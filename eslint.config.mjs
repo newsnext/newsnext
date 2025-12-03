@@ -1,0 +1,24 @@
+import antfu from "@antfu/eslint-config"
+
+export default antfu(
+  {
+    react: false,
+    lessOpinionated: true,
+    markdown: false,
+    stylistic: {
+      quotes: "double",
+    },
+    ignores: ["**/components/ui/**", "public/**"],
+    rules: {
+      "node/prefer-global/process": "off",
+      "style/eol-last": "off",
+      "antfu/curly": "error",
+      "curly": "off",
+      "style/brace-style": ["error", "1tbs"],
+      "no-console": "off",
+      "antfu/no-top-level-await": "off",
+      "unused-imports/no-unused-vars": "warn",
+      "no-control-regex": "off",
+    },
+  },
+)
