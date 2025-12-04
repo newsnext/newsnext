@@ -18,14 +18,14 @@ function NotFoundComponent() {
 function RootComponent() {
   return (
     <>
-      <div className="h-screen w-screen flex flex-col justify-between sprinkle-theme-400">
-        <header className="py-6 flex flex-col items-center justify-center text-sm text-neutral-500 font-mono">
+      <div className="h-screen w-screen flex-col-center justify-between sprinkle-theme-400">
+        <header className="py-6 flex-col-center text-sm text-neutral-500 font-mono">
           Header
         </header>
-        <main className="flex-1 text-theme-300 min-h-0 overflow-x-auto flex flex-col items-center justify-center">
+        <main className="flex-1 text-theme-300 min-h-0 overflow-x-auto flex-col-center">
           <Outlet />
         </main>
-        <footer className="py-6 flex flex-col items-center justify-center text-sm text-neutral-500 font-mono">
+        <footer className="py-6 flex-col-center text-sm text-neutral-500 font-mono">
           Footer
         </footer>
       </div>

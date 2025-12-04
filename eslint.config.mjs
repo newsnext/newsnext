@@ -8,7 +8,7 @@ export default antfu(
     stylistic: {
       quotes: "double",
     },
-    ignores: ["**/components/ui/**", "public/**"],
+    ignores: ["**/components/ui/**", "public/**", "bun.lock"],
     rules: {
       "node/prefer-global/process": "off",
       "style/eol-last": "off",

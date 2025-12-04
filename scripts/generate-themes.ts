@@ -1,18 +1,16 @@
 import fs from "node:fs"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
-import { COLORS } from "../src/typings/source"
+import { COLORS } from "../src/typings/constants"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-const TARGET_FILE = path.resolve(__dirname, "../src/styles/themes.css")
+const TARGET_FILE = path.resolve(__dirname, "..", "src", "styles", "themes.css")
 
 const SHADES = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950]
 
 const DEFAULT_THEME_COLOR = "red"
-
-const THEME_COLORS = COLORS
 
 function generateCss() {
   let css = "@theme {\n"
@@ -26,7 +24,7 @@ function generateCss() {
   css += "@layer theme {\n"
 
   // Generate other color classes
-  THEME_COLORS.forEach((color) => {
+  COLORS.forEach((color) => {
     css += `  .${color} {\n`
     SHADES.forEach((shade) => {
       css += `    --color-theme-${shade}: var(--color-${color}-${shade});\n`

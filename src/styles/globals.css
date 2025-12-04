@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "./themes.css";
+@import "./utilities.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -84,8 +85,4 @@
   body {
     @apply bg-background text-foreground;
   }
-}
-
-@utility sprinkle-* {
-  background-image: radial-gradient(ellipse 80% 80% at 50% -30%, --alpha(--value(--color-*)/0.3), transparent);
 }
