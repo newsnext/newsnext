@@ -2,6 +2,7 @@
 @import "tw-animate-css";
 @import "./themes.css";
 @import "./utilities.css";
+@import "./safalist.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -83,6 +84,13 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground sprinkle-theme-400;
+  }
+  html,
+  body,
+  #root {
+    height: 100vh;
+    margin: 0;
+    padding: 0;
   }
 }

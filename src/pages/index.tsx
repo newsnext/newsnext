@@ -1,10 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router"
+import { Board } from "@/components/board"
 
 function IndexComponent() {
   return (
-    <div className="">
-      <h1>Index</h1>
-    </div>
+    <Board />
   )
 }
 

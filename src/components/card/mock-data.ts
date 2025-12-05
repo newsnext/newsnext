@@ -1,0 +1,142 @@
+import type { NewsItem, Source } from "@/typings/source"
+
+const MOCK_TITLES_HOT = [
+  "OpenAI 发布最新 GPT-5 模型，性能提升 10 倍",
+  "特斯拉宣布全自动驾驶技术重大突破",
+  "苹果春季发布会：iPhone 16 系列正式亮相",
+  "微软收购 GitHub Copilot 竞争对手",
+  "Meta 推出新一代 VR 头显，售价降至 $299",
+  "谷歌量子计算机实现里程碑式突破",
+  "亚马逊云服务 AWS 推出 AI 芯片",
+  "字节跳动估值突破 3000 亿美元",
+  "SpaceX 星舰完成首次载人飞行",
+  "英伟达发布新一代 GPU 架构",
+  "阿里云推出自研大模型服务",
+  "腾讯游戏新作《黎明觉醒》全球上线",
+  "比亚迪电动车销量超越特斯拉",
+  "小米汽车 SU7 预订量突破 10 万",
+  "华为鸿蒙系统全球用户破 5 亿",
+  "百度 Apollo 获得全国首批自动驾驶牌照",
+  "OpenAI CEO Sam Altman 谈 AGI 发展路径",
+  "GitHub Copilot 推出企业版，支持私有部署",
+  "Rust 语言成为 Linux 内核官方支持语言",
+  "TypeScript 5.5 正式发布，带来重大性能优化",
+]
+
+const MOCK_TITLES_TIMELINE = [
+  "React 19 Beta 版本发布，引入编译器优化",
+  "Vue 3.5 更新：性能提升 30%",
+  "Next.js 15 支持原生 Rust 编译",
+  "Vite 6.0 发布，构建速度翻倍",
+  "Tailwind CSS 4.0 Alpha 版本预览",
+  "Bun 1.2 发布，兼容性大幅提升",
+  "Deno 2.0 正式版发布",
+  "Svelte 5 引入全新响应式系统",
+  "Astro 5.0 支持服务端组件",
+  "Nuxt 4 开发路线图公布",
+  "Remix 3.0 Beta 测试开启",
+  "SolidJS 2.0 性能基准测试结果公布",
+  "Qwik 框架获得 Google 投资",
+  "Turbopack 进入稳定版本",
+  "ESLint 10 支持扁平化配置",
+  "Prettier 4.0 重写核心引擎",
+  "Vitest 2.0 发布，支持浏览器模式",
+  "Playwright 2.0 新增 AI 测试功能",
+  "Webpack 6 开发计划公布",
+  "Rollup 5.0 优化 Tree-shaking 算法",
+]
+
+export const MOCK_ITEMS_HOT: NewsItem[] = Array.from({ length: 20 }).map((_, i) => ({
+  id: i,
+  title: MOCK_TITLES_HOT[i],
+  url: "https://example.com",
+  extra: {
+    diff: i % 4 === 0 ? (i % 2 === 0 ? 1 : -1) : undefined,
+    info: i % 3 === 0 ? `${Math.floor(Math.random() * 500) + 10} 评论` : undefined,
+  },
+}))
+
+export const MOCK_ITEMS_TIMELINE: NewsItem[] = Array.from({ length: 20 }).map((_, i) => ({
+  id: i,
+  title: MOCK_TITLES_TIMELINE[i],
+  url: "https://example.com",
+  pubDate: Date.now() - i * 1000 * 60 * 30, // 每条新闻间隔 30 分钟
+  extra: {
+    date: Date.now() - i * 1000 * 60 * 30,
+  },
+}))
+
+export const MOCK_SOURCES: Record<string, Source & { id: string }> = {
+  "36kr": {
+    id: "36kr",
+    name: "36氪",
+    color: "blue",
+    type: "hottest",
+    home: "https://36kr.com",
+    desc: "36氪 - 让创业更简单",
+    interval: 60,
+  },
+  "v2ex": {
+    id: "v2ex",
+    name: "V2EX",
+    color: "gray",
+    type: "normal",
+    home: "https://v2ex.com",
+    desc: "V2EX - 创意工作者们的社区",
+    interval: 60,
+  },
+  "github": {
+    id: "github",
+    name: "GitHub",
+    color: "gray",
+    type: "hottest",
+    home: "https://github.com",
+    desc: "GitHub Trending - 今日热门开源项目",
+    interval: 60,
+  },
+  "zhihu": {
+    id: "zhihu",
+    name: "知乎",
+    color: "blue",
+    type: "hottest",
+    home: "https://zhihu.com",
+    desc: "知乎热榜 - 有问题，就会有答案",
+    interval: 60,
+  },
+  "juejin": {
+    id: "juejin",
+    name: "掘金",
+    color: "blue",
+    type: "normal",
+    home: "https://juejin.cn",
+    desc: "掘金 - 代码不止，掘金不停",
+    interval: 60,
+  },
+  "ithome": {
+    id: "ithome",
+    name: "IT之家",
+    color: "red",
+    type: "normal",
+    home: "https://ithome.com",
+    desc: "IT之家 - 数码科技新闻",
+    interval: 60,
+  },
+  "weibo": {
+    id: "weibo",
+    name: "微博",
+    color: "orange",
+    type: "hottest",
+    home: "https://weibo.com",
+    desc: "微博热搜榜",
+    interval: 60,
+  },
+  "bilibili": {
+    id: "bilibili",
+    name: "哔哩哔哩",
+    color: "pink",
+    type: "hottest",
+    home: "https://bilibili.com",
+    desc: "哔哩哔哩热门视频",
+    interval: 60,
+  },
+}

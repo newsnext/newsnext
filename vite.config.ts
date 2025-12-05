@@ -5,13 +5,29 @@ import react from "@vitejs/plugin-react"
 import { nitro } from "nitro/vite"
 import Icons from "unplugin-icons/vite"
 import { defineConfig } from "vite"
+import { ROOT_DIR } from "./root"
 
 export default defineConfig({
+  server: {
+    port: 3001,
+    strictPort: true,
+    host: true,
+    proxy: {
+      "/api": {
+        target: "https://newsnow.busiyi.world/api",
+        changeOrigin: true,
+        rewrite: path => path.replace(/^\/api/, ""),
+      },
+    },
+  },
   plugins: [
     nitro(),
     react(),
     tailwindcss(),
-    Icons({}),
+    Icons({
+      compiler: "jsx",
+      jsx: "react",
+    }),
     tanstackRouter({
       target: "react",
       autoCodeSplitting: true,
@@ -23,7 +39,7 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "src"),
+      "@": path.resolve(ROOT_DIR, "src"),
     },
   },
 })

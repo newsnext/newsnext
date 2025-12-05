@@ -1,12 +1,9 @@
 import fs from "node:fs"
 import path from "node:path"
-import { fileURLToPath } from "node:url"
-import { COLORS } from "../src/typings/constants"
+import { ROOT_DIR } from "../../root"
+import { COLORS } from "../../src/typings/constants"
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
-
-const TARGET_FILE = path.resolve(__dirname, "..", "src", "styles", "themes.css")
+const TARGET_FILE = path.resolve(ROOT_DIR, "src", "styles", "themes.css")
 
 const SHADES = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950]
 
@@ -39,8 +36,10 @@ function generateCss() {
 
 try {
   const cssContent = generateCss()
-  fs.writeFileSync(TARGET_FILE, cssContent, "utf-8")
+  fs.writeFileSync(TARGET_FILE, `/* auto generated */\n\n${cssContent}`, "utf-8")
   console.log(`Successfully generated themes at: ${TARGET_FILE}`)
+  console.log("--------------------------------")
+  console.log(cssContent)
 } catch (error) {
   console.error("Error generating themes:", error)
   process.exit(1)
