@@ -10,6 +10,7 @@ function generateCss() {
   return [
     `@source inline("bg-{${colorsList}}-400/40")`,
     `@source inline("sprinkle-{${colorsList}}-400")`,
+    `@source inline("text-{${colorsList}}-400")`,
   ].join(";\n")
 }
 

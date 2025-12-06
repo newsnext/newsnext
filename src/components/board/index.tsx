@@ -5,12 +5,7 @@ export function Board() {
   const sources = Object.keys(MOCK_SOURCES)
 
   return (
-    <ol
-      className="grid gap-6"
-      style={{
-        gridTemplateColumns: `repeat(auto-fill, minmax(350px, 1fr))`,
-      }}
-    >
+    <ol className="flex flex-wrap justify-center gap-2 sm:gap-6">
       {sources.map(id => (
         <li key={id}>
           <Card id={id} />

@@ -71,6 +71,7 @@ export const MOCK_SOURCES: Record<string, Source & { id: string }> = {
     id: "36kr",
     name: "36氪",
     color: "blue",
+    title: "最新",
     type: "hottest",
     home: "https://36kr.com",
     desc: "36氪 - 让创业更简单",

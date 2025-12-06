@@ -8,7 +8,7 @@
 
 :root {
   --background: var(--color-neutral-900);
-  --foreground: var(--color-neutral-50);
+  --foreground: var(--color-neutral-300);
   --card: oklch(0.205 0 0);
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
@@ -41,10 +41,6 @@
 }
 
 @theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -83,9 +79,6 @@
   * {
     @apply border-border outline-ring/50;
   }
-  body {
-    @apply bg-background text-foreground sprinkle-theme-400;
-  }
   html,
   body,
   #root {
@@ -93,4 +86,16 @@
     margin: 0;
     padding: 0;
   }
+  body,
+  #root {
+    @apply bg-background text-foreground sprinkle-theme-400;
+  }
+}
+
+@utility font-brand {
+  font-family: "Baloo 2";
+}
+
+@utility overflow-opacity-0 {
+  scrollbar-width: none;
 }

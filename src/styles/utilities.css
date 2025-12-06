@@ -1,5 +1,7 @@
 @utility sprinkle-* {
   background-image: radial-gradient(ellipse 80% 80% at 50% -30%, --alpha(--value(--color-*)/0.3), transparent);
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
 }
 
 @utility flex-center {
