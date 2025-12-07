@@ -1,12 +1,12 @@
+import { useEffect, useRef, useState } from "react"
 import { PhMagnifyingGlass } from "@/components/icons/ph"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
-import { useState, useRef, useEffect } from "react"
 
 export function SearchBar({
   className,
   onSearch,
-  autoFocus = false
+  autoFocus = false,
 }: {
   className?: string
   onSearch?: () => void
