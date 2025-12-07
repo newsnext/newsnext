@@ -1,22 +1,22 @@
 import type { BaseEventPayload, ElementDragType } from "@atlaskit/pragmatic-drag-and-drop/dist/types/internal-types"
-import type { BoardProps } from "./index"
+import type { BaseBoardProps } from "./base-board"
 import { useCallback, useState } from "react"
 import { DndContext } from "@/hooks/use-dnd-context"
 import useThrottleFn from "@/hooks/use-throttle-fn"
 import { DraggableCard } from "../card/draggable-card"
 import { MOCK_SOURCES } from "../card/mock-data"
-import Board, { ANIMATION_DURATION } from "./index"
+import { ANIMATION_DURATION, BaseBoard } from "./base-board"
 
-interface DraggableBoardProps extends Omit<BoardProps, "sourceIds" | "renderCard"> {
+interface CardBoardProps extends Omit<BaseBoardProps, "sourceIds" | "renderCard"> {
   initialSourceIds?: string[]
   onSourceIdsChange?: (sourceIds: string[]) => void
 }
 
-export function DraggableBoard({
+export function CardBoard({
   initialSourceIds = Object.keys(MOCK_SOURCES),
   onSourceIdsChange,
   ...props
-}: DraggableBoardProps) {
+}: CardBoardProps) {
   const [sourceIds, setSourceIds] = useState<string[]>(initialSourceIds)
 
   const onDropTargetChange = useCallback(({ location, source }: BaseEventPayload<ElementDragType>) => {
@@ -48,7 +48,7 @@ export function DraggableBoard({
 
   return (
     <DndContext onDropTargetChange={run}>
-      <Board
+      <BaseBoard
         sourceIds={sourceIds}
         renderCard={id => <DraggableCard id={id} />}
         {...props}

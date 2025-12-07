@@ -74,24 +74,21 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
-
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border outline-ring/50 m-0 p-0;
   }
-  html,
-  body,
+
+  body {
+    @apply h-screen bg-background text-foreground sprinkle-theme-400;
+  }
+
   #root {
-    height: 100vh;
-    margin: 0;
-    padding: 0;
+    @apply h-full;
   }
-  body,
-  #root {
-    @apply bg-background text-foreground sprinkle-theme-400;
-  }
-  html.grabbing,
-  html.grabbing * {
+
+  .grabbing,
+  .grabbing * {
     cursor: grabbing !important;
   }
 }
