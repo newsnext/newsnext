@@ -13,7 +13,7 @@
 }
 
 @utility island-pill {
-  @apply rounded-full bg-black/20 backdrop-blur-xl pointer-events-auto shadow-lg transition-all;
+  @apply h-10 shadow-sm shadow-theme-400/5 hover:shadow-theme-400/30 rounded-full bg-black/20 backdrop-blur-xl pointer-events-auto transition-all;
 }
 
 @utility font-brand {

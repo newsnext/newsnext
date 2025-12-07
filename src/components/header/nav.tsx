@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils"
 const TABS = ["All", "Tech", "Social", "News"] as const
 function Nav() {
   return (
-    <div className="island-pill flex gap-2 items-center px-2 h-10 pointer-events-auto">
+    <div className="island-pill flex gap-2 items-center px-2 pointer-events-auto">
       {TABS.map((tab, index) => (
         <button
           key={tab}

@@ -10,8 +10,8 @@ interface HeaderProps {
 
 export function Header({ scrollContainerRef }: HeaderProps) {
   return (
-    <header className="fixed top-0 inset-x-0 z-20 p-4 pointer-events-none">
-      <div className="flex items-center gap-3 overflow-x-auto scrollbar-hidden pointer-events-auto md:pointer-events-none">
+    <header className="fixed -top-0.5 inset-x-0 z-20 p-4 pointer-events-none">
+      <div className="h-11 flex items-center gap-3 overflow-x-auto scrollbar-hidden pointer-events-auto md:pointer-events-none">
         {/* Left Section - Tabs */}
         <div className="shrink-0 flex-1 flex justify-end">
           <Nav />
@@ -25,7 +25,7 @@ export function Header({ scrollContainerRef }: HeaderProps) {
           <DateTime />
           {/* Refresh Button - Right Island 1 */}
           <button
-            className="island-pill flex items-center justify-center h-10 w-10 text-white/70 hover:text-white hover:bg-black/30 pointer-events-auto"
+            className="island-pill flex items-center justify-center size-10 text-white/70 hover:text-white hover:bg-black/30 pointer-events-auto"
             title="Refresh All"
           >
             <PhArrowCounterClockwiseDuotone className="size-5" />

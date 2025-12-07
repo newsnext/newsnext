@@ -33,7 +33,7 @@ export function Logo({ scrollContainerRef }: LogoProps) {
   return (
     <button
       onClick={handleScrollToTop}
-      className="island-pill relative flex gap-2 items-center px-4 h-10 hover:bg-black/30 shrink-0 pointer-events-auto cursor-pointer"
+      className="island-pill relative flex gap-2 items-center px-4 hover:bg-black/30 shrink-0 pointer-events-auto cursor-pointer"
     >
       <svg className="absolute inset-0 size-full pointer-events-none">
         <motion.rect

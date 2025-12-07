@@ -19,7 +19,7 @@ export function DateTime() {
   }, [])
 
   return (
-    <div className="island-pill px-4 h-10 flex items-center gap-3 select-none">
+    <div className="island-pill px-4 flex items-center gap-3 select-none">
       <span className="text-lg font-bold tabular-nums text-white/90 tracking-tight">
         {formatTimeWithHighlight(format(date, "HH:mm"))}
       </span>
