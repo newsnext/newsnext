@@ -1,0 +1,32 @@
+import { format } from "date-fns"
+import { enUS } from "date-fns/locale"
+import { useEffect, useState } from "react"
+
+function formatTimeWithHighlight(time: string) {
+  return time.split("").map((char, index) => (
+    <span key={index} className={char === "1" ? "text-theme-400" : ""}>
+      {char}
+    </span>
+  ))
+}
+
+export function DateTime() {
+  const [date, setDate] = useState(new Date())
+
+  useEffect(() => {
+    const timer = setInterval(() => setDate(new Date()), 1000)
+    return () => clearInterval(timer)
+  }, [])
+
+  return (
+    <div className="island-pill px-4 h-10 flex items-center gap-3 select-none">
+      <span className="text-lg font-bold tabular-nums text-white/90 tracking-tight">
+        {formatTimeWithHighlight(format(date, "HH:mm"))}
+      </span>
+      <div className="flex-col-center text-[10px] font-semibold leading-tight text-white/50 border-l border-white/10 pl-3">
+        <span>{format(date, "EEE", { locale: enUS })}</span>
+        <span>{format(date, "MM/dd")}</span>
+      </div>
+    </div>
+  )
+}
