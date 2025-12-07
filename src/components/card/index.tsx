@@ -1,9 +1,9 @@
+import type { ReactNode } from "react"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
 import {
   PhArrowCounterClockwiseDuotone,
   PhCircleDashedDuotone,
-  PhDotsSixVerticalDuotone,
   PhStarDuotone,
   PhStarFill,
 } from "../icons/ph"
@@ -12,12 +12,15 @@ import { Hottest } from "./hottest"
 import { MOCK_ITEMS_HOT, MOCK_ITEMS_TIMELINE, MOCK_SOURCES } from "./mock-data"
 import { Timeline } from "./timeline"
 
-interface CardProps {
+export interface CardProps {
   id: string
   className?: string
+  isDragging?: boolean
+  nodeRef?: (node: HTMLElement | null) => void
+  dragHandle?: ReactNode
 }
 
-export default function Card({ id, className }: CardProps) {
+export default function Card({ id, className, nodeRef, dragHandle }: CardProps) {
   const source = MOCK_SOURCES[id] || MOCK_SOURCES["36kr"]
   const [isFocused, setIsFocused] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
@@ -31,17 +34,21 @@ export default function Card({ id, className }: CardProps) {
 
   return (
     <div
+      ref={nodeRef}
       className={cn(
-        "flex flex-col rounded-2xl p-4 transition-opacity-300",
+        "flex flex-col rounded-2xl p-4",
         `bg-${source.color}-400/40`,
         "h-[500px] w-[400px]",
         className,
       )}
+      style={{
+        transformOrigin: "50% 50%",
+      }}
     >
-      <div className="flex justify-between mb-3 items-center">
-        <div className="flex gap-2.5 items-center">
+      <div className="flex justify-between mb-3 items-center mx-1">
+        <div className="flex gap-2.5 items-center ml-1">
           <a
-            className="size-8 rounded-full bg-cover ml-2"
+            className="size-8 rounded-full bg-cover"
             target="_blank"
             rel="noreferrer"
             href={source.home}
@@ -88,14 +95,7 @@ export default function Card({ id, className }: CardProps) {
           >
             {isFocused ? <PhStarFill /> : <PhStarDuotone />}
           </Button>
-          <Button
-            asChild
-            variant="icon"
-            size="icon"
-            aria-label="Handle"
-          >
-            <PhDotsSixVerticalDuotone />
-          </Button>
+          {dragHandle}
         </div>
       </div>
 

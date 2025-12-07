@@ -90,6 +90,10 @@
   #root {
     @apply bg-background text-foreground sprinkle-theme-400;
   }
+  html.grabbing,
+  html.grabbing * {
+    cursor: grabbing !important;
+  }
 }
 
 @utility font-brand {

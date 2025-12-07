@@ -125,7 +125,7 @@ export const MOCK_SOURCES: Record<string, Source & { id: string }> = {
   "weibo": {
     id: "weibo",
     name: "微博",
-    color: "orange",
+    color: "red",
     type: "hottest",
     home: "https://weibo.com",
     desc: "微博热搜榜",
@@ -134,7 +134,7 @@ export const MOCK_SOURCES: Record<string, Source & { id: string }> = {
   "bilibili": {
     id: "bilibili",
     name: "哔哩哔哩",
-    color: "pink",
+    color: "blue",
     type: "hottest",
     home: "https://bilibili.com",
     desc: "哔哩哔哩热门视频",

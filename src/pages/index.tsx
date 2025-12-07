@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router"
-import { Board } from "@/components/board"
+import { DraggableBoard } from "@/components/board/draggable-board"
 
 function IndexComponent() {
   return (
-    <Board />
+    <DraggableBoard />
   )
 }
 
