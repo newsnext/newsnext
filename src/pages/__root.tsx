@@ -17,9 +17,9 @@ function NotFoundComponent() {
 
 function RootComponent() {
   return (
-    <div className="relative h-full w-full">
+    <div className="relative h-full w-full overflow-y-auto scrollbar-hidden">
       <Header />
-      <main className="h-full w-full overflow-y-auto px-2 sm:px-6 pt-20 scrollbar-hidden">
+      <main className="px-2 sm:px-6 my-18">
         <Outlet />
       </main>
       {import.meta.env.DEV && (

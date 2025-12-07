@@ -11,3 +11,7 @@
 @utility flex-col-center {
   @apply flex flex-col items-center justify-center;
 }
+
+@utility island-pill {
+  @apply rounded-full bg-black/20 backdrop-blur-xl pointer-events-auto shadow-lg transition-all;
+}
