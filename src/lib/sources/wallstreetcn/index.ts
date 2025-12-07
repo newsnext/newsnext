@@ -2,7 +2,7 @@ import { defineSource } from "@/typings/source"
 import { hot, live, news } from "./handlers"
 
 export default defineSource({
-  name: "华尔街见闻",
+  name: "Wall Street CN",
   color: "blue",
   home: "https://wallstreetcn.com/",
   lang: "zh-CN",
@@ -10,16 +10,16 @@ export default defineSource({
   sub: {
     quick: {
       type: "realtime",
-      title: "快讯",
+      title: "Breaking News",
       handler: live,
       default: true,
     },
     news: {
-      title: "最新",
+      title: "Latest",
       handler: news,
     },
     hot: {
-      title: "最热",
+      title: "Hot",
       type: "hottest",
       handler: hot,
     },

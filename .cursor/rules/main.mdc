@@ -1,0 +1,8 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+
+ALWAYS use English for all text, including comments.
+DONT create markdown documents, not needed. Tell me directly, PLEASE.

@@ -18,7 +18,7 @@ function NotFoundComponent() {
 function RootComponent() {
   return (
     <>
-      <div className="h-full overflow-y-auto overflow-opacity-0">
+      <div className="h-full overflow-y-auto scrollbar-hidden">
         <Header />
         <main className="flex-1 min-h-0 w-full px-2 sm:px-6">
           <Outlet />

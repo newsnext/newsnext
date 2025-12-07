@@ -100,6 +100,6 @@
   font-family: "Baloo 2";
 }
 
-@utility overflow-opacity-0 {
+@utility scrollbar-hidden {
   scrollbar-width: none;
 }

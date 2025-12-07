@@ -1,7 +1,6 @@
 import type { NewsItem } from "@/typings/source"
 import { formatDistanceToNow } from "date-fns"
-
-import { zhCN } from "date-fns/locale"
+import { enUS } from "date-fns/locale"
 
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
@@ -45,7 +44,7 @@ export function Timeline({ items }: { items: NewsItem[] }) {
 function NewsUpdatedTime({ date }: { date: string | number }) {
   try {
     const d = new Date(date)
-    return <>{formatDistanceToNow(d, { addSuffix: true, locale: zhCN })}</>
+    return <>{formatDistanceToNow(d, { addSuffix: true, locale: enUS })}</>
   } catch {
     return null
   }

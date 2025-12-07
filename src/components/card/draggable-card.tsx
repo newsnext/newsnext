@@ -9,7 +9,7 @@ import { Button } from "../ui/button"
 import { DragOverlay } from "./drag-overlay"
 import Card from "./index"
 
-interface DraggableCardProps extends Omit<CardProps, "isDragging" | "nodeRef" | "dragHandle"> {
+interface DraggableCardProps extends Omit<CardProps, "nodeRef" | "dragHandle"> {
   id: string
 }
 
@@ -47,12 +47,12 @@ export function DraggableCard({ id, ...props }: DraggableCardProps) {
     <>
       <Card
         id={id}
-        isDragging={isDragging}
         nodeRef={setNodeRef}
         dragHandle={dragHandle}
         {...props}
         className={cn(
           isDragging && "opacity-50",
+          props.className,
         )}
       />
 
