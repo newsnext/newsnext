@@ -92,11 +92,3 @@
     cursor: grabbing !important;
   }
 }
-
-@utility font-brand {
-  font-family: "Baloo 2";
-}
-
-@utility scrollbar-hidden {
-  scrollbar-width: none;
-}

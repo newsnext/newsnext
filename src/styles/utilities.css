@@ -15,3 +15,12 @@
 @utility island-pill {
   @apply rounded-full bg-black/20 backdrop-blur-xl pointer-events-auto shadow-lg transition-all;
 }
+
+@utility font-brand {
+  font-family: "Baloo 2";
+}
+
+@utility scrollbar-hidden {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
