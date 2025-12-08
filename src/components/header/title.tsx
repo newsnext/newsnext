@@ -2,11 +2,11 @@ import type { RefObject } from "react"
 import { motion, useScroll, useTransform } from "motion/react"
 import { useCallback } from "react"
 
-interface LogoProps {
+interface TitleProps {
   scrollContainerRef?: RefObject<HTMLElement | null>
 }
 
-export function Logo({ scrollContainerRef }: LogoProps) {
+export function Title({ scrollContainerRef }: TitleProps) {
   const { scrollYProgress, scrollY } = useScroll({
     container: scrollContainerRef,
   })

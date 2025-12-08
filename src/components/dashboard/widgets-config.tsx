@@ -4,11 +4,9 @@ import {
   AlarmClock,
   Battery,
   BatteryLevel,
-  Calendar,
   CalendarEvent,
   CalendarWidget,
   CalorieCounter,
-  Clock,
   ClockWithPhoto,
   Cycling,
   DeliveryCard,
@@ -41,19 +39,10 @@ export interface WidgetConfig {
   id: string
   component: ReactNode
   className?: string
+  disabled?: boolean
 }
 
 export const initialWidgets: WidgetConfig[] = [
-  {
-    id: "clock",
-    component: <Clock className="w-full max-w-sm aspect-square" />,
-    className: "flex justify-center",
-  },
-  {
-    id: "calendar",
-    component: <Calendar className="w-full max-w-sm aspect-square flex items-center justify-center" />,
-    className: "flex justify-center",
-  },
   {
     id: "alarm-clock",
     component: (
@@ -128,11 +117,13 @@ export const initialWidgets: WidgetConfig[] = [
     className: "flex justify-center",
   },
   {
+    disabled: true,
     id: "calendar-widget",
     component: <CalendarWidget />,
     className: "flex justify-center",
   },
   {
+    disabled: true,
     id: "calorie-counter",
     component: (
       <CalorieCounter
@@ -232,6 +223,7 @@ export const initialWidgets: WidgetConfig[] = [
   {
     id: "notes",
     component: <Notes />,
+    disabled: true,
     className: "flex justify-center",
   },
   {
@@ -247,6 +239,7 @@ export const initialWidgets: WidgetConfig[] = [
   {
     id: "reminder-widget",
     component: <ReminderWidget />,
+    disabled: true,
     className: "flex justify-center",
   },
   {
@@ -402,6 +395,7 @@ export const initialWidgets: WidgetConfig[] = [
   },
   {
     id: "storage-status",
+    disabled: true,
     component: <StorageStatus />,
     className: "flex justify-center",
   },
@@ -463,10 +457,12 @@ export const initialWidgets: WidgetConfig[] = [
         use24HourFormat={false}
       />
     ),
+    disabled: true,
     className: "flex justify-center col-span-full",
   },
   {
     id: "music-stack-interaction",
+    disabled: true,
     component: (
       <MusicStackInteraction
         albums={[
@@ -478,4 +474,4 @@ export const initialWidgets: WidgetConfig[] = [
     ),
     className: "flex justify-center col-span-full",
   },
-]
+].filter(widget => widget.disabled === undefined || !widget.disabled)

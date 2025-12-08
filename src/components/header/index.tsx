@@ -1,8 +1,8 @@
 import type { RefObject } from "react"
 import { PhArrowCounterClockwiseDuotone } from "../icons/ph"
 import { DateTime } from "./date-time"
-import { Logo } from "./logo"
 import Nav from "./nav"
+import { Title } from "./title"
 
 interface HeaderProps {
   scrollContainerRef?: RefObject<HTMLElement | null>
@@ -13,23 +13,22 @@ export function Header({ scrollContainerRef }: HeaderProps) {
     <header className="fixed -top-0.5 inset-x-0 z-20 p-4 pointer-events-none">
       <div className="h-11 flex items-center gap-3 overflow-x-auto scrollbar-hidden pointer-events-auto md:pointer-events-none">
         {/* Left Section - Tabs */}
-        <div className="shrink-0 flex-1 flex justify-end">
+        <div className="shrink-0 flex-1 flex justify-end gap-3">
           <Nav />
-        </div>
-
-        {/* Center Section - Logo */}
-        <Logo scrollContainerRef={scrollContainerRef} />
-
-        {/* Right Section - DateTime, Refresh, User */}
-        <div className="shrink-0 flex items-center gap-3 flex-1 justify-start">
-          <DateTime />
-          {/* Refresh Button - Right Island 1 */}
           <button
-            className="island-pill flex items-center justify-center size-10 text-white/70 hover:text-white hover:bg-black/30 pointer-events-auto"
+            className="island-pill flex items-center justify-center size-10 pointer-events-auto"
             title="Refresh All"
           >
             <PhArrowCounterClockwiseDuotone className="size-5" />
           </button>
+        </div>
+
+        {/* Center Section - Logo */}
+        <Title scrollContainerRef={scrollContainerRef} />
+
+        {/* Right Section - DateTime, Refresh, User */}
+        <div className="shrink-0 flex items-center gap-3 flex-1 justify-start">
+          <DateTime />
 
           {/* User Avatar - Right Island 2 */}
           <button
