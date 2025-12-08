@@ -1,7 +1,12 @@
+import type { BaseEventPayload, ElementDragType } from "@atlaskit/pragmatic-drag-and-drop/dist/types/internal-types"
 import { AnimatePresence, motion } from "motion/react"
-import { Calendar } from "@/components/widgets/calendar"
-import { Clock } from "@/components/widgets/clock"
-import { SearchBar } from "@/components/widgets/search-bar"
+import { useCallback, useState } from "react"
+import { SearchBar } from "@/components/widgets"
+import { DndContext } from "@/hooks/use-dnd-context"
+import useThrottleFn from "@/hooks/use-throttle-fn"
+import { reorder } from "@/lib/utils/reorder"
+import { SortableWidget } from "./sortable-widget"
+import { initialWidgets } from "./widgets-config"
 
 interface DashboardProps {
   isVisible: boolean
@@ -9,6 +14,8 @@ interface DashboardProps {
 }
 
 export function Dashboard({ isVisible, onClose }: DashboardProps) {
+  const [widgets, setWidgets] = useState(initialWidgets)
+
   // Handle escape key at dashboard level
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Escape") {
@@ -16,9 +23,42 @@ export function Dashboard({ isVisible, onClose }: DashboardProps) {
     }
   }
 
+  const handleReorder = useCallback(
+    ({ source, location }: BaseEventPayload<ElementDragType>) => {
+      const destination = location.current.dropTargets[0]
+      if (!destination) {
+        return
+      }
+      const sourceId = source.data.id as string
+      const destinationId = destination.data.id as string
+
+      const sourceIndex = widgets.findIndex(w => w.id === sourceId)
+      const destinationIndex = widgets.findIndex(w => w.id === destinationId)
+
+      if (sourceIndex === -1 || destinationIndex === -1) {
+        return
+      }
+
+      // Only reorder if the index changed
+      if (sourceIndex === destinationIndex) {
+        return
+      }
+
+      const newWidgets = reorder(widgets, sourceIndex, destinationIndex)
+      setWidgets(newWidgets)
+    },
+    [widgets],
+  )
+
+  const { run: handleDropTargetChange } = useThrottleFn(handleReorder, {
+    wait: 200,
+    leading: true,
+    trailing: true,
+  })
+
   return (
     <div
-      className="absolute inset-0 flex flex-col items-center justify-center pointer-events-auto"
+      className="h-full flex flex-col items-center pointer-events-auto overflow-y-auto bg-transparent scrollbar-hidden"
       onClick={onClose}
       onKeyDown={handleKeyDown}
     >
@@ -29,7 +69,7 @@ export function Dashboard({ isVisible, onClose }: DashboardProps) {
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
             transition={{ duration: 0.2, delay: 0.2 }}
-            className="w-full max-w-7xl px-4 flex flex-col items-center gap-12"
+            className="w-full max-w-7xl px-4 py-8 pb-16 flex flex-col items-center gap-12"
             onClick={e => e.stopPropagation()}
           >
             {/* Search Widget */}
@@ -37,15 +77,16 @@ export function Dashboard({ isVisible, onClose }: DashboardProps) {
               <SearchBar autoFocus onSearch={onClose} />
             </div>
 
-            {/* Other Widgets Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
-              <div className="flex justify-center">
-                <Clock className="w-full max-w-sm aspect-square" />
+            {/* Widgets Grid */}
+            <DndContext onDropTargetChange={handleDropTargetChange}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 w-full">
+                {widgets.map(widget => (
+                  <SortableWidget key={widget.id} id={widget.id} className={widget.className}>
+                    {widget.component}
+                  </SortableWidget>
+                ))}
               </div>
-              <div className="flex justify-center">
-                <Calendar className="w-full max-w-sm aspect-square flex items-center justify-center" />
-              </div>
-            </div>
+            </DndContext>
           </motion.div>
         )}
       </AnimatePresence>

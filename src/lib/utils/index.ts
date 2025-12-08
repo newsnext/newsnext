@@ -16,3 +16,13 @@ export const myFetch = $fetch.create({
   timeout: 10000,
   retry: 3,
 })
+
+export function absoluteUrl(path: string): string {
+  if (path.startsWith("http")) {
+    return path
+  }
+  if (path.startsWith("/")) {
+    return path
+  }
+  return `/${path}`
+}

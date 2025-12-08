@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { CardBoard } from "@/components/card-board"
 import { Dashboard } from "@/components/dashboard"
+import { cn } from "@/lib/utils"
 
 export function Desk() {
   const [isScattered, setIsScattered] = useState(false)
@@ -17,16 +18,19 @@ export function Desk() {
   }, [])
 
   return (
-    <>
-      {/* Dashboard Layer (Fixed Background) */}
-      <div className={`fixed inset-0 z-0 ${isScattered ? "pointer-events-auto" : "pointer-events-none"}`}>
+    <div className="grid w-full h-full">
+      <div className={cn("col-start-1 row-start-1 z-0 h-full", isScattered ? "pointer-events-auto" : "pointer-events-none")}>
         <Dashboard isVisible={isScattered} onClose={() => setIsScattered(false)} />
       </div>
 
-      {/* CardBoard Layer (Scrollable Content) */}
-      <div className={`relative z-10 h-full transition-all duration-300 ${isScattered ? "pointer-events-none" : ""}`}>
+      <div
+        className={cn(
+          "col-start-1 row-start-1 relative z-10 h-full transition-all duration-300",
+          isScattered && "pointer-events-none",
+        )}
+      >
         <CardBoard isScattered={isScattered} />
       </div>
-    </>
+    </div>
   )
 }
