@@ -1,6 +1,7 @@
 import type { RefObject } from "react"
 import { motion, useScroll, useTransform } from "motion/react"
 import { useCallback } from "react"
+import { Logo } from "../icons/logo"
 
 interface TitleProps {
   scrollContainerRef?: RefObject<HTMLElement | null>
@@ -54,7 +55,7 @@ export function Title({ scrollContainerRef }: TitleProps) {
           className="text-theme-400"
         />
       </svg>
-      <div className="size-5 bg-cover shrink-0" title="logo" style={{ backgroundImage: "url(/icon.svg)" }} />
+      <Logo className="text-theme-400/80 size-5" />
       <span className="text-xl font-brand font-bold whitespace-nowrap">
         News
         <span className="text-theme-400">N</span>

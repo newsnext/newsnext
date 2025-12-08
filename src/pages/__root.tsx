@@ -25,7 +25,7 @@ function RootComponent() {
       className="relative h-full w-full overflow-y-auto scrollbar-hidden"
     >
       <Header scrollContainerRef={scrollContainerRef} />
-      <main className="px-2 sm:px-6 my-18">
+      <main className="px-2 sm:px-6 my-22">
         <Outlet />
       </main>
       {import.meta.env.DEV && (

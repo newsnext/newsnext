@@ -10,7 +10,7 @@ interface HeaderProps {
 
 export function Header({ scrollContainerRef }: HeaderProps) {
   return (
-    <header className="fixed -top-0.5 inset-x-0 z-20 p-4 pointer-events-none">
+    <header className="fixed -top-0.5 inset-x-0 z-20 p-6 pointer-events-none">
       <div className="h-11 flex items-center gap-3 overflow-x-auto scrollbar-hidden pointer-events-auto md:pointer-events-none">
         {/* Left Section - Tabs */}
         <div className="shrink-0 flex-1 flex justify-end gap-3">
