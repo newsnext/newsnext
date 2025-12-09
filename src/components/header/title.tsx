@@ -1,10 +1,81 @@
 import type { RefObject } from "react"
 import { motion, useScroll, useTransform } from "motion/react"
-import { useCallback } from "react"
+import { useCallback, useEffect, useState } from "react"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
+import { COLORS } from "@/typings/constants"
 import { Logo } from "../icons/logo"
 
 interface TitleProps {
   scrollContainerRef?: RefObject<HTMLElement | null>
+}
+
+function ThemeSwitcher({ children }: { children: React.ReactNode }) {
+  const [currentTheme, setCurrentTheme] = useState("red")
+
+  useEffect(() => {
+    const root = document.documentElement
+    const found = COLORS.find(c => root.classList.contains(c))
+    if (found) setCurrentTheme(found)
+  }, [])
+
+  const handleThemeChange = (color: string) => {
+    const root = document.documentElement
+    COLORS.forEach(c => root.classList.remove(c))
+    if (color !== "red") {
+      root.classList.add(color)
+    }
+    setCurrentTheme(color)
+  }
+
+  return (
+    <Popover>
+      <PopoverTrigger
+        onClick={e => e.stopPropagation()}
+        className="cursor-pointer outline-none transition-transform active:scale-95 flex items-center justify-center"
+      >
+        {children}
+      </PopoverTrigger>
+      <PopoverContent
+        side="bottom"
+        align="center"
+        className="p-3 mt-3 sprinkle-theme-400"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="flex flex-wrap gap-3 justify-center">
+          {COLORS.map(color => (
+            <button
+              key={color}
+              className={cn(
+                "size-8 hover:scale-110 transition-transform cursor-pointer flex-center p-0 relative",
+              )}
+              style={{
+                color: `var(--color-${color}-500)`,
+              }}
+              onClick={() => handleThemeChange(color)}
+              title={color}
+            >
+              {currentTheme === color && (
+                <motion.div
+                  layoutId="theme-indicator"
+                  className="absolute -bottom-1 size-1 rounded-full"
+                  style={{
+                    backgroundColor: `var(--color-${color}-500)`,
+                  }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 500,
+                    damping: 30,
+                  }}
+                />
+              )}
+              <Logo className="size-full p-0.5" />
+            </button>
+          ))}
+        </div>
+      </PopoverContent>
+    </Popover>
+  )
 }
 
 export function Title({ scrollContainerRef }: TitleProps) {
@@ -32,7 +103,7 @@ export function Title({ scrollContainerRef }: TitleProps) {
   }, [scrollContainerRef])
 
   return (
-    <button
+    <div
       onClick={handleScrollToTop}
       className="island-pill relative flex gap-2 items-center px-4 hover:bg-black/30 shrink-0 pointer-events-auto cursor-pointer"
     >
@@ -52,15 +123,18 @@ export function Title({ scrollContainerRef }: TitleProps) {
           stroke="currentColor"
           strokeWidth="1"
           strokeLinecap="round"
+          strokeLinejoin="round"
           className="text-theme-400"
         />
       </svg>
-      <Logo className="text-theme-400/80 size-5" />
+      <ThemeSwitcher>
+        <Logo className="text-theme-400/80 size-5" />
+      </ThemeSwitcher>
       <span className="text-xl font-brand font-bold whitespace-nowrap">
         News
         <span className="text-theme-400">N</span>
         ext
       </span>
-    </button>
+    </div>
   )
 }

@@ -4,7 +4,7 @@ interface ProgressBarData {
   label: string
   value: number
   max: number
-  icon?: JSX.Element
+  icon?: React.ReactNode
 }
 
 const progressBarsData: ProgressBarData[] = [

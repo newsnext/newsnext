@@ -1,7 +1,7 @@
-import { useSortable } from "@/hooks/use-sortable"
+import type { ReactNode } from "react"
 import { motion } from "motion/react"
-import { ReactNode } from "react"
 import { createPortal } from "react-dom"
+import { useSortable } from "@/hooks/use-sortable"
 
 interface SortableWidgetProps {
   id: string

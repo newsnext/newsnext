@@ -67,7 +67,7 @@ export default function FundWidget({
 
   const sliderTransition = {
     duration: 0.5,
-    ease: [0.56, 0.03, 0.12, 1.04],
+    ease: [0.56, 0.03, 0.12, 1.04] as const,
   }
 
   const swipeToAction = (direction: number) => {
@@ -84,9 +84,8 @@ export default function FundWidget({
     // Only swipe down if not at the first div (activeDiv !== 0)
     if (dragDistanceY > swipeThreshold) {
       swipeToAction(-1)
-    }
+    } else if (dragDistanceY < -swipeThreshold) {
     // Only swipe up if not at the last div (activeDiv !== len - 1)
-    else if (dragDistanceY < -swipeThreshold) {
       swipeToAction(1)
     }
 
@@ -116,7 +115,7 @@ export default function FundWidget({
       >
         <div
           className={cn(
-            "absolute inset-0 -z-10 h-full w-full items-center bg-gradient-to-r from-violet-200 to-pink-200",
+            "absolute inset-0 -z-10 h-full w-full items-center bg-linear-to-r from-violet-200 to-pink-200",
             backgroundClassName,
           )}
         />
@@ -135,7 +134,7 @@ export default function FundWidget({
                 dragConstraints={{ top: 0, bottom: 0 }}
                 dragElastic={1}
                 onDragEnd={(_, dragInfo) => draghandler(dragInfo)}
-                onDrag={(event, info) => setDragDistance(info.offset.y)}
+                onDrag={(_event, info) => setDragDistance(info.offset.y)}
                 style={{
                   filter: `blur(${blurValue}px)`,
                   transform: `rotateY(${rotateYValue}deg)`,

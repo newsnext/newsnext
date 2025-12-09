@@ -79,7 +79,7 @@ const StudyTimer: React.FC<StudyTimerProps> = ({ segments = testStudyTimerProps.
   )
 }
 
-const SegmentBar: React.FC<{ segment: Segment, totalSum: number }> = ({ segment, totalSum }) => {
+function SegmentBar({ segment, totalSum }: { segment: Segment, totalSum: number }) {
   const widthPercent = (segment.value / totalSum) * 100
 
   return (

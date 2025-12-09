@@ -3,6 +3,7 @@
 @import "./themes.css";
 @import "./utilities.css";
 @import "./safalist.css";
+@import "./colors.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -76,7 +77,7 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50 m-0 p-0;
+    @apply border-border outline-ring/0 outline-none m-0 p-0;
   }
 
   body {

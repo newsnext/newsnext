@@ -1,1 +1,35 @@
-export const COLORS = ["red", "orange", "amber", "yellow", "lime", "green", "emerald", "teal", "cyan", "sky", "blue", "indigo", "violet", "purple", "fuchsia", "pink", "rose", "slate", "gray", "zinc", "neutral", "stone"]
+export const COLORS = [
+  // Red & Pink
+  "red",
+  "rose",
+  "pink",
+  "fuchsia",
+
+  // Purple
+  "purple",
+  "violet",
+  "indigo",
+
+  // Blue
+  "blue",
+  "sky",
+  "cyan",
+
+  // Green
+  "teal",
+  "emerald",
+  "green",
+  "lime",
+
+  // Yellow & Orange
+  "yellow",
+  "amber",
+  "orange",
+
+  // Gray
+  "slate",
+  "gray",
+  "zinc",
+  "neutral",
+  "stone",
+]

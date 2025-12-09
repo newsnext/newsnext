@@ -1,5 +1,4 @@
 import { TriangleAlert } from "lucide-react"
-import React from "react"
 
 const SecurityAlert = () => {
   const riskValue = "139 532"
