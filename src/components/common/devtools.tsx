@@ -5,7 +5,7 @@ export const TanStackDevtools
     ? lazy(() =>
         Promise.all([
           import("@tanstack/react-query-devtools"),
-          import("@tanstack/router-devtools"),
+          import("@tanstack/react-router-devtools"),
         ]).then(([reactQuery, router]) => ({
           default: () => (
             <>

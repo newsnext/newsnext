@@ -3,6 +3,7 @@ import { motion, useScroll, useTransform } from "motion/react"
 import { useCallback, useEffect, useState } from "react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
+import { handleThemeSwitch, THEME_KEY } from "@/lib/utils/swith-theme"
 import { COLORS } from "@/typings/constants"
 import { Logo } from "../icons/logo"
 
@@ -10,22 +11,21 @@ interface TitleProps {
   scrollContainerRef?: RefObject<HTMLElement | null>
 }
 
-function ThemeSwitcher({ children }: { children: React.ReactNode }) {
-  const [currentTheme, setCurrentTheme] = useState("red")
+function ThemeSwitcher() {
+  const [currentTheme, setCurrentTheme] = useState("")
 
   useEffect(() => {
-    const root = document.documentElement
-    const found = COLORS.find(c => root.classList.contains(c))
-    if (found) setCurrentTheme(found)
+    const color = localStorage.getItem(THEME_KEY)
+    if (color) {
+      setCurrentTheme(color)
+    }
   }, [])
 
-  const handleThemeChange = (color: string) => {
-    const root = document.documentElement
-    COLORS.forEach(c => root.classList.remove(c))
-    root.classList.add(color)
-    setCurrentTheme(color)
-    localStorage.setItem("theme", color)
-  }
+  useEffect(() => {
+    if (currentTheme) {
+      handleThemeSwitch(currentTheme)
+    }
+  }, [currentTheme])
 
   return (
     <Popover>
@@ -33,7 +33,7 @@ function ThemeSwitcher({ children }: { children: React.ReactNode }) {
         onClick={e => e.stopPropagation()}
         className="cursor-pointer outline-none transition-transform active:scale-95 flex items-center justify-center"
       >
-        {children}
+        <Logo className="text-theme-500 size-5" />
       </PopoverTrigger>
       <PopoverContent
         side="bottom"
@@ -46,10 +46,10 @@ function ThemeSwitcher({ children }: { children: React.ReactNode }) {
             <button
               key={color}
               className={cn(
-                "text-theme-400 size-8 hover:scale-110 transition-transform cursor-pointer flex-center p-0 relative",
+                "text-theme-500 size-8 hover:scale-110 transition-transform cursor-pointer flex-center p-0 relative",
                 color,
               )}
-              onClick={() => handleThemeChange(color)}
+              onClick={() => setCurrentTheme(color)}
               title={color}
             >
               {currentTheme === color && (
@@ -121,9 +121,7 @@ export function Title({ scrollContainerRef }: TitleProps) {
           className="text-theme-400"
         />
       </svg>
-      <ThemeSwitcher>
-        <Logo className="text-theme-400 size-5" />
-      </ThemeSwitcher>
+      <ThemeSwitcher />
       <span className="text-xl font-brand font-bold whitespace-nowrap">
         News
         <span className="text-theme-400">N</span>

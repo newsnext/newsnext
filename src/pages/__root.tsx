@@ -19,17 +19,19 @@ function RootComponent() {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
 
   return (
-    <div
-      ref={scrollContainerRef}
-      className="relative h-full w-full overflow-y-auto scrollbar-hidden"
-    >
-      <Header scrollContainerRef={scrollContainerRef} />
-      <main className="px-2 sm:px-6 my-22">
-        <Outlet />
-      </main>
+    <>
+      <div
+        ref={scrollContainerRef}
+        className="relative h-full w-full overflow-y-auto scrollbar-hidden"
+      >
+        <Header scrollContainerRef={scrollContainerRef} />
+        <main className="px-2 sm:px-6 my-22">
+          <Outlet />
+        </main>
+      </div>
       <Suspense>
         <TanStackDevtools />
       </Suspense>
-    </div>
+    </>
   )
 }
