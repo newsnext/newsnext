@@ -22,10 +22,9 @@ function ThemeSwitcher({ children }: { children: React.ReactNode }) {
   const handleThemeChange = (color: string) => {
     const root = document.documentElement
     COLORS.forEach(c => root.classList.remove(c))
-    if (color !== "red") {
-      root.classList.add(color)
-    }
+    root.classList.add(color)
     setCurrentTheme(color)
+    localStorage.setItem("theme", color)
   }
 
   return (
@@ -47,21 +46,16 @@ function ThemeSwitcher({ children }: { children: React.ReactNode }) {
             <button
               key={color}
               className={cn(
-                "size-8 hover:scale-110 transition-transform cursor-pointer flex-center p-0 relative",
+                "text-theme-400 size-8 hover:scale-110 transition-transform cursor-pointer flex-center p-0 relative",
+                color,
               )}
-              style={{
-                color: `var(--color-${color}-500)`,
-              }}
               onClick={() => handleThemeChange(color)}
               title={color}
             >
               {currentTheme === color && (
                 <motion.div
                   layoutId="theme-indicator"
-                  className="absolute -bottom-1 size-1 rounded-full"
-                  style={{
-                    backgroundColor: `var(--color-${color}-500)`,
-                  }}
+                  className="absolute -bottom-1 size-1 rounded-full bg-theme-500"
                   transition={{
                     type: "spring",
                     stiffness: 500,
@@ -128,7 +122,7 @@ export function Title({ scrollContainerRef }: TitleProps) {
         />
       </svg>
       <ThemeSwitcher>
-        <Logo className="text-theme-400/80 size-5" />
+        <Logo className="text-theme-400 size-5" />
       </ThemeSwitcher>
       <span className="text-xl font-brand font-bold whitespace-nowrap">
         News
