@@ -1,7 +1,7 @@
 import type { RefObject } from "react"
+import { Popover, PopoverContent, PopoverTrigger } from "@newsnext/ui/components/popover"
 import { motion, useScroll, useTransform } from "motion/react"
 import { useCallback, useEffect, useState } from "react"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { handleThemeSwitch, THEME_KEY } from "@/lib/utils/swith-theme"
 import { COLORS } from "@/typings/constants"

@@ -1,6 +1,5 @@
-import type { COLORS } from "./constants"
+import type { Color } from "./constants"
 
-export type Color = typeof COLORS[number]
 export type SourceType = "hottest" | "realtime" | "normal"
 
 export interface SubSource {

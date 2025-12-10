@@ -1,0 +1,21 @@
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "new-york",
+  "rsc": false,
+  "tsx": true,
+  "tailwind": {
+    "config": "",
+    "css": "src/styles/globals.css",
+    "baseColor": "neutral",
+    "cssVariables": true,
+    "prefix": ""
+  },
+  "aliases": {
+    "components": "@newsnext/ui/components",
+    "utils": "@newsnext/ui/lib/utils",
+    "ui": "@newsnext/ui/components",
+    "lib": "@newsnext/ui/lib",
+    "hooks": "@newsnext/ui/hooks"
+  },
+  "iconLibrary": "lucide"
+}

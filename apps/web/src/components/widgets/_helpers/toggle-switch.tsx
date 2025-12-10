@@ -1,4 +1,4 @@
-import { Switch } from "@/components/ui/switch"
+import { Switch } from "@newsnext/ui/components/switch"
 
 interface ToggleSwitchProps {
   defaultChecked?: boolean

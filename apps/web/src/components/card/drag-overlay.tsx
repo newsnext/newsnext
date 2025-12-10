@@ -1,7 +1,7 @@
+import { Button } from "@newsnext/ui/components/button"
 import { isIOS } from "react-device-detect"
 import { cn } from "@/lib/utils"
 import { PhDotsSixVerticalDuotone } from "../icons/ph"
-import { Button } from "../ui/button"
 import { MOCK_SOURCES } from "./mock-data"
 
 interface DragOverlayProps {

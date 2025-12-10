@@ -1,7 +1,7 @@
 import fs from "node:fs"
 import path from "node:path"
-import { ROOT_DIR } from "../root"
 import { COLORS } from "../../src/typings/constants"
+import { ROOT_DIR } from "../root"
 
 const TARGET_FILE = path.resolve(ROOT_DIR, "src", "styles", "themes.css")
 

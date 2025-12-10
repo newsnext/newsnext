@@ -1,11 +1,11 @@
 import type { CardProps } from "./index"
+import { Button } from "@newsnext/ui/components/button"
 import { useEffect } from "react"
 import { isIOS } from "react-device-detect"
 import { createPortal } from "react-dom"
 import { useSortable } from "@/hooks/use-sortable"
 import { cn } from "@/lib/utils"
 import { PhDotsSixVerticalDuotone } from "../icons/ph"
-import { Button } from "../ui/button"
 import { DragOverlay } from "./drag-overlay"
 import Card from "./index"
 

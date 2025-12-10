@@ -1,12 +1,6 @@
-import type { ClassValue } from "clsx"
-import { clsx } from "clsx"
 import { $fetch } from "ofetch"
-import { twMerge } from "tailwind-merge"
 
-
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
-}
+export * from "@newsnext/ui/lib/utils"
 
 export const myFetch = $fetch.create({
   headers: {

@@ -4,7 +4,16 @@
       "path": "./apps/web/tsconfig.json"
     },
     {
-      // "path": "./tsconfig.node.json"
+      "path": "./servers/api/tsconfig.json"
+    },
+    {
+      "path": "./apps/extension/tsconfig.json"
+    },
+    {
+      "path": "./packages/components/tsconfig.json"
+    },
+    {
+      "path": "./packages/styles/tsconfig.json"
     }
   ],
   "files": []

@@ -1,10 +1,11 @@
+import type { Color } from "@/typings/constants"
 import { COLORS } from "@/typings/constants"
 import FAVICON_SVG from "/icon.svg?url&raw"
 
 /**
  * --500
  */
-export const THEME_COLOR_HEX: Record<string, string> = {
+export const THEME_COLOR_HEX: Record<Color, string> = {
   red: "#EF4444",
   rose: "#F43F5E",
   pink: "#EC4899",
@@ -31,10 +32,15 @@ export const THEME_COLOR_HEX: Record<string, string> = {
 
 export const THEME_KEY = "newsnext-theme"
 
+export function isThemeColor(value: string): value is Color {
+  return COLORS.includes(value as Color)
+}
+
 export function handleThemeSwitch(color: string) {
   const root = document.documentElement
+  if (!isThemeColor(color)) return
   Array.from(root.classList.values()).reverse().forEach((c) => {
-    if (COLORS.includes(c)) root.classList.remove(c)
+    if (isThemeColor(c)) root.classList.remove(c)
   })
   root.classList.add(color)
   localStorage.setItem(THEME_KEY, color)

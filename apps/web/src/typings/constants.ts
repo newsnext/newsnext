@@ -32,4 +32,6 @@ export const COLORS = [
   "zinc",
   "neutral",
   "stone",
-]
+] as const
+
+export type Color = typeof COLORS[number]

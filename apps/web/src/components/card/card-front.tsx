@@ -1,3 +1,4 @@
+import { Button } from "@newsnext/ui/components/button"
 import { cn } from "@/lib/utils"
 import {
   PhArrowCounterClockwiseDuotone,
@@ -5,7 +6,6 @@ import {
   PhStarDuotone,
   PhStarFill,
 } from "../icons/ph"
-import { Button } from "../ui/button"
 import { useCard } from "./card-context"
 import { Hottest } from "./hottest"
 import { Timeline } from "./timeline"

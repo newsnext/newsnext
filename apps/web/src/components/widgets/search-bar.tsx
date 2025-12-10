@@ -1,6 +1,6 @@
+import { Input } from "@newsnext/ui/components/input"
 import { useEffect, useRef, useState } from "react"
 import { PhMagnifyingGlass } from "@/components/icons/ph"
-import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 
 export function SearchBar({
