@@ -1,5 +1,5 @@
-import type { Color } from "@/typings/constants"
-import { COLORS } from "@/typings/constants"
+import type { Color } from "@newsnext/shared/types"
+import { COLORS } from "@newsnext/shared/constants"
 import FAVICON_SVG from "/icon.svg?url&raw"
 
 /**

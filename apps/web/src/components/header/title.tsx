@@ -1,10 +1,10 @@
 import type { RefObject } from "react"
+import { COLORS } from "@newsnext/shared/constants"
 import { Popover, PopoverContent, PopoverTrigger } from "@newsnext/ui/components/popover"
+import { cn } from "@newsnext/ui/lib/utils"
 import { motion, useScroll, useTransform } from "motion/react"
 import { useCallback, useEffect, useState } from "react"
-import { cn } from "@/lib/utils"
 import { handleThemeSwitch, THEME_KEY } from "@/lib/utils/swith-theme"
-import { COLORS } from "@/typings/constants"
 import { Logo } from "../icons/logo"
 
 interface TitleProps {

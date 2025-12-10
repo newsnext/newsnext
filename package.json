@@ -16,7 +16,9 @@
     }
   },
   "scripts": {
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "dev": "bun run dev:web",
+    "dev:web": "bun --filter=@newsnext/{web,ui} run dev "
   },
   "dependencies": {
     "zod": "^4.1.13"

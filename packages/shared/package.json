@@ -1,0 +1,13 @@
+{
+  "name": "@newsnext/shared",
+  "type": "module",
+  "private": true,
+  "sideEffects": false,
+  "exports": {
+    "./constants": "./src/constants/index.ts",
+    "./types": "./src/typings/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  }
+}

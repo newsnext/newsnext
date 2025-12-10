@@ -4,7 +4,6 @@ import react from "@vitejs/plugin-react"
 import Icons from "unplugin-icons/vite"
 import TurboConsole from "unplugin-turbo-console/vite"
 import { defineConfig } from "vite"
-import { ROOT_DIR } from "./scripts/root"
 
 export default defineConfig({
   server: {
@@ -37,7 +36,7 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      "@": path.resolve(ROOT_DIR, "src"),
+      "@": path.resolve(__dirname, "src"),
     },
   },
 })

@@ -1,4 +1,4 @@
-import type { Color } from "./constants"
+import type { Color } from "@newsnext/shared/types"
 
 export type SourceType = "hottest" | "realtime" | "normal"
 
