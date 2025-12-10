@@ -1,0 +1,14 @@
+{
+  "name": "@newsnext/sources",
+  "type": "module",
+  "private": true,
+  "license": "MPL-2.0",
+  "exports": {
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@newsnext/shared": "workspace:*"
+  }
+}

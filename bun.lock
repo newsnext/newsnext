@@ -5,6 +5,7 @@
     "": {
       "name": "newsnext",
       "dependencies": {
+        "ofetch": "^1.5.1",
         "zod": "^4.1.13",
       },
       "devDependencies": {
@@ -74,6 +75,12 @@
     },
     "packages/shared": {
       "name": "@newsnext/shared",
+    },
+    "packages/sources": {
+      "name": "@newsnext/sources",
+      "dependencies": {
+        "@newsnext/shared": "workspace:*",
+      },
     },
     "packages/ui": {
       "name": "@newsnext/ui",
@@ -363,6 +370,8 @@
     "@newsnext/extension": ["@newsnext/extension@workspace:apps/extension"],
 
     "@newsnext/shared": ["@newsnext/shared@workspace:packages/shared"],
+
+    "@newsnext/sources": ["@newsnext/sources@workspace:packages/sources"],
 
     "@newsnext/ui": ["@newsnext/ui@workspace:packages/ui"],
 

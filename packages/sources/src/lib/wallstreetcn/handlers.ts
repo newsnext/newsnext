@@ -1,5 +1,5 @@
-import { myFetch } from "@/lib/utils"
 import { defineSourceHandler } from "@/typings/source"
+import { myFetch } from "@/utils"
 
 interface Item {
   uri: string

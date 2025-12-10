@@ -21,6 +21,7 @@
     "dev:web": "bun --filter=@newsnext/{web,ui} run dev "
   },
   "dependencies": {
+    "ofetch": "^1.5.1",
     "zod": "^4.1.13"
   },
   "devDependencies": {
