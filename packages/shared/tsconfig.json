@@ -1,5 +1,5 @@
 {
-  "extends": "../../tsconfig.web.json",
+  "extends": "@newsnext/tsconfigs/base.json",
   "compilerOptions": {
     "baseUrl": "."
   },

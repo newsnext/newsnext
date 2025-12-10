@@ -15,6 +15,10 @@
     "postinstall": "wxt prepare"
   },
   "dependencies": {
+    "@newsnext/ui": "workspace:*",
+    "@tanstack/react-query": "^5.90.12",
+    "@webext-core/messaging": "^2.3.0",
+    "@webext-core/proxy-service": "^1.2.1",
     "react": "catalog:",
     "react-dom": "catalog:"
   },

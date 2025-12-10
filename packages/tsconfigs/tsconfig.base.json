@@ -1,25 +1,30 @@
 {
+  "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
-    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
-    "target": "ES2023",
-    "lib": ["ES2023"],
     "moduleDetection": "force",
-    "baseUrl": ".",
+    /* Modules */
     "module": "ESNext",
-
-    /* Bundler mode */
     "moduleResolution": "bundler",
-    "types": ["bun"],
+    "resolveJsonModule": true,
     "allowImportingTsExtensions": true,
 
-    /* Linting */
+    /* Type Checking */
     "strict": true,
     "noFallthroughCasesInSwitch": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
+
+    /* Emit */
     "noEmit": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+
+    /* Interop Constraints */
+    "isolatedModules": true,
     "verbatimModuleSyntax": true,
     "erasableSyntaxOnly": true,
+    /* Completeness */
     "skipLibCheck": true,
     "noUncheckedSideEffectImports": true
   }

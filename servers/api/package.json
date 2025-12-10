@@ -1,5 +1,7 @@
 {
   "name": "@newsnext/api",
+  "type": "module",
+  "private": true,
   "license": "MPL-2.0",
   "scripts": {
     "dev": "bun run --hot src/index.ts",

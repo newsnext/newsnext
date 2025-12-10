@@ -1,0 +1,11 @@
+{
+  "name": "@newsnext/tsconfigs",
+  "type": "module",
+  "private": true,
+  "license": "MPL-2.0",
+  "exports": {
+    "./base.json": "./tsconfig.base.json",
+    "./server.json": "./tsconfig.server.json",
+    "./web.json": "./tsconfig.web.json"
+  }
+}

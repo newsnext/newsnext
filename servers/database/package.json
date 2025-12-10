@@ -1,0 +1,13 @@
+{
+  "name": "@newsnext/database",
+  "type": "module",
+  "private": true,
+  "license": "MPL-2.0",
+  "scripts": {},
+  "dependencies": {
+    "drizzle-orm": "^0.45.0"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.31.8"
+  }
+}
