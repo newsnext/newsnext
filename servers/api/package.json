@@ -1,0 +1,11 @@
+{
+  "name": "@newsnext/api",
+  "license": "MPL-2.0",
+  "scripts": {
+    "dev": "bun run --hot src/index.ts",
+    "build": "tsdown src/index.ts --outDir dist --dts"
+  },
+  "dependencies": {
+    "hono": "^4.10.8"
+  }
+}

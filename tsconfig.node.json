@@ -1,5 +1,4 @@
 {
-  "extends": "nitro/tsconfig",
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
     "target": "ES2023",
@@ -10,11 +9,6 @@
 
     /* Bundler mode */
     "moduleResolution": "bundler",
-    "paths": {
-      "@/*": [
-        "./src/*"
-      ]
-    },
     "types": ["node"],
     "allowImportingTsExtensions": true,
 
@@ -28,6 +22,5 @@
     "erasableSyntaxOnly": true,
     "skipLibCheck": true,
     "noUncheckedSideEffectImports": true
-  },
-  "include": ["vite.config.ts", "src/api/**/*.ts", "root.ts", "scripts/**/*.ts"]
+  }
 }
