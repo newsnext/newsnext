@@ -5,38 +5,45 @@ import Icons from "unplugin-icons/vite"
 import TurboConsole from "unplugin-turbo-console/vite"
 import { defineConfig } from "vite"
 
-export default defineConfig({
-  server: {
-    port: 3001,
-    strictPort: true,
-    host: true,
-    proxy: {
-      "/api": {
-        target: "https://newsnow.busiyi.world/api",
-        changeOrigin: true,
-        rewrite: path => path.replace(/^\/api/, ""),
+export default defineConfig(({ mode }) => {
+  const isDEV = mode !== "production"
+  return {
+    logLevel: isDEV ? "info" : "warn",
+    server: {
+      port: 3001,
+      strictPort: true,
+      host: true,
+      proxy: {
+        "/api": {
+          target: "https://newsnow.busiyi.world/api",
+          changeOrigin: true,
+          rewrite: path => path.replace(/^\/api/, ""),
+        },
       },
     },
-  },
-  plugins: [
-    react(),
-    Icons({
-      compiler: "jsx",
-      jsx: "react",
-    }),
-    tanstackRouter({
-      target: "react",
-      autoCodeSplitting: true,
-      routesDirectory: "./src/pages",
-      generatedRouteTree: "./src/routeTree.gen.ts",
-      routeFileIgnorePrefix: "-",
-      quoteStyle: "double",
-    }),
-    TurboConsole(),
-  ],
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "src"),
+    optimizeDeps: {
+      force: false,
     },
-  },
+    plugins: [
+      react(),
+      Icons({
+        compiler: "jsx",
+        jsx: "react",
+      }),
+      tanstackRouter({
+        target: "react",
+        autoCodeSplitting: true,
+        routesDirectory: "./src/pages",
+        generatedRouteTree: "./src/routeTree.gen.ts",
+        routeFileIgnorePrefix: "-",
+        quoteStyle: "double",
+      }),
+      TurboConsole(),
+    ],
+    resolve: {
+      alias: {
+        "@": path.resolve(__dirname, "src"),
+      },
+    },
+  }
 })

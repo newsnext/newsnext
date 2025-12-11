@@ -67,6 +67,7 @@
       "devDependencies": {
         "@iconify-json/ph": "^1.2.2",
         "@newsnext/shared": "workspace:*",
+        "@newsnext/vite-plugin-tw": "workspace:*",
         "@svgr/core": "^8.1.0",
         "@svgr/plugin-jsx": "^8.1.0",
         "@tanstack/react-query-devtools": "^5.91.1",
@@ -77,6 +78,13 @@
         "unplugin-icons": "^22.5.0",
         "unplugin-turbo-console": "^2.3.0",
         "vite": "npm:rolldown-vite@7.2.10",
+      },
+    },
+    "packages/misc/vite-plugin-tw": {
+      "name": "@newsnext/vite-plugin-tw",
+      "version": "0.0.1",
+      "peerDependencies": {
+        "vite": "^7",
       },
     },
     "packages/shared": {
@@ -404,6 +412,8 @@
     "@newsnext/tsconfigs": ["@newsnext/tsconfigs@workspace:packages/tsconfigs"],
 
     "@newsnext/ui": ["@newsnext/ui@workspace:packages/ui"],
+
+    "@newsnext/vite-plugin-tw": ["@newsnext/vite-plugin-tw@workspace:packages/misc/vite-plugin-tw"],
 
     "@newsnext/web": ["@newsnext/web@workspace:apps/web"],
 

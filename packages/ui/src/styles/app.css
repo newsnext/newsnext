@@ -1,11 +1,13 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "./sources.css";
 @import "./themes.css";
 @import "./utilities.css";
 @import "./safalist.css";
 @import "./colors.css";
 @import "./fonts.css";
+
+/* @source not "../components"; */
+@source "../../../../apps/web/src";
 
 @custom-variant dark (&:is(.dark *));
 

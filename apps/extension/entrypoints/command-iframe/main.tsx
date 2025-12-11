@@ -8,15 +8,14 @@ import {
 } from "@newsnext/ui/components/command"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import ReactDOM from "react-dom/client"
-import "@newsnext/ui/globals.css"
-import "./app.css"
+import "@newsnext/ui/styles/command-bar.css"
 
 export const queryClient = new QueryClient()
 const rootElement = document.getElementById("app")!
 
 function CommandPalette() {
   return (
-    <Command className="rounded-lg border shadow-md">
+    <Command className="sprinkle-theme-400 bg-neutral-800 rounded-lg border shadow-md">
       <CommandInput placeholder="Type a command or search..." />
       <CommandList>
         <CommandEmpty>No results found.</CommandEmpty>

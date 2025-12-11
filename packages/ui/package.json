@@ -8,12 +8,14 @@
     "./components/*": "./src/components/*.tsx",
     "./lib/*": "./src/lib/*.ts",
     "./hooks/*": "./src/hooks/*.ts",
-    "./globals.css": "./dist/globals.css"
+    "./styles/*": "./bundles/*"
   },
   "scripts": {
-    "_": "tailwindcss -i ./src/styles/globals.css -o ./dist/globals.css",
+    "_": "tailwindcss -i ./src/styles/${FILE:-app.css} -o ./bundles/${FILE:-app.css}",
     "build": "bun run _ --minify",
     "dev": "bun run _ --watch",
+    "build:command-bar": "FILE=command-bar.css bun run build",
+    "dev:command-bar": "FILE=command-bar.css bun run dev",
     "tw:themes": "bun run scripts/tw/themes.ts",
     "tw:safelist": "bun run scripts/tw/safelist.ts"
   },
