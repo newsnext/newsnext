@@ -3,7 +3,7 @@ import { createRouter, RouterProvider } from "@tanstack/react-router"
 import ReactDOM from "react-dom/client"
 import { handleThemeSwitch, THEME_KEY } from "./lib/utils/swith-theme"
 import { routeTree } from "./routeTree.gen"
-import "@newsnext/ui/styles/app.css"
+import "./globals.css"
 
 // Initialize favicon on load
 const theme = localStorage.getItem(THEME_KEY)

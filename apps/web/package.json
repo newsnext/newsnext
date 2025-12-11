@@ -5,9 +5,8 @@
   "private": true,
   "license": "MPL-2.0",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "lint": "eslint .",
+    "dev": "bun run --bun vite",
+    "build": "bun run --bun tsc -b && bun run --bun vite build",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -34,11 +33,13 @@
     "@newsnext/shared": "workspace:*",
     "@svgr/core": "^8.1.0",
     "@svgr/plugin-jsx": "^8.1.0",
+    "@tailwindcss/vite": "catalog:",
     "@tanstack/react-query-devtools": "^5.91.1",
     "@tanstack/react-router-devtools": "^1.140.0",
     "@tanstack/router-plugin": "^1.139.14",
     "@vitejs/plugin-react": "^5.1.1",
     "react-scan": "^0.4.3",
+    "tailwindcss": "catalog:",
     "unplugin-icons": "^22.5.0",
     "unplugin-turbo-console": "^2.3.0",
     "vite": "npm:rolldown-vite@7.2.10"

@@ -1,13 +1,12 @@
 @import "tailwindcss";
-@import "tw-animate-css";
-@import "./themes.css";
-@import "./utilities.css";
-@import "./safalist.css";
-@import "./colors.css";
-@import "./fonts.css";
+@import "@newsnext/ui/styles/animates.css";
+@import "@newsnext/ui/styles/themes.css";
+@import "@newsnext/ui/styles/utilities.css";
+@import "@newsnext/ui/styles/safalist.css";
+@import "@newsnext/ui/styles/colors.css";
+@import "@newsnext/ui/styles/fonts.css";
 
-/* @source not "../components"; */
-@source "../../../../apps/web/src";
+@source "../../../../packages/ui/src";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -85,7 +84,7 @@
   }
 
   body {
-    @apply h-screen bg-background text-foreground sprinkle-theme-400;
+    @apply h-screen text-foreground;
   }
 
   #root {
@@ -95,25 +94,5 @@
   .grabbing,
   .grabbing * {
     cursor: grabbing !important;
-  }
-}
-
-.dark {
-  --sidebar: hsl(240 5.9% 10%);
-  --sidebar-foreground: hsl(240 4.8% 95.9%);
-  --sidebar-primary: hsl(224.3 76.3% 48%);
-  --sidebar-primary-foreground: hsl(0 0% 100%);
-  --sidebar-accent: hsl(240 3.7% 15.9%);
-  --sidebar-accent-foreground: hsl(240 4.8% 95.9%);
-  --sidebar-border: hsl(240 3.7% 15.9%);
-  --sidebar-ring: hsl(217.2 91.2% 59.8%);
-}
-
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
   }
 }

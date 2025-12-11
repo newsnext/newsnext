@@ -38,7 +38,8 @@ function ThemeSwitcher() {
       <PopoverContent
         side="bottom"
         align="center"
-        className="p-3 mt-3 sprinkle-theme-400"
+        sideOffset={20}
+        className="p-3 sprinkle-theme-400 rounded-2xl"
         onClick={e => e.stopPropagation()}
       >
         <div className="flex flex-wrap gap-3 justify-center">

@@ -11,14 +11,16 @@
       "servers/**"
     ],
     "catalog": {
+      "@tailwindcss/vite": "^4.1.18",
       "react": "^19.2.1",
-      "react-dom": "^19.2.1"
+      "react-dom": "^19.2.1",
+      "tailwindcss": "^4.1.18"
     }
   },
   "scripts": {
-    "lint": "eslint .",
+    "lint": "bun run --bun eslint .",
     "dev": "bun run dev:web",
-    "dev:web": "bun --filter=@newsnext/{web,ui} run dev "
+    "dev:web": "bun --filter=@newsnext/web run dev "
   },
   "dependencies": {
     "dotenv": "^17.2.3",

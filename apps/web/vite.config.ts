@@ -1,4 +1,5 @@
 import path from "node:path"
+import tailwindcss from "@tailwindcss/vite"
 import { tanstackRouter } from "@tanstack/router-plugin/vite"
 import react from "@vitejs/plugin-react"
 import Icons from "unplugin-icons/vite"
@@ -8,7 +9,6 @@ import { defineConfig } from "vite"
 export default defineConfig(({ mode }) => {
   const isDEV = mode !== "production"
   return {
-    logLevel: isDEV ? "info" : "warn",
     server: {
       port: 3001,
       strictPort: true,
@@ -39,6 +39,7 @@ export default defineConfig(({ mode }) => {
         quoteStyle: "double",
       }),
       TurboConsole(),
+      tailwindcss(),
     ],
     resolve: {
       alias: {

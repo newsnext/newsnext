@@ -8,7 +8,7 @@ import {
 } from "@newsnext/ui/components/command"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import ReactDOM from "react-dom/client"
-import "@newsnext/ui/styles/command-bar.css"
+import "./globals.css"
 
 export const queryClient = new QueryClient()
 const rootElement = document.getElementById("app")!
