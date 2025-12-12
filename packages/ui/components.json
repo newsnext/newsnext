@@ -5,11 +5,12 @@
   "tsx": true,
   "tailwind": {
     "config": "",
-    "css": "src/styles/globals.css",
+    "css": "src/styles/_globals.css",
     "baseColor": "neutral",
     "cssVariables": true,
     "prefix": ""
   },
+  "iconLibrary": "lucide",
   "aliases": {
     "components": "@newsnext/ui/components",
     "utils": "@newsnext/ui/lib/utils",
@@ -17,5 +18,7 @@
     "lib": "@newsnext/ui/lib",
     "hooks": "@newsnext/ui/hooks"
   },
-  "iconLibrary": "lucide"
+  "registries": {
+    "@hooks": "https://shadcn-hooks.vercel.app/r/{name}.json"
+  }
 }

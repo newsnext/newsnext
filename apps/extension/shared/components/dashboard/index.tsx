@@ -1,9 +1,9 @@
 import type { BaseEventPayload, ElementDragType } from "@atlaskit/pragmatic-drag-and-drop/dist/types/internal-types"
+import { useThrottleFn } from "@newsnext/ui/hooks/use-throttle-fn"
 import { AnimatePresence, motion } from "motion/react"
 import { useCallback, useState } from "react"
 import { SearchBar } from "@/components/widgets"
 import { DndContext } from "@/hooks/use-dnd-context"
-import useThrottleFn from "@/hooks/use-throttle-fn"
 import { reorder } from "@/lib/utils/reorder"
 import { SortableWidget } from "./sortable-widget"
 import { initialWidgets } from "./widgets-config"
@@ -50,10 +50,8 @@ export function Dashboard({ isVisible, onClose }: DashboardProps) {
     [widgets],
   )
 
-  const { run: handleDropTargetChange } = useThrottleFn(handleReorder, {
-    wait: 200,
-    leading: true,
-    trailing: true,
+  const { run: handleDropTargetChange } = useThrottleFn(handleReorder, 200, {
+    edges: ["trailing"],
   })
 
   return (

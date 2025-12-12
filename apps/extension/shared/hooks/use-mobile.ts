@@ -1,1 +1,0 @@
-export * from "@newsnext/ui/hooks/use-mobile"

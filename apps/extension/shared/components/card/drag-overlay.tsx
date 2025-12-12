@@ -13,7 +13,7 @@ export function DragOverlay({ id }: DragOverlayProps) {
   return (
     <div
       className={cn(
-        "flex flex-col rounded-2xl p-4 backdrop-blur-sm",
+        "flex flex-col p-4 backdrop-blur-md",
         `bg-${source.color}-400/40`,
         !isIOS && "rounded-2xl",
       )}

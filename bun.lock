@@ -68,45 +68,6 @@
         "wxt": "^0.20.6",
       },
     },
-    "apps/web": {
-      "name": "@newsnext/web",
-      "version": "0.0.1",
-      "dependencies": {
-        "@atlaskit/pragmatic-drag-and-drop": "^1.7.7",
-        "@atlaskit/pragmatic-drag-and-drop-auto-scroll": "^2.1.2",
-        "@atlaskit/pragmatic-drag-and-drop-hitbox": "^1.1.0",
-        "@newsnext/ui": "workspace:*",
-        "@tanstack/react-query": "^5.90.12",
-        "@tanstack/react-router": "^1.139.14",
-        "clsx": "^2.1.1",
-        "date-fns": "^4.1.0",
-        "defu": "^6.1.4",
-        "es-toolkit": "^1.42.0",
-        "jotai": "^2.15.2",
-        "motion": "^12.23.25",
-        "ofetch": "^1.5.1",
-        "react": "catalog:",
-        "react-device-detect": "^2.2.3",
-        "react-dom": "catalog:",
-        "tailwind-merge": "^3.4.0",
-      },
-      "devDependencies": {
-        "@iconify-json/ph": "^1.2.2",
-        "@newsnext/shared": "workspace:*",
-        "@svgr/core": "^8.1.0",
-        "@svgr/plugin-jsx": "^8.1.0",
-        "@tailwindcss/vite": "catalog:",
-        "@tanstack/react-query-devtools": "^5.91.1",
-        "@tanstack/react-router-devtools": "^1.140.0",
-        "@tanstack/router-plugin": "^1.139.14",
-        "@vitejs/plugin-react": "^5.1.1",
-        "react-scan": "^0.4.3",
-        "tailwindcss": "catalog:",
-        "unplugin-icons": "^22.5.0",
-        "unplugin-turbo-console": "^2.3.0",
-        "vite": "npm:rolldown-vite@7.2.10",
-      },
-    },
     "packages/shared": {
       "name": "@newsnext/shared",
     },
@@ -154,6 +115,7 @@
         "cmdk": "^1.1.1",
         "date-fns": "^4.1.0",
         "embla-carousel-react": "^8.6.0",
+        "es-toolkit": "^1.43.0",
         "input-otp": "^1.4.2",
         "lucide-react": "^0.556.0",
         "react-day-picker": "^9.12.0",
@@ -433,8 +395,6 @@
     "@newsnext/tsconfigs": ["@newsnext/tsconfigs@workspace:packages/tsconfigs"],
 
     "@newsnext/ui": ["@newsnext/ui@workspace:packages/ui"],
-
-    "@newsnext/web": ["@newsnext/web@workspace:apps/web"],
 
     "@nodelib/fs.scandir": ["@nodelib/fs.scandir@2.1.5", "", { "dependencies": { "@nodelib/fs.stat": "2.0.5", "run-parallel": "^1.1.9" } }, "sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g=="],
 
@@ -2131,6 +2091,8 @@
     "@eslint-community/eslint-utils/eslint-visitor-keys": ["eslint-visitor-keys@3.4.3", "", {}, "sha512-wpc+LXeiyiisxPlEkUzU6svyS1frIO3Mgxj1fdy7Pm8Ygzguax2N3Fa/D/ag1WqbOprdI+uY6wMUl8/a2G+iag=="],
 
     "@eslint/eslintrc/globals": ["globals@14.0.0", "", {}, "sha512-oahGvuMGQlPw/ivIYBjVSrWAfWLBeku5tpPE2fOPLi+WHffIWbuh2tCjhyQhTBPMf5E9jDEH4FOmTYgYwbKwtQ=="],
+
+    "@newsnext/ui/es-toolkit": ["es-toolkit@1.43.0", "", {}, "sha512-SKCT8AsWvYzBBuUqMk4NPwFlSdqLpJwmy6AP322ERn8W2YLIB6JBXnwMI2Qsh2gfphT3q7EKAxKb23cvFHFwKA=="],
 
     "@pnpm/network.ca-file/graceful-fs": ["graceful-fs@4.2.10", "", {}, "sha512-9ByhssR2fPVsNZj478qUUbKfmL0+t5BDVyjShtyZZLiK7ZDAArFFfopyOTj0M05wE2tJPisA4iTnnXl2YoPvOA=="],
 

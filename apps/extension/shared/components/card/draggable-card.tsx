@@ -23,7 +23,7 @@ export function DraggableCard({ id, ...props }: DraggableCardProps) {
 
   useEffect(() => {
     if (OverlayContainer) {
-      OverlayContainer!.className += cn("bg-background/50", !isIOS && "rounded-2xl")
+      OverlayContainer!.className += cn("bg-background", !isIOS && "rounded-2xl")
     }
   }, [OverlayContainer])
 

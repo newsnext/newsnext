@@ -1,8 +1,8 @@
 import type { NewsItem } from "@/typings/source"
+import { useIsMobile } from "@newsnext/ui/hooks/use-mobile"
 import { formatDistanceToNow } from "date-fns"
-import { enUS } from "date-fns/locale"
 
-import { useIsMobile } from "@/hooks/use-mobile"
+import { enUS } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 
 export function Timeline({ items }: { items: NewsItem[] }) {

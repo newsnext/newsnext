@@ -1,5 +1,5 @@
 import type { NewsItem } from "@/typings/source"
-import { useIsMobile } from "@/hooks/use-mobile"
+import { useIsMobile } from "@newsnext/ui/hooks/use-mobile"
 import { cn } from "@/lib/utils"
 
 export function Hottest({ items }: { items: NewsItem[] }) {

@@ -1,8 +1,8 @@
 import type { BaseEventPayload, ElementDragType } from "@atlaskit/pragmatic-drag-and-drop/dist/types/internal-types"
+import { useThrottleFn } from "@newsnext/ui/hooks/use-throttle-fn"
 import { motion } from "motion/react"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { DndContext } from "@/hooks/use-dnd-context"
-import useThrottleFn from "@/hooks/use-throttle-fn"
 import { DraggableCard } from "../card/draggable-card"
 
 const ANIMATION_DURATION = 0.2 // 200ms
@@ -38,10 +38,8 @@ export function DesktopBoard({ sourceIds, className, isScattered, onSourceIdsCha
   }, [sourceIds, onSourceIdsChange])
 
   // avoid animation jitter
-  const { run } = useThrottleFn(onDropTargetChange, {
-    leading: true,
-    trailing: true,
-    wait: ANIMATION_DURATION * 1000,
+  const { run } = useThrottleFn(onDropTargetChange, ANIMATION_DURATION * 1000, {
+    edges: ["trailing"],
   })
 
   // Calculate scatter vectors
