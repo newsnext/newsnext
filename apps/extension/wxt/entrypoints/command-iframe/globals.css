@@ -1,4 +1,4 @@
-@import "tailwindcss" source("../command-iframe/");
+@import "tailwindcss" source("../command-iframe");
 @import "@newsnext/ui/styles/animates.css";
 @import "@newsnext/ui/styles/themes.css";
 @import "@newsnext/ui/styles/utilities.css";
@@ -6,7 +6,7 @@
 @import "@newsnext/ui/styles/colors.css";
 @import "@newsnext/ui/styles/fonts.css";
 
-@source "../../../../packages/ui/src";
+@source "../../../../../packages/ui/src/";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -84,11 +84,11 @@
   }
 
   body {
-    @apply h-screen text-foreground;
+    @apply h-screen text-foreground flex-center;
   }
 
   #root {
-    @apply h-full;
+    @apply w-full max-w-2xl;
   }
 
   .grabbing,

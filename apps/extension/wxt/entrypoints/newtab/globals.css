@@ -6,8 +6,8 @@
 @import "@newsnext/ui/styles/colors.css";
 @import "@newsnext/ui/styles/fonts.css";
 
-@source "../../../../packages/ui/src";
-@source "../shared";
+@source "../../../../../packages/ui/src/";
+@source "../../../shared/";
 
 @custom-variant dark (&:is(.dark *));
 
