@@ -3,12 +3,16 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
+      "#/*": [
+        "./wxt/*"
+      ],
       "@/*": [
-        "./src/*"
+        "./shared/*"
       ]
     }
   },
   "include": [
-    "./src"
+    "./web",
+    "./shared"
   ]
 }

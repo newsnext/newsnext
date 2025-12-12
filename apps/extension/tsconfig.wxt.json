@@ -1,0 +1,23 @@
+{
+  "extends": "./.wxt/tsconfig.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "paths": {
+      "#/*": [
+        "./wxt/*"
+      ],
+      "@/*": [
+        "./shared/*"
+      ]
+    },
+    "allowImportingTsExtensions": true
+  },
+  "include": [
+    "./wxt",
+    "./shared",
+    "./.wxt/wxt.d.ts"
+  ],
+  "exclude": [
+    "./web"
+  ]
+}

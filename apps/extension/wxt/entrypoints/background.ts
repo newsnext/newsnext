@@ -1,6 +1,6 @@
 import { browser, defineBackground } from "#imports"
-import { registerCommandBarService } from "@/services"
-import { sendMessage } from "@/services/message"
+import { registerCommandBarService } from "../services"
+import { sendMessage } from "../services/message"
 
 export function currentTab() {
   return new Promise<number>((resolve) => {

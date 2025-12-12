@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import "tailwindcss" source("../command-iframe/");
 @import "@newsnext/ui/styles/animates.css";
 @import "@newsnext/ui/styles/themes.css";
 @import "@newsnext/ui/styles/utilities.css";

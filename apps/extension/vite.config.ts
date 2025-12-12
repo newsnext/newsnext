@@ -7,7 +7,7 @@ import TurboConsole from "unplugin-turbo-console/vite"
 import { defineConfig } from "vite"
 
 export default defineConfig(({ mode }) => {
-  const isDEV = mode !== "production"
+  const _isDEV = mode !== "production"
   return {
     server: {
       port: 3001,
@@ -33,8 +33,8 @@ export default defineConfig(({ mode }) => {
       tanstackRouter({
         target: "react",
         autoCodeSplitting: true,
-        routesDirectory: "./src/pages",
-        generatedRouteTree: "./src/routeTree.gen.ts",
+        routesDirectory: "./web/pages",
+        generatedRouteTree: "./web/routeTree.gen.ts",
         routeFileIgnorePrefix: "-",
         quoteStyle: "double",
       }),
@@ -43,7 +43,8 @@ export default defineConfig(({ mode }) => {
     ],
     resolve: {
       alias: {
-        "@": path.resolve(__dirname, "src"),
+        "#": path.resolve(__dirname, "web"),
+        "@": path.resolve(__dirname, "shared"),
       },
     },
   }

@@ -1,5 +1,5 @@
+import { onMessage, sendMessage } from "#/services/message"
 import { createIframeUi, defineContentScript } from "#imports"
-import { onMessage, sendMessage } from "@/services/message"
 
 export default defineContentScript({
   matches: ["<all_urls>"],

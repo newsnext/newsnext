@@ -11,7 +11,7 @@ import ReactDOM from "react-dom/client"
 import "./globals.css"
 
 export const queryClient = new QueryClient()
-const rootElement = document.getElementById("app")!
+const rootElement = document.getElementById("root")!
 
 function CommandPalette() {
   return (

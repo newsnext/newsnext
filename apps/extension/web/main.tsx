@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createRouter, RouterProvider } from "@tanstack/react-router"
 import ReactDOM from "react-dom/client"
-import { handleThemeSwitch, THEME_KEY } from "./lib/utils/swith-theme"
+import { handleThemeSwitch, THEME_KEY } from "@/lib/utils/swith-theme"
 import { routeTree } from "./routeTree.gen"
 import "./globals.css"
 

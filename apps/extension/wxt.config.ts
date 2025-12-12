@@ -1,10 +1,19 @@
+import path from "node:path"
 import tailwindcss from "@tailwindcss/vite"
+import react from "@vitejs/plugin-react"
+import Icons from "unplugin-icons/vite"
+import TurboConsole from "unplugin-turbo-console/vite"
 import { defineConfig } from "wxt"
 
 // See https://wxt.dev/api/config.html
 export default defineConfig({
-  modules: ["@wxt-dev/module-react"],
   imports: false,
+  srcDir: "./wxt",
+  dev: {
+    server: {
+      port: 3002,
+    },
+  },
   manifest: {
     name: "NewsNext",
     description: "NewsNext is a browser extension that helps you work with your browser",
@@ -26,10 +35,24 @@ export default defineConfig({
       },
     ],
   },
+  hooks: {
+    ready: (wxt) => {
+      wxt.config.alias = {
+        "#": path.resolve(__dirname, "wxt"),
+        "@": path.resolve(__dirname, "shared"),
+      }
+    },
+  },
   vite: () => {
     return {
       plugins: [
         tailwindcss(),
+        TurboConsole(),
+        Icons({
+          compiler: "jsx",
+          jsx: "react",
+        }),
+        react(),
       ],
     }
   },
