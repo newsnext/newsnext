@@ -39,7 +39,7 @@ export function DesktopBoard({ sourceIds, className, isScattered, onSourceIdsCha
 
   // avoid animation jitter
   const { run } = useThrottleFn(onDropTargetChange, ANIMATION_DURATION * 1000, {
-    edges: ["trailing"],
+    edges: ["trailing", "leading"],
   })
 
   // Calculate scatter vectors

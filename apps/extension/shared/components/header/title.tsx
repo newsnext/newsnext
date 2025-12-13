@@ -1,4 +1,4 @@
-import type { RefObject } from "react"
+import type { PropsWithChildren, RefObject } from "react"
 import { COLORS } from "@newsnext/shared/constants"
 import { Popover, PopoverContent, PopoverTrigger } from "@newsnext/ui/components/popover"
 import { cn } from "@newsnext/ui/lib/utils"
@@ -11,7 +11,7 @@ interface TitleProps {
   scrollContainerRef?: RefObject<HTMLElement | null>
 }
 
-function ThemeSwitcher() {
+function ThemeSwitcher({ children }: PropsWithChildren) {
   const [currentTheme, setCurrentTheme] = useState("")
 
   useEffect(() => {
@@ -33,7 +33,7 @@ function ThemeSwitcher() {
         onClick={e => e.stopPropagation()}
         className="cursor-pointer outline-none transition-transform active:scale-95 flex items-center justify-center"
       >
-        <Logo className="text-theme-500 size-5" />
+        {children}
       </PopoverTrigger>
       <PopoverContent
         side="bottom"
@@ -122,7 +122,9 @@ export function Title({ scrollContainerRef }: TitleProps) {
           className="text-theme-400"
         />
       </svg>
-      <ThemeSwitcher />
+      <ThemeSwitcher>
+        <Logo className="text-theme-500 size-5" />
+      </ThemeSwitcher>
       <span className="text-xl font-brand font-bold whitespace-nowrap">
         News
         <span className="text-theme-400">N</span>

@@ -24,6 +24,7 @@
     "dev:ext": "bun --filter=@newsnext/extension run dev:chrome"
   },
   "dependencies": {
+    "defu": "^6.1.4",
     "dotenv": "^17.2.3",
     "ofetch": "^1.5.1",
     "zod": "^4.1.13"

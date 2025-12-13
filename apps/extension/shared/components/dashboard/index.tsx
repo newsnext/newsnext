@@ -51,7 +51,7 @@ export function Dashboard({ isVisible, onClose }: DashboardProps) {
   )
 
   const { run: handleDropTargetChange } = useThrottleFn(handleReorder, 200, {
-    edges: ["trailing"],
+    edges: ["trailing", "leading"],
   })
 
   return (
