@@ -4,11 +4,22 @@
   "private": true,
   "license": "MPL-2.0",
   "exports": {
+    "metadata": "./metadata.json"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build": "bun run build.ts"
   },
   "dependencies": {
-    "@newsnext/shared": "workspace:*"
+    "@newsnext/shared": "workspace:*",
+    "cheerio": "^1.1.2",
+    "dayjs": "^1.11.19",
+    "fast-xml-parser": "^5.3.3",
+    "iconv-lite": "^0.7.1",
+    "md5": "^2.3.0"
+  },
+  "devDependencies": {
+    "@types/md5": "^2.3.6",
+    "mockdate": "^3.0.5"
   }
 }
