@@ -5,10 +5,6 @@ export * from "./source"
 
 export type SourceID = string
 export interface NewsItem {
-  /**
-   * unique
-   */
-  id: string | number
   title: string
   url: string
   /**

@@ -1,10 +1,7 @@
+import _md5 from "md5"
+
 export async function md5(s: string) {
-  // if (isCF) {
-  return await myCrypto(s, "MD5")
-  // } else {
-  //   const { default: _md5 } = await import("md5")
-  //   return _md5(s)
-  // }
+  return _md5(s)
 }
 
 type Algorithm = "MD5" | "SHA-1" | "SHA-256" | "SHA-384" | "SHA-512"

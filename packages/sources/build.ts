@@ -1,17 +1,21 @@
-import { join } from "node:path"
+import { dirname, join } from "node:path"
+import { fileURLToPath } from "node:url"
 import { Glob } from "bun"
 import { build } from "tsdown"
 
-const glob = new Glob("./src/core/*.ts")
-const deepIndexGlob = new Glob("./src/core/**/index.ts")
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const rootDir = __dirname
+
+const glob = new Glob("src/lib/*.ts")
+const deepIndexGlob = new Glob("src/core/**/index.ts")
 
 const files = new Set<string>()
 
-for await (const file of glob.scan(".")) {
+for await (const file of glob.scan(rootDir)) {
   files.add(file)
 }
 
-for await (const file of deepIndexGlob.scan(".")) {
+for await (const file of deepIndexGlob.scan(rootDir)) {
   files.add(file)
 }
 
@@ -20,9 +24,10 @@ const sortedFiles = Array.from(files).sort()
 
 // Generate import statements using dynamic import() as object properties
 const imports = sortedFiles.map((file) => {
-  // Remove ./src/ prefix and .ts extension, convert to relative import path
+  // Remove src/ prefix and .ts extension, convert to relative import path
   // Since index.ts is in src/, we need relative paths from src/
-  const importPath = file.replace(/^\.\/src\//, "./").replace(/\.ts$/, "")
+  // file from scan is like "src/core/github.ts"
+  const importPath = `./${file.replace(/^src\//, "").replace(/\.ts$/, "")}`
 
   // Extract key name from path
   // e.g., "./core/coolapk/index" -> "coolapk"
@@ -43,14 +48,18 @@ ${imports.join(",\n")}
 }
 `
 
-const indexPath = join(process.cwd(), "src", "index.ts")
+const indexPath = join(rootDir, "src", "index.ts")
 await Bun.file(indexPath).write(indexContent)
 
-const { sources } = await import(indexPath)
-console.log(sources)
+// Dynamic import might fail if the file hasn't been written to disk yet or module cache
+// Just log the keys we found
+console.log("Found sources:", imports.map(i => i.split(":")[0].trim()))
+
+// const { sources } = await import("./src/index.ts")
+// console.log(sources)
 
 await build({
   entry: indexPath,
-  outDir: join(process.cwd(), "dist"),
+  outDir: join(rootDir, "dist"),
   dts: true,
 })

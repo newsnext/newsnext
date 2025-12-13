@@ -19,11 +19,13 @@
   },
   "scripts": {
     "lint": "bun run --bun eslint .",
+    "test": "vitest",
     "dev": "bun run dev:web",
     "dev:web": "bun --filter=@newsnext/extension run dev",
     "dev:ext": "bun --filter=@newsnext/extension run dev:chrome"
   },
   "dependencies": {
+    "consola": "^3.4.2",
     "defu": "^6.1.4",
     "dotenv": "^17.2.3",
     "ofetch": "^1.5.1",

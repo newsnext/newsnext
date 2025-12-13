@@ -1,6 +1,6 @@
 export type OmitNever<T> = { [K in keyof T as T[K] extends never ? never : K]: T[K] }
-export type UnionToIntersection<U> =
-  (U extends any ? (x: U) => void : never) extends ((x: infer I) => void) ? I : never
+export type UnionToIntersection<U>
+  = (U extends any ? (x: U) => void : never) extends ((x: infer I) => void) ? I : never
 
 export type MaybePromise<T> = Promise<T> | T
 

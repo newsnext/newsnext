@@ -30,7 +30,7 @@ export type InitalSource = Partial<Omit<Source, "getter" | "namespace" | "id">>
         )[]
       },
       {
-        id: SourceID
+        id?: SourceID
         getter: SourceGetter
       }
     >

@@ -5,10 +5,9 @@ export default defineSource({
   name: "RSS",
   color: "orange",
   home: "https://rss.com/",
-  id: "default",
   ...defineSourceGetterWithParams({
     url: {
-      type: "text",
+      type: "url",
       default: "https://bbs.pcbeta.com/forum.php?mod=rss&fid=563&page=1",
       title: "RSS URL",
     },

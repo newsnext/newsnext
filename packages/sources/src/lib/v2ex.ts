@@ -24,9 +24,8 @@ const share: SourceGetter = async () => {
   const res = await Promise.all(["create", "ideas", "programmer", "share"]
     .map(k => myFetch(`https://www.v2ex.com/feed/${k}.json`) as Promise<Res>))
   return res.map(k => k.items).flat().map(k => ({
-    id: k.id,
     title: k.title,
-    updated: k.date_modified ?? k.date_published,
+    updated: new Date(k.date_modified ?? k.date_published).getTime(),
     url: k.url,
   })).sort((m, n) => m.updated < n.updated ? 1 : -1)
 }

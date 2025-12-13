@@ -1,3 +1,4 @@
+import { sources } from "@newsnext/sources"
 import { Hono } from "hono"
 import { logger } from "hono/logger"
 
@@ -14,12 +15,71 @@ app.get("/boards/:boardId", (c) => {
   return c.text(`Hello Hono! ${boardId}`)
 })
 
-app.get("/sources/:sourceId", (c) => {
+app.get("/sources", async (c) => {
+  return c.json(sources)
+})
+app.get("/sources/:sourceId", async (c) => {
   const sourceId = c.req.param("sourceId")
-  return c.text(`Hello Hono! ${sourceId}`)
+
+  // Expect sourceId to be "group:id"
+  const [group, id = "default"] = sourceId.split(":")
+
+  if (!group || !id) {
+    return c.json({ error: "Invalid source ID format. Expected 'group:id'" }, 400)
+  }
+
+  const sourceGroup = sources[group as keyof typeof sources]
+  if (!sourceGroup) {
+    return c.json({ error: `Source group '${group}' not found` }, 404)
+  }
+
+  const source = sourceGroup[id]
+  if (!source) {
+    return c.json({ error: `Source '${id}' not found in group '${group}'` }, 404)
+  }
+
+  if (!source.getter) {
+    return c.json({ error: "Source does not have a getter" }, 400)
+  }
+
+  // Parse and validate parameters
+  const params: Record<string, any> = {}
+  const query = c.req.query()
+
+  if (source.params) {
+    for (const [key, config] of Object.entries(source.params)) {
+      const val = query[key]
+      if (val !== undefined) {
+        switch (config.type) {
+          case "number":
+            params[key] = Number(val)
+            break
+          case "switch":
+            params[key] = val === "true" || val === "1"
+            break
+          default:
+            params[key] = val
+        }
+      } else {
+        params[key] = config.default
+      }
+    }
+  }
+
+  try {
+    const items = await source.getter(params)
+    return c.json({
+      id: sourceId,
+      updated: Date.now(),
+      items,
+    })
+  } catch (error: any) {
+    console.error(`Error executing source ${sourceId}:`, error)
+    return c.json({ error: error.message || "Internal Server Error" }, 500)
+  }
 })
 
 export default {
-  port: process.env.PORT ?? 3002,
+  port: process.env.PORT ?? 4000,
   fetch: app.fetch,
 }

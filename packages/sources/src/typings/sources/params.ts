@@ -27,6 +27,11 @@ interface Text extends Base {
   default: string
 }
 
+interface Url extends Base {
+  type: "url"
+  default: string
+}
+
 interface Number extends Base {
   type: "number"
   default: number
@@ -40,7 +45,7 @@ interface Switch extends Base {
   default: boolean
 }
 
-export type Parameter = Select | MulitSelect | Text | Switch | Number
+export type Parameter = Select | MulitSelect | Text | Switch | Number | Url
 
 export const ParameterAsserts = {
   isNumber(param: Parameter): param is Number {
@@ -54,6 +59,9 @@ export const ParameterAsserts = {
   },
   isText(param: Parameter): param is Text {
     return param.type === "text"
+  },
+  isUrl(param: Parameter): param is Url {
+    return param.type === "url"
   },
   isSwitch(param: Parameter): param is Switch {
     return param.type === "switch"

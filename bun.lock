@@ -5,6 +5,7 @@
     "": {
       "name": "newsnext",
       "dependencies": {
+        "consola": "^3.4.2",
         "defu": "^6.1.4",
         "dotenv": "^17.2.3",
         "ofetch": "^1.5.1",
@@ -87,6 +88,7 @@
       },
       "devDependencies": {
         "@types/md5": "^2.3.6",
+        "domhandler": "^5.0.3",
         "mockdate": "^3.0.5",
       },
     },
@@ -145,6 +147,7 @@
     "servers/api": {
       "name": "@newsnext/api",
       "dependencies": {
+        "@newsnext/sources": "workspace:*",
         "hono": "^4.10.8",
       },
     },

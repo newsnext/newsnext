@@ -221,5 +221,5 @@ export function parseRelativeDate(date: string, timezone: string = "UTC") {
     }
   }
 
-  return date
+  return new Date(date)
 }

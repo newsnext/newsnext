@@ -8,17 +8,17 @@ import { rss2json } from "./rss2json"
 
 export function defineSource(source: InitalSource): Record<string, SourceWithoutNamespaceKey> {
   const _: Record<string, SourceWithoutNamespaceKey> = {}
-  const main = {
+  const _default = {
     ...typeSafeObjectOmit(source, "sub"),
     interval: source.interval ?? Time.Default,
     category: source.category ?? "others",
   } as SourceWithoutNamespaceKey
   if (source?.sub?.length) {
     source.sub.forEach((subSource) => {
-      _[subSource.id] = { ...main, ...subSource }
+      _[subSource.id] = { ..._default, ...subSource }
     })
-  } else if (main.id && main.getter!) {
-    _[source.id!] = main
+  } else if (_default.getter!) {
+    _[source.id ?? "default"] = _default
   }
   return _
 }
@@ -30,7 +30,6 @@ export function defineRSSSourceGetter(url: string): SourceGetter {
     return data.items.map(item => ({
       title: item.title,
       url: item.link,
-      id: item.link,
       updated: item.created,
     }))
   }
@@ -53,7 +52,6 @@ export function defineRSSHubSourceGetter(route: string, host = "https://rsshub.r
     return data.items.map(item => ({
       title: item.title,
       url: item.url,
-      id: item.id ?? item.url,
       updated: item.date_published,
     }))
   }

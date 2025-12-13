@@ -4,11 +4,12 @@
   "private": true,
   "license": "MPL-2.0",
   "exports": {
-    "metadata": "./metadata.json"
+    ".": "./src/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "build": "bun run build.ts"
+    "build": "bun run build.ts",
+    "test": "bun run vitest"
   },
   "dependencies": {
     "@newsnext/shared": "workspace:*",
@@ -20,6 +21,7 @@
   },
   "devDependencies": {
     "@types/md5": "^2.3.6",
+    "domhandler": "^5.0.3",
     "mockdate": "^3.0.5"
   }
 }

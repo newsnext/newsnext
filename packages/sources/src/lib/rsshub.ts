@@ -6,7 +6,6 @@ export default defineSource({
   color: "orange",
   home: "https://rsshub.app/",
   interval: 1,
-  id: "default",
   ...defineSourceGetterWithParams({
     route: {
       type: "text",
@@ -14,7 +13,7 @@ export default defineSource({
       title: "Route",
     },
     host: {
-      type: "text",
+      type: "url",
       default: "https://rsshub.rssforever.com",
       title: "Host",
     },
