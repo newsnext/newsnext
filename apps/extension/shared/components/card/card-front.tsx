@@ -90,7 +90,7 @@ export function CardFront() {
       {/* Content */}
       <div
         className={cn(
-          "h-full px-2 rounded-2xl py-2 bg-background/70 overflow-y-auto scrollbar-hidden",
+          "h-full px-2 rounded-xl py-2 bg-background/70 overflow-y-auto scrollbar-hidden",
           `sprinkle-${color}-400`,
         )}
       >
