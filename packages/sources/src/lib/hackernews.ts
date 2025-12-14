@@ -7,8 +7,12 @@ const createHNFetcher = (sub: string) => defineHtmlSourceFetcher(() => ({
   fields: {
     title: ".titleline a",
     url: {
-      selector: ".titleline a",
-      attr: "href",
+      selector: "",
+      attr: "id",
+      transform: (id: string | undefined) => {
+        if (!id) return undefined
+        return `https://news.ycombinator.com/item?id=${id}`
+      },
     },
     updated: {
       // Use $el to access next sibling row
