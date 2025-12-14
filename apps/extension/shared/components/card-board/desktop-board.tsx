@@ -1,4 +1,5 @@
 import type { BaseEventPayload, ElementDragType } from "@atlaskit/pragmatic-drag-and-drop/dist/types/internal-types"
+import type { Source } from "@/typings/source"
 import { useThrottleFn } from "@newsnext/ui/hooks/use-throttle-fn"
 import { motion } from "motion/react"
 import { useCallback, useEffect, useRef, useState } from "react"
@@ -9,12 +10,13 @@ const ANIMATION_DURATION = 0.2 // 200ms
 
 interface DesktopBoardProps {
   sourceIds: string[]
+  sourcesMap: Record<string, Source & { id: string }>
   className?: string
   isScattered?: boolean
   onSourceIdsChange?: (sourceIds: string[]) => void
 }
 
-export function DesktopBoard({ sourceIds, className, isScattered, onSourceIdsChange }: DesktopBoardProps) {
+export function DesktopBoard({ sourceIds, sourcesMap, className, isScattered, onSourceIdsChange }: DesktopBoardProps) {
   const [scatterVectors, setScatterVectors] = useState<Record<string, { x: number, y: number }>>({})
   const itemsRef = useRef<Map<string, HTMLLIElement>>(new Map())
 
@@ -156,7 +158,7 @@ export function DesktopBoard({ sourceIds, className, isScattered, onSourceIdsCha
               },
             }}
           >
-            <DraggableCard id={id} />
+            <DraggableCard id={id} source={sourcesMap[id]} />
           </motion.li>
         ))}
       </motion.ol>

@@ -12,7 +12,7 @@ export function Hottest({ items }: { items: NewsItem[] }) {
           href={isMobile ? item.mobileUrl || item.url : item.url}
           target="_blank"
           rel="noreferrer"
-          key={item.id}
+          key={item.url}
           title={item.extra?.hover}
           className={cn(
             "flex gap-2 items-stretch relative cursor-pointer **:cursor-pointer transition-all",

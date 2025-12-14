@@ -1,15 +1,15 @@
+import type { Source } from "@/typings/source"
 import { Button } from "@newsnext/ui/components/button"
 import { isIOS } from "react-device-detect"
 import { cn } from "@/lib/utils"
 import { PhDotsSixVerticalDuotone } from "../icons/ph"
-import { MOCK_SOURCES } from "./mock-data"
 
 interface DragOverlayProps {
   id: string
+  source: Source & { id: string }
 }
 
-export function DragOverlay({ id }: DragOverlayProps) {
-  const source = MOCK_SOURCES[id] || MOCK_SOURCES["36kr"]
+export function DragOverlay({ id, source }: DragOverlayProps) {
   return (
     <div
       className={cn(

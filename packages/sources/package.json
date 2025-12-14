@@ -4,7 +4,8 @@
   "private": true,
   "license": "MPL-2.0",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./metadata": "./src/metadata.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

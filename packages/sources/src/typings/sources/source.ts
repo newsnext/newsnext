@@ -41,10 +41,7 @@ export type DefineSource = Partial<Omit<Source, "fetcher" | "namespace" | "id">>
   )
 
 export interface Source {
-  /**
-   * forked from upstream source
-   */
-  upstream?: string
+  icon?: string
   /**
    * namespace name
    */

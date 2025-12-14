@@ -10,6 +10,7 @@ export default defineSource({
   color: "red",
   category: "china",
   interval: Time.Common,
+  type: "hottest",
   ...defineHtmlSourceFetcher(() => ({
     url: "https://s.weibo.com/top/summary?cate=realtimehot",
     fetch: async (url) => {

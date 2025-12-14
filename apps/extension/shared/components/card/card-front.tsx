@@ -12,7 +12,6 @@ import { Timeline } from "./timeline"
 
 export function CardFront() {
   const {
-    id,
     source,
     items,
     isRefreshing,
@@ -23,7 +22,7 @@ export function CardFront() {
     dragHandle,
   } = useCard()
 
-  const { name, title, desc, home, type, color } = source
+  const { namespace, name, title, desc, home, type, color } = source
 
   return (
     <div
@@ -43,7 +42,7 @@ export function CardFront() {
             href={home || "#"}
             title={desc || name}
             style={{
-              backgroundImage: `url(/icons/${id}.png)`,
+              backgroundImage: `url(https://s3.newsnext.pro/icons/${namespace}.png)`,
             }}
           />
           <div className="flex flex-col">

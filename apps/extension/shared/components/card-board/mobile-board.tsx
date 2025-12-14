@@ -1,4 +1,5 @@
 import type { PanInfo } from "motion/react"
+import type { Source } from "@/typings/source"
 import { motion, useMotionValue, useTransform } from "motion/react"
 import { useCallback, useMemo, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
@@ -6,6 +7,7 @@ import Card from "../card"
 
 interface MobileBoardProps {
   sourceIds: string[]
+  sourcesMap: Record<string, Source & { id: string }>
   className?: string
   isScattered?: boolean
 }
@@ -17,7 +19,7 @@ const CARD_WIDTH_PERCENT = 0.92
 const CARD_MAX_WIDTH = 450
 const SPRING_OPTIONS = { type: "spring", stiffness: 300, damping: 30 } as const
 
-export function MobileBoard({ sourceIds }: MobileBoardProps) {
+export function MobileBoard({ sourceIds, sourcesMap }: MobileBoardProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
   const x = useMotionValue(0)
@@ -107,7 +109,7 @@ export function MobileBoard({ sourceIds }: MobileBoardProps) {
                 }}
               >
                 <div className="h-full w-full">
-                  <Card id={id} className="h-full w-full" />
+                  <Card id={id} source={sourcesMap[id]} className="h-full w-full" />
                 </div>
               </motion.div>
             )

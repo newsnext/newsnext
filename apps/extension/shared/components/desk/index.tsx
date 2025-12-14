@@ -1,10 +1,13 @@
+import { useAtomValue } from "jotai"
 import { useEffect, useState } from "react"
 import { CardBoard } from "@/components/card-board"
 import { Dashboard } from "@/components/dashboard"
 import { cn } from "@/lib/utils"
+import { currentBoardAtom } from "@/store/board"
 
 export function Desk() {
   const [isScattered, setIsScattered] = useState(false)
+  const currentBoard = useAtomValue(currentBoardAtom)
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -29,7 +32,7 @@ export function Desk() {
           isScattered && "pointer-events-none",
         )}
       >
-        <CardBoard isScattered={isScattered} />
+        <CardBoard isScattered={isScattered} boardId={currentBoard} />
       </div>
     </div>
   )

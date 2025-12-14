@@ -1,3 +1,4 @@
+import { parseRelativeDate } from "../utils/date"
 import { defineHtmlSourceFetcher, defineSource } from "../utils/source"
 
 export default defineSource({
@@ -7,7 +8,7 @@ export default defineSource({
   ...defineHtmlSourceFetcher({
     url: {
       type: "url",
-      default: "https://bbs.pcbeta.com/viewthread-2059838-1-1.html",
+      default: "https://www.36kr.com/newsflashes",
       title: "Target URL",
     },
     decoding: {
@@ -17,26 +18,43 @@ export default defineSource({
     },
     itemSelector: {
       type: "text",
-      default: "#postlist > div[id^='post_']",
+      default: ".newsflash-item",
       title: "Item Selector",
     },
     titleSelector: {
       type: "text",
-      default: ".authi .xw1",
+      default: "a.item-title",
       title: "Title Selector",
     },
     linkSelector: {
       type: "text",
-      default: "",
+      default: "a.item-title",
       title: "Link Selector",
     },
-  }, ({ url, decoding, itemSelector, titleSelector, linkSelector }) => ({
-    url,
-    decoding,
-    itemSelector,
-    fields: {
-      title: titleSelector,
-      url: linkSelector,
-    },
-  })),
+  }, ({ url, decoding, itemSelector, titleSelector, linkSelector }) => {
+    const baseURL = url.includes("36kr.com") ? "https://www.36kr.com" : new URL(url).origin
+    return {
+      url,
+      decoding,
+      itemSelector,
+      fields: {
+        title: titleSelector,
+        url: {
+          selector: linkSelector,
+          attr: "href",
+          transform: (href: string | undefined) => {
+            if (!href) return undefined
+            return href.startsWith("http") ? href : `${baseURL}${href}`
+          },
+        },
+        updated: {
+          selector: ".time",
+          transform: (relativeDate: string | undefined) => {
+            if (!relativeDate) return undefined
+            return parseRelativeDate(relativeDate, "Asia/Shanghai")
+          },
+        },
+      },
+    }
+  }),
 })

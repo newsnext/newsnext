@@ -11,12 +11,12 @@ export function Timeline({ items }: { items: NewsItem[] }) {
   return (
     <ol className="border-s border-neutral-400/50 flex flex-col ml-1">
       {items?.map(item => (
-        <li key={`${item.id}-${item.pubDate || item?.extra?.date || ""}`} className="flex flex-col">
+        <li key={`${item.url}`} className="flex flex-col">
           <span className="flex items-center gap-1 text-neutral-400/50 ml--1px">
             <span className="">-</span>
             <span className="text-xs text-neutral-400/80">
-              {(item.pubDate || item?.extra?.date) && (
-                <NewsUpdatedTime date={(item.pubDate || item?.extra?.date)!} />
+              {(item.updated) && (
+                <NewsUpdatedTime date={(item.updated)!} />
               )}
             </span>
             <span className="text-xs text-neutral-400/80">

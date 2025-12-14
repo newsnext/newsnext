@@ -22,6 +22,7 @@ export interface Source {
   desc?: string
   type?: SourceType
   home?: string
+  namespace: string
   sub?: Record<string, SubSource>
 }
 
@@ -30,11 +31,10 @@ export function defineSource(source: Source): Source {
 }
 
 export interface NewsItem {
-  id: string | number // unique
   title: string
   url: string
   mobileUrl?: string
-  pubDate?: number | string
+  updated?: number | string
   extra?: {
     hover?: string
     date?: number | string

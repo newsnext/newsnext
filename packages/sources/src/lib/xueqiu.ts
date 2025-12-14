@@ -15,6 +15,7 @@ export default defineSource({
   home: "https://xueqiu.com",
   color: "blue",
   category: "finance",
+  type: "hottest",
   ...defineJsonSourceFetcher<StockItem>(() => ({
     url: "https://stock.xueqiu.com/v5/stock/hot_stock/list.json?size=30&_type=10&type=10",
     fetch: async (url) => {

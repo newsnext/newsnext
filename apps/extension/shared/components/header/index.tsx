@@ -1,5 +1,6 @@
 import type { RefObject } from "react"
-import { PhArrowCounterClockwiseDuotone } from "../icons/ph"
+import { useRefetch } from "@/hooks"
+import { PhArrowCounterClockwiseDuotone, PhCircleDashedDuotone } from "../icons/ph"
 import { DateTime } from "./date-time"
 import Nav from "./nav"
 import { Title } from "./title"
@@ -9,6 +10,7 @@ interface HeaderProps {
 }
 
 export function Header({ scrollContainerRef }: HeaderProps) {
+  const { refreshAll, isRefreshing } = useRefetch()
   return (
     <header className="fixed -top-0.5 inset-x-0 z-20 p-6 pointer-events-none">
       <div className="h-11 flex items-center gap-3 overflow-x-auto scrollbar-hidden pointer-events-auto md:pointer-events-none">
@@ -18,8 +20,10 @@ export function Header({ scrollContainerRef }: HeaderProps) {
           <button
             className="island-pill flex items-center justify-center size-10 pointer-events-auto"
             title="Refresh All"
+            onClick={refreshAll}
+            disabled={isRefreshing}
           >
-            <PhArrowCounterClockwiseDuotone className="size-5" />
+            {isRefreshing ? <PhCircleDashedDuotone className="size-5 animate-spin" /> : <PhArrowCounterClockwiseDuotone className="size-5" />}
           </button>
         </div>
 

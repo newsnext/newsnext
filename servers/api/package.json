@@ -3,12 +3,17 @@
   "type": "module",
   "private": true,
   "license": "MPL-2.0",
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "scripts": {
     "dev": "bun run --hot src/index.ts",
     "build": "tsdown src/index.ts --outDir dist --dts"
   },
   "dependencies": {
+    "@hono/trpc-server": "^0.4.1",
     "@newsnext/sources": "workspace:*",
+    "@trpc/server": "^11.8.0",
     "hono": "^4.10.8"
   }
 }

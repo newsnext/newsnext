@@ -9,14 +9,13 @@ const TYPE_LABELS = {
 
 export function CardBack() {
   const {
-    id,
     source,
     items,
     isStarred,
     onCardClick,
   } = useCard()
 
-  const { name, desc, home, type, interval, color } = source
+  const { namespace, name, desc, home, type, interval, color } = source
   return (
     <div
       className={cn(
@@ -30,7 +29,7 @@ export function CardBack() {
           <div
             className="size-8 rounded-full bg-cover"
             style={{
-              backgroundImage: `url(/icons/${id}.png)`,
+              backgroundImage: `url(https://s3.newsnext.pro/icons/${namespace}.png)`,
             }}
           />
           <div className="flex flex-col">

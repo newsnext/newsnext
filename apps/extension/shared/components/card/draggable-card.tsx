@@ -1,4 +1,5 @@
 import type { CardProps } from "./index"
+import type { Source } from "@/typings/source"
 import { Button } from "@newsnext/ui/components/button"
 import { useEffect } from "react"
 import { isIOS } from "react-device-detect"
@@ -11,9 +12,10 @@ import Card from "./index"
 
 interface DraggableCardProps extends Omit<CardProps, "nodeRef" | "dragHandle"> {
   id: string
+  source: Source & { id: string }
 }
 
-export function DraggableCard({ id, ...props }: DraggableCardProps) {
+export function DraggableCard({ id, source, ...props }: DraggableCardProps) {
   const {
     isDragging,
     setNodeRef,
@@ -47,6 +49,7 @@ export function DraggableCard({ id, ...props }: DraggableCardProps) {
     <>
       <Card
         id={id}
+        source={source}
         nodeRef={setNodeRef}
         dragHandle={dragHandle}
         {...props}
@@ -57,7 +60,7 @@ export function DraggableCard({ id, ...props }: DraggableCardProps) {
       />
 
       {OverlayContainer && createPortal(
-        <DragOverlay id={id} />,
+        <DragOverlay id={id} source={source} />,
         OverlayContainer,
       )}
     </>

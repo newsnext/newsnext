@@ -69,18 +69,20 @@ const ranking = defineJsonSourceFetcher<VideoItem>(() => ({
 export default defineSource({
   name: "Bilibili",
   home: "https://www.bilibili.com",
-  color: "pink",
+  color: "blue",
   category: "china",
   sub: [
     {
       id: "default",
       title: "热搜",
+      type: "hottest",
       interval: Time.Realtime,
       ...hotSearch,
     },
     {
       id: "hot-video",
       title: "热门视频",
+      type: "hottest",
       interval: Time.Common,
       ...hotVideo,
     },
@@ -88,6 +90,7 @@ export default defineSource({
       id: "ranking",
       title: "排行榜",
       interval: Time.Common,
+      type: "hottest",
       ...ranking,
     },
   ],
