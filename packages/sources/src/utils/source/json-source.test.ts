@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { myFetch } from "../src/utils/fetch"
-import { defineJsonSourceGetter } from "../src/utils/json-source"
+import { myFetch } from "../fetch"
+import { defineJsonSourceFetcher } from "./json-source"
 
 // Mock fetch
-vi.mock("../src/utils/fetch", () => ({
+vi.mock("../fetch", () => ({
   myFetch: vi.fn(),
 }))
 
@@ -20,7 +20,7 @@ describe("defineJsonSource", () => {
 
     ;(myFetch as any).mockResolvedValue(data)
 
-    const source = defineJsonSourceGetter(() => ({
+    const source = defineJsonSourceFetcher(() => ({
       url: "https://api.example.com",
       fields: {
         title: "title",
@@ -29,7 +29,7 @@ describe("defineJsonSource", () => {
       },
     }))
 
-    const results = await (source as any).getter({})
+    const results = await (source as any).fetcher({})
 
     expect(results).toHaveLength(2)
     // Sorted by updated desc
@@ -47,7 +47,7 @@ describe("defineJsonSource", () => {
     }
     ;(myFetch as any).mockResolvedValue(data)
 
-    const source = defineJsonSourceGetter(() => ({
+    const source = defineJsonSourceFetcher(() => ({
       url: "https://api.example.com",
       items: "response.items",
       fields: {
@@ -56,7 +56,7 @@ describe("defineJsonSource", () => {
       },
     }))
 
-    const results = await (source as any).getter({})
+    const results = await (source as any).fetcher({})
     expect(results).toHaveLength(1)
     expect(results[0].title).toBe("Nest")
   })
@@ -69,7 +69,7 @@ describe("defineJsonSource", () => {
     }
     ;(myFetch as any).mockResolvedValue(data)
 
-    const source = defineJsonSourceGetter(() => ({
+    const source = defineJsonSourceFetcher(() => ({
       url: "https://api.example.com",
       items: json => json.data,
       fields: {
@@ -81,7 +81,7 @@ describe("defineJsonSource", () => {
       },
     }))
 
-    const results = await (source as any).getter({})
+    const results = await (source as any).fetcher({})
     expect(results[0].title).toBe("FUNC")
     expect(results[0].extra.info).toBe("Score: 99")
   })
@@ -89,13 +89,13 @@ describe("defineJsonSource", () => {
   it("should handle custom fetch", async () => {
     const customFetch = vi.fn().mockResolvedValue([{ t: "Custom", u: "u" }])
 
-    const source = defineJsonSourceGetter(() => ({
+    const source = defineJsonSourceFetcher(() => ({
       url: "http://c",
       fetch: customFetch,
       fields: { title: "t", url: "u" },
     }))
 
-    const results = await (source as any).getter({})
+    const results = await (source as any).fetcher({})
     expect(customFetch).toHaveBeenCalled()
     expect(results[0].title).toBe("Custom")
   })

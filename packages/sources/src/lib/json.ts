@@ -1,11 +1,10 @@
-import { defineJsonSourceGetter, resolvePath } from "../utils/json-source"
-import { defineSource } from "../utils/source"
+import { defineJsonSourceFetcher, defineSource, resolvePath } from "../utils/source"
 
 export default defineSource({
   name: "JSON",
   color: "cyan",
   home: "https://www.json.org/",
-  ...defineJsonSourceGetter({
+  ...defineJsonSourceFetcher({
     url: {
       type: "url",
       default: "https://www.v2ex.com/feed/ideas.json",

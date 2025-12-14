@@ -1,13 +1,12 @@
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
-import { Glob } from "bun"
 // import { build } from "tsdown"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const rootDir = __dirname
 
-const glob = new Glob("src/lib/*.ts")
-const deepIndexGlob = new Glob("src/core/**/index.ts")
+const glob = new Bun.Glob("src/lib/*.ts")
+const deepIndexGlob = new Bun.Glob("src/core/**/index.ts")
 
 const files = new Set<string>()
 

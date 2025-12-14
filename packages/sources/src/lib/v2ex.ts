@@ -1,4 +1,4 @@
-import type { SourceGetter } from "../typings/sources"
+import type { SourceFetcher } from "../typings/sources"
 import { myFetch } from "../utils/fetch"
 import { defineSource } from "../utils/source"
 
@@ -20,7 +20,7 @@ interface Res {
   }[]
 }
 
-const share: SourceGetter = async () => {
+const share: SourceFetcher = async () => {
   const res = await Promise.all(["create", "ideas", "programmer", "share"]
     .map(k => myFetch(`https://www.v2ex.com/feed/${k}.json`) as Promise<Res>))
   return res.map(k => k.items).flat().map(k => ({
@@ -35,5 +35,5 @@ export default defineSource({
   color: "slate",
   home: "https://v2ex.com/",
   category: "tech",
-  getter: share,
+  fetcher: share,
 })

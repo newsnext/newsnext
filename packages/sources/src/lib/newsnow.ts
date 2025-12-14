@@ -1,7 +1,6 @@
 import { Time } from "../typings/constants"
-import { defineHtmlSourceGetter } from "../utils/html-source"
-import { defineSelect } from "../utils/params"
-import { defineSource } from "../utils/source"
+import { defineSelectParameter } from "../utils/params"
+import { defineHtmlSourceFetcher, defineSource } from "../utils/source"
 
 export default defineSource({
   name: "NEWS NOW",
@@ -10,9 +9,8 @@ export default defineSource({
   category: "world",
   color: "red",
   home: "https://www.newsnow.com",
-  id: "news",
-  ...defineHtmlSourceGetter({
-    locale: defineSelect<"us" | "uk" | "ng" | "ro" | "it" | "ca" | "au">({
+  ...defineHtmlSourceFetcher({
+    locale: defineSelectParameter<"us" | "uk" | "ng" | "ro" | "it" | "ca" | "au">({
       options: [
         { label: "US", value: "us" },
         { label: "UK", value: "uk" },

@@ -1,4 +1,4 @@
-import type { MetaSource } from "./source"
+import type { SourceMeta } from "./source"
 
 export * from "./params"
 export * from "./source"
@@ -31,7 +31,7 @@ export interface SourceResponse {
 
 export interface MetaSourceResponse {
   id: string
-  meta: MetaSource
+  meta: SourceMeta
   updated?: number | string
   items?: NewsItem[]
 }

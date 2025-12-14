@@ -38,8 +38,8 @@ app.get("/sources/:sourceId", async (c) => {
     return c.json({ error: `Source '${id}' not found in group '${group}'` }, 404)
   }
 
-  if (!source.getter) {
-    return c.json({ error: "Source does not have a getter" }, 400)
+  if (!source.fetcher) {
+    return c.json({ error: "Source does not have a fetcher" }, 400)
   }
 
   // Parse and validate parameters
@@ -67,7 +67,7 @@ app.get("/sources/:sourceId", async (c) => {
   }
 
   try {
-    const items = await source.getter(params)
+    const items = await source.fetcher(params)
     return c.json({
       id: sourceId,
       updated: Date.now(),

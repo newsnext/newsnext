@@ -1,37 +1,37 @@
-interface Base {
+interface BaseParameter {
   title: string
   description?: string
   icon?: string
 }
 
-export interface Option<K extends string> {
+export interface SelectOption<K extends string> {
   label: string
   value: K
 }
 
-export interface Select<K extends string = string> extends Base {
+export interface SelectParameter<K extends string = string> extends BaseParameter {
   type: "select"
-  options: Option<K>[]
+  options: SelectOption<K>[]
   default: K
 }
 
-export interface MulitSelect<K extends string = string> extends Base {
+export interface MultiSelectParameter<K extends string = string> extends BaseParameter {
   type: "multiselect"
-  options: Option<K>[]
+  options: SelectOption<K>[]
   default: K[]
 }
 
-interface Text extends Base {
+export interface TextParameter extends BaseParameter {
   type: "text"
   default: string
 }
 
-interface Url extends Base {
+export interface UrlParameter extends BaseParameter {
   type: "url"
   default: string
 }
 
-interface Number extends Base {
+export interface NumberParameter extends BaseParameter {
   type: "number"
   default: number
   min?: number
@@ -39,30 +39,30 @@ interface Number extends Base {
   step?: number
 }
 
-interface Switch extends Base {
+export interface SwitchParameter extends BaseParameter {
   type: "switch"
   default: boolean
 }
 
-export type Parameter = Select | MulitSelect | Text | Switch | Number | Url
+export type Parameter = SelectParameter | MultiSelectParameter | TextParameter | SwitchParameter | NumberParameter | UrlParameter
 
 export const ParameterAsserts = {
-  isNumber(param: Parameter): param is Number {
+  isNumber(param: Parameter): param is NumberParameter {
     return param.type === "number"
   },
-  isSelect(param: Parameter): param is Select {
+  isSelect(param: Parameter): param is SelectParameter {
     return param.type === "select"
   },
-  isMulitSelect(param: Parameter): param is MulitSelect {
+  isMultiSelect(param: Parameter): param is MultiSelectParameter {
     return param.type === "multiselect"
   },
-  isText(param: Parameter): param is Text {
+  isText(param: Parameter): param is TextParameter {
     return param.type === "text"
   },
-  isUrl(param: Parameter): param is Url {
+  isUrl(param: Parameter): param is UrlParameter {
     return param.type === "url"
   },
-  isSwitch(param: Parameter): param is Switch {
+  isSwitch(param: Parameter): param is SwitchParameter {
     return param.type === "switch"
   },
 }

@@ -1,7 +1,6 @@
 import { Time } from "../typings/constants"
 import { parseRelativeDate } from "../utils/date"
-import { defineHtmlSourceGetter } from "../utils/html-source"
-import { defineSource } from "../utils/source"
+import { defineHtmlSourceFetcher, defineSource } from "../utils/source"
 
 const base = "https://www.zaochenbao.com"
 
@@ -12,8 +11,7 @@ export default defineSource({
   category: "world",
   color: "red",
   home: "https://www.zaobao.com",
-  id: "news",
-  ...defineHtmlSourceGetter(() => ({
+  ...defineHtmlSourceFetcher(() => ({
     url: "https://www.zaochenbao.com/realtime/",
     decoding: "gb2312",
     itemSelector: "div.list-block>a.item",

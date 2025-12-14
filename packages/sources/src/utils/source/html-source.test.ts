@@ -1,10 +1,10 @@
 import iconv from "iconv-lite"
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { myFetch } from "../src/utils/fetch"
-import { defineHtmlSourceGetter } from "../src/utils/html-source"
+import { myFetch } from "../fetch"
+import { defineHtmlSourceFetcher } from "./html-source"
 
 // Mock fetch
-vi.mock("../src/utils/fetch", () => ({
+vi.mock("../fetch", () => ({
   myFetch: vi.fn(),
 }))
 
@@ -30,7 +30,7 @@ describe("defineHtmlSource", () => {
     // Setup mock
     ;(myFetch as any).mockResolvedValue(html)
 
-    const source = defineHtmlSourceGetter(() => ({
+    const source = defineHtmlSourceFetcher(() => ({
       url: "https://example.com",
       itemSelector: ".list .item",
       fields: {
@@ -40,8 +40,8 @@ describe("defineHtmlSource", () => {
       },
     }))
 
-    // Assuming simple source without params returns { getter }
-    const results = await (source as any).getter({})
+    // Assuming simple source without params returns { fetcher }
+    const results = await (source as any).fetcher({})
 
     expect(results).toHaveLength(2)
     // Results are sorted by updated desc by default
@@ -59,7 +59,7 @@ describe("defineHtmlSource", () => {
     `
     ;(myFetch as any).mockResolvedValue(html)
 
-    const source = defineHtmlSourceGetter(() => ({
+    const source = defineHtmlSourceFetcher(() => ({
       url: "https://example.com",
       itemSelector: ".item",
       fields: {
@@ -80,7 +80,7 @@ describe("defineHtmlSource", () => {
       },
     }))
 
-    const results = await (source as any).getter({})
+    const results = await (source as any).fetcher({})
     expect(results[0].title).toBe("DIRTY TITLE")
     expect(results[0].updated).toBe(1600000000000)
   })
@@ -88,7 +88,7 @@ describe("defineHtmlSource", () => {
   it("should handle params in url function", async () => {
     ;(myFetch as any).mockResolvedValue("<div class=\"item\"></div>")
 
-    const source = defineHtmlSourceGetter({
+    const source = defineHtmlSourceFetcher({
       page: { type: "number", default: 1, title: "Page" },
     }, params => ({
       url: `https://example.com?p=${params.page}`,
@@ -96,7 +96,7 @@ describe("defineHtmlSource", () => {
       fields: { title: ".t", url: ".u" },
     }))
 
-    await (source as any).getter({ page: 2 })
+    await (source as any).fetcher({ page: 2 })
 
     expect(myFetch).toHaveBeenCalledWith("https://example.com?p=2", undefined)
   })
@@ -107,7 +107,7 @@ describe("defineHtmlSource", () => {
     // Mock fetch returning array buffer
     ;(myFetch as any).mockResolvedValue(gb2312Buffer)
 
-    const source = defineHtmlSourceGetter(() => ({
+    const source = defineHtmlSourceFetcher(() => ({
       url: "https://example.com/gb",
       decoding: "gb2312",
       itemSelector: ".item",
@@ -117,7 +117,7 @@ describe("defineHtmlSource", () => {
       },
     }))
 
-    const results = await (source as any).getter({})
+    const results = await (source as any).fetcher({})
 
     expect(myFetch).toHaveBeenCalledWith("https://example.com/gb", { responseType: "arrayBuffer" })
     expect(results[0].title).toBe("你好")
@@ -128,7 +128,7 @@ describe("defineHtmlSource", () => {
 
     const customFetch = vi.fn().mockResolvedValue(html)
 
-    const source = defineHtmlSourceGetter(() => ({
+    const source = defineHtmlSourceFetcher(() => ({
       url: "https://example.com/custom",
       fetch: customFetch,
       itemSelector: ".item",
@@ -138,7 +138,7 @@ describe("defineHtmlSource", () => {
       },
     }))
 
-    const results = await (source as any).getter({})
+    const results = await (source as any).fetcher({})
 
     expect(customFetch).toHaveBeenCalledWith("https://example.com/custom")
     expect(results[0].title).toBe("Custom Fetch")

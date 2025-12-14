@@ -1,12 +1,12 @@
 import { CommonSourceParams } from "../utils/params"
-import { defineRSSHubSourceGetter, defineSource } from "../utils/source"
+import { defineRSSHubSourceFetcher, defineSource } from "../utils/source"
 
 export default defineSource({
   name: "RSSHub",
   color: "orange",
   home: "https://rsshub.app/",
   interval: 1,
-  ...defineRSSHubSourceGetter({
+  ...defineRSSHubSourceFetcher({
     route: {
       type: "text",
       default: "/36kr/newsflashes",

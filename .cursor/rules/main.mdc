@@ -8,3 +8,5 @@ ALWAYS use English for all text, including comments.
 DONT create markdown documents, not needed. Tell me directly, PLEASE.
 
 ALWAYS use TypeScript, React v19, Tailwind CSS v4, Bun.
+
+ALWAYS use `bun run test` to run tests.

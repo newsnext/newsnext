@@ -22,8 +22,8 @@ describeIntegration("source Integration Tests", () => {
     describe(namespace, () => {
       for (const [sourceId, source] of Object.entries(subsource)) {
         const fullSourceId = `${namespace}:${sourceId}`
-        if (!source.getter) {
-          it.skip(`${fullSourceId} (No getter)`, () => {})
+        if (!source.fetcher) {
+          it.skip(`${fullSourceId} (No fetcher)`, () => {})
           continue
         }
 
@@ -41,7 +41,7 @@ describeIntegration("source Integration Tests", () => {
           }
 
           try {
-            const items = await source.getter(params)
+            const items = await source.fetcher(params)
 
             // Basic assertions
             expect(Array.isArray(items)).toBe(true)

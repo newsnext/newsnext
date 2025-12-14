@@ -1,11 +1,10 @@
-import { defineHtmlSourceGetter } from "../utils/html-source"
-import { defineSource } from "../utils/source"
+import { defineHtmlSourceFetcher, defineSource } from "../utils/source"
 
 export default defineSource({
   name: "HTML Parser",
   color: "blue",
   home: "https://html.com/",
-  ...defineHtmlSourceGetter({
+  ...defineHtmlSourceFetcher({
     url: {
       type: "url",
       default: "https://bbs.pcbeta.com/viewthread-2059838-1-1.html",

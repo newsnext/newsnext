@@ -138,6 +138,14 @@ function toDurations(matches: string[]) {
       }
     }
   }
+
+  if (durations.weeks) {
+    const weeks = Number.parseInt(durations.weeks)
+    const days = Number.parseInt(durations.days || "0")
+    durations.days = (days + weeks * 7).toString()
+    delete durations.weeks
+  }
+
   return durations
 }
 

@@ -13,9 +13,9 @@ export const categories: Record<CategoryId, string> = {
   others: "Others",
 }
 
-export type SourceGetter = (params?: any) => Promise<NewsItem[]>
+export type SourceFetcher = (params?: any) => Promise<NewsItem[]>
 
-export type InitalSource = Partial<Omit<Source, "getter" | "namespace" | "id">>
+export type DefineSource = Partial<Omit<Source, "fetcher" | "namespace" | "id">>
   & {
     name: string
     color: Color
@@ -24,18 +24,18 @@ export type InitalSource = Partial<Omit<Source, "getter" | "namespace" | "id">>
       {
         sub: ({
           title: string
-          getter: SourceGetter
+          fetcher: SourceFetcher
         } & (
           Either<{
             id: "default"
           }, {
             id: string
           }>
-        ) & Partial<Omit<Source, "name" | "namespace" | "key">>
+        ) & Partial<Omit<Source, "name" | "namespace">>
         )[]
       },
       {
-        getter: SourceGetter
+        fetcher: SourceFetcher
       }
     >
   )
@@ -54,6 +54,7 @@ export interface Source {
    */
   namespace: string
   /**
+   * Unique identifier for the source variant
    */
   id: string
   /**
@@ -81,15 +82,15 @@ export interface Source {
    * @default false
    */
   disable?: boolean
-  getter: SourceGetter
+  fetcher: SourceFetcher
 }
 
-export type SourceWithoutNamespaceKey = Omit<Source, "namespace" | "key">
-export type SourceWithoutGetter = Omit<Source, "getter">
+export type SourceOptions = Omit<Source, "namespace">
+export type SourceInfo = Omit<Source, "fetcher">
 
-export type Metadata = Record<CategoryId, {
+export type SourcesMap = Record<CategoryId, {
   name: string
-  sources: SourceWithoutGetter[]
+  sources: SourceInfo[]
 }>
 
-export type MetaSource = Omit<Source, "getter" | "disable">
+export type SourceMeta = Omit<Source, "fetcher" | "disable">

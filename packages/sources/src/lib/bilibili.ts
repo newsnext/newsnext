@@ -1,6 +1,5 @@
 import { Time } from "../typings/constants"
-import { defineJsonSourceGetter } from "../utils/json-source"
-import { defineSource } from "../utils/source"
+import { defineJsonSourceFetcher, defineSource } from "../utils/source"
 
 function formatNumber(num: number): string {
   if (num >= 10000) {
@@ -25,7 +24,7 @@ interface VideoItem {
   pic: string
 }
 
-const hotSearch = defineJsonSourceGetter<HotSearchItem>(() => ({
+const hotSearch = defineJsonSourceFetcher<HotSearchItem>(() => ({
   url: "https://s.search.bilibili.com/main/hotword?limit=30",
   items: "list",
   fields: {
@@ -35,9 +34,9 @@ const hotSearch = defineJsonSourceGetter<HotSearchItem>(() => ({
       icon: item => item.icon ? { url: item.icon, scale: 1 } : undefined,
     },
   },
-})).getter
+}))
 
-const hotVideo = defineJsonSourceGetter<VideoItem>(() => ({
+const hotVideo = defineJsonSourceFetcher<VideoItem>(() => ({
   url: "https://api.bilibili.com/x/web-interface/popular",
   items: "data.list",
   fields: {
@@ -50,9 +49,9 @@ const hotVideo = defineJsonSourceGetter<VideoItem>(() => ({
       icon: item => item.pic ? { url: item.pic, scale: 1 } : undefined,
     },
   },
-})).getter
+}))
 
-const ranking = defineJsonSourceGetter<VideoItem>(() => ({
+const ranking = defineJsonSourceFetcher<VideoItem>(() => ({
   url: "https://api.bilibili.com/x/web-interface/ranking/v2",
   items: "data.list",
   fields: {
@@ -65,7 +64,7 @@ const ranking = defineJsonSourceGetter<VideoItem>(() => ({
       icon: item => item.pic ? { url: item.pic, scale: 1 } : undefined,
     },
   },
-})).getter
+}))
 
 export default defineSource({
   name: "Bilibili",
@@ -77,19 +76,19 @@ export default defineSource({
       id: "default",
       title: "热搜",
       interval: Time.Realtime,
-      getter: hotSearch,
+      ...hotSearch,
     },
     {
       id: "hot-video",
       title: "热门视频",
       interval: Time.Common,
-      getter: hotVideo,
+      ...hotVideo,
     },
     {
       id: "ranking",
       title: "排行榜",
       interval: Time.Common,
-      getter: ranking,
+      ...ranking,
     },
   ],
 })

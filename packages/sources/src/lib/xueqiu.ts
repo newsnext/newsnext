@@ -1,7 +1,6 @@
 import { $fetch } from "ofetch"
 import { myFetch } from "../utils/fetch"
-import { defineJsonSourceGetter } from "../utils/json-source"
-import { defineSource } from "../utils/source"
+import { defineJsonSourceFetcher, defineSource } from "../utils/source"
 
 interface StockItem {
   code: string
@@ -16,7 +15,7 @@ export default defineSource({
   home: "https://xueqiu.com",
   color: "blue",
   category: "finance",
-  ...defineJsonSourceGetter<StockItem>(() => ({
+  ...defineJsonSourceFetcher<StockItem>(() => ({
     url: "https://stock.xueqiu.com/v5/stock/hot_stock/list.json?size=30&_type=10&type=10",
     fetch: async (url) => {
       // Need to get cookie first

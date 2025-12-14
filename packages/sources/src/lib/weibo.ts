@@ -1,7 +1,6 @@
 import { Time } from "../typings/constants"
 import { myFetch } from "../utils/fetch"
-import { defineHtmlSourceGetter } from "../utils/html-source"
-import { defineSource } from "../utils/source"
+import { defineHtmlSourceFetcher, defineSource } from "../utils/source"
 
 const baseurl = "https://s.weibo.com"
 
@@ -10,9 +9,8 @@ export default defineSource({
   home: "https://s.weibo.com/top/summary?cate=realtimehot",
   color: "red",
   category: "china",
-  id: "hot",
   interval: Time.Common,
-  ...defineHtmlSourceGetter(() => ({
+  ...defineHtmlSourceFetcher(() => ({
     url: "https://s.weibo.com/top/summary?cate=realtimehot",
     fetch: async (url) => {
       return myFetch(url, {

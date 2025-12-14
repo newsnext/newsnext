@@ -1,6 +1,6 @@
-import type { RSSInfo } from "../typings"
+import type { RSSInfo } from "../../typings"
 import { XMLParser } from "fast-xml-parser"
-import { myFetch } from "./fetch"
+import { myFetch } from "../fetch"
 
 export async function rss2json(url: string): Promise<RSSInfo | undefined> {
   if (!/^https?:\/\/[^\s$.?#].\S*/i.test(url)) return

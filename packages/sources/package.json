@@ -21,7 +21,6 @@
   },
   "devDependencies": {
     "@types/md5": "^2.3.6",
-    "domhandler": "^5.0.3",
-    "mockdate": "^3.0.5"
+    "domhandler": "^5.0.3"
   }
 }

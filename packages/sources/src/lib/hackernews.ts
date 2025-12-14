@@ -1,8 +1,7 @@
 import { Time } from "../typings/constants"
-import { defineHtmlSourceGetter } from "../utils/html-source"
-import { defineSource } from "../utils/source"
+import { defineHtmlSourceFetcher, defineSource } from "../utils/source"
 
-const createHNGetter = (sub: string) => defineHtmlSourceGetter(() => ({
+const createHNFetcher = (sub: string) => defineHtmlSourceFetcher(() => ({
   url: `https://news.ycombinator.com${sub}`,
   itemSelector: ".athing",
   fields: {
@@ -25,7 +24,7 @@ const createHNGetter = (sub: string) => defineHtmlSourceGetter(() => ({
       },
     },
   },
-})).getter
+}))
 
 export default defineSource({
   name: "Hacker News",
@@ -37,7 +36,7 @@ export default defineSource({
       type: "hottest",
       title: "Hottest",
       id: "default",
-      getter: createHNGetter("/"),
+      ...createHNFetcher("/"),
     },
     {
       type: "timeline",
@@ -45,21 +44,21 @@ export default defineSource({
       id: "newest",
       home: "https://news.ycombinator.com/newest",
       interval: Time.Realtime,
-      getter: createHNGetter("/newest"),
+      ...createHNFetcher("/newest"),
     },
     {
       title: "Show",
       id: "show",
       interval: Time.Common,
       home: "https://news.ycombinator.com/show",
-      getter: createHNGetter("/show"),
+      ...createHNFetcher("/show"),
     },
     {
       title: "Ask",
       id: "ask",
       interval: Time.Common,
       home: "https://news.ycombinator.com/ask",
-      getter: createHNGetter("/ask"),
+      ...createHNFetcher("/ask"),
     },
   ],
 })

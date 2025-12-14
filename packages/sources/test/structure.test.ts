@@ -6,11 +6,11 @@ describe("source Structure Tests", () => {
     describe(groupKey, () => {
       for (const [sourceId, source] of Object.entries(sourceGroup)) {
         it(`should have valid structure for ${sourceId}`, () => {
-          // Check if getter exists
-          if (source.getter) {
-            expect(typeof source.getter).toBe("function")
+          // Check if fetcher exists
+          if (source.fetcher) {
+            expect(typeof source.fetcher).toBe("function")
           } else {
-            // If no getter, it might be valid if it's WIP, but generally we expect a getter
+            // If no fetcher, it might be valid if it's WIP, but generally we expect a fetcher
             // verify other props
           }
 
