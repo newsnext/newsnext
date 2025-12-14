@@ -19,12 +19,13 @@ export function defineMulitSelect<K extends string>(R: Omit<MulitSelect<K>, "typ
 }
 
 export const CommonSourceParams = {
-  type: defineSelect<"hottest" | "timeline">({
+  type: defineSelect<"hottest" | "timeline" | "realtime">({
     options: [
       { label: "Hottest", value: "hottest" },
+      { label: "Realtime", value: "realtime" },
       { label: "Timeline", value: "timeline" },
     ],
-    default: "timeline",
+    default: "realtime",
     title: "Type",
   }),
 }

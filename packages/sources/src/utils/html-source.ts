@@ -7,42 +7,34 @@ import iconv from "iconv-lite"
 import { myFetch } from "./fetch"
 import { defineSourceGetterWithParams } from "./source"
 
-export type FieldSelector<P = any> = string | {
-  selector?: string | ((params: P) => string)
+export type FieldSelector = string | {
+  selector?: string
   attr?: string
   transform?: (value: string | undefined, el: cheerio.Cheerio<AnyNode>) => any
-} | ((params: P) => string)
-
-export interface HtmlSourceOptions<P extends Record<string, Parameter> = Record<string, Parameter>> {
-  url: string | ((params: { [K in keyof P]: P[K]["default"] }) => string)
-  itemSelector: string | ((params: { [K in keyof P]: P[K]["default"] }) => string)
-  // Allow dynamic decoding
-  decoding?: string | ((params: { [K in keyof P]: P[K]["default"] }) => string)
-  fetchOptions?: FetchOptions | ((params: { [K in keyof P]: P[K]["default"] }) => FetchOptions)
-  fetch?: (url: string, params: { [K in keyof P]: P[K]["default"] }) => Promise<string>
-  fields: {
-    title: FieldSelector<{ [K in keyof P]: P[K]["default"] }>
-    url: FieldSelector<{ [K in keyof P]: P[K]["default"] }>
-    updated?: FieldSelector<{ [K in keyof P]: P[K]["default"] }>
-    extra?: Record<string, FieldSelector<{ [K in keyof P]: P[K]["default"] }>>
-  }
-  params?: P
 }
 
-function resolveFieldSelector<P>(
-  selectorConfig: FieldSelector<P>,
-  params: P,
-): string | { selector?: string, attr?: string, transform?: any } {
-  if (typeof selectorConfig === "function") {
-    return selectorConfig(params)
+export interface HtmlSourceOptions {
+  url: string
+  itemSelector: string
+  // Allow dynamic decoding
+  decoding?: string
+  fetchOptions?: FetchOptions
+  fetch?: (url: string) => Promise<string>
+  fields: {
+    title: FieldSelector
+    url: FieldSelector
+    updated?: FieldSelector
+    extra?: Record<string, FieldSelector>
   }
-  if (typeof selectorConfig === "object" && typeof selectorConfig.selector === "function") {
-    return {
-      ...selectorConfig,
-      selector: selectorConfig.selector(params),
-    }
+}
+
+function resolveFieldSelector(
+  selectorConfig: FieldSelector,
+): { selector?: string, attr?: string, transform?: any } {
+  if (typeof selectorConfig === "object") {
+    return selectorConfig
   }
-  return selectorConfig as string | { selector?: string, attr?: string, transform?: any }
+  return { selector: selectorConfig }
 }
 
 function resolveField(
@@ -76,24 +68,31 @@ function resolveField(
   return value
 }
 
-export function defineHtmlSourceGetter<P extends Record<string, Parameter>>(options: HtmlSourceOptions<P>) {
-  const getter = async (params: any) => {
-    const url = typeof options.url === "function" ? options.url(params) : options.url
-    const itemSelector = typeof options.itemSelector === "function" ? options.itemSelector(params) : options.itemSelector
-    const decoding = typeof options.decoding === "function" ? options.decoding(params) : options.decoding
+export function defineHtmlSourceGetter(
+  options: () => HtmlSourceOptions,
+): { getter: () => Promise<NewsItem[]> }
+export function defineHtmlSourceGetter<P extends Record<string, Parameter> = Record<string, Parameter>>(
+  params: P,
+  options: (params: { [K in keyof P]: P[K]["default"] }) => HtmlSourceOptions,
+): { params: P, getter: (params: any) => Promise<NewsItem[]> }
+export function defineHtmlSourceGetter(
+  ...args: any[]
+): any {
+  const params = args.length === 2 ? args[0] : {}
+  const options = args.length === 2 ? args[1] : args[0]
 
-    const fetchOpts = typeof options.fetchOptions === "function"
-      ? options.fetchOptions(params)
-      : options.fetchOptions
+  return defineSourceGetterWithParams(params, async (paramsValue) => {
+    const opts = options(paramsValue)
+    const { url, itemSelector, decoding, fetchOptions, fetch, fields } = opts
 
     let html: string
-    if (options.fetch) {
-      html = await options.fetch(url, params)
+    if (fetch) {
+      html = await fetch(url)
     } else if (decoding && decoding.toLowerCase() !== "utf-8") {
-      const response = await myFetch(url, { ...fetchOpts, responseType: "arrayBuffer" }) as ArrayBuffer
+      const response = await myFetch(url, { ...fetchOptions, responseType: "arrayBuffer" }) as ArrayBuffer
       html = iconv.decode(Buffer.from(response), decoding)
     } else {
-      const res = await myFetch(url, fetchOpts)
+      const res = await myFetch(url, fetchOptions)
       html = typeof res === "string" ? res : JSON.stringify(res)
     }
 
@@ -103,16 +102,16 @@ export function defineHtmlSourceGetter<P extends Record<string, Parameter>>(opti
     const news: NewsItem[] = []
 
     $items.each((_, el) => {
-      const titleConfig = resolveFieldSelector(options.fields.title, params)
-      const urlConfig = resolveFieldSelector(options.fields.url, params)
+      const titleConfig = resolveFieldSelector(fields.title)
+      const urlConfig = resolveFieldSelector(fields.url)
 
       const title = resolveField($, el, titleConfig)
       // Allow URL to be derived from current page URL if urlConfig is empty/special
       let itemUrl = resolveField($, el, urlConfig)
 
       // Fallback: if no URL selector provided, use the page URL (common for single-item parsers)
-      if (!urlConfig || (typeof urlConfig === "string" && !urlConfig)) {
-        itemUrl = url
+      if (!urlConfig || (typeof urlConfig === "string" && !urlConfig) || (!urlConfig.selector && !urlConfig.attr)) {
+        if (!itemUrl) itemUrl = url
       }
 
       if (!title || !itemUrl) return
@@ -122,16 +121,16 @@ export function defineHtmlSourceGetter<P extends Record<string, Parameter>>(opti
         url: itemUrl,
       }
 
-      if (options.fields.updated) {
-        const updatedConfig = resolveFieldSelector(options.fields.updated, params)
+      if (fields.updated) {
+        const updatedConfig = resolveFieldSelector(fields.updated)
         const updated = resolveField($, el, updatedConfig)
         if (updated) item.updated = updated
       }
 
-      if (options.fields.extra) {
+      if (fields.extra) {
         item.extra = {}
-        for (const [key, fieldSelector] of Object.entries(options.fields.extra)) {
-          const config = resolveFieldSelector(fieldSelector, params)
+        for (const [key, fieldSelector] of Object.entries(fields.extra)) {
+          const config = resolveFieldSelector(fieldSelector as FieldSelector)
           const extraValue = resolveField($, el, config)
           if (extraValue !== undefined && extraValue !== "") {
             item.extra[key as keyof typeof item.extra] = extraValue
@@ -147,11 +146,5 @@ export function defineHtmlSourceGetter<P extends Record<string, Parameter>>(opti
     }
 
     return news
-  }
-
-  if (options.params) {
-    return defineSourceGetterWithParams(options.params, getter)
-  }
-
-  return { getter }
+  })
 }

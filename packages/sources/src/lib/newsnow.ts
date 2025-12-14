@@ -12,27 +12,26 @@ export default defineSource({
   home: "https://www.newsnow.com",
   id: "news",
   ...defineHtmlSourceGetter({
-    params: {
-      locale: defineSelect<"us" | "uk" | "ng" | "ro" | "it" | "ca" | "au">({
-        options: [
-          { label: "US", value: "us" },
-          { label: "UK", value: "uk" },
-          { label: "Nigeria", value: "ng" },
-          { label: "România", value: "ro" },
-          { label: "Italia", value: "it" },
-          { label: "Canada", value: "ca" },
-          { label: "Australia", value: "au" },
-        ],
-        default: "us",
-        title: "Locale",
-      }),
-      topic: {
-        type: "text",
-        default: "US",
-        title: "Topic",
-      },
+    locale: defineSelect<"us" | "uk" | "ng" | "ro" | "it" | "ca" | "au">({
+      options: [
+        { label: "US", value: "us" },
+        { label: "UK", value: "uk" },
+        { label: "Nigeria", value: "ng" },
+        { label: "România", value: "ro" },
+        { label: "Italia", value: "it" },
+        { label: "Canada", value: "ca" },
+        { label: "Australia", value: "au" },
+      ],
+      default: "us",
+      title: "Locale",
+    }),
+    topic: {
+      type: "text",
+      default: "US",
+      title: "Topic",
     },
-    url: params => `https://www.newsnow.com/${params.locale}/${params.topic}?type=ln`,
+  }, ({ locale, topic }) => ({
+    url: `https://www.newsnow.com/${locale}/${topic}?type=ln`,
     itemSelector: ".newsfeed .article",
     fields: {
       title: ".article-card__headline",
@@ -46,5 +45,5 @@ export default defineSource({
         info: ".article-publisher__name",
       },
     },
-  }),
+  })),
 })

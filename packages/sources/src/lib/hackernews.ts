@@ -2,7 +2,7 @@ import { Time } from "../typings/constants"
 import { defineHtmlSourceGetter } from "../utils/html-source"
 import { defineSource } from "../utils/source"
 
-const createHNGetter = (sub: string) => defineHtmlSourceGetter({
+const createHNGetter = (sub: string) => defineHtmlSourceGetter(() => ({
   url: `https://news.ycombinator.com${sub}`,
   itemSelector: ".athing",
   fields: {
@@ -25,7 +25,7 @@ const createHNGetter = (sub: string) => defineHtmlSourceGetter({
       },
     },
   },
-}).getter
+})).getter
 
 export default defineSource({
   name: "Hacker News",
@@ -36,7 +36,7 @@ export default defineSource({
     {
       type: "hottest",
       title: "Hottest",
-      id: "hot",
+      id: "default",
       getter: createHNGetter("/"),
     },
     {

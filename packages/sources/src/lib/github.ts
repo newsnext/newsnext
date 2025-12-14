@@ -12,7 +12,7 @@ export default defineSource({
   color: "slate",
   interval: Time.Common,
   type: "hottest",
-  ...defineHtmlSourceGetter({
+  ...defineHtmlSourceGetter(() => ({
     url: "https://github.com/trending?spoken_language_code=",
     itemSelector: "main .Box div[data-hpc] > article",
     fields: {
@@ -36,5 +36,5 @@ export default defineSource({
         },
       },
     },
-  }),
+  })),
 })

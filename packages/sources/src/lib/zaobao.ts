@@ -13,7 +13,7 @@ export default defineSource({
   color: "red",
   home: "https://www.zaobao.com",
   id: "news",
-  ...defineHtmlSourceGetter({
+  ...defineHtmlSourceGetter(() => ({
     url: "https://www.zaochenbao.com/realtime/",
     decoding: "gb2312",
     itemSelector: "div.list-block>a.item",
@@ -32,5 +32,5 @@ export default defineSource({
         },
       },
     },
-  }),
+  })),
 })

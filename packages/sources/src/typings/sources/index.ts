@@ -3,7 +3,6 @@ import type { MetaSource } from "./source"
 export * from "./params"
 export * from "./source"
 
-export type SourceID = string
 export interface NewsItem {
   title: string
   url: string
@@ -25,13 +24,13 @@ export interface NewsItem {
 
 export interface SourceResponse {
   status: "success" | "cache"
-  id: SourceID
+  id: string
   updated: number | string
   items: NewsItem[]
 }
 
 export interface MetaSourceResponse {
-  id: SourceID
+  id: string
   meta: MetaSource
   updated?: number | string
   items?: NewsItem[]

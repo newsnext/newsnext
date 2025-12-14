@@ -9,17 +9,25 @@ const SOURCEID = process.env.SOURCEID
 // Only run integration tests if LIVE_TEST is set
 const describeIntegration = SOURCEID || process.env.LIVE_TEST ? describe : describe.skip
 
+describe("source has default", () => {
+  for (const [namespace, subsource] of Object.entries(sources)) {
+    it(`${namespace} has default`, async () => {
+      expect(Object.keys(subsource).includes("default")).toBe(true)
+    })
+  }
+})
+
 describeIntegration("source Integration Tests", () => {
-  for (const [groupKey, sourceGroup] of Object.entries(sources)) {
-    describe(groupKey, () => {
-      for (const [sourceId, source] of Object.entries(sourceGroup)) {
-        const fullSourceId = `${groupKey}:${sourceId}`
+  for (const [namespace, subsource] of Object.entries(sources)) {
+    describe(namespace, () => {
+      for (const [sourceId, source] of Object.entries(subsource)) {
+        const fullSourceId = `${namespace}:${sourceId}`
         if (!source.getter) {
           it.skip(`${fullSourceId} (No getter)`, () => {})
           continue
         }
 
-        if (SOURCEID && groupKey !== SOURCEID) {
+        if (SOURCEID && namespace !== SOURCEID) {
           it.skip(`${fullSourceId} (Not the source ID)`, () => {})
           continue
         }

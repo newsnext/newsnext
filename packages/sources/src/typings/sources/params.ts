@@ -1,7 +1,6 @@
 interface Base {
   title: string
   description?: string
-  optional?: boolean
   icon?: string
 }
 

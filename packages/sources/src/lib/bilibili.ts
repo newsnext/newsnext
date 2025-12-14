@@ -25,7 +25,7 @@ interface VideoItem {
   pic: string
 }
 
-const hotSearch = defineJsonSourceGetter<HotSearchItem>({
+const hotSearch = defineJsonSourceGetter<HotSearchItem>(() => ({
   url: "https://s.search.bilibili.com/main/hotword?limit=30",
   items: "list",
   fields: {
@@ -35,9 +35,9 @@ const hotSearch = defineJsonSourceGetter<HotSearchItem>({
       icon: item => item.icon ? { url: item.icon, scale: 1 } : undefined,
     },
   },
-}).getter
+})).getter
 
-const hotVideo = defineJsonSourceGetter<VideoItem>({
+const hotVideo = defineJsonSourceGetter<VideoItem>(() => ({
   url: "https://api.bilibili.com/x/web-interface/popular",
   items: "data.list",
   fields: {
@@ -50,9 +50,9 @@ const hotVideo = defineJsonSourceGetter<VideoItem>({
       icon: item => item.pic ? { url: item.pic, scale: 1 } : undefined,
     },
   },
-}).getter
+})).getter
 
-const ranking = defineJsonSourceGetter<VideoItem>({
+const ranking = defineJsonSourceGetter<VideoItem>(() => ({
   url: "https://api.bilibili.com/x/web-interface/ranking/v2",
   items: "data.list",
   fields: {
@@ -65,7 +65,7 @@ const ranking = defineJsonSourceGetter<VideoItem>({
       icon: item => item.pic ? { url: item.pic, scale: 1 } : undefined,
     },
   },
-}).getter
+})).getter
 
 export default defineSource({
   name: "Bilibili",
@@ -74,7 +74,7 @@ export default defineSource({
   category: "china",
   sub: [
     {
-      id: "hot-search",
+      id: "default",
       title: "热搜",
       interval: Time.Realtime,
       getter: hotSearch,

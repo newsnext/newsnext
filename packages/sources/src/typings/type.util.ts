@@ -4,9 +4,10 @@ export type UnionToIntersection<U>
 
 export type MaybePromise<T> = Promise<T> | T
 
-export type XOR<T, U> = T | U extends object
+export type Either<T, U> = T | U extends object
   ? (Without<T, U> & U) | (Without<U, T> & T)
   : T | U
+
 export type Without<T, U> = { [P in Exclude<keyof T, keyof U>]?: never }
 
 export function typeSafeObjectFromEntries<T extends ReadonlyArray<readonly [PropertyKey, unknown]>>(entries: T) {

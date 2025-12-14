@@ -20,14 +20,14 @@ describe("defineJsonSource", () => {
 
     ;(myFetch as any).mockResolvedValue(data)
 
-    const source = defineJsonSourceGetter({
+    const source = defineJsonSourceGetter(() => ({
       url: "https://api.example.com",
       fields: {
         title: "title",
         url: "link",
         updated: "ts",
       },
-    })
+    }))
 
     const results = await (source as any).getter({})
 
@@ -47,14 +47,14 @@ describe("defineJsonSource", () => {
     }
     ;(myFetch as any).mockResolvedValue(data)
 
-    const source = defineJsonSourceGetter({
+    const source = defineJsonSourceGetter(() => ({
       url: "https://api.example.com",
       items: "response.items",
       fields: {
         title: "name",
         url: "url",
       },
-    })
+    }))
 
     const results = await (source as any).getter({})
     expect(results).toHaveLength(1)
@@ -69,7 +69,7 @@ describe("defineJsonSource", () => {
     }
     ;(myFetch as any).mockResolvedValue(data)
 
-    const source = defineJsonSourceGetter({
+    const source = defineJsonSourceGetter(() => ({
       url: "https://api.example.com",
       items: json => json.data,
       fields: {
@@ -79,7 +79,7 @@ describe("defineJsonSource", () => {
           info: item => `Score: ${item.meta.score}`,
         },
       },
-    })
+    }))
 
     const results = await (source as any).getter({})
     expect(results[0].title).toBe("FUNC")
@@ -89,11 +89,11 @@ describe("defineJsonSource", () => {
   it("should handle custom fetch", async () => {
     const customFetch = vi.fn().mockResolvedValue([{ t: "Custom", u: "u" }])
 
-    const source = defineJsonSourceGetter({
+    const source = defineJsonSourceGetter(() => ({
       url: "http://c",
       fetch: customFetch,
       fields: { title: "t", url: "u" },
-    })
+    }))
 
     const results = await (source as any).getter({})
     expect(customFetch).toHaveBeenCalled()

@@ -1,6 +1,6 @@
 import type { Color } from "@newsnext/shared/types"
-import type { NewsItem, SourceID } from "."
-import type { XOR } from "../type.util"
+import type { NewsItem } from "."
+import type { Either } from "../type.util"
 import type { Parameter } from "./params"
 
 export type CategoryId = "tech" | "finance" | "china" | "world" | "others"
@@ -20,17 +20,21 @@ export type InitalSource = Partial<Omit<Source, "getter" | "namespace" | "id">>
     name: string
     color: Color
   } & (
-    XOR<
+    Either<
       {
         sub: ({
-          id: SourceID
           title: string
           getter: SourceGetter
-        } & Partial<Omit<Source, "name" | "namespace" | "key">>
+        } & (
+          Either<{
+            id: "default"
+          }, {
+            id: string
+          }>
+        ) & Partial<Omit<Source, "name" | "namespace" | "key">>
         )[]
       },
       {
-        id?: SourceID
         getter: SourceGetter
       }
     >
@@ -50,11 +54,8 @@ export interface Source {
    */
   namespace: string
   /**
-   * source id，uuid 是不是应该就用这个 id 代替 呢。
-   * 或者说 uuid 始终用 namespace:xxxxx 代替呢，我们随机生成这个 id。始终保持在 namespace 下面。
-   * 其实可以在 generate 的时候替换成 namespace:id 就不用多一个属性了。
    */
-  id: SourceID
+  id: string
   /**
    * source name, sub title
    */

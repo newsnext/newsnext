@@ -12,7 +12,7 @@ export default defineSource({
   category: "china",
   id: "hot",
   interval: Time.Common,
-  ...defineHtmlSourceGetter({
+  ...defineHtmlSourceGetter(() => ({
     url: "https://s.weibo.com/top/summary?cate=realtimehot",
     fetch: async (url) => {
       return myFetch(url, {
@@ -48,5 +48,5 @@ export default defineSource({
         },
       },
     },
-  }),
+  })),
 })

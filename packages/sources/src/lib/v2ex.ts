@@ -34,12 +34,6 @@ export default defineSource({
   name: "V2EX",
   color: "slate",
   home: "https://v2ex.com/",
-  sub: [
-    {
-      id: "share",
-      title: "Share",
-      category: "tech",
-      getter: share,
-    },
-  ],
+  category: "tech",
+  getter: share,
 })

@@ -22,7 +22,7 @@ describe("defineHtmlSource", () => {
         </div>
         <div class="item">
           <a class="title" href="/article/2">Article 2</a>
-           <span class="date">123457</span>
+          <span class="date">123457</span>
         </div>
       </div>
     `
@@ -30,7 +30,7 @@ describe("defineHtmlSource", () => {
     // Setup mock
     ;(myFetch as any).mockResolvedValue(html)
 
-    const source = defineHtmlSourceGetter({
+    const source = defineHtmlSourceGetter(() => ({
       url: "https://example.com",
       itemSelector: ".list .item",
       fields: {
@@ -38,7 +38,7 @@ describe("defineHtmlSource", () => {
         url: { selector: ".title", attr: "href" },
         updated: ".date",
       },
-    })
+    }))
 
     // Assuming simple source without params returns { getter }
     const results = await (source as any).getter({})
@@ -59,7 +59,7 @@ describe("defineHtmlSource", () => {
     `
     ;(myFetch as any).mockResolvedValue(html)
 
-    const source = defineHtmlSourceGetter({
+    const source = defineHtmlSourceGetter(() => ({
       url: "https://example.com",
       itemSelector: ".item",
       fields: {
@@ -78,7 +78,7 @@ describe("defineHtmlSource", () => {
           transform: val => Number(val) * 1000,
         },
       },
-    })
+    }))
 
     const results = await (source as any).getter({})
     expect(results[0].title).toBe("DIRTY TITLE")
@@ -89,13 +89,12 @@ describe("defineHtmlSource", () => {
     ;(myFetch as any).mockResolvedValue("<div class=\"item\"></div>")
 
     const source = defineHtmlSourceGetter({
-      url: (params: { page: number }) => `https://example.com?p=${params.page}`,
+      page: { type: "number", default: 1, title: "Page" },
+    }, params => ({
+      url: `https://example.com?p=${params.page}`,
       itemSelector: ".item",
       fields: { title: ".t", url: ".u" },
-      params: {
-        page: { type: "number", default: 1, title: "Page" },
-      },
-    })
+    }))
 
     await (source as any).getter({ page: 2 })
 
@@ -108,7 +107,7 @@ describe("defineHtmlSource", () => {
     // Mock fetch returning array buffer
     ;(myFetch as any).mockResolvedValue(gb2312Buffer)
 
-    const source = defineHtmlSourceGetter({
+    const source = defineHtmlSourceGetter(() => ({
       url: "https://example.com/gb",
       decoding: "gb2312",
       itemSelector: ".item",
@@ -116,7 +115,7 @@ describe("defineHtmlSource", () => {
         title: ".title",
         url: { transform: () => "http://u" },
       },
-    })
+    }))
 
     const results = await (source as any).getter({})
 
@@ -129,7 +128,7 @@ describe("defineHtmlSource", () => {
 
     const customFetch = vi.fn().mockResolvedValue(html)
 
-    const source = defineHtmlSourceGetter({
+    const source = defineHtmlSourceGetter(() => ({
       url: "https://example.com/custom",
       fetch: customFetch,
       itemSelector: ".item",
@@ -137,11 +136,11 @@ describe("defineHtmlSource", () => {
         title: ".title",
         url: { transform: () => "http://u" },
       },
-    })
+    }))
 
     const results = await (source as any).getter({})
 
-    expect(customFetch).toHaveBeenCalledWith("https://example.com/custom", {})
+    expect(customFetch).toHaveBeenCalledWith("https://example.com/custom")
     expect(results[0].title).toBe("Custom Fetch")
     // Ensure default fetch was NOT called
     expect(myFetch).not.toHaveBeenCalled()

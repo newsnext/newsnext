@@ -19,7 +19,6 @@ describe("source Structure Tests", () => {
             expect(typeof source.params).toBe("object")
             for (const [_paramKey, param] of Object.entries(source.params)) {
               expect(param).toHaveProperty("default")
-              // title is optional but good practice
             }
           }
         })

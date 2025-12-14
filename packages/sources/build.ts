@@ -1,7 +1,7 @@
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 import { Glob } from "bun"
-import { build } from "tsdown"
+// import { build } from "tsdown"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const rootDir = __dirname
@@ -58,8 +58,8 @@ console.log("Found sources:", imports.map(i => i.split(":")[0].trim()))
 // const { sources } = await import("./src/index.ts")
 // console.log(sources)
 
-await build({
-  entry: indexPath,
-  outDir: join(rootDir, "dist"),
-  dts: true,
-})
+// await build({
+//   entry: indexPath,
+//   outDir: join(rootDir, "dist"),
+//   dts: true,
+// })

@@ -3,10 +3,10 @@ import type { NewsItem, Parameter } from "../typings/sources"
 import { myFetch } from "./fetch"
 import { defineSourceGetterWithParams } from "./source"
 
-export type FieldResolver<Item = any, Result = any, P = any> = string | ((item: Item, params: P) => Result)
+export type FieldResolver<Item = any, Result = any> = string | ((item: Item, params?: any) => Result)
 
-export interface JsonSourceOptions<Item = any, P extends Record<string, Parameter> = Record<string, Parameter>> {
-  url: string | ((params: { [K in keyof P]: P[K]["default"] }) => string)
+export interface JsonSourceOptions<Item = any> {
+  url: string
   /**
    * Path to the array of items in the response JSON (e.g. "data.items").
    * OR a function that returns the items array from the JSON.
@@ -14,59 +14,67 @@ export interface JsonSourceOptions<Item = any, P extends Record<string, Paramete
    *
    * If not provided, assumes the response itself is the array.
    */
-  items?: string | ((json: any, params: { [K in keyof P]: P[K]["default"] }) => Item[] | string)
+  items?: string | ((json: any) => Item[] | string)
   /**
    * Custom fetch function
    */
-  fetchOptions?: FetchOptions | ((params: { [K in keyof P]: P[K]["default"] }) => FetchOptions)
-  fetch?: (url: string, params: { [K in keyof P]: P[K]["default"] }) => Promise<any>
+  fetchOptions?: FetchOptions
+  fetch?: (url: string) => Promise<any>
   fields: {
-    title: FieldResolver<Item, string, { [K in keyof P]: P[K]["default"] }>
-    url: FieldResolver<Item, string, { [K in keyof P]: P[K]["default"] }>
-    updated?: FieldResolver<Item, number, { [K in keyof P]: P[K]["default"] }>
-    extra?: Record<string, FieldResolver<Item, any, { [K in keyof P]: P[K]["default"] }>>
+    title: FieldResolver<Item, string>
+    url: FieldResolver<Item, string>
+    updated?: FieldResolver<Item, number>
+    extra?: Record<string, FieldResolver<Item, any>>
   }
-  params?: P
 }
 
 export function resolvePath(item: any, path: string) {
   return path.split(".").reduce((acc: any, part) => acc && acc[part], item)
 }
 
-function resolveValue<Item, P>(item: Item, params: P, resolver: FieldResolver<Item, any, P>): any {
+function resolveValue<Item>(item: Item, resolver: FieldResolver<Item, any>): any {
   if (typeof resolver === "function") {
-    return resolver(item, params)
+    return resolver(item, undefined)
   }
   // Simple dot notation resolution
   return resolvePath(item, resolver as string)
 }
 
-export function defineJsonSourceGetter<Item = any, P extends Record<string, Parameter> = Record<string, Parameter>>(options: JsonSourceOptions<Item, P>) {
-  const getter = async (params: any) => {
-    const url = typeof options.url === "function" ? options.url(params) : options.url
+export function defineJsonSourceGetter<Item = any>(
+  options: () => JsonSourceOptions<Item>,
+): { getter: () => Promise<NewsItem[]> }
+export function defineJsonSourceGetter<Item = any, P extends Record<string, Parameter> = Record<string, Parameter>>(
+  params: P,
+  options: (params: { [K in keyof P]: P[K]["default"] }) => JsonSourceOptions<Item>,
+): { params: P, getter: (params: any) => Promise<NewsItem[]> }
+export function defineJsonSourceGetter<Item = any>(
+  ...args: any[]
+): any {
+  const params = args.length === 2 ? args[0] : {}
+  const options = args.length === 2 ? args[1] : args[0]
 
-    const fetchOpts = typeof options.fetchOptions === "function"
-      ? options.fetchOptions(params)
-      : options.fetchOptions
+  return defineSourceGetterWithParams(params, async (paramsValue) => {
+    const opts = options(paramsValue)
+    const { url, fetchOptions, fetch, items: itemsResolver, fields } = opts
 
     let json: any
-    if (options.fetch) {
-      json = await options.fetch(url, params)
+    if (fetch) {
+      json = await fetch(url)
     } else {
-      json = await myFetch(url, fetchOpts)
+      json = await myFetch(url, fetchOptions)
     }
 
     let items: Item[] = []
-    if (options.items) {
-      if (typeof options.items === "function") {
-        const res = options.items(json, params)
+    if (itemsResolver) {
+      if (typeof itemsResolver === "function") {
+        const res = itemsResolver(json)
         if (typeof res === "string") {
           items = resolvePath(json, res)
         } else {
           items = res
         }
-      } else if (typeof options.items === "string") {
-        items = resolvePath(json, options.items)
+      } else if (typeof itemsResolver === "string") {
+        items = resolvePath(json, itemsResolver)
       }
     } else {
       items = Array.isArray(json) ? json : []
@@ -78,8 +86,8 @@ export function defineJsonSourceGetter<Item = any, P extends Record<string, Para
     }
 
     const news: NewsItem[] = items.map((item) => {
-      const title = resolveValue(item, params, options.fields.title)
-      const itemUrl = resolveValue(item, params, options.fields.url)
+      const title = resolveValue(item, fields.title)
+      const itemUrl = resolveValue(item, fields.url)
 
       if (!title || !itemUrl) return null
 
@@ -88,15 +96,15 @@ export function defineJsonSourceGetter<Item = any, P extends Record<string, Para
         url: itemUrl,
       }
 
-      if (options.fields.updated) {
-        const updated = resolveValue(item, params, options.fields.updated)
+      if (fields.updated) {
+        const updated = resolveValue(item, fields.updated)
         if (updated) newsItem.updated = updated
       }
 
-      if (options.fields.extra) {
+      if (fields.extra) {
         newsItem.extra = {}
-        for (const [key, resolver] of Object.entries(options.fields.extra)) {
-          const val = resolveValue(item, params, resolver!)
+        for (const [key, resolver] of Object.entries(fields.extra)) {
+          const val = resolveValue(item, resolver as FieldResolver<Item, any>)
           if (val !== undefined) {
             newsItem.extra[key as keyof typeof newsItem.extra] = val
           }
@@ -111,11 +119,5 @@ export function defineJsonSourceGetter<Item = any, P extends Record<string, Para
     }
 
     return news
-  }
-
-  if (options.params) {
-    return defineSourceGetterWithParams(options.params, getter)
-  }
-
-  return { getter }
+  })
 }
