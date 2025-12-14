@@ -15,15 +15,7 @@ interface CardContextValue {
   dragHandle?: ReactNode
 }
 
-const CardContext = createContext<CardContextValue | null>(null)
-
-export function CardProvider({ children, value }: { children: ReactNode, value: CardContextValue }) {
-  return (
-    <CardContext.Provider value={value}>
-      {children}
-    </CardContext.Provider>
-  )
-}
+export const CardContext = createContext<CardContextValue | null>(null)
 
 export function useCard() {
   const context = useContext(CardContext)

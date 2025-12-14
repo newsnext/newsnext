@@ -1,11 +1,12 @@
 import type { ReactNode } from "react"
 import type { Source } from "@/typings/source"
-import { useCallback, useMemo, useState } from "react"
+import { useInView } from "motion/react"
+import { useCallback, useImperativeHandle, useMemo, useRef, useState } from "react"
 import { FlipAnimate } from "@/components/common/flip-animate"
 import { useSourceQuery } from "@/hooks/use-source-query"
 import { cn } from "@/lib/utils"
 import { CardBack } from "./card-back"
-import { CardProvider } from "./card-context"
+import { CardContext } from "./card-context"
 import { CardFront } from "./card-front"
 
 export interface CardProps {
@@ -19,9 +20,17 @@ export interface CardProps {
 export default function Card({ id, source, className, nodeRef, dragHandle }: CardProps) {
   const [isStarred, setIsStarred] = useState(false)
   const [isFlipped, setIsFlipped] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  const inView = useInView(ref, {
+    once: true,
+  })
+
+  useImperativeHandle(nodeRef, () => ref.current! as HTMLDivElement)
 
   const { items, refetch, isFetching } = useSourceQuery({
     sourceId: id,
+    enabled: inView,
   })
 
   const handleRefresh = useCallback(() => {
@@ -58,9 +67,9 @@ export default function Card({ id, source, className, nodeRef, dragHandle }: Car
   )
 
   return (
-    <CardProvider value={contextValue}>
+    <CardContext.Provider value={contextValue}>
       <div
-        ref={nodeRef}
+        ref={ref}
         className={cn(
           "h-[500px] w-[400px]",
           className,
@@ -74,6 +83,6 @@ export default function Card({ id, source, className, nodeRef, dragHandle }: Car
           <CardBack />
         </FlipAnimate>
       </div>
-    </CardProvider>
+    </CardContext.Provider>
   )
 }
