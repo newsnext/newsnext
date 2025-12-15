@@ -3,9 +3,10 @@ import "dotenv/config"
 
 export default defineConfig({
   out: "./drizzle",
-  schema: "./src/lib/db/schema.ts",
+  schema: "./src/schema.ts",
   dialect: "sqlite",
   dbCredentials: {
-    url: process.env.DB_FILE_NAME!,
+    url: process.env.DB_PATH!,
   },
+  verbose: true,
 })

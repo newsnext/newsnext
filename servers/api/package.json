@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@hono/trpc-server": "^0.4.1",
+    "@newsnext/database": "workspace:*",
     "@newsnext/sources": "workspace:*",
     "@trpc/server": "^11.8.0",
     "hono": "^4.10.8"

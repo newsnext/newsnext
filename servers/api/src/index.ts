@@ -1,10 +1,14 @@
 import { trpcServer } from "@hono/trpc-server"
+import { cache, db } from "@newsnext/database"
+import { eq } from "@newsnext/database/orm"
 import { sources } from "@newsnext/sources"
 import { metadata } from "@newsnext/sources/metadata"
 import { Hono } from "hono"
 import { cors } from "hono/cors"
 import { logger } from "hono/logger"
 import { appRouter } from "./app-router"
+
+const TTL = 30 * 60 * 1000 // 30 minutes
 
 export type { AppRouter } from "./app-router"
 
@@ -79,20 +83,20 @@ app.get("/sources/:sourceId", async (c) => {
   const sourceId = c.req.param("sourceId")
 
   // Expect sourceId to be "group:id"
-  const [group, id = "default"] = sourceId.split(":")
+  const [namespace, id = "default"] = sourceId.split(":")
 
-  if (!group || !id) {
+  if (!namespace || !id) {
     return c.json(error("INVALID_FORMAT", "Invalid source ID format. Expected 'group:id'"))
   }
 
-  const sourceGroup = sources[group as keyof typeof sources]
+  const sourceGroup = sources[namespace as keyof typeof sources]
   if (!sourceGroup) {
-    return c.json(error("GROUP_NOT_FOUND", `Source group '${group}' not found`))
+    return c.json(error("GROUP_NOT_FOUND", `Source group '${namespace}' not found`))
   }
 
   const source = sourceGroup[id]
   if (!source) {
-    return c.json(error("SOURCE_NOT_FOUND", `Source '${id}' not found in group '${group}'`))
+    return c.json(error("SOURCE_NOT_FOUND", `Source '${id}' not found in group '${namespace}'`))
   }
 
   if (!source.fetcher) {
@@ -123,14 +127,79 @@ app.get("/sources/:sourceId", async (c) => {
     }
   }
 
+  // Cache Logic
+  const meta = metadata.find(m => m.namespace === namespace && m.id === id)
+  const interval = meta?.interval ?? 10 * 60 * 1000
+  const isLatest = query.latest === "true" || query.latest === "1"
+  const now = Date.now()
+
+  let cached: typeof cache.$inferSelect | undefined
+  try {
+    const result = await db.query.cache.findFirst({
+      where: eq(cache.key, sourceId),
+    })
+    cached = result
+  } catch (e) {
+    console.error("Cache read error:", e)
+  }
+
+  if (cached) {
+    const updated = new Date(cached.updatedAt).getTime()
+    // 1. Fresh cache
+    if (now - updated < interval) {
+      return c.json(success({
+        id: sourceId,
+        updated,
+        items: JSON.parse(cached.value),
+        status: "success", // Considered fresh
+      }))
+    }
+    // 2. Stale but valid within TTL (if not forced refresh)
+    if (now - updated < TTL) {
+      if (!isLatest) {
+        return c.json(success({
+          id: sourceId,
+          updated,
+          items: JSON.parse(cached.value),
+          status: "cache",
+        }))
+      }
+    }
+  }
+
   try {
     const items = await source.fetcher(params)
+
+    // Update cache
+    const value = JSON.stringify(items)
+    await db.insert(cache).values({
+      key: sourceId,
+      value,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    }).onConflictDoUpdate({
+      target: cache.key,
+      set: {
+        value,
+        updatedAt: Date.now(),
+      },
+    })
+
     return c.json(success({
       id: sourceId,
       updated: Date.now(),
       items,
+      status: "success",
     }))
   } catch (err: any) {
+    if (cached) {
+      return c.json(success({
+        id: sourceId,
+        updated: new Date(cached.updatedAt).getTime(),
+        items: JSON.parse(cached.value),
+        status: "cache",
+      }))
+    }
     console.error(`Error executing source ${sourceId}:`, err)
     return c.json(error("INTERNAL_ERROR", err.message || "Internal Server Error"))
   }

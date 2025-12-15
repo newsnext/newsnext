@@ -3,11 +3,21 @@
   "type": "module",
   "private": true,
   "license": "MPL-2.0",
-  "scripts": {},
+  "exports": {
+    ".": "./src/index.ts",
+    "./orm": "./src/orm.ts"
+  },
+  "scripts": {
+    "generate": "bun run --bun drizzle-kit generate",
+    "push": "bun run --bun drizzle-kit push",
+    "migrate": "bun run --bun drizzle-kit migrate",
+    "studio": "bun run --bun drizzle-kit studio"
+  },
   "dependencies": {
-    "drizzle-orm": "^0.45.0"
+    "drizzle-orm": "^0.45.1"
   },
   "devDependencies": {
+    "@libsql/client": "^0.15.15",
     "drizzle-kit": "^0.31.8"
   }
 }
