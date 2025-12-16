@@ -10,7 +10,7 @@ interface HeaderProps {
 }
 
 export function Header({ scrollContainerRef }: HeaderProps) {
-  const { refreshAll, isRefreshing } = useRefetch()
+  const { refetchAll, isFetching } = useRefetch()
   return (
     <header className="fixed -top-0.5 inset-x-0 z-20 p-6 pointer-events-none">
       <div className="h-11 flex items-center gap-3 overflow-x-auto scrollbar-hidden pointer-events-auto md:pointer-events-none">
@@ -20,10 +20,10 @@ export function Header({ scrollContainerRef }: HeaderProps) {
           <button
             className="island-pill flex items-center justify-center size-10 pointer-events-auto"
             title="Refresh All"
-            onClick={refreshAll}
-            disabled={isRefreshing}
+            onClick={refetchAll}
+            disabled={isFetching}
           >
-            {isRefreshing ? <PhCircleDashedDuotone className="size-5 animate-spin" /> : <PhArrowCounterClockwiseDuotone className="size-5" />}
+            {isFetching ? <PhCircleDashedDuotone className="size-5 animate-spin" /> : <PhArrowCounterClockwiseDuotone className="size-5" />}
           </button>
         </div>
 

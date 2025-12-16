@@ -2,8 +2,8 @@ import type { NewsItem } from "@/typings/source"
 import { useQuery } from "@tanstack/react-query"
 import { getQueryKey } from "@trpc/react-query"
 import { useCallback } from "react"
-import { refetchSources } from "@/lib/refetch-state"
 import { trpc } from "@/lib/trpc"
+import { refetchSources, useRefetch } from "./use-refetch"
 
 export interface UseSourceQueryOptions {
   sourceId: string
@@ -12,8 +12,9 @@ export interface UseSourceQueryOptions {
 
 export function useSourceQuery({ sourceId, enabled = true }: UseSourceQueryOptions) {
   const utils = trpc.useUtils()
+  const { refetch } = useRefetch()
 
-  const { data, isFetching, isError, refetch } = useQuery({
+  const { data, isFetching, isError } = useQuery({
     queryKey: getQueryKey(trpc.getSource, { sourceId }),
     queryFn: async () => {
       const isRefetch = refetchSources.has(sourceId)
@@ -32,15 +33,14 @@ export function useSourceQuery({ sourceId, enabled = true }: UseSourceQueryOptio
     retry: false,
   })
 
-  const forceRefresh = useCallback(async () => {
-    refetchSources.add(sourceId)
-    await refetch()
+  const handleRefetch = useCallback(async () => {
+    await refetch(sourceId)
   }, [sourceId, refetch])
 
   return {
     data,
     items: (data?.items || []) as NewsItem[],
-    refetch: forceRefresh,
+    refetch: handleRefetch,
     isFetching,
     isError,
     updatedTime: data?.updated,

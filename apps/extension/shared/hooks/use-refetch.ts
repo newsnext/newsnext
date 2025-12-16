@@ -1,21 +1,24 @@
+import { useIsFetching } from "@tanstack/react-query"
+import { getQueryKey } from "@trpc/react-query"
 import { useAtomValue } from "jotai"
-import { useCallback, useState } from "react"
-import { refetchSources } from "@/lib/refetch-state"
+import { useCallback, useMemo } from "react"
 import { trpc } from "@/lib/trpc"
 import { currentBoardAtom } from "@/store/board"
 
+export const refetchSources = new Set<string>()
+
 export function useRefetch() {
   const utils = trpc.useUtils()
-  const [isRefreshing, setIsRefreshing] = useState(false)
   const currentBoard = useAtomValue(currentBoardAtom)
+  const fetchingCount = useIsFetching({ queryKey: getQueryKey(trpc.getSource) })
+
+  const isFetching = useMemo(() => fetchingCount > 0, [fetchingCount])
 
   /**
    * Force refresh specific sources
    */
-  const refresh = useCallback(
+  const refetch = useCallback(
     async (...sourceIds: string[]) => {
-      if (isRefreshing) return
-      setIsRefreshing(true)
       try {
         // Set flags
         sourceIds.forEach(id => refetchSources.add(id))
@@ -26,19 +29,17 @@ export function useRefetch() {
             utils.getSource.invalidate({ sourceId }),
           ),
         )
-      } finally {
-        setIsRefreshing(false)
+      } catch (e) {
+        console.error("Failed to refresh sources", e)
       }
     },
-    [utils, isRefreshing],
+    [utils],
   )
 
   /**
    * Refresh all sources in current board
    */
-  const refreshAll = useCallback(async () => {
-    if (isRefreshing) return
-    setIsRefreshing(true)
+  const refetchAll = useCallback(async () => {
     try {
       // 1. Get current board's sources
       const sources = await utils.getBoard.ensureData({ boardId: currentBoard })
@@ -55,14 +56,12 @@ export function useRefetch() {
       )
     } catch (e) {
       console.error("Failed to refresh board sources", e)
-    } finally {
-      setIsRefreshing(false)
     }
-  }, [utils, currentBoard, isRefreshing])
+  }, [utils, currentBoard])
 
   return {
-    refresh,
-    refreshAll,
-    isRefreshing,
+    refetch,
+    refetchAll,
+    isFetching,
   }
 }
