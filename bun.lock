@@ -152,10 +152,22 @@
       "name": "@newsnext/api",
       "dependencies": {
         "@hono/trpc-server": "^0.4.1",
+        "@newsnext/cache": "workspace:*",
         "@newsnext/database": "workspace:*",
         "@newsnext/sources": "workspace:*",
         "@trpc/server": "^11.8.0",
         "hono": "^4.10.8",
+      },
+    },
+    "servers/cache": {
+      "name": "@newsnext/cache",
+      "dependencies": {
+        "drizzle-orm": "^0.45.1",
+      },
+      "devDependencies": {
+        "@libsql/client": "^0.15.15",
+        "@newsnext/sources": "workspace:*",
+        "drizzle-kit": "^0.31.8",
       },
     },
     "servers/database": {
@@ -165,6 +177,7 @@
       },
       "devDependencies": {
         "@libsql/client": "^0.15.15",
+        "@newsnext/sources": "workspace:*",
         "drizzle-kit": "^0.31.8",
       },
     },
@@ -436,6 +449,8 @@
     "@neon-rs/load": ["@neon-rs/load@0.0.4", "", {}, "sha512-kTPhdZyTQxB+2wpiRcFWrDcejc4JI6tkPuS7UZCG4l6Zvc5kU/gGQ/ozvHTh1XR5tS+UlfAfGuPajjzQjCiHCw=="],
 
     "@newsnext/api": ["@newsnext/api@workspace:servers/api"],
+
+    "@newsnext/cache": ["@newsnext/cache@workspace:servers/cache"],
 
     "@newsnext/database": ["@newsnext/database@workspace:servers/database"],
 

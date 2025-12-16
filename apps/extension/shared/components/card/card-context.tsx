@@ -7,7 +7,7 @@ interface CardContextValue {
   id: string
   source: Source & { id: string }
   items: NewsItem[]
-  isRefreshing: boolean
+  isFetching: boolean
   isStarred: boolean
   onRefresh: () => void
   onToggleStar: () => void

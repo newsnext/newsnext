@@ -56,7 +56,7 @@ export default function Card({ id, source, className, nodeRef, dragHandle }: Car
       id,
       source,
       items,
-      isRefreshing: isFetching,
+      isFetching,
       isStarred,
       onRefresh: handleRefresh,
       onToggleStar: handleToggleStar,

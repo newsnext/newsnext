@@ -6,7 +6,9 @@ CREATE TABLE `boards_table` (
 --> statement-breakpoint
 CREATE TABLE `cache_table` (
 	`key` text PRIMARY KEY NOT NULL,
-	`value` text NOT NULL
+	`value` text NOT NULL,
+	`createdAt` integer DEFAULT CURRENT_TIMESTAMP NOT NULL,
+	`updatedAt` integer DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE `sources_table` (

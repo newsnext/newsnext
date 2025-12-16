@@ -4,335 +4,335 @@ import type { SourceMeta } from "./typings/sources"
 
 export const metadata: SourceMeta[] = [
   {
-    "name": "Bilibili",
-    "home": "https://www.bilibili.com",
-    "color": "blue",
-    "category": "china",
-    "interval": 120000,
-    "id": "default",
-    "title": "热搜",
-    "type": "hottest",
-    "params": {},
-    "namespace": "bilibili"
+    name: "Bilibili",
+    home: "https://www.bilibili.com",
+    color: "blue",
+    category: "china",
+    interval: 120000,
+    id: "default",
+    title: "热搜",
+    type: "hottest",
+    params: {},
+    namespace: "bilibili",
   },
   {
-    "name": "Bilibili",
-    "home": "https://www.bilibili.com",
-    "color": "blue",
-    "category": "china",
-    "interval": 1800000,
-    "id": "hot-video",
-    "title": "热门视频",
-    "type": "hottest",
-    "params": {},
-    "namespace": "bilibili"
+    name: "Bilibili",
+    home: "https://www.bilibili.com",
+    color: "blue",
+    category: "china",
+    interval: 1800000,
+    id: "hot-video",
+    title: "热门视频",
+    type: "hottest",
+    params: {},
+    namespace: "bilibili",
   },
   {
-    "name": "Bilibili",
-    "home": "https://www.bilibili.com",
-    "color": "blue",
-    "category": "china",
-    "interval": 1800000,
-    "id": "ranking",
-    "title": "排行榜",
-    "type": "hottest",
-    "params": {},
-    "namespace": "bilibili"
+    name: "Bilibili",
+    home: "https://www.bilibili.com",
+    color: "blue",
+    category: "china",
+    interval: 1800000,
+    id: "ranking",
+    title: "排行榜",
+    type: "hottest",
+    params: {},
+    namespace: "bilibili",
   },
   {
-    "name": "GitHub",
-    "title": "Trending",
-    "home": "https://github.com/trending",
-    "color": "slate",
-    "interval": 1800000,
-    "type": "hottest",
-    "params": {},
-    "category": "others",
-    "id": "default",
-    "namespace": "github"
+    name: "GitHub",
+    title: "Trending",
+    home: "https://github.com/trending",
+    color: "slate",
+    interval: 1800000,
+    type: "hottest",
+    params: {},
+    category: "others",
+    id: "default",
+    namespace: "github",
   },
   {
-    "name": "Hacker News",
-    "color": "orange",
-    "category": "tech",
-    "home": "https://news.ycombinator.com/",
-    "interval": 600000,
-    "type": "hottest",
-    "title": "Hottest",
-    "id": "default",
-    "params": {},
-    "namespace": "hackernews"
+    name: "Hacker News",
+    color: "orange",
+    category: "tech",
+    home: "https://news.ycombinator.com/",
+    interval: 600000,
+    type: "hottest",
+    title: "Hottest",
+    id: "default",
+    params: {},
+    namespace: "hackernews",
   },
   {
-    "name": "Hacker News",
-    "color": "orange",
-    "category": "tech",
-    "home": "https://news.ycombinator.com/newest",
-    "interval": 120000,
-    "type": "timeline",
-    "title": "Newest",
-    "id": "newest",
-    "params": {},
-    "namespace": "hackernews"
+    name: "Hacker News",
+    color: "orange",
+    category: "tech",
+    home: "https://news.ycombinator.com/newest",
+    interval: 120000,
+    type: "timeline",
+    title: "Newest",
+    id: "newest",
+    params: {},
+    namespace: "hackernews",
   },
   {
-    "name": "Hacker News",
-    "color": "orange",
-    "category": "tech",
-    "home": "https://news.ycombinator.com/show",
-    "interval": 1800000,
-    "title": "Show",
-    "id": "show",
-    "params": {},
-    "namespace": "hackernews"
+    name: "Hacker News",
+    color: "orange",
+    category: "tech",
+    home: "https://news.ycombinator.com/show",
+    interval: 1800000,
+    title: "Show",
+    id: "show",
+    params: {},
+    namespace: "hackernews",
   },
   {
-    "name": "Hacker News",
-    "color": "orange",
-    "category": "tech",
-    "home": "https://news.ycombinator.com/ask",
-    "interval": 1800000,
-    "title": "Ask",
-    "id": "ask",
-    "params": {},
-    "namespace": "hackernews"
+    name: "Hacker News",
+    color: "orange",
+    category: "tech",
+    home: "https://news.ycombinator.com/ask",
+    interval: 1800000,
+    title: "Ask",
+    id: "ask",
+    params: {},
+    namespace: "hackernews",
   },
   {
-    "name": "HTML Parser",
-    "color": "blue",
-    "home": "https://html.com/",
-    "params": {
-      "url": {
-        "type": "url",
-        "default": "https://bbs.pcbeta.com/viewthread-2059838-1-1.html",
-        "title": "Target URL"
+    name: "HTML Parser",
+    color: "blue",
+    home: "https://html.com/",
+    params: {
+      url: {
+        type: "url",
+        default: "https://bbs.pcbeta.com/viewthread-2059838-1-1.html",
+        title: "Target URL",
       },
-      "decoding": {
-        "type": "text",
-        "default": "UTF-8",
-        "title": "Decoding"
+      decoding: {
+        type: "text",
+        default: "UTF-8",
+        title: "Decoding",
       },
-      "itemSelector": {
-        "type": "text",
-        "default": "#postlist > div[id^='post_']",
-        "title": "Item Selector"
+      itemSelector: {
+        type: "text",
+        default: "#postlist > div[id^='post_']",
+        title: "Item Selector",
       },
-      "titleSelector": {
-        "type": "text",
-        "default": ".authi .xw1",
-        "title": "Title Selector"
+      titleSelector: {
+        type: "text",
+        default: ".authi .xw1",
+        title: "Title Selector",
       },
-      "linkSelector": {
-        "type": "text",
-        "default": "",
-        "title": "Link Selector"
-      }
+      linkSelector: {
+        type: "text",
+        default: "",
+        title: "Link Selector",
+      },
     },
-    "interval": 600000,
-    "category": "others",
-    "id": "default",
-    "namespace": "html"
+    interval: 600000,
+    category: "others",
+    id: "default",
+    namespace: "html",
   },
   {
-    "name": "JSON",
-    "color": "cyan",
-    "home": "https://www.json.org/",
-    "params": {
-      "url": {
-        "type": "url",
-        "default": "https://www.v2ex.com/feed/ideas.json",
-        "title": "Target URL"
+    name: "JSON",
+    color: "cyan",
+    home: "https://www.json.org/",
+    params: {
+      url: {
+        type: "url",
+        default: "https://www.v2ex.com/feed/ideas.json",
+        title: "Target URL",
       },
-      "headers": {
-        "type": "text",
-        "default": "{}",
-        "title": "Request Headers (JSON)"
+      headers: {
+        type: "text",
+        default: "{}",
+        title: "Request Headers (JSON)",
       },
-      "itemsPath": {
-        "type": "text",
-        "default": "items",
-        "title": "Items Path"
+      itemsPath: {
+        type: "text",
+        default: "items",
+        title: "Items Path",
       },
-      "titlePath": {
-        "type": "text",
-        "default": "title",
-        "title": "Title Path"
+      titlePath: {
+        type: "text",
+        default: "title",
+        title: "Title Path",
       },
-      "urlPath": {
-        "type": "text",
-        "default": "url",
-        "title": "URL Path"
+      urlPath: {
+        type: "text",
+        default: "url",
+        title: "URL Path",
       },
-      "updatedPath": {
-        "type": "text",
-        "default": "date_published",
-        "title": "Updated Path"
-      }
+      updatedPath: {
+        type: "text",
+        default: "date_published",
+        title: "Updated Path",
+      },
     },
-    "interval": 600000,
-    "category": "others",
-    "id": "default",
-    "namespace": "json"
+    interval: 600000,
+    category: "others",
+    id: "default",
+    namespace: "json",
   },
   {
-    "name": "NEWS NOW",
-    "interval": 1,
-    "type": "timeline",
-    "category": "world",
-    "color": "red",
-    "home": "https://www.newsnow.com",
-    "params": {
-      "locale": {
-        "type": "select",
-        "options": [
+    name: "NEWS NOW",
+    interval: 1,
+    type: "timeline",
+    category: "world",
+    color: "red",
+    home: "https://www.newsnow.com",
+    params: {
+      locale: {
+        type: "select",
+        options: [
           {
-            "label": "US",
-            "value": "us"
+            label: "US",
+            value: "us",
           },
           {
-            "label": "UK",
-            "value": "uk"
+            label: "UK",
+            value: "uk",
           },
           {
-            "label": "Nigeria",
-            "value": "ng"
+            label: "Nigeria",
+            value: "ng",
           },
           {
-            "label": "România",
-            "value": "ro"
+            label: "România",
+            value: "ro",
           },
           {
-            "label": "Italia",
-            "value": "it"
+            label: "Italia",
+            value: "it",
           },
           {
-            "label": "Canada",
-            "value": "ca"
+            label: "Canada",
+            value: "ca",
           },
           {
-            "label": "Australia",
-            "value": "au"
-          }
+            label: "Australia",
+            value: "au",
+          },
         ],
-        "default": "us",
-        "title": "Locale"
+        default: "us",
+        title: "Locale",
       },
-      "topic": {
-        "type": "text",
-        "default": "US",
-        "title": "Topic"
-      }
+      topic: {
+        type: "text",
+        default: "US",
+        title: "Topic",
+      },
     },
-    "id": "default",
-    "namespace": "newsnow"
+    id: "default",
+    namespace: "newsnow",
   },
   {
-    "name": "RSS",
-    "color": "orange",
-    "home": "https://rss.com/",
-    "params": {
-      "url": {
-        "type": "url",
-        "default": "https://bbs.pcbeta.com/forum.php?mod=rss&fid=563&page=1",
-        "title": "RSS URL"
+    name: "RSS",
+    color: "orange",
+    home: "https://rss.com/",
+    params: {
+      url: {
+        type: "url",
+        default: "https://bbs.pcbeta.com/forum.php?mod=rss&fid=563&page=1",
+        title: "RSS URL",
       },
-      "type": {
-        "type": "select",
-        "options": [
+      type: {
+        type: "select",
+        options: [
           {
-            "label": "Hottest",
-            "value": "hottest"
+            label: "Hottest",
+            value: "hottest",
           },
           {
-            "label": "Timeline",
-            "value": "timeline"
-          }
+            label: "Timeline",
+            value: "timeline",
+          },
         ],
-        "default": "timeline",
-        "title": "Type"
-      }
+        default: "timeline",
+        title: "Type",
+      },
     },
-    "interval": 600000,
-    "category": "others",
-    "id": "default",
-    "namespace": "rss"
+    interval: 600000,
+    category: "others",
+    id: "default",
+    namespace: "rss",
   },
   {
-    "name": "RSSHub",
-    "color": "orange",
-    "home": "https://rsshub.app/",
-    "interval": 1,
-    "params": {
-      "route": {
-        "type": "text",
-        "default": "/36kr/newsflashes",
-        "title": "Route"
+    name: "RSSHub",
+    color: "orange",
+    home: "https://rsshub.app/",
+    interval: 1,
+    params: {
+      route: {
+        type: "text",
+        default: "/36kr/newsflashes",
+        title: "Route",
       },
-      "host": {
-        "type": "url",
-        "default": "https://rsshub.rssforever.com",
-        "title": "Host"
+      host: {
+        type: "url",
+        default: "https://rsshub.rssforever.com",
+        title: "Host",
       },
-      "type": {
-        "type": "select",
-        "options": [
+      type: {
+        type: "select",
+        options: [
           {
-            "label": "Hottest",
-            "value": "hottest"
+            label: "Hottest",
+            value: "hottest",
           },
           {
-            "label": "Timeline",
-            "value": "timeline"
-          }
+            label: "Timeline",
+            value: "timeline",
+          },
         ],
-        "default": "timeline",
-        "title": "Type"
-      }
+        default: "timeline",
+        title: "Type",
+      },
     },
-    "category": "others",
-    "id": "default",
-    "namespace": "rsshub"
+    category: "others",
+    id: "default",
+    namespace: "rsshub",
   },
   {
-    "name": "V2EX",
-    "color": "slate",
-    "home": "https://v2ex.com/",
-    "category": "tech",
-    "interval": 600000,
-    "id": "default",
-    "namespace": "v2ex"
+    name: "V2EX",
+    color: "slate",
+    home: "https://v2ex.com/",
+    category: "tech",
+    interval: 600000,
+    id: "default",
+    namespace: "v2ex",
   },
   {
-    "name": "微博",
-    "home": "https://s.weibo.com/top/summary?cate=realtimehot",
-    "color": "red",
-    "category": "china",
-    "interval": 1800000,
-    "type": "hottest",
-    "params": {},
-    "id": "default",
-    "namespace": "weibo"
+    name: "微博",
+    home: "https://s.weibo.com/top/summary?cate=realtimehot",
+    color: "red",
+    category: "china",
+    interval: 1800000,
+    type: "hottest",
+    params: {},
+    id: "default",
+    namespace: "weibo",
   },
   {
-    "name": "雪球",
-    "home": "https://xueqiu.com",
-    "color": "blue",
-    "category": "finance",
-    "type": "hottest",
-    "params": {},
-    "interval": 600000,
-    "id": "default",
-    "namespace": "xueqiu"
+    name: "雪球",
+    home: "https://xueqiu.com",
+    color: "blue",
+    category: "finance",
+    type: "hottest",
+    params: {},
+    interval: 600000,
+    id: "default",
+    namespace: "xueqiu",
   },
   {
-    "name": "联合早报",
-    "interval": 1800000,
-    "type": "timeline",
-    "category": "world",
-    "color": "red",
-    "home": "https://www.zaobao.com",
-    "params": {},
-    "id": "default",
-    "namespace": "zaobao"
-  }
+    name: "联合早报",
+    interval: 1800000,
+    type: "timeline",
+    category: "world",
+    color: "red",
+    home: "https://www.zaobao.com",
+    params: {},
+    id: "default",
+    namespace: "zaobao",
+  },
 ]

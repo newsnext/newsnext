@@ -14,7 +14,7 @@ export function CardFront() {
   const {
     source,
     items,
-    isRefreshing,
+    isFetching,
     isStarred,
     onRefresh,
     onToggleStar,
@@ -57,7 +57,7 @@ export function CardFront() {
               )}
             </div>
             <span className="text-xs opacity-70">
-              {isRefreshing ? "Updating..." : "Updated just now"}
+              {isFetching ? "Updating..." : "Updated just now"}
             </span>
           </div>
         </div>
@@ -67,12 +67,12 @@ export function CardFront() {
             size="icon"
             asChild
             className={cn(
-              isRefreshing && "animate-spin",
+              isFetching && "animate-spin",
             )}
             onClick={onRefresh}
             aria-label="Refresh"
           >
-            {isRefreshing ? <PhCircleDashedDuotone /> : <PhArrowCounterClockwiseDuotone />}
+            {isFetching ? <PhCircleDashedDuotone /> : <PhArrowCounterClockwiseDuotone />}
           </Button>
           <Button
             variant="icon"
@@ -91,10 +91,13 @@ export function CardFront() {
       <div
         className={cn(
           "h-full px-2 rounded-xl py-2 bg-background/70 overflow-y-auto scrollbar-hidden",
+          isFetching && `animate-pulse`,
           `sprinkle-${color}-400`,
         )}
       >
-        {type === "hottest" ? <Hottest items={items} /> : <Timeline items={items} />}
+        <div className={cn("transition-opacity-500", isFetching && "opacity-20")}>
+          {type === "hottest" ? <Hottest items={items} /> : <Timeline items={items} />}
+        </div>
       </div>
     </div>
   )

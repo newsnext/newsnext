@@ -1,7 +1,6 @@
 import type { Source } from "@/typings/source"
 import { useEffect, useState } from "react"
 import { isMobile } from "react-device-detect"
-import { useBatchQuery } from "@/hooks/use-batch-query"
 import { trpc } from "@/lib/trpc"
 import { DesktopBoard } from "./desktop-board"
 import { MobileBoard } from "./mobile-board"

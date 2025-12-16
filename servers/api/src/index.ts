@@ -1,6 +1,5 @@
 import { trpcServer } from "@hono/trpc-server"
-import { cache, db } from "@newsnext/database"
-import { eq } from "@newsnext/database/orm"
+import { getCachedSource, SqliteCacheAdapter } from "@newsnext/cache"
 import { sources } from "@newsnext/sources"
 import { metadata } from "@newsnext/sources/metadata"
 import { Hono } from "hono"
@@ -8,11 +7,10 @@ import { cors } from "hono/cors"
 import { logger } from "hono/logger"
 import { appRouter } from "./app-router"
 
-const TTL = 30 * 60 * 1000 // 30 minutes
-
 export type { AppRouter } from "./app-router"
 
 const app = new Hono()
+const adapter = new SqliteCacheAdapter()
 
 app.use(logger())
 app.use("/*", cors())
@@ -21,6 +19,7 @@ app.use(
   "/trpc/*",
   trpcServer({
     router: appRouter,
+    createContext: () => ({ adapter }),
   }),
 )
 
@@ -127,79 +126,20 @@ app.get("/sources/:sourceId", async (c) => {
     }
   }
 
-  // Cache Logic
-  const meta = metadata.find(m => m.namespace === namespace && m.id === id)
-  const interval = meta?.interval ?? 10 * 60 * 1000
   const isLatest = query.latest === "true" || query.latest === "1"
-  const now = Date.now()
-
-  let cached: typeof cache.$inferSelect | undefined
-  try {
-    const result = await db.query.cache.findFirst({
-      where: eq(cache.key, sourceId),
-    })
-    cached = result
-  } catch (e) {
-    console.error("Cache read error:", e)
-  }
-
-  if (cached) {
-    const updated = new Date(cached.updatedAt).getTime()
-    // 1. Fresh cache
-    if (now - updated < interval) {
-      return c.json(success({
-        id: sourceId,
-        updated,
-        items: JSON.parse(cached.value),
-        status: "success", // Considered fresh
-      }))
-    }
-    // 2. Stale but valid within TTL (if not forced refresh)
-    if (now - updated < TTL) {
-      if (!isLatest) {
-        return c.json(success({
-          id: sourceId,
-          updated,
-          items: JSON.parse(cached.value),
-          status: "cache",
-        }))
-      }
-    }
-  }
 
   try {
-    const items = await source.fetcher(params)
-
-    // Update cache
-    const value = JSON.stringify(items)
-    await db.insert(cache).values({
+    const result = await getCachedSource({
       key: sourceId,
-      value,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    }).onConflictDoUpdate({
-      target: cache.key,
-      set: {
-        value,
-        updatedAt: Date.now(),
-      },
-    })
+      fetcher: () => source.fetcher(params),
+      forceRefresh: isLatest,
+    }, adapter)
 
     return c.json(success({
       id: sourceId,
-      updated: Date.now(),
-      items,
-      status: "success",
+      ...result,
     }))
   } catch (err: any) {
-    if (cached) {
-      return c.json(success({
-        id: sourceId,
-        updated: new Date(cached.updatedAt).getTime(),
-        items: JSON.parse(cached.value),
-        status: "cache",
-      }))
-    }
     console.error(`Error executing source ${sourceId}:`, err)
     return c.json(error("INTERNAL_ERROR", err.message || "Internal Server Error"))
   }

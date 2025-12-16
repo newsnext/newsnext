@@ -5,7 +5,8 @@
   "license": "MPL-2.0",
   "exports": {
     ".": "./src/index.ts",
-    "./metadata": "./src/metadata.ts"
+    "./metadata": "./src/metadata.ts",
+    "./typings": "./src/typings/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

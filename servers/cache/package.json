@@ -1,11 +1,10 @@
 {
-  "name": "@newsnext/database",
+  "name": "@newsnext/cache",
   "type": "module",
   "private": true,
   "license": "MPL-2.0",
   "exports": {
-    ".": "./src/index.ts",
-    "./orm": "./src/orm.ts"
+    ".": "./src/index.ts"
   },
   "scripts": {
     "generate": "bun run --bun drizzle-kit generate",

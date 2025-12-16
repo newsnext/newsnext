@@ -1,3 +1,4 @@
+import { getCachedSource } from "@newsnext/cache"
 import { sources } from "@newsnext/sources"
 import { metadata } from "@newsnext/sources/metadata"
 import { TRPCError } from "@trpc/server"
@@ -5,12 +6,6 @@ import { z } from "zod"
 import { publicProcedure, router } from "./trpc"
 
 export const appRouter = router({
-  hello: publicProcedure
-    .input(z.string().optional())
-    .query(({ input }) => {
-      return `Hello ${input ?? "World"}!`
-    }),
-
   listSources: publicProcedure.query(() => {
     return metadata
   }),
@@ -35,9 +30,10 @@ export const appRouter = router({
     .input(z.object({
       sourceId: z.string(),
       params: z.record(z.string(), z.any()).optional(),
+      latest: z.boolean().optional(),
     }))
-    .query(async ({ input }) => {
-      const { sourceId, params: queryParams = {} } = input
+    .query(async ({ input, ctx }) => {
+      const { sourceId, params: queryParams = {}, latest } = input
       const [group, id = "default"] = sourceId.split(":")
 
       if (!group || !id) {
@@ -92,11 +88,15 @@ export const appRouter = router({
       }
 
       try {
-        const items = await source.fetcher(params)
+        const result = await getCachedSource({
+          key: sourceId,
+          fetcher: () => source.fetcher(params),
+          forceRefresh: latest,
+        }, ctx.adapter)
+
         return {
           id: sourceId,
-          updated: Date.now(),
-          items,
+          ...result,
         }
       } catch (err: any) {
         console.error(`Error executing source ${sourceId}:`, err)

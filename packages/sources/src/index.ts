@@ -13,5 +13,5 @@ export const sources = {
   v2ex: (await import("./lib/v2ex")).default,
   weibo: (await import("./lib/weibo")).default,
   xueqiu: (await import("./lib/xueqiu")).default,
-  zaobao: (await import("./lib/zaobao")).default
+  zaobao: (await import("./lib/zaobao")).default,
 }
