@@ -76,6 +76,17 @@
         "wxt": "^0.20.6",
       },
     },
+    "packages/cache": {
+      "name": "@newsnext/cache",
+      "dependencies": {
+        "drizzle-orm": "^0.45.1",
+      },
+      "devDependencies": {
+        "@libsql/client": "^0.15.15",
+        "@newsnext/sources": "workspace:*",
+        "drizzle-kit": "^0.31.8",
+      },
+    },
     "packages/misc/tsconfigs": {
       "name": "@newsnext/tsconfigs",
     },
@@ -158,17 +169,6 @@
         "@newsnext/sources": "workspace:*",
         "@trpc/server": "^11.8.0",
         "hono": "^4.10.8",
-      },
-    },
-    "servers/cache": {
-      "name": "@newsnext/cache",
-      "dependencies": {
-        "drizzle-orm": "^0.45.1",
-      },
-      "devDependencies": {
-        "@libsql/client": "^0.15.15",
-        "@newsnext/sources": "workspace:*",
-        "drizzle-kit": "^0.31.8",
       },
     },
     "servers/database": {
@@ -451,7 +451,7 @@
 
     "@newsnext/api": ["@newsnext/api@workspace:servers/api"],
 
-    "@newsnext/cache": ["@newsnext/cache@workspace:servers/cache"],
+    "@newsnext/cache": ["@newsnext/cache@workspace:packages/cache"],
 
     "@newsnext/database": ["@newsnext/database@workspace:servers/database"],
 
