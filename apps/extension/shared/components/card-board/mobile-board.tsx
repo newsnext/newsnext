@@ -1,4 +1,4 @@
-import type { PanInfo } from "motion/react"
+import type { MotionValue, PanInfo } from "motion/react"
 import type { Source } from "@/typings/source"
 import { motion, useMotionValue, useTransform } from "motion/react"
 import { useCallback, useMemo, useRef, useState } from "react"
@@ -18,6 +18,44 @@ const GAP = 6
 const CARD_WIDTH_PERCENT = 0.92
 const CARD_MAX_WIDTH = 450
 const SPRING_OPTIONS = { type: "spring", stiffness: 300, damping: 30 } as const
+
+interface MobileCardProps {
+  id: string
+  index: number
+  x: MotionValue<number>
+  trackItemOffset: number
+  source: Source & { id: string }
+}
+
+const rotateOutputRange = [-10, 0, 10]
+const yOutputRange = [40, 0, 40]
+
+function MobileCard({ id, index, x, trackItemOffset, source }: MobileCardProps) {
+  const range = [
+    -(index + 1) * trackItemOffset,
+    -index * trackItemOffset,
+    -(index - 1) * trackItemOffset,
+  ]
+
+  const rotate = useTransform(x, range, rotateOutputRange, { clamp: false })
+  const y = useTransform(x, range, yOutputRange, { clamp: false })
+
+  return (
+    <motion.div
+      className="relative shrink-0 origin-bottom"
+      style={{
+        width: `min(${CARD_WIDTH_PERCENT * 100}vw, ${CARD_MAX_WIDTH}px)`,
+        height: "65vh",
+        rotate,
+        y,
+      }}
+    >
+      <div className="h-full w-full">
+        <Card id={id} source={source} className="h-full w-full" />
+      </div>
+    </motion.div>
+  )
+}
 
 export function MobileBoard({ sourceIds, sourcesMap }: MobileBoardProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -84,36 +122,16 @@ export function MobileBoard({ sourceIds, sourcesMap }: MobileBoardProps) {
           animate={animateValue}
           transition={SPRING_OPTIONS}
         >
-          {sourceIds.map((id, index) => {
-            const range = [
-              -(index + 1) * trackItemOffset,
-              -index * trackItemOffset,
-              -(index - 1) * trackItemOffset,
-            ]
-
-            const rotateOutputRange = [-10, 0, 10]
-            const yOutputRange = [40, 0, 40]
-
-            const rotate = useTransform(x, range, rotateOutputRange, { clamp: false })
-            const y = useTransform(x, range, yOutputRange, { clamp: false })
-
-            return (
-              <motion.div
-                key={id}
-                className="relative shrink-0 origin-bottom"
-                style={{
-                  width: `min(${CARD_WIDTH_PERCENT * 100}vw, ${CARD_MAX_WIDTH}px)`,
-                  height: "65vh",
-                  rotate,
-                  y,
-                }}
-              >
-                <div className="h-full w-full">
-                  <Card id={id} source={sourcesMap[id]} className="h-full w-full" />
-                </div>
-              </motion.div>
-            )
-          })}
+          {sourceIds.map((id, index) => (
+            <MobileCard
+              key={id}
+              id={id}
+              index={index}
+              x={x}
+              trackItemOffset={trackItemOffset}
+              source={sourcesMap[id]}
+            />
+          ))}
         </motion.div>
       </div>
 

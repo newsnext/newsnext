@@ -15,7 +15,7 @@ export default defineConfig(({ mode }) => {
       host: true,
       proxy: {
         "/api": {
-          target: "https://newsnow.busiyi.world/api",
+          target: "http://localhost:4000",
           changeOrigin: true,
           rewrite: path => path.replace(/^\/api/, ""),
         },
