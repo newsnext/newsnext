@@ -182,6 +182,13 @@
         "drizzle-kit": "^0.31.8",
       },
     },
+    "servers/proxy": {
+      "name": "@newsnext/proxy",
+      "dependencies": {
+        "@newsnext/sources": "workspace:*",
+        "hono": "^4.10.8",
+      },
+    },
   },
   "overrides": {
     "react": "catalog:",
@@ -456,6 +463,8 @@
     "@newsnext/database": ["@newsnext/database@workspace:servers/database"],
 
     "@newsnext/extension": ["@newsnext/extension@workspace:apps/extension"],
+
+    "@newsnext/proxy": ["@newsnext/proxy@workspace:servers/proxy"],
 
     "@newsnext/shared": ["@newsnext/shared@workspace:packages/shared"],
 

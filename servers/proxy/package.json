@@ -1,0 +1,17 @@
+{
+  "name": "@newsnext/proxy",
+  "type": "module",
+  "private": true,
+  "license": "MPL-2.0",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "dev": "bun run --hot src/index.ts",
+    "build": "tsdown src/index.ts --outDir dist --dts"
+  },
+  "dependencies": {
+    "@newsnext/sources": "workspace:*",
+    "hono": "^4.10.8"
+  }
+}

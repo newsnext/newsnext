@@ -1,0 +1,16 @@
+{
+  "extends": "@newsnext/tsconfigs/server.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "./tsconfig.tsbuildinfo",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ]
+    },
+    "strict": true
+  },
+  "include": [
+    "./src"
+  ]
+}
