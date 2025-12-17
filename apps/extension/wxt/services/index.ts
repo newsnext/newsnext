@@ -1,4 +1,4 @@
-import type { SourceResponse } from "@newsnext/shared"
+import type { SourceResponse } from "@newsnext/shared/types"
 import { defineProxyService } from "@webext-core/proxy-service"
 import { browser } from "wxt/browser"
 

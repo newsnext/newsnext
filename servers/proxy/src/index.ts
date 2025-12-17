@@ -1,3 +1,4 @@
+import type { ApiResponse } from "@newsnext/shared/types"
 import { sources } from "@newsnext/sources"
 import { metadata } from "@newsnext/sources/metadata"
 import { Hono } from "hono"
@@ -8,15 +9,6 @@ const app = new Hono()
 
 app.use(logger())
 app.use("/*", cors())
-
-interface ApiResponse<T = any> {
-  success: boolean
-  data?: T
-  error?: {
-    code: string
-    message: string
-  }
-}
 
 function success<T>(data: T): ApiResponse<T> {
   return {

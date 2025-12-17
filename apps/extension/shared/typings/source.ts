@@ -1,6 +1,6 @@
-import type { Color } from "@newsnext/shared/types"
+import type { Color, NewsItem, SourceType } from "@newsnext/shared/types"
 
-export type SourceType = "hottest" | "realtime" | "normal"
+export type { SourceType }
 
 export interface SubSource {
   title: string
@@ -30,22 +30,7 @@ export function defineSource(source: Source): Source {
   return source
 }
 
-export interface NewsItem {
-  title: string
-  url: string
-  mobileUrl?: string
-  updated?: number | string
-  extra?: {
-    hover?: string
-    date?: number | string
-    info?: false | string
-    diff?: number
-    icon?: false | string | {
-      url: string
-      scale: number
-    }
-  }
-}
+export type { NewsItem }
 
 export type SourceHandler = () => Promise<NewsItem[]>
 export function defineSourceHandler(handler: SourceHandler): SourceHandler {

@@ -1,3 +1,4 @@
+import type { ApiResponse } from "@newsnext/shared/types"
 import { trpcServer } from "@hono/trpc-server"
 import { getCachedSource, SqliteCacheAdapter } from "@newsnext/cache"
 import { sources } from "@newsnext/sources"
@@ -22,15 +23,6 @@ app.use(
     createContext: () => ({ adapter }),
   }),
 )
-
-interface ApiResponse<T = any> {
-  success: boolean
-  data?: T
-  error?: {
-    code: string
-    message: string
-  }
-}
 
 function success<T>(data: T): ApiResponse<T> {
   return {

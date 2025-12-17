@@ -166,6 +166,7 @@
         "@hono/trpc-server": "^0.4.1",
         "@newsnext/cache": "workspace:*",
         "@newsnext/database": "workspace:*",
+        "@newsnext/shared": "workspace:*",
         "@newsnext/sources": "workspace:*",
         "@trpc/server": "^11.8.0",
         "hono": "^4.10.8",
@@ -185,6 +186,7 @@
     "servers/proxy": {
       "name": "@newsnext/proxy",
       "dependencies": {
+        "@newsnext/shared": "workspace:*",
         "@newsnext/sources": "workspace:*",
         "hono": "^4.10.8",
       },

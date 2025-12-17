@@ -14,6 +14,7 @@
     "@hono/trpc-server": "^0.4.1",
     "@newsnext/cache": "workspace:*",
     "@newsnext/database": "workspace:*",
+    "@newsnext/shared": "workspace:*",
     "@newsnext/sources": "workspace:*",
     "@trpc/server": "^11.8.0",
     "hono": "^4.10.8"

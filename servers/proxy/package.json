@@ -11,6 +11,7 @@
     "build": "tsdown src/index.ts --outDir dist --dts"
   },
   "dependencies": {
+    "@newsnext/shared": "workspace:*",
     "@newsnext/sources": "workspace:*",
     "hono": "^4.10.8"
   }

@@ -1,5 +1,4 @@
-import type { Color } from "@newsnext/shared/types"
-import type { NewsItem } from "."
+import type { Color, NewsItem } from "@newsnext/shared/types"
 import type { Either } from "../type.util"
 import type { Parameter } from "./params"
 
