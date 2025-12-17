@@ -9,5 +9,5 @@
     },
     "strict": true
   },
-  "include": ["./src", "migrate.ts"]
+  "include": ["./src"]
 }
