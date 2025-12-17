@@ -1,7 +1,7 @@
-import { initTRPC } from "@trpc/server"
 import type { CacheAdapter } from "@newsnext/cache"
+import { initTRPC } from "@trpc/server"
 
-export type Context = {
+export interface Context {
   adapter: CacheAdapter
 }
 

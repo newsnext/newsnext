@@ -15,20 +15,20 @@ export class MemoryCacheAdapter implements CacheAdapter {
   async get<T>(key: string): Promise<CacheEntry<T> | undefined> {
     const entry = this.cache.get(key)
     if (entry) {
-        // Simple LRU: re-insert to update access order (since Map keys are ordered by insertion)
-        this.cache.delete(key)
-        this.cache.set(key, entry)
+      // Simple LRU: re-insert to update access order (since Map keys are ordered by insertion)
+      this.cache.delete(key)
+      this.cache.set(key, entry)
     }
     return entry
   }
 
   async set<T>(key: string, value: T): Promise<void> {
     if (this.cache.has(key)) {
-        this.cache.delete(key)
+      this.cache.delete(key)
     } else if (this.cache.size >= this.maxSize) {
-        // Remove oldest (first inserted) item
-        const firstKey = this.cache.keys().next().value
-        if (firstKey) this.cache.delete(firstKey)
+      // Remove oldest (first inserted) item
+      const firstKey = this.cache.keys().next().value
+      if (firstKey) this.cache.delete(firstKey)
     }
 
     this.cache.set(key, {

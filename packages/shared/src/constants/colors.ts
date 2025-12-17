@@ -28,8 +28,8 @@ export const COLORS = [
 
   // Gray
   "slate",
-  "gray",
-  "zinc",
-  "neutral",
-  "stone",
+  // "gray",
+  // "zinc",
+  // "neutral",
+  // "stone",
 ] as const

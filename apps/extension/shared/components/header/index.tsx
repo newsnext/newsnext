@@ -3,7 +3,7 @@ import { useRefetch } from "@/hooks"
 import { PhArrowCounterClockwiseDuotone, PhCircleDashedDuotone } from "../icons/ph"
 import { DateTime } from "./date-time"
 import Nav from "./nav"
-import { Title } from "./title"
+import { TitleIsland } from "./title"
 
 interface HeaderProps {
   scrollContainerRef?: RefObject<HTMLElement | null>
@@ -27,8 +27,8 @@ export function Header({ scrollContainerRef }: HeaderProps) {
           </button>
         </div>
 
-        {/* Center Section - Logo */}
-        <Title scrollContainerRef={scrollContainerRef} />
+        {/* Center Section - Title Island */}
+        <TitleIsland width={150} scrollContainerRef={scrollContainerRef} />
 
         {/* Right Section - DateTime, Refresh, User */}
         <div className="shrink-0 flex items-center gap-3 flex-1 justify-start">

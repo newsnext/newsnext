@@ -24,10 +24,10 @@ export const THEME_COLOR_HEX: Record<Color, string> = {
   amber: "#F59E0B",
   orange: "#F97316",
   slate: "#64748B",
-  gray: "#6B7280",
-  zinc: "#71717A",
-  neutral: "#737373",
-  stone: "#78716C",
+  // gray: "#6B7280",
+  // zinc: "#71717A",
+  // neutral: "#737373",
+  // stone: "#78716C",
 }
 
 export const THEME_KEY = "newsnext-theme"
