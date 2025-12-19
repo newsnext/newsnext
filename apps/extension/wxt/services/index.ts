@@ -1,6 +1,7 @@
 import type { SourceResponse } from "@newsnext/shared/types"
 import { defineProxyService } from "@webext-core/proxy-service"
 import { browser } from "wxt/browser"
+import { myFetch } from "@/lib/utils"
 
 class CommandBarService {
   async googleComplete(query: string) {
@@ -9,7 +10,7 @@ class CommandBarService {
     const res = await myFetch(sugurl)
     try {
       return JSON.parse(res.replace(key, "").slice(1, -1))[1].map((k: any) => k[0]) as string[]
-    } catch (e) {
+    } catch {
       return []
     }
   }
@@ -85,6 +86,15 @@ class CommandBarService {
       await browser.tabs.update(tabs[0].id!, { active: true })
     } else {
       await browser.tabs.create({ url })
+    }
+  }
+
+  async getSource(sourceId: string) {
+    if (sourceId === "history") {
+      return this.getHistorySource()
+    }
+    if (sourceId === "bookmarks") {
+      return this.getBookmarksSource()
     }
   }
 }

@@ -28,6 +28,7 @@ export default defineConfig({
       },
     },
     permissions: ["bookmarks", "history"],
+    host_permissions: ["<all_urls>"],
     web_accessible_resources: [
       {
         resources: ["command-iframe.html"],

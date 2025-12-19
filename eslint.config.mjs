@@ -8,7 +8,7 @@ export default antfu(
     stylistic: {
       quotes: "double",
     },
-    ignores: ["packages/ui/src/**", "public/**", "bun.lock", "**/routeTree.gen.ts", "**/.wxt/**"],
+    ignores: ["packages/ui/src/**", "public/**", "bun.lock", "**/routeTree.gen.ts", "**/.wxt/**", "**/metadata.ts"],
     rules: {
       "node/prefer-global/process": "off",
       "style/eol-last": "off",

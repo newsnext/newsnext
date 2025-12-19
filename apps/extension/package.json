@@ -22,7 +22,6 @@
     "@atlaskit/pragmatic-drag-and-drop": "^1.7.7",
     "@atlaskit/pragmatic-drag-and-drop-auto-scroll": "^2.1.2",
     "@atlaskit/pragmatic-drag-and-drop-hitbox": "^1.1.0",
-    "@newsnext/api": "workspace:*",
     "@newsnext/ui": "workspace:*",
     "@tanstack/react-query": "^5.90.12",
     "@tanstack/react-router": "^1.139.14",
@@ -31,7 +30,6 @@
     "@trpc/server": "^11.8.0",
     "@webext-core/messaging": "^2.3.0",
     "@webext-core/proxy-service": "^1.2.1",
-    "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "defu": "^6.1.4",
     "es-toolkit": "^1.42.0",
@@ -41,11 +39,11 @@
     "ofetch": "^1.5.1",
     "react": "catalog:",
     "react-device-detect": "^2.2.3",
-    "react-dom": "catalog:",
-    "tailwind-merge": "^3.4.0"
+    "react-dom": "catalog:"
   },
   "devDependencies": {
     "@iconify-json/ph": "^1.2.2",
+    "@newsnext/api": "workspace:*",
     "@newsnext/shared": "workspace:*",
     "@svgr/core": "^8.1.0",
     "@svgr/plugin-jsx": "^8.1.0",
