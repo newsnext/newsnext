@@ -1,6 +1,7 @@
+import type { CacheAdapter } from "@newsnext/cache"
 import type { ApiResponse } from "@newsnext/shared/types"
 import { trpcServer } from "@hono/trpc-server"
-import { getCachedSource, SqliteCacheAdapter } from "@newsnext/cache"
+import { getCachedSource } from "@newsnext/cache"
 import { sources } from "@newsnext/sources"
 import { metadata } from "@newsnext/sources/metadata"
 import { Hono } from "hono"
@@ -10,19 +11,46 @@ import { appRouter } from "./app-router"
 
 export type { AppRouter } from "./app-router"
 
-const app = new Hono()
-const adapter = new SqliteCacheAdapter()
+interface Variables {
+  adapter: CacheAdapter
+}
+
+const app = new Hono<{ Bindings: CloudflareBindings, Variables: Variables }>()
+
+let adapter: CacheAdapter
 
 app.use(logger())
 app.use("/*", cors())
 
-app.use(
-  "/trpc/*",
-  trpcServer({
+app.use("*", async (c, next) => {
+  if (!adapter) {
+    if (c.env.CACHE_DB) {
+      const { D1CacheAdapter } = await import("@newsnext/cache/d1")
+      adapter = new D1CacheAdapter(c.env.CACHE_DB)
+      console.log("Using D1 cache adapter")
+    } else {
+      // try {
+      //   const { SqliteCacheAdapter } = await import("@newsnext/cache/sqlite")
+      //   const { CACHE_DB_PATH } = await import("../../../data")
+      //   adapter = new SqliteCacheAdapter(CACHE_DB_PATH)
+      //   console.log("Using SQLite cache adapter")
+      // } catch {
+      const { MemoryCacheAdapter } = await import("@newsnext/cache/memory")
+      adapter = new MemoryCacheAdapter()
+      console.log("Using Memory cache adapter")
+      // }
+    }
+  }
+  c.set("adapter", adapter)
+  await next()
+})
+
+app.use("/trpc/*", (c, next) => {
+  return trpcServer({
     router: appRouter,
-    createContext: () => ({ adapter }),
-  }),
-)
+    createContext: () => ({ adapter: c.var.adapter }),
+  })(c, next)
+})
 
 function success<T>(data: T): ApiResponse<T> {
   return {
@@ -125,7 +153,7 @@ app.get("/sources/:sourceId", async (c) => {
       key: sourceId,
       fetcher: () => source.fetcher(params),
       forceRefresh: isLatest,
-    }, adapter)
+    }, c.var.adapter)
 
     return c.json(success({
       id: sourceId,

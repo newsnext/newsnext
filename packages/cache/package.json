@@ -4,7 +4,11 @@
   "private": true,
   "license": "MPL-2.0",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./sqlite": "./src/adapters/sqlite.ts",
+    "./memory": "./src/adapters/memory.ts",
+    "./d1": "./src/adapters/d1.ts",
+    "./db": "./src/adapters/db/index.ts"
   },
   "scripts": {
     "generate": "bun run --bun drizzle-kit generate",

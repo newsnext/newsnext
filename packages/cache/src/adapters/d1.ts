@@ -1,12 +1,19 @@
-import type { CacheAdapter, CacheEntry } from "../../typings"
+import type { CacheAdapter, CacheEntry } from "../typings"
 import { eq } from "drizzle-orm"
-import { cache, db } from "./db"
+import { drizzle } from "drizzle-orm/d1"
+import * as schema from "./db/schema"
 
-export class SqliteCacheAdapter implements CacheAdapter {
+export class D1CacheAdapter implements CacheAdapter {
+  private db
+
+  constructor(d1: any) {
+    this.db = drizzle(d1, { schema })
+  }
+
   async get<T>(key: string): Promise<CacheEntry<T> | undefined> {
     try {
-      const result = await db.query.cache.findFirst({
-        where: eq(cache.key, key),
+      const result = await this.db.query.cache.findFirst({
+        where: eq(schema.cache.key, key),
       })
       if (!result) return undefined
       return {
@@ -21,12 +28,12 @@ export class SqliteCacheAdapter implements CacheAdapter {
 
   async set<T>(key: string, value: T): Promise<void> {
     const now = Date.now()
-    await db.insert(cache).values({
+    await this.db.insert(schema.cache).values({
       key,
       value: value as T,
       updatedAt: now,
     }).onConflictDoUpdate({
-      target: cache.key,
+      target: schema.cache.key,
       set: {
         value: value as T,
         updatedAt: now,

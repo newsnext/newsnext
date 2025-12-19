@@ -1,0 +1,47 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "newsnext",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-12-19",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  // "vars": {
+  //   "MY_VAR": "my-variable"
+  // },
+  // "kv_namespaces": [
+  //   {
+  //     "binding": "MY_KV_NAMESPACE",
+  //     "id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  //   }
+  // ],
+  "r2_buckets": [
+    {
+      "binding": "ICON_BUCKET",
+      "bucket_name": "newsnext"
+    }
+  ],
+  "d1_databases": [
+    {
+      "binding": "CACHE_DB",
+      "database_name": "newsnext-cache",
+      "database_id": "7c7b6739-9dc4-4f3f-a480-ec1816ddebbc"
+    },
+    {
+      "binding": "DATA_DB",
+      "database_name": "newsnext-data",
+      "database_id": "d57ded3d-72e3-47c8-a72b-4bc2501ce410"
+    }
+  ],
+  // "ai": {
+  //   "binding": "AI"
+  // },
+  "observability": {
+    "logs": {
+      "enabled": false,
+      "head_sampling_rate": 1,
+      "invocation_logs": true,
+      "persist": true
+    }
+  }
+}
