@@ -3,6 +3,7 @@ import { initTRPC } from "@trpc/server"
 
 export interface Context {
   adapter: CacheAdapter
+  waitUntil?: (promise: Promise<any>) => void
 }
 
 const t = initTRPC.context<Context>().create()

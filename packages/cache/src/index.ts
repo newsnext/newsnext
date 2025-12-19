@@ -56,8 +56,12 @@ export async function getCachedSource<T>(
           throw new Error("Invalid items: empty or not an array")
         }
 
-        // Optimization: Catch set errors
-        adapter.set(key, items).catch(e => console.error(`[Cache] Set failed for ${key}:`, e))
+        const setPromise = adapter.set(key, items).catch(e => console.error(`[Cache] Set failed for ${key}:`, e))
+        if (options.waitUntil) {
+          options.waitUntil(setPromise)
+        } else {
+          await setPromise
+        }
         return items
       } finally {
         pendingRequests.delete(key)

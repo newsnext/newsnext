@@ -92,6 +92,7 @@ export const appRouter = router({
           key: sourceId,
           fetcher: () => source.fetcher(params),
           forceRefresh: latest,
+          waitUntil: ctx.waitUntil,
         }, ctx.adapter)
 
         return {

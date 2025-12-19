@@ -20,4 +20,5 @@ export interface GetCachedSourceOptions<T> {
   interval?: number
   ttl?: number
   forceRefresh?: boolean
+  waitUntil?: (promise: Promise<any>) => void
 }

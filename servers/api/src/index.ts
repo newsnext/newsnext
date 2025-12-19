@@ -25,20 +25,19 @@ app.use("/*", cors())
 app.use("*", async (c, next) => {
   if (!adapter) {
     if (c.env.CACHE_DB) {
-      const { D1CacheAdapter } = await import("@newsnext/cache/d1")
-      adapter = new D1CacheAdapter(c.env.CACHE_DB)
-      console.log("Using D1 cache adapter")
-    } else {
-      // try {
-      //   const { SqliteCacheAdapter } = await import("@newsnext/cache/sqlite")
-      //   const { CACHE_DB_PATH } = await import("../../../data")
-      //   adapter = new SqliteCacheAdapter(CACHE_DB_PATH)
-      //   console.log("Using SQLite cache adapter")
-      // } catch {
+      try {
+        const { D1CacheAdapter } = await import("@newsnext/cache/d1")
+        adapter = new D1CacheAdapter(c.env.CACHE_DB)
+        console.log("Using D1 cache adapter")
+      } catch (e) {
+        console.error("Failed to initialize D1 cache adapter:", e)
+      }
+    }
+
+    if (!adapter) {
       const { MemoryCacheAdapter } = await import("@newsnext/cache/memory")
       adapter = new MemoryCacheAdapter()
       console.log("Using Memory cache adapter")
-      // }
     }
   }
   c.set("adapter", adapter)
@@ -48,7 +47,10 @@ app.use("*", async (c, next) => {
 app.use("/trpc/*", (c, next) => {
   return trpcServer({
     router: appRouter,
-    createContext: () => ({ adapter: c.var.adapter }),
+    createContext: () => ({
+      adapter: c.var.adapter,
+      waitUntil: (p: Promise<any>) => c.executionCtx.waitUntil(p),
+    }),
   })(c, next)
 })
 
@@ -153,6 +155,7 @@ app.get("/sources/:sourceId", async (c) => {
       key: sourceId,
       fetcher: () => source.fetcher(params),
       forceRefresh: isLatest,
+      waitUntil: (p: Promise<any>) => c.executionCtx.waitUntil(p),
     }, c.var.adapter)
 
     return c.json(success({
