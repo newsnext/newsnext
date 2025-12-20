@@ -8,11 +8,15 @@
   },
   "scripts": {
     "dev": "bun run --hot src/index.ts",
-    "build": "bun build src/index.ts --outdir dist"
+    "build": "bun build src/index.ts --outdir dist",
+    "typecheck": "tsc -b"
   },
   "dependencies": {
     "@newsnext/shared": "workspace:*",
     "@newsnext/sources": "workspace:*",
     "hono": "^4.10.8"
+  },
+  "devDependencies": {
+    "vercel": "^50.1.3"
   }
 }

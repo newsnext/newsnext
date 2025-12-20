@@ -26,3 +26,4 @@ examples/
 .output/
 .tanstack/
 .wrangler/
+.vercel
