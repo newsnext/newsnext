@@ -15,14 +15,13 @@
   },
   "dependencies": {
     "@newsnext/shared": "workspace:*",
+    "@smithy/md5-js": "^4.2.7",
     "cheerio": "^1.1.2",
     "dayjs": "^1.11.19",
     "fast-xml-parser": "^5.3.3",
-    "iconv-lite": "^0.7.1",
-    "md5": "^2.3.0"
+    "iconv-lite": "^0.7.1"
   },
   "devDependencies": {
-    "@types/md5": "^2.3.6",
     "domhandler": "^5.0.3"
   }
 }
