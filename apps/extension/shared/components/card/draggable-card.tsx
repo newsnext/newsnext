@@ -1,6 +1,5 @@
 import type { CardProps } from "./index"
 import type { Source } from "@/typings/source"
-import { Button } from "@newsnext/ui/components/button"
 import { useEffect } from "react"
 import { isIOS } from "react-device-detect"
 import { createPortal } from "react-dom"
@@ -9,6 +8,7 @@ import { cn } from "@/lib/utils"
 import { PhDotsSixVerticalDuotone } from "../icons/ph"
 import { DragOverlay } from "./drag-overlay"
 import Card from "./index"
+import { IconButton } from "../common/button";
 
 interface DraggableCardProps extends Omit<CardProps, "nodeRef" | "dragHandle"> {
   id: string
@@ -34,14 +34,11 @@ export function DraggableCard({ id, source, ...props }: DraggableCardProps) {
       ref={setHandleRef}
       className="flex items-center justify-center cursor-grab active:cursor-grabbing"
     >
-      <Button
-        variant="icon"
-        size="icon"
+      <IconButton
         aria-label="Handle"
-        asChild
       >
         <PhDotsSixVerticalDuotone />
-      </Button>
+      </IconButton>
     </div>
   )
 

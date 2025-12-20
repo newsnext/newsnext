@@ -8,14 +8,14 @@
     "dev": "bun run dev:web",
     "build": "bun run build:web",
     "dev:web": "bun run --bun vite",
-    "build:web": "bun run --bun tsc -b && bun run --bun vite build",
+    "build:web": "bun run --bun tsgo -b && bun run --bun vite build",
     "dev:chrome": "wxt",
     "dev:firefox": "wxt -b firefox",
     "build:chrome": "wxt build",
     "build:firefox": "wxt build -b firefox",
     "zip:chrome": "wxt zip",
     "zip:firefox": "wxt zip -b firefox",
-    "compile": "tsc --noEmit",
+    "compile": "tsgo --noEmit",
     "postinstall": "wxt prepare"
   },
   "dependencies": {

@@ -26,6 +26,8 @@ function HeaderProgress({ scrollContainerRef }: HeaderProgressProps) {
     return Math.min((value - threshold) / fadeRange, 1)
   })
 
+  // TODO: Add scroll to top functionality
+  // oxlint-disable-next-line no-unused-vars
   const handleScrollToTop = useCallback((e: React.MouseEvent) => {
     e.stopPropagation()
     const container = scrollContainerRef?.current

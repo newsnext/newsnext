@@ -1,6 +1,7 @@
 import type { Color } from "@newsnext/shared/types"
 import type { PropsWithChildren } from "react"
 import { COLORS } from "@newsnext/shared/constants"
+import { IconButton } from "../common/button"
 import { Button } from "@newsnext/ui/components/button"
 import { Input } from "@newsnext/ui/components/input"
 import { ScrollArea } from "@newsnext/ui/components/scroll-area"
@@ -214,28 +215,22 @@ export function CardBack() {
           </div>
         </div>
         <div className={cn("flex gap-1 items-center shrink-0", `text-${color}-400`)}>
-          <Button
-            variant="icon"
-            size="icon"
-            asChild
+          <IconButton
             onClick={(e) => {
               e.stopPropagation()
               setEditable(p => !p)
             }}
           >
             <PhPencilCircleDuotone className={cn("size-5", editable && "text-primary")} />
-          </Button>
-          <Button
-            variant="icon"
-            asChild
-            size="icon"
+          </IconButton>
+          <IconButton
             onClick={(e) => {
               e.stopPropagation()
               onCardClick(e)
             }}
           >
             <PhArrowCircleLeftDuotone className="size-5" />
-          </Button>
+          </IconButton>
         </div>
       </div>
 

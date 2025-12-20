@@ -1,4 +1,4 @@
-import { Button } from "@newsnext/ui/components/button"
+import { IconButton } from "../common/button"
 import { cn } from "@/lib/utils"
 import {
   PhArrowCounterClockwiseDuotone,
@@ -62,10 +62,7 @@ export function CardFront() {
           </div>
         </div>
         <div className={cn("flex gap-1 items-center shrink-0", `text-${color}-400`)} onClick={e => e.stopPropagation()}>
-          <Button
-            variant="icon"
-            size="icon"
-            asChild
+          <IconButton
             className={cn(
               isFetching && "animate-spin",
             )}
@@ -73,16 +70,13 @@ export function CardFront() {
             aria-label="Refresh"
           >
             {isFetching ? <PhCircleDashedDuotone /> : <PhArrowCounterClockwiseDuotone />}
-          </Button>
-          <Button
-            variant="icon"
-            size="icon"
-            asChild
+          </IconButton>
+          <IconButton
             onClick={onToggleStar}
             aria-label="Star"
           >
             {isStarred ? <PhStarFill /> : <PhStarDuotone />}
-          </Button>
+          </IconButton>
           {dragHandle}
         </div>
       </div>
