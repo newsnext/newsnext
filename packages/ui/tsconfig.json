@@ -1,7 +1,6 @@
 {
   "extends": "@newsnext/tsconfigs/web.json",
   "compilerOptions": {
-    "baseUrl": ".",
     "paths": {
       "@newsnext/ui/*": [
         "./src/*"

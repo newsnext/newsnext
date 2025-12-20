@@ -1,7 +1,7 @@
 import { sources } from "@newsnext/sources"
 import { metadata } from "@newsnext/sources/metadata"
 import { Hono } from "hono"
-import { error, success } from "../utils"
+import { error, success } from "./utils"
 
 const app = new Hono()
 

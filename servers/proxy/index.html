@@ -1,6 +1,3 @@
-import { html } from "hono/html"
-
-export const HomePage = html`
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -49,18 +46,18 @@ export const HomePage = html`
     }
 
     function createCard(source) {
-      const sourceId = \`\${source.namespace}:\${source.id}\`;
+      const sourceId = `${source.namespace}:${source.id}`;
       const div = document.createElement('div');
       div.className = 'bg-white rounded-xl shadow-sm border border-gray-100 p-6 transition-all duration-200 hover:shadow-md';
-      div.id = \`card-\${sourceId.replace(':', '-')}\`;
+      div.id = `card-${sourceId.replace(':', '-')}`;
 
-      div.innerHTML = \`
+      div.innerHTML = `
         <div class="flex justify-between items-start mb-4">
           <div>
-            <h3 class="font-bold text-lg text-gray-900">\${source.name}</h3>
-            <p class="text-sm text-gray-500">\${source.title || source.id}</p>
+            <h3 class="font-bold text-lg text-gray-900">${source.name}</h3>
+            <p class="text-sm text-gray-500">${source.title || source.id}</p>
           </div>
-          <span id="status-\${sourceId.replace(':', '-')}" class="status-badge status-pending">
+          <span id="status-${sourceId.replace(':', '-')}" class="status-badge status-pending">
             Pending
           </span>
         </div>
@@ -68,31 +65,31 @@ export const HomePage = html`
         <div class="space-y-2 text-sm">
           <div class="flex justify-between">
             <span class="text-gray-500">Namespace</span>
-            <span class="font-medium font-mono text-gray-700">\${source.namespace}</span>
+            <span class="font-medium font-mono text-gray-700">${source.namespace}</span>
           </div>
           <div class="flex justify-between">
             <span class="text-gray-500">ID</span>
-            <span class="font-medium font-mono text-gray-700">\${source.id}</span>
+            <span class="font-medium font-mono text-gray-700">${source.id}</span>
           </div>
           <div class="flex justify-between items-center pt-2 border-t border-gray-50 mt-2">
             <span class="text-gray-500">Latency</span>
-            <span id="latency-\${sourceId.replace(':', '-')}" class="font-mono text-gray-400">-</span>
+            <span id="latency-${sourceId.replace(':', '-')}" class="font-mono text-gray-400">-</span>
           </div>
         </div>
 
-        <div id="error-\${sourceId.replace(':', '-')}" class="hidden mt-3 text-xs text-red-600 bg-red-50 p-2 rounded border border-red-100 break-all"></div>
-      \`;
+        <div id="error-${sourceId.replace(':', '-')}" class="hidden mt-3 text-xs text-red-600 bg-red-50 p-2 rounded border border-red-100 break-all"></div>
+      `;
 
       return div;
     }
 
     async function checkSource(source) {
-      const sourceId = \`\${source.namespace}:\${source.id}\`;
+      const sourceId = `${source.namespace}:${source.id}`;
       const cardId = sourceId.replace(':', '-');
-      const statusEl = document.getElementById(\`status-\${cardId}\`);
-      const latencyEl = document.getElementById(\`latency-\${cardId}\`);
-      const errorEl = document.getElementById(\`error-\${cardId}\`);
-      const cardEl = document.getElementById(\`card-\${cardId}\`);
+      const statusEl = document.getElementById(`status-${cardId}`);
+      const latencyEl = document.getElementById(`latency-${cardId}`);
+      const errorEl = document.getElementById(`error-${cardId}`);
+      const cardEl = document.getElementById(`card-${cardId}`);
 
       statusEl.className = 'status-badge status-pending';
       statusEl.textContent = 'Checking...';
@@ -103,11 +100,11 @@ export const HomePage = html`
       const start = performance.now();
 
       try {
-        const res = await fetch(\`/sources/\${sourceId}\`);
+        const res = await fetch(`/sources/${sourceId}`);
         const data = await res.json();
         const duration = Math.round(performance.now() - start);
 
-        latencyEl.textContent = \`\${duration}ms\`;
+        latencyEl.textContent = `${duration}ms`;
 
         if (data.success) {
           statusEl.className = 'status-badge status-success';
@@ -118,7 +115,7 @@ export const HomePage = html`
         }
       } catch (err) {
         const duration = Math.round(performance.now() - start);
-        latencyEl.textContent = \`\${duration}ms\`;
+        latencyEl.textContent = `${duration}ms`;
         latencyEl.className = 'font-mono text-red-500';
 
         statusEl.className = 'status-badge status-error';
@@ -147,6 +144,7 @@ export const HomePage = html`
 
       for (const source of sources) {
         checkSource(source);
+        await new Promise(resolve => setTimeout(resolve, 300));
       }
     }
 
@@ -155,4 +153,3 @@ export const HomePage = html`
   </script>
 </body>
 </html>
-`

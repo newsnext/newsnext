@@ -1,5 +1,9 @@
 import { defineConfig } from "nitro"
 
 export default defineConfig({
-  preset: process.env.VERCEL ? "vercel" : "bun",
+  imports: false,
+  externals: {
+    inline: ["cheerio"],
+  },
+  minify: true,
 })

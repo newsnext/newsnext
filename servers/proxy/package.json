@@ -7,9 +7,9 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "build": "nitro build",
-    "dev": "nitro dev",
-    "preview": "npx srvx --prod .output/",
+    "build": "bun run --bun nitro build",
+    "dev": "PORT=4001 bun run --bun nitro dev",
+    "start": "bun run --bun .output/server/index.mjs",
     "typecheck": "tsc -b"
   },
   "dependencies": {
