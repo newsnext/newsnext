@@ -1,8 +1,8 @@
 import type { Source } from "@/typings/source"
 import { isIOS } from "react-device-detect"
 import { cn } from "@/lib/utils"
+import { IconButton } from "../common/button"
 import { PhDotsSixVerticalDuotone } from "../icons/ph"
-import { IconButton } from "../common/button";
 
 interface DragOverlayProps {
   id: string
@@ -42,7 +42,7 @@ export function DragOverlay({ id, source }: DragOverlayProps) {
         </div>
         <div className={cn("flex gap-1 items-center shrink-0", `text-${source.color}-400`)}>
           <div className="flex items-center justify-center cursor-grabbing">
-            <IconButton aria-label="Handle" >
+            <IconButton aria-label="Handle">
               <PhDotsSixVerticalDuotone />
             </IconButton>
           </div>

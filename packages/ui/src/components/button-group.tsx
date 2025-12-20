@@ -1,9 +1,10 @@
+import type { VariantProps } from "class-variance-authority"
 import { mergeProps } from "@base-ui/react/merge-props"
 import { useRender } from "@base-ui/react/use-render"
-import { cva, type VariantProps } from "class-variance-authority"
 
-import { cn } from "@newsnext/ui/lib/utils"
 import { Separator } from "@newsnext/ui/components/separator"
+import { cn } from "@newsnext/ui/lib/utils"
+import { cva } from "class-variance-authority"
 
 const buttonGroupVariants = cva(
   "has-[>[data-slot=button-group]]:gap-2 has-[select[aria-hidden=true]:last-child]:[&>[data-slot=select-trigger]:last-of-type]:rounded-r-4xl flex w-fit items-stretch [&>*]:focus-visible:z-10 [&>*]:focus-visible:relative [&>[data-slot=select-trigger]:not([class*='w-'])]:w-fit [&>input]:flex-1",
@@ -19,7 +20,7 @@ const buttonGroupVariants = cva(
     defaultVariants: {
       orientation: "horizontal",
     },
-  }
+  },
 )
 
 function ButtonGroup({
@@ -49,10 +50,10 @@ function ButtonGroupText({
       {
         className: cn(
           "bg-muted gap-2 rounded-4xl border px-2.5 text-sm font-medium [&_svg:not([class*='size-'])]:size-4 flex items-center [&_svg]:pointer-events-none",
-          className
+          className,
         ),
       },
-      props
+      props,
     ),
     render,
     state: {
@@ -72,7 +73,7 @@ function ButtonGroupSeparator({
       orientation={orientation}
       className={cn(
         "bg-input relative self-stretch data-[orientation=horizontal]:mx-px data-[orientation=horizontal]:w-auto data-[orientation=vertical]:my-px data-[orientation=vertical]:h-auto",
-        className
+        className,
       )}
       {...props}
     />

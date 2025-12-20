@@ -1,8 +1,8 @@
-import { throttle } from 'es-toolkit'
-import { useMemo } from 'react'
-import { useLatest } from '@newsnext/ui/hooks/use-latest'
-import { useUnmount } from '@newsnext/ui/hooks/use-unmount'
-import type { ThrottleOptions } from 'es-toolkit'
+import type { ThrottleOptions } from "es-toolkit"
+import { useLatest } from "@newsnext/ui/hooks/use-latest"
+import { useUnmount } from "@newsnext/ui/hooks/use-unmount"
+import { throttle } from "es-toolkit"
+import { useMemo } from "react"
 
 export type { ThrottleOptions }
 

@@ -1,9 +1,9 @@
-import * as React from "react"
 import { Dialog as SheetPrimitive } from "@base-ui/react/dialog"
+import { Button } from "@newsnext/ui/components/button"
 
 import { cn } from "@newsnext/ui/lib/utils"
-import { Button } from "@newsnext/ui/components/button"
 import { XIcon } from "@phosphor-icons/react"
+import * as React from "react"
 
 function Sheet({ ...props }: SheetPrimitive.Root.Props) {
   return <SheetPrimitive.Root data-slot="sheet" {...props} />
@@ -54,16 +54,15 @@ function SheetContent({
         {showCloseButton && (
           <SheetPrimitive.Close
             data-slot="sheet-close"
-            render={
+            render={(
               <Button
                 variant="ghost"
                 className="absolute top-4 right-4"
                 size="icon-sm"
               />
-            }
+            )}
           >
-            <XIcon
-            />
+            <XIcon />
             <span className="sr-only">Close</span>
           </SheetPrimitive.Close>
         )}
@@ -117,11 +116,11 @@ function SheetDescription({
 
 export {
   Sheet,
-  SheetTrigger,
   SheetClose,
   SheetContent,
-  SheetHeader,
-  SheetFooter,
-  SheetTitle,
   SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
 }

@@ -1,8 +1,8 @@
-import * as React from "react"
+import { Button } from "@newsnext/ui/components/button"
 
 import { cn } from "@newsnext/ui/lib/utils"
-import { Button } from "@newsnext/ui/components/button"
 import { CaretLeftIcon, CaretRightIcon, DotsThreeIcon } from "@phosphor-icons/react"
+import * as React from "react"
 
 function Pagination({ className, ...props }: React.ComponentProps<"nav">) {
   return (
@@ -12,7 +12,7 @@ function Pagination({ className, ...props }: React.ComponentProps<"nav">) {
       data-slot="pagination"
       className={cn(
         "mx-auto flex w-full justify-center",
-        className
+        className,
       )}
       {...props}
     />
@@ -38,8 +38,8 @@ function PaginationItem({ ...props }: React.ComponentProps<"li">) {
 
 type PaginationLinkProps = {
   isActive?: boolean
-} & Pick<React.ComponentProps<typeof Button>, "size"> &
-  React.ComponentProps<"a">
+} & Pick<React.ComponentProps<typeof Button>, "size">
+& React.ComponentProps<"a">
 
 function PaginationLink({
   className,
@@ -53,14 +53,14 @@ function PaginationLink({
       size={size}
       className={cn(className)}
       nativeButton={false}
-      render={
+      render={(
         <a
           aria-current={isActive ? "page" : undefined}
           data-slot="pagination-link"
           data-active={isActive}
           {...props}
         />
-      }
+      )}
     />
   )
 }
@@ -111,12 +111,11 @@ function PaginationEllipsis({
       data-slot="pagination-ellipsis"
       className={cn(
         "size-9 items-center justify-center [&_svg:not([class*='size-'])]:size-4 flex items-center justify-center",
-        className
+        className,
       )}
       {...props}
     >
-      <DotsThreeIcon
-      />
+      <DotsThreeIcon />
       <span className="sr-only">More pages</span>
     </span>
   )

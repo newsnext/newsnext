@@ -1,9 +1,9 @@
 "use client"
 
-import * as React from "react"
 import { Avatar as AvatarPrimitive } from "@base-ui/react/avatar"
-
 import { cn } from "@newsnext/ui/lib/utils"
+
+import * as React from "react"
 
 function Avatar({
   className,
@@ -18,7 +18,7 @@ function Avatar({
       data-size={size}
       className={cn(
         "size-8 rounded-full after:rounded-full data-[size=lg]:size-10 data-[size=sm]:size-6 after:border-border group/avatar relative flex shrink-0 select-none after:absolute after:inset-0 after:border after:mix-blend-darken dark:after:mix-blend-lighten",
-        className
+        className,
       )}
       {...props}
     />
@@ -31,7 +31,7 @@ function AvatarImage({ className, ...props }: AvatarPrimitive.Image.Props) {
       data-slot="avatar-image"
       className={cn(
         "rounded-full aspect-square size-full object-cover",
-        className
+        className,
       )}
       {...props}
     />
@@ -47,7 +47,7 @@ function AvatarFallback({
       data-slot="avatar-fallback"
       className={cn(
         "bg-muted text-muted-foreground rounded-full flex size-full items-center justify-center text-sm group-data-[size=sm]/avatar:text-xs",
-        className
+        className,
       )}
       {...props}
     />
@@ -63,7 +63,7 @@ function AvatarBadge({ className, ...props }: React.ComponentProps<"span">) {
         "group-data-[size=sm]/avatar:size-2 group-data-[size=sm]/avatar:[&>svg]:hidden",
         "group-data-[size=default]/avatar:size-2.5 group-data-[size=default]/avatar:[&>svg]:size-2",
         "group-data-[size=lg]/avatar:size-3 group-data-[size=lg]/avatar:[&>svg]:size-2",
-        className
+        className,
       )}
       {...props}
     />
@@ -76,7 +76,7 @@ function AvatarGroup({ className, ...props }: React.ComponentProps<"div">) {
       data-slot="avatar-group"
       className={cn(
         "*:data-[slot=avatar]:ring-background group/avatar-group flex -space-x-2 *:data-[slot=avatar]:ring-2",
-        className
+        className,
       )}
       {...props}
     />
@@ -98,9 +98,9 @@ function AvatarGroupCount({
 
 export {
   Avatar,
-  AvatarImage,
+  AvatarBadge,
   AvatarFallback,
   AvatarGroup,
   AvatarGroupCount,
-  AvatarBadge,
+  AvatarImage,
 }

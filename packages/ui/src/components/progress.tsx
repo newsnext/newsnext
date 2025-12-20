@@ -30,7 +30,7 @@ function ProgressTrack({ className, ...props }: ProgressPrimitive.Track.Props) {
     <ProgressPrimitive.Track
       className={cn(
         "bg-muted h-3 rounded-4xl relative flex w-full items-center overflow-x-hidden",
-        className
+        className,
       )}
       data-slot="progress-track"
       {...props}
@@ -73,8 +73,8 @@ function ProgressValue({ className, ...props }: ProgressPrimitive.Value.Props) {
 
 export {
   Progress,
-  ProgressTrack,
   ProgressIndicator,
   ProgressLabel,
+  ProgressTrack,
   ProgressValue,
 }

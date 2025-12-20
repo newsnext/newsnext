@@ -9,7 +9,6 @@ export default antfu(
       quotes: "double",
     },
     ignores: [
-      "packages/ui/src/**",
       "public/**",
       "bun.lock",
       "**/routeTree.gen.ts",

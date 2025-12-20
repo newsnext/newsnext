@@ -1,11 +1,11 @@
 "use client"
 
-import * as React from "react"
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
+import { Button } from "@newsnext/ui/components/button"
 
 import { cn } from "@newsnext/ui/lib/utils"
-import { Button } from "@newsnext/ui/components/button"
 import { XIcon } from "@phosphor-icons/react"
+import * as React from "react"
 
 function Dialog({ ...props }: DialogPrimitive.Root.Props) {
   return <DialogPrimitive.Root data-slot="dialog" {...props} />
@@ -51,7 +51,7 @@ function DialogContent({
         data-slot="dialog-content"
         className={cn(
           "bg-background data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 ring-foreground/5 grid max-w-[calc(100%-2rem)] gap-6 rounded-4xl p-6 text-sm ring-1 duration-100 sm:max-w-md fixed top-1/2 left-1/2 z-50 w-full -translate-x-1/2 -translate-y-1/2 outline-none",
-          className
+          className,
         )}
         {...props}
       >
@@ -59,16 +59,15 @@ function DialogContent({
         {showCloseButton && (
           <DialogPrimitive.Close
             data-slot="dialog-close"
-            render={
+            render={(
               <Button
                 variant="ghost"
                 className="absolute top-4 right-4"
                 size="icon-sm"
               />
-            }
+            )}
           >
-            <XIcon
-            />
+            <XIcon />
             <span className="sr-only">Close</span>
           </DialogPrimitive.Close>
         )}
@@ -100,7 +99,7 @@ function DialogFooter({
       data-slot="dialog-footer"
       className={cn(
         "gap-2 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end",
-        className
+        className,
       )}
       {...props}
     >

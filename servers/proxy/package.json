@@ -18,6 +18,6 @@
     "hono": "^4.10.8"
   },
   "devDependencies": {
-    "nitro": "^3.0.1-alpha.1",
+    "nitro": "^3.0.1-alpha.1"
   }
 }

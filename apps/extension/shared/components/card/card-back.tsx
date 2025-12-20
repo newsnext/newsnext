@@ -1,7 +1,6 @@
 import type { Color } from "@newsnext/shared/types"
 import type { PropsWithChildren } from "react"
 import { COLORS } from "@newsnext/shared/constants"
-import { IconButton } from "../common/button"
 import { Button } from "@newsnext/ui/components/button"
 import { Input } from "@newsnext/ui/components/input"
 import { ScrollArea } from "@newsnext/ui/components/scroll-area"
@@ -19,6 +18,7 @@ import {
   PhPencilCircleDuotone,
 } from "@/components/icons/ph"
 import { cn } from "@/lib/utils"
+import { IconButton } from "../common/button"
 import { useCard } from "./card-context"
 
 function EditableInput({ text, editable = false, onChange }: { text: string, editable?: boolean, onChange?: (value: string) => void }) {
