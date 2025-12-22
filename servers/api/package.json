@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "bun run --hot src/index.ts",
     "build": "tsdown src/index.ts --outDir dist --dts",
+    "build:cf": "bun run build && cd ../../apps/extension && bun run build:web --outDir ../../servers/api/public",
     "cf:typegen": "wrangler types --env-interface CloudflareBindings"
   },
   "dependencies": {

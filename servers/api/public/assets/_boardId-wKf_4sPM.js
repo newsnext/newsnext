@@ -1,1 +1,0 @@
-import{K as e,U as t}from"./index-2pkUD_R9.js";var n=e(t());function r(){return(0,n.jsx)(`div`,{children:`Hello "/boards/$boardId"!`})}export{r as component};

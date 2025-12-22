@@ -1,1 +1,0 @@
-import{K as e,U as t}from"./index-BnTJCfnt.js";var n=e(t());function r(){return(0,n.jsx)(`div`,{children:`Hello "/boards/custom"!`})}export{r as component};

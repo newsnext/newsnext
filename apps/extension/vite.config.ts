@@ -26,9 +26,6 @@ export default defineConfig(({ mode }) => {
     optimizeDeps: {
       force: false,
     },
-    build: {
-      outDir: "../../servers/api/public",
-    },
     plugins: [
       react(),
       Icons({
