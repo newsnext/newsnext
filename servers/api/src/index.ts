@@ -1,6 +1,7 @@
 import type { CacheAdapter } from "@newsnext/cache"
 import { trpcServer } from "@hono/trpc-server"
 import { Hono } from "hono"
+import { getRuntimeKey } from "hono/adapter"
 import { cors } from "hono/cors"
 import { logger } from "hono/logger"
 import { appRouter } from "./app-router"
@@ -17,6 +18,10 @@ let adapter: CacheAdapter
 
 app.use(logger())
 app.use("/*", cors())
+
+if (getRuntimeKey() === "bun") {
+  app.get("/*", await import("hono/bun").then(m => m.serveStatic({ root: "./public" })))
+}
 
 app.use("/trpc/*", async (c, next) => {
   if (!adapter) {
