@@ -1,12 +1,19 @@
-import { createFileRoute } from "@tanstack/react-router"
-import { Desk } from "@/components/desk"
+import { Navigate } from "@tanstack/react-router"
+import { useEffect, useState } from "react"
 
-function IndexComponent() {
-  return (
-    <Desk />
-  )
+const DEFAULT_BOARD_KEY = "newsnext-default-board"
+
+export function IndexComponent() {
+  const [defaultBoard, setDefaultBoard] = useState<string | null>(null)
+
+  useEffect(() => {
+    const saved = localStorage.getItem(DEFAULT_BOARD_KEY)
+    setDefaultBoard(saved || "hottest")
+  }, [])
+
+  if (!defaultBoard) {
+    return null // or a loading spinner
+  }
+
+  return <Navigate to="/boards/$boardId" params={{ boardId: defaultBoard }} />
 }
-
-export const Route = createFileRoute("/")({
-  component: IndexComponent,
-})

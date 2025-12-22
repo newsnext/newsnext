@@ -4,6 +4,7 @@ import { PhArrowCounterClockwiseDuotone, PhCircleDashedDuotone } from "../icons/
 import { DateTime } from "./date-time"
 import Nav from "./nav"
 import { TitleIsland } from "./title"
+import { UserMenu } from "./user-menu"
 
 interface HeaderProps {
   scrollContainerRef?: RefObject<HTMLElement | null>
@@ -35,12 +36,7 @@ export function Header({ scrollContainerRef }: HeaderProps) {
           <DateTime />
 
           {/* User Avatar - Right Island 2 */}
-          <button
-            className="island-pill size-10 bg-linear-to-br from-theme-400 to-theme-600 hover:from-theme-500 hover:to-theme-700 flex items-center justify-center text-white font-semibold text-base pointer-events-auto"
-            title="User Profile"
-          >
-            U
-          </button>
+          <UserMenu />
         </div>
       </div>
     </header>

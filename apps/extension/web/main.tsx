@@ -5,7 +5,7 @@ import { useState } from "react"
 import ReactDOM from "react-dom/client"
 import { trpc } from "@/lib/trpc"
 import { handleThemeSwitch, THEME_KEY } from "@/lib/utils/swith-theme"
-import { routeTree } from "./routeTree.gen"
+import { routeTree } from "./routeTree"
 import "./globals.css"
 
 // Initialize favicon on load

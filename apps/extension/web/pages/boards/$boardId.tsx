@@ -1,9 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router"
+import type { BoardType } from "@/store/board"
+import { useParams } from "@tanstack/react-router"
+import { Desk } from "@/components/desk"
 
-export const Route = createFileRoute("/boards/$boardId")({
-  component: RouteComponent,
-})
-
-function RouteComponent() {
-  return <div>Hello "/boards/$boardId"!</div>
+export function BoardIdComponent() {
+  const { boardId } = useParams({ strict: false }) as { boardId: BoardType }
+  return <Desk boardId={boardId} />
 }

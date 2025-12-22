@@ -1,6 +1,5 @@
 import path from "node:path"
 import tailwindcss from "@tailwindcss/vite"
-import { tanstackRouter } from "@tanstack/router-plugin/vite"
 import react from "@vitejs/plugin-react"
 import Icons from "unplugin-icons/vite"
 import TurboConsole from "unplugin-turbo-console/vite"
@@ -32,14 +31,6 @@ export default defineConfig(({ mode }) => {
       Icons({
         compiler: "jsx",
         jsx: "react",
-      }),
-      tanstackRouter({
-        target: "react",
-        autoCodeSplitting: true,
-        routesDirectory: "./web/pages",
-        generatedRouteTree: "./web/routeTree.gen.ts",
-        routeFileIgnorePrefix: "-",
-        quoteStyle: "double",
       }),
       TurboConsole(),
       tailwindcss(),

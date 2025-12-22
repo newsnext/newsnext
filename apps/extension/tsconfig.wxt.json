@@ -1,6 +1,7 @@
 {
   "extends": "./.wxt/tsconfig.json",
   "compilerOptions": {
+    "tsBuildInfoFile": "./tsconfig.wxt.tsbuildinfo",
     "jsx": "react-jsx",
     "paths": {
       "#/*": [
