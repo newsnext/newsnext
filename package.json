@@ -55,6 +55,7 @@
     "wrangler": "^4.56.0"
   },
   "overrides": {
+    "iconv-lite": "^0.7.1",
     "react": "catalog:",
     "react-dom": "catalog:",
     "vite": "npm:rolldown-vite@7.2.10"
