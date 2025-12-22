@@ -4,6 +4,7 @@ import { Hono } from "hono"
 import { getRuntimeKey } from "hono/adapter"
 import { cors } from "hono/cors"
 import { logger } from "hono/logger"
+import { CACHE_DB_PATH } from "../../../data"
 import { appRouter } from "./app-router"
 
 export type { AppRouter } from "./app-router"
@@ -32,6 +33,14 @@ app.use("/trpc/*", async (c, next) => {
         console.log("Using D1 cache adapter")
       } catch (e) {
         console.error("Failed to initialize D1 cache adapter:", e)
+      }
+    } else {
+      try {
+        const { SqliteCacheAdapter } = await import("@newsnext/cache/sqlite")
+        adapter = new SqliteCacheAdapter(CACHE_DB_PATH)
+        console.log("Using Sqlite cache adapter")
+      } catch (e) {
+        console.error("Failed to initialize Sqlite cache adapter:", e)
       }
     }
 

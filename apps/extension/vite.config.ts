@@ -7,7 +7,8 @@ import TurboConsole from "unplugin-turbo-console/vite"
 import { defineConfig } from "vite"
 
 export default defineConfig(({ mode }) => {
-  const _isDEV = mode !== "production"
+  const isDEV = mode !== "production"
+  console.log("isDEV", isDEV)
   return {
     server: {
       port: 3001,
@@ -15,9 +16,9 @@ export default defineConfig(({ mode }) => {
       host: true,
       proxy: {
         "/trpc": {
-          // target: "http://localhost:4000",
-          // target: "http://api.newsnext.pro",
-          target: "https://newsnext.orongxing.workers.dev/trpc",
+          target: "http://localhost:4000/trpc",
+          // target: "http://api.newsnext.pro/trpc",
+          // target: "https://newsnext.pro/trpc",
           changeOrigin: true,
           rewrite: path => path.replace(/^\/trpc/, ""),
         },
