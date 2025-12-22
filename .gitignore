@@ -24,3 +24,4 @@ examples/
 .tanstack/
 .wrangler/
 .vercel
+servers/api/public
