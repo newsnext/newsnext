@@ -18,7 +18,7 @@ let adapter: CacheAdapter
 app.use(logger())
 app.use("/*", cors())
 
-app.use("*", async (c, next) => {
+app.use("/trpc/*", async (c, next) => {
   if (!adapter) {
     if (c.env.CACHE_DB) {
       try {

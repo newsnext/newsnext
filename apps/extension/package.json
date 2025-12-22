@@ -8,7 +8,7 @@
     "dev": "bun run dev:web",
     "build": "bun run build:web",
     "dev:web": "bun run --bun vite",
-    "build:web": "bun run --bun tsgo -b && bun run --bun vite build",
+    "build:web": "bun run --bun vite build",
     "dev:chrome": "wxt",
     "dev:firefox": "wxt -b firefox",
     "build:chrome": "wxt build",

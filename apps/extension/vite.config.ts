@@ -14,11 +14,12 @@ export default defineConfig(({ mode }) => {
       strictPort: true,
       host: true,
       proxy: {
-        "/api": {
+        "/trpc": {
           // target: "http://localhost:4000",
-          target: "http://api.newsnext.pro",
+          // target: "http://api.newsnext.pro",
+          target: "https://newsnext.orongxing.workers.dev/trpc",
           changeOrigin: true,
-          rewrite: path => path.replace(/^\/api/, ""),
+          rewrite: path => path.replace(/^\/trpc/, ""),
         },
       },
     },

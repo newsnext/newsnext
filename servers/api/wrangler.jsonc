@@ -6,6 +6,9 @@
   "compatibility_flags": [
     "nodejs_compat"
   ],
+  "assets": {
+    "directory": "public"
+  },
   // "vars": {
   //   "MY_VAR": "my-variable"
   // },
