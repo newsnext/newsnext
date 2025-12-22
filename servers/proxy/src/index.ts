@@ -12,4 +12,5 @@ app.route("/sources", sourcesRoute)
 
 export default {
   fetch: app.fetch,
+  port: 4001,
 }
