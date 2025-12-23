@@ -8,8 +8,7 @@
   },
   "scripts": {
     "dev": "bun run --hot src/index.ts",
-    "build:lib": "tsdown src/index.ts --outDir dist --dts",
-    "build": "bun run build:lib && cd ../../apps/extension && bun run build:web --outDir ../../servers/api/public",
+    "build": "bun run build.ts",
     "cf:typegen": "wrangler types --env-interface CloudflareBindings"
   },
   "dependencies": {
