@@ -1,13 +1,9 @@
-import { getRuntimeKey } from "hono/adapter"
-
-const isServerless = getRuntimeKey() === "edge-light" || getRuntimeKey() === "workerd"
+import { build as tsdownBuild } from "tsdown"
 
 async function build() {
-  await Bun.build({
-    entrypoints: ["src/index.ts", "src/index.cf.ts"],
-    minify: false,
-    target: isServerless ? "browser" : "bun",
-    outdir: "dist",
+  await tsdownBuild({
+    entry: ["src/index.ts", "src/index.cf.ts"],
+    outDir: "dist",
   })
   await Bun.$`cd ../../apps/extension && bun run build:web --outDir ../../servers/api/public --emptyOutDir`
 }
