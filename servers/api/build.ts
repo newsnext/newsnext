@@ -6,7 +6,7 @@ async function build() {
   await Bun.build({
     entrypoints: ["src/index.ts"],
     minify: false,
-    target: isServerless ? "node" : "bun",
+    target: isServerless ? "browser" : "bun",
     outdir: "dist",
   })
   await Bun.$`cd ../../apps/extension && bun run build:web --outDir ../../servers/api/public --emptyOutDir`
