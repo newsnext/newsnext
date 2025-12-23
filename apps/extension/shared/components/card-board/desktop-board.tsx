@@ -100,8 +100,8 @@ export function DesktopBoard({ sourceIds, sourcesMap, className, isScattered, on
           visible: {
             opacity: 1,
             transition: {
-              delayChildren: 0.05,
-              staggerChildren: 0.03,
+              delayChildren: 0.1,
+              staggerChildren: 0.1,
             },
           },
           scattered: {
@@ -131,14 +131,7 @@ export function DesktopBoard({ sourceIds, sourcesMap, className, isScattered, on
               },
               visible: {
                 y: 0,
-                x: 0,
-                scale: 1,
                 opacity: 1,
-                transition: {
-                  type: "spring",
-                  stiffness: 300,
-                  damping: 25,
-                },
               },
               scattered: ({ vector }: { vector?: { x: number, y: number } }) => {
                 if (!vector) {

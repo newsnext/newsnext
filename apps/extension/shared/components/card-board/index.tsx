@@ -64,6 +64,17 @@ export function CardBoard({
     },
   )
 
+  const [prevBoardId, setPrevBoardId] = useState(boardId)
+  if (prevBoardId !== boardId) {
+    setPrevBoardId(boardId)
+    const cached = getCachedSources()
+    if (cached) {
+      const { ids, map } = processSources(cached)
+      setSourceIds(ids)
+      setSourcesMap(map)
+    }
+  }
+
   useEffect(() => {
     if (sources) {
       const { ids, map } = processSources(sources)
@@ -79,11 +90,20 @@ export function CardBoard({
   }
 
   if (isMobile) {
-    return <MobileBoard sourceIds={sourceIds} sourcesMap={sourcesMap} className={className} isScattered={isScattered} />
+    return (
+      <MobileBoard
+        key={boardId}
+        sourceIds={sourceIds}
+        sourcesMap={sourcesMap}
+        className={className}
+        isScattered={isScattered}
+      />
+    )
   }
 
   return (
     <DesktopBoard
+      key={boardId}
       sourceIds={sourceIds}
       sourcesMap={sourcesMap}
       className={className}
