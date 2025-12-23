@@ -20,18 +20,17 @@ let adapter: CacheAdapter
 app.use(logger())
 app.use("/*", cors())
 
-export const isServerless = getRuntimeKey() === "edge-light" || getRuntimeKey() === "workerd"
-
-if (!isServerless) {
-  app.get("/*", await import("hono/bun").then(m => m.serveStatic({ root: "./public" })))
+if (getRuntimeKey() === "edge-light" || getRuntimeKey() === "workerd") {
   app.use("/trpc/*", async (c, next) => {
     if (!adapter) {
-      try {
-        const { SqliteCacheAdapter } = await import("@newsnext/cache/sqlite")
-        adapter = new SqliteCacheAdapter(CACHE_DB_PATH)
-        console.log("Using Sqlite cache adapter")
-      } catch (e) {
-        console.error("Failed to initialize Sqlite cache adapter:", e)
+      if (c.env.CACHE_DB) {
+        try {
+          const { D1CacheAdapter } = await import("@newsnext/cache/d1")
+          adapter = new D1CacheAdapter(c.env.CACHE_DB)
+          console.log("Using D1 cache adapter")
+        } catch (e) {
+          console.error("Failed to initialize D1 cache adapter:", e)
+        }
       }
       if (!adapter) {
         const { MemoryCacheAdapter } = await import("@newsnext/cache/memory")
@@ -43,16 +42,15 @@ if (!isServerless) {
     await next()
   })
 } else {
+  app.get("/*", await import("hono/bun").then(m => m.serveStatic({ root: "./public" })))
   app.use("/trpc/*", async (c, next) => {
     if (!adapter) {
-      if (c.env.CACHE_DB) {
-        try {
-          const { D1CacheAdapter } = await import("@newsnext/cache/d1")
-          adapter = new D1CacheAdapter(c.env.CACHE_DB)
-          console.log("Using D1 cache adapter")
-        } catch (e) {
-          console.error("Failed to initialize D1 cache adapter:", e)
-        }
+      try {
+        const { SqliteCacheAdapter } = await import("@newsnext/cache/sqlite")
+        adapter = new SqliteCacheAdapter(CACHE_DB_PATH)
+        console.log("Using Sqlite cache adapter")
+      } catch (e) {
+        console.error("Failed to initialize Sqlite cache adapter:", e)
       }
       if (!adapter) {
         const { MemoryCacheAdapter } = await import("@newsnext/cache/memory")

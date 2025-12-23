@@ -1,9 +1,11 @@
-import { isServerless } from "./src"
+import { getRuntimeKey } from "hono/adapter"
+
+const isServerless = getRuntimeKey() === "edge-light" || getRuntimeKey() === "workerd"
 
 async function build() {
   await Bun.build({
     entrypoints: ["src/index.ts"],
-    minify: true,
+    minify: false,
     target: isServerless ? "node" : "bun",
     outdir: "dist",
   })
