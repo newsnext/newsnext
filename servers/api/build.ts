@@ -4,7 +4,7 @@ const isServerless = getRuntimeKey() === "edge-light" || getRuntimeKey() === "wo
 
 async function build() {
   await Bun.build({
-    entrypoints: ["src/index.ts"],
+    entrypoints: ["src/index.ts", "src/index.cf.ts"],
     minify: false,
     target: isServerless ? "browser" : "bun",
     outdir: "dist",

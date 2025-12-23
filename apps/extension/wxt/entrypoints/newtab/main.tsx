@@ -33,7 +33,7 @@ function App() {
     trpc.createClient({
       links: [
         httpBatchStreamLink({
-          url: "http://localhost:4000/trpc",
+          url: "http://localhost:4000/api/trpc",
         }),
       ],
     }),
