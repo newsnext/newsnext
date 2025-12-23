@@ -21,7 +21,7 @@ app.use(logger())
 app.use("/*", cors())
 
 console.log(getRuntimeKey())
-if (false) {
+if (true) {
   app.use("/trpc/*", async (c, next) => {
     if (!adapter) {
       if (c.env.CACHE_DB) {
