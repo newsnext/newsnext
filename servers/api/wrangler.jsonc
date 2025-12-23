@@ -7,7 +7,8 @@
     "nodejs_compat"
   ],
   "assets": {
-    "directory": "public"
+    "directory": "public",
+    "not_found_handling": "single-page-application"
   },
   // "vars": {
   //   "MY_VAR": "my-variable"
