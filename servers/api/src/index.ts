@@ -20,7 +20,8 @@ let adapter: CacheAdapter
 app.use(logger())
 app.use("/*", cors())
 
-if (getRuntimeKey() === "edge-light" || getRuntimeKey() === "workerd") {
+console.log(getRuntimeKey())
+if (false) {
   app.use("/trpc/*", async (c, next) => {
     if (!adapter) {
       if (c.env.CACHE_DB) {
