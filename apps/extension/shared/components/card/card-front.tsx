@@ -3,6 +3,7 @@ import { IconButton } from "../common/button"
 import {
   PhArrowCounterClockwiseDuotone,
   PhCircleDashedDuotone,
+  PhInfoDuotone,
   PhStarDuotone,
   PhStarFill,
 } from "../icons/ph"
@@ -18,7 +19,7 @@ export function CardFront() {
     isStarred,
     onRefresh,
     onToggleStar,
-    onCardClick,
+    onFlip,
     dragHandle,
   } = useCard()
 
@@ -30,7 +31,6 @@ export function CardFront() {
         "flex flex-col rounded-2xl p-4 h-full",
         `bg-${color}-400/40`,
       )}
-      onClick={onCardClick}
     >
       {/* Header */}
       <div className="flex justify-between mb-3 items-center mx-1">
@@ -76,6 +76,12 @@ export function CardFront() {
             aria-label="Star"
           >
             {isStarred ? <PhStarFill /> : <PhStarDuotone />}
+          </IconButton>
+          <IconButton
+            onClick={onFlip}
+            aria-label="Datail"
+          >
+            <PhInfoDuotone />
           </IconButton>
           {dragHandle}
         </div>

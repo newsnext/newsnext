@@ -6,55 +6,72 @@ import { DesktopBoard } from "./desktop-board"
 import { MobileBoard } from "./mobile-board"
 
 interface CardBoardProps {
-  initialSourceIds?: string[]
   boardId?: "hottest" | "timeline" | "realtime"
   onSourceIdsChange?: (sourceIds: string[]) => void
   className?: string
   isScattered?: boolean
 }
 
+function processSources(sources: (Source & { id: string })[]) {
+  // Construct unique IDs using namespace:id format
+  const processedSources = sources.map((s) => {
+    const uniqueId = s.namespace ? `${s.namespace}:${s.id}` : s.id
+    return { ...s, uniqueId }
+  })
+
+  // Use Set to ensure IDs are unique
+  const ids = [...new Set(processedSources.map(s => s.uniqueId))]
+  const map: Record<string, Source & { id: string }> = {}
+
+  processedSources.forEach((s) => {
+    map[s.uniqueId] = { ...s, id: s.uniqueId } as unknown as Source & { id: string }
+  })
+
+  return { ids, map }
+}
+
 export function CardBoard({
-  initialSourceIds,
   boardId = "hottest",
   onSourceIdsChange,
   className,
   isScattered,
 }: CardBoardProps) {
-  const [sourceIds, setSourceIds] = useState<string[]>(initialSourceIds || [])
-  const [sourcesMap, setSourcesMap] = useState<Record<string, Source & { id: string }>>({})
+  // Lazy initialization from local storage
+  const getCachedSources = () => {
+    try {
+      const cached = localStorage.getItem(`board-cache-${boardId}`)
+      return cached ? JSON.parse(cached) : null
+    } catch (e) {
+      console.error("Failed to load from local storage", e)
+      return null
+    }
+  }
 
-  const { data: sources } = trpc.getBoard.useQuery({ boardId }, {
-    enabled: !initialSourceIds,
+  const [sourceIds, setSourceIds] = useState<string[]>(() => {
+    const cached = getCachedSources()
+    return cached ? processSources(cached).ids : []
   })
 
-  // Pre-fetch all sources in batch for better performance
-  // useBatchQuery(sourceIds)
+  const [sourcesMap, setSourcesMap] = useState<Record<string, Source & { id: string }>>(() => {
+    const cached = getCachedSources()
+    return cached ? processSources(cached).map : {}
+  })
+
+  const { data: sources } = trpc.getBoard.useQuery(
+    { boardId },
+    {
+      initialData: getCachedSources,
+    },
+  )
 
   useEffect(() => {
-    if (sources && !initialSourceIds) {
-      // Construct unique IDs using namespace:id format
-      const processedSources = sources.map((s) => {
-        const uniqueId = s.namespace ? `${s.namespace}:${s.id}` : s.id
-        return { ...s, uniqueId }
-      })
-
-      // Use Set to ensure IDs are unique
-      const ids = [...new Set(processedSources.map(s => s.uniqueId))]
-      const map: Record<string, Source & { id: string }> = {}
-
-      processedSources.forEach((s) => {
-        // Store the original metadata but accessible via the unique ID
-        // We override the 'id' field in the map value to match the key if needed,
-        // but keeping original id might be better for display?
-        // Actually, DraggableCard uses 'id' prop for key, but 'source' prop for data.
-        // Let's ensure the source object passed down has the correct properties.
-        map[s.uniqueId] = { ...s, id: s.uniqueId } as unknown as Source & { id: string }
-      })
-
+    if (sources) {
+      const { ids, map } = processSources(sources)
       setSourceIds(ids)
       setSourcesMap(map)
+      localStorage.setItem(`board-cache-${boardId}`, JSON.stringify(sources))
     }
-  }, [sources, initialSourceIds])
+  }, [sources, boardId])
 
   const handleSourceIdsChange = (newSourceIds: string[]) => {
     setSourceIds(newSourceIds)

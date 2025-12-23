@@ -49,6 +49,7 @@ function NumberInput({ num, step = 1, editable, max = Infinity, min = -Infinity,
   if (!editable) {
     return <Text text={num.toString()} />
   }
+
   const [value, setValue] = useState(num)
 
   useEffect(() => {
@@ -149,10 +150,7 @@ function ColorSelector({ color, editable, onChange }: { color: Color, editable?:
 }
 
 export function CardBack() {
-  const {
-    source,
-    onCardClick,
-  } = useCard()
+  const { source, onFlip, dragHandle } = useCard()
 
   const [editable, setEditable] = useState(false)
   const { namespace, name, title, desc, home, interval, color } = source
@@ -221,16 +219,17 @@ export function CardBack() {
               setEditable(p => !p)
             }}
           >
-            <PhPencilCircleDuotone className={cn("size-5", editable && "text-primary")} />
+            <PhPencilCircleDuotone className={cn(editable && "text-primary")} />
           </IconButton>
           <IconButton
             onClick={(e) => {
               e.stopPropagation()
-              onCardClick(e)
+              onFlip()
             }}
           >
-            <PhArrowCircleLeftDuotone className="size-5" />
+            <PhArrowCircleLeftDuotone />
           </IconButton>
+          {dragHandle}
         </div>
       </div>
 

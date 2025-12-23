@@ -37,18 +37,12 @@ export default function Card({ id, source, className, nodeRef, dragHandle }: Car
     refetch()
   }, [refetch])
 
-  const handleCardClick = useCallback((e: React.MouseEvent) => {
-    // Check if the clicked element is an interactive element (button, link, etc.)
-    const target = e.target as HTMLElement
-    const isInteractive = target.closest("button, a, [role='button']")
-
-    if (!isInteractive) {
-      setIsFlipped(prev => !prev)
-    }
-  }, [])
-
   const handleToggleStar = useCallback(() => {
     setIsStarred(prev => !prev)
+  }, [])
+
+  const handleFlip = useCallback(() => {
+    setIsFlipped(prev => !prev)
   }, [])
 
   const contextValue = useMemo(
@@ -60,10 +54,10 @@ export default function Card({ id, source, className, nodeRef, dragHandle }: Car
       isStarred,
       onRefresh: handleRefresh,
       onToggleStar: handleToggleStar,
-      onCardClick: handleCardClick,
+      onFlip: handleFlip,
       dragHandle,
     }),
-    [id, source, items, isFetching, isStarred, handleRefresh, handleToggleStar, handleCardClick, dragHandle],
+    [id, source, items, isFetching, isStarred, handleRefresh, handleToggleStar, handleFlip, dragHandle],
   )
 
   return (

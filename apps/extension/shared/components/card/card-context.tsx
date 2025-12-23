@@ -11,7 +11,7 @@ interface CardContextValue {
   isStarred: boolean
   onRefresh: () => void
   onToggleStar: () => void
-  onCardClick: (e: React.MouseEvent) => void
+  onFlip: () => void
   dragHandle?: ReactNode
 }
 

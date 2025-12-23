@@ -1,6 +1,6 @@
 import type { CardProps } from "./index"
 import type { Source } from "@/typings/source"
-import { useEffect } from "react"
+import { useEffect, useMemo } from "react"
 import { isIOS } from "react-device-detect"
 import { createPortal } from "react-dom"
 import { useSortable } from "@/hooks/use-sortable"
@@ -29,18 +29,19 @@ export function DraggableCard({ id, source, ...props }: DraggableCardProps) {
     }
   }, [OverlayContainer])
 
-  const dragHandle = (
+  const dragHandle = useMemo(() => (
     <div
       ref={setHandleRef}
-      className="flex items-center justify-center cursor-grab active:cursor-grabbing"
+      className="flex items-center justify-center"
     >
       <IconButton
         aria-label="Handle"
+        className="cursor-grab active:cursor-grabbing"
       >
         <PhDotsSixVerticalDuotone />
       </IconButton>
     </div>
-  )
+  ), [])
 
   return (
     <>
