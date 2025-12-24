@@ -25,4 +25,4 @@ examples/
 .wrangler/
 .vercel
 servers/api/public
-cache.db
+data/*.db
