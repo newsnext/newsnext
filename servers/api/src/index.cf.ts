@@ -18,7 +18,7 @@ let adapter: CacheAdapter
 app.use(logger())
 app.use("/*", cors())
 
-app.use("/api/trpc", async (c, next) => {
+app.use("/api/trpc/*", async (c, next) => {
   if (!adapter) {
     if (c.env.CACHE_DB) {
       try {
@@ -39,7 +39,7 @@ app.use("/api/trpc", async (c, next) => {
   await next()
 })
 
-app.use("/api/trpc", (c, next) => {
+app.use("/api/trpc/*", (c, next) => {
   return trpcServer({
     router: appRouter,
     createContext: () => ({
