@@ -43,6 +43,10 @@ export function CardBoard({
     { boardId },
   )
 
+  useEffect(() => {
+    console.log("sources", sources)
+  }, [sources])
+
   const [prevBoardId, setPrevBoardId] = useState(boardId)
   if (prevBoardId !== boardId) {
     setPrevBoardId(boardId)

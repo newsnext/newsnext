@@ -1,4 +1,3 @@
-import { COLORS } from "@newsnext/shared/constants"
 import {
   Dialog,
   DialogContent,
@@ -13,12 +12,9 @@ import {
 } from "@newsnext/ui/components/dropdown-menu"
 import { Label } from "@newsnext/ui/components/label"
 import { cn } from "@newsnext/ui/lib/utils"
-import { motion } from "motion/react"
 import { useEffect, useState } from "react"
-import { handleThemeSwitch, THEME_KEY } from "@/lib/utils/swith-theme"
 import { SegmentedControl } from "../common/segmented-control"
 import { ThemeSelector } from "../common/theme-selector"
-import { Logo } from "../icons/logo"
 import { PhGearDuotone, PhUserDuotone } from "../icons/ph"
 
 export function UserMenu() {
@@ -28,13 +24,8 @@ export function UserMenu() {
   return (
     <>
       <DropdownMenu>
-        <DropdownMenuTrigger>
-          <button
-            className="island-pill size-10 bg-linear-to-br from-theme-400 to-theme-600 hover:from-theme-500 hover:to-theme-700 flex items-center justify-center text-white font-semibold text-base pointer-events-auto cursor-pointer outline-none"
-            title="User Profile"
-          >
-            U
-          </button>
+        <DropdownMenuTrigger className="island-pill size-10 bg-linear-to-br from-theme-400 to-theme-600 hover:from-theme-500 hover:to-theme-700 flex items-center justify-center text-white font-semibold text-base pointer-events-auto cursor-pointer outline-none" title="User Profile">
+          U
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
           <DropdownMenuItem onClick={() => setIsSettingsOpen(true)}>
