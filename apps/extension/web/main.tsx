@@ -1,60 +1,24 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createMemoryHistory, createRouter, RouterProvider } from "@tanstack/react-router"
-import { httpBatchStreamLink } from "@trpc/client"
-import { useState } from "react"
 import ReactDOM from "react-dom/client"
-import { trpc } from "@/lib/trpc"
-import { handleThemeSwitch, THEME_KEY } from "@/lib/utils/swith-theme"
+import { AppProvider, createDefaultQueryClient } from "@/components/app-provider"
 import { routeTree } from "./routeTree"
 import "./globals.css"
 
-// Initialize favicon on load
-const theme = localStorage.getItem(THEME_KEY)
-if (theme) {
-  handleThemeSwitch(theme)
-}
+const queryClient = createDefaultQueryClient()
+const hashHistory = createMemoryHistory()
+const router = createRouter({
+  routeTree,
+  history: hashHistory,
+  context: {
+    queryClient,
+  },
+})
 
 function App() {
-  const [queryClient] = useState(
-    () =>
-      new QueryClient({
-        defaultOptions: {
-          queries: {
-            staleTime: Number.POSITIVE_INFINITY,
-            refetchOnMount: false,
-            refetchOnReconnect: false,
-            refetchOnWindowFocus: false,
-            retry: false,
-          },
-        },
-      }),
-  )
-  const [trpcClient] = useState(() =>
-    trpc.createClient({
-      links: [
-        httpBatchStreamLink({
-          url: "/api/trpc",
-        }),
-      ],
-    }),
-  )
-
-  const hashHistory = createMemoryHistory()
-
-  const router = createRouter({
-    routeTree,
-    history: hashHistory,
-    context: {
-      queryClient,
-    },
-  })
-
   return (
-    <trpc.Provider client={trpcClient} queryClient={queryClient}>
-      <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router} />
-      </QueryClientProvider>
-    </trpc.Provider>
+    <AppProvider trpcUrl="/api/trpc" queryClient={queryClient}>
+      <RouterProvider router={router} />
+    </AppProvider>
   )
 }
 
@@ -63,10 +27,4 @@ const rootElement = document.getElementById("root")!
 if (!rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement)
   root.render(<App />)
-}
-
-declare module "@tanstack/react-router" {
-  interface Register {
-    router: ReturnType<typeof createRouter>
-  }
 }

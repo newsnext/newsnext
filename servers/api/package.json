@@ -7,7 +7,7 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "dev": "bun run --hot src/index.ts",
+    "dev": "bun run --hot src/index.bun.ts",
     "build": "bun run build.ts",
     "cf:typegen": "wrangler types --env-interface CloudflareBindings"
   },
