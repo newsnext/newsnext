@@ -1,7 +1,8 @@
-import type { ReactNode } from "react"
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import type { QueryClient } from "@tanstack/react-query"
+import type { PropsWithChildren } from "react"
+import { QueryClientProvider } from "@tanstack/react-query"
 import { httpBatchStreamLink } from "@trpc/client"
-import { useMemo } from "react"
+import { useState } from "react"
 import { trpc } from "@/lib/trpc"
 import { handleThemeSwitch, THEME_KEY } from "@/lib/utils/swith-theme"
 
@@ -13,36 +14,17 @@ if (typeof window !== "undefined") {
   }
 }
 
-export const createDefaultQueryClient = () =>
-  new QueryClient({
-    defaultOptions: {
-      queries: {
-        staleTime: Number.POSITIVE_INFINITY,
-        refetchOnMount: false,
-        refetchOnReconnect: false,
-        refetchOnWindowFocus: false,
-        retry: false,
-      },
-    },
-  })
-
 interface AppProviderProps {
-  children: ReactNode
   trpcUrl: string
-  queryClient?: QueryClient
+  queryClient: QueryClient
 }
 
 export function AppProvider({
   children,
   trpcUrl,
-  queryClient: externalQueryClient,
-}: AppProviderProps) {
-  const queryClient = useMemo(
-    () => externalQueryClient ?? createDefaultQueryClient(),
-    [externalQueryClient],
-  )
-
-  const trpcClient = useMemo(
+  queryClient,
+}: PropsWithChildren<AppProviderProps>) {
+  const [trpcClient] = useState(
     () =>
       trpc.createClient({
         links: [
@@ -51,7 +33,6 @@ export function AppProvider({
           }),
         ],
       }),
-    [trpcUrl],
   )
 
   return (
