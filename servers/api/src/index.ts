@@ -1,6 +1,7 @@
 import type { CacheAdapter } from "@newsnext/cache"
 import { trpcServer } from "@hono/trpc-server"
 import { Hono } from "hono"
+import { serveStatic } from "hono/bun"
 import { cors } from "hono/cors"
 import { logger } from "hono/logger"
 import { CACHE_DB_PATH } from "../../../data"
@@ -19,7 +20,6 @@ let adapter: CacheAdapter
 app.use(logger())
 app.use("/*", cors())
 
-app.get("/*", await import("hono/bun").then(m => m.serveStatic({ root: "./public" })))
 app.use("/api/trpc/*", async (c, next) => {
   if (!adapter) {
     try {
@@ -48,6 +48,12 @@ app.use("/api/trpc/*", (c, next) => {
     }),
   })(c, next)
 })
+
+app.get("/*", (c, next) => {
+  return serveStatic({ root: "./public" })(c, next)
+})
+
+app.get("*", serveStatic({ path: "./public/index.html" }))
 
 export default {
   port: process.env.PORT ?? 4000,

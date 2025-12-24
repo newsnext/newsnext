@@ -36,43 +36,18 @@ export function CardBoard({
   className,
   isScattered,
 }: CardBoardProps) {
-  // Lazy initialization from local storage
-  const getCachedSources = () => {
-    try {
-      const cached = localStorage.getItem(`board-cache-${boardId}`)
-      return cached ? JSON.parse(cached) : null
-    } catch (e) {
-      console.error("Failed to load from local storage", e)
-      return null
-    }
-  }
-
-  const [sourceIds, setSourceIds] = useState<string[]>(() => {
-    const cached = getCachedSources()
-    return cached ? processSources(cached).ids : []
-  })
-
-  const [sourcesMap, setSourcesMap] = useState<Record<string, Source & { id: string }>>(() => {
-    const cached = getCachedSources()
-    return cached ? processSources(cached).map : {}
-  })
+  const [sourceIds, setSourceIds] = useState<string[]>([])
+  const [sourcesMap, setSourcesMap] = useState<Record<string, Source & { id: string }>>({})
 
   const { data: sources } = trpc.getBoard.useQuery(
     { boardId },
-    {
-      initialData: getCachedSources,
-    },
   )
 
   const [prevBoardId, setPrevBoardId] = useState(boardId)
   if (prevBoardId !== boardId) {
     setPrevBoardId(boardId)
-    const cached = getCachedSources()
-    if (cached) {
-      const { ids, map } = processSources(cached)
-      setSourceIds(ids)
-      setSourcesMap(map)
-    }
+    setSourceIds([])
+    setSourcesMap({})
   }
 
   useEffect(() => {
@@ -80,7 +55,6 @@ export function CardBoard({
       const { ids, map } = processSources(sources)
       setSourceIds(ids)
       setSourcesMap(map)
-      localStorage.setItem(`board-cache-${boardId}`, JSON.stringify(sources))
     }
   }, [sources, boardId])
 

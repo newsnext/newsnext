@@ -9,6 +9,7 @@
     "build": "bun run build:web",
     "dev:web": "bun run --bun vite",
     "build:web": "bun run --bun vite build",
+    "preview": "bun run --bun vite preview",
     "dev:chrome": "wxt",
     "dev:firefox": "wxt -b firefox",
     "build:chrome": "wxt build",

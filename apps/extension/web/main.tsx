@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { createRouter, RouterProvider } from "@tanstack/react-router"
+import { createMemoryHistory, createRouter, RouterProvider } from "@tanstack/react-router"
 import { httpBatchStreamLink } from "@trpc/client"
 import { useState } from "react"
 import ReactDOM from "react-dom/client"
@@ -39,8 +39,11 @@ function App() {
     }),
   )
 
+  const hashHistory = createMemoryHistory()
+
   const router = createRouter({
     routeTree,
+    history: hashHistory,
     context: {
       queryClient,
     },
