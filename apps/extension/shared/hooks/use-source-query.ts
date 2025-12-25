@@ -27,9 +27,9 @@ export function useSourceQuery({ sourceId, enabled = true }: UseSourceQueryOptio
     enabled,
     placeholderData: prev => prev,
     staleTime: Number.POSITIVE_INFINITY,
-    refetchOnMount: true,
-    refetchOnReconnect: true,
-    refetchOnWindowFocus: true,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    refetchOnWindowFocus: false,
     retry: false,
   })
 

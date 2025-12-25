@@ -1,7 +1,7 @@
 import type { ReactNode } from "react"
 import type { Source } from "@/typings/source"
 import { useInView } from "motion/react"
-import { useCallback, useImperativeHandle, useMemo, useRef, useState } from "react"
+import { useImperativeHandle, useMemo, useRef, useState } from "react"
 import { FlipAnimate } from "@/components/common/flip-animate"
 import { useSourceQuery } from "@/hooks/use-source-query"
 import { cn } from "@/lib/utils"
@@ -33,18 +33,6 @@ export default function Card({ id, source, className, nodeRef, dragHandle }: Car
     enabled: inView,
   })
 
-  const handleRefresh = useCallback(() => {
-    refetch()
-  }, [refetch])
-
-  const handleToggleStar = useCallback(() => {
-    setIsStarred(prev => !prev)
-  }, [])
-
-  const handleFlip = useCallback(() => {
-    setIsFlipped(prev => !prev)
-  }, [])
-
   const contextValue = useMemo(
     () => ({
       id,
@@ -52,12 +40,12 @@ export default function Card({ id, source, className, nodeRef, dragHandle }: Car
       items,
       isFetching,
       isStarred,
-      onRefresh: handleRefresh,
-      onToggleStar: handleToggleStar,
-      onFlip: handleFlip,
+      onRefresh: refetch,
+      onToggleStar: () => setIsStarred(prev => !prev),
+      onFlip: () => setIsFlipped(prev => !prev),
       dragHandle,
     }),
-    [id, source, items, isFetching, isStarred, handleRefresh, handleToggleStar, handleFlip, dragHandle],
+    [id, source, items, isFetching, isStarred, refetch, dragHandle],
   )
 
   return (
@@ -65,7 +53,7 @@ export default function Card({ id, source, className, nodeRef, dragHandle }: Car
       <div
         ref={ref}
         className={cn(
-          "h-[500px] w-[400px]",
+          "h-[550px] w-[400px]",
           className,
         )}
       >
