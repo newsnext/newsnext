@@ -3,6 +3,11 @@ import { myFetch } from "../utils/fetch"
 import { defineHtmlSourceFetcher, defineSource } from "../utils/source"
 
 const baseurl = "https://s.weibo.com"
+const flagUrls = {
+  新: "https://simg.s.weibo.com/moter/flags/1_0.png",
+  热: "https://simg.s.weibo.com/moter/flags/2_0.png",
+  爆: "https://simg.s.weibo.com/moter/flags/4_0.png",
+}
 
 export default defineSource({
   name: "微博",
@@ -38,11 +43,9 @@ export default defineSource({
         icon: {
           selector: "td.td-03",
           transform: (val) => {
-            const flagUrl = {
-              新: "https://simg.s.weibo.com/moter/flags/1_0.png",
-              热: "https://simg.s.weibo.com/moter/flags/2_0.png",
-            }[val as "新" | "热"]
-            return flagUrl ? { url: flagUrl, scale: 1.5 } : undefined
+            const flagUrl = flagUrls[val as keyof typeof flagUrls]
+            if (!flagUrl) return undefined
+            return { url: flagUrl, scale: 1.5 }
           },
         },
       },
