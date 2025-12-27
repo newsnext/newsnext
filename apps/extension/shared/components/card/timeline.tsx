@@ -59,6 +59,7 @@ function ExtraInfo({ item }: { item: NewsItem }) {
     return (
       <img
         src={url}
+        referrerPolicy="no-referrer"
         alt="icon"
         style={{
           transform: `scale(${scale ?? 1})`,
