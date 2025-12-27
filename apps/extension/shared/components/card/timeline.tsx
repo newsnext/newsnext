@@ -1,13 +1,10 @@
 import type { NewsItem } from "@/typings/source"
-import { useIsMobile } from "@newsnext/ui/hooks/use-mobile"
 import { formatDistanceToNow } from "date-fns"
-
 import { enUS } from "date-fns/locale"
 import { cn } from "@/lib/utils"
+import { NewsItemInfo, NewsItemLink } from "./news-item-common"
 
 export function Timeline({ items }: { items: NewsItem[] }) {
-  const isMobile = useIsMobile()
-
   return (
     <ol className="border-s border-neutral-400/50 flex flex-col ml-1">
       {items?.map(item => (
@@ -20,23 +17,18 @@ export function Timeline({ items }: { items: NewsItem[] }) {
               )}
             </span>
             {item.info && (
-              <span className="text-xs text-neutral-400/80">
-                <Info item={item} />
-              </span>
+              <NewsItemInfo item={item} />
             )}
           </span>
-          <a
+          <NewsItemLink
+            item={item}
             className={cn(
               "ml-2 px-1 hover:bg-neutral-400/10 rounded-md",
               "cursor-pointer **:cursor-pointer transition-all",
             )}
-            href={isMobile ? item.mobileUrl || item.url : item.url}
-            title={item.info?.detail}
-            target="_blank"
-            rel="noopener noreferrer"
           >
             {item.title}
-          </a>
+          </NewsItemLink>
         </li>
       ))}
     </ol>
@@ -50,26 +42,4 @@ function NewsUpdatedTime({ date }: { date: string | number }) {
   } catch {
     return null
   }
-}
-
-function Info({ item }: { item: NewsItem }) {
-  if (item?.info?.text) {
-    return <span dangerouslySetInnerHTML={{ __html: item.info.text }} />
-  }
-  if (item?.info?.icon) {
-    const { url, scale } = typeof item.info.icon === "string" ? { url: item.info.icon, scale: undefined } : item.info.icon
-    return (
-      <img
-        src={url}
-        referrerPolicy="no-referrer"
-        alt="icon"
-        style={{
-          transform: `scale(${scale ?? 1})`,
-        }}
-        className="h-4 inline -mt-1"
-        onError={e => e.currentTarget.style.display = "none"}
-      />
-    )
-  }
-  return null
 }

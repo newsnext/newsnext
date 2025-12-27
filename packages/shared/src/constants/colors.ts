@@ -1,3 +1,7 @@
+/**
+ * Available theme colors from Tailwind CSS palette
+ * Used for source theming and UI customization
+ */
 export const COLORS = [
   // Red & Pink
   "red",

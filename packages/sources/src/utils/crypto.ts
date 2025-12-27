@@ -9,7 +9,6 @@ export async function md5(s: string) {
     const hasher = new Md5()
     hasher.update(s)
     const result = await hasher.digest()
-    console.log("use md5", result)
     return Array.from(result)
       .map(b => b.toString(16).padStart(2, "0"))
       .join("")

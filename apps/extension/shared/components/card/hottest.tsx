@@ -1,19 +1,14 @@
 import type { NewsItem } from "@/typings/source"
-import { useIsMobile } from "@newsnext/ui/hooks/use-mobile"
 import { cn } from "@/lib/utils"
+import { NewsItemInfo, NewsItemLink } from "./news-item-common"
 
 export function Hottest({ items }: { items: NewsItem[] }) {
-  const isMobile = useIsMobile()
-
   return (
     <ol className="flex flex-col gap-2">
       {items?.map((item, i) => (
-        <a
-          href={isMobile ? item.mobileUrl || item.url : item.url}
-          target="_blank"
-          rel="noreferrer"
+        <NewsItemLink
           key={item.url}
-          title={item.info?.detail}
+          item={item}
           className={cn(
             "flex gap-2 items-stretch relative cursor-pointer **:cursor-pointer transition-all",
             "hover:bg-neutral-400/10 rounded-md",
@@ -27,35 +22,11 @@ export function Hottest({ items }: { items: NewsItem[] }) {
               {item.title}
             </span>
             {item.info && (
-              <span className="text-xs text-neutral-400/80 truncate align-middle">
-                <Info item={item} />
-              </span>
+              <NewsItemInfo item={item} className="truncate align-middle" />
             )}
           </span>
-        </a>
+        </NewsItemLink>
       ))}
     </ol>
   )
-}
-
-function Info({ item }: { item: NewsItem }) {
-  if (item?.info?.text) {
-    return <span dangerouslySetInnerHTML={{ __html: item.info.text }} />
-  }
-  if (item?.info?.icon) {
-    const { url, scale } = typeof item.info.icon === "string" ? { url: item.info.icon, scale: undefined } : item.info.icon
-    return (
-      <img
-        src={url}
-        referrerPolicy="no-referrer"
-        alt="icon"
-        style={{
-          transform: `scale(${scale ?? 1})`,
-        }}
-        className="h-4 inline -mt-1"
-        onError={e => e.currentTarget.style.display = "none"}
-      />
-    )
-  }
-  return null
 }

@@ -12,6 +12,20 @@ export async function getCachedSource<T>(
   const { key, fetcher, interval = DEFAULT_INTERVAL, ttl = DEFAULT_TTL, forceRefresh = false } = options
   const now = Date.now()
 
+  // Disable cache in DEV environment
+  const disableCache = process.env.CACHE === "false"
+  if (disableCache) {
+    const items = await fetcher()
+    if (!Array.isArray(items) || items.length === 0) {
+      throw new Error("Invalid items: empty or not an array")
+    }
+    return {
+      updated: Date.now(),
+      status: "success",
+      items,
+    }
+  }
+
   const cached = await adapter.get<T>(key)
 
   if (cached) {

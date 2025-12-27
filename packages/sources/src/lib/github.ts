@@ -28,7 +28,9 @@ export default defineSource({
           selector: "[href$=stargazers]",
           transform: val => `✰ ${val?.replace(/\s+/g, "").trim()}`,
         },
-        detail: {
+      },
+      detail: {
+        text: {
           selector: ">p",
           transform: val => val?.replace(/\n+/g, "").trim(),
         },

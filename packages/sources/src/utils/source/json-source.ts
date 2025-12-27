@@ -23,8 +23,10 @@ export interface JsonSourceOptions<Item = any> {
   fields: {
     title: FieldResolver<Item, string>
     url: FieldResolver<Item, string>
+    mobileUrl?: FieldResolver<Item, string>
     timestamp?: FieldResolver<Item, number>
     info?: Record<string, FieldResolver<Item, any>>
+    detail?: Record<string, FieldResolver<Item, any>>
   }
 }
 
@@ -82,6 +84,11 @@ async function jsonSourceHandler<Item = any>(opts: JsonSourceOptions<Item>): Pro
       url: itemUrl,
     }
 
+    if (fields.mobileUrl) {
+      const mobileUrl = resolveValue(item, fields.mobileUrl)
+      if (mobileUrl) newsItem.mobileUrl = mobileUrl
+    }
+
     if (fields.timestamp) {
       const timestamp = resolveValue(item, fields.timestamp)
       if (timestamp) newsItem.timestamp = timestamp
@@ -96,6 +103,17 @@ async function jsonSourceHandler<Item = any>(opts: JsonSourceOptions<Item>): Pro
         }
       }
     }
+
+    if (fields.detail) {
+      newsItem.detail = {}
+      for (const [key, resolver] of Object.entries(fields.detail)) {
+        const val = resolveValue(item, resolver as FieldResolver<Item, any>)
+        if (val !== undefined) {
+          newsItem.detail[key as keyof typeof newsItem.detail] = val
+        }
+      }
+    }
+
     return newsItem
   }).filter((i): i is NewsItem => i !== null)
 

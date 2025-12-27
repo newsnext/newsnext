@@ -23,8 +23,10 @@ export interface HtmlSourceOptions {
   fields: {
     title: FieldSelector
     url: FieldSelector
+    mobileUrl?: FieldSelector
     timestamp?: FieldSelector
     info?: Record<string, FieldSelector>
+    detail?: Record<string, FieldSelector>
   }
 }
 
@@ -107,6 +109,12 @@ export const defineHtmlSourceFetcher = createSourceFetcher<HtmlSourceOptions>(as
       url: itemUrl,
     }
 
+    if (fields.mobileUrl) {
+      const mobileUrlConfig = resolveFieldSelector(fields.mobileUrl)
+      const mobileUrl = resolveField($, el, mobileUrlConfig)
+      if (mobileUrl) item.mobileUrl = mobileUrl
+    }
+
     if (fields.timestamp) {
       const timestampConfig = resolveFieldSelector(fields.timestamp)
       const timestamp = resolveField($, el, timestampConfig)
@@ -120,6 +128,17 @@ export const defineHtmlSourceFetcher = createSourceFetcher<HtmlSourceOptions>(as
         const infoValue = resolveField($, el, config)
         if (infoValue !== undefined && infoValue !== "") {
           item.info[key as keyof typeof item.info] = infoValue
+        }
+      }
+    }
+
+    if (fields.detail) {
+      item.detail = {}
+      for (const [key, fieldSelector] of Object.entries(fields.detail)) {
+        const config = resolveFieldSelector(fieldSelector as FieldSelector)
+        const detailValue = resolveField($, el, config)
+        if (detailValue !== undefined && detailValue !== "") {
+          item.detail[key as keyof typeof item.detail] = detailValue
         }
       }
     }

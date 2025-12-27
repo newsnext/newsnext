@@ -18,7 +18,7 @@ interface VideoItem {
   bvid: string
   title: string
   pubdate: number
-  owner: { name: string }
+  owner: { name: string, face: string }
   stat: { view: number, like: number }
   desc: string
   pic: string
@@ -31,7 +31,7 @@ const hotSearch = defineJsonSourceFetcher<HotSearchItem>(() => ({
     title: "show_name",
     url: ({ keyword }) => `https://search.bilibili.com/all?keyword=${encodeURIComponent(keyword)}`,
     info: {
-      icon: item => item.icon ? { url: item.icon, scale: 1 } : undefined,
+      picture: item => item.icon ? { url: item.icon, scale: 1 } : undefined,
     },
   },
 }))
@@ -44,9 +44,12 @@ const hotVideo = defineJsonSourceFetcher<VideoItem>(() => ({
     url: ({ bvid }) => `https://www.bilibili.com/video/${bvid}`,
     timestamp: ({ pubdate }) => pubdate * 1000,
     info: {
-      text: ({ owner, stat }) => `${owner.name} · ${formatNumber(stat.view)}观看 · ${formatNumber(stat.like)}点赞`,
-      detail: "desc",
-      icon: item => item.pic ? { url: item.pic, scale: 1 } : undefined,
+      text: ({ stat }) => `${formatNumber(stat.view)}观看 · ${formatNumber(stat.like)}点赞`,
+      picture: item => item.owner.face ? { url: item.owner.face, radius: 4 } : undefined,
+    },
+    detail: {
+      text: "desc",
+      picture: item => item.pic,
     },
   },
 }))
@@ -59,9 +62,12 @@ const ranking = defineJsonSourceFetcher<VideoItem>(() => ({
     url: ({ bvid }) => `https://www.bilibili.com/video/${bvid}`,
     timestamp: ({ pubdate }) => pubdate * 1000,
     info: {
-      text: ({ owner, stat }) => `${owner.name} · ${formatNumber(stat.view)}观看 · ${formatNumber(stat.like)}点赞`,
-      detail: "desc",
-      icon: item => item.pic ? { url: item.pic, scale: 1 } : undefined,
+      text: ({ stat }) => `${formatNumber(stat.view)}观看 · ${formatNumber(stat.like)}点赞`,
+      picture: item => item.owner.face ? { url: item.owner.face, radius: 4 } : undefined,
+    },
+    detail: {
+      text: "desc",
+      picture: item => item.pic,
     },
   },
 }))

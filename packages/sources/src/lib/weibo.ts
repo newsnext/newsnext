@@ -40,7 +40,7 @@ export default defineSource({
         },
       },
       info: {
-        icon: {
+        picture: {
           selector: "td.td-03",
           transform: (val) => {
             const flagUrl = flagUrls[val as keyof typeof flagUrls]

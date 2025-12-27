@@ -10,7 +10,7 @@ export const defineRSSSourceFetcher = createSourceFetcher<{ url: string }>(async
   return data.items.map(item => ({
     title: item.title,
     url: item.link,
-    timestamp: item.created,
+    timestamp: item.created ? new Date(item.created).getTime() : undefined,
   }))
 })
 
@@ -27,10 +27,10 @@ export const defineRSSHubSourceFetcher = createSourceFetcher<{ route: string, ho
   Object.entries(RSSHubOptions).forEach(([key, value]) => {
     url.searchParams.set(key, (value as any).toString())
   })
-  const data: RSSHubResponse = await myFetch(url)
+  const data: RSSHubResponse = await myFetch(url.toString())
   return data.items.map(item => ({
     title: item.title,
     url: item.url,
-    timestamp: item.date_published,
+    timestamp: new Date(item.date_published).getTime(),
   }))
 })

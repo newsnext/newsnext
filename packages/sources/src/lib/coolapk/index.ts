@@ -1,3 +1,4 @@
+import { load } from "cheerio"
 import { myFetch } from "../../utils/fetch"
 import { defineJsonSourceFetcher, defineSource } from "../../utils/source"
 import { genHeaders } from "./utils"
@@ -27,7 +28,7 @@ export default defineSource({
     },
     items: json => json.data.filter((k: any) => k.id),
     fields: {
-      title: item => item.editor_title || item.message.split("\n")[0],
+      title: item => item.editor_title || load(item.message).text().split("\n")[0],
       url: item => `https://www.coolapk.com${item.url}`,
       info: {
         text: "targetRow.subTitle",
