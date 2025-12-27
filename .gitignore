@@ -8,9 +8,11 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
-dist
-dist-ssr
-*.local
+.output
+stats.html
+stats-*.json
+.wxt
+web-ext.config.ts
 
 .idea
 .DS_Store
@@ -26,3 +28,7 @@ examples/
 .vercel
 servers/api/public
 data/*.db
+
+.env*
+!.env.example
+dist/

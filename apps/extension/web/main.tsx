@@ -17,7 +17,7 @@ const router = createRouter({
 
 function App() {
   return (
-    <AppProvider trpcUrl="/api/trpc" queryClient={queryClient}>
+    <AppProvider queryClient={queryClient}>
       <RouterProvider router={router} />
     </AppProvider>
   )

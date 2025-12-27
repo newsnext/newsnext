@@ -4,6 +4,7 @@ import { Hono } from "hono"
 import { cors } from "hono/cors"
 import { logger } from "hono/logger"
 import { appRouter } from "./app-router"
+import proxyApp from "./proxy"
 
 export type { AppRouter } from "./app-router"
 
@@ -48,6 +49,9 @@ app.use("/api/trpc/*", (c, next) => {
     }),
   })(c, next)
 })
+
+// Image proxy endpoint - /api/p/:encodedUrl
+app.route("/api/p", proxyApp)
 
 export default {
   port: process.env.PORT ?? 4000,

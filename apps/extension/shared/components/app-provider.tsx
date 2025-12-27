@@ -3,6 +3,7 @@ import type { PropsWithChildren } from "react"
 import { QueryClientProvider } from "@tanstack/react-query"
 import { httpBatchStreamLink } from "@trpc/client"
 import { useState } from "react"
+import { BASE_URL } from "@/lib/env"
 import { trpc } from "@/lib/trpc"
 import { handleThemeSwitch, THEME_KEY } from "@/lib/utils/swith-theme"
 
@@ -15,13 +16,11 @@ if (typeof window !== "undefined") {
 }
 
 interface AppProviderProps {
-  trpcUrl: string
   queryClient: QueryClient
 }
 
 export function AppProvider({
   children,
-  trpcUrl,
   queryClient,
 }: PropsWithChildren<AppProviderProps>) {
   const [trpcClient] = useState(
@@ -29,7 +28,7 @@ export function AppProvider({
       trpc.createClient({
         links: [
           httpBatchStreamLink({
-            url: trpcUrl,
+            url: `${BASE_URL}/api/trpc`,
           }),
         ],
       }),

@@ -1,0 +1,1 @@
+export const BASE_URL = (import.meta.env.BROWSER ? import.meta.env.WXT_BASE_URL : import.meta.env.VITE_BASE_URL) || ""

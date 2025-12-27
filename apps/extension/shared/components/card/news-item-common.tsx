@@ -2,7 +2,39 @@ import type { ReactNode } from "react"
 import type { NewsItem } from "@/typings/source"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@newsnext/ui/components/hover-card"
 import { useIsMobile } from "@newsnext/ui/hooks/use-mobile"
+import { useCallback, useState } from "react"
+import { BASE_URL } from "@/lib/env"
 import { cn } from "@/lib/utils"
+
+function getProxiedImageUrl(url: string): string {
+  return `${BASE_URL}/api/p/${encodeURIComponent(url)}`
+}
+
+interface ProxiedImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
+  src: string
+}
+
+function ProxiedImage({ src, onError, ...props }: ProxiedImageProps) {
+  const [imgSrc, setImgSrc] = useState(src)
+  const [failed, setFailed] = useState(false)
+
+  const handleError = useCallback((e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    if (imgSrc === src) {
+      // First error: try proxied URL
+      setImgSrc(getProxiedImageUrl(src))
+    } else {
+      // Second error: mark as failed
+      setFailed(true)
+    }
+    onError?.(e)
+  }, [imgSrc, src, onError])
+
+  if (failed) {
+    return null
+  }
+
+  return <img {...props} src={imgSrc} onError={handleError} />
+}
 
 interface NewsItemLinkProps {
   item: NewsItem
@@ -52,7 +84,7 @@ export function NewsItemLink({ item, className, children }: NewsItemLinkProps) {
             {detailPicture && (() => {
               const { url, scale, radius } = typeof detailPicture === "string" ? { url: detailPicture, scale: undefined, radius: undefined } : detailPicture
               return (
-                <img
+                <ProxiedImage
                   src={url}
                   referrerPolicy="no-referrer"
                   alt="detail picture"
@@ -61,7 +93,6 @@ export function NewsItemLink({ item, className, children }: NewsItemLinkProps) {
                     borderRadius: `${radius ?? 12}px`,
                   }}
                   className="max-w-full"
-                  onError={e => e.currentTarget.style.display = "none"}
                 />
               )
             })()}
@@ -103,16 +134,15 @@ export function NewsItemInfo({ item, className }: { item: NewsItem, className?: 
       {hasPicture && (() => {
         const { url, scale, radius } = typeof hasPicture === "string" ? { url: hasPicture, scale: undefined, radius: undefined } : hasPicture
         return (
-          <img
+          <ProxiedImage
             src={url}
             referrerPolicy="no-referrer"
             alt="picture"
             style={{
               transform: `scale(${scale ?? 1})`,
-              borderRadius: radius !== undefined ? `${radius}px` : undefined,
+              borderRadius: `${radius ?? 4}px`,
             }}
             className="h-4 inline -mt-1"
-            onError={e => e.currentTarget.style.display = "none"}
           />
         )
       })()}

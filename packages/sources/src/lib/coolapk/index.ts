@@ -7,7 +7,9 @@ interface CoolApkItem {
   id: string
   editor_title?: string
   message: string
+  pic?: string
   url: string
+  userAvatar: string
   targetRow?: {
     subTitle: string
   }
@@ -28,10 +30,18 @@ export default defineSource({
     },
     items: json => json.data.filter((k: any) => k.id),
     fields: {
-      title: item => item.editor_title || load(item.message).text().split("\n")[0],
+      title: (item) => {
+        const title = item.editor_title || load(item.message).text().split("\n")[0]
+        return title.length > 50 ? `${title.slice(0, 50)}...` : title
+      },
       url: item => `https://www.coolapk.com${item.url}`,
       info: {
         text: "targetRow.subTitle",
+        picture: item => item.userAvatar,
+      },
+      detail: {
+        text: item => item.message ? load(item.message).text() : undefined,
+        picture: item => item.pic,
       },
     },
   })),
