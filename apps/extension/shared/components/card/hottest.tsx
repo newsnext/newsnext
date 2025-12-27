@@ -13,7 +13,7 @@ export function Hottest({ items }: { items: NewsItem[] }) {
           target="_blank"
           rel="noreferrer"
           key={item.url}
-          title={item.extra?.hover}
+          title={item.info?.detail}
           className={cn(
             "flex gap-2 items-stretch relative cursor-pointer **:cursor-pointer transition-all",
             "hover:bg-neutral-400/10 rounded-md",
@@ -26,9 +26,9 @@ export function Hottest({ items }: { items: NewsItem[] }) {
             <span className="mr-2 text-base">
               {item.title}
             </span>
-            {(item.extra?.info || item.extra?.icon) && (
+            {item.info && (
               <span className="text-xs text-neutral-400/80 truncate align-middle">
-                <ExtraInfo item={item} />
+                <Info item={item} />
               </span>
             )}
           </span>
@@ -38,12 +38,12 @@ export function Hottest({ items }: { items: NewsItem[] }) {
   )
 }
 
-export function ExtraInfo({ item }: { item: NewsItem }) {
-  if (item?.extra?.info) {
-    return <>{item.extra.info}</>
+function Info({ item }: { item: NewsItem }) {
+  if (item?.info?.text) {
+    return <span dangerouslySetInnerHTML={{ __html: item.info.text }} />
   }
-  if (item?.extra?.icon) {
-    const { url, scale } = typeof item.extra.icon === "string" ? { url: item.extra.icon, scale: undefined } : item.extra.icon
+  if (item?.info?.icon) {
+    const { url, scale } = typeof item.info.icon === "string" ? { url: item.info.icon, scale: undefined } : item.info.icon
     return (
       <img
         src={url}

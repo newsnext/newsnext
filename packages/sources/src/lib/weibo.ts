@@ -39,7 +39,7 @@ export default defineSource({
           return `${baseurl}${href}`
         },
       },
-      extra: {
+      info: {
         icon: {
           selector: "td.td-03",
           transform: (val) => {

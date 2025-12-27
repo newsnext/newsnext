@@ -25,16 +25,16 @@ describe("defineJsonSource", () => {
       fields: {
         title: "title",
         url: "link",
-        updated: "ts",
+        timestamp: "ts",
       },
     }))
 
     const results = await (source as any).fetcher({})
 
     expect(results).toHaveLength(2)
-    // Sorted by updated desc
+    // Sorted by timestamp desc
     expect(results[0].title).toBe("Item 2")
-    expect(results[0].updated).toBe(200)
+    expect(results[0].timestamp).toBe(200)
   })
 
   it("should handle nested itemsPath", async () => {
@@ -75,15 +75,15 @@ describe("defineJsonSource", () => {
       fields: {
         title: (item: any) => item.name.toUpperCase(),
         url: "url",
-        extra: {
-          info: item => `Score: ${item.meta.score}`,
+        info: {
+          text: item => `Score: ${item.meta.score}`,
         },
       },
     }))
 
     const results = await (source as any).fetcher({})
     expect(results[0].title).toBe("FUNC")
-    expect(results[0].extra.info).toBe("Score: 99")
+    expect(results[0].info.text).toBe("Score: 99")
   })
 
   it("should handle custom fetch", async () => {

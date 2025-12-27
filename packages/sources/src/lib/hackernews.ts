@@ -14,15 +14,15 @@ const createHNFetcher = (sub: string) => defineHtmlSourceFetcher(() => ({
         return `https://news.ycombinator.com/item?id=${id}`
       },
     },
-    updated: {
+    timestamp: {
       // Use $el to access next sibling row
       transform: (_, $el) => {
         const date = $el.next("tr").find(".age").attr("title")?.split(" ")?.[1]
         return date ? Number(`${date}000`) : undefined
       },
     },
-    extra: {
-      info: {
+    info: {
+      text: {
         attr: "id",
         transform: (id, $el) => $el.next("tr").find(`#score_${id}`).text(),
       },

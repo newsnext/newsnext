@@ -29,8 +29,8 @@ export default defineSource({
     fields: {
       title: item => item.editor_title || item.message.split("\n")[0],
       url: item => `https://www.coolapk.com${item.url}`,
-      extra: {
-        info: "targetRow.subTitle",
+      info: {
+        text: "targetRow.subTitle",
       },
     },
   })),

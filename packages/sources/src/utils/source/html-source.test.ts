@@ -36,7 +36,7 @@ describe("defineHtmlSource", () => {
       fields: {
         title: ".title",
         url: { selector: ".title", attr: "href" },
-        updated: ".date",
+        timestamp: ".date",
       },
     }))
 
@@ -44,10 +44,10 @@ describe("defineHtmlSource", () => {
     const results = await (source as any).fetcher({})
 
     expect(results).toHaveLength(2)
-    // Results are sorted by updated desc by default
+    // Results are sorted by timestamp desc by default
     expect(results[0].title).toBe("Article 2")
     expect(results[0].url).toBe("/article/2")
-    expect(results[0].updated).toBe("123457")
+    expect(results[0].timestamp).toBe("123457")
   })
 
   it("should support transforms", async () => {
@@ -72,7 +72,7 @@ describe("defineHtmlSource", () => {
           selector: ".title", // just to select something
           transform: () => "https://example.com/1",
         },
-        updated: {
+        timestamp: {
           selector: ".date",
           attr: "data-ts",
           transform: val => Number(val) * 1000,
@@ -82,7 +82,7 @@ describe("defineHtmlSource", () => {
 
     const results = await (source as any).fetcher({})
     expect(results[0].title).toBe("DIRTY TITLE")
-    expect(results[0].updated).toBe(1600000000000)
+    expect(results[0].timestamp).toBe(1600000000000)
   })
 
   it("should handle params in url function", async () => {

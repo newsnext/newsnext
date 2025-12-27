@@ -47,7 +47,7 @@ export default defineSource({
             return href.startsWith("http") ? href : `${baseURL}${href}`
           },
         },
-        updated: {
+        timestamp: {
           selector: ".time",
           transform: (relativeDate: string | undefined) => {
             if (!relativeDate) return undefined

@@ -23,12 +23,12 @@ export default defineSource({
         attr: "href",
         transform: val => `${baseURL}${val}`,
       },
-      extra: {
-        info: {
+      info: {
+        text: {
           selector: "[href$=stargazers]",
           transform: val => `✰ ${val?.replace(/\s+/g, "").trim()}`,
         },
-        hover: {
+        detail: {
           selector: ">p",
           transform: val => val?.replace(/\n+/g, "").trim(),
         },

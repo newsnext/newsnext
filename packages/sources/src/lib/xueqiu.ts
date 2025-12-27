@@ -33,8 +33,8 @@ export default defineSource({
     fields: {
       url: item => `https://xueqiu.com/s/${item.code}`,
       title: "name",
-      extra: {
-        info: item => `${item.percent}% ${item.exchange}`,
+      info: {
+        text: item => `${item.percent}% ${item.exchange}`,
       },
     },
   })),

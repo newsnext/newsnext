@@ -30,12 +30,12 @@ export default defineSource({
       default: "url",
       title: "URL Path",
     },
-    updatedPath: {
+    timestampPath: {
       type: "text",
       default: "date_published",
-      title: "Updated Path",
+      title: "Timestamp Path",
     },
-  }, ({ headers, url, itemsPath, titlePath, urlPath, updatedPath }) => {
+  }, ({ headers, url, itemsPath, titlePath, urlPath, timestampPath }) => {
     const fetchOptions = {
       headers: JSON.parse(headers),
     }
@@ -46,7 +46,7 @@ export default defineSource({
       fields: {
         title: item => resolvePath(item, titlePath),
         url: item => resolvePath(item, urlPath),
-        updated: item => resolvePath(item, updatedPath),
+        timestamp: item => resolvePath(item, timestampPath),
       },
     }
   }),

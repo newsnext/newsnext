@@ -15,13 +15,15 @@ export function Timeline({ items }: { items: NewsItem[] }) {
           <span className="flex items-center gap-1 text-neutral-400/50 ml--1px">
             <span className="">-</span>
             <span className="text-xs text-neutral-400/80">
-              {(item.updated) && (
-                <NewsUpdatedTime date={(item.updated)!} />
+              {(item.timestamp) && (
+                <NewsUpdatedTime date={(item.timestamp)!} />
               )}
             </span>
-            <span className="text-xs text-neutral-400/80">
-              <ExtraInfo item={item} />
-            </span>
+            {item.info && (
+              <span className="text-xs text-neutral-400/80">
+                <Info item={item} />
+              </span>
+            )}
           </span>
           <a
             className={cn(
@@ -29,7 +31,7 @@ export function Timeline({ items }: { items: NewsItem[] }) {
               "cursor-pointer **:cursor-pointer transition-all",
             )}
             href={isMobile ? item.mobileUrl || item.url : item.url}
-            title={item.extra?.hover}
+            title={item.info?.detail}
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -50,12 +52,12 @@ function NewsUpdatedTime({ date }: { date: string | number }) {
   }
 }
 
-function ExtraInfo({ item }: { item: NewsItem }) {
-  if (item?.extra?.info) {
-    return <>{item.extra.info}</>
+function Info({ item }: { item: NewsItem }) {
+  if (item?.info?.text) {
+    return <span dangerouslySetInnerHTML={{ __html: item.info.text }} />
   }
-  if (item?.extra?.icon) {
-    const { url, scale } = typeof item.extra.icon === "string" ? { url: item.extra.icon, scale: undefined } : item.extra.icon
+  if (item?.info?.icon) {
+    const { url, scale } = typeof item.info.icon === "string" ? { url: item.info.icon, scale: undefined } : item.info.icon
     return (
       <img
         src={url}

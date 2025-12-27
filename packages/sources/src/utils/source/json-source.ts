@@ -23,8 +23,8 @@ export interface JsonSourceOptions<Item = any> {
   fields: {
     title: FieldResolver<Item, string>
     url: FieldResolver<Item, string>
-    updated?: FieldResolver<Item, number>
-    extra?: Record<string, FieldResolver<Item, any>>
+    timestamp?: FieldResolver<Item, number>
+    info?: Record<string, FieldResolver<Item, any>>
   }
 }
 
@@ -82,26 +82,26 @@ async function jsonSourceHandler<Item = any>(opts: JsonSourceOptions<Item>): Pro
       url: itemUrl,
     }
 
-    if (fields.updated) {
-      const updated = resolveValue(item, fields.updated)
-      if (updated) newsItem.updated = updated
+    if (fields.timestamp) {
+      const timestamp = resolveValue(item, fields.timestamp)
+      if (timestamp) newsItem.timestamp = timestamp
     }
 
-    if (fields.extra) {
-      newsItem.extra = {}
-      for (const [key, resolver] of Object.entries(fields.extra)) {
+    if (fields.info) {
+      newsItem.info = {}
+      for (const [key, resolver] of Object.entries(fields.info)) {
         const val = resolveValue(item, resolver as FieldResolver<Item, any>)
         if (val !== undefined) {
-          newsItem.extra[key as keyof typeof newsItem.extra] = val
+          newsItem.info[key as keyof typeof newsItem.info] = val
         }
       }
     }
     return newsItem
   }).filter((i): i is NewsItem => i !== null)
 
-  // Sort by updated if available
-  if (news.length > 0 && news[0].updated) {
-    news.sort((a, b) => (b.updated as number) - (a.updated as number))
+  // Sort by timestamp if available
+  if (news.length > 0 && news[0].timestamp) {
+    news.sort((a, b) => (b.timestamp as number) - (a.timestamp as number))
   }
 
   return news

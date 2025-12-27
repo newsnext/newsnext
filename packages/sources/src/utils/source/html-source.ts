@@ -23,8 +23,8 @@ export interface HtmlSourceOptions {
   fields: {
     title: FieldSelector
     url: FieldSelector
-    updated?: FieldSelector
-    extra?: Record<string, FieldSelector>
+    timestamp?: FieldSelector
+    info?: Record<string, FieldSelector>
   }
 }
 
@@ -107,19 +107,19 @@ export const defineHtmlSourceFetcher = createSourceFetcher<HtmlSourceOptions>(as
       url: itemUrl,
     }
 
-    if (fields.updated) {
-      const updatedConfig = resolveFieldSelector(fields.updated)
-      const updated = resolveField($, el, updatedConfig)
-      if (updated) item.updated = updated
+    if (fields.timestamp) {
+      const timestampConfig = resolveFieldSelector(fields.timestamp)
+      const timestamp = resolveField($, el, timestampConfig)
+      if (timestamp) item.timestamp = timestamp
     }
 
-    if (fields.extra) {
-      item.extra = {}
-      for (const [key, fieldSelector] of Object.entries(fields.extra)) {
+    if (fields.info) {
+      item.info = {}
+      for (const [key, fieldSelector] of Object.entries(fields.info)) {
         const config = resolveFieldSelector(fieldSelector as FieldSelector)
-        const extraValue = resolveField($, el, config)
-        if (extraValue !== undefined && extraValue !== "") {
-          item.extra[key as keyof typeof item.extra] = extraValue
+        const infoValue = resolveField($, el, config)
+        if (infoValue !== undefined && infoValue !== "") {
+          item.info[key as keyof typeof item.info] = infoValue
         }
       }
     }
@@ -127,8 +127,8 @@ export const defineHtmlSourceFetcher = createSourceFetcher<HtmlSourceOptions>(as
     news.push(item)
   })
 
-  if (news.length > 0 && news[0].updated) {
-    news.sort((a, b) => (b.updated as number) - (a.updated as number))
+  if (news.length > 0 && news[0].timestamp) {
+    news.sort((a, b) => (b.timestamp as number) - (a.timestamp as number))
   }
 
   return news

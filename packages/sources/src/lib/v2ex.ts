@@ -25,9 +25,9 @@ const share: SourceFetcher = async () => {
     .map(k => myFetch(`https://www.v2ex.com/feed/${k}.json`) as Promise<Res>))
   return res.map(k => k.items).flat().map(k => ({
     title: k.title,
-    updated: new Date(k.date_modified ?? k.date_published).getTime(),
+    timestamp: new Date(k.date_modified ?? k.date_published).getTime(),
     url: k.url,
-  })).sort((m, n) => m.updated < n.updated ? 1 : -1)
+  })).sort((m, n) => m.timestamp < n.timestamp ? 1 : -1)
 }
 
 export default defineSource({

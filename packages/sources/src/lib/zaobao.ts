@@ -21,7 +21,7 @@ export default defineSource({
         attr: "href",
         transform: val => base + val,
       },
-      updated: {
+      timestamp: {
         selector: ".pdt10",
         transform: (val) => {
           if (!val) return undefined
