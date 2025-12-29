@@ -39,7 +39,7 @@ export default defineSource({
         attr: "data-timestamp",
         transform: val => Number(val) * 1000,
       },
-      info: {
+      meta: {
         text: ".article-publisher__name",
       },
     },

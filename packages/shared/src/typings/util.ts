@@ -13,6 +13,7 @@ export type UnionToIntersection<U>
  * Type that can be either a Promise or the value directly
  */
 export type MaybePromise<T> = Promise<T> | T
+export type MaybeArray<T> = T | T[]
 
 /**
  * Exclusive OR type - ensures only properties from one type are present

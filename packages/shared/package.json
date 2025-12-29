@@ -5,6 +5,7 @@
   "sideEffects": false,
   "exports": {
     "./constants": "./src/constants/index.ts",
+    "./utils": "./src/utils/index.ts",
     "./types": "./src/typings/index.ts"
   },
   "scripts": {

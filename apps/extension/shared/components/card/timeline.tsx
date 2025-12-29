@@ -1,8 +1,9 @@
 import type { RefObject } from "react"
 import type { NewsItem } from "@/typings/source"
+import { extractPictures } from "@newsnext/shared/types"
 import { useRelativeTime } from "@/hooks/useRelativeTime"
 import { VirtualList } from "../common/virtual-list"
-import { NewsItemInfo, NewsItemLink } from "./news-item-common"
+import { NewsItemInfo, NewsItemLink, ProxiedImage } from "./news-item-common"
 
 function RelativeTime({ date }: { date: number }) {
   const time = useRelativeTime({ date })
@@ -29,12 +30,26 @@ export function Timeline({ items, scrollRef }: { items: NewsItem[], scrollRef: R
               {(item.timestamp) && (
                 <RelativeTime date={item.timestamp!} />
               )}
-              {item.info && (
+              {item.meta && (
                 <NewsItemInfo item={item} />
               )}
             </span>
           </span>
           <NewsItemLink item={item}>
+            {item.meta?.icon && extractPictures(item.meta.icon).map((icon, i) => {
+              const { url, scale, radius } = icon
+              return (
+                <ProxiedImage
+                  key={`icon-${i}`}
+                  src={url}
+                  style={{
+                    transform: `scale(${scale ?? 1})`,
+                    borderRadius: `${radius ?? 4}px`,
+                  }}
+                  className="h-4 w-4 object-contain inline -mt-1 mr-1"
+                />
+              )
+            })}
             {item.title}
           </NewsItemLink>
         </div>

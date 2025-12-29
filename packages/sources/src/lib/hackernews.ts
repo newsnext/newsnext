@@ -21,7 +21,7 @@ const createHNFetcher = (sub: string) => defineHtmlSourceFetcher(() => ({
         return date ? Number(`${date}000`) : undefined
       },
     },
-    info: {
+    meta: {
       text: {
         attr: "id",
         transform: (id, $el) => $el.next("tr").find(`#score_${id}`).text(),

@@ -25,8 +25,17 @@ export interface JsonSourceOptions<Item = any> {
     url: FieldResolver<Item, string>
     mobileUrl?: FieldResolver<Item, string>
     timestamp?: FieldResolver<Item, number>
-    info?: Record<string, FieldResolver<Item, any>>
-    detail?: Record<string, FieldResolver<Item, any>>
+    meta?: {
+      text?: FieldResolver<Item, string>
+      html?: FieldResolver<Item, string>
+      mark?: FieldResolver<Item, NonNullable<NewsItem["meta"]>["mark"]>
+      icon?: FieldResolver<Item, NonNullable<NewsItem["meta"]>["icon"]>
+    }
+    detail?: {
+      text?: FieldResolver<Item, string>
+      html?: FieldResolver<Item, string>
+      picture?: FieldResolver<Item, NonNullable<NewsItem["detail"]>["picture"]>
+    }
   }
 }
 
@@ -94,24 +103,26 @@ async function jsonSourceHandler<Item = any>(opts: JsonSourceOptions<Item>): Pro
       if (timestamp) newsItem.timestamp = timestamp
     }
 
-    if (fields.info) {
-      newsItem.info = {}
-      for (const [key, resolver] of Object.entries(fields.info)) {
+    if (fields.meta) {
+      const meta: any = {}
+      for (const [key, resolver] of Object.entries(fields.meta)) {
         const val = resolveValue(item, resolver as FieldResolver<Item, any>)
         if (val !== undefined) {
-          newsItem.info[key as keyof typeof newsItem.info] = val
+          meta[key as keyof typeof meta] = val
         }
       }
+      newsItem.meta = meta
     }
 
     if (fields.detail) {
-      newsItem.detail = {}
+      const detail: any = {}
       for (const [key, resolver] of Object.entries(fields.detail)) {
         const val = resolveValue(item, resolver as FieldResolver<Item, any>)
         if (val !== undefined) {
-          newsItem.detail[key as keyof typeof newsItem.detail] = val
+          detail[key as keyof typeof detail] = val
         }
       }
+      newsItem.detail = detail
     }
 
     return newsItem

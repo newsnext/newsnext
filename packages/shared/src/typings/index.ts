@@ -4,6 +4,6 @@
 
 export * from "./api"
 export * from "./color"
-export * from "./news"
+export * from "./items"
 export * from "./source"
 export * from "./util"

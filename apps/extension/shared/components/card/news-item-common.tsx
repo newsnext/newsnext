@@ -1,5 +1,6 @@
 import type { ReactNode } from "react"
 import type { NewsItem } from "@/typings/source"
+import { extractPictures } from "@newsnext/shared/types"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@newsnext/ui/components/hover-card"
 import { useIsMobile } from "@newsnext/ui/hooks/use-mobile"
 import { useCallback, useState } from "react"
@@ -14,7 +15,7 @@ interface ProxiedImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   src: string
 }
 
-function ProxiedImage({ src, onError, ...props }: ProxiedImageProps) {
+export function ProxiedImage({ src, onError, ...props }: ProxiedImageProps) {
   const [imgSrc, setImgSrc] = useState(src)
   const [failed, setFailed] = useState(false)
 
@@ -77,7 +78,6 @@ export function NewsItemLink({ item, className, children }: NewsItemLinkProps) {
   const hasDetail = item.detail?.html || item.detail?.text || item.detail?.picture
 
   if (hasDetail) {
-    const detailPicture = item.detail?.picture
     return (
       <HoverCard>
         <HoverCardTrigger
@@ -89,10 +89,11 @@ export function NewsItemLink({ item, className, children }: NewsItemLinkProps) {
         />
         <HoverCardContent side="right" align="start" alignOffset={0} className="max-h-96 overflow-y-auto scrollbar-hidden">
           <div className="flex flex-col gap-2">
-            {detailPicture && (() => {
-              const { url, scale, radius } = typeof detailPicture === "string" ? { url: detailPicture, scale: undefined, radius: undefined } : detailPicture
+            {item.detail?.picture && extractPictures(item.detail.picture).map((picture, i) => {
+              const { url, scale, radius } = picture
               return (
                 <ProxiedImage
+                  key={i}
                   src={url}
                   referrerPolicy="no-referrer"
                   alt="detail picture"
@@ -103,19 +104,19 @@ export function NewsItemLink({ item, className, children }: NewsItemLinkProps) {
                   className="max-w-full"
                 />
               )
-            })()}
+            })}
             {item.detail?.html
-              && (
-                <span
-                  className="whitespace-pre-wrap wrap-break-word"
-                  dangerouslySetInnerHTML={{ __html: item.detail.html }}
-                />
+              ? (
+                  <span
+                    className="whitespace-pre-wrap wrap-break-word"
+                    dangerouslySetInnerHTML={{ __html: item.detail.html }}
+                  />
+                )
+              : item.detail?.text && (
+                <span className="whitespace-pre-wrap wrap-break-word">
+                  {item.detail?.text}
+                </span>
               )}
-            {item.detail?.text && (
-              <span className="whitespace-pre-wrap wrap-break-word">
-                {item.detail?.text}
-              </span>
-            )}
           </div>
         </HoverCardContent>
       </HoverCard>
@@ -130,19 +131,20 @@ export function NewsItemLink({ item, className, children }: NewsItemLinkProps) {
 }
 
 export function NewsItemInfo({ item, className }: { item: NewsItem, className?: string }) {
-  const hasInfo = item?.info?.html || item?.info?.text
-  const hasPicture = item?.info?.picture
+  const hasMeta = item?.meta?.html || item?.meta?.text
+  const hasMark = item?.meta?.mark
 
-  if (!hasInfo && !hasPicture) {
+  if (!hasMeta && !hasMark) {
     return null
   }
 
   return (
     <>
-      {hasPicture && (() => {
-        const { url, scale, radius } = typeof hasPicture === "string" ? { url: hasPicture, scale: undefined, radius: undefined } : hasPicture
+      {hasMark && extractPictures(hasMark).map((mark, i) => {
+        const { url, scale, radius } = mark
         return (
           <ProxiedImage
+            key={`mark-${i}`}
             src={url}
             style={{
               transform: `scale(${scale ?? 1})`,
@@ -151,10 +153,10 @@ export function NewsItemInfo({ item, className }: { item: NewsItem, className?: 
             className="h-4 inline -mt-1 mr-1"
           />
         )
-      })()}
+      })}
       <span className={cn("text-xs text-neutral-400/80 space-x-1", className)}>
-        {item.info?.html && <span dangerouslySetInnerHTML={{ __html: item.info.html }} />}
-        {item.info?.text && <span>{item.info.text}</span>}
+        {item.meta?.html && <span dangerouslySetInnerHTML={{ __html: item.meta.html }} />}
+        {item.meta?.text && <span>{item.meta.text}</span>}
       </span>
     </>
   )

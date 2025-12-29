@@ -30,8 +30,8 @@ const hotSearch = defineJsonSourceFetcher<HotSearchItem>(() => ({
   fields: {
     title: "show_name",
     url: ({ keyword }) => `https://search.bilibili.com/all?keyword=${encodeURIComponent(keyword)}`,
-    info: {
-      picture: item => item.icon,
+    meta: {
+      mark: item => item.icon,
     },
   },
 }))
@@ -43,9 +43,9 @@ const hotVideo = defineJsonSourceFetcher<VideoItem>(() => ({
     title: "title",
     url: ({ bvid }) => `https://www.bilibili.com/video/${bvid}`,
     timestamp: ({ pubdate }) => pubdate * 1000,
-    info: {
+    meta: {
       text: ({ stat }) => `${formatNumber(stat.view)}观看 · ${formatNumber(stat.like)}点赞`,
-      picture: item => item.owner.face,
+      icon: item => item.owner.face,
     },
     detail: {
       text: "desc",
@@ -61,9 +61,9 @@ const ranking = defineJsonSourceFetcher<VideoItem>(() => ({
     title: "title",
     url: ({ bvid }) => `https://www.bilibili.com/video/${bvid}`,
     timestamp: ({ pubdate }) => pubdate * 1000,
-    info: {
+    meta: {
       text: ({ stat }) => `${formatNumber(stat.view)}观看 · ${formatNumber(stat.like)}点赞`,
-      picture: item => item.owner.face ? { url: item.owner.face, radius: 4 } : undefined,
+      icon: item => item.owner.face ? { url: item.owner.face, radius: 4 } : undefined,
     },
     detail: {
       text: "desc",

@@ -33,7 +33,7 @@ export default defineSource({
     fields: {
       url: item => `https://xueqiu.com/s/${item.code}`,
       title: "name",
-      info: {
+      meta: {
         text: item => `${item.percent}% ${item.exchange}`,
       },
     },

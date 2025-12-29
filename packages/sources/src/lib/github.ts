@@ -23,7 +23,7 @@ export default defineSource({
         attr: "href",
         transform: val => `${baseURL}${val}`,
       },
-      info: {
+      meta: {
         text: {
           selector: "[href$=stargazers]",
           transform: val => `✰ ${val?.replace(/\s+/g, "").trim()}`,

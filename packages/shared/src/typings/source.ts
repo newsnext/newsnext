@@ -1,4 +1,4 @@
-import type { NewsItem } from "./news"
+import type { NewsItem } from "./items"
 
 /**
  * Type of source based on content update frequency and nature

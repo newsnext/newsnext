@@ -35,12 +35,12 @@ export default defineSource({
         return title.length > 50 ? `${title.slice(0, 50)}...` : title
       },
       url: item => `https://www.coolapk.com${item.url}`,
-      info: {
+      meta: {
         text: "targetRow.subTitle",
-        picture: item => item.userAvatar,
+        icon: item => item.userAvatar,
       },
       detail: {
-        text: item => item.message ? load(item.message).text() : undefined,
+        text: item => item.message ? load(item.message).text() : "",
         picture: item => item.pic,
       },
     },

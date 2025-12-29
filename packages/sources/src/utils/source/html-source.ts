@@ -7,10 +7,10 @@ import iconv from "iconv-lite"
 import { createSourceFetcher } from "."
 import { myFetch } from "../fetch"
 
-export type FieldSelector = string | {
+export type FieldSelector<T = any> = string | {
   selector?: string
   attr?: string
-  transform?: (value: string | undefined, el: cheerio.Cheerio<AnyNode>) => any
+  transform?: (value: string | undefined, el: cheerio.Cheerio<AnyNode>) => T | undefined
 }
 
 export interface HtmlSourceOptions {
@@ -21,12 +21,21 @@ export interface HtmlSourceOptions {
   fetchOptions?: FetchOptions
   fetch?: (url: string) => Promise<string>
   fields: {
-    title: FieldSelector
-    url: FieldSelector
-    mobileUrl?: FieldSelector
-    timestamp?: FieldSelector
-    info?: Record<string, FieldSelector>
-    detail?: Record<string, FieldSelector>
+    title: FieldSelector<string>
+    url: FieldSelector<string>
+    mobileUrl?: FieldSelector<string>
+    timestamp?: FieldSelector<number>
+    meta?: {
+      text?: FieldSelector<string>
+      html?: FieldSelector<string>
+      mark?: FieldSelector<NonNullable<NewsItem["meta"]>["mark"]>
+      icon?: FieldSelector<NonNullable<NewsItem["meta"]>["icon"]>
+    }
+    detail?: {
+      text?: FieldSelector<string>
+      html?: FieldSelector<string>
+      picture?: FieldSelector<NonNullable<NewsItem["detail"]>["picture"]>
+    }
   }
 }
 
@@ -121,26 +130,28 @@ export const defineHtmlSourceFetcher = createSourceFetcher<HtmlSourceOptions>(as
       if (timestamp) item.timestamp = timestamp
     }
 
-    if (fields.info) {
-      item.info = {}
-      for (const [key, fieldSelector] of Object.entries(fields.info)) {
+    if (fields.meta) {
+      const meta: any = {}
+      for (const [key, fieldSelector] of Object.entries(fields.meta)) {
         const config = resolveFieldSelector(fieldSelector as FieldSelector)
         const infoValue = resolveField($, el, config)
         if (infoValue !== undefined && infoValue !== "") {
-          item.info[key as keyof typeof item.info] = infoValue
+          meta[key] = infoValue
         }
       }
+      item.meta = meta
     }
 
     if (fields.detail) {
-      item.detail = {}
+      const detail: any = {}
       for (const [key, fieldSelector] of Object.entries(fields.detail)) {
         const config = resolveFieldSelector(fieldSelector as FieldSelector)
         const detailValue = resolveField($, el, config)
         if (detailValue !== undefined && detailValue !== "") {
-          item.detail[key as keyof typeof item.detail] = detailValue
+          detail[key] = detailValue
         }
       }
+      item.detail = detail
     }
 
     news.push(item)

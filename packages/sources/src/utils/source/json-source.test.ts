@@ -75,7 +75,7 @@ describe("defineJsonSource", () => {
       fields: {
         title: (item: any) => item.name.toUpperCase(),
         url: "url",
-        info: {
+        meta: {
           text: item => `Score: ${item.meta.score}`,
         },
       },
@@ -83,7 +83,7 @@ describe("defineJsonSource", () => {
 
     const results = await (source as any).fetcher({})
     expect(results[0].title).toBe("FUNC")
-    expect(results[0].info.text).toBe("Score: 99")
+    expect(results[0].meta.text).toBe("Score: 99")
   })
 
   it("should handle custom fetch", async () => {

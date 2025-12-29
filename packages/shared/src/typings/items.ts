@@ -1,0 +1,58 @@
+import type { Either, MaybeArray } from "./util"
+
+interface Picture {
+  url: string
+  scale?: number
+  radius?: number
+}
+
+type RichText = Either<{
+  text: string
+}, {
+  html: string
+}>
+
+export interface NewsItem {
+  /**
+   * Title of the news item
+   */
+  title: string
+  /**
+   * URL of the news item (used as unique identifier)
+   */
+  url: string
+  /**
+   * Mobile-optimized URL
+   * @default url
+   */
+  mobileUrl?: string
+  /**
+   * Timestamp in milliseconds
+   */
+  timestamp?: number
+  meta?: RichText & {
+    /**
+     * Mark displayed in the end of the item
+     */
+    mark?: MaybeArray<string | Picture>
+    /**
+     * Icon displayed in the start of the item
+     */
+    icon?: string | Picture
+  }
+  /**
+   * Detailed information shown on hover
+   */
+  detail?: RichText & {
+    picture?: MaybeArray<string | Picture>
+  }
+}
+
+export const extractPictures = (pictures: MaybeArray<string | Picture>): Picture[] => {
+  return (Array.isArray(pictures) ? pictures : [pictures]).map((p) => {
+    if (typeof p === "string") {
+      return { url: p }
+    }
+    return p
+  })
+}

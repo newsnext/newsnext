@@ -34,13 +34,10 @@ export default defineSource({
       url: {
         selector: "td.td-02 a",
         attr: "href",
-        transform: (href) => {
-          if (!href || href.includes("javascript:void(0);")) return undefined
-          return `${baseurl}${href}`
-        },
+        transform: href => `${baseurl}${href}`,
       },
-      info: {
-        picture: {
+      meta: {
+        mark: {
           selector: "td.td-03",
           transform: (val) => {
             const flagUrl = flagUrls[val as keyof typeof flagUrls]
