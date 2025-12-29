@@ -3,7 +3,7 @@ import { defineHtmlSourceFetcher, defineSource } from "../utils/source"
 
 export default defineSource({
   name: "HTML Parser",
-  color: "blue",
+  color: "orange",
   home: "https://html.com/",
   ...defineHtmlSourceFetcher({
     url: {

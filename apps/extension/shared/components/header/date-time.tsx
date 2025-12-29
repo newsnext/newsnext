@@ -1,6 +1,7 @@
 import { format } from "date-fns"
 import { enUS } from "date-fns/locale"
-import { useEffect, useState } from "react"
+import { useAtomValue } from "jotai"
+import { minuteDateAtom } from "@/hooks/useRelativeTime"
 
 function formatTimeWithHighlight(time: string) {
   return time.split("").map((char, index) => (
@@ -11,12 +12,7 @@ function formatTimeWithHighlight(time: string) {
 }
 
 export function DateTime() {
-  const [date, setDate] = useState(new Date())
-
-  useEffect(() => {
-    const timer = setInterval(() => setDate(new Date()), 1000)
-    return () => clearInterval(timer)
-  }, [])
+  const date = useAtomValue(minuteDateAtom)
 
   return (
     <div className="island-pill px-4 flex items-center gap-3 select-none">

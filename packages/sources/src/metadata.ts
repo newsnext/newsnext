@@ -111,7 +111,7 @@ export const metadata: SourceMeta[] = [
   },
   {
     "name": "HTML Parser",
-    "color": "blue",
+    "color": "orange",
     "home": "https://html.com/",
     "params": {
       "url": {
@@ -175,10 +175,10 @@ export const metadata: SourceMeta[] = [
         "default": "url",
         "title": "URL Path"
       },
-      "updatedPath": {
+      "timestampPath": {
         "type": "text",
         "default": "date_published",
-        "title": "Updated Path"
+        "title": "Timestamp Path"
       }
     },
     "interval": 600000,

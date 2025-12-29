@@ -1,45 +1,44 @@
+import type { RefObject } from "react"
 import type { NewsItem } from "@/typings/source"
-import { formatDistanceToNow } from "date-fns"
-import { enUS } from "date-fns/locale"
-import { cn } from "@/lib/utils"
+import { useRelativeTime } from "@/hooks/useRelativeTime"
+import { VirtualList } from "../common/virtual-list"
 import { NewsItemInfo, NewsItemLink } from "./news-item-common"
 
-export function Timeline({ items }: { items: NewsItem[] }) {
+function RelativeTime({ date }: { date: number }) {
+  const time = useRelativeTime({ date })
   return (
-    <ol className="border-s border-neutral-400/50 flex flex-col ml-1">
-      {items?.map(item => (
-        <li key={`${item.url}`} className="flex flex-col">
-          <span className="flex items-center gap-1 text-neutral-400/50 ml--1px">
-            <span className="">-</span>
-            <span className="text-xs text-neutral-400/80">
-              {(item.timestamp) && (
-                <NewsUpdatedTime date={(item.timestamp)!} />
-              )}
-            </span>
-            {item.info && (
-              <NewsItemInfo item={item} />
-            )}
-          </span>
-          <NewsItemLink
-            item={item}
-            className={cn(
-              "ml-2 px-1 hover:bg-neutral-400/10 rounded-md",
-              "cursor-pointer **:cursor-pointer transition-all",
-            )}
-          >
-            {item.title}
-          </NewsItemLink>
-        </li>
-      ))}
-    </ol>
+    <span className="text-xs text-neutral-400/80 bg-neutral-400/10 py-0.5 px-1 rounded-md">
+      {time}
+    </span>
   )
 }
 
-function NewsUpdatedTime({ date }: { date: string | number }) {
-  try {
-    const d = new Date(date)
-    return <>{formatDistanceToNow(d, { addSuffix: true, locale: enUS })}</>
-  } catch {
-    return null
-  }
+export function Timeline({ items, scrollRef }: { items: NewsItem[], scrollRef: RefObject<HTMLDivElement> }) {
+  return (
+    <VirtualList
+      items={items}
+      scrollRef={scrollRef}
+      estimateSize={50}
+      className="border-s border-neutral-400/50"
+      itemClassName="pb-2 pl-[10px]"
+      renderItem={item => (
+        <div className="flex flex-col hover:bg-neutral-400/10 rounded-md px-1">
+          <span className="text-neutral-400/50 -mt-1 -ml-1">
+            <span className="inline-block w-4 -ml-3">-</span>
+            <span className="space-x-1 -ml-1">
+              {(item.timestamp) && (
+                <RelativeTime date={item.timestamp!} />
+              )}
+              {item.info && (
+                <NewsItemInfo item={item} />
+              )}
+            </span>
+          </span>
+          <NewsItemLink item={item}>
+            {item.title}
+          </NewsItemLink>
+        </div>
+      )}
+    />
+  )
 }

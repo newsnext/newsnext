@@ -1,3 +1,4 @@
+import { useRef } from "react"
 import { cn } from "@/lib/utils"
 import { IconButton } from "../common/button"
 import {
@@ -24,6 +25,7 @@ export function CardFront() {
   } = useCard()
 
   const { namespace, name, title, desc, home, type, color } = source
+  const ref = useRef<HTMLDivElement>(null)
 
   return (
     <div
@@ -89,6 +91,7 @@ export function CardFront() {
 
       {/* Content */}
       <div
+        ref={ref}
         className={cn(
           "h-full px-2 rounded-xl py-2 bg-background/70 overflow-y-auto scrollbar-hidden",
           isFetching && `animate-pulse`,
@@ -96,7 +99,7 @@ export function CardFront() {
         )}
       >
         <div className={cn("transition-opacity-500", isFetching && "opacity-20")}>
-          {type === "hottest" ? <Hottest items={items} /> : <Timeline items={items} />}
+          {type === "hottest" ? <Hottest items={items} scrollRef={ref as React.RefObject<HTMLDivElement>} /> : <Timeline items={items} scrollRef={ref as React.RefObject<HTMLDivElement>} />}
         </div>
       </div>
     </div>

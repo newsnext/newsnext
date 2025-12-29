@@ -1,16 +1,18 @@
 import type { Either } from "./util"
 
-export type Info = Either<{
+export interface Picture {
+  url: string
+  scale?: number
+  radius?: number
+}
+
+export type BaseInfo = Either<{
   text?: string
 }, {
   html?: string
 }>
 & {
-  picture?: string | {
-    url: string
-    scale?: number
-    radius?: number
-  }
+  picture?: string | Picture
 }
 
 export interface NewsItem {
@@ -34,9 +36,9 @@ export interface NewsItem {
   /**
    * Additional information displayed at the end of the item
    */
-  info?: Info
+  info?: BaseInfo
   /**
    * Detailed information shown on hover
    */
-  detail?: Info
+  detail?: BaseInfo
 }

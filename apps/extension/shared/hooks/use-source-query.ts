@@ -14,7 +14,7 @@ export function useSourceQuery({ sourceId, enabled = true }: UseSourceQueryOptio
   const utils = trpc.useUtils()
   const { refetch } = useRefetch()
 
-  const { data, isFetching, isError } = useQuery({
+  const { data, isFetching, isError, refetch: normalRefetch } = useQuery({
     queryKey: getQueryKey(trpc.getSource, { sourceId }),
     queryFn: async () => {
       const isRefetch = refetchSources.has(sourceId)
@@ -41,6 +41,7 @@ export function useSourceQuery({ sourceId, enabled = true }: UseSourceQueryOptio
     data,
     items: (data?.items || []) as NewsItem[],
     refetch: handleRefetch,
+    normalRefetch,
     isFetching,
     isError,
     updatedTime: data?.updated,

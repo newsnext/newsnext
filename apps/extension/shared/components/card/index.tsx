@@ -23,7 +23,7 @@ export default function Card({ id, source, className, nodeRef, dragHandle }: Car
   const ref = useRef<HTMLDivElement>(null)
 
   const inView = useInView(ref, {
-    once: true,
+    // once: true,
   })
 
   useImperativeHandle(nodeRef, () => ref.current! as HTMLDivElement)
@@ -32,6 +32,10 @@ export default function Card({ id, source, className, nodeRef, dragHandle }: Car
     sourceId: id,
     enabled: inView,
   })
+
+  // useEffect(() => {
+  //   if (source.interval <= 2 * 60 * 1000) normalRefetch()
+  // }, [date, normalRefetch])
 
   const contextValue = useMemo(
     () => ({
@@ -53,7 +57,7 @@ export default function Card({ id, source, className, nodeRef, dragHandle }: Car
       <div
         ref={ref}
         className={cn(
-          "h-[550px] w-[400px]",
+          "h-[500px] w-[400px]",
           className,
         )}
       >

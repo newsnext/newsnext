@@ -33,7 +33,15 @@ function ProxiedImage({ src, onError, ...props }: ProxiedImageProps) {
     return null
   }
 
-  return <img {...props} src={imgSrc} onError={handleError} />
+  return (
+    <img
+      referrerPolicy="no-referrer"
+      alt="picture"
+      src={imgSrc}
+      onError={handleError}
+      {...props}
+    />
+  )
 }
 
 interface NewsItemLinkProps {
@@ -67,9 +75,9 @@ export function NewsItemLink({ item, className, children }: NewsItemLinkProps) {
   const href = isMobile ? item.mobileUrl || item.url : item.url
 
   const hasDetail = item.detail?.html || item.detail?.text || item.detail?.picture
-  const detailPicture = item.detail?.picture
 
   if (hasDetail) {
+    const detailPicture = item.detail?.picture
     return (
       <HoverCard>
         <HoverCardTrigger
@@ -79,7 +87,7 @@ export function NewsItemLink({ item, className, children }: NewsItemLinkProps) {
             </NewsItemAnchor>
           )}
         />
-        <HoverCardContent>
+        <HoverCardContent side="right" align="start" alignOffset={0} className="max-h-96 overflow-y-auto scrollbar-hidden">
           <div className="flex flex-col gap-2">
             {detailPicture && (() => {
               const { url, scale, radius } = typeof detailPicture === "string" ? { url: detailPicture, scale: undefined, radius: undefined } : detailPicture
@@ -97,17 +105,17 @@ export function NewsItemLink({ item, className, children }: NewsItemLinkProps) {
               )
             })()}
             {item.detail?.html
-              ? (
-                  <span
-                    className="whitespace-pre-wrap wrap-break-word"
-                    dangerouslySetInnerHTML={{ __html: item.detail.html }}
-                  />
-                )
-              : (
-                  <span className="whitespace-pre-wrap wrap-break-word">
-                    {item.detail?.text}
-                  </span>
-                )}
+              && (
+                <span
+                  className="whitespace-pre-wrap wrap-break-word"
+                  dangerouslySetInnerHTML={{ __html: item.detail.html }}
+                />
+              )}
+            {item.detail?.text && (
+              <span className="whitespace-pre-wrap wrap-break-word">
+                {item.detail?.text}
+              </span>
+            )}
           </div>
         </HoverCardContent>
       </HoverCard>
@@ -130,24 +138,24 @@ export function NewsItemInfo({ item, className }: { item: NewsItem, className?: 
   }
 
   return (
-    <span className={cn("text-xs text-neutral-400/80 space-x-1", className)}>
+    <>
       {hasPicture && (() => {
         const { url, scale, radius } = typeof hasPicture === "string" ? { url: hasPicture, scale: undefined, radius: undefined } : hasPicture
         return (
           <ProxiedImage
             src={url}
-            referrerPolicy="no-referrer"
-            alt="picture"
             style={{
               transform: `scale(${scale ?? 1})`,
               borderRadius: `${radius ?? 4}px`,
             }}
-            className="h-4 inline -mt-1"
+            className="h-4 inline -mt-1 mr-1"
           />
         )
       })()}
-      {item.info?.html && <span dangerouslySetInnerHTML={{ __html: item.info.html }} />}
-      {item.info?.text && <span>{item.info.text}</span>}
-    </span>
+      <span className={cn("text-xs text-neutral-400/80 space-x-1", className)}>
+        {item.info?.html && <span dangerouslySetInnerHTML={{ __html: item.info.html }} />}
+        {item.info?.text && <span>{item.info.text}</span>}
+      </span>
+    </>
   )
 }
