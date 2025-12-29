@@ -8,11 +8,14 @@ export const InstanceIdContext = createContext<string | null>(null)
 
 interface SortableProps {
   id: string
+  onGenerateDragPreview?: (args: {
+    container: HTMLElement
+    element: HTMLElement
+  }) => void | (() => void)
 }
 
 interface DraggableState {
   type: "idle" | "dragging"
-  container?: HTMLElement
 }
 
 export function useSortable(props: SortableProps) {
@@ -49,8 +52,8 @@ export function useSortable(props: SortableProps) {
                 input: location.current.input,
               }),
               render({ container }) {
-                container.style.width = `${nodeRef.clientWidth}px`
-                setDraggableState({ type: "dragging", container })
+                setDraggableState({ type: "dragging" })
+                return props.onGenerateDragPreview?.({ container, element: nodeRef })
               },
               nativeSetDragImage,
             })
@@ -68,12 +71,11 @@ export function useSortable(props: SortableProps) {
       )
       return cleanup
     }
-  }, [props.id, instanceId, handleRef, nodeRef])
+  }, [props.id, instanceId, handleRef, nodeRef, props.onGenerateDragPreview])
 
   return {
     setHandleRef,
     setNodeRef,
     isDragging: draggableState.type === "dragging",
-    OverlayContainer: draggableState.container,
   }
 }

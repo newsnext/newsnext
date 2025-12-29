@@ -150,7 +150,7 @@ function ColorSelector({ color, editable, onChange }: { color: Color, editable?:
 }
 
 export function CardBack() {
-  const { source, onFlip, dragHandle } = useCard()
+  const { source, onFlip } = useCard()
 
   const [editable, setEditable] = useState(false)
   const { namespace, name, title, desc, home, interval, color } = source
@@ -229,7 +229,6 @@ export function CardBack() {
           >
             <PhArrowCircleLeftDuotone />
           </IconButton>
-          {dragHandle}
         </div>
       </div>
 

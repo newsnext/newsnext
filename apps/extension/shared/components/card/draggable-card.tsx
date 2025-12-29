@@ -1,8 +1,8 @@
 import type { CardProps } from "./index"
 import type { Source } from "@/typings/source"
-import { useEffect, useMemo } from "react"
+import { useCallback, useMemo } from "react"
 import { isIOS } from "react-device-detect"
-import { createPortal } from "react-dom"
+import { createRoot } from "react-dom/client"
 import { useSortable } from "@/hooks/use-sortable"
 import { cn } from "@/lib/utils"
 import { IconButton } from "../common/button"
@@ -16,51 +16,45 @@ interface DraggableCardProps extends Omit<CardProps, "nodeRef" | "dragHandle"> {
 }
 
 export function DraggableCard({ id, source, ...props }: DraggableCardProps) {
-  const {
-    isDragging,
-    setNodeRef,
-    setHandleRef,
-    OverlayContainer,
-  } = useSortable({ id })
+  const onGenerateDragPreview = useCallback(
+    ({ container, element }: { container: HTMLElement, element: HTMLElement }) => {
+      container.style.width = `${element.clientWidth}px`
+      container.className = cn("bg-background", !isIOS && "rounded-2xl")
 
-  useEffect(() => {
-    if (OverlayContainer) {
-      OverlayContainer!.className += cn("bg-background", !isIOS && "rounded-2xl")
-    }
-  }, [OverlayContainer])
+      const root = createRoot(container)
+      root.render(<DragOverlay source={source} />)
+      return () => root.unmount()
+    },
+    [id, source],
+  )
 
-  const dragHandle = useMemo(() => (
-    <div
-      ref={setHandleRef}
-      className="flex items-center justify-center"
-    >
-      <IconButton
-        aria-label="Handle"
-        className="cursor-grab active:cursor-grabbing"
-      >
-        <PhDotsSixVerticalDuotone />
-      </IconButton>
-    </div>
-  ), [])
+  const { isDragging, setNodeRef, setHandleRef } = useSortable({
+    id,
+    onGenerateDragPreview,
+  })
+
+  const dragHandle = useMemo(
+    () => (
+      <div ref={setHandleRef} className="flex items-center justify-center">
+        <IconButton
+          aria-label="Handle"
+          className="cursor-grab active:cursor-grabbing"
+        >
+          <PhDotsSixVerticalDuotone />
+        </IconButton>
+      </div>
+    ),
+    [],
+  )
 
   return (
-    <>
-      <Card
-        id={id}
-        source={source}
-        nodeRef={setNodeRef}
-        dragHandle={dragHandle}
-        {...props}
-        className={cn(
-          isDragging && "opacity-50",
-          props.className,
-        )}
-      />
-
-      {OverlayContainer && createPortal(
-        <DragOverlay id={id} source={source} />,
-        OverlayContainer,
-      )}
-    </>
+    <Card
+      id={id}
+      source={source}
+      nodeRef={setNodeRef}
+      dragHandle={dragHandle}
+      {...props}
+      className={cn(isDragging && "opacity-50", props.className)}
+    />
   )
 }

@@ -5,11 +5,11 @@ import { IconButton } from "../common/button"
 import { PhDotsSixVerticalDuotone } from "../icons/ph"
 
 interface DragOverlayProps {
-  id: string
-  source: Source & { id: string }
+  source: Source
 }
 
-export function DragOverlay({ id, source }: DragOverlayProps) {
+export function DragOverlay({ source }: DragOverlayProps) {
+  const { namespace } = source
   return (
     <div
       className={cn(
@@ -23,7 +23,7 @@ export function DragOverlay({ id, source }: DragOverlayProps) {
           <div
             className="size-8 rounded-full bg-cover"
             style={{
-              backgroundImage: `url(/icons/${id}.png)`,
+              backgroundImage: `url(https://s3.newsnext.pro/icons/${namespace}.png)`,
             }}
           />
           <div className="flex flex-col">

@@ -1,7 +1,7 @@
 import type { BaseEventPayload, ElementDragType } from "@atlaskit/pragmatic-drag-and-drop/dist/types/internal-types"
 import { useThrottleFn } from "@newsnext/ui/hooks/use-throttle-fn"
 import { AnimatePresence, motion } from "motion/react"
-import { useCallback, useState } from "react"
+import { useCallback, useRef, useState } from "react"
 import { SearchBar } from "@/components/widgets"
 import { DndContext } from "@/hooks/use-dnd-context"
 import { reorder } from "@/lib/utils/reorder"
@@ -15,6 +15,7 @@ interface DashboardProps {
 
 export function Dashboard({ isVisible, onClose }: DashboardProps) {
   const [widgets, setWidgets] = useState(initialWidgets)
+  const originalWidgetsRef = useRef(initialWidgets)
 
   // Handle escape key at dashboard level
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -22,6 +23,16 @@ export function Dashboard({ isVisible, onClose }: DashboardProps) {
       onClose()
     }
   }
+
+  const onDragStart = useCallback(() => {
+    originalWidgetsRef.current = widgets
+  }, [widgets])
+
+  const onDrop = useCallback(({ location }: BaseEventPayload<ElementDragType>) => {
+    if (location.current.dropTargets.length === 0) {
+      setWidgets(originalWidgetsRef.current)
+    }
+  }, [])
 
   const handleReorder = useCallback(
     ({ source, location }: BaseEventPayload<ElementDragType>) => {
@@ -76,7 +87,11 @@ export function Dashboard({ isVisible, onClose }: DashboardProps) {
             </div>
 
             {/* Widgets Grid */}
-            <DndContext onDropTargetChange={handleDropTargetChange}>
+            <DndContext
+              onDragStart={onDragStart}
+              onDropTargetChange={handleDropTargetChange}
+              onDrop={onDrop}
+            >
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 w-full">
                 {widgets.map(widget => (
                   <SortableWidget key={widget.id} id={widget.id} className={widget.className}>

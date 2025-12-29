@@ -17,8 +17,18 @@ interface DesktopBoardProps {
 }
 
 export function DesktopBoard({ sourceIds, sourcesMap, className, isScattered, onSourceIdsChange }: DesktopBoardProps) {
+  const [orderedSourceIds, setOrderedSourceIds] = useState(sourceIds)
+  const initialOrderedSourceIdsRef = useRef(sourceIds)
   const [scatterVectors, setScatterVectors] = useState<Record<string, { x: number, y: number }>>({})
   const itemsRef = useRef<Map<string, HTMLLIElement>>(new Map())
+
+  useEffect(() => {
+    setOrderedSourceIds(sourceIds)
+  }, [sourceIds])
+
+  const onDragStart = useCallback(() => {
+    initialOrderedSourceIdsRef.current = orderedSourceIds
+  }, [orderedSourceIds])
 
   const onDropTargetChange = useCallback(({ location, source }: BaseEventPayload<ElementDragType>) => {
     const target = location.current.dropTargets[0]
@@ -27,17 +37,27 @@ export function DesktopBoard({ sourceIds, sourcesMap, className, isScattered, on
     const fromId = source.data.id as string
     const toId = target.data.id as string
 
-    const fromIndex = sourceIds.indexOf(fromId)
-    const toIndex = sourceIds.indexOf(toId)
+    const fromIndex = orderedSourceIds.indexOf(fromId)
+    const toIndex = orderedSourceIds.indexOf(toId)
 
     if (fromIndex === toIndex || fromIndex === -1 || toIndex === -1) return
 
-    const newSourceIds = [...sourceIds]
+    const newSourceIds = [...orderedSourceIds]
     const [movedItem] = newSourceIds.splice(fromIndex, 1)
     newSourceIds.splice(toIndex, 0, movedItem)
 
-    onSourceIdsChange?.(newSourceIds)
-  }, [sourceIds, onSourceIdsChange])
+    setOrderedSourceIds(newSourceIds)
+  }, [orderedSourceIds])
+
+  const onDrop = useCallback(({ location }: BaseEventPayload<ElementDragType>) => {
+    // If dropped outside (no targets), revert
+    if (location.current.dropTargets.length === 0) {
+      setOrderedSourceIds(initialOrderedSourceIdsRef.current)
+      return
+    }
+    // Otherwise commit
+    onSourceIdsChange?.(orderedSourceIds)
+  }, [orderedSourceIds, onSourceIdsChange])
 
   // avoid animation jitter
   const { run } = useThrottleFn(onDropTargetChange, ANIMATION_DURATION * 1000, {
@@ -52,7 +72,7 @@ export function DesktopBoard({ sourceIds, sourcesMap, className, isScattered, on
       const centerY = window.innerHeight / 2
 
       itemsRef.current.forEach((el, id) => {
-        if (!sourceIds.includes(id)) return // cleanup old refs
+        if (!orderedSourceIds.includes(id)) return // cleanup old refs
 
         const rect = el.getBoundingClientRect()
         const elCenterX = rect.left + rect.width / 2
@@ -85,10 +105,10 @@ export function DesktopBoard({ sourceIds, sourcesMap, className, isScattered, on
     calculateVectors()
     window.addEventListener("resize", calculateVectors)
     return () => window.removeEventListener("resize", calculateVectors)
-  }, [sourceIds])
+  }, [orderedSourceIds])
 
   return (
-    <DndContext onDropTargetChange={run}>
+    <DndContext onDragStart={onDragStart} onDropTargetChange={run} onDrop={onDrop}>
       <motion.ol
         className={className || "flex flex-wrap justify-center gap-2 sm:gap-6"}
         initial="hidden"
@@ -111,7 +131,7 @@ export function DesktopBoard({ sourceIds, sourcesMap, className, isScattered, on
           },
         }}
       >
-        {sourceIds.map((id, index) => (
+        {orderedSourceIds.map((id, index) => (
           <motion.li
             key={id}
             ref={(el) => {
