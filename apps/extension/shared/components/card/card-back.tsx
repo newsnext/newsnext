@@ -216,18 +216,18 @@ export function CardBack() {
           <IconButton
             onClick={(e) => {
               e.stopPropagation()
-              setEditable(p => !p)
-            }}
-          >
-            <PhPencilCircleDuotone className={cn(editable && "text-primary")} />
-          </IconButton>
-          <IconButton
-            onClick={(e) => {
-              e.stopPropagation()
               onFlip()
             }}
           >
             <PhArrowCircleLeftDuotone />
+          </IconButton>
+          <IconButton
+            onClick={(e) => {
+              e.stopPropagation()
+              setEditable(p => !p)
+            }}
+          >
+            <PhPencilCircleDuotone className={cn(editable && "text-primary")} />
           </IconButton>
         </div>
       </div>

@@ -33,10 +33,8 @@ export function Header({ scrollContainerRef }: HeaderProps) {
 
         {/* Right Section - DateTime, Refresh, User */}
         <div className="shrink-0 flex items-center gap-3 flex-1 justify-start">
-          <DateTime />
-
-          {/* User Avatar - Right Island 2 */}
           <UserMenu />
+          <DateTime />
         </div>
       </div>
     </header>

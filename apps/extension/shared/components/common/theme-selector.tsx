@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils"
 import { handleThemeSwitch, THEME_KEY } from "@/lib/utils/swith-theme"
 import { Logo } from "../icons/logo"
 
-export function ThemeSelector({ onClose }: { onClose: () => void }) {
+export function ThemeSelector() {
   const [currentTheme, setCurrentTheme] = useState("")
 
   useEffect(() => {
@@ -34,7 +34,6 @@ export function ThemeSelector({ onClose }: { onClose: () => void }) {
             e.stopPropagation()
             handleThemeSwitch(color)
             setCurrentTheme(color)
-            onClose()
           }}
           title={color}
         >

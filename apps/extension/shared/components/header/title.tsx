@@ -1,9 +1,10 @@
 import type { RefObject } from "react"
-import { motion, useScroll, useTransform } from "motion/react"
-import { useCallback } from "react"
+import { AnimatePresence, motion, useMotionValueEvent, useScroll, useTransform } from "motion/react"
+import { useCallback, useState } from "react"
 import { ThemeSelector } from "../common/theme-selector"
 import DynamicIsland from "../dynamic-island"
 import { Logo } from "../icons/logo"
+import { PhArrowFatUpDuotone } from "../icons/ph"
 
 interface HeaderProgressProps {
   scrollContainerRef?: RefObject<HTMLElement | null>
@@ -13,6 +14,7 @@ function HeaderProgress({ scrollContainerRef }: HeaderProgressProps) {
   const { scrollYProgress, scrollY } = useScroll({
     container: scrollContainerRef,
   })
+  const [isAtTop, setIsAtTop] = useState(true)
 
   // Only show opacity when scroll height > 150% of screen height
   const opacity = useTransform(scrollY, (value) => {
@@ -24,8 +26,6 @@ function HeaderProgress({ scrollContainerRef }: HeaderProgressProps) {
     return Math.min((value - threshold) / fadeRange, 1)
   })
 
-  // TODO: Add scroll to top functionality
-  // oxlint-disable-next-line no-unused-vars
   const handleScrollToTop = useCallback((e: React.MouseEvent) => {
     e.stopPropagation()
     const container = scrollContainerRef?.current
@@ -36,8 +36,15 @@ function HeaderProgress({ scrollContainerRef }: HeaderProgressProps) {
     }
   }, [scrollContainerRef])
 
+  useMotionValueEvent(scrollY, "change", (value) => {
+    setIsAtTop(value < 24)
+  })
+
   return (
-    <div className="flex items-center gap-2 size-full justify-center">
+    <div
+      className="flex items-center gap-2 size-full justify-center"
+      onClick={!isAtTop ? handleScrollToTop : undefined}
+    >
       <svg className="absolute inset-0 size-full pointer-events-none">
         <motion.rect
           x="1"
@@ -58,15 +65,41 @@ function HeaderProgress({ scrollContainerRef }: HeaderProgressProps) {
           className="text-theme-400"
         />
       </svg>
-      <Logo className="text-theme-500 size-5" />
-      <span
-        // onClick={handleScrollToTop}
-        className="text-xl font-brand font-bold whitespace-nowrap cursor-pointer hover:opacity-80 transition-opacity"
-      >
-        News
-        <span className="text-theme-400">N</span>
-        ext
-      </span>
+      <AnimatePresence mode="popLayout" initial={false}>
+        {isAtTop
+          ? (
+              <motion.div
+                key="top"
+                className="flex items-center gap-2"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.18 }}
+              >
+                <Logo className="text-theme-500 size-5" />
+                <span className="text-xl font-brand font-bold whitespace-nowrap cursor-pointer hover:opacity-80 transition-opacity">
+                  News
+                  <span className="text-theme-400">N</span>
+                  ext
+                </span>
+              </motion.div>
+            )
+          : (
+              <motion.div
+                key="go-top"
+                className="flex items-center gap-2"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.18 }}
+              >
+                <PhArrowFatUpDuotone className="text-theme-500 size-5" />
+                <span className="text-xl font-brand font-bold whitespace-nowrap cursor-pointer hover:opacity-80 transition-opacity">
+                  Go to top
+                </span>
+              </motion.div>
+            )}
+      </AnimatePresence>
     </div>
   )
 }
@@ -85,20 +118,20 @@ export function TitleIsland({ scrollContainerRef, width = 150 }: TitleIslandProp
       <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50">
         <DynamicIsland
           top={0}
-          smallClassName="island-pill relative flex gap-2 items-center px-4 hover:bg-black/30 shrink-0 pointer-events-auto cursor-pointer"
+          smallClassName="relative flex gap-2 items-center px-4 hover:bg-background/30 shrink-0 pointer-events-auto cursor-pointer island-pill"
           largeClassName="p-3 sprinkle-theme-400 rounded-2xl pointer-events-auto"
-          smallHeight={44}
+          smallHeight={40}
           smallWidth={width}
           largeWidth={300}
           largeHeight={160}
         >
-          {(isSmall, helpers) =>
+          {isSmall =>
             isSmall
               ? (
                   <HeaderProgress scrollContainerRef={scrollContainerRef} />
                 )
               : (
-                  <ThemeSelector onClose={helpers.close} />
+                  <ThemeSelector />
                 )}
         </DynamicIsland>
       </div>
