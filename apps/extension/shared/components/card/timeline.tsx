@@ -21,12 +21,12 @@ export function Timeline({ items, scrollRef }: { items: NewsItem[], scrollRef: R
       scrollRef={scrollRef}
       estimateSize={50}
       className="border-s border-neutral-400/50"
-      itemClassName="pb-2 pl-[10px]"
+      itemClassName="pb-2 pl-[8px] last:pb-0"
       renderItem={item => (
         <div className="flex flex-col hover:bg-neutral-400/10 rounded-md px-1">
           <span className="text-neutral-400/50 -mt-1 -ml-1">
-            <span className="inline-block w-4 -ml-3">-</span>
-            <span className="space-x-1 -ml-1">
+            <span className="inline-block w-4 -ml-2">-</span>
+            <span className="space-x-1 -ml-2">
               {(item.timestamp) && (
                 <RelativeTime date={item.timestamp!} />
               )}

@@ -74,7 +74,7 @@ function HeaderProgress({ scrollContainerRef }: HeaderProgressProps) {
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -6 }}
-                transition={{ duration: 0.18 }}
+                transition={{ duration: 0.2 }}
               >
                 <Logo className="text-theme-500 size-5" />
                 <span className="text-xl font-brand font-bold whitespace-nowrap cursor-pointer hover:opacity-80 transition-opacity">
@@ -91,7 +91,7 @@ function HeaderProgress({ scrollContainerRef }: HeaderProgressProps) {
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -6 }}
-                transition={{ duration: 0.18 }}
+                transition={{ duration: 0.2 }}
               >
                 <PhArrowFatUpDuotone className="text-theme-500 size-5" />
                 <span className="text-xl font-brand font-bold whitespace-nowrap cursor-pointer hover:opacity-80 transition-opacity">

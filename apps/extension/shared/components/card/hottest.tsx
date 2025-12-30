@@ -11,7 +11,7 @@ export function Hottest({ items, scrollRef }: { items: NewsItem[], scrollRef: Re
       items={items}
       scrollRef={scrollRef}
       estimateSize={60}
-      itemClassName="pb-2"
+      itemClassName="pb-2 last:pb-0"
       renderItem={(item, index) => (
         <NewsItemLink
           item={item}
