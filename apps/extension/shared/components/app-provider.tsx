@@ -5,14 +5,20 @@ import { httpBatchStreamLink } from "@trpc/client"
 import { useState } from "react"
 import { BASE_URL } from "@/lib/env"
 import { trpc } from "@/lib/trpc"
-import { handleThemeSwitch, THEME_KEY } from "@/lib/utils/swith-theme"
+import {
+  handleThemeSwitch,
+  handleThemeVersionSwitch,
+  THEME_KEY,
+  THEME_VERSION_KEY,
+
+} from "@/lib/utils/swith-theme"
 
 // Initialize theme as soon as possible to avoid flicker
 if (typeof window !== "undefined") {
+  const storedVersion = localStorage.getItem(THEME_VERSION_KEY)
+  if (storedVersion) handleThemeVersionSwitch(storedVersion === "v4" ? "v4" : "v3")
   const theme = localStorage.getItem(THEME_KEY)
-  if (theme) {
-    handleThemeSwitch(theme)
-  }
+  if (theme) handleThemeSwitch(theme)
 }
 
 interface AppProviderProps {

@@ -31,6 +31,8 @@ export const THEME_COLOR_HEX: Record<Color, string> = {
 }
 
 export const THEME_KEY = "newsnext-theme"
+export const THEME_VERSION_KEY = "newsnext-theme-version"
+export type ThemeVersion = "v3" | "v4"
 
 export function isThemeColor(value: string): value is Color {
   return COLORS.includes(value as Color)
@@ -54,4 +56,14 @@ export function handleThemeSwitch(color: string) {
   if (link) {
     link.href = url
   }
+}
+
+export function handleThemeVersionSwitch(version: ThemeVersion) {
+  const root = document.documentElement
+  if (version === "v3") {
+    root.classList.add("v3")
+  } else {
+    root.classList.remove("v3")
+  }
+  localStorage.setItem(THEME_VERSION_KEY, version)
 }

@@ -1,3 +1,4 @@
+import type { ThemeVersion } from "@/lib/utils/swith-theme"
 import {
   Dialog,
   DialogContent,
@@ -7,6 +8,9 @@ import {
 import { Label } from "@newsnext/ui/components/label"
 import { cn } from "@newsnext/ui/lib/utils"
 import { useEffect, useState } from "react"
+
+import { handleThemeVersionSwitch, THEME_VERSION_KEY } from "@/lib/utils/swith-theme"
+
 import { SegmentedControl } from "../common/segmented-control"
 import { ThemeSelector } from "../common/theme-selector"
 
@@ -70,13 +74,38 @@ export function SettingsModal({ open, onOpenChange }: { open: boolean, onOpenCha
 }
 
 function AppearanceSettings() {
+  const [themeVersion, setThemeVersion] = useState<ThemeVersion>(() => {
+    if (typeof window === "undefined") return "v3"
+    const stored = localStorage.getItem(THEME_VERSION_KEY) as ThemeVersion | null
+    return stored === "v4" ? "v4" : "v3"
+  })
+
+  useEffect(() => {
+    handleThemeVersionSwitch(themeVersion)
+  }, [themeVersion])
+
   return (
     <div className="space-y-6">
       <div className="space-y-4">
         <h3 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Theme Color</h3>
         <div className="flex w-[300px] h-[160px]">
-          <ThemeSelector onClose={() => {}} />
+          <ThemeSelector />
         </div>
+      </div>
+      <div className="space-y-2">
+        <Label>Color Version</Label>
+        <SegmentedControl<ThemeVersion>
+          items={[
+            { value: "v3", label: "v3 (default)" },
+            { value: "v4", label: "v4 (vivid)" },
+          ]}
+          value={themeVersion}
+          onValueChange={setThemeVersion}
+          layoutId="color-version-toggle"
+        />
+        <p className="text-sm text-muted-foreground">
+          Tailwind v4 colors are more vivid and colorful.
+        </p>
       </div>
     </div>
   )
