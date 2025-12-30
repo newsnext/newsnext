@@ -1,4 +1,4 @@
-import type { ThemeVersion } from "@/lib/utils/swith-theme"
+import type { ThemeMode, ThemeVersion } from "@/lib/utils/swith-theme"
 import {
   Dialog,
   DialogContent,
@@ -7,9 +7,14 @@ import {
 } from "@newsnext/ui/components/dialog"
 import { Label } from "@newsnext/ui/components/label"
 import { cn } from "@newsnext/ui/lib/utils"
-import { useEffect, useState } from "react"
 
-import { handleThemeVersionSwitch, THEME_VERSION_KEY } from "@/lib/utils/swith-theme"
+import { useEffect, useState } from "react"
+import {
+  handleThemeModeSwitch,
+  handleThemeVersionSwitch,
+  THEME_MODE_KEY,
+  THEME_VERSION_KEY,
+} from "@/lib/utils/swith-theme"
 
 import { SegmentedControl } from "../common/segmented-control"
 import { ThemeSelector } from "../common/theme-selector"
@@ -74,11 +79,20 @@ export function SettingsModal({ open, onOpenChange }: { open: boolean, onOpenCha
 }
 
 function AppearanceSettings() {
+  const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
+    if (typeof window === "undefined") return "dark"
+    const stored = localStorage.getItem(THEME_MODE_KEY) as ThemeMode | null
+    return stored ?? "dark"
+  })
   const [themeVersion, setThemeVersion] = useState<ThemeVersion>(() => {
     if (typeof window === "undefined") return "v3"
     const stored = localStorage.getItem(THEME_VERSION_KEY) as ThemeVersion | null
     return stored === "v4" ? "v4" : "v3"
   })
+
+  useEffect(() => {
+    handleThemeModeSwitch(themeMode)
+  }, [themeMode])
 
   useEffect(() => {
     handleThemeVersionSwitch(themeVersion)
@@ -91,6 +105,22 @@ function AppearanceSettings() {
         <div className="flex w-[300px] h-[160px]">
           <ThemeSelector />
         </div>
+      </div>
+      <div className="space-y-2">
+        <Label>Theme Mode</Label>
+        <SegmentedControl<ThemeMode>
+          items={[
+            { value: "dark", label: "Dark" },
+            { value: "light", label: "Light" },
+            { value: "system", label: "System" },
+          ]}
+          value={themeMode}
+          onValueChange={setThemeMode}
+          layoutId="theme-mode-toggle"
+        />
+        <p className="text-sm text-muted-foreground">
+          Toggles the html `dark` class or follows your OS setting.
+        </p>
       </div>
       <div className="space-y-2">
         <Label>Color Version</Label>

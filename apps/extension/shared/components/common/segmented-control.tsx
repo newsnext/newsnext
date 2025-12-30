@@ -47,7 +47,7 @@ export function SegmentedControl<T extends string>({
   layoutId = "segmented-control",
 }: SegmentedControlProps<T>) {
   return (
-    <div className={cn("flex gap-2 items-center p-1 rounded-full w-fit", className)}>
+    <div className={cn("island-pill flex gap-2 items-center p-1 rounded-full w-fit", className)}>
       {items.map((item) => {
         const isActive = value === item.value
         return (

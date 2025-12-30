@@ -2,14 +2,14 @@ import { COLORS } from "@newsnext/shared/constants"
 import { motion } from "motion/react"
 import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
-import { handleThemeSwitch, THEME_KEY } from "@/lib/utils/swith-theme"
+import { handleThemeSwitch, THEME_COLOR_KEY } from "@/lib/utils/swith-theme"
 import { Logo } from "../icons/logo"
 
 export function ThemeSelector() {
   const [currentTheme, setCurrentTheme] = useState("")
 
   useEffect(() => {
-    const color = localStorage.getItem(THEME_KEY)
+    const color = localStorage.getItem(THEME_COLOR_KEY)
     if (color) {
       setCurrentTheme(color)
     }

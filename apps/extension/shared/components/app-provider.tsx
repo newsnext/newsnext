@@ -1,23 +1,27 @@
 import type { QueryClient } from "@tanstack/react-query"
 import type { PropsWithChildren } from "react"
+import type { ThemeMode } from "@/lib/utils/swith-theme"
 import { QueryClientProvider } from "@tanstack/react-query"
 import { httpBatchStreamLink } from "@trpc/client"
 import { useState } from "react"
 import { BASE_URL } from "@/lib/env"
 import { trpc } from "@/lib/trpc"
 import {
+  handleThemeModeSwitch,
   handleThemeSwitch,
   handleThemeVersionSwitch,
-  THEME_KEY,
+  THEME_COLOR_KEY,
+  THEME_MODE_KEY,
   THEME_VERSION_KEY,
-
 } from "@/lib/utils/swith-theme"
 
 // Initialize theme as soon as possible to avoid flicker
 if (typeof window !== "undefined") {
+  const storedMode = localStorage.getItem(THEME_MODE_KEY)
+  if (storedMode) handleThemeModeSwitch(storedMode as ThemeMode)
   const storedVersion = localStorage.getItem(THEME_VERSION_KEY)
   if (storedVersion) handleThemeVersionSwitch(storedVersion === "v4" ? "v4" : "v3")
-  const theme = localStorage.getItem(THEME_KEY)
+  const theme = localStorage.getItem(THEME_COLOR_KEY)
   if (theme) handleThemeSwitch(theme)
 }
 

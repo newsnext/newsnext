@@ -30,9 +30,11 @@ export const THEME_COLOR_HEX: Record<Color, string> = {
   // stone: "#78716C",
 }
 
-export const THEME_KEY = "newsnext-theme"
+export const THEME_COLOR_KEY = "newsnext-theme-color"
 export const THEME_VERSION_KEY = "newsnext-theme-version"
+export const THEME_MODE_KEY = "newsnext-theme-mode"
 export type ThemeVersion = "v3" | "v4"
+export type ThemeMode = "light" | "dark" | "system"
 
 export function isThemeColor(value: string): value is Color {
   return COLORS.includes(value as Color)
@@ -45,7 +47,7 @@ export function handleThemeSwitch(color: string) {
     if (isThemeColor(c)) root.classList.remove(c)
   })
   root.classList.add(color)
-  localStorage.setItem(THEME_KEY, color)
+  localStorage.setItem(THEME_COLOR_KEY, color)
   const hex = THEME_COLOR_HEX[color]
   if (!hex) return
 
@@ -66,4 +68,18 @@ export function handleThemeVersionSwitch(version: ThemeVersion) {
     root.classList.remove("v3")
   }
   localStorage.setItem(THEME_VERSION_KEY, version)
+}
+
+const prefersDark = () => {
+  if (typeof window === "undefined") return false
+  return window.matchMedia?.("(prefers-color-scheme: dark)")?.matches ?? false
+}
+
+export function handleThemeModeSwitch(mode: ThemeMode) {
+  if (typeof document === "undefined") return
+  const root = document.documentElement
+  const isDark = mode === "dark" || (mode === "system" && prefersDark())
+  root.classList.toggle("dark", isDark)
+  root.style.colorScheme = isDark ? "dark" : "light"
+  localStorage.setItem(THEME_MODE_KEY, mode)
 }
