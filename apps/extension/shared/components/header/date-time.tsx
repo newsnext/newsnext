@@ -16,10 +16,10 @@ export function DateTime() {
 
   return (
     <div className="island-pill px-4 flex items-center gap-3 select-none">
-      <span className="text-lg font-bold tabular-nums text-white/90 tracking-tight">
+      <span className="text-lg font-bold tabular-nums text-accent-foreground/90 tracking-tight">
         {formatTimeWithHighlight(format(date, "HH:mm"))}
       </span>
-      <div className="flex-col-center text-[10px] font-semibold leading-tight text-white/50 border-l border-white/10 pl-3">
+      <div className="flex-col-center text-[10px] font-semibold leading-tight text-accent-foreground/50 border-l border-accent-foreground/10 pl-3">
         <span>{format(date, "EEE", { locale: enUS })}</span>
         <span>{format(date, "MM/dd")}</span>
       </div>

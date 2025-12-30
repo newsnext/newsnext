@@ -97,7 +97,7 @@ function DynamicIsland({
       ref={wrapperRef}
       hidden={isHide}
       className={cn(
-        "fixed inset-x-0 top-[--top] z-9999",
+        "fixed inset-x-0 top-[--top] z-9999 dark",
         wrapperClassName,
       )}
       style={
