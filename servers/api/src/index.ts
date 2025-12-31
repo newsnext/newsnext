@@ -3,10 +3,11 @@ import { trpcServer } from "@hono/trpc-server"
 import { Hono } from "hono"
 import { cors } from "hono/cors"
 import { logger } from "hono/logger"
-import { appRouter } from "./app-router"
-import proxyApp from "./proxy"
+import { authApp } from "./routes/auth"
+import { proxyApp } from "./routes/proxy"
+import { appRouter } from "./routes/trpc/app-router"
 
-export type { AppRouter } from "./app-router"
+export type { AppRouter } from "./routes/trpc/app-router"
 
 interface Variables {
   adapter: CacheAdapter
@@ -52,6 +53,8 @@ app.use("/api/trpc/*", (c, next) => {
 
 // Image proxy endpoint - /api/p/:encodedUrl
 app.route("/api/p", proxyApp)
+
+app.route("/api/auth", authApp)
 
 export default {
   port: process.env.PORT ?? 4000,

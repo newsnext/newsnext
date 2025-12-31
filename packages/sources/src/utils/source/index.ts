@@ -1,6 +1,6 @@
 import type { DefineSource, NewsItem, Parameter, SourceOptions } from "../../typings/sources"
+import { typeSafeObjectOmit } from "@newsnext/shared/types"
 import { Time } from "../../typings/constants"
-import { typeSafeObjectOmit } from "../../typings/type.util"
 
 export function defineSource(source: DefineSource): Record<string, SourceOptions> {
   const _: Record<string, SourceOptions> = {}

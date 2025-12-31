@@ -1,9 +1,9 @@
 import { Hono } from "hono"
 import { proxy } from "hono/proxy"
 
-const app = new Hono()
+export const proxyApp = new Hono()
 
-app.get("/:encodedUrl", async (c) => {
+proxyApp.get("/:encodedUrl", async (c) => {
   const encodedUrl = c.req.param("encodedUrl")
 
   if (!encodedUrl) {
@@ -39,5 +39,3 @@ app.get("/:encodedUrl", async (c) => {
     return c.json({ error: err.message || "Failed to proxy image" }, 500)
   }
 })
-
-export default app
