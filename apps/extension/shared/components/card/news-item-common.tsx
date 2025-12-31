@@ -16,7 +16,7 @@ interface ProxiedImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   href?: string
 }
 
-export function ProxiedImage({ src, href, onError, ...props }: ProxiedImageProps) {
+export function ProxiedImage({ src, href, onError, onClick, ...props }: ProxiedImageProps) {
   const [imgSrc, setImgSrc] = useState(src)
   const [failed, setFailed] = useState(false)
 
@@ -35,19 +35,14 @@ export function ProxiedImage({ src, href, onError, ...props }: ProxiedImageProps
     return null
   }
 
-  if (href) {
-    return (
-      <a href={href} target="_blank" rel="noreferrer">
-        <img
-          referrerPolicy="no-referrer"
-          alt="picture"
-          src={imgSrc}
-          onError={handleError}
-          {...props}
-        />
-      </a>
-    )
-  }
+  const handleClick = useCallback((e: React.MouseEvent<HTMLImageElement>) => {
+    if (href) {
+      e.preventDefault()
+      e.stopPropagation()
+      window.open(href, "_blank", "noreferrer")
+    }
+    onClick?.(e)
+  }, [href, onClick])
 
   return (
     <img
@@ -55,6 +50,7 @@ export function ProxiedImage({ src, href, onError, ...props }: ProxiedImageProps
       alt="picture"
       src={imgSrc}
       onError={handleError}
+      onClick={handleClick}
       {...props}
     />
   )
@@ -122,7 +118,7 @@ export function NewsItemLink({ item, className, children }: NewsItemLinkProps) {
             })}
             {item.detail?.html
               ? (
-                  <span
+                  <div
                     className="whitespace-pre-wrap wrap-break-word"
                     dangerouslySetInnerHTML={{ __html: item.detail.html }}
                   />
