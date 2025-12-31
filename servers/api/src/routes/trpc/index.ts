@@ -11,23 +11,7 @@ interface Variables {
 type TrpcContext = Context<{ Bindings: CloudflareBindings, Variables: Variables }>
 type AdapterLoader = (context: TrpcContext) => Promise<CacheAdapter>
 
-const loadAdapterFromEnv: AdapterLoader = async (c) => {
-  if (c.env.CACHE_DB) {
-    try {
-      const { D1CacheAdapter } = await import("@newsnext/cache/d1")
-      console.log("Using D1 cache adapter")
-      return new D1CacheAdapter(c.env.CACHE_DB)
-    } catch (error) {
-      console.error("Failed to initialize D1 cache adapter:", error)
-    }
-  }
-
-  const { MemoryCacheAdapter } = await import("@newsnext/cache/memory")
-  console.log("Using Memory cache adapter")
-  return new MemoryCacheAdapter()
-}
-
-export const createTrpcApp = (loadAdapter: AdapterLoader = loadAdapterFromEnv) => {
+export const createTrpcApp = (loadAdapter: AdapterLoader) => {
   const trpcApp = new Hono<{ Bindings: CloudflareBindings, Variables: Variables }>()
   let adapter: CacheAdapter | undefined
 
@@ -62,7 +46,5 @@ export const createTrpcApp = (loadAdapter: AdapterLoader = loadAdapterFromEnv) =
 
   return trpcApp
 }
-
-export const trpcApp = createTrpcApp()
 
 export type { AdapterLoader }

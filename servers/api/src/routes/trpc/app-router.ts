@@ -3,13 +3,9 @@ import { sources } from "@newsnext/sources"
 import { metadata } from "@newsnext/sources/metadata"
 import { TRPCError } from "@trpc/server"
 import { z } from "zod"
-import { publicProcedure, router } from "./trpc"
+import { publicProcedure, router } from "./core"
 
 export const appRouter = router({
-  listSources: publicProcedure.query(() => {
-    return metadata
-  }),
-
   getBoard: publicProcedure
     .input(z.object({
       boardId: z.enum(["hottest", "timeline", "realtime"]),

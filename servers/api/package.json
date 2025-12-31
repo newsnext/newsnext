@@ -4,7 +4,7 @@
   "private": true,
   "license": "MPL-2.0",
   "exports": {
-    ".": "./src/index.ts"
+    "./trpc": "./src/routes/trpc/app-router.ts"
   },
   "scripts": {
     "dev": "bun run --hot src/index.bun.ts",
