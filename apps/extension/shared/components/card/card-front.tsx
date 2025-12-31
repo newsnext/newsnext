@@ -1,4 +1,5 @@
 import { useRef } from "react"
+import { useRelativeTime } from "@/hooks/useRelativeTime"
 import { cn } from "@/lib/utils"
 import { IconButton } from "../common/button"
 import {
@@ -17,6 +18,7 @@ export function CardFront() {
     source,
     items,
     isFetching,
+    updatedTime,
     isStarred,
     onRefresh,
     onToggleStar,
@@ -26,6 +28,7 @@ export function CardFront() {
 
   const { namespace, name, title, desc, home, type, color } = source
   const ref = useRef<HTMLDivElement>(null)
+  const relativeTime = useRelativeTime({ date: updatedTime ?? Date.now() })
 
   return (
     <div
@@ -59,7 +62,7 @@ export function CardFront() {
               )}
             </div>
             <span className="text-xs opacity-70">
-              {isFetching ? "Updating..." : "Updated just now"}
+              {isFetching ? "Updating..." : relativeTime}
             </span>
           </div>
         </div>

@@ -13,6 +13,7 @@ interface CardContextValue {
   onToggleStar: () => void
   onFlip: () => void
   dragHandle?: ReactNode
+  updatedTime: number | undefined
 }
 
 export const CardContext = createContext<CardContextValue | null>(null)

@@ -28,7 +28,7 @@ export default function Card({ id, source, className, nodeRef, dragHandle }: Car
 
   useImperativeHandle(nodeRef, () => ref.current! as HTMLDivElement)
 
-  const { items, refetch, isFetching } = useSourceQuery({
+  const { items, refetch, isFetching, updatedTime } = useSourceQuery({
     sourceId: id,
     enabled: inView,
   })
@@ -48,8 +48,9 @@ export default function Card({ id, source, className, nodeRef, dragHandle }: Car
       onToggleStar: () => setIsStarred(prev => !prev),
       onFlip: () => setIsFlipped(prev => !prev),
       dragHandle,
+      updatedTime,
     }),
-    [id, source, items, isFetching, isStarred, refetch, dragHandle],
+    [id, source, items, isFetching, isStarred, refetch, dragHandle, updatedTime],
   )
 
   return (

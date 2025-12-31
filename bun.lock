@@ -98,10 +98,11 @@
     "packages/sources": {
       "name": "@newsnext/sources",
       "dependencies": {
+        "@date-fns/tz": "^1.4.1",
         "@newsnext/shared": "workspace:*",
         "@smithy/md5-js": "^4.2.7",
         "cheerio": "^1.1.2",
-        "dayjs": "^1.11.19",
+        "date-fns": "^4.1.0",
         "fast-xml-parser": "^5.3.3",
         "iconv-lite": "^0.7.1",
       },
@@ -1254,8 +1255,6 @@
     "date-fns": ["date-fns@4.1.0", "", {}, "sha512-Ukq0owbQXxa/U3EGtsdVBkR1w7KOQ5gIBqdH2hkvknzZPYvBxb/aa6E8L7tmjFtkwZBu3UXBbjIgPo/Ez4xaNg=="],
 
     "date-fns-jalali": ["date-fns-jalali@4.1.0-0", "", {}, "sha512-hTIP/z+t+qKwBDcmmsnmjWTduxCg+5KfdqWQvb2X/8C9+knYY6epN/pfxdDuyVlSVeFz0sM5eEfwIUQ70U4ckg=="],
-
-    "dayjs": ["dayjs@1.11.19", "", {}, "sha512-t5EcLVS6QPBNqM2z8fakk/NKel+Xzshgt8FFKAn+qwlD1pzZWxh0nVCrvFK7ZDb6XucZeF9z8C7CBWTRIVApAw=="],
 
     "debounce": ["debounce@1.2.1", "", {}, "sha512-XRRe6Glud4rd/ZGQfiV1ruXSfbvfJedlV9Y6zOlP+2K04vBYiJEte6stfFkCP03aMnY5tsipamumUjL14fofug=="],
 
