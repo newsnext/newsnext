@@ -1,5 +1,5 @@
 import type { RefObject } from "react"
-import { AnimatePresence, motion, useMotionValueEvent, useScroll, useTransform } from "motion/react"
+import { AnimatePresence, motion, useMotionValue, useMotionValueEvent, useScroll } from "motion/react"
 import { useCallback, useState } from "react"
 import { ThemeSelector } from "../common/theme-selector"
 import DynamicIsland from "../dynamic-island"
@@ -14,17 +14,9 @@ function HeaderProgress({ scrollContainerRef }: HeaderProgressProps) {
   const { scrollYProgress, scrollY } = useScroll({
     container: scrollContainerRef,
   })
-  const [isAtTop, setIsAtTop] = useState(true)
 
-  // Only show opacity when scroll height > 150% of screen height
-  const opacity = useTransform(scrollY, (value) => {
-    const screenHeight = window.innerHeight
-    const threshold = screenHeight * 0.1
-    if (value < threshold) return 0
-    // Fade in over the next 10% of screen height
-    const fadeRange = screenHeight * 0.1
-    return Math.min((value - threshold) / fadeRange, 1)
-  })
+  const [isAtTop, setIsAtTop] = useState(true)
+  const opacity = useMotionValue(0)
 
   const handleScrollToTop = useCallback((e: React.MouseEvent) => {
     e.stopPropagation()
@@ -37,7 +29,17 @@ function HeaderProgress({ scrollContainerRef }: HeaderProgressProps) {
   }, [scrollContainerRef])
 
   useMotionValueEvent(scrollY, "change", (value) => {
-    setIsAtTop(value < 24)
+    const screenHeight = window.innerHeight
+    const threshold = screenHeight * 0.1
+    const fadeRange = screenHeight * 0.1
+
+    if (value < threshold) {
+      opacity.set(0)
+      setIsAtTop(true)
+    } else {
+      opacity.set(Math.min((value - threshold) / fadeRange, 1))
+      setIsAtTop(false)
+    }
   })
 
   return (
@@ -47,11 +49,11 @@ function HeaderProgress({ scrollContainerRef }: HeaderProgressProps) {
     >
       <svg className="absolute inset-0 size-full pointer-events-none">
         <motion.rect
-          x="1"
-          y="1"
+          x="0.5"
+          y="0.5"
           style={{
-            width: "calc(100% - 2px)",
-            height: "calc(100% - 2px)",
+            width: "calc(100% - 1px)",
+            height: "calc(100% - 1px)",
             pathLength: scrollYProgress,
             opacity,
           }}
@@ -62,7 +64,7 @@ function HeaderProgress({ scrollContainerRef }: HeaderProgressProps) {
           strokeWidth="1"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className="text-theme-400"
+          className="text-theme-500"
         />
       </svg>
       <AnimatePresence mode="popLayout" initial={false}>
@@ -93,7 +95,7 @@ function HeaderProgress({ scrollContainerRef }: HeaderProgressProps) {
                 exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.2 }}
               >
-                <PhArrowFatUpDuotone className="text-theme-500 size-5" />
+                <PhArrowFatUpDuotone className="text-theme-400 size-5" />
                 <span className="text-xl font-brand font-bold whitespace-nowrap cursor-pointer transition-opacity">
                   Go to top
                 </span>
