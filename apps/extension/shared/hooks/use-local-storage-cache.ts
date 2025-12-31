@@ -7,10 +7,6 @@ interface LocalStorageCacheHandlers<T> {
 
 export function useLocalStorageCache<T>(storageKey: string): LocalStorageCacheHandlers<T> {
   const readCache = useCallback((): T | undefined => {
-    if (typeof window === "undefined") {
-      return undefined
-    }
-
     const cached = window.localStorage.getItem(storageKey)
     if (!cached) {
       return undefined
@@ -26,10 +22,6 @@ export function useLocalStorageCache<T>(storageKey: string): LocalStorageCacheHa
 
   const writeCache = useCallback(
     (value: T) => {
-      if (typeof window === "undefined") {
-        return
-      }
-
       try {
         window.localStorage.setItem(storageKey, JSON.stringify(value))
       } catch {

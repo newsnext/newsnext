@@ -7,7 +7,6 @@ import {
 } from "@newsnext/ui/components/dialog"
 import { Label } from "@newsnext/ui/components/label"
 import { cn } from "@newsnext/ui/lib/utils"
-
 import { useEffect, useState } from "react"
 import {
   handleThemeModeSwitch,
@@ -15,7 +14,6 @@ import {
   THEME_MODE_KEY,
   THEME_VERSION_KEY,
 } from "@/lib/utils/swith-theme"
-
 import { SegmentedControl } from "../common/segmented-control"
 import { ThemeSelector } from "../common/theme-selector"
 
@@ -80,12 +78,10 @@ export function SettingsModal({ open, onOpenChange }: { open: boolean, onOpenCha
 
 function AppearanceSettings() {
   const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
-    if (typeof window === "undefined") return "dark"
     const stored = localStorage.getItem(THEME_MODE_KEY) as ThemeMode | null
     return stored ?? "dark"
   })
   const [themeVersion, setThemeVersion] = useState<ThemeVersion>(() => {
-    if (typeof window === "undefined") return "v3"
     const stored = localStorage.getItem(THEME_VERSION_KEY) as ThemeVersion | null
     return stored === "v4" ? "v4" : "v3"
   })

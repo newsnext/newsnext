@@ -71,7 +71,6 @@ export function handleThemeVersionSwitch(version: ThemeVersion) {
 }
 
 const prefersDark = () => {
-  if (typeof window === "undefined") return false
   return window.matchMedia?.("(prefers-color-scheme: dark)")?.matches ?? false
 }
 

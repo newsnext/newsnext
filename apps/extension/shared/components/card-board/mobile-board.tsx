@@ -64,9 +64,7 @@ export function MobileBoard({ sourceIds, sourcesMap }: MobileBoardProps) {
 
   // Calculate item width: min(92vw, 450px)
   const itemWidth = useMemo(
-    () => (typeof window !== "undefined"
-      ? Math.min(window.innerWidth * CARD_WIDTH_PERCENT, CARD_MAX_WIDTH)
-      : 350),
+    () => Math.min(window.innerWidth * CARD_WIDTH_PERCENT, CARD_MAX_WIDTH),
     [],
   )
   const trackItemOffset = useMemo(() => itemWidth + GAP, [itemWidth])
