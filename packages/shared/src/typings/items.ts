@@ -1,3 +1,4 @@
+import type { IframeHTMLAttributes } from "react"
 import type { Either, MaybeArray } from "./util"
 
 interface Picture {
@@ -15,6 +16,11 @@ type RichText = Either<{
 }, {
   html: string
 }>
+
+export interface AdvancedIframe extends IframeHTMLAttributes<HTMLIFrameElement> {
+  selector?: string
+  blocked?: MaybeArray<string>
+}
 
 export interface NewsItem {
   /**
@@ -49,6 +55,7 @@ export interface NewsItem {
    */
   detail?: RichText & {
     picture?: MaybeArray<string | Picture>
+    iframe?: string | AdvancedIframe
   }
 }
 

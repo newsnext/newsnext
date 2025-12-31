@@ -1,3 +1,4 @@
+import { getFavicon } from "@newsnext/shared/utils"
 import { useRef } from "react"
 import { useRelativeTime } from "@/hooks/useRelativeTime"
 import { cn } from "@/lib/utils"
@@ -26,7 +27,7 @@ export function CardFront() {
     dragHandle,
   } = useCard()
 
-  const { namespace, name, title, desc, home, type, color } = source
+  const { namespace, name, title, home, type, color, desc } = source
   const ref = useRef<HTMLDivElement>(null)
   const relativeTime = useRelativeTime({ date: updatedTime ?? Date.now() })
 
@@ -40,14 +41,14 @@ export function CardFront() {
       {/* Header */}
       <div className="flex justify-between mb-3 items-center mx-1">
         <div className="flex gap-2.5 items-center ml-1">
-          <a
-            className="size-8 rounded-full bg-cover"
-            target="_blank"
-            rel="noreferrer"
-            href={home || "#"}
+          <img
+            className="size-8 rounded-full bg-cover cursor-pointer"
+            src={`https://s3.newsnext.pro/icons/${namespace}.png`}
             title={desc || name}
-            style={{
-              backgroundImage: `url(https://s3.newsnext.pro/icons/${namespace}.png)`,
+            onClick={() => window.open(home || "#", "_blank")}
+            referrerPolicy="no-referrer"
+            onError={(e) => {
+              e.currentTarget.src = getFavicon(home || "#")!
             }}
           />
           <div className="flex flex-col">

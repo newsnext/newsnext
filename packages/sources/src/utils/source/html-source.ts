@@ -35,6 +35,7 @@ export interface HtmlSourceOptions {
       text?: FieldSelector<string>
       html?: FieldSelector<string>
       picture?: FieldSelector<NonNullable<NewsItem["detail"]>["picture"]>
+      iframe?: FieldSelector<NonNullable<NewsItem["detail"]>["iframe"]>
     }
   }
 }

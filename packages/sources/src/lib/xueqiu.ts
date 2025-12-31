@@ -34,7 +34,7 @@ export default defineSource({
       url: item => `https://xueqiu.com/s/${item.code}`,
       title: "name",
       meta: {
-        text: item => `${item.percent}% ${item.exchange}`,
+        html: item => `<span class="${item.percent > 0 ? "text-red-500" : "text-green-500"}">${item.percent}%</span> <span>${item.exchange}</span>`,
       },
     },
   })),

@@ -36,7 +36,7 @@ export function Timeline({ items, scrollRef }: { items: NewsItem[], scrollRef: R
             </span>
           </span>
           <NewsItemLink item={item}>
-            {item.meta?.icon && extractPictures(item.meta.icon).map((icon, i) => {
+            {item.meta?.icon && extractPictures(item.meta.icon).slice(0, 1).map((icon, i) => {
               const { src, scale, radius, href } = icon
               return (
                 <ProxiedImage

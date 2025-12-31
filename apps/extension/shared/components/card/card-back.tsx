@@ -1,6 +1,7 @@
 import type { Color } from "@newsnext/shared/types"
 import type { PropsWithChildren } from "react"
 import { COLORS } from "@newsnext/shared/constants"
+import { getFavicon } from "@newsnext/shared/utils"
 import { Button } from "@newsnext/ui/components/button"
 import { Input } from "@newsnext/ui/components/input"
 import { ScrollArea } from "@newsnext/ui/components/scroll-area"
@@ -186,14 +187,14 @@ export function CardBack() {
     >
       <div className="flex justify-between mb-3 items-center mx-1">
         <div className="flex gap-2.5 items-center ml-1">
-          <a
-            className="size-8 rounded-full bg-cover"
-            target="_blank"
-            rel="noreferrer"
-            href={home || "#"}
+          <img
+            className="size-8 rounded-full bg-cover cursor-pointer"
+            src={`https://s3.newsnext.pro/icons/${namespace}.png`}
             title={desc || name}
-            style={{
-              backgroundImage: `url(https://s3.newsnext.pro/icons/${namespace}.png)`,
+            onClick={() => window.open(home || "#", "_blank")}
+            referrerPolicy="no-referrer"
+            onError={(e) => {
+              e.currentTarget.src = getFavicon(home || "#")!
             }}
           />
           <div className="flex flex-col">

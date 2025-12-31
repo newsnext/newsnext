@@ -1,9 +1,10 @@
+import type { AdvancedIframe } from "@newsnext/shared/types"
 import type { ReactNode } from "react"
 import type { NewsItem } from "@/typings/source"
 import { extractPictures } from "@newsnext/shared/types"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@newsnext/ui/components/hover-card"
 import { useIsMobile } from "@newsnext/ui/hooks/use-mobile"
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { BASE_URL } from "@/lib/env"
 import { cn } from "@/lib/utils"
 
@@ -31,10 +32,6 @@ export function ProxiedImage({ src, href, onError, onClick, ...props }: ProxiedI
     onError?.(e)
   }, [imgSrc, src, onError])
 
-  if (failed) {
-    return null
-  }
-
   const handleClick = useCallback((e: React.MouseEvent<HTMLImageElement>) => {
     if (href) {
       e.preventDefault()
@@ -44,12 +41,17 @@ export function ProxiedImage({ src, href, onError, onClick, ...props }: ProxiedI
     onClick?.(e)
   }, [href, onClick])
 
+  if (failed) {
+    return null
+  }
+
   return (
     <img
       referrerPolicy="no-referrer"
       alt="picture"
       src={imgSrc}
       onError={handleError}
+      loading="lazy"
       onClick={handleClick}
       {...props}
     />
@@ -86,12 +88,13 @@ export function NewsItemLink({ item, className, children }: NewsItemLinkProps) {
   const isMobile = useIsMobile()
   const href = isMobile ? item.mobileUrl || item.url : item.url
 
-  const hasDetail = item.detail?.html || item.detail?.text || item.detail?.picture
+  const hasDetail = item.detail?.html || item.detail?.text || item.detail?.picture || item.detail?.iframe
 
   if (hasDetail) {
     return (
       <HoverCard>
         <HoverCardTrigger
+          delay={300}
           render={props => (
             <NewsItemAnchor href={href} className={className} {...props}>
               {children}
@@ -116,12 +119,10 @@ export function NewsItemLink({ item, className, children }: NewsItemLinkProps) {
                 />
               )
             })}
+            {item.detail?.iframe && <DetailIframe iframe={item.detail.iframe} />}
             {item.detail?.html
               ? (
-                  <div
-                    className="whitespace-pre-wrap wrap-break-word"
-                    dangerouslySetInnerHTML={{ __html: item.detail.html }}
-                  />
+                  <DetailHtml html={item.detail.html} />
                 )
               : item.detail?.text && (
                 <span className="whitespace-pre-wrap wrap-break-word">
@@ -138,6 +139,47 @@ export function NewsItemLink({ item, className, children }: NewsItemLinkProps) {
     <NewsItemAnchor href={href} className={className}>
       {children}
     </NewsItemAnchor>
+  )
+}
+
+function DetailIframe({ iframe }: { iframe: AdvancedIframe | string }) {
+  const props = typeof iframe === "string" ? { src: iframe } : iframe
+  const ref = useRef<HTMLIFrameElement>(null)
+  const [loaded, setLoaded] = useState(false)
+
+  if (!props?.src) return null
+
+  useEffect(() => {
+    if (loaded && ref.current) {
+      const contentWindow = ref.current.contentWindow
+      console.log(contentWindow)
+    }
+  }, [props.src])
+
+  const { className, loading, width, height, ...rest } = props
+
+  return (
+    <iframe
+      ref={ref}
+      {...rest}
+      src={props.src}
+      width={width ?? "100%"}
+      height={height ?? "320"}
+      className={cn("w-full rounded-xl", className)}
+      loading={loading ?? "lazy"}
+      onLoad={() => {
+        setLoaded(true)
+      }}
+    />
+  )
+}
+
+function DetailHtml({ html }: { html: string }) {
+  return (
+    <div
+      className="whitespace-pre-wrap wrap-break-word"
+      dangerouslySetInnerHTML={{ __html: html }}
+    />
   )
 }
 

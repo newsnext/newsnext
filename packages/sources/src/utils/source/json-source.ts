@@ -35,6 +35,7 @@ export interface JsonSourceOptions<Item = any> {
       text?: FieldResolver<Item, string>
       html?: FieldResolver<Item, string>
       picture?: FieldResolver<Item, NonNullable<NewsItem["detail"]>["picture"]>
+      iframe?: FieldResolver<Item, NonNullable<NewsItem["detail"]>["iframe"]>
     }
   }
 }

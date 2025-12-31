@@ -16,13 +16,12 @@ export async function getCachedSource<T>(
   const disableCache = process.env.CACHE === "false"
   if (disableCache) {
     const items = await fetcher()
-    if (!Array.isArray(items) || items.length === 0) {
-      throw new Error("Invalid items: empty or not an array")
-    }
-    return {
-      updated: Date.now(),
-      status: "success",
-      items,
+    if (Array.isArray(items) && items.length > 0) {
+      return {
+        updated: Date.now(),
+        status: "success",
+        items,
+      }
     }
   }
 

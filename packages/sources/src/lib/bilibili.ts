@@ -50,6 +50,11 @@ const hotVideo = defineJsonSourceFetcher<VideoItem>(() => ({
     detail: {
       text: "desc",
       picture: item => item.pic,
+      iframe: item => ({
+        src: `https://player.bilibili.com/player.html?bvid=${item.bvid}`,
+        width: "100%",
+        height: "100%",
+      }),
     },
   },
 }))
@@ -68,6 +73,11 @@ const ranking = defineJsonSourceFetcher<VideoItem>(() => ({
     detail: {
       text: "desc",
       picture: item => item.pic,
+      iframe: item => ({
+        src: `https://player.bilibili.com/player.html?bvid=${item.bvid}`,
+        width: "100%",
+        height: "100%",
+      }),
     },
   },
 }))

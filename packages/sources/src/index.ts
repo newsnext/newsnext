@@ -7,13 +7,14 @@ import source_2 from "./lib/github"
 import source_3 from "./lib/hackernews"
 import source_4 from "./lib/html"
 import source_5 from "./lib/json"
-import source_6 from "./lib/newsnow"
-import source_7 from "./lib/rss"
-import source_8 from "./lib/rsshub"
-import source_9 from "./lib/v2ex"
-import source_10 from "./lib/weibo"
-import source_11 from "./lib/xueqiu"
-import source_12 from "./lib/zaobao"
+import source_6 from "./lib/netease-music"
+import source_7 from "./lib/newsnow"
+import source_8 from "./lib/rss"
+import source_9 from "./lib/rsshub"
+import source_10 from "./lib/v2ex"
+import source_11 from "./lib/weibo"
+import source_12 from "./lib/xueqiu"
+import source_13 from "./lib/zaobao"
 
 export const sources = {
   "bilibili": source_0,
@@ -22,11 +23,12 @@ export const sources = {
   "hackernews": source_3,
   "html": source_4,
   "json": source_5,
-  "newsnow": source_6,
-  "rss": source_7,
-  "rsshub": source_8,
-  "v2ex": source_9,
-  "weibo": source_10,
-  "xueqiu": source_11,
-  "zaobao": source_12
+  "netease-music": source_6,
+  "newsnow": source_7,
+  "rss": source_8,
+  "rsshub": source_9,
+  "v2ex": source_10,
+  "weibo": source_11,
+  "xueqiu": source_12,
+  "zaobao": source_13
 }

@@ -187,6 +187,54 @@ export const metadata: SourceMeta[] = [
     "namespace": "json"
   },
   {
+    "name": "网易云音乐",
+    "home": "https://music.163.com/#/playlist?id=19723756",
+    "color": "red",
+    "category": "china",
+    "type": "hottest",
+    "interval": 1800000,
+    "id": "default",
+    "title": "云音乐飙升榜",
+    "params": {},
+    "namespace": "netease-music"
+  },
+  {
+    "name": "网易云音乐",
+    "home": "https://music.163.com/#/playlist?id=3779629",
+    "color": "red",
+    "category": "china",
+    "type": "hottest",
+    "interval": 1800000,
+    "id": "new-songs",
+    "title": "云音乐新歌榜",
+    "params": {},
+    "namespace": "netease-music"
+  },
+  {
+    "name": "网易云音乐",
+    "home": "https://music.163.com/#/playlist?id=3778678",
+    "color": "red",
+    "category": "china",
+    "type": "hottest",
+    "interval": 1800000,
+    "id": "hot-songs",
+    "title": "云音乐热歌榜",
+    "params": {},
+    "namespace": "netease-music"
+  },
+  {
+    "name": "网易云音乐",
+    "home": "https://music.163.com/#/playlist?id=2250011882",
+    "color": "red",
+    "category": "china",
+    "type": "hottest",
+    "interval": 1800000,
+    "id": "douyin",
+    "title": "抖音排行榜",
+    "params": {},
+    "namespace": "netease-music"
+  },
+  {
     "name": "NEWS NOW",
     "interval": 1,
     "type": "timeline",

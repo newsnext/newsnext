@@ -27,7 +27,9 @@ export const defineRSSHubSourceFetcher = createSourceFetcher<{ route: string, ho
   Object.entries(RSSHubOptions).forEach(([key, value]) => {
     url.searchParams.set(key, (value as any).toString())
   })
-  const data: RSSHubResponse = await myFetch(url.toString())
+  const data: RSSHubResponse = await myFetch(url.toString(), {
+    timeout: 5000,
+  })
   return data.items.map(item => ({
     title: item.title,
     url: item.url,
