@@ -1,8 +1,9 @@
 import type { NewsItem } from "@/typings/source"
 import { useQuery } from "@tanstack/react-query"
 import { getQueryKey } from "@trpc/react-query"
-import { useCallback } from "react"
+import { useCallback, useEffect } from "react"
 import { trpc } from "@/lib/trpc"
+import { useLocalStorageCache } from "./use-local-storage-cache"
 import { refetchSources, useRefetch } from "./use-refetch"
 
 export interface UseSourceQueryOptions {
@@ -10,9 +11,13 @@ export interface UseSourceQueryOptions {
   enabled?: boolean
 }
 
+const STORAGE_PREFIX = "newsnext-source-cache"
 export function useSourceQuery({ sourceId, enabled = true }: UseSourceQueryOptions) {
   const utils = trpc.useUtils()
   const { refetch } = useRefetch()
+  type SourceData = Awaited<ReturnType<typeof utils.client.getSource.query>>
+  const storageKey = `${STORAGE_PREFIX}/${sourceId}`
+  const { readCache, writeCache } = useLocalStorageCache<SourceData>(storageKey)
 
   const { data, isFetching, isError, refetch: normalRefetch } = useQuery({
     queryKey: getQueryKey(trpc.getSource, { sourceId }),
@@ -25,13 +30,17 @@ export function useSourceQuery({ sourceId, enabled = true }: UseSourceQueryOptio
       return utils.client.getSource.query({ sourceId })
     },
     enabled,
-    placeholderData: prev => prev,
+    placeholderData: prev => prev ?? readCache(),
     staleTime: Number.POSITIVE_INFINITY,
     refetchOnMount: false,
     refetchOnReconnect: false,
     refetchOnWindowFocus: false,
     retry: false,
   })
+
+  useEffect(() => {
+    if (data) writeCache(data)
+  }, [data, writeCache])
 
   const handleRefetch = useCallback(async () => {
     await refetch(sourceId)

@@ -1,4 +1,5 @@
 export * from "./use-dnd-context"
+export * from "./use-local-storage-cache"
 export * from "./use-refetch"
 export * from "./use-sortable"
 export * from "./use-source-query"
