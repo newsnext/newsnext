@@ -42,7 +42,7 @@ export default defineSource({
           transform: (val) => {
             const flagUrl = flagUrls[val as keyof typeof flagUrls]
             if (!flagUrl) return undefined
-            return { url: flagUrl, scale: 1.5 }
+            return { src: flagUrl, scale: 1.5 }
           },
         },
       },

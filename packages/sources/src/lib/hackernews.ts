@@ -1,3 +1,4 @@
+import { getFavicon } from "@newsnext/shared/utils"
 import { Time } from "../typings/constants"
 import { defineHtmlSourceFetcher, defineSource } from "../utils/source"
 
@@ -25,6 +26,16 @@ const createHNFetcher = (sub: string) => defineHtmlSourceFetcher(() => ({
       text: {
         attr: "id",
         transform: (id, $el) => $el.next("tr").find(`#score_${id}`).text(),
+      },
+      icon: {
+        selector: ".titleline>a",
+        attr: "href",
+        transform: (href: string | undefined) => {
+          if (!href) return undefined
+          const src = getFavicon(href)
+          if (!src) return undefined
+          return { href, src }
+        },
       },
     },
   },

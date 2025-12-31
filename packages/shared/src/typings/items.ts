@@ -1,9 +1,13 @@
 import type { Either, MaybeArray } from "./util"
 
 interface Picture {
-  url: string
+  src: string
   scale?: number
   radius?: number
+  /**
+   * Href of the picture when clicked
+   */
+  href?: string
 }
 
 type RichText = Either<{
@@ -51,7 +55,7 @@ export interface NewsItem {
 export const extractPictures = (pictures: MaybeArray<string | Picture>): Picture[] => {
   return (Array.isArray(pictures) ? pictures : [pictures]).map((p) => {
     if (typeof p === "string") {
-      return { url: p }
+      return { src: p }
     }
     return p
   })

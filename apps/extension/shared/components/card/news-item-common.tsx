@@ -13,9 +13,10 @@ function getProxiedImageUrl(url: string): string {
 
 interface ProxiedImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   src: string
+  href?: string
 }
 
-export function ProxiedImage({ src, onError, ...props }: ProxiedImageProps) {
+export function ProxiedImage({ src, href, onError, ...props }: ProxiedImageProps) {
   const [imgSrc, setImgSrc] = useState(src)
   const [failed, setFailed] = useState(false)
 
@@ -32,6 +33,20 @@ export function ProxiedImage({ src, onError, ...props }: ProxiedImageProps) {
 
   if (failed) {
     return null
+  }
+
+  if (href) {
+    return (
+      <a href={href} target="_blank" rel="noreferrer">
+        <img
+          referrerPolicy="no-referrer"
+          alt="picture"
+          src={imgSrc}
+          onError={handleError}
+          {...props}
+        />
+      </a>
+    )
   }
 
   return (
@@ -90,11 +105,11 @@ export function NewsItemLink({ item, className, children }: NewsItemLinkProps) {
         <HoverCardContent side="right" align="start" alignOffset={0} className="max-h-96 overflow-y-auto scrollbar-hidden">
           <div className="flex flex-col gap-2">
             {item.detail?.picture && extractPictures(item.detail.picture).map((picture, i) => {
-              const { url, scale, radius } = picture
+              const { src, scale, radius } = picture
               return (
                 <ProxiedImage
                   key={i}
-                  src={url}
+                  src={src}
                   referrerPolicy="no-referrer"
                   alt="detail picture"
                   style={{
@@ -141,11 +156,11 @@ export function NewsItemInfo({ item, className }: { item: NewsItem, className?: 
   return (
     <>
       {hasMark && extractPictures(hasMark).map((mark, i) => {
-        const { url, scale, radius } = mark
+        const { src, scale, radius } = mark
         return (
           <ProxiedImage
             key={`mark-${i}`}
-            src={url}
+            src={src}
             style={{
               transform: `scale(${scale ?? 1})`,
               borderRadius: `${radius ?? 4}px`,

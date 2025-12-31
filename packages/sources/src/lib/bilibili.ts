@@ -63,7 +63,7 @@ const ranking = defineJsonSourceFetcher<VideoItem>(() => ({
     timestamp: ({ pubdate }) => pubdate * 1000,
     meta: {
       text: ({ stat }) => `${formatNumber(stat.view)}观看 · ${formatNumber(stat.like)}点赞`,
-      icon: item => item.owner.face ? { url: item.owner.face, radius: 4 } : undefined,
+      icon: item => item.owner.face ? { src: item.owner.face, radius: 4 } : undefined,
     },
     detail: {
       text: "desc",
