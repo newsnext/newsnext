@@ -9,7 +9,7 @@ DONT create markdown documents, not needed. Tell me directly, PLEASE.
 
 ALWAYS use TypeScript, React v19, Tailwind CSS v4, Bun.
 
-ALWAYS use `bun run test` to run tests.
+ALWAYS use `bun run test` to run tests if needed.
 
 1. 原来使用了 asChild prop, 这是 Radix UI 的模式
 2. 这个项目使用的 ui/* 组件来自 @base-ui/react,
