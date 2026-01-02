@@ -7,14 +7,14 @@ import { NewsItemInfo, NewsItemLink, ProxiedImage } from "./news-item-common"
 
 function RelativeTime({ date }: { date: number }) {
   const time = useRelativeTime({ date })
-  return (
-    <span className="text-xs text-neutral-400/80 bg-neutral-400/10 py-0.5 px-1 rounded-md">
-      {time}
-    </span>
-  )
+  return time
 }
 
-export function Timeline({ items, scrollRef }: { items: NewsItem[], scrollRef: RefObject<HTMLDivElement> }) {
+export function Timeline({ items, scrollRef, relativeUpdatedTime }: {
+  items: NewsItem[]
+  scrollRef: RefObject<HTMLDivElement>
+  relativeUpdatedTime: string
+}) {
   return (
     <VirtualList
       items={items}
@@ -27,9 +27,9 @@ export function Timeline({ items, scrollRef }: { items: NewsItem[], scrollRef: R
           <span className="text-neutral-400/50 -mt-1 -ml-1">
             <span className="inline-block w-4 -ml-2">-</span>
             <span className="space-x-1 -ml-2">
-              {(item.timestamp) && (
-                <RelativeTime date={item.timestamp!} />
-              )}
+              <span className="text-xs text-neutral-400/80 bg-neutral-400/10 py-0.5 px-1 rounded-md">
+                {item.timestamp ? <RelativeTime date={item.timestamp!} /> : relativeUpdatedTime}
+              </span>
               {item.meta && (
                 <NewsItemInfo item={item} />
               )}

@@ -29,7 +29,7 @@ export function CardFront() {
 
   const { namespace, name, title, home, type, color, desc } = source
   const ref = useRef<HTMLDivElement>(null)
-  const relativeTime = useRelativeTime({ date: updatedTime ?? Date.now() })
+  const relativeTime = useRelativeTime({ date: updatedTime })
 
   return (
     <div
@@ -103,7 +103,20 @@ export function CardFront() {
         )}
       >
         <div className={cn("transition-opacity-500", isFetching && "opacity-20")}>
-          {type === "hottest" ? <Hottest items={items} scrollRef={ref as React.RefObject<HTMLDivElement>} /> : <Timeline items={items} scrollRef={ref as React.RefObject<HTMLDivElement>} />}
+          {type === "hottest"
+            ? (
+                <Hottest
+                  items={items}
+                  scrollRef={ref as React.RefObject<HTMLDivElement>}
+                />
+              )
+            : (
+                <Timeline
+                  items={items}
+                  relativeUpdatedTime={relativeTime}
+                  scrollRef={ref as React.RefObject<HTMLDivElement>}
+                />
+              )}
         </div>
       </div>
     </div>

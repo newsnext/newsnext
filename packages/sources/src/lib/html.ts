@@ -51,7 +51,7 @@ export default defineSource({
           selector: ".time",
           transform: (relativeDate: string | undefined) => {
             if (!relativeDate) return undefined
-            return parseRelativeDate(relativeDate, "Asia/Shanghai")
+            return parseRelativeDate(relativeDate, "Asia/Shanghai").getTime()
           },
         },
       },

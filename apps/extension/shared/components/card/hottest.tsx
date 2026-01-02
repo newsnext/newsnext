@@ -44,7 +44,7 @@ export function Hottest({ items, scrollRef }: { items: NewsItem[], scrollRef: Re
               {item.title}
             </span>
             {item.meta && (
-              <NewsItemInfo item={item} className="truncate align-middle" />
+              <NewsItemInfo item={item} className="truncate align-middle max-w-80 inline-block" />
             )}
           </span>
         </NewsItemLink>

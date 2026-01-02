@@ -59,6 +59,6 @@ export function useSourceQuery({ sourceId, enabled = true }: UseSourceQueryOptio
     normalRefetch,
     isFetching,
     isError,
-    updatedTime: data?.updated,
+    updatedTime: data?.updated ?? Date.now(),
   }
 }

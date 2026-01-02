@@ -17,7 +17,7 @@
     "@newsnext/database": "workspace:*",
     "@newsnext/sources": "workspace:*",
     "@trpc/server": "^11.8.1",
-    "better-auth": "^1.4.9",
+    "better-auth": "^1.4.10",
     "hono": "catalog:"
   }
 }
