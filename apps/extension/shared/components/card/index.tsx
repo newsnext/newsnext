@@ -58,7 +58,7 @@ export default function Card({ id, source, className, nodeRef, dragHandle }: Car
       <div
         ref={ref}
         className={cn(
-          "h-[500px] w-[400px]",
+          "h-125 w-100",
           className,
         )}
       >
