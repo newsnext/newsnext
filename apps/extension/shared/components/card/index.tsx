@@ -1,7 +1,7 @@
 import type { ReactNode } from "react"
 import type { Source } from "@/typings/source"
 import { useInView } from "motion/react"
-import { useImperativeHandle, useMemo, useRef, useState } from "react"
+import { useMemo, useRef, useState } from "react"
 import { FlipAnimate } from "@/components/common/flip-animate"
 import { useSourceQuery } from "@/hooks/use-source-query"
 import { cn } from "@/lib/utils"
@@ -17,20 +17,12 @@ export interface CardProps {
   dragHandle?: ReactNode
 }
 
-export default function Card({ id, source, className, nodeRef, dragHandle }: CardProps) {
+function CardContent({ id, source, dragHandle }: CardProps) {
   const [isStarred, setIsStarred] = useState(false)
   const [isFlipped, setIsFlipped] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
-
-  const inView = useInView(ref, {
-    // once: true,
-  })
-
-  useImperativeHandle(nodeRef, () => ref.current! as HTMLDivElement)
 
   const { items, refetch, isFetching, updatedTime } = useSourceQuery({
     sourceId: id,
-    enabled: inView,
   })
 
   // useEffect(() => {
@@ -55,21 +47,39 @@ export default function Card({ id, source, className, nodeRef, dragHandle }: Car
 
   return (
     <CardContext.Provider value={contextValue}>
-      <div
-        ref={ref}
-        className={cn(
-          "h-[500px] w-[400px]",
-          className,
-        )}
+      <FlipAnimate
+        rotate="y"
+        flipped={isFlipped}
       >
-        <FlipAnimate
-          rotate="y"
-          flipped={isFlipped}
-        >
-          <CardFront />
-          <CardBack />
-        </FlipAnimate>
-      </div>
+        <CardFront />
+        <CardBack />
+      </FlipAnimate>
     </CardContext.Provider>
+  )
+}
+
+export default function Card(props: CardProps) {
+  const ref = useRef<HTMLDivElement>(null)
+  const setRef = (node: HTMLDivElement | null) => {
+    ref.current = node
+    props.nodeRef?.(node)
+  }
+
+  const inView = useInView(ref, {
+    once: true,
+  })
+
+  return (
+    <div
+      ref={setRef}
+      className={cn(
+        "h-125 w-100",
+        props.className,
+      )}
+    >
+      {inView && (
+        <CardContent {...props} />
+      )}
+    </div>
   )
 }

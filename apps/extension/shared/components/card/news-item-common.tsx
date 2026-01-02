@@ -15,11 +15,22 @@ function getProxiedImageUrl(url: string): string {
 interface ProxiedImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   src: string
   href?: string
+  delay?: number
 }
 
-export function ProxiedImage({ src, href, onError, onClick, ...props }: ProxiedImageProps) {
+export function ProxiedImage({ src, href, onError, onClick, delay, ...props }: ProxiedImageProps) {
   const [imgSrc, setImgSrc] = useState(src)
   const [failed, setFailed] = useState(false)
+  const [shouldLoad, setShouldLoad] = useState(!delay)
+
+  useEffect(() => {
+    if (delay && !shouldLoad) {
+      const timer = setTimeout(() => {
+        setShouldLoad(true)
+      }, delay)
+      return () => clearTimeout(timer)
+    }
+  }, [delay, shouldLoad])
 
   const handleError = useCallback((e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     if (imgSrc === src) {
@@ -43,6 +54,17 @@ export function ProxiedImage({ src, href, onError, onClick, ...props }: ProxiedI
 
   if (failed) {
     return null
+  }
+
+  if (!shouldLoad) {
+    return (
+      <img
+        referrerPolicy="no-referrer"
+        alt="picture"
+        src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMSIgaGVpZ2h0PSIxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjwvc3ZnPg=="
+        {...props}
+      />
+    )
   }
 
   return (

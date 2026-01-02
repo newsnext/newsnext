@@ -29,6 +29,7 @@ export function Hottest({ items, scrollRef }: { items: NewsItem[], scrollRef: Re
               return (
                 <ProxiedImage
                   key={`icon-${i}`}
+                  delay={500}
                   src={src}
                   href={href}
                   style={{
