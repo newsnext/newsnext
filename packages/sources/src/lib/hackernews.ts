@@ -6,7 +6,7 @@ const createHNFetcher = (sub: string) => defineHtmlSourceFetcher(() => ({
   url: `https://news.ycombinator.com${sub}`,
   itemSelector: ".athing",
   fields: {
-    title: ".titleline a",
+    title: ".titleline>a",
     url: {
       selector: "",
       attr: "id",
@@ -32,6 +32,7 @@ const createHNFetcher = (sub: string) => defineHtmlSourceFetcher(() => ({
         attr: "href",
         transform: (href: string | undefined) => {
           if (!href) return undefined
+          if (href.startsWith("item")) href = `https://news.ycombinator.com/${href}`
           const src = getFavicon(href)
           if (!src) return undefined
           return { href, src }
