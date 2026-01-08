@@ -15,6 +15,7 @@ import source_10 from "./lib/v2ex"
 import source_11 from "./lib/weibo"
 import source_12 from "./lib/xueqiu"
 import source_13 from "./lib/zaobao"
+import source_14 from "./lib/zhihu"
 
 export const sources = {
   "bilibili": source_0,
@@ -30,5 +31,6 @@ export const sources = {
   "v2ex": source_10,
   "weibo": source_11,
   "xueqiu": source_12,
-  "zaobao": source_13
+  "zaobao": source_13,
+  "zhihu": source_14
 }

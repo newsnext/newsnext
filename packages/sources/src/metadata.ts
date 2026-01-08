@@ -394,5 +394,17 @@ export const metadata: SourceMeta[] = [
     "params": {},
     "id": "default",
     "namespace": "zaobao"
+  },
+  {
+    "name": "知乎",
+    "home": "https://www.zhihu.com",
+    "color": "blue",
+    "category": "china",
+    "interval": 300000,
+    "id": "default",
+    "title": "全站热榜",
+    "type": "hottest",
+    "params": {},
+    "namespace": "zhihu"
   }
 ]
