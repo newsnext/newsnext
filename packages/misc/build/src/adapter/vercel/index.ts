@@ -73,13 +73,18 @@ const vercelAdapter = (options?: VercelBuildOptions): Adapter => {
 
       const functionConfig: VercelServerlessFunctionConfig = {
         ...options?.vercel?.function,
-        runtime: getRuntimeVersion(),
-        launcherType: "Nodejs",
         handler: BUNDLE_NAME,
         shouldAddHelpers: true,
         // Fallback for sourcemap support check if config is not available
         shouldAddSourcemapSupport: config ? Boolean(config.build.sourcemap) : false,
         supportsResponseStreaming: true,
+      }
+
+      if (options?.vercel?.function?.runtime === "bun1.x") {
+        //
+      } else {
+        functionConfig.launcherType = "Nodejs"
+        functionConfig.runtime = getRuntimeVersion()
       }
 
       const publicDir = config ? config.publicDir : "public" // Default fallback
