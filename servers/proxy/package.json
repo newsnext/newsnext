@@ -9,12 +9,16 @@
   },
   "scripts": {
     "dev": "bun run --hot src/index.ts",
-    "build": "tsdown src/index.ts --outfile dist/index.mjs --minify",
+    "build": "tsdown",
     "typecheck": "tsgo -b"
   },
   "dependencies": {
     "@newsnext/shared": "workspace:*",
     "@newsnext/sources": "workspace:*",
     "hono": "catalog:"
+  },
+  "devDependencies": {
+    "@newsnext/build": "workspace:*",
+    "tsdown": "^0.18.2"
   }
 }

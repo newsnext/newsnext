@@ -1,0 +1,59 @@
+{
+  "name": "@newsnext/build",
+  "type": "module",
+  "private": true,
+  "license": "MPL-2.0",
+  "keywords": [
+    "unplugin",
+    "vite",
+    "webpack",
+    "rspack",
+    "rollup",
+    "rolldown",
+    "esbuild",
+    "farm"
+  ],
+  "exports": {
+    ".": "./dist/index.mjs",
+    "./adapter/bun": "./dist/adapter/bun/index.mjs",
+    "./adapter/cloudflare-pages": "./dist/adapter/cloudflare-pages/index.mjs",
+    "./adapter/cloudflare-workers": "./dist/adapter/cloudflare-workers/index.mjs",
+    "./adapter/deno": "./dist/adapter/deno/index.mjs",
+    "./adapter/netlify-functions": "./dist/adapter/netlify-functions/index.mjs",
+    "./adapter/node": "./dist/adapter/node/index.mjs",
+    "./adapter/vercel": "./dist/adapter/vercel/index.mjs",
+    "./api": "./dist/api.mjs",
+    "./entry": "./dist/entry.mjs",
+    "./esbuild": "./dist/esbuild.mjs",
+    "./farm": "./dist/farm.mjs",
+    "./rolldown": "./dist/rolldown.mjs",
+    "./rollup": "./dist/rollup.mjs",
+    "./rspack": "./dist/rspack.mjs",
+    "./vite": "./dist/vite.mjs",
+    "./webpack": "./dist/webpack.mjs",
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "typesVersions": {
+    "*": {
+      "*": [
+        "./dist/*.d.mts",
+        "./*"
+      ]
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "test": "vitest",
+    "typecheck": "tsgo --noEmit"
+  },
+  "dependencies": {
+    "unplugin": "^2.3.11"
+  }
+}

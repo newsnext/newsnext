@@ -25,9 +25,10 @@
     "dev:api": "bun --filter=@newsnext/api run dev",
     "dev:web": "bun --filter=@newsnext/extension run dev",
     "dev:chrome": "bun --filter=@newsnext/extension run dev:chrome",
-    "vercel": "vercel"
+    "postinstall": "bun --filter=@newsnext/build run build"
   },
   "dependencies": {
+    "@types/node": "^25.0.3",
     "consola": "^3.4.2",
     "defu": "^6.1.4",
     "dotenv": "^17.2.3",
