@@ -12,12 +12,12 @@
     "cf:typegen": "wrangler types --env-interface CloudflareBindings"
   },
   "dependencies": {
-    "@hono/trpc-server": "^0.4.1",
+    "@hono/trpc-server": "^0.4.2",
     "@newsnext/cache": "workspace:*",
     "@newsnext/database": "workspace:*",
     "@newsnext/sources": "workspace:*",
     "@trpc/server": "^11.8.1",
-    "better-auth": "^1.4.10",
+    "better-auth": "^1.4.17",
     "hono": "catalog:"
   }
 }

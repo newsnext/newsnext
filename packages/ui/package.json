@@ -15,7 +15,7 @@
     "tw:safelist": "bun run scripts/tw/safelist.ts"
   },
   "dependencies": {
-    "@base-ui/react": "^1.0.0",
+    "@base-ui/react": "^1.1.0",
     "@fontsource-variable/baloo-2": "^5.2.7",
     "@phosphor-icons/react": "^2.1.10",
     "class-variance-authority": "^0.7.1",
@@ -23,20 +23,20 @@
     "cmdk": "^1.1.1",
     "date-fns": "^4.1.0",
     "embla-carousel-react": "^8.6.0",
-    "es-toolkit": "^1.43.0",
+    "es-toolkit": "^1.44.0",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.562.0",
-    "motion": "^12.23.26",
+    "motion": "^12.28.1",
     "next-themes": "^0.4.6",
     "react": "catalog:",
     "react-day-picker": "^9.13.0",
-    "react-hook-form": "^7.69.0",
-    "react-resizable-panels": "^4.0.14",
+    "react-hook-form": "^7.71.1",
+    "react-resizable-panels": "^4.4.1",
     "recharts": "2.15.4",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.4.0",
     "vaul": "^1.1.2",
-    "zod": "^4.2.1"
+    "zod": "^4.3.5"
   },
   "devDependencies": {
     "@newsnext/shared": "workspace:*",
