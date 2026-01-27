@@ -27,7 +27,10 @@ function getAdapter() {
 export default defineConfig({
   format: "esm",
   clean: true,
-  noExternal: [/.*/], // Bundle all dependencies for Vercel functions
+  noExternal: [/.*/],
+  outputOptions: {
+    inlineDynamicImports: true,
+  },
   plugins: [
     Build({
       entry: ["./src/index.ts"],
