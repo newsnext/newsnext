@@ -3,7 +3,7 @@ import type { Adapter } from "../../core/adapter"
 import type { Options } from "../../core/options"
 import type { VercelBuildConfigV3, VercelServerlessFunctionConfig } from "./types.js"
 import { existsSync, mkdirSync } from "node:fs"
-import { cp, writeFile } from "node:fs/promises"
+import { cp, readFile, writeFile } from "node:fs/promises"
 import { resolve } from "node:path"
 
 export type VercelBuildOptions = {
@@ -88,6 +88,45 @@ const vercelAdapter = (options?: VercelBuildOptions): Adapter => {
       }
 
       await Promise.all(promises)
+
+      // Fix for Vercel's read-only filesystem: Add environment variables at the top of the bundle
+      // This redirects Bun's cache and temp directories to /tmp (writable in Vercel)
+      const bundlePath = resolve(functionDir, BUNDLE_NAME)
+      try {
+        const bundleContent = await readFile(bundlePath, "utf-8")
+        const envSetupCode = `// Set environment variables for Vercel's read-only filesystem
+// Redirect Bun's cache and temp directories to /tmp (writable in Vercel)
+// This must be executed BEFORE any imports to prevent Bun from writing to read-only filesystem
+(function() {
+	if (typeof process === "undefined" || !process.env) return;
+	
+	// Set Bun cache directory to /tmp
+	if (!process.env.BUN_INSTALL_CACHE_DIR) {
+		process.env.BUN_INSTALL_CACHE_DIR = "/tmp/.bun-cache";
+	}
+	
+	// Set temp directories to /tmp
+	const tmpDirs = ["TMPDIR", "TMP", "TEMP"];
+	for (const dir of tmpDirs) {
+		if (!process.env[dir]) {
+			process.env[dir] = "/tmp";
+		}
+	}
+	
+	// Disable Bun's bytecode cache to prevent file writes
+	if (!process.env.BUN_DISABLE_BYTECODE_CACHE) {
+		process.env.BUN_DISABLE_BYTECODE_CACHE = "1";
+	}
+})();
+
+`
+        // Only add if not already present
+        if (!bundleContent.includes("BUN_INSTALL_CACHE_DIR")) {
+          await writeFile(bundlePath, envSetupCode + bundleContent, "utf-8")
+        }
+      } catch (error) {
+        console.warn(`Failed to add environment variable setup to bundle: ${error}`)
+      }
     },
   }
 }
