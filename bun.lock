@@ -93,6 +93,7 @@
     "packages/misc/build": {
       "name": "@newsnext/build",
       "dependencies": {
+        "@hono/node-server": "^1.19.9",
         "unplugin": "^2.3.11",
       },
     },
@@ -181,7 +182,6 @@
         "hono": "catalog:",
       },
       "devDependencies": {
-        "@hono/node-server": "^1.19.9",
         "@newsnext/build": "workspace:*",
         "tsdown": "^0.19.0",
       },

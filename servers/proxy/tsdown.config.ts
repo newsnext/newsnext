@@ -2,8 +2,9 @@ import bunAdapter from "@newsnext/build/adapter/bun"
 import cloudflareWorkersAdapter from "@newsnext/build/adapter/cloudflare-workers"
 import vercelAdapter from "@newsnext/build/adapter/vercel"
 import Build from "@newsnext/build/rolldown"
+import { defineConfig } from "tsdown"
 
-export default {
+export default defineConfig({
   format: "esm",
   clean: true,
   plugins: [
@@ -13,17 +14,12 @@ export default {
       // adapter: bunAdapter({
       //   staticRoot: "public",
       // }),
-      adapter: cloudflareWorkersAdapter({
-        staticRoot: "public",
-      }),
-      // adapter: vercelAdapter({
-      //   vercel: {
-      //     function: {
-      //       runtime: "bun1.x",
-      //       regions: ["hkg1"],
-      //     },
-      //   },
+      // adapter: cloudflareWorkersAdapter({
+      //   staticRoot: "public",
       // }),
+      adapter: vercelAdapter({
+        staticPaths: ["public"],
+      }),
     }),
   ],
-}
+})
