@@ -5,13 +5,13 @@ import Build from "@newsnext/build/rolldown"
 import { defineConfig } from "tsdown"
 
 function getAdapter() {
-  console.log(globalThis.navigator?.userAgent)
+  console.log(process.env)
   if (process.env.VERCEL) {
     console.log("using vercel adapter")
     return vercelAdapter({
       staticPaths: ["public"],
     })
-  } else if (globalThis.navigator?.userAgent === "Cloudflare-Workers") {
+  } else if (process.env.CLOUDFLARE) {
     console.log("using cloudflare workers adapter")
     return cloudflareWorkersAdapter({
       staticPaths: ["public"],
