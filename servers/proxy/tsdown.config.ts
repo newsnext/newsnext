@@ -8,14 +8,17 @@ import { defineConfig } from "tsdown"
 function getAdapter() {
   const runtimeKey = getRuntimeKey()
   if (runtimeKey === "edge-light") {
+    console.log("using vercel adapter")
     return vercelAdapter({
       staticPaths: ["public"],
     })
   } else if (runtimeKey === "workerd") {
+    console.log("using cloudflare workers adapter")
     return cloudflareWorkersAdapter({
       staticPaths: ["public"],
     })
   }
+  console.log("using bun adapter")
   return bunAdapter({
     staticRoot: "public",
   })
