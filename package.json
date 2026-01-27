@@ -25,7 +25,7 @@
     "dev:api": "bun --filter=@newsnext/api run dev",
     "dev:web": "bun --filter=@newsnext/extension run dev",
     "dev:chrome": "bun --filter=@newsnext/extension run dev:chrome",
-    "postinstall": "bun --filter=@newsnext/build run build"
+    "postinstall": "bun --filter=@newsnext/build run build -l warn"
   },
   "dependencies": {
     "@types/node": "^25.0.10",

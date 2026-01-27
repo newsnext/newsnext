@@ -8,7 +8,11 @@ function getAdapter() {
   if (process.env.VERCEL) {
     console.log("Using adapter: Vercel")
     return vercelAdapter({
-      staticPaths: ["public"],
+      vercel: {
+        function: {
+          runtime: "bun1.x",
+        },
+      },
     })
   } else if (process.env.WORKERS_CI) {
     console.log("Using adapter: Cloudflare Workers")
