@@ -27,10 +27,10 @@ function getAdapter() {
 export default defineConfig({
   format: "esm",
   clean: true,
-  noExternal: [/.*/],
-  outputOptions: {
-    inlineDynamicImports: true,
-  },
+  // noExternal: [/.*/],
+  // outputOptions: {
+  //   inlineDynamicImports: true,
+  // },
   plugins: [
     Build({
       entry: ["./src/index.ts"],
