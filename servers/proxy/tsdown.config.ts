@@ -5,19 +5,18 @@ import Build from "@newsnext/build/rolldown"
 import { defineConfig } from "tsdown"
 
 function getAdapter() {
-  console.log(process.env)
   if (process.env.VERCEL) {
-    console.log("using vercel adapter")
+    console.log("Using adapter: Vercel")
     return vercelAdapter({
       staticPaths: ["public"],
     })
-  } else if (process.env.CLOUDFLARE) {
-    console.log("using cloudflare workers adapter")
+  } else if (process.env.WORKERS_CI) {
+    console.log("Using adapter: Cloudflare Workers")
     return cloudflareWorkersAdapter({
       staticPaths: ["public"],
     })
   }
-  console.log("using bun adapter")
+  console.log("Using adapter: Bun")
   return bunAdapter({
     staticRoot: "public",
   })
