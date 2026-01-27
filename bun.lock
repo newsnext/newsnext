@@ -181,6 +181,7 @@
         "hono": "catalog:",
       },
       "devDependencies": {
+        "@hono/node-server": "^1.19.9",
         "@newsnext/build": "workspace:*",
         "tsdown": "^0.19.0",
       },
@@ -411,6 +412,8 @@
     "@floating-ui/utils": ["@floating-ui/utils@0.2.10", "", {}, "sha512-aGTxbpbg8/b5JfU1HXSrbH3wXZuLPJcNEcZQFMxLs3oSzgtVu6nFPkbbGGUvBcUjKV2YyB9Wxxabo+HEH9tcRQ=="],
 
     "@fontsource-variable/baloo-2": ["@fontsource-variable/baloo-2@5.2.7", "", {}, "sha512-45Uxv5Ic0shabqUalV/QwXCJBPDqyzcuVnlFugNqBg8vYEQxqMEb2H6uktmWRp9oKyMVrA8ksoSKUSSWmwapoQ=="],
+
+    "@hono/node-server": ["@hono/node-server@1.19.9", "", { "peerDependencies": { "hono": "^4" } }, "sha512-vHL6w3ecZsky+8P5MD+eFfaGTyCeOHUIFYMGpQGbrBTSmNNoxv0if69rEZ5giu36weC5saFuznL411gRX7bJDw=="],
 
     "@hono/trpc-server": ["@hono/trpc-server@0.4.2", "", { "peerDependencies": { "@trpc/server": "^10.10.0 || >11.0.0-rc", "hono": ">=4.0.0" } }, "sha512-3TDrc42CZLgcTFkXQba+y7JlRWRiyw1AqhLqztWyNS2IFT+3bHld0lxKdGBttCtGKHYx0505dM67RMazjhdZqw=="],
 

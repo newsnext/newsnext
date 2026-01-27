@@ -6,12 +6,9 @@
   "keywords": [
     "unplugin",
     "vite",
-    "webpack",
-    "rspack",
     "rollup",
     "rolldown",
-    "esbuild",
-    "farm"
+    "esbuild"
   ],
   "exports": {
     ".": "./dist/index.mjs",
@@ -25,12 +22,9 @@
     "./api": "./dist/api.mjs",
     "./entry": "./dist/entry.mjs",
     "./esbuild": "./dist/esbuild.mjs",
-    "./farm": "./dist/farm.mjs",
     "./rolldown": "./dist/rolldown.mjs",
     "./rollup": "./dist/rollup.mjs",
-    "./rspack": "./dist/rspack.mjs",
     "./vite": "./dist/vite.mjs",
-    "./webpack": "./dist/webpack.mjs",
     "./package.json": "./package.json"
   },
   "types": "./dist/index.d.mts",

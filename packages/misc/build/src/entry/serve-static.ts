@@ -5,8 +5,13 @@ interface ServeStaticHookOptions {
 
 export const serveStaticHook = (appName: string, options: ServeStaticHookOptions) => {
   let code = ""
-  for (const path of options.filePaths ?? []) {
-    code += `${appName}.use('${path}', serveStatic({ root: '${options.root ?? "./"}' }))\n`
-  }
+
+  code += `${appName}.get('/*', serveStatic({ root: '${options.root ?? "./"}' }))\n`
   return code
 }
+
+// app.get("/*", (c, next) => {
+//   return serveStatic({ root: "./public" })(c, next)
+// })
+
+// app.get("*", serveStatic({ path: "./public/index.html" }))

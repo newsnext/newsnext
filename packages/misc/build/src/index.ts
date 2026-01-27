@@ -1,7 +1,6 @@
-import type { UnpluginInstance, VitePlugin } from "unplugin"
+import type { UnpluginInstance } from "unplugin"
 import type { Options } from "./core/options"
-import { readdirSync } from "node:fs"
-import { builtinModules } from "node:module"
+import { existsSync, readdirSync, rmSync } from "node:fs"
 import { resolve } from "node:path"
 import { createUnplugin } from "unplugin"
 import { resolveOptions } from "./core/options"
@@ -14,9 +13,11 @@ export const BuildPlugin: UnpluginInstance<Options | undefined, false>
     const resolvedVirtualEntryId = `\0${virtualEntryId}`
 
     // Defaults for non-Vite environments
-    let root = process.cwd()
-    let publicDir = "public"
-    let outDir = options.outputDir || "dist"
+    const root = process.cwd()
+    const publicDir = "public"
+    const outDir = options.outputDir || "dist"
+
+    const rawInput = []
 
     const name = "@newsnext/build"
 
@@ -24,10 +25,15 @@ export const BuildPlugin: UnpluginInstance<Options | undefined, false>
       name,
       enforce: options.enforce,
 
-      resolveId(id) {
+      resolveId(id, _importer, _options) {
         if (id === virtualEntryId) {
           return resolvedVirtualEntryId
         }
+        // Also handle the resolved ID to ensure it's recognized
+        if (id === resolvedVirtualEntryId) {
+          return resolvedVirtualEntryId
+        }
+        return null
       },
 
       async load(id) {
@@ -41,7 +47,7 @@ export const BuildPlugin: UnpluginInstance<Options | undefined, false>
                 withFileTypes: true,
               })
               direntPaths.push(...publicDirPaths)
-            } catch {}
+            } catch { }
 
             const buildOutDirPath = resolve(root, outDir)
             try {
@@ -49,8 +55,8 @@ export const BuildPlugin: UnpluginInstance<Options | undefined, false>
                 withFileTypes: true,
               })
               direntPaths.push(...buildOutDirPaths)
-            } catch {}
-          } catch {}
+            } catch { }
+          } catch { }
 
           const uniqueStaticPaths = new Set<string>()
 
@@ -77,6 +83,10 @@ export const BuildPlugin: UnpluginInstance<Options | undefined, false>
             preset: options.preset,
           })
         }
+        return null
+      },
+
+      buildStart: () => {
       },
 
       writeBundle: async () => {
@@ -84,63 +94,22 @@ export const BuildPlugin: UnpluginInstance<Options | undefined, false>
           await options.adapter.onWriteBundle(resolve(root, outDir), root)
         }
       },
+      buildEnd: () => {
+      },
 
-      vite: {
-        configResolved(config: VitePlugin.ResolvedConfig) {
-          root = config.root
-          publicDir = config.publicDir
-          outDir = config.build.outDir
-          if (options.adapter?.vite?.configResolved) {
-            options.adapter.vite.configResolved(config)
+      rolldown: {
+        options: (rolldownOptions) => {
+          rawInput.push(...(Array.isArray(rolldownOptions.input) ? rolldownOptions.input : [rolldownOptions.input]))
+          return {
+            ...rolldownOptions,
+            input: virtualEntryId,
           }
         },
-        apply: (_config: VitePlugin.Config, { command, mode }: { command: string, mode: string }) => {
-          if (command === "build" && mode !== "client") {
-            return true
+        outputOptions: (rolldownOutputOptions) => {
+          return {
+            ...rolldownOutputOptions,
+            entryFileNames: options.output,
           }
-          return false
-        },
-        config: async (config) => {
-          const baseConfig = {
-            ssr: {
-              external: options.external,
-              noExternal: true,
-              target: "webworker",
-            },
-            build: {
-              outDir: options.outputDir,
-              emptyOutDir: options.emptyOutDir,
-              minify: options.minify,
-              ssr: true,
-              rollupOptions: {
-                external: [...builtinModules, /^node:/],
-                input: virtualEntryId,
-                output: {
-                  entryFileNames: options.output,
-                },
-              },
-            },
-          }
-
-          if (options.adapter?.vite?.config) {
-            const adapterConfig = await options.adapter.vite.config(config)
-            // Simple merge for now, deep merge might be needed
-            return {
-              ...baseConfig,
-              ...adapterConfig,
-              ssr: { ...baseConfig.ssr, ...adapterConfig.ssr },
-              build: {
-                ...baseConfig.build,
-                ...adapterConfig.build,
-                rollupOptions: {
-                  ...baseConfig.build.rollupOptions,
-                  ...(adapterConfig.build?.rollupOptions || {}),
-                },
-              },
-            }
-          }
-
-          return baseConfig
         },
       },
     }

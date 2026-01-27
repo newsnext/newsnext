@@ -49,7 +49,8 @@ export const getEntryContent = async (options: GetEntryContentOptions): Promise<
       "hono")
 
   const staticPaths = options.staticPaths ?? [""]
-  const globStr = normalizePaths(options.entry)
+  const normalizedPaths = options.entry
+  const globStr = normalizedPaths
     .map(e => `'${e}'`)
     .join(",")
 
@@ -69,9 +70,18 @@ export const getEntryContent = async (options: GetEntryContentOptions): Promise<
     return ""
   }
 
-  const appStr = `const modules = import.meta.glob([${globStr}], { import: 'default', eager: true })
+  // Generate explicit imports instead of using import.meta.glob
+  const imports = normalizedPaths
+    .map((path, index) => `import * as _module${index} from '${path}'`)
+    .join("\n")
+
+  const moduleArray = normalizedPaths
+    .map((_, index) => `_module${index}.default`)
+    .join(", ")
+
+  const appStr = `const modules = [${moduleArray}]
       let added = false
-      for (const [, app] of Object.entries(modules)) {
+      for (const app of modules) {
         if (app) {
           mainApp.all('*', (c) => {
             let executionCtx
@@ -98,6 +108,8 @@ export const getEntryContent = async (options: GetEntryContentOptions): Promise<
     = options.entryContentDefaultExportHook ?? (() => "export default mainApp")
 
   return `import { Hono } from '${preset}'
+${imports}
+
 const mainApp = new Hono()
 
 ${await hooksToString("mainApp", options.entryContentBeforeHooks)}
