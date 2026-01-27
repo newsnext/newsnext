@@ -40,11 +40,6 @@ const vercelAdapter = (options?: VercelBuildOptions): Adapter => {
     name: "vercel",
     output: `functions/${FUNCTION_NAME}.func/${BUNDLE_NAME}`,
     outputDir: ".vercel/output",
-    entryContentAfterHooks: [
-
-      () => "import { handle } from '@hono/node-server/vercel'",
-    ],
-    entryContentDefaultExportHook: appName => `export default handle(${appName})`,
     vite: {
       configResolved: (resolvedConfig) => {
         config = resolvedConfig

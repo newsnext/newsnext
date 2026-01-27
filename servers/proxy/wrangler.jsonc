@@ -1,5 +1,5 @@
 {
-  "name": "newsnext",
+  "name": "newsnext-proxy",
   "main": "dist/index.mjs",
   "compatibility_date": "2025-12-19",
   "compatibility_flags": [
