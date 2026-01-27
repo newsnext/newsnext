@@ -1,9 +1,5 @@
-import type { Adapter } from "../../core/adapter"
-import type { Options } from "../../core/options"
-import type { GetEntryContentOptions } from "../../entry"
-
-export type CloudflareWorkersBuildOptions = Options
-  & Pick<GetEntryContentOptions, "entryContentAfterHooks" | "entryContentDefaultExportHook">
+import type { Adapter } from "../../types"
+import type { CloudflareWorkersBuildOptions } from "./types"
 
 export const defaultOptions: CloudflareWorkersBuildOptions = {
   entryContentAfterHooks: [
@@ -27,7 +23,25 @@ export const defaultOptions: CloudflareWorkersBuildOptions = {
     `export default { ...merged, fetch: ${appName}.fetch }`,
 }
 
-const cloudflareWorkersAdapter = (options?: CloudflareWorkersBuildOptions): Adapter => {
+/**
+ * Cloudflare Workers adapter for Hono applications
+ *
+ * @param options - Adapter configuration options
+ * @returns Adapter configuration
+ *
+ * @example
+ * ```ts
+ * import { buildPlugin } from '@newsnext/build'
+ * import cloudflareWorkersAdapter from '@newsnext/build/adapters/cloudflare-workers'
+ *
+ * export default {
+ *   plugins: [buildPlugin({
+ *     adapter: cloudflareWorkersAdapter()
+ *   })]
+ * }
+ * ```
+ */
+export default function cloudflareWorkersAdapter(options?: CloudflareWorkersBuildOptions): Adapter {
   return {
     name: "cloudflare-workers",
     entryContentAfterHooks:
@@ -37,5 +51,3 @@ const cloudflareWorkersAdapter = (options?: CloudflareWorkersBuildOptions): Adap
       ?? defaultOptions.entryContentDefaultExportHook,
   }
 }
-
-export default cloudflareWorkersAdapter

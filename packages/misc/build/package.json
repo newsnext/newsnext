@@ -4,24 +4,17 @@
   "private": true,
   "license": "MPL-2.0",
   "keywords": [
-    "unplugin",
-    "vite",
-    "rollup",
     "rolldown",
-    "esbuild"
+    "build",
+    "plugin",
+    "hono"
   ],
   "exports": {
     ".": "./dist/index.mjs",
-    "./adapter/bun": "./dist/adapter/bun/index.mjs",
-    "./adapter/cloudflare-workers": "./dist/adapter/cloudflare-workers/index.mjs",
-    "./adapter/netlify-functions": "./dist/adapter/netlify-functions/index.mjs",
-    "./adapter/vercel": "./dist/adapter/vercel/index.mjs",
-    "./api": "./dist/api.mjs",
-    "./entry": "./dist/entry.mjs",
-    "./esbuild": "./dist/esbuild.mjs",
-    "./rolldown": "./dist/rolldown.mjs",
-    "./rollup": "./dist/rollup.mjs",
-    "./vite": "./dist/vite.mjs",
+    "./adapters/bun": "./dist/adapters/bun/index.mjs",
+    "./adapters/cloudflare-workers": "./dist/adapters/cloudflare-workers/index.mjs",
+    "./adapters/netlify": "./dist/adapters/netlify/index.mjs",
+    "./adapters/vercel": "./dist/adapters/vercel/index.mjs",
     "./package.json": "./package.json"
   },
   "types": "./dist/index.d.mts",
@@ -41,8 +34,5 @@
     "dev": "tsdown --watch",
     "test": "vitest",
     "typecheck": "tsgo --noEmit"
-  },
-  "dependencies": {
-    "unplugin": "^2.3.11"
   }
 }

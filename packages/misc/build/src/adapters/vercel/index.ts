@@ -1,17 +1,8 @@
-import type { VitePlugin } from "unplugin"
-import type { Adapter } from "../../core/adapter"
-import type { Options } from "../../core/options"
-import type { VercelBuildConfigV3, VercelServerlessFunctionConfig } from "./types.js"
+import type { Adapter, VercelBuildConfigV3, VercelServerlessFunctionConfig } from "../../types"
+import type { VercelBuildOptions } from "./types"
 import { existsSync, mkdirSync } from "node:fs"
 import { cp, writeFile } from "node:fs/promises"
 import { resolve } from "node:path"
-
-export type VercelBuildOptions = {
-  vercel?: {
-    config?: VercelBuildConfigV3
-    function?: VercelServerlessFunctionConfig
-  }
-} & Omit<Options, "output" | "outputDir">
 
 const BUNDLE_NAME = "index.js"
 const FUNCTION_NAME = "__hono"
@@ -24,22 +15,44 @@ const writeJSON = (path: string, data: Record<string, unknown>) => {
   return writeFile(path, JSON.stringify(data))
 }
 
-const vercelAdapter = (options?: VercelBuildOptions): Adapter => {
-  let config: VitePlugin.ResolvedConfig
-
+/**
+ * Vercel adapter for Hono applications
+ *
+ * @param options - Adapter configuration options
+ * @returns Adapter configuration
+ *
+ * @example
+ * ```ts
+ * import { buildPlugin } from '@newsnext/build'
+ * import vercelAdapter from '@newsnext/build/adapters/vercel'
+ *
+ * export default {
+ *   plugins: [buildPlugin({
+ *     adapter: vercelAdapter({
+ *       vercel: {
+ *         config: { version: 3 }
+ *       }
+ *     })
+ *   })]
+ * }
+ * ```
+ */
+export default function vercelAdapter(options?: VercelBuildOptions): Adapter {
   return {
     name: "vercel",
     output: `functions/${FUNCTION_NAME}.func/${BUNDLE_NAME}`,
     outputDir: ".vercel/output",
-    vite: {
-      configResolved: (resolvedConfig) => {
-        config = resolvedConfig
-      },
+    bundler: {
+      input: options => ({
+        ...options,
+        noExternal: [/.*/],
+      }),
+      output: options => ({
+        ...options,
+        inlineDynamicImports: true,
+      }),
     },
     onWriteBundle: async (outDir: string, root: string) => {
-      // If config is not captured via vite hook (e.g. non-vite build), we need another way or default to assumption
-      // However, onWriteBundle is currently called with resolved paths from BuildPlugin
-
       const functionDir = resolve(outDir, "functions", `${FUNCTION_NAME}.func`)
 
       const buildConfig: VercelBuildConfigV3 = {
@@ -61,16 +74,13 @@ const vercelAdapter = (options?: VercelBuildOptions): Adapter => {
         ...options?.vercel?.function,
         handler: BUNDLE_NAME,
         shouldAddHelpers: true,
-        // Fallback for sourcemap support check if config is not available
-        shouldAddSourcemapSupport: config ? Boolean(config.build.sourcemap) : false,
+        shouldAddSourcemapSupport: false,
         supportsResponseStreaming: true,
       }
 
-      const publicDir = config ? config.publicDir : "public" // Default fallback
-      const publicDirPath = resolve(root, publicDir)
+      const publicDirPath = resolve(root, "public")
 
       const promises = [
-        // Write all necessary config files and ensure type compatibility
         writeJSON(resolve(outDir, "config.json"), buildConfig as Record<string, unknown>),
         writeJSON(resolve(functionDir, ".vc-config.json"), functionConfig as Record<string, unknown>),
         writeJSON(resolve(functionDir, "package.json"), {
@@ -80,7 +90,6 @@ const vercelAdapter = (options?: VercelBuildOptions): Adapter => {
 
       if (existsSync(publicDirPath)) {
         promises.push(
-          // Copy static files to the .vercel/output/static directory
           cp(publicDirPath, resolve(outDir, "static"), {
             recursive: true,
           }),
@@ -91,5 +100,3 @@ const vercelAdapter = (options?: VercelBuildOptions): Adapter => {
     },
   }
 }
-
-export default vercelAdapter

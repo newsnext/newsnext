@@ -92,9 +92,6 @@
     },
     "packages/misc/build": {
       "name": "@newsnext/build",
-      "dependencies": {
-        "unplugin": "^2.3.11",
-      },
     },
     "packages/misc/tsconfigs": {
       "name": "@newsnext/tsconfigs",

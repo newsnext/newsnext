@@ -1,7 +1,7 @@
-import bunAdapter from "@newsnext/build/adapter/bun"
-import cloudflareWorkersAdapter from "@newsnext/build/adapter/cloudflare-workers"
-import vercelAdapter from "@newsnext/build/adapter/vercel"
-import Build from "@newsnext/build/rolldown"
+import Build from "@newsnext/build"
+import bunAdapter from "@newsnext/build/adapters/bun"
+import cloudflareWorkersAdapter from "@newsnext/build/adapters/cloudflare-workers"
+import vercelAdapter from "@newsnext/build/adapters/vercel"
 import { defineConfig } from "tsdown"
 
 function getAdapter() {
@@ -27,10 +27,6 @@ function getAdapter() {
 export default defineConfig({
   format: "esm",
   clean: true,
-  // noExternal: [/.*/],
-  // outputOptions: {
-  //   inlineDynamicImports: true,
-  // },
   plugins: [
     Build({
       entry: ["./src/index.ts"],

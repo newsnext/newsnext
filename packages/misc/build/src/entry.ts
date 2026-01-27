@@ -1,5 +1,3 @@
-import { normalize } from "node:path"
-
 export interface EntryContentHookOptions {
   staticPaths: string[]
 }
@@ -28,16 +26,6 @@ export interface GetEntryContentOptions {
    * @default `hono`
    */
   preset?: Preset
-}
-
-const normalizePaths = (paths: string[]) => {
-  return paths.map((p) => {
-    let normalizedPath = normalize(p).replace(/\\/g, "/")
-    if (normalizedPath.startsWith("./")) {
-      normalizedPath = normalizedPath.substring(2)
-    }
-    return `/${normalizedPath}`
-  })
 }
 
 export const getEntryContent = async (options: GetEntryContentOptions): Promise<string> => {
