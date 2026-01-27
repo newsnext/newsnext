@@ -12,9 +12,7 @@ function getAdapter() {
     })
   } else if (process.env.WORKERS_CI) {
     console.log("Using adapter: Cloudflare Workers")
-    return cloudflareWorkersAdapter({
-      staticPaths: ["public"],
-    })
+    return cloudflareWorkersAdapter()
   }
   console.log("Using adapter: Bun")
   return bunAdapter({

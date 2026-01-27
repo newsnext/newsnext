@@ -13,11 +13,8 @@
   "exports": {
     ".": "./dist/index.mjs",
     "./adapter/bun": "./dist/adapter/bun/index.mjs",
-    "./adapter/cloudflare-pages": "./dist/adapter/cloudflare-pages/index.mjs",
     "./adapter/cloudflare-workers": "./dist/adapter/cloudflare-workers/index.mjs",
-    "./adapter/deno": "./dist/adapter/deno/index.mjs",
     "./adapter/netlify-functions": "./dist/adapter/netlify-functions/index.mjs",
-    "./adapter/node": "./dist/adapter/node/index.mjs",
     "./adapter/vercel": "./dist/adapter/vercel/index.mjs",
     "./api": "./dist/api.mjs",
     "./entry": "./dist/entry.mjs",
