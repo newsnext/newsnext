@@ -11,15 +11,15 @@ export default defineConfig({
     Build({
       entry: ["./src/index.ts"],
       output: "index.mjs",
-      // adapter: bunAdapter({
-      //   staticRoot: "public",
-      // }),
+      adapter: bunAdapter({
+        staticRoot: "public",
+      }),
       // adapter: cloudflareWorkersAdapter({
       //   staticRoot: "public",
       // }),
-      adapter: vercelAdapter({
-        staticPaths: ["public"],
-      }),
+      // adapter: vercelAdapter({
+      //   staticPaths: ["public"],
+      // }),
     }),
   ],
 })
