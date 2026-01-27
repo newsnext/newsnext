@@ -13,6 +13,7 @@
     "typecheck": "tsgo -b"
   },
   "dependencies": {
+    "@newsnext/cache": "workspace:*",
     "@newsnext/shared": "workspace:*",
     "@newsnext/sources": "workspace:*",
     "hono": "catalog:"

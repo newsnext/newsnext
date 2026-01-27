@@ -24,15 +24,6 @@ const writeJSON = (path: string, data: Record<string, unknown>) => {
   return writeFile(path, JSON.stringify(data))
 }
 
-const getRuntimeVersion = () => {
-  try {
-    const systemNodeVersion = process.versions.node.split(".")[0]
-    return `nodejs${Number(systemNodeVersion)}.x` as const
-  } catch {
-    return "nodejs22.x" as const
-  }
-}
-
 const vercelAdapter = (options?: VercelBuildOptions): Adapter => {
   let config: VitePlugin.ResolvedConfig
 
@@ -73,13 +64,6 @@ const vercelAdapter = (options?: VercelBuildOptions): Adapter => {
         // Fallback for sourcemap support check if config is not available
         shouldAddSourcemapSupport: config ? Boolean(config.build.sourcemap) : false,
         supportsResponseStreaming: true,
-      }
-
-      if (options?.vercel?.function?.runtime === "bun1.x") {
-        //
-      } else {
-        functionConfig.launcherType = "Nodejs"
-        functionConfig.runtime = getRuntimeVersion()
       }
 
       const publicDir = config ? config.publicDir : "public" // Default fallback

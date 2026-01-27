@@ -176,6 +176,7 @@
     "servers/proxy": {
       "name": "@newsnext/proxy",
       "dependencies": {
+        "@newsnext/cache": "workspace:*",
         "@newsnext/shared": "workspace:*",
         "@newsnext/sources": "workspace:*",
         "hono": "catalog:",
