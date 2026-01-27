@@ -10,7 +10,7 @@ function getAdapter() {
     return vercelAdapter({
       vercel: {
         function: {
-          runtime: "nodejs24.x",
+          runtime: "bun1.x",
         },
       },
     })
