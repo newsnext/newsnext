@@ -7,12 +7,6 @@ export const serveStaticHook = (appName: string, options: ServeStaticHookOptions
   let code = ""
 
   code += `${appName}.get('/*', serveStatic({ root: '${options.root ?? "./"}' }))\n`
-  code += `${appName}.get('*', serveStatic({ path: '${options.root ?? "."}/index.html' }))\n`
+  // code += `${appName}.get('*', serveStatic({ path: '${options.root ?? "."}/index.html' }))\n`
   return code
 }
-
-// app.get("/*", (c, next) => {
-//   return serveStatic({ root: "./public" })(c, next)
-// })
-
-// app.get("*", serveStatic({ path: "./public/index.html" }))
