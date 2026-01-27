@@ -10,7 +10,7 @@ const cacheAdapter = new MemoryCacheAdapter()
 app.use(logger())
 app.use("/*", cors())
 
-app.route("/sources", sourcesRoute(cacheAdapter))
+app.route("/api", sourcesRoute(cacheAdapter))
 
 export default {
   fetch: app.fetch,
