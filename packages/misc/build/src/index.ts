@@ -108,6 +108,7 @@ export const BuildPlugin: UnpluginInstance<Options | undefined, false>
         outputOptions: (rolldownOutputOptions) => {
           return {
             ...rolldownOutputOptions,
+            dir: options.outputDir,
             entryFileNames: options.output,
           }
         },
