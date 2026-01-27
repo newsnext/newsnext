@@ -7,7 +7,13 @@ import { defineConfig } from "tsdown"
 function getAdapter() {
   if (process.env.VERCEL) {
     console.log("Using adapter: Vercel")
-    return vercelAdapter({})
+    return vercelAdapter({
+      vercel: {
+        function: {
+          runtime: "nodejs24.x",
+        },
+      },
+    })
   } else if (process.env.WORKERS_CI) {
     console.log("Using adapter: Cloudflare Workers")
     return cloudflareWorkersAdapter()
