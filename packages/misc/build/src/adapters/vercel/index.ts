@@ -42,24 +42,14 @@ export default function vercelAdapter(options?: VercelBuildOptions): Adapter {
     name: "vercel",
     output: `functions/${FUNCTION_NAME}.func/${BUNDLE_NAME}`,
     outputDir: ".vercel/output",
-    bundler: {
-      input: options => ({
-        ...options,
-        noExternal: [/.*/],
-      }),
-      output: options => ({
-        ...options,
-        inlineDynamicImports: true,
-      }),
-    },
     onWriteBundle: async (outDir: string, root: string) => {
       const functionDir = resolve(outDir, "functions", `${FUNCTION_NAME}.func`)
 
       const buildConfig: VercelBuildConfigV3 = {
-        ...options?.vercel?.config,
+        ...options?.config,
         version: 3,
         routes: [
-          ...(options?.vercel?.config?.routes ?? []),
+          ...(options?.config?.routes ?? []),
           {
             handle: "filesystem",
           },
@@ -71,7 +61,7 @@ export default function vercelAdapter(options?: VercelBuildOptions): Adapter {
       }
 
       const functionConfig: VercelServerlessFunctionConfig = {
-        ...options?.vercel?.function,
+        ...options?.function,
         handler: BUNDLE_NAME,
         shouldAddHelpers: true,
         shouldAddSourcemapSupport: false,

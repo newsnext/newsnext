@@ -1,37 +1,51 @@
+import type { Adapter } from "@newsnext/build"
+import type { UserConfig } from "tsdown"
 import Build from "@newsnext/build"
 import bunAdapter from "@newsnext/build/adapters/bun"
 import cloudflareWorkersAdapter from "@newsnext/build/adapters/cloudflare-workers"
 import vercelAdapter from "@newsnext/build/adapters/vercel"
 import { defineConfig } from "tsdown"
 
-function getAdapter() {
+function getAdapter(): { config?: UserConfig, adapter: Adapter } {
   if (process.env.VERCEL) {
     console.log("Using adapter: Vercel")
-    return vercelAdapter({
-      vercel: {
+    return {
+      config: {
+        noExternal: [/.*/],
+        outputOptions: {
+          inlineDynamicImports: true,
+        },
+      },
+      adapter: vercelAdapter({
         function: {
           runtime: "bun1.x",
         },
-      },
-    })
+      }),
+    }
   } else if (process.env.WORKERS_CI) {
     console.log("Using adapter: Cloudflare Workers")
-    return cloudflareWorkersAdapter()
+    return {
+      adapter: cloudflareWorkersAdapter(),
+    }
   }
   console.log("Using adapter: Bun")
-  return bunAdapter({
-    staticRoot: "public",
-  })
+  return {
+    adapter: bunAdapter({
+      staticRoot: "public",
+    }),
+  }
 }
 
+const { config, adapter } = getAdapter()
 export default defineConfig({
   format: "esm",
   clean: true,
+  ...config,
   plugins: [
     Build({
       entry: ["./src/index.ts"],
       output: "index.mjs",
-      adapter: getAdapter(),
+      adapter,
     }),
   ],
 })

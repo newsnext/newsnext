@@ -1,4 +1,3 @@
-import type { InputOptions, OutputOptions } from "rolldown"
 import type { GetEntryContentOptions } from "./entry"
 
 /**
@@ -27,14 +26,6 @@ export interface Adapter {
    */
   output?: string
   outputDir?: string
-
-  /**
-   * Bundler configuration hooks
-   */
-  bundler?: {
-    input?: (options: InputOptions) => InputOptions
-    output?: (options: OutputOptions) => OutputOptions
-  }
 
   /**
    * Post-build hook

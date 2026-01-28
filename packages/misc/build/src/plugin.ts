@@ -58,8 +58,7 @@ export function buildPlugin(rawOptions: Options = {}): Plugin {
               withFileTypes: true,
             })
             direntPaths.push(...publicDirPaths)
-          }
-          catch { }
+          } catch { }
 
           const buildOutDirPath = resolve(root, outDir)
           try {
@@ -67,18 +66,15 @@ export function buildPlugin(rawOptions: Options = {}): Plugin {
               withFileTypes: true,
             })
             direntPaths.push(...buildOutDirPaths)
-          }
-          catch { }
-        }
-        catch { }
+          } catch { }
+        } catch { }
 
         const uniqueStaticPaths = new Set<string>()
 
         direntPaths.forEach((p) => {
           if (p.isDirectory()) {
             uniqueStaticPaths.add(`/${p.name}/*`)
-          }
-          else {
+          } else {
             if (p.name === options.output) {
               return
             }
@@ -102,32 +98,18 @@ export function buildPlugin(rawOptions: Options = {}): Plugin {
     },
 
     options(rolldownOptions) {
-      const baseOptions = {
+      return {
         ...rolldownOptions,
         input: virtualEntryId,
       }
-
-      // Apply adapter's bundler input hook if provided
-      if (options.adapter?.bundler?.input) {
-        return options.adapter.bundler.input(baseOptions)
-      }
-
-      return baseOptions
     },
 
     outputOptions(rolldownOutputOptions) {
-      const baseOptions = {
+      return {
         ...rolldownOutputOptions,
         dir: options.outputDir,
         entryFileNames: options.output,
       }
-
-      // Apply adapter's bundler output hook if provided
-      if (options.adapter?.bundler?.output) {
-        return options.adapter.bundler.output(baseOptions)
-      }
-
-      return baseOptions
     },
 
     async writeBundle() {
