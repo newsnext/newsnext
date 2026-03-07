@@ -19,6 +19,6 @@
   "devDependencies": {
     "@libsql/client": "^0.17.0",
     "@newsnext/sources": "workspace:*",
-    "drizzle-kit": "^0.31.8"
+    "drizzle-kit": "^0.31.9"
   }
 }

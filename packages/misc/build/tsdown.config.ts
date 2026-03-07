@@ -5,6 +5,8 @@ export default defineConfig({
     "./src/index.ts",
     "./src/adapters/*/index.ts",
   ],
-  inlineOnly: [],
+  deps: {
+    onlyAllowBundle: [],
+  },
   exports: true,
 })

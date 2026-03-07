@@ -34,5 +34,8 @@
     "dev": "tsdown --watch",
     "test": "vitest",
     "typecheck": "tsgo --noEmit"
+  },
+  "peerDependencies": {
+    "rolldown": ">=1.0.0-rc"
   }
 }
