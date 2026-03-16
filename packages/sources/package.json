@@ -16,10 +16,10 @@
   "dependencies": {
     "@date-fns/tz": "^1.4.1",
     "@newsnext/shared": "workspace:*",
-    "@smithy/md5-js": "^4.2.11",
+    "@smithy/md5-js": "^4.2.12",
     "cheerio": "^1.2.0",
     "date-fns": "^4.1.0",
-    "fast-xml-parser": "^5.4.2",
+    "fast-xml-parser": "^5.5.5",
     "iconv-lite": "^0.7.2"
   },
   "devDependencies": {

@@ -21,6 +21,6 @@
   "devDependencies": {
     "@hono/node-server": "^1.19.11",
     "@newsnext/build": "workspace:*",
-    "tsdown": "^0.21.0"
+    "tsdown": "^0.21.3"
   }
 }
