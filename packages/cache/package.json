@@ -17,11 +17,11 @@
     "studio": "bun run --bun drizzle-kit studio"
   },
   "dependencies": {
-    "drizzle-orm": "^0.45.1"
+    "drizzle-orm": "^0.45.2"
   },
   "devDependencies": {
-    "@libsql/client": "^0.17.0",
+    "@libsql/client": "^0.17.2",
     "@newsnext/sources": "workspace:*",
-    "drizzle-kit": "^0.31.9"
+    "drizzle-kit": "^0.31.10"
   }
 }
