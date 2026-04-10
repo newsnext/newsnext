@@ -3,11 +3,11 @@ import type { SourceOptions } from "../typings"
 import { getCachedSource } from "@newsnext/cache"
 import { sources } from "../index"
 
-export type SourceErrorCode =
-  | "GROUP_NOT_FOUND"
-  | "INVALID_FORMAT"
-  | "NO_FETCHER"
-  | "SOURCE_NOT_FOUND"
+export type SourceErrorCode
+  = | "GROUP_NOT_FOUND"
+    | "INVALID_FORMAT"
+    | "NO_FETCHER"
+    | "SOURCE_NOT_FOUND"
 
 export class SourceServiceError extends Error {
   readonly code: SourceErrorCode

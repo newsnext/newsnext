@@ -1,5 +1,5 @@
-import type { Options } from "../../types"
 import type { GetEntryContentOptions } from "../../entry"
+import type { Options } from "../../types"
 
 /**
  * Cloudflare Workers adapter options

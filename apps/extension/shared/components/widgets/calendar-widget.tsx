@@ -102,7 +102,7 @@ export default function CalendarWidget({
                     )}
               </AnimatePresence>
               <span>
-                {eventsData.find((alldates: EventType) => alldates.date === date)
+                {eventsData.some((alldates: EventType) => alldates.date === date)
                   ? (
                       <DotIcon />
                     )
