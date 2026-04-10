@@ -1,6 +1,5 @@
-import { getCachedSource } from "@newsnext/cache"
-import { sources } from "@newsnext/sources"
 import { metadata } from "@newsnext/sources/metadata"
+import { executeSource, SourceServiceError } from "@newsnext/sources/service"
 import { TRPCError } from "@trpc/server"
 import { z } from "zod"
 import { publicProcedure, router } from "./core"
@@ -29,73 +28,26 @@ export const appRouter = router({
       latest: z.boolean().optional(),
     }))
     .query(async ({ input, ctx }) => {
-      const { sourceId, params: queryParams = {}, latest } = input
-      const [group, id = "default"] = sourceId.split(":")
-
-      if (!group || !id) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Invalid source ID format. Expected 'group:id'",
-        })
-      }
-
-      const sourceGroup = sources[group as keyof typeof sources]
-      if (!sourceGroup) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: `Source group '${group}' not found`,
-        })
-      }
-
-      const source = sourceGroup[id]
-      if (!source) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: `Source '${id}' not found in group '${group}'`,
-        })
-      }
-
-      if (!source.fetcher) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Source does not have a fetcher",
-        })
-      }
-
-      const params: Record<string, any> = {}
-      if (source.params) {
-        for (const [key, config] of Object.entries(source.params)) {
-          const val = queryParams[key]
-          if (val !== undefined) {
-            switch (config.type) {
-              case "number":
-                params[key] = Number(val)
-                break
-              case "switch":
-                params[key] = val === true || val === "true" || val === "1" || val === 1
-                break
-              default:
-                params[key] = val
-            }
-          } else {
-            params[key] = config.default
-          }
-        }
-      }
-
+      const { sourceId, params = {}, latest } = input
       try {
-        const result = await getCachedSource({
-          key: sourceId,
-          fetcher: () => source.fetcher(params),
-          forceRefresh: latest,
+        return await executeSource({
+          sourceId,
+          params,
+          latest,
+          adapter: ctx.adapter,
           waitUntil: ctx.waitUntil,
-        }, ctx.adapter)
-
-        return {
-          id: sourceId,
-          ...result,
+        })
+      } catch (error) {
+        if (error instanceof SourceServiceError) {
+          throw new TRPCError({
+            code: error.code === "GROUP_NOT_FOUND" || error.code === "SOURCE_NOT_FOUND"
+              ? "NOT_FOUND"
+              : "BAD_REQUEST",
+            message: error.message,
+          })
         }
-      } catch (err: any) {
+
+        const err = error as Error
         console.error(`Error executing source ${sourceId}:`, err)
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",

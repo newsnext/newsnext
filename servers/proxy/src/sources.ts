@@ -1,8 +1,6 @@
 import type { CacheAdapter } from "@newsnext/cache"
-import { getCachedSource } from "@newsnext/cache"
-
-import { sources } from "@newsnext/sources"
 import { metadata } from "@newsnext/sources/metadata"
+import { executeSource, SourceServiceError } from "@newsnext/sources/service"
 import { Hono } from "hono"
 import { error, success } from "./utils"
 
@@ -16,61 +14,24 @@ export default function createSourcesRoute(adapter: CacheAdapter) {
   app.get("/:sourceId", async (c) => {
     const sourceId = c.req.param("sourceId")
 
-    // Expect sourceId to be "group:id"
-    const [namespace, id = "default"] = sourceId.split(":")
-
-    if (!namespace || !id) {
-      return c.json(error("INVALID_FORMAT", "Invalid source ID format. Expected 'group:id'"))
-    }
-
-    const sourceGroup = sources[namespace as keyof typeof sources]
-    if (!sourceGroup) {
-      return c.json(error("GROUP_NOT_FOUND", `Source group '${namespace}' not found`))
-    }
-
-    const source = sourceGroup[id]
-    if (!source) {
-      return c.json(error("SOURCE_NOT_FOUND", `Source '${id}' not found in group '${namespace}'`))
-    }
-
-    if (!source.fetcher) {
-      return c.json(error("NO_FETCHER", "Source does not have a fetcher"))
-    }
-
-    const params: Record<string, any> = {}
-    const query = c.req.query()
-
-    if (source.params) {
-      for (const [key, config] of Object.entries(source.params)) {
-        const val = query[key]
-        if (val !== undefined) {
-          switch (config.type) {
-            case "number":
-              params[key] = Number(val)
-              break
-            case "switch":
-              params[key] = val === "true" || val === "1"
-              break
-            default:
-              params[key] = val
-          }
-        } else {
-          params[key] = config.default
-        }
-      }
-    }
-
     try {
-      const result = await getCachedSource({
-        key: `${sourceId}:${JSON.stringify(params)}`,
-        fetcher: () => source.fetcher(params),
-      }, adapter)
+      const result = await executeSource({
+        sourceId,
+        params: c.req.query(),
+        adapter,
+      })
 
       return c.json(success({
         status: result.status,
+        updated: result.updated,
         items: result.items,
       }))
-    } catch (err: any) {
+    } catch (error_) {
+      if (error_ instanceof SourceServiceError) {
+        return c.json(error(error_.code, error_.message))
+      }
+
+      const err = error_ as Error
       console.error(`Error executing source ${sourceId}:`, err)
       return c.json(error("INTERNAL_ERROR", err.message || "Internal Server Error"))
     }

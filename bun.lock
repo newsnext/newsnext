@@ -106,6 +106,7 @@
       "name": "@newsnext/sources",
       "dependencies": {
         "@date-fns/tz": "^1.4.1",
+        "@newsnext/cache": "workspace:*",
         "@newsnext/shared": "workspace:*",
         "@smithy/md5-js": "^4.2.12",
         "cheerio": "^1.2.0",
