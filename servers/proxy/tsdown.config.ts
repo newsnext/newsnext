@@ -6,12 +6,14 @@ import cloudflareWorkersAdapter from "@newsnext/build/adapters/cloudflare-worker
 import vercelAdapter from "@newsnext/build/adapters/vercel"
 import { defineConfig } from "tsdown"
 
+const INLINE_ALL_EXTERNAL_REGEX = /.*/
+
 function getAdapter(): { config?: UserConfig, adapter: Adapter } {
   if (process.env.VERCEL) {
     console.log("Using adapter: Vercel")
     return {
       config: {
-        noExternal: [/.*/],
+        noExternal: [INLINE_ALL_EXTERNAL_REGEX],
         outputOptions: {
           inlineDynamicImports: true,
         },

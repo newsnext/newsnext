@@ -4,7 +4,7 @@ import type { NetlifyFunctionsBuildOptions } from "./types"
 /**
  * Netlify Functions adapter for Hono applications
  *
- * @param options - Adapter configuration options
+ * @param _options - Adapter configuration options
  * @returns Adapter configuration
  *
  * @example
@@ -20,7 +20,7 @@ import type { NetlifyFunctionsBuildOptions } from "./types"
  * ```
  */
 export default function netlifyAdapter(
-  options?: NetlifyFunctionsBuildOptions,
+  _options?: NetlifyFunctionsBuildOptions,
 ): Adapter {
   return {
     name: "netlify-functions",

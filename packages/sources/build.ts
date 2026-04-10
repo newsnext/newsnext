@@ -7,6 +7,8 @@ const rootDir = __dirname
 
 const glob = new Bun.Glob("src/lib/*.ts")
 const deepIndexGlob = new Bun.Glob("src/lib/**/index.ts")
+const SRC_PREFIX_REGEX = /^src\//
+const TS_EXTENSION_REGEX = /\.ts$/
 
 const files = new Set<string>()
 
@@ -28,7 +30,7 @@ const sourceKeys: string[] = []
 
 sortedFiles.forEach((file, index) => {
   // Remove src/ prefix and .ts extension, convert to relative import path
-  const importPath = `./${file.replace(/^src\//, "").replace(/\.ts$/, "")}`
+  const importPath = `./${file.replace(SRC_PREFIX_REGEX, "").replace(TS_EXTENSION_REGEX, "")}`
 
   // Extract key name from path
   const pathParts = importPath.split("/")

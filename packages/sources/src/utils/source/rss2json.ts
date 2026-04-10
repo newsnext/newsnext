@@ -2,8 +2,10 @@ import type { RSSInfo } from "../../typings"
 import { XMLParser } from "fast-xml-parser"
 import { myFetch } from "../fetch"
 
+const HTTP_URL_REGEX = /^https?:\/\/[^\s$.?#].\S*/i
+
 export async function rss2json(url: string): Promise<RSSInfo | undefined> {
-  if (!/^https?:\/\/[^\s$.?#].\S*/i.test(url)) return
+  if (!HTTP_URL_REGEX.test(url)) return
 
   const data = await myFetch(url)
 
