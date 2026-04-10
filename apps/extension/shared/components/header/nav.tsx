@@ -2,6 +2,7 @@ import { useNavigate, useParams } from "@tanstack/react-router"
 import { SegmentedControl } from "../common/segmented-control"
 
 const TABS = [
+  { label: "Stars", value: "stars" },
   { label: "Hottest", value: "hottest" },
   { label: "Timeline", value: "timeline" },
   { label: "Realtime", value: "realtime" },

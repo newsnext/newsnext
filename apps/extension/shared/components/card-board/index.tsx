@@ -1,13 +1,15 @@
 import type { RefObject } from "react"
 import type { Source } from "@/typings/source"
+import { useAtomValue } from "jotai"
 import { useEffect, useState } from "react"
 import { isMobile } from "react-device-detect"
 import { trpc } from "@/lib/trpc"
+import { starredSourceIdsAtom } from "@/store/board"
 import { DesktopBoard } from "./desktop-board"
 import { MobileBoard } from "./mobile-board"
 
 interface CardBoardProps {
-  boardId?: "hottest" | "timeline" | "realtime"
+  boardId?: "hottest" | "timeline" | "realtime" | "stars"
   onSourceIdsChange?: (sourceIds: string[]) => void
   className?: string
   isScattered?: boolean
@@ -41,9 +43,10 @@ export function CardBoard({
 }: CardBoardProps) {
   const [sourceIds, setSourceIds] = useState<string[]>([])
   const [sourcesMap, setSourcesMap] = useState<Record<string, Source & { id: string }>>({})
+  const starredSourceIds = useAtomValue(starredSourceIdsAtom)
 
-  const { data: sources } = trpc.getBoard.useQuery(
-    { boardId },
+  const { data: sources, isPending } = trpc.getBoard.useQuery(
+    { boardId, starredSourceIds },
   )
 
   const [prevBoardId, setPrevBoardId] = useState(boardId)
@@ -64,6 +67,14 @@ export function CardBoard({
   const handleSourceIdsChange = (newSourceIds: string[]) => {
     setSourceIds(newSourceIds)
     onSourceIdsChange?.(newSourceIds)
+  }
+
+  if (!isPending && boardId === "stars" && sourceIds.length === 0) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center px-6 text-center text-sm text-muted-foreground">
+        Star cards from any board to collect them here.
+      </div>
+    )
   }
 
   if (isMobile) {

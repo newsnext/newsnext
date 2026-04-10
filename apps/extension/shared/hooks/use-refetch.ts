@@ -3,13 +3,14 @@ import { getQueryKey } from "@trpc/react-query"
 import { useAtomValue } from "jotai"
 import { useCallback, useMemo } from "react"
 import { trpc } from "@/lib/trpc"
-import { currentBoardAtom } from "@/store/board"
+import { currentBoardAtom, starredSourceIdsAtom } from "@/store/board"
 
 export const refetchSources = new Set<string>()
 
 export function useRefetch() {
   const utils = trpc.useUtils()
   const currentBoard = useAtomValue(currentBoardAtom)
+  const starredSourceIds = useAtomValue(starredSourceIdsAtom)
   const fetchingCount = useIsFetching({ queryKey: getQueryKey(trpc.getSource) })
 
   const isFetching = useMemo(() => fetchingCount > 0, [fetchingCount])
@@ -42,7 +43,7 @@ export function useRefetch() {
   const refetchAll = useCallback(async () => {
     try {
       // 1. Get current board's sources
-      const sources = await utils.getBoard.ensureData({ boardId: currentBoard })
+      const sources = await utils.getBoard.ensureData({ boardId: currentBoard, starredSourceIds })
       const sourceIds = sources.map(s => s.namespace ? `${s.namespace}:${s.id}` : s.id)
 
       // 2. Set flags
@@ -57,7 +58,7 @@ export function useRefetch() {
     } catch (e) {
       console.error("Failed to refresh board sources", e)
     }
-  }, [utils, currentBoard])
+  }, [utils, currentBoard, starredSourceIds])
 
   return {
     refetch,

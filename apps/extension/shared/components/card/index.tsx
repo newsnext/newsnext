@@ -1,10 +1,12 @@
 import type { ReactNode } from "react"
 import type { Source } from "@/typings/source"
+import { useAtom } from "jotai"
 import { useInView } from "motion/react"
 import { useMemo, useRef, useState } from "react"
 import { FlipAnimate } from "@/components/common/flip-animate"
 import { useSourceQuery } from "@/hooks/use-source-query"
 import { cn } from "@/lib/utils"
+import { starredSourceIdsAtom } from "@/store/board"
 import { CardBack } from "./card-back"
 import { CardContext } from "./card-context"
 import { CardFront } from "./card-front"
@@ -18,7 +20,7 @@ export interface CardProps {
 }
 
 function CardContent({ id, source, dragHandle }: CardProps) {
-  const [isStarred, setIsStarred] = useState(false)
+  const [starredSourceIds, setStarredSourceIds] = useAtom(starredSourceIdsAtom)
   const [isFlipped, setIsFlipped] = useState(false)
 
   const { items, refetch, isFetching, updatedTime } = useSourceQuery({
@@ -29,6 +31,8 @@ function CardContent({ id, source, dragHandle }: CardProps) {
   //   if (source.interval <= 2 * 60 * 1000) normalRefetch()
   // }, [date, normalRefetch])
 
+  const isStarred = useMemo(() => starredSourceIds.includes(id), [id, starredSourceIds])
+
   const contextValue = useMemo(
     () => ({
       id,
@@ -37,12 +41,18 @@ function CardContent({ id, source, dragHandle }: CardProps) {
       isFetching,
       isStarred,
       onRefresh: refetch,
-      onToggleStar: () => setIsStarred(prev => !prev),
+      onToggleStar: () =>
+        setStarredSourceIds((prev) => {
+          if (prev.includes(id)) {
+            return prev.filter(sourceId => sourceId !== id)
+          }
+          return [...prev, id]
+        }),
       onFlip: () => setIsFlipped(prev => !prev),
       dragHandle,
       updatedTime,
     }),
-    [id, source, items, isFetching, isStarred, refetch, dragHandle, updatedTime],
+    [id, source, items, isFetching, isStarred, refetch, setStarredSourceIds, dragHandle, updatedTime],
   )
 
   return (

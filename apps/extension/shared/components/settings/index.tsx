@@ -141,6 +141,7 @@ function GeneralSettings() {
   const [defaultBoard, setDefaultBoard] = useState("hottest")
 
   const TABS = [
+    { label: "Stars", value: "stars" },
     { label: "Hottest", value: "hottest" },
     { label: "Timeline", value: "timeline" },
     { label: "Realtime", value: "realtime" },

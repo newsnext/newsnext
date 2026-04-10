@@ -7,16 +7,24 @@ import { publicProcedure, router } from "./core"
 export const appRouter = router({
   getBoard: publicProcedure
     .input(z.object({
-      boardId: z.enum(["hottest", "timeline", "realtime"]),
+      boardId: z.enum(["hottest", "timeline", "realtime", "stars"]),
+      starredSourceIds: z.array(z.string()).optional(),
     }))
     .query(({ input }) => {
-      const { boardId } = input
+      const { boardId, starredSourceIds = [] } = input
       if (boardId === "hottest") {
         return metadata.filter(m => m.type === "hottest")
       }
       const timeline = metadata.filter(m => m.type !== "hottest")
       if (boardId === "timeline") {
         return timeline
+      }
+      if (boardId === "stars") {
+        const starredSourceIdSet = new Set(starredSourceIds)
+        return metadata.filter((source) => {
+          const uniqueId = source.namespace ? `${source.namespace}:${source.id}` : source.id
+          return starredSourceIdSet.has(uniqueId)
+        })
       }
       return timeline.filter(m => m.interval <= 2 * 60 * 1000)
     }),
