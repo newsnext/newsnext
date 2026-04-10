@@ -1,3 +1,4 @@
+import type { RefObject } from "react"
 import type { Source } from "@/typings/source"
 import { useEffect, useState } from "react"
 import { isMobile } from "react-device-detect"
@@ -10,6 +11,7 @@ interface CardBoardProps {
   onSourceIdsChange?: (sourceIds: string[]) => void
   className?: string
   isScattered?: boolean
+  containerRef?: RefObject<HTMLDivElement | null>
 }
 
 function processSources(sources: (Source & { id: string })[]) {
@@ -35,6 +37,7 @@ export function CardBoard({
   onSourceIdsChange,
   className,
   isScattered,
+  containerRef,
 }: CardBoardProps) {
   const [sourceIds, setSourceIds] = useState<string[]>([])
   const [sourcesMap, setSourcesMap] = useState<Record<string, Source & { id: string }>>({})
@@ -82,6 +85,7 @@ export function CardBoard({
       sourcesMap={sourcesMap}
       className={className}
       isScattered={isScattered}
+      containerRef={containerRef}
       onSourceIdsChange={handleSourceIdsChange}
     />
   )

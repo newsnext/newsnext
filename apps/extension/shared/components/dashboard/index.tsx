@@ -1,16 +1,13 @@
-import type { BaseEventPayload, ElementDragType } from "@atlaskit/pragmatic-drag-and-drop/dist/types/internal-types"
-import { useThrottleFn } from "@newsnext/ui/hooks/use-throttle-fn"
+import type { RefObject } from "react"
 import { AnimatePresence, motion } from "motion/react"
-import { useCallback, useRef, useState } from "react"
-import { DndContext } from "@/hooks/use-dnd-context"
-import { reorder } from "@/lib/utils/reorder"
 
 interface DashboardProps {
   isVisible: boolean
   onClose: () => void
+  scrollContainerRef?: RefObject<HTMLDivElement | null>
 }
 
-export function Dashboard({ isVisible, onClose }: DashboardProps) {
+export function Dashboard({ isVisible, onClose, scrollContainerRef }: DashboardProps) {
   // Handle escape key at dashboard level
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Escape") {
@@ -20,7 +17,8 @@ export function Dashboard({ isVisible, onClose }: DashboardProps) {
 
   return (
     <div
-      className="h-full flex flex-col items-center pointer-events-auto overflow-y-auto bg-transparent scrollbar-hidden"
+      ref={scrollContainerRef}
+      className="h-full w-full overflow-y-auto bg-transparent scrollbar-hidden"
       onClick={onClose}
       onKeyDown={handleKeyDown}
     >
@@ -31,7 +29,7 @@ export function Dashboard({ isVisible, onClose }: DashboardProps) {
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
             transition={{ duration: 0.2, delay: 0.2 }}
-            className="w-full h-full max-w-7xl px-4 py-8 pb-16 flex flex-col items-center gap-12"
+            className="mx-auto flex min-h-full w-full max-w-7xl flex-col items-center gap-12 px-4 py-8 pb-16"
             onClick={e => e.stopPropagation()}
           >
             OPEN EYES

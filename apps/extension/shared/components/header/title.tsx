@@ -1,6 +1,7 @@
 import type { RefObject } from "react"
 import { AnimatePresence, motion, useMotionValue, useMotionValueEvent, useScroll } from "motion/react"
 import { useCallback, useState } from "react"
+import { useScrollProgressContext } from "@/components/scroll-progress-context"
 import { ThemeSelector } from "../common/theme-selector"
 import DynamicIsland from "../dynamic-island"
 import { Logo } from "../icons/logo"
@@ -11,22 +12,35 @@ interface HeaderProgressProps {
 }
 
 function HeaderProgress({ scrollContainerRef }: HeaderProgressProps) {
-  const { scrollYProgress, scrollY } = useScroll({
+  const {
+    dashboardScrollContainerRef,
+    isDashboardActive,
+  } = useScrollProgressContext()
+
+  const rootScroll = useScroll({
     container: scrollContainerRef,
   })
+  const dashboardScroll = useScroll({
+    container: dashboardScrollContainerRef,
+  })
+
+  const activeScroll = isDashboardActive ? dashboardScroll : rootScroll
+  const { scrollYProgress, scrollY } = activeScroll
 
   const [isAtTop, setIsAtTop] = useState(true)
   const opacity = useMotionValue(0)
 
   const handleScrollToTop = useCallback((e: React.MouseEvent) => {
     e.stopPropagation()
-    const container = scrollContainerRef?.current
+    const container = isDashboardActive
+      ? dashboardScrollContainerRef.current
+      : scrollContainerRef?.current
     if (container) {
       container.scrollTo({ top: 0, behavior: "smooth" })
     } else {
       window.scrollTo({ top: 0, behavior: "smooth" })
     }
-  }, [scrollContainerRef])
+  }, [dashboardScrollContainerRef, isDashboardActive, scrollContainerRef])
 
   useMotionValueEvent(scrollY, "change", (value) => {
     const screenHeight = window.innerHeight

@@ -1,4 +1,5 @@
 import type { BaseEventPayload, ElementDragType } from "@atlaskit/pragmatic-drag-and-drop/dist/types/internal-types"
+import type { RefObject } from "react"
 import type { Source } from "@/typings/source"
 import { useThrottleFn } from "@newsnext/ui/hooks/use-throttle-fn"
 import { motion } from "motion/react"
@@ -14,9 +15,17 @@ interface DesktopBoardProps {
   className?: string
   isScattered?: boolean
   onSourceIdsChange?: (sourceIds: string[]) => void
+  containerRef?: RefObject<HTMLDivElement | null>
 }
 
-export function DesktopBoard({ sourceIds, sourcesMap, className, isScattered, onSourceIdsChange }: DesktopBoardProps) {
+export function DesktopBoard({
+  sourceIds,
+  sourcesMap,
+  className,
+  isScattered,
+  onSourceIdsChange,
+  containerRef,
+}: DesktopBoardProps) {
   const [orderedSourceIds, setOrderedSourceIds] = useState(sourceIds)
   const initialOrderedSourceIdsRef = useRef(sourceIds)
   const [scatterVectors, setScatterVectors] = useState<Record<string, { x: number, y: number }>>({})
@@ -67,9 +76,13 @@ export function DesktopBoard({ sourceIds, sourcesMap, className, isScattered, on
   // Calculate scatter vectors
   useEffect(() => {
     const calculateVectors = () => {
+      const container = containerRef?.current
+      if (!container) return
+
       const newVectors: Record<string, { x: number, y: number }> = {}
-      const centerX = window.innerWidth / 2
-      const centerY = window.innerHeight / 2
+      const containerRect = container.getBoundingClientRect()
+      const centerX = containerRect.left + containerRect.width / 2
+      const centerY = containerRect.top + containerRect.height / 2
 
       itemsRef.current.forEach((el, id) => {
         if (!orderedSourceIds.includes(id)) return // cleanup old refs
@@ -87,10 +100,9 @@ export function DesktopBoard({ sourceIds, sourcesMap, className, isScattered, on
           dy = (Math.random() - 0.5) || 1
         }
 
-        // Normalize and scale to ensure it goes off screen
-        // Using a large enough multiplier (e.g. diagonal of screen)
+        // Normalize and scale to ensure it goes off the board layer.
         const length = Math.sqrt(dx * dx + dy * dy) || 1
-        const maxDist = Math.sqrt(window.innerWidth ** 2 + window.innerHeight ** 2)
+        const maxDist = Math.sqrt(containerRect.width ** 2 + containerRect.height ** 2)
         const scale = maxDist / 2 + 200 // Add some buffer
 
         newVectors[id] = {
@@ -101,11 +113,25 @@ export function DesktopBoard({ sourceIds, sourcesMap, className, isScattered, on
       setScatterVectors(newVectors)
     }
 
-    // Calculate immediately and on resize
     calculateVectors()
     window.addEventListener("resize", calculateVectors)
-    return () => window.removeEventListener("resize", calculateVectors)
-  }, [orderedSourceIds])
+
+    const container = containerRef?.current
+    const resizeObserver = container
+      ? new ResizeObserver(() => {
+          calculateVectors()
+        })
+      : null
+
+    if (container && resizeObserver) {
+      resizeObserver.observe(container)
+    }
+
+    return () => {
+      window.removeEventListener("resize", calculateVectors)
+      resizeObserver?.disconnect()
+    }
+  }, [containerRef, orderedSourceIds])
 
   return (
     <DndContext onDragStart={onDragStart} onDropTargetChange={run} onDrop={onDrop}>

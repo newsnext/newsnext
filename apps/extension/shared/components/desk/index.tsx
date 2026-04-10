@@ -1,7 +1,8 @@
 import type { BoardType } from "@/store/board"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { CardBoard } from "@/components/card-board"
 import { Dashboard } from "@/components/dashboard"
+import { useScrollProgressContext } from "@/components/scroll-progress-context"
 import { cn } from "@/lib/utils"
 
 interface DeskProps {
@@ -10,6 +11,8 @@ interface DeskProps {
 
 export function Desk({ boardId = "hottest" }: DeskProps) {
   const [isScattered, setIsScattered] = useState(false)
+  const boardLayerRef = useRef<HTMLDivElement>(null)
+  const { dashboardScrollContainerRef, setIsDashboardActive } = useScrollProgressContext()
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -22,19 +25,37 @@ export function Desk({ boardId = "hottest" }: DeskProps) {
     return () => window.removeEventListener("keydown", handleKeyDown)
   }, [])
 
+  useEffect(() => {
+    setIsDashboardActive(isScattered)
+
+    return () => {
+      setIsDashboardActive(false)
+    }
+  }, [isScattered, setIsDashboardActive])
+
   return (
-    <div className="grid w-full h-full">
-      <div className={cn("col-start-1 row-start-1 z-0 h-full", isScattered ? "pointer-events-auto" : "pointer-events-none")}>
-        <Dashboard isVisible={isScattered} onClose={() => setIsScattered(false)} />
+    <div className="relative w-full">
+      <div
+        className={cn(
+          "pointer-events-none fixed inset-x-0 top-0 bottom-0 z-10 px-2 pt-22 pb-22 sm:px-6",
+          isScattered && "pointer-events-auto",
+        )}
+      >
+        <Dashboard
+          isVisible={isScattered}
+          onClose={() => setIsScattered(false)}
+          scrollContainerRef={dashboardScrollContainerRef}
+        />
       </div>
 
       <div
+        ref={boardLayerRef}
         className={cn(
-          "col-start-1 row-start-1 relative z-10 h-full transition-all duration-300",
+          "relative z-0 transition-all duration-300",
           isScattered && "pointer-events-none",
         )}
       >
-        <CardBoard isScattered={isScattered} boardId={boardId} />
+        <CardBoard isScattered={isScattered} boardId={boardId} containerRef={boardLayerRef} />
       </div>
     </div>
   )
