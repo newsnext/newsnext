@@ -189,49 +189,37 @@ export const feedDescriptors: FeedDescriptor[] = [
   {
     "name": "网易云音乐",
     "id": "default",
-    "title": "云音乐飙升榜",
+    "title": "排行榜",
     "interval": 1800000,
-    "params": {},
+    "params": {
+      "id": {
+        "type": "select",
+        "options": [
+          {
+            "label": "云音乐飙升榜",
+            "value": "19723756"
+          },
+          {
+            "label": "云音乐新歌榜",
+            "value": "3779629"
+          },
+          {
+            "label": "云音乐热歌榜",
+            "value": "3778678"
+          },
+          {
+            "label": "抖音排行榜",
+            "value": "2250011882"
+          }
+        ],
+        "default": "19723756",
+        "title": "Playlist"
+      }
+    },
     "color": "red",
     "type": "hottest",
     "category": "china",
     "home": "https://music.163.com/#/playlist?id=19723756",
-    "provider": "netease-music"
-  },
-  {
-    "name": "网易云音乐",
-    "id": "new-songs",
-    "title": "云音乐新歌榜",
-    "interval": 1800000,
-    "params": {},
-    "color": "red",
-    "type": "hottest",
-    "category": "china",
-    "home": "https://music.163.com/#/playlist?id=3779629",
-    "provider": "netease-music"
-  },
-  {
-    "name": "网易云音乐",
-    "id": "hot-songs",
-    "title": "云音乐热歌榜",
-    "interval": 1800000,
-    "params": {},
-    "color": "red",
-    "type": "hottest",
-    "category": "china",
-    "home": "https://music.163.com/#/playlist?id=3778678",
-    "provider": "netease-music"
-  },
-  {
-    "name": "网易云音乐",
-    "id": "douyin",
-    "title": "抖音排行榜",
-    "interval": 1800000,
-    "params": {},
-    "color": "red",
-    "type": "hottest",
-    "category": "china",
-    "home": "https://music.163.com/#/playlist?id=2250011882",
     "provider": "netease-music"
   },
   {

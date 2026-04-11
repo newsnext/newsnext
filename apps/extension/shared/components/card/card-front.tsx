@@ -1,6 +1,7 @@
 import { getFavicon } from "@newsnext/shared/utils"
 import { useRef } from "react"
 import { useRelativeTime } from "@/hooks/useRelativeTime"
+import { resolveFeedDisplay } from "@/lib/feed-display"
 import { cn } from "@/lib/utils"
 import { IconButton } from "../common/button"
 import {
@@ -17,6 +18,7 @@ import { Timeline } from "./timeline"
 export function CardFront() {
   const {
     feed,
+    feedParams,
     items,
     isFetching,
     updatedTime,
@@ -27,7 +29,8 @@ export function CardFront() {
     dragHandle,
   } = useCard()
 
-  const { provider, name, title, home, type, color, desc } = feed
+  const { provider, type, color, desc } = feed
+  const { name, title, home } = resolveFeedDisplay(feed, feedParams)
   const ref = useRef<HTMLDivElement>(null)
   const relativeTime = useRelativeTime({ date: updatedTime })
 

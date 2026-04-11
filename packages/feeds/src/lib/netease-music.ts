@@ -1,5 +1,6 @@
 import { Time } from "../typings/constants"
 import { $feed, $jsonFeedLoader, $provider } from "../utils/feed"
+import { $selectParam } from "../utils/params"
 
 interface NeteaseArtist {
   name?: string
@@ -19,52 +20,48 @@ interface NeteaseTrack {
   album?: NeteaseAlbum
 }
 
-interface PlaylistResponse {
-  result?: { tracks?: NeteaseTrack[] }
-  playlist?: { tracks?: NeteaseTrack[] }
+interface PlaylistPayload {
+  tracks?: NeteaseTrack[]
+  name?: string
 }
 
-const extractTracks = (payload: PlaylistResponse) => {
+interface PlaylistResponse {
+  result?: PlaylistPayload
+  playlist?: PlaylistPayload
+}
+
+const NETEASE_PLAYLIST_OPTIONS = [
+  { label: "云音乐飙升榜", value: "19723756" },
+  { label: "云音乐新歌榜", value: "3779629" },
+  { label: "云音乐热歌榜", value: "3778678" },
+  { label: "抖音排行榜", value: "2250011882" },
+] as const
+
+type NeteasePlaylistId = (typeof NETEASE_PLAYLIST_OPTIONS)[number]["value"]
+
+const DEFAULT_PLAYLIST_ID: NeteasePlaylistId = "19723756"
+
+const getPlaylistHome = (id: string): string => `https://music.163.com/#/playlist?id=${id}`
+
+const extractTracks = (payload: PlaylistResponse): NeteaseTrack[] => {
   const tracks = payload.result?.tracks ?? payload.playlist?.tracks ?? []
   return Array.isArray(tracks) ? tracks.slice(0, 100) : []
 }
 
-const formatArtists = (track: NeteaseTrack) => {
+const formatArtists = (track: NeteaseTrack): string => {
   const artists = track.ar ?? track.artists ?? []
   return artists.map(artist => artist.name).filter(Boolean).join(" / ")
 }
 
-const extractCover = (track: NeteaseTrack) => track.al?.picUrl ?? track.album?.picUrl
+const extractCover = (track: NeteaseTrack): string | undefined => track.al?.picUrl ?? track.album?.picUrl
 
-const createPlaylistFetcher = (id: number) => $jsonFeedLoader<NeteaseTrack>(() => ({
-  url: `https://music.163.com/api/playlist/detail?id=${id}`,
-  items: (json: PlaylistResponse) => extractTracks(json),
-  fields: {
-    title: track => track.name,
-    url: track => `https://music.163.com/song?id=${track.id}`,
-    meta: {
-      text: (track) => {
-        const artists = formatArtists(track)
-        const album = track.al?.name ?? track.album?.name
-        return [artists, album].filter(Boolean).join(" · ")
-      },
-      icon: (track) => {
-        const pic = extractCover(track)
-        return pic ? { src: pic, radius: 6 } : undefined
-      },
-    },
-    detail: {
-      picture: (track) => {
-        const pic = extractCover(track)
-        return pic ? { src: pic } : undefined
-      },
-      iframe: track => ({
-        src: `https://notion.busiyi.world/music-player/?server=netease&type=song&id=${track.id}`,
-        height: 90,
-      }),
-    },
-  },
-}))
+const neteaseMusicParams = {
+  id: $selectParam<NeteasePlaylistId>({
+    options: [...NETEASE_PLAYLIST_OPTIONS],
+    default: DEFAULT_PLAYLIST_ID,
+    title: "Playlist",
+  }),
+}
 
 export default $provider({
   name: "网易云音乐",
@@ -72,33 +69,40 @@ export default $provider({
   color: "red",
   category: "china",
   feeds: {
-    "default": $feed({
-      title: "云音乐飙升榜",
+    default: $feed({
+      title: "排行榜",
       type: "hottest",
       interval: Time.Common,
-      home: "https://music.163.com/#/playlist?id=19723756",
-      ...createPlaylistFetcher(19723756),
-    }),
-    "new-songs": $feed({
-      title: "云音乐新歌榜",
-      type: "hottest",
-      interval: Time.Common,
-      home: "https://music.163.com/#/playlist?id=3779629",
-      ...createPlaylistFetcher(3779629),
-    }),
-    "hot-songs": $feed({
-      title: "云音乐热歌榜",
-      type: "hottest",
-      interval: Time.Common,
-      home: "https://music.163.com/#/playlist?id=3778678",
-      ...createPlaylistFetcher(3778678),
-    }),
-    "douyin": $feed({
-      title: "抖音排行榜",
-      type: "hottest",
-      interval: Time.Common,
-      home: "https://music.163.com/#/playlist?id=2250011882",
-      ...createPlaylistFetcher(2250011882),
+      home: getPlaylistHome(DEFAULT_PLAYLIST_ID),
+      ...$jsonFeedLoader(neteaseMusicParams, ({ id }) => ({
+        url: `https://music.163.com/api/playlist/detail?id=${id}`,
+        items: (json: PlaylistResponse) => extractTracks(json),
+        fields: {
+          title: track => track.name,
+          url: track => `https://music.163.com/song?id=${track.id}`,
+          meta: {
+            text: (track) => {
+              const artists = formatArtists(track)
+              const album = track.al?.name ?? track.album?.name
+              return [artists, album].filter(Boolean).join(" · ")
+            },
+            icon: (track) => {
+              const pic = extractCover(track)
+              return pic ? { src: pic, radius: 6 } : undefined
+            },
+          },
+          detail: {
+            picture: (track) => {
+              const pic = extractCover(track)
+              return pic ? { src: pic } : undefined
+            },
+            iframe: track => ({
+              src: `https://notion.busiyi.world/music-player/?server=netease&type=song&id=${track.id}`,
+              height: 90,
+            }),
+          },
+        },
+      })),
     }),
   },
 })

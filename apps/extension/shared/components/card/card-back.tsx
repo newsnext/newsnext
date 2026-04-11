@@ -21,6 +21,7 @@ import {
   PhLinkDuotone,
   PhPencilCircleDuotone,
 } from "@/components/icons/ph"
+import { resolveFeedDisplay } from "@/lib/feed-display"
 import { cn } from "@/lib/utils"
 import { IconButton } from "../common/button"
 import { useCard } from "./card-context"
@@ -284,7 +285,8 @@ export function CardBack() {
   } = useCard()
 
   const [editable, setEditable] = useState(false)
-  const { provider, name, title, desc, home, interval, color, params } = feed
+  const { provider, desc, interval, color, params } = feed
+  const { name, title, home } = resolveFeedDisplay(feed, draftFeedParams)
 
   // Local state for edits (though not persisted yet)
   // In a real app, these would update via a mutation
