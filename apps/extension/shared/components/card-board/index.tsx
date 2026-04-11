@@ -91,6 +91,7 @@ export function CardBoard({
       key={boardId}
       feedIds={feedIds}
       feedsMap={feedsMap}
+      isSortable={boardId === "copies" || boardId === "stars"}
       className={className}
       isScattered={isScattered}
       containerRef={containerRef}

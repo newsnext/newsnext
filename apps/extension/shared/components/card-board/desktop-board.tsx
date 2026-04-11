@@ -5,6 +5,7 @@ import { useThrottleFn } from "@newsnext/ui/hooks/use-throttle-fn"
 import { motion } from "motion/react"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { DndContext } from "@/hooks/use-dnd-context"
+import Card from "../card"
 import { DraggableCard } from "../card/draggable-card"
 
 const ANIMATION_DURATION = 0.2 // 200ms
@@ -12,6 +13,7 @@ const ANIMATION_DURATION = 0.2 // 200ms
 interface DesktopBoardProps {
   feedIds: string[]
   feedsMap: Record<string, BoardFeed>
+  isSortable?: boolean
   className?: string
   isScattered?: boolean
   onFeedIdsChange?: (feedIds: string[]) => void
@@ -21,6 +23,7 @@ interface DesktopBoardProps {
 export function DesktopBoard({
   feedIds,
   feedsMap,
+  isSortable = false,
   className,
   isScattered,
   onFeedIdsChange,
@@ -133,81 +136,91 @@ export function DesktopBoard({
     }
   }, [containerRef, orderedFeedIds])
 
+  const boardContent = (
+    <motion.ol
+      className={className || "flex flex-wrap justify-center gap-2 sm:gap-6"}
+      initial="hidden"
+      animate={isScattered ? "scattered" : "visible"}
+      variants={{
+        hidden: {
+          opacity: 0,
+        },
+        visible: {
+          opacity: 1,
+          transition: {
+            delayChildren: 0.1,
+            staggerChildren: 0.1,
+          },
+        },
+        scattered: {
+          transition: {
+            staggerChildren: 0.01, // Faster stagger for scatter
+          },
+        },
+      }}
+    >
+      {visibleFeedIds.map((id, index) => (
+        <motion.li
+          key={id}
+          ref={(el) => {
+            if (el) itemsRef.current.set(id, el)
+            else itemsRef.current.delete(id)
+          }}
+          layout={!isScattered} // Disable layout animation during scatter to prevent conflict
+          custom={{ index, vector: scatterVectors[id] }}
+          transition={{
+            type: "tween",
+            duration: ANIMATION_DURATION,
+          }}
+          variants={{
+            hidden: {
+              y: 20,
+              opacity: 0,
+            },
+            visible: {
+              y: 0,
+              x: 0,
+              scale: 1,
+              opacity: 1,
+              transition: {
+                type: "spring",
+                stiffness: 300,
+                damping: 25,
+              },
+            },
+            scattered: ({ vector }: { vector?: { x: number, y: number } }) => {
+              if (!vector) {
+                // Fallback if vector not ready
+                return { opacity: 0 }
+              }
+              return {
+                x: vector.x,
+                y: vector.y,
+                scale: 1.1,
+                opacity: 0,
+                transition: {
+                  duration: 0.4,
+                  ease: "easeIn",
+                },
+              }
+            },
+          }}
+        >
+          {isSortable
+            ? <DraggableCard id={id} feed={feedsMap[id]} />
+            : <Card id={id} feed={feedsMap[id]} />}
+        </motion.li>
+      ))}
+    </motion.ol>
+  )
+
+  if (!isSortable) {
+    return boardContent
+  }
+
   return (
     <DndContext onDragStart={onDragStart} onDropTargetChange={run} onDrop={onDrop}>
-      <motion.ol
-        className={className || "flex flex-wrap justify-center gap-2 sm:gap-6"}
-        initial="hidden"
-        animate={isScattered ? "scattered" : "visible"}
-        variants={{
-          hidden: {
-            opacity: 0,
-          },
-          visible: {
-            opacity: 1,
-            transition: {
-              delayChildren: 0.1,
-              staggerChildren: 0.1,
-            },
-          },
-          scattered: {
-            transition: {
-              staggerChildren: 0.01, // Faster stagger for scatter
-            },
-          },
-        }}
-      >
-        {visibleFeedIds.map((id, index) => (
-          <motion.li
-            key={id}
-            ref={(el) => {
-              if (el) itemsRef.current.set(id, el)
-              else itemsRef.current.delete(id)
-            }}
-            layout={!isScattered} // Disable layout animation during scatter to prevent conflict
-            custom={{ index, vector: scatterVectors[id] }}
-            transition={{
-              type: "tween",
-              duration: ANIMATION_DURATION,
-            }}
-            variants={{
-              hidden: {
-                y: 20,
-                opacity: 0,
-              },
-              visible: {
-                y: 0,
-                x: 0,
-                scale: 1,
-                opacity: 1,
-                transition: {
-                  type: "spring",
-                  stiffness: 300,
-                  damping: 25,
-                },
-              },
-              scattered: ({ vector }: { vector?: { x: number, y: number } }) => {
-                if (!vector) {
-                  // Fallback if vector not ready
-                  return { opacity: 0 }
-                }
-                return {
-                  x: vector.x,
-                  y: vector.y,
-                  scale: 1.1,
-                  opacity: 0,
-                  transition: {
-                    duration: 0.4,
-                    ease: "easeIn",
-                  },
-                }
-              },
-            }}
-          >
-            <DraggableCard id={id} feed={feedsMap[id]} />
-          </motion.li>
-        ))}
-      </motion.ol>
+      {boardContent}
     </DndContext>
   )
 }
