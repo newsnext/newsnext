@@ -1,7 +1,7 @@
 import type { MotionValue, PanInfo } from "motion/react"
 import type { BoardFeed } from "@/typings/feed"
 import { motion, useMotionValue, useTransform } from "motion/react"
-import { useCallback, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
 import Card from "../card"
 
@@ -61,6 +61,7 @@ export function MobileBoard({ feedIds, feedsMap }: MobileBoardProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
   const x = useMotionValue(0)
+  const visibleFeedIds = useMemo(() => feedIds.filter(id => Boolean(feedsMap[id])), [feedIds, feedsMap])
 
   // Calculate item width: min(92vw, 450px)
   const itemWidth = useMemo(
@@ -74,18 +75,22 @@ export function MobileBoard({ feedIds, feedsMap }: MobileBoardProps) {
     const velocity = info.velocity.x
 
     if (offset < -DRAG_BUFFER || velocity < -VELOCITY_THRESHOLD) {
-      setCurrentIndex(prev => Math.min(prev + 1, feedIds.length - 1))
+      setCurrentIndex(prev => Math.min(prev + 1, visibleFeedIds.length - 1))
     } else if (offset > DRAG_BUFFER || velocity > VELOCITY_THRESHOLD) {
       setCurrentIndex(prev => Math.max(prev - 1, 0))
     }
-  }, [feedIds.length])
+  }, [visibleFeedIds.length])
+
+  useEffect(() => {
+    setCurrentIndex(prev => Math.max(0, Math.min(prev, Math.max(visibleFeedIds.length - 1, 0))))
+  }, [visibleFeedIds.length])
 
   const dragConstraints = useMemo(
     () => ({
-      left: -trackItemOffset * (feedIds.length - 1),
+      left: -trackItemOffset * Math.max(visibleFeedIds.length - 1, 0),
       right: 0,
     }),
-    [trackItemOffset, feedIds.length],
+    [trackItemOffset, visibleFeedIds.length],
   )
 
   const motionStyle = useMemo(
@@ -120,7 +125,7 @@ export function MobileBoard({ feedIds, feedsMap }: MobileBoardProps) {
           animate={animateValue}
           transition={SPRING_OPTIONS}
         >
-          {feedIds.map((id, index) => (
+          {visibleFeedIds.map((id, index) => (
             <MobileCard
               key={id}
               id={id}
@@ -135,7 +140,7 @@ export function MobileBoard({ feedIds, feedsMap }: MobileBoardProps) {
 
       {/* Indicator dots */}
       <div className="mt-6 flex gap-2">
-        {feedIds.map((_, index) => {
+        {visibleFeedIds.map((_, index) => {
           const isActive = index === currentIndex
           return (
             <motion.div

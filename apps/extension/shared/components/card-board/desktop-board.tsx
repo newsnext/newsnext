@@ -30,6 +30,7 @@ export function DesktopBoard({
   const initialOrderedFeedIdsRef = useRef(feedIds)
   const [scatterVectors, setScatterVectors] = useState<Record<string, { x: number, y: number }>>({})
   const itemsRef = useRef<Map<string, HTMLLIElement>>(new Map())
+  const visibleFeedIds = orderedFeedIds.filter(id => Boolean(feedsMap[id]))
 
   useEffect(() => {
     setOrderedFeedIds(feedIds)
@@ -156,7 +157,7 @@ export function DesktopBoard({
           },
         }}
       >
-        {orderedFeedIds.map((id, index) => (
+        {visibleFeedIds.map((id, index) => (
           <motion.li
             key={id}
             ref={(el) => {

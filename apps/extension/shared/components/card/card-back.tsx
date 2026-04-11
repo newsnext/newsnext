@@ -17,9 +17,11 @@ import { Switch } from "@newsnext/ui/components/switch"
 import { useEffect, useMemo, useState } from "react"
 import {
   PhArrowCircleLeftDuotone,
+  PhCopyDuotone,
   PhInfoDuotone,
   PhLinkDuotone,
   PhPencilCircleDuotone,
+  PhTrashDuotone,
 } from "@/components/icons/ph"
 import { resolveFeedDisplay } from "@/lib/feed-display"
 import { cn } from "@/lib/utils"
@@ -120,14 +122,12 @@ function Info(props: PropsWithChildren<{
 }
 
 function ParamField({
-  paramKey,
   param,
   value,
   editable,
   color,
   onChange,
 }: {
-  paramKey: string
   param: FeedParamSchema
   value: unknown
   editable: boolean
@@ -277,6 +277,9 @@ export function CardBack() {
     draftFeedParams,
     hasFeedParams,
     hasFeedParamChanges,
+    isFork,
+    onFork,
+    onDelete,
     onFeedParamChange,
     onSaveFeedParams,
     onResetFeedParams,
@@ -346,6 +349,26 @@ export function CardBack() {
           </div>
         </div>
         <div className={cn("flex gap-1 items-center shrink-0", `text-${color}-400`)}>
+          <IconButton
+            onClick={(e) => {
+              e.stopPropagation()
+              onFork()
+            }}
+            aria-label="Fork"
+          >
+            <PhCopyDuotone />
+          </IconButton>
+          {isFork && (
+            <IconButton
+              onClick={(e) => {
+                e.stopPropagation()
+                onDelete()
+              }}
+              aria-label="Delete Fork"
+            >
+              <PhTrashDuotone />
+            </IconButton>
+          )}
           <IconButton
             onClick={(e) => {
               e.stopPropagation()
@@ -461,7 +484,6 @@ export function CardBack() {
             {params && Object.entries(params).map(([paramKey, param]) => (
               <ParamField
                 key={paramKey}
-                paramKey={paramKey}
                 param={param}
                 value={draftFeedParams[paramKey]}
                 editable={editable}

@@ -1,74 +1,35 @@
 import type { FeedParamSchema } from "@newsnext/feeds/typings"
+import type { FeedParamValues } from "@/lib/feed-params"
 import { useCallback, useEffect, useMemo, useState } from "react"
-
-const FEED_PARAMS_STORAGE_PREFIX = "newsnext-feed-params"
-
-export type FeedParamValues = Record<string, unknown>
-
-function getDefaultParamValues(params?: Record<string, FeedParamSchema>): FeedParamValues {
-  if (!params) {
-    return {}
-  }
-
-  return Object.fromEntries(
-    Object.entries(params).map(([key, param]) => [key, param.default]),
-  )
-}
-
-function sanitizeParamValues(
-  values: FeedParamValues | undefined,
-  params?: Record<string, FeedParamSchema>,
-): FeedParamValues {
-  const defaults = getDefaultParamValues(params)
-
-  if (!params) {
-    return {}
-  }
-
-  if (!values) {
-    return defaults
-  }
-
-  return Object.fromEntries(
-    Object.keys(params).map(key => [key, values[key] ?? defaults[key]]),
-  )
-}
-
-function readStoredParamValues(storageKey: string): FeedParamValues | undefined {
-  const stored = window.localStorage.getItem(storageKey)
-  if (!stored) {
-    return undefined
-  }
-
-  try {
-    return JSON.parse(stored) as FeedParamValues
-  } catch {
-    window.localStorage.removeItem(storageKey)
-    return undefined
-  }
-}
+import {
+  getDefaultFeedParamValues,
+  getFeedParamsStorageKey,
+  readStoredFeedParamValues,
+  sanitizeFeedParamValues,
+  writeStoredFeedParamValues,
+} from "@/lib/feed-params"
 
 export interface UseFeedParamsOptions {
-  feedId: string
+  storageId: string
   params?: Record<string, FeedParamSchema>
 }
 
-export function useFeedParams({ feedId, params }: UseFeedParamsOptions) {
-  const storageKey = useMemo(() => `${FEED_PARAMS_STORAGE_PREFIX}/${feedId}`, [feedId])
+export function useFeedParams({ storageId, params }: UseFeedParamsOptions) {
+  const storageKey = useMemo(() => getFeedParamsStorageKey(storageId), [storageId])
   const [savedParams, setSavedParams] = useState<FeedParamValues>(() => {
     if (typeof window === "undefined") {
-      return getDefaultParamValues(params)
+      return getDefaultFeedParamValues(params)
     }
 
-    return sanitizeParamValues(readStoredParamValues(`${FEED_PARAMS_STORAGE_PREFIX}/${feedId}`), params)
+    return sanitizeFeedParamValues(readStoredFeedParamValues(storageId), params)
   })
   const [draftParams, setDraftParams] = useState<FeedParamValues>(savedParams)
 
   useEffect(() => {
-    const nextSavedParams = sanitizeParamValues(readStoredParamValues(storageKey), params)
+    const nextSavedParams = sanitizeFeedParamValues(readStoredFeedParamValues(storageId), params)
     setSavedParams(nextSavedParams)
     setDraftParams(nextSavedParams)
-  }, [storageKey, params])
+  }, [storageId, storageKey, params])
 
   const updateDraftParam = useCallback((key: string, value: unknown) => {
     setDraftParams(prev => ({
@@ -78,14 +39,14 @@ export function useFeedParams({ feedId, params }: UseFeedParamsOptions) {
   }, [])
 
   const saveDraftParams = useCallback(() => {
-    const nextParams = sanitizeParamValues(draftParams, params)
+    const nextParams = sanitizeFeedParamValues(draftParams, params)
     setSavedParams(nextParams)
     setDraftParams(nextParams)
-    window.localStorage.setItem(storageKey, JSON.stringify(nextParams))
-  }, [draftParams, params, storageKey])
+    writeStoredFeedParamValues(storageId, nextParams)
+  }, [draftParams, params, storageId])
 
   const resetDraftParams = useCallback(() => {
-    const defaults = getDefaultParamValues(params)
+    const defaults = getDefaultFeedParamValues(params)
     setSavedParams(defaults)
     setDraftParams(defaults)
     window.localStorage.removeItem(storageKey)

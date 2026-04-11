@@ -1,10 +1,11 @@
 import type { RefObject } from "react"
-import type { BoardFeed, FeedDescriptor } from "@/typings/feed"
+import type { BoardFeed } from "@/typings/feed"
 import { useAtomValue } from "jotai"
 import { useEffect, useState } from "react"
 import { isMobile } from "react-device-detect"
+import { buildBoardFeeds } from "@/lib/feed-cards"
 import { trpc } from "@/lib/trpc"
-import { starredFeedIdsAtom } from "@/store/board"
+import { forkedFeedCardsAtom, starredFeedIdsAtom } from "@/store/board"
 import { DesktopBoard } from "./desktop-board"
 import { MobileBoard } from "./mobile-board"
 
@@ -14,28 +15,6 @@ interface CardBoardProps {
   className?: string
   isScattered?: boolean
   containerRef?: RefObject<HTMLDivElement | null>
-}
-
-function processFeeds(feeds: FeedDescriptor[]) {
-  // Construct unique IDs using provider:feed format
-  const processedFeeds = feeds.map((feed) => {
-    const uniqueId = feed.provider ? `${feed.provider}:${feed.id}` : feed.id
-    return {
-      ...feed,
-      variantId: feed.id,
-      id: uniqueId,
-    } satisfies BoardFeed
-  })
-
-  // Use Set to ensure IDs are unique
-  const ids = [...new Set(processedFeeds.map(feed => feed.id))]
-  const map: Record<string, BoardFeed> = {}
-
-  processedFeeds.forEach((feed) => {
-    map[feed.id] = feed
-  })
-
-  return { ids, map }
 }
 
 export function CardBoard({
@@ -48,9 +27,10 @@ export function CardBoard({
   const [feedIds, setFeedIds] = useState<string[]>([])
   const [feedsMap, setFeedsMap] = useState<Record<string, BoardFeed>>({})
   const starredFeedIds = useAtomValue(starredFeedIdsAtom)
+  const forkedFeedCards = useAtomValue(forkedFeedCardsAtom)
 
   const { data: feeds, isPending } = trpc.getBoard.useQuery(
-    { boardId, starredFeedIds },
+    { boardId: "recommend" },
   )
 
   const [prevBoardId, setPrevBoardId] = useState(boardId)
@@ -62,11 +42,16 @@ export function CardBoard({
 
   useEffect(() => {
     if (feeds) {
-      const { ids, map } = processFeeds(feeds)
+      const { ids, map } = buildBoardFeeds({
+        feeds,
+        boardId,
+        starredCardIds: starredFeedIds,
+        forkedFeedCards,
+      })
       setFeedIds(ids)
       setFeedsMap(map)
     }
-  }, [feeds, boardId])
+  }, [feeds, boardId, starredFeedIds, forkedFeedCards])
 
   const handleFeedIdsChange = (newFeedIds: string[]) => {
     setFeedIds(newFeedIds)

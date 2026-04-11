@@ -7,9 +7,11 @@ import { IconButton } from "../common/button"
 import {
   PhArrowCounterClockwiseDuotone,
   PhCircleDashedDuotone,
+  PhCopyDuotone,
   PhInfoDuotone,
   PhStarDuotone,
   PhStarFill,
+  PhTrashDuotone,
 } from "../icons/ph"
 import { useCard } from "./card-context"
 import { Hottest } from "./hottest"
@@ -23,8 +25,11 @@ export function CardFront() {
     isFetching,
     updatedTime,
     isStarred,
+    isFork,
     onRefresh,
     onToggleStar,
+    onFork,
+    onDelete,
     onFlip,
     dragHandle,
   } = useCard()
@@ -86,6 +91,20 @@ export function CardFront() {
           >
             {isStarred ? <PhStarFill /> : <PhStarDuotone />}
           </IconButton>
+          <IconButton
+            onClick={onFork}
+            aria-label="Fork"
+          >
+            <PhCopyDuotone />
+          </IconButton>
+          {isFork && (
+            <IconButton
+              onClick={onDelete}
+              aria-label="Delete Fork"
+            >
+              <PhTrashDuotone />
+            </IconButton>
+          )}
           <IconButton
             onClick={onFlip}
             aria-label="Datail"

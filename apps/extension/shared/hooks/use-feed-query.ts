@@ -1,7 +1,8 @@
 import type { NewsItem } from "@/typings/feed"
 import { useQuery } from "@tanstack/react-query"
 import { getQueryKey } from "@trpc/react-query"
-import { useCallback } from "react"
+import { useCallback, useMemo } from "react"
+import { buildFeedRequestKey } from "@/lib/feed-cards"
 import { trpc } from "@/lib/trpc"
 // import { useLocalStorageCache } from "./use-local-storage-cache"
 import { refetchFeeds, useRefetch } from "./use-refetch"
@@ -16,19 +17,21 @@ export interface UseFeedQueryOptions {
 export function useFeedQuery({ feedId, params, enabled = true }: UseFeedQueryOptions) {
   const utils = trpc.useUtils()
   const { refetch } = useRefetch()
+  const normalizedParams = useMemo(() => params ?? {}, [params])
+  const refreshKey = useMemo(() => buildFeedRequestKey(feedId, normalizedParams), [feedId, normalizedParams])
   // type FeedData = Awaited<ReturnType<typeof utils.client.getFeed.query>>
   // const storageKey = `${STORAGE_PREFIX}/${feedId}`
   // const { readCache, writeCache } = useLocalStorageCache<SourceData>(storageKey)
 
   const { data, isFetching, isError, refetch: normalRefetch } = useQuery({
-    queryKey: getQueryKey(trpc.getFeed, { feedId, params }),
+    queryKey: getQueryKey(trpc.getFeed, { feedId, params: normalizedParams }),
     queryFn: async () => {
-      const isRefetch = refetchFeeds.has(feedId)
+      const isRefetch = refetchFeeds.has(refreshKey)
       if (isRefetch) {
-        refetchFeeds.delete(feedId)
-        return utils.client.getFeed.query({ feedId, params, latest: true })
+        refetchFeeds.delete(refreshKey)
+        return utils.client.getFeed.query({ feedId, params: normalizedParams, latest: true })
       }
-      return utils.client.getFeed.query({ feedId, params })
+      return utils.client.getFeed.query({ feedId, params: normalizedParams })
     },
     enabled,
     // placeholderData: prev => prev ?? readCache(),
@@ -50,8 +53,8 @@ export function useFeedQuery({ feedId, params, enabled = true }: UseFeedQueryOpt
   // }, [data, writeCache])
 
   const handleRefetch = useCallback(async () => {
-    await refetch(feedId)
-  }, [feedId, refetch])
+    await refetch({ feedId, params: normalizedParams })
+  }, [feedId, normalizedParams, refetch])
 
   return {
     data,
