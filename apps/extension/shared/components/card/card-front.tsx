@@ -25,10 +25,10 @@ export function CardFront() {
     isFetching,
     updatedTime,
     isStarred,
-    isFork,
+    isCopy,
     onRefresh,
     onToggleStar,
-    onFork,
+    onCopy,
     onDelete,
     onFlip,
     dragHandle,
@@ -92,15 +92,17 @@ export function CardFront() {
             {isStarred ? <PhStarFill /> : <PhStarDuotone />}
           </IconButton>
           <IconButton
-            onClick={onFork}
-            aria-label="Fork"
+            onClick={onCopy}
+            aria-label="Copy"
+            title="Copy"
           >
             <PhCopyDuotone />
           </IconButton>
-          {isFork && (
+          {isCopy && (
             <IconButton
               onClick={onDelete}
-              aria-label="Delete Fork"
+              aria-label="Delete Copy"
+              title="Delete Copy"
             >
               <PhTrashDuotone />
             </IconButton>

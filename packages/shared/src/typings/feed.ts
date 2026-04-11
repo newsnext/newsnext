@@ -8,7 +8,7 @@ export type FeedType = "hottest" | "realtime" | "timeline" | "normal"
 /**
  * Type of board for displaying feeds.
  */
-export type BoardType = "recommend" | "stars"
+export type BoardType = "recommend" | "copies" | "stars"
 
 /**
  * Response structure for feed data.

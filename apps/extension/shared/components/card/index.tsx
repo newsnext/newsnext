@@ -50,7 +50,7 @@ function CardContent({ id, feed, dragHandle }: CardProps) {
   // }, [date, normalRefetch])
 
   const isStarred = useMemo(() => starredFeedIds.includes(id), [id, starredFeedIds])
-  const handleFork = useCallback(() => {
+  const handleCopy = useCallback(() => {
     const forkedFeedCard = createForkedFeedCard(feed.feedId)
 
     writeStoredFeedParamValues(forkedFeedCard.id, savedParams)
@@ -62,14 +62,14 @@ function CardContent({ id, feed, dragHandle }: CardProps) {
   }, [feed.feedId, isStarred, savedParams, setForkedFeedCards, setStarredFeedIds])
 
   const handleDelete = useCallback(() => {
-    if (!feed.isFork) {
+    if (!feed.isCopy) {
       return
     }
 
     setForkedFeedCards(prev => prev.filter(forkedFeedCard => forkedFeedCard.id !== id))
     setStarredFeedIds(prev => prev.filter(starredFeedId => starredFeedId !== id))
     deleteStoredFeedParamValues(id)
-  }, [feed.isFork, id, setForkedFeedCards, setStarredFeedIds])
+  }, [feed.isCopy, id, setForkedFeedCards, setStarredFeedIds])
 
   const contextValue = useMemo(
     () => ({
@@ -82,7 +82,7 @@ function CardContent({ id, feed, dragHandle }: CardProps) {
       items,
       isFetching,
       isStarred,
-      isFork: feed.isFork,
+      isCopy: feed.isCopy,
       onRefresh: refetch,
       onToggleStar: () =>
         setStarredFeedIds((prev) => {
@@ -91,7 +91,7 @@ function CardContent({ id, feed, dragHandle }: CardProps) {
           }
           return [...prev, id]
         }),
-      onFork: handleFork,
+      onCopy: handleCopy,
       onDelete: handleDelete,
       onFeedParamChange: updateDraftParam,
       onSaveFeedParams: saveDraftParams,
@@ -101,7 +101,7 @@ function CardContent({ id, feed, dragHandle }: CardProps) {
       dragHandle,
       updatedTime,
     }),
-    [id, feed, savedParams, draftParams, hasParams, isDirty, items, isFetching, isStarred, refetch, setStarredFeedIds, handleFork, handleDelete, updateDraftParam, saveDraftParams, resetDraftParams, discardDraftParams, dragHandle, updatedTime],
+    [id, feed, savedParams, draftParams, hasParams, isDirty, items, isFetching, isStarred, refetch, setStarredFeedIds, handleCopy, handleDelete, updateDraftParam, saveDraftParams, resetDraftParams, discardDraftParams, dragHandle, updatedTime],
   )
 
   return (

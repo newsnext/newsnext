@@ -11,5 +11,5 @@ export type BoardFeed = Omit<FeedDescriptor, "id"> & {
   id: string
   feedId: string
   variantId: string
-  isFork: boolean
+  isCopy: boolean
 }

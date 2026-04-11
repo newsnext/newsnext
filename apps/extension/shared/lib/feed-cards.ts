@@ -14,13 +14,13 @@ function createBoardFeed(feed: FeedDescriptor): BoardFeed {
     id: feedId,
     feedId,
     variantId: feed.id,
-    isFork: false,
+    isCopy: false,
   }
 }
 
 export function createForkedFeedCard(feedId: string): ForkedFeedCard {
   return {
-    id: `${feedId}::fork:${crypto.randomUUID()}`,
+    id: `${feedId}::copy:${crypto.randomUUID()}`,
     feedId,
     createdAt: Date.now(),
   }
@@ -58,15 +58,20 @@ export function buildBoardFeeds({
         ...feed,
         id: forkedFeedCard.id,
         feedId: forkedFeedCard.feedId,
-        isFork: true,
+        isCopy: true,
       } satisfies BoardFeed))
 
-    return [feed, ...forks]
+    return {
+      baseFeed: feed,
+      copiedFeeds: forks,
+    }
   })
 
   const visibleFeeds = boardId === "stars"
-    ? mergedFeeds.filter(feed => starredCardIds.includes(feed.id))
-    : mergedFeeds
+    ? mergedFeeds.flatMap(({ baseFeed, copiedFeeds }) => [baseFeed, ...copiedFeeds]).filter(feed => starredCardIds.includes(feed.id))
+    : boardId === "copies"
+      ? mergedFeeds.flatMap(({ copiedFeeds }) => copiedFeeds)
+      : mergedFeeds.map(({ baseFeed }) => baseFeed)
 
   return {
     ids: visibleFeeds.map(feed => feed.id),

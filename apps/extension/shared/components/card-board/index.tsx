@@ -10,7 +10,7 @@ import { DesktopBoard } from "./desktop-board"
 import { MobileBoard } from "./mobile-board"
 
 interface CardBoardProps {
-  boardId?: "recommend" | "stars"
+  boardId?: "recommend" | "copies" | "stars"
   onFeedIdsChange?: (feedIds: string[]) => void
   className?: string
   isScattered?: boolean
@@ -62,6 +62,14 @@ export function CardBoard({
     return (
       <div className="flex min-h-[50vh] items-center justify-center px-6 text-center text-sm text-muted-foreground">
         Star cards from any board to collect them here.
+      </div>
+    )
+  }
+
+  if (!isPending && boardId === "copies" && feedIds.length === 0) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center px-6 text-center text-sm text-muted-foreground">
+        Copy a card to collect your custom versions here.
       </div>
     )
   }

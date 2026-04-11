@@ -277,8 +277,8 @@ export function CardBack() {
     draftFeedParams,
     hasFeedParams,
     hasFeedParamChanges,
-    isFork,
-    onFork,
+    isCopy,
+    onCopy,
     onDelete,
     onFeedParamChange,
     onSaveFeedParams,
@@ -352,19 +352,21 @@ export function CardBack() {
           <IconButton
             onClick={(e) => {
               e.stopPropagation()
-              onFork()
+              onCopy()
             }}
-            aria-label="Fork"
+            aria-label="Copy"
+            title="Copy"
           >
             <PhCopyDuotone />
           </IconButton>
-          {isFork && (
+          {isCopy && (
             <IconButton
               onClick={(e) => {
                 e.stopPropagation()
                 onDelete()
               }}
-              aria-label="Delete Fork"
+              aria-label="Delete Copy"
+              title="Delete Copy"
             >
               <PhTrashDuotone />
             </IconButton>
