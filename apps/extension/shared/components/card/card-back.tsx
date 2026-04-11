@@ -288,6 +288,7 @@ export function CardBack() {
   } = useCard()
 
   const [editable, setEditable] = useState(false)
+  const canEdit = isCopy && editable
   const { provider, desc, interval, color, params } = feed
   const { name, title, home } = resolveFeedDisplay(feed, draftFeedParams)
 
@@ -311,6 +312,12 @@ export function CardBack() {
       setLocalColor(color)
     }
   }, [editable, name, title, desc, home, interval, color])
+
+  useEffect(() => {
+    if (!isCopy) {
+      setEditable(false)
+    }
+  }, [isCopy])
 
   return (
     <div
@@ -382,10 +389,16 @@ export function CardBack() {
           <IconButton
             onClick={(e) => {
               e.stopPropagation()
+              if (!isCopy) {
+                return
+              }
+
               setEditable(p => !p)
             }}
+            aria-label="Edit"
+            title={isCopy ? "Edit" : "Only copied cards can be edited"}
           >
-            <PhPencilCircleDuotone className={cn(editable && "text-primary")} />
+            <PhPencilCircleDuotone className={cn(canEdit && "text-primary", !isCopy && "opacity-40")} />
           </IconButton>
         </div>
       </div>
@@ -400,29 +413,33 @@ export function CardBack() {
           className="p-4 space-y-4"
           onDoubleClick={(e) => {
             e.stopPropagation() // Prevent flip on double click if that's a thing
+            if (!isCopy) {
+              return
+            }
+
             setEditable(p => !p)
           }}
         >
           <div className="flex flex-col text-sm">
             <div className="font-semibold mb-2 opacity-80">Information</div>
             <Info icon={<PhInfoDuotone />} label="Name">
-              <EditableInput text={localName} editable={editable} onChange={setLocalName} />
+              <EditableInput text={localName} editable={canEdit} onChange={setLocalName} />
             </Info>
 
             <Info icon={<PhInfoDuotone />} label="Title">
-              <EditableInput text={localTitle || ""} editable={editable} onChange={setLocalTitle} />
+              <EditableInput text={localTitle || ""} editable={canEdit} onChange={setLocalTitle} />
             </Info>
 
             <Info icon={<PhInfoDuotone />} label="Description">
-              <EditableInput text={localDesc || ""} editable={editable} onChange={setLocalDesc} />
+              <EditableInput text={localDesc || ""} editable={canEdit} onChange={setLocalDesc} />
             </Info>
 
             <Info icon={<PhLinkDuotone />} label="Home">
-              <EditableInput text={localHome || ""} editable={editable} onChange={setLocalHome} />
+              <EditableInput text={localHome || ""} editable={canEdit} onChange={setLocalHome} />
             </Info>
 
             <Info icon={<PhLinkDuotone />} label="Interval (min)">
-              <NumberInput num={localInterval} editable={editable} min={1} onChange={setLocalInterval} />
+              <NumberInput num={localInterval} editable={canEdit} min={1} onChange={setLocalInterval} />
             </Info>
 
             <Info icon={<PhLinkDuotone />} label="Icon">
@@ -430,7 +447,7 @@ export function CardBack() {
             </Info>
 
             <Info icon={<PhLinkDuotone />} label="Color">
-              <ColorSelector color={localColor} editable={editable} onChange={setLocalColor} />
+              <ColorSelector color={localColor} editable={canEdit} onChange={setLocalColor} />
             </Info>
           </div>
 
@@ -442,7 +459,7 @@ export function CardBack() {
                   type="button"
                   variant="outline"
                   size="sm"
-                  disabled={!editable || !hasFeedParamChanges}
+                  disabled={!canEdit || !hasFeedParamChanges}
                   className={cn(`h-7 bg-${color}-500/10 hover:bg-${color}-500/20 text-${color}-600 border-${color}-200`)}
                   onClick={(event) => {
                     event.stopPropagation()
@@ -455,7 +472,7 @@ export function CardBack() {
                   type="button"
                   variant="outline"
                   size="sm"
-                  disabled={!editable || !hasFeedParams}
+                  disabled={!canEdit || !hasFeedParams}
                   className={cn(`h-7 bg-${color}-500/10 hover:bg-${color}-500/20 text-${color}-600 border-${color}-200`)}
                   onClick={(event) => {
                     event.stopPropagation()
@@ -467,7 +484,7 @@ export function CardBack() {
                 <Button
                   type="button"
                   size="sm"
-                  disabled={!editable || !hasFeedParamChanges}
+                  disabled={!canEdit || !hasFeedParamChanges}
                   className="h-7"
                   onClick={(event) => {
                     event.stopPropagation()
@@ -488,7 +505,7 @@ export function CardBack() {
                 key={paramKey}
                 param={param}
                 value={draftFeedParams[paramKey]}
-                editable={editable}
+                editable={canEdit}
                 color={color}
                 onChange={nextValue => onFeedParamChange(paramKey, nextValue)}
               />
