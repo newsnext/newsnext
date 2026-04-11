@@ -138,19 +138,19 @@ function AppearanceSettings() {
 }
 
 function GeneralSettings() {
-  const [defaultBoard, setDefaultBoard] = useState("hottest")
+  const [defaultBoard, setDefaultBoard] = useState("recommend")
 
   const TABS = [
+    { label: "Recommend", value: "recommend" },
     { label: "Stars", value: "stars" },
-    { label: "Hottest", value: "hottest" },
-    { label: "Timeline", value: "timeline" },
-    { label: "Realtime", value: "realtime" },
     { label: "Last Used", value: "last" },
   ] as const
 
   useEffect(() => {
     const saved = localStorage.getItem(DEFAULT_BOARD_KEY)
-    if (saved) setDefaultBoard(saved)
+    if (saved) {
+      setDefaultBoard(saved)
+    }
   }, [])
 
   const handleDefaultBoardChange = (value: string) => {

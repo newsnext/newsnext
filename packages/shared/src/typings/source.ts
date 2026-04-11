@@ -8,7 +8,7 @@ export type SourceType = "hottest" | "realtime" | "timeline" | "normal"
 /**
  * Type of board for displaying sources
  */
-export type BoardType = "hottest" | "timeline" | "realtime" | "stars"
+export type BoardType = "recommend" | "stars"
 
 /**
  * Response structure for source data

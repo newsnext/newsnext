@@ -9,7 +9,7 @@ interface DeskProps {
   boardId?: BoardType
 }
 
-export function Desk({ boardId = "hottest" }: DeskProps) {
+export function Desk({ boardId = "recommend" }: DeskProps) {
   const [isScattered, setIsScattered] = useState(false)
   const boardLayerRef = useRef<HTMLDivElement>(null)
   const { dashboardScrollContainerRef, setIsDashboardActive } = useScrollProgressContext()

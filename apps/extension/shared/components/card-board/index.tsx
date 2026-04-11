@@ -9,7 +9,7 @@ import { DesktopBoard } from "./desktop-board"
 import { MobileBoard } from "./mobile-board"
 
 interface CardBoardProps {
-  boardId?: "hottest" | "timeline" | "realtime" | "stars"
+  boardId?: "recommend" | "stars"
   onSourceIdsChange?: (sourceIds: string[]) => void
   className?: string
   isScattered?: boolean
@@ -35,7 +35,7 @@ function processSources(sources: (Source & { id: string })[]) {
 }
 
 export function CardBoard({
-  boardId = "hottest",
+  boardId = "recommend",
   onSourceIdsChange,
   className,
   isScattered,

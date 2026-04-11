@@ -4,6 +4,6 @@ import { atomWithStorage } from "jotai/utils"
 
 export type { BoardType }
 
-export const currentBoardAtom = atom<BoardType>("hottest")
+export const currentBoardAtom = atom<BoardType>("recommend")
 export const STARRED_SOURCE_IDS_KEY = "newsnext-starred-source-ids"
 export const starredSourceIdsAtom = atomWithStorage<string[]>(STARRED_SOURCE_IDS_KEY, [])
