@@ -1,5 +1,5 @@
 import type { CardProps } from "./index"
-import type { Source } from "@/typings/source"
+import type { BoardFeed } from "@/typings/feed"
 import { useCallback, useMemo } from "react"
 import { isIOS } from "react-device-detect"
 import { createRoot } from "react-dom/client"
@@ -12,20 +12,20 @@ import Card from "./index"
 
 interface DraggableCardProps extends Omit<CardProps, "nodeRef" | "dragHandle"> {
   id: string
-  source: Source & { id: string }
+  feed: BoardFeed
 }
 
-export function DraggableCard({ id, source, ...props }: DraggableCardProps) {
+export function DraggableCard({ id, feed, ...props }: DraggableCardProps) {
   const onGenerateDragPreview = useCallback(
     ({ container, element }: { container: HTMLElement, element: HTMLElement }) => {
       container.style.width = `${element.clientWidth}px`
       container.className = cn("bg-background", !isIOS && "rounded-2xl")
 
       const root = createRoot(container)
-      root.render(<DragOverlay source={source} />)
+      root.render(<DragOverlay feed={feed} />)
       return () => root.unmount()
     },
-    [id, source],
+    [id, feed],
   )
 
   const { isDragging, setNodeRef, setHandleRef } = useSortable({
@@ -50,7 +50,7 @@ export function DraggableCard({ id, source, ...props }: DraggableCardProps) {
   return (
     <Card
       id={id}
-      source={source}
+      feed={feed}
       nodeRef={setNodeRef}
       dragHandle={dragHandle}
       {...props}

@@ -22,7 +22,7 @@
 <body class="bg-gray-50 min-h-screen p-8">
   <div class="max-w-7xl mx-auto">
     <div class="flex justify-between items-center mb-8">
-      <h1 class="text-3xl font-bold text-gray-900">Source Status</h1>
+      <h1 class="text-3xl font-bold text-gray-900">Feed Status</h1>
       <button onclick="checkAll()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
         Refresh All
       </button>
@@ -34,58 +34,58 @@
   </div>
 
   <script>
-    async function fetchSources() {
+    async function fetchFeeds() {
       try {
-        const response = await fetch('/sources');
+        const response = await fetch('/feeds');
         const json = await response.json();
         return json.data;
       } catch (error) {
-        console.error('Failed to fetch sources:', error);
+        console.error('Failed to fetch feeds:', error);
         return [];
       }
     }
 
-    function createCard(source) {
-      const sourceId = `${source.namespace}:${source.id}`;
+    function createCard(feed) {
+      const feedId = `${feed.provider}:${feed.id}`;
       const div = document.createElement('div');
       div.className = 'bg-white rounded-xl shadow-sm border border-gray-100 p-6 transition-all duration-200 hover:shadow-md';
-      div.id = `card-${sourceId.replace(':', '-')}`;
+      div.id = `card-${feedId.replace(':', '-')}`;
 
       div.innerHTML = `
         <div class="flex justify-between items-start mb-4">
           <div>
-            <h3 class="font-bold text-lg text-gray-900">${source.name}</h3>
-            <p class="text-sm text-gray-500">${source.title || source.id}</p>
+            <h3 class="font-bold text-lg text-gray-900">${feed.name}</h3>
+            <p class="text-sm text-gray-500">${feed.title || feed.id}</p>
           </div>
-          <span id="status-${sourceId.replace(':', '-')}" class="status-badge status-pending">
+          <span id="status-${feedId.replace(':', '-')}" class="status-badge status-pending">
             Pending
           </span>
         </div>
 
         <div class="space-y-2 text-sm">
           <div class="flex justify-between">
-            <span class="text-gray-500">Namespace</span>
-            <span class="font-medium font-mono text-gray-700">${source.namespace}</span>
+            <span class="text-gray-500">Provider</span>
+            <span class="font-medium font-mono text-gray-700">${feed.provider}</span>
           </div>
           <div class="flex justify-between">
             <span class="text-gray-500">ID</span>
-            <span class="font-medium font-mono text-gray-700">${source.id}</span>
+            <span class="font-medium font-mono text-gray-700">${feed.id}</span>
           </div>
           <div class="flex justify-between items-center pt-2 border-t border-gray-50 mt-2">
             <span class="text-gray-500">Latency</span>
-            <span id="latency-${sourceId.replace(':', '-')}" class="font-mono text-gray-400">-</span>
+            <span id="latency-${feedId.replace(':', '-')}" class="font-mono text-gray-400">-</span>
           </div>
         </div>
 
-        <div id="error-${sourceId.replace(':', '-')}" class="hidden mt-3 text-xs text-red-600 bg-red-50 p-2 rounded border border-red-100 break-all"></div>
+        <div id="error-${feedId.replace(':', '-')}" class="hidden mt-3 text-xs text-red-600 bg-red-50 p-2 rounded border border-red-100 break-all"></div>
       `;
 
       return div;
     }
 
-    async function checkSource(source) {
-      const sourceId = `${source.namespace}:${source.id}`;
-      const cardId = sourceId.replace(':', '-');
+    async function checkFeed(feed) {
+      const feedId = `${feed.provider}:${feed.id}`;
+      const cardId = feedId.replace(':', '-');
       const statusEl = document.getElementById(`status-${cardId}`);
       const latencyEl = document.getElementById(`latency-${cardId}`);
       const errorEl = document.getElementById(`error-${cardId}`);
@@ -100,7 +100,7 @@
       const start = performance.now();
 
       try {
-        const res = await fetch(`/sources/${sourceId}`);
+        const res = await fetch(`/feeds/${feedId}`);
         const data = await res.json();
         const duration = Math.round(performance.now() - start);
 
@@ -130,11 +130,11 @@
       const grid = document.getElementById('grid');
       grid.innerHTML = ''; // Clear existing
 
-      const sources = await fetchSources();
+      const feeds = await fetchFeeds();
 
       // Render all cards first
-      sources.forEach(source => {
-        grid.appendChild(createCard(source));
+      feeds.forEach(feed => {
+        grid.appendChild(createCard(feed));
       });
 
       // Check in parallel with a concurrency limit if needed,
@@ -142,8 +142,8 @@
       // Browsers usually limit concurrent connections (e.g. 6), so it handles itself somewhat.
       // However, to be nicer to the UI rendering, we can batch or just loop.
 
-      for (const source of sources) {
-        checkSource(source);
+      for (const feed of feeds) {
+        checkFeed(feed);
         await new Promise(resolve => setTimeout(resolve, 300));
       }
     }

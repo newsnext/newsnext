@@ -21,7 +21,7 @@
   },
   "devDependencies": {
     "@libsql/client": "^0.17.2",
-    "@newsnext/sources": "workspace:*",
+    "@newsnext/feeds": "workspace:*",
     "drizzle-kit": "^0.31.10"
   }
 }

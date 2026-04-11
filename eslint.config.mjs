@@ -13,7 +13,7 @@ export default antfu(
       "bun.lock",
       "**/routeTree.gen.ts",
       "**/.wxt/**",
-      "./packages/sources/src/{index,metadata}.ts",
+      "./packages/feeds/src/{index,metadata}.ts",
     ],
     rules: {
       "node/prefer-global/process": "off",

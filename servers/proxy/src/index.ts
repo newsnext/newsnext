@@ -2,7 +2,7 @@ import { MemoryCacheAdapter } from "@newsnext/cache/memory"
 import { Hono } from "hono"
 import { cors } from "hono/cors"
 import { logger } from "hono/logger"
-import sourcesRoute from "./sources"
+import feedsRoute from "./feeds"
 
 const app = new Hono()
 const cacheAdapter = new MemoryCacheAdapter()
@@ -10,7 +10,7 @@ const cacheAdapter = new MemoryCacheAdapter()
 app.use(logger())
 app.use("/*", cors())
 
-app.route("/sources", sourcesRoute(cacheAdapter))
+app.route("/feeds", feedsRoute(cacheAdapter))
 
 export default {
   fetch: app.fetch,

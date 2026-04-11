@@ -1,34 +1,38 @@
 import type { RefObject } from "react"
-import type { Source } from "@/typings/source"
+import type { BoardFeed, FeedDescriptor } from "@/typings/feed"
 import { useAtomValue } from "jotai"
 import { useEffect, useState } from "react"
 import { isMobile } from "react-device-detect"
 import { trpc } from "@/lib/trpc"
-import { starredSourceIdsAtom } from "@/store/board"
+import { starredFeedIdsAtom } from "@/store/board"
 import { DesktopBoard } from "./desktop-board"
 import { MobileBoard } from "./mobile-board"
 
 interface CardBoardProps {
   boardId?: "recommend" | "stars"
-  onSourceIdsChange?: (sourceIds: string[]) => void
+  onFeedIdsChange?: (feedIds: string[]) => void
   className?: string
   isScattered?: boolean
   containerRef?: RefObject<HTMLDivElement | null>
 }
 
-function processSources(sources: (Source & { id: string })[]) {
-  // Construct unique IDs using namespace:id format
-  const processedSources = sources.map((s) => {
-    const uniqueId = s.namespace ? `${s.namespace}:${s.id}` : s.id
-    return { ...s, uniqueId }
+function processFeeds(feeds: FeedDescriptor[]) {
+  // Construct unique IDs using provider:feed format
+  const processedFeeds = feeds.map((feed) => {
+    const uniqueId = feed.provider ? `${feed.provider}:${feed.id}` : feed.id
+    return {
+      ...feed,
+      variantId: feed.id,
+      id: uniqueId,
+    } satisfies BoardFeed
   })
 
   // Use Set to ensure IDs are unique
-  const ids = [...new Set(processedSources.map(s => s.uniqueId))]
-  const map: Record<string, Source & { id: string }> = {}
+  const ids = [...new Set(processedFeeds.map(feed => feed.id))]
+  const map: Record<string, BoardFeed> = {}
 
-  processedSources.forEach((s) => {
-    map[s.uniqueId] = { ...s, id: s.uniqueId } as unknown as Source & { id: string }
+  processedFeeds.forEach((feed) => {
+    map[feed.id] = feed
   })
 
   return { ids, map }
@@ -36,40 +40,40 @@ function processSources(sources: (Source & { id: string })[]) {
 
 export function CardBoard({
   boardId = "recommend",
-  onSourceIdsChange,
+  onFeedIdsChange,
   className,
   isScattered,
   containerRef,
 }: CardBoardProps) {
-  const [sourceIds, setSourceIds] = useState<string[]>([])
-  const [sourcesMap, setSourcesMap] = useState<Record<string, Source & { id: string }>>({})
-  const starredSourceIds = useAtomValue(starredSourceIdsAtom)
+  const [feedIds, setFeedIds] = useState<string[]>([])
+  const [feedsMap, setFeedsMap] = useState<Record<string, BoardFeed>>({})
+  const starredFeedIds = useAtomValue(starredFeedIdsAtom)
 
-  const { data: sources, isPending } = trpc.getBoard.useQuery(
-    { boardId, starredSourceIds },
+  const { data: feeds, isPending } = trpc.getBoard.useQuery(
+    { boardId, starredFeedIds },
   )
 
   const [prevBoardId, setPrevBoardId] = useState(boardId)
   if (prevBoardId !== boardId) {
     setPrevBoardId(boardId)
-    setSourceIds([])
-    setSourcesMap({})
+    setFeedIds([])
+    setFeedsMap({})
   }
 
   useEffect(() => {
-    if (sources) {
-      const { ids, map } = processSources(sources)
-      setSourceIds(ids)
-      setSourcesMap(map)
+    if (feeds) {
+      const { ids, map } = processFeeds(feeds)
+      setFeedIds(ids)
+      setFeedsMap(map)
     }
-  }, [sources, boardId])
+  }, [feeds, boardId])
 
-  const handleSourceIdsChange = (newSourceIds: string[]) => {
-    setSourceIds(newSourceIds)
-    onSourceIdsChange?.(newSourceIds)
+  const handleFeedIdsChange = (newFeedIds: string[]) => {
+    setFeedIds(newFeedIds)
+    onFeedIdsChange?.(newFeedIds)
   }
 
-  if (!isPending && boardId === "stars" && sourceIds.length === 0) {
+  if (!isPending && boardId === "stars" && feedIds.length === 0) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center px-6 text-center text-sm text-muted-foreground">
         Star cards from any board to collect them here.
@@ -81,8 +85,8 @@ export function CardBoard({
     return (
       <MobileBoard
         key={boardId}
-        sourceIds={sourceIds}
-        sourcesMap={sourcesMap}
+        feedIds={feedIds}
+        feedsMap={feedsMap}
         className={className}
         isScattered={isScattered}
       />
@@ -92,12 +96,12 @@ export function CardBoard({
   return (
     <DesktopBoard
       key={boardId}
-      sourceIds={sourceIds}
-      sourcesMap={sourcesMap}
+      feedIds={feedIds}
+      feedsMap={feedsMap}
       className={className}
       isScattered={isScattered}
       containerRef={containerRef}
-      onSourceIdsChange={handleSourceIdsChange}
+      onFeedIdsChange={handleFeedIdsChange}
     />
   )
 }

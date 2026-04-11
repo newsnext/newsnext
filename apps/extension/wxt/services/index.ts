@@ -1,4 +1,4 @@
-import type { SourceResponse } from "@newsnext/shared/types"
+import type { FeedResponse } from "@newsnext/shared/types"
 import { defineProxyService } from "@webext-core/proxy-service"
 import { browser } from "wxt/browser"
 import { myFetch } from "@/lib/utils"
@@ -44,7 +44,7 @@ class CommandBarService {
     return history
   }
 
-  async getHistorySource(): Promise<SourceResponse> {
+  async getHistoryFeed(): Promise<FeedResponse> {
     return {
       status: "success",
       key: "history",
@@ -62,7 +62,7 @@ class CommandBarService {
     }
   }
 
-  async getBookmarksSource(): Promise<SourceResponse> {
+  async getBookmarksFeed(): Promise<FeedResponse> {
     return {
       status: "success",
       key: "bookmarks",
@@ -89,12 +89,12 @@ class CommandBarService {
     }
   }
 
-  async getSource(sourceId: string) {
-    if (sourceId === "history") {
-      return this.getHistorySource()
+  async getFeed(feedId: string) {
+    if (feedId === "history") {
+      return this.getHistoryFeed()
     }
-    if (sourceId === "bookmarks") {
-      return this.getBookmarksSource()
+    if (feedId === "bookmarks") {
+      return this.getBookmarksFeed()
     }
   }
 }

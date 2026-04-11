@@ -86,24 +86,12 @@
       },
       "devDependencies": {
         "@libsql/client": "^0.17.2",
-        "@newsnext/sources": "workspace:*",
+        "@newsnext/feeds": "workspace:*",
         "drizzle-kit": "^0.31.10",
       },
     },
-    "packages/misc/build": {
-      "name": "@newsnext/build",
-      "peerDependencies": {
-        "rolldown": ">=1.0.0-rc",
-      },
-    },
-    "packages/misc/tsconfigs": {
-      "name": "@newsnext/tsconfigs",
-    },
-    "packages/shared": {
-      "name": "@newsnext/shared",
-    },
-    "packages/sources": {
-      "name": "@newsnext/sources",
+    "packages/feeds": {
+      "name": "@newsnext/feeds",
       "dependencies": {
         "@date-fns/tz": "^1.4.1",
         "@newsnext/cache": "workspace:*",
@@ -117,6 +105,18 @@
       "devDependencies": {
         "domhandler": "^6.0.1",
       },
+    },
+    "packages/misc/build": {
+      "name": "@newsnext/build",
+      "peerDependencies": {
+        "rolldown": ">=1.0.0-rc",
+      },
+    },
+    "packages/misc/tsconfigs": {
+      "name": "@newsnext/tsconfigs",
+    },
+    "packages/shared": {
+      "name": "@newsnext/shared",
     },
     "packages/ui": {
       "name": "@newsnext/ui",
@@ -157,7 +157,7 @@
         "@hono/trpc-server": "^0.4.2",
         "@newsnext/cache": "workspace:*",
         "@newsnext/database": "workspace:*",
-        "@newsnext/sources": "workspace:*",
+        "@newsnext/feeds": "workspace:*",
         "@trpc/server": "^11.16.0",
         "better-auth": "^1.6.2",
         "hono": "catalog:",
@@ -170,7 +170,7 @@
       },
       "devDependencies": {
         "@libsql/client": "^0.17.2",
-        "@newsnext/sources": "workspace:*",
+        "@newsnext/feeds": "workspace:*",
         "drizzle-kit": "^0.31.10",
       },
     },
@@ -178,8 +178,8 @@
       "name": "@newsnext/proxy",
       "dependencies": {
         "@newsnext/cache": "workspace:*",
+        "@newsnext/feeds": "workspace:*",
         "@newsnext/shared": "workspace:*",
-        "@newsnext/sources": "workspace:*",
         "hono": "catalog:",
       },
       "devDependencies": {
@@ -555,11 +555,11 @@
 
     "@newsnext/extension": ["@newsnext/extension@workspace:apps/extension"],
 
+    "@newsnext/feeds": ["@newsnext/feeds@workspace:packages/feeds"],
+
     "@newsnext/proxy": ["@newsnext/proxy@workspace:servers/proxy"],
 
     "@newsnext/shared": ["@newsnext/shared@workspace:packages/shared"],
-
-    "@newsnext/sources": ["@newsnext/sources@workspace:packages/sources"],
 
     "@newsnext/tsconfigs": ["@newsnext/tsconfigs@workspace:packages/misc/tsconfigs"],
 

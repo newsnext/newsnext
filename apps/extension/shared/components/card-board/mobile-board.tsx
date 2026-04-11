@@ -1,13 +1,13 @@
 import type { MotionValue, PanInfo } from "motion/react"
-import type { Source } from "@/typings/source"
+import type { BoardFeed } from "@/typings/feed"
 import { motion, useMotionValue, useTransform } from "motion/react"
 import { useCallback, useMemo, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
 import Card from "../card"
 
 interface MobileBoardProps {
-  sourceIds: string[]
-  sourcesMap: Record<string, Source & { id: string }>
+  feedIds: string[]
+  feedsMap: Record<string, BoardFeed>
   className?: string
   isScattered?: boolean
 }
@@ -24,13 +24,13 @@ interface MobileCardProps {
   index: number
   x: MotionValue<number>
   trackItemOffset: number
-  source: Source & { id: string }
+  feed: BoardFeed
 }
 
 const rotateOutputRange = [-10, 0, 10]
 const yOutputRange = [40, 0, 40]
 
-function MobileCard({ id, index, x, trackItemOffset, source }: MobileCardProps) {
+function MobileCard({ id, index, x, trackItemOffset, feed }: MobileCardProps) {
   const range = [
     -(index + 1) * trackItemOffset,
     -index * trackItemOffset,
@@ -51,13 +51,13 @@ function MobileCard({ id, index, x, trackItemOffset, source }: MobileCardProps) 
       }}
     >
       <div className="h-full w-full">
-        <Card id={id} source={source} className="h-full w-full" />
+        <Card id={id} feed={feed} className="h-full w-full" />
       </div>
     </motion.div>
   )
 }
 
-export function MobileBoard({ sourceIds, sourcesMap }: MobileBoardProps) {
+export function MobileBoard({ feedIds, feedsMap }: MobileBoardProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
   const x = useMotionValue(0)
@@ -74,18 +74,18 @@ export function MobileBoard({ sourceIds, sourcesMap }: MobileBoardProps) {
     const velocity = info.velocity.x
 
     if (offset < -DRAG_BUFFER || velocity < -VELOCITY_THRESHOLD) {
-      setCurrentIndex(prev => Math.min(prev + 1, sourceIds.length - 1))
+      setCurrentIndex(prev => Math.min(prev + 1, feedIds.length - 1))
     } else if (offset > DRAG_BUFFER || velocity > VELOCITY_THRESHOLD) {
       setCurrentIndex(prev => Math.max(prev - 1, 0))
     }
-  }, [sourceIds.length])
+  }, [feedIds.length])
 
   const dragConstraints = useMemo(
     () => ({
-      left: -trackItemOffset * (sourceIds.length - 1),
+      left: -trackItemOffset * (feedIds.length - 1),
       right: 0,
     }),
-    [trackItemOffset, sourceIds.length],
+    [trackItemOffset, feedIds.length],
   )
 
   const motionStyle = useMemo(
@@ -120,14 +120,14 @@ export function MobileBoard({ sourceIds, sourcesMap }: MobileBoardProps) {
           animate={animateValue}
           transition={SPRING_OPTIONS}
         >
-          {sourceIds.map((id, index) => (
+          {feedIds.map((id, index) => (
             <MobileCard
               key={id}
               id={id}
               index={index}
               x={x}
               trackItemOffset={trackItemOffset}
-              source={sourcesMap[id]}
+              feed={feedsMap[id]}
             />
           ))}
         </motion.div>
@@ -135,7 +135,7 @@ export function MobileBoard({ sourceIds, sourcesMap }: MobileBoardProps) {
 
       {/* Indicator dots */}
       <div className="mt-6 flex gap-2">
-        {sourceIds.map((_, index) => {
+        {feedIds.map((_, index) => {
           const isActive = index === currentIndex
           return (
             <motion.div

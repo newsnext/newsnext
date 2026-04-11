@@ -1,58 +1,81 @@
 import type { ReactNode } from "react"
-import type { Source } from "@/typings/source"
+import type { BoardFeed } from "@/typings/feed"
 import { useAtom } from "jotai"
 import { useInView } from "motion/react"
 import { useMemo, useRef, useState } from "react"
 import { FlipAnimate } from "@/components/common/flip-animate"
-import { useSourceQuery } from "@/hooks/use-source-query"
+import { useFeedParams } from "@/hooks"
+import { useFeedQuery } from "@/hooks/use-feed-query"
 import { cn } from "@/lib/utils"
-import { starredSourceIdsAtom } from "@/store/board"
+import { starredFeedIdsAtom } from "@/store/board"
 import { CardBack } from "./card-back"
 import { CardContext } from "./card-context"
 import { CardFront } from "./card-front"
 
 export interface CardProps {
   id: string
-  source: Source & { id: string }
+  feed: BoardFeed
   className?: string
   nodeRef?: (node: HTMLElement | null) => void
   dragHandle?: ReactNode
 }
 
-function CardContent({ id, source, dragHandle }: CardProps) {
-  const [starredSourceIds, setStarredSourceIds] = useAtom(starredSourceIdsAtom)
+function CardContent({ id, feed, dragHandle }: CardProps) {
+  const [starredFeedIds, setStarredFeedIds] = useAtom(starredFeedIdsAtom)
   const [isFlipped, setIsFlipped] = useState(false)
+  const {
+    hasParams,
+    savedParams,
+    draftParams,
+    isDirty,
+    updateDraftParam,
+    saveDraftParams,
+    resetDraftParams,
+    discardDraftParams,
+  } = useFeedParams({
+    feedId: id,
+    params: feed.params,
+  })
 
-  const { items, refetch, isFetching, updatedTime } = useSourceQuery({
-    sourceId: id,
+  const { items, refetch, isFetching, updatedTime } = useFeedQuery({
+    feedId: id,
+    params: savedParams,
   })
 
   // useEffect(() => {
   //   if (source.interval <= 2 * 60 * 1000) normalRefetch()
   // }, [date, normalRefetch])
 
-  const isStarred = useMemo(() => starredSourceIds.includes(id), [id, starredSourceIds])
+  const isStarred = useMemo(() => starredFeedIds.includes(id), [id, starredFeedIds])
 
   const contextValue = useMemo(
     () => ({
       id,
-      source,
+      feed,
+      feedParams: savedParams,
+      draftFeedParams: draftParams,
+      hasFeedParams: hasParams,
+      hasFeedParamChanges: isDirty,
       items,
       isFetching,
       isStarred,
       onRefresh: refetch,
       onToggleStar: () =>
-        setStarredSourceIds((prev) => {
+        setStarredFeedIds((prev) => {
           if (prev.includes(id)) {
-            return prev.filter(sourceId => sourceId !== id)
+            return prev.filter(feedId => feedId !== id)
           }
           return [...prev, id]
         }),
+      onFeedParamChange: updateDraftParam,
+      onSaveFeedParams: saveDraftParams,
+      onResetFeedParams: resetDraftParams,
+      onDiscardFeedParams: discardDraftParams,
       onFlip: () => setIsFlipped(prev => !prev),
       dragHandle,
       updatedTime,
     }),
-    [id, source, items, isFetching, isStarred, refetch, setStarredSourceIds, dragHandle, updatedTime],
+    [id, feed, savedParams, draftParams, hasParams, isDirty, items, isFetching, isStarred, refetch, setStarredFeedIds, updateDraftParam, saveDraftParams, resetDraftParams, discardDraftParams, dragHandle, updatedTime],
   )
 
   return (

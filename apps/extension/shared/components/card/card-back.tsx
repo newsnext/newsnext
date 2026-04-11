@@ -1,3 +1,4 @@
+import type { FeedParamSchema } from "@newsnext/feeds/typings"
 import type { Color } from "@newsnext/shared/types"
 import type { PropsWithChildren } from "react"
 import { COLORS } from "@newsnext/shared/constants"
@@ -10,7 +11,9 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
+  SelectValue,
 } from "@newsnext/ui/components/select"
+import { Switch } from "@newsnext/ui/components/switch"
 import { useEffect, useMemo, useState } from "react"
 import {
   PhArrowCircleLeftDuotone,
@@ -115,6 +118,123 @@ function Info(props: PropsWithChildren<{
   )
 }
 
+function ParamField({
+  paramKey,
+  param,
+  value,
+  editable,
+  color,
+  onChange,
+}: {
+  paramKey: string
+  param: FeedParamSchema
+  value: unknown
+  editable: boolean
+  color: Color
+  onChange: (value: unknown) => void
+}) {
+  const currentValue = value ?? param.default
+
+  if (param.type === "switch") {
+    return (
+      <Info icon={<PhInfoDuotone />} label={param.title}>
+        <div className="flex items-center justify-end gap-3 px-2">
+          <span className="text-xs text-muted-foreground">
+            {currentValue ? "On" : "Off"}
+          </span>
+          <Switch
+            checked={Boolean(currentValue)}
+            disabled={!editable}
+            onCheckedChange={checked => onChange(checked)}
+            size="sm"
+          />
+        </div>
+      </Info>
+    )
+  }
+
+  if (param.type === "select") {
+    return (
+      <Info icon={<PhInfoDuotone />} label={param.title}>
+        <Select
+          value={String(currentValue)}
+          disabled={!editable}
+          onValueChange={nextValue => onChange(nextValue)}
+        >
+          <SelectTrigger className="w-full h-7 bg-background/50" onClick={e => e.stopPropagation()}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {param.options.map(option => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </Info>
+    )
+  }
+
+  if (param.type === "multiselect") {
+    const selectedValues = Array.isArray(currentValue) ? currentValue.map(String) : []
+
+    return (
+      <Info icon={<PhInfoDuotone />} label={param.title}>
+        <div className="flex flex-wrap justify-end gap-1">
+          {param.options.map((option) => {
+            const isSelected = selectedValues.includes(option.value)
+            return (
+              <Button
+                key={option.value}
+                type="button"
+                size="xs"
+                variant={isSelected ? "default" : "outline"}
+                disabled={!editable}
+                className={cn("h-6", !isSelected && `text-${color}-600 border-${color}-200 bg-${color}-500/10`)}
+                onClick={(event) => {
+                  event.stopPropagation()
+                  const nextValues = isSelected
+                    ? selectedValues.filter(item => item !== option.value)
+                    : [...selectedValues, option.value]
+                  onChange(nextValues)
+                }}
+              >
+                {option.label}
+              </Button>
+            )
+          })}
+        </div>
+      </Info>
+    )
+  }
+
+  if (param.type === "number") {
+    return (
+      <Info icon={<PhInfoDuotone />} label={param.title}>
+        <NumberInput
+          num={typeof currentValue === "number" ? currentValue : Number(currentValue ?? param.default)}
+          editable={editable}
+          min={param.min}
+          max={param.max}
+          step={param.step}
+          onChange={nextValue => onChange(nextValue)}
+        />
+      </Info>
+    )
+  }
+
+  return (
+    <Info icon={<PhInfoDuotone />} label={param.title}>
+      <EditableInput
+        text={String(currentValue ?? "")}
+        editable={editable}
+        onChange={nextValue => onChange(nextValue)}
+      />
+    </Info>
+  )
+}
+
 function ColorSelector({ color, editable, onChange }: { color: Color, editable?: boolean, onChange?: (color: Color) => void }) {
   if (!editable) {
     return (
@@ -151,10 +271,20 @@ function ColorSelector({ color, editable, onChange }: { color: Color, editable?:
 }
 
 export function CardBack() {
-  const { source, onFlip } = useCard()
+  const {
+    feed,
+    draftFeedParams,
+    hasFeedParams,
+    hasFeedParamChanges,
+    onFeedParamChange,
+    onSaveFeedParams,
+    onResetFeedParams,
+    onDiscardFeedParams,
+    onFlip,
+  } = useCard()
 
   const [editable, setEditable] = useState(false)
-  const { namespace, name, title, desc, home, interval, color } = source
+  const { provider, name, title, desc, home, interval, color, params } = feed
 
   // Local state for edits (though not persisted yet)
   // In a real app, these would update via a mutation
@@ -189,7 +319,7 @@ export function CardBack() {
         <div className="flex gap-2.5 items-center ml-1">
           <img
             className="size-8 rounded-full bg-cover cursor-pointer"
-            src={`https://s3.newsnext.pro/icons/${namespace}.png`}
+            src={`https://s3.newsnext.pro/icons/${provider}.png`}
             title={desc || name}
             onClick={() => window.open(home || "#", "_blank")}
             referrerPolicy="no-referrer"
@@ -282,21 +412,61 @@ export function CardBack() {
               <span className="font-semibold opacity-80">Parameters</span>
               <div className="flex gap-2">
                 <Button
+                  type="button"
                   variant="outline"
                   size="sm"
+                  disabled={!editable || !hasFeedParamChanges}
                   className={cn(`h-7 bg-${color}-500/10 hover:bg-${color}-500/20 text-${color}-600 border-${color}-200`)}
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    onDiscardFeedParams()
+                  }}
                 >
-                  Preview
+                  Revert
                 </Button>
                 <Button
+                  type="button"
                   variant="outline"
                   size="sm"
+                  disabled={!editable || !hasFeedParams}
                   className={cn(`h-7 bg-${color}-500/10 hover:bg-${color}-500/20 text-${color}-600 border-${color}-200`)}
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    onResetFeedParams()
+                  }}
                 >
-                  New
+                  Reset
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={!editable || !hasFeedParamChanges}
+                  className="h-7"
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    onSaveFeedParams()
+                  }}
+                >
+                  Save
                 </Button>
               </div>
             </div>
+            {!hasFeedParams && (
+              <div className="rounded-xl border border-dashed border-border/50 px-3 py-4 text-sm text-muted-foreground">
+                This feed does not expose configurable parameters yet.
+              </div>
+            )}
+            {params && Object.entries(params).map(([paramKey, param]) => (
+              <ParamField
+                key={paramKey}
+                paramKey={paramKey}
+                param={param}
+                value={draftFeedParams[paramKey]}
+                editable={editable}
+                color={color}
+                onChange={nextValue => onFeedParamChange(paramKey, nextValue)}
+              />
+            ))}
           </div>
         </div>
       </ScrollArea>

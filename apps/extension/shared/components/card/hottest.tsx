@@ -1,5 +1,5 @@
 import type { RefObject } from "react"
-import type { NewsItem } from "@/typings/source"
+import type { NewsItem } from "@/typings/feed"
 import { extractPictures } from "@newsnext/shared/types"
 import { cn } from "@/lib/utils"
 import { VirtualList } from "../common/virtual-list"

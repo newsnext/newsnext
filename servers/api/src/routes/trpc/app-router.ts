@@ -1,47 +1,69 @@
-import { metadata } from "@newsnext/sources/metadata"
-import { executeSource, SourceServiceError } from "@newsnext/sources/service"
+import { feedDescriptors } from "@newsnext/feeds/metadata"
+import { FeedServiceError, loadFeed, prepareFeedRequest } from "@newsnext/feeds/service"
 import { TRPCError } from "@trpc/server"
 import { z } from "zod"
 import { publicProcedure, router } from "./core"
+
+const getFeedInputSchema = z.object({
+  feedId: z.string(),
+  params: z.record(z.string(), z.unknown()).optional(),
+  latest: z.boolean().optional(),
+}).transform((input, ctx) => {
+  try {
+    const prepared = prepareFeedRequest(input.feedId, input.params ?? {})
+    return {
+      ...input,
+      params: prepared.params as Record<string, unknown>,
+    }
+  } catch (error) {
+    if (error instanceof FeedServiceError) {
+      ctx.addIssue({
+        code: "custom",
+        message: error.message,
+        path: error.code === "INVALID_PARAMS" ? ["params"] : ["feedId"],
+      })
+      return z.NEVER
+    }
+
+    throw error
+  }
+})
 
 export const appRouter = router({
   getBoard: publicProcedure
     .input(z.object({
       boardId: z.enum(["recommend", "stars"]),
-      starredSourceIds: z.array(z.string()).optional(),
+      starredFeedIds: z.array(z.string()).optional(),
     }))
     .query(({ input }) => {
-      const { boardId, starredSourceIds = [] } = input
+      const { boardId, starredFeedIds = [] } = input
       if (boardId === "stars") {
-        const starredSourceIdSet = new Set(starredSourceIds)
-        return metadata.filter((source) => {
-          const uniqueId = source.namespace ? `${source.namespace}:${source.id}` : source.id
-          return starredSourceIdSet.has(uniqueId)
+        const starredFeedIdSet = new Set(starredFeedIds)
+        return feedDescriptors.filter((feed) => {
+          const uniqueId = feed.provider ? `${feed.provider}:${feed.id}` : feed.id
+          return starredFeedIdSet.has(uniqueId)
         })
       }
-      return metadata
+      return feedDescriptors
     }),
 
-  getSource: publicProcedure
-    .input(z.object({
-      sourceId: z.string(),
-      params: z.record(z.string(), z.any()).optional(),
-      latest: z.boolean().optional(),
-    }))
+  getFeed: publicProcedure
+    .input(getFeedInputSchema)
     .query(async ({ input, ctx }) => {
-      const { sourceId, params = {}, latest } = input
+      const { feedId, params = {}, latest } = input
       try {
-        return await executeSource({
-          sourceId,
+        return await loadFeed({
+          feedId,
           params,
+          paramsAreNormalized: true,
           latest,
           adapter: ctx.adapter,
           waitUntil: ctx.waitUntil,
         })
       } catch (error) {
-        if (error instanceof SourceServiceError) {
+        if (error instanceof FeedServiceError) {
           throw new TRPCError({
-            code: error.code === "GROUP_NOT_FOUND" || error.code === "SOURCE_NOT_FOUND"
+            code: error.code === "PROVIDER_NOT_FOUND" || error.code === "FEED_NOT_FOUND"
               ? "NOT_FOUND"
               : "BAD_REQUEST",
             message: error.message,
@@ -49,7 +71,7 @@ export const appRouter = router({
         }
 
         const err = error as Error
-        console.error(`Error executing source ${sourceId}:`, err)
+        console.error(`Error loading feed ${feedId}:`, err)
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: err.message || "Internal Server Error",

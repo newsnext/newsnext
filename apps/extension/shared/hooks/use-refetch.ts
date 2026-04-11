@@ -3,62 +3,57 @@ import { getQueryKey } from "@trpc/react-query"
 import { useAtomValue } from "jotai"
 import { useCallback, useMemo } from "react"
 import { trpc } from "@/lib/trpc"
-import { currentBoardAtom, starredSourceIdsAtom } from "@/store/board"
+import { currentBoardAtom, starredFeedIdsAtom } from "@/store/board"
 
-export const refetchSources = new Set<string>()
+export const refetchFeeds = new Set<string>()
 
 export function useRefetch() {
   const utils = trpc.useUtils()
   const currentBoard = useAtomValue(currentBoardAtom)
-  const starredSourceIds = useAtomValue(starredSourceIdsAtom)
-  const fetchingCount = useIsFetching({ queryKey: getQueryKey(trpc.getSource) })
+  const starredFeedIds = useAtomValue(starredFeedIdsAtom)
+  const fetchingCount = useIsFetching({ queryKey: getQueryKey(trpc.getFeed) })
 
   const isFetching = useMemo(() => fetchingCount > 0, [fetchingCount])
 
   /**
-   * Force refresh specific sources
+   * Force refresh specific feeds.
    */
   const refetch = useCallback(
-    async (...sourceIds: string[]) => {
+    async (...feedIds: string[]) => {
       try {
-        // Set flags
-        sourceIds.forEach(id => refetchSources.add(id))
+        feedIds.forEach(id => refetchFeeds.add(id))
 
-        // Invalidate queries to trigger refetch
         await Promise.all(
-          sourceIds.map(sourceId =>
-            utils.getSource.invalidate({ sourceId }),
+          feedIds.map(feedId =>
+            utils.getFeed.invalidate({ feedId }),
           ),
         )
       } catch (e) {
-        console.error("Failed to refresh sources", e)
+        console.error("Failed to refresh feeds", e)
       }
     },
     [utils],
   )
 
   /**
-   * Refresh all sources in current board
+   * Refresh all feeds in the current board.
    */
   const refetchAll = useCallback(async () => {
     try {
-      // 1. Get current board's sources
-      const sources = await utils.getBoard.ensureData({ boardId: currentBoard, starredSourceIds })
-      const sourceIds = sources.map(s => s.namespace ? `${s.namespace}:${s.id}` : s.id)
+      const feeds = await utils.getBoard.ensureData({ boardId: currentBoard, starredFeedIds })
+      const feedIds = feeds.map(feed => feed.provider ? `${feed.provider}:${feed.id}` : feed.id)
 
-      // 2. Set flags
-      sourceIds.forEach(id => refetchSources.add(id))
+      feedIds.forEach(id => refetchFeeds.add(id))
 
-      // 3. Invalidate queries to trigger refetch
       await Promise.all(
-        sourceIds.map(sourceId =>
-          utils.getSource.invalidate({ sourceId }),
+        feedIds.map(feedId =>
+          utils.getFeed.invalidate({ feedId }),
         ),
       )
     } catch (e) {
-      console.error("Failed to refresh board sources", e)
+      console.error("Failed to refresh board feeds", e)
     }
-  }, [utils, currentBoard, starredSourceIds])
+  }, [utils, currentBoard, starredFeedIds])
 
   return {
     refetch,

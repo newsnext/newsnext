@@ -1,1 +1,1 @@
-{"root":["./src/index.ts","./src/sources.ts","./src/utils.ts","./server.ts"],"version":"5.9.3"}
+{"version":"7.0.0-dev.20260410.1","root":["./src/feeds.ts","./src/index.ts","./src/utils.ts"]}

@@ -6,13 +6,13 @@ export const boards = sqliteTable("boards_table", {
   description: text().notNull(),
 })
 
-export const sources = sqliteTable("sources_table", {
+export const feeds = sqliteTable("sources_table", {
   id: integer().primaryKey({ autoIncrement: true }),
   name: text().notNull(),
   description: text().notNull(),
   url: text().notNull(),
 })
 
-export type Source = typeof sources.$inferSelect
-export type NewSource = typeof sources.$inferInsert
+export type Feed = typeof feeds.$inferSelect
+export type NewFeed = typeof feeds.$inferInsert
 export type Board = typeof boards.$inferSelect

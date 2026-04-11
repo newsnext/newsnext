@@ -1,6 +1,6 @@
 import type { BaseEventPayload, ElementDragType } from "@atlaskit/pragmatic-drag-and-drop/dist/types/internal-types"
 import type { RefObject } from "react"
-import type { Source } from "@/typings/source"
+import type { BoardFeed } from "@/typings/feed"
 import { useThrottleFn } from "@newsnext/ui/hooks/use-throttle-fn"
 import { motion } from "motion/react"
 import { useCallback, useEffect, useRef, useState } from "react"
@@ -10,34 +10,34 @@ import { DraggableCard } from "../card/draggable-card"
 const ANIMATION_DURATION = 0.2 // 200ms
 
 interface DesktopBoardProps {
-  sourceIds: string[]
-  sourcesMap: Record<string, Source & { id: string }>
+  feedIds: string[]
+  feedsMap: Record<string, BoardFeed>
   className?: string
   isScattered?: boolean
-  onSourceIdsChange?: (sourceIds: string[]) => void
+  onFeedIdsChange?: (feedIds: string[]) => void
   containerRef?: RefObject<HTMLDivElement | null>
 }
 
 export function DesktopBoard({
-  sourceIds,
-  sourcesMap,
+  feedIds,
+  feedsMap,
   className,
   isScattered,
-  onSourceIdsChange,
+  onFeedIdsChange,
   containerRef,
 }: DesktopBoardProps) {
-  const [orderedSourceIds, setOrderedSourceIds] = useState(sourceIds)
-  const initialOrderedSourceIdsRef = useRef(sourceIds)
+  const [orderedFeedIds, setOrderedFeedIds] = useState(feedIds)
+  const initialOrderedFeedIdsRef = useRef(feedIds)
   const [scatterVectors, setScatterVectors] = useState<Record<string, { x: number, y: number }>>({})
   const itemsRef = useRef<Map<string, HTMLLIElement>>(new Map())
 
   useEffect(() => {
-    setOrderedSourceIds(sourceIds)
-  }, [sourceIds])
+    setOrderedFeedIds(feedIds)
+  }, [feedIds])
 
   const onDragStart = useCallback(() => {
-    initialOrderedSourceIdsRef.current = orderedSourceIds
-  }, [orderedSourceIds])
+    initialOrderedFeedIdsRef.current = orderedFeedIds
+  }, [orderedFeedIds])
 
   const onDropTargetChange = useCallback(({ location, source }: BaseEventPayload<ElementDragType>) => {
     const target = location.current.dropTargets[0]
@@ -46,27 +46,26 @@ export function DesktopBoard({
     const fromId = source.data.id as string
     const toId = target.data.id as string
 
-    const fromIndex = orderedSourceIds.indexOf(fromId)
-    const toIndex = orderedSourceIds.indexOf(toId)
+    const fromIndex = orderedFeedIds.indexOf(fromId)
+    const toIndex = orderedFeedIds.indexOf(toId)
 
     if (fromIndex === toIndex || fromIndex === -1 || toIndex === -1) return
 
-    const newSourceIds = [...orderedSourceIds]
-    const [movedItem] = newSourceIds.splice(fromIndex, 1)
-    newSourceIds.splice(toIndex, 0, movedItem)
+    const newFeedIds = [...orderedFeedIds]
+    const [movedItem] = newFeedIds.splice(fromIndex, 1)
+    newFeedIds.splice(toIndex, 0, movedItem)
 
-    setOrderedSourceIds(newSourceIds)
-  }, [orderedSourceIds])
+    setOrderedFeedIds(newFeedIds)
+  }, [orderedFeedIds])
 
   const onDrop = useCallback(({ location }: BaseEventPayload<ElementDragType>) => {
     // If dropped outside (no targets), revert
     if (location.current.dropTargets.length === 0) {
-      setOrderedSourceIds(initialOrderedSourceIdsRef.current)
+      setOrderedFeedIds(initialOrderedFeedIdsRef.current)
       return
     }
-    // Otherwise commit
-    onSourceIdsChange?.(orderedSourceIds)
-  }, [orderedSourceIds, onSourceIdsChange])
+    onFeedIdsChange?.(orderedFeedIds)
+  }, [orderedFeedIds, onFeedIdsChange])
 
   // avoid animation jitter
   const { run } = useThrottleFn(onDropTargetChange, ANIMATION_DURATION * 1000, {
@@ -85,7 +84,7 @@ export function DesktopBoard({
       const centerY = containerRect.top + containerRect.height / 2
 
       itemsRef.current.forEach((el, id) => {
-        if (!orderedSourceIds.includes(id)) return // cleanup old refs
+        if (!orderedFeedIds.includes(id)) return // cleanup old refs
 
         const rect = el.getBoundingClientRect()
         const elCenterX = rect.left + rect.width / 2
@@ -131,7 +130,7 @@ export function DesktopBoard({
       window.removeEventListener("resize", calculateVectors)
       resizeObserver?.disconnect()
     }
-  }, [containerRef, orderedSourceIds])
+  }, [containerRef, orderedFeedIds])
 
   return (
     <DndContext onDragStart={onDragStart} onDropTargetChange={run} onDrop={onDrop}>
@@ -157,7 +156,7 @@ export function DesktopBoard({
           },
         }}
       >
-        {orderedSourceIds.map((id, index) => (
+        {orderedFeedIds.map((id, index) => (
           <motion.li
             key={id}
             ref={(el) => {
@@ -204,7 +203,7 @@ export function DesktopBoard({
               },
             }}
           >
-            <DraggableCard id={id} source={sourcesMap[id]} />
+            <DraggableCard id={id} feed={feedsMap[id]} />
           </motion.li>
         ))}
       </motion.ol>

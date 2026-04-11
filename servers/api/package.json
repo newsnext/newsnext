@@ -15,7 +15,7 @@
     "@hono/trpc-server": "^0.4.2",
     "@newsnext/cache": "workspace:*",
     "@newsnext/database": "workspace:*",
-    "@newsnext/sources": "workspace:*",
+    "@newsnext/feeds": "workspace:*",
     "@trpc/server": "^11.16.0",
     "better-auth": "^1.6.2",
     "hono": "catalog:"

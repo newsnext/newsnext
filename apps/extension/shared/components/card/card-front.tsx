@@ -16,7 +16,7 @@ import { Timeline } from "./timeline"
 
 export function CardFront() {
   const {
-    source,
+    feed,
     items,
     isFetching,
     updatedTime,
@@ -27,7 +27,7 @@ export function CardFront() {
     dragHandle,
   } = useCard()
 
-  const { namespace, name, title, home, type, color, desc } = source
+  const { provider, name, title, home, type, color, desc } = feed
   const ref = useRef<HTMLDivElement>(null)
   const relativeTime = useRelativeTime({ date: updatedTime })
 
@@ -43,7 +43,7 @@ export function CardFront() {
         <div className="flex gap-2.5 items-center ml-1">
           <img
             className="size-8 rounded-full bg-cover cursor-pointer"
-            src={`https://s3.newsnext.pro/icons/${namespace}.png`}
+            src={`https://s3.newsnext.pro/icons/${provider}.png`}
             title={desc || name}
             onClick={() => window.open(home || "#", "_blank")}
             referrerPolicy="no-referrer"
