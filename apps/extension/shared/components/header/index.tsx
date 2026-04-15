@@ -20,14 +20,6 @@ export function Header({ scrollContainerRef }: HeaderProps) {
         <div className="shrink-0 flex-1 flex justify-end gap-3">
           <SearchDialog />
           <Nav />
-          <button
-            className="island-pill flex items-center justify-center size-10 pointer-events-auto"
-            title="Refresh All"
-            onClick={refetchAll}
-            disabled={isFetching}
-          >
-            {isFetching ? <PhCircleDashedDuotone className="size-5 animate-spin" /> : <PhArrowCounterClockwiseDuotone className="size-5" />}
-          </button>
         </div>
 
         {/* Center Section - Title Island */}
@@ -37,6 +29,14 @@ export function Header({ scrollContainerRef }: HeaderProps) {
         <div className="shrink-0 flex items-center gap-3 flex-1 justify-start">
           <UserMenu />
           <DateTime />
+          <button
+            className="island-pill flex items-center justify-center size-10 pointer-events-auto"
+            title="Refresh All"
+            onClick={refetchAll}
+            disabled={isFetching}
+          >
+            {isFetching ? <PhCircleDashedDuotone className="size-5 animate-spin" /> : <PhArrowCounterClockwiseDuotone className="size-5" />}
+          </button>
         </div>
       </div>
     </header>
