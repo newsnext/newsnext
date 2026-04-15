@@ -163,6 +163,9 @@
         "better-auth": "^1.6.2",
         "hono": "catalog:",
       },
+      "devDependencies": {
+        "tsdown": "^0.21.7",
+      },
     },
     "servers/database": {
       "name": "@newsnext/database",

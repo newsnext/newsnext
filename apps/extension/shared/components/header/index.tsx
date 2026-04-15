@@ -1,6 +1,7 @@
 import type { RefObject } from "react"
 import { useRefetch } from "@/hooks"
 import { PhArrowCounterClockwiseDuotone, PhCircleDashedDuotone } from "../icons/ph"
+import { SearchDialog } from "../search"
 import { DateTime } from "./date-time"
 import Nav from "./nav"
 import { TitleIsland } from "./title"
@@ -17,6 +18,7 @@ export function Header({ scrollContainerRef }: HeaderProps) {
       <div className="h-11 flex items-center gap-3 overflow-x-auto scrollbar-hidden pointer-events-auto md:pointer-events-none">
         {/* Left Section - Tabs */}
         <div className="shrink-0 flex-1 flex justify-end gap-3">
+          <SearchDialog />
           <Nav />
           <button
             className="island-pill flex items-center justify-center size-10 pointer-events-auto"

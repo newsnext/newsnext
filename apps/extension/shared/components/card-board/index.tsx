@@ -45,7 +45,7 @@ export function CardBoard({
       const { ids, map } = buildBoardFeeds({
         feeds,
         boardId,
-        starredCardIds: starredFeedIds,
+        starredFeedIds,
         forkedFeedCards,
       })
       setFeedIds(ids)

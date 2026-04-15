@@ -56,7 +56,7 @@ export function useRefetch() {
       const boardFeeds = buildBoardFeeds({
         feeds,
         boardId: currentBoard,
-        starredCardIds: starredFeedIds,
+        starredFeedIds,
         forkedFeedCards,
       })
       const targets = boardFeeds.ids.map((id) => {

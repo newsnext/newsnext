@@ -7,10 +7,15 @@ export interface ForkedFeedCard {
   createdAt: number
 }
 
-function createBoardFeed(feed: FeedDescriptor): BoardFeed {
+type BoardFeedSource = Omit<FeedDescriptor, "params"> & {
+  params?: Record<string, unknown>
+}
+
+function createBoardFeed(feed: BoardFeedSource): BoardFeed {
   const feedId = feed.provider ? `${feed.provider}:${feed.id}` : feed.id
   return {
     ...feed,
+    params: feed.params as BoardFeed["params"],
     id: feedId,
     feedId,
     variantId: feed.id,
@@ -29,12 +34,12 @@ export function createForkedFeedCard(feedId: string): ForkedFeedCard {
 export function buildBoardFeeds({
   feeds,
   boardId,
-  starredCardIds,
+  starredFeedIds,
   forkedFeedCards,
 }: {
-  feeds: FeedDescriptor[]
+  feeds: BoardFeedSource[]
   boardId: BoardType
-  starredCardIds: string[]
+  starredFeedIds: string[]
   forkedFeedCards: ForkedFeedCard[]
 }): { ids: string[], map: Record<string, BoardFeed> } {
   const baseFeeds = feeds.map(createBoardFeed)
@@ -68,7 +73,7 @@ export function buildBoardFeeds({
   })
 
   const visibleFeeds = boardId === "stars"
-    ? mergedFeeds.flatMap(({ baseFeed, copiedFeeds }) => [baseFeed, ...copiedFeeds]).filter(feed => starredCardIds.includes(feed.id))
+    ? mergedFeeds.flatMap(({ baseFeed, copiedFeeds }) => [baseFeed, ...copiedFeeds]).filter(feed => starredFeedIds.includes(feed.id))
     : boardId === "copies"
       ? mergedFeeds.flatMap(({ copiedFeeds }) => copiedFeeds)
       : mergedFeeds.map(({ baseFeed }) => baseFeed)
