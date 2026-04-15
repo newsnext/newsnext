@@ -142,6 +142,7 @@ function GeneralSettings() {
 
   const TABS = [
     { label: "Recommend", value: "recommend" },
+    { label: "Custom", value: "copies" },
     { label: "Stars", value: "stars" },
     { label: "Last Used", value: "last" },
   ] as const
