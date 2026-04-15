@@ -32,7 +32,7 @@ const getFeedInputSchema = z.object({
 export const appRouter = router({
   getBoard: publicProcedure
     .input(z.object({
-      boardId: z.enum(["recommend", "copies", "stars"]),
+      boardId: z.enum(["featured", "copies", "stars"]),
       starredFeedIds: z.array(z.string()).optional(),
     }))
     .query(({ input }) => {

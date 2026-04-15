@@ -10,7 +10,7 @@ import { DesktopBoard } from "./desktop-board"
 import { MobileBoard } from "./mobile-board"
 
 interface CardBoardProps {
-  boardId?: "recommend" | "copies" | "stars"
+  boardId?: "featured" | "copies" | "stars"
   onFeedIdsChange?: (feedIds: string[]) => void
   className?: string
   isScattered?: boolean
@@ -18,7 +18,7 @@ interface CardBoardProps {
 }
 
 export function CardBoard({
-  boardId = "recommend",
+  boardId = "featured",
   onFeedIdsChange,
   className,
   isScattered,
@@ -30,7 +30,7 @@ export function CardBoard({
   const forkedFeedCards = useAtomValue(forkedFeedCardsAtom)
 
   const { data: feeds, isPending } = trpc.getBoard.useQuery(
-    { boardId: "recommend" },
+    { boardId: "featured" },
   )
 
   const [prevBoardId, setPrevBoardId] = useState(boardId)

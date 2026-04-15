@@ -5,6 +5,11 @@ import { useEffect, useState } from "react"
 const DEFAULT_BOARD_KEY = "newsnext-default-board"
 const LAST_ACTIVE_BOARD_KEY = "newsnext-last-active-board"
 
+function parseStoredBoard(raw: string | null): BoardType {
+  if (raw === "featured" || raw === "copies" || raw === "stars") return raw
+  return "featured"
+}
+
 export function IndexComponent() {
   const [defaultBoard, setDefaultBoard] = useState<BoardType | null>(null)
 
@@ -12,10 +17,9 @@ export function IndexComponent() {
     const saved = localStorage.getItem(DEFAULT_BOARD_KEY)
 
     if (saved === "last") {
-      const lastActive = localStorage.getItem(LAST_ACTIVE_BOARD_KEY) as BoardType | null
-      setDefaultBoard(lastActive || "recommend")
+      setDefaultBoard(parseStoredBoard(localStorage.getItem(LAST_ACTIVE_BOARD_KEY)))
     } else {
-      setDefaultBoard((saved as BoardType | null) || "recommend")
+      setDefaultBoard(parseStoredBoard(saved))
     }
   }, [])
 

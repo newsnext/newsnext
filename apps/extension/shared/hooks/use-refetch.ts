@@ -52,7 +52,7 @@ export function useRefetch() {
    */
   const refetchAll = useCallback(async () => {
     try {
-      const feeds = await utils.getBoard.ensureData({ boardId: "recommend" })
+      const feeds = await utils.getBoard.ensureData({ boardId: "featured" })
       const boardFeeds = buildBoardFeeds({
         feeds,
         boardId: currentBoard,

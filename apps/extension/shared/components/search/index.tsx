@@ -79,7 +79,7 @@ export function SearchDialog(): JSX.Element {
   const [selectedItemId, setSelectedItemId] = useState("")
   const starredFeedIds = useAtomValue(starredFeedIdsAtom)
   const forkedFeedCards = useAtomValue(forkedFeedCardsAtom)
-  const { data: feeds = [] } = trpc.getBoard.useQuery({ boardId: "recommend" })
+  const { data: feeds = [] } = trpc.getBoard.useQuery({ boardId: "featured" })
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -98,9 +98,9 @@ export function SearchDialog(): JSX.Element {
       return []
     }
 
-    const recommendBoard = buildBoardFeeds({
+    const featuredBoard = buildBoardFeeds({
       feeds,
-      boardId: "recommend",
+      boardId: "featured",
       starredFeedIds,
       forkedFeedCards,
     })
@@ -112,8 +112,8 @@ export function SearchDialog(): JSX.Element {
     })
 
     return [
-      ...recommendBoard.ids.map((id) => {
-        const feed = recommendBoard.map[id]
+      ...featuredBoard.ids.map((id) => {
+        const feed = featuredBoard.map[id]
         const params = getSavedFeedParamValues(feed.id, feed.params)
         const display = resolveFeedDisplay(feed, params)
 
@@ -216,7 +216,7 @@ export function SearchDialog(): JSX.Element {
                         item.title ?? "",
                         item.provider ?? "",
                         item.category,
-                        item.isCopy ? "copy copied copies custom" : "recommend",
+                        item.isCopy ? "copy copied copies custom" : "featured recommend",
                         item.isStarred ? "star starred" : "",
                       ]}
                     >

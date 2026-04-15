@@ -138,10 +138,10 @@ function AppearanceSettings() {
 }
 
 function GeneralSettings() {
-  const [defaultBoard, setDefaultBoard] = useState("recommend")
+  const [defaultBoard, setDefaultBoard] = useState("featured")
 
   const TABS = [
-    { label: "Recommend", value: "recommend" },
+    { label: "Featured", value: "featured" },
     { label: "Custom", value: "copies" },
     { label: "Stars", value: "stars" },
     { label: "Last Used", value: "last" },
@@ -150,7 +150,7 @@ function GeneralSettings() {
   useEffect(() => {
     const saved = localStorage.getItem(DEFAULT_BOARD_KEY)
     if (saved) {
-      setDefaultBoard(saved)
+      setDefaultBoard(saved === "recommend" ? "featured" : saved)
     }
   }, [])
 
