@@ -45,8 +45,8 @@ export function CardFront() {
       )}
     >
       {/* Header */}
-      <div className="flex justify-between mb-3 items-center mx-1">
-        <div className="flex gap-2.5 items-center ml-1">
+      <div className="flex justify-between mb-3 items-center mx-1 gap-2">
+        <div className="flex gap-2.5 items-center ml-1 min-w-0 flex-1">
           <img
             className="size-8 rounded-full bg-cover cursor-pointer"
             src={`https://s3.newsnext.pro/icons/${provider}.png`}
@@ -57,14 +57,26 @@ export function CardFront() {
               e.currentTarget.src = getFavicon(home || "#")!
             }}
           />
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2">
-              <span className="text-xl font-bold">
-                {name}
-              </span>
-              {title && (
-                <span className={cn("text-sm px-1 rounded-3xl bg-background/50 opacity-80", `text-${color}-400`)}>
-                  {title}
+          <div className="flex flex-col min-w-0">
+            <div className="flex items-center gap-2 min-w-0 w-full">
+              {(title || name) && (
+                <span
+                  className={cn(
+                    "font-bold truncate min-w-0",
+                    title && name ? "shrink-0 max-w-[min(14rem,60%)]" : "w-full",
+                  )}
+                >
+                  {title || name}
+                </span>
+              )}
+              {title && name && (
+                <span
+                  className={cn(
+                    "inline-block min-w-0 flex-1 truncate text-sm px-1 rounded-3xl bg-background/50 opacity-80",
+                    `text-${color}-400`,
+                  )}
+                >
+                  {name.replace(/\s+/g, " ")}
                 </span>
               )}
             </div>
