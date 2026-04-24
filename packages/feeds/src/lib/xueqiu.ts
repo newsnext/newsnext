@@ -36,7 +36,7 @@ export default $provider({
           url: item => `https://xueqiu.com/s/${item.code}`,
           title: "name",
           meta: {
-            html: item => `<span class="${item.percent > 0 ? "text-red-500" : "text-green-500"}">${item.percent}%</span> <span>${item.exchange}</span>`,
+            html: item => `<span style="color: ${item.percent > 0 ? "#ef4444" : "#22c55e"}">${item.percent}%</span> <span>${item.exchange}</span>`,
           },
         },
       })),
