@@ -7,7 +7,6 @@ import { IconButton } from "../common/button"
 import {
   PhArrowCounterClockwiseDuotone,
   PhCircleDashedDuotone,
-  PhCopyDuotone,
   PhInfoDuotone,
   PhStarDuotone,
   PhStarFill,
@@ -28,7 +27,6 @@ export function CardFront() {
     isCopy,
     onRefresh,
     onToggleStar,
-    onCopy,
     onDelete,
     onFlip,
     dragHandle,
@@ -90,13 +88,6 @@ export function CardFront() {
             aria-label="Star"
           >
             {isStarred ? <PhStarFill /> : <PhStarDuotone />}
-          </IconButton>
-          <IconButton
-            onClick={onCopy}
-            aria-label="Copy"
-            title="Copy"
-          >
-            <PhCopyDuotone />
           </IconButton>
           {isCopy && (
             <IconButton

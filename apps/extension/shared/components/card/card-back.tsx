@@ -285,10 +285,12 @@ export function CardBack() {
     onResetFeedParams,
     onDiscardFeedParams,
     onFlip,
+    dragHandle,
   } = useCard()
 
   const [editable, setEditable] = useState(false)
   const canEdit = isCopy && editable
+  const shouldPromoteEditButton = !dragHandle
   const { provider, desc, interval, color, params } = feed
   const { name, title, home } = resolveFeedDisplay(feed, draftFeedParams)
 
@@ -366,6 +368,22 @@ export function CardBack() {
           >
             <PhCopyDuotone />
           </IconButton>
+          {shouldPromoteEditButton && (
+            <IconButton
+              onClick={(e) => {
+                e.stopPropagation()
+                if (!isCopy) {
+                  return
+                }
+
+                setEditable(p => !p)
+              }}
+              aria-label="Edit"
+              title={isCopy ? "Edit" : "Only copied cards can be edited"}
+            >
+              <PhPencilCircleDuotone className={cn(canEdit && "text-primary", !isCopy && "opacity-40")} />
+            </IconButton>
+          )}
           {isCopy && (
             <IconButton
               onClick={(e) => {
@@ -386,20 +404,22 @@ export function CardBack() {
           >
             <PhArrowCircleLeftDuotone />
           </IconButton>
-          <IconButton
-            onClick={(e) => {
-              e.stopPropagation()
-              if (!isCopy) {
-                return
-              }
+          {!shouldPromoteEditButton && (
+            <IconButton
+              onClick={(e) => {
+                e.stopPropagation()
+                if (!isCopy) {
+                  return
+                }
 
-              setEditable(p => !p)
-            }}
-            aria-label="Edit"
-            title={isCopy ? "Edit" : "Only copied cards can be edited"}
-          >
-            <PhPencilCircleDuotone className={cn(canEdit && "text-primary", !isCopy && "opacity-40")} />
-          </IconButton>
+                setEditable(p => !p)
+              }}
+              aria-label="Edit"
+              title={isCopy ? "Edit" : "Only copied cards can be edited"}
+            >
+              <PhPencilCircleDuotone className={cn(canEdit && "text-primary", !isCopy && "opacity-40")} />
+            </IconButton>
+          )}
         </div>
       </div>
 
