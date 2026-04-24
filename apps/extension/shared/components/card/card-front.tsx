@@ -40,7 +40,7 @@ export function CardFront() {
   return (
     <div
       className={cn(
-        "flex flex-col rounded-2xl p-4 h-full",
+        "flex flex-col rounded-4xl p-3 h-full",
         `bg-${color}-400/40`,
       )}
     >
@@ -112,7 +112,7 @@ export function CardFront() {
       <div
         ref={ref}
         className={cn(
-          "h-full px-2 rounded-xl py-2 bg-background/70 overflow-y-auto scrollbar-hidden",
+          "h-full px-2 rounded-3xl py-2 bg-background/70 overflow-y-auto scrollbar-hidden",
           isFetching && `animate-pulse`,
           `sprinkle-${color}-400`,
         )}

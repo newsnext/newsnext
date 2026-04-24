@@ -324,7 +324,7 @@ export function CardBack() {
   return (
     <div
       className={cn(
-        "flex flex-col rounded-2xl p-4 h-full",
+        "flex flex-col rounded-4xl p-4 h-full",
         `bg-${color}-400/40`,
         "transition-colors duration-300",
       )}
@@ -425,7 +425,7 @@ export function CardBack() {
 
       <ScrollArea
         className={cn(
-          "flex-1 rounded-xl bg-background/70 overflow-hidden",
+          "flex-1 rounded-3xl bg-background/70 overflow-hidden",
           `sprinkle-${color}-400`,
         )}
       >

@@ -15,7 +15,7 @@ export function DragOverlay({ feed }: DragOverlayProps) {
       className={cn(
         "flex flex-col p-4 backdrop-blur-md",
         `bg-${feed.color}-400/40`,
-        !isIOS && "rounded-2xl",
+        !isIOS && "rounded-4xl",
       )}
     >
       <div className="flex justify-between items-center mx-2">
