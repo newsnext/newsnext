@@ -116,7 +116,7 @@ export function NewsItemLink({ item, className, children }: NewsItemLinkProps) {
     return (
       <HoverCard>
         <HoverCardTrigger
-          delay={300}
+          delay={600}
           render={props => (
             <NewsItemAnchor href={href} className={className} {...props}>
               {children}
