@@ -4,6 +4,7 @@ import { useCallback, useMemo } from "react"
 import { isIOS } from "react-device-detect"
 import { createRoot } from "react-dom/client"
 import { useSortable } from "@/hooks/use-sortable"
+import { getSavedFeedParamValues } from "@/lib/feed-params"
 import { cn } from "@/lib/utils"
 import { IconButton } from "../common/button"
 import { PhDotsSixVerticalDuotone } from "../icons/ph"
@@ -22,7 +23,8 @@ export function DraggableCard({ id, feed, ...props }: DraggableCardProps) {
       container.className = cn("bg-background", !isIOS && "rounded-4xl")
 
       const root = createRoot(container)
-      root.render(<DragOverlay feed={feed} />)
+      const feedParams = getSavedFeedParamValues(id, feed.params)
+      root.render(<DragOverlay feed={feed} feedParams={feedParams} />)
       return () => root.unmount()
     },
     [id, feed],
