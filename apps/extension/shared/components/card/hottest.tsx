@@ -1,9 +1,8 @@
 import type { RefObject } from "react"
 import type { NewsItem } from "@/typings/feed"
-import { extractPictures } from "@newsnext/shared/types"
 import { cn } from "@/lib/utils"
 import { VirtualList } from "../common/virtual-list"
-import { NewsItemInfo, NewsItemLink, ProxiedImage } from "./news-item-common"
+import { NewsItemLink, NewsItemSummary } from "./news-item-common"
 
 export function Hottest({ items, scrollRef }: { items: NewsItem[], scrollRef: RefObject<HTMLDivElement> }) {
   return (
@@ -20,33 +19,10 @@ export function Hottest({ items, scrollRef }: { items: NewsItem[], scrollRef: Re
             "hover:bg-neutral-400/10 rounded-xl",
           )}
         >
-          <span className="bg-neutral-400/10 size-6 shrink-0 flex justify-center items-center rounded-xl text-sm">
+          <span className="bg-neutral-400/10 ml-0.5 mt-0.5 size-5 shrink-0 flex justify-center items-center rounded-full text-sm">
             {index + 1}
           </span>
-          <span className="self-start leading-none">
-            {item.meta?.icon && extractPictures(item.meta.icon).map((icon, i) => {
-              const { src, scale, radius, href } = icon
-              return (
-                <ProxiedImage
-                  key={`icon-${i}`}
-                  delay={500}
-                  src={src}
-                  href={href}
-                  style={{
-                    transform: `scale(${scale ?? 1})`,
-                    borderRadius: `${radius ?? 4}px`,
-                  }}
-                  className="h-4 w-4 object-contain inline -mt-1 mr-1"
-                />
-              )
-            })}
-            <span className="text-base mr-2">
-              {item.title}
-            </span>
-            {item.meta && (
-              <NewsItemInfo item={item} className="truncate align-middle max-w-80 inline-block" />
-            )}
-          </span>
+          <NewsItemSummary item={item} />
         </NewsItemLink>
       )}
     />

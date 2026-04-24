@@ -236,3 +236,37 @@ export function NewsItemInfo({ item, className }: { item: NewsItem, className?: 
     </>
   )
 }
+
+interface NewsItemSummaryProps {
+  item: NewsItem
+  className?: string
+}
+
+export function NewsItemSummary({ item, className }: NewsItemSummaryProps) {
+  return (
+    <span className={cn("self-start leading-none space-x-1", className)}>
+      {item.meta?.icon && extractPictures(item.meta.icon).map((icon, i) => {
+        const { src, scale, radius, href } = icon
+        return (
+          <ProxiedImage
+            key={`icon-${i}`}
+            delay={500}
+            src={src}
+            href={href}
+            style={{
+              transform: `scale(${scale ?? 1})`,
+              borderRadius: `${radius ?? 4}px`,
+            }}
+            className="h-4 w-4 object-contain inline -mt-1"
+          />
+        )
+      })}
+      <span className="text-base">
+        {item.title}
+      </span>
+      {item.meta && (
+        <NewsItemInfo item={item} className="truncate align-middle max-w-80 inline-block" />
+      )}
+    </span>
+  )
+}
