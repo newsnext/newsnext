@@ -97,7 +97,7 @@ export default $provider({
               return pic ? { src: pic } : undefined
             },
             iframe: track => ({
-              src: `https://notion.busiyi.world/music-player/?server=netease&type=song&id=${track.id}`,
+              src: `https://music.163.com/outchain/player?type=2&id=${track.id}&auto=1&height=66`,
               height: 90,
             }),
           },
