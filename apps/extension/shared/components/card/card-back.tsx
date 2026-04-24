@@ -324,7 +324,7 @@ export function CardBack() {
   return (
     <div
       className={cn(
-        "flex flex-col rounded-4xl p-4 h-full",
+        "flex flex-col rounded-4xl p-3 h-full",
         `bg-${color}-400/40`,
         "transition-colors duration-300",
       )}
