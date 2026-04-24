@@ -23,11 +23,11 @@ export function Timeline({ items, scrollRef, relativeUpdatedTime }: {
       className="border-s border-neutral-400/50"
       itemClassName="pb-2 pl-[8px] last:pb-0"
       renderItem={item => (
-        <div className="flex flex-col hover:bg-neutral-400/10 rounded-md px-1">
+        <div className="flex flex-col hover:bg-neutral-400/10 rounded-xl px-1">
           <span className="text-neutral-400/50 -mt-1 -ml-1">
             <span className="inline-block w-4 -ml-2">-</span>
             <span className="space-x-1 -ml-2">
-              <span className="text-xs text-neutral-400/80 bg-neutral-400/10 py-0.5 px-1 rounded-md">
+              <span className="text-xs text-neutral-400/80 bg-neutral-400/10 py-0.5 px-1 rounded-3xl">
                 {item.timestamp ? <RelativeTime date={item.timestamp!} /> : relativeUpdatedTime}
               </span>
               {item.meta && (

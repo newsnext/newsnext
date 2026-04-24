@@ -19,7 +19,7 @@ export function DraggableCard({ id, feed, ...props }: DraggableCardProps) {
   const onGenerateDragPreview = useCallback(
     ({ container, element }: { container: HTMLElement, element: HTMLElement }) => {
       container.style.width = `${element.clientWidth}px`
-      container.className = cn("bg-background", !isIOS && "rounded-2xl")
+      container.className = cn("bg-background", !isIOS && "rounded-4xl")
 
       const root = createRoot(container)
       root.render(<DragOverlay feed={feed} />)

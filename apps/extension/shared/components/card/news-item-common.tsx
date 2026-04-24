@@ -187,7 +187,7 @@ function DetailIframe({ iframe }: { iframe: AdvancedIframe | string }) {
       src={props.src}
       width={width ?? "100%"}
       height={height ?? "320"}
-      className={cn("w-full rounded-xl", className)}
+      className={cn("w-full rounded-3xl", className)}
       loading={loading ?? "lazy"}
       onLoad={() => {
         setLoaded(true)

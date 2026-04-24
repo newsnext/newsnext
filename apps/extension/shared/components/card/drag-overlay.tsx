@@ -32,7 +32,7 @@ export function DragOverlay({ feed }: DragOverlayProps) {
                 {feed.name}
               </span>
               {feed.title && (
-                <span className={cn("text-sm px-1 rounded bg-background/50 opacity-80", `text-${feed.color}-400`)}>
+                <span className={cn("text-sm px-1 rounded-3xl bg-background/50 opacity-80", `text-${feed.color}-400`)}>
                   {feed.title}
                 </span>
               )}

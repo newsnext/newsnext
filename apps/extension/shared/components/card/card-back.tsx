@@ -88,7 +88,7 @@ function Text({ text }: { text: string }) {
   return (
     <span
       className={cn(
-        "font-normal rounded px-2 block w-full",
+        "font-normal rounded-3xl px-2 block w-full",
         "text-right overflow-hidden whitespace-nowrap text-ellipsis",
         isLink && "cursor-pointer hover:underline text-blue-500",
       )}
@@ -347,7 +347,7 @@ export function CardBack() {
                 {name}
               </span>
               {title && (
-                <span className={cn("text-sm px-1 rounded bg-background/50 opacity-80", `text-${color}-400`)}>
+                <span className={cn("text-sm px-1 rounded-3xl bg-background/50 opacity-80", `text-${color}-400`)}>
                   {title}
                 </span>
               )}
@@ -516,7 +516,7 @@ export function CardBack() {
               </div>
             </div>
             {!hasFeedParams && (
-              <div className="rounded-xl border border-dashed border-border/50 px-3 py-4 text-sm text-muted-foreground">
+              <div className="rounded-3xl border border-dashed border-border/50 px-3 py-4 text-sm text-muted-foreground">
                 This feed does not expose configurable parameters yet.
               </div>
             )}

@@ -16,11 +16,11 @@ export function Hottest({ items, scrollRef }: { items: NewsItem[], scrollRef: Re
         <NewsItemLink
           item={item}
           className={cn(
-            "flex gap-2 items-stretch relative cursor-pointer **:cursor-pointer transition-all",
-            "hover:bg-neutral-400/10 rounded-md",
+            "flex gap-2 items-start relative cursor-pointer **:cursor-pointer transition-all",
+            "hover:bg-neutral-400/10 rounded-xl",
           )}
         >
-          <span className="bg-neutral-400/10 min-w-6 flex justify-center items-center rounded-md text-sm">
+          <span className="bg-neutral-400/10 size-6 shrink-0 flex justify-center items-center rounded-xl text-sm">
             {index + 1}
           </span>
           <span className="self-start leading-none">

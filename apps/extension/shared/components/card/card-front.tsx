@@ -63,7 +63,7 @@ export function CardFront() {
                 {name}
               </span>
               {title && (
-                <span className={cn("text-sm px-1 rounded bg-background/50 opacity-80", `text-${color}-400`)}>
+                <span className={cn("text-sm px-1 rounded-3xl bg-background/50 opacity-80", `text-${color}-400`)}>
                   {title}
                 </span>
               )}
