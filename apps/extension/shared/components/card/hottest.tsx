@@ -1,10 +1,17 @@
+import type { Color } from "@newsnext/shared/types"
 import type { RefObject } from "react"
 import type { NewsItem } from "@/typings/feed"
 import { cn } from "@/lib/utils"
 import { VirtualList } from "../common/virtual-list"
 import { NewsItemLink, NewsItemSummary } from "./news-item-common"
 
-export function Hottest({ items, scrollRef }: { items: NewsItem[], scrollRef: RefObject<HTMLDivElement> }) {
+interface Props {
+  items: NewsItem[]
+  scrollRef: RefObject<HTMLDivElement>
+  color: Color
+}
+
+export function Hottest({ items, scrollRef, color }: Props) {
   return (
     <VirtualList
       items={items}
@@ -19,7 +26,7 @@ export function Hottest({ items, scrollRef }: { items: NewsItem[], scrollRef: Re
             "hover:bg-neutral-400/10 rounded-xl",
           )}
         >
-          <span className="opacity-80 bg-neutral-400/10 ml-0.5 mt-0.5 size-5 shrink-0 flex justify-center items-center rounded-full text-sm">
+          <span className={cn("opacity-80 size-6 shrink-0 flex justify-center items-center rounded-full text-sm", `bg-${color}-400/10`)}>
             {index + 1}
           </span>
           <NewsItemSummary item={item} />

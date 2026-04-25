@@ -134,11 +134,13 @@ export function CardFront() {
             ? (
                 <Hottest
                   items={items}
+                  color={color}
                   scrollRef={ref as React.RefObject<HTMLDivElement>}
                 />
               )
             : (
                 <Timeline
+                  color={color}
                   items={items}
                   relativeUpdatedTime={relativeTime}
                   scrollRef={ref as React.RefObject<HTMLDivElement>}

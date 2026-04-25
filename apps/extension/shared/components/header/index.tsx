@@ -18,8 +18,8 @@ export function Header({ scrollContainerRef }: HeaderProps) {
       <div className="h-11 flex items-center gap-3 overflow-x-auto scrollbar-hidden pointer-events-auto md:pointer-events-none">
         {/* Left Section - Tabs */}
         <div className="shrink-0 flex-1 flex justify-end gap-3">
-          <SearchDialog />
           <Nav />
+          <SearchDialog />
         </div>
 
         {/* Center Section - Title Island */}
@@ -27,8 +27,6 @@ export function Header({ scrollContainerRef }: HeaderProps) {
 
         {/* Right Section - DateTime, Refresh, User */}
         <div className="shrink-0 flex items-center gap-3 flex-1 justify-start">
-          <UserMenu />
-          <DateTime />
           <button
             className="island-pill flex items-center justify-center size-10 pointer-events-auto"
             title="Refresh All"
@@ -37,6 +35,8 @@ export function Header({ scrollContainerRef }: HeaderProps) {
           >
             {isFetching ? <PhCircleDashedDuotone className="size-5 animate-spin" /> : <PhArrowCounterClockwiseDuotone className="size-5" />}
           </button>
+          <DateTime />
+          <UserMenu />
         </div>
       </div>
     </header>
