@@ -29,7 +29,7 @@ export function Dashboard({ isVisible, onClose, scrollContainerRef }: DashboardP
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
             transition={{ duration: 0.2, delay: 0.2 }}
-            className="mx-auto flex min-h-full w-full max-w-7xl flex-col items-center gap-12 px-4 py-8 pb-16"
+            className="mx-auto flex min-h-full w-full max-w-7xl flex-col items-center gap-12"
             onClick={e => e.stopPropagation()}
           >
             OPEN EYES

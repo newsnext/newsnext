@@ -34,13 +34,15 @@ function RootComponent() {
       <>
         <div
           ref={scrollContainerRef}
-          className="relative h-full w-full overflow-y-auto scrollbar-hidden"
+          className="relative h-full min-h-0 w-full overflow-y-auto scrollbar-hidden"
         >
-          <Header scrollContainerRef={scrollContainerRef} />
-          <main className="px-2 sm:px-6">
-            <Outlet />
-          </main>
-          <Footer />
+          <div className="flex min-h-full w-full flex-col">
+            <Header scrollContainerRef={scrollContainerRef} />
+            <main className="flex grow shrink-0 flex-col px-2 sm:px-6">
+              <Outlet />
+            </main>
+            <Footer />
+          </div>
         </div>
         <Suspense>
           <TanStackDevtools />

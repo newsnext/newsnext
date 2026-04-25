@@ -3,7 +3,7 @@ export function Footer(): React.JSX.Element {
 
   return (
     <footer
-      className="my-10 flex-col-center border-t border-border/40 px-2 pt-10 text-center text-xs text-muted-foreground sm:text-sm"
+      className="shrink-0 my-10 flex-col-center border-t border-border/40 px-2 pt-10 text-center text-xs text-muted-foreground sm:text-sm"
       role="contentinfo"
     >
       <p className="max-w-prose leading-relaxed">
