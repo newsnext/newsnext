@@ -62,7 +62,7 @@ export function Timeline({ items, scrollRef, relativeUpdatedTime, color }: Props
               />
             </svg>
           </div>
-          <div className={cn("min-w-0 flex-1 flex flex-col", index !== items.length - 1 && "pb-2")}>
+          <div className={cn("min-w-0 flex-1 flex flex-col pb-1")}>
             <div className="-ml-2.5">
               <span className={cn("text-xs bg-neutral-400/10 py-0.5 px-1 rounded-3xl opacity-80", `bg-${color}-400/10`)}>
                 {item.timestamp
