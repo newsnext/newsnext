@@ -3,7 +3,7 @@ import { createContext, useContext } from "react"
 
 export interface ScrollProgressContextValue {
   rootScrollContainerRef: RefObject<HTMLElement | null>
-  dashboardScrollContainerRef: RefObject<HTMLElement | null>
+  dashboardScrollContainerRef: RefObject<HTMLDivElement | null>
   isDashboardActive: boolean
   setIsDashboardActive: (active: boolean) => void
 }

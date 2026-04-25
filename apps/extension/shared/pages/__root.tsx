@@ -2,6 +2,7 @@ import type { QueryClient } from "@tanstack/react-query"
 import { createRootRouteWithContext, Outlet } from "@tanstack/react-router"
 import { Suspense, useRef, useState } from "react"
 import { TanStackDevtools } from "@/components/common/devtools"
+import { Footer } from "@/components/footer"
 import { Header } from "@/components/header"
 import { ScrollProgressContext } from "@/components/scroll-progress-context"
 
@@ -36,9 +37,10 @@ function RootComponent() {
           className="relative h-full w-full overflow-y-auto scrollbar-hidden"
         >
           <Header scrollContainerRef={scrollContainerRef} />
-          <main className="px-2 sm:px-6 my-22">
+          <main className="px-2 sm:px-6">
             <Outlet />
           </main>
+          <Footer />
         </div>
         <Suspense>
           <TanStackDevtools />

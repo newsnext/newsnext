@@ -37,7 +37,7 @@ export function Desk({ boardId = "featured" }: DeskProps) {
     <div className="relative w-full">
       <div
         className={cn(
-          "pointer-events-none fixed inset-x-0 top-0 bottom-0 z-10 px-2 pt-22 pb-22 sm:px-6",
+          "pointer-events-none fixed inset-x-0 top-0 bottom-0 z-10 px-2 sm:px-6",
           isScattered && "pointer-events-auto",
         )}
       >
