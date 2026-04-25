@@ -19,7 +19,7 @@ export function Hottest({ items, scrollRef }: { items: NewsItem[], scrollRef: Re
             "hover:bg-neutral-400/10 rounded-xl",
           )}
         >
-          <span className="bg-neutral-400/10 ml-0.5 mt-0.5 size-5 shrink-0 flex justify-center items-center rounded-full text-sm">
+          <span className="opacity-80 bg-neutral-400/10 ml-0.5 mt-0.5 size-5 shrink-0 flex justify-center items-center rounded-full text-sm">
             {index + 1}
           </span>
           <NewsItemSummary item={item} />
