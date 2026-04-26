@@ -10,12 +10,12 @@ async function build() {
     clean: true,
   })
 
-  await Bun.build({
-    entrypoints: ["src/index.bun.ts"],
-    outdir: "dist",
-    target: "bun",
-    bytecode: true,
-  })
+  // await Bun.build({
+  //   entrypoints: ["src/index.bun.ts"],
+  //   outdir: "dist",
+  //   target: "bun",
+  //   bytecode: true,
+  // })
 
   await Bun.$`cd ../../apps/extension && bun run build:web --outDir ../../servers/api/public --emptyOutDir`
 }
