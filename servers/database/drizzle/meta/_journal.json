@@ -8,6 +8,13 @@
       "when": 1765865001484,
       "tag": "0000_blue_lady_ursula",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1777220820000,
+      "tag": "0001_github_login",
+      "breakpoints": true
     }
   ]
 }

@@ -18,7 +18,21 @@ interface Variables {
 const app = new Hono<{ Bindings: CloudflareBindings, Variables: Variables }>()
 
 app.use(logger())
-app.use("/*", cors())
+app.use("/*", cors({
+  credentials: true,
+  origin: (origin) => {
+    const trustedOrigins = (process.env.BETTER_AUTH_TRUSTED_ORIGINS ?? "")
+      .split(",")
+      .map(value => value.trim())
+      .filter(Boolean)
+
+    if (trustedOrigins.length === 0) {
+      return origin
+    }
+
+    return trustedOrigins.includes(origin) ? origin : null
+  },
+}))
 
 const loadSqliteAdapter: AdapterLoader = async () => {
   const { SqliteCacheAdapter } = await import("@newsnext/cache/sqlite")
