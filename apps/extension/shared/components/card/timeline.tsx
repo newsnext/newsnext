@@ -70,7 +70,7 @@ export function Timeline({ items, scrollRef, relativeUpdatedTime, color }: Props
                   : relativeUpdatedTime}
               </span>
             </div>
-            <NewsItemLink item={item}>
+            <NewsItemLink item={item} className="pl-2">
               <NewsItemSummary item={item} />
             </NewsItemLink>
           </div>
