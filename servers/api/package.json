@@ -17,10 +17,10 @@
     "@newsnext/database": "workspace:*",
     "@newsnext/feeds": "workspace:*",
     "@trpc/server": "^11.16.0",
-    "better-auth": "^1.6.2",
+    "better-auth": "^1.6.9",
     "hono": "catalog:"
   },
   "devDependencies": {
-    "tsdown": "^0.21.7"
+    "tsdown": "^0.21.10"
   }
 }

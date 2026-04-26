@@ -19,8 +19,7 @@
     "hono": "catalog:"
   },
   "devDependencies": {
-    "@hono/node-server": "^1.19.13",
     "@newsnext/build": "workspace:*",
-    "tsdown": "^0.21.7"
+    "tsdown": "^0.21.10"
   }
 }

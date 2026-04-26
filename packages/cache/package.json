@@ -20,7 +20,7 @@
     "drizzle-orm": "^0.45.2"
   },
   "devDependencies": {
-    "@libsql/client": "^0.17.2",
+    "@libsql/client": "^0.17.3",
     "@newsnext/feeds": "workspace:*",
     "drizzle-kit": "^0.31.10"
   }

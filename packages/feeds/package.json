@@ -18,10 +18,10 @@
     "@date-fns/tz": "^1.4.1",
     "@newsnext/cache": "workspace:*",
     "@newsnext/shared": "workspace:*",
-    "@smithy/md5-js": "^4.2.13",
+    "@smithy/md5-js": "^4.2.14",
     "cheerio": "^1.2.0",
     "date-fns": "^4.1.0",
-    "fast-xml-parser": "^5.5.11",
+    "fast-xml-parser": "^5.7.2",
     "iconv-lite": "^0.7.2"
   },
   "devDependencies": {
