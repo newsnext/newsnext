@@ -13,18 +13,18 @@ interface HeaderProgressProps {
 
 function HeaderProgress({ scrollContainerRef }: HeaderProgressProps) {
   const {
-    dashboardScrollContainerRef,
-    isDashboardActive,
+    nextLayerScrollContainerRef,
+    isNextLayerActive,
   } = useScrollProgressContext()
 
   const rootScroll = useScroll({
     container: scrollContainerRef,
   })
-  const dashboardScroll = useScroll({
-    container: dashboardScrollContainerRef,
+  const nextLayerScroll = useScroll({
+    container: nextLayerScrollContainerRef,
   })
 
-  const activeScroll = isDashboardActive ? dashboardScroll : rootScroll
+  const activeScroll = isNextLayerActive ? nextLayerScroll : rootScroll
   const { scrollYProgress, scrollY } = activeScroll
 
   const [isAtTop, setIsAtTop] = useState(true)
@@ -32,15 +32,15 @@ function HeaderProgress({ scrollContainerRef }: HeaderProgressProps) {
 
   const handleScrollToTop = useCallback((e: React.MouseEvent) => {
     e.stopPropagation()
-    const container = isDashboardActive
-      ? dashboardScrollContainerRef.current
+    const container = isNextLayerActive
+      ? nextLayerScrollContainerRef.current
       : scrollContainerRef?.current
     if (container) {
       container.scrollTo({ top: 0, behavior: "smooth" })
     } else {
       window.scrollTo({ top: 0, behavior: "smooth" })
     }
-  }, [dashboardScrollContainerRef, isDashboardActive, scrollContainerRef])
+  }, [nextLayerScrollContainerRef, isNextLayerActive, scrollContainerRef])
 
   useMotionValueEvent(scrollY, "change", (value) => {
     const screenHeight = window.innerHeight

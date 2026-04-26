@@ -1,7 +1,7 @@
 import type { BoardType } from "@/store/board"
 import { useEffect, useRef, useState } from "react"
-import { CardBoard } from "@/components/card-board"
-import { Dashboard } from "@/components/dashboard"
+import { NextLayer } from "@/components/nextlayer"
+import { NowLayer } from "@/components/nowlayer"
 import { useScrollProgressContext } from "@/components/scroll-progress-context"
 import { cn } from "@/lib/utils"
 
@@ -11,8 +11,11 @@ interface DeskProps {
 
 export function Desk({ boardId = "featured" }: DeskProps) {
   const [isScattered, setIsScattered] = useState(false)
-  const boardLayerRef = useRef<HTMLDivElement>(null)
-  const { dashboardScrollContainerRef, setIsDashboardActive } = useScrollProgressContext()
+  const nowLayerRef = useRef<HTMLDivElement>(null)
+  const {
+    nextLayerScrollContainerRef,
+    setIsNextLayerActive,
+  } = useScrollProgressContext()
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -26,12 +29,12 @@ export function Desk({ boardId = "featured" }: DeskProps) {
   }, [])
 
   useEffect(() => {
-    setIsDashboardActive(isScattered)
+    setIsNextLayerActive(isScattered)
 
     return () => {
-      setIsDashboardActive(false)
+      setIsNextLayerActive(false)
     }
-  }, [isScattered, setIsDashboardActive])
+  }, [isScattered, setIsNextLayerActive])
 
   return (
     <div className="relative w-full">
@@ -41,21 +44,21 @@ export function Desk({ boardId = "featured" }: DeskProps) {
           isScattered && "pointer-events-auto",
         )}
       >
-        <Dashboard
+        <NextLayer
           isVisible={isScattered}
           onClose={() => setIsScattered(false)}
-          scrollContainerRef={dashboardScrollContainerRef}
+          scrollContainerRef={nextLayerScrollContainerRef}
         />
       </div>
 
       <div
-        ref={boardLayerRef}
+        ref={nowLayerRef}
         className={cn(
           "relative z-0 transition-all duration-300",
           isScattered && "pointer-events-none",
         )}
       >
-        <CardBoard isScattered={isScattered} boardId={boardId} containerRef={boardLayerRef} />
+        <NowLayer isScattered={isScattered} boardId={boardId} containerRef={nowLayerRef} />
       </div>
     </div>
   )

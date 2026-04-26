@@ -19,16 +19,16 @@ function NotFoundComponent() {
 
 function RootComponent() {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
-  const dashboardScrollContainerRef = useRef<HTMLDivElement>(null)
-  const [isDashboardActive, setIsDashboardActive] = useState(false)
+  const nextLayerScrollContainerRef = useRef<HTMLDivElement>(null)
+  const [isNextLayerActive, setIsNextLayerActive] = useState(false)
 
   return (
     <ScrollProgressContext.Provider
       value={{
         rootScrollContainerRef: scrollContainerRef,
-        dashboardScrollContainerRef,
-        isDashboardActive,
-        setIsDashboardActive,
+        nextLayerScrollContainerRef,
+        isNextLayerActive,
+        setIsNextLayerActive,
       }}
     >
       <>

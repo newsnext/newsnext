@@ -1,14 +1,13 @@
 import type { RefObject } from "react"
 import { AnimatePresence, motion } from "motion/react"
 
-interface DashboardProps {
+interface NextLayerProps {
   isVisible: boolean
   onClose: () => void
   scrollContainerRef?: RefObject<HTMLDivElement | null>
 }
 
-export function Dashboard({ isVisible, onClose, scrollContainerRef }: DashboardProps) {
-  // Handle escape key at dashboard level
+export function NextLayer({ isVisible, onClose, scrollContainerRef }: NextLayerProps) {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Escape") {
       onClose()

@@ -3,9 +3,9 @@ import { createContext, useContext } from "react"
 
 export interface ScrollProgressContextValue {
   rootScrollContainerRef: RefObject<HTMLElement | null>
-  dashboardScrollContainerRef: RefObject<HTMLDivElement | null>
-  isDashboardActive: boolean
-  setIsDashboardActive: (active: boolean) => void
+  nextLayerScrollContainerRef: RefObject<HTMLDivElement | null>
+  isNextLayerActive: boolean
+  setIsNextLayerActive: (active: boolean) => void
 }
 
 export const ScrollProgressContext = createContext<ScrollProgressContextValue | null>(null)

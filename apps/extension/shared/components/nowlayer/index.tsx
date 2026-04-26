@@ -9,7 +9,7 @@ import { forkedFeedCardsAtom, starredFeedIdsAtom } from "@/store/board"
 import { DesktopBoard } from "./desktop-board"
 import { MobileBoard } from "./mobile-board"
 
-interface CardBoardProps {
+interface NowLayerProps {
   boardId?: "featured" | "copies" | "stars"
   onFeedIdsChange?: (feedIds: string[]) => void
   className?: string
@@ -17,13 +17,13 @@ interface CardBoardProps {
   containerRef?: RefObject<HTMLDivElement | null>
 }
 
-export function CardBoard({
+export function NowLayer({
   boardId = "featured",
   onFeedIdsChange,
   className,
   isScattered,
   containerRef,
-}: CardBoardProps) {
+}: NowLayerProps) {
   const [feedIds, setFeedIds] = useState<string[]>([])
   const [feedsMap, setFeedsMap] = useState<Record<string, BoardFeed>>({})
   const starredFeedIds = useAtomValue(starredFeedIdsAtom)
