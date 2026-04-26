@@ -1,6 +1,7 @@
 import type { MotionValue, PanInfo } from "motion/react"
+import type { PointerEvent } from "react"
 import type { BoardFeed } from "@/typings/feed"
-import { motion, useMotionValue, useTransform } from "motion/react"
+import { motion, useDragControls, useMotionValue, useTransform } from "motion/react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
 import Card from "../card"
@@ -60,6 +61,7 @@ function MobileCard({ id, index, x, trackItemOffset, feed }: MobileCardProps) {
 export function MobileBoard({ feedIds, feedsMap }: MobileBoardProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
+  const dragControls = useDragControls()
   const x = useMotionValue(0)
   const visibleFeedIds = useMemo(() => feedIds.filter(id => Boolean(feedsMap[id])), [feedIds, feedsMap])
 
@@ -80,6 +82,24 @@ export function MobileBoard({ feedIds, feedsMap }: MobileBoardProps) {
       setCurrentIndex(prev => Math.max(prev - 1, 0))
     }
   }, [visibleFeedIds.length])
+
+  const handleTrackPointerDownCapture = useCallback((event: PointerEvent<HTMLElement>) => {
+    const target = event.target
+
+    if (!(target instanceof HTMLElement)) {
+      return
+    }
+
+    if (!target.closest("[data-mobile-board-swipe-header]")) {
+      return
+    }
+
+    if (target.closest("button, a, input, select, textarea, [role='button'], [role='menuitem']")) {
+      return
+    }
+
+    dragControls.start(event)
+  }, [dragControls])
 
   useEffect(() => {
     setCurrentIndex(prev => Math.max(0, Math.min(prev, Math.max(visibleFeedIds.length - 1, 0))))
@@ -119,8 +139,11 @@ export function MobileBoard({ feedIds, feedsMap }: MobileBoardProps) {
         <motion.div
           className="flex"
           drag="x"
+          dragControls={dragControls}
           dragConstraints={dragConstraints}
+          dragListener={false}
           style={motionStyle}
+          onPointerDownCapture={handleTrackPointerDownCapture}
           onDragEnd={handleDragEnd}
           animate={animateValue}
           transition={SPRING_OPTIONS}

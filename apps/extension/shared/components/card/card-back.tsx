@@ -329,7 +329,7 @@ export function CardBack() {
         "transition-colors duration-300",
       )}
     >
-      <div className="flex justify-between mb-3 items-center mx-1">
+      <div className="flex justify-between mb-3 items-center mx-1" data-mobile-board-swipe-header>
         <div className="flex gap-2.5 items-center ml-1">
           <img
             className="size-8 rounded-full bg-cover cursor-pointer"
