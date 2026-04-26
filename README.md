@@ -1,3 +1,3 @@
 # NewsNext
 
-Latest Official version of `ourongxing/newsnow`
+The Next Official version of [ourongxing/newsnow](https://github.com/ourongxing/newsnow)
