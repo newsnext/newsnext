@@ -133,7 +133,6 @@ export function TitleIsland({ scrollContainerRef, width = 150 }: TitleIslandProp
 
       <DynamicIsland
         top={0}
-        wrapperClassName="absolute top-6 inset-x-0"
         smallClassName="relative flex gap-2 items-center px-4 shrink-0 pointer-events-auto cursor-pointer island-pill"
         largeClassName="p-3 sprinkle-theme-400 rounded-2xl pointer-events-auto"
         smallHeight={40}

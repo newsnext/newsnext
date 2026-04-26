@@ -2,6 +2,7 @@ import { format } from "date-fns"
 import { enUS } from "date-fns/locale"
 import { useAtomValue } from "jotai"
 import { minuteDateAtom } from "@/hooks/useRelativeTime"
+import { cn } from "@/lib/utils"
 
 function formatTimeWithHighlight(time: string) {
   return time.split("").map((char, index) => (
@@ -11,11 +12,11 @@ function formatTimeWithHighlight(time: string) {
   ))
 }
 
-export function DateTime() {
+export function DateTime({ className }: { className?: string }) {
   const date = useAtomValue(minuteDateAtom)
 
   return (
-    <div className="island-pill px-4 flex items-center gap-3 select-none">
+    <div className={cn("island-pill px-4 flex items-center gap-3 select-none", className)}>
       <span className="text-lg font-bold tabular-nums text-accent-foreground/90 tracking-tight">
         {formatTimeWithHighlight(format(date, "HH:mm"))}
       </span>

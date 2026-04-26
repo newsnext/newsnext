@@ -11,8 +11,20 @@ interface HeaderProps {
   scrollContainerRef?: RefObject<HTMLElement | null>
 }
 
-export function Header({ scrollContainerRef }: HeaderProps) {
+function RefreshButton() {
   const { refetchAll, isFetching } = useRefetch()
+  return (
+    <button
+      className="island-pill flex items-center justify-center size-10 pointer-events-auto"
+      title="Refresh All"
+      onClick={refetchAll}
+    >
+      {isFetching ? <PhCircleDashedDuotone className="size-5 animate-spin" /> : <PhArrowCounterClockwiseDuotone className="size-5" />}
+    </button>
+  )
+}
+
+export function Header({ scrollContainerRef }: HeaderProps) {
   return (
     <header className="sticky -top-0.5 inset-x-0 z-50 shrink-0 p-6 pointer-events-none">
       <div className="h-11 flex items-center gap-3 overflow-x-auto scrollbar-hidden pointer-events-auto md:pointer-events-none">
@@ -27,15 +39,8 @@ export function Header({ scrollContainerRef }: HeaderProps) {
 
         {/* Right Section - DateTime, Refresh, User */}
         <div className="shrink-0 flex items-center gap-3 flex-1 justify-start">
-          <button
-            className="island-pill flex items-center justify-center size-10 pointer-events-auto"
-            title="Refresh All"
-            onClick={refetchAll}
-            disabled={isFetching}
-          >
-            {isFetching ? <PhCircleDashedDuotone className="size-5 animate-spin" /> : <PhArrowCounterClockwiseDuotone className="size-5" />}
-          </button>
-          <DateTime />
+          <RefreshButton />
+          <DateTime className="max-sm:hidden" />
           <UserMenu />
         </div>
       </div>
