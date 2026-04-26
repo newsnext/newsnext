@@ -21,6 +21,7 @@ import { trpc } from "@/lib/trpc"
 import { forkedFeedCardsAtom, starredFeedIdsAtom } from "@/store/board"
 import Card from "../card"
 import { PhCopyDuotone, PhMagnifyingGlass, PhStarFill } from "../icons/ph"
+import "./index.css"
 
 interface SearchItem {
   id: string
@@ -68,7 +69,7 @@ function SearchPreview({ item }: { item?: SearchItem }) {
   }
 
   return (
-    <div className="hidden min-w-100 flex-1 flex-col items-start justify-center px-4 pt-2 *:max-w-none *:shrink-0 md:flex">
+    <div className="hidden md:flex flex-col items-start justify-center *:shrink-0">
       <Card id={item.id} feed={item.feed} />
     </div>
   )
@@ -179,24 +180,21 @@ export function SearchDialog(): JSX.Element {
         onOpenChange={setOpen}
         title="Search Cards"
         description="Search cards"
-        className="top-1/2 w-[80vw] max-w-168.75 -translate-y-1/2 gap-0 rounded-2xl bg-transparent p-0 shadow-none sm:max-w-168.75"
+        className="search-dialog w-[80vw] h-[80vh] sm:max-w-180 max-h-143 top-1/2 -translate-y-1/2 rounded-[40px]"
       >
         <Command
           value={selectedItem?.id}
           onValueChange={setSelectedItemId}
-          className={cn(
-            "rounded-2xl bg-popover/90 pb-4 backdrop-blur-[20px]",
-            "**:data-[slot=command-input-wrapper]:p-0",
-            "[&_[data-slot=command-input-wrapper]>[data-slot=input-group]]:h-auto [&_[data-slot=command-input-wrapper]>[data-slot=input-group]]:rounded-none [&_[data-slot=command-input-wrapper]>[data-slot=input-group]]:border-0 [&_[data-slot=command-input-wrapper]>[data-slot=input-group]]:border-b [&_[data-slot=command-input-wrapper]>[data-slot=input-group]]:border-foreground/10 [&_[data-slot=command-input-wrapper]>[data-slot=input-group]]:bg-transparent [&_[data-slot=command-input-wrapper]>[data-slot=input-group]]:px-4 [&_[data-slot=command-input-wrapper]>[data-slot=input-group]]:shadow-none",
-          )}
+          disablePointerSelection
+          className="sprinkle-theme-400 rounded-[40px] border p-3 pt-0"
         >
           <CommandInput
             autoFocus
             placeholder="Search what you want"
-            className="bg-transparent py-[0.85rem] text-[0.95rem] placeholder:text-foreground/50"
+            className="py-3 placeholder:text-foreground/50"
           />
-          <div className="flex flex-col gap-0 pt-2 md:flex-row md:items-stretch">
-            <CommandList className="flex h-125 max-h-125 flex-col gap-0 px-3 md:w-61 md:min-w-61 md:max-w-61 md:shrink-0 md:grow-0 md:basis-61 md:flex-none">
+          <div className="flex flex-col md:flex-row md:items-stretch md:justify-between gap-2 mt-3">
+            <CommandList className="flex h-125 max-h-125 flex-col gap-0 w-full">
               <CommandEmpty className="flex items-center justify-center py-8 text-sm opacity-70 whitespace-pre-wrap">
                 No cards found.
               </CommandEmpty>
@@ -204,12 +202,11 @@ export function SearchDialog(): JSX.Element {
                 <CommandGroup
                   key={group.heading}
                   heading={group.heading}
-                  className="p-0 **:[[cmdk-group-heading]]:mx-1 **:[[cmdk-group-heading]]:my-2 **:[[cmdk-group-heading]]:px-1 **:[[cmdk-group-heading]]:py-0 **:[[cmdk-group-heading]]:text-sm **:[[cmdk-group-heading]]:font-bold **:[[cmdk-group-heading]]:text-foreground **:[[cmdk-group-heading]]:opacity-70"
                 >
                   {group.items.map(item => (
                     <CommandItem
                       key={item.id}
-                      className="mb-1 justify-between gap-3 hover:bg-neutral-400/10 data-selected:bg-neutral-400/16 bg-transparent!"
+                      className="justify-between gap-3 data-[selected=true]:bg-neutral-400/10"
                       value={item.id}
                       keywords={[
                         item.name,
@@ -220,9 +217,9 @@ export function SearchDialog(): JSX.Element {
                         item.isStarred ? "star starred" : "",
                       ]}
                     >
-                      <span className="flex min-w-0 flex-1 items-center gap-2">
+                      <span className="flex items-center min-w-0 flex-1 gap-2">
                         <span
-                          className="size-4 shrink-0 rounded-md bg-cover bg-center bg-no-repeat"
+                          className="size-4 shrink-0 rounded-full bg-cover bg-center bg-no-repeat"
                           aria-hidden="true"
                           style={{
                             backgroundImage: item.provider
@@ -230,12 +227,12 @@ export function SearchDialog(): JSX.Element {
                               : undefined,
                           }}
                         />
-                        <span className="shrink-0">{item.name}</span>
-                        <span className="mb-0.75 min-w-0 self-end truncate text-xs text-neutral-400/80">
-                          {item.title}
+                        <span className="shrink-0">{item.title || item.name}</span>
+                        <span className="min-w-0 truncate text-xs text-neutral-400/80">
+                          {item.title && item.name}
                         </span>
                       </span>
-                      <span className="ml-auto flex shrink-0 items-center gap-2 [&_svg]:size-[0.95rem] [&_svg]:text-neutral-400/72">
+                      <span className="ml-auto flex shrink-0 items-center gap-2 text-neutral-400/80">
                         {item.isCopy && <PhCopyDuotone />}
                         {item.isStarred && <PhStarFill />}
                       </span>

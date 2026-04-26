@@ -1,0 +1,31 @@
+.search-dialog {
+  & [data-slot=command-input-wrapper] {
+    padding: 0;
+
+    & [data-slot=input-group] {
+      height: auto;
+      border: 0;
+      border-radius: 0;
+      border-bottom: 1px solid rgba(212, 212, 212, 0.10);
+      transition-duration: 0s;
+      background-color: transparent;
+      padding: 0 4px;
+      box-shadow: none;
+    }
+  }
+
+  & [data-slot=command-group] {
+    padding: 4xp 0 4px 0;
+  }
+
+  & [cmdk-group-heading] {
+    padding: 0 1px;
+    font-weight: 600;
+    color: rgba(212, 212, 212, 0.70);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
