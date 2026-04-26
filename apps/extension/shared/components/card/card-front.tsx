@@ -45,7 +45,7 @@ export function CardFront() {
       )}
     >
       {/* Header */}
-      <div className="flex justify-between mb-3 items-center mx-1 gap-2" data-mobile-board-swipe-header>
+      <div className="flex justify-between mb-3 items-center mx-1 gap-2">
         <div className="flex gap-2.5 items-center ml-1 min-w-0 flex-1">
           <img
             className="size-8 rounded-full bg-cover cursor-pointer"
@@ -123,6 +123,7 @@ export function CardFront() {
       {/* Content */}
       <div
         ref={ref}
+        onPointerDown={event => event.stopPropagation()}
         className={cn(
           "h-full px-2 rounded-3xl py-2 bg-background/70 overflow-y-auto scrollbar-hidden",
           isFetching && `animate-pulse`,

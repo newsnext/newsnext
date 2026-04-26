@@ -26,12 +26,13 @@ interface MobileCardProps {
   x: MotionValue<number>
   trackItemOffset: number
   feed: BoardFeed
+  onDragHandlePointerDown: (event: PointerEvent<HTMLDivElement>) => void
 }
 
 const rotateOutputRange = [-10, 0, 10]
 const yOutputRange = [40, 0, 40]
 
-function MobileCard({ id, index, x, trackItemOffset, feed }: MobileCardProps) {
+function MobileCard({ id, index, x, trackItemOffset, feed, onDragHandlePointerDown }: MobileCardProps) {
   const range = [
     -(index + 1) * trackItemOffset,
     -index * trackItemOffset,
@@ -51,7 +52,11 @@ function MobileCard({ id, index, x, trackItemOffset, feed }: MobileCardProps) {
         y,
       }}
     >
-      <div className="h-full w-full">
+      <div
+        className="h-full w-full"
+        style={{ touchAction: "pan-y" }}
+        onPointerDown={onDragHandlePointerDown}
+      >
         <Card id={id} feed={feed} className="h-full w-full" />
       </div>
     </motion.div>
@@ -83,21 +88,7 @@ export function MobileBoard({ feedIds, feedsMap }: MobileBoardProps) {
     }
   }, [visibleFeedIds.length])
 
-  const handleTrackPointerDownCapture = useCallback((event: PointerEvent<HTMLElement>) => {
-    const target = event.target
-
-    if (!(target instanceof HTMLElement)) {
-      return
-    }
-
-    if (!target.closest("[data-mobile-board-swipe-header]")) {
-      return
-    }
-
-    if (target.closest("button, a, input, select, textarea, [role='button'], [role='menuitem']")) {
-      return
-    }
-
+  const handleDragHandlePointerDown = useCallback((event: PointerEvent<HTMLDivElement>) => {
     dragControls.start(event)
   }, [dragControls])
 
@@ -143,7 +134,6 @@ export function MobileBoard({ feedIds, feedsMap }: MobileBoardProps) {
           dragConstraints={dragConstraints}
           dragListener={false}
           style={motionStyle}
-          onPointerDownCapture={handleTrackPointerDownCapture}
           onDragEnd={handleDragEnd}
           animate={animateValue}
           transition={SPRING_OPTIONS}
@@ -156,6 +146,7 @@ export function MobileBoard({ feedIds, feedsMap }: MobileBoardProps) {
               x={x}
               trackItemOffset={trackItemOffset}
               feed={feedsMap[id]}
+              onDragHandlePointerDown={handleDragHandlePointerDown}
             />
           ))}
         </motion.div>
