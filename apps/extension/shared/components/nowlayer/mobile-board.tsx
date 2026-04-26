@@ -46,7 +46,7 @@ function MobileCard({ id, index, x, trackItemOffset, feed }: MobileCardProps) {
       className="relative shrink-0 origin-bottom"
       style={{
         width: `min(${CARD_WIDTH_PERCENT * 100}vw, ${CARD_MAX_WIDTH}px)`,
-        height: "65vh",
+        height: "500px",
         rotate,
         y,
       }}
