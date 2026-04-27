@@ -1,5 +1,5 @@
 import type { FeedResponse } from "@newsnext/shared/types"
-import { defineProxyService } from "@webext-core/proxy-service"
+import { createProxyService, registerService } from "@webext-core/proxy-service"
 import { browser } from "wxt/browser"
 import { myFetch } from "@/lib/utils"
 
@@ -9,7 +9,7 @@ class CommandBarService {
     const sugurl = `http://suggestqueries.google.com/complete/search?client=youtube&q=${encodeURIComponent(query)}&jsonp=${key}`
     const res = await myFetch(sugurl)
     try {
-      return JSON.parse(res.replace(key, "").slice(1, -1))[1].map((k: any) => k[0]) as string[]
+        return JSON.parse(res.replace(key, "").slice(1, -1))[1].map((k: any) => k[0]) as string[]
     } catch {
       return []
     }
@@ -99,7 +99,12 @@ class CommandBarService {
   }
 }
 
-export const [registerCommandBarService, getCommandBarService] = defineProxyService(
-  "CommandBarService",
-  () => new CommandBarService(),
-)
+const commandBarServiceKey = "CommandBarService"
+
+export function registerCommandBarService(): ReturnType<typeof registerService> {
+  return registerService(commandBarServiceKey, new CommandBarService())
+}
+
+export function getCommandBarService(): ReturnType<typeof createProxyService<CommandBarService>> {
+  return createProxyService<CommandBarService>(commandBarServiceKey)
+}
