@@ -97,7 +97,7 @@ function DynamicIsland({
       ref={wrapperRef}
       hidden={isHide}
       className={cn(
-        "fixed inset-x-0 top-[--top] z-9999 dark",
+        "pointer-events-none fixed inset-x-0 top-[--top] z-9999 dark",
         wrapperClassName,
       )}
       style={
@@ -113,14 +113,14 @@ function DynamicIsland({
     >
       <div
         className={cn(
-          !isSmall && "fixed inset-0",
+          !isSmall && "pointer-events-auto fixed inset-0",
         )}
         onClick={onClose}
       />
 
       <div
         className={cn(
-          "absolute left-1/2 top-0 overflow-hidden bg-background text-white",
+          "pointer-events-auto absolute left-1/2 top-0 overflow-hidden bg-background text-white",
           "h-(--small-height) w-(--small-width) rounded-(--small-height)",
           "transform-[translate(-50%)_scale(var(--scale,1))]",
           "*:duration-200",

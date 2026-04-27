@@ -30,7 +30,7 @@ export function Header({ scrollContainerRef }: HeaderProps) {
       <div className="h-11 flex items-center gap-3 overflow-x-auto scrollbar-hidden pointer-events-auto md:pointer-events-none">
         {/* Left Section - Tabs */}
         <div className="shrink-0 flex-1 flex justify-end gap-3">
-          <Nav />
+          <Nav className="max-md:hidden" />
           <SearchDialog />
         </div>
 
@@ -40,7 +40,7 @@ export function Header({ scrollContainerRef }: HeaderProps) {
         {/* Right Section - DateTime, Refresh, User */}
         <div className="shrink-0 flex items-center gap-3 flex-1 justify-start">
           <RefreshButton />
-          <DateTime className="max-sm:hidden" />
+          <DateTime className="max-md:hidden" />
           <UserMenu />
         </div>
       </div>
