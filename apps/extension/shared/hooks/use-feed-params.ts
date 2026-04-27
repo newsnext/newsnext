@@ -12,24 +12,25 @@ import {
 export interface UseFeedParamsOptions {
   storageId: string
   params?: Record<string, FeedParamSchema>
+  initialValues?: FeedParamValues
 }
 
-export function useFeedParams({ storageId, params }: UseFeedParamsOptions) {
+export function useFeedParams({ storageId, params, initialValues }: UseFeedParamsOptions) {
   const storageKey = useMemo(() => getFeedParamsStorageKey(storageId), [storageId])
   const [savedParams, setSavedParams] = useState<FeedParamValues>(() => {
     if (typeof window === "undefined") {
-      return getDefaultFeedParamValues(params)
+      return sanitizeFeedParamValues(initialValues, params)
     }
 
-    return sanitizeFeedParamValues(readStoredFeedParamValues(storageId), params)
+    return sanitizeFeedParamValues(readStoredFeedParamValues(storageId) ?? initialValues, params)
   })
   const [draftParams, setDraftParams] = useState<FeedParamValues>(savedParams)
 
   useEffect(() => {
-    const nextSavedParams = sanitizeFeedParamValues(readStoredFeedParamValues(storageId), params)
+    const nextSavedParams = sanitizeFeedParamValues(readStoredFeedParamValues(storageId) ?? initialValues, params)
     setSavedParams(nextSavedParams)
     setDraftParams(nextSavedParams)
-  }, [storageId, storageKey, params])
+  }, [storageId, storageKey, params, initialValues])
 
   const updateDraftParam = useCallback((key: string, value: unknown) => {
     setDraftParams(prev => ({
@@ -43,6 +44,7 @@ export function useFeedParams({ storageId, params }: UseFeedParamsOptions) {
     setSavedParams(nextParams)
     setDraftParams(nextParams)
     writeStoredFeedParamValues(storageId, nextParams)
+    return nextParams
   }, [draftParams, params, storageId])
 
   const resetDraftParams = useCallback(() => {

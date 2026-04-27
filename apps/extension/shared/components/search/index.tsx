@@ -20,7 +20,7 @@ import { getSavedFeedParamValues } from "@/lib/feed-params"
 import { trpc } from "@/lib/trpc"
 import { forkedFeedCardsAtom, starredFeedIdsAtom } from "@/store/board"
 import Card from "../card"
-import { PhCopyDuotone, PhMagnifyingGlass, PhStarFill } from "../icons/ph"
+import { PhForkDuotone, PhMagnifyingGlass, PhStarFill } from "../icons/ph"
 import "./index.css"
 
 interface SearchItem {
@@ -30,7 +30,7 @@ interface SearchItem {
   name: string
   title?: string
   provider?: string
-  isCopy: boolean
+  isFork: boolean
   isStarred: boolean
 }
 
@@ -105,9 +105,9 @@ export function SearchDialog(): JSX.Element {
       starredFeedIds,
       forkedFeedCards,
     })
-    const copiesBoard = buildBoardFeeds({
+    const forksBoard = buildBoardFeeds({
       feeds,
-      boardId: "copies",
+      boardId: "forks",
       starredFeedIds,
       forkedFeedCards,
     })
@@ -125,23 +125,23 @@ export function SearchDialog(): JSX.Element {
           name: display.name,
           title: display.title,
           provider: feed.provider,
-          isCopy: false,
+          isFork: false,
           isStarred: starredFeedIds.includes(id),
         } satisfies SearchItem
       }),
-      ...copiesBoard.ids.map((id) => {
-        const feed = copiesBoard.map[id]
-        const params = getSavedFeedParamValues(feed.id, feed.params)
+      ...forksBoard.ids.map((id) => {
+        const feed = forksBoard.map[id]
+        const params = feed.paramsValue ?? getSavedFeedParamValues(feed.id, feed.params)
         const display = resolveFeedDisplay(feed, params)
 
         return {
           id,
-          category: `${categories[feed.category]} / Copied`,
+          category: `${categories[feed.category]} / Forked`,
           feed,
           name: display.name,
           title: display.title,
           provider: feed.provider,
-          isCopy: true,
+          isFork: true,
           isStarred: starredFeedIds.includes(id),
         } satisfies SearchItem
       }),
@@ -213,7 +213,7 @@ export function SearchDialog(): JSX.Element {
                         item.title ?? "",
                         item.provider ?? "",
                         item.category,
-                        item.isCopy ? "copy copied copies custom" : "featured recommend",
+                        item.isFork ? "fork forked custom" : "featured recommend",
                         item.isStarred ? "star starred" : "",
                       ]}
                     >
@@ -233,7 +233,7 @@ export function SearchDialog(): JSX.Element {
                         </span>
                       </span>
                       <span className="ml-auto flex shrink-0 items-center gap-2 text-neutral-400/80">
-                        {item.isCopy && <PhCopyDuotone />}
+                        {item.isFork && <PhForkDuotone />}
                         {item.isStarred && <PhStarFill />}
                       </span>
                     </CommandItem>

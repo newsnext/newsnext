@@ -17,7 +17,7 @@ import { Switch } from "@newsnext/ui/components/switch"
 import { useEffect, useMemo, useState } from "react"
 import {
   PhArrowCircleLeftDuotone,
-  PhCopyDuotone,
+  PhForkDuotone,
   PhInfoDuotone,
   PhLinkDuotone,
   PhPencilCircleDuotone,
@@ -330,8 +330,8 @@ export function CardBack() {
     draftFeedParams,
     hasFeedParams,
     hasFeedParamChanges,
-    isCopy,
-    onCopy,
+    isFork,
+    onFork,
     onDelete,
     onFeedParamChange,
     onSaveFeedParams,
@@ -342,7 +342,7 @@ export function CardBack() {
   } = useCard()
 
   const [editable, setEditable] = useState(false)
-  const canEdit = isCopy && editable
+  const canEdit = isFork && editable
   const shouldPromoteEditButton = !dragHandle
   const { provider, desc, interval, color, params } = feed
   const { name, title, home } = resolveFeedDisplay(feed, draftFeedParams)
@@ -370,10 +370,10 @@ export function CardBack() {
   }, [editable, name, title, desc, home, interval, color])
 
   useEffect(() => {
-    if (!isCopy) {
+    if (!isFork) {
       setEditable(false)
     }
-  }, [isCopy])
+  }, [isFork])
 
   return (
     <div
@@ -415,37 +415,37 @@ export function CardBack() {
           <IconButton
             onClick={(e) => {
               e.stopPropagation()
-              onCopy()
+              onFork()
             }}
-            aria-label="Copy"
-            title="Copy"
+            aria-label="Fork"
+            title="Fork"
           >
-            <PhCopyDuotone />
+            <PhForkDuotone />
           </IconButton>
           {shouldPromoteEditButton && (
             <IconButton
               onClick={(e) => {
                 e.stopPropagation()
-                if (!isCopy) {
+                if (!isFork) {
                   return
                 }
 
                 setEditable(p => !p)
               }}
               aria-label="Edit"
-              title={isCopy ? "Edit" : "Only copied cards can be edited"}
+              title={isFork ? "Edit" : "Only forked cards can be edited"}
             >
-              <PhPencilCircleDuotone className={cn(canEdit && "text-primary", !isCopy && "opacity-40")} />
+              <PhPencilCircleDuotone className={cn(canEdit && "text-primary", !isFork && "opacity-40")} />
             </IconButton>
           )}
-          {isCopy && (
+          {isFork && (
             <IconButton
               onClick={(e) => {
                 e.stopPropagation()
                 onDelete()
               }}
-              aria-label="Delete Copy"
-              title="Delete Copy"
+              aria-label="Delete Fork"
+              title="Delete Fork"
             >
               <PhTrashDuotone />
             </IconButton>
@@ -462,16 +462,16 @@ export function CardBack() {
             <IconButton
               onClick={(e) => {
                 e.stopPropagation()
-                if (!isCopy) {
+                if (!isFork) {
                   return
                 }
 
                 setEditable(p => !p)
               }}
               aria-label="Edit"
-              title={isCopy ? "Edit" : "Only copied cards can be edited"}
+              title={isFork ? "Edit" : "Only forked cards can be edited"}
             >
-              <PhPencilCircleDuotone className={cn(canEdit && "text-primary", !isCopy && "opacity-40")} />
+              <PhPencilCircleDuotone className={cn(canEdit && "text-primary", !isFork && "opacity-40")} />
             </IconButton>
           )}
         </div>
@@ -488,7 +488,7 @@ export function CardBack() {
           className="px-3 py-2 space-y-2"
           onDoubleClick={(e) => {
             e.stopPropagation() // Prevent flip on double click if that's a thing
-            if (!isCopy) {
+            if (!isFork) {
               return
             }
 

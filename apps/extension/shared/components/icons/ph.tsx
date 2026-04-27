@@ -2,9 +2,9 @@ import PhArrowCircleLeftDuotone from "~icons/ph/arrow-circle-left-duotone"
 import PhArrowCounterClockwiseDuotone from "~icons/ph/arrow-counter-clockwise-duotone"
 import PhArrowFatUpDuotone from "~icons/ph/arrow-fat-up-duotone"
 import PhCircleDashedDuotone from "~icons/ph/circle-dashed-duotone"
-import PhCopyDuotone from "~icons/ph/copy-duotone"
 import PhDotsSixVerticalDuotone from "~icons/ph/dots-six-vertical-duotone"
 import PhGearDuotone from "~icons/ph/gear-duotone"
+import PhGitForkDuotone from "~icons/ph/git-fork-duotone"
 import PhGithubLogoDuotone from "~icons/ph/github-logo-duotone"
 import PhGoogleLogoDuotone from "~icons/ph/google-logo-duotone"
 import PhInfoDuotone from "~icons/ph/info-duotone"
@@ -21,9 +21,9 @@ export {
   PhArrowCounterClockwiseDuotone,
   PhArrowFatUpDuotone,
   PhCircleDashedDuotone,
-  PhCopyDuotone,
   PhDotsSixVerticalDuotone,
   PhGearDuotone,
+  PhGitForkDuotone as PhForkDuotone,
   PhGithubLogoDuotone,
   PhGoogleLogoDuotone,
   PhInfoDuotone,

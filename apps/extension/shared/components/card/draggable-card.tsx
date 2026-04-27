@@ -23,7 +23,7 @@ export function DraggableCard({ id, feed, ...props }: DraggableCardProps) {
       container.className = cn("bg-background", !isIOS && "rounded-4xl")
 
       const root = createRoot(container)
-      const feedParams = getSavedFeedParamValues(id, feed.params)
+      const feedParams = feed.paramsValue ?? getSavedFeedParamValues(id, feed.params)
       root.render(<DragOverlay feed={feed} feedParams={feedParams} />)
       return () => root.unmount()
     },

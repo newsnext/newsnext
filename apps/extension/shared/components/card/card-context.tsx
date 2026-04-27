@@ -13,10 +13,10 @@ interface CardContextValue {
   items: NewsItem[]
   isFetching: boolean
   isStarred: boolean
-  isCopy: boolean
+  isFork: boolean
   onRefresh: () => void
   onToggleStar: () => void
-  onCopy: () => void
+  onFork: () => void
   onDelete: () => void
   onFeedParamChange: (key: string, value: unknown) => void
   onSaveFeedParams: () => void

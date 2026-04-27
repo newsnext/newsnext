@@ -1,9 +1,11 @@
 import type { BoardType } from "@newsnext/shared/types"
 import type { BoardFeed, FeedDescriptor } from "@/typings/feed"
+import { hashString, stableStringify } from "@newsnext/shared/utils"
 
 export interface ForkedFeedCard {
   id: string
   feedId: string
+  params?: Record<string, unknown>
   createdAt: number
 }
 
@@ -19,14 +21,17 @@ function createBoardFeed(feed: BoardFeedSource): BoardFeed {
     id: feedId,
     feedId,
     variantId: feed.id,
-    isCopy: false,
+    isFork: false,
   }
 }
 
-export function createForkedFeedCard(feedId: string): ForkedFeedCard {
+export function createForkedFeedCard(feedId: string, params: Record<string, unknown> = {}): ForkedFeedCard {
+  const paramsKey = stableStringify(params)
+
   return {
-    id: `${feedId}::copy:${crypto.randomUUID()}`,
+    id: `${feedId}::fork:${hashString(paramsKey)}`,
     feedId,
+    params,
     createdAt: Date.now(),
   }
 }
@@ -63,19 +68,20 @@ export function buildBoardFeeds({
         ...feed,
         id: forkedFeedCard.id,
         feedId: forkedFeedCard.feedId,
-        isCopy: true,
+        paramsValue: forkedFeedCard.params,
+        isFork: true,
       } satisfies BoardFeed))
 
     return {
       baseFeed: feed,
-      copiedFeeds: forks,
+      forkedFeeds: forks,
     }
   })
 
   const visibleFeeds = boardId === "stars"
-    ? mergedFeeds.flatMap(({ baseFeed, copiedFeeds }) => [baseFeed, ...copiedFeeds]).filter(feed => starredFeedIds.includes(feed.id))
-    : boardId === "copies"
-      ? mergedFeeds.flatMap(({ copiedFeeds }) => copiedFeeds)
+    ? mergedFeeds.flatMap(({ baseFeed, forkedFeeds }) => [baseFeed, ...forkedFeeds]).filter(feed => starredFeedIds.includes(feed.id))
+    : boardId === "forks"
+      ? mergedFeeds.flatMap(({ forkedFeeds }) => forkedFeeds)
       : mergedFeeds.map(({ baseFeed }) => baseFeed)
 
   return {
@@ -85,5 +91,5 @@ export function buildBoardFeeds({
 }
 
 export function buildFeedRequestKey(feedId: string, params: Record<string, unknown> = {}): string {
-  return `${feedId}:${JSON.stringify(params)}`
+  return `${feedId}:${stableStringify(params)}`
 }

@@ -10,7 +10,6 @@ import {
   PhInfoDuotone,
   PhStarDuotone,
   PhStarFill,
-  PhTrashDuotone,
 } from "../icons/ph"
 import { useCard } from "./card-context"
 import { Hottest } from "./hottest"
@@ -24,10 +23,8 @@ export function CardFront() {
     isFetching,
     updatedTime,
     isStarred,
-    isCopy,
     onRefresh,
     onToggleStar,
-    onDelete,
     onFlip,
     dragHandle,
   } = useCard()
@@ -101,15 +98,6 @@ export function CardFront() {
           >
             {isStarred ? <PhStarFill /> : <PhStarDuotone />}
           </IconButton>
-          {isCopy && (
-            <IconButton
-              onClick={onDelete}
-              aria-label="Delete Copy"
-              title="Delete Copy"
-            >
-              <PhTrashDuotone />
-            </IconButton>
-          )}
           <IconButton
             onClick={onFlip}
             aria-label="Datail"

@@ -4,7 +4,7 @@ import { SegmentedControl } from "../common/segmented-control"
 
 const TABS = [
   { label: "Featured", value: "featured" },
-  { label: "Custom", value: "copies" },
+  { label: "Forks", value: "forks" },
   { label: "Stars", value: "stars" },
 ] as const
 

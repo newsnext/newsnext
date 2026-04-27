@@ -1,6 +1,7 @@
 import type { CacheAdapter, CacheResult } from "@newsnext/cache"
 import type { FeedParamSchemaMap, InferFeedParams, RegisteredFeedDefinition } from "../typings"
 import { getCachedSource } from "@newsnext/cache"
+import { stableStringify } from "@newsnext/shared/utils"
 import { providers } from "../index"
 import { FeedParamValueError } from "../typings"
 import { parseFeedParams } from "../utils/params"
@@ -38,6 +39,7 @@ export interface LoadFeedOptions {
 
 export interface FeedLoadResult<T> extends CacheResult<T> {
   id: string
+  key: string
 }
 
 export interface PreparedFeedRequest<TParams extends FeedParamSchemaMap = FeedParamSchemaMap> {
@@ -119,7 +121,7 @@ export function buildFeedCacheKey(
   feedId: string,
   params: Record<string, unknown>,
 ): string {
-  return `${feedId}:${JSON.stringify(params)}`
+  return `${feedId}:${stableStringify(params)}`
 }
 
 export async function loadFeed<T>({
@@ -134,8 +136,9 @@ export async function loadFeed<T>({
   const params = paramsAreNormalized
     ? queryParams
     : normalizeFeedParams(feed, queryParams)
+  const key = buildFeedCacheKey(feedId, params)
   const result = await getCachedSource<T>({
-    key: buildFeedCacheKey(feedId, params),
+    key,
     fetcher: () => feed.loader(params) as Promise<T>,
     forceRefresh: latest,
     waitUntil,
@@ -143,6 +146,7 @@ export async function loadFeed<T>({
 
   return {
     id: feedId,
+    key,
     ...result,
   }
 }

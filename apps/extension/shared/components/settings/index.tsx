@@ -174,7 +174,7 @@ function GeneralSettings() {
 
   const TABS = [
     { label: "Featured", value: "featured" },
-    { label: "Custom", value: "copies" },
+    { label: "Forks", value: "forks" },
     { label: "Stars", value: "stars" },
     { label: "Last Used", value: "last" },
   ] as const

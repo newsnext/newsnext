@@ -107,4 +107,13 @@ describe("feed service", () => {
       page: 2,
     })).toBe("json:default:{\"itemsPath\":\"items\",\"page\":2}")
   })
+
+  it("builds stable cache keys for object params", () => {
+    expect(buildFeedCacheKey("json:default", {
+      headers: {
+        Authorization: "Bearer token",
+        Accept: "application/json",
+      },
+    })).toBe("json:default:{\"headers\":{\"Accept\":\"application/json\",\"Authorization\":\"Bearer token\"}}")
+  })
 })

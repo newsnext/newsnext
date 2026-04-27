@@ -10,7 +10,7 @@ import { DesktopBoard } from "./desktop-board"
 import { MobileBoard } from "./mobile-board"
 
 interface NowLayerProps {
-  boardId?: "featured" | "copies" | "stars"
+  boardId?: "featured" | "forks" | "stars"
   onFeedIdsChange?: (feedIds: string[]) => void
   className?: string
   isScattered?: boolean
@@ -66,10 +66,10 @@ export function NowLayer({
     )
   }
 
-  if (!isPending && boardId === "copies" && feedIds.length === 0) {
+  if (!isPending && boardId === "forks" && feedIds.length === 0) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center px-6 text-center text-sm text-muted-foreground">
-        Copy a card to collect your custom versions here.
+        Fork a card to collect your feed forks here.
       </div>
     )
   }
@@ -91,7 +91,7 @@ export function NowLayer({
       key={boardId}
       feedIds={feedIds}
       feedsMap={feedsMap}
-      isSortable={boardId === "copies" || boardId === "stars"}
+      isSortable={boardId === "forks" || boardId === "stars"}
       className={className}
       isScattered={isScattered}
       containerRef={containerRef}

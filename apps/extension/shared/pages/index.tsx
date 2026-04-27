@@ -6,7 +6,7 @@ const DEFAULT_BOARD_KEY = "newsnext-default-board"
 const LAST_ACTIVE_BOARD_KEY = "newsnext-last-active-board"
 
 function parseStoredBoard(raw: string | null): BoardType {
-  if (raw === "featured" || raw === "copies" || raw === "stars") return raw
+  if (raw === "featured" || raw === "forks" || raw === "stars") return raw
   return "featured"
 }
 

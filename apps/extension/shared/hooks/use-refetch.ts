@@ -63,7 +63,7 @@ export function useRefetch() {
         const feed = boardFeeds.map[id]
         return {
           feedId: feed.feedId,
-          params: getSavedFeedParamValues(feed.id, feed.params),
+          params: feed.paramsValue ?? getSavedFeedParamValues(feed.id, feed.params),
         } satisfies RefetchTarget
       })
       const uniqueTargets = [...new Map(
