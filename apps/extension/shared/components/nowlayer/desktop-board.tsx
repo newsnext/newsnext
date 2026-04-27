@@ -3,12 +3,34 @@ import type { RefObject } from "react"
 import type { BoardFeed } from "@/typings/feed"
 import { useThrottleFn } from "@newsnext/ui/hooks/use-throttle-fn"
 import { motion } from "motion/react"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { DndContext } from "@/hooks/use-dnd-context"
 import Card from "../card"
 import { DraggableCard } from "../card/draggable-card"
 
 const ANIMATION_DURATION = 0.2 // 200ms
+const SCATTER_STAGGER = 0.01
+
+interface ScatterVector {
+  x: number
+  y: number
+}
+
+interface VisibleBounds {
+  top: number
+  right: number
+  bottom: number
+  left: number
+  width: number
+  height: number
+}
+
+interface ScatterItemCustom {
+  index: number
+  scatterIndex: number
+  hasScattered: boolean
+  vector?: ScatterVector
+}
 
 interface DesktopBoardProps {
   feedIds: string[]
@@ -31,13 +53,24 @@ export function DesktopBoard({
 }: DesktopBoardProps) {
   const [orderedFeedIds, setOrderedFeedIds] = useState(feedIds)
   const initialOrderedFeedIdsRef = useRef(feedIds)
-  const [scatterVectors, setScatterVectors] = useState<Record<string, { x: number, y: number }>>({})
+  const [scatterVectors, setScatterVectors] = useState<Record<string, ScatterVector>>({})
+  const [visibleScatterFeedIds, setVisibleScatterFeedIds] = useState<string[]>([])
+  const [hasScattered, setHasScattered] = useState(false)
   const itemsRef = useRef<Map<string, HTMLLIElement>>(new Map())
-  const visibleFeedIds = orderedFeedIds.filter(id => Boolean(feedsMap[id]))
+  const visibleFeedIds = useMemo(
+    () => orderedFeedIds.filter(id => Boolean(feedsMap[id])),
+    [orderedFeedIds, feedsMap],
+  )
 
   useEffect(() => {
     setOrderedFeedIds(feedIds)
   }, [feedIds])
+
+  useEffect(() => {
+    if (isScattered) {
+      setHasScattered(true)
+    }
+  }, [isScattered])
 
   const onDragStart = useCallback(() => {
     initialOrderedFeedIdsRef.current = orderedFeedIds
@@ -76,21 +109,54 @@ export function DesktopBoard({
     edges: ["trailing", "leading"],
   })
 
-  // Calculate scatter vectors
-  useEffect(() => {
-    const calculateVectors = () => {
+  // Calculate scatter vectors for cards that are visible in the viewport.
+  useLayoutEffect(() => {
+    const getVisibleBounds = (container: HTMLDivElement) => {
+      const containerRect = container.getBoundingClientRect()
+      const top = Math.max(containerRect.top, 0)
+      const right = Math.min(containerRect.right, window.innerWidth)
+      const bottom = Math.min(containerRect.bottom, window.innerHeight)
+      const left = Math.max(containerRect.left, 0)
+
+      return {
+        visibleRect: {
+          top,
+          right,
+          bottom,
+          left,
+          width: Math.max(0, right - left),
+          height: Math.max(0, bottom - top),
+        },
+      }
+    }
+
+    const isRectVisible = (
+      rect: DOMRect,
+      bounds: VisibleBounds,
+    ) => (
+      rect.bottom > bounds.top
+      && rect.top < bounds.bottom
+      && rect.right > bounds.left
+      && rect.left < bounds.right
+    )
+
+    const calculateVectors = (): void => {
       const container = containerRef?.current
       if (!container) return
 
-      const newVectors: Record<string, { x: number, y: number }> = {}
-      const containerRect = container.getBoundingClientRect()
-      const centerX = containerRect.left + containerRect.width / 2
-      const centerY = containerRect.top + containerRect.height / 2
+      const newVectors: Record<string, ScatterVector> = {}
+      const newVisibleFeedIds: string[] = []
+      const { visibleRect } = getVisibleBounds(container)
+      const centerX = visibleRect.left + visibleRect.width / 2
+      const centerY = visibleRect.top + visibleRect.height / 2
 
       itemsRef.current.forEach((el, id) => {
-        if (!orderedFeedIds.includes(id)) return // cleanup old refs
+        if (!visibleFeedIds.includes(id)) return // cleanup old refs
 
         const rect = el.getBoundingClientRect()
+        if (!isRectVisible(rect, visibleRect)) return
+
+        newVisibleFeedIds.push(id)
         const elCenterX = rect.left + rect.width / 2
         const elCenterY = rect.top + rect.height / 2
 
@@ -105,7 +171,7 @@ export function DesktopBoard({
 
         // Normalize and scale to ensure it goes off the board layer.
         const length = Math.sqrt(dx * dx + dy * dy) || 1
-        const maxDist = Math.sqrt(containerRect.width ** 2 + containerRect.height ** 2)
+        const maxDist = Math.sqrt(visibleRect.width ** 2 + visibleRect.height ** 2)
         const scale = maxDist / 2 + 200 // Add some buffer
 
         newVectors[id] = {
@@ -114,9 +180,11 @@ export function DesktopBoard({
         }
       })
       setScatterVectors(newVectors)
+      setVisibleScatterFeedIds(newVisibleFeedIds)
     }
 
     calculateVectors()
+    window.addEventListener("scroll", calculateVectors, true)
     window.addEventListener("resize", calculateVectors)
 
     const container = containerRef?.current
@@ -131,10 +199,11 @@ export function DesktopBoard({
     }
 
     return () => {
+      window.removeEventListener("scroll", calculateVectors, true)
       window.removeEventListener("resize", calculateVectors)
       resizeObserver?.disconnect()
     }
-  }, [containerRef, orderedFeedIds])
+  }, [containerRef, visibleFeedIds, isScattered])
 
   const boardContent = (
     <motion.ol
@@ -147,14 +216,10 @@ export function DesktopBoard({
         },
         visible: {
           opacity: 1,
-          transition: {
-            delayChildren: 0.1,
-            staggerChildren: 0.1,
-          },
         },
         scattered: {
           transition: {
-            staggerChildren: 0.01, // Faster stagger for scatter
+            duration: 0,
           },
         },
       }}
@@ -167,7 +232,12 @@ export function DesktopBoard({
             else itemsRef.current.delete(id)
           }}
           layout={!isScattered} // Disable layout animation during scatter to prevent conflict
-          custom={{ index, vector: scatterVectors[id] }}
+          custom={{
+            index,
+            scatterIndex: visibleScatterFeedIds.indexOf(id),
+            hasScattered,
+            vector: scatterVectors[id],
+          }}
           transition={{
             type: "tween",
             duration: ANIMATION_DURATION,
@@ -177,21 +247,31 @@ export function DesktopBoard({
               y: 20,
               opacity: 0,
             },
-            visible: {
-              y: 0,
-              x: 0,
-              scale: 1,
-              opacity: 1,
-              transition: {
-                type: "spring",
-                stiffness: 300,
-                damping: 25,
-              },
+            visible: ({ hasScattered, index, scatterIndex }: ScatterItemCustom) => {
+              const isVisibleScatterCard = scatterIndex !== -1
+              return {
+                y: 0,
+                x: 0,
+                scale: 1,
+                opacity: 1,
+                transition: hasScattered && !isVisibleScatterCard
+                  ? { duration: 0 }
+                  : {
+                      type: "spring",
+                      stiffness: 300,
+                      damping: 25,
+                      delay: (hasScattered ? scatterIndex : index) * SCATTER_STAGGER,
+                    },
+              }
             },
-            scattered: ({ vector }: { vector?: { x: number, y: number } }) => {
-              if (!vector) {
-                // Fallback if vector not ready
-                return { opacity: 0 }
+            scattered: ({ scatterIndex, vector }: ScatterItemCustom) => {
+              if (scatterIndex === -1 || !vector) {
+                return {
+                  opacity: 0,
+                  transition: {
+                    duration: 0,
+                  },
+                }
               }
               return {
                 x: vector.x,
@@ -199,6 +279,7 @@ export function DesktopBoard({
                 scale: 1.1,
                 opacity: 0,
                 transition: {
+                  delay: scatterIndex * SCATTER_STAGGER,
                   duration: 0.4,
                   ease: "easeIn",
                 },
