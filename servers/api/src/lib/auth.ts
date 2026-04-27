@@ -16,6 +16,8 @@ function getTrustedOrigins(): string[] {
 
 const githubClientId = getEnv("GITHUB_CLIENT_ID")
 const githubClientSecret = getEnv("GITHUB_CLIENT_SECRET")
+const googleClientId = getEnv("GOOGLE_CLIENT_ID")
+const googleClientSecret = getEnv("GOOGLE_CLIENT_SECRET")
 
 export const auth = betterAuth({
   baseURL: getEnv("BETTER_AUTH_URL"),
@@ -31,6 +33,14 @@ export const auth = betterAuth({
           github: {
             clientId: githubClientId,
             clientSecret: githubClientSecret,
+          },
+        }
+      : {}),
+    ...(googleClientId && googleClientSecret
+      ? {
+          google: {
+            clientId: googleClientId,
+            clientSecret: googleClientSecret,
           },
         }
       : {}),

@@ -1,4 +1,5 @@
 import type { SettingsTabId } from "../settings"
+import type { AuthProviderId } from "@/lib/auth-client"
 import {
   Avatar,
   AvatarFallback,
@@ -15,31 +16,33 @@ import {
 import { Spinner } from "@newsnext/ui/components/spinner"
 import { cn } from "@newsnext/ui/lib/utils"
 import { useState } from "react"
-import { authClient } from "@/lib/auth-client"
-import { PhGearDuotone, PhGithubLogoDuotone, PhUserDuotone } from "../icons/ph"
+import { authClient, signInWithProvider } from "@/lib/auth-client"
+import { PhGearDuotone, PhGithubLogoDuotone, PhGoogleLogoDuotone, PhUserDuotone } from "../icons/ph"
 import { SettingsModal } from "../settings"
 
 export function UserMenu() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [settingsTab, setSettingsTab] = useState<SettingsTabId>("appearance")
-  const [isSigningIn, setIsSigningIn] = useState(false)
+  const [accountError, setAccountError] = useState<string | null>(null)
+  const [signingInProvider, setSigningInProvider] = useState<AuthProviderId | null>(null)
   const { data: session, isPending } = authClient.useSession()
   const userName = session?.user.name || "Guest"
   const hasUserImage = Boolean(session?.user.image)
 
-  function openSettings(tab: SettingsTabId = "appearance"): void {
+  function openSettings(tab: SettingsTabId = "appearance", error: string | null = null): void {
+    setAccountError(error)
     setSettingsTab(tab)
     setIsSettingsOpen(true)
   }
 
-  async function handleGithubSignIn(): Promise<void> {
-    setIsSigningIn(true)
+  async function handleSignIn(provider: AuthProviderId): Promise<void> {
+    setSigningInProvider(provider)
 
-    const { error } = await signInWithGithub()
+    const { error } = await signInWithProvider(provider)
 
     if (error) {
-      setIsSigningIn(false)
-      openSettings("account")
+      setSigningInProvider(null)
+      openSettings("account", formatSignInError(provider, error))
     }
   }
 
@@ -89,15 +92,26 @@ export function UserMenu() {
             {session
               ? null
               : (
-                  <DropdownMenuItem
-                    disabled={isSigningIn}
-                    onClick={handleGithubSignIn}
-                  >
-                    {isSigningIn
-                      ? <Spinner className="size-4" />
-                      : <PhGithubLogoDuotone className="size-4" />}
-                    Sign in with GitHub
-                  </DropdownMenuItem>
+                  <>
+                    <DropdownMenuItem
+                      disabled={Boolean(signingInProvider)}
+                      onClick={() => handleSignIn("github")}
+                    >
+                      {signingInProvider === "github"
+                        ? <Spinner className="size-4" />
+                        : <PhGithubLogoDuotone className="size-4" />}
+                      Sign in with GitHub
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      disabled={Boolean(signingInProvider)}
+                      onClick={() => handleSignIn("google")}
+                    >
+                      {signingInProvider === "google"
+                        ? <Spinner className="size-4" />
+                        : <PhGoogleLogoDuotone className="size-4" />}
+                      Sign in with Google
+                    </DropdownMenuItem>
+                  </>
                 )}
             <DropdownMenuItem onClick={() => openSettings()}>
               <PhGearDuotone className="size-4" />
@@ -108,6 +122,7 @@ export function UserMenu() {
       </DropdownMenu>
 
       <SettingsModal
+        initialAccountError={accountError}
         initialTab={settingsTab}
         open={isSettingsOpen}
         onOpenChange={setIsSettingsOpen}
@@ -116,16 +131,9 @@ export function UserMenu() {
   )
 }
 
-async function signInWithGithub(): Promise<{ error: string | null }> {
-  const { error } = await authClient.signIn.social({
-    provider: "github",
-    callbackURL: window.location.href,
-    errorCallbackURL: window.location.href,
-  })
-
-  return {
-    error: error?.message || null,
-  }
+function formatSignInError(provider: AuthProviderId, error: string): string {
+  const providerName = provider === "github" ? "GitHub" : "Google"
+  return `${providerName} sign-in failed: ${error}`
 }
 
 function UserAvatar({

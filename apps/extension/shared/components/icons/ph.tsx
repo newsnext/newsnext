@@ -6,6 +6,7 @@ import PhCopyDuotone from "~icons/ph/copy-duotone"
 import PhDotsSixVerticalDuotone from "~icons/ph/dots-six-vertical-duotone"
 import PhGearDuotone from "~icons/ph/gear-duotone"
 import PhGithubLogoDuotone from "~icons/ph/github-logo-duotone"
+import PhGoogleLogoDuotone from "~icons/ph/google-logo-duotone"
 import PhInfoDuotone from "~icons/ph/info-duotone"
 import PhLinkDuotone from "~icons/ph/link-duotone"
 import PhMagnifyingGlassDuotone from "~icons/ph/magnifying-glass-duotone"
@@ -24,6 +25,7 @@ export {
   PhDotsSixVerticalDuotone,
   PhGearDuotone,
   PhGithubLogoDuotone,
+  PhGoogleLogoDuotone,
   PhInfoDuotone,
   PhLinkDuotone,
   PhMagnifyingGlassDuotone as PhMagnifyingGlass,

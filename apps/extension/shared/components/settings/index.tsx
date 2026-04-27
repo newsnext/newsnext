@@ -1,3 +1,4 @@
+import type { AuthProviderId } from "@/lib/auth-client"
 import type { ThemeMode, ThemeVersion } from "@/lib/utils/swith-theme"
 import { Button } from "@newsnext/ui/components/button"
 import {
@@ -11,7 +12,7 @@ import { Spinner } from "@newsnext/ui/components/spinner"
 import { cn } from "@newsnext/ui/lib/utils"
 import { LogOut } from "lucide-react"
 import { useEffect, useState } from "react"
-import { authClient } from "@/lib/auth-client"
+import { authClient, signInWithProvider } from "@/lib/auth-client"
 import {
   handleThemeModeSwitch,
   handleThemeVersionSwitch,
@@ -20,17 +21,19 @@ import {
 } from "@/lib/utils/swith-theme"
 import { SegmentedControl } from "../common/segmented-control"
 import { ThemeSelector } from "../common/theme-selector"
-import { PhGithubLogoDuotone } from "../icons/ph"
+import { PhGithubLogoDuotone, PhGoogleLogoDuotone } from "../icons/ph"
 
 const SETTINGS_TAB_KEY = "newsnext-settings-tab"
 const DEFAULT_BOARD_KEY = "newsnext-default-board"
 export type SettingsTabId = "appearance" | "general" | "account"
 
 export function SettingsModal({
+  initialAccountError,
   initialTab,
   open,
   onOpenChange,
 }: {
+  initialAccountError?: string | null
   initialTab?: SettingsTabId
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -84,7 +87,7 @@ export function SettingsModal({
           </DialogHeader>
           {activeTab === "appearance" && <AppearanceSettings />}
           {activeTab === "general" && <GeneralSettings />}
-          {activeTab === "account" && <AccountSettings />}
+          {activeTab === "account" && <AccountSettings initialError={initialAccountError} />}
         </div>
       </DialogContent>
     </Dialog>
@@ -206,25 +209,25 @@ function GeneralSettings() {
   )
 }
 
-function AccountSettings() {
+function AccountSettings({ initialError }: { initialError?: string | null }) {
   const { data: session, isPending, refetch } = authClient.useSession()
-  const [error, setError] = useState<string | null>(null)
-  const [isSigningIn, setIsSigningIn] = useState(false)
+  const [error, setError] = useState<string | null>(initialError ?? null)
+  const [signingInProvider, setSigningInProvider] = useState<AuthProviderId | null>(null)
   const [isSigningOut, setIsSigningOut] = useState(false)
 
-  async function handleGithubSignIn(): Promise<void> {
-    setError(null)
-    setIsSigningIn(true)
+  useEffect(() => {
+    setError(initialError ?? null)
+  }, [initialError])
 
-    const { error } = await authClient.signIn.social({
-      provider: "github",
-      callbackURL: window.location.href,
-      errorCallbackURL: window.location.href,
-    })
+  async function handleSignIn(provider: AuthProviderId): Promise<void> {
+    setError(null)
+    setSigningInProvider(provider)
+
+    const { error } = await signInWithProvider(provider)
 
     if (error) {
-      setIsSigningIn(false)
-      setError(error.message || "GitHub sign-in failed.")
+      setSigningInProvider(null)
+      setError(formatSignInError(provider, error))
     }
   }
 
@@ -281,13 +284,23 @@ function AccountSettings() {
             </div>
           )
         : (
-            <Button
-              disabled={isSigningIn}
-              onClick={handleGithubSignIn}
-            >
-              {isSigningIn ? <Spinner /> : <PhGithubLogoDuotone />}
-              Sign in with GitHub
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                disabled={Boolean(signingInProvider)}
+                onClick={() => handleSignIn("github")}
+              >
+                {signingInProvider === "github" ? <Spinner /> : <PhGithubLogoDuotone />}
+                Sign in with GitHub
+              </Button>
+              <Button
+                disabled={Boolean(signingInProvider)}
+                variant="outline"
+                onClick={() => handleSignIn("google")}
+              >
+                {signingInProvider === "google" ? <Spinner /> : <PhGoogleLogoDuotone />}
+                Sign in with Google
+              </Button>
+            </div>
           )}
 
       {error && (
@@ -308,4 +321,9 @@ function AccountSettings() {
       )}
     </div>
   )
+}
+
+function formatSignInError(provider: AuthProviderId, error: string): string {
+  const providerName = provider === "github" ? "GitHub" : "Google"
+  return `${providerName} sign-in failed: ${error}`
 }
