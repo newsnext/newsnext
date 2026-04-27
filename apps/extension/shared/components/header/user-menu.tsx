@@ -62,25 +62,29 @@ export function UserMenu() {
               : <PhUserDuotone className="size-5" />}
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-64">
-          <DropdownMenuGroup>
-            <DropdownMenuItem
-              className="px-2 py-2.5"
-              onClick={() => openSettings("account")}
-            >
-              <div className="flex items-center gap-3">
-                <UserAvatar image={session?.user.image} name={userName} />
-                <div className="min-w-0">
-                  <div className="truncate text-sm font-medium text-foreground">
-                    {userName}
+          {session && (
+            <>
+              <DropdownMenuGroup>
+                <DropdownMenuItem
+                  className="px-2 py-2.5"
+                  onClick={() => openSettings("account")}
+                >
+                  <div className="flex items-center gap-3">
+                    <UserAvatar image={session.user.image} name={userName} />
+                    <div className="min-w-0">
+                      <div className="truncate text-sm font-medium text-foreground">
+                        {userName}
+                      </div>
+                      <div className="truncate text-xs text-muted-foreground">
+                        {session.user.email}
+                      </div>
+                    </div>
                   </div>
-                  <div className="truncate text-xs text-muted-foreground">
-                    {session?.user.email || "Not signed in"}
-                  </div>
-                </div>
-              </div>
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
-          <DropdownMenuSeparator />
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+              <DropdownMenuSeparator />
+            </>
+          )}
           <DropdownMenuGroup>
             {session
               ? null
