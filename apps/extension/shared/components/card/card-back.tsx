@@ -95,9 +95,8 @@ function Text({ text }: { text: string }) {
   return (
     <span
       className={cn(
-        "flex h-6 w-full items-center justify-end rounded-3xl border border-transparent px-2 font-normal leading-none",
-        "overflow-hidden whitespace-nowrap text-right text-ellipsis",
-        isLink && "cursor-pointer hover:underline text-blue-500",
+        "flex h-6 w-full items-center justify-end truncate rounded-3xl border border-transparent px-2 text-right font-normal leading-none",
+        isLink && "cursor-pointer hover:underline",
       )}
       title={text}
       onClick={() => {
@@ -122,7 +121,7 @@ function SelectLikeValue({ children }: PropsWithChildren) {
   )
 }
 
-function ColorSwatch({ color, className }: { color: Color, className?: string }) {
+function ColorSwitch({ color, className }: { color: Color, className?: string }) {
   return (
     <span
       className={cn("inline-block rounded-full", className)}
@@ -134,9 +133,10 @@ function ColorSwatch({ color, className }: { color: Color, className?: string })
 function Info(props: PropsWithChildren<{
   icon: React.ReactNode
   label: string
+  className?: string
 }>) {
   return (
-    <div className="flex min-h-6 gap-3 items-center w-full justify-between border-b border-border/10 pb-1 mb-1 last:mb-0 last:border-0">
+    <div className={cn("flex min-h-6 w-full items-center justify-between gap-3 border-b border-border/10 pb-1 mb-1 last:mb-0 last:border-0", props.className)}>
       <span className="flex gap-2 items-center shrink-0 text-muted-foreground">
         {props.icon}
         <span className="font-medium text-sm leading-none">{props.label}</span>
@@ -291,7 +291,7 @@ function ColorSelector({ color, editable, onChange }: { color: Color, editable?:
   if (!editable) {
     return (
       <SelectLikeValue>
-        <ColorSwatch color={color} className="size-3" />
+        <ColorSwitch color={color} className="size-3" />
         <span className="text-sm">{color}</span>
       </SelectLikeValue>
     )
@@ -301,20 +301,21 @@ function ColorSelector({ color, editable, onChange }: { color: Color, editable?:
     <Select value={color} onValueChange={val => onChange?.(val as Color)}>
       <SelectTrigger className={editableSelectClassName} onClick={e => e.stopPropagation()}>
         <div className="flex items-center gap-2">
-          <ColorSwatch color={color} className="size-3" />
+          <ColorSwitch color={color} className="size-3" />
           <span className="text-sm">{color}</span>
         </div>
       </SelectTrigger>
-      <SelectContent className="w-auto min-w-34">
-        <div className="grid grid-cols-5 gap-1 p-1.5">
+      <SelectContent className="w-42">
+        <div className="grid grid-cols-6 place-items-center gap-1 p-1.5">
           {COLORS.map(c => (
             <SelectItem
               key={c}
               value={c}
-              className="size-7 justify-center cursor-pointer p-0 pr-0 pl-0"
+              className="grid size-7 cursor-pointer place-items-center p-0"
+              indicatorClassName="hidden!"
               title={c}
             >
-              <ColorSwatch color={c} className="size-4" />
+              <ColorSwitch color={c} className="size-4" />
             </SelectItem>
           ))}
         </div>

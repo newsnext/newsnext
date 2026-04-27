@@ -110,9 +110,12 @@ function SelectLabel({
 
 function SelectItem({
   className,
+  indicatorClassName,
   children,
   ...props
-}: SelectPrimitive.Item.Props) {
+}: SelectPrimitive.Item.Props & {
+  indicatorClassName?: string
+}) {
   return (
     <SelectPrimitive.Item
       data-slot="select-item"
@@ -127,7 +130,7 @@ function SelectItem({
       </SelectPrimitive.ItemText>
       <SelectPrimitive.ItemIndicator
         render={
-          <span className="pointer-events-none absolute right-2 flex size-4 items-center justify-center" />
+          <span className={cn("pointer-events-none absolute right-2 flex size-4 items-center justify-center", indicatorClassName)} />
         }
       >
         <CheckIcon className="pointer-events-none" />
