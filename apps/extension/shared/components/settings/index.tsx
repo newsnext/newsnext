@@ -1,4 +1,5 @@
 import type { ThemeMode, ThemeVersion } from "@/lib/utils/swith-theme"
+import { Button } from "@newsnext/ui/components/button"
 import {
   Dialog,
   DialogContent,
@@ -6,8 +7,11 @@ import {
   DialogTitle,
 } from "@newsnext/ui/components/dialog"
 import { Label } from "@newsnext/ui/components/label"
+import { Spinner } from "@newsnext/ui/components/spinner"
 import { cn } from "@newsnext/ui/lib/utils"
+import { LogOut } from "lucide-react"
 import { useEffect, useState } from "react"
+import { authClient } from "@/lib/auth-client"
 import {
   handleThemeModeSwitch,
   handleThemeVersionSwitch,
@@ -16,30 +20,40 @@ import {
 } from "@/lib/utils/swith-theme"
 import { SegmentedControl } from "../common/segmented-control"
 import { ThemeSelector } from "../common/theme-selector"
+import { PhGithubLogoDuotone } from "../icons/ph"
 
 const SETTINGS_TAB_KEY = "newsnext-settings-tab"
 const DEFAULT_BOARD_KEY = "newsnext-default-board"
+export type SettingsTabId = "appearance" | "general" | "account"
 
-export function SettingsModal({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) {
-  const [activeTab, setActiveTab] = useState(() => {
-    return localStorage.getItem(SETTINGS_TAB_KEY) || "appearance"
+export function SettingsModal({
+  initialTab,
+  open,
+  onOpenChange,
+}: {
+  initialTab?: SettingsTabId
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}) {
+  const [activeTab, setActiveTab] = useState<SettingsTabId>(() => {
+    return readSettingsTab(initialTab)
   })
 
   useEffect(() => {
     if (open) {
-      const savedTab = localStorage.getItem(SETTINGS_TAB_KEY)
-      if (savedTab) setActiveTab(savedTab)
+      setActiveTab(readSettingsTab(initialTab))
     }
-  }, [open])
+  }, [initialTab, open])
 
-  const handleTabChange = (tabId: string) => {
+  const handleTabChange = (tabId: SettingsTabId) => {
     setActiveTab(tabId)
     localStorage.setItem(SETTINGS_TAB_KEY, tabId)
   }
 
-  const tabs = [
+  const tabs: Array<{ id: SettingsTabId, label: string }> = [
     { id: "appearance", label: "Appearance" },
     { id: "general", label: "General" },
+    { id: "account", label: "Account" },
   ]
 
   return (
@@ -70,10 +84,25 @@ export function SettingsModal({ open, onOpenChange }: { open: boolean, onOpenCha
           </DialogHeader>
           {activeTab === "appearance" && <AppearanceSettings />}
           {activeTab === "general" && <GeneralSettings />}
+          {activeTab === "account" && <AccountSettings />}
         </div>
       </DialogContent>
     </Dialog>
   )
+}
+
+function readSettingsTab(initialTab?: SettingsTabId): SettingsTabId {
+  if (initialTab) {
+    localStorage.setItem(SETTINGS_TAB_KEY, initialTab)
+    return initialTab
+  }
+
+  const savedTab = localStorage.getItem(SETTINGS_TAB_KEY)
+  return isSettingsTabId(savedTab) ? savedTab : "appearance"
+}
+
+function isSettingsTabId(value: string | null): value is SettingsTabId {
+  return value === "appearance" || value === "general" || value === "account"
 }
 
 function AppearanceSettings() {
@@ -173,6 +202,110 @@ function GeneralSettings() {
           Choose which tab to show when the extension opens.
         </p>
       </div>
+    </div>
+  )
+}
+
+function AccountSettings() {
+  const { data: session, isPending, refetch } = authClient.useSession()
+  const [error, setError] = useState<string | null>(null)
+  const [isSigningIn, setIsSigningIn] = useState(false)
+  const [isSigningOut, setIsSigningOut] = useState(false)
+
+  async function handleGithubSignIn(): Promise<void> {
+    setError(null)
+    setIsSigningIn(true)
+
+    const { error } = await authClient.signIn.social({
+      provider: "github",
+      callbackURL: window.location.href,
+      errorCallbackURL: window.location.href,
+    })
+
+    if (error) {
+      setIsSigningIn(false)
+      setError(error.message || "GitHub sign-in failed.")
+    }
+  }
+
+  async function handleSignOut(): Promise<void> {
+    setError(null)
+    setIsSigningOut(true)
+
+    const { error } = await authClient.signOut()
+    setIsSigningOut(false)
+
+    if (error) {
+      setError(error.message || "Sign-out failed.")
+      return
+    }
+
+    await refetch()
+  }
+
+  if (isPending) {
+    return (
+      <div className="flex min-h-32 items-center justify-center">
+        <Spinner className="size-5 text-muted-foreground" />
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      {session
+        ? (
+            <div className="flex items-center gap-3 rounded-2xl bg-muted/40 p-3">
+              {session.user.image
+                ? (
+                    <img
+                      alt=""
+                      className="size-10 rounded-full object-cover"
+                      referrerPolicy="no-referrer"
+                      src={session.user.image}
+                    />
+                  )
+                : (
+                    <div className="flex size-10 items-center justify-center rounded-full bg-theme-500 text-sm font-semibold text-white">
+                      {session.user.name.slice(0, 1).toUpperCase()}
+                    </div>
+                  )}
+              <div className="min-w-0">
+                <div className="truncate font-medium">
+                  {session.user.name}
+                </div>
+                <div className="truncate text-sm text-muted-foreground">
+                  {session.user.email}
+                </div>
+              </div>
+            </div>
+          )
+        : (
+            <Button
+              disabled={isSigningIn}
+              onClick={handleGithubSignIn}
+            >
+              {isSigningIn ? <Spinner /> : <PhGithubLogoDuotone />}
+              Sign in with GitHub
+            </Button>
+          )}
+
+      {error && (
+        <p className="rounded-2xl bg-destructive/10 px-3 py-2 text-sm text-destructive" role="alert">
+          {error}
+        </p>
+      )}
+
+      {session && (
+        <Button
+          disabled={isSigningOut}
+          variant="outline"
+          onClick={handleSignOut}
+        >
+          {isSigningOut ? <Spinner /> : <LogOut />}
+          Sign out
+        </Button>
+      )}
     </div>
   )
 }
