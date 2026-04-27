@@ -27,18 +27,20 @@ function RefreshButton() {
 export function Header({ scrollContainerRef }: HeaderProps) {
   return (
     <header className="sticky top-0 inset-x-0 z-50 shrink-0 py-6 pointer-events-none">
-      <div className="grid h-11 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 W">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] grid-rows-[2.75rem_auto] md:h-11 md:grid-rows-1 items-center gap-2 W">
         {/* Left Section - Tabs */}
-        <div className="flex min-w-0 items-center justify-end gap-2 W">
-          <Nav className="max-md:hidden" />
+        <div className="col-span-3 row-start-2 flex min-w-0 items-center justify-center gap-2 md:col-span-1 md:col-start-1 md:row-start-1 md:justify-end W">
+          <Nav />
           <SearchDialog />
         </div>
 
         {/* Center Section - Title Island */}
-        <TitleIsland width={150} scrollContainerRef={scrollContainerRef} />
+        <div className="col-start-2 row-start-1">
+          <TitleIsland width={150} scrollContainerRef={scrollContainerRef} />
+        </div>
 
         {/* Right Section - DateTime, Refresh, User */}
-        <div className="flex min-w-0 items-center justify-start gap-2 W">
+        <div className="col-start-3 row-start-1 flex min-w-0 items-center justify-start gap-2 W">
           <RefreshButton />
           <DateTime className="max-md:hidden" />
           <UserMenu />
