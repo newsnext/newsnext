@@ -28,6 +28,13 @@ import { cn } from "@/lib/utils"
 import { IconButton } from "../common/button"
 import { useCard } from "./card-context"
 
+const editableFieldClassName = "h-6 w-full rounded-3xl border border-transparent bg-transparent px-2 text-sm leading-none text-right shadow-none transition-colors hover:bg-background/40 focus-visible:border-input/50 focus-visible:bg-background/60 focus-visible:ring-1 focus-visible:ring-ring/30"
+const editableSelectClassName = cn(
+  editableFieldClassName,
+  "py-0 data-[size=default]:h-6 data-[size=sm]:h-6 justify-end",
+  "[&_[data-slot=select-value]]:justify-end [&_[data-slot=select-value]]:text-right",
+)
+
 function EditableInput({ text, editable = false, onChange }: { text: string, editable?: boolean, onChange?: (value: string) => void }) {
   const [value, setValue] = useState(text)
 
@@ -41,7 +48,7 @@ function EditableInput({ text, editable = false, onChange }: { text: string, edi
 
   return (
     <Input
-      className="h-7 px-2 w-full bg-background/50 focus-visible:ring-1"
+      className={editableFieldClassName}
       value={value}
       onChange={(e) => {
         setValue(e.target.value)
@@ -53,10 +60,6 @@ function EditableInput({ text, editable = false, onChange }: { text: string, edi
 }
 
 function NumberInput({ num, step = 1, editable, max = Infinity, min = -Infinity, onChange }: { num: number, step?: number, editable?: boolean, max?: number, min?: number, onChange?: (value: number) => void }) {
-  if (!editable) {
-    return <Text text={num.toString()} />
-  }
-
   const [value, setValue] = useState(num)
 
   useEffect(() => {
@@ -69,10 +72,14 @@ function NumberInput({ num, step = 1, editable, max = Infinity, min = -Infinity,
     onChange?.(newValue)
   }
 
+  if (!editable) {
+    return <Text text={num.toString()} />
+  }
+
   return (
     <Input
       type="number"
-      className="h-7 px-2 w-full bg-background/50 focus-visible:ring-1"
+      className={editableFieldClassName}
       value={value}
       onChange={e => handleChange(Number(e.target.value))}
       step={step}
@@ -88,8 +95,8 @@ function Text({ text }: { text: string }) {
   return (
     <span
       className={cn(
-        "font-normal rounded-3xl px-2 block w-full",
-        "text-right overflow-hidden whitespace-nowrap text-ellipsis",
+        "flex h-6 w-full items-center justify-end rounded-3xl border border-transparent px-2 font-normal leading-none",
+        "overflow-hidden whitespace-nowrap text-right text-ellipsis",
         isLink && "cursor-pointer hover:underline text-blue-500",
       )}
       title={text}
@@ -104,15 +111,35 @@ function Text({ text }: { text: string }) {
   )
 }
 
+function SelectLikeValue({ children }: PropsWithChildren) {
+  return (
+    <span className="flex h-6 w-full items-center justify-end gap-1.5 rounded-3xl border border-transparent px-2 leading-none">
+      <span className="flex min-w-0 items-center justify-end gap-2">
+        {children}
+      </span>
+      <span className="size-4 shrink-0" aria-hidden />
+    </span>
+  )
+}
+
+function ColorSwatch({ color, className }: { color: Color, className?: string }) {
+  return (
+    <span
+      className={cn("inline-block rounded-full", className)}
+      style={{ backgroundColor: `var(--color-${color}-500)` }}
+    />
+  )
+}
+
 function Info(props: PropsWithChildren<{
   icon: React.ReactNode
   label: string
 }>) {
   return (
-    <div className="flex gap-4 items-center w-full justify-between border-b border-border/20 pb-2 mb-2 last:mb-0 last:border-0">
+    <div className="flex min-h-6 gap-3 items-center w-full justify-between border-b border-border/10 pb-1 mb-1 last:mb-0 last:border-0">
       <span className="flex gap-2 items-center shrink-0 text-muted-foreground">
         {props.icon}
-        <span className="font-medium text-sm">{props.label}</span>
+        <span className="font-medium text-sm leading-none">{props.label}</span>
       </span>
       <div className="flex-1 min-w-0 flex justify-end max-w-40">
         {props.children}
@@ -148,6 +175,7 @@ function ParamField({
             disabled={!editable}
             onCheckedChange={checked => onChange(checked)}
             size="sm"
+            className="data-disabled:opacity-100"
           />
         </div>
       </Info>
@@ -155,14 +183,27 @@ function ParamField({
   }
 
   if (param.type === "select") {
+    const selectedOption = param.options.find(option => option.value === String(currentValue))
+
+    if (!editable) {
+      return (
+        <Info icon={<PhInfoDuotone />} label={param.title}>
+          <SelectLikeValue>
+            <span className="truncate text-sm">
+              {selectedOption?.label ?? String(currentValue)}
+            </span>
+          </SelectLikeValue>
+        </Info>
+      )
+    }
+
     return (
       <Info icon={<PhInfoDuotone />} label={param.title}>
         <Select
           value={String(currentValue)}
-          disabled={!editable}
           onValueChange={nextValue => onChange(nextValue)}
         >
-          <SelectTrigger className="w-full h-7 bg-background/50" onClick={e => e.stopPropagation()}>
+          <SelectTrigger className={editableSelectClassName} onClick={e => e.stopPropagation()}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -179,6 +220,17 @@ function ParamField({
 
   if (param.type === "multiselect") {
     const selectedValues = Array.isArray(currentValue) ? currentValue.map(String) : []
+    const selectedLabels = param.options
+      .filter(option => selectedValues.includes(option.value))
+      .map(option => option.label)
+
+    if (!editable) {
+      return (
+        <Info icon={<PhInfoDuotone />} label={param.title}>
+          <Text text={selectedLabels.length > 0 ? selectedLabels.join(", ") : "None"} />
+        </Info>
+      )
+    }
 
     return (
       <Info icon={<PhInfoDuotone />} label={param.title}>
@@ -191,7 +243,6 @@ function ParamField({
                 type="button"
                 size="xs"
                 variant={isSelected ? "default" : "outline"}
-                disabled={!editable}
                 className={cn("h-6", !isSelected && `text-${color}-600 border-${color}-200 bg-${color}-500/10`)}
                 onClick={(event) => {
                   event.stopPropagation()
@@ -239,30 +290,31 @@ function ParamField({
 function ColorSelector({ color, editable, onChange }: { color: Color, editable?: boolean, onChange?: (color: Color) => void }) {
   if (!editable) {
     return (
-      <div className="flex gap-2 items-center justify-end px-2">
-        <span className={cn("inline-block w-3 h-3 rounded-full", `bg-${color}-500`)}></span>
+      <SelectLikeValue>
+        <ColorSwatch color={color} className="size-3" />
         <span className="text-sm">{color}</span>
-      </div>
+      </SelectLikeValue>
     )
   }
 
   return (
     <Select value={color} onValueChange={val => onChange?.(val as Color)}>
-      <SelectTrigger className="w-full h-7 bg-background/50" onClick={e => e.stopPropagation()}>
+      <SelectTrigger className={editableSelectClassName} onClick={e => e.stopPropagation()}>
         <div className="flex items-center gap-2">
-          <span className={cn("inline-block w-3 h-3 rounded-full", `bg-${color}-500`)}></span>
+          <ColorSwatch color={color} className="size-3" />
           <span className="text-sm">{color}</span>
         </div>
       </SelectTrigger>
-      <SelectContent>
-        <div className="grid grid-cols-5 gap-1 p-2">
+      <SelectContent className="w-auto min-w-34">
+        <div className="grid grid-cols-5 gap-1 p-1.5">
           {COLORS.map(c => (
             <SelectItem
               key={c}
               value={c}
-              className="justify-center cursor-pointer p-1"
+              className="size-7 justify-center cursor-pointer p-0 pr-0 pl-0"
+              title={c}
             >
-              <span className={cn("inline-block w-4 h-4 rounded-full", `bg-${c}-500`)}></span>
+              <ColorSwatch color={c} className="size-4" />
             </SelectItem>
           ))}
         </div>
@@ -302,6 +354,7 @@ export function CardBack() {
   const [localHome, setLocalHome] = useState(home)
   const [localInterval, setLocalInterval] = useState(interval)
   const [localColor, setLocalColor] = useState(color)
+  const previewColor = canEdit ? localColor : color
 
   useEffect(() => {
     if (!editable) {
@@ -325,11 +378,11 @@ export function CardBack() {
     <div
       className={cn(
         "flex flex-col rounded-4xl p-3 h-full",
-        `bg-${color}-400/40`,
+        `bg-${previewColor}-400/40`,
         "transition-colors duration-300",
       )}
     >
-      <div className="flex justify-between mb-3 items-center mx-1">
+      <div className="flex justify-between mb-2 items-center mx-1">
         <div className="flex gap-2.5 items-center ml-1">
           <img
             className="size-8 rounded-full bg-cover cursor-pointer"
@@ -347,7 +400,7 @@ export function CardBack() {
                 {name}
               </span>
               {title && (
-                <span className={cn("text-sm px-1 rounded-3xl bg-background/50 opacity-80", `text-${color}-400`)}>
+                <span className={cn("text-sm px-1 rounded-3xl bg-background/50 opacity-80", `text-${previewColor}-400`)}>
                   {title}
                 </span>
               )}
@@ -357,7 +410,7 @@ export function CardBack() {
             </span>
           </div>
         </div>
-        <div className={cn("flex gap-1 items-center shrink-0", `text-${color}-400`)}>
+        <div className={cn("flex gap-1 items-center shrink-0", `text-${previewColor}-400`)}>
           <IconButton
             onClick={(e) => {
               e.stopPropagation()
@@ -427,11 +480,11 @@ export function CardBack() {
         onPointerDown={event => event.stopPropagation()}
         className={cn(
           "flex-1 rounded-3xl bg-background/70 overflow-hidden",
-          `sprinkle-${color}-400`,
+          `sprinkle-${previewColor}-400`,
         )}
       >
         <div
-          className="p-4 space-y-4"
+          className="px-3 py-2 space-y-2"
           onDoubleClick={(e) => {
             e.stopPropagation() // Prevent flip on double click if that's a thing
             if (!isCopy) {
@@ -442,7 +495,7 @@ export function CardBack() {
           }}
         >
           <div className="flex flex-col text-sm">
-            <div className="font-semibold mb-2 opacity-80">Information</div>
+            <div className="font-semibold mb-1 opacity-80">Information</div>
             <Info icon={<PhInfoDuotone />} label="Name">
               <EditableInput text={localName} editable={canEdit} onChange={setLocalName} />
             </Info>
@@ -472,16 +525,16 @@ export function CardBack() {
             </Info>
           </div>
 
-          <div className="flex flex-col gap-1 text-sm pt-2">
-            <div className="flex justify-between items-center mb-2">
+          <div className="flex flex-col text-sm pt-0.5">
+            <div className="flex justify-between items-center mb-1">
               <span className="font-semibold opacity-80">Parameters</span>
-              <div className="flex gap-2">
+              <div className="flex gap-1.5">
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   disabled={!canEdit || !hasFeedParamChanges}
-                  className={cn(`h-7 bg-${color}-500/10 hover:bg-${color}-500/20 text-${color}-600 border-${color}-200`)}
+                  className={cn(`h-6 px-2 bg-${previewColor}-500/10 hover:bg-${previewColor}-500/20 text-${previewColor}-600 border-${previewColor}-200`)}
                   onClick={(event) => {
                     event.stopPropagation()
                     onDiscardFeedParams()
@@ -494,7 +547,7 @@ export function CardBack() {
                   variant="outline"
                   size="sm"
                   disabled={!canEdit || !hasFeedParams}
-                  className={cn(`h-7 bg-${color}-500/10 hover:bg-${color}-500/20 text-${color}-600 border-${color}-200`)}
+                  className={cn(`h-6 px-2 bg-${previewColor}-500/10 hover:bg-${previewColor}-500/20 text-${previewColor}-600 border-${previewColor}-200`)}
                   onClick={(event) => {
                     event.stopPropagation()
                     onResetFeedParams()
@@ -506,7 +559,7 @@ export function CardBack() {
                   type="button"
                   size="sm"
                   disabled={!canEdit || !hasFeedParamChanges}
-                  className="h-7"
+                  className="h-6 px-2"
                   onClick={(event) => {
                     event.stopPropagation()
                     onSaveFeedParams()
@@ -517,7 +570,7 @@ export function CardBack() {
               </div>
             </div>
             {!hasFeedParams && (
-              <div className="rounded-3xl border border-dashed border-border/50 px-3 py-4 text-sm text-muted-foreground">
+              <div className="rounded-3xl border border-dashed border-border/50 px-3 py-2.5 text-sm text-muted-foreground">
                 This feed does not expose configurable parameters yet.
               </div>
             )}
@@ -527,7 +580,7 @@ export function CardBack() {
                 param={param}
                 value={draftFeedParams[paramKey]}
                 editable={canEdit}
-                color={color}
+                color={previewColor}
                 onChange={nextValue => onFeedParamChange(paramKey, nextValue)}
               />
             ))}
