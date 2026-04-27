@@ -11,15 +11,24 @@ function getAuthBaseURL(): string {
   return `${window.location.origin}/api/auth`
 }
 
+function getAuthRedirectURL(): string {
+  if (globalThis.location?.protocol === "chrome-extension:") {
+    return BASE_URL || getAuthBaseURL()
+  }
+
+  return window.location.href
+}
+
 export const authClient = createAuthClient({
   baseURL: getAuthBaseURL(),
 })
 
 export async function signInWithProvider(provider: AuthProviderId): Promise<{ error: string | null }> {
+  const redirectURL = getAuthRedirectURL()
   const { error } = await authClient.signIn.social({
     provider,
-    callbackURL: window.location.href,
-    errorCallbackURL: window.location.href,
+    callbackURL: redirectURL,
+    errorCallbackURL: redirectURL,
   })
 
   return {
