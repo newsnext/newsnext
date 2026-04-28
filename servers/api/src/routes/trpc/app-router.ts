@@ -1,5 +1,5 @@
 import type { FeedDescriptor } from "@newsnext/feeds/typings"
-import { db, feedForks, feedParamConfigs, feeds, starredFeeds } from "@newsnext/database"
+import { db, feeds, starredFeedInstances, userFeedInstances } from "@newsnext/database"
 import { and, asc, eq } from "@newsnext/database/orm"
 import { feedDescriptors } from "@newsnext/feeds/metadata"
 import { FeedServiceError, loadFeed, prepareFeedRequest } from "@newsnext/feeds/service"
@@ -34,36 +34,26 @@ const getFeedInputSchema = z.object({
 
 const paramsSchema = z.record(z.string(), z.unknown())
 
-const feedForkInputSchema = z.object({
-  id: z.string(),
-  feedId: z.string(),
+const feedInstanceInputSchema = z.object({
+  instanceId: z.string(),
+  feedKey: z.string(),
   params: paramsSchema,
+  isFork: z.boolean(),
   createdAt: z.number().optional(),
 })
 
-const feedParamConfigInputSchema = z.object({
-  feedInstanceId: z.string(),
-  feedId: z.string(),
-  params: paramsSchema,
-})
-
 const saveFeedStateInputSchema = z.object({
-  forks: z.array(feedForkInputSchema),
-  starredFeedIds: z.array(z.string()),
-  paramConfigs: z.array(feedParamConfigInputSchema),
+  feedInstances: z.array(feedInstanceInputSchema),
+  starredFeedInstanceIds: z.array(z.string()),
 })
 
-const deleteFeedForkInputSchema = z.object({
-  id: z.string(),
+const feedInstanceIdInputSchema = z.object({
+  instanceId: z.string(),
 })
 
-const setStarredFeedInputSchema = z.object({
-  feedId: z.string(),
+const setStarredFeedInstanceInputSchema = z.object({
+  instanceId: z.string(),
   starred: z.boolean(),
-})
-
-const deleteFeedParamConfigInputSchema = z.object({
-  feedInstanceId: z.string(),
 })
 
 const updateFeedInputSchema = z.object({
@@ -157,20 +147,8 @@ async function listFeedDescriptors(): Promise<FeedDescriptor[]> {
 
 export const appRouter = router({
   getBoard: publicProcedure
-    .input(z.object({
-      boardId: z.enum(["featured", "forks", "stars"]),
-      starredFeedIds: z.array(z.string()).optional(),
-    }))
-    .query(async ({ input }) => {
-      const { boardId, starredFeedIds = [] } = input
+    .query(async () => {
       const feeds = await listFeedDescriptors()
-      if (boardId === "stars") {
-        const starredFeedIdSet = new Set(starredFeedIds)
-        return feeds.filter((feed) => {
-          const uniqueId = feed.provider ? `${feed.provider}:${feed.id}` : feed.id
-          return starredFeedIdSet.has(uniqueId)
-        })
-      }
       return feeds
     }),
 
@@ -209,16 +187,20 @@ export const appRouter = router({
   getFeedState: protectedProcedure
     .query(async ({ ctx }) => {
       const userId = ctx.session.user.id
-      const [forks, stars, paramConfigs] = await Promise.all([
-        db.select().from(feedForks).where(eq(feedForks.userId, userId)),
-        db.select().from(starredFeeds).where(eq(starredFeeds.userId, userId)),
-        db.select().from(feedParamConfigs).where(eq(feedParamConfigs.userId, userId)),
+      const [instances, stars] = await Promise.all([
+        db.select().from(userFeedInstances).where(eq(userFeedInstances.userId, userId)),
+        db.select().from(starredFeedInstances).where(eq(starredFeedInstances.userId, userId)),
       ])
 
       return {
-        forks: forks.map(({ userId: _userId, updatedAt: _updatedAt, ...fork }) => fork),
-        starredFeedIds: stars.map(star => star.feedId),
-        paramConfigs: paramConfigs.map(({ userId: _userId, updatedAt: _updatedAt, ...config }) => config),
+        feedInstances: instances.map(instance => ({
+          instanceId: instance.instanceId,
+          feedKey: instance.feedKey,
+          params: instance.params,
+          isFork: instance.isFork,
+          createdAt: instance.createdAt,
+        })),
+        starredFeedInstanceIds: stars.map(star => star.instanceId),
       }
     }),
 
@@ -227,38 +209,29 @@ export const appRouter = router({
     .mutation(async ({ input, ctx }) => {
       const userId = ctx.session.user.id
       const now = Date.now()
+      await ensureFeedCatalogSeeded()
 
       await db.transaction(async (tx) => {
-        await tx.delete(feedForks).where(eq(feedForks.userId, userId))
-        await tx.delete(starredFeeds).where(eq(starredFeeds.userId, userId))
-        await tx.delete(feedParamConfigs).where(eq(feedParamConfigs.userId, userId))
+        await tx.delete(userFeedInstances).where(eq(userFeedInstances.userId, userId))
+        await tx.delete(starredFeedInstances).where(eq(starredFeedInstances.userId, userId))
 
-        if (input.forks.length > 0) {
-          await tx.insert(feedForks).values(input.forks.map(fork => ({
-            id: fork.id,
+        if (input.feedInstances.length > 0) {
+          await tx.insert(userFeedInstances).values(input.feedInstances.map(instance => ({
             userId,
-            feedId: fork.feedId,
-            params: fork.params,
-            createdAt: fork.createdAt ?? now,
+            instanceId: instance.instanceId,
+            feedKey: instance.feedKey,
+            params: instance.params,
+            isFork: instance.isFork,
+            createdAt: instance.createdAt ?? now,
             updatedAt: now,
           })))
         }
 
-        if (input.starredFeedIds.length > 0) {
-          await tx.insert(starredFeeds).values(input.starredFeedIds.map(feedId => ({
+        if (input.starredFeedInstanceIds.length > 0) {
+          await tx.insert(starredFeedInstances).values(input.starredFeedInstanceIds.map(instanceId => ({
             userId,
-            feedId,
+            instanceId,
             createdAt: now,
-          })))
-        }
-
-        if (input.paramConfigs.length > 0) {
-          await tx.insert(feedParamConfigs).values(input.paramConfigs.map(config => ({
-            userId,
-            feedInstanceId: config.feedInstanceId,
-            feedId: config.feedId,
-            params: config.params,
-            updatedAt: now,
           })))
         }
       })
@@ -266,24 +239,27 @@ export const appRouter = router({
       return { ok: true }
     }),
 
-  upsertFeedFork: protectedProcedure
-    .input(feedForkInputSchema)
+  upsertFeedInstance: protectedProcedure
+    .input(feedInstanceInputSchema)
     .mutation(async ({ input, ctx }) => {
       const userId = ctx.session.user.id
       const now = Date.now()
+      await ensureFeedCatalogSeeded()
 
-      await db.insert(feedForks).values({
-        id: input.id,
+      await db.insert(userFeedInstances).values({
         userId,
-        feedId: input.feedId,
+        instanceId: input.instanceId,
+        feedKey: input.feedKey,
         params: input.params,
+        isFork: input.isFork,
         createdAt: input.createdAt ?? now,
         updatedAt: now,
       }).onConflictDoUpdate({
-        target: [feedForks.userId, feedForks.id],
+        target: [userFeedInstances.userId, userFeedInstances.instanceId],
         set: {
-          feedId: input.feedId,
+          feedKey: input.feedKey,
           params: input.params,
+          isFork: input.isFork,
           updatedAt: now,
         },
       })
@@ -291,65 +267,58 @@ export const appRouter = router({
       return { ok: true }
     }),
 
-  deleteFeedFork: protectedProcedure
-    .input(deleteFeedForkInputSchema)
+  deleteFeedInstance: protectedProcedure
+    .input(feedInstanceIdInputSchema)
     .mutation(async ({ input, ctx }) => {
       const userId = ctx.session.user.id
 
-      await db.delete(feedForks).where(and(eq(feedForks.userId, userId), eq(feedForks.id, input.id)))
+      await Promise.all([
+        db.delete(userFeedInstances).where(and(eq(userFeedInstances.userId, userId), eq(userFeedInstances.instanceId, input.instanceId))),
+        db.delete(starredFeedInstances).where(and(eq(starredFeedInstances.userId, userId), eq(starredFeedInstances.instanceId, input.instanceId))),
+      ])
 
       return { ok: true }
     }),
 
-  setStarredFeed: protectedProcedure
-    .input(setStarredFeedInputSchema)
+  setStarredFeedInstance: protectedProcedure
+    .input(setStarredFeedInstanceInputSchema)
     .mutation(async ({ input, ctx }) => {
       const userId = ctx.session.user.id
 
       if (!input.starred) {
-        await db.delete(starredFeeds).where(and(eq(starredFeeds.userId, userId), eq(starredFeeds.feedId, input.feedId)))
+        await db.delete(starredFeedInstances).where(and(eq(starredFeedInstances.userId, userId), eq(starredFeedInstances.instanceId, input.instanceId)))
         return { ok: true }
       }
 
-      await db.insert(starredFeeds).values({
+      await db.insert(starredFeedInstances).values({
         userId,
-        feedId: input.feedId,
+        instanceId: input.instanceId,
         createdAt: Date.now(),
       }).onConflictDoNothing()
 
       return { ok: true }
     }),
 
-  saveFeedParamConfig: protectedProcedure
-    .input(feedParamConfigInputSchema)
+  resetFeedInstanceParams: protectedProcedure
+    .input(feedInstanceIdInputSchema)
     .mutation(async ({ input, ctx }) => {
       const userId = ctx.session.user.id
-      const now = Date.now()
+      const [instance] = await db
+        .select()
+        .from(userFeedInstances)
+        .where(and(eq(userFeedInstances.userId, userId), eq(userFeedInstances.instanceId, input.instanceId)))
+        .limit(1)
 
-      await db.insert(feedParamConfigs).values({
-        userId,
-        feedInstanceId: input.feedInstanceId,
-        feedId: input.feedId,
-        params: input.params,
-        updatedAt: now,
-      }).onConflictDoUpdate({
-        target: [feedParamConfigs.userId, feedParamConfigs.feedInstanceId],
-        set: {
-          feedId: input.feedId,
-          params: input.params,
-          updatedAt: now,
-        },
-      })
-
-      return { ok: true }
-    }),
-
-  deleteFeedParamConfig: protectedProcedure
-    .input(deleteFeedParamConfigInputSchema)
-    .mutation(async ({ input, ctx }) => {
-      const userId = ctx.session.user.id
-
-      await db.delete(feedParamConfigs).where(and(eq(feedParamConfigs.userId, userId), eq(feedParamConfigs.feedInstanceId, input.feedInstanceId)))
+      if (instance?.isFork) {
+        await db.update(userFeedInstances)
+          .set({
+            params: {},
+            updatedAt: Date.now(),
+          })
+          .where(and(eq(userFeedInstances.userId, userId), eq(userFeedInstances.instanceId, input.instanceId)))
+      } else {
+        await db.delete(userFeedInstances).where(and(eq(userFeedInstances.userId, userId), eq(userFeedInstances.instanceId, input.instanceId)))
+      }
 
       return { ok: true }
     }),

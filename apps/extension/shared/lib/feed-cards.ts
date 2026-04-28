@@ -2,10 +2,11 @@ import type { BoardType } from "@newsnext/shared/types"
 import type { BoardFeed, FeedDescriptor } from "@/typings/feed"
 import { hashString, stableStringify } from "@newsnext/shared/utils"
 
-export interface ForkedFeedCard {
-  id: string
-  feedId: string
-  params?: Record<string, unknown>
+export interface FeedInstance {
+  instanceId: string
+  feedKey: string
+  params: Record<string, unknown>
+  isFork: boolean
   createdAt: number
 }
 
@@ -25,13 +26,18 @@ function createBoardFeed(feed: BoardFeedSource): BoardFeed {
   }
 }
 
-export function createForkedFeedCard(feedId: string, params: Record<string, unknown> = {}): ForkedFeedCard {
+export function createFeedInstance(
+  feedKey: string,
+  params: Record<string, unknown> = {},
+  isFork = false,
+): FeedInstance {
   const paramsKey = stableStringify(params)
 
   return {
-    id: `${feedId}::fork:${hashString(paramsKey)}`,
-    feedId,
+    instanceId: isFork ? `${feedKey}::fork:${hashString(paramsKey)}` : feedKey,
+    feedKey,
     params,
+    isFork,
     createdAt: Date.now(),
   }
 }
@@ -39,36 +45,43 @@ export function createForkedFeedCard(feedId: string, params: Record<string, unkn
 export function buildBoardFeeds({
   feeds,
   boardId,
-  starredFeedIds,
-  forkedFeedCards,
+  starredFeedInstanceIds,
+  feedInstances,
 }: {
   feeds: BoardFeedSource[]
   boardId: BoardType
-  starredFeedIds: string[]
-  forkedFeedCards: ForkedFeedCard[]
+  starredFeedInstanceIds: string[]
+  feedInstances: FeedInstance[]
 }): { ids: string[], map: Record<string, BoardFeed> } {
-  const baseFeeds = feeds.map(createBoardFeed)
+  const instanceMap = new Map(feedInstances.map(instance => [instance.instanceId, instance]))
+  const baseFeeds = feeds.map((feed) => {
+    const boardFeed = createBoardFeed(feed)
+    const instance = instanceMap.get(boardFeed.id)
+    return instance
+      ? { ...boardFeed, paramsValue: instance.params }
+      : boardFeed
+  })
   const baseFeedMap = Object.fromEntries(baseFeeds.map(feed => [feed.feedId, feed]))
-  const forkGroups = new Map<string, ForkedFeedCard[]>()
+  const forkGroups = new Map<string, FeedInstance[]>()
 
-  forkedFeedCards.forEach((forkedFeedCard) => {
-    if (!baseFeedMap[forkedFeedCard.feedId]) {
+  feedInstances.forEach((instance) => {
+    if (!instance.isFork || !baseFeedMap[instance.feedKey]) {
       return
     }
 
-    const currentForks = forkGroups.get(forkedFeedCard.feedId) ?? []
-    currentForks.push(forkedFeedCard)
-    forkGroups.set(forkedFeedCard.feedId, currentForks)
+    const currentForks = forkGroups.get(instance.feedKey) ?? []
+    currentForks.push(instance)
+    forkGroups.set(instance.feedKey, currentForks)
   })
 
   const mergedFeeds = baseFeeds.flatMap((feed) => {
     const forks = (forkGroups.get(feed.feedId) ?? [])
       .sort((a, b) => a.createdAt - b.createdAt)
-      .map(forkedFeedCard => ({
+      .map(instance => ({
         ...feed,
-        id: forkedFeedCard.id,
-        feedId: forkedFeedCard.feedId,
-        paramsValue: forkedFeedCard.params,
+        id: instance.instanceId,
+        feedId: instance.feedKey,
+        paramsValue: instance.params,
         isFork: true,
       } satisfies BoardFeed))
 
@@ -79,7 +92,7 @@ export function buildBoardFeeds({
   })
 
   const visibleFeeds = boardId === "stars"
-    ? mergedFeeds.flatMap(({ baseFeed, forkedFeeds }) => [baseFeed, ...forkedFeeds]).filter(feed => starredFeedIds.includes(feed.id))
+    ? mergedFeeds.flatMap(({ baseFeed, forkedFeeds }) => [baseFeed, ...forkedFeeds]).filter(feed => starredFeedInstanceIds.includes(feed.id))
     : boardId === "forks"
       ? mergedFeeds.flatMap(({ forkedFeeds }) => forkedFeeds)
       : mergedFeeds.map(({ baseFeed }) => baseFeed)

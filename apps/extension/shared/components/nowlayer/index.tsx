@@ -5,7 +5,7 @@ import { useEffect, useState } from "react"
 import { isMobile } from "react-device-detect"
 import { buildBoardFeeds } from "@/lib/feed-cards"
 import { trpc } from "@/lib/trpc"
-import { forkedFeedCardsAtom, starredFeedIdsAtom } from "@/store/board"
+import { feedInstancesAtom, starredFeedInstanceIdsAtom } from "@/store/board"
 import { DesktopBoard } from "./desktop-board"
 import { MobileBoard } from "./mobile-board"
 
@@ -26,12 +26,10 @@ export function NowLayer({
 }: NowLayerProps) {
   const [feedIds, setFeedIds] = useState<string[]>([])
   const [feedsMap, setFeedsMap] = useState<Record<string, BoardFeed>>({})
-  const starredFeedIds = useAtomValue(starredFeedIdsAtom)
-  const forkedFeedCards = useAtomValue(forkedFeedCardsAtom)
+  const starredFeedInstanceIds = useAtomValue(starredFeedInstanceIdsAtom)
+  const feedInstances = useAtomValue(feedInstancesAtom)
 
-  const { data: feeds, isPending } = trpc.getBoard.useQuery(
-    { boardId: "featured" },
-  )
+  const { data: feeds, isPending } = trpc.getBoard.useQuery()
 
   const [prevBoardId, setPrevBoardId] = useState(boardId)
   if (prevBoardId !== boardId) {
@@ -45,13 +43,13 @@ export function NowLayer({
       const { ids, map } = buildBoardFeeds({
         feeds,
         boardId,
-        starredFeedIds,
-        forkedFeedCards,
+        starredFeedInstanceIds,
+        feedInstances,
       })
       setFeedIds(ids)
       setFeedsMap(map)
     }
-  }, [feeds, boardId, starredFeedIds, forkedFeedCards])
+  }, [feeds, boardId, starredFeedInstanceIds, feedInstances])
 
   const handleFeedIdsChange = (newFeedIds: string[]) => {
     setFeedIds(newFeedIds)

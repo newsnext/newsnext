@@ -5,7 +5,7 @@ import { useCallback, useMemo } from "react"
 import { buildBoardFeeds, buildFeedRequestKey } from "@/lib/feed-cards"
 import { getSavedFeedParamValues } from "@/lib/feed-params"
 import { trpc } from "@/lib/trpc"
-import { currentBoardAtom, forkedFeedCardsAtom, starredFeedIdsAtom } from "@/store/board"
+import { currentBoardAtom, feedInstancesAtom, starredFeedInstanceIdsAtom } from "@/store/board"
 
 export const refetchFeeds = new Set<string>()
 
@@ -17,8 +17,8 @@ interface RefetchTarget {
 export function useRefetch() {
   const utils = trpc.useUtils()
   const currentBoard = useAtomValue(currentBoardAtom)
-  const starredFeedIds = useAtomValue(starredFeedIdsAtom)
-  const forkedFeedCards = useAtomValue(forkedFeedCardsAtom)
+  const starredFeedInstanceIds = useAtomValue(starredFeedInstanceIdsAtom)
+  const feedInstances = useAtomValue(feedInstancesAtom)
   const fetchingCount = useIsFetching({ queryKey: getQueryKey(trpc.getFeed) })
 
   const isFetching = useMemo(() => fetchingCount > 0, [fetchingCount])
@@ -52,12 +52,12 @@ export function useRefetch() {
    */
   const refetchAll = useCallback(async () => {
     try {
-      const feeds = await utils.getBoard.ensureData({ boardId: "featured" })
+      const feeds = await utils.getBoard.ensureData()
       const boardFeeds = buildBoardFeeds({
         feeds,
         boardId: currentBoard,
-        starredFeedIds,
-        forkedFeedCards,
+        starredFeedInstanceIds,
+        feedInstances,
       })
       const targets = boardFeeds.ids.map((id) => {
         const feed = boardFeeds.map[id]
@@ -80,7 +80,7 @@ export function useRefetch() {
     } catch (e) {
       console.error("Failed to refresh board feeds", e)
     }
-  }, [utils, currentBoard, starredFeedIds, forkedFeedCards])
+  }, [utils, currentBoard, starredFeedInstanceIds, feedInstances])
 
   return {
     refetch,

@@ -17,7 +17,7 @@ import { buildBoardFeeds } from "@/lib/feed-cards"
 import { resolveFeedDisplay } from "@/lib/feed-display"
 import { getSavedFeedParamValues } from "@/lib/feed-params"
 import { trpc } from "@/lib/trpc"
-import { forkedFeedCardsAtom, starredFeedIdsAtom } from "@/store/board"
+import { feedInstancesAtom, starredFeedInstanceIdsAtom } from "@/store/board"
 import Card from "../card"
 import { PhForkDuotone, PhMagnifyingGlass, PhStarFill } from "../icons/ph"
 import "./index.css"
@@ -77,9 +77,9 @@ function SearchPreview({ item }: { item?: SearchItem }) {
 export function SearchDialog(): JSX.Element {
   const [open, setOpen] = useState(false)
   const [selectedItemId, setSelectedItemId] = useState("")
-  const starredFeedIds = useAtomValue(starredFeedIdsAtom)
-  const forkedFeedCards = useAtomValue(forkedFeedCardsAtom)
-  const { data: feeds = [] } = trpc.getBoard.useQuery({ boardId: "featured" })
+  const starredFeedInstanceIds = useAtomValue(starredFeedInstanceIdsAtom)
+  const feedInstances = useAtomValue(feedInstancesAtom)
+  const { data: feeds = [] } = trpc.getBoard.useQuery()
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -101,14 +101,14 @@ export function SearchDialog(): JSX.Element {
     const featuredBoard = buildBoardFeeds({
       feeds,
       boardId: "featured",
-      starredFeedIds,
-      forkedFeedCards,
+      starredFeedInstanceIds,
+      feedInstances,
     })
     const forksBoard = buildBoardFeeds({
       feeds,
       boardId: "forks",
-      starredFeedIds,
-      forkedFeedCards,
+      starredFeedInstanceIds,
+      feedInstances,
     })
 
     return [
@@ -125,7 +125,7 @@ export function SearchDialog(): JSX.Element {
           title: display.title,
           provider: feed.provider,
           isFork: false,
-          isStarred: starredFeedIds.includes(id),
+          isStarred: starredFeedInstanceIds.includes(id),
         } satisfies SearchItem
       }),
       ...forksBoard.ids.map((id) => {
@@ -141,11 +141,11 @@ export function SearchDialog(): JSX.Element {
           title: display.title,
           provider: feed.provider,
           isFork: true,
-          isStarred: starredFeedIds.includes(id),
+          isStarred: starredFeedInstanceIds.includes(id),
         } satisfies SearchItem
       }),
     ]
-  }, [feeds, starredFeedIds, forkedFeedCards])
+  }, [feeds, starredFeedInstanceIds, feedInstances])
 
   const searchGroups = useMemo(() => groupSearchItems(searchItems), [searchItems])
   const selectedItem = useMemo(

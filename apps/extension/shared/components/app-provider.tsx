@@ -18,7 +18,7 @@ import {
   THEME_MODE_KEY,
   THEME_VERSION_KEY,
 } from "@/lib/utils/swith-theme"
-import { forkedFeedCardsAtom, starredFeedIdsAtom } from "@/store/board"
+import { feedInstancesAtom, starredFeedInstanceIdsAtom } from "@/store/board"
 
 // Initialize theme as soon as possible to avoid flicker
 if (isBrowser) {
@@ -35,8 +35,8 @@ interface AppProviderProps {
 }
 
 function FeedStateHydrator() {
-  const setForkedFeedCards = useSetAtom(forkedFeedCardsAtom)
-  const setStarredFeedIds = useSetAtom(starredFeedIdsAtom)
+  const setFeedInstances = useSetAtom(feedInstancesAtom)
+  const setStarredFeedInstanceIds = useSetAtom(starredFeedInstanceIdsAtom)
   const { data: session } = authClient.useSession()
   const { data } = trpc.getFeedState.useQuery(undefined, {
     enabled: Boolean(session),
@@ -48,12 +48,12 @@ function FeedStateHydrator() {
       return
     }
 
-    setForkedFeedCards(data.forks)
-    setStarredFeedIds(data.starredFeedIds)
-    data.paramConfigs.forEach((config) => {
-      writeStoredFeedParamValues(config.feedInstanceId, config.params)
+    setFeedInstances(data.feedInstances)
+    setStarredFeedInstanceIds(data.starredFeedInstanceIds)
+    data.feedInstances.forEach((instance) => {
+      writeStoredFeedParamValues(instance.instanceId, instance.params)
     })
-  }, [data, setForkedFeedCards, setStarredFeedIds])
+  }, [data, setFeedInstances, setStarredFeedInstanceIds])
 
   return null
 }

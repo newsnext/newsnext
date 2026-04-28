@@ -29,6 +29,13 @@
       "when": 1777383600000,
       "tag": "0003_feed_catalog",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1777395600000,
+      "tag": "0004_simplify_feed_state",
+      "breakpoints": true
     }
   ]
 }

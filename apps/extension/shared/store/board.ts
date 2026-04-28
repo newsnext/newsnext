@@ -1,12 +1,12 @@
 import type { BoardType } from "@newsnext/shared/types"
-import type { ForkedFeedCard } from "@/lib/feed-cards"
+import type { FeedInstance } from "@/lib/feed-cards"
 import { atom } from "jotai"
 import { atomWithStorage } from "jotai/utils"
 
 export type { BoardType }
 
 export const currentBoardAtom = atom<BoardType>("featured")
-export const STARRED_CARD_IDS_KEY = "newsnext-starred-feed-ids"
-export const FORKED_FEED_CARDS_KEY = "newsnext-forked-feed-cards"
-export const starredFeedIdsAtom = atomWithStorage<string[]>(STARRED_CARD_IDS_KEY, [])
-export const forkedFeedCardsAtom = atomWithStorage<ForkedFeedCard[]>(FORKED_FEED_CARDS_KEY, [])
+export const STARRED_FEED_INSTANCE_IDS_KEY = "newsnext-starred-feed-instance-ids"
+export const FEED_INSTANCES_KEY = "newsnext-feed-instances"
+export const starredFeedInstanceIdsAtom = atomWithStorage<string[]>(STARRED_FEED_INSTANCE_IDS_KEY, [])
+export const feedInstancesAtom = atomWithStorage<FeedInstance[]>(FEED_INSTANCES_KEY, [])

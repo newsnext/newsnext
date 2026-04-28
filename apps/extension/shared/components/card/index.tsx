@@ -6,11 +6,11 @@ import { useCallback, useMemo, useRef, useState } from "react"
 import { FlipAnimate } from "@/components/common/flip-animate"
 import { useFeedParams } from "@/hooks"
 import { useFeedQuery } from "@/hooks/use-feed-query"
-import { createForkedFeedCard } from "@/lib/feed-cards"
+import { createFeedInstance } from "@/lib/feed-cards"
 import { deleteStoredFeedParamValues, writeStoredFeedParamValues } from "@/lib/feed-params"
 import { trpc } from "@/lib/trpc"
 import { cn } from "@/lib/utils"
-import { forkedFeedCardsAtom, starredFeedIdsAtom } from "@/store/board"
+import { feedInstancesAtom, starredFeedInstanceIdsAtom } from "@/store/board"
 import { CardBack } from "./card-back"
 import { CardContext } from "./card-context"
 import { CardFront } from "./card-front"
@@ -24,13 +24,12 @@ export interface CardProps {
 }
 
 function CardContent({ id, feed, dragHandle }: CardProps) {
-  const [starredFeedIds, setStarredFeedIds] = useAtom(starredFeedIdsAtom)
-  const [, setForkedFeedCards] = useAtom(forkedFeedCardsAtom)
-  const upsertFeedFork = trpc.upsertFeedFork.useMutation({ onError: () => {} })
-  const deleteFeedFork = trpc.deleteFeedFork.useMutation({ onError: () => {} })
-  const setStarredFeed = trpc.setStarredFeed.useMutation({ onError: () => {} })
-  const saveFeedParamConfig = trpc.saveFeedParamConfig.useMutation({ onError: () => {} })
-  const deleteFeedParamConfig = trpc.deleteFeedParamConfig.useMutation({ onError: () => {} })
+  const [starredFeedInstanceIds, setStarredFeedInstanceIds] = useAtom(starredFeedInstanceIdsAtom)
+  const [, setFeedInstances] = useAtom(feedInstancesAtom)
+  const upsertFeedInstance = trpc.upsertFeedInstance.useMutation({ onError: () => {} })
+  const deleteFeedInstance = trpc.deleteFeedInstance.useMutation({ onError: () => {} })
+  const setStarredFeedInstance = trpc.setStarredFeedInstance.useMutation({ onError: () => {} })
+  const resetFeedInstanceParams = trpc.resetFeedInstanceParams.useMutation({ onError: () => {} })
   const [isFlipped, setIsFlipped] = useState(false)
   const {
     hasParams,
@@ -56,83 +55,78 @@ function CardContent({ id, feed, dragHandle }: CardProps) {
   //   if (source.interval <= 2 * 60 * 1000) normalRefetch()
   // }, [date, normalRefetch])
 
-  const isStarred = useMemo(() => starredFeedIds.includes(id), [id, starredFeedIds])
+  const isStarred = useMemo(() => starredFeedInstanceIds.includes(id), [id, starredFeedInstanceIds])
   const handleFork = useCallback(() => {
-    const forkedFeedCard = createForkedFeedCard(feed.feedId, savedParams)
+    const forkedInstance = createFeedInstance(feed.feedId, savedParams, true)
 
-    writeStoredFeedParamValues(forkedFeedCard.id, savedParams)
-    upsertFeedFork.mutate(forkedFeedCard)
-    setForkedFeedCards(prev =>
-      prev.some(item => item.id === forkedFeedCard.id)
+    writeStoredFeedParamValues(forkedInstance.instanceId, savedParams)
+    upsertFeedInstance.mutate(forkedInstance)
+    setFeedInstances(prev =>
+      prev.some(item => item.instanceId === forkedInstance.instanceId)
         ? prev
-        : [...prev, forkedFeedCard],
+        : [...prev, forkedInstance],
     )
 
     if (isStarred) {
-      setStarredFeedIds(prev => prev.includes(forkedFeedCard.id) ? prev : [...prev, forkedFeedCard.id])
-      setStarredFeed.mutate({ feedId: forkedFeedCard.id, starred: true })
+      setStarredFeedInstanceIds(prev => prev.includes(forkedInstance.instanceId) ? prev : [...prev, forkedInstance.instanceId])
+      setStarredFeedInstance.mutate({ instanceId: forkedInstance.instanceId, starred: true })
     }
-  }, [feed.feedId, isStarred, savedParams, setForkedFeedCards, setStarredFeedIds, setStarredFeed, upsertFeedFork])
+  }, [feed.feedId, isStarred, savedParams, setFeedInstances, setStarredFeedInstance, setStarredFeedInstanceIds, upsertFeedInstance])
 
   const handleDelete = useCallback(() => {
     if (!feed.isFork) {
       return
     }
 
-    setForkedFeedCards(prev => prev.filter(forkedFeedCard => forkedFeedCard.id !== id))
-    setStarredFeedIds(prev => prev.filter(starredFeedId => starredFeedId !== id))
+    setFeedInstances(prev => prev.filter(instance => instance.instanceId !== id))
+    setStarredFeedInstanceIds(prev => prev.filter(instanceId => instanceId !== id))
     deleteStoredFeedParamValues(id)
-    deleteFeedFork.mutate({ id })
-    deleteFeedParamConfig.mutate({ feedInstanceId: id })
-    setStarredFeed.mutate({ feedId: id, starred: false })
-  }, [deleteFeedFork, deleteFeedParamConfig, feed.isFork, id, setForkedFeedCards, setStarredFeed, setStarredFeedIds])
+    deleteFeedInstance.mutate({ instanceId: id })
+  }, [deleteFeedInstance, feed.isFork, id, setFeedInstances, setStarredFeedInstanceIds])
 
   const handleSaveFeedParams = useCallback(() => {
     const nextParams = saveDraftParams()
-
-    saveFeedParamConfig.mutate({
-      feedInstanceId: id,
-      feedId: feed.feedId,
+    const nextInstance = {
+      instanceId: id,
+      feedKey: feed.feedId,
       params: nextParams,
-    })
-
-    if (feed.isFork) {
-      setForkedFeedCards(prev => prev.map(forkedFeedCard =>
-        forkedFeedCard.id === id
-          ? { ...forkedFeedCard, params: nextParams }
-          : forkedFeedCard,
-      ))
-      upsertFeedFork.mutate({
-        id,
-        feedId: feed.feedId,
-        params: nextParams,
-      })
+      isFork: feed.isFork,
+      createdAt: Date.now(),
     }
-  }, [feed.feedId, feed.isFork, id, saveDraftParams, saveFeedParamConfig, setForkedFeedCards, upsertFeedFork])
+
+    setFeedInstances(prev =>
+      prev.some(instance => instance.instanceId === id)
+        ? prev.map(instance => instance.instanceId === id ? { ...instance, params: nextParams } : instance)
+        : [...prev, nextInstance],
+    )
+    upsertFeedInstance.mutate(nextInstance)
+  }, [feed.feedId, feed.isFork, id, saveDraftParams, setFeedInstances, upsertFeedInstance])
 
   const handleResetFeedParams = useCallback(() => {
     resetDraftParams()
-    deleteFeedParamConfig.mutate({ feedInstanceId: id })
+    resetFeedInstanceParams.mutate({ instanceId: id })
 
     if (feed.isFork) {
-      setForkedFeedCards(prev => prev.map(forkedFeedCard =>
-        forkedFeedCard.id === id
-          ? { ...forkedFeedCard, params: undefined }
-          : forkedFeedCard,
+      setFeedInstances(prev => prev.map(instance =>
+        instance.instanceId === id
+          ? { ...instance, params: {} }
+          : instance,
       ))
+    } else {
+      setFeedInstances(prev => prev.filter(instance => instance.instanceId !== id))
     }
-  }, [deleteFeedParamConfig, feed.isFork, id, resetDraftParams, setForkedFeedCards])
+  }, [feed.isFork, id, resetDraftParams, resetFeedInstanceParams, setFeedInstances])
 
   const handleToggleStar = useCallback(() => {
     const nextIsStarred = !isStarred
-    setStarredFeedIds((prev) => {
+    setStarredFeedInstanceIds((prev) => {
       if (prev.includes(id)) {
-        return prev.filter(feedId => feedId !== id)
+        return prev.filter(instanceId => instanceId !== id)
       }
       return [...prev, id]
     })
-    setStarredFeed.mutate({ feedId: id, starred: nextIsStarred })
-  }, [id, isStarred, setStarredFeed, setStarredFeedIds])
+    setStarredFeedInstance.mutate({ instanceId: id, starred: nextIsStarred })
+  }, [id, isStarred, setStarredFeedInstance, setStarredFeedInstanceIds])
 
   const contextValue = useMemo(
     () => ({
