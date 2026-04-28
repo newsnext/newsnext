@@ -1,5 +1,5 @@
-import type { FeedDraft, StatusTone } from "@/lib/feed-admin"
 import type { ReactNode } from "react"
+import type { FeedDraft, StatusTone } from "@/lib/feed-admin"
 import { categories } from "@newsnext/feeds/typings"
 import { COLORS } from "@newsnext/shared/constants"
 import { Badge } from "@newsnext/ui/components/badge"
@@ -10,9 +10,9 @@ import { Switch } from "@newsnext/ui/components/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@newsnext/ui/components/tabs"
 import { Textarea } from "@newsnext/ui/components/textarea"
 import { cn } from "@newsnext/ui/lib/utils"
-import { Field } from "./field"
-import { FeedStateBadge } from "./feed-state-badge"
 import { formatCategory, selectClassName, TYPE_OPTIONS } from "@/lib/feed-admin"
+import { FeedStateBadge } from "./feed-state-badge"
+import { Field } from "./field"
 
 export function FeedEditor({
   feedKey,
@@ -35,7 +35,10 @@ export function FeedEditor({
     <Card className="min-w-0">
       <CardHeader className="border-b pb-4">
         <CardTitle>{feedKey}</CardTitle>
-        <CardDescription>Updated {new Date(updatedAt).toLocaleString()}</CardDescription>
+        <CardDescription>
+          Updated
+          {new Date(updatedAt).toLocaleString()}
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex flex-wrap items-center gap-2">

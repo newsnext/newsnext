@@ -18,7 +18,11 @@ export function ChartAreaInteractive({ feeds }: { feeds: AdminFeedRow[] }) {
             <div key={row.category} className="grid gap-1.5">
               <div className="flex items-center justify-between gap-3 text-sm">
                 <span className="truncate font-medium">{formatCategory(row.category)}</span>
-                <span className="shrink-0 text-muted-foreground">{row.enabled}/{row.total}</span>
+                <span className="shrink-0 text-muted-foreground">
+                  {row.enabled}
+                  /
+                  {row.total}
+                </span>
               </div>
               <div className="h-2 overflow-hidden rounded-full bg-muted">
                 <div

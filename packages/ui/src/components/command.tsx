@@ -13,7 +13,7 @@ import {
 } from "@newsnext/ui/components/input-group"
 
 import { cn } from "@newsnext/ui/lib/utils"
-import { CheckIcon, MagnifyingGlassIcon } from "@phosphor-icons/react"
+import { MagnifyingGlassIcon } from "@phosphor-icons/react"
 import { Command as CommandPrimitive } from "cmdk"
 import * as React from "react"
 

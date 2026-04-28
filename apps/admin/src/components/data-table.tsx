@@ -14,8 +14,8 @@ import {
   TableHeader,
   TableRow,
 } from "@newsnext/ui/components/table"
-import { FeedStateBadge } from "./feed-state-badge"
 import { formatCategory } from "@/lib/feed-admin"
+import { FeedStateBadge } from "./feed-state-badge"
 
 export function DataTable({
   feeds,
@@ -30,7 +30,11 @@ export function DataTable({
     <Card className="min-w-0">
       <CardHeader className="border-b pb-4">
         <CardTitle>Feeds</CardTitle>
-        <CardDescription>{feeds.length} matching feeds</CardDescription>
+        <CardDescription>
+          {feeds.length}
+          {" "}
+          matching feeds
+        </CardDescription>
       </CardHeader>
       <CardContent className="p-0">
         <div className="max-h-[34rem] overflow-auto">

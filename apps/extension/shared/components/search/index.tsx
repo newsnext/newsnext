@@ -11,7 +11,6 @@ import {
   CommandItem,
   CommandList,
 } from "@newsnext/ui/components/command"
-import { cn } from "@newsnext/ui/lib/utils"
 import { useAtomValue } from "jotai"
 import { useEffect, useMemo, useState } from "react"
 import { buildBoardFeeds } from "@/lib/feed-cards"

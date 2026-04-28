@@ -1,5 +1,5 @@
-import type { FilterState, FeedStats } from "@/lib/feed-admin"
 import type { ComponentProps } from "react"
+import type { FeedStats, FilterState } from "@/lib/feed-admin"
 import { categories } from "@newsnext/feeds/typings"
 import { Input } from "@newsnext/ui/components/input"
 import {
@@ -17,8 +17,8 @@ import {
   SidebarSeparator,
 } from "@newsnext/ui/components/sidebar"
 import { ChartBar, Database, Filter, Search, Settings2 } from "lucide-react"
-import { Field } from "./field"
 import { selectClassName } from "@/lib/feed-admin"
+import { Field } from "./field"
 
 export function AppSidebar({
   stats,
