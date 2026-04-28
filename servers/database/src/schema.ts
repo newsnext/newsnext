@@ -1,23 +1,11 @@
 import {
   index,
   integer,
+  primaryKey,
   sqliteTable,
   text,
   uniqueIndex,
 } from "drizzle-orm/sqlite-core"
-
-export const boards = sqliteTable("boards_table", {
-  id: integer().primaryKey({ autoIncrement: true }),
-  name: text().notNull(),
-  description: text().notNull(),
-})
-
-export const feeds = sqliteTable("sources_table", {
-  id: integer().primaryKey({ autoIncrement: true }),
-  name: text().notNull(),
-  description: text().notNull(),
-  url: text().notNull(),
-})
 
 export const user = sqliteTable("user", {
   id: text().primaryKey(),
@@ -74,6 +62,43 @@ export const verification = sqliteTable("verification", {
   index("verification_identifier_idx").on(table.identifier),
 ])
 
-export type Feed = typeof feeds.$inferSelect
-export type NewFeed = typeof feeds.$inferInsert
-export type Board = typeof boards.$inferSelect
+export const feedForks = sqliteTable("feed_forks", {
+  id: text().notNull(),
+  userId: text().notNull().references(() => user.id, { onDelete: "cascade" }),
+  feedId: text().notNull(),
+  params: text({ mode: "json" }).$type<Record<string, unknown>>().notNull(),
+  createdAt: integer().notNull(),
+  updatedAt: integer().notNull(),
+}, table => [
+  primaryKey({ columns: [table.userId, table.id] }),
+  index("feed_forks_userId_idx").on(table.userId),
+  index("feed_forks_feedId_idx").on(table.feedId),
+])
+
+export const starredFeeds = sqliteTable("starred_feeds", {
+  userId: text().notNull().references(() => user.id, { onDelete: "cascade" }),
+  feedId: text().notNull(),
+  createdAt: integer().notNull(),
+}, table => [
+  primaryKey({ columns: [table.userId, table.feedId] }),
+  index("starred_feeds_userId_idx").on(table.userId),
+])
+
+export const feedParamConfigs = sqliteTable("feed_param_configs", {
+  userId: text().notNull().references(() => user.id, { onDelete: "cascade" }),
+  feedInstanceId: text().notNull(),
+  feedId: text().notNull(),
+  params: text({ mode: "json" }).$type<Record<string, unknown>>().notNull(),
+  updatedAt: integer().notNull(),
+}, table => [
+  primaryKey({ columns: [table.userId, table.feedInstanceId] }),
+  index("feed_param_configs_userId_idx").on(table.userId),
+  index("feed_param_configs_feedId_idx").on(table.feedId),
+])
+
+export type FeedFork = typeof feedForks.$inferSelect
+export type NewFeedFork = typeof feedForks.$inferInsert
+export type StarredFeed = typeof starredFeeds.$inferSelect
+export type NewStarredFeed = typeof starredFeeds.$inferInsert
+export type FeedParamConfig = typeof feedParamConfigs.$inferSelect
+export type NewFeedParamConfig = typeof feedParamConfigs.$inferInsert

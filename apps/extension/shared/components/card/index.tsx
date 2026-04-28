@@ -8,6 +8,7 @@ import { useFeedParams } from "@/hooks"
 import { useFeedQuery } from "@/hooks/use-feed-query"
 import { createForkedFeedCard } from "@/lib/feed-cards"
 import { deleteStoredFeedParamValues, writeStoredFeedParamValues } from "@/lib/feed-params"
+import { trpc } from "@/lib/trpc"
 import { cn } from "@/lib/utils"
 import { forkedFeedCardsAtom, starredFeedIdsAtom } from "@/store/board"
 import { CardBack } from "./card-back"
@@ -25,6 +26,11 @@ export interface CardProps {
 function CardContent({ id, feed, dragHandle }: CardProps) {
   const [starredFeedIds, setStarredFeedIds] = useAtom(starredFeedIdsAtom)
   const [, setForkedFeedCards] = useAtom(forkedFeedCardsAtom)
+  const upsertFeedFork = trpc.upsertFeedFork.useMutation({ onError: () => {} })
+  const deleteFeedFork = trpc.deleteFeedFork.useMutation({ onError: () => {} })
+  const setStarredFeed = trpc.setStarredFeed.useMutation({ onError: () => {} })
+  const saveFeedParamConfig = trpc.saveFeedParamConfig.useMutation({ onError: () => {} })
+  const deleteFeedParamConfig = trpc.deleteFeedParamConfig.useMutation({ onError: () => {} })
   const [isFlipped, setIsFlipped] = useState(false)
   const {
     hasParams,
@@ -55,6 +61,7 @@ function CardContent({ id, feed, dragHandle }: CardProps) {
     const forkedFeedCard = createForkedFeedCard(feed.feedId, savedParams)
 
     writeStoredFeedParamValues(forkedFeedCard.id, savedParams)
+    upsertFeedFork.mutate(forkedFeedCard)
     setForkedFeedCards(prev =>
       prev.some(item => item.id === forkedFeedCard.id)
         ? prev
@@ -63,8 +70,9 @@ function CardContent({ id, feed, dragHandle }: CardProps) {
 
     if (isStarred) {
       setStarredFeedIds(prev => prev.includes(forkedFeedCard.id) ? prev : [...prev, forkedFeedCard.id])
+      setStarredFeed.mutate({ feedId: forkedFeedCard.id, starred: true })
     }
-  }, [feed.feedId, isStarred, savedParams, setForkedFeedCards, setStarredFeedIds])
+  }, [feed.feedId, isStarred, savedParams, setForkedFeedCards, setStarredFeedIds, setStarredFeed, upsertFeedFork])
 
   const handleDelete = useCallback(() => {
     if (!feed.isFork) {
@@ -74,10 +82,19 @@ function CardContent({ id, feed, dragHandle }: CardProps) {
     setForkedFeedCards(prev => prev.filter(forkedFeedCard => forkedFeedCard.id !== id))
     setStarredFeedIds(prev => prev.filter(starredFeedId => starredFeedId !== id))
     deleteStoredFeedParamValues(id)
-  }, [feed.isFork, id, setForkedFeedCards, setStarredFeedIds])
+    deleteFeedFork.mutate({ id })
+    deleteFeedParamConfig.mutate({ feedInstanceId: id })
+    setStarredFeed.mutate({ feedId: id, starred: false })
+  }, [deleteFeedFork, deleteFeedParamConfig, feed.isFork, id, setForkedFeedCards, setStarredFeed, setStarredFeedIds])
 
   const handleSaveFeedParams = useCallback(() => {
     const nextParams = saveDraftParams()
+
+    saveFeedParamConfig.mutate({
+      feedInstanceId: id,
+      feedId: feed.feedId,
+      params: nextParams,
+    })
 
     if (feed.isFork) {
       setForkedFeedCards(prev => prev.map(forkedFeedCard =>
@@ -85,11 +102,17 @@ function CardContent({ id, feed, dragHandle }: CardProps) {
           ? { ...forkedFeedCard, params: nextParams }
           : forkedFeedCard,
       ))
+      upsertFeedFork.mutate({
+        id,
+        feedId: feed.feedId,
+        params: nextParams,
+      })
     }
-  }, [feed.isFork, id, saveDraftParams, setForkedFeedCards])
+  }, [feed.feedId, feed.isFork, id, saveDraftParams, saveFeedParamConfig, setForkedFeedCards, upsertFeedFork])
 
   const handleResetFeedParams = useCallback(() => {
     resetDraftParams()
+    deleteFeedParamConfig.mutate({ feedInstanceId: id })
 
     if (feed.isFork) {
       setForkedFeedCards(prev => prev.map(forkedFeedCard =>
@@ -98,7 +121,18 @@ function CardContent({ id, feed, dragHandle }: CardProps) {
           : forkedFeedCard,
       ))
     }
-  }, [feed.isFork, id, resetDraftParams, setForkedFeedCards])
+  }, [deleteFeedParamConfig, feed.isFork, id, resetDraftParams, setForkedFeedCards])
+
+  const handleToggleStar = useCallback(() => {
+    const nextIsStarred = !isStarred
+    setStarredFeedIds((prev) => {
+      if (prev.includes(id)) {
+        return prev.filter(feedId => feedId !== id)
+      }
+      return [...prev, id]
+    })
+    setStarredFeed.mutate({ feedId: id, starred: nextIsStarred })
+  }, [id, isStarred, setStarredFeed, setStarredFeedIds])
 
   const contextValue = useMemo(
     () => ({
@@ -113,13 +147,7 @@ function CardContent({ id, feed, dragHandle }: CardProps) {
       isStarred,
       isFork: feed.isFork,
       onRefresh: refetch,
-      onToggleStar: () =>
-        setStarredFeedIds((prev) => {
-          if (prev.includes(id)) {
-            return prev.filter(feedId => feedId !== id)
-          }
-          return [...prev, id]
-        }),
+      onToggleStar: handleToggleStar,
       onFork: handleFork,
       onDelete: handleDelete,
       onFeedParamChange: updateDraftParam,
@@ -130,7 +158,7 @@ function CardContent({ id, feed, dragHandle }: CardProps) {
       dragHandle,
       updatedTime,
     }),
-    [id, feed, savedParams, draftParams, hasParams, isDirty, items, isFetching, isStarred, refetch, setStarredFeedIds, handleFork, handleDelete, updateDraftParam, handleSaveFeedParams, handleResetFeedParams, discardDraftParams, dragHandle, updatedTime],
+    [id, feed, savedParams, draftParams, hasParams, isDirty, items, isFetching, isStarred, refetch, handleToggleStar, handleFork, handleDelete, updateDraftParam, handleSaveFeedParams, handleResetFeedParams, discardDraftParams, dragHandle, updatedTime],
   )
 
   return (

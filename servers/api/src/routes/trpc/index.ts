@@ -3,6 +3,7 @@ import type { Context } from "hono"
 import { trpcServer } from "@hono/trpc-server"
 import { Hono } from "hono"
 import { appRouter } from "./app-router"
+import { createContext } from "./context"
 
 interface Variables {
   adapter: CacheAdapter
@@ -37,7 +38,8 @@ export const createTrpcApp = (loadAdapter: AdapterLoader) => {
   trpcApp.use("/*", (c, next) => {
     return trpcServer({
       router: appRouter,
-      createContext: () => ({
+      createContext: async () => ({
+        ...await createContext({ hono: c }),
         adapter: c.var.adapter,
         waitUntil: (p: Promise<any>) => c.executionCtx.waitUntil(p),
       }),

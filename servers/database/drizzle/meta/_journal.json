@@ -15,6 +15,13 @@
       "when": 1777220820000,
       "tag": "0001_github_login",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1777380000000,
+      "tag": "0002_feed_state",
+      "breakpoints": true
     }
   ]
 }

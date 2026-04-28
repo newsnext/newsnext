@@ -4,8 +4,11 @@ import type { ThemeMode } from "@/lib/utils/swith-theme"
 import { isBrowser } from "@newsnext/ui/lib/is-browser"
 import { QueryClientProvider } from "@tanstack/react-query"
 import { httpBatchStreamLink } from "@trpc/client"
-import { useState } from "react"
+import { useSetAtom } from "jotai"
+import { useEffect, useState } from "react"
+import { authClient } from "@/lib/auth-client"
 import { BASE_URL } from "@/lib/env"
+import { writeStoredFeedParamValues } from "@/lib/feed-params"
 import { trpc } from "@/lib/trpc"
 import {
   handleThemeModeSwitch,
@@ -15,6 +18,7 @@ import {
   THEME_MODE_KEY,
   THEME_VERSION_KEY,
 } from "@/lib/utils/swith-theme"
+import { forkedFeedCardsAtom, starredFeedIdsAtom } from "@/store/board"
 
 // Initialize theme as soon as possible to avoid flicker
 if (isBrowser) {
@@ -30,6 +34,30 @@ interface AppProviderProps {
   queryClient: QueryClient
 }
 
+function FeedStateHydrator() {
+  const setForkedFeedCards = useSetAtom(forkedFeedCardsAtom)
+  const setStarredFeedIds = useSetAtom(starredFeedIdsAtom)
+  const { data: session } = authClient.useSession()
+  const { data } = trpc.getFeedState.useQuery(undefined, {
+    enabled: Boolean(session),
+    retry: false,
+  })
+
+  useEffect(() => {
+    if (!data) {
+      return
+    }
+
+    setForkedFeedCards(data.forks)
+    setStarredFeedIds(data.starredFeedIds)
+    data.paramConfigs.forEach((config) => {
+      writeStoredFeedParamValues(config.feedInstanceId, config.params)
+    })
+  }, [data, setForkedFeedCards, setStarredFeedIds])
+
+  return null
+}
+
 export function AppProvider({
   children,
   queryClient,
@@ -40,6 +68,12 @@ export function AppProvider({
         links: [
           httpBatchStreamLink({
             url: `${BASE_URL}/api/trpc`,
+            fetch(url, options) {
+              return fetch(url, {
+                ...options,
+                credentials: "include",
+              })
+            },
           }),
         ],
       }),
@@ -47,7 +81,10 @@ export function AppProvider({
 
   return (
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
+        <FeedStateHydrator />
+        {children}
+      </QueryClientProvider>
     </trpc.Provider>
   )
 }
