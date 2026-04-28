@@ -96,9 +96,34 @@ export const feedParamConfigs = sqliteTable("feed_param_configs", {
   index("feed_param_configs_feedId_idx").on(table.feedId),
 ])
 
+export const feeds = sqliteTable("feeds", {
+  key: text().primaryKey(),
+  provider: text().notNull(),
+  feedId: text().notNull(),
+  name: text().notNull(),
+  title: text(),
+  interval: integer().notNull(),
+  params: text({ mode: "json" }).$type<Record<string, unknown>>().notNull(),
+  color: text().notNull(),
+  desc: text(),
+  type: text(),
+  category: text().notNull(),
+  home: text(),
+  icon: text(),
+  enabled: integer({ mode: "boolean" }).notNull().default(true),
+  createdAt: integer().notNull(),
+  updatedAt: integer().notNull(),
+}, table => [
+  uniqueIndex("feeds_provider_feedId_unique").on(table.provider, table.feedId),
+  index("feeds_provider_idx").on(table.provider),
+  index("feeds_category_idx").on(table.category),
+])
+
 export type FeedFork = typeof feedForks.$inferSelect
 export type NewFeedFork = typeof feedForks.$inferInsert
 export type StarredFeed = typeof starredFeeds.$inferSelect
 export type NewStarredFeed = typeof starredFeeds.$inferInsert
 export type FeedParamConfig = typeof feedParamConfigs.$inferSelect
 export type NewFeedParamConfig = typeof feedParamConfigs.$inferInsert
+export type Feed = typeof feeds.$inferSelect
+export type NewFeed = typeof feeds.$inferInsert

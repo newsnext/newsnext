@@ -1,0 +1,30 @@
+{
+  "name": "@newsnext/admin",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "bun run --bun vite --host 0.0.0.0 --port 3002",
+    "build": "bun run --bun vite build",
+    "compile": "tsgo --noEmit"
+  },
+  "dependencies": {
+    "@newsnext/api": "workspace:*",
+    "@newsnext/feeds": "workspace:*",
+    "@newsnext/shared": "workspace:*",
+    "@newsnext/ui": "workspace:*",
+    "@tanstack/react-query": "^5.100.5",
+    "@trpc/client": "^11.16.0",
+    "@trpc/react-query": "^11.16.0",
+    "@trpc/server": "^11.16.0",
+    "better-auth": "^1.6.9",
+    "lucide-react": "^1.11.0",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "catalog:",
+    "@vitejs/plugin-react": "^6.0.1",
+    "tailwindcss": "catalog:",
+    "vite": "^8.0.10"
+  }
+}

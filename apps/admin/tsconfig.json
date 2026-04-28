@@ -1,0 +1,18 @@
+{
+  "extends": "@newsnext/tsconfigs/web.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "./tsconfig.tsbuildinfo",
+    "types": [
+      "bun",
+      "vite/client"
+    ],
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ]
+    }
+  },
+  "include": [
+    "./src"
+  ]
+}
