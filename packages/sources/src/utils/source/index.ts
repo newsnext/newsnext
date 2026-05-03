@@ -51,7 +51,7 @@ export function $provider(
   }
 }
 
-export function createSourceLoader<Options>(
+export function createLoader<Options>(
   handler: (options: Options) => Promise<NewsItem[]>,
 ) {
   function defineLoader(

@@ -1,6 +1,6 @@
 import { $fetch } from "ofetch"
 import { myFetch } from "../utils/fetch"
-import { $jsonSourceLoader, $provider, $source } from "../utils/source"
+import { $jsonLoader, $provider, $source } from "../utils/source"
 
 interface StockItem {
   code: string
@@ -18,7 +18,7 @@ export default $provider({
   sources: {
     default: $source({
       type: "hottest",
-      ...$jsonSourceLoader<StockItem>(() => ({
+      ...$jsonLoader<StockItem>(() => ({
         url: "https://stock.xueqiu.com/v5/stock/hot_stock/list.json?size=30&_type=10&type=10",
         fetch: async (url) => {
           // Need to get cookie first

@@ -1,5 +1,5 @@
 import { CommonSourceParams } from "../utils/params"
-import { $provider, $rssHubSourceLoader, $source } from "../utils/source"
+import { $provider, $rssHubLoader, $source } from "../utils/source"
 
 export default $provider({
   name: "RSSHub",
@@ -9,7 +9,7 @@ export default $provider({
     default: $source({
       interval: 1,
       title: "36 氪",
-      ...$rssHubSourceLoader({
+      ...$rssHubLoader({
         route: {
           type: "text",
           default: "/36kr/newsflashes",

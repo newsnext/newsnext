@@ -1,5 +1,5 @@
 import { $jsonParam } from "../utils/params"
-import { $jsonSourceLoader, $provider, $source, resolvePath } from "../utils/source"
+import { $jsonLoader, $provider, $source, resolvePath } from "../utils/source"
 
 export default $provider({
   name: "JSON",
@@ -8,7 +8,7 @@ export default $provider({
   sources: {
     default: $source({
       title: "V2EX",
-      ...$jsonSourceLoader({
+      ...$jsonLoader({
         url: {
           type: "url",
           default: "https://www.v2ex.com/feed/ideas.json",

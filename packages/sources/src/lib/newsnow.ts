@@ -1,6 +1,6 @@
 import { Time } from "../typings/constants"
 import { $selectParam } from "../utils/params"
-import { $htmlSourceLoader, $provider, $source } from "../utils/source"
+import { $htmlLoader, $provider, $source } from "../utils/source"
 
 export default $provider({
   name: "NEWS NOW",
@@ -11,7 +11,7 @@ export default $provider({
     default: $source({
       interval: Time.Test,
       type: "timeline",
-      ...$htmlSourceLoader({
+      ...$htmlLoader({
         locale: $selectParam<"us" | "uk" | "ng" | "ro" | "it" | "ca" | "au">({
           options: [
             { label: "US", value: "us" },

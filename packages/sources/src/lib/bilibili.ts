@@ -1,5 +1,5 @@
 import { Time } from "../typings/constants"
-import { $jsonSourceLoader, $provider, $source } from "../utils/source"
+import { $jsonLoader, $provider, $source } from "../utils/source"
 
 function formatNumber(num: number): string {
   if (num >= 10000) {
@@ -24,7 +24,7 @@ interface VideoItem {
   pic: string
 }
 
-const hotSearch = $jsonSourceLoader<HotSearchItem>(() => ({
+const hotSearch = $jsonLoader<HotSearchItem>(() => ({
   url: "https://s.search.bilibili.com/main/hotword?limit=30",
   items: "list",
   fields: {
@@ -36,7 +36,7 @@ const hotSearch = $jsonSourceLoader<HotSearchItem>(() => ({
   },
 }))
 
-const hotVideo = $jsonSourceLoader<VideoItem>(() => ({
+const hotVideo = $jsonLoader<VideoItem>(() => ({
   url: "https://api.bilibili.com/x/web-interface/popular",
   items: "data.list",
   fields: {
@@ -59,7 +59,7 @@ const hotVideo = $jsonSourceLoader<VideoItem>(() => ({
   },
 }))
 
-const ranking = $jsonSourceLoader<VideoItem>(() => ({
+const ranking = $jsonLoader<VideoItem>(() => ({
   url: "https://api.bilibili.com/x/web-interface/ranking/v2",
   items: "data.list",
   fields: {

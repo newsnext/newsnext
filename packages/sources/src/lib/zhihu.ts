@@ -1,4 +1,4 @@
-import { $jsonSourceLoader, $provider, $source } from "../utils/source"
+import { $jsonLoader, $provider, $source } from "../utils/source"
 
 interface ResItem {
   card_label?: {
@@ -24,7 +24,7 @@ interface ResItem {
   }
 }
 
-const hot = $jsonSourceLoader<ResItem>(() => ({
+const hot = $jsonLoader<ResItem>(() => ({
   url: "https://www.zhihu.com/api/v3/source/topstory/hot-list-web?limit=50&desktop=true",
   items: "data",
   fields: {

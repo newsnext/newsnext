@@ -1,6 +1,6 @@
 import { Time } from "../typings/constants"
 import { $selectParam } from "../utils/params"
-import { $jsonSourceLoader, $provider, $source } from "../utils/source"
+import { $jsonLoader, $provider, $source } from "../utils/source"
 
 interface NeteaseArtist {
   name?: string
@@ -74,7 +74,7 @@ export default $provider({
       type: "hottest",
       interval: Time.Common,
       home: getPlaylistHome(DEFAULT_PLAYLIST_ID),
-      ...$jsonSourceLoader(neteaseMusicParams, ({ id }) => ({
+      ...$jsonLoader(neteaseMusicParams, ({ id }) => ({
         url: `https://music.163.com/api/playlist/detail?id=${id}`,
         items: (json: PlaylistResponse) => extractTracks(json),
         fields: {

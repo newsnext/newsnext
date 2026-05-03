@@ -1,10 +1,10 @@
 import type { RSSHubOption, RSSHubResponse } from "../../typings"
 import defu from "defu"
-import { createSourceLoader } from "."
+import { createLoader } from "."
 import { myFetch } from "../fetch"
 import { rss2json } from "./rss2json"
 
-export const $rssSourceLoader = createSourceLoader<{ url: string }>(async ({ url }) => {
+export const $rssLoader = createLoader<{ url: string }>(async ({ url }) => {
   const data = await rss2json(url)
   if (!data?.items.length) throw new Error("Cannot fetch rss data")
   return data.items.map(item => ({
@@ -14,7 +14,7 @@ export const $rssSourceLoader = createSourceLoader<{ url: string }>(async ({ url
   }))
 })
 
-export const $rssHubSourceLoader = createSourceLoader<{ route: string, host?: string, options?: RSSHubOption }>(async ({ route, host, options: RSSHubOptions }) => {
+export const $rssHubLoader = createLoader<{ route: string, host?: string, options?: RSSHubOption }>(async ({ route, host, options: RSSHubOptions }) => {
   if (!host) host = "https://rsshub.rssforever.com"
   // "https://rsshub.pseudoyu.com"
   const RSSHubBase = host

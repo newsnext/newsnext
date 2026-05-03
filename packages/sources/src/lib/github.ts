@@ -1,5 +1,5 @@
 import { Time } from "../typings/constants"
-import { $htmlSourceLoader, $provider, $source } from "../utils/source"
+import { $htmlLoader, $provider, $source } from "../utils/source"
 
 const baseURL = new URL("https://github.com")
 
@@ -12,7 +12,7 @@ export default $provider({
       title: "Trending",
       interval: Time.Common,
       type: "hottest",
-      ...$htmlSourceLoader(() => ({
+      ...$htmlLoader(() => ({
         url: "https://github.com/trending?spoken_language_code=",
         itemSelector: "main .Box div[data-hpc] > article",
         fields: {

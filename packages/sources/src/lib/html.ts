@@ -1,5 +1,5 @@
 import { parseRelativeDate } from "../utils/date"
-import { $htmlSourceLoader, $provider, $source } from "../utils/source"
+import { $htmlLoader, $provider, $source } from "../utils/source"
 
 export default $provider({
   name: "HTML Parser",
@@ -9,7 +9,7 @@ export default $provider({
     default: $source({
       title: "36 氪",
       home: "https://www.36kr.com/newsflashes",
-      ...$htmlSourceLoader({
+      ...$htmlLoader({
         url: {
           type: "url",
           default: "https://www.36kr.com/newsflashes",

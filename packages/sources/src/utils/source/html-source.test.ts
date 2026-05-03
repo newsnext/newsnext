@@ -1,7 +1,7 @@
 import iconv from "iconv-lite"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { myFetch } from "../fetch"
-import { $htmlSourceLoader } from "./html-source"
+import { $htmlLoader } from "./html-source"
 
 // Mock fetch
 vi.mock("../fetch", () => ({
@@ -30,7 +30,7 @@ describe("$htmlSourceLoader", () => {
     // Setup mock
     ;(myFetch as any).mockResolvedValue(html)
 
-    const source = $htmlSourceLoader(() => ({
+    const source = $htmlLoader(() => ({
       url: "https://example.com",
       itemSelector: ".list .item",
       fields: {
@@ -58,7 +58,7 @@ describe("$htmlSourceLoader", () => {
     `
     ;(myFetch as any).mockResolvedValue(html)
 
-    const source = $htmlSourceLoader(() => ({
+    const source = $htmlLoader(() => ({
       url: "https://example.com",
       itemSelector: ".item",
       fields: {
@@ -87,7 +87,7 @@ describe("$htmlSourceLoader", () => {
   it("should handle params in url function", async () => {
     ;(myFetch as any).mockResolvedValue("<div class=\"item\"></div>")
 
-    const source = $htmlSourceLoader({
+    const source = $htmlLoader({
       page: { type: "number", default: 1, title: "Page" },
     }, params => ({
       url: `https://example.com?p=${params.page}`,
@@ -106,7 +106,7 @@ describe("$htmlSourceLoader", () => {
     // Mock fetch returning array buffer
     ;(myFetch as any).mockResolvedValue(gb2312Buffer)
 
-    const source = $htmlSourceLoader(() => ({
+    const source = $htmlLoader(() => ({
       url: "https://example.com/gb",
       decoding: "gb2312",
       itemSelector: ".item",
@@ -127,7 +127,7 @@ describe("$htmlSourceLoader", () => {
 
     const customFetch = vi.fn().mockResolvedValue(html)
 
-    const source = $htmlSourceLoader(() => ({
+    const source = $htmlLoader(() => ({
       url: "https://example.com/custom",
       fetch: customFetch,
       itemSelector: ".item",

@@ -1,6 +1,6 @@
 import type { FetchOptions } from "ofetch"
 import type { InferSourceParams, NewsItem, SourceParamSchemaMap } from "../../typings/sources"
-import { createSourceLoader } from "."
+import { createLoader } from "."
 import { myFetch } from "../fetch"
 
 export type FieldResolver<Item = any, Result = any> = string | ((item: Item) => Result)
@@ -137,15 +137,15 @@ async function jsonSourceHandler<Item = any>(opts: JsonSourceOptions<Item>): Pro
   return news
 }
 
-export function $jsonSourceLoader<Item = any>(
+export function $jsonLoader<Item = any>(
   options: () => JsonSourceOptions<Item>,
 ): { loader: () => Promise<NewsItem[]> }
-export function $jsonSourceLoader<P extends SourceParamSchemaMap, Item = any>(
+export function $jsonLoader<P extends SourceParamSchemaMap, Item = any>(
   params: P,
   options: (params: InferSourceParams<P>) => JsonSourceOptions<Item>,
 ): { params: P, loader: (params: InferSourceParams<P>) => Promise<NewsItem[]> }
-export function $jsonSourceLoader<Item = any>(
+export function $jsonLoader<Item = any>(
   ...args: any[]
 ): any {
-  return (createSourceLoader<JsonSourceOptions<Item>>(jsonSourceHandler as any) as any)(...args)
+  return (createLoader<JsonSourceOptions<Item>>(jsonSourceHandler as any) as any)(...args)
 }

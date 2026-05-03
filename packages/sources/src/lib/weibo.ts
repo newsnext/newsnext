@@ -1,6 +1,6 @@
 import { Time } from "../typings/constants"
 import { myFetch } from "../utils/fetch"
-import { $htmlSourceLoader, $provider, $source } from "../utils/source"
+import { $htmlLoader, $provider, $source } from "../utils/source"
 
 const baseurl = "https://s.weibo.com"
 const flagUrls = {
@@ -18,7 +18,7 @@ export default $provider({
     default: $source({
       interval: Time.Common,
       type: "hottest",
-      ...$htmlSourceLoader(() => ({
+      ...$htmlLoader(() => ({
         url: "https://s.weibo.com/top/summary?cate=realtimehot",
         fetch: async (url) => {
           return myFetch(url, {

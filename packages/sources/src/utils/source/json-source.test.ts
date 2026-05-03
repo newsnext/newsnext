@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { myFetch } from "../fetch"
-import { $jsonSourceLoader } from "./json-source"
+import { $jsonLoader } from "./json-source"
 
 // Mock fetch
 vi.mock("../fetch", () => ({
@@ -20,7 +20,7 @@ describe("$jsonSourceLoader", () => {
 
     ;(myFetch as any).mockResolvedValue(data)
 
-    const source = $jsonSourceLoader(() => ({
+    const source = $jsonLoader(() => ({
       url: "https://api.example.com",
       fields: {
         title: "title",
@@ -47,7 +47,7 @@ describe("$jsonSourceLoader", () => {
     }
     ;(myFetch as any).mockResolvedValue(data)
 
-    const source = $jsonSourceLoader(() => ({
+    const source = $jsonLoader(() => ({
       url: "https://api.example.com",
       items: "response.items",
       fields: {
@@ -69,7 +69,7 @@ describe("$jsonSourceLoader", () => {
     }
     ;(myFetch as any).mockResolvedValue(data)
 
-    const source = $jsonSourceLoader(() => ({
+    const source = $jsonLoader(() => ({
       url: "https://api.example.com",
       items: json => json.data,
       fields: {
@@ -89,7 +89,7 @@ describe("$jsonSourceLoader", () => {
   it("should handle custom fetch", async () => {
     const customFetch = vi.fn().mockResolvedValue([{ t: "Custom", u: "u" }])
 
-    const source = $jsonSourceLoader(() => ({
+    const source = $jsonLoader(() => ({
       url: "http://c",
       fetch: customFetch,
       fields: { title: "t", url: "u" },
@@ -103,7 +103,7 @@ describe("$jsonSourceLoader", () => {
   it("should allow parsed runtime params to flow into fetch options", async () => {
     ;(myFetch as any).mockResolvedValue([{ title: "Parsed", url: "https://example.com" }])
 
-    const source = $jsonSourceLoader({
+    const source = $jsonLoader({
       headers: {
         type: "text",
         default: "{}",

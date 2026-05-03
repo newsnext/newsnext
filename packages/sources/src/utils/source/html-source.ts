@@ -4,7 +4,7 @@ import type { NewsItem } from "../../typings/sources"
 import { Buffer } from "node:buffer"
 import * as cheerio from "cheerio"
 import iconv from "iconv-lite"
-import { createSourceLoader } from "."
+import { createLoader } from "."
 import { myFetch } from "../fetch"
 
 export type FieldSelector<T = any> = string | {
@@ -80,7 +80,7 @@ function resolveField(
   return value
 }
 
-export const $htmlSourceLoader = createSourceLoader<HtmlSourceOptions>(async (opts) => {
+export const $htmlLoader = createLoader<HtmlSourceOptions>(async (opts) => {
   const { url, itemSelector, decoding, fetchOptions, fetch, fields } = opts
 
   let html: string
