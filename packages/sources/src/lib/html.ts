@@ -7,6 +7,8 @@ export default $provider({
   home: "https://html.com/",
   sources: {
     default: $source({
+      title: "36 氪",
+      home: "https://www.36kr.com/newsflashes",
       ...$htmlSourceLoader({
         url: {
           type: "url",
@@ -34,7 +36,6 @@ export default $provider({
           title: "Link Selector",
         },
       }, ({ url, decoding, itemSelector, titleSelector, linkSelector }) => {
-        const baseURL = new URL(url.includes("36kr.com") ? "https://www.36kr.com" : url)
         return {
           url,
           decoding,
@@ -46,7 +47,7 @@ export default $provider({
               attr: "href",
               transform: (href: string | undefined) => {
                 if (!href) return undefined
-                return new URL(href, baseURL).toString()
+                return new URL(href, url).toString()
               },
             },
             timestamp: {

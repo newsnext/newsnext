@@ -8,6 +8,7 @@ export default $provider({
   sources: {
     default: $source({
       interval: 1,
+      title: "36 氪",
       ...$rssHubSourceLoader({
         route: {
           type: "text",

@@ -112,6 +112,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
   {
     "name": "HTML Parser",
     "id": "default",
+    "title": "36 氪",
     "interval": 600000,
     "params": {
       "url": {
@@ -142,17 +143,18 @@ export const sourceDescriptors: SourceDescriptor[] = [
     },
     "color": "orange",
     "category": "others",
-    "home": "https://html.com/",
+    "home": "https://www.36kr.com/newsflashes",
     "provider": "html"
   },
   {
     "name": "JSON",
     "id": "default",
+    "title": "V2EX",
     "interval": 600000,
     "params": {
       "url": {
         "type": "url",
-        "default": "https://www.v2ex.com/source/ideas.json",
+        "default": "https://www.v2ex.com/feed/ideas.json",
         "title": "Target URL"
       },
       "headers": {
@@ -277,6 +279,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
   {
     "name": "RSS",
     "id": "default",
+    "title": "PCBeta",
     "interval": 600000,
     "params": {
       "url": {
@@ -308,6 +311,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
   {
     "name": "RSSHub",
     "id": "default",
+    "title": "36 氪",
     "interval": 1,
     "params": {
       "route": {

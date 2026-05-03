@@ -7,6 +7,7 @@ export default $provider({
   home: "https://rss.com/",
   sources: {
     default: $source({
+      title: "PCBeta",
       ...$rssSourceLoader({
         url: {
           type: "url",

@@ -7,10 +7,11 @@ export default $provider({
   home: "https://www.json.org/",
   sources: {
     default: $source({
+      title: "V2EX",
       ...$jsonSourceLoader({
         url: {
           type: "url",
-          default: "https://www.v2ex.com/source/ideas.json",
+          default: "https://www.v2ex.com/feed/ideas.json",
           title: "Target URL",
         },
         headers: $jsonParam<Record<string, string>>({
