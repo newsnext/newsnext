@@ -22,7 +22,7 @@ interface Res {
 
 const share: SourceLoader = async () => {
   const res = await Promise.all(["create", "ideas", "programmer", "share"]
-    .map(k => myFetch(`https://www.v2ex.com/source/${k}.json`) as Promise<Res>))
+    .map(k => myFetch(`https://www.v2ex.com/feed/${k}.json`) as Promise<Res>))
   return res.map(k => k.items).flat().map(k => ({
     title: k.title,
     timestamp: new Date(k.date_modified ?? k.date_published).getTime(),

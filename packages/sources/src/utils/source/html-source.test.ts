@@ -1,7 +1,9 @@
+import type { SourceParamSchemaMap } from "../../typings"
 import iconv from "iconv-lite"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { myFetch } from "../fetch"
 import { $htmlLoader } from "./html-source"
+import { $source } from "./index"
 
 // Mock fetch
 vi.mock("../fetch", () => ({
@@ -87,13 +89,18 @@ describe("$htmlSourceLoader", () => {
   it("should handle params in url function", async () => {
     ;(myFetch as any).mockResolvedValue("<div class=\"item\"></div>")
 
-    const source = $htmlLoader({
-      page: { type: "number", default: 1, title: "Page" },
-    }, params => ({
-      url: `https://example.com?p=${params.page}`,
-      itemSelector: ".item",
-      fields: { title: ".t", url: ".u" },
-    }))
+    const source = $source.html(
+      {
+        params: {
+          page: { type: "number", default: 1, title: "Page" },
+        } satisfies SourceParamSchemaMap,
+      },
+      params => ({
+        url: `https://example.com?p=${params.page}`,
+        itemSelector: ".item",
+        fields: { title: ".t", url: ".u" },
+      }),
+    )
 
     await (source as any).loader({ page: 2 })
 

@@ -1,5 +1,11 @@
 import type { FetchOptions } from "ofetch"
-import type { InferSourceParams, NewsItem, SourceParamSchemaMap } from "../../typings/sources"
+import type {
+  InferSourceParams,
+  NewsItem,
+  SourceLoader,
+  SourceParamSchemaMap,
+  SourceRegistration,
+} from "../../typings/sources"
 import { createLoader } from "."
 import { myFetch } from "../fetch"
 
@@ -139,13 +145,27 @@ async function jsonSourceHandler<Item = any>(opts: JsonSourceOptions<Item>): Pro
 
 export function $jsonLoader<Item = any>(
   options: () => JsonSourceOptions<Item>,
-): { loader: () => Promise<NewsItem[]> }
+): { loader: SourceLoader<Record<string, never>> }
 export function $jsonLoader<P extends SourceParamSchemaMap, Item = any>(
-  params: P,
   options: (params: InferSourceParams<P>) => JsonSourceOptions<Item>,
-): { params: P, loader: (params: InferSourceParams<P>) => Promise<NewsItem[]> }
+): { loader: SourceLoader<P> }
 export function $jsonLoader<Item = any>(
-  ...args: any[]
+  options: any,
 ): any {
-  return (createLoader<JsonSourceOptions<Item>>(jsonSourceHandler as any) as any)(...args)
+  return createLoader<JsonSourceOptions<Item>>(jsonSourceHandler as any)(options)
+}
+
+export function $jsonSource<P extends SourceParamSchemaMap, Item = any>(
+  registration: Omit<SourceRegistration<P>, "loader" | "params"> & { params: P },
+  options: (params: InferSourceParams<P>) => JsonSourceOptions<Item>,
+): SourceRegistration<P>
+export function $jsonSource<Item = any>(
+  registration: Omit<SourceRegistration<Record<string, never>>, "loader" | "params">,
+  options: () => JsonSourceOptions<Item>,
+): SourceRegistration<Record<string, never>>
+export function $jsonSource(registration: unknown, options: unknown): SourceRegistration<any> {
+  return {
+    ...(registration as object),
+    ...$jsonLoader(options as any),
+  } as SourceRegistration<any>
 }

@@ -1,6 +1,6 @@
 import { Time } from "../typings/constants"
 import { myFetch } from "../utils/fetch"
-import { $htmlLoader, $provider, $source } from "../utils/source"
+import { $provider, $source } from "../utils/source"
 
 const baseurl = "https://s.weibo.com"
 const flagUrls = {
@@ -15,10 +15,12 @@ export default $provider({
   color: "red",
   category: "china",
   sources: {
-    default: $source({
-      interval: Time.Common,
-      type: "hottest",
-      ...$htmlLoader(() => ({
+    default: $source.html(
+      {
+        interval: Time.Common,
+        type: "hottest",
+      },
+      () => ({
         url: "https://s.weibo.com/top/summary?cate=realtimehot",
         fetch: async (url) => {
           return myFetch(url, {
@@ -29,7 +31,6 @@ export default $provider({
             },
           })
         },
-        // Use nth-child to skip the header row
         itemSelector: "#pl_top_realtimehot table tbody tr:nth-child(n+2)",
         fields: {
           title: "td.td-02 a",
@@ -49,7 +50,7 @@ export default $provider({
             },
           },
         },
-      })),
-    }),
+      }),
+    ),
   },
 })

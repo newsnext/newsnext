@@ -1,6 +1,6 @@
 import { Time } from "../typings/constants"
 import { parseRelativeDate } from "../utils/date"
-import { $htmlLoader, $provider, $source } from "../utils/source"
+import { $provider, $source } from "../utils/source"
 
 const base = "https://www.zaochenbao.com"
 
@@ -10,10 +10,12 @@ export default $provider({
   color: "red",
   home: "https://www.zaobao.com",
   sources: {
-    default: $source({
-      interval: Time.Common,
-      type: "timeline",
-      ...$htmlLoader(() => ({
+    default: $source.html(
+      {
+        interval: Time.Common,
+        type: "timeline",
+      },
+      () => ({
         url: "https://www.zaochenbao.com/realtime/",
         decoding: "gb2312",
         itemSelector: "div.list-block>a.item",
@@ -32,7 +34,7 @@ export default $provider({
             },
           },
         },
-      })),
-    }),
+      }),
+    ),
   },
 })

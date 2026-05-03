@@ -1,5 +1,7 @@
+import type { SourceParamSchemaMap } from "../../typings"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { myFetch } from "../fetch"
+import { $source } from "./index"
 import { $jsonLoader } from "./json-source"
 
 // Mock fetch
@@ -103,21 +105,26 @@ describe("$jsonSourceLoader", () => {
   it("should allow parsed runtime params to flow into fetch options", async () => {
     ;(myFetch as any).mockResolvedValue([{ title: "Parsed", url: "https://example.com" }])
 
-    const source = $jsonLoader({
-      headers: {
-        type: "text",
-        default: "{}",
-        title: "Headers",
-        parse: value => JSON.parse(String(value)) as Record<string, string>,
+    const source = $source.json(
+      {
+        params: {
+          headers: {
+            type: "text",
+            default: "{}",
+            title: "Headers",
+            parse: (value: unknown) => JSON.parse(String(value)) as Record<string, string>,
+          },
+        } satisfies SourceParamSchemaMap,
       },
-    }, ({ headers }) => ({
-      url: "https://api.example.com",
-      fetchOptions: { headers },
-      fields: {
-        title: "title",
-        url: "url",
-      },
-    }))
+      ({ headers }) => ({
+        url: "https://api.example.com",
+        fetchOptions: { headers },
+        fields: {
+          title: "title",
+          url: "url",
+        },
+      }),
+    )
 
     await (source as any).loader({
       headers: { authorization: "Bearer token" },

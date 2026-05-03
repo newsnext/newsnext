@@ -1,6 +1,6 @@
 import { $fetch } from "ofetch"
 import { myFetch } from "../utils/fetch"
-import { $jsonLoader, $provider, $source } from "../utils/source"
+import { $provider, $source } from "../utils/source"
 
 interface StockItem {
   code: string
@@ -16,12 +16,13 @@ export default $provider({
   color: "blue",
   category: "finance",
   sources: {
-    default: $source({
-      type: "hottest",
-      ...$jsonLoader<StockItem>(() => ({
+    default: $source.json(
+      {
+        type: "hottest",
+      },
+      () => ({
         url: "https://stock.xueqiu.com/v5/stock/hot_stock/list.json?size=30&_type=10&type=10",
         fetch: async (url) => {
-          // Need to get cookie first
           const cookieResponse = await $fetch.raw("https://xueqiu.com/hq")
           const cookies = cookieResponse.headers.getSetCookie()
 
@@ -31,15 +32,15 @@ export default $provider({
             },
           })
         },
-        items: json => json.data.items.filter((k: any) => !k.ad),
+        items: json => json.data.items.filter((k: StockItem) => !k.ad),
         fields: {
-          url: item => `https://xueqiu.com/s/${item.code}`,
+          url: (item: StockItem) => `https://xueqiu.com/s/${item.code}`,
           title: "name",
           meta: {
-            html: item => `<span style="color: ${item.percent > 0 ? "#ef4444" : "#22c55e"}">${item.percent}%</span> <span>${item.exchange}</span>`,
+            html: (item: StockItem) => `<span style="color: ${item.percent > 0 ? "#ef4444" : "#22c55e"}">${item.percent}%</span> <span>${item.exchange}</span>`,
           },
         },
-      })),
-    }),
+      }),
+    ),
   },
 })

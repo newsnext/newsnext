@@ -1,6 +1,6 @@
 import { Time } from "../typings/constants"
 import { $selectParam } from "../utils/params"
-import { $jsonLoader, $provider, $source } from "../utils/source"
+import { $provider, $source } from "../utils/source"
 
 interface NeteaseArtist {
   name?: string
@@ -55,26 +55,27 @@ const formatArtists = (track: NeteaseTrack): string => {
 
 const extractCover = (track: NeteaseTrack): string | undefined => track.al?.picUrl ?? track.album?.picUrl
 
-const neteaseMusicParams = {
-  id: $selectParam<NeteasePlaylistId>({
-    options: [...NETEASE_PLAYLIST_OPTIONS],
-    default: DEFAULT_PLAYLIST_ID,
-    title: "Playlist",
-  }),
-}
-
 export default $provider({
   name: "网易云音乐",
   home: "https://sg.music.163.com/#/discover/toplist",
   color: "red",
   category: "china",
   sources: {
-    default: $source({
-      title: "排行榜",
-      type: "hottest",
-      interval: Time.Common,
-      home: getPlaylistHome(DEFAULT_PLAYLIST_ID),
-      ...$jsonLoader(neteaseMusicParams, ({ id }) => ({
+    default: $source.json(
+      {
+        title: "排行榜",
+        type: "hottest",
+        interval: Time.Common,
+        home: getPlaylistHome(DEFAULT_PLAYLIST_ID),
+        params: {
+          id: $selectParam<NeteasePlaylistId>({
+            options: [...NETEASE_PLAYLIST_OPTIONS],
+            default: DEFAULT_PLAYLIST_ID,
+            title: "Playlist",
+          }),
+        },
+      },
+      ({ id }) => ({
         url: `https://music.163.com/api/playlist/detail?id=${id}`,
         items: (json: PlaylistResponse) => extractTracks(json),
         fields: {
@@ -102,7 +103,7 @@ export default $provider({
             }),
           },
         },
-      })),
-    }),
+      }),
+    ),
   },
 })

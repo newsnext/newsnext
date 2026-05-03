@@ -4,15 +4,26 @@ import type {
   ProviderDefinition,
   ProviderRegistration,
   RegisteredSourceDefinition,
+  SourceLoader,
   SourceParamSchemaMap,
   SourceRegistration,
 } from "../../typings/sources"
 import { Time } from "../../typings/constants"
 
-export function $source<TParams extends SourceParamSchemaMap>(
-  source: SourceRegistration<TParams>,
-): SourceRegistration<TParams> {
-  return source
+import { $htmlSource } from "./html-source"
+import { $jsonSource } from "./json-source"
+import { $rssHubSource, $rssSource } from "./rss-source"
+
+function $sourceCallable<P extends SourceParamSchemaMap = Record<string, never>>(
+  registration:
+    | SourceRegistration<P>
+    | Omit<SourceRegistration<P>, "loader">,
+  loaderPart?: Pick<SourceRegistration<P>, "loader">,
+): SourceRegistration<P> {
+  if (loaderPart !== undefined) {
+    return { ...registration, ...loaderPart } as SourceRegistration<P>
+  }
+  return registration as SourceRegistration<P>
 }
 
 export function $provider(
@@ -56,23 +67,23 @@ export function createLoader<Options>(
 ) {
   function defineLoader(
     options: () => Options,
-  ): { loader: () => Promise<NewsItem[]> }
+  ): { loader: SourceLoader<Record<string, never>> }
   function defineLoader<P extends SourceParamSchemaMap>(
-    params: P,
     options: (params: InferSourceParams<P>) => Options,
-  ): { params: P, loader: (params: InferSourceParams<P>) => Promise<NewsItem[]> }
+  ): { loader: SourceLoader<P> }
   function defineLoader(
-    ...args: any[]
-  ): any {
-    const params = args.length === 2 ? args[0] : {}
-    const options = args.length === 2 ? args[1] : args[0]
-
+    options: unknown,
+  ): { loader: SourceLoader<any> } {
+    const arityZero = (options as (...args: unknown[]) => Options).length === 0
+    if (arityZero) {
+      const getOpts = options as () => Options
+      return {
+        loader: async (_params: InferSourceParams<Record<string, never>>) => handler(getOpts()),
+      }
+    }
+    const buildOpts = options as (params: InferSourceParams<any>) => Options
     return {
-      params,
-      loader: async (paramsValue: any) => {
-        const opts = options(paramsValue)
-        return handler(opts)
-      },
+      loader: async (params: InferSourceParams<any>) => handler(buildOpts(params)),
     }
   }
 
@@ -82,3 +93,15 @@ export function createLoader<Options>(
 export * from "./html-source"
 export * from "./json-source"
 export * from "./rss-source"
+
+export const $source = Object.assign($sourceCallable, {
+  json: $jsonSource,
+  html: $htmlSource,
+  rss: $rssSource,
+  rssHub: $rssHubSource,
+}) as typeof $sourceCallable & {
+  json: typeof $jsonSource
+  html: typeof $htmlSource
+  rss: typeof $rssSource
+  rssHub: typeof $rssHubSource
+}

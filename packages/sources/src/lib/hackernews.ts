@@ -1,8 +1,10 @@
+import type * as cheerio from "cheerio"
+import type { AnyNode } from "domhandler"
 import { getFavicon } from "@newsnext/shared/utils"
 import { Time } from "../typings/constants"
-import { $htmlLoader, $provider, $source } from "../utils/source"
+import { $provider, $source } from "../utils/source"
 
-const createHNFetcher = (sub: string) => $htmlLoader(() => ({
+const createLoader = (sub: string) => () => ({
   url: `https://news.ycombinator.com${sub}`,
   itemSelector: ".athing",
   fields: {
@@ -16,8 +18,7 @@ const createHNFetcher = (sub: string) => $htmlLoader(() => ({
       },
     },
     timestamp: {
-      // Use $el to access next sibling row
-      transform: (_, $el) => {
+      transform: (_value: string | undefined, $el: cheerio.Cheerio<AnyNode>) => {
         const date = $el.next("tr").find(".age").attr("title")?.split(" ")?.[1]
         return date ? Number(`${date}000`) : undefined
       },
@@ -25,7 +26,7 @@ const createHNFetcher = (sub: string) => $htmlLoader(() => ({
     meta: {
       text: {
         attr: "id",
-        transform: (id, $el) => $el.next("tr").find(`#score_${id}`).text(),
+        transform: (id: string | undefined, $el: cheerio.Cheerio<AnyNode>) => $el.next("tr").find(`#score_${id}`).text(),
       },
       icon: {
         selector: ".titleline>a",
@@ -40,7 +41,7 @@ const createHNFetcher = (sub: string) => $htmlLoader(() => ({
       },
     },
   },
-}))
+})
 
 export default $provider({
   name: "Hacker News",
@@ -48,29 +49,37 @@ export default $provider({
   category: "tech",
   home: "https://news.ycombinator.com/",
   sources: {
-    default: $source({
-      type: "hottest",
-      title: "Hottest",
-      ...createHNFetcher("/"),
-    }),
-    newest: $source({
-      type: "timeline",
-      title: "Newest",
-      home: "https://news.ycombinator.com/newest",
-      interval: Time.Realtime,
-      ...createHNFetcher("/newest"),
-    }),
-    show: $source({
-      title: "Show",
-      interval: Time.Common,
-      home: "https://news.ycombinator.com/show",
-      ...createHNFetcher("/show"),
-    }),
-    ask: $source({
-      title: "Ask",
-      interval: Time.Common,
-      home: "https://news.ycombinator.com/ask",
-      ...createHNFetcher("/ask"),
-    }),
+    default: $source.html(
+      {
+        type: "hottest",
+        title: "Hottest",
+      },
+      createLoader("/"),
+    ),
+    newest: $source.html(
+      {
+        type: "timeline",
+        title: "Newest",
+        home: "https://news.ycombinator.com/newest",
+        interval: Time.Realtime,
+      },
+      createLoader("/newest"),
+    ),
+    show: $source.html(
+      {
+        title: "Show",
+        interval: Time.Common,
+        home: "https://news.ycombinator.com/show",
+      },
+      createLoader("/show"),
+    ),
+    ask: $source.html(
+      {
+        title: "Ask",
+        interval: Time.Common,
+        home: "https://news.ycombinator.com/ask",
+      },
+      createLoader("/ask"),
+    ),
   },
 })

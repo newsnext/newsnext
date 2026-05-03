@@ -1,5 +1,5 @@
 import { Time } from "../typings/constants"
-import { $jsonLoader, $provider, $source } from "../utils/source"
+import { $provider, $source } from "../utils/source"
 
 function formatNumber(num: number): string {
   if (num >= 10000) {
@@ -24,87 +24,87 @@ interface VideoItem {
   pic: string
 }
 
-const hotSearch = $jsonLoader<HotSearchItem>(() => ({
-  url: "https://s.search.bilibili.com/main/hotword?limit=30",
-  items: "list",
-  fields: {
-    title: "show_name",
-    url: ({ keyword }) => `https://search.bilibili.com/all?keyword=${encodeURIComponent(keyword)}`,
-    meta: {
-      mark: item => item.icon,
-    },
-  },
-}))
-
-const hotVideo = $jsonLoader<VideoItem>(() => ({
-  url: "https://api.bilibili.com/x/web-interface/popular",
-  items: "data.list",
-  fields: {
-    title: "title",
-    url: ({ bvid }) => `https://www.bilibili.com/video/${bvid}`,
-    timestamp: ({ pubdate }) => pubdate * 1000,
-    meta: {
-      text: ({ stat }) => `${formatNumber(stat.view)}观看 · ${formatNumber(stat.like)}点赞`,
-      icon: item => item.owner.face,
-    },
-    detail: {
-      text: "desc",
-      picture: item => item.pic,
-      iframe: item => ({
-        src: `https://player.bilibili.com/player.html?bvid=${item.bvid}`,
-        width: "100%",
-        height: "100%",
-      }),
-    },
-  },
-}))
-
-const ranking = $jsonLoader<VideoItem>(() => ({
-  url: "https://api.bilibili.com/x/web-interface/ranking/v2",
-  items: "data.list",
-  fields: {
-    title: "title",
-    url: ({ bvid }) => `https://www.bilibili.com/video/${bvid}`,
-    timestamp: ({ pubdate }) => pubdate * 1000,
-    meta: {
-      text: ({ stat }) => `${formatNumber(stat.view)}观看 · ${formatNumber(stat.like)}点赞`,
-      icon: item => item.owner.face ? { src: item.owner.face, radius: 4 } : undefined,
-    },
-    detail: {
-      text: "desc",
-      picture: item => item.pic,
-      iframe: item => ({
-        src: `https://player.bilibili.com/player.html?bvid=${item.bvid}`,
-        width: "100%",
-        height: "100%",
-      }),
-    },
-  },
-}))
-
 export default $provider({
   name: "Bilibili",
   home: "https://www.bilibili.com",
   color: "blue",
   category: "china",
   sources: {
-    "default": $source({
-      title: "热搜",
-      type: "hottest",
-      interval: Time.Realtime,
-      ...hotSearch,
-    }),
-    "hot-video": $source({
-      title: "热门视频",
-      type: "hottest",
-      interval: Time.Common,
-      ...hotVideo,
-    }),
-    "ranking": $source({
-      title: "排行榜",
-      interval: Time.Common,
-      type: "hottest",
-      ...ranking,
-    }),
+    "default": $source.json(
+      {
+        title: "热搜",
+        type: "hottest",
+        interval: Time.Realtime,
+      },
+      () => ({
+        url: "https://s.search.bilibili.com/main/hotword?limit=30",
+        items: "list",
+        fields: {
+          title: "show_name",
+          url: ({ keyword }: HotSearchItem) => `https://search.bilibili.com/all?keyword=${encodeURIComponent(keyword)}`,
+          meta: {
+            mark: (item: HotSearchItem) => item.icon,
+          },
+        },
+      }),
+    ),
+    "hot-video": $source.json(
+      {
+        title: "热门视频",
+        type: "hottest",
+        interval: Time.Common,
+      },
+      () => ({
+        url: "https://api.bilibili.com/x/web-interface/popular",
+        items: "data.list",
+        fields: {
+          title: "title",
+          url: ({ bvid }: VideoItem) => `https://www.bilibili.com/video/${bvid}`,
+          timestamp: ({ pubdate }: VideoItem) => pubdate * 1000,
+          meta: {
+            text: ({ stat }: VideoItem) => `${formatNumber(stat.view)}观看 · ${formatNumber(stat.like)}点赞`,
+            icon: (item: VideoItem) => item.owner.face,
+          },
+          detail: {
+            text: "desc",
+            picture: (item: VideoItem) => item.pic,
+            iframe: (item: VideoItem) => ({
+              src: `https://player.bilibili.com/player.html?bvid=${item.bvid}`,
+              width: "100%",
+              height: "100%",
+            }),
+          },
+        },
+      }),
+    ),
+    "ranking": $source.json(
+      {
+        title: "排行榜",
+        interval: Time.Common,
+        type: "hottest",
+      },
+      () => ({
+        url: "https://api.bilibili.com/x/web-interface/ranking/v2",
+        items: "data.list",
+        fields: {
+          title: "title",
+          url: ({ bvid }: VideoItem) => `https://www.bilibili.com/video/${bvid}`,
+          timestamp: ({ pubdate }: VideoItem) => pubdate * 1000,
+          meta: {
+            text: ({ stat }: VideoItem) => `${formatNumber(stat.view)}观看 · ${formatNumber(stat.like)}点赞`,
+            icon: (item: VideoItem) => item.owner.face ? { src: item.owner.face, radius: 4 } : undefined,
+          },
+          detail: {
+            text: "desc",
+            picture: (item: VideoItem) => item.pic,
+            iframe: (item: VideoItem) => ({
+              src: `https://player.bilibili.com/player.html?bvid=${item.bvid}`,
+              width: "100%",
+              height: "100%",
+            }),
+          },
+        },
+      }),
+    ),
   },
 })

@@ -1,4 +1,4 @@
-import { $jsonLoader, $provider, $source } from "../utils/source"
+import { $provider, $source } from "../utils/source"
 
 interface ResItem {
   card_label?: {
@@ -24,36 +24,36 @@ interface ResItem {
   }
 }
 
-const hot = $jsonLoader<ResItem>(() => ({
-  url: "https://www.zhihu.com/api/v3/source/topstory/hot-list-web?limit=50&desktop=true",
-  items: "data",
-  fields: {
-    title: "target.title_area.text",
-    url: "target.link.url",
-    meta: {
-      mark: item => item?.card_label?.night_icon
-        && ({
-          src: item.card_label.night_icon,
-          radius: 0,
-        }),
-    },
-    detail: {
-      text: "target.excerpt_area.text",
-      picture: "target.image_area.url",
-    },
-  },
-}))
-
 export default $provider({
   name: "知乎",
   home: "https://www.zhihu.com",
   color: "blue",
   category: "china",
   sources: {
-    default: $source({
-      title: "全站热榜",
-      type: "hottest",
-      ...hot,
-    }),
+    default: $source.json(
+      {
+        title: "全站热榜",
+        type: "hottest",
+      },
+      () => ({
+        url: "https://www.zhihu.com/api/v3/feed/topstory/hot-list-web?limit=50&desktop=true",
+        items: "data",
+        fields: {
+          title: "target.title_area.text",
+          url: "target.link.url",
+          meta: {
+            mark: (item: ResItem) => item?.card_label?.night_icon
+              && ({
+                src: item.card_label.night_icon,
+                radius: 0,
+              }),
+          },
+          detail: {
+            text: "target.excerpt_area.text",
+            picture: "target.image_area.url",
+          },
+        },
+      }),
+    ),
   },
 })

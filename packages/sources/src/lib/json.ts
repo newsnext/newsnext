@@ -1,44 +1,47 @@
 import { $jsonParam } from "../utils/params"
-import { $jsonLoader, $provider, $source, resolvePath } from "../utils/source"
+import { $provider, $source, resolvePath } from "../utils/source"
 
 export default $provider({
   name: "JSON",
   color: "cyan",
   home: "https://www.json.org/",
   sources: {
-    default: $source({
-      title: "V2EX",
-      ...$jsonLoader({
-        url: {
-          type: "url",
-          default: "https://www.v2ex.com/feed/ideas.json",
-          title: "Target URL",
+    default: $source.json(
+      {
+        title: "V2EX",
+        params: {
+          url: {
+            type: "url",
+            default: "https://www.v2ex.com/feed/ideas.json",
+            title: "Target URL",
+          },
+          headers: $jsonParam({
+            default: "{}",
+            title: "Request Headers (JSON)",
+          }),
+          itemsPath: {
+            type: "text",
+            default: "items",
+            title: "Items Path",
+          },
+          titlePath: {
+            type: "text",
+            default: "title",
+            title: "Title Path",
+          },
+          urlPath: {
+            type: "text",
+            default: "url",
+            title: "URL Path",
+          },
+          timestampPath: {
+            type: "text",
+            default: "date_published",
+            title: "Timestamp Path",
+          },
         },
-        headers: $jsonParam<Record<string, string>>({
-          default: "{}",
-          title: "Request Headers (JSON)",
-        }),
-        itemsPath: {
-          type: "text",
-          default: "items",
-          title: "Items Path",
-        },
-        titlePath: {
-          type: "text",
-          default: "title",
-          title: "Title Path",
-        },
-        urlPath: {
-          type: "text",
-          default: "url",
-          title: "URL Path",
-        },
-        timestampPath: {
-          type: "text",
-          default: "date_published",
-          title: "Timestamp Path",
-        },
-      }, ({ headers, url, itemsPath, titlePath, urlPath, timestampPath }) => {
+      },
+      ({ headers, url, itemsPath, titlePath, urlPath, timestampPath }) => {
         const fetchOptions = {
           headers,
         }
@@ -52,7 +55,7 @@ export default $provider({
             timestamp: item => resolvePath(item, timestampPath),
           },
         }
-      }),
-    }),
+      },
+    ),
   },
 })

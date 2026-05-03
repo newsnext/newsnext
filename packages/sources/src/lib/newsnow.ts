@@ -1,6 +1,6 @@
 import { Time } from "../typings/constants"
 import { $selectParam } from "../utils/params"
-import { $htmlLoader, $provider, $source } from "../utils/source"
+import { $provider, $source } from "../utils/source"
 
 export default $provider({
   name: "NEWS NOW",
@@ -8,31 +8,34 @@ export default $provider({
   color: "red",
   home: "https://www.newsnow.com",
   sources: {
-    default: $source({
-      interval: Time.Test,
-      type: "timeline",
-      ...$htmlLoader({
-        locale: $selectParam<"us" | "uk" | "ng" | "ro" | "it" | "ca" | "au">({
-          options: [
-            { label: "US", value: "us" },
-            { label: "UK", value: "uk" },
-            { label: "Nigeria", value: "ng" },
-            { label: "România", value: "ro" },
-            { label: "Italia", value: "it" },
-            { label: "Canada", value: "ca" },
-            { label: "Australia", value: "au" },
-          ],
-          default: "us",
-          title: "Locale",
-        }),
-        topic: {
-          type: "text",
-          default: "US",
-          title: "Topic",
+    default: $source.html(
+      {
+        interval: Time.Test,
+        type: "timeline",
+        params: {
+          locale: $selectParam<"us" | "uk" | "ng" | "ro" | "it" | "ca" | "au">({
+            options: [
+              { label: "US", value: "us" },
+              { label: "UK", value: "uk" },
+              { label: "Nigeria", value: "ng" },
+              { label: "România", value: "ro" },
+              { label: "Italia", value: "it" },
+              { label: "Canada", value: "ca" },
+              { label: "Australia", value: "au" },
+            ],
+            default: "us",
+            title: "Locale",
+          }),
+          topic: {
+            type: "text",
+            default: "US",
+            title: "Topic",
+          },
         },
-      }, ({ locale, topic }) => ({
+      },
+      ({ locale, topic }) => ({
         url: `https://www.newsnow.com/${locale}/${topic}?type=ln`,
-        itemSelector: ".newssource .article",
+        itemSelector: ".newsfeed .article",
         fields: {
           title: ".article-card__headline",
           url: { selector: ".article-card__headline", attr: "href" },
@@ -45,7 +48,7 @@ export default $provider({
             text: ".article-publisher__name",
           },
         },
-      })),
-    }),
+      }),
+    ),
   },
 })

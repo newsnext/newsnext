@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,16 +15,30 @@
       font-size: 0.75rem;
       font-weight: 500;
     }
-    .status-pending { background-color: #f3f4f6; color: #374151; }
-    .status-success { background-color: #d1fae5; color: #065f46; }
-    .status-error { background-color: #fee2e2; color: #991b1b; }
+
+    .status-pending {
+      background-color: #f3f4f6;
+      color: #374151;
+    }
+
+    .status-success {
+      background-color: #d1fae5;
+      color: #065f46;
+    }
+
+    .status-error {
+      background-color: #fee2e2;
+      color: #991b1b;
+    }
   </style>
 </head>
+
 <body class="bg-gray-50 min-h-screen p-8">
   <div class="max-w-7xl mx-auto">
     <div class="flex justify-between items-center mb-8">
       <h1 class="text-3xl font-bold text-gray-900">Source Status</h1>
-      <button onclick="checkAll()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
+      <button onclick="checkAll()"
+        class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
         Refresh All
       </button>
     </div>
@@ -54,8 +69,8 @@
       div.innerHTML = `
         <div class="flex justify-between items-start mb-4">
           <div>
-            <h3 class="font-bold text-lg text-gray-900">${source.name}</h3>
-            <p class="text-sm text-gray-500">${source.title || source.id}</p>
+            <h3 class="font-bold text-lg text-gray-900">${source.title || source.name}</h3>
+            <p class="text-sm text-gray-500">${source.name}</p>
           </div>
           <span id="status-${sourceId.replace(':', '-')}" class="status-badge status-pending">
             Pending
@@ -80,6 +95,17 @@
         <div id="error-${sourceId.replace(':', '-')}" class="hidden mt-3 text-xs text-red-600 bg-red-50 p-2 rounded border border-red-100 break-all"></div>
       `;
 
+      const actions = document.createElement('div');
+      actions.className = 'mt-4 flex justify-end';
+      const refreshBtn = document.createElement('button');
+      refreshBtn.type = 'button';
+      refreshBtn.textContent = 'Refresh';
+      refreshBtn.className =
+        'text-sm font-medium text-blue-600 hover:text-blue-800 px-3 py-1.5 rounded-lg border border-blue-200 hover:bg-blue-50 transition-colors';
+      refreshBtn.addEventListener('click', () => checkSource(source));
+      actions.appendChild(refreshBtn);
+      div.appendChild(actions);
+
       return div;
     }
 
@@ -90,6 +116,8 @@
       const latencyEl = document.getElementById(`latency-${cardId}`);
       const errorEl = document.getElementById(`error-${cardId}`);
       const cardEl = document.getElementById(`card-${cardId}`);
+      const refreshBtn = cardEl?.querySelector('button[type="button"]');
+      if (refreshBtn) refreshBtn.disabled = true;
 
       statusEl.className = 'status-badge status-pending';
       statusEl.textContent = 'Checking...';
@@ -123,6 +151,8 @@
 
         errorEl.textContent = err.message;
         errorEl.classList.remove('hidden');
+      } finally {
+        if (refreshBtn) refreshBtn.disabled = false;
       }
     }
 
@@ -152,4 +182,5 @@
     checkAll();
   </script>
 </body>
+
 </html>

@@ -1,33 +1,36 @@
 import { CommonSourceParams } from "../utils/params"
-import { $provider, $rssHubLoader, $source } from "../utils/source"
+import { $provider, $source } from "../utils/source"
 
 export default $provider({
   name: "RSSHub",
   color: "orange",
   home: "https://rsshub.app/",
   sources: {
-    default: $source({
-      interval: 1,
-      title: "36 氪",
-      ...$rssHubLoader({
-        route: {
-          type: "text",
-          default: "/36kr/newsflashes",
-          title: "Route",
+    default: $source.rssHub(
+      {
+        interval: 1,
+        title: "36 氪",
+        params: {
+          route: {
+            type: "text",
+            default: "/36kr/newsflashes",
+            title: "Route",
+          },
+          host: {
+            type: "url",
+            default: "https://rsshub.rssforever.com",
+            title: "Host",
+          },
+          type: CommonSourceParams.type,
         },
-        host: {
-          type: "url",
-          default: "https://rsshub.rssforever.com",
-          title: "Host",
-        },
-        type: CommonSourceParams.type,
-      }, ({ route, type, host }) => ({
+      },
+      ({ route, type, host }) => ({
         route,
         host,
         options: {
           sorted: type !== "hottest",
         },
-      })),
-    }),
+      }),
+    ),
   },
 })
