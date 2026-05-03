@@ -340,6 +340,36 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "name": "V2EX",
     "id": "default",
     "interval": 600000,
+    "params": {
+      "feeds": {
+        "type": "multiselect",
+        "title": "Feeds",
+        "options": [
+          {
+            "label": "Create",
+            "value": "create"
+          },
+          {
+            "label": "Ideas",
+            "value": "ideas"
+          },
+          {
+            "label": "Programmer",
+            "value": "programmer"
+          },
+          {
+            "label": "Share",
+            "value": "share"
+          }
+        ],
+        "default": [
+          "create",
+          "ideas",
+          "programmer",
+          "share"
+        ]
+      }
+    },
     "color": "slate",
     "category": "others",
     "home": "https://v2ex.com/",

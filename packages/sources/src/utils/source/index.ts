@@ -14,16 +14,23 @@ import { $htmlSource } from "./html-source"
 import { $jsonSource } from "./json-source"
 import { $rssHubSource, $rssSource } from "./rss-source"
 
+function $sourceCallable<P extends SourceParamSchemaMap>(
+  registration: Omit<SourceRegistration<P>, "loader">,
+  loader: SourceLoader<P>,
+): SourceRegistration<P>
 function $sourceCallable<P extends SourceParamSchemaMap = Record<string, never>>(
+  registration: SourceRegistration<P>,
+): SourceRegistration<P>
+function $sourceCallable(
   registration:
-    | SourceRegistration<P>
-    | Omit<SourceRegistration<P>, "loader">,
-  loaderPart?: Pick<SourceRegistration<P>, "loader">,
-): SourceRegistration<P> {
-  if (loaderPart !== undefined) {
-    return { ...registration, ...loaderPart } as SourceRegistration<P>
+    | SourceRegistration<any>
+    | Omit<SourceRegistration<any>, "loader">,
+  loader?: SourceLoader<any>,
+): SourceRegistration<any> {
+  if (loader !== undefined) {
+    return { ...registration, loader }
   }
-  return registration as SourceRegistration<P>
+  return registration as SourceRegistration<any>
 }
 
 export function $provider(
