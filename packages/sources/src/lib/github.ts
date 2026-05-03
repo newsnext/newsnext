@@ -27,13 +27,13 @@ export default $provider({
             attr: "href",
             transform: val => val ? new URL(val, baseURL).toString() : undefined,
           },
-          meta: {
+          inline: {
             text: {
               selector: "[href$=stargazers]",
               transform: val => `✰ ${val?.replace(/\s+/g, "").trim()}`,
             },
           },
-          detail: {
+          preview: {
             text: {
               selector: ">p",
               transform: val => val?.replace(/\n+/g, "").trim(),

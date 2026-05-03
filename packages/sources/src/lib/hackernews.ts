@@ -23,7 +23,7 @@ const createLoader = (sub: string) => () => ({
         return date ? Number(`${date}000`) : undefined
       },
     },
-    meta: {
+    inline: {
       text: {
         attr: "id",
         transform: (id: string | undefined, $el: cheerio.Cheerio<AnyNode>) => $el.next("tr").find(`#score_${id}`).text(),

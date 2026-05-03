@@ -31,17 +31,17 @@ export interface JsonSourceOptions<Item = any> {
     url: FieldResolver<Item, string>
     mobileUrl?: FieldResolver<Item, string>
     timestamp?: FieldResolver<Item, number>
-    meta?: {
+    inline?: {
       text?: FieldResolver<Item, string>
       html?: FieldResolver<Item, string>
-      mark?: FieldResolver<Item, NonNullable<NewsItem["meta"]>["mark"]>
-      icon?: FieldResolver<Item, NonNullable<NewsItem["meta"]>["icon"]>
+      mark?: FieldResolver<Item, NonNullable<NewsItem["inline"]>["mark"]>
+      icon?: FieldResolver<Item, NonNullable<NewsItem["inline"]>["icon"]>
     }
-    detail?: {
+    preview?: {
       text?: FieldResolver<Item, string>
       html?: FieldResolver<Item, string>
-      picture?: FieldResolver<Item, NonNullable<NewsItem["detail"]>["picture"]>
-      iframe?: FieldResolver<Item, NonNullable<NewsItem["detail"]>["iframe"]>
+      picture?: FieldResolver<Item, NonNullable<NewsItem["preview"]>["picture"]>
+      iframe?: FieldResolver<Item, NonNullable<NewsItem["preview"]>["iframe"]>
     }
   }
 }
@@ -110,26 +110,26 @@ async function jsonSourceHandler<Item = any>(opts: JsonSourceOptions<Item>): Pro
       if (timestamp) newsItem.timestamp = timestamp
     }
 
-    if (fields.meta) {
-      const meta: any = {}
-      for (const [key, resolver] of Object.entries(fields.meta)) {
+    if (fields.inline) {
+      const inline: any = {}
+      for (const [key, resolver] of Object.entries(fields.inline)) {
         const val = resolveValue(item, resolver as FieldResolver<Item, any>)
         if (val !== undefined) {
-          meta[key as keyof typeof meta] = val
+          inline[key as keyof typeof inline] = val
         }
       }
-      newsItem.meta = meta
+      newsItem.inline = inline
     }
 
-    if (fields.detail) {
-      const detail: any = {}
-      for (const [key, resolver] of Object.entries(fields.detail)) {
+    if (fields.preview) {
+      const preview: any = {}
+      for (const [key, resolver] of Object.entries(fields.preview)) {
         const val = resolveValue(item, resolver as FieldResolver<Item, any>)
         if (val !== undefined) {
-          detail[key as keyof typeof detail] = val
+          preview[key as keyof typeof preview] = val
         }
       }
-      newsItem.detail = detail
+      newsItem.preview = preview
     }
 
     return newsItem

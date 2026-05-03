@@ -38,11 +38,11 @@ export default $provider({
             return title.length > 50 ? `${title.slice(0, 50)}...` : title
           },
           url: item => `https://www.coolapk.com${item.url}`,
-          meta: {
+          inline: {
             text: "targetRow.subTitle",
             icon: item => item.userAvatar,
           },
-          detail: {
+          preview: {
             text: item => item.message ? load(item.message).text() : "",
             picture: item => item.pic,
           },

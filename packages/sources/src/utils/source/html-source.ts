@@ -30,17 +30,17 @@ export interface HtmlSourceOptions {
     url: FieldSelector<string>
     mobileUrl?: FieldSelector<string>
     timestamp?: FieldSelector<number>
-    meta?: {
+    inline?: {
       text?: FieldSelector<string>
       html?: FieldSelector<string>
-      mark?: FieldSelector<NonNullable<NewsItem["meta"]>["mark"]>
-      icon?: FieldSelector<NonNullable<NewsItem["meta"]>["icon"]>
+      mark?: FieldSelector<NonNullable<NewsItem["inline"]>["mark"]>
+      icon?: FieldSelector<NonNullable<NewsItem["inline"]>["icon"]>
     }
-    detail?: {
+    preview?: {
       text?: FieldSelector<string>
       html?: FieldSelector<string>
-      picture?: FieldSelector<NonNullable<NewsItem["detail"]>["picture"]>
-      iframe?: FieldSelector<NonNullable<NewsItem["detail"]>["iframe"]>
+      picture?: FieldSelector<NonNullable<NewsItem["preview"]>["picture"]>
+      iframe?: FieldSelector<NonNullable<NewsItem["preview"]>["iframe"]>
     }
   }
 }
@@ -136,28 +136,28 @@ export const $htmlLoader = createLoader<HtmlSourceOptions>(async (opts) => {
       if (timestamp) item.timestamp = timestamp
     }
 
-    if (fields.meta) {
-      const meta: any = {}
-      for (const [key, fieldSelector] of Object.entries(fields.meta)) {
+    if (fields.inline) {
+      const inline: any = {}
+      for (const [key, fieldSelector] of Object.entries(fields.inline)) {
         const config = resolveFieldSelector(fieldSelector as FieldSelector)
         const infoValue = resolveField($, el, config)
         if (infoValue !== undefined && infoValue !== "") {
-          meta[key] = infoValue
+          inline[key] = infoValue
         }
       }
-      item.meta = meta
+      item.inline = inline
     }
 
-    if (fields.detail) {
-      const detail: any = {}
-      for (const [key, fieldSelector] of Object.entries(fields.detail)) {
+    if (fields.preview) {
+      const preview: any = {}
+      for (const [key, fieldSelector] of Object.entries(fields.preview)) {
         const config = resolveFieldSelector(fieldSelector as FieldSelector)
         const detailValue = resolveField($, el, config)
         if (detailValue !== undefined && detailValue !== "") {
-          detail[key] = detailValue
+          preview[key] = detailValue
         }
       }
-      item.detail = detail
+      item.preview = preview
     }
 
     news.push(item)

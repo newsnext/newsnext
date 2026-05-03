@@ -38,7 +38,7 @@ export default $provider({
             attr: "href",
             transform: href => `${baseurl}${href}`,
           },
-          meta: {
+          inline: {
             mark: {
               selector: "td.td-03",
               transform: (val) => {

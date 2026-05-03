@@ -43,7 +43,7 @@ export default $provider({
             attr: "data-timestamp",
             transform: val => Number(val) * 1000,
           },
-          meta: {
+          inline: {
             text: ".article-publisher__name",
           },
         },

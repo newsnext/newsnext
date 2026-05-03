@@ -110,9 +110,9 @@ export function NewsItemLink({ item, className, children }: NewsItemLinkProps) {
   const isMobile = useIsMobile()
   const href = isMobile ? item.mobileUrl || item.url : item.url
 
-  const hasDetail = item.detail?.html || item.detail?.text || item.detail?.picture || item.detail?.iframe
+  const hasPreview = item.preview?.html || item.preview?.text || item.preview?.picture || item.preview?.iframe
 
-  if (hasDetail) {
+  if (hasPreview) {
     return (
       <HoverCard>
         <HoverCardTrigger
@@ -125,14 +125,14 @@ export function NewsItemLink({ item, className, children }: NewsItemLinkProps) {
         />
         <HoverCardContent side="right" align="start" alignOffset={0} className="max-h-96 overflow-y-auto scrollbar-hidden">
           <div className="flex flex-col gap-2">
-            {item.detail?.picture && extractPictures(item.detail.picture).map((picture, i) => {
+            {item.preview?.picture && extractPictures(item.preview.picture).map((picture, i) => {
               const { src, scale, radius } = picture
               return (
                 <ProxiedImage
                   key={i}
                   src={src}
                   referrerPolicy="no-referrer"
-                  alt="detail picture"
+                  alt="preview picture"
                   style={{
                     transform: `scale(${scale ?? 1})`,
                     borderRadius: `${radius ?? 12}px`,
@@ -141,14 +141,14 @@ export function NewsItemLink({ item, className, children }: NewsItemLinkProps) {
                 />
               )
             })}
-            {item.detail?.iframe && <DetailIframe iframe={item.detail.iframe} />}
-            {item.detail?.html
+            {item.preview?.iframe && <PreviewIframe iframe={item.preview.iframe} />}
+            {item.preview?.html
               ? (
-                  <DetailHtml html={item.detail.html} />
+                  <PreviewHtml html={item.preview.html} />
                 )
-              : item.detail?.text && (
+              : item.preview?.text && (
                 <span className="whitespace-pre-wrap wrap-break-word">
-                  {item.detail?.text}
+                  {item.preview?.text}
                 </span>
               )}
           </div>
@@ -164,7 +164,7 @@ export function NewsItemLink({ item, className, children }: NewsItemLinkProps) {
   )
 }
 
-function DetailIframe({ iframe }: { iframe: AdvancedIframe | string }) {
+function PreviewIframe({ iframe }: { iframe: AdvancedIframe | string }) {
   const props = typeof iframe === "string" ? { src: iframe } : iframe
   const ref = useRef<HTMLIFrameElement>(null)
   const [loaded, setLoaded] = useState(false)
@@ -196,7 +196,7 @@ function DetailIframe({ iframe }: { iframe: AdvancedIframe | string }) {
   )
 }
 
-function DetailHtml({ html }: { html: string }) {
+function PreviewHtml({ html }: { html: string }) {
   return (
     <div
       className="whitespace-pre-wrap wrap-break-word"
@@ -206,8 +206,8 @@ function DetailHtml({ html }: { html: string }) {
 }
 
 export function NewsItemInfo({ item, className }: { item: NewsItem, className?: string }) {
-  const hasMeta = item?.meta?.html || item?.meta?.text
-  const hasMark = item?.meta?.mark
+  const hasMeta = item?.inline?.html || item?.inline?.text
+  const hasMark = item?.inline?.mark
 
   if (!hasMeta && !hasMark) {
     return null
@@ -230,8 +230,8 @@ export function NewsItemInfo({ item, className }: { item: NewsItem, className?: 
         )
       })}
       <span className={cn("text-xs text-neutral-400/80 space-x-1", className)}>
-        {item.meta?.html && <span dangerouslySetInnerHTML={{ __html: item.meta.html }} />}
-        {item.meta?.text && <span>{item.meta.text}</span>}
+        {item.inline?.html && <span dangerouslySetInnerHTML={{ __html: item.inline.html }} />}
+        {item.inline?.text && <span>{item.inline.text}</span>}
       </span>
     </>
   )
@@ -245,7 +245,7 @@ interface NewsItemSummaryProps {
 export function NewsItemSummary({ item, className }: NewsItemSummaryProps) {
   return (
     <span className={cn("self-start leading-none space-x-1", className)}>
-      {item.meta?.icon && extractPictures(item.meta.icon).map((icon, i) => {
+      {item.inline?.icon && extractPictures(item.inline.icon).map((icon, i) => {
         const { src, scale, radius, href } = icon
         return (
           <ProxiedImage
@@ -264,7 +264,7 @@ export function NewsItemSummary({ item, className }: NewsItemSummaryProps) {
       <span className="text-base">
         {item.title}
       </span>
-      {item.meta && (
+      {item.inline && (
         <NewsItemInfo item={item} className="truncate align-middle max-w-80 inline-block" />
       )}
     </span>

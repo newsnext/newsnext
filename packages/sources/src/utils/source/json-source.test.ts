@@ -77,7 +77,7 @@ describe("$jsonSourceLoader", () => {
       fields: {
         title: (item: any) => item.name.toUpperCase(),
         url: "url",
-        meta: {
+        inline: {
           text: item => `Score: ${item.meta.score}`,
         },
       },
@@ -85,7 +85,7 @@ describe("$jsonSourceLoader", () => {
 
     const results = await (source as any).loader({})
     expect(results[0].title).toBe("FUNC")
-    expect(results[0].meta.text).toBe("Score: 99")
+    expect(results[0].inline.text).toBe("Score: 99")
   })
 
   it("should handle custom fetch", async () => {

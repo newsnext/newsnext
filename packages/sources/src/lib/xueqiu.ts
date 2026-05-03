@@ -35,7 +35,7 @@ export default $provider({
         fields: {
           url: (item: StockItem) => `https://xueqiu.com/s/${item.code}`,
           title: "name",
-          meta: {
+          inline: {
             html: (item: StockItem) => `<span style="color: ${item.percent > 0 ? "#ef4444" : "#22c55e"}">${item.percent}%</span> <span>${item.exchange}</span>`,
           },
         },

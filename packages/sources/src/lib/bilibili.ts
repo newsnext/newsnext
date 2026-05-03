@@ -41,7 +41,7 @@ export default $provider({
         fields: {
           title: "show_name",
           url: ({ keyword }: HotSearchItem) => `https://search.bilibili.com/all?keyword=${encodeURIComponent(keyword)}`,
-          meta: {
+          inline: {
             mark: (item: HotSearchItem) => item.icon,
           },
         },
@@ -60,11 +60,11 @@ export default $provider({
           title: "title",
           url: ({ bvid }: VideoItem) => `https://www.bilibili.com/video/${bvid}`,
           timestamp: ({ pubdate }: VideoItem) => pubdate * 1000,
-          meta: {
+          inline: {
             text: ({ stat }: VideoItem) => `${formatNumber(stat.view)}观看 · ${formatNumber(stat.like)}点赞`,
             icon: (item: VideoItem) => item.owner.face,
           },
-          detail: {
+          preview: {
             text: "desc",
             picture: (item: VideoItem) => item.pic,
             iframe: (item: VideoItem) => ({
@@ -89,11 +89,11 @@ export default $provider({
           title: "title",
           url: ({ bvid }: VideoItem) => `https://www.bilibili.com/video/${bvid}`,
           timestamp: ({ pubdate }: VideoItem) => pubdate * 1000,
-          meta: {
+          inline: {
             text: ({ stat }: VideoItem) => `${formatNumber(stat.view)}观看 · ${formatNumber(stat.like)}点赞`,
             icon: (item: VideoItem) => item.owner.face ? { src: item.owner.face, radius: 4 } : undefined,
           },
-          detail: {
+          preview: {
             text: "desc",
             picture: (item: VideoItem) => item.pic,
             iframe: (item: VideoItem) => ({

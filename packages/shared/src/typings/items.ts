@@ -40,7 +40,7 @@ export interface NewsItem {
    * Timestamp in milliseconds
    */
   timestamp?: number
-  meta?: RichText & {
+  inline?: RichText & {
     /**
      * Mark displayed in the end of the item
      */
@@ -51,9 +51,9 @@ export interface NewsItem {
     icon?: string | Picture
   }
   /**
-   * Detailed information shown on hover
+   * Previewed information shown on hover
    */
-  detail?: RichText & {
+  preview?: RichText & {
     picture?: MaybeArray<string | Picture>
     iframe?: string | AdvancedIframe
   }

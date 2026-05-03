@@ -80,7 +80,7 @@ export default $provider({
         fields: {
           title: track => track.name,
           url: track => `https://music.163.com/song?id=${track.id}`,
-          meta: {
+          inline: {
             text: (track) => {
               const artists = formatArtists(track)
               const album = track.al?.name ?? track.album?.name
@@ -91,7 +91,7 @@ export default $provider({
               return pic ? { src: pic, radius: 6 } : undefined
             },
           },
-          detail: {
+          preview: {
             picture: (track) => {
               const pic = extractCover(track)
               return pic ? { src: pic } : undefined

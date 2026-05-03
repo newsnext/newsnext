@@ -40,14 +40,14 @@ export default $provider({
         fields: {
           title: "target.title_area.text",
           url: "target.link.url",
-          meta: {
+          inline: {
             mark: (item: ResItem) => item?.card_label?.night_icon
               && ({
                 src: item.card_label.night_icon,
                 radius: 0,
               }),
           },
-          detail: {
+          preview: {
             text: "target.excerpt_area.text",
             picture: "target.image_area.url",
           },
