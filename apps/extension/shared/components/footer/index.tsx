@@ -8,10 +8,12 @@ export function Footer(): React.JSX.Element {
       className="shrink-0 my-10 flex-col-center border-t border-border/40 px-2 pt-10 text-center text-xs text-muted-foreground sm:text-sm"
       role="contentinfo"
     >
-      <p className="max-w-prose leading-relaxed flex-center gap-1">
+      <p className="leading-relaxed flex-center gap-1">
         <Logo className="size-4 text-theme-500" />
-        <span>
-          NewsNext
+        <span className="font-brand font-bold whitespace-nowrap cursor-pointer transition-opacity">
+          News
+          <span className="text-theme-500">N</span>
+          ext
         </span>
         <span className="tabular-nums">
           ©

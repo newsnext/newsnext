@@ -95,7 +95,7 @@ function HeaderProgress({ scrollContainerRef }: HeaderProgressProps) {
                 <Logo className="text-theme-500 size-5" />
                 <span className="text-xl font-brand font-bold whitespace-nowrap cursor-pointer transition-opacity">
                   News
-                  <span className="text-theme-400">N</span>
+                  <span className="text-theme-500">N</span>
                   ext
                 </span>
               </motion.div>
@@ -135,7 +135,7 @@ export function TitleIsland({ scrollContainerRef, width = 150 }: TitleIslandProp
         top={0}
         wrapperClassName="absolute top-[26px] inset-x-0"
         smallClassName="relative flex gap-2 items-center px-4 shrink-0 pointer-events-auto cursor-pointer island-pill"
-        largeClassName="p-3 sprinkle-theme-400 rounded-2xl pointer-events-auto"
+        largeClassName="p-3 sprinkle-theme-500 rounded-2xl pointer-events-auto"
         smallHeight={40}
         smallWidth={width}
         largeWidth={300}

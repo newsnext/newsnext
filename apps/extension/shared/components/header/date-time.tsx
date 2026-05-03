@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils"
 
 function formatTimeWithHighlight(time: string) {
   return time.split("").map((char, index) => (
-    <span key={index} className={char === "1" ? "text-theme-400" : ""}>
+    <span key={index} className={char === "1" ? "text-theme-500" : ""}>
       {char}
     </span>
   ))
