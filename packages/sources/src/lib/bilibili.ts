@@ -28,7 +28,6 @@ export default $provider({
   name: "Bilibili",
   home: "https://www.bilibili.com",
   color: "blue",
-  category: "china",
   sources: {
     "default": $source.json(
       {

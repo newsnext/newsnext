@@ -4,7 +4,6 @@ import { $provider, $source } from "../utils/source"
 
 export default $provider({
   name: "NEWS NOW",
-  category: "world",
   color: "red",
   home: "https://www.newsnow.com",
   sources: {

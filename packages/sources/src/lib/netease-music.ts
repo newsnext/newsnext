@@ -59,7 +59,6 @@ export default $provider({
   name: "网易云音乐",
   home: "https://sg.music.163.com/#/discover/toplist",
   color: "red",
-  category: "china",
   sources: {
     default: $source.json(
       {

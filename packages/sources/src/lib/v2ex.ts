@@ -34,7 +34,6 @@ export default $provider({
   name: "V2EX",
   color: "slate",
   home: "https://v2ex.com/",
-  category: "tech",
   sources: {
     default: $source({
       loader: share,

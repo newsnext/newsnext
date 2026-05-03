@@ -17,7 +17,6 @@ interface CoolApkItem {
 
 export default $provider({
   name: "CoolAPK",
-  category: "tech",
   color: "green",
   home: "https://coolapk.com",
   sources: {

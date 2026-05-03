@@ -14,7 +14,6 @@ export default $provider({
   name: "雪球",
   home: "https://xueqiu.com",
   color: "blue",
-  category: "finance",
   sources: {
     default: $source.json(
       {

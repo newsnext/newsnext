@@ -46,7 +46,6 @@ const createLoader = (sub: string) => () => ({
 export default $provider({
   name: "Hacker News",
   color: "orange",
-  category: "tech",
   home: "https://news.ycombinator.com/",
   sources: {
     default: $source.html(

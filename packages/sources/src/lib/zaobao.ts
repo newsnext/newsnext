@@ -6,7 +6,6 @@ const base = "https://www.zaochenbao.com"
 
 export default $provider({
   name: "联合早报",
-  category: "world",
   color: "red",
   home: "https://www.zaobao.com",
   sources: {

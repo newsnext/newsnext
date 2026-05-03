@@ -10,7 +10,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "interval": 120000,
     "color": "blue",
     "type": "hottest",
-    "category": "china",
+    "category": "others",
     "home": "https://www.bilibili.com",
     "provider": "bilibili"
   },
@@ -21,7 +21,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "interval": 1800000,
     "color": "blue",
     "type": "hottest",
-    "category": "china",
+    "category": "others",
     "home": "https://www.bilibili.com",
     "provider": "bilibili"
   },
@@ -32,7 +32,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "interval": 1800000,
     "color": "blue",
     "type": "hottest",
-    "category": "china",
+    "category": "others",
     "home": "https://www.bilibili.com",
     "provider": "bilibili"
   },
@@ -43,7 +43,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "interval": 600000,
     "color": "green",
     "type": "hottest",
-    "category": "tech",
+    "category": "others",
     "home": "https://coolapk.com",
     "provider": "coolapk"
   },
@@ -65,7 +65,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "interval": 600000,
     "color": "orange",
     "type": "hottest",
-    "category": "tech",
+    "category": "others",
     "home": "https://news.ycombinator.com/",
     "provider": "hackernews"
   },
@@ -76,7 +76,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "interval": 120000,
     "color": "orange",
     "type": "timeline",
-    "category": "tech",
+    "category": "others",
     "home": "https://news.ycombinator.com/newest",
     "provider": "hackernews"
   },
@@ -86,7 +86,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "title": "Show",
     "interval": 1800000,
     "color": "orange",
-    "category": "tech",
+    "category": "others",
     "home": "https://news.ycombinator.com/show",
     "provider": "hackernews"
   },
@@ -96,7 +96,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "title": "Ask",
     "interval": 1800000,
     "color": "orange",
-    "category": "tech",
+    "category": "others",
     "home": "https://news.ycombinator.com/ask",
     "provider": "hackernews"
   },
@@ -211,7 +211,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     },
     "color": "red",
     "type": "hottest",
-    "category": "china",
+    "category": "others",
     "home": "https://music.163.com/#/playlist?id=19723756",
     "provider": "netease-music"
   },
@@ -263,7 +263,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     },
     "color": "red",
     "type": "timeline",
-    "category": "world",
+    "category": "others",
     "home": "https://www.newsnow.com",
     "provider": "newsnow"
   },
@@ -341,7 +341,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "id": "default",
     "interval": 600000,
     "color": "slate",
-    "category": "tech",
+    "category": "others",
     "home": "https://v2ex.com/",
     "provider": "v2ex"
   },
@@ -351,7 +351,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "interval": 1800000,
     "color": "red",
     "type": "hottest",
-    "category": "china",
+    "category": "others",
     "home": "https://s.weibo.com/top/summary?cate=realtimehot",
     "provider": "weibo"
   },
@@ -361,7 +361,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "interval": 600000,
     "color": "blue",
     "type": "hottest",
-    "category": "finance",
+    "category": "others",
     "home": "https://xueqiu.com",
     "provider": "xueqiu"
   },
@@ -371,7 +371,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "interval": 1800000,
     "color": "red",
     "type": "timeline",
-    "category": "world",
+    "category": "others",
     "home": "https://www.zaobao.com",
     "provider": "zaobao"
   },
@@ -382,7 +382,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "interval": 600000,
     "color": "blue",
     "type": "hottest",
-    "category": "china",
+    "category": "others",
     "home": "https://www.zhihu.com",
     "provider": "zhihu"
   }

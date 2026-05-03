@@ -13,7 +13,6 @@ export default $provider({
   name: "微博",
   home: "https://s.weibo.com/top/summary?cate=realtimehot",
   color: "red",
-  category: "china",
   sources: {
     default: $source.html(
       {

@@ -28,7 +28,6 @@ export default $provider({
   name: "知乎",
   home: "https://www.zhihu.com",
   color: "blue",
-  category: "china",
   sources: {
     default: $source.json(
       {
