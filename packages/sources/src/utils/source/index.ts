@@ -1,11 +1,11 @@
 import type {
-  SourceParamSchemaMap,
-  SourceRegistration,
   InferSourceParams,
   NewsItem,
   ProviderDefinition,
   ProviderRegistration,
   RegisteredSourceDefinition,
+  SourceParamSchemaMap,
+  SourceRegistration,
 } from "../../typings/sources"
 import { Time } from "../../typings/constants"
 

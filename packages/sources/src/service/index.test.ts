@@ -2,9 +2,9 @@ import type { RegisteredSourceDefinition } from "../typings"
 import { describe, expect, it } from "vitest"
 import {
   buildSourceCacheKey,
-  SourceServiceError,
   normalizeSourceParams,
   parseSourceId,
+  SourceServiceError,
 } from "./index"
 
 describe("source service", () => {

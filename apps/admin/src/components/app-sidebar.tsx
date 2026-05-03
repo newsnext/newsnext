@@ -1,5 +1,5 @@
 import type { ComponentProps } from "react"
-import type { SourceStats, FilterState } from "@/lib/source-admin"
+import type { FilterState, SourceStats } from "@/lib/source-admin"
 import { categories } from "@newsnext/sources/typings"
 import { Input } from "@newsnext/ui/components/input"
 import {

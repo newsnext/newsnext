@@ -1,5 +1,5 @@
 import type { FetchOptions } from "ofetch"
-import type { SourceParamSchemaMap, InferSourceParams, NewsItem } from "../../typings/sources"
+import type { InferSourceParams, NewsItem, SourceParamSchemaMap } from "../../typings/sources"
 import { createSourceLoader } from "."
 import { myFetch } from "../fetch"
 

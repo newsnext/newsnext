@@ -1,5 +1,5 @@
 import { Time } from "../typings/constants"
-import { $source, $jsonSourceLoader, $provider } from "../utils/source"
+import { $jsonSourceLoader, $provider, $source } from "../utils/source"
 
 function formatNumber(num: number): string {
   if (num >= 10000) {

@@ -1,5 +1,5 @@
 import type { CacheAdapter, CacheResult } from "@newsnext/cache"
-import type { SourceParamSchemaMap, InferSourceParams, RegisteredSourceDefinition } from "../typings"
+import type { InferSourceParams, RegisteredSourceDefinition, SourceParamSchemaMap } from "../typings"
 import { getCachedSource } from "@newsnext/cache"
 import { stableStringify } from "@newsnext/shared/utils"
 import { providers } from "../index"

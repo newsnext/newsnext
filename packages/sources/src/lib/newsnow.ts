@@ -1,6 +1,6 @@
 import { Time } from "../typings/constants"
-import { $source, $htmlSourceLoader, $provider } from "../utils/source"
 import { $selectParam } from "../utils/params"
+import { $htmlSourceLoader, $provider, $source } from "../utils/source"
 
 export default $provider({
   name: "NEWS NOW",

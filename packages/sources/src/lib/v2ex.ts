@@ -1,6 +1,6 @@
 import type { SourceLoader } from "../typings/sources"
-import { $source, $provider } from "../utils/source"
 import { myFetch } from "../utils/fetch"
+import { $provider, $source } from "../utils/source"
 
 interface Res {
   version: string

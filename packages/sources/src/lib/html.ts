@@ -1,5 +1,5 @@
 import { parseRelativeDate } from "../utils/date"
-import { $source, $htmlSourceLoader, $provider } from "../utils/source"
+import { $htmlSourceLoader, $provider, $source } from "../utils/source"
 
 export default $provider({
   name: "HTML Parser",

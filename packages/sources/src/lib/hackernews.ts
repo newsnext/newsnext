@@ -1,6 +1,6 @@
 import { getFavicon } from "@newsnext/shared/utils"
 import { Time } from "../typings/constants"
-import { $source, $htmlSourceLoader, $provider } from "../utils/source"
+import { $htmlSourceLoader, $provider, $source } from "../utils/source"
 
 const createHNFetcher = (sub: string) => $htmlSourceLoader(() => ({
   url: `https://news.ycombinator.com${sub}`,

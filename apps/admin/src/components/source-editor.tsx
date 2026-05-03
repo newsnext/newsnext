@@ -1,7 +1,7 @@
 import type { ReactNode } from "react"
 import type { SourceDraft, StatusTone } from "@/lib/source-admin"
-import { categories } from "@newsnext/sources/typings"
 import { COLORS } from "@newsnext/shared/constants"
+import { categories } from "@newsnext/sources/typings"
 import { Badge } from "@newsnext/ui/components/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@newsnext/ui/components/card"
 import { Input } from "@newsnext/ui/components/input"
@@ -11,8 +11,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@newsnext/ui/component
 import { Textarea } from "@newsnext/ui/components/textarea"
 import { cn } from "@newsnext/ui/lib/utils"
 import { formatCategory, selectClassName, TYPE_OPTIONS } from "@/lib/source-admin"
-import { SourceStateBadge } from "./source-state-badge"
 import { Field } from "./field"
+import { SourceStateBadge } from "./source-state-badge"
 
 export function SourceEditor({
   sourceKey,

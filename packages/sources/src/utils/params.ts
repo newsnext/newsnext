@@ -1,11 +1,11 @@
 import type {
-  SourceParamSchema,
-  SourceParamSchemaMap,
   InferSourceParams,
   InferSourceParamValue,
   MultiSelectParameter,
   NumberParameter,
   SelectParameter,
+  SourceParamSchema,
+  SourceParamSchemaMap,
   SwitchParameter,
   TextParameter,
   UrlParameter,

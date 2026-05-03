@@ -1,6 +1,6 @@
 import { Time } from "../typings/constants"
-import { $source, $jsonSourceLoader, $provider } from "../utils/source"
 import { $selectParam } from "../utils/params"
+import { $jsonSourceLoader, $provider, $source } from "../utils/source"
 
 interface NeteaseArtist {
   name?: string

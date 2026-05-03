@@ -14,8 +14,8 @@
   },
   "dependencies": {
     "@newsnext/cache": "workspace:*",
-    "@newsnext/sources": "workspace:*",
     "@newsnext/shared": "workspace:*",
+    "@newsnext/sources": "workspace:*",
     "hono": "catalog:"
   },
   "devDependencies": {

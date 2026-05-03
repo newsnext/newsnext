@@ -1,5 +1,5 @@
-import { $source, $jsonSourceLoader, $provider, resolvePath } from "../utils/source"
 import { $jsonParam } from "../utils/params"
+import { $jsonSourceLoader, $provider, $source, resolvePath } from "../utils/source"
 
 export default $provider({
   name: "JSON",

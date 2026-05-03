@@ -1,5 +1,5 @@
-import { $source, $provider, $rssSourceLoader } from "../utils/source"
 import { CommonSourceParams } from "../utils/params"
+import { $provider, $rssSourceLoader, $source } from "../utils/source"
 
 export default $provider({
   name: "RSS",

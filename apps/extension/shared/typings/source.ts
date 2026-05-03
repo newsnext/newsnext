@@ -1,7 +1,7 @@
+import type { NewsItem, SourceType } from "@newsnext/shared/types"
 import type { SourceDescriptor } from "@newsnext/sources/typings"
-import type { SourceType, NewsItem } from "@newsnext/shared/types"
 
-export type { SourceDescriptor, SourceType, NewsItem }
+export type { NewsItem, SourceDescriptor, SourceType }
 
 /**
  * Frontend source shape used by draggable cards and boards.

@@ -1,6 +1,6 @@
 import { Time } from "../typings/constants"
-import { $source, $htmlSourceLoader, $provider } from "../utils/source"
 import { myFetch } from "../utils/fetch"
+import { $htmlSourceLoader, $provider, $source } from "../utils/source"
 
 const baseurl = "https://s.weibo.com"
 const flagUrls = {

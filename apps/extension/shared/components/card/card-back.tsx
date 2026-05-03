@@ -1,5 +1,5 @@
-import type { SourceParamSchema } from "@newsnext/sources/typings"
 import type { Color } from "@newsnext/shared/types"
+import type { SourceParamSchema } from "@newsnext/sources/typings"
 import type { PropsWithChildren } from "react"
 import { COLORS } from "@newsnext/shared/constants"
 import { getFavicon } from "@newsnext/shared/utils"

@@ -1,5 +1,5 @@
 import { Time } from "../typings/constants"
-import { $source, $htmlSourceLoader, $provider } from "../utils/source"
+import { $htmlSourceLoader, $provider, $source } from "../utils/source"
 
 const baseURL = new URL("https://github.com")
 

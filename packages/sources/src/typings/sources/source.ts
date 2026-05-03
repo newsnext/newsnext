@@ -1,5 +1,5 @@
 import type { Color, NewsItem } from "@newsnext/shared/types"
-import type { SourceParamSchemaMap, InferSourceParams } from "./params"
+import type { InferSourceParams, SourceParamSchemaMap } from "./params"
 
 /**
  * Category identifier for organizing sources

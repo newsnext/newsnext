@@ -9,8 +9,8 @@
   },
   "dependencies": {
     "@newsnext/api": "workspace:*",
-    "@newsnext/sources": "workspace:*",
     "@newsnext/shared": "workspace:*",
+    "@newsnext/sources": "workspace:*",
     "@newsnext/ui": "workspace:*",
     "@tanstack/react-query": "^5.100.5",
     "@trpc/client": "^11.16.0",

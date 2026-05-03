@@ -1,6 +1,6 @@
-import type { SourceResponse, NewsItem } from "@newsnext/shared/types"
+import type { NewsItem, SourceResponse } from "@newsnext/shared/types"
 
-export * from "./source"
 export * from "./params"
+export * from "./source"
 
-export type { SourceResponse, NewsItem }
+export type { NewsItem, SourceResponse }

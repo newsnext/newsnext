@@ -1,6 +1,6 @@
 import { Time } from "../typings/constants"
 import { parseRelativeDate } from "../utils/date"
-import { $source, $htmlSourceLoader, $provider } from "../utils/source"
+import { $htmlSourceLoader, $provider, $source } from "../utils/source"
 
 const base = "https://www.zaochenbao.com"
 
