@@ -5,11 +5,11 @@ import { extractPictures } from "@newsnext/shared/types"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@newsnext/ui/components/hover-card"
 import { useIsMobile } from "@newsnext/ui/hooks/use-mobile"
 import { useCallback, useEffect, useRef, useState } from "react"
-import { BASE_URL } from "@/lib/env"
+import { getAppURL } from "@/lib/env"
 import { cn } from "@/lib/utils"
 
 function getProxiedImageUrl(url: string): string {
-  return `${BASE_URL}/api/p/${encodeURIComponent(url)}`
+  return getAppURL(`/api/p/${encodeURIComponent(url)}`)
 }
 
 interface ProxiedImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {

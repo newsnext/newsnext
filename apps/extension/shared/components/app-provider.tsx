@@ -7,7 +7,7 @@ import { httpBatchStreamLink } from "@trpc/client"
 import { useSetAtom } from "jotai"
 import { useEffect, useState } from "react"
 import { authClient } from "@/lib/auth-client"
-import { BASE_URL } from "@/lib/env"
+import { getAppURL } from "@/lib/env"
 import { writeStoredFeedParamValues } from "@/lib/feed-params"
 import { trpc } from "@/lib/trpc"
 import {
@@ -67,7 +67,7 @@ export function AppProvider({
       trpc.createClient({
         links: [
           httpBatchStreamLink({
-            url: `${BASE_URL}/api/trpc`,
+            url: getAppURL("/api/trpc"),
             fetch(url, options) {
               return fetch(url, {
                 ...options,

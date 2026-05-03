@@ -34,7 +34,7 @@ export default $provider({
           title: "Link Selector",
         },
       }, ({ url, decoding, itemSelector, titleSelector, linkSelector }) => {
-        const baseURL = url.includes("36kr.com") ? "https://www.36kr.com" : new URL(url).origin
+        const baseURL = new URL(url.includes("36kr.com") ? "https://www.36kr.com" : url)
         return {
           url,
           decoding,
@@ -46,7 +46,7 @@ export default $provider({
               attr: "href",
               transform: (href: string | undefined) => {
                 if (!href) return undefined
-                return href.startsWith("http") ? href : `${baseURL}${href}`
+                return new URL(href, baseURL).toString()
               },
             },
             timestamp: {

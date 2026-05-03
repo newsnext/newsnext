@@ -19,3 +19,7 @@ function getBaseURL(): string {
 }
 
 export const BASE_URL = getBaseURL()
+
+export function getAppURL(path: string): string {
+  return new URL(path, BASE_URL || window.location.origin).toString()
+}

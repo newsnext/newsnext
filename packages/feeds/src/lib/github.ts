@@ -1,7 +1,7 @@
 import { Time } from "../typings/constants"
 import { $feed, $htmlFeedLoader, $provider } from "../utils/feed"
 
-const baseURL = "https://github.com"
+const baseURL = new URL("https://github.com")
 
 export default $provider({
   name: "GitHub",
@@ -23,7 +23,7 @@ export default $provider({
           url: {
             selector: ">h2 a",
             attr: "href",
-            transform: val => `${baseURL}${val}`,
+            transform: val => val ? new URL(val, baseURL).toString() : undefined,
           },
           meta: {
             text: {

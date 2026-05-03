@@ -1,13 +1,13 @@
 import { createAuthClient } from "better-auth/react"
 
-export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/$/, "")
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/$/, "")
 
-function getAuthBaseURL(): string {
-  return API_BASE_URL ? `${API_BASE_URL}/api/auth` : `${window.location.origin}/api/auth`
+export function getAPIURL(path: string): URL {
+  return new URL(path, API_BASE_URL || window.location.origin)
 }
 
 export const authClient = createAuthClient({
-  baseURL: getAuthBaseURL(),
+  baseURL: getAPIURL("/api/auth").toString(),
 })
 
 export async function signInWithGitHub(): Promise<void> {
