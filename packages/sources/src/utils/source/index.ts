@@ -106,9 +106,4 @@ export const $source = Object.assign($sourceCallable, {
   html: $htmlSource,
   rss: $rssSource,
   rssHub: $rssHubSource,
-}) as typeof $sourceCallable & {
-  json: typeof $jsonSource
-  html: typeof $htmlSource
-  rss: typeof $rssSource
-  rssHub: typeof $rssHubSource
-}
+})
