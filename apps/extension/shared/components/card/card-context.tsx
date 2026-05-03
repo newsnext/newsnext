@@ -1,15 +1,15 @@
 import type { ReactNode } from "react"
-import type { BoardFeed, NewsItem } from "@/typings/feed"
+import type { BoardSource, NewsItem } from "@/typings/source"
 
 import { createContext, useContext } from "react"
 
 interface CardContextValue {
   id: string
-  feed: BoardFeed
-  feedParams: Record<string, unknown>
-  draftFeedParams: Record<string, unknown>
-  hasFeedParams: boolean
-  hasFeedParamChanges: boolean
+  source: BoardSource
+  sourceParams: Record<string, unknown>
+  draftSourceParams: Record<string, unknown>
+  hasSourceParams: boolean
+  hasSourceParamChanges: boolean
   items: NewsItem[]
   isFetching: boolean
   isStarred: boolean
@@ -18,10 +18,10 @@ interface CardContextValue {
   onToggleStar: () => void
   onFork: () => void
   onDelete: () => void
-  onFeedParamChange: (key: string, value: unknown) => void
-  onSaveFeedParams: () => void
-  onResetFeedParams: () => void
-  onDiscardFeedParams: () => void
+  onSourceParamChange: (key: string, value: unknown) => void
+  onSaveSourceParams: () => void
+  onResetSourceParams: () => void
+  onDiscardSourceParams: () => void
   onFlip: () => void
   dragHandle?: ReactNode
   updatedTime: number

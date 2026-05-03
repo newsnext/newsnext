@@ -1,6 +1,6 @@
 import type { JSX } from "react"
-import type { BoardFeed } from "@/typings/feed"
-import { categories } from "@newsnext/feeds/typings"
+import type { BoardSource } from "@/typings/source"
+import { categories } from "@newsnext/sources/typings"
 import { Button } from "@newsnext/ui/components/button"
 import {
   Command,
@@ -13,11 +13,11 @@ import {
 } from "@newsnext/ui/components/command"
 import { useAtomValue } from "jotai"
 import { useEffect, useMemo, useState } from "react"
-import { buildBoardFeeds } from "@/lib/feed-cards"
-import { resolveFeedDisplay } from "@/lib/feed-display"
-import { getSavedFeedParamValues } from "@/lib/feed-params"
+import { buildBoardSources } from "@/lib/source-cards"
+import { resolveSourceDisplay } from "@/lib/source-display"
+import { getSavedSourceParamValues } from "@/lib/source-params"
 import { trpc } from "@/lib/trpc"
-import { feedInstancesAtom, starredFeedInstanceIdsAtom } from "@/store/board"
+import { sourceInstancesAtom, starredSourceInstanceIdsAtom } from "@/store/board"
 import Card from "../card"
 import { PhForkDuotone, PhMagnifyingGlass, PhStarFill } from "../icons/ph"
 import "./index.css"
@@ -25,7 +25,7 @@ import "./index.css"
 interface SearchItem {
   id: string
   category: string
-  feed: BoardFeed
+  source: BoardSource
   name: string
   title?: string
   provider?: string
@@ -69,7 +69,7 @@ function SearchPreview({ item }: { item?: SearchItem }) {
 
   return (
     <div className="hidden md:flex flex-col items-start justify-center *:shrink-0">
-      <Card id={item.id} feed={item.feed} />
+      <Card id={item.id} source={item.source} />
     </div>
   )
 }
@@ -77,9 +77,9 @@ function SearchPreview({ item }: { item?: SearchItem }) {
 export function SearchDialog(): JSX.Element {
   const [open, setOpen] = useState(false)
   const [selectedItemId, setSelectedItemId] = useState("")
-  const starredFeedInstanceIds = useAtomValue(starredFeedInstanceIdsAtom)
-  const feedInstances = useAtomValue(feedInstancesAtom)
-  const { data: feeds = [] } = trpc.getBoard.useQuery()
+  const starredSourceInstanceIds = useAtomValue(starredSourceInstanceIdsAtom)
+  const sourceInstances = useAtomValue(sourceInstancesAtom)
+  const { data: sources = [] } = trpc.getBoard.useQuery()
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -94,58 +94,58 @@ export function SearchDialog(): JSX.Element {
   }, [])
 
   const searchItems = useMemo<SearchItem[]>(() => {
-    if (feeds.length === 0) {
+    if (sources.length === 0) {
       return []
     }
 
-    const featuredBoard = buildBoardFeeds({
-      feeds,
+    const featuredBoard = buildBoardSources({
+      sources,
       boardId: "featured",
-      starredFeedInstanceIds,
-      feedInstances,
+      starredSourceInstanceIds,
+      sourceInstances,
     })
-    const forksBoard = buildBoardFeeds({
-      feeds,
+    const forksBoard = buildBoardSources({
+      sources,
       boardId: "forks",
-      starredFeedInstanceIds,
-      feedInstances,
+      starredSourceInstanceIds,
+      sourceInstances,
     })
 
     return [
       ...featuredBoard.ids.map((id) => {
-        const feed = featuredBoard.map[id]
-        const params = getSavedFeedParamValues(feed.id, feed.params)
-        const display = resolveFeedDisplay(feed, params)
+        const source = featuredBoard.map[id]
+        const params = getSavedSourceParamValues(source.id, source.params)
+        const display = resolveSourceDisplay(source, params)
 
         return {
           id,
-          category: categories[feed.category],
-          feed,
+          category: categories[source.category],
+          source,
           name: display.name,
           title: display.title,
-          provider: feed.provider,
+          provider: source.provider,
           isFork: false,
-          isStarred: starredFeedInstanceIds.includes(id),
+          isStarred: starredSourceInstanceIds.includes(id),
         } satisfies SearchItem
       }),
       ...forksBoard.ids.map((id) => {
-        const feed = forksBoard.map[id]
-        const params = feed.paramsValue ?? getSavedFeedParamValues(feed.id, feed.params)
-        const display = resolveFeedDisplay(feed, params)
+        const source = forksBoard.map[id]
+        const params = source.paramsValue ?? getSavedSourceParamValues(source.id, source.params)
+        const display = resolveSourceDisplay(source, params)
 
         return {
           id,
-          category: `${categories[feed.category]} / Forked`,
-          feed,
+          category: `${categories[source.category]} / Forked`,
+          source,
           name: display.name,
           title: display.title,
-          provider: feed.provider,
+          provider: source.provider,
           isFork: true,
-          isStarred: starredFeedInstanceIds.includes(id),
+          isStarred: starredSourceInstanceIds.includes(id),
         } satisfies SearchItem
       }),
     ]
-  }, [feeds, starredFeedInstanceIds, feedInstances])
+  }, [sources, starredSourceInstanceIds, sourceInstances])
 
   const searchGroups = useMemo(() => groupSearchItems(searchItems), [searchItems])
   const selectedItem = useMemo(

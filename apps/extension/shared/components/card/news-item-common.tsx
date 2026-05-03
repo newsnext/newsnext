@@ -1,6 +1,6 @@
 import type { AdvancedIframe } from "@newsnext/shared/types"
 import type { ReactNode } from "react"
-import type { NewsItem } from "@/typings/feed"
+import type { NewsItem } from "@/typings/source"
 import { extractPictures } from "@newsnext/shared/types"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@newsnext/ui/components/hover-card"
 import { useIsMobile } from "@newsnext/ui/hooks/use-mobile"

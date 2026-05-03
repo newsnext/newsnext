@@ -1,20 +1,20 @@
-import type { FeedParamValues } from "@/lib/feed-params"
-import type { BoardFeed } from "@/typings/feed"
+import type { SourceParamValues } from "@/lib/source-params"
+import type { BoardSource } from "@/typings/source"
 import { getFavicon } from "@newsnext/shared/utils"
 import { isIOS } from "react-device-detect"
-import { resolveFeedDisplay } from "@/lib/feed-display"
+import { resolveSourceDisplay } from "@/lib/source-display"
 import { cn } from "@/lib/utils"
 import { IconButton } from "../common/button"
 import { PhDotsSixVerticalDuotone } from "../icons/ph"
 
 interface DragOverlayProps {
-  feed: BoardFeed
-  feedParams: FeedParamValues
+  source: BoardSource
+  sourceParams: SourceParamValues
 }
 
-export function DragOverlay({ feed, feedParams }: DragOverlayProps) {
-  const { provider, color, desc } = feed
-  const { name, title, home } = resolveFeedDisplay(feed, feedParams)
+export function DragOverlay({ source, sourceParams }: DragOverlayProps) {
+  const { provider, color, desc } = source
+  const { name, title, home } = resolveSourceDisplay(source, sourceParams)
   return (
     <div
       className={cn(

@@ -1,1 +1,1 @@
-{"version":"7.0.0-dev.20260410.1","root":["./src/feeds.ts","./src/index.ts","./src/utils.ts"]}
+{"version":"7.0.0-dev.20260426.1","root":["./src/index.ts","./src/sources.ts","./src/utils.ts"]}

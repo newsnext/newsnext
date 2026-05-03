@@ -1,6 +1,6 @@
 import type { ComponentProps } from "react"
-import type { FeedStats, FilterState } from "@/lib/feed-admin"
-import { categories } from "@newsnext/feeds/typings"
+import type { SourceStats, FilterState } from "@/lib/source-admin"
+import { categories } from "@newsnext/sources/typings"
 import { Input } from "@newsnext/ui/components/input"
 import {
   Sidebar,
@@ -17,7 +17,7 @@ import {
   SidebarSeparator,
 } from "@newsnext/ui/components/sidebar"
 import { ChartBar, Database, Filter, Search, Settings2 } from "lucide-react"
-import { selectClassName } from "@/lib/feed-admin"
+import { selectClassName } from "@/lib/source-admin"
 import { Field } from "./field"
 
 export function AppSidebar({
@@ -30,7 +30,7 @@ export function AppSidebar({
   onFilterStateChange,
   ...props
 }: ComponentProps<typeof Sidebar> & {
-  stats: FeedStats
+  stats: SourceStats
   query: string
   category: string
   filterState: FilterState
@@ -49,7 +49,7 @@ export function AppSidebar({
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">NewsNext Admin</span>
-                <span className="truncate text-xs">Feed catalog</span>
+                <span className="truncate text-xs">Source catalog</span>
               </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -78,7 +78,7 @@ export function AppSidebar({
             </Field>
             <Field label="State">
               <select className={selectClassName} value={filterState} onChange={event => onFilterStateChange(event.target.value as FilterState)}>
-                <option value="all">All feeds</option>
+                <option value="all">All sources</option>
                 <option value="enabled">Enabled</option>
                 <option value="disabled">Hidden</option>
               </select>
@@ -95,7 +95,7 @@ export function AppSidebar({
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              <SnapshotItem label="Total feeds" value={stats.total} />
+              <SnapshotItem label="Total sources" value={stats.total} />
               <SnapshotItem label="Enabled" value={stats.enabled} />
               <SnapshotItem label="Providers" value={stats.providers} />
               <SnapshotItem label="Categories" value={stats.categories} />
@@ -109,7 +109,7 @@ export function AppSidebar({
           <SidebarMenuItem>
             <SidebarMenuButton>
               <Settings2 className="size-4" />
-              <span>Database backed</span>
+              <span>Code defined</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

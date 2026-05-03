@@ -1,6 +1,6 @@
 import type { BaseEventPayload, ElementDragType } from "@atlaskit/pragmatic-drag-and-drop/dist/types/internal-types"
 import type { RefObject } from "react"
-import type { BoardFeed } from "@/typings/feed"
+import type { BoardSource } from "@/typings/source"
 import { useThrottleFn } from "@newsnext/ui/hooks/use-throttle-fn"
 import { motion } from "motion/react"
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
@@ -33,38 +33,38 @@ interface ScatterItemCustom {
 }
 
 interface DesktopBoardProps {
-  feedIds: string[]
-  feedsMap: Record<string, BoardFeed>
+  sourceIds: string[]
+  sourcesMap: Record<string, BoardSource>
   isSortable?: boolean
   className?: string
   isScattered?: boolean
-  onFeedIdsChange?: (feedIds: string[]) => void
+  onSourceIdsChange?: (sourceIds: string[]) => void
   containerRef?: RefObject<HTMLDivElement | null>
 }
 
 export function DesktopBoard({
-  feedIds,
-  feedsMap,
+  sourceIds,
+  sourcesMap,
   isSortable = false,
   className,
   isScattered,
-  onFeedIdsChange,
+  onSourceIdsChange,
   containerRef,
 }: DesktopBoardProps) {
-  const [orderedFeedIds, setOrderedFeedIds] = useState(feedIds)
-  const initialOrderedFeedIdsRef = useRef(feedIds)
+  const [orderedSourceIds, setOrderedSourceIds] = useState(sourceIds)
+  const initialOrderedSourceIdsRef = useRef(sourceIds)
   const [scatterVectors, setScatterVectors] = useState<Record<string, ScatterVector>>({})
-  const [visibleScatterFeedIds, setVisibleScatterFeedIds] = useState<string[]>([])
+  const [visibleScatterSourceIds, setVisibleScatterSourceIds] = useState<string[]>([])
   const [hasScattered, setHasScattered] = useState(false)
   const itemsRef = useRef<Map<string, HTMLLIElement>>(new Map())
-  const visibleFeedIds = useMemo(
-    () => orderedFeedIds.filter(id => Boolean(feedsMap[id])),
-    [orderedFeedIds, feedsMap],
+  const visibleSourceIds = useMemo(
+    () => orderedSourceIds.filter(id => Boolean(sourcesMap[id])),
+    [orderedSourceIds, sourcesMap],
   )
 
   useEffect(() => {
-    setOrderedFeedIds(feedIds)
-  }, [feedIds])
+    setOrderedSourceIds(sourceIds)
+  }, [sourceIds])
 
   useEffect(() => {
     if (isScattered) {
@@ -73,8 +73,8 @@ export function DesktopBoard({
   }, [isScattered])
 
   const onDragStart = useCallback(() => {
-    initialOrderedFeedIdsRef.current = orderedFeedIds
-  }, [orderedFeedIds])
+    initialOrderedSourceIdsRef.current = orderedSourceIds
+  }, [orderedSourceIds])
 
   const onDropTargetChange = useCallback(({ location, source }: BaseEventPayload<ElementDragType>) => {
     const target = location.current.dropTargets[0]
@@ -83,26 +83,26 @@ export function DesktopBoard({
     const fromId = source.data.id as string
     const toId = target.data.id as string
 
-    const fromIndex = orderedFeedIds.indexOf(fromId)
-    const toIndex = orderedFeedIds.indexOf(toId)
+    const fromIndex = orderedSourceIds.indexOf(fromId)
+    const toIndex = orderedSourceIds.indexOf(toId)
 
     if (fromIndex === toIndex || fromIndex === -1 || toIndex === -1) return
 
-    const newFeedIds = [...orderedFeedIds]
-    const [movedItem] = newFeedIds.splice(fromIndex, 1)
-    newFeedIds.splice(toIndex, 0, movedItem)
+    const newSourceIds = [...orderedSourceIds]
+    const [movedItem] = newSourceIds.splice(fromIndex, 1)
+    newSourceIds.splice(toIndex, 0, movedItem)
 
-    setOrderedFeedIds(newFeedIds)
-  }, [orderedFeedIds])
+    setOrderedSourceIds(newSourceIds)
+  }, [orderedSourceIds])
 
   const onDrop = useCallback(({ location }: BaseEventPayload<ElementDragType>) => {
     // If dropped outside (no targets), revert
     if (location.current.dropTargets.length === 0) {
-      setOrderedFeedIds(initialOrderedFeedIdsRef.current)
+      setOrderedSourceIds(initialOrderedSourceIdsRef.current)
       return
     }
-    onFeedIdsChange?.(orderedFeedIds)
-  }, [orderedFeedIds, onFeedIdsChange])
+    onSourceIdsChange?.(orderedSourceIds)
+  }, [orderedSourceIds, onSourceIdsChange])
 
   // avoid animation jitter
   const { run } = useThrottleFn(onDropTargetChange, ANIMATION_DURATION * 1000, {
@@ -145,18 +145,18 @@ export function DesktopBoard({
       if (!container) return
 
       const newVectors: Record<string, ScatterVector> = {}
-      const newVisibleFeedIds: string[] = []
+      const newVisibleSourceIds: string[] = []
       const { visibleRect } = getVisibleBounds(container)
       const centerX = visibleRect.left + visibleRect.width / 2
       const centerY = visibleRect.top + visibleRect.height / 2
 
       itemsRef.current.forEach((el, id) => {
-        if (!visibleFeedIds.includes(id)) return // cleanup old refs
+        if (!visibleSourceIds.includes(id)) return // cleanup old refs
 
         const rect = el.getBoundingClientRect()
         if (!isRectVisible(rect, visibleRect)) return
 
-        newVisibleFeedIds.push(id)
+        newVisibleSourceIds.push(id)
         const elCenterX = rect.left + rect.width / 2
         const elCenterY = rect.top + rect.height / 2
 
@@ -180,7 +180,7 @@ export function DesktopBoard({
         }
       })
       setScatterVectors(newVectors)
-      setVisibleScatterFeedIds(newVisibleFeedIds)
+      setVisibleScatterSourceIds(newVisibleSourceIds)
     }
 
     calculateVectors()
@@ -203,7 +203,7 @@ export function DesktopBoard({
       window.removeEventListener("resize", calculateVectors)
       resizeObserver?.disconnect()
     }
-  }, [containerRef, visibleFeedIds, isScattered])
+  }, [containerRef, visibleSourceIds, isScattered])
 
   const boardContent = (
     <motion.ol
@@ -224,7 +224,7 @@ export function DesktopBoard({
         },
       }}
     >
-      {visibleFeedIds.map((id, index) => (
+      {visibleSourceIds.map((id, index) => (
         <motion.li
           key={id}
           ref={(el) => {
@@ -234,7 +234,7 @@ export function DesktopBoard({
           layout={!isScattered} // Disable layout animation during scatter to prevent conflict
           custom={{
             index,
-            scatterIndex: visibleScatterFeedIds.indexOf(id),
+            scatterIndex: visibleScatterSourceIds.indexOf(id),
             hasScattered,
             vector: scatterVectors[id],
           }}
@@ -288,8 +288,8 @@ export function DesktopBoard({
           }}
         >
           {isSortable
-            ? <DraggableCard id={id} feed={feedsMap[id]} />
-            : <Card id={id} feed={feedsMap[id]} />}
+            ? <DraggableCard id={id} source={sourcesMap[id]} />
+            : <Card id={id} source={sourcesMap[id]} />}
         </motion.li>
       ))}
     </motion.ol>

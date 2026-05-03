@@ -1,14 +1,14 @@
 import type { MotionValue, PanInfo } from "motion/react"
 import type { PointerEvent } from "react"
-import type { BoardFeed } from "@/typings/feed"
+import type { BoardSource } from "@/typings/source"
 import { motion, useDragControls, useMotionValue, useTransform } from "motion/react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
 import Card from "../card"
 
 interface MobileBoardProps {
-  feedIds: string[]
-  feedsMap: Record<string, BoardFeed>
+  sourceIds: string[]
+  sourcesMap: Record<string, BoardSource>
   className?: string
   isScattered?: boolean
 }
@@ -25,14 +25,14 @@ interface MobileCardProps {
   index: number
   x: MotionValue<number>
   trackItemOffset: number
-  feed: BoardFeed
+  source: BoardSource
   onDragHandlePointerDown: (event: PointerEvent<HTMLDivElement>) => void
 }
 
 const rotateOutputRange = [-10, 0, 10]
 const yOutputRange = [40, 0, 40]
 
-function MobileCard({ id, index, x, trackItemOffset, feed, onDragHandlePointerDown }: MobileCardProps) {
+function MobileCard({ id, index, x, trackItemOffset, source, onDragHandlePointerDown }: MobileCardProps) {
   const range = [
     -(index + 1) * trackItemOffset,
     -index * trackItemOffset,
@@ -57,18 +57,18 @@ function MobileCard({ id, index, x, trackItemOffset, feed, onDragHandlePointerDo
         style={{ touchAction: "pan-y" }}
         onPointerDown={onDragHandlePointerDown}
       >
-        <Card id={id} feed={feed} className="h-full w-full" />
+        <Card id={id} source={source} className="h-full w-full" />
       </div>
     </motion.div>
   )
 }
 
-export function MobileBoard({ feedIds, feedsMap }: MobileBoardProps) {
+export function MobileBoard({ sourceIds, sourcesMap }: MobileBoardProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
   const dragControls = useDragControls()
   const x = useMotionValue(0)
-  const visibleFeedIds = useMemo(() => feedIds.filter(id => Boolean(feedsMap[id])), [feedIds, feedsMap])
+  const visibleSourceIds = useMemo(() => sourceIds.filter(id => Boolean(sourcesMap[id])), [sourceIds, sourcesMap])
 
   // Calculate item width: min(92vw, 450px)
   const itemWidth = useMemo(
@@ -82,26 +82,26 @@ export function MobileBoard({ feedIds, feedsMap }: MobileBoardProps) {
     const velocity = info.velocity.x
 
     if (offset < -DRAG_BUFFER || velocity < -VELOCITY_THRESHOLD) {
-      setCurrentIndex(prev => Math.min(prev + 1, visibleFeedIds.length - 1))
+      setCurrentIndex(prev => Math.min(prev + 1, visibleSourceIds.length - 1))
     } else if (offset > DRAG_BUFFER || velocity > VELOCITY_THRESHOLD) {
       setCurrentIndex(prev => Math.max(prev - 1, 0))
     }
-  }, [visibleFeedIds.length])
+  }, [visibleSourceIds.length])
 
   const handleDragHandlePointerDown = useCallback((event: PointerEvent<HTMLDivElement>) => {
     dragControls.start(event)
   }, [dragControls])
 
   useEffect(() => {
-    setCurrentIndex(prev => Math.max(0, Math.min(prev, Math.max(visibleFeedIds.length - 1, 0))))
-  }, [visibleFeedIds.length])
+    setCurrentIndex(prev => Math.max(0, Math.min(prev, Math.max(visibleSourceIds.length - 1, 0))))
+  }, [visibleSourceIds.length])
 
   const dragConstraints = useMemo(
     () => ({
-      left: -trackItemOffset * Math.max(visibleFeedIds.length - 1, 0),
+      left: -trackItemOffset * Math.max(visibleSourceIds.length - 1, 0),
       right: 0,
     }),
-    [trackItemOffset, visibleFeedIds.length],
+    [trackItemOffset, visibleSourceIds.length],
   )
 
   const motionStyle = useMemo(
@@ -138,14 +138,14 @@ export function MobileBoard({ feedIds, feedsMap }: MobileBoardProps) {
           animate={animateValue}
           transition={SPRING_OPTIONS}
         >
-          {visibleFeedIds.map((id, index) => (
+          {visibleSourceIds.map((id, index) => (
             <MobileCard
               key={id}
               id={id}
               index={index}
               x={x}
               trackItemOffset={trackItemOffset}
-              feed={feedsMap[id]}
+              source={sourcesMap[id]}
               onDragHandlePointerDown={handleDragHandlePointerDown}
             />
           ))}
@@ -154,7 +154,7 @@ export function MobileBoard({ feedIds, feedsMap }: MobileBoardProps) {
 
       {/* Indicator dots */}
       <div className="mt-6 flex gap-2">
-        {visibleFeedIds.map((_, index) => {
+        {visibleSourceIds.map((_, index) => {
           const isActive = index === currentIndex
           return (
             <motion.div

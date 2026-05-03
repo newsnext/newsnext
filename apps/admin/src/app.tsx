@@ -1,6 +1,6 @@
-import type { FeedParamSchema } from "@newsnext/feeds/typings"
+import type { SourceParamSchema } from "@newsnext/sources/typings"
 import type { CSSProperties, ReactNode } from "react"
-import type { FeedDraft, FeedStats, FilterState, StatusTone } from "./lib/feed-admin"
+import type { SourceDraft, SourceStats, FilterState, StatusTone } from "./lib/source-admin"
 import { Button } from "@newsnext/ui/components/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@newsnext/ui/components/card"
 import { SidebarInset, SidebarProvider } from "@newsnext/ui/components/sidebar"
@@ -9,10 +9,10 @@ import { authClient, signInWithGitHub, signInWithGoogle } from "./auth"
 import { AppSidebar } from "./components/app-sidebar"
 import { ChartAreaInteractive } from "./components/chart-area-interactive"
 import { DataTable } from "./components/data-table"
-import { FeedEditor } from "./components/feed-editor"
+import { SourceEditor } from "./components/source-editor"
 import { SectionCards } from "./components/section-cards"
 import { SiteHeader } from "./components/site-header"
-import { createDraft } from "./lib/feed-admin"
+import { createDraft } from "./lib/source-admin"
 import { trpc } from "./trpc"
 
 export function App() {
@@ -28,7 +28,7 @@ export function App() {
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>NewsNext Admin</CardTitle>
-            <CardDescription>Sign in to manage database-backed feeds.</CardDescription>
+            <CardDescription>Sign in to inspect code-defined sources.</CardDescription>
           </CardHeader>
           <CardContent className="flex gap-2">
             <Button type="button" onClick={() => void signInWithGitHub()}>GitHub</Button>
@@ -39,25 +39,25 @@ export function App() {
     )
   }
 
-  return <FeedAdmin userName={session.user.name || session.user.email} />
+  return <SourceAdmin userName={session.user.name || session.user.email} />
 }
 
-function FeedAdmin({ userName }: { userName: string }) {
+function SourceAdmin({ userName }: { userName: string }) {
   const utils = trpc.useUtils()
-  const { data: feeds = [], isPending, isError, error } = trpc.getAdminFeeds.useQuery(undefined, {
+  const { data: sources = [], isPending, isError, error } = trpc.getAdminSources.useQuery(undefined, {
     retry: false,
   })
   const [selectedKey, setSelectedKey] = useState("")
-  const [draft, setDraft] = useState<FeedDraft | undefined>()
+  const [draft, setDraft] = useState<SourceDraft | undefined>()
   const [status, setStatus] = useState<{ tone: StatusTone, message: string } | undefined>()
   const [query, setQuery] = useState("")
   const [category, setCategory] = useState("all")
   const [filterState, setFilterState] = useState<FilterState>("all")
 
-  const updateFeed = trpc.updateAdminFeed.useMutation({
+  const updateSource = trpc.updateAdminSource.useMutation({
     onSuccess: async () => {
       await Promise.all([
-        utils.getAdminFeeds.invalidate(),
+        utils.getAdminSources.invalidate(),
         utils.getBoard.invalidate(),
       ])
       setStatus({ tone: "success", message: "Saved" })
@@ -65,73 +65,73 @@ function FeedAdmin({ userName }: { userName: string }) {
     onError: err => setStatus({ tone: "error", message: err.message }),
   })
 
-  const selectedFeed = useMemo(
-    () => feeds.find(feed => feed.key === selectedKey) ?? feeds[0],
-    [feeds, selectedKey],
+  const selectedSource = useMemo(
+    () => sources.find(source => source.key === selectedKey) ?? sources[0],
+    [sources, selectedKey],
   )
 
-  const filteredFeeds = useMemo(() => {
+  const filteredSources = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase()
 
-    return feeds.filter((feed) => {
+    return sources.filter((source) => {
       const matchesQuery = !normalizedQuery || [
-        feed.key,
-        feed.name,
-        feed.title,
-        feed.provider,
-        feed.feedId,
+        source.key,
+        source.name,
+        source.title,
+        source.provider,
+        source.sourceId,
       ].filter(Boolean).some(value => String(value).toLowerCase().includes(normalizedQuery))
-      const matchesCategory = category === "all" || feed.category === category
+      const matchesCategory = category === "all" || source.category === category
       const matchesState = filterState === "all"
-        || (filterState === "enabled" && feed.enabled)
-        || (filterState === "disabled" && !feed.enabled)
+        || (filterState === "enabled" && source.enabled)
+        || (filterState === "disabled" && !source.enabled)
 
       return matchesQuery && matchesCategory && matchesState
     })
-  }, [category, feeds, filterState, query])
+  }, [category, sources, filterState, query])
 
-  const stats = useMemo<FeedStats>(() => ({
-    total: feeds.length,
-    enabled: feeds.filter(feed => feed.enabled).length,
-    disabled: feeds.filter(feed => !feed.enabled).length,
-    providers: new Set(feeds.map(feed => feed.provider)).size,
-    categories: new Set(feeds.map(feed => feed.category)).size,
-  }), [feeds])
+  const stats = useMemo<SourceStats>(() => ({
+    total: sources.length,
+    enabled: sources.filter(source => source.enabled).length,
+    disabled: sources.filter(source => !source.enabled).length,
+    providers: new Set(sources.map(source => source.provider)).size,
+    categories: new Set(sources.map(source => source.category)).size,
+  }), [sources])
 
-  const isDirty = Boolean(selectedFeed && draft && JSON.stringify(draft) !== JSON.stringify(createDraft(selectedFeed)))
+  const isDirty = Boolean(selectedSource && draft && JSON.stringify(draft) !== JSON.stringify(createDraft(selectedSource)))
 
   useEffect(() => {
-    if (selectedFeed && !selectedKey) {
-      setSelectedKey(selectedFeed.key)
+    if (selectedSource && !selectedKey) {
+      setSelectedKey(selectedSource.key)
     }
-  }, [selectedFeed, selectedKey])
+  }, [selectedSource, selectedKey])
 
   useEffect(() => {
-    if (selectedFeed) {
-      setDraft(createDraft(selectedFeed))
+    if (selectedSource) {
+      setDraft(createDraft(selectedSource))
       setStatus(undefined)
     }
-  }, [selectedFeed])
+  }, [selectedSource])
 
-  function updateDraft(key: keyof FeedDraft, value: string | boolean): void {
+  function updateDraft(key: keyof SourceDraft, value: string | boolean): void {
     setDraft(prev => prev ? { ...prev, [key]: value } : prev)
   }
 
   function resetDraft(): void {
-    if (selectedFeed) {
-      setDraft(createDraft(selectedFeed))
+    if (selectedSource) {
+      setDraft(createDraft(selectedSource))
       setStatus(undefined)
     }
   }
 
   function handleSave(): void {
-    if (!selectedFeed || !draft) {
+    if (!selectedSource || !draft) {
       return
     }
 
-    let params: Record<string, FeedParamSchema>
+    let params: Record<string, SourceParamSchema>
     try {
-      params = JSON.parse(draft.paramsText) as Record<string, FeedParamSchema>
+      params = JSON.parse(draft.paramsText) as Record<string, SourceParamSchema>
     } catch {
       setStatus({ tone: "error", message: "Params must be valid JSON" })
       return
@@ -144,8 +144,8 @@ function FeedAdmin({ userName }: { userName: string }) {
     }
 
     setStatus({ tone: "muted", message: "Saving..." })
-    updateFeed.mutate({
-      key: selectedFeed.key,
+    updateSource.mutate({
+      key: selectedSource.key,
       name: draft.name,
       title: draft.title,
       interval,
@@ -161,15 +161,15 @@ function FeedAdmin({ userName }: { userName: string }) {
   }
 
   if (isPending) {
-    return <CenteredShell>Loading feeds...</CenteredShell>
+    return <CenteredShell>Loading sources...</CenteredShell>
   }
 
   if (isError) {
     return <CenteredShell>{error.message}</CenteredShell>
   }
 
-  if (!selectedFeed || !draft) {
-    return <CenteredShell>No feeds found.</CenteredShell>
+  if (!selectedSource || !draft) {
+    return <CenteredShell>No sources found.</CenteredShell>
   }
 
   return (
@@ -194,9 +194,9 @@ function FeedAdmin({ userName }: { userName: string }) {
       <SidebarInset>
         <SiteHeader
           userName={userName}
-          selectedFeed={selectedFeed}
+          selectedSource={selectedSource}
           isDirty={isDirty}
-          saving={updateFeed.isPending}
+          saving={updateSource.isPending}
           onReset={resetDraft}
           onSave={handleSave}
         />
@@ -205,14 +205,14 @@ function FeedAdmin({ userName }: { userName: string }) {
             <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
               <SectionCards stats={stats} />
               <div className="px-4 lg:px-6">
-                <ChartAreaInteractive feeds={feeds} />
+                <ChartAreaInteractive sources={sources} />
               </div>
               <div className="grid gap-4 px-4 lg:px-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(32rem,0.95fr)]">
-                <DataTable feeds={filteredFeeds} selectedKey={selectedFeed.key} onSelect={setSelectedKey} />
-                <FeedEditor
-                  feedKey={selectedFeed.key}
-                  provider={selectedFeed.provider}
-                  updatedAt={selectedFeed.updatedAt}
+                <DataTable sources={filteredSources} selectedKey={selectedSource.key} onSelect={setSelectedKey} />
+                <SourceEditor
+                  sourceKey={selectedSource.key}
+                  provider={selectedSource.provider}
+                  updatedAt={selectedSource.updatedAt}
                   draft={draft}
                   isDirty={isDirty}
                   status={status}

@@ -4,6 +4,6 @@
 
 export * from "./api"
 export * from "./color"
-export * from "./feed"
+export * from "./source"
 export * from "./items"
 export * from "./util"

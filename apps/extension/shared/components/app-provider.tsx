@@ -8,7 +8,7 @@ import { useSetAtom } from "jotai"
 import { useEffect, useState } from "react"
 import { authClient } from "@/lib/auth-client"
 import { getAppURL } from "@/lib/env"
-import { writeStoredFeedParamValues } from "@/lib/feed-params"
+import { writeStoredSourceParamValues } from "@/lib/source-params"
 import { trpc } from "@/lib/trpc"
 import {
   handleThemeModeSwitch,
@@ -18,7 +18,7 @@ import {
   THEME_MODE_KEY,
   THEME_VERSION_KEY,
 } from "@/lib/utils/swith-theme"
-import { feedInstancesAtom, starredFeedInstanceIdsAtom } from "@/store/board"
+import { sourceInstancesAtom, starredSourceInstanceIdsAtom } from "@/store/board"
 
 // Initialize theme as soon as possible to avoid flicker
 if (isBrowser) {
@@ -34,11 +34,11 @@ interface AppProviderProps {
   queryClient: QueryClient
 }
 
-function FeedStateHydrator() {
-  const setFeedInstances = useSetAtom(feedInstancesAtom)
-  const setStarredFeedInstanceIds = useSetAtom(starredFeedInstanceIdsAtom)
+function SourceStateHydrator() {
+  const setSourceInstances = useSetAtom(sourceInstancesAtom)
+  const setStarredSourceInstanceIds = useSetAtom(starredSourceInstanceIdsAtom)
   const { data: session } = authClient.useSession()
-  const { data } = trpc.getFeedState.useQuery(undefined, {
+  const { data } = trpc.getSourceState.useQuery(undefined, {
     enabled: Boolean(session),
     retry: false,
   })
@@ -48,12 +48,12 @@ function FeedStateHydrator() {
       return
     }
 
-    setFeedInstances(data.feedInstances)
-    setStarredFeedInstanceIds(data.starredFeedInstanceIds)
-    data.feedInstances.forEach((instance) => {
-      writeStoredFeedParamValues(instance.instanceId, instance.params)
+    setSourceInstances(data.sourceInstances)
+    setStarredSourceInstanceIds(data.starredSourceInstanceIds)
+    data.sourceInstances.forEach((instance) => {
+      writeStoredSourceParamValues(instance.instanceId, instance.params)
     })
-  }, [data, setFeedInstances, setStarredFeedInstanceIds])
+  }, [data, setSourceInstances, setStarredSourceInstanceIds])
 
   return null
 }
@@ -82,7 +82,7 @@ export function AppProvider({
   return (
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
-        <FeedStateHydrator />
+        <SourceStateHydrator />
         {children}
       </QueryClientProvider>
     </trpc.Provider>

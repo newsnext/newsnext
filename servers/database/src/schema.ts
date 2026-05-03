@@ -1,6 +1,4 @@
-import { sql } from "drizzle-orm"
 import {
-  check,
   index,
   integer,
   primaryKey,
@@ -64,57 +62,30 @@ export const verification = sqliteTable("verification", {
   index("verification_identifier_idx").on(table.identifier),
 ])
 
-export const feeds = sqliteTable("feeds", {
-  key: text().primaryKey(),
-  provider: text().notNull(),
-  feedId: text().notNull(),
-  name: text().notNull(),
-  title: text(),
-  interval: integer().notNull(),
-  params: text({ mode: "json" }).$type<Record<string, unknown>>().notNull(),
-  color: text().notNull(),
-  desc: text(),
-  type: text(),
-  category: text().notNull(),
-  home: text(),
-  icon: text(),
-  enabled: integer({ mode: "boolean" }).notNull().default(true),
-  createdAt: integer().notNull(),
-  updatedAt: integer().notNull(),
-}, table => [
-  uniqueIndex("feeds_provider_feedId_unique").on(table.provider, table.feedId),
-  index("feeds_provider_idx").on(table.provider),
-  index("feeds_category_idx").on(table.category),
-  check("feeds_type_check", sql`${table.type} IS NULL OR ${table.type} IN ('hottest', 'timeline')`),
-  check("feeds_category_check", sql`${table.category} IN ('tech', 'finance', 'china', 'world', 'others')`),
-])
-
-export const userFeedInstances = sqliteTable("user_feed_instances", {
+export const userSourceInstances = sqliteTable("user_source_instances", {
   userId: text().notNull().references(() => user.id, { onDelete: "cascade" }),
   instanceId: text().notNull(),
-  feedKey: text().notNull().references(() => feeds.key, { onDelete: "cascade" }),
+  sourceKey: text().notNull(),
   params: text({ mode: "json" }).$type<Record<string, unknown>>().notNull(),
   isFork: integer({ mode: "boolean" }).notNull().default(false),
   createdAt: integer().notNull(),
   updatedAt: integer().notNull(),
 }, table => [
   primaryKey({ columns: [table.userId, table.instanceId] }),
-  index("user_feed_instances_userId_idx").on(table.userId),
-  index("user_feed_instances_feedKey_idx").on(table.feedKey),
+  index("user_source_instances_userId_idx").on(table.userId),
+  index("user_source_instances_sourceKey_idx").on(table.sourceKey),
 ])
 
-export const starredFeedInstances = sqliteTable("starred_feed_instances", {
+export const starredSourceInstances = sqliteTable("starred_source_instances", {
   userId: text().notNull().references(() => user.id, { onDelete: "cascade" }),
   instanceId: text().notNull(),
   createdAt: integer().notNull(),
 }, table => [
   primaryKey({ columns: [table.userId, table.instanceId] }),
-  index("starred_feed_instances_userId_idx").on(table.userId),
+  index("starred_source_instances_userId_idx").on(table.userId),
 ])
 
-export type Feed = typeof feeds.$inferSelect
-export type NewFeed = typeof feeds.$inferInsert
-export type UserFeedInstance = typeof userFeedInstances.$inferSelect
-export type NewUserFeedInstance = typeof userFeedInstances.$inferInsert
-export type StarredFeedInstance = typeof starredFeedInstances.$inferSelect
-export type NewStarredFeedInstance = typeof starredFeedInstances.$inferInsert
+export type UserSourceInstance = typeof userSourceInstances.$inferSelect
+export type NewUserSourceInstance = typeof userSourceInstances.$inferInsert
+export type StarredSourceInstance = typeof starredSourceInstances.$inferSelect
+export type NewStarredSourceInstance = typeof starredSourceInstances.$inferInsert

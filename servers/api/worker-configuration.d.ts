@@ -8540,7 +8540,7 @@ type UniversalGatewayOptions = Exclude<GatewayOptions, 'id'> & {
 };
 type AiGatewayPatchLog = {
     score?: number | null;
-    feedback?: -1 | 1 | null;
+    sourceback?: -1 | 1 | null;
     metadata?: Record<string, number | string | boolean | null | bigint> | null;
 };
 type AiGatewayLog = {

@@ -36,8 +36,8 @@
       "name": "@newsnext/admin",
       "dependencies": {
         "@newsnext/api": "workspace:*",
-        "@newsnext/feeds": "workspace:*",
         "@newsnext/shared": "workspace:*",
+        "@newsnext/sources": "workspace:*",
         "@newsnext/ui": "workspace:*",
         "@tanstack/react-query": "^5.100.5",
         "@trpc/client": "^11.16.0",
@@ -63,7 +63,7 @@
         "@atlaskit/pragmatic-drag-and-drop-auto-scroll": "^2.1.5",
         "@atlaskit/pragmatic-drag-and-drop-hitbox": "^1.1.0",
         "@chenglou/pretext": "^0.0.6",
-        "@newsnext/feeds": "workspace:*",
+        "@newsnext/sources": "workspace:*",
         "@newsnext/ui": "workspace:*",
         "@tanstack/react-query": "^5.100.5",
         "@tanstack/react-router": "^1.168.24",
@@ -111,24 +111,8 @@
       },
       "devDependencies": {
         "@libsql/client": "^0.17.3",
-        "@newsnext/feeds": "workspace:*",
+        "@newsnext/sources": "workspace:*",
         "drizzle-kit": "^0.31.10",
-      },
-    },
-    "packages/feeds": {
-      "name": "@newsnext/feeds",
-      "dependencies": {
-        "@date-fns/tz": "^1.4.1",
-        "@newsnext/cache": "workspace:*",
-        "@newsnext/shared": "workspace:*",
-        "@smithy/md5-js": "^4.2.14",
-        "cheerio": "^1.2.0",
-        "date-fns": "^4.1.0",
-        "fast-xml-parser": "^5.7.2",
-        "iconv-lite": "^0.7.2",
-      },
-      "devDependencies": {
-        "domhandler": "^6.0.1",
       },
     },
     "packages/misc/build": {
@@ -142,6 +126,22 @@
     },
     "packages/shared": {
       "name": "@newsnext/shared",
+    },
+    "packages/sources": {
+      "name": "@newsnext/sources",
+      "dependencies": {
+        "@date-fns/tz": "^1.4.1",
+        "@newsnext/cache": "workspace:*",
+        "@newsnext/shared": "workspace:*",
+        "@smithy/md5-js": "^4.2.14",
+        "cheerio": "^1.2.0",
+        "date-fns": "^4.1.0",
+        "fast-xml-parser": "^5.7.2",
+        "iconv-lite": "^0.7.2",
+      },
+      "devDependencies": {
+        "domhandler": "^6.0.1",
+      },
     },
     "packages/ui": {
       "name": "@newsnext/ui",
@@ -182,7 +182,7 @@
         "@hono/trpc-server": "^0.4.2",
         "@newsnext/cache": "workspace:*",
         "@newsnext/database": "workspace:*",
-        "@newsnext/feeds": "workspace:*",
+        "@newsnext/sources": "workspace:*",
         "@trpc/server": "^11.16.0",
         "better-auth": "^1.6.9",
         "hono": "catalog:",
@@ -198,7 +198,7 @@
       },
       "devDependencies": {
         "@libsql/client": "^0.17.3",
-        "@newsnext/feeds": "workspace:*",
+        "@newsnext/sources": "workspace:*",
         "drizzle-kit": "^0.31.10",
       },
     },
@@ -206,8 +206,8 @@
       "name": "@newsnext/proxy",
       "dependencies": {
         "@newsnext/cache": "workspace:*",
-        "@newsnext/feeds": "workspace:*",
         "@newsnext/shared": "workspace:*",
+        "@newsnext/sources": "workspace:*",
         "hono": "catalog:",
       },
       "devDependencies": {
@@ -582,11 +582,11 @@
 
     "@newsnext/extension": ["@newsnext/extension@workspace:apps/extension"],
 
-    "@newsnext/feeds": ["@newsnext/feeds@workspace:packages/feeds"],
-
     "@newsnext/proxy": ["@newsnext/proxy@workspace:servers/proxy"],
 
     "@newsnext/shared": ["@newsnext/shared@workspace:packages/shared"],
+
+    "@newsnext/sources": ["@newsnext/sources@workspace:packages/sources"],
 
     "@newsnext/tsconfigs": ["@newsnext/tsconfigs@workspace:packages/misc/tsconfigs"],
 

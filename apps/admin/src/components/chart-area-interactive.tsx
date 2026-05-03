@@ -1,16 +1,16 @@
-import type { AdminFeedRow } from "@/lib/feed-admin"
+import type { AdminSourceRow } from "@/lib/source-admin"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@newsnext/ui/components/card"
-import { formatCategory } from "@/lib/feed-admin"
+import { formatCategory } from "@/lib/source-admin"
 
-export function ChartAreaInteractive({ feeds }: { feeds: AdminFeedRow[] }) {
-  const rows = getCategoryRows(feeds)
+export function ChartAreaInteractive({ sources }: { sources: AdminSourceRow[] }) {
+  const rows = getCategoryRows(sources)
   const max = Math.max(1, ...rows.map(row => row.total))
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Category Coverage</CardTitle>
-        <CardDescription>Enabled and hidden feed distribution</CardDescription>
+        <CardDescription>Enabled and hidden source distribution</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="grid gap-3">
@@ -38,16 +38,16 @@ export function ChartAreaInteractive({ feeds }: { feeds: AdminFeedRow[] }) {
   )
 }
 
-function getCategoryRows(feeds: AdminFeedRow[]) {
+function getCategoryRows(sources: AdminSourceRow[]) {
   const map = new Map<string, { category: string, total: number, enabled: number }>()
 
-  for (const feed of feeds) {
-    const row = map.get(feed.category) ?? { category: feed.category, total: 0, enabled: 0 }
+  for (const source of sources) {
+    const row = map.get(source.category) ?? { category: source.category, total: 0, enabled: 0 }
     row.total += 1
-    if (feed.enabled) {
+    if (source.enabled) {
       row.enabled += 1
     }
-    map.set(feed.category, row)
+    map.set(source.category, row)
   }
 
   return [...map.values()]

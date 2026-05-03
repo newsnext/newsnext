@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@newsnext/cache": "workspace:*",
-    "@newsnext/feeds": "workspace:*",
+    "@newsnext/sources": "workspace:*",
     "@newsnext/shared": "workspace:*",
     "hono": "catalog:"
   },

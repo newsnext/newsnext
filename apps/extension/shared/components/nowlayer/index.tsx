@@ -1,17 +1,17 @@
 import type { RefObject } from "react"
-import type { BoardFeed } from "@/typings/feed"
+import type { BoardSource } from "@/typings/source"
 import { useAtomValue } from "jotai"
 import { useEffect, useState } from "react"
 import { isMobile } from "react-device-detect"
-import { buildBoardFeeds } from "@/lib/feed-cards"
+import { buildBoardSources } from "@/lib/source-cards"
 import { trpc } from "@/lib/trpc"
-import { feedInstancesAtom, starredFeedInstanceIdsAtom } from "@/store/board"
+import { sourceInstancesAtom, starredSourceInstanceIdsAtom } from "@/store/board"
 import { DesktopBoard } from "./desktop-board"
 import { MobileBoard } from "./mobile-board"
 
 interface NowLayerProps {
   boardId?: "featured" | "forks" | "stars"
-  onFeedIdsChange?: (feedIds: string[]) => void
+  onSourceIdsChange?: (sourceIds: string[]) => void
   className?: string
   isScattered?: boolean
   containerRef?: RefObject<HTMLDivElement | null>
@@ -19,44 +19,44 @@ interface NowLayerProps {
 
 export function NowLayer({
   boardId = "featured",
-  onFeedIdsChange,
+  onSourceIdsChange,
   className,
   isScattered,
   containerRef,
 }: NowLayerProps) {
-  const [feedIds, setFeedIds] = useState<string[]>([])
-  const [feedsMap, setFeedsMap] = useState<Record<string, BoardFeed>>({})
-  const starredFeedInstanceIds = useAtomValue(starredFeedInstanceIdsAtom)
-  const feedInstances = useAtomValue(feedInstancesAtom)
+  const [sourceIds, setSourceIds] = useState<string[]>([])
+  const [sourcesMap, setSourcesMap] = useState<Record<string, BoardSource>>({})
+  const starredSourceInstanceIds = useAtomValue(starredSourceInstanceIdsAtom)
+  const sourceInstances = useAtomValue(sourceInstancesAtom)
 
-  const { data: feeds, isPending } = trpc.getBoard.useQuery()
+  const { data: sources, isPending } = trpc.getBoard.useQuery()
 
   const [prevBoardId, setPrevBoardId] = useState(boardId)
   if (prevBoardId !== boardId) {
     setPrevBoardId(boardId)
-    setFeedIds([])
-    setFeedsMap({})
+    setSourceIds([])
+    setSourcesMap({})
   }
 
   useEffect(() => {
-    if (feeds) {
-      const { ids, map } = buildBoardFeeds({
-        feeds,
+    if (sources) {
+      const { ids, map } = buildBoardSources({
+        sources,
         boardId,
-        starredFeedInstanceIds,
-        feedInstances,
+        starredSourceInstanceIds,
+        sourceInstances,
       })
-      setFeedIds(ids)
-      setFeedsMap(map)
+      setSourceIds(ids)
+      setSourcesMap(map)
     }
-  }, [feeds, boardId, starredFeedInstanceIds, feedInstances])
+  }, [sources, boardId, starredSourceInstanceIds, sourceInstances])
 
-  const handleFeedIdsChange = (newFeedIds: string[]) => {
-    setFeedIds(newFeedIds)
-    onFeedIdsChange?.(newFeedIds)
+  const handleSourceIdsChange = (newSourceIds: string[]) => {
+    setSourceIds(newSourceIds)
+    onSourceIdsChange?.(newSourceIds)
   }
 
-  if (!isPending && boardId === "stars" && feedIds.length === 0) {
+  if (!isPending && boardId === "stars" && sourceIds.length === 0) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center px-6 text-center text-sm text-muted-foreground">
         Star cards from any board to collect them here.
@@ -64,10 +64,10 @@ export function NowLayer({
     )
   }
 
-  if (!isPending && boardId === "forks" && feedIds.length === 0) {
+  if (!isPending && boardId === "forks" && sourceIds.length === 0) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center px-6 text-center text-sm text-muted-foreground">
-        Fork a card to collect your feed forks here.
+        Fork a card to collect your source forks here.
       </div>
     )
   }
@@ -76,8 +76,8 @@ export function NowLayer({
     return (
       <MobileBoard
         key={boardId}
-        feedIds={feedIds}
-        feedsMap={feedsMap}
+        sourceIds={sourceIds}
+        sourcesMap={sourcesMap}
         className={className}
         isScattered={isScattered}
       />
@@ -87,13 +87,13 @@ export function NowLayer({
   return (
     <DesktopBoard
       key={boardId}
-      feedIds={feedIds}
-      feedsMap={feedsMap}
+      sourceIds={sourceIds}
+      sourcesMap={sourcesMap}
       isSortable={boardId === "forks" || boardId === "stars"}
       className={className}
       isScattered={isScattered}
       containerRef={containerRef}
-      onFeedIdsChange={handleFeedIdsChange}
+      onSourceIdsChange={handleSourceIdsChange}
     />
   )
 }

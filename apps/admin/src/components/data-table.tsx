@@ -1,4 +1,4 @@
-import type { AdminFeedRow } from "@/lib/feed-admin"
+import type { AdminSourceRow } from "@/lib/source-admin"
 import {
   Card,
   CardContent,
@@ -14,26 +14,26 @@ import {
   TableHeader,
   TableRow,
 } from "@newsnext/ui/components/table"
-import { formatCategory } from "@/lib/feed-admin"
-import { FeedStateBadge } from "./feed-state-badge"
+import { formatCategory } from "@/lib/source-admin"
+import { SourceStateBadge } from "./source-state-badge"
 
 export function DataTable({
-  feeds,
+  sources,
   selectedKey,
   onSelect,
 }: {
-  feeds: AdminFeedRow[]
+  sources: AdminSourceRow[]
   selectedKey: string
   onSelect: (key: string) => void
 }) {
   return (
     <Card className="min-w-0">
       <CardHeader className="border-b pb-4">
-        <CardTitle>Feeds</CardTitle>
+        <CardTitle>Sources</CardTitle>
         <CardDescription>
-          {feeds.length}
+          {sources.length}
           {" "}
-          matching feeds
+          matching sources
         </CardDescription>
       </CardHeader>
       <CardContent className="p-0">
@@ -41,28 +41,28 @@ export function DataTable({
           <Table>
             <TableHeader className="sticky top-0 z-10 bg-card">
               <TableRow>
-                <TableHead>Feed</TableHead>
+                <TableHead>Source</TableHead>
                 <TableHead>Provider</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead>State</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {feeds.map(feed => (
+              {sources.map(source => (
                 <TableRow
-                  key={feed.key}
-                  data-state={selectedKey === feed.key ? "selected" : undefined}
+                  key={source.key}
+                  data-state={selectedKey === source.key ? "selected" : undefined}
                   className="cursor-pointer"
-                  onClick={() => onSelect(feed.key)}
+                  onClick={() => onSelect(source.key)}
                 >
                   <TableCell className="min-w-64">
-                    <div className="font-medium">{feed.title || feed.name}</div>
-                    <div className="text-xs text-muted-foreground">{feed.key}</div>
+                    <div className="font-medium">{source.title || source.name}</div>
+                    <div className="text-xs text-muted-foreground">{source.key}</div>
                   </TableCell>
-                  <TableCell>{feed.provider}</TableCell>
-                  <TableCell>{formatCategory(feed.category)}</TableCell>
+                  <TableCell>{source.provider}</TableCell>
+                  <TableCell>{formatCategory(source.category)}</TableCell>
                   <TableCell>
-                    <FeedStateBadge enabled={feed.enabled} />
+                    <SourceStateBadge enabled={source.enabled} />
                   </TableCell>
                 </TableRow>
               ))}

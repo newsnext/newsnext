@@ -1,4 +1,4 @@
-import type { FeedParamSchema } from "@newsnext/feeds/typings"
+import type { SourceParamSchema } from "@newsnext/sources/typings"
 import type { Color } from "@newsnext/shared/types"
 import type { PropsWithChildren } from "react"
 import { COLORS } from "@newsnext/shared/constants"
@@ -23,7 +23,7 @@ import {
   PhPencilCircleDuotone,
   PhTrashDuotone,
 } from "@/components/icons/ph"
-import { resolveFeedDisplay } from "@/lib/feed-display"
+import { resolveSourceDisplay } from "@/lib/source-display"
 import { cn } from "@/lib/utils"
 import { IconButton } from "../common/button"
 import { useCard } from "./card-context"
@@ -155,7 +155,7 @@ function ParamField({
   color,
   onChange,
 }: {
-  param: FeedParamSchema
+  param: SourceParamSchema
   value: unknown
   editable: boolean
   color: Color
@@ -326,17 +326,17 @@ function ColorSelector({ color, editable, onChange }: { color: Color, editable?:
 
 export function CardBack() {
   const {
-    feed,
-    draftFeedParams,
-    hasFeedParams,
-    hasFeedParamChanges,
+    source,
+    draftSourceParams,
+    hasSourceParams,
+    hasSourceParamChanges,
     isFork,
     onFork,
     onDelete,
-    onFeedParamChange,
-    onSaveFeedParams,
-    onResetFeedParams,
-    onDiscardFeedParams,
+    onSourceParamChange,
+    onSaveSourceParams,
+    onResetSourceParams,
+    onDiscardSourceParams,
     onFlip,
     dragHandle,
   } = useCard()
@@ -344,8 +344,8 @@ export function CardBack() {
   const [editable, setEditable] = useState(false)
   const canEdit = isFork && editable
   const shouldPromoteEditButton = !dragHandle
-  const { provider, desc, interval, color, params } = feed
-  const { name, title, home } = resolveFeedDisplay(feed, draftFeedParams)
+  const { provider, desc, interval, color, params } = source
+  const { name, title, home } = resolveSourceDisplay(source, draftSourceParams)
 
   // Local state for edits (though not persisted yet)
   // In a real app, these would update via a mutation
@@ -534,11 +534,11 @@ export function CardBack() {
                   type="button"
                   variant="outline"
                   size="sm"
-                  disabled={!canEdit || !hasFeedParamChanges}
+                  disabled={!canEdit || !hasSourceParamChanges}
                   className={cn(`h-6 px-2 bg-${previewColor}-500/10 hover:bg-${previewColor}-500/20 text-${previewColor}-600 border-${previewColor}-200`)}
                   onClick={(event) => {
                     event.stopPropagation()
-                    onDiscardFeedParams()
+                    onDiscardSourceParams()
                   }}
                 >
                   Revert
@@ -547,11 +547,11 @@ export function CardBack() {
                   type="button"
                   variant="outline"
                   size="sm"
-                  disabled={!canEdit || !hasFeedParams}
+                  disabled={!canEdit || !hasSourceParams}
                   className={cn(`h-6 px-2 bg-${previewColor}-500/10 hover:bg-${previewColor}-500/20 text-${previewColor}-600 border-${previewColor}-200`)}
                   onClick={(event) => {
                     event.stopPropagation()
-                    onResetFeedParams()
+                    onResetSourceParams()
                   }}
                 >
                   Reset
@@ -559,30 +559,30 @@ export function CardBack() {
                 <Button
                   type="button"
                   size="sm"
-                  disabled={!canEdit || !hasFeedParamChanges}
+                  disabled={!canEdit || !hasSourceParamChanges}
                   className="h-6 px-2"
                   onClick={(event) => {
                     event.stopPropagation()
-                    onSaveFeedParams()
+                    onSaveSourceParams()
                   }}
                 >
                   Save
                 </Button>
               </div>
             </div>
-            {!hasFeedParams && (
+            {!hasSourceParams && (
               <div className="rounded-3xl border border-dashed border-border/50 px-3 py-2.5 text-sm text-muted-foreground">
-                This feed does not expose configurable parameters yet.
+                This source does not expose configurable parameters yet.
               </div>
             )}
             {params && Object.entries(params).map(([paramKey, param]) => (
               <ParamField
                 key={paramKey}
                 param={param}
-                value={draftFeedParams[paramKey]}
+                value={draftSourceParams[paramKey]}
                 editable={canEdit}
                 color={previewColor}
-                onChange={nextValue => onFeedParamChange(paramKey, nextValue)}
+                onChange={nextValue => onSourceParamChange(paramKey, nextValue)}
               />
             ))}
           </div>

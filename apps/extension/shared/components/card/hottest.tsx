@@ -1,6 +1,6 @@
 import type { Color } from "@newsnext/shared/types"
 import type { RefObject } from "react"
-import type { NewsItem } from "@/typings/feed"
+import type { NewsItem } from "@/typings/source"
 import { cn } from "@/lib/utils"
 import { VirtualList } from "../common/virtual-list"
 import { NewsItemLink, NewsItemSummary } from "./news-item-common"

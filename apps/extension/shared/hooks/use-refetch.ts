@@ -2,85 +2,85 @@ import { useIsFetching } from "@tanstack/react-query"
 import { getQueryKey } from "@trpc/react-query"
 import { useAtomValue } from "jotai"
 import { useCallback, useMemo } from "react"
-import { buildBoardFeeds, buildFeedRequestKey } from "@/lib/feed-cards"
-import { getSavedFeedParamValues } from "@/lib/feed-params"
+import { buildBoardSources, buildSourceRequestKey } from "@/lib/source-cards"
+import { getSavedSourceParamValues } from "@/lib/source-params"
 import { trpc } from "@/lib/trpc"
-import { currentBoardAtom, feedInstancesAtom, starredFeedInstanceIdsAtom } from "@/store/board"
+import { currentBoardAtom, sourceInstancesAtom, starredSourceInstanceIdsAtom } from "@/store/board"
 
-export const refetchFeeds = new Set<string>()
+export const refetchSources = new Set<string>()
 
 interface RefetchTarget {
-  feedId: string
+  sourceId: string
   params?: Record<string, unknown>
 }
 
 export function useRefetch() {
   const utils = trpc.useUtils()
   const currentBoard = useAtomValue(currentBoardAtom)
-  const starredFeedInstanceIds = useAtomValue(starredFeedInstanceIdsAtom)
-  const feedInstances = useAtomValue(feedInstancesAtom)
-  const fetchingCount = useIsFetching({ queryKey: getQueryKey(trpc.getFeed) })
+  const starredSourceInstanceIds = useAtomValue(starredSourceInstanceIdsAtom)
+  const sourceInstances = useAtomValue(sourceInstancesAtom)
+  const fetchingCount = useIsFetching({ queryKey: getQueryKey(trpc.getSource) })
 
   const isFetching = useMemo(() => fetchingCount > 0, [fetchingCount])
 
   /**
-   * Force refresh specific feeds.
+   * Force refresh specific sources.
    */
   const refetch = useCallback(
     async (...targets: RefetchTarget[]) => {
       try {
         const uniqueTargets = [...new Map(
-          targets.map(target => [buildFeedRequestKey(target.feedId, target.params ?? {}), target]),
+          targets.map(target => [buildSourceRequestKey(target.sourceId, target.params ?? {}), target]),
         ).values()]
 
-        uniqueTargets.forEach(target => refetchFeeds.add(buildFeedRequestKey(target.feedId, target.params ?? {})))
+        uniqueTargets.forEach(target => refetchSources.add(buildSourceRequestKey(target.sourceId, target.params ?? {})))
 
         await Promise.all(
           uniqueTargets.map(target =>
-            utils.getFeed.invalidate({ feedId: target.feedId, params: target.params ?? {} }),
+            utils.getSource.invalidate({ sourceId: target.sourceId, params: target.params ?? {} }),
           ),
         )
       } catch (e) {
-        console.error("Failed to refresh feeds", e)
+        console.error("Failed to refresh sources", e)
       }
     },
     [utils],
   )
 
   /**
-   * Refresh all feeds in the current board.
+   * Refresh all sources in the current board.
    */
   const refetchAll = useCallback(async () => {
     try {
-      const feeds = await utils.getBoard.ensureData()
-      const boardFeeds = buildBoardFeeds({
-        feeds,
+      const sources = await utils.getBoard.ensureData()
+      const boardSources = buildBoardSources({
+        sources,
         boardId: currentBoard,
-        starredFeedInstanceIds,
-        feedInstances,
+        starredSourceInstanceIds,
+        sourceInstances,
       })
-      const targets = boardFeeds.ids.map((id) => {
-        const feed = boardFeeds.map[id]
+      const targets = boardSources.ids.map((id) => {
+        const source = boardSources.map[id]
         return {
-          feedId: feed.feedId,
-          params: feed.paramsValue ?? getSavedFeedParamValues(feed.id, feed.params),
+          sourceId: source.sourceId,
+          params: source.paramsValue ?? getSavedSourceParamValues(source.id, source.params),
         } satisfies RefetchTarget
       })
       const uniqueTargets = [...new Map(
-        targets.map(target => [buildFeedRequestKey(target.feedId, target.params ?? {}), target]),
+        targets.map(target => [buildSourceRequestKey(target.sourceId, target.params ?? {}), target]),
       ).values()]
 
-      uniqueTargets.forEach(target => refetchFeeds.add(buildFeedRequestKey(target.feedId, target.params ?? {})))
+      uniqueTargets.forEach(target => refetchSources.add(buildSourceRequestKey(target.sourceId, target.params ?? {})))
 
       await Promise.all(
         uniqueTargets.map(target =>
-          utils.getFeed.invalidate({ feedId: target.feedId, params: target.params ?? {} }),
+          utils.getSource.invalidate({ sourceId: target.sourceId, params: target.params ?? {} }),
         ),
       )
     } catch (e) {
-      console.error("Failed to refresh board feeds", e)
+      console.error("Failed to refresh board sources", e)
     }
-  }, [utils, currentBoard, starredFeedInstanceIds, feedInstances])
+  }, [utils, currentBoard, starredSourceInstanceIds, sourceInstances])
 
   return {
     refetch,

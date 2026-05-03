@@ -1,10 +1,10 @@
 import type { CardProps } from "./index"
-import type { BoardFeed } from "@/typings/feed"
+import type { BoardSource } from "@/typings/source"
 import { useCallback, useMemo } from "react"
 import { isIOS } from "react-device-detect"
 import { createRoot } from "react-dom/client"
 import { useSortable } from "@/hooks/use-sortable"
-import { getSavedFeedParamValues } from "@/lib/feed-params"
+import { getSavedSourceParamValues } from "@/lib/source-params"
 import { cn } from "@/lib/utils"
 import { IconButton } from "../common/button"
 import { PhDotsSixVerticalDuotone } from "../icons/ph"
@@ -13,21 +13,21 @@ import Card from "./index"
 
 interface DraggableCardProps extends Omit<CardProps, "nodeRef" | "dragHandle"> {
   id: string
-  feed: BoardFeed
+  source: BoardSource
 }
 
-export function DraggableCard({ id, feed, ...props }: DraggableCardProps) {
+export function DraggableCard({ id, source, ...props }: DraggableCardProps) {
   const onGenerateDragPreview = useCallback(
     ({ container, element }: { container: HTMLElement, element: HTMLElement }) => {
       container.style.width = `${element.clientWidth}px`
       container.className = cn("bg-background", !isIOS && "rounded-4xl")
 
       const root = createRoot(container)
-      const feedParams = feed.paramsValue ?? getSavedFeedParamValues(id, feed.params)
-      root.render(<DragOverlay feed={feed} feedParams={feedParams} />)
+      const sourceParams = source.paramsValue ?? getSavedSourceParamValues(id, source.params)
+      root.render(<DragOverlay source={source} sourceParams={sourceParams} />)
       return () => root.unmount()
     },
-    [id, feed],
+    [id, source],
   )
 
   const { isDragging, setNodeRef, setHandleRef } = useSortable({
@@ -52,7 +52,7 @@ export function DraggableCard({ id, feed, ...props }: DraggableCardProps) {
   return (
     <Card
       id={id}
-      feed={feed}
+      source={source}
       nodeRef={setNodeRef}
       dragHandle={dragHandle}
       {...props}

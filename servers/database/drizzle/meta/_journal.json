@@ -20,21 +20,28 @@
       "idx": 2,
       "version": "6",
       "when": 1777380000000,
-      "tag": "0002_feed_state",
+      "tag": "0002_source_state",
       "breakpoints": true
     },
     {
       "idx": 3,
       "version": "6",
       "when": 1777383600000,
-      "tag": "0003_feed_catalog",
+      "tag": "0003_source_catalog",
       "breakpoints": true
     },
     {
       "idx": 4,
       "version": "6",
       "when": 1777395600000,
-      "tag": "0004_simplify_feed_state",
+      "tag": "0004_simplify_source_state",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1777796400000,
+      "tag": "0005_reset_source_schema",
       "breakpoints": true
     }
   ]

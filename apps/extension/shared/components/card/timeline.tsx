@@ -1,6 +1,6 @@
 import type { Color } from "@newsnext/shared/types"
 import type { RefObject } from "react"
-import type { NewsItem } from "@/typings/feed"
+import type { NewsItem } from "@/typings/source"
 import { useId } from "react"
 import { useRelativeTime } from "@/hooks/useRelativeTime"
 import { cn } from "@/lib/utils"
