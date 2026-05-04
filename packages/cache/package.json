@@ -7,8 +7,7 @@
     ".": "./src/index.ts",
     "./sqlite": "./src/adapters/sqlite.ts",
     "./memory": "./src/adapters/memory.ts",
-    "./d1": "./src/adapters/d1.ts",
-    "./db": "./src/adapters/db/index.ts"
+    "./d1": "./src/adapters/d1.ts"
   },
   "scripts": {
     "generate": "bun run --bun drizzle-kit generate",
@@ -21,7 +20,6 @@
   },
   "devDependencies": {
     "@libsql/client": "^0.17.3",
-    "@newsnext/sources": "workspace:*",
     "drizzle-kit": "^0.31.10"
   }
 }

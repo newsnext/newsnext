@@ -1,9 +1,6 @@
 import type { CacheAdapter } from "@newsnext/cache"
-import type {
-  LoadSourceOptions,
-  SourceLoadResult,
-} from "@newsnext/sources/service"
 import type { SourceDescriptor } from "@newsnext/sources/typings"
+import type { LoadSourceOptions, SourceLoadResult } from "./source-loader"
 
 export interface InstanceSuccessResponse<T> {
   success: true

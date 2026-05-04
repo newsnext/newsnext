@@ -1,5 +1,6 @@
-import type { PreparedSourceRequest, SourceLoadResult } from "@newsnext/sources/service"
+import type { PreparedSourceRequest } from "@newsnext/sources/service"
 import type { SourceDescriptor } from "@newsnext/sources/typings"
+import type { SourceLoadResult } from "./source-loader"
 import type {
   LoadInstanceSourceOptions,
   NewsNextDataInstance,
@@ -7,9 +8,9 @@ import type {
 } from "./types"
 import { sourceDescriptors } from "@newsnext/sources/metadata"
 import {
-  loadSource,
   prepareSourceRequest,
 } from "@newsnext/sources/service"
+import { loadSource } from "./source-loader"
 
 export class NewsNextInstance implements NewsNextDataInstance {
   private readonly adapter: NewsNextInstanceOptions["adapter"]

@@ -111,7 +111,6 @@
       },
       "devDependencies": {
         "@libsql/client": "^0.17.3",
-        "@newsnext/sources": "workspace:*",
         "drizzle-kit": "^0.31.10",
       },
     },
@@ -131,7 +130,6 @@
       "name": "@newsnext/sources",
       "dependencies": {
         "@date-fns/tz": "^1.4.1",
-        "@newsnext/cache": "workspace:*",
         "@newsnext/shared": "workspace:*",
         "@smithy/md5-js": "^4.2.14",
         "cheerio": "^1.2.0",
@@ -206,6 +204,7 @@
       "name": "@newsnext/instance",
       "dependencies": {
         "@newsnext/cache": "workspace:*",
+        "@newsnext/shared": "workspace:*",
         "@newsnext/sources": "workspace:*",
         "hono": "catalog:",
       },

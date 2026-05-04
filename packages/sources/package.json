@@ -16,7 +16,6 @@
   },
   "dependencies": {
     "@date-fns/tz": "^1.4.1",
-    "@newsnext/cache": "workspace:*",
     "@newsnext/shared": "workspace:*",
     "@smithy/md5-js": "^4.2.14",
     "cheerio": "^1.2.0",

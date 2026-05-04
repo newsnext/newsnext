@@ -1,5 +1,5 @@
-import type { SourceLoadResult } from "@newsnext/sources/service"
 import type { SourceDescriptor } from "@newsnext/sources/typings"
+import type { SourceLoadResult } from "./source-loader"
 import type {
   InstanceDebugInfo,
   InstanceResponse,

@@ -21,7 +21,7 @@
   "scripts": {
     "lint": "bun run --bun eslint .",
     "test": "vitest",
-    "dev": "bun --filter=@newsnext/api --filter=@newsnext/extension run dev",
+    "dev": "bun --parallel --filter=@newsnext/instance --filter=@newsnext/api --filter=@newsnext/extension run dev",
     "dev:api": "bun --filter=@newsnext/api run dev",
     "dev:web": "bun --filter=@newsnext/extension run dev",
     "dev:chrome": "bun --filter=@newsnext/extension run dev:chrome",
