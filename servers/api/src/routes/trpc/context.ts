@@ -1,4 +1,4 @@
-import type { CacheAdapter } from "@newsnext/cache"
+import type { NewsNextDataInstance } from "@newsnext/instance"
 import type { Context as HonoContext } from "hono"
 import { auth } from "../../lib/auth"
 
@@ -17,6 +17,6 @@ export async function createContext({ hono }: CreateContextOptions) {
 }
 
 export type Context = Awaited<ReturnType<typeof createContext>> & {
-  adapter: CacheAdapter
-  waitUntil?: (promise: Promise<any>) => void
+  instance: NewsNextDataInstance
+  waitUntil?: (promise: Promise<unknown>) => void
 }

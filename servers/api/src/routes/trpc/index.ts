@@ -1,4 +1,4 @@
-import type { CacheAdapter } from "@newsnext/cache"
+import type { NewsNextDataInstance } from "@newsnext/instance"
 import type { Context } from "hono"
 import { trpcServer } from "@hono/trpc-server"
 import { Hono } from "hono"
@@ -6,32 +6,32 @@ import { appRouter } from "./app-router"
 import { createContext } from "./context"
 
 interface Variables {
-  adapter: CacheAdapter
+  instance: NewsNextDataInstance
 }
 
 type TrpcContext = Context<{ Bindings: CloudflareBindings, Variables: Variables }>
-type AdapterLoader = (context: TrpcContext) => Promise<CacheAdapter>
+type InstanceLoader = (context: TrpcContext) => Promise<NewsNextDataInstance>
 
-export const createTrpcApp = (loadAdapter: AdapterLoader) => {
+export const createTrpcApp = (loadInstance: InstanceLoader) => {
   const trpcApp = new Hono<{ Bindings: CloudflareBindings, Variables: Variables }>()
-  let adapter: CacheAdapter | undefined
+  let instance: NewsNextDataInstance | undefined
 
   trpcApp.use("/*", async (c, next) => {
-    if (!adapter) {
+    if (!instance) {
       try {
-        adapter = await loadAdapter(c)
+        instance = await loadInstance(c)
       } catch (error) {
-        console.error("Failed to load cache adapter:", error)
+        console.error("Failed to load data instance:", error)
       }
     }
 
-    if (!adapter) {
-      const { MemoryCacheAdapter } = await import("@newsnext/cache/memory")
-      adapter = new MemoryCacheAdapter()
-      console.log("Using Memory cache adapter (fallback)")
+    if (!instance) {
+      const { createMemoryNewsNextInstance } = await import("@newsnext/instance")
+      instance = await createMemoryNewsNextInstance()
+      console.log("Using Memory data instance (fallback)")
     }
 
-    c.set("adapter", adapter)
+    c.set("instance", instance)
     await next()
   })
 
@@ -40,8 +40,8 @@ export const createTrpcApp = (loadAdapter: AdapterLoader) => {
       router: appRouter,
       createContext: async () => ({
         ...await createContext({ hono: c }),
-        adapter: c.var.adapter,
-        waitUntil: (p: Promise<any>) => c.executionCtx.waitUntil(p),
+        instance: c.var.instance,
+        waitUntil: (p: Promise<unknown>) => c.executionCtx.waitUntil(p),
       }),
     })(c, next)
   })
@@ -49,4 +49,4 @@ export const createTrpcApp = (loadAdapter: AdapterLoader) => {
   return trpcApp
 }
 
-export type { AdapterLoader }
+export type { InstanceLoader }

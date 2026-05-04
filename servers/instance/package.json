@@ -1,25 +1,23 @@
 {
-  "name": "@newsnext/proxy",
+  "name": "@newsnext/instance",
   "type": "module",
   "private": true,
-  "description": "Proxy server for NewsNext data sources",
+  "description": "Data fetching instance for NewsNext sources",
   "license": "MPL-2.0",
   "exports": {
     ".": "./src/index.ts"
   },
   "scripts": {
-    "dev": "bun run --hot dist/index.mjs",
+    "dev": "bun run --hot src/index.bun.ts",
     "build": "tsdown",
     "typecheck": "tsgo -b"
   },
   "dependencies": {
     "@newsnext/cache": "workspace:*",
-    "@newsnext/shared": "workspace:*",
     "@newsnext/sources": "workspace:*",
     "hono": "catalog:"
   },
   "devDependencies": {
-    "@newsnext/build": "workspace:*",
     "tsdown": "^0.21.10"
   }
 }

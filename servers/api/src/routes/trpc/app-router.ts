@@ -1,8 +1,7 @@
 import type { SourceDescriptor } from "@newsnext/sources/typings"
 import { db, starredSourceInstances, userSourceInstances } from "@newsnext/database"
 import { and, eq } from "@newsnext/database/orm"
-import { sourceDescriptors } from "@newsnext/sources/metadata"
-import { loadSource, prepareSourceRequest, SourceServiceError } from "@newsnext/sources/service"
+import { SourceServiceError } from "@newsnext/instance"
 import { TRPCError } from "@trpc/server"
 import { z } from "zod"
 import { protectedProcedure, publicProcedure, router } from "./core"
@@ -11,25 +10,6 @@ const getSourceInputSchema = z.object({
   sourceId: z.string(),
   params: z.record(z.string(), z.unknown()).optional(),
   latest: z.boolean().optional(),
-}).transform((input, ctx) => {
-  try {
-    const prepared = prepareSourceRequest(input.sourceId, input.params ?? {})
-    return {
-      ...input,
-      params: prepared.params as Record<string, unknown>,
-    }
-  } catch (error) {
-    if (error instanceof SourceServiceError) {
-      ctx.addIssue({
-        code: "custom",
-        message: error.message,
-        path: error.code === "INVALID_PARAMS" ? ["params"] : ["sourceId"],
-      })
-      return z.NEVER
-    }
-
-    throw error
-  }
 })
 
 const paramsSchema = z.record(z.string(), z.unknown())
@@ -68,22 +48,6 @@ function getSourceDescriptorKey(source: Pick<SourceDescriptor, "provider" | "id"
   return source.provider ? `${source.provider}:${source.id}` : source.id
 }
 
-function listSourceDescriptors(): SourceDescriptor[] {
-  return [...sourceDescriptors].sort((a, b) => {
-    const byCategory = a.category.localeCompare(b.category)
-    if (byCategory !== 0) {
-      return byCategory
-    }
-
-    const byProvider = (a.provider ?? "").localeCompare(b.provider ?? "")
-    if (byProvider !== 0) {
-      return byProvider
-    }
-
-    return a.id.localeCompare(b.id)
-  })
-}
-
 function toAdminSource(source: SourceDescriptor): AdminSource {
   const key = getSourceDescriptorKey(source)
   return {
@@ -98,8 +62,8 @@ function toAdminSource(source: SourceDescriptor): AdminSource {
 
 export const appRouter = router({
   getBoard: publicProcedure
-    .query(async () => {
-      return listSourceDescriptors()
+    .query(async ({ ctx }) => {
+      return ctx.instance.listSourceDescriptors()
     }),
 
   getSource: publicProcedure
@@ -107,12 +71,10 @@ export const appRouter = router({
     .query(async ({ input, ctx }) => {
       const { sourceId, params = {}, latest } = input
       try {
-        return await loadSource({
+        return await ctx.instance.loadSource({
           sourceId,
           params,
-          paramsAreNormalized: true,
           latest,
-          adapter: ctx.adapter,
           waitUntil: ctx.waitUntil,
         })
       } catch (error) {
@@ -272,8 +234,8 @@ export const appRouter = router({
     }),
 
   getAdminSources: protectedProcedure
-    .query(async () => {
-      return listSourceDescriptors().map(toAdminSource)
+    .query(async ({ ctx }) => {
+      return (await ctx.instance.listSourceDescriptors()).map(toAdminSource)
     }),
 
   updateAdminSource: protectedProcedure

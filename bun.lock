@@ -180,8 +180,8 @@
       "name": "@newsnext/api",
       "dependencies": {
         "@hono/trpc-server": "^0.4.2",
-        "@newsnext/cache": "workspace:*",
         "@newsnext/database": "workspace:*",
+        "@newsnext/instance": "workspace:*",
         "@newsnext/sources": "workspace:*",
         "@trpc/server": "^11.16.0",
         "better-auth": "^1.6.9",
@@ -202,16 +202,14 @@
         "drizzle-kit": "^0.31.10",
       },
     },
-    "servers/proxy": {
-      "name": "@newsnext/proxy",
+    "servers/instance": {
+      "name": "@newsnext/instance",
       "dependencies": {
         "@newsnext/cache": "workspace:*",
-        "@newsnext/shared": "workspace:*",
         "@newsnext/sources": "workspace:*",
         "hono": "catalog:",
       },
       "devDependencies": {
-        "@newsnext/build": "workspace:*",
         "tsdown": "^0.21.10",
       },
     },
@@ -582,7 +580,7 @@
 
     "@newsnext/extension": ["@newsnext/extension@workspace:apps/extension"],
 
-    "@newsnext/proxy": ["@newsnext/proxy@workspace:servers/proxy"],
+    "@newsnext/instance": ["@newsnext/instance@workspace:servers/instance"],
 
     "@newsnext/shared": ["@newsnext/shared@workspace:packages/shared"],
 
