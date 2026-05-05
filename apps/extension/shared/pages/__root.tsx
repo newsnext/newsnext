@@ -4,6 +4,7 @@ import { Suspense, useRef, useState } from "react"
 import { TanStackDevtools } from "@/components/common/devtools"
 import { Footer } from "@/components/footer"
 import { Header } from "@/components/header"
+import { ExpandedPreviewProvider } from "@/components/preview/expanded-preview-dialog"
 import { ScrollProgressContext } from "@/components/scroll-progress-context"
 
 export const Route = createRootRouteWithContext<{
@@ -31,7 +32,7 @@ function RootComponent() {
         setIsNextLayerActive,
       }}
     >
-      <>
+      <ExpandedPreviewProvider>
         <div
           ref={scrollContainerRef}
           className="relative h-full min-h-0 w-full overflow-y-auto scrollbar-hidden"
@@ -47,7 +48,7 @@ function RootComponent() {
         <Suspense>
           <TanStackDevtools />
         </Suspense>
-      </>
+      </ExpandedPreviewProvider>
     </ScrollProgressContext.Provider>
   )
 }

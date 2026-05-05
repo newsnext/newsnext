@@ -27,6 +27,7 @@ export function CardFront() {
     onToggleStar,
     onFlip,
     dragHandle,
+    previewSelection,
   } = useCard()
 
   const { provider, type, color, desc } = source
@@ -125,6 +126,7 @@ export function CardFront() {
                   items={items}
                   color={color}
                   scrollRef={ref as React.RefObject<HTMLDivElement>}
+                  previewSelection={previewSelection}
                 />
               )
             : (
@@ -133,6 +135,7 @@ export function CardFront() {
                   items={items}
                   relativeUpdatedTime={relativeTime}
                   scrollRef={ref as React.RefObject<HTMLDivElement>}
+                  previewSelection={previewSelection}
                 />
               )}
         </div>

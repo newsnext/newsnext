@@ -23,6 +23,13 @@ interface CardContextValue {
   onResetSourceParams: () => void
   onDiscardSourceParams: () => void
   onFlip: () => void
+  onOpenExpandedPreview: (item: NewsItem) => void
+  canOpenExpandedPreview: boolean
+  canShowHoverPreview: boolean
+  previewSelection?: {
+    selectedItemUrl?: string
+    onSelectItem: (item: NewsItem) => void
+  }
   dragHandle?: ReactNode
   updatedTime: number
 }

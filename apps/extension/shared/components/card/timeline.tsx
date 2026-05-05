@@ -5,7 +5,8 @@ import { useId } from "react"
 import { useRelativeTime } from "@/hooks/useRelativeTime"
 import { cn } from "@/lib/utils"
 import { VirtualList } from "../common/virtual-list"
-import { NewsItemLink, NewsItemSummary } from "./news-item-common"
+import { NewsItemLink } from "../preview/news-item-preview"
+import { NewsItemSummary } from "./news-item-common"
 
 function RelativeTime({ date }: { date: number }) {
   return useRelativeTime({ date })
@@ -18,9 +19,13 @@ interface Props {
   scrollRef: RefObject<HTMLDivElement>
   relativeUpdatedTime: string
   color: Color
+  previewSelection?: {
+    selectedItemUrl?: string
+    onSelectItem: (item: NewsItem) => void
+  }
 }
 
-export function Timeline({ items, scrollRef, relativeUpdatedTime, color }: Props) {
+export function Timeline({ items, scrollRef, relativeUpdatedTime, color, previewSelection }: Props) {
   const gradientIdPrefix = useId().replace(/:/g, "")
 
   return (
@@ -70,7 +75,7 @@ export function Timeline({ items, scrollRef, relativeUpdatedTime, color }: Props
                   : relativeUpdatedTime}
               </span>
             </div>
-            <NewsItemLink item={item} className="pl-2">
+            <NewsItemLink item={item} previewSelection={previewSelection} className="pl-2">
               <NewsItemSummary item={item} />
             </NewsItemLink>
           </div>

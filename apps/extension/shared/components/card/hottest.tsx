@@ -3,15 +3,20 @@ import type { RefObject } from "react"
 import type { NewsItem } from "@/typings/source"
 import { cn } from "@/lib/utils"
 import { VirtualList } from "../common/virtual-list"
-import { NewsItemLink, NewsItemSummary } from "./news-item-common"
+import { NewsItemLink } from "../preview/news-item-preview"
+import { NewsItemSummary } from "./news-item-common"
 
 interface Props {
   items: NewsItem[]
   scrollRef: RefObject<HTMLDivElement>
   color: Color
+  previewSelection?: {
+    selectedItemUrl?: string
+    onSelectItem: (item: NewsItem) => void
+  }
 }
 
-export function Hottest({ items, scrollRef, color }: Props) {
+export function Hottest({ items, scrollRef, color, previewSelection }: Props) {
   return (
     <VirtualList
       items={items}
@@ -21,6 +26,7 @@ export function Hottest({ items, scrollRef, color }: Props) {
       renderItem={(item, index) => (
         <NewsItemLink
           item={item}
+          previewSelection={previewSelection}
           className={cn(
             "flex gap-2 items-start relative cursor-pointer **:cursor-pointer transition-all",
             "hover:bg-neutral-400/10 rounded-xl",

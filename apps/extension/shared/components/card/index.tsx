@@ -1,5 +1,5 @@
 import type { ReactNode } from "react"
-import type { BoardSource } from "@/typings/source"
+import type { BoardSource, NewsItem } from "@/typings/source"
 import { useAtom } from "jotai"
 import { useInView } from "motion/react"
 import { useCallback, useMemo, useRef, useState } from "react"
@@ -11,6 +11,7 @@ import { deleteStoredSourceParamValues, writeStoredSourceParamValues } from "@/l
 import { trpc } from "@/lib/trpc"
 import { cn } from "@/lib/utils"
 import { sourceInstancesAtom, starredSourceInstanceIdsAtom } from "@/store/board"
+import { useExpandedPreview } from "../preview/expanded-preview-context"
 import { CardBack } from "./card-back"
 import { CardContext } from "./card-context"
 import { CardFront } from "./card-front"
@@ -21,9 +22,15 @@ export interface CardProps {
   className?: string
   nodeRef?: (node: HTMLElement | null) => void
   dragHandle?: ReactNode
+  disableExpandedPreview?: boolean
+  previewSelection?: {
+    selectedItemUrl?: string
+    onSelectItem: (item: NewsItem) => void
+  }
 }
 
-function CardContent({ id, source, dragHandle }: CardProps) {
+function CardContent({ id, source, dragHandle, disableExpandedPreview = false, previewSelection }: CardProps) {
+  const { isExpandedPreviewOpen, openExpandedPreview } = useExpandedPreview()
   const [starredSourceInstanceIds, setStarredSourceInstanceIds] = useAtom(starredSourceInstanceIdsAtom)
   const [, setSourceInstances] = useAtom(sourceInstancesAtom)
   const upsertSourceInstance = trpc.upsertSourceInstance.useMutation({ onError: () => {} })
@@ -149,10 +156,14 @@ function CardContent({ id, source, dragHandle }: CardProps) {
       onResetSourceParams: handleResetSourceParams,
       onDiscardSourceParams: discardDraftParams,
       onFlip: () => setIsFlipped(prev => !prev),
+      onOpenExpandedPreview: item => openExpandedPreview(id, source, item),
+      canOpenExpandedPreview: !disableExpandedPreview,
+      canShowHoverPreview: !isExpandedPreviewOpen,
+      previewSelection,
       dragHandle,
       updatedTime,
     }),
-    [id, source, savedParams, draftParams, hasParams, isDirty, items, isFetching, isStarred, refetch, handleToggleStar, handleFork, handleDelete, updateDraftParam, handleSaveSourceParams, handleResetSourceParams, discardDraftParams, dragHandle, updatedTime],
+    [id, source, savedParams, draftParams, hasParams, isDirty, items, isFetching, isStarred, refetch, handleToggleStar, handleFork, handleDelete, updateDraftParam, handleSaveSourceParams, handleResetSourceParams, discardDraftParams, openExpandedPreview, disableExpandedPreview, isExpandedPreviewOpen, previewSelection, dragHandle, updatedTime],
   )
 
   return (
