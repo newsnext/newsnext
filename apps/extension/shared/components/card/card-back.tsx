@@ -59,7 +59,7 @@ function EditableInput({ text, editable = false, onChange }: { text: string, edi
   )
 }
 
-function NumberInput({ num, step = 1, editable, max = Infinity, min = -Infinity, onChange }: { num: number, step?: number, editable?: boolean, max?: number, min?: number, onChange?: (value: number) => void }) {
+function NumberInput({ num = 0, step = 1, editable, max = Infinity, min = -Infinity, onChange }: { num?: number, step?: number, editable?: boolean, max?: number, min?: number, onChange?: (value: number) => void }) {
   const [value, setValue] = useState(num)
 
   useEffect(() => {
@@ -344,7 +344,7 @@ export function CardBack() {
   const [editable, setEditable] = useState(false)
   const canEdit = isFork && editable
   const shouldPromoteEditButton = !dragHandle
-  const { provider, desc, interval, color, params } = source
+  const { provider, desc, maxCacheAge, color, params } = source
   const { name, title, home } = resolveSourceDisplay(source, draftSourceParams)
 
   // Local state for edits (though not persisted yet)
@@ -353,7 +353,7 @@ export function CardBack() {
   const [localTitle, setLocalTitle] = useState(title)
   const [localDesc, setLocalDesc] = useState(desc)
   const [localHome, setLocalHome] = useState(home)
-  const [localInterval, setLocalInterval] = useState(interval)
+  const [localMaxCacheAge, setLocalMaxCacheAge] = useState(maxCacheAge)
   const [localColor, setLocalColor] = useState(color)
   const previewColor = canEdit ? localColor : color
 
@@ -364,10 +364,10 @@ export function CardBack() {
       setLocalTitle(title)
       setLocalDesc(desc)
       setLocalHome(home)
-      setLocalInterval(interval)
+      setLocalMaxCacheAge(maxCacheAge)
       setLocalColor(color)
     }
-  }, [editable, name, title, desc, home, interval, color])
+  }, [editable, name, title, desc, home, maxCacheAge, color])
 
   useEffect(() => {
     if (!isFork) {
@@ -513,8 +513,8 @@ export function CardBack() {
               <EditableInput text={localHome || ""} editable={canEdit} onChange={setLocalHome} />
             </Info>
 
-            <Info icon={<PhLinkDuotone />} label="Interval (min)">
-              <NumberInput num={localInterval} editable={canEdit} min={1} onChange={setLocalInterval} />
+            <Info icon={<PhLinkDuotone />} label="Max cache age">
+              <NumberInput num={localMaxCacheAge} editable={canEdit} min={1} onChange={setLocalMaxCacheAge} />
             </Info>
 
             <Info icon={<PhLinkDuotone />} label="Icon">

@@ -17,8 +17,8 @@ export interface CacheResult<T> {
 export interface GetCachedSourceOptions<T> {
   key: string
   fetcher: () => Promise<T>
-  interval?: number
-  ttl?: number
+  minFetchAge?: number
+  maxCacheAge?: number
   forceRefresh?: boolean
   waitUntil?: (promise: Promise<any>) => void
 }

@@ -11,7 +11,7 @@ export default $provider({
   sources: {
     default: $source.html(
       {
-        interval: Time.Common,
+        maxCacheAge: Time.Common,
         type: "timeline",
       },
       () => ({

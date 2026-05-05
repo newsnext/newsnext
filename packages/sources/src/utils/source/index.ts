@@ -43,7 +43,7 @@ export function $provider(
         name: source.name ?? provider.name,
         id: sourceId,
         title: source.title,
-        interval: source.interval ?? Time.Default,
+        maxCacheAge: source.maxCacheAge ?? Time.Default,
         params: source.params,
         color: source.color ?? provider.color,
         desc: source.desc ?? provider.desc,

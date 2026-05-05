@@ -63,8 +63,8 @@ export function SourceEditor({
               <EditorField label="Title">
                 <Input value={draft.title} onChange={event => onDraftChange("title", event.target.value)} />
               </EditorField>
-              <EditorField label="Interval">
-                <Input value={draft.interval} inputMode="numeric" onChange={event => onDraftChange("interval", event.target.value)} />
+              <EditorField label="Max cache age">
+                <Input value={draft.maxCacheAge} inputMode="numeric" onChange={event => onDraftChange("maxCacheAge", event.target.value)} />
               </EditorField>
               <EditorField label="Home">
                 <Input value={draft.home} onChange={event => onDraftChange("home", event.target.value)} />

@@ -137,9 +137,9 @@ function SourceAdmin({ userName }: { userName: string }) {
       return
     }
 
-    const interval = Number(draft.interval)
-    if (!Number.isFinite(interval) || interval < 1) {
-      setStatus({ tone: "error", message: "Interval must be a positive number" })
+    const maxCacheAge = Number(draft.maxCacheAge)
+    if (!Number.isFinite(maxCacheAge) || maxCacheAge < 1) {
+      setStatus({ tone: "error", message: "Max cache age must be a positive number" })
       return
     }
 
@@ -148,7 +148,7 @@ function SourceAdmin({ userName }: { userName: string }) {
       key: selectedSource.key,
       name: draft.name,
       title: draft.title,
-      interval,
+      maxCacheAge,
       params,
       color: draft.color,
       desc: draft.desc,

@@ -1,7 +1,7 @@
 import type { CacheAdapter, CacheResult, GetCachedSourceOptions } from "./typings"
 
-const DEFAULT_TTL = 30 * 60 * 1000 // 30 minutes
-const DEFAULT_INTERVAL = 1 * 60 * 1000 // 1 minutes
+const DEFAULT_MAX_CACHE_AGE = 30 * 60 * 1000 // 30 minutes
+const DEFAULT_MIN_FETCH_AGE = 1 * 60 * 1000 // 1 minute
 
 const pendingRequests = new Map<string, Promise<any>>()
 
@@ -9,7 +9,13 @@ export async function getCachedSource<T>(
   options: GetCachedSourceOptions<T>,
   adapter: CacheAdapter,
 ): Promise<CacheResult<T>> {
-  const { key, fetcher, interval = DEFAULT_INTERVAL, ttl = DEFAULT_TTL, forceRefresh = false } = options
+  const {
+    key,
+    fetcher,
+    minFetchAge = DEFAULT_MIN_FETCH_AGE,
+    maxCacheAge = DEFAULT_MAX_CACHE_AGE,
+    forceRefresh = false,
+  } = options
   const now = Date.now()
 
   // Disable cache in DEV environment
@@ -31,7 +37,7 @@ export async function getCachedSource<T>(
     const updated = cached.updatedAt
 
     // 1. Fresh cache
-    if (now - updated < interval) {
+    if (now - updated < minFetchAge) {
       return {
         updated,
         status: "success",
@@ -39,8 +45,8 @@ export async function getCachedSource<T>(
       }
     }
 
-    // 2. Stale but valid within TTL
-    if (now - updated < ttl) {
+    // 2. Stale but valid within max cache age
+    if (now - updated < maxCacheAge) {
       if (!forceRefresh) {
         return {
           updated,

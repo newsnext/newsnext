@@ -60,14 +60,14 @@ export default $provider({
         type: "timeline",
         title: "Newest",
         home: "https://news.ycombinator.com/newest",
-        interval: Time.Realtime,
+        maxCacheAge: Time.Realtime,
       },
       createLoader("/newest"),
     ),
     show: $source.html(
       {
         title: "Show",
-        interval: Time.Common,
+        maxCacheAge: Time.Common,
         home: "https://news.ycombinator.com/show",
       },
       createLoader("/show"),
@@ -75,7 +75,7 @@ export default $provider({
     ask: $source.html(
       {
         title: "Ask",
-        interval: Time.Common,
+        maxCacheAge: Time.Common,
         home: "https://news.ycombinator.com/ask",
       },
       createLoader("/ask"),

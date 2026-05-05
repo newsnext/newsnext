@@ -29,7 +29,7 @@ export type SourceLoader<TParams extends SourceParamSchemaMap = SourceParamSchem
  */
 export interface SourceRegistration<TParams extends SourceParamSchemaMap = SourceParamSchemaMap> {
   title?: string
-  interval?: number
+  maxCacheAge?: number
   params?: TParams
   color?: Color
   name?: string
@@ -50,7 +50,7 @@ export interface SourceDefinition<TParams extends SourceParamSchemaMap = SourceP
   provider: string
   id: string
   title?: string
-  interval: number
+  maxCacheAge: number
   params?: TParams
   color: Color
   desc?: string

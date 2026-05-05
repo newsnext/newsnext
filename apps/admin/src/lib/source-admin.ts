@@ -5,7 +5,7 @@ import { categories } from "@newsnext/sources/typings"
 export interface SourceDraft {
   name: string
   title: string
-  interval: string
+  maxCacheAge: string
   paramsText: string
   color: string
   desc: string
@@ -40,7 +40,7 @@ export function createDraft(source: AdminSourceRow): SourceDraft {
   return {
     name: source.name,
     title: source.title ?? "",
-    interval: String(source.interval),
+    maxCacheAge: String(source.maxCacheAge),
     paramsText: JSON.stringify(source.params ?? {}, null, 2),
     color: source.color,
     desc: source.desc ?? "",

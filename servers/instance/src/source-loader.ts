@@ -43,6 +43,7 @@ export async function loadSource<T>({
   const result = await getCachedSource<T>({
     key,
     fetcher: () => source.loader(params) as Promise<T>,
+    maxCacheAge: source.maxCacheAge,
     forceRefresh: latest,
     waitUntil,
   }, adapter)

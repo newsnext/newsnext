@@ -8,7 +8,7 @@ export default $provider({
   sources: {
     default: $source.rssHub(
       {
-        interval: 1,
+        maxCacheAge: 1,
         title: "36 氪",
         params: {
           route: {

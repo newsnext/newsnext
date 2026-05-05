@@ -11,7 +11,7 @@ export default $provider({
     default: $source.html(
       {
         title: "Trending",
-        interval: Time.Common,
+        maxCacheAge: Time.Common,
         type: "hottest",
       },
       () => ({

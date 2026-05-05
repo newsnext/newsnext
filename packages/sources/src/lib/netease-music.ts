@@ -64,7 +64,7 @@ export default $provider({
       {
         title: "排行榜",
         type: "hottest",
-        interval: Time.Common,
+        maxCacheAge: Time.Common,
         home: getPlaylistHome(DEFAULT_PLAYLIST_ID),
         params: {
           id: $selectParam<NeteasePlaylistId>({

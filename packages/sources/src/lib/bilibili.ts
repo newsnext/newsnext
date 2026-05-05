@@ -33,7 +33,7 @@ export default $provider({
       {
         title: "热搜",
         type: "hottest",
-        interval: Time.Realtime,
+        maxCacheAge: Time.Realtime,
       },
       () => ({
         url: "https://s.search.bilibili.com/main/hotword?limit=30",
@@ -51,7 +51,7 @@ export default $provider({
       {
         title: "热门视频",
         type: "hottest",
-        interval: Time.Common,
+        maxCacheAge: Time.Common,
       },
       () => ({
         url: "https://api.bilibili.com/x/web-interface/popular",
@@ -79,7 +79,7 @@ export default $provider({
     "ranking": $source.json(
       {
         title: "排行榜",
-        interval: Time.Common,
+        maxCacheAge: Time.Common,
         type: "hottest",
       },
       () => ({

@@ -9,7 +9,7 @@ export default $provider({
   sources: {
     default: $source.html(
       {
-        interval: Time.Test,
+        maxCacheAge: Time.Test,
         type: "timeline",
         params: {
           locale: $selectParam<"us" | "uk" | "ng" | "ro" | "it" | "ca" | "au">({
