@@ -2,6 +2,7 @@ import type { ReactNode } from "react"
 import type { BoardSource, NewsItem } from "@/typings/source"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@newsnext/ui/components/dialog"
 import { useCallback, useMemo, useState } from "react"
+import { cn } from "@/lib/utils"
 import Card from "../card"
 import { ExpandedPreviewContext } from "./expanded-preview-context"
 import { NewsItemPreviewContent } from "./news-item-preview"
@@ -30,15 +31,10 @@ export function ExpandedPreviewDialog({
   return (
     <Dialog open={!!selectedItem} onOpenChange={open => onOpenChange(open)}>
       <DialogContent
-        className="sprinkle-theme-400 rounded-[40px] p-3 gap-0 overflow-hidden max-w-[80vw] max-h-[80vh]"
+        className={cn("border rounded-[40px] p-3 gap-0 overflow-hidden w-[80vw] max-h-[80vh] max-w-189!", `bg-background`)}
         showCloseButton={false}
       >
-        <DialogHeader className="sr-only">
-          <DialogTitle>Expanded Preview</DialogTitle>
-          <DialogDescription>Browse card items and preview the selected item.</DialogDescription>
-        </DialogHeader>
-
-        <div className="flex gap-3 h-125 w-180">
+        <div className="flex gap-3 h-125">
           <Card
             id={cardId}
             source={source}
@@ -49,7 +45,7 @@ export function ExpandedPreviewDialog({
               onSelectItem: onSelectedItemChange,
             }}
           />
-          <section className="overflow-y-auto px-2 pb-2">
+          <section className="overflow-y-auto w-80 rounded-r-4xl scrollbar-hidden">
             {selectedItem
               ? (
                   <NewsItemPreviewContent item={selectedItem} className="text-sm" />

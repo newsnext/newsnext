@@ -85,7 +85,7 @@ export function NewsItemLink({ item, className, children, previewSelection }: Ne
               size="icon-xs"
               title="Max view"
               aria-label="Max view"
-              className="bg-background/70 text-muted-foreground hover:text-foreground"
+              className="bg-background/70 border text-muted-foreground hover:text-foreground"
               onClick={(event) => {
                 event.preventDefault()
                 event.stopPropagation()
@@ -125,7 +125,7 @@ export function NewsItemPreviewContent({ item, className }: { item: NewsItem, cl
             alt="preview picture"
             style={{
               transform: `scale(${scale ?? 1})`,
-              borderRadius: `${radius ?? 24}px`,
+              borderRadius: `${radius ?? 32}px`,
             }}
             className="max-w-full"
           />
