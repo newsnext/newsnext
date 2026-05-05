@@ -1,4 +1,3 @@
-import { Time } from "../typings/constants"
 import { $selectParam } from "../utils/params"
 import { $provider, $source } from "../utils/source"
 
@@ -9,7 +8,6 @@ export default $provider({
   sources: {
     default: $source.html(
       {
-        maxCacheAge: Time.Test,
         type: "timeline",
         params: {
           locale: $selectParam<"us" | "uk" | "ng" | "ro" | "it" | "ca" | "au">({

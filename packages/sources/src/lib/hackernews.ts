@@ -1,7 +1,6 @@
 import type * as cheerio from "cheerio"
 import type { AnyNode } from "domhandler"
 import { getFavicon } from "@newsnext/shared/utils"
-import { Time } from "../typings/constants"
 import { $provider, $source } from "../utils/source"
 
 const createLoader = (sub: string) => () => ({
@@ -60,14 +59,12 @@ export default $provider({
         type: "timeline",
         title: "Newest",
         home: "https://news.ycombinator.com/newest",
-        maxCacheAge: Time.Realtime,
       },
       createLoader("/newest"),
     ),
     show: $source.html(
       {
         title: "Show",
-        maxCacheAge: Time.Common,
         home: "https://news.ycombinator.com/show",
       },
       createLoader("/show"),
@@ -75,7 +72,6 @@ export default $provider({
     ask: $source.html(
       {
         title: "Ask",
-        maxCacheAge: Time.Common,
         home: "https://news.ycombinator.com/ask",
       },
       createLoader("/ask"),

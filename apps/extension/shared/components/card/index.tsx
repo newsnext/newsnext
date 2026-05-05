@@ -52,7 +52,7 @@ function CardContent({ id, source, dragHandle }: CardProps) {
   })
 
   // useEffect(() => {
-  //   if (source.maxCacheAge <= 2 * 60 * 1000) normalRefetch()
+  //   normalRefetch()
   // }, [date, normalRefetch])
 
   const isStarred = useMemo(() => starredSourceInstanceIds.includes(id), [id, starredSourceInstanceIds])

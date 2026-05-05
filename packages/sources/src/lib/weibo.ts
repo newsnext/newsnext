@@ -1,4 +1,3 @@
-import { Time } from "../typings/constants"
 import { myFetch } from "../utils/fetch"
 import { $provider, $source } from "../utils/source"
 
@@ -16,7 +15,6 @@ export default $provider({
   sources: {
     default: $source.html(
       {
-        maxCacheAge: Time.Common,
         type: "hottest",
       },
       () => ({

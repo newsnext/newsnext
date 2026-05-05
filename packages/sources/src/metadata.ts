@@ -7,7 +7,6 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "name": "Bilibili",
     "id": "default",
     "title": "热搜",
-    "maxCacheAge": 120000,
     "color": "blue",
     "type": "hottest",
     "category": "others",
@@ -18,7 +17,6 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "name": "Bilibili",
     "id": "hot-video",
     "title": "热门视频",
-    "maxCacheAge": 1800000,
     "color": "blue",
     "type": "hottest",
     "category": "others",
@@ -29,7 +27,6 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "name": "Bilibili",
     "id": "ranking",
     "title": "排行榜",
-    "maxCacheAge": 1800000,
     "color": "blue",
     "type": "hottest",
     "category": "others",
@@ -40,7 +37,6 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "name": "CoolAPK",
     "id": "default",
     "title": "Today",
-    "maxCacheAge": 600000,
     "color": "green",
     "type": "hottest",
     "category": "others",
@@ -51,7 +47,6 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "name": "GitHub",
     "id": "default",
     "title": "Trending",
-    "maxCacheAge": 1800000,
     "color": "slate",
     "type": "hottest",
     "category": "others",
@@ -62,7 +57,6 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "name": "Hacker News",
     "id": "default",
     "title": "Hottest",
-    "maxCacheAge": 600000,
     "color": "orange",
     "type": "hottest",
     "category": "others",
@@ -73,7 +67,6 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "name": "Hacker News",
     "id": "newest",
     "title": "Newest",
-    "maxCacheAge": 120000,
     "color": "orange",
     "type": "timeline",
     "category": "others",
@@ -84,7 +77,6 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "name": "Hacker News",
     "id": "show",
     "title": "Show",
-    "maxCacheAge": 1800000,
     "color": "orange",
     "category": "others",
     "home": "https://news.ycombinator.com/show",
@@ -94,7 +86,6 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "name": "Hacker News",
     "id": "ask",
     "title": "Ask",
-    "maxCacheAge": 1800000,
     "color": "orange",
     "category": "others",
     "home": "https://news.ycombinator.com/ask",
@@ -104,7 +95,6 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "name": "HTML Parser",
     "id": "default",
     "title": "36 氪",
-    "maxCacheAge": 600000,
     "params": {
       "url": {
         "type": "url",
@@ -141,7 +131,6 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "name": "JSON",
     "id": "default",
     "title": "V2EX",
-    "maxCacheAge": 600000,
     "params": {
       "url": {
         "type": "url",
@@ -183,7 +172,6 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "name": "网易云音乐",
     "id": "default",
     "title": "排行榜",
-    "maxCacheAge": 1800000,
     "params": {
       "id": {
         "type": "select",
@@ -218,7 +206,6 @@ export const sourceDescriptors: SourceDescriptor[] = [
   {
     "name": "NEWS NOW",
     "id": "default",
-    "maxCacheAge": 1,
     "params": {
       "locale": {
         "type": "select",
@@ -271,7 +258,6 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "name": "RSS",
     "id": "default",
     "title": "PCBeta",
-    "maxCacheAge": 600000,
     "params": {
       "url": {
         "type": "url",
@@ -303,7 +289,6 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "name": "RSSHub",
     "id": "default",
     "title": "36 氪",
-    "maxCacheAge": 1,
     "params": {
       "route": {
         "type": "text",
@@ -339,7 +324,6 @@ export const sourceDescriptors: SourceDescriptor[] = [
   {
     "name": "V2EX",
     "id": "default",
-    "maxCacheAge": 600000,
     "params": {
       "feeds": {
         "type": "multiselect",
@@ -378,7 +362,6 @@ export const sourceDescriptors: SourceDescriptor[] = [
   {
     "name": "微博",
     "id": "default",
-    "maxCacheAge": 1800000,
     "color": "red",
     "type": "hottest",
     "category": "others",
@@ -388,7 +371,6 @@ export const sourceDescriptors: SourceDescriptor[] = [
   {
     "name": "雪球",
     "id": "default",
-    "maxCacheAge": 600000,
     "color": "blue",
     "type": "hottest",
     "category": "others",
@@ -398,7 +380,6 @@ export const sourceDescriptors: SourceDescriptor[] = [
   {
     "name": "联合早报",
     "id": "default",
-    "maxCacheAge": 1800000,
     "color": "red",
     "type": "timeline",
     "category": "others",
@@ -409,7 +390,6 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "name": "知乎",
     "id": "default",
     "title": "全站热榜",
-    "maxCacheAge": 600000,
     "color": "blue",
     "type": "hottest",
     "category": "others",

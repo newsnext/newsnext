@@ -137,18 +137,11 @@ function SourceAdmin({ userName }: { userName: string }) {
       return
     }
 
-    const maxCacheAge = Number(draft.maxCacheAge)
-    if (!Number.isFinite(maxCacheAge) || maxCacheAge < 1) {
-      setStatus({ tone: "error", message: "Max cache age must be a positive number" })
-      return
-    }
-
     setStatus({ tone: "muted", message: "Saving..." })
     updateSource.mutate({
       key: selectedSource.key,
       name: draft.name,
       title: draft.title,
-      maxCacheAge,
       params,
       color: draft.color,
       desc: draft.desc,

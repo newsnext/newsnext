@@ -1,4 +1,3 @@
-import { Time } from "../typings/constants"
 import { $provider, $source } from "../utils/source"
 
 const baseURL = new URL("https://github.com")
@@ -11,7 +10,6 @@ export default $provider({
     default: $source.html(
       {
         title: "Trending",
-        maxCacheAge: Time.Common,
         type: "hottest",
       },
       () => ({

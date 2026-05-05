@@ -1,4 +1,3 @@
-import { Time } from "../typings/constants"
 import { $selectParam } from "../utils/params"
 import { $provider, $source } from "../utils/source"
 
@@ -64,7 +63,6 @@ export default $provider({
       {
         title: "排行榜",
         type: "hottest",
-        maxCacheAge: Time.Common,
         home: getPlaylistHome(DEFAULT_PLAYLIST_ID),
         params: {
           id: $selectParam<NeteasePlaylistId>({

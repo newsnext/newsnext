@@ -1,4 +1,3 @@
-import { Time } from "../typings/constants"
 import { parseRelativeDate } from "../utils/date"
 import { $provider, $source } from "../utils/source"
 
@@ -11,7 +10,6 @@ export default $provider({
   sources: {
     default: $source.html(
       {
-        maxCacheAge: Time.Common,
         type: "timeline",
       },
       () => ({

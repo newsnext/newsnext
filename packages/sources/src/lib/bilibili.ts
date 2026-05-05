@@ -1,4 +1,3 @@
-import { Time } from "../typings/constants"
 import { $provider, $source } from "../utils/source"
 
 function formatNumber(num: number): string {
@@ -33,7 +32,6 @@ export default $provider({
       {
         title: "热搜",
         type: "hottest",
-        maxCacheAge: Time.Realtime,
       },
       () => ({
         url: "https://s.search.bilibili.com/main/hotword?limit=30",
@@ -51,7 +49,6 @@ export default $provider({
       {
         title: "热门视频",
         type: "hottest",
-        maxCacheAge: Time.Common,
       },
       () => ({
         url: "https://api.bilibili.com/x/web-interface/popular",
@@ -79,7 +76,6 @@ export default $provider({
     "ranking": $source.json(
       {
         title: "排行榜",
-        maxCacheAge: Time.Common,
         type: "hottest",
       },
       () => ({

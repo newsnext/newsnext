@@ -344,7 +344,7 @@ export function CardBack() {
   const [editable, setEditable] = useState(false)
   const canEdit = isFork && editable
   const shouldPromoteEditButton = !dragHandle
-  const { provider, desc, maxCacheAge, color, params } = source
+  const { provider, desc, color, params } = source
   const { name, title, home } = resolveSourceDisplay(source, draftSourceParams)
 
   // Local state for edits (though not persisted yet)
@@ -353,7 +353,6 @@ export function CardBack() {
   const [localTitle, setLocalTitle] = useState(title)
   const [localDesc, setLocalDesc] = useState(desc)
   const [localHome, setLocalHome] = useState(home)
-  const [localMaxCacheAge, setLocalMaxCacheAge] = useState(maxCacheAge)
   const [localColor, setLocalColor] = useState(color)
   const previewColor = canEdit ? localColor : color
 
@@ -364,10 +363,9 @@ export function CardBack() {
       setLocalTitle(title)
       setLocalDesc(desc)
       setLocalHome(home)
-      setLocalMaxCacheAge(maxCacheAge)
       setLocalColor(color)
     }
-  }, [editable, name, title, desc, home, maxCacheAge, color])
+  }, [editable, name, title, desc, home, color])
 
   useEffect(() => {
     if (!isFork) {
@@ -511,10 +509,6 @@ export function CardBack() {
 
             <Info icon={<PhLinkDuotone />} label="Home">
               <EditableInput text={localHome || ""} editable={canEdit} onChange={setLocalHome} />
-            </Info>
-
-            <Info icon={<PhLinkDuotone />} label="Max cache age">
-              <NumberInput num={localMaxCacheAge} editable={canEdit} min={1} onChange={setLocalMaxCacheAge} />
             </Info>
 
             <Info icon={<PhLinkDuotone />} label="Icon">

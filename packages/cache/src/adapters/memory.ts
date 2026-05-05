@@ -1,4 +1,4 @@
-import type { CacheAdapter, CacheEntry } from "../typings"
+import type { AdaptiveCacheState, CacheAdapter, CacheEntry } from "../typings"
 
 interface MemoryCacheOptions {
   maxSize?: number
@@ -6,6 +6,7 @@ interface MemoryCacheOptions {
 
 export class MemoryCacheAdapter implements CacheAdapter {
   private cache = new Map<string, CacheEntry<any>>()
+  private policies = new Map<string, AdaptiveCacheState>()
   private maxSize: number
 
   constructor(options: MemoryCacheOptions = {}) {
@@ -35,5 +36,13 @@ export class MemoryCacheAdapter implements CacheAdapter {
       value,
       updatedAt: Date.now(),
     })
+  }
+
+  async getPolicy(key: string): Promise<AdaptiveCacheState | undefined> {
+    return this.policies.get(key)
+  }
+
+  async setPolicy(key: string, value: AdaptiveCacheState): Promise<void> {
+    this.policies.set(key, value)
   }
 }

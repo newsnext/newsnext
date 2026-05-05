@@ -8,7 +8,6 @@ import type {
   SourceParamSchemaMap,
   SourceRegistration,
 } from "../../typings/sources"
-import { Time } from "../../typings/constants"
 
 import { $htmlSource } from "./html-source"
 import { $jsonSource } from "./json-source"
@@ -43,7 +42,6 @@ export function $provider(
         name: source.name ?? provider.name,
         id: sourceId,
         title: source.title,
-        maxCacheAge: source.maxCacheAge ?? Time.Default,
         params: source.params,
         color: source.color ?? provider.color,
         desc: source.desc ?? provider.desc,
