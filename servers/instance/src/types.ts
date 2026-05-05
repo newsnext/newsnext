@@ -25,8 +25,19 @@ export interface NewsNextInstanceOptions {
 
 export type LoadInstanceSourceOptions = Omit<LoadSourceOptions, "adapter">
 
+export interface SourceCachePolicyInfo {
+  sourceId: string
+  name: string
+  title?: string
+  provider?: string
+  type: "hottest" | "timeline"
+  maxCacheAge: number | null
+  learned: boolean
+}
+
 export interface NewsNextDataInstance {
   listSourceDescriptors: () => MaybePromise<SourceDescriptor[]>
+  listSourceCachePolicies?: (sources?: SourceDescriptor[]) => MaybePromise<SourceCachePolicyInfo[]>
   loadSource: <T = unknown>(options: LoadInstanceSourceOptions) => Promise<SourceLoadResult<T>>
   getDebugInfo?: () => MaybePromise<InstanceDebugInfo>
 }
@@ -39,6 +50,7 @@ export interface InstanceDebugInfo {
     path?: string
   }
   remoteUrl?: string
+  sourcePolicies?: SourceCachePolicyInfo[]
 }
 
 export interface RemoteNewsNextInstanceOptions {

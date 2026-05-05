@@ -1,19 +1,10 @@
+import type { AdaptiveCacheAlgorithm, AdaptiveCacheMode, AdaptiveCacheState } from "@newsnext/cache-policy"
+
+export type { AdaptiveCacheAlgorithm, AdaptiveCacheMode, AdaptiveCacheState } from "@newsnext/cache-policy"
+
 export interface CacheEntry<T> {
   value: T
   updatedAt: number
-}
-
-export type AdaptiveCacheMode = "timeline" | "hottest"
-
-export interface AdaptiveCacheState {
-  currentMaxCacheAge: number
-  lastFingerprint?: string
-  lastFetchedAt: number
-  lastChangedAt?: number
-  unchangedStreak: number
-  errorStreak: number
-  hourlyChangeScores: number[]
-  averageChangeScore: number
 }
 
 export interface CacheAdapter {
@@ -36,6 +27,7 @@ export interface GetCachedSourceOptions<T> {
   maxCacheAge?: number
   adaptiveMaxCacheAge?: boolean
   cacheMode?: AdaptiveCacheMode
+  adaptiveAlgorithm?: AdaptiveCacheAlgorithm
   forceRefresh?: boolean
   waitUntil?: (promise: Promise<any>) => void
 }

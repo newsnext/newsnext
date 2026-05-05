@@ -1,0 +1,15 @@
+{
+  "name": "@newsnext/cache-policy",
+  "type": "module",
+  "private": true,
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./benchmark": "./src/benchmark.ts",
+    "./fixtures": "./src/fixtures.ts"
+  },
+  "scripts": {
+    "typecheck": "tsgo --noEmit",
+    "test": "vitest --config vitest.config.ts"
+  }
+}

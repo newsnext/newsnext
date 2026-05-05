@@ -4,6 +4,7 @@ import type {
   InstanceSuccessResponse,
   LoadInstanceSourceOptions,
   NewsNextDataInstance,
+  SourceCachePolicyInfo,
 } from "./types"
 import { Hono } from "hono"
 import { SourceServiceError } from "./errors"
@@ -97,6 +98,7 @@ interface HomePageOptions extends InstanceDebugInfo {
   categories: Array<{ name: string, count: number }>
   providers: Array<{ name: string, count: number }>
   hotSources: Array<{ sourceId: string, count: number }>
+  sourcePolicies: SourceCachePolicyInfo[]
   generatedAt: string
 }
 
@@ -106,6 +108,7 @@ function renderHomePage(options: HomePageOptions): string {
   const hotSourceRows = options.hotSources.length > 0
     ? options.hotSources.map(item => `<li><span>${item.count}</span> <code>${escapeHtml(item.sourceId)}</code></li>`).join("")
     : `<li><span>0</span> No source requests yet</li>`
+  const sourcePolicyRows = renderSourcePolicyRows(options.sourcePolicies)
 
   return `<!doctype html>
 <html lang="en">
@@ -419,6 +422,54 @@ function renderHomePage(options: HomePageOptions): string {
         font-size: 0.84rem;
       }
 
+      .source-policies {
+        padding: 22px 30px 28px;
+        border-top: 1px solid var(--border);
+      }
+
+      .policy-grid {
+        display: grid;
+        grid-template-columns: minmax(180px, 1.5fr) minmax(120px, 0.8fr) minmax(104px, 0.6fr) minmax(112px, 0.7fr);
+        gap: 0;
+        margin-top: 14px;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        overflow: hidden;
+      }
+
+      .policy-row {
+        display: contents;
+      }
+
+      .policy-cell {
+        min-width: 0;
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--border);
+        color: var(--muted);
+        font-size: 0.84rem;
+        line-height: 1.35;
+        overflow-wrap: anywhere;
+      }
+
+      .policy-row:last-child .policy-cell {
+        border-bottom: 0;
+      }
+
+      .policy-cell + .policy-cell {
+        border-left: 1px solid var(--border);
+      }
+
+      .policy-source {
+        color: var(--foreground);
+        font-weight: 800;
+      }
+
+      .policy-age {
+        color: var(--theme-strong);
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        font-weight: 800;
+      }
+
       @media (max-width: 840px) {
         main {
           width: min(100vw - 24px, 1080px);
@@ -448,9 +499,22 @@ function renderHomePage(options: HomePageOptions): string {
 
         .workspace-head,
         .section,
-        .list {
+        .list,
+        .source-policies {
           padding-right: 18px;
           padding-left: 18px;
+        }
+
+        .policy-grid {
+          grid-template-columns: minmax(0, 1fr);
+        }
+
+        .policy-cell {
+          border-left: 0;
+        }
+
+        .policy-cell + .policy-cell {
+          border-left: 0;
         }
 
         .metric,
@@ -573,6 +637,11 @@ function renderHomePage(options: HomePageOptions): string {
             <ol>${hotSourceRows}</ol>
           </div>
         </section>
+
+        <section class="source-policies" aria-label="Source cache policies">
+          <p class="label">Source maxCacheAge</p>
+          <div class="policy-grid">${sourcePolicyRows}</div>
+        </section>
       </section>
     </main>
   </body>
@@ -636,6 +705,7 @@ async function collectDebugInfo(
     },
   }
   const uptimeMs = Date.now() - stats.startedAt
+  const sourcePolicies = await instance.listSourceCachePolicies?.(sources) ?? instanceDebug.sourcePolicies ?? []
 
   return {
     ...instanceDebug,
@@ -655,6 +725,7 @@ async function collectDebugInfo(
       .sort((a, b) => b[1] - a[1])
       .slice(0, 8)
       .map(([sourceId, count]) => ({ sourceId, count })),
+    sourcePolicies,
     generatedAt: new Date().toISOString(),
   }
 }
@@ -667,6 +738,25 @@ function renderCountRows(items: Array<{ name: string, count: number }>): string 
   return items
     .map(item => `<li><span>${item.count}</span> ${escapeHtml(item.name)}</li>`)
     .join("")
+}
+
+function renderSourcePolicyRows(items: SourceCachePolicyInfo[]): string {
+  if (items.length === 0) {
+    return `<div class="policy-row"><div class="policy-cell policy-source">No sources</div><div class="policy-cell"></div><div class="policy-cell"></div><div class="policy-cell"></div></div>`
+  }
+
+  return items
+    .map(item => `<div class="policy-row">
+      <div class="policy-cell policy-source">${escapeHtml(formatSourceLabel(item))}</div>
+      <div class="policy-cell"><code>${escapeHtml(item.sourceId)}</code></div>
+      <div class="policy-cell">${escapeHtml(item.type)}</div>
+      <div class="policy-cell policy-age">${escapeHtml(formatCacheAge(item.maxCacheAge))}${item.learned ? "" : " pending"}</div>
+    </div>`)
+    .join("")
+}
+
+function formatSourceLabel(item: SourceCachePolicyInfo): string {
+  return item.title ? `${item.name} / ${item.title}` : item.name
 }
 
 function recordHotSource(stats: RequestStats, sourceId: string): void {
@@ -691,6 +781,25 @@ function topCounts(values: string[], limit: number): Array<{ name: string, count
 
 function formatCache(cache: InstanceDebugInfo["cache"]): string {
   return cache.path ? `${cache.type} (${cache.path})` : cache.type
+}
+
+function formatCacheAge(value: number | null): string {
+  if (value === null) {
+    return "1 min"
+  }
+
+  const totalSeconds = Math.round(value / 1000)
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
+  if (minutes === 0) {
+    return `${seconds}s`
+  }
+
+  if (seconds === 0) {
+    return `${minutes} min`
+  }
+
+  return `${minutes} min ${seconds}s`
 }
 
 function formatDuration(ms: number): string {

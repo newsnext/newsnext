@@ -5,12 +5,13 @@ import type {
   LoadInstanceSourceOptions,
   NewsNextDataInstance,
   NewsNextInstanceOptions,
+  SourceCachePolicyInfo,
 } from "./types"
 import { sourceDescriptors } from "@newsnext/sources/metadata"
 import {
   prepareSourceRequest,
 } from "@newsnext/sources/service"
-import { loadSource } from "./source-loader"
+import { buildSourceCacheKey, loadSource } from "./source-loader"
 
 export class NewsNextInstance implements NewsNextDataInstance {
   private readonly adapter: NewsNextInstanceOptions["adapter"]
@@ -41,6 +42,25 @@ export class NewsNextInstance implements NewsNextDataInstance {
     return prepareSourceRequest(sourceId, params)
   }
 
+  async listSourceCachePolicies(sources: SourceDescriptor[] = this.listSourceDescriptors()): Promise<SourceCachePolicyInfo[]> {
+    return Promise.all(sources.map(async (source) => {
+      const sourceId = getDescriptorSourceId(source)
+      const request = prepareSourceRequest(sourceId)
+      const key = buildSourceCacheKey(sourceId, request.params)
+      const policy = await this.adapter.getPolicy(key)
+
+      return {
+        sourceId,
+        name: source.name,
+        title: source.title,
+        provider: source.provider,
+        type: source.type ?? "hottest",
+        maxCacheAge: policy?.currentMaxCacheAge ?? null,
+        learned: policy !== undefined,
+      }
+    }))
+  }
+
   async loadSource<T = unknown>(options: LoadInstanceSourceOptions): Promise<SourceLoadResult<T>> {
     return loadSource<T>({
       ...options,
@@ -62,6 +82,10 @@ export class NewsNextInstance implements NewsNextDataInstance {
 
 export function createNewsNextInstance(options: NewsNextInstanceOptions): NewsNextInstance {
   return new NewsNextInstance(options)
+}
+
+function getDescriptorSourceId(source: SourceDescriptor): string {
+  return `${source.provider}:${source.id}`
 }
 
 export async function createMemoryNewsNextInstance(): Promise<NewsNextInstance> {
