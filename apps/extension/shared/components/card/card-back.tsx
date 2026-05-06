@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@newsnext/ui/components/select"
+import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { Switch } from "@newsnext/ui/components/switch"
 import { useEffect, useMemo, useState } from "react"
 import {
@@ -374,214 +375,225 @@ export function CardBack() {
   }, [isFork])
 
   return (
-    <div
-      className={cn(
-        "flex flex-col rounded-4xl p-3 h-full",
-        `bg-${previewColor}-400/40`,
-        "transition-colors duration-300",
-      )}
-    >
-      <div className="flex justify-between mb-2 items-center mx-1">
-        <div className="flex gap-2.5 items-center ml-1">
-          <img
-            className="size-8 rounded-full bg-cover cursor-pointer"
-            src={`https://s3.newsnext.pro/icons/${provider}.png`}
-            title={desc || name}
-            onClick={() => window.open(home || "#", "_blank")}
-            referrerPolicy="no-referrer"
-            onError={(e) => {
-              e.currentTarget.src = getFavicon(home || "#")!
-            }}
-          />
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2">
-              <span className="text-xl font-bold">
-                {name}
-              </span>
-              {title && (
-                <span className={cn("text-sm px-1 rounded-3xl bg-background/50 opacity-80", `text-${previewColor}-400`)}>
-                  {title}
+    <div className="relative h-full rounded-4xl">
+      <SquircleBox
+        aria-hidden
+        radius="4xl"
+        className={cn(
+          "pointer-events-none absolute inset-0 transition-colors duration-300",
+          `bg-${previewColor}-400/40`,
+        )}
+      />
+      <div className="relative flex h-full flex-col p-3 transition-colors duration-300">
+        <div className="flex justify-between mb-2 items-center mx-1">
+          <div className="flex gap-2.5 items-center ml-1">
+            <img
+              className="size-8 rounded-full bg-cover cursor-pointer"
+              src={`https://s3.newsnext.pro/icons/${provider}.png`}
+              title={desc || name}
+              onClick={() => window.open(home || "#", "_blank")}
+              referrerPolicy="no-referrer"
+              onError={(e) => {
+                e.currentTarget.src = getFavicon(home || "#")!
+              }}
+            />
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2">
+                <span className="text-xl font-bold">
+                  {name}
                 </span>
-              )}
+                {title && (
+                  <span className={cn("text-sm px-1 rounded-3xl bg-background/50 opacity-80", `text-${previewColor}-400`)}>
+                    {title}
+                  </span>
+                )}
+              </div>
+              <span className="text-xs opacity-70">
+                Placeholder
+              </span>
             </div>
-            <span className="text-xs opacity-70">
-              Placeholder
-            </span>
+          </div>
+          <div className={cn("flex gap-1 items-center shrink-0", `text-${previewColor}-400`)}>
+            <IconButton
+              onClick={(e) => {
+                e.stopPropagation()
+                onFork()
+              }}
+              aria-label="Fork"
+              title="Fork"
+            >
+              <PhForkDuotone />
+            </IconButton>
+            {shouldPromoteEditButton && (
+              <IconButton
+                onClick={(e) => {
+                  e.stopPropagation()
+                  if (!isFork) {
+                    return
+                  }
+
+                  setEditable(p => !p)
+                }}
+                aria-label="Edit"
+                title={isFork ? "Edit" : "Only forked cards can be edited"}
+              >
+                <PhPencilCircleDuotone className={cn(canEdit && "text-primary", !isFork && "opacity-40")} />
+              </IconButton>
+            )}
+            {isFork && (
+              <IconButton
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onDelete()
+                }}
+                aria-label="Delete Fork"
+                title="Delete Fork"
+              >
+                <PhTrashDuotone />
+              </IconButton>
+            )}
+            <IconButton
+              onClick={(e) => {
+                e.stopPropagation()
+                onFlip()
+              }}
+            >
+              <PhArrowCircleLeftDuotone />
+            </IconButton>
+            {!shouldPromoteEditButton && (
+              <IconButton
+                onClick={(e) => {
+                  e.stopPropagation()
+                  if (!isFork) {
+                    return
+                  }
+
+                  setEditable(p => !p)
+                }}
+                aria-label="Edit"
+                title={isFork ? "Edit" : "Only forked cards can be edited"}
+              >
+                <PhPencilCircleDuotone className={cn(canEdit && "text-primary", !isFork && "opacity-40")} />
+              </IconButton>
+            )}
           </div>
         </div>
-        <div className={cn("flex gap-1 items-center shrink-0", `text-${previewColor}-400`)}>
-          <IconButton
-            onClick={(e) => {
-              e.stopPropagation()
-              onFork()
-            }}
-            aria-label="Fork"
-            title="Fork"
+
+        <div className="relative min-h-0 flex-1 overflow-hidden rounded-3xl">
+          <SquircleBox
+            aria-hidden
+            radius="3xl"
+            className={cn(
+              "pointer-events-none absolute inset-0 bg-background/70",
+              `sprinkle-${previewColor}-400`,
+            )}
+          />
+          <ScrollArea
+            onPointerDown={event => event.stopPropagation()}
+            className="relative size-full rounded-3xl overflow-hidden"
           >
-            <PhForkDuotone />
-          </IconButton>
-          {shouldPromoteEditButton && (
-            <IconButton
-              onClick={(e) => {
-                e.stopPropagation()
+            <div
+              className="px-3 py-2 space-y-2"
+              onDoubleClick={(e) => {
+                e.stopPropagation() // Prevent flip on double click if that's a thing
                 if (!isFork) {
                   return
                 }
 
                 setEditable(p => !p)
               }}
-              aria-label="Edit"
-              title={isFork ? "Edit" : "Only forked cards can be edited"}
             >
-              <PhPencilCircleDuotone className={cn(canEdit && "text-primary", !isFork && "opacity-40")} />
-            </IconButton>
-          )}
-          {isFork && (
-            <IconButton
-              onClick={(e) => {
-                e.stopPropagation()
-                onDelete()
-              }}
-              aria-label="Delete Fork"
-              title="Delete Fork"
-            >
-              <PhTrashDuotone />
-            </IconButton>
-          )}
-          <IconButton
-            onClick={(e) => {
-              e.stopPropagation()
-              onFlip()
-            }}
-          >
-            <PhArrowCircleLeftDuotone />
-          </IconButton>
-          {!shouldPromoteEditButton && (
-            <IconButton
-              onClick={(e) => {
-                e.stopPropagation()
-                if (!isFork) {
-                  return
-                }
+              <div className="flex flex-col text-sm">
+                <div className="font-semibold mb-1 opacity-80">Information</div>
+                <Info icon={<PhInfoDuotone />} label="Name">
+                  <EditableInput text={localName} editable={canEdit} onChange={setLocalName} />
+                </Info>
 
-                setEditable(p => !p)
-              }}
-              aria-label="Edit"
-              title={isFork ? "Edit" : "Only forked cards can be edited"}
-            >
-              <PhPencilCircleDuotone className={cn(canEdit && "text-primary", !isFork && "opacity-40")} />
-            </IconButton>
-          )}
+                <Info icon={<PhInfoDuotone />} label="Title">
+                  <EditableInput text={localTitle || ""} editable={canEdit} onChange={setLocalTitle} />
+                </Info>
+
+                <Info icon={<PhInfoDuotone />} label="Description">
+                  <EditableInput text={localDesc || ""} editable={canEdit} onChange={setLocalDesc} />
+                </Info>
+
+                <Info icon={<PhLinkDuotone />} label="Home">
+                  <EditableInput text={localHome || ""} editable={canEdit} onChange={setLocalHome} />
+                </Info>
+
+                <Info icon={<PhLinkDuotone />} label="Icon">
+                  <EditableInput text={`https://icons.duckduckgo.com/ip3/${new URL(localHome || "http://localhost").hostname}.ico`} editable={false} />
+                </Info>
+
+                <Info icon={<PhLinkDuotone />} label="Color">
+                  <ColorSelector color={localColor} editable={canEdit} onChange={setLocalColor} />
+                </Info>
+              </div>
+
+              <div className="flex flex-col text-sm pt-0.5">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="font-semibold opacity-80">Parameters</span>
+                  <div className="flex gap-1.5">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={!canEdit || !hasSourceParamChanges}
+                      className={cn(`h-6 px-2 bg-${previewColor}-500/10 hover:bg-${previewColor}-500/20 text-${previewColor}-600 border-${previewColor}-200`)}
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        onDiscardSourceParams()
+                      }}
+                    >
+                      Revert
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={!canEdit || !hasSourceParams}
+                      className={cn(`h-6 px-2 bg-${previewColor}-500/10 hover:bg-${previewColor}-500/20 text-${previewColor}-600 border-${previewColor}-200`)}
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        onResetSourceParams()
+                      }}
+                    >
+                      Reset
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      disabled={!canEdit || !hasSourceParamChanges}
+                      className="h-6 px-2"
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        onSaveSourceParams()
+                      }}
+                    >
+                      Save
+                    </Button>
+                  </div>
+                </div>
+                {!hasSourceParams && (
+                  <div className="rounded-3xl border border-dashed border-border/50 px-3 py-2.5 text-sm text-muted-foreground">
+                    This source does not expose configurable parameters yet.
+                  </div>
+                )}
+                {params && Object.entries(params).map(([paramKey, param]) => (
+                  <ParamField
+                    key={paramKey}
+                    param={param}
+                    value={draftSourceParams[paramKey]}
+                    editable={canEdit}
+                    color={previewColor}
+                    onChange={nextValue => onSourceParamChange(paramKey, nextValue)}
+                  />
+                ))}
+              </div>
+            </div>
+          </ScrollArea>
         </div>
       </div>
-
-      <ScrollArea
-        onPointerDown={event => event.stopPropagation()}
-        className={cn(
-          "flex-1 rounded-3xl bg-background/70 overflow-hidden",
-          `sprinkle-${previewColor}-400`,
-        )}
-      >
-        <div
-          className="px-3 py-2 space-y-2"
-          onDoubleClick={(e) => {
-            e.stopPropagation() // Prevent flip on double click if that's a thing
-            if (!isFork) {
-              return
-            }
-
-            setEditable(p => !p)
-          }}
-        >
-          <div className="flex flex-col text-sm">
-            <div className="font-semibold mb-1 opacity-80">Information</div>
-            <Info icon={<PhInfoDuotone />} label="Name">
-              <EditableInput text={localName} editable={canEdit} onChange={setLocalName} />
-            </Info>
-
-            <Info icon={<PhInfoDuotone />} label="Title">
-              <EditableInput text={localTitle || ""} editable={canEdit} onChange={setLocalTitle} />
-            </Info>
-
-            <Info icon={<PhInfoDuotone />} label="Description">
-              <EditableInput text={localDesc || ""} editable={canEdit} onChange={setLocalDesc} />
-            </Info>
-
-            <Info icon={<PhLinkDuotone />} label="Home">
-              <EditableInput text={localHome || ""} editable={canEdit} onChange={setLocalHome} />
-            </Info>
-
-            <Info icon={<PhLinkDuotone />} label="Icon">
-              <EditableInput text={`https://icons.duckduckgo.com/ip3/${new URL(localHome || "http://localhost").hostname}.ico`} editable={false} />
-            </Info>
-
-            <Info icon={<PhLinkDuotone />} label="Color">
-              <ColorSelector color={localColor} editable={canEdit} onChange={setLocalColor} />
-            </Info>
-          </div>
-
-          <div className="flex flex-col text-sm pt-0.5">
-            <div className="flex justify-between items-center mb-1">
-              <span className="font-semibold opacity-80">Parameters</span>
-              <div className="flex gap-1.5">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  disabled={!canEdit || !hasSourceParamChanges}
-                  className={cn(`h-6 px-2 bg-${previewColor}-500/10 hover:bg-${previewColor}-500/20 text-${previewColor}-600 border-${previewColor}-200`)}
-                  onClick={(event) => {
-                    event.stopPropagation()
-                    onDiscardSourceParams()
-                  }}
-                >
-                  Revert
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  disabled={!canEdit || !hasSourceParams}
-                  className={cn(`h-6 px-2 bg-${previewColor}-500/10 hover:bg-${previewColor}-500/20 text-${previewColor}-600 border-${previewColor}-200`)}
-                  onClick={(event) => {
-                    event.stopPropagation()
-                    onResetSourceParams()
-                  }}
-                >
-                  Reset
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  disabled={!canEdit || !hasSourceParamChanges}
-                  className="h-6 px-2"
-                  onClick={(event) => {
-                    event.stopPropagation()
-                    onSaveSourceParams()
-                  }}
-                >
-                  Save
-                </Button>
-              </div>
-            </div>
-            {!hasSourceParams && (
-              <div className="rounded-3xl border border-dashed border-border/50 px-3 py-2.5 text-sm text-muted-foreground">
-                This source does not expose configurable parameters yet.
-              </div>
-            )}
-            {params && Object.entries(params).map(([paramKey, param]) => (
-              <ParamField
-                key={paramKey}
-                param={param}
-                value={draftSourceParams[paramKey]}
-                editable={canEdit}
-                color={previewColor}
-                onChange={nextValue => onSourceParamChange(paramKey, nextValue)}
-              />
-            ))}
-          </div>
-        </div>
-      </ScrollArea>
     </div>
   )
 }
