@@ -33,7 +33,7 @@ export const TYPE_OPTIONS = [
   { label: "Timeline", value: "timeline" },
 ] as const
 
-export const selectClassName = "h-9 w-full rounded-4xl border border-input bg-input/30 px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+export const selectClassName = "h-9 w-full rounded-3xl border border-input bg-input/30 px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
 
 export function createDraft(source: AdminSourceRow): SourceDraft {
   return {

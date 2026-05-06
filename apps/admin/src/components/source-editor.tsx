@@ -85,7 +85,7 @@ export function SourceEditor({
                 <Input value={draft.icon} onChange={event => onDraftChange("icon", event.target.value)} />
               </EditorField>
               <EditorField label="Visibility">
-                <div className="flex h-9 items-center justify-between rounded-4xl border border-input bg-input/30 px-3 text-sm">
+                <div className="flex h-9 items-center justify-between rounded-3xl border border-input bg-input/30 px-3 text-sm">
                   <span>Visible in boards</span>
                   <Switch checked={draft.enabled} onCheckedChange={checked => onDraftChange("enabled", checked)} />
                 </div>

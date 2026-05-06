@@ -37,10 +37,10 @@ export function CardFront() {
   const relativeTime = useRelativeTime({ date: updatedTime })
 
   return (
-    <div className="relative h-full rounded-4xl">
+    <div className="relative h-full">
       <SquircleBox
         aria-hidden
-        radius="4xl"
+        radius="3xl"
         className={cn(
           "pointer-events-none absolute inset-0",
           `bg-${color}-400/40`,
@@ -115,10 +115,10 @@ export function CardFront() {
         </div>
 
         {/* Content */}
-        <div className="relative min-h-0 flex-1 overflow-hidden rounded-3xl">
+        <div className="relative min-h-0 flex-1 overflow-hidden">
           <SquircleBox
             aria-hidden
-            radius="3xl"
+            radius="2xl"
             className={cn(
               "pointer-events-none absolute inset-0 bg-background/70",
               `sprinkle-${color}-400`,

@@ -179,13 +179,13 @@ export function SearchDialog(): JSX.Element {
         onOpenChange={setOpen}
         title="Search Cards"
         description="Search cards"
-        className="search-dialog w-[80vw] h-[80vh] sm:max-w-180 max-h-143 top-1/2 -translate-y-1/2 rounded-[40px]"
+        className="search-dialog w-[80vw] h-[80vh] sm:max-w-180 max-h-143 top-1/2 -translate-y-1/2 rounded-4xl"
       >
         <Command
           value={selectedItem?.id}
           onValueChange={setSelectedItemId}
           disablePointerSelection
-          className="sprinkle-theme-400 rounded-[40px] border p-3 pt-0"
+          className="sprinkle-theme-400 rounded-4xl border p-3 pt-0"
         >
           <CommandInput
             autoFocus

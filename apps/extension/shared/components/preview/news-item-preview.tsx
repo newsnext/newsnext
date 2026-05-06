@@ -77,7 +77,7 @@ export function NewsItemLink({ item, className, children, previewSelection }: Ne
             </NewsItemAnchor>
           )}
         />
-        <HoverCardContent side="left" align="start" alignOffset={0} className="relative max-h-96 overflow-y-auto scrollbar-hidden rounded-4xl">
+        <HoverCardContent side="left" align="start" alignOffset={0} className="relative max-h-96 overflow-y-auto scrollbar-hidden rounded-3xl">
           {canOpenExpandedPreview && (
             <Button
               type="button"
@@ -174,7 +174,7 @@ function PreviewIframe({ iframe }: { iframe: AdvancedIframe | string }) {
       src={props.src}
       width={width ?? "100%"}
       height={height ?? "320"}
-      className={cn("w-full rounded-4xl", className)}
+      className={cn("w-full rounded-3xl", className)}
       loading={loading ?? "lazy"}
       onLoad={() => {
         setLoaded(true)

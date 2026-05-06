@@ -20,7 +20,7 @@ export function DragOverlay({ source, sourceParams }: DragOverlayProps) {
       className={cn(
         "flex flex-col p-3",
         `bg-${color}-400/40`,
-        !isIOS && "rounded-4xl",
+        !isIOS && "rounded-3xl",
       )}
     >
       <div className="flex justify-between items-center mx-1 gap-2">

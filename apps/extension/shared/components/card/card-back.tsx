@@ -375,10 +375,10 @@ export function CardBack() {
   }, [isFork])
 
   return (
-    <div className="relative h-full rounded-4xl">
+    <div className="relative h-full">
       <SquircleBox
         aria-hidden
-        radius="4xl"
+        radius="3xl"
         className={cn(
           "pointer-events-none absolute inset-0 transition-colors duration-300",
           `bg-${previewColor}-400/40`,
@@ -479,10 +479,10 @@ export function CardBack() {
           </div>
         </div>
 
-        <div className="relative min-h-0 flex-1 overflow-hidden rounded-3xl">
+        <div className="relative min-h-0 flex-1 overflow-hidden">
           <SquircleBox
             aria-hidden
-            radius="3xl"
+            radius="2xl"
             className={cn(
               "pointer-events-none absolute inset-0 bg-background/70",
               `sprinkle-${previewColor}-400`,
@@ -490,7 +490,7 @@ export function CardBack() {
           />
           <ScrollArea
             onPointerDown={event => event.stopPropagation()}
-            className="relative size-full rounded-3xl overflow-hidden"
+            className="relative size-full rounded-2xl overflow-hidden"
           >
             <div
               className="px-3 py-2 space-y-2"
