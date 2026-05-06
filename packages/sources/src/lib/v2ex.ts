@@ -17,6 +17,11 @@ interface Res {
     date_published: string
     title: string
     id: string
+    author: {
+      url: string
+      name: string
+      avatar: string
+    }
   }[]
 }
 
@@ -53,6 +58,13 @@ export default $provider({
           title: k.title,
           timestamp: new Date(k.date_modified ?? k.date_published).getTime(),
           url: k.url,
+          inline: {
+            icon: k.author.avatar,
+            text: "",
+          },
+          preview: {
+            html: k.content_html,
+          },
         })).sort((m, n) => m.timestamp < n.timestamp ? 1 : -1)
       },
     ),
