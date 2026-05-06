@@ -61,7 +61,7 @@ export function CardFront() {
               }}
             />
             <div className="flex flex-col min-w-0">
-              <div className="flex items-center gap-2 min-w-0 w-full">
+              <div className="flex items-center gap-2 min-w-0 w-full text-base">
                 {(title || name) && (
                   <span
                     className={cn(
