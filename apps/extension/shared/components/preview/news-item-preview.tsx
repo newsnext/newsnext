@@ -8,7 +8,7 @@ import { useIsMobile } from "@newsnext/ui/hooks/use-mobile"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
 import { useCard } from "../card/card-context"
-import { PhArrowsOutSimpleDuotone } from "../icons/ph"
+import { PhArrowsOutSimple } from "../icons/ph"
 import { ProxiedImage } from "./proxied-image"
 
 interface NewsItemLinkProps {
@@ -77,22 +77,25 @@ export function NewsItemLink({ item, className, children, previewSelection }: Ne
             </NewsItemAnchor>
           )}
         />
-        <HoverCardContent side="left" align="start" alignOffset={0} className="relative max-h-96 overflow-y-auto scrollbar-hidden rounded-3xl">
+        <HoverCardContent
+          side="left"
+          align="start"
+          alignOffset={0}
+          radius="3xl"
+          surfaceClassName="max-h-96 overflow-y-auto scrollbar-hidden"
+        >
           {canOpenExpandedPreview && (
             <Button
-              type="button"
               variant="ghost"
-              size="icon-xs"
-              title="Max view"
-              aria-label="Max view"
-              className="bg-background/70 border text-muted-foreground hover:text-foreground"
+              size="icon-sm"
+              className="absolute top-3 right-3 z-10 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-950 dark:text-muted-foreground dark:hover:bg-muted dark:hover:text-foreground"
               onClick={(event) => {
                 event.preventDefault()
                 event.stopPropagation()
                 onOpenExpandedPreview(item)
               }}
             >
-              <PhArrowsOutSimpleDuotone />
+              <PhArrowsOutSimple />
             </Button>
           )}
           <NewsItemPreviewContent item={item} />
@@ -125,7 +128,7 @@ export function NewsItemPreviewContent({ item, className }: { item: NewsItem, cl
             alt="preview picture"
             style={{
               transform: `scale(${scale ?? 1})`,
-              borderRadius: `${radius ?? 32}px`,
+              borderRadius: `${radius ?? 24}px`,
             }}
             className="max-w-full"
           />

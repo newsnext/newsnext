@@ -17,6 +17,7 @@ import { buildBoardSources } from "@/lib/source-cards"
 import { resolveSourceDisplay } from "@/lib/source-display"
 import { getSavedSourceParamValues } from "@/lib/source-params"
 import { trpc } from "@/lib/trpc"
+import { cn } from "@/lib/utils"
 import { sourceInstancesAtom, starredSourceInstanceIdsAtom } from "@/store/board"
 import Card from "../card"
 import { PhForkDuotone, PhMagnifyingGlass, PhStarFill } from "../icons/ph"
@@ -63,13 +64,9 @@ function groupSearchItems(items: SearchItem[]): SearchGroup[] {
 }
 
 function SearchPreview({ item }: { item?: SearchItem }) {
-  if (!item) {
-    return <></>
-  }
-
   return (
-    <div className="hidden md:flex flex-col items-start justify-center *:shrink-0">
-      <Card id={item.id} source={item.source} />
+    <div className="hidden md:flex flex-col p-3 items-start justify-center *:shrink-0 border-l">
+      {item ? <Card id={item.id} source={item.source} /> : <></>}
     </div>
   )
 }
@@ -179,21 +176,21 @@ export function SearchDialog(): JSX.Element {
         onOpenChange={setOpen}
         title="Search Cards"
         description="Search cards"
-        className="search-dialog w-[80vw] h-[80vh] sm:max-w-180 max-h-143 top-1/2 -translate-y-1/2 rounded-4xl"
+        className="search-dialog w-[80vw] h-[80vh] sm:max-w-180 max-h-143 top-1/2 -translate-y-1/2"
       >
         <Command
           value={selectedItem?.id}
           onValueChange={setSelectedItemId}
           disablePointerSelection
-          className="sprinkle-theme-400 rounded-4xl border p-3 pt-0"
+          className={cn(`sprinkle-${selectedItem?.source.color ?? "theme"}-400`, "bg-transparent p-0 rounded-none")}
         >
           <CommandInput
             autoFocus
             placeholder="Search what you want"
             className="py-3 placeholder:text-foreground/50"
           />
-          <div className="flex flex-col md:flex-row md:items-stretch md:justify-between gap-2 mt-3">
-            <CommandList className="flex h-125 max-h-125 flex-col gap-0 w-full">
+          <div className="flex flex-col md:flex-row md:items-stretch md:justify-between gap-2">
+            <CommandList className="flex h-125 max-h-125 flex-col gap-0 w-full pl-3 pt-3">
               <CommandEmpty className="flex items-center justify-center py-8 text-sm opacity-70 whitespace-pre-wrap">
                 No cards found.
               </CommandEmpty>

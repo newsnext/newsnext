@@ -1,5 +1,7 @@
+import type { SquircleRadius } from "@newsnext/ui/components/squircle"
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 import { Button } from "@newsnext/ui/components/button"
+import { SquircleBox } from "@newsnext/ui/components/squircle"
 
 import { cn } from "@newsnext/ui/lib/utils"
 import { XIcon } from "@phosphor-icons/react"
@@ -40,10 +42,14 @@ function DialogOverlay({
 function DialogContent({
   className,
   children,
+  radius = "3xl",
   showCloseButton = true,
+  surfaceClassName,
   ...props
 }: DialogPrimitive.Popup.Props & {
+  radius?: SquircleRadius | number
   showCloseButton?: boolean
+  surfaceClassName?: string
 }) {
   return (
     <DialogPortal>
@@ -51,27 +57,35 @@ function DialogContent({
       <DialogPrimitive.Popup
         data-slot="dialog-content"
         className={cn(
-          "fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-6 rounded-3xl bg-popover p-6 text-sm text-popover-foreground ring-1 ring-foreground/5 duration-100 outline-none sm:max-w-md data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+          "fixed top-1/2 left-1/2 z-50 w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 text-sm text-popover-foreground duration-100 outline-none sm:max-w-md data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
           className,
         )}
         {...props}
       >
-        {children}
-        {showCloseButton && (
-          <DialogPrimitive.Close
-            data-slot="dialog-close"
-            render={(
-              <Button
-                variant="ghost"
-                className="absolute top-4 right-4"
-                size="icon-sm"
-              />
-            )}
-          >
-            <XIcon />
-            <span className="sr-only">Close</span>
-          </DialogPrimitive.Close>
-        )}
+        <SquircleBox
+          radius={radius}
+          className={cn(
+            "relative grid size-full gap-6 bg-popover p-6 ring-1 ring-foreground/5",
+            surfaceClassName,
+          )}
+        >
+          {children}
+          {showCloseButton && (
+            <DialogPrimitive.Close
+              data-slot="dialog-close"
+              render={(
+                <Button
+                  variant="ghost"
+                  className="absolute top-4 right-4"
+                  size="icon-sm"
+                />
+              )}
+            >
+              <XIcon />
+              <span className="sr-only">Close</span>
+            </DialogPrimitive.Close>
+          )}
+        </SquircleBox>
       </DialogPrimitive.Popup>
     </DialogPortal>
   )

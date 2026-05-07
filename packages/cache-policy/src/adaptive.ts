@@ -239,7 +239,7 @@ export function createInitialAdaptiveState(now: number, minFetchAge: number): Ad
     lastFetchedAt: now,
     unchangedStreak: 0,
     errorStreak: 0,
-    hourlyChangeScores: Array.from({ length: 24 }, () => 0.5),
+    hourlyChangeScores: Array.from({ length: 24 }).fill(0.5) as number[],
     averageChangeScore: 0.5,
   }
 }

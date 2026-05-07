@@ -15,7 +15,7 @@ function createState(overrides: Partial<AdaptiveCacheState> = {}): AdaptiveCache
     lastFetchedAt: 0,
     unchangedStreak: 0,
     errorStreak: 0,
-    hourlyChangeScores: Array.from({ length: 24 }, () => 1),
+    hourlyChangeScores: Array.from({ length: 24 }).fill(1) as number[],
     averageChangeScore: 1,
     ...overrides,
   }
@@ -97,7 +97,7 @@ describe("adaptive cache policy", () => {
     expect(getEffectiveMaxCacheAge({
       state: createState({
         currentMaxCacheAge: minute,
-        hourlyChangeScores: Array.from({ length: 24 }, () => 0),
+        hourlyChangeScores: Array.from({ length: 24 }).fill(0) as number[],
         averageChangeScore: 0,
       }),
       now: Date.UTC(2026, 0, 1, 3, 0, 0),

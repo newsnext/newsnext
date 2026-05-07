@@ -61,7 +61,10 @@ export function SettingsModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl w-full h-[600px] p-0 gap-0 overflow-hidden flex sm:max-w-3xl">
+      <DialogContent
+        className="max-w-3xl w-full h-150 sm:max-w-3xl"
+        surfaceClassName="p-0 gap-0 flex"
+      >
         {/* Left Sidebar */}
         <div className="w-48 border-r bg-muted/30 p-2 flex flex-col gap-1 shrink-0">
           <div className="p-4 font-semibold text-sm text-muted-foreground">Settings</div>
