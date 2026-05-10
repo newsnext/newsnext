@@ -1,0 +1,19 @@
+{
+  "name": "@newsnext/cli",
+  "type": "module",
+  "version": "0.0.1",
+  "private": true,
+  "license": "MPL-2.0",
+  "bin": {
+    "newsnext": "./src/index.ts"
+  },
+  "scripts": {
+    "dev": "bun run src/index.ts",
+    "test": "vitest",
+    "typecheck": "tsgo --noEmit"
+  },
+  "dependencies": {
+    "@newsnext/instance": "workspace:*",
+    "@newsnext/sources": "workspace:*"
+  }
+}

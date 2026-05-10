@@ -55,6 +55,17 @@
         "vite": "^8.0.10",
       },
     },
+    "apps/cli": {
+      "name": "@newsnext/cli",
+      "version": "0.0.1",
+      "bin": {
+        "newsnext": "./src/index.ts",
+      },
+      "dependencies": {
+        "@newsnext/instance": "workspace:*",
+        "@newsnext/sources": "workspace:*",
+      },
+    },
     "apps/extension": {
       "name": "@newsnext/extension",
       "version": "0.0.1",
@@ -581,6 +592,8 @@
     "@newsnext/cache": ["@newsnext/cache@workspace:packages/cache"],
 
     "@newsnext/cache-policy": ["@newsnext/cache-policy@workspace:packages/cache-policy"],
+
+    "@newsnext/cli": ["@newsnext/cli@workspace:apps/cli"],
 
     "@newsnext/database": ["@newsnext/database@workspace:servers/database"],
 
