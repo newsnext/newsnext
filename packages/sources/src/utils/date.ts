@@ -1,6 +1,6 @@
 import type { Duration } from "date-fns"
 import { tz, tzOffset } from "@date-fns/tz"
-import { add, format, isAfter, parse, set, setDay, sub, subWeeks } from "date-fns"
+import { add, format, isAfter, isEqual, parse, set, setDay, sub, subWeeks } from "date-fns"
 
 const DEFAULT_TIMEZONE = "Asia/Shanghai"
 const DAYS_PER_MONTH = 30
@@ -60,8 +60,9 @@ export function tranformToUTC(date: string, formatString?: string, timezone: str
 }
 
 function getWeekdayStart(base: Date, weekday: number, context: ReturnType<typeof tz>) {
-  const candidate = setDay(base, weekday, { weekStartsOn: 1, in: context })
-  return isAfter(base, candidate) ? candidate : subWeeks(candidate, 1, { in: context })
+  const dayStart = set(base, { hours: 0, minutes: 0, seconds: 0, milliseconds: 0 })
+  const candidate = setDay(dayStart, weekday, { weekStartsOn: 1, in: context })
+  return isAfter(dayStart, candidate) || isEqual(dayStart, candidate) ? candidate : subWeeks(candidate, 1, { in: context })
 }
 
 // Build dynamic word list; keep here because Cloudflare may return zero when evaluated at module scope.
