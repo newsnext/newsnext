@@ -4,7 +4,7 @@ import type { NewsItem } from "@/typings/source"
 import { cn } from "@/lib/utils"
 import { VirtualList } from "../common/virtual-list"
 import { NewsItemLink } from "../preview/news-item-preview"
-import { NewsItemSummary } from "./news-item-common"
+import { getNewsItemKey, NewsItemSummary } from "./news-item-common"
 
 interface Props {
   items: NewsItem[]
@@ -23,6 +23,7 @@ export function Hottest({ items, scrollRef, color, previewSelection }: Props) {
       scrollRef={scrollRef}
       estimateSize={60}
       itemClassName="pb-2 last:pb-0"
+      getItemKey={getNewsItemKey}
       renderItem={(item, index) => (
         <NewsItemLink
           item={item}

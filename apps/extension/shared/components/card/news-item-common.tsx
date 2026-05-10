@@ -3,6 +3,10 @@ import { extractPictures } from "@newsnext/shared/types"
 import { cn } from "@/lib/utils"
 import { ProxiedImage } from "../preview/proxied-image"
 
+export function getNewsItemKey(item: NewsItem): string {
+  return item.url
+}
+
 interface NewsItemInlineProps {
   item: NewsItem
   className?: string
