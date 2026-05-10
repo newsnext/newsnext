@@ -2,10 +2,9 @@ import type { NewsItem } from "@/typings/source"
 import { useQuery } from "@tanstack/react-query"
 import { getQueryKey } from "@trpc/react-query"
 import { useCallback, useMemo } from "react"
-import { buildSourceRequestKey } from "@/lib/source-cards"
 import { trpc } from "@/lib/trpc"
 // import { useLocalStorageCache } from "./use-local-storage-cache"
-import { refetchSources, useRefetch } from "./use-refetch"
+import { consumeLatestSourceRefresh, useRefetch } from "./use-refetch"
 
 export interface UseSourceQueryOptions {
   sourceId: string
@@ -18,7 +17,6 @@ export function useSourceQuery({ sourceId, params, enabled = true }: UseSourceQu
   const utils = trpc.useUtils()
   const { refetch } = useRefetch()
   const normalizedParams = useMemo(() => params ?? {}, [params])
-  const refreshKey = useMemo(() => buildSourceRequestKey(sourceId, normalizedParams), [sourceId, normalizedParams])
   // type SourceData = Awaited<ReturnType<typeof utils.client.getSource.query>>
   // const storageKey = `${STORAGE_PREFIX}/${sourceId}`
   // const { readCache, writeCache } = useLocalStorageCache<SourceData>(storageKey)
@@ -26,9 +24,7 @@ export function useSourceQuery({ sourceId, params, enabled = true }: UseSourceQu
   const { data, isFetching, isError, refetch: normalRefetch } = useQuery({
     queryKey: getQueryKey(trpc.getSource, { sourceId, params: normalizedParams }),
     queryFn: async () => {
-      const isRefetch = refetchSources.has(refreshKey)
-      if (isRefetch) {
-        refetchSources.delete(refreshKey)
+      if (consumeLatestSourceRefresh({ sourceId, params: normalizedParams })) {
         return utils.client.getSource.query({ sourceId, params: normalizedParams, latest: true })
       }
       return utils.client.getSource.query({ sourceId, params: normalizedParams })

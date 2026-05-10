@@ -7,11 +7,30 @@ import { getSavedSourceParamValues } from "@/lib/source-params"
 import { trpc } from "@/lib/trpc"
 import { currentBoardAtom, sourceInstancesAtom, starredSourceInstanceIdsAtom } from "@/store/board"
 
-export const refetchSources = new Set<string>()
+const latestSourceRefreshKeys = new Set<string>()
 
-interface RefetchTarget {
+export interface RefetchTarget {
   sourceId: string
   params?: Record<string, unknown>
+}
+
+function getLatestSourceRefreshKey(target: RefetchTarget): string {
+  return buildSourceRequestKey(target.sourceId, target.params ?? {})
+}
+
+function markLatestSourceRefresh(target: RefetchTarget): void {
+  latestSourceRefreshKeys.add(getLatestSourceRefreshKey(target))
+}
+
+export function consumeLatestSourceRefresh(target: RefetchTarget): boolean {
+  const key = getLatestSourceRefreshKey(target)
+
+  if (!latestSourceRefreshKeys.has(key)) {
+    return false
+  }
+
+  latestSourceRefreshKeys.delete(key)
+  return true
 }
 
 export function useRefetch() {
@@ -30,10 +49,10 @@ export function useRefetch() {
     async (...targets: RefetchTarget[]) => {
       try {
         const uniqueTargets = [...new Map(
-          targets.map(target => [buildSourceRequestKey(target.sourceId, target.params ?? {}), target]),
+          targets.map(target => [getLatestSourceRefreshKey(target), target]),
         ).values()]
 
-        uniqueTargets.forEach(target => refetchSources.add(buildSourceRequestKey(target.sourceId, target.params ?? {})))
+        uniqueTargets.forEach(markLatestSourceRefresh)
 
         await Promise.all(
           uniqueTargets.map(target =>
@@ -67,10 +86,10 @@ export function useRefetch() {
         } satisfies RefetchTarget
       })
       const uniqueTargets = [...new Map(
-        targets.map(target => [buildSourceRequestKey(target.sourceId, target.params ?? {}), target]),
+        targets.map(target => [getLatestSourceRefreshKey(target), target]),
       ).values()]
 
-      uniqueTargets.forEach(target => refetchSources.add(buildSourceRequestKey(target.sourceId, target.params ?? {})))
+      uniqueTargets.forEach(markLatestSourceRefresh)
 
       await Promise.all(
         uniqueTargets.map(target =>
