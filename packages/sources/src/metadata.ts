@@ -106,10 +106,15 @@ export const sourceDescriptors: SourceDescriptor[] = [
         "default": "UTF-8",
         "title": "Decoding"
       },
-      "itemSelector": {
+      "items": {
         "type": "text",
         "default": ".newsflash-item",
-        "title": "Item Selector"
+        "title": "Items Selector"
+      },
+      "filter": {
+        "type": "text",
+        "default": "",
+        "title": "Filter"
       },
       "titleSelector": {
         "type": "text",

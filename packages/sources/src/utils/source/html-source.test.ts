@@ -34,7 +34,7 @@ describe("$htmlSourceLoader", () => {
 
     const source = $htmlLoader(() => ({
       url: "https://example.com",
-      itemSelector: ".list .item",
+      items: ".list .item",
       fields: {
         title: ".title",
         url: { selector: ".title", attr: "href" },
@@ -62,7 +62,7 @@ describe("$htmlSourceLoader", () => {
 
     const source = $htmlLoader(() => ({
       url: "https://example.com",
-      itemSelector: ".item",
+      items: ".item",
       fields: {
         title: {
           selector: ".title",
@@ -86,6 +86,75 @@ describe("$htmlSourceLoader", () => {
     expect(results[0].timestamp).toBe(1600000000000)
   })
 
+  it("should resolve items with a function and filter items", async () => {
+    const html = `
+      <div class="list">
+        <article class="item">
+          <a class="title" href="/article/1">Article 1</a>
+        </article>
+        <article class="item is-ad">
+          <a class="title" href="/ad">Ad</a>
+        </article>
+        <article class="item">
+          <a class="title" href="/article/2">Article 2</a>
+        </article>
+      </div>
+    `
+    ;(myFetch as any).mockResolvedValue(html)
+
+    const source = $htmlLoader(() => ({
+      url: "https://example.com",
+      items: $ => $(".list .item"),
+      filter: el => !el.hasClass("is-ad"),
+      fields: {
+        title: ".title",
+        url: { selector: ".title", attr: "href" },
+      },
+    }))
+
+    const results = await (source as any).loader({})
+    expect(results).toHaveLength(2)
+    expect(results.map(item => item.title)).toEqual(["Article 1", "Article 2"])
+  })
+
+  it("should filter items with a selector", async () => {
+    const html = `
+      <div class="item"><a class="title" href="/1">Normal</a></div>
+      <div class="item pinned"><a class="title" href="/2">Pinned</a></div>
+    `
+    ;(myFetch as any).mockResolvedValue(html)
+
+    const source = $htmlLoader(() => ({
+      url: "https://example.com",
+      items: ".item",
+      filter: ".pinned",
+      fields: {
+        title: ".title",
+        url: { selector: ".title", attr: "href" },
+      },
+    }))
+
+    const results = await (source as any).loader({})
+    expect(results).toHaveLength(1)
+    expect(results[0].title).toBe("Pinned")
+  })
+
+  it("should keep itemSelector compatibility", async () => {
+    ;(myFetch as any).mockResolvedValue("<div class=\"item\"><a class=\"title\" href=\"/1\">Legacy</a></div>")
+
+    const source = $htmlLoader(() => ({
+      url: "https://example.com",
+      itemSelector: ".item",
+      fields: {
+        title: ".title",
+        url: { selector: ".title", attr: "href" },
+      },
+    }))
+
+    const results = await (source as any).loader({})
+    expect(results[0].title).toBe("Legacy")
+  })
+
   it("should handle params in url function", async () => {
     ;(myFetch as any).mockResolvedValue("<div class=\"item\"></div>")
 
@@ -97,7 +166,7 @@ describe("$htmlSourceLoader", () => {
       },
       params => ({
         url: `https://example.com?p=${params.page}`,
-        itemSelector: ".item",
+        items: ".item",
         fields: { title: ".t", url: ".u" },
       }),
     )
@@ -116,7 +185,7 @@ describe("$htmlSourceLoader", () => {
     const source = $htmlLoader(() => ({
       url: "https://example.com/gb",
       decoding: "gb2312",
-      itemSelector: ".item",
+      items: ".item",
       fields: {
         title: ".title",
         url: { transform: () => "http://u" },
@@ -137,7 +206,7 @@ describe("$htmlSourceLoader", () => {
     const source = $htmlLoader(() => ({
       url: "https://example.com/custom",
       fetch: customFetch,
-      itemSelector: ".item",
+      items: ".item",
       fields: {
         title: ".title",
         url: { transform: () => "http://u" },

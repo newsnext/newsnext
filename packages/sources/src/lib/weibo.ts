@@ -28,7 +28,7 @@ export default $provider({
             },
           })
         },
-        itemSelector: "#pl_top_realtimehot table tbody tr:nth-child(n+2)",
+        items: $ => $("#pl_top_realtimehot table tbody tr:nth-child(n+2)").filter((_, el) => $(el).find(".ranktop").text() !== "•"),
         fields: {
           title: "td.td-02 a",
           url: {

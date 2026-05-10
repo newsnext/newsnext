@@ -32,7 +32,7 @@ export default $provider({
       },
       ({ locale, topic }) => ({
         url: `https://www.newsnow.com/${locale}/${topic}?type=ln`,
-        itemSelector: ".newsfeed .article",
+        items: ".newsfeed .article",
         fields: {
           title: ".article-card__headline",
           url: { selector: ".article-card__headline", attr: "href" },

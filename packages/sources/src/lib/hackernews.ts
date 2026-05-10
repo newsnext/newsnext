@@ -5,7 +5,7 @@ import { $provider, $source } from "../utils/source"
 
 const createLoader = (sub: string) => () => ({
   url: `https://news.ycombinator.com${sub}`,
-  itemSelector: ".athing",
+  items: ".athing",
   fields: {
     title: ".titleline>a",
     url: {

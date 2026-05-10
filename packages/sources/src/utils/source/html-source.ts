@@ -18,9 +18,20 @@ export type FieldSelector<T = any> = string | {
   transform?: (value: string | undefined, el: cheerio.Cheerio<AnyNode>) => T | undefined
 }
 
+export type ItemsResolver = string | (($: cheerio.CheerioAPI) => cheerio.Cheerio<AnyNode> | AnyNode[])
+export type ItemFilter = string | ((el: cheerio.Cheerio<AnyNode>, index: number, $: cheerio.CheerioAPI) => boolean)
+
 export interface HtmlSourceOptions {
   url: string
-  itemSelector: string
+  /**
+   * Selector or resolver for the source items.
+   */
+  items?: ItemsResolver
+  /**
+   * @deprecated Use `items` instead.
+   */
+  itemSelector?: string
+  filter?: ItemFilter
   // Allow dynamic decoding
   decoding?: string
   fetchOptions?: FetchOptions
@@ -86,7 +97,7 @@ function resolveField(
 }
 
 export const $htmlLoader = createLoader<HtmlSourceOptions>(async (opts) => {
-  const { url, itemSelector, decoding, fetchOptions, fetch, fields } = opts
+  const { url, items: itemsResolver, itemSelector, filter, decoding, fetchOptions, fetch, fields } = opts
 
   let html: string
   if (fetch) {
@@ -101,10 +112,13 @@ export const $htmlLoader = createLoader<HtmlSourceOptions>(async (opts) => {
 
   // console.log(html)
   const $ = cheerio.load(html)
-  const $items = $(itemSelector)
+  const items = resolveItems($, itemsResolver ?? itemSelector)
   const news: NewsItem[] = []
 
-  $items.each((_, el) => {
+  items.forEach((el, index) => {
+    const $item = $(el)
+    if (filter && !matchesFilter($item, index, $, filter)) return
+
     const titleConfig = resolveFieldSelector(fields.title)
     const urlConfig = resolveFieldSelector(fields.url)
 
@@ -169,6 +183,33 @@ export const $htmlLoader = createLoader<HtmlSourceOptions>(async (opts) => {
 
   return news
 })
+
+function resolveItems(
+  $: cheerio.CheerioAPI,
+  resolver: ItemsResolver | undefined,
+): AnyNode[] {
+  if (!resolver) return []
+
+  if (typeof resolver === "function") {
+    const resolved = resolver($)
+    return Array.isArray(resolved) ? resolved : resolved.toArray()
+  }
+
+  return $(resolver).toArray()
+}
+
+function matchesFilter(
+  el: cheerio.Cheerio<AnyNode>,
+  index: number,
+  $: cheerio.CheerioAPI,
+  filter: ItemFilter,
+): boolean {
+  if (typeof filter === "function") {
+    return filter(el, index, $)
+  }
+
+  return el.is(filter)
+}
 
 export function $htmlSource<P extends SourceParamSchemaMap>(
   registration: Omit<SourceRegistration<P>, "loader" | "params"> & { params: P },

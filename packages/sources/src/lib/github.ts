@@ -14,7 +14,7 @@ export default $provider({
       },
       () => ({
         url: "https://github.com/trending?spoken_language_code=",
-        itemSelector: "main .Box div[data-hpc] > article",
+        items: "main .Box div[data-hpc] > article",
         fields: {
           title: {
             selector: ">h2 a",

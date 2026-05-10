@@ -15,7 +15,7 @@ export default $provider({
       () => ({
         url: "https://www.zaochenbao.com/realtime/",
         decoding: "gb2312",
-        itemSelector: "div.list-block>a.item",
+        items: "div.list-block>a.item",
         fields: {
           title: ".eps",
           url: {

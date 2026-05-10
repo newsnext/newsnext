@@ -21,10 +21,15 @@ export default $provider({
             default: "UTF-8",
             title: "Decoding",
           },
-          itemSelector: {
+          items: {
             type: "text",
             default: ".newsflash-item",
-            title: "Item Selector",
+            title: "Items Selector",
+          },
+          filter: {
+            type: "text",
+            default: "",
+            title: "Filter",
           },
           titleSelector: {
             type: "text",
@@ -38,10 +43,11 @@ export default $provider({
           },
         },
       },
-      ({ url, decoding, itemSelector, titleSelector, linkSelector }) => ({
+      ({ url, decoding, items, filter, titleSelector, linkSelector }) => ({
         url,
         decoding,
-        itemSelector,
+        items,
+        filter: filter || undefined,
         fields: {
           title: titleSelector,
           url: {
