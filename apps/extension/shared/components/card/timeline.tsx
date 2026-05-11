@@ -6,7 +6,7 @@ import { useRelativeTime } from "@/hooks/useRelativeTime"
 import { cn } from "@/lib/utils"
 import { VirtualList } from "../common/virtual-list"
 import { NewsItemLink } from "../preview/news-item-preview"
-import { getNewsItemKey, NewsItemSummary } from "./news-item-common"
+import { NewsItemSummary } from "./news-item-common"
 
 function RelativeTime({ date }: { date: number }) {
   return useRelativeTime({ date })
@@ -34,7 +34,6 @@ export function Timeline({ items, scrollRef, relativeUpdatedTime, color, preview
       scrollRef={scrollRef}
       estimateSize={50}
       className="relative z-0"
-      getItemKey={getNewsItemKey}
       renderItem={(item, index) => (
         <div className="flex min-w-0 gap-0.5 pr-1 rounded-xl hover:bg-neutral-400/10">
           <div className="relative w-3.5 shrink-0 self-stretch" aria-hidden>

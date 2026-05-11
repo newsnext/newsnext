@@ -1,7 +1,5 @@
 import type { RefObject } from "react"
 import { useVirtualizer } from "@tanstack/react-virtual"
-import { motion } from "motion/react"
-import { useCallback } from "react"
 import { cn } from "@/lib/utils"
 
 interface VirtualListProps<T> {
@@ -10,7 +8,6 @@ interface VirtualListProps<T> {
   estimateSize?: number
   className?: string
   itemClassName?: string
-  getItemKey?: (item: T, index: number) => string | number
   renderItem: (item: T, index: number) => React.ReactNode
 }
 
@@ -32,20 +29,16 @@ function VirtualListItem<T>({
   renderItem,
 }: VirtualListItemProps<T>) {
   return (
-    <motion.div
+    <div
       ref={measureElement}
-      layout="position"
       data-index={index}
       className={cn("absolute top-0 left-0 w-full", itemClassName)}
-      animate={{ y: start }}
-      initial={false}
-      transition={{ type: "spring", stiffness: 420, damping: 34, mass: 0.7 }}
       style={{
-        willChange: "transform",
+        transform: `translateY(${start}px)`,
       }}
     >
       {renderItem(item, index)}
-    </motion.div>
+    </div>
   )
 }
 
@@ -55,19 +48,12 @@ export function VirtualList<T>({
   estimateSize = 50,
   className,
   itemClassName,
-  getItemKey,
   renderItem,
 }: VirtualListProps<T>) {
-  const resolveItemKey = useCallback((index: number) => {
-    const item = items[index]
-    return item ? getItemKey?.(item, index) ?? index : index
-  }, [getItemKey, items])
-
   const rowVirtualizer = useVirtualizer({
     count: items?.length ?? 0,
     getScrollElement: () => scrollRef.current,
     estimateSize: () => estimateSize,
-    getItemKey: resolveItemKey,
     overscan: 5,
   })
 
