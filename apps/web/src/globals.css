@@ -1,0 +1,13 @@
+@import "tailwindcss" source(".");
+@import "./styles/base.css";
+
+@source "../../../packages/ui/src";
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}

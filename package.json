@@ -22,7 +22,7 @@
     "lint": "bun run --bun eslint .",
     "test": "vitest",
     "cli": "bun run apps/cli/src/index.ts",
-    "dev": "bun --parallel --filter=@newsnext/instance --filter=@newsnext/api --filter=@newsnext/extension run dev",
+    "dev": "bun --parallel --filter=@newsnext/instance --filter=@newsnext/api --filter=@newsnext/web run dev",
     "dev:api": "bun --filter=@newsnext/api run dev",
     "dev:web": "bun --filter=@newsnext/extension run dev",
     "dev:chrome": "bun --filter=@newsnext/extension run dev:chrome",

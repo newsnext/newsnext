@@ -1,0 +1,14 @@
+{
+  "extends": "@newsnext/tsconfigs/web.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "./tsconfig.web.tsbuildinfo",
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ]
+    }
+  },
+  "include": [
+    "./src"
+  ]
+}
