@@ -205,7 +205,7 @@ function GeneralSettings() {
           layoutId="default-board-tab"
         />
         <p className="text-sm text-muted-foreground">
-          Choose which tab to show when the extension opens.
+          Choose which tab to show when the app opens.
         </p>
       </div>
     </div>

@@ -1,13 +1,9 @@
 import { createAuthClient } from "better-auth/react"
-import { BASE_URL, getAppURL } from "@/lib/env"
+import { getAppURL } from "@/lib/env"
 
 export type AuthProviderId = "github" | "google"
 
 function getAuthRedirectURL(): string {
-  if (globalThis.location?.protocol === "chrome-extension:") {
-    return BASE_URL || getAppURL("/api/auth")
-  }
-
   return window.location.href
 }
 

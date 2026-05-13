@@ -3,7 +3,7 @@
   "type": "module",
   "version": "0.0.1",
   "private": true,
-  "description": "manifest.json description",
+  "description": "NewsNext web app",
   "scripts": {
     "dev": "bun run --bun vite",
     "scan": "react-scan http://localhost:3001",
@@ -24,8 +24,6 @@
     "@trpc/client": "^11.16.0",
     "@trpc/react-query": "^11.16.0",
     "@trpc/server": "^11.16.0",
-    "@webext-core/messaging": "^2.3.0",
-    "@webext-core/proxy-service": "^2.0.0",
     "better-auth": "^1.6.9",
     "date-fns": "^4.1.0",
     "defu": "^6.1.7",
@@ -53,7 +51,6 @@
     "tailwindcss": "catalog:",
     "unplugin-icons": "^23.0.1",
     "unplugin-turbo-console": "^2.3.1",
-    "vite": "^8.0.10",
-    "wxt": "^0.20.25"
+    "vite": "^8.0.10"
   }
 }
