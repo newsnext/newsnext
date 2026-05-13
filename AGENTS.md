@@ -5,6 +5,10 @@
 
 ## Development
 
+### Frozen Areas
+
+- Do not modify `apps/admin` or `apps/extension` for now; these areas are temporarily archived.
+
 ### Version Control
 
 - Use `git` as the primary version control system for this repository.
