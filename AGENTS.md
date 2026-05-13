@@ -7,10 +7,8 @@
 
 ### Version Control
 
-- Use `jj` as the primary version control system for this repository.
-- Prefer `jj` commands and workflows for status checks, history inspection, commit description updates, bookmarks, and pushes.
-- Before making any code changes, always set the current working commit description first with `jj desc -m "<type>(<scope>): <summary>"`.
-- Treat setting the commit description as mandatory before editing files so each change starts from an explicitly described commit.
+- Use `git` as the primary version control system for this repository.
+- Prefer `git` commands and workflows for status checks, history inspection, branches, commits, and pushes.
 - When asked to "separately push" multiple changes, treat that as separate commits pushed sequentially to `main` by default, not separate branches or pull requests, unless explicitly requested.
 
 ### Commit Messages
