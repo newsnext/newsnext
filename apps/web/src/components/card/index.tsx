@@ -2,7 +2,7 @@ import type { ReactNode } from "react"
 import type { BoardSource, NewsItem } from "@/typings/source"
 import { useAtom } from "jotai"
 import { useInView } from "motion/react"
-import { useCallback, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { FlipAnimate } from "@/components/common/flip-animate"
 import { useSourceParams } from "@/hooks"
 import { useSourceQuery } from "@/hooks/use-source-query"
@@ -29,7 +29,11 @@ export interface CardProps {
   }
 }
 
-function CardContent({ id, source, dragHandle, disableExpandedPreview = false, previewSelection }: CardProps) {
+interface CardContentProps extends CardProps {
+  isInView: boolean
+}
+
+function CardContent({ id, source, isInView, dragHandle, disableExpandedPreview = false, previewSelection }: CardContentProps) {
   const { isExpandedPreviewOpen, openExpandedPreview } = useExpandedPreview()
   const [starredSourceInstanceIds, setStarredSourceInstanceIds] = useAtom(starredSourceInstanceIdsAtom)
   const [, setSourceInstances] = useAtom(sourceInstancesAtom)
@@ -56,6 +60,7 @@ function CardContent({ id, source, dragHandle, disableExpandedPreview = false, p
   const { items, refetch, isFetching, updatedTime } = useSourceQuery({
     sourceId: source.sourceId,
     params: savedParams,
+    enabled: isInView,
   })
 
   // useEffect(() => {
@@ -181,14 +186,19 @@ function CardContent({ id, source, dragHandle, disableExpandedPreview = false, p
 
 export default function Card(props: CardProps) {
   const ref = useRef<HTMLDivElement>(null)
+  const [hasEnteredView, setHasEnteredView] = useState(false)
   const setRef = (node: HTMLDivElement | null) => {
     ref.current = node
     props.nodeRef?.(node)
   }
 
-  const inView = useInView(ref, {
-    once: true,
-  })
+  const isInView = useInView(ref)
+
+  useEffect(() => {
+    if (isInView) {
+      setHasEnteredView(true)
+    }
+  }, [isInView])
 
   return (
     <div
@@ -198,8 +208,8 @@ export default function Card(props: CardProps) {
         props.className,
       )}
     >
-      {inView && (
-        <CardContent {...props} />
+      {hasEnteredView && (
+        <CardContent {...props} isInView={isInView} />
       )}
     </div>
   )
