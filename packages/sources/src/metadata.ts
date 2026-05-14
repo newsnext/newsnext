@@ -327,6 +327,16 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "provider": "rsshub"
   },
   {
+    "name": "百度贴吧",
+    "id": "default",
+    "title": "热议",
+    "color": "blue",
+    "type": "hottest",
+    "category": "china",
+    "home": "https://tieba.baidu.com",
+    "provider": "tieba"
+  },
+  {
     "name": "V2EX",
     "id": "default",
     "params": {

@@ -11,11 +11,12 @@ import source_6 from "./lib/netease-music"
 import source_7 from "./lib/newsnow"
 import source_8 from "./lib/rss"
 import source_9 from "./lib/rsshub"
-import source_10 from "./lib/v2ex"
-import source_11 from "./lib/weibo"
-import source_12 from "./lib/xueqiu"
-import source_13 from "./lib/zaobao"
-import source_14 from "./lib/zhihu"
+import source_10 from "./lib/tieba"
+import source_11 from "./lib/v2ex"
+import source_12 from "./lib/weibo"
+import source_13 from "./lib/xueqiu"
+import source_14 from "./lib/zaobao"
+import source_15 from "./lib/zhihu"
 
 export const providers = {
   "bilibili": source_0,
@@ -28,9 +29,10 @@ export const providers = {
   "newsnow": source_7,
   "rss": source_8,
   "rsshub": source_9,
-  "v2ex": source_10,
-  "weibo": source_11,
-  "xueqiu": source_12,
-  "zaobao": source_13,
-  "zhihu": source_14
+  "tieba": source_10,
+  "v2ex": source_11,
+  "weibo": source_12,
+  "xueqiu": source_13,
+  "zaobao": source_14,
+  "zhihu": source_15
 }

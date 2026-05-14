@@ -2,6 +2,16 @@ import { describe, expect, it } from "vitest"
 import { providers } from "../src/index"
 
 describe("source Structure Tests", () => {
+  it("registers tieba default source", () => {
+    expect(providers.tieba.sources.default).toMatchObject({
+      name: "百度贴吧",
+      title: "热议",
+      type: "hottest",
+      category: "china",
+      home: "https://tieba.baidu.com",
+    })
+  })
+
   for (const [providerId, providerDefinition] of Object.entries(providers)) {
     describe(providerId, () => {
       for (const [sourceId, source] of Object.entries(providerDefinition.sources)) {

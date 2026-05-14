@@ -1,4 +1,4 @@
-import type { SourceParamSchemaMap } from "../../typings"
+import type { NewsItem, SourceParamSchemaMap } from "../../typings"
 import iconv from "iconv-lite"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { myFetch } from "../fetch"
@@ -114,7 +114,7 @@ describe("$htmlSourceLoader", () => {
 
     const results = await (source as any).loader({})
     expect(results).toHaveLength(2)
-    expect(results.map(item => item.title)).toEqual(["Article 1", "Article 2"])
+    expect(results.map((item: NewsItem) => item.title)).toEqual(["Article 1", "Article 2"])
   })
 
   it("should filter items with a selector", async () => {
