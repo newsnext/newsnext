@@ -32,10 +32,10 @@ export function useSourceQuery({ sourceId, params, enabled = true }: UseSourceQu
     enabled,
     // placeholderData: prev => prev ?? readCache(),
     placeholderData: prev => prev,
-    staleTime: Number.POSITIVE_INFINITY,
+    staleTime: 1000 * 60 * 3,
     refetchOnMount: false,
     refetchOnReconnect: false,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
     retry: false,
   })
 
