@@ -122,15 +122,13 @@ export function CardFront() {
             className={cn(
               "pointer-events-none absolute inset-0 bg-background/70",
               `sprinkle-${color}-400`,
+              isFetching && "animate-pulse",
             )}
           />
           <div
             ref={ref}
             onPointerDown={event => event.stopPropagation()}
-            className={cn(
-              "relative size-full overflow-y-auto px-2 py-2 scrollbar-hidden",
-              isFetching && `animate-pulse`,
-            )}
+            className="relative size-full overflow-y-auto px-2 py-2 scrollbar-hidden"
           >
             <div className={cn("transition-opacity-500", isFetching && "opacity-20")}>
               {type === "hottest"
