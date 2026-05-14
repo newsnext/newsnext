@@ -12,11 +12,20 @@ const DEFAULT_MIN_FETCH_AGE = 1 * 60 * 1000 // 1 minute
 const MAX_CACHED_ITEM_COUNT = 100
 
 const pendingRequests = new Map<string, Promise<unknown>>()
+type CacheStatus = CacheResult<unknown>["status"]
 
 function limitCachedItems<T>(value: T): T {
   return Array.isArray(value)
     ? value.slice(0, MAX_CACHED_ITEM_COUNT) as T
     : value
+}
+
+function createCacheResult<T>(updated: number, status: CacheStatus, items: T): CacheResult<T> {
+  return {
+    updated,
+    status,
+    items: limitCachedItems(items),
+  }
 }
 
 function mergeTimelineItems<T>(previous: T | undefined, next: T, cacheMode: string): T {
@@ -51,11 +60,7 @@ export async function getCachedSource<T>(
   if (disableCache) {
     const items = await fetcher()
     if (Array.isArray(items) && items.length > 0) {
-      return {
-        updated: Date.now(),
-        status: "success",
-        items: limitCachedItems(items),
-      }
+      return createCacheResult(Date.now(), "success", items)
     }
   }
 
@@ -72,20 +77,12 @@ export async function getCachedSource<T>(
 
     // 1. Fresh cache
     if (!forceRefresh && now - updated < minFetchAge) {
-      return {
-        updated,
-        status: "success",
-        items: limitCachedItems(cached.value),
-      }
+      return createCacheResult(updated, "success", cached.value)
     }
 
     // 2. Stale but valid within max cache age
     if (!forceRefresh && now - updated < effectiveMaxCacheAge) {
-      return {
-        updated,
-        status: "cache",
-        items: limitCachedItems(cached.value),
-      }
+      return createCacheResult(updated, "cache", cached.value)
     }
   }
 
@@ -93,11 +90,7 @@ export async function getCachedSource<T>(
     // Optimization: Request Coalescing
     if (pendingRequests.has(key)) {
       const items = await pendingRequests.get(key)
-      return {
-        updated: Date.now(),
-        status: "success",
-        items: items as T,
-      }
+      return createCacheResult(Date.now(), "success", items as T)
     }
 
     const fetchPromise = (async (): Promise<T> => {
@@ -136,11 +129,7 @@ export async function getCachedSource<T>(
     pendingRequests.set(key, fetchPromise)
     const items = await fetchPromise
 
-    return {
-      updated: Date.now(),
-      status: "success",
-      items,
-    }
+    return createCacheResult(Date.now(), "success", items)
   } catch (err) {
     if (adaptiveMaxCacheAge) {
       const errorPolicyPromise = adapter.setPolicy(key, updateAdaptiveCacheStateForError({
@@ -158,11 +147,7 @@ export async function getCachedSource<T>(
     }
 
     if (cached) {
-      return {
-        updated: cached.updatedAt,
-        status: "cache",
-        items: limitCachedItems(cached.value),
-      }
+      return createCacheResult(cached.updatedAt, "cache", cached.value)
     }
     throw err
   }

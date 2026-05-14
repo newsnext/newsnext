@@ -297,10 +297,10 @@ describe("getCachedSource", () => {
     expect(persistedPolicy?.currentMaxCacheAge).toBe(96_000)
   })
 
-  it("falls back to cache and updates policy after fetch errors", async () => {
+  it("falls back to limited cache and updates policy after fetch errors", async () => {
     vi.setSystemTime(2 * minute)
     const adapter = new MemoryCacheAdapter()
-    setCachedItems(adapter, [{ id: "cached" }], 0)
+    setCachedItems(adapter, createItems(101, "cached"), 0)
     const fetcher = vi.fn(async (): Promise<Array<{ id: string }>> => {
       throw new Error("upstream failed")
     })
@@ -316,7 +316,7 @@ describe("getCachedSource", () => {
     const state = await adapter.getPolicy("source")
 
     expect(result.status).toBe("cache")
-    expect(result.items).toEqual([{ id: "cached" }])
+    expect(result.items).toEqual(createItems(100, "cached"))
     expect(state?.errorStreak).toBe(1)
     expect(state?.currentMaxCacheAge).toBe(150_000)
   })
