@@ -2,14 +2,32 @@ import type { CacheAdapter, CacheResult, GetCachedSourceOptions } from "./typing
 import {
   getBestAdaptiveCacheAlgorithm,
   getEffectiveMaxCacheAge,
+  getIdentity,
   updateAdaptiveCacheState,
   updateAdaptiveCacheStateForError,
 } from "@newsnext/cache-policy"
 
 const DEFAULT_MAX_CACHE_AGE = 30 * 60 * 1000 // 30 minutes
 const DEFAULT_MIN_FETCH_AGE = 1 * 60 * 1000 // 1 minute
+const MAX_CACHED_ITEM_COUNT = 100
 
 const pendingRequests = new Map<string, Promise<unknown>>()
+
+function limitCachedItems<T>(value: T): T {
+  return Array.isArray(value)
+    ? value.slice(0, MAX_CACHED_ITEM_COUNT) as T
+    : value
+}
+
+function mergeTimelineItems<T>(previous: T | undefined, next: T, cacheMode: string): T {
+  if (cacheMode !== "timeline" || !Array.isArray(previous) || !Array.isArray(next)) {
+    return limitCachedItems(next)
+  }
+
+  const nextIdentities = new Set(next.map(getIdentity))
+  const retainedPrevious = previous.filter(item => !nextIdentities.has(getIdentity(item)))
+  return limitCachedItems([...next, ...retainedPrevious] as T)
+}
 
 export async function getCachedSource<T>(
   options: GetCachedSourceOptions<T>,
@@ -36,7 +54,7 @@ export async function getCachedSource<T>(
       return {
         updated: Date.now(),
         status: "success",
-        items,
+        items: limitCachedItems(items),
       }
     }
   }
@@ -57,7 +75,7 @@ export async function getCachedSource<T>(
       return {
         updated,
         status: "success",
-        items: cached.value,
+        items: limitCachedItems(cached.value),
       }
     }
 
@@ -66,7 +84,7 @@ export async function getCachedSource<T>(
       return {
         updated,
         status: "cache",
-        items: cached.value,
+        items: limitCachedItems(cached.value),
       }
     }
   }
@@ -89,7 +107,8 @@ export async function getCachedSource<T>(
           throw new Error("Invalid items: empty or not an array")
         }
 
-        const setPromise = adapter.set(key, items).catch(e => console.error(`[Cache] Set failed for ${key}:`, e))
+        const mergedItems = mergeTimelineItems(cached?.value, items, cacheMode)
+        const setPromise = adapter.set(key, mergedItems).catch(e => console.error(`[Cache] Set failed for ${key}:`, e))
         const policyPromise = adaptiveMaxCacheAge
           ? adapter.setPolicy(key, updateAdaptiveCacheState({
               previous: cached?.value,
@@ -108,7 +127,7 @@ export async function getCachedSource<T>(
           await setPromise
           await policyPromise
         }
-        return items
+        return mergedItems
       } finally {
         pendingRequests.delete(key)
       }
@@ -142,7 +161,7 @@ export async function getCachedSource<T>(
       return {
         updated: cached.updatedAt,
         status: "cache",
-        items: cached.value,
+        items: limitCachedItems(cached.value),
       }
     }
     throw err

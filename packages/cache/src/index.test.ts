@@ -32,13 +32,17 @@ function setCachedItems(adapter: MemoryCacheAdapter, value: unknown[], updatedAt
   adapter.entries.set("source", { value, updatedAt })
 }
 
+function createItems(count: number, prefix = "item"): Array<{ id: string }> {
+  return Array.from({ length: count }, (_, index) => ({ id: `${prefix}-${index}` }))
+}
+
 function createAdaptiveState(overrides: Partial<AdaptiveCacheState> = {}): AdaptiveCacheState {
   return {
     currentMaxCacheAge: minute,
     lastFetchedAt: 0,
     unchangedStreak: 0,
     errorStreak: 0,
-    hourlyChangeScores: Array.from({ length: 24 }).fill(1),
+    hourlyChangeScores: Array.from<number>({ length: 24 }).fill(1),
     averageChangeScore: 1,
     ...overrides,
   }
@@ -117,6 +121,109 @@ describe("getCachedSource", () => {
     expect(fetcher).toHaveBeenCalledOnce()
   })
 
+  it("appends older cached timeline items after newly fetched items", async () => {
+    vi.setSystemTime(5_500)
+    const adapter = new MemoryCacheAdapter()
+    setCachedItems(adapter, [
+      { id: "b", title: "old b" },
+      { id: "c", title: "old c" },
+    ], 500)
+    const fetcher = vi.fn(async () => [
+      { id: "a", title: "new a" },
+      { id: "b", title: "new b" },
+    ])
+
+    const result = await getCachedSource({
+      key: "source",
+      fetcher,
+      minFetchAge: 1_000,
+      maxCacheAge: 5_000,
+      cacheMode: "timeline",
+    }, adapter)
+
+    expect(result.items).toEqual([
+      { id: "a", title: "new a" },
+      { id: "b", title: "new b" },
+      { id: "c", title: "old c" },
+    ])
+    expect(adapter.entries.get("source")?.value).toEqual(result.items)
+  })
+
+  it("stores and returns only the first 100 timeline items after merging", async () => {
+    vi.setSystemTime(5_500)
+    const adapter = new MemoryCacheAdapter()
+    setCachedItems(adapter, createItems(80, "old"), 500)
+    const fetcher = vi.fn(async () => createItems(40, "new"))
+
+    const result = await getCachedSource({
+      key: "source",
+      fetcher,
+      minFetchAge: 1_000,
+      maxCacheAge: 5_000,
+      cacheMode: "timeline",
+    }, adapter)
+
+    expect(result.items).toHaveLength(100)
+    expect(result.items).toEqual([
+      ...createItems(40, "new"),
+      ...createItems(60, "old"),
+    ])
+    expect(adapter.entries.get("source")?.value).toHaveLength(100)
+  })
+
+  it("returns only the first 100 cached items", async () => {
+    vi.setSystemTime(1_000)
+    const adapter = new MemoryCacheAdapter()
+    setCachedItems(adapter, createItems(101), 500)
+    const fetcher = vi.fn(async () => createItems(1, "fresh"))
+
+    const result = await getCachedSource({
+      key: "source",
+      fetcher,
+      minFetchAge: 1_000,
+      maxCacheAge: 5_000,
+    }, adapter)
+
+    expect(result.items).toEqual(createItems(100))
+    expect(fetcher).not.toHaveBeenCalled()
+  })
+
+  it("stores and returns only the first 100 hottest items", async () => {
+    vi.setSystemTime(5_500)
+    const adapter = new MemoryCacheAdapter()
+    setCachedItems(adapter, [{ id: "old" }], 500)
+    const fetcher = vi.fn(async () => createItems(101, "hot"))
+
+    const result = await getCachedSource({
+      key: "source",
+      fetcher,
+      minFetchAge: 1_000,
+      maxCacheAge: 5_000,
+      cacheMode: "hottest",
+    }, adapter)
+
+    expect(result.items).toEqual(createItems(100, "hot"))
+    expect(adapter.entries.get("source")?.value).toEqual(createItems(100, "hot"))
+  })
+
+  it("replaces hottest cache instead of appending older entries", async () => {
+    vi.setSystemTime(5_500)
+    const adapter = new MemoryCacheAdapter()
+    setCachedItems(adapter, [{ id: "old" }], 500)
+    const fetcher = vi.fn(async () => [{ id: "new" }])
+
+    const result = await getCachedSource({
+      key: "source",
+      fetcher,
+      minFetchAge: 1_000,
+      maxCacheAge: 5_000,
+      cacheMode: "hottest",
+    }, adapter)
+
+    expect(result.items).toEqual([{ id: "new" }])
+    expect(adapter.entries.get("source")?.value).toEqual([{ id: "new" }])
+  })
+
   it("force refresh bypasses minFetchAge and corrects adaptive policy", async () => {
     const now = Date.UTC(2026, 0, 1, 3, 5, 0)
     vi.setSystemTime(now)
@@ -125,7 +232,7 @@ describe("getCachedSource", () => {
     adapter.policies.set("source", createAdaptiveState({
       currentMaxCacheAge: 30 * minute,
       unchangedStreak: 12,
-      hourlyChangeScores: Array.from({ length: 24 }).fill(0),
+      hourlyChangeScores: Array.from<number>({ length: 24 }).fill(0),
       averageChangeScore: 0,
       lastChangedAt: now - 6 * 60 * minute,
     }))
