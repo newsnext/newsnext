@@ -5,7 +5,8 @@
   "license": "MPL-2.0",
   "exports": {
     ".": "./src/index.ts",
-    "./orm": "./src/orm.ts"
+    "./orm": "./src/orm.ts",
+    "./schema": "./src/schema.ts"
   },
   "scripts": {
     "generate": "bun run --bun drizzle-kit generate",
@@ -14,6 +15,7 @@
     "studio": "bun run --bun drizzle-kit studio"
   },
   "dependencies": {
+    "db0": "^0.3.4",
     "drizzle-orm": "^0.45.2"
   },
   "devDependencies": {

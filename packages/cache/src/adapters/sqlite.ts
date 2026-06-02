@@ -1,25 +1,33 @@
 import type { AdaptiveCacheState, CacheAdapter, CacheEntry } from "../typings"
-import { Database } from "bun:sqlite"
+import type { Database } from "db0"
+import { fileURLToPath } from "node:url"
+import { createDatabase } from "db0"
+import { drizzle } from "db0/integrations/drizzle"
 import { eq } from "drizzle-orm"
-import { drizzle } from "drizzle-orm/bun-sqlite"
 import * as schema from "./db/schema"
 
-export class SqliteCacheAdapter implements CacheAdapter {
-  private db
+type Db0Database = Database
+type SqliteDrizzleDatabase = ReturnType<typeof drizzle<typeof schema>>
 
-  constructor(path: string) {
-    const sqlite = new Database(path, { create: true })
-    this.db = drizzle(sqlite, { schema })
+export class SqliteCacheAdapter implements CacheAdapter {
+  private readonly db
+
+  private constructor(db: SqliteDrizzleDatabase) {
+    this.db = db
+  }
+
+  static async create(path: string): Promise<SqliteCacheAdapter> {
+    const db0 = await createDb0Database(path)
+    await prepareSchema(db0)
+    return new SqliteCacheAdapter(drizzle<typeof schema>(db0))
   }
 
   async get<T>(key: string): Promise<CacheEntry<T> | undefined> {
     try {
-      const result = await this.db.query.cache.findFirst({
-        where: eq(schema.cache.key, key),
-      })
+      const result = await this.db.select().from(schema.cache).where(eq(schema.cache.key, key)).get()
       if (!result) return undefined
       return {
-        value: result.value as T,
+        value: parseJsonValue<T>(result.value),
         updatedAt: result.updatedAt,
       }
     } catch (e) {
@@ -45,9 +53,7 @@ export class SqliteCacheAdapter implements CacheAdapter {
 
   async getPolicy(key: string): Promise<AdaptiveCacheState | undefined> {
     try {
-      const result = await this.db.query.cachePolicy.findFirst({
-        where: eq(schema.cachePolicy.key, key),
-      })
+      const result = await this.db.select().from(schema.cachePolicy).where(eq(schema.cachePolicy.key, key)).get()
       if (!result) return undefined
       return {
         currentMaxCacheAge: result.currentMaxCacheAge,
@@ -56,7 +62,7 @@ export class SqliteCacheAdapter implements CacheAdapter {
         lastChangedAt: result.lastChangedAt ?? undefined,
         unchangedStreak: result.unchangedStreak,
         errorStreak: result.errorStreak,
-        hourlyChangeScores: result.hourlyChangeScores,
+        hourlyChangeScores: parseJsonValue<number[]>(result.hourlyChangeScores),
         averageChangeScore: result.averageChangeScore,
       }
     } catch (e) {
@@ -93,4 +99,45 @@ export class SqliteCacheAdapter implements CacheAdapter {
       },
     })
   }
+}
+
+function parseJsonValue<T>(value: unknown): T {
+  return typeof value === "string" ? JSON.parse(value) as T : value as T
+}
+
+async function createDb0Database(path: string): Promise<Db0Database> {
+  if (typeof Bun === "undefined") {
+    throw new Error("SQLite cache requires Bun runtime")
+  }
+
+  const { default: createBunSqliteConnector } = await import("db0/connectors/bun-sqlite")
+  return createDatabase(createBunSqliteConnector({ path: normalizeSqlitePath(path) }))
+}
+
+function normalizeSqlitePath(path: string): string {
+  return path.startsWith("file:") ? fileURLToPath(path) : path
+}
+
+async function prepareSchema(db: Database): Promise<void> {
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS sources_cache_table (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL,
+      updatedAt INTEGER NOT NULL
+    );
+  `)
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS sources_cache_policy_table (
+      key TEXT PRIMARY KEY,
+      currentMaxCacheAge INTEGER NOT NULL,
+      lastFingerprint TEXT,
+      lastFetchedAt INTEGER NOT NULL,
+      lastChangedAt INTEGER,
+      unchangedStreak INTEGER NOT NULL,
+      errorStreak INTEGER NOT NULL,
+      hourlyChangeScores TEXT NOT NULL,
+      averageChangeScore REAL NOT NULL,
+      updatedAt INTEGER NOT NULL
+    );
+  `)
 }

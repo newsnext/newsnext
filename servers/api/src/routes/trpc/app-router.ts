@@ -1,7 +1,7 @@
 import type { SourceDescriptor } from "@newsnext/sources/typings"
-import { db, starredSourceInstances, userSourceInstances } from "@newsnext/database"
 import { and, eq } from "@newsnext/database/orm"
-import { SourceServiceError } from "@newsnext/instance"
+import { starredSourceInstances, userSourceInstances } from "@newsnext/database/schema"
+import { SourceServiceError } from "@newsnext/instance/errors"
 import { TRPCError } from "@trpc/server"
 import { z } from "zod"
 import { protectedProcedure, publicProcedure, router } from "./core"
@@ -99,6 +99,7 @@ export const appRouter = router({
   getSourceState: protectedProcedure
     .query(async ({ ctx }) => {
       const userId = ctx.session.user.id
+      const db = ctx.db
       const [instances, stars] = await Promise.all([
         db.select().from(userSourceInstances).where(eq(userSourceInstances.userId, userId)),
         db.select().from(starredSourceInstances).where(eq(starredSourceInstances.userId, userId)),
@@ -121,6 +122,7 @@ export const appRouter = router({
     .mutation(async ({ input, ctx }) => {
       const userId = ctx.session.user.id
       const now = Date.now()
+      const db = ctx.db
 
       await db.transaction(async (tx) => {
         await tx.delete(userSourceInstances).where(eq(userSourceInstances.userId, userId))
@@ -155,6 +157,7 @@ export const appRouter = router({
     .mutation(async ({ input, ctx }) => {
       const userId = ctx.session.user.id
       const now = Date.now()
+      const db = ctx.db
 
       await db.insert(userSourceInstances).values({
         userId,
@@ -181,6 +184,7 @@ export const appRouter = router({
     .input(sourceInstanceIdInputSchema)
     .mutation(async ({ input, ctx }) => {
       const userId = ctx.session.user.id
+      const db = ctx.db
 
       await Promise.all([
         db.delete(userSourceInstances).where(and(eq(userSourceInstances.userId, userId), eq(userSourceInstances.instanceId, input.instanceId))),
@@ -194,6 +198,7 @@ export const appRouter = router({
     .input(setStarredSourceInstanceInputSchema)
     .mutation(async ({ input, ctx }) => {
       const userId = ctx.session.user.id
+      const db = ctx.db
 
       if (!input.starred) {
         await db.delete(starredSourceInstances).where(and(eq(starredSourceInstances.userId, userId), eq(starredSourceInstances.instanceId, input.instanceId)))
@@ -213,6 +218,7 @@ export const appRouter = router({
     .input(sourceInstanceIdInputSchema)
     .mutation(async ({ input, ctx }) => {
       const userId = ctx.session.user.id
+      const db = ctx.db
       const [instance] = await db
         .select()
         .from(userSourceInstances)

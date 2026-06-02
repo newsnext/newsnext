@@ -11,6 +11,7 @@
   "include": [
     "./src",
     "./worker-configuration.d.ts",
-    "./build.ts"
+    "./build.ts",
+    "./nitro.config.ts"
   ]
 }

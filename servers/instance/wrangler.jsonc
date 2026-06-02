@@ -1,38 +1,15 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "newsnext-api",
+  "name": "newsnext-instance",
   "compatibility_date": "2025-12-19",
+  "workers_dev": true,
   "compatibility_flags": [
     "nodejs_compat"
   ],
-  "vars": {
-    "NEWSNEXT_INSTANCE_URL": "https://instance.newsnext.pro",
-    "BETTER_AUTH_URL": "https://api.newsnext.pro",
-    "BETTER_AUTH_TRUSTED_ORIGINS": "https://newsnext.pro,chrome-extension://cffgbnjiaakknooiegnjkojemhidheke",
-    "GITHUB_CLIENT_ID": "Ov23lizGxoGltuEXdplC"
-  },
   "routes": [
     {
-      "pattern": "api.newsnext.pro",
+      "pattern": "instance.newsnext.pro",
       "custom_domain": true
-    }
-  ],
-  // "kv_namespaces": [
-  //   {
-  //     "binding": "MY_KV_NAMESPACE",
-  //     "id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-  //   }
-  // ],
-  "r2_buckets": [
-    {
-      "binding": "ICON_BUCKET",
-      "bucket_name": "newsnext"
-    }
-  ],
-  "services": [
-    {
-      "binding": "INSTANCE",
-      "service": "newsnext-instance"
     }
   ],
   "d1_databases": [
@@ -47,9 +24,6 @@
       "database_id": "d57ded3d-72e3-47c8-a72b-4bc2501ce410"
     }
   ],
-  // "ai": {
-  //   "binding": "AI"
-  // },
   "observability": {
     "enabled": false,
     "head_sampling_rate": 1,

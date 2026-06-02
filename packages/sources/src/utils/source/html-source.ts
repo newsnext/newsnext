@@ -1,5 +1,6 @@
 import type { AnyNode } from "domhandler"
 import type { FetchOptions } from "ofetch"
+import type * as cheerio from "cheerio/slim"
 import type {
   InferSourceParams,
   NewsItem,
@@ -7,7 +8,7 @@ import type {
   SourceRegistration,
 } from "../../typings/sources"
 import { Buffer } from "node:buffer"
-import * as cheerio from "cheerio"
+import { load } from "cheerio/slim"
 import iconv from "iconv-lite"
 import { createLoader } from "."
 import { myFetch } from "../fetch"
@@ -111,7 +112,7 @@ export const $htmlLoader = createLoader<HtmlSourceOptions>(async (opts) => {
   }
 
   // console.log(html)
-  const $ = cheerio.load(html)
+  const $ = load(html)
   const items = resolveItems($, itemsResolver ?? itemSelector)
   const news: NewsItem[] = []
 

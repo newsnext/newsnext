@@ -9,13 +9,15 @@ import type {
 } from "./types"
 import { isSourceErrorCode, SourceServiceError } from "./errors"
 
+type FetchFunction = (...args: Parameters<typeof fetch>) => ReturnType<typeof fetch>
+
 export class RemoteNewsNextInstance implements NewsNextDataInstance {
   private readonly baseUrl: URL
-  private readonly fetch: typeof fetch
+  private readonly customFetch?: FetchFunction
 
   constructor(options: RemoteNewsNextInstanceOptions) {
     this.baseUrl = new URL(options.url)
-    this.fetch = options.fetch ?? globalThis.fetch
+    this.customFetch = options.fetch
   }
 
   async listSourceDescriptors(): Promise<SourceDescriptor[]> {
@@ -54,7 +56,9 @@ export class RemoteNewsNextInstance implements NewsNextDataInstance {
 
   private async request<T>(pathname: string, init?: RequestInit): Promise<T> {
     const url = new URL(pathname.replace(/^\//, ""), this.baseUrlWithSlash())
-    const response = await this.fetch(url, init)
+    const response = this.customFetch
+      ? await this.customFetch(url.toString(), init)
+      : await globalThis.fetch(url.toString(), init)
     const payload = await response.json() as InstanceResponse<T>
 
     if (payload.success) {

@@ -8,6 +8,8 @@
     "dev": "bun run --bun vite",
     "scan": "react-scan http://localhost:3001",
     "build": "bun run --bun vite build",
+    "build:cloudflare": "VITE_BASE_URL=https://api.newsnext.pro bun run build",
+    "deploy:cloudflare": "wrangler deploy",
     "preview": "bun run --bun vite preview",
     "compile": "tsgo --noEmit"
   },

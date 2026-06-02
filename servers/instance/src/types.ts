@@ -55,12 +55,13 @@ export interface InstanceDebugInfo {
 
 export interface RemoteNewsNextInstanceOptions {
   url: string
-  fetch?: typeof fetch
+  fetch?: (...args: Parameters<typeof fetch>) => ReturnType<typeof fetch>
 }
 
 export interface CloudflareNewsNextInstanceOptions {
   bindings: {
     CACHE_DB?: unknown
+    DATA_DB?: unknown
   }
   remoteUrl?: string
 }

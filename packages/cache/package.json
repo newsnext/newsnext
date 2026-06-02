@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@newsnext/cache-policy": "workspace:*",
+    "db0": "^0.3.4",
     "drizzle-orm": "^0.45.2"
   },
   "devDependencies": {

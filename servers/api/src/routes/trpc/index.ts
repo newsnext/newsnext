@@ -1,4 +1,4 @@
-import type { NewsNextDataInstance } from "@newsnext/instance"
+import type { NewsNextDataInstance } from "@newsnext/instance/types"
 import type { Context } from "hono"
 import { trpcServer } from "@hono/trpc-server"
 import { Hono } from "hono"
@@ -26,7 +26,7 @@ export const createTrpcApp = (loadInstance: InstanceLoader) => {
     }
 
     if (!instance) {
-      const { createMemoryNewsNextInstance } = await import("@newsnext/instance")
+      const { createMemoryNewsNextInstance } = await import("@newsnext/instance/local")
       instance = await createMemoryNewsNextInstance()
       console.log("Using Memory data instance (fallback)")
     }
