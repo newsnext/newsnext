@@ -75,7 +75,7 @@ export function ExpandedPreviewDialog({
           <aside className="min-w-0 flex flex-1 flex-col">
             {selectedItem
               ? (
-                  <article className="mx-auto flex w-full max-w-180 flex-1 flex-col overflow-y-auto p-6 leading-7">
+                  <article className="mx-auto flex w-full max-w-180 flex-1 flex-col overflow-y-auto p-3 leading-7">
                     <NewsItemPreviewContent
                       item={selectedItem}
                       className="gap-4 text-foreground/90"

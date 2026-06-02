@@ -128,7 +128,7 @@ export function NewsItemPreviewContent({ item, className }: { item: NewsItem, cl
             alt="preview picture"
             style={{
               transform: `scale(${scale ?? 1})`,
-              borderRadius: `${radius ?? 24}px`,
+              borderRadius: `${radius ?? 12}px`,
             }}
             className="max-w-full"
           />

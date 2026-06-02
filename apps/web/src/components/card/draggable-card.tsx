@@ -37,7 +37,7 @@ export function DraggableCard({ id, source, ...props }: DraggableCardProps) {
 
   const dragHandle = useMemo(
     () => (
-      <div ref={setHandleRef} className="flex items-center justify-center">
+  <div ref={setHandleRef} className="flex items-center justify-center">
         <IconButton
           aria-label="Handle"
           className="cursor-grab active:cursor-grabbing"
