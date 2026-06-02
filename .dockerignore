@@ -1,0 +1,14 @@
+.git
+.github
+.wrangler
+**/.output
+**/dist
+**/node_modules
+**/coverage
+**/*.tsbuildinfo
+.env
+.env.*
+data/*.sqlite
+data/*.sqlite-*
+Dockerfile
+docker-compose*.yml

@@ -121,6 +121,9 @@ app.route("/api/p", proxyApp)
 
 app.route("/api/auth", authApp)
 
+app.get("/api", c => c.json({ name: "newsnext-api", ok: true }))
+app.get("/api/", c => c.json({ name: "newsnext-api", ok: true }))
+
 app.notFound((c) => c.json({ error: "Not Found" }, 404))
 
 export default app

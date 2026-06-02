@@ -34,6 +34,13 @@
     "deploy:server": "bun --filter=@newsnext/api run deploy:cloudflare",
     "deploy:web": "bun run build:web && bun --filter=@newsnext/web run deploy:cloudflare",
     "deploy:cloudflare": "bun run deploy:instance && bun run deploy:server && bun run deploy:web",
+    "docker:build": "bun run docker:build:api && bun run docker:build:instance && bun run docker:build:web",
+    "docker:build:api": "docker build --target api -t newsnext-api:latest .",
+    "docker:build:instance": "docker build --target instance -t newsnext-instance:latest .",
+    "docker:build:web": "docker build --target web -t newsnext-web:latest .",
+    "docker:up": "docker compose up -d --build",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
     "dev:chrome": "bun --filter=@newsnext/extension run dev:chrome",
     "postinstall": "bun --filter=@newsnext/build run build -l warn"
   },

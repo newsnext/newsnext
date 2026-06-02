@@ -1,5 +1,7 @@
 import { defineNitroConfig } from "nitro/config"
 
+const preset = process.env.NITRO_PRESET ?? process.env.SERVER_PRESET ?? "bun"
+
 const saferBufferCloudflarePlugin = {
   name: "newsnext:safer-buffer-cloudflare",
   transform(code: string, id: string) {
@@ -15,7 +17,7 @@ const saferBufferCloudflarePlugin = {
 
 export default defineNitroConfig({
   compatibilityDate: "2025-12-19",
-  preset: process.env.NITRO_PRESET ?? process.env.SERVER_PRESET ?? "bun",
+  preset,
   serverEntry: {
     handler: "./src/index.ts",
     format: "web",
@@ -34,6 +36,8 @@ export default defineNitroConfig({
   },
   rolldownConfig: {
     plugins: [saferBufferCloudflarePlugin],
-    external: ["@newsnext/cache/sqlite", "db0/connectors/bun-sqlite", "bun:sqlite"],
+    external: preset.includes("cloudflare")
+      ? ["@newsnext/cache/sqlite", "db0/connectors/bun-sqlite", "bun:sqlite"]
+      : ["bun:sqlite"],
   },
 })
