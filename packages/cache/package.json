@@ -5,6 +5,7 @@
   "license": "MPL-2.0",
   "exports": {
     ".": "./src/index.ts",
+    "./db0": "./src/adapters/db0.ts",
     "./sqlite": "./src/adapters/sqlite.ts",
     "./memory": "./src/adapters/memory.ts",
     "./d1": "./src/adapters/d1.ts",

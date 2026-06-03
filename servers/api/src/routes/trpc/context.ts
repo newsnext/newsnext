@@ -2,7 +2,6 @@ import type { NewsNextDatabase } from "@newsnext/database/d1"
 import type { NewsNextDataInstance } from "@newsnext/instance/types"
 import type { H3Event } from "nitro"
 import type { ApiCloudflareBindings } from "@/cloudflare-bindings"
-import { createD1Db } from "@newsnext/database/d1"
 import { getNitroCloudflareEnv } from "@/cloudflare-bindings"
 
 export interface CreateContextOptions {
@@ -25,11 +24,12 @@ export async function createContext({ event }: CreateContextOptions) {
 }
 
 async function getDatabase(bindings: ApiCloudflareBindings | undefined): Promise<NewsNextDatabase> {
-  if (!bindings?.DATA_DB) {
+  if (!bindings?.DATA_DB && !("Bun" in globalThis)) {
     throw new Error("DATA_DB binding is required for NewsNext API database")
   }
 
-  return createD1Db(bindings.DATA_DB)
+  const { getApiDatabase } = await import("@/local-database")
+  return getApiDatabase()
 }
 
 export type Context = Awaited<ReturnType<typeof createContext>> & {

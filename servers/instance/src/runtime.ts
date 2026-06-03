@@ -6,7 +6,6 @@ import type {
 import {
   createD1NewsNextInstance,
   createMemoryNewsNextInstance,
-  createSqliteNewsNextInstance,
 } from "./local"
 import { createRemoteNewsNextInstance } from "./remote"
 
@@ -43,6 +42,8 @@ export async function createBunNewsNextInstance(
 
   const cachePath = options.cachePath ?? await getDefaultSqliteCachePath()
   console.log("Using Sqlite data instance")
+  const localSqliteModule = ["./local", "sqlite"].join("-")
+  const { createSqliteNewsNextInstance } = await import(localSqliteModule)
   return createSqliteNewsNextInstance(cachePath)
 }
 

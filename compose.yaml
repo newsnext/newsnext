@@ -6,6 +6,8 @@ services:
       target: instance
     ports:
       - "4101:3000"
+    volumes:
+      - instance-data:/data
 
   api:
     image: newsnext-api:latest
@@ -20,6 +22,8 @@ services:
       NEWSNEXT_INSTANCE_URL: http://instance:3000
     ports:
       - "4100:3000"
+    volumes:
+      - api-data:/data
     depends_on:
       - instance
 
@@ -34,3 +38,7 @@ services:
       - "4102:80"
     depends_on:
       - api
+
+volumes:
+  api-data:
+  instance-data:

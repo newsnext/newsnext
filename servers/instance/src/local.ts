@@ -112,17 +112,3 @@ export async function createD1NewsNextInstance(d1: unknown): Promise<NewsNextIns
     },
   })
 }
-
-export async function createSqliteNewsNextInstance(path: string): Promise<NewsNextInstance> {
-  const { SqliteCacheAdapter } = await import("@newsnext/cache/sqlite")
-  return createNewsNextInstance({
-    adapter: await SqliteCacheAdapter.create(path),
-    debugInfo: {
-      runtime: "bun",
-      cache: {
-        type: "sqlite",
-        path,
-      },
-    },
-  })
-}

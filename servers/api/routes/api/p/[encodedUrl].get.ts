@@ -1,5 +1,6 @@
 import { defineHandler, HTTPError } from "nitro"
 import { getRouterParam } from "nitro/h3"
+import { createSafeProxiedImageHeaders } from "@/proxy-headers"
 
 export default defineHandler(async (event) => {
   const encodedUrl = getRouterParam(event, "encodedUrl")
@@ -25,10 +26,7 @@ export default defineHandler(async (event) => {
       },
     })
 
-    const headers = new Headers(response.headers)
-    headers.delete("Set-Cookie")
-    headers.set("Cache-Control", "public, max-age=31536000, immutable")
-    headers.set("Access-Control-Allow-Origin", "*")
+    const headers = createSafeProxiedImageHeaders(response.headers)
 
     return new Response(response.body, {
       status: response.status,

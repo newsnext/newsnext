@@ -1,6 +1,23 @@
+import { fileURLToPath } from "node:url"
 import { defineNitroConfig } from "nitro/config"
 
-const preset = process.env.NITRO_PRESET ?? process.env.SERVER_PRESET ?? "bun"
+const preset = getNitroPreset()
+const isCloudflarePreset = preset.includes("cloudflare")
+const dataDbPath = process.env.NEWSNEXT_DATA_DB_PATH
+  ?? fileURLToPath(new URL("../../data/data.db", import.meta.url))
+const dataDatabase = isCloudflarePreset
+  ? {
+      connector: "cloudflare-d1",
+      options: {
+        bindingName: "DATA_DB",
+      },
+    }
+  : {
+      connector: "bun-sqlite",
+      options: {
+        path: dataDbPath,
+      },
+    }
 
 const saferBufferCloudflarePlugin = {
   name: "newsnext:safer-buffer-cloudflare",
@@ -22,6 +39,20 @@ export default defineNitroConfig({
   devServer: {
     runner: "bun-process",
   },
+  experimental: {
+    database: true,
+  },
+  database: {
+    default: dataDatabase,
+  },
+  devDatabase: {
+    default: {
+      connector: "bun-sqlite",
+      options: {
+        path: dataDbPath,
+      },
+    },
+  },
   publicAssets: [
     {
       dir: "./public",
@@ -40,8 +71,26 @@ export default defineNitroConfig({
   },
   rolldownConfig: {
     plugins: [saferBufferCloudflarePlugin],
-    external: preset.includes("cloudflare")
-      ? ["@newsnext/cache/sqlite", "db0/connectors/bun-sqlite", "bun:sqlite"]
+    external: isCloudflarePreset
+      ? ["db0/connectors/bun-sqlite", "bun:sqlite"]
       : ["bun:sqlite"],
   },
 })
+
+function getNitroPreset(): string {
+  return process.env.NITRO_PRESET
+    ?? process.env.SERVER_PRESET
+    ?? getCliPreset()
+    ?? "bun"
+}
+
+function getCliPreset(): string | undefined {
+  const presetFlagIndex = process.argv.findIndex(arg => arg === "--preset")
+  if (presetFlagIndex >= 0) {
+    return process.argv[presetFlagIndex + 1]
+  }
+
+  return process.argv
+    .find(arg => arg.startsWith("--preset="))
+    ?.slice("--preset=".length)
+}

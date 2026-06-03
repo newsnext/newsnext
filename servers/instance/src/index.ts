@@ -1,5 +1,5 @@
 import type { H3Event } from "nitro"
-import { createCloudflareNewsNextInstance, createLocalNewsNextInstance } from "./runtime"
+import { createLocalNewsNextInstance } from "./runtime"
 
 export * from "./app"
 export * from "./errors"
@@ -30,15 +30,12 @@ let instance: Awaited<ReturnType<typeof createLocalNewsNextInstance>> | undefine
 export async function getNewsNextInstance(event: H3Event) {
   const bindings = await getNitroCloudflareEnv(event)
   if (instance) {
-    if (bindings?.CACHE_DB && !await isCloudflareD1Instance(instance)) {
-      instance = await createCloudflareNewsNextInstance({ bindings })
-    }
-
     return instance
   }
 
-  if (bindings?.CACHE_DB) {
-    instance = await createCloudflareNewsNextInstance({ bindings })
+  if (bindings?.CACHE_DB || typeof Bun !== "undefined") {
+    const { createNitroDatabaseNewsNextInstance } = await import("./local-database")
+    instance = await createNitroDatabaseNewsNextInstance()
     return instance
   }
 
@@ -59,9 +56,4 @@ async function getNitroCloudflareEnv(event: H3Event): Promise<NitroCloudflareBin
   } catch {
     return undefined
   }
-}
-
-async function isCloudflareD1Instance(value: Awaited<ReturnType<typeof createLocalNewsNextInstance>>): Promise<boolean> {
-  const debugInfo = await value.getDebugInfo?.()
-  return debugInfo?.runtime === "cloudflare" && debugInfo.cache.type === "d1"
 }
