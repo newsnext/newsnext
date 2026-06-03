@@ -1,9 +1,9 @@
-import type { RSSHubOption, RSSHubResponse } from "../../typings"
+import type { RSSHubOption, RSSHubResponse } from "@/typings"
 import type {
   InferSourceParams,
   SourceParamSchemaMap,
   SourceRegistration,
-} from "../../typings/sources"
+} from "@/typings/sources"
 import defu from "defu"
 import { createLoader } from "."
 import { myFetch } from "../fetch"

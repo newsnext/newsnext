@@ -1,8 +1,8 @@
 import { defineHandler } from "nitro"
 import { getRouterParam } from "nitro/h3"
-import { loadInstanceSource, readLoadSourceBody } from "../../src/app"
-import { getNewsNextInstance } from "../../src"
-import { instanceStats } from "../../src/nitro-runtime"
+import { loadInstanceSource, readLoadSourceBody } from "@/app"
+import { getNewsNextInstance } from "@/index"
+import { instanceStats } from "@/nitro-runtime"
 
 export default defineHandler(async (event) => {
   const sourceId = getRouterParam(event, "sourceId", { decode: true }) ?? ""

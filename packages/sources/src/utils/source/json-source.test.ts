@@ -1,4 +1,4 @@
-import type { SourceParamSchemaMap } from "../../typings"
+import type { SourceParamSchemaMap } from "@/typings"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { myFetch } from "../fetch"
 import { $source } from "./index"

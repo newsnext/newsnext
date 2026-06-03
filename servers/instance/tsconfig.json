@@ -12,6 +12,7 @@
     "./src",
     "./middleware",
     "./routes",
+    "./worker-configuration.d.ts",
     "./nitro.config.ts"
   ]
 }

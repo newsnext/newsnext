@@ -7,7 +7,7 @@ import type {
   SourceLoader,
   SourceParamSchemaMap,
   SourceRegistration,
-} from "../../typings/sources"
+} from "@/typings/sources"
 
 import { $htmlSource } from "./html-source"
 import { $jsonSource } from "./json-source"

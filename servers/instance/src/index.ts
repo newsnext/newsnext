@@ -1,3 +1,6 @@
+import type { H3Event } from "nitro"
+import { createCloudflareNewsNextInstance, createLocalNewsNextInstance } from "./runtime"
+
 export * from "./app"
 export * from "./errors"
 export * from "./local"
@@ -6,15 +9,11 @@ export * from "./runtime"
 export * from "./source-loader"
 export * from "./types"
 
-import type { H3Event } from "nitro"
-import { createCloudflareNewsNextInstance, createLocalNewsNextInstance } from "./runtime"
-import type { CloudflareNewsNextInstanceOptions } from "./types"
-
-type CloudflareBindings = CloudflareNewsNextInstanceOptions["bindings"]
+type NitroCloudflareBindings = Partial<CloudflareBindings>
 
 interface NitroCloudflareRuntime {
   cloudflare?: {
-    env?: CloudflareBindings
+    env?: NitroCloudflareBindings
   }
 }
 
@@ -22,15 +21,23 @@ interface NitroRequest extends Request {
   runtime?: NitroCloudflareRuntime
 }
 
+interface NitroGeneratedGlobal {
+  __env__?: NitroCloudflareBindings
+}
+
 let instance: Awaited<ReturnType<typeof createLocalNewsNextInstance>> | undefined
 
 export async function getNewsNextInstance(event: H3Event) {
+  const bindings = await getNitroCloudflareEnv(event)
   if (instance) {
+    if (bindings?.CACHE_DB && !await isCloudflareD1Instance(instance)) {
+      instance = await createCloudflareNewsNextInstance({ bindings })
+    }
+
     return instance
   }
 
-  const bindings = getCloudflareBindings(getNitroCloudflareEnv(event), event.req)
-  if (bindings) {
+  if (bindings?.CACHE_DB) {
     instance = await createCloudflareNewsNextInstance({ bindings })
     return instance
   }
@@ -39,22 +46,22 @@ export async function getNewsNextInstance(event: H3Event) {
   return instance
 }
 
-function getCloudflareBindings(
-  bindings: CloudflareBindings | undefined,
-  request: Request,
-): CloudflareBindings | undefined {
-  const nitroBindings = (request as NitroRequest).runtime?.cloudflare?.env
-  if (nitroBindings?.CACHE_DB && nitroBindings.DATA_DB) {
-    return nitroBindings
+async function getNitroCloudflareEnv(event: H3Event): Promise<NitroCloudflareBindings | undefined> {
+  const requestEnv = (event.req as NitroRequest).runtime?.cloudflare?.env
+    ?? (globalThis as NitroGeneratedGlobal).__env__
+  if (requestEnv) {
+    return requestEnv
   }
 
-  if (bindings?.CACHE_DB && bindings.DATA_DB) {
-    return bindings
+  try {
+    const { env } = await import("cloudflare:workers")
+    return env
+  } catch {
+    return undefined
   }
-
-  return undefined
 }
 
-function getNitroCloudflareEnv(event: H3Event): CloudflareBindings | undefined {
-  return (event.req as NitroRequest).runtime?.cloudflare?.env
+async function isCloudflareD1Instance(value: Awaited<ReturnType<typeof createLocalNewsNextInstance>>): Promise<boolean> {
+  const debugInfo = await value.getDebugInfo?.()
+  return debugInfo?.runtime === "cloudflare" && debugInfo.cache.type === "d1"
 }

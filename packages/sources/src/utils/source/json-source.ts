@@ -5,7 +5,7 @@ import type {
   SourceLoader,
   SourceParamSchemaMap,
   SourceRegistration,
-} from "../../typings/sources"
+} from "@/typings/sources"
 import { createLoader } from "."
 import { myFetch } from "../fetch"
 

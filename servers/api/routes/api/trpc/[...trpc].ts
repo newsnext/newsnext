@@ -1,9 +1,9 @@
 import type { H3Event } from "nitro"
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch"
 import { defineHandler } from "nitro"
-import { loadInstance } from "../../../src"
-import { appRouter } from "../../../src/routes/trpc/app-router"
-import { createContext } from "../../../src/routes/trpc/context"
+import { loadInstance } from "@/index"
+import { appRouter } from "@/routes/trpc/app-router"
+import { createContext } from "@/routes/trpc/context"
 
 export default defineHandler(async (event) => {
   try {

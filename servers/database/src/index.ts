@@ -1,13 +1,14 @@
 import type { Database } from "db0"
 import type { NewsNextDatabase } from "./d1"
+import type * as schema from "./schema"
 import { fileURLToPath } from "node:url"
 import { createDatabase } from "db0"
 import { drizzle as drizzleDb0 } from "db0/integrations/drizzle"
-import * as schema from "./schema"
+import { DATA_DB_PATH } from "./paths"
 
-export * from "./schema"
 export { createD1Db } from "./d1"
 export type { NewsNextDatabase } from "./d1"
+export * from "./schema"
 
 let databasePromise: Promise<NewsNextDatabase> | undefined
 
@@ -17,7 +18,6 @@ export function getDb(): Promise<NewsNextDatabase> {
 }
 
 async function createBunDatabase(): Promise<NewsNextDatabase> {
-  const { DATA_DB_PATH } = await import("../../../data")
   return createSqliteDb(DATA_DB_PATH)
 }
 

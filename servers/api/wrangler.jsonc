@@ -11,6 +11,14 @@
     "BETTER_AUTH_TRUSTED_ORIGINS": "https://newsnext.pro,chrome-extension://cffgbnjiaakknooiegnjkojemhidheke",
     "GITHUB_CLIENT_ID": "Ov23lizGxoGltuEXdplC"
   },
+  "secrets": {
+    "required": [
+      "BETTER_AUTH_SECRET",
+      "GITHUB_CLIENT_SECRET",
+      "GOOGLE_CLIENT_ID",
+      "GOOGLE_CLIENT_SECRET"
+    ]
+  },
   "routes": [
     {
       "pattern": "api.newsnext.pro",

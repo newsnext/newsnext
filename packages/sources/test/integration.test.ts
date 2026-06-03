@@ -1,6 +1,6 @@
-import type { SourceParamSchema } from "../src/typings/sources"
+import type { SourceParamSchema } from "@/typings/sources"
 import { describe, expect, it } from "vitest"
-import { providers } from "../src/index"
+import { providers } from "@/index"
 
 // Increase timeout for network requests
 const TIMEOUT = 10000

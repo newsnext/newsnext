@@ -59,10 +59,7 @@ export interface RemoteNewsNextInstanceOptions {
 }
 
 export interface CloudflareNewsNextInstanceOptions {
-  bindings: {
-    CACHE_DB?: unknown
-    DATA_DB?: unknown
-  }
+  bindings: Pick<Partial<CloudflareBindings>, "CACHE_DB" | "DATA_DB">
   remoteUrl?: string
 }
 

@@ -64,6 +64,6 @@ export async function createLocalNewsNextInstance(
 }
 
 async function getDefaultSqliteCachePath(): Promise<string> {
-  const { CACHE_DB_PATH } = await import("../../../data")
+  const { CACHE_DB_PATH } = await import("@newsnext/cache/paths")
   return CACHE_DB_PATH
 }

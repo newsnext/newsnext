@@ -1,4 +1,4 @@
-import type { NewsItem, SourceParamSchemaMap } from "../../typings"
+import type { NewsItem, SourceParamSchemaMap } from "@/typings"
 import iconv from "iconv-lite"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { myFetch } from "../fetch"

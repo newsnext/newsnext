@@ -1,12 +1,12 @@
+import type * as cheerio from "cheerio/slim"
 import type { AnyNode } from "domhandler"
 import type { FetchOptions } from "ofetch"
-import type * as cheerio from "cheerio/slim"
 import type {
   InferSourceParams,
   NewsItem,
   SourceParamSchemaMap,
   SourceRegistration,
-} from "../../typings/sources"
+} from "@/typings/sources"
 import { Buffer } from "node:buffer"
 import { load } from "cheerio/slim"
 import iconv from "iconv-lite"

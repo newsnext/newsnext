@@ -1,6 +1,6 @@
 import { defineMiddleware } from "nitro"
-import { recordInstanceRequest } from "../src/app"
-import { instanceStats } from "../src/nitro-runtime"
+import { recordInstanceRequest } from "@/app"
+import { instanceStats } from "@/nitro-runtime"
 
 export default defineMiddleware(() => {
   recordInstanceRequest(instanceStats)

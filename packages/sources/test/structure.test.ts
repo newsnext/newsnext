@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { providers } from "../src/index"
+import { providers } from "@/index"
 
 describe("source Structure Tests", () => {
   it("registers tieba default source", () => {

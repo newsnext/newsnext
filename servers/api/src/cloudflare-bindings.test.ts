@@ -1,5 +1,6 @@
+import type { H3Event } from "nitro"
 import { afterEach, describe, expect, it } from "vitest"
-import { getCloudflareBindings } from "./cloudflare-bindings"
+import { getNitroCloudflareEnv, getNitroCloudflareEnvValue } from "./cloudflare-bindings"
 
 interface GlobalWithCloudflareEnv {
   __env__?: Record<string, unknown>
@@ -19,8 +20,8 @@ afterEach(() => {
   delete globalWithCloudflareEnv.__env__
 })
 
-describe("getCloudflareBindings", () => {
-  it("prefers Nitro request runtime bindings", () => {
+describe("getNitroCloudflareEnv", () => {
+  it("reads Cloudflare bindings from the Nitro request runtime", () => {
     const request = new Request("https://api.newsnext.test") as RequestWithRuntime
     const runtimeBindings = { DATA_DB: {} }
     request.runtime = {
@@ -29,21 +30,29 @@ describe("getCloudflareBindings", () => {
       },
     }
 
-    expect(getCloudflareBindings({ CACHE_DB: {} }, request)).toBe(runtimeBindings)
+    expect(getNitroCloudflareEnv(createEvent(request))).toBe(runtimeBindings)
   })
 
-  it("falls back to Cloudflare global env", () => {
+  it("does not read Cloudflare global env fallbacks", () => {
     const request = new Request("https://api.newsnext.test")
-    const globalBindings = { DATA_DB: {} }
-    globalWithCloudflareEnv.__env__ = globalBindings
+    globalWithCloudflareEnv.__env__ = { DATA_DB: {} }
 
-    expect(getCloudflareBindings(undefined, request)).toBe(globalBindings)
+    expect(getNitroCloudflareEnv(createEvent(request))).toBeUndefined()
   })
 
-  it("accepts partial deployment bindings", () => {
+  it("returns undefined outside the Cloudflare runtime", () => {
     const request = new Request("https://api.newsnext.test")
-    const deploymentBindings = { NEWSNEXT_INSTANCE_URL: "https://instance.newsnext.test" }
 
-    expect(getCloudflareBindings(deploymentBindings, request)).toBe(deploymentBindings)
+    expect(getNitroCloudflareEnv(createEvent(request))).toBeUndefined()
+  })
+
+  it("reads string env values from Cloudflare bindings", () => {
+    expect(getNitroCloudflareEnvValue({ BETTER_AUTH_URL: "https://api.newsnext.test" }, "BETTER_AUTH_URL"))
+      .toBe("https://api.newsnext.test")
+    expect(getNitroCloudflareEnvValue({ DATA_DB: {} as D1Database }, "DATA_DB")).toBeUndefined()
   })
 })
+
+function createEvent(request: Request): H3Event {
+  return { req: request } as H3Event
+}

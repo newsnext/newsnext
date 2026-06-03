@@ -21,6 +21,7 @@
     "deploy:cloudflare": "nitro deploy --preset cloudflare_module",
     "deploy:vercel": "nitro deploy --preset vercel",
     "preview": "nitro preview",
+    "cf:typegen": "CLOUDFLARE_LOAD_DEV_VARS_FROM_DOT_ENV=false wrangler types --env-interface CloudflareBindings",
     "typecheck": "tsgo -b"
   },
   "dependencies": {

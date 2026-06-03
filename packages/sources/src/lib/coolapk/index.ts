@@ -1,6 +1,6 @@
 import { load } from "cheerio/slim"
-import { myFetch } from "../../utils/fetch"
-import { $provider, $source } from "../../utils/source"
+import { myFetch } from "@/utils/fetch"
+import { $provider, $source } from "@/utils/source"
 import { genHeaders } from "./utils"
 
 interface CoolApkItem {

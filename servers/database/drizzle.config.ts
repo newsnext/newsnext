@@ -1,5 +1,5 @@
 import { defineConfig } from "drizzle-kit"
-import { DATA_DB_PATH } from "../../data"
+import { DATA_DB_PATH } from "./src/paths"
 
 export default defineConfig({
   out: "./drizzle",
