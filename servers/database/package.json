@@ -5,6 +5,7 @@
   "license": "MPL-2.0",
   "exports": {
     ".": "./src/index.ts",
+    "./d1": "./src/d1.ts",
     "./orm": "./src/orm.ts",
     "./schema": "./src/schema.ts"
   },

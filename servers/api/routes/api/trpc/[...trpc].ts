@@ -6,18 +6,23 @@ import { appRouter } from "../../../src/routes/trpc/app-router"
 import { createContext } from "../../../src/routes/trpc/context"
 
 export default defineHandler(async (event) => {
-  const instance = await loadInstance(event)
+  try {
+    const instance = await loadInstance(event)
 
-  return fetchRequestHandler({
-    endpoint: "/api/trpc",
-    req: event.req,
-    router: appRouter,
-    createContext: async () => ({
-      ...await createContext({ event }),
-      instance,
-      waitUntil: getWaitUntil(event),
-    }),
-  })
+    return await fetchRequestHandler({
+      endpoint: "/api/trpc",
+      req: event.req,
+      router: appRouter,
+      createContext: async () => ({
+        ...await createContext({ event }),
+        instance,
+        waitUntil: getWaitUntil(event),
+      }),
+    })
+  } catch (error) {
+    console.error("[tRPC] Unhandled route error", formatRouteError(error))
+    throw error
+  }
 })
 
 interface WaitUntilRequest extends Request {
@@ -27,4 +32,16 @@ interface WaitUntilRequest extends Request {
 function getWaitUntil(event: H3Event): ((promise: Promise<unknown>) => void) | undefined {
   const waitUntil = (event.req as WaitUntilRequest).waitUntil
   return typeof waitUntil === "function" ? promise => waitUntil.call(event.req, promise) : undefined
+}
+
+function formatRouteError(error: unknown): Record<string, unknown> {
+  if (error instanceof Error) {
+    return {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+    }
+  }
+
+  return { error }
 }

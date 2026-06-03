@@ -1,10 +1,9 @@
 import type { ApiCloudflareBindings } from "../cloudflare-bindings"
-import { createD1Db, getDb } from "@newsnext/database"
+import { createD1Db } from "@newsnext/database/d1"
 import * as schema from "@newsnext/database/schema"
 import { betterAuth } from "better-auth"
 import { drizzleAdapter } from "better-auth/adapters/drizzle"
 
-let localAuthPromise: ReturnType<typeof createAuth> | undefined
 let cloudflareAuthPromise: ReturnType<typeof createAuth> | undefined
 
 function getEnv(name: string): string | undefined {
@@ -24,17 +23,16 @@ const googleClientId = getEnv("GOOGLE_CLIENT_ID")
 const googleClientSecret = getEnv("GOOGLE_CLIENT_SECRET")
 
 export function getAuth(bindings?: Pick<ApiCloudflareBindings, "DATA_DB">): ReturnType<typeof createAuth> {
-  if (bindings?.DATA_DB) {
-    cloudflareAuthPromise ??= createAuth(bindings.DATA_DB)
-    return cloudflareAuthPromise
+  if (!bindings?.DATA_DB) {
+    throw new Error("DATA_DB binding is required for NewsNext API auth")
   }
 
-  localAuthPromise ??= createAuth()
-  return localAuthPromise
+  cloudflareAuthPromise ??= createAuth(bindings.DATA_DB)
+  return cloudflareAuthPromise
 }
 
-async function createAuth(d1?: unknown) {
-  const db = d1 ? createD1Db(d1) : await getDb()
+async function createAuth(d1: unknown) {
+  const db = createD1Db(d1)
   return betterAuth({
     baseURL: getEnv("BETTER_AUTH_URL"),
     secret: getEnv("BETTER_AUTH_SECRET"),

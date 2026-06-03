@@ -20,7 +20,7 @@ export function getCloudflareBindings(
   bindings: ApiCloudflareBindings | undefined,
   request: Request,
 ): ApiCloudflareBindings | undefined {
-  const nitroBindings = (request as NitroRequest).runtime?.cloudflare?.env
+  const nitroBindings = (request as NitroRequest).runtime?.cloudflare?.env ?? getGlobalCloudflareEnv()
   if (nitroBindings) {
     return nitroBindings
   }
@@ -29,5 +29,23 @@ export function getCloudflareBindings(
     return undefined
   }
 
-  return bindings.DATA_DB && bindings.CACHE_DB && bindings.ICON_BUCKET ? bindings : undefined
+  return hasCloudflareBinding(bindings) ? bindings : undefined
+}
+
+interface GlobalWithCloudflareEnv {
+  __env__?: ApiCloudflareBindings
+}
+
+function getGlobalCloudflareEnv(): ApiCloudflareBindings | undefined {
+  return (globalThis as GlobalWithCloudflareEnv).__env__
+}
+
+function hasCloudflareBinding(bindings: ApiCloudflareBindings): boolean {
+  return Boolean(
+    bindings.DATA_DB
+    || bindings.CACHE_DB
+    || bindings.ICON_BUCKET
+    || bindings.INSTANCE
+    || bindings.NEWSNEXT_INSTANCE_URL,
+  )
 }

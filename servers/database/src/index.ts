@@ -1,23 +1,19 @@
 import type { Database } from "db0"
+import type { NewsNextDatabase } from "./d1"
 import { fileURLToPath } from "node:url"
 import { createDatabase } from "db0"
 import { drizzle as drizzleDb0 } from "db0/integrations/drizzle"
-import { drizzle as drizzleD1 } from "drizzle-orm/d1"
 import * as schema from "./schema"
 
 export * from "./schema"
-
-export type NewsNextDatabase = ReturnType<typeof drizzleDb0<typeof schema>>
+export { createD1Db } from "./d1"
+export type { NewsNextDatabase } from "./d1"
 
 let databasePromise: Promise<NewsNextDatabase> | undefined
 
 export function getDb(): Promise<NewsNextDatabase> {
   databasePromise ??= createBunDatabase()
   return databasePromise
-}
-
-export function createD1Db(d1: unknown): NewsNextDatabase {
-  return drizzleD1(d1 as never, { schema }) as unknown as NewsNextDatabase
 }
 
 async function createBunDatabase(): Promise<NewsNextDatabase> {
@@ -28,7 +24,7 @@ async function createBunDatabase(): Promise<NewsNextDatabase> {
 export async function createSqliteDb(path: string): Promise<NewsNextDatabase> {
   const db0 = await createDb0Database(path)
   await prepareSchema(db0)
-  return drizzleDb0<typeof schema>(db0)
+  return drizzleDb0<typeof schema>(db0) as unknown as NewsNextDatabase
 }
 
 async function createDb0Database(path: string): Promise<Database> {
