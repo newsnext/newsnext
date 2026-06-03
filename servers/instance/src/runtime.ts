@@ -20,10 +20,10 @@ export async function createCloudflareNewsNextInstance(
 
   if (options.bindings.CACHE_DB) {
     try {
-      console.log("Using D1 data instance")
+      console.log("Using D1 cache instance")
       return await createD1NewsNextInstance(options.bindings.CACHE_DB)
     } catch (error) {
-      console.error("Failed to initialize D1 data instance:", error)
+      console.error("Failed to initialize D1 cache instance:", error)
     }
   }
 

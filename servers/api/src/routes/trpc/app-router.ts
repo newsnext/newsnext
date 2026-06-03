@@ -1,7 +1,7 @@
 import type { SourceDescriptor } from "@newsnext/sources/typings"
 import { and, eq } from "@newsnext/database/orm"
 import { starredSourceInstances, userSourceInstances } from "@newsnext/database/schema"
-import { SourceServiceError } from "@newsnext/instance/errors"
+import { SourceServiceError } from "@newsnext/sources/service"
 import { TRPCError } from "@trpc/server"
 import { z } from "zod"
 import { protectedProcedure, publicProcedure, router } from "./core"

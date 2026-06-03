@@ -4,7 +4,6 @@
 declare namespace Cloudflare {
 	interface Env {
 		CACHE_DB: D1Database;
-		DATA_DB: D1Database;
 	}
 }
 interface CloudflareBindings extends Cloudflare.Env {}

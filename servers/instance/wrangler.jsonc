@@ -17,11 +17,6 @@
       "binding": "CACHE_DB",
       "database_name": "newsnext-cache",
       "database_id": "7c7b6739-9dc4-4f3f-a480-ec1816ddebbc"
-    },
-    {
-      "binding": "DATA_DB",
-      "database_name": "newsnext-data",
-      "database_id": "d57ded3d-72e3-47c8-a72b-4bc2501ce410"
     }
   ],
   "observability": {

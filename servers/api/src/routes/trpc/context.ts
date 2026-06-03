@@ -1,7 +1,7 @@
 import type { NewsNextDatabase } from "@newsnext/database/d1"
-import type { NewsNextDataInstance } from "@newsnext/instance/types"
 import type { H3Event } from "nitro"
 import type { ApiCloudflareBindings } from "@/cloudflare-bindings"
+import type { NewsNextDataInstance } from "@/instance-client"
 import { getNitroCloudflareEnv } from "@/cloudflare-bindings"
 
 export interface CreateContextOptions {

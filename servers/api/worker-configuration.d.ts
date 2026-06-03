@@ -4,7 +4,6 @@
 declare namespace Cloudflare {
 	interface Env {
 		ICON_BUCKET: R2Bucket;
-		CACHE_DB: D1Database;
 		DATA_DB: D1Database;
 		NEWSNEXT_INSTANCE_URL: "https://instance.newsnext.pro";
 		BETTER_AUTH_URL: "https://api.newsnext.pro";

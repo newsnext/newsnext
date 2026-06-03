@@ -20,7 +20,6 @@
   },
   "dependencies": {
     "@newsnext/database": "workspace:*",
-    "@newsnext/instance": "workspace:*",
     "@newsnext/sources": "workspace:*",
     "@trpc/server": "^11.16.0",
     "better-auth": "^1.6.9"
