@@ -41,8 +41,7 @@
     "docker:up": "docker compose up -d --build",
     "docker:down": "docker compose down",
     "docker:logs": "docker compose logs -f",
-    "dev:chrome": "bun --filter=@newsnext/extension run dev:chrome",
-    "postinstall": "bun --filter=@newsnext/build run build -l warn"
+    "dev:chrome": "bun --filter=@newsnext/extension run dev:chrome"
   },
   "dependencies": {
     "consola": "^3.4.2",

@@ -1,3 +1,4 @@
+import type { ApiCloudflareBindings } from "../cloudflare-bindings"
 import { createD1Db, getDb } from "@newsnext/database"
 import * as schema from "@newsnext/database/schema"
 import { betterAuth } from "better-auth"
@@ -22,7 +23,7 @@ const githubClientSecret = getEnv("GITHUB_CLIENT_SECRET")
 const googleClientId = getEnv("GOOGLE_CLIENT_ID")
 const googleClientSecret = getEnv("GOOGLE_CLIENT_SECRET")
 
-export function getAuth(bindings?: Pick<CloudflareBindings, "DATA_DB">): ReturnType<typeof createAuth> {
+export function getAuth(bindings?: Pick<ApiCloudflareBindings, "DATA_DB">): ReturnType<typeof createAuth> {
   if (bindings?.DATA_DB) {
     cloudflareAuthPromise ??= createAuth(bindings.DATA_DB)
     return cloudflareAuthPromise

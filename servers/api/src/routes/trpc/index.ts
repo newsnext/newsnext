@@ -1,5 +1,6 @@
 import type { NewsNextDataInstance } from "@newsnext/instance/types"
 import type { Context } from "hono"
+import type { ApiCloudflareBindings } from "../../cloudflare-bindings"
 import { trpcServer } from "@hono/trpc-server"
 import { Hono } from "hono"
 import { appRouter } from "./app-router"
@@ -9,11 +10,11 @@ interface Variables {
   instance: NewsNextDataInstance
 }
 
-type TrpcContext = Context<{ Bindings: CloudflareBindings, Variables: Variables }>
+type TrpcContext = Context<{ Bindings: ApiCloudflareBindings, Variables: Variables }>
 type InstanceLoader = (context: TrpcContext) => Promise<NewsNextDataInstance>
 
 export const createTrpcApp = (loadInstance: InstanceLoader) => {
-  const trpcApp = new Hono<{ Bindings: CloudflareBindings, Variables: Variables }>()
+  const trpcApp = new Hono<{ Bindings: ApiCloudflareBindings, Variables: Variables }>()
   let instance: NewsNextDataInstance | undefined
 
   trpcApp.use("/*", async (c, next) => {

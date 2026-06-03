@@ -32,7 +32,7 @@ export async function createSqliteDb(path: string): Promise<NewsNextDatabase> {
 }
 
 async function createDb0Database(path: string): Promise<Database> {
-  if (typeof Bun === "undefined") {
+  if (!("Bun" in globalThis)) {
     throw new Error("NewsNext database requires Bun runtime")
   }
 

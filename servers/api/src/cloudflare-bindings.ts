@@ -1,6 +1,14 @@
+export interface ApiCloudflareBindings {
+  ICON_BUCKET?: unknown
+  CACHE_DB?: unknown
+  DATA_DB?: unknown
+  INSTANCE?: unknown
+  NEWSNEXT_INSTANCE_URL?: string
+}
+
 interface NitroCloudflareRuntime {
   cloudflare?: {
-    env?: CloudflareBindings
+    env?: ApiCloudflareBindings
   }
 }
 
@@ -9,9 +17,9 @@ interface NitroRequest extends Request {
 }
 
 export function getCloudflareBindings(
-  bindings: CloudflareBindings | undefined,
+  bindings: ApiCloudflareBindings | undefined,
   request: Request,
-): CloudflareBindings | undefined {
+): ApiCloudflareBindings | undefined {
   const nitroBindings = (request as NitroRequest).runtime?.cloudflare?.env
   if (nitroBindings) {
     return nitroBindings

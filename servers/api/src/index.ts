@@ -1,5 +1,6 @@
 import type { NewsNextDataInstance } from "@newsnext/instance/types"
 import type { InstanceLoader } from "./routes/trpc"
+import type { ApiCloudflareBindings } from "./cloudflare-bindings"
 import { Hono } from "hono"
 import { cors } from "hono/cors"
 import { logger } from "hono/logger"
@@ -14,7 +15,7 @@ interface Variables {
   instance: NewsNextDataInstance
 }
 
-const app = new Hono<{ Bindings: CloudflareBindings, Variables: Variables }>()
+const app = new Hono<{ Bindings: ApiCloudflareBindings, Variables: Variables }>()
 
 app.use(logger())
 app.use("/*", cors({
@@ -61,7 +62,7 @@ export const loadInstance: InstanceLoader = async (c) => {
   })
 }
 
-function getInstanceRemoteUrl(bindings: CloudflareBindings | undefined, request: Request): string | undefined {
+function getInstanceRemoteUrl(bindings: ApiCloudflareBindings | undefined, request: Request): string | undefined {
   const env = getNitroCloudflareEnv(request) ?? bindings
   return getEnvValue(env, "NEWSNEXT_INSTANCE_URL") ?? process.env.NEWSNEXT_INSTANCE_URL
 }
@@ -70,7 +71,7 @@ interface InstanceServiceBinding {
   fetch: (request: Request) => Promise<Response>
 }
 
-function getInstanceService(bindings: CloudflareBindings | undefined, request: Request): InstanceServiceBinding | undefined {
+function getInstanceService(bindings: ApiCloudflareBindings | undefined, request: Request): InstanceServiceBinding | undefined {
   const env = getNitroCloudflareEnv(request) ?? bindings
   const value = (env as Record<string, unknown> | undefined)?.INSTANCE
   if (isInstanceServiceBinding(value)) {
@@ -97,7 +98,7 @@ function toServiceRequest(input: Parameters<typeof fetch>[0], init?: Parameters<
 
 interface NitroCloudflareRuntime {
   cloudflare?: {
-    env?: CloudflareBindings
+    env?: ApiCloudflareBindings
   }
 }
 
@@ -105,11 +106,11 @@ interface NitroRequest extends Request {
   runtime?: NitroCloudflareRuntime
 }
 
-function getNitroCloudflareEnv(request: Request): CloudflareBindings | undefined {
+function getNitroCloudflareEnv(request: Request): ApiCloudflareBindings | undefined {
   return (request as NitroRequest).runtime?.cloudflare?.env
 }
 
-function getEnvValue(bindings: CloudflareBindings | undefined, key: string): string | undefined {
+function getEnvValue(bindings: ApiCloudflareBindings | undefined, key: string): string | undefined {
   const value = (bindings as Record<string, unknown> | undefined)?.[key]
   return typeof value === "string" && value ? value : undefined
 }

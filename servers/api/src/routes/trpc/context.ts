@@ -1,6 +1,7 @@
 import type { NewsNextDataInstance } from "@newsnext/instance/types"
 import type { Context as HonoContext } from "hono"
 import type { NewsNextDatabase } from "@newsnext/database"
+import type { ApiCloudflareBindings } from "../../cloudflare-bindings"
 import { createD1Db, getDb } from "@newsnext/database"
 import { getCloudflareBindings } from "../../cloudflare-bindings"
 import { getAuth } from "../../lib/auth"
@@ -10,7 +11,7 @@ export interface CreateContextOptions {
 }
 
 export async function createContext({ hono }: CreateContextOptions) {
-  const bindings = getCloudflareBindings(hono.env as CloudflareBindings | undefined, hono.req.raw)
+  const bindings = getCloudflareBindings(hono.env as ApiCloudflareBindings | undefined, hono.req.raw)
   const auth = await getAuth(bindings)
   const session = await auth.api.getSession({
     headers: hono.req.raw.headers,
@@ -23,7 +24,7 @@ export async function createContext({ hono }: CreateContextOptions) {
   }
 }
 
-async function getDatabase(bindings: CloudflareBindings | undefined): Promise<NewsNextDatabase> {
+async function getDatabase(bindings: ApiCloudflareBindings | undefined): Promise<NewsNextDatabase> {
   if (bindings?.DATA_DB) {
     return createD1Db(bindings.DATA_DB)
   }

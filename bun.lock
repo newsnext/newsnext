@@ -176,12 +176,6 @@
     "packages/cache-policy": {
       "name": "@newsnext/cache-policy",
     },
-    "packages/misc/build": {
-      "name": "@newsnext/build",
-      "peerDependencies": {
-        "rolldown": ">=1.0.0-rc",
-      },
-    },
     "packages/misc/tsconfigs": {
       "name": "@newsnext/tsconfigs",
     },
@@ -636,8 +630,6 @@
     "@newsnext/admin": ["@newsnext/admin@workspace:apps/admin"],
 
     "@newsnext/api": ["@newsnext/api@workspace:servers/api"],
-
-    "@newsnext/build": ["@newsnext/build@workspace:packages/misc/build"],
 
     "@newsnext/cache": ["@newsnext/cache@workspace:packages/cache"],
 

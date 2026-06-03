@@ -161,7 +161,7 @@ function CardContent({ id, source, isInView, dragHandle, disableExpandedPreview 
       onResetSourceParams: handleResetSourceParams,
       onDiscardSourceParams: discardDraftParams,
       onFlip: () => setIsFlipped(prev => !prev),
-      onOpenExpandedPreview: item => openExpandedPreview(id, source, item),
+      onOpenExpandedPreview: (item: NewsItem) => openExpandedPreview(id, source, item),
       canOpenExpandedPreview: !disableExpandedPreview,
       canShowHoverPreview: !isExpandedPreviewOpen,
       previewSelection,
