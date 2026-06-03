@@ -6,76 +6,78 @@ import type {
   NewsNextDataInstance,
   SourceCachePolicyInfo,
 } from "./types"
-import { Hono } from "hono"
 import { SourceServiceError } from "./errors"
 
-interface LoadSourceBody extends Pick<LoadInstanceSourceOptions, "latest" | "paramsAreNormalized"> {
+export interface LoadSourceBody extends Pick<LoadInstanceSourceOptions, "latest" | "paramsAreNormalized"> {
   params?: Record<string, unknown>
 }
 
-export function createNewsNextInstanceApp(instance: NewsNextDataInstance): Hono {
-  const app = new Hono()
-  const stats = createRequestStats()
-
-  app.use("*", async (_c, next) => {
-    stats.requestCount += 1
-    await next()
-  })
-
-  app.get("/", async (c) => {
-    const sources = await instance.listSourceDescriptors()
-    const debugInfo = await collectDebugInfo(instance, sources, stats)
-
-    return c.html(renderHomePage(debugInfo))
-  })
-
-  app.get("/debug", async (c) => {
-    const sources = await instance.listSourceDescriptors()
-    return c.json(success(await collectDebugInfo(instance, sources, stats)))
-  })
-
-  app.get("/sources", async (c) => {
-    return c.json(success(await instance.listSourceDescriptors()))
-  })
-
-  app.post("/sources/:sourceId", async (c) => {
-    const sourceId = decodeURIComponent(c.req.param("sourceId"))
-    const body = await readLoadSourceBody(c.req.raw)
-    recordHotSource(stats, sourceId)
-
-    try {
-      const result = await instance.loadSource({
-        sourceId,
-        params: body.params ?? {},
-        latest: body.latest,
-        paramsAreNormalized: body.paramsAreNormalized,
-      })
-
-      stats.sourceLoadCount += 1
-      if (result.status === "cache") {
-        stats.cacheResultCount += 1
-      }
-
-      return c.json(success(result))
-    } catch (error) {
-      stats.sourceErrorCount += 1
-      if (error instanceof SourceServiceError) {
-        const status = error.code === "PROVIDER_NOT_FOUND" || error.code === "SOURCE_NOT_FOUND"
-          ? 404
-          : 400
-        return c.json(failure(error.code, error.message), status)
-      }
-
-      const err = error as Error
-      console.error(`Error loading source ${sourceId}:`, err)
-      return c.json(failure("INTERNAL_ERROR", err.message || "Internal Server Error"), 500)
-    }
-  })
-
-  return app
+export function createInstanceStats(): RequestStats {
+  return createRequestStats()
 }
 
-interface RequestStats {
+export function recordInstanceRequest(stats: RequestStats): void {
+  stats.requestCount += 1
+}
+
+export async function renderInstanceHome(instance: NewsNextDataInstance, stats: RequestStats): Promise<Response> {
+  const sources = await instance.listSourceDescriptors()
+  const debugInfo = await collectDebugInfo(instance, sources, stats)
+
+  return new Response(renderHomePage(debugInfo), {
+    headers: {
+      "content-type": "text/html; charset=utf-8",
+    },
+  })
+}
+
+export async function getInstanceDebug(instance: NewsNextDataInstance, stats: RequestStats) {
+  const sources = await instance.listSourceDescriptors()
+  return success(await collectDebugInfo(instance, sources, stats))
+}
+
+export async function listInstanceSources(instance: NewsNextDataInstance) {
+  return success(await instance.listSourceDescriptors())
+}
+
+export async function loadInstanceSource(
+  instance: NewsNextDataInstance,
+  stats: RequestStats,
+  sourceId: string,
+  body: LoadSourceBody,
+): Promise<Response> {
+  recordHotSource(stats, sourceId)
+
+  try {
+    const result = await instance.loadSource({
+      sourceId,
+      params: body.params ?? {},
+      latest: body.latest,
+      paramsAreNormalized: body.paramsAreNormalized,
+    })
+
+    stats.sourceLoadCount += 1
+    if (result.status === "cache") {
+      stats.cacheResultCount += 1
+    }
+
+    return jsonResponse(success(result))
+  } catch (error) {
+    stats.sourceErrorCount += 1
+    if (error instanceof SourceServiceError) {
+      const status = error.code === "PROVIDER_NOT_FOUND" || error.code === "SOURCE_NOT_FOUND"
+        ? 404
+        : 400
+      return jsonResponse(failure(error.code, error.message), status)
+    }
+
+    const err = error as Error
+    console.error(`Error loading source ${sourceId}:`, err)
+    return jsonResponse(failure("INTERNAL_ERROR", err.message || "Internal Server Error"), 500)
+  }
+}
+
+export interface RequestStats {
   startedAt: number
   requestCount: number
   sourceLoadCount: number
@@ -857,7 +859,7 @@ function failure(code: string, message: string): InstanceErrorResponse {
   }
 }
 
-async function readLoadSourceBody(request: Request): Promise<LoadSourceBody> {
+export async function readLoadSourceBody(request: Request): Promise<LoadSourceBody> {
   if (!request.body) {
     return {}
   }
@@ -868,4 +870,13 @@ async function readLoadSourceBody(request: Request): Promise<LoadSourceBody> {
   }
 
   return body as LoadSourceBody
+}
+
+function jsonResponse(data: unknown, status = 200): Response {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: {
+      "content-type": "application/json; charset=utf-8",
+    },
+  })
 }

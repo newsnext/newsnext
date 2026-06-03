@@ -10,6 +10,8 @@
   },
   "include": [
     "./src",
+    "./middleware",
+    "./routes",
     "./nitro.config.ts"
   ]
 }

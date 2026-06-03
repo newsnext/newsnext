@@ -6,13 +6,11 @@ export * from "./runtime"
 export * from "./source-loader"
 export * from "./types"
 
-import { createNewsNextInstanceApp } from "./app"
+import type { H3Event } from "nitro"
 import { createCloudflareNewsNextInstance, createLocalNewsNextInstance } from "./runtime"
 import type { CloudflareNewsNextInstanceOptions } from "./types"
 
 type CloudflareBindings = CloudflareNewsNextInstanceOptions["bindings"]
-type InstanceApp = ReturnType<typeof createNewsNextInstanceApp>
-type InstanceAppExecutionContext = Parameters<InstanceApp["fetch"]>[2]
 
 interface NitroCloudflareRuntime {
   cloudflare?: {
@@ -24,26 +22,21 @@ interface NitroRequest extends Request {
   runtime?: NitroCloudflareRuntime
 }
 
-let instanceApp: InstanceApp | undefined
+let instance: Awaited<ReturnType<typeof createLocalNewsNextInstance>> | undefined
 
-const app = {
-  async fetch(
-    request: Request,
-    env?: CloudflareBindings,
-    executionCtx?: InstanceAppExecutionContext,
-  ): Promise<Response> {
-    instanceApp ??= createNewsNextInstanceApp(await createInstance(env, request))
-    return instanceApp.fetch(request, env, executionCtx)
-  },
-}
-
-async function createInstance(env: CloudflareBindings | undefined, request: Request) {
-  const bindings = getCloudflareBindings(env, request)
-  if (bindings) {
-    return createCloudflareNewsNextInstance({ bindings })
+export async function getNewsNextInstance(event: H3Event) {
+  if (instance) {
+    return instance
   }
 
-  return createLocalNewsNextInstance()
+  const bindings = getCloudflareBindings(getNitroCloudflareEnv(event), event.req)
+  if (bindings) {
+    instance = await createCloudflareNewsNextInstance({ bindings })
+    return instance
+  }
+
+  instance = await createLocalNewsNextInstance()
+  return instance
 }
 
 function getCloudflareBindings(
@@ -62,4 +55,6 @@ function getCloudflareBindings(
   return undefined
 }
 
-export default app
+function getNitroCloudflareEnv(event: H3Event): CloudflareBindings | undefined {
+  return (event.req as NitroRequest).runtime?.cloudflare?.env
+}

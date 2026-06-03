@@ -18,10 +18,7 @@ const saferBufferCloudflarePlugin = {
 export default defineNitroConfig({
   compatibilityDate: "2025-12-19",
   preset,
-  serverEntry: {
-    handler: "./src/index.ts",
-    format: "web",
-  },
+  serverDir: "./",
   devServer: {
     runner: "bun-process",
   },

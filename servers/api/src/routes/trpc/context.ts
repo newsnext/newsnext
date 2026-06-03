@@ -1,20 +1,20 @@
 import type { NewsNextDataInstance } from "@newsnext/instance/types"
-import type { Context as HonoContext } from "hono"
 import type { NewsNextDatabase } from "@newsnext/database"
 import type { ApiCloudflareBindings } from "../../cloudflare-bindings"
+import type { H3Event } from "nitro"
 import { createD1Db, getDb } from "@newsnext/database"
 import { getCloudflareBindings } from "../../cloudflare-bindings"
 import { getAuth } from "../../lib/auth"
 
 export interface CreateContextOptions {
-  hono: HonoContext
+  event: H3Event
 }
 
-export async function createContext({ hono }: CreateContextOptions) {
-  const bindings = getCloudflareBindings(hono.env as ApiCloudflareBindings | undefined, hono.req.raw)
+export async function createContext({ event }: CreateContextOptions) {
+  const bindings = getCloudflareBindings(getNitroCloudflareEnv(event), event.req)
   const auth = await getAuth(bindings)
   const session = await auth.api.getSession({
-    headers: hono.req.raw.headers,
+    headers: event.req.headers,
   })
   const db = await getDatabase(bindings)
 
@@ -35,4 +35,18 @@ async function getDatabase(bindings: ApiCloudflareBindings | undefined): Promise
 export type Context = Awaited<ReturnType<typeof createContext>> & {
   instance: NewsNextDataInstance
   waitUntil?: (promise: Promise<unknown>) => void
+}
+
+interface NitroCloudflareRuntime {
+  cloudflare?: {
+    env?: ApiCloudflareBindings
+  }
+}
+
+interface NitroRequest extends Request {
+  runtime?: NitroCloudflareRuntime
+}
+
+function getNitroCloudflareEnv(event: H3Event): ApiCloudflareBindings | undefined {
+  return (event.req as NitroRequest).runtime?.cloudflare?.env
 }

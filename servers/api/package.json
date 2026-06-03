@@ -19,14 +19,12 @@
     "cf:typegen": "wrangler types --env-interface CloudflareBindings"
   },
   "dependencies": {
-    "@hono/trpc-server": "^0.4.2",
     "@newsnext/database": "workspace:*",
     "@newsnext/instance": "workspace:*",
     "@newsnext/sources": "workspace:*",
     "@trpc/server": "^11.16.0",
     "better-auth": "^1.6.9",
-    "db0": "^0.3.4",
-    "hono": "catalog:"
+    "db0": "^0.3.4"
   },
   "devDependencies": {
     "nitro": "3.0.260522-beta"

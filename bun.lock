@@ -234,14 +234,12 @@
     "servers/api": {
       "name": "@newsnext/api",
       "dependencies": {
-        "@hono/trpc-server": "^0.4.2",
         "@newsnext/database": "workspace:*",
         "@newsnext/instance": "workspace:*",
         "@newsnext/sources": "workspace:*",
         "@trpc/server": "^11.16.0",
         "better-auth": "^1.6.9",
         "db0": "^0.3.4",
-        "hono": "catalog:",
       },
       "devDependencies": {
         "nitro": "3.0.260522-beta",
@@ -266,7 +264,6 @@
         "@newsnext/shared": "workspace:*",
         "@newsnext/sources": "workspace:*",
         "db0": "^0.3.4",
-        "hono": "catalog:",
       },
       "devDependencies": {
         "nitro": "3.0.260522-beta",
@@ -281,7 +278,6 @@
   },
   "catalog": {
     "@tailwindcss/vite": "^4.1.18",
-    "hono": "^4.11.1",
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
     "tailwindcss": "^4.1.18",
@@ -508,8 +504,6 @@
     "@floating-ui/utils": ["@floating-ui/utils@0.2.11", "", {}, "sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg=="],
 
     "@fontsource-variable/baloo-2": ["@fontsource-variable/baloo-2@5.2.7", "", {}, "sha512-45Uxv5Ic0shabqUalV/QwXCJBPDqyzcuVnlFugNqBg8vYEQxqMEb2H6uktmWRp9oKyMVrA8ksoSKUSSWmwapoQ=="],
-
-    "@hono/trpc-server": ["@hono/trpc-server@0.4.2", "", { "peerDependencies": { "@trpc/server": "^10.10.0 || >11.0.0-rc", "hono": ">=4.0.0" } }, "sha512-3TDrc42CZLgcTFkXQba+y7JlRWRiyw1AqhLqztWyNS2IFT+3bHld0lxKdGBttCtGKHYx0505dM67RMazjhdZqw=="],
 
     "@humanfs/core": ["@humanfs/core@0.19.1", "", {}, "sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA=="],
 
@@ -1776,8 +1770,6 @@
     "hermes-estree": ["hermes-estree@0.25.1", "", {}, "sha512-0wUoCcLp+5Ev5pDW2OriHC2MJCbwLwuRx+gAqMTOkGKJJiBCLjtrvy4PWUGn6MIVefecRpzoOZ/UV6iGdOr+Cw=="],
 
     "hermes-parser": ["hermes-parser@0.25.1", "", { "dependencies": { "hermes-estree": "0.25.1" } }, "sha512-6pEjquH3rqaI6cYAXYPcz9MS4rY6R4ngRgrgfDshRptUZIc3lw0MCIJIGDj9++mfySOuPTHB4nrSW99BCvOPIA=="],
-
-    "hono": ["hono@4.11.9", "", {}, "sha512-Eaw2YTGM6WOxA6CXbckaEvslr2Ne4NFsKrvc0v97JD5awbmeBLO5w9Ho9L9kmKonrwF9RJlW6BxT1PVv/agBHQ=="],
 
     "hookable": ["hookable@6.1.1", "", {}, "sha512-U9LYDy1CwhMCnprUfeAZWZGByVbhd54hwepegYTK7Pi5NvqEj63ifz5z+xukznehT7i6NIZRu89Ay1AZmRsLEQ=="],
 
