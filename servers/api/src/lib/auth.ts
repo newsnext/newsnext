@@ -33,9 +33,9 @@ export function getAuth(bindings?: ApiCloudflareBindings): ReturnType<typeof cre
 async function createLocalAuth() {
   const database = "Bun" in globalThis
     ? drizzleAdapter(await getLocalAuthDatabase(), {
-      provider: "sqlite",
-      schema,
-    })
+        provider: "sqlite",
+        schema,
+      })
     : memoryAdapter({})
 
   return betterAuth({

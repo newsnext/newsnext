@@ -4,7 +4,7 @@ import { MemoryCacheAdapter } from "@newsnext/cache/memory"
 import { describe, expect, it } from "vitest"
 import { CachedNewsNextInstance } from "./instance-client"
 
-describe("CachedNewsNextInstance", () => {
+describe("cachedNewsNextInstance", () => {
   it("caches source fetches inside the API instance", async () => {
     const adapter = new MemoryCacheAdapter()
     const sourceInstance = createTestSourceInstance()

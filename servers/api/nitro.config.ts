@@ -1,5 +1,5 @@
-import { fileURLToPath } from "node:url"
 import type { DatabaseConnectionConfig } from "nitro/types"
+import { fileURLToPath } from "node:url"
 import { defineNitroConfig } from "nitro/config"
 
 const preset = getNitroPreset()
@@ -8,17 +8,17 @@ const dbPath = process.env.NEWSNEXT_DB_PATH
   ?? fileURLToPath(new URL("../../data/newsnext.db", import.meta.url))
 const database = isCloudflarePreset
   ? {
-      connector: "cloudflare-d1",
-      options: {
-        bindingName: "DB",
-      },
-    } satisfies DatabaseConnectionConfig
+    connector: "cloudflare-d1",
+    options: {
+      bindingName: "DB",
+    },
+  } satisfies DatabaseConnectionConfig
   : {
-      connector: "bun-sqlite",
-      options: {
-        path: dbPath,
-      },
-    } satisfies DatabaseConnectionConfig
+    connector: "bun-sqlite",
+    options: {
+      path: dbPath,
+    },
+  } satisfies DatabaseConnectionConfig
 
 const saferBufferCloudflarePlugin = {
   name: "newsnext:safer-buffer-cloudflare",

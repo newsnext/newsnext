@@ -1,6 +1,6 @@
 import type { NewsNextDatabase } from "./db0"
-import { createLocalDb } from "./local"
 import { DB_PATH } from "../paths"
+import { createLocalDb } from "./local"
 
 export { createDbFromDb0 } from "./db0"
 export type { NewsNextDatabase } from "./db0"

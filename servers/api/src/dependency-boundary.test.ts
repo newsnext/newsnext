@@ -4,8 +4,8 @@ import { describe, expect, it } from "vitest"
 
 const apiRoot = path.resolve(import.meta.dirname, "..")
 const forbiddenRemoteUrlEnv = ["NEWSNEXT", "INSTANCE", "URL"].join("_")
-const forbiddenInternalInstanceHost = ["newsnext", "instance"].join("-")
-  + ".internal"
+const forbiddenInternalInstanceHost = `${["newsnext", "instance"].join("-")
+}.internal`
 const forbiddenDataDbBinding = ["DATA", "DB"].join("_")
 const forbiddenCacheDbBinding = ["CACHE", "DB"].join("_")
 const forbiddenDataDbPathEnv = ["NEWSNEXT", "DATA", "DB", "PATH"].join("_")
