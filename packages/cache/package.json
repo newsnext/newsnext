@@ -6,8 +6,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./db0": "./src/adapters/db0.ts",
-    "./memory": "./src/adapters/memory.ts",
-    "./paths": "./src/paths.ts"
+    "./memory": "./src/adapters/memory.ts"
   },
   "scripts": {
     "test": "bun run vitest"

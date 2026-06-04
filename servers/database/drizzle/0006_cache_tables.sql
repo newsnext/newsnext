@@ -1,4 +1,10 @@
-CREATE TABLE `sources_cache_policy_table` (
+CREATE TABLE IF NOT EXISTS `sources_cache_table` (
+	`key` text PRIMARY KEY NOT NULL,
+	`value` text NOT NULL,
+	`updatedAt` integer NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS `sources_cache_policy_table` (
 	`key` text PRIMARY KEY NOT NULL,
 	`currentMaxCacheAge` integer NOT NULL,
 	`lastFingerprint` text,

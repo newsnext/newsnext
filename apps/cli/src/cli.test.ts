@@ -6,7 +6,6 @@ describe("newsnext cli", () => {
     expect(parseCliArgs([
       "fetch",
       "hackernews:newest",
-      "--latest",
       "--param",
       "page=2",
       "-p",
@@ -15,7 +14,6 @@ describe("newsnext cli", () => {
     ])).toEqual({
       command: "fetch",
       sourceId: "hackernews:newest",
-      latest: true,
       format: "json",
       params: {
         page: "2",

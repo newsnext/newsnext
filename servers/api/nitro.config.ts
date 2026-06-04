@@ -1,23 +1,24 @@
 import { fileURLToPath } from "node:url"
+import type { DatabaseConnectionConfig } from "nitro/types"
 import { defineNitroConfig } from "nitro/config"
 
 const preset = getNitroPreset()
 const isCloudflarePreset = preset.includes("cloudflare")
-const dataDbPath = process.env.NEWSNEXT_DATA_DB_PATH
-  ?? fileURLToPath(new URL("../../data/data.db", import.meta.url))
-const dataDatabase = isCloudflarePreset
+const dbPath = process.env.NEWSNEXT_DB_PATH
+  ?? fileURLToPath(new URL("../../data/newsnext.db", import.meta.url))
+const database = isCloudflarePreset
   ? {
       connector: "cloudflare-d1",
       options: {
-        bindingName: "DATA_DB",
+        bindingName: "DB",
       },
-    }
+    } satisfies DatabaseConnectionConfig
   : {
       connector: "bun-sqlite",
       options: {
-        path: dataDbPath,
+        path: dbPath,
       },
-    }
+    } satisfies DatabaseConnectionConfig
 
 const saferBufferCloudflarePlugin = {
   name: "newsnext:safer-buffer-cloudflare",
@@ -43,13 +44,13 @@ export default defineNitroConfig({
     database: true,
   },
   database: {
-    default: dataDatabase,
+    default: database,
   },
   devDatabase: {
     default: {
       connector: "bun-sqlite",
       options: {
-        path: dataDbPath,
+        path: dbPath,
       },
     },
   },

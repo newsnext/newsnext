@@ -7,7 +7,7 @@ RUN bun install --frozen-lockfile --ignore-scripts
 
 FROM deps AS api-build
 WORKDIR /repo/servers/api
-ENV NEWSNEXT_DATA_DB_PATH=/data/data.db
+ENV NEWSNEXT_DB_PATH=/data/newsnext.db
 RUN bun run build:bun
 
 FROM oven/bun:1-slim AS api
@@ -15,25 +15,9 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0
 ENV PORT=3000
-ENV NEWSNEXT_DATA_DB_PATH=/data/data.db
+ENV NEWSNEXT_DB_PATH=/data/newsnext.db
 RUN mkdir -p /data
 COPY --from=api-build /repo/servers/api/.output ./.output
-EXPOSE 3000
-CMD ["bun", ".output/server/index.mjs"]
-
-FROM deps AS instance-build
-WORKDIR /repo/servers/instance
-ENV NEWSNEXT_CACHE_DB_PATH=/data/cache.db
-RUN bun run build:bun
-
-FROM oven/bun:1-slim AS instance
-WORKDIR /app
-ENV NODE_ENV=production
-ENV HOST=0.0.0.0
-ENV PORT=3000
-ENV NEWSNEXT_CACHE_DB_PATH=/data/cache.db
-RUN mkdir -p /data
-COPY --from=instance-build /repo/servers/instance/.output ./.output
 EXPOSE 3000
 CMD ["bun", ".output/server/index.mjs"]
 

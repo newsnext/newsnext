@@ -19,7 +19,9 @@
     "cf:typegen": "CLOUDFLARE_LOAD_DEV_VARS_FROM_DOT_ENV=false wrangler types --env-interface CloudflareBindings"
   },
   "dependencies": {
+    "@newsnext/cache": "workspace:*",
     "@newsnext/database": "workspace:*",
+    "@newsnext/instance": "workspace:*",
     "@newsnext/sources": "workspace:*",
     "@trpc/server": "^11.16.0",
     "better-auth": "^1.6.9"

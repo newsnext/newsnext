@@ -1,6 +1,6 @@
 import type { NewsNextDatabase } from "./db0"
 import { createLocalDb } from "./local"
-import { DATA_DB_PATH } from "./paths"
+import { DB_PATH } from "../paths"
 
 export { createDbFromDb0 } from "./db0"
 export type { NewsNextDatabase } from "./db0"
@@ -15,5 +15,5 @@ export function getDb(): Promise<NewsNextDatabase> {
 }
 
 async function createBunDatabase(): Promise<NewsNextDatabase> {
-  return createLocalDb(DATA_DB_PATH)
+  return createLocalDb(DB_PATH)
 }

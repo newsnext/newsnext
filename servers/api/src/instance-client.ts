@@ -1,24 +1,10 @@
-import type { SourceErrorCode } from "@newsnext/sources/service"
+import type { CacheAdapter, CacheResult } from "@newsnext/cache"
+import type { NewsNextDataInstance } from "@newsnext/instance"
 import type { SourceDescriptor } from "@newsnext/sources/typings"
-import { SourceServiceError } from "@newsnext/sources/service"
+import { getCachedSource } from "@newsnext/cache"
+import { createNewsNextInstance } from "@newsnext/instance"
 
-export interface InstanceSuccessResponse<T> {
-  success: true
-  data: T
-}
-
-export interface InstanceErrorResponse {
-  success: false
-  error: {
-    code: string
-    message: string
-  }
-}
-
-export type InstanceResponse<T> = InstanceSuccessResponse<T> | InstanceErrorResponse
-export type MaybePromise<T> = T | Promise<T>
-
-export interface LoadInstanceSourceOptions {
+export interface LoadApiSourceOptions {
   sourceId: string
   params?: Record<string, unknown>
   paramsAreNormalized?: boolean
@@ -26,89 +12,58 @@ export interface LoadInstanceSourceOptions {
   waitUntil?: (promise: Promise<unknown>) => void
 }
 
-export interface SourceLoadResult<T> {
+export interface ApiSourceLoadResult<T> extends CacheResult<T> {
   id: string
   key: string
-  items: T
-  updated: number
-  status: "success" | "cache"
 }
 
-export interface NewsNextDataInstance {
-  listSourceDescriptors: () => MaybePromise<SourceDescriptor[]>
-  loadSource: <T = unknown>(options: LoadInstanceSourceOptions) => Promise<SourceLoadResult<T>>
+export interface ApiNewsNextInstance {
+  listSourceDescriptors: () => Promise<SourceDescriptor[]>
+  loadSource: <T = unknown>(options: LoadApiSourceOptions) => Promise<ApiSourceLoadResult<T>>
 }
 
-export interface RemoteNewsNextInstanceOptions {
-  url: string
-  fetch?: (...args: Parameters<typeof fetch>) => ReturnType<typeof fetch>
-}
+export class CachedNewsNextInstance implements ApiNewsNextInstance {
+  private readonly sourceInstance: NewsNextDataInstance
+  private readonly adapter: CacheAdapter
 
-type FetchFunction = (...args: Parameters<typeof fetch>) => ReturnType<typeof fetch>
-
-export class RemoteNewsNextInstance implements NewsNextDataInstance {
-  private readonly baseUrl: URL
-  private readonly customFetch?: FetchFunction
-
-  constructor(options: RemoteNewsNextInstanceOptions) {
-    this.baseUrl = new URL(options.url)
-    this.customFetch = options.fetch
+  constructor(adapter: CacheAdapter, sourceInstance: NewsNextDataInstance = createNewsNextInstance()) {
+    this.adapter = adapter
+    this.sourceInstance = sourceInstance
   }
 
   async listSourceDescriptors(): Promise<SourceDescriptor[]> {
-    return this.request<SourceDescriptor[]>("/sources")
+    return this.sourceInstance.listSourceDescriptors()
   }
 
-  async loadSource<T = unknown>(options: LoadInstanceSourceOptions): Promise<SourceLoadResult<T>> {
-    const sourceId = encodeURIComponent(options.sourceId)
-    return this.request<SourceLoadResult<T>>(`/sources/${sourceId}`, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        params: options.params ?? {},
-        latest: options.latest,
-        paramsAreNormalized: options.paramsAreNormalized,
-      }),
+  async loadSource<T = unknown>({
+    sourceId,
+    params = {},
+    paramsAreNormalized = false,
+    latest = false,
+    waitUntil,
+  }: LoadApiSourceOptions): Promise<ApiSourceLoadResult<T>> {
+    const request = this.sourceInstance.prepareInstanceSourceRequest<T>({
+      sourceId,
+      params,
+      paramsAreNormalized,
     })
-  }
+    const result = await getCachedSource<T>({
+      key: request.key,
+      fetcher: request.fetcher,
+      adaptiveMaxCacheAge: true,
+      cacheMode: request.source.type ?? "hottest",
+      forceRefresh: latest,
+      waitUntil,
+    }, this.adapter)
 
-  private async request<T>(pathname: string, init?: RequestInit): Promise<T> {
-    const url = new URL(pathname.replace(/^\//, ""), this.baseUrlWithSlash())
-    const response = this.customFetch
-      ? await this.customFetch(url.toString(), init)
-      : await globalThis.fetch(url.toString(), init)
-    const payload = await response.json() as InstanceResponse<T>
-
-    if (payload.success) {
-      return payload.data
+    return {
+      id: sourceId,
+      key: request.key,
+      ...result,
     }
-
-    if (isSourceErrorCode(payload.error.code)) {
-      throw new SourceServiceError(payload.error.code, payload.error.message)
-    }
-
-    throw new Error(payload.error.message)
-  }
-
-  private baseUrlWithSlash(): URL {
-    const url = new URL(this.baseUrl)
-    if (!url.pathname.endsWith("/")) {
-      url.pathname = `${url.pathname}/`
-    }
-    return url
   }
 }
 
-export function createRemoteNewsNextInstance(url: string): RemoteNewsNextInstance {
-  return new RemoteNewsNextInstance({ url })
-}
-
-function isSourceErrorCode(code: string): code is SourceErrorCode {
-  return code === "SOURCE_NOT_FOUND"
-    || code === "INVALID_PARAMS"
-    || code === "INVALID_FORMAT"
-    || code === "LOADER_NOT_FOUND"
-    || code === "PROVIDER_NOT_FOUND"
+export function createCachedNewsNextInstance(adapter: CacheAdapter): CachedNewsNextInstance {
+  return new CachedNewsNextInstance(adapter)
 }

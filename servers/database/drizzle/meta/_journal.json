@@ -43,6 +43,13 @@
       "when": 1777796400000,
       "tag": "0005_reset_source_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1778000400000,
+      "tag": "0006_cache_tables",
+      "breakpoints": true
     }
   ]
 }

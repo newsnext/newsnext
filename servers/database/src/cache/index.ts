@@ -1,5 +1,4 @@
 export { Db0CacheStorage } from "./db0"
-export { createLocalCacheDb0 } from "./local"
-export { CACHE_DB_PATH } from "./paths"
+export { DB_PATH } from "../paths"
 export * from "./schema"
 export * from "./typings"

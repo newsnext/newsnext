@@ -1,5 +1,3 @@
-import type { CacheAdapter, CacheResult } from "@newsnext/cache"
-import { getCachedSource } from "@newsnext/cache"
 import { stableStringify } from "@newsnext/shared/utils"
 import {
   normalizeSourceParams,
@@ -10,14 +8,21 @@ export interface LoadSourceOptions {
   sourceId: string
   params?: Record<string, unknown>
   paramsAreNormalized?: boolean
-  adapter: CacheAdapter
-  latest?: boolean
-  waitUntil?: (promise: Promise<unknown>) => void
 }
 
-export interface SourceLoadResult<T> extends CacheResult<T> {
+export interface PreparedInstanceSourceRequest<T> {
+  sourceId: string
+  params: Record<string, unknown>
+  key: string
+  source: ReturnType<typeof resolveSource>
+  fetcher: () => Promise<T>
+}
+
+export interface SourceLoadResult<T> {
   id: string
   key: string
+  items: T
+  updated: number
 }
 
 export function buildSourceCacheKey(
@@ -31,27 +36,38 @@ export async function loadSource<T>({
   sourceId,
   params: queryParams = {},
   paramsAreNormalized = false,
-  adapter,
-  latest = false,
-  waitUntil,
 }: LoadSourceOptions): Promise<SourceLoadResult<T>> {
+  const request = prepareInstanceSourceRequest<T>({
+    sourceId,
+    params: queryParams,
+    paramsAreNormalized,
+  })
+  const items = await request.fetcher()
+
+  return {
+    id: sourceId,
+    key: request.key,
+    items,
+    updated: Date.now(),
+  }
+}
+
+export function prepareInstanceSourceRequest<T>({
+  sourceId,
+  params: queryParams = {},
+  paramsAreNormalized = false,
+}: LoadSourceOptions): PreparedInstanceSourceRequest<T> {
   const source = resolveSource(sourceId)
   const params = paramsAreNormalized
     ? queryParams
     : normalizeSourceParams(source, queryParams)
   const key = buildSourceCacheKey(sourceId, params)
-  const result = await getCachedSource<T>({
-    key,
-    fetcher: () => source.loader(params) as Promise<T>,
-    adaptiveMaxCacheAge: true,
-    cacheMode: source.type ?? "hottest",
-    forceRefresh: latest,
-    waitUntil,
-  }, adapter)
 
   return {
-    id: sourceId,
+    sourceId,
+    params,
     key,
-    ...result,
+    source,
+    fetcher: () => source.loader(params) as Promise<T>,
   }
 }

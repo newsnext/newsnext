@@ -1,14 +1,4 @@
 services:
-  instance:
-    image: newsnext-instance:latest
-    build:
-      context: .
-      target: instance
-    ports:
-      - "4101:3000"
-    volumes:
-      - instance-data:/data
-
   api:
     image: newsnext-api:latest
     build:
@@ -19,13 +9,10 @@ services:
     environment:
       BETTER_AUTH_URL: http://localhost:4100
       BETTER_AUTH_TRUSTED_ORIGINS: http://localhost:4102,http://127.0.0.1:4102,http://localhost:3001,http://127.0.0.1:3001,https://newsnext-web-1.orb.local,http://newsnext-web-1.orb.local
-      NEWSNEXT_INSTANCE_URL: http://instance:3000
     ports:
       - "4100:3000"
     volumes:
       - api-data:/data
-    depends_on:
-      - instance
 
   web:
     image: newsnext-web:latest
@@ -41,4 +28,3 @@ services:
 
 volumes:
   api-data:
-  instance-data:

@@ -229,7 +229,9 @@
     "servers/api": {
       "name": "@newsnext/api",
       "dependencies": {
+        "@newsnext/cache": "workspace:*",
         "@newsnext/database": "workspace:*",
+        "@newsnext/instance": "workspace:*",
         "@newsnext/sources": "workspace:*",
         "@trpc/server": "^11.16.0",
         "better-auth": "^1.6.9",
@@ -254,8 +256,6 @@
     "servers/instance": {
       "name": "@newsnext/instance",
       "dependencies": {
-        "@newsnext/cache": "workspace:*",
-        "@newsnext/database": "workspace:*",
         "@newsnext/shared": "workspace:*",
         "@newsnext/sources": "workspace:*",
       },

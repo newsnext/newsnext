@@ -1,1 +1,0 @@
-{"version":"7.0.0-dev.20260426.1","root":["./src/app.ts","./src/errors.ts","./src/index.ts","./src/local.ts","./src/remote.ts","./src/runtime.ts","./src/source-loader.test.ts","./src/source-loader.ts","./src/types.ts","./nitro.config.ts"]}

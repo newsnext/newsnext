@@ -8,25 +8,19 @@
     ".": "./src/index.ts",
     "./errors": "./src/errors.ts",
     "./local": "./src/local.ts",
-    "./remote": "./src/remote.ts",
     "./runtime": "./src/runtime.ts",
+    "./source-loader": "./src/source-loader.ts",
     "./types": "./src/types.ts"
   },
   "scripts": {
     "dev": "nitro dev --port 4001",
     "build": "nitro build --preset bun",
     "build:bun": "nitro build --preset bun",
-    "build:cloudflare": "nitro build --preset cloudflare_module",
-    "build:vercel": "nitro build --preset vercel",
-    "deploy:cloudflare": "nitro deploy --preset cloudflare_module",
-    "deploy:vercel": "nitro deploy --preset vercel",
     "preview": "nitro preview",
-    "cf:typegen": "CLOUDFLARE_LOAD_DEV_VARS_FROM_DOT_ENV=false wrangler types --env-interface CloudflareBindings",
+    "test": "cd ../.. && bun run vitest --run servers/instance/src/source-loader.test.ts",
     "typecheck": "tsgo -b"
   },
   "dependencies": {
-    "@newsnext/cache": "workspace:*",
-    "@newsnext/database": "workspace:*",
     "@newsnext/shared": "workspace:*",
     "@newsnext/sources": "workspace:*"
   },

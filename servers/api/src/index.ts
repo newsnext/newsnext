@@ -1,32 +1,30 @@
 import type { H3Event } from "nitro"
-import type { NewsNextDataInstance } from "./instance-client"
-import { getNitroCloudflareEnv, getNitroCloudflareEnvValue } from "./cloudflare-bindings"
-import { createRemoteNewsNextInstance, RemoteNewsNextInstance } from "./instance-client"
+import type { ApiNewsNextInstance } from "./instance-client"
+import type { ApiCloudflareBindings } from "./cloudflare-bindings"
+import type { CacheAdapter } from "@newsnext/cache"
+import { getNitroCloudflareEnv } from "./cloudflare-bindings"
+import { createCachedNewsNextInstance } from "./instance-client"
 
 export type { AppRouter } from "./routes/trpc/app-router"
 
-let instance: NewsNextDataInstance | undefined
+let instance: ApiNewsNextInstance | undefined
 
-export async function loadInstance(event: H3Event): Promise<NewsNextDataInstance> {
+export async function loadInstance(event: H3Event): Promise<ApiNewsNextInstance> {
   if (instance) {
     return instance
   }
 
   const bindings = getNitroCloudflareEnv(event)
-  const service = bindings?.INSTANCE
-  if (service) {
-    instance = new RemoteNewsNextInstance({
-      url: "https://newsnext-instance.internal",
-      fetch: (input, init) => service.fetch(input, init),
-    })
-    return instance
+  instance = createCachedNewsNextInstance(await getCacheAdapter(bindings))
+  return instance
+}
+
+async function getCacheAdapter(bindings: ApiCloudflareBindings | undefined): Promise<CacheAdapter> {
+  if (!bindings?.DB && !("Bun" in globalThis)) {
+    throw new Error("DB binding is required for NewsNext API cache")
   }
 
-  const remoteUrl = getNitroCloudflareEnvValue(bindings, "NEWSNEXT_INSTANCE_URL") ?? process.env.NEWSNEXT_INSTANCE_URL
-  if (remoteUrl) {
-    instance = createRemoteNewsNextInstance(remoteUrl)
-    return instance
-  }
-
-  throw new Error("NEWSNEXT_INSTANCE_URL or INSTANCE binding is required for NewsNext API")
+  const { Db0CacheAdapter } = await import("@newsnext/cache/db0")
+  const { useDatabase } = await import("nitro/database")
+  return Db0CacheAdapter.fromDb0(useDatabase() as never)
 }

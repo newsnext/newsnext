@@ -1,7 +1,6 @@
 {
   "extends": "@newsnext/tsconfigs/server.json",
   "compilerOptions": {
-    "tsBuildInfoFile": "./tsconfig.tsbuildinfo",
     "paths": {
       "@/*": [
         "./src/*"
@@ -10,9 +9,7 @@
   },
   "include": [
     "./src",
-    "./middleware",
     "./routes",
-    "./worker-configuration.d.ts",
     "./nitro.config.ts"
   ]
 }

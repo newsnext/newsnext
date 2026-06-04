@@ -6,7 +6,6 @@
     "nodejs_compat"
   ],
   "vars": {
-    "NEWSNEXT_INSTANCE_URL": "https://instance.newsnext.pro",
     "BETTER_AUTH_URL": "https://api.newsnext.pro",
     "BETTER_AUTH_TRUSTED_ORIGINS": "https://newsnext.pro,chrome-extension://cffgbnjiaakknooiegnjkojemhidheke",
     "GITHUB_CLIENT_ID": "Ov23lizGxoGltuEXdplC"
@@ -37,17 +36,11 @@
       "bucket_name": "newsnext"
     }
   ],
-  "services": [
-    {
-      "binding": "INSTANCE",
-      "service": "newsnext-instance"
-    }
-  ],
   "d1_databases": [
     {
-      "binding": "DATA_DB",
-      "database_name": "newsnext-data",
-      "database_id": "d57ded3d-72e3-47c8-a72b-4bc2501ce410"
+      "binding": "DB",
+      "database_name": "newsnext-db",
+      "database_id": "17b001f5-1b84-4304-9239-31f4a7e5b96f"
     }
   ],
   // "ai": {

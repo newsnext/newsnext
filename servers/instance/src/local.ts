@@ -1,27 +1,10 @@
-import type { PreparedSourceRequest } from "@newsnext/sources/service"
 import type { SourceDescriptor } from "@newsnext/sources/typings"
-import type { SourceLoadResult } from "./source-loader"
-import type {
-  LoadInstanceSourceOptions,
-  NewsNextDataInstance,
-  NewsNextInstanceOptions,
-  SourceCachePolicyInfo,
-} from "./types"
+import type { PreparedInstanceSourceRequest, SourceLoadResult } from "./source-loader"
+import type { LoadInstanceSourceOptions, NewsNextDataInstance } from "./types"
 import { sourceDescriptors } from "@newsnext/sources/metadata"
-import {
-  prepareSourceRequest,
-} from "@newsnext/sources/service"
-import { buildSourceCacheKey, loadSource } from "./source-loader"
+import { loadSource, prepareInstanceSourceRequest } from "./source-loader"
 
 export class NewsNextInstance implements NewsNextDataInstance {
-  private readonly adapter: NewsNextInstanceOptions["adapter"]
-  private readonly debugInfo: NewsNextInstanceOptions["debugInfo"]
-
-  constructor(options: NewsNextInstanceOptions) {
-    this.adapter = options.adapter
-    this.debugInfo = options.debugInfo
-  }
-
   listSourceDescriptors(): SourceDescriptor[] {
     return [...sourceDescriptors].sort((a, b) => {
       const byCategory = a.category.localeCompare(b.category)
@@ -38,64 +21,15 @@ export class NewsNextInstance implements NewsNextDataInstance {
     })
   }
 
-  prepareSourceRequest(sourceId: string, params: Record<string, unknown> = {}): PreparedSourceRequest {
-    return prepareSourceRequest(sourceId, params)
-  }
-
-  async listSourceCachePolicies(sources: SourceDescriptor[] = this.listSourceDescriptors()): Promise<SourceCachePolicyInfo[]> {
-    return Promise.all(sources.map(async (source) => {
-      const sourceId = getDescriptorSourceId(source)
-      const request = prepareSourceRequest(sourceId)
-      const key = buildSourceCacheKey(sourceId, request.params)
-      const policy = await this.adapter.getPolicy(key)
-
-      return {
-        sourceId,
-        name: source.name,
-        title: source.title,
-        provider: source.provider,
-        type: source.type ?? "hottest",
-        maxCacheAge: policy?.currentMaxCacheAge ?? null,
-        learned: policy !== undefined,
-      }
-    }))
+  prepareInstanceSourceRequest<T = unknown>(options: LoadInstanceSourceOptions): PreparedInstanceSourceRequest<T> {
+    return prepareInstanceSourceRequest<T>(options)
   }
 
   async loadSource<T = unknown>(options: LoadInstanceSourceOptions): Promise<SourceLoadResult<T>> {
-    return loadSource<T>({
-      ...options,
-      adapter: this.adapter,
-    })
-  }
-
-  getDebugInfo() {
-    return {
-      mode: "local" as const,
-      runtime: "unknown",
-      cache: {
-        type: "unknown" as const,
-      },
-      ...this.debugInfo,
-    }
+    return loadSource<T>(options)
   }
 }
 
-export function createNewsNextInstance(options: NewsNextInstanceOptions): NewsNextInstance {
-  return new NewsNextInstance(options)
-}
-
-function getDescriptorSourceId(source: SourceDescriptor): string {
-  return `${source.provider}:${source.id}`
-}
-
-export async function createMemoryNewsNextInstance(): Promise<NewsNextInstance> {
-  const { MemoryCacheAdapter } = await import("@newsnext/cache/memory")
-  return createNewsNextInstance({
-    adapter: new MemoryCacheAdapter(),
-    debugInfo: {
-      cache: {
-        type: "memory",
-      },
-    },
-  })
+export function createNewsNextInstance(): NewsNextInstance {
+  return new NewsNextInstance()
 }

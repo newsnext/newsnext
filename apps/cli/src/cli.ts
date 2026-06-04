@@ -2,17 +2,14 @@ import type { NewsNextDataInstance } from "@newsnext/instance"
 import type { SourceDescriptor } from "@newsnext/sources/typings"
 import { createBunNewsNextInstance } from "@newsnext/instance"
 
-export type CliCommandName = "fetch" | "help" | "info" | "sources" | "version"
+export type CliCommandName = "fetch" | "help" | "sources" | "version"
 export type OutputFormat = "json" | "table"
 
 export interface CliCommand {
   command: CliCommandName
   sourceId?: string
   format: OutputFormat
-  latest?: boolean
   params: Record<string, string>
-  cachePath?: string
-  remoteUrl?: string
 }
 
 export interface CliIo {
@@ -42,10 +39,7 @@ export async function runCli(io: CliIo): Promise<number> {
     }
 
     const context: CommandContext = {
-      instance: await createCliInstance({
-        cachePath: command.cachePath,
-        remoteUrl: command.remoteUrl,
-      }),
+      instance: await createCliInstance(),
     }
 
     const output = await executeCommand(command, context)
@@ -57,15 +51,12 @@ export async function runCli(io: CliIo): Promise<number> {
   }
 }
 
-async function createCliInstance(options: {
-  cachePath?: string
-  remoteUrl?: string
-}): Promise<NewsNextDataInstance> {
+async function createCliInstance(): Promise<NewsNextDataInstance> {
   const originalLog = console.log
 
   try {
     console.log = () => {}
-    return await createBunNewsNextInstance(options)
+    return await createBunNewsNextInstance()
   } finally {
     console.log = originalLog
   }
@@ -75,9 +66,6 @@ export function parseCliArgs(args: string[]): CliCommand {
   const params: Record<string, string> = {}
   const positional: string[] = []
   let format: OutputFormat = "table"
-  let latest = false
-  let cachePath: string | undefined
-  let remoteUrl: string | undefined
 
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index]
@@ -100,23 +88,6 @@ export function parseCliArgs(args: string[]): CliCommand {
 
     if (arg === "--json") {
       format = "json"
-      continue
-    }
-
-    if (arg === "--latest") {
-      latest = true
-      continue
-    }
-
-    if (arg === "--cache-path") {
-      cachePath = readOptionValue(args, index, "--cache-path")
-      index += 1
-      continue
-    }
-
-    if (arg === "--remote-url") {
-      remoteUrl = readOptionValue(args, index, "--remote-url")
-      index += 1
       continue
     }
 
@@ -145,11 +116,8 @@ export function parseCliArgs(args: string[]): CliCommand {
   return {
     command,
     sourceId,
-    latest,
     format,
     params,
-    cachePath,
-    remoteUrl,
   }
 }
 
@@ -165,17 +133,9 @@ async function executeCommand(command: CliCommand, context: CommandContext): Pro
     const result = await context.instance.loadSource({
       sourceId: command.sourceId ?? "",
       params: command.params,
-      latest: command.latest,
     })
 
     return stringifyJson(result)
-  }
-
-  if (command.command === "info") {
-    const debugInfo = await context.instance.getDebugInfo?.()
-    return command.format === "json"
-      ? stringifyJson(debugInfo ?? {})
-      : renderInfo(debugInfo)
   }
 
   return renderHelp()
@@ -195,38 +155,16 @@ export function renderSourceTable(sources: SourceDescriptor[]): string {
   ])
 }
 
-function renderInfo(info: Awaited<ReturnType<NonNullable<NewsNextDataInstance["getDebugInfo"]>>> | undefined): string {
-  if (!info) {
-    return "No debug info available."
-  }
-
-  const rows = [
-    ["Mode", info.mode],
-    ["Runtime", info.runtime],
-    ["Cache", info.cache.path ? `${info.cache.type} (${info.cache.path})` : info.cache.type],
-  ]
-
-  if (info.remoteUrl) {
-    rows.push(["Remote", info.remoteUrl])
-  }
-
-  return renderTable(rows)
-}
-
 function renderHelp(): string {
   return [
     "NewsNext CLI",
     "",
     "Usage:",
     "  newsnext sources [--json]",
-    "  newsnext fetch <provider:source> [--latest] [--param key=value] [--json]",
-    "  newsnext info [--json]",
+    "  newsnext fetch <provider:source> [--param key=value] [--json]",
     "",
     "Options:",
-    "  --cache-path <path>   Use a sqlite cache path",
-    "  --remote-url <url>    Use a remote NewsNext instance",
     "  --json                Print JSON where supported",
-    "  --latest              Force a fresh source fetch",
     "  -p, --param <k=v>     Pass a source parameter",
     "  -h, --help            Show help",
     "  -v, --version         Show version",
@@ -254,7 +192,7 @@ function normalizeCommandName(value: string): CliCommandName {
     return "sources"
   }
 
-  if (value === "fetch" || value === "info" || value === "help" || value === "version") {
+  if (value === "fetch" || value === "help" || value === "version") {
     return value
   }
 
