@@ -74,5 +74,8 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "vite": "^8.0.10"
+  },
+  "patchedDependencies": {
+    "env-runner@0.1.9": "patches/env-runner@0.1.9.patch"
   }
 }

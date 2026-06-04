@@ -264,6 +264,9 @@
       },
     },
   },
+  "patchedDependencies": {
+    "env-runner@0.1.9": "patches/env-runner@0.1.9.patch",
+  },
   "overrides": {
     "iconv-lite": "^0.7.2",
     "react": "catalog:",
