@@ -1,4 +1,4 @@
-import type { NewsNextDatabase } from "@newsnext/database/d1"
+import type { NewsNextDatabase } from "@newsnext/database/db0"
 import type { H3Event } from "nitro"
 import type { ApiCloudflareBindings } from "@/cloudflare-bindings"
 import type { NewsNextDataInstance } from "@/instance-client"

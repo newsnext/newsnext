@@ -29,5 +29,5 @@ export interface GetCachedSourceOptions<T> {
   cacheMode?: AdaptiveCacheMode
   adaptiveAlgorithm?: AdaptiveCacheAlgorithm
   forceRefresh?: boolean
-  waitUntil?: (promise: Promise<any>) => void
+  waitUntil?: (promise: Promise<unknown>) => void
 }

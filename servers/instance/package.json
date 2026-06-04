@@ -26,9 +26,9 @@
   },
   "dependencies": {
     "@newsnext/cache": "workspace:*",
+    "@newsnext/database": "workspace:*",
     "@newsnext/shared": "workspace:*",
-    "@newsnext/sources": "workspace:*",
-    "db0": "^0.3.4"
+    "@newsnext/sources": "workspace:*"
   },
   "devDependencies": {
     "nitro": "3.0.260522-beta"

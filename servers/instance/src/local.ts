@@ -99,16 +99,3 @@ export async function createMemoryNewsNextInstance(): Promise<NewsNextInstance> 
     },
   })
 }
-
-export async function createD1NewsNextInstance(d1: unknown): Promise<NewsNextInstance> {
-  const { D1CacheAdapter } = await import("@newsnext/cache/d1")
-  return createNewsNextInstance({
-    adapter: new D1CacheAdapter(d1),
-    debugInfo: {
-      runtime: "cloudflare",
-      cache: {
-        type: "d1",
-      },
-    },
-  })
-}

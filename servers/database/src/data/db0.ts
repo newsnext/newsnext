@@ -1,11 +1,12 @@
 import type { Database } from "db0"
-import type { NewsNextDatabase } from "./d1"
 import type * as schema from "./schema"
 import { drizzle as drizzleDb0 } from "db0/integrations/drizzle"
 
+export type NewsNextDatabase = ReturnType<typeof drizzleDb0<typeof schema>>
+
 export async function createDbFromDb0(db0: Database): Promise<NewsNextDatabase> {
   await prepareSchema(db0)
-  return drizzleDb0<typeof schema>(db0) as unknown as NewsNextDatabase
+  return drizzleDb0<typeof schema>(db0)
 }
 
 async function prepareSchema(db: Database): Promise<void> {

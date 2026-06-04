@@ -3,10 +3,7 @@ import type {
   CloudflareNewsNextInstanceOptions,
   NewsNextDataInstance,
 } from "./types"
-import {
-  createD1NewsNextInstance,
-  createMemoryNewsNextInstance,
-} from "./local"
+import { createMemoryNewsNextInstance } from "./local"
 import { createRemoteNewsNextInstance } from "./remote"
 
 export async function createCloudflareNewsNextInstance(
@@ -20,10 +17,11 @@ export async function createCloudflareNewsNextInstance(
 
   if (options.bindings.CACHE_DB) {
     try {
-      console.log("Using D1 cache instance")
-      return await createD1NewsNextInstance(options.bindings.CACHE_DB)
+      console.log("Using db0 cache instance")
+      const { createNitroDatabaseNewsNextInstance } = await import("./local-database")
+      return await createNitroDatabaseNewsNextInstance()
     } catch (error) {
-      console.error("Failed to initialize D1 cache instance:", error)
+      console.error("Failed to initialize db0 cache instance:", error)
     }
   }
 
@@ -40,11 +38,11 @@ export async function createBunNewsNextInstance(
     return createRemoteNewsNextInstance(remoteUrl)
   }
 
-  const cachePath = options.cachePath ?? await getDefaultSqliteCachePath()
-  console.log("Using Sqlite data instance")
-  const localSqliteModule = ["./local", "sqlite"].join("-")
-  const { createSqliteNewsNextInstance } = await import(localSqliteModule)
-  return createSqliteNewsNextInstance(cachePath)
+  const cachePath = options.cachePath ?? await getDefaultCachePath()
+  console.log("Using local db0 cache instance")
+  const localDb0Module = ["./local", "db0"].join("-")
+  const { createDb0NewsNextInstance } = await import(localDb0Module)
+  return createDb0NewsNextInstance(cachePath)
 }
 
 export async function createLocalNewsNextInstance(
@@ -64,7 +62,7 @@ export async function createLocalNewsNextInstance(
   return createBunNewsNextInstance(options)
 }
 
-async function getDefaultSqliteCachePath(): Promise<string> {
+async function getDefaultCachePath(): Promise<string> {
   const { CACHE_DB_PATH } = await import("@newsnext/cache/paths")
   return CACHE_DB_PATH
 }

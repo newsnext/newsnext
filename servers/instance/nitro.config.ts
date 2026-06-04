@@ -65,7 +65,7 @@ export default defineNitroConfig({
   rolldownConfig: {
     plugins: [saferBufferCloudflarePlugin],
     external: isCloudflarePreset
-      ? ["@newsnext/cache/sqlite", "db0/connectors/bun-sqlite", "bun:sqlite"]
+      ? ["@newsnext/database/cache/local", "db0/connectors/bun-sqlite", "bun:sqlite"]
       : ["bun:sqlite"],
   },
 })

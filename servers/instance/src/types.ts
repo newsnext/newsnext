@@ -46,7 +46,7 @@ export interface InstanceDebugInfo {
   mode: "local" | "remote"
   runtime: string
   cache: {
-    type: "memory" | "d1" | "sqlite" | "remote" | "unknown"
+    type: "memory" | "db0" | "remote" | "unknown"
     path?: string
   }
   remoteUrl?: string

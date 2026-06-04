@@ -1,11 +1,10 @@
-import type { NewsNextDatabase } from "./d1"
+import type { NewsNextDatabase } from "./db0"
+import { createLocalDb } from "./local"
 import { DATA_DB_PATH } from "./paths"
-import { createSqliteDb } from "./sqlite"
 
-export { createD1Db } from "./d1"
 export { createDbFromDb0 } from "./db0"
-export { createSqliteDb } from "./sqlite"
-export type { NewsNextDatabase } from "./d1"
+export type { NewsNextDatabase } from "./db0"
+export { createLocalDb } from "./local"
 export * from "./schema"
 
 let databasePromise: Promise<NewsNextDatabase> | undefined
@@ -16,5 +15,5 @@ export function getDb(): Promise<NewsNextDatabase> {
 }
 
 async function createBunDatabase(): Promise<NewsNextDatabase> {
-  return createSqliteDb(DATA_DB_PATH)
+  return createLocalDb(DATA_DB_PATH)
 }

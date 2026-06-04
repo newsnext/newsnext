@@ -1,4 +1,4 @@
-import type { NewsNextDatabase } from "@newsnext/database/d1"
+import type { NewsNextDatabase } from "@newsnext/database/db0"
 import { createDbFromDb0 } from "@newsnext/database/db0"
 import { useDatabase } from "nitro/database"
 

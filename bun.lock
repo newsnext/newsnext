@@ -165,12 +165,7 @@
       "name": "@newsnext/cache",
       "dependencies": {
         "@newsnext/cache-policy": "workspace:*",
-        "db0": "^0.3.4",
-        "drizzle-orm": "^0.45.2",
-      },
-      "devDependencies": {
-        "@libsql/client": "^0.17.3",
-        "drizzle-kit": "^0.31.10",
+        "@newsnext/database": "workspace:*",
       },
     },
     "packages/cache-policy": {
@@ -235,7 +230,6 @@
       "name": "@newsnext/api",
       "dependencies": {
         "@newsnext/database": "workspace:*",
-        "@newsnext/instance": "workspace:*",
         "@newsnext/sources": "workspace:*",
         "@trpc/server": "^11.16.0",
         "better-auth": "^1.6.9",
@@ -247,6 +241,7 @@
     "servers/database": {
       "name": "@newsnext/database",
       "dependencies": {
+        "@newsnext/cache-policy": "workspace:*",
         "db0": "^0.3.4",
         "drizzle-orm": "^0.45.2",
       },
@@ -260,9 +255,9 @@
       "name": "@newsnext/instance",
       "dependencies": {
         "@newsnext/cache": "workspace:*",
+        "@newsnext/database": "workspace:*",
         "@newsnext/shared": "workspace:*",
         "@newsnext/sources": "workspace:*",
-        "db0": "^0.3.4",
       },
       "devDependencies": {
         "nitro": "3.0.260522-beta",

@@ -4,20 +4,35 @@
   "private": true,
   "license": "MPL-2.0",
   "exports": {
-    ".": "./src/index.ts",
-    "./db0": "./src/db0.ts",
-    "./d1": "./src/d1.ts",
-    "./orm": "./src/orm.ts",
-    "./schema": "./src/schema.ts",
-    "./sqlite": "./src/sqlite.ts"
+    ".": "./src/data/index.ts",
+    "./cache": "./src/cache/index.ts",
+    "./cache/db0": "./src/cache/db0.ts",
+    "./cache/local": "./src/cache/local.ts",
+    "./cache/paths": "./src/cache/paths.ts",
+    "./cache/schema": "./src/cache/schema.ts",
+    "./cache/typings": "./src/cache/typings.ts",
+    "./data": "./src/data/index.ts",
+    "./data/db0": "./src/data/db0.ts",
+    "./data/local": "./src/data/local.ts",
+    "./data/orm": "./src/data/orm.ts",
+    "./data/paths": "./src/data/paths.ts",
+    "./data/schema": "./src/data/schema.ts",
+    "./db0": "./src/data/db0.ts",
+    "./local": "./src/data/local.ts",
+    "./orm": "./src/data/orm.ts",
+    "./schema": "./src/data/schema.ts"
   },
   "scripts": {
     "generate": "bun run --bun drizzle-kit generate",
+    "generate:cache": "bun run --bun drizzle-kit generate --config drizzle.cache.config.ts",
     "push": "bun run --bun drizzle-kit push",
+    "push:cache": "bun run --bun drizzle-kit push --config drizzle.cache.config.ts",
     "migrate": "bun run --bun drizzle-kit migrate",
+    "migrate:cache": "bun run --bun drizzle-kit migrate --config drizzle.cache.config.ts",
     "studio": "bun run --bun drizzle-kit studio"
   },
   "dependencies": {
+    "@newsnext/cache-policy": "workspace:*",
     "db0": "^0.3.4",
     "drizzle-orm": "^0.45.2"
   },

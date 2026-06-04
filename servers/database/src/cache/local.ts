@@ -1,18 +1,10 @@
 import type { Database } from "db0"
 import { fileURLToPath } from "node:url"
 import { createDatabase } from "db0"
-import { Db0CacheAdapter } from "./db0"
 
-export class SqliteCacheAdapter {
-  static async create(path: string): Promise<Db0CacheAdapter> {
-    const db0 = await createDb0Database(path)
-    return Db0CacheAdapter.fromDb0(db0)
-  }
-}
-
-async function createDb0Database(path: string): Promise<Database> {
+export async function createLocalCacheDb0(path: string): Promise<Database> {
   if (typeof Bun === "undefined") {
-    throw new Error("SQLite cache requires Bun runtime")
+    throw new TypeError("SQLite cache requires Bun runtime")
   }
 
   const { default: createBunSqliteConnector } = await import("db0/connectors/bun-sqlite")

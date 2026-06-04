@@ -6,24 +6,14 @@
   "exports": {
     ".": "./src/index.ts",
     "./db0": "./src/adapters/db0.ts",
-    "./sqlite": "./src/adapters/sqlite.ts",
     "./memory": "./src/adapters/memory.ts",
-    "./d1": "./src/adapters/d1.ts",
     "./paths": "./src/paths.ts"
   },
   "scripts": {
-    "generate": "bun run --bun drizzle-kit generate",
-    "push": "bun run --bun drizzle-kit push",
-    "migrate": "bun run --bun drizzle-kit migrate",
-    "studio": "bun run --bun drizzle-kit studio"
+    "test": "bun run vitest"
   },
   "dependencies": {
     "@newsnext/cache-policy": "workspace:*",
-    "db0": "^0.3.4",
-    "drizzle-orm": "^0.45.2"
-  },
-  "devDependencies": {
-    "@libsql/client": "^0.17.3",
-    "drizzle-kit": "^0.31.10"
+    "@newsnext/database": "workspace:*"
   }
 }
