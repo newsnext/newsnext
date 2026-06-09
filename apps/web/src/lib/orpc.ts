@@ -2,9 +2,9 @@ import type { Client, NestedClient } from "@orpc/client"
 import type { NewsItem, SourceDescriptor } from "@/typings/source"
 import { createORPCClient } from "@orpc/client"
 import { RPCLink } from "@orpc/client/fetch"
-import { BatchLinkPlugin } from "@orpc/client/plugins"
+import { BatchLinkPlugin, DedupeRequestsPlugin } from "@orpc/client/plugins"
 import { createTanstackQueryUtils } from "@orpc/tanstack-query"
-import { getAppURL } from "@/lib/env"
+import { getAppURL } from "./env"
 
 interface GetSourceInput {
   sourceId: string
@@ -70,9 +70,24 @@ interface AppClient extends Record<string, NestedClient<Record<never, never>>> {
   resetSourceInstanceParams: Client<Record<never, never>, SourceInstanceIdInput, MutationResult, unknown>
 }
 
+const DEDUPE_PROCEDURES = new Set(["getBoard", "getSource", "getSourceState"])
+
+export function shouldDedupeProcedurePath(path: readonly string[]): boolean {
+  return DEDUPE_PROCEDURES.has(path[0] ?? "")
+}
+
 const link = new RPCLink({
   url: getAppURL("/api/orpc"),
   plugins: [
+    new DedupeRequestsPlugin({
+      filter: ({ path }) => shouldDedupeProcedurePath(path),
+      groups: [
+        {
+          condition: () => true,
+          context: {},
+        },
+      ],
+    }),
     new BatchLinkPlugin({
       mode: "streaming",
       groups: [
