@@ -31,7 +31,7 @@
 - Prefer functional components and composition; extract reusable behavior into custom hooks when it improves clarity.
 - Follow the Rules of Hooks, keep state close to usage, and add effect cleanup when needed.
 - Use semantic HTML and accessible interactions for forms and UI.
-- When adding features or modifying code, always add new tests or update existing tests to cover the behavior change.
+- Add or update tests for meaningful behavior changes, bug fixes, shared logic, and risky integration paths. Avoid adding low-value tests for trivial wiring, mechanical refactors, styling-only changes, or configuration-only changes when type-checking, linting, build output, or targeted manual verification covers the risk.
 - Optimize render performance deliberately rather than by default.
 - Avoid `any`; prefer `unknown` when a value is not yet known.
 - Prefer `interface` for object shapes and `type` for unions, intersections, and mapped types.
