@@ -1,18 +1,20 @@
+const DEFAULT_DEV_API_BASE_URL = "http://localhost:4000"
+
 function cleanBaseURL(value: string | undefined): string {
   return value?.replace(/\/$/, "") ?? ""
 }
 
-function getBaseURL(): string {
-  const configuredBaseURL = cleanBaseURL(import.meta.env.VITE_BASE_URL)
+export function resolveBaseURL(configuredBaseURL: string | undefined, isDEV: boolean): string {
+  const cleanedBaseURL = cleanBaseURL(configuredBaseURL)
 
-  if (configuredBaseURL) {
-    return configuredBaseURL
+  if (cleanedBaseURL) {
+    return cleanedBaseURL
   }
 
-  return ""
+  return isDEV ? DEFAULT_DEV_API_BASE_URL : ""
 }
 
-export const BASE_URL = getBaseURL()
+export const BASE_URL = resolveBaseURL(import.meta.env.VITE_BASE_URL, import.meta.env.DEV)
 
 export function getAppURL(path: string): string {
   return new URL(path, BASE_URL || window.location.origin).toString()

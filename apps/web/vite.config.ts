@@ -5,8 +5,6 @@ import Icons from "unplugin-icons/vite"
 import TurboConsole from "unplugin-turbo-console/vite"
 import { defineConfig } from "vite"
 
-const API_PREFIX_REGEX = /^\/api/
-
 export default defineConfig(({ mode }) => {
   const isDEV = mode !== "production"
   console.log("isDEV", isDEV)
@@ -15,14 +13,6 @@ export default defineConfig(({ mode }) => {
       port: 3001,
       strictPort: true,
       host: true,
-      proxy: {
-        "/api": {
-          target: "http://localhost:4000/api",
-          // target: "https://newsnext.pro/api",
-          changeOrigin: true,
-          rewrite: path => path.replace(API_PREFIX_REGEX, ""),
-        },
-      },
     },
     optimizeDeps: {
       force: false,
