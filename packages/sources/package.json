@@ -15,12 +15,12 @@
     "test": "bun run vitest"
   },
   "dependencies": {
-    "@date-fns/tz": "^1.4.1",
+    "@date-fns/tz": "^1.5.0",
     "@newsnext/shared": "workspace:*",
-    "@smithy/md5-js": "^4.2.14",
+    "@smithy/md5-js": "^4.3.6",
     "cheerio": "^1.2.0",
-    "date-fns": "^4.1.0",
-    "fast-xml-parser": "^5.7.2",
+    "date-fns": "^4.4.0",
+    "fast-xml-parser": "^5.8.0",
     "iconv-lite": "^0.7.2"
   },
   "devDependencies": {
