@@ -1,14 +1,15 @@
 import type { ReactNode } from "react"
 import type { BoardSource, NewsItem } from "@/typings/source"
+import { useMutation } from "@tanstack/react-query"
 import { useAtom } from "jotai"
 import { useInView } from "motion/react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { FlipAnimate } from "@/components/common/flip-animate"
 import { useSourceParams } from "@/hooks"
 import { useSourceQuery } from "@/hooks/use-source-query"
+import { orpc } from "@/lib/orpc"
 import { createSourceInstance } from "@/lib/source-cards"
 import { deleteStoredSourceParamValues, writeStoredSourceParamValues } from "@/lib/source-params"
-import { trpc } from "@/lib/trpc"
 import { cn } from "@/lib/utils"
 import { sourceInstancesAtom, starredSourceInstanceIdsAtom } from "@/store/board"
 import { useExpandedPreview } from "../preview/expanded-preview-context"
@@ -37,10 +38,10 @@ function CardContent({ id, source, isInView, dragHandle, disableExpandedPreview 
   const { isExpandedPreviewOpen, openExpandedPreview } = useExpandedPreview()
   const [starredSourceInstanceIds, setStarredSourceInstanceIds] = useAtom(starredSourceInstanceIdsAtom)
   const [, setSourceInstances] = useAtom(sourceInstancesAtom)
-  const upsertSourceInstance = trpc.upsertSourceInstance.useMutation({ onError: () => {} })
-  const deleteSourceInstance = trpc.deleteSourceInstance.useMutation({ onError: () => {} })
-  const setStarredSourceInstance = trpc.setStarredSourceInstance.useMutation({ onError: () => {} })
-  const resetSourceInstanceParams = trpc.resetSourceInstanceParams.useMutation({ onError: () => {} })
+  const upsertSourceInstance = useMutation(orpc.upsertSourceInstance.mutationOptions({ onError: () => {} }))
+  const deleteSourceInstance = useMutation(orpc.deleteSourceInstance.mutationOptions({ onError: () => {} }))
+  const setStarredSourceInstance = useMutation(orpc.setStarredSourceInstance.mutationOptions({ onError: () => {} }))
+  const resetSourceInstanceParams = useMutation(orpc.resetSourceInstanceParams.mutationOptions({ onError: () => {} }))
   const [isFlipped, setIsFlipped] = useState(false)
   const {
     hasParams,

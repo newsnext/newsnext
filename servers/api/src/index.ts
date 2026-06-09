@@ -5,7 +5,7 @@ import type { ApiNewsNextInstance } from "./instance-client"
 import { getNitroCloudflareEnv } from "./cloudflare-bindings"
 import { createCachedNewsNextInstance } from "./instance-client"
 
-export type { AppRouter } from "./routes/trpc/app-router"
+export type { AppRouter } from "./routes/orpc/app-router"
 
 let instance: ApiNewsNextInstance | undefined
 

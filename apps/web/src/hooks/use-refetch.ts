@@ -1,10 +1,9 @@
-import { useIsFetching } from "@tanstack/react-query"
-import { getQueryKey } from "@trpc/react-query"
+import { useIsFetching, useQueryClient } from "@tanstack/react-query"
 import { useAtomValue } from "jotai"
 import { useCallback, useMemo } from "react"
+import { orpc } from "@/lib/orpc"
 import { buildBoardSources, buildSourceRequestKey } from "@/lib/source-cards"
 import { getSavedSourceParamValues } from "@/lib/source-params"
-import { trpc } from "@/lib/trpc"
 import { currentBoardAtom, sourceInstancesAtom, starredSourceInstanceIdsAtom } from "@/store/board"
 
 const latestSourceRefreshKeys = new Set<string>()
@@ -34,11 +33,11 @@ export function consumeLatestSourceRefresh(target: RefetchTarget): boolean {
 }
 
 export function useRefetch() {
-  const utils = trpc.useUtils()
+  const queryClient = useQueryClient()
   const currentBoard = useAtomValue(currentBoardAtom)
   const starredSourceInstanceIds = useAtomValue(starredSourceInstanceIdsAtom)
   const sourceInstances = useAtomValue(sourceInstancesAtom)
-  const fetchingCount = useIsFetching({ queryKey: getQueryKey(trpc.getSource) })
+  const fetchingCount = useIsFetching({ queryKey: orpc.getSource.key({ type: "query" }) })
 
   const isFetching = useMemo(() => fetchingCount > 0, [fetchingCount])
 
@@ -56,14 +55,18 @@ export function useRefetch() {
 
         await Promise.all(
           uniqueTargets.map(target =>
-            utils.getSource.invalidate({ sourceId: target.sourceId, params: target.params ?? {} }),
+            queryClient.invalidateQueries({
+              queryKey: orpc.getSource.queryKey({
+                input: { sourceId: target.sourceId, params: target.params ?? {} },
+              }),
+            }),
           ),
         )
       } catch (e) {
         console.error("Failed to refresh sources", e)
       }
     },
-    [utils],
+    [queryClient],
   )
 
   /**
@@ -71,7 +74,7 @@ export function useRefetch() {
    */
   const refetchAll = useCallback(async () => {
     try {
-      const sources = await utils.getBoard.ensureData()
+      const sources = await queryClient.ensureQueryData(orpc.getBoard.queryOptions())
       const boardSources = buildBoardSources({
         sources,
         boardId: currentBoard,
@@ -93,13 +96,17 @@ export function useRefetch() {
 
       await Promise.all(
         uniqueTargets.map(target =>
-          utils.getSource.invalidate({ sourceId: target.sourceId, params: target.params ?? {} }),
+          queryClient.invalidateQueries({
+            queryKey: orpc.getSource.queryKey({
+              input: { sourceId: target.sourceId, params: target.params ?? {} },
+            }),
+          }),
         ),
       )
     } catch (e) {
       console.error("Failed to refresh board sources", e)
     }
-  }, [utils, currentBoard, starredSourceInstanceIds, sourceInstances])
+  }, [queryClient, currentBoard, starredSourceInstanceIds, sourceInstances])
 
   return {
     refetch,

@@ -1,10 +1,11 @@
 import type { RefObject } from "react"
 import type { BoardSource } from "@/typings/source"
+import { useQuery } from "@tanstack/react-query"
 import { useAtomValue } from "jotai"
 import { useEffect, useState } from "react"
 import { isMobile } from "react-device-detect"
+import { orpc } from "@/lib/orpc"
 import { buildBoardSources } from "@/lib/source-cards"
-import { trpc } from "@/lib/trpc"
 import { sourceInstancesAtom, starredSourceInstanceIdsAtom } from "@/store/board"
 import { DesktopBoard } from "./desktop-board"
 import { MobileBoard } from "./mobile-board"
@@ -29,7 +30,7 @@ export function NowLayer({
   const starredSourceInstanceIds = useAtomValue(starredSourceInstanceIdsAtom)
   const sourceInstances = useAtomValue(sourceInstancesAtom)
 
-  const { data: sources, isPending } = trpc.getBoard.useQuery()
+  const { data: sources, isPending } = useQuery(orpc.getBoard.queryOptions())
 
   const [prevBoardId, setPrevBoardId] = useState(boardId)
   if (prevBoardId !== boardId) {

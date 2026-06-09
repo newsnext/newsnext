@@ -11,12 +11,13 @@ import {
   CommandItem,
   CommandList,
 } from "@newsnext/ui/components/command"
+import { useQuery } from "@tanstack/react-query"
 import { useAtomValue } from "jotai"
 import { useEffect, useMemo, useState } from "react"
+import { orpc } from "@/lib/orpc"
 import { buildBoardSources } from "@/lib/source-cards"
 import { resolveSourceDisplay } from "@/lib/source-display"
 import { getSavedSourceParamValues } from "@/lib/source-params"
-import { trpc } from "@/lib/trpc"
 import { cn } from "@/lib/utils"
 import { sourceInstancesAtom, starredSourceInstanceIdsAtom } from "@/store/board"
 import Card from "../card"
@@ -76,7 +77,7 @@ export function SearchDialog(): JSX.Element {
   const [selectedItemId, setSelectedItemId] = useState("")
   const starredSourceInstanceIds = useAtomValue(starredSourceInstanceIdsAtom)
   const sourceInstances = useAtomValue(sourceInstancesAtom)
-  const { data: sources = [] } = trpc.getBoard.useQuery()
+  const { data: sources = [] } = useQuery(orpc.getBoard.queryOptions())
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {

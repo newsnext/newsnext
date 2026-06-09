@@ -4,6 +4,7 @@
   "private": true,
   "license": "MPL-2.0",
   "exports": {
+    "./orpc": "./src/routes/orpc/app-router.ts",
     "./trpc": "./src/routes/trpc/app-router.ts"
   },
   "scripts": {
@@ -23,6 +24,7 @@
     "@newsnext/database": "workspace:*",
     "@newsnext/instance": "workspace:*",
     "@newsnext/sources": "workspace:*",
+    "@orpc/server": "^1.14.5",
     "@trpc/server": "^11.17.0",
     "better-auth": "^1.6.15"
   },

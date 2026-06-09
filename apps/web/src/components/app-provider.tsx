@@ -2,14 +2,12 @@ import type { QueryClient } from "@tanstack/react-query"
 import type { PropsWithChildren } from "react"
 import type { ThemeMode } from "@/lib/utils/swith-theme"
 import { isBrowser } from "@newsnext/ui/lib/is-browser"
-import { QueryClientProvider } from "@tanstack/react-query"
-import { httpBatchStreamLink } from "@trpc/client"
+import { QueryClientProvider, useQuery } from "@tanstack/react-query"
 import { useSetAtom } from "jotai"
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import { authClient } from "@/lib/auth-client"
-import { getAppURL } from "@/lib/env"
+import { orpc } from "@/lib/orpc"
 import { writeStoredSourceParamValues } from "@/lib/source-params"
-import { trpc } from "@/lib/trpc"
 import {
   handleThemeModeSwitch,
   handleThemeSwitch,
@@ -38,10 +36,10 @@ function SourceStateHydrator() {
   const setSourceInstances = useSetAtom(sourceInstancesAtom)
   const setStarredSourceInstanceIds = useSetAtom(starredSourceInstanceIdsAtom)
   const { data: session } = authClient.useSession()
-  const { data } = trpc.getSourceState.useQuery(undefined, {
+  const { data } = useQuery(orpc.getSourceState.queryOptions({
     enabled: Boolean(session),
     retry: false,
-  })
+  }))
 
   useEffect(() => {
     if (!data) {
@@ -62,29 +60,10 @@ export function AppProvider({
   children,
   queryClient,
 }: PropsWithChildren<AppProviderProps>) {
-  const [trpcClient] = useState(
-    () =>
-      trpc.createClient({
-        links: [
-          httpBatchStreamLink({
-            url: getAppURL("/api/trpc"),
-            fetch(url, options) {
-              return fetch(url, {
-                ...options,
-                credentials: "include",
-              })
-            },
-          }),
-        ],
-      }),
-  )
-
   return (
-    <trpc.Provider client={trpcClient} queryClient={queryClient}>
-      <QueryClientProvider client={queryClient}>
-        <SourceStateHydrator />
-        {children}
-      </QueryClientProvider>
-    </trpc.Provider>
+    <QueryClientProvider client={queryClient}>
+      <SourceStateHydrator />
+      {children}
+    </QueryClientProvider>
   )
 }
