@@ -20,7 +20,7 @@ services:
       context: .
       target: web
       args:
-        VITE_BASE_URL: http://localhost:4100
+        VITE_BASE_URL: http://localhost:4100/v1
     ports:
       - "4102:80"
     depends_on:
