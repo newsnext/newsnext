@@ -4,7 +4,7 @@ import { createORPCClient } from "@orpc/client"
 import { RPCLink } from "@orpc/client/fetch"
 import { BatchLinkPlugin, DedupeRequestsPlugin } from "@orpc/client/plugins"
 import { createTanstackQueryUtils } from "@orpc/tanstack-query"
-import { getAppURL } from "./env"
+import { getApiUrl } from "./env"
 
 interface GetSourceInput {
   sourceId: string
@@ -77,7 +77,7 @@ export function shouldDedupeProcedurePath(path: readonly string[]): boolean {
 }
 
 const link = new RPCLink({
-  url: getAppURL("/v1/orpc"),
+  url: getApiUrl("/orpc"),
   plugins: [
     new DedupeRequestsPlugin({
       filter: ({ path }) => shouldDedupeProcedurePath(path),

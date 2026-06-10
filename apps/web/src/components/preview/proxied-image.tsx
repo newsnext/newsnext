@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from "react"
-import { getAppURL } from "@/lib/env"
+import { getApiUrl } from "@/lib/env"
 
 function getProxiedImageUrl(url: string): string {
-  return getAppURL(`/v1/p/${encodeURIComponent(url)}`)
+  return getApiUrl(`/p/${encodeURIComponent(url)}`)
 }
 
 interface ProxiedImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
