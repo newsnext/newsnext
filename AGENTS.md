@@ -7,7 +7,7 @@
 
 ### Frozen Areas
 
-- Do not modify `apps/admin` or `apps/extension` for now; these areas are temporarily archived.
+- Do not modify `apps/admin` for now; these areas are temporarily archived.
 
 ### Version Control
 

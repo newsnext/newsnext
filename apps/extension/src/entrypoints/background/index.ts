@@ -1,6 +1,6 @@
-import { browser, defineBackground } from "#imports"
 import { sendMessage } from "#/messaging/command-bar"
 import { registerCommandBarService } from "#/services/command-bar"
+import { browser, defineBackground } from "#imports"
 
 export async function getCurrentTabId(): Promise<number | undefined> {
   const [tab] = await browser.tabs.query({ active: true, currentWindow: true })
