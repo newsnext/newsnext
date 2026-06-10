@@ -19,9 +19,11 @@
     "@newsnext/shared": "workspace:*",
     "@smithy/md5-js": "^4.3.6",
     "cheerio": "^1.2.0",
-    "date-fns": "^4.4.0",
+    "date-fns": "catalog:",
+    "defu": "catalog:",
     "fast-xml-parser": "^5.8.0",
-    "iconv-lite": "^0.7.2"
+    "iconv-lite": "^0.7.2",
+    "ofetch": "catalog:"
   },
   "devDependencies": {
     "domhandler": "^6.0.1"

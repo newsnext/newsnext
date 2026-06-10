@@ -11,10 +11,38 @@
       "servers/**"
     ],
     "catalog": {
+      "@atlaskit/pragmatic-drag-and-drop": "^1.8.1",
+      "@atlaskit/pragmatic-drag-and-drop-auto-scroll": "^2.1.5",
+      "@atlaskit/pragmatic-drag-and-drop-hitbox": "^1.2.0",
+      "@iconify-json/ph": "^1.2.2",
+      "@orpc/client": "^1.14.5",
+      "@orpc/server": "^1.14.5",
+      "@orpc/tanstack-query": "^1.14.5",
       "@tailwindcss/vite": "^4.1.18",
+      "@tanstack/react-query": "^5.101.0",
+      "@tanstack/react-query-devtools": "^5.101.0",
+      "@tanstack/react-router": "^1.170.15",
+      "@tanstack/react-router-devtools": "^1.167.0",
+      "@tanstack/react-virtual": "^3.14.2",
+      "@vitejs/plugin-react": "^6.0.2",
+      "better-auth": "^1.6.15",
+      "date-fns": "^4.4.0",
+      "defu": "^6.1.7",
+      "es-toolkit": "^1.47.0",
+      "jotai": "^2.20.0",
+      "lucide-react": "^1.17.0",
+      "motion": "^12.40.0",
+      "nitro": "3.0.260522-beta",
+      "ofetch": "^1.5.1",
       "react": "^19.2.1",
+      "react-device-detect": "^2.2.3",
       "react-dom": "^19.2.1",
-      "tailwindcss": "^4.1.18"
+      "react-scan": "^0.5.7",
+      "tailwindcss": "^4.1.18",
+      "unplugin-icons": "^23.0.1",
+      "unplugin-turbo-console": "^2.3.2",
+      "vite": "^8.0.16",
+      "zod": "^4.4.3"
     }
   },
   "scripts": {
@@ -39,12 +67,6 @@
     "docker:down": "docker compose down",
     "docker:logs": "docker compose logs -f",
     "dev:chrome": "bun --filter=@newsnext/extension run dev:chrome"
-  },
-  "dependencies": {
-    "consola": "^3.4.2",
-    "defu": "^6.1.7",
-    "ofetch": "^1.5.1",
-    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^9.0.0",
