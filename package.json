@@ -33,7 +33,7 @@
       "lucide-react": "^1.17.0",
       "motion": "^12.40.0",
       "nitro": "3.0.260522-beta",
-      "ofetch": "^1.5.1",
+      "ofetch": "2.0.0-alpha.3",
       "react": "^19.2.1",
       "react-device-detect": "^2.2.3",
       "react-dom": "^19.2.1",
@@ -90,6 +90,10 @@
     "wrangler": "^4.98.0"
   },
   "overrides": {
+    "@atlaskit/pragmatic-drag-and-drop": "catalog:",
+    "@better-auth/utils": "0.4.1",
+    "defu": "catalog:",
+    "es-toolkit": "catalog:",
     "iconv-lite": "^0.7.2",
     "react": "catalog:",
     "react-dom": "catalog:",
