@@ -2,7 +2,7 @@ import { defineMiddleware } from "nitro"
 import { handleCors } from "nitro/h3"
 import { getNitroCloudflareEnv, getNitroCloudflareEnvValue } from "@/cloudflare-bindings"
 
-export const CORS_ALLOW_HEADERS = ["authorization", "content-type", "trpc-accept", "x-orpc-batch", "x-trpc-source"]
+export const CORS_ALLOW_HEADERS = ["authorization", "content-type", "x-orpc-batch"]
 
 export default defineMiddleware((event) => {
   const env = getNitroCloudflareEnv(event)

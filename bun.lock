@@ -122,7 +122,6 @@
         "@atlaskit/pragmatic-drag-and-drop": "^1.8.1",
         "@atlaskit/pragmatic-drag-and-drop-auto-scroll": "^2.1.5",
         "@atlaskit/pragmatic-drag-and-drop-hitbox": "^1.2.0",
-        "@chenglou/pretext": "^0.0.7",
         "@newsnext/sources": "workspace:*",
         "@newsnext/ui": "workspace:*",
         "@orpc/client": "^1.14.5",
@@ -233,7 +232,6 @@
         "@newsnext/instance": "workspace:*",
         "@newsnext/sources": "workspace:*",
         "@orpc/server": "^1.14.5",
-        "@trpc/server": "^11.17.0",
         "better-auth": "^1.6.15",
       },
       "devDependencies": {
