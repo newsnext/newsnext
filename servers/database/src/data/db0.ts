@@ -93,9 +93,25 @@ async function prepareSchema(db: Database): Promise<void> {
     )
   `,
     `CREATE INDEX IF NOT EXISTS starred_source_instances_userId_idx ON "starred_source_instances" (userId)`,
+    ...timestampMillisecondsMigrationStatements(),
   ]
 
   for (const statement of statements) {
     await db.prepare(statement).run()
   }
+}
+
+function timestampMillisecondsMigrationStatements(): string[] {
+  const authTimestampColumns: Record<string, string[]> = {
+    user: ["createdAt", "updatedAt"],
+    session: ["expiresAt", "createdAt", "updatedAt"],
+    account: ["accessTokenExpiresAt", "refreshTokenExpiresAt", "createdAt", "updatedAt"],
+    verification: ["expiresAt", "createdAt", "updatedAt"],
+  }
+
+  return Object.entries(authTimestampColumns).flatMap(([table, columns]) => {
+    return columns.map((column) => {
+      return `UPDATE "${table}" SET "${column}" = "${column}" * 1000 WHERE "${column}" IS NOT NULL AND "${column}" < 1000000000000`
+    })
+  })
 }

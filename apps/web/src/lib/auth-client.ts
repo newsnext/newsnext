@@ -1,15 +1,22 @@
 import { createAuthClient } from "better-auth/react"
-import { getApiUrl } from "@/lib/env"
+import { API_BASE_PATH, API_ORIGIN_URL } from "@/lib/env"
 
 export type AuthProviderId = "github" | "google"
 
 function getAuthRedirectURL(): string {
-  return window.location.href
+  const url = new URL(window.location.href)
+
+  url.searchParams.delete("code")
+  url.searchParams.delete("error")
+  url.searchParams.delete("error_description")
+  url.searchParams.delete("state")
+
+  return url.toString()
 }
 
 export const authClient = createAuthClient({
-  baseURL: getApiUrl("/"),
-  basePath: "/auth",
+  baseURL: API_ORIGIN_URL,
+  basePath: `${API_BASE_PATH}/auth`,
 })
 
 export async function signInWithProvider(provider: AuthProviderId): Promise<{ error: string | null }> {

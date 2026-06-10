@@ -7,14 +7,14 @@
   ],
   "vars": {
     "BETTER_AUTH_URL": "https://api.newsnext.pro",
-    "BETTER_AUTH_TRUSTED_ORIGINS": "https://newsnext.pro,chrome-extension://cffgbnjiaakknooiegnjkojemhidheke",
-    "GITHUB_CLIENT_ID": "Ov23lizGxoGltuEXdplC"
+    "BETTER_AUTH_TRUSTED_ORIGINS": "https://newsnext.pro,https://www.newsnext.pro",
+    "GITHUB_CLIENT_ID": "Ov23lizGxoGltuEXdplC",
+    "GOOGLE_CLIENT_ID": "120943254993-gugm6n400ia5srid207ua2kjj5ium7t7.apps.googleusercontent.com"
   },
   "secrets": {
     "required": [
       "BETTER_AUTH_SECRET",
       "GITHUB_CLIENT_SECRET",
-      "GOOGLE_CLIENT_ID",
       "GOOGLE_CLIENT_SECRET"
     ]
   },

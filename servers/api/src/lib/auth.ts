@@ -21,8 +21,52 @@ function getTrustedOrigins(bindings: ApiCloudflareBindings | undefined): string[
     .filter(Boolean)
 }
 
+function hasCloudflareDatabaseBinding(bindings: ApiCloudflareBindings | undefined): boolean {
+  return Boolean(bindings?.DB)
+}
+
+function getProviderCallbackUrl(bindings: ApiCloudflareBindings | undefined, provider: "github" | "google"): string | undefined {
+  const authBaseUrl = getEnv(bindings, "BETTER_AUTH_URL")?.replace(/\/+$/, "")
+
+  if (!authBaseUrl) {
+    return undefined
+  }
+
+  return `${authBaseUrl}${AUTH_BASE_PATH}/callback/${provider}`
+}
+
+function getSocialProviders(bindings: ApiCloudflareBindings | undefined) {
+  const githubClientId = getEnv(bindings, "GITHUB_CLIENT_ID")
+  const githubClientSecret = getEnv(bindings, "GITHUB_CLIENT_SECRET")
+  const googleClientId = getEnv(bindings, "GOOGLE_CLIENT_ID")
+  const googleClientSecret = getEnv(bindings, "GOOGLE_CLIENT_SECRET")
+  const githubRedirectURI = getProviderCallbackUrl(bindings, "github")
+  const googleRedirectURI = getProviderCallbackUrl(bindings, "google")
+
+  return {
+    ...(githubClientId && githubClientSecret
+      ? {
+          github: {
+            clientId: githubClientId,
+            clientSecret: githubClientSecret,
+            ...(githubRedirectURI ? { redirectURI: githubRedirectURI } : {}),
+          },
+        }
+      : {}),
+    ...(googleClientId && googleClientSecret
+      ? {
+          google: {
+            clientId: googleClientId,
+            clientSecret: googleClientSecret,
+            ...(googleRedirectURI ? { redirectURI: googleRedirectURI } : {}),
+          },
+        }
+      : {}),
+  }
+}
+
 export function getAuth(bindings?: ApiCloudflareBindings): ReturnType<typeof createAuth> | ReturnType<typeof createLocalAuth> {
-  if (isLocalApiRuntime()) {
+  if (!hasCloudflareDatabaseBinding(bindings) && isLocalApiRuntime()) {
     localAuthPromise ??= createLocalAuth()
     return localAuthPromise
   }
@@ -45,6 +89,7 @@ async function createLocalAuth() {
     secret: getEnv(undefined, "BETTER_AUTH_SECRET"),
     database,
     trustedOrigins: getTrustedOrigins(undefined),
+    socialProviders: getSocialProviders(undefined),
   })
 }
 
@@ -54,11 +99,6 @@ async function getLocalAuthDatabase() {
 }
 
 async function createAuth(bindings?: ApiCloudflareBindings) {
-  const githubClientId = getEnv(bindings, "GITHUB_CLIENT_ID")
-  const githubClientSecret = getEnv(bindings, "GITHUB_CLIENT_SECRET")
-  const googleClientId = getEnv(bindings, "GOOGLE_CLIENT_ID")
-  const googleClientSecret = getEnv(bindings, "GOOGLE_CLIENT_SECRET")
-
   const { getApiDatabase } = await import("../local-database")
   const db = await getApiDatabase()
   return betterAuth({
@@ -70,23 +110,6 @@ async function createAuth(bindings?: ApiCloudflareBindings) {
       schema,
     }),
     trustedOrigins: getTrustedOrigins(bindings),
-    socialProviders: {
-      ...(githubClientId && githubClientSecret
-        ? {
-            github: {
-              clientId: githubClientId,
-              clientSecret: githubClientSecret,
-            },
-          }
-        : {}),
-      ...(googleClientId && googleClientSecret
-        ? {
-            google: {
-              clientId: googleClientId,
-              clientSecret: googleClientSecret,
-            },
-          }
-        : {}),
-    },
+    socialProviders: getSocialProviders(bindings),
   })
 }
