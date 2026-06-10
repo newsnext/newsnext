@@ -5,20 +5,17 @@
     "jsx": "react-jsx",
     "paths": {
       "#/*": [
-        "./wxt/*"
+        "./src/*"
       ],
       "@/*": [
-        "./shared/*"
+        "../web/src/*"
       ]
     },
     "allowImportingTsExtensions": true
   },
   "include": [
-    "./wxt",
-    "./shared",
+    "./src",
+    "../web/src",
     "./.wxt/wxt.d.ts"
-  ],
-  "exclude": [
-    "./web"
   ]
 }

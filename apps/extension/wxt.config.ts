@@ -8,7 +8,10 @@ import { defineConfig } from "wxt"
 // See https://wxt.dev/api/config.html
 export default defineConfig({
   imports: false,
-  srcDir: "./wxt",
+  srcDir: "./src",
+  alias: {
+    "#": path.resolve(__dirname, "src"),
+  },
   dev: {
     server: {
       port: 3002,
@@ -39,8 +42,8 @@ export default defineConfig({
   hooks: {
     ready: (wxt) => {
       wxt.config.alias = {
-        "#": path.resolve(__dirname, "wxt"),
-        "@": path.resolve(__dirname, "shared"),
+        ...wxt.config.alias,
+        "@": path.resolve(__dirname, "../web/src"),
       }
     },
   },
