@@ -56,7 +56,7 @@
     "dev:web": "bun --filter=@newsnext/web run dev",
     "build:instance": "bun --filter=@newsnext/instance run build",
     "build:server": "bun --filter=@newsnext/api run build:cloudflare",
-    "build:web": "VITE_BASE_URL=https://api.newsnext.pro bun --filter=@newsnext/web run build",
+    "build:web": "VITE_BASE_URL=https://api.newsnext.pro/v1 bun --filter=@newsnext/web run build",
     "deploy:server": "bun --filter=@newsnext/api run deploy:cloudflare",
     "deploy:web": "bun run build:web && bun --filter=@newsnext/web run deploy:cloudflare",
     "deploy:cloudflare": "bun run deploy:server && bun run deploy:web",

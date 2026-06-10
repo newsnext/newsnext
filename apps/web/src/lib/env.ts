@@ -1,5 +1,4 @@
-const DEFAULT_DEV_API_BASE_URL = "http://localhost:4000"
-const API_PATH_PREFIX = "/v1"
+const DEFAULT_DEV_API_BASE_URL = "http://localhost:4000/v1"
 
 function cleanBaseUrl(value: string | undefined): string {
   return value?.replace(/\/+$/, "") ?? ""
@@ -23,10 +22,7 @@ export const API_BASE_URL = isExtensionOrigin(globalThis.location)
   ? resolveApiBaseUrl(import.meta.env.WXT_BASE_URL || import.meta.env.VITE_BASE_URL, true)
   : resolveApiBaseUrl(import.meta.env.VITE_BASE_URL, import.meta.env.DEV)
 
-function withApiPathPrefix(path: string): string {
-  return `${API_PATH_PREFIX}/${path.replace(/^\/+/, "")}`
-}
-
 export function getApiUrl(path: string): string {
-  return new URL(withApiPathPrefix(path), API_BASE_URL || window.location.origin).toString()
+  const baseUrl = `${API_BASE_URL || window.location.origin}/`
+  return new URL(path.replace(/^\/+/, ""), baseUrl).toString()
 }
