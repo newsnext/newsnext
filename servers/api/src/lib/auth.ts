@@ -8,6 +8,7 @@ import { isLocalApiRuntime } from "../runtime"
 
 let cloudflareAuthPromise: ReturnType<typeof createAuth> | undefined
 let localAuthPromise: ReturnType<typeof createLocalAuth> | undefined
+const AUTH_BASE_PATH = "/v1/auth"
 
 function getEnv(bindings: ApiCloudflareBindings | undefined, name: keyof ApiCloudflareBindings): string | undefined {
   return getNitroCloudflareEnvValue(bindings, name) ?? process.env[name]
@@ -40,6 +41,7 @@ async function createLocalAuth() {
 
   return betterAuth({
     baseURL: getEnv(undefined, "BETTER_AUTH_URL"),
+    basePath: AUTH_BASE_PATH,
     secret: getEnv(undefined, "BETTER_AUTH_SECRET"),
     database,
     trustedOrigins: getTrustedOrigins(undefined),
@@ -61,6 +63,7 @@ async function createAuth(bindings?: ApiCloudflareBindings) {
   const db = await getApiDatabase()
   return betterAuth({
     baseURL: getEnv(bindings, "BETTER_AUTH_URL"),
+    basePath: AUTH_BASE_PATH,
     secret: getEnv(bindings, "BETTER_AUTH_SECRET"),
     database: drizzleAdapter(db, {
       provider: "sqlite",

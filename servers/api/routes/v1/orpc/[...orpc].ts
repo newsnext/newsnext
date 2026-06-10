@@ -14,7 +14,7 @@ export default defineHandler(async (event) => {
   try {
     const instance = await loadInstance(event)
     const { matched, response } = await handler.handle(event.req, {
-      prefix: "/api/orpc",
+      prefix: "/v1/orpc",
       context: {
         ...await createContext({ event }),
         instance,

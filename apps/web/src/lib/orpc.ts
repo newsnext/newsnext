@@ -77,7 +77,7 @@ export function shouldDedupeProcedurePath(path: readonly string[]): boolean {
 }
 
 const link = new RPCLink({
-  url: getAppURL("/api/orpc"),
+  url: getAppURL("/v1/orpc"),
   plugins: [
     new DedupeRequestsPlugin({
       filter: ({ path }) => shouldDedupeProcedurePath(path),

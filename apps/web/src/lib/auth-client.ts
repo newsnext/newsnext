@@ -8,7 +8,8 @@ function getAuthRedirectURL(): string {
 }
 
 export const authClient = createAuthClient({
-  baseURL: getAppURL("/api/auth"),
+  baseURL: getAppURL("/"),
+  basePath: "/v1/auth",
 })
 
 export async function signInWithProvider(provider: AuthProviderId): Promise<{ error: string | null }> {
