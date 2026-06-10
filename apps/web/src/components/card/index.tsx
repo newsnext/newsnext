@@ -30,11 +30,7 @@ export interface CardProps {
   }
 }
 
-interface CardContentProps extends CardProps {
-  isInView: boolean
-}
-
-function CardContent({ id, source, isInView, dragHandle, disableExpandedPreview = false, previewSelection }: CardContentProps) {
+function CardContent({ id, source, dragHandle, disableExpandedPreview = false, previewSelection }: CardProps) {
   const { isExpandedPreviewOpen, openExpandedPreview } = useExpandedPreview()
   const [starredSourceInstanceIds, setStarredSourceInstanceIds] = useAtom(starredSourceInstanceIdsAtom)
   const [, setSourceInstances] = useAtom(sourceInstancesAtom)
@@ -61,7 +57,6 @@ function CardContent({ id, source, isInView, dragHandle, disableExpandedPreview 
   const { items, refetch, isFetching, updatedTime } = useSourceQuery({
     sourceId: source.sourceId,
     params: savedParams,
-    enabled: isInView,
   })
 
   // useEffect(() => {
@@ -210,7 +205,7 @@ export default function Card(props: CardProps) {
       )}
     >
       {hasEnteredView && (
-        <CardContent {...props} isInView={isInView} />
+        <CardContent {...props} />
       )}
     </div>
   )
