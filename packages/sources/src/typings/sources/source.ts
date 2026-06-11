@@ -96,7 +96,9 @@ export interface ProviderDefinition {
 /**
  * Public descriptor for sources exposed to clients
  */
-export type SourceDescriptor<TParams extends SourceParamSchemaMap = SourceParamSchemaMap> = Omit<SourceDefinition<TParams>, "loader" | "disable">
+export interface SourceDescriptor<TParams extends SourceParamSchemaMap = SourceParamSchemaMap> extends Omit<SourceDefinition<TParams>, "provider" | "key" | "loader" | "disable"> {
+  id: string
+}
 
 /**
  * Map of categories to source descriptors

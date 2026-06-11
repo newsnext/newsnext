@@ -24,7 +24,6 @@ import {
   PhPencilCircleDuotone,
   PhTrashDuotone,
 } from "@/components/icons/ph"
-import { resolveSourceDisplay } from "@/lib/source-display"
 import { cn } from "@/lib/utils"
 import { IconButton } from "../common/button"
 import { useCard } from "./card-context"
@@ -351,8 +350,7 @@ export function CardBack() {
   } = useCard()
 
   const shouldPromoteEditButton = !dragHandle
-  const { provider, desc, color, params } = source
-  const { providerTitle, title, home } = resolveSourceDisplay(source, draftSourceParams)
+  const { desc, color, params, icon, providerTitle, title, home } = source
   const [editDraft, setEditDraft] = useState<SourceEditDraft | null>(null)
   const canEdit = isFork && editDraft !== null
   const previewProviderTitle = canEdit ? editDraft.providerTitle : providerTitle
@@ -404,7 +402,7 @@ export function CardBack() {
             >
               <img
                 className="size-full rounded-full bg-cover"
-                src={`https://s3.newsnext.pro/icons/${provider}.png`}
+                src={icon}
                 alt={`${previewProviderTitle} icon`}
                 referrerPolicy="no-referrer"
                 onError={(e) => {

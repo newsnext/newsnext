@@ -44,16 +44,11 @@ type AdminSource = SourceDescriptor & {
   updatedAt: number
 }
 
-function getSourceDescriptorKey(source: Pick<SourceDescriptor, "provider" | "key">): string {
-  return source.provider ? `${source.provider}:${source.key}` : source.key
-}
-
 function toAdminSource(source: SourceDescriptor): AdminSource {
-  const key = getSourceDescriptorKey(source)
   return {
     ...source,
-    key,
-    sourceId: key,
+    key: source.id,
+    sourceId: source.id,
     enabled: true,
     createdAt: 0,
     updatedAt: 0,

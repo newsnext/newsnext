@@ -4,96 +4,96 @@ import type { SourceDescriptor } from "./typings/sources"
 
 export const sourceDescriptors: SourceDescriptor[] = [
   {
+    "icon": "https://s3.newsnext.pro/icons/bilibili.png",
     "providerTitle": "Bilibili",
-    "key": "default",
     "title": "热搜",
     "color": "blue",
     "type": "hottest",
     "category": "others",
     "home": "https://www.bilibili.com",
-    "provider": "bilibili"
+    "id": "bilibili:default"
   },
   {
+    "icon": "https://s3.newsnext.pro/icons/bilibili.png",
     "providerTitle": "Bilibili",
-    "key": "hot-video",
     "title": "热门视频",
     "color": "blue",
     "type": "hottest",
     "category": "others",
     "home": "https://www.bilibili.com",
-    "provider": "bilibili"
+    "id": "bilibili:hot-video"
   },
   {
+    "icon": "https://s3.newsnext.pro/icons/bilibili.png",
     "providerTitle": "Bilibili",
-    "key": "ranking",
     "title": "排行榜",
     "color": "blue",
     "type": "hottest",
     "category": "others",
     "home": "https://www.bilibili.com",
-    "provider": "bilibili"
+    "id": "bilibili:ranking"
   },
   {
+    "icon": "https://s3.newsnext.pro/icons/coolapk.png",
     "providerTitle": "CoolAPK",
-    "key": "default",
     "title": "Today",
     "color": "green",
     "type": "hottest",
     "category": "others",
     "home": "https://coolapk.com",
-    "provider": "coolapk"
+    "id": "coolapk:default"
   },
   {
+    "icon": "https://s3.newsnext.pro/icons/github.png",
     "providerTitle": "GitHub",
-    "key": "default",
     "title": "Trending",
     "color": "slate",
     "type": "hottest",
     "category": "others",
     "home": "https://github.com/trending",
-    "provider": "github"
+    "id": "github:default"
   },
   {
+    "icon": "https://s3.newsnext.pro/icons/hackernews.png",
     "providerTitle": "Hacker News",
-    "key": "default",
     "title": "Hottest",
     "color": "orange",
     "type": "hottest",
     "category": "others",
     "home": "https://news.ycombinator.com/",
-    "provider": "hackernews"
+    "id": "hackernews:default"
   },
   {
+    "icon": "https://s3.newsnext.pro/icons/hackernews.png",
     "providerTitle": "Hacker News",
-    "key": "newest",
     "title": "Newest",
     "color": "orange",
     "type": "timeline",
     "category": "others",
     "home": "https://news.ycombinator.com/newest",
-    "provider": "hackernews"
+    "id": "hackernews:newest"
   },
   {
+    "icon": "https://s3.newsnext.pro/icons/hackernews.png",
     "providerTitle": "Hacker News",
-    "key": "show",
     "title": "Show",
     "color": "orange",
     "category": "others",
     "home": "https://news.ycombinator.com/show",
-    "provider": "hackernews"
+    "id": "hackernews:show"
   },
   {
+    "icon": "https://s3.newsnext.pro/icons/hackernews.png",
     "providerTitle": "Hacker News",
-    "key": "ask",
     "title": "Ask",
     "color": "orange",
     "category": "others",
     "home": "https://news.ycombinator.com/ask",
-    "provider": "hackernews"
+    "id": "hackernews:ask"
   },
   {
+    "icon": "https://s3.newsnext.pro/icons/html.png",
     "providerTitle": "HTML Parser",
-    "key": "default",
     "title": "36 氪",
     "params": {
       "url": {
@@ -130,11 +130,11 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "color": "orange",
     "category": "others",
     "home": "https://www.36kr.com/newsflashes",
-    "provider": "html"
+    "id": "html:default"
   },
   {
+    "icon": "https://s3.newsnext.pro/icons/json.png",
     "providerTitle": "JSON",
-    "key": "default",
     "title": "V2EX",
     "params": {
       "url": {
@@ -171,11 +171,11 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "color": "cyan",
     "category": "others",
     "home": "https://www.json.org/",
-    "provider": "json"
+    "id": "json:default"
   },
   {
+    "icon": "https://s3.newsnext.pro/icons/netease-music.png",
     "providerTitle": "网易云音乐",
-    "key": "default",
     "title": "排行榜",
     "params": {
       "id": {
@@ -206,11 +206,11 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "type": "hottest",
     "category": "others",
     "home": "https://music.163.com/#/playlist?id=19723756",
-    "provider": "netease-music"
+    "id": "netease-music:default"
   },
   {
+    "icon": "https://s3.newsnext.pro/icons/newsnow.png",
     "providerTitle": "NEWS NOW",
-    "key": "default",
     "params": {
       "locale": {
         "type": "select",
@@ -257,11 +257,11 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "type": "timeline",
     "category": "others",
     "home": "https://www.newsnow.com",
-    "provider": "newsnow"
+    "id": "newsnow:default"
   },
   {
+    "icon": "https://s3.newsnext.pro/icons/rss.png",
     "providerTitle": "RSS",
-    "key": "default",
     "title": "PCBeta",
     "params": {
       "url": {
@@ -288,11 +288,11 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "color": "orange",
     "category": "others",
     "home": "https://rss.com/",
-    "provider": "rss"
+    "id": "rss:default"
   },
   {
+    "icon": "https://s3.newsnext.pro/icons/rsshub.png",
     "providerTitle": "RSSHub",
-    "key": "default",
     "title": "36 氪",
     "params": {
       "route": {
@@ -324,21 +324,21 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "color": "orange",
     "category": "others",
     "home": "https://rsshub.app/",
-    "provider": "rsshub"
+    "id": "rsshub:default"
   },
   {
+    "icon": "https://s3.newsnext.pro/icons/tieba.png",
     "providerTitle": "百度贴吧",
-    "key": "default",
     "title": "热议",
     "color": "blue",
     "type": "hottest",
     "category": "china",
     "home": "https://tieba.baidu.com",
-    "provider": "tieba"
+    "id": "tieba:default"
   },
   {
+    "icon": "https://s3.newsnext.pro/icons/v2ex.png",
     "providerTitle": "V2EX",
-    "key": "default",
     "params": {
       "feeds": {
         "type": "multiselect",
@@ -372,43 +372,43 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "color": "slate",
     "category": "others",
     "home": "https://v2ex.com/",
-    "provider": "v2ex"
+    "id": "v2ex:default"
   },
   {
+    "icon": "https://s3.newsnext.pro/icons/weibo.png",
     "providerTitle": "微博",
-    "key": "default",
     "color": "red",
     "type": "hottest",
     "category": "others",
     "home": "https://s.weibo.com/top/summary?cate=realtimehot",
-    "provider": "weibo"
+    "id": "weibo:default"
   },
   {
+    "icon": "https://s3.newsnext.pro/icons/xueqiu.png",
     "providerTitle": "雪球",
-    "key": "default",
     "color": "blue",
     "type": "hottest",
     "category": "others",
     "home": "https://xueqiu.com",
-    "provider": "xueqiu"
+    "id": "xueqiu:default"
   },
   {
+    "icon": "https://s3.newsnext.pro/icons/zaobao.png",
     "providerTitle": "联合早报",
-    "key": "default",
     "color": "red",
     "type": "timeline",
     "category": "others",
     "home": "https://www.zaobao.com",
-    "provider": "zaobao"
+    "id": "zaobao:default"
   },
   {
+    "icon": "https://s3.newsnext.pro/icons/zhihu.png",
     "providerTitle": "知乎",
-    "key": "default",
     "title": "全站热榜",
     "color": "blue",
     "type": "hottest",
     "category": "others",
     "home": "https://www.zhihu.com",
-    "provider": "zhihu"
+    "id": "zhihu:default"
   }
 ]

@@ -63,10 +63,13 @@ const sourceDescriptors = []
 for (const [provider, providerDefinition] of Object.entries(providers)) {
   for (const [sourceId, source] of Object.entries((providerDefinition as any).sources)) {
     const { loader, ...meta } = source as any
+    const key = meta.key || sourceId
+    const descriptor = { ...meta }
+    delete descriptor.key
     sourceDescriptors.push({
-      ...meta,
-      key: meta.key || sourceId,
-      provider,
+      ...descriptor,
+      icon: descriptor.icon ?? `https://s3.newsnext.pro/icons/${provider}.png`,
+      id: `${provider}:${key}`,
     })
   }
 }

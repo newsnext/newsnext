@@ -2,7 +2,6 @@ import { getFavicon } from "@newsnext/shared/utils"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { useRef } from "react"
 import { useRelativeTime } from "@/hooks/useRelativeTime"
-import { resolveSourceDisplay } from "@/lib/source-display"
 import { cn } from "@/lib/utils"
 import { IconButton } from "../common/button"
 import {
@@ -19,7 +18,6 @@ import { Timeline } from "./timeline"
 export function CardFront() {
   const {
     source,
-    sourceParams,
     items,
     isFetching,
     updatedTime,
@@ -31,8 +29,7 @@ export function CardFront() {
     previewSelection,
   } = useCard()
 
-  const { provider, type, color, desc } = source
-  const { providerTitle, title, home } = resolveSourceDisplay(source, sourceParams)
+  const { type, color, desc, icon, providerTitle, title, home } = source
   const ref = useRef<HTMLDivElement>(null)
   const relativeTime = useRelativeTime({ date: updatedTime })
 
@@ -58,7 +55,7 @@ export function CardFront() {
             >
               <img
                 className="size-full rounded-full bg-cover"
-                src={`https://s3.newsnext.pro/icons/${provider}.png`}
+                src={icon}
                 alt={`${providerTitle} icon`}
                 referrerPolicy="no-referrer"
                 onError={(e) => {

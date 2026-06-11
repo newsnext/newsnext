@@ -1,20 +1,16 @@
-import type { SourceParamValues } from "@/lib/source-params"
 import type { BoardSource } from "@/typings/source"
 import { getFavicon } from "@newsnext/shared/utils"
 import { isIOS } from "react-device-detect"
-import { resolveSourceDisplay } from "@/lib/source-display"
 import { cn } from "@/lib/utils"
 import { IconButton } from "../common/button"
 import { PhDotsSixVerticalDuotone } from "../icons/ph"
 
 interface DragOverlayProps {
   source: BoardSource
-  sourceParams: SourceParamValues
 }
 
-export function DragOverlay({ source, sourceParams }: DragOverlayProps) {
-  const { provider, color, desc } = source
-  const { providerTitle, title, home } = resolveSourceDisplay(source, sourceParams)
+export function DragOverlay({ source }: DragOverlayProps) {
+  const { color, desc, icon, providerTitle, title, home } = source
   return (
     <div
       className={cn(
@@ -27,7 +23,7 @@ export function DragOverlay({ source, sourceParams }: DragOverlayProps) {
         <div className="flex gap-2.5 items-center ml-1 min-w-0 flex-1">
           <img
             className="size-8 rounded-full bg-cover cursor-grabbing"
-            src={`https://s3.newsnext.pro/icons/${provider}.png`}
+            src={icon}
             alt={`${providerTitle} icon`}
             title={desc || providerTitle}
             referrerPolicy="no-referrer"

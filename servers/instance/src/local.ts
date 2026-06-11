@@ -12,12 +12,7 @@ export class NewsNextInstance implements NewsNextDataInstance {
         return byCategory
       }
 
-      const byProvider = (a.provider ?? "").localeCompare(b.provider ?? "")
-      if (byProvider !== 0) {
-        return byProvider
-      }
-
-      return a.key.localeCompare(b.key)
+      return a.id.localeCompare(b.id)
     })
   }
 

@@ -16,8 +16,6 @@ import { useAtomValue } from "jotai"
 import { useEffect, useMemo, useState } from "react"
 import { orpc } from "@/lib/orpc"
 import { buildBoardSources } from "@/lib/source-cards"
-import { resolveSourceDisplay } from "@/lib/source-display"
-import { getSavedSourceParamValues } from "@/lib/source-params"
 import { cn } from "@/lib/utils"
 import { boardInstancesAtom, boardStarIdsAtom } from "@/store/board"
 import Card from "../card"
@@ -30,7 +28,6 @@ interface SearchItem {
   source: BoardSource
   providerTitle: string
   title?: string
-  provider?: string
   isFork: boolean
   isStarred: boolean
 }
@@ -140,32 +137,26 @@ function SearchDialogContent(): ReactNode {
     return [
       ...featuredBoard.ids.map((id) => {
         const source = featuredBoard.map[id]
-        const params = getSavedSourceParamValues(source.id, source.params)
-        const display = resolveSourceDisplay(source, params)
 
         return {
           id,
           category: categories[source.category],
           source,
-          providerTitle: display.providerTitle,
-          title: display.title,
-          provider: source.provider,
+          providerTitle: source.providerTitle,
+          title: source.title,
           isFork: false,
           isStarred: starredInstanceIds.includes(id),
         } satisfies SearchItem
       }),
       ...forksBoard.ids.map((id) => {
         const source = forksBoard.map[id]
-        const params = source.paramsValue ?? getSavedSourceParamValues(source.id, source.params)
-        const display = resolveSourceDisplay(source, params)
 
         return {
           id,
           category: `${categories[source.category]} / Forked`,
           source,
-          providerTitle: display.providerTitle,
-          title: display.title,
-          provider: source.provider,
+          providerTitle: source.providerTitle,
+          title: source.title,
           isFork: true,
           isStarred: starredInstanceIds.includes(id),
         } satisfies SearchItem
@@ -211,9 +202,9 @@ function SearchDialogContent(): ReactNode {
                   className="justify-between gap-3 data-[selected=true]:bg-neutral-400/10"
                   value={item.id}
                   keywords={[
+                    item.id,
                     item.providerTitle,
                     item.title ?? "",
-                    item.provider ?? "",
                     item.category,
                     item.isFork ? "fork forked custom" : "featured recommend",
                     item.isStarred ? "star starred" : "",
@@ -224,9 +215,7 @@ function SearchDialogContent(): ReactNode {
                       className="size-4 shrink-0 rounded-full bg-cover bg-center bg-no-repeat"
                       aria-hidden="true"
                       style={{
-                        backgroundImage: item.provider
-                          ? `url(https://s3.newsnext.pro/icons/${item.provider}.png)`
-                          : undefined,
+                        backgroundImage: item.source.icon ? `url(${item.source.icon})` : undefined,
                       }}
                     />
                     <span className="shrink-0">{item.title || item.providerTitle}</span>

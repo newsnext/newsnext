@@ -10,7 +10,6 @@ export type { NewsItem, SourceDescriptor, SourceType }
 export type BoardSource = Omit<SourceDescriptor, "id"> & {
   id: string
   sourceId: string
-  variantId: string
   paramsValue?: Record<string, unknown>
   isFork: boolean
 }
