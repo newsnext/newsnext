@@ -28,6 +28,7 @@ export function DragOverlay({ source, sourceParams }: DragOverlayProps) {
           <img
             className="size-8 rounded-full bg-cover cursor-grabbing"
             src={`https://s3.newsnext.pro/icons/${provider}.png`}
+            alt={`${name} icon`}
             title={desc || name}
             referrerPolicy="no-referrer"
             onError={(e) => {

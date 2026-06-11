@@ -1,6 +1,6 @@
 import type { QueryClient } from "@tanstack/react-query"
 import { createRootRouteWithContext, Outlet } from "@tanstack/react-router"
-import { Suspense, useRef, useState } from "react"
+import { Suspense, useMemo, useRef, useState } from "react"
 import { TanStackDevtools } from "@/components/common/devtools"
 import { Footer } from "@/components/footer"
 import { Header } from "@/components/header"
@@ -22,15 +22,16 @@ function RootComponent() {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const nextLayerScrollContainerRef = useRef<HTMLDivElement>(null)
   const [isNextLayerActive, setIsNextLayerActive] = useState(false)
+  const scrollProgressContextValue = useMemo(() => ({
+    rootScrollContainerRef: scrollContainerRef,
+    nextLayerScrollContainerRef,
+    isNextLayerActive,
+    setIsNextLayerActive,
+  }), [isNextLayerActive])
 
   return (
     <ScrollProgressContext.Provider
-      value={{
-        rootScrollContainerRef: scrollContainerRef,
-        nextLayerScrollContainerRef,
-        isNextLayerActive,
-        setIsNextLayerActive,
-      }}
+      value={scrollProgressContextValue}
     >
       <ExpandedPreviewProvider>
         <div

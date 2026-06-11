@@ -1,5 +1,5 @@
 import type { RefObject } from "react"
-import { AnimatePresence, motion, useMotionValue, useMotionValueEvent, useScroll } from "motion/react"
+import { AnimatePresence, m, useMotionValue, useMotionValueEvent, useScroll } from "motion/react"
 import { useCallback, useState } from "react"
 import { useScrollProgressContext } from "@/components/scroll-progress-context"
 import { ThemeSelector } from "../common/theme-selector"
@@ -62,7 +62,7 @@ function HeaderProgress({ scrollContainerRef }: HeaderProgressProps) {
       onClick={!isAtTop ? handleScrollToTop : undefined}
     >
       <svg className="absolute inset-0 size-full pointer-events-none">
-        <motion.rect
+        <m.rect
           x="0.5"
           y="0.5"
           style={{
@@ -84,7 +84,7 @@ function HeaderProgress({ scrollContainerRef }: HeaderProgressProps) {
       <AnimatePresence mode="popLayout" initial={false}>
         {isAtTop
           ? (
-              <motion.div
+              <m.div
                 key="top"
                 className="flex items-center gap-2"
                 initial={{ opacity: 0, y: 6 }}
@@ -98,10 +98,10 @@ function HeaderProgress({ scrollContainerRef }: HeaderProgressProps) {
                   <span className="text-theme-500">N</span>
                   ext
                 </span>
-              </motion.div>
+              </m.div>
             )
           : (
-              <motion.div
+              <m.div
                 key="go-top"
                 className="flex items-center gap-2"
                 initial={{ opacity: 0, y: 6 }}
@@ -113,7 +113,7 @@ function HeaderProgress({ scrollContainerRef }: HeaderProgressProps) {
                 <span className="text-xl font-brand font-bold whitespace-nowrap cursor-pointer transition-opacity">
                   Go to top
                 </span>
-              </motion.div>
+              </m.div>
             )}
       </AnimatePresence>
     </div>

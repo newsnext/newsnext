@@ -159,7 +159,7 @@ function PreviewIframe({ iframe }: { iframe: AdvancedIframe | string }) {
 
   if (!props?.src) return null
 
-  const { className, loading, width, height, aspectRatio = 16 / 9, style, ...rest } = props
+  const { className, loading, width, height, aspectRatio = 16 / 9, style, title, sandbox, ...rest } = props
   const shouldUseAspectRatio = height == null && style?.height == null && aspectRatio != null && aspectRatio > 0
   const iframeStyle: CSSProperties | undefined = shouldUseAspectRatio
     ? { ...style, aspectRatio, height: "auto" }
@@ -174,6 +174,8 @@ function PreviewIframe({ iframe }: { iframe: AdvancedIframe | string }) {
       style={iframeStyle}
       className={cn("w-full rounded-xl", className)}
       loading={loading ?? "lazy"}
+      sandbox={sandbox ?? "allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"}
+      title={title ?? "News item preview"}
     />
   )
 }

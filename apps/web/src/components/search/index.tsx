@@ -1,4 +1,4 @@
-import type { JSX } from "react"
+import type { ReactNode } from "react"
 import type { BoardSource } from "@/typings/source"
 import { categories } from "@newsnext/sources/typings"
 import { Button } from "@newsnext/ui/components/button"
@@ -72,7 +72,7 @@ function SearchPreview({ item }: { item?: SearchItem }) {
   )
 }
 
-export function SearchDialog(): JSX.Element {
+export function SearchDialog(): ReactNode {
   const [open, setOpen] = useState(false)
   const [selectedItemId, setSelectedItemId] = useState("")
   const starredSourceInstanceIds = useAtomValue(starredSourceInstanceIdsAtom)

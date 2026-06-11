@@ -1,5 +1,5 @@
 import { COLORS } from "@newsnext/shared/constants"
-import { motion } from "motion/react"
+import { m } from "motion/react"
 import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
 import { handleThemeSwitch, THEME_COLOR_KEY } from "@/lib/utils/swith-theme"
@@ -26,6 +26,7 @@ export function ThemeSelector() {
       {COLORS.map(color => (
         <button
           key={color}
+          type="button"
           className={cn(
             "text-theme-500 size-8 hover:scale-110 cursor-pointer p-0 relative self-center justify-self-center",
             color,
@@ -38,7 +39,7 @@ export function ThemeSelector() {
           title={color}
         >
           {currentTheme === color && (
-            <motion.div
+            <m.div
               layoutId="theme-indicator"
               className="absolute -bottom-1 left-1/2 -translate-x-1/2 size-1 rounded-full bg-theme-500"
               transition={{

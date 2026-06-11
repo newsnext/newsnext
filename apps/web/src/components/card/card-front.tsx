@@ -50,16 +50,22 @@ export function CardFront() {
         {/* Header */}
         <div className="flex justify-between mb-3 items-center mx-1 gap-2">
           <div className="flex gap-2.5 items-center ml-1 min-w-0 flex-1">
-            <img
-              className="size-8 rounded-full bg-cover cursor-pointer"
-              src={`https://s3.newsnext.pro/icons/${provider}.png`}
+            <button
+              type="button"
+              className="size-8 shrink-0 rounded-full"
               title={desc || name}
               onClick={() => window.open(home || "#", "_blank")}
-              referrerPolicy="no-referrer"
-              onError={(e) => {
-                e.currentTarget.src = getFavicon(home || "#")!
-              }}
-            />
+            >
+              <img
+                className="size-full rounded-full bg-cover"
+                src={`https://s3.newsnext.pro/icons/${provider}.png`}
+                alt={`${name} icon`}
+                referrerPolicy="no-referrer"
+                onError={(e) => {
+                  e.currentTarget.src = getFavicon(home || "#")!
+                }}
+              />
+            </button>
             <div className="flex flex-col min-w-0">
               <div className="flex items-center gap-2 min-w-0 w-full text-base">
                 {(title || name) && (

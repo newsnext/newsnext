@@ -92,7 +92,7 @@ export function buildBoardSources({
   })
 
   const visibleSources = boardId === "stars"
-    ? mergedSources.flatMap(({ baseSource, forkedSources }) => [baseSource, ...forkedSources]).filter(source => starredSourceInstanceIds.includes(source.id))
+    ? mergedSources.flatMap(({ baseSource, forkedSources }) => [baseSource, ...forkedSources].filter(source => starredSourceInstanceIds.includes(source.id)))
     : boardId === "forks"
       ? mergedSources.flatMap(({ forkedSources }) => forkedSources)
       : mergedSources.map(({ baseSource }) => baseSource)

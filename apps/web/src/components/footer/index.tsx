@@ -6,7 +6,6 @@ export function Footer(): React.JSX.Element {
   return (
     <footer
       className="shrink-0 my-10 flex-col-center border-t border-border/40 px-2 pt-10 text-center text-xs text-muted-foreground sm:text-sm"
-      role="contentinfo"
     >
       <p className="leading-relaxed flex-center gap-1">
         <Logo className="size-4 text-theme-500" />

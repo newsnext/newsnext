@@ -1,6 +1,6 @@
 import { useIsFetching, useQueryClient } from "@tanstack/react-query"
 import { useAtomValue } from "jotai"
-import { useCallback, useMemo } from "react"
+import { useCallback } from "react"
 import { orpc } from "@/lib/orpc"
 import { buildBoardSources, buildSourceRequestKey } from "@/lib/source-cards"
 import { getSavedSourceParamValues } from "@/lib/source-params"
@@ -39,7 +39,7 @@ export function useRefetch() {
   const sourceInstances = useAtomValue(sourceInstancesAtom)
   const fetchingCount = useIsFetching({ queryKey: orpc.getSource.key({ type: "query" }) })
 
-  const isFetching = useMemo(() => fetchingCount > 0, [fetchingCount])
+  const isFetching = fetchingCount > 0
 
   /**
    * Force refresh specific sources.

@@ -15,6 +15,7 @@ function RefreshButton() {
   const { refetchAll, isFetching } = useRefetch()
   return (
     <button
+      type="button"
       className="island-pill flex items-center justify-center size-10 pointer-events-auto"
       title="Refresh All"
       onClick={refetchAll}

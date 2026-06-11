@@ -1,7 +1,7 @@
 import type { ReactNode } from "react"
 import type { BoardSource, NewsItem } from "@/typings/source"
 
-import { createContext, useContext } from "react"
+import { createContext, use } from "react"
 
 interface CardContextValue {
   id: string
@@ -37,7 +37,7 @@ interface CardContextValue {
 export const CardContext = createContext<CardContextValue | null>(null)
 
 export function useCard() {
-  const context = useContext(CardContext)
+  const context = use(CardContext)
   if (!context) {
     throw new Error("useCard must be used within CardProvider")
   }

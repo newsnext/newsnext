@@ -1,5 +1,5 @@
 import type { RefObject } from "react"
-import { AnimatePresence, motion } from "motion/react"
+import { AnimatePresence, m } from "motion/react"
 
 interface NextLayerProps {
   isVisible: boolean
@@ -23,7 +23,7 @@ export function NextLayer({ isVisible, onClose, scrollContainerRef }: NextLayerP
     >
       <AnimatePresence>
         {isVisible && (
-          <motion.div
+          <m.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
@@ -32,7 +32,7 @@ export function NextLayer({ isVisible, onClose, scrollContainerRef }: NextLayerP
             onClick={e => e.stopPropagation()}
           >
             OPEN EYES
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>

@@ -2,7 +2,7 @@ import type { BaseEventPayload, ElementDragType } from "@atlaskit/pragmatic-drag
 import type { RefObject } from "react"
 import type { BoardSource } from "@/typings/source"
 import { useThrottleFn } from "@newsnext/ui/hooks/use-throttle-fn"
-import { motion } from "motion/react"
+import { m } from "motion/react"
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { DndContext } from "@/hooks/use-dnd-context"
 import Card from "../card"
@@ -55,8 +55,12 @@ export function DesktopBoard({
   const initialOrderedSourceIdsRef = useRef(sourceIds)
   const [scatterVectors, setScatterVectors] = useState<Record<string, ScatterVector>>({})
   const [visibleScatterSourceIds, setVisibleScatterSourceIds] = useState<string[]>([])
-  const [hasScattered, setHasScattered] = useState(false)
-  const itemsRef = useRef<Map<string, HTMLLIElement>>(new Map())
+  const hasScatteredRef = useRef(false)
+  if (isScattered) {
+    hasScatteredRef.current = true
+  }
+  const hasScattered = hasScatteredRef.current
+  const items = useMemo(() => new Map<string, HTMLLIElement>(), [])
   const visibleSourceIds = useMemo(
     () => orderedSourceIds.filter(id => Boolean(sourcesMap[id])),
     [orderedSourceIds, sourcesMap],
@@ -65,12 +69,6 @@ export function DesktopBoard({
   useEffect(() => {
     setOrderedSourceIds(sourceIds)
   }, [sourceIds])
-
-  useEffect(() => {
-    if (isScattered) {
-      setHasScattered(true)
-    }
-  }, [isScattered])
 
   const onDragStart = useCallback(() => {
     initialOrderedSourceIdsRef.current = orderedSourceIds
@@ -150,7 +148,7 @@ export function DesktopBoard({
       const centerX = visibleRect.left + visibleRect.width / 2
       const centerY = visibleRect.top + visibleRect.height / 2
 
-      itemsRef.current.forEach((el, id) => {
+      items.forEach((el, id) => {
         if (!visibleSourceIds.includes(id)) return // cleanup old refs
 
         const rect = el.getBoundingClientRect()
@@ -203,10 +201,10 @@ export function DesktopBoard({
       window.removeEventListener("resize", calculateVectors)
       resizeObserver?.disconnect()
     }
-  }, [containerRef, visibleSourceIds, isScattered])
+  }, [containerRef, visibleSourceIds, isScattered, items])
 
   const boardContent = (
-    <motion.ol
+    <m.ol
       className={className || "flex flex-wrap justify-center gap-2 sm:gap-6"}
       initial="hidden"
       animate={isScattered ? "scattered" : "visible"}
@@ -225,11 +223,11 @@ export function DesktopBoard({
       }}
     >
       {visibleSourceIds.map((id, index) => (
-        <motion.li
+        <m.li
           key={id}
           ref={(el) => {
-            if (el) itemsRef.current.set(id, el)
-            else itemsRef.current.delete(id)
+            if (el) items.set(id, el)
+            else items.delete(id)
           }}
           layout={!isScattered} // Disable layout animation during scatter to prevent conflict
           custom={{
@@ -290,9 +288,9 @@ export function DesktopBoard({
           {isSortable
             ? <DraggableCard id={id} source={sourcesMap[id]} />
             : <Card id={id} source={sourcesMap[id]} />}
-        </motion.li>
+        </m.li>
       ))}
-    </motion.ol>
+    </m.ol>
   )
 
   if (!isSortable) {

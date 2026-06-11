@@ -1,7 +1,7 @@
 import type { MotionValue, PanInfo } from "motion/react"
 import type { PointerEvent } from "react"
 import type { BoardSource } from "@/typings/source"
-import { motion, useDragControls, useMotionValue, useTransform } from "motion/react"
+import { m, useDragControls, useMotionValue, useTransform } from "motion/react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
 import Card from "../card"
@@ -43,7 +43,7 @@ function MobileCard({ id, index, x, trackItemOffset, source, onDragHandlePointer
   const y = useTransform(x, range, yOutputRange, { clamp: false })
 
   return (
-    <motion.div
+    <m.div
       className="relative shrink-0 origin-bottom"
       style={{
         width: `min(${CARD_WIDTH_PERCENT * 100}vw, ${CARD_MAX_WIDTH}px)`,
@@ -59,7 +59,7 @@ function MobileCard({ id, index, x, trackItemOffset, source, onDragHandlePointer
       >
         <Card id={id} source={source} className="h-full w-full" />
       </div>
-    </motion.div>
+    </m.div>
   )
 }
 
@@ -75,7 +75,7 @@ export function MobileBoard({ sourceIds, sourcesMap }: MobileBoardProps) {
     () => Math.min(window.innerWidth * CARD_WIDTH_PERCENT, CARD_MAX_WIDTH),
     [],
   )
-  const trackItemOffset = useMemo(() => itemWidth + GAP, [itemWidth])
+  const trackItemOffset = itemWidth + GAP
 
   const handleDragEnd = useCallback((_: any, info: PanInfo) => {
     const offset = info.offset.x
@@ -127,7 +127,7 @@ export function MobileBoard({ sourceIds, sourcesMap }: MobileBoardProps) {
         className="flex items-center"
         style={{ width: `min(${CARD_WIDTH_PERCENT * 100}vw, ${CARD_MAX_WIDTH}px)` }}
       >
-        <motion.div
+        <m.div
           className="flex"
           drag="x"
           dragControls={dragControls}
@@ -149,7 +149,7 @@ export function MobileBoard({ sourceIds, sourcesMap }: MobileBoardProps) {
               onDragHandlePointerDown={handleDragHandlePointerDown}
             />
           ))}
-        </motion.div>
+        </m.div>
       </div>
 
       {/* Indicator dots */}
@@ -157,7 +157,7 @@ export function MobileBoard({ sourceIds, sourcesMap }: MobileBoardProps) {
         {visibleSourceIds.map((_, index) => {
           const isActive = index === currentIndex
           return (
-            <motion.div
+            <m.div
               key={index}
               className={cn(
                 `h-2 w-2 rounded-full cursor-pointer transition-colors duration-150`,

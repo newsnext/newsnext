@@ -71,6 +71,7 @@ export function SettingsModal({
           {tabs.map(tab => (
             <button
               key={tab.id}
+              type="button"
               onClick={() => handleTabChange(tab.id)}
               className={cn(
                 "flex items-center w-full px-3 py-2 text-sm font-medium rounded-md transition-colors text-left",

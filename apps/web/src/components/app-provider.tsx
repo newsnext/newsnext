@@ -4,6 +4,7 @@ import type { ThemeMode } from "@/lib/utils/swith-theme"
 import { isBrowser } from "@newsnext/ui/lib/is-browser"
 import { QueryClientProvider, useQuery } from "@tanstack/react-query"
 import { useSetAtom } from "jotai"
+import { domMax, LazyMotion, MotionConfig } from "motion/react"
 import { useEffect } from "react"
 import { authClient } from "@/lib/auth-client"
 import { orpc } from "@/lib/orpc"
@@ -61,9 +62,13 @@ export function AppProvider({
   queryClient,
 }: PropsWithChildren<AppProviderProps>) {
   return (
-    <QueryClientProvider client={queryClient}>
-      <SourceStateHydrator />
-      {children}
-    </QueryClientProvider>
+    <MotionConfig reducedMotion="user">
+      <LazyMotion features={domMax}>
+        <QueryClientProvider client={queryClient}>
+          <SourceStateHydrator />
+          {children}
+        </QueryClientProvider>
+      </LazyMotion>
+    </MotionConfig>
   )
 }

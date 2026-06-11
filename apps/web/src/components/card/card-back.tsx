@@ -221,9 +221,9 @@ function ParamField({
 
   if (param.type === "multiselect") {
     const selectedValues = Array.isArray(currentValue) ? currentValue.map(String) : []
-    const selectedLabels = param.options
-      .filter(option => selectedValues.includes(option.value))
-      .map(option => option.label)
+    const selectedLabels = param.options.flatMap(option =>
+      selectedValues.includes(option.value) ? [option.label] : [],
+    )
 
     if (!editable) {
       return (
@@ -387,16 +387,22 @@ export function CardBack() {
       <div className="relative flex h-full flex-col p-3 transition-colors duration-300">
         <div className="flex justify-between mb-2 items-center mx-1">
           <div className="flex gap-2.5 items-center ml-1">
-            <img
-              className="size-8 rounded-full bg-cover cursor-pointer"
-              src={`https://s3.newsnext.pro/icons/${provider}.png`}
+            <button
+              type="button"
+              className="size-8 shrink-0 rounded-full"
               title={desc || name}
               onClick={() => window.open(home || "#", "_blank")}
-              referrerPolicy="no-referrer"
-              onError={(e) => {
-                e.currentTarget.src = getFavicon(home || "#")!
-              }}
-            />
+            >
+              <img
+                className="size-full rounded-full bg-cover"
+                src={`https://s3.newsnext.pro/icons/${provider}.png`}
+                alt={`${name} icon`}
+                referrerPolicy="no-referrer"
+                onError={(e) => {
+                  e.currentTarget.src = getFavicon(home || "#")!
+                }}
+              />
+            </button>
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
                 <span className="text-xl font-bold">

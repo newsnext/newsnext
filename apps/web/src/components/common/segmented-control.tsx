@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 import { cn } from "@newsnext/ui/lib/utils"
-import { motion } from "motion/react"
+import { m } from "motion/react"
 
 export interface SegmentedControlItem<T> {
   value: T
@@ -25,7 +25,7 @@ export function SegmentedControlIndicator({
   className?: string
 }) {
   return (
-    <motion.div
+    <m.div
       layoutId={layoutId}
       className={cn("absolute inset-0 bg-theme-500 rounded-full shadow-md", className)}
       transition={{
@@ -53,6 +53,7 @@ export function SegmentedControl<T extends string>({
         return (
           <button
             key={item.value}
+            type="button"
             onClick={() => onValueChange(item.value)}
             className={cn(
               "relative px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors outline-none cursor-pointer",

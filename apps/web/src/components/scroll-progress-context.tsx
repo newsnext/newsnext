@@ -1,5 +1,5 @@
 import type { RefObject } from "react"
-import { createContext, useContext } from "react"
+import { createContext, use } from "react"
 
 export interface ScrollProgressContextValue {
   rootScrollContainerRef: RefObject<HTMLElement | null>
@@ -11,7 +11,7 @@ export interface ScrollProgressContextValue {
 export const ScrollProgressContext = createContext<ScrollProgressContextValue | null>(null)
 
 export function useScrollProgressContext(): ScrollProgressContextValue {
-  const context = useContext(ScrollProgressContext)
+  const context = use(ScrollProgressContext)
 
   if (!context) {
     throw new Error("useScrollProgressContext must be used within ScrollProgressContext")

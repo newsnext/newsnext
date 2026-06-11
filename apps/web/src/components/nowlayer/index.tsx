@@ -2,7 +2,7 @@ import type { RefObject } from "react"
 import type { BoardSource } from "@/typings/source"
 import { useQuery } from "@tanstack/react-query"
 import { useAtomValue } from "jotai"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { isMobile } from "react-device-detect"
 import { orpc } from "@/lib/orpc"
 import { buildBoardSources } from "@/lib/source-cards"
@@ -32,9 +32,9 @@ export function NowLayer({
 
   const { data: sources, isPending } = useQuery(orpc.getBoard.queryOptions())
 
-  const [prevBoardId, setPrevBoardId] = useState(boardId)
-  if (prevBoardId !== boardId) {
-    setPrevBoardId(boardId)
+  const prevBoardIdRef = useRef(boardId)
+  if (prevBoardIdRef.current !== boardId) {
+    prevBoardIdRef.current = boardId
     setSourceIds([])
     setSourcesMap({})
   }

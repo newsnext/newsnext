@@ -12,35 +12,26 @@ interface ProxiedImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
 }
 
 export function ProxiedImage({ src, href, onError, onClick, delay, ...props }: ProxiedImageProps) {
-  const [imgSrc, setImgSrc] = useState(src)
-  const [failed, setFailed] = useState(false)
-  const [shouldLoad, setShouldLoad] = useState(!delay)
-
-  useEffect(() => {
-    setImgSrc(src)
-    setFailed(false)
-    setShouldLoad(!delay)
-  }, [src, delay])
+  const [failedSrc, setFailedSrc] = useState<string | null>(null)
+  const [readySrc, setReadySrc] = useState(delay ? "" : src)
+  const proxiedSrc = getProxiedImageUrl(src)
+  const imgSrc = failedSrc === src ? proxiedSrc : src
+  const failed = failedSrc === proxiedSrc
+  const shouldLoad = !delay || readySrc === src
 
   useEffect(() => {
     if (delay && !shouldLoad) {
       const timer = setTimeout(() => {
-        setShouldLoad(true)
+        setReadySrc(src)
       }, delay)
       return () => clearTimeout(timer)
     }
-  }, [delay, shouldLoad])
+  }, [delay, shouldLoad, src])
 
   const handleError = useCallback((e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-    if (imgSrc === src) {
-      // First error: try proxied URL
-      setImgSrc(getProxiedImageUrl(src))
-    } else {
-      // Second error: mark as failed
-      setFailed(true)
-    }
+    setFailedSrc(imgSrc)
     onError?.(e)
-  }, [imgSrc, src, onError])
+  }, [imgSrc, onError])
 
   const handleClick = useCallback((e: React.MouseEvent<HTMLImageElement>) => {
     if (href) {
@@ -51,6 +42,15 @@ export function ProxiedImage({ src, href, onError, onClick, delay, ...props }: P
     onClick?.(e)
   }, [href, onClick])
 
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLImageElement>) => {
+    if (e.key !== "Enter" && e.key !== " ") {
+      return
+    }
+
+    e.preventDefault()
+    e.currentTarget.click()
+  }, [])
+
   if (failed) {
     return null
   }
@@ -59,7 +59,7 @@ export function ProxiedImage({ src, href, onError, onClick, delay, ...props }: P
     return (
       <img
         referrerPolicy="no-referrer"
-        alt="picture"
+        alt=""
         src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMSIgaGVpZ2h0PSIxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjwvc3ZnPg=="
         {...props}
       />
@@ -74,6 +74,9 @@ export function ProxiedImage({ src, href, onError, onClick, delay, ...props }: P
       onError={handleError}
       loading="lazy"
       onClick={handleClick}
+      onKeyDown={href || onClick ? handleKeyDown : undefined}
+      role={href || onClick ? "button" : undefined}
+      tabIndex={href || onClick ? 0 : undefined}
       {...props}
     />
   )

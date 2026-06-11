@@ -2,7 +2,7 @@ import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine"
 import { draggable, dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter"
 import { preserveOffsetOnSource } from "@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source"
 import { setCustomNativeDragPreview } from "@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview"
-import { createContext, useContext, useEffect, useState } from "react"
+import { createContext, use, useEffect, useState } from "react"
 
 export const InstanceIdContext = createContext<string | null>(null)
 
@@ -19,7 +19,7 @@ interface DraggableState {
 }
 
 export function useSortable(props: SortableProps) {
-  const instanceId = useContext(InstanceIdContext)
+  const instanceId = use(InstanceIdContext)
   const [draggableState, setDraggableState] = useState<DraggableState>({
     type: "idle",
   })
@@ -29,9 +29,10 @@ export function useSortable(props: SortableProps) {
       document.querySelector("html")?.classList.remove("grabbing")
     } else if (draggableState.type === "dragging") {
       // https://github.com/SortableJS/Vue.Draggable/issues/815#issuecomment-1552904628
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         document.querySelector("html")?.classList.add("grabbing")
       }, 50)
+      return () => clearTimeout(timer)
     }
   }, [draggableState])
 
