@@ -11,7 +11,8 @@
     "build:cloudflare": "VITE_BASE_URL=https://api.newsnext.pro/v1 bun run build",
     "deploy:cloudflare": "wrangler deploy",
     "preview": "bun run --bun vite preview",
-    "compile": "tsgo --noEmit"
+    "compile": "tsgo --noEmit",
+    "doctor": "npx react-doctor@latest"
   },
   "dependencies": {
     "@atlaskit/pragmatic-drag-and-drop": "catalog:",
@@ -43,6 +44,7 @@
     "@tanstack/react-query-devtools": "catalog:",
     "@tanstack/react-router-devtools": "catalog:",
     "@vitejs/plugin-react": "catalog:",
+    "react-doctor": "^0.5.1",
     "react-scan": "catalog:",
     "tailwindcss": "catalog:",
     "unplugin-icons": "catalog:",
