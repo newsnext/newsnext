@@ -8,7 +8,7 @@ import { FlipAnimate } from "@/components/common/flip-animate"
 import { useSourceParams } from "@/hooks"
 import { useSourceQuery } from "@/hooks/use-source-query"
 import { orpc } from "@/lib/orpc"
-import { createSourceInstance } from "@/lib/source-cards"
+import { createForkedInstance } from "@/lib/source-cards"
 import { deleteStoredSourceParamValues, writeStoredSourceParamValues } from "@/lib/source-params"
 import { cn } from "@/lib/utils"
 import {
@@ -76,7 +76,7 @@ function CardContent({ id, source, dragHandle, disableExpandedPreview = false, p
   // }, [date, normalRefetch])
 
   const handleFork = useCallback(() => {
-    const forkedInstance = createSourceInstance(source.sourceId, savedParams, true)
+    const forkedInstance = createForkedInstance(source.sourceId, savedParams)
 
     writeStoredSourceParamValues(forkedInstance.instanceId, savedParams)
     upsertSourceInstance.mutate(forkedInstance)

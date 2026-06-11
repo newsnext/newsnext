@@ -1,6 +1,6 @@
 import type { BoardType } from "@newsnext/shared/types"
 import type { BoardSource, SourceDescriptor } from "@/typings/source"
-import { hashString, stableStringify } from "@newsnext/shared/utils"
+import { stableStringify } from "@newsnext/shared/utils"
 
 export interface SourceInstance {
   instanceId: string
@@ -26,18 +26,15 @@ function createBoardSource(source: BoardSourceSource): BoardSource {
   }
 }
 
-export function createSourceInstance(
+export function createForkedInstance(
   sourceKey: string,
   params: Record<string, unknown> = {},
-  isFork = false,
 ): SourceInstance {
-  const paramsKey = stableStringify(params)
-
   return {
-    instanceId: isFork ? `${sourceKey}::fork:${hashString(paramsKey)}` : sourceKey,
+    instanceId: `${sourceKey}::${crypto.randomUUID()}`,
     sourceKey,
     params,
-    isFork,
+    isFork: true,
     createdAt: Date.now(),
   }
 }
