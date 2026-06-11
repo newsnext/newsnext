@@ -15,13 +15,13 @@ type BoardSourceSource = Omit<SourceDescriptor, "params"> & {
 }
 
 function createBoardSource(source: BoardSourceSource): BoardSource {
-  const sourceId = source.provider ? `${source.provider}:${source.id}` : source.id
+  const sourceId = source.provider ? `${source.provider}:${source.name}` : source.name
   return {
     ...source,
     params: source.params as BoardSource["params"],
     id: sourceId,
     sourceId,
-    variantId: source.id,
+    variantId: source.name,
     isFork: false,
   }
 }

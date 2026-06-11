@@ -149,6 +149,14 @@ function Info(props: PropsWithChildren<{
   )
 }
 
+interface SourceEditDraft {
+  providerTitle: string
+  title?: string
+  desc?: string
+  home?: string
+  color: Color
+}
+
 function ParamField({
   param,
   value,
@@ -342,37 +350,38 @@ export function CardBack() {
     dragHandle,
   } = useCard()
 
-  const [editable, setEditable] = useState(false)
-  const canEdit = isFork && editable
   const shouldPromoteEditButton = !dragHandle
   const { provider, desc, color, params } = source
-  const { name, title, home } = resolveSourceDisplay(source, draftSourceParams)
+  const { providerTitle, title, home } = resolveSourceDisplay(source, draftSourceParams)
+  const [editDraft, setEditDraft] = useState<SourceEditDraft | null>(null)
+  const canEdit = isFork && editDraft !== null
+  const previewProviderTitle = canEdit ? editDraft.providerTitle : providerTitle
+  const previewTitle = canEdit ? editDraft.title : title
+  const previewDesc = canEdit ? editDraft.desc : desc
+  const previewHome = canEdit ? editDraft.home : home
+  const previewColor = canEdit ? editDraft.color : color
 
-  // Local state for edits (though not persisted yet)
-  // In a real app, these would update via a mutation
-  const [localName, setLocalName] = useState(name)
-  const [localTitle, setLocalTitle] = useState(title)
-  const [localDesc, setLocalDesc] = useState(desc)
-  const [localHome, setLocalHome] = useState(home)
-  const [localColor, setLocalColor] = useState(color)
-  const previewColor = canEdit ? localColor : color
-
-  useEffect(() => {
-    if (!editable) {
-      // Reset on cancel/exit edit
-      setLocalName(name)
-      setLocalTitle(title)
-      setLocalDesc(desc)
-      setLocalHome(home)
-      setLocalColor(color)
+  function createEditDraft(): SourceEditDraft {
+    return {
+      providerTitle,
+      title,
+      desc,
+      home,
+      color,
     }
-  }, [editable, name, title, desc, home, color])
+  }
 
-  useEffect(() => {
+  function toggleEdit(): void {
     if (!isFork) {
-      setEditable(false)
+      return
     }
-  }, [isFork])
+
+    setEditDraft(prev => prev ? null : createEditDraft())
+  }
+
+  function updateEditDraft(patch: Partial<SourceEditDraft>): void {
+    setEditDraft(prev => prev ? { ...prev, ...patch } : prev)
+  }
 
   return (
     <div className="relative h-full">
@@ -390,27 +399,27 @@ export function CardBack() {
             <button
               type="button"
               className="size-8 shrink-0 rounded-full"
-              title={desc || name}
-              onClick={() => window.open(home || "#", "_blank")}
+              title={previewDesc || previewProviderTitle}
+              onClick={() => window.open(previewHome || "#", "_blank")}
             >
               <img
                 className="size-full rounded-full bg-cover"
                 src={`https://s3.newsnext.pro/icons/${provider}.png`}
-                alt={`${name} icon`}
+                alt={`${previewProviderTitle} icon`}
                 referrerPolicy="no-referrer"
                 onError={(e) => {
-                  e.currentTarget.src = getFavicon(home || "#")!
+                  e.currentTarget.src = getFavicon(previewHome || "#")!
                 }}
               />
             </button>
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
                 <span className="text-xl font-bold">
-                  {name}
+                  {previewProviderTitle}
                 </span>
-                {title && (
+                {previewTitle && (
                   <span className={cn("text-sm px-1 rounded-3xl bg-background/50 opacity-80", `text-${previewColor}-400`)}>
-                    {title}
+                    {previewTitle}
                   </span>
                 )}
               </div>
@@ -438,7 +447,7 @@ export function CardBack() {
                     return
                   }
 
-                  setEditable(p => !p)
+                  toggleEdit()
                 }}
                 aria-label="Edit"
                 title={isFork ? "Edit" : "Only forked cards can be edited"}
@@ -474,7 +483,7 @@ export function CardBack() {
                     return
                   }
 
-                  setEditable(p => !p)
+                  toggleEdit()
                 }}
                 aria-label="Edit"
                 title={isFork ? "Edit" : "Only forked cards can be edited"}
@@ -506,33 +515,33 @@ export function CardBack() {
                   return
                 }
 
-                setEditable(p => !p)
+                toggleEdit()
               }}
             >
               <div className="flex flex-col text-sm">
                 <div className="font-semibold mb-1 opacity-80">Information</div>
-                <Info icon={<PhInfoDuotone />} label="Name">
-                  <EditableInput text={localName} editable={canEdit} onChange={setLocalName} />
+                <Info icon={<PhInfoDuotone />} label="Provider Title">
+                  <EditableInput text={previewProviderTitle} editable={canEdit} onChange={value => updateEditDraft({ providerTitle: value })} />
                 </Info>
 
                 <Info icon={<PhInfoDuotone />} label="Title">
-                  <EditableInput text={localTitle || ""} editable={canEdit} onChange={setLocalTitle} />
+                  <EditableInput text={previewTitle || ""} editable={canEdit} onChange={value => updateEditDraft({ title: value })} />
                 </Info>
 
                 <Info icon={<PhInfoDuotone />} label="Description">
-                  <EditableInput text={localDesc || ""} editable={canEdit} onChange={setLocalDesc} />
+                  <EditableInput text={previewDesc || ""} editable={canEdit} onChange={value => updateEditDraft({ desc: value })} />
                 </Info>
 
                 <Info icon={<PhLinkDuotone />} label="Home">
-                  <EditableInput text={localHome || ""} editable={canEdit} onChange={setLocalHome} />
+                  <EditableInput text={previewHome || ""} editable={canEdit} onChange={value => updateEditDraft({ home: value })} />
                 </Info>
 
                 <Info icon={<PhLinkDuotone />} label="Icon">
-                  <EditableInput text={`https://icons.duckduckgo.com/ip3/${new URL(localHome || "http://localhost").hostname}.ico`} editable={false} />
+                  <EditableInput text={`https://icons.duckduckgo.com/ip3/${new URL(previewHome || "http://localhost").hostname}.ico`} editable={false} />
                 </Info>
 
                 <Info icon={<PhLinkDuotone />} label="Color">
-                  <ColorSelector color={localColor} editable={canEdit} onChange={setLocalColor} />
+                  <ColorSelector color={previewColor} editable={canEdit} onChange={value => updateEditDraft({ color: value })} />
                 </Info>
               </div>
 

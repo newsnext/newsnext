@@ -9,7 +9,7 @@ const flagUrls = {
 }
 
 export default $provider({
-  name: "微博",
+  title: "微博",
   home: "https://s.weibo.com/top/summary?cate=realtimehot",
   color: "red",
   sources: {

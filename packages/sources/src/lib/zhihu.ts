@@ -25,7 +25,7 @@ interface ResItem {
 }
 
 export default $provider({
-  name: "知乎",
+  title: "知乎",
   home: "https://www.zhihu.com",
   color: "blue",
   sources: {

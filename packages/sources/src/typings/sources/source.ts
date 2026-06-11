@@ -31,7 +31,7 @@ export interface SourceRegistration<TParams extends SourceParamSchemaMap = Sourc
   title?: string
   params?: TParams
   color?: Color
-  name?: string
+  providerTitle?: string
   desc?: string
   type?: "hottest" | "timeline"
   category?: CategoryId
@@ -45,9 +45,9 @@ export interface SourceRegistration<TParams extends SourceParamSchemaMap = Sourc
  */
 export interface SourceDefinition<TParams extends SourceParamSchemaMap = SourceParamSchemaMap> {
   icon?: string
-  name: string
+  providerTitle: string
   provider: string
-  id: string
+  name: string
   title?: string
   params?: TParams
   color: Color
@@ -68,7 +68,7 @@ export type RegisteredSourceDefinition<TParams extends SourceParamSchemaMap = So
  * Provider configuration authored in source definition files.
  */
 export interface ProviderRegistration {
-  name: string
+  title: string
   color: Color
   icon?: string
   desc?: string
@@ -81,7 +81,7 @@ export interface ProviderRegistration {
  * Provider definition after source defaults are expanded
  */
 export interface ProviderDefinition {
-  name: string
+  title: string
   color: Color
   icon?: string
   desc?: string

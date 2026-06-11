@@ -2,7 +2,7 @@ import { $jsonParam } from "../utils/params"
 import { $provider, $source, resolvePath } from "../utils/source"
 
 export default $provider({
-  name: "JSON",
+  title: "JSON",
   color: "cyan",
   home: "https://www.json.org/",
   sources: {

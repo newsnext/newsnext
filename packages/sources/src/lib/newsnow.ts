@@ -2,7 +2,7 @@ import { $selectParam } from "../utils/params"
 import { $provider, $source } from "../utils/source"
 
 export default $provider({
-  name: "NEWS NOW",
+  title: "NEWS NOW",
   color: "red",
   home: "https://www.newsnow.com",
   sources: {

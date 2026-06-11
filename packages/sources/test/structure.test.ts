@@ -10,7 +10,7 @@ describe("source Structure Tests", () => {
 
   it("registers tieba default source", () => {
     expect(providers.tieba.sources.default).toMatchObject({
-      name: "百度贴吧",
+      providerTitle: "百度贴吧",
       title: "热议",
       type: "hottest",
       category: "china",

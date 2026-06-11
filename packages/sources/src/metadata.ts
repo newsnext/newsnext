@@ -4,8 +4,8 @@ import type { SourceDescriptor } from "./typings/sources"
 
 export const sourceDescriptors: SourceDescriptor[] = [
   {
-    "name": "Bilibili",
-    "id": "default",
+    "providerTitle": "Bilibili",
+    "name": "default",
     "title": "热搜",
     "color": "blue",
     "type": "hottest",
@@ -14,8 +14,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "provider": "bilibili"
   },
   {
-    "name": "Bilibili",
-    "id": "hot-video",
+    "providerTitle": "Bilibili",
+    "name": "hot-video",
     "title": "热门视频",
     "color": "blue",
     "type": "hottest",
@@ -24,8 +24,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "provider": "bilibili"
   },
   {
-    "name": "Bilibili",
-    "id": "ranking",
+    "providerTitle": "Bilibili",
+    "name": "ranking",
     "title": "排行榜",
     "color": "blue",
     "type": "hottest",
@@ -34,8 +34,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "provider": "bilibili"
   },
   {
-    "name": "CoolAPK",
-    "id": "default",
+    "providerTitle": "CoolAPK",
+    "name": "default",
     "title": "Today",
     "color": "green",
     "type": "hottest",
@@ -44,8 +44,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "provider": "coolapk"
   },
   {
-    "name": "GitHub",
-    "id": "default",
+    "providerTitle": "GitHub",
+    "name": "default",
     "title": "Trending",
     "color": "slate",
     "type": "hottest",
@@ -54,8 +54,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "provider": "github"
   },
   {
-    "name": "Hacker News",
-    "id": "default",
+    "providerTitle": "Hacker News",
+    "name": "default",
     "title": "Hottest",
     "color": "orange",
     "type": "hottest",
@@ -64,8 +64,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "provider": "hackernews"
   },
   {
-    "name": "Hacker News",
-    "id": "newest",
+    "providerTitle": "Hacker News",
+    "name": "newest",
     "title": "Newest",
     "color": "orange",
     "type": "timeline",
@@ -74,8 +74,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "provider": "hackernews"
   },
   {
-    "name": "Hacker News",
-    "id": "show",
+    "providerTitle": "Hacker News",
+    "name": "show",
     "title": "Show",
     "color": "orange",
     "category": "others",
@@ -83,8 +83,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "provider": "hackernews"
   },
   {
-    "name": "Hacker News",
-    "id": "ask",
+    "providerTitle": "Hacker News",
+    "name": "ask",
     "title": "Ask",
     "color": "orange",
     "category": "others",
@@ -92,8 +92,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "provider": "hackernews"
   },
   {
-    "name": "HTML Parser",
-    "id": "default",
+    "providerTitle": "HTML Parser",
+    "name": "default",
     "title": "36 氪",
     "params": {
       "url": {
@@ -133,8 +133,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "provider": "html"
   },
   {
-    "name": "JSON",
-    "id": "default",
+    "providerTitle": "JSON",
+    "name": "default",
     "title": "V2EX",
     "params": {
       "url": {
@@ -174,8 +174,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "provider": "json"
   },
   {
-    "name": "网易云音乐",
-    "id": "default",
+    "providerTitle": "网易云音乐",
+    "name": "default",
     "title": "排行榜",
     "params": {
       "id": {
@@ -209,8 +209,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "provider": "netease-music"
   },
   {
-    "name": "NEWS NOW",
-    "id": "default",
+    "providerTitle": "NEWS NOW",
+    "name": "default",
     "params": {
       "locale": {
         "type": "select",
@@ -260,8 +260,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "provider": "newsnow"
   },
   {
-    "name": "RSS",
-    "id": "default",
+    "providerTitle": "RSS",
+    "name": "default",
     "title": "PCBeta",
     "params": {
       "url": {
@@ -291,8 +291,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "provider": "rss"
   },
   {
-    "name": "RSSHub",
-    "id": "default",
+    "providerTitle": "RSSHub",
+    "name": "default",
     "title": "36 氪",
     "params": {
       "route": {
@@ -327,8 +327,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "provider": "rsshub"
   },
   {
-    "name": "百度贴吧",
-    "id": "default",
+    "providerTitle": "百度贴吧",
+    "name": "default",
     "title": "热议",
     "color": "blue",
     "type": "hottest",
@@ -337,8 +337,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "provider": "tieba"
   },
   {
-    "name": "V2EX",
-    "id": "default",
+    "providerTitle": "V2EX",
+    "name": "default",
     "params": {
       "feeds": {
         "type": "multiselect",
@@ -375,8 +375,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "provider": "v2ex"
   },
   {
-    "name": "微博",
-    "id": "default",
+    "providerTitle": "微博",
+    "name": "default",
     "color": "red",
     "type": "hottest",
     "category": "others",
@@ -384,8 +384,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "provider": "weibo"
   },
   {
-    "name": "雪球",
-    "id": "default",
+    "providerTitle": "雪球",
+    "name": "default",
     "color": "blue",
     "type": "hottest",
     "category": "others",
@@ -393,8 +393,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "provider": "xueqiu"
   },
   {
-    "name": "联合早报",
-    "id": "default",
+    "providerTitle": "联合早报",
+    "name": "default",
     "color": "red",
     "type": "timeline",
     "category": "others",
@@ -402,8 +402,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "provider": "zaobao"
   },
   {
-    "name": "知乎",
-    "id": "default",
+    "providerTitle": "知乎",
+    "name": "default",
     "title": "全站热榜",
     "color": "blue",
     "type": "hottest",

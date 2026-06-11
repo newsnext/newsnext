@@ -28,7 +28,7 @@ interface SearchItem {
   id: string
   category: string
   source: BoardSource
-  name: string
+  providerTitle: string
   title?: string
   provider?: string
   isFork: boolean
@@ -51,7 +51,7 @@ function groupSearchItems(items: SearchItem[]): SearchGroup[] {
   return [...groups.entries()]
     .map(([heading, groupedItems]) => ({
       heading,
-      items: groupedItems.sort((a, b) => a.name.localeCompare(b.name)),
+      items: groupedItems.sort((a, b) => a.providerTitle.localeCompare(b.providerTitle)),
     }))
     .sort((a, b) => {
       if (a.heading === categories.tech) {
@@ -147,7 +147,7 @@ function SearchDialogContent(): ReactNode {
           id,
           category: categories[source.category],
           source,
-          name: display.name,
+          providerTitle: display.providerTitle,
           title: display.title,
           provider: source.provider,
           isFork: false,
@@ -163,7 +163,7 @@ function SearchDialogContent(): ReactNode {
           id,
           category: `${categories[source.category]} / Forked`,
           source,
-          name: display.name,
+          providerTitle: display.providerTitle,
           title: display.title,
           provider: source.provider,
           isFork: true,
@@ -211,7 +211,7 @@ function SearchDialogContent(): ReactNode {
                   className="justify-between gap-3 data-[selected=true]:bg-neutral-400/10"
                   value={item.id}
                   keywords={[
-                    item.name,
+                    item.providerTitle,
                     item.title ?? "",
                     item.provider ?? "",
                     item.category,
@@ -229,9 +229,9 @@ function SearchDialogContent(): ReactNode {
                           : undefined,
                       }}
                     />
-                    <span className="shrink-0">{item.title || item.name}</span>
+                    <span className="shrink-0">{item.title || item.providerTitle}</span>
                     <span className="min-w-0 truncate text-xs text-neutral-400/80">
-                      {item.title && item.name}
+                      {item.title && item.providerTitle}
                     </span>
                   </span>
                   <span className="ml-auto flex shrink-0 items-center gap-2 text-neutral-400/80">

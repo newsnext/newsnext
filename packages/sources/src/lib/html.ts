@@ -2,7 +2,7 @@ import { parseRelativeDate } from "../utils/date"
 import { $provider, $source } from "../utils/source"
 
 export default $provider({
-  name: "HTML Parser",
+  title: "HTML Parser",
   color: "orange",
   home: "https://html.com/",
   sources: {

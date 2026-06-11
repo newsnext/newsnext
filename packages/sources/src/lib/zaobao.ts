@@ -4,7 +4,7 @@ import { $provider, $source } from "../utils/source"
 const base = "https://www.zaochenbao.com"
 
 export default $provider({
-  name: "联合早报",
+  title: "联合早报",
   color: "red",
   home: "https://www.zaobao.com",
   sources: {

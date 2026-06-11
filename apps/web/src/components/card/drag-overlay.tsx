@@ -14,7 +14,7 @@ interface DragOverlayProps {
 
 export function DragOverlay({ source, sourceParams }: DragOverlayProps) {
   const { provider, color, desc } = source
-  const { name, title, home } = resolveSourceDisplay(source, sourceParams)
+  const { providerTitle, title, home } = resolveSourceDisplay(source, sourceParams)
   return (
     <div
       className={cn(
@@ -28,8 +28,8 @@ export function DragOverlay({ source, sourceParams }: DragOverlayProps) {
           <img
             className="size-8 rounded-full bg-cover cursor-grabbing"
             src={`https://s3.newsnext.pro/icons/${provider}.png`}
-            alt={`${name} icon`}
-            title={desc || name}
+            alt={`${providerTitle} icon`}
+            title={desc || providerTitle}
             referrerPolicy="no-referrer"
             onError={(e) => {
               e.currentTarget.src = getFavicon(home || "#")!
@@ -37,24 +37,24 @@ export function DragOverlay({ source, sourceParams }: DragOverlayProps) {
           />
           <div className="flex flex-col min-w-0">
             <div className="flex items-center gap-2 min-w-0 w-full">
-              {(title || name) && (
+              {(title || providerTitle) && (
                 <span
                   className={cn(
                     "font-bold truncate min-w-0",
-                    title && name ? "shrink-0 max-w-[min(14rem,60%)]" : "w-full",
+                    title && providerTitle ? "shrink-0 max-w-[min(14rem,60%)]" : "w-full",
                   )}
                 >
-                  {title || name}
+                  {title || providerTitle}
                 </span>
               )}
-              {title && name && (
+              {title && providerTitle && (
                 <span
                   className={cn(
                     "inline-block min-w-0 flex-1 truncate text-center text-sm px-1 rounded-3xl bg-background/50 opacity-80",
                     `text-${color}-400`,
                   )}
                 >
-                  {name.replace(/\s+/g, " ")}
+                  {providerTitle.replace(/\s+/g, " ")}
                 </span>
               )}
             </div>

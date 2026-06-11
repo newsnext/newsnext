@@ -2,7 +2,7 @@ import { CommonSourceParams } from "../utils/params"
 import { $provider, $source } from "../utils/source"
 
 export default $provider({
-  name: "RSS",
+  title: "RSS",
   color: "orange",
   home: "https://rss.com/",
   sources: {

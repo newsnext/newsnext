@@ -3,7 +3,7 @@ import { $provider, $source } from "../utils/source"
 const baseURL = new URL("https://github.com")
 
 export default $provider({
-  name: "GitHub",
+  title: "GitHub",
   home: "https://github.com/trending",
   color: "slate",
   sources: {

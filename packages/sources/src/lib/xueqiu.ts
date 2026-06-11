@@ -11,7 +11,7 @@ interface StockItem {
 }
 
 export default $provider({
-  name: "雪球",
+  title: "雪球",
   home: "https://xueqiu.com",
   color: "blue",
   sources: {

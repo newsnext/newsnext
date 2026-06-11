@@ -35,7 +35,7 @@ const FEED_OPTIONS = [
 type FeedId = (typeof FEED_OPTIONS)[number]["value"]
 
 export default $provider({
-  name: "V2EX",
+  title: "V2EX",
   color: "slate",
   home: "https://v2ex.com/",
   sources: {

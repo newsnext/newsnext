@@ -32,7 +32,7 @@ export function CardFront() {
   } = useCard()
 
   const { provider, type, color, desc } = source
-  const { name, title, home } = resolveSourceDisplay(source, sourceParams)
+  const { providerTitle, title, home } = resolveSourceDisplay(source, sourceParams)
   const ref = useRef<HTMLDivElement>(null)
   const relativeTime = useRelativeTime({ date: updatedTime })
 
@@ -53,13 +53,13 @@ export function CardFront() {
             <button
               type="button"
               className="size-8 shrink-0 rounded-full"
-              title={desc || name}
+              title={desc || providerTitle}
               onClick={() => window.open(home || "#", "_blank")}
             >
               <img
                 className="size-full rounded-full bg-cover"
                 src={`https://s3.newsnext.pro/icons/${provider}.png`}
-                alt={`${name} icon`}
+                alt={`${providerTitle} icon`}
                 referrerPolicy="no-referrer"
                 onError={(e) => {
                   e.currentTarget.src = getFavicon(home || "#")!
@@ -68,24 +68,24 @@ export function CardFront() {
             </button>
             <div className="flex flex-col min-w-0">
               <div className="flex items-center gap-2 min-w-0 w-full text-base">
-                {(title || name) && (
+                {(title || providerTitle) && (
                   <span
                     className={cn(
                       "font-bold truncate min-w-0",
-                      title && name ? "shrink-0 max-w-[min(14rem,60%)]" : "w-full",
+                      title && providerTitle ? "shrink-0 max-w-[min(14rem,60%)]" : "w-full",
                     )}
                   >
-                    {title || name}
+                    {title || providerTitle}
                   </span>
                 )}
-                {title && name && (
+                {title && providerTitle && (
                   <span
                     className={cn(
                       "inline-block min-w-0 flex-1 truncate text-sm px-1 rounded-3xl text-center bg-background/50 opacity-80",
                       `text-${color}-400`,
                     )}
                   >
-                    {name.replace(/\s+/g, " ")}
+                    {providerTitle.replace(/\s+/g, " ")}
                   </span>
                 )}
               </div>

@@ -1,8 +1,8 @@
 import type { SelectParameter } from "@newsnext/sources/typings"
 import type { BoardSource } from "@/typings/source"
 
-interface SourceDisplay {
-  name: string
+export interface SourceDisplay {
+  providerTitle: string
   title?: string
   home?: string
 }
@@ -31,7 +31,7 @@ function getNeteasePlaylistTitle(source: BoardSource, playlistId: string | undef
 export function resolveSourceDisplay(source: BoardSource, params: Record<string, unknown>): SourceDisplay {
   if (source.provider !== "netease-music") {
     return {
-      name: source.name,
+      providerTitle: source.providerTitle,
       title: source.title,
       home: source.home,
     }
@@ -40,7 +40,7 @@ export function resolveSourceDisplay(source: BoardSource, params: Record<string,
   const playlistId = getNeteasePlaylistId(source, params)
 
   return {
-    name: source.name,
+    providerTitle: source.providerTitle,
     title: getNeteasePlaylistTitle(source, playlistId),
     home: playlistId ? `https://music.163.com/#/playlist?id=${playlistId}` : source.home,
   }

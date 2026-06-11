@@ -22,7 +22,7 @@ function resolveTopicUrl(url: string): string {
 }
 
 export default $provider({
-  name: "百度贴吧",
+  title: "百度贴吧",
   home: "https://tieba.baidu.com",
   color: "blue",
   category: "china",

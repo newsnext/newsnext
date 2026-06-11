@@ -55,7 +55,7 @@ const formatArtists = (track: NeteaseTrack): string => {
 const extractCover = (track: NeteaseTrack): string | undefined => track.al?.picUrl ?? track.album?.picUrl
 
 export default $provider({
-  name: "网易云音乐",
+  title: "网易云音乐",
   home: "https://sg.music.163.com/#/discover/toplist",
   color: "red",
   sources: {

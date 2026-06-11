@@ -24,7 +24,7 @@ interface VideoItem {
 }
 
 export default $provider({
-  name: "Bilibili",
+  title: "Bilibili",
   home: "https://www.bilibili.com",
   color: "blue",
   sources: {

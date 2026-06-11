@@ -38,7 +38,7 @@ sortedFiles.forEach((file, index) => {
     ? pathParts[pathParts.length - 2]
     : pathParts[pathParts.length - 1]
 
-  const alias = `source_${index}`
+  const alias = `provider_${index}`
   importStatements.push(`import ${alias} from "${importPath}"`)
   indexEntries.push(`  ${JSON.stringify(key)}: ${alias}`)
   providerKeys.push(key)
@@ -70,7 +70,7 @@ for (const [provider, providerDefinition] of Object.entries(providers)) {
     const { loader, ...meta } = source as any
     sourceDescriptors.push({
       ...meta,
-      id: meta.id || sourceId,
+      name: meta.name || sourceId,
       provider,
     })
   }
