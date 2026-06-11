@@ -25,8 +25,7 @@ const sortedFiles = Array.from(files).sort()
 
 // Generate import statements and entries
 const importStatements: string[] = []
-const indexEntries: string[] = []
-const providerKeys: string[] = []
+const providerEntries: string[] = []
 
 sortedFiles.forEach((file, index) => {
   // Remove src/ prefix and .ts extension, convert to relative import path
@@ -40,8 +39,7 @@ sortedFiles.forEach((file, index) => {
 
   const alias = `provider_${index}`
   importStatements.push(`import ${alias} from "${importPath}"`)
-  indexEntries.push(`  ${JSON.stringify(key)}: ${alias}`)
-  providerKeys.push(key)
+  providerEntries.push(`  [${alias}.id ?? ${JSON.stringify(key)}]: ${alias}`)
 })
 
 const indexContent = `// Auto-generated file - do not edit manually
@@ -50,19 +48,16 @@ const indexContent = `// Auto-generated file - do not edit manually
 ${importStatements.join("\n")}
 
 export const providers = {
-${indexEntries.join(",\n")}
+${providerEntries.join(",\n")}
 }
 `
 
 const indexPath = join(rootDir, "src", "index.ts")
 await Bun.file(indexPath).write(indexContent)
 
-// Dynamic import might fail if the file hasn't been written to disk yet or module cache
-// Just log the keys we found
-console.log("Found providers:", providerKeys)
-
 // Generate metadata.ts
-const { providers } = await import(indexPath)
+const { providers } = await import(`${indexPath}?updated=${Date.now()}`)
+console.log("Found providers:", Object.keys(providers))
 
 const sourceDescriptors = []
 for (const [provider, providerDefinition] of Object.entries(providers)) {

@@ -57,6 +57,7 @@ export function $provider(
   ) as Record<string, RegisteredSourceDefinition>
 
   return {
+    id: provider.id,
     title: provider.title,
     color: provider.color,
     icon: provider.icon,

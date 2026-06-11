@@ -19,20 +19,20 @@ import provider_14 from "./lib/zaobao"
 import provider_15 from "./lib/zhihu"
 
 export const providers = {
-  "bilibili": provider_0,
-  "coolapk": provider_1,
-  "github": provider_2,
-  "hackernews": provider_3,
-  "html": provider_4,
-  "json": provider_5,
-  "netease-music": provider_6,
-  "newsnow": provider_7,
-  "rss": provider_8,
-  "rsshub": provider_9,
-  "tieba": provider_10,
-  "v2ex": provider_11,
-  "weibo": provider_12,
-  "xueqiu": provider_13,
-  "zaobao": provider_14,
-  "zhihu": provider_15
+  [provider_0.id ?? "bilibili"]: provider_0,
+  [provider_1.id ?? "coolapk"]: provider_1,
+  [provider_2.id ?? "github"]: provider_2,
+  [provider_3.id ?? "hackernews"]: provider_3,
+  [provider_4.id ?? "html"]: provider_4,
+  [provider_5.id ?? "json"]: provider_5,
+  [provider_6.id ?? "netease-music"]: provider_6,
+  [provider_7.id ?? "newsnow"]: provider_7,
+  [provider_8.id ?? "rss"]: provider_8,
+  [provider_9.id ?? "rsshub"]: provider_9,
+  [provider_10.id ?? "tieba"]: provider_10,
+  [provider_11.id ?? "v2ex"]: provider_11,
+  [provider_12.id ?? "weibo"]: provider_12,
+  [provider_13.id ?? "xueqiu"]: provider_13,
+  [provider_14.id ?? "zaobao"]: provider_14,
+  [provider_15.id ?? "zhihu"]: provider_15
 }

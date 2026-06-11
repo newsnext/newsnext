@@ -68,6 +68,7 @@ export type RegisteredSourceDefinition<TParams extends SourceParamSchemaMap = So
  * Provider configuration authored in source definition files.
  */
 export interface ProviderRegistration {
+  id?: string
   title: string
   color: Color
   icon?: string
@@ -81,6 +82,7 @@ export interface ProviderRegistration {
  * Provider definition after source defaults are expanded
  */
 export interface ProviderDefinition {
+  id?: string
   title: string
   color: Color
   icon?: string
