@@ -7,9 +7,10 @@ export default $provider({
   title: "联合早报",
   color: "red",
   home: "https://www.zaobao.com",
-  sources: {
-    default: $source.html(
+  sources: [
+    $source.html(
       {
+        name: "default",
         type: "timeline",
       },
       () => ({
@@ -33,5 +34,5 @@ export default $provider({
         },
       }),
     ),
-  },
+  ],
 })

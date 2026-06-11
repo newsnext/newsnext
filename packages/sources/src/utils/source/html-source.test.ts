@@ -160,6 +160,7 @@ describe("$htmlSourceLoader", () => {
 
     const source = $source.html(
       {
+        name: "test",
         params: {
           page: { type: "number", default: 1, title: "Page" },
         } satisfies SourceParamSchemaMap,

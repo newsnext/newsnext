@@ -5,9 +5,10 @@ export default $provider({
   title: "RSS",
   color: "orange",
   home: "https://rss.com/",
-  sources: {
-    default: $source.rss(
+  sources: [
+    $source.rss(
       {
+        name: "default",
         title: "PCBeta",
         params: {
           url: {
@@ -22,5 +23,5 @@ export default $provider({
         url,
       }),
     ),
-  },
+  ],
 })

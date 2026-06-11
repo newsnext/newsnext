@@ -14,9 +14,10 @@ export default $provider({
   title: "雪球",
   home: "https://xueqiu.com",
   color: "blue",
-  sources: {
-    default: $source.json(
+  sources: [
+    $source.json(
       {
+        name: "default",
         type: "hottest",
       },
       () => ({
@@ -41,5 +42,5 @@ export default $provider({
         },
       }),
     ),
-  },
+  ],
 })

@@ -5,9 +5,10 @@ export default $provider({
   title: "HTML Parser",
   color: "orange",
   home: "https://html.com/",
-  sources: {
-    default: $source.html(
+  sources: [
+    $source.html(
       {
+        name: "default",
         title: "36 氪",
         home: "https://www.36kr.com/newsflashes",
         params: {
@@ -68,5 +69,5 @@ export default $provider({
         },
       }),
     ),
-  },
+  ],
 })

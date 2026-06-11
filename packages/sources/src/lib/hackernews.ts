@@ -46,35 +46,39 @@ export default $provider({
   title: "Hacker News",
   color: "orange",
   home: "https://news.ycombinator.com/",
-  sources: {
-    default: $source.html(
+  sources: [
+    $source.html(
       {
+        name: "default",
         type: "hottest",
         title: "Hottest",
       },
       createLoader("/"),
     ),
-    newest: $source.html(
+    $source.html(
       {
+        name: "newest",
         type: "timeline",
         title: "Newest",
         home: "https://news.ycombinator.com/newest",
       },
       createLoader("/newest"),
     ),
-    show: $source.html(
+    $source.html(
       {
+        name: "show",
         title: "Show",
         home: "https://news.ycombinator.com/show",
       },
       createLoader("/show"),
     ),
-    ask: $source.html(
+    $source.html(
       {
+        name: "ask",
         title: "Ask",
         home: "https://news.ycombinator.com/ask",
       },
       createLoader("/ask"),
     ),
-  },
+  ],
 })

@@ -36,11 +36,11 @@ export function $provider(
   provider: ProviderRegistration,
 ): ProviderDefinition {
   const sources = Object.fromEntries(
-    Object.entries(provider.sources).map(([sourceId, source]) => {
+    provider.sources.map((source) => {
       const registeredSource: RegisteredSourceDefinition = {
         icon: provider.icon,
         providerTitle: source.providerTitle ?? provider.title,
-        name: sourceId,
+        name: source.name,
         title: source.title,
         params: source.params,
         color: source.color ?? provider.color,
@@ -52,7 +52,7 @@ export function $provider(
         loader: source.loader,
       }
 
-      return [sourceId, registeredSource]
+      return [source.name, registeredSource]
     }),
   ) as Record<string, RegisteredSourceDefinition>
 

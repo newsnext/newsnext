@@ -27,9 +27,10 @@ export default $provider({
   title: "Bilibili",
   home: "https://www.bilibili.com",
   color: "blue",
-  sources: {
-    "default": $source.json(
+  sources: [
+    $source.json(
       {
+        name: "default",
         title: "热搜",
         type: "hottest",
       },
@@ -45,8 +46,9 @@ export default $provider({
         },
       }),
     ),
-    "hot-video": $source.json(
+    $source.json(
       {
+        name: "hot-video",
         title: "热门视频",
         type: "hottest",
       },
@@ -71,8 +73,9 @@ export default $provider({
         },
       }),
     ),
-    "ranking": $source.json(
+    $source.json(
       {
+        name: "ranking",
         title: "排行榜",
         type: "hottest",
       },
@@ -97,5 +100,5 @@ export default $provider({
         },
       }),
     ),
-  },
+  ],
 })

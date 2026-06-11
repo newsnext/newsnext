@@ -5,9 +5,10 @@ export default $provider({
   title: "RSSHub",
   color: "orange",
   home: "https://rsshub.app/",
-  sources: {
-    default: $source.rssHub(
+  sources: [
+    $source.rssHub(
       {
+        name: "default",
         title: "36 氪",
         params: {
           route: {
@@ -31,5 +32,5 @@ export default $provider({
         },
       }),
     ),
-  },
+  ],
 })

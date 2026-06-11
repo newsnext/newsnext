@@ -5,9 +5,10 @@ export default $provider({
   title: "NEWS NOW",
   color: "red",
   home: "https://www.newsnow.com",
-  sources: {
-    default: $source.html(
+  sources: [
+    $source.html(
       {
+        name: "default",
         type: "timeline",
         params: {
           locale: $selectParam<"us" | "uk" | "ng" | "ro" | "it" | "ca" | "au">({
@@ -47,5 +48,5 @@ export default $provider({
         },
       }),
     ),
-  },
+  ],
 })

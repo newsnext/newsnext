@@ -6,9 +6,10 @@ export default $provider({
   title: "GitHub",
   home: "https://github.com/trending",
   color: "slate",
-  sources: {
-    default: $source.html(
+  sources: [
+    $source.html(
       {
+        name: "default",
         title: "Trending",
         type: "hottest",
       },
@@ -40,5 +41,5 @@ export default $provider({
         },
       }),
     ),
-  },
+  ],
 })

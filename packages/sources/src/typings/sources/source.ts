@@ -28,6 +28,7 @@ export type SourceLoader<TParams extends SourceParamSchemaMap = SourceParamSchem
  * Source configuration authored inside a provider
  */
 export interface SourceRegistration<TParams extends SourceParamSchemaMap = SourceParamSchemaMap> {
+  name: string
   title?: string
   params?: TParams
   color?: Color
@@ -75,7 +76,7 @@ export interface ProviderRegistration {
   desc?: string
   home?: string
   category?: CategoryId
-  sources: Record<string, SourceRegistration<any>>
+  sources: SourceRegistration<any>[]
 }
 
 /**

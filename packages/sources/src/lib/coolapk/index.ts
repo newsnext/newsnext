@@ -19,9 +19,10 @@ export default $provider({
   title: "CoolAPK",
   color: "green",
   home: "https://coolapk.com",
-  sources: {
-    default: $source.json(
+  sources: [
+    $source.json(
       {
+        name: "default",
         type: "hottest",
         title: "Today",
       },
@@ -49,5 +50,5 @@ export default $provider({
         },
       }),
     ),
-  },
+  ],
 })

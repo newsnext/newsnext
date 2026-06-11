@@ -38,9 +38,10 @@ export default $provider({
   title: "V2EX",
   color: "slate",
   home: "https://v2ex.com/",
-  sources: {
-    default: $source(
+  sources: [
+    $source(
       {
+        name: "default",
         params: {
           feeds: $multiSelectParam<FeedId>({
             title: "Feeds",
@@ -68,5 +69,5 @@ export default $provider({
         })).sort((m, n) => m.timestamp < n.timestamp ? 1 : -1)
       },
     ),
-  },
+  ],
 })

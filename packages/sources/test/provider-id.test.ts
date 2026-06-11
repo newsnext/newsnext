@@ -4,20 +4,25 @@ import { describe, expect, it } from "vitest"
 import { $provider } from "@/utils/source"
 
 describe("provider IDs", () => {
-  it("preserves explicit provider IDs", () => {
+  it("preserves explicit provider IDs and indexes sources by name", () => {
     const provider = $provider({
       id: "custom-provider",
       title: "Custom Provider",
       color: "blue",
-      sources: {
-        default: {
+      sources: [
+        {
+          name: "custom-source",
           title: "Default",
           loader: async () => [],
         },
-      },
+      ],
     })
 
     expect(provider.id).toBe("custom-provider")
+    expect(provider.sources["custom-source"]).toMatchObject({
+      name: "custom-source",
+      title: "Default",
+    })
   })
 
   it("generates provider registry keys from provider IDs with filename fallback", () => {

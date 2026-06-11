@@ -58,9 +58,10 @@ export default $provider({
   title: "网易云音乐",
   home: "https://sg.music.163.com/#/discover/toplist",
   color: "red",
-  sources: {
-    default: $source.json(
+  sources: [
+    $source.json(
       {
+        name: "default",
         title: "排行榜",
         type: "hottest",
         home: getPlaylistHome(DEFAULT_PLAYLIST_ID),
@@ -102,5 +103,5 @@ export default $provider({
         },
       }),
     ),
-  },
+  ],
 })

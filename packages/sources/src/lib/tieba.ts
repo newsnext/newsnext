@@ -26,9 +26,10 @@ export default $provider({
   home: "https://tieba.baidu.com",
   color: "blue",
   category: "china",
-  sources: {
-    default: $source.json<TiebaTopic>(
+  sources: [
+    $source.json<TiebaTopic>(
       {
+        name: "default",
         title: "热议",
         type: "hottest",
       },
@@ -42,5 +43,5 @@ export default $provider({
         },
       }),
     ),
-  },
+  ],
 })

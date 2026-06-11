@@ -5,9 +5,10 @@ export default $provider({
   title: "JSON",
   color: "cyan",
   home: "https://www.json.org/",
-  sources: {
-    default: $source.json(
+  sources: [
+    $source.json(
       {
+        name: "default",
         title: "V2EX",
         params: {
           url: {
@@ -57,5 +58,5 @@ export default $provider({
         }
       },
     ),
-  },
+  ],
 })

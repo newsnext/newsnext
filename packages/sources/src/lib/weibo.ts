@@ -12,9 +12,10 @@ export default $provider({
   title: "微博",
   home: "https://s.weibo.com/top/summary?cate=realtimehot",
   color: "red",
-  sources: {
-    default: $source.html(
+  sources: [
+    $source.html(
       {
+        name: "default",
         type: "hottest",
       },
       () => ({
@@ -49,5 +50,5 @@ export default $provider({
         },
       }),
     ),
-  },
+  ],
 })

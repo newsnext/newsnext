@@ -28,9 +28,10 @@ export default $provider({
   title: "知乎",
   home: "https://www.zhihu.com",
   color: "blue",
-  sources: {
-    default: $source.json(
+  sources: [
+    $source.json(
       {
+        name: "default",
         title: "全站热榜",
         type: "hottest",
       },
@@ -54,5 +55,5 @@ export default $provider({
         },
       }),
     ),
-  },
+  ],
 })
