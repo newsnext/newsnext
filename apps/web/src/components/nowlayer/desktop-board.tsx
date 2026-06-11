@@ -107,8 +107,12 @@ export function DesktopBoard({
     edges: ["trailing", "leading"],
   })
 
-  // Calculate scatter vectors for cards that are visible in the viewport.
+  // Calculate scatter vectors only while the board is scattering away.
   useLayoutEffect(() => {
+    if (!isScattered) {
+      return
+    }
+
     const getVisibleBounds = (container: HTMLDivElement) => {
       const containerRect = container.getBoundingClientRect()
       const top = Math.max(containerRect.top, 0)

@@ -190,7 +190,7 @@ export default function Card(props: CardProps) {
     props.nodeRef?.(node)
   }
 
-  const isInView = useInView(ref)
+  const isInView = useInView(ref, { once: true })
 
   useEffect(() => {
     if (isInView) {
