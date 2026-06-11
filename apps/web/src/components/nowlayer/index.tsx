@@ -6,7 +6,7 @@ import { useCallback, useMemo, useState } from "react"
 import { isMobile } from "react-device-detect"
 import { orpc } from "@/lib/orpc"
 import { buildBoardSources } from "@/lib/source-cards"
-import { selectBoardSourceInstancesAtom, selectBoardStarredSourceInstanceIdsAtom } from "@/store/board"
+import { boardInstancesAtom, boardStarIdsAtom } from "@/store/board"
 import { DesktopBoard } from "./desktop-board"
 import { MobileBoard } from "./mobile-board"
 
@@ -37,8 +37,8 @@ export function NowLayer({
 }: NowLayerProps) {
   const [sourceIdOrderState, setSourceIdOrderState] = useState<SourceIdOrderState | null>(null)
   const sourceIdOrder = sourceIdOrderState?.boardId === boardId ? sourceIdOrderState.ids : null
-  const starredSourceInstanceIds = useAtomValue(selectBoardStarredSourceInstanceIdsAtom(boardId))
-  const sourceInstances = useAtomValue(selectBoardSourceInstancesAtom(boardId))
+  const starredInstanceIds = useAtomValue(boardStarIdsAtom(boardId))
+  const instances = useAtomValue(boardInstancesAtom(boardId))
 
   const { data: sources, isPending } = useQuery(orpc.getBoard.queryOptions())
 
@@ -50,10 +50,10 @@ export function NowLayer({
     return buildBoardSources({
       sources,
       boardId,
-      starredSourceInstanceIds,
-      sourceInstances,
+      starredSourceInstanceIds: starredInstanceIds,
+      sourceInstances: instances,
     })
-  }, [sources, boardId, starredSourceInstanceIds, sourceInstances])
+  }, [sources, boardId, starredInstanceIds, instances])
 
   const sourceIds = useMemo(() => {
     if (!sourceIdOrder) {

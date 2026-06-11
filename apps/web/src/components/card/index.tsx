@@ -11,7 +11,13 @@ import { orpc } from "@/lib/orpc"
 import { createSourceInstance } from "@/lib/source-cards"
 import { deleteStoredSourceParamValues, writeStoredSourceParamValues } from "@/lib/source-params"
 import { cn } from "@/lib/utils"
-import { selectIsSourceInstanceStarredAtom, sourceInstancesAtom, starredSourceInstanceIdsAtom } from "@/store/board"
+import {
+  deleteInstanceAtom,
+  instanceStarredAtom,
+  resetInstanceParamsAtom,
+  starInstanceAtom,
+  upsertInstanceAtom,
+} from "@/store/board"
 import { useExpandedPreview } from "../preview/expanded-preview-context"
 import { CardBack } from "./card-back"
 import { CardContext } from "./card-context"
@@ -34,10 +40,12 @@ export interface CardProps {
 
 function CardContent({ id, source, dragHandle, disableExpandedPreview = false, previewSelection }: CardProps) {
   const { isExpandedPreviewOpen, openExpandedPreview } = useExpandedPreview()
-  const isStarredAtom = useMemo(() => selectIsSourceInstanceStarredAtom(id), [id])
+  const isStarredAtom = useMemo(() => instanceStarredAtom(id), [id])
   const isStarred = useAtomValue(isStarredAtom)
-  const setStarredSourceInstanceIds = useSetAtom(starredSourceInstanceIdsAtom)
-  const setSourceInstances = useSetAtom(sourceInstancesAtom)
+  const upsertLocal = useSetAtom(upsertInstanceAtom)
+  const deleteLocal = useSetAtom(deleteInstanceAtom)
+  const resetLocalParams = useSetAtom(resetInstanceParamsAtom)
+  const starLocal = useSetAtom(starInstanceAtom)
   const upsertSourceInstance = useMutation(orpc.upsertSourceInstance.mutationOptions({ onError: () => {} }))
   const deleteSourceInstance = useMutation(orpc.deleteSourceInstance.mutationOptions({ onError: () => {} }))
   const setStarredSourceInstance = useMutation(orpc.setStarredSourceInstance.mutationOptions({ onError: () => {} }))
@@ -72,28 +80,23 @@ function CardContent({ id, source, dragHandle, disableExpandedPreview = false, p
 
     writeStoredSourceParamValues(forkedInstance.instanceId, savedParams)
     upsertSourceInstance.mutate(forkedInstance)
-    setSourceInstances(prev =>
-      prev.some(item => item.instanceId === forkedInstance.instanceId)
-        ? prev
-        : [...prev, forkedInstance],
-    )
+    upsertLocal(forkedInstance)
 
     if (isStarred) {
-      setStarredSourceInstanceIds(prev => prev.includes(forkedInstance.instanceId) ? prev : [...prev, forkedInstance.instanceId])
+      starLocal({ instanceId: forkedInstance.instanceId, starred: true })
       setStarredSourceInstance.mutate({ instanceId: forkedInstance.instanceId, starred: true })
     }
-  }, [source.sourceId, isStarred, savedParams, setSourceInstances, setStarredSourceInstance, setStarredSourceInstanceIds, upsertSourceInstance])
+  }, [source.sourceId, isStarred, savedParams, starLocal, setStarredSourceInstance, upsertLocal, upsertSourceInstance])
 
   const handleDelete = useCallback(() => {
     if (!source.isFork) {
       return
     }
 
-    setSourceInstances(prev => prev.filter(instance => instance.instanceId !== id))
-    setStarredSourceInstanceIds(prev => prev.filter(instanceId => instanceId !== id))
+    deleteLocal(id)
     deleteStoredSourceParamValues(id)
     deleteSourceInstance.mutate({ instanceId: id })
-  }, [deleteSourceInstance, source.isFork, id, setSourceInstances, setStarredSourceInstanceIds])
+  }, [deleteLocal, deleteSourceInstance, source.isFork, id])
 
   const handleSaveSourceParams = useCallback(() => {
     const nextParams = saveDraftParams()
@@ -105,39 +108,21 @@ function CardContent({ id, source, dragHandle, disableExpandedPreview = false, p
       createdAt: Date.now(),
     }
 
-    setSourceInstances(prev =>
-      prev.some(instance => instance.instanceId === id)
-        ? prev.map(instance => instance.instanceId === id ? { ...instance, params: nextParams } : instance)
-        : [...prev, nextInstance],
-    )
+    upsertLocal(nextInstance)
     upsertSourceInstance.mutate(nextInstance)
-  }, [source.sourceId, source.isFork, id, saveDraftParams, setSourceInstances, upsertSourceInstance])
+  }, [source.sourceId, source.isFork, id, saveDraftParams, upsertLocal, upsertSourceInstance])
 
   const handleResetSourceParams = useCallback(() => {
     resetDraftParams()
     resetSourceInstanceParams.mutate({ instanceId: id })
-
-    if (source.isFork) {
-      setSourceInstances(prev => prev.map(instance =>
-        instance.instanceId === id
-          ? { ...instance, params: {} }
-          : instance,
-      ))
-    } else {
-      setSourceInstances(prev => prev.filter(instance => instance.instanceId !== id))
-    }
-  }, [source.isFork, id, resetDraftParams, resetSourceInstanceParams, setSourceInstances])
+    resetLocalParams({ instanceId: id, isFork: source.isFork })
+  }, [source.isFork, id, resetDraftParams, resetLocalParams, resetSourceInstanceParams])
 
   const handleToggleStar = useCallback(() => {
     const nextIsStarred = !isStarred
-    setStarredSourceInstanceIds((prev) => {
-      if (prev.includes(id)) {
-        return prev.filter(instanceId => instanceId !== id)
-      }
-      return [...prev, id]
-    })
+    starLocal({ instanceId: id, starred: nextIsStarred })
     setStarredSourceInstance.mutate({ instanceId: id, starred: nextIsStarred })
-  }, [id, isStarred, setStarredSourceInstance, setStarredSourceInstanceIds])
+  }, [id, isStarred, starLocal, setStarredSourceInstance])
 
   const contextValue = useMemo(
     () => ({

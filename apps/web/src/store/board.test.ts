@@ -1,22 +1,25 @@
 import { createStore } from "jotai"
 import { describe, expect, it } from "vitest"
 import {
-  selectBoardSourceInstancesAtom,
-  selectBoardStarredSourceInstanceIdsAtom,
-  selectIsSourceInstanceStarredAtom,
-  sourceInstancesAtom,
-  starredSourceInstanceIdsAtom,
+  boardInstancesAtom,
+  boardStarIdsAtom,
+  deleteInstanceAtom,
+  instancesAtom,
+  instanceStarredAtom,
+  starIdsAtom,
+  starInstanceAtom,
+  upsertInstanceAtom,
 } from "./board"
 
 describe("board store selectors", () => {
   it("returns stable board selector atoms", () => {
-    expect(selectBoardSourceInstancesAtom("featured")).toBe(selectBoardSourceInstancesAtom("featured"))
-    expect(selectBoardStarredSourceInstanceIdsAtom("stars")).toBe(selectBoardStarredSourceInstanceIdsAtom("stars"))
+    expect(boardInstancesAtom("featured")).toBe(boardInstancesAtom("featured"))
+    expect(boardStarIdsAtom("stars")).toBe(boardStarIdsAtom("stars"))
   })
 
   it("does not notify featured board subscribers when only fork instances change", () => {
     const store = createStore()
-    const featuredSourceInstancesAtom = selectBoardSourceInstancesAtom("featured")
+    const featuredInstancesAtom = boardInstancesAtom("featured")
     const baseInstance = {
       instanceId: "github",
       sourceKey: "github",
@@ -33,46 +36,94 @@ describe("board store selectors", () => {
     }
     let notificationCount = 0
 
-    const unsubscribe = store.sub(featuredSourceInstancesAtom, () => {
+    const unsubscribe = store.sub(featuredInstancesAtom, () => {
       notificationCount += 1
     })
 
-    store.set(sourceInstancesAtom, [baseInstance])
+    store.set(instancesAtom, [baseInstance])
     expect(notificationCount).toBe(1)
-    expect(store.get(featuredSourceInstancesAtom)).toEqual([baseInstance])
+    expect(store.get(featuredInstancesAtom)).toEqual([baseInstance])
 
-    store.set(sourceInstancesAtom, [baseInstance, forkInstance])
+    store.set(instancesAtom, [baseInstance, forkInstance])
     expect(notificationCount).toBe(1)
-    expect(store.get(featuredSourceInstancesAtom)).toEqual([baseInstance])
+    expect(store.get(featuredInstancesAtom)).toEqual([baseInstance])
 
     unsubscribe()
   })
 
   it("notifies only when the selected star state changes", () => {
     const store = createStore()
-    const isGithubStarredAtom = selectIsSourceInstanceStarredAtom("github")
-    const featuredStarredSourceInstanceIdsAtom = selectBoardStarredSourceInstanceIdsAtom("featured")
+    const isGithubStarredAtom = instanceStarredAtom("github")
+    const featuredStarIdsAtom = boardStarIdsAtom("featured")
     let cardNotificationCount = 0
     let boardNotificationCount = 0
 
     const unsubscribeCard = store.sub(isGithubStarredAtom, () => {
       cardNotificationCount += 1
     })
-    const unsubscribeBoard = store.sub(featuredStarredSourceInstanceIdsAtom, () => {
+    const unsubscribeBoard = store.sub(featuredStarIdsAtom, () => {
       boardNotificationCount += 1
     })
 
-    store.set(starredSourceInstanceIdsAtom, ["v2ex"])
+    store.set(starIdsAtom, ["v2ex"])
     expect(cardNotificationCount).toBe(0)
     expect(boardNotificationCount).toBe(0)
     expect(store.get(isGithubStarredAtom)).toBe(false)
 
-    store.set(starredSourceInstanceIdsAtom, ["v2ex", "github"])
+    store.set(starIdsAtom, ["v2ex", "github"])
     expect(cardNotificationCount).toBe(1)
     expect(boardNotificationCount).toBe(0)
     expect(store.get(isGithubStarredAtom)).toBe(true)
 
     unsubscribeCard()
     unsubscribeBoard()
+  })
+
+  it("skips source instance notifications for idempotent upserts", () => {
+    const store = createStore()
+    const sourceInstance = {
+      instanceId: "github",
+      sourceKey: "github",
+      params: {},
+      isFork: false,
+      createdAt: 1,
+    }
+    let notificationCount = 0
+
+    const unsubscribe = store.sub(instancesAtom, () => {
+      notificationCount += 1
+    })
+
+    store.set(upsertInstanceAtom, sourceInstance)
+    expect(notificationCount).toBe(1)
+
+    store.set(upsertInstanceAtom, sourceInstance)
+    expect(notificationCount).toBe(1)
+
+    unsubscribe()
+  })
+
+  it("keeps star and delete writes idempotent", () => {
+    const store = createStore()
+    let starNotificationCount = 0
+
+    const unsubscribeStars = store.sub(starIdsAtom, () => {
+      starNotificationCount += 1
+    })
+
+    store.set(starInstanceAtom, { instanceId: "github", starred: true })
+    expect(starNotificationCount).toBe(1)
+
+    store.set(starInstanceAtom, { instanceId: "github", starred: true })
+    expect(starNotificationCount).toBe(1)
+
+    store.set(deleteInstanceAtom, "github")
+    expect(store.get(starIdsAtom)).toEqual([])
+    expect(starNotificationCount).toBe(2)
+
+    store.set(deleteInstanceAtom, "github")
+    expect(starNotificationCount).toBe(2)
+
+    unsubscribeStars()
   })
 })

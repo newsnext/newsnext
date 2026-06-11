@@ -17,7 +17,7 @@ import {
   THEME_MODE_KEY,
   THEME_VERSION_KEY,
 } from "@/lib/utils/swith-theme"
-import { sourceInstancesAtom, starredSourceInstanceIdsAtom } from "@/store/board"
+import { replaceInstancesAtom, replaceStarIdsAtom } from "@/store/board"
 
 // Initialize theme as soon as possible to avoid flicker
 if (isBrowser) {
@@ -34,8 +34,8 @@ interface AppProviderProps {
 }
 
 function SourceStateHydrator() {
-  const setSourceInstances = useSetAtom(sourceInstancesAtom)
-  const setStarredSourceInstanceIds = useSetAtom(starredSourceInstanceIdsAtom)
+  const replaceInstances = useSetAtom(replaceInstancesAtom)
+  const replaceStarIds = useSetAtom(replaceStarIdsAtom)
   const { data: session } = authClient.useSession()
   const { data } = useQuery(orpc.getSourceState.queryOptions({
     enabled: Boolean(session),
@@ -47,12 +47,12 @@ function SourceStateHydrator() {
       return
     }
 
-    setSourceInstances(data.sourceInstances)
-    setStarredSourceInstanceIds(data.starredSourceInstanceIds)
+    replaceInstances(data.sourceInstances)
+    replaceStarIds(data.starredSourceInstanceIds)
     data.sourceInstances.forEach((instance) => {
       writeStoredSourceParamValues(instance.instanceId, instance.params)
     })
-  }, [data, setSourceInstances, setStarredSourceInstanceIds])
+  }, [data, replaceInstances, replaceStarIds])
 
   return null
 }

@@ -19,7 +19,7 @@ import { buildBoardSources } from "@/lib/source-cards"
 import { resolveSourceDisplay } from "@/lib/source-display"
 import { getSavedSourceParamValues } from "@/lib/source-params"
 import { cn } from "@/lib/utils"
-import { sourceInstancesAtom, starredSourceInstanceIdsAtom } from "@/store/board"
+import { boardInstancesAtom, boardStarIdsAtom } from "@/store/board"
 import Card from "../card"
 import { PhForkDuotone, PhMagnifyingGlass, PhStarFill } from "../icons/ph"
 import "./index.css"
@@ -74,10 +74,6 @@ function SearchPreview({ item }: { item?: SearchItem }) {
 
 export function SearchDialog(): ReactNode {
   const [open, setOpen] = useState(false)
-  const [selectedItemId, setSelectedItemId] = useState("")
-  const starredSourceInstanceIds = useAtomValue(starredSourceInstanceIdsAtom)
-  const sourceInstances = useAtomValue(sourceInstancesAtom)
-  const { data: sources = [] } = useQuery(orpc.getBoard.queryOptions())
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -90,74 +86,6 @@ export function SearchDialog(): ReactNode {
     window.addEventListener("keydown", onKeyDown)
     return () => window.removeEventListener("keydown", onKeyDown)
   }, [])
-
-  const searchItems = useMemo<SearchItem[]>(() => {
-    if (sources.length === 0) {
-      return []
-    }
-
-    const featuredBoard = buildBoardSources({
-      sources,
-      boardId: "featured",
-      starredSourceInstanceIds,
-      sourceInstances,
-    })
-    const forksBoard = buildBoardSources({
-      sources,
-      boardId: "forks",
-      starredSourceInstanceIds,
-      sourceInstances,
-    })
-
-    return [
-      ...featuredBoard.ids.map((id) => {
-        const source = featuredBoard.map[id]
-        const params = getSavedSourceParamValues(source.id, source.params)
-        const display = resolveSourceDisplay(source, params)
-
-        return {
-          id,
-          category: categories[source.category],
-          source,
-          name: display.name,
-          title: display.title,
-          provider: source.provider,
-          isFork: false,
-          isStarred: starredSourceInstanceIds.includes(id),
-        } satisfies SearchItem
-      }),
-      ...forksBoard.ids.map((id) => {
-        const source = forksBoard.map[id]
-        const params = source.paramsValue ?? getSavedSourceParamValues(source.id, source.params)
-        const display = resolveSourceDisplay(source, params)
-
-        return {
-          id,
-          category: `${categories[source.category]} / Forked`,
-          source,
-          name: display.name,
-          title: display.title,
-          provider: source.provider,
-          isFork: true,
-          isStarred: starredSourceInstanceIds.includes(id),
-        } satisfies SearchItem
-      }),
-    ]
-  }, [sources, starredSourceInstanceIds, sourceInstances])
-
-  const searchGroups = useMemo(() => groupSearchItems(searchItems), [searchItems])
-  const selectedItem = useMemo(
-    () => searchItems.find(item => item.id === selectedItemId) ?? searchItems[0],
-    [searchItems, selectedItemId],
-  )
-
-  useEffect(() => {
-    if (!open) {
-      return
-    }
-
-    setSelectedItemId(prev => searchItems.some(item => item.id === prev) ? prev : (searchItems[0]?.id ?? ""))
-  }, [open, searchItems])
 
   return (
     <>
@@ -179,69 +107,144 @@ export function SearchDialog(): ReactNode {
         description="Search cards"
         className="search-dialog w-[80vw] h-[80vh] sm:max-w-180 max-h-143 top-1/2 -translate-y-1/2"
       >
-        <Command
-          value={selectedItem?.id}
-          onValueChange={setSelectedItemId}
-          disablePointerSelection
-          className={cn(`sprinkle-${selectedItem?.source.color ?? "theme"}-400`, "bg-transparent p-0 rounded-none")}
-        >
-          <CommandInput
-            autoFocus
-            placeholder="Search what you want"
-            className="py-3 placeholder:text-foreground/50"
-          />
-          <div className="flex flex-col md:flex-row md:items-stretch md:justify-between gap-2">
-            <CommandList className="flex h-125 max-h-125 flex-col gap-0 w-full pl-3 pt-3">
-              <CommandEmpty className="flex items-center justify-center py-8 text-sm opacity-70 whitespace-pre-wrap">
-                No cards found.
-              </CommandEmpty>
-              {searchGroups.map(group => (
-                <CommandGroup
-                  key={group.heading}
-                  heading={group.heading}
-                >
-                  {group.items.map(item => (
-                    <CommandItem
-                      key={item.id}
-                      className="justify-between gap-3 data-[selected=true]:bg-neutral-400/10"
-                      value={item.id}
-                      keywords={[
-                        item.name,
-                        item.title ?? "",
-                        item.provider ?? "",
-                        item.category,
-                        item.isFork ? "fork forked custom" : "featured recommend",
-                        item.isStarred ? "star starred" : "",
-                      ]}
-                    >
-                      <span className="flex items-center min-w-0 flex-1 gap-2">
-                        <span
-                          className="size-4 shrink-0 rounded-full bg-cover bg-center bg-no-repeat"
-                          aria-hidden="true"
-                          style={{
-                            backgroundImage: item.provider
-                              ? `url(https://s3.newsnext.pro/icons/${item.provider}.png)`
-                              : undefined,
-                          }}
-                        />
-                        <span className="shrink-0">{item.title || item.name}</span>
-                        <span className="min-w-0 truncate text-xs text-neutral-400/80">
-                          {item.title && item.name}
-                        </span>
-                      </span>
-                      <span className="ml-auto flex shrink-0 items-center gap-2 text-neutral-400/80">
-                        {item.isFork && <PhForkDuotone />}
-                        {item.isStarred && <PhStarFill />}
-                      </span>
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              ))}
-            </CommandList>
-            <SearchPreview item={selectedItem} />
-          </div>
-        </Command>
+        {open && <SearchDialogContent />}
       </CommandDialog>
     </>
+  )
+}
+
+function SearchDialogContent(): ReactNode {
+  const [selectedItemId, setSelectedItemId] = useState("")
+  const starredInstanceIds = useAtomValue(boardStarIdsAtom("stars"))
+  const instances = useAtomValue(boardInstancesAtom("stars"))
+  const { data: sources = [] } = useQuery(orpc.getBoard.queryOptions())
+
+  const searchItems = useMemo<SearchItem[]>(() => {
+    if (sources.length === 0) {
+      return []
+    }
+
+    const featuredBoard = buildBoardSources({
+      sources,
+      boardId: "featured",
+      starredSourceInstanceIds: starredInstanceIds,
+      sourceInstances: instances,
+    })
+    const forksBoard = buildBoardSources({
+      sources,
+      boardId: "forks",
+      starredSourceInstanceIds: starredInstanceIds,
+      sourceInstances: instances,
+    })
+
+    return [
+      ...featuredBoard.ids.map((id) => {
+        const source = featuredBoard.map[id]
+        const params = getSavedSourceParamValues(source.id, source.params)
+        const display = resolveSourceDisplay(source, params)
+
+        return {
+          id,
+          category: categories[source.category],
+          source,
+          name: display.name,
+          title: display.title,
+          provider: source.provider,
+          isFork: false,
+          isStarred: starredInstanceIds.includes(id),
+        } satisfies SearchItem
+      }),
+      ...forksBoard.ids.map((id) => {
+        const source = forksBoard.map[id]
+        const params = source.paramsValue ?? getSavedSourceParamValues(source.id, source.params)
+        const display = resolveSourceDisplay(source, params)
+
+        return {
+          id,
+          category: `${categories[source.category]} / Forked`,
+          source,
+          name: display.name,
+          title: display.title,
+          provider: source.provider,
+          isFork: true,
+          isStarred: starredInstanceIds.includes(id),
+        } satisfies SearchItem
+      }),
+    ]
+  }, [sources, starredInstanceIds, instances])
+
+  const searchGroups = useMemo(() => groupSearchItems(searchItems), [searchItems])
+  const selectedItem = useMemo(
+    () => searchItems.find(item => item.id === selectedItemId) ?? searchItems[0],
+    [searchItems, selectedItemId],
+  )
+
+  useEffect(() => {
+    setSelectedItemId(prev => searchItems.some(item => item.id === prev) ? prev : (searchItems[0]?.id ?? ""))
+  }, [searchItems])
+
+  return (
+    <Command
+      value={selectedItem?.id}
+      onValueChange={setSelectedItemId}
+      disablePointerSelection
+      className={cn(`sprinkle-${selectedItem?.source.color ?? "theme"}-400`, "bg-transparent p-0 rounded-none")}
+    >
+      <CommandInput
+        autoFocus
+        placeholder="Search what you want"
+        className="py-3 placeholder:text-foreground/50"
+      />
+      <div className="flex flex-col md:flex-row md:items-stretch md:justify-between gap-2">
+        <CommandList className="flex h-125 max-h-125 flex-col gap-0 w-full pl-3 pt-3">
+          <CommandEmpty className="flex items-center justify-center py-8 text-sm opacity-70 whitespace-pre-wrap">
+            No cards found.
+          </CommandEmpty>
+          {searchGroups.map(group => (
+            <CommandGroup
+              key={group.heading}
+              heading={group.heading}
+            >
+              {group.items.map(item => (
+                <CommandItem
+                  key={item.id}
+                  className="justify-between gap-3 data-[selected=true]:bg-neutral-400/10"
+                  value={item.id}
+                  keywords={[
+                    item.name,
+                    item.title ?? "",
+                    item.provider ?? "",
+                    item.category,
+                    item.isFork ? "fork forked custom" : "featured recommend",
+                    item.isStarred ? "star starred" : "",
+                  ]}
+                >
+                  <span className="flex items-center min-w-0 flex-1 gap-2">
+                    <span
+                      className="size-4 shrink-0 rounded-full bg-cover bg-center bg-no-repeat"
+                      aria-hidden="true"
+                      style={{
+                        backgroundImage: item.provider
+                          ? `url(https://s3.newsnext.pro/icons/${item.provider}.png)`
+                          : undefined,
+                      }}
+                    />
+                    <span className="shrink-0">{item.title || item.name}</span>
+                    <span className="min-w-0 truncate text-xs text-neutral-400/80">
+                      {item.title && item.name}
+                    </span>
+                  </span>
+                  <span className="ml-auto flex shrink-0 items-center gap-2 text-neutral-400/80">
+                    {item.isFork && <PhForkDuotone />}
+                    {item.isStarred && <PhStarFill />}
+                  </span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          ))}
+        </CommandList>
+        <SearchPreview item={selectedItem} />
+      </div>
+    </Command>
   )
 }
