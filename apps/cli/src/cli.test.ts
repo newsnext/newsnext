@@ -33,9 +33,9 @@ describe("newsnext cli", () => {
   it("renders source descriptors with provider-qualified ids", () => {
     expect(renderSourceTable([
       {
-        id: "default",
+        key: "default",
         provider: "hackernews",
-        name: "Hacker News",
+        providerTitle: "Hacker News",
         title: "Hottest",
         color: "orange",
         category: "others",

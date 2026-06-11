@@ -28,7 +28,7 @@ export type SourceLoader<TParams extends SourceParamSchemaMap = SourceParamSchem
  * Source configuration authored inside a provider
  */
 export interface SourceRegistration<TParams extends SourceParamSchemaMap = SourceParamSchemaMap> {
-  name: string
+  key: string
   title?: string
   params?: TParams
   color?: Color
@@ -48,7 +48,7 @@ export interface SourceDefinition<TParams extends SourceParamSchemaMap = SourceP
   icon?: string
   providerTitle: string
   provider: string
-  name: string
+  key: string
   title?: string
   params?: TParams
   color: Color
@@ -102,6 +102,6 @@ export type SourceDescriptor<TParams extends SourceParamSchemaMap = SourceParamS
  * Map of categories to source descriptors
  */
 export type SourcesByCategory = Record<CategoryId, {
-  name: string
+  key: string
   sources: SourceDescriptor[]
 }>

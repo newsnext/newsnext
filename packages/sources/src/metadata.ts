@@ -5,7 +5,7 @@ import type { SourceDescriptor } from "./typings/sources"
 export const sourceDescriptors: SourceDescriptor[] = [
   {
     "providerTitle": "Bilibili",
-    "name": "default",
+    "key": "default",
     "title": "热搜",
     "color": "blue",
     "type": "hottest",
@@ -15,7 +15,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
   },
   {
     "providerTitle": "Bilibili",
-    "name": "hot-video",
+    "key": "hot-video",
     "title": "热门视频",
     "color": "blue",
     "type": "hottest",
@@ -25,7 +25,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
   },
   {
     "providerTitle": "Bilibili",
-    "name": "ranking",
+    "key": "ranking",
     "title": "排行榜",
     "color": "blue",
     "type": "hottest",
@@ -35,7 +35,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
   },
   {
     "providerTitle": "CoolAPK",
-    "name": "default",
+    "key": "default",
     "title": "Today",
     "color": "green",
     "type": "hottest",
@@ -45,7 +45,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
   },
   {
     "providerTitle": "GitHub",
-    "name": "default",
+    "key": "default",
     "title": "Trending",
     "color": "slate",
     "type": "hottest",
@@ -55,7 +55,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
   },
   {
     "providerTitle": "Hacker News",
-    "name": "default",
+    "key": "default",
     "title": "Hottest",
     "color": "orange",
     "type": "hottest",
@@ -65,7 +65,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
   },
   {
     "providerTitle": "Hacker News",
-    "name": "newest",
+    "key": "newest",
     "title": "Newest",
     "color": "orange",
     "type": "timeline",
@@ -75,7 +75,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
   },
   {
     "providerTitle": "Hacker News",
-    "name": "show",
+    "key": "show",
     "title": "Show",
     "color": "orange",
     "category": "others",
@@ -84,7 +84,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
   },
   {
     "providerTitle": "Hacker News",
-    "name": "ask",
+    "key": "ask",
     "title": "Ask",
     "color": "orange",
     "category": "others",
@@ -93,7 +93,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
   },
   {
     "providerTitle": "HTML Parser",
-    "name": "default",
+    "key": "default",
     "title": "36 氪",
     "params": {
       "url": {
@@ -134,7 +134,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
   },
   {
     "providerTitle": "JSON",
-    "name": "default",
+    "key": "default",
     "title": "V2EX",
     "params": {
       "url": {
@@ -175,7 +175,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
   },
   {
     "providerTitle": "网易云音乐",
-    "name": "default",
+    "key": "default",
     "title": "排行榜",
     "params": {
       "id": {
@@ -210,7 +210,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
   },
   {
     "providerTitle": "NEWS NOW",
-    "name": "default",
+    "key": "default",
     "params": {
       "locale": {
         "type": "select",
@@ -261,7 +261,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
   },
   {
     "providerTitle": "RSS",
-    "name": "default",
+    "key": "default",
     "title": "PCBeta",
     "params": {
       "url": {
@@ -292,7 +292,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
   },
   {
     "providerTitle": "RSSHub",
-    "name": "default",
+    "key": "default",
     "title": "36 氪",
     "params": {
       "route": {
@@ -328,7 +328,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
   },
   {
     "providerTitle": "百度贴吧",
-    "name": "default",
+    "key": "default",
     "title": "热议",
     "color": "blue",
     "type": "hottest",
@@ -338,7 +338,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
   },
   {
     "providerTitle": "V2EX",
-    "name": "default",
+    "key": "default",
     "params": {
       "feeds": {
         "type": "multiselect",
@@ -376,7 +376,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
   },
   {
     "providerTitle": "微博",
-    "name": "default",
+    "key": "default",
     "color": "red",
     "type": "hottest",
     "category": "others",
@@ -385,7 +385,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
   },
   {
     "providerTitle": "雪球",
-    "name": "default",
+    "key": "default",
     "color": "blue",
     "type": "hottest",
     "category": "others",
@@ -394,7 +394,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
   },
   {
     "providerTitle": "联合早报",
-    "name": "default",
+    "key": "default",
     "color": "red",
     "type": "timeline",
     "category": "others",
@@ -403,7 +403,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
   },
   {
     "providerTitle": "知乎",
-    "name": "default",
+    "key": "default",
     "title": "全站热榜",
     "color": "blue",
     "type": "hottest",

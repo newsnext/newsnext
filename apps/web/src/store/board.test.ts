@@ -22,14 +22,14 @@ describe("board store selectors", () => {
     const featuredInstancesAtom = boardInstancesAtom("featured")
     const baseInstance = {
       instanceId: "github",
-      sourceKey: "github",
+      sourceId: "github",
       params: {},
       isFork: false,
       createdAt: 1,
     }
     const forkInstance = {
       instanceId: "github::fork:abc",
-      sourceKey: "github",
+      sourceId: "github",
       params: { tag: "react" },
       isFork: true,
       createdAt: 2,
@@ -83,7 +83,7 @@ describe("board store selectors", () => {
     const store = createStore()
     const sourceInstance = {
       instanceId: "github",
-      sourceKey: "github",
+      sourceId: "github",
       params: {},
       isFork: false,
       createdAt: 1,

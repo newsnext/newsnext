@@ -17,7 +17,7 @@ export class NewsNextInstance implements NewsNextDataInstance {
         return byProvider
       }
 
-      return a.name.localeCompare(b.name)
+      return a.key.localeCompare(b.key)
     })
   }
 

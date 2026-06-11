@@ -10,7 +10,7 @@ export default $provider({
   sources: [
     $source.html(
       {
-        name: "default",
+        key: "default",
         type: "timeline",
       },
       () => ({

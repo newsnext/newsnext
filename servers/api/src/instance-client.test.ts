@@ -24,7 +24,7 @@ describe("cachedNewsNextInstance", () => {
 function createTestSourceInstance(): NewsNextDataInstance {
   let loadCount = 0
   const source: PreparedInstanceSourceRequest<string[]>["source"] = {
-    name: "default",
+    key: "default",
     providerTitle: "Test",
     title: "Test",
     color: "blue",

@@ -40,7 +40,7 @@ export function $provider(
       const registeredSource: RegisteredSourceDefinition = {
         icon: provider.icon,
         providerTitle: source.providerTitle ?? provider.title,
-        name: source.name,
+        key: source.key,
         title: source.title,
         params: source.params,
         color: source.color ?? provider.color,
@@ -52,7 +52,7 @@ export function $provider(
         loader: source.loader,
       }
 
-      return [source.name, registeredSource]
+      return [source.key, registeredSource]
     }),
   ) as Record<string, RegisteredSourceDefinition>
 

@@ -4,7 +4,7 @@ import { stableStringify } from "@newsnext/shared/utils"
 
 export interface SourceInstance {
   instanceId: string
-  sourceKey: string
+  sourceId: string
   params: Record<string, unknown>
   isFork: boolean
   createdAt: number
@@ -15,24 +15,24 @@ type BoardSourceSource = Omit<SourceDescriptor, "params"> & {
 }
 
 function createBoardSource(source: BoardSourceSource): BoardSource {
-  const sourceId = source.provider ? `${source.provider}:${source.name}` : source.name
+  const sourceId = source.provider ? `${source.provider}:${source.key}` : source.key
   return {
     ...source,
     params: source.params as BoardSource["params"],
     id: sourceId,
     sourceId,
-    variantId: source.name,
+    variantId: source.key,
     isFork: false,
   }
 }
 
 export function createForkedInstance(
-  sourceKey: string,
+  sourceId: string,
   params: Record<string, unknown> = {},
 ): SourceInstance {
   return {
-    instanceId: `${sourceKey}::${crypto.randomUUID()}`,
-    sourceKey,
+    instanceId: `${sourceId}::${crypto.randomUUID()}`,
+    sourceId,
     params,
     isFork: true,
     createdAt: Date.now(),
@@ -62,13 +62,13 @@ export function buildBoardSources({
   const forkGroups = new Map<string, SourceInstance[]>()
 
   sourceInstances.forEach((instance) => {
-    if (!instance.isFork || !baseSourceMap[instance.sourceKey]) {
+    if (!instance.isFork || !baseSourceMap[instance.sourceId]) {
       return
     }
 
-    const currentForks = forkGroups.get(instance.sourceKey) ?? []
+    const currentForks = forkGroups.get(instance.sourceId) ?? []
     currentForks.push(instance)
-    forkGroups.set(instance.sourceKey, currentForks)
+    forkGroups.set(instance.sourceId, currentForks)
   })
 
   const mergedSources = baseSources.flatMap((source) => {
@@ -77,7 +77,7 @@ export function buildBoardSources({
       .map(instance => ({
         ...source,
         id: instance.instanceId,
-        sourceId: instance.sourceKey,
+        sourceId: instance.sourceId,
         paramsValue: instance.params,
         isFork: true,
       } satisfies BoardSource))

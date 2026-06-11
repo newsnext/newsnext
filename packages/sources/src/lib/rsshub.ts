@@ -8,7 +8,7 @@ export default $provider({
   sources: [
     $source.rssHub(
       {
-        name: "default",
+        key: "default",
         title: "36 氪",
         params: {
           route: {

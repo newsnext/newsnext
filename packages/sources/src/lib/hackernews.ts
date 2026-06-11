@@ -49,7 +49,7 @@ export default $provider({
   sources: [
     $source.html(
       {
-        name: "default",
+        key: "default",
         type: "hottest",
         title: "Hottest",
       },
@@ -57,7 +57,7 @@ export default $provider({
     ),
     $source.html(
       {
-        name: "newest",
+        key: "newest",
         type: "timeline",
         title: "Newest",
         home: "https://news.ycombinator.com/newest",
@@ -66,7 +66,7 @@ export default $provider({
     ),
     $source.html(
       {
-        name: "show",
+        key: "show",
         title: "Show",
         home: "https://news.ycombinator.com/show",
       },
@@ -74,7 +74,7 @@ export default $provider({
     ),
     $source.html(
       {
-        name: "ask",
+        key: "ask",
         title: "Ask",
         home: "https://news.ycombinator.com/ask",
       },

@@ -61,7 +61,7 @@ export default $provider({
   sources: [
     $source.json(
       {
-        name: "default",
+        key: "default",
         title: "排行榜",
         type: "hottest",
         home: getPlaylistHome(DEFAULT_PLAYLIST_ID),

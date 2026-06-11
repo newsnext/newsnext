@@ -41,7 +41,7 @@ export default $provider({
   sources: [
     $source(
       {
-        name: "default",
+        key: "default",
         params: {
           feeds: $multiSelectParam<FeedId>({
             title: "Feeds",

@@ -65,7 +65,7 @@ export const verification = sqliteTable("verification", {
 export const userSourceInstances = sqliteTable("user_source_instances", {
   userId: text().notNull().references(() => user.id, { onDelete: "cascade" }),
   instanceId: text().notNull(),
-  sourceKey: text().notNull(),
+  sourceId: text().notNull(),
   params: text({ mode: "json" }).$type<Record<string, unknown>>().notNull(),
   isFork: integer({ mode: "boolean" }).notNull().default(false),
   createdAt: integer().notNull(),
@@ -73,7 +73,7 @@ export const userSourceInstances = sqliteTable("user_source_instances", {
 }, table => [
   primaryKey({ columns: [table.userId, table.instanceId] }),
   index("user_source_instances_userId_idx").on(table.userId),
-  index("user_source_instances_sourceKey_idx").on(table.sourceKey),
+  index("user_source_instances_sourceId_idx").on(table.sourceId),
 ])
 
 export const starredSourceInstances = sqliteTable("starred_source_instances", {

@@ -16,7 +16,7 @@ const paramsSchema = z.record(z.string(), z.unknown())
 
 const sourceInstanceInputSchema = z.object({
   instanceId: z.string(),
-  sourceKey: z.string(),
+  sourceId: z.string(),
   params: paramsSchema,
   isFork: z.boolean(),
   createdAt: z.number().optional(),
@@ -44,8 +44,8 @@ type AdminSource = SourceDescriptor & {
   updatedAt: number
 }
 
-function getSourceDescriptorKey(source: Pick<SourceDescriptor, "provider" | "name">): string {
-  return source.provider ? `${source.provider}:${source.name}` : source.name
+function getSourceDescriptorKey(source: Pick<SourceDescriptor, "provider" | "key">): string {
+  return source.provider ? `${source.provider}:${source.key}` : source.key
 }
 
 function toAdminSource(source: SourceDescriptor): AdminSource {
@@ -53,7 +53,7 @@ function toAdminSource(source: SourceDescriptor): AdminSource {
   return {
     ...source,
     key,
-    sourceId: source.name,
+    sourceId: key,
     enabled: true,
     createdAt: 0,
     updatedAt: 0,
@@ -105,7 +105,7 @@ export const appRouter = {
     return {
       sourceInstances: instances.map(instance => ({
         instanceId: instance.instanceId,
-        sourceKey: instance.sourceKey,
+        sourceId: instance.sourceId,
         params: instance.params,
         isFork: instance.isFork,
         createdAt: instance.createdAt,
@@ -129,7 +129,7 @@ export const appRouter = {
           await tx.insert(userSourceInstances).values(input.sourceInstances.map(instance => ({
             userId,
             instanceId: instance.instanceId,
-            sourceKey: instance.sourceKey,
+            sourceId: instance.sourceId,
             params: instance.params,
             isFork: instance.isFork,
             createdAt: instance.createdAt ?? now,
@@ -159,7 +159,7 @@ export const appRouter = {
       await db.insert(userSourceInstances).values({
         userId,
         instanceId: input.instanceId,
-        sourceKey: input.sourceKey,
+        sourceId: input.sourceId,
         params: input.params,
         isFork: input.isFork,
         createdAt: input.createdAt ?? now,
@@ -167,7 +167,7 @@ export const appRouter = {
       }).onConflictDoUpdate({
         target: [userSourceInstances.userId, userSourceInstances.instanceId],
         set: {
-          sourceKey: input.sourceKey,
+          sourceId: input.sourceId,
           params: input.params,
           isFork: input.isFork,
           updatedAt: now,

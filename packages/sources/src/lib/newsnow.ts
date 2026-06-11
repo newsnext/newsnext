@@ -8,7 +8,7 @@ export default $provider({
   sources: [
     $source.html(
       {
-        name: "default",
+        key: "default",
         type: "timeline",
         params: {
           locale: $selectParam<"us" | "uk" | "ng" | "ro" | "it" | "ca" | "au">({

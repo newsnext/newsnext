@@ -8,7 +8,7 @@ export default $provider({
   sources: [
     $source.json(
       {
-        name: "default",
+        key: "default",
         title: "V2EX",
         params: {
           url: {

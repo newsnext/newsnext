@@ -143,15 +143,15 @@ async function executeCommand(command: CliCommand, context: CommandContext): Pro
 
 export function renderSourceTable(sources: SourceDescriptor[]): string {
   const rows = sources.map(source => ({
-    id: `${source.provider}:${source.id}`,
-    name: source.title ? `${source.name} - ${source.title}` : source.name,
+    id: `${source.provider}:${source.key}`,
+    key: source.title ? `${source.key} - ${source.title}` : source.key,
     category: source.category,
     type: source.type ?? "hottest",
   }))
 
   return renderTable([
-    ["Source", "Name", "Category", "Type"],
-    ...rows.map(row => [row.id, row.name, row.category, row.type]),
+    ["Source", "Key", "Category", "Type"],
+    ...rows.map(row => [row.id, row.key, row.category, row.type]),
   ])
 }
 

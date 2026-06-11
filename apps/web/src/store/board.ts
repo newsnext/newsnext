@@ -1,6 +1,6 @@
 import type { BoardType } from "@newsnext/shared/types"
 import type { Atom } from "jotai"
-import type { SourceInstance } from "@/lib/source-cards"
+import type { SourceInstance } from "../lib/source-cards"
 import { atom } from "jotai"
 import { atomWithStorage, selectAtom } from "jotai/utils"
 
@@ -24,7 +24,7 @@ function areInstanceArraysEqual(a: SourceInstance[], b: SourceInstance[]): boole
 
 function areInstancesEqual(a: SourceInstance, b: SourceInstance): boolean {
   return a.instanceId === b.instanceId
-    && a.sourceKey === b.sourceKey
+    && a.sourceId === b.sourceId
     && a.isFork === b.isFork
     && a.createdAt === b.createdAt
     && a.params === b.params

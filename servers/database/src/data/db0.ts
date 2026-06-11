@@ -72,7 +72,7 @@ async function prepareSchema(db: Database): Promise<void> {
     CREATE TABLE IF NOT EXISTS "user_source_instances" (
       userId TEXT NOT NULL,
       instanceId TEXT NOT NULL,
-      sourceKey TEXT NOT NULL,
+      sourceId TEXT NOT NULL,
       params TEXT NOT NULL,
       isFork INTEGER DEFAULT false NOT NULL,
       createdAt INTEGER NOT NULL,
@@ -82,7 +82,7 @@ async function prepareSchema(db: Database): Promise<void> {
     )
   `,
     `CREATE INDEX IF NOT EXISTS user_source_instances_userId_idx ON "user_source_instances" (userId)`,
-    `CREATE INDEX IF NOT EXISTS user_source_instances_sourceKey_idx ON "user_source_instances" (sourceKey)`,
+    `CREATE INDEX IF NOT EXISTS user_source_instances_sourceId_idx ON "user_source_instances" (sourceId)`,
     `
     CREATE TABLE IF NOT EXISTS "starred_source_instances" (
       userId TEXT NOT NULL,

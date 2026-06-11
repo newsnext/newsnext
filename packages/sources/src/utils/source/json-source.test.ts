@@ -107,7 +107,7 @@ describe("$jsonSourceLoader", () => {
 
     const source = $source.json(
       {
-        name: "test",
+        key: "test",
         params: {
           headers: {
             type: "text",

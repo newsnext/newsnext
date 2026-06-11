@@ -8,7 +8,7 @@ export default $provider({
   sources: [
     $source.html(
       {
-        name: "default",
+        key: "default",
         title: "36 氪",
         home: "https://www.36kr.com/newsflashes",
         params: {

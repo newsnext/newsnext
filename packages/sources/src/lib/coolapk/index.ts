@@ -22,7 +22,7 @@ export default $provider({
   sources: [
     $source.json(
       {
-        name: "default",
+        key: "default",
         type: "hottest",
         title: "Today",
       },

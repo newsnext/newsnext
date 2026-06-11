@@ -31,7 +31,7 @@ sortedFiles.forEach((file, index) => {
   // Remove src/ prefix and .ts extension, convert to relative import path
   const importPath = `./${file.replace(SRC_PREFIX_REGEX, "").replace(TS_EXTENSION_REGEX, "")}`
 
-  // Extract key name from path
+  // Extract key from path
   const pathParts = importPath.split("/")
   const key = pathParts[pathParts.length - 1] === "index"
     ? pathParts[pathParts.length - 2]
@@ -65,7 +65,7 @@ for (const [provider, providerDefinition] of Object.entries(providers)) {
     const { loader, ...meta } = source as any
     sourceDescriptors.push({
       ...meta,
-      name: meta.name || sourceId,
+      key: meta.key || sourceId,
       provider,
     })
   }

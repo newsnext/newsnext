@@ -14,7 +14,7 @@ interface GetSourceInput {
 
 interface SourceInstanceInput {
   instanceId: string
-  sourceKey: string
+  sourceId: string
   params: Record<string, unknown>
   isFork: boolean
   createdAt?: number
@@ -22,7 +22,7 @@ interface SourceInstanceInput {
 
 interface SourceInstanceState {
   instanceId: string
-  sourceKey: string
+  sourceId: string
   params: Record<string, unknown>
   isFork: boolean
   createdAt: number

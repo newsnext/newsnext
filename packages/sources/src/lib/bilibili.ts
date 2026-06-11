@@ -30,7 +30,7 @@ export default $provider({
   sources: [
     $source.json(
       {
-        name: "default",
+        key: "default",
         title: "热搜",
         type: "hottest",
       },
@@ -48,7 +48,7 @@ export default $provider({
     ),
     $source.json(
       {
-        name: "hot-video",
+        key: "hot-video",
         title: "热门视频",
         type: "hottest",
       },
@@ -75,7 +75,7 @@ export default $provider({
     ),
     $source.json(
       {
-        name: "ranking",
+        key: "ranking",
         title: "排行榜",
         type: "hottest",
       },

@@ -102,7 +102,7 @@ function CardContent({ id, source, dragHandle, disableExpandedPreview = false, p
     const nextParams = saveDraftParams()
     const nextInstance = {
       instanceId: id,
-      sourceKey: source.sourceId,
+      sourceId: source.sourceId,
       params: nextParams,
       isFork: source.isFork,
       createdAt: Date.now(),

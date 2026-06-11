@@ -8,7 +8,7 @@ export default $provider({
   sources: [
     $source.rss(
       {
-        name: "default",
+        key: "default",
         title: "PCBeta",
         params: {
           url: {
