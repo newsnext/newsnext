@@ -1,7 +1,7 @@
 import type { ReactNode } from "react"
 import type { BoardSource, NewsItem } from "@/typings/source"
 import { useMutation } from "@tanstack/react-query"
-import { useAtom } from "jotai"
+import { useAtomValue, useSetAtom } from "jotai"
 import { useInView } from "motion/react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { FlipAnimate } from "@/components/common/flip-animate"
@@ -11,7 +11,7 @@ import { orpc } from "@/lib/orpc"
 import { createSourceInstance } from "@/lib/source-cards"
 import { deleteStoredSourceParamValues, writeStoredSourceParamValues } from "@/lib/source-params"
 import { cn } from "@/lib/utils"
-import { sourceInstancesAtom, starredSourceInstanceIdsAtom } from "@/store/board"
+import { selectIsSourceInstanceStarredAtom, sourceInstancesAtom, starredSourceInstanceIdsAtom } from "@/store/board"
 import { useExpandedPreview } from "../preview/expanded-preview-context"
 import { CardBack } from "./card-back"
 import { CardContext } from "./card-context"
@@ -34,8 +34,10 @@ export interface CardProps {
 
 function CardContent({ id, source, dragHandle, disableExpandedPreview = false, previewSelection }: CardProps) {
   const { isExpandedPreviewOpen, openExpandedPreview } = useExpandedPreview()
-  const [starredSourceInstanceIds, setStarredSourceInstanceIds] = useAtom(starredSourceInstanceIdsAtom)
-  const [, setSourceInstances] = useAtom(sourceInstancesAtom)
+  const isStarredAtom = useMemo(() => selectIsSourceInstanceStarredAtom(id), [id])
+  const isStarred = useAtomValue(isStarredAtom)
+  const setStarredSourceInstanceIds = useSetAtom(starredSourceInstanceIdsAtom)
+  const setSourceInstances = useSetAtom(sourceInstancesAtom)
   const upsertSourceInstance = useMutation(orpc.upsertSourceInstance.mutationOptions({ onError: () => {} }))
   const deleteSourceInstance = useMutation(orpc.deleteSourceInstance.mutationOptions({ onError: () => {} }))
   const setStarredSourceInstance = useMutation(orpc.setStarredSourceInstance.mutationOptions({ onError: () => {} }))
@@ -65,7 +67,6 @@ function CardContent({ id, source, dragHandle, disableExpandedPreview = false, p
   //   normalRefetch()
   // }, [date, normalRefetch])
 
-  const isStarred = useMemo(() => starredSourceInstanceIds.includes(id), [id, starredSourceInstanceIds])
   const handleFork = useCallback(() => {
     const forkedInstance = createSourceInstance(source.sourceId, savedParams, true)
 

@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query"
 import { useCallback, useMemo } from "react"
 import { orpc } from "@/lib/orpc"
 // import { useLocalStorageCache } from "./use-local-storage-cache"
-import { consumeLatestSourceRefresh, useRefetch } from "./use-refetch"
+import { consumeLatestSourceRefresh, useSourceRefetch } from "./use-refetch"
 
 export interface UseSourceQueryOptions {
   sourceId: string
@@ -13,7 +13,7 @@ export interface UseSourceQueryOptions {
 
 // const STORAGE_PREFIX = "newsnext-source-cache"
 export function useSourceQuery({ sourceId, params, enabled = true }: UseSourceQueryOptions) {
-  const { refetch } = useRefetch()
+  const refetch = useSourceRefetch()
   const normalizedParams = useMemo(() => params ?? {}, [params])
   // type SourceData = Awaited<ReturnType<typeof orpc.getSource.call>>
   // const storageKey = `${STORAGE_PREFIX}/${sourceId}`

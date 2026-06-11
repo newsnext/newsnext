@@ -32,6 +32,35 @@ export function consumeLatestSourceRefresh(target: RefetchTarget): boolean {
   return true
 }
 
+export function useSourceRefetch() {
+  const queryClient = useQueryClient()
+
+  return useCallback(
+    async (...targets: RefetchTarget[]) => {
+      try {
+        const uniqueTargets = [...new Map(
+          targets.map(target => [getLatestSourceRefreshKey(target), target]),
+        ).values()]
+
+        uniqueTargets.forEach(markLatestSourceRefresh)
+
+        await Promise.all(
+          uniqueTargets.map(target =>
+            queryClient.invalidateQueries({
+              queryKey: orpc.getSource.queryKey({
+                input: { sourceId: target.sourceId, params: target.params ?? {} },
+              }),
+            }),
+          ),
+        )
+      } catch (e) {
+        console.error("Failed to refresh sources", e)
+      }
+    },
+    [queryClient],
+  )
+}
+
 export function useRefetch() {
   const queryClient = useQueryClient()
   const currentBoard = useAtomValue(currentBoardAtom)

@@ -2,16 +2,26 @@ import type { RefObject } from "react"
 import type { BoardSource } from "@/typings/source"
 import { useQuery } from "@tanstack/react-query"
 import { useAtomValue } from "jotai"
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { isMobile } from "react-device-detect"
 import { orpc } from "@/lib/orpc"
 import { buildBoardSources } from "@/lib/source-cards"
-import { sourceInstancesAtom, starredSourceInstanceIdsAtom } from "@/store/board"
+import { selectBoardSourceInstancesAtom, selectBoardStarredSourceInstanceIdsAtom } from "@/store/board"
 import { DesktopBoard } from "./desktop-board"
 import { MobileBoard } from "./mobile-board"
 
+const EMPTY_SOURCE_IDS: string[] = []
+const EMPTY_SOURCES_MAP: Record<string, BoardSource> = {}
+
+type NowLayerBoardId = "featured" | "forks" | "stars"
+
+interface SourceIdOrderState {
+  boardId: NowLayerBoardId
+  ids: string[]
+}
+
 interface NowLayerProps {
-  boardId?: "featured" | "forks" | "stars"
+  boardId?: NowLayerBoardId
   onSourceIdsChange?: (sourceIds: string[]) => void
   className?: string
   isScattered?: boolean
@@ -25,37 +35,45 @@ export function NowLayer({
   isScattered,
   containerRef,
 }: NowLayerProps) {
-  const [sourceIds, setSourceIds] = useState<string[]>([])
-  const [sourcesMap, setSourcesMap] = useState<Record<string, BoardSource>>({})
+  const [sourceIdOrderState, setSourceIdOrderState] = useState<SourceIdOrderState | null>(null)
+  const sourceIdOrder = sourceIdOrderState?.boardId === boardId ? sourceIdOrderState.ids : null
+  const starredSourceInstanceIdsAtom = useMemo(() => selectBoardStarredSourceInstanceIdsAtom(boardId), [boardId])
+  const sourceInstancesAtom = useMemo(() => selectBoardSourceInstancesAtom(boardId), [boardId])
   const starredSourceInstanceIds = useAtomValue(starredSourceInstanceIdsAtom)
   const sourceInstances = useAtomValue(sourceInstancesAtom)
 
   const { data: sources, isPending } = useQuery(orpc.getBoard.queryOptions())
 
-  const prevBoardIdRef = useRef(boardId)
-  if (prevBoardIdRef.current !== boardId) {
-    prevBoardIdRef.current = boardId
-    setSourceIds([])
-    setSourcesMap({})
-  }
-
-  useEffect(() => {
-    if (sources) {
-      const { ids, map } = buildBoardSources({
-        sources,
-        boardId,
-        starredSourceInstanceIds,
-        sourceInstances,
-      })
-      setSourceIds(ids)
-      setSourcesMap(map)
+  const { ids: boardSourceIds, map: sourcesMap } = useMemo(() => {
+    if (!sources) {
+      return { ids: EMPTY_SOURCE_IDS, map: EMPTY_SOURCES_MAP }
     }
+
+    return buildBoardSources({
+      sources,
+      boardId,
+      starredSourceInstanceIds,
+      sourceInstances,
+    })
   }, [sources, boardId, starredSourceInstanceIds, sourceInstances])
 
-  const handleSourceIdsChange = (newSourceIds: string[]) => {
-    setSourceIds(newSourceIds)
+  const sourceIds = useMemo(() => {
+    if (!sourceIdOrder) {
+      return boardSourceIds
+    }
+
+    const boardSourceIdSet = new Set(boardSourceIds)
+    const orderedIds = sourceIdOrder.filter(id => boardSourceIdSet.has(id))
+    const orderedIdSet = new Set(orderedIds)
+    const appendedIds = boardSourceIds.filter(id => !orderedIdSet.has(id))
+
+    return [...orderedIds, ...appendedIds]
+  }, [boardSourceIds, sourceIdOrder])
+
+  const handleSourceIdsChange = useCallback((newSourceIds: string[]) => {
+    setSourceIdOrderState({ boardId, ids: newSourceIds })
     onSourceIdsChange?.(newSourceIds)
-  }
+  }, [boardId, onSourceIdsChange])
 
   if (!isPending && boardId === "stars" && sourceIds.length === 0) {
     return (
