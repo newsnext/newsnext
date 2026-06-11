@@ -9,6 +9,11 @@ import {
 } from "./board"
 
 describe("board store selectors", () => {
+  it("returns stable board selector atoms", () => {
+    expect(selectBoardSourceInstancesAtom("featured")).toBe(selectBoardSourceInstancesAtom("featured"))
+    expect(selectBoardStarredSourceInstanceIdsAtom("stars")).toBe(selectBoardStarredSourceInstanceIdsAtom("stars"))
+  })
+
   it("does not notify featured board subscribers when only fork instances change", () => {
     const store = createStore()
     const featuredSourceInstancesAtom = selectBoardSourceInstancesAtom("featured")

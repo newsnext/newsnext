@@ -37,10 +37,8 @@ export function NowLayer({
 }: NowLayerProps) {
   const [sourceIdOrderState, setSourceIdOrderState] = useState<SourceIdOrderState | null>(null)
   const sourceIdOrder = sourceIdOrderState?.boardId === boardId ? sourceIdOrderState.ids : null
-  const starredSourceInstanceIdsAtom = useMemo(() => selectBoardStarredSourceInstanceIdsAtom(boardId), [boardId])
-  const sourceInstancesAtom = useMemo(() => selectBoardSourceInstancesAtom(boardId), [boardId])
-  const starredSourceInstanceIds = useAtomValue(starredSourceInstanceIdsAtom)
-  const sourceInstances = useAtomValue(sourceInstancesAtom)
+  const starredSourceInstanceIds = useAtomValue(selectBoardStarredSourceInstanceIdsAtom(boardId))
+  const sourceInstances = useAtomValue(selectBoardSourceInstancesAtom(boardId))
 
   const { data: sources, isPending } = useQuery(orpc.getBoard.queryOptions())
 

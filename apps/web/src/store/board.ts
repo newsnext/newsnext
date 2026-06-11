@@ -29,7 +29,7 @@ export function selectIsSourceInstanceStarredAtom(instanceId: string): Atom<bool
   )
 }
 
-export function selectBoardStarredSourceInstanceIdsAtom(boardId: BoardType): Atom<string[]> {
+function createBoardStarredSourceInstanceIdsAtom(boardId: BoardType): Atom<string[]> {
   return selectAtom(
     starredSourceInstanceIdsAtom,
     starredSourceInstanceIds => boardId === "stars"
@@ -39,7 +39,7 @@ export function selectBoardStarredSourceInstanceIdsAtom(boardId: BoardType): Ato
   )
 }
 
-export function selectBoardSourceInstancesAtom(boardId: BoardType): Atom<SourceInstance[]> {
+function createBoardSourceInstancesAtom(boardId: BoardType): Atom<SourceInstance[]> {
   return selectAtom(
     sourceInstancesAtom,
     (sourceInstances) => {
@@ -55,4 +55,24 @@ export function selectBoardSourceInstancesAtom(boardId: BoardType): Atom<SourceI
     },
     areSourceInstanceArraysEqual,
   )
+}
+
+const boardStarredSourceInstanceIdsAtoms: Record<BoardType, Atom<string[]>> = {
+  featured: createBoardStarredSourceInstanceIdsAtom("featured"),
+  forks: createBoardStarredSourceInstanceIdsAtom("forks"),
+  stars: createBoardStarredSourceInstanceIdsAtom("stars"),
+}
+
+const boardSourceInstancesAtoms: Record<BoardType, Atom<SourceInstance[]>> = {
+  featured: createBoardSourceInstancesAtom("featured"),
+  forks: createBoardSourceInstancesAtom("forks"),
+  stars: createBoardSourceInstancesAtom("stars"),
+}
+
+export function selectBoardStarredSourceInstanceIdsAtom(boardId: BoardType): Atom<string[]> {
+  return boardStarredSourceInstanceIdsAtoms[boardId]
+}
+
+export function selectBoardSourceInstancesAtom(boardId: BoardType): Atom<SourceInstance[]> {
+  return boardSourceInstancesAtoms[boardId]
 }
