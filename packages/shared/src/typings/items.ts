@@ -20,6 +20,7 @@ type RichText = Either<{
 export interface AdvancedIframe extends IframeHTMLAttributes<HTMLIFrameElement> {
   selector?: string
   blocked?: MaybeArray<string>
+  aspectRatio?: number
 }
 
 export interface NewsItem {

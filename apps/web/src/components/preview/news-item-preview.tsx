@@ -1,11 +1,11 @@
 import type { AdvancedIframe } from "@newsnext/shared/types"
-import type { ReactNode } from "react"
+import type { CSSProperties, ReactNode } from "react"
 import type { NewsItem } from "@/typings/source"
 import { extractPictures } from "@newsnext/shared/types"
 import { Button } from "@newsnext/ui/components/button"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@newsnext/ui/components/hover-card"
 import { useIsMobile } from "@newsnext/ui/hooks/use-mobile"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback } from "react"
 import { cn } from "@/lib/utils"
 import { useCard } from "../card/card-context"
 import { PhArrowsOutSimple } from "../icons/ph"
@@ -156,32 +156,24 @@ export function NewsItemPreviewContent({ item, className }: { item: NewsItem, cl
 
 function PreviewIframe({ iframe }: { iframe: AdvancedIframe | string }) {
   const props = typeof iframe === "string" ? { src: iframe } : iframe
-  const ref = useRef<HTMLIFrameElement>(null)
-  const [loaded, setLoaded] = useState(false)
 
   if (!props?.src) return null
 
-  useEffect(() => {
-    if (loaded && ref.current) {
-      const contentWindow = ref.current.contentWindow
-      console.log(contentWindow)
-    }
-  }, [props.src])
-
-  const { className, loading, width, height, ...rest } = props
+  const { className, loading, width, height, aspectRatio = 16 / 9, style, ...rest } = props
+  const shouldUseAspectRatio = height == null && style?.height == null && aspectRatio != null && aspectRatio > 0
+  const iframeStyle: CSSProperties | undefined = shouldUseAspectRatio
+    ? { ...style, aspectRatio, height: "auto" }
+    : style
 
   return (
     <iframe
-      ref={ref}
       {...rest}
       src={props.src}
       width={width ?? "100%"}
-      height={height ?? "320"}
-      className={cn("w-full rounded-3xl", className)}
+      height={height ?? (shouldUseAspectRatio ? undefined : "320")}
+      style={iframeStyle}
+      className={cn("w-full rounded-xl", className)}
       loading={loading ?? "lazy"}
-      onLoad={() => {
-        setLoaded(true)
-      }}
     />
   )
 }
