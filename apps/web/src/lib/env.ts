@@ -1,7 +1,7 @@
 const DEFAULT_DEV_API_BASE_URL = "http://localhost:4000/v1"
 
-const configuredApiBaseUrl =
-  globalThis.location.protocol === "chrome-extension:"
+const configuredApiBaseUrl
+  = globalThis.location.protocol === "chrome-extension:"
     ? import.meta.env.WXT_BASE_URL || import.meta.env.VITE_BASE_URL || DEFAULT_DEV_API_BASE_URL
     : import.meta.env.VITE_BASE_URL || (import.meta.env.DEV ? DEFAULT_DEV_API_BASE_URL : globalThis.location.origin)
 
