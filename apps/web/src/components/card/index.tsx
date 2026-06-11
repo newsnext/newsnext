@@ -17,6 +17,8 @@ import { CardBack } from "./card-back"
 import { CardContext } from "./card-context"
 import { CardFront } from "./card-front"
 
+const HOVER_PREVIEW_ENABLED = false
+
 export interface CardProps {
   id: string
   source: BoardSource
@@ -159,7 +161,7 @@ function CardContent({ id, source, dragHandle, disableExpandedPreview = false, p
       onFlip: () => setIsFlipped(prev => !prev),
       onOpenExpandedPreview: (item: NewsItem) => openExpandedPreview(id, source, item),
       canOpenExpandedPreview: !disableExpandedPreview,
-      canShowHoverPreview: !isExpandedPreviewOpen,
+      canShowHoverPreview: HOVER_PREVIEW_ENABLED && !isExpandedPreviewOpen,
       previewSelection,
       dragHandle,
       updatedTime,
