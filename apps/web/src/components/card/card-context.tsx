@@ -1,45 +1,24 @@
-import type { ReactNode } from "react"
-import type { BoardSource, NewsItem } from "@/typings/source"
-
+import type { NewsItem } from "@/typings/source"
 import { createContext, use } from "react"
 
-interface CardContextValue {
-  id: string
-  source: BoardSource
-  sourceParams: Record<string, unknown>
-  draftSourceParams: Record<string, unknown>
-  hasSourceParams: boolean
-  hasSourceParamChanges: boolean
-  items: NewsItem[]
-  isFetching: boolean
-  isStarred: boolean
-  isFork: boolean
-  onRefresh: () => void
-  onToggleStar: () => void
-  onFork: () => void
-  onDelete: () => void
-  onSourceParamChange: (key: string, value: unknown) => void
-  onSaveSourceParams: () => void
-  onResetSourceParams: () => void
-  onDiscardSourceParams: () => void
-  onFlip: () => void
+export interface CardPreviewContextValue {
   onOpenExpandedPreview: (item: NewsItem) => void
   canOpenExpandedPreview: boolean
   canShowHoverPreview: boolean
-  previewSelection?: {
-    selectedItemUrl?: string
-    onSelectItem: (item: NewsItem) => void
-  }
-  dragHandle?: ReactNode
-  updatedTime: number
 }
 
-export const CardContext = createContext<CardContextValue | null>(null)
+export const CardPreviewContext = createContext<CardPreviewContextValue | null>(null)
 
-export function useCard() {
-  const context = use(CardContext)
+export function useCardPreview(): CardPreviewContextValue {
+  const context = use(CardPreviewContext)
+
   if (!context) {
-    throw new Error("useCard must be used within CardProvider")
+    return {
+      onOpenExpandedPreview: () => {},
+      canOpenExpandedPreview: false,
+      canShowHoverPreview: false,
+    }
   }
+
   return context
 }
