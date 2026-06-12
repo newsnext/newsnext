@@ -1,6 +1,6 @@
 import type { BoardSource } from "@/typings/source"
 import { getFavicon } from "@newsnext/shared/utils"
-import { isIOS } from "react-device-detect"
+import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { cn } from "@/lib/utils"
 import { IconButton } from "../common/button"
 import { PhDotsSixVerticalDuotone } from "../icons/ph"
@@ -12,14 +12,16 @@ interface DragOverlayProps {
 export function DragOverlay({ source }: DragOverlayProps) {
   const { color, desc, icon, providerTitle, title, home } = source
   return (
-    <div
-      className={cn(
-        "flex flex-col p-3",
-        `bg-${color}-400/40`,
-        !isIOS && "rounded-3xl",
-      )}
-    >
-      <div className="flex justify-between items-center mx-1 gap-2">
+    <div className="relative flex flex-col p-3">
+      <SquircleBox
+        aria-hidden
+        radius="3xl"
+        className={cn(
+          "pointer-events-none absolute inset-0",
+          `bg-${color}-400/40`,
+        )}
+      />
+      <div className="relative flex justify-between items-center mx-1 gap-2">
         <div className="flex gap-2.5 items-center ml-1 min-w-0 flex-1">
           <img
             className="size-8 rounded-full bg-cover cursor-grabbing"

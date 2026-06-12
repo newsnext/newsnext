@@ -1,7 +1,6 @@
 import type { CardProps } from "./index"
 import type { BoardSource } from "@/typings/source"
 import { useCallback, useMemo } from "react"
-import { isIOS } from "react-device-detect"
 import { createRoot } from "react-dom/client"
 import { useSortable } from "@/hooks/use-sortable"
 import { cn } from "@/lib/utils"
@@ -19,7 +18,7 @@ export function DraggableCard({ id, source, ...props }: DraggableCardProps) {
   const onGenerateDragPreview = useCallback(
     ({ container, element }: { container: HTMLElement, element: HTMLElement }) => {
       container.style.width = `${element.clientWidth}px`
-      container.className = cn("bg-background", !isIOS && "rounded-3xl")
+      container.className = cn("bg-background")
 
       const root = createRoot(container)
       root.render(<DragOverlay source={source} />)
