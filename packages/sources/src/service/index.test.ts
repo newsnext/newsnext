@@ -1,5 +1,6 @@
 import type { RegisteredSourceDefinition } from "../typings"
 import { describe, expect, it } from "vitest"
+import neteaseMusic from "../lib/netease-music"
 import {
   normalizeSourceParams,
   parseSourceId,
@@ -97,6 +98,14 @@ describe("source service", () => {
 
     expect(normalizeSourceParams(sourceDefinition)).toEqual({
       headers: {},
+    })
+  })
+
+  it("normalizes NetEase Music playlist links to playlist IDs", () => {
+    expect(normalizeSourceParams(neteaseMusic.sources.default, {
+      id: "https://music.163.com/playlist?id=5059661515&uct2=U2FsdGVkX1+h604nouVzL3eBMasVMbAgGM76vxJxHfw=",
+    })).toEqual({
+      id: "5059661515",
     })
   })
 })

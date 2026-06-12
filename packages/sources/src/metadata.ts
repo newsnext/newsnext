@@ -176,28 +176,10 @@ export const sourceDescriptors: SourceDescriptor[] = [
   {
     "icon": "https://s3.newsnext.pro/icons/netease-music.png",
     "providerTitle": "网易云音乐",
-    "title": "排行榜",
+    "title": "飙升榜",
     "params": {
       "id": {
-        "type": "select",
-        "options": [
-          {
-            "label": "云音乐飙升榜",
-            "value": "19723756"
-          },
-          {
-            "label": "云音乐新歌榜",
-            "value": "3779629"
-          },
-          {
-            "label": "云音乐热歌榜",
-            "value": "3778678"
-          },
-          {
-            "label": "抖音排行榜",
-            "value": "2250011882"
-          }
-        ],
+        "type": "text",
         "default": "19723756",
         "title": "Playlist"
       }

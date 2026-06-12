@@ -1,4 +1,4 @@
-import { $selectParam } from "../utils/params"
+import { $textParam } from "../utils/params"
 import { $provider, $source } from "../utils/source"
 
 interface NeteaseArtist {
@@ -29,18 +29,20 @@ interface PlaylistResponse {
   playlist?: PlaylistPayload
 }
 
-const NETEASE_PLAYLIST_OPTIONS = [
-  { label: "云音乐飙升榜", value: "19723756" },
-  { label: "云音乐新歌榜", value: "3779629" },
-  { label: "云音乐热歌榜", value: "3778678" },
-  { label: "抖音排行榜", value: "2250011882" },
-] as const
-
-type NeteasePlaylistId = (typeof NETEASE_PLAYLIST_OPTIONS)[number]["value"]
-
-const DEFAULT_PLAYLIST_ID: NeteasePlaylistId = "19723756"
+const DEFAULT_PLAYLIST_ID = "19723756"
 
 const getPlaylistHome = (id: string): string => `https://music.163.com/#/playlist?id=${id}`
+
+const parsePlaylistId = (value: unknown): string => {
+  const input = String(value).trim()
+
+  if (/^\d+$/.test(input)) {
+    return input
+  }
+
+  const playlistId = input.match(/(?:[?#&]|^)id=(\d+)(?:&|$)/)?.[1]
+  return playlistId ?? input
+}
 
 const extractTracks = (payload: PlaylistResponse): NeteaseTrack[] => {
   const tracks = payload.result?.tracks ?? payload.playlist?.tracks ?? []
@@ -62,14 +64,15 @@ export default $provider({
     $source.json(
       {
         key: "default",
-        title: "排行榜",
+        title: "飙升榜",
         type: "hottest",
         home: getPlaylistHome(DEFAULT_PLAYLIST_ID),
         params: {
-          id: $selectParam<NeteasePlaylistId>({
-            options: [...NETEASE_PLAYLIST_OPTIONS],
+          id: $textParam({
             default: DEFAULT_PLAYLIST_ID,
             title: "Playlist",
+            parse: parsePlaylistId,
+            validate: value => /^\d+$/.test(value) || "Playlist must be a numeric ID",
           }),
         },
       },
