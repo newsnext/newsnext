@@ -115,12 +115,12 @@ export function ColorSwitch({ color, className }: { color: Color, className?: st
 }
 
 export function Info(props: PropsWithChildren<{
-  icon: React.ReactNode
+  icon?: React.ReactNode
   label: string
   className?: string
 }>) {
   return (
-    <div className={cn("flex min-h-6 w-full items-center justify-between gap-3 border-b border-border/10 pb-1 mb-1 last:mb-0 last:border-0", props.className)}>
+    <div className={cn("flex min-h-6 w-full items-center justify-between gap-3 mb-1 last:mb-0", props.className)}>
       <span className="flex gap-2 items-center shrink-0 text-muted-foreground">
         {props.icon}
         <span className="font-medium text-sm leading-none">{props.label}</span>

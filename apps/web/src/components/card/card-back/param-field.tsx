@@ -9,7 +9,6 @@ import {
   SelectValue,
 } from "@newsnext/ui/components/select"
 import { Switch } from "@newsnext/ui/components/switch"
-import { PhInfoDuotone } from "@/components/icons/ph"
 import { cn } from "@/lib/utils"
 import { EditableInput, editableSelectClassName, Info, NumberInput, SelectLikeValue, Text } from "./fields"
 
@@ -30,7 +29,7 @@ export function ParamField({
 
   if (param.type === "switch") {
     return (
-      <Info icon={<PhInfoDuotone />} label={param.title}>
+      <Info label={param.title}>
         <div className="flex items-center justify-end gap-3 px-2">
           <span className="text-xs text-muted-foreground">
             {currentValue ? "On" : "Off"}
@@ -52,7 +51,7 @@ export function ParamField({
 
     if (!editable) {
       return (
-        <Info icon={<PhInfoDuotone />} label={param.title}>
+        <Info label={param.title}>
           <SelectLikeValue>
             <span className="truncate text-sm">
               {selectedOption?.label ?? String(currentValue)}
@@ -63,7 +62,7 @@ export function ParamField({
     }
 
     return (
-      <Info icon={<PhInfoDuotone />} label={param.title}>
+      <Info label={param.title}>
         <Select
           value={String(currentValue)}
           onValueChange={nextValue => onChange(nextValue)}
@@ -91,14 +90,14 @@ export function ParamField({
 
     if (!editable) {
       return (
-        <Info icon={<PhInfoDuotone />} label={param.title}>
+        <Info label={param.title}>
           <Text text={selectedLabels.length > 0 ? selectedLabels.join(", ") : "None"} />
         </Info>
       )
     }
 
     return (
-      <Info icon={<PhInfoDuotone />} label={param.title}>
+      <Info label={param.title}>
         <div className="flex flex-wrap justify-end gap-1">
           {param.options.map((option) => {
             const isSelected = selectedValues.includes(option.value)
@@ -128,7 +127,7 @@ export function ParamField({
 
   if (param.type === "number") {
     return (
-      <Info icon={<PhInfoDuotone />} label={param.title}>
+      <Info label={param.title}>
         <NumberInput
           num={typeof currentValue === "number" ? currentValue : Number(currentValue ?? param.default)}
           editable={editable}
@@ -142,7 +141,7 @@ export function ParamField({
   }
 
   return (
-    <Info icon={<PhInfoDuotone />} label={param.title}>
+    <Info label={param.title}>
       <EditableInput
         text={String(currentValue ?? "")}
         editable={editable}

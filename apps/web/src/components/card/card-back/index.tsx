@@ -7,8 +7,6 @@ import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { useState } from "react"
 import {
   PhArrowCircleLeftDuotone,
-  PhInfoDuotone,
-  PhLinkDuotone,
   PhPencilCircleDuotone,
 } from "@/components/icons/ph"
 import { useRelativeTime } from "@/hooks/useRelativeTime"
@@ -149,7 +147,7 @@ export function CardBack({
             className="relative size-full rounded-2xl overflow-hidden"
           >
             <div
-              className="px-3 py-2 space-y-2"
+              className="px-3 py-2 space-y-4"
               onDoubleClick={(e) => {
                 e.stopPropagation() // Prevent flip on double click if that's a thing
                 if (!isFork) {
@@ -160,92 +158,93 @@ export function CardBack({
               }}
             >
               <div className="flex flex-col text-sm">
-                <div className="font-semibold mb-1 opacity-80">Information</div>
-                <Info icon={<PhInfoDuotone />} label="Provider Title">
+                <div className="mb-2">
+                  <span className="inline-block font-semibold opacity-80">Information</span>
+                </div>
+                <Info label="Provider Title">
                   <EditableInput text={previewProviderTitle} editable={canEdit} onChange={value => updateEditDraft({ providerTitle: value })} />
                 </Info>
 
-                <Info icon={<PhInfoDuotone />} label="Title">
+                <Info label="Title">
                   <EditableInput text={previewTitle || ""} editable={canEdit} onChange={value => updateEditDraft({ title: value })} />
                 </Info>
 
-                <Info icon={<PhInfoDuotone />} label="Description">
+                <Info label="Description">
                   <EditableInput text={previewDesc || ""} editable={canEdit} onChange={value => updateEditDraft({ desc: value })} />
                 </Info>
 
-                <Info icon={<PhLinkDuotone />} label="Home">
+                <Info label="Home">
                   <EditableInput text={previewHome || ""} editable={canEdit} onChange={value => updateEditDraft({ home: value })} />
                 </Info>
 
-                <Info icon={<PhLinkDuotone />} label="Icon">
+                <Info label="Icon">
                   <EditableInput text={`https://icons.duckduckgo.com/ip3/${new URL(previewHome || "http://localhost").hostname}.ico`} editable={false} />
                 </Info>
 
-                <Info icon={<PhLinkDuotone />} label="Color">
+                <Info label="Color">
                   <ColorSelector color={previewColor} editable={canEdit} onChange={value => updateEditDraft({ color: value })} />
                 </Info>
               </div>
 
-              <div className="flex flex-col text-sm pt-0.5">
-                <div className="flex justify-between items-center mb-1">
-                  <span className="font-semibold opacity-80">Parameters</span>
-                  <div className="flex gap-1.5">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      disabled={!canEdit || !hasSourceParamChanges}
-                      className={cn(`h-6 px-2 bg-${previewColor}-500/10 hover:bg-${previewColor}-500/20 text-${previewColor}-600 border-${previewColor}-200`)}
-                      onClick={(event) => {
-                        event.stopPropagation()
-                        onDiscardSourceParams()
-                      }}
-                    >
-                      Revert
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      disabled={!canEdit || !hasSourceParams}
-                      className={cn(`h-6 px-2 bg-${previewColor}-500/10 hover:bg-${previewColor}-500/20 text-${previewColor}-600 border-${previewColor}-200`)}
-                      onClick={(event) => {
-                        event.stopPropagation()
-                        onResetSourceParams()
-                      }}
-                    >
-                      Reset
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      disabled={!canEdit || !hasSourceParamChanges}
-                      className="h-6 px-2"
-                      onClick={(event) => {
-                        event.stopPropagation()
-                        onSaveSourceParams()
-                      }}
-                    >
-                      Save
-                    </Button>
+              {hasSourceParams && (
+                <div className="flex flex-col text-sm pt-0.5">
+                  <div className="mb-2 flex items-start justify-between">
+                    <span className="inline-block border-b border-border/60 pb-1 font-semibold opacity-80">Parameters</span>
+                    {canEdit && (
+                      <div className="flex gap-1.5">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={!hasSourceParamChanges}
+                          className={cn(`h-6 px-2 bg-${previewColor}-500/10 hover:bg-${previewColor}-500/20 text-${previewColor}-600 border-${previewColor}-200`)}
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            onDiscardSourceParams()
+                          }}
+                        >
+                          Revert
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={!hasSourceParams}
+                          className={cn(`h-6 px-2 bg-${previewColor}-500/10 hover:bg-${previewColor}-500/20 text-${previewColor}-600 border-${previewColor}-200`)}
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            onResetSourceParams()
+                          }}
+                        >
+                          Reset
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          disabled={!hasSourceParamChanges}
+                          className="h-6 px-2"
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            onSaveSourceParams()
+                          }}
+                        >
+                          Save
+                        </Button>
+                      </div>
+                    )}
                   </div>
+                  {params && Object.entries(params).map(([paramKey, param]) => (
+                    <ParamField
+                      key={paramKey}
+                      param={param}
+                      value={draftSourceParams[paramKey]}
+                      editable={canEdit}
+                      color={previewColor}
+                      onChange={nextValue => onSourceParamChange(paramKey, nextValue)}
+                    />
+                  ))}
                 </div>
-                {!hasSourceParams && (
-                  <div className="rounded-3xl border border-dashed border-border/50 px-3 py-2.5 text-sm text-muted-foreground">
-                    This source does not expose configurable parameters yet.
-                  </div>
-                )}
-                {params && Object.entries(params).map(([paramKey, param]) => (
-                  <ParamField
-                    key={paramKey}
-                    param={param}
-                    value={draftSourceParams[paramKey]}
-                    editable={canEdit}
-                    color={previewColor}
-                    onChange={nextValue => onSourceParamChange(paramKey, nextValue)}
-                  />
-                ))}
-              </div>
+              )}
             </div>
           </ScrollArea>
         </div>
