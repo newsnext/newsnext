@@ -44,7 +44,7 @@
     "@tanstack/react-query-devtools": "catalog:",
     "@tanstack/react-router-devtools": "catalog:",
     "@vitejs/plugin-react": "catalog:",
-    "react-doctor": "^0.5.1",
+    "react-doctor": "^0.5.8",
     "react-scan": "catalog:",
     "tailwindcss": "catalog:",
     "unplugin-icons": "catalog:",
