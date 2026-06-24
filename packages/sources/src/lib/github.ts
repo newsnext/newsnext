@@ -1,6 +1,43 @@
+import { $selectParam, $textParam } from "../utils/params"
 import { $provider, $source } from "../utils/source"
 
 const baseURL = new URL("https://github.com")
+
+const DATE_RANGE_OPTIONS = [
+  { label: "Today", value: "daily" },
+  { label: "This week", value: "weekly" },
+  { label: "This month", value: "monthly" },
+] as const
+
+type DateRange = (typeof DATE_RANGE_OPTIONS)[number]["value"]
+
+interface GitHubTrendingParams {
+  language: string
+  spokenLanguage: string
+  dateRange: DateRange
+}
+
+export function buildGitHubTrendingUrl({
+  language,
+  spokenLanguage,
+  dateRange,
+}: GitHubTrendingParams): string {
+  const normalizedLanguage = language.trim()
+  const normalizedSpokenLanguage = spokenLanguage.trim()
+  const url = new URL(
+    normalizedLanguage
+      ? `/trending/${encodeURIComponent(normalizedLanguage)}`
+      : "/trending",
+    baseURL,
+  )
+
+  url.searchParams.set("since", dateRange)
+  if (normalizedSpokenLanguage) {
+    url.searchParams.set("spoken_language_code", normalizedSpokenLanguage)
+  }
+
+  return url.toString()
+}
 
 export default $provider({
   title: "GitHub",
@@ -12,9 +49,26 @@ export default $provider({
         key: "default",
         title: "Trending",
         type: "hottest",
+        params: {
+          language: $textParam({
+            title: "Language",
+            description: "Programming language slug used by GitHub Trending, such as javascript, go, or rust.",
+            default: "",
+          }),
+          spokenLanguage: $textParam({
+            title: "Spoken Language",
+            description: "Repository description language code, such as en, zh, or ja.",
+            default: "",
+          }),
+          dateRange: $selectParam<DateRange>({
+            title: "Date range",
+            options: [...DATE_RANGE_OPTIONS],
+            default: "daily",
+          }),
+        },
       },
-      () => ({
-        url: "https://github.com/trending?spoken_language_code=",
+      params => ({
+        url: buildGitHubTrendingUrl(params),
         items: "main .Box div[data-hpc] > article",
         fields: {
           title: {

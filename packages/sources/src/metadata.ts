@@ -47,6 +47,39 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "icon": "https://s3.newsnext.pro/icons/github.png",
     "providerTitle": "GitHub",
     "title": "Trending",
+    "params": {
+      "language": {
+        "type": "text",
+        "title": "Language",
+        "description": "Programming language slug used by GitHub Trending, such as javascript, go, or rust.",
+        "default": ""
+      },
+      "spokenLanguage": {
+        "type": "text",
+        "title": "Spoken Language",
+        "description": "Repository description language code, such as en, zh, or ja.",
+        "default": ""
+      },
+      "dateRange": {
+        "type": "select",
+        "title": "Date range",
+        "options": [
+          {
+            "label": "Today",
+            "value": "daily"
+          },
+          {
+            "label": "This week",
+            "value": "weekly"
+          },
+          {
+            "label": "This month",
+            "value": "monthly"
+          }
+        ],
+        "default": "daily"
+      }
+    },
     "color": "slate",
     "type": "hottest",
     "category": "others",
