@@ -9,6 +9,8 @@ import Card from "../card"
 import { DraggableCard } from "../card/draggable-card"
 
 const ANIMATION_DURATION = 0.2 // 200ms
+const ENTRANCE_DELAY = 0.1
+const ENTRANCE_STAGGER = 0.1
 const SCATTER_STAGGER = 0.01
 
 interface ScatterVector {
@@ -32,6 +34,12 @@ interface ScatterItemCustom {
   vector?: ScatterVector
 }
 
+interface ScatterAnimationState {
+  requestId: number
+  vectors: Record<string, ScatterVector>
+  visibleSourceIds: string[]
+}
+
 interface DesktopBoardProps {
   sourceIds: string[]
   sourcesMap: Record<string, BoardSource>
@@ -53,9 +61,20 @@ export function DesktopBoard({
 }: DesktopBoardProps) {
   const [orderedSourceIds, setOrderedSourceIds] = useState(sourceIds)
   const initialOrderedSourceIdsRef = useRef(sourceIds)
-  const [scatterVectors, setScatterVectors] = useState<Record<string, ScatterVector>>({})
-  const [visibleScatterSourceIds, setVisibleScatterSourceIds] = useState<string[]>([])
+  const [scatterAnimationState, setScatterAnimationState] = useState<ScatterAnimationState>({
+    requestId: 0,
+    vectors: {},
+    visibleSourceIds: [],
+  })
   const hasScatteredRef = useRef(false)
+  const scatterRequestIdRef = useRef(0)
+  const previousIsScatteredRef = useRef(isScattered)
+  if (previousIsScatteredRef.current !== isScattered) {
+    previousIsScatteredRef.current = isScattered
+    if (isScattered) {
+      scatterRequestIdRef.current += 1
+    }
+  }
   if (isScattered) {
     hasScatteredRef.current = true
   }
@@ -64,6 +83,11 @@ export function DesktopBoard({
   const visibleSourceIds = useMemo(
     () => orderedSourceIds.filter(id => Boolean(sourcesMap[id])),
     [orderedSourceIds, sourcesMap],
+  )
+  const isScatterReady = Boolean(
+    isScattered
+    && scatterAnimationState.requestId === scatterRequestIdRef.current
+    && scatterAnimationState.visibleSourceIds.length > 0,
   )
 
   useEffect(() => {
@@ -181,8 +205,11 @@ export function DesktopBoard({
           y: (dy / length) * scale,
         }
       })
-      setScatterVectors(newVectors)
-      setVisibleScatterSourceIds(newVisibleSourceIds)
+      setScatterAnimationState({
+        requestId: scatterRequestIdRef.current,
+        vectors: newVectors,
+        visibleSourceIds: newVisibleSourceIds,
+      })
     }
 
     calculateVectors()
@@ -234,11 +261,13 @@ export function DesktopBoard({
             else items.delete(id)
           }}
           layout={!isScattered} // Disable layout animation during scatter to prevent conflict
+          initial="hidden"
+          animate={isScatterReady ? "scattered" : "visible"}
           custom={{
             index,
-            scatterIndex: visibleScatterSourceIds.indexOf(id),
+            scatterIndex: scatterAnimationState.visibleSourceIds.indexOf(id),
             hasScattered,
-            vector: scatterVectors[id],
+            vector: scatterAnimationState.vectors[id],
           }}
           transition={{
             type: "tween",
@@ -256,13 +285,18 @@ export function DesktopBoard({
                 x: 0,
                 scale: 1,
                 opacity: 1,
-                transition: hasScattered && !isVisibleScatterCard
-                  ? { duration: 0 }
+                transition: hasScattered
+                  ? isVisibleScatterCard
+                    ? {
+                        delay: scatterIndex * SCATTER_STAGGER,
+                        duration: ANIMATION_DURATION,
+                        type: "tween",
+                      }
+                    : { duration: 0 }
                   : {
-                      type: "spring",
-                      stiffness: 300,
-                      damping: 25,
-                      delay: (hasScattered ? scatterIndex : index) * SCATTER_STAGGER,
+                      delay: ENTRANCE_DELAY + index * ENTRANCE_STAGGER,
+                      duration: ANIMATION_DURATION,
+                      type: "tween",
                     },
               }
             },
