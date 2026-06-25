@@ -34,7 +34,7 @@ function NewsItemAnchor({ href, className, children, ...props }: NewsItemAnchorP
       href={href}
       target="_blank"
       rel="noreferrer"
-      className={className}
+      className={cn("visited:text-neutral-500 dark:visited:text-neutral-400", className)}
     >
       {children}
     </a>
