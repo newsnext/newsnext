@@ -16,7 +16,7 @@ interface Props {
   }
 }
 
-export function Hottest({ items, scrollRef, color, previewSelection }: Props) {
+export function Hottest({ items, scrollRef, previewSelection }: Props) {
   return (
     <VirtualList
       items={items}
