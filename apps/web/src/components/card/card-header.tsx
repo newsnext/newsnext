@@ -61,7 +61,7 @@ export function CardHeader({
             {displayProviderTitle && (
               <span
                 className={cn(
-                  "inline-block min-w-0 flex-1 truncate text-sm px-1 rounded-3xl text-center bg-background/50 opacity-80",
+                  "inline-block min-w-0 flex-1 truncate text-sm px-1.5 rounded-3xl text-center bg-background/50 opacity-80",
                   `text-${color}-400`,
                 )}
               >
