@@ -34,10 +34,10 @@ export function Timeline({ items, scrollRef, relativeUpdatedTime, color, preview
       scrollRef={scrollRef}
       estimateSize={50}
       className="relative z-0"
-      itemClassName="hover:bg-neutral-400/10 rounded-xl"
+      itemClassName=""
       renderItem={(item, index) => (
-        <div className="flex min-w-0 gap-0.5">
-          <div className="-ml-0.5 relative w-3.5 shrink-0 self-stretch" aria-hidden>
+        <div className={cn("relative min-w-0 pb-2", index === items.length - 1 && "pb-0")}>
+          <div className="pointer-events-none absolute inset-y-0 -ml-0.5 w-3.5" aria-hidden>
             <svg
               className="pointer-events-none absolute inset-0 h-full w-full"
               viewBox="0 0 12 100"
@@ -68,17 +68,20 @@ export function Timeline({ items, scrollRef, relativeUpdatedTime, color, preview
               />
             </svg>
           </div>
-          <div className={cn("min-w-0 flex-1 flex flex-col pb-1")}>
-            <div className="-ml-2.5 -mt-1">
-              <span className={cn("text-xs bg-neutral-400/10 py-0.5 px-1 rounded-3xl opacity-80")}>
-                {item.timestamp
-                  ? <RelativeTime date={item.timestamp!} />
-                  : relativeUpdatedTime}
-              </span>
+          <div className="flex min-w-0 gap-0.5 rounded-xl hover:bg-neutral-400/10">
+            <div className="-ml-0.5 w-3.5 shrink-0" aria-hidden />
+            <div className="min-w-0 flex flex-1 flex-col">
+              <div className="-ml-2.5 -mt-1">
+                <span className="rounded-3xl bg-neutral-400/10 px-1 py-0.5 text-xs opacity-80">
+                  {item.timestamp
+                    ? <RelativeTime date={item.timestamp!} />
+                    : relativeUpdatedTime}
+                </span>
+              </div>
+              <NewsItemLink item={item} previewSelection={previewSelection} className="pl-2">
+                <NewsItemSummary item={item} />
+              </NewsItemLink>
             </div>
-            <NewsItemLink item={item} previewSelection={previewSelection} className="pl-2">
-              <NewsItemSummary item={item} />
-            </NewsItemLink>
           </div>
         </div>
       )}
