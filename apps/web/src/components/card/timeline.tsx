@@ -34,9 +34,10 @@ export function Timeline({ items, scrollRef, relativeUpdatedTime, color, preview
       scrollRef={scrollRef}
       estimateSize={50}
       className="relative z-0"
+      itemClassName="hover:bg-neutral-400/10 rounded-xl"
       renderItem={(item, index) => (
-        <div className="flex min-w-0 gap-0.5 pr-1 rounded-xl hover:bg-neutral-400/10">
-          <div className="relative w-3.5 shrink-0 self-stretch" aria-hidden>
+        <div className="flex min-w-0 gap-0.5">
+          <div className="-ml-0.5 relative w-3.5 shrink-0 self-stretch" aria-hidden>
             <svg
               className="pointer-events-none absolute inset-0 h-full w-full"
               viewBox="0 0 12 100"
@@ -68,8 +69,8 @@ export function Timeline({ items, scrollRef, relativeUpdatedTime, color, preview
             </svg>
           </div>
           <div className={cn("min-w-0 flex-1 flex flex-col pb-1")}>
-            <div className="-ml-2.5">
-              <span className={cn("text-xs bg-neutral-400/10 py-0.5 px-1 rounded-3xl opacity-80", `bg-${color}-400/10`)}>
+            <div className="-ml-2.5 -mt-1">
+              <span className={cn("text-xs bg-neutral-400/10 py-0.5 px-1 rounded-3xl opacity-80")}>
                 {item.timestamp
                   ? <RelativeTime date={item.timestamp!} />
                   : relativeUpdatedTime}

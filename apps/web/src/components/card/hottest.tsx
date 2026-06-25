@@ -32,7 +32,7 @@ export function Hottest({ items, scrollRef, color, previewSelection }: Props) {
             "hover:bg-neutral-400/10 rounded-xl",
           )}
         >
-          <span className={cn("opacity-80 size-6 shrink-0 flex justify-center items-center rounded-full text-sm", `bg-${color}-400/10`)}>
+          <span className={cn("opacity-80 w-6 min-h-6 self-stretch shrink-0 flex justify-center items-center rounded-full text-sm", "bg-neutral-400/10")}>
             {index + 1}
           </span>
           <NewsItemSummary item={item} />
