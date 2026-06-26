@@ -2,16 +2,17 @@ import type { RefObject } from "react"
 import type { BoardSource } from "@/typings/source"
 import { useQuery } from "@tanstack/react-query"
 import { useAtomValue } from "jotai"
-import { useCallback, useMemo, useState } from "react"
+import { lazy, Suspense, useCallback, useMemo, useState } from "react"
 import { isMobile } from "react-device-detect"
 import { orpc } from "@/lib/orpc"
 import { buildBoardSources } from "@/lib/source-cards"
 import { boardInstancesAtom, boardStarIdsAtom } from "@/store/board"
-import { DesktopBoard } from "./desktop-board"
-import { MobileBoard } from "./mobile-board"
 
 const EMPTY_SOURCE_IDS: string[] = []
 const EMPTY_SOURCES_MAP: Record<string, BoardSource> = {}
+
+const DesktopBoard = lazy(() => import("./desktop-board").then(module => ({ default: module.DesktopBoard })))
+const MobileBoard = lazy(() => import("./mobile-board").then(module => ({ default: module.MobileBoard })))
 
 type NowLayerBoardId = "featured" | "forks" | "stars"
 
@@ -91,26 +92,30 @@ export function NowLayer({
 
   if (isMobile) {
     return (
-      <MobileBoard
-        key={boardId}
-        sourceIds={sourceIds}
-        sourcesMap={sourcesMap}
-        className={className}
-        isScattered={isScattered}
-      />
+      <Suspense fallback={null}>
+        <MobileBoard
+          key={boardId}
+          sourceIds={sourceIds}
+          sourcesMap={sourcesMap}
+          className={className}
+          isScattered={isScattered}
+        />
+      </Suspense>
     )
   }
 
   return (
-    <DesktopBoard
-      key={boardId}
-      sourceIds={sourceIds}
-      sourcesMap={sourcesMap}
-      isSortable={boardId === "forks" || boardId === "stars"}
-      className={className}
-      isScattered={isScattered}
-      containerRef={containerRef}
-      onSourceIdsChange={handleSourceIdsChange}
-    />
+    <Suspense fallback={null}>
+      <DesktopBoard
+        key={boardId}
+        sourceIds={sourceIds}
+        sourcesMap={sourcesMap}
+        isSortable={boardId === "forks" || boardId === "stars"}
+        className={className}
+        isScattered={isScattered}
+        containerRef={containerRef}
+        onSourceIdsChange={handleSourceIdsChange}
+      />
+    </Suspense>
   )
 }

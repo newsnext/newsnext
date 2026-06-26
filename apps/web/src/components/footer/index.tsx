@@ -1,4 +1,5 @@
 import { Logo } from "../icons/logo"
+import { WordmarkLogo } from "../icons/wordmark-logo"
 
 export function Footer(): React.JSX.Element {
   const year = new Date().getFullYear()
@@ -9,11 +10,7 @@ export function Footer(): React.JSX.Element {
     >
       <p className="leading-relaxed flex-center gap-1">
         <Logo className="size-4 text-theme-500" />
-        <span className="font-brand font-bold whitespace-nowrap cursor-pointer transition-opacity">
-          News
-          <span className="text-theme-500">N</span>
-          ext
-        </span>
+        <WordmarkLogo className="w-[4.6em] h-auto cursor-pointer transition-opacity" accentClassName="text-theme-500" />
         <span className="tabular-nums">
           ©
           {year}

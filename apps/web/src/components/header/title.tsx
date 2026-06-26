@@ -6,6 +6,7 @@ import { ThemeSelector } from "../common/theme-selector"
 import DynamicIsland from "../dynamic-island"
 import { Logo } from "../icons/logo"
 import { PhArrowFatUpDuotone } from "../icons/ph"
+import { WordmarkLogo } from "../icons/wordmark-logo"
 
 interface HeaderProgressProps {
   scrollContainerRef?: RefObject<HTMLElement | null>
@@ -93,11 +94,7 @@ function HeaderProgress({ scrollContainerRef }: HeaderProgressProps) {
                 transition={{ duration: 0.2 }}
               >
                 <Logo className="text-theme-500 size-5" />
-                <span className="text-xl font-brand font-bold whitespace-nowrap cursor-pointer transition-opacity">
-                  News
-                  <span className="text-theme-500">N</span>
-                  ext
-                </span>
+                <WordmarkLogo className="w-[4.6em] h-auto text-xl cursor-pointer transition-opacity" accentClassName="text-theme-500" />
               </m.div>
             )
           : (
@@ -110,7 +107,7 @@ function HeaderProgress({ scrollContainerRef }: HeaderProgressProps) {
                 transition={{ duration: 0.2 }}
               >
                 <PhArrowFatUpDuotone className="text-theme-400 size-5" />
-                <span className="text-xl font-brand font-bold whitespace-nowrap cursor-pointer transition-opacity">
+                <span className="text-xl font-bold whitespace-nowrap cursor-pointer transition-opacity">
                   Go to top
                 </span>
               </m.div>

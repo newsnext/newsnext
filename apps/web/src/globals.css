@@ -1,7 +1,21 @@
 @import "tailwindcss" source(".");
 @import "./styles/base.css";
 
-@source "../../../packages/ui/src";
+@source "../../../packages/ui/src/components/avatar.tsx";
+@source "../../../packages/ui/src/components/button.tsx";
+@source "../../../packages/ui/src/components/command.tsx";
+@source "../../../packages/ui/src/components/dialog.tsx";
+@source "../../../packages/ui/src/components/dropdown-menu.tsx";
+@source "../../../packages/ui/src/components/hover-card.tsx";
+@source "../../../packages/ui/src/components/input.tsx";
+@source "../../../packages/ui/src/components/input-group.tsx";
+@source "../../../packages/ui/src/components/label.tsx";
+@source "../../../packages/ui/src/components/scroll-area.tsx";
+@source "../../../packages/ui/src/components/select.tsx";
+@source "../../../packages/ui/src/components/separator.tsx";
+@source "../../../packages/ui/src/components/spinner.tsx";
+@source "../../../packages/ui/src/components/squircle.tsx";
+@source "../../../packages/ui/src/components/switch.tsx";
 
 @layer base {
   * {

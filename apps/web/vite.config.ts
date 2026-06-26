@@ -17,6 +17,38 @@ export default defineConfig(({ mode }) => {
     optimizeDeps: {
       force: false,
     },
+    build: {
+      rolldownOptions: {
+        output: {
+          manualChunks(id) {
+            if (!id.includes("node_modules")) {
+              return undefined
+            }
+
+            if (
+              /node_modules\/(?:\.bun\/)?react-dom@/.test(id)
+              || /node_modules\/(?:\.bun\/)?react@/.test(id)
+              || /node_modules\/(?:\.bun\/)?scheduler@/.test(id)
+              || /node_modules\/react-dom\//.test(id)
+              || /node_modules\/react\//.test(id)
+              || /node_modules\/scheduler\//.test(id)
+            ) {
+              return "vendor-react"
+            }
+
+            if (id.includes("@tanstack")) {
+              return "vendor-tanstack"
+            }
+
+            if (id.includes("motion") || id.includes("framer-motion")) {
+              return "vendor-motion"
+            }
+
+            return "vendor"
+          },
+        },
+      },
+    },
     plugins: [
       react(),
       Icons({
