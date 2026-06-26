@@ -12,6 +12,7 @@ import PhInfoDuotone from "~icons/ph/info-duotone"
 import PhLinkDuotone from "~icons/ph/link-duotone"
 import PhMagnifyingGlassDuotone from "~icons/ph/magnifying-glass-duotone"
 import PhPencilCircleDuotone from "~icons/ph/pencil-circle-duotone"
+import PhPictureInPictureDuotone from "~icons/ph/picture-in-picture-duotone"
 import PhStarDuotone from "~icons/ph/star-duotone"
 import PhStarFill from "~icons/ph/star-fill"
 import PhTrashDuotone from "~icons/ph/trash-duotone"
@@ -32,6 +33,7 @@ export {
   PhLinkDuotone,
   PhMagnifyingGlassDuotone as PhMagnifyingGlass,
   PhPencilCircleDuotone,
+  PhPictureInPictureDuotone,
   PhStarDuotone,
   PhStarFill,
   PhTrashDuotone,

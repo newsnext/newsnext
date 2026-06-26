@@ -13,6 +13,7 @@ import {
   PhArrowCounterClockwiseDuotone,
   PhCircleDashedDuotone,
   PhInfoDuotone,
+  PhPictureInPictureDuotone,
   PhStarDuotone,
   PhStarFill,
 } from "../icons/ph"
@@ -27,7 +28,11 @@ interface CardFrontProps {
   isFetching: boolean
   updatedTime: number
   onRefresh: () => void
-  onFlip: () => void
+  onFlip?: () => void
+  onOpenPictureInPicture?: () => void
+  isPictureInPictureOpen?: boolean
+  isPictureInPictureSupported?: boolean
+  actionsVariant?: "default" | "refresh-only"
   dragHandle?: ReactNode
   previewSelection?: {
     selectedItemUrl?: string
@@ -65,6 +70,10 @@ function CardFrontComponent({
   updatedTime,
   onRefresh,
   onFlip,
+  onOpenPictureInPicture,
+  isPictureInPictureOpen = false,
+  isPictureInPictureSupported = false,
+  actionsVariant = "default",
   dragHandle,
   previewSelection,
 }: CardFrontProps) {
@@ -102,14 +111,31 @@ function CardFrontComponent({
               >
                 {isFetching ? <PhCircleDashedDuotone /> : <PhArrowCounterClockwiseDuotone />}
               </IconButton>
-              <StarButton id={id} />
-              <IconButton
-                onClick={onFlip}
-                aria-label="Datail"
-              >
-                <PhInfoDuotone />
-              </IconButton>
-              {dragHandle}
+              {actionsVariant === "default" && (
+                <>
+                  <StarButton id={id} />
+                  {onOpenPictureInPicture && (
+                    <IconButton
+                      onClick={onOpenPictureInPicture}
+                      aria-label={isPictureInPictureOpen ? "Focus picture in picture" : "Open picture in picture"}
+                      title={isPictureInPictureSupported ? "Open picture in picture" : "Picture in picture is not supported"}
+                      disabled={!isPictureInPictureSupported}
+                      className={cn(isPictureInPictureOpen && "opacity-85")}
+                    >
+                      <PhPictureInPictureDuotone />
+                    </IconButton>
+                  )}
+                  {onFlip && (
+                    <IconButton
+                      onClick={onFlip}
+                      aria-label="Datail"
+                    >
+                      <PhInfoDuotone />
+                    </IconButton>
+                  )}
+                  {dragHandle}
+                </>
+              )}
             </>
           )}
         />

@@ -9,10 +9,18 @@ export interface UseSourceQueryOptions {
   sourceId: string
   params?: Record<string, unknown>
   enabled?: boolean
+  forceLatest?: boolean
+  refetchInterval?: number | false
 }
 
 // const STORAGE_PREFIX = "newsnext-source-cache"
-export function useSourceQuery({ sourceId, params, enabled = true }: UseSourceQueryOptions) {
+export function useSourceQuery({
+  sourceId,
+  params,
+  enabled = true,
+  forceLatest = false,
+  refetchInterval = false,
+}: UseSourceQueryOptions) {
   const refetch = useSourceRefetch()
   const normalizedParams = useMemo(() => params ?? {}, [params])
   // type SourceData = Awaited<ReturnType<typeof orpc.getSource.call>>
@@ -22,7 +30,7 @@ export function useSourceQuery({ sourceId, params, enabled = true }: UseSourceQu
   const { data, isFetching, isError, refetch: normalRefetch } = useQuery({
     queryKey: orpc.getSource.queryKey({ input: { sourceId, params: normalizedParams } }),
     queryFn: async () => {
-      if (consumeLatestSourceRefresh({ sourceId, params: normalizedParams })) {
+      if (forceLatest || consumeLatestSourceRefresh({ sourceId, params: normalizedParams })) {
         return orpc.getSource.call({ sourceId, params: normalizedParams, latest: true })
       }
       return orpc.getSource.call({ sourceId, params: normalizedParams })
@@ -34,6 +42,8 @@ export function useSourceQuery({ sourceId, params, enabled = true }: UseSourceQu
     refetchOnMount: false,
     refetchOnReconnect: false,
     refetchOnWindowFocus: true,
+    refetchInterval,
+    refetchIntervalInBackground: true,
     retry: false,
   })
 
