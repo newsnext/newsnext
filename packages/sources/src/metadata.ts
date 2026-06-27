@@ -280,6 +280,26 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "id": "json:default"
   },
   {
+    "icon": "https://s3.newsnext.pro/icons/linuxdo.png",
+    "providerTitle": "Linux.do",
+    "title": "Latest",
+    "color": "slate",
+    "type": "timeline",
+    "category": "tech",
+    "home": "https://linux.do",
+    "id": "linuxdo:latest"
+  },
+  {
+    "icon": "https://s3.newsnext.pro/icons/linuxdo.png",
+    "providerTitle": "Linux.do",
+    "title": "Hot",
+    "color": "slate",
+    "type": "hottest",
+    "category": "tech",
+    "home": "https://linux.do",
+    "id": "linuxdo:hot"
+  },
+  {
     "icon": "https://s3.newsnext.pro/icons/netease-music.png",
     "providerTitle": "网易云音乐",
     "title": "飙升榜",
