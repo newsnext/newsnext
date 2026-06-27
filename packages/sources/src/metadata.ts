@@ -83,6 +83,23 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "id": "coolapk:default"
   },
   {
+    "icon": "https://s3.newsnext.pro/icons/folo.png",
+    "providerTitle": "Folo",
+    "title": "Linux Do",
+    "params": {
+      "feedId": {
+        "type": "text",
+        "title": "Feed ID",
+        "default": "71931642168770560"
+      }
+    },
+    "color": "orange",
+    "type": "timeline",
+    "category": "others",
+    "home": "https://folo.is",
+    "id": "folo:default"
+  },
+  {
     "icon": "https://s3.newsnext.pro/icons/github.png",
     "providerTitle": "GitHub",
     "title": "Trending",
