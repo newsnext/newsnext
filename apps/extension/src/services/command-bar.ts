@@ -1,4 +1,5 @@
 import type { SourceResponse } from "@newsnext/shared/types"
+import { getFavicon } from "@newsnext/shared/utils"
 import { createProxyService, registerService } from "@webext-core/proxy-service"
 import { browser } from "wxt/browser"
 import { myFetch } from "@/lib/utils"
@@ -22,18 +23,6 @@ function parseGoogleSuggestions(payload: string): string[] {
     : []
 }
 
-function getFaviconURL(rawURL: string | undefined): string | undefined {
-  if (!rawURL) {
-    return undefined
-  }
-
-  try {
-    return `https://icons.duckduckgo.com/ip3/${new URL(rawURL).hostname}.ico`
-  } catch {
-    return undefined
-  }
-}
-
 function flattenBookmarks(tree: BookmarkTreeNode[]): BookmarkTreeNode[] {
   return tree.flatMap((item) => {
     if (item.children) {
@@ -52,7 +41,7 @@ function toSourceItem(item: BookmarkTreeNode | HistoryItem, category: string): S
     url: item.url ?? "",
     category,
     extra: {
-      icon: getFaviconURL(item.url),
+      icon: item.url ? getFavicon(item.url) : undefined,
     },
   }
 }

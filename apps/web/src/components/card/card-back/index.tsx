@@ -1,6 +1,7 @@
 import type { ReactNode } from "react"
 import type { SourceEditDraft } from "./types"
 import type { BoardSource } from "@/typings/source"
+import { getFavicon } from "@newsnext/shared/utils"
 import { Button } from "@newsnext/ui/components/button"
 import { ScrollArea } from "@newsnext/ui/components/scroll-area"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
@@ -178,7 +179,7 @@ export function CardBack({
                 </Info>
 
                 <Info label="Icon">
-                  <EditableInput text={`https://icons.duckduckgo.com/ip3/${new URL(previewHome || "http://localhost").hostname}.ico`} editable={false} />
+                  <EditableInput text={source.icon ?? (previewHome ? getFavicon(previewHome) : "")} editable={false} />
                 </Info>
 
                 <Info label="Color">
