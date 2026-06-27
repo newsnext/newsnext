@@ -80,7 +80,7 @@ export function Timeline({ items, scrollRef, relativeUpdatedTime, color, preview
                 </span>
               </div>
             )}
-            <NewsItemLink item={item} previewSelection={previewSelection} className="pl-2">
+            <NewsItemLink item={item} previewSelection={previewSelection} className="pl-1 flex">
               <NewsItemSummary item={item} />
             </NewsItemLink>
           </div>
