@@ -85,7 +85,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
   {
     "icon": "https://s3.newsnext.pro/icons/folo.png",
     "providerTitle": "Folo",
-    "title": "Linux Do",
+    "title": "Feed",
     "params": {
       "feedId": {
         "type": "text",
@@ -98,6 +98,23 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "category": "others",
     "home": "https://folo.is",
     "id": "folo:default"
+  },
+  {
+    "icon": "https://s3.newsnext.pro/icons/folo.png",
+    "providerTitle": "Folo",
+    "title": "List",
+    "params": {
+      "listId": {
+        "type": "text",
+        "title": "List ID",
+        "default": "68649150114432000"
+      }
+    },
+    "color": "orange",
+    "type": "timeline",
+    "category": "others",
+    "home": "https://folo.is",
+    "id": "folo:list"
   },
   {
     "icon": "https://s3.newsnext.pro/icons/github.png",

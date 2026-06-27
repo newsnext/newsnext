@@ -36,6 +36,26 @@ interface FoloResponse {
   data?: FoloDataItem[]
 }
 
+type FoloEntriesRequest = { feedId: string } | { listId: string }
+
+async function loadFoloEntries(body: FoloEntriesRequest): Promise<NewsItem[]> {
+  const res = await myFetch<FoloResponse>("https://api.folo.is/entries", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-app-name": "Folo Web",
+      "x-app-platform": "desktop/web",
+      "x-app-version": "1.10.0",
+    },
+    body: {
+      view: 0,
+      ...body,
+    },
+  })
+
+  return foloEntriesToNewsItems(res.data ?? [])
+}
+
 export function foloEntriesToNewsItems(items: FoloDataItem[]): NewsItem[] {
   const newsItems: NewsItem[] = []
 
@@ -96,7 +116,7 @@ export default $provider({
     $source(
       {
         key: "default",
-        title: "Linux Do",
+        title: "Feed",
         type: "timeline",
         category: "others",
         params: {
@@ -107,21 +127,24 @@ export default $provider({
         },
       },
       async ({ feedId }) => {
-        const res = await myFetch<FoloResponse>("https://api.folo.is/entries", {
-          method: "POST",
-          headers: {
-            "content-type": "application/json",
-            "x-app-name": "Folo Web",
-            "x-app-platform": "desktop/web",
-            "x-app-version": "1.10.0",
-          },
-          body: {
-            view: 0,
-            feedId,
-          },
-        })
-
-        return foloEntriesToNewsItems(res.data ?? [])
+        return loadFoloEntries({ feedId })
+      },
+    ),
+    $source(
+      {
+        key: "list",
+        title: "List",
+        type: "timeline",
+        category: "others",
+        params: {
+          listId: $textParam({
+            title: "List ID",
+            default: "68649150114432000",
+          }),
+        },
+      },
+      async ({ listId }) => {
+        return loadFoloEntries({ listId })
       },
     ),
   ],
