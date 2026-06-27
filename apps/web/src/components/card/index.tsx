@@ -75,13 +75,17 @@ function CardContent({ id, source, dragHandle, disableExpandedPreview = false, p
     initialValues: source.paramsValue,
   })
 
-  const { items, refetch, isFetching, updatedTime } = useSourceQuery({
+  const { items, refetch, isFetching, isError, errorMessage, updatedTime } = useSourceQuery({
     sourceId: source.sourceId,
     params: savedParams,
+    isLocalOnly: source.isLocalOnly,
     forceLatest: !!pictureInPictureWindow,
     refetchInterval: pictureInPictureWindow ? PICTURE_IN_PICTURE_REFRESH_INTERVAL : false,
   })
   const isPictureInPictureSupported = typeof window !== "undefined" && !!window.documentPictureInPicture
+  const sourceErrorMessage = isError
+    ? `Failed to load source${errorMessage ? `: ${errorMessage}` : "."}`
+    : undefined
 
   // useEffect(() => {
   //   normalRefetch()
@@ -122,14 +126,18 @@ function CardContent({ id, source, dragHandle, disableExpandedPreview = false, p
     }
 
     upsertLocal(nextInstance)
-    upsertSourceInstance.mutate(nextInstance)
-  }, [source.sourceId, source.isFork, id, saveDraftParams, upsertLocal, upsertSourceInstance])
+    if (!source.isLocalOnly) {
+      upsertSourceInstance.mutate(nextInstance)
+    }
+  }, [source.sourceId, source.isFork, source.isLocalOnly, id, saveDraftParams, upsertLocal, upsertSourceInstance])
 
   const handleResetSourceParams = useCallback(() => {
     resetDraftParams()
-    resetSourceInstanceParams.mutate({ instanceId: id })
+    if (!source.isLocalOnly) {
+      resetSourceInstanceParams.mutate({ instanceId: id })
+    }
     resetLocalParams({ instanceId: id, isFork: source.isFork })
-  }, [source.isFork, id, resetDraftParams, resetLocalParams, resetSourceInstanceParams])
+  }, [source.isFork, source.isLocalOnly, id, resetDraftParams, resetLocalParams, resetSourceInstanceParams])
 
   const handleOpenExpandedPreview = useCallback((item: NewsItem) => {
     openExpandedPreview(id, source, item)
@@ -176,6 +184,7 @@ function CardContent({ id, source, dragHandle, disableExpandedPreview = false, p
           source={source}
           items={items}
           isFetching={isFetching}
+          sourceErrorMessage={sourceErrorMessage}
           updatedTime={updatedTime}
           onRefresh={refetch}
           onFlip={handleFlip}
@@ -210,6 +219,7 @@ function CardContent({ id, source, dragHandle, disableExpandedPreview = false, p
                 source={source}
                 items={items}
                 isFetching={isFetching}
+                sourceErrorMessage={sourceErrorMessage}
                 updatedTime={updatedTime}
                 onRefresh={refetch}
                 actionsVariant="refresh-only"

@@ -120,7 +120,7 @@ export function CardBack({
               >
                 <PhPencilCircleDuotone className={cn(canEdit && "text-primary", !isFork && "opacity-40")} />
               </IconButton>
-              <DeleteForkButton id={id} isFork={isFork} />
+              <DeleteForkButton id={id} isFork={isFork} isLocalOnly={source.isLocalOnly} />
               <IconButton
                 onClick={(e) => {
                   e.stopPropagation()

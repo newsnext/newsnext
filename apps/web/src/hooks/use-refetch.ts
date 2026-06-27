@@ -3,6 +3,7 @@ import { useStore } from "jotai"
 import { useCallback } from "react"
 import { orpc } from "@/lib/orpc"
 import { buildBoardSources, buildSourceRequestKey } from "@/lib/source-cards"
+import { getDefaultSourceMode } from "@/lib/source-mode"
 import { getSavedSourceParamValues } from "@/lib/source-params"
 import { boardInstancesAtom, boardStarIdsAtom, currentBoardAtom } from "@/store/board"
 
@@ -73,6 +74,11 @@ export function useRefetch() {
    * Refresh all sources in the current board.
    */
   const refetchAll = useCallback(async () => {
+    if (getDefaultSourceMode() === "local") {
+      await queryClient.invalidateQueries({ queryKey: ["local-source"] })
+      return
+    }
+
     try {
       const currentBoard = store.get(currentBoardAtom)
       const starredInstanceIds = store.get(boardStarIdsAtom(currentBoard))
