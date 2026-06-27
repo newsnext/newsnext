@@ -13,6 +13,7 @@ import { cn } from "@newsnext/ui/lib/utils"
 import { LogOut } from "lucide-react"
 import { useEffect, useState } from "react"
 import { authClient, signInWithProvider } from "@/lib/auth-client"
+import { DEFAULT_BOARD_KEY } from "@/lib/board-default"
 import {
   handleThemeModeSwitch,
   handleThemeVersionSwitch,
@@ -24,7 +25,6 @@ import { ThemeSelector } from "../common/theme-selector"
 import { PhGithubLogoDuotone, PhGoogleLogoDuotone } from "../icons/ph"
 
 const SETTINGS_TAB_KEY = "newsnext-settings-tab"
-const DEFAULT_BOARD_KEY = "newsnext-default-board"
 export type SettingsTabId = "appearance" | "general" | "account"
 
 export function SettingsModal({
@@ -112,6 +112,14 @@ function isSettingsTabId(value: string | null): value is SettingsTabId {
   return value === "appearance" || value === "general" || value === "account"
 }
 
+type DefaultBoardOption = "featured" | "forks" | "stars" | "last"
+
+function readDefaultBoardOption(value: string | null): DefaultBoardOption {
+  if (value === "recommend") return "featured"
+  if (value === "featured" || value === "forks" || value === "stars" || value === "last") return value
+  return "last"
+}
+
 function AppearanceSettings() {
   const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
     const stored = localStorage.getItem(THEME_MODE_KEY) as ThemeMode | null
@@ -174,7 +182,9 @@ function AppearanceSettings() {
 }
 
 function GeneralSettings() {
-  const [defaultBoard, setDefaultBoard] = useState("featured")
+  const [defaultBoard, setDefaultBoard] = useState<DefaultBoardOption>(() => {
+    return readDefaultBoardOption(localStorage.getItem(DEFAULT_BOARD_KEY))
+  })
 
   const TABS = [
     { label: "Featured", value: "featured" },
@@ -183,14 +193,7 @@ function GeneralSettings() {
     { label: "Last Used", value: "last" },
   ] as const
 
-  useEffect(() => {
-    const saved = localStorage.getItem(DEFAULT_BOARD_KEY)
-    if (saved) {
-      setDefaultBoard(saved === "recommend" ? "featured" : saved)
-    }
-  }, [])
-
-  const handleDefaultBoardChange = (value: string) => {
+  const handleDefaultBoardChange = (value: DefaultBoardOption) => {
     setDefaultBoard(value)
     localStorage.setItem(DEFAULT_BOARD_KEY, value)
   }
