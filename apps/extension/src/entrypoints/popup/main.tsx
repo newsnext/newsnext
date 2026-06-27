@@ -1,9 +1,8 @@
 import type { NewsItem, SourceDescriptor } from "@newsnext/sources/typings"
-import type { LoadSourceResponse } from "../background"
 import { sourceDescriptors } from "@newsnext/sources/metadata"
 import React from "react"
 import ReactDOM from "react-dom/client"
-import { browser } from "wxt/browser"
+import { createBackgroundClient } from "@/lib/background-client"
 import "./style.css"
 
 interface SourceRunState {
@@ -29,18 +28,15 @@ function getErrorMessage(error: unknown): string {
 }
 
 async function loadSourceItems(sourceId: string): Promise<NewsItem[]> {
-  const response = await browser.runtime.sendMessage({
-    type: "load-source",
+  const backgroundClient = createBackgroundClient()
+
+  if (!backgroundClient) {
+    throw new Error("Background source runner is not available")
+  }
+
+  const response = await backgroundClient.loadSource({
     sourceId,
-  }) as LoadSourceResponse | undefined
-
-  if (!response) {
-    throw new Error("Background source runner did not respond")
-  }
-
-  if (!response.ok) {
-    throw new Error(response.error)
-  }
+  })
 
   return response.items
 }
@@ -126,7 +122,7 @@ function Popup(): React.JSX.Element {
           <ol className="popup__items">
             {runState.items.slice(0, 12).map(item => (
               <li key={item.url}>
-                <a href={item.mobileUrl ?? item.url} target="_blank" rel="noreferrer">
+                <a href={item.url} target="_blank" rel="noreferrer">
                   {item.title}
                 </a>
                 {item.inline?.text && <p>{item.inline.text}</p>}

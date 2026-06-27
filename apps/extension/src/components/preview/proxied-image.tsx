@@ -1,22 +1,16 @@
 import { useCallback, useEffect, useState } from "react"
-import { getApiUrl } from "@/lib/env"
 
-function getProxiedImageUrl(url: string): string {
-  return getApiUrl(`/p/${encodeURIComponent(url)}`)
-}
-
-interface ProxiedImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
+interface ProxiedImageProps extends Omit<React.ImgHTMLAttributes<HTMLImageElement>, "onClick" | "src"> {
   src: string
   href?: string
   delay?: number
+  onClick?: React.MouseEventHandler<HTMLAnchorElement | HTMLButtonElement>
 }
 
 export function ProxiedImage({ src, href, onError, onClick, delay, ...props }: ProxiedImageProps) {
   const [failedSrc, setFailedSrc] = useState<string | null>(null)
   const [readySrc, setReadySrc] = useState(delay ? "" : src)
-  const proxiedSrc = getProxiedImageUrl(src)
-  const imgSrc = failedSrc === src ? proxiedSrc : src
-  const failed = failedSrc === proxiedSrc
+  const failed = failedSrc === src
   const shouldLoad = !delay || readySrc === src
 
   useEffect(() => {
@@ -29,27 +23,9 @@ export function ProxiedImage({ src, href, onError, onClick, delay, ...props }: P
   }, [delay, shouldLoad, src])
 
   const handleError = useCallback((e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-    setFailedSrc(imgSrc)
+    setFailedSrc(src)
     onError?.(e)
-  }, [imgSrc, onError])
-
-  const handleClick = useCallback((e: React.MouseEvent<HTMLImageElement>) => {
-    if (href) {
-      e.preventDefault()
-      e.stopPropagation()
-      window.open(href, "_blank", "noreferrer")
-    }
-    onClick?.(e)
-  }, [href, onClick])
-
-  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLImageElement>) => {
-    if (e.key !== "Enter" && e.key !== " ") {
-      return
-    }
-
-    e.preventDefault()
-    e.currentTarget.click()
-  }, [])
+  }, [src, onError])
 
   if (failed) {
     return null
@@ -66,18 +42,37 @@ export function ProxiedImage({ src, href, onError, onClick, delay, ...props }: P
     )
   }
 
-  return (
+  const image = (
     <img
       referrerPolicy="no-referrer"
-      alt="picture"
-      src={imgSrc}
+      alt=""
+      src={src}
       onError={handleError}
       loading="lazy"
-      onClick={handleClick}
-      onKeyDown={href || onClick ? handleKeyDown : undefined}
-      role={href || onClick ? "button" : undefined}
-      tabIndex={href || onClick ? 0 : undefined}
       {...props}
     />
   )
+
+  if (href) {
+    return (
+      <a
+        href={href}
+        target="_blank"
+        rel="noreferrer"
+        onClick={onClick}
+      >
+        {image}
+      </a>
+    )
+  }
+
+  if (onClick) {
+    return (
+      <button type="button" className="contents" onClick={onClick}>
+        {image}
+      </button>
+    )
+  }
+
+  return image
 }

@@ -1,21 +1,15 @@
 import type { RefObject } from "react"
 import type { BoardSource } from "@/typings/source"
-import { useQuery } from "@tanstack/react-query"
 import { useAtomValue } from "jotai"
-import { lazy, Suspense, useCallback, useMemo, useState } from "react"
-import { isMobile } from "react-device-detect"
+import { useCallback, useMemo, useState } from "react"
 import { getLocalSourceDescriptors } from "@/lib/local-sources"
-import { orpc } from "@/lib/orpc"
 import { buildBoardSources } from "@/lib/source-cards"
-import { getDefaultSourceMode } from "@/lib/source-mode"
 import { boardInstancesAtom, boardStarIdsAtom } from "@/store/board"
+import { DesktopBoard } from "./desktop-board"
 
 const EMPTY_SOURCE_IDS: string[] = []
 const EMPTY_SOURCES_MAP: Record<string, BoardSource> = {}
 const LOCAL_SOURCES = getLocalSourceDescriptors()
-
-const DesktopBoard = lazy(() => import("./desktop-board").then(module => ({ default: module.DesktopBoard })))
-const MobileBoard = lazy(() => import("./mobile-board").then(module => ({ default: module.MobileBoard })))
 
 type NowLayerBoardId = "featured" | "forks" | "stars"
 
@@ -43,14 +37,10 @@ export function NowLayer({
   const sourceIdOrder = sourceIdOrderState?.boardId === boardId ? sourceIdOrderState.ids : null
   const starredInstanceIds = useAtomValue(boardStarIdsAtom(boardId))
   const instances = useAtomValue(boardInstancesAtom(boardId))
-  const sourceMode = getDefaultSourceMode()
-  const { data: remoteSources, isPending } = useQuery(orpc.getBoard.queryOptions({
-    enabled: sourceMode === "remote",
-  }))
-  const sources = sourceMode === "local" ? LOCAL_SOURCES : remoteSources
+  const sources = LOCAL_SOURCES
 
   const { ids: boardSourceIds, map: sourcesMap } = useMemo(() => {
-    if (!sources?.length) {
+    if (!sources.length) {
       return { ids: EMPTY_SOURCE_IDS, map: EMPTY_SOURCES_MAP }
     }
 
@@ -59,9 +49,9 @@ export function NowLayer({
       boardId,
       starredSourceInstanceIds: starredInstanceIds,
       sourceInstances: instances,
-      isLocalOnly: sourceMode === "local",
+      isLocalOnly: true,
     })
-  }, [sources, boardId, starredInstanceIds, instances, sourceMode])
+  }, [sources, boardId, starredInstanceIds, instances])
 
   const sourceIds = useMemo(() => {
     if (!sourceIdOrder) {
@@ -81,7 +71,7 @@ export function NowLayer({
     onSourceIdsChange?.(newSourceIds)
   }, [boardId, onSourceIdsChange])
 
-  if (!isPending && boardId === "stars" && sourceIds.length === 0) {
+  if (boardId === "stars" && sourceIds.length === 0) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center px-6 text-center text-sm text-muted-foreground">
         Star cards from any board to collect them here.
@@ -89,7 +79,7 @@ export function NowLayer({
     )
   }
 
-  if (!isPending && boardId === "forks" && sourceIds.length === 0) {
+  if (boardId === "forks" && sourceIds.length === 0) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center px-6 text-center text-sm text-muted-foreground">
         Fork a card to collect your source forks here.
@@ -97,32 +87,16 @@ export function NowLayer({
     )
   }
 
-  if (isMobile) {
-    return (
-      <Suspense fallback={null}>
-        <MobileBoard
-          key={boardId}
-          sourceIds={sourceIds}
-          sourcesMap={sourcesMap}
-          className={className}
-          isScattered={isScattered}
-        />
-      </Suspense>
-    )
-  }
-
   return (
-    <Suspense fallback={null}>
-      <DesktopBoard
-        key={boardId}
-        sourceIds={sourceIds}
-        sourcesMap={sourcesMap}
-        isSortable={boardId === "forks" || boardId === "stars"}
-        className={className}
-        isScattered={isScattered}
-        containerRef={containerRef}
-        onSourceIdsChange={handleSourceIdsChange}
-      />
-    </Suspense>
+    <DesktopBoard
+      key={boardId}
+      sourceIds={sourceIds}
+      sourcesMap={sourcesMap}
+      isSortable={boardId === "forks" || boardId === "stars"}
+      className={className}
+      isScattered={isScattered}
+      containerRef={containerRef}
+      onSourceIdsChange={handleSourceIdsChange}
+    />
   )
 }

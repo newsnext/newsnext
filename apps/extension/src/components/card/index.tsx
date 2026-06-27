@@ -1,6 +1,5 @@
 import type { ReactNode } from "react"
 import type { BoardSource, NewsItem } from "@/typings/source"
-import { useMutation } from "@tanstack/react-query"
 import { useSetAtom } from "jotai"
 import { useInView } from "motion/react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
@@ -8,7 +7,6 @@ import { createPortal } from "react-dom"
 import { FlipAnimate } from "@/components/common/flip-animate"
 import { useSourceParams } from "@/hooks"
 import { useSourceQuery } from "@/hooks/use-source-query"
-import { orpc } from "@/lib/orpc"
 import { cn } from "@/lib/utils"
 import {
   resetInstanceParamsAtom,
@@ -56,8 +54,6 @@ function CardContent({ id, source, dragHandle, disableExpandedPreview = false, p
   const { isExpandedPreviewOpen, openExpandedPreview } = useExpandedPreview()
   const upsertLocal = useSetAtom(upsertInstanceAtom)
   const resetLocalParams = useSetAtom(resetInstanceParamsAtom)
-  const upsertSourceInstance = useMutation(orpc.upsertSourceInstance.mutationOptions({ onError: () => {} }))
-  const resetSourceInstanceParams = useMutation(orpc.resetSourceInstanceParams.mutationOptions({ onError: () => {} }))
   const [isFlipped, setIsFlipped] = useState(false)
   const [pictureInPictureWindow, setPictureInPictureWindow] = useState<Window | null>(null)
   const {
@@ -78,8 +74,6 @@ function CardContent({ id, source, dragHandle, disableExpandedPreview = false, p
   const { items, refetch, isFetching, isError, errorMessage, updatedTime } = useSourceQuery({
     sourceId: source.sourceId,
     params: savedParams,
-    isLocalOnly: source.isLocalOnly,
-    forceLatest: !!pictureInPictureWindow,
     refetchInterval: pictureInPictureWindow ? PICTURE_IN_PICTURE_REFRESH_INTERVAL : false,
   })
   const isPictureInPictureSupported = typeof window !== "undefined" && !!window.documentPictureInPicture
@@ -126,18 +120,12 @@ function CardContent({ id, source, dragHandle, disableExpandedPreview = false, p
     }
 
     upsertLocal(nextInstance)
-    if (!source.isLocalOnly) {
-      upsertSourceInstance.mutate(nextInstance)
-    }
-  }, [source.sourceId, source.isFork, source.isLocalOnly, id, saveDraftParams, upsertLocal, upsertSourceInstance])
+  }, [source.sourceId, source.isFork, id, saveDraftParams, upsertLocal])
 
   const handleResetSourceParams = useCallback(() => {
     resetDraftParams()
-    if (!source.isLocalOnly) {
-      resetSourceInstanceParams.mutate({ instanceId: id })
-    }
     resetLocalParams({ instanceId: id, isFork: source.isFork })
-  }, [source.isFork, source.isLocalOnly, id, resetDraftParams, resetLocalParams, resetSourceInstanceParams])
+  }, [source.isFork, id, resetDraftParams, resetLocalParams])
 
   const handleOpenExpandedPreview = useCallback((item: NewsItem) => {
     openExpandedPreview(id, source, item)

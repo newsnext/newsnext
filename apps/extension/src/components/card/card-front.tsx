@@ -1,11 +1,9 @@
 import type { ReactNode } from "react"
 import type { BoardSource, NewsItem } from "@/typings/source"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
-import { useMutation } from "@tanstack/react-query"
 import { useAtomValue, useSetAtom } from "jotai"
 import { memo, useCallback, useMemo, useRef } from "react"
 import { useRelativeTime } from "@/hooks/useRelativeTime"
-import { orpc } from "@/lib/orpc"
 import { cn } from "@/lib/utils"
 import { instanceStarredAtom, starInstanceAtom } from "@/store/board"
 import { IconButton } from "../common/button"
@@ -41,19 +39,14 @@ interface CardFrontProps {
   }
 }
 
-function StarButton({ id, source }: { id: string, source: BoardSource }) {
+function StarButton({ id }: { id: string }) {
   const isStarredAtom = useMemo(() => instanceStarredAtom(id), [id])
   const isStarred = useAtomValue(isStarredAtom)
   const starLocal = useSetAtom(starInstanceAtom)
-  const setStarredSourceInstance = useMutation(orpc.setStarredSourceInstance.mutationOptions({ onError: () => {} }))
 
   const handleToggleStar = useCallback(() => {
-    const nextIsStarred = !isStarred
-    starLocal({ instanceId: id, starred: nextIsStarred })
-    if (!source.isLocalOnly) {
-      setStarredSourceInstance.mutate({ instanceId: id, starred: nextIsStarred })
-    }
-  }, [id, isStarred, source.isLocalOnly, starLocal, setStarredSourceInstance])
+    starLocal({ instanceId: id, starred: !isStarred })
+  }, [id, isStarred, starLocal])
 
   return (
     <IconButton
@@ -117,7 +110,7 @@ function CardFrontComponent({
               </IconButton>
               {actionsVariant === "default" && (
                 <>
-                  <StarButton id={id} source={source} />
+                  <StarButton id={id} />
                   {onOpenPictureInPicture && (
                     <IconButton
                       onClick={onOpenPictureInPicture}

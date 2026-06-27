@@ -4,7 +4,6 @@ import type { NewsItem } from "@/typings/source"
 import { extractPictures } from "@newsnext/shared/types"
 import { Button } from "@newsnext/ui/components/button"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@newsnext/ui/components/hover-card"
-import { useIsMobile } from "@newsnext/ui/hooks/use-mobile"
 import { useCallback } from "react"
 import { cn } from "@/lib/utils"
 import { useCardPreview } from "../card/card-context"
@@ -42,9 +41,8 @@ function NewsItemAnchor({ href, className, children, ...props }: NewsItemAnchorP
 }
 
 export function NewsItemLink({ item, className, children, previewSelection }: NewsItemLinkProps) {
-  const isMobile = useIsMobile()
   const { canOpenExpandedPreview, canShowHoverPreview, onOpenExpandedPreview } = useCardPreview()
-  const href = isMobile ? item.mobileUrl || item.url : item.url
+  const href = item.url
 
   const hasPreview = item.preview?.html || item.preview?.text || item.preview?.picture || item.preview?.iframe
   const isPreviewSelected = previewSelection?.selectedItemUrl === item.url

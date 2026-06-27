@@ -11,13 +11,10 @@ import {
   CommandItem,
   CommandList,
 } from "@newsnext/ui/components/command"
-import { useQuery } from "@tanstack/react-query"
 import { useAtomValue } from "jotai"
 import { useEffect, useMemo, useState } from "react"
 import { getLocalSourceDescriptors } from "@/lib/local-sources"
-import { orpc } from "@/lib/orpc"
 import { buildBoardSources } from "@/lib/source-cards"
-import { getDefaultSourceMode } from "@/lib/source-mode"
 import { cn } from "@/lib/utils"
 import { boardInstancesAtom, boardStarIdsAtom } from "@/store/board"
 import Card from "../card"
@@ -118,14 +115,10 @@ function SearchDialogContent(): ReactNode {
   const [selectedItemId, setSelectedItemId] = useState("")
   const starredInstanceIds = useAtomValue(boardStarIdsAtom("stars"))
   const instances = useAtomValue(boardInstancesAtom("stars"))
-  const sourceMode = getDefaultSourceMode()
-  const { data: remoteSources } = useQuery(orpc.getBoard.queryOptions({
-    enabled: sourceMode === "remote",
-  }))
-  const sources = sourceMode === "local" ? LOCAL_SOURCES : remoteSources
+  const sources = LOCAL_SOURCES
 
   const searchItems = useMemo<SearchItem[]>(() => {
-    if (!sources?.length) {
+    if (!sources.length) {
       return []
     }
 
@@ -134,14 +127,14 @@ function SearchDialogContent(): ReactNode {
       boardId: "featured",
       starredSourceInstanceIds: starredInstanceIds,
       sourceInstances: instances,
-      isLocalOnly: sourceMode === "local",
+      isLocalOnly: true,
     })
     const forksBoard = buildBoardSources({
       sources,
       boardId: "forks",
       starredSourceInstanceIds: starredInstanceIds,
       sourceInstances: instances,
-      isLocalOnly: sourceMode === "local",
+      isLocalOnly: true,
     })
 
     return [
@@ -172,7 +165,7 @@ function SearchDialogContent(): ReactNode {
         } satisfies SearchItem
       }),
     ]
-  }, [sources, starredInstanceIds, instances, sourceMode])
+  }, [sources, starredInstanceIds, instances])
 
   const searchGroups = useMemo(() => groupSearchItems(searchItems), [searchItems])
   const selectedItem = useMemo(

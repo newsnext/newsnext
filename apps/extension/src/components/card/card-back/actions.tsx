@@ -1,8 +1,6 @@
 import type { BoardSource } from "@/typings/source"
-import { useMutation } from "@tanstack/react-query"
 import { useSetAtom, useStore } from "jotai"
 import { PhForkDuotone, PhTrashDuotone } from "@/components/icons/ph"
-import { orpc } from "@/lib/orpc"
 import { createForkedInstance } from "@/lib/source-cards"
 import { deleteStoredSourceParamValues, writeStoredSourceParamValues } from "@/lib/source-params"
 import {
@@ -25,24 +23,16 @@ export function ForkButton({
   const store = useStore()
   const upsertLocal = useSetAtom(upsertInstanceAtom)
   const starLocal = useSetAtom(starInstanceAtom)
-  const upsertSourceInstance = useMutation(orpc.upsertSourceInstance.mutationOptions({ onError: () => {} }))
-  const setStarredSourceInstance = useMutation(orpc.setStarredSourceInstance.mutationOptions({ onError: () => {} }))
 
   function handleFork(): void {
     const forkedInstance = createForkedInstance(source.sourceId, sourceParams)
     const isStarred = store.get(instanceStarredAtom(id))
 
     writeStoredSourceParamValues(forkedInstance.instanceId, sourceParams)
-    if (!source.isLocalOnly) {
-      upsertSourceInstance.mutate(forkedInstance)
-    }
     upsertLocal(forkedInstance)
 
     if (isStarred) {
       starLocal({ instanceId: forkedInstance.instanceId, starred: true })
-      if (!source.isLocalOnly) {
-        setStarredSourceInstance.mutate({ instanceId: forkedInstance.instanceId, starred: true })
-      }
     }
   }
 
@@ -60,9 +50,8 @@ export function ForkButton({
   )
 }
 
-export function DeleteForkButton({ id, isFork, isLocalOnly = false }: { id: string, isFork: boolean, isLocalOnly?: boolean }) {
+export function DeleteForkButton({ id, isFork }: { id: string, isFork: boolean }) {
   const deleteLocal = useSetAtom(deleteInstanceAtom)
-  const deleteSourceInstance = useMutation(orpc.deleteSourceInstance.mutationOptions({ onError: () => {} }))
 
   function handleDelete(): void {
     if (!isFork) {
@@ -71,9 +60,6 @@ export function DeleteForkButton({ id, isFork, isLocalOnly = false }: { id: stri
 
     deleteLocal(id)
     deleteStoredSourceParamValues(id)
-    if (!isLocalOnly) {
-      deleteSourceInstance.mutate({ instanceId: id })
-    }
   }
 
   if (!isFork) {

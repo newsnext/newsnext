@@ -1,78 +1,58 @@
-import { afterEach, describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
+import { createBackgroundClient } from "./background-client"
 import { loadLocalSource } from "./local-source-loader"
 
-interface RuntimeGlobal {
-  chrome?: unknown
-}
+vi.mock("./background-client", () => ({
+  createBackgroundClient: vi.fn(),
+}))
+
+const createBackgroundClientMock = vi.mocked(createBackgroundClient)
 
 describe("loadLocalSource", () => {
   afterEach(() => {
-    delete (globalThis as RuntimeGlobal).chrome
+    createBackgroundClientMock.mockReset()
   })
 
   it("loads source data through the extension background when available", async () => {
-    const sentMessages: unknown[] = []
+    const loadSource = vi.fn().mockResolvedValue({
+      items: [{ title: "Loaded in background", url: "https://example.com" }],
+      updated: 123,
+    })
 
-    ;(globalThis as RuntimeGlobal).chrome = {
-      runtime: {
-        sendMessage(message: unknown, callback: (response: unknown) => void) {
-          sentMessages.push(message)
-          callback({
-            ok: true,
-            items: [{ title: "Loaded in background", url: "https://example.com" }],
-            key: "github:default:test",
-            updated: 123,
-          })
-        },
-      },
-    }
+    createBackgroundClientMock.mockReturnValue({ loadSource } as never)
 
     const result = await loadLocalSource("github:default", { dateRange: "weekly" })
 
-    expect(sentMessages).toEqual([
-      {
-        type: "load-source",
-        sourceId: "github:default",
-        params: { dateRange: "weekly" },
-      },
-    ])
+    expect(loadSource).toHaveBeenCalledWith({
+      sourceId: "github:default",
+      params: { dateRange: "weekly" },
+    })
+    expect(result.key).toMatch(/^github:default:/)
     expect(result).toMatchObject({
-      key: "github:default:test",
       updated: 123,
       items: [{ title: "Loaded in background", url: "https://example.com" }],
     })
   })
 
   it("sends JSON params to the background before local normalization", async () => {
-    const sentMessages: unknown[] = []
+    const loadSource = vi.fn().mockResolvedValue({
+      items: [{ title: "V2EX", url: "https://www.v2ex.com/t/1" }],
+      updated: 123,
+    })
 
-    ;(globalThis as RuntimeGlobal).chrome = {
-      runtime: {
-        sendMessage(message: unknown, callback: (response: unknown) => void) {
-          sentMessages.push(message)
-          callback({
-            ok: true,
-            items: [{ title: "V2EX", url: "https://www.v2ex.com/t/1" }],
-            updated: 123,
-          })
-        },
-      },
-    }
+    createBackgroundClientMock.mockReturnValue({ loadSource } as never)
 
     await loadLocalSource("json:default", {
       url: "https://www.v2ex.com/feed/ideas.json",
       headers: "{}",
     })
 
-    expect(sentMessages).toEqual([
-      {
-        type: "load-source",
-        sourceId: "json:default",
-        params: {
-          url: "https://www.v2ex.com/feed/ideas.json",
-          headers: "{}",
-        },
+    expect(loadSource).toHaveBeenCalledWith({
+      sourceId: "json:default",
+      params: {
+        url: "https://www.v2ex.com/feed/ideas.json",
+        headers: "{}",
       },
-    ])
+    })
   })
 })
