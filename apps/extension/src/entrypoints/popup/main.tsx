@@ -25,7 +25,7 @@ function Popup(): React.JSX.Element {
         Open new tab
       </button>
 
-      <p className="popup__hint">Use the extension shortcut to toggle the command bar.</p>
+      <p className="popup__hint">Open NewsNext in a dedicated browser tab.</p>
     </main>
   )
 }
