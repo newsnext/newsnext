@@ -28,6 +28,7 @@ describe("provider IDs", () => {
   it("generates provider registry keys from provider IDs with filename fallback", () => {
     const generatedIndex = readFileSync(path.resolve(import.meta.dirname, "../src/index.ts"), "utf8")
 
-    expect(generatedIndex).toContain("[provider_0.id ?? \"bilibili\"]: provider_0")
+    expect(generatedIndex).toMatch(/\[provider_\d+\.id \?\? "bilibili"\]: provider_\d+/)
+    expect(generatedIndex).toMatch(/\[provider_\d+\.id \?\? "cls"\]: provider_\d+/)
   })
 })

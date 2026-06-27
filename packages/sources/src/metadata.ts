@@ -4,6 +4,15 @@ import type { SourceDescriptor } from "./typings/sources"
 
 export const sourceDescriptors: SourceDescriptor[] = [
   {
+    "icon": "https://s3.newsnext.pro/icons/aihot.png",
+    "providerTitle": "AIHot",
+    "color": "blue",
+    "type": "timeline",
+    "category": "tech",
+    "home": "https://aihot.virxact.com",
+    "id": "aihot:default"
+  },
+  {
     "icon": "https://s3.newsnext.pro/icons/bilibili.png",
     "providerTitle": "Bilibili",
     "title": "热搜",
@@ -32,6 +41,36 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "category": "others",
     "home": "https://www.bilibili.com",
     "id": "bilibili:ranking"
+  },
+  {
+    "icon": "https://s3.newsnext.pro/icons/cls.png",
+    "providerTitle": "财联社",
+    "title": "电报",
+    "color": "red",
+    "type": "timeline",
+    "category": "finance",
+    "home": "https://www.cls.cn/telegraph",
+    "id": "cls:default"
+  },
+  {
+    "icon": "https://s3.newsnext.pro/icons/cls.png",
+    "providerTitle": "财联社",
+    "title": "深度",
+    "color": "red",
+    "type": "timeline",
+    "category": "finance",
+    "home": "https://www.cls.cn/depth",
+    "id": "cls:depth"
+  },
+  {
+    "icon": "https://s3.newsnext.pro/icons/cls.png",
+    "providerTitle": "财联社",
+    "title": "热门",
+    "color": "red",
+    "type": "hottest",
+    "category": "finance",
+    "home": "https://www.cls.cn",
+    "id": "cls:hot"
   },
   {
     "icon": "https://s3.newsnext.pro/icons/coolapk.png",
