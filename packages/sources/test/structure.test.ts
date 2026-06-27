@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { providers } from "@/index"
+import { providers } from "../src"
 
 describe("source Structure Tests", () => {
   for (const [providerId, providerDefinition] of Object.entries(providers)) {

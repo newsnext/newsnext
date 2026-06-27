@@ -1,4 +1,4 @@
-import type { NewsItem } from "@/typings/sources"
+import type { NewsItem } from "../typings/sources"
 import { md5, myCrypto } from "../utils/crypto"
 import { myFetch } from "../utils/fetch"
 import { $provider, $source } from "../utils/source"

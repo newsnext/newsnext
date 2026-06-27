@@ -6,10 +6,8 @@ import type {
   NewsItem,
   SourceParamSchemaMap,
   SourceRegistration,
-} from "@/typings/sources"
-import { Buffer } from "node:buffer"
+} from "../../typings/sources"
 import { load } from "cheerio/slim"
-import iconv from "iconv-lite"
 import { createLoader } from "."
 import { myFetch } from "../fetch"
 
@@ -105,7 +103,7 @@ export const $htmlLoader = createLoader<HtmlSourceOptions>(async (opts) => {
     html = await fetch(url)
   } else if (decoding && decoding.toLowerCase() !== "utf-8") {
     const response = await myFetch(url, { ...fetchOptions, responseType: "arrayBuffer" }) as ArrayBuffer
-    html = iconv.decode(Buffer.from(response), decoding)
+    html = new TextDecoder(decoding as ConstructorParameters<typeof TextDecoder>[0]).decode(response)
   } else {
     const res = await myFetch(url, fetchOptions)
     html = typeof res === "string" ? res : JSON.stringify(res)

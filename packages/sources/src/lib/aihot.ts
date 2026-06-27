@@ -1,4 +1,4 @@
-import type { NewsItem } from "@/typings/sources"
+import type { NewsItem } from "../typings/sources"
 import { myFetch } from "../utils/fetch"
 import { $provider, $source } from "../utils/source"
 import { rss2json } from "../utils/source/rss2json"

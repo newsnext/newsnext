@@ -1,4 +1,4 @@
-import type { RSSInfo } from "@/typings"
+import type { RSSInfo } from "../../typings"
 import { XMLParser } from "fast-xml-parser"
 import { myFetch } from "../fetch"
 

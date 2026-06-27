@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs"
 import path from "node:path"
 import { describe, expect, it } from "vitest"
-import { $provider } from "@/utils/source"
+import { $provider } from "../src/utils/source"
 
 describe("provider IDs", () => {
   it("preserves explicit provider IDs and indexes sources by key", () => {
