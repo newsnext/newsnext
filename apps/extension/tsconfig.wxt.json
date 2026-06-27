@@ -8,14 +8,13 @@
         "./src/*"
       ],
       "@/*": [
-        "../web/src/*"
+        "./src/*"
       ]
     },
     "allowImportingTsExtensions": true
   },
   "include": [
     "./src",
-    "../web/src",
     "./.wxt/wxt.d.ts"
   ]
 }

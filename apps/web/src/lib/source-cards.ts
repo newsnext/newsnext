@@ -14,14 +14,13 @@ type BoardSourceSource = Omit<SourceDescriptor, "params"> & {
   params?: Record<string, unknown>
 }
 
-function createBoardSource(source: BoardSourceSource, isLocalOnly: boolean): BoardSource {
+function createBoardSource(source: BoardSourceSource): BoardSource {
   return {
     ...source,
     params: source.params as BoardSource["params"],
     id: source.id,
     sourceId: source.id,
     isFork: false,
-    isLocalOnly,
   }
 }
 
@@ -43,17 +42,15 @@ export function buildBoardSources({
   boardId,
   starredSourceInstanceIds,
   sourceInstances,
-  isLocalOnly = false,
 }: {
   sources: BoardSourceSource[]
   boardId: BoardType
   starredSourceInstanceIds: string[]
   sourceInstances: SourceInstance[]
-  isLocalOnly?: boolean
 }): { ids: string[], map: Record<string, BoardSource> } {
   const instanceMap = new Map(sourceInstances.map(instance => [instance.instanceId, instance]))
   const baseSources = sources.map((source) => {
-    const boardSource = createBoardSource(source, isLocalOnly)
+    const boardSource = createBoardSource(source)
     const instance = instanceMap.get(boardSource.id)
     return instance
       ? { ...boardSource, paramsValue: instance.params }

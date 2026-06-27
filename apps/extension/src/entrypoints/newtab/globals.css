@@ -1,6 +1,6 @@
 @import "tailwindcss" source("../newtab/");
-@import "../../../../../apps/web/src/styles/base.css";
+@import "../../styles/base.css";
 
 
 @source "../../../../../packages/ui/src";
-@source "../../../../../apps/web/src";
+@source "../../";

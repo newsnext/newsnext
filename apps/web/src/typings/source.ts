@@ -12,5 +12,4 @@ export type BoardSource = Omit<SourceDescriptor, "id"> & {
   sourceId: string
   paramsValue?: Record<string, unknown>
   isFork: boolean
-  isLocalOnly?: boolean
 }

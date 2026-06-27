@@ -4,15 +4,12 @@ import { useQuery } from "@tanstack/react-query"
 import { useAtomValue } from "jotai"
 import { lazy, Suspense, useCallback, useMemo, useState } from "react"
 import { isMobile } from "react-device-detect"
-import { getLocalSourceDescriptors } from "@/lib/local-sources"
 import { orpc } from "@/lib/orpc"
 import { buildBoardSources } from "@/lib/source-cards"
-import { getDefaultSourceMode } from "@/lib/source-mode"
 import { boardInstancesAtom, boardStarIdsAtom } from "@/store/board"
 
 const EMPTY_SOURCE_IDS: string[] = []
 const EMPTY_SOURCES_MAP: Record<string, BoardSource> = {}
-const LOCAL_SOURCES = getLocalSourceDescriptors()
 
 const DesktopBoard = lazy(() => import("./desktop-board").then(module => ({ default: module.DesktopBoard })))
 const MobileBoard = lazy(() => import("./mobile-board").then(module => ({ default: module.MobileBoard })))
@@ -43,14 +40,11 @@ export function NowLayer({
   const sourceIdOrder = sourceIdOrderState?.boardId === boardId ? sourceIdOrderState.ids : null
   const starredInstanceIds = useAtomValue(boardStarIdsAtom(boardId))
   const instances = useAtomValue(boardInstancesAtom(boardId))
-  const sourceMode = getDefaultSourceMode()
-  const { data: remoteSources, isPending } = useQuery(orpc.getBoard.queryOptions({
-    enabled: sourceMode === "remote",
-  }))
-  const sources = sourceMode === "local" ? LOCAL_SOURCES : remoteSources
+
+  const { data: sources, isPending } = useQuery(orpc.getBoard.queryOptions())
 
   const { ids: boardSourceIds, map: sourcesMap } = useMemo(() => {
-    if (!sources?.length) {
+    if (!sources) {
       return { ids: EMPTY_SOURCE_IDS, map: EMPTY_SOURCES_MAP }
     }
 
@@ -59,9 +53,8 @@ export function NowLayer({
       boardId,
       starredSourceInstanceIds: starredInstanceIds,
       sourceInstances: instances,
-      isLocalOnly: sourceMode === "local",
     })
-  }, [sources, boardId, starredInstanceIds, instances, sourceMode])
+  }, [sources, boardId, starredInstanceIds, instances])
 
   const sourceIds = useMemo(() => {
     if (!sourceIdOrder) {

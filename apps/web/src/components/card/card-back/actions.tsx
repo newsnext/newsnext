@@ -33,16 +33,12 @@ export function ForkButton({
     const isStarred = store.get(instanceStarredAtom(id))
 
     writeStoredSourceParamValues(forkedInstance.instanceId, sourceParams)
-    if (!source.isLocalOnly) {
-      upsertSourceInstance.mutate(forkedInstance)
-    }
+    upsertSourceInstance.mutate(forkedInstance)
     upsertLocal(forkedInstance)
 
     if (isStarred) {
       starLocal({ instanceId: forkedInstance.instanceId, starred: true })
-      if (!source.isLocalOnly) {
-        setStarredSourceInstance.mutate({ instanceId: forkedInstance.instanceId, starred: true })
-      }
+      setStarredSourceInstance.mutate({ instanceId: forkedInstance.instanceId, starred: true })
     }
   }
 
@@ -60,7 +56,7 @@ export function ForkButton({
   )
 }
 
-export function DeleteForkButton({ id, isFork, isLocalOnly = false }: { id: string, isFork: boolean, isLocalOnly?: boolean }) {
+export function DeleteForkButton({ id, isFork }: { id: string, isFork: boolean }) {
   const deleteLocal = useSetAtom(deleteInstanceAtom)
   const deleteSourceInstance = useMutation(orpc.deleteSourceInstance.mutationOptions({ onError: () => {} }))
 
@@ -71,9 +67,7 @@ export function DeleteForkButton({ id, isFork, isLocalOnly = false }: { id: stri
 
     deleteLocal(id)
     deleteStoredSourceParamValues(id)
-    if (!isLocalOnly) {
-      deleteSourceInstance.mutate({ instanceId: id })
-    }
+    deleteSourceInstance.mutate({ instanceId: id })
   }
 
   if (!isFork) {

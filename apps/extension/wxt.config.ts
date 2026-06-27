@@ -11,6 +11,7 @@ export default defineConfig({
   srcDir: "./src",
   alias: {
     "#": path.resolve(__dirname, "src"),
+    "@": path.resolve(__dirname, "src"),
   },
   dev: {
     server: {
@@ -26,14 +27,6 @@ export default defineConfig({
     version: "0.9.0",
     permissions: ["declarativeNetRequestWithHostAccess"],
     host_permissions: ["<all_urls>"],
-  },
-  hooks: {
-    ready: (wxt) => {
-      wxt.config.alias = {
-        ...wxt.config.alias,
-        "@": path.resolve(__dirname, "../web/src"),
-      }
-    },
   },
   vite: () => {
     return {

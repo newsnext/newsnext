@@ -26,7 +26,6 @@ interface CardFrontProps {
   source: BoardSource
   items: NewsItem[]
   isFetching: boolean
-  sourceErrorMessage?: string
   updatedTime: number
   onRefresh: () => void
   onFlip?: () => void
@@ -41,7 +40,7 @@ interface CardFrontProps {
   }
 }
 
-function StarButton({ id, source }: { id: string, source: BoardSource }) {
+function StarButton({ id }: { id: string }) {
   const isStarredAtom = useMemo(() => instanceStarredAtom(id), [id])
   const isStarred = useAtomValue(isStarredAtom)
   const starLocal = useSetAtom(starInstanceAtom)
@@ -50,10 +49,8 @@ function StarButton({ id, source }: { id: string, source: BoardSource }) {
   const handleToggleStar = useCallback(() => {
     const nextIsStarred = !isStarred
     starLocal({ instanceId: id, starred: nextIsStarred })
-    if (!source.isLocalOnly) {
-      setStarredSourceInstance.mutate({ instanceId: id, starred: nextIsStarred })
-    }
-  }, [id, isStarred, source.isLocalOnly, starLocal, setStarredSourceInstance])
+    setStarredSourceInstance.mutate({ instanceId: id, starred: nextIsStarred })
+  }, [id, isStarred, starLocal, setStarredSourceInstance])
 
   return (
     <IconButton
@@ -70,7 +67,6 @@ function CardFrontComponent({
   source,
   items,
   isFetching,
-  sourceErrorMessage,
   updatedTime,
   onRefresh,
   onFlip,
@@ -117,7 +113,7 @@ function CardFrontComponent({
               </IconButton>
               {actionsVariant === "default" && (
                 <>
-                  <StarButton id={id} source={source} />
+                  <StarButton id={id} />
                   {onOpenPictureInPicture && (
                     <IconButton
                       onClick={onOpenPictureInPicture}
@@ -161,36 +157,24 @@ function CardFrontComponent({
             className="relative size-full overflow-y-auto px-2 py-2 scrollbar-hidden"
           >
             <div className={cn("transition-opacity-500", isFetching && "opacity-20")}>
-              {sourceErrorMessage
+              {type === "hottest"
                 ? (
-                    <div className="flex min-h-32 items-center justify-center px-3 text-center text-sm text-muted-foreground">
-                      {sourceErrorMessage}
-                    </div>
+                    <Hottest
+                      items={items}
+                      color={color}
+                      scrollRef={ref as React.RefObject<HTMLDivElement>}
+                      previewSelection={previewSelection}
+                    />
                   )
-                : items.length === 0 && !isFetching
-                  ? (
-                      <div className="flex min-h-32 items-center justify-center px-3 text-center text-sm text-muted-foreground">
-                        No source items.
-                      </div>
-                    )
-                  : type === "hottest"
-                    ? (
-                        <Hottest
-                          items={items}
-                          color={color}
-                          scrollRef={ref as React.RefObject<HTMLDivElement>}
-                          previewSelection={previewSelection}
-                        />
-                      )
-                    : (
-                        <Timeline
-                          color={color}
-                          items={items}
-                          relativeUpdatedTime={relativeTime}
-                          scrollRef={ref as React.RefObject<HTMLDivElement>}
-                          previewSelection={previewSelection}
-                        />
-                      )}
+                : (
+                    <Timeline
+                      color={color}
+                      items={items}
+                      relativeUpdatedTime={relativeTime}
+                      scrollRef={ref as React.RefObject<HTMLDivElement>}
+                      previewSelection={previewSelection}
+                    />
+                  )}
             </div>
           </div>
         </div>
