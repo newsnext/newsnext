@@ -9,6 +9,7 @@
 
 :root {
   --background: var(--color-neutral-100);
+  --background-grid-line: oklch(0.929 0.013 255.508 / 70%);
   --foreground: var(--color-neutral-900);
   --card: oklch(0.985 0 0);
   --card-foreground: oklch(0.205 0 0);
@@ -44,6 +45,7 @@
 
 .dark {
   --background: var(--color-neutral-900);
+  --background-grid-line: oklch(1 0 0 / 4%);
   --foreground: var(--color-neutral-300);
   --card: oklch(0.205 0 0);
   --card-foreground: oklch(0.985 0 0);
@@ -126,5 +128,41 @@
   .grabbing,
   .grabbing * {
     cursor: grabbing !important;
+  }
+}
+
+@layer components {
+  body,
+  .grid-texture-background {
+    position: relative;
+    background-color: var(--background);
+  }
+
+  body::before,
+  .grid-texture-background::before {
+    content: "";
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background-image:
+      linear-gradient(to right, var(--background-grid-line) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--background-grid-line) 1px, transparent 1px);
+    background-size: 24px 32px;
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 100%, #000 60%, transparent 100%);
+  }
+
+  body::before {
+    position: fixed;
+  }
+
+  body > *,
+  .grid-texture-background > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .grid-texture-background {
+    isolation: isolate;
   }
 }
