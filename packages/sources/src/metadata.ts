@@ -438,9 +438,9 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "icon": "https://s3.newsnext.pro/icons/v2ex.png",
     "providerTitle": "V2EX",
     "params": {
-      "feeds": {
-        "type": "multiselect",
-        "title": "Feeds",
+      "feed": {
+        "type": "select",
+        "title": "Feed",
         "options": [
           {
             "label": "Create",
@@ -459,12 +459,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
             "value": "share"
           }
         ],
-        "default": [
-          "create",
-          "ideas",
-          "programmer",
-          "share"
-        ]
+        "default": "ideas"
       }
     },
     "color": "slate",

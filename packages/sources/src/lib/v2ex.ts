@@ -1,5 +1,4 @@
-import { myFetch } from "../utils/fetch"
-import { $multiSelectParam } from "../utils/params"
+import { $selectParam } from "../utils/params"
 import { $provider, $source } from "../utils/source"
 
 interface Res {
@@ -39,35 +38,33 @@ export default $provider({
   color: "slate",
   home: "https://v2ex.com/",
   sources: [
-    $source(
+    $source.json(
       {
         key: "default",
         params: {
-          feeds: $multiSelectParam<FeedId>({
-            title: "Feeds",
+          feed: $selectParam<FeedId>({
+            title: "Feed",
             options: [...FEED_OPTIONS],
-            default: ["create", "ideas", "programmer", "share"],
+            default: "ideas",
           }),
         },
       },
-      async ({ feeds }) => {
-        const res = await Promise.all(
-          feeds.map(k =>
-            myFetch(`https://www.v2ex.com/feed/${k}.json`) as Promise<Res>),
-        )
-        return res.map(k => k.items).flat().map(k => ({
-          title: k.title,
-          timestamp: new Date(k.date_modified ?? k.date_published).getTime(),
-          url: k.url,
+      ({ feed }) => ({
+        url: `https://www.v2ex.com/feed/${feed}.json`,
+        items: (res: Res) => res.items,
+        fields: {
+          title: "title",
+          timestamp: item => new Date(item.date_modified ?? item.date_published).getTime(),
+          url: "url",
           inline: {
-            icon: k.author.avatar,
-            text: "",
+            icon: item => item.author.avatar,
+            text: () => "",
           },
           preview: {
-            html: k.content_html,
+            html: "content_html",
           },
-        })).sort((m, n) => m.timestamp < n.timestamp ? 1 : -1)
-      },
+        },
+      }),
     ),
   ],
 })
