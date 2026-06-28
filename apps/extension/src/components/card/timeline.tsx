@@ -74,7 +74,7 @@ export function Timeline({ items, scrollRef, relativeUpdatedTime, color, preview
           <div className="-ml-0.5 w-3.5 shrink-0" aria-hidden />
           <div className="min-w-0 flex flex-1 flex-col">
             {showTimeLabel && (
-              <div className="-ml-2.5 -mt-1">
+              <div className="-ml-2.5 mt-1 mb-2">
                 <span className="rounded-3xl bg-neutral-400/10 px-1 py-0.5 text-xs opacity-80">
                   {timeLabel}
                 </span>
