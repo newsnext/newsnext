@@ -88,6 +88,30 @@ describe("$jsonSourceLoader", () => {
     expect(results[0].inline.text).toBe("Score: 99")
   })
 
+  it("should omit nullable optional field groups", async () => {
+    ;(myFetch as any).mockResolvedValue([
+      { title: "Item", url: "https://example.com", summary: null },
+    ])
+
+    const source = $jsonLoader(() => ({
+      url: "https://api.example.com",
+      fields: {
+        title: "title",
+        url: "url",
+        inline: {
+          text: item => item.source,
+        },
+        preview: {
+          text: item => item.summary,
+        },
+      },
+    }))
+
+    const results = await (source as any).loader({})
+    expect(results[0].inline).toBeUndefined()
+    expect(results[0].preview).toBeUndefined()
+  })
+
   it("should handle custom fetch", async () => {
     const customFetch = vi.fn().mockResolvedValue([{ t: "Custom", u: "u" }])
 

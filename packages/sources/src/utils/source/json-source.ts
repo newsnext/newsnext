@@ -9,7 +9,7 @@ import type {
 import { createLoader } from "."
 import { myFetch } from "../fetch"
 
-export type FieldResolver<Item = any, Result = any> = string | ((item: Item) => Result)
+export type FieldResolver<Item = any, Result = any> = string | ((item: Item) => Result | null | undefined)
 
 export interface JsonSourceOptions<Item = any> {
   url: string
@@ -114,22 +114,26 @@ async function jsonSourceHandler<Item = any>(opts: JsonSourceOptions<Item>): Pro
       const inline: any = {}
       for (const [key, resolver] of Object.entries(fields.inline)) {
         const val = resolveValue(item, resolver as FieldResolver<Item, any>)
-        if (val !== undefined) {
+        if (val != null) {
           inline[key as keyof typeof inline] = val
         }
       }
-      newsItem.inline = inline
+      if (Object.keys(inline).length > 0) {
+        newsItem.inline = inline
+      }
     }
 
     if (fields.preview) {
       const preview: any = {}
       for (const [key, resolver] of Object.entries(fields.preview)) {
         const val = resolveValue(item, resolver as FieldResolver<Item, any>)
-        if (val !== undefined) {
+        if (val != null) {
           preview[key as keyof typeof preview] = val
         }
       }
-      newsItem.preview = preview
+      if (Object.keys(preview).length > 0) {
+        newsItem.preview = preview
+      }
     }
 
     return newsItem
