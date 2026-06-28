@@ -53,7 +53,7 @@ export function CardHeader({
             <span
               className={cn(
                 "font-bold truncate min-w-0",
-                displayProviderTitle ? "shrink-0 max-w-[min(14rem,60%)]" : "w-full",
+                displayProviderTitle ? "shrink-0 max-w-[min(14rem,80%)]" : "w-full",
               )}
             >
               {displayTitle}
