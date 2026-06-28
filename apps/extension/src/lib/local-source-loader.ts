@@ -2,6 +2,10 @@ import type { NewsItem } from "@/typings/source"
 import { stableStringify } from "@newsnext/shared/utils"
 import { normalizeSourceParams, resolveSource } from "@newsnext/sources/service"
 import { createBackgroundClient } from "./background-client"
+import { readCachedLocalSource, writeCachedLocalSource } from "./local-source-cache"
+
+const SOURCE_REQUEST_MIN_INTERVAL = 1000 * 60
+const inFlightSourceLoads = new Map<string, Promise<LocalSourceLoadResult>>()
 
 export interface LocalSourceLoadResult {
   id: string
@@ -40,18 +44,52 @@ export async function loadLocalSource(
 ): Promise<LocalSourceLoadResult> {
   const source = resolveSource(sourceId)
   const params = normalizeSourceParams(source, queryParams)
+  const key = `${sourceId}:${stableStringify(params)}`
+  const cachedResult = await readCachedLocalSource(key, SOURCE_REQUEST_MIN_INTERVAL)
+
+  if (cachedResult) {
+    return cachedResult
+  }
+
+  const inFlightLoad = inFlightSourceLoads.get(key)
+  if (inFlightLoad) {
+    return inFlightLoad
+  }
+
+  const sourceLoad = loadFreshLocalSource(sourceId, queryParams, params, key)
+  inFlightSourceLoads.set(key, sourceLoad)
+
+  try {
+    return await sourceLoad
+  } finally {
+    inFlightSourceLoads.delete(key)
+  }
+}
+
+async function loadFreshLocalSource(
+  sourceId: string,
+  queryParams: Record<string, unknown>,
+  params: Record<string, unknown>,
+  key: string,
+): Promise<LocalSourceLoadResult> {
+  const source = resolveSource(sourceId)
   const backgroundResult = await loadLocalSourceViaBackground(sourceId, queryParams, params)
 
   if (backgroundResult) {
-    return backgroundResult
+    const result = { ...backgroundResult, key }
+    await writeCachedLocalSource(result)
+    return result
   }
 
   const items = await source.loader(params)
 
-  return {
+  const result = {
     id: sourceId,
-    key: `${sourceId}:${stableStringify(params)}`,
+    key,
     items,
     updated: Date.now(),
   }
+
+  await writeCachedLocalSource(result)
+  return result
 }
