@@ -19,7 +19,6 @@ interface AIHotResponse {
 
 const AIHOT_API_URL = "https://aihot.virxact.com/api/public/items?mode=all&take=30"
 const AIHOT_FEED_URL = "https://aihot.virxact.com/feed/all.xml"
-const USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 aihot-skill/0.2.0 newsnow/0.0.40"
 
 async function loadRSSFallback(): Promise<NewsItem[]> {
   const data = await rss2json(AIHOT_FEED_URL)
@@ -45,11 +44,7 @@ export default $provider({
       },
       async () => {
         try {
-          const response = await myFetch<AIHotResponse>(AIHOT_API_URL, {
-            headers: {
-              "User-Agent": USER_AGENT,
-            },
-          })
+          const response = await myFetch<AIHotResponse>(AIHOT_API_URL)
 
           const items = response.items?.filter(item => item.id && item.title && item.url) ?? []
           if (!items.length) return loadRSSFallback()

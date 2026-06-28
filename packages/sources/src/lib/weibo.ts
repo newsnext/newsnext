@@ -1,4 +1,3 @@
-import { myFetch } from "../utils/fetch"
 import { $provider, $source } from "../utils/source"
 
 const baseurl = "https://s.weibo.com"
@@ -20,15 +19,6 @@ export default $provider({
       },
       () => ({
         url: "https://s.weibo.com/top/summary?cate=realtimehot",
-        fetch: async (url) => {
-          return myFetch(url, {
-            headers: {
-              "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
-              "Cookie": "SUB=_2AkMWIuNSf8NxqwJRmP8dy2rhaoV2ygrEieKgfhKJJRMxHRl-yT9jqk86tRB6PaLNvQZR6zYUcYVT1zSjoSreQHidcUq7",
-              "Referer": url,
-            },
-          })
-        },
         items: $ => $("#pl_top_realtimehot table tbody tr:nth-child(n+2)").filter((_, el) => $(el).find(".ranktop").text() !== "•"),
         fields: {
           title: "td.td-02 a",

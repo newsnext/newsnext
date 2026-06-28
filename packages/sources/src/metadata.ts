@@ -73,16 +73,6 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "id": "cls:hot"
   },
   {
-    "icon": "https://s3.newsnext.pro/icons/coolapk.png",
-    "providerTitle": "CoolAPK",
-    "title": "Today",
-    "color": "green",
-    "type": "hottest",
-    "category": "others",
-    "home": "https://coolapk.com",
-    "id": "coolapk:default"
-  },
-  {
     "icon": "https://s3.newsnext.pro/icons/folo.png",
     "providerTitle": "Folo",
     "title": "Feed",

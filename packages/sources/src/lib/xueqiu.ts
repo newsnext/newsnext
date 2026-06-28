@@ -1,5 +1,3 @@
-import { $fetch } from "ofetch"
-import { myFetch } from "../utils/fetch"
 import { $provider, $source } from "../utils/source"
 
 interface StockItem {
@@ -22,16 +20,6 @@ export default $provider({
       },
       () => ({
         url: "https://stock.xueqiu.com/v5/stock/hot_stock/list.json?size=30&_type=10&type=10",
-        fetch: async (url) => {
-          const cookieResponse = await $fetch.raw("https://xueqiu.com/hq")
-          const cookies = cookieResponse.headers.getSetCookie()
-
-          return myFetch(url, {
-            headers: {
-              cookie: cookies.join("; "),
-            },
-          })
-        },
         items: json => json.data.items.filter((k: StockItem) => !k.ad),
         fields: {
           url: (item: StockItem) => `https://xueqiu.com/s/${item.code}`,

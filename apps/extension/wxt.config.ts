@@ -25,8 +25,6 @@ export default defineConfig({
     name: "NewsNext",
     description: "NewsNext is a browser extension that helps you work with your browser",
     version: "0.9.0",
-    permissions: ["declarativeNetRequestWithHostAccess"],
-    host_permissions: ["<all_urls>"],
   },
   vite: () => {
     return {

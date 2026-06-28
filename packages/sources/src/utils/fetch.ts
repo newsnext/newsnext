@@ -17,7 +17,6 @@ interface RequestOptionsWithHeaders {
   headers?: FetchHeaders
 }
 
-const userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
 const browserForbiddenHeaders = new Set([
   "accept-charset",
   "accept-encoding",
@@ -91,7 +90,6 @@ function sanitizeBrowserHeaders(headers: FetchHeaders | undefined): FetchHeaders
 }
 
 export const myFetch: $Fetch = $fetch.create({
-  headers: isBrowserRuntime() ? undefined : { "User-Agent": userAgent },
   timeout: 5000,
   retry: 3,
   onRequest({ options }) {
