@@ -477,6 +477,102 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "id": "weibo:default"
   },
   {
+    "icon": "https://x.com/favicon.ico",
+    "providerTitle": "X",
+    "title": "Trending",
+    "params": {
+      "location": {
+        "type": "select",
+        "title": "Location",
+        "options": [
+          {
+            "label": "Worldwide",
+            "value": "1"
+          },
+          {
+            "label": "United States",
+            "value": "23424977"
+          },
+          {
+            "label": "United Kingdom",
+            "value": "23424975"
+          },
+          {
+            "label": "Japan",
+            "value": "23424856"
+          },
+          {
+            "label": "Hong Kong",
+            "value": "24865698"
+          },
+          {
+            "label": "Taiwan",
+            "value": "23424971"
+          },
+          {
+            "label": "Singapore",
+            "value": "23424948"
+          },
+          {
+            "label": "India",
+            "value": "23424848"
+          },
+          {
+            "label": "Brazil",
+            "value": "23424768"
+          },
+          {
+            "label": "Germany",
+            "value": "23424829"
+          }
+        ],
+        "default": "1"
+      }
+    },
+    "color": "slate",
+    "type": "hottest",
+    "category": "world",
+    "home": "https://x.com",
+    "id": "x:default"
+  },
+  {
+    "icon": "https://x.com/favicon.ico",
+    "providerTitle": "X",
+    "title": "Recommended",
+    "color": "slate",
+    "type": "timeline",
+    "category": "world",
+    "home": "https://x.com",
+    "id": "x:recommended"
+  },
+  {
+    "icon": "https://x.com/favicon.ico",
+    "providerTitle": "X",
+    "title": "Following",
+    "color": "slate",
+    "type": "timeline",
+    "category": "world",
+    "home": "https://x.com",
+    "id": "x:following"
+  },
+  {
+    "icon": "https://x.com/favicon.ico",
+    "providerTitle": "X",
+    "title": "User Tweets",
+    "params": {
+      "username": {
+        "type": "text",
+        "title": "Username",
+        "default": "elonmusk"
+      }
+    },
+    "color": "slate",
+    "type": "timeline",
+    "category": "world",
+    "home": "https://x.com",
+    "id": "x:user"
+  },
+  {
     "icon": "https://s3.newsnext.pro/icons/xueqiu.png",
     "providerTitle": "雪球",
     "color": "blue",

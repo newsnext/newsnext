@@ -17,9 +17,10 @@ import provider_12 from "./lib/rsshub"
 import provider_13 from "./lib/tieba"
 import provider_14 from "./lib/v2ex"
 import provider_15 from "./lib/weibo"
-import provider_16 from "./lib/xueqiu"
-import provider_17 from "./lib/zaobao"
-import provider_18 from "./lib/zhihu"
+import provider_16 from "./lib/x"
+import provider_17 from "./lib/xueqiu"
+import provider_18 from "./lib/zaobao"
+import provider_19 from "./lib/zhihu"
 
 export const providers = {
   [provider_0.id ?? "aihot"]: provider_0,
@@ -38,7 +39,8 @@ export const providers = {
   [provider_13.id ?? "tieba"]: provider_13,
   [provider_14.id ?? "v2ex"]: provider_14,
   [provider_15.id ?? "weibo"]: provider_15,
-  [provider_16.id ?? "xueqiu"]: provider_16,
-  [provider_17.id ?? "zaobao"]: provider_17,
-  [provider_18.id ?? "zhihu"]: provider_18
+  [provider_16.id ?? "x"]: provider_16,
+  [provider_17.id ?? "xueqiu"]: provider_17,
+  [provider_18.id ?? "zaobao"]: provider_18,
+  [provider_19.id ?? "zhihu"]: provider_19
 }
