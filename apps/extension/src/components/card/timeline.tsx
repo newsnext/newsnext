@@ -39,10 +39,10 @@ export function Timeline({ items, scrollRef, relativeUpdatedTime, color, preview
 
     return (
       <div className={cn("relative min-w-0 pb-2", index === items.length - 1 && "pb-0")}>
-        <div className="pointer-events-none absolute inset-y-0 -ml-0.5 w-3.5" aria-hidden>
+        <div className="-ml-1 pointer-events-none absolute inset-y-0 w-3.5" aria-hidden>
           <svg
             className="pointer-events-none absolute inset-0 h-full w-full"
-            viewBox="0 0 12 100"
+            viewBox="0 0 10 100"
             preserveAspectRatio="none"
           >
             <defs>
@@ -70,17 +70,17 @@ export function Timeline({ items, scrollRef, relativeUpdatedTime, color, preview
             />
           </svg>
         </div>
-        <div className="flex min-w-0 gap-0.5 rounded-xl hover:bg-neutral-400/10">
-          <div className="-ml-0.5 w-3.5 shrink-0" aria-hidden />
+        <div className="flex min-w-0 rounded-xl hover:bg-neutral-400/10">
+          <div className="w-5 shrink-0" aria-hidden />
           <div className="min-w-0 flex flex-1 flex-col">
             {showTimeLabel && (
-              <div className="-ml-2.5 mt-1 mb-2">
-                <span className="rounded-3xl bg-neutral-400/10 px-1 py-0.5 text-xs opacity-80">
+              <div className="-ml-5 mb-2">
+                <span className="inline-flex rounded-3xl bg-neutral-400/10 p-1 text-xs leading-none opacity-80">
                   {timeLabel}
                 </span>
               </div>
             )}
-            <NewsItemLink item={item} previewSelection={previewSelection} className="pl-1 flex">
+            <NewsItemLink item={item} previewSelection={previewSelection} className="flex">
               <NewsItemSummary item={item} />
             </NewsItemLink>
           </div>

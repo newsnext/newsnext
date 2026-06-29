@@ -47,7 +47,7 @@ interface NewsItemSummaryProps {
 
 export function NewsItemSummary({ item, className }: NewsItemSummaryProps) {
   return (
-    <span className={cn("self-start leading-none space-x-1", className)}>
+    <span className={cn("leading-none space-x-1", className)}>
       {item.inline?.icon && extractPictures(item.inline.icon).map((icon, i) => {
         const { src, scale, radius, href } = icon
         return (
@@ -68,7 +68,7 @@ export function NewsItemSummary({ item, className }: NewsItemSummaryProps) {
         {item.title}
       </span>
       {item.inline && (
-        <NewsItemInline item={item} className="truncate align-middle max-w-80 inline-block" />
+        <NewsItemInline item={item} className="truncate align-middle max-w-80 inline-block -mt-1" />
       )}
     </span>
   )
