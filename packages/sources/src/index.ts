@@ -7,20 +7,16 @@ import provider_2 from "./lib/cls"
 import provider_3 from "./lib/folo"
 import provider_4 from "./lib/github"
 import provider_5 from "./lib/hackernews"
-import provider_6 from "./lib/html"
-import provider_7 from "./lib/json"
-import provider_8 from "./lib/linuxdo"
-import provider_9 from "./lib/netease-music"
-import provider_10 from "./lib/newsnow"
-import provider_11 from "./lib/rss"
-import provider_12 from "./lib/rsshub"
-import provider_13 from "./lib/tieba"
-import provider_14 from "./lib/v2ex"
-import provider_15 from "./lib/weibo"
-import provider_16 from "./lib/x"
-import provider_17 from "./lib/xueqiu"
-import provider_18 from "./lib/zaobao"
-import provider_19 from "./lib/zhihu"
+import provider_6 from "./lib/linuxdo"
+import provider_7 from "./lib/netease-music"
+import provider_8 from "./lib/newsnow"
+import provider_9 from "./lib/tieba"
+import provider_10 from "./lib/v2ex"
+import provider_11 from "./lib/weibo"
+import provider_12 from "./lib/x"
+import provider_13 from "./lib/xueqiu"
+import provider_14 from "./lib/zaobao"
+import provider_15 from "./lib/zhihu"
 
 export const providers = {
   [provider_0.id ?? "aihot"]: provider_0,
@@ -29,18 +25,14 @@ export const providers = {
   [provider_3.id ?? "folo"]: provider_3,
   [provider_4.id ?? "github"]: provider_4,
   [provider_5.id ?? "hackernews"]: provider_5,
-  [provider_6.id ?? "html"]: provider_6,
-  [provider_7.id ?? "json"]: provider_7,
-  [provider_8.id ?? "linuxdo"]: provider_8,
-  [provider_9.id ?? "netease-music"]: provider_9,
-  [provider_10.id ?? "newsnow"]: provider_10,
-  [provider_11.id ?? "rss"]: provider_11,
-  [provider_12.id ?? "rsshub"]: provider_12,
-  [provider_13.id ?? "tieba"]: provider_13,
-  [provider_14.id ?? "v2ex"]: provider_14,
-  [provider_15.id ?? "weibo"]: provider_15,
-  [provider_16.id ?? "x"]: provider_16,
-  [provider_17.id ?? "xueqiu"]: provider_17,
-  [provider_18.id ?? "zaobao"]: provider_18,
-  [provider_19.id ?? "zhihu"]: provider_19
+  [provider_6.id ?? "linuxdo"]: provider_6,
+  [provider_7.id ?? "netease-music"]: provider_7,
+  [provider_8.id ?? "newsnow"]: provider_8,
+  [provider_9.id ?? "tieba"]: provider_9,
+  [provider_10.id ?? "v2ex"]: provider_10,
+  [provider_11.id ?? "weibo"]: provider_11,
+  [provider_12.id ?? "x"]: provider_12,
+  [provider_13.id ?? "xueqiu"]: provider_13,
+  [provider_14.id ?? "zaobao"]: provider_14,
+  [provider_15.id ?? "zhihu"]: provider_15
 }
