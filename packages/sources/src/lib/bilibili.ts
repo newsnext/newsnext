@@ -66,9 +66,6 @@ export default $provider({
           preview: {
             text: "desc",
             picture: (item: VideoItem) => item.pic,
-            iframe: (item: VideoItem) => ({
-              src: `https://player.bilibili.com/player.html?bvid=${item.bvid}`,
-            }),
           },
         },
       }),
@@ -93,9 +90,6 @@ export default $provider({
           preview: {
             text: "desc",
             picture: (item: VideoItem) => item.pic,
-            iframe: (item: VideoItem) => ({
-              src: `https://player.bilibili.com/player.html?bvid=${item.bvid}`,
-            }),
           },
         },
       }),

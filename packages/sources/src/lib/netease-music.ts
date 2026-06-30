@@ -98,10 +98,6 @@ export default $provider({
               const pic = extractCover(track)
               return pic ? { src: pic } : undefined
             },
-            iframe: track => ({
-              src: `https://music.163.com/outchain/player?type=2&id=${track.id}&auto=1&height=66`,
-              height: 90,
-            }),
           },
         },
       }),

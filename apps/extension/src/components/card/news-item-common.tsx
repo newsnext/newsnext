@@ -8,7 +8,7 @@ interface NewsItemInlineProps {
   className?: string
 }
 
-export function NewsItemInline({ item, className }: NewsItemInlineProps) {
+export function NewsItemInline({ item }: NewsItemInlineProps) {
   const hasMeta = item?.inline?.html || item?.inline?.text
   const hasMark = item?.inline?.mark
 
@@ -17,7 +17,7 @@ export function NewsItemInline({ item, className }: NewsItemInlineProps) {
   }
 
   return (
-    <>
+    <span className="space-x-1 align-middle">
       {hasMark && extractPictures(hasMark).map((mark, i) => {
         const { src, scale, radius } = mark
         return (
@@ -28,15 +28,15 @@ export function NewsItemInline({ item, className }: NewsItemInlineProps) {
               transform: `scale(${scale ?? 1})`,
               borderRadius: `${radius ?? 4}px`,
             }}
-            className="h-4 inline -mt-1 mr-1"
+            className="h-4 inline-block -mt-1"
           />
         )
       })}
-      <span className={cn("text-xs text-neutral-400/80 space-x-1", className)}>
+      <span className="text-xs text-neutral-400/80 truncate max-w-80 inline-block">
         {item.inline?.html && <span dangerouslySetInnerHTML={{ __html: item.inline.html }} />}
         {item.inline?.text && <span>{item.inline.text}</span>}
       </span>
-    </>
+    </span>
   )
 }
 
@@ -60,7 +60,7 @@ export function NewsItemSummary({ item, className }: NewsItemSummaryProps) {
               transform: `scale(${scale ?? 1})`,
               borderRadius: `${radius ?? 4}px`,
             }}
-            className="h-4 w-4 object-contain inline -mt-1"
+            className="h-4 w-4 object-contain inline-block -mt-1"
           />
         )
       })}
@@ -68,7 +68,7 @@ export function NewsItemSummary({ item, className }: NewsItemSummaryProps) {
         {item.title}
       </span>
       {item.inline && (
-        <NewsItemInline item={item} className="truncate align-middle max-w-80 inline-block -mt-1" />
+        <NewsItemInline item={item} />
       )}
     </span>
   )

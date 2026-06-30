@@ -12,6 +12,7 @@ import { NewsItemLink } from "../preview/news-item-preview"
 import { NewsItemSummary } from "./news-item-common"
 
 const RAIL_PATH = "M6 0 Q0 25 6 50 Q12 75 6 100"
+const LABEL_RAIL_PATH = "M10 0 Q2 0 2 20 Q2 35 6 50 Q12 75 6 100"
 
 interface Props {
   items: NewsItem[]
@@ -39,10 +40,10 @@ export function Timeline({ items, scrollRef, relativeUpdatedTime, color, preview
 
     return (
       <div className={cn("relative min-w-0 pb-2", index === items.length - 1 && "pb-0")}>
-        <div className="-ml-1 pointer-events-none absolute inset-y-0 w-3.5" aria-hidden>
+        <div className="-ml-0.5 pointer-events-none absolute inset-y-0 w-4" aria-hidden>
           <svg
             className="pointer-events-none absolute inset-0 h-full w-full"
-            viewBox="0 0 10 100"
+            viewBox="0 0 12 100"
             preserveAspectRatio="none"
           >
             <defs>
@@ -60,7 +61,7 @@ export function Timeline({ items, scrollRef, relativeUpdatedTime, color, preview
               </linearGradient>
             </defs>
             <path
-              d={RAIL_PATH}
+              d={showTimeLabel ? LABEL_RAIL_PATH : RAIL_PATH}
               className="fill-none"
               stroke={`url(#${gradientIdPrefix}-${index})`}
               vectorEffect="non-scaling-stroke"
@@ -71,10 +72,10 @@ export function Timeline({ items, scrollRef, relativeUpdatedTime, color, preview
           </svg>
         </div>
         <div className="flex min-w-0 rounded-xl hover:bg-neutral-400/10">
-          <div className="w-5 shrink-0" aria-hidden />
+          <div className="w-4 shrink-0" aria-hidden />
           <div className="min-w-0 flex flex-1 flex-col">
             {showTimeLabel && (
-              <div className="-ml-5 mb-2">
+              <div className="-ml-4 mb-2">
                 <span className="inline-flex rounded-3xl bg-neutral-400/10 p-1 text-xs leading-none opacity-80">
                   {timeLabel}
                 </span>
