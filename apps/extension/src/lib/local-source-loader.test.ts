@@ -46,25 +46,23 @@ describe("loadLocalSource", () => {
     expect(writeCachedLocalSource).toHaveBeenCalledWith(result)
   })
 
-  it("sends JSON params to the background before local normalization", async () => {
+  it("sends query params to the background before local normalization", async () => {
     readCachedLocalSourceMock.mockResolvedValue(undefined)
     const loadSource = vi.fn().mockResolvedValue({
-      items: [{ title: "V2EX", url: "https://www.v2ex.com/t/1" }],
+      items: [{ title: "Song", url: "https://music.163.com/song?id=1" }],
       updated: 123,
     })
 
     createBackgroundClientMock.mockReturnValue({ loadSource } as never)
 
-    await loadLocalSource("json:default", {
-      url: "https://www.v2ex.com/feed/ideas.json",
-      headers: "{}",
+    await loadLocalSource("netease-music:default", {
+      id: "https://music.163.com/playlist?id=5059661515",
     })
 
     expect(loadSource).toHaveBeenCalledWith({
-      sourceId: "json:default",
+      sourceId: "netease-music:default",
       params: {
-        url: "https://www.v2ex.com/feed/ideas.json",
-        headers: "{}",
+        id: "https://music.163.com/playlist?id=5059661515",
       },
     })
   })
