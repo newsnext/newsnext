@@ -44,6 +44,8 @@
     "@iconify-json/ph": "catalog:",
     "@newsnext/shared": "workspace:*",
     "@tailwindcss/vite": "catalog:",
+    "@tanstack/react-query-devtools": "catalog:",
+    "@tanstack/react-router-devtools": "catalog:",
     "@vitejs/plugin-react": "catalog:",
     "tailwindcss": "catalog:",
     "unplugin-icons": "catalog:",
