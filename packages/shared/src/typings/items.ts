@@ -33,11 +33,6 @@ export interface NewsItem {
    */
   url: string
   /**
-   * Mobile-optimized URL
-   * @default url
-   */
-  mobileUrl?: string
-  /**
    * Timestamp in milliseconds
    */
   timestamp?: number

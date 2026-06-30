@@ -7,7 +7,6 @@ interface CLSItem {
   id: number
   title?: string
   brief: string
-  shareurl: string
   ctime: number
   is_ad?: number
 }
@@ -53,7 +52,6 @@ async function getSearchParams(moreParams: Record<string, SearchParamValue> = {}
 function toNewsItem(item: CLSItem): NewsItem {
   return {
     title: item.title || item.brief,
-    mobileUrl: item.shareurl,
     timestamp: item.ctime * 1000,
     url: `https://www.cls.cn/detail/${item.id}`,
   }
