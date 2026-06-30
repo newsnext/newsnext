@@ -38,6 +38,7 @@ export interface HtmlSourceOptions {
   fields: {
     title: FieldSelector<string>
     url: FieldSelector<string>
+    mobileUrl?: FieldSelector<string>
     timestamp?: FieldSelector<number>
     inline?: {
       text?: FieldSelector<string>
@@ -134,6 +135,12 @@ export const $htmlLoader = createLoader<HtmlSourceOptions>(async (opts) => {
     const item: NewsItem = {
       title,
       url: itemUrl,
+    }
+
+    if (fields.mobileUrl) {
+      const mobileUrlConfig = resolveFieldSelector(fields.mobileUrl)
+      const mobileUrl = resolveField($, el, mobileUrlConfig)
+      if (mobileUrl) item.mobileUrl = mobileUrl
     }
 
     if (fields.timestamp) {

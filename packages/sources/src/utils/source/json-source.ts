@@ -29,6 +29,7 @@ export interface JsonSourceOptions<Item = any> {
   fields: {
     title: FieldResolver<Item, string>
     url: FieldResolver<Item, string>
+    mobileUrl?: FieldResolver<Item, string>
     timestamp?: FieldResolver<Item, number>
     inline?: {
       text?: FieldResolver<Item, string>
@@ -97,6 +98,11 @@ async function jsonSourceHandler<Item = any>(opts: JsonSourceOptions<Item>): Pro
     const newsItem: NewsItem = {
       title,
       url: itemUrl,
+    }
+
+    if (fields.mobileUrl) {
+      const mobileUrl = resolveValue(item, fields.mobileUrl)
+      if (mobileUrl) newsItem.mobileUrl = mobileUrl
     }
 
     if (fields.timestamp) {
