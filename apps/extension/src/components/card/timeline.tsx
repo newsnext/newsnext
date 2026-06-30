@@ -72,10 +72,10 @@ export function Timeline({ items, scrollRef, relativeUpdatedTime, color, preview
           </svg>
         </div>
         <div className="flex min-w-0 rounded-xl hover:bg-neutral-400/10">
-          <div className="w-4 shrink-0" aria-hidden />
+          <div className="w-5 shrink-0" aria-hidden />
           <div className="min-w-0 flex flex-1 flex-col">
             {showTimeLabel && (
-              <div className="-ml-4 mb-2">
+              <div className="-ml-5 mb-2">
                 <span className="inline-flex rounded-3xl bg-neutral-400/10 p-1 text-xs leading-none opacity-80">
                   {timeLabel}
                 </span>
