@@ -1,4 +1,3 @@
-import { myFetch } from "../utils/fetch"
 import { $provider, $source } from "../utils/source"
 
 interface LinuxDoTopicListResponse {
@@ -9,6 +8,12 @@ interface LinuxDoTopicListResponse {
     top_tags: string[]
     topics: LinuxDoTopic[]
   }
+  users?: LinuxDoUser[]
+}
+
+interface LinuxDoUser {
+  username: string
+  avatar_template?: string
 }
 
 interface LinuxDoTopic {
@@ -36,30 +41,34 @@ interface LinuxDoTopic {
   pinned_globally: boolean
 }
 
-async function fetchTopics(url: string): Promise<LinuxDoTopic[]> {
-  const res = await myFetch<LinuxDoTopicListResponse>(url)
+interface LinuxDoTopicWithAvatar extends LinuxDoTopic {
+  last_poster_avatar?: string
+}
+
+function normalizeLinuxDoAvatarUrl(avatarTemplate: string): string {
+  const avatarUrl = avatarTemplate.replace("{size}", "48")
+  if (avatarUrl.startsWith("//")) {
+    return `https:${avatarUrl}`
+  }
+
+  if (avatarUrl.startsWith("/")) {
+    return `https://linux.do${avatarUrl}`
+  }
+
+  return avatarUrl
+}
+
+function getTopicsWithAvatars(res: LinuxDoTopicListResponse): LinuxDoTopicWithAvatar[] {
+  const avatars = new Map(
+    (res.users ?? [])
+      .flatMap(user => user.avatar_template ? [[user.username, normalizeLinuxDoAvatarUrl(user.avatar_template)]] : []),
+  )
 
   return res.topic_list.topics.filter(topic =>
     topic.visible && !topic.archived && !topic.pinned,
-  )
-}
-
-const latestLoader = async () => {
-  const topics = await fetchTopics("https://linux.do/latest.json?order=created")
-
-  return topics.map(topic => ({
-    title: topic.title,
-    timestamp: new Date(topic.created_at).valueOf(),
-    url: `https://linux.do/t/topic/${topic.id}`,
-  }))
-}
-
-const hotLoader = async () => {
-  const topics = await fetchTopics("https://linux.do/top/daily.json")
-
-  return topics.map(topic => ({
-    title: topic.title,
-    url: `https://linux.do/t/topic/${topic.id}`,
+  ).map(topic => ({
+    ...topic,
+    last_poster_avatar: avatars.get(topic.last_poster_username),
   }))
 }
 
@@ -69,21 +78,42 @@ export default $provider({
   home: "https://linux.do",
   category: "tech",
   sources: [
-    $source(
+    $source.json(
       {
         key: "latest",
         title: "Latest",
         type: "timeline",
       },
-      latestLoader,
+      () => ({
+        url: "https://linux.do/latest.json?order=created",
+        items: getTopicsWithAvatars,
+        fields: {
+          title: "title",
+          timestamp: topic => new Date(topic.created_at).valueOf(),
+          url: topic => `https://linux.do/t/topic/${topic.id}`,
+          inline: {
+            icon: topic => topic.last_poster_avatar ? { src: topic.last_poster_avatar, radius: 999 } : undefined,
+          },
+        },
+      }),
     ),
-    $source(
+    $source.json(
       {
         key: "hot",
         title: "Hot",
         type: "hottest",
       },
-      hotLoader,
+      () => ({
+        url: "https://linux.do/top/daily.json",
+        items: getTopicsWithAvatars,
+        fields: {
+          title: "title",
+          url: topic => `https://linux.do/t/topic/${topic.id}`,
+          inline: {
+            icon: topic => topic.last_poster_avatar ? { src: topic.last_poster_avatar, radius: 999 } : undefined,
+          },
+        },
+      }),
     ),
   ],
 })

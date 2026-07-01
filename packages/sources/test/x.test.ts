@@ -100,6 +100,7 @@ describe("x source", () => {
                                     user_results: {
                                       result: {
                                         legacy: {
+                                          profile_image_url_https: "https://pbs.twimg.com/profile_images/openai_normal.jpg",
                                           screen_name: "OpenAI",
                                         },
                                       },
@@ -134,6 +135,7 @@ describe("x source", () => {
                                     user_results: {
                                       result: {
                                         legacy: {
+                                          profile_image_url_https: "https://pbs.twimg.com/profile_images/openai_normal.jpg",
                                           screen_name: "OpenAI",
                                         },
                                       },
@@ -196,7 +198,11 @@ describe("x source", () => {
         url: "https://x.com/OpenAI/status/456",
         timestamp: Date.parse("Sat Jun 27 12:00:00 +0000 2026"),
         inline: {
-          text: "@OpenAI · 1 like",
+          text: "1 like",
+          icon: {
+            src: "https://pbs.twimg.com/profile_images/openai_normal.jpg",
+            radius: 999,
+          },
         },
       },
       {
@@ -204,7 +210,11 @@ describe("x source", () => {
         url: "https://x.com/OpenAI/status/123",
         timestamp: Date.parse("Fri Jun 26 12:00:00 +0000 2026"),
         inline: {
-          text: "@OpenAI · 1.2K likes",
+          text: "1.2K likes",
+          icon: {
+            src: "https://pbs.twimg.com/profile_images/openai_normal.jpg",
+            radius: 999,
+          },
         },
         preview: {
           text: "Hello from X",
@@ -314,7 +324,7 @@ describe("x source", () => {
         url: "https://x.com/NewsNext/status/790",
         timestamp: Date.parse("Sun Jun 28 10:30:00 +0000 2026"),
         inline: {
-          text: "@NewsNext · 9.9K likes",
+          text: "9.9K likes",
         },
       },
       {
@@ -322,7 +332,7 @@ describe("x source", () => {
         url: "https://x.com/NewsNext/status/789",
         timestamp: Date.parse("Sun Jun 28 09:30:00 +0000 2026"),
         inline: {
-          text: "@NewsNext · 42 likes",
+          text: "42 likes",
         },
       },
     ])

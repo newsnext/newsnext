@@ -120,6 +120,7 @@ interface XTweetResult {
     user_results?: {
       result?: {
         legacy?: {
+          profile_image_url_https?: string
           screen_name?: string
         }
       }
@@ -314,7 +315,8 @@ function formatLikeCount(count: number): string {
 
 function xTweetToNewsItem(tweet: XTweetResult): NewsItem | undefined {
   const id = tweet.rest_id
-  const screenName = tweet.core?.user_results?.result?.legacy?.screen_name
+  const user = tweet.core?.user_results?.result?.legacy
+  const screenName = user?.screen_name
   const text = getTweetText(tweet)
   if (!id || !screenName || !text) {
     return undefined
@@ -330,7 +332,8 @@ function xTweetToNewsItem(tweet: XTweetResult): NewsItem | undefined {
     title: text,
     url: `${X_ORIGIN}/${screenName}/status/${id}`,
     inline: {
-      text: `@${screenName} · ${formatLikeCount(tweet.legacy?.favorite_count ?? 0)}`,
+      text: formatLikeCount(tweet.legacy?.favorite_count ?? 0),
+      ...(user.profile_image_url_https ? { icon: { src: user.profile_image_url_https, radius: 999 } } : {}),
     },
   }
 

@@ -58,7 +58,6 @@ export default $provider({
           url: "url",
           inline: {
             icon: item => item.author.avatar,
-            text: () => "",
           },
           preview: {
             html: "content_html",
