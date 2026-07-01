@@ -1,7 +1,7 @@
 import { QueryClient } from "@tanstack/react-query"
 import { createMemoryHistory, createRouter, RouterProvider } from "@tanstack/react-router"
-import ReactDOM from "react-dom/client"
 import { AppProvider } from "@/components/app-provider"
+import { renderPersistentReactRoot } from "@/lib/react-root"
 import { routeTree } from "./routeTree"
 import "./globals.css"
 
@@ -24,8 +24,4 @@ function App() {
 }
 
 const rootElement = document.getElementById("root")!
-
-if (!rootElement.innerHTML) {
-  const root = ReactDOM.createRoot(rootElement)
-  root.render(<App />)
-}
+renderPersistentReactRoot(rootElement, <App />)

@@ -1,8 +1,8 @@
 import type { NewsItem, SourceDescriptor } from "@newsnext/sources/typings"
 import { sourceDescriptors } from "@newsnext/sources/metadata"
 import React from "react"
-import ReactDOM from "react-dom/client"
 import { createBackgroundClient } from "@/lib/background-client"
+import { renderPersistentReactRoot } from "@/lib/react-root"
 import "./style.css"
 
 interface SourceRunState {
@@ -135,7 +135,10 @@ function Popup(): React.JSX.Element {
   )
 }
 
-ReactDOM.createRoot(document.getElementById("root")!).render(
+const rootElement = document.getElementById("root")!
+
+renderPersistentReactRoot(
+  rootElement,
   <React.StrictMode>
     <Popup />
   </React.StrictMode>,
