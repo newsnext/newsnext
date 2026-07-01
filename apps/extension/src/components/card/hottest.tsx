@@ -113,7 +113,7 @@ export function Hottest({ items, scrollRef }: Props) {
         <NewsItemLink
           item={item}
           className={cn(
-            "flex gap-2 items-start relative cursor-pointer **:cursor-pointer transition-all",
+            "flex gap-2 items-center relative cursor-pointer **:cursor-pointer transition-all",
             "hover:bg-neutral-400/10 rounded-xl",
           )}
         >

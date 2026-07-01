@@ -17,22 +17,25 @@ export function NewsItemInline({ item }: NewsItemInlineProps) {
   }
 
   return (
-    <span className="space-x-1 align-middle">
-      {hasMark && extractPictures(hasMark).map((mark, i) => {
-        const { src, scale, radius } = mark
-        return (
-          <ProxiedImage
-            key={`mark-${i}`}
-            src={src}
-            style={{
-              transform: `scale(${scale ?? 1})`,
-              borderRadius: `${radius ?? 4}px`,
-            }}
-            className="h-4 inline-block -mt-1"
-          />
-        )
-      })}
-      <span className="text-xs text-neutral-400/80 truncate max-w-80 inline-block">
+    <span className="inline-flex max-w-full items-center gap-1 align-middle leading-none">
+      {hasMark
+        ? extractPictures(hasMark).map((mark, i) => {
+            const { src, scale, radius } = mark
+            return (
+              <ProxiedImage
+                key={`mark-${i}`}
+                src={src}
+                style={{
+                  transform: `scale(${scale ?? 1})`,
+                  borderRadius: `${radius ?? 4}px`,
+                }}
+                className="inline-block h-4 shrink-0 object-cover align-middle"
+              />
+            )
+          })
+          // for hight
+        : <span className="inline-block h-4 -ml-1" />}
+      <span className="self-end inline-flex min-w-0 max-w-80 items-center gap-1 truncate text-xs leading-none text-neutral-400/80">
         {item.inline?.html && <span dangerouslySetInnerHTML={{ __html: item.inline.html }} />}
         {item.inline?.text && <span>{item.inline.text}</span>}
       </span>
@@ -47,24 +50,23 @@ interface NewsItemSummaryProps {
 
 export function NewsItemSummary({ item, className }: NewsItemSummaryProps) {
   return (
-    <span className={cn("leading-none space-x-1", className)}>
+    <span className={cn("leading-none", className)}>
       {item.inline?.icon && extractPictures(item.inline.icon).map((icon, i) => {
-        const { src, scale, radius, href } = icon
+        const { src, scale, radius } = icon
         return (
           <ProxiedImage
             key={`icon-${i}`}
             delay={500}
             src={src}
-            href={href}
             style={{
               transform: `scale(${scale ?? 1})`,
               borderRadius: `${radius ?? 4}px`,
             }}
-            className="h-4 w-4 object-contain inline-block -mt-1"
+            className="mr-1 inline-block h-4 w-4 object-cover align-middle"
           />
         )
       })}
-      <span className="text-base">
+      <span className="mr-1 text-base align-middle">
         {item.title}
       </span>
       {item.inline && (
