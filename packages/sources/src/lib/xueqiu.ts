@@ -15,7 +15,7 @@ export default $provider({
   sources: [
     $source.json(
       {
-        key: "default",
+        key: "hot-stock",
         type: "hottest",
       },
       () => ({

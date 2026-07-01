@@ -107,7 +107,7 @@ export default $provider({
   sources: [
     $source(
       {
-        key: "default",
+        key: "feed",
         title: "Feed",
         type: "timeline",
         category: "others",

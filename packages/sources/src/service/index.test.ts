@@ -8,15 +8,17 @@ import {
 } from "./index"
 
 describe("source service", () => {
-  it("parses source IDs with default source IDs", () => {
-    expect(parseSourceId("rss")).toEqual({
+  it("parses provider-qualified source IDs", () => {
+    expect(parseSourceId("rss:latest")).toEqual({
       provider: "rss",
-      source: "default",
+      source: "latest",
     })
   })
 
   it("throws for invalid source IDs", () => {
     expect(() => parseSourceId("")).toThrowError(SourceServiceError)
+    expect(() => parseSourceId("rss")).toThrowError(SourceServiceError)
+    expect(() => parseSourceId("rss:latest:extra")).toThrowError(SourceServiceError)
   })
 
   it("normalizes parameter values using source parameter definitions", () => {
@@ -102,7 +104,7 @@ describe("source service", () => {
   })
 
   it("normalizes NetEase Music playlist links to playlist IDs", () => {
-    expect(normalizeSourceParams(neteaseMusic.sources.default, {
+    expect(normalizeSourceParams(neteaseMusic.sources.playlist, {
       id: "https://music.163.com/playlist?id=5059661515&uct2=U2FsdGVkX1+h604nouVzL3eBMasVMbAgGM76vxJxHfw=",
     })).toEqual({
       id: "5059661515",

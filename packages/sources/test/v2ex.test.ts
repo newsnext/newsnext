@@ -8,7 +8,7 @@ vi.mock("../src/utils/fetch", () => ({
 
 describe("v2ex source", () => {
   it("uses a single selectable JSON feed", async () => {
-    const source = providers.v2ex.sources.default
+    const source = providers.v2ex.sources.feed
 
     expect(source.params).toHaveProperty("feed")
     expect(source.params).not.toHaveProperty("feeds")
@@ -42,7 +42,6 @@ describe("v2ex source", () => {
         timestamp: Date.parse("2026-06-28T00:00:00.000Z"),
         inline: {
           icon: "https://cdn.v2ex.com/avatar.png",
-          text: "",
         },
         preview: {
           html: "<p>Hello</p>",

@@ -24,7 +24,7 @@ export default $provider({
   sources: [
     $source.json<AIHotItem>(
       {
-        key: "default",
+        key: "all",
         type: "timeline",
       },
       () => ({

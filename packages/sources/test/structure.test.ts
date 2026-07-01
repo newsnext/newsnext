@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest"
 import { providers } from "../src"
 
 describe("source Structure Tests", () => {
-  it("registers tieba default source", () => {
-    expect(providers.tieba.sources.default).toMatchObject({
+  it("registers tieba hot-topic source", () => {
+    expect(providers.tieba.sources["hot-topic"]).toMatchObject({
       providerTitle: "百度贴吧",
       title: "热议",
       type: "hottest",

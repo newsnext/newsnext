@@ -10,7 +10,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "type": "timeline",
     "category": "tech",
     "home": "https://aihot.virxact.com",
-    "id": "aihot:default"
+    "id": "aihot:all"
   },
   {
     "icon": "https://s3.newsnext.pro/icons/bilibili.png",
@@ -20,7 +20,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "type": "hottest",
     "category": "others",
     "home": "https://www.bilibili.com",
-    "id": "bilibili:default"
+    "id": "bilibili:hotword"
   },
   {
     "icon": "https://s3.newsnext.pro/icons/bilibili.png",
@@ -30,7 +30,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "type": "hottest",
     "category": "others",
     "home": "https://www.bilibili.com",
-    "id": "bilibili:hot-video"
+    "id": "bilibili:popular"
   },
   {
     "icon": "https://s3.newsnext.pro/icons/bilibili.png",
@@ -50,7 +50,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "type": "timeline",
     "category": "finance",
     "home": "https://www.cls.cn/telegraph",
-    "id": "cls:default"
+    "id": "cls:telegraph"
   },
   {
     "icon": "https://s3.newsnext.pro/icons/cls.png",
@@ -70,7 +70,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "type": "hottest",
     "category": "finance",
     "home": "https://www.cls.cn",
-    "id": "cls:hot"
+    "id": "cls:hot-article"
   },
   {
     "icon": "https://s3.newsnext.pro/icons/folo.png",
@@ -87,7 +87,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "type": "timeline",
     "category": "others",
     "home": "https://folo.is",
-    "id": "folo:default"
+    "id": "folo:feed"
   },
   {
     "icon": "https://s3.newsnext.pro/icons/folo.png",
@@ -147,7 +147,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "type": "hottest",
     "category": "others",
     "home": "https://github.com/trending",
-    "id": "github:default"
+    "id": "github:trending"
   },
   {
     "icon": "https://s3.newsnext.pro/icons/hackernews.png",
@@ -157,7 +157,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "type": "hottest",
     "category": "others",
     "home": "https://news.ycombinator.com/",
-    "id": "hackernews:default"
+    "id": "hackernews:top"
   },
   {
     "icon": "https://s3.newsnext.pro/icons/hackernews.png",
@@ -205,7 +205,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "type": "hottest",
     "category": "tech",
     "home": "https://linux.do",
-    "id": "linuxdo:hot"
+    "id": "linuxdo:top-daily"
   },
   {
     "icon": "https://s3.newsnext.pro/icons/netease-music.png",
@@ -222,7 +222,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "type": "hottest",
     "category": "others",
     "home": "https://music.163.com/#/playlist?id=19723756",
-    "id": "netease-music:default"
+    "id": "netease-music:playlist"
   },
   {
     "icon": "https://s3.newsnext.pro/icons/newsnow.png",
@@ -273,7 +273,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "type": "timeline",
     "category": "others",
     "home": "https://www.newsnow.com",
-    "id": "newsnow:default"
+    "id": "newsnow:topic-latest"
   },
   {
     "icon": "https://s3.newsnext.pro/icons/tieba.png",
@@ -283,7 +283,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "type": "hottest",
     "category": "china",
     "home": "https://tieba.baidu.com",
-    "id": "tieba:default"
+    "id": "tieba:hot-topic"
   },
   {
     "icon": "https://s3.newsnext.pro/icons/v2ex.png",
@@ -316,7 +316,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "color": "slate",
     "category": "others",
     "home": "https://v2ex.com/",
-    "id": "v2ex:default"
+    "id": "v2ex:feed"
   },
   {
     "icon": "https://s3.newsnext.pro/icons/weibo.png",
@@ -325,7 +325,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "type": "hottest",
     "category": "others",
     "home": "https://s.weibo.com/top/summary?cate=realtimehot",
-    "id": "weibo:default"
+    "id": "weibo:hot-search"
   },
   {
     "icon": "https://x.com/favicon.ico",
@@ -384,7 +384,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "type": "hottest",
     "category": "world",
     "home": "https://x.com",
-    "id": "x:default"
+    "id": "x:place-trends"
   },
   {
     "icon": "https://x.com/favicon.ico",
@@ -430,7 +430,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "type": "hottest",
     "category": "others",
     "home": "https://xueqiu.com",
-    "id": "xueqiu:default"
+    "id": "xueqiu:hot-stock"
   },
   {
     "icon": "https://s3.newsnext.pro/icons/zaobao.png",
@@ -439,7 +439,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "type": "timeline",
     "category": "others",
     "home": "https://www.zaobao.com",
-    "id": "zaobao:default"
+    "id": "zaobao:realtime"
   },
   {
     "icon": "https://s3.newsnext.pro/icons/zhihu.png",
@@ -449,6 +449,6 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "type": "hottest",
     "category": "others",
     "home": "https://www.zhihu.com",
-    "id": "zhihu:default"
+    "id": "zhihu:hot-list"
   }
 ]

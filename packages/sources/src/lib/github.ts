@@ -46,7 +46,7 @@ export default $provider({
   sources: [
     $source.html(
       {
-        key: "default",
+        key: "trending",
         title: "Trending",
         type: "hottest",
         params: {

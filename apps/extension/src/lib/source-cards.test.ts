@@ -4,7 +4,7 @@ import { buildBoardSources } from "./source-cards"
 
 const testSources: SourceDescriptor[] = [
   {
-    id: "test:default",
+    id: "test:feed",
     providerTitle: "Test",
     color: "blue",
     category: "tech",
@@ -20,8 +20,8 @@ describe("buildBoardSources", () => {
       starredSourceInstanceIds: [],
       sourceInstances: [
         {
-          instanceId: "test:default::fork",
-          sourceId: "test:default",
+          instanceId: "test:feed::fork",
+          sourceId: "test:feed",
           params: {},
           isFork: true,
           createdAt: 1,
@@ -30,10 +30,10 @@ describe("buildBoardSources", () => {
       isLocalOnly: true,
     })
 
-    expect(boardSources.map["test:default::fork"]).toMatchObject({
+    expect(boardSources.map["test:feed::fork"]).toMatchObject({
       isFork: true,
       isLocalOnly: true,
-      sourceId: "test:default",
+      sourceId: "test:feed",
     })
   })
 })

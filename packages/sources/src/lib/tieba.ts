@@ -29,7 +29,7 @@ export default $provider({
   sources: [
     $source.json<TiebaTopic>(
       {
-        key: "default",
+        key: "hot-topic",
         title: "热议",
         type: "hottest",
       },

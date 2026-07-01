@@ -31,9 +31,9 @@ export interface PreparedSourceRequest<TParams extends SourceParamSchemaMap = So
 }
 
 export function parseSourceId(sourceId: string): ParsedSourceId {
-  const [provider, source = "default"] = sourceId.split(":")
+  const [provider, source, extra] = sourceId.split(":")
 
-  if (!provider || !source) {
+  if (!provider || !source || extra !== undefined) {
     throw new SourceServiceError(
       "INVALID_FORMAT",
       "Invalid source ID format. Expected 'provider:source'",

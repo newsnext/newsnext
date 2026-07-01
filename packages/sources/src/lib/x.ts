@@ -448,7 +448,7 @@ export default $provider({
   sources: [
     $source(
       {
-        key: "default",
+        key: "place-trends",
         title: "Trending",
         type: "hottest",
         params: {

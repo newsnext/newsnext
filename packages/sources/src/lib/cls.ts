@@ -67,7 +67,7 @@ export default $provider({
   sources: [
     $source(
       {
-        key: "default",
+        key: "telegraph",
         title: "电报",
         type: "timeline",
         home: "https://www.cls.cn/telegraph",
@@ -108,7 +108,7 @@ export default $provider({
     ),
     $source(
       {
-        key: "hot",
+        key: "hot-article",
         title: "热门",
         type: "hottest",
         home: "https://www.cls.cn",

@@ -31,7 +31,7 @@ export default $provider({
   sources: [
     $source.json(
       {
-        key: "default",
+        key: "hot-list",
         title: "全站热榜",
         type: "hottest",
       },

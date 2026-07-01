@@ -30,7 +30,7 @@ export default $provider({
   sources: [
     $source.json(
       {
-        key: "default",
+        key: "hotword",
         title: "热搜",
         type: "hottest",
       },
@@ -48,7 +48,7 @@ export default $provider({
     ),
     $source.json(
       {
-        key: "hot-video",
+        key: "popular",
         title: "热门视频",
         type: "hottest",
       },

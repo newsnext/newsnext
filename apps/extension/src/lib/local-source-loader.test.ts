@@ -32,13 +32,13 @@ describe("loadLocalSource", () => {
 
     createBackgroundClientMock.mockReturnValue({ loadSource } as never)
 
-    const result = await loadLocalSource("github:default", { dateRange: "weekly" })
+    const result = await loadLocalSource("github:trending", { dateRange: "weekly" })
 
     expect(loadSource).toHaveBeenCalledWith({
-      sourceId: "github:default",
+      sourceId: "github:trending",
       params: { dateRange: "weekly" },
     })
-    expect(result.key).toMatch(/^github:default:/)
+    expect(result.key).toMatch(/^github:trending:/)
     expect(result).toMatchObject({
       updated: 123,
       items: [{ title: "Loaded in background", url: "https://example.com" }],
@@ -55,12 +55,12 @@ describe("loadLocalSource", () => {
 
     createBackgroundClientMock.mockReturnValue({ loadSource } as never)
 
-    await loadLocalSource("netease-music:default", {
+    await loadLocalSource("netease-music:playlist", {
       id: "https://music.163.com/playlist?id=5059661515",
     })
 
     expect(loadSource).toHaveBeenCalledWith({
-      sourceId: "netease-music:default",
+      sourceId: "netease-music:playlist",
       params: {
         id: "https://music.163.com/playlist?id=5059661515",
       },
@@ -69,26 +69,26 @@ describe("loadLocalSource", () => {
 
   it("returns fresh cached source data without requesting the background", async () => {
     const cachedResult = {
-      id: "github:default",
-      key: "github:default:cached",
+      id: "github:trending",
+      key: "github:trending:cached",
       items: [{ title: "Cached", url: "https://example.com/cached" }],
       updated: 456,
     }
 
     readCachedLocalSourceMock.mockResolvedValue(cachedResult)
 
-    const result = await loadLocalSource("github:default", { dateRange: "weekly" })
+    const result = await loadLocalSource("github:trending", { dateRange: "weekly" })
 
     expect(result).toBe(cachedResult)
-    expect(readCachedLocalSource).toHaveBeenCalledWith(expect.stringMatching(/^github:default:/), 60_000)
+    expect(readCachedLocalSource).toHaveBeenCalledWith(expect.stringMatching(/^github:trending:/), 60_000)
     expect(createBackgroundClient).not.toHaveBeenCalled()
     expect(writeCachedLocalSource).not.toHaveBeenCalled()
   })
 
   it("skips cached source data when fresh data is forced", async () => {
     const cachedResult = {
-      id: "github:default",
-      key: "github:default:cached",
+      id: "github:trending",
+      key: "github:trending:cached",
       items: [{ title: "Cached", url: "https://example.com/cached" }],
       updated: 456,
     }
@@ -100,11 +100,11 @@ describe("loadLocalSource", () => {
     readCachedLocalSourceMock.mockResolvedValue(cachedResult)
     createBackgroundClientMock.mockReturnValue({ loadSource } as never)
 
-    const result = await loadLocalSource("github:default", { dateRange: "weekly" }, { forceFresh: true })
+    const result = await loadLocalSource("github:trending", { dateRange: "weekly" }, { forceFresh: true })
 
     expect(readCachedLocalSource).not.toHaveBeenCalled()
     expect(loadSource).toHaveBeenCalledWith({
-      sourceId: "github:default",
+      sourceId: "github:trending",
       params: { dateRange: "weekly" },
     })
     expect(result).toMatchObject({
@@ -120,17 +120,17 @@ describe("loadLocalSource", () => {
     })
 
     readCachedLocalSourceMock.mockResolvedValue({
-      id: "github:default",
-      key: "github:default:cached",
+      id: "github:trending",
+      key: "github:trending:cached",
       items: [],
       updated: 456,
     })
     createBackgroundClientMock.mockReturnValue({ loadSource } as never)
 
-    const result = await loadLocalSource("github:default", { dateRange: "weekly" })
+    const result = await loadLocalSource("github:trending", { dateRange: "weekly" })
 
     expect(loadSource).toHaveBeenCalledWith({
-      sourceId: "github:default",
+      sourceId: "github:trending",
       params: { dateRange: "weekly" },
     })
     expect(result.items).toEqual([{ title: "Fresh", url: "https://example.com/fresh" }])
@@ -146,8 +146,8 @@ describe("loadLocalSource", () => {
     createBackgroundClientMock.mockReturnValue({ loadSource } as never)
 
     const [firstResult, secondResult] = await Promise.all([
-      loadLocalSource("github:default", { dateRange: "weekly" }),
-      loadLocalSource("github:default", { dateRange: "weekly" }),
+      loadLocalSource("github:trending", { dateRange: "weekly" }),
+      loadLocalSource("github:trending", { dateRange: "weekly" }),
     ])
 
     expect(firstResult).toEqual(secondResult)

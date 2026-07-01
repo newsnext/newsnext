@@ -14,7 +14,7 @@ export default $provider({
   sources: [
     $source.html(
       {
-        key: "default",
+        key: "hot-search",
         type: "hottest",
       },
       () => ({

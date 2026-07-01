@@ -40,7 +40,7 @@ export default $provider({
   sources: [
     $source.json(
       {
-        key: "default",
+        key: "feed",
         params: {
           feed: $selectParam<FeedId>({
             title: "Feed",

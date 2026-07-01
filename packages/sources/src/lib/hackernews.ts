@@ -49,7 +49,7 @@ export default $provider({
   sources: [
     $source.html(
       {
-        key: "default",
+        key: "top",
         type: "hottest",
         title: "Hottest",
       },

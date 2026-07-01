@@ -99,7 +99,7 @@ export default $provider({
     ),
     $source.json(
       {
-        key: "hot",
+        key: "top-daily",
         title: "Hot",
         type: "hottest",
       },
