@@ -2,7 +2,7 @@ import type { ReactNode } from "react"
 import type { BoardSource } from "@/typings/source"
 import { useSetAtom } from "jotai"
 import { useInView } from "motion/react"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { FlipAnimate } from "@/components/common/flip-animate"
 import { useSourceParams } from "@/hooks"
@@ -13,17 +13,12 @@ import {
   upsertInstanceAtom,
 } from "@/store/board"
 import { CardBack } from "./card-back"
-import { CardPreviewContext } from "./card-context"
 import { CardFront } from "./card-front"
 
-const HOVER_PREVIEW_ENABLED = true
 const PICTURE_IN_PICTURE_REFRESH_INTERVAL = 1000 * 60
 const PICTURE_IN_PICTURE_SIZE = {
   width: 400,
   height: 500,
-}
-const PICTURE_IN_PICTURE_PREVIEW_CONTEXT = {
-  canShowHoverPreview: false,
 }
 
 export interface CardProps {
@@ -140,14 +135,8 @@ function CardContent({ id, source, dragHandle }: CardProps) {
     }
   }, [pictureInPictureWindow, providerTitle, refetch, title])
 
-  const previewContextValue = useMemo(
-    () => ({
-      canShowHoverPreview: HOVER_PREVIEW_ENABLED,
-    }),
-    [],
-  )
   return (
-    <CardPreviewContext.Provider value={previewContextValue}>
+    <>
       <FlipAnimate
         rotate="y"
         flipped={isFlipped}
@@ -185,23 +174,21 @@ function CardContent({ id, source, dragHandle }: CardProps) {
       {pictureInPictureWindow && createPortal(
         <div className="grid-texture-background h-screen w-screen bg-background sprinkle-theme-400 p-2">
           <div className="h-full w-full">
-            <CardPreviewContext.Provider value={PICTURE_IN_PICTURE_PREVIEW_CONTEXT}>
-              <CardFront
-                id={id}
-                source={source}
-                items={items}
-                isFetching={isFetching}
-                sourceErrorMessage={sourceErrorMessage}
-                updatedTime={updatedTime}
-                onRefresh={refetch}
-                actionsVariant="refresh-only"
-              />
-            </CardPreviewContext.Provider>
+            <CardFront
+              id={id}
+              source={source}
+              items={items}
+              isFetching={isFetching}
+              sourceErrorMessage={sourceErrorMessage}
+              updatedTime={updatedTime}
+              onRefresh={refetch}
+              actionsVariant="refresh-only"
+            />
           </div>
         </div>,
         pictureInPictureWindow.document.body,
       )}
-    </CardPreviewContext.Provider>
+    </>
   )
 }
 

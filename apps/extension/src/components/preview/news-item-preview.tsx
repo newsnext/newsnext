@@ -4,7 +4,6 @@ import type { NewsItem } from "@/typings/source"
 import { extractPictures } from "@newsnext/shared/types"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@newsnext/ui/components/hover-card"
 import { cn } from "@/lib/utils"
-import { useCardPreview } from "../card/card-context"
 import { ProxiedImage } from "./proxied-image"
 
 interface NewsItemLinkProps {
@@ -34,12 +33,11 @@ function NewsItemAnchor({ href, className, children, ...props }: NewsItemAnchorP
 }
 
 export function NewsItemLink({ item, className, children }: NewsItemLinkProps) {
-  const { canShowHoverPreview } = useCardPreview()
   const href = item.url
 
   const hasPreview = item.preview?.html || item.preview?.text || item.preview?.picture || item.preview?.iframe
 
-  if (hasPreview && canShowHoverPreview) {
+  if (hasPreview) {
     return (
       <HoverCard>
         <HoverCardTrigger
