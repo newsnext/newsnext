@@ -12,7 +12,7 @@ import { NewsItemLink } from "../preview/news-item-preview"
 import { NewsItemSummary } from "./news-item-common"
 
 const RAIL_PATH = "M6 0 Q0 25 6 50 Q12 75 6 100"
-const LABEL_RAIL_PATH = "M10 0 Q2 0 2 20 Q2 35 6 50 Q12 75 6 100"
+const LABEL_RAIL_PATH = "M16 0 Q3 0 2 20 Q2 35 6 50 Q12 75 6 100"
 
 interface Props {
   items: NewsItem[]
@@ -39,7 +39,7 @@ export function Timeline({ items, scrollRef, relativeUpdatedTime, color }: Props
         <div className="-ml-0.5 pointer-events-none absolute inset-y-0 w-4" aria-hidden>
           <svg
             className="pointer-events-none absolute inset-0 h-full w-full"
-            viewBox="0 0 12 100"
+            viewBox="0 0 14 100"
             preserveAspectRatio="none"
           >
             <defs>
