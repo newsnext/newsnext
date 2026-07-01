@@ -20,6 +20,7 @@ const PICTURE_IN_PICTURE_SIZE = {
   width: 400,
   height: 500,
 }
+const CARD_IN_VIEW_MARGIN = "200px"
 
 export interface CardProps {
   id: string
@@ -200,7 +201,7 @@ export default function Card(props: CardProps) {
     props.nodeRef?.(node)
   }
 
-  const isInView = useInView(ref, { once: true })
+  const isInView = useInView(ref, { once: true, margin: CARD_IN_VIEW_MARGIN })
 
   useEffect(() => {
     if (isInView) {

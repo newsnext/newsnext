@@ -85,6 +85,57 @@ describe("loadLocalSource", () => {
     expect(writeCachedLocalSource).not.toHaveBeenCalled()
   })
 
+  it("skips cached source data when fresh data is forced", async () => {
+    const cachedResult = {
+      id: "github:default",
+      key: "github:default:cached",
+      items: [{ title: "Cached", url: "https://example.com/cached" }],
+      updated: 456,
+    }
+    const loadSource = vi.fn().mockResolvedValue({
+      items: [{ title: "Fresh", url: "https://example.com/fresh" }],
+      updated: 789,
+    })
+
+    readCachedLocalSourceMock.mockResolvedValue(cachedResult)
+    createBackgroundClientMock.mockReturnValue({ loadSource } as never)
+
+    const result = await loadLocalSource("github:default", { dateRange: "weekly" }, { forceFresh: true })
+
+    expect(readCachedLocalSource).not.toHaveBeenCalled()
+    expect(loadSource).toHaveBeenCalledWith({
+      sourceId: "github:default",
+      params: { dateRange: "weekly" },
+    })
+    expect(result).toMatchObject({
+      updated: 789,
+      items: [{ title: "Fresh", url: "https://example.com/fresh" }],
+    })
+  })
+
+  it("reloads source data when the cached result is empty", async () => {
+    const loadSource = vi.fn().mockResolvedValue({
+      items: [{ title: "Fresh", url: "https://example.com/fresh" }],
+      updated: 789,
+    })
+
+    readCachedLocalSourceMock.mockResolvedValue({
+      id: "github:default",
+      key: "github:default:cached",
+      items: [],
+      updated: 456,
+    })
+    createBackgroundClientMock.mockReturnValue({ loadSource } as never)
+
+    const result = await loadLocalSource("github:default", { dateRange: "weekly" })
+
+    expect(loadSource).toHaveBeenCalledWith({
+      sourceId: "github:default",
+      params: { dateRange: "weekly" },
+    })
+    expect(result.items).toEqual([{ title: "Fresh", url: "https://example.com/fresh" }])
+  })
+
   it("dedupes concurrent source loads for the same cache key", async () => {
     readCachedLocalSourceMock.mockResolvedValue(undefined)
     const loadSource = vi.fn().mockResolvedValue({

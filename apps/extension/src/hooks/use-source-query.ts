@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query"
 import { useCallback, useMemo } from "react"
 import { loadLocalSource } from "@/lib/local-source-loader"
 // import { useLocalStorageCache } from "./use-local-storage-cache"
-import { LOCAL_SOURCE_QUERY_KEY } from "./use-refetch"
+import { consumeLatestSourceRefresh, LOCAL_SOURCE_QUERY_KEY } from "./use-refetch"
 
 export interface UseSourceQueryOptions {
   sourceId: string
@@ -26,12 +26,14 @@ export function useSourceQuery({
 
   const { data, error, isFetching, isError, refetch: normalRefetch } = useQuery({
     queryKey: [...LOCAL_SOURCE_QUERY_KEY, sourceId, normalizedParams],
-    queryFn: () => loadLocalSource(sourceId, normalizedParams),
+    queryFn: () => loadLocalSource(sourceId, normalizedParams, {
+      forceFresh: consumeLatestSourceRefresh({ sourceId, params: normalizedParams }),
+    }),
     enabled,
     // placeholderData: prev => prev ?? readCache(),
     placeholderData: prev => prev,
     staleTime: 1000 * 60 * 3,
-    refetchOnMount: false,
+    refetchOnMount: "always",
     refetchOnReconnect: false,
     refetchOnWindowFocus: true,
     refetchInterval,

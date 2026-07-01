@@ -38,16 +38,23 @@ async function loadLocalSourceViaBackground(
   }
 }
 
+export interface LoadLocalSourceOptions {
+  forceFresh?: boolean
+}
+
 export async function loadLocalSource(
   sourceId: string,
   queryParams: Record<string, unknown> = {},
+  options: LoadLocalSourceOptions = {},
 ): Promise<LocalSourceLoadResult> {
   const source = resolveSource(sourceId)
   const params = normalizeSourceParams(source, queryParams)
   const key = `${sourceId}:${stableStringify(params)}`
-  const cachedResult = await readCachedLocalSource(key, SOURCE_REQUEST_MIN_INTERVAL)
+  const cachedResult = options.forceFresh
+    ? undefined
+    : await readCachedLocalSource(key, SOURCE_REQUEST_MIN_INTERVAL)
 
-  if (cachedResult) {
+  if (cachedResult?.items.length) {
     return cachedResult
   }
 
@@ -77,7 +84,9 @@ async function loadFreshLocalSource(
 
   if (backgroundResult) {
     const result = { ...backgroundResult, key }
-    await writeCachedLocalSource(result)
+    if (result.items.length) {
+      await writeCachedLocalSource(result)
+    }
     return result
   }
 
@@ -90,6 +99,8 @@ async function loadFreshLocalSource(
     updated: Date.now(),
   }
 
-  await writeCachedLocalSource(result)
+  if (result.items.length) {
+    await writeCachedLocalSource(result)
+  }
   return result
 }
