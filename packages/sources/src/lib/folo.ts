@@ -78,14 +78,6 @@ export function foloEntriesToNewsItems(items: FoloDataItem[]): NewsItem[] {
       item.timestamp = timestamp
     }
 
-    if (feeds?.image) {
-      inline.icon = feeds.image
-    }
-
-    if (entries.categories && entries.categories.length > 0) {
-      inline.mark = entries.categories
-    }
-
     const previewText = entries.summary ?? entries.description ?? undefined
     const pictures = entries.media
       ?.filter((media): media is FoloMedia & { url: string } => media.type === "photo" && Boolean(media.url))

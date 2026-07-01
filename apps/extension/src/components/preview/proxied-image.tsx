@@ -1,16 +1,21 @@
 import { useCallback, useEffect, useState } from "react"
+import { getApiUrl } from "@/lib/env"
 
-interface ProxiedImageProps extends Omit<React.ImgHTMLAttributes<HTMLImageElement>, "onClick" | "src"> {
-  src: string
-  href?: string
-  delay?: number
-  onClick?: React.MouseEventHandler<HTMLAnchorElement | HTMLButtonElement>
+function getProxiedImageUrl(url: string): string {
+  return getApiUrl(`/p/${encodeURIComponent(url)}`)
 }
 
-export function ProxiedImage({ src, href, onError, onClick, delay, ...props }: ProxiedImageProps) {
+interface ProxiedImageProps extends Omit<React.ImgHTMLAttributes<HTMLImageElement>, "src"> {
+  src: string
+  delay?: number
+}
+
+export function ProxiedImage({ src, onError, delay, ...props }: ProxiedImageProps) {
   const [failedSrc, setFailedSrc] = useState<string | null>(null)
   const [readySrc, setReadySrc] = useState(delay ? "" : src)
-  const failed = failedSrc === src
+  const proxiedSrc = getProxiedImageUrl(src)
+  const imgSrc = failedSrc === src ? proxiedSrc : src
+  const failed = failedSrc === proxiedSrc
   const shouldLoad = !delay || readySrc === src
 
   useEffect(() => {
@@ -23,9 +28,11 @@ export function ProxiedImage({ src, href, onError, onClick, delay, ...props }: P
   }, [delay, shouldLoad, src])
 
   const handleError = useCallback((e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-    setFailedSrc(src)
-    onError?.(e)
-  }, [src, onError])
+    setFailedSrc(imgSrc)
+    if (imgSrc === proxiedSrc) {
+      onError?.(e)
+    }
+  }, [imgSrc, onError, proxiedSrc])
 
   if (failed) {
     return null
@@ -42,37 +49,14 @@ export function ProxiedImage({ src, href, onError, onClick, delay, ...props }: P
     )
   }
 
-  const image = (
+  return (
     <img
       referrerPolicy="no-referrer"
       alt=""
-      src={src}
+      src={imgSrc}
       onError={handleError}
       loading="lazy"
       {...props}
     />
   )
-
-  if (href) {
-    return (
-      <a
-        href={href}
-        target="_blank"
-        rel="noreferrer"
-        onClick={onClick}
-      >
-        {image}
-      </a>
-    )
-  }
-
-  if (onClick) {
-    return (
-      <button type="button" className="contents" onClick={onClick}>
-        {image}
-      </button>
-    )
-  }
-
-  return image
 }
