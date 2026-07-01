@@ -19,13 +19,9 @@ interface Props {
   scrollRef: RefObject<HTMLDivElement>
   relativeUpdatedTime: string
   color: Color
-  previewSelection?: {
-    selectedItemUrl?: string
-    onSelectItem: (item: NewsItem) => void
-  }
 }
 
-export function Timeline({ items, scrollRef, relativeUpdatedTime, color, previewSelection }: Props) {
+export function Timeline({ items, scrollRef, relativeUpdatedTime, color }: Props) {
   const gradientIdPrefix = useId().replace(/:/g, "")
   const now = useAtomValue(minuteDateAtom)
   const timeLabels = useMemo(() => items.map(item => item.timestamp
@@ -81,14 +77,14 @@ export function Timeline({ items, scrollRef, relativeUpdatedTime, color, preview
                 </span>
               </div>
             )}
-            <NewsItemLink item={item} previewSelection={previewSelection} className="flex">
+            <NewsItemLink item={item} className="flex">
               <NewsItemSummary item={item} />
             </NewsItemLink>
           </div>
         </div>
       </div>
     )
-  }, [color, gradientIdPrefix, items.length, previewSelection, timeLabels])
+  }, [color, gradientIdPrefix, items.length, timeLabels])
 
   return (
     <VirtualList

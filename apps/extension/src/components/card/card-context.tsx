@@ -1,9 +1,6 @@
-import type { NewsItem } from "@/typings/source"
 import { createContext, use } from "react"
 
 export interface CardPreviewContextValue {
-  onOpenExpandedPreview: (item: NewsItem) => void
-  canOpenExpandedPreview: boolean
   canShowHoverPreview: boolean
 }
 
@@ -14,8 +11,6 @@ export function useCardPreview(): CardPreviewContextValue {
 
   if (!context) {
     return {
-      onOpenExpandedPreview: () => {},
-      canOpenExpandedPreview: false,
       canShowHoverPreview: false,
     }
   }

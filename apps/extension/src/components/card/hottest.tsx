@@ -12,10 +12,6 @@ interface Props {
   items: NewsItem[]
   scrollRef: RefObject<HTMLDivElement>
   color: Color
-  previewSelection?: {
-    selectedItemUrl?: string
-    onSelectItem: (item: NewsItem) => void
-  }
 }
 
 const RANK_CHANGE_VISIBLE_MS = 3000
@@ -104,7 +100,7 @@ function RankChangeBadge({ diff }: { diff?: number }) {
   )
 }
 
-export function Hottest({ items, scrollRef, previewSelection }: Props) {
+export function Hottest({ items, scrollRef }: Props) {
   const rankChanges = useRankChanges(items)
 
   return (
@@ -116,7 +112,6 @@ export function Hottest({ items, scrollRef, previewSelection }: Props) {
       renderItem={(item, index) => (
         <NewsItemLink
           item={item}
-          previewSelection={previewSelection}
           className={cn(
             "flex gap-2 items-start relative cursor-pointer **:cursor-pointer transition-all",
             "hover:bg-neutral-400/10 rounded-xl",

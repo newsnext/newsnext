@@ -4,7 +4,6 @@ import { Suspense, useMemo, useRef, useState } from "react"
 import { TanStackDevtools } from "@/components/common/devtools"
 import { Footer } from "@/components/footer"
 import { Header } from "@/components/header"
-import { ExpandedPreviewProvider } from "@/components/preview/expanded-preview-dialog"
 import { ScrollProgressContext } from "@/components/scroll-progress-context"
 
 export const Route = createRootRouteWithContext<{
@@ -33,23 +32,21 @@ function RootComponent() {
     <ScrollProgressContext.Provider
       value={scrollProgressContextValue}
     >
-      <ExpandedPreviewProvider>
-        <div
-          ref={scrollContainerRef}
-          className="relative h-full min-h-0 w-full overflow-y-auto scrollbar-hidden"
-        >
-          <div className="flex min-h-full w-full flex-col">
-            <Header scrollContainerRef={scrollContainerRef} />
-            <main className="flex grow shrink-0 flex-col px-2 sm:px-6">
-              <Outlet />
-            </main>
-            <Footer />
-          </div>
+      <div
+        ref={scrollContainerRef}
+        className="relative h-full min-h-0 w-full overflow-y-auto scrollbar-hidden"
+      >
+        <div className="flex min-h-full w-full flex-col">
+          <Header scrollContainerRef={scrollContainerRef} />
+          <main className="flex grow shrink-0 flex-col px-2 sm:px-6">
+            <Outlet />
+          </main>
+          <Footer />
         </div>
-        <Suspense>
-          <TanStackDevtools />
-        </Suspense>
-      </ExpandedPreviewProvider>
+      </div>
+      <Suspense>
+        <TanStackDevtools />
+      </Suspense>
     </ScrollProgressContext.Provider>
   )
 }

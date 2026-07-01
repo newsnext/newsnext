@@ -1,5 +1,5 @@
 import type { ReactNode } from "react"
-import type { BoardSource, NewsItem } from "@/typings/source"
+import type { BoardSource } from "@/typings/source"
 import { useSetAtom } from "jotai"
 import { useInView } from "motion/react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
@@ -12,7 +12,6 @@ import {
   resetInstanceParamsAtom,
   upsertInstanceAtom,
 } from "@/store/board"
-import { useExpandedPreview } from "../preview/expanded-preview-context"
 import { CardBack } from "./card-back"
 import { CardPreviewContext } from "./card-context"
 import { CardFront } from "./card-front"
@@ -24,8 +23,6 @@ const PICTURE_IN_PICTURE_SIZE = {
   height: 500,
 }
 const PICTURE_IN_PICTURE_PREVIEW_CONTEXT = {
-  onOpenExpandedPreview: () => {},
-  canOpenExpandedPreview: false,
   canShowHoverPreview: false,
 }
 
@@ -35,11 +32,6 @@ export interface CardProps {
   className?: string
   nodeRef?: (node: HTMLElement | null) => void
   dragHandle?: ReactNode
-  disableExpandedPreview?: boolean
-  previewSelection?: {
-    selectedItemUrl?: string
-    onSelectItem: (item: NewsItem) => void
-  }
 }
 
 function copyPictureInPictureStyles(targetDocument: Document): void {
@@ -49,9 +41,8 @@ function copyPictureInPictureStyles(targetDocument: Document): void {
   })
 }
 
-function CardContent({ id, source, dragHandle, disableExpandedPreview = false, previewSelection }: CardProps) {
+function CardContent({ id, source, dragHandle }: CardProps) {
   const { providerTitle, title } = source
-  const { isExpandedPreviewOpen, openExpandedPreview } = useExpandedPreview()
   const upsertLocal = useSetAtom(upsertInstanceAtom)
   const resetLocalParams = useSetAtom(resetInstanceParamsAtom)
   const [isFlipped, setIsFlipped] = useState(false)
@@ -127,10 +118,6 @@ function CardContent({ id, source, dragHandle, disableExpandedPreview = false, p
     resetLocalParams({ instanceId: id, isFork: source.isFork })
   }, [source.isFork, id, resetDraftParams, resetLocalParams])
 
-  const handleOpenExpandedPreview = useCallback((item: NewsItem) => {
-    openExpandedPreview(id, source, item)
-  }, [id, source, openExpandedPreview])
-
   const handleOpenPictureInPicture = useCallback(async () => {
     if (!window.documentPictureInPicture) {
       return
@@ -155,11 +142,9 @@ function CardContent({ id, source, dragHandle, disableExpandedPreview = false, p
 
   const previewContextValue = useMemo(
     () => ({
-      onOpenExpandedPreview: handleOpenExpandedPreview,
-      canOpenExpandedPreview: !disableExpandedPreview,
-      canShowHoverPreview: HOVER_PREVIEW_ENABLED && !isExpandedPreviewOpen,
+      canShowHoverPreview: HOVER_PREVIEW_ENABLED,
     }),
-    [handleOpenExpandedPreview, disableExpandedPreview, isExpandedPreviewOpen],
+    [],
   )
   return (
     <CardPreviewContext.Provider value={previewContextValue}>
@@ -180,7 +165,6 @@ function CardContent({ id, source, dragHandle, disableExpandedPreview = false, p
           isPictureInPictureOpen={!!pictureInPictureWindow && !pictureInPictureWindow.closed}
           isPictureInPictureSupported={isPictureInPictureSupported}
           dragHandle={isFlipped ? undefined : dragHandle}
-          previewSelection={previewSelection}
         />
         <CardBack
           id={id}

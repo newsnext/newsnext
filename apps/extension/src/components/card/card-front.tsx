@@ -33,10 +33,6 @@ interface CardFrontProps {
   isPictureInPictureSupported?: boolean
   actionsVariant?: "default" | "refresh-only"
   dragHandle?: ReactNode
-  previewSelection?: {
-    selectedItemUrl?: string
-    onSelectItem: (item: NewsItem) => void
-  }
 }
 
 function StarButton({ id }: { id: string }) {
@@ -72,7 +68,6 @@ function CardFrontComponent({
   isPictureInPictureSupported = false,
   actionsVariant = "default",
   dragHandle,
-  previewSelection,
 }: CardFrontProps) {
   const { type, color, desc, icon, providerTitle, title, home } = source
   const ref = useRef<HTMLDivElement>(null)
@@ -172,7 +167,6 @@ function CardFrontComponent({
                           items={items}
                           color={color}
                           scrollRef={ref as React.RefObject<HTMLDivElement>}
-                          previewSelection={previewSelection}
                         />
                       )
                     : (
@@ -181,7 +175,6 @@ function CardFrontComponent({
                           items={items}
                           relativeUpdatedTime={relativeTime}
                           scrollRef={ref as React.RefObject<HTMLDivElement>}
-                          previewSelection={previewSelection}
                         />
                       )}
             </div>

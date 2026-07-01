@@ -2,22 +2,15 @@ import type { AdvancedIframe } from "@newsnext/shared/types"
 import type { CSSProperties, ReactNode } from "react"
 import type { NewsItem } from "@/typings/source"
 import { extractPictures } from "@newsnext/shared/types"
-import { Button } from "@newsnext/ui/components/button"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@newsnext/ui/components/hover-card"
-import { useCallback } from "react"
 import { cn } from "@/lib/utils"
 import { useCardPreview } from "../card/card-context"
-import { PhArrowsOutSimple } from "../icons/ph"
 import { ProxiedImage } from "./proxied-image"
 
 interface NewsItemLinkProps {
   item: NewsItem
   className?: string
   children: ReactNode
-  previewSelection?: {
-    selectedItemUrl?: string
-    onSelectItem: (item: NewsItem) => void
-  }
 }
 
 interface NewsItemAnchorProps extends React.ComponentPropsWithoutRef<"a"> {
@@ -40,21 +33,11 @@ function NewsItemAnchor({ href, className, children, ...props }: NewsItemAnchorP
   )
 }
 
-export function NewsItemLink({ item, className, children, previewSelection }: NewsItemLinkProps) {
-  const { canOpenExpandedPreview, canShowHoverPreview, onOpenExpandedPreview } = useCardPreview()
+export function NewsItemLink({ item, className, children }: NewsItemLinkProps) {
+  const { canShowHoverPreview } = useCardPreview()
   const href = item.url
 
   const hasPreview = item.preview?.html || item.preview?.text || item.preview?.picture || item.preview?.iframe
-  const isPreviewSelected = previewSelection?.selectedItemUrl === item.url
-  const handleSelectPreview = useCallback((event: React.MouseEvent<HTMLAnchorElement>) => {
-    if (!previewSelection) {
-      return
-    }
-
-    event.preventDefault()
-    event.stopPropagation()
-    previewSelection.onSelectItem(item)
-  }, [item, previewSelection])
 
   if (hasPreview && canShowHoverPreview) {
     return (
@@ -65,11 +48,7 @@ export function NewsItemLink({ item, className, children, previewSelection }: Ne
             <NewsItemAnchor
               {...props}
               href={href}
-              className={cn(className, isPreviewSelected && "bg-neutral-400/10")}
-              onClick={(event) => {
-                handleSelectPreview(event)
-                props.onClick?.(event)
-              }}
+              className={className}
             >
               {children}
             </NewsItemAnchor>
@@ -82,20 +61,6 @@ export function NewsItemLink({ item, className, children, previewSelection }: Ne
           radius="3xl"
           surfaceClassName="max-h-96 overflow-y-auto scrollbar-hidden"
         >
-          {canOpenExpandedPreview && (
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              className="absolute top-3 right-3 z-10 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-950 dark:text-muted-foreground dark:hover:bg-muted dark:hover:text-foreground"
-              onClick={(event) => {
-                event.preventDefault()
-                event.stopPropagation()
-                onOpenExpandedPreview(item)
-              }}
-            >
-              <PhArrowsOutSimple />
-            </Button>
-          )}
           <NewsItemPreviewContent item={item} />
         </HoverCardContent>
       </HoverCard>
@@ -105,8 +70,7 @@ export function NewsItemLink({ item, className, children, previewSelection }: Ne
   return (
     <NewsItemAnchor
       href={href}
-      className={cn(className, isPreviewSelected && "bg-neutral-400/10")}
-      onClick={handleSelectPreview}
+      className={className}
     >
       {children}
     </NewsItemAnchor>
@@ -116,11 +80,11 @@ export function NewsItemLink({ item, className, children, previewSelection }: Ne
 export function NewsItemPreviewContent({ item, className }: { item: NewsItem, className?: string }) {
   return (
     <div className={cn("flex flex-col gap-2", className)}>
-      {item.preview?.picture && extractPictures(item.preview.picture).map((picture, i) => {
+      {item.preview?.picture && extractPictures(item.preview.picture).map((picture) => {
         const { src, scale, radius } = picture
         return (
           <ProxiedImage
-            key={i}
+            key={src}
             src={src}
             referrerPolicy="no-referrer"
             alt="preview picture"
