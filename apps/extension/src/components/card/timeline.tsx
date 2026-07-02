@@ -17,11 +17,11 @@ const LABEL_RAIL_PATH = "M16 0 Q3 0 2 20 Q2 35 6 50 Q12 75 6 100"
 interface Props {
   items: NewsItem[]
   scrollRef: RefObject<HTMLDivElement>
-  relativeUpdatedTime: string
+  relativeUpdatedAt: string
   color: Color
 }
 
-export function Timeline({ items, scrollRef, relativeUpdatedTime, color }: Props) {
+export function Timeline({ items, scrollRef, relativeUpdatedAt, color }: Props) {
   const gradientIdPrefix = useId().replace(/:/g, "")
   const now = useAtomValue(minuteDateAtom)
   const timeLabels = useMemo(() => items.map(item => item.timestamp
@@ -29,7 +29,7 @@ export function Timeline({ items, scrollRef, relativeUpdatedTime, color }: Props
         addSuffix: true,
         locale: enUS,
       })
-    : relativeUpdatedTime), [items, now, relativeUpdatedTime])
+    : relativeUpdatedAt), [items, now, relativeUpdatedAt])
   const renderItem = useCallback((item: NewsItem, index: number) => {
     const timeLabel = timeLabels[index]
     const showTimeLabel = index === 0 || timeLabel !== timeLabels[index - 1]

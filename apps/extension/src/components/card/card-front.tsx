@@ -25,7 +25,7 @@ interface CardFrontProps {
   items: NewsItem[]
   isFetching: boolean
   sourceErrorMessage?: string
-  updatedTime: number
+  updatedAt: number
   onRefresh: () => void
   onFlip?: () => void
   onOpenPictureInPicture?: () => void
@@ -60,7 +60,7 @@ function CardFrontComponent({
   items,
   isFetching,
   sourceErrorMessage,
-  updatedTime,
+  updatedAt,
   onRefresh,
   onFlip,
   onOpenPictureInPicture,
@@ -71,7 +71,7 @@ function CardFrontComponent({
 }: CardFrontProps) {
   const { type, color, desc, icon, providerTitle, title, home } = source
   const ref = useRef<HTMLDivElement>(null)
-  const relativeTime = useRelativeTime({ date: updatedTime })
+  const relativeTime = useRelativeTime({ date: updatedAt })
 
   return (
     <div className="relative h-full">
@@ -173,7 +173,7 @@ function CardFrontComponent({
                         <Timeline
                           color={color}
                           items={items}
-                          relativeUpdatedTime={relativeTime}
+                          relativeUpdatedAt={relativeTime}
                           scrollRef={ref as React.RefObject<HTMLDivElement>}
                         />
                       )}

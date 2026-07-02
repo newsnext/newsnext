@@ -11,7 +11,7 @@ export interface LocalSourceLoadResult {
   id: string
   key: string
   items: NewsItem[]
-  updated: number
+  updatedAt: number
 }
 
 async function loadLocalSourceViaBackground(
@@ -34,7 +34,7 @@ async function loadLocalSourceViaBackground(
     id: sourceId,
     key: response.key ?? `${sourceId}:${stableStringify(normalizedParams)}`,
     items: response.items,
-    updated: response.updated ?? Date.now(),
+    updatedAt: response.updatedAt ?? Date.now(),
   }
 }
 
@@ -96,7 +96,7 @@ async function loadFreshLocalSource(
     id: sourceId,
     key,
     items,
-    updated: Date.now(),
+    updatedAt: Date.now(),
   }
 
   if (result.items.length) {

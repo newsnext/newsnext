@@ -25,7 +25,7 @@ export interface CardBackProps {
   draftSourceParams: Record<string, unknown>
   hasSourceParams: boolean
   hasSourceParamChanges: boolean
-  updatedTime: number
+  updatedAt: number
   onSourceParamChange: (key: string, value: unknown) => void
   onSaveSourceParams: () => void
   onResetSourceParams: () => void
@@ -41,7 +41,7 @@ export function CardBack({
   draftSourceParams,
   hasSourceParams,
   hasSourceParamChanges,
-  updatedTime,
+  updatedAt,
   onSourceParamChange,
   onSaveSourceParams,
   onResetSourceParams,
@@ -59,7 +59,7 @@ export function CardBack({
   const previewDesc = canEdit ? editDraft.desc : desc
   const previewHome = canEdit ? editDraft.home : home
   const previewColor = canEdit ? editDraft.color : color
-  const relativeTime = useRelativeTime({ date: updatedTime })
+  const relativeTime = useRelativeTime({ date: updatedAt })
 
   function createEditDraft(): SourceEditDraft {
     return {

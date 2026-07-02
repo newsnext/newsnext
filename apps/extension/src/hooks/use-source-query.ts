@@ -66,6 +66,6 @@ export function useSourceQuery({
     isFetching,
     isError,
     errorMessage: error instanceof Error ? error.message : undefined,
-    updatedTime: data?.updated ?? Date.now(),
+    updatedAt: data?.updatedAt ?? Date.now(),
   }
 }

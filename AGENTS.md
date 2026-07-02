@@ -7,7 +7,7 @@
 
 ### Frozen Areas
 
-- Do not modify `apps/admin`, `apps/web`, or `apps/cli` for now; these areas are temporarily archived.
+- Do not modify `apps/admin`, `apps/web`, `packages/cache`, or `apps/cli` for now; these areas are temporarily archived.
 
 ### Version Control
 

@@ -27,7 +27,7 @@ describe("loadLocalSource", () => {
     readCachedLocalSourceMock.mockResolvedValue(undefined)
     const loadSource = vi.fn().mockResolvedValue({
       items: [{ title: "Loaded in background", url: "https://example.com" }],
-      updated: 123,
+      updatedAt: 123,
     })
 
     createBackgroundClientMock.mockReturnValue({ loadSource } as never)
@@ -40,7 +40,7 @@ describe("loadLocalSource", () => {
     })
     expect(result.key).toMatch(/^github:trending:/)
     expect(result).toMatchObject({
-      updated: 123,
+      updatedAt: 123,
       items: [{ title: "Loaded in background", url: "https://example.com" }],
     })
     expect(writeCachedLocalSource).toHaveBeenCalledWith(result)
@@ -50,7 +50,7 @@ describe("loadLocalSource", () => {
     readCachedLocalSourceMock.mockResolvedValue(undefined)
     const loadSource = vi.fn().mockResolvedValue({
       items: [{ title: "Song", url: "https://music.163.com/song?id=1" }],
-      updated: 123,
+      updatedAt: 123,
     })
 
     createBackgroundClientMock.mockReturnValue({ loadSource } as never)
@@ -72,7 +72,7 @@ describe("loadLocalSource", () => {
       id: "github:trending",
       key: "github:trending:cached",
       items: [{ title: "Cached", url: "https://example.com/cached" }],
-      updated: 456,
+      updatedAt: 456,
     }
 
     readCachedLocalSourceMock.mockResolvedValue(cachedResult)
@@ -90,11 +90,11 @@ describe("loadLocalSource", () => {
       id: "github:trending",
       key: "github:trending:cached",
       items: [{ title: "Cached", url: "https://example.com/cached" }],
-      updated: 456,
+      updatedAt: 456,
     }
     const loadSource = vi.fn().mockResolvedValue({
       items: [{ title: "Fresh", url: "https://example.com/fresh" }],
-      updated: 789,
+      updatedAt: 789,
     })
 
     readCachedLocalSourceMock.mockResolvedValue(cachedResult)
@@ -108,7 +108,7 @@ describe("loadLocalSource", () => {
       params: { dateRange: "weekly" },
     })
     expect(result).toMatchObject({
-      updated: 789,
+      updatedAt: 789,
       items: [{ title: "Fresh", url: "https://example.com/fresh" }],
     })
   })
@@ -116,14 +116,14 @@ describe("loadLocalSource", () => {
   it("reloads source data when the cached result is empty", async () => {
     const loadSource = vi.fn().mockResolvedValue({
       items: [{ title: "Fresh", url: "https://example.com/fresh" }],
-      updated: 789,
+      updatedAt: 789,
     })
 
     readCachedLocalSourceMock.mockResolvedValue({
       id: "github:trending",
       key: "github:trending:cached",
       items: [],
-      updated: 456,
+      updatedAt: 456,
     })
     createBackgroundClientMock.mockReturnValue({ loadSource } as never)
 
@@ -140,7 +140,7 @@ describe("loadLocalSource", () => {
     readCachedLocalSourceMock.mockResolvedValue(undefined)
     const loadSource = vi.fn().mockResolvedValue({
       items: [{ title: "Concurrent", url: "https://example.com/concurrent" }],
-      updated: 789,
+      updatedAt: 789,
     })
 
     createBackgroundClientMock.mockReturnValue({ loadSource } as never)

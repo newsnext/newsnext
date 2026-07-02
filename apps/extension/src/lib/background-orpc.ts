@@ -1,6 +1,6 @@
 import type { NewsItem } from "@newsnext/sources/typings"
 import { prepareSourceRequest } from "@newsnext/sources/service"
-import { os } from "@orpc/server"
+import { os, type } from "@orpc/server"
 
 export interface LoadSourceInput {
   sourceId: string
@@ -9,19 +9,21 @@ export interface LoadSourceInput {
 
 export interface LoadSourceOutput {
   items: NewsItem[]
-  updated: number
+  updatedAt: number
 }
 
 export const backgroundRouter = {
-  loadSource: os.handler(async ({ input }: { input: LoadSourceInput }): Promise<LoadSourceOutput> => {
-    const request = prepareSourceRequest(input.sourceId, input.params ?? {})
-    const items = await request.source.loader(request.params)
+  loadSource: os
+    .input(type<LoadSourceInput>())
+    .handler(async ({ input }): Promise<LoadSourceOutput> => {
+      const request = prepareSourceRequest(input.sourceId, input.params ?? {})
+      const items = await request.source.loader(request.params)
 
-    return {
-      items,
-      updated: Date.now(),
-    }
-  }),
+      return {
+        items,
+        updatedAt: Date.now(),
+      }
+    }),
 }
 
 export type BackgroundRouter = typeof backgroundRouter

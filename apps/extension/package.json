@@ -33,6 +33,7 @@
     "date-fns": "catalog:",
     "defu": "catalog:",
     "es-toolkit": "catalog:",
+    "idb": "^8.0.3",
     "jotai": "catalog:",
     "lucide-react": "catalog:",
     "motion": "catalog:",
