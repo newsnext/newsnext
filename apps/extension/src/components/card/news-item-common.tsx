@@ -50,7 +50,7 @@ interface NewsItemSummaryProps {
 
 export function NewsItemSummary({ item, className }: NewsItemSummaryProps) {
   return (
-    <span className={cn("leading-none", className)}>
+    <span className={cn("leading-none line-clamp-3", className)}>
       {item.inline?.icon && extractPictures(item.inline.icon).map((icon, i) => {
         const { src, scale, radius } = icon
         return (
