@@ -14,6 +14,47 @@ type BoardSourceSource = Omit<SourceDescriptor, "params"> & {
   params?: Record<string, unknown>
 }
 
+export const FEATURED_SOURCE_IDS: string[] = [
+  // "aihot:all",
+  // "bilibili:hotword",
+  // "bilibili:following-videos",
+  // "bilibili:ranking",
+  "browser:history",
+  // "browser:bookmarks",
+  // "cls:telegraph",
+  // "cls:depth",
+  // "cls:hot-article",
+  "folo:feed",
+  "folo:list",
+  // "github:trending",
+  // "hackernews:top",
+  // "hackernews:newest",
+  // "hackernews:show",
+  // "hackernews:ask",
+  "jike:following-updates",
+  // "jike:user-updates",
+  // "jike:topic-recent",
+  // "jike:topic-hottest",
+  "linuxdo:latest",
+  "linuxdo:top-daily",
+  // "netease-music:playlist",
+  // "newsnow:topic-latest",
+  // "tieba:hot-topic",
+  // "v2ex:feed",
+  // "weibo:hot-search",
+  "x:place-trends",
+  "x:recommended",
+  // "x:following",
+  // "x:user",
+  // "xueqiu:hot-stock",
+  // "zaobao:realtime",
+  // "zhihu:hot-list",
+]
+
+function isBoardSource(source: BoardSource | undefined): source is BoardSource {
+  return Boolean(source)
+}
+
 function createBoardSource(source: BoardSourceSource, isLocalOnly: boolean): BoardSource {
   return {
     ...source,
@@ -89,11 +130,16 @@ export function buildBoardSources({
     }
   })
 
+  const featuredSourceMap = new Map(mergedSources.map(source => [source.baseSource.sourceId, source.baseSource]))
+  const featuredSources = FEATURED_SOURCE_IDS
+    .map(sourceId => featuredSourceMap.get(sourceId))
+    .filter(isBoardSource)
+
   const visibleSources = boardId === "stars"
     ? mergedSources.flatMap(({ baseSource, forkedSources }) => [baseSource, ...forkedSources].filter(source => starredSourceInstanceIds.includes(source.id)))
     : boardId === "forks"
       ? mergedSources.flatMap(({ forkedSources }) => forkedSources)
-      : mergedSources.map(({ baseSource }) => baseSource)
+      : featuredSources
 
   return {
     ids: visibleSources.map(source => source.id),
