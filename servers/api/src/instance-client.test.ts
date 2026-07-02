@@ -1,5 +1,5 @@
 import type { NewsNextDataInstance, PreparedInstanceSourceRequest } from "@newsnext/instance"
-import type { SourceDescriptor } from "@newsnext/sources/typings"
+import type { SourceDescriptor } from "@newsnext/server-source/typings"
 import { MemoryCacheAdapter } from "@newsnext/cache/memory"
 import { describe, expect, it } from "vitest"
 import { CachedNewsNextInstance } from "./instance-client"

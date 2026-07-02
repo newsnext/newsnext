@@ -1,5 +1,5 @@
+import type { SourceParamSchema } from "@newsnext/client-source/typings"
 import type { Color } from "@newsnext/shared/types"
-import type { SourceParamSchema } from "@newsnext/sources/typings"
 import { Button } from "@newsnext/ui/components/button"
 import {
   Select,

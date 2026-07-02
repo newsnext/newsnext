@@ -1,7 +1,7 @@
 import type { SourceDescriptor } from "@/typings/source"
-import { sourceDescriptors } from "@newsnext/sources/metadata"
+import { sourceDescriptors } from "@newsnext/client-source/metadata"
 
-export function getLocalSourceDescriptors(): SourceDescriptor[] {
+export function getClientSourceDescriptors(): SourceDescriptor[] {
   return [...sourceDescriptors].sort((a, b) => {
     const byCategory = a.category.localeCompare(b.category)
     if (byCategory !== 0) {

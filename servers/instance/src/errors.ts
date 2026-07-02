@@ -1,6 +1,6 @@
-import type { SourceErrorCode } from "@newsnext/sources/service"
+import type { SourceErrorCode } from "@newsnext/server-source/service"
 
-export { SourceServiceError } from "@newsnext/sources/service"
+export { SourceServiceError } from "@newsnext/server-source/service"
 
 export function isSourceErrorCode(code: string): code is SourceErrorCode {
   return code === "SOURCE_NOT_FOUND"

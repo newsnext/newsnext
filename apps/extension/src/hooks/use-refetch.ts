@@ -1,13 +1,13 @@
 import { useIsFetching, useQueryClient } from "@tanstack/react-query"
 import { useStore } from "jotai"
 import { useCallback } from "react"
-import { getLocalSourceDescriptors } from "@/lib/local-sources"
+import { getClientSourceDescriptors } from "@/lib/client-sources"
 import { buildBoardSources, buildSourceRequestKey } from "@/lib/source-cards"
 import { getSavedSourceParamValues } from "@/lib/source-params"
 import { boardInstancesAtom, boardStarIdsAtom, currentBoardAtom } from "@/store/board"
 
 const latestSourceRefreshKeys = new Set<string>()
-export const LOCAL_SOURCE_QUERY_KEY = ["local-source"] as const
+export const CLIENT_SOURCE_QUERY_KEY = ["client-source"] as const
 
 export interface RefetchTarget {
   sourceId: string
@@ -48,7 +48,7 @@ export function useSourceRefetch() {
         await Promise.all(
           uniqueTargets.map(target =>
             queryClient.invalidateQueries({
-              queryKey: [...LOCAL_SOURCE_QUERY_KEY, target.sourceId, target.params ?? {}],
+              queryKey: [...CLIENT_SOURCE_QUERY_KEY, target.sourceId, target.params ?? {}],
             }),
           ),
         )
@@ -64,7 +64,7 @@ export function useRefetch() {
   const queryClient = useQueryClient()
   const store = useStore()
   const refetch = useSourceRefetch()
-  const fetchingCount = useIsFetching({ queryKey: LOCAL_SOURCE_QUERY_KEY })
+  const fetchingCount = useIsFetching({ queryKey: CLIENT_SOURCE_QUERY_KEY })
 
   const isFetching = fetchingCount > 0
 
@@ -76,7 +76,7 @@ export function useRefetch() {
       const currentBoard = store.get(currentBoardAtom)
       const starredInstanceIds = store.get(boardStarIdsAtom(currentBoard))
       const instances = store.get(boardInstancesAtom(currentBoard))
-      const sources = getLocalSourceDescriptors()
+      const sources = getClientSourceDescriptors()
       const boardSources = buildBoardSources({
         sources,
         boardId: currentBoard,
@@ -100,7 +100,7 @@ export function useRefetch() {
       await Promise.all(
         uniqueTargets.map(target =>
           queryClient.invalidateQueries({
-            queryKey: [...LOCAL_SOURCE_QUERY_KEY, target.sourceId, target.params ?? {}],
+            queryKey: [...CLIENT_SOURCE_QUERY_KEY, target.sourceId, target.params ?? {}],
           }),
         ),
       )

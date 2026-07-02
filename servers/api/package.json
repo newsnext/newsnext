@@ -22,7 +22,7 @@
     "@newsnext/cache": "workspace:*",
     "@newsnext/database": "workspace:*",
     "@newsnext/instance": "workspace:*",
-    "@newsnext/sources": "workspace:*",
+    "@newsnext/server-source": "workspace:*",
     "@orpc/server": "catalog:",
     "better-auth": "catalog:",
     "nitro": "catalog:",

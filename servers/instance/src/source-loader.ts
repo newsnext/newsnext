@@ -1,8 +1,8 @@
-import { stableStringify } from "@newsnext/shared/utils"
 import {
   normalizeSourceParams,
   resolveSource,
-} from "@newsnext/sources/service"
+} from "@newsnext/server-source/service"
+import { stableStringify } from "@newsnext/shared/utils"
 
 export interface LoadSourceOptions {
   sourceId: string

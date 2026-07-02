@@ -1,12 +1,12 @@
 import type { DBSchema, IDBPDatabase } from "idb"
-import type { LocalSourceLoadResult } from "./local-source-loader"
+import type { ClientSourceLoadResult } from "./client-source-loader"
 import { openDB } from "idb"
 
 const SOURCE_CACHE_DATABASE_NAME = "newsnext-extension-source-cache"
 const SOURCE_CACHE_DATABASE_VERSION = 1
 const SOURCE_CACHE_STORE_NAME = "source-results"
 
-export interface LocalSourceCacheEntry extends LocalSourceLoadResult {
+export interface ClientSourceCacheEntry extends ClientSourceLoadResult {
   cachedAt: number
   usedAt: number
 }
@@ -14,7 +14,7 @@ export interface LocalSourceCacheEntry extends LocalSourceLoadResult {
 interface SourceCacheDatabase extends DBSchema {
   [SOURCE_CACHE_STORE_NAME]: {
     key: string
-    value: LocalSourceCacheEntry
+    value: ClientSourceCacheEntry
   }
 }
 
@@ -46,11 +46,11 @@ function openSourceCacheDatabase(): Promise<IDBPDatabase<SourceCacheDatabase> | 
   return sourceCacheDatabasePromise
 }
 
-export async function readCachedLocalSource(
+export async function readCachedClientSource(
   key: string,
   maxAgeMs: number,
   now = Date.now(),
-): Promise<LocalSourceLoadResult | undefined> {
+): Promise<ClientSourceLoadResult | undefined> {
   try {
     const database = await openSourceCacheDatabase()
     if (!database) {
@@ -77,8 +77,8 @@ export async function readCachedLocalSource(
   }
 }
 
-export async function writeCachedLocalSource(
-  result: LocalSourceLoadResult,
+export async function writeCachedClientSource(
+  result: ClientSourceLoadResult,
   now = Date.now(),
 ): Promise<void> {
   try {

@@ -1,6 +1,6 @@
 import type { CacheAdapter, CacheResult } from "@newsnext/cache"
 import type { NewsNextDataInstance } from "@newsnext/instance"
-import type { SourceDescriptor } from "@newsnext/sources/typings"
+import type { SourceDescriptor } from "@newsnext/server-source/typings"
 import { getCachedSource } from "@newsnext/cache"
 import { createNewsNextInstance } from "@newsnext/instance"
 

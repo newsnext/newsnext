@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 import type { BoardSource } from "@/typings/source"
-import { categories } from "@newsnext/sources/typings"
+import { categories } from "@newsnext/client-source/typings"
 import { Button } from "@newsnext/ui/components/button"
 import {
   Command,
@@ -13,7 +13,7 @@ import {
 } from "@newsnext/ui/components/command"
 import { useAtomValue } from "jotai"
 import { useEffect, useMemo, useState } from "react"
-import { getLocalSourceDescriptors } from "@/lib/local-sources"
+import { getClientSourceDescriptors } from "@/lib/client-sources"
 import { buildBoardSources } from "@/lib/source-cards"
 import { cn } from "@/lib/utils"
 import { boardInstancesAtom, boardStarIdsAtom } from "@/store/board"
@@ -21,7 +21,7 @@ import Card from "../card"
 import { PhForkDuotone, PhMagnifyingGlass, PhStarFill } from "../icons/ph"
 import "./index.css"
 
-const LOCAL_SOURCES = getLocalSourceDescriptors()
+const CLIENT_SOURCES = getClientSourceDescriptors()
 
 interface SearchItem {
   id: string
@@ -115,7 +115,7 @@ function SearchDialogContent(): ReactNode {
   const [selectedItemId, setSelectedItemId] = useState("")
   const starredInstanceIds = useAtomValue(boardStarIdsAtom("stars"))
   const instances = useAtomValue(boardInstancesAtom("stars"))
-  const sources = LOCAL_SOURCES
+  const sources = CLIENT_SOURCES
 
   const searchItems = useMemo<SearchItem[]>(() => {
     if (!sources.length) {

@@ -1,7 +1,7 @@
-import type { SourceDescriptor } from "@newsnext/sources/typings"
+import type { SourceDescriptor } from "@newsnext/server-source/typings"
 import type { PreparedInstanceSourceRequest, SourceLoadResult } from "./source-loader"
 import type { LoadInstanceSourceOptions, NewsNextDataInstance } from "./types"
-import { sourceDescriptors } from "@newsnext/sources/metadata"
+import { sourceDescriptors } from "@newsnext/server-source/metadata"
 import { loadSource, prepareInstanceSourceRequest } from "./source-loader"
 
 export class NewsNextInstance implements NewsNextDataInstance {

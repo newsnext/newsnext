@@ -1,11 +1,11 @@
 import { useAtomValue } from "jotai"
 import { useMemo } from "react"
 import Card from "@/components/card"
-import { getLocalSourceDescriptors } from "@/lib/local-sources"
+import { getClientSourceDescriptors } from "@/lib/client-sources"
 import { buildBoardSources } from "@/lib/source-cards"
 import { boardInstancesAtom, boardStarIdsAtom } from "@/store/board"
 
-const LOCAL_SOURCES = getLocalSourceDescriptors()
+const CLIENT_SOURCES = getClientSourceDescriptors()
 
 export function StarredSidePanel() {
   const starredInstanceIds = useAtomValue(boardStarIdsAtom("stars"))
@@ -13,7 +13,7 @@ export function StarredSidePanel() {
 
   const { ids: sourceIds, map: sourcesMap } = useMemo(() => {
     return buildBoardSources({
-      sources: LOCAL_SOURCES,
+      sources: CLIENT_SOURCES,
       boardId: "stars",
       starredSourceInstanceIds: starredInstanceIds,
       sourceInstances: instances,

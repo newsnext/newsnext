@@ -1,5 +1,5 @@
 {
-  "name": "@newsnext/sources",
+  "name": "@newsnext/server-source",
   "type": "module",
   "private": true,
   "license": "MPL-2.0",

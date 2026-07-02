@@ -21,8 +21,8 @@
     "typecheck": "tsgo -b"
   },
   "dependencies": {
+    "@newsnext/server-source": "workspace:*",
     "@newsnext/shared": "workspace:*",
-    "@newsnext/sources": "workspace:*",
     "nitro": "catalog:"
   }
 }

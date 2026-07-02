@@ -1,30 +1,30 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { createBackgroundClient } from "./background-client"
-import { readCachedLocalSource, writeCachedLocalSource } from "./local-source-cache"
-import { loadLocalSource } from "./local-source-loader"
+import { readCachedClientSource, writeCachedClientSource } from "./client-source-cache"
+import { loadClientSource } from "./client-source-loader"
 
 vi.mock("./background-client", () => ({
   createBackgroundClient: vi.fn(),
 }))
 
-vi.mock("./local-source-cache", () => ({
-  readCachedLocalSource: vi.fn(),
-  writeCachedLocalSource: vi.fn(),
+vi.mock("./client-source-cache", () => ({
+  readCachedClientSource: vi.fn(),
+  writeCachedClientSource: vi.fn(),
 }))
 
 const createBackgroundClientMock = vi.mocked(createBackgroundClient)
-const readCachedLocalSourceMock = vi.mocked(readCachedLocalSource)
-const writeCachedLocalSourceMock = vi.mocked(writeCachedLocalSource)
+const readCachedClientSourceMock = vi.mocked(readCachedClientSource)
+const writeCachedClientSourceMock = vi.mocked(writeCachedClientSource)
 
-describe("loadLocalSource", () => {
+describe("loadClientSource", () => {
   afterEach(() => {
     createBackgroundClientMock.mockReset()
-    readCachedLocalSourceMock.mockReset()
-    writeCachedLocalSourceMock.mockReset()
+    readCachedClientSourceMock.mockReset()
+    writeCachedClientSourceMock.mockReset()
   })
 
   it("loads source data through the extension background when available", async () => {
-    readCachedLocalSourceMock.mockResolvedValue(undefined)
+    readCachedClientSourceMock.mockResolvedValue(undefined)
     const load = vi.fn().mockResolvedValue({
       items: [{ title: "Loaded in background", url: "https://example.com" }],
       updatedAt: 123,
@@ -32,7 +32,7 @@ describe("loadLocalSource", () => {
 
     createBackgroundClientMock.mockReturnValue({ source: { load } } as never)
 
-    const result = await loadLocalSource("github:trending", { dateRange: "weekly" })
+    const result = await loadClientSource("github:trending", { dateRange: "weekly" })
 
     expect(load).toHaveBeenCalledWith({
       sourceId: "github:trending",
@@ -43,11 +43,11 @@ describe("loadLocalSource", () => {
       updatedAt: 123,
       items: [{ title: "Loaded in background", url: "https://example.com" }],
     })
-    expect(writeCachedLocalSource).toHaveBeenCalledWith(result)
+    expect(writeCachedClientSource).toHaveBeenCalledWith(result)
   })
 
   it("sends query params to the background before local normalization", async () => {
-    readCachedLocalSourceMock.mockResolvedValue(undefined)
+    readCachedClientSourceMock.mockResolvedValue(undefined)
     const load = vi.fn().mockResolvedValue({
       items: [{ title: "Song", url: "https://music.163.com/song?id=1" }],
       updatedAt: 123,
@@ -55,7 +55,7 @@ describe("loadLocalSource", () => {
 
     createBackgroundClientMock.mockReturnValue({ source: { load } } as never)
 
-    await loadLocalSource("netease-music:playlist", {
+    await loadClientSource("netease-music:playlist", {
       id: "https://music.163.com/playlist?id=5059661515",
     })
 
@@ -75,14 +75,14 @@ describe("loadLocalSource", () => {
       updatedAt: 456,
     }
 
-    readCachedLocalSourceMock.mockResolvedValue(cachedResult)
+    readCachedClientSourceMock.mockResolvedValue(cachedResult)
 
-    const result = await loadLocalSource("github:trending", { dateRange: "weekly" })
+    const result = await loadClientSource("github:trending", { dateRange: "weekly" })
 
     expect(result).toBe(cachedResult)
-    expect(readCachedLocalSource).toHaveBeenCalledWith(expect.stringMatching(/^github:trending:/), 60_000)
+    expect(readCachedClientSource).toHaveBeenCalledWith(expect.stringMatching(/^github:trending:/), 60_000)
     expect(createBackgroundClient).not.toHaveBeenCalled()
-    expect(writeCachedLocalSource).not.toHaveBeenCalled()
+    expect(writeCachedClientSource).not.toHaveBeenCalled()
   })
 
   it("skips cached source data when fresh data is forced", async () => {
@@ -97,12 +97,12 @@ describe("loadLocalSource", () => {
       updatedAt: 789,
     })
 
-    readCachedLocalSourceMock.mockResolvedValue(cachedResult)
+    readCachedClientSourceMock.mockResolvedValue(cachedResult)
     createBackgroundClientMock.mockReturnValue({ source: { load } } as never)
 
-    const result = await loadLocalSource("github:trending", { dateRange: "weekly" }, { forceFresh: true })
+    const result = await loadClientSource("github:trending", { dateRange: "weekly" }, { forceFresh: true })
 
-    expect(readCachedLocalSource).not.toHaveBeenCalled()
+    expect(readCachedClientSource).not.toHaveBeenCalled()
     expect(load).toHaveBeenCalledWith({
       sourceId: "github:trending",
       params: { dateRange: "weekly" },
@@ -119,7 +119,7 @@ describe("loadLocalSource", () => {
       updatedAt: 789,
     })
 
-    readCachedLocalSourceMock.mockResolvedValue({
+    readCachedClientSourceMock.mockResolvedValue({
       id: "github:trending",
       key: "github:trending:cached",
       items: [],
@@ -127,7 +127,7 @@ describe("loadLocalSource", () => {
     })
     createBackgroundClientMock.mockReturnValue({ source: { load } } as never)
 
-    const result = await loadLocalSource("github:trending", { dateRange: "weekly" })
+    const result = await loadClientSource("github:trending", { dateRange: "weekly" })
 
     expect(load).toHaveBeenCalledWith({
       sourceId: "github:trending",
@@ -137,7 +137,7 @@ describe("loadLocalSource", () => {
   })
 
   it("dedupes concurrent source loads for the same cache key", async () => {
-    readCachedLocalSourceMock.mockResolvedValue(undefined)
+    readCachedClientSourceMock.mockResolvedValue(undefined)
     const load = vi.fn().mockResolvedValue({
       items: [{ title: "Concurrent", url: "https://example.com/concurrent" }],
       updatedAt: 789,
@@ -146,12 +146,12 @@ describe("loadLocalSource", () => {
     createBackgroundClientMock.mockReturnValue({ source: { load } } as never)
 
     const [firstResult, secondResult] = await Promise.all([
-      loadLocalSource("github:trending", { dateRange: "weekly" }),
-      loadLocalSource("github:trending", { dateRange: "weekly" }),
+      loadClientSource("github:trending", { dateRange: "weekly" }),
+      loadClientSource("github:trending", { dateRange: "weekly" }),
     ])
 
     expect(firstResult).toEqual(secondResult)
     expect(load).toHaveBeenCalledTimes(1)
-    expect(writeCachedLocalSource).toHaveBeenCalledTimes(1)
+    expect(writeCachedClientSource).toHaveBeenCalledTimes(1)
   })
 })

@@ -1,4 +1,4 @@
-import type { SourceDescriptor } from "@newsnext/sources/typings"
+import type { SourceDescriptor } from "@newsnext/server-source/typings"
 import type { LoadSourceOptions, PreparedInstanceSourceRequest, SourceLoadResult } from "./source-loader"
 
 export type LoadInstanceSourceOptions = LoadSourceOptions
