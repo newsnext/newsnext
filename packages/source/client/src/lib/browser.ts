@@ -384,7 +384,7 @@ export async function fetchBrowserBookmarks({
 export default $provider({
   title: "Browser",
   icon: BROWSER_PROVIDER_ICON,
-  color: "sky",
+  color: "blue",
   category: "others",
   sources: [
     $source(

@@ -99,17 +99,11 @@ export function NewsItemPreviewContent({ item, className }: { item: NewsItem, cl
         ? (
             <PreviewHtml html={item.preview.html} />
           )
-        : item.preview?.text
-          ? (
-              <span className="whitespace-pre-wrap wrap-break-word">
-                {item.preview?.text}
-              </span>
-            )
-          : (
-              <span className="text-muted-foreground">
-                No preview available for this item.
-              </span>
-            )}
+        : item.preview?.text && (
+          <span className="whitespace-pre-wrap wrap-break-word">
+            {item.preview?.text}
+          </span>
+        )}
     </div>
   )
 }
