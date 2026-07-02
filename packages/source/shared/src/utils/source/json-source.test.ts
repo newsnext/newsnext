@@ -1,4 +1,4 @@
-import type { SourceParamSchemaMap } from "../../typings"
+import type { NewsItem, SourceParamSchemaMap } from "../../typings"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { myFetch } from "../fetch"
 import { $source } from "./index"
@@ -61,6 +61,32 @@ describe("$jsonSourceLoader", () => {
     const results = await (source as any).loader({})
     expect(results).toHaveLength(1)
     expect(results[0].title).toBe("Nest")
+  })
+
+  it("should preserve original order for hottest sources", async () => {
+    const data = [
+      { id: 1, title: "Item 1", link: "/1", ts: 100 },
+      { id: 2, title: "Item 2", link: "/2", ts: 200 },
+    ]
+    ;(myFetch as any).mockResolvedValue(data)
+
+    const source = $source.json(
+      {
+        key: "test",
+        type: "hottest",
+      },
+      () => ({
+        url: "https://api.example.com",
+        fields: {
+          title: "title",
+          url: "link",
+          timestamp: "ts",
+        },
+      }),
+    )
+
+    const results = await (source as any).loader({})
+    expect(results.map((item: NewsItem) => item.title)).toEqual(["Item 1", "Item 2"])
   })
 
   it("should handle function resolvers and itemsPath", async () => {

@@ -22,6 +22,7 @@ export type ItemFilter = string | ((el: cheerio.Cheerio<AnyNode>, index: number,
 
 export interface HtmlSourceOptions {
   url: string
+  type?: SourceRegistration["type"]
   /**
    * Selector or resolver for the source items.
    */
@@ -96,7 +97,7 @@ function resolveField(
 }
 
 export const $htmlLoader = createLoader<HtmlSourceOptions>(async (opts) => {
-  const { url, items: itemsResolver, itemSelector, filter, decoding, fetchOptions, fetch, fields } = opts
+  const { url, type, items: itemsResolver, itemSelector, filter, decoding, fetchOptions, fetch, fields } = opts
 
   let html: string
   if (fetch) {
@@ -176,7 +177,7 @@ export const $htmlLoader = createLoader<HtmlSourceOptions>(async (opts) => {
     news.push(item)
   })
 
-  if (news.length > 0 && news[0].timestamp) {
+  if (type !== "hottest" && news.length > 0 && news[0].timestamp) {
     news.sort((a, b) => (b.timestamp as number) - (a.timestamp as number))
   }
 
@@ -219,8 +220,15 @@ export function $htmlSource(
   options: () => HtmlSourceOptions,
 ): SourceRegistration<Record<string, never>>
 export function $htmlSource(registration: unknown, options: unknown): SourceRegistration<any> {
+  const sourceRegistration = registration as SourceRegistration<any>
   return {
-    ...(registration as object),
-    ...$htmlLoader(options as any),
+    ...sourceRegistration,
+    ...$htmlLoader((params: InferSourceParams<any>) => {
+      const sourceOptions = (options as (params: InferSourceParams<any>) => HtmlSourceOptions)(params)
+      return {
+        ...sourceOptions,
+        type: sourceRegistration.type ?? sourceOptions.type,
+      }
+    }),
   } as SourceRegistration<any>
 }

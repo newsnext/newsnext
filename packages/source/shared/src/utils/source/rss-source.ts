@@ -9,6 +9,13 @@ import { createLoader } from "."
 import { myFetch } from "../fetch"
 import { rss2json } from "./rss2json"
 
+interface RSSHubLoaderOptions {
+  route: string
+  host?: string
+  options?: RSSHubOption
+  type?: SourceRegistration["type"]
+}
+
 export const $rssLoader = createLoader<{ url: string }>(async ({ url }) => {
   const data = await rss2json(url)
   if (!data?.items.length) throw new Error("Cannot fetch rss data")
@@ -19,14 +26,14 @@ export const $rssLoader = createLoader<{ url: string }>(async ({ url }) => {
   }))
 })
 
-export const $rssHubLoader = createLoader<{ route: string, host?: string, options?: RSSHubOption }>(async ({ route, host, options: RSSHubOptions }) => {
+export const $rssHubLoader = createLoader<RSSHubLoaderOptions>(async ({ route, host, options: RSSHubOptions, type }) => {
   if (!host) host = "https://rsshub.rssforever.com"
   // "https://rsshub.pseudoyu.com"
   const RSSHubBase = host
   const url = new URL(route, RSSHubBase)
   url.searchParams.set("format", "json")
   RSSHubOptions = defu<RSSHubOption, RSSHubOption[]>(RSSHubOptions, {
-    sorted: true,
+    sorted: type !== "hottest",
   })
 
   Object.entries(RSSHubOptions).forEach(([key, value]) => {
@@ -66,8 +73,15 @@ export function $rssHubSource(
   options: () => { route: string, host?: string, options?: RSSHubOption },
 ): SourceRegistration<Record<string, never>>
 export function $rssHubSource(registration: unknown, options: unknown): SourceRegistration<any> {
+  const sourceRegistration = registration as SourceRegistration<any>
   return {
-    ...(registration as object),
-    ...$rssHubLoader(options as any),
+    ...sourceRegistration,
+    ...$rssHubLoader((params: InferSourceParams<any>) => {
+      const sourceOptions = (options as (params: InferSourceParams<any>) => RSSHubLoaderOptions)(params)
+      return {
+        ...sourceOptions,
+        type: sourceRegistration.type ?? sourceOptions.type,
+      }
+    }),
   } as SourceRegistration<any>
 }

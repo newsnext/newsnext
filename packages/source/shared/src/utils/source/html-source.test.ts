@@ -117,6 +117,39 @@ describe("$htmlSourceLoader", () => {
     expect(results.map((item: NewsItem) => item.title)).toEqual(["Article 1", "Article 2"])
   })
 
+  it("should preserve original order for hottest sources", async () => {
+    const html = `
+      <div class="item">
+        <a class="title" href="/article/1">Article 1</a>
+        <span class="date">100</span>
+      </div>
+      <div class="item">
+        <a class="title" href="/article/2">Article 2</a>
+        <span class="date">200</span>
+      </div>
+    `
+    ;(myFetch as any).mockResolvedValue(html)
+
+    const source = $source.html(
+      {
+        key: "test",
+        type: "hottest",
+      },
+      () => ({
+        url: "https://example.com",
+        items: ".item",
+        fields: {
+          title: ".title",
+          url: { selector: ".title", attr: "href" },
+          timestamp: ".date",
+        },
+      }),
+    )
+
+    const results = await (source as any).loader({})
+    expect(results.map((item: NewsItem) => item.title)).toEqual(["Article 1", "Article 2"])
+  })
+
   it("should filter items with a selector", async () => {
     const html = `
       <div class="item"><a class="title" href="/1">Normal</a></div>

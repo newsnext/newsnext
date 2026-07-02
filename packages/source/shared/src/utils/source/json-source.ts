@@ -13,6 +13,7 @@ export type FieldResolver<Item = any, Result = any> = string | ((item: Item) => 
 
 export interface JsonSourceOptions<Item = any> {
   url: string
+  type?: SourceRegistration["type"]
   /**
    * Path to the array of items in the response JSON (e.g. "data.items").
    * OR a function that returns the items array from the JSON.
@@ -59,7 +60,7 @@ function resolveValue<Item>(item: Item, resolver: FieldResolver<Item, any>): any
 }
 
 async function jsonSourceHandler<Item = any>(opts: JsonSourceOptions<Item>): Promise<NewsItem[]> {
-  const { url, fetchOptions, fetch, items: itemsResolver, fields } = opts
+  const { url, type, fetchOptions, fetch, items: itemsResolver, fields } = opts
 
   let json: any
   if (fetch) {
@@ -139,8 +140,7 @@ async function jsonSourceHandler<Item = any>(opts: JsonSourceOptions<Item>): Pro
     return newsItem
   }).filter((i): i is NewsItem => i !== null)
 
-  // Sort by timestamp if available
-  if (news.length > 0 && news[0].timestamp) {
+  if (type !== "hottest" && news.length > 0 && news[0].timestamp) {
     news.sort((a, b) => (b.timestamp as number) - (a.timestamp as number))
   }
 
@@ -168,8 +168,15 @@ export function $jsonSource<Item = any>(
   options: () => JsonSourceOptions<Item>,
 ): SourceRegistration<Record<string, never>>
 export function $jsonSource(registration: unknown, options: unknown): SourceRegistration<any> {
+  const sourceRegistration = registration as SourceRegistration<any>
   return {
-    ...(registration as object),
-    ...$jsonLoader(options as any),
+    ...sourceRegistration,
+    ...$jsonLoader((params: InferSourceParams<any>) => {
+      const sourceOptions = (options as (params: InferSourceParams<any>) => JsonSourceOptions)(params)
+      return {
+        ...sourceOptions,
+        type: sourceRegistration.type ?? sourceOptions.type,
+      }
+    }),
   } as SourceRegistration<any>
 }
