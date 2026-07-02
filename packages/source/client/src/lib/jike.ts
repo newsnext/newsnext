@@ -285,6 +285,15 @@ function getStringProperty(value: unknown, key: string): string | undefined {
   return typeof result === "string" ? result.trim() || undefined : undefined
 }
 
+function getNumberProperty(value: unknown, key: string): number | undefined {
+  if (!value || typeof value !== "object") {
+    return undefined
+  }
+
+  const result = (value as Record<string, unknown>)[key]
+  return typeof result === "number" ? result : undefined
+}
+
 async function readStoredJikeAuthTokens(): Promise<JikeAuthTokens | undefined> {
   const jikeVars = (await readNewsNextVars())[JIKE_PROVIDER_ID]
   const accessToken = getStringProperty(jikeVars, JIKE_ACCESS_TOKEN_STORAGE_KEY)
@@ -463,27 +472,56 @@ function isJikeAuthError(response: JikeFeedResponse): boolean {
   ].some(keyword => message.includes(keyword))
 }
 
-async function fetchJikeWithAuth(url: string, options: JikeRequestOptions): Promise<JikeFeedResponse> {
-  const tokens = await getJikeAuthTokens()
-  const accessToken = tokens.accessToken ?? await refreshJikeAccessToken(tokens)
-  const response = await myFetch<JikeFeedResponse>(url, {
+function getFetchErrorStatus(error: unknown): number | undefined {
+  return getNumberProperty(error, "statusCode")
+    ?? getNumberProperty(error, "status")
+    ?? getNumberProperty((error as { response?: unknown } | null)?.response, "status")
+    ?? getNumberProperty((error as { response?: unknown } | null)?.response, "statusCode")
+}
+
+function isJikeAuthFetchError(error: unknown): boolean {
+  const status = getFetchErrorStatus(error)
+  return status === 401 || status === 403
+}
+
+async function requestJikeFeed(url: string, options: JikeRequestOptions, accessToken: string): Promise<JikeFeedResponse> {
+  return await myFetch<JikeFeedResponse>(url, {
     method: "POST",
     credentials: "include",
     headers: createJikeHeaders(accessToken),
     body: options.body,
   })
+}
+
+async function retryJikeWithFreshAccessToken(
+  url: string,
+  options: JikeRequestOptions,
+  fallbackTokens: JikeAuthTokens,
+): Promise<JikeFeedResponse> {
+  const refreshedAccessToken = await refreshJikeAccessToken(await readStoredJikeAuthTokens() ?? fallbackTokens)
+  return await requestJikeFeed(url, options, refreshedAccessToken)
+}
+
+async function fetchJikeWithAuth(url: string, options: JikeRequestOptions): Promise<JikeFeedResponse> {
+  const tokens = await getJikeAuthTokens()
+  const accessToken = tokens.accessToken ?? await refreshJikeAccessToken(tokens)
+  let response: JikeFeedResponse
+
+  try {
+    response = await requestJikeFeed(url, options, accessToken)
+  } catch (error) {
+    if (!isJikeAuthFetchError(error)) {
+      throw error
+    }
+
+    return await retryJikeWithFreshAccessToken(url, options, tokens)
+  }
 
   if (!isJikeAuthError(response)) {
     return response
   }
 
-  const refreshedAccessToken = await refreshJikeAccessToken(await readStoredJikeAuthTokens() ?? tokens)
-  return await myFetch<JikeFeedResponse>(url, {
-    method: "POST",
-    credentials: "include",
-    headers: createJikeHeaders(refreshedAccessToken),
-    body: options.body,
-  })
+  return await retryJikeWithFreshAccessToken(url, options, tokens)
 }
 
 function parseTimestamp(post: JikePost): number | undefined {

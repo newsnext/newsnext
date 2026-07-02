@@ -511,6 +511,50 @@ describe("jike source", () => {
     expect(globalThis.localStorage.setItem).not.toHaveBeenCalled()
   })
 
+  it("refreshes the access token after a 401 response", async () => {
+    vi.mocked(myFetch)
+      .mockRejectedValueOnce({
+        response: {
+          status: 401,
+        },
+      })
+    mockJikeRefresh()
+    vi.mocked(myFetch).mockResolvedValueOnce({
+      success: true,
+      data: [],
+    })
+
+    await expect(fetchJikeFollowingUpdates()).resolves.toEqual([])
+
+    expect(myFetch).toHaveBeenNthCalledWith(
+      1,
+      "https://api.ruguoapp.com/1.0/personalUpdate/followingUpdates",
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          "x-jike-access-token": "stored-access-token",
+        }),
+      }),
+    )
+    expect(myFetch).toHaveBeenNthCalledWith(
+      2,
+      "https://api.ruguoapp.com/app_auth_tokens.refresh",
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          "x-jike-refresh-token": "stored-refresh-token",
+        }),
+      }),
+    )
+    expect(myFetch).toHaveBeenNthCalledWith(
+      3,
+      "https://api.ruguoapp.com/1.0/personalUpdate/followingUpdates",
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          "x-jike-access-token": "fresh-access-token",
+        }),
+      }),
+    )
+  })
+
   it("skips non-post updates without a shareable URL", () => {
     expect(jikePostsToNewsItems([
       {
