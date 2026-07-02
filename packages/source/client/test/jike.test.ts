@@ -6,6 +6,13 @@ vi.mock("@newsnext/source-shared/utils/fetch", () => ({
   myFetch: vi.fn(),
 }))
 
+function mockJikeRefresh(): void {
+  vi.mocked(myFetch).mockResolvedValueOnce({
+    "x-jike-access-token": "fresh-access-token",
+    "x-jike-refresh-token": "fresh-refresh-token",
+  })
+}
+
 interface MockChromeGlobal {
   chrome: {
     runtime: Record<string, never>
@@ -15,12 +22,32 @@ interface MockChromeGlobal {
     scripting: {
       executeScript: ReturnType<typeof vi.fn>
     }
+    storage: {
+      local?: {
+        get: ReturnType<typeof vi.fn>
+        set: ReturnType<typeof vi.fn>
+      }
+    }
   }
 }
 
 describe("jike source", () => {
+  let localStorageValues: Map<string, string>
+
   beforeEach(() => {
     vi.mocked(myFetch).mockReset()
+    localStorageValues = new Map([
+      ["newsnext_vars", JSON.stringify({
+        jike: {
+          JK_ACCESS_TOKEN: "stored-access-token",
+          JK_REFRESH_TOKEN: "stored-refresh-token",
+          JK_DEVICE_ID: "stored-device-id",
+        },
+        other: {
+          value: "kept",
+        },
+      })],
+    ])
     Object.assign(globalThis, {
       chrome: {
         runtime: {},
@@ -31,15 +58,46 @@ describe("jike source", () => {
         },
         scripting: {
           executeScript: vi.fn((_injection, callback) => {
-            callback?.([{ result: " jike-token " }])
+            const injection = _injection as { args?: unknown[] }
+            const [arg] = injection.args ?? []
+            if (arg === "JK_ACCESS_TOKEN") {
+              callback?.([{ result: " cached-access-token " }])
+              return
+            }
+            if (arg === "JK_REFRESH_TOKEN") {
+              callback?.([{ result: " refresh-token " }])
+              return
+            }
+            if (arg === "JK_DEVICE_ID") {
+              callback?.([{ result: " device-id " }])
+              return
+            }
+
+            callback?.([{ result: true }])
           }),
+        },
+        storage: {
+          local: {
+            get: vi.fn((key: string, callback) => {
+              callback?.({ [key]: localStorageValues.get(key) })
+            }),
+            set: vi.fn((items: Record<string, string>, callback) => {
+              for (const [key, value] of Object.entries(items)) {
+                localStorageValues.set(key, value)
+              }
+              callback?.()
+            }),
+          },
         },
       },
     })
     Object.defineProperty(globalThis, "localStorage", {
       configurable: true,
       value: {
-        getItem: vi.fn(() => undefined),
+        getItem: vi.fn((key: string) => localStorageValues.get(key) ?? null),
+        setItem: vi.fn((key: string, value: string) => {
+          localStorageValues.set(key, value)
+        }),
       },
     })
   })
@@ -113,6 +171,7 @@ describe("jike source", () => {
           ],
           user: {
             screenName: "NewsNext",
+            username: "newsnext-user",
             profileImageUrl: "https://cdnv2.ruguoapp.com/avatar.jpg",
           },
         },
@@ -122,17 +181,7 @@ describe("jike source", () => {
     const items = await fetchJikeFollowingUpdates()
     const extensionGlobal = globalThis as typeof globalThis & MockChromeGlobal
 
-    expect(extensionGlobal.chrome.tabs.query).toHaveBeenCalledWith(
-      { url: "https://web.okjike.com/*" },
-      expect.any(Function),
-    )
-    expect(extensionGlobal.chrome.scripting.executeScript).toHaveBeenCalledWith(
-      expect.objectContaining({
-        target: { tabId: 42 },
-        args: ["JK_ACCESS_TOKEN"],
-      }),
-      expect.any(Function),
-    )
+    expect(extensionGlobal.chrome.tabs.query).not.toHaveBeenCalled()
     expect(myFetch).toHaveBeenCalledWith(
       "https://api.ruguoapp.com/1.0/personalUpdate/followingUpdates",
       expect.objectContaining({
@@ -140,7 +189,7 @@ describe("jike source", () => {
         method: "POST",
         headers: expect.objectContaining({
           "platform": "web",
-          "x-jike-access-token": "jike-token",
+          "x-jike-access-token": "stored-access-token",
         }),
         body: {
           limit: 50,
@@ -150,7 +199,8 @@ describe("jike source", () => {
     expect(items).toEqual([
       {
         title: "A fresh update",
-        url: "https://m.okjike.com/originalPosts/6a464f3e54aae0885e15bd28",
+        url: "https://web.okjike.com/u/newsnext-user/post/6a464f3e54aae0885e15bd28",
+        mobileUrl: "https://m.okjike.com/originalPosts/6a464f3e54aae0885e15bd28",
         timestamp: 1782992702000,
         inline: {
           text: "NewsNext · #AI · 7 likes · 2 comments",
@@ -167,6 +217,40 @@ describe("jike source", () => {
     ])
   })
 
+  it("copies Jike auth from web localStorage when provider localStorage is empty", async () => {
+    localStorageValues.clear()
+    vi.mocked(myFetch).mockResolvedValueOnce({
+      success: true,
+      data: [],
+    })
+
+    await expect(fetchJikeFollowingUpdates()).resolves.toEqual([])
+    const extensionGlobal = globalThis as typeof globalThis & MockChromeGlobal
+
+    expect(extensionGlobal.chrome.tabs.query).toHaveBeenCalledWith(
+      { url: "https://web.okjike.com/*" },
+      expect.any(Function),
+    )
+    expect(myFetch).toHaveBeenCalledWith(
+      "https://api.ruguoapp.com/1.0/personalUpdate/followingUpdates",
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          "x-jike-access-token": "cached-access-token",
+        }),
+      }),
+    )
+    expect(extensionGlobal.chrome.storage.local?.set).toHaveBeenCalledWith({
+      newsnext_vars: JSON.stringify({
+        jike: {
+          JK_ACCESS_TOKEN: "cached-access-token",
+          JK_REFRESH_TOKEN: "refresh-token",
+          JK_DEVICE_ID: "device-id",
+        },
+      }),
+    }, expect.any(Function))
+    expect(globalThis.localStorage.setItem).not.toHaveBeenCalled()
+  })
+
   it("maps reposts to repost URLs and previews the target post", () => {
     expect(jikePostsToNewsItems([
       {
@@ -176,6 +260,7 @@ describe("jike source", () => {
         actionTime: "2026-07-02T05:39:42.698Z",
         user: {
           screenName: "Reposter",
+          username: "reposter-user",
         },
         target: {
           id: "6a45f1d24683afd739f2bad0",
@@ -193,7 +278,8 @@ describe("jike source", () => {
     ])).toEqual([
       {
         title: "Worth reading",
-        url: "https://m.okjike.com/reposts/6a45f99e3fc142e22cd61726",
+        url: "https://web.okjike.com/u/reposter-user/repost/6a45f99e3fc142e22cd61726",
+        mobileUrl: "https://m.okjike.com/reposts/6a45f99e3fc142e22cd61726",
         timestamp: 1782970782698,
         inline: {
           text: "Reposter",
@@ -221,6 +307,7 @@ describe("jike source", () => {
           },
           user: {
             screenName: "Topic author",
+            username: "topic-author",
             avatarImage: {
               thumbnailUrl: "https://cdnv2.ruguoapp.com/topic-avatar.jpg",
             },
@@ -244,7 +331,7 @@ describe("jike source", () => {
         method: "POST",
         headers: expect.objectContaining({
           "platform": "web",
-          "x-jike-access-token": "jike-token",
+          "x-jike-access-token": "stored-access-token",
         }),
         body: {
           limit: 50,
@@ -255,7 +342,8 @@ describe("jike source", () => {
     expect(items).toEqual([
       {
         title: "Topic post",
-        url: "https://m.okjike.com/originalPosts/6a4655b0228d9ca1696e52ec",
+        url: "https://web.okjike.com/u/topic-author/post/6a4655b0228d9ca1696e52ec",
+        mobileUrl: "https://m.okjike.com/originalPosts/6a4655b0228d9ca1696e52ec",
         timestamp: 1782994352834,
         inline: {
           text: "Topic author · #即友日记本 · 3 likes · 1 comments",
@@ -281,6 +369,7 @@ describe("jike source", () => {
           },
           user: {
             screenName: "哥飞",
+            username: "gefei",
           },
         },
         {
@@ -293,6 +382,7 @@ describe("jike source", () => {
           },
           user: {
             screenName: "哥飞",
+            username: "gefei",
           },
         },
       ],
@@ -309,7 +399,7 @@ describe("jike source", () => {
         method: "POST",
         headers: expect.objectContaining({
           "platform": "web",
-          "x-jike-access-token": "jike-token",
+          "x-jike-access-token": "stored-access-token",
         }),
         body: {
           limit: 50,
@@ -320,7 +410,8 @@ describe("jike source", () => {
     expect(items).toEqual([
       {
         title: "User post",
-        url: "https://m.okjike.com/originalPosts/6a464c6064a7b806f12270a5",
+        url: "https://web.okjike.com/u/gefei/post/6a464c6064a7b806f12270a5",
+        mobileUrl: "https://m.okjike.com/originalPosts/6a464c6064a7b806f12270a5",
         timestamp: 1782991968000,
         inline: {
           text: "哥飞",
@@ -359,6 +450,67 @@ describe("jike source", () => {
     )
   })
 
+  it("refreshes the access token only after an auth error", async () => {
+    vi.mocked(myFetch)
+      .mockResolvedValueOnce({
+        success: false,
+        error: {
+          message: "Invalid token",
+        },
+      })
+    mockJikeRefresh()
+    vi.mocked(myFetch).mockResolvedValueOnce({
+      success: true,
+      data: [],
+    })
+
+    await expect(fetchJikeFollowingUpdates()).resolves.toEqual([])
+    const extensionGlobal = globalThis as typeof globalThis & MockChromeGlobal
+
+    expect(myFetch).toHaveBeenNthCalledWith(
+      1,
+      "https://api.ruguoapp.com/1.0/personalUpdate/followingUpdates",
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          "x-jike-access-token": "stored-access-token",
+        }),
+      }),
+    )
+    expect(myFetch).toHaveBeenNthCalledWith(
+      2,
+      "https://api.ruguoapp.com/app_auth_tokens.refresh",
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          "x-jike-device-id": "stored-device-id",
+          "x-jike-refresh-token": "stored-refresh-token",
+        }),
+      }),
+    )
+    expect(myFetch).toHaveBeenNthCalledWith(
+      3,
+      "https://api.ruguoapp.com/1.0/personalUpdate/followingUpdates",
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          "x-jike-access-token": "fresh-access-token",
+        }),
+      }),
+    )
+    expect(extensionGlobal.chrome.tabs.query).not.toHaveBeenCalled()
+    expect(extensionGlobal.chrome.storage.local?.set).toHaveBeenCalledWith({
+      newsnext_vars: JSON.stringify({
+        jike: {
+          JK_ACCESS_TOKEN: "fresh-access-token",
+          JK_REFRESH_TOKEN: "fresh-refresh-token",
+          JK_DEVICE_ID: "stored-device-id",
+        },
+        other: {
+          value: "kept",
+        },
+      }),
+    }, expect.any(Function))
+    expect(globalThis.localStorage.setItem).not.toHaveBeenCalled()
+  })
+
   it("skips non-post updates without a shareable URL", () => {
     expect(jikePostsToNewsItems([
       {
@@ -376,10 +528,10 @@ describe("jike source", () => {
     vi.mocked(myFetch).mockResolvedValueOnce({
       success: false,
       error: {
-        message: "Invalid token",
+        message: "Topic not found",
       },
     })
 
-    await expect(fetchJikeFollowingUpdates()).rejects.toThrow("Invalid token")
+    await expect(fetchJikeFollowingUpdates()).rejects.toThrow("Topic not found")
   })
 })

@@ -31,6 +31,7 @@ export default defineConfig({
       "favicon",
       "history",
       "scripting",
+      "storage",
       "tabs",
     ],
     host_permissions: [

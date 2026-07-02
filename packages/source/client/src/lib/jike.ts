@@ -5,11 +5,16 @@ import { $provider, $source } from "@newsnext/source-shared/utils/source"
 
 const JIKE_WEB_ORIGIN = "https://web.okjike.com"
 const JIKE_SHARE_ORIGIN = "https://m.okjike.com"
+const REFRESH_AUTH_TOKEN_URL = "https://api.ruguoapp.com/app_auth_tokens.refresh"
 const FOLLOWING_UPDATES_URL = "https://api.ruguoapp.com/1.0/personalUpdate/followingUpdates"
 const USER_UPDATES_URL = "https://api.ruguoapp.com/1.0/personalUpdate/single"
 const TOPIC_FEED_BASE_URL = "https://api.ruguoapp.com/1.0/topics/tabs"
 const FOLLOWING_UPDATES_LIMIT = 50
+const NEWSNEXT_VARS_STORAGE_KEY = "newsnext_vars"
+const JIKE_PROVIDER_ID = "jike"
 const JIKE_ACCESS_TOKEN_STORAGE_KEY = "JK_ACCESS_TOKEN"
+const JIKE_REFRESH_TOKEN_STORAGE_KEY = "JK_REFRESH_TOKEN"
+const JIKE_DEVICE_ID_STORAGE_KEY = "JK_DEVICE_ID"
 
 type TopicFeedOrder = "recent" | "hottest"
 
@@ -37,6 +42,7 @@ interface JikeUser {
   avatarImage?: JikePicture
   profileImageUrl?: string
   screenName?: string
+  username?: string
 }
 
 interface JikeTopic {
@@ -77,6 +83,32 @@ interface JikeFeedResponse {
   toast?: string
 }
 
+interface JikeRefreshTokenResponse {
+  "x-jike-access-token"?: string
+  "x-jike-refresh-token"?: string
+}
+
+interface JikeAuthTokens {
+  accessToken?: string
+  refreshToken?: string
+  deviceId?: string
+}
+
+interface JikeStoredVars {
+  JK_ACCESS_TOKEN?: string
+  JK_REFRESH_TOKEN?: string
+  JK_DEVICE_ID?: string
+}
+
+interface NewsNextVars {
+  jike?: JikeStoredVars
+  [providerId: string]: unknown
+}
+
+interface JikeRequestOptions {
+  body: Record<string, unknown>
+}
+
 interface BrowserTab {
   id?: number
 }
@@ -92,11 +124,22 @@ interface BrowserScriptingApi {
   executeScript: (
     injection: {
       target: { tabId: number }
-      args: [string]
-      func: (key: string) => string | null
+      args?: unknown[]
+      func: (...args: unknown[]) => unknown
     },
-    callback?: (results: Array<{ result?: string | null }>) => void,
-  ) => Promise<Array<{ result?: string | null }>> | void
+    callback?: (results: Array<{ result?: unknown }>) => void,
+  ) => Promise<Array<{ result?: unknown }>> | void
+}
+
+interface BrowserStorageAreaApi {
+  get: (
+    keys: string | string[] | Record<string, unknown> | null,
+    callback?: (items: Record<string, unknown>) => void,
+  ) => Promise<Record<string, unknown>> | void
+  set: (
+    items: Record<string, unknown>,
+    callback?: () => void,
+  ) => Promise<void> | void
 }
 
 interface BrowserExtensionGlobal {
@@ -105,10 +148,16 @@ interface BrowserExtensionGlobal {
       lastError?: { message?: string }
     }
     scripting?: BrowserScriptingApi
+    storage?: {
+      local?: BrowserStorageAreaApi
+    }
     tabs?: BrowserTabsApi
   }
   browser?: {
     scripting?: BrowserScriptingApi
+    storage?: {
+      local?: BrowserStorageAreaApi
+    }
     tabs?: BrowserTabsApi
   }
 }
@@ -116,6 +165,7 @@ interface BrowserExtensionGlobal {
 interface LocalStorageGlobal {
   localStorage?: {
     getItem: (key: string) => string | null
+    setItem: (key: string, value: string) => void
   }
 }
 
@@ -140,15 +190,148 @@ function getExtensionScriptingApi(): BrowserScriptingApi | undefined {
   return extensionGlobal.browser?.scripting ?? extensionGlobal.chrome?.scripting
 }
 
-function readLocalStorageValue(key: string): string | null {
+function getExtensionStorageArea(): BrowserStorageAreaApi | undefined {
+  const extensionGlobal = globalThis as BrowserExtensionGlobal
+  return extensionGlobal.browser?.storage?.local ?? extensionGlobal.chrome?.storage?.local
+}
+
+function isBrowserTabsApi(tabs: BrowserTabsApi): boolean {
+  return (globalThis as BrowserExtensionGlobal).browser?.tabs === tabs
+}
+
+function isBrowserScriptingApi(scripting: BrowserScriptingApi): boolean {
+  return (globalThis as BrowserExtensionGlobal).browser?.scripting === scripting
+}
+
+function isBrowserStorageAreaApi(storage: BrowserStorageAreaApi): boolean {
+  return (globalThis as BrowserExtensionGlobal).browser?.storage?.local === storage
+}
+
+function readLocalStorageValue(...args: unknown[]): string | null {
+  const [key] = args
+  if (typeof key !== "string") {
+    return null
+  }
+
   return (globalThis as LocalStorageGlobal).localStorage?.getItem(key) ?? null
+}
+
+function parseNewsNextVars(value: string | null): NewsNextVars {
+  if (!value) {
+    return {}
+  }
+
+  try {
+    const parsed = JSON.parse(value) as unknown
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed as NewsNextVars : {}
+  } catch {
+    return {}
+  }
+}
+
+async function readExtensionStorageValue(key: string): Promise<string | undefined> {
+  const storage = getExtensionStorageArea()
+  if (!storage) {
+    throw new Error("Jike requires browser storage permission to read newsnext_vars.")
+  }
+
+  if (isBrowserStorageAreaApi(storage)) {
+    const maybeItems = storage.get(key)
+    if (isPromiseLike<Record<string, unknown>>(maybeItems)) {
+      const items = await maybeItems
+      const value = items[key]
+      return typeof value === "string" ? value : undefined
+    }
+  }
+
+  return await new Promise((resolve) => {
+    storage.get(key, (items) => {
+      const value = items[key]
+      resolve(typeof value === "string" ? value : undefined)
+    })
+  })
+}
+
+async function writeExtensionStorageValue(key: string, value: string): Promise<void> {
+  const storage = getExtensionStorageArea()
+  if (!storage) {
+    throw new Error("Jike requires browser storage permission to write newsnext_vars.")
+  }
+
+  if (isBrowserStorageAreaApi(storage)) {
+    const maybeResult = storage.set({ [key]: value })
+    if (isPromiseLike<void>(maybeResult)) {
+      await maybeResult
+      return
+    }
+  }
+
+  await new Promise<void>((resolve) => {
+    storage.set({ [key]: value }, resolve)
+  })
+}
+
+async function readNewsNextVars(): Promise<NewsNextVars> {
+  const extensionValue = await readExtensionStorageValue(NEWSNEXT_VARS_STORAGE_KEY)
+  return parseNewsNextVars(extensionValue ?? null)
+}
+
+function getStringProperty(value: unknown, key: string): string | undefined {
+  if (!value || typeof value !== "object") {
+    return undefined
+  }
+
+  const result = (value as Record<string, unknown>)[key]
+  return typeof result === "string" ? result.trim() || undefined : undefined
+}
+
+async function readStoredJikeAuthTokens(): Promise<JikeAuthTokens | undefined> {
+  const jikeVars = (await readNewsNextVars())[JIKE_PROVIDER_ID]
+  const accessToken = getStringProperty(jikeVars, JIKE_ACCESS_TOKEN_STORAGE_KEY)
+  const refreshToken = getStringProperty(jikeVars, JIKE_REFRESH_TOKEN_STORAGE_KEY)
+  const deviceId = getStringProperty(jikeVars, JIKE_DEVICE_ID_STORAGE_KEY)
+  if (!accessToken || !refreshToken) {
+    return undefined
+  }
+
+  return {
+    accessToken,
+    refreshToken,
+    deviceId: deviceId || undefined,
+  }
+}
+
+async function writeStoredJikeAuthTokens(tokens: JikeAuthTokens): Promise<void> {
+  const vars = await readNewsNextVars()
+  const currentJikeVars = vars[JIKE_PROVIDER_ID]
+  const nextJikeVars: JikeStoredVars = currentJikeVars && typeof currentJikeVars === "object" && !Array.isArray(currentJikeVars)
+    ? { ...(currentJikeVars as JikeStoredVars) }
+    : {}
+
+  if (tokens.accessToken) {
+    nextJikeVars.JK_ACCESS_TOKEN = tokens.accessToken
+  }
+  if (tokens.refreshToken) {
+    nextJikeVars.JK_REFRESH_TOKEN = tokens.refreshToken
+  }
+  if (tokens.deviceId) {
+    nextJikeVars.JK_DEVICE_ID = tokens.deviceId
+  }
+
+  const serialized = JSON.stringify({
+    ...vars,
+    [JIKE_PROVIDER_ID]: nextJikeVars,
+  })
+  await writeExtensionStorageValue(NEWSNEXT_VARS_STORAGE_KEY, serialized)
 }
 
 async function queryJikeTabs(tabs: BrowserTabsApi): Promise<BrowserTab[]> {
   const query = { url: `${JIKE_WEB_ORIGIN}/*` }
-  const maybeTabs = tabs.query(query)
-  if (isPromiseLike<BrowserTab[]>(maybeTabs)) {
-    return await maybeTabs
+  if (isBrowserTabsApi(tabs)) {
+    const maybeTabs = tabs.query(query)
+    if (isPromiseLike<BrowserTab[]>(maybeTabs)) {
+      return await maybeTabs
+    }
   }
 
   return await new Promise((resolve) => {
@@ -156,26 +339,39 @@ async function queryJikeTabs(tabs: BrowserTabsApi): Promise<BrowserTab[]> {
   })
 }
 
-async function executeReadJikeAccessToken(
+async function executeReadJikeStorageValue(
   scripting: BrowserScriptingApi,
   tabId: number,
+  key: string,
 ): Promise<string | undefined> {
   const injection = {
     target: { tabId },
-    args: [JIKE_ACCESS_TOKEN_STORAGE_KEY],
+    args: [key],
     func: readLocalStorageValue,
   } satisfies Parameters<BrowserScriptingApi["executeScript"]>[0]
-  const maybeResults = scripting.executeScript(injection)
-  const results = isPromiseLike<Array<{ result?: string | null }>>(maybeResults)
-    ? await maybeResults
-    : await new Promise<Array<{ result?: string | null }>>((resolve) => {
-        scripting.executeScript(injection, resolve)
-      })
+  const results = await executeJikeScript(scripting, injection)
 
-  return results[0]?.result?.trim() || undefined
+  const result = results[0]?.result
+  return typeof result === "string" ? result.trim() || undefined : undefined
 }
 
-async function getJikeAccessToken(): Promise<string> {
+async function executeJikeScript(
+  scripting: BrowserScriptingApi,
+  injection: Parameters<BrowserScriptingApi["executeScript"]>[0],
+): Promise<Array<{ result?: unknown }>> {
+  if (isBrowserScriptingApi(scripting)) {
+    const maybeResults = scripting.executeScript(injection)
+    if (isPromiseLike<Array<{ result?: unknown }>>(maybeResults)) {
+      return await maybeResults
+    }
+  }
+
+  return await new Promise<Array<{ result?: unknown }>>((resolve) => {
+    scripting.executeScript(injection, resolve)
+  })
+}
+
+async function getJikeAuthTab(): Promise<{ scripting: BrowserScriptingApi, tabId: number }> {
   const tabs = getExtensionTabsApi()
   const scripting = getExtensionScriptingApi()
   if (!tabs || !scripting) {
@@ -184,21 +380,110 @@ async function getJikeAccessToken(): Promise<string> {
 
   const [tab] = (await queryJikeTabs(tabs)).filter((item): item is BrowserTab & { id: number } => typeof item.id === "number")
   if (!tab) {
-    throw new Error("Open https://web.okjike.com/ in a browser tab first so NewsNext can read JK_ACCESS_TOKEN.")
+    throw new Error("Open https://web.okjike.com/ in a browser tab first so NewsNext can read JK_REFRESH_TOKEN.")
   }
 
-  const accessToken = await executeReadJikeAccessToken(scripting, tab.id)
+  return { scripting, tabId: tab.id }
+}
+
+async function loadJikeAuthTokensFromWeb(): Promise<JikeAuthTokens> {
+  const { scripting, tabId } = await getJikeAuthTab()
+  const accessToken = await executeReadJikeStorageValue(scripting, tabId, JIKE_ACCESS_TOKEN_STORAGE_KEY)
+  const refreshToken = await executeReadJikeStorageValue(scripting, tabId, JIKE_REFRESH_TOKEN_STORAGE_KEY)
+  const deviceId = await executeReadJikeStorageValue(scripting, tabId, JIKE_DEVICE_ID_STORAGE_KEY)
   const extensionGlobal = globalThis as BrowserExtensionGlobal
   const runtimeError = extensionGlobal.chrome?.runtime?.lastError?.message
   if (runtimeError) {
     throw new Error(runtimeError)
   }
 
-  if (!accessToken) {
-    throw new Error("JK_ACCESS_TOKEN was not found in https://web.okjike.com/ localStorage.")
+  if (!refreshToken) {
+    throw new Error("JK_REFRESH_TOKEN was not found in https://web.okjike.com/ localStorage.")
   }
 
+  const tokens = {
+    accessToken,
+    refreshToken,
+    deviceId,
+  }
+  await writeStoredJikeAuthTokens(tokens)
+  return tokens
+}
+
+async function refreshJikeAccessToken(tokens: JikeAuthTokens): Promise<string> {
+  if (!tokens.refreshToken) {
+    throw new Error("JK_REFRESH_TOKEN was not found in localStorage.")
+  }
+
+  const refreshed = await myFetch<JikeRefreshTokenResponse>(REFRESH_AUTH_TOKEN_URL, {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "content-type": "application/json",
+      "platform": "web",
+      "x-jike-refresh-token": tokens.refreshToken,
+      ...(tokens.deviceId ? { "x-jike-device-id": tokens.deviceId } : {}),
+    },
+    body: {},
+  })
+  const accessToken = refreshed["x-jike-access-token"]?.trim()
+  const refreshToken = refreshed["x-jike-refresh-token"]?.trim()
+  if (!accessToken) {
+    throw new Error("Failed to refresh Jike access token from JK_REFRESH_TOKEN.")
+  }
+
+  await writeStoredJikeAuthTokens({
+    accessToken,
+    refreshToken: refreshToken ?? tokens.refreshToken,
+    deviceId: tokens.deviceId,
+  })
+
   return accessToken
+}
+
+async function getJikeAuthTokens(): Promise<JikeAuthTokens> {
+  return await readStoredJikeAuthTokens() ?? await loadJikeAuthTokensFromWeb()
+}
+
+function isJikeAuthError(response: JikeFeedResponse): boolean {
+  if (response.success !== false) {
+    return false
+  }
+
+  const message = `${response.error?.message ?? ""} ${response.toast ?? ""}`.toLowerCase()
+  return [
+    "token",
+    "auth",
+    "unauthorized",
+    "login",
+    "登录",
+    "鉴权",
+    "认证",
+    "过期",
+  ].some(keyword => message.includes(keyword))
+}
+
+async function fetchJikeWithAuth(url: string, options: JikeRequestOptions): Promise<JikeFeedResponse> {
+  const tokens = await getJikeAuthTokens()
+  const accessToken = tokens.accessToken ?? await refreshJikeAccessToken(tokens)
+  const response = await myFetch<JikeFeedResponse>(url, {
+    method: "POST",
+    credentials: "include",
+    headers: createJikeHeaders(accessToken),
+    body: options.body,
+  })
+
+  if (!isJikeAuthError(response)) {
+    return response
+  }
+
+  const refreshedAccessToken = await refreshJikeAccessToken(await readStoredJikeAuthTokens() ?? tokens)
+  return await myFetch<JikeFeedResponse>(url, {
+    method: "POST",
+    credentials: "include",
+    headers: createJikeHeaders(refreshedAccessToken),
+    body: options.body,
+  })
 }
 
 function parseTimestamp(post: JikePost): number | undefined {
@@ -211,7 +496,19 @@ function parseTimestamp(post: JikePost): number | undefined {
   return Number.isNaN(timestamp) ? undefined : timestamp
 }
 
-function getPostUrl(post: JikePost): string | undefined {
+function getPostTypeSlug(post: JikePost): "post" | "repost" | undefined {
+  if (post.type === "ORIGINAL_POST") {
+    return "post"
+  }
+
+  if (post.type === "REPOST") {
+    return "repost"
+  }
+
+  return undefined
+}
+
+function getPostMobileUrl(post: JikePost): string | undefined {
   const id = post.id
   if (!id) {
     return undefined
@@ -226,6 +523,17 @@ function getPostUrl(post: JikePost): string | undefined {
   }
 
   return undefined
+}
+
+function getPostWebUrl(post: JikePost): string | undefined {
+  const id = post.id
+  const username = post.user?.username
+  const type = getPostTypeSlug(post)
+  if (!id || !username || !type) {
+    return undefined
+  }
+
+  return `${JIKE_WEB_ORIGIN}/u/${username}/${type}/${id}`
 }
 
 function getPictureUrl(picture: JikePicture): string | undefined {
@@ -284,14 +592,15 @@ function isPinnedPersonalUpdate(post: JikePost): boolean {
 export function jikePostsToNewsItems(posts: JikePost[]): NewsItem[] {
   return posts
     .map((post): NewsItem | null => {
-      const url = getPostUrl(post)
-      if (!url) {
+      const mobileUrl = getPostMobileUrl(post)
+      if (!mobileUrl) {
         return null
       }
 
       const item: NewsItem = {
         title: getPostTitle(post),
-        url,
+        url: getPostWebUrl(post) ?? mobileUrl,
+        mobileUrl,
         timestamp: parseTimestamp(post),
       }
 
@@ -332,12 +641,7 @@ function buildJikeTopicFeedUrl(order: TopicFeedOrder): string {
 }
 
 export async function fetchJikeFollowingUpdates(): Promise<NewsItem[]> {
-  const accessToken = await getJikeAccessToken()
-
-  const response = await myFetch<JikeFeedResponse>(FOLLOWING_UPDATES_URL, {
-    method: "POST",
-    credentials: "include",
-    headers: createJikeHeaders(accessToken),
+  const response = await fetchJikeWithAuth(FOLLOWING_UPDATES_URL, {
     body: {
       limit: FOLLOWING_UPDATES_LIMIT,
     },
@@ -353,12 +657,7 @@ export async function fetchJikeFollowingUpdates(): Promise<NewsItem[]> {
 export async function fetchJikeUserUpdates({
   username,
 }: JikeUserUpdatesParams): Promise<NewsItem[]> {
-  const accessToken = await getJikeAccessToken()
-
-  const response = await myFetch<JikeFeedResponse>(USER_UPDATES_URL, {
-    method: "POST",
-    credentials: "include",
-    headers: createJikeHeaders(accessToken),
+  const response = await fetchJikeWithAuth(USER_UPDATES_URL, {
     body: {
       limit: FOLLOWING_UPDATES_LIMIT,
       username: username.trim(),
@@ -376,12 +675,7 @@ async function fetchJikeTopicFeedByOrder({
   topicId,
   order,
 }: JikeTopicFeedParams & { order: TopicFeedOrder }): Promise<NewsItem[]> {
-  const accessToken = await getJikeAccessToken()
-
-  const response = await myFetch<JikeFeedResponse>(buildJikeTopicFeedUrl(order), {
-    method: "POST",
-    credentials: "include",
-    headers: createJikeHeaders(accessToken),
+  const response = await fetchJikeWithAuth(buildJikeTopicFeedUrl(order), {
     body: {
       limit: FOLLOWING_UPDATES_LIMIT,
       topicId: topicId.trim(),
