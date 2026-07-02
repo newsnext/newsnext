@@ -30,6 +30,8 @@ export default defineConfig({
       "cookies",
       "favicon",
       "history",
+      "scripting",
+      "tabs",
     ],
     host_permissions: [
       "http://*/*",

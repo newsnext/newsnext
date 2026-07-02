@@ -8,16 +8,17 @@ import provider_3 from "./lib/cls"
 import provider_4 from "./lib/folo"
 import provider_5 from "./lib/github"
 import provider_6 from "./lib/hackernews"
-import provider_7 from "./lib/linuxdo"
-import provider_8 from "./lib/netease-music"
-import provider_9 from "./lib/newsnow"
-import provider_10 from "./lib/tieba"
-import provider_11 from "./lib/v2ex"
-import provider_12 from "./lib/weibo"
-import provider_13 from "./lib/x"
-import provider_14 from "./lib/xueqiu"
-import provider_15 from "./lib/zaobao"
-import provider_16 from "./lib/zhihu"
+import provider_7 from "./lib/jike"
+import provider_8 from "./lib/linuxdo"
+import provider_9 from "./lib/netease-music"
+import provider_10 from "./lib/newsnow"
+import provider_11 from "./lib/tieba"
+import provider_12 from "./lib/v2ex"
+import provider_13 from "./lib/weibo"
+import provider_14 from "./lib/x"
+import provider_15 from "./lib/xueqiu"
+import provider_16 from "./lib/zaobao"
+import provider_17 from "./lib/zhihu"
 
 export const providers = {
   [provider_0.id ?? "aihot"]: provider_0,
@@ -27,14 +28,15 @@ export const providers = {
   [provider_4.id ?? "folo"]: provider_4,
   [provider_5.id ?? "github"]: provider_5,
   [provider_6.id ?? "hackernews"]: provider_6,
-  [provider_7.id ?? "linuxdo"]: provider_7,
-  [provider_8.id ?? "netease-music"]: provider_8,
-  [provider_9.id ?? "newsnow"]: provider_9,
-  [provider_10.id ?? "tieba"]: provider_10,
-  [provider_11.id ?? "v2ex"]: provider_11,
-  [provider_12.id ?? "weibo"]: provider_12,
-  [provider_13.id ?? "x"]: provider_13,
-  [provider_14.id ?? "xueqiu"]: provider_14,
-  [provider_15.id ?? "zaobao"]: provider_15,
-  [provider_16.id ?? "zhihu"]: provider_16
+  [provider_7.id ?? "jike"]: provider_7,
+  [provider_8.id ?? "linuxdo"]: provider_8,
+  [provider_9.id ?? "netease-music"]: provider_9,
+  [provider_10.id ?? "newsnow"]: provider_10,
+  [provider_11.id ?? "tieba"]: provider_11,
+  [provider_12.id ?? "v2ex"]: provider_12,
+  [provider_13.id ?? "weibo"]: provider_13,
+  [provider_14.id ?? "x"]: provider_14,
+  [provider_15.id ?? "xueqiu"]: provider_15,
+  [provider_16.id ?? "zaobao"]: provider_16,
+  [provider_17.id ?? "zhihu"]: provider_17
 }

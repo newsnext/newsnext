@@ -177,7 +177,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
         "max": 100
       }
     },
-    "color": "sky",
+    "color": "blue",
     "type": "timeline",
     "category": "others",
     "id": "browser:history"
@@ -201,7 +201,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
         "max": 200
       }
     },
-    "color": "sky",
+    "color": "blue",
     "type": "timeline",
     "category": "others",
     "id": "browser:bookmarks"
@@ -350,6 +350,71 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "category": "others",
     "home": "https://news.ycombinator.com/ask",
     "id": "hackernews:ask"
+  },
+  {
+    "icon": "https://web.okjike.com/favicon.ico",
+    "providerTitle": "Jike",
+    "title": "Following updates",
+    "color": "yellow",
+    "desc": "Updates from followed Jike users",
+    "type": "timeline",
+    "category": "others",
+    "home": "https://web.okjike.com",
+    "id": "jike:following-updates"
+  },
+  {
+    "icon": "https://web.okjike.com/favicon.ico",
+    "providerTitle": "Jike",
+    "title": "User updates",
+    "params": {
+      "username": {
+        "type": "text",
+        "title": "Username",
+        "default": "a2d6acc1-626f-4d15-a22a-849e88a4c9f0"
+      }
+    },
+    "color": "yellow",
+    "desc": "Updates from a Jike user",
+    "type": "timeline",
+    "category": "others",
+    "home": "https://web.okjike.com",
+    "id": "jike:user-updates"
+  },
+  {
+    "icon": "https://web.okjike.com/favicon.ico",
+    "providerTitle": "Jike",
+    "title": "Topic recent",
+    "params": {
+      "topicId": {
+        "type": "text",
+        "title": "Topic ID",
+        "default": "5aeaa84029e4000011ac3768"
+      }
+    },
+    "color": "yellow",
+    "desc": "Recent posts from a Jike topic",
+    "type": "timeline",
+    "category": "others",
+    "home": "https://web.okjike.com",
+    "id": "jike:topic-recent"
+  },
+  {
+    "icon": "https://web.okjike.com/favicon.ico",
+    "providerTitle": "Jike",
+    "title": "Topic hottest",
+    "params": {
+      "topicId": {
+        "type": "text",
+        "title": "Topic ID",
+        "default": "5aeaa84029e4000011ac3768"
+      }
+    },
+    "color": "yellow",
+    "desc": "Hottest posts from a Jike topic",
+    "type": "hottest",
+    "category": "others",
+    "home": "https://web.okjike.com",
+    "id": "jike:topic-hottest"
   },
   {
     "icon": "https://s3.newsnext.pro/icons/linuxdo.png",
