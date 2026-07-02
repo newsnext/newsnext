@@ -26,6 +26,7 @@ export interface CardProps {
   id: string
   source: BoardSource
   className?: string
+  sizeClassName?: string
   nodeRef?: (node: HTMLElement | null) => void
   dragHandle?: ReactNode
 }
@@ -213,7 +214,7 @@ export default function Card(props: CardProps) {
     <div
       ref={setRef}
       className={cn(
-        "h-125 w-100",
+        props.sizeClassName ?? "h-125 w-100",
         props.className,
       )}
     >
