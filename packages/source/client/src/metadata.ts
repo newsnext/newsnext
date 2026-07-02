@@ -25,17 +25,111 @@ export const sourceDescriptors: SourceDescriptor[] = [
   {
     "icon": "https://s3.newsnext.pro/icons/bilibili.png",
     "providerTitle": "Bilibili",
-    "title": "热门视频",
+    "title": "关注视频",
     "color": "blue",
-    "type": "hottest",
+    "desc": "关注 UP 的视频动态",
+    "type": "timeline",
     "category": "others",
     "home": "https://www.bilibili.com",
-    "id": "bilibili:popular"
+    "id": "bilibili:following-videos"
   },
   {
     "icon": "https://s3.newsnext.pro/icons/bilibili.png",
     "providerTitle": "Bilibili",
     "title": "排行榜",
+    "params": {
+      "region": {
+        "type": "select",
+        "title": "Region",
+        "options": [
+          {
+            "label": "All",
+            "value": "0"
+          },
+          {
+            "label": "Animation",
+            "value": "1"
+          },
+          {
+            "label": "Anime",
+            "value": "13"
+          },
+          {
+            "label": "Guochuang",
+            "value": "167"
+          },
+          {
+            "label": "Music",
+            "value": "3"
+          },
+          {
+            "label": "Dance",
+            "value": "129"
+          },
+          {
+            "label": "Games",
+            "value": "4"
+          },
+          {
+            "label": "Knowledge",
+            "value": "36"
+          },
+          {
+            "label": "Technology",
+            "value": "188"
+          },
+          {
+            "label": "Sports",
+            "value": "234"
+          },
+          {
+            "label": "Cars",
+            "value": "223"
+          },
+          {
+            "label": "Life",
+            "value": "160"
+          },
+          {
+            "label": "Food",
+            "value": "211"
+          },
+          {
+            "label": "Animals",
+            "value": "217"
+          },
+          {
+            "label": "Kichiku",
+            "value": "119"
+          },
+          {
+            "label": "Fashion",
+            "value": "155"
+          },
+          {
+            "label": "Entertainment",
+            "value": "5"
+          },
+          {
+            "label": "Film & TV",
+            "value": "181"
+          },
+          {
+            "label": "Documentary",
+            "value": "177"
+          },
+          {
+            "label": "Movies",
+            "value": "23"
+          },
+          {
+            "label": "TV Series",
+            "value": "11"
+          }
+        ],
+        "default": "0"
+      }
+    },
     "color": "blue",
     "type": "hottest",
     "category": "others",
