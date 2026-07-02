@@ -43,6 +43,76 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "id": "bilibili:ranking"
   },
   {
+    "icon": "https://www.google.com/chrome/static/images/favicons/favicon-96x96.png",
+    "providerTitle": "Browser",
+    "title": "History",
+    "params": {
+      "query": {
+        "type": "text",
+        "title": "Search",
+        "default": ""
+      },
+      "dateRange": {
+        "type": "select",
+        "title": "Date range",
+        "options": [
+          {
+            "label": "Today",
+            "value": "today"
+          },
+          {
+            "label": "Last 7 days",
+            "value": "week"
+          },
+          {
+            "label": "Last 30 days",
+            "value": "month"
+          },
+          {
+            "label": "All history",
+            "value": "all"
+          }
+        ],
+        "default": "week"
+      },
+      "maxResults": {
+        "type": "number",
+        "title": "Limit",
+        "default": 50,
+        "min": 1,
+        "max": 100
+      }
+    },
+    "color": "sky",
+    "type": "timeline",
+    "category": "others",
+    "id": "browser:history"
+  },
+  {
+    "icon": "https://www.google.com/chrome/static/images/favicons/favicon-96x96.png",
+    "providerTitle": "Browser",
+    "title": "Bookmarks",
+    "params": {
+      "folder": {
+        "type": "text",
+        "title": "Folder",
+        "description": "Leave empty to include every bookmark. Use a folder ID, title, or path.",
+        "default": ""
+      },
+      "maxResults": {
+        "type": "number",
+        "title": "Limit",
+        "default": 50,
+        "min": 1,
+        "max": 200
+      }
+    },
+    "color": "sky",
+    "type": "timeline",
+    "category": "others",
+    "id": "browser:bookmarks"
+  },
+  {
     "icon": "https://s3.newsnext.pro/icons/cls.png",
     "providerTitle": "财联社",
     "title": "电报",
