@@ -50,7 +50,6 @@
         "@newsnext/sources": "workspace:*",
         "@newsnext/ui": "workspace:*",
         "@orpc/client": "catalog:",
-        "@orpc/server": "catalog:",
         "@orpc/tanstack-query": "catalog:",
         "@tanstack/react-query": "catalog:",
         "@tanstack/react-router": "catalog:",

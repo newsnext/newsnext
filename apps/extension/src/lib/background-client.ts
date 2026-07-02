@@ -1,12 +1,10 @@
-import type { Client } from "@orpc/client"
-import type { BackgroundRouter } from "./background-orpc"
-import { createORPCClient } from "@orpc/client"
-import { RPCLink } from "@orpc/client/message-port"
-import { BACKGROUND_ORPC_PORT_NAME } from "./background-rpc-shared"
+import type { BackgroundService } from "./background/service"
+import { createProxyService } from "@webext-core/proxy-service"
+import { BACKGROUND_SERVICE_KEY } from "./background/service"
 
 interface RuntimeConnector {
   runtime?: {
-    connect?: (connectInfo?: { name?: string }) => unknown
+    sendMessage?: (...args: unknown[]) => unknown
   }
 }
 
@@ -16,21 +14,19 @@ function getRuntimeConnector(): RuntimeConnector | undefined {
     chrome?: RuntimeConnector
   }
 
-  return globalValue.browser?.runtime?.connect
+  return globalValue.browser?.runtime?.sendMessage
     ? globalValue.browser
-    : globalValue.chrome?.runtime?.connect
+    : globalValue.chrome?.runtime?.sendMessage
       ? globalValue.chrome
       : undefined
 }
 
-export function createBackgroundClient(): Client<BackgroundRouter> | undefined {
+export function createBackgroundClient(): BackgroundService | undefined {
   const runtimeConnector = getRuntimeConnector()
-  const port = runtimeConnector?.runtime?.connect?.({ name: BACKGROUND_ORPC_PORT_NAME })
 
-  if (!port) {
+  if (!runtimeConnector) {
     return undefined
   }
 
-  const link = new RPCLink({ port })
-  return createORPCClient<Client<BackgroundRouter>>(link)
+  return createProxyService(BACKGROUND_SERVICE_KEY)
 }

@@ -25,16 +25,16 @@ async function loadLocalSourceViaBackground(
     return undefined
   }
 
-  const response = await backgroundClient.loadSource({
+  const response = await backgroundClient.source.load({
     sourceId,
     params: queryParams,
   })
 
   return {
     id: sourceId,
-    key: response.key ?? `${sourceId}:${stableStringify(normalizedParams)}`,
+    key: `${sourceId}:${stableStringify(normalizedParams)}`,
     items: response.items,
-    updatedAt: response.updatedAt ?? Date.now(),
+    updatedAt: response.updatedAt,
   }
 }
 
