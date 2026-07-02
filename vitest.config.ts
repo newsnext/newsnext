@@ -6,8 +6,9 @@ const rootDir = process.cwd()
 const workspaceAliasRoots = [
   "servers/api",
   "servers/instance",
-  "packages/client-source",
-  "packages/server-source",
+  "packages/source/client",
+  "packages/source/server",
+  "packages/source/shared",
 ]
 
 export default defineConfig({

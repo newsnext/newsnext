@@ -80,47 +80,48 @@
     "packages/cache-policy": {
       "name": "@newsnext/cache-policy",
     },
-    "packages/client-source": {
-      "name": "@newsnext/client-source",
-      "dependencies": {
-        "@date-fns/tz": "^1.5.0",
-        "@newsnext/shared": "workspace:*",
-        "@smithy/md5-js": "^4.4.2",
-        "cheerio": "^1.2.0",
-        "date-fns": "catalog:",
-        "defu": "catalog:",
-        "fast-xml-parser": "^5.9.3",
-        "iconv-lite": "^0.7.2",
-        "ofetch": "catalog:",
-      },
-      "devDependencies": {
-        "domhandler": "^6.0.1",
-      },
-    },
     "packages/misc/tsconfigs": {
       "name": "@newsnext/tsconfigs",
-    },
-    "packages/server-source": {
-      "name": "@newsnext/server-source",
-      "dependencies": {
-        "@date-fns/tz": "^1.5.0",
-        "@newsnext/shared": "workspace:*",
-        "@smithy/md5-js": "^4.4.2",
-        "cheerio": "^1.2.0",
-        "date-fns": "catalog:",
-        "defu": "catalog:",
-        "fast-xml-parser": "^5.9.3",
-        "iconv-lite": "^0.7.2",
-        "ofetch": "catalog:",
-      },
-      "devDependencies": {
-        "domhandler": "^6.0.1",
-      },
     },
     "packages/shared": {
       "name": "@newsnext/shared",
       "devDependencies": {
         "react": "catalog:",
+      },
+    },
+    "packages/source/client": {
+      "name": "@newsnext/client-source",
+      "dependencies": {
+        "@newsnext/shared": "workspace:*",
+        "@newsnext/source-shared": "workspace:*",
+        "cheerio": "^1.2.0",
+      },
+      "devDependencies": {
+        "domhandler": "^6.0.1",
+      },
+    },
+    "packages/source/server": {
+      "name": "@newsnext/server-source",
+      "dependencies": {
+        "@newsnext/source-shared": "workspace:*",
+        "cheerio": "^1.2.0",
+      },
+    },
+    "packages/source/shared": {
+      "name": "@newsnext/source-shared",
+      "dependencies": {
+        "@date-fns/tz": "^1.5.0",
+        "@newsnext/shared": "workspace:*",
+        "@smithy/md5-js": "^4.4.2",
+        "cheerio": "^1.2.0",
+        "date-fns": "catalog:",
+        "defu": "catalog:",
+        "fast-xml-parser": "^5.9.3",
+        "iconv-lite": "^0.7.2",
+        "ofetch": "catalog:",
+      },
+      "devDependencies": {
+        "domhandler": "^6.0.1",
       },
     },
     "packages/ui": {
@@ -601,7 +602,7 @@
 
     "@newsnext/cache-policy": ["@newsnext/cache-policy@workspace:packages/cache-policy"],
 
-    "@newsnext/client-source": ["@newsnext/client-source@workspace:packages/client-source"],
+    "@newsnext/client-source": ["@newsnext/client-source@workspace:packages/source/client"],
 
     "@newsnext/database": ["@newsnext/database@workspace:servers/database"],
 
@@ -609,9 +610,11 @@
 
     "@newsnext/instance": ["@newsnext/instance@workspace:servers/instance"],
 
-    "@newsnext/server-source": ["@newsnext/server-source@workspace:packages/server-source"],
+    "@newsnext/server-source": ["@newsnext/server-source@workspace:packages/source/server"],
 
     "@newsnext/shared": ["@newsnext/shared@workspace:packages/shared"],
+
+    "@newsnext/source-shared": ["@newsnext/source-shared@workspace:packages/source/shared"],
 
     "@newsnext/tsconfigs": ["@newsnext/tsconfigs@workspace:packages/misc/tsconfigs"],
 

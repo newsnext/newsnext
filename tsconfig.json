@@ -8,8 +8,9 @@
     { "path": "./packages/cache/tsconfig.json" },
     { "path": "./packages/cache-policy/tsconfig.json" },
     { "path": "./packages/ui/tsconfig.json" },
-    { "path": "./packages/client-source/tsconfig.json" },
-    { "path": "./packages/server-source/tsconfig.json" },
+    { "path": "./packages/source/client/tsconfig.json" },
+    { "path": "./packages/source/server/tsconfig.json" },
+    { "path": "./packages/source/shared/tsconfig.json" },
     { "path": "./packages/shared/tsconfig.json" }
   ],
   "files": []
