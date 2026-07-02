@@ -21,7 +21,7 @@ export default defineConfig({
   webExt: {
     disabled: true,
   },
-  manifest: {
+  manifest: ({ browser }) => ({
     name: "NewsNext",
     description: "NewsNext is a browser extension that helps you work with your browser",
     version: "0.9.0",
@@ -32,7 +32,14 @@ export default defineConfig({
       "http://*/*",
       "https://*/*",
     ],
-  },
+    ...browser === "chrome"
+      ? {
+          action: {
+            default_title: "NewsNext",
+          },
+        }
+      : {},
+  }),
   vite: () => {
     return {
       plugins: [
