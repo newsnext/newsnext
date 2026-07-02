@@ -7,6 +7,7 @@ import { atomWithStorage, selectAtom } from "jotai/utils"
 export type { BoardType }
 
 export const currentBoardAtom = atom<BoardType>("featured")
+export const pendingForkFocusAtom = atom<string | null>(null)
 export const STARRED_SOURCE_INSTANCE_IDS_KEY = "newsnext-starred-source-instance-ids"
 export const SOURCE_INSTANCES_KEY = "newsnext-source-instances"
 export const starIdsAtom = atomWithStorage<string[]>(STARRED_SOURCE_INSTANCE_IDS_KEY, [])

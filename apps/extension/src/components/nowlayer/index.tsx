@@ -1,10 +1,10 @@
 import type { RefObject } from "react"
 import type { BoardSource } from "@/typings/source"
-import { useAtomValue } from "jotai"
+import { useAtom, useAtomValue } from "jotai"
 import { useCallback, useMemo, useState } from "react"
 import { getClientSourceDescriptors } from "@/lib/client-sources"
 import { buildBoardSources } from "@/lib/source-cards"
-import { boardInstancesAtom, boardStarIdsAtom } from "@/store/board"
+import { boardInstancesAtom, boardStarIdsAtom, pendingForkFocusAtom } from "@/store/board"
 import { DesktopBoard } from "./desktop-board"
 
 const EMPTY_SOURCE_IDS: string[] = []
@@ -34,6 +34,7 @@ export function NowLayer({
   containerRef,
 }: NowLayerProps) {
   const [sourceIdOrderState, setSourceIdOrderState] = useState<SourceIdOrderState | null>(null)
+  const [pendingForkFocusId, setPendingForkFocusId] = useAtom(pendingForkFocusAtom)
   const sourceIdOrder = sourceIdOrderState?.boardId === boardId ? sourceIdOrderState.ids : null
   const starredInstanceIds = useAtomValue(boardStarIdsAtom(boardId))
   const instances = useAtomValue(boardInstancesAtom(boardId))
@@ -71,6 +72,14 @@ export function NowLayer({
     onSourceIdsChange?.(newSourceIds)
   }, [boardId, onSourceIdsChange])
 
+  const handleFocusedSourceComplete = useCallback(() => {
+    setPendingForkFocusId(null)
+  }, [setPendingForkFocusId])
+
+  const focusedSourceId = boardId === "forks" && pendingForkFocusId && sourceIds.includes(pendingForkFocusId)
+    ? pendingForkFocusId
+    : null
+
   if (boardId === "stars" && sourceIds.length === 0) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center px-6 text-center text-sm text-muted-foreground">
@@ -97,6 +106,8 @@ export function NowLayer({
       isScattered={isScattered}
       containerRef={containerRef}
       onSourceIdsChange={handleSourceIdsChange}
+      focusedSourceId={focusedSourceId}
+      onFocusedSourceComplete={handleFocusedSourceComplete}
     />
   )
 }

@@ -48,6 +48,8 @@ interface DesktopBoardProps {
   isScattered?: boolean
   onSourceIdsChange?: (sourceIds: string[]) => void
   containerRef?: RefObject<HTMLDivElement | null>
+  focusedSourceId?: string | null
+  onFocusedSourceComplete?: () => void
 }
 
 export function DesktopBoard({
@@ -58,6 +60,8 @@ export function DesktopBoard({
   isScattered,
   onSourceIdsChange,
   containerRef,
+  focusedSourceId,
+  onFocusedSourceComplete,
 }: DesktopBoardProps) {
   const [orderedSourceIds, setOrderedSourceIds] = useState(sourceIds)
   const initialOrderedSourceIdsRef = useRef(sourceIds)
@@ -93,6 +97,29 @@ export function DesktopBoard({
   useEffect(() => {
     setOrderedSourceIds(sourceIds)
   }, [sourceIds])
+
+  useEffect(() => {
+    if (!focusedSourceId) {
+      return
+    }
+
+    const target = items.get(focusedSourceId)
+    if (!target) {
+      return
+    }
+
+    const frameId = requestAnimationFrame(() => {
+      target.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" })
+    })
+    const timeoutId = window.setTimeout(() => {
+      onFocusedSourceComplete?.()
+    }, 500)
+
+    return () => {
+      cancelAnimationFrame(frameId)
+      window.clearTimeout(timeoutId)
+    }
+  }, [focusedSourceId, items, onFocusedSourceComplete])
 
   const onDragStart = useCallback(() => {
     initialOrderedSourceIdsRef.current = orderedSourceIds

@@ -1,4 +1,5 @@
 import type { BoardSource } from "@/typings/source"
+import { useNavigate } from "@tanstack/react-router"
 import { useSetAtom, useStore } from "jotai"
 import { PhForkDuotone, PhTrashDuotone } from "@/components/icons/ph"
 import { createForkedInstance } from "@/lib/source-cards"
@@ -6,6 +7,7 @@ import { deleteStoredSourceParamValues, writeStoredSourceParamValues } from "@/l
 import {
   deleteInstanceAtom,
   instanceStarredAtom,
+  pendingForkFocusAtom,
   starInstanceAtom,
   upsertInstanceAtom,
 } from "@/store/board"
@@ -20,9 +22,11 @@ export function ForkButton({
   source: BoardSource
   sourceParams: Record<string, unknown>
 }) {
+  const navigate = useNavigate()
   const store = useStore()
   const upsertLocal = useSetAtom(upsertInstanceAtom)
   const starLocal = useSetAtom(starInstanceAtom)
+  const focusFork = useSetAtom(pendingForkFocusAtom)
 
   function handleFork(): void {
     const forkedInstance = createForkedInstance(source.sourceId, sourceParams)
@@ -34,6 +38,9 @@ export function ForkButton({
     if (isStarred) {
       starLocal({ instanceId: forkedInstance.instanceId, starred: true })
     }
+
+    focusFork(forkedInstance.instanceId)
+    void navigate({ to: "/boards/$boardId", params: { boardId: "forks" } })
   }
 
   return (
