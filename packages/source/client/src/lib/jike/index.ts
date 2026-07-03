@@ -155,6 +155,8 @@ export default $provider({
   home: JIKE_WEB_ORIGIN,
   color: "yellow",
   icon: `${JIKE_WEB_ORIGIN}/favicon.ico`,
+  secrets: [...JIKE_AUTH_SECRETS],
+  secretTransforms: [...JIKE_AUTH_SECRET_TRANSFORMS],
   sources: [
     $source(
       {
@@ -163,8 +165,6 @@ export default $provider({
         desc: "Updates from followed Jike users",
         type: "timeline",
         category: "others",
-        secrets: [...JIKE_AUTH_SECRETS],
-        secretTransforms: [...JIKE_AUTH_SECRET_TRANSFORMS],
       },
       fetchJikeFollowingUpdates,
     ),
@@ -175,8 +175,6 @@ export default $provider({
         desc: "Updates from a Jike user",
         type: "timeline",
         category: "others",
-        secrets: [...JIKE_AUTH_SECRETS],
-        secretTransforms: [...JIKE_AUTH_SECRET_TRANSFORMS],
         params: {
           username: $textParam({
             title: "Username",
@@ -194,8 +192,6 @@ export default $provider({
         desc: "Recent posts from a Jike topic",
         type: "timeline",
         category: "others",
-        secrets: [...JIKE_AUTH_SECRETS],
-        secretTransforms: [...JIKE_AUTH_SECRET_TRANSFORMS],
         params: {
           topicId: $textParam({
             title: "Topic ID",
@@ -213,8 +209,6 @@ export default $provider({
         desc: "Hottest posts from a Jike topic",
         type: "hottest",
         category: "others",
-        secrets: [...JIKE_AUTH_SECRETS],
-        secretTransforms: [...JIKE_AUTH_SECRET_TRANSFORMS],
         params: {
           topicId: $textParam({
             title: "Topic ID",

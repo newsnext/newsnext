@@ -130,6 +130,8 @@ export interface ProviderRegistration {
   desc?: string
   home?: string
   category?: CategoryId
+  secrets?: SourceSecretDefinition[]
+  secretTransforms?: SourceSecretTransformDefinition[]
   sources: SourceRegistration<any>[]
 }
 

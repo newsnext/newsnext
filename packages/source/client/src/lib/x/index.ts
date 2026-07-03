@@ -140,13 +140,13 @@ export default $provider({
   color: "slate",
   home: X_ORIGIN,
   category: "world",
+  secrets: [...X_CSRF_COOKIE_SECRET],
   sources: [
     $source(
       {
         key: "place-trends",
         title: "Trending",
         type: "hottest",
-        secrets: [...X_CSRF_COOKIE_SECRET],
         params: {
           location: $selectParam<LocationId>({
             title: "Location",
@@ -162,7 +162,6 @@ export default $provider({
         key: "recommended",
         title: "Recommended",
         type: "timeline",
-        secrets: [...X_CSRF_COOKIE_SECRET],
       },
       (_params, context) => fetchXTimeline(HOME_TIMELINE_URL, context),
     ),
@@ -171,7 +170,6 @@ export default $provider({
         key: "following",
         title: "Following",
         type: "timeline",
-        secrets: [...X_CSRF_COOKIE_SECRET],
       },
       (_params, context) => fetchXTimeline(HOME_LATEST_TIMELINE_URL, context),
     ),
@@ -180,7 +178,6 @@ export default $provider({
         key: "user",
         title: "User Tweets",
         type: "timeline",
-        secrets: [...X_CSRF_COOKIE_SECRET],
         params: {
           username: $textParam({
             title: "Username",
