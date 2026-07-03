@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query"
 import { useCallback, useMemo } from "react"
 import { loadClientSource } from "@/lib/client-source-loader"
 // import { useLocalStorageCache } from "./use-local-storage-cache"
+import { getLoginUrlFromError } from "./source-login-error"
 import { CLIENT_SOURCE_QUERY_KEY, consumeLatestSourceRefresh } from "./use-refetch"
 
 export interface UseSourceQueryOptions {
@@ -10,25 +11,6 @@ export interface UseSourceQueryOptions {
   params?: Record<string, unknown>
   enabled?: boolean
   refetchInterval?: number | false
-}
-
-interface LoginRequiredError extends Error {
-  code?: unknown
-  loginUrl?: unknown
-}
-
-function getLoginUrlFromError(error: unknown): string | undefined {
-  if (!(error instanceof Error)) {
-    return undefined
-  }
-
-  const loginUrl = (error as LoginRequiredError).loginUrl
-  const code = (error as LoginRequiredError).code
-  if (code === "SOURCE_LOGIN_REQUIRED" && typeof loginUrl === "string" && loginUrl.trim()) {
-    return loginUrl.trim()
-  }
-
-  return undefined
 }
 
 // const STORAGE_PREFIX = "newsnext-source-cache"

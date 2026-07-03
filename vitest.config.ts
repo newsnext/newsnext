@@ -4,6 +4,7 @@ import { defineConfig } from "vitest/config"
 
 const rootDir = process.cwd()
 const workspaceAliasRoots = [
+  "apps/extension",
   "servers/api",
   "servers/instance",
   "packages/source/client",
