@@ -1,16 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { resolveSourceSecrets, updateSourceSecrets } from "./source-secrets"
 
-const { browserMock } = vi.hoisted(() => ({
+const { browserMock, sourceSecretCacheItemMock } = vi.hoisted(() => ({
   browserMock: {
     cookies: {
       get: vi.fn(),
-    },
-    storage: {
-      local: {
-        get: vi.fn(),
-        set: vi.fn(),
-      },
     },
     scripting: {
       executeScript: vi.fn(),
@@ -19,11 +12,23 @@ const { browserMock } = vi.hoisted(() => ({
       query: vi.fn(),
     },
   },
+  sourceSecretCacheItemMock: {
+    getValue: vi.fn(),
+    setValue: vi.fn(),
+  },
 }))
 
 vi.mock("wxt/browser", () => ({
   browser: browserMock,
 }))
+
+vi.mock("wxt/utils/storage", () => ({
+  storage: {
+    defineItem: vi.fn(() => sourceSecretCacheItemMock),
+  },
+}))
+
+const { resolveSourceSecrets, updateSourceSecrets } = await import("./source-secrets")
 
 describe("source secrets", () => {
   const localStorageValues: Record<string, string> = {
@@ -35,20 +40,41 @@ describe("source secrets", () => {
   beforeEach(() => {
     vi.restoreAllMocks()
     browserMock.cookies.get.mockResolvedValue({ value: "cookie-secret" })
-    browserMock.storage.local.set.mockResolvedValue(undefined)
-    browserMock.storage.local.get.mockImplementation(async (key: string) => ({
-      [key]: JSON.stringify({
-        jike: {
-          accessToken: "vars-access-token",
-          refreshToken: "vars-refresh-token",
-        },
-      }),
-    }))
+    sourceSecretCacheItemMock.setValue.mockResolvedValue(undefined)
+    sourceSecretCacheItemMock.getValue.mockResolvedValue({
+      jike: {
+        accessToken: "vars-access-token",
+        refreshToken: "vars-refresh-token",
+      },
+    })
     browserMock.scripting.executeScript.mockImplementation(async (injection: { args?: unknown[] }) => {
       const [key] = injection.args ?? []
       return [{ result: typeof key === "string" ? ` ${localStorageValues[key] ?? ""} ` : undefined }]
     })
     browserMock.tabs.query.mockResolvedValue([{ id: 7 }])
+  })
+
+  it("supports legacy string secret cache values", async () => {
+    sourceSecretCacheItemMock.getValue.mockResolvedValueOnce(JSON.stringify({
+      jike: {
+        accessToken: "vars-access-token",
+        refreshToken: "vars-refresh-token",
+      },
+    }))
+
+    await expect(resolveSourceSecrets({
+      secrets: [
+        {
+          key: "accessToken",
+          type: "localStorage",
+          origin: "https://web.okjike.com",
+          itemKey: "token",
+          cache: true,
+        },
+      ],
+    }, "jike")).resolves.toEqual({
+      accessToken: "vars-access-token",
+    })
   })
 
   it("resolves localStorage secrets from extension cache before reading a tab", async () => {
@@ -77,13 +103,11 @@ describe("source secrets", () => {
   })
 
   it("resolves cookie secrets from extension cache before reading cookies", async () => {
-    browserMock.storage.local.get.mockImplementationOnce(async (key: string) => ({
-      [key]: JSON.stringify({
-        jike: {
-          csrfToken: "cached-cookie-secret",
-        },
-      }),
-    }))
+    sourceSecretCacheItemMock.getValue.mockResolvedValueOnce({
+      jike: {
+        csrfToken: "cached-cookie-secret",
+      },
+    })
 
     await expect(resolveSourceSecrets({
       secrets: [
@@ -102,6 +126,8 @@ describe("source secrets", () => {
   })
 
   it("resolves cookie and localStorage secrets", async () => {
+    sourceSecretCacheItemMock.getValue.mockResolvedValueOnce(undefined)
+
     await expect(resolveSourceSecrets({
       secrets: [
         {
@@ -147,13 +173,11 @@ describe("source secrets", () => {
       undeclared: "ignored",
     })
 
-    expect(browserMock.storage.local.set).toHaveBeenCalledWith({
-      newsnext_source_secrets: JSON.stringify({
-        jike: {
-          accessToken: "fresh-access-token",
-          refreshToken: "vars-refresh-token",
-        },
-      }),
+    expect(sourceSecretCacheItemMock.setValue).toHaveBeenCalledWith({
+      jike: {
+        accessToken: "fresh-access-token",
+        refreshToken: "vars-refresh-token",
+      },
     })
   })
 })

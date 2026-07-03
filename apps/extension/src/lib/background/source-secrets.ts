@@ -1,8 +1,12 @@
 import type { RegisteredSourceDefinition, SourceSecretDefinition, SourceSecrets } from "@newsnext/client-source/typings"
 import { browser } from "wxt/browser"
+import { storage } from "wxt/utils/storage"
 
-const DEFAULT_LOCAL_STORAGE_SECRET_CACHE_STORAGE_KEY = "newsnext_source_secrets"
 type SourceSecretCache = Record<string, Record<string, string>>
+
+const sourceSecretCacheItem = storage.defineItem<SourceSecretCache | string | null>("local:newsnext_source_secrets", {
+  fallback: null,
+})
 
 function parseSourceSecretCache(storedValue: unknown): SourceSecretCache | undefined {
   let cache: unknown = storedValue
@@ -21,8 +25,8 @@ function parseSourceSecretCache(storedValue: unknown): SourceSecretCache | undef
 }
 
 async function readSourceSecretCache(): Promise<SourceSecretCache | undefined> {
-  const items = await browser.storage.local.get(DEFAULT_LOCAL_STORAGE_SECRET_CACHE_STORAGE_KEY).catch(() => undefined)
-  return parseSourceSecretCache(items?.[DEFAULT_LOCAL_STORAGE_SECRET_CACHE_STORAGE_KEY])
+  const cache = await sourceSecretCacheItem.getValue().catch(() => undefined)
+  return parseSourceSecretCache(cache)
 }
 
 async function readLocalStorageSecret(secret: SourceSecretDefinition & { type: "localStorage" }): Promise<string | undefined> {
@@ -114,13 +118,11 @@ export async function updateSourceSecrets(
   const cache = await readSourceSecretCache() ?? {}
   const providerCache = cache[provider] ?? {}
 
-  await browser.storage.local.set({
-    [DEFAULT_LOCAL_STORAGE_SECRET_CACHE_STORAGE_KEY]: JSON.stringify({
-      ...cache,
-      [provider]: {
-        ...providerCache,
-        ...updates,
-      },
-    }),
+  await sourceSecretCacheItem.setValue({
+    ...cache,
+    [provider]: {
+      ...providerCache,
+      ...updates,
+    },
   }).catch(() => undefined)
 }
