@@ -62,7 +62,6 @@ describe("linuxdo source", () => {
         timestamp: Date.parse("2026-06-28T00:00:00.000Z"),
         url: "https://linux.do/t/topic/123",
         inline: {
-          text: "",
           icon: {
             src: "https://linux.do/user_avatar/linux.do/ada/48/1_2.png",
             radius: 999,
@@ -89,7 +88,7 @@ describe("linuxdo source", () => {
       },
     })
 
-    const items = await linuxdoProvider.sources.hot.loader({})
+    const items = await linuxdoProvider.sources["top-daily"].loader({})
 
     expect(myFetch).toHaveBeenCalledWith("https://linux.do/top/daily.json", undefined)
     expect(items).toEqual([
@@ -97,7 +96,6 @@ describe("linuxdo source", () => {
         title: "Linux.do topic",
         url: "https://linux.do/t/topic/123",
         inline: {
-          text: "",
           icon: {
             src: "https://linux.do/user_avatar/linux.do/ada/48/1_2.png",
             radius: 999,

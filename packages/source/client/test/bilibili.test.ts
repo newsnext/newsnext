@@ -142,7 +142,6 @@ describe("bilibili source", () => {
       {
         title: "A ranking video",
         url: "https://www.bilibili.com/video/BV1rank411c7mD",
-        timestamp: 1782806400000,
         inline: {
           text: "1.2w观看 · 678点赞",
           icon: {

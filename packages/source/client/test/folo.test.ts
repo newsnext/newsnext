@@ -37,8 +37,6 @@ describe("folo source", () => {
         timestamp: 1782566320772,
         inline: {
           text: "Ada",
-          icon: "https://example.com/icon.png",
-          mark: ["Updates"],
         },
         preview: {
           text: "Summary preview",
