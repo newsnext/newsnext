@@ -1,6 +1,7 @@
 import { myFetch } from "@newsnext/source-shared/utils/fetch"
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import jikeProvider, { fetchJikeFollowingUpdates, fetchJikeTopicHottestFeed, fetchJikeTopicRecentFeed, fetchJikeUserUpdates, jikePostsToNewsItems } from "../src/lib/jike"
+
+import jikeProvider, { fetchJikeFollowingUpdates, fetchJikeTopicHottestFeed, fetchJikeTopicRecentFeed, fetchJikeUserUpdates, jikePostsToNewsItems } from "."
 
 vi.mock("@newsnext/source-shared/utils/fetch", () => ({
   myFetch: vi.fn(),

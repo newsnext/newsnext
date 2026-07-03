@@ -1,14 +1,49 @@
 import type { NewsItem } from "@newsnext/source-shared/typings"
+import type {
+  BrowserExtensionGlobal,
+  BrowserScriptingApi,
+  BrowserTab,
+  BrowserTabsApi,
+  JikeAuthTokens,
+  JikeFeedResponse,
+  JikeRefreshTokenResponse,
+  JikeRequestOptions,
+  JikeStoredVars,
+  JikeTopicFeedParams,
+  JikeUserUpdatesParams,
+  NewsNextVars,
+  TopicFeedOrder,
+} from "./types"
 import { myFetch } from "@newsnext/source-shared/utils/fetch"
 import { $textParam } from "@newsnext/source-shared/utils/params"
+
 import { $provider, $source } from "@newsnext/source-shared/utils/source"
 
-const JIKE_WEB_ORIGIN = "https://web.okjike.com"
-const JIKE_SHARE_ORIGIN = "https://m.okjike.com"
+import {
+  buildJikeTopicFeedUrl,
+  createJikeHeaders,
+  getExtensionScriptingApi,
+  getExtensionStorageArea,
+  getExtensionTabsApi,
+  getStringProperty,
+  isBrowserScriptingApi,
+  isBrowserStorageAreaApi,
+  isBrowserTabsApi,
+  isJikeAuthError,
+  isJikeAuthFetchError,
+  isPinnedPersonalUpdate,
+  isPromiseLike,
+  JIKE_WEB_ORIGIN,
+  jikePostsToNewsItems,
+  parseNewsNextVars,
+  readLocalStorageValue,
+} from "./utils"
+
+export { jikePostsToNewsItems } from "./utils"
+
 const REFRESH_AUTH_TOKEN_URL = "https://api.ruguoapp.com/app_auth_tokens.refresh"
 const FOLLOWING_UPDATES_URL = "https://api.ruguoapp.com/1.0/personalUpdate/followingUpdates"
 const USER_UPDATES_URL = "https://api.ruguoapp.com/1.0/personalUpdate/single"
-const TOPIC_FEED_BASE_URL = "https://api.ruguoapp.com/1.0/topics/tabs"
 const FOLLOWING_UPDATES_LIMIT = 50
 const NEWSNEXT_VARS_STORAGE_KEY = "newsnext_vars"
 const JIKE_PROVIDER_ID = "jike"
@@ -16,227 +51,14 @@ const JIKE_ACCESS_TOKEN_STORAGE_KEY = "JK_ACCESS_TOKEN"
 const JIKE_REFRESH_TOKEN_STORAGE_KEY = "JK_REFRESH_TOKEN"
 const JIKE_DEVICE_ID_STORAGE_KEY = "JK_DEVICE_ID"
 
-type TopicFeedOrder = "recent" | "hottest"
-
-const TOPIC_FEED_TAB_BY_ORDER: Record<TopicFeedOrder, string> = {
-  recent: "square",
-  hottest: "selected",
-}
-
-interface JikeTopicFeedParams {
-  topicId: string
-}
-
-interface JikeUserUpdatesParams {
-  username: string
-}
-
-interface JikePicture {
-  middlePicUrl?: string
-  picUrl?: string
-  smallPicUrl?: string
-  thumbnailUrl?: string
-}
-
-interface JikeUser {
-  avatarImage?: JikePicture
-  profileImageUrl?: string
-  screenName?: string
-  username?: string
-}
-
-interface JikeTopic {
-  content?: string
-}
-
-interface JikeLinkInfo {
-  linkUrl?: string
-  pictureUrl?: string
-  source?: string
-  title?: string
-}
-
-interface JikePost {
-  id?: string
-  type?: string
-  content?: string
-  createdAt?: string
-  actionTime?: string
-  commentCount?: number
-  likeCount?: number
-  pictures?: JikePicture[]
-  target?: JikePost
-  topic?: JikeTopic
-  user?: JikeUser
-  linkInfo?: JikeLinkInfo
-  pinned?: {
-    personalUpdate?: boolean
-  }
-}
-
-interface JikeFeedResponse {
-  success?: boolean
-  data?: JikePost[]
-  error?: {
-    message?: string
-  }
-  toast?: string
-}
-
-interface JikeRefreshTokenResponse {
-  "x-jike-access-token"?: string
-  "x-jike-refresh-token"?: string
-}
-
-interface JikeAuthTokens {
-  accessToken?: string
-  refreshToken?: string
-  deviceId?: string
-}
-
-interface JikeStoredVars {
-  JK_ACCESS_TOKEN?: string
-  JK_REFRESH_TOKEN?: string
-  JK_DEVICE_ID?: string
-}
-
-interface NewsNextVars {
-  jike?: JikeStoredVars
-  [providerId: string]: unknown
-}
-
-interface JikeRequestOptions {
-  body: Record<string, unknown>
-}
-
-interface BrowserTab {
-  id?: number
-}
-
-interface BrowserTabsApi {
-  query: (
-    queryInfo: { url: string | string[] },
-    callback?: (tabs: BrowserTab[]) => void,
-  ) => Promise<BrowserTab[]> | void
-}
-
-interface BrowserScriptingApi {
-  executeScript: (
-    injection: {
-      target: { tabId: number }
-      args?: unknown[]
-      func: (...args: unknown[]) => unknown
-    },
-    callback?: (results: Array<{ result?: unknown }>) => void,
-  ) => Promise<Array<{ result?: unknown }>> | void
-}
-
-interface BrowserStorageAreaApi {
-  get: (
-    keys: string | string[] | Record<string, unknown> | null,
-    callback?: (items: Record<string, unknown>) => void,
-  ) => Promise<Record<string, unknown>> | void
-  set: (
-    items: Record<string, unknown>,
-    callback?: () => void,
-  ) => Promise<void> | void
-}
-
-interface BrowserExtensionGlobal {
-  chrome?: {
-    runtime?: {
-      lastError?: { message?: string }
-    }
-    scripting?: BrowserScriptingApi
-    storage?: {
-      local?: BrowserStorageAreaApi
-    }
-    tabs?: BrowserTabsApi
-  }
-  browser?: {
-    scripting?: BrowserScriptingApi
-    storage?: {
-      local?: BrowserStorageAreaApi
-    }
-    tabs?: BrowserTabsApi
-  }
-}
-
-interface LocalStorageGlobal {
-  localStorage?: {
-    getItem: (key: string) => string | null
-    setItem: (key: string, value: string) => void
-  }
-}
-
-function isPromiseLike<T>(value: unknown): value is Promise<T> {
-  return typeof value === "object"
-    && value !== null
-    && "then" in value
-    && typeof value.then === "function"
-}
-
-function compactText(text: string): string {
-  return text.trim().replace(/\s+/g, " ")
-}
-
-function getExtensionTabsApi(): BrowserTabsApi | undefined {
-  const extensionGlobal = globalThis as BrowserExtensionGlobal
-  return extensionGlobal.browser?.tabs ?? extensionGlobal.chrome?.tabs
-}
-
-function getExtensionScriptingApi(): BrowserScriptingApi | undefined {
-  const extensionGlobal = globalThis as BrowserExtensionGlobal
-  return extensionGlobal.browser?.scripting ?? extensionGlobal.chrome?.scripting
-}
-
-function getExtensionStorageArea(): BrowserStorageAreaApi | undefined {
-  const extensionGlobal = globalThis as BrowserExtensionGlobal
-  return extensionGlobal.browser?.storage?.local ?? extensionGlobal.chrome?.storage?.local
-}
-
-function isBrowserTabsApi(tabs: BrowserTabsApi): boolean {
-  return (globalThis as BrowserExtensionGlobal).browser?.tabs === tabs
-}
-
-function isBrowserScriptingApi(scripting: BrowserScriptingApi): boolean {
-  return (globalThis as BrowserExtensionGlobal).browser?.scripting === scripting
-}
-
-function isBrowserStorageAreaApi(storage: BrowserStorageAreaApi): boolean {
-  return (globalThis as BrowserExtensionGlobal).browser?.storage?.local === storage
-}
-
-function readLocalStorageValue(...args: unknown[]): string | null {
-  const [key] = args
-  if (typeof key !== "string") {
-    return null
-  }
-
-  return (globalThis as LocalStorageGlobal).localStorage?.getItem(key) ?? null
-}
-
-function parseNewsNextVars(value: string | null): NewsNextVars {
-  if (!value) {
-    return {}
-  }
-
-  try {
-    const parsed = JSON.parse(value) as unknown
-    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed as NewsNextVars : {}
-  } catch {
-    return {}
-  }
-}
-
 async function readExtensionStorageValue(key: string): Promise<string | undefined> {
-  const storage = getExtensionStorageArea()
-  if (!storage) {
+  const extensionStorage = getExtensionStorageArea()
+  if (!extensionStorage) {
     throw new Error("Jike requires browser storage permission to read newsnext_vars.")
   }
 
-  if (isBrowserStorageAreaApi(storage)) {
-    const maybeItems = storage.get(key)
+  if (isBrowserStorageAreaApi(extensionStorage)) {
+    const maybeItems = extensionStorage.get(key)
     if (isPromiseLike<Record<string, unknown>>(maybeItems)) {
       const items = await maybeItems
       const value = items[key]
@@ -245,7 +67,7 @@ async function readExtensionStorageValue(key: string): Promise<string | undefine
   }
 
   return await new Promise((resolve) => {
-    storage.get(key, (items) => {
+    extensionStorage.get(key, (items) => {
       const value = items[key]
       resolve(typeof value === "string" ? value : undefined)
     })
@@ -253,13 +75,13 @@ async function readExtensionStorageValue(key: string): Promise<string | undefine
 }
 
 async function writeExtensionStorageValue(key: string, value: string): Promise<void> {
-  const storage = getExtensionStorageArea()
-  if (!storage) {
+  const extensionStorage = getExtensionStorageArea()
+  if (!extensionStorage) {
     throw new Error("Jike requires browser storage permission to write newsnext_vars.")
   }
 
-  if (isBrowserStorageAreaApi(storage)) {
-    const maybeResult = storage.set({ [key]: value })
+  if (isBrowserStorageAreaApi(extensionStorage)) {
+    const maybeResult = extensionStorage.set({ [key]: value })
     if (isPromiseLike<void>(maybeResult)) {
       await maybeResult
       return
@@ -267,31 +89,13 @@ async function writeExtensionStorageValue(key: string, value: string): Promise<v
   }
 
   await new Promise<void>((resolve) => {
-    storage.set({ [key]: value }, resolve)
+    extensionStorage.set({ [key]: value }, resolve)
   })
 }
 
 async function readNewsNextVars(): Promise<NewsNextVars> {
   const extensionValue = await readExtensionStorageValue(NEWSNEXT_VARS_STORAGE_KEY)
   return parseNewsNextVars(extensionValue ?? null)
-}
-
-function getStringProperty(value: unknown, key: string): string | undefined {
-  if (!value || typeof value !== "object") {
-    return undefined
-  }
-
-  const result = (value as Record<string, unknown>)[key]
-  return typeof result === "string" ? result.trim() || undefined : undefined
-}
-
-function getNumberProperty(value: unknown, key: string): number | undefined {
-  if (!value || typeof value !== "object") {
-    return undefined
-  }
-
-  const result = (value as Record<string, unknown>)[key]
-  return typeof result === "number" ? result : undefined
 }
 
 async function readStoredJikeAuthTokens(): Promise<JikeAuthTokens | undefined> {
@@ -454,36 +258,6 @@ async function getJikeAuthTokens(): Promise<JikeAuthTokens> {
   return await readStoredJikeAuthTokens() ?? await loadJikeAuthTokensFromWeb()
 }
 
-function isJikeAuthError(response: JikeFeedResponse): boolean {
-  if (response.success !== false) {
-    return false
-  }
-
-  const message = `${response.error?.message ?? ""} ${response.toast ?? ""}`.toLowerCase()
-  return [
-    "token",
-    "auth",
-    "unauthorized",
-    "login",
-    "登录",
-    "鉴权",
-    "认证",
-    "过期",
-  ].some(keyword => message.includes(keyword))
-}
-
-function getFetchErrorStatus(error: unknown): number | undefined {
-  return getNumberProperty(error, "statusCode")
-    ?? getNumberProperty(error, "status")
-    ?? getNumberProperty((error as { response?: unknown } | null)?.response, "status")
-    ?? getNumberProperty((error as { response?: unknown } | null)?.response, "statusCode")
-}
-
-function isJikeAuthFetchError(error: unknown): boolean {
-  const status = getFetchErrorStatus(error)
-  return status === 401 || status === 403
-}
-
 async function requestJikeFeed(url: string, options: JikeRequestOptions, accessToken: string): Promise<JikeFeedResponse> {
   return await myFetch<JikeFeedResponse>(url, {
     method: "POST",
@@ -522,160 +296,6 @@ async function fetchJikeWithAuth(url: string, options: JikeRequestOptions): Prom
   }
 
   return await retryJikeWithFreshAccessToken(url, options, tokens)
-}
-
-function parseTimestamp(post: JikePost): number | undefined {
-  const timestampSource = post.actionTime ?? post.createdAt
-  if (!timestampSource) {
-    return undefined
-  }
-
-  const timestamp = new Date(timestampSource).getTime()
-  return Number.isNaN(timestamp) ? undefined : timestamp
-}
-
-function getPostTypeSlug(post: JikePost): "post" | "repost" | undefined {
-  if (post.type === "ORIGINAL_POST") {
-    return "post"
-  }
-
-  if (post.type === "REPOST") {
-    return "repost"
-  }
-
-  return undefined
-}
-
-function getPostMobileUrl(post: JikePost): string | undefined {
-  const id = post.id
-  if (!id) {
-    return undefined
-  }
-
-  if (post.type === "REPOST") {
-    return `${JIKE_SHARE_ORIGIN}/reposts/${id}`
-  }
-
-  if (post.type === "ORIGINAL_POST") {
-    return `${JIKE_SHARE_ORIGIN}/originalPosts/${id}`
-  }
-
-  return undefined
-}
-
-function getPostWebUrl(post: JikePost): string | undefined {
-  const id = post.id
-  const username = post.user?.username
-  const type = getPostTypeSlug(post)
-  if (!id || !username || !type) {
-    return undefined
-  }
-
-  return `${JIKE_WEB_ORIGIN}/u/${username}/${type}/${id}`
-}
-
-function getPictureUrl(picture: JikePicture): string | undefined {
-  return picture.middlePicUrl ?? picture.picUrl ?? picture.smallPicUrl ?? picture.thumbnailUrl
-}
-
-function getUserAvatar(user: JikeUser | undefined): string | undefined {
-  return user?.profileImageUrl ?? getPictureUrl(user?.avatarImage ?? {})
-}
-
-function getPostTitle(post: JikePost): string {
-  const ownContent = post.content ? compactText(post.content) : ""
-  if (ownContent) {
-    return ownContent
-  }
-
-  const targetContent = post.target?.content ? compactText(post.target.content) : ""
-  if (targetContent) {
-    return targetContent
-  }
-
-  return post.linkInfo?.title ?? "Jike update"
-}
-
-function getInlineText(post: JikePost): string {
-  const parts = [
-    post.user?.screenName,
-    post.topic?.content ? `#${post.topic.content}` : undefined,
-    typeof post.likeCount === "number" ? `${post.likeCount} likes` : undefined,
-    typeof post.commentCount === "number" ? `${post.commentCount} comments` : undefined,
-  ]
-
-  return parts.filter(Boolean).join(" · ")
-}
-
-function getPreviewText(post: JikePost): string | undefined {
-  const target = post.target
-  if (target?.content) {
-    const author = target.user?.screenName
-    const content = compactText(target.content)
-    return author ? `${author}: ${content}` : content
-  }
-
-  return post.linkInfo?.title
-}
-
-function getPreviewPictures(post: JikePost): string[] {
-  const pictures = post.pictures?.length ? post.pictures : post.target?.pictures
-  return (pictures ?? []).map(getPictureUrl).filter((url): url is string => Boolean(url))
-}
-
-function isPinnedPersonalUpdate(post: JikePost): boolean {
-  return post.pinned?.personalUpdate === true
-}
-
-export function jikePostsToNewsItems(posts: JikePost[]): NewsItem[] {
-  return posts
-    .map((post): NewsItem | null => {
-      const mobileUrl = getPostMobileUrl(post)
-      if (!mobileUrl) {
-        return null
-      }
-
-      const item: NewsItem = {
-        title: getPostTitle(post),
-        url: getPostWebUrl(post) ?? mobileUrl,
-        mobileUrl,
-        timestamp: parseTimestamp(post),
-      }
-
-      const inlineText = getInlineText(post)
-      const avatar = getUserAvatar(post.user)
-      if (inlineText || avatar) {
-        item.inline = {
-          text: inlineText,
-          ...(avatar ? { icon: { src: avatar, radius: 4 } } : {}),
-        }
-      }
-
-      const previewText = getPreviewText(post)
-      const pictures = getPreviewPictures(post)
-      if (previewText || pictures.length > 0 || post.linkInfo?.pictureUrl) {
-        item.preview = {
-          text: previewText ?? "",
-          picture: pictures.length > 0 ? pictures : post.linkInfo?.pictureUrl,
-        }
-      }
-
-      return item
-    })
-    .filter((item): item is NewsItem => item !== null)
-}
-
-function createJikeHeaders(accessToken: string): Record<string, string> {
-  return {
-    "accept": "application/json, text/plain, */*",
-    "content-type": "application/json",
-    "platform": "web",
-    "x-jike-access-token": accessToken,
-  }
-}
-
-function buildJikeTopicFeedUrl(order: TopicFeedOrder): string {
-  return `${TOPIC_FEED_BASE_URL}/${TOPIC_FEED_TAB_BY_ORDER[order]}/feed`
 }
 
 export async function fetchJikeFollowingUpdates(): Promise<NewsItem[]> {
