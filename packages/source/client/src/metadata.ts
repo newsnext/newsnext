@@ -681,8 +681,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
       {
         "key": "csrfToken",
         "type": "cookie",
-        "url": "https://x.com",
-        "name": "ct0"
+        "origin": "https://x.com",
+        "itemKey": "ct0"
       }
     ],
     "id": "x:place-trends"
@@ -699,8 +699,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
       {
         "key": "csrfToken",
         "type": "cookie",
-        "url": "https://x.com",
-        "name": "ct0"
+        "origin": "https://x.com",
+        "itemKey": "ct0"
       }
     ],
     "id": "x:recommended"
@@ -717,8 +717,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
       {
         "key": "csrfToken",
         "type": "cookie",
-        "url": "https://x.com",
-        "name": "ct0"
+        "origin": "https://x.com",
+        "itemKey": "ct0"
       }
     ],
     "id": "x:following"
@@ -742,8 +742,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
       {
         "key": "csrfToken",
         "type": "cookie",
-        "url": "https://x.com",
-        "name": "ct0"
+        "origin": "https://x.com",
+        "itemKey": "ct0"
       }
     ],
     "id": "x:user"

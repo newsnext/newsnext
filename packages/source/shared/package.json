@@ -10,6 +10,7 @@
     "./utils/crypto": "./src/utils/crypto.ts",
     "./utils/date": "./src/utils/date.ts",
     "./utils/fetch": "./src/utils/fetch.ts",
+    "./utils/jwt": "./src/utils/jwt.ts",
     "./utils/params": "./src/utils/params.ts",
     "./utils/source": "./src/utils/source/index.ts"
   },

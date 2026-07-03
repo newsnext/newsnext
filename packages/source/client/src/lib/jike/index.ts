@@ -1,4 +1,4 @@
-import type { NewsItem, SourceLoaderContext, SourceSecrets } from "@newsnext/source-shared/typings"
+import type { NewsItem, SourceLoaderContext } from "@newsnext/source-shared/typings"
 import type {
   JikeFeedResponse,
   JikeRequestOptions,
@@ -7,6 +7,7 @@ import type {
   TopicFeedOrder,
 } from "./types"
 import { myFetch } from "@newsnext/source-shared/utils/fetch"
+import { isJwtExpired } from "@newsnext/source-shared/utils/jwt"
 import { $textParam } from "@newsnext/source-shared/utils/params"
 
 import { $provider, $source } from "@newsnext/source-shared/utils/source"
@@ -29,6 +30,7 @@ const JIKE_ACCESS_TOKEN_STORAGE_KEY = "JK_ACCESS_TOKEN"
 const JIKE_REFRESH_TOKEN_STORAGE_KEY = "JK_REFRESH_TOKEN"
 const JIKE_ACCESS_TOKEN_SECRET_KEY = "accessToken"
 const JIKE_REFRESH_TOKEN_SECRET_KEY = "refreshToken"
+const JIKE_ACCESS_TOKEN_EXPIRY_BUFFER_SECONDS = 30
 
 const JIKE_AUTH_SECRETS = [
   {
@@ -47,32 +49,53 @@ const JIKE_AUTH_SECRETS = [
   },
 ] as const
 
-const JIKE_AUTH_SECRET_TRANSFORMS = [
-  {
-    type: "http",
-    targetKey: JIKE_ACCESS_TOKEN_SECRET_KEY,
-    url: REFRESH_AUTH_TOKEN_URL,
-    method: "POST",
-    credentials: "include",
-    request: ({ refreshToken }: SourceSecrets) => ({
+async function refreshJikeAccessToken(
+  refreshToken: string | undefined,
+  context: SourceLoaderContext | undefined,
+): Promise<string | undefined> {
+  if (!refreshToken) {
+    return undefined
+  }
+
+  try {
+    const response = await fetch(REFRESH_AUTH_TOKEN_URL, {
+      method: "POST",
+      credentials: "include",
       headers: {
         "content-type": "application/json",
         "platform": "web",
         "x-jike-refresh-token": refreshToken,
       },
-      body: {},
-    }),
-    output: {
-      type: "header",
-      key: "x-jike-access-token",
-    },
-    when: "always",
-  },
-] as const
+      body: "{}",
+    })
+
+    if (!response.ok) {
+      return undefined
+    }
+
+    const refreshedAccessToken = response.headers.get("x-jike-access-token")?.trim()
+    if (!refreshedAccessToken) {
+      return undefined
+    }
+
+    await context?.updateSecrets?.({
+      [JIKE_ACCESS_TOKEN_SECRET_KEY]: refreshedAccessToken,
+    })
+
+    return refreshedAccessToken
+  } catch {
+    return undefined
+  }
+}
 
 function getJikeAccessTokenFromContext(context: SourceLoaderContext | undefined): string | undefined {
   const accessToken = context?.secrets?.[JIKE_ACCESS_TOKEN_SECRET_KEY]?.trim()
   return accessToken || undefined
+}
+
+function getJikeRefreshTokenFromContext(context: SourceLoaderContext | undefined): string | undefined {
+  const refreshToken = context?.secrets?.[JIKE_REFRESH_TOKEN_SECRET_KEY]?.trim()
+  return refreshToken || undefined
 }
 
 async function requestJikeFeed(url: string, options: JikeRequestOptions, accessToken: string): Promise<JikeFeedResponse> {
@@ -85,12 +108,30 @@ async function requestJikeFeed(url: string, options: JikeRequestOptions, accessT
 }
 
 async function fetchJikeWithAuth(url: string, options: JikeRequestOptions, context?: SourceLoaderContext): Promise<JikeFeedResponse> {
-  const accessToken = getJikeAccessTokenFromContext(context)
-  if (!accessToken) {
-    throw new Error("Jike accessToken secret is required.")
+  const refreshToken = getJikeRefreshTokenFromContext(context)
+  if (!refreshToken) {
+    throw new Error("Jike refreshToken secret is required.")
   }
 
-  return await requestJikeFeed(url, options, accessToken)
+  const accessToken = getJikeAccessTokenFromContext(context)
+  const requestAccessToken = !accessToken || isJwtExpired(accessToken, { bufferSeconds: JIKE_ACCESS_TOKEN_EXPIRY_BUFFER_SECONDS })
+    ? await refreshJikeAccessToken(refreshToken, context) ?? accessToken
+    : accessToken
+
+  if (!requestAccessToken) {
+    throw new Error("Jike accessToken refresh failed.")
+  }
+
+  try {
+    return await requestJikeFeed(url, options, requestAccessToken)
+  } catch (error) {
+    const refreshedAccessToken = await refreshJikeAccessToken(refreshToken, context)
+    if (!refreshedAccessToken) {
+      throw error
+    }
+
+    return await requestJikeFeed(url, options, refreshedAccessToken)
+  }
 }
 
 export async function fetchJikeFollowingUpdates(_params: Record<string, unknown> = {}, context?: SourceLoaderContext): Promise<NewsItem[]> {
@@ -156,7 +197,6 @@ export default $provider({
   color: "yellow",
   icon: `${JIKE_WEB_ORIGIN}/favicon.ico`,
   secrets: [...JIKE_AUTH_SECRETS],
-  secretTransforms: [...JIKE_AUTH_SECRET_TRANSFORMS],
   sources: [
     $source(
       {

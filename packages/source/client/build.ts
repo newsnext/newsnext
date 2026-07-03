@@ -66,7 +66,6 @@ for (const [provider, providerDefinition] of Object.entries(providers)) {
     const key = meta.key || sourceId
     const descriptor = { ...meta }
     delete descriptor.key
-    delete descriptor.secretTransforms
     sourceDescriptors.push({
       ...descriptor,
       icon: descriptor.icon ?? `https://s3.newsnext.pro/icons/${provider}.png`,

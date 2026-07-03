@@ -14,9 +14,23 @@ const JIKE_CONTEXT = {
   },
 }
 
+function createJwt(expiresInSeconds: number): string {
+  const encode = (value: unknown) => btoa(JSON.stringify(value))
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "")
+
+  return `${encode({ alg: "none" })}.${encode({
+    exp: Math.floor(Date.now() / 1000) + expiresInSeconds,
+  })}.signature`
+}
+
 describe("jike source", () => {
   beforeEach(() => {
+    vi.restoreAllMocks()
     vi.mocked(myFetch).mockReset()
+    vi.useRealTimers()
+    vi.spyOn(globalThis, "fetch").mockRejectedValue(new Error("Refresh token request failed"))
   })
 
   it("registers following updates as a timeline source", () => {
@@ -40,30 +54,6 @@ describe("jike source", () => {
           cache: true,
         },
       ],
-    })
-    const [authTransform] = jikeProvider.sources["following-updates"].secretTransforms ?? []
-    expect(authTransform).toMatchObject({
-      type: "http",
-      targetKey: "accessToken",
-      url: "https://api.ruguoapp.com/app_auth_tokens.refresh",
-      method: "POST",
-      credentials: "include",
-      output: {
-        type: "header",
-        key: "x-jike-access-token",
-      },
-      when: "always",
-    })
-    expect(authTransform?.request?.({
-      accessToken: "old-access-token",
-      refreshToken: "stored-refresh-token",
-    })).toEqual({
-      headers: {
-        "content-type": "application/json",
-        "platform": "web",
-        "x-jike-refresh-token": "stored-refresh-token",
-      },
-      body: {},
     })
     expect(jikeProvider.sources["following-updates"].params).toBeUndefined()
   })
@@ -190,6 +180,192 @@ describe("jike source", () => {
       expect.objectContaining({
         headers: expect.objectContaining({
           "x-jike-access-token": "context-access-token",
+        }),
+      }),
+    )
+  })
+
+  it("refreshes an access token when only the refresh token is available", async () => {
+    const updateSecrets = vi.fn()
+    const fetchMock = vi.mocked(globalThis.fetch).mockResolvedValueOnce(
+      new Response(null, {
+        status: 200,
+        headers: {
+          "x-jike-access-token": "fresh-access-token",
+        },
+      }),
+    )
+    vi.mocked(myFetch).mockResolvedValueOnce({
+      success: true,
+      data: [],
+    })
+
+    await fetchJikeFollowingUpdates({}, {
+      secrets: {
+        refreshToken: "stored-refresh-token",
+      },
+      updateSecrets,
+    })
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.ruguoapp.com/app_auth_tokens.refresh",
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          "x-jike-refresh-token": "stored-refresh-token",
+        }),
+      }),
+    )
+    expect(myFetch).toHaveBeenCalledWith(
+      "https://api.ruguoapp.com/1.0/personalUpdate/followingUpdates",
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          "x-jike-access-token": "fresh-access-token",
+        }),
+      }),
+    )
+    expect(updateSecrets).toHaveBeenCalledWith({
+      accessToken: "fresh-access-token",
+    })
+  })
+
+  it("requires the Jike refresh token", async () => {
+    await expect(fetchJikeFollowingUpdates({}, {
+      secrets: {
+        accessToken: "stored-access-token",
+      },
+    })).rejects.toThrow("Jike refreshToken secret is required.")
+  })
+
+  it("refreshes the Jike access token after the first request fails", async () => {
+    const updateSecrets = vi.fn()
+    const fetchMock = vi.mocked(globalThis.fetch).mockResolvedValueOnce(
+      new Response(null, {
+        status: 200,
+        headers: {
+          "x-jike-access-token": "fresh-access-token",
+        },
+      }),
+    )
+    vi.mocked(myFetch)
+      .mockRejectedValueOnce(new Error("Unauthorized"))
+      .mockResolvedValueOnce({
+        success: true,
+        data: [],
+      })
+
+    await fetchJikeFollowingUpdates({}, {
+      secrets: {
+        accessToken: "old-access-token",
+        refreshToken: "stored-refresh-token",
+      },
+      updateSecrets,
+    })
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.ruguoapp.com/app_auth_tokens.refresh",
+      expect.objectContaining({
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "content-type": "application/json",
+          "platform": "web",
+          "x-jike-refresh-token": "stored-refresh-token",
+        },
+        body: "{}",
+      }),
+    )
+    expect(myFetch).toHaveBeenNthCalledWith(
+      1,
+      "https://api.ruguoapp.com/1.0/personalUpdate/followingUpdates",
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          "x-jike-access-token": "old-access-token",
+        }),
+      }),
+    )
+    expect(myFetch).toHaveBeenNthCalledWith(
+      2,
+      "https://api.ruguoapp.com/1.0/personalUpdate/followingUpdates",
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          "x-jike-access-token": "fresh-access-token",
+        }),
+      }),
+    )
+    expect(updateSecrets).toHaveBeenCalledWith({
+      accessToken: "fresh-access-token",
+    })
+  })
+
+  it("refreshes an expired Jike access token before requesting the feed", async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date("2026-07-03T10:00:00Z"))
+    const updateSecrets = vi.fn()
+    const fetchMock = vi.mocked(globalThis.fetch).mockResolvedValueOnce(
+      new Response(null, {
+        status: 200,
+        headers: {
+          "x-jike-access-token": "fresh-access-token",
+        },
+      }),
+    )
+    vi.mocked(myFetch).mockResolvedValueOnce({
+      success: true,
+      data: [],
+    })
+
+    await fetchJikeFollowingUpdates({}, {
+      secrets: {
+        accessToken: createJwt(30),
+        refreshToken: "stored-refresh-token",
+      },
+      updateSecrets,
+    })
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.ruguoapp.com/app_auth_tokens.refresh",
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          "x-jike-refresh-token": "stored-refresh-token",
+        }),
+      }),
+    )
+    expect(myFetch).toHaveBeenCalledOnce()
+    expect(myFetch).toHaveBeenCalledWith(
+      "https://api.ruguoapp.com/1.0/personalUpdate/followingUpdates",
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          "x-jike-access-token": "fresh-access-token",
+        }),
+      }),
+    )
+    expect(updateSecrets).toHaveBeenCalledWith({
+      accessToken: "fresh-access-token",
+    })
+  })
+
+  it("uses a Jike access token with more than 30 seconds left without refreshing", async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date("2026-07-03T10:00:00Z"))
+    const accessToken = createJwt(31)
+    vi.mocked(myFetch).mockResolvedValueOnce({
+      success: true,
+      data: [],
+    })
+
+    await fetchJikeFollowingUpdates({}, {
+      secrets: {
+        accessToken,
+        refreshToken: "stored-refresh-token",
+      },
+    })
+
+    expect(globalThis.fetch).not.toHaveBeenCalled()
+    expect(myFetch).toHaveBeenCalledWith(
+      "https://api.ruguoapp.com/1.0/personalUpdate/followingUpdates",
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          "x-jike-access-token": accessToken,
         }),
       }),
     )

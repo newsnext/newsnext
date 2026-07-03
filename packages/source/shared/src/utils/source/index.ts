@@ -8,7 +8,6 @@ import type {
   SourceParamSchemaMap,
   SourceRegistration,
   SourceSecretDefinition,
-  SourceSecretTransformDefinition,
 } from "../../typings/sources"
 
 import { $htmlSource } from "./html-source"
@@ -34,7 +33,7 @@ function $sourceCallable(
   return registration as SourceRegistration<any>
 }
 
-function mergeDefinitions<T extends SourceSecretDefinition | SourceSecretTransformDefinition>(
+function mergeDefinitions<T extends SourceSecretDefinition>(
   providerDefinitions: T[] | undefined,
   sourceDefinitions: T[] | undefined,
 ): T[] | undefined {
@@ -64,7 +63,6 @@ export function $provider(
         category: source.category ?? provider.category ?? "others",
         home: source.home ?? provider.home,
         secrets: mergeDefinitions(provider.secrets, source.secrets),
-        secretTransforms: mergeDefinitions(provider.secretTransforms, source.secretTransforms),
         disable: source.disable,
         loader: source.loader,
       }

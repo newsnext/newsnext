@@ -41,8 +41,8 @@ const X_CSRF_COOKIE_SECRET = [
   {
     key: X_CSRF_TOKEN_SECRET_KEY,
     type: "cookie",
-    url: X_ORIGIN,
-    name: "ct0",
+    origin: X_ORIGIN,
+    itemKey: "ct0",
   },
 ] as const
 

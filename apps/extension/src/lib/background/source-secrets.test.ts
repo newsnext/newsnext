@@ -1,5 +1,29 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { resolveSourceSecrets } from "./source-secrets"
+import { resolveSourceSecrets, updateSourceSecrets } from "./source-secrets"
+
+const { browserMock } = vi.hoisted(() => ({
+  browserMock: {
+    cookies: {
+      get: vi.fn(),
+    },
+    storage: {
+      local: {
+        get: vi.fn(),
+        set: vi.fn(),
+      },
+    },
+    scripting: {
+      executeScript: vi.fn(),
+    },
+    tabs: {
+      query: vi.fn(),
+    },
+  },
+}))
+
+vi.mock("wxt/browser", () => ({
+  browser: browserMock,
+}))
 
 describe("source secrets", () => {
   const localStorageValues: Record<string, string> = {
@@ -10,41 +34,21 @@ describe("source secrets", () => {
 
   beforeEach(() => {
     vi.restoreAllMocks()
-    Object.assign(globalThis, {
-      chrome: {
-        cookies: {
-          get: vi.fn((_details, callback) => {
-            callback?.({ value: "cookie-secret" })
-          }),
+    browserMock.cookies.get.mockResolvedValue({ value: "cookie-secret" })
+    browserMock.storage.local.set.mockResolvedValue(undefined)
+    browserMock.storage.local.get.mockImplementation(async (key: string) => ({
+      [key]: JSON.stringify({
+        jike: {
+          accessToken: "vars-access-token",
+          refreshToken: "vars-refresh-token",
         },
-        runtime: {},
-        storage: {
-          local: {
-            get: vi.fn((key, callback) => {
-              callback?.({
-                [key as string]: JSON.stringify({
-                  jike: {
-                    accessToken: "vars-access-token",
-                    refreshToken: "vars-refresh-token",
-                  },
-                }),
-              })
-            }),
-          },
-        },
-        scripting: {
-          executeScript: vi.fn((injection, callback) => {
-            const [key] = (injection as { args?: unknown[] }).args ?? []
-            callback?.([{ result: typeof key === "string" ? ` ${localStorageValues[key] ?? ""} ` : undefined }])
-          }),
-        },
-        tabs: {
-          query: vi.fn((_queryInfo, callback) => {
-            callback?.([{ id: 7 }])
-          }),
-        },
-      },
+      }),
+    }))
+    browserMock.scripting.executeScript.mockImplementation(async (injection: { args?: unknown[] }) => {
+      const [key] = injection.args ?? []
+      return [{ result: typeof key === "string" ? ` ${localStorageValues[key] ?? ""} ` : undefined }]
     })
+    browserMock.tabs.query.mockResolvedValue([{ id: 7 }])
   })
 
   it("resolves localStorage secrets from extension cache before reading a tab", async () => {
@@ -69,7 +73,32 @@ describe("source secrets", () => {
       refreshToken: "vars-refresh-token",
     })
 
-    expect(globalThis.chrome.scripting.executeScript).not.toHaveBeenCalled()
+    expect(browserMock.scripting.executeScript).not.toHaveBeenCalled()
+  })
+
+  it("resolves cookie secrets from extension cache before reading cookies", async () => {
+    browserMock.storage.local.get.mockImplementationOnce(async (key: string) => ({
+      [key]: JSON.stringify({
+        jike: {
+          csrfToken: "cached-cookie-secret",
+        },
+      }),
+    }))
+
+    await expect(resolveSourceSecrets({
+      secrets: [
+        {
+          key: "csrfToken",
+          type: "cookie",
+          origin: "https://x.com",
+          itemKey: "ct0",
+        },
+      ],
+    }, "jike")).resolves.toEqual({
+      csrfToken: "cached-cookie-secret",
+    })
+
+    expect(browserMock.cookies.get).not.toHaveBeenCalled()
   })
 
   it("resolves cookie and localStorage secrets", async () => {
@@ -78,8 +107,8 @@ describe("source secrets", () => {
         {
           key: "csrfToken",
           type: "cookie",
-          url: "https://x.com",
-          name: "ct0",
+          origin: "https://x.com",
+          itemKey: "ct0",
         },
         {
           key: "accessToken",
@@ -94,77 +123,37 @@ describe("source secrets", () => {
     })
   })
 
-  it("refreshes a declared secret through an HTTP request", async () => {
-    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
-      new Response(null, {
-        status: 200,
-        headers: {
-          "x-access-token": "fresh-access-token",
-        },
-      }),
-    )
-
-    await expect(resolveSourceSecrets({
+  it("updates cacheable declared secrets in extension storage", async () => {
+    await updateSourceSecrets({
       secrets: [
         {
           key: "accessToken",
           type: "localStorage",
-          origin: "https://example.com",
+          origin: "https://web.okjike.com",
           itemKey: "token",
-        },
-        {
-          key: "refreshToken",
-          type: "localStorage",
-          origin: "https://example.com",
-          itemKey: "refresh",
+          cache: true,
         },
         {
           key: "deviceId",
           type: "localStorage",
-          origin: "https://example.com",
+          origin: "https://web.okjike.com",
           itemKey: "device",
+          cache: false,
         },
       ],
-      secretTransforms: [
-        {
-          type: "http",
-          targetKey: "accessToken",
-          url: "https://example.com/auth.refresh",
-          method: "POST",
-          credentials: "include",
-          request: secrets => ({
-            headers: {
-              "content-type": "application/json",
-              "x-refresh-token": `${secrets.refreshToken}`,
-              "x-device-id": `${secrets.deviceId}`,
-            },
-            body: {},
-          }),
-          output: {
-            type: "header",
-            key: "x-access-token",
-          },
-          when: "always",
-        },
-      ],
-    })).resolves.toMatchObject({
-      accessToken: "fresh-access-token",
-      refreshToken: "refresh-secret",
-      deviceId: "device-secret",
+    }, "jike", {
+      accessToken: " fresh-access-token ",
+      deviceId: "new-device-id",
+      undeclared: "ignored",
     })
 
-    expect(fetchMock).toHaveBeenCalledWith(
-      "https://example.com/auth.refresh",
-      expect.objectContaining({
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "content-type": "application/json",
-          "x-refresh-token": "refresh-secret",
-          "x-device-id": "device-secret",
+    expect(browserMock.storage.local.set).toHaveBeenCalledWith({
+      newsnext_source_secrets: JSON.stringify({
+        jike: {
+          accessToken: "fresh-access-token",
+          refreshToken: "vars-refresh-token",
         },
-        body: "{}",
       }),
-    )
+    })
   })
 })
