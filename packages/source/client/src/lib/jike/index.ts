@@ -15,6 +15,7 @@ import { $provider, $source } from "@newsnext/source-shared/utils/source"
 import {
   buildJikeTopicFeedUrl,
   createJikeHeaders,
+  isJikeAuthFetchError,
   isPinnedPersonalUpdate,
   JIKE_WEB_ORIGIN,
   jikePostsToNewsItems,
@@ -38,14 +39,12 @@ const JIKE_AUTH_SECRETS = [
     type: "localStorage",
     origin: JIKE_WEB_ORIGIN,
     itemKey: JIKE_ACCESS_TOKEN_STORAGE_KEY,
-    cache: true,
   },
   {
     key: JIKE_REFRESH_TOKEN_SECRET_KEY,
     type: "localStorage",
     origin: JIKE_WEB_ORIGIN,
     itemKey: JIKE_REFRESH_TOKEN_STORAGE_KEY,
-    cache: true,
   },
 ] as const
 
@@ -125,6 +124,10 @@ async function fetchJikeWithAuth(url: string, options: JikeRequestOptions, conte
   try {
     return await requestJikeFeed(url, options, requestAccessToken)
   } catch (error) {
+    if (!isJikeAuthFetchError(error)) {
+      throw error
+    }
+
     const refreshedAccessToken = await refreshJikeAccessToken(refreshToken, context)
     if (!refreshedAccessToken) {
       throw error

@@ -3,6 +3,18 @@ import { browser } from "wxt/browser"
 import { storage } from "wxt/utils/storage"
 
 type SourceSecretCache = Record<string, Record<string, string>>
+const SOURCE_LOGIN_REQUIRED_ERROR_CODE = "SOURCE_LOGIN_REQUIRED"
+
+export class SourceLoginRequiredError extends Error {
+  readonly code = SOURCE_LOGIN_REQUIRED_ERROR_CODE
+  readonly loginUrl: string
+
+  constructor(loginUrl: string) {
+    super("Source login required.")
+    this.name = "SourceLoginRequiredError"
+    this.loginUrl = loginUrl
+  }
+}
 
 const sourceSecretCacheItem = storage.defineItem<SourceSecretCache | string | null>("local:newsnext_source_secrets", {
   fallback: null,
@@ -45,6 +57,15 @@ async function readLocalStorageSecret(secret: SourceSecretDefinition & { type: "
   return typeof value === "string" ? value.trim() || undefined : undefined
 }
 
+function assertRequiredSecretsResolved(secretDefinitions: SourceSecretDefinition[], secrets: SourceSecrets): void {
+  const missingSecret = secretDefinitions.find(secret => secret.required !== false && !secrets[secret.key]?.trim())
+  if (!missingSecret) {
+    return
+  }
+
+  throw new SourceLoginRequiredError(missingSecret.origin)
+}
+
 export async function resolveSourceSecrets(
   source: Pick<RegisteredSourceDefinition, "secrets">,
   provider?: string,
@@ -84,7 +105,10 @@ export async function resolveSourceSecrets(
     }),
   )
 
-  return Object.fromEntries(entries)
+  const secrets = Object.fromEntries(entries)
+  assertRequiredSecretsResolved(secretDefinitions, secrets)
+
+  return secrets
 }
 
 export async function updateSourceSecrets(

@@ -5,6 +5,7 @@ import { createBackgroundClient } from "./background-client"
 import { readCachedClientSource, writeCachedClientSource } from "./client-source-cache"
 
 const SOURCE_REQUEST_MIN_INTERVAL = 1000 * 60
+const EMPTY_SOURCE_ITEMS_ERROR_MESSAGE = "Empty"
 const inFlightClientSourceLoads = new Map<string, Promise<ClientSourceLoadResult>>()
 
 export interface ClientSourceLoadResult {
@@ -78,6 +79,10 @@ async function loadFreshClientSource(request: FreshClientSourceLoad): Promise<Cl
     key: request.key,
     items: loaded.items,
     updatedAt: loaded.updatedAt,
+  }
+
+  if (!result.items.length) {
+    throw new Error(EMPTY_SOURCE_ITEMS_ERROR_MESSAGE)
   }
 
   if (result.items.length) {

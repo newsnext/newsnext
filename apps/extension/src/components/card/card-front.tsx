@@ -16,6 +16,12 @@ import {
   PhStarFill,
 } from "../icons/ph"
 import { CardHeader } from "./card-header"
+import {
+  SourceErrorState,
+  SourceLoginState,
+  SourceStatusMessage,
+  SourceStatusPattern,
+} from "./card-source-state"
 import { Hottest } from "./hottest"
 import { Timeline } from "./timeline"
 
@@ -25,6 +31,7 @@ interface CardFrontProps {
   items: NewsItem[]
   isFetching: boolean
   sourceErrorMessage?: string
+  sourceLoginUrl?: string
   updatedAt: number
   onRefresh: () => void
   onFlip?: () => void
@@ -54,12 +61,79 @@ function StarButton({ id }: { id: string }) {
   )
 }
 
+interface CardFrontContentProps {
+  color: BoardSource["color"]
+  icon?: string
+  isFetching: boolean
+  items: NewsItem[]
+  providerTitle: string
+  relativeUpdatedAt: string
+  scrollRef: React.RefObject<HTMLDivElement>
+  sourceErrorMessage?: string
+  sourceLoginUrl?: string
+  type: BoardSource["type"]
+  onRefresh: () => void
+}
+
+function CardFrontContent({
+  color,
+  icon,
+  items,
+  providerTitle,
+  relativeUpdatedAt,
+  scrollRef,
+  sourceErrorMessage,
+  sourceLoginUrl,
+  type,
+  onRefresh,
+}: CardFrontContentProps) {
+  if (sourceLoginUrl) {
+    return (
+      <SourceLoginState
+        color={color}
+        icon={icon}
+        providerTitle={providerTitle}
+        loginUrl={sourceLoginUrl}
+      />
+    )
+  }
+
+  if (sourceErrorMessage) {
+    return (
+      <SourceErrorState
+        color={color}
+        onRefresh={onRefresh}
+      />
+    )
+  }
+
+  if (type === "hottest") {
+    return (
+      <Hottest
+        items={items}
+        color={color}
+        scrollRef={scrollRef}
+      />
+    )
+  }
+
+  return (
+    <Timeline
+      color={color}
+      items={items}
+      relativeUpdatedAt={relativeUpdatedAt}
+      scrollRef={scrollRef}
+    />
+  )
+}
+
 function CardFrontComponent({
   id,
   source,
   items,
   isFetching,
   sourceErrorMessage,
+  sourceLoginUrl,
   updatedAt,
   onRefresh,
   onFlip,
@@ -72,6 +146,9 @@ function CardFrontComponent({
   const { type, color, desc, icon, providerTitle, title, home } = source
   const ref = useRef<HTMLDivElement>(null)
   const relativeTime = useRelativeTime({ date: updatedAt })
+  const sourceStatusMessage = sourceLoginUrl
+    ? `Log in to ${providerTitle} to continue.`
+    : sourceErrorMessage
 
   return (
     <div className="relative h-full">
@@ -133,7 +210,7 @@ function CardFrontComponent({
         />
 
         {/* Content */}
-        <div className="relative min-h-0 flex-1 overflow-hidden">
+        <div className="relative min-h-0 flex-1 overflow-hidden rounded-2xl">
           <SquircleBox
             aria-hidden
             radius="2xl"
@@ -143,42 +220,37 @@ function CardFrontComponent({
               isFetching && "animate-pulse",
             )}
           />
+          {sourceStatusMessage && (
+            <SourceStatusPattern icon={icon} />
+          )}
           <div
             ref={ref}
             onPointerDown={event => event.stopPropagation()}
             className="relative size-full overflow-y-auto px-2 py-2 scrollbar-hidden"
           >
-            <div className={cn("transition-opacity-500", isFetching && "opacity-20")}>
-              {sourceErrorMessage
-                ? (
-                    <div className="flex min-h-32 items-center justify-center px-3 text-center text-sm text-muted-foreground">
-                      {sourceErrorMessage}
-                    </div>
-                  )
-                : items.length === 0 && !isFetching
-                  ? (
-                      <div className="flex min-h-32 items-center justify-center px-3 text-center text-sm text-muted-foreground">
-                        No source items.
-                      </div>
-                    )
-                  : type === "hottest"
-                    ? (
-                        <Hottest
-                          items={items}
-                          color={color}
-                          scrollRef={ref as React.RefObject<HTMLDivElement>}
-                        />
-                      )
-                    : (
-                        <Timeline
-                          color={color}
-                          items={items}
-                          relativeUpdatedAt={relativeTime}
-                          scrollRef={ref as React.RefObject<HTMLDivElement>}
-                        />
-                      )}
+            <div className={cn("min-h-full transition-opacity-500", isFetching && "opacity-20")}>
+              <CardFrontContent
+                color={color}
+                icon={icon}
+                isFetching={isFetching}
+                items={items}
+                providerTitle={providerTitle}
+                relativeUpdatedAt={relativeTime}
+                scrollRef={ref as React.RefObject<HTMLDivElement>}
+                sourceErrorMessage={sourceErrorMessage}
+                sourceLoginUrl={sourceLoginUrl}
+                type={type}
+                onRefresh={onRefresh}
+              />
             </div>
           </div>
+          {sourceStatusMessage && (
+            <SourceStatusMessage
+              icon={icon}
+              isLoginRequired={Boolean(sourceLoginUrl)}
+              message={sourceStatusMessage}
+            />
+          )}
         </div>
       </div>
     </div>

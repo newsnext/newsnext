@@ -136,6 +136,26 @@ describe("loadClientSource", () => {
     expect(result.items).toEqual([{ title: "Fresh", url: "https://example.com/fresh" }])
   })
 
+  it("throws when fresh source data is empty", async () => {
+    readCachedClientSourceMock.mockResolvedValue(undefined)
+    const load = vi.fn().mockResolvedValue({
+      items: [],
+      updatedAt: 789,
+    })
+
+    createBackgroundClientMock.mockReturnValue({ source: { load } } as never)
+
+    await expect(loadClientSource("github:trending", { dateRange: "weekly" }))
+      .rejects
+      .toThrow("No source items. Refresh to try again.")
+
+    expect(load).toHaveBeenCalledWith({
+      sourceId: "github:trending",
+      params: { dateRange: "weekly" },
+    })
+    expect(writeCachedClientSource).not.toHaveBeenCalled()
+  })
+
   it("dedupes concurrent source loads for the same cache key", async () => {
     readCachedClientSourceMock.mockResolvedValue(undefined)
     const load = vi.fn().mockResolvedValue({

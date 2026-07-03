@@ -365,15 +365,13 @@ export const sourceDescriptors: SourceDescriptor[] = [
         "key": "accessToken",
         "type": "localStorage",
         "origin": "https://web.okjike.com",
-        "itemKey": "JK_ACCESS_TOKEN",
-        "cache": true
+        "itemKey": "JK_ACCESS_TOKEN"
       },
       {
         "key": "refreshToken",
         "type": "localStorage",
         "origin": "https://web.okjike.com",
-        "itemKey": "JK_REFRESH_TOKEN",
-        "cache": true
+        "itemKey": "JK_REFRESH_TOKEN"
       }
     ],
     "id": "jike:following-updates"
@@ -399,15 +397,13 @@ export const sourceDescriptors: SourceDescriptor[] = [
         "key": "accessToken",
         "type": "localStorage",
         "origin": "https://web.okjike.com",
-        "itemKey": "JK_ACCESS_TOKEN",
-        "cache": true
+        "itemKey": "JK_ACCESS_TOKEN"
       },
       {
         "key": "refreshToken",
         "type": "localStorage",
         "origin": "https://web.okjike.com",
-        "itemKey": "JK_REFRESH_TOKEN",
-        "cache": true
+        "itemKey": "JK_REFRESH_TOKEN"
       }
     ],
     "id": "jike:user-updates"
@@ -433,15 +429,13 @@ export const sourceDescriptors: SourceDescriptor[] = [
         "key": "accessToken",
         "type": "localStorage",
         "origin": "https://web.okjike.com",
-        "itemKey": "JK_ACCESS_TOKEN",
-        "cache": true
+        "itemKey": "JK_ACCESS_TOKEN"
       },
       {
         "key": "refreshToken",
         "type": "localStorage",
         "origin": "https://web.okjike.com",
-        "itemKey": "JK_REFRESH_TOKEN",
-        "cache": true
+        "itemKey": "JK_REFRESH_TOKEN"
       }
     ],
     "id": "jike:topic-recent"
@@ -467,15 +461,13 @@ export const sourceDescriptors: SourceDescriptor[] = [
         "key": "accessToken",
         "type": "localStorage",
         "origin": "https://web.okjike.com",
-        "itemKey": "JK_ACCESS_TOKEN",
-        "cache": true
+        "itemKey": "JK_ACCESS_TOKEN"
       },
       {
         "key": "refreshToken",
         "type": "localStorage",
         "origin": "https://web.okjike.com",
-        "itemKey": "JK_REFRESH_TOKEN",
-        "cache": true
+        "itemKey": "JK_REFRESH_TOKEN"
       }
     ],
     "id": "jike:topic-hottest"

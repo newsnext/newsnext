@@ -28,7 +28,7 @@ vi.mock("wxt/utils/storage", () => ({
   },
 }))
 
-const { resolveSourceSecrets, updateSourceSecrets } = await import("./source-secrets")
+const { SourceLoginRequiredError, resolveSourceSecrets, updateSourceSecrets } = await import("./source-secrets")
 
 describe("source secrets", () => {
   const localStorageValues: Record<string, string> = {
@@ -146,6 +146,47 @@ describe("source secrets", () => {
     })).resolves.toEqual({
       csrfToken: "cookie-secret",
       accessToken: "local-secret",
+    })
+  })
+
+  it("requires login when a default-required secret cannot be resolved", async () => {
+    sourceSecretCacheItemMock.getValue.mockResolvedValueOnce(undefined)
+    browserMock.tabs.query.mockResolvedValueOnce([])
+
+    const promise = resolveSourceSecrets({
+      secrets: [
+        {
+          key: "accessToken",
+          type: "localStorage",
+          origin: "https://web.okjike.com",
+          itemKey: "token",
+        },
+      ],
+    })
+
+    await expect(promise).rejects.toBeInstanceOf(SourceLoginRequiredError)
+    await expect(promise).rejects.toMatchObject({
+      code: "SOURCE_LOGIN_REQUIRED",
+      loginUrl: "https://web.okjike.com",
+    })
+  })
+
+  it("allows missing optional secrets", async () => {
+    sourceSecretCacheItemMock.getValue.mockResolvedValueOnce(undefined)
+    browserMock.tabs.query.mockResolvedValueOnce([])
+
+    await expect(resolveSourceSecrets({
+      secrets: [
+        {
+          key: "accessToken",
+          type: "localStorage",
+          origin: "https://web.okjike.com",
+          itemKey: "token",
+          required: false,
+        },
+      ],
+    })).resolves.toEqual({
+      accessToken: undefined,
     })
   })
 

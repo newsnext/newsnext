@@ -59,7 +59,7 @@ function CardContent({ id, source, dragHandle }: CardProps) {
     initialValues: source.paramsValue,
   })
 
-  const { items, refetch, isFetching, isError, errorMessage, updatedAt } = useSourceQuery({
+  const { items, refetch, isFetching, isError, errorMessage, loginUrl, updatedAt } = useSourceQuery({
     sourceId: source.sourceId,
     params: savedParams,
     refetchInterval: pictureInPictureWindow ? PICTURE_IN_PICTURE_REFRESH_INTERVAL : false,
@@ -149,6 +149,7 @@ function CardContent({ id, source, dragHandle }: CardProps) {
           items={items}
           isFetching={isFetching}
           sourceErrorMessage={sourceErrorMessage}
+          sourceLoginUrl={loginUrl}
           updatedAt={updatedAt}
           onRefresh={refetch}
           onFlip={handleFlip}
@@ -182,6 +183,7 @@ function CardContent({ id, source, dragHandle }: CardProps) {
               items={items}
               isFetching={isFetching}
               sourceErrorMessage={sourceErrorMessage}
+              sourceLoginUrl={loginUrl}
               updatedAt={updatedAt}
               onRefresh={refetch}
               actionsVariant="refresh-only"

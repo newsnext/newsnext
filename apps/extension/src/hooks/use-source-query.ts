@@ -12,6 +12,25 @@ export interface UseSourceQueryOptions {
   refetchInterval?: number | false
 }
 
+interface LoginRequiredError extends Error {
+  code?: unknown
+  loginUrl?: unknown
+}
+
+function getLoginUrlFromError(error: unknown): string | undefined {
+  if (!(error instanceof Error)) {
+    return undefined
+  }
+
+  const loginUrl = (error as LoginRequiredError).loginUrl
+  const code = (error as LoginRequiredError).code
+  if (code === "SOURCE_LOGIN_REQUIRED" && typeof loginUrl === "string" && loginUrl.trim()) {
+    return loginUrl.trim()
+  }
+
+  return undefined
+}
+
 // const STORAGE_PREFIX = "newsnext-source-cache"
 export function useSourceQuery({
   sourceId,
@@ -66,6 +85,7 @@ export function useSourceQuery({
     isFetching,
     isError,
     errorMessage: error instanceof Error ? error.message : undefined,
+    loginUrl: getLoginUrlFromError(error),
     updatedAt: data?.updatedAt ?? Date.now(),
   }
 }

@@ -44,14 +44,12 @@ describe("jike source", () => {
           type: "localStorage",
           origin: "https://web.okjike.com",
           itemKey: "JK_ACCESS_TOKEN",
-          cache: true,
         },
         {
           key: "refreshToken",
           type: "localStorage",
           origin: "https://web.okjike.com",
           itemKey: "JK_REFRESH_TOKEN",
-          cache: true,
         },
       ],
     })
@@ -236,7 +234,7 @@ describe("jike source", () => {
     })).rejects.toThrow("Jike refreshToken secret is required.")
   })
 
-  it("refreshes the Jike access token after the first request fails", async () => {
+  it("refreshes the Jike access token after the first request fails with an auth status", async () => {
     const updateSecrets = vi.fn()
     const fetchMock = vi.mocked(globalThis.fetch).mockResolvedValueOnce(
       new Response(null, {
@@ -246,8 +244,10 @@ describe("jike source", () => {
         },
       }),
     )
+    const authError = new Error("Unauthorized")
+    Object.assign(authError, { status: 401 })
     vi.mocked(myFetch)
-      .mockRejectedValueOnce(new Error("Unauthorized"))
+      .mockRejectedValueOnce(authError)
       .mockResolvedValueOnce({
         success: true,
         data: [],
@@ -295,6 +295,30 @@ describe("jike source", () => {
     expect(updateSecrets).toHaveBeenCalledWith({
       accessToken: "fresh-access-token",
     })
+  })
+
+  it("does not refresh the Jike access token after a non-auth request failure", async () => {
+    const requestError = new Error("Internal Server Error")
+    Object.assign(requestError, { status: 500 })
+    vi.mocked(myFetch).mockRejectedValueOnce(requestError)
+
+    await expect(fetchJikeFollowingUpdates({}, {
+      secrets: {
+        accessToken: "old-access-token",
+        refreshToken: "stored-refresh-token",
+      },
+    })).rejects.toThrow("Internal Server Error")
+
+    expect(globalThis.fetch).not.toHaveBeenCalled()
+    expect(myFetch).toHaveBeenCalledOnce()
+    expect(myFetch).toHaveBeenCalledWith(
+      "https://api.ruguoapp.com/1.0/personalUpdate/followingUpdates",
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          "x-jike-access-token": "old-access-token",
+        }),
+      }),
+    )
   })
 
   it("refreshes an expired Jike access token before requesting the feed", async () => {
