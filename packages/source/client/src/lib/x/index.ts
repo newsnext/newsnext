@@ -37,15 +37,6 @@ import {
 
 export { normalizeXUsername } from "./utils"
 
-const X_CSRF_COOKIE_SECRET = [
-  {
-    key: X_CSRF_TOKEN_SECRET_KEY,
-    type: "cookie",
-    origin: X_ORIGIN,
-    itemKey: "ct0",
-  },
-] as const
-
 export async function fetchXPlaceTrends({ location }: XTrendingParams, context?: SourceLoaderContext): Promise<NewsItem[]> {
   const headers = await createXLoggedInHeaders(context)
 
@@ -140,7 +131,15 @@ export default $provider({
   color: "slate",
   home: X_ORIGIN,
   category: "world",
-  secrets: [...X_CSRF_COOKIE_SECRET],
+  secrets: [
+    {
+      key: X_CSRF_TOKEN_SECRET_KEY,
+      type: "cookie",
+      origin: X_ORIGIN,
+      itemKey: "ct0",
+      cache: false,
+    },
+  ],
   sources: [
     $source(
       {

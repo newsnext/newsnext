@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-const { browserMock, sourceSecretCacheItemMock } = vi.hoisted(() => ({
+const { browserMock, browserStorageLocalMock } = vi.hoisted(() => ({
   browserMock: {
     cookies: {
       get: vi.fn(),
@@ -12,9 +12,9 @@ const { browserMock, sourceSecretCacheItemMock } = vi.hoisted(() => ({
       query: vi.fn(),
     },
   },
-  sourceSecretCacheItemMock: {
-    getValue: vi.fn(),
-    setValue: vi.fn(),
+  browserStorageLocalMock: {
+    getItem: vi.fn(),
+    setItem: vi.fn(),
   },
 }))
 
@@ -23,9 +23,7 @@ vi.mock("wxt/browser", () => ({
 }))
 
 vi.mock("wxt/utils/storage", () => ({
-  storage: {
-    defineItem: vi.fn(() => sourceSecretCacheItemMock),
-  },
+  storage: browserStorageLocalMock,
 }))
 
 const { SourceLoginRequiredError, resolveSourceSecrets, updateSourceSecrets } = await import("./source-secrets")
@@ -39,9 +37,10 @@ describe("source secrets", () => {
 
   beforeEach(() => {
     vi.restoreAllMocks()
+    vi.clearAllMocks()
     browserMock.cookies.get.mockResolvedValue({ value: "cookie-secret" })
-    sourceSecretCacheItemMock.setValue.mockResolvedValue(undefined)
-    sourceSecretCacheItemMock.getValue.mockResolvedValue({
+    browserStorageLocalMock.setItem.mockResolvedValue(undefined)
+    browserStorageLocalMock.getItem.mockResolvedValue({
       jike: {
         accessToken: "vars-access-token",
         refreshToken: "vars-refresh-token",
@@ -55,7 +54,7 @@ describe("source secrets", () => {
   })
 
   it("supports legacy string secret cache values", async () => {
-    sourceSecretCacheItemMock.getValue.mockResolvedValueOnce(JSON.stringify({
+    browserStorageLocalMock.getItem.mockResolvedValueOnce(JSON.stringify({
       jike: {
         accessToken: "vars-access-token",
         refreshToken: "vars-refresh-token",
@@ -100,10 +99,11 @@ describe("source secrets", () => {
     })
 
     expect(browserMock.scripting.executeScript).not.toHaveBeenCalled()
+    expect(browserStorageLocalMock.setItem).not.toHaveBeenCalled()
   })
 
   it("resolves cookie secrets from extension cache before reading cookies", async () => {
-    sourceSecretCacheItemMock.getValue.mockResolvedValueOnce({
+    browserStorageLocalMock.getItem.mockResolvedValueOnce({
       jike: {
         csrfToken: "cached-cookie-secret",
       },
@@ -126,7 +126,7 @@ describe("source secrets", () => {
   })
 
   it("resolves cookie and localStorage secrets", async () => {
-    sourceSecretCacheItemMock.getValue.mockResolvedValueOnce(undefined)
+    browserStorageLocalMock.getItem.mockResolvedValueOnce(undefined)
 
     await expect(resolveSourceSecrets({
       secrets: [
@@ -149,8 +149,79 @@ describe("source secrets", () => {
     })
   })
 
+  it("caches newly resolved cacheable secrets", async () => {
+    browserStorageLocalMock.getItem.mockResolvedValue(undefined)
+
+    await expect(resolveSourceSecrets({
+      secrets: [
+        {
+          key: "csrfToken",
+          type: "cookie",
+          origin: "https://x.com",
+          itemKey: "ct0",
+        },
+        {
+          key: "accessToken",
+          type: "localStorage",
+          origin: "https://web.okjike.com",
+          itemKey: "token",
+        },
+        {
+          key: "deviceId",
+          type: "localStorage",
+          origin: "https://web.okjike.com",
+          itemKey: "device",
+          cache: false,
+        },
+      ],
+    }, "x")).resolves.toEqual({
+      csrfToken: "cookie-secret",
+      accessToken: "local-secret",
+      deviceId: "device-secret",
+    })
+
+    expect(browserStorageLocalMock.setItem).toHaveBeenCalledWith("local:newsnext_source_secrets", {
+      x: {
+        csrfToken: "cookie-secret",
+        accessToken: "local-secret",
+      },
+    })
+  })
+
+  it("caches newly resolved secrets without replacing existing providers", async () => {
+    browserStorageLocalMock.getItem
+      .mockResolvedValueOnce(undefined)
+      .mockResolvedValueOnce({
+        jike: {
+          accessToken: "vars-access-token",
+          refreshToken: "vars-refresh-token",
+        },
+      })
+
+    await resolveSourceSecrets({
+      secrets: [
+        {
+          key: "csrfToken",
+          type: "cookie",
+          origin: "https://x.com",
+          itemKey: "ct0",
+        },
+      ],
+    }, "x")
+
+    expect(browserStorageLocalMock.setItem).toHaveBeenCalledWith("local:newsnext_source_secrets", {
+      jike: {
+        accessToken: "vars-access-token",
+        refreshToken: "vars-refresh-token",
+      },
+      x: {
+        csrfToken: "cookie-secret",
+      },
+    })
+  })
+
   it("requires login when a default-required secret cannot be resolved", async () => {
-    sourceSecretCacheItemMock.getValue.mockResolvedValueOnce(undefined)
+    browserStorageLocalMock.getItem.mockResolvedValueOnce(undefined)
     browserMock.tabs.query.mockResolvedValueOnce([])
 
     const promise = resolveSourceSecrets({
@@ -172,7 +243,7 @@ describe("source secrets", () => {
   })
 
   it("allows missing optional secrets", async () => {
-    sourceSecretCacheItemMock.getValue.mockResolvedValueOnce(undefined)
+    browserStorageLocalMock.getItem.mockResolvedValueOnce(undefined)
     browserMock.tabs.query.mockResolvedValueOnce([])
 
     await expect(resolveSourceSecrets({
@@ -214,7 +285,7 @@ describe("source secrets", () => {
       undeclared: "ignored",
     })
 
-    expect(sourceSecretCacheItemMock.setValue).toHaveBeenCalledWith({
+    expect(browserStorageLocalMock.setItem).toHaveBeenCalledWith("local:newsnext_source_secrets", {
       jike: {
         accessToken: "fresh-access-token",
         refreshToken: "vars-refresh-token",

@@ -4,6 +4,7 @@ import { storage } from "wxt/utils/storage"
 
 type SourceSecretCache = Record<string, Record<string, string>>
 const SOURCE_LOGIN_REQUIRED_ERROR_CODE = "SOURCE_LOGIN_REQUIRED"
+const SOURCE_SECRET_CACHE_STORAGE_KEY = "local:newsnext_source_secrets"
 
 export class SourceLoginRequiredError extends Error {
   readonly code = SOURCE_LOGIN_REQUIRED_ERROR_CODE
@@ -15,10 +16,6 @@ export class SourceLoginRequiredError extends Error {
     this.loginUrl = loginUrl
   }
 }
-
-const sourceSecretCacheItem = storage.defineItem<SourceSecretCache | string | null>("local:newsnext_source_secrets", {
-  fallback: null,
-})
 
 function parseSourceSecretCache(storedValue: unknown): SourceSecretCache | undefined {
   let cache: unknown = storedValue
@@ -37,8 +34,12 @@ function parseSourceSecretCache(storedValue: unknown): SourceSecretCache | undef
 }
 
 async function readSourceSecretCache(): Promise<SourceSecretCache | undefined> {
-  const cache = await sourceSecretCacheItem.getValue().catch(() => undefined)
+  const cache = await storage.getItem<SourceSecretCache | string>(SOURCE_SECRET_CACHE_STORAGE_KEY).catch(() => undefined)
   return parseSourceSecretCache(cache)
+}
+
+async function writeSourceSecretCache(cache: SourceSecretCache): Promise<void> {
+  await storage.setItem(SOURCE_SECRET_CACHE_STORAGE_KEY, cache)
 }
 
 async function readLocalStorageSecret(secret: SourceSecretDefinition & { type: "localStorage" }): Promise<string | undefined> {
@@ -108,6 +109,10 @@ export async function resolveSourceSecrets(
   const secrets = Object.fromEntries(entries)
   assertRequiredSecretsResolved(secretDefinitions, secrets)
 
+  if (provider) {
+    await updateSourceSecrets(source, provider, secrets)
+  }
+
   return secrets
 }
 
@@ -140,9 +145,16 @@ export async function updateSourceSecrets(
   }
 
   const cache = await readSourceSecretCache() ?? {}
-  const providerCache = cache[provider] ?? {}
+  const providerCache = cache[provider] && typeof cache[provider] === "object"
+    ? cache[provider]
+    : {}
 
-  await sourceSecretCacheItem.setValue({
+  const hasChanges = Object.entries(updates).some(([key, value]) => providerCache[key] !== value)
+  if (!hasChanges) {
+    return
+  }
+
+  await writeSourceSecretCache({
     ...cache,
     [provider]: {
       ...providerCache,
