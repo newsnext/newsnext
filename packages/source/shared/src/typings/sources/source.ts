@@ -20,8 +20,58 @@ export const categories: Record<CategoryId, string> = {
 /**
  * Loader function for a source
  */
+export interface SourceCookieSecretDefinition {
+  key: string
+  type: "cookie"
+  url: string
+  name: string
+  required?: boolean
+}
+
+export interface SourceLocalStorageSecretDefinition {
+  key: string
+  type: "localStorage"
+  origin: string
+  itemKey: string
+  cache?: boolean
+  required?: boolean
+}
+
+export type SourceSecretDefinition = SourceCookieSecretDefinition | SourceLocalStorageSecretDefinition
+
+export type SourceSecrets = Record<string, string | undefined>
+
+export interface SourceSecretHttpTransformRequest {
+  url?: string
+  method?: "GET" | "POST"
+  credentials?: "include" | "omit" | "same-origin"
+  headers?: Record<string, string | undefined>
+  body?: Record<string, unknown> | string
+}
+
+export interface SourceSecretHttpTransformDefinition {
+  type: "http"
+  targetKey: string
+  url: string
+  method?: "GET" | "POST"
+  credentials?: "include" | "omit" | "same-origin"
+  request?: (secrets: SourceSecrets) => SourceSecretHttpTransformRequest | undefined
+  output: {
+    type: "header" | "json"
+    key: string
+  }
+  when?: "missing" | "always"
+}
+
+export type SourceSecretTransformDefinition = SourceSecretHttpTransformDefinition
+
+export interface SourceLoaderContext {
+  secrets?: SourceSecrets
+}
+
 export type SourceLoader<TParams extends SourceParamSchemaMap = SourceParamSchemaMap> = (
   params: InferSourceParams<TParams>,
+  context?: SourceLoaderContext,
 ) => Promise<NewsItem[]>
 
 /**
@@ -37,6 +87,8 @@ export interface SourceRegistration<TParams extends SourceParamSchemaMap = Sourc
   type?: "hottest" | "timeline"
   category?: CategoryId
   home?: string
+  secrets?: SourceSecretDefinition[]
+  secretTransforms?: SourceSecretTransformDefinition[]
   disable?: boolean
   loader: SourceLoader<TParams>
 }
@@ -56,6 +108,8 @@ export interface SourceDefinition<TParams extends SourceParamSchemaMap = SourceP
   type?: "hottest" | "timeline"
   category: CategoryId
   home?: string
+  secrets?: SourceSecretDefinition[]
+  secretTransforms?: SourceSecretTransformDefinition[]
   disable?: boolean
   loader: SourceLoader<TParams>
 }
@@ -96,7 +150,7 @@ export interface ProviderDefinition {
 /**
  * Public descriptor for sources exposed to clients
  */
-export interface SourceDescriptor<TParams extends SourceParamSchemaMap = SourceParamSchemaMap> extends Omit<SourceDefinition<TParams>, "provider" | "key" | "loader" | "disable"> {
+export interface SourceDescriptor<TParams extends SourceParamSchemaMap = SourceParamSchemaMap> extends Omit<SourceDefinition<TParams>, "provider" | "key" | "loader" | "secretTransforms" | "disable"> {
   id: string
 }
 

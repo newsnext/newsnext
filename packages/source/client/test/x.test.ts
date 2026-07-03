@@ -6,19 +6,26 @@ vi.mock("@newsnext/source-shared/utils/fetch", () => ({
   myFetch: vi.fn(),
 }))
 
+const X_CONTEXT = {
+  secrets: {
+    csrfToken: "csrf-token",
+  },
+}
+
 describe("x source", () => {
   beforeEach(() => {
     vi.mocked(myFetch).mockReset()
-    Object.assign(globalThis, {
-      chrome: {
-        cookies: {
-          get: vi.fn((_details, callback) => {
-            callback?.({ value: "csrf-token" })
-          }),
-        },
-        runtime: {},
+  })
+
+  it("declares the csrf cookie secret", () => {
+    expect(xProvider.sources.recommended.secrets).toEqual([
+      {
+        key: "csrfToken",
+        type: "cookie",
+        url: "https://x.com",
+        name: "ct0",
       },
-    })
+    ])
   })
 
   it("loads place trends through logged-in X credentials", async () => {
@@ -43,7 +50,7 @@ describe("x source", () => {
         },
       ])
 
-    const items = await fetchXPlaceTrends({ location: "1" })
+    const items = await fetchXPlaceTrends({ location: "1" }, X_CONTEXT)
 
     expect(myFetch).toHaveBeenCalledTimes(1)
     expect(myFetch).toHaveBeenNthCalledWith(
@@ -64,6 +71,30 @@ describe("x source", () => {
         url: "https://x.com/search?q=%23NewsNext",
         timestamp: Date.parse("2026-06-28T10:00:00Z"),
       },
+    )
+  })
+
+  it("uses injected csrf token", async () => {
+    vi.mocked(myFetch).mockResolvedValueOnce([
+      {
+        created_at: "2026-06-28T10:00:00Z",
+        trends: [],
+      },
+    ])
+
+    await fetchXPlaceTrends({ location: "1" }, {
+      secrets: {
+        csrfToken: "context-csrf-token",
+      },
+    })
+
+    expect(myFetch).toHaveBeenCalledWith(
+      "https://api.x.com/1.1/trends/place.json",
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          "x-csrf-token": "context-csrf-token",
+        }),
+      }),
     )
   })
 
@@ -162,7 +193,7 @@ describe("x source", () => {
         },
       })
 
-    const items = await fetchXUserTweets({ username: "@OpenAI" })
+    const items = await fetchXUserTweets({ username: "@OpenAI" }, X_CONTEXT)
 
     expect(myFetch).toHaveBeenCalledTimes(2)
     expect(myFetch).toHaveBeenNthCalledWith(
@@ -297,7 +328,7 @@ describe("x source", () => {
       },
     })
 
-    const items = await xProvider.sources.following.loader({})
+    const items = await xProvider.sources.following.loader({}, X_CONTEXT)
 
     expect(myFetch).toHaveBeenCalledOnce()
     expect(myFetch).toHaveBeenCalledWith(

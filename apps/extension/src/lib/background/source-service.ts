@@ -1,5 +1,6 @@
 import type { NewsItem } from "@newsnext/client-source/typings"
-import { prepareSourceRequest } from "@newsnext/client-source/service"
+import { parseSourceId, prepareSourceRequest } from "@newsnext/client-source/service"
+import { resolveSourceSecrets } from "./source-secrets"
 
 export interface LoadBackgroundSourceInput {
   sourceId: string
@@ -19,7 +20,9 @@ export function createBackgroundSourceService(): BackgroundSourceService {
   return {
     async load(input): Promise<LoadBackgroundSourceOutput> {
       const request = prepareSourceRequest(input.sourceId, input.params ?? {})
-      const items = await request.source.loader(request.params)
+      const { provider } = parseSourceId(input.sourceId)
+      const secrets = await resolveSourceSecrets(request.source, provider)
+      const items = await request.source.loader(request.params, { secrets })
 
       return {
         items,

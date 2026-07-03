@@ -1,4 +1,5 @@
 import type { NewsItem } from "@newsnext/shared/types"
+import type { SourceLoaderContext } from "@newsnext/source-shared/typings"
 import { myFetch } from "@newsnext/source-shared/utils/fetch"
 import { $selectParam, $textParam } from "@newsnext/source-shared/utils/params"
 import { $provider, $source } from "@newsnext/source-shared/utils/source"
@@ -13,6 +14,7 @@ const USER_TWEETS_URL = `${X_ORIGIN}/i/api/graphql/QWF3SzpHmykQHsQMixG0cg/UserTw
 const HOME_TIMELINE_COUNT = 20
 const USER_TWEETS_COUNT = 40
 const USER_TWEET_ENTRY_PREFIXES = ["tweet-", "profile-conversation-", "profile-grid-"]
+const X_CSRF_TOKEN_SECRET_KEY = "csrfToken"
 
 const X_FEATURES = {
   creator_subscriptions_tweet_preview_api_enabled: true,
@@ -178,67 +180,8 @@ function createXHeaders(): Record<string, string> {
   }
 }
 
-interface BrowserCookie {
-  value?: string
-}
-
-interface BrowserCookiesApi {
-  get: (
-    details: { url: string, name: string },
-    callback?: (cookie?: BrowserCookie) => void,
-  ) => Promise<BrowserCookie | undefined> | void
-}
-
-interface BrowserExtensionGlobal {
-  chrome?: {
-    cookies?: BrowserCookiesApi
-    runtime?: {
-      lastError?: { message?: string }
-    }
-  }
-  browser?: {
-    cookies?: BrowserCookiesApi
-  }
-}
-
-function isPromiseLike<T>(value: unknown): value is Promise<T> {
-  return typeof value === "object"
-    && value !== null
-    && "then" in value
-    && typeof value.then === "function"
-}
-
-function getExtensionCookiesApi(): BrowserCookiesApi | undefined {
-  const extensionGlobal = globalThis as BrowserExtensionGlobal
-  return extensionGlobal.browser?.cookies ?? extensionGlobal.chrome?.cookies
-}
-
-async function getXCsrfToken(): Promise<string | undefined> {
-  const cookies = getExtensionCookiesApi()
-  if (!cookies) {
-    return undefined
-  }
-
-  const maybeCookie = cookies.get({ url: X_ORIGIN, name: "ct0" })
-  if (isPromiseLike<BrowserCookie | undefined>(maybeCookie)) {
-    return (await maybeCookie)?.value
-  }
-
-  return await new Promise((resolve) => {
-    cookies.get({ url: X_ORIGIN, name: "ct0" }, (cookie) => {
-      const extensionGlobal = globalThis as BrowserExtensionGlobal
-      if (extensionGlobal.chrome?.runtime?.lastError) {
-        resolve(undefined)
-        return
-      }
-
-      resolve(cookie?.value)
-    })
-  })
-}
-
-async function createXLoggedInHeaders(): Promise<Record<string, string>> {
-  const csrfToken = await getXCsrfToken()
+async function createXLoggedInHeaders(context?: SourceLoaderContext): Promise<Record<string, string>> {
+  const csrfToken = context?.secrets?.[X_CSRF_TOKEN_SECRET_KEY]
 
   return {
     ...createXHeaders(),
@@ -351,8 +294,8 @@ function xTweetToNewsItem(tweet: XTweetResult): NewsItem | undefined {
   return item
 }
 
-export async function fetchXPlaceTrends({ location }: XTrendingParams): Promise<NewsItem[]> {
-  const headers = await createXLoggedInHeaders()
+export async function fetchXPlaceTrends({ location }: XTrendingParams, context?: SourceLoaderContext): Promise<NewsItem[]> {
+  const headers = await createXLoggedInHeaders(context)
 
   const response = await myFetch<XPlaceTrendResponse[]>(PLACE_TRENDS_URL, {
     headers,
@@ -370,8 +313,8 @@ export async function fetchXPlaceTrends({ location }: XTrendingParams): Promise<
   }))
 }
 
-export async function fetchXTimeline(url: string): Promise<NewsItem[]> {
-  const headers = await createXLoggedInHeaders()
+export async function fetchXTimeline(url: string, context?: SourceLoaderContext): Promise<NewsItem[]> {
+  const headers = await createXLoggedInHeaders(context)
   const response = await myFetch<XHomeTimelineResponse>(url, {
     method: "POST",
     headers,
@@ -393,9 +336,9 @@ export async function fetchXTimeline(url: string): Promise<NewsItem[]> {
   return sortNewsItemsByNewest(entriesToNewsItems(getTimelineEntries(instructions)))
 }
 
-export async function fetchXUserTweets({ username }: XUserTweetsParams): Promise<NewsItem[]> {
+export async function fetchXUserTweets({ username }: XUserTweetsParams, context?: SourceLoaderContext): Promise<NewsItem[]> {
   const screenName = normalizeXUsername(username)
-  const headers = await createXLoggedInHeaders()
+  const headers = await createXLoggedInHeaders(context)
 
   const user = await myFetch<XUserByScreenNameResponse>(USER_BY_SCREEN_NAME_URL, {
     headers,
@@ -451,6 +394,14 @@ export default $provider({
         key: "place-trends",
         title: "Trending",
         type: "hottest",
+        secrets: [
+          {
+            key: X_CSRF_TOKEN_SECRET_KEY,
+            type: "cookie",
+            url: X_ORIGIN,
+            name: "ct0",
+          },
+        ],
         params: {
           location: $selectParam<LocationId>({
             title: "Location",
@@ -466,22 +417,46 @@ export default $provider({
         key: "recommended",
         title: "Recommended",
         type: "timeline",
+        secrets: [
+          {
+            key: X_CSRF_TOKEN_SECRET_KEY,
+            type: "cookie",
+            url: X_ORIGIN,
+            name: "ct0",
+          },
+        ],
       },
-      () => fetchXTimeline(HOME_TIMELINE_URL),
+      (_params, context) => fetchXTimeline(HOME_TIMELINE_URL, context),
     ),
     $source(
       {
         key: "following",
         title: "Following",
         type: "timeline",
+        secrets: [
+          {
+            key: X_CSRF_TOKEN_SECRET_KEY,
+            type: "cookie",
+            url: X_ORIGIN,
+            name: "ct0",
+          },
+        ],
       },
-      () => fetchXTimeline(HOME_LATEST_TIMELINE_URL),
+      (_params, context) => fetchXTimeline(HOME_LATEST_TIMELINE_URL, context),
     ),
     $source(
       {
         key: "user",
         title: "User Tweets",
         type: "timeline",
+        secrets: [
+          {
+            key: X_CSRF_TOKEN_SECRET_KEY,
+            type: "cookie",
+            url: X_ORIGIN,
+            name: "ct0",
+          },
+        ],
         params: {
           username: $textParam({
             title: "Username",

@@ -1,16 +1,10 @@
 import type { NewsItem } from "@newsnext/source-shared/typings"
 
 import type {
-  BrowserExtensionGlobal,
-  BrowserScriptingApi,
-  BrowserStorageAreaApi,
-  BrowserTabsApi,
   JikeFeedResponse,
   JikePicture,
   JikePost,
   JikeUser,
-  LocalStorageGlobal,
-  NewsNextVars,
   TopicFeedOrder,
 } from "./types"
 
@@ -23,73 +17,8 @@ const TOPIC_FEED_TAB_BY_ORDER: Record<TopicFeedOrder, string> = {
   hottest: "selected",
 }
 
-export function isPromiseLike<T>(value: unknown): value is Promise<T> {
-  return typeof value === "object"
-    && value !== null
-    && "then" in value
-    && typeof value.then === "function"
-}
-
 function compactText(text: string): string {
   return text.trim().replace(/\s+/g, " ")
-}
-
-export function getExtensionTabsApi(): BrowserTabsApi | undefined {
-  const extensionGlobal = globalThis as BrowserExtensionGlobal
-  return extensionGlobal.browser?.tabs ?? extensionGlobal.chrome?.tabs
-}
-
-export function getExtensionScriptingApi(): BrowserScriptingApi | undefined {
-  const extensionGlobal = globalThis as BrowserExtensionGlobal
-  return extensionGlobal.browser?.scripting ?? extensionGlobal.chrome?.scripting
-}
-
-export function getExtensionStorageArea(): BrowserStorageAreaApi | undefined {
-  const extensionGlobal = globalThis as BrowserExtensionGlobal
-  return extensionGlobal.browser?.storage?.local ?? extensionGlobal.chrome?.storage?.local
-}
-
-export function isBrowserTabsApi(tabs: BrowserTabsApi): boolean {
-  return (globalThis as BrowserExtensionGlobal).browser?.tabs === tabs
-}
-
-export function isBrowserScriptingApi(scripting: BrowserScriptingApi): boolean {
-  return (globalThis as BrowserExtensionGlobal).browser?.scripting === scripting
-}
-
-export function isBrowserStorageAreaApi(storageArea: BrowserStorageAreaApi): boolean {
-  return (globalThis as BrowserExtensionGlobal).browser?.storage?.local === storageArea
-}
-
-export function readLocalStorageValue(...args: unknown[]): string | null {
-  const [key] = args
-  if (typeof key !== "string") {
-    return null
-  }
-
-  return (globalThis as LocalStorageGlobal).localStorage?.getItem(key) ?? null
-}
-
-export function parseNewsNextVars(value: string | null): NewsNextVars {
-  if (!value) {
-    return {}
-  }
-
-  try {
-    const parsed = JSON.parse(value) as unknown
-    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed as NewsNextVars : {}
-  } catch {
-    return {}
-  }
-}
-
-export function getStringProperty(value: unknown, key: string): string | undefined {
-  if (!value || typeof value !== "object") {
-    return undefined
-  }
-
-  const result = (value as Record<string, unknown>)[key]
-  return typeof result === "string" ? result.trim() || undefined : undefined
 }
 
 export function getNumberProperty(value: unknown, key: string): number | undefined {

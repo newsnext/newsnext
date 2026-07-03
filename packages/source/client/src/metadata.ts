@@ -360,6 +360,22 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "type": "timeline",
     "category": "others",
     "home": "https://web.okjike.com",
+    "secrets": [
+      {
+        "key": "accessToken",
+        "type": "localStorage",
+        "origin": "https://web.okjike.com",
+        "itemKey": "JK_ACCESS_TOKEN",
+        "cache": true
+      },
+      {
+        "key": "refreshToken",
+        "type": "localStorage",
+        "origin": "https://web.okjike.com",
+        "itemKey": "JK_REFRESH_TOKEN",
+        "cache": true
+      }
+    ],
     "id": "jike:following-updates"
   },
   {
@@ -378,6 +394,22 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "type": "timeline",
     "category": "others",
     "home": "https://web.okjike.com",
+    "secrets": [
+      {
+        "key": "accessToken",
+        "type": "localStorage",
+        "origin": "https://web.okjike.com",
+        "itemKey": "JK_ACCESS_TOKEN",
+        "cache": true
+      },
+      {
+        "key": "refreshToken",
+        "type": "localStorage",
+        "origin": "https://web.okjike.com",
+        "itemKey": "JK_REFRESH_TOKEN",
+        "cache": true
+      }
+    ],
     "id": "jike:user-updates"
   },
   {
@@ -396,6 +428,22 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "type": "timeline",
     "category": "others",
     "home": "https://web.okjike.com",
+    "secrets": [
+      {
+        "key": "accessToken",
+        "type": "localStorage",
+        "origin": "https://web.okjike.com",
+        "itemKey": "JK_ACCESS_TOKEN",
+        "cache": true
+      },
+      {
+        "key": "refreshToken",
+        "type": "localStorage",
+        "origin": "https://web.okjike.com",
+        "itemKey": "JK_REFRESH_TOKEN",
+        "cache": true
+      }
+    ],
     "id": "jike:topic-recent"
   },
   {
@@ -414,6 +462,22 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "type": "hottest",
     "category": "others",
     "home": "https://web.okjike.com",
+    "secrets": [
+      {
+        "key": "accessToken",
+        "type": "localStorage",
+        "origin": "https://web.okjike.com",
+        "itemKey": "JK_ACCESS_TOKEN",
+        "cache": true
+      },
+      {
+        "key": "refreshToken",
+        "type": "localStorage",
+        "origin": "https://web.okjike.com",
+        "itemKey": "JK_REFRESH_TOKEN",
+        "cache": true
+      }
+    ],
     "id": "jike:topic-hottest"
   },
   {
@@ -613,6 +677,14 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "type": "hottest",
     "category": "world",
     "home": "https://x.com",
+    "secrets": [
+      {
+        "key": "csrfToken",
+        "type": "cookie",
+        "url": "https://x.com",
+        "name": "ct0"
+      }
+    ],
     "id": "x:place-trends"
   },
   {
@@ -623,6 +695,14 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "type": "timeline",
     "category": "world",
     "home": "https://x.com",
+    "secrets": [
+      {
+        "key": "csrfToken",
+        "type": "cookie",
+        "url": "https://x.com",
+        "name": "ct0"
+      }
+    ],
     "id": "x:recommended"
   },
   {
@@ -633,6 +713,14 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "type": "timeline",
     "category": "world",
     "home": "https://x.com",
+    "secrets": [
+      {
+        "key": "csrfToken",
+        "type": "cookie",
+        "url": "https://x.com",
+        "name": "ct0"
+      }
+    ],
     "id": "x:following"
   },
   {
@@ -650,6 +738,14 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "type": "timeline",
     "category": "world",
     "home": "https://x.com",
+    "secrets": [
+      {
+        "key": "csrfToken",
+        "type": "cookie",
+        "url": "https://x.com",
+        "name": "ct0"
+      }
+    ],
     "id": "x:user"
   },
   {

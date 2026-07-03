@@ -7,100 +7,16 @@ vi.mock("@newsnext/source-shared/utils/fetch", () => ({
   myFetch: vi.fn(),
 }))
 
-function mockJikeRefresh(): void {
-  vi.mocked(myFetch).mockResolvedValueOnce({
-    "x-jike-access-token": "fresh-access-token",
-    "x-jike-refresh-token": "fresh-refresh-token",
-  })
-}
-
-interface MockChromeGlobal {
-  chrome: {
-    runtime: Record<string, never>
-    tabs: {
-      query: ReturnType<typeof vi.fn>
-    }
-    scripting: {
-      executeScript: ReturnType<typeof vi.fn>
-    }
-    storage: {
-      local?: {
-        get: ReturnType<typeof vi.fn>
-        set: ReturnType<typeof vi.fn>
-      }
-    }
-  }
+const JIKE_CONTEXT = {
+  secrets: {
+    accessToken: "stored-access-token",
+    refreshToken: "stored-refresh-token",
+  },
 }
 
 describe("jike source", () => {
-  let localStorageValues: Map<string, string>
-
   beforeEach(() => {
     vi.mocked(myFetch).mockReset()
-    localStorageValues = new Map([
-      ["newsnext_vars", JSON.stringify({
-        jike: {
-          JK_ACCESS_TOKEN: "stored-access-token",
-          JK_REFRESH_TOKEN: "stored-refresh-token",
-          JK_DEVICE_ID: "stored-device-id",
-        },
-        other: {
-          value: "kept",
-        },
-      })],
-    ])
-    Object.assign(globalThis, {
-      chrome: {
-        runtime: {},
-        tabs: {
-          query: vi.fn((_queryInfo, callback) => {
-            callback?.([{ id: 42 }])
-          }),
-        },
-        scripting: {
-          executeScript: vi.fn((_injection, callback) => {
-            const injection = _injection as { args?: unknown[] }
-            const [arg] = injection.args ?? []
-            if (arg === "JK_ACCESS_TOKEN") {
-              callback?.([{ result: " cached-access-token " }])
-              return
-            }
-            if (arg === "JK_REFRESH_TOKEN") {
-              callback?.([{ result: " refresh-token " }])
-              return
-            }
-            if (arg === "JK_DEVICE_ID") {
-              callback?.([{ result: " device-id " }])
-              return
-            }
-
-            callback?.([{ result: true }])
-          }),
-        },
-        storage: {
-          local: {
-            get: vi.fn((key: string, callback) => {
-              callback?.({ [key]: localStorageValues.get(key) })
-            }),
-            set: vi.fn((items: Record<string, string>, callback) => {
-              for (const [key, value] of Object.entries(items)) {
-                localStorageValues.set(key, value)
-              }
-              callback?.()
-            }),
-          },
-        },
-      },
-    })
-    Object.defineProperty(globalThis, "localStorage", {
-      configurable: true,
-      value: {
-        getItem: vi.fn((key: string) => localStorageValues.get(key) ?? null),
-        setItem: vi.fn((key: string, value: string) => {
-          localStorageValues.set(key, value)
-        }),
-      },
-    })
   })
 
   it("registers following updates as a timeline source", () => {
@@ -108,6 +24,46 @@ describe("jike source", () => {
       title: "Following updates",
       type: "timeline",
       home: "https://web.okjike.com",
+      secrets: [
+        {
+          key: "accessToken",
+          type: "localStorage",
+          origin: "https://web.okjike.com",
+          itemKey: "JK_ACCESS_TOKEN",
+          cache: true,
+        },
+        {
+          key: "refreshToken",
+          type: "localStorage",
+          origin: "https://web.okjike.com",
+          itemKey: "JK_REFRESH_TOKEN",
+          cache: true,
+        },
+      ],
+    })
+    const [authTransform] = jikeProvider.sources["following-updates"].secretTransforms ?? []
+    expect(authTransform).toMatchObject({
+      type: "http",
+      targetKey: "accessToken",
+      url: "https://api.ruguoapp.com/app_auth_tokens.refresh",
+      method: "POST",
+      credentials: "include",
+      output: {
+        type: "header",
+        key: "x-jike-access-token",
+      },
+      when: "always",
+    })
+    expect(authTransform?.request?.({
+      accessToken: "old-access-token",
+      refreshToken: "stored-refresh-token",
+    })).toEqual({
+      headers: {
+        "content-type": "application/json",
+        "platform": "web",
+        "x-jike-refresh-token": "stored-refresh-token",
+      },
+      body: {},
     })
     expect(jikeProvider.sources["following-updates"].params).toBeUndefined()
   })
@@ -179,10 +135,8 @@ describe("jike source", () => {
       ],
     })
 
-    const items = await fetchJikeFollowingUpdates()
-    const extensionGlobal = globalThis as typeof globalThis & MockChromeGlobal
+    const items = await fetchJikeFollowingUpdates({}, JIKE_CONTEXT)
 
-    expect(extensionGlobal.chrome.tabs.query).not.toHaveBeenCalled()
     expect(myFetch).toHaveBeenCalledWith(
       "https://api.ruguoapp.com/1.0/personalUpdate/followingUpdates",
       expect.objectContaining({
@@ -218,38 +172,27 @@ describe("jike source", () => {
     ])
   })
 
-  it("copies Jike auth from web localStorage when provider localStorage is empty", async () => {
-    localStorageValues.clear()
+  it("uses injected auth secrets", async () => {
     vi.mocked(myFetch).mockResolvedValueOnce({
       success: true,
       data: [],
     })
 
-    await expect(fetchJikeFollowingUpdates()).resolves.toEqual([])
-    const extensionGlobal = globalThis as typeof globalThis & MockChromeGlobal
+    await fetchJikeFollowingUpdates({}, {
+      secrets: {
+        accessToken: "context-access-token",
+        refreshToken: "context-refresh-token",
+      },
+    })
 
-    expect(extensionGlobal.chrome.tabs.query).toHaveBeenCalledWith(
-      { url: "https://web.okjike.com/*" },
-      expect.any(Function),
-    )
     expect(myFetch).toHaveBeenCalledWith(
       "https://api.ruguoapp.com/1.0/personalUpdate/followingUpdates",
       expect.objectContaining({
         headers: expect.objectContaining({
-          "x-jike-access-token": "cached-access-token",
+          "x-jike-access-token": "context-access-token",
         }),
       }),
     )
-    expect(extensionGlobal.chrome.storage.local?.set).toHaveBeenCalledWith({
-      newsnext_vars: JSON.stringify({
-        jike: {
-          JK_ACCESS_TOKEN: "cached-access-token",
-          JK_REFRESH_TOKEN: "refresh-token",
-          JK_DEVICE_ID: "device-id",
-        },
-      }),
-    }, expect.any(Function))
-    expect(globalThis.localStorage.setItem).not.toHaveBeenCalled()
   })
 
   it("maps reposts to repost URLs and previews the target post", () => {
@@ -323,7 +266,7 @@ describe("jike source", () => {
 
     const items = await fetchJikeTopicHottestFeed({
       topicId: " 5aeaa84029e4000011ac3768 ",
-    })
+    }, JIKE_CONTEXT)
 
     expect(myFetch).toHaveBeenCalledWith(
       "https://api.ruguoapp.com/1.0/topics/tabs/selected/feed",
@@ -391,7 +334,7 @@ describe("jike source", () => {
 
     const items = await fetchJikeUserUpdates({
       username: " a2d6acc1-626f-4d15-a22a-849e88a4c9f0 ",
-    })
+    }, JIKE_CONTEXT)
 
     expect(myFetch).toHaveBeenCalledWith(
       "https://api.ruguoapp.com/1.0/personalUpdate/single",
@@ -438,7 +381,7 @@ describe("jike source", () => {
 
     await fetchJikeTopicRecentFeed({
       topicId: "5aeaa84029e4000011ac3768",
-    })
+    }, JIKE_CONTEXT)
 
     expect(myFetch).toHaveBeenCalledWith(
       "https://api.ruguoapp.com/1.0/topics/tabs/square/feed",
@@ -447,111 +390,6 @@ describe("jike source", () => {
           limit: 50,
           topicId: "5aeaa84029e4000011ac3768",
         },
-      }),
-    )
-  })
-
-  it("refreshes the access token only after an auth error", async () => {
-    vi.mocked(myFetch)
-      .mockResolvedValueOnce({
-        success: false,
-        error: {
-          message: "Invalid token",
-        },
-      })
-    mockJikeRefresh()
-    vi.mocked(myFetch).mockResolvedValueOnce({
-      success: true,
-      data: [],
-    })
-
-    await expect(fetchJikeFollowingUpdates()).resolves.toEqual([])
-    const extensionGlobal = globalThis as typeof globalThis & MockChromeGlobal
-
-    expect(myFetch).toHaveBeenNthCalledWith(
-      1,
-      "https://api.ruguoapp.com/1.0/personalUpdate/followingUpdates",
-      expect.objectContaining({
-        headers: expect.objectContaining({
-          "x-jike-access-token": "stored-access-token",
-        }),
-      }),
-    )
-    expect(myFetch).toHaveBeenNthCalledWith(
-      2,
-      "https://api.ruguoapp.com/app_auth_tokens.refresh",
-      expect.objectContaining({
-        headers: expect.objectContaining({
-          "x-jike-device-id": "stored-device-id",
-          "x-jike-refresh-token": "stored-refresh-token",
-        }),
-      }),
-    )
-    expect(myFetch).toHaveBeenNthCalledWith(
-      3,
-      "https://api.ruguoapp.com/1.0/personalUpdate/followingUpdates",
-      expect.objectContaining({
-        headers: expect.objectContaining({
-          "x-jike-access-token": "fresh-access-token",
-        }),
-      }),
-    )
-    expect(extensionGlobal.chrome.tabs.query).not.toHaveBeenCalled()
-    expect(extensionGlobal.chrome.storage.local?.set).toHaveBeenCalledWith({
-      newsnext_vars: JSON.stringify({
-        jike: {
-          JK_ACCESS_TOKEN: "fresh-access-token",
-          JK_REFRESH_TOKEN: "fresh-refresh-token",
-          JK_DEVICE_ID: "stored-device-id",
-        },
-        other: {
-          value: "kept",
-        },
-      }),
-    }, expect.any(Function))
-    expect(globalThis.localStorage.setItem).not.toHaveBeenCalled()
-  })
-
-  it("refreshes the access token after a 401 response", async () => {
-    vi.mocked(myFetch)
-      .mockRejectedValueOnce({
-        response: {
-          status: 401,
-        },
-      })
-    mockJikeRefresh()
-    vi.mocked(myFetch).mockResolvedValueOnce({
-      success: true,
-      data: [],
-    })
-
-    await expect(fetchJikeFollowingUpdates()).resolves.toEqual([])
-
-    expect(myFetch).toHaveBeenNthCalledWith(
-      1,
-      "https://api.ruguoapp.com/1.0/personalUpdate/followingUpdates",
-      expect.objectContaining({
-        headers: expect.objectContaining({
-          "x-jike-access-token": "stored-access-token",
-        }),
-      }),
-    )
-    expect(myFetch).toHaveBeenNthCalledWith(
-      2,
-      "https://api.ruguoapp.com/app_auth_tokens.refresh",
-      expect.objectContaining({
-        headers: expect.objectContaining({
-          "x-jike-refresh-token": "stored-refresh-token",
-        }),
-      }),
-    )
-    expect(myFetch).toHaveBeenNthCalledWith(
-      3,
-      "https://api.ruguoapp.com/1.0/personalUpdate/followingUpdates",
-      expect.objectContaining({
-        headers: expect.objectContaining({
-          "x-jike-access-token": "fresh-access-token",
-        }),
       }),
     )
   })
@@ -577,6 +415,6 @@ describe("jike source", () => {
       },
     })
 
-    await expect(fetchJikeFollowingUpdates()).rejects.toThrow("Topic not found")
+    await expect(fetchJikeFollowingUpdates({}, JIKE_CONTEXT)).rejects.toThrow("Topic not found")
   })
 })

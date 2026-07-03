@@ -48,6 +48,8 @@ export function $provider(
         type: source.type,
         category: source.category ?? provider.category ?? "others",
         home: source.home ?? provider.home,
+        secrets: source.secrets,
+        secretTransforms: source.secretTransforms,
         disable: source.disable,
         loader: source.loader,
       }
