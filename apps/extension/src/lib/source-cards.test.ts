@@ -1,6 +1,6 @@
 import type { SourceDescriptor } from "@/typings/source"
 import { describe, expect, it } from "vitest"
-import { buildBoardSources, FEATURED_SOURCE_IDS } from "./source-cards"
+import { buildAllBoardSources, buildBoardSources, FEATURED_SOURCE_IDS } from "./source-cards"
 
 const testSources: SourceDescriptor[] = [
   {
@@ -20,6 +20,44 @@ const testSources: SourceDescriptor[] = [
 ]
 
 describe("buildBoardSources", () => {
+  it("shows every base source when building the all-sources list", () => {
+    const boardSources = buildAllBoardSources({
+      sources: testSources,
+      sourceInstances: [],
+      isLocalOnly: true,
+    })
+
+    expect(boardSources.ids).toEqual(["test:feed", "test:latest"])
+    expect(boardSources.map["test:feed"]).toMatchObject({
+      isFork: false,
+      isLocalOnly: true,
+      sourceId: "test:feed",
+    })
+  })
+
+  it("includes forks in the all-sources list", () => {
+    const boardSources = buildAllBoardSources({
+      sources: testSources,
+      sourceInstances: [
+        {
+          instanceId: "test:feed::fork",
+          sourceId: "test:feed",
+          params: { topic: "custom" },
+          isFork: true,
+          createdAt: 1,
+        },
+      ],
+      isLocalOnly: true,
+    })
+
+    expect(boardSources.ids).toEqual(["test:feed", "test:feed::fork", "test:latest"])
+    expect(boardSources.map["test:feed::fork"]).toMatchObject({
+      isFork: true,
+      paramsValue: { topic: "custom" },
+      sourceId: "test:feed",
+    })
+  })
+
   it("hides sources that are not configured for the featured board", () => {
     const boardSources = buildBoardSources({
       sources: testSources,

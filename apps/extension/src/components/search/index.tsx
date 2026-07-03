@@ -14,7 +14,7 @@ import {
 import { useAtomValue } from "jotai"
 import { useEffect, useMemo, useState } from "react"
 import { getClientSourceDescriptors } from "@/lib/client-sources"
-import { buildBoardSources } from "@/lib/source-cards"
+import { buildAllBoardSources } from "@/lib/source-cards"
 import { cn } from "@/lib/utils"
 import { boardInstancesAtom, boardStarIdsAtom } from "@/store/board"
 import Card from "../card"
@@ -122,49 +122,25 @@ function SearchDialogContent(): ReactNode {
       return []
     }
 
-    const featuredBoard = buildBoardSources({
+    const allSourcesBoard = buildAllBoardSources({
       sources,
-      boardId: "featured",
-      starredSourceInstanceIds: starredInstanceIds,
-      sourceInstances: instances,
-      isLocalOnly: true,
-    })
-    const forksBoard = buildBoardSources({
-      sources,
-      boardId: "forks",
-      starredSourceInstanceIds: starredInstanceIds,
       sourceInstances: instances,
       isLocalOnly: true,
     })
 
-    return [
-      ...featuredBoard.ids.map((id) => {
-        const source = featuredBoard.map[id]
+    return allSourcesBoard.ids.map((id) => {
+      const source = allSourcesBoard.map[id]
 
-        return {
-          id,
-          category: categories[source.category],
-          source,
-          providerTitle: source.providerTitle,
-          title: source.title,
-          isFork: false,
-          isStarred: starredInstanceIds.includes(id),
-        } satisfies SearchItem
-      }),
-      ...forksBoard.ids.map((id) => {
-        const source = forksBoard.map[id]
-
-        return {
-          id,
-          category: `${categories[source.category]} / Forked`,
-          source,
-          providerTitle: source.providerTitle,
-          title: source.title,
-          isFork: true,
-          isStarred: starredInstanceIds.includes(id),
-        } satisfies SearchItem
-      }),
-    ]
+      return {
+        id,
+        category: `${categories[source.category]}${source.isFork ? " / Forked" : ""}`,
+        source,
+        providerTitle: source.providerTitle,
+        title: source.title,
+        isFork: source.isFork,
+        isStarred: starredInstanceIds.includes(id),
+      } satisfies SearchItem
+    })
   }, [sources, starredInstanceIds, instances])
 
   const searchGroups = useMemo(() => groupSearchItems(searchItems), [searchItems])

@@ -66,6 +66,11 @@ function createBoardSource(source: BoardSourceSource, isLocalOnly: boolean): Boa
   }
 }
 
+interface MergedBoardSource {
+  baseSource: BoardSource
+  forkedSources: BoardSource[]
+}
+
 export function createForkedInstance(
   sourceId: string,
   params: Record<string, unknown> = {},
@@ -79,19 +84,11 @@ export function createForkedInstance(
   }
 }
 
-export function buildBoardSources({
-  sources,
-  boardId,
-  starredSourceInstanceIds,
-  sourceInstances,
-  isLocalOnly = false,
-}: {
-  sources: BoardSourceSource[]
-  boardId: BoardType
-  starredSourceInstanceIds: string[]
-  sourceInstances: SourceInstance[]
-  isLocalOnly?: boolean
-}): { ids: string[], map: Record<string, BoardSource> } {
+function buildMergedBoardSources(
+  sources: BoardSourceSource[],
+  sourceInstances: SourceInstance[],
+  isLocalOnly: boolean,
+): MergedBoardSource[] {
   const instanceMap = new Map(sourceInstances.map(instance => [instance.instanceId, instance]))
   const baseSources = sources.map((source) => {
     const boardSource = createBoardSource(source, isLocalOnly)
@@ -113,7 +110,7 @@ export function buildBoardSources({
     forkGroups.set(instance.sourceId, currentForks)
   })
 
-  const mergedSources = baseSources.flatMap((source) => {
+  return baseSources.map((source) => {
     const forks = (forkGroups.get(source.sourceId) ?? [])
       .sort((a, b) => a.createdAt - b.createdAt)
       .map(instance => ({
@@ -129,7 +126,45 @@ export function buildBoardSources({
       forkedSources: forks,
     }
   })
+}
 
+function createBoardSourceResult(visibleSources: BoardSource[]): { ids: string[], map: Record<string, BoardSource> } {
+  return {
+    ids: visibleSources.map(source => source.id),
+    map: Object.fromEntries(visibleSources.map(source => [source.id, source])),
+  }
+}
+
+export function buildAllBoardSources({
+  sources,
+  sourceInstances,
+  isLocalOnly = false,
+}: {
+  sources: BoardSourceSource[]
+  sourceInstances: SourceInstance[]
+  isLocalOnly?: boolean
+}): { ids: string[], map: Record<string, BoardSource> } {
+  const mergedSources = buildMergedBoardSources(sources, sourceInstances, isLocalOnly)
+
+  return createBoardSourceResult(
+    mergedSources.flatMap(({ baseSource, forkedSources }) => [baseSource, ...forkedSources]),
+  )
+}
+
+export function buildBoardSources({
+  sources,
+  boardId,
+  starredSourceInstanceIds,
+  sourceInstances,
+  isLocalOnly = false,
+}: {
+  sources: BoardSourceSource[]
+  boardId: BoardType
+  starredSourceInstanceIds: string[]
+  sourceInstances: SourceInstance[]
+  isLocalOnly?: boolean
+}): { ids: string[], map: Record<string, BoardSource> } {
+  const mergedSources = buildMergedBoardSources(sources, sourceInstances, isLocalOnly)
   const featuredSourceMap = new Map(mergedSources.map(source => [source.baseSource.sourceId, source.baseSource]))
   const featuredSources = FEATURED_SOURCE_IDS
     .map(sourceId => featuredSourceMap.get(sourceId))
@@ -141,10 +176,7 @@ export function buildBoardSources({
       ? mergedSources.flatMap(({ forkedSources }) => forkedSources)
       : featuredSources
 
-  return {
-    ids: visibleSources.map(source => source.id),
-    map: Object.fromEntries(visibleSources.map(source => [source.id, source])),
-  }
+  return createBoardSourceResult(visibleSources)
 }
 
 export function buildSourceRequestKey(sourceId: string, params: Record<string, unknown> = {}): string {
