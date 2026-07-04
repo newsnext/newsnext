@@ -1,7 +1,13 @@
-@utility sprinkle-* {
-  background-image: radial-gradient(ellipse 80% 80% at 50% -30%, --alpha(--value(--color-*)/0.3), transparent);
+@utility sunrise-* {
+  background-image: radial-gradient(
+    ellipse 120% 95% at 50% -25%,
+    --alpha(--value(--color-*)/0.24) 0%,
+    --alpha(--value(--color-*)/0.14) 38%,
+    --alpha(--value(--color-*)/0.05) 64%,
+    transparent 88%
+  );
   background-repeat: no-repeat;
-  background-size: 100% 100%;
+  background-size: 100% 115%;
 }
 
 @utility flex-center {

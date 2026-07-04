@@ -128,7 +128,7 @@ function CardContent({ id, source, dragHandle }: CardProps) {
     try {
       const nextWindow = await window.documentPictureInPicture.requestWindow(PICTURE_IN_PICTURE_SIZE)
       nextWindow.document.title = title || providerTitle
-      nextWindow.document.body.className = "grid-texture-background m-0 h-screen w-screen overflow-hidden bg-background text-foreground sprinkle-theme-400"
+      nextWindow.document.body.className = "grid-texture-background m-0 h-screen w-screen overflow-hidden bg-background text-foreground sunrise-theme-400"
       copyPictureInPictureStyles(nextWindow.document)
       setPictureInPictureWindow(nextWindow)
       void refetch()
@@ -175,7 +175,7 @@ function CardContent({ id, source, dragHandle }: CardProps) {
         />
       </FlipAnimate>
       {pictureInPictureWindow && createPortal(
-        <div className="grid-texture-background h-screen w-screen bg-background sprinkle-theme-400 p-2">
+        <div className="grid-texture-background h-screen w-screen bg-background sunrise-theme-400 p-2">
           <div className="h-full w-full">
             <CardFront
               id={id}

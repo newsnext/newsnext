@@ -147,7 +147,7 @@ function CardFrontComponent({
             radius="2xl"
             className={cn(
               "pointer-events-none absolute inset-0 bg-background/70",
-              `sprinkle-${color}-400`,
+              `sunrise-${color}-400`,
               isFetching && "animate-pulse",
             )}
           />

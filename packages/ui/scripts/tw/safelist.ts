@@ -4,7 +4,7 @@ function generateCss() {
   const colorsList = COLORS.join(",")
   return [
     `@source inline("bg-{${colorsList}}-{300,400}/{10,35,40,60}")`,
-    `@source inline("sprinkle-{${colorsList}}-400")`,
+    `@source inline("sunrise-{${colorsList}}-400")`,
     `@source inline("text-{${colorsList}}-400")`,
   ].join(";\n")
 }

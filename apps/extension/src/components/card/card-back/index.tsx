@@ -140,7 +140,7 @@ export function CardBack({
             radius="2xl"
             className={cn(
               "pointer-events-none absolute inset-0 bg-background/70",
-              `sprinkle-${previewColor}-400`,
+              `sunrise-${previewColor}-400`,
             )}
           />
           <ScrollArea

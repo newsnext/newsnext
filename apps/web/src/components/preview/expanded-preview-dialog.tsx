@@ -37,7 +37,7 @@ export function ExpandedPreviewDialog({
       <DialogContent
         radius="4xl"
         className="w-[92vw] max-h-[calc(100vh-4rem)] sm:max-w-200"
-        surfaceClassName={cn(`sprinkle-${source.color}-400`, "overflow-hidden bg-neutral-50 p-0 gap-0 text-neutral-950 shadow-2xl ring-neutral-950/10 dark:bg-background dark:text-foreground dark:ring-foreground/10")}
+        surfaceClassName={cn(`sunrise-${source.color}-400`, "overflow-hidden bg-neutral-50 p-0 gap-0 text-neutral-950 shadow-2xl ring-neutral-950/10 dark:bg-background dark:text-foreground dark:ring-foreground/10")}
         showCloseButton={false}
       >
         <DialogHeader className="flex min-w-0 flex-row items-center justify-between gap-3 border-b border-neutral-200/80 pl-6 pr-3 py-2 dark:border-border/60">

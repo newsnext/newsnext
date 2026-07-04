@@ -158,7 +158,7 @@ function SearchDialogContent(): ReactNode {
       value={selectedItem?.id}
       onValueChange={setSelectedItemId}
       disablePointerSelection
-      className={cn(`sprinkle-${selectedItem?.source.color ?? "theme"}-400`, "bg-transparent p-0 rounded-none")}
+      className={cn(`sunrise-${selectedItem?.source.color ?? "theme"}-400`, "bg-transparent p-0 rounded-none")}
     >
       <CommandInput
         autoFocus

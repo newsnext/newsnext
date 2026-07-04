@@ -118,7 +118,7 @@
   }
 
   body {
-    @apply h-screen bg-background text-foreground sprinkle-theme-400;
+    @apply h-screen bg-background text-foreground sunrise-theme-400;
   }
 
   #root {

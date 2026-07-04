@@ -22,7 +22,7 @@ export function StarredSidePanel() {
   }, [starredInstanceIds, instances])
 
   return (
-    <main className="grid-texture-background h-screen overflow-y-auto bg-background px-3 py-4 text-foreground sprinkle-theme-400">
+    <main className="grid-texture-background h-screen overflow-y-auto bg-background px-3 py-4 text-foreground sunrise-theme-400">
       {sourceIds.length === 0
         ? (
             <div className="flex min-h-[calc(100vh-5rem)] items-center justify-center px-4 text-center text-sm text-muted-foreground">
