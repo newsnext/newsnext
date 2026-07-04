@@ -605,12 +605,195 @@ export const sourceDescriptors: SourceDescriptor[] = [
   },
   {
     "icon": "https://s3.newsnext.pro/icons/weibo.png",
-    "providerTitle": "微博",
+    "providerTitle": "Weibo",
+    "title": "Hot Search",
     "color": "red",
     "type": "hottest",
     "category": "others",
-    "home": "https://s.weibo.com/top/summary?cate=realtimehot",
+    "home": "https://s.m.weibo.cn/top/summary?cate=realtimehot",
     "id": "weibo:hot-search"
+  },
+  {
+    "icon": "https://s3.newsnext.pro/icons/weibo.png",
+    "providerTitle": "Weibo",
+    "title": "User Posts",
+    "params": {
+      "uid": {
+        "type": "text",
+        "title": "User ID",
+        "description": "Numeric uid, or a Weibo profile URL containing the uid.",
+        "default": "1195230310"
+      }
+    },
+    "color": "red",
+    "desc": "Latest posts from a specified Weibo user",
+    "type": "timeline",
+    "category": "others",
+    "home": "https://m.weibo.cn",
+    "secrets": [
+      {
+        "key": "sub",
+        "type": "cookie",
+        "origin": "https://m.weibo.cn",
+        "itemKey": "SUB",
+        "required": false
+      },
+      {
+        "key": "subp",
+        "type": "cookie",
+        "origin": "https://m.weibo.cn",
+        "itemKey": "SUBP",
+        "required": false
+      },
+      {
+        "key": "ssoLoginState",
+        "type": "cookie",
+        "origin": "https://m.weibo.cn",
+        "itemKey": "SSOLoginState",
+        "required": false
+      }
+    ],
+    "id": "weibo:user"
+  },
+  {
+    "icon": "https://s3.newsnext.pro/icons/weibo.png",
+    "providerTitle": "Weibo",
+    "title": "Keyword",
+    "params": {
+      "keyword": {
+        "type": "text",
+        "title": "Keyword",
+        "default": "MSI"
+      }
+    },
+    "color": "red",
+    "desc": "Latest Weibo posts matching a keyword",
+    "type": "timeline",
+    "category": "others",
+    "home": "https://m.weibo.cn",
+    "secrets": [
+      {
+        "key": "sub",
+        "type": "cookie",
+        "origin": "https://m.weibo.cn",
+        "itemKey": "SUB",
+        "required": false
+      },
+      {
+        "key": "subp",
+        "type": "cookie",
+        "origin": "https://m.weibo.cn",
+        "itemKey": "SUBP",
+        "required": false
+      },
+      {
+        "key": "ssoLoginState",
+        "type": "cookie",
+        "origin": "https://m.weibo.cn",
+        "itemKey": "SSOLoginState",
+        "required": false
+      }
+    ],
+    "id": "weibo:keyword"
+  },
+  {
+    "icon": "https://s3.newsnext.pro/icons/weibo.png",
+    "providerTitle": "Weibo",
+    "title": "Super Topic",
+    "params": {
+      "id": {
+        "type": "text",
+        "title": "Super topic ID",
+        "description": "A 100808... super topic ID, or a Weibo super topic URL containing it.",
+        "default": "1008084989d223732bf6f02f75ea30efad58a9"
+      },
+      "type": {
+        "type": "select",
+        "title": "Type",
+        "options": [
+          {
+            "label": "Latest comments",
+            "value": "feed"
+          },
+          {
+            "label": "Latest posts",
+            "value": "sort_time"
+          },
+          {
+            "label": "Hot",
+            "value": "hot_sort"
+          },
+          {
+            "label": "Featured",
+            "value": "soul"
+          }
+        ],
+        "default": "feed"
+      }
+    },
+    "color": "red",
+    "desc": "Latest posts from a Weibo super topic",
+    "type": "timeline",
+    "category": "others",
+    "home": "https://m.weibo.cn",
+    "secrets": [
+      {
+        "key": "sub",
+        "type": "cookie",
+        "origin": "https://m.weibo.cn",
+        "itemKey": "SUB",
+        "required": false
+      },
+      {
+        "key": "subp",
+        "type": "cookie",
+        "origin": "https://m.weibo.cn",
+        "itemKey": "SUBP",
+        "required": false
+      },
+      {
+        "key": "ssoLoginState",
+        "type": "cookie",
+        "origin": "https://m.weibo.cn",
+        "itemKey": "SSOLoginState",
+        "required": false
+      }
+    ],
+    "id": "weibo:super-topic"
+  },
+  {
+    "icon": "https://s3.newsnext.pro/icons/weibo.png",
+    "providerTitle": "Weibo",
+    "title": "Following Timeline",
+    "color": "red",
+    "desc": "Latest posts from all followed Weibo accounts",
+    "type": "timeline",
+    "category": "others",
+    "home": "https://m.weibo.cn",
+    "secrets": [
+      {
+        "key": "sub",
+        "type": "cookie",
+        "origin": "https://m.weibo.cn",
+        "itemKey": "SUB",
+        "required": true
+      },
+      {
+        "key": "subp",
+        "type": "cookie",
+        "origin": "https://m.weibo.cn",
+        "itemKey": "SUBP",
+        "required": false
+      },
+      {
+        "key": "ssoLoginState",
+        "type": "cookie",
+        "origin": "https://m.weibo.cn",
+        "itemKey": "SSOLoginState",
+        "required": false
+      }
+    ],
+    "id": "weibo:following"
   },
   {
     "icon": "https://x.com/favicon.ico",
@@ -674,7 +857,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
         "key": "csrfToken",
         "type": "cookie",
         "origin": "https://x.com",
-        "itemKey": "ct0"
+        "itemKey": "ct0",
+        "cache": false
       }
     ],
     "id": "x:place-trends"
@@ -692,7 +876,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
         "key": "csrfToken",
         "type": "cookie",
         "origin": "https://x.com",
-        "itemKey": "ct0"
+        "itemKey": "ct0",
+        "cache": false
       }
     ],
     "id": "x:recommended"
@@ -710,7 +895,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
         "key": "csrfToken",
         "type": "cookie",
         "origin": "https://x.com",
-        "itemKey": "ct0"
+        "itemKey": "ct0",
+        "cache": false
       }
     ],
     "id": "x:following"
@@ -735,7 +921,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
         "key": "csrfToken",
         "type": "cookie",
         "origin": "https://x.com",
-        "itemKey": "ct0"
+        "itemKey": "ct0",
+        "cache": false
       }
     ],
     "id": "x:user"
