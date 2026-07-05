@@ -37,6 +37,19 @@ import {
 
 export { normalizeXUsername } from "./utils"
 
+const X_RADAR_RESERVED_PATHS = [
+  "compose",
+  "explore",
+  "home",
+  "i",
+  "intent",
+  "messages",
+  "notifications",
+  "search",
+  "settings",
+  "share",
+]
+
 export async function fetchXPlaceTrends({ location }: XTrendingParams, context?: SourceLoaderContext): Promise<NewsItem[]> {
   const headers = await createXLoggedInHeaders(context)
 
@@ -177,6 +190,20 @@ export default $provider({
         key: "user",
         title: "User Tweets",
         type: "timeline",
+        radar: [
+          {
+            id: "x-user",
+            match: {
+              hosts: ["x.com", "twitter.com"],
+              paths: ["/:username", "/:username/*"],
+            },
+            title: { type: "param", name: "username", transforms: [{ type: "prepend", value: "@" }] },
+            params: {
+              username: { value: { type: "path", name: "username" }, pattern: "^\\w{1,15}$", notIn: X_RADAR_RESERVED_PATHS },
+            },
+            confidence: 0.95,
+          },
+        ],
         params: {
           username: $textParam({
             title: "Username",

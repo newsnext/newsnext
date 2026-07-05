@@ -63,6 +63,7 @@ export function $provider(
         category: source.category ?? provider.category ?? "others",
         home: source.home ?? provider.home,
         secrets: mergeDefinitions(provider.secrets, source.secrets),
+        radar: source.radar,
         disable: source.disable,
         loader: source.loader,
       }

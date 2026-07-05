@@ -40,6 +40,58 @@ export type SourceSecretDefinition = SourceCookieSecretDefinition | SourceLocalS
 
 export type SourceSecrets = Record<string, string | undefined>
 
+export type SourceRadarValue
+  = | { type: "literal", value: unknown }
+    | { type: "path", name: string }
+    | { type: "query", name: string }
+    | { type: "hashQuery", name: string }
+    | { type: "pathSegmentWithPrefix", prefix: string }
+    | { type: "first", values: SourceRadarValue[] }
+    | { type: "pageTitle" }
+
+export type SourceRadarTransform
+  = | { type: "normalizeWhitespace" }
+    | { type: "replace", pattern: string, replacement: string }
+    | { type: "extract", pattern: string, group?: number, fallbackToEmpty?: boolean }
+    | { type: "prepend", value: string }
+    | { type: "template", value: string }
+
+export type SourceRadarCondition
+  = | { type: "value", value: SourceRadarValue, exists?: boolean, pattern?: string, startsWith?: string, in?: string[], notIn?: string[] }
+    | { type: "urlIncludes", value: string }
+    | { type: "oneOf", conditions: SourceRadarCondition[] }
+
+export type SourceRadarTitle
+  = | { type: "value", value: SourceRadarValue, transforms?: SourceRadarTransform[], fallback?: string }
+    | { type: "param", name: string, transforms?: SourceRadarTransform[], fallback?: string }
+    | { type: "template", value: string }
+
+export interface SourceRadarParam {
+  value: SourceRadarValue
+  required?: boolean
+  pattern?: string
+  startsWith?: string
+  in?: string[]
+  notIn?: string[]
+}
+
+export interface SourceRadarMatch {
+  hosts: string[]
+  paths?: string[]
+  includes?: string | string[]
+}
+
+export interface SourceRadarRule {
+  id: string
+  match: SourceRadarMatch
+  hosts?: string[]
+  paths?: string[]
+  title?: SourceRadarTitle
+  params: Record<string, SourceRadarValue | SourceRadarParam>
+  conditions?: SourceRadarCondition[]
+  confidence?: number
+}
+
 export interface SourceLoaderContext {
   secrets?: SourceSecrets
   updateSecrets?: (secrets: SourceSecrets) => Promise<void>
@@ -64,6 +116,7 @@ export interface SourceRegistration<TParams extends SourceParamSchemaMap = Sourc
   category?: CategoryId
   home?: string
   secrets?: SourceSecretDefinition[]
+  radar?: SourceRadarRule[]
   disable?: boolean
   loader: SourceLoader<TParams>
 }
@@ -84,6 +137,7 @@ export interface SourceDefinition<TParams extends SourceParamSchemaMap = SourceP
   category: CategoryId
   home?: string
   secrets?: SourceSecretDefinition[]
+  radar?: SourceRadarRule[]
   disable?: boolean
   loader: SourceLoader<TParams>
 }

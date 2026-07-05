@@ -16,7 +16,7 @@ import { useEffect, useMemo, useState } from "react"
 import { getClientSourceDescriptors } from "@/lib/client-sources"
 import { buildAllBoardSources } from "@/lib/source-cards"
 import { cn } from "@/lib/utils"
-import { boardInstancesAtom, boardStarIdsAtom } from "@/store/board"
+import { boardInstancesAtom, boardStarIdsAtom, sourceInstanceMetaAtom } from "@/store/board"
 import Card from "../card"
 import { PhForkDuotone, PhMagnifyingGlass, PhStarFill } from "../icons/ph"
 import "./index.css"
@@ -115,6 +115,7 @@ function SearchDialogContent(): ReactNode {
   const [selectedItemId, setSelectedItemId] = useState("")
   const starredInstanceIds = useAtomValue(boardStarIdsAtom("stars"))
   const instances = useAtomValue(boardInstancesAtom("stars"))
+  const sourceInstanceMeta = useAtomValue(sourceInstanceMetaAtom)
   const sources = CLIENT_SOURCES
 
   const searchItems = useMemo<SearchItem[]>(() => {
@@ -125,6 +126,7 @@ function SearchDialogContent(): ReactNode {
     const allSourcesBoard = buildAllBoardSources({
       sources,
       sourceInstances: instances,
+      sourceInstanceMeta,
       isLocalOnly: true,
     })
 
@@ -141,7 +143,7 @@ function SearchDialogContent(): ReactNode {
         isStarred: starredInstanceIds.includes(id),
       } satisfies SearchItem
     })
-  }, [sources, starredInstanceIds, instances])
+  }, [sources, starredInstanceIds, instances, sourceInstanceMeta])
 
   const searchGroups = useMemo(() => groupSearchItems(searchItems), [searchItems])
   const selectedItem = useMemo(

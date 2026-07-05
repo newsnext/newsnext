@@ -311,6 +311,55 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "type": "hottest",
     "category": "others",
     "home": "https://github.com/trending",
+    "radar": [
+      {
+        "id": "github-trending",
+        "match": {
+          "hosts": [
+            "github.com"
+          ],
+          "paths": [
+            "/trending",
+            "/trending/:language"
+          ]
+        },
+        "title": {
+          "type": "template",
+          "value": "Trending {language}"
+        },
+        "params": {
+          "language": {
+            "type": "path",
+            "name": "language"
+          },
+          "spokenLanguage": {
+            "type": "query",
+            "name": "spoken_language_code"
+          },
+          "dateRange": {
+            "value": {
+              "type": "first",
+              "values": [
+                {
+                  "type": "query",
+                  "name": "since"
+                },
+                {
+                  "type": "literal",
+                  "value": "daily"
+                }
+              ]
+            },
+            "in": [
+              "daily",
+              "weekly",
+              "monthly"
+            ]
+          }
+        },
+        "confidence": 0.95
+      }
+    ],
     "id": "github:trending"
   },
   {
@@ -507,6 +556,57 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "type": "hottest",
     "category": "others",
     "home": "https://music.163.com/#/playlist?id=19723756",
+    "radar": [
+      {
+        "id": "netease-music-playlist",
+        "match": {
+          "hosts": [
+            "music.163.com",
+            "y.music.163.com"
+          ],
+          "includes": [
+            "playlist",
+            "toplist"
+          ]
+        },
+        "title": {
+          "type": "value",
+          "value": {
+            "type": "pageTitle"
+          },
+          "transforms": [
+            {
+              "type": "normalizeWhitespace"
+            },
+            {
+              "type": "extract",
+              "pattern": "^(.+?)\\s*-\\s*(?:歌单|排行榜)\\s*-\\s*网易云音乐$",
+              "fallbackToEmpty": true
+            }
+          ],
+          "fallback": "Playlist {id}"
+        },
+        "params": {
+          "id": {
+            "value": {
+              "type": "first",
+              "values": [
+                {
+                  "type": "query",
+                  "name": "id"
+                },
+                {
+                  "type": "hashQuery",
+                  "name": "id"
+                }
+              ]
+            },
+            "pattern": "^\\d+$"
+          }
+        },
+        "confidence": 0.95
+      }
+    ],
     "id": "netease-music:playlist"
   },
   {
@@ -558,6 +658,48 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "type": "timeline",
     "category": "others",
     "home": "https://www.newsnow.com",
+    "radar": [
+      {
+        "id": "newsnow-topic",
+        "match": {
+          "hosts": [
+            "newsnow.com"
+          ],
+          "paths": [
+            "/:locale/:topic*"
+          ]
+        },
+        "title": {
+          "type": "param",
+          "name": "topic"
+        },
+        "params": {
+          "locale": {
+            "value": {
+              "type": "path",
+              "name": "locale"
+            },
+            "in": [
+              "us",
+              "uk",
+              "ng",
+              "ro",
+              "it",
+              "ca",
+              "au"
+            ]
+          },
+          "topic": {
+            "value": {
+              "type": "path",
+              "name": "topic"
+            },
+            "required": true
+          }
+        },
+        "confidence": 0.85
+      }
+    ],
     "id": "newsnow:topic-latest"
   },
   {
@@ -575,32 +717,53 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "providerTitle": "V2EX",
     "params": {
       "feed": {
-        "type": "select",
+        "type": "text",
         "title": "Feed",
-        "options": [
-          {
-            "label": "Create",
-            "value": "create"
-          },
-          {
-            "label": "Ideas",
-            "value": "ideas"
-          },
-          {
-            "label": "Programmer",
-            "value": "programmer"
-          },
-          {
-            "label": "Share",
-            "value": "share"
-          }
-        ],
         "default": "ideas"
       }
     },
     "color": "slate",
     "category": "others",
     "home": "https://v2ex.com/",
+    "radar": [
+      {
+        "id": "v2ex-feed",
+        "match": {
+          "hosts": [
+            "v2ex.com"
+          ],
+          "paths": [
+            "/go/:feed"
+          ]
+        },
+        "title": {
+          "type": "value",
+          "value": {
+            "type": "pageTitle"
+          },
+          "transforms": [
+            {
+              "type": "normalizeWhitespace"
+            },
+            {
+              "type": "extract",
+              "pattern": "^.*[>›]\\s*(.+)$"
+            }
+          ],
+          "fallback": "{feed}"
+        },
+        "params": {
+          "feed": {
+            "value": {
+              "type": "path",
+              "name": "feed"
+            },
+            "required": true
+          }
+        },
+        "confidence": 0.9
+      }
+    ],
     "id": "v2ex:feed"
   },
   {
@@ -653,6 +816,57 @@ export const sourceDescriptors: SourceDescriptor[] = [
         "required": false
       }
     ],
+    "radar": [
+      {
+        "id": "weibo-user",
+        "match": {
+          "hosts": [
+            "m.weibo.cn",
+            "weibo.com"
+          ],
+          "paths": [
+            "/u/:uid",
+            "/profile/:uid"
+          ]
+        },
+        "title": {
+          "type": "value",
+          "value": {
+            "type": "pageTitle"
+          },
+          "transforms": [
+            {
+              "type": "normalizeWhitespace"
+            },
+            {
+              "type": "extract",
+              "pattern": "^@(.+)\\s*的个人主页"
+            },
+            {
+              "type": "replace",
+              "pattern": "[-_—|].*微博.*$",
+              "replacement": ""
+            },
+            {
+              "type": "replace",
+              "pattern": "的微博.*$",
+              "replacement": ""
+            }
+          ],
+          "fallback": "User {uid}"
+        },
+        "params": {
+          "uid": {
+            "value": {
+              "type": "path",
+              "name": "uid"
+            },
+            "pattern": "^\\d+$"
+          }
+        },
+        "confidence": 0.9
+      }
+    ],
     "id": "weibo:user"
   },
   {
@@ -692,6 +906,40 @@ export const sourceDescriptors: SourceDescriptor[] = [
         "origin": "https://m.weibo.cn",
         "itemKey": "SSOLoginState",
         "required": false
+      }
+    ],
+    "radar": [
+      {
+        "id": "weibo-keyword",
+        "match": {
+          "hosts": [
+            "s.weibo.com",
+            "s.m.weibo.cn"
+          ]
+        },
+        "title": {
+          "type": "param",
+          "name": "keyword"
+        },
+        "params": {
+          "keyword": {
+            "value": {
+              "type": "first",
+              "values": [
+                {
+                  "type": "query",
+                  "name": "q"
+                },
+                {
+                  "type": "query",
+                  "name": "keyword"
+                }
+              ]
+            },
+            "required": true
+          }
+        },
+        "confidence": 0.9
       }
     ],
     "id": "weibo:keyword"
@@ -757,6 +1005,70 @@ export const sourceDescriptors: SourceDescriptor[] = [
         "origin": "https://m.weibo.cn",
         "itemKey": "SSOLoginState",
         "required": false
+      }
+    ],
+    "radar": [
+      {
+        "id": "weibo-super-topic",
+        "match": {
+          "hosts": [
+            "m.weibo.cn",
+            "weibo.com"
+          ]
+        },
+        "title": {
+          "type": "value",
+          "value": {
+            "type": "pageTitle"
+          },
+          "transforms": [
+            {
+              "type": "normalizeWhitespace"
+            },
+            {
+              "type": "replace",
+              "pattern": "[-_—|].*微博.*$",
+              "replacement": ""
+            },
+            {
+              "type": "replace",
+              "pattern": "的微博.*$",
+              "replacement": ""
+            },
+            {
+              "type": "extract",
+              "pattern": "^#?(.+?)超话#?$"
+            }
+          ],
+          "fallback": "{id}"
+        },
+        "params": {
+          "id": {
+            "value": {
+              "type": "first",
+              "values": [
+                {
+                  "type": "query",
+                  "name": "containerid"
+                },
+                {
+                  "type": "hashQuery",
+                  "name": "containerid"
+                },
+                {
+                  "type": "pathSegmentWithPrefix",
+                  "prefix": "100808"
+                }
+              ]
+            },
+            "startsWith": "100808"
+          },
+          "type": {
+            "type": "literal",
+            "value": "feed"
+          }
+        },
+        "confidence": 0.9
       }
     ],
     "id": "weibo:super-topic"
@@ -923,6 +1235,53 @@ export const sourceDescriptors: SourceDescriptor[] = [
         "origin": "https://x.com",
         "itemKey": "ct0",
         "cache": false
+      }
+    ],
+    "radar": [
+      {
+        "id": "x-user",
+        "match": {
+          "hosts": [
+            "x.com",
+            "twitter.com"
+          ],
+          "paths": [
+            "/:username",
+            "/:username/*"
+          ]
+        },
+        "title": {
+          "type": "param",
+          "name": "username",
+          "transforms": [
+            {
+              "type": "prepend",
+              "value": "@"
+            }
+          ]
+        },
+        "params": {
+          "username": {
+            "value": {
+              "type": "path",
+              "name": "username"
+            },
+            "pattern": "^\\w{1,15}$",
+            "notIn": [
+              "compose",
+              "explore",
+              "home",
+              "i",
+              "intent",
+              "messages",
+              "notifications",
+              "search",
+              "settings",
+              "share"
+            ]
+          }
+        },
+        "confidence": 0.95
       }
     ],
     "id": "x:user"

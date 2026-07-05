@@ -10,6 +10,10 @@ export interface SourceInstance {
   createdAt: number
 }
 
+export interface SourceInstanceMeta {
+  title?: string
+}
+
 type BoardSourceSource = Omit<SourceDescriptor, "params"> & {
   params?: Record<string, unknown>
 }
@@ -66,6 +70,20 @@ function createBoardSource(source: BoardSourceSource, isLocalOnly: boolean): Boa
   }
 }
 
+function applyInstanceOverrides(
+  source: BoardSource,
+  instance: SourceInstance,
+  sourceInstanceMeta: Record<string, SourceInstanceMeta> = {},
+): BoardSource {
+  const title = sourceInstanceMeta[instance.instanceId]?.title?.trim()
+
+  return {
+    ...source,
+    ...(title ? { title } : {}),
+    paramsValue: instance.params,
+  }
+}
+
 interface MergedBoardSource {
   baseSource: BoardSource
   forkedSources: BoardSource[]
@@ -88,13 +106,14 @@ function buildMergedBoardSources(
   sources: BoardSourceSource[],
   sourceInstances: SourceInstance[],
   isLocalOnly: boolean,
+  sourceInstanceMeta: Record<string, SourceInstanceMeta> = {},
 ): MergedBoardSource[] {
   const instanceMap = new Map(sourceInstances.map(instance => [instance.instanceId, instance]))
   const baseSources = sources.map((source) => {
     const boardSource = createBoardSource(source, isLocalOnly)
     const instance = instanceMap.get(boardSource.id)
     return instance
-      ? { ...boardSource, paramsValue: instance.params }
+      ? applyInstanceOverrides(boardSource, instance, sourceInstanceMeta)
       : boardSource
   })
   const baseSourceMap = Object.fromEntries(baseSources.map(source => [source.sourceId, source]))
@@ -113,13 +132,14 @@ function buildMergedBoardSources(
   return baseSources.map((source) => {
     const forks = (forkGroups.get(source.sourceId) ?? [])
       .sort((a, b) => a.createdAt - b.createdAt)
-      .map(instance => ({
-        ...source,
-        id: instance.instanceId,
-        sourceId: instance.sourceId,
-        paramsValue: instance.params,
-        isFork: true,
-      } satisfies BoardSource))
+      .map((instance) => {
+        return applyInstanceOverrides({
+          ...source,
+          id: instance.instanceId,
+          sourceId: instance.sourceId,
+          isFork: true,
+        }, instance, sourceInstanceMeta)
+      })
 
     return {
       baseSource: source,
@@ -138,13 +158,15 @@ function createBoardSourceResult(visibleSources: BoardSource[]): { ids: string[]
 export function buildAllBoardSources({
   sources,
   sourceInstances,
+  sourceInstanceMeta,
   isLocalOnly = false,
 }: {
   sources: BoardSourceSource[]
   sourceInstances: SourceInstance[]
+  sourceInstanceMeta?: Record<string, SourceInstanceMeta>
   isLocalOnly?: boolean
 }): { ids: string[], map: Record<string, BoardSource> } {
-  const mergedSources = buildMergedBoardSources(sources, sourceInstances, isLocalOnly)
+  const mergedSources = buildMergedBoardSources(sources, sourceInstances, isLocalOnly, sourceInstanceMeta)
 
   return createBoardSourceResult(
     mergedSources.flatMap(({ baseSource, forkedSources }) => [baseSource, ...forkedSources]),
@@ -156,15 +178,17 @@ export function buildBoardSources({
   boardId,
   starredSourceInstanceIds,
   sourceInstances,
+  sourceInstanceMeta,
   isLocalOnly = false,
 }: {
   sources: BoardSourceSource[]
   boardId: BoardType
   starredSourceInstanceIds: string[]
   sourceInstances: SourceInstance[]
+  sourceInstanceMeta?: Record<string, SourceInstanceMeta>
   isLocalOnly?: boolean
 }): { ids: string[], map: Record<string, BoardSource> } {
-  const mergedSources = buildMergedBoardSources(sources, sourceInstances, isLocalOnly)
+  const mergedSources = buildMergedBoardSources(sources, sourceInstances, isLocalOnly, sourceInstanceMeta)
   const featuredSourceMap = new Map(mergedSources.map(source => [source.baseSource.sourceId, source.baseSource]))
   const featuredSources = FEATURED_SOURCE_IDS
     .map(sourceId => featuredSourceMap.get(sourceId))

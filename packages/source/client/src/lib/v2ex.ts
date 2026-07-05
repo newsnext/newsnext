@@ -1,4 +1,4 @@
-import { $selectParam } from "@newsnext/source-shared/utils/params"
+import { $textParam } from "@newsnext/source-shared/utils/params"
 import { $provider, $source } from "@newsnext/source-shared/utils/source"
 
 interface Res {
@@ -24,15 +24,6 @@ interface Res {
   }[]
 }
 
-const FEED_OPTIONS = [
-  { label: "Create", value: "create" },
-  { label: "Ideas", value: "ideas" },
-  { label: "Programmer", value: "programmer" },
-  { label: "Share", value: "share" },
-] as const
-
-type FeedId = (typeof FEED_OPTIONS)[number]["value"]
-
 export default $provider({
   title: "V2EX",
   color: "slate",
@@ -41,11 +32,34 @@ export default $provider({
     $source.json(
       {
         key: "feed",
+        radar: [
+          {
+            id: "v2ex-feed",
+            match: {
+              hosts: ["v2ex.com"],
+              paths: ["/go/:feed"],
+            },
+            title: {
+              type: "value",
+              value: { type: "pageTitle" },
+              transforms: [
+                { type: "normalizeWhitespace" },
+                { type: "extract", pattern: "^.*[>›]\\s*(.+)$" },
+              ],
+              fallback: "{feed}",
+            },
+            params: {
+              feed: { value: { type: "path", name: "feed" }, required: true },
+            },
+            confidence: 0.9,
+          },
+        ],
         params: {
-          feed: $selectParam<FeedId>({
+          feed: $textParam({
             title: "Feed",
-            options: [...FEED_OPTIONS],
             default: "ideas",
+            parse: value => String(value).trim(),
+            validate: value => value.length > 0 || "Feed must not be empty.",
           }),
         },
       },

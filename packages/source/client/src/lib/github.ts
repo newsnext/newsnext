@@ -49,6 +49,25 @@ export default $provider({
         key: "trending",
         title: "Trending",
         type: "hottest",
+        radar: [
+          {
+            id: "github-trending",
+            match: {
+              hosts: ["github.com"],
+              paths: ["/trending", "/trending/:language"],
+            },
+            title: { type: "template", value: "Trending {language}" },
+            params: {
+              language: { type: "path", name: "language" },
+              spokenLanguage: { type: "query", name: "spoken_language_code" },
+              dateRange: {
+                value: { type: "first", values: [{ type: "query", name: "since" }, { type: "literal", value: "daily" }] },
+                in: ["daily", "weekly", "monthly"],
+              },
+            },
+            confidence: 0.95,
+          },
+        ],
         params: {
           language: $textParam({
             title: "Language",

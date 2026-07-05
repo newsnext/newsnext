@@ -13,7 +13,7 @@ import {
   upsertInstanceAtom,
 } from "@/store/board"
 import { CardBack } from "./card-back"
-import { CardFront } from "./card-front"
+import { CardFront, CardRefreshButton } from "./card-front"
 
 const PICTURE_IN_PICTURE_REFRESH_INTERVAL = 1000 * 60
 const PICTURE_IN_PICTURE_SIZE = {
@@ -186,7 +186,7 @@ function CardContent({ id, source, dragHandle }: CardProps) {
               sourceLoginUrl={loginUrl}
               updatedAt={updatedAt}
               onRefresh={refetch}
-              actionsVariant="refresh-only"
+              actions={<CardRefreshButton isFetching={isFetching} onRefresh={refetch} />}
             />
           </div>
         </div>,

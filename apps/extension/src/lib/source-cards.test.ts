@@ -58,6 +58,29 @@ describe("buildBoardSources", () => {
     })
   })
 
+  it("applies source instance title overrides", () => {
+    const boardSources = buildAllBoardSources({
+      sources: testSources,
+      sourceInstances: [
+        {
+          instanceId: "test:feed::fork",
+          sourceId: "test:feed",
+          params: {},
+          isFork: true,
+          createdAt: 1,
+        },
+      ],
+      sourceInstanceMeta: {
+        "test:feed::fork": { title: "Custom Radar Title" },
+      },
+      isLocalOnly: true,
+    })
+
+    expect(boardSources.map["test:feed::fork"]).toMatchObject({
+      title: "Custom Radar Title",
+    })
+  })
+
   it("hides sources that are not configured for the featured board", () => {
     const boardSources = buildBoardSources({
       sources: testSources,

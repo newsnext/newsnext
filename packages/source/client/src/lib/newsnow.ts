@@ -10,6 +10,21 @@ export default $provider({
       {
         key: "topic-latest",
         type: "timeline",
+        radar: [
+          {
+            id: "newsnow-topic",
+            match: {
+              hosts: ["newsnow.com"],
+              paths: ["/:locale/:topic*"],
+            },
+            title: { type: "param", name: "topic" },
+            params: {
+              locale: { value: { type: "path", name: "locale" }, in: ["us", "uk", "ng", "ro", "it", "ca", "au"] },
+              topic: { value: { type: "path", name: "topic" }, required: true },
+            },
+            confidence: 0.85,
+          },
+        ],
         params: {
           locale: $selectParam<"us" | "uk" | "ng" | "ro" | "it" | "ca" | "au">({
             options: [

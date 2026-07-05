@@ -1,6 +1,6 @@
 import type { BoardType } from "@newsnext/shared/types"
 import type { Atom } from "jotai"
-import type { SourceInstance } from "../lib/source-cards"
+import type { SourceInstance, SourceInstanceMeta } from "../lib/source-cards"
 import { atom } from "jotai"
 import { atomWithStorage, selectAtom } from "jotai/utils"
 
@@ -12,6 +12,7 @@ export const STARRED_SOURCE_INSTANCE_IDS_KEY = "newsnext-starred-source-instance
 export const SOURCE_INSTANCES_KEY = "newsnext-source-instances"
 export const starIdsAtom = atomWithStorage<string[]>(STARRED_SOURCE_INSTANCE_IDS_KEY, [])
 export const instancesAtom = atomWithStorage<SourceInstance[]>(SOURCE_INSTANCES_KEY, [])
+export const sourceInstanceMetaAtom = atom<Record<string, SourceInstanceMeta>>({})
 
 const EMPTY_STARRED_INSTANCE_IDS: string[] = []
 
@@ -56,10 +57,32 @@ export const upsertInstanceAtom = atom(null, (_get, set, instance: SourceInstanc
   })
 })
 
+export const setSourceInstanceMetaAtom = atom(null, (_get, set, { instanceId, meta }: { instanceId: string, meta: SourceInstanceMeta }) => {
+  set(sourceInstanceMetaAtom, (prev) => {
+    if (prev[instanceId] === meta) {
+      return prev
+    }
+
+    return {
+      ...prev,
+      [instanceId]: meta,
+    }
+  })
+})
+
 export const deleteInstanceAtom = atom(null, (_get, set, instanceId: string) => {
   set(instancesAtom, (prev) => {
     const next = prev.filter(instance => instance.instanceId !== instanceId)
     return next.length === prev.length ? prev : next
+  })
+  set(sourceInstanceMetaAtom, (prev) => {
+    if (!prev[instanceId]) {
+      return prev
+    }
+
+    const next = { ...prev }
+    delete next[instanceId]
+    return next
   })
   set(starIdsAtom, (prev) => {
     const next = prev.filter(starredInstanceId => starredInstanceId !== instanceId)

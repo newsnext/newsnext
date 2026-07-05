@@ -38,7 +38,7 @@ interface CardFrontProps {
   onOpenPictureInPicture?: () => void
   isPictureInPictureOpen?: boolean
   isPictureInPictureSupported?: boolean
-  actionsVariant?: "default" | "refresh-only"
+  actions?: ReactNode
   dragHandle?: ReactNode
 }
 
@@ -57,6 +57,26 @@ function StarButton({ id }: { id: string }) {
       aria-label="Star"
     >
       {isStarred ? <PhStarFill /> : <PhStarDuotone />}
+    </IconButton>
+  )
+}
+
+export function CardRefreshButton({
+  isFetching,
+  onRefresh,
+}: {
+  isFetching: boolean
+  onRefresh: () => void
+}) {
+  return (
+    <IconButton
+      className={cn(
+        isFetching && "animate-spin",
+      )}
+      onClick={onRefresh}
+      aria-label="Refresh"
+    >
+      {isFetching ? <PhCircleDashedDuotone /> : <PhArrowCounterClockwiseDuotone />}
     </IconButton>
   )
 }
@@ -140,7 +160,7 @@ function CardFrontComponent({
   onOpenPictureInPicture,
   isPictureInPictureOpen = false,
   isPictureInPictureSupported = false,
-  actionsVariant = "default",
+  actions,
   dragHandle,
 }: CardFrontProps) {
   const { type, color, desc, icon, providerTitle, title, home } = source
@@ -169,42 +189,30 @@ function CardFrontComponent({
           providerTitle={providerTitle}
           title={title}
           subtitle={isFetching ? "Updating..." : relativeTime}
-          actions={(
+          actions={actions ?? (
             <>
-              <IconButton
-                className={cn(
-                  isFetching && "animate-spin",
-                )}
-                onClick={onRefresh}
-                aria-label="Refresh"
-              >
-                {isFetching ? <PhCircleDashedDuotone /> : <PhArrowCounterClockwiseDuotone />}
-              </IconButton>
-              {actionsVariant === "default" && (
-                <>
-                  <StarButton id={id} />
-                  {onOpenPictureInPicture && (
-                    <IconButton
-                      onClick={onOpenPictureInPicture}
-                      aria-label={isPictureInPictureOpen ? "Focus picture in picture" : "Open picture in picture"}
-                      title={isPictureInPictureSupported ? "Open picture in picture" : "Picture in picture is not supported"}
-                      disabled={!isPictureInPictureSupported}
-                      className={cn(isPictureInPictureOpen && "opacity-85")}
-                    >
-                      <PhPictureInPictureDuotone />
-                    </IconButton>
-                  )}
-                  {onFlip && (
-                    <IconButton
-                      onClick={onFlip}
-                      aria-label="Datail"
-                    >
-                      <PhInfoDuotone />
-                    </IconButton>
-                  )}
-                  {dragHandle}
-                </>
+              <CardRefreshButton isFetching={isFetching} onRefresh={onRefresh} />
+              <StarButton id={id} />
+              {onOpenPictureInPicture && (
+                <IconButton
+                  onClick={onOpenPictureInPicture}
+                  aria-label={isPictureInPictureOpen ? "Focus picture in picture" : "Open picture in picture"}
+                  title={isPictureInPictureSupported ? "Open picture in picture" : "Picture in picture is not supported"}
+                  disabled={!isPictureInPictureSupported}
+                  className={cn(isPictureInPictureOpen && "opacity-85")}
+                >
+                  <PhPictureInPictureDuotone />
+                </IconButton>
               )}
+              {onFlip && (
+                <IconButton
+                  onClick={onFlip}
+                  aria-label="Datail"
+                >
+                  <PhInfoDuotone />
+                </IconButton>
+              )}
+              {dragHandle}
             </>
           )}
         />

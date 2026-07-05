@@ -67,6 +67,31 @@ export default $provider({
         title: "飙升榜",
         type: "hottest",
         home: getPlaylistHome(DEFAULT_PLAYLIST_ID),
+        radar: [
+          {
+            id: "netease-music-playlist",
+            match: {
+              hosts: ["music.163.com", "y.music.163.com"],
+              includes: ["playlist", "toplist"],
+            },
+            title: {
+              type: "value",
+              value: { type: "pageTitle" },
+              transforms: [
+                { type: "normalizeWhitespace" },
+                { type: "extract", pattern: "^(.+?)\\s*-\\s*(?:歌单|排行榜)\\s*-\\s*网易云音乐$", fallbackToEmpty: true },
+              ],
+              fallback: "Playlist {id}",
+            },
+            params: {
+              id: {
+                value: { type: "first", values: [{ type: "query", name: "id" }, { type: "hashQuery", name: "id" }] },
+                pattern: "^\\d+$",
+              },
+            },
+            confidence: 0.95,
+          },
+        ],
         params: {
           id: $textParam({
             default: DEFAULT_PLAYLIST_ID,

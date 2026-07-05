@@ -60,6 +60,30 @@ export default $provider({
         type: "timeline",
         home: "https://m.weibo.cn",
         secrets: optionalWeiboCookieSecrets,
+        radar: [
+          {
+            id: "weibo-user",
+            match: {
+              hosts: ["m.weibo.cn", "weibo.com"],
+              paths: ["/u/:uid", "/profile/:uid"],
+            },
+            title: {
+              type: "value",
+              value: { type: "pageTitle" },
+              transforms: [
+                { type: "normalizeWhitespace" },
+                { type: "extract", pattern: "^@(.+)\\s*的个人主页" },
+                { type: "replace", pattern: "[-_—|].*微博.*$", replacement: "" },
+                { type: "replace", pattern: "的微博.*$", replacement: "" },
+              ],
+              fallback: "User {uid}",
+            },
+            params: {
+              uid: { value: { type: "path", name: "uid" }, pattern: "^\\d+$" },
+            },
+            confidence: 0.9,
+          },
+        ],
         params: {
           uid: $textParam({
             title: "User ID",
@@ -80,6 +104,20 @@ export default $provider({
         type: "timeline",
         home: "https://m.weibo.cn",
         secrets: optionalWeiboCookieSecrets,
+        radar: [
+          {
+            id: "weibo-keyword",
+            match: { hosts: ["s.weibo.com", "s.m.weibo.cn"] },
+            title: { type: "param", name: "keyword" },
+            params: {
+              keyword: {
+                value: { type: "first", values: [{ type: "query", name: "q" }, { type: "query", name: "keyword" }] },
+                required: true,
+              },
+            },
+            confidence: 0.9,
+          },
+        ],
         params: {
           keyword: $textParam({
             title: "Keyword",
@@ -99,6 +137,31 @@ export default $provider({
         type: "timeline",
         home: "https://m.weibo.cn",
         secrets: optionalWeiboCookieSecrets,
+        radar: [
+          {
+            id: "weibo-super-topic",
+            match: { hosts: ["m.weibo.cn", "weibo.com"] },
+            title: {
+              type: "value",
+              value: { type: "pageTitle" },
+              transforms: [
+                { type: "normalizeWhitespace" },
+                { type: "replace", pattern: "[-_—|].*微博.*$", replacement: "" },
+                { type: "replace", pattern: "的微博.*$", replacement: "" },
+                { type: "extract", pattern: "^#?(.+?)超话#?$" },
+              ],
+              fallback: "{id}",
+            },
+            params: {
+              id: {
+                value: { type: "first", values: [{ type: "query", name: "containerid" }, { type: "hashQuery", name: "containerid" }, { type: "pathSegmentWithPrefix", prefix: "100808" }] },
+                startsWith: "100808",
+              },
+              type: { type: "literal", value: "feed" },
+            },
+            confidence: 0.9,
+          },
+        ],
         params: {
           id: $textParam({
             title: "Super topic ID",
