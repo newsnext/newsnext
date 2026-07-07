@@ -1,11 +1,13 @@
+import type { MotionValue, PanInfo } from "motion/react"
+import type { PointerEvent } from "react"
 import type { RadarContext, RadarSuggestion } from "@/lib/radar"
 import type { SourceInstanceMeta } from "@/lib/source-cards"
 import type { BoardSource } from "@/typings/source"
 import { ButtonPrimitive } from "@newsnext/ui/components/button"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { useSetAtom } from "jotai"
-import { AnimatePresence, motion, useMotionValue, useTransform } from "motion/react"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { motion, useDragControls, useMotionValue, useTransform } from "motion/react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { browser } from "#imports"
 import Card from "@/components/card"
 import { IconButton } from "@/components/common/button"
@@ -21,6 +23,9 @@ import {
 
 const CLIENT_SOURCES = getClientSourceDescriptors()
 const RADAR_SWIPE_THRESHOLD = 90
+const RADAR_SWIPE_VELOCITY_THRESHOLD = 500
+const RADAR_CARD_GAP = 8
+const RADAR_DECK_SPRING = { type: "spring", stiffness: 300, damping: 30 } as const
 
 interface RadarDraftPatch {
   paramsPatch?: Record<string, unknown>
@@ -58,12 +63,62 @@ function RadarSourceCard({ source, className, onDraftSourceChange }: RadarSource
     <Card
       id={source.id}
       source={source}
-      className={className}
+      className={cn(
+        "overflow-hidden rounded-3xl bg-background shadow-sm ring-1 ring-border/40",
+        className,
+      )}
       sizeClassName="h-[30rem] w-full"
       showStar={false}
       isDraft
       onDraftSourceChange={onDraftSourceChange}
     />
+  )
+}
+
+interface RadarTrackCardProps {
+  index: number
+  source: BoardSource
+  trackItemOffset: number
+  x: MotionValue<number>
+  onDragHandlePointerDown: (event: PointerEvent<HTMLDivElement>) => void
+  onDraftSourceChange?: (patch: RadarDraftPatch) => void
+}
+
+const RADAR_CARD_ROTATE_OUTPUT = [-7, 0, 7]
+const RADAR_CARD_Y_OUTPUT = [20, 0, 20]
+
+function RadarTrackCard({
+  index,
+  source,
+  trackItemOffset,
+  x,
+  onDragHandlePointerDown,
+  onDraftSourceChange,
+}: RadarTrackCardProps) {
+  const range = [
+    -(index + 1) * trackItemOffset,
+    -index * trackItemOffset,
+    -(index - 1) * trackItemOffset,
+  ]
+  const rotate = useTransform(x, range, RADAR_CARD_ROTATE_OUTPUT, { clamp: false })
+  const y = useTransform(x, range, RADAR_CARD_Y_OUTPUT, { clamp: false })
+
+  return (
+    <motion.div
+      className="relative h-[30rem] w-full shrink-0 origin-bottom"
+      style={{ rotate, y }}
+    >
+      <div
+        className="h-full w-full"
+        style={{ touchAction: "pan-y" }}
+        onPointerDown={onDragHandlePointerDown}
+      >
+        <RadarSourceCard
+          source={source}
+          onDraftSourceChange={onDraftSourceChange}
+        />
+      </div>
+    </motion.div>
   )
 }
 
@@ -139,27 +194,83 @@ function RadarDeck({ suggestions }: RadarDeckProps) {
   const upsertLocal = useSetAtom(upsertInstanceAtom)
   const starLocal = useSetAtom(starInstanceAtom)
   const [activeIndex, setActiveIndex] = useState(0)
-  const [exitDirection, setExitDirection] = useState(0)
   const [draftPatches, setDraftPatches] = useState<Record<string, RadarDraftPatch>>({})
+  const [trackItemOffset, setTrackItemOffset] = useState(1)
+  const deckRef = useRef<HTMLDivElement>(null)
+  const dragControls = useDragControls()
   const x = useMotionValue(0)
-  const rotate = useTransform(x, [-160, 160], [-7, 7])
 
   useEffect(() => {
     setActiveIndex(0)
-    setExitDirection(0)
     x.set(0)
   }, [suggestions, x])
 
+  useEffect(() => {
+    const deck = deckRef.current
+    if (!deck) {
+      return
+    }
+
+    const updateTrackItemOffset = () => {
+      setTrackItemOffset(Math.max(deck.clientWidth + RADAR_CARD_GAP, 1))
+    }
+
+    updateTrackItemOffset()
+    const resizeObserver = new ResizeObserver(updateTrackItemOffset)
+    resizeObserver.observe(deck)
+
+    return () => {
+      resizeObserver.disconnect()
+    }
+  }, [])
+
   const activeSuggestion = suggestions[activeIndex]
-  const visibleSuggestions = suggestions.slice(activeIndex, activeIndex + 3)
   const activeSource = activeSuggestion ? createRadarBoardSource(activeSuggestion, draftPatches[activeSuggestion.id]) : null
   const canGoPrevious = activeIndex > 0
   const canGoNext = activeIndex < suggestions.length - 1
+  const radarSources = useMemo(() => {
+    return suggestions.map(suggestion => ({
+      suggestion,
+      source: createRadarBoardSource(suggestion, draftPatches[suggestion.id]),
+    }))
+  }, [draftPatches, suggestions])
 
   const moveDeck = useCallback((direction: number) => {
-    setExitDirection(direction)
     setActiveIndex(prev => Math.min(Math.max(prev + direction, 0), suggestions.length - 1))
   }, [suggestions.length])
+
+  const handleDragEnd = useCallback((_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    const shouldMovePrevious = info.offset.x > RADAR_SWIPE_THRESHOLD || info.velocity.x > RADAR_SWIPE_VELOCITY_THRESHOLD
+    const shouldMoveNext = info.offset.x < -RADAR_SWIPE_THRESHOLD || info.velocity.x < -RADAR_SWIPE_VELOCITY_THRESHOLD
+
+    if (shouldMovePrevious && canGoPrevious) {
+      moveDeck(-1)
+      return
+    }
+
+    if (shouldMoveNext && canGoNext) {
+      moveDeck(1)
+    }
+  }, [canGoNext, canGoPrevious, moveDeck])
+
+  const handleDragHandlePointerDown = useCallback((event: PointerEvent<HTMLDivElement>) => {
+    dragControls.start(event)
+  }, [dragControls])
+
+  const dragConstraints = useMemo(() => ({
+    left: -trackItemOffset * Math.max(suggestions.length - 1, 0),
+    right: 0,
+  }), [suggestions.length, trackItemOffset])
+
+  const trackStyle = useMemo(() => ({
+    gap: `${RADAR_CARD_GAP}px`,
+    x,
+    touchAction: "pan-y" as const,
+  }), [x])
+
+  const trackAnimate = useMemo(() => ({
+    x: -(activeIndex * trackItemOffset),
+  }), [activeIndex, trackItemOffset])
 
   const createActiveForkInstance = useCallback(() => {
     if (!activeSuggestion || !activeSource) {
@@ -246,59 +357,33 @@ function RadarDeck({ suggestions }: RadarDeckProps) {
         </div>
       </div>
 
-      <div className="relative h-[31rem] overflow-hidden">
-        {visibleSuggestions.slice(1).map((suggestion, index) => {
-          const source = createRadarBoardSource(suggestion)
-          if (!source) {
-            return null
-          }
-
-          return (
-            <div
-              key={suggestion.id}
-              className="pointer-events-none absolute inset-x-0 top-3 mx-auto w-full max-w-[25rem]"
-              style={{
-                transform: `translateY(${(index + 1) * 12}px) scale(${1 - (index + 1) * 0.05})`,
-                zIndex: 2 - index,
-              }}
-              aria-hidden
-            >
-              <RadarSourceCard
-                source={source}
-              />
-            </div>
-          )
-        })}
-
-        <AnimatePresence mode="popLayout" initial={false}>
+      <div className="flex justify-center overflow-hidden">
+        <div ref={deckRef} className="w-full max-w-[25rem] overflow-hidden py-2">
           <motion.div
-            key={activeSuggestion.id}
-            className="absolute inset-x-0 top-0 z-10 mx-auto w-full max-w-[25rem] cursor-grab active:cursor-grabbing"
-            style={{ x, rotate }}
+            className="flex cursor-grab active:cursor-grabbing"
             drag="x"
-            dragConstraints={{ left: 0, right: 0 }}
+            dragControls={dragControls}
+            dragConstraints={dragConstraints}
             dragElastic={0.4}
-            initial={{ opacity: 0, x: exitDirection >= 0 ? 80 : -80, rotate: exitDirection >= 0 ? 5 : -5 }}
-            animate={{ opacity: 1, x: 0, rotate: 0 }}
-            exit={{ opacity: 0, x: exitDirection >= 0 ? -180 : 180, rotate: exitDirection >= 0 ? -8 : 8 }}
-            transition={{ type: "spring", stiffness: 260, damping: 28 }}
-            onDragEnd={(_, info) => {
-              if (info.offset.x > RADAR_SWIPE_THRESHOLD && canGoPrevious) {
-                moveDeck(-1)
-                return
-              }
-
-              if (info.offset.x < -RADAR_SWIPE_THRESHOLD && canGoNext) {
-                moveDeck(1)
-              }
-            }}
+            dragListener={false}
+            style={trackStyle}
+            animate={trackAnimate}
+            transition={RADAR_DECK_SPRING}
+            onDragEnd={handleDragEnd}
           >
-            <RadarSourceCard
-              source={activeSource}
-              onDraftSourceChange={handleActiveDraftSourceChange}
-            />
+            {radarSources.map(({ suggestion, source }, index) => source && (
+              <RadarTrackCard
+                key={suggestion.id}
+                index={index}
+                source={source}
+                trackItemOffset={trackItemOffset}
+                x={x}
+                onDragHandlePointerDown={handleDragHandlePointerDown}
+                onDraftSourceChange={index === activeIndex ? handleActiveDraftSourceChange : undefined}
+              />
+            ))}
           </motion.div>
-        </AnimatePresence>
+        </div>
       </div>
 
       <div className="flex items-center justify-between gap-3">
