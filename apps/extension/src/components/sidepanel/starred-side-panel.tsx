@@ -3,14 +3,13 @@ import { useMemo } from "react"
 import Card from "@/components/card"
 import { getClientSourceDescriptors } from "@/lib/client-sources"
 import { buildBoardSources } from "@/lib/source-cards"
-import { boardInstancesAtom, boardStarIdsAtom, sourceInstanceMetaAtom } from "@/store/board"
+import { boardInstancesAtom, boardStarIdsAtom } from "@/store/board"
 
 const CLIENT_SOURCES = getClientSourceDescriptors()
 
 export function StarredSidePanel() {
   const starredInstanceIds = useAtomValue(boardStarIdsAtom("stars"))
   const instances = useAtomValue(boardInstancesAtom("stars"))
-  const sourceInstanceMeta = useAtomValue(sourceInstanceMetaAtom)
 
   const { ids: sourceIds, map: sourcesMap } = useMemo(() => {
     return buildBoardSources({
@@ -18,10 +17,9 @@ export function StarredSidePanel() {
       boardId: "stars",
       starredSourceInstanceIds: starredInstanceIds,
       sourceInstances: instances,
-      sourceInstanceMeta,
       isLocalOnly: true,
     })
-  }, [starredInstanceIds, instances, sourceInstanceMeta])
+  }, [starredInstanceIds, instances])
 
   return (
     <main className="grid-texture-background h-screen overflow-y-auto bg-background px-3 py-4 text-foreground sunrise-theme-400">

@@ -109,6 +109,8 @@ export interface SourceRegistration<TParams extends SourceParamSchemaMap = Sourc
   key: string
   title?: string
   params?: TParams
+  paramsSchemaVersion?: number
+  cacheVersion?: number
   color?: Color
   providerTitle?: string
   desc?: string
@@ -131,6 +133,8 @@ export interface SourceDefinition<TParams extends SourceParamSchemaMap = SourceP
   key: string
   title?: string
   params?: TParams
+  paramsSchemaVersion?: number
+  cacheVersion?: number
   color: Color
   desc?: string
   type?: "hottest" | "timeline"

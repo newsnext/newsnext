@@ -17,9 +17,12 @@ const paramsSchema = z.record(z.string(), z.unknown())
 const sourceInstanceInputSchema = z.object({
   instanceId: z.string(),
   sourceId: z.string(),
-  params: paramsSchema,
-  isFork: z.boolean(),
+  paramsPatch: paramsSchema,
+  metaPatch: z.record(z.string(), z.unknown()).optional(),
+  origin: z.enum(["default", "fork"]),
+  originRef: z.unknown().optional(),
   createdAt: z.number().optional(),
+  updatedAt: z.number().optional(),
 })
 
 const saveSourceStateInputSchema = z.object({
@@ -101,9 +104,12 @@ export const appRouter = {
       sourceInstances: instances.map(instance => ({
         instanceId: instance.instanceId,
         sourceId: instance.sourceId,
-        params: instance.params,
-        isFork: instance.isFork,
+        paramsPatch: instance.paramsPatch,
+        metaPatch: instance.metaPatch,
+        origin: instance.origin,
+        originRef: instance.originRef,
         createdAt: instance.createdAt,
+        updatedAt: instance.updatedAt,
       })),
       starredSourceInstanceIds: stars.map(star => star.instanceId),
     }
@@ -125,10 +131,12 @@ export const appRouter = {
             userId,
             instanceId: instance.instanceId,
             sourceId: instance.sourceId,
-            params: instance.params,
-            isFork: instance.isFork,
+            paramsPatch: instance.paramsPatch,
+            metaPatch: instance.metaPatch,
+            origin: instance.origin,
+            originRef: instance.originRef,
             createdAt: instance.createdAt ?? now,
-            updatedAt: now,
+            updatedAt: instance.updatedAt ?? now,
           })))
         }
 
@@ -155,17 +163,21 @@ export const appRouter = {
         userId,
         instanceId: input.instanceId,
         sourceId: input.sourceId,
-        params: input.params,
-        isFork: input.isFork,
+        paramsPatch: input.paramsPatch,
+        metaPatch: input.metaPatch,
+        origin: input.origin,
+        originRef: input.originRef,
         createdAt: input.createdAt ?? now,
-        updatedAt: now,
+        updatedAt: input.updatedAt ?? now,
       }).onConflictDoUpdate({
         target: [userSourceInstances.userId, userSourceInstances.instanceId],
         set: {
           sourceId: input.sourceId,
-          params: input.params,
-          isFork: input.isFork,
-          updatedAt: now,
+          paramsPatch: input.paramsPatch,
+          metaPatch: input.metaPatch,
+          origin: input.origin,
+          originRef: input.originRef,
+          updatedAt: input.updatedAt ?? now,
         },
       })
 
@@ -211,22 +223,12 @@ export const appRouter = {
     .handler(async ({ input, context }) => {
       const userId = context.session.user.id
       const db = context.db
-      const [instance] = await db
-        .select()
-        .from(userSourceInstances)
+      await db.update(userSourceInstances)
+        .set({
+          paramsPatch: {},
+          updatedAt: Date.now(),
+        })
         .where(and(eq(userSourceInstances.userId, userId), eq(userSourceInstances.instanceId, input.instanceId)))
-        .limit(1)
-
-      if (instance?.isFork) {
-        await db.update(userSourceInstances)
-          .set({
-            params: {},
-            updatedAt: Date.now(),
-          })
-          .where(and(eq(userSourceInstances.userId, userId), eq(userSourceInstances.instanceId, input.instanceId)))
-      } else {
-        await db.delete(userSourceInstances).where(and(eq(userSourceInstances.userId, userId), eq(userSourceInstances.instanceId, input.instanceId)))
-      }
 
       return { ok: true }
     }),

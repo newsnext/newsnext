@@ -4,7 +4,7 @@ import { useAtom, useAtomValue } from "jotai"
 import { useCallback, useMemo, useState } from "react"
 import { getClientSourceDescriptors } from "@/lib/client-sources"
 import { buildBoardSources } from "@/lib/source-cards"
-import { boardInstancesAtom, boardStarIdsAtom, pendingForkFocusAtom, sourceInstanceMetaAtom } from "@/store/board"
+import { boardInstancesAtom, boardStarIdsAtom, pendingForkFocusAtom } from "@/store/board"
 import { DesktopBoard } from "./desktop-board"
 
 const EMPTY_SOURCE_IDS: string[] = []
@@ -38,7 +38,6 @@ export function NowLayer({
   const sourceIdOrder = sourceIdOrderState?.boardId === boardId ? sourceIdOrderState.ids : null
   const starredInstanceIds = useAtomValue(boardStarIdsAtom(boardId))
   const instances = useAtomValue(boardInstancesAtom(boardId))
-  const sourceInstanceMeta = useAtomValue(sourceInstanceMetaAtom)
   const sources = CLIENT_SOURCES
 
   const { ids: boardSourceIds, map: sourcesMap } = useMemo(() => {
@@ -51,10 +50,9 @@ export function NowLayer({
       boardId,
       starredSourceInstanceIds: starredInstanceIds,
       sourceInstances: instances,
-      sourceInstanceMeta,
       isLocalOnly: true,
     })
-  }, [sources, boardId, starredInstanceIds, instances, sourceInstanceMeta])
+  }, [sources, boardId, starredInstanceIds, instances])
 
   const sourceIds = useMemo(() => {
     if (!sourceIdOrder) {

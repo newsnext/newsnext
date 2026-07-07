@@ -1,9 +1,11 @@
+import { normalizeSourceParams, resolveSource } from "@newsnext/client-source/service"
 import { useIsFetching, useQueryClient } from "@tanstack/react-query"
 import { useStore } from "jotai"
 import { useCallback } from "react"
+import { buildClientSourceCacheKey } from "@/lib/client-source-loader"
 import { getClientSourceDescriptors } from "@/lib/client-sources"
-import { buildBoardSources, buildSourceRequestKey } from "@/lib/source-cards"
-import { getSavedSourceParamValues } from "@/lib/source-params"
+import { buildBoardSources } from "@/lib/source-cards"
+import { sanitizeSourceParamValues } from "@/lib/source-params"
 import { boardInstancesAtom, boardStarIdsAtom, currentBoardAtom } from "@/store/board"
 
 const latestSourceRefreshKeys = new Set<string>()
@@ -15,7 +17,9 @@ export interface RefetchTarget {
 }
 
 function getLatestSourceRefreshKey(target: RefetchTarget): string {
-  return buildSourceRequestKey(target.sourceId, target.params ?? {})
+  const source = resolveSource(target.sourceId)
+  const params = normalizeSourceParams(source, target.params ?? {})
+  return buildClientSourceCacheKey(target.sourceId, source.cacheVersion ?? 1, params)
 }
 
 function markLatestSourceRefresh(target: RefetchTarget): void {
@@ -48,7 +52,7 @@ export function useSourceRefetch() {
         await Promise.all(
           uniqueTargets.map(target =>
             queryClient.invalidateQueries({
-              queryKey: [...CLIENT_SOURCE_QUERY_KEY, target.sourceId, target.params ?? {}],
+              queryKey: [...CLIENT_SOURCE_QUERY_KEY, getLatestSourceRefreshKey(target)],
             }),
           ),
         )
@@ -88,7 +92,7 @@ export function useRefetch() {
         const source = boardSources.map[id]
         return {
           sourceId: source.sourceId,
-          params: source.paramsValue ?? getSavedSourceParamValues(source.id, source.params),
+          params: sanitizeSourceParamValues(source.paramsValue, source.params),
         } satisfies RefetchTarget
       })
       const uniqueTargets = [...new Map(
@@ -100,7 +104,7 @@ export function useRefetch() {
       await Promise.all(
         uniqueTargets.map(target =>
           queryClient.invalidateQueries({
-            queryKey: [...CLIENT_SOURCE_QUERY_KEY, target.sourceId, target.params ?? {}],
+            queryKey: [...CLIENT_SOURCE_QUERY_KEY, getLatestSourceRefreshKey(target)],
           }),
         ),
       )

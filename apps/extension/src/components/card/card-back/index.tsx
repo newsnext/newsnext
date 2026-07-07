@@ -1,5 +1,6 @@
 import type { ReactNode } from "react"
 import type { SourceEditDraft } from "./types"
+import type { SourceInstanceMeta } from "@/lib/source-cards"
 import type { BoardSource } from "@/typings/source"
 import { getFavicon } from "@newsnext/shared/utils"
 import { Button } from "@newsnext/ui/components/button"
@@ -30,7 +31,9 @@ export interface CardBackProps {
   onSaveSourceParams: () => void
   onResetSourceParams: () => void
   onDiscardSourceParams: () => void
+  onSaveSourceMeta: (meta: SourceInstanceMeta) => void
   onFlip: () => void
+  isDraft?: boolean
   dragHandle?: ReactNode
 }
 
@@ -46,20 +49,32 @@ export function CardBack({
   onSaveSourceParams,
   onResetSourceParams,
   onDiscardSourceParams,
+  onSaveSourceMeta,
   onFlip,
+  isDraft = false,
   dragHandle,
 }: CardBackProps) {
-  const isFork = source.isFork
+  const isCustom = source.isCustom
 
   const { desc, color, params, icon, providerTitle, title, home } = source
   const [editDraft, setEditDraft] = useState<SourceEditDraft | null>(null)
-  const canEdit = isFork && editDraft !== null
+  const canEdit = isCustom && editDraft !== null
   const previewProviderTitle = canEdit ? editDraft.providerTitle : providerTitle
   const previewTitle = canEdit ? editDraft.title : title
   const previewDesc = canEdit ? editDraft.desc : desc
   const previewHome = canEdit ? editDraft.home : home
   const previewColor = canEdit ? editDraft.color : color
   const relativeTime = useRelativeTime({ date: updatedAt })
+  const hasSourceMetaChanges = Boolean(
+    editDraft
+    && (
+      editDraft.providerTitle !== providerTitle
+      || editDraft.title !== title
+      || editDraft.desc !== desc
+      || editDraft.home !== home
+      || editDraft.color !== color
+    ),
+  )
 
   function createEditDraft(): SourceEditDraft {
     return {
@@ -72,7 +87,7 @@ export function CardBack({
   }
 
   function toggleEdit(): void {
-    if (!isFork) {
+    if (!isCustom) {
       return
     }
 
@@ -81,6 +96,19 @@ export function CardBack({
 
   function updateEditDraft(patch: Partial<SourceEditDraft>): void {
     setEditDraft(prev => prev ? { ...prev, ...patch } : prev)
+  }
+
+  function discardEditDraft(): void {
+    setEditDraft(createEditDraft())
+  }
+
+  function saveEditDraft(): void {
+    if (!editDraft) {
+      return
+    }
+
+    onSaveSourceMeta(editDraft)
+    setEditDraft(null)
   }
 
   return (
@@ -105,22 +133,22 @@ export function CardBack({
           subtitle={previewDesc || relativeTime}
           actions={(
             <>
-              <ForkButton id={id} source={source} sourceParams={sourceParams} />
+              {!isDraft && <ForkButton id={id} source={source} sourceParams={sourceParams} />}
               <IconButton
                 onClick={(e) => {
                   e.stopPropagation()
-                  if (!isFork) {
+                  if (!isCustom) {
                     return
                   }
 
                   toggleEdit()
                 }}
                 aria-label="Edit"
-                title={isFork ? "Edit" : "Only forked cards can be edited"}
+                title={isCustom ? "Edit" : "Only custom cards can be edited"}
               >
-                <PhPencilCircleDuotone className={cn(canEdit && "text-primary", !isFork && "opacity-40")} />
+                <PhPencilCircleDuotone className={cn(canEdit && "text-primary", !isCustom && "opacity-40")} />
               </IconButton>
-              <DeleteForkButton id={id} isFork={isFork} />
+              {!isDraft && <DeleteForkButton id={id} isCustom={isCustom} />}
               <IconButton
                 onClick={(e) => {
                   e.stopPropagation()
@@ -151,7 +179,7 @@ export function CardBack({
               className="px-3 py-2 space-y-4"
               onDoubleClick={(e) => {
                 e.stopPropagation() // Prevent flip on double click if that's a thing
-                if (!isFork) {
+                if (!isCustom) {
                   return
                 }
 
@@ -159,8 +187,37 @@ export function CardBack({
               }}
             >
               <div className="flex flex-col text-sm">
-                <div className="mb-2">
+                <div className="mb-2 flex items-start justify-between">
                   <span className="inline-block font-semibold opacity-80">Information</span>
+                  {canEdit && (
+                    <div className="flex gap-1.5">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={!hasSourceMetaChanges}
+                        className={cn(`h-6 px-2 bg-${previewColor}-500/10 hover:bg-${previewColor}-500/20 text-${previewColor}-600 border-${previewColor}-200`)}
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          discardEditDraft()
+                        }}
+                      >
+                        Revert
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        disabled={!hasSourceMetaChanges}
+                        className="h-6 px-2"
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          saveEditDraft()
+                        }}
+                      >
+                        Save
+                      </Button>
+                    </div>
+                  )}
                 </div>
                 <Info label="Provider Title">
                   <EditableInput text={previewProviderTitle} editable={canEdit} onChange={value => updateEditDraft({ providerTitle: value })} />

@@ -3,10 +3,12 @@ import type { ClientSourceLoadResult } from "./client-source-loader"
 import { openDB } from "idb"
 
 const SOURCE_CACHE_DATABASE_NAME = "newsnext-extension-source-cache"
-const SOURCE_CACHE_DATABASE_VERSION = 1
+const SOURCE_CACHE_DATABASE_VERSION = 2
 const SOURCE_CACHE_STORE_NAME = "source-results"
 
-export interface ClientSourceCacheEntry extends ClientSourceLoadResult {
+export type ClientSourceCacheValue = Omit<ClientSourceLoadResult, "key">
+
+export interface ClientSourceCacheEntry extends ClientSourceCacheValue {
   cachedAt: number
   usedAt: number
 }
@@ -36,9 +38,11 @@ function openSourceCacheDatabase(): Promise<IDBPDatabase<SourceCacheDatabase> | 
     SOURCE_CACHE_DATABASE_VERSION,
     {
       upgrade(database) {
-        if (!database.objectStoreNames.contains(SOURCE_CACHE_STORE_NAME)) {
-          database.createObjectStore(SOURCE_CACHE_STORE_NAME, { keyPath: "key" })
+        if (database.objectStoreNames.contains(SOURCE_CACHE_STORE_NAME)) {
+          database.deleteObjectStore(SOURCE_CACHE_STORE_NAME)
         }
+
+        database.createObjectStore(SOURCE_CACHE_STORE_NAME)
       },
     },
   )
@@ -67,11 +71,14 @@ export async function readCachedClientSource(
     await objectStore.put({
       ...entry,
       usedAt: now,
-    })
+    }, key)
     await transaction.done
 
     const { cachedAt: _cachedAt, usedAt: _usedAt, ...result } = entry
-    return result
+    return {
+      ...result,
+      key,
+    }
   } catch {
     return undefined
   }
@@ -87,11 +94,13 @@ export async function writeCachedClientSource(
       return
     }
 
+    const { key, ...value } = result
+
     await database.put(SOURCE_CACHE_STORE_NAME, {
-      ...result,
+      ...value,
       cachedAt: now,
       usedAt: now,
-    })
+    }, key)
   } catch {
     // Cache writes should never block source loading.
   }

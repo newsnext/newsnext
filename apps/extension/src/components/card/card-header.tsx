@@ -37,7 +37,7 @@ export function CardHeader({
       <div className="flex gap-2.5 items-center ml-1 min-w-0 flex-1">
         <button
           type="button"
-          className="size-8 shrink-0 rounded-full"
+          className="size-8 shrink-0 rounded-full cursor-pointer"
           title={desc || providerTitle}
           onClick={() => window.open(home || "#", "_blank")}
         >
@@ -77,7 +77,7 @@ export function CardHeader({
               </span>
             )}
           </div>
-          <span className="text-xs opacity-70">
+          <span className="text-xs opacity-70 max-w-full truncate">
             {subtitle}
           </span>
         </div>

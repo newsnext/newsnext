@@ -1,12 +1,8 @@
 import type { SourceParamSchema } from "@newsnext/client-source/typings"
 
-export const SOURCE_PARAMS_STORAGE_PREFIX = "newsnext-source-params"
+const SOURCE_PARAMS_STORAGE_PREFIX = "newsnext-source-params"
 
 export type SourceParamValues = Record<string, unknown>
-
-export function getSourceParamsStorageKey(instanceId: string): string {
-  return `${SOURCE_PARAMS_STORAGE_PREFIX}/${instanceId}`
-}
 
 export function getDefaultSourceParamValues(params?: Record<string, SourceParamSchema>): SourceParamValues {
   if (!params) {
@@ -37,43 +33,13 @@ export function sanitizeSourceParamValues(
   )
 }
 
-export function readStoredSourceParamValues(instanceId: string): SourceParamValues | undefined {
-  if (typeof window === "undefined") {
-    return undefined
-  }
-
-  const stored = window.localStorage.getItem(getSourceParamsStorageKey(instanceId))
-  if (!stored) {
-    return undefined
-  }
-
-  try {
-    return JSON.parse(stored) as SourceParamValues
-  } catch {
-    window.localStorage.removeItem(getSourceParamsStorageKey(instanceId))
-    return undefined
-  }
-}
-
-export function getSavedSourceParamValues(
-  instanceId: string,
-  params?: Record<string, SourceParamSchema>,
-): SourceParamValues {
-  return sanitizeSourceParamValues(readStoredSourceParamValues(instanceId), params)
-}
-
-export function writeStoredSourceParamValues(instanceId: string, values: SourceParamValues): void {
+export function clearStoredSourceParamValues(): void {
   if (typeof window === "undefined") {
     return
   }
 
-  window.localStorage.setItem(getSourceParamsStorageKey(instanceId), JSON.stringify(values))
-}
+  const keys = Array.from({ length: window.localStorage.length }, (_, index) => window.localStorage.key(index))
+    .filter((key): key is string => Boolean(key?.startsWith(`${SOURCE_PARAMS_STORAGE_PREFIX}/`)))
 
-export function deleteStoredSourceParamValues(instanceId: string): void {
-  if (typeof window === "undefined") {
-    return
-  }
-
-  window.localStorage.removeItem(getSourceParamsStorageKey(instanceId))
+  keys.forEach(key => window.localStorage.removeItem(key))
 }

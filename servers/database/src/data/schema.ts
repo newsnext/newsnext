@@ -66,8 +66,10 @@ export const userSourceInstances = sqliteTable("user_source_instances", {
   userId: text().notNull().references(() => user.id, { onDelete: "cascade" }),
   instanceId: text().notNull(),
   sourceId: text().notNull(),
-  params: text({ mode: "json" }).$type<Record<string, unknown>>().notNull(),
-  isFork: integer({ mode: "boolean" }).notNull().default(false),
+  paramsPatch: text("params_patch", { mode: "json" }).$type<Record<string, unknown>>().notNull(),
+  metaPatch: text("meta_patch", { mode: "json" }).$type<Record<string, unknown> | undefined>(),
+  origin: text().$type<"default" | "fork">().notNull(),
+  originRef: text("origin_ref", { mode: "json" }).$type<unknown>(),
   createdAt: integer().notNull(),
   updatedAt: integer().notNull(),
 }, table => [

@@ -12,7 +12,6 @@ export const STARRED_SOURCE_INSTANCE_IDS_KEY = "newsnext-starred-source-instance
 export const SOURCE_INSTANCES_KEY = "newsnext-source-instances"
 export const starIdsAtom = atomWithStorage<string[]>(STARRED_SOURCE_INSTANCE_IDS_KEY, [])
 export const instancesAtom = atomWithStorage<SourceInstance[]>(SOURCE_INSTANCES_KEY, [])
-export const sourceInstanceMetaAtom = atom<Record<string, SourceInstanceMeta>>({})
 
 const EMPTY_STARRED_INSTANCE_IDS: string[] = []
 
@@ -27,9 +26,15 @@ function areInstanceArraysEqual(a: SourceInstance[], b: SourceInstance[]): boole
 function areInstancesEqual(a: SourceInstance, b: SourceInstance): boolean {
   return a.instanceId === b.instanceId
     && a.sourceId === b.sourceId
-    && a.isFork === b.isFork
+    && a.origin === b.origin
     && a.createdAt === b.createdAt
-    && a.params === b.params
+    && a.updatedAt === b.updatedAt
+    && a.paramsPatch === b.paramsPatch
+    && a.metaPatch === b.metaPatch
+}
+
+function removeTemporarySourceIds(starredInstanceIds: string[]): string[] {
+  return starredInstanceIds.filter(instanceId => !instanceId.startsWith("tmp:"))
 }
 
 export const replaceInstancesAtom = atom(null, (_get, set, instances: SourceInstance[]) => {
@@ -37,7 +42,15 @@ export const replaceInstancesAtom = atom(null, (_get, set, instances: SourceInst
 })
 
 export const replaceStarIdsAtom = atom(null, (_get, set, starredInstanceIds: string[]) => {
-  set(starIdsAtom, starredInstanceIds)
+  set(starIdsAtom, removeTemporarySourceIds(starredInstanceIds))
+})
+
+export const cleanTemporaryStarIdsAtom = atom(null, (get, set) => {
+  const starredInstanceIds = get(starIdsAtom)
+  const nextStarredInstanceIds = removeTemporarySourceIds(starredInstanceIds)
+  if (!areStringArraysEqual(starredInstanceIds, nextStarredInstanceIds)) {
+    set(starIdsAtom, nextStarredInstanceIds)
+  }
 })
 
 export const upsertInstanceAtom = atom(null, (_get, set, instance: SourceInstance) => {
@@ -53,21 +66,26 @@ export const upsertInstanceAtom = atom(null, (_get, set, instance: SourceInstanc
       return prev
     }
 
-    return prev.map(currentInstance => currentInstance.instanceId === instance.instanceId ? instance : currentInstance)
+    return prev.map(currentInstance =>
+      currentInstance.instanceId === instance.instanceId
+        ? { ...instance, createdAt: currentInstance.createdAt }
+        : currentInstance,
+    )
   })
 })
 
 export const setSourceInstanceMetaAtom = atom(null, (_get, set, { instanceId, meta }: { instanceId: string, meta: SourceInstanceMeta }) => {
-  set(sourceInstanceMetaAtom, (prev) => {
-    if (prev[instanceId] === meta) {
-      return prev
+  set(instancesAtom, prev => prev.map((instance) => {
+    if (instance.instanceId !== instanceId) {
+      return instance
     }
 
     return {
-      ...prev,
-      [instanceId]: meta,
+      ...instance,
+      metaPatch: meta,
+      updatedAt: Date.now(),
     }
-  })
+  }))
 })
 
 export const deleteInstanceAtom = atom(null, (_get, set, instanceId: string) => {
@@ -75,33 +93,19 @@ export const deleteInstanceAtom = atom(null, (_get, set, instanceId: string) => 
     const next = prev.filter(instance => instance.instanceId !== instanceId)
     return next.length === prev.length ? prev : next
   })
-  set(sourceInstanceMetaAtom, (prev) => {
-    if (!prev[instanceId]) {
-      return prev
-    }
-
-    const next = { ...prev }
-    delete next[instanceId]
-    return next
-  })
   set(starIdsAtom, (prev) => {
     const next = prev.filter(starredInstanceId => starredInstanceId !== instanceId)
     return next.length === prev.length ? prev : next
   })
 })
 
-export const resetInstanceParamsAtom = atom(null, (_get, set, { instanceId, isFork }: { instanceId: string, isFork: boolean }) => {
+export const resetInstanceParamsAtom = atom(null, (_get, set, instanceId: string) => {
   set(instancesAtom, (prev) => {
-    if (!isFork) {
-      const next = prev.filter(instance => instance.instanceId !== instanceId)
-      return next.length === prev.length ? prev : next
-    }
-
     let didReset = false
     const next = prev.map((instance) => {
-      if (instance.instanceId === instanceId && Object.keys(instance.params).length > 0) {
+      if (instance.instanceId === instanceId && Object.keys(instance.paramsPatch).length > 0) {
         didReset = true
-        return { ...instance, params: {} }
+        return { ...instance, paramsPatch: {}, updatedAt: Date.now() }
       }
 
       return instance
@@ -112,14 +116,26 @@ export const resetInstanceParamsAtom = atom(null, (_get, set, { instanceId, isFo
 })
 
 export const starInstanceAtom = atom(null, (_get, set, { instanceId, starred }: { instanceId: string, starred: boolean }) => {
+  if (instanceId.startsWith("tmp:")) {
+    return
+  }
+
   set(starIdsAtom, (prev) => {
     const isAlreadyStarred = prev.includes(instanceId)
 
     if (starred) {
-      return isAlreadyStarred ? prev : [...prev, instanceId]
+      if (isAlreadyStarred) {
+        return prev
+      }
+
+      return [...prev, instanceId]
     }
 
-    return isAlreadyStarred ? prev.filter(starredInstanceId => starredInstanceId !== instanceId) : prev
+    if (!isAlreadyStarred) {
+      return prev
+    }
+
+    return prev.filter(starredInstanceId => starredInstanceId !== instanceId)
   })
 })
 
@@ -144,12 +160,8 @@ function createBoardInstancesAtom(boardId: BoardType): Atom<SourceInstance[]> {
   return selectAtom(
     instancesAtom,
     (instances) => {
-      if (boardId === "featured") {
-        return instances.filter(instance => !instance.isFork)
-      }
-
       if (boardId === "forks") {
-        return instances.filter(instance => instance.isFork)
+        return instances
       }
 
       return instances

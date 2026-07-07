@@ -1,6 +1,7 @@
+import type { SourceInstance } from "./source-cards"
 import type { SourceDescriptor } from "@/typings/source"
 import { describe, expect, it } from "vitest"
-import { buildAllBoardSources, buildBoardSources, FEATURED_SOURCE_IDS } from "./source-cards"
+import { buildAllBoardSources, buildBoardSources, FEATURED_SOURCE_IDS, getDefaultSourceInstanceId } from "./source-cards"
 
 const testSources: SourceDescriptor[] = [
   {
@@ -19,6 +20,18 @@ const testSources: SourceDescriptor[] = [
   },
 ]
 
+function createCustomInstance(patch: Partial<SourceInstance> = {}): SourceInstance {
+  return {
+    instanceId: "test:feed::fork_abc",
+    sourceId: "test:feed",
+    paramsPatch: {},
+    origin: "fork",
+    createdAt: 1,
+    updatedAt: 1,
+    ...patch,
+  }
+}
+
 describe("buildBoardSources", () => {
   it("shows every base source when building the all-sources list", () => {
     const boardSources = buildAllBoardSources({
@@ -27,32 +40,28 @@ describe("buildBoardSources", () => {
       isLocalOnly: true,
     })
 
-    expect(boardSources.ids).toEqual(["test:feed", "test:latest"])
-    expect(boardSources.map["test:feed"]).toMatchObject({
-      isFork: false,
+    expect(boardSources.ids).toEqual(["test:feed::default", "test:latest::default"])
+    expect(boardSources.map["test:feed::default"]).toMatchObject({
+      isCustom: false,
+      origin: "default",
       isLocalOnly: true,
       sourceId: "test:feed",
     })
   })
 
-  it("includes forks in the all-sources list", () => {
+  it("includes custom instances in the all-sources list", () => {
     const boardSources = buildAllBoardSources({
       sources: testSources,
       sourceInstances: [
-        {
-          instanceId: "test:feed::fork",
-          sourceId: "test:feed",
-          params: { topic: "custom" },
-          isFork: true,
-          createdAt: 1,
-        },
+        createCustomInstance({ paramsPatch: { topic: "custom" } }),
       ],
       isLocalOnly: true,
     })
 
-    expect(boardSources.ids).toEqual(["test:feed", "test:feed::fork", "test:latest"])
-    expect(boardSources.map["test:feed::fork"]).toMatchObject({
-      isFork: true,
+    expect(boardSources.ids).toEqual(["test:feed::default", "test:feed::fork_abc", "test:latest::default"])
+    expect(boardSources.map["test:feed::fork_abc"]).toMatchObject({
+      isCustom: true,
+      origin: "fork",
       paramsValue: { topic: "custom" },
       sourceId: "test:feed",
     })
@@ -62,22 +71,41 @@ describe("buildBoardSources", () => {
     const boardSources = buildAllBoardSources({
       sources: testSources,
       sourceInstances: [
-        {
-          instanceId: "test:feed::fork",
-          sourceId: "test:feed",
-          params: {},
-          isFork: true,
-          createdAt: 1,
-        },
+        createCustomInstance({
+          metaPatch: { title: "Custom Radar Title" },
+        }),
       ],
-      sourceInstanceMeta: {
-        "test:feed::fork": { title: "Custom Radar Title" },
-      },
       isLocalOnly: true,
     })
 
-    expect(boardSources.map["test:feed::fork"]).toMatchObject({
+    expect(boardSources.map["test:feed::fork_abc"]).toMatchObject({
       title: "Custom Radar Title",
+    })
+  })
+
+  it("applies source instance metadata overrides", () => {
+    const boardSources = buildAllBoardSources({
+      sources: testSources,
+      sourceInstances: [
+        createCustomInstance({
+          metaPatch: {
+            providerTitle: "Custom Provider",
+            title: "Custom Title",
+            desc: "Custom description",
+            home: "https://custom.example.com",
+            color: "red",
+          },
+        }),
+      ],
+      isLocalOnly: true,
+    })
+
+    expect(boardSources.map["test:feed::fork_abc"]).toMatchObject({
+      providerTitle: "Custom Provider",
+      title: "Custom Title",
+      desc: "Custom description",
+      home: "https://custom.example.com",
+      color: "red",
     })
   })
 
@@ -107,33 +135,31 @@ describe("buildBoardSources", () => {
         isLocalOnly: true,
       })
 
-      expect(boardSources.ids).toEqual(["test:latest", "test:feed"])
+      expect(boardSources.ids).toEqual(["test:latest::default", "test:feed::default"])
     } finally {
       FEATURED_SOURCE_IDS.splice(0, FEATURED_SOURCE_IDS.length, ...originalFeaturedSourceIds)
     }
   })
 
-  it("marks local-only base and forked sources", () => {
+  it("marks local-only base and custom sources", () => {
     const boardSources = buildBoardSources({
       sources: testSources,
       boardId: "forks",
       starredSourceInstanceIds: [],
       sourceInstances: [
-        {
-          instanceId: "test:feed::fork",
-          sourceId: "test:feed",
-          params: {},
-          isFork: true,
-          createdAt: 1,
-        },
+        createCustomInstance(),
       ],
       isLocalOnly: true,
     })
 
-    expect(boardSources.map["test:feed::fork"]).toMatchObject({
-      isFork: true,
+    expect(boardSources.map["test:feed::fork_abc"]).toMatchObject({
+      isCustom: true,
       isLocalOnly: true,
       sourceId: "test:feed",
     })
+  })
+
+  it("uses stable default instance ids for source templates", () => {
+    expect(getDefaultSourceInstanceId("test:feed")).toBe("test:feed::default")
   })
 })

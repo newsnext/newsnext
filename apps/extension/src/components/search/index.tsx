@@ -16,7 +16,7 @@ import { useEffect, useMemo, useState } from "react"
 import { getClientSourceDescriptors } from "@/lib/client-sources"
 import { buildAllBoardSources } from "@/lib/source-cards"
 import { cn } from "@/lib/utils"
-import { boardInstancesAtom, boardStarIdsAtom, sourceInstanceMetaAtom } from "@/store/board"
+import { boardInstancesAtom, boardStarIdsAtom } from "@/store/board"
 import Card from "../card"
 import { PhForkDuotone, PhMagnifyingGlass, PhStarFill } from "../icons/ph"
 import "./index.css"
@@ -29,7 +29,7 @@ interface SearchItem {
   source: BoardSource
   providerTitle: string
   title?: string
-  isFork: boolean
+  isCustom: boolean
   isStarred: boolean
 }
 
@@ -115,7 +115,6 @@ function SearchDialogContent(): ReactNode {
   const [selectedItemId, setSelectedItemId] = useState("")
   const starredInstanceIds = useAtomValue(boardStarIdsAtom("stars"))
   const instances = useAtomValue(boardInstancesAtom("stars"))
-  const sourceInstanceMeta = useAtomValue(sourceInstanceMetaAtom)
   const sources = CLIENT_SOURCES
 
   const searchItems = useMemo<SearchItem[]>(() => {
@@ -126,7 +125,6 @@ function SearchDialogContent(): ReactNode {
     const allSourcesBoard = buildAllBoardSources({
       sources,
       sourceInstances: instances,
-      sourceInstanceMeta,
       isLocalOnly: true,
     })
 
@@ -135,15 +133,15 @@ function SearchDialogContent(): ReactNode {
 
       return {
         id,
-        category: `${categories[source.category]}${source.isFork ? " / Forked" : ""}`,
+        category: `${categories[source.category]}${source.isCustom ? " / Custom" : ""}`,
         source,
         providerTitle: source.providerTitle,
         title: source.title,
-        isFork: source.isFork,
+        isCustom: source.isCustom,
         isStarred: starredInstanceIds.includes(id),
       } satisfies SearchItem
     })
-  }, [sources, starredInstanceIds, instances, sourceInstanceMeta])
+  }, [sources, starredInstanceIds, instances])
 
   const searchGroups = useMemo(() => groupSearchItems(searchItems), [searchItems])
   const selectedItem = useMemo(
@@ -187,7 +185,7 @@ function SearchDialogContent(): ReactNode {
                     item.providerTitle,
                     item.title ?? "",
                     item.category,
-                    item.isFork ? "fork forked custom" : "featured recommend",
+                    item.isCustom ? "fork radar custom" : "featured recommend",
                     item.isStarred ? "star starred" : "",
                   ]}
                 >
@@ -205,7 +203,7 @@ function SearchDialogContent(): ReactNode {
                     </span>
                   </span>
                   <span className="ml-auto flex shrink-0 items-center gap-2 text-neutral-400/80">
-                    {item.isFork && <PhForkDuotone />}
+                    {item.isCustom && <PhForkDuotone />}
                     {item.isStarred && <PhStarFill />}
                   </span>
                 </CommandItem>

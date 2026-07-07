@@ -17,36 +17,26 @@ describe("board store selectors", () => {
     expect(boardStarIdsAtom("stars")).toBe(boardStarIdsAtom("stars"))
   })
 
-  it("does not notify featured board subscribers when only fork instances change", () => {
+  it("exposes custom instances to board selectors", () => {
     const store = createStore()
-    const featuredInstancesAtom = boardInstancesAtom("featured")
-    const baseInstance = {
-      instanceId: "github",
+    const instancesSelectorAtom = boardInstancesAtom("forks")
+    const customInstance = {
+      instanceId: "github::fork_abc",
       sourceId: "github",
-      params: {},
-      isFork: false,
-      createdAt: 1,
-    }
-    const forkInstance = {
-      instanceId: "github::fork:abc",
-      sourceId: "github",
-      params: { tag: "react" },
-      isFork: true,
+      paramsPatch: { tag: "react" },
+      origin: "fork" as const,
       createdAt: 2,
+      updatedAt: 2,
     }
     let notificationCount = 0
 
-    const unsubscribe = store.sub(featuredInstancesAtom, () => {
+    const unsubscribe = store.sub(instancesSelectorAtom, () => {
       notificationCount += 1
     })
 
-    store.set(instancesAtom, [baseInstance])
+    store.set(instancesAtom, [customInstance])
     expect(notificationCount).toBe(1)
-    expect(store.get(featuredInstancesAtom)).toEqual([baseInstance])
-
-    store.set(instancesAtom, [baseInstance, forkInstance])
-    expect(notificationCount).toBe(1)
-    expect(store.get(featuredInstancesAtom)).toEqual([baseInstance])
+    expect(store.get(instancesSelectorAtom)).toEqual([customInstance])
 
     unsubscribe()
   })
@@ -82,11 +72,12 @@ describe("board store selectors", () => {
   it("skips source instance notifications for idempotent upserts", () => {
     const store = createStore()
     const sourceInstance = {
-      instanceId: "github",
+      instanceId: "github::fork_abc",
       sourceId: "github",
-      params: {},
-      isFork: false,
+      paramsPatch: {},
+      origin: "fork" as const,
       createdAt: 1,
+      updatedAt: 1,
     }
     let notificationCount = 0
 

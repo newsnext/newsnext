@@ -1,20 +1,20 @@
 import type { RadarContext, RadarSuggestion } from "@/lib/radar"
-import type { SourceInstance } from "@/lib/source-cards"
+import type { SourceInstanceMeta } from "@/lib/source-cards"
 import type { BoardSource } from "@/typings/source"
 import { ButtonPrimitive } from "@newsnext/ui/components/button"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { useSetAtom } from "jotai"
 import { AnimatePresence, motion, useMotionValue, useTransform } from "motion/react"
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { CardFront, CardRefreshButton } from "@/components/card/card-front"
+import { browser } from "#imports"
+import Card from "@/components/card"
 import { IconButton } from "@/components/common/button"
-import { PhArrowCircleLeftDuotone, PhLinkDuotone, PhStarFill } from "@/components/icons/ph"
-import { useSourceQuery } from "@/hooks/use-source-query"
+import { PhArrowCircleLeftDuotone, PhForkDuotone, PhLinkDuotone, PhStarFill } from "@/components/icons/ph"
 import { getClientSourceDescriptors } from "@/lib/client-sources"
 import { getRadarSuggestions } from "@/lib/radar"
+import { createForkedInstance } from "@/lib/source-cards"
 import { cn } from "@/lib/utils"
 import {
-  setSourceInstanceMetaAtom,
   starInstanceAtom,
   upsertInstanceAtom,
 } from "@/store/board"
@@ -22,67 +22,48 @@ import {
 const CLIENT_SOURCES = getClientSourceDescriptors()
 const RADAR_SWIPE_THRESHOLD = 90
 
-function createRadarInstance(suggestion: RadarSuggestion): SourceInstance {
-  return {
-    instanceId: `radar:${suggestion.id}`,
-    sourceId: suggestion.sourceId,
-    params: suggestion.params,
-    isFork: true,
-    createdAt: Date.now(),
-  }
+interface RadarDraftPatch {
+  paramsPatch?: Record<string, unknown>
+  metaPatch?: SourceInstanceMeta
 }
 
-function createRadarBoardSource(suggestion: RadarSuggestion): BoardSource | null {
+function createRadarBoardSource(suggestion: RadarSuggestion, draftPatch?: RadarDraftPatch): BoardSource | null {
   const descriptor = CLIENT_SOURCES.find(source => source.id === suggestion.sourceId)
   if (!descriptor) {
     return null
   }
+  const metaPatch = draftPatch?.metaPatch ?? {}
 
   return {
     ...descriptor,
-    id: `tmp-source:${suggestion.id}`,
+    ...metaPatch,
+    id: `tmp:radar:${suggestion.id}`,
     sourceId: suggestion.sourceId,
-    title: suggestion.title,
-    paramsValue: suggestion.params,
-    isFork: false,
+    title: metaPatch.title ?? suggestion.title,
+    paramsValue: draftPatch?.paramsPatch ?? suggestion.params,
+    isCustom: true,
+    origin: "fork",
     isLocalOnly: true,
   }
 }
 
-interface TemporarySourceCardProps {
+interface RadarSourceCardProps {
   source: BoardSource
-  params: Record<string, unknown>
   className?: string
+  onDraftSourceChange?: (patch: RadarDraftPatch) => void
 }
 
-function TemporarySourceCard({ source, params, className }: TemporarySourceCardProps) {
-  const {
-    items,
-    refetch,
-    isFetching,
-    isError,
-    errorMessage,
-    loginUrl,
-    updatedAt,
-  } = useSourceQuery({
-    sourceId: source.sourceId,
-    params,
-  })
-
+function RadarSourceCard({ source, className, onDraftSourceChange }: RadarSourceCardProps) {
   return (
-    <div className={cn("h-[30rem] w-full", className)}>
-      <CardFront
-        id={source.id}
-        source={source}
-        items={items}
-        isFetching={isFetching}
-        sourceErrorMessage={isError ? `Failed to load source${errorMessage ? `: ${errorMessage}` : "."}` : undefined}
-        sourceLoginUrl={loginUrl}
-        updatedAt={updatedAt}
-        onRefresh={refetch}
-        actions={<CardRefreshButton isFetching={isFetching} onRefresh={refetch} />}
-      />
-    </div>
+    <Card
+      id={source.id}
+      source={source}
+      className={className}
+      sizeClassName="h-[30rem] w-full"
+      showStar={false}
+      isDraft
+      onDraftSourceChange={onDraftSourceChange}
+    />
   )
 }
 
@@ -157,9 +138,9 @@ interface RadarDeckProps {
 function RadarDeck({ suggestions }: RadarDeckProps) {
   const upsertLocal = useSetAtom(upsertInstanceAtom)
   const starLocal = useSetAtom(starInstanceAtom)
-  const setSourceInstanceMeta = useSetAtom(setSourceInstanceMetaAtom)
   const [activeIndex, setActiveIndex] = useState(0)
   const [exitDirection, setExitDirection] = useState(0)
+  const [draftPatches, setDraftPatches] = useState<Record<string, RadarDraftPatch>>({})
   const x = useMotionValue(0)
   const rotate = useTransform(x, [-160, 160], [-7, 7])
 
@@ -171,7 +152,7 @@ function RadarDeck({ suggestions }: RadarDeckProps) {
 
   const activeSuggestion = suggestions[activeIndex]
   const visibleSuggestions = suggestions.slice(activeIndex, activeIndex + 3)
-  const activeSource = activeSuggestion ? createRadarBoardSource(activeSuggestion) : null
+  const activeSource = activeSuggestion ? createRadarBoardSource(activeSuggestion, draftPatches[activeSuggestion.id]) : null
   const canGoPrevious = activeIndex > 0
   const canGoNext = activeIndex < suggestions.length - 1
 
@@ -180,19 +161,57 @@ function RadarDeck({ suggestions }: RadarDeckProps) {
     setActiveIndex(prev => Math.min(Math.max(prev + direction, 0), suggestions.length - 1))
   }, [suggestions.length])
 
-  const handleCreateAndStar = useCallback(() => {
+  const createActiveForkInstance = useCallback(() => {
+    if (!activeSuggestion || !activeSource) {
+      return null
+    }
+
+    return createForkedInstance(
+      activeSource.sourceId,
+      activeSource.paramsValue ?? {},
+      {
+        providerTitle: activeSource.providerTitle,
+        title: activeSource.title,
+        desc: activeSource.desc,
+        home: activeSource.home,
+        color: activeSource.color,
+      },
+      { type: "radar", ruleId: activeSuggestion.ruleId },
+    )
+  }, [activeSource, activeSuggestion])
+
+  const handleFork = useCallback(() => {
+    const instance = createActiveForkInstance()
+    if (!instance) {
+      return
+    }
+
+    upsertLocal(instance)
+  }, [createActiveForkInstance, upsertLocal])
+
+  const handleForkAndStar = useCallback(() => {
+    const instance = createActiveForkInstance()
+    if (!instance) {
+      return
+    }
+
+    upsertLocal(instance)
+    starLocal({ instanceId: instance.instanceId, starred: true })
+  }, [createActiveForkInstance, starLocal, upsertLocal])
+
+  const handleActiveDraftSourceChange = useCallback((patch: RadarDraftPatch) => {
     if (!activeSuggestion) {
       return
     }
 
-    const instance = createRadarInstance(activeSuggestion)
-    upsertLocal(instance)
-    setSourceInstanceMeta({
-      instanceId: instance.instanceId,
-      meta: { title: activeSuggestion.title },
-    })
-    starLocal({ instanceId: instance.instanceId, starred: true })
-  }, [activeSuggestion, setSourceInstanceMeta, starLocal, upsertLocal])
+    setDraftPatches(prev => ({
+      ...prev,
+      [activeSuggestion.id]: {
+        ...prev[activeSuggestion.id],
+        ...patch,
+      },
+    }))
+  }, [activeSuggestion])
 
   if (!activeSuggestion || !activeSource) {
     return <RadarEmptyState />
@@ -244,9 +263,8 @@ function RadarDeck({ suggestions }: RadarDeckProps) {
               }}
               aria-hidden
             >
-              <TemporarySourceCard
+              <RadarSourceCard
                 source={source}
-                params={suggestion.params}
               />
             </div>
           )
@@ -275,9 +293,9 @@ function RadarDeck({ suggestions }: RadarDeckProps) {
               }
             }}
           >
-            <TemporarySourceCard
+            <RadarSourceCard
               source={activeSource}
-              params={activeSuggestion.params}
+              onDraftSourceChange={handleActiveDraftSourceChange}
             />
           </motion.div>
         </AnimatePresence>
@@ -289,13 +307,22 @@ function RadarDeck({ suggestions }: RadarDeckProps) {
           {" / "}
           {suggestions.length}
         </span>
-        <ButtonPrimitive
-          onClick={handleCreateAndStar}
-          className="inline-flex h-9 items-center gap-2 rounded-lg bg-foreground px-3 text-sm font-medium text-background transition-opacity hover:opacity-90"
-        >
-          <PhStarFill />
-          Create and star
-        </ButtonPrimitive>
+        <div className="flex shrink-0 items-center gap-2">
+          <ButtonPrimitive
+            onClick={handleFork}
+            className="inline-flex h-9 items-center gap-2 rounded-lg border border-border/70 bg-background/70 px-3 text-sm font-medium text-foreground transition-colors hover:bg-muted/80"
+          >
+            <PhForkDuotone />
+            Fork
+          </ButtonPrimitive>
+          <ButtonPrimitive
+            onClick={handleForkAndStar}
+            className="inline-flex h-9 items-center gap-2 rounded-lg bg-foreground px-3 text-sm font-medium text-background transition-opacity hover:opacity-90"
+          >
+            <PhStarFill />
+            Fork and Star
+          </ButtonPrimitive>
+        </div>
       </div>
     </section>
   )

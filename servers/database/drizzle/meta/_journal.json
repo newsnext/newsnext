@@ -57,6 +57,13 @@
       "when": 1781139600000,
       "tag": "0007_rename_source_key_to_source_id",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1783470000000,
+      "tag": "0008_source_instance_patches",
+      "breakpoints": true
     }
   ]
 }

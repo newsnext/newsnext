@@ -5,7 +5,7 @@ import { createBackgroundClient } from "./background-client"
 import { readCachedClientSource, writeCachedClientSource } from "./client-source-cache"
 
 const SOURCE_REQUEST_MIN_INTERVAL = 1000 * 60
-const EMPTY_SOURCE_ITEMS_ERROR_MESSAGE = "Empty."
+const EMPTY_SOURCE_ITEMS_ERROR_MESSAGE = "No source items. Refresh to try again."
 const inFlightClientSourceLoads = new Map<string, Promise<ClientSourceLoadResult>>()
 
 export interface ClientSourceLoadResult {
@@ -19,6 +19,14 @@ export interface LoadClientSourceOptions {
   forceFresh?: boolean
 }
 
+export function buildClientSourceCacheKey(
+  sourceId: string,
+  cacheVersion: number,
+  params: Record<string, unknown>,
+): string {
+  return `${sourceId}:v${cacheVersion}:${stableStringify(params)}`
+}
+
 export async function loadClientSource(
   sourceId: string,
   queryParams: Record<string, unknown> = {},
@@ -26,7 +34,7 @@ export async function loadClientSource(
 ): Promise<ClientSourceLoadResult> {
   const source = resolveSource(sourceId)
   const params = normalizeSourceParams(source, queryParams)
-  const key = `${sourceId}:${stableStringify(params)}`
+  const key = buildClientSourceCacheKey(sourceId, source.cacheVersion ?? 1, params)
   const cachedResult = options.forceFresh
     ? undefined
     : await readCachedClientSource(key, SOURCE_REQUEST_MIN_INTERVAL)

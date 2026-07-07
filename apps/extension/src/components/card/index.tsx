@@ -1,4 +1,5 @@
 import type { ReactNode } from "react"
+import type { SourceInstanceMeta } from "@/lib/source-cards"
 import type { BoardSource } from "@/typings/source"
 import { useSetAtom } from "jotai"
 import { useInView } from "motion/react"
@@ -10,6 +11,7 @@ import { useSourceQuery } from "@/hooks/use-source-query"
 import { cn } from "@/lib/utils"
 import {
   resetInstanceParamsAtom,
+  setSourceInstanceMetaAtom,
   upsertInstanceAtom,
 } from "@/store/board"
 import { CardBack } from "./card-back"
@@ -29,6 +31,9 @@ export interface CardProps {
   sizeClassName?: string
   nodeRef?: (node: HTMLElement | null) => void
   dragHandle?: ReactNode
+  showStar?: boolean
+  isDraft?: boolean
+  onDraftSourceChange?: (patch: { paramsPatch?: Record<string, unknown>, metaPatch?: SourceInstanceMeta }) => void
 }
 
 function copyPictureInPictureStyles(targetDocument: Document): void {
@@ -38,10 +43,11 @@ function copyPictureInPictureStyles(targetDocument: Document): void {
   })
 }
 
-function CardContent({ id, source, dragHandle }: CardProps) {
+function CardContent({ id, source, dragHandle, showStar = true, isDraft = false, onDraftSourceChange }: CardProps) {
   const { providerTitle, title } = source
   const upsertLocal = useSetAtom(upsertInstanceAtom)
   const resetLocalParams = useSetAtom(resetInstanceParamsAtom)
+  const setSourceInstanceMeta = useSetAtom(setSourceInstanceMetaAtom)
   const [isFlipped, setIsFlipped] = useState(false)
   const [pictureInPictureWindow, setPictureInPictureWindow] = useState<Window | null>(null)
   const {
@@ -54,7 +60,6 @@ function CardContent({ id, source, dragHandle }: CardProps) {
     resetDraftParams,
     discardDraftParams,
   } = useSourceParams({
-    storageId: id,
     params: source.params,
     initialValues: source.paramsValue,
   })
@@ -99,21 +104,53 @@ function CardContent({ id, source, dragHandle }: CardProps) {
 
   const handleSaveSourceParams = useCallback(() => {
     const nextParams = saveDraftParams()
+    if (onDraftSourceChange) {
+      onDraftSourceChange({ paramsPatch: nextParams })
+      return
+    }
+
+    const now = Date.now()
+    const metaPatch = source.isCustom
+      ? {
+          providerTitle: source.providerTitle,
+          title: source.title,
+          desc: source.desc,
+          home: source.home,
+          color: source.color,
+        }
+      : undefined
+    const origin = source.isCustom && source.origin !== "default" ? source.origin : "fork"
     const nextInstance = {
       instanceId: id,
       sourceId: source.sourceId,
-      params: nextParams,
-      isFork: source.isFork,
-      createdAt: Date.now(),
+      paramsPatch: nextParams,
+      metaPatch,
+      origin,
+      createdAt: now,
+      updatedAt: now,
     }
 
     upsertLocal(nextInstance)
-  }, [source.sourceId, source.isFork, id, saveDraftParams, upsertLocal])
+  }, [source, id, onDraftSourceChange, saveDraftParams, upsertLocal])
 
   const handleResetSourceParams = useCallback(() => {
     resetDraftParams()
-    resetLocalParams({ instanceId: id, isFork: source.isFork })
-  }, [source.isFork, id, resetDraftParams, resetLocalParams])
+    if (onDraftSourceChange) {
+      onDraftSourceChange({ paramsPatch: {} })
+      return
+    }
+
+    resetLocalParams(id)
+  }, [id, onDraftSourceChange, resetDraftParams, resetLocalParams])
+
+  const handleSaveSourceMeta = useCallback((meta: SourceInstanceMeta) => {
+    if (onDraftSourceChange) {
+      onDraftSourceChange({ metaPatch: meta })
+      return
+    }
+
+    setSourceInstanceMeta({ instanceId: id, meta })
+  }, [id, onDraftSourceChange, setSourceInstanceMeta])
 
   const handleOpenPictureInPicture = useCallback(async () => {
     if (!window.documentPictureInPicture) {
@@ -156,6 +193,7 @@ function CardContent({ id, source, dragHandle }: CardProps) {
           onOpenPictureInPicture={handleOpenPictureInPicture}
           isPictureInPictureOpen={!!pictureInPictureWindow && !pictureInPictureWindow.closed}
           isPictureInPictureSupported={isPictureInPictureSupported}
+          showStar={showStar}
           dragHandle={isFlipped ? undefined : dragHandle}
         />
         <CardBack
@@ -170,7 +208,9 @@ function CardContent({ id, source, dragHandle }: CardProps) {
           onSaveSourceParams={handleSaveSourceParams}
           onResetSourceParams={handleResetSourceParams}
           onDiscardSourceParams={discardDraftParams}
+          onSaveSourceMeta={handleSaveSourceMeta}
           onFlip={handleFlip}
+          isDraft={isDraft}
           dragHandle={isFlipped ? dragHandle : undefined}
         />
       </FlipAnimate>

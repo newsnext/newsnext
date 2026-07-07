@@ -57,6 +57,8 @@ export function $provider(
         key: source.key,
         title: source.title,
         params: source.params,
+        paramsSchemaVersion: source.paramsSchemaVersion ?? 1,
+        cacheVersion: source.cacheVersion ?? 1,
         color: source.color ?? provider.color,
         desc: source.desc ?? provider.desc,
         type: source.type,

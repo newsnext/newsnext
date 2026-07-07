@@ -3,7 +3,6 @@ import { useNavigate } from "@tanstack/react-router"
 import { useSetAtom, useStore } from "jotai"
 import { PhForkDuotone, PhTrashDuotone } from "@/components/icons/ph"
 import { createForkedInstance } from "@/lib/source-cards"
-import { deleteStoredSourceParamValues, writeStoredSourceParamValues } from "@/lib/source-params"
 import {
   deleteInstanceAtom,
   instanceStarredAtom,
@@ -29,10 +28,22 @@ export function ForkButton({
   const focusFork = useSetAtom(pendingForkFocusAtom)
 
   function handleFork(): void {
-    const forkedInstance = createForkedInstance(source.sourceId, sourceParams)
+    const forkedInstance = createForkedInstance(
+      source.sourceId,
+      sourceParams,
+      source.isCustom
+        ? {
+            providerTitle: source.providerTitle,
+            title: source.title,
+            desc: source.desc,
+            home: source.home,
+            color: source.color,
+          }
+        : undefined,
+      { type: "fork", forkedFromInstanceId: id },
+    )
     const isStarred = store.get(instanceStarredAtom(id))
 
-    writeStoredSourceParamValues(forkedInstance.instanceId, sourceParams)
     upsertLocal(forkedInstance)
 
     if (isStarred) {
@@ -57,19 +68,18 @@ export function ForkButton({
   )
 }
 
-export function DeleteForkButton({ id, isFork }: { id: string, isFork: boolean }) {
+export function DeleteForkButton({ id, isCustom }: { id: string, isCustom: boolean }) {
   const deleteLocal = useSetAtom(deleteInstanceAtom)
 
   function handleDelete(): void {
-    if (!isFork) {
+    if (!isCustom) {
       return
     }
 
     deleteLocal(id)
-    deleteStoredSourceParamValues(id)
   }
 
-  if (!isFork) {
+  if (!isCustom) {
     return null
   }
 
@@ -79,8 +89,8 @@ export function DeleteForkButton({ id, isFork }: { id: string, isFork: boolean }
         e.stopPropagation()
         handleDelete()
       }}
-      aria-label="Delete Fork"
-      title="Delete Fork"
+      aria-label="Delete custom card"
+      title="Delete custom card"
     >
       <PhTrashDuotone />
     </IconButton>

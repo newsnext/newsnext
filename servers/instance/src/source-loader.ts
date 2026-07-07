@@ -27,9 +27,10 @@ export interface SourceLoadResult<T> {
 
 export function buildSourceCacheKey(
   sourceId: string,
+  cacheVersion: number,
   params: Record<string, unknown>,
 ): string {
-  return `${sourceId}:${stableStringify(params)}`
+  return `${sourceId}:v${cacheVersion}:${stableStringify(params)}`
 }
 
 export async function loadSource<T>({
@@ -61,7 +62,7 @@ export function prepareInstanceSourceRequest<T>({
   const params = paramsAreNormalized
     ? queryParams
     : normalizeSourceParams(source, queryParams)
-  const key = buildSourceCacheKey(sourceId, params)
+  const key = buildSourceCacheKey(sourceId, source.cacheVersion ?? 1, params)
 
   return {
     sourceId,

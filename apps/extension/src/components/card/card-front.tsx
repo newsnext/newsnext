@@ -4,8 +4,9 @@ import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { useAtomValue, useSetAtom } from "jotai"
 import { memo, useCallback, useMemo, useRef } from "react"
 import { useRelativeTime } from "@/hooks/useRelativeTime"
+import { createDefaultSourceInstance } from "@/lib/source-cards"
 import { cn } from "@/lib/utils"
-import { instanceStarredAtom, starInstanceAtom } from "@/store/board"
+import { instanceStarredAtom, starInstanceAtom, upsertInstanceAtom } from "@/store/board"
 import { IconButton } from "../common/button"
 import {
   PhArrowCounterClockwiseDuotone,
@@ -38,18 +39,24 @@ interface CardFrontProps {
   onOpenPictureInPicture?: () => void
   isPictureInPictureOpen?: boolean
   isPictureInPictureSupported?: boolean
+  showStar?: boolean
   actions?: ReactNode
   dragHandle?: ReactNode
 }
 
-function StarButton({ id }: { id: string }) {
+function StarButton({ id, source }: { id: string, source: BoardSource }) {
   const isStarredAtom = useMemo(() => instanceStarredAtom(id), [id])
   const isStarred = useAtomValue(isStarredAtom)
   const starLocal = useSetAtom(starInstanceAtom)
+  const upsertLocal = useSetAtom(upsertInstanceAtom)
 
   const handleToggleStar = useCallback(() => {
+    if (!source.isCustom) {
+      upsertLocal(createDefaultSourceInstance(source.sourceId))
+    }
+
     starLocal({ instanceId: id, starred: !isStarred })
-  }, [id, isStarred, starLocal])
+  }, [id, isStarred, source.isCustom, source.sourceId, starLocal, upsertLocal])
 
   return (
     <IconButton
@@ -160,6 +167,7 @@ function CardFrontComponent({
   onOpenPictureInPicture,
   isPictureInPictureOpen = false,
   isPictureInPictureSupported = false,
+  showStar = true,
   actions,
   dragHandle,
 }: CardFrontProps) {
@@ -192,7 +200,7 @@ function CardFrontComponent({
           actions={actions ?? (
             <>
               <CardRefreshButton isFetching={isFetching} onRefresh={onRefresh} />
-              <StarButton id={id} />
+              {showStar && <StarButton id={id} source={source} />}
               {onOpenPictureInPicture && (
                 <IconButton
                   onClick={onOpenPictureInPicture}

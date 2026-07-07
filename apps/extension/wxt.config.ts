@@ -23,7 +23,7 @@ export default defineConfig({
   },
   manifest: ({ browser }) => ({
     name: "NewsNext",
-    description: "NewsNext is a browser extension that helps you work with your browser",
+    description: "Elegant reading experience, Fastest information reception",
     version: "0.9.0",
     permissions: [
       "bookmarks",
