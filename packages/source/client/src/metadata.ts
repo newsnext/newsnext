@@ -6,6 +6,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
   {
     "icon": "https://s3.newsnext.pro/icons/aihot.png",
     "providerTitle": "AIHot",
+    "paramsSchemaVersion": 1,
+    "cacheVersion": 1,
     "color": "blue",
     "type": "timeline",
     "category": "tech",
@@ -16,6 +18,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "icon": "https://s3.newsnext.pro/icons/bilibili.png",
     "providerTitle": "Bilibili",
     "title": "热搜",
+    "paramsSchemaVersion": 1,
+    "cacheVersion": 1,
     "color": "blue",
     "type": "hottest",
     "category": "others",
@@ -26,6 +30,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "icon": "https://s3.newsnext.pro/icons/bilibili.png",
     "providerTitle": "Bilibili",
     "title": "关注视频",
+    "paramsSchemaVersion": 1,
+    "cacheVersion": 1,
     "color": "blue",
     "desc": "关注 UP 的视频动态",
     "type": "timeline",
@@ -130,6 +136,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
         "default": "0"
       }
     },
+    "paramsSchemaVersion": 1,
+    "cacheVersion": 1,
     "color": "blue",
     "type": "hottest",
     "category": "others",
@@ -177,6 +185,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
         "max": 100
       }
     },
+    "paramsSchemaVersion": 1,
+    "cacheVersion": 1,
     "color": "blue",
     "type": "timeline",
     "category": "others",
@@ -201,6 +211,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
         "max": 200
       }
     },
+    "paramsSchemaVersion": 1,
+    "cacheVersion": 1,
     "color": "blue",
     "type": "timeline",
     "category": "others",
@@ -210,6 +222,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "icon": "https://s3.newsnext.pro/icons/cls.png",
     "providerTitle": "财联社",
     "title": "电报",
+    "paramsSchemaVersion": 1,
+    "cacheVersion": 1,
     "color": "red",
     "type": "timeline",
     "category": "finance",
@@ -220,6 +234,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "icon": "https://s3.newsnext.pro/icons/cls.png",
     "providerTitle": "财联社",
     "title": "深度",
+    "paramsSchemaVersion": 1,
+    "cacheVersion": 1,
     "color": "red",
     "type": "timeline",
     "category": "finance",
@@ -230,6 +246,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "icon": "https://s3.newsnext.pro/icons/cls.png",
     "providerTitle": "财联社",
     "title": "热门",
+    "paramsSchemaVersion": 1,
+    "cacheVersion": 1,
     "color": "red",
     "type": "hottest",
     "category": "finance",
@@ -247,6 +265,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
         "default": "71931642168770560"
       }
     },
+    "paramsSchemaVersion": 1,
+    "cacheVersion": 1,
     "color": "orange",
     "type": "timeline",
     "category": "others",
@@ -264,6 +284,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
         "default": "68649150114432000"
       }
     },
+    "paramsSchemaVersion": 1,
+    "cacheVersion": 1,
     "color": "orange",
     "type": "timeline",
     "category": "others",
@@ -307,6 +329,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
         "default": "daily"
       }
     },
+    "paramsSchemaVersion": 1,
+    "cacheVersion": 1,
     "color": "slate",
     "type": "hottest",
     "category": "others",
@@ -366,6 +390,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "icon": "https://s3.newsnext.pro/icons/hackernews.png",
     "providerTitle": "Hacker News",
     "title": "Hottest",
+    "paramsSchemaVersion": 1,
+    "cacheVersion": 1,
     "color": "orange",
     "type": "hottest",
     "category": "others",
@@ -376,6 +402,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "icon": "https://s3.newsnext.pro/icons/hackernews.png",
     "providerTitle": "Hacker News",
     "title": "Newest",
+    "paramsSchemaVersion": 1,
+    "cacheVersion": 1,
     "color": "orange",
     "type": "timeline",
     "category": "others",
@@ -386,6 +414,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "icon": "https://s3.newsnext.pro/icons/hackernews.png",
     "providerTitle": "Hacker News",
     "title": "Show",
+    "paramsSchemaVersion": 1,
+    "cacheVersion": 1,
     "color": "orange",
     "category": "others",
     "home": "https://news.ycombinator.com/show",
@@ -395,6 +425,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "icon": "https://s3.newsnext.pro/icons/hackernews.png",
     "providerTitle": "Hacker News",
     "title": "Ask",
+    "paramsSchemaVersion": 1,
+    "cacheVersion": 1,
     "color": "orange",
     "category": "others",
     "home": "https://news.ycombinator.com/ask",
@@ -404,6 +436,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "icon": "https://web.okjike.com/favicon.ico",
     "providerTitle": "Jike",
     "title": "Following updates",
+    "paramsSchemaVersion": 1,
+    "cacheVersion": 1,
     "color": "yellow",
     "desc": "Updates from followed Jike users",
     "type": "timeline",
@@ -436,6 +470,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
         "default": "a2d6acc1-626f-4d15-a22a-849e88a4c9f0"
       }
     },
+    "paramsSchemaVersion": 1,
+    "cacheVersion": 1,
     "color": "yellow",
     "desc": "Updates from a Jike user",
     "type": "timeline",
@@ -455,6 +491,52 @@ export const sourceDescriptors: SourceDescriptor[] = [
         "itemKey": "JK_REFRESH_TOKEN"
       }
     ],
+    "radar": [
+      {
+        "id": "jike-user-updates",
+        "match": {
+          "hosts": [
+            "web.okjike.com"
+          ],
+          "paths": [
+            "/u/:username",
+            "/u/:username/*"
+          ]
+        },
+        "title": {
+          "type": "value",
+          "value": {
+            "type": "pageTitle"
+          },
+          "transforms": [
+            {
+              "type": "normalizeWhitespace"
+            },
+            {
+              "type": "replace",
+              "pattern": "的主页\\s*[-_—|]\\s*即刻.*$",
+              "replacement": ""
+            },
+            {
+              "type": "extract",
+              "pattern": "^(.+?)(?:\\s*[-_—|]\\s*即刻.*)?$",
+              "fallbackToEmpty": true
+            }
+          ],
+          "fallback": "{username}"
+        },
+        "params": {
+          "username": {
+            "value": {
+              "type": "path",
+              "name": "username"
+            },
+            "required": true
+          }
+        },
+        "confidence": 0.9
+      }
+    ],
     "id": "jike:user-updates"
   },
   {
@@ -468,6 +550,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
         "default": "5aeaa84029e4000011ac3768"
       }
     },
+    "paramsSchemaVersion": 1,
+    "cacheVersion": 1,
     "color": "yellow",
     "desc": "Recent posts from a Jike topic",
     "type": "timeline",
@@ -487,6 +571,47 @@ export const sourceDescriptors: SourceDescriptor[] = [
         "itemKey": "JK_REFRESH_TOKEN"
       }
     ],
+    "radar": [
+      {
+        "id": "jike-topic-recent",
+        "match": {
+          "hosts": [
+            "web.okjike.com"
+          ],
+          "paths": [
+            "/topic/:topicId",
+            "/topic/:topicId/*"
+          ]
+        },
+        "title": {
+          "type": "value",
+          "value": {
+            "type": "pageTitle"
+          },
+          "transforms": [
+            {
+              "type": "normalizeWhitespace"
+            },
+            {
+              "type": "extract",
+              "pattern": "^(.+?)(?:\\s*[-_—|]\\s*即刻.*)?$",
+              "fallbackToEmpty": true
+            }
+          ],
+          "fallback": "Topic {topicId}"
+        },
+        "params": {
+          "topicId": {
+            "value": {
+              "type": "path",
+              "name": "topicId"
+            },
+            "required": true
+          }
+        },
+        "confidence": 0.9
+      }
+    ],
     "id": "jike:topic-recent"
   },
   {
@@ -500,6 +625,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
         "default": "5aeaa84029e4000011ac3768"
       }
     },
+    "paramsSchemaVersion": 1,
+    "cacheVersion": 1,
     "color": "yellow",
     "desc": "Hottest posts from a Jike topic",
     "type": "hottest",
@@ -519,12 +646,55 @@ export const sourceDescriptors: SourceDescriptor[] = [
         "itemKey": "JK_REFRESH_TOKEN"
       }
     ],
+    "radar": [
+      {
+        "id": "jike-topic-hottest",
+        "match": {
+          "hosts": [
+            "web.okjike.com"
+          ],
+          "paths": [
+            "/topic/:topicId",
+            "/topic/:topicId/*"
+          ]
+        },
+        "title": {
+          "type": "value",
+          "value": {
+            "type": "pageTitle"
+          },
+          "transforms": [
+            {
+              "type": "normalizeWhitespace"
+            },
+            {
+              "type": "extract",
+              "pattern": "^(.+?)(?:\\s*[-_—|]\\s*即刻.*)?$",
+              "fallbackToEmpty": true
+            }
+          ],
+          "fallback": "Topic {topicId}"
+        },
+        "params": {
+          "topicId": {
+            "value": {
+              "type": "path",
+              "name": "topicId"
+            },
+            "required": true
+          }
+        },
+        "confidence": 0.85
+      }
+    ],
     "id": "jike:topic-hottest"
   },
   {
     "icon": "https://s3.newsnext.pro/icons/linuxdo.png",
     "providerTitle": "Linux.do",
     "title": "Latest",
+    "paramsSchemaVersion": 1,
+    "cacheVersion": 1,
     "color": "slate",
     "type": "timeline",
     "category": "tech",
@@ -535,6 +705,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "icon": "https://s3.newsnext.pro/icons/linuxdo.png",
     "providerTitle": "Linux.do",
     "title": "Hot",
+    "paramsSchemaVersion": 1,
+    "cacheVersion": 1,
     "color": "slate",
     "type": "hottest",
     "category": "tech",
@@ -552,6 +724,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
         "title": "Playlist"
       }
     },
+    "paramsSchemaVersion": 1,
+    "cacheVersion": 1,
     "color": "red",
     "type": "hottest",
     "category": "others",
@@ -654,6 +828,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
         "title": "Topic"
       }
     },
+    "paramsSchemaVersion": 1,
+    "cacheVersion": 1,
     "color": "red",
     "type": "timeline",
     "category": "others",
@@ -706,6 +882,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "icon": "https://s3.newsnext.pro/icons/tieba.png",
     "providerTitle": "百度贴吧",
     "title": "热议",
+    "paramsSchemaVersion": 1,
+    "cacheVersion": 1,
     "color": "blue",
     "type": "hottest",
     "category": "china",
@@ -722,6 +900,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
         "default": "ideas"
       }
     },
+    "paramsSchemaVersion": 1,
+    "cacheVersion": 1,
     "color": "slate",
     "category": "others",
     "home": "https://v2ex.com/",
@@ -770,6 +950,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "icon": "https://s3.newsnext.pro/icons/weibo.png",
     "providerTitle": "Weibo",
     "title": "Hot Search",
+    "paramsSchemaVersion": 1,
+    "cacheVersion": 1,
     "color": "red",
     "type": "hottest",
     "category": "others",
@@ -788,6 +970,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
         "default": "1195230310"
       }
     },
+    "paramsSchemaVersion": 1,
+    "cacheVersion": 1,
     "color": "red",
     "desc": "Latest posts from a specified Weibo user",
     "type": "timeline",
@@ -880,6 +1064,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
         "default": "MSI"
       }
     },
+    "paramsSchemaVersion": 1,
+    "cacheVersion": 1,
     "color": "red",
     "desc": "Latest Weibo posts matching a keyword",
     "type": "timeline",
@@ -979,6 +1165,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
         "default": "feed"
       }
     },
+    "paramsSchemaVersion": 1,
+    "cacheVersion": 1,
     "color": "red",
     "desc": "Latest posts from a Weibo super topic",
     "type": "timeline",
@@ -1077,6 +1265,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "icon": "https://s3.newsnext.pro/icons/weibo.png",
     "providerTitle": "Weibo",
     "title": "Following Timeline",
+    "paramsSchemaVersion": 1,
+    "cacheVersion": 1,
     "color": "red",
     "desc": "Latest posts from all followed Weibo accounts",
     "type": "timeline",
@@ -1160,6 +1350,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
         "default": "1"
       }
     },
+    "paramsSchemaVersion": 1,
+    "cacheVersion": 1,
     "color": "slate",
     "type": "hottest",
     "category": "world",
@@ -1179,6 +1371,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "icon": "https://x.com/favicon.ico",
     "providerTitle": "X",
     "title": "Recommended",
+    "paramsSchemaVersion": 1,
+    "cacheVersion": 1,
     "color": "slate",
     "type": "timeline",
     "category": "world",
@@ -1198,6 +1392,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "icon": "https://x.com/favicon.ico",
     "providerTitle": "X",
     "title": "Following",
+    "paramsSchemaVersion": 1,
+    "cacheVersion": 1,
     "color": "slate",
     "type": "timeline",
     "category": "world",
@@ -1224,6 +1420,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
         "default": "elonmusk"
       }
     },
+    "paramsSchemaVersion": 1,
+    "cacheVersion": 1,
     "color": "slate",
     "type": "timeline",
     "category": "world",
@@ -1289,6 +1487,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
   {
     "icon": "https://s3.newsnext.pro/icons/xueqiu.png",
     "providerTitle": "雪球",
+    "paramsSchemaVersion": 1,
+    "cacheVersion": 1,
     "color": "blue",
     "type": "hottest",
     "category": "others",
@@ -1298,6 +1498,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
   {
     "icon": "https://s3.newsnext.pro/icons/zaobao.png",
     "providerTitle": "联合早报",
+    "paramsSchemaVersion": 1,
+    "cacheVersion": 1,
     "color": "red",
     "type": "timeline",
     "category": "others",
@@ -1308,6 +1510,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "icon": "https://s3.newsnext.pro/icons/zhihu.png",
     "providerTitle": "知乎",
     "title": "全站热榜",
+    "paramsSchemaVersion": 1,
+    "cacheVersion": 1,
     "color": "blue",
     "type": "hottest",
     "category": "others",

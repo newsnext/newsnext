@@ -218,6 +218,29 @@ export default $provider({
         desc: "Updates from a Jike user",
         type: "timeline",
         category: "others",
+        radar: [
+          {
+            id: "jike-user-updates",
+            match: {
+              hosts: ["web.okjike.com"],
+              paths: ["/u/:username", "/u/:username/*"],
+            },
+            title: {
+              type: "value",
+              value: { type: "pageTitle" },
+              transforms: [
+                { type: "normalizeWhitespace" },
+                { type: "replace", pattern: "的主页\\s*[-_—|]\\s*即刻.*$", replacement: "" },
+                { type: "extract", pattern: "^(.+?)(?:\\s*[-_—|]\\s*即刻.*)?$", fallbackToEmpty: true },
+              ],
+              fallback: "{username}",
+            },
+            params: {
+              username: { value: { type: "path", name: "username" }, required: true },
+            },
+            confidence: 0.9,
+          },
+        ],
         params: {
           username: $textParam({
             title: "Username",
@@ -235,6 +258,28 @@ export default $provider({
         desc: "Recent posts from a Jike topic",
         type: "timeline",
         category: "others",
+        radar: [
+          {
+            id: "jike-topic-recent",
+            match: {
+              hosts: ["web.okjike.com"],
+              paths: ["/topic/:topicId", "/topic/:topicId/*"],
+            },
+            title: {
+              type: "value",
+              value: { type: "pageTitle" },
+              transforms: [
+                { type: "normalizeWhitespace" },
+                { type: "extract", pattern: "^(.+?)(?:\\s*[-_—|]\\s*即刻.*)?$", fallbackToEmpty: true },
+              ],
+              fallback: "Topic {topicId}",
+            },
+            params: {
+              topicId: { value: { type: "path", name: "topicId" }, required: true },
+            },
+            confidence: 0.9,
+          },
+        ],
         params: {
           topicId: $textParam({
             title: "Topic ID",
@@ -252,6 +297,28 @@ export default $provider({
         desc: "Hottest posts from a Jike topic",
         type: "hottest",
         category: "others",
+        radar: [
+          {
+            id: "jike-topic-hottest",
+            match: {
+              hosts: ["web.okjike.com"],
+              paths: ["/topic/:topicId", "/topic/:topicId/*"],
+            },
+            title: {
+              type: "value",
+              value: { type: "pageTitle" },
+              transforms: [
+                { type: "normalizeWhitespace" },
+                { type: "extract", pattern: "^(.+?)(?:\\s*[-_—|]\\s*即刻.*)?$", fallbackToEmpty: true },
+              ],
+              fallback: "Topic {topicId}",
+            },
+            params: {
+              topicId: { value: { type: "path", name: "topicId" }, required: true },
+            },
+            confidence: 0.85,
+          },
+        ],
         params: {
           topicId: $textParam({
             title: "Topic ID",

@@ -112,6 +112,35 @@ describe("getRadarSuggestions", () => {
     ])
   })
 
+  it("suggests Jike cards from user and topic URLs", () => {
+    expect(getSuggestions({
+      url: "https://web.okjike.com/u/lijigang/post/6a464c6064a7b806f12270a5",
+      title: "李继刚的主页 - 即刻",
+    })).toMatchObject([
+      {
+        sourceId: "jike:user-updates",
+        title: "李继刚",
+        params: { username: "lijigang" },
+      },
+    ])
+
+    expect(getSuggestions({
+      url: "https://web.okjike.com/topic/5aeaa84029e4000011ac3768",
+      title: "AI探索站 - 即刻",
+    })).toMatchObject([
+      {
+        sourceId: "jike:topic-recent",
+        title: "AI探索站",
+        params: { topicId: "5aeaa84029e4000011ac3768" },
+      },
+      {
+        sourceId: "jike:topic-hottest",
+        title: "AI探索站",
+        params: { topicId: "5aeaa84029e4000011ac3768" },
+      },
+    ])
+  })
+
   it("suggests V2EX and NewsNow parameterized cards", () => {
     expect(getSuggestions({
       url: "https://v2ex.com/go/share",
