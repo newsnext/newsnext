@@ -493,14 +493,13 @@ export const sourceDescriptors: SourceDescriptor[] = [
     ],
     "radar": [
       {
-        "id": "jike-user-updates",
+        "id": "jike-user-profile",
         "match": {
           "hosts": [
             "web.okjike.com"
           ],
           "paths": [
-            "/u/:username",
-            "/u/:username/*"
+            "/u/:username"
           ]
         },
         "title": {
@@ -516,6 +515,48 @@ export const sourceDescriptors: SourceDescriptor[] = [
               "type": "replace",
               "pattern": "的主页\\s*[-_—|]\\s*即刻.*$",
               "replacement": ""
+            },
+            {
+              "type": "extract",
+              "pattern": "^(.+?)(?:\\s*[-_—|]\\s*即刻.*)?$",
+              "fallbackToEmpty": true
+            }
+          ],
+          "fallback": "{username}"
+        },
+        "params": {
+          "username": {
+            "value": {
+              "type": "path",
+              "name": "username"
+            },
+            "required": true
+          }
+        },
+        "confidence": 0.9
+      },
+      {
+        "id": "jike-user-post",
+        "match": {
+          "hosts": [
+            "web.okjike.com"
+          ],
+          "paths": [
+            "/u/:username/:type/:id{/*rest}"
+          ]
+        },
+        "title": {
+          "type": "value",
+          "value": {
+            "type": "pageTitle"
+          },
+          "transforms": [
+            {
+              "type": "normalizeWhitespace"
+            },
+            {
+              "type": "extract",
+              "pattern": "^(.+?)[:：]"
             },
             {
               "type": "extract",
@@ -579,8 +620,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
             "web.okjike.com"
           ],
           "paths": [
-            "/topic/:topicId",
-            "/topic/:topicId/*"
+            "/topic/:topicId{/*rest}"
           ]
         },
         "title": {
@@ -654,8 +694,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
             "web.okjike.com"
           ],
           "paths": [
-            "/topic/:topicId",
-            "/topic/:topicId/*"
+            "/topic/:topicId{/*rest}"
           ]
         },
         "title": {
@@ -842,7 +881,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
             "newsnow.com"
           ],
           "paths": [
-            "/:locale/:topic*"
+            "/:locale/*topic"
           ]
         },
         "title": {
@@ -1444,8 +1483,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
             "twitter.com"
           ],
           "paths": [
-            "/:username",
-            "/:username/*"
+            "/:username{/*rest}"
           ]
         },
         "title": {

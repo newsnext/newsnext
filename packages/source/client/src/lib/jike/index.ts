@@ -220,10 +220,10 @@ export default $provider({
         category: "others",
         radar: [
           {
-            id: "jike-user-updates",
+            id: "jike-user-profile",
             match: {
               hosts: ["web.okjike.com"],
-              paths: ["/u/:username", "/u/:username/*"],
+              paths: ["/u/:username"],
             },
             title: {
               type: "value",
@@ -231,6 +231,27 @@ export default $provider({
               transforms: [
                 { type: "normalizeWhitespace" },
                 { type: "replace", pattern: "的主页\\s*[-_—|]\\s*即刻.*$", replacement: "" },
+                { type: "extract", pattern: "^(.+?)(?:\\s*[-_—|]\\s*即刻.*)?$", fallbackToEmpty: true },
+              ],
+              fallback: "{username}",
+            },
+            params: {
+              username: { value: { type: "path", name: "username" }, required: true },
+            },
+            confidence: 0.9,
+          },
+          {
+            id: "jike-user-post",
+            match: {
+              hosts: ["web.okjike.com"],
+              paths: ["/u/:username/:type/:id{/*rest}"],
+            },
+            title: {
+              type: "value",
+              value: { type: "pageTitle" },
+              transforms: [
+                { type: "normalizeWhitespace" },
+                { type: "extract", pattern: "^(.+?)[:：]" },
                 { type: "extract", pattern: "^(.+?)(?:\\s*[-_—|]\\s*即刻.*)?$", fallbackToEmpty: true },
               ],
               fallback: "{username}",
@@ -263,7 +284,7 @@ export default $provider({
             id: "jike-topic-recent",
             match: {
               hosts: ["web.okjike.com"],
-              paths: ["/topic/:topicId", "/topic/:topicId/*"],
+              paths: ["/topic/:topicId{/*rest}"],
             },
             title: {
               type: "value",
@@ -302,7 +323,7 @@ export default $provider({
             id: "jike-topic-hottest",
             match: {
               hosts: ["web.okjike.com"],
-              paths: ["/topic/:topicId", "/topic/:topicId/*"],
+              paths: ["/topic/:topicId{/*rest}"],
             },
             title: {
               type: "value",

@@ -195,7 +195,7 @@ export default $provider({
             id: "x-user",
             match: {
               hosts: ["x.com", "twitter.com"],
-              paths: ["/:username", "/:username/*"],
+              paths: ["/:username{/*rest}"],
             },
             title: { type: "param", name: "username", transforms: [{ type: "prepend", value: "@" }] },
             params: {

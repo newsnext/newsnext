@@ -15,7 +15,7 @@ export default $provider({
             id: "newsnow-topic",
             match: {
               hosts: ["newsnow.com"],
-              paths: ["/:locale/:topic*"],
+              paths: ["/:locale/*topic"],
             },
             title: { type: "param", name: "topic" },
             params: {

@@ -114,13 +114,24 @@ describe("getRadarSuggestions", () => {
 
   it("suggests Jike cards from user and topic URLs", () => {
     expect(getSuggestions({
-      url: "https://web.okjike.com/u/lijigang/post/6a464c6064a7b806f12270a5",
+      url: "https://web.okjike.com/u/lijigang",
       title: "李继刚的主页 - 即刻",
     })).toMatchObject([
       {
         sourceId: "jike:user-updates",
         title: "李继刚",
         params: { username: "lijigang" },
+      },
+    ])
+
+    expect(getSuggestions({
+      url: "https://web.okjike.com/u/2FEA4ABE-39F7-49F2-8AFD-4A5A39902D75/post/6a4c9b7bc704301bc51dffef",
+      title: "王紫君Zima：泡泡",
+    })).toMatchObject([
+      {
+        sourceId: "jike:user-updates",
+        title: "王紫君Zima",
+        params: { username: "2FEA4ABE-39F7-49F2-8AFD-4A5A39902D75" },
       },
     ])
 

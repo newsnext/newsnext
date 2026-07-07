@@ -6,6 +6,7 @@ import type {
   SourceRadarTransform,
   SourceRadarValue,
 } from "@newsnext/client-source/typings"
+import { match } from "path-to-regexp"
 
 export interface RadarContext {
   url: string
@@ -187,50 +188,19 @@ function renderTemplate(template: string, variables: Record<string, unknown>): s
 }
 
 function matchPathTemplate(template: string, pathname: string): Record<string, string> | null {
-  const pathParts = pathname.split("/").map(part => decodeURIComponent(part)).filter(Boolean)
-  const templateParts = template.split("/").filter(Boolean)
-  const params: Record<string, string> = {}
-
-  for (let index = 0; index < templateParts.length; index += 1) {
-    const templatePart = templateParts[index]
-    const pathPart = pathParts[index]
-
-    if (templatePart === "*") {
-      return params
-    }
-
-    if (templatePart.startsWith(":")) {
-      const rawName = templatePart.slice(1)
-      const isRest = rawName.endsWith("*")
-      const isOptional = rawName.endsWith("?")
-      const name = rawName.replace(/[?*]$/, "")
-
-      if (isRest) {
-        const rest = pathParts.slice(index).join("/")
-        if (!rest) {
-          return null
-        }
-        params[name] = rest
-        return params
-      }
-
-      if (!pathPart) {
-        if (isOptional) {
-          continue
-        }
-        return null
-      }
-
-      params[name] = pathPart
-      continue
-    }
-
-    if (templatePart !== pathPart) {
+  try {
+    const result = match<Record<string, string | string[]>>(template)(pathname)
+    if (!result) {
       return null
     }
-  }
 
-  return pathParts.length === templateParts.length ? params : null
+    return Object.fromEntries(
+      Object.entries(result.params)
+        .map(([key, value]) => [key, Array.isArray(value) ? value.join("/") : value]),
+    )
+  } catch {
+    return null
+  }
 }
 
 function getRuleHosts(rule: SourceRadarRule): string[] {
