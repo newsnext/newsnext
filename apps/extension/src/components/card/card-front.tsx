@@ -12,7 +12,6 @@ import {
   PhArrowCounterClockwiseDuotone,
   PhCircleDashedDuotone,
   PhInfoDuotone,
-  PhPictureInPictureDuotone,
   PhStarDuotone,
   PhStarFill,
 } from "../icons/ph"
@@ -36,9 +35,6 @@ interface CardFrontProps {
   updatedAt: number
   onRefresh: () => void
   onFlip?: () => void
-  onOpenPictureInPicture?: () => void
-  isPictureInPictureOpen?: boolean
-  isPictureInPictureSupported?: boolean
   showStar?: boolean
   actions?: ReactNode
   dragHandle?: ReactNode
@@ -164,9 +160,6 @@ function CardFrontComponent({
   updatedAt,
   onRefresh,
   onFlip,
-  onOpenPictureInPicture,
-  isPictureInPictureOpen = false,
-  isPictureInPictureSupported = false,
   showStar = true,
   actions,
   dragHandle,
@@ -201,17 +194,6 @@ function CardFrontComponent({
             <>
               <CardRefreshButton isFetching={isFetching} onRefresh={onRefresh} />
               {showStar && <StarButton id={id} source={source} />}
-              {onOpenPictureInPicture && (
-                <IconButton
-                  onClick={onOpenPictureInPicture}
-                  aria-label={isPictureInPictureOpen ? "Focus picture in picture" : "Open picture in picture"}
-                  title={isPictureInPictureSupported ? "Open picture in picture" : "Picture in picture is not supported"}
-                  disabled={!isPictureInPictureSupported}
-                  className={cn(isPictureInPictureOpen && "opacity-85")}
-                >
-                  <PhPictureInPictureDuotone />
-                </IconButton>
-              )}
               {onFlip && (
                 <IconButton
                   onClick={onFlip}
