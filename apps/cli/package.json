@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "bun run src/index.ts",
     "test": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsgo --noEmit"
   },
   "dependencies": {
     "@newsnext/instance": "workspace:*",

@@ -9,7 +9,7 @@
     "./fixtures": "./src/fixtures.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsgo --noEmit",
     "test": "vitest --config vitest.config.ts"
   }
 }

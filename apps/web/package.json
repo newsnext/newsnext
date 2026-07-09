@@ -11,7 +11,7 @@
     "build:cloudflare": "VITE_BASE_URL=https://api.newsnext.pro/v1 bun run build",
     "deploy:cloudflare": "wrangler deploy",
     "preview": "bun run --bun vite preview",
-    "compile": "tsc --noEmit",
+    "compile": "tsgo --noEmit",
     "doctor": "npx react-doctor@latest"
   },
   "dependencies": {

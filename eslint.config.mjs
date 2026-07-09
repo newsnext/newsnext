@@ -10,11 +10,6 @@ export default antfu(
     },
     ignores: [
       "public/**",
-      "bun.lock",
-      "**/routeTree.gen.ts",
-      "**/.wxt/**",
-      "./packages/source/client/src/{index,metadata}.ts",
-      "./packages/source/server/src/{index,metadata}.ts",
     ],
     rules: {
       "node/prefer-global/process": "off",
@@ -22,6 +17,7 @@ export default antfu(
       "antfu/curly": "error",
       "curly": "off",
       "style/brace-style": ["error", "1tbs"],
+      "eslint-comments/no-unlimited-disable": "off",
       "no-console": "off",
       "antfu/no-top-level-await": "off",
       "unused-imports/no-unused-vars": "warn",

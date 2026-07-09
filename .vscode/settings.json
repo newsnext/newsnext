@@ -76,5 +76,6 @@
   "git.ignoreLimitWarning": true,
   "[typescriptreact]": {
     "editor.defaultFormatter": "dbaeumer.vscode-eslint"
-  }
+  },
+  "js/ts.experimental.useTsgo": true
 }

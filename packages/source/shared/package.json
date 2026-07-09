@@ -15,7 +15,7 @@
     "./utils/source": "./src/utils/source/index.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsgo --noEmit",
     "test": "bun run vitest"
   },
   "dependencies": {
