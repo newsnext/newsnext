@@ -12,7 +12,10 @@ describe("getRadarSuggestions", () => {
       {
         sourceId: "x:user",
         paramsPatch: { username: "newsnext_dev" },
-        metaPatch: { title: "@newsnext_dev" },
+        metaPatch: {
+          title: "@newsnext_dev",
+          home: "https://x.com/newsnext_dev/status/1",
+        },
       },
     ])
   })
@@ -123,6 +126,9 @@ describe("getRadarSuggestions", () => {
       {
         sourceId: "jike:following-updates",
         paramsPatch: {},
+        metaPatch: {
+          home: "https://web.okjike.com/following",
+        },
       },
     ])
 

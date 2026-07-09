@@ -407,17 +407,15 @@ function resolveMetaPatchValue(
 function resolveMetaPatch(
   metaPatch: SourceRadarMetaPatch | undefined,
   context: RadarMatchContext,
-): RadarSuggestionMetaPatch | undefined {
-  if (!metaPatch) {
-    return undefined
+): RadarSuggestionMetaPatch {
+  const resolvedMetaPatch: RadarSuggestionMetaPatch = {
+    home: context.url.toString(),
   }
-
-  const resolvedMetaPatch: RadarSuggestionMetaPatch = {}
-  const providerTitle = resolveMetaPatchValue(metaPatch.providerTitle, context)
-  const title = resolveMetaPatchValue(metaPatch.title, context)
-  const desc = resolveMetaPatchValue(metaPatch.desc, context)
-  const home = resolveMetaPatchValue(metaPatch.home, context)
-  const color = resolveMetaPatchValue(metaPatch.color, context)
+  const providerTitle = resolveMetaPatchValue(metaPatch?.providerTitle, context)
+  const title = resolveMetaPatchValue(metaPatch?.title, context)
+  const desc = resolveMetaPatchValue(metaPatch?.desc, context)
+  const home = resolveMetaPatchValue(metaPatch?.home, context)
+  const color = resolveMetaPatchValue(metaPatch?.color, context)
 
   if (isPresent(providerTitle)) {
     resolvedMetaPatch.providerTitle = String(providerTitle)
@@ -435,7 +433,7 @@ function resolveMetaPatch(
     resolvedMetaPatch.color = color as Color
   }
 
-  return Object.keys(resolvedMetaPatch).length ? resolvedMetaPatch : undefined
+  return resolvedMetaPatch
 }
 
 function matchCompiledRule(compiledRule: CompiledRadarRule, input: RadarContext, url: URL): RadarSuggestion | null {
