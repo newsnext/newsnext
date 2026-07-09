@@ -10,8 +10,18 @@ export const currentBoardAtom = atom<BoardType>("featured")
 export const pendingForkFocusAtom = atom<string | null>(null)
 export const STARRED_SOURCE_INSTANCE_IDS_KEY = "newsnext-starred-source-instance-ids"
 export const SOURCE_INSTANCES_KEY = "newsnext-source-instances"
-export const starIdsAtom = atomWithStorage<string[]>(STARRED_SOURCE_INSTANCE_IDS_KEY, [])
-export const instancesAtom = atomWithStorage<SourceInstance[]>(SOURCE_INSTANCES_KEY, [])
+export const starIdsAtom = atomWithStorage<string[]>(
+  STARRED_SOURCE_INSTANCE_IDS_KEY,
+  [],
+  undefined,
+  { getOnInit: true },
+)
+export const instancesAtom = atomWithStorage<SourceInstance[]>(
+  SOURCE_INSTANCES_KEY,
+  [],
+  undefined,
+  { getOnInit: true },
+)
 
 const EMPTY_STARRED_INSTANCE_IDS: string[] = []
 

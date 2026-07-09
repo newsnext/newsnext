@@ -1,5 +1,5 @@
 import { createStore } from "jotai"
-import { describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 import {
   boardInstancesAtom,
   boardStarIdsAtom,
@@ -10,6 +10,10 @@ import {
   starInstanceAtom,
   upsertInstanceAtom,
 } from "./board"
+
+afterEach(() => {
+  vi.unstubAllGlobals()
+})
 
 describe("board store selectors", () => {
   it("returns stable board selector atoms", () => {
@@ -116,5 +120,54 @@ describe("board store selectors", () => {
     expect(starNotificationCount).toBe(2)
 
     unsubscribeStars()
+  })
+
+  it("hydrates persisted board state before the first write", async () => {
+    vi.resetModules()
+
+    const existingInstance = {
+      instanceId: "github::fork_existing",
+      sourceId: "github",
+      paramsPatch: { tag: "react" },
+      origin: "fork" as const,
+      createdAt: 1,
+      updatedAt: 1,
+    }
+    const newInstance = {
+      instanceId: "github::fork_new",
+      sourceId: "github",
+      paramsPatch: { tag: "vue" },
+      origin: "fork" as const,
+      createdAt: 2,
+      updatedAt: 2,
+    }
+    const storedValues: Record<string, string> = {
+      "newsnext-source-instances": JSON.stringify([existingInstance]),
+      "newsnext-starred-source-instance-ids": JSON.stringify([existingInstance.instanceId]),
+    }
+    const localStorageMock = {
+      getItem: vi.fn((key: string) => storedValues[key] ?? null),
+      setItem: vi.fn((key: string, value: string) => {
+        storedValues[key] = value
+      }),
+      removeItem: vi.fn((key: string) => {
+        delete storedValues[key]
+      }),
+    }
+
+    vi.stubGlobal("window", {
+      localStorage: localStorageMock,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    })
+
+    const board = await import("./board")
+    const store = createStore()
+
+    store.set(board.upsertInstanceAtom, newInstance)
+    store.set(board.starInstanceAtom, { instanceId: newInstance.instanceId, starred: true })
+
+    expect(store.get(board.instancesAtom)).toEqual([existingInstance, newInstance])
+    expect(store.get(board.starIdsAtom)).toEqual([existingInstance.instanceId, newInstance.instanceId])
   })
 })
