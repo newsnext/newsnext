@@ -28,6 +28,7 @@ export function DragOverlay({ source }: DragOverlayProps) {
             src={icon}
             alt={`${providerTitle} icon`}
             title={desc || providerTitle}
+            draggable={false}
             referrerPolicy="no-referrer"
             onError={(e) => {
               e.currentTarget.src = getFavicon(home || "#")!

@@ -174,6 +174,7 @@ export default function Card(props: CardProps) {
     <div
       ref={setRef}
       className={cn(
+        "select-none",
         props.sizeClassName ?? "h-125 w-100",
         props.className,
       )}
