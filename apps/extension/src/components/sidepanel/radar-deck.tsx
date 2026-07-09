@@ -1,5 +1,5 @@
 import type { MotionValue, PanInfo } from "motion/react"
-import type { PointerEvent } from "react"
+import type { CSSProperties, PointerEvent } from "react"
 import type { RadarSuggestion } from "@/lib/radar"
 import type { RadarDraftPatch } from "@/lib/radar-board-source"
 import type { BoardSource, SourceDescriptor } from "@/typings/source"
@@ -10,7 +10,7 @@ import { animate, motion, useDragControls, useMotionValue, useTransform } from "
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Card from "@/components/card"
 import { IconButton } from "@/components/common/button"
-import { PhArrowCircleLeftDuotone, PhForkDuotone, PhLinkDuotone, PhStarFill } from "@/components/icons/ph"
+import { PhArrowCircleLeftDuotone, PhForkDuotone, PhStarFill } from "@/components/icons/ph"
 import { createRadarBoardSource, mergeRadarDraftPatch } from "@/lib/radar-board-source"
 import { createForkedInstance } from "@/lib/source-cards"
 import { cn } from "@/lib/utils"
@@ -28,6 +28,20 @@ const RADAR_CARD_Y_OUTPUT = [20, 0, 20]
 
 function getRadarTrackX(index: number, trackItemOffset: number): number {
   return -(index * trackItemOffset)
+}
+
+interface RadarActionStyle extends CSSProperties {
+  "--radar-action-card-bg": string
+  "--radar-action-card-bg-hover": string
+  "--radar-action-chip-text": string
+}
+
+function getRadarActionStyle(color: BoardSource["color"]): RadarActionStyle {
+  return {
+    "--radar-action-card-bg": `color-mix(in oklab, var(--color-${color}-400) 40%, transparent)`,
+    "--radar-action-card-bg-hover": `color-mix(in oklab, var(--color-${color}-400) 52%, transparent)`,
+    "--radar-action-chip-text": `var(--color-${color}-400)`,
+  }
 }
 
 interface RadarSourceCardProps {
@@ -259,32 +273,36 @@ export function RadarDeck({ sourceDescriptors, suggestions }: RadarDeckProps) {
     return <RadarEmptyState />
   }
 
+  const radarActionStyle = getRadarActionStyle(activeSource.color)
+
   return (
     <section className="space-y-3" aria-label="Radar cards">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          <PhLinkDuotone className="text-base" />
           Radar
         </div>
-        <div className="flex shrink-0 items-center gap-1">
-          <IconButton
-            onClick={() => moveDeck(-1)}
-            disabled={!canGoPrevious}
-            aria-label="Previous radar card"
-            title="Previous radar card"
-            className={cn("text-xl", !canGoPrevious && "opacity-20")}
+        <div
+          className="relative shrink-0"
+          style={radarActionStyle}
+        >
+          <ButtonPrimitive
+            onClick={handleForkAndStar}
+            aria-label="Fork and star"
+            title="Fork and star"
+            className="flex h-8 items-center gap-1 rounded-3xl bg-(--radar-action-card-bg) py-0.5 pr-2.5 pl-[4.35rem] text-xs font-semibold transition-colors hover:bg-(--radar-action-card-bg-hover) hover:text-foreground"
           >
-            <PhArrowCircleLeftDuotone />
-          </IconButton>
-          <IconButton
-            onClick={() => moveDeck(1)}
-            disabled={!canGoNext}
-            aria-label="Next radar card"
-            title="Next radar card"
-            className={cn("rotate-180 text-xl", !canGoNext && "opacity-20")}
+            <PhStarFill className="text-sm" />
+            Star
+          </ButtonPrimitive>
+          <ButtonPrimitive
+            onClick={handleFork}
+            aria-label="Fork only"
+            title="Fork only"
+            className="absolute top-0.5 left-0.5 inline-flex h-7 items-center gap-1 rounded-3xl bg-background/50 px-2 text-xs font-medium text-(--radar-action-chip-text) opacity-80 transition-all hover:bg-background/70 hover:opacity-100"
           >
-            <PhArrowCircleLeftDuotone />
-          </IconButton>
+            <PhForkDuotone className="text-sm" />
+            Fork
+          </ButtonPrimitive>
         </div>
       </div>
 
@@ -321,21 +339,25 @@ export function RadarDeck({ sourceDescriptors, suggestions }: RadarDeckProps) {
           {" / "}
           {suggestions.length}
         </span>
-        <div className="flex shrink-0 items-center gap-2">
-          <ButtonPrimitive
-            onClick={handleFork}
-            className="inline-flex h-9 items-center gap-2 rounded-lg border border-border/70 bg-background/70 px-3 text-sm font-medium text-foreground transition-colors hover:bg-muted/80"
+        <div className="flex shrink-0 items-center gap-1">
+          <IconButton
+            onClick={() => moveDeck(-1)}
+            disabled={!canGoPrevious}
+            aria-label="Previous radar card"
+            title="Previous radar card"
+            className={cn("text-xl", !canGoPrevious && "opacity-20")}
           >
-            <PhForkDuotone />
-            Fork
-          </ButtonPrimitive>
-          <ButtonPrimitive
-            onClick={handleForkAndStar}
-            className="inline-flex h-9 items-center gap-2 rounded-lg bg-foreground px-3 text-sm font-medium text-background transition-opacity hover:opacity-90"
+            <PhArrowCircleLeftDuotone />
+          </IconButton>
+          <IconButton
+            onClick={() => moveDeck(1)}
+            disabled={!canGoNext}
+            aria-label="Next radar card"
+            title="Next radar card"
+            className={cn("rotate-180 text-xl", !canGoNext && "opacity-20")}
           >
-            <PhStarFill />
-            Fork and Star
-          </ButtonPrimitive>
+            <PhArrowCircleLeftDuotone />
+          </IconButton>
         </div>
       </div>
     </section>
