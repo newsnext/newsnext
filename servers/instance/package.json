@@ -18,7 +18,7 @@
     "build:bun": "nitro build --preset bun",
     "preview": "nitro preview",
     "test": "cd ../.. && bun run vitest --run servers/instance/src/source-loader.test.ts",
-    "typecheck": "tsgo -b"
+    "typecheck": "tsc -b"
   },
   "dependencies": {
     "@newsnext/server-source": "workspace:*",

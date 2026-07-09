@@ -9,7 +9,7 @@
     "./types": "./src/typings/index.ts"
   },
   "scripts": {
-    "typecheck": "tsgo --noEmit"
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "react": "catalog:"

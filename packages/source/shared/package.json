@@ -15,18 +15,18 @@
     "./utils/source": "./src/utils/source/index.ts"
   },
   "scripts": {
-    "typecheck": "tsgo --noEmit",
+    "typecheck": "tsc --noEmit",
     "test": "bun run vitest"
   },
   "dependencies": {
     "@date-fns/tz": "^1.5.0",
     "@newsnext/shared": "workspace:*",
-    "@smithy/md5-js": "^4.4.2",
+    "@smithy/md5-js": "^4.4.7",
     "cheerio": "^1.2.0",
     "date-fns": "catalog:",
     "defu": "catalog:",
     "fast-xml-parser": "^5.9.3",
-    "iconv-lite": "^0.7.2",
+    "iconv-lite": "^0.7.3",
     "ofetch": "catalog:"
   },
   "devDependencies": {

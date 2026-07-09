@@ -10,7 +10,7 @@
     "./typings": "./src/typings/index.ts"
   },
   "scripts": {
-    "typecheck": "tsgo --noEmit",
+    "typecheck": "tsc --noEmit",
     "build": "bun run build.ts",
     "test": "bun run vitest"
   },
