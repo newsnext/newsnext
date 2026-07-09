@@ -94,7 +94,7 @@ function RadarTrackCard({
 
   return (
     <motion.div
-      className="relative h-[30rem] w-full shrink-0 origin-bottom"
+      className="relative h-120 w-full shrink-0 origin-bottom"
       style={{ rotate, y }}
     >
       <div
@@ -307,7 +307,7 @@ export function RadarDeck({ sourceDescriptors, suggestions }: RadarDeckProps) {
       </div>
 
       <div className="flex justify-center overflow-hidden">
-        <div ref={deckRef} className="w-full max-w-[25rem] overflow-hidden py-2">
+        <div ref={deckRef} className="w-full max-w-100 overflow-hidden py-2">
           <motion.div
             className="flex cursor-grab active:cursor-grabbing"
             drag="x"
