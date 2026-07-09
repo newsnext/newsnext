@@ -135,7 +135,9 @@ export function RadarDeck({ sourceDescriptors, suggestions }: RadarDeckProps) {
   const [activeIndex, setActiveIndex] = useState(0)
   const [draftPatches, setDraftPatches] = useState<Record<string, RadarDraftPatch>>({})
   const [trackItemOffset, setTrackItemOffset] = useState(1)
+  const [hasMeasuredDeck, setHasMeasuredDeck] = useState(false)
   const deckRef = useRef<HTMLDivElement>(null)
+  const resizeObserverRef = useRef<ResizeObserver | null>(null)
   const dragControls = useDragControls()
   const x = useMotionValue(0)
 
@@ -145,31 +147,37 @@ export function RadarDeck({ sourceDescriptors, suggestions }: RadarDeckProps) {
   }, [suggestions, x])
 
   useEffect(() => {
-    const controls = animate(x, getRadarTrackX(activeIndex, trackItemOffset), RADAR_DECK_SPRING)
+    const targetX = getRadarTrackX(activeIndex, trackItemOffset)
+    const controls = animate(x, targetX, RADAR_DECK_SPRING)
 
     return () => {
       controls.stop()
     }
   }, [activeIndex, trackItemOffset, x])
 
-  useEffect(() => {
-    const deck = deckRef.current
-    if (!deck) {
+  const measureDeck = useCallback((deck: HTMLDivElement) => {
+    const nextTrackItemOffset = Math.max(deck.clientWidth + RADAR_CARD_GAP, 1)
+    setTrackItemOffset(nextTrackItemOffset)
+    setHasMeasuredDeck(true)
+  }, [])
+
+  const setDeckNode = useCallback((node: HTMLDivElement | null) => {
+    resizeObserverRef.current?.disconnect()
+    resizeObserverRef.current = null
+    deckRef.current = node
+
+    if (!node) {
+      setHasMeasuredDeck(false)
       return
     }
 
-    const updateTrackItemOffset = () => {
-      setTrackItemOffset(Math.max(deck.clientWidth + RADAR_CARD_GAP, 1))
-    }
-
-    updateTrackItemOffset()
-    const resizeObserver = new ResizeObserver(updateTrackItemOffset)
-    resizeObserver.observe(deck)
-
-    return () => {
-      resizeObserver.disconnect()
-    }
-  }, [])
+    measureDeck(node)
+    const resizeObserver = new ResizeObserver(() => {
+      measureDeck(node)
+    })
+    resizeObserver.observe(node)
+    resizeObserverRef.current = resizeObserver
+  }, [measureDeck])
 
   const activeSuggestion = suggestions[activeIndex]
   const activeSource = activeSuggestion
@@ -177,6 +185,7 @@ export function RadarDeck({ sourceDescriptors, suggestions }: RadarDeckProps) {
     : null
   const canGoPrevious = activeIndex > 0
   const canGoNext = activeIndex < suggestions.length - 1
+  const canDragDeck = hasMeasuredDeck && suggestions.length > 0
   const radarSources = useMemo(() => {
     return suggestions.map(suggestion => ({
       suggestion,
@@ -191,6 +200,7 @@ export function RadarDeck({ sourceDescriptors, suggestions }: RadarDeckProps) {
   const handleDragEnd = useCallback((_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     const shouldMovePrevious = info.offset.x > RADAR_SWIPE_THRESHOLD || info.velocity.x > RADAR_SWIPE_VELOCITY_THRESHOLD
     const shouldMoveNext = info.offset.x < -RADAR_SWIPE_THRESHOLD || info.velocity.x < -RADAR_SWIPE_VELOCITY_THRESHOLD
+    const fallbackTargetX = getRadarTrackX(activeIndex, trackItemOffset)
 
     if (shouldMovePrevious && canGoPrevious) {
       moveDeck(-1)
@@ -202,12 +212,16 @@ export function RadarDeck({ sourceDescriptors, suggestions }: RadarDeckProps) {
       return
     }
 
-    void animate(x, getRadarTrackX(activeIndex, trackItemOffset), RADAR_DECK_SPRING)
+    void animate(x, fallbackTargetX, RADAR_DECK_SPRING)
   }, [activeIndex, canGoNext, canGoPrevious, moveDeck, trackItemOffset, x])
 
   const handleDragHandlePointerDown = useCallback((event: PointerEvent<HTMLDivElement>) => {
+    if (!canDragDeck) {
+      return
+    }
+
     dragControls.start(event)
-  }, [dragControls])
+  }, [canDragDeck, dragControls])
 
   const dragConstraints = useMemo(() => ({
     left: -trackItemOffset * Math.max(suggestions.length - 1, 0),
@@ -307,9 +321,9 @@ export function RadarDeck({ sourceDescriptors, suggestions }: RadarDeckProps) {
       </div>
 
       <div className="flex justify-center overflow-hidden">
-        <div ref={deckRef} className="w-full max-w-100 overflow-hidden py-2">
+        <div ref={setDeckNode} className="w-full max-w-100 overflow-hidden py-2">
           <motion.div
-            className="flex cursor-grab active:cursor-grabbing"
+            className={cn("flex", canDragDeck && "cursor-grab active:cursor-grabbing")}
             drag="x"
             dragControls={dragControls}
             dragConstraints={dragConstraints}
