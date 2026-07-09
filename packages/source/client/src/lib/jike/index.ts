@@ -8,7 +8,7 @@ import type {
 } from "./types"
 import { myFetch } from "@newsnext/source-shared/utils/fetch"
 import { isJwtExpired } from "@newsnext/source-shared/utils/jwt"
-import { $textParam } from "@newsnext/source-shared/utils/params"
+import { $param } from "@newsnext/source-shared/utils/params"
 import { $radar, pageTitle } from "@newsnext/source-shared/utils/radar"
 
 import { $provider, $source } from "@newsnext/source-shared/utils/source"
@@ -243,7 +243,7 @@ export default $provider({
           }),
         ],
         params: {
-          username: $textParam({
+          username: $param.text({
             title: "Username",
             default: "7f422d5d-d79a-4f45-9880-b89d64d7f37a",
             validate: value => value.trim().length > 0 || "Username is required",
@@ -274,7 +274,7 @@ export default $provider({
           }),
         ],
         params: {
-          topicId: $textParam({
+          topicId: $param.text({
             title: "Topic ID",
             default: "5aeaa84029e4000011ac3768",
             validate: value => value.trim().length > 0 || "Topic ID is required",
@@ -305,7 +305,7 @@ export default $provider({
           }),
         ],
         params: {
-          topicId: $textParam({
+          topicId: $param.text({
             title: "Topic ID",
             default: "5aeaa84029e4000011ac3768",
             validate: value => value.trim().length > 0 || "Topic ID is required",

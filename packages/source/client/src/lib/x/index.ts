@@ -10,7 +10,7 @@ import type {
   XUserTweetsResponse,
 } from "./types"
 import { myFetch } from "@newsnext/source-shared/utils/fetch"
-import { $selectParam, $textParam } from "@newsnext/source-shared/utils/params"
+import { $param } from "@newsnext/source-shared/utils/params"
 import { $radar } from "@newsnext/source-shared/utils/radar"
 import { $provider, $source } from "@newsnext/source-shared/utils/source"
 import { LOCATION_OPTIONS as X_LOCATION_OPTIONS } from "./types"
@@ -164,7 +164,7 @@ export default $provider({
         title: "Trending",
         type: "hottest",
         params: {
-          location: $selectParam<LocationId>({
+          location: $param.select<LocationId>({
             title: "Location",
             options: [...X_LOCATION_OPTIONS],
             default: "1",
@@ -206,7 +206,7 @@ export default $provider({
           }),
         ],
         params: {
-          username: $textParam({
+          username: $param.text({
             title: "Username",
             default: "elonmusk",
             pattern: "^\\w{1,15}$",

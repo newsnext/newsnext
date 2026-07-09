@@ -1,6 +1,6 @@
 import type { NewsItem } from "@newsnext/source-shared/typings"
 import { myFetch } from "@newsnext/source-shared/utils/fetch"
-import { $textParam } from "@newsnext/source-shared/utils/params"
+import { $param } from "@newsnext/source-shared/utils/params"
 import { $provider, $source } from "@newsnext/source-shared/utils/source"
 
 interface FoloMedia {
@@ -112,7 +112,7 @@ export default $provider({
         type: "timeline",
         category: "others",
         params: {
-          feedId: $textParam({
+          feedId: $param.text({
             title: "Feed ID",
             default: "71931642168770560",
           }),
@@ -129,7 +129,7 @@ export default $provider({
         type: "timeline",
         category: "others",
         params: {
-          listId: $textParam({
+          listId: $param.text({
             title: "List ID",
             default: "68649150114432000",
           }),

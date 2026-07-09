@@ -1,5 +1,5 @@
 import type { NewsItem } from "@newsnext/source-shared/typings"
-import { $numberParam, $selectParam, $textParam } from "@newsnext/source-shared/utils/params"
+import { $param } from "@newsnext/source-shared/utils/params"
 import { $provider, $source } from "@newsnext/source-shared/utils/source"
 
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000
@@ -393,16 +393,16 @@ export default $provider({
         title: "History",
         type: "timeline",
         params: {
-          query: $textParam({
+          query: $param.text({
             title: "Search",
             default: "",
           }),
-          dateRange: $selectParam<DateRange>({
+          dateRange: $param.select<DateRange>({
             title: "Date range",
             options: [...DATE_RANGE_OPTIONS],
             default: "week",
           }),
-          maxResults: $numberParam({
+          maxResults: $param.number({
             title: "Limit",
             default: 50,
             min: 1,
@@ -418,12 +418,12 @@ export default $provider({
         title: "Bookmarks",
         type: "timeline",
         params: {
-          folder: $textParam({
+          folder: $param.text({
             title: "Folder",
             description: "Leave empty to include every bookmark. Use a folder ID, title, or path.",
             default: "",
           }),
-          maxResults: $numberParam({
+          maxResults: $param.number({
             title: "Limit",
             default: 50,
             min: 1,

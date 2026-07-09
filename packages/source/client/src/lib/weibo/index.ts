@@ -1,4 +1,4 @@
-import { $selectParam, $textParam } from "@newsnext/source-shared/utils/params"
+import { $param } from "@newsnext/source-shared/utils/params"
 import { $radar, first, hashQuery, literal, pageTitle, pathSegmentWithPrefix, query } from "@newsnext/source-shared/utils/radar"
 import { $provider, $source } from "@newsnext/source-shared/utils/source"
 import {
@@ -76,7 +76,7 @@ export default $provider({
           }),
         ],
         params: {
-          uid: $textParam({
+          uid: $param.text({
             title: "User ID",
             description: "Numeric Weibo uid.",
             default: "1195230310",
@@ -110,7 +110,7 @@ export default $provider({
           }),
         ],
         params: {
-          keyword: $textParam({
+          keyword: $param.text({
             title: "Keyword",
             default: "MSI",
             parse: value => String(value).trim(),
@@ -152,14 +152,14 @@ export default $provider({
           }),
         ],
         params: {
-          id: $textParam({
+          id: $param.text({
             title: "Super topic ID",
             description: "A 100808... Weibo super topic ID.",
             default: "1008084989d223732bf6f02f75ea30efad58a9",
             parse: value => String(value).trim(),
             validate: value => /^100808[a-z\d]+$/i.test(value) || "Super topic ID must start with 100808 and contain only letters or digits.",
           }),
-          type: $selectParam({
+          type: $param.select({
             title: "Type",
             options: [
               { label: "Latest comments", value: "feed" },

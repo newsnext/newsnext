@@ -1,4 +1,4 @@
-import { $selectParam } from "@newsnext/source-shared/utils/params"
+import { $param } from "@newsnext/source-shared/utils/params"
 import { $radar } from "@newsnext/source-shared/utils/radar"
 import { $provider, $source } from "@newsnext/source-shared/utils/source"
 
@@ -23,7 +23,7 @@ export default $provider({
           }),
         ],
         params: {
-          locale: $selectParam<"us" | "uk" | "ng" | "ro" | "it" | "ca" | "au">({
+          locale: $param.select<"us" | "uk" | "ng" | "ro" | "it" | "ca" | "au">({
             options: [
               { label: "US", value: "us" },
               { label: "UK", value: "uk" },

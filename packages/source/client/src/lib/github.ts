@@ -1,4 +1,4 @@
-import { $selectParam, $textParam } from "@newsnext/source-shared/utils/params"
+import { $param } from "@newsnext/source-shared/utils/params"
 import { $radar, query } from "@newsnext/source-shared/utils/radar"
 import { $provider, $source } from "@newsnext/source-shared/utils/source"
 
@@ -66,17 +66,17 @@ export default $provider({
           }),
         ],
         params: {
-          language: $textParam({
+          language: $param.text({
             title: "Language",
             description: "Programming language slug used by GitHub Trending, such as javascript, go, or rust.",
             default: "",
           }),
-          spokenLanguage: $textParam({
+          spokenLanguage: $param.text({
             title: "Spoken Language",
             description: "Repository description language code, such as en, zh, or ja.",
             default: "",
           }),
-          dateRange: $selectParam<DateRange>({
+          dateRange: $param.select<DateRange>({
             title: "Date range",
             options: [...DATE_RANGE_OPTIONS],
             default: "daily",

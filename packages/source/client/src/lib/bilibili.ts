@@ -1,6 +1,6 @@
 import type { NewsItem } from "@newsnext/shared/types"
 import { myFetch } from "@newsnext/source-shared/utils/fetch"
-import { $selectParam } from "@newsnext/source-shared/utils/params"
+import { $param } from "@newsnext/source-shared/utils/params"
 import { $provider, $source } from "@newsnext/source-shared/utils/source"
 
 const DYNAMIC_FEED_URL = "https://api.bilibili.com/x/polymer/web-dynamic/v1/feed/all"
@@ -227,7 +227,7 @@ export default $provider({
         title: "排行榜",
         type: "hottest",
         params: {
-          region: $selectParam<RankingRegionId>({
+          region: $param.select<RankingRegionId>({
             title: "Region",
             options: [...RANKING_REGION_OPTIONS],
             default: "0",

@@ -1,4 +1,4 @@
-import { $textParam } from "@newsnext/source-shared/utils/params"
+import { $param } from "@newsnext/source-shared/utils/params"
 import { $radar, pageTitle } from "@newsnext/source-shared/utils/radar"
 import { $provider, $source } from "@newsnext/source-shared/utils/source"
 
@@ -48,7 +48,7 @@ export default $provider({
           }),
         ],
         params: {
-          feed: $textParam({
+          feed: $param.text({
             title: "Feed",
             default: "ideas",
             parse: value => String(value).trim(),

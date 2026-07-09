@@ -133,77 +133,79 @@ export function parseSourceParams<TParams extends SourceParamSchemaMap>(
   ) as InferSourceParams<TParams>
 }
 
-export function $selectParam<K extends string>(R: Omit<SelectParameter<K>, "type">): SelectParameter<K> {
-  return {
-    type: "select",
-    ...R,
-  }
-}
+export const $param = {
+  select<K extends string>(R: Omit<SelectParameter<K>, "type">): SelectParameter<K> {
+    return {
+      type: "select",
+      ...R,
+    }
+  },
 
-export function $textParam<TOutput = string>(
-  R: Omit<TextParameter<TOutput>, "type">,
-): TextParameter<TOutput> {
-  return {
-    type: "text",
-    ...R,
-  }
-}
+  text<TOutput = string>(
+    R: Omit<TextParameter<TOutput>, "type">,
+  ): TextParameter<TOutput> {
+    return {
+      type: "text",
+      ...R,
+    }
+  },
 
-export function $urlParam<TOutput = string>(
-  R: Omit<UrlParameter<TOutput>, "type">,
-): UrlParameter<TOutput> {
-  return {
-    type: "url",
-    ...R,
-  }
-}
+  url<TOutput = string>(
+    R: Omit<UrlParameter<TOutput>, "type">,
+  ): UrlParameter<TOutput> {
+    return {
+      type: "url",
+      ...R,
+    }
+  },
 
-export function $numberParam<TOutput = number>(
-  R: Omit<NumberParameter<TOutput>, "type">,
-): NumberParameter<TOutput> {
-  return {
-    type: "number",
-    ...R,
-  }
-}
+  number<TOutput = number>(
+    R: Omit<NumberParameter<TOutput>, "type">,
+  ): NumberParameter<TOutput> {
+    return {
+      type: "number",
+      ...R,
+    }
+  },
 
-export function $switchParam<TOutput = boolean>(
-  R: Omit<SwitchParameter<TOutput>, "type">,
-): SwitchParameter<TOutput> {
-  return {
-    type: "switch",
-    ...R,
-  }
-}
+  switch<TOutput = boolean>(
+    R: Omit<SwitchParameter<TOutput>, "type">,
+  ): SwitchParameter<TOutput> {
+    return {
+      type: "switch",
+      ...R,
+    }
+  },
 
-export function $multiSelectParam<K extends string>(R: Omit<MultiSelectParameter<K>, "type">): MultiSelectParameter<K> {
-  return {
-    type: "multiselect",
-    ...R,
-  }
-}
+  multiSelect<K extends string>(R: Omit<MultiSelectParameter<K>, "type">): MultiSelectParameter<K> {
+    return {
+      type: "multiselect",
+      ...R,
+    }
+  },
 
-export function $jsonParam<TOutput>(
-  config: Omit<TextParameter<TOutput>, "type">,
-): TextParameter<TOutput> {
-  return $textParam<TOutput>({
-    ...config,
-    parse: (value) => {
-      if (typeof value !== "string") {
-        throw new SourceParamValueError(config.title, `${config.title} must be a JSON string`)
-      }
+  json<TOutput>(
+    config: Omit<TextParameter<TOutput>, "type">,
+  ): TextParameter<TOutput> {
+    return $param.text<TOutput>({
+      ...config,
+      parse: (value) => {
+        if (typeof value !== "string") {
+          throw new SourceParamValueError(config.title, `${config.title} must be a JSON string`)
+        }
 
-      try {
-        return JSON.parse(value) as TOutput
-      } catch {
-        throw new SourceParamValueError(config.title, `${config.title} must be valid JSON`)
-      }
-    },
-  })
+        try {
+          return JSON.parse(value) as TOutput
+        } catch {
+          throw new SourceParamValueError(config.title, `${config.title} must be valid JSON`)
+        }
+      },
+    })
+  },
 }
 
 export const CommonSourceParams = {
-  type: $selectParam<"hottest" | "timeline">({
+  type: $param.select<"hottest" | "timeline">({
     options: [
       { label: "Hottest", value: "hottest" },
       { label: "Timeline", value: "timeline" },

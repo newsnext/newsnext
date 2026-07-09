@@ -1,4 +1,4 @@
-import { $textParam } from "@newsnext/source-shared/utils/params"
+import { $param } from "@newsnext/source-shared/utils/params"
 import { $radar, first, hashQuery, pageTitle, query } from "@newsnext/source-shared/utils/radar"
 import { $provider, $source } from "@newsnext/source-shared/utils/source"
 
@@ -75,7 +75,7 @@ export default $provider({
           }),
         ],
         params: {
-          id: $textParam({
+          id: $param.text({
             default: DEFAULT_PLAYLIST_ID,
             title: "Playlist",
             pattern: "^\\d+$",
