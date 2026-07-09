@@ -45,7 +45,6 @@ export function ProxiedImage({ src, onError, delay, ...props }: ProxiedImageProp
         alt=""
         src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMSIgaGVpZ2h0PSIxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjwvc3ZnPg=="
         {...props}
-        draggable={false}
       />
     )
   }
@@ -58,7 +57,6 @@ export function ProxiedImage({ src, onError, delay, ...props }: ProxiedImageProp
       onError={handleError}
       loading="lazy"
       {...props}
-      draggable={false}
     />
   )
 }

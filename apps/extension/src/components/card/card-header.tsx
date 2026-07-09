@@ -45,7 +45,6 @@ export function CardHeader({
             className="size-full rounded-full bg-cover"
             src={icon}
             alt={`${providerTitle} icon`}
-            draggable={false}
             referrerPolicy="no-referrer"
             onError={(e) => {
               e.currentTarget.src = getFavicon(home || "#")!

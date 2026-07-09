@@ -36,7 +36,6 @@ function SourceLogoIcon({
       className={className}
       src={icon}
       alt=""
-      draggable={false}
       referrerPolicy="no-referrer"
     />
   )
