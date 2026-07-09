@@ -24,7 +24,6 @@ import {
   HOME_TIMELINE_URL,
   isUserTweetEntry,
   normalizeXSearchUrl,
-  normalizeXUsername,
   PLACE_TRENDS_URL,
   sortNewsItemsByNewest,
   USER_BY_SCREEN_NAME_URL,
@@ -94,7 +93,11 @@ export async function fetchXTimeline(url: string, context?: SourceLoaderContext)
 }
 
 export async function fetchXUserTweets({ username }: XUserTweetsParams, context?: SourceLoaderContext): Promise<NewsItem[]> {
-  const screenName = normalizeXUsername(username)
+  const screenName = username.trim()
+  if (!/^\w{1,15}$/.test(screenName)) {
+    throw new Error("X username must be a valid handle.")
+  }
+
   const headers = await createXLoggedInHeaders(context)
 
   const user = await myFetch<XUserByScreenNameResponse>(USER_BY_SCREEN_NAME_URL, {
@@ -208,7 +211,7 @@ export default $provider({
             default: "elonmusk",
             pattern: "^\\w{1,15}$",
             notIn: X_RADAR_RESERVED_PATHS,
-            parse: value => normalizeXUsername(String(value)),
+            parse: value => String(value).trim(),
             validate: value => /^\w{1,15}$/.test(value) || "Username must be a valid X handle.",
           }),
         },

@@ -719,17 +719,19 @@ export const sourceDescriptors: SourceDescriptor[] = [
         },
         "paramsPatch": {
           "id": {
-            "type": "first",
-            "values": [
-              {
-                "type": "query",
-                "name": "id"
-              },
-              {
-                "type": "hashQuery",
-                "name": "id"
-              }
-            ]
+            "value": {
+              "type": "first",
+              "values": [
+                {
+                  "type": "query",
+                  "name": "id"
+                },
+                {
+                  "type": "hashQuery",
+                  "name": "id"
+                }
+              ]
+            }
           }
         },
         "metaPatch": {
@@ -905,7 +907,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
       "uid": {
         "type": "text",
         "title": "User ID",
-        "description": "Numeric uid, or a Weibo profile URL containing the uid.",
+        "description": "Numeric Weibo uid.",
         "default": "1195230310",
         "pattern": "^\\d+$"
       }
@@ -950,7 +952,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
           ],
           "paths": [
             "/u/:uid",
-            "/profile/:uid"
+            "/profile/:uid",
+            "/:uid"
           ]
         },
         "metaPatch": {
@@ -1037,17 +1040,19 @@ export const sourceDescriptors: SourceDescriptor[] = [
         },
         "paramsPatch": {
           "keyword": {
-            "type": "first",
-            "values": [
-              {
-                "type": "query",
-                "name": "q"
-              },
-              {
-                "type": "query",
-                "name": "keyword"
-              }
-            ]
+            "value": {
+              "type": "first",
+              "values": [
+                {
+                  "type": "query",
+                  "name": "q"
+                },
+                {
+                  "type": "query",
+                  "name": "keyword"
+                }
+              ]
+            }
           }
         },
         "metaPatch": {
@@ -1066,9 +1071,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
       "id": {
         "type": "text",
         "title": "Super topic ID",
-        "description": "A 100808... super topic ID, or a Weibo super topic URL containing it.",
-        "default": "1008084989d223732bf6f02f75ea30efad58a9",
-        "startsWith": "100808"
+        "description": "A 100808... Weibo super topic ID.",
+        "default": "1008084989d223732bf6f02f75ea30efad58a9"
       },
       "type": {
         "type": "select",
@@ -1135,19 +1139,28 @@ export const sourceDescriptors: SourceDescriptor[] = [
         },
         "paramsPatch": {
           "id": {
-            "type": "first",
-            "values": [
+            "value": {
+              "type": "first",
+              "values": [
+                {
+                  "type": "query",
+                  "name": "containerid"
+                },
+                {
+                  "type": "hashQuery",
+                  "name": "containerid"
+                },
+                {
+                  "type": "pathSegmentWithPrefix",
+                  "prefix": "100808"
+                }
+              ]
+            },
+            "transforms": [
               {
-                "type": "query",
-                "name": "containerid"
-              },
-              {
-                "type": "hashQuery",
-                "name": "containerid"
-              },
-              {
-                "type": "pathSegmentWithPrefix",
-                "prefix": "100808"
+                "type": "replace",
+                "pattern": "_-_.*$",
+                "replacement": ""
               }
             ]
           },

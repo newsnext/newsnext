@@ -1,6 +1,8 @@
 import type { RegisteredSourceDefinition } from "@newsnext/source-shared/typings"
 import { describe, expect, it } from "vitest"
 import neteaseMusic from "../lib/netease-music"
+import weibo from "../lib/weibo"
+import x from "../lib/x"
 import {
   normalizeSourceParams,
   parseSourceId,
@@ -103,11 +105,21 @@ describe("source service", () => {
     })
   })
 
-  it("normalizes NetEase Music playlist links to playlist IDs", () => {
-    expect(normalizeSourceParams(neteaseMusic.sources.playlist, {
+  it("rejects URL-like values for params handled by radar", () => {
+    expect(() => normalizeSourceParams(neteaseMusic.sources.playlist, {
       id: "https://music.163.com/playlist?id=5059661515&uct2=U2FsdGVkX1+h604nouVzL3eBMasVMbAgGM76vxJxHfw=",
-    })).toEqual({
-      id: "5059661515",
-    })
+    })).toThrowError(SourceServiceError)
+
+    expect(() => normalizeSourceParams(weibo.sources.user, {
+      uid: "https://m.weibo.cn/u/1195230310",
+    })).toThrowError(SourceServiceError)
+
+    expect(() => normalizeSourceParams(weibo.sources["super-topic"], {
+      id: "https://m.weibo.cn/p/index?containerid=1008084989d223732bf6f02f75ea30efad58a9_-_feed",
+    })).toThrowError(SourceServiceError)
+
+    expect(() => normalizeSourceParams(x.sources.user, {
+      username: "https://x.com/newsnext_dev",
+    })).toThrowError(SourceServiceError)
   })
 })

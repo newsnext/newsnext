@@ -172,18 +172,6 @@ async function fetchWeiboApi<T>(url: string, referer: string, context?: SourceLo
   return response.data
 }
 
-export function normalizeWeiboUid(value: string): string {
-  const trimmed = value.trim()
-  const match = trimmed.match(/(?:weibo\.com\/u\/|m\.weibo\.cn\/(?:u|profile)\/)(\d+)/)
-  return (match?.[1] ?? trimmed).replace(/\D/g, "")
-}
-
-export function normalizeWeiboSuperTopicId(value: string): string {
-  const trimmed = value.trim()
-  const match = trimmed.match(/(?:containerid=|(?:m\.)?weibo\.cn\/p\/|weibo\.com\/p\/)(100808[a-z\d]+)/i)
-  return (match?.[1] ?? trimmed).split("_-_")[0] ?? ""
-}
-
 export function isWeiboSuperTopicType(value: string): value is WeiboSuperTopicType {
   return WEIBO_SUPER_TOPIC_TYPE_OPTIONS.includes(value as WeiboSuperTopicType)
 }
@@ -279,8 +267,8 @@ export async function fetchWeiboUserPosts(
   { uid }: WeiboUserPostsParams,
   context?: SourceLoaderContext,
 ): Promise<NewsItem[]> {
-  const normalizedUid = normalizeWeiboUid(uid)
-  if (!normalizedUid) {
+  const normalizedUid = uid.trim()
+  if (!/^\d+$/.test(normalizedUid)) {
     throw new Error("Weibo user ID must be a numeric uid.")
   }
 
@@ -328,9 +316,9 @@ export async function fetchWeiboSuperTopicPosts(
   { id, type }: WeiboSuperTopicPostsParams,
   context?: SourceLoaderContext,
 ): Promise<NewsItem[]> {
-  const normalizedId = normalizeWeiboSuperTopicId(id)
-  if (!normalizedId) {
-    throw new Error("Weibo super topic ID must not be empty.")
+  const normalizedId = id.trim()
+  if (!/^100808[a-z\d]+$/i.test(normalizedId)) {
+    throw new Error("Weibo super topic ID must start with 100808 and contain only letters or digits.")
   }
 
   const normalizedType = isWeiboSuperTopicType(type) ? type : "feed"

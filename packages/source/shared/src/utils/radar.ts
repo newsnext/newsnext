@@ -110,8 +110,8 @@ export function pathSegmentWithPrefix(prefix: string): RadarValueBuilder {
   return value({ type: "pathSegmentWithPrefix", prefix })
 }
 
-export function first(...values: RadarValueInput[]): SourceRadarValue {
-  return { type: "first", values: values.map(toRadarValue) }
+export function first(...values: RadarValueInput[]): RadarValueBuilder {
+  return value({ type: "first", values: values.map(toRadarValue) })
 }
 
 export function pageTitle(): RadarValueBuilder {

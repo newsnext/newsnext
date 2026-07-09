@@ -34,17 +34,6 @@ const DEFAULT_PLAYLIST_ID = "19723756"
 
 const getPlaylistHome = (id: string): string => `https://music.163.com/#/playlist?id=${id}`
 
-const parsePlaylistId = (value: unknown): string => {
-  const input = String(value).trim()
-
-  if (/^\d+$/.test(input)) {
-    return input
-  }
-
-  const playlistId = input.match(/(?:[?#&]|^)id=(\d+)(?:&|$)/)?.[1]
-  return playlistId ?? input
-}
-
 const extractTracks = (payload: PlaylistResponse): NeteaseTrack[] => {
   const tracks = payload.result?.tracks ?? payload.playlist?.tracks ?? []
   return Array.isArray(tracks) ? tracks.slice(0, 100) : []
@@ -90,7 +79,7 @@ export default $provider({
             default: DEFAULT_PLAYLIST_ID,
             title: "Playlist",
             pattern: "^\\d+$",
-            parse: parsePlaylistId,
+            parse: value => String(value).trim(),
             validate: value => /^\d+$/.test(value) || "Playlist must be a numeric ID",
           }),
         },

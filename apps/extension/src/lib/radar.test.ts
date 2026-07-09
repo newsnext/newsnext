@@ -95,6 +95,17 @@ describe("getRadarSuggestions", () => {
       },
     ])
 
+    expect(getSuggestions({
+      url: "https://weibo.com/1195230310",
+      title: "少数派的微博_微博",
+    })).toMatchObject([
+      {
+        sourceId: "weibo:user",
+        paramsPatch: { uid: "1195230310" },
+        metaPatch: { title: "少数派" },
+      },
+    ])
+
     expect(getSuggestions({ url: "https://s.weibo.com/weibo?q=React" })).toMatchObject([
       {
         sourceId: "weibo:keyword",
@@ -104,7 +115,7 @@ describe("getRadarSuggestions", () => {
     ])
 
     expect(getSuggestions({
-      url: "https://m.weibo.cn/p/index?containerid=1008084989d223732bf6f02f75ea30efad58a9",
+      url: "https://m.weibo.cn/p/index?containerid=1008084989d223732bf6f02f75ea30efad58a9_-_feed",
       title: "React超话-微博",
     })).toMatchObject([
       {

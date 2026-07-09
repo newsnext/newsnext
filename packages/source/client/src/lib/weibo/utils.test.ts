@@ -5,8 +5,6 @@ import {
   fetchWeiboKeywordPosts,
   fetchWeiboSuperTopicPosts,
   fetchWeiboUserPosts,
-  normalizeWeiboSuperTopicId,
-  normalizeWeiboUid,
 } from "./utils"
 
 vi.mock("@newsnext/source-shared/utils/fetch", () => ({
@@ -18,16 +16,17 @@ describe("weibo utils", () => {
     vi.mocked(myFetch).mockReset()
   })
 
-  it("normalizes numeric user IDs from Weibo profile URLs", () => {
-    expect(normalizeWeiboUid("https://m.weibo.cn/u/1195230310")).toBe("1195230310")
-    expect(normalizeWeiboUid("https://m.weibo.cn/profile/1195230310")).toBe("1195230310")
-    expect(normalizeWeiboUid(" 1195230310 ")).toBe("1195230310")
+  it("rejects Weibo profile URLs as user post params", async () => {
+    await expect(fetchWeiboUserPosts({ uid: "https://m.weibo.cn/u/1195230310" })).rejects.toThrow("Weibo user ID must be a numeric uid.")
+    expect(myFetch).not.toHaveBeenCalled()
   })
 
-  it("normalizes super topic IDs from Weibo URLs", () => {
-    expect(normalizeWeiboSuperTopicId("https://m.weibo.cn/p/1008084989d223732bf6f02f75ea30efad58a9/super_index")).toBe("1008084989d223732bf6f02f75ea30efad58a9")
-    expect(normalizeWeiboSuperTopicId("https://m.weibo.cn/p/index?containerid=1008084989d223732bf6f02f75ea30efad58a9_-_feed")).toBe("1008084989d223732bf6f02f75ea30efad58a9")
-    expect(normalizeWeiboSuperTopicId("1008084989d223732bf6f02f75ea30efad58a9")).toBe("1008084989d223732bf6f02f75ea30efad58a9")
+  it("rejects Weibo super topic URLs as super topic params", async () => {
+    await expect(fetchWeiboSuperTopicPosts({
+      id: "https://m.weibo.cn/p/index?containerid=1008084989d223732bf6f02f75ea30efad58a9_-_feed",
+      type: "feed",
+    })).rejects.toThrow("Weibo super topic ID must start with 100808")
+    expect(myFetch).not.toHaveBeenCalled()
   })
 
   it("loads posts for a specified user through the mobile container API", async () => {
@@ -71,7 +70,7 @@ describe("weibo utils", () => {
         },
       })
 
-    const items = await fetchWeiboUserPosts({ uid: "https://m.weibo.cn/u/1195230310" })
+    const items = await fetchWeiboUserPosts({ uid: "1195230310" })
 
     expect(myFetch).toHaveBeenNthCalledWith(
       1,
@@ -227,7 +226,7 @@ describe("weibo utils", () => {
     })
 
     const items = await fetchWeiboSuperTopicPosts({
-      id: "https://m.weibo.cn/p/1008084989d223732bf6f02f75ea30efad58a9/super_index",
+      id: "1008084989d223732bf6f02f75ea30efad58a9",
       type: "sort_time",
     })
 

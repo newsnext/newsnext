@@ -6,8 +6,6 @@ import {
   fetchWeiboKeywordPosts,
   fetchWeiboSuperTopicPosts,
   fetchWeiboUserPosts,
-  normalizeWeiboSuperTopicId,
-  normalizeWeiboUid,
   optionalWeiboCookieSecrets,
   requiredWeiboCookieSecrets,
 } from "./utils"
@@ -65,7 +63,7 @@ export default $provider({
           $radar({
             id: "weibo-user",
             hosts: ["m.weibo.cn", "weibo.com"],
-            paths: ["/u/:uid", "/profile/:uid"],
+            paths: ["/u/:uid", "/profile/:uid", "/:uid"],
             meta: {
               title: pageTitle()
                 .normalize()
@@ -80,10 +78,10 @@ export default $provider({
         params: {
           uid: $textParam({
             title: "User ID",
-            description: "Numeric uid, or a Weibo profile URL containing the uid.",
+            description: "Numeric Weibo uid.",
             default: "1195230310",
             pattern: "^\\d+$",
-            parse: value => normalizeWeiboUid(String(value)),
+            parse: value => String(value).trim(),
             validate: value => /^\d+$/.test(value) || "User ID must be numeric.",
           }),
         },
@@ -143,7 +141,11 @@ export default $provider({
                 .fallback("{id}"),
             },
             params: {
-              id: first(query("containerid"), hashQuery("containerid"), pathSegmentWithPrefix("100808")),
+              id: first(
+                query("containerid"),
+                hashQuery("containerid"),
+                pathSegmentWithPrefix("100808"),
+              ).replace("_-_.*$", ""),
               type: literal("feed"),
             },
             confidence: 0.9,
@@ -152,11 +154,10 @@ export default $provider({
         params: {
           id: $textParam({
             title: "Super topic ID",
-            description: "A 100808... super topic ID, or a Weibo super topic URL containing it.",
+            description: "A 100808... Weibo super topic ID.",
             default: "1008084989d223732bf6f02f75ea30efad58a9",
-            startsWith: "100808",
-            parse: value => normalizeWeiboSuperTopicId(String(value)),
-            validate: value => value.length > 0 || "Super topic ID must not be empty.",
+            parse: value => String(value).trim(),
+            validate: value => /^100808[a-z\d]+$/i.test(value) || "Super topic ID must start with 100808 and contain only letters or digits.",
           }),
           type: $selectParam({
             title: "Type",
