@@ -1,4 +1,5 @@
 import { $textParam } from "@newsnext/source-shared/utils/params"
+import { $radar, first, hashQuery, pageTitle, query } from "@newsnext/source-shared/utils/radar"
 import { $provider, $source } from "@newsnext/source-shared/utils/source"
 
 interface NeteaseArtist {
@@ -68,34 +69,27 @@ export default $provider({
         type: "hottest",
         home: getPlaylistHome(DEFAULT_PLAYLIST_ID),
         radar: [
-          {
+          $radar({
             id: "netease-music-playlist",
-            match: {
-              hosts: ["music.163.com", "y.music.163.com"],
-              includes: ["playlist", "toplist"],
-            },
-            title: {
-              type: "value",
-              value: { type: "pageTitle" },
-              transforms: [
-                { type: "normalizeWhitespace" },
-                { type: "extract", pattern: "^(.+?)\\s*-\\s*(?:歌单|排行榜)\\s*-\\s*网易云音乐$", fallbackToEmpty: true },
-              ],
-              fallback: "Playlist {id}",
+            hosts: ["music.163.com", "y.music.163.com"],
+            includes: ["playlist", "toplist"],
+            meta: {
+              title: pageTitle()
+                .normalize()
+                .extract("^(.+?)\\s*-\\s*(?:歌单|排行榜)\\s*-\\s*网易云音乐$", { fallbackToEmpty: true })
+                .fallback("Playlist {id}"),
             },
             params: {
-              id: {
-                value: { type: "first", values: [{ type: "query", name: "id" }, { type: "hashQuery", name: "id" }] },
-                pattern: "^\\d+$",
-              },
+              id: first(query("id"), hashQuery("id")),
             },
             confidence: 0.95,
-          },
+          }),
         ],
         params: {
           id: $textParam({
             default: DEFAULT_PLAYLIST_ID,
             title: "Playlist",
+            pattern: "^\\d+$",
             parse: parsePlaylistId,
             validate: value => /^\d+$/.test(value) || "Playlist must be a numeric ID",
           }),

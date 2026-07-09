@@ -348,39 +348,24 @@ export const sourceDescriptors: SourceDescriptor[] = [
             "/trending/:language"
           ]
         },
-        "title": {
-          "type": "template",
-          "value": "Trending {language}"
-        },
-        "params": {
-          "language": {
-            "type": "path",
-            "name": "language"
-          },
+        "paramsPatch": {
           "spokenLanguage": {
-            "type": "query",
-            "name": "spoken_language_code"
+            "value": {
+              "type": "query",
+              "name": "spoken_language_code"
+            },
+            "fallback": ""
           },
           "dateRange": {
             "value": {
-              "type": "first",
-              "values": [
-                {
-                  "type": "query",
-                  "name": "since"
-                },
-                {
-                  "type": "literal",
-                  "value": "daily"
-                }
-              ]
+              "type": "query",
+              "name": "since"
             },
-            "in": [
-              "daily",
-              "weekly",
-              "monthly"
-            ]
+            "fallback": "daily"
           }
+        },
+        "metaPatch": {
+          "title": "Trending {language}"
         },
         "confidence": 0.95
       }
@@ -458,6 +443,20 @@ export const sourceDescriptors: SourceDescriptor[] = [
         "itemKey": "JK_REFRESH_TOKEN"
       }
     ],
+    "radar": [
+      {
+        "id": "jike-following-updates",
+        "match": {
+          "hosts": [
+            "web.okjike.com"
+          ],
+          "paths": [
+            "/following"
+          ]
+        },
+        "confidence": 0.95
+      }
+    ],
     "id": "jike:following-updates"
   },
   {
@@ -468,7 +467,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
       "username": {
         "type": "text",
         "title": "Username",
-        "default": "a2d6acc1-626f-4d15-a22a-849e88a4c9f0"
+        "default": "7f422d5d-d79a-4f45-9880-b89d64d7f37a"
       }
     },
     "paramsSchemaVersion": 1,
@@ -500,80 +499,30 @@ export const sourceDescriptors: SourceDescriptor[] = [
             "web.okjike.com"
           ],
           "paths": [
-            "/u/:username"
+            "/u/:username{/*rest}"
           ]
         },
-        "title": {
-          "type": "value",
-          "value": {
-            "type": "pageTitle"
-          },
-          "transforms": [
-            {
-              "type": "normalizeWhitespace"
-            },
-            {
-              "type": "replace",
-              "pattern": "的主页\\s*[-_—|]\\s*即刻.*$",
-              "replacement": ""
-            },
-            {
-              "type": "extract",
-              "pattern": "^(.+?)(?:\\s*[-_—|]\\s*即刻.*)?$",
-              "fallbackToEmpty": true
-            }
-          ],
-          "fallback": "{username}"
-        },
-        "params": {
-          "username": {
+        "metaPatch": {
+          "title": {
             "value": {
-              "type": "path",
-              "name": "username"
+              "type": "pageTitle"
             },
-            "required": true
-          }
-        },
-        "confidence": 0.9
-      },
-      {
-        "id": "jike-user-post",
-        "match": {
-          "hosts": [
-            "web.okjike.com"
-          ],
-          "paths": [
-            "/u/:username/:type/:id{/*rest}"
-          ]
-        },
-        "title": {
-          "type": "value",
-          "value": {
-            "type": "pageTitle"
-          },
-          "transforms": [
-            {
-              "type": "normalizeWhitespace"
-            },
-            {
-              "type": "extract",
-              "pattern": "^(.+?)[:：]"
-            },
-            {
-              "type": "extract",
-              "pattern": "^(.+?)(?:\\s*[-_—|]\\s*即刻.*)?$",
-              "fallbackToEmpty": true
-            }
-          ],
-          "fallback": "{username}"
-        },
-        "params": {
-          "username": {
-            "value": {
-              "type": "path",
-              "name": "username"
-            },
-            "required": true
+            "transforms": [
+              {
+                "type": "normalizeWhitespace"
+              },
+              {
+                "type": "replace",
+                "pattern": "[:：].*$",
+                "replacement": ""
+              },
+              {
+                "type": "replace",
+                "pattern": "的主页\\s*[-_—|]\\s*即刻.*$",
+                "replacement": ""
+              }
+            ],
+            "fallback": "{username}"
           }
         },
         "confidence": 0.9
@@ -624,30 +573,22 @@ export const sourceDescriptors: SourceDescriptor[] = [
             "/topic/:topicId{/*rest}"
           ]
         },
-        "title": {
-          "type": "value",
-          "value": {
-            "type": "pageTitle"
-          },
-          "transforms": [
-            {
-              "type": "normalizeWhitespace"
-            },
-            {
-              "type": "extract",
-              "pattern": "^(.+?)(?:\\s*[-_—|]\\s*即刻.*)?$",
-              "fallbackToEmpty": true
-            }
-          ],
-          "fallback": "Topic {topicId}"
-        },
-        "params": {
-          "topicId": {
+        "metaPatch": {
+          "title": {
             "value": {
-              "type": "path",
-              "name": "topicId"
+              "type": "pageTitle"
             },
-            "required": true
+            "transforms": [
+              {
+                "type": "normalizeWhitespace"
+              },
+              {
+                "type": "extract",
+                "pattern": "^(.+?)(?:\\s*[-_—|]\\s*即刻.*)?$",
+                "fallbackToEmpty": true
+              }
+            ],
+            "fallback": "Topic {topicId}"
           }
         },
         "confidence": 0.9
@@ -698,30 +639,22 @@ export const sourceDescriptors: SourceDescriptor[] = [
             "/topic/:topicId{/*rest}"
           ]
         },
-        "title": {
-          "type": "value",
-          "value": {
-            "type": "pageTitle"
-          },
-          "transforms": [
-            {
-              "type": "normalizeWhitespace"
-            },
-            {
-              "type": "extract",
-              "pattern": "^(.+?)(?:\\s*[-_—|]\\s*即刻.*)?$",
-              "fallbackToEmpty": true
-            }
-          ],
-          "fallback": "Topic {topicId}"
-        },
-        "params": {
-          "topicId": {
+        "metaPatch": {
+          "title": {
             "value": {
-              "type": "path",
-              "name": "topicId"
+              "type": "pageTitle"
             },
-            "required": true
+            "transforms": [
+              {
+                "type": "normalizeWhitespace"
+              },
+              {
+                "type": "extract",
+                "pattern": "^(.+?)(?:\\s*[-_—|]\\s*即刻.*)?$",
+                "fallbackToEmpty": true
+              }
+            ],
+            "fallback": "Topic {topicId}"
           }
         },
         "confidence": 0.85
@@ -761,7 +694,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
       "id": {
         "type": "text",
         "default": "19723756",
-        "title": "Playlist"
+        "title": "Playlist",
+        "pattern": "^\\d+$"
       }
     },
     "paramsSchemaVersion": 1,
@@ -783,39 +717,37 @@ export const sourceDescriptors: SourceDescriptor[] = [
             "toplist"
           ]
         },
-        "title": {
-          "type": "value",
-          "value": {
-            "type": "pageTitle"
-          },
-          "transforms": [
-            {
-              "type": "normalizeWhitespace"
-            },
-            {
-              "type": "extract",
-              "pattern": "^(.+?)\\s*-\\s*(?:歌单|排行榜)\\s*-\\s*网易云音乐$",
-              "fallbackToEmpty": true
-            }
-          ],
-          "fallback": "Playlist {id}"
-        },
-        "params": {
+        "paramsPatch": {
           "id": {
+            "type": "first",
+            "values": [
+              {
+                "type": "query",
+                "name": "id"
+              },
+              {
+                "type": "hashQuery",
+                "name": "id"
+              }
+            ]
+          }
+        },
+        "metaPatch": {
+          "title": {
             "value": {
-              "type": "first",
-              "values": [
-                {
-                  "type": "query",
-                  "name": "id"
-                },
-                {
-                  "type": "hashQuery",
-                  "name": "id"
-                }
-              ]
+              "type": "pageTitle"
             },
-            "pattern": "^\\d+$"
+            "transforms": [
+              {
+                "type": "normalizeWhitespace"
+              },
+              {
+                "type": "extract",
+                "pattern": "^(.+?)\\s*-\\s*(?:歌单|排行榜)\\s*-\\s*网易云音乐$",
+                "fallbackToEmpty": true
+              }
+            ],
+            "fallback": "Playlist {id}"
           }
         },
         "confidence": 0.95
@@ -885,33 +817,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
             "/:locale/*topic"
           ]
         },
-        "title": {
-          "type": "param",
-          "name": "topic"
-        },
-        "params": {
-          "locale": {
-            "value": {
-              "type": "path",
-              "name": "locale"
-            },
-            "in": [
-              "us",
-              "uk",
-              "ng",
-              "ro",
-              "it",
-              "ca",
-              "au"
-            ]
-          },
-          "topic": {
-            "value": {
-              "type": "path",
-              "name": "topic"
-            },
-            "required": true
-          }
+        "metaPatch": {
+          "title": "{topic}"
         },
         "confidence": 0.85
       }
@@ -956,29 +863,21 @@ export const sourceDescriptors: SourceDescriptor[] = [
             "/go/:feed"
           ]
         },
-        "title": {
-          "type": "value",
-          "value": {
-            "type": "pageTitle"
-          },
-          "transforms": [
-            {
-              "type": "normalizeWhitespace"
-            },
-            {
-              "type": "extract",
-              "pattern": "^.*[>›]\\s*(.+)$"
-            }
-          ],
-          "fallback": "{feed}"
-        },
-        "params": {
-          "feed": {
+        "metaPatch": {
+          "title": {
             "value": {
-              "type": "path",
-              "name": "feed"
+              "type": "pageTitle"
             },
-            "required": true
+            "transforms": [
+              {
+                "type": "normalizeWhitespace"
+              },
+              {
+                "type": "extract",
+                "pattern": "^.*[>›]\\s*(.+)$"
+              }
+            ],
+            "fallback": "{feed}"
           }
         },
         "confidence": 0.9
@@ -1007,7 +906,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
         "type": "text",
         "title": "User ID",
         "description": "Numeric uid, or a Weibo profile URL containing the uid.",
-        "default": "1195230310"
+        "default": "1195230310",
+        "pattern": "^\\d+$"
       }
     },
     "paramsSchemaVersion": 1,
@@ -1053,39 +953,31 @@ export const sourceDescriptors: SourceDescriptor[] = [
             "/profile/:uid"
           ]
         },
-        "title": {
-          "type": "value",
-          "value": {
-            "type": "pageTitle"
-          },
-          "transforms": [
-            {
-              "type": "normalizeWhitespace"
-            },
-            {
-              "type": "extract",
-              "pattern": "^@(.+)\\s*的个人主页"
-            },
-            {
-              "type": "replace",
-              "pattern": "[-_—|].*微博.*$",
-              "replacement": ""
-            },
-            {
-              "type": "replace",
-              "pattern": "的微博.*$",
-              "replacement": ""
-            }
-          ],
-          "fallback": "User {uid}"
-        },
-        "params": {
-          "uid": {
+        "metaPatch": {
+          "title": {
             "value": {
-              "type": "path",
-              "name": "uid"
+              "type": "pageTitle"
             },
-            "pattern": "^\\d+$"
+            "transforms": [
+              {
+                "type": "normalizeWhitespace"
+              },
+              {
+                "type": "extract",
+                "pattern": "^@(.+)\\s*的个人主页"
+              },
+              {
+                "type": "replace",
+                "pattern": "[-_—|].*微博.*$",
+                "replacement": ""
+              },
+              {
+                "type": "replace",
+                "pattern": "的微博.*$",
+                "replacement": ""
+              }
+            ],
+            "fallback": "User {uid}"
           }
         },
         "confidence": 0.9
@@ -1143,27 +1035,23 @@ export const sourceDescriptors: SourceDescriptor[] = [
             "s.m.weibo.cn"
           ]
         },
-        "title": {
-          "type": "param",
-          "name": "keyword"
-        },
-        "params": {
+        "paramsPatch": {
           "keyword": {
-            "value": {
-              "type": "first",
-              "values": [
-                {
-                  "type": "query",
-                  "name": "q"
-                },
-                {
-                  "type": "query",
-                  "name": "keyword"
-                }
-              ]
-            },
-            "required": true
+            "type": "first",
+            "values": [
+              {
+                "type": "query",
+                "name": "q"
+              },
+              {
+                "type": "query",
+                "name": "keyword"
+              }
+            ]
           }
+        },
+        "metaPatch": {
+          "title": "{keyword}"
         },
         "confidence": 0.9
       }
@@ -1179,7 +1067,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
         "type": "text",
         "title": "Super topic ID",
         "description": "A 100808... super topic ID, or a Weibo super topic URL containing it.",
-        "default": "1008084989d223732bf6f02f75ea30efad58a9"
+        "default": "1008084989d223732bf6f02f75ea30efad58a9",
+        "startsWith": "100808"
       },
       "type": {
         "type": "select",
@@ -1244,56 +1133,54 @@ export const sourceDescriptors: SourceDescriptor[] = [
             "weibo.com"
           ]
         },
-        "title": {
-          "type": "value",
-          "value": {
-            "type": "pageTitle"
-          },
-          "transforms": [
-            {
-              "type": "normalizeWhitespace"
-            },
-            {
-              "type": "replace",
-              "pattern": "[-_—|].*微博.*$",
-              "replacement": ""
-            },
-            {
-              "type": "replace",
-              "pattern": "的微博.*$",
-              "replacement": ""
-            },
-            {
-              "type": "extract",
-              "pattern": "^#?(.+?)超话#?$"
-            }
-          ],
-          "fallback": "{id}"
-        },
-        "params": {
+        "paramsPatch": {
           "id": {
-            "value": {
-              "type": "first",
-              "values": [
-                {
-                  "type": "query",
-                  "name": "containerid"
-                },
-                {
-                  "type": "hashQuery",
-                  "name": "containerid"
-                },
-                {
-                  "type": "pathSegmentWithPrefix",
-                  "prefix": "100808"
-                }
-              ]
-            },
-            "startsWith": "100808"
+            "type": "first",
+            "values": [
+              {
+                "type": "query",
+                "name": "containerid"
+              },
+              {
+                "type": "hashQuery",
+                "name": "containerid"
+              },
+              {
+                "type": "pathSegmentWithPrefix",
+                "prefix": "100808"
+              }
+            ]
           },
           "type": {
             "type": "literal",
             "value": "feed"
+          }
+        },
+        "metaPatch": {
+          "title": {
+            "value": {
+              "type": "pageTitle"
+            },
+            "transforms": [
+              {
+                "type": "normalizeWhitespace"
+              },
+              {
+                "type": "replace",
+                "pattern": "[-_—|].*微博.*$",
+                "replacement": ""
+              },
+              {
+                "type": "replace",
+                "pattern": "的微博.*$",
+                "replacement": ""
+              },
+              {
+                "type": "extract",
+                "pattern": "^#?(.+?)超话#?$"
+              }
+            ],
+            "fallback": "{id}"
           }
         },
         "confidence": 0.9
@@ -1457,7 +1344,20 @@ export const sourceDescriptors: SourceDescriptor[] = [
       "username": {
         "type": "text",
         "title": "Username",
-        "default": "elonmusk"
+        "default": "elonmusk",
+        "pattern": "^\\w{1,15}$",
+        "notIn": [
+          "compose",
+          "explore",
+          "home",
+          "i",
+          "intent",
+          "messages",
+          "notifications",
+          "search",
+          "settings",
+          "share"
+        ]
       }
     },
     "paramsSchemaVersion": 1,
@@ -1487,36 +1387,8 @@ export const sourceDescriptors: SourceDescriptor[] = [
             "/:username{/*rest}"
           ]
         },
-        "title": {
-          "type": "param",
-          "name": "username",
-          "transforms": [
-            {
-              "type": "prepend",
-              "value": "@"
-            }
-          ]
-        },
-        "params": {
-          "username": {
-            "value": {
-              "type": "path",
-              "name": "username"
-            },
-            "pattern": "^\\w{1,15}$",
-            "notIn": [
-              "compose",
-              "explore",
-              "home",
-              "i",
-              "intent",
-              "messages",
-              "notifications",
-              "search",
-              "settings",
-              "share"
-            ]
-          }
+        "metaPatch": {
+          "title": "@{username}"
         },
         "confidence": 0.95
       }

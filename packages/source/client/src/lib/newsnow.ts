@@ -1,4 +1,5 @@
 import { $selectParam } from "@newsnext/source-shared/utils/params"
+import { $radar } from "@newsnext/source-shared/utils/radar"
 import { $provider, $source } from "@newsnext/source-shared/utils/source"
 
 export default $provider({
@@ -11,19 +12,15 @@ export default $provider({
         key: "topic-latest",
         type: "timeline",
         radar: [
-          {
+          $radar({
             id: "newsnow-topic",
-            match: {
-              hosts: ["newsnow.com"],
-              paths: ["/:locale/*topic"],
-            },
-            title: { type: "param", name: "topic" },
-            params: {
-              locale: { value: { type: "path", name: "locale" }, in: ["us", "uk", "ng", "ro", "it", "ca", "au"] },
-              topic: { value: { type: "path", name: "topic" }, required: true },
+            hosts: ["newsnow.com"],
+            path: "/:locale/*topic",
+            meta: {
+              title: "{topic}",
             },
             confidence: 0.85,
-          },
+          }),
         ],
         params: {
           locale: $selectParam<"us" | "uk" | "ng" | "ro" | "it" | "ca" | "au">({

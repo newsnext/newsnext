@@ -21,6 +21,20 @@ function validateParsedSourceParamValue<TParam extends SourceParamSchema>(
   param: TParam,
   value: InferSourceParamValue<TParam>,
 ): InferSourceParamValue<TParam> {
+  const stringValue = String(value)
+
+  if (param.pattern && !(new RegExp(param.pattern).test(stringValue))) {
+    throw new SourceParamValueError(param.title, `Invalid value for '${param.title}'`)
+  }
+
+  if (param.startsWith && !stringValue.startsWith(param.startsWith)) {
+    throw new SourceParamValueError(param.title, `Invalid value for '${param.title}'`)
+  }
+
+  if (param.notIn?.some(item => item.toLowerCase() === stringValue.toLowerCase())) {
+    throw new SourceParamValueError(param.title, `Invalid value for '${param.title}'`)
+  }
+
   if (SourceParamGuards.isNumber(param)) {
     const numericValue = value as number
     if (Number.isNaN(numericValue)) {

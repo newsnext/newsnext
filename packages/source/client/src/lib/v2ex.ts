@@ -1,4 +1,5 @@
 import { $textParam } from "@newsnext/source-shared/utils/params"
+import { $radar, pageTitle } from "@newsnext/source-shared/utils/radar"
 import { $provider, $source } from "@newsnext/source-shared/utils/source"
 
 interface Res {
@@ -33,26 +34,18 @@ export default $provider({
       {
         key: "feed",
         radar: [
-          {
+          $radar({
             id: "v2ex-feed",
-            match: {
-              hosts: ["v2ex.com"],
-              paths: ["/go/:feed"],
-            },
-            title: {
-              type: "value",
-              value: { type: "pageTitle" },
-              transforms: [
-                { type: "normalizeWhitespace" },
-                { type: "extract", pattern: "^.*[>›]\\s*(.+)$" },
-              ],
-              fallback: "{feed}",
-            },
-            params: {
-              feed: { value: { type: "path", name: "feed" }, required: true },
+            hosts: ["v2ex.com"],
+            path: "/go/:feed",
+            meta: {
+              title: pageTitle()
+                .normalize()
+                .extract("^.*[>›]\\s*(.+)$")
+                .fallback("{feed}"),
             },
             confidence: 0.9,
-          },
+          }),
         ],
         params: {
           feed: $textParam({

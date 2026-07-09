@@ -23,6 +23,18 @@ interface BaseParameter<TOutput = unknown> {
    */
   validate?: (value: TOutput) => boolean | string
   /**
+   * Optional serializable regular expression pattern for string-like values.
+   */
+  pattern?: string
+  /**
+   * Optional serializable prefix constraint for string-like values.
+   */
+  startsWith?: string
+  /**
+   * Optional serializable disallowed values for string-like values.
+   */
+  notIn?: string[]
+  /**
    * Phantom runtime output type used for inference only
    */
   readonly __output?: TOutput

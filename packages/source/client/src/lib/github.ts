@@ -1,4 +1,5 @@
 import { $selectParam, $textParam } from "@newsnext/source-shared/utils/params"
+import { $radar, query } from "@newsnext/source-shared/utils/radar"
 import { $provider, $source } from "@newsnext/source-shared/utils/source"
 
 const baseURL = new URL("https://github.com")
@@ -50,23 +51,19 @@ export default $provider({
         title: "Trending",
         type: "hottest",
         radar: [
-          {
+          $radar({
             id: "github-trending",
-            match: {
-              hosts: ["github.com"],
-              paths: ["/trending", "/trending/:language"],
-            },
-            title: { type: "template", value: "Trending {language}" },
+            hosts: ["github.com"],
+            paths: ["/trending", "/trending/:language"],
             params: {
-              language: { type: "path", name: "language" },
-              spokenLanguage: { type: "query", name: "spoken_language_code" },
-              dateRange: {
-                value: { type: "first", values: [{ type: "query", name: "since" }, { type: "literal", value: "daily" }] },
-                in: ["daily", "weekly", "monthly"],
-              },
+              spokenLanguage: query("spoken_language_code").default(""),
+              dateRange: query("since").default("daily"),
+            },
+            meta: {
+              title: "Trending {language}",
             },
             confidence: 0.95,
-          },
+          }),
         ],
         params: {
           language: $textParam({

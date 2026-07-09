@@ -56,23 +56,10 @@ export type SourceRadarTransform
     | { type: "prepend", value: string }
     | { type: "template", value: string }
 
-export type SourceRadarCondition
-  = | { type: "value", value: SourceRadarValue, exists?: boolean, pattern?: string, startsWith?: string, in?: string[], notIn?: string[] }
-    | { type: "urlIncludes", value: string }
-    | { type: "oneOf", conditions: SourceRadarCondition[] }
-
-export type SourceRadarTitle
-  = | { type: "value", value: SourceRadarValue, transforms?: SourceRadarTransform[], fallback?: string }
-    | { type: "param", name: string, transforms?: SourceRadarTransform[], fallback?: string }
-    | { type: "template", value: string }
-
-export interface SourceRadarParam {
+export interface SourceRadarPatchValue {
   value: SourceRadarValue
-  required?: boolean
-  pattern?: string
-  startsWith?: string
-  in?: string[]
-  notIn?: string[]
+  transforms?: SourceRadarTransform[]
+  fallback?: unknown
 }
 
 export interface SourceRadarMatch {
@@ -81,12 +68,21 @@ export interface SourceRadarMatch {
   includes?: string | string[]
 }
 
+export type SourceRadarParamPatch = Record<string, SourceRadarValue | SourceRadarPatchValue>
+
+export interface SourceRadarMetaPatch {
+  providerTitle?: string | SourceRadarPatchValue
+  title?: string | SourceRadarPatchValue
+  desc?: string | SourceRadarPatchValue
+  home?: string | SourceRadarPatchValue
+  color?: Color | SourceRadarPatchValue
+}
+
 export interface SourceRadarRule {
   id: string
   match: SourceRadarMatch
-  title?: SourceRadarTitle
-  params: Record<string, SourceRadarValue | SourceRadarParam>
-  conditions?: SourceRadarCondition[]
+  paramsPatch?: SourceRadarParamPatch
+  metaPatch?: SourceRadarMetaPatch
   confidence?: number
 }
 

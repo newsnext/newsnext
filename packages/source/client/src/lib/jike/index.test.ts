@@ -90,7 +90,7 @@ describe("jike source", () => {
     expect(jikeProvider.sources["user-updates"].params).toMatchObject({
       username: {
         title: "Username",
-        default: "a2d6acc1-626f-4d15-a22a-849e88a4c9f0",
+        default: "7f422d5d-d79a-4f45-9880-b89d64d7f37a",
       },
     })
   })

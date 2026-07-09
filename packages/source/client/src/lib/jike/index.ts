@@ -9,6 +9,7 @@ import type {
 import { myFetch } from "@newsnext/source-shared/utils/fetch"
 import { isJwtExpired } from "@newsnext/source-shared/utils/jwt"
 import { $textParam } from "@newsnext/source-shared/utils/params"
+import { $radar, pageTitle } from "@newsnext/source-shared/utils/radar"
 
 import { $provider, $source } from "@newsnext/source-shared/utils/source"
 
@@ -208,6 +209,14 @@ export default $provider({
         desc: "Updates from followed Jike users",
         type: "timeline",
         category: "others",
+        radar: [
+          $radar({
+            id: "jike-following-updates",
+            hosts: ["web.okjike.com"],
+            path: "/following",
+            confidence: 0.95,
+          }),
+        ],
       },
       fetchJikeFollowingUpdates,
     ),
@@ -219,53 +228,24 @@ export default $provider({
         type: "timeline",
         category: "others",
         radar: [
-          {
+          $radar({
             id: "jike-user-profile",
-            match: {
-              hosts: ["web.okjike.com"],
-              paths: ["/u/:username"],
-            },
-            title: {
-              type: "value",
-              value: { type: "pageTitle" },
-              transforms: [
-                { type: "normalizeWhitespace" },
-                { type: "replace", pattern: "的主页\\s*[-_—|]\\s*即刻.*$", replacement: "" },
-                { type: "extract", pattern: "^(.+?)(?:\\s*[-_—|]\\s*即刻.*)?$", fallbackToEmpty: true },
-              ],
-              fallback: "{username}",
-            },
-            params: {
-              username: { value: { type: "path", name: "username" }, required: true },
+            hosts: ["web.okjike.com"],
+            path: "/u/:username{/*rest}",
+            meta: {
+              title: pageTitle()
+                .normalize()
+                .replace("[:：].*$", "")
+                .replace("的主页\\s*[-_—|]\\s*即刻.*$", "")
+                .fallback("{username}"),
             },
             confidence: 0.9,
-          },
-          {
-            id: "jike-user-post",
-            match: {
-              hosts: ["web.okjike.com"],
-              paths: ["/u/:username/:type/:id{/*rest}"],
-            },
-            title: {
-              type: "value",
-              value: { type: "pageTitle" },
-              transforms: [
-                { type: "normalizeWhitespace" },
-                { type: "extract", pattern: "^(.+?)[:：]" },
-                { type: "extract", pattern: "^(.+?)(?:\\s*[-_—|]\\s*即刻.*)?$", fallbackToEmpty: true },
-              ],
-              fallback: "{username}",
-            },
-            params: {
-              username: { value: { type: "path", name: "username" }, required: true },
-            },
-            confidence: 0.9,
-          },
+          }),
         ],
         params: {
           username: $textParam({
             title: "Username",
-            default: "a2d6acc1-626f-4d15-a22a-849e88a4c9f0",
+            default: "7f422d5d-d79a-4f45-9880-b89d64d7f37a",
             validate: value => value.trim().length > 0 || "Username is required",
           }),
         },
@@ -280,26 +260,18 @@ export default $provider({
         type: "timeline",
         category: "others",
         radar: [
-          {
+          $radar({
             id: "jike-topic-recent",
-            match: {
-              hosts: ["web.okjike.com"],
-              paths: ["/topic/:topicId{/*rest}"],
-            },
-            title: {
-              type: "value",
-              value: { type: "pageTitle" },
-              transforms: [
-                { type: "normalizeWhitespace" },
-                { type: "extract", pattern: "^(.+?)(?:\\s*[-_—|]\\s*即刻.*)?$", fallbackToEmpty: true },
-              ],
-              fallback: "Topic {topicId}",
-            },
-            params: {
-              topicId: { value: { type: "path", name: "topicId" }, required: true },
+            hosts: ["web.okjike.com"],
+            path: "/topic/:topicId{/*rest}",
+            meta: {
+              title: pageTitle()
+                .normalize()
+                .extract("^(.+?)(?:\\s*[-_—|]\\s*即刻.*)?$", { fallbackToEmpty: true })
+                .fallback("Topic {topicId}"),
             },
             confidence: 0.9,
-          },
+          }),
         ],
         params: {
           topicId: $textParam({
@@ -319,26 +291,18 @@ export default $provider({
         type: "hottest",
         category: "others",
         radar: [
-          {
+          $radar({
             id: "jike-topic-hottest",
-            match: {
-              hosts: ["web.okjike.com"],
-              paths: ["/topic/:topicId{/*rest}"],
-            },
-            title: {
-              type: "value",
-              value: { type: "pageTitle" },
-              transforms: [
-                { type: "normalizeWhitespace" },
-                { type: "extract", pattern: "^(.+?)(?:\\s*[-_—|]\\s*即刻.*)?$", fallbackToEmpty: true },
-              ],
-              fallback: "Topic {topicId}",
-            },
-            params: {
-              topicId: { value: { type: "path", name: "topicId" }, required: true },
+            hosts: ["web.okjike.com"],
+            path: "/topic/:topicId{/*rest}",
+            meta: {
+              title: pageTitle()
+                .normalize()
+                .extract("^(.+?)(?:\\s*[-_—|]\\s*即刻.*)?$", { fallbackToEmpty: true })
+                .fallback("Topic {topicId}"),
             },
             confidence: 0.85,
-          },
+          }),
         ],
         params: {
           topicId: $textParam({

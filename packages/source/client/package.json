@@ -12,6 +12,7 @@
   "scripts": {
     "typecheck": "tsgo --noEmit",
     "build": "bun run build.ts",
+    "build:watch": "bun --watch run build.ts",
     "test": "bun run vitest"
   },
   "dependencies": {

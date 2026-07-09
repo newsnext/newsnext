@@ -32,14 +32,18 @@ export function createRadarBoardSource(
   }
 
   const metaPatch = draftPatch?.metaPatch ?? {}
+  const paramsPatch = {
+    ...suggestion.paramsPatch,
+    ...draftPatch?.paramsPatch,
+  }
 
   return {
     ...descriptor,
+    ...suggestion.metaPatch,
     ...metaPatch,
     id: `tmp:radar:${suggestion.id}`,
     sourceId: suggestion.sourceId,
-    title: metaPatch.title ?? suggestion.title,
-    paramsValue: draftPatch?.paramsPatch ?? suggestion.params,
+    paramsValue: paramsPatch,
     isCustom: true,
     origin: "fork",
     isLocalOnly: true,

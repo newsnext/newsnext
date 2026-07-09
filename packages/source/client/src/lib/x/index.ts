@@ -11,6 +11,7 @@ import type {
 } from "./types"
 import { myFetch } from "@newsnext/source-shared/utils/fetch"
 import { $selectParam, $textParam } from "@newsnext/source-shared/utils/params"
+import { $radar } from "@newsnext/source-shared/utils/radar"
 import { $provider, $source } from "@newsnext/source-shared/utils/source"
 import { LOCATION_OPTIONS as X_LOCATION_OPTIONS } from "./types"
 
@@ -191,23 +192,22 @@ export default $provider({
         title: "User Tweets",
         type: "timeline",
         radar: [
-          {
+          $radar({
             id: "x-user",
-            match: {
-              hosts: ["x.com", "twitter.com"],
-              paths: ["/:username{/*rest}"],
-            },
-            title: { type: "param", name: "username", transforms: [{ type: "prepend", value: "@" }] },
-            params: {
-              username: { value: { type: "path", name: "username" }, pattern: "^\\w{1,15}$", notIn: X_RADAR_RESERVED_PATHS },
+            hosts: ["x.com", "twitter.com"],
+            path: "/:username{/*rest}",
+            meta: {
+              title: "@{username}",
             },
             confidence: 0.95,
-          },
+          }),
         ],
         params: {
           username: $textParam({
             title: "Username",
             default: "elonmusk",
+            pattern: "^\\w{1,15}$",
+            notIn: X_RADAR_RESERVED_PATHS,
             parse: value => normalizeXUsername(String(value)),
             validate: value => /^\w{1,15}$/.test(value) || "Username must be a valid X handle.",
           }),

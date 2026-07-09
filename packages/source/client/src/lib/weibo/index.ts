@@ -1,4 +1,5 @@
 import { $selectParam, $textParam } from "@newsnext/source-shared/utils/params"
+import { $radar, first, hashQuery, literal, pageTitle, pathSegmentWithPrefix, query } from "@newsnext/source-shared/utils/radar"
 import { $provider, $source } from "@newsnext/source-shared/utils/source"
 import {
   fetchWeiboFollowingTimeline,
@@ -61,34 +62,27 @@ export default $provider({
         home: "https://m.weibo.cn",
         secrets: optionalWeiboCookieSecrets,
         radar: [
-          {
+          $radar({
             id: "weibo-user",
-            match: {
-              hosts: ["m.weibo.cn", "weibo.com"],
-              paths: ["/u/:uid", "/profile/:uid"],
-            },
-            title: {
-              type: "value",
-              value: { type: "pageTitle" },
-              transforms: [
-                { type: "normalizeWhitespace" },
-                { type: "extract", pattern: "^@(.+)\\s*的个人主页" },
-                { type: "replace", pattern: "[-_—|].*微博.*$", replacement: "" },
-                { type: "replace", pattern: "的微博.*$", replacement: "" },
-              ],
-              fallback: "User {uid}",
-            },
-            params: {
-              uid: { value: { type: "path", name: "uid" }, pattern: "^\\d+$" },
+            hosts: ["m.weibo.cn", "weibo.com"],
+            paths: ["/u/:uid", "/profile/:uid"],
+            meta: {
+              title: pageTitle()
+                .normalize()
+                .extract("^@(.+)\\s*的个人主页")
+                .replace("[-_—|].*微博.*$", "")
+                .replace("的微博.*$", "")
+                .fallback("User {uid}"),
             },
             confidence: 0.9,
-          },
+          }),
         ],
         params: {
           uid: $textParam({
             title: "User ID",
             description: "Numeric uid, or a Weibo profile URL containing the uid.",
             default: "1195230310",
+            pattern: "^\\d+$",
             parse: value => normalizeWeiboUid(String(value)),
             validate: value => /^\d+$/.test(value) || "User ID must be numeric.",
           }),
@@ -105,18 +99,17 @@ export default $provider({
         home: "https://m.weibo.cn",
         secrets: optionalWeiboCookieSecrets,
         radar: [
-          {
+          $radar({
             id: "weibo-keyword",
-            match: { hosts: ["s.weibo.com", "s.m.weibo.cn"] },
-            title: { type: "param", name: "keyword" },
+            hosts: ["s.weibo.com", "s.m.weibo.cn"],
             params: {
-              keyword: {
-                value: { type: "first", values: [{ type: "query", name: "q" }, { type: "query", name: "keyword" }] },
-                required: true,
-              },
+              keyword: first(query("q"), query("keyword")),
+            },
+            meta: {
+              title: "{keyword}",
             },
             confidence: 0.9,
-          },
+          }),
         ],
         params: {
           keyword: $textParam({
@@ -138,35 +131,30 @@ export default $provider({
         home: "https://m.weibo.cn",
         secrets: optionalWeiboCookieSecrets,
         radar: [
-          {
+          $radar({
             id: "weibo-super-topic",
-            match: { hosts: ["m.weibo.cn", "weibo.com"] },
-            title: {
-              type: "value",
-              value: { type: "pageTitle" },
-              transforms: [
-                { type: "normalizeWhitespace" },
-                { type: "replace", pattern: "[-_—|].*微博.*$", replacement: "" },
-                { type: "replace", pattern: "的微博.*$", replacement: "" },
-                { type: "extract", pattern: "^#?(.+?)超话#?$" },
-              ],
-              fallback: "{id}",
+            hosts: ["m.weibo.cn", "weibo.com"],
+            meta: {
+              title: pageTitle()
+                .normalize()
+                .replace("[-_—|].*微博.*$", "")
+                .replace("的微博.*$", "")
+                .extract("^#?(.+?)超话#?$")
+                .fallback("{id}"),
             },
             params: {
-              id: {
-                value: { type: "first", values: [{ type: "query", name: "containerid" }, { type: "hashQuery", name: "containerid" }, { type: "pathSegmentWithPrefix", prefix: "100808" }] },
-                startsWith: "100808",
-              },
-              type: { type: "literal", value: "feed" },
+              id: first(query("containerid"), hashQuery("containerid"), pathSegmentWithPrefix("100808")),
+              type: literal("feed"),
             },
             confidence: 0.9,
-          },
+          }),
         ],
         params: {
           id: $textParam({
             title: "Super topic ID",
             description: "A 100808... super topic ID, or a Weibo super topic URL containing it.",
             default: "1008084989d223732bf6f02f75ea30efad58a9",
+            startsWith: "100808",
             parse: value => normalizeWeiboSuperTopicId(String(value)),
             validate: value => value.length > 0 || "Super topic ID must not be empty.",
           }),
