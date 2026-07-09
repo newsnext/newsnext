@@ -1,5 +1,6 @@
 import type {
   SourceRadarCondition,
+  SourceRadarMatch,
   SourceRadarParam,
   SourceRadarRule,
   SourceRadarTitle,
@@ -36,6 +37,30 @@ interface RadarMatchContext {
   sourceTitle?: string
 }
 
+interface SourceRuleSpec {
+  sourceId: string
+  sourceTitle?: string
+  rules: SourceRadarRule[]
+}
+
+type PathMatch = (pathname: string) => Record<string, string> | null
+
+interface CompiledRadarRule {
+  sourceId: string
+  sourceTitle?: string
+  rule: SourceRadarRule
+  hosts: string[]
+  includes: string[]
+  pathMatches: PathMatch[]
+}
+
+export interface RadarMatcher {
+  getSuggestions: (context: RadarContext) => RadarSuggestion[]
+}
+
+const matcherCache = new WeakMap<RadarSourceMetadata[], RadarMatcher>()
+const regexCache = new Map<string, RegExp | null>()
+
 function createRadarSuggestion({
   ruleId,
   sourceId,
@@ -56,12 +81,31 @@ function createRadarSuggestion({
 function stableParamsKey(params: Record<string, unknown>): string {
   return Object.entries(params)
     .sort(([a], [b]) => a.localeCompare(b))
-    .map(([key, value]) => `${key}=${String(value)}`)
+    .map(([key, value]) => `${key}=${stableValueKey(value)}`)
     .join("&")
+}
+
+function stableValueKey(value: unknown): string {
+  if (Array.isArray(value)) {
+    return `[${value.map(item => stableValueKey(item)).join(",")}]`
+  }
+
+  if (value && typeof value === "object") {
+    return `{${Object.entries(value)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, nestedValue]) => `${key}:${stableValueKey(nestedValue)}`)
+      .join(",")}}`
+  }
+
+  return String(value)
 }
 
 function getHostname(url: URL): string {
   return url.hostname.replace(/^www\./, "").toLowerCase()
+}
+
+function normalizeHostname(host: string): string {
+  return host.replace(/^www\./, "").toLowerCase()
 }
 
 function normalizeWhitespace(value: string): string {
@@ -116,15 +160,9 @@ function applyTransform(value: string, transform: SourceRadarTransform, context:
     case "normalizeWhitespace":
       return normalizeWhitespace(value)
     case "replace":
-      return value.replace(new RegExp(transform.pattern), transform.replacement).trim()
-    case "extract": {
-      const match = new RegExp(transform.pattern).exec(value)
-      if (!match) {
-        return transform.fallbackToEmpty ? "" : value
-      }
-
-      return (match[transform.group ?? 1] ?? match[0] ?? "").trim()
-    }
+      return replacePattern(value, transform.pattern, transform.replacement)
+    case "extract":
+      return extractPattern(value, transform)
     case "prepend":
       return `${transform.value}${value}`
     case "template":
@@ -187,32 +225,8 @@ function renderTemplate(template: string, variables: Record<string, unknown>): s
   return template.replace(/\{(\w+)\}/g, (_match, key: string) => String(variables[key] ?? "")).trim()
 }
 
-function matchPathTemplate(template: string, pathname: string): Record<string, string> | null {
-  try {
-    const result = match<Record<string, string | string[]>>(template)(pathname)
-    if (!result) {
-      return null
-    }
-
-    return Object.fromEntries(
-      Object.entries(result.params)
-        .map(([key, value]) => [key, Array.isArray(value) ? value.join("/") : value]),
-    )
-  } catch {
-    return null
-  }
-}
-
-function getRuleHosts(rule: SourceRadarRule): string[] {
-  return rule.match?.hosts ?? rule.hosts ?? []
-}
-
-function getRulePaths(rule: SourceRadarRule): string[] | undefined {
-  return rule.match?.paths ?? rule.paths
-}
-
-function getRuleIncludes(rule: SourceRadarRule): string[] {
-  const includes = rule.match?.includes
+function getMatchIncludes(matchSpec: SourceRadarMatch): string[] {
+  const includes = matchSpec.includes
   if (!includes) {
     return []
   }
@@ -220,20 +234,226 @@ function getRuleIncludes(rule: SourceRadarRule): string[] {
   return Array.isArray(includes) ? includes : [includes]
 }
 
-function matchRulePath(rule: SourceRadarRule, url: URL): Record<string, string> | null {
-  const paths = getRulePaths(rule)
+function compilePathMatch(template: string): PathMatch | null {
+  try {
+    const matcher = match<Record<string, string | string[]>>(template)
+    return (pathname) => {
+      const result = matcher(pathname)
+      if (!result) {
+        return null
+      }
+
+      return Object.fromEntries(
+        Object.entries(result.params)
+          .map(([key, value]) => [key, Array.isArray(value) ? value.join("/") : value]),
+      )
+    }
+  } catch {
+    return null
+  }
+}
+
+function compilePathMatches(paths: string[] | undefined): PathMatch[] {
   if (!paths?.length) {
-    return {}
+    return [() => ({})]
   }
 
-  for (const pathTemplate of paths) {
-    const params = matchPathTemplate(pathTemplate, url.pathname)
+  return paths
+    .map(compilePathMatch)
+    .filter((pathMatch): pathMatch is PathMatch => pathMatch !== null)
+}
+
+function matchRulePath(rule: CompiledRadarRule, url: URL): Record<string, string> | null {
+  if (!rule.pathMatches.length) {
+    return null
+  }
+
+  for (const pathMatch of rule.pathMatches) {
+    const params = pathMatch(url.pathname)
     if (params) {
       return params
     }
   }
 
   return null
+}
+
+function isListedValue(list: string[] | undefined, value: string): boolean {
+  if (!list) {
+    return false
+  }
+
+  return list.some(item => item.toLowerCase() === value.toLowerCase())
+}
+
+function isAllowedValue(list: string[] | undefined, value: string): boolean {
+  if (!list) {
+    return true
+  }
+
+  return list.includes(value)
+}
+
+function testPattern(pattern: string | undefined, value: string): boolean {
+  if (!pattern) {
+    return true
+  }
+
+  return getCachedRegex(pattern)?.test(value) ?? false
+}
+
+function replacePattern(value: string, pattern: string, replacement: string): string {
+  const regex = getCachedRegex(pattern)
+  return regex ? value.replace(regex, replacement).trim() : value.trim()
+}
+
+function extractPattern(value: string, transform: Extract<SourceRadarTransform, { type: "extract" }>): string {
+  const matchResult = getCachedRegex(transform.pattern)?.exec(value)
+  if (matchResult === undefined) {
+    return transform.fallbackToEmpty ? "" : value
+  }
+
+  if (!matchResult) {
+    return transform.fallbackToEmpty ? "" : value
+  }
+
+  return (matchResult[transform.group ?? 1] ?? matchResult[0] ?? "").trim()
+}
+
+function getCachedRegex(pattern: string): RegExp | null {
+  if (regexCache.has(pattern)) {
+    return regexCache.get(pattern) ?? null
+  }
+
+  try {
+    const regex = new RegExp(pattern)
+    regexCache.set(pattern, regex)
+    return regex
+  } catch {
+    regexCache.set(pattern, null)
+    return null
+  }
+}
+
+function compileRadarRule(sourceRule: SourceRuleSpec, rule: SourceRadarRule): CompiledRadarRule | null {
+  const pathMatches = compilePathMatches(rule.match.paths)
+  if (!pathMatches.length) {
+    return null
+  }
+
+  return {
+    sourceId: sourceRule.sourceId,
+    sourceTitle: sourceRule.sourceTitle,
+    rule,
+    hosts: rule.match.hosts.map(normalizeHostname),
+    includes: getMatchIncludes(rule.match),
+    pathMatches,
+  }
+}
+
+function indexRulesByHost(rules: CompiledRadarRule[]): Map<string, CompiledRadarRule[]> {
+  const rulesByHost = new Map<string, CompiledRadarRule[]>()
+
+  for (const rule of rules) {
+    for (const host of rule.hosts) {
+      const hostRules = rulesByHost.get(host) ?? []
+      hostRules.push(rule)
+      rulesByHost.set(host, hostRules)
+    }
+  }
+
+  return rulesByHost
+}
+
+function matchCompiledRule(compiledRule: CompiledRadarRule, input: RadarContext, url: URL): RadarSuggestion | null {
+  const hostname = getHostname(url)
+  if (!compiledRule.hosts.includes(hostname)) {
+    return null
+  }
+
+  if (compiledRule.includes.length && !compiledRule.includes.some(value => url.toString().includes(value))) {
+    return null
+  }
+
+  const pathParams = matchRulePath(compiledRule, url)
+  if (!pathParams) {
+    return null
+  }
+
+  const context: RadarMatchContext = {
+    input,
+    url,
+    pathParams,
+    sourceTitle: compiledRule.sourceTitle,
+  }
+  if (compiledRule.rule.conditions?.some(condition => !isConditionMatched(condition, context))) {
+    return null
+  }
+
+  const params = resolveParams(compiledRule.rule, context)
+  if (!params) {
+    return null
+  }
+
+  const contextWithValues: RadarMatchContext = { ...context, values: params }
+
+  return createRadarSuggestion({
+    ruleId: compiledRule.rule.id,
+    sourceId: compiledRule.sourceId,
+    title: resolveSuggestionTitle(compiledRule.rule.title, contextWithValues),
+    params,
+    confidence: compiledRule.rule.confidence,
+  })
+}
+
+function createSuggestions(context: RadarContext, rulesByHost: Map<string, CompiledRadarRule[]>): RadarSuggestion[] {
+  let url: URL
+  try {
+    url = new URL(context.url)
+  } catch {
+    return []
+  }
+
+  const rules = rulesByHost.get(getHostname(url)) ?? []
+  const suggestions = rules
+    .map(rule => matchCompiledRule(rule, context, url))
+    .filter((suggestion): suggestion is RadarSuggestion => suggestion !== null)
+  const suggestionsById = new Map<string, RadarSuggestion>()
+
+  for (const suggestion of suggestions) {
+    suggestionsById.set(suggestion.id, suggestion)
+  }
+
+  return [...suggestionsById.values()].sort((a, b) => b.confidence - a.confidence)
+}
+
+function getSourceRuleSpecs(sourceMetadata: RadarSourceMetadata[] | undefined): SourceRuleSpec[] {
+  return sourceMetadata
+    ?.flatMap(source => source.radar?.length ? [{ sourceId: source.id, sourceTitle: source.title, rules: source.radar }] : [])
+    ?? []
+}
+
+export function createRadarMatcher(sourceMetadata: RadarSourceMetadata[] = []): RadarMatcher {
+  const cachedMatcher = matcherCache.get(sourceMetadata)
+  if (cachedMatcher) {
+    return cachedMatcher
+  }
+
+  const compiledRules = getSourceRuleSpecs(sourceMetadata)
+    .flatMap(sourceRule => sourceRule.rules
+      .map(rule => compileRadarRule(sourceRule, rule))
+      .filter((rule): rule is CompiledRadarRule => rule !== null))
+  const rulesByHost = indexRulesByHost(compiledRules)
+  const radarMatcher: RadarMatcher = {
+    getSuggestions: context => createSuggestions(context, rulesByHost),
+  }
+
+  matcherCache.set(sourceMetadata, radarMatcher)
+  return radarMatcher
+}
+
+export function getRadarSuggestions(context: RadarContext, sourceMetadata?: RadarSourceMetadata[]): RadarSuggestion[] {
+  return createRadarMatcher(sourceMetadata).getSuggestions(context)
 }
 
 function isConditionMatched(condition: SourceRadarCondition, context: RadarMatchContext): boolean {
@@ -247,16 +467,16 @@ function isConditionMatched(condition: SourceRadarCondition, context: RadarMatch
       if (condition.exists && !isPresent(value)) {
         return false
       }
-      if (condition.pattern && !new RegExp(condition.pattern).test(value)) {
+      if (!testPattern(condition.pattern, value)) {
         return false
       }
       if (condition.startsWith && !value.startsWith(condition.startsWith)) {
         return false
       }
-      if (condition.in && !condition.in.includes(value)) {
+      if (!isAllowedValue(condition.in, value)) {
         return false
       }
-      if (condition.notIn && condition.notIn.includes(value.toLowerCase())) {
+      if (isListedValue(condition.notIn, value)) {
         return false
       }
       return true
@@ -281,16 +501,16 @@ function isParamMatched(param: SourceRadarValue | SourceRadarParam, value: unkno
   if (param.required && !isPresent(value)) {
     return false
   }
-  if (param.pattern && !new RegExp(param.pattern).test(stringValue)) {
+  if (!testPattern(param.pattern, stringValue)) {
     return false
   }
   if (param.startsWith && !stringValue.startsWith(param.startsWith)) {
     return false
   }
-  if (param.in && !param.in.includes(stringValue)) {
+  if (!isAllowedValue(param.in, stringValue)) {
     return false
   }
-  if (param.notIn && param.notIn.includes(stringValue.toLowerCase())) {
+  if (isListedValue(param.notIn, stringValue)) {
     return false
   }
 
@@ -309,67 +529,4 @@ function resolveParams(rule: SourceRadarRule, context: RadarMatchContext): Recor
   }
 
   return params
-}
-
-function matchRule(sourceId: string, sourceTitle: string | undefined, rule: SourceRadarRule, input: RadarContext, url: URL): RadarSuggestion | null {
-  const hostname = getHostname(url)
-  if (!getRuleHosts(rule).includes(hostname)) {
-    return null
-  }
-
-  const includes = getRuleIncludes(rule)
-  if (includes.length && !includes.some(value => url.toString().includes(value))) {
-    return null
-  }
-
-  const pathParams = matchRulePath(rule, url)
-  if (!pathParams) {
-    return null
-  }
-
-  const context: RadarMatchContext = { input, url, pathParams, sourceTitle }
-  if (rule.conditions?.some(condition => !isConditionMatched(condition, context))) {
-    return null
-  }
-
-  const params = resolveParams(rule, context)
-  if (!params) {
-    return null
-  }
-
-  const contextWithValues: RadarMatchContext = { ...context, values: params }
-
-  return createRadarSuggestion({
-    ruleId: rule.id,
-    sourceId,
-    title: resolveSuggestionTitle(rule.title, contextWithValues),
-    params,
-    confidence: rule.confidence,
-  })
-}
-
-function getSourceRuleSpecs(sourceMetadata: RadarSourceMetadata[] | undefined): { sourceId: string, sourceTitle?: string, rules: SourceRadarRule[] }[] {
-  return sourceMetadata
-    ?.flatMap(source => source.radar?.length ? [{ sourceId: source.id, sourceTitle: source.title, rules: source.radar }] : [])
-    ?? []
-}
-
-export function getRadarSuggestions(context: RadarContext, sourceMetadata?: RadarSourceMetadata[]): RadarSuggestion[] {
-  let url: URL
-  try {
-    url = new URL(context.url)
-  } catch {
-    return []
-  }
-
-  const suggestions = getSourceRuleSpecs(sourceMetadata)
-    .flatMap(sourceRule => sourceRule.rules.map(rule => matchRule(sourceRule.sourceId, sourceRule.sourceTitle, rule, context, url)))
-    .filter((suggestion): suggestion is RadarSuggestion => suggestion !== null)
-  const suggestionsById = new Map<string, RadarSuggestion>()
-
-  for (const suggestion of suggestions) {
-    suggestionsById.set(suggestion.id, suggestion)
-  }
-
-  return [...suggestionsById.values()].sort((a, b) => b.confidence - a.confidence)
 }

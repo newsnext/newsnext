@@ -84,8 +84,6 @@ export interface SourceRadarMatch {
 export interface SourceRadarRule {
   id: string
   match: SourceRadarMatch
-  hosts?: string[]
-  paths?: string[]
   title?: SourceRadarTitle
   params: Record<string, SourceRadarValue | SourceRadarParam>
   conditions?: SourceRadarCondition[]

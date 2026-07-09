@@ -1,6 +1,6 @@
 import { sourceDescriptors } from "@newsnext/client-source/metadata"
 import { describe, expect, it } from "vitest"
-import { getRadarSuggestions } from "./radar"
+import { createRadarMatcher, getRadarSuggestions } from "./radar"
 
 function getSuggestions(...args: Parameters<typeof getRadarSuggestions>) {
   return getRadarSuggestions(args[0], args[1] ?? sourceDescriptors)
@@ -192,5 +192,125 @@ describe("getRadarSuggestions", () => {
         title: "@newsnext_dev",
       },
     ])
+  })
+
+  it("creates a reusable matcher from source metadata", () => {
+    const matcher = createRadarMatcher(sourceDescriptors)
+
+    expect(matcher.getSuggestions({ url: "https://x.com/newsnext_dev" })).toMatchObject([
+      {
+        sourceId: "x:user",
+        title: "@newsnext_dev",
+      },
+    ])
+  })
+
+  it("sorts suggestions by confidence", () => {
+    expect(getRadarSuggestions(
+      { url: "https://example.com/a" },
+      [
+        {
+          id: "test:low",
+          radar: [
+            {
+              id: "low",
+              match: { hosts: ["example.com"], paths: ["/a"] },
+              params: { value: { type: "literal", value: "low" } },
+              confidence: 0.1,
+            },
+          ],
+        },
+        {
+          id: "test:high",
+          radar: [
+            {
+              id: "high",
+              match: { hosts: ["example.com"], paths: ["/a"] },
+              params: { value: { type: "literal", value: "high" } },
+              confidence: 0.9,
+            },
+          ],
+        },
+      ],
+    ).map(suggestion => suggestion.sourceId)).toEqual(["test:high", "test:low"])
+  })
+
+  it("matches notIn values case-insensitively", () => {
+    expect(getRadarSuggestions(
+      { url: "https://x.com/Search" },
+      [
+        {
+          id: "x:user",
+          radar: [
+            {
+              id: "x-user",
+              match: { hosts: ["x.com"], paths: ["/:username"] },
+              params: {
+                username: {
+                  value: { type: "path", name: "username" },
+                  notIn: ["search"],
+                },
+              },
+            },
+          ],
+        },
+      ],
+    )).toEqual([])
+  })
+
+  it("keeps suggestions distinct when params contain objects", () => {
+    expect(getRadarSuggestions(
+      { url: "https://example.com/a" },
+      [
+        {
+          id: "test:object",
+          radar: [
+            {
+              id: "object",
+              match: { hosts: ["example.com"], paths: ["/a"] },
+              params: { value: { type: "literal", value: { b: 2, a: 1 } } },
+            },
+            {
+              id: "object",
+              match: { hosts: ["example.com"], paths: ["/a"] },
+              params: { value: { type: "literal", value: { b: 3, a: 1 } } },
+            },
+          ],
+        },
+      ],
+    )).toHaveLength(2)
+  })
+
+  it("ignores invalid matcher and validator patterns without throwing", () => {
+    expect(getRadarSuggestions(
+      { url: "https://example.com/a" },
+      [
+        {
+          id: "test:invalid-path",
+          radar: [
+            {
+              id: "invalid-path",
+              match: { hosts: ["example.com"], paths: ["/*"] },
+              params: { value: { type: "literal", value: "invalid-path" } },
+            },
+          ],
+        },
+        {
+          id: "test:invalid-pattern",
+          radar: [
+            {
+              id: "invalid-pattern",
+              match: { hosts: ["example.com"], paths: ["/a"] },
+              params: {
+                value: {
+                  value: { type: "literal", value: "invalid-pattern" },
+                  pattern: "[",
+                },
+              },
+            },
+          ],
+        },
+      ],
+    )).toEqual([])
   })
 })
