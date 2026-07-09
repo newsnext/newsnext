@@ -6,7 +6,7 @@ import type { BoardSource, SourceDescriptor } from "@/typings/source"
 import { ButtonPrimitive } from "@newsnext/ui/components/button"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { useSetAtom } from "jotai"
-import { motion, useDragControls, useMotionValue, useTransform } from "motion/react"
+import { animate, motion, useDragControls, useMotionValue, useTransform } from "motion/react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Card from "@/components/card"
 import { IconButton } from "@/components/common/button"
@@ -25,6 +25,10 @@ const RADAR_CARD_GAP = 8
 const RADAR_DECK_SPRING = { type: "spring", stiffness: 300, damping: 30 } as const
 const RADAR_CARD_ROTATE_OUTPUT = [-7, 0, 7]
 const RADAR_CARD_Y_OUTPUT = [20, 0, 20]
+
+function getRadarTrackX(index: number, trackItemOffset: number): number {
+  return -(index * trackItemOffset)
+}
 
 interface RadarSourceCardProps {
   source: BoardSource
@@ -127,6 +131,14 @@ export function RadarDeck({ sourceDescriptors, suggestions }: RadarDeckProps) {
   }, [suggestions, x])
 
   useEffect(() => {
+    const controls = animate(x, getRadarTrackX(activeIndex, trackItemOffset), RADAR_DECK_SPRING)
+
+    return () => {
+      controls.stop()
+    }
+  }, [activeIndex, trackItemOffset, x])
+
+  useEffect(() => {
     const deck = deckRef.current
     if (!deck) {
       return
@@ -173,8 +185,11 @@ export function RadarDeck({ sourceDescriptors, suggestions }: RadarDeckProps) {
 
     if (shouldMoveNext && canGoNext) {
       moveDeck(1)
+      return
     }
-  }, [canGoNext, canGoPrevious, moveDeck])
+
+    void animate(x, getRadarTrackX(activeIndex, trackItemOffset), RADAR_DECK_SPRING)
+  }, [activeIndex, canGoNext, canGoPrevious, moveDeck, trackItemOffset, x])
 
   const handleDragHandlePointerDown = useCallback((event: PointerEvent<HTMLDivElement>) => {
     dragControls.start(event)
@@ -190,10 +205,6 @@ export function RadarDeck({ sourceDescriptors, suggestions }: RadarDeckProps) {
     x,
     touchAction: "pan-y" as const,
   }), [x])
-
-  const trackAnimate = useMemo(() => ({
-    x: -(activeIndex * trackItemOffset),
-  }), [activeIndex, trackItemOffset])
 
   const createActiveForkInstance = useCallback(() => {
     if (!activeSuggestion || !activeSource) {
@@ -287,8 +298,6 @@ export function RadarDeck({ sourceDescriptors, suggestions }: RadarDeckProps) {
             dragElastic={0.4}
             dragListener={false}
             style={trackStyle}
-            animate={trackAnimate}
-            transition={RADAR_DECK_SPRING}
             onDragEnd={handleDragEnd}
           >
             {radarSources.map(({ suggestion, source }, index) => source && (
