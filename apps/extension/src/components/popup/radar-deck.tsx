@@ -291,37 +291,8 @@ export function RadarDeck({ sourceDescriptors, suggestions }: RadarDeckProps) {
 
   return (
     <section className="space-y-3" aria-label="Radar cards">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          Radar
-        </div>
-        <div
-          className="relative shrink-0"
-          style={radarActionStyle}
-        >
-          <ButtonPrimitive
-            onClick={handleForkAndStar}
-            aria-label="Fork and star"
-            title="Fork and star"
-            className="flex h-8 items-center gap-1 rounded-3xl bg-(--radar-action-card-bg) py-0.5 pr-2.5 pl-[4.35rem] text-xs font-semibold transition-colors hover:bg-(--radar-action-card-bg-hover) hover:text-foreground"
-          >
-            <PhStarFill className="text-sm" />
-            Star
-          </ButtonPrimitive>
-          <ButtonPrimitive
-            onClick={handleFork}
-            aria-label="Fork only"
-            title="Fork only"
-            className="absolute top-0.5 left-0.5 inline-flex h-7 items-center gap-1 rounded-3xl bg-background/50 px-2 text-xs font-medium text-(--radar-action-chip-text) opacity-80 transition-all hover:bg-background/70 hover:opacity-100"
-          >
-            <PhForkDuotone className="text-sm" />
-            Fork
-          </ButtonPrimitive>
-        </div>
-      </div>
-
       <div className="flex justify-center overflow-hidden">
-        <div ref={setDeckNode} className="w-full max-w-100 overflow-hidden py-2">
+        <div ref={setDeckNode} className="w-full max-w-100 overflow-hidden">
           <motion.div
             className={cn("flex", canDragDeck && "cursor-grab active:cursor-grabbing")}
             drag="x"
@@ -346,13 +317,30 @@ export function RadarDeck({ sourceDescriptors, suggestions }: RadarDeckProps) {
           </motion.div>
         </div>
       </div>
-
       <div className="flex items-center justify-between gap-3">
-        <span className="text-xs text-muted-foreground">
-          {activeIndex + 1}
-          {" / "}
-          {suggestions.length}
-        </span>
+        <div
+          className="relative shrink-0"
+          style={radarActionStyle}
+        >
+          <ButtonPrimitive
+            onClick={handleForkAndStar}
+            aria-label="Fork and star"
+            title="Fork and star"
+            className="flex h-8 items-center gap-1 rounded-3xl bg-(--radar-action-card-bg) py-0.5 pr-2.5 pl-[4.35rem] text-xs font-semibold transition-colors hover:bg-(--radar-action-card-bg-hover) hover:text-foreground"
+          >
+            <PhStarFill className="text-sm" />
+            Star
+          </ButtonPrimitive>
+          <ButtonPrimitive
+            onClick={handleFork}
+            aria-label="Fork only"
+            title="Fork only"
+            className="absolute top-0.5 left-0.5 inline-flex h-7 items-center gap-1 rounded-3xl bg-background/50 px-2 text-xs font-medium text-(--radar-action-chip-text) opacity-80 transition-all hover:bg-background/70 hover:opacity-100"
+          >
+            <PhForkDuotone className="text-sm" />
+            Fork
+          </ButtonPrimitive>
+        </div>
         <div className="flex shrink-0 items-center gap-1">
           <IconButton
             onClick={() => moveDeck(-1)}

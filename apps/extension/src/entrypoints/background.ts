@@ -8,10 +8,6 @@ import { createRadarMatcher } from "@/lib/radar"
 const backgroundService = createBackgroundService()
 const radarMatcher = createRadarMatcher(getClientSourceDescriptors())
 
-interface SidePanelApi {
-  setPanelBehavior?: (behavior: { openPanelOnActionClick: boolean }) => Promise<void>
-}
-
 async function updateRadarBadge(tab: browser.tabs.Tab): Promise<void> {
   if (!tab.id) {
     return
@@ -41,12 +37,6 @@ async function updateActiveRadarBadge(): Promise<void> {
 
 export default defineBackground(() => {
   registerService(BACKGROUND_SERVICE_KEY, backgroundService)
-
-  const sidePanel = (browser as typeof browser & { sidePanel?: SidePanelApi }).sidePanel
-
-  void sidePanel?.setPanelBehavior?.({ openPanelOnActionClick: true }).catch((error: unknown) => {
-    console.error("Failed to configure side panel behavior", error)
-  })
 
   void updateActiveRadarBadge()
 
