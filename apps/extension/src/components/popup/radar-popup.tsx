@@ -14,7 +14,7 @@ export function RadarPopup() {
   }, [radarContext])
 
   return (
-    <main className="grid-texture-background h-full min-h-0 overflow-y-auto bg-background px-3 py-4 text-foreground sunrise-theme-400">
+    <main className="grid-texture-background h-full min-h-0 overflow-y-auto bg-background p-3 text-foreground sunrise-theme-400">
       <div className="mx-auto w-full max-w-108">
         <RadarDeck sourceDescriptors={CLIENT_SOURCES} suggestions={suggestions} />
       </div>

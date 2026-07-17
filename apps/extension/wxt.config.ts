@@ -43,13 +43,15 @@ export default defineConfig({
         "http://*/*",
         "https://*/*",
       ],
-      ...browser === "chrome"
-        ? {
-            action: {
-              default_title: "NewsNext",
-            },
-          }
-        : {},
+      web_accessible_resources: browser === "firefox"
+        ? ["radar-overlay.html"]
+        : [{
+            resources: ["radar-overlay.html"],
+            matches: ["http://*/*", "https://*/*"],
+          }],
+      action: {
+        default_title: "NewsNext",
+      },
     }
   },
   vite: () => {

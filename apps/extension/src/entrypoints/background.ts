@@ -6,6 +6,7 @@ import { installImageRequestRules } from "@/lib/background/image-request-rules"
 import { BACKGROUND_SERVICE_KEY, createBackgroundService } from "@/lib/background/service"
 import { getClientSourceDescriptors } from "@/lib/client-sources"
 import { createRadarMatcher } from "@/lib/radar"
+import { TOGGLE_RADAR_OVERLAY_MESSAGE } from "@/lib/radar-overlay-message"
 
 const backgroundService = createBackgroundService()
 const radarMatcher = createRadarMatcher(getClientSourceDescriptors())
@@ -58,6 +59,18 @@ export default defineBackground(() => {
     if (info.menuItemId === DASHBOARD_MENU_ID) {
       void browser.tabs.create({ url: browser.runtime.getURL("/dashboard.html") })
     }
+  })
+
+  browser.action.onClicked.addListener((tab) => {
+    if (!tab.id) {
+      return
+    }
+
+    void browser.tabs.sendMessage(tab.id, {
+      type: TOGGLE_RADAR_OVERLAY_MESSAGE,
+    }).catch(() => {
+      // Content scripts are unavailable on browser-internal and extension pages.
+    })
   })
 
   browser.tabs.onActivated.addListener(() => {
