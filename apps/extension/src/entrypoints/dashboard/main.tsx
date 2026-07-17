@@ -1,12 +1,12 @@
 import { QueryClient } from "@tanstack/react-query"
-import { createMemoryHistory, createRouter, RouterProvider } from "@tanstack/react-router"
+import { createHashHistory, createRouter, RouterProvider } from "@tanstack/react-router"
 import { AppProvider } from "@/components/app-provider"
 import { renderPersistentReactRoot } from "@/lib/react-root"
 import { routeTree } from "./routeTree"
 import "@/styles/index.css"
 
 const queryClient = new QueryClient()
-const hashHistory = createMemoryHistory()
+const hashHistory = createHashHistory()
 const router = createRouter({
   routeTree,
   history: hashHistory,
