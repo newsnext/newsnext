@@ -7,6 +7,15 @@ import { createRadarMatcher } from "@/lib/radar"
 
 const backgroundService = createBackgroundService()
 const radarMatcher = createRadarMatcher(getClientSourceDescriptors())
+const OPEN_NEWSNEXT_MENU_ID = "open-newsnext"
+
+function registerOpenNewsNextMenu(): void {
+  browser.contextMenus.create({
+    id: OPEN_NEWSNEXT_MENU_ID,
+    title: "Open NewsNext",
+    contexts: [import.meta.env.MANIFEST_VERSION === 3 ? "action" : "browser_action"],
+  })
+}
 
 async function updateRadarBadge(tab: browser.tabs.Tab): Promise<void> {
   if (!tab.id) {
@@ -39,6 +48,14 @@ export default defineBackground(() => {
   registerService(BACKGROUND_SERVICE_KEY, backgroundService)
 
   void updateActiveRadarBadge()
+
+  browser.runtime.onInstalled.addListener(registerOpenNewsNextMenu)
+
+  browser.contextMenus.onClicked.addListener((info) => {
+    if (info.menuItemId === OPEN_NEWSNEXT_MENU_ID) {
+      void browser.runtime.openOptionsPage()
+    }
+  })
 
   browser.tabs.onActivated.addListener(() => {
     void updateActiveRadarBadge()

@@ -3,7 +3,7 @@ import { createMemoryHistory, createRouter, RouterProvider } from "@tanstack/rea
 import { AppProvider } from "@/components/app-provider"
 import { renderPersistentReactRoot } from "@/lib/react-root"
 import { routeTree } from "./routeTree"
-import "./globals.css"
+import "@/styles/index.css"
 
 const queryClient = new QueryClient()
 const hashHistory = createMemoryHistory()

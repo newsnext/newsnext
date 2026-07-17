@@ -21,31 +21,36 @@ export default defineConfig({
   webExt: {
     disabled: true,
   },
-  manifest: ({ browser }) => ({
-    name: "NewsNext",
-    description: "Elegant reading experience, Fastest information reception",
-    version: "0.9.0",
-    permissions: [
-      "bookmarks",
-      "cookies",
-      "favicon",
-      "history",
-      "scripting",
-      "storage",
-      "tabs",
-    ],
-    host_permissions: [
-      "http://*/*",
-      "https://*/*",
-    ],
-    ...browser === "chrome"
-      ? {
-          action: {
-            default_title: "NewsNext",
-          },
-        }
-      : {},
-  }),
+  manifest: ({ browser, mode }) => {
+    const extensionName = mode === "development" ? "NewsNext Dev" : "NewsNext"
+
+    return {
+      name: extensionName,
+      description: "Elegant reading experience, Fastest information reception",
+      version: "0.9.0",
+      permissions: [
+        "bookmarks",
+        "contextMenus",
+        "cookies",
+        "favicon",
+        "history",
+        "scripting",
+        "storage",
+        "tabs",
+      ],
+      host_permissions: [
+        "http://*/*",
+        "https://*/*",
+      ],
+      ...browser === "chrome"
+        ? {
+            action: {
+              default_title: "NewsNext",
+            },
+          }
+        : {},
+    }
+  },
   vite: () => {
     return {
       plugins: [

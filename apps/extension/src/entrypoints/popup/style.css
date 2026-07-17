@@ -1,9 +1,3 @@
-@import "tailwindcss" source("../popup/");
-@import "../../styles/base.css";
-
-@source "../../../../../packages/ui/src";
-@source "../../";
-
 html {
   width: 420px;
   height: 558px;
