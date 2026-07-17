@@ -1,9 +1,4 @@
-import { useCallback, useEffect, useState } from "react"
-import { getApiUrl } from "@/lib/env"
-
-function getProxiedImageUrl(url: string): string {
-  return getApiUrl(`/p/${encodeURIComponent(url)}`)
-}
+import { useEffect, useState } from "react"
 
 interface ProxiedImageProps extends Omit<React.ImgHTMLAttributes<HTMLImageElement>, "src"> {
   src: string
@@ -11,11 +6,7 @@ interface ProxiedImageProps extends Omit<React.ImgHTMLAttributes<HTMLImageElemen
 }
 
 export function ProxiedImage({ src, onError, delay, ...props }: ProxiedImageProps) {
-  const [failedSrc, setFailedSrc] = useState<string | null>(null)
   const [readySrc, setReadySrc] = useState(delay ? "" : src)
-  const proxiedSrc = getProxiedImageUrl(src)
-  const imgSrc = failedSrc === src ? proxiedSrc : src
-  const failed = failedSrc === proxiedSrc
   const shouldLoad = !delay || readySrc === src
 
   useEffect(() => {
@@ -26,17 +17,6 @@ export function ProxiedImage({ src, onError, delay, ...props }: ProxiedImageProp
       return () => clearTimeout(timer)
     }
   }, [delay, shouldLoad, src])
-
-  const handleError = useCallback((e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-    setFailedSrc(imgSrc)
-    if (imgSrc === proxiedSrc) {
-      onError?.(e)
-    }
-  }, [imgSrc, onError, proxiedSrc])
-
-  if (failed) {
-    return null
-  }
 
   if (!shouldLoad) {
     return (
@@ -53,8 +33,8 @@ export function ProxiedImage({ src, onError, delay, ...props }: ProxiedImageProp
     <img
       referrerPolicy="no-referrer"
       alt=""
-      src={imgSrc}
-      onError={handleError}
+      src={src}
+      onError={onError}
       loading="lazy"
       {...props}
     />

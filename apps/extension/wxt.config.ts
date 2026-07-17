@@ -32,6 +32,7 @@ export default defineConfig({
         "bookmarks",
         "contextMenus",
         "cookies",
+        "declarativeNetRequestWithHostAccess",
         "favicon",
         "history",
         "scripting",
