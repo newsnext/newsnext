@@ -1,3 +1,4 @@
+import type { Browser } from "wxt/browser"
 import { registerService } from "@webext-core/proxy-service"
 import { browser } from "wxt/browser"
 import { defineBackground } from "#imports"
@@ -18,7 +19,7 @@ function registerDashboardMenu(): void {
   })
 }
 
-async function updateRadarBadge(tab: browser.tabs.Tab): Promise<void> {
+async function updateRadarBadge(tab: Browser.tabs.Tab): Promise<void> {
   if (!tab.id) {
     return
   }

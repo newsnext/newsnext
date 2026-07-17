@@ -1,3 +1,4 @@
+import type { Browser } from "wxt/browser"
 import type { RadarContext } from "@/lib/radar"
 import { useEffect, useRef, useState } from "react"
 import { browser } from "#imports"
@@ -28,7 +29,7 @@ export function useCurrentTabRadarContext(): RadarContext | null {
       void updateFromActiveTab()
     }
 
-    const handleTabUpdated = (_tabId: number, changeInfo: browser.tabs.TabChangeInfo, tab: browser.tabs.Tab) => {
+    const handleTabUpdated = (_tabId: number, changeInfo: Browser.tabs.OnUpdatedInfo, tab: Browser.tabs.Tab) => {
       if (!tab.active || (!changeInfo.url && !changeInfo.title)) {
         return
       }
