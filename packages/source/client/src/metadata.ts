@@ -5,7 +5,7 @@ import type { SourceDescriptor } from "@newsnext/source-shared/typings"
 
 export const sourceDescriptors: SourceDescriptor[] = [
   {
-    "icon": "https://s3.newsnext.pro/icons/aihot.png",
+    "icon": "https://icons.folo.is/aihot.virxact.com",
     "providerTitle": "AIHot",
     "paramsSchemaVersion": 1,
     "cacheVersion": 1,
@@ -16,7 +16,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "id": "aihot:all"
   },
   {
-    "icon": "https://s3.newsnext.pro/icons/bilibili.png",
+    "icon": "https://icons.folo.is/www.bilibili.com",
     "providerTitle": "Bilibili",
     "title": "热搜",
     "paramsSchemaVersion": 1,
@@ -28,7 +28,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "id": "bilibili:hotword"
   },
   {
-    "icon": "https://s3.newsnext.pro/icons/bilibili.png",
+    "icon": "https://icons.folo.is/www.bilibili.com",
     "providerTitle": "Bilibili",
     "title": "关注视频",
     "paramsSchemaVersion": 1,
@@ -41,7 +41,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "id": "bilibili:following-videos"
   },
   {
-    "icon": "https://s3.newsnext.pro/icons/bilibili.png",
+    "icon": "https://icons.folo.is/www.bilibili.com",
     "providerTitle": "Bilibili",
     "title": "排行榜",
     "params": {
@@ -220,7 +220,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "id": "browser:bookmarks"
   },
   {
-    "icon": "https://s3.newsnext.pro/icons/cls.png",
+    "icon": "https://icons.folo.is/www.cls.cn",
     "providerTitle": "财联社",
     "title": "电报",
     "paramsSchemaVersion": 1,
@@ -232,7 +232,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "id": "cls:telegraph"
   },
   {
-    "icon": "https://s3.newsnext.pro/icons/cls.png",
+    "icon": "https://icons.folo.is/www.cls.cn",
     "providerTitle": "财联社",
     "title": "深度",
     "paramsSchemaVersion": 1,
@@ -244,7 +244,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "id": "cls:depth"
   },
   {
-    "icon": "https://s3.newsnext.pro/icons/cls.png",
+    "icon": "https://icons.folo.is/www.cls.cn",
     "providerTitle": "财联社",
     "title": "热门",
     "paramsSchemaVersion": 1,
@@ -256,7 +256,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "id": "cls:hot-article"
   },
   {
-    "icon": "https://s3.newsnext.pro/icons/folo.png",
+    "icon": "https://icons.folo.is/folo.is",
     "providerTitle": "Folo",
     "title": "Feed",
     "params": {
@@ -275,7 +275,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "id": "folo:feed"
   },
   {
-    "icon": "https://s3.newsnext.pro/icons/folo.png",
+    "icon": "https://icons.folo.is/folo.is",
     "providerTitle": "Folo",
     "title": "List",
     "params": {
@@ -294,7 +294,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "id": "folo:list"
   },
   {
-    "icon": "https://s3.newsnext.pro/icons/github.png",
+    "icon": "https://icons.folo.is/github.com",
     "providerTitle": "GitHub",
     "title": "Trending",
     "params": {
@@ -373,7 +373,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "id": "github:trending"
   },
   {
-    "icon": "https://s3.newsnext.pro/icons/hackernews.png",
+    "icon": "https://icons.folo.is/news.ycombinator.com",
     "providerTitle": "Hacker News",
     "title": "Hottest",
     "paramsSchemaVersion": 1,
@@ -385,7 +385,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "id": "hackernews:top"
   },
   {
-    "icon": "https://s3.newsnext.pro/icons/hackernews.png",
+    "icon": "https://icons.folo.is/news.ycombinator.com",
     "providerTitle": "Hacker News",
     "title": "Newest",
     "paramsSchemaVersion": 1,
@@ -397,7 +397,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "id": "hackernews:newest"
   },
   {
-    "icon": "https://s3.newsnext.pro/icons/hackernews.png",
+    "icon": "https://icons.folo.is/news.ycombinator.com",
     "providerTitle": "Hacker News",
     "title": "Show",
     "paramsSchemaVersion": 1,
@@ -408,7 +408,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "id": "hackernews:show"
   },
   {
-    "icon": "https://s3.newsnext.pro/icons/hackernews.png",
+    "icon": "https://icons.folo.is/news.ycombinator.com",
     "providerTitle": "Hacker News",
     "title": "Ask",
     "paramsSchemaVersion": 1,
@@ -663,7 +663,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "id": "jike:topic-hottest"
   },
   {
-    "icon": "https://s3.newsnext.pro/icons/linuxdo.png",
+    "icon": "https://icons.folo.is/linux.do",
     "providerTitle": "Linux.do",
     "title": "Latest",
     "paramsSchemaVersion": 1,
@@ -675,7 +675,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "id": "linuxdo:latest"
   },
   {
-    "icon": "https://s3.newsnext.pro/icons/linuxdo.png",
+    "icon": "https://icons.folo.is/linux.do",
     "providerTitle": "Linux.do",
     "title": "Hot",
     "paramsSchemaVersion": 1,
@@ -687,7 +687,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "id": "linuxdo:top-daily"
   },
   {
-    "icon": "https://s3.newsnext.pro/icons/netease-music.png",
+    "icon": "https://icons.folo.is/music.163.com",
     "providerTitle": "网易云音乐",
     "title": "飙升榜",
     "params": {
@@ -758,7 +758,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "id": "netease-music:playlist"
   },
   {
-    "icon": "https://s3.newsnext.pro/icons/newsnow.png",
+    "icon": "https://icons.folo.is/www.newsnow.com",
     "providerTitle": "NEWS NOW",
     "params": {
       "locale": {
@@ -828,7 +828,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "id": "newsnow:topic-latest"
   },
   {
-    "icon": "https://s3.newsnext.pro/icons/tieba.png",
+    "icon": "https://icons.folo.is/tieba.baidu.com",
     "providerTitle": "百度贴吧",
     "title": "热议",
     "paramsSchemaVersion": 1,
@@ -840,7 +840,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "id": "tieba:hot-topic"
   },
   {
-    "icon": "https://s3.newsnext.pro/icons/v2ex.png",
+    "icon": "https://icons.folo.is/v2ex.com",
     "providerTitle": "V2EX",
     "params": {
       "feed": {
@@ -888,7 +888,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "id": "v2ex:feed"
   },
   {
-    "icon": "https://s3.newsnext.pro/icons/weibo.png",
+    "icon": "https://icons.folo.is/s.m.weibo.cn",
     "providerTitle": "Weibo",
     "title": "Hot Search",
     "paramsSchemaVersion": 1,
@@ -900,7 +900,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "id": "weibo:hot-search"
   },
   {
-    "icon": "https://s3.newsnext.pro/icons/weibo.png",
+    "icon": "https://icons.folo.is/m.weibo.cn",
     "providerTitle": "Weibo",
     "title": "User Posts",
     "params": {
@@ -989,7 +989,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "id": "weibo:user"
   },
   {
-    "icon": "https://s3.newsnext.pro/icons/weibo.png",
+    "icon": "https://icons.folo.is/m.weibo.cn",
     "providerTitle": "Weibo",
     "title": "Keyword",
     "params": {
@@ -1064,7 +1064,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "id": "weibo:keyword"
   },
   {
-    "icon": "https://s3.newsnext.pro/icons/weibo.png",
+    "icon": "https://icons.folo.is/m.weibo.cn",
     "providerTitle": "Weibo",
     "title": "Super Topic",
     "params": {
@@ -1202,7 +1202,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "id": "weibo:super-topic"
   },
   {
-    "icon": "https://s3.newsnext.pro/icons/weibo.png",
+    "icon": "https://icons.folo.is/m.weibo.cn",
     "providerTitle": "Weibo",
     "title": "Following Timeline",
     "paramsSchemaVersion": 1,
@@ -1409,7 +1409,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "id": "x:user"
   },
   {
-    "icon": "https://s3.newsnext.pro/icons/xueqiu.png",
+    "icon": "https://icons.folo.is/xueqiu.com",
     "providerTitle": "雪球",
     "paramsSchemaVersion": 1,
     "cacheVersion": 1,
@@ -1420,7 +1420,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "id": "xueqiu:hot-stock"
   },
   {
-    "icon": "https://s3.newsnext.pro/icons/zaobao.png",
+    "icon": "https://icons.folo.is/www.zaobao.com",
     "providerTitle": "联合早报",
     "paramsSchemaVersion": 1,
     "cacheVersion": 1,
@@ -1431,7 +1431,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "id": "zaobao:realtime"
   },
   {
-    "icon": "https://s3.newsnext.pro/icons/zhihu.png",
+    "icon": "https://icons.folo.is/www.zhihu.com",
     "providerTitle": "知乎",
     "title": "全站热榜",
     "paramsSchemaVersion": 1,

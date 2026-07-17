@@ -1,7 +1,6 @@
-export function getFavicon(url: string | URL) {
+export function getFavicon(url: string | URL): string {
   try {
-    const hostname = typeof url === "string" ? new URL(url).hostname : url.hostname
-    return `https://icons.folo.is/${hostname}`
+    return `https://icons.folo.is/${new URL(url).hostname}`
   } catch {
     return ""
   }

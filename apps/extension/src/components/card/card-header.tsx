@@ -1,6 +1,5 @@
 import type { Color } from "@newsnext/shared/types"
 import type { ReactNode } from "react"
-import { getFavicon } from "@newsnext/shared/utils"
 import { cn } from "@/lib/utils"
 
 interface CardHeaderProps {
@@ -46,9 +45,6 @@ export function CardHeader({
             src={icon}
             alt={`${providerTitle} icon`}
             referrerPolicy="no-referrer"
-            onError={(e) => {
-              e.currentTarget.src = getFavicon(home || "#")!
-            }}
           />
         </button>
         <div className="flex flex-col min-w-0 flex-1">

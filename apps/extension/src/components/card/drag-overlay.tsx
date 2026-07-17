@@ -1,5 +1,4 @@
 import type { BoardSource } from "@/typings/source"
-import { getFavicon } from "@newsnext/shared/utils"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { cn } from "@/lib/utils"
 import { IconButton } from "../common/button"
@@ -10,7 +9,7 @@ interface DragOverlayProps {
 }
 
 export function DragOverlay({ source }: DragOverlayProps) {
-  const { color, desc, icon, providerTitle, title, home } = source
+  const { color, desc, icon, providerTitle, title } = source
   return (
     <div className="relative flex flex-col p-3">
       <SquircleBox
@@ -29,9 +28,6 @@ export function DragOverlay({ source }: DragOverlayProps) {
             alt={`${providerTitle} icon`}
             title={desc || providerTitle}
             referrerPolicy="no-referrer"
-            onError={(e) => {
-              e.currentTarget.src = getFavicon(home || "#")!
-            }}
           />
           <div className="flex flex-col min-w-0">
             <div className="flex items-center gap-2 min-w-0 w-full">

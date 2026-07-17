@@ -1,5 +1,6 @@
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
+import { getFavicon } from "@newsnext/shared/utils"
 // import { build } from "tsdown"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -73,7 +74,7 @@ ${providerEntries.join(",\n")}
       delete descriptor.key
       sourceDescriptors.push({
         ...descriptor,
-        icon: descriptor.icon ?? `https://s3.newsnext.pro/icons/${provider}.png`,
+        icon: descriptor.icon ?? (descriptor.home ? getFavicon(descriptor.home) : undefined),
         id: `${provider}:${key}`,
       })
     }
