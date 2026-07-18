@@ -23,8 +23,6 @@
     "@newsnext/client-source": "workspace:*",
     "@newsnext/source-shared": "workspace:*",
     "@newsnext/ui": "workspace:*",
-    "@orpc/client": "catalog:",
-    "@orpc/tanstack-query": "catalog:",
     "@tanstack/react-query": "catalog:",
     "@tanstack/react-router": "catalog:",
     "@tanstack/react-virtual": "catalog:",

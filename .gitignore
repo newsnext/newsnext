@@ -21,13 +21,8 @@ web-ext.config.ts
 *.njsproj
 *.sln
 *.sw?
-examples/
 .output/
 .tanstack/
-.wrangler/
-.vercel
-servers/api/public
-data/*.db
 
 .env*
 !.env.example

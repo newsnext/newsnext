@@ -1,1 +1,0 @@
--- No-op: source metadata is defined in code, not stored in the database.

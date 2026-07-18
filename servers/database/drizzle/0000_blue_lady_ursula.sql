@@ -1,1 +1,0 @@
--- No-op: obsolete bootstrap tables were removed from the direct source schema.

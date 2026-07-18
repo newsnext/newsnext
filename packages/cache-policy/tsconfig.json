@@ -1,4 +1,0 @@
-{
-  "extends": "@newsnext/tsconfigs/server.json",
-  "include": ["./src"]
-}

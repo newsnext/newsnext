@@ -1,1 +1,0 @@
--- No-op: source state tables are created directly in the final schema migration.
