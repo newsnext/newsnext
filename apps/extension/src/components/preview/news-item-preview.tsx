@@ -3,6 +3,7 @@ import type { CSSProperties, ReactNode } from "react"
 import type { NewsItem } from "@/typings/source"
 import { extractPictures } from "@newsnext/shared/types"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@newsnext/ui/components/hover-card"
+import { useId, useMemo, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
 import { ProxiedImage } from "./proxied-image"
 
@@ -38,31 +39,7 @@ export function NewsItemLink({ item, className, children }: NewsItemLinkProps) {
   const hasPreview = item.preview?.html || item.preview?.text || item.preview?.picture || item.preview?.iframe
 
   if (hasPreview) {
-    return (
-      <HoverCard>
-        <HoverCardTrigger
-          delay={600}
-          render={props => (
-            <NewsItemAnchor
-              {...props}
-              href={href}
-              className={className}
-            >
-              {children}
-            </NewsItemAnchor>
-          )}
-        />
-        <HoverCardContent
-          side="left"
-          align="start"
-          alignOffset={0}
-          radius="3xl"
-          surfaceClassName="max-h-96 overflow-y-auto scrollbar-hidden"
-        >
-          <NewsItemPreviewContent item={item} />
-        </HoverCardContent>
-      </HoverCard>
-    )
+    return <PreviewNewsItemLink item={item} href={href} className={className}>{children}</PreviewNewsItemLink>
   }
 
   return (
@@ -75,17 +52,83 @@ export function NewsItemLink({ item, className, children }: NewsItemLinkProps) {
   )
 }
 
-export function NewsItemPreviewContent({ item, className }: { item: NewsItem, className?: string }) {
+function PreviewNewsItemLink({ item, href, className, children }: NewsItemLinkProps & { href: string }) {
+  const triggerId = useId()
+  const pictures = useMemo(
+    () => item.preview?.picture ? extractPictures(item.preview.picture).map(picture => picture.src) : [],
+    [item.preview?.picture],
+  )
+  const [open, setOpen] = useState(false)
+  const [picturesReady, setPicturesReady] = useState(pictures.length === 0)
+  const settledPicturesRef = useRef(new Set<number>())
+
+  const handleOpenChange = (nextOpen: boolean): void => {
+    setOpen(nextOpen)
+  }
+
+  const handlePictureSettled = (index: number): void => {
+    if (settledPicturesRef.current.has(index)) {
+      return
+    }
+
+    settledPicturesRef.current.add(index)
+    if (settledPicturesRef.current.size === pictures.length) {
+      setPicturesReady(true)
+    }
+  }
+
+  return (
+    <HoverCard open={open} triggerId={open ? triggerId : null} onOpenChange={handleOpenChange}>
+      <HoverCardTrigger
+        id={triggerId}
+        delay={600}
+        render={props => (
+          <NewsItemAnchor
+            {...props}
+            href={href}
+            className={className}
+          >
+            {children}
+          </NewsItemAnchor>
+        )}
+      />
+      <HoverCardContent
+        side="left"
+        align="start"
+        alignOffset={0}
+        radius="3xl"
+        aria-hidden={!picturesReady}
+        className={cn("transition-opacity", !picturesReady && "invisible pointer-events-none opacity-0")}
+        surfaceClassName="max-h-96 overflow-y-auto scrollbar-hidden"
+      >
+        <NewsItemPreviewContent item={item} onPictureSettled={handlePictureSettled} />
+      </HoverCardContent>
+    </HoverCard>
+  )
+}
+
+export function NewsItemPreviewContent({
+  item,
+  className,
+  onPictureSettled,
+}: {
+  item: NewsItem
+  className?: string
+  onPictureSettled?: (index: number) => void
+}) {
   return (
     <div className={cn("flex flex-col gap-2", className)}>
-      {item.preview?.picture && extractPictures(item.preview.picture).map((picture) => {
+      {item.preview?.picture && extractPictures(item.preview.picture).map((picture, index) => {
         const { src, scale, radius } = picture
         return (
           <ProxiedImage
-            key={src}
+            key={`${src}-${index}`}
             src={src}
             referrerPolicy="no-referrer"
             alt="preview picture"
+            loading="eager"
+            onLoad={() => onPictureSettled?.(index)}
+            onError={() => onPictureSettled?.(index)}
             style={{
               transform: `scale(${scale ?? 1})`,
               borderRadius: `${radius ?? 12}px`,
