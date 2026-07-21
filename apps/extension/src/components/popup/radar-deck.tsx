@@ -5,13 +5,15 @@ import type { RadarDraftPatch } from "@/lib/radar-board-source"
 import type { BoardSource, SourceDescriptor } from "@/typings/source"
 import { ButtonPrimitive } from "@newsnext/ui/components/button"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
+import confetti from "canvas-confetti"
 import { useSetAtom } from "jotai"
-import { animate, motion, useDragControls, useMotionValue, useTransform } from "motion/react"
+import { animate, motion, useDragControls, useMotionValue, useReducedMotion, useTransform } from "motion/react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Card from "@/components/card"
 import { IconButton } from "@/components/common/button"
 import { PhArrowCircleLeftDuotone, PhForkDuotone, PhStarFill } from "@/components/icons/ph"
 import { createRadarBoardSource, mergeRadarDraftPatch } from "@/lib/radar-board-source"
+import { requestRadarOverlayClose } from "@/lib/radar-overlay-message"
 import { createForkedInstance } from "@/lib/source-cards"
 import { cn } from "@/lib/utils"
 import {
@@ -25,6 +27,30 @@ const RADAR_CARD_GAP = 8
 const RADAR_DECK_SPRING = { type: "spring", stiffness: 300, damping: 30 } as const
 const RADAR_CARD_ROTATE_OUTPUT = [-7, 0, 7]
 const RADAR_CARD_Y_OUTPUT = [20, 0, 20]
+const RADAR_CELEBRATION_DURATION = 900
+const RADAR_REDUCED_MOTION_CELEBRATION_DURATION = 180
+const RADAR_CONFETTI_COLORS: Record<BoardSource["color"], string> = {
+  red: "#f87171",
+  rose: "#fb7185",
+  pink: "#f472b6",
+  fuchsia: "#e879f9",
+  purple: "#c084fc",
+  violet: "#a78bfa",
+  indigo: "#818cf8",
+  blue: "#60a5fa",
+  sky: "#38bdf8",
+  cyan: "#22d3ee",
+  teal: "#2dd4bf",
+  emerald: "#34d399",
+  green: "#4ade80",
+  lime: "#a3e635",
+  yellow: "#facc15",
+  amber: "#fbbf24",
+  orange: "#fb923c",
+  slate: "#94a3b8",
+}
+
+type RadarCelebrationKind = "fork" | "star"
 
 function getRadarTrackX(index: number, trackItemOffset: number): number {
   return -(index * trackItemOffset)
@@ -42,6 +68,39 @@ function getRadarActionStyle(color: BoardSource["color"]): RadarActionStyle {
     "--radar-action-card-bg-hover": `color-mix(in oklab, var(--color-${color}-400) 52%, transparent)`,
     "--radar-action-chip-text": `var(--color-${color}-400)`,
   }
+}
+
+interface RadarConfettiOptions {
+  color: BoardSource["color"]
+  kind: RadarCelebrationKind
+  originElement: HTMLElement | null
+}
+
+function launchRadarConfetti({ color, kind, originElement }: RadarConfettiOptions): void {
+  const rect = originElement?.getBoundingClientRect()
+  const origin = rect
+    ? {
+        x: (rect.left + rect.width / 2) / window.innerWidth,
+        y: (rect.top + rect.height / 2) / window.innerHeight,
+      }
+    : { x: 0.18, y: 0.92 }
+  const activeColor = RADAR_CONFETTI_COLORS[color]
+
+  void confetti({
+    particleCount: kind === "star" ? 64 : 52,
+    angle: 78,
+    spread: 72,
+    startVelocity: 34,
+    decay: 0.91,
+    gravity: 0.9,
+    ticks: 58,
+    scalar: 0.72,
+    origin,
+    colors: [activeColor, "#fbbf24", "#fb7185", "#f8fafc"],
+    shapes: kind === "star" ? ["star", "circle"] : ["square", "circle"],
+    disableForReducedMotion: true,
+    zIndex: 50,
+  })
 }
 
 interface RadarSourceCardProps {
@@ -136,10 +195,26 @@ export function RadarDeck({ sourceDescriptors, suggestions }: RadarDeckProps) {
   const [draftPatches, setDraftPatches] = useState<Record<string, RadarDraftPatch>>({})
   const [trackItemOffset, setTrackItemOffset] = useState(1)
   const [hasMeasuredDeck, setHasMeasuredDeck] = useState(false)
+  const [celebration, setCelebration] = useState<RadarCelebrationKind | null>(null)
+  const actionRef = useRef<HTMLDivElement>(null)
   const deckRef = useRef<HTMLDivElement>(null)
   const resizeObserverRef = useRef<ResizeObserver | null>(null)
   const dragControls = useDragControls()
   const x = useMotionValue(0)
+  const prefersReducedMotion = useReducedMotion() ?? false
+
+  useEffect(() => {
+    if (!celebration) {
+      return
+    }
+
+    const duration = prefersReducedMotion
+      ? RADAR_REDUCED_MOTION_CELEBRATION_DURATION
+      : RADAR_CELEBRATION_DURATION
+    const timeout = window.setTimeout(requestRadarOverlayClose, duration)
+
+    return () => window.clearTimeout(timeout)
+  }, [celebration, prefersReducedMotion])
 
   useEffect(() => {
     setActiveIndex(0)
@@ -254,15 +329,25 @@ export function RadarDeck({ sourceDescriptors, suggestions }: RadarDeckProps) {
   }, [activeSource, activeSuggestion])
 
   const handleFork = useCallback(() => {
+    if (celebration) {
+      return
+    }
+
     const instance = createActiveForkInstance()
     if (!instance) {
       return
     }
 
     upsertLocal(instance)
-  }, [createActiveForkInstance, upsertLocal])
+    launchRadarConfetti({ color: activeSource.color, kind: "fork", originElement: actionRef.current })
+    setCelebration("fork")
+  }, [activeSource, celebration, createActiveForkInstance, upsertLocal])
 
   const handleForkAndStar = useCallback(() => {
+    if (celebration) {
+      return
+    }
+
     const instance = createActiveForkInstance()
     if (!instance) {
       return
@@ -270,7 +355,9 @@ export function RadarDeck({ sourceDescriptors, suggestions }: RadarDeckProps) {
 
     upsertLocal(instance)
     starLocal({ instanceId: instance.instanceId, starred: true })
-  }, [createActiveForkInstance, starLocal, upsertLocal])
+    launchRadarConfetti({ color: activeSource.color, kind: "star", originElement: actionRef.current })
+    setCelebration("star")
+  }, [activeSource, celebration, createActiveForkInstance, starLocal, upsertLocal])
 
   const handleActiveDraftSourceChange = useCallback((patch: RadarDraftPatch) => {
     if (!activeSuggestion) {
@@ -290,7 +377,16 @@ export function RadarDeck({ sourceDescriptors, suggestions }: RadarDeckProps) {
   const radarActionStyle = getRadarActionStyle(activeSource.color)
 
   return (
-    <section className="space-y-3" aria-label="Radar cards">
+    <motion.section
+      className="relative space-y-3"
+      aria-label="Radar cards"
+      animate={celebration && !prefersReducedMotion
+        ? { scale: [1, 1.008, 0.985], opacity: [1, 1, 0] }
+        : undefined}
+      transition={celebration && !prefersReducedMotion
+        ? { duration: RADAR_CELEBRATION_DURATION / 1000, times: [0, 0.7, 1], ease: "easeInOut" }
+        : undefined}
+    >
       <div className="flex justify-center overflow-hidden">
         <div ref={setDeckNode} className="w-full max-w-100 overflow-hidden">
           <motion.div
@@ -319,11 +415,13 @@ export function RadarDeck({ sourceDescriptors, suggestions }: RadarDeckProps) {
       </div>
       <div className="flex items-center justify-between gap-3">
         <div
+          ref={actionRef}
           className="relative shrink-0"
           style={radarActionStyle}
         >
           <ButtonPrimitive
             onClick={handleForkAndStar}
+            disabled={celebration !== null}
             aria-label="Fork and star"
             title="Fork and star"
             className="flex h-8 items-center gap-1 rounded-3xl bg-(--radar-action-card-bg) py-0.5 pr-2.5 pl-[4.35rem] text-xs font-semibold transition-colors hover:bg-(--radar-action-card-bg-hover) hover:text-foreground"
@@ -333,6 +431,7 @@ export function RadarDeck({ sourceDescriptors, suggestions }: RadarDeckProps) {
           </ButtonPrimitive>
           <ButtonPrimitive
             onClick={handleFork}
+            disabled={celebration !== null}
             aria-label="Fork only"
             title="Fork only"
             className="absolute top-0.5 left-0.5 inline-flex h-7 items-center gap-1 rounded-3xl bg-background/50 px-2 text-xs font-medium text-(--radar-action-chip-text) opacity-80 transition-all hover:bg-background/70 hover:opacity-100"
@@ -362,6 +461,6 @@ export function RadarDeck({ sourceDescriptors, suggestions }: RadarDeckProps) {
           </IconButton>
         </div>
       </div>
-    </section>
+    </motion.section>
   )
 }

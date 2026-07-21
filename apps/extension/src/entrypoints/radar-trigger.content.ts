@@ -2,6 +2,7 @@ import type { ShadowRootContentScriptUi } from "wxt/utils/content-script-ui/shad
 import { browser } from "wxt/browser"
 import { createShadowRootUi, defineContentScript } from "#imports"
 import {
+  isCloseRadarOverlayMessage,
   isToggleRadarOverlayMessage,
 } from "@/lib/radar-overlay-message"
 import "@/styles/radar-overlay.css"
@@ -86,12 +87,22 @@ export default defineContentScript({
       }
     }
 
+    const handleWindowMessage = (event: MessageEvent<unknown>): void => {
+      const frame = ui?.mounted?.querySelector<HTMLIFrameElement>(".newsnext-radar-frame")
+
+      if (isCloseRadarOverlayMessage(event.data) && event.source === frame?.contentWindow) {
+        close()
+      }
+    }
+
     browser.runtime.onMessage.addListener(handleMessage)
     document.addEventListener("keydown", handleKeyDown)
+    window.addEventListener("message", handleWindowMessage)
 
     ctx.onInvalidated(() => {
       browser.runtime.onMessage.removeListener(handleMessage)
       document.removeEventListener("keydown", handleKeyDown)
+      window.removeEventListener("message", handleWindowMessage)
     })
   },
 })
