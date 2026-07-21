@@ -10,6 +10,7 @@ const glob = new Bun.Glob("src/lib/*.ts")
 const deepIndexGlob = new Bun.Glob("src/lib/**/index.ts")
 const SRC_PREFIX_REGEX = /^src\//
 const TS_EXTENSION_REGEX = /\.ts$/
+const TEST_FILE_REGEX = /\.(?:test|spec)\.ts$/
 
 async function writeIfChanged(path: string, content: string): Promise<void> {
   const file = Bun.file(path)
@@ -23,10 +24,12 @@ async function generate(): Promise<void> {
   const files = new Set<string>()
 
   for await (const file of glob.scan(rootDir)) {
+    if (TEST_FILE_REGEX.test(file)) continue
     files.add(file)
   }
 
   for await (const file of deepIndexGlob.scan(rootDir)) {
+    if (TEST_FILE_REGEX.test(file)) continue
     files.add(file)
   }
 

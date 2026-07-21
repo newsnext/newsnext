@@ -13,13 +13,14 @@ import provider_7 from "./lib/jike/index"
 import provider_8 from "./lib/linuxdo"
 import provider_9 from "./lib/netease-music"
 import provider_10 from "./lib/newsnow"
-import provider_11 from "./lib/tieba"
-import provider_12 from "./lib/v2ex"
-import provider_13 from "./lib/weibo/index"
-import provider_14 from "./lib/x/index"
-import provider_15 from "./lib/xueqiu"
-import provider_16 from "./lib/zaobao"
-import provider_17 from "./lib/zhihu"
+import provider_11 from "./lib/telegram"
+import provider_12 from "./lib/tieba"
+import provider_13 from "./lib/v2ex"
+import provider_14 from "./lib/weibo/index"
+import provider_15 from "./lib/x/index"
+import provider_16 from "./lib/xueqiu"
+import provider_17 from "./lib/zaobao"
+import provider_18 from "./lib/zhihu"
 
 export const providers = {
   [provider_0.id ?? "aihot"]: provider_0,
@@ -33,11 +34,12 @@ export const providers = {
   [provider_8.id ?? "linuxdo"]: provider_8,
   [provider_9.id ?? "netease-music"]: provider_9,
   [provider_10.id ?? "newsnow"]: provider_10,
-  [provider_11.id ?? "tieba"]: provider_11,
-  [provider_12.id ?? "v2ex"]: provider_12,
-  [provider_13.id ?? "weibo"]: provider_13,
-  [provider_14.id ?? "x"]: provider_14,
-  [provider_15.id ?? "xueqiu"]: provider_15,
-  [provider_16.id ?? "zaobao"]: provider_16,
-  [provider_17.id ?? "zhihu"]: provider_17
+  [provider_11.id ?? "telegram"]: provider_11,
+  [provider_12.id ?? "tieba"]: provider_12,
+  [provider_13.id ?? "v2ex"]: provider_13,
+  [provider_14.id ?? "weibo"]: provider_14,
+  [provider_15.id ?? "x"]: provider_15,
+  [provider_16.id ?? "xueqiu"]: provider_16,
+  [provider_17.id ?? "zaobao"]: provider_17,
+  [provider_18.id ?? "zhihu"]: provider_18
 }

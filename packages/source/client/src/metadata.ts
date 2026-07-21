@@ -828,6 +828,80 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "id": "newsnow:topic-latest"
   },
   {
+    "icon": "https://icons.folo.is/t.me",
+    "providerTitle": "Telegram",
+    "title": "科技圈 在花频道",
+    "params": {
+      "channel": {
+        "type": "text",
+        "default": "TestFlightCN",
+        "title": "Channel",
+        "pattern": "^(?![\\d_])\\w{5,32}$"
+      }
+    },
+    "paramsSchemaVersion": 1,
+    "cacheVersion": 1,
+    "color": "blue",
+    "type": "timeline",
+    "category": "tech",
+    "home": "https://t.me/s/TestFlightCN",
+    "radar": [
+      {
+        "id": "telegram-channel",
+        "match": {
+          "hosts": [
+            "t.me",
+            "telegram.me"
+          ],
+          "paths": [
+            "/s/:channel",
+            "/:channel"
+          ]
+        },
+        "paramsPatch": {
+          "channel": {
+            "value": {
+              "type": "path",
+              "name": "channel"
+            }
+          }
+        },
+        "metaPatch": {
+          "title": {
+            "value": {
+              "type": "pageTitle"
+            },
+            "transforms": [
+              {
+                "type": "normalizeWhitespace"
+              },
+              {
+                "type": "replace",
+                "pattern": "\\s*[–-]\\s*Telegram$",
+                "replacement": ""
+              }
+            ],
+            "fallback": "Telegram channel"
+          },
+          "home": {
+            "value": {
+              "type": "path",
+              "name": "channel"
+            },
+            "transforms": [
+              {
+                "type": "template",
+                "value": "https://t.me/s/{value}"
+              }
+            ]
+          }
+        },
+        "confidence": 0.95
+      }
+    ],
+    "id": "telegram:channel"
+  },
+  {
     "icon": "https://icons.folo.is/tieba.baidu.com",
     "providerTitle": "百度贴吧",
     "title": "热议",
