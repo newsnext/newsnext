@@ -1,6 +1,7 @@
 import type { Color } from "@newsnext/shared/types"
 import type { ReactNode } from "react"
 import { cn } from "@/lib/utils"
+import { SourceIcon } from "./source-icon"
 
 interface CardHeaderProps {
   color: Color
@@ -40,11 +41,10 @@ export function CardHeader({
           title={desc || providerTitle}
           onClick={() => window.open(home || "#", "_blank")}
         >
-          <img
-            className="size-full rounded-full bg-cover"
-            src={icon}
-            alt={`${providerTitle} icon`}
-            referrerPolicy="no-referrer"
+          <SourceIcon
+            className="size-full rounded-full after:rounded-full"
+            icon={icon}
+            providerTitle={providerTitle}
           />
         </button>
         <div className="flex flex-col min-w-0 flex-1">

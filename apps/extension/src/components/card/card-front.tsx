@@ -19,6 +19,7 @@ import { CardHeader } from "./card-header"
 import {
   SourceErrorState,
   SourceLoginState,
+  SourcePermissionState,
   SourceStatusMessage,
   SourceStatusPattern,
 } from "./card-source-state"
@@ -32,8 +33,10 @@ interface CardFrontProps {
   isFetching: boolean
   sourceErrorMessage?: string
   sourceLoginUrl?: string
+  sourcePermissionRequired: boolean
   updatedAt: number
   onRefresh: () => void
+  onRequestPermission: () => Promise<boolean>
   onFlip?: () => void
   showStar?: boolean
   actions?: ReactNode
@@ -94,8 +97,10 @@ interface CardFrontContentProps {
   scrollRef: React.RefObject<HTMLDivElement>
   sourceErrorMessage?: string
   sourceLoginUrl?: string
+  sourcePermissionRequired: boolean
   type: BoardSource["type"]
   onRefresh: () => void
+  onRequestPermission: () => Promise<boolean>
 }
 
 function CardFrontContent({
@@ -107,9 +112,22 @@ function CardFrontContent({
   scrollRef,
   sourceErrorMessage,
   sourceLoginUrl,
+  sourcePermissionRequired,
   type,
   onRefresh,
+  onRequestPermission,
 }: CardFrontContentProps) {
+  if (sourcePermissionRequired) {
+    return (
+      <SourcePermissionState
+        color={color}
+        icon={icon}
+        onRequestPermission={onRequestPermission}
+        providerTitle={providerTitle}
+      />
+    )
+  }
+
   if (sourceLoginUrl) {
     return (
       <SourceLoginState
@@ -125,7 +143,9 @@ function CardFrontContent({
     return (
       <SourceErrorState
         color={color}
+        icon={icon}
         onRefresh={onRefresh}
+        providerTitle={providerTitle}
       />
     )
   }
@@ -157,8 +177,10 @@ function CardFrontComponent({
   isFetching,
   sourceErrorMessage,
   sourceLoginUrl,
+  sourcePermissionRequired,
   updatedAt,
   onRefresh,
+  onRequestPermission,
   onFlip,
   showStar = true,
   actions,
@@ -167,9 +189,11 @@ function CardFrontComponent({
   const { type, color, desc, icon, providerTitle, title, home } = source
   const ref = useRef<HTMLDivElement>(null)
   const relativeTime = useRelativeTime({ date: updatedAt })
-  const sourceStatusMessage = sourceLoginUrl
-    ? `Log in to ${providerTitle} to continue.`
-    : sourceErrorMessage
+  const sourceStatusMessage = sourcePermissionRequired
+    ? `Authorize access to your browser ${title?.toLowerCase() ?? "data"} to continue.`
+    : sourceLoginUrl
+      ? `Log in to ${providerTitle} to continue.`
+      : sourceErrorMessage
 
   return (
     <div className="relative h-full">
@@ -237,15 +261,15 @@ function CardFrontComponent({
                 scrollRef={ref as React.RefObject<HTMLDivElement>}
                 sourceErrorMessage={sourceErrorMessage}
                 sourceLoginUrl={sourceLoginUrl}
+                sourcePermissionRequired={sourcePermissionRequired}
                 type={type}
                 onRefresh={onRefresh}
+                onRequestPermission={onRequestPermission}
               />
             </div>
           </div>
           {sourceStatusMessage && (
             <SourceStatusMessage
-              icon={icon}
-              isLoginRequired={Boolean(sourceLoginUrl)}
               message={sourceStatusMessage}
             />
           )}

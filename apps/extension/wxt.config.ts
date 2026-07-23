@@ -29,15 +29,17 @@ export default defineConfig({
       description: "Elegant reading experience, Fastest information reception",
       version: "0.9.0",
       permissions: [
-        "bookmarks",
         "contextMenus",
         "cookies",
         "declarativeNetRequestWithHostAccess",
         "favicon",
-        "history",
         "scripting",
         "storage",
         "tabs",
+      ],
+      optional_permissions: [
+        "bookmarks",
+        "history",
       ],
       host_permissions: [
         "http://*/*",

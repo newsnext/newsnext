@@ -6,6 +6,7 @@ import { useInView } from "motion/react"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { FlipAnimate } from "@/components/common/flip-animate"
 import { useSourceParams } from "@/hooks"
+import { useSourcePermission } from "@/hooks/use-source-permission"
 import { useSourceQuery } from "@/hooks/use-source-query"
 import { cn } from "@/lib/utils"
 import {
@@ -36,6 +37,11 @@ function CardContent({ id, source, dragHandle, showStar = true, isDraft = false,
   const setSourceInstanceMeta = useSetAtom(setSourceInstanceMetaAtom)
   const [isFlipped, setIsFlipped] = useState(false)
   const {
+    canLoad,
+    permissionRequired,
+    requestPermission,
+  } = useSourcePermission(source.sourceId)
+  const {
     hasParams,
     savedParams,
     draftParams,
@@ -52,8 +58,9 @@ function CardContent({ id, source, dragHandle, showStar = true, isDraft = false,
   const { items, refetch, isFetching, isError, errorMessage, loginUrl, updatedAt } = useSourceQuery({
     sourceId: source.sourceId,
     params: savedParams,
+    enabled: canLoad,
   })
-  const sourceErrorMessage = isError
+  const sourceErrorMessage = canLoad && isError
     ? `Failed to load source${errorMessage ? `: ${errorMessage}` : "."}`
     : undefined
 
@@ -126,9 +133,11 @@ function CardContent({ id, source, dragHandle, showStar = true, isDraft = false,
         items={items}
         isFetching={isFetching}
         sourceErrorMessage={sourceErrorMessage}
-        sourceLoginUrl={loginUrl}
+        sourceLoginUrl={canLoad ? loginUrl : undefined}
+        sourcePermissionRequired={permissionRequired}
         updatedAt={updatedAt}
         onRefresh={refetch}
+        onRequestPermission={requestPermission}
         onFlip={handleFlip}
         showStar={showStar}
         dragHandle={isFlipped ? undefined : dragHandle}
