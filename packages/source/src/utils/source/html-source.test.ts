@@ -172,22 +172,6 @@ describe("$htmlSourceLoader", () => {
     expect(results[0].title).toBe("Pinned")
   })
 
-  it("should keep itemSelector compatibility", async () => {
-    ;(myFetch as any).mockResolvedValue("<div class=\"item\"><a class=\"title\" href=\"/1\">Legacy</a></div>")
-
-    const source = $htmlLoader(() => ({
-      url: "https://example.com",
-      itemSelector: ".item",
-      fields: {
-        title: ".title",
-        url: { selector: ".title", attr: "href" },
-      },
-    }))
-
-    const results = await (source as any).loader({})
-    expect(results[0].title).toBe("Legacy")
-  })
-
   it("should handle params in url function", async () => {
     ;(myFetch as any).mockResolvedValue("<div class=\"item\"></div>")
 

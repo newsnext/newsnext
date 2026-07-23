@@ -2,10 +2,10 @@ import type { NewsItem, SourceLoaderContext, SourceSecretDefinition } from "@new
 import { myFetch } from "@newsnext/source/utils/fetch"
 import { load } from "cheerio/slim"
 
-export const WEIBO_ORIGIN = "https://m.weibo.cn"
-export const WEIBO_SUB_SECRET_KEY = "sub"
-export const WEIBO_SUBP_SECRET_KEY = "subp"
-export const WEIBO_LOGIN_STATE_SECRET_KEY = "ssoLoginState"
+const WEIBO_ORIGIN = "https://m.weibo.cn"
+const WEIBO_SUB_SECRET_KEY = "sub"
+const WEIBO_SUBP_SECRET_KEY = "subp"
+const WEIBO_LOGIN_STATE_SECRET_KEY = "ssoLoginState"
 
 const WEIBO_HEADERS = {
   "MWeibo-Pwa": "1",
@@ -126,7 +126,7 @@ const WEIBO_SUPER_TOPIC_TYPE_OPTIONS = [
   "soul",
 ] as const
 
-export type WeiboSuperTopicType = (typeof WEIBO_SUPER_TOPIC_TYPE_OPTIONS)[number]
+type WeiboSuperTopicType = (typeof WEIBO_SUPER_TOPIC_TYPE_OPTIONS)[number]
 
 export interface WeiboSuperTopicPostsParams {
   id: string
@@ -172,7 +172,7 @@ async function fetchWeiboApi<T>(url: string, referer: string, context?: SourceLo
   return response.data
 }
 
-export function isWeiboSuperTopicType(value: string): value is WeiboSuperTopicType {
+function isWeiboSuperTopicType(value: string): value is WeiboSuperTopicType {
   return WEIBO_SUPER_TOPIC_TYPE_OPTIONS.includes(value as WeiboSuperTopicType)
 }
 

@@ -1,4 +1,4 @@
-export interface XPlaceTrend {
+interface XPlaceTrend {
   name: string
   url: string
 }

@@ -1,7 +1,6 @@
 import type { NewsItem } from "@newsnext/source/typings"
 
 import type {
-  JikeFeedResponse,
   JikePicture,
   JikePost,
   JikeUser,
@@ -9,8 +8,8 @@ import type {
 } from "./types"
 
 export const JIKE_WEB_ORIGIN = "https://web.okjike.com"
-export const JIKE_SHARE_ORIGIN = "https://m.okjike.com"
-export const TOPIC_FEED_BASE_URL = "https://api.ruguoapp.com/1.0/topics/tabs"
+const JIKE_SHARE_ORIGIN = "https://m.okjike.com"
+const TOPIC_FEED_BASE_URL = "https://api.ruguoapp.com/1.0/topics/tabs"
 
 const TOPIC_FEED_TAB_BY_ORDER: Record<TopicFeedOrder, string> = {
   recent: "square",
@@ -21,7 +20,7 @@ function compactText(text: string): string {
   return text.trim().replace(/\s+/g, " ")
 }
 
-export function getNumberProperty(value: unknown, key: string): number | undefined {
+function getNumberProperty(value: unknown, key: string): number | undefined {
   if (!value || typeof value !== "object") {
     return undefined
   }
@@ -30,25 +29,7 @@ export function getNumberProperty(value: unknown, key: string): number | undefin
   return typeof result === "number" ? result : undefined
 }
 
-export function isJikeAuthError(response: JikeFeedResponse): boolean {
-  if (response.success !== false) {
-    return false
-  }
-
-  const message = `${response.error?.message ?? ""} ${response.toast ?? ""}`.toLowerCase()
-  return [
-    "token",
-    "auth",
-    "unauthorized",
-    "login",
-    "登录",
-    "鉴权",
-    "认证",
-    "过期",
-  ].some(keyword => message.includes(keyword))
-}
-
-export function getFetchErrorStatus(error: unknown): number | undefined {
+function getFetchErrorStatus(error: unknown): number | undefined {
   return getNumberProperty(error, "statusCode")
     ?? getNumberProperty(error, "status")
     ?? getNumberProperty((error as { response?: unknown } | null)?.response, "status")

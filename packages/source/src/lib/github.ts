@@ -18,7 +18,7 @@ interface GitHubTrendingParams {
   dateRange: DateRange
 }
 
-export function buildGitHubTrendingUrl({
+function buildGitHubTrendingUrl({
   language,
   spokenLanguage,
   dateRange,

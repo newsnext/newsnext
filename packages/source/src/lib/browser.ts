@@ -147,7 +147,7 @@ function formatVisitCount(count: number | undefined): string {
   return `${visits} ${visits === 1 ? "visit" : "visits"}`
 }
 
-export function browserHistoryItemsToNewsItems(historyItems: BrowserHistoryItem[]): NewsItem[] {
+function browserHistoryItemsToNewsItems(historyItems: BrowserHistoryItem[]): NewsItem[] {
   const seen = new Set<string>()
   const items: NewsItem[] = []
 
@@ -222,7 +222,7 @@ function findBookmarkFolder(
   return undefined
 }
 
-export function browserBookmarkNodesToNewsItems(bookmarkNodes: BrowserBookmarkNode[]): NewsItem[] {
+function browserBookmarkNodesToNewsItems(bookmarkNodes: BrowserBookmarkNode[]): NewsItem[] {
   return flattenBookmarkNodes(bookmarkNodes)
     .filter((node): node is BrowserBookmarkNode & { url: string } => Boolean(node.url))
     .sort((a, b) => (b.dateAdded ?? 0) - (a.dateAdded ?? 0))
@@ -246,7 +246,7 @@ export function browserBookmarkNodesToNewsItems(bookmarkNodes: BrowserBookmarkNo
     })
 }
 
-export async function fetchBrowserHistory({
+async function fetchBrowserHistory({
   query,
   dateRange,
   maxResults,
@@ -349,7 +349,7 @@ async function readBookmarksFromFolder(
   }
 }
 
-export async function fetchBrowserBookmarks({
+async function fetchBrowserBookmarks({
   folder,
   maxResults,
 }: BrowserBookmarksParams): Promise<NewsItem[]> {

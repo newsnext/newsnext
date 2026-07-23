@@ -27,10 +27,6 @@ export interface HtmlSourceOptions {
    * Selector or resolver for the source items.
    */
   items?: ItemsResolver
-  /**
-   * @deprecated Use `items` instead.
-   */
-  itemSelector?: string
   filter?: ItemFilter
   // Allow dynamic decoding
   decoding?: string
@@ -69,7 +65,6 @@ function resolveField(
   $: cheerio.CheerioAPI,
   el: AnyNode,
   selectorConfig: string | { selector?: string, attr?: string, transform?: any },
-  _defaultSelector?: string,
 ): any {
   if (typeof selectorConfig === "string") {
     // Check if selector is empty string, if so, return undefined or maybe text of current el?
@@ -97,7 +92,7 @@ function resolveField(
 }
 
 export const $htmlLoader = createLoader<HtmlSourceOptions>(async (opts) => {
-  const { url, type, items: itemsResolver, itemSelector, filter, decoding, fetchOptions, fetch, fields } = opts
+  const { url, type, items: itemsResolver, filter, decoding, fetchOptions, fetch, fields } = opts
 
   let html: string
   if (fetch) {
@@ -110,9 +105,8 @@ export const $htmlLoader = createLoader<HtmlSourceOptions>(async (opts) => {
     html = typeof res === "string" ? res : JSON.stringify(res)
   }
 
-  // console.log(html)
   const $ = load(html)
-  const items = resolveItems($, itemsResolver ?? itemSelector)
+  const items = resolveItems($, itemsResolver)
   const news: NewsItem[] = []
 
   items.forEach((el, index) => {

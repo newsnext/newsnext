@@ -1,7 +1,6 @@
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 import { getFavicon } from "@newsnext/shared/utils"
-// import { build } from "tsdown"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const rootDir = __dirname
@@ -96,9 +95,3 @@ export const sourceDescriptors: SourceDescriptor[] = ${JSON.stringify(sourceDesc
 }
 
 await generate()
-
-// await build({
-//   entry: indexPath,
-//   outDir: join(rootDir, "dist"),
-//   dts: true,
-// })

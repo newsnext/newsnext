@@ -22,11 +22,11 @@ export interface JikeUser {
   username?: string
 }
 
-export interface JikeTopic {
+interface JikeTopic {
   content?: string
 }
 
-export interface JikeLinkInfo {
+interface JikeLinkInfo {
   linkUrl?: string
   pictureUrl?: string
   source?: string

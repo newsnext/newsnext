@@ -56,7 +56,7 @@ async function loadFoloEntries(body: FoloEntriesRequest): Promise<NewsItem[]> {
   return foloEntriesToNewsItems(res.data ?? [])
 }
 
-export function foloEntriesToNewsItems(items: FoloDataItem[]): NewsItem[] {
+function foloEntriesToNewsItems(items: FoloDataItem[]): NewsItem[] {
   const newsItems: NewsItem[] = []
 
   for (const { entries, feeds } of items) {

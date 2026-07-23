@@ -28,7 +28,6 @@ export const $rssLoader = createLoader<{ url: string }>(async ({ url }) => {
 
 export const $rssHubLoader = createLoader<RSSHubLoaderOptions>(async ({ route, host, options: RSSHubOptions, type }) => {
   if (!host) host = "https://rsshub.rssforever.com"
-  // "https://rsshub.pseudoyu.com"
   const RSSHubBase = host
   const url = new URL(route, RSSHubBase)
   url.searchParams.set("format", "json")

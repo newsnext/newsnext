@@ -76,10 +76,6 @@ export function normalizeXSearchUrl(url: string): string {
   return url.replace(/^http:\/\/twitter\.com\//, "https://x.com/")
 }
 
-export function normalizeXUsername(username: string): string {
-  return username.trim().replace(/^@/, "").replace(/^https?:\/\/(?:www\.)?(?:x|twitter)\.com\//, "").split(/[/?#]/)[0] ?? ""
-}
-
 export function isUserTweetEntry(entry: XTimelineEntry): boolean {
   return Boolean(entry.entryId && USER_TWEET_ENTRY_PREFIXES.some(prefix => entry.entryId?.startsWith(prefix)))
 }

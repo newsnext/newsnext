@@ -35,8 +35,6 @@ import {
   X_USER_FEATURES,
 } from "./utils"
 
-export { normalizeXUsername } from "./utils"
-
 const X_RADAR_RESERVED_PATHS = [
   "compose",
   "explore",
@@ -50,7 +48,7 @@ const X_RADAR_RESERVED_PATHS = [
   "share",
 ]
 
-export async function fetchXPlaceTrends({ location }: XTrendingParams, context?: SourceLoaderContext): Promise<NewsItem[]> {
+async function fetchXPlaceTrends({ location }: XTrendingParams, context?: SourceLoaderContext): Promise<NewsItem[]> {
   const headers = await createXLoggedInHeaders(context)
 
   const response = await myFetch<XPlaceTrendResponse[]>(PLACE_TRENDS_URL, {
@@ -69,7 +67,7 @@ export async function fetchXPlaceTrends({ location }: XTrendingParams, context?:
   }))
 }
 
-export async function fetchXTimeline(url: string, context?: SourceLoaderContext): Promise<NewsItem[]> {
+async function fetchXTimeline(url: string, context?: SourceLoaderContext): Promise<NewsItem[]> {
   const headers = await createXLoggedInHeaders(context)
   const response = await myFetch<XHomeTimelineResponse>(url, {
     method: "POST",
@@ -92,7 +90,7 @@ export async function fetchXTimeline(url: string, context?: SourceLoaderContext)
   return sortNewsItemsByNewest(entriesToNewsItems(getTimelineEntries(instructions)))
 }
 
-export async function fetchXUserTweets({ username }: XUserTweetsParams, context?: SourceLoaderContext): Promise<NewsItem[]> {
+async function fetchXUserTweets({ username }: XUserTweetsParams, context?: SourceLoaderContext): Promise<NewsItem[]> {
   const screenName = username.trim()
   if (!/^\w{1,15}$/.test(screenName)) {
     throw new Error("X username must be a valid handle.")

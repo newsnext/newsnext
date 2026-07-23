@@ -8,7 +8,6 @@
     "./metadata": "./src/metadata.ts",
     "./service": "./src/service/index.ts",
     "./typings": "./src/typings/index.ts",
-    "./utils/base64": "./src/utils/base64.ts",
     "./utils/crypto": "./src/utils/crypto.ts",
     "./utils/date": "./src/utils/date.ts",
     "./utils/fetch": "./src/utils/fetch.ts",

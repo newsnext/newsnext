@@ -158,7 +158,7 @@ function dynamicArchiveToNewsItem(item: DynamicFeedItem): NewsItem | null {
   return newsItem
 }
 
-export async function fetchBilibiliFollowingVideos(): Promise<NewsItem[]> {
+async function fetchBilibiliFollowingVideos(): Promise<NewsItem[]> {
   const response = await myFetch<DynamicFeedResponse>(DYNAMIC_FEED_URL, {
     credentials: "include",
     headers: {
