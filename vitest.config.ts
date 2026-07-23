@@ -5,8 +5,7 @@ import { defineConfig } from "vitest/config"
 const rootDir = process.cwd()
 const workspaceAliasRoots = [
   "apps/extension",
-  "packages/source/client",
-  "packages/source/shared",
+  "packages/source",
 ]
 
 export default defineConfig({
@@ -35,8 +34,7 @@ export default defineConfig({
     include: [
       "apps/extension/**/*.{test,spec}.{ts,tsx}",
       "packages/shared/**/*.{test,spec}.{ts,tsx}",
-      "packages/source/client/**/*.{test,spec}.{ts,tsx}",
-      "packages/source/shared/**/*.{test,spec}.{ts,tsx}",
+      "packages/source/**/*.{test,spec}.{ts,tsx}",
     ],
     exclude: [
       "**/node_modules/**",

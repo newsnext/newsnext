@@ -1,4 +1,4 @@
-import type { SourceParamSchema } from "@newsnext/client-source/typings"
+import type { SourceParamSchema } from "@newsnext/source/typings"
 import type { SourceParamValues } from "@/lib/source-params"
 import { useCallback, useEffect, useState } from "react"
 import {

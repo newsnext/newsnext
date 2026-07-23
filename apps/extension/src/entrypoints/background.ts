@@ -4,12 +4,12 @@ import { browser } from "wxt/browser"
 import { defineBackground } from "#imports"
 import { installImageRequestRules } from "@/lib/background/image-request-rules"
 import { BACKGROUND_SERVICE_KEY, createBackgroundService } from "@/lib/background/service"
-import { getClientSourceDescriptors } from "@/lib/client-sources"
 import { createRadarMatcher } from "@/lib/radar"
 import { TOGGLE_RADAR_OVERLAY_MESSAGE } from "@/lib/radar-overlay-message"
+import { getSourceDescriptors } from "@/lib/sources"
 
 const backgroundService = createBackgroundService()
-const radarMatcher = createRadarMatcher(getClientSourceDescriptors())
+const radarMatcher = createRadarMatcher(getSourceDescriptors())
 const DASHBOARD_MENU_ID = "dashboard"
 
 function registerDashboardMenu(): void {

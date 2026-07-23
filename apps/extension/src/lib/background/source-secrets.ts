@@ -1,4 +1,4 @@
-import type { RegisteredSourceDefinition, SourceSecretDefinition, SourceSecrets } from "@newsnext/client-source/typings"
+import type { RegisteredSourceDefinition, SourceSecretDefinition, SourceSecrets } from "@newsnext/source/typings"
 import { browser } from "wxt/browser"
 import { storage } from "wxt/utils/storage"
 

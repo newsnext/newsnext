@@ -1,11 +1,11 @@
 import type { NewsItem } from "@/typings/source"
-import { normalizeSourceParams, resolveSource } from "@newsnext/client-source/service"
+import { normalizeSourceParams, resolveSource } from "@newsnext/source/service"
 import { useQuery } from "@tanstack/react-query"
 import { useCallback, useMemo } from "react"
-import { buildClientSourceCacheKey, loadClientSource } from "@/lib/client-source-loader"
+import { buildSourceCacheKey, loadSource } from "@/lib/source-loader"
 // import { useLocalStorageCache } from "./use-local-storage-cache"
 import { getLoginUrlFromError } from "./source-login-error"
-import { CLIENT_SOURCE_QUERY_KEY, consumeLatestSourceRefresh } from "./use-refetch"
+import { consumeLatestSourceRefresh, SOURCE_QUERY_KEY } from "./use-refetch"
 
 export interface UseSourceQueryOptions {
   sourceId: string
@@ -24,16 +24,16 @@ export function useSourceQuery({
   const source = useMemo(() => resolveSource(sourceId), [sourceId])
   const normalizedParams = useMemo(() => normalizeSourceParams(source, params ?? {}), [params, source])
   const cacheKey = useMemo(
-    () => buildClientSourceCacheKey(sourceId, source.cacheVersion ?? 1, normalizedParams),
+    () => buildSourceCacheKey(sourceId, source.cacheVersion ?? 1, normalizedParams),
     [normalizedParams, source.cacheVersion, sourceId],
   )
-  // type SourceData = Awaited<ReturnType<typeof loadClientSource>>
+  // type SourceData = Awaited<ReturnType<typeof loadSource>>
   // const storageKey = `${STORAGE_PREFIX}/${sourceId}`
   // const { readCache, writeCache } = useLocalStorageCache<SourceData>(storageKey)
 
   const { data, error, isFetching, isError, refetch: normalRefetch } = useQuery({
-    queryKey: [...CLIENT_SOURCE_QUERY_KEY, cacheKey],
-    queryFn: () => loadClientSource(sourceId, normalizedParams, {
+    queryKey: [...SOURCE_QUERY_KEY, cacheKey],
+    queryFn: () => loadSource(sourceId, normalizedParams, {
       forceFresh: consumeLatestSourceRefresh({ sourceId, params: normalizedParams }),
     }),
     enabled,

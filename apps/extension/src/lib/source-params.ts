@@ -1,4 +1,4 @@
-import type { SourceParamSchema } from "@newsnext/client-source/typings"
+import type { SourceParamSchema } from "@newsnext/source/typings"
 
 const SOURCE_PARAMS_STORAGE_PREFIX = "newsnext-source-params"
 

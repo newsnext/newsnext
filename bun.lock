@@ -31,8 +31,7 @@
         "@atlaskit/pragmatic-drag-and-drop": "catalog:",
         "@atlaskit/pragmatic-drag-and-drop-auto-scroll": "catalog:",
         "@atlaskit/pragmatic-drag-and-drop-hitbox": "catalog:",
-        "@newsnext/client-source": "workspace:*",
-        "@newsnext/source-shared": "workspace:*",
+        "@newsnext/source": "workspace:*",
         "@newsnext/ui": "workspace:*",
         "@tanstack/react-query": "catalog:",
         "@tanstack/react-router": "catalog:",
@@ -76,19 +75,8 @@
         "react": "catalog:",
       },
     },
-    "packages/source/client": {
-      "name": "@newsnext/client-source",
-      "dependencies": {
-        "@newsnext/shared": "workspace:*",
-        "@newsnext/source-shared": "workspace:*",
-        "cheerio": "^1.2.0",
-      },
-      "devDependencies": {
-        "domhandler": "^6.0.1",
-      },
-    },
-    "packages/source/shared": {
-      "name": "@newsnext/source-shared",
+    "packages/source": {
+      "name": "@newsnext/source",
       "dependencies": {
         "@date-fns/tz": "^1.5.0",
         "@newsnext/shared": "workspace:*",
@@ -366,13 +354,11 @@
 
     "@napi-rs/wasm-runtime": ["@napi-rs/wasm-runtime@1.1.4", "", { "dependencies": { "@tybys/wasm-util": "^0.10.1" }, "peerDependencies": { "@emnapi/core": "^1.7.1", "@emnapi/runtime": "^1.7.1" } }, "sha512-3NQNNgA1YSlJb/kMH1ildASP9HW7/7kYnRI2szWJaofaS1hWmbGI4H+d3+22aGzXXN9IJ+n+GiFVcGipJP18ow=="],
 
-    "@newsnext/client-source": ["@newsnext/client-source@workspace:packages/source/client"],
-
     "@newsnext/extension": ["@newsnext/extension@workspace:apps/extension"],
 
     "@newsnext/shared": ["@newsnext/shared@workspace:packages/shared"],
 
-    "@newsnext/source-shared": ["@newsnext/source-shared@workspace:packages/source/shared"],
+    "@newsnext/source": ["@newsnext/source@workspace:packages/source"],
 
     "@newsnext/tsconfigs": ["@newsnext/tsconfigs@workspace:packages/misc/tsconfigs"],
 

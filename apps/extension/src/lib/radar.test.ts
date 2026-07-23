@@ -1,4 +1,4 @@
-import { sourceDescriptors } from "@newsnext/client-source/metadata"
+import { sourceDescriptors } from "@newsnext/source/metadata"
 import { describe, expect, it } from "vitest"
 import { createRadarMatcher, getRadarSuggestions } from "./radar"
 

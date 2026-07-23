@@ -9,8 +9,7 @@
       "apps/extension",
       "packages/misc/tsconfigs",
       "packages/shared",
-      "packages/source/client",
-      "packages/source/shared",
+      "packages/source",
       "packages/ui"
     ],
     "catalog": {

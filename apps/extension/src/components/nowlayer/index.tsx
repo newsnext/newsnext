@@ -2,14 +2,14 @@ import type { RefObject } from "react"
 import type { BoardSource } from "@/typings/source"
 import { useAtom, useAtomValue } from "jotai"
 import { useCallback, useMemo, useState } from "react"
-import { getClientSourceDescriptors } from "@/lib/client-sources"
 import { buildBoardSources } from "@/lib/source-cards"
+import { getSourceDescriptors } from "@/lib/sources"
 import { boardInstancesAtom, boardStarIdsAtom, pendingForkFocusAtom } from "@/store/board"
 import { DesktopBoard } from "./desktop-board"
 
 const EMPTY_SOURCE_IDS: string[] = []
 const EMPTY_SOURCES_MAP: Record<string, BoardSource> = {}
-const CLIENT_SOURCES = getClientSourceDescriptors()
+const SOURCES = getSourceDescriptors()
 
 type NowLayerBoardId = "featured" | "forks" | "stars"
 
@@ -38,7 +38,7 @@ export function NowLayer({
   const sourceIdOrder = sourceIdOrderState?.boardId === boardId ? sourceIdOrderState.ids : null
   const starredInstanceIds = useAtomValue(boardStarIdsAtom(boardId))
   const instances = useAtomValue(boardInstancesAtom(boardId))
-  const sources = CLIENT_SOURCES
+  const sources = SOURCES
 
   const { ids: boardSourceIds, map: sourcesMap } = useMemo(() => {
     if (!sources.length) {

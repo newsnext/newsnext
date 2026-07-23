@@ -7,8 +7,8 @@ import type {
   SourceRadarRule,
   SourceRadarTransform,
   SourceRadarValue,
-} from "@newsnext/client-source/typings"
-import { parseSourceParams } from "@newsnext/source-shared/utils/params"
+} from "@newsnext/source/typings"
+import { parseSourceParams } from "@newsnext/source/utils/params"
 import { match } from "path-to-regexp"
 
 export interface RadarContext {

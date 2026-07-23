@@ -1,11 +1,11 @@
 import { useMemo } from "react"
 import { RadarDeck } from "@/components/popup/radar-deck"
 import { useCurrentTabRadarContext } from "@/hooks/use-current-tab-radar-context"
-import { getClientSourceDescriptors } from "@/lib/client-sources"
 import { createRadarMatcher } from "@/lib/radar"
+import { getSourceDescriptors } from "@/lib/sources"
 
-const CLIENT_SOURCES = getClientSourceDescriptors()
-const RADAR_MATCHER = createRadarMatcher(CLIENT_SOURCES)
+const SOURCES = getSourceDescriptors()
+const RADAR_MATCHER = createRadarMatcher(SOURCES)
 
 export function RadarPopup() {
   const radarContext = useCurrentTabRadarContext()
@@ -16,7 +16,7 @@ export function RadarPopup() {
   return (
     <main className="grid-texture-background h-full min-h-0 overflow-y-auto bg-background p-3 text-foreground sunrise-theme-400">
       <div className="mx-auto w-full max-w-108">
-        <RadarDeck sourceDescriptors={CLIENT_SOURCES} suggestions={suggestions} />
+        <RadarDeck sourceDescriptors={SOURCES} suggestions={suggestions} />
       </div>
     </main>
   )
