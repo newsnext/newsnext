@@ -12,7 +12,9 @@ import { PhGearDuotone, PhUserDuotone } from "../icons/ph"
 import { SettingsModal } from "../settings"
 
 export function UserMenu() {
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const [isSettingsOpen, setIsSettingsOpen] = useState(
+    () => new URLSearchParams(window.location.search).has("settings"),
+  )
   const [settingsTab, setSettingsTab] = useState<SettingsTabId>("appearance")
 
   function openSettings(tab: SettingsTabId = "appearance"): void {
