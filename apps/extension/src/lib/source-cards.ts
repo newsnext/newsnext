@@ -33,47 +33,6 @@ type BoardSourceSource = Omit<SourceDescriptor, "params"> & {
   params?: Record<string, unknown>
 }
 
-export const FEATURED_SOURCE_IDS: string[] = [
-  // "aihot:all",
-  // "bilibili:hotword",
-  // "bilibili:following-videos",
-  // "bilibili:ranking",
-  "browser:history",
-  // "browser:bookmarks",
-  // "cls:telegraph",
-  // "cls:depth",
-  // "cls:hot-article",
-  "folo:feed",
-  "folo:list",
-  // "github:trending",
-  // "hackernews:top",
-  // "hackernews:newest",
-  // "hackernews:show",
-  // "hackernews:ask",
-  "jike:following-updates",
-  // "jike:user-updates",
-  // "jike:topic-recent",
-  // "jike:topic-hottest",
-  "linuxdo:latest",
-  "linuxdo:top-daily",
-  // "netease-music:playlist",
-  // "newsnow:topic-latest",
-  // "tieba:hot-topic",
-  // "v2ex:feed",
-  // "weibo:hot-search",
-  "x:place-trends",
-  "x:recommended",
-  // "x:following",
-  // "x:user",
-  // "xueqiu:hot-stock",
-  // "zaobao:realtime",
-  // "zhihu:hot-list",
-]
-
-function isBoardSource(source: BoardSource | undefined): source is BoardSource {
-  return Boolean(source)
-}
-
 function createBoardSource(source: BoardSourceSource, isLocalOnly: boolean): BoardSource {
   return {
     ...source,
@@ -124,19 +83,6 @@ export function createForkedInstance(
 
 export function getDefaultSourceInstanceId(sourceId: string): string {
   return `${sourceId}::default`
-}
-
-export function createDefaultSourceInstance(sourceId: string): SourceInstance {
-  const now = Date.now()
-
-  return {
-    instanceId: getDefaultSourceInstanceId(sourceId),
-    sourceId,
-    paramsPatch: {},
-    origin: "default",
-    createdAt: now,
-    updatedAt: now,
-  }
 }
 
 function buildMergedBoardSources(
@@ -192,22 +138,6 @@ function createBoardSourceResult(visibleSources: BoardSource[]): { ids: string[]
   }
 }
 
-export function buildAllBoardSources({
-  sources,
-  sourceInstances,
-  isLocalOnly = false,
-}: {
-  sources: BoardSourceSource[]
-  sourceInstances: SourceInstance[]
-  isLocalOnly?: boolean
-}): { ids: string[], map: Record<string, BoardSource> } {
-  const mergedSources = buildMergedBoardSources(sources, sourceInstances, isLocalOnly)
-
-  return createBoardSourceResult(
-    mergedSources.flatMap(({ baseSource, forkedSources }) => [baseSource, ...forkedSources]),
-  )
-}
-
 export function buildBoardSources({
   sources,
   boardId,
@@ -222,16 +152,11 @@ export function buildBoardSources({
   isLocalOnly?: boolean
 }): { ids: string[], map: Record<string, BoardSource> } {
   const mergedSources = buildMergedBoardSources(sources, sourceInstances, isLocalOnly)
-  const featuredSourceMap = new Map(mergedSources.map(source => [source.baseSource.sourceId, source.baseSource]))
-  const featuredSources = FEATURED_SOURCE_IDS
-    .map(sourceId => featuredSourceMap.get(sourceId))
-    .filter(isBoardSource)
+  const forkedSources = mergedSources.flatMap(source => source.forkedSources)
 
   const visibleSources = boardId === "stars"
-    ? mergedSources.flatMap(({ baseSource, forkedSources }) => [baseSource, ...forkedSources].filter(source => starredSourceInstanceIds.includes(source.id)))
-    : boardId === "forks"
-      ? mergedSources.flatMap(({ forkedSources }) => forkedSources)
-      : featuredSources
+    ? forkedSources.filter(source => starredSourceInstanceIds.includes(source.id))
+    : forkedSources
 
   return createBoardSourceResult(visibleSources)
 }

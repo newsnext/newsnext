@@ -4,9 +4,8 @@ import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { useAtomValue, useSetAtom } from "jotai"
 import { memo, useCallback, useMemo, useRef } from "react"
 import { useRelativeTime } from "@/hooks/useRelativeTime"
-import { createDefaultSourceInstance } from "@/lib/source-cards"
 import { cn } from "@/lib/utils"
-import { instanceStarredAtom, starInstanceAtom, upsertInstanceAtom } from "@/store/board"
+import { instanceStarredAtom, starInstanceAtom } from "@/store/board"
 import { IconButton } from "../common/button"
 import {
   PhArrowCounterClockwiseDuotone,
@@ -44,19 +43,14 @@ interface CardFrontProps {
   dragHandle?: ReactNode
 }
 
-function StarButton({ id, source }: { id: string, source: BoardSource }) {
+function StarButton({ id }: { id: string }) {
   const isStarredAtom = useMemo(() => instanceStarredAtom(id), [id])
   const isStarred = useAtomValue(isStarredAtom)
   const starLocal = useSetAtom(starInstanceAtom)
-  const upsertLocal = useSetAtom(upsertInstanceAtom)
 
   const handleToggleStar = useCallback(() => {
-    if (!source.isCustom) {
-      upsertLocal(createDefaultSourceInstance(source.sourceId))
-    }
-
     starLocal({ instanceId: id, starred: !isStarred })
-  }, [id, isStarred, source.isCustom, source.sourceId, starLocal, upsertLocal])
+  }, [id, isStarred, starLocal])
 
   return (
     <IconButton
@@ -219,7 +213,7 @@ function CardFrontComponent({
           actions={actions ?? (
             <>
               <CardRefreshButton isFetching={isFetching} onRefresh={onRefresh} />
-              {showStar && <StarButton id={id} source={source} />}
+              {showStar && <StarButton id={id} />}
               {onFlip && (
                 <IconButton
                   onClick={onFlip}

@@ -6,7 +6,7 @@ import { atomWithStorage, selectAtom } from "jotai/utils"
 
 export type { BoardType }
 
-export const currentBoardAtom = atom<BoardType>("featured")
+export const currentBoardAtom = atom<BoardType>("stars")
 export const pendingForkFocusAtom = atom<string | null>(null)
 export const STARRED_SOURCE_INSTANCE_IDS_KEY = "newsnext-starred-source-instance-ids"
 export const SOURCE_INSTANCES_KEY = "newsnext-source-instances"
@@ -181,13 +181,11 @@ function createBoardInstancesAtom(boardId: BoardType): Atom<SourceInstance[]> {
 }
 
 const boardStarIdsAtoms: Record<BoardType, Atom<string[]>> = {
-  featured: createBoardStarIdsAtom("featured"),
   forks: createBoardStarIdsAtom("forks"),
   stars: createBoardStarIdsAtom("stars"),
 }
 
 const boardInstancesAtoms: Record<BoardType, Atom<SourceInstance[]>> = {
-  featured: createBoardInstancesAtom("featured"),
   forks: createBoardInstancesAtom("forks"),
   stars: createBoardInstancesAtom("stars"),
 }

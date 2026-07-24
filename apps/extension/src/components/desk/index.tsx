@@ -9,7 +9,7 @@ interface DeskProps {
   boardId?: BoardType
 }
 
-export function Desk({ boardId = "featured" }: DeskProps) {
+export function Desk({ boardId = "stars" }: DeskProps) {
   const [isScattered, setIsScattered] = useState(false)
   const nowLayerRef = useRef<HTMLDivElement>(null)
   const {

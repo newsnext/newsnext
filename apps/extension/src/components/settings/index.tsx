@@ -29,9 +29,8 @@ const SETTINGS_TABS: Array<{ id: SettingsTabId, label: string }> = [
 ]
 
 const DEFAULT_BOARD_TABS = [
-  { label: "Featured", value: "featured" },
-  { label: "Forks", value: "forks" },
   { label: "Stars", value: "stars" },
+  { label: "Forks", value: "forks" },
   { label: "Last Used", value: "last" },
 ] as const
 
@@ -126,12 +125,11 @@ function isSettingsTabId(value: string | null): value is SettingsTabId {
   return value === "appearance" || value === "general" || value === "permissions"
 }
 
-type DefaultBoardOption = "featured" | "forks" | "stars" | "last"
+type DefaultBoardOption = "forks" | "stars" | "last"
 
 function readDefaultBoardOption(value: string | null): DefaultBoardOption {
-  if (value === "recommend") return "featured"
-  if (value === "featured" || value === "forks" || value === "stars" || value === "last") return value
-  return "last"
+  if (value === "forks" || value === "stars" || value === "last") return value
+  return "stars"
 }
 
 function AppearanceSettings() {

@@ -17,7 +17,7 @@ afterEach(() => {
 
 describe("board store selectors", () => {
   it("returns stable board selector atoms", () => {
-    expect(boardInstancesAtom("featured")).toBe(boardInstancesAtom("featured"))
+    expect(boardInstancesAtom("forks")).toBe(boardInstancesAtom("forks"))
     expect(boardStarIdsAtom("stars")).toBe(boardStarIdsAtom("stars"))
   })
 
@@ -48,14 +48,14 @@ describe("board store selectors", () => {
   it("notifies only when the selected star state changes", () => {
     const store = createStore()
     const isGithubStarredAtom = instanceStarredAtom("github")
-    const featuredStarIdsAtom = boardStarIdsAtom("featured")
+    const forksStarIdsAtom = boardStarIdsAtom("forks")
     let cardNotificationCount = 0
     let boardNotificationCount = 0
 
     const unsubscribeCard = store.sub(isGithubStarredAtom, () => {
       cardNotificationCount += 1
     })
-    const unsubscribeBoard = store.sub(featuredStarIdsAtom, () => {
+    const unsubscribeBoard = store.sub(forksStarIdsAtom, () => {
       boardNotificationCount += 1
     })
 

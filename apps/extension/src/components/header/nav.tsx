@@ -3,9 +3,8 @@ import { cn } from "@/lib/utils"
 import { SegmentedControl } from "../common/segmented-control"
 
 const TABS = [
-  { label: "Featured", value: "featured" },
-  { label: "Forks", value: "forks" },
   { label: "Stars", value: "stars" },
+  { label: "Forks", value: "forks" },
 ] as const
 
 interface Props {

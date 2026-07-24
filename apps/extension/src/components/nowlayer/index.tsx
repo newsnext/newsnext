@@ -11,7 +11,7 @@ const EMPTY_SOURCE_IDS: string[] = []
 const EMPTY_SOURCES_MAP: Record<string, BoardSource> = {}
 const SOURCES = getSourceDescriptors()
 
-type NowLayerBoardId = "featured" | "forks" | "stars"
+type NowLayerBoardId = "forks" | "stars"
 
 interface SourceIdOrderState {
   boardId: NowLayerBoardId
@@ -27,7 +27,7 @@ interface NowLayerProps {
 }
 
 export function NowLayer({
-  boardId = "featured",
+  boardId = "stars",
   onSourceIdsChange,
   className,
   isScattered,
