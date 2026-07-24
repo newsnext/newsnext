@@ -2,13 +2,17 @@ import type { NewsItem, SourceParamSchemaMap } from "../../typings"
 import iconv from "iconv-lite"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { myFetch } from "../fetch"
-import { $htmlLoader } from "./html-source"
+import { loadHtml } from "./html-source"
 import { $source } from "./index"
 
 // Mock fetch
 vi.mock("../fetch", () => ({
   myFetch: vi.fn(),
 }))
+
+function createHtmlTestSource(options: () => Parameters<typeof loadHtml>[0]) {
+  return { loader: async () => loadHtml(options()) }
+}
 
 describe("$htmlSourceLoader", () => {
   beforeEach(() => {
@@ -32,7 +36,7 @@ describe("$htmlSourceLoader", () => {
     // Setup mock
     ;(myFetch as any).mockResolvedValue(html)
 
-    const source = $htmlLoader(() => ({
+    const source = createHtmlTestSource(() => ({
       url: "https://example.com",
       items: ".list .item",
       fields: {
@@ -60,7 +64,7 @@ describe("$htmlSourceLoader", () => {
     `
     ;(myFetch as any).mockResolvedValue(html)
 
-    const source = $htmlLoader(() => ({
+    const source = createHtmlTestSource(() => ({
       url: "https://example.com",
       items: ".item",
       fields: {
@@ -102,7 +106,7 @@ describe("$htmlSourceLoader", () => {
     `
     ;(myFetch as any).mockResolvedValue(html)
 
-    const source = $htmlLoader(() => ({
+    const source = createHtmlTestSource(() => ({
       url: "https://example.com",
       items: $ => $(".list .item"),
       filter: el => !el.hasClass("is-ad"),
@@ -130,12 +134,13 @@ describe("$htmlSourceLoader", () => {
     `
     ;(myFetch as any).mockResolvedValue(html)
 
-    const source = $source.html(
-      {
+    const source = $source({
+      metadata: {
         key: "test",
         type: "hottest",
       },
-      () => ({
+      loader: {
+        type: "html",
         url: "https://example.com",
         items: ".item",
         fields: {
@@ -143,8 +148,10 @@ describe("$htmlSourceLoader", () => {
           url: { selector: ".title", attr: "href" },
           timestamp: ".date",
         },
-      }),
-    )
+      },
+      capabilities: { network: ["example.com"], cookies: [], browser: [] },
+      cache: { version: 1, maxAge: "5m" },
+    })
 
     const results = await (source as any).loader({})
     expect(results.map((item: NewsItem) => item.title)).toEqual(["Article 1", "Article 2"])
@@ -157,7 +164,7 @@ describe("$htmlSourceLoader", () => {
     `
     ;(myFetch as any).mockResolvedValue(html)
 
-    const source = $htmlLoader(() => ({
+    const source = createHtmlTestSource(() => ({
       url: "https://example.com",
       items: ".item",
       filter: ".pinned",
@@ -175,19 +182,22 @@ describe("$htmlSourceLoader", () => {
   it("should handle params in url function", async () => {
     ;(myFetch as any).mockResolvedValue("<div class=\"item\"></div>")
 
-    const source = $source.html(
-      {
+    const source = $source({
+      metadata: {
         key: "test",
-        params: {
-          page: { type: "number", default: 1, title: "Page" },
-        } satisfies SourceParamSchemaMap,
       },
-      params => ({
-        url: `https://example.com?p=${params.page}`,
+      params: {
+        page: { type: "number", default: 1, title: "Page" },
+      } satisfies SourceParamSchemaMap,
+      loader: {
+        type: "html",
+        url: params => `https://example.com?p=${params.page}`,
         items: ".item",
         fields: { title: ".t", url: ".u" },
-      }),
-    )
+      },
+      capabilities: { network: ["example.com"], cookies: [], browser: [] },
+      cache: { version: 1, maxAge: "5m" },
+    })
 
     await (source as any).loader({ page: 2 })
 
@@ -200,7 +210,7 @@ describe("$htmlSourceLoader", () => {
     // Mock fetch returning array buffer
     ;(myFetch as any).mockResolvedValue(gb2312Buffer)
 
-    const source = $htmlLoader(() => ({
+    const source = createHtmlTestSource(() => ({
       url: "https://example.com/gb",
       decoding: "gb2312",
       items: ".item",
@@ -221,7 +231,7 @@ describe("$htmlSourceLoader", () => {
 
     const customFetch = vi.fn().mockResolvedValue(html)
 
-    const source = $htmlLoader(() => ({
+    const source = createHtmlTestSource(() => ({
       url: "https://example.com/custom",
       fetch: customFetch,
       items: ".item",

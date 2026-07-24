@@ -1,12 +1,8 @@
 import type { FetchOptions } from "ofetch"
 import type {
-  InferSourceParams,
   NewsItem,
-  SourceLoader,
-  SourceParamSchemaMap,
   SourceRegistration,
 } from "../../typings/sources"
-import { createLoader } from "."
 import { myFetch } from "../fetch"
 
 export type FieldResolver<Item = any, Result = any> = string | ((item: Item) => Result | null | undefined)
@@ -59,7 +55,7 @@ function resolveValue<Item>(item: Item, resolver: FieldResolver<Item, any>): any
   return resolvePath(item, resolver as string)
 }
 
-async function jsonSourceHandler<Item = any>(opts: JsonSourceOptions<Item>): Promise<NewsItem[]> {
+export async function loadJson<Item = any>(opts: JsonSourceOptions<Item>): Promise<NewsItem[]> {
   const { url, type, fetchOptions, fetch, items: itemsResolver, fields } = opts
 
   let json: any
@@ -145,38 +141,4 @@ async function jsonSourceHandler<Item = any>(opts: JsonSourceOptions<Item>): Pro
   }
 
   return news
-}
-
-export function $jsonLoader<Item = any>(
-  options: () => JsonSourceOptions<Item>,
-): { loader: SourceLoader<Record<string, never>> }
-export function $jsonLoader<P extends SourceParamSchemaMap, Item = any>(
-  options: (params: InferSourceParams<P>) => JsonSourceOptions<Item>,
-): { loader: SourceLoader<P> }
-export function $jsonLoader<Item = any>(
-  options: any,
-): any {
-  return createLoader<JsonSourceOptions<Item>>(jsonSourceHandler as any)(options)
-}
-
-export function $jsonSource<P extends SourceParamSchemaMap, Item = any>(
-  registration: Omit<SourceRegistration<P>, "loader" | "params"> & { params: P },
-  options: (params: InferSourceParams<P>) => JsonSourceOptions<Item>,
-): SourceRegistration<P>
-export function $jsonSource<Item = any>(
-  registration: Omit<SourceRegistration<Record<string, never>>, "loader" | "params">,
-  options: () => JsonSourceOptions<Item>,
-): SourceRegistration<Record<string, never>>
-export function $jsonSource(registration: unknown, options: unknown): SourceRegistration<any> {
-  const sourceRegistration = registration as SourceRegistration<any>
-  return {
-    ...sourceRegistration,
-    ...$jsonLoader((params: InferSourceParams<any>) => {
-      const sourceOptions = (options as (params: InferSourceParams<any>) => JsonSourceOptions)(params)
-      return {
-        ...sourceOptions,
-        type: sourceRegistration.type ?? sourceOptions.type,
-      }
-    }),
-  } as SourceRegistration<any>
 }

@@ -47,7 +47,7 @@ export function ParamField({
   }
 
   if (param.type === "select") {
-    const selectedOption = param.options.find(option => option.value === String(currentValue))
+    const selectedOption = param.values.find(option => option.value === String(currentValue))
 
     if (!editable) {
       return (
@@ -71,7 +71,7 @@ export function ParamField({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {param.options.map(option => (
+            {param.values.map(option => (
               <SelectItem key={option.value} value={option.value}>
                 {option.label}
               </SelectItem>
@@ -84,7 +84,7 @@ export function ParamField({
 
   if (param.type === "multiselect") {
     const selectedValues = Array.isArray(currentValue) ? currentValue.map(String) : []
-    const selectedLabels = param.options.flatMap(option =>
+    const selectedLabels = param.values.flatMap(option =>
       selectedValues.includes(option.value) ? [option.label] : [],
     )
 
@@ -99,7 +99,7 @@ export function ParamField({
     return (
       <Info label={param.title}>
         <div className="flex flex-wrap justify-end gap-1">
-          {param.options.map((option) => {
+          {param.values.map((option) => {
             const isSelected = selectedValues.includes(option.value)
             return (
               <Button

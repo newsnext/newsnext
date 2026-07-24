@@ -62,7 +62,7 @@ export interface SelectParameter<K extends string = string> extends BaseParamete
   /**
    * Available options
    */
-  options: SelectOption<K>[]
+  values: readonly SelectOption<K>[]
   /**
    * Default selected value
    */
@@ -77,7 +77,7 @@ export interface MultiSelectParameter<K extends string = string> extends BasePar
   /**
    * Available options
    */
-  options: SelectOption<K>[]
+  values: readonly SelectOption<K>[]
   /**
    * Default selected values
    */

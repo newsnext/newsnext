@@ -1,13 +1,18 @@
 import type { NewsItem, SourceParamSchemaMap } from "../../typings"
+import type { JsonSourceOptions } from "./json-source"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { myFetch } from "../fetch"
 import { $source } from "./index"
-import { $jsonLoader } from "./json-source"
+import { loadJson } from "./json-source"
 
 // Mock fetch
 vi.mock("../fetch", () => ({
   myFetch: vi.fn(),
 }))
+
+function createJsonTestSource(options: () => JsonSourceOptions<any>) {
+  return { loader: async () => loadJson(options()) }
+}
 
 describe("$jsonSourceLoader", () => {
   beforeEach(() => {
@@ -22,7 +27,7 @@ describe("$jsonSourceLoader", () => {
 
     ;(myFetch as any).mockResolvedValue(data)
 
-    const source = $jsonLoader(() => ({
+    const source = createJsonTestSource(() => ({
       url: "https://api.example.com",
       fields: {
         title: "title",
@@ -49,7 +54,7 @@ describe("$jsonSourceLoader", () => {
     }
     ;(myFetch as any).mockResolvedValue(data)
 
-    const source = $jsonLoader(() => ({
+    const source = createJsonTestSource(() => ({
       url: "https://api.example.com",
       items: "response.items",
       fields: {
@@ -70,20 +75,23 @@ describe("$jsonSourceLoader", () => {
     ]
     ;(myFetch as any).mockResolvedValue(data)
 
-    const source = $source.json(
-      {
+    const source = $source({
+      metadata: {
         key: "test",
         type: "hottest",
       },
-      () => ({
+      loader: {
+        type: "json",
         url: "https://api.example.com",
         fields: {
           title: "title",
           url: "link",
           timestamp: "ts",
         },
-      }),
-    )
+      },
+      capabilities: { network: ["api.example.com"], cookies: [], browser: [] },
+      cache: { version: 1, maxAge: "5m" },
+    })
 
     const results = await (source as any).loader({})
     expect(results.map((item: NewsItem) => item.title)).toEqual(["Item 1", "Item 2"])
@@ -97,7 +105,7 @@ describe("$jsonSourceLoader", () => {
     }
     ;(myFetch as any).mockResolvedValue(data)
 
-    const source = $jsonLoader(() => ({
+    const source = createJsonTestSource(() => ({
       url: "https://api.example.com",
       items: json => json.data,
       fields: {
@@ -119,7 +127,7 @@ describe("$jsonSourceLoader", () => {
       { title: "Item", url: "https://example.com", summary: null },
     ])
 
-    const source = $jsonLoader(() => ({
+    const source = createJsonTestSource(() => ({
       url: "https://api.example.com",
       fields: {
         title: "title",
@@ -141,7 +149,7 @@ describe("$jsonSourceLoader", () => {
   it("should handle custom fetch", async () => {
     const customFetch = vi.fn().mockResolvedValue([{ t: "Custom", u: "u" }])
 
-    const source = $jsonLoader(() => ({
+    const source = createJsonTestSource(() => ({
       url: "http://c",
       fetch: customFetch,
       fields: { title: "t", url: "u" },
@@ -155,27 +163,30 @@ describe("$jsonSourceLoader", () => {
   it("should allow parsed runtime params to flow into fetch options", async () => {
     ;(myFetch as any).mockResolvedValue([{ title: "Parsed", url: "https://example.com" }])
 
-    const source = $source.json(
-      {
+    const source = $source({
+      metadata: {
         key: "test",
-        params: {
-          headers: {
-            type: "text",
-            default: "{}",
-            title: "Headers",
-            parse: (value: unknown) => JSON.parse(String(value)) as Record<string, string>,
-          },
-        } satisfies SourceParamSchemaMap,
       },
-      ({ headers }) => ({
+      params: {
+        headers: {
+          type: "text",
+          default: "{}",
+          title: "Headers",
+          parse: (value: unknown) => JSON.parse(String(value)) as Record<string, string>,
+        },
+      } satisfies SourceParamSchemaMap,
+      loader: {
+        type: "json",
         url: "https://api.example.com",
-        fetchOptions: { headers },
+        fetchOptions: ({ headers }) => ({ headers }),
         fields: {
           title: "title",
           url: "url",
         },
-      }),
-    )
+      },
+      capabilities: { network: ["api.example.com"], cookies: [], browser: [] },
+      cache: { version: 1, maxAge: "5m" },
+    })
 
     await (source as any).loader({
       headers: { authorization: "Bearer token" },

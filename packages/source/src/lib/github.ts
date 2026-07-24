@@ -1,4 +1,3 @@
-import { $param } from "@newsnext/source/utils/params"
 import { $radar, query } from "@newsnext/source/utils/radar"
 import { $provider, $source } from "@newsnext/source/utils/source"
 
@@ -45,46 +44,50 @@ export default $provider({
   home: "https://github.com/trending",
   color: "slate",
   sources: [
-    $source.html(
-      {
+    $source({
+      metadata: {
         key: "trending",
         title: "Trending",
         type: "hottest",
-        radar: [
-          $radar({
-            id: "github-trending",
-            hosts: ["github.com"],
-            paths: ["/trending", "/trending/:language"],
-            params: {
-              spokenLanguage: query("spoken_language_code").default(""),
-              dateRange: query("since").default("daily"),
-            },
-            meta: {
-              title: "Trending {language}",
-            },
-            confidence: 0.95,
-          }),
-        ],
-        params: {
-          language: $param.text({
-            title: "Language",
-            description: "Programming language slug used by GitHub Trending, such as javascript, go, or rust.",
-            default: "",
-          }),
-          spokenLanguage: $param.text({
-            title: "Spoken Language",
-            description: "Repository description language code, such as en, zh, or ja.",
-            default: "",
-          }),
-          dateRange: $param.select<DateRange>({
-            title: "Date range",
-            options: [...DATE_RANGE_OPTIONS],
-            default: "daily",
-          }),
+      },
+      params: {
+        language: {
+          type: "text",
+          title: "Language",
+          description: "Programming language slug used by GitHub Trending, such as javascript, go, or rust.",
+          default: "",
+        },
+        spokenLanguage: {
+          type: "text",
+          title: "Spoken Language",
+          description: "Repository description language code, such as en, zh, or ja.",
+          default: "",
+        },
+        dateRange: {
+          type: "select",
+          title: "Date range",
+          values: DATE_RANGE_OPTIONS,
+          default: "daily",
         },
       },
-      params => ({
-        url: buildGitHubTrendingUrl(params),
+      radar: [
+        $radar({
+          id: "github-trending",
+          hosts: ["github.com"],
+          paths: ["/trending", "/trending/:language"],
+          params: {
+            spokenLanguage: query("spoken_language_code").default(""),
+            dateRange: query("since").default("daily"),
+          },
+          meta: {
+            title: "Trending {language}",
+          },
+          confidence: 0.95,
+        }),
+      ],
+      loader: {
+        type: "html",
+        url: params => buildGitHubTrendingUrl(params),
         items: "main .Box div[data-hpc] > article",
         fields: {
           title: {
@@ -109,7 +112,13 @@ export default $provider({
             },
           },
         },
-      }),
-    ),
+      },
+      capabilities: {
+        network: ["github.com"],
+        cookies: [],
+        browser: [],
+      },
+      cache: { version: 1, maxAge: "15m" },
+    }),
   ],
 })

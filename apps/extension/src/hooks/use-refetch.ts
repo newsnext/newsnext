@@ -19,7 +19,7 @@ export interface RefetchTarget {
 function getLatestSourceRefreshKey(target: RefetchTarget): string {
   const source = resolveSource(target.sourceId)
   const params = normalizeSourceParams(source, target.params ?? {})
-  return buildSourceCacheKey(target.sourceId, source.cacheVersion ?? 1, params)
+  return buildSourceCacheKey(target.sourceId, source.cache.version, params)
 }
 
 function markLatestSourceRefresh(target: RefetchTarget): void {

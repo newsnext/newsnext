@@ -22,12 +22,13 @@ export default $provider({
   home: "https://aihot.virxact.com",
   category: "tech",
   sources: [
-    $source.json<AIHotItem>(
-      {
+    $source({
+      metadata: {
         key: "all",
         type: "timeline",
       },
-      () => ({
+      loader: {
+        type: "json",
         url: AIHOT_API_URL,
         items: (response: AIHotResponse) => response.items?.filter(item => item.id && item.title && item.url) ?? [],
         fields: {
@@ -41,7 +42,13 @@ export default $provider({
             text: item => item.summary,
           },
         },
-      }),
-    ),
+      },
+      capabilities: {
+        network: ["aihot.virxact.com"],
+        cookies: [],
+        browser: [],
+      },
+      cache: { version: 1, maxAge: "5m" },
+    }),
   ],
 })

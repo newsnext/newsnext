@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { createBackgroundClient } from "./background-client"
 import { readCachedSource, writeCachedSource } from "./source-cache"
-import { loadSource } from "./source-loader"
+import { loadSource, parseCacheMaxAge } from "./source-loader"
 
 vi.mock("./background-client", () => ({
   createBackgroundClient: vi.fn(),
@@ -80,7 +80,7 @@ describe("loadSource", () => {
     const result = await loadSource("github:trending", { dateRange: "weekly" })
 
     expect(result).toBe(cachedResult)
-    expect(readCachedSource).toHaveBeenCalledWith(expect.stringMatching(/^github:trending:/), 60_000)
+    expect(readCachedSource).toHaveBeenCalledWith(expect.stringMatching(/^github:trending:/), 15 * 60_000)
     expect(createBackgroundClient).not.toHaveBeenCalled()
     expect(writeCachedSource).not.toHaveBeenCalled()
   })
@@ -173,5 +173,16 @@ describe("loadSource", () => {
     expect(firstResult).toEqual(secondResult)
     expect(load).toHaveBeenCalledTimes(1)
     expect(writeCachedSource).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe("parseCacheMaxAge", () => {
+  it.each([
+    ["30s", 30_000],
+    ["5m", 300_000],
+    ["2h", 7_200_000],
+    ["1d", 86_400_000],
+  ] as const)("parses %s", (maxAge, milliseconds) => {
+    expect(parseCacheMaxAge(maxAge)).toBe(milliseconds)
   })
 })

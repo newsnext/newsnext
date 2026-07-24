@@ -8,12 +8,13 @@ export default $provider({
   color: "red",
   home: "https://www.zaobao.com",
   sources: [
-    $source.html(
-      {
+    $source({
+      metadata: {
         key: "realtime",
         type: "timeline",
       },
-      () => ({
+      loader: {
+        type: "html",
         url: "https://www.zaochenbao.com/realtime/",
         decoding: "gb2312",
         items: "div.list-block>a.item",
@@ -32,7 +33,13 @@ export default $provider({
             },
           },
         },
-      }),
-    ),
+      },
+      capabilities: {
+        network: ["www.zaochenbao.com"],
+        cookies: [],
+        browser: [],
+      },
+      cache: { version: 1, maxAge: "5m" },
+    }),
   ],
 })

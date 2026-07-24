@@ -96,6 +96,30 @@ export type SourceLoader<TParams extends SourceParamSchemaMap = SourceParamSchem
   context?: SourceLoaderContext,
 ) => Promise<NewsItem[]>
 
+export interface SourceMetadata {
+  key: string
+  title?: string
+  providerTitle?: string
+  desc?: string
+  type?: "hottest" | "timeline"
+  category?: CategoryId
+  home?: string
+  color?: Color
+}
+
+export interface SourceCapabilities {
+  network: readonly string[]
+  cookies: readonly string[]
+  browser: readonly string[]
+}
+
+export type SourceCacheMaxAge = `${number}${"s" | "m" | "h" | "d"}`
+
+export interface SourceCacheConfig {
+  version: number
+  maxAge: SourceCacheMaxAge
+}
+
 /**
  * Source configuration authored inside a provider
  */
@@ -103,8 +127,8 @@ export interface SourceRegistration<TParams extends SourceParamSchemaMap = Sourc
   key: string
   title?: string
   params?: TParams
-  paramsSchemaVersion?: number
-  cacheVersion?: number
+  capabilities: SourceCapabilities
+  cache: SourceCacheConfig
   color?: Color
   providerTitle?: string
   desc?: string
@@ -117,33 +141,13 @@ export interface SourceRegistration<TParams extends SourceParamSchemaMap = Sourc
   loader: SourceLoader<TParams>
 }
 
-/**
- * Fully-expanded source definition with provider context
- */
-export interface SourceDefinition<TParams extends SourceParamSchemaMap = SourceParamSchemaMap> {
-  icon?: string
-  providerTitle: string
-  provider: string
-  key: string
-  title?: string
-  params?: TParams
-  paramsSchemaVersion?: number
-  cacheVersion?: number
-  color: Color
-  desc?: string
-  type?: "hottest" | "timeline"
-  category: CategoryId
-  home?: string
-  secrets?: SourceSecretDefinition[]
-  radar?: SourceRadarRule[]
-  disable?: boolean
-  loader: SourceLoader<TParams>
-}
-
-/**
- * Source definition stored under a provider after defaults are applied
- */
-export type RegisteredSourceDefinition<TParams extends SourceParamSchemaMap = SourceParamSchemaMap> = Omit<SourceDefinition<TParams>, "provider">
+export type RuntimeSource<TParams extends SourceParamSchemaMap = SourceParamSchemaMap>
+  = Omit<SourceRegistration<TParams>, "providerTitle" | "color" | "category"> & {
+    icon?: string
+    providerTitle: string
+    color: Color
+    category: CategoryId
+  }
 
 /**
  * Provider configuration authored in source definition files.
@@ -171,15 +175,16 @@ export interface ProviderDefinition {
   desc?: string
   home?: string
   category: CategoryId
-  sources: Record<string, RegisteredSourceDefinition<any>>
+  sources: Record<string, RuntimeSource<any>>
 }
 
 /**
  * Public descriptor for sources exposed to clients
  */
-export interface SourceDescriptor<TParams extends SourceParamSchemaMap = SourceParamSchemaMap> extends Omit<SourceDefinition<TParams>, "provider" | "key" | "loader" | "disable"> {
-  id: string
-}
+export type SourceDescriptor<TParams extends SourceParamSchemaMap = SourceParamSchemaMap>
+  = Omit<RuntimeSource<TParams>, "key" | "loader" | "disable"> & {
+    id: string
+  }
 
 /**
  * Map of categories to source descriptors

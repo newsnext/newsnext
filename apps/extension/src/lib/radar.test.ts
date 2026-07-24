@@ -7,23 +7,6 @@ function getSuggestions(...args: Parameters<typeof getRadarSuggestions>) {
 }
 
 describe("getRadarSuggestions", () => {
-  it("suggests an X user card from a profile URL", () => {
-    expect(getSuggestions({ url: "https://x.com/newsnext_dev/status/1" })).toMatchObject([
-      {
-        sourceId: "x:user",
-        paramsPatch: { username: "newsnext_dev" },
-        metaPatch: {
-          title: "@newsnext_dev",
-          home: "https://x.com/newsnext_dev/status/1",
-        },
-      },
-    ])
-  })
-
-  it("ignores X reserved routes", () => {
-    expect(getSuggestions({ url: "https://x.com/search?q=news" })).toEqual([])
-  })
-
   it("suggests a GitHub Trending card with filters", () => {
     expect(getSuggestions({ url: "https://github.com/trending/typescript?since=weekly&spoken_language_code=zh" })).toMatchObject([
       {
@@ -72,116 +55,6 @@ describe("getRadarSuggestions", () => {
     ])
   })
 
-  it("suggests Weibo cards from user, keyword, and super topic URLs", () => {
-    expect(getSuggestions({
-      url: "https://m.weibo.cn/u/1195230310",
-      title: "少数派的微博_微博",
-    })).toMatchObject([
-      {
-        sourceId: "weibo:user",
-        paramsPatch: { uid: "1195230310" },
-        metaPatch: { title: "少数派" },
-      },
-    ])
-
-    expect(getSuggestions({
-      url: "https://m.weibo.cn/u/123456",
-      title: "@阿兰工作室 的个人主页",
-    })).toMatchObject([
-      {
-        sourceId: "weibo:user",
-        paramsPatch: { uid: "123456" },
-        metaPatch: { title: "阿兰工作室" },
-      },
-    ])
-
-    expect(getSuggestions({
-      url: "https://weibo.com/1195230310",
-      title: "少数派的微博_微博",
-    })).toMatchObject([
-      {
-        sourceId: "weibo:user",
-        paramsPatch: { uid: "1195230310" },
-        metaPatch: { title: "少数派" },
-      },
-    ])
-
-    expect(getSuggestions({ url: "https://s.weibo.com/weibo?q=React" })).toMatchObject([
-      {
-        sourceId: "weibo:keyword",
-        paramsPatch: { keyword: "React" },
-        metaPatch: { title: "React" },
-      },
-    ])
-
-    expect(getSuggestions({
-      url: "https://m.weibo.cn/p/index?containerid=1008084989d223732bf6f02f75ea30efad58a9_-_feed",
-      title: "React超话-微博",
-    })).toMatchObject([
-      {
-        sourceId: "weibo:super-topic",
-        paramsPatch: {
-          id: "1008084989d223732bf6f02f75ea30efad58a9",
-          type: "feed",
-        },
-        metaPatch: { title: "React" },
-      },
-    ])
-  })
-
-  it("suggests Jike cards from user and topic URLs", () => {
-    expect(getSuggestions({
-      url: "https://web.okjike.com/following",
-      title: "Following - 即刻",
-    })).toMatchObject([
-      {
-        sourceId: "jike:following-updates",
-        paramsPatch: {},
-        metaPatch: {
-          home: "https://web.okjike.com/following",
-        },
-      },
-    ])
-
-    expect(getSuggestions({
-      url: "https://web.okjike.com/u/lijigang",
-      title: "李继刚的主页 - 即刻",
-    })).toMatchObject([
-      {
-        sourceId: "jike:user-updates",
-        paramsPatch: { username: "lijigang" },
-        metaPatch: { title: "李继刚" },
-      },
-    ])
-
-    expect(getSuggestions({
-      url: "https://web.okjike.com/u/2FEA4ABE-39F7-49F2-8AFD-4A5A39902D75/post/6a4c9b7bc704301bc51dffef",
-      title: "王紫君Zima：泡泡",
-    })).toMatchObject([
-      {
-        sourceId: "jike:user-updates",
-        paramsPatch: { username: "2FEA4ABE-39F7-49F2-8AFD-4A5A39902D75" },
-        metaPatch: { title: "王紫君Zima" },
-      },
-    ])
-
-    expect(getSuggestions({
-      url: "https://web.okjike.com/topic/5aeaa84029e4000011ac3768",
-      title: "AI探索站 - 即刻",
-    })).toMatchObject([
-      {
-        sourceId: "jike:topic-recent",
-        paramsPatch: { topicId: "5aeaa84029e4000011ac3768" },
-        metaPatch: { title: "AI探索站" },
-      },
-      {
-        sourceId: "jike:topic-hottest",
-        paramsPatch: { topicId: "5aeaa84029e4000011ac3768" },
-        metaPatch: { title: "AI探索站" },
-      },
-    ])
-  })
-
   it("suggests V2EX and NewsNow parameterized cards", () => {
     expect(getSuggestions({
       url: "https://v2ex.com/go/share",
@@ -210,18 +83,18 @@ describe("getRadarSuggestions", () => {
 
   it("filters suggestions by available source metadata", () => {
     expect(getRadarSuggestions(
-      { url: "https://x.com/newsnext_dev" },
-      [{ id: "weibo:user" }],
+      { url: "https://github.com/trending/typescript?since=weekly&spoken_language_code=en" },
+      [{ id: "v2ex:feed" }],
     )).toEqual([])
 
     expect(getRadarSuggestions(
-      { url: "https://x.com/newsnext_dev" },
-      sourceDescriptors.filter(source => source.id === "x:user"),
+      { url: "https://github.com/trending/typescript?since=weekly&spoken_language_code=en" },
+      sourceDescriptors.filter(source => source.id === "github:trending"),
     )).toMatchObject([
       {
-        sourceId: "x:user",
-        paramsPatch: { username: "newsnext_dev" },
-        metaPatch: { title: "@newsnext_dev" },
+        sourceId: "github:trending",
+        paramsPatch: { language: "typescript", dateRange: "weekly", spokenLanguage: "en" },
+        metaPatch: { title: "Trending typescript" },
       },
     ])
   })
@@ -229,11 +102,11 @@ describe("getRadarSuggestions", () => {
   it("creates a reusable matcher from source metadata", () => {
     const matcher = createRadarMatcher(sourceDescriptors)
 
-    expect(matcher.getSuggestions({ url: "https://x.com/newsnext_dev" })).toMatchObject([
+    expect(matcher.getSuggestions({ url: "https://github.com/trending/typescript?since=weekly&spoken_language_code=en" })).toMatchObject([
       {
-        sourceId: "x:user",
-        paramsPatch: { username: "newsnext_dev" },
-        metaPatch: { title: "@newsnext_dev" },
+        sourceId: "github:trending",
+        paramsPatch: { language: "typescript", dateRange: "weekly", spokenLanguage: "en" },
+        metaPatch: { title: "Trending typescript" },
       },
     ])
   })

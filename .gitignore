@@ -27,3 +27,4 @@ web-ext.config.ts
 .env*
 !.env.example
 dist/
+_lib

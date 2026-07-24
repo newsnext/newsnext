@@ -1,4 +1,4 @@
-import type { InferSourceParams, RegisteredSourceDefinition, SourceParamSchemaMap } from "@newsnext/source/typings"
+import type { InferSourceParams, RuntimeSource, SourceParamSchemaMap } from "@newsnext/source/typings"
 import { SourceParamValueError } from "@newsnext/source/typings"
 import { parseSourceParams } from "@newsnext/source/utils/params"
 import { providers } from "../index"
@@ -26,7 +26,7 @@ export interface ParsedSourceId {
 }
 
 export interface PreparedSourceRequest<TParams extends SourceParamSchemaMap = SourceParamSchemaMap> {
-  source: RegisteredSourceDefinition<TParams>
+  source: RuntimeSource<TParams>
   params: InferSourceParams<TParams>
 }
 
@@ -43,7 +43,7 @@ export function parseSourceId(sourceId: string): ParsedSourceId {
   return { provider, source }
 }
 
-export function resolveSource(sourceId: string): RegisteredSourceDefinition<any> {
+export function resolveSource(sourceId: string): RuntimeSource<any> {
   const { provider, source } = parseSourceId(sourceId)
   const providerDefinition = providers[provider as keyof typeof providers]
 
@@ -73,7 +73,7 @@ export function resolveSource(sourceId: string): RegisteredSourceDefinition<any>
 }
 
 export function normalizeSourceParams<TParams extends SourceParamSchemaMap>(
-  source: Pick<RegisteredSourceDefinition<TParams>, "params">,
+  source: Pick<RuntimeSource<TParams>, "params">,
   queryParams: Record<string, unknown> = {},
 ) {
   try {
@@ -91,7 +91,7 @@ export function prepareSourceRequest<TParams extends SourceParamSchemaMap>(
   sourceId: string,
   queryParams: Record<string, unknown> = {},
 ): PreparedSourceRequest<TParams> {
-  const source = resolveSource(sourceId) as RegisteredSourceDefinition<TParams>
+  const source = resolveSource(sourceId) as RuntimeSource<TParams>
   const params = normalizeSourceParams(source, queryParams)
 
   return {

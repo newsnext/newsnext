@@ -7,143 +7,22 @@ export const sourceDescriptors: SourceDescriptor[] = [
   {
     "icon": "https://icons.folo.is/aihot.virxact.com",
     "providerTitle": "AIHot",
-    "paramsSchemaVersion": 1,
-    "cacheVersion": 1,
+    "capabilities": {
+      "network": [
+        "aihot.virxact.com"
+      ],
+      "cookies": [],
+      "browser": []
+    },
+    "cache": {
+      "version": 1,
+      "maxAge": "5m"
+    },
     "color": "blue",
     "type": "timeline",
     "category": "tech",
     "home": "https://aihot.virxact.com",
     "id": "aihot:all"
-  },
-  {
-    "icon": "https://icons.folo.is/www.bilibili.com",
-    "providerTitle": "Bilibili",
-    "title": "热搜",
-    "paramsSchemaVersion": 1,
-    "cacheVersion": 1,
-    "color": "blue",
-    "type": "hottest",
-    "category": "others",
-    "home": "https://www.bilibili.com",
-    "id": "bilibili:hotword"
-  },
-  {
-    "icon": "https://icons.folo.is/www.bilibili.com",
-    "providerTitle": "Bilibili",
-    "title": "关注视频",
-    "paramsSchemaVersion": 1,
-    "cacheVersion": 1,
-    "color": "blue",
-    "desc": "关注 UP 的视频动态",
-    "type": "timeline",
-    "category": "others",
-    "home": "https://www.bilibili.com",
-    "id": "bilibili:following-videos"
-  },
-  {
-    "icon": "https://icons.folo.is/www.bilibili.com",
-    "providerTitle": "Bilibili",
-    "title": "排行榜",
-    "params": {
-      "region": {
-        "type": "select",
-        "title": "Region",
-        "options": [
-          {
-            "label": "All",
-            "value": "0"
-          },
-          {
-            "label": "Animation",
-            "value": "1"
-          },
-          {
-            "label": "Anime",
-            "value": "13"
-          },
-          {
-            "label": "Guochuang",
-            "value": "167"
-          },
-          {
-            "label": "Music",
-            "value": "3"
-          },
-          {
-            "label": "Dance",
-            "value": "129"
-          },
-          {
-            "label": "Games",
-            "value": "4"
-          },
-          {
-            "label": "Knowledge",
-            "value": "36"
-          },
-          {
-            "label": "Technology",
-            "value": "188"
-          },
-          {
-            "label": "Sports",
-            "value": "234"
-          },
-          {
-            "label": "Cars",
-            "value": "223"
-          },
-          {
-            "label": "Life",
-            "value": "160"
-          },
-          {
-            "label": "Food",
-            "value": "211"
-          },
-          {
-            "label": "Animals",
-            "value": "217"
-          },
-          {
-            "label": "Kichiku",
-            "value": "119"
-          },
-          {
-            "label": "Fashion",
-            "value": "155"
-          },
-          {
-            "label": "Entertainment",
-            "value": "5"
-          },
-          {
-            "label": "Film & TV",
-            "value": "181"
-          },
-          {
-            "label": "Documentary",
-            "value": "177"
-          },
-          {
-            "label": "Movies",
-            "value": "23"
-          },
-          {
-            "label": "TV Series",
-            "value": "11"
-          }
-        ],
-        "default": "0"
-      }
-    },
-    "paramsSchemaVersion": 1,
-    "cacheVersion": 1,
-    "color": "blue",
-    "type": "hottest",
-    "category": "others",
-    "home": "https://www.bilibili.com",
-    "id": "bilibili:ranking"
   },
   {
     "icon": "https://www.google.com/chrome/static/images/favicons/favicon-96x96.png",
@@ -158,7 +37,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
       "dateRange": {
         "type": "select",
         "title": "Date range",
-        "options": [
+        "values": [
           {
             "label": "Today",
             "value": "today"
@@ -186,8 +65,17 @@ export const sourceDescriptors: SourceDescriptor[] = [
         "max": 100
       }
     },
-    "paramsSchemaVersion": 1,
-    "cacheVersion": 1,
+    "capabilities": {
+      "network": [],
+      "cookies": [],
+      "browser": [
+        "history"
+      ]
+    },
+    "cache": {
+      "version": 1,
+      "maxAge": "1m"
+    },
     "color": "blue",
     "type": "timeline",
     "category": "others",
@@ -212,8 +100,18 @@ export const sourceDescriptors: SourceDescriptor[] = [
         "max": 200
       }
     },
-    "paramsSchemaVersion": 1,
-    "cacheVersion": 1,
+    "capabilities": {
+      "network": [],
+      "cookies": [],
+      "browser": [
+        "bookmarks",
+        "favicon"
+      ]
+    },
+    "cache": {
+      "version": 1,
+      "maxAge": "5m"
+    },
     "color": "blue",
     "type": "timeline",
     "category": "others",
@@ -223,20 +121,38 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "icon": "https://icons.folo.is/www.cls.cn",
     "providerTitle": "财联社",
     "title": "电报",
-    "paramsSchemaVersion": 1,
-    "cacheVersion": 1,
+    "capabilities": {
+      "network": [
+        "www.cls.cn"
+      ],
+      "cookies": [],
+      "browser": []
+    },
+    "cache": {
+      "version": 1,
+      "maxAge": "1m"
+    },
     "color": "red",
     "type": "timeline",
     "category": "finance",
-    "home": "https://www.cls.cn/telegraph",
+    "home": "https://www.cls.cn",
     "id": "cls:telegraph"
   },
   {
     "icon": "https://icons.folo.is/www.cls.cn",
     "providerTitle": "财联社",
     "title": "深度",
-    "paramsSchemaVersion": 1,
-    "cacheVersion": 1,
+    "capabilities": {
+      "network": [
+        "www.cls.cn"
+      ],
+      "cookies": [],
+      "browser": []
+    },
+    "cache": {
+      "version": 1,
+      "maxAge": "5m"
+    },
     "color": "red",
     "type": "timeline",
     "category": "finance",
@@ -247,51 +163,22 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "icon": "https://icons.folo.is/www.cls.cn",
     "providerTitle": "财联社",
     "title": "热门",
-    "paramsSchemaVersion": 1,
-    "cacheVersion": 1,
+    "capabilities": {
+      "network": [
+        "www.cls.cn"
+      ],
+      "cookies": [],
+      "browser": []
+    },
+    "cache": {
+      "version": 1,
+      "maxAge": "5m"
+    },
     "color": "red",
     "type": "hottest",
     "category": "finance",
     "home": "https://www.cls.cn",
     "id": "cls:hot-article"
-  },
-  {
-    "icon": "https://icons.folo.is/folo.is",
-    "providerTitle": "Folo",
-    "title": "Feed",
-    "params": {
-      "feedId": {
-        "type": "text",
-        "title": "Feed ID",
-        "default": "71931642168770560"
-      }
-    },
-    "paramsSchemaVersion": 1,
-    "cacheVersion": 1,
-    "color": "orange",
-    "type": "timeline",
-    "category": "others",
-    "home": "https://folo.is",
-    "id": "folo:feed"
-  },
-  {
-    "icon": "https://icons.folo.is/folo.is",
-    "providerTitle": "Folo",
-    "title": "List",
-    "params": {
-      "listId": {
-        "type": "text",
-        "title": "List ID",
-        "default": "68649150114432000"
-      }
-    },
-    "paramsSchemaVersion": 1,
-    "cacheVersion": 1,
-    "color": "orange",
-    "type": "timeline",
-    "category": "others",
-    "home": "https://folo.is",
-    "id": "folo:list"
   },
   {
     "icon": "https://icons.folo.is/github.com",
@@ -313,7 +200,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
       "dateRange": {
         "type": "select",
         "title": "Date range",
-        "options": [
+        "values": [
           {
             "label": "Today",
             "value": "daily"
@@ -330,8 +217,17 @@ export const sourceDescriptors: SourceDescriptor[] = [
         "default": "daily"
       }
     },
-    "paramsSchemaVersion": 1,
-    "cacheVersion": 1,
+    "capabilities": {
+      "network": [
+        "github.com"
+      ],
+      "cookies": [],
+      "browser": []
+    },
+    "cache": {
+      "version": 1,
+      "maxAge": "15m"
+    },
     "color": "slate",
     "type": "hottest",
     "category": "others",
@@ -376,8 +272,17 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "icon": "https://icons.folo.is/news.ycombinator.com",
     "providerTitle": "Hacker News",
     "title": "Hottest",
-    "paramsSchemaVersion": 1,
-    "cacheVersion": 1,
+    "capabilities": {
+      "network": [
+        "news.ycombinator.com"
+      ],
+      "cookies": [],
+      "browser": []
+    },
+    "cache": {
+      "version": 1,
+      "maxAge": "5m"
+    },
     "color": "orange",
     "type": "hottest",
     "category": "others",
@@ -388,8 +293,17 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "icon": "https://icons.folo.is/news.ycombinator.com",
     "providerTitle": "Hacker News",
     "title": "Newest",
-    "paramsSchemaVersion": 1,
-    "cacheVersion": 1,
+    "capabilities": {
+      "network": [
+        "news.ycombinator.com"
+      ],
+      "cookies": [],
+      "browser": []
+    },
+    "cache": {
+      "version": 1,
+      "maxAge": "1m"
+    },
     "color": "orange",
     "type": "timeline",
     "category": "others",
@@ -400,8 +314,17 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "icon": "https://icons.folo.is/news.ycombinator.com",
     "providerTitle": "Hacker News",
     "title": "Show",
-    "paramsSchemaVersion": 1,
-    "cacheVersion": 1,
+    "capabilities": {
+      "network": [
+        "news.ycombinator.com"
+      ],
+      "cookies": [],
+      "browser": []
+    },
+    "cache": {
+      "version": 1,
+      "maxAge": "5m"
+    },
     "color": "orange",
     "category": "others",
     "home": "https://news.ycombinator.com/show",
@@ -411,263 +334,37 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "icon": "https://icons.folo.is/news.ycombinator.com",
     "providerTitle": "Hacker News",
     "title": "Ask",
-    "paramsSchemaVersion": 1,
-    "cacheVersion": 1,
+    "capabilities": {
+      "network": [
+        "news.ycombinator.com"
+      ],
+      "cookies": [],
+      "browser": []
+    },
+    "cache": {
+      "version": 1,
+      "maxAge": "5m"
+    },
     "color": "orange",
     "category": "others",
     "home": "https://news.ycombinator.com/ask",
     "id": "hackernews:ask"
   },
   {
-    "icon": "https://web.okjike.com/favicon.ico",
-    "providerTitle": "Jike",
-    "title": "Following updates",
-    "paramsSchemaVersion": 1,
-    "cacheVersion": 1,
-    "color": "yellow",
-    "desc": "Updates from followed Jike users",
-    "type": "timeline",
-    "category": "others",
-    "home": "https://web.okjike.com",
-    "secrets": [
-      {
-        "key": "accessToken",
-        "type": "localStorage",
-        "origin": "https://web.okjike.com",
-        "itemKey": "JK_ACCESS_TOKEN"
-      },
-      {
-        "key": "refreshToken",
-        "type": "localStorage",
-        "origin": "https://web.okjike.com",
-        "itemKey": "JK_REFRESH_TOKEN"
-      }
-    ],
-    "radar": [
-      {
-        "id": "jike-following-updates",
-        "match": {
-          "hosts": [
-            "web.okjike.com"
-          ],
-          "paths": [
-            "/following"
-          ]
-        },
-        "confidence": 0.95
-      }
-    ],
-    "id": "jike:following-updates"
-  },
-  {
-    "icon": "https://web.okjike.com/favicon.ico",
-    "providerTitle": "Jike",
-    "title": "User updates",
-    "params": {
-      "username": {
-        "type": "text",
-        "title": "Username",
-        "default": "7f422d5d-d79a-4f45-9880-b89d64d7f37a"
-      }
-    },
-    "paramsSchemaVersion": 1,
-    "cacheVersion": 1,
-    "color": "yellow",
-    "desc": "Updates from a Jike user",
-    "type": "timeline",
-    "category": "others",
-    "home": "https://web.okjike.com",
-    "secrets": [
-      {
-        "key": "accessToken",
-        "type": "localStorage",
-        "origin": "https://web.okjike.com",
-        "itemKey": "JK_ACCESS_TOKEN"
-      },
-      {
-        "key": "refreshToken",
-        "type": "localStorage",
-        "origin": "https://web.okjike.com",
-        "itemKey": "JK_REFRESH_TOKEN"
-      }
-    ],
-    "radar": [
-      {
-        "id": "jike-user-profile",
-        "match": {
-          "hosts": [
-            "web.okjike.com"
-          ],
-          "paths": [
-            "/u/:username{/*rest}"
-          ]
-        },
-        "metaPatch": {
-          "title": {
-            "value": {
-              "type": "pageTitle"
-            },
-            "transforms": [
-              {
-                "type": "normalizeWhitespace"
-              },
-              {
-                "type": "replace",
-                "pattern": "[:：].*$",
-                "replacement": ""
-              },
-              {
-                "type": "replace",
-                "pattern": "的主页\\s*[-_—|]\\s*即刻.*$",
-                "replacement": ""
-              }
-            ],
-            "fallback": "{username}"
-          }
-        },
-        "confidence": 0.9
-      }
-    ],
-    "id": "jike:user-updates"
-  },
-  {
-    "icon": "https://web.okjike.com/favicon.ico",
-    "providerTitle": "Jike",
-    "title": "Topic recent",
-    "params": {
-      "topicId": {
-        "type": "text",
-        "title": "Topic ID",
-        "default": "5aeaa84029e4000011ac3768"
-      }
-    },
-    "paramsSchemaVersion": 1,
-    "cacheVersion": 1,
-    "color": "yellow",
-    "desc": "Recent posts from a Jike topic",
-    "type": "timeline",
-    "category": "others",
-    "home": "https://web.okjike.com",
-    "secrets": [
-      {
-        "key": "accessToken",
-        "type": "localStorage",
-        "origin": "https://web.okjike.com",
-        "itemKey": "JK_ACCESS_TOKEN"
-      },
-      {
-        "key": "refreshToken",
-        "type": "localStorage",
-        "origin": "https://web.okjike.com",
-        "itemKey": "JK_REFRESH_TOKEN"
-      }
-    ],
-    "radar": [
-      {
-        "id": "jike-topic-recent",
-        "match": {
-          "hosts": [
-            "web.okjike.com"
-          ],
-          "paths": [
-            "/topic/:topicId{/*rest}"
-          ]
-        },
-        "metaPatch": {
-          "title": {
-            "value": {
-              "type": "pageTitle"
-            },
-            "transforms": [
-              {
-                "type": "normalizeWhitespace"
-              },
-              {
-                "type": "extract",
-                "pattern": "^(.+?)(?:\\s*[-_—|]\\s*即刻.*)?$",
-                "fallbackToEmpty": true
-              }
-            ],
-            "fallback": "Topic {topicId}"
-          }
-        },
-        "confidence": 0.9
-      }
-    ],
-    "id": "jike:topic-recent"
-  },
-  {
-    "icon": "https://web.okjike.com/favicon.ico",
-    "providerTitle": "Jike",
-    "title": "Topic hottest",
-    "params": {
-      "topicId": {
-        "type": "text",
-        "title": "Topic ID",
-        "default": "5aeaa84029e4000011ac3768"
-      }
-    },
-    "paramsSchemaVersion": 1,
-    "cacheVersion": 1,
-    "color": "yellow",
-    "desc": "Hottest posts from a Jike topic",
-    "type": "hottest",
-    "category": "others",
-    "home": "https://web.okjike.com",
-    "secrets": [
-      {
-        "key": "accessToken",
-        "type": "localStorage",
-        "origin": "https://web.okjike.com",
-        "itemKey": "JK_ACCESS_TOKEN"
-      },
-      {
-        "key": "refreshToken",
-        "type": "localStorage",
-        "origin": "https://web.okjike.com",
-        "itemKey": "JK_REFRESH_TOKEN"
-      }
-    ],
-    "radar": [
-      {
-        "id": "jike-topic-hottest",
-        "match": {
-          "hosts": [
-            "web.okjike.com"
-          ],
-          "paths": [
-            "/topic/:topicId{/*rest}"
-          ]
-        },
-        "metaPatch": {
-          "title": {
-            "value": {
-              "type": "pageTitle"
-            },
-            "transforms": [
-              {
-                "type": "normalizeWhitespace"
-              },
-              {
-                "type": "extract",
-                "pattern": "^(.+?)(?:\\s*[-_—|]\\s*即刻.*)?$",
-                "fallbackToEmpty": true
-              }
-            ],
-            "fallback": "Topic {topicId}"
-          }
-        },
-        "confidence": 0.85
-      }
-    ],
-    "id": "jike:topic-hottest"
-  },
-  {
     "icon": "https://icons.folo.is/linux.do",
     "providerTitle": "Linux.do",
     "title": "Latest",
-    "paramsSchemaVersion": 1,
-    "cacheVersion": 1,
+    "capabilities": {
+      "network": [
+        "linux.do"
+      ],
+      "cookies": [],
+      "browser": []
+    },
+    "cache": {
+      "version": 1,
+      "maxAge": "5m"
+    },
     "color": "slate",
     "type": "timeline",
     "category": "tech",
@@ -678,8 +375,17 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "icon": "https://icons.folo.is/linux.do",
     "providerTitle": "Linux.do",
     "title": "Hot",
-    "paramsSchemaVersion": 1,
-    "cacheVersion": 1,
+    "capabilities": {
+      "network": [
+        "linux.do"
+      ],
+      "cookies": [],
+      "browser": []
+    },
+    "cache": {
+      "version": 1,
+      "maxAge": "5m"
+    },
     "color": "slate",
     "type": "hottest",
     "category": "tech",
@@ -698,8 +404,17 @@ export const sourceDescriptors: SourceDescriptor[] = [
         "pattern": "^\\d+$"
       }
     },
-    "paramsSchemaVersion": 1,
-    "cacheVersion": 1,
+    "capabilities": {
+      "network": [
+        "music.163.com"
+      ],
+      "cookies": [],
+      "browser": []
+    },
+    "cache": {
+      "version": 1,
+      "maxAge": "15m"
+    },
     "color": "red",
     "type": "hottest",
     "category": "others",
@@ -763,7 +478,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "params": {
       "locale": {
         "type": "select",
-        "options": [
+        "values": [
           {
             "label": "US",
             "value": "us"
@@ -802,8 +517,17 @@ export const sourceDescriptors: SourceDescriptor[] = [
         "title": "Topic"
       }
     },
-    "paramsSchemaVersion": 1,
-    "cacheVersion": 1,
+    "capabilities": {
+      "network": [
+        "www.newsnow.com"
+      ],
+      "cookies": [],
+      "browser": []
+    },
+    "cache": {
+      "version": 1,
+      "maxAge": "5m"
+    },
     "color": "red",
     "type": "timeline",
     "category": "others",
@@ -839,8 +563,17 @@ export const sourceDescriptors: SourceDescriptor[] = [
         "pattern": "^(?![\\d_])\\w{5,32}$"
       }
     },
-    "paramsSchemaVersion": 1,
-    "cacheVersion": 1,
+    "capabilities": {
+      "network": [
+        "t.me"
+      ],
+      "cookies": [],
+      "browser": []
+    },
+    "cache": {
+      "version": 1,
+      "maxAge": "5m"
+    },
     "color": "blue",
     "type": "timeline",
     "category": "tech",
@@ -905,8 +638,17 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "icon": "https://icons.folo.is/tieba.baidu.com",
     "providerTitle": "百度贴吧",
     "title": "热议",
-    "paramsSchemaVersion": 1,
-    "cacheVersion": 1,
+    "capabilities": {
+      "network": [
+        "tieba.baidu.com"
+      ],
+      "cookies": [],
+      "browser": []
+    },
+    "cache": {
+      "version": 1,
+      "maxAge": "5m"
+    },
     "color": "blue",
     "type": "hottest",
     "category": "china",
@@ -920,11 +662,21 @@ export const sourceDescriptors: SourceDescriptor[] = [
       "feed": {
         "type": "text",
         "title": "Feed",
-        "default": "ideas"
+        "default": "ideas",
+        "pattern": ".+"
       }
     },
-    "paramsSchemaVersion": 1,
-    "cacheVersion": 1,
+    "capabilities": {
+      "network": [
+        "www.v2ex.com"
+      ],
+      "cookies": [],
+      "browser": []
+    },
+    "cache": {
+      "version": 1,
+      "maxAge": "5m"
+    },
     "color": "slate",
     "category": "others",
     "home": "https://v2ex.com/",
@@ -962,531 +714,19 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "id": "v2ex:feed"
   },
   {
-    "icon": "https://icons.folo.is/s.m.weibo.cn",
-    "providerTitle": "Weibo",
-    "title": "Hot Search",
-    "paramsSchemaVersion": 1,
-    "cacheVersion": 1,
-    "color": "red",
-    "type": "hottest",
-    "category": "others",
-    "home": "https://s.m.weibo.cn/top/summary?cate=realtimehot",
-    "id": "weibo:hot-search"
-  },
-  {
-    "icon": "https://icons.folo.is/m.weibo.cn",
-    "providerTitle": "Weibo",
-    "title": "User Posts",
-    "params": {
-      "uid": {
-        "type": "text",
-        "title": "User ID",
-        "description": "Numeric Weibo uid.",
-        "default": "1195230310",
-        "pattern": "^\\d+$"
-      }
-    },
-    "paramsSchemaVersion": 1,
-    "cacheVersion": 1,
-    "color": "red",
-    "desc": "Latest posts from a specified Weibo user",
-    "type": "timeline",
-    "category": "others",
-    "home": "https://m.weibo.cn",
-    "secrets": [
-      {
-        "key": "sub",
-        "type": "cookie",
-        "origin": "https://m.weibo.cn",
-        "itemKey": "SUB",
-        "required": false
-      },
-      {
-        "key": "subp",
-        "type": "cookie",
-        "origin": "https://m.weibo.cn",
-        "itemKey": "SUBP",
-        "required": false
-      },
-      {
-        "key": "ssoLoginState",
-        "type": "cookie",
-        "origin": "https://m.weibo.cn",
-        "itemKey": "SSOLoginState",
-        "required": false
-      }
-    ],
-    "radar": [
-      {
-        "id": "weibo-user",
-        "match": {
-          "hosts": [
-            "m.weibo.cn",
-            "weibo.com"
-          ],
-          "paths": [
-            "/u/:uid",
-            "/profile/:uid",
-            "/:uid"
-          ]
-        },
-        "metaPatch": {
-          "title": {
-            "value": {
-              "type": "pageTitle"
-            },
-            "transforms": [
-              {
-                "type": "normalizeWhitespace"
-              },
-              {
-                "type": "extract",
-                "pattern": "^@(.+)\\s*的个人主页"
-              },
-              {
-                "type": "replace",
-                "pattern": "[-_—|].*微博.*$",
-                "replacement": ""
-              },
-              {
-                "type": "replace",
-                "pattern": "的微博.*$",
-                "replacement": ""
-              }
-            ],
-            "fallback": "User {uid}"
-          }
-        },
-        "confidence": 0.9
-      }
-    ],
-    "id": "weibo:user"
-  },
-  {
-    "icon": "https://icons.folo.is/m.weibo.cn",
-    "providerTitle": "Weibo",
-    "title": "Keyword",
-    "params": {
-      "keyword": {
-        "type": "text",
-        "title": "Keyword",
-        "default": "MSI"
-      }
-    },
-    "paramsSchemaVersion": 1,
-    "cacheVersion": 1,
-    "color": "red",
-    "desc": "Latest Weibo posts matching a keyword",
-    "type": "timeline",
-    "category": "others",
-    "home": "https://m.weibo.cn",
-    "secrets": [
-      {
-        "key": "sub",
-        "type": "cookie",
-        "origin": "https://m.weibo.cn",
-        "itemKey": "SUB",
-        "required": false
-      },
-      {
-        "key": "subp",
-        "type": "cookie",
-        "origin": "https://m.weibo.cn",
-        "itemKey": "SUBP",
-        "required": false
-      },
-      {
-        "key": "ssoLoginState",
-        "type": "cookie",
-        "origin": "https://m.weibo.cn",
-        "itemKey": "SSOLoginState",
-        "required": false
-      }
-    ],
-    "radar": [
-      {
-        "id": "weibo-keyword",
-        "match": {
-          "hosts": [
-            "s.weibo.com",
-            "s.m.weibo.cn"
-          ]
-        },
-        "paramsPatch": {
-          "keyword": {
-            "value": {
-              "type": "first",
-              "values": [
-                {
-                  "type": "query",
-                  "name": "q"
-                },
-                {
-                  "type": "query",
-                  "name": "keyword"
-                }
-              ]
-            }
-          }
-        },
-        "metaPatch": {
-          "title": "{keyword}"
-        },
-        "confidence": 0.9
-      }
-    ],
-    "id": "weibo:keyword"
-  },
-  {
-    "icon": "https://icons.folo.is/m.weibo.cn",
-    "providerTitle": "Weibo",
-    "title": "Super Topic",
-    "params": {
-      "id": {
-        "type": "text",
-        "title": "Super topic ID",
-        "description": "A 100808... Weibo super topic ID.",
-        "default": "1008084989d223732bf6f02f75ea30efad58a9"
-      },
-      "type": {
-        "type": "select",
-        "title": "Type",
-        "options": [
-          {
-            "label": "Latest comments",
-            "value": "feed"
-          },
-          {
-            "label": "Latest posts",
-            "value": "sort_time"
-          },
-          {
-            "label": "Hot",
-            "value": "hot_sort"
-          },
-          {
-            "label": "Featured",
-            "value": "soul"
-          }
-        ],
-        "default": "feed"
-      }
-    },
-    "paramsSchemaVersion": 1,
-    "cacheVersion": 1,
-    "color": "red",
-    "desc": "Latest posts from a Weibo super topic",
-    "type": "timeline",
-    "category": "others",
-    "home": "https://m.weibo.cn",
-    "secrets": [
-      {
-        "key": "sub",
-        "type": "cookie",
-        "origin": "https://m.weibo.cn",
-        "itemKey": "SUB",
-        "required": false
-      },
-      {
-        "key": "subp",
-        "type": "cookie",
-        "origin": "https://m.weibo.cn",
-        "itemKey": "SUBP",
-        "required": false
-      },
-      {
-        "key": "ssoLoginState",
-        "type": "cookie",
-        "origin": "https://m.weibo.cn",
-        "itemKey": "SSOLoginState",
-        "required": false
-      }
-    ],
-    "radar": [
-      {
-        "id": "weibo-super-topic",
-        "match": {
-          "hosts": [
-            "m.weibo.cn",
-            "weibo.com"
-          ]
-        },
-        "paramsPatch": {
-          "id": {
-            "value": {
-              "type": "first",
-              "values": [
-                {
-                  "type": "query",
-                  "name": "containerid"
-                },
-                {
-                  "type": "hashQuery",
-                  "name": "containerid"
-                },
-                {
-                  "type": "pathSegmentWithPrefix",
-                  "prefix": "100808"
-                }
-              ]
-            },
-            "transforms": [
-              {
-                "type": "replace",
-                "pattern": "_-_.*$",
-                "replacement": ""
-              }
-            ]
-          },
-          "type": {
-            "type": "literal",
-            "value": "feed"
-          }
-        },
-        "metaPatch": {
-          "title": {
-            "value": {
-              "type": "pageTitle"
-            },
-            "transforms": [
-              {
-                "type": "normalizeWhitespace"
-              },
-              {
-                "type": "replace",
-                "pattern": "[-_—|].*微博.*$",
-                "replacement": ""
-              },
-              {
-                "type": "replace",
-                "pattern": "的微博.*$",
-                "replacement": ""
-              },
-              {
-                "type": "extract",
-                "pattern": "^#?(.+?)超话#?$"
-              }
-            ],
-            "fallback": "{id}"
-          }
-        },
-        "confidence": 0.9
-      }
-    ],
-    "id": "weibo:super-topic"
-  },
-  {
-    "icon": "https://icons.folo.is/m.weibo.cn",
-    "providerTitle": "Weibo",
-    "title": "Following Timeline",
-    "paramsSchemaVersion": 1,
-    "cacheVersion": 1,
-    "color": "red",
-    "desc": "Latest posts from all followed Weibo accounts",
-    "type": "timeline",
-    "category": "others",
-    "home": "https://m.weibo.cn",
-    "secrets": [
-      {
-        "key": "sub",
-        "type": "cookie",
-        "origin": "https://m.weibo.cn",
-        "itemKey": "SUB",
-        "required": true
-      },
-      {
-        "key": "subp",
-        "type": "cookie",
-        "origin": "https://m.weibo.cn",
-        "itemKey": "SUBP",
-        "required": false
-      },
-      {
-        "key": "ssoLoginState",
-        "type": "cookie",
-        "origin": "https://m.weibo.cn",
-        "itemKey": "SSOLoginState",
-        "required": false
-      }
-    ],
-    "id": "weibo:following"
-  },
-  {
-    "icon": "https://x.com/favicon.ico",
-    "providerTitle": "X",
-    "title": "Trending",
-    "params": {
-      "location": {
-        "type": "select",
-        "title": "Location",
-        "options": [
-          {
-            "label": "Worldwide",
-            "value": "1"
-          },
-          {
-            "label": "United States",
-            "value": "23424977"
-          },
-          {
-            "label": "United Kingdom",
-            "value": "23424975"
-          },
-          {
-            "label": "Japan",
-            "value": "23424856"
-          },
-          {
-            "label": "Hong Kong",
-            "value": "24865698"
-          },
-          {
-            "label": "Taiwan",
-            "value": "23424971"
-          },
-          {
-            "label": "Singapore",
-            "value": "23424948"
-          },
-          {
-            "label": "India",
-            "value": "23424848"
-          },
-          {
-            "label": "Brazil",
-            "value": "23424768"
-          },
-          {
-            "label": "Germany",
-            "value": "23424829"
-          }
-        ],
-        "default": "1"
-      }
-    },
-    "paramsSchemaVersion": 1,
-    "cacheVersion": 1,
-    "color": "slate",
-    "type": "hottest",
-    "category": "world",
-    "home": "https://x.com",
-    "secrets": [
-      {
-        "key": "csrfToken",
-        "type": "cookie",
-        "origin": "https://x.com",
-        "itemKey": "ct0",
-        "cache": false
-      }
-    ],
-    "id": "x:place-trends"
-  },
-  {
-    "icon": "https://x.com/favicon.ico",
-    "providerTitle": "X",
-    "title": "Recommended",
-    "paramsSchemaVersion": 1,
-    "cacheVersion": 1,
-    "color": "slate",
-    "type": "timeline",
-    "category": "world",
-    "home": "https://x.com",
-    "secrets": [
-      {
-        "key": "csrfToken",
-        "type": "cookie",
-        "origin": "https://x.com",
-        "itemKey": "ct0",
-        "cache": false
-      }
-    ],
-    "id": "x:recommended"
-  },
-  {
-    "icon": "https://x.com/favicon.ico",
-    "providerTitle": "X",
-    "title": "Following",
-    "paramsSchemaVersion": 1,
-    "cacheVersion": 1,
-    "color": "slate",
-    "type": "timeline",
-    "category": "world",
-    "home": "https://x.com",
-    "secrets": [
-      {
-        "key": "csrfToken",
-        "type": "cookie",
-        "origin": "https://x.com",
-        "itemKey": "ct0",
-        "cache": false
-      }
-    ],
-    "id": "x:following"
-  },
-  {
-    "icon": "https://x.com/favicon.ico",
-    "providerTitle": "X",
-    "title": "User Tweets",
-    "params": {
-      "username": {
-        "type": "text",
-        "title": "Username",
-        "default": "elonmusk",
-        "pattern": "^\\w{1,15}$",
-        "notIn": [
-          "compose",
-          "explore",
-          "home",
-          "i",
-          "intent",
-          "messages",
-          "notifications",
-          "search",
-          "settings",
-          "share"
-        ]
-      }
-    },
-    "paramsSchemaVersion": 1,
-    "cacheVersion": 1,
-    "color": "slate",
-    "type": "timeline",
-    "category": "world",
-    "home": "https://x.com",
-    "secrets": [
-      {
-        "key": "csrfToken",
-        "type": "cookie",
-        "origin": "https://x.com",
-        "itemKey": "ct0",
-        "cache": false
-      }
-    ],
-    "radar": [
-      {
-        "id": "x-user",
-        "match": {
-          "hosts": [
-            "x.com",
-            "twitter.com"
-          ],
-          "paths": [
-            "/:username{/*rest}"
-          ]
-        },
-        "metaPatch": {
-          "title": "@{username}"
-        },
-        "confidence": 0.95
-      }
-    ],
-    "id": "x:user"
-  },
-  {
     "icon": "https://icons.folo.is/xueqiu.com",
     "providerTitle": "雪球",
-    "paramsSchemaVersion": 1,
-    "cacheVersion": 1,
+    "capabilities": {
+      "network": [
+        "stock.xueqiu.com"
+      ],
+      "cookies": [],
+      "browser": []
+    },
+    "cache": {
+      "version": 1,
+      "maxAge": "5m"
+    },
     "color": "blue",
     "type": "hottest",
     "category": "others",
@@ -1496,8 +736,17 @@ export const sourceDescriptors: SourceDescriptor[] = [
   {
     "icon": "https://icons.folo.is/www.zaobao.com",
     "providerTitle": "联合早报",
-    "paramsSchemaVersion": 1,
-    "cacheVersion": 1,
+    "capabilities": {
+      "network": [
+        "www.zaochenbao.com"
+      ],
+      "cookies": [],
+      "browser": []
+    },
+    "cache": {
+      "version": 1,
+      "maxAge": "5m"
+    },
     "color": "red",
     "type": "timeline",
     "category": "others",
@@ -1508,8 +757,17 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "icon": "https://icons.folo.is/www.zhihu.com",
     "providerTitle": "知乎",
     "title": "全站热榜",
-    "paramsSchemaVersion": 1,
-    "cacheVersion": 1,
+    "capabilities": {
+      "network": [
+        "www.zhihu.com"
+      ],
+      "cookies": [],
+      "browser": []
+    },
+    "cache": {
+      "version": 1,
+      "maxAge": "5m"
+    },
     "color": "blue",
     "type": "hottest",
     "category": "others",

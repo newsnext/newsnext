@@ -1,4 +1,4 @@
-import { $param } from "@newsnext/source/utils/params"
+import { normalizeTextParam } from "@newsnext/source/utils/params"
 import { $radar, pageTitle } from "@newsnext/source/utils/radar"
 import { $provider, $source } from "@newsnext/source/utils/source"
 
@@ -30,34 +30,36 @@ export default $provider({
   color: "slate",
   home: "https://v2ex.com/",
   sources: [
-    $source.json(
-      {
+    $source({
+      metadata: {
         key: "feed",
-        radar: [
-          $radar({
-            id: "v2ex-feed",
-            hosts: ["v2ex.com"],
-            path: "/go/:feed",
-            meta: {
-              title: pageTitle()
-                .normalize()
-                .extract("^.*[>›]\\s*(.+)$")
-                .fallback("{feed}"),
-            },
-            confidence: 0.9,
-          }),
-        ],
-        params: {
-          feed: $param.text({
-            title: "Feed",
-            default: "ideas",
-            parse: value => String(value).trim(),
-            validate: value => value.length > 0 || "Feed must not be empty.",
-          }),
+      },
+      params: {
+        feed: {
+          type: "text",
+          title: "Feed",
+          default: "ideas",
+          pattern: ".+",
+          parse: normalizeTextParam,
         },
       },
-      ({ feed }) => ({
-        url: `https://www.v2ex.com/feed/${feed}.json`,
+      radar: [
+        $radar({
+          id: "v2ex-feed",
+          hosts: ["v2ex.com"],
+          path: "/go/:feed",
+          meta: {
+            title: pageTitle()
+              .normalize()
+              .extract("^.*[>›]\\s*(.+)$")
+              .fallback("{feed}"),
+          },
+          confidence: 0.9,
+        }),
+      ],
+      loader: {
+        type: "json",
+        url: ({ feed }) => `https://www.v2ex.com/feed/${feed}.json`,
         items: (res: Res) => res.items,
         fields: {
           title: "title",
@@ -70,7 +72,13 @@ export default $provider({
             html: "content_html",
           },
         },
-      }),
-    ),
+      },
+      capabilities: {
+        network: ["www.v2ex.com"],
+        cookies: [],
+        browser: [],
+      },
+      cache: { version: 1, maxAge: "5m" },
+    }),
   ],
 })

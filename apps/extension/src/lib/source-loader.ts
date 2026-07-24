@@ -1,10 +1,10 @@
+import type { SourceCacheMaxAge } from "@newsnext/source/typings"
 import type { NewsItem } from "@/typings/source"
 import { stableStringify } from "@newsnext/shared/utils"
 import { normalizeSourceParams, resolveSource } from "@newsnext/source/service"
 import { createBackgroundClient } from "./background-client"
 import { readCachedSource, writeCachedSource } from "./source-cache"
 
-const SOURCE_REQUEST_MIN_INTERVAL = 1000 * 60
 const EMPTY_SOURCE_ITEMS_ERROR_MESSAGE = "No source items. Refresh to try again."
 const inFlightSourceLoads = new Map<string, Promise<SourceLoadResult>>()
 
@@ -21,10 +21,27 @@ export interface LoadSourceOptions {
 
 export function buildSourceCacheKey(
   sourceId: string,
-  cacheVersion: number,
+  version: number,
   params: Record<string, unknown>,
 ): string {
-  return `${sourceId}:v${cacheVersion}:${stableStringify(params)}`
+  return `${sourceId}:v${version}:${stableStringify(params)}`
+}
+
+export function parseCacheMaxAge(maxAge: SourceCacheMaxAge): number {
+  const value = Number.parseFloat(maxAge.slice(0, -1))
+  const unit = maxAge.at(-1)
+  const unitMilliseconds = {
+    s: 1000,
+    m: 60 * 1000,
+    h: 60 * 60 * 1000,
+    d: 24 * 60 * 60 * 1000,
+  }[unit ?? ""]
+
+  if (!Number.isFinite(value) || value < 0 || unitMilliseconds === undefined) {
+    throw new Error(`Invalid source cache maxAge: ${maxAge}`)
+  }
+
+  return value * unitMilliseconds
 }
 
 export async function loadSource(
@@ -34,10 +51,10 @@ export async function loadSource(
 ): Promise<SourceLoadResult> {
   const source = resolveSource(sourceId)
   const params = normalizeSourceParams(source, queryParams)
-  const key = buildSourceCacheKey(sourceId, source.cacheVersion ?? 1, params)
+  const key = buildSourceCacheKey(sourceId, source.cache.version, params)
   const cachedResult = options.forceFresh
     ? undefined
-    : await readCachedSource(key, SOURCE_REQUEST_MIN_INTERVAL)
+    : await readCachedSource(key, parseCacheMaxAge(source.cache.maxAge))
 
   if (cachedResult?.items.length) {
     return cachedResult

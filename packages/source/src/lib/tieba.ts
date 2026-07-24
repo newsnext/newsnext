@@ -27,13 +27,14 @@ export default $provider({
   color: "blue",
   category: "china",
   sources: [
-    $source.json<TiebaTopic>(
-      {
+    $source({
+      metadata: {
         key: "hot-topic",
         title: "热议",
         type: "hottest",
       },
-      () => ({
+      loader: {
+        type: "json",
         url: "https://tieba.baidu.com/hottopic/browse/topicList",
         items: (json: TiebaResponse) => json.data.bang_topic.topic_list,
         fields: {
@@ -41,7 +42,13 @@ export default $provider({
           url: item => resolveTopicUrl(item.topic_url),
           timestamp: item => item.create_time * 1000,
         },
-      }),
-    ),
+      },
+      capabilities: {
+        network: ["tieba.baidu.com"],
+        cookies: [],
+        browser: [],
+      },
+      cache: { version: 1, maxAge: "5m" },
+    }),
   ],
 })

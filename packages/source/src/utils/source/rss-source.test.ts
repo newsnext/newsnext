@@ -27,15 +27,18 @@ describe("$rssHubSourceLoader", () => {
       ],
     })
 
-    const source = $source.rssHub(
-      {
+    const source = $source({
+      metadata: {
         key: "test",
         type: "hottest",
       },
-      () => ({
+      loader: {
+        type: "rssHub",
         route: "/test",
-      }),
-    )
+      },
+      capabilities: { network: ["rsshub.rssforever.com"], cookies: [], browser: [] },
+      cache: { version: 1, maxAge: "5m" },
+    })
 
     await (source as any).loader({})
 

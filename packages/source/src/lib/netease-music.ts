@@ -1,4 +1,4 @@
-import { $param } from "@newsnext/source/utils/params"
+import { normalizeTextParam } from "@newsnext/source/utils/params"
 import { $radar, first, hashQuery, pageTitle, query } from "@newsnext/source/utils/radar"
 import { $provider, $source } from "@newsnext/source/utils/source"
 
@@ -51,41 +51,42 @@ export default $provider({
   home: "https://sg.music.163.com/#/discover/toplist",
   color: "red",
   sources: [
-    $source.json(
-      {
+    $source({
+      metadata: {
         key: "playlist",
         title: "飙升榜",
         type: "hottest",
         home: getPlaylistHome(DEFAULT_PLAYLIST_ID),
-        radar: [
-          $radar({
-            id: "netease-music-playlist",
-            hosts: ["music.163.com", "y.music.163.com"],
-            includes: ["playlist", "toplist"],
-            meta: {
-              title: pageTitle()
-                .normalize()
-                .extract("^(.+?)\\s*-\\s*(?:歌单|排行榜)\\s*-\\s*网易云音乐$", { fallbackToEmpty: true })
-                .fallback("Playlist {id}"),
-            },
-            params: {
-              id: first(query("id"), hashQuery("id")),
-            },
-            confidence: 0.95,
-          }),
-        ],
-        params: {
-          id: $param.text({
-            default: DEFAULT_PLAYLIST_ID,
-            title: "Playlist",
-            pattern: "^\\d+$",
-            parse: value => String(value).trim(),
-            validate: value => /^\d+$/.test(value) || "Playlist must be a numeric ID",
-          }),
+      },
+      params: {
+        id: {
+          type: "text",
+          default: DEFAULT_PLAYLIST_ID,
+          title: "Playlist",
+          pattern: "^\\d+$",
+          parse: normalizeTextParam,
         },
       },
-      ({ id }) => ({
-        url: `https://music.163.com/api/playlist/detail?id=${id}`,
+      radar: [
+        $radar({
+          id: "netease-music-playlist",
+          hosts: ["music.163.com", "y.music.163.com"],
+          includes: ["playlist", "toplist"],
+          meta: {
+            title: pageTitle()
+              .normalize()
+              .extract("^(.+?)\\s*-\\s*(?:歌单|排行榜)\\s*-\\s*网易云音乐$", { fallbackToEmpty: true })
+              .fallback("Playlist {id}"),
+          },
+          params: {
+            id: first(query("id"), hashQuery("id")),
+          },
+          confidence: 0.95,
+        }),
+      ],
+      loader: {
+        type: "json",
+        url: ({ id }) => `https://music.163.com/api/playlist/detail?id=${id}`,
         items: (json: PlaylistResponse) => extractTracks(json),
         fields: {
           title: track => track.name,
@@ -108,7 +109,13 @@ export default $provider({
             },
           },
         },
-      }),
-    ),
+      },
+      capabilities: {
+        network: ["music.163.com"],
+        cookies: [],
+        browser: [],
+      },
+      cache: { version: 1, maxAge: "15m" },
+    }),
   ],
 })

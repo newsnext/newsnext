@@ -1,36 +1,136 @@
 import type {
   InferSourceParams,
-  NewsItem,
   ProviderDefinition,
   ProviderRegistration,
-  RegisteredSourceDefinition,
+  RuntimeSource,
+  SourceCacheConfig,
+  SourceCapabilities,
   SourceLoader,
+  SourceMetadata,
   SourceParamSchemaMap,
+  SourceRadarRule,
   SourceRegistration,
   SourceSecretDefinition,
 } from "../../typings/sources"
+import type { HtmlSourceOptions } from "./html-source"
+import type { JsonSourceOptions } from "./json-source"
+import type { RSSHubLoaderOptions } from "./rss-source"
 
-import { $htmlSource } from "./html-source"
-import { $jsonSource } from "./json-source"
-import { $rssHubSource, $rssSource } from "./rss-source"
+import { loadHtml } from "./html-source"
+import { loadJson } from "./json-source"
+import { loadRss, loadRssHub } from "./rss-source"
 
-function $sourceCallable<P extends SourceParamSchemaMap>(
-  registration: Omit<SourceRegistration<P>, "loader">,
-  loader: SourceLoader<P>,
-): SourceRegistration<P>
-function $sourceCallable<P extends SourceParamSchemaMap = Record<string, never>>(
-  registration: SourceRegistration<P>,
-): SourceRegistration<P>
-function $sourceCallable(
-  registration:
-    | SourceRegistration<any>
-    | Omit<SourceRegistration<any>, "loader">,
-  loader?: SourceLoader<any>,
-): SourceRegistration<any> {
-  if (loader !== undefined) {
-    return { ...registration, loader }
+interface SourceConfigBase<TParams extends SourceParamSchemaMap> {
+  metadata: SourceMetadata
+  params?: TParams
+  radar?: SourceRadarRule[]
+  capabilities: SourceCapabilities
+  cache: SourceCacheConfig
+}
+
+type SourceOption<TParams extends SourceParamSchemaMap, TValue>
+  = TValue | ((params: InferSourceParams<TParams>) => TValue)
+
+type SourceLoaderConfig<TParams extends SourceParamSchemaMap, Item>
+  = (
+    | ({
+      type: "json"
+      url: SourceOption<TParams, string>
+      fetchOptions?: SourceOption<TParams, NonNullable<JsonSourceOptions<Item>["fetchOptions"]>>
+    } & Omit<JsonSourceOptions<Item>, "url" | "type" | "fetchOptions">)
+    | ({
+      type: "html"
+      url: SourceOption<TParams, string>
+      fetchOptions?: SourceOption<TParams, NonNullable<HtmlSourceOptions["fetchOptions"]>>
+    } & Omit<HtmlSourceOptions, "url" | "type" | "fetchOptions">)
+    | {
+      type: "rss"
+      url: SourceOption<TParams, string>
+    }
+    | ({
+      type: "rssHub"
+      route: SourceOption<TParams, string>
+    } & Omit<RSSHubLoaderOptions, "route" | "type">)
+    | {
+      type: "custom"
+      load: SourceLoader<TParams>
+    }
+  )
+
+interface SourceConfig<TParams extends SourceParamSchemaMap, Item> extends SourceConfigBase<TParams> {
+  loader: SourceLoaderConfig<TParams, Item>
+}
+
+export function $source<
+  Item = any,
+  const TParams extends SourceParamSchemaMap = Record<string, never>,
+>(config: SourceConfig<TParams, Item>): SourceRegistration<TParams> {
+  const { metadata, params, radar, capabilities, cache, loader } = config
+  const registration = {
+    ...metadata,
+    params,
+    radar,
+    capabilities,
+    cache,
   }
-  return registration as SourceRegistration<any>
+
+  switch (loader.type) {
+    case "json": {
+      const { type: _type, url, fetchOptions, ...options } = loader
+      return {
+        ...registration,
+        loader: async loaderParams => loadJson({
+          ...options,
+          url: resolveSourceOption(url, loaderParams),
+          fetchOptions: fetchOptions === undefined
+            ? undefined
+            : resolveSourceOption(fetchOptions, loaderParams),
+          type: metadata.type,
+        }),
+      }
+    }
+    case "html": {
+      const { type: _type, url, fetchOptions, ...options } = loader
+      return {
+        ...registration,
+        loader: async loaderParams => loadHtml({
+          ...options,
+          url: resolveSourceOption(url, loaderParams),
+          fetchOptions: fetchOptions === undefined
+            ? undefined
+            : resolveSourceOption(fetchOptions, loaderParams),
+          type: metadata.type,
+        }),
+      }
+    }
+    case "rss": {
+      const { url } = loader
+      return {
+        ...registration,
+        loader: async loaderParams => loadRss({
+          url: resolveSourceOption(url, loaderParams),
+        }),
+      }
+    }
+    case "rssHub": {
+      const { type: _type, route, ...options } = loader
+      return {
+        ...registration,
+        loader: async loaderParams => loadRssHub({
+          ...options,
+          route: resolveSourceOption(route, loaderParams),
+          type: metadata.type,
+        }),
+      }
+    }
+    case "custom":
+      return {
+        ...registration,
+        loader: loader.load,
+      }
+  }
+
+  throw new Error(`Unsupported source loader: ${(loader as { type?: unknown }).type}`)
 }
 
 function mergeDefinitions<T extends SourceSecretDefinition>(
@@ -51,14 +151,14 @@ export function $provider(
 ): ProviderDefinition {
   const sources = Object.fromEntries(
     provider.sources.map((source) => {
-      const registeredSource: RegisteredSourceDefinition = {
+      const registeredSource: RuntimeSource = {
         icon: provider.icon,
         providerTitle: source.providerTitle ?? provider.title,
         key: source.key,
         title: source.title,
         params: source.params,
-        paramsSchemaVersion: source.paramsSchemaVersion ?? 1,
-        cacheVersion: source.cacheVersion ?? 1,
+        capabilities: source.capabilities,
+        cache: source.cache,
         color: source.color ?? provider.color,
         desc: source.desc ?? provider.desc,
         type: source.type,
@@ -72,7 +172,7 @@ export function $provider(
 
       return [source.key, registeredSource]
     }),
-  ) as Record<string, RegisteredSourceDefinition>
+  ) as Record<string, RuntimeSource>
 
   return {
     id: provider.id,
@@ -86,41 +186,11 @@ export function $provider(
   }
 }
 
-export function createLoader<Options>(
-  handler: (options: Options) => Promise<NewsItem[]>,
-) {
-  function defineLoader(
-    options: () => Options,
-  ): { loader: SourceLoader<Record<string, never>> }
-  function defineLoader<P extends SourceParamSchemaMap>(
-    options: (params: InferSourceParams<P>) => Options,
-  ): { loader: SourceLoader<P> }
-  function defineLoader(
-    options: unknown,
-  ): { loader: SourceLoader<any> } {
-    const arityZero = (options as (...args: unknown[]) => Options).length === 0
-    if (arityZero) {
-      const getOpts = options as () => Options
-      return {
-        loader: async (_params: InferSourceParams<Record<string, never>>) => handler(getOpts()),
-      }
-    }
-    const buildOpts = options as (params: InferSourceParams<any>) => Options
-    return {
-      loader: async (params: InferSourceParams<any>) => handler(buildOpts(params)),
-    }
-  }
-
-  return defineLoader
+function resolveSourceOption<TParams extends SourceParamSchemaMap, TValue>(
+  option: SourceOption<TParams, TValue>,
+  params: InferSourceParams<TParams>,
+): TValue {
+  return typeof option === "function"
+    ? (option as (params: InferSourceParams<TParams>) => TValue)(params)
+    : option
 }
-
-export * from "./html-source"
-export * from "./json-source"
-export * from "./rss-source"
-
-export const $source = Object.assign($sourceCallable, {
-  json: $jsonSource,
-  html: $htmlSource,
-  rss: $rssSource,
-  rssHub: $rssHubSource,
-})

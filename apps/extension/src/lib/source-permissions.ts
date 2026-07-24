@@ -1,14 +1,15 @@
+import { sourceDescriptors } from "@newsnext/source/metadata"
 import { browser } from "wxt/browser"
 
 type OptionalSourcePermission = "bookmarks" | "history"
 
-const OPTIONAL_SOURCE_PERMISSIONS: Partial<Record<string, OptionalSourcePermission>> = {
-  "browser:bookmarks": "bookmarks",
-  "browser:history": "history",
+function isOptionalSourcePermission(permission: string): permission is OptionalSourcePermission {
+  return permission === "bookmarks" || permission === "history"
 }
 
 export function getOptionalPermissionForSource(sourceId: string): OptionalSourcePermission | undefined {
-  return OPTIONAL_SOURCE_PERMISSIONS[sourceId]
+  const source = sourceDescriptors.find(descriptor => descriptor.id === sourceId)
+  return source?.capabilities.browser.find(isOptionalSourcePermission)
 }
 
 export async function hasPermissionToLoadSource(sourceId: string): Promise<boolean> {

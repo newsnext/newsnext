@@ -13,12 +13,13 @@ export default $provider({
   home: "https://xueqiu.com",
   color: "blue",
   sources: [
-    $source.json(
-      {
+    $source({
+      metadata: {
         key: "hot-stock",
         type: "hottest",
       },
-      () => ({
+      loader: {
+        type: "json",
         url: "https://stock.xueqiu.com/v5/stock/hot_stock/list.json?size=30&_type=10&type=10",
         items: json => json.data.items.filter((k: StockItem) => !k.ad),
         fields: {
@@ -28,7 +29,13 @@ export default $provider({
             html: (item: StockItem) => `<span style="color: ${item.percent > 0 ? "#ef4444" : "#22c55e"}">${item.percent}%</span> <span>${item.exchange}</span>`,
           },
         },
-      }),
-    ),
+      },
+      capabilities: {
+        network: ["stock.xueqiu.com"],
+        cookies: [],
+        browser: [],
+      },
+      cache: { version: 1, maxAge: "5m" },
+    }),
   ],
 })

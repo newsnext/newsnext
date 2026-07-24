@@ -1,4 +1,4 @@
-import type { RegisteredSourceDefinition, SourceSecretDefinition, SourceSecrets } from "@newsnext/source/typings"
+import type { RuntimeSource, SourceSecretDefinition, SourceSecrets } from "@newsnext/source/typings"
 import { browser } from "wxt/browser"
 import { storage } from "wxt/utils/storage"
 
@@ -68,7 +68,7 @@ function assertRequiredSecretsResolved(secretDefinitions: SourceSecretDefinition
 }
 
 export async function resolveSourceSecrets(
-  source: Pick<RegisteredSourceDefinition, "secrets">,
+  source: Pick<RuntimeSource, "secrets">,
   provider?: string,
 ): Promise<SourceSecrets> {
   const secretDefinitions = source.secrets
@@ -117,7 +117,7 @@ export async function resolveSourceSecrets(
 }
 
 export async function updateSourceSecrets(
-  source: Pick<RegisteredSourceDefinition, "secrets">,
+  source: Pick<RuntimeSource, "secrets">,
   provider: string,
   secrets: SourceSecrets,
 ): Promise<void> {

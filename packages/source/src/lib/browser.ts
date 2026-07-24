@@ -1,5 +1,4 @@
 import type { NewsItem } from "@newsnext/source/typings"
-import { $param } from "@newsnext/source/utils/params"
 import { $provider, $source } from "@newsnext/source/utils/source"
 
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000
@@ -387,51 +386,74 @@ export default $provider({
   color: "blue",
   category: "others",
   sources: [
-    $source(
-      {
+    $source({
+      metadata: {
         key: "history",
         title: "History",
         type: "timeline",
-        params: {
-          query: $param.text({
-            title: "Search",
-            default: "",
-          }),
-          dateRange: $param.select<DateRange>({
-            title: "Date range",
-            options: [...DATE_RANGE_OPTIONS],
-            default: "week",
-          }),
-          maxResults: $param.number({
-            title: "Limit",
-            default: 50,
-            min: 1,
-            max: 100,
-          }),
+      },
+      params: {
+        query: {
+          type: "text",
+          title: "Search",
+          default: "",
+        },
+        dateRange: {
+          type: "select",
+          title: "Date range",
+          values: DATE_RANGE_OPTIONS,
+          default: "week",
+        },
+        maxResults: {
+          type: "number",
+          title: "Limit",
+          default: 50,
+          min: 1,
+          max: 100,
         },
       },
-      fetchBrowserHistory,
-    ),
-    $source(
-      {
+      loader: {
+        type: "custom",
+        load: fetchBrowserHistory,
+      },
+      capabilities: {
+        network: [],
+        cookies: [],
+        browser: ["history"],
+      },
+      cache: { version: 1, maxAge: "1m" },
+    }),
+    $source({
+      metadata: {
         key: "bookmarks",
         title: "Bookmarks",
         type: "timeline",
-        params: {
-          folder: $param.text({
-            title: "Folder",
-            description: "Leave empty to include every bookmark. Use a folder ID, title, or path.",
-            default: "",
-          }),
-          maxResults: $param.number({
-            title: "Limit",
-            default: 50,
-            min: 1,
-            max: 200,
-          }),
+      },
+      params: {
+        folder: {
+          type: "text",
+          title: "Folder",
+          description: "Leave empty to include every bookmark. Use a folder ID, title, or path.",
+          default: "",
+        },
+        maxResults: {
+          type: "number",
+          title: "Limit",
+          default: 50,
+          min: 1,
+          max: 200,
         },
       },
-      fetchBrowserBookmarks,
-    ),
+      loader: {
+        type: "custom",
+        load: fetchBrowserBookmarks,
+      },
+      capabilities: {
+        network: [],
+        cookies: [],
+        browser: ["bookmarks", "favicon"],
+      },
+      cache: { version: 1, maxAge: "5m" },
+    }),
   ],
 })

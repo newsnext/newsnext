@@ -3,7 +3,8 @@ import type { AnyNode } from "domhandler"
 import { getFavicon } from "@newsnext/shared/utils"
 import { $provider, $source } from "@newsnext/source/utils/source"
 
-const createLoader = (sub: string) => () => ({
+const createLoader = (sub: string) => ({
+  type: "html" as const,
   url: `https://news.ycombinator.com${sub}`,
   items: ".athing",
   fields: {
@@ -47,38 +48,62 @@ export default $provider({
   color: "orange",
   home: "https://news.ycombinator.com/",
   sources: [
-    $source.html(
-      {
+    $source({
+      metadata: {
         key: "top",
         type: "hottest",
         title: "Hottest",
       },
-      createLoader("/"),
-    ),
-    $source.html(
-      {
+      loader: createLoader("/"),
+      capabilities: {
+        network: ["news.ycombinator.com"],
+        cookies: [],
+        browser: [],
+      },
+      cache: { version: 1, maxAge: "5m" },
+    }),
+    $source({
+      metadata: {
         key: "newest",
         type: "timeline",
         title: "Newest",
         home: "https://news.ycombinator.com/newest",
       },
-      createLoader("/newest"),
-    ),
-    $source.html(
-      {
+      loader: createLoader("/newest"),
+      capabilities: {
+        network: ["news.ycombinator.com"],
+        cookies: [],
+        browser: [],
+      },
+      cache: { version: 1, maxAge: "1m" },
+    }),
+    $source({
+      metadata: {
         key: "show",
         title: "Show",
         home: "https://news.ycombinator.com/show",
       },
-      createLoader("/show"),
-    ),
-    $source.html(
-      {
+      loader: createLoader("/show"),
+      capabilities: {
+        network: ["news.ycombinator.com"],
+        cookies: [],
+        browser: [],
+      },
+      cache: { version: 1, maxAge: "5m" },
+    }),
+    $source({
+      metadata: {
         key: "ask",
         title: "Ask",
         home: "https://news.ycombinator.com/ask",
       },
-      createLoader("/ask"),
-    ),
+      loader: createLoader("/ask"),
+      capabilities: {
+        network: ["news.ycombinator.com"],
+        cookies: [],
+        browser: [],
+      },
+      cache: { version: 1, maxAge: "5m" },
+    }),
   ],
 })

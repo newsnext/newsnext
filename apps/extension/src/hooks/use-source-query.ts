@@ -24,8 +24,8 @@ export function useSourceQuery({
   const source = useMemo(() => resolveSource(sourceId), [sourceId])
   const normalizedParams = useMemo(() => normalizeSourceParams(source, params ?? {}), [params, source])
   const cacheKey = useMemo(
-    () => buildSourceCacheKey(sourceId, source.cacheVersion ?? 1, normalizedParams),
-    [normalizedParams, source.cacheVersion, sourceId],
+    () => buildSourceCacheKey(sourceId, source.cache.version, normalizedParams),
+    [normalizedParams, source.cache.version, sourceId],
   )
   // type SourceData = Awaited<ReturnType<typeof loadSource>>
   // const storageKey = `${STORAGE_PREFIX}/${sourceId}`

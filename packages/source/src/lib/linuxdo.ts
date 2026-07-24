@@ -78,13 +78,14 @@ export default $provider({
   home: "https://linux.do",
   category: "tech",
   sources: [
-    $source.json(
-      {
+    $source({
+      metadata: {
         key: "latest",
         title: "Latest",
         type: "timeline",
       },
-      () => ({
+      loader: {
+        type: "json",
         url: "https://linux.do/latest.json?order=created",
         items: getTopicsWithAvatars,
         fields: {
@@ -95,15 +96,22 @@ export default $provider({
             icon: topic => topic.last_poster_avatar ? { src: topic.last_poster_avatar, radius: 999 } : undefined,
           },
         },
-      }),
-    ),
-    $source.json(
-      {
+      },
+      capabilities: {
+        network: ["linux.do"],
+        cookies: [],
+        browser: [],
+      },
+      cache: { version: 1, maxAge: "5m" },
+    }),
+    $source({
+      metadata: {
         key: "top-daily",
         title: "Hot",
         type: "hottest",
       },
-      () => ({
+      loader: {
+        type: "json",
         url: "https://linux.do/top/daily.json",
         items: getTopicsWithAvatars,
         fields: {
@@ -113,7 +121,13 @@ export default $provider({
             icon: topic => topic.last_poster_avatar ? { src: topic.last_poster_avatar, radius: 999 } : undefined,
           },
         },
-      }),
-    ),
+      },
+      capabilities: {
+        network: ["linux.do"],
+        cookies: [],
+        browser: [],
+      },
+      cache: { version: 1, maxAge: "5m" },
+    }),
   ],
 })

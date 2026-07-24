@@ -1,17 +1,15 @@
 import type {
   InferSourceParams,
   InferSourceParamValue,
-  MultiSelectParameter,
-  NumberParameter,
-  SelectParameter,
   SourceParamSchema,
   SourceParamSchemaMap,
-  SwitchParameter,
-  TextParameter,
-  UrlParameter,
 } from "../typings/sources"
 
 import { SourceParamGuards, SourceParamValueError } from "../typings/sources"
+
+export function normalizeTextParam(value: unknown): string {
+  return String(value).trim()
+}
 
 export function getDefaultValues(params?: Record<string, SourceParamSchema>) {
   return params ? Object.fromEntries(Object.entries(params).map(([key, param]) => [key, param.default])) : {}
@@ -49,14 +47,14 @@ function validateParsedSourceParamValue<TParam extends SourceParamSchema>(
   }
 
   if (SourceParamGuards.isSelect(param)) {
-    const allowedValues = new Set(param.options.map(option => option.value))
+    const allowedValues = new Set(param.values.map(option => option.value))
     if (!allowedValues.has(value as string)) {
       throw new SourceParamValueError(param.title, `Invalid value for '${param.title}'`)
     }
   }
 
   if (SourceParamGuards.isMultiSelect(param)) {
-    const allowedValues = new Set(param.options.map(option => option.value))
+    const allowedValues = new Set(param.values.map(option => option.value))
     const values = value as string[]
     const invalidValue = values.find(option => !allowedValues.has(option))
     if (invalidValue) {
@@ -131,86 +129,4 @@ export function parseSourceParams<TParams extends SourceParamSchemaMap>(
   return Object.fromEntries(
     Object.entries(params).map(([key, param]) => [key, parseSourceParamValue(param, rawValues[key])]),
   ) as InferSourceParams<TParams>
-}
-
-export const $param = {
-  select<K extends string>(R: Omit<SelectParameter<K>, "type">): SelectParameter<K> {
-    return {
-      type: "select",
-      ...R,
-    }
-  },
-
-  text<TOutput = string>(
-    R: Omit<TextParameter<TOutput>, "type">,
-  ): TextParameter<TOutput> {
-    return {
-      type: "text",
-      ...R,
-    }
-  },
-
-  url<TOutput = string>(
-    R: Omit<UrlParameter<TOutput>, "type">,
-  ): UrlParameter<TOutput> {
-    return {
-      type: "url",
-      ...R,
-    }
-  },
-
-  number<TOutput = number>(
-    R: Omit<NumberParameter<TOutput>, "type">,
-  ): NumberParameter<TOutput> {
-    return {
-      type: "number",
-      ...R,
-    }
-  },
-
-  switch<TOutput = boolean>(
-    R: Omit<SwitchParameter<TOutput>, "type">,
-  ): SwitchParameter<TOutput> {
-    return {
-      type: "switch",
-      ...R,
-    }
-  },
-
-  multiSelect<K extends string>(R: Omit<MultiSelectParameter<K>, "type">): MultiSelectParameter<K> {
-    return {
-      type: "multiselect",
-      ...R,
-    }
-  },
-
-  json<TOutput>(
-    config: Omit<TextParameter<TOutput>, "type">,
-  ): TextParameter<TOutput> {
-    return $param.text<TOutput>({
-      ...config,
-      parse: (value) => {
-        if (typeof value !== "string") {
-          throw new SourceParamValueError(config.title, `${config.title} must be a JSON string`)
-        }
-
-        try {
-          return JSON.parse(value) as TOutput
-        } catch {
-          throw new SourceParamValueError(config.title, `${config.title} must be valid JSON`)
-        }
-      },
-    })
-  },
-}
-
-export const CommonSourceParams = {
-  type: $param.select<"hottest" | "timeline">({
-    options: [
-      { label: "Hottest", value: "hottest" },
-      { label: "Timeline", value: "timeline" },
-    ],
-    default: "timeline",
-    title: "Type",
-  }),
 }

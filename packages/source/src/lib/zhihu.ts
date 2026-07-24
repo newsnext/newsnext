@@ -29,13 +29,14 @@ export default $provider({
   home: "https://www.zhihu.com",
   color: "blue",
   sources: [
-    $source.json(
-      {
+    $source({
+      metadata: {
         key: "hot-list",
         title: "全站热榜",
         type: "hottest",
       },
-      () => ({
+      loader: {
+        type: "json",
         url: "https://www.zhihu.com/api/v3/feed/topstory/hot-list-web?limit=50&desktop=true",
         items: "data",
         fields: {
@@ -53,7 +54,13 @@ export default $provider({
             picture: "target.image_area.url",
           },
         },
-      }),
-    ),
+      },
+      capabilities: {
+        network: ["www.zhihu.com"],
+        cookies: [],
+        browser: [],
+      },
+      cache: { version: 1, maxAge: "5m" },
+    }),
   ],
 })

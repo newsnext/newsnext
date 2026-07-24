@@ -2,13 +2,10 @@ import type * as cheerio from "cheerio/slim"
 import type { AnyNode } from "domhandler"
 import type { FetchOptions } from "ofetch"
 import type {
-  InferSourceParams,
   NewsItem,
-  SourceParamSchemaMap,
   SourceRegistration,
 } from "../../typings/sources"
 import { load } from "cheerio/slim"
-import { createLoader } from "."
 import { myFetch } from "../fetch"
 
 export type FieldSelector<T = any> = string | {
@@ -91,7 +88,7 @@ function resolveField(
   return value
 }
 
-export const $htmlLoader = createLoader<HtmlSourceOptions>(async (opts) => {
+export async function loadHtml(opts: HtmlSourceOptions): Promise<NewsItem[]> {
   const { url, type, items: itemsResolver, filter, decoding, fetchOptions, fetch, fields } = opts
 
   let html: string
@@ -176,7 +173,7 @@ export const $htmlLoader = createLoader<HtmlSourceOptions>(async (opts) => {
   }
 
   return news
-})
+}
 
 function resolveItems(
   $: cheerio.CheerioAPI,
@@ -203,26 +200,4 @@ function matchesFilter(
   }
 
   return el.is(filter)
-}
-
-export function $htmlSource<P extends SourceParamSchemaMap>(
-  registration: Omit<SourceRegistration<P>, "loader" | "params"> & { params: P },
-  options: (params: InferSourceParams<P>) => HtmlSourceOptions,
-): SourceRegistration<P>
-export function $htmlSource(
-  registration: Omit<SourceRegistration<Record<string, never>>, "loader" | "params">,
-  options: () => HtmlSourceOptions,
-): SourceRegistration<Record<string, never>>
-export function $htmlSource(registration: unknown, options: unknown): SourceRegistration<any> {
-  const sourceRegistration = registration as SourceRegistration<any>
-  return {
-    ...sourceRegistration,
-    ...$htmlLoader((params: InferSourceParams<any>) => {
-      const sourceOptions = (options as (params: InferSourceParams<any>) => HtmlSourceOptions)(params)
-      return {
-        ...sourceOptions,
-        type: sourceRegistration.type ?? sourceOptions.type,
-      }
-    }),
-  } as SourceRegistration<any>
 }
