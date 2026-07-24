@@ -29,7 +29,6 @@
     "@wxt-dev/browser": "^0.2.0",
     "cheerio": "^1.2.0",
     "date-fns": "catalog:",
-    "defu": "catalog:",
     "fast-xml-parser": "^5.9.3",
     "iconv-lite": "^0.7.3",
     "ofetch": "catalog:"

@@ -15,12 +15,11 @@ import type {
 } from "../../typings/sources"
 import type { HtmlSourceOptions } from "./html-source"
 import type { JsonSourceOptions } from "./json-source"
-import type { RSSHubLoaderOptions } from "./rss-source"
 
 import { assertNetworkCapability } from "./capabilities"
 import { loadHtml } from "./html-source"
 import { loadJson } from "./json-source"
-import { loadRss, loadRssHub } from "./rss-source"
+import { loadRss } from "./rss-source"
 
 interface SourceConfigBase<TParams extends SourceParamSchemaMap> {
   metadata: SourceMetadata
@@ -50,10 +49,6 @@ type StructuredSourceLoaderConfig<TParams extends SourceParamSchemaMap, Item>
       type: "rss"
       url: SourceOption<TParams, string>
     }
-    | ({
-      type: "rssHub"
-      route: SourceOption<TParams, string>
-    } & Omit<RSSHubLoaderOptions, "route" | "type">)
   )
 
 type SourceConfig<TParams extends SourceParamSchemaMap, Item>
@@ -134,25 +129,6 @@ export function $source<
           const resolvedUrl = resolveSourceOption(url, loaderParams)
           assertNetworkCapability(metadata.key, resolvedUrl, capabilities.network)
           return loadRss({ url: resolvedUrl })
-        },
-      }
-    }
-    case "rssHub": {
-      const { type: _type, route, ...options } = loader
-      return {
-        ...registration,
-        loader: async (loaderParams) => {
-          const resolvedRoute = resolveSourceOption(route, loaderParams)
-          const resolvedUrl = new URL(
-            resolvedRoute,
-            options.host ?? "https://rsshub.rssforever.com",
-          ).toString()
-          assertNetworkCapability(metadata.key, resolvedUrl, capabilities.network)
-          return loadRssHub({
-            ...options,
-            route: resolvedRoute,
-            type: metadata.type,
-          })
         },
       }
     }
@@ -255,12 +231,7 @@ function resolveSourceCapabilities<TParams extends SourceParamSchemaMap, Item>(
 
   if (loader.type !== "custom") {
     const defaultParams = resolveDefaultParams(params)
-    const requestUrl = loader.type === "rssHub"
-      ? new URL(
-          resolveSourceOption(loader.route, defaultParams),
-          loader.host ?? "https://rsshub.rssforever.com",
-        ).toString()
-      : resolveSourceOption(loader.url, defaultParams)
+    const requestUrl = resolveSourceOption(loader.url, defaultParams)
 
     inferredNetworkHosts.push(new URL(requestUrl).hostname)
   }

@@ -1,18 +1,5 @@
-import type { RSSHubOption, RSSHubResponse } from "../../typings"
-import type {
-  NewsItem,
-  SourceRegistration,
-} from "../../typings/sources"
-import defu from "defu"
-import { myFetch } from "../fetch"
+import type { NewsItem } from "../../typings/sources"
 import { rss2json } from "./rss2json"
-
-export interface RSSHubLoaderOptions {
-  route: string
-  host?: string
-  options?: RSSHubOption
-  type?: SourceRegistration["type"]
-}
 
 export async function loadRss({ url }: { url: string }): Promise<NewsItem[]> {
   const data = await rss2json(url)
@@ -21,27 +8,5 @@ export async function loadRss({ url }: { url: string }): Promise<NewsItem[]> {
     title: item.title,
     url: item.link,
     timestamp: item.created ? new Date(item.created).getTime() : undefined,
-  }))
-}
-
-export async function loadRssHub({ route, host, options: RSSHubOptions, type }: RSSHubLoaderOptions): Promise<NewsItem[]> {
-  if (!host) host = "https://rsshub.rssforever.com"
-  const RSSHubBase = host
-  const url = new URL(route, RSSHubBase)
-  url.searchParams.set("format", "json")
-  RSSHubOptions = defu<RSSHubOption, RSSHubOption[]>(RSSHubOptions, {
-    sorted: type !== "hottest",
-  })
-
-  Object.entries(RSSHubOptions).forEach(([key, value]) => {
-    url.searchParams.set(key, (value as any).toString())
-  })
-  const data: RSSHubResponse = await myFetch(url.toString(), {
-    timeout: 5000,
-  })
-  return data.items.map(item => ({
-    title: item.title,
-    url: item.url,
-    timestamp: new Date(item.date_published).getTime(),
   }))
 }
