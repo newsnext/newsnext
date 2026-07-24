@@ -1,5 +1,3 @@
-import type { Browser } from "#imports"
-import { Switch } from "@newsnext/ui/components/switch"
 import { useCallback, useEffect, useState } from "react"
 import { browser } from "#imports"
 import {
@@ -7,12 +5,30 @@ import {
   getUserManagedHostPermissionOrigins,
   revokeHostPermissionOrigin,
 } from "@/lib/host-permissions"
-import {
-  disableRadarBadge,
-  enableRadarBadge,
-  isRadarBadgeActive,
-  RADAR_BADGE_ENABLED_KEY,
-} from "@/lib/radar-badge-settings"
+
+type ManagedPermission = "bookmarks" | "history" | "tabs"
+
+const MANAGED_PERMISSIONS: Array<{
+  description: string
+  id: ManagedPermission
+  label: string
+}> = [
+  {
+    id: "tabs",
+    label: "Tabs",
+    description: "Reads open tab URLs and titles to show matching Radar source counts on the extension icon.",
+  },
+  {
+    id: "bookmarks",
+    label: "Bookmarks",
+    description: "Reads browser bookmarks to load the Bookmarks source.",
+  },
+  {
+    id: "history",
+    label: "History",
+    description: "Reads browser history to load the History source.",
+  },
+]
 
 function getOriginLabel(origin: string): string {
   return origin
@@ -23,46 +39,44 @@ function getOriginLabel(origin: string): string {
 export function PermissionsSettings() {
   const [origins, setOrigins] = useState<string[]>([])
   const [revokingOrigin, setRevokingOrigin] = useState<string>()
-  const [radarBadgeEnabled, setRadarBadgeEnabled] = useState(false)
-  const [updatingRadarBadge, setUpdatingRadarBadge] = useState(false)
+  const [grantedPermissions, setGrantedPermissions] = useState<ManagedPermission[]>([])
+  const [revokingPermission, setRevokingPermission] = useState<ManagedPermission>()
 
   const refreshOrigins = useCallback(async (): Promise<void> => {
     const grantedOrigins = await getGrantedHostPermissionOrigins()
     setOrigins(getUserManagedHostPermissionOrigins(grantedOrigins, import.meta.env.DEV))
   }, [])
 
-  const refreshRadarBadge = useCallback(async (): Promise<void> => {
-    setRadarBadgeEnabled(await isRadarBadgeActive())
+  const refreshPermissions = useCallback(async (): Promise<void> => {
+    const permissions = await Promise.all(
+      MANAGED_PERMISSIONS.map(async permission => ({
+        permission: permission.id,
+        granted: await browser.permissions.contains({ permissions: [permission.id] }),
+      })),
+    )
+    setGrantedPermissions(
+      permissions.filter(permission => permission.granted).map(permission => permission.permission),
+    )
   }, [])
 
   useEffect(() => {
     const handlePermissionChange = (): void => {
       void refreshOrigins()
-      void refreshRadarBadge()
-    }
-    const handleStorageChange = (
-      changes: Record<string, Browser.storage.StorageChange>,
-      areaName: string,
-    ): void => {
-      if (areaName === "local" && RADAR_BADGE_ENABLED_KEY in changes) {
-        void refreshRadarBadge()
-      }
+      void refreshPermissions()
     }
 
     void refreshOrigins()
-    void refreshRadarBadge()
+    void refreshPermissions()
     browser.permissions.onAdded.addListener(handlePermissionChange)
     browser.permissions.onRemoved.addListener(handlePermissionChange)
-    browser.storage.onChanged.addListener(handleStorageChange)
 
     return () => {
       browser.permissions.onAdded.removeListener(handlePermissionChange)
       browser.permissions.onRemoved.removeListener(handlePermissionChange)
-      browser.storage.onChanged.removeListener(handleStorageChange)
     }
-  }, [refreshOrigins, refreshRadarBadge])
+  }, [refreshOrigins, refreshPermissions])
 
-  const handleRevoke = useCallback(async (origin: string): Promise<void> => {
+  const handleRevokeOrigin = useCallback(async (origin: string): Promise<void> => {
     setRevokingOrigin(origin)
     try {
       await revokeHostPermissionOrigin(origin)
@@ -72,40 +86,60 @@ export function PermissionsSettings() {
     }
   }, [refreshOrigins])
 
-  const handleRadarBadgeToggle = useCallback(async (): Promise<void> => {
-    setUpdatingRadarBadge(true)
-    try {
-      if (radarBadgeEnabled) {
-        await disableRadarBadge()
-      } else {
-        await enableRadarBadge()
+  const handleRevokePermission = useCallback(
+    async (permission: ManagedPermission): Promise<void> => {
+      setRevokingPermission(permission)
+      try {
+        await browser.permissions.remove({ permissions: [permission] }).catch(() => false)
+        await refreshPermissions()
+      } finally {
+        setRevokingPermission(undefined)
       }
-      await refreshRadarBadge()
-    } finally {
-      setUpdatingRadarBadge(false)
-    }
-  }, [radarBadgeEnabled, refreshRadarBadge])
+    },
+    [refreshPermissions],
+  )
+
+  const visiblePermissions = MANAGED_PERMISSIONS.filter(permission => (
+    grantedPermissions.includes(permission.id)
+  ))
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between gap-6 rounded-xl border p-4">
-        <div className="min-w-0 space-y-1">
-          <h3 className="text-sm font-medium">Radar badge</h3>
-          <p className="text-sm leading-5 text-muted-foreground">
-            Show the number of matching Radar sources on the extension icon. Requires optional access to tab URLs.
+      <div className="space-y-3">
+        <div className="space-y-1">
+          <h3 className="text-sm font-medium">Browser Permissions</h3>
+          <p className="text-sm text-muted-foreground">
+            Permissions currently granted to NewsNext and what they are used for.
           </p>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <Switch
-            checked={radarBadgeEnabled}
-            disabled={updatingRadarBadge}
-            aria-label="Toggle Radar badge"
-            onCheckedChange={() => void handleRadarBadgeToggle()}
-          />
-          <span className="w-14 text-sm font-medium text-muted-foreground">
-            {radarBadgeEnabled ? "On" : "Off"}
-          </span>
-        </div>
+        {visiblePermissions.length === 0
+          ? (
+              <div className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
+                No browser permissions have been granted.
+              </div>
+            )
+          : (
+              <ul className="divide-y rounded-xl border">
+                {visiblePermissions.map(permission => (
+                  <li key={permission.id} className="flex items-center justify-between gap-4 p-3">
+                    <div className="min-w-0 space-y-1">
+                      <div className="text-sm font-medium">{permission.label}</div>
+                      <div className="text-xs leading-5 text-muted-foreground">
+                        {permission.description}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      className="shrink-0 rounded-lg border px-3 py-1.5 text-xs font-medium transition hover:bg-muted disabled:cursor-wait disabled:opacity-50"
+                      disabled={revokingPermission === permission.id}
+                      onClick={() => void handleRevokePermission(permission.id)}
+                    >
+                      {revokingPermission === permission.id ? "Revoking..." : "Revoke"}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
       </div>
 
       <div className="space-y-1">
@@ -133,7 +167,7 @@ export function PermissionsSettings() {
                     type="button"
                     className="shrink-0 rounded-lg border px-3 py-1.5 text-xs font-medium transition hover:bg-muted disabled:cursor-wait disabled:opacity-50"
                     disabled={revokingOrigin === origin}
-                    onClick={() => void handleRevoke(origin)}
+                    onClick={() => void handleRevokeOrigin(origin)}
                   >
                     {revokingOrigin === origin ? "Revoking..." : "Revoke"}
                   </button>

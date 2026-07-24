@@ -18,6 +18,7 @@ import {
 import { SegmentedControl } from "../common/segmented-control"
 import { ThemeSelector } from "../common/theme-selector"
 import { PermissionsSettings } from "./permissions"
+import { RadarBadgeSetting } from "./radar-badge"
 
 const SETTINGS_TAB_KEY = "newsnext-settings-tab"
 export type SettingsTabId = "appearance" | "general" | "permissions"
@@ -219,6 +220,7 @@ function GeneralSettings() {
           Choose which tab to show when the app opens.
         </p>
       </div>
+      <RadarBadgeSetting />
     </div>
   )
 }
