@@ -10,7 +10,6 @@ export default defineConfig({
   imports: false,
   srcDir: "./src",
   alias: {
-    "#": path.resolve(__dirname, "src"),
     "@": path.resolve(__dirname, "src"),
   },
   dev: {

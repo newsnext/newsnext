@@ -43,12 +43,7 @@ export default $provider({
           timestamp: item => item.create_time * 1000,
         },
       },
-      capabilities: {
-        network: ["tieba.baidu.com"],
-        cookies: [],
-        browser: [],
-      },
-      cache: { version: 1, maxAge: "5m" },
+      cache: "5m",
     }),
   ],
 })

@@ -1,5 +1,5 @@
 import type { ShadowRootContentScriptUi } from "wxt/utils/content-script-ui/shadow-root"
-import { browser } from "wxt/browser"
+import { browser } from "@wxt-dev/browser"
 import { createShadowRootUi, defineContentScript } from "#imports"
 import {
   isCloseRadarOverlayMessage,

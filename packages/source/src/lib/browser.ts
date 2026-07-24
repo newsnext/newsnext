@@ -1,5 +1,7 @@
 import type { NewsItem } from "@newsnext/source/typings"
+import type { Browser } from "@wxt-dev/browser"
 import { $provider, $source } from "@newsnext/source/utils/source"
+import { browser } from "@wxt-dev/browser"
 
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000
 const BROWSER_PROVIDER_ICON = "https://www.google.com/chrome/static/images/favicons/favicon-96x96.png"
@@ -24,89 +26,6 @@ interface BrowserBookmarksParams {
   maxResults: number
 }
 
-interface BrowserHistoryItem {
-  id?: string
-  url?: string
-  title?: string
-  lastVisitTime?: number
-  visitCount?: number
-  typedCount?: number
-}
-
-interface BrowserHistorySearchQuery {
-  text: string
-  startTime?: number
-  maxResults: number
-}
-
-interface BrowserHistoryApi {
-  search: (
-    query: BrowserHistorySearchQuery,
-    callback?: (results: BrowserHistoryItem[]) => void,
-  ) => Promise<BrowserHistoryItem[]> | void
-}
-
-interface BrowserBookmarkNode {
-  id: string
-  parentId?: string
-  index?: number
-  url?: string
-  title?: string
-  dateAdded?: number
-  children?: BrowserBookmarkNode[]
-}
-
-interface BrowserBookmarksApi {
-  getTree: (
-    callback?: (results: BrowserBookmarkNode[]) => void,
-  ) => Promise<BrowserBookmarkNode[]> | void
-  getSubTree: (
-    id: string,
-    callback?: (results: BrowserBookmarkNode[]) => void,
-  ) => Promise<BrowserBookmarkNode[]> | void
-}
-
-interface BrowserExtensionGlobal {
-  chrome?: {
-    bookmarks?: BrowserBookmarksApi
-    history?: BrowserHistoryApi
-    runtime?: {
-      lastError?: { message?: string }
-      getURL?: (path: string) => string
-    }
-  }
-  browser?: {
-    bookmarks?: BrowserBookmarksApi
-    history?: BrowserHistoryApi
-    runtime?: {
-      getURL?: (path: string) => string
-    }
-  }
-}
-
-function isPromiseLike<T>(value: unknown): value is Promise<T> {
-  return typeof value === "object"
-    && value !== null
-    && "then" in value
-    && typeof value.then === "function"
-}
-
-function getBrowserHistoryApi(): BrowserHistoryApi | undefined {
-  return (globalThis as BrowserExtensionGlobal).browser?.history
-}
-
-function getChromeHistoryApi(): BrowserHistoryApi | undefined {
-  return (globalThis as BrowserExtensionGlobal).chrome?.history
-}
-
-function getBrowserBookmarksApi(): BrowserBookmarksApi | undefined {
-  return (globalThis as BrowserExtensionGlobal).browser?.bookmarks
-}
-
-function getChromeBookmarksApi(): BrowserBookmarksApi | undefined {
-  return (globalThis as BrowserExtensionGlobal).chrome?.bookmarks
-}
-
 function getStartTime(dateRange: DateRange, now = Date.now()): number | undefined {
   switch (dateRange) {
     case "today":
@@ -129,13 +48,7 @@ function getHostname(url: string): string | undefined {
 }
 
 function getFaviconUrl(url: string): string | undefined {
-  const extensionGlobal = globalThis as BrowserExtensionGlobal
-  const getRuntimeUrl = extensionGlobal.browser?.runtime?.getURL ?? extensionGlobal.chrome?.runtime?.getURL
-  if (!getRuntimeUrl) {
-    return undefined
-  }
-
-  const faviconUrl = new URL(getRuntimeUrl("/_favicon/"))
+  const faviconUrl = new URL(browser.runtime.getURL("/_favicon/"))
   faviconUrl.searchParams.set("pageUrl", url)
   faviconUrl.searchParams.set("size", "64")
   return faviconUrl.toString()
@@ -146,7 +59,7 @@ function formatVisitCount(count: number | undefined): string {
   return `${visits} ${visits === 1 ? "visit" : "visits"}`
 }
 
-function browserHistoryItemsToNewsItems(historyItems: BrowserHistoryItem[]): NewsItem[] {
+function browserHistoryItemsToNewsItems(historyItems: Browser.history.HistoryItem[]): NewsItem[] {
   const seen = new Set<string>()
   const items: NewsItem[] = []
 
@@ -181,22 +94,22 @@ function browserHistoryItemsToNewsItems(historyItems: BrowserHistoryItem[]): New
   return items.sort((a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0))
 }
 
-function flattenBookmarkNodes(nodes: BrowserBookmarkNode[]): BrowserBookmarkNode[] {
+function flattenBookmarkNodes(nodes: Browser.bookmarks.BookmarkTreeNode[]): Browser.bookmarks.BookmarkTreeNode[] {
   return nodes.flatMap(node => [
     node,
     ...flattenBookmarkNodes(node.children ?? []),
   ])
 }
 
-function getBookmarkFolderPath(path: string[], node: BrowserBookmarkNode): string[] {
+function getBookmarkFolderPath(path: string[], node: Browser.bookmarks.BookmarkTreeNode): string[] {
   return node.title ? [...path, node.title] : path
 }
 
 function findBookmarkFolder(
-  nodes: BrowserBookmarkNode[],
+  nodes: Browser.bookmarks.BookmarkTreeNode[],
   folder: string,
   path: string[] = [],
-): BrowserBookmarkNode | undefined {
+): Browser.bookmarks.BookmarkTreeNode | undefined {
   const normalizedFolder = folder.trim().toLowerCase()
   for (const node of nodes) {
     const currentPath = getBookmarkFolderPath(path, node)
@@ -221,9 +134,9 @@ function findBookmarkFolder(
   return undefined
 }
 
-function browserBookmarkNodesToNewsItems(bookmarkNodes: BrowserBookmarkNode[]): NewsItem[] {
+function browserBookmarkNodesToNewsItems(bookmarkNodes: Browser.bookmarks.BookmarkTreeNode[]): NewsItem[] {
   return flattenBookmarkNodes(bookmarkNodes)
-    .filter((node): node is BrowserBookmarkNode & { url: string } => Boolean(node.url))
+    .filter((node): node is Browser.bookmarks.BookmarkTreeNode & { url: string } => Boolean(node.url))
     .sort((a, b) => (b.dateAdded ?? 0) - (a.dateAdded ?? 0))
     .map((node) => {
       const hostname = getHostname(node.url)
@@ -250,7 +163,7 @@ async function fetchBrowserHistory({
   dateRange,
   maxResults,
 }: BrowserHistoryParams): Promise<NewsItem[]> {
-  const searchQuery: BrowserHistorySearchQuery = {
+  const searchQuery: Browser.history.HistoryQuery = {
     text: query.trim(),
     maxResults,
   }
@@ -259,86 +172,20 @@ async function fetchBrowserHistory({
     searchQuery.startTime = startTime
   }
 
-  const browserHistory = getBrowserHistoryApi()
-  if (browserHistory) {
-    const maybeResults = browserHistory.search(searchQuery)
-    if (isPromiseLike<BrowserHistoryItem[]>(maybeResults)) {
-      return browserHistoryItemsToNewsItems(await maybeResults)
-    }
-  }
-
-  const chromeHistory = getChromeHistoryApi()
-  if (!chromeHistory) {
-    throw new Error("Browser history API is not available.")
-  }
-
-  return await new Promise((resolve, reject) => {
-    chromeHistory.search(searchQuery, (results) => {
-      const extensionGlobal = globalThis as BrowserExtensionGlobal
-      const lastError = extensionGlobal.chrome?.runtime?.lastError
-      if (lastError) {
-        reject(new Error(lastError.message ?? "Failed to search browser history."))
-        return
-      }
-
-      resolve(browserHistoryItemsToNewsItems(results))
-    })
-  })
+  const historyItems = await browser.history.search(searchQuery)
+  return browserHistoryItemsToNewsItems(historyItems)
 }
 
-function readBrowserBookmarks(
-  bookmarks: BrowserBookmarksApi,
-  folder: string,
-): Promise<BrowserBookmarkNode[]> | undefined {
-  const normalizedFolder = folder.trim()
-  const maybeResults = normalizedFolder
-    ? bookmarks.getSubTree(normalizedFolder)
-    : bookmarks.getTree()
-
-  return isPromiseLike<BrowserBookmarkNode[]>(maybeResults)
-    ? maybeResults
-    : undefined
-}
-
-function readChromeBookmarks(
-  bookmarks: BrowserBookmarksApi,
-  folder: string,
-): Promise<BrowserBookmarkNode[]> {
-  const normalizedFolder = folder.trim()
-
-  return new Promise((resolve, reject) => {
-    const callback = (results: BrowserBookmarkNode[]) => {
-      const extensionGlobal = globalThis as BrowserExtensionGlobal
-      const lastError = extensionGlobal.chrome?.runtime?.lastError
-      if (lastError) {
-        reject(new Error(lastError.message ?? "Failed to read browser bookmarks."))
-        return
-      }
-
-      resolve(results)
-    }
-
-    if (normalizedFolder) {
-      bookmarks.getSubTree(normalizedFolder, callback)
-    } else {
-      bookmarks.getTree(callback)
-    }
-  })
-}
-
-async function readBookmarksFromFolder(
-  readBookmarks: (folder: string) => Promise<BrowserBookmarkNode[]>,
-  folder: string,
-): Promise<BrowserBookmarkNode[]> {
+async function readBookmarks(folder: string): Promise<Browser.bookmarks.BookmarkTreeNode[]> {
   const normalizedFolder = folder.trim()
   if (!normalizedFolder) {
-    return await readBookmarks("")
+    return browser.bookmarks.getTree()
   }
 
   try {
-    return await readBookmarks(normalizedFolder)
+    return await browser.bookmarks.getSubTree(normalizedFolder)
   } catch {
-    const tree = await readBookmarks("")
+    const tree = await browser.bookmarks.getTree()
     const matchedFolder = findBookmarkFolder(tree, normalizedFolder)
     if (!matchedFolder) {
       throw new Error(`Browser bookmarks folder not found: ${normalizedFolder}`)
@@ -352,31 +199,7 @@ async function fetchBrowserBookmarks({
   folder,
   maxResults,
 }: BrowserBookmarksParams): Promise<NewsItem[]> {
-  const browserBookmarks = getBrowserBookmarksApi()
-  if (browserBookmarks) {
-    const results = await readBookmarksFromFolder(async (targetFolder) => {
-      const maybeResults = readBrowserBookmarks(browserBookmarks, targetFolder)
-      if (!maybeResults) {
-        throw new Error("Browser bookmarks API did not return a promise.")
-      }
-
-      return await maybeResults
-    }, folder)
-
-    if (results) {
-      return browserBookmarkNodesToNewsItems(results).slice(0, maxResults)
-    }
-  }
-
-  const chromeBookmarks = getChromeBookmarksApi()
-  if (!chromeBookmarks) {
-    throw new Error("Browser bookmarks API is not available.")
-  }
-
-  const results = await readBookmarksFromFolder(
-    targetFolder => readChromeBookmarks(chromeBookmarks, targetFolder),
-    folder,
-  )
+  const results = await readBookmarks(folder)
   return browserBookmarkNodesToNewsItems(results).slice(0, maxResults)
 }
 
@@ -416,12 +239,8 @@ export default $provider({
         type: "custom",
         load: fetchBrowserHistory,
       },
-      capabilities: {
-        network: [],
-        cookies: [],
-        browser: ["history"],
-      },
-      cache: { version: 1, maxAge: "1m" },
+      capabilities: { browser: ["history"] },
+      cache: "1m",
     }),
     $source({
       metadata: {
@@ -448,12 +267,8 @@ export default $provider({
         type: "custom",
         load: fetchBrowserBookmarks,
       },
-      capabilities: {
-        network: [],
-        cookies: [],
-        browser: ["bookmarks", "favicon"],
-      },
-      cache: { version: 1, maxAge: "5m" },
+      capabilities: { browser: ["bookmarks", "favicon"] },
+      cache: "5m",
     }),
   ],
 })

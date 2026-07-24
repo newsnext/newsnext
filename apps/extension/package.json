@@ -27,6 +27,7 @@
     "@tanstack/react-virtual": "catalog:",
     "@webext-core/messaging": "^3.0.2",
     "@webext-core/proxy-service": "^2.0.1",
+    "@wxt-dev/browser": "^0.2.0",
     "canvas-confetti": "^1.9.4",
     "date-fns": "catalog:",
     "defu": "catalog:",

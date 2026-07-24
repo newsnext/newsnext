@@ -30,12 +30,7 @@ export default $provider({
           },
         },
       },
-      capabilities: {
-        network: ["stock.xueqiu.com"],
-        cookies: [],
-        browser: [],
-      },
-      cache: { version: 1, maxAge: "5m" },
+      cache: "5m",
     }),
   ],
 })

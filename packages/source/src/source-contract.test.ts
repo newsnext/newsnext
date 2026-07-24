@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest"
 import { providers } from "./index"
 import { sourceDescriptors } from "./metadata"
+import { matchesCapabilityHost } from "./utils/source/capabilities"
 
 const CACHE_MAX_AGE_PATTERN = /^\d+(?:\.\d+)?[smhd]$/
+const CAPABILITY_HOST_PATTERN = /^(?:\*|(?:\*\.)?(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)*[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)$/i
 
 function toSerializable(value: unknown): unknown {
   return value === undefined ? undefined : JSON.parse(JSON.stringify(value))
@@ -48,6 +50,29 @@ describe("source contract", () => {
         expect(Array.isArray(values), `${id}:${capability}`).toBe(true)
         expect(new Set(values).size, `${id}:${capability}`).toBe(values.length)
         expect(values.every(value => value.trim().length > 0), `${id}:${capability}`).toBe(true)
+      }
+
+      for (const capability of ["network", "cookies"] as const) {
+        expect(
+          source.capabilities[capability].every(host => CAPABILITY_HOST_PATTERN.test(host)),
+          `${id}:${capability}`,
+        ).toBe(true)
+      }
+    }
+  })
+
+  it("declares every cookie secret origin as a cookie capability", () => {
+    for (const { id, source } of runtimeSources) {
+      for (const secret of source.secrets ?? []) {
+        if (secret.type !== "cookie") {
+          continue
+        }
+
+        const hostname = new URL(secret.origin).hostname
+        expect(
+          source.capabilities.cookies.some(host => matchesCapabilityHost(hostname, host)),
+          `${id}:${secret.key}:${hostname}`,
+        ).toBe(true)
       }
     }
   })

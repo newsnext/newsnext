@@ -73,12 +73,7 @@ export default $provider({
           },
         },
       },
-      capabilities: {
-        network: ["www.v2ex.com"],
-        cookies: [],
-        browser: [],
-      },
-      cache: { version: 1, maxAge: "5m" },
+      cache: "5m",
     }),
   ],
 })

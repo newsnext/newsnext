@@ -1,6 +1,6 @@
-import type { Browser } from "wxt/browser"
+import type { Browser } from "@wxt-dev/browser"
 import { registerService } from "@webext-core/proxy-service"
-import { browser } from "wxt/browser"
+import { browser } from "@wxt-dev/browser"
 import { defineBackground } from "#imports"
 import { installImageRequestRules } from "@/lib/background/image-request-rules"
 import { BACKGROUND_SERVICE_KEY, createBackgroundService } from "@/lib/background/service"

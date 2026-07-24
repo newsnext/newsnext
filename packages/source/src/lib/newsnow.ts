@@ -60,12 +60,7 @@ export default $provider({
           },
         },
       },
-      capabilities: {
-        network: ["www.newsnow.com"],
-        cookies: [],
-        browser: [],
-      },
-      cache: { version: 1, maxAge: "5m" },
+      cache: "5m",
     }),
   ],
 })

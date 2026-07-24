@@ -1,5 +1,5 @@
 import type { RuntimeSource, SourceSecretDefinition, SourceSecrets } from "@newsnext/source/typings"
-import { browser } from "wxt/browser"
+import { browser } from "@wxt-dev/browser"
 import { storage } from "wxt/utils/storage"
 
 type SourceSecretCache = Record<string, Record<string, string>>

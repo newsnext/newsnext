@@ -113,12 +113,7 @@ export default $provider({
           },
         },
       },
-      capabilities: {
-        network: ["github.com"],
-        cookies: [],
-        browser: [],
-      },
-      cache: { version: 1, maxAge: "15m" },
+      cache: "15m",
     }),
   ],
 })

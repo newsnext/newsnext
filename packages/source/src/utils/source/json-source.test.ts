@@ -2,7 +2,7 @@ import type { NewsItem, SourceParamSchemaMap } from "../../typings"
 import type { JsonSourceOptions } from "./json-source"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { myFetch } from "../fetch"
-import { $source } from "./index"
+import { $provider, $source } from "./index"
 import { loadJson } from "./json-source"
 
 // Mock fetch
@@ -95,6 +95,45 @@ describe("$jsonSourceLoader", () => {
 
     const results = await (source as any).loader({})
     expect(results.map((item: NewsItem) => item.title)).toEqual(["Item 1", "Item 2"])
+  })
+
+  it("infers capabilities and expands cache shorthand", () => {
+    const provider = $provider({
+      title: "Test",
+      color: "blue",
+      secrets: [{
+        key: "session",
+        type: "cookie",
+        origin: "https://account.example.com",
+        itemKey: "session",
+      }],
+      sources: [
+        $source({
+          metadata: {
+            key: "test",
+          },
+          loader: {
+            type: "json",
+            url: "https://api.example.com/items",
+            fields: {
+              title: "title",
+              url: "url",
+            },
+          },
+          cache: "5m",
+        }),
+      ],
+    })
+
+    expect(provider.sources.test.capabilities).toEqual({
+      network: ["api.example.com"],
+      cookies: ["account.example.com"],
+      browser: [],
+    })
+    expect(provider.sources.test.cache).toEqual({
+      version: 1,
+      maxAge: "5m",
+    })
   })
 
   it("should handle function resolvers and itemsPath", async () => {
@@ -195,5 +234,68 @@ describe("$jsonSourceLoader", () => {
     expect(myFetch).toHaveBeenCalledWith("https://api.example.com", {
       headers: { authorization: "Bearer token" },
     })
+  })
+
+  it("rejects requests to hosts not declared by the source", async () => {
+    const source = $source({
+      metadata: {
+        key: "test",
+      },
+      params: {
+        endpoint: {
+          type: "url",
+          title: "Endpoint",
+          default: "https://api.example.com/items",
+        },
+      } satisfies SourceParamSchemaMap,
+      loader: {
+        type: "json",
+        url: ({ endpoint }) => endpoint,
+        fields: {
+          title: "title",
+          url: "url",
+        },
+      },
+      cache: "5m",
+    })
+
+    await expect(source.loader({
+      endpoint: "https://private.example.com/items",
+    })).rejects.toThrow(
+      "Source \"test\" attempted to access undeclared host \"private.example.com\"",
+    )
+    expect(myFetch).not.toHaveBeenCalled()
+  })
+
+  it("supports wildcard network capability declarations", async () => {
+    ;(myFetch as any).mockResolvedValue([{ title: "Item", url: "https://example.com/item" }])
+
+    const source = $source({
+      metadata: {
+        key: "test",
+      },
+      params: {
+        endpoint: {
+          type: "url",
+          title: "Endpoint",
+          default: "https://api.example.com/items",
+        },
+      } satisfies SourceParamSchemaMap,
+      loader: {
+        type: "json",
+        url: ({ endpoint }) => endpoint,
+        fields: {
+          title: "title",
+          url: "url",
+        },
+      },
+      capabilities: { network: ["*.example.com"] },
+      cache: "5m",
+    })
+
+    await expect(source.loader({
+      endpoint: "https://feed.api.example.com/items",
+    })).resolves.toHaveLength(1)
+    expect(myFetch).toHaveBeenCalledWith("https://feed.api.example.com/items", undefined)
   })
 })

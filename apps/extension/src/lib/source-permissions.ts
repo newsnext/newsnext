@@ -1,5 +1,5 @@
 import { sourceDescriptors } from "@newsnext/source/metadata"
-import { browser } from "wxt/browser"
+import { browser } from "@wxt-dev/browser"
 
 type OptionalSourcePermission = "bookmarks" | "history"
 

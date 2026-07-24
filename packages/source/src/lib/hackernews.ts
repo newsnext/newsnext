@@ -55,12 +55,7 @@ export default $provider({
         title: "Hottest",
       },
       loader: createLoader("/"),
-      capabilities: {
-        network: ["news.ycombinator.com"],
-        cookies: [],
-        browser: [],
-      },
-      cache: { version: 1, maxAge: "5m" },
+      cache: "5m",
     }),
     $source({
       metadata: {
@@ -70,12 +65,7 @@ export default $provider({
         home: "https://news.ycombinator.com/newest",
       },
       loader: createLoader("/newest"),
-      capabilities: {
-        network: ["news.ycombinator.com"],
-        cookies: [],
-        browser: [],
-      },
-      cache: { version: 1, maxAge: "1m" },
+      cache: "1m",
     }),
     $source({
       metadata: {
@@ -84,12 +74,7 @@ export default $provider({
         home: "https://news.ycombinator.com/show",
       },
       loader: createLoader("/show"),
-      capabilities: {
-        network: ["news.ycombinator.com"],
-        cookies: [],
-        browser: [],
-      },
-      cache: { version: 1, maxAge: "5m" },
+      cache: "5m",
     }),
     $source({
       metadata: {
@@ -98,12 +83,7 @@ export default $provider({
         home: "https://news.ycombinator.com/ask",
       },
       loader: createLoader("/ask"),
-      capabilities: {
-        network: ["news.ycombinator.com"],
-        cookies: [],
-        browser: [],
-      },
-      cache: { version: 1, maxAge: "5m" },
+      cache: "5m",
     }),
   ],
 })

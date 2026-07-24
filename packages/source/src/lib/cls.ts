@@ -84,12 +84,7 @@ export default $provider({
           timestamp: item => item.ctime * 1000,
         },
       },
-      capabilities: {
-        network: ["www.cls.cn"],
-        cookies: [],
-        browser: [],
-      },
-      cache: { version: 1, maxAge: "1m" },
+      cache: "1m",
     }),
     $source({
       metadata: {
@@ -115,12 +110,7 @@ export default $provider({
           timestamp: item => item.ctime * 1000,
         },
       },
-      capabilities: {
-        network: ["www.cls.cn"],
-        cookies: [],
-        browser: [],
-      },
-      cache: { version: 1, maxAge: "5m" },
+      cache: "5m",
     }),
     $source({
       metadata: {
@@ -144,12 +134,7 @@ export default $provider({
           timestamp: item => item.ctime * 1000,
         },
       },
-      capabilities: {
-        network: ["www.cls.cn"],
-        cookies: [],
-        browser: [],
-      },
-      cache: { version: 1, maxAge: "5m" },
+      cache: "5m",
     }),
   ],
 })
