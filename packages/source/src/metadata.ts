@@ -733,26 +733,6 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "id": "xueqiu:hot-stock"
   },
   {
-    "icon": "https://icons.folo.is/www.zaobao.com",
-    "providerTitle": "联合早报",
-    "capabilities": {
-      "network": [
-        "www.zaochenbao.com"
-      ],
-      "cookies": [],
-      "browser": []
-    },
-    "cache": {
-      "version": 1,
-      "maxAge": "5m"
-    },
-    "color": "red",
-    "type": "timeline",
-    "category": "others",
-    "home": "https://www.zaobao.com",
-    "id": "zaobao:realtime"
-  },
-  {
     "icon": "https://icons.folo.is/www.zhihu.com",
     "providerTitle": "知乎",
     "title": "全站热榜",

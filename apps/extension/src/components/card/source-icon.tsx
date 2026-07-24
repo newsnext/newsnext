@@ -18,7 +18,7 @@ export function SourceIcon({
   providerTitle,
 }: SourceIconProps) {
   return (
-    <Avatar className={cn("size-4 rounded-sm after:rounded-sm", className)}>
+    <Avatar className={cn("size-4 rounded-sm after:rounded-sm after:border-0", className)}>
       <AvatarImage
         className="rounded-[inherit]"
         src={icon}

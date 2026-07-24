@@ -13,8 +13,7 @@ import provider_8 from "./lib/telegram"
 import provider_9 from "./lib/tieba"
 import provider_10 from "./lib/v2ex"
 import provider_11 from "./lib/xueqiu"
-import provider_12 from "./lib/zaobao"
-import provider_13 from "./lib/zhihu"
+import provider_12 from "./lib/zhihu"
 
 export const providers = {
   [provider_0.id ?? "aihot"]: provider_0,
@@ -29,6 +28,5 @@ export const providers = {
   [provider_9.id ?? "tieba"]: provider_9,
   [provider_10.id ?? "v2ex"]: provider_10,
   [provider_11.id ?? "xueqiu"]: provider_11,
-  [provider_12.id ?? "zaobao"]: provider_12,
-  [provider_13.id ?? "zhihu"]: provider_13
+  [provider_12.id ?? "zhihu"]: provider_12
 }
