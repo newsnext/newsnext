@@ -31,6 +31,10 @@ export default defineConfig({
   },
   manifest: ({ browser, mode }) => {
     const extensionName = mode === "development" ? "NewsNext Dev" : "NewsNext"
+    // WXT requires "tabs" for development reloads, so it cannot also be optional.
+    const optionalSourcePermissions = mode === "development"
+      ? OPTIONAL_SOURCE_PERMISSIONS.filter(permission => permission !== "tabs")
+      : [...OPTIONAL_SOURCE_PERMISSIONS]
 
     return {
       name: extensionName,
@@ -44,8 +48,8 @@ export default defineConfig({
         "storage",
       ],
       optional_permissions: browser === "firefox"
-        ? [...OPTIONAL_SOURCE_PERMISSIONS, ...OPTIONAL_SOURCE_ORIGINS]
-        : [...OPTIONAL_SOURCE_PERMISSIONS],
+        ? [...optionalSourcePermissions, ...OPTIONAL_SOURCE_ORIGINS]
+        : optionalSourcePermissions,
       optional_host_permissions: browser === "firefox" ? undefined : [...OPTIONAL_SOURCE_ORIGINS],
       web_accessible_resources: browser === "firefox"
         ? ["radar-overlay.html"]

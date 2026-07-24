@@ -29,3 +29,5 @@ web-ext.config.ts
 !.env.example
 dist/
 _lib
+
+note.md
