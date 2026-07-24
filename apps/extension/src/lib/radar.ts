@@ -1,5 +1,5 @@
+import type { Color } from "@newsnext/shared/types"
 import type {
-  Color,
   SourceParamSchemaMap,
   SourceRadarMatch,
   SourceRadarMetaPatch,
@@ -81,7 +81,7 @@ function createRadarSuggestion({
   paramsPatch,
   metaPatch,
   confidence = 1,
-}: Omit<RadarSuggestion, "id">): RadarSuggestion {
+}: Omit<RadarSuggestion, "id" | "confidence"> & { confidence?: number }): RadarSuggestion {
   return {
     id: `${ruleId}:${sourceId}:${stablePatchKey({ paramsPatch, metaPatch })}`,
     ruleId,

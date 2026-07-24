@@ -8,7 +8,7 @@ import {
   SelectItem,
   SelectTrigger,
 } from "@newsnext/ui/components/select"
-import { useEffect, useMemo, useState } from "react"
+import { useMemo } from "react"
 import { cn } from "@/lib/utils"
 
 const editableFieldClassName = "h-6 w-full rounded-3xl border border-transparent bg-transparent px-2 text-sm leading-none text-right shadow-none transition-colors hover:bg-background/40 focus-visible:border-input/50 focus-visible:bg-background/60 focus-visible:ring-1 focus-visible:ring-ring/30"
@@ -20,12 +20,6 @@ export const editableSelectClassName = cn(
 )
 
 export function EditableInput({ text, editable = false, onChange }: { text: string, editable?: boolean, onChange?: (value: string) => void }) {
-  const [value, setValue] = useState(text)
-
-  useEffect(() => {
-    setValue(text)
-  }, [text])
-
   if (!editable) {
     return <Text text={text} />
   }
@@ -33,9 +27,8 @@ export function EditableInput({ text, editable = false, onChange }: { text: stri
   return (
     <Input
       className={editableFieldClassName}
-      value={value}
+      value={text}
       onChange={(e) => {
-        setValue(e.target.value)
         onChange?.(e.target.value)
       }}
       onClick={e => e.stopPropagation()}
@@ -44,15 +37,8 @@ export function EditableInput({ text, editable = false, onChange }: { text: stri
 }
 
 export function NumberInput({ num = 0, step = 1, editable, max = Infinity, min = -Infinity, onChange }: { num?: number, step?: number, editable?: boolean, max?: number, min?: number, onChange?: (value: number) => void }) {
-  const [value, setValue] = useState(num)
-
-  useEffect(() => {
-    setValue(num)
-  }, [num])
-
   const handleChange = (val: number) => {
     const newValue = Math.max(min, Math.min(max, val))
-    setValue(newValue)
     onChange?.(newValue)
   }
 
@@ -64,7 +50,7 @@ export function NumberInput({ num = 0, step = 1, editable, max = Infinity, min =
     <Input
       type="number"
       className={editableFieldClassName}
-      value={value}
+      value={num}
       onChange={e => handleChange(Number(e.target.value))}
       step={step}
       min={min}

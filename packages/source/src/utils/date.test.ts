@@ -1,3 +1,4 @@
+import process from "node:process"
 import MockDate from "mockdate"
 import { describe, expect, it } from "vitest"
 import { parseRelativeDate, tranformToUTC } from "./date"

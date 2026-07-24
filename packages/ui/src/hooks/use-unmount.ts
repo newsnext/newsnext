@@ -8,6 +8,6 @@ export function useUnmount(fn: () => void) {
     () => () => {
       fnRef.current()
     },
-    [],
+    [fnRef],
   )
 }

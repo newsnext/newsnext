@@ -1,6 +1,6 @@
 import type { SourceParamSchema } from "@newsnext/source/typings"
 import type { SourceParamValues } from "@/lib/source-params"
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useState } from "react"
 import {
   getDefaultSourceParamValues,
   sanitizeSourceParamValues,
@@ -11,49 +11,80 @@ export interface UseSourceParamsOptions {
   initialValues?: SourceParamValues
 }
 
-export function useSourceParams({ params, initialValues }: UseSourceParamsOptions) {
-  const [savedParams, setSavedParams] = useState<SourceParamValues>(() => {
-    return sanitizeSourceParamValues(initialValues, params)
-  })
-  const [draftParams, setDraftParams] = useState<SourceParamValues>(savedParams)
+interface SourceParamsState {
+  initialValues?: SourceParamValues
+  params?: Record<string, SourceParamSchema>
+  savedParams: SourceParamValues
+  draftParams: SourceParamValues
+}
 
-  useEffect(() => {
-    const nextSavedParams = sanitizeSourceParamValues(initialValues, params)
-    setSavedParams(nextSavedParams)
-    setDraftParams(nextSavedParams)
-  }, [params, initialValues])
+function createSourceParamsState(
+  params?: Record<string, SourceParamSchema>,
+  initialValues?: SourceParamValues,
+): SourceParamsState {
+  const savedParams = sanitizeSourceParamValues(initialValues, params)
+  return {
+    initialValues,
+    params,
+    savedParams,
+    draftParams: savedParams,
+  }
+}
+
+export function useSourceParams({ params, initialValues }: UseSourceParamsOptions) {
+  const [storedState, setStoredState] = useState<SourceParamsState>(() => (
+    createSourceParamsState(params, initialValues)
+  ))
+  let state = storedState
+
+  if (storedState.params !== params || storedState.initialValues !== initialValues) {
+    state = createSourceParamsState(params, initialValues)
+    setStoredState(state)
+  }
 
   const updateDraftParam = useCallback((key: string, value: unknown) => {
-    setDraftParams(prev => ({
+    setStoredState(prev => ({
       ...prev,
-      [key]: value,
+      draftParams: {
+        ...prev.draftParams,
+        [key]: value,
+      },
     }))
   }, [])
 
   const saveDraftParams = useCallback(() => {
-    const nextParams = sanitizeSourceParamValues(draftParams, params)
-    setSavedParams(nextParams)
-    setDraftParams(nextParams)
+    const nextParams = sanitizeSourceParamValues(state.draftParams, params)
+    setStoredState(prev => ({
+      ...prev,
+      savedParams: nextParams,
+      draftParams: nextParams,
+    }))
     return nextParams
-  }, [draftParams, params])
+  }, [params, state.draftParams])
 
   const resetDraftParams = useCallback(() => {
     const defaults = getDefaultSourceParamValues(params)
-    setSavedParams(defaults)
-    setDraftParams(defaults)
+    setStoredState(prev => ({
+      ...prev,
+      savedParams: defaults,
+      draftParams: defaults,
+    }))
   }, [params])
 
   const discardDraftParams = useCallback(() => {
-    setDraftParams(savedParams)
-  }, [savedParams])
+    setStoredState(prev => ({
+      ...prev,
+      draftParams: prev.savedParams,
+    }))
+  }, [])
 
   const hasParams = Boolean(params && Object.keys(params).length > 0)
-  const isDirty = JSON.stringify(savedParams) !== JSON.stringify(draftParams)
+  const isDirty = JSON.stringify(state.savedParams) !== JSON.stringify(state.draftParams)
 
   return {
     hasParams,
-    savedParams,
-    draftParams,
+    savedParams: state.savedParams,
+    draftParams: state.draftParams,
     isDirty,
     updateDraftParam,
     saveDraftParams,

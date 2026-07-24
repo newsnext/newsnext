@@ -43,7 +43,7 @@ export function DraggableCard({ id, source, ...props }: DraggableCardProps) {
         </IconButton>
       </div>
     ),
-    [],
+    [setHandleRef],
   )
 
   return (

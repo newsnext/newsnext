@@ -2,7 +2,7 @@ import antfu from "@antfu/eslint-config"
 
 export default antfu(
   {
-    react: false,
+    react: true,
     lessOpinionated: true,
     markdown: false,
     stylistic: {
@@ -10,18 +10,46 @@ export default antfu(
     },
     ignores: [
       "public/**",
+      "packages/source/src/index.ts",
+      "packages/source/src/metadata.ts",
     ],
     rules: {
-      "node/prefer-global/process": "off",
-      "style/eol-last": "off",
       "antfu/curly": "error",
       "curly": "off",
       "style/brace-style": ["error", "1tbs"],
-      "eslint-comments/no-unlimited-disable": "off",
-      "no-console": "off",
-      "antfu/no-top-level-await": "off",
       "unused-imports/no-unused-vars": "warn",
-      "no-control-regex": "off",
+    },
+  },
+  {
+    name: "newsnext/command-line-scripts",
+    files: [
+      "packages/source/build.ts",
+      "packages/ui/scripts/**/*.ts",
+    ],
+    rules: {
+      "no-console": "off",
+    },
+  },
+  {
+    name: "newsnext/esm-top-level-await",
+    files: [
+      "**/*.{test,spec}.{ts,tsx}",
+      "packages/source/build.ts",
+    ],
+    rules: {
+      "antfu/no-top-level-await": "off",
+    },
+  },
+  {
+    name: "newsnext/react-refresh-boundaries",
+    files: [
+      "apps/extension/src/components/card/card-back/fields.tsx",
+      "apps/extension/src/entrypoints/**/*.{ts,tsx}",
+      "apps/extension/src/pages/**/*.{ts,tsx}",
+      "packages/ui/src/components/**/*.{ts,tsx}",
+    ],
+    rules: {
+      "react-refresh/only-export-components": "off",
     },
   },
 )

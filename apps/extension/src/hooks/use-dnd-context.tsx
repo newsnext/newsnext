@@ -29,8 +29,8 @@ export function DndContext({ children, autoscroll, ...callback }: PropsWithChild
   }, [callback, instanceId, autoscroll])
 
   return (
-    <InstanceIdContext.Provider value={instanceId}>
+    <InstanceIdContext value={instanceId}>
       {children}
-    </InstanceIdContext.Provider>
+    </InstanceIdContext>
   )
 }

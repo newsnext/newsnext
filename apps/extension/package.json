@@ -13,7 +13,7 @@
     "build:firefox": "wxt build -b firefox",
     "zip:chrome": "wxt zip",
     "zip:firefox": "wxt zip -b firefox",
-    "compile": "tsgo --noEmit",
+    "typecheck": "tsc --noEmit",
     "postinstall": "wxt prepare"
   },
   "dependencies": {
@@ -30,6 +30,7 @@
     "canvas-confetti": "^1.9.4",
     "date-fns": "catalog:",
     "defu": "catalog:",
+    "dompurify": "^3.4.12",
     "es-toolkit": "catalog:",
     "idb": "^8.0.3",
     "jotai": "catalog:",

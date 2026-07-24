@@ -22,7 +22,7 @@ interface Props {
 }
 
 export function Timeline({ items, scrollRef, relativeUpdatedAt, color }: Props) {
-  const gradientIdPrefix = useId().replace(/:/g, "")
+  const gradientId = useId().replace(/:/g, "")
   const now = useAtomValue(minuteDateAtom)
   const timeLabels = useMemo(() => items.map(item => item.timestamp
     ? formatDistance(new Date(item.timestamp), now, {
@@ -44,7 +44,7 @@ export function Timeline({ items, scrollRef, relativeUpdatedAt, color }: Props) 
           >
             <defs>
               <linearGradient
-                id={`${gradientIdPrefix}-${index}`}
+                id={`${gradientId}-${index}`}
                 x1="0"
                 y1="0"
                 x2="0"
@@ -59,7 +59,7 @@ export function Timeline({ items, scrollRef, relativeUpdatedAt, color }: Props) 
             <path
               d={showTimeLabel ? LABEL_RAIL_PATH : RAIL_PATH}
               className="fill-none"
-              stroke={`url(#${gradientIdPrefix}-${index})`}
+              stroke={`url(#${gradientId}-${index})`}
               vectorEffect="non-scaling-stroke"
               strokeWidth={1.25}
               strokeLinecap="round"
@@ -84,7 +84,7 @@ export function Timeline({ items, scrollRef, relativeUpdatedAt, color }: Props) 
         </div>
       </div>
     )
-  }, [color, gradientIdPrefix, items.length, timeLabels])
+  }, [color, gradientId, items.length, timeLabels])
 
   return (
     <VirtualList

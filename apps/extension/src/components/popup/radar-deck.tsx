@@ -189,6 +189,17 @@ interface RadarDeckProps {
 }
 
 export function RadarDeck({ sourceDescriptors, suggestions }: RadarDeckProps) {
+  const deckKey = suggestions.map(suggestion => suggestion.id).join("\0")
+  return (
+    <RadarDeckContent
+      key={deckKey}
+      sourceDescriptors={sourceDescriptors}
+      suggestions={suggestions}
+    />
+  )
+}
+
+function RadarDeckContent({ sourceDescriptors, suggestions }: RadarDeckProps) {
   const upsertLocal = useSetAtom(upsertInstanceAtom)
   const starLocal = useSetAtom(starInstanceAtom)
   const [activeIndex, setActiveIndex] = useState(0)
@@ -215,11 +226,6 @@ export function RadarDeck({ sourceDescriptors, suggestions }: RadarDeckProps) {
 
     return () => window.clearTimeout(timeout)
   }, [celebration, prefersReducedMotion])
-
-  useEffect(() => {
-    setActiveIndex(0)
-    x.set(0)
-  }, [suggestions, x])
 
   useEffect(() => {
     const targetX = getRadarTrackX(activeIndex, trackItemOffset)
@@ -329,7 +335,7 @@ export function RadarDeck({ sourceDescriptors, suggestions }: RadarDeckProps) {
   }, [activeSource, activeSuggestion])
 
   const handleFork = useCallback(() => {
-    if (celebration) {
+    if (celebration || !activeSource) {
       return
     }
 
@@ -344,7 +350,7 @@ export function RadarDeck({ sourceDescriptors, suggestions }: RadarDeckProps) {
   }, [activeSource, celebration, createActiveForkInstance, upsertLocal])
 
   const handleForkAndStar = useCallback(() => {
-    if (celebration) {
+    if (celebration || !activeSource) {
       return
     }
 

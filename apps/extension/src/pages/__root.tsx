@@ -29,7 +29,7 @@ function RootComponent() {
   }), [isNextLayerActive])
 
   return (
-    <ScrollProgressContext.Provider
+    <ScrollProgressContext
       value={scrollProgressContextValue}
     >
       <div
@@ -47,6 +47,6 @@ function RootComponent() {
       <Suspense>
         <TanStackDevtools />
       </Suspense>
-    </ScrollProgressContext.Provider>
+    </ScrollProgressContext>
   )
 }

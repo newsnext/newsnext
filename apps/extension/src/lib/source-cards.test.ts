@@ -10,6 +10,15 @@ const testSources: SourceDescriptor[] = [
     color: "blue",
     category: "tech",
     home: "https://example.com",
+    capabilities: {
+      network: [],
+      cookies: [],
+      browser: [],
+    },
+    cache: {
+      version: 1,
+      maxAge: "5m",
+    },
   },
   {
     id: "test:latest",
@@ -17,6 +26,15 @@ const testSources: SourceDescriptor[] = [
     color: "green",
     category: "tech",
     home: "https://latest.example.com",
+    capabilities: {
+      network: [],
+      cookies: [],
+      browser: [],
+    },
+    cache: {
+      version: 1,
+      maxAge: "5m",
+    },
   },
 ]
 

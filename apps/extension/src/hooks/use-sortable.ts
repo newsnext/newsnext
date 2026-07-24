@@ -18,7 +18,7 @@ interface DraggableState {
   type: "idle" | "dragging"
 }
 
-export function useSortable(props: SortableProps) {
+export function useSortable({ id, onGenerateDragPreview }: SortableProps) {
   const instanceId = use(InstanceIdContext)
   const [draggableState, setDraggableState] = useState<DraggableState>({
     type: "idle",
@@ -45,7 +45,7 @@ export function useSortable(props: SortableProps) {
         draggable({
           element: nodeRef,
           dragHandle: handleRef,
-          getInitialData: () => ({ id: props.id, instanceId }),
+          getInitialData: () => ({ id, instanceId }),
           onGenerateDragPreview({ nativeSetDragImage, location }) {
             setCustomNativeDragPreview({
               getOffset: preserveOffsetOnSource({
@@ -54,7 +54,7 @@ export function useSortable(props: SortableProps) {
               }),
               render({ container }) {
                 setDraggableState({ type: "dragging" })
-                return props.onGenerateDragPreview?.({ container, element: nodeRef })
+                return onGenerateDragPreview?.({ container, element: nodeRef })
               },
               nativeSetDragImage,
             })
@@ -65,14 +65,14 @@ export function useSortable(props: SortableProps) {
         }),
         dropTargetForElements({
           element: nodeRef,
-          getData: () => ({ id: props.id }),
+          getData: () => ({ id }),
           getIsSticky: () => true,
           canDrop: ({ source }) => source.data.instanceId === instanceId,
         }),
       )
       return cleanup
     }
-  }, [props.id, instanceId, handleRef, nodeRef, props.onGenerateDragPreview])
+  }, [handleRef, id, instanceId, nodeRef, onGenerateDragPreview])
 
   return {
     setHandleRef,

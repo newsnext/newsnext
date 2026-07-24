@@ -20,7 +20,7 @@ export function useThrottleFn<Fn extends (...args: any[]) => any>(
         throttleMs ?? 1000,
         options,
       ),
-    [],
+    [fnRef, options, throttleMs],
   )
 
   useUnmount(() => throttledFn.cancel())

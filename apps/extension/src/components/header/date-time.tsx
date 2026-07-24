@@ -5,9 +5,9 @@ import { minuteDateAtom } from "@/hooks/useRelativeTime"
 import { cn } from "@/lib/utils"
 
 function formatTimeWithHighlight(time: string) {
-  return time.split("").map((char, index) => (
-    <span key={index} className={char === "1" ? "text-theme-500" : ""}>
-      {char}
+  return Array.from(time.matchAll(/1|[^1]+/g), match => (
+    <span key={match.index} className={match[0] === "1" ? "text-theme-500" : ""}>
+      {match[0]}
     </span>
   ))
 }

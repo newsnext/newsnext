@@ -6,14 +6,9 @@ import { handleThemeSwitch, THEME_COLOR_KEY } from "@/lib/utils/swith-theme"
 import { Logo } from "../icons/logo"
 
 export function ThemeSelector() {
-  const [currentTheme, setCurrentTheme] = useState("")
-
-  useEffect(() => {
-    const color = localStorage.getItem(THEME_COLOR_KEY)
-    if (color) {
-      setCurrentTheme(color)
-    }
-  }, [])
+  const [currentTheme, setCurrentTheme] = useState(
+    () => localStorage.getItem(THEME_COLOR_KEY) ?? "",
+  )
 
   useEffect(() => {
     if (currentTheme) {

@@ -40,6 +40,11 @@ interface ScatterAnimationState {
   visibleSourceIds: string[]
 }
 
+interface SourceOrderState {
+  sourceIds: string[]
+  orderedSourceIds: string[]
+}
+
 interface DesktopBoardProps {
   sourceIds: string[]
   sourcesMap: Record<string, BoardSource>
@@ -63,7 +68,18 @@ export function DesktopBoard({
   focusedSourceId,
   onFocusedSourceComplete,
 }: DesktopBoardProps) {
-  const [orderedSourceIds, setOrderedSourceIds] = useState(sourceIds)
+  const [sourceOrderState, setSourceOrderState] = useState<SourceOrderState>(() => ({
+    sourceIds,
+    orderedSourceIds: sourceIds,
+  }))
+  let orderedSourceIds = sourceOrderState.orderedSourceIds
+  if (sourceOrderState.sourceIds !== sourceIds) {
+    orderedSourceIds = sourceIds
+    setSourceOrderState({
+      sourceIds,
+      orderedSourceIds,
+    })
+  }
   const initialOrderedSourceIdsRef = useRef(sourceIds)
   const [scatterAnimationState, setScatterAnimationState] = useState<ScatterAnimationState>({
     requestId: 0,
@@ -93,10 +109,6 @@ export function DesktopBoard({
     && scatterAnimationState.requestId === scatterRequestIdRef.current
     && scatterAnimationState.visibleSourceIds.length > 0,
   )
-
-  useEffect(() => {
-    setOrderedSourceIds(sourceIds)
-  }, [sourceIds])
 
   useEffect(() => {
     if (!focusedSourceId) {
@@ -141,13 +153,19 @@ export function DesktopBoard({
     const [movedItem] = newSourceIds.splice(fromIndex, 1)
     newSourceIds.splice(toIndex, 0, movedItem)
 
-    setOrderedSourceIds(newSourceIds)
+    setSourceOrderState(prev => ({
+      ...prev,
+      orderedSourceIds: newSourceIds,
+    }))
   }, [orderedSourceIds])
 
   const onDrop = useCallback(({ location }: BaseEventPayload<ElementDragType>) => {
     // If dropped outside (no targets), revert
     if (location.current.dropTargets.length === 0) {
-      setOrderedSourceIds(initialOrderedSourceIdsRef.current)
+      setSourceOrderState(prev => ({
+        ...prev,
+        orderedSourceIds: initialOrderedSourceIdsRef.current,
+      }))
       return
     }
     onSourceIdsChange?.(orderedSourceIds)
@@ -232,6 +250,8 @@ export function DesktopBoard({
           y: (dy / length) * scale,
         }
       })
+      // This layout measurement must update before paint to avoid a visible position flash.
+      // eslint-disable-next-line react/set-state-in-effect
       setScatterAnimationState({
         requestId: scatterRequestIdRef.current,
         vectors: newVectors,

@@ -149,10 +149,6 @@ function SearchDialogContent(): ReactNode {
     [searchItems, selectedItemId],
   )
 
-  useEffect(() => {
-    setSelectedItemId(prev => searchItems.some(item => item.id === prev) ? prev : (searchItems[0]?.id ?? ""))
-  }, [searchItems])
-
   return (
     <Command
       value={selectedItem?.id}

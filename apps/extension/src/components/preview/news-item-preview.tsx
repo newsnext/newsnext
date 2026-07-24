@@ -5,6 +5,7 @@ import { extractPictures } from "@newsnext/shared/types"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@newsnext/ui/components/hover-card"
 import { useId, useMemo, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
+import { SafeHtml } from "../common/safe-html"
 import { ProxiedImage } from "./proxied-image"
 
 interface NewsItemLinkProps {
@@ -122,7 +123,7 @@ export function NewsItemPreviewContent({
         const { src, scale, radius } = picture
         return (
           <ProxiedImage
-            key={`${src}-${index}`}
+            key={`${src}-${scale ?? 1}-${radius ?? 12}`}
             src={src}
             referrerPolicy="no-referrer"
             alt="preview picture"
@@ -179,9 +180,10 @@ function PreviewIframe({ iframe }: { iframe: AdvancedIframe | string }) {
 
 function PreviewHtml({ html }: { html: string }) {
   return (
-    <div
+    <SafeHtml
+      as="div"
       className="whitespace-pre-wrap wrap-break-word"
-      dangerouslySetInnerHTML={{ __html: html }}
+      html={html}
     />
   )
 }

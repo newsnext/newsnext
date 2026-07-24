@@ -42,15 +42,29 @@ export function SettingsModal({
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
+  const resetKey = `${open}:${initialTab ?? "saved"}`
+  return (
+    <SettingsModalContent
+      key={resetKey}
+      initialTab={initialTab}
+      open={open}
+      onOpenChange={onOpenChange}
+    />
+  )
+}
+
+function SettingsModalContent({
+  initialTab,
+  open,
+  onOpenChange,
+}: {
+  initialTab?: SettingsTabId
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}) {
   const [activeTab, setActiveTab] = useState<SettingsTabId>(() => {
     return readSettingsTab(initialTab)
   })
-
-  useEffect(() => {
-    if (open) {
-      setActiveTab(readSettingsTab(initialTab))
-    }
-  }, [initialTab, open])
 
   const handleTabChange = (tabId: SettingsTabId) => {
     setActiveTab(tabId)

@@ -12,31 +12,44 @@ export interface SourcePermissionState {
   requestPermission: () => Promise<boolean>
 }
 
+interface PermissionState {
+  granted: boolean | undefined
+  sourceId: string
+}
+
+function createPermissionState(sourceId: string): PermissionState {
+  return {
+    granted: getOptionalPermissionForSource(sourceId) ? undefined : true,
+    sourceId,
+  }
+}
+
 export function useSourcePermission(sourceId: string): SourcePermissionState {
   const requiresPermission = Boolean(getOptionalPermissionForSource(sourceId))
-  const [hasPermission, setHasPermission] = useState<boolean | undefined>(
-    requiresPermission ? undefined : true,
-  )
+  const [storedState, setStoredState] = useState<PermissionState>(() => (
+    createPermissionState(sourceId)
+  ))
+  let permissionState = storedState
+  if (storedState.sourceId !== sourceId) {
+    permissionState = createPermissionState(sourceId)
+    setStoredState(permissionState)
+  }
 
   useEffect(() => {
-    if (!requiresPermission) {
-      setHasPermission(true)
-      return
-    }
+    if (!requiresPermission) return
 
     let active = true
-    const updatePermission = async () => {
+    const refreshPermission = async (): Promise<void> => {
       const granted = await hasPermissionToLoadSource(sourceId)
       if (active) {
-        setHasPermission(granted)
+        setStoredState({ granted, sourceId })
       }
     }
-    const handlePermissionChange = () => {
-      void updatePermission()
+    const handlePermissionChange = (): void => {
+      void refreshPermission()
     }
 
-    setHasPermission(undefined)
-    void updatePermission()
+    void refreshPermission()
     browser.permissions.onAdded.addListener(handlePermissionChange)
     browser.permissions.onRemoved.addListener(handlePermissionChange)
 
@@ -49,13 +62,13 @@ export function useSourcePermission(sourceId: string): SourcePermissionState {
 
   const requestPermission = useCallback(async () => {
     const granted = await requestPermissionToLoadSource(sourceId)
-    setHasPermission(granted)
+    setStoredState({ granted, sourceId })
     return granted
   }, [sourceId])
 
   return {
-    canLoad: hasPermission === true,
-    permissionRequired: hasPermission === false,
+    canLoad: permissionState.granted === true,
+    permissionRequired: permissionState.granted === false,
     requestPermission,
   }
 }

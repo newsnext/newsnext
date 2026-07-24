@@ -13,6 +13,10 @@ type UseCarouselParameters = Parameters<typeof useEmblaCarousel>
 type CarouselOptions = UseCarouselParameters[0]
 type CarouselPlugin = UseCarouselParameters[1]
 
+const EMPTY_CAROUSEL_STATE = 0
+const CAN_SCROLL_PREV = 1
+const CAN_SCROLL_NEXT = 2
+
 interface CarouselProps {
   opts?: CarouselOptions
   plugins?: CarouselPlugin
@@ -32,7 +36,7 @@ type CarouselContextProps = {
 const CarouselContext = React.createContext<CarouselContextProps | null>(null)
 
 function useCarousel() {
-  const context = React.useContext(CarouselContext)
+  const context = React.use(CarouselContext)
 
   if (!context) {
     throw new Error("useCarousel must be used within a <Carousel />")
@@ -57,14 +61,30 @@ function Carousel({
     },
     plugins,
   )
-  const [canScrollPrev, setCanScrollPrev] = React.useState(false)
-  const [canScrollNext, setCanScrollNext] = React.useState(false)
+  const subscribeToCarousel = React.useCallback((onStoreChange: () => void) => {
+    if (!api) return () => {}
 
-  const onSelect = React.useCallback((api: CarouselApi) => {
-    if (!api) return
-    setCanScrollPrev(api.canScrollPrev())
-    setCanScrollNext(api.canScrollNext())
-  }, [])
+    api.on("reInit", onStoreChange)
+    api.on("select", onStoreChange)
+
+    return () => {
+      api.off("reInit", onStoreChange)
+      api.off("select", onStoreChange)
+    }
+  }, [api])
+  const getCarouselState = React.useCallback(() => {
+    if (!api) return EMPTY_CAROUSEL_STATE
+
+    return (api.canScrollPrev() ? CAN_SCROLL_PREV : 0)
+      | (api.canScrollNext() ? CAN_SCROLL_NEXT : 0)
+  }, [api])
+  const carouselState = React.useSyncExternalStore(
+    subscribeToCarousel,
+    getCarouselState,
+    () => EMPTY_CAROUSEL_STATE,
+  )
+  const canScrollPrev = Boolean(carouselState & CAN_SCROLL_PREV)
+  const canScrollNext = Boolean(carouselState & CAN_SCROLL_NEXT)
 
   const scrollPrev = React.useCallback(() => {
     api?.scrollPrev()
@@ -92,19 +112,8 @@ function Carousel({
     setApi(api)
   }, [api, setApi])
 
-  React.useEffect(() => {
-    if (!api) return
-    onSelect(api)
-    api.on("reInit", onSelect)
-    api.on("select", onSelect)
-
-    return () => {
-      api?.off("select", onSelect)
-    }
-  }, [api, onSelect])
-
   return (
-    <CarouselContext.Provider
+    <CarouselContext
       value={{
         carouselRef,
         api,
@@ -127,7 +136,7 @@ function Carousel({
       >
         {children}
       </div>
-    </CarouselContext.Provider>
+    </CarouselContext>
   )
 }
 

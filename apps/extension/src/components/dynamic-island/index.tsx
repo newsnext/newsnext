@@ -48,15 +48,13 @@ function DynamicIsland({
   onChange,
   children,
 }: DynamicIslandProps) {
-  const [isHide, setIsHide] = useState(true)
-  const hasMount = useRef(false)
+  const hasMountedRef = useRef(false)
   const [isSmall, setIsSmall] = useState(true)
   const wrapperRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    setIsHide(false)
     if (!isSmall) {
-      hasMount.current = true
+      hasMountedRef.current = true
     }
   }, [isSmall])
 
@@ -81,7 +79,7 @@ function DynamicIsland({
     return () => {
       window.removeEventListener("scroll", onScroll, true)
     }
-  }, [])
+  }, [onClose])
 
   useClickAway(
     () => {
@@ -95,7 +93,6 @@ function DynamicIsland({
   return (
     <div
       ref={wrapperRef}
-      hidden={isHide}
       className={cn(
         "pointer-events-none fixed inset-x-0 top-[--top] z-9999 dark",
         wrapperClassName,
@@ -128,7 +125,7 @@ function DynamicIsland({
           isSmall
             ? [
                 "cursor-pointer select-none duration-300 hover:[--scale:1.05]",
-                (initialAnimation || hasMount.current) && "animate-[turn-to-small_0.4s_ease-out_both]",
+                (initialAnimation || hasMountedRef.current) && "animate-[turn-to-small_0.4s_ease-out_both]",
                 smallClassName,
               ]
             : [

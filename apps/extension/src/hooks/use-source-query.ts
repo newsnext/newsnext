@@ -1,7 +1,7 @@
 import type { NewsItem } from "@/typings/source"
 import { normalizeSourceParams, resolveSource } from "@newsnext/source/service"
 import { useQuery } from "@tanstack/react-query"
-import { useCallback, useMemo } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { buildSourceCacheKey, loadSource } from "@/lib/source-loader"
 // import { useLocalStorageCache } from "./use-local-storage-cache"
 import { getLoginUrlFromError } from "./source-login-error"
@@ -31,6 +31,7 @@ export function useSourceQuery({
   // const storageKey = `${STORAGE_PREFIX}/${sourceId}`
   // const { readCache, writeCache } = useLocalStorageCache<SourceData>(storageKey)
 
+  const [initialUpdatedAt] = useState(Date.now)
   const { data, error, isFetching, isError, refetch: normalRefetch } = useQuery({
     queryKey: [...SOURCE_QUERY_KEY, cacheKey],
     queryFn: () => loadSource(sourceId, normalizedParams, {
@@ -74,6 +75,6 @@ export function useSourceQuery({
     isError,
     errorMessage: error instanceof Error ? error.message : undefined,
     loginUrl: getLoginUrlFromError(error),
-    updatedAt: data?.updatedAt ?? Date.now(),
+    updatedAt: data?.updatedAt ?? initialUpdatedAt,
   }
 }

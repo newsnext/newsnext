@@ -1,6 +1,7 @@
 import type { NewsItem } from "@/typings/source"
 import { extractPictures } from "@newsnext/shared/types"
 import { cn } from "@/lib/utils"
+import { SafeHtml } from "../common/safe-html"
 import { ProxiedImage } from "../preview/proxied-image"
 
 interface NewsItemInlineProps {
@@ -19,11 +20,11 @@ export function NewsItemInline({ item }: NewsItemInlineProps) {
   return (
     <span className="inline-flex max-w-full items-center gap-1 align-middle leading-none">
       {hasMark
-        ? extractPictures(hasMark).map((mark, i) => {
+        ? extractPictures(hasMark).map((mark) => {
             const { src, scale, radius } = mark
             return (
               <ProxiedImage
-                key={`mark-${i}`}
+                key={`${src}-${scale ?? 1}-${radius ?? 4}`}
                 src={src}
                 style={{
                   transform: `scale(${scale ?? 1})`,
@@ -36,7 +37,7 @@ export function NewsItemInline({ item }: NewsItemInlineProps) {
           // for hight
         : <span className="inline-block h-4 -ml-1" />}
       <span className="self-end inline-flex min-w-0 max-w-80 items-center gap-1 truncate text-xs leading-none text-neutral-400/80">
-        {item.inline?.html && <span dangerouslySetInnerHTML={{ __html: item.inline.html }} />}
+        {item.inline?.html && <SafeHtml html={item.inline.html} />}
         {item.inline?.text && <span>{item.inline.text}</span>}
       </span>
     </span>
@@ -51,11 +52,11 @@ interface NewsItemSummaryProps {
 export function NewsItemSummary({ item, className }: NewsItemSummaryProps) {
   return (
     <span className={cn("leading-none line-clamp-3", className)}>
-      {item.inline?.icon && extractPictures(item.inline.icon).map((icon, i) => {
+      {item.inline?.icon && extractPictures(item.inline.icon).map((icon) => {
         const { src, scale, radius } = icon
         return (
           <ProxiedImage
-            key={`icon-${i}`}
+            key={`${src}-${scale ?? 1}-${radius ?? 4}`}
             delay={500}
             src={src}
             style={{
