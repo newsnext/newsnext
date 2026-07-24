@@ -43,7 +43,7 @@
   "scripts": {
     "lint": "bun run --bun eslint .",
     "test": "vitest",
-    "typecheck": "bun run --workspaces typecheck",
+    "typecheck": "tsc -b --noEmit",
     "prepare": "simple-git-hooks",
     "dev": "bun --filter=@newsnext/extension run dev",
     "dev:chrome": "bun --filter=@newsnext/extension run dev:chrome",

@@ -4,7 +4,7 @@ import {
   isCloseRadarOverlayMessage,
   isToggleRadarOverlayMessage,
 } from "@/lib/radar-overlay-message"
-import "@/styles/radar-overlay.css"
+import radarOverlayCss from "@/styles/radar-overlay.css?inline"
 
 const RADAR_OVERLAY_PAGE = "/radar-overlay.html"
 
@@ -27,8 +27,8 @@ function createOverlayContent(): HTMLDialogElement {
 }
 
 export default defineContentScript({
-  matches: ["http://*/*", "https://*/*"],
-  cssInjectionMode: "ui",
+  registration: "runtime",
+  cssInjectionMode: "manual",
   async main(ctx) {
     let isMounted = false
     let ui: ShadowRootContentScriptUi<HTMLDialogElement> | undefined
@@ -48,6 +48,7 @@ export default defineContentScript({
       position: "modal",
       zIndex: 2147483647,
       isolateEvents: true,
+      css: radarOverlayCss,
       onMount(container) {
         const content = createOverlayContent()
         const panel = content.querySelector(".newsnext-radar-panel")

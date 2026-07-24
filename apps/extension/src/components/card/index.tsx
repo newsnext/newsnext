@@ -8,6 +8,7 @@ import { FlipAnimate } from "@/components/common/flip-animate"
 import { useSourceParams } from "@/hooks"
 import { useSourcePermission } from "@/hooks/use-source-permission"
 import { useSourceQuery } from "@/hooks/use-source-query"
+import { getSourcePermissionDescription } from "@/lib/source-permissions"
 import { cn } from "@/lib/utils"
 import {
   resetInstanceParamsAtom,
@@ -40,7 +41,7 @@ function CardContent({ id, source, dragHandle, showStar = true, isDraft = false,
     canLoad,
     permissionRequired,
     requestPermission,
-  } = useSourcePermission(source.sourceId)
+  } = useSourcePermission(source)
   const {
     hasParams,
     savedParams,
@@ -134,6 +135,7 @@ function CardContent({ id, source, dragHandle, showStar = true, isDraft = false,
         isFetching={isFetching}
         sourceErrorMessage={sourceErrorMessage}
         sourceLoginUrl={canLoad ? loginUrl : undefined}
+        sourcePermissionDescription={getSourcePermissionDescription(source)}
         sourcePermissionRequired={permissionRequired}
         updatedAt={updatedAt}
         onRefresh={refetch}

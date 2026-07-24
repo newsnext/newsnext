@@ -33,6 +33,7 @@ interface CardFrontProps {
   isFetching: boolean
   sourceErrorMessage?: string
   sourceLoginUrl?: string
+  sourcePermissionDescription: string
   sourcePermissionRequired: boolean
   updatedAt: number
   onRefresh: () => void
@@ -177,6 +178,7 @@ function CardFrontComponent({
   isFetching,
   sourceErrorMessage,
   sourceLoginUrl,
+  sourcePermissionDescription,
   sourcePermissionRequired,
   updatedAt,
   onRefresh,
@@ -190,7 +192,7 @@ function CardFrontComponent({
   const ref = useRef<HTMLDivElement>(null)
   const relativeTime = useRelativeTime({ date: updatedAt })
   const sourceStatusMessage = sourcePermissionRequired
-    ? `Authorize access to your browser ${title?.toLowerCase() ?? "data"} to continue.`
+    ? sourcePermissionDescription
     : sourceLoginUrl
       ? `Log in to ${providerTitle} to continue.`
       : sourceErrorMessage

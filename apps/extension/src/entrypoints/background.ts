@@ -1,14 +1,11 @@
-import type { Browser } from "#imports"
 import { registerService } from "@webext-core/proxy-service"
 import { browser, defineBackground } from "#imports"
 import { installImageRequestRules } from "@/lib/background/image-request-rules"
+import { registerRadarBadge } from "@/lib/background/radar-badge"
+import { toggleRadarOverlay } from "@/lib/background/radar-overlay"
 import { BACKGROUND_SERVICE_KEY, createBackgroundService } from "@/lib/background/service"
-import { createRadarMatcher } from "@/lib/radar"
-import { TOGGLE_RADAR_OVERLAY_MESSAGE } from "@/lib/radar-overlay-message"
-import { getSourceDescriptors } from "@/lib/sources"
 
 const backgroundService = createBackgroundService()
-const radarMatcher = createRadarMatcher(getSourceDescriptors())
 const DASHBOARD_MENU_ID = "dashboard"
 
 function registerDashboardMenu(): void {
@@ -19,38 +16,10 @@ function registerDashboardMenu(): void {
   })
 }
 
-async function updateRadarBadge(tab: Browser.tabs.Tab): Promise<void> {
-  if (!tab.id) {
-    return
-  }
-
-  const count = tab.url
-    ? radarMatcher.getSuggestions({ url: tab.url, title: tab.title }).length
-    : 0
-
-  await browser.action.setBadgeText({
-    tabId: tab.id,
-    text: count > 0 ? String(count) : "",
-  })
-
-  if (count > 0) {
-    await browser.action.setBadgeBackgroundColor({
-      tabId: tab.id,
-      color: "#ef4444",
-    })
-  }
-}
-
-async function updateActiveRadarBadge(): Promise<void> {
-  const tabs = await browser.tabs.query({ active: true, currentWindow: true })
-  await Promise.all(tabs.map(updateRadarBadge))
-}
-
 export default defineBackground(() => {
   registerService(BACKGROUND_SERVICE_KEY, backgroundService)
+  registerRadarBadge()
   void installImageRequestRules()
-
-  void updateActiveRadarBadge()
 
   browser.runtime.onInstalled.addListener(registerDashboardMenu)
 
@@ -61,26 +30,8 @@ export default defineBackground(() => {
   })
 
   browser.action.onClicked.addListener((tab) => {
-    if (!tab.id) {
-      return
-    }
-
-    void browser.tabs.sendMessage(tab.id, {
-      type: TOGGLE_RADAR_OVERLAY_MESSAGE,
-    }).catch(() => {
-      // Content scripts are unavailable on browser-internal and extension pages.
+    void toggleRadarOverlay(tab).catch(() => {
+      // Scripts cannot be injected into browser-internal and extension pages.
     })
-  })
-
-  browser.tabs.onActivated.addListener(() => {
-    void updateActiveRadarBadge()
-  })
-
-  browser.tabs.onUpdated.addListener((_tabId, changeInfo, tab) => {
-    if (!changeInfo.url && !changeInfo.title) {
-      return
-    }
-
-    void updateRadarBadge(tab)
   })
 })

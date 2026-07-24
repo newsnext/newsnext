@@ -5,6 +5,15 @@ import Icons from "unplugin-icons/vite"
 import TurboConsole from "unplugin-turbo-console/vite"
 import { defineConfig } from "wxt"
 
+const OPTIONAL_SOURCE_PERMISSIONS = [
+  "bookmarks",
+  "cookies",
+  "favicon",
+  "history",
+  "tabs",
+] as const
+const OPTIONAL_SOURCE_ORIGINS = ["*://*/*"] as const
+
 // See https://wxt.dev/api/config.html
 export default defineConfig({
   imports: false,
@@ -28,22 +37,16 @@ export default defineConfig({
       description: "Elegant reading experience, Fastest information reception",
       version: "0.9.0",
       permissions: [
+        "activeTab",
         "contextMenus",
-        "cookies",
         "declarativeNetRequestWithHostAccess",
-        "favicon",
         "scripting",
         "storage",
-        "tabs",
       ],
-      optional_permissions: [
-        "bookmarks",
-        "history",
-      ],
-      host_permissions: [
-        "http://*/*",
-        "https://*/*",
-      ],
+      optional_permissions: browser === "firefox"
+        ? [...OPTIONAL_SOURCE_PERMISSIONS, ...OPTIONAL_SOURCE_ORIGINS]
+        : [...OPTIONAL_SOURCE_PERMISSIONS],
+      optional_host_permissions: browser === "firefox" ? undefined : [...OPTIONAL_SOURCE_ORIGINS],
       web_accessible_resources: browser === "firefox"
         ? ["radar-overlay.html"]
         : [{

@@ -17,13 +17,15 @@ import {
 } from "@/lib/utils/swith-theme"
 import { SegmentedControl } from "../common/segmented-control"
 import { ThemeSelector } from "../common/theme-selector"
+import { PermissionsSettings } from "./permissions"
 
 const SETTINGS_TAB_KEY = "newsnext-settings-tab"
-export type SettingsTabId = "appearance" | "general"
+export type SettingsTabId = "appearance" | "general" | "permissions"
 
 const SETTINGS_TABS: Array<{ id: SettingsTabId, label: string }> = [
   { id: "appearance", label: "Appearance" },
   { id: "general", label: "General" },
+  { id: "permissions", label: "Permissions" },
 ]
 
 const DEFAULT_BOARD_TABS = [
@@ -103,6 +105,7 @@ function SettingsModalContent({
           </DialogHeader>
           {activeTab === "appearance" && <AppearanceSettings />}
           {activeTab === "general" && <GeneralSettings />}
+          {activeTab === "permissions" && <PermissionsSettings />}
         </div>
       </DialogContent>
     </Dialog>
@@ -120,7 +123,7 @@ function readSettingsTab(initialTab?: SettingsTabId): SettingsTabId {
 }
 
 function isSettingsTabId(value: string | null): value is SettingsTabId {
-  return value === "appearance" || value === "general"
+  return value === "appearance" || value === "general" || value === "permissions"
 }
 
 type DefaultBoardOption = "featured" | "forks" | "stars" | "last"
