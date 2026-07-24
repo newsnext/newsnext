@@ -1,6 +1,6 @@
 import type { BackgroundService } from "./background/service"
 import { createProxyService } from "@webext-core/proxy-service"
-import { browser } from "@wxt-dev/browser"
+import { browser } from "#imports"
 import { BACKGROUND_SERVICE_KEY } from "./background/service"
 
 export function createBackgroundClient(): BackgroundService | undefined {

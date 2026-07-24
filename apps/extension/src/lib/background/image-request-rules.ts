@@ -1,4 +1,4 @@
-import { browser } from "@wxt-dev/browser"
+import { browser } from "#imports"
 
 const IMAGE_REQUEST_RULE_ID = 1_000_000_001
 

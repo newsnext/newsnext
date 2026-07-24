@@ -1,7 +1,7 @@
-import type { Browser } from "@wxt-dev/browser"
+import type { Browser } from "#imports"
 import type { RadarContext } from "@/lib/radar"
-import { browser } from "@wxt-dev/browser"
 import { useEffect, useRef, useState } from "react"
+import { browser } from "#imports"
 
 export function useCurrentTabRadarContext(): RadarContext | null {
   const [context, setContext] = useState<RadarContext | null>(null)

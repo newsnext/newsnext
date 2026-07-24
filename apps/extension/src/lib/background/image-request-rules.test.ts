@@ -11,7 +11,7 @@ const { browserMock } = vi.hoisted(() => ({
   },
 }))
 
-vi.mock("@wxt-dev/browser", () => ({
+vi.mock("#imports", () => ({
   browser: browserMock,
 }))
 

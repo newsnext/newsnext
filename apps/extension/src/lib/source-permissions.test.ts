@@ -5,7 +5,7 @@ const permissionApi = vi.hoisted(() => ({
   request: vi.fn(),
 }))
 
-vi.mock("@wxt-dev/browser", () => ({
+vi.mock("#imports", () => ({
   browser: {
     permissions: permissionApi,
   },

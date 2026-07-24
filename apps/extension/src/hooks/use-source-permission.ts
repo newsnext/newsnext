@@ -1,5 +1,5 @@
-import { browser } from "@wxt-dev/browser"
 import { useCallback, useEffect, useState } from "react"
+import { browser } from "#imports"
 import {
   getOptionalPermissionForSource,
   hasPermissionToLoadSource,
