@@ -1,21 +1,16 @@
 import type { Browser } from "#imports"
 import { browser } from "#imports"
 import { createRadarMatcher } from "@/lib/radar"
-import {
-  clearRadarBadges,
-  isRadarBadgeActive,
-  RADAR_BADGE_ENABLED_KEY,
-} from "@/lib/radar-badge-settings"
 import { getSourceDescriptors } from "@/lib/sources"
 
 const radarMatcher = createRadarMatcher(getSourceDescriptors())
 
-async function updateRadarBadge(tab: Browser.tabs.Tab, enabled: boolean): Promise<void> {
+async function updateRadarBadge(tab: Browser.tabs.Tab): Promise<void> {
   if (tab.id === undefined) {
     return
   }
 
-  const count = enabled && tab.url
+  const count = tab.url
     ? radarMatcher.getSuggestions({ url: tab.url, title: tab.title }).length
     : 0
 
@@ -33,24 +28,12 @@ async function updateRadarBadge(tab: Browser.tabs.Tab, enabled: boolean): Promis
 }
 
 export function registerRadarBadge(): void {
-  let enabled = false
-
   const updateActiveRadarBadge = async (): Promise<void> => {
     const tabs = await browser.tabs.query({ active: true, currentWindow: true })
-    await Promise.all(tabs.map(tab => updateRadarBadge(tab, enabled)))
+    await Promise.all(tabs.map(updateRadarBadge))
   }
 
-  const syncState = async (): Promise<void> => {
-    enabled = await isRadarBadgeActive()
-
-    if (enabled) {
-      await updateActiveRadarBadge()
-    } else {
-      await clearRadarBadges()
-    }
-  }
-
-  void syncState()
+  void updateActiveRadarBadge()
 
   browser.tabs.onActivated.addListener(() => {
     void updateActiveRadarBadge()
@@ -60,21 +43,6 @@ export function registerRadarBadge(): void {
       return
     }
 
-    void updateRadarBadge(tab, enabled)
-  })
-  browser.storage.onChanged.addListener((changes, areaName) => {
-    if (areaName === "local" && RADAR_BADGE_ENABLED_KEY in changes) {
-      void syncState()
-    }
-  })
-  browser.permissions.onAdded.addListener((permissions) => {
-    if (permissions.permissions?.includes("tabs")) {
-      void syncState()
-    }
-  })
-  browser.permissions.onRemoved.addListener((permissions) => {
-    if (permissions.permissions?.includes("tabs")) {
-      void syncState()
-    }
+    void updateRadarBadge(tab)
   })
 }

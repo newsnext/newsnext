@@ -10,7 +10,6 @@ const OPTIONAL_SOURCE_PERMISSIONS = [
   "cookies",
   "favicon",
   "history",
-  "tabs",
 ] as const
 const OPTIONAL_SOURCE_ORIGINS = ["*://*/*"] as const
 
@@ -31,10 +30,6 @@ export default defineConfig({
   },
   manifest: ({ browser, mode }) => {
     const extensionName = mode === "development" ? "NewsNext Dev" : "NewsNext"
-    // WXT requires "tabs" for development reloads, so it cannot also be optional.
-    const optionalSourcePermissions = mode === "development"
-      ? OPTIONAL_SOURCE_PERMISSIONS.filter(permission => permission !== "tabs")
-      : [...OPTIONAL_SOURCE_PERMISSIONS]
 
     return {
       name: extensionName,
@@ -46,10 +41,11 @@ export default defineConfig({
         "declarativeNetRequestWithHostAccess",
         "scripting",
         "storage",
+        "tabs",
       ],
       optional_permissions: browser === "firefox"
-        ? [...optionalSourcePermissions, ...OPTIONAL_SOURCE_ORIGINS]
-        : optionalSourcePermissions,
+        ? [...OPTIONAL_SOURCE_PERMISSIONS, ...OPTIONAL_SOURCE_ORIGINS]
+        : [...OPTIONAL_SOURCE_PERMISSIONS],
       optional_host_permissions: browser === "firefox" ? undefined : [...OPTIONAL_SOURCE_ORIGINS],
       web_accessible_resources: browser === "firefox"
         ? ["radar-overlay.html"]

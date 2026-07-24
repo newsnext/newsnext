@@ -6,18 +6,7 @@ import {
   revokeHostPermissionOrigin,
 } from "@/lib/host-permissions"
 
-type ManagedPermission = "bookmarks" | "history" | "tabs"
-
-const MANAGED_PERMISSIONS: Array<{
-  description: string
-  id: ManagedPermission
-  label: string
-}> = [
-  {
-    id: "tabs",
-    label: "Tabs",
-    description: "Reads open tab URLs and titles to show matching Radar source counts on the extension icon.",
-  },
+const MANAGED_PERMISSIONS = [
   {
     id: "bookmarks",
     label: "Bookmarks",
@@ -28,7 +17,13 @@ const MANAGED_PERMISSIONS: Array<{
     label: "History",
     description: "Reads browser history to load the History source.",
   },
-]
+] as const satisfies ReadonlyArray<{
+  description: string
+  id: string
+  label: string
+}>
+
+type ManagedPermission = typeof MANAGED_PERMISSIONS[number]["id"]
 
 function getOriginLabel(origin: string): string {
   return origin
