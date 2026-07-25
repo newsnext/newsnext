@@ -11,6 +11,7 @@ import {
   PhPencilCircleDuotone,
 } from "@/components/icons/ph"
 import { useRelativeTime } from "@/hooks/useRelativeTime"
+import { resolveSourceIconUrl } from "@/lib/source-icon"
 import { cn } from "@/lib/utils"
 import { IconButton } from "../../common/button"
 import { CardHeader } from "../card-header"
@@ -55,7 +56,7 @@ export function CardBack({
 }: CardBackProps) {
   const isCustom = source.isCustom
 
-  const { desc, color, params, icon, providerTitle, title, home } = source
+  const { desc, color, params, icon, providerTitle, sourceIcon, title, home } = source
   const [editDraft, setEditDraft] = useState<SourceEditDraft | null>(null)
   const canEdit = isCustom && editDraft !== null
   const previewProviderTitle = canEdit ? editDraft.providerTitle : providerTitle
@@ -64,6 +65,7 @@ export function CardBack({
   const previewHome = canEdit ? editDraft.home : home
   const previewColor = canEdit ? editDraft.color : color
   const relativeTime = useRelativeTime({ date: updatedAt })
+  const resolvedSourceIcon = resolveSourceIconUrl(sourceIcon, sourceParams)
   const hasSourceMetaChanges = Boolean(
     editDraft
     && (
@@ -128,6 +130,7 @@ export function CardBack({
           home={previewHome}
           icon={icon}
           providerTitle={previewProviderTitle}
+          sourceIcon={resolvedSourceIcon}
           title={previewTitle}
           subtitle={previewDesc || relativeTime}
           actions={(

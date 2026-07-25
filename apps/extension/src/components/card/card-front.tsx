@@ -4,6 +4,7 @@ import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { useAtomValue, useSetAtom } from "jotai"
 import { memo, useCallback, useMemo, useRef } from "react"
 import { useRelativeTime } from "@/hooks/useRelativeTime"
+import { resolveSourceIconUrl } from "@/lib/source-icon"
 import { cn } from "@/lib/utils"
 import { instanceStarredAtom, starInstanceAtom } from "@/store/board"
 import { IconButton } from "../common/button"
@@ -28,6 +29,7 @@ import { Timeline } from "./timeline"
 interface CardFrontProps {
   id: string
   source: BoardSource
+  sourceParams: Record<string, unknown>
   items: NewsItem[]
   isFetching: boolean
   sourceErrorMessage?: string
@@ -168,6 +170,7 @@ function CardFrontContent({
 function CardFrontComponent({
   id,
   source,
+  sourceParams,
   items,
   isFetching,
   sourceErrorMessage,
@@ -182,9 +185,10 @@ function CardFrontComponent({
   actions,
   dragHandle,
 }: CardFrontProps) {
-  const { type, color, desc, icon, providerTitle, title, home } = source
+  const { type, color, desc, icon, providerTitle, sourceIcon, title, home } = source
   const ref = useRef<HTMLDivElement>(null)
   const relativeTime = useRelativeTime({ date: updatedAt })
+  const resolvedSourceIcon = resolveSourceIconUrl(sourceIcon, sourceParams)
   const sourceStatusMessage = sourcePermissionRequired
     ? sourcePermissionDescription
     : sourceLoginUrl
@@ -208,6 +212,7 @@ function CardFrontComponent({
           home={home}
           icon={icon}
           providerTitle={providerTitle}
+          sourceIcon={resolvedSourceIcon}
           title={title}
           subtitle={isFetching ? "Updating..." : relativeTime}
           actions={actions ?? (

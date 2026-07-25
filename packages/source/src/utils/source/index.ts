@@ -167,6 +167,7 @@ export function $provider(
       const registeredSource: RuntimeSource = {
         icon: provider.icon,
         providerTitle: source.providerTitle ?? provider.title,
+        sourceIcon: source.sourceIcon,
         key: source.key,
         title: source.title,
         params: source.params,

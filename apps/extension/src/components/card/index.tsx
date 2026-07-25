@@ -131,6 +131,7 @@ function CardContent({ id, source, dragHandle, showStar = true, isDraft = false,
       <CardFront
         id={id}
         source={source}
+        sourceParams={savedParams}
         items={items}
         isFetching={isFetching}
         sourceErrorMessage={sourceErrorMessage}

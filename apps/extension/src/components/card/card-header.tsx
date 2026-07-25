@@ -9,6 +9,7 @@ interface CardHeaderProps {
   home?: string
   icon?: string
   providerTitle: string
+  sourceIcon?: string
   title?: string
   subtitle: ReactNode
   actions: ReactNode
@@ -21,6 +22,7 @@ export function CardHeader({
   home,
   icon,
   providerTitle,
+  sourceIcon,
   title,
   subtitle,
   actions,
@@ -45,6 +47,7 @@ export function CardHeader({
             className="size-full rounded-full after:rounded-full"
             icon={icon}
             providerTitle={providerTitle}
+            sourceIcon={sourceIcon}
           />
         </button>
         <div className="flex flex-col min-w-0 flex-1">

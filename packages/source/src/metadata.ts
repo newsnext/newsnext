@@ -553,6 +553,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
   {
     "icon": "https://icons.folo.is/t.me",
     "providerTitle": "Telegram",
+    "sourceIcon": "https://t.me/i/userpic/320/{channel}.jpg",
     "title": "科技圈 在花频道",
     "params": {
       "channel": {

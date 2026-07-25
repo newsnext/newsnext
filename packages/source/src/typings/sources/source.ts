@@ -100,6 +100,7 @@ export interface SourceMetadata {
   key: string
   title?: string
   providerTitle?: string
+  sourceIcon?: string
   desc?: string
   type?: "hottest" | "timeline"
   category?: CategoryId
@@ -131,6 +132,7 @@ export interface SourceRegistration<TParams extends SourceParamSchemaMap = Sourc
   cache: SourceCacheConfig
   color?: Color
   providerTitle?: string
+  sourceIcon?: string
   desc?: string
   type?: "hottest" | "timeline"
   category?: CategoryId

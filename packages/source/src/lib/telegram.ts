@@ -59,6 +59,7 @@ export default $provider({
       metadata: {
         key: "channel",
         title: "科技圈 在花频道",
+        sourceIcon: "https://t.me/i/userpic/320/{channel}.jpg",
         type: "timeline",
       },
       params: {
