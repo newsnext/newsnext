@@ -391,12 +391,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
         "type": "text",
         "default": "19723756",
         "title": "Playlist",
-        "pattern": "^\\d+$",
-        "transforms": [
-          {
-            "type": "trim"
-          }
-        ]
+        "pattern": "^\\d+$"
       }
     },
     "capabilities": {
@@ -536,15 +531,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
         "default": "TestFlightCN",
         "title": "Channel",
         "pattern": "^(?![\\d_])\\w{5,32}$",
-        "transforms": [
-          {
-            "type": "trim"
-          },
-          {
-            "type": "removePrefix",
-            "value": "@"
-          }
-        ]
+        "template": "{{ value | remove_first: '@' }}"
       }
     },
     "capabilities": {
@@ -618,12 +605,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
         "type": "text",
         "title": "Feed",
         "default": "ideas",
-        "pattern": ".+",
-        "transforms": [
-          {
-            "type": "trim"
-          }
-        ]
+        "pattern": ".+"
       }
     },
     "capabilities": {

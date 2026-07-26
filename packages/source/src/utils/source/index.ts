@@ -17,7 +17,7 @@ import type { HtmlSourceOptions } from "./html-source"
 import type { JsonSourceOptions } from "./json-source"
 
 import { parseSourceParamValue } from "../params"
-import { isTemplate, renderTemplate, validateTemplates } from "../template"
+import { renderTemplates, validateTemplates } from "../template"
 import { assertNetworkCapability } from "./capabilities"
 import { loadHtml } from "./html-source"
 import { loadJson, validateJsonExpression } from "./json-source"
@@ -32,6 +32,7 @@ interface SourceConfigBase<TParams extends SourceParamSchemaMap> extends Omit<So
 type SourceCapabilityOverrides = Partial<SourceCapabilities>
 
 const PARAM_TEMPLATE_ROOTS = ["params"] as const
+const PARAM_VALUE_TEMPLATE_ROOTS = ["value"] as const
 const FIELD_TEMPLATE_ROOTS = ["index", "item", ...PARAM_TEMPLATE_ROOTS, "requestUrl", "value"] as const
 const JSON_FIELD_TEMPLATE_ROOTS = [...FIELD_TEMPLATE_ROOTS, "json"] as const
 const RADAR_URL_TEMPLATE_ROOTS = ["hashQuery", "path", "query"] as const
@@ -43,36 +44,33 @@ const RADAR_METADATA_TEMPLATE_ROOTS = [
 
 type IsAny<T> = 0 extends (1 & T) ? true : false
 
-type SourceOption<TParams extends SourceParamSchemaMap, TValue>
-  = TValue | ((params: IsAny<TParams> extends true ? any : InferSourceParams<TParams>) => TValue)
-
 type SourceLoaderOption<TParams extends SourceParamSchemaMap>
   = IsAny<TParams> extends true
     ? (...args: any[]) => Promise<ReturnType<SourceLoader> extends Promise<infer Result> ? Result : never>
     : SourceLoader<TParams>
 
-type StructuredSourceLoaderConfig<TParams extends SourceParamSchemaMap>
+type StructuredSourceLoaderConfig
   = (
     | ({
       type: "json"
-      url: SourceOption<TParams, string>
-      fetchOptions?: SourceOption<TParams, NonNullable<JsonSourceOptions["fetchOptions"]>>
+      url: string
+      fetchOptions?: NonNullable<JsonSourceOptions["fetchOptions"]>
     } & Omit<JsonSourceOptions, "url" | "type" | "fetchOptions">)
     | ({
       type: "html"
-      url: SourceOption<TParams, string>
-      fetchOptions?: SourceOption<TParams, NonNullable<HtmlSourceOptions["fetchOptions"]>>
+      url: string
+      fetchOptions?: NonNullable<HtmlSourceOptions["fetchOptions"]>
     } & Omit<HtmlSourceOptions, "url" | "type" | "fetchOptions">)
     | {
       type: "rss"
-      url: SourceOption<TParams, string>
+      url: string
     }
   )
 
 export type SourceConfig<TParams extends SourceParamSchemaMap = any>
   = SourceConfigBase<TParams> & (
     | {
-      loader: StructuredSourceLoaderConfig<TParams>
+      loader: StructuredSourceLoaderConfig
       capabilities?: SourceCapabilityOverrides
     }
     | {
@@ -85,6 +83,10 @@ export type SourceConfig<TParams extends SourceParamSchemaMap = any>
   )
 
 export function validateSourceTemplates(sourceId: string, config: SourceConfig): void {
+  validateTemplates(config.params, `${sourceId}.params`, {
+    allowedRoots: PARAM_VALUE_TEMPLATE_ROOTS,
+  })
+
   if (config.sourceIcon) {
     validateTemplates(config.sourceIcon, `${sourceId}.sourceIcon`, {
       allowedRoots: PARAM_TEMPLATE_ROOTS,
@@ -96,6 +98,11 @@ export function validateSourceTemplates(sourceId: string, config: SourceConfig):
     validateTemplates(loader.url, `${sourceId}.loader.url`, {
       allowedRoots: PARAM_TEMPLATE_ROOTS,
     })
+    if (loader.type === "json" || loader.type === "html") {
+      validateTemplates(loader.fetchOptions, `${sourceId}.loader.fetchOptions`, {
+        allowedRoots: PARAM_TEMPLATE_ROOTS,
+      })
+    }
   }
 
   if (loader.type === "json") {
@@ -197,14 +204,14 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
       return {
         ...registration,
         loader: async (loaderParams) => {
-          const resolvedUrl = resolveSourceOption(url, loaderParams)
+          const resolvedUrl = resolveSourceTemplates(url, loaderParams)
           assertNetworkCapability(key, resolvedUrl, capabilities.network)
           return loadJson({
             ...options,
             url: resolvedUrl,
             fetchOptions: fetchOptions === undefined
               ? undefined
-              : resolveSourceOption(fetchOptions, loaderParams),
+              : resolveSourceTemplates(fetchOptions, loaderParams),
             type: metadata.type,
           }, {
             params: loaderParams,
@@ -217,14 +224,14 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
       return {
         ...registration,
         loader: async (loaderParams) => {
-          const resolvedUrl = resolveSourceOption(url, loaderParams)
+          const resolvedUrl = resolveSourceTemplates(url, loaderParams)
           assertNetworkCapability(key, resolvedUrl, capabilities.network)
           return loadHtml({
             ...options,
             url: resolvedUrl,
             fetchOptions: fetchOptions === undefined
               ? undefined
-              : resolveSourceOption(fetchOptions, loaderParams),
+              : resolveSourceTemplates(fetchOptions, loaderParams),
             type: metadata.type,
           }, {
             params: loaderParams,
@@ -237,7 +244,7 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
       return {
         ...registration,
         loader: async (loaderParams) => {
-          const resolvedUrl = resolveSourceOption(url, loaderParams)
+          const resolvedUrl = resolveSourceTemplates(url, loaderParams)
           assertNetworkCapability(key, resolvedUrl, capabilities.network)
           return loadRss({ url: resolvedUrl })
         },
@@ -331,19 +338,11 @@ export function resolveProvider(
   }
 }
 
-function resolveSourceOption<TParams extends SourceParamSchemaMap, TValue>(
-  option: SourceOption<TParams, TValue>,
+function resolveSourceTemplates<TParams extends SourceParamSchemaMap, TValue>(
+  option: TValue,
   params: InferSourceParams<TParams>,
 ): TValue {
-  if (typeof option === "function") {
-    return (option as (params: InferSourceParams<TParams>) => TValue)(params)
-  }
-
-  if (typeof option === "string" && isTemplate(option)) {
-    return renderTemplate(option, { params }) as TValue
-  }
-
-  return option
+  return renderTemplates(option, { params })
 }
 
 function resolveDefaultParams<TParams extends SourceParamSchemaMap>(
@@ -358,7 +357,7 @@ function resolveDefaultParams<TParams extends SourceParamSchemaMap>(
 }
 
 function resolveSourceCapabilities<TParams extends SourceParamSchemaMap>(
-  loader: StructuredSourceLoaderConfig<TParams> | { type: "custom", load: SourceLoader<TParams> },
+  loader: StructuredSourceLoaderConfig | { type: "custom", load: SourceLoader<TParams> },
   params: TParams | undefined,
   overrides: SourceCapabilityOverrides | undefined,
 ): SourceCapabilities {
@@ -366,7 +365,7 @@ function resolveSourceCapabilities<TParams extends SourceParamSchemaMap>(
 
   if (loader.type !== "custom") {
     const defaultParams = resolveDefaultParams(params)
-    const requestUrl = resolveSourceOption(loader.url, defaultParams)
+    const requestUrl = resolveSourceTemplates(loader.url, defaultParams)
 
     inferredNetworkHosts.push(new URL(requestUrl).hostname)
   }

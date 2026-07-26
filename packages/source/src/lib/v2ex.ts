@@ -12,7 +12,6 @@ export default {
           title: "Feed",
           default: "ideas",
           pattern: ".+",
-          transforms: [{ type: "trim" }],
         },
       },
       radar: [

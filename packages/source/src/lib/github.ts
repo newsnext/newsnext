@@ -56,7 +56,7 @@ export default {
       ],
       loader: {
         type: "html",
-        url: "https://github.com/trending{% assign language = params.language | strip %}{% if language %}/{{ language | url_path }}{% endif %}?since={{ params.dateRange | url_query }}{% assign spoken_language = params.spokenLanguage | strip %}{% if spoken_language %}&spoken_language_code={{ spoken_language | url_query }}{% endif %}",
+        url: "https://github.com/trending{% if params.language %}/{{ params.language | url_path }}{% endif %}?since={{ params.dateRange | url_query }}{% if params.spokenLanguage %}&spoken_language_code={{ params.spokenLanguage | url_query }}{% endif %}",
         items: "main .Box div[data-hpc] > article",
         fields: {
           title: {

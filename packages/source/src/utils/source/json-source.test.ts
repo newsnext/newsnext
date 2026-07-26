@@ -175,6 +175,47 @@ describe("jSON source loader", () => {
     })).toThrow("JMESPath property \"constructor\" is not allowed")
   })
 
+  it("restricts parameter templates to the raw value", () => {
+    expect(() => createSource({
+      params: {
+        topic: {
+          type: "text",
+          title: "Topic",
+          default: "news",
+          template: "{{ params.topic }}",
+        },
+      },
+      loader: {
+        type: "json",
+        url: "https://api.example.com",
+        fields: {
+          title: "title",
+          url: "url",
+        },
+      },
+      cache: "5m",
+    })).toThrow("Invalid Liquid template at test:test.params.topic.template")
+  })
+
+  it("restricts fetch option templates to parsed parameters", () => {
+    expect(() => createSource({
+      loader: {
+        type: "json",
+        url: "https://api.example.com",
+        fetchOptions: {
+          headers: {
+            authorization: "Bearer {{ value }}",
+          },
+        },
+        fields: {
+          title: "title",
+          url: "url",
+        },
+      },
+      cache: "5m",
+    })).toThrow("Invalid Liquid template at test:test.loader.fetchOptions.headers.authorization")
+  })
+
   it("should preserve original order for hottest sources", async () => {
     const data = [
       { id: 1, title: "Item 1", link: "/1", ts: 100 },
@@ -393,22 +434,26 @@ describe("jSON source loader", () => {
     expect(results[0].title).toBe("Custom")
   })
 
-  it("should allow parsed runtime params to flow into fetch options", async () => {
+  it("should render parameterized fetch options with Liquid", async () => {
     ;(myFetch as any).mockResolvedValue([{ title: "Parsed", url: "https://example.com" }])
 
     const source = createSource({
       params: {
-        headers: {
+        token: {
           type: "text",
-          default: "{}",
-          title: "Headers",
-          parse: (value: unknown) => JSON.parse(String(value)) as Record<string, string>,
+          default: "",
+          title: "Token",
+          template: "{{ value | strip }}",
         },
       } satisfies SourceParamSchemaMap,
       loader: {
         type: "json",
         url: "https://api.example.com",
-        fetchOptions: ({ headers }) => ({ headers }),
+        fetchOptions: {
+          headers: {
+            authorization: "Bearer {{ params.token }}",
+          },
+        },
         fields: {
           title: "title",
           url: "url",
@@ -419,7 +464,7 @@ describe("jSON source loader", () => {
     })
 
     await (source as any).loader({
-      headers: { authorization: "Bearer token" },
+      token: "token",
     })
 
     expect(myFetch).toHaveBeenCalledWith("https://api.example.com", {
@@ -438,7 +483,7 @@ describe("jSON source loader", () => {
       } satisfies SourceParamSchemaMap,
       loader: {
         type: "json",
-        url: ({ endpoint }) => endpoint,
+        url: "{{ params.endpoint }}",
         fields: {
           title: "title",
           url: "url",
@@ -468,7 +513,7 @@ describe("jSON source loader", () => {
       } satisfies SourceParamSchemaMap,
       loader: {
         type: "json",
-        url: ({ endpoint }) => endpoint,
+        url: "{{ params.endpoint }}",
         fields: {
           title: "title",
           url: "url",

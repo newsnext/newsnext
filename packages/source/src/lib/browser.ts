@@ -110,7 +110,7 @@ function findBookmarkFolder(
   folder: string,
   path: string[] = [],
 ): Browser.bookmarks.BookmarkTreeNode | undefined {
-  const normalizedFolder = folder.trim().toLowerCase()
+  const normalizedFolder = folder.toLowerCase()
   for (const node of nodes) {
     const currentPath = getBookmarkFolderPath(path, node)
     const normalizedPath = currentPath.join("/").toLowerCase()
@@ -164,7 +164,7 @@ async function fetchBrowserHistory({
   maxResults,
 }: BrowserHistoryParams): Promise<NewsItem[]> {
   const searchQuery: Browser.history.HistoryQuery = {
-    text: query.trim(),
+    text: query,
     maxResults,
   }
   const startTime = getStartTime(dateRange)
@@ -177,7 +177,7 @@ async function fetchBrowserHistory({
 }
 
 async function readBookmarks(folder: string): Promise<Browser.bookmarks.BookmarkTreeNode[]> {
-  const normalizedFolder = folder.trim()
+  const normalizedFolder = folder
   if (!normalizedFolder) {
     return browser.bookmarks.getTree()
   }

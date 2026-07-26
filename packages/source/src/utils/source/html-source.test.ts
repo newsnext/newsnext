@@ -431,7 +431,7 @@ describe("hTML source loader", () => {
     expect(results[0].title).toBe("Pinned")
   })
 
-  it("should handle params in url function", async () => {
+  it("should handle params in a URL template", async () => {
     ;(myFetch as any).mockResolvedValue("<div class=\"item\"></div>")
 
     const source = createSource({
@@ -440,7 +440,7 @@ describe("hTML source loader", () => {
       } satisfies SourceParamSchemaMap,
       loader: {
         type: "html",
-        url: params => `https://example.com?p=${params.page}`,
+        url: "https://example.com?p={{ params.page | url_query }}",
         items: ".item",
         fields: { title: ".t", url: ".u" },
       },

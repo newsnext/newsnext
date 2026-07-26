@@ -121,6 +121,24 @@ export function renderHtmlTemplate(template: string, context: object): string {
   return getRenderer(template, "html")(context)
 }
 
+export function renderTemplates<T>(value: T, context: object): T {
+  if (typeof value === "string") {
+    return (isTemplate(value) ? renderTemplate(value, context) : value) as T
+  }
+
+  if (Array.isArray(value)) {
+    return value.map(child => renderTemplates(child, context)) as T
+  }
+
+  if (!value || typeof value !== "object" || Object.getPrototypeOf(value) !== Object.prototype) {
+    return value
+  }
+
+  return Object.fromEntries(
+    Object.entries(value).map(([key, child]) => [key, renderTemplates(child, context)]),
+  ) as T
+}
+
 export function validateTemplate(
   template: string,
   options: TemplateValidationOptions = {},

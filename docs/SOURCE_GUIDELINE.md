@@ -23,7 +23,7 @@ provider
 The configuration follows four pipelines:
 
 ```text
-parameters  raw → transforms → type coercion → validation
+parameters  raw → trim strings → Liquid template → type coercion → validation
 radar       URL → explicit parameter Liquid → metadata Liquid
 JSON field  JMESPath select → Liquid template
 HTML field  CSS select → text/attr/content → Liquid template
@@ -156,69 +156,31 @@ String-like parameters support declarative validation:
 }
 ```
 
-String-like parameters also support declarative transforms:
+All string inputs are trimmed automatically before templates, type coercion,
+and validation.
+
+Use a Liquid template to normalize a parameter before type coercion and
+validation. The raw value or default is available as `value`:
 
 ```ts
 {
   type: "text",
   title: "Channel",
   default: "example",
-  transforms: [
-    { type: "trim" },
-    { type: "removePrefix", value: "@" },
-  ],
+  template: "{{ value | remove_first: '@' }}",
   pattern: "^[A-Za-z][A-Za-z0-9_]+$",
 }
 ```
 
-Available parameter transforms are:
-
-```ts
-{ type: "trim" }
-{ type: "normalizeWhitespace" }
-{ type: "lowercase" }
-{ type: "uppercase" }
-{ type: "removePrefix", value: "@" }
-{ type: "removeSuffix", value: ".json" }
-{ type: "replace", search: "-", replacement: "_" }
-{ type: "replace", search: "-", replacement: "_", all: false }
-```
-
-They run in declaration order before type coercion and validation:
-
-```text
-raw value or default → transforms → type coercion/parse → validation
-```
-
-Parameter transforms are available to `text`, `url`, and `select` parameters.
-A parameter may declare at most eight transforms.
-
-`replace` performs literal string matching, not regular-expression matching.
-It replaces all matches by default; set `all: false` to replace only the first.
-The search value must not be empty. Parameter values are limited to 20,000
-characters and replacement text to 256 characters.
-
-Built-in sources may still provide runtime parsing or validation functions for
-output types or rules that cannot be represented declaratively:
-
-```ts
-{
-  type: "text",
-  title: "Headers",
-  default: "{}",
-  parse: value => JSON.parse(String(value)) as Record<string, string>,
-  validate: value => Object.keys(value).length <= 20 || "Too many headers",
-}
-```
-
-Function-based `parse` and `validate` cannot be represented in serialized
-user-authored sources. Prefer declarative transforms and validation whenever
-they can express the same behavior.
+Parameter templates are serializable and use the same restricted LiquidJS
+environment and filters as other source templates. Only the `value` root is
+available.
 
 ## Liquid templates
 
-Liquid is used only when a field explicitly accepts a template. It is not used
-to select JSON data.
+Liquid is used wherever the source schema explicitly accepts a template,
+including parameters, loader URLs, fetch options, Radar patches, metadata, and
+fields. It is not used to select JSON data.
 
 ### Output and control flow
 
@@ -313,8 +275,7 @@ limits. It does not use `eval` or `new Function`.
 
 ## URL and option templates
 
-Structured loader URLs may be strings, Liquid templates, or functions of parsed
-parameters.
+Structured loader URLs are strings and may contain Liquid templates.
 
 ```ts
 url: "https://api.example.com/{{ params.topic | url_path }}?page={{ params.page | url_query }}"
@@ -326,20 +287,14 @@ URL and `sourceIcon` templates can access only:
 params
 ```
 
-For URL logic that cannot be expressed clearly in Liquid:
+Nested strings in `fetchOptions` may also use parsed parameters:
 
 ```ts
-url: ({ endpoint, page }) => `${endpoint}?page=${page}`
-```
-
-`fetchOptions` can also be static or parameter-dependent:
-
-```ts
-fetchOptions: ({ token }) => ({
+fetchOptions: {
   headers: {
-    authorization: `Bearer ${token}`,
+    authorization: "Bearer {{ params.token }}",
   },
-})
+}
 ```
 
 ## JSON loaders
@@ -1055,8 +1010,8 @@ patch: {
 ```
 
 Missing extracted values are omitted and the parameter schema supplies its
-default. Extracted values then run through the normal parameter transforms,
-type coercion, and validation.
+default. Extracted string values are trimmed, then run through the parameter
+Liquid template, type coercion, and validation.
 
 In `patch.metadata`, `params` contains the final parsed source parameters.
 

@@ -19,10 +19,7 @@ export default {
           default: DEFAULT_CHANNEL,
           title: "Channel",
           pattern: TELEGRAM_CHANNEL_PATTERN.source,
-          transforms: [
-            { type: "trim" },
-            { type: "removePrefix", value: "@" },
-          ],
+          template: "{{ value | remove_first: '@' }}",
         },
       },
       radar: [

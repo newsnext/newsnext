@@ -1,7 +1,7 @@
 /**
  * Base properties shared by all parameter types
  */
-interface BaseParameter<TOutput = unknown> {
+interface BaseParameter {
   /**
    * Display title for the parameter
    */
@@ -15,13 +15,9 @@ interface BaseParameter<TOutput = unknown> {
    */
   icon?: string
   /**
-   * Optional runtime parser for raw input values
+   * Optional Liquid template applied to the raw value before type coercion.
    */
-  parse?: (value: unknown) => TOutput
-  /**
-   * Optional runtime validator. Return true for success or a message for failures.
-   */
-  validate?: (value: TOutput) => boolean | string
+  template?: string
   /**
    * Optional serializable regular expression pattern for string-like values.
    */
@@ -34,26 +30,6 @@ interface BaseParameter<TOutput = unknown> {
    * Optional serializable disallowed values for string-like values.
    */
   notIn?: string[]
-  /**
-   * Phantom runtime output type used for inference only
-   */
-  readonly __output?: TOutput
-}
-
-export type SourceParamTransform
-  = { type: "lowercase" }
-    | { type: "normalizeWhitespace" }
-    | { type: "removePrefix", value: string }
-    | { type: "removeSuffix", value: string }
-    | { type: "replace", search: string, replacement: string, all?: boolean }
-    | { type: "trim" }
-    | { type: "uppercase" }
-
-interface StringTransformParameter {
-  /**
-   * Serializable transforms applied before type coercion and validation.
-   */
-  transforms?: readonly SourceParamTransform[]
 }
 
 /**
@@ -73,7 +49,7 @@ export interface SelectOption<K extends string> {
 /**
  * Single-select dropdown parameter
  */
-export interface SelectParameter<K extends string = string> extends BaseParameter<K>, StringTransformParameter {
+export interface SelectParameter<K extends string = string> extends BaseParameter {
   type: "select"
   /**
    * Available options
@@ -88,7 +64,7 @@ export interface SelectParameter<K extends string = string> extends BaseParamete
 /**
  * Multi-select parameter
  */
-export interface MultiSelectParameter<K extends string = string> extends BaseParameter<K[]> {
+export interface MultiSelectParameter<K extends string = string> extends BaseParameter {
   type: "multiselect"
   /**
    * Available options
@@ -103,7 +79,7 @@ export interface MultiSelectParameter<K extends string = string> extends BasePar
 /**
  * Text input parameter
  */
-export interface TextParameter<TOutput = string> extends BaseParameter<TOutput>, StringTransformParameter {
+export interface TextParameter extends BaseParameter {
   type: "text"
   /**
    * Default text value
@@ -114,7 +90,7 @@ export interface TextParameter<TOutput = string> extends BaseParameter<TOutput>,
 /**
  * URL input parameter
  */
-export interface UrlParameter<TOutput = string> extends BaseParameter<TOutput>, StringTransformParameter {
+export interface UrlParameter extends BaseParameter {
   type: "url"
   /**
    * Default URL value
@@ -125,7 +101,7 @@ export interface UrlParameter<TOutput = string> extends BaseParameter<TOutput>, 
 /**
  * Number input parameter
  */
-export interface NumberParameter<TOutput = number> extends BaseParameter<TOutput> {
+export interface NumberParameter extends BaseParameter {
   type: "number"
   /**
    * Default numeric value
@@ -148,7 +124,7 @@ export interface NumberParameter<TOutput = number> extends BaseParameter<TOutput
 /**
  * Boolean switch parameter
  */
-export interface SwitchParameter<TOutput = boolean> extends BaseParameter<TOutput> {
+export interface SwitchParameter extends BaseParameter {
   type: "switch"
   /**
    * Default boolean value
@@ -162,10 +138,10 @@ export interface SwitchParameter<TOutput = boolean> extends BaseParameter<TOutpu
 export type SourceParamSchema
   = | SelectParameter<any>
     | MultiSelectParameter<any>
-    | TextParameter<any>
-    | SwitchParameter<any>
-    | NumberParameter<any>
-    | UrlParameter<any>
+    | TextParameter
+    | SwitchParameter
+    | NumberParameter
+    | UrlParameter
 
 /**
  * Map of parameter keys to parameter definitions
@@ -176,9 +152,7 @@ export type SourceParamSchemaMap = Record<string, SourceParamSchema>
  * Infer the runtime value type for a parameter
  */
 export type InferSourceParamValue<TParam extends SourceParamSchema>
-  = TParam extends { parse?: ((value: unknown) => infer TOutput) | undefined }
-    ? TOutput
-    : TParam["default"]
+  = TParam["default"]
 
 /**
  * Infer runtime values for a parameter map

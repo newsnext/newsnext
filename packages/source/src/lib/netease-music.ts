@@ -19,7 +19,6 @@ export default {
           default: DEFAULT_PLAYLIST_ID,
           title: "Playlist",
           pattern: "^\\d+$",
-          transforms: [{ type: "trim" }],
         },
       },
       radar: [

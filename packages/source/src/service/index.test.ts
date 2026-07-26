@@ -33,6 +33,7 @@ describe("source service", () => {
     expect(normalizeSourceParams(sourceDefinition, {
       page: "2",
       latest: "1",
+      q: " top ",
     })).toEqual({
       page: 2,
       latest: true,
@@ -60,103 +61,19 @@ describe("source service", () => {
     })).toEqual({
       tags: ["tech", "world"],
     })
-  })
-
-  it("applies declarative parameter transforms before validation", () => {
-    const sourceDefinition = {
-      params: {
-        channel: {
-          type: "text",
-          default: "example",
-          title: "Channel",
-          transforms: [
-            { type: "trim" },
-            { type: "removePrefix", value: "@" },
-            { type: "replace", search: "-", replacement: "_", all: true },
-            { type: "lowercase" },
-          ],
-          pattern: "^[a-z_]+$",
-        },
-      },
-    } satisfies Pick<RuntimeSource, "params">
 
     expect(normalizeSourceParams(sourceDefinition, {
-      channel: "  @News-Channel  ",
+      tags: [" tech ", "world "],
     })).toEqual({
-      channel: "news_channel",
+      tags: ["tech", "world"],
     })
   })
 
-  it("supports replacing only the first literal match", () => {
-    const sourceDefinition = {
-      params: {
-        path: {
-          type: "text",
-          default: "a.b.c",
-          title: "Path",
-          transforms: [
-            {
-              type: "replace",
-              search: ".",
-              replacement: "/",
-              all: false,
-            },
-          ],
-        },
-      },
-    } satisfies Pick<RuntimeSource, "params">
-
-    expect(normalizeSourceParams(sourceDefinition)).toEqual({
-      path: "a/b.c",
-    })
-  })
-
-  it("normalizes Telegram channel parameters declaratively", () => {
+  it("applies Liquid parameter templates before validation", () => {
     expect(normalizeSourceParams(providers.telegram.sources.channel, {
       channel: "  @TestFlightCN  ",
     })).toEqual({
       channel: "TestFlightCN",
-    })
-  })
-
-  it("throws a source service error for invalid parameter values", () => {
-    const sourceDefinition = {
-      params: {
-        headers: {
-          type: "text",
-          default: "{}",
-          title: "Request Headers (JSON)",
-          validate: (value) => {
-            try {
-              JSON.parse(String(value))
-              return true
-            } catch {
-              return "Request Headers (JSON) must be valid JSON"
-            }
-          },
-        },
-      },
-    } satisfies Pick<RuntimeSource, "params">
-
-    expect(() => normalizeSourceParams(sourceDefinition, {
-      headers: "{invalid-json}",
-    })).toThrowError("Request Headers (JSON) must be valid JSON")
-  })
-
-  it("parses default values into runtime output types", () => {
-    const sourceDefinition = {
-      params: {
-        headers: {
-          type: "text",
-          default: "{}",
-          title: "Request Headers (JSON)",
-          parse: value => JSON.parse(String(value)) as Record<string, string>,
-        },
-      },
-    } satisfies Pick<RuntimeSource, "params">
-
-    expect(normalizeSourceParams(sourceDefinition)).toEqual({
-      headers: {},
     })
   })
 

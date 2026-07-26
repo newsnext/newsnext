@@ -1,5 +1,11 @@
 import { describe, expect, it, vi } from "vitest"
-import { isTemplate, renderHtmlTemplate, renderTemplate, validateTemplates } from "./template"
+import {
+  isTemplate,
+  renderHtmlTemplate,
+  renderTemplate,
+  renderTemplates,
+  validateTemplates,
+} from "./template"
 
 describe("source templates", () => {
   it("renders plain text without HTML escaping", () => {
@@ -77,6 +83,22 @@ describe("source templates", () => {
       "/{{ item.path | url_path }}?query={{ item.query | url_query }}",
       { item: { path: "a/b", query: "a&b" } },
     )).toBe("/a%2Fb?query=a%26b")
+  })
+
+  it("renders templates recursively in plain objects and arrays", () => {
+    expect(renderTemplates({
+      headers: {
+        authorization: "Bearer {{ params.token }}",
+      },
+      tags: ["static", "{{ params.tag | upcase }}"],
+    }, {
+      params: { tag: "news", token: "secret" },
+    })).toEqual({
+      headers: {
+        authorization: "Bearer secret",
+      },
+      tags: ["static", "NEWS"],
+    })
   })
 
   it("renders blocks without dynamic code evaluation", () => {

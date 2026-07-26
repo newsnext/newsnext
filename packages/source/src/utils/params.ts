@@ -3,112 +3,24 @@ import type {
   InferSourceParamValue,
   SourceParamSchema,
   SourceParamSchemaMap,
-  SourceParamTransform,
 } from "../typings/sources"
 
 import { SourceParamGuards, SourceParamValueError } from "../typings/sources"
+import { renderTemplate } from "./template"
 
-const MAX_PARAM_VALUE_LENGTH = 20_000
-const MAX_REPLACEMENT_LENGTH = 256
-
-export function applySourceParamTransforms(
-  value: unknown,
-  transforms: readonly SourceParamTransform[] = [],
-): string {
-  if (transforms.length > 8) {
-    throw new Error("A source parameter cannot use more than 8 transforms")
+function trimSourceParamInput(value: unknown): unknown {
+  if (typeof value === "string") return value.trim()
+  if (Array.isArray(value)) {
+    return value.map(item => typeof item === "string" ? item.trim() : item)
   }
-
-  const input = String(value)
-  assertParamValueLength(input)
-
-  return transforms.reduce((current, transform) => {
-    let transformed: string
-    switch (transform.type) {
-      case "lowercase":
-        transformed = current.toLowerCase()
-        break
-      case "normalizeWhitespace":
-        transformed = current.replace(/\s+/g, " ").trim()
-        break
-      case "removePrefix":
-        transformed = current.startsWith(transform.value)
-          ? current.slice(transform.value.length)
-          : current
-        break
-      case "removeSuffix":
-        transformed = current.endsWith(transform.value)
-          ? current.slice(0, current.length - transform.value.length)
-          : current
-        break
-      case "replace":
-        transformed = replaceLiteral(current, transform)
-        break
-      case "trim":
-        transformed = current.trim()
-        break
-      case "uppercase":
-        transformed = current.toUpperCase()
-        break
-      default:
-        throw new Error(`Unsupported source parameter transform: ${(transform as { type?: unknown }).type}`)
-    }
-
-    assertParamValueLength(transformed)
-    return transformed
-  }, input)
-}
-
-function replaceLiteral(
-  input: string,
-  transform: Extract<SourceParamTransform, { type: "replace" }>,
-): string {
-  const { search, replacement, all = true } = transform
-  assertReplacement(replacement)
-  if (!search) {
-    throw new Error("The replace parameter transform requires a non-empty search value")
-  }
-
-  if (!all) {
-    const index = input.indexOf(search)
-    return index === -1
-      ? input
-      : `${input.slice(0, index)}${replacement}${input.slice(index + search.length)}`
-  }
-
-  const parts: string[] = []
-  let start = 0
-  while (start < input.length) {
-    const index = input.indexOf(search, start)
-    if (index === -1) break
-    parts.push(input.slice(start, index), replacement)
-    start = index + search.length
-  }
-  parts.push(input.slice(start))
-  return parts.join("")
-}
-
-function assertReplacement(replacement: string): void {
-  if (replacement.length > MAX_REPLACEMENT_LENGTH) {
-    throw new Error(
-      `A source parameter replacement cannot exceed ${MAX_REPLACEMENT_LENGTH} characters`,
-    )
-  }
-}
-
-function assertParamValueLength(value: string): void {
-  if (value.length > MAX_PARAM_VALUE_LENGTH) {
-    throw new Error(
-      `A transformed source parameter cannot exceed ${MAX_PARAM_VALUE_LENGTH} characters`,
-    )
-  }
+  return value
 }
 
 export function getDefaultValues(params?: Record<string, SourceParamSchema>) {
   return params ? Object.fromEntries(Object.entries(params).map(([key, param]) => [key, param.default])) : {}
 }
 
-function validateParsedSourceParamValue<TParam extends SourceParamSchema>(
+function validateSourceParamValue<TParam extends SourceParamSchema>(
   param: TParam,
   value: InferSourceParamValue<TParam>,
 ): InferSourceParamValue<TParam> {
@@ -155,18 +67,6 @@ function validateParsedSourceParamValue<TParam extends SourceParamSchema>(
     }
   }
 
-  if (param.validate) {
-    const validationResult = param.validate(value)
-    if (validationResult !== true) {
-      throw new SourceParamValueError(
-        param.title,
-        typeof validationResult === "string"
-          ? validationResult
-          : `Invalid value for '${param.title}'`,
-      )
-    }
-  }
-
   return value
 }
 
@@ -175,45 +75,39 @@ export function parseSourceParamValue<TParam extends SourceParamSchema>(
   value: unknown,
 ): InferSourceParamValue<TParam> {
   const input = value === undefined ? param.default : value
-  const transformedInput = "transforms" in param && param.transforms
-    ? applySourceParamTransforms(input, param.transforms)
-    : input
-
-  if (param.parse) {
-    return validateParsedSourceParamValue(
-      param,
-      param.parse(transformedInput) as InferSourceParamValue<TParam>,
-    )
-  }
+  const normalizedInput = trimSourceParamInput(input)
+  const templatedInput = param.template
+    ? renderTemplate(param.template, { value: normalizedInput })
+    : normalizedInput
 
   switch (param.type) {
     case "number":
-      return validateParsedSourceParamValue(param, Number(transformedInput) as InferSourceParamValue<TParam>)
+      return validateSourceParamValue(param, Number(templatedInput) as InferSourceParamValue<TParam>)
     case "switch":
-      return validateParsedSourceParamValue(
+      return validateSourceParamValue(
         param,
         (
-          transformedInput === true
-          || transformedInput === "true"
-          || transformedInput === "1"
-          || transformedInput === 1
+          templatedInput === true
+          || templatedInput === "true"
+          || templatedInput === "1"
+          || templatedInput === 1
         ) as InferSourceParamValue<TParam>,
       )
     case "multiselect":
-      return validateParsedSourceParamValue(
+      return validateSourceParamValue(
         param,
         (
-          Array.isArray(transformedInput)
-            ? transformedInput.map(String)
-            : String(transformedInput).split(",").map(item => item.trim()).filter(Boolean)
+          Array.isArray(templatedInput)
+            ? templatedInput.map(String)
+            : String(templatedInput).split(",").map(item => item.trim()).filter(Boolean)
         ) as InferSourceParamValue<TParam>,
       )
     case "text":
     case "url":
     case "select":
-      return validateParsedSourceParamValue(param, String(transformedInput) as InferSourceParamValue<TParam>)
+      return validateSourceParamValue(param, String(templatedInput) as InferSourceParamValue<TParam>)
     default:
-      return validateParsedSourceParamValue(param, transformedInput as InferSourceParamValue<TParam>)
+      return validateSourceParamValue(param, templatedInput as InferSourceParamValue<TParam>)
   }
 }
 
