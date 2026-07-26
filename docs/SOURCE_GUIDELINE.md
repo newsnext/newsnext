@@ -764,6 +764,12 @@ Use `context.updateSecrets` when a loader refreshes a stored value.
 
 Radar rules detect supported sources from the active page.
 
+When a source omits `radar`, has no parameters, and has an HTTP(S) `home`,
+NewsNext automatically creates a default radar rule that matches every page on
+the same host as `home`. A leading `www.` is ignored. Set `radar: []` to opt out
+of this default. Parameterized sources must declare explicit radar rules so
+their parameter patches can be resolved.
+
 ```ts
 radar: [
   {

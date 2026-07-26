@@ -59,6 +59,8 @@ interface SourceRuleSpec {
   rules: SourceRadarRule[]
 }
 
+const DEFAULT_RADAR_RULE_ID = "default-home-origin"
+
 type PathMatch = (pathname: string) => Record<string, string> | null
 
 interface CompiledRadarRule {
@@ -506,7 +508,32 @@ function createSuggestions(context: RadarContext, rulesByHost: Map<string, Compi
 
 function getSourceRuleSpecs(sourceMetadata: RadarSourceMetadata[] | undefined): SourceRuleSpec[] {
   return sourceMetadata
-    ?.flatMap(source => source.radar?.length ? [{ source, rules: source.radar }] : [])
+    ?.flatMap((source) => {
+      if (source.radar !== undefined) {
+        return source.radar.length ? [{ source, rules: source.radar }] : []
+      }
+
+      if (!source.home || Object.keys(source.params ?? {}).length > 0) {
+        return []
+      }
+
+      try {
+        const home = new URL(source.home)
+        if (!["http:", "https:"].includes(home.protocol) || !home.hostname) {
+          return []
+        }
+
+        return [{
+          source,
+          rules: [{
+            id: DEFAULT_RADAR_RULE_ID,
+            match: { hosts: [home.hostname] },
+          }],
+        }]
+      } catch {
+        return []
+      }
+    })
     ?? []
 }
 

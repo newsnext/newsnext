@@ -99,6 +99,66 @@ describe("getRadarSuggestions", () => {
     ])
   })
 
+  it("creates a default origin radar rule for sources without params or radar", () => {
+    expect(getRadarSuggestions(
+      { url: "https://example.com/articles/one" },
+      [{
+        id: "test:default",
+        home: "https://www.example.com/feed",
+      }],
+    )).toMatchObject([
+      {
+        ruleId: "default-home-origin",
+        sourceId: "test:default",
+        paramsPatch: {},
+      },
+    ])
+  })
+
+  it("does not create a default radar rule for parameterized sources or explicit radar configs", () => {
+    expect(getRadarSuggestions(
+      { url: "https://example.com/articles/one" },
+      [
+        {
+          id: "test:parameterized",
+          home: "https://example.com",
+          params: {
+            topic: {
+              type: "text",
+              title: "Topic",
+              default: "news",
+            },
+          },
+        },
+        {
+          id: "test:disabled",
+          home: "https://example.com",
+          radar: [],
+        },
+        {
+          id: "test:explicit",
+          home: "https://example.com",
+          radar: [
+            {
+              id: "other-path",
+              match: { hosts: ["example.com"], paths: ["/other"] },
+            },
+          ],
+        },
+      ],
+    )).toEqual([])
+  })
+
+  it("ignores invalid and non-web home URLs when creating default radar rules", () => {
+    expect(getRadarSuggestions(
+      { url: "https://example.com/articles/one" },
+      [
+        { id: "test:invalid-home", home: "not a url" },
+        { id: "test:extension-home", home: "chrome-extension://example/page.html" },
+      ],
+    )).toEqual([])
+  })
+
   it("creates a reusable matcher from source metadata", () => {
     const matcher = createRadarMatcher(sourceDescriptors)
 
