@@ -87,13 +87,16 @@ export default {
         items: getTopicsWithAvatars,
         fields: {
           title: "title",
-          timestamp: topic => new Date(topic.created_at).valueOf(),
+          timestamp: {
+            select: "created_at",
+            template: "{{ value | date_to_ms }}",
+          },
           url: {
             select: "id",
             template: "https://linux.do/t/topic/{{ value | url_path }}",
           },
           inline: {
-            icon: topic => topic.last_poster_avatar ? { src: topic.last_poster_avatar, radius: 999 } : undefined,
+            icon: "last_poster_avatar && {src: last_poster_avatar, radius: `999`}",
           },
         },
       },
@@ -113,7 +116,7 @@ export default {
             template: "https://linux.do/t/topic/{{ value | url_path }}",
           },
           inline: {
-            icon: topic => topic.last_poster_avatar ? { src: topic.last_poster_avatar, radius: 999 } : undefined,
+            icon: "last_poster_avatar && {src: last_poster_avatar, radius: `999`}",
           },
         },
       },

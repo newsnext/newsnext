@@ -42,6 +42,14 @@ describe("source templates", () => {
       "{{ value | date_to_ms }}",
       { value: "2024-01-01T00:00:00Z" },
     )).toBe("1704067200000")
+
+    expect(renderTemplate(
+      "{{ value | absolute_url: requestUrl | favicon_url }}",
+      {
+        requestUrl: "https://news.ycombinator.com/",
+        value: "https://example.com/article",
+      },
+    )).toBe("https://icons.folo.is/example.com")
   })
 
   it("allows source-oriented filters to receive null values", () => {

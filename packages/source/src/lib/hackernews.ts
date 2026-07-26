@@ -1,5 +1,4 @@
 import type { ProviderConfig } from "@newsnext/source/utils/source"
-import { getFavicon } from "@newsnext/shared/utils"
 
 const createLoader = (sub: string) => ({
   type: "html" as const,
@@ -26,13 +25,7 @@ const createLoader = (sub: string) => ({
       icon: {
         selector: ".titleline>a",
         attr: "href",
-        transform: (href: string | undefined) => {
-          if (!href) return undefined
-          if (href.startsWith("item")) href = `https://news.ycombinator.com/${href}`
-          const src = getFavicon(href)
-          if (!src) return undefined
-          return { href, src }
-        },
+        template: "{{ value | absolute_url: requestUrl | favicon_url }}",
       },
     },
   },

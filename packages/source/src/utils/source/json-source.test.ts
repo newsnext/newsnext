@@ -111,6 +111,41 @@ describe("jSON source loader", () => {
     expect(results[0].inline?.text).toBe("Score: 60")
   })
 
+  it("supports conditional JMESPath object construction", async () => {
+    ;(myFetch as any).mockResolvedValue([
+      {
+        title: "With mark",
+        url: "https://example.com/1",
+        card_label: {
+          night_icon: "https://example.com/mark.png",
+        },
+      },
+      {
+        title: "Without mark",
+        url: "https://example.com/2",
+      },
+    ])
+
+    const source = createJsonTestSource(() => ({
+      url: "https://api.example.com",
+      fields: {
+        title: "title",
+        url: "url",
+        inline: {
+          mark: "card_label.night_icon && {src: card_label.night_icon, radius: `0`}",
+        },
+      },
+    }))
+
+    const results = await (source as any).loader({})
+
+    expect(results[0].inline?.mark).toEqual({
+      src: "https://example.com/mark.png",
+      radius: 0,
+    })
+    expect(results[1].inline).toBeUndefined()
+  })
+
   it("rejects invalid JMESPath expressions during source registration", () => {
     expect(() => createSource({
       loader: {

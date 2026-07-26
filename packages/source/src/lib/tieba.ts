@@ -1,26 +1,5 @@
 import type { ProviderConfig } from "@newsnext/source/utils/source"
 
-interface TiebaTopic {
-  topic_id: string
-  topic_name: string
-  create_time: number
-  topic_url: string
-}
-
-interface TiebaResponse {
-  data: {
-    bang_topic: {
-      topic_list: TiebaTopic[]
-    }
-  }
-}
-
-function resolveTopicUrl(url: string): string {
-  return url.startsWith("http")
-    ? url
-    : `https://tieba.baidu.com${url}`
-}
-
 export default {
   title: "百度贴吧",
   home: "https://tieba.baidu.com",
@@ -33,11 +12,17 @@ export default {
       loader: {
         type: "json",
         url: "https://tieba.baidu.com/hottopic/browse/topicList",
-        items: (json: TiebaResponse) => json.data.bang_topic.topic_list,
+        items: "data.bang_topic.topic_list",
         fields: {
           title: "topic_name",
-          url: item => resolveTopicUrl(item.topic_url),
-          timestamp: item => item.create_time * 1000,
+          url: {
+            select: "topic_url",
+            template: "{{ value | replace: '&amp;', '&' | absolute_url: requestUrl }}",
+          },
+          timestamp: {
+            select: "create_time",
+            template: "{{ value | times: 1000 }}",
+          },
         },
       },
       cache: "5m",

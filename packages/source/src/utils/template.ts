@@ -1,4 +1,5 @@
 import type { Template } from "liquidjs"
+import { getFavicon } from "@newsnext/shared/utils"
 import { Liquid } from "liquidjs"
 
 type TemplateRenderer = (context: object) => string
@@ -58,6 +59,9 @@ function createEngine(output: "html" | "plain"): Liquid {
   })
   engine.registerFilter("first_line", (value: unknown) => {
     return firstLine(value)
+  })
+  engine.registerFilter("favicon_url", (value: unknown) => {
+    return getFavicon(stringify(value))
   })
   engine.registerFilter("normalize_lines", (value: unknown, spacing: unknown = 1) => {
     const lineSpacing = Number(spacing)

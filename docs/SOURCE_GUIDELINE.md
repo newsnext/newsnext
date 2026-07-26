@@ -255,6 +255,7 @@ NewsNext also registers:
 {{ value | normalize_lines: 2 }}
 {{ value | first_line }}
 {{ value | absolute_url: requestUrl }}
+{{ value | favicon_url }}
 {{ value | css_url }}
 {{ value | date_to_ms }}
 ```
@@ -267,6 +268,7 @@ NewsNext also registers:
   newline. Its optional spacing argument accepts an integer from 1 through 4.
 - `first_line` returns the first non-empty trimmed line.
 - `absolute_url` resolves a URL against its base.
+- `favicon_url` returns the configured favicon service URL for a page URL.
 - `css_url` extracts the first `url(...)` value from a CSS declaration.
 - `date_to_ms` parses a date and returns its Unix timestamp in milliseconds.
 
@@ -383,6 +385,19 @@ fields: {
   timestamp: "created_at",
 }
 ```
+
+JMESPath can also conditionally construct structured values such as pictures,
+icons, marks, and iframe options:
+
+```ts
+inline: {
+  mark: "card_label.icon && {src: card_label.icon, radius: `0`}",
+}
+```
+
+The expression returns `null` when `card_label.icon` is missing and returns a
+picture object when it exists. Prefer JMESPath object construction for
+structured JSON output; Liquid templates are intended to produce strings.
 
 Do not put a Liquid template directly in a JSON string field. Use an explicit
 field object when formatting is required:
