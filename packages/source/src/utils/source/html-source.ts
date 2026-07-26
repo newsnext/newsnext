@@ -5,13 +5,21 @@ import type {
   NewsItem,
   RuntimeSource,
 } from "../../typings/sources"
+import type { SourceFieldTransform } from "./fields"
 import { load } from "cheerio/slim"
 import { myFetch } from "../fetch"
+import { renderHtmlTemplate, renderTemplate } from "../template"
+import { applyFieldTransforms, normalizeTimestamp } from "./fields"
+
+export type FieldTransform<T = any>
+  = (value: string | undefined, el: cheerio.Cheerio<AnyNode>) => T | undefined
 
 export type FieldSelector<T = any> = string | {
   selector?: string
   attr?: string
-  transform?: (value: string | undefined, el: cheerio.Cheerio<AnyNode>) => T | undefined
+  template?: string
+  transforms?: SourceFieldTransform[]
+  transform?: FieldTransform<T>
 }
 
 export type ItemsResolver = string | (($: cheerio.CheerioAPI) => cheerio.Cheerio<AnyNode> | AnyNode[])
@@ -51,7 +59,7 @@ export interface HtmlSourceOptions {
 
 function resolveFieldSelector(
   selectorConfig: FieldSelector,
-): { selector?: string, attr?: string, transform?: any } {
+): Exclude<FieldSelector, string> {
   if (typeof selectorConfig === "object") {
     return selectorConfig
   }
@@ -61,15 +69,10 @@ function resolveFieldSelector(
 function resolveField(
   $: cheerio.CheerioAPI,
   el: AnyNode,
-  selectorConfig: string | { selector?: string, attr?: string, transform?: any },
+  selectorConfig: Exclude<FieldSelector, string>,
+  escapeTemplateValues = false,
 ): any {
-  if (typeof selectorConfig === "string") {
-    // Check if selector is empty string, if so, return undefined or maybe text of current el?
-    if (!selectorConfig) return $(el).text().trim()
-    return $(el).find(selectorConfig).text().trim()
-  }
-
-  const { selector, attr, transform } = selectorConfig
+  const { selector, attr, template, transforms, transform } = selectorConfig
   const target = selector ? $(el).find(selector) : $(el)
 
   let value: string | undefined
@@ -85,6 +88,12 @@ function resolveField(
     return transform(value, target)
   }
 
+  value = applyFieldTransforms(value, transforms) as string | undefined
+  if (template) {
+    return escapeTemplateValues
+      ? renderHtmlTemplate(template, { value })
+      : renderTemplate(template, { value })
+  }
   return value
 }
 
@@ -137,15 +146,15 @@ export async function loadHtml(opts: HtmlSourceOptions): Promise<NewsItem[]> {
 
     if (fields.timestamp) {
       const timestampConfig = resolveFieldSelector(fields.timestamp)
-      const timestamp = resolveField($, el, timestampConfig)
-      if (timestamp) item.timestamp = timestamp
+      const timestamp = normalizeTimestamp(resolveField($, el, timestampConfig))
+      if (timestamp !== undefined) item.timestamp = timestamp
     }
 
     if (fields.inline) {
       const inline: any = {}
       for (const [key, fieldSelector] of Object.entries(fields.inline)) {
         const config = resolveFieldSelector(fieldSelector as FieldSelector)
-        const infoValue = resolveField($, el, config)
+        const infoValue = resolveField($, el, config, key === "html")
         if (infoValue !== undefined && infoValue !== "") {
           inline[key] = infoValue
         }
@@ -157,7 +166,7 @@ export async function loadHtml(opts: HtmlSourceOptions): Promise<NewsItem[]> {
       const preview: any = {}
       for (const [key, fieldSelector] of Object.entries(fields.preview)) {
         const config = resolveFieldSelector(fieldSelector as FieldSelector)
-        const detailValue = resolveField($, el, config)
+        const detailValue = resolveField($, el, config, key === "html")
         if (detailValue !== undefined && detailValue !== "") {
           preview[key] = detailValue
         }

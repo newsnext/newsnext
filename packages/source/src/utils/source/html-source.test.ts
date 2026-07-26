@@ -61,10 +61,10 @@ describe("hTML source loader", () => {
     // Results are sorted by timestamp desc by default
     expect(results[0].title).toBe("Article 2")
     expect(results[0].url).toBe("/article/2")
-    expect(results[0].timestamp).toBe("123457")
+    expect(results[0].timestamp).toBe(123457)
   })
 
-  it("should support transforms", async () => {
+  it("should support declarative transforms", async () => {
     const html = `
       <div class="item">
         <div class="title">  Dirty Title  </div>
@@ -79,17 +79,16 @@ describe("hTML source loader", () => {
       fields: {
         title: {
           selector: ".title",
-          transform: val => val?.toUpperCase(),
+          transforms: [{ type: "uppercase" }],
         },
         url: {
-          // Mocking a url since it's required
-          selector: ".title", // just to select something
-          transform: () => "https://example.com/1",
+          selector: ".title",
+          template: "https://example.com/1",
         },
         timestamp: {
           selector: ".date",
           attr: "data-ts",
-          transform: val => Number(val) * 1000,
+          transforms: [{ type: "multiply", value: 1000 }],
         },
       },
     }))
@@ -97,6 +96,40 @@ describe("hTML source loader", () => {
     const results = await (source as any).loader({})
     expect(results[0].title).toBe("DIRTY TITLE")
     expect(results[0].timestamp).toBe(1600000000000)
+  })
+
+  it("should support template transforms", async () => {
+    ;(myFetch as any).mockResolvedValue(`
+      <div class="item">
+        <a class="title" href="/article/1">Article 1</a>
+        <div class="summary">&lt;script&gt;alert(1)&lt;/script&gt;</div>
+      </div>
+    `)
+
+    const source = createHtmlTestSource(() => ({
+      url: "https://example.com",
+      items: ".item",
+      fields: {
+        title: ".title",
+        url: {
+          selector: ".title",
+          attr: "href",
+          template: "https://example.com{{ value }}",
+        },
+        preview: {
+          html: {
+            selector: ".summary",
+            template: "<strong>{{ value }}</strong>",
+          },
+        },
+      },
+    }))
+
+    const results = await (source as any).loader({})
+    expect(results[0].url).toBe("https://example.com/article/1")
+    expect(results[0].preview.html).toBe(
+      "<strong>&lt;script&gt;alert(1)&lt;/script&gt;</strong>",
+    )
   })
 
   it("should resolve items with a function and filter items", async () => {
@@ -205,6 +238,27 @@ describe("hTML source loader", () => {
     await (source as any).loader({ page: 2 })
 
     expect(myFetch).toHaveBeenCalledWith("https://example.com?p=2", undefined)
+  })
+
+  it("should render params in URL templates", async () => {
+    ;(myFetch as any).mockResolvedValue("<div class=\"item\"></div>")
+
+    const source = createSource({
+      params: {
+        topic: { type: "text", default: "news", title: "Topic" },
+      } satisfies SourceParamSchemaMap,
+      loader: {
+        type: "html",
+        url: "https://example.com/{{ params.topic | strip | url_path }}",
+        items: ".item",
+        fields: { title: ".t", url: ".u" },
+      },
+      cache: "5m",
+    })
+
+    await (source as any).loader({ topic: "c++ news" })
+
+    expect(myFetch).toHaveBeenCalledWith("https://example.com/c%2B%2B%20news", undefined)
   })
 
   it("should handle non-utf8 decoding", async () => {

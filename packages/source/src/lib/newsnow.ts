@@ -36,14 +36,14 @@ export default {
             paths: ["/:locale/*topic"],
           },
           metaPatch: {
-            title: "{topic}",
+            title: "{{ params.topic }}",
           },
           confidence: 0.85,
         },
       ],
       loader: {
         type: "html",
-        url: ({ locale, topic }) => `https://www.newsnow.com/${locale}/${topic}?type=ln`,
+        url: "https://www.newsnow.com/{{ params.locale | url_path }}/{{ params.topic | url_path }}?type=ln",
         items: ".newsfeed .article",
         fields: {
           title: ".article-card__headline",
@@ -51,7 +51,7 @@ export default {
           timestamp: {
             selector: "[data-timestamp]",
             attr: "data-timestamp",
-            transform: val => Number(val) * 1000,
+            transforms: [{ type: "multiply", value: 1000 }],
           },
           inline: {
             text: ".article-publisher__name",

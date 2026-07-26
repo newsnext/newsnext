@@ -73,12 +73,18 @@ export default {
             },
           })
         },
-        items: (response: TelegraphResponse) => response.data.roll_data.filter(item => !item.is_ad),
+        items: "data.roll_data[?!is_ad]",
         fields: {
-          title: item => item.title || item.brief,
-          url: item => `https://www.cls.cn/detail/${item.id}`,
+          title: "title || brief",
+          url: {
+            select: "id",
+            template: "https://www.cls.cn/detail/{{ value | url_path }}",
+          },
           mobileUrl: "shareurl",
-          timestamp: item => item.ctime * 1000,
+          timestamp: {
+            select: "ctime",
+            transforms: [{ type: "multiply", value: 1000 }],
+          },
         },
       },
       cache: "1m",
@@ -95,13 +101,18 @@ export default {
             query: Object.fromEntries(await getSearchParams()),
           })
         },
-        items: (response: DepthResponse) => [...response.data.depth_list]
-          .sort((left, right) => right.ctime - left.ctime),
+        items: "reverse(sort_by(data.depth_list, &ctime))",
         fields: {
-          title: item => item.title || item.brief,
-          url: item => `https://www.cls.cn/detail/${item.id}`,
+          title: "title || brief",
+          url: {
+            select: "id",
+            template: "https://www.cls.cn/detail/{{ value | url_path }}",
+          },
           mobileUrl: "shareurl",
-          timestamp: item => item.ctime * 1000,
+          timestamp: {
+            select: "ctime",
+            transforms: [{ type: "multiply", value: 1000 }],
+          },
         },
       },
       cache: "5m",
@@ -117,12 +128,18 @@ export default {
             query: Object.fromEntries(await getSearchParams()),
           })
         },
-        items: (response: HotResponse) => response.data,
+        items: "data",
         fields: {
-          title: item => item.title || item.brief,
-          url: item => `https://www.cls.cn/detail/${item.id}`,
+          title: "title || brief",
+          url: {
+            select: "id",
+            template: "https://www.cls.cn/detail/{{ value | url_path }}",
+          },
           mobileUrl: "shareurl",
-          timestamp: item => item.ctime * 1000,
+          timestamp: {
+            select: "ctime",
+            transforms: [{ type: "multiply", value: 1000 }],
+          },
         },
       },
       cache: "5m",

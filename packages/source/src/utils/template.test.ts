@@ -1,0 +1,93 @@
+import { describe, expect, it, vi } from "vitest"
+import { isTemplate, renderHtmlTemplate, renderTemplate, validateTemplates } from "./template"
+
+describe("source templates", () => {
+  it("renders plain text without HTML escaping", () => {
+    expect(renderTemplate(
+      "https://example.com/{{ topic }}?tag={{ tag }}",
+      { topic: "news", tag: "a&b" },
+    )).toBe("https://example.com/news?tag=a&b")
+  })
+
+  it("supports conditions and URL encoding helpers", () => {
+    expect(renderTemplate(
+      "{% assign normalized = language | strip %}/trending{% if normalized %}/{{ normalized | url_path }}{% endif %}",
+      { language: " c++ " },
+    )).toBe("/trending/c%2B%2B")
+
+    expect(renderTemplate(
+      "/{{ item.path | url_path }}?query={{ item.query | url_query }}",
+      { item: { path: "a/b", query: "a&b" } },
+    )).toBe("/a%2Fb?query=a%26b")
+  })
+
+  it("renders blocks without dynamic code evaluation", () => {
+    const functionSpy = vi.spyOn(globalThis, "Function").mockImplementation(() => {
+      throw new EvalError("Dynamic code evaluation is blocked")
+    })
+
+    try {
+      expect(renderTemplate(
+        "{% for entry in json.items %}{{ forloop.index0 }}:{{ entry.name }};{% else %}empty{% endfor %}",
+        { json: { items: [{ name: "A" }, { name: "B" }] } },
+      )).toBe("0:A;1:B;")
+      expect(functionSpy).not.toHaveBeenCalled()
+    } finally {
+      functionSpy.mockRestore()
+    }
+  })
+
+  it("escapes inserted values in HTML templates", () => {
+    expect(renderHtmlTemplate(
+      "<strong>{{ item.title }}</strong>",
+      { item: { title: "<script>alert(1)</script>" } },
+    )).toBe("<strong>&lt;script&gt;alert(1)&lt;/script&gt;</strong>")
+  })
+
+  it("rejects the raw filter in HTML templates", () => {
+    expect(() => renderHtmlTemplate(
+      "<strong>{{ item.title | raw }}</strong>",
+      { item: { title: "<em>unsafe</em>" } },
+    )).toThrow("The raw filter is not allowed")
+  })
+
+  it("only identifies strings containing template expressions", () => {
+    expect(isTemplate("item.title")).toBe(false)
+    expect(isTemplate("{{ item.title }}")).toBe(true)
+    expect(isTemplate("{% if item %}yes{% endif %}")).toBe(true)
+  })
+
+  it("reports invalid templates with their source location", () => {
+    expect(() => validateTemplates(
+      { loader: { url: "{{ params.id | unknown_filter }}" } },
+      "test:source",
+    )).toThrow("Invalid Liquid template at test:source.loader.url")
+  })
+
+  it("validates available context roots", () => {
+    expect(() => validateTemplates(
+      "{{ item.id }}",
+      "test:source.loader.url",
+      { allowedRoots: ["params"] },
+    )).toThrow("Template root \"item\" is not available")
+  })
+
+  it("validates nested HTML transforms as HTML output", () => {
+    expect(() => validateTemplates(
+      { html: { template: "<strong>{{ value | raw }}</strong>" } },
+      "test:source.loader.fields.preview",
+    )).toThrow("Invalid Liquid template at test:source.loader.fields.preview.html.template")
+  })
+
+  it("rejects file-backed and raw tags", () => {
+    expect(() => renderTemplate("{% include 'secret' %}", {})).toThrow(
+      "File inclusion, layouts, and raw blocks are not allowed",
+    )
+    expect(() => renderTemplate("{% raw %}{{ unsafe }}{% endraw %}", {})).toThrow(
+      "File inclusion, layouts, and raw blocks are not allowed",
+    )
+    expect(() => renderTemplate("{% liquid\ninclude 'secret'\n%}", {})).toThrow(
+      "File inclusion, layouts, and raw blocks are not allowed",
+    )
+  })
+})

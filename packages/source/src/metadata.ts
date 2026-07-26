@@ -260,7 +260,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
           }
         },
         "metaPatch": {
-          "title": "Trending {language}"
+          "title": "Trending {{ params.language }}"
         },
         "confidence": 0.95
       }
@@ -463,7 +463,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
                 "fallbackToEmpty": true
               }
             ],
-            "fallback": "Playlist {id}"
+            "fallback": "Playlist {{ params.id }}"
           }
         },
         "confidence": 0.95
@@ -543,7 +543,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
           ]
         },
         "metaPatch": {
-          "title": "{topic}"
+          "title": "{{ params.topic }}"
         },
         "confidence": 0.85
       }
@@ -553,7 +553,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
   {
     "icon": "https://icons.folo.is/t.me",
     "providerTitle": "Telegram",
-    "sourceIcon": "https://t.me/i/userpic/320/{channel}.jpg",
+    "sourceIcon": "https://t.me/i/userpic/320/{{ params.channel | required | url_path }}.jpg",
     "title": "科技圈 在花频道",
     "params": {
       "channel": {
@@ -624,7 +624,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
             "transforms": [
               {
                 "type": "template",
-                "value": "https://t.me/s/{value}"
+                "value": "https://t.me/s/{{ value }}"
               }
             ]
           }
@@ -705,7 +705,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
                 "pattern": "^.*[>›]\\s*(.+)$"
               }
             ],
-            "fallback": "{feed}"
+            "fallback": "{{ params.feed }}"
           }
         },
         "confidence": 0.9

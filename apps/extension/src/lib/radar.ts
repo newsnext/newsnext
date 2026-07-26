@@ -9,6 +9,7 @@ import type {
   SourceRadarValue,
 } from "@newsnext/source/typings"
 import { parseSourceParams } from "@newsnext/source/utils/params"
+import { renderTemplate } from "@newsnext/source/utils/template"
 import { match } from "path-to-regexp"
 
 export interface RadarContext {
@@ -173,7 +174,7 @@ function applyTransform(value: string, transform: SourceRadarTransform, context:
     case "prepend":
       return `${transform.value}${value}`
     case "template":
-      return renderTemplate(transform.value, createTemplateVariables(context, { value }))
+      return renderTemplate(transform.value, createTemplateVariables(context, { value })).trim()
   }
 }
 
@@ -229,7 +230,7 @@ function resolvePatchValue(spec: SourceRadarValue | SourceRadarPatchValue, conte
   }
 
   if (typeof spec.fallback === "string") {
-    return renderTemplate(spec.fallback, createTemplateVariables(context))
+    return renderTemplate(spec.fallback, createTemplateVariables(context)).trim()
   }
 
   return spec.fallback
@@ -238,22 +239,22 @@ function resolvePatchValue(spec: SourceRadarValue | SourceRadarPatchValue, conte
 function createTemplateVariables(
   context: RadarMatchContext,
   extraVariables: Record<string, unknown> = {},
-): Record<string, string> {
-  return Object.fromEntries(
-    Object.entries({
-      ...context.pathParams,
+): Record<string, unknown> {
+  return {
+    path: context.pathParams,
+    params: {
       ...context.rawParams,
       ...context.paramsPatch,
-      pageTitle: context.input.title ?? "",
+    },
+    page: {
+      title: context.input.title ?? "",
+    },
+    source: {
       providerTitle: context.source.providerTitle ?? "",
-      sourceTitle: context.source.title ?? "",
-      ...extraVariables,
-    }).map(([key, value]) => [key, String(value ?? "")]),
-  )
-}
-
-function renderTemplate(template: string, variables: Record<string, unknown>): string {
-  return template.replace(/\{(\w+)\}/g, (_match, key: string) => String(variables[key] ?? "")).trim()
+      title: context.source.title ?? "",
+    },
+    ...extraVariables,
+  }
 }
 
 function getMatchIncludes(matchSpec: SourceRadarMatch): string[] {

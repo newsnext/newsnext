@@ -56,7 +56,7 @@ export default {
   sources: {
     channel: {
       title: "科技圈 在花频道",
-      sourceIcon: "https://t.me/i/userpic/320/{channel}.jpg",
+      sourceIcon: "https://t.me/i/userpic/320/{{ params.channel | required | url_path }}.jpg",
       type: "timeline",
       params: {
         channel: {
@@ -91,7 +91,7 @@ export default {
             home: {
               value: { type: "path", name: "channel" },
               transforms: [
-                { type: "template", value: "https://t.me/s/{value}" },
+                { type: "template", value: "https://t.me/s/{{ value }}" },
               ],
             },
           },
@@ -100,7 +100,7 @@ export default {
       ],
       loader: {
         type: "html",
-        url: ({ channel }) => `https://t.me/s/${channel}`,
+        url: "https://t.me/s/{{ params.channel | url_path }}",
         items: getTelegramMessageItems,
         fields: {
           title: {
@@ -114,12 +114,12 @@ export default {
           timestamp: {
             selector: ".tgme_widget_message_date time",
             attr: "datetime",
-            transform: value => value ? Date.parse(value) : undefined,
+            transforms: [{ type: "parseDate" }],
           },
           inline: {
             text: {
               selector: ".tgme_widget_message_views",
-              transform: value => value ? `${value} views` : undefined,
+              template: "{% if value %}{{ value }} views{% endif %}",
             },
           },
           preview: {

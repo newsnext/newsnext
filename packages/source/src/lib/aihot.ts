@@ -1,19 +1,5 @@
 import type { ProviderConfig } from "@newsnext/source/utils/source"
 
-interface AIHotItem {
-  id: string
-  title: string
-  url: string
-  source: string
-  publishedAt?: string | null
-  summary?: string | null
-  category?: string | null
-}
-
-interface AIHotResponse {
-  items?: AIHotItem[]
-}
-
 const AIHOT_API_URL = "https://aihot.virxact.com/api/public/items?mode=all&take=30"
 
 export default {
@@ -27,16 +13,21 @@ export default {
       loader: {
         type: "json",
         url: AIHOT_API_URL,
-        items: (response: AIHotResponse) => response.items?.filter(item => item.id && item.title && item.url) ?? [],
+        items: "items[?id && title && url]",
         fields: {
           title: "title",
           url: "url",
-          timestamp: item => item.publishedAt ? new Date(item.publishedAt).getTime() : 0,
+          timestamp: {
+            select: "publishedAt",
+            transforms: [{ type: "parseDate" }],
+          },
           inline: {
-            text: item => item.category ? `${item.source} · ${item.category}` : item.source,
+            text: {
+              template: "{{ item.source }}{% if item.category %} · {{ item.category }}{% endif %}",
+            },
           },
           preview: {
-            text: item => item.summary,
+            text: "summary",
           },
         },
       },

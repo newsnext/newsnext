@@ -1,29 +1,6 @@
 import type { ProviderConfig } from "@newsnext/source/utils/source"
 import { normalizeTextParam } from "@newsnext/source/utils/params"
 
-interface Res {
-  version: string
-  title: string
-  description: string
-  home_page_url: string
-  source_url: string
-  icon: string
-  favicon: string
-  items: {
-    url: string
-    date_modified?: string
-    content_html: string
-    date_published: string
-    title: string
-    id: string
-    author: {
-      url: string
-      name: string
-      avatar: string
-    }
-  }[]
-}
-
 export default {
   title: "V2EX",
   color: "slate",
@@ -53,7 +30,7 @@ export default {
                 { type: "normalizeWhitespace" },
                 { type: "extract", pattern: "^.*[>›]\\s*(.+)$" },
               ],
-              fallback: "{feed}",
+              fallback: "{{ params.feed }}",
             },
           },
           confidence: 0.9,
@@ -61,14 +38,17 @@ export default {
       ],
       loader: {
         type: "json",
-        url: ({ feed }) => `https://www.v2ex.com/feed/${feed}.json`,
-        items: (res: Res) => res.items,
+        url: "https://www.v2ex.com/feed/{{ params.feed | url_path }}.json",
+        items: "items",
         fields: {
           title: "title",
-          timestamp: item => new Date(item.date_modified ?? item.date_published).getTime(),
+          timestamp: {
+            select: "date_modified || date_published",
+            transforms: [{ type: "parseDate" }],
+          },
           url: "url",
           inline: {
-            icon: item => item.author.avatar,
+            icon: "author.avatar",
           },
           preview: {
             html: "content_html",

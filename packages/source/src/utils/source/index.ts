@@ -16,10 +16,13 @@ import type {
 import type { HtmlSourceOptions } from "./html-source"
 import type { JsonSourceOptions } from "./json-source"
 
+import { isTemplate, renderTemplate, validateTemplates } from "../template"
 import { assertNetworkCapability } from "./capabilities"
 import { loadHtml } from "./html-source"
-import { loadJson } from "./json-source"
+import { loadJson, validateJsonExpression } from "./json-source"
 import { loadRss } from "./rss-source"
+
+export type { SourceFieldTransform } from "./fields"
 
 interface SourceConfigBase<TParams extends SourceParamSchemaMap> extends Omit<SourceMetadata, "key"> {
   params?: TParams
@@ -28,6 +31,11 @@ interface SourceConfigBase<TParams extends SourceParamSchemaMap> extends Omit<So
 }
 
 type SourceCapabilityOverrides = Partial<SourceCapabilities>
+
+const JSON_TEMPLATE_ROOTS = ["index", "item", "json", "params", "requestUrl", "value"] as const
+const HTML_TEMPLATE_ROOTS = ["value"] as const
+const PARAM_TEMPLATE_ROOTS = ["params"] as const
+const RADAR_TEMPLATE_ROOTS = ["page", "params", "path", "source", "value"] as const
 
 type IsAny<T> = 0 extends (1 & T) ? true : false
 
@@ -71,6 +79,72 @@ export type SourceConfig<TParams extends SourceParamSchemaMap = any, Item = any>
       capabilities: SourceCapabilityOverrides
     }
   )
+
+export function validateSourceTemplates(sourceId: string, config: SourceConfig): void {
+  validateTemplates(config, sourceId)
+
+  if (config.sourceIcon) {
+    validateTemplates(config.sourceIcon, `${sourceId}.sourceIcon`, {
+      allowedRoots: PARAM_TEMPLATE_ROOTS,
+    })
+  }
+
+  const { loader } = config
+  if (loader.type !== "custom" && typeof loader.url === "string") {
+    validateTemplates(loader.url, `${sourceId}.loader.url`, {
+      allowedRoots: PARAM_TEMPLATE_ROOTS,
+    })
+  }
+
+  if (loader.type === "json") {
+    if (typeof loader.items === "string") {
+      validateJsonExpressionAt(loader.items, `${sourceId}.loader.items`)
+    }
+    validateJsonFieldExpressions(loader.fields, `${sourceId}.loader.fields`)
+    validateTemplates(loader.fields, `${sourceId}.loader.fields`, {
+      allowedRoots: JSON_TEMPLATE_ROOTS,
+    })
+  } else if (loader.type === "html") {
+    validateTemplates(loader.fields, `${sourceId}.loader.fields`, {
+      allowedRoots: HTML_TEMPLATE_ROOTS,
+    })
+  }
+
+  validateTemplates(config.radar, `${sourceId}.radar`, {
+    allowedRoots: RADAR_TEMPLATE_ROOTS,
+  })
+}
+
+function validateJsonFieldExpressions(value: unknown, location: string): void {
+  if (typeof value === "string") {
+    validateJsonExpressionAt(value, location)
+    return
+  }
+  if (typeof value === "function" || !value || typeof value !== "object") {
+    return
+  }
+
+  if ("select" in value || "template" in value || "transforms" in value) {
+    const select = (value as { select?: unknown }).select
+    if (typeof select === "string") {
+      validateJsonExpressionAt(select, `${location}.select`)
+    }
+    return
+  }
+
+  for (const [key, child] of Object.entries(value)) {
+    validateJsonFieldExpressions(child, `${location}.${key}`)
+  }
+}
+
+function validateJsonExpressionAt(expression: string, location: string): void {
+  try {
+    validateJsonExpression(expression)
+  } catch (error) {
+    const detail = error instanceof Error ? `: ${error.message}` : ""
+    throw new Error(`Invalid JMESPath expression at ${location}${detail}`, { cause: error })
+  }
+}
 
 type ResolvedSource<TParams extends SourceParamSchemaMap> = Omit<
   RuntimeSource<TParams>,
@@ -117,6 +191,8 @@ function resolveSource<
               ? undefined
               : resolveSourceOption(fetchOptions, loaderParams),
             type: metadata.type,
+          }, {
+            params: loaderParams,
           })
         },
       }
@@ -188,6 +264,10 @@ export function resolveProvider(
   id: string,
   provider: ProviderConfig,
 ): ProviderDefinition {
+  for (const [key, config] of Object.entries(provider.sources)) {
+    validateSourceTemplates(`${id}:${key}`, config)
+  }
+
   const sources = Object.fromEntries(
     Object.entries(provider.sources).map(([key, config]) => {
       const source = resolveSource(key, config)
@@ -238,9 +318,15 @@ function resolveSourceOption<TParams extends SourceParamSchemaMap, TValue>(
   option: SourceOption<TParams, TValue>,
   params: InferSourceParams<TParams>,
 ): TValue {
-  return typeof option === "function"
-    ? (option as (params: InferSourceParams<TParams>) => TValue)(params)
-    : option
+  if (typeof option === "function") {
+    return (option as (params: InferSourceParams<TParams>) => TValue)(params)
+  }
+
+  if (typeof option === "string" && isTemplate(option)) {
+    return renderTemplate(option, { params }) as TValue
+  }
+
+  return option
 }
 
 function resolveDefaultParams<TParams extends SourceParamSchemaMap>(

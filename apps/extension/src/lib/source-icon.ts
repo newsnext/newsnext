@@ -1,3 +1,5 @@
+import { isTemplate, renderTemplate } from "@newsnext/source/utils/template"
+
 export function resolveSourceIconUrl(
   template: string | undefined,
   params: Record<string, unknown>,
@@ -6,16 +8,13 @@ export function resolveSourceIconUrl(
     return undefined
   }
 
-  let isComplete = true
-  const url = template.replace(/\{([^{}]+)\}/g, (_placeholder, key: string) => {
-    const value = params[key]
-    if (value === undefined || value === null || value === "") {
-      isComplete = false
-      return ""
-    }
+  if (!isTemplate(template)) {
+    return template
+  }
 
-    return encodeURIComponent(String(value))
-  })
-
-  return isComplete ? url : undefined
+  try {
+    return renderTemplate(template, { params }) || undefined
+  } catch {
+    return undefined
+  }
 }

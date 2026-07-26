@@ -12,7 +12,8 @@
     "./utils/fetch": "./src/utils/fetch.ts",
     "./utils/jwt": "./src/utils/jwt.ts",
     "./utils/params": "./src/utils/params.ts",
-    "./utils/source": "./src/utils/source/index.ts"
+    "./utils/source": "./src/utils/source/index.ts",
+    "./utils/template": "./src/utils/template.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
@@ -27,9 +28,12 @@
     "cheerio": "^1.2.0",
     "fast-xml-parser": "^5.10.1",
     "iconv-lite": "^0.7.3",
+    "jmespath": "^0.16.0",
+    "liquidjs": "^10.27.2",
     "ofetch": "catalog:"
   },
   "devDependencies": {
+    "@types/jmespath": "^0.15.2",
     "domhandler": "^6.0.1"
   }
 }

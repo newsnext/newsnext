@@ -1,42 +1,10 @@
 import type { ProviderConfig } from "@newsnext/source/utils/source"
 
-const baseURL = new URL("https://github.com")
-
 const DATE_RANGE_OPTIONS = [
   { label: "Today", value: "daily" },
   { label: "This week", value: "weekly" },
   { label: "This month", value: "monthly" },
 ] as const
-
-type DateRange = (typeof DATE_RANGE_OPTIONS)[number]["value"]
-
-interface GitHubTrendingParams {
-  language: string
-  spokenLanguage: string
-  dateRange: DateRange
-}
-
-function buildGitHubTrendingUrl({
-  language,
-  spokenLanguage,
-  dateRange,
-}: GitHubTrendingParams): string {
-  const normalizedLanguage = language.trim()
-  const normalizedSpokenLanguage = spokenLanguage.trim()
-  const url = new URL(
-    normalizedLanguage
-      ? `/trending/${encodeURIComponent(normalizedLanguage)}`
-      : "/trending",
-    baseURL,
-  )
-
-  url.searchParams.set("since", dateRange)
-  if (normalizedSpokenLanguage) {
-    url.searchParams.set("spoken_language_code", normalizedSpokenLanguage)
-  }
-
-  return url.toString()
-}
 
 export default {
   title: "GitHub",
@@ -84,35 +52,38 @@ export default {
             },
           },
           metaPatch: {
-            title: "Trending {language}",
+            title: "Trending {{ params.language }}",
           },
           confidence: 0.95,
         },
       ],
       loader: {
         type: "html",
-        url: params => buildGitHubTrendingUrl(params),
+        url: "https://github.com/trending{% assign language = params.language | strip %}{% if language %}/{{ language | url_path }}{% endif %}?since={{ params.dateRange | url_query }}{% assign spoken_language = params.spokenLanguage | strip %}{% if spoken_language %}&spoken_language_code={{ spoken_language | url_query }}{% endif %}",
         items: "main .Box div[data-hpc] > article",
         fields: {
           title: {
             selector: ">h2 a",
-            transform: val => val?.replace(/\n+/g, "").trim(),
+            transforms: [{ type: "normalizeWhitespace" }],
           },
           url: {
             selector: ">h2 a",
             attr: "href",
-            transform: val => val ? new URL(val, baseURL).toString() : undefined,
+            template: "https://github.com{{ value }}",
           },
           inline: {
             text: {
               selector: "[href$=stargazers]",
-              transform: val => `✰ ${val?.replace(/\s+/g, "").trim()}`,
+              transforms: [
+                { type: "normalizeWhitespace" },
+                { type: "prepend", value: "✰ " },
+              ],
             },
           },
           preview: {
             text: {
               selector: ">p",
-              transform: val => val?.replace(/\n+/g, "").trim(),
+              transforms: [{ type: "normalizeWhitespace" }],
             },
           },
         },

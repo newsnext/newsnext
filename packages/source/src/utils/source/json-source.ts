@@ -3,11 +3,46 @@ import type {
   NewsItem,
   RuntimeSource,
 } from "../../typings/sources"
+import type { SourceFieldTransform } from "./fields"
+import * as jmespath from "jmespath"
 import { myFetch } from "../fetch"
+import { renderHtmlTemplate, renderTemplate } from "../template"
+import { applyFieldTransforms, normalizeTimestamp } from "./fields"
 
-export type FieldResolver<Item = any, Result = any> = string | ((item: Item) => Result | null | undefined)
+const MAX_EXPRESSION_LENGTH = 2_000
+const validatedExpressions = new Set<string>()
+const blockedExpressionNames = new Set(["__proto__", "constructor", "prototype"])
+const jmespathCompiler = jmespath as typeof jmespath & {
+  compile: (expression: string) => unknown
+}
 
-export interface JsonSourceOptions<Item = any> {
+export interface JsonFieldResolverContext {
+  json: unknown
+  index: number
+  params: Record<string, unknown>
+  requestUrl: string
+}
+
+export interface JsonFieldConfig {
+  select?: string
+  template?: string
+  transforms?: SourceFieldTransform[]
+}
+
+export type FieldResolver<Item = unknown, Result = unknown>
+  = string
+    | JsonFieldConfig
+    | ((item: Item, context: JsonFieldResolverContext) => Result | null | undefined)
+
+interface JsonTemplateContext<Item> extends JsonFieldResolverContext {
+  item: Item
+}
+
+export interface JsonSourceLoaderContext {
+  params?: Record<string, unknown>
+}
+
+export interface JsonSourceOptions<Item = unknown> {
   url: string
   type?: RuntimeSource["type"]
   /**
@@ -22,7 +57,7 @@ export interface JsonSourceOptions<Item = any> {
    * Custom fetch function
    */
   fetchOptions?: FetchOptions
-  fetch?: (url: string) => Promise<any>
+  fetch?: (url: string) => Promise<unknown>
   fields: {
     title: FieldResolver<Item, string>
     url: FieldResolver<Item, string>
@@ -43,22 +78,77 @@ export interface JsonSourceOptions<Item = any> {
   }
 }
 
-export function resolvePath(item: any, path: string) {
-  return path.split(".").reduce((acc: any, part) => acc && acc[part], item)
+export function selectJson(value: unknown, expression: string): unknown {
+  validateJsonExpression(expression)
+  return jmespath.search(value, expression)
 }
 
-function resolveValue<Item>(item: Item, resolver: FieldResolver<Item, any>): any {
-  if (typeof resolver === "function") {
-    return resolver(item)
+export function validateJsonExpression(expression: string): void {
+  if (validatedExpressions.has(expression)) return
+  if (expression.length > MAX_EXPRESSION_LENGTH) {
+    throw new Error(`JMESPath expression exceeds ${MAX_EXPRESSION_LENGTH} characters`)
   }
-  // Simple dot notation resolution
-  return resolvePath(item, resolver as string)
+
+  const compiled = jmespathCompiler.compile(expression)
+  assertSafeExpression(compiled)
+  validatedExpressions.add(expression)
 }
 
-export async function loadJson<Item = any>(opts: JsonSourceOptions<Item>): Promise<NewsItem[]> {
+function assertSafeExpression(value: unknown): void {
+  if (Array.isArray(value)) {
+    value.forEach(assertSafeExpression)
+    return
+  }
+  if (!value || typeof value !== "object") {
+    return
+  }
+
+  const node = value as Record<string, unknown>
+  if (typeof node.name === "string" && blockedExpressionNames.has(node.name)) {
+    throw new Error(`JMESPath property "${node.name}" is not allowed`)
+  }
+  Object.values(node).forEach(assertSafeExpression)
+}
+
+function resolveValue<Item>(
+  item: Item,
+  context: JsonFieldResolverContext,
+  resolver: FieldResolver<Item>,
+  escapeTemplateValues = false,
+): unknown {
+  if (typeof resolver === "function") {
+    return resolver(item, context)
+  }
+
+  if (typeof resolver === "string") {
+    return selectJson(item, resolver)
+  }
+
+  const selected = resolver.select === undefined
+    ? item
+    : selectJson(item, resolver.select)
+  const value = applyFieldTransforms(selected, resolver.transforms)
+  if (!resolver.template) {
+    return value
+  }
+
+  const templateContext = {
+    item,
+    value,
+    ...context,
+  } satisfies JsonTemplateContext<Item> & { value: unknown }
+  return escapeTemplateValues
+    ? renderHtmlTemplate(resolver.template, templateContext)
+    : renderTemplate(resolver.template, templateContext)
+}
+
+export async function loadJson<Item = unknown>(
+  opts: JsonSourceOptions<Item>,
+  loaderContext: JsonSourceLoaderContext = {},
+): Promise<NewsItem[]> {
   const { url, type, fetchOptions, fetch, items: itemsResolver, fields } = opts
 
-  let json: any
+  let json: unknown
   if (fetch) {
     json = await fetch(url)
   } else {
@@ -70,12 +160,12 @@ export async function loadJson<Item = any>(opts: JsonSourceOptions<Item>): Promi
     if (typeof itemsResolver === "function") {
       const res = itemsResolver(json)
       if (typeof res === "string") {
-        items = resolvePath(json, res)
+        items = selectJson(json, res) as Item[]
       } else {
         items = res
       }
     } else if (typeof itemsResolver === "string") {
-      items = resolvePath(json, itemsResolver)
+      items = selectJson(json, itemsResolver) as Item[]
     }
   } else {
     items = Array.isArray(json) ? json : []
@@ -86,50 +176,56 @@ export async function loadJson<Item = any>(opts: JsonSourceOptions<Item>): Promi
     return []
   }
 
-  const news: NewsItem[] = items.map((item) => {
-    const title = resolveValue(item, fields.title)
-    const itemUrl = resolveValue(item, fields.url)
+  const news: NewsItem[] = items.map((item, index) => {
+    const context: JsonFieldResolverContext = {
+      json,
+      index,
+      params: loaderContext.params ?? {},
+      requestUrl: url,
+    }
+    const titleValue = resolveValue(item, context, fields.title)
+    const itemUrlValue = resolveValue(item, context, fields.url)
 
-    if (!title || !itemUrl) return null
+    if (!titleValue || !itemUrlValue) return null
 
     const newsItem: NewsItem = {
-      title,
-      url: itemUrl,
+      title: String(titleValue),
+      url: String(itemUrlValue),
     }
 
     if (fields.mobileUrl) {
-      const mobileUrl = resolveValue(item, fields.mobileUrl)
-      if (mobileUrl) newsItem.mobileUrl = mobileUrl
+      const mobileUrl = resolveValue(item, context, fields.mobileUrl)
+      if (mobileUrl) newsItem.mobileUrl = String(mobileUrl)
     }
 
     if (fields.timestamp) {
-      const timestamp = resolveValue(item, fields.timestamp)
-      if (timestamp) newsItem.timestamp = timestamp
+      const timestamp = normalizeTimestamp(resolveValue(item, context, fields.timestamp))
+      if (timestamp !== undefined) newsItem.timestamp = timestamp
     }
 
     if (fields.inline) {
-      const inline: any = {}
+      const inline: Record<string, unknown> = {}
       for (const [key, resolver] of Object.entries(fields.inline)) {
-        const val = resolveValue(item, resolver as FieldResolver<Item, any>)
+        const val = resolveValue(item, context, resolver as FieldResolver<Item>, key === "html")
         if (val != null) {
-          inline[key as keyof typeof inline] = val
+          Object.assign(inline, { [key]: val })
         }
       }
       if (Object.keys(inline).length > 0) {
-        newsItem.inline = inline
+        newsItem.inline = inline as NonNullable<NewsItem["inline"]>
       }
     }
 
     if (fields.preview) {
-      const preview: any = {}
+      const preview: Record<string, unknown> = {}
       for (const [key, resolver] of Object.entries(fields.preview)) {
-        const val = resolveValue(item, resolver as FieldResolver<Item, any>)
+        const val = resolveValue(item, context, resolver as FieldResolver<Item>, key === "html")
         if (val != null) {
-          preview[key as keyof typeof preview] = val
+          Object.assign(preview, { [key]: val })
         }
       }
       if (Object.keys(preview).length > 0) {
-        newsItem.preview = preview
+        newsItem.preview = preview as NonNullable<NewsItem["preview"]>
       }
     }
 

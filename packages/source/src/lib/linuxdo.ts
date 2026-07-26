@@ -88,7 +88,10 @@ export default {
         fields: {
           title: "title",
           timestamp: topic => new Date(topic.created_at).valueOf(),
-          url: topic => `https://linux.do/t/topic/${topic.id}`,
+          url: {
+            select: "id",
+            template: "https://linux.do/t/topic/{{ value | url_path }}",
+          },
           inline: {
             icon: topic => topic.last_poster_avatar ? { src: topic.last_poster_avatar, radius: 999 } : undefined,
           },
@@ -105,7 +108,10 @@ export default {
         items: getTopicsWithAvatars,
         fields: {
           title: "title",
-          url: topic => `https://linux.do/t/topic/${topic.id}`,
+          url: {
+            select: "id",
+            template: "https://linux.do/t/topic/{{ value | url_path }}",
+          },
           inline: {
             icon: topic => topic.last_poster_avatar ? { src: topic.last_poster_avatar, radius: 999 } : undefined,
           },

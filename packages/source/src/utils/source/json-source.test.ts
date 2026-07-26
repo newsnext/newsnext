@@ -77,6 +77,72 @@ describe("jSON source loader", () => {
     expect(results[0].title).toBe("Nest")
   })
 
+  it("supports JMESPath filtering, sorting, and projections", async () => {
+    ;(myFetch as any).mockResolvedValue({
+      response: {
+        items: [
+          { name: "Low", category: "A", score: 5, id: 1 },
+          { name: "High", category: "B", score: 30, id: 2 },
+          { name: "Medium", category: "C", score: 20, id: 3 },
+        ],
+      },
+    })
+
+    const source = createJsonTestSource(() => ({
+      url: "https://api.example.com",
+      items: "reverse(sort_by(response.items[?score > `10`], &score))",
+      fields: {
+        title: "join(' · ', [name, category])",
+        url: {
+          select: "id",
+          template: "https://example.com/items/{{ value }}",
+        },
+        inline: {
+          text: {
+            select: "score",
+            transforms: [
+              { type: "multiply", value: 2 },
+              { type: "prepend", value: "Score: " },
+            ],
+          },
+        },
+      },
+    }))
+
+    const results = await (source as any).loader({})
+    expect(results.map((item: NewsItem) => item.title)).toEqual(["High · B", "Medium · C"])
+    expect(results[0].inline?.text).toBe("Score: 60")
+  })
+
+  it("rejects invalid JMESPath expressions during source registration", () => {
+    expect(() => createSource({
+      loader: {
+        type: "json",
+        url: "https://api.example.com",
+        items: "items[",
+        fields: {
+          title: "title",
+          url: "url",
+        },
+      },
+      cache: "5m",
+    })).toThrow("Invalid JMESPath expression at test:test.loader.items")
+  })
+
+  it("rejects prototype access in JMESPath expressions", () => {
+    expect(() => createSource({
+      loader: {
+        type: "json",
+        url: "https://api.example.com",
+        fields: {
+          title: "constructor.name",
+          url: "url",
+        },
+      },
+      cache: "5m",
+    })).toThrow("JMESPath property \"constructor\" is not allowed")
+  })
+
   it("should preserve original order for hottest sources", async () => {
     const data = [
       { id: 1, title: "Item 1", link: "/1", ts: 100 },
@@ -162,6 +228,92 @@ describe("jSON source loader", () => {
     const results = await (source as any).loader({})
     expect(results[0].title).toBe("FUNC")
     expect(results[0].inline.text).toBe("Score: 99")
+  })
+
+  it("should render field templates against each item", async () => {
+    ;(myFetch as any).mockResolvedValue({
+      label: "Latest",
+      items: [
+        {
+          id: 42,
+          title: "Template",
+          source: "News",
+          category: "Tech",
+          summary: "<script>alert(1)</script>",
+        },
+      ],
+    })
+
+    const source = createJsonTestSource(() => ({
+      url: "https://api.example.com",
+      items: "items",
+      fields: {
+        title: {
+          template: "{{ json.label }}: {{ item.title }}",
+        },
+        url: {
+          select: "id",
+          template: "https://example.com/items/{{ value }}",
+        },
+        inline: {
+          text: {
+            template: "{{ item.source }}{% if item.category %} · {{ item.category }}{% endif %}",
+          },
+        },
+        preview: {
+          html: {
+            select: "summary",
+            template: "<strong>{{ value }}</strong>",
+          },
+        },
+      },
+    }))
+
+    const results = await (source as any).loader({})
+    expect(results[0]).toMatchObject({
+      title: "Latest: Template",
+      url: "https://example.com/items/42",
+      inline: { text: "News · Tech" },
+      preview: {
+        html: "<strong>&lt;script&gt;alert(1)&lt;/script&gt;</strong>",
+      },
+    })
+  })
+
+  it("should expose params, request details, and indexes to field resolvers", async () => {
+    ;(myFetch as any).mockResolvedValue([
+      { id: 7, title: "Context" },
+    ])
+
+    const source = createSource({
+      params: {
+        section: { type: "text", default: "tech", title: "Section" },
+      } satisfies SourceParamSchemaMap,
+      loader: {
+        type: "json",
+        url: "https://api.example.com/{{ params.section | url_path }}",
+        fields: {
+          title: (item, context) => `${context.index}: ${item.title}`,
+          url: {
+            select: "id",
+            template: "https://example.com/{{ params.section | url_path }}/{{ value | url_path }}",
+          },
+          inline: {
+            text: {
+              template: "{{ requestUrl }}",
+            },
+          },
+        },
+      },
+      cache: "5m",
+    })
+
+    const results = await (source as any).loader({ section: "world" })
+    expect(results[0]).toMatchObject({
+      title: "0: Context",
+      url: "https://example.com/world/7",
+      inline: { text: "https://api.example.com/world" },
+    })
   })
 
   it("should omit nullable optional field groups", async () => {

@@ -12,10 +12,7 @@ const createLoader = (sub: string) => ({
     url: {
       selector: "",
       attr: "id",
-      transform: (id: string | undefined) => {
-        if (!id) return undefined
-        return `https://news.ycombinator.com/item?id=${id}`
-      },
+      template: "https://news.ycombinator.com/item?id={{ value | url_query }}",
     },
     timestamp: {
       transform: (_value: string | undefined, $el: cheerio.Cheerio<AnyNode>) => {

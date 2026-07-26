@@ -2,12 +2,18 @@
 
 ## Project Overview
 
-Newsnext is a personalized web crawler that runs inside a browser extension.
+Newsnext is a personalized web crawler that runs inside a browser extension (mv3).
 
 - Use English for all code, comments, and user-facing text written in the repository.
 - Avoid creating Markdown documentation files unless the task explicitly requires them.
 
 ## Development
+
+### Source Documentation
+
+- `docs/SOURCE_GUIDELINE.md` is the canonical source authoring reference.
+- Update `docs/SOURCE_GUIDELINE.md` in the same change whenever modifying source configuration, provider metadata, parameters, loaders, field selectors, transforms, Liquid templates, JMESPath behavior, radar rules, capabilities, secrets, caching, validation, or source security limits.
+- Keep source examples in the guide aligned with the current TypeScript APIs and runtime behavior.
 
 ### Version Control
 

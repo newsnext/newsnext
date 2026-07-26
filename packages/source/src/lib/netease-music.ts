@@ -1,49 +1,9 @@
 import type { ProviderConfig } from "@newsnext/source/utils/source"
 import { normalizeTextParam } from "@newsnext/source/utils/params"
 
-interface NeteaseArtist {
-  name?: string
-}
-
-interface NeteaseAlbum {
-  name?: string
-  picUrl?: string
-}
-
-interface NeteaseTrack {
-  id: number
-  name: string
-  ar?: NeteaseArtist[]
-  artists?: NeteaseArtist[]
-  al?: NeteaseAlbum
-  album?: NeteaseAlbum
-}
-
-interface PlaylistPayload {
-  tracks?: NeteaseTrack[]
-  name?: string
-}
-
-interface PlaylistResponse {
-  result?: PlaylistPayload
-  playlist?: PlaylistPayload
-}
-
 const DEFAULT_PLAYLIST_ID = "19723756"
 
 const getPlaylistHome = (id: string): string => `https://music.163.com/#/playlist?id=${id}`
-
-const extractTracks = (payload: PlaylistResponse): NeteaseTrack[] => {
-  const tracks = payload.result?.tracks ?? payload.playlist?.tracks ?? []
-  return Array.isArray(tracks) ? tracks.slice(0, 100) : []
-}
-
-const formatArtists = (track: NeteaseTrack): string => {
-  const artists = track.ar ?? track.artists ?? []
-  return artists.map(artist => artist.name).filter(Boolean).join(" / ")
-}
-
-const extractCover = (track: NeteaseTrack): string | undefined => track.al?.picUrl ?? track.album?.picUrl
 
 export default {
   title: "网易云音乐",
@@ -92,7 +52,7 @@ export default {
                   fallbackToEmpty: true,
                 },
               ],
-              fallback: "Playlist {id}",
+              fallback: "Playlist {{ params.id }}",
             },
           },
           confidence: 0.95,
@@ -100,27 +60,22 @@ export default {
       ],
       loader: {
         type: "json",
-        url: ({ id }) => `https://music.163.com/api/playlist/detail?id=${id}`,
-        items: (json: PlaylistResponse) => extractTracks(json),
+        url: "https://music.163.com/api/playlist/detail?id={{ params.id | url_query }}",
+        items: "(result.tracks || playlist.tracks)[:100]",
         fields: {
-          title: track => track.name,
-          url: track => `https://music.163.com/song?id=${track.id}`,
+          title: "name",
+          url: {
+            select: "id",
+            template: "https://music.163.com/song?id={{ value | url_query }}",
+          },
           inline: {
-            text: (track) => {
-              const artists = formatArtists(track)
-              const album = track.al?.name ?? track.album?.name
-              return [artists, album].filter(Boolean).join(" · ")
+            text: {
+              template: "{% assign artists = item.ar | default: item.artists %}{% for artist in artists %}{% unless forloop.first %} / {% endunless %}{{ artist.name }}{% endfor %}{% assign album = item.al.name | default: item.album.name %}{% if artists and album %} · {% endif %}{{ album | default: '' }}",
             },
-            icon: (track) => {
-              const pic = extractCover(track)
-              return pic ? { src: pic, radius: 6 } : undefined
-            },
+            icon: "al.picUrl || album.picUrl",
           },
           preview: {
-            picture: (track) => {
-              const pic = extractCover(track)
-              return pic ? { src: pic } : undefined
-            },
+            picture: "al.picUrl || album.picUrl",
           },
         },
       },
