@@ -10,7 +10,7 @@ export default {
       loader: {
         type: "json",
         url: "https://stock.xueqiu.com/v5/stock/hot_stock/list.json?size=30&_type=10&type=10",
-        items: "data.items[?!ad]",
+        items: "data.items[?ad == `0` || ad == `null`]",
         fields: {
           url: {
             select: "code",
@@ -19,7 +19,7 @@ export default {
           title: "name",
           inline: {
             html: {
-              template: "<span style=\"color: {% if item.percent > 0 %}#ef4444{% else %}#22c55e{% endif %}\">{{ item.percent }}%</span> <span>{{ item.exchange }}</span>",
+              template: "<span style=\"color: {% if item.percent == nil %}#64748b{% elsif item.percent > 0 %}#ef4444{% else %}#22c55e{% endif %}\">{% if item.percent == nil %}--{% else %}{{ item.percent }}%{% endif %}</span> <span>{{ item.exchange }}</span>",
             },
           },
         },
