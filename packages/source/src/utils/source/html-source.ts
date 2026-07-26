@@ -5,11 +5,10 @@ import type {
   NewsItem,
   RuntimeSource,
 } from "../../typings/sources"
-import type { SourceFieldTransform } from "./fields"
 import { load } from "cheerio/slim"
 import { myFetch } from "../fetch"
 import { renderHtmlTemplate, renderTemplate } from "../template"
-import { applyFieldTransforms, normalizeTimestamp } from "./fields"
+import { normalizeTimestamp } from "./fields"
 
 const MAX_SELECTED_ITEMS = 2_000
 
@@ -65,7 +64,6 @@ export interface HtmlFieldConfig<T = unknown> {
   all?: boolean
   separator?: string
   template?: string
-  transforms?: SourceFieldTransform[]
   /**
    * Internal escape hatch for built-in sources with unusual DOM relationships.
    */
@@ -194,9 +192,7 @@ function extractField(
     return config.transform(value, target, context)
   }
 
-  return applyFieldTransforms(value, config.transforms, {
-    requestUrl: context.requestUrl,
-  })
+  return value
 }
 
 function selectTarget(
@@ -287,7 +283,7 @@ function resolveField(
   const templateContext = {
     ...context,
     item: extractedItem,
-    value,
+    value: value ?? null,
   } satisfies HtmlTemplateContext
 
   return entry.htmlOutput

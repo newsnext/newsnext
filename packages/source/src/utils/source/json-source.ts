@@ -3,11 +3,10 @@ import type {
   NewsItem,
   RuntimeSource,
 } from "../../typings/sources"
-import type { SourceFieldTransform } from "./fields"
 import * as jmespath from "jmespath"
 import { myFetch } from "../fetch"
 import { renderHtmlTemplate, renderTemplate } from "../template"
-import { applyFieldTransforms, normalizeTimestamp } from "./fields"
+import { normalizeTimestamp } from "./fields"
 
 const MAX_EXPRESSION_LENGTH = 2_000
 const validatedExpressions = new Set<string>()
@@ -26,7 +25,6 @@ export interface JsonFieldResolverContext {
 export interface JsonFieldConfig {
   select?: string
   template?: string
-  transforms?: SourceFieldTransform[]
 }
 
 export type FieldResolver<Item = unknown, Result = unknown>
@@ -127,16 +125,13 @@ function resolveValue<Item>(
   const selected = resolver.select === undefined
     ? item
     : selectJson(item, resolver.select)
-  const value = applyFieldTransforms(selected, resolver.transforms, {
-    requestUrl: context.requestUrl,
-  })
   if (!resolver.template) {
-    return value
+    return selected
   }
 
   const templateContext = {
     item,
-    value,
+    value: selected ?? null,
     ...context,
   } satisfies JsonTemplateContext<Item> & { value: unknown }
   return escapeTemplateValues

@@ -43,7 +43,7 @@ export default {
           title: "title",
           timestamp: {
             select: "date_modified || date_published",
-            transforms: [{ type: "parseDate" }],
+            template: "{{ value | date_to_ms }}",
           },
           url: "url",
           inline: {

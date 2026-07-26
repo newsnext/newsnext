@@ -46,6 +46,29 @@ function createEngine(output: "html" | "plain"): Liquid {
     }
     return value
   })
+  engine.registerFilter("absolute_url", (value: unknown, base: unknown) => {
+    return resolveUrl(value, base)
+  })
+  engine.registerFilter("css_url", (value: unknown) => {
+    return extractCssUrl(value)
+  })
+  engine.registerFilter("date_to_ms", (value: unknown) => {
+    const timestamp = Date.parse(stringify(value))
+    return Number.isFinite(timestamp) ? timestamp : undefined
+  })
+  engine.registerFilter("first_line", (value: unknown) => {
+    return firstLine(value)
+  })
+  engine.registerFilter("normalize_lines", (value: unknown, spacing: unknown = 1) => {
+    const lineSpacing = Number(spacing)
+    if (!Number.isInteger(lineSpacing) || lineSpacing < 1 || lineSpacing > 4) {
+      throw new Error("The normalize_lines spacing must be an integer from 1 through 4")
+    }
+    return normalizeLines(value, "\n".repeat(lineSpacing))
+  })
+  engine.registerFilter("normalize_whitespace", (value: unknown) => {
+    return stringify(value).replace(/\s+/g, " ").trim()
+  })
   engine.registerFilter("url_path", encodeUrlComponent)
   engine.registerFilter("url_query", encodeUrlComponent)
 
@@ -178,6 +201,48 @@ function encodeUrlComponent(value: unknown): string {
   return encodeURIComponent(String(value ?? ""))
 }
 
+function extractCssUrl(value: unknown): string | undefined {
+  const css = stringify(value)
+  const start = css.toLowerCase().indexOf("url(")
+  if (start === -1) return undefined
+
+  const content = css.slice(start + 4).trimStart()
+  const quote = content[0]
+  if (quote === "\"" || quote === "'") {
+    const end = content.indexOf(quote, 1)
+    return end === -1 ? undefined : content.slice(1, end) || undefined
+  }
+
+  const end = content.indexOf(")")
+  return end === -1 ? undefined : content.slice(0, end).trim() || undefined
+}
+
+function firstLine(value: unknown): string | undefined {
+  return stringify(value)
+    .split(/\r?\n/)
+    .map(line => line.trim())
+    .find(Boolean)
+}
+
+function normalizeLines(value: unknown, separator: string): string {
+  return stringify(value)
+    .split(/\r?\n/)
+    .map(line => line.trim())
+    .filter(Boolean)
+    .join(separator)
+}
+
+function resolveUrl(value: unknown, base: unknown): string | undefined {
+  const url = stringify(value)
+  if (!url) return undefined
+
+  const baseUrl = stringify(base)
+  if (!baseUrl) {
+    throw new Error("The absolute_url filter requires a base URL")
+  }
+  return new URL(url, baseUrl).href
+}
+
 function setCached<T>(cache: Map<string, T>, key: string, value: T): void {
   if (cache.size >= CACHE_LIMIT) {
     const oldestKey = cache.keys().next().value
@@ -186,4 +251,8 @@ function setCached<T>(cache: Map<string, T>, key: string, value: T): void {
     }
   }
   cache.set(key, value)
+}
+
+function stringify(value: unknown): string {
+  return value === undefined || value === null ? "" : String(value)
 }

@@ -2,7 +2,6 @@ import type { ProviderConfig } from "@newsnext/source/utils/source"
 
 const DEFAULT_CHANNEL = "TestFlightCN"
 const TELEGRAM_CHANNEL_PATTERN = /^(?![\d_])\w{5,32}$/
-const TITLE_MAX_LENGTH = 160
 
 export default {
   title: "Telegram",
@@ -65,20 +64,17 @@ export default {
           title: {
             selector: ".tgme_widget_message_text",
             brSeparator: "\n",
-            transforms: [
-              { type: "firstLine" },
-              { type: "truncate", length: TITLE_MAX_LENGTH },
-            ],
+            template: "{{ value | first_line | truncate: 160, '…' }}",
           },
           url: {
             selector: ".tgme_widget_message_date",
             attr: "href",
-            transforms: [{ type: "resolveUrl" }],
+            template: "{{ value | absolute_url: requestUrl }}",
           },
           timestamp: {
             selector: ".tgme_widget_message_date time",
             attr: "datetime",
-            transforms: [{ type: "parseDate" }],
+            template: "{{ value | date_to_ms }}",
           },
           inline: {
             text: {
@@ -90,14 +86,12 @@ export default {
             text: {
               selector: ".tgme_widget_message_text",
               brSeparator: "\n",
-              transforms: [
-                { type: "normalizeLines", separator: "\n\n" },
-              ],
+              template: "{{ value | normalize_lines: 2 }}",
             },
             picture: {
               selector: ".tgme_widget_message_photo_wrap, .tgme_widget_message_video_thumb",
               attr: "style",
-              transforms: [{ type: "extractCssUrl" }],
+              template: "{{ value | css_url }}",
             },
           },
         },

@@ -83,7 +83,7 @@ export default {
           mobileUrl: "shareurl",
           timestamp: {
             select: "ctime",
-            transforms: [{ type: "multiply", value: 1000 }],
+            template: "{{ value | times: 1000 }}",
           },
         },
       },
@@ -111,7 +111,7 @@ export default {
           mobileUrl: "shareurl",
           timestamp: {
             select: "ctime",
-            transforms: [{ type: "multiply", value: 1000 }],
+            template: "{{ value | times: 1000 }}",
           },
         },
       },
@@ -138,7 +138,7 @@ export default {
           mobileUrl: "shareurl",
           timestamp: {
             select: "ctime",
-            transforms: [{ type: "multiply", value: 1000 }],
+            template: "{{ value | times: 1000 }}",
           },
         },
       },

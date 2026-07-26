@@ -64,7 +64,7 @@ describe("hTML source loader", () => {
     expect(results[0].timestamp).toBe(123457)
   })
 
-  it("should support declarative transforms", async () => {
+  it("should support composable Liquid filters", async () => {
     const html = `
       <div class="item">
         <div class="title">  Dirty Title  </div>
@@ -79,7 +79,7 @@ describe("hTML source loader", () => {
       fields: {
         title: {
           selector: ".title",
-          transforms: [{ type: "uppercase" }],
+          template: "{{ value | upcase }}",
         },
         url: {
           selector: ".title",
@@ -88,7 +88,7 @@ describe("hTML source loader", () => {
         timestamp: {
           selector: ".date",
           attr: "data-ts",
-          transforms: [{ type: "multiply", value: 1000 }],
+          template: "{{ value | times: 1000 }}",
         },
       },
     }))
@@ -98,7 +98,7 @@ describe("hTML source loader", () => {
     expect(results[0].timestamp).toBe(1600000000000)
   })
 
-  it("should support template transforms", async () => {
+  it("should support template formatting", async () => {
     ;(myFetch as any).mockResolvedValue(`
       <div class="item">
         <a class="title" href="/article/1">Article 1</a>
@@ -151,13 +151,12 @@ describe("hTML source loader", () => {
         fields: {
           title: {
             selector: ".title",
-            transforms: [{ type: "normalizeWhitespace" }],
-            template: "{{ params.prefix }}: {{ value }} ({{ item.inline.text }})",
+            template: "{{ params.prefix }}: {{ value | normalize_whitespace }} ({{ item.inline.text }})",
           },
           url: {
             selector: ".title",
             attr: "href",
-            transforms: [{ type: "resolveUrl" }],
+            template: "{{ value | absolute_url: requestUrl }}",
           },
           inline: {
             text: ".category",
@@ -206,7 +205,7 @@ describe("hTML source loader", () => {
         url: {
           selector: ".fallback-title",
           attr: "href",
-          transforms: [{ type: "resolveUrl" }],
+          template: "{{ value | absolute_url: requestUrl }}",
         },
         inline: {
           text: {
@@ -259,7 +258,7 @@ describe("hTML source loader", () => {
         url: {
           selector: ".title",
           attr: "href",
-          transforms: [{ type: "resolveUrl" }],
+          template: "{{ value | absolute_url: requestUrl }}",
         },
         inline: {
           text: {
@@ -290,6 +289,10 @@ describe("hTML source loader", () => {
         ></a>
       </article>
       <article class="message message-without-text"></article>
+      <article class="message">
+        <div class="message-text">Short message</div>
+        <a class="message-date" href="/channel/43">Date</a>
+      </article>
     `)
 
     const source = createHtmlTestSource(() => ({
@@ -299,28 +302,23 @@ describe("hTML source loader", () => {
         title: {
           selector: ".message-text",
           brSeparator: "\n",
-          transforms: [
-            { type: "firstLine" },
-            { type: "truncate", length: 16 },
-          ],
+          template: "{{ value | first_line | truncate: 16, '…' }}",
         },
         url: {
           selector: ".message-date",
           attr: "href",
-          transforms: [{ type: "resolveUrl" }],
+          template: "{{ value | absolute_url: requestUrl }}",
         },
         preview: {
           text: {
             selector: ".message-text",
             brSeparator: "\n",
-            transforms: [
-              { type: "normalizeLines", separator: "\n\n" },
-            ],
+            template: "{{ value | normalize_lines: 2 }}",
           },
           picture: {
             selector: ".message-photo",
             attr: "style",
-            transforms: [{ type: "extractCssUrl" }],
+            template: "{{ value | css_url }}",
           },
         },
       },
@@ -328,7 +326,7 @@ describe("hTML source loader", () => {
 
     const results = await (source as any).loader({})
 
-    expect(results).toHaveLength(1)
+    expect(results).toHaveLength(2)
     expect(results[0]).toMatchObject({
       title: "First line that…",
       url: "https://example.com/channel/42",
@@ -337,6 +335,14 @@ describe("hTML source loader", () => {
         picture: "https://cdn.example.com/photo.jpg",
       },
     })
+    expect(results[1]).toMatchObject({
+      title: "Short message",
+      url: "https://example.com/channel/43",
+      preview: {
+        text: "Short message",
+      },
+    })
+    expect(results[1].preview?.picture).toBeUndefined()
   })
 
   it("should resolve items with a function and filter items", async () => {

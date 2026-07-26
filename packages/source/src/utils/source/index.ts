@@ -23,8 +23,6 @@ import { loadHtml } from "./html-source"
 import { loadJson, validateJsonExpression } from "./json-source"
 import { loadRss } from "./rss-source"
 
-export type { SourceFieldTransform } from "./fields"
-
 interface SourceConfigBase<TParams extends SourceParamSchemaMap> extends Omit<SourceMetadata, "key"> {
   params?: TParams
   radar?: SourceRadarRule[]
@@ -125,7 +123,7 @@ function validateJsonFieldExpressions(value: unknown, location: string): void {
     return
   }
 
-  if ("select" in value || "template" in value || "transforms" in value) {
+  if ("select" in value || "template" in value) {
     const select = (value as { select?: unknown }).select
     if (typeof select === "string") {
       validateJsonExpressionAt(select, `${location}.select`)

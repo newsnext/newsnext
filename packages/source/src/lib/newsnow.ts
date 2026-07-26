@@ -50,12 +50,12 @@ export default {
           url: {
             selector: ".article-card__headline",
             attr: "href",
-            transforms: [{ type: "resolveUrl" }],
+            template: "{{ value | absolute_url: requestUrl }}",
           },
           timestamp: {
             selector: "[data-timestamp]",
             attr: "data-timestamp",
-            transforms: [{ type: "multiply", value: 1000 }],
+            template: "{{ value | times: 1000 }}",
           },
           inline: {
             text: ".article-publisher__name",

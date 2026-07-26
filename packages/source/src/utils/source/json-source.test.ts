@@ -100,10 +100,7 @@ describe("jSON source loader", () => {
         inline: {
           text: {
             select: "score",
-            transforms: [
-              { type: "multiply", value: 2 },
-              { type: "prepend", value: "Score: " },
-            ],
+            template: "Score: {{ value | times: 2 }}",
           },
         },
       },

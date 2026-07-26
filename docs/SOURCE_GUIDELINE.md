@@ -25,14 +25,11 @@ Structured source data flows through three distinct layers:
 ```text
 JMESPath or CSS selectors
         ↓
-typed field transforms
-        ↓
 Liquid templates
 ```
 
 - JMESPath and CSS selectors select data.
-- Typed transforms normalize known value types.
-- Liquid formats final text, URLs, and HTML.
+- Liquid formats text, numbers, dates, URLs, and HTML.
 - TypeScript functions are an escape hatch for built-in sources when declarative
   configuration is insufficient.
 
@@ -243,17 +240,43 @@ to select JSON data.
 ### Filters
 
 LiquidJS built-in filters such as `strip`, `default`, `upcase`, `downcase`,
-`join`, and `date` are available. NewsNext also registers:
+`replace`, `remove`, `prepend`, `append`, `split`, `first`, `join`, `truncate`,
+`times`, and `date` are available. Prefer these filters for string formatting
+instead of building an equivalent field-transform pipeline.
+
+NewsNext also registers:
 
 ```liquid
 {{ value | required }}
 {{ value | url_path }}
 {{ value | url_query }}
+{{ value | normalize_whitespace }}
+{{ value | normalize_lines }}
+{{ value | normalize_lines: 2 }}
+{{ value | first_line }}
+{{ value | absolute_url: requestUrl }}
+{{ value | css_url }}
+{{ value | date_to_ms }}
 ```
 
 - `required` throws when a value is `null`, `undefined`, or an empty string.
 - `url_path` encodes one URL component with `encodeURIComponent`.
 - `url_query` currently performs the same component encoding.
+- `normalize_whitespace` collapses whitespace to single spaces.
+- `normalize_lines` trims lines, removes empty lines, and joins them with one
+  newline. Its optional spacing argument accepts an integer from 1 through 4.
+- `first_line` returns the first non-empty trimmed line.
+- `absolute_url` resolves a URL against its base.
+- `css_url` extracts the first `url(...)` value from a CSS declaration.
+- `date_to_ms` parses a date and returns its Unix timestamp in milliseconds.
+
+Filters compose naturally:
+
+```liquid
+{{ value | first_line | truncate: 160, "…" }}
+{{ value | normalize_whitespace | prepend: "✰ " }}
+{{ value | absolute_url: requestUrl }}
+```
 
 Templates use strict variables and strict filters. Guard optional data with
 `if` or `default`:
@@ -376,7 +399,7 @@ fields: {
 JSON field resolution order is:
 
 ```text
-select → transforms → template
+select → template
 ```
 
 If `select` is omitted, `value` starts as the complete current item.
@@ -386,7 +409,7 @@ If `select` is omitted, `value` starts as the complete current item.
 A JSON field template can access:
 
 ```text
-value       selected and transformed field value
+value       selected field value
 item        current response item
 json        complete response body
 params      parsed source parameters
@@ -443,14 +466,12 @@ export default {
           },
           timestamp: {
             select: "published_at",
-            transforms: [{ type: "parseDate" }],
+            template: "{{ value | date_to_ms }}",
           },
           inline: {
             text: {
               select: "score",
-              transforms: [
-                { type: "prepend", value: "Score: " },
-              ],
+              template: "Score: {{ value }}",
             },
           },
           preview: {
@@ -520,19 +541,19 @@ fields: {
 }
 ```
 
-Use an object to control selection, extraction, transforms, and formatting:
+Use an object to control selection, extraction, and Liquid formatting:
 
 ```ts
 fields: {
   url: {
     selector: ".title",
     attr: "href",
-    transforms: [{ type: "resolveUrl" }],
+    template: "{{ value | absolute_url: requestUrl }}",
   },
   timestamp: {
     selector: "[data-timestamp]",
     attr: "data-timestamp",
-    transforms: [{ type: "multiply", value: 1000 }],
+    template: "{{ value | times: 1000 }}",
   },
 }
 ```
@@ -540,18 +561,18 @@ fields: {
 HTML field resolution order is:
 
 ```text
-selector → content/attr extraction → transforms → template
+selector → content/attr extraction → template
 ```
 
-All fields are extracted and transformed before any field template is rendered.
-This two-phase model means a template can compose values from the complete
-extracted item regardless of field declaration order.
+All fields are extracted before any field template is rendered. This two-phase
+model means a template can compose values from the complete extracted item
+regardless of field declaration order.
 
 HTML field templates can access:
 
 ```text
-value       Current extracted and transformed field value
-item        Complete extracted and transformed item
+value       Current extracted field value
+item        Complete extracted item
 params      Resolved source parameters
 index       Zero-based item index
 requestUrl  Resolved loader URL
@@ -568,7 +589,7 @@ fields: {
   url: {
     selector: ".title",
     attr: "href",
-    transforms: [{ type: "resolveUrl" }],
+    template: "{{ value | absolute_url: requestUrl }}",
   },
   inline: {
     text: ".category",
@@ -619,7 +640,7 @@ reading an item attribute:
 ```ts
 url: {
   attr: "data-url",
-  transforms: [{ type: "resolveUrl" }],
+  template: "{{ value | absolute_url: requestUrl }}",
 }
 ```
 
@@ -634,7 +655,7 @@ timestamp: {
   traverse: { type: "next", selector: "tr.metadata" },
   selector: "time",
   attr: "datetime",
-  transforms: [{ type: "parseDate" }],
+  template: "{{ value | date_to_ms }}",
 }
 ```
 
@@ -700,9 +721,7 @@ preview: {
   text: {
     selector: ".message",
     brSeparator: "\n",
-    transforms: [
-      { type: "normalizeLines", separator: "\n\n" },
-    ],
+    template: "{{ value | normalize_lines: 2 }}",
   },
 }
 ```
@@ -735,27 +754,23 @@ the joined result.
 
 ### Relative URLs
 
-Use `resolveUrl` to resolve protocol-relative, root-relative, and path-relative
-URLs against the final loader request URL:
+Use `absolute_url` to resolve protocol-relative, root-relative, and
+path-relative URLs against the final loader request URL:
 
 ```ts
 url: {
   selector: ".title",
   attr: "href",
-  transforms: [{ type: "resolveUrl" }],
+  template: "{{ value | absolute_url: requestUrl }}",
 }
 ```
 
-Provide an explicit base only when the page's links use a different origin or
-base path:
+Provide an explicit base when the page's links use a different origin or base
+path:
 
 ```ts
-transforms: [
-  { type: "resolveUrl", base: "https://www.example.com/archive/" },
-]
+template: "{{ value | absolute_url: 'https://www.example.com/archive/' }}"
 ```
-
-The same transform is available to JSON fields.
 
 ### Internal function escape hatch
 
@@ -771,7 +786,7 @@ timestamp: {
 ```
 
 When a function `transform` is present, its result is returned directly;
-declarative `transforms` and `template` are not evaluated.
+the Liquid `template` is not evaluated.
 
 The transform context contains `params`, `index`, and `requestUrl`. Function
 resolvers are intended for bundled sources only and cannot be represented in a
@@ -812,61 +827,6 @@ loader: {
 ```
 
 RSS items are mapped to `title`, `url`, and an optional parsed `timestamp`.
-
-## Field transforms
-
-The same declarative transforms are available to JSON and HTML fields:
-
-```ts
-{ type: "trim" }
-{ type: "normalizeWhitespace" }
-{ type: "normalizeLines" }
-{ type: "normalizeLines", separator: "\n\n" }
-{ type: "firstLine" }
-{ type: "uppercase" }
-{ type: "lowercase" }
-{ type: "prepend", value: "Score: " }
-{ type: "append", value: " views" }
-{ type: "multiply", value: 1000 }
-{ type: "parseDate" }
-{ type: "truncate", length: 160 }
-{ type: "truncate", length: 160, omission: "..." }
-{ type: "extractCssUrl" }
-{ type: "resolveUrl" }
-{ type: "resolveUrl", base: "https://example.com/base/" }
-```
-
-`firstLine` returns the first non-empty trimmed line. `normalizeLines` trims
-lines, removes empty lines, and joins the result with `separator`, which
-defaults to a single newline.
-
-`truncate` counts Unicode code points and includes the omission text in the
-configured length. Its length must be an integer from 1 through 10,000.
-
-`extractCssUrl` reads the first quoted or unquoted `url(...)` value from a CSS
-declaration such as an inline `background-image` style. It returns the URL
-string directly, which is valid for picture and icon fields.
-
-Examples:
-
-```ts
-title: {
-  select: "name",
-  transforms: [
-    { type: "trim" },
-    { type: "uppercase" },
-  ],
-}
-```
-
-```ts
-timestamp: {
-  select: "created_at",
-  transforms: [{ type: "parseDate" }],
-}
-```
-
-A field may contain at most 16 transforms.
 
 ## News item output
 

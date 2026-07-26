@@ -9,6 +9,46 @@ describe("source templates", () => {
     )).toBe("https://example.com/news?tag=a&b")
   })
 
+  it("provides source-oriented Liquid filters", () => {
+    expect(renderTemplate(
+      "{{ value | normalize_whitespace }}",
+      { value: "  Hello \n world  " },
+    )).toBe("Hello world")
+
+    expect(renderTemplate(
+      "{{ value | normalize_lines: 2 }}",
+      { value: " First \n\n Second " },
+    )).toBe("First\n\nSecond")
+
+    expect(renderTemplate(
+      "{{ value | first_line | truncate: 8, '…' }}",
+      { value: "\nTelegram message\nSecond" },
+    )).toBe("Telegra…")
+
+    expect(renderTemplate(
+      "{{ value | absolute_url: requestUrl }}",
+      {
+        requestUrl: "https://example.com/news/",
+        value: "../article/1",
+      },
+    )).toBe("https://example.com/article/1")
+
+    expect(renderTemplate(
+      "{{ value | css_url }}",
+      { value: "background-image: url('https://example.com/image.jpg')" },
+    )).toBe("https://example.com/image.jpg")
+
+    expect(renderTemplate(
+      "{{ value | date_to_ms }}",
+      { value: "2024-01-01T00:00:00Z" },
+    )).toBe("1704067200000")
+  })
+
+  it("allows source-oriented filters to receive null values", () => {
+    expect(renderTemplate("{{ value | css_url }}", { value: null })).toBe("")
+    expect(renderTemplate("{{ value | date_to_ms }}", { value: null })).toBe("")
+  })
+
   it("supports conditions and URL encoding helpers", () => {
     expect(renderTemplate(
       "{% assign normalized = language | strip %}/trending{% if normalized %}/{{ normalized | url_path }}{% endif %}",
@@ -72,7 +112,7 @@ describe("source templates", () => {
     )).toThrow("Template root \"item\" is not available")
   })
 
-  it("validates nested HTML transforms as HTML output", () => {
+  it("validates nested HTML templates as HTML output", () => {
     expect(() => validateTemplates(
       { html: { template: "<strong>{{ value | raw }}</strong>" } },
       "test:source.loader.fields.preview",

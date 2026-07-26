@@ -64,26 +64,23 @@ export default {
         fields: {
           title: {
             selector: ">h2 a",
-            transforms: [{ type: "normalizeWhitespace" }],
+            template: "{{ value | normalize_whitespace }}",
           },
           url: {
             selector: ">h2 a",
             attr: "href",
-            transforms: [{ type: "resolveUrl" }],
+            template: "{{ value | absolute_url: requestUrl }}",
           },
           inline: {
             text: {
               selector: "[href$=stargazers]",
-              transforms: [
-                { type: "normalizeWhitespace" },
-                { type: "prepend", value: "✰ " },
-              ],
+              template: "✰ {{ value | normalize_whitespace }}",
             },
           },
           preview: {
             text: {
               selector: ">p",
-              transforms: [{ type: "normalizeWhitespace" }],
+              template: "{{ value | normalize_whitespace }}",
             },
           },
         },

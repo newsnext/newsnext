@@ -19,7 +19,7 @@ export default {
           url: "url",
           timestamp: {
             select: "publishedAt",
-            transforms: [{ type: "parseDate" }],
+            template: "{{ value | date_to_ms }}",
           },
           inline: {
             text: {
