@@ -17,6 +17,22 @@ type RichText = Either<{
   html: string
 }>
 
+interface InlineDecorations {
+  /**
+   * Mark displayed at the end of the item
+   */
+  mark?: MaybeArray<string | Picture>
+  /**
+   * Icon displayed at the start of the item
+   */
+  icon?: string | Picture
+}
+
+interface InlineContent extends InlineDecorations {
+  text?: string
+  html?: string
+}
+
 export interface AdvancedIframe extends IframeHTMLAttributes<HTMLIFrameElement> {
   selector?: string
   blocked?: MaybeArray<string>
@@ -41,16 +57,7 @@ export interface NewsItem {
    * Timestamp in milliseconds
    */
   timestamp?: number
-  inline?: RichText & {
-    /**
-     * Mark displayed in the end of the item
-     */
-    mark?: MaybeArray<string | Picture>
-    /**
-     * Icon displayed in the start of the item
-     */
-    icon?: string | Picture
-  }
+  inline?: InlineContent
   /**
    * Previewed information shown on hover
    */

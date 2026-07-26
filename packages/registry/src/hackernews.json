@@ -2,6 +2,9 @@
   "title": "Hacker News",
   "color": "orange",
   "home": "https://news.ycombinator.com/",
+  "context": {
+    "origin": "https://news.ycombinator.com"
+  },
   "sources": {
     "top": {
       "metadata": {
@@ -10,14 +13,14 @@
       },
       "loader": {
         "type": "html",
-        "url": "https://news.ycombinator.com/",
+        "url": "{{ context.origin }}/",
         "items": ".athing",
         "fields": {
           "title": ".titleline>a",
           "url": {
             "select": "",
             "attr": "id",
-            "template": "https://news.ycombinator.com/item?id={{ value | url_query }}"
+            "template": "{{ context.origin }}/item?id={{ value | url_query }}"
           },
           "timestamp": {
             "traverse": {
@@ -54,14 +57,14 @@
       },
       "loader": {
         "type": "html",
-        "url": "https://news.ycombinator.com/newest",
+        "url": "{{ context.origin }}/newest",
         "items": ".athing",
         "fields": {
           "title": ".titleline>a",
           "url": {
             "select": "",
             "attr": "id",
-            "template": "https://news.ycombinator.com/item?id={{ value | url_query }}"
+            "template": "{{ context.origin }}/item?id={{ value | url_query }}"
           },
           "timestamp": {
             "traverse": {
@@ -97,14 +100,14 @@
       },
       "loader": {
         "type": "html",
-        "url": "https://news.ycombinator.com/show",
+        "url": "{{ context.origin }}/show",
         "items": ".athing",
         "fields": {
           "title": ".titleline>a",
           "url": {
             "select": "",
             "attr": "id",
-            "template": "https://news.ycombinator.com/item?id={{ value | url_query }}"
+            "template": "{{ context.origin }}/item?id={{ value | url_query }}"
           },
           "timestamp": {
             "traverse": {
@@ -140,14 +143,14 @@
       },
       "loader": {
         "type": "html",
-        "url": "https://news.ycombinator.com/ask",
+        "url": "{{ context.origin }}/ask",
         "items": ".athing",
         "fields": {
           "title": ".titleline>a",
           "url": {
             "select": "",
             "attr": "id",
-            "template": "https://news.ycombinator.com/item?id={{ value | url_query }}"
+            "template": "{{ context.origin }}/item?id={{ value | url_query }}"
           },
           "timestamp": {
             "traverse": {

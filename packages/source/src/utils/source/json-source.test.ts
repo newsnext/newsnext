@@ -111,6 +111,36 @@ describe("jSON source loader", () => {
     expect(results[0].inline?.text).toBe("Score: 60")
   })
 
+  it("exposes source context to loader and field templates", async () => {
+    ;(myFetch as any).mockResolvedValue([
+      { title: "Release", url: "https://example.com/release" },
+    ])
+
+    const source = createSource({
+      context: {
+        endpoint: "items/latest",
+        label: "Mapped",
+      },
+      loader: {
+        type: "json",
+        url: "https://api.example.com/{{ context.endpoint }}",
+        fields: {
+          title: {
+            select: "title",
+            template: "{{ context.label }}: {{ value }}",
+          },
+          url: "url",
+        },
+      },
+      cache: "5m",
+    })
+
+    const results = await source.loader({})
+
+    expect(myFetch).toHaveBeenCalledWith("https://api.example.com/items/latest", undefined)
+    expect(results[0].title).toBe("Mapped: Release")
+  })
+
   it("supports conditional JMESPath object construction", async () => {
     ;(myFetch as any).mockResolvedValue([
       {

@@ -64,6 +64,18 @@ export default {
         title: "Hot Search",
         type: "hottest",
       },
+      context: {
+        endpoint: {
+          search: "side/hotSearch",
+          mine: "statuses/mineBand",
+          entertainment: "statuses/entertainment",
+          social: "statuses/social",
+          tech: "statuses/technology",
+          life: "statuses/life",
+          sports: "statuses/sport",
+          acg: "statuses/acg",
+        },
+      },
       params: {
         type: {
           type: "select",
@@ -102,7 +114,7 @@ export default {
       ],
       loader: {
         type: "json",
-        url: "https://weibo.com/ajax/{% case params.type %}{% when 'search' %}side/hotSearch{% when 'mine' %}statuses/mineBand{% when 'tech' %}statuses/technology{% when 'sports' %}statuses/sport{% else %}statuses/{{ params.type }}{% endcase %}",
+        url: "https://weibo.com/ajax/{{ context.endpoint[params.type] }}",
         fetchOptions: {
           credentials: "include",
         },
@@ -114,10 +126,6 @@ export default {
             template: "{% if item.url %}{{ value | replace: 'http://', 'https://' }}{% else %}https://s.weibo.com/weibo?q={{ value | url_query }}{% endif %}",
           },
           inline: {
-            text: {
-              select: "num || description",
-              template: "{% if value %}{{ value }}{% elsif item.icon_desc %}{{ item.icon_desc }}{% endif %}",
-            },
             mark: "(icon || icon_url) && {src: icon || icon_url, scale: `1.5`, radius: `0`}",
           },
         },
@@ -125,7 +133,7 @@ export default {
       capabilities: weiboCapabilities,
       requestRules: weiboRequestRules,
       cache: {
-        version: 3,
+        version: 4,
         maxAge: "1m",
       },
     },

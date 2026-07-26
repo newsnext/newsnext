@@ -134,6 +134,38 @@ describe("source template contexts", () => {
     expect(provider.sources.test.requestRules).toEqual([requestRule])
   })
 
+  it("inherits provider context and allows source overrides", () => {
+    const provider = resolveProvider("test", {
+      title: "Provider",
+      color: "blue",
+      context: {
+        origin: "https://provider.example",
+      },
+      sources: {
+        inherited: {
+          cache: "1h",
+          loader: {
+            type: "rss",
+            url: "{{ context.origin }}/feed.xml",
+          },
+        },
+        overridden: {
+          context: {
+            origin: "https://source.example",
+          },
+          cache: "1h",
+          loader: {
+            type: "rss",
+            url: "{{ context.origin }}/feed.xml",
+          },
+        },
+      },
+    })
+
+    expect(provider.sources.inherited.capabilities.network).toEqual(["provider.example"])
+    expect(provider.sources.overridden.capabilities.network).toEqual(["source.example"])
+  })
+
   it("restricts Radar parameter templates to URL variables", () => {
     expect(() => resolveTestSource(createSourceConfig([
       {

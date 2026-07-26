@@ -3,6 +3,9 @@
   "color": "slate",
   "home": "https://linux.do",
   "category": "tech",
+  "context": {
+    "origin": "https://linux.do"
+  },
   "sources": {
     "latest": {
       "metadata": {
@@ -11,7 +14,7 @@
       },
       "loader": {
         "type": "json",
-        "url": "https://linux.do/latest.json?order=created",
+        "url": "{{ context.origin }}/latest.json?order=created",
         "items": "topic_list.topics[?visible && !archived && !pinned]",
         "fields": {
           "title": "title",
@@ -21,11 +24,11 @@
           },
           "url": {
             "select": "id",
-            "template": "https://linux.do/t/topic/{{ value | url_path }}"
+            "template": "{{ context.origin }}/t/topic/{{ value | url_path }}"
           },
           "inline": {
             "icon": {
-              "template": "{% assign user = json.users | where: 'username', item.last_poster_username | first %}{% if user and user.avatar_template %}{{ user.avatar_template | replace: '{size}', '48' | absolute_url: 'https://linux.do' }}{% endif %}"
+              "template": "{% assign user = json.users | where: 'username', item.last_poster_username | first %}{% if user and user.avatar_template %}{{ user.avatar_template | replace: '{size}', '48' | absolute_url: context.origin }}{% endif %}"
             }
           }
         }
@@ -39,17 +42,17 @@
       },
       "loader": {
         "type": "json",
-        "url": "https://linux.do/top/daily.json",
+        "url": "{{ context.origin }}/top/daily.json",
         "items": "topic_list.topics[?visible && !archived && !pinned]",
         "fields": {
           "title": "title",
           "url": {
             "select": "id",
-            "template": "https://linux.do/t/topic/{{ value | url_path }}"
+            "template": "{{ context.origin }}/t/topic/{{ value | url_path }}"
           },
           "inline": {
             "icon": {
-              "template": "{% assign user = json.users | where: 'username', item.last_poster_username | first %}{% if user and user.avatar_template %}{{ user.avatar_template | replace: '{size}', '48' | absolute_url: 'https://linux.do' }}{% endif %}"
+              "template": "{% assign user = json.users | where: 'username', item.last_poster_username | first %}{% if user and user.avatar_template %}{{ user.avatar_template | replace: '{size}', '48' | absolute_url: context.origin }}{% endif %}"
             }
           }
         }

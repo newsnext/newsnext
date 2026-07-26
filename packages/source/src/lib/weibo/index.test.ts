@@ -52,7 +52,6 @@ describe("weibo hot search source", () => {
         title: "Trending topic",
         url: "https://s.weibo.com/weibo?q=%23Trending%20topic%23",
         inline: {
-          text: "1172636",
           mark: {
             src: "https://simg.s.weibo.com/new.png",
             scale: 1.5,
@@ -99,7 +98,6 @@ describe("weibo hot search source", () => {
         title: "Technology topic",
         url: "https://s.weibo.com/weibo?q=%23Technology%20topic%23",
         inline: {
-          text: "246810",
           mark: {
             src: "https://simg.s.weibo.com/new.png",
             scale: 1.5,
@@ -140,11 +138,33 @@ describe("weibo hot search source", () => {
       {
         title: "Personalized topic",
         url: "https://s.weibo.com/weibo?q=Personalized%20topic",
-        inline: {
-          text: "Recently topped",
-        },
       },
     ])
+  })
+
+  it.each([
+    ["search", "side/hotSearch"],
+    ["mine", "statuses/mineBand"],
+    ["entertainment", "statuses/entertainment"],
+    ["social", "statuses/social"],
+    ["tech", "statuses/technology"],
+    ["life", "statuses/life"],
+    ["sports", "statuses/sport"],
+    ["acg", "statuses/acg"],
+  ] as const)("maps %s to its API endpoint", async (type, endpoint) => {
+    vi.mocked(myFetch).mockResolvedValue({
+      data: {
+        realtime: [],
+      },
+    })
+
+    const source = resolveProvider("weibo", weiboProvider).sources["hot-search"]
+    await source.loader({ type })
+
+    expect(myFetch).toHaveBeenCalledWith(
+      `https://weibo.com/ajax/${endpoint}`,
+      { credentials: "include" },
+    )
   })
 
   it("requests access to Weibo image hosts", () => {

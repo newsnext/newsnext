@@ -4,6 +4,7 @@ import type { FetchOptions } from "ofetch"
 import type {
   NewsItem,
   RuntimeSource,
+  SourceTemplateContext,
 } from "../../typings/sources"
 import { load } from "cheerio/slim"
 import { myFetch } from "../fetch"
@@ -13,6 +14,7 @@ import { normalizeTimestamp } from "./fields"
 const MAX_SELECTED_ITEMS = 2_000
 
 export interface HtmlFieldContext {
+  context: SourceTemplateContext
   index: number
   params: Record<string, unknown>
   requestUrl: string
@@ -61,6 +63,7 @@ export interface HtmlFieldConfig {
 
 export type HtmlField = string | HtmlFieldConfig
 export interface HtmlSourceLoaderContext {
+  context?: SourceTemplateContext
   params?: Record<string, unknown>
 }
 
@@ -301,6 +304,7 @@ export async function loadHtml(
     if (filter && !$item.is(filter)) return
 
     const context: HtmlFieldContext = {
+      context: loaderContext.context ?? {},
       index,
       params: loaderContext.params ?? {},
       requestUrl: url,

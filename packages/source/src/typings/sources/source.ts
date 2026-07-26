@@ -97,6 +97,16 @@ export interface SourceCapabilities {
   browser: readonly string[]
 }
 
+export type SourceTemplateContextValue
+  = | boolean
+    | null
+    | number
+    | string
+    | readonly SourceTemplateContextValue[]
+    | { readonly [key: string]: SourceTemplateContextValue }
+
+export type SourceTemplateContext = Readonly<Record<string, SourceTemplateContextValue>>
+
 export type SourceRequestRule = Omit<Browser.declarativeNetRequest.Rule, "id">
 
 export type SourceCacheMaxAge = `${number}${"s" | "m" | "h" | "d"}`

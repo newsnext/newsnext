@@ -13,6 +13,7 @@ import type {
   SourceRadarRule,
   SourceRequestRule,
   SourceSecretDefinition,
+  SourceTemplateContext,
 } from "../../typings/sources"
 import type { HtmlSourceOptions } from "./html-source"
 import type { JsonSourceOptions } from "./json-source"
@@ -26,6 +27,7 @@ import { loadRss } from "./rss-source"
 
 interface SourceConfigBase<TParams extends SourceParamSchemaMap> {
   metadata?: Omit<SourceMetadata, "key">
+  context?: SourceTemplateContext
   params?: TParams
   radar?: SourceRadarRule[]
   requestRules?: readonly SourceRequestRule[]
@@ -36,8 +38,9 @@ interface SourceConfigBase<TParams extends SourceParamSchemaMap> {
 type SourceCapabilityOverrides = Partial<SourceCapabilities>
 
 const PARAM_TEMPLATE_ROOTS = ["params"] as const
+const LOADER_TEMPLATE_ROOTS = ["context", ...PARAM_TEMPLATE_ROOTS] as const
 const PARAM_VALUE_TEMPLATE_ROOTS = ["value"] as const
-const FIELD_TEMPLATE_ROOTS = ["index", "item", ...PARAM_TEMPLATE_ROOTS, "requestUrl", "value"] as const
+const FIELD_TEMPLATE_ROOTS = ["context", "index", "item", ...PARAM_TEMPLATE_ROOTS, "requestUrl", "value"] as const
 const JSON_FIELD_TEMPLATE_ROOTS = [...FIELD_TEMPLATE_ROOTS, "json"] as const
 const RADAR_URL_TEMPLATE_ROOTS = ["hashQuery", "path", "query"] as const
 const RADAR_METADATA_TEMPLATE_ROOTS = [
@@ -87,6 +90,7 @@ export type SourceConfig<TParams extends SourceParamSchemaMap = any>
   )
 
 export function validateSourceTemplates(sourceId: string, config: SourceConfig): void {
+  validateSourceContext(config.context, `${sourceId}.context`)
   validateTemplates(config.params, `${sourceId}.params`, {
     allowedRoots: PARAM_VALUE_TEMPLATE_ROOTS,
   })
@@ -100,11 +104,11 @@ export function validateSourceTemplates(sourceId: string, config: SourceConfig):
   const { loader } = config
   if (loader.type !== "custom" && typeof loader.url === "string") {
     validateTemplates(loader.url, `${sourceId}.loader.url`, {
-      allowedRoots: PARAM_TEMPLATE_ROOTS,
+      allowedRoots: LOADER_TEMPLATE_ROOTS,
     })
     if (loader.type === "json" || loader.type === "html") {
       validateTemplates(loader.fetchOptions, `${sourceId}.loader.fetchOptions`, {
-        allowedRoots: PARAM_TEMPLATE_ROOTS,
+        allowedRoots: LOADER_TEMPLATE_ROOTS,
       })
     }
   }
@@ -124,6 +128,42 @@ export function validateSourceTemplates(sourceId: string, config: SourceConfig):
   }
 
   validateRadarTemplates(config.radar, `${sourceId}.radar`)
+}
+
+function validateSourceContext(
+  context: unknown,
+  location: string,
+): void {
+  if (context === undefined) {
+    return
+  }
+  if (!isRecord(context)) {
+    throw new TypeError(`${location} must be an object`)
+  }
+
+  validateSourceContextValue(context, location)
+}
+
+function validateSourceContextValue(value: unknown, location: string): void {
+  if (
+    value === null
+    || typeof value === "string"
+    || typeof value === "boolean"
+    || (typeof value === "number" && Number.isFinite(value))
+  ) {
+    return
+  }
+  if (Array.isArray(value)) {
+    value.forEach((child, index) => validateSourceContextValue(child, `${location}.${index}`))
+    return
+  }
+  if (isRecord(value)) {
+    Object.entries(value).forEach(([key, child]) => {
+      validateSourceContextValue(child, `${location}.${key}`)
+    })
+    return
+  }
+  throw new TypeError(`${location} must contain only serializable values`)
 }
 
 function validateRadarTemplates(
@@ -182,6 +222,7 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
   config: SourceConfig<TParams>,
 ): ResolvedSource<TParams> {
   const {
+    context,
     params,
     radar,
     requestRules,
@@ -191,7 +232,7 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
     capabilities: capabilityOverrides,
     metadata = {},
   } = config
-  const capabilities = resolveSourceCapabilities(loader, params, capabilityOverrides)
+  const capabilities = resolveSourceCapabilities(loader, params, context, capabilityOverrides)
   validateSourceRequestRules(key, requestRules, capabilities.network)
   const cache = typeof cacheInput === "string"
     ? { version: 1, maxAge: cacheInput }
@@ -213,16 +254,17 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
       return {
         ...registration,
         loader: async (loaderParams) => {
-          const resolvedUrl = resolveSourceTemplates(url, loaderParams)
+          const resolvedUrl = resolveSourceTemplates(url, loaderParams, context)
           assertNetworkCapability(key, resolvedUrl, capabilities.network)
           return loadJson({
             ...options,
             url: resolvedUrl,
             fetchOptions: fetchOptions === undefined
               ? undefined
-              : resolveSourceTemplates(fetchOptions, loaderParams),
+              : resolveSourceTemplates(fetchOptions, loaderParams, context),
             type: metadata.type,
           }, {
+            context,
             params: loaderParams,
           })
         },
@@ -233,16 +275,17 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
       return {
         ...registration,
         loader: async (loaderParams) => {
-          const resolvedUrl = resolveSourceTemplates(url, loaderParams)
+          const resolvedUrl = resolveSourceTemplates(url, loaderParams, context)
           assertNetworkCapability(key, resolvedUrl, capabilities.network)
           return loadHtml({
             ...options,
             url: resolvedUrl,
             fetchOptions: fetchOptions === undefined
               ? undefined
-              : resolveSourceTemplates(fetchOptions, loaderParams),
+              : resolveSourceTemplates(fetchOptions, loaderParams, context),
             type: metadata.type,
           }, {
+            context,
             params: loaderParams,
           })
         },
@@ -253,7 +296,7 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
       return {
         ...registration,
         loader: async (loaderParams) => {
-          const resolvedUrl = resolveSourceTemplates(url, loaderParams)
+          const resolvedUrl = resolveSourceTemplates(url, loaderParams, context)
           assertNetworkCapability(key, resolvedUrl, capabilities.network)
           return loadRss({ url: resolvedUrl })
         },
@@ -282,6 +325,22 @@ function mergeDefinitions<T>(
   return [...providerDefinitions, ...sourceDefinitions]
 }
 
+function mergeSourceContexts(
+  providerContext: SourceTemplateContext | undefined,
+  sourceContext: SourceTemplateContext | undefined,
+): SourceTemplateContext | undefined {
+  if (!providerContext) {
+    return sourceContext
+  }
+  if (!sourceContext) {
+    return providerContext
+  }
+  return {
+    ...providerContext,
+    ...sourceContext,
+  }
+}
+
 export interface ProviderConfig {
   title: string
   color: Color
@@ -289,6 +348,7 @@ export interface ProviderConfig {
   desc?: string
   home?: string
   category?: CategoryId
+  context?: SourceTemplateContext
   secrets?: SourceSecretDefinition[]
   requestRules?: readonly SourceRequestRule[]
   sources: Record<string, SourceConfig>
@@ -487,6 +547,7 @@ export function flattenProviderConfig(
           home: provider.home,
           ...source.metadata,
         },
+        context: mergeSourceContexts(provider.context, source.context),
         secrets: mergeDefinitions(provider.secrets, source.secrets),
         requestRules: mergeDefinitions(provider.requestRules, source.requestRules),
       },
@@ -545,13 +606,17 @@ export function resolveProvider(
   provider: ProviderConfig,
 ): ProviderDefinition {
   for (const [key, config] of Object.entries(provider.sources)) {
-    validateSourceTemplates(`${id}:${key}`, config)
+    validateSourceTemplates(`${id}:${key}`, {
+      ...config,
+      context: mergeSourceContexts(provider.context, config.context),
+    })
   }
 
   const sources = Object.fromEntries(
     Object.entries(provider.sources).map(([key, config]) => {
       const source = resolveSource(key, {
         ...config,
+        context: mergeSourceContexts(provider.context, config.context),
         requestRules: mergeDefinitions(provider.requestRules, config.requestRules),
       })
       const secrets = mergeDefinitions(provider.secrets, source.secrets)
@@ -601,8 +666,9 @@ export function resolveProvider(
 function resolveSourceTemplates<TParams extends SourceParamSchemaMap, TValue>(
   option: TValue,
   params: InferSourceParams<TParams>,
+  context?: SourceTemplateContext,
 ): TValue {
-  return renderTemplates(option, { params })
+  return renderTemplates(option, { context: context ?? {}, params })
 }
 
 function resolveDefaultParams<TParams extends SourceParamSchemaMap>(
@@ -619,13 +685,14 @@ function resolveDefaultParams<TParams extends SourceParamSchemaMap>(
 function resolveSourceCapabilities<TParams extends SourceParamSchemaMap>(
   loader: StructuredSourceLoaderConfig | { type: "custom", load: SourceLoader<TParams> },
   params: TParams | undefined,
+  context: SourceTemplateContext | undefined,
   overrides: SourceCapabilityOverrides | undefined,
 ): SourceCapabilities {
   const inferredNetworkHosts: string[] = []
 
   if (loader.type !== "custom") {
     const defaultParams = resolveDefaultParams(params)
-    const requestUrl = resolveSourceTemplates(loader.url, defaultParams)
+    const requestUrl = resolveSourceTemplates(loader.url, defaultParams, context)
 
     inferredNetworkHosts.push(new URL(requestUrl).hostname)
   }

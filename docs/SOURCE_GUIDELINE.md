@@ -384,11 +384,37 @@ Structured loader URLs are strings and may contain Liquid templates.
 url: "https://api.example.com/{{ params.topic | url_path }}?page={{ params.page | url_query }}"
 ```
 
-URL and `sourceIcon` templates can access only:
+When templates need static lookup tables or other shared constants, declare a
+serializable `context` container on the source. Access it with Liquid's dynamic object
+indexing instead of using a long `case` expression:
+
+```ts
+context: {
+  endpoint: {
+    latest: "items/latest",
+    popular: "rankings/popular",
+  },
+},
+loader: {
+  type: "json",
+  url: "https://api.example.com/{{ context.endpoint[params.type] }}",
+  // ...
+}
+```
+
+URL and nested `fetchOptions` templates can access:
 
 ```text
 params
+context
 ```
+
+`context` accepts JSON-compatible objects, arrays, strings, finite numbers,
+booleans, and `null`. It is available to loader URLs, nested `fetchOptions`,
+and JSON or HTML field templates. Provider context is inherited by every
+source; source-level keys override provider keys.
+
+`sourceIcon` templates can access only `params`.
 
 Nested strings in `fetchOptions` may also use parsed parameters:
 
@@ -938,13 +964,11 @@ interface NewsItem {
   mobileUrl?: string
   timestamp?: number
   inline?: ({
-    text: string
-  } | {
-    html: string
-  }) & {
+    text?: string
+    html?: string
     mark?: string | Picture | Array<string | Picture>
     icon?: string | Picture
-  }
+  }) // Must contain text, html, mark, or icon.
   preview?: ({
     text: string
   } | {
@@ -956,8 +980,9 @@ interface NewsItem {
 }
 ```
 
-`inline` and `preview` each use either `text` or `html`. Prefer `text` unless
-markup is necessary.
+`preview` uses either `text` or `html`. `inline` may use either text format or
+decorations alone, but it must contain at least one of `text`, `html`, `mark`,
+or `icon`. Prefer `text` unless markup is necessary.
 
 Picture objects accept optional `scale` and `radius` values. Use `scale`
 sparingly for compact inline icons and marks because transforms do not reserve

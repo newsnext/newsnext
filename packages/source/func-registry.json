@@ -719,7 +719,7 @@
       "browser": []
     },
     "cache": {
-      "version": 3,
+      "version": 4,
       "maxAge": "1m"
     },
     "color": "red",

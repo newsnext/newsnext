@@ -2,6 +2,7 @@ import type { FetchOptions } from "ofetch"
 import type {
   NewsItem,
   RuntimeSource,
+  SourceTemplateContext,
 } from "../../typings/sources"
 import * as jmespath from "jmespath"
 import { myFetch } from "../fetch"
@@ -16,6 +17,7 @@ const jmespathCompiler = jmespath as typeof jmespath & {
 }
 
 export interface JsonFieldContext {
+  context: SourceTemplateContext
   json: unknown
   index: number
   params: Record<string, unknown>
@@ -34,6 +36,7 @@ interface JsonTemplateContext extends JsonFieldContext {
 }
 
 export interface JsonSourceLoaderContext {
+  context?: SourceTemplateContext
   params?: Record<string, unknown>
 }
 
@@ -156,6 +159,7 @@ export async function loadJson(
 
   const news: NewsItem[] = items.map((item, index) => {
     const context: JsonFieldContext = {
+      context: loaderContext.context ?? {},
       json,
       index,
       params: loaderContext.params ?? {},

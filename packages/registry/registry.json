@@ -138,14 +138,14 @@
     },
     "loader": {
       "type": "html",
-      "url": "https://news.ycombinator.com/",
+      "url": "{{ context.origin }}/",
       "items": ".athing",
       "fields": {
         "title": ".titleline>a",
         "url": {
           "select": "",
           "attr": "id",
-          "template": "https://news.ycombinator.com/item?id={{ value | url_query }}"
+          "template": "{{ context.origin }}/item?id={{ value | url_query }}"
         },
         "timestamp": {
           "traverse": {
@@ -172,7 +172,10 @@
         }
       }
     },
-    "cache": "5m"
+    "cache": "5m",
+    "context": {
+      "origin": "https://news.ycombinator.com"
+    }
   },
   "hackernews:newest": {
     "metadata": {
@@ -185,14 +188,14 @@
     },
     "loader": {
       "type": "html",
-      "url": "https://news.ycombinator.com/newest",
+      "url": "{{ context.origin }}/newest",
       "items": ".athing",
       "fields": {
         "title": ".titleline>a",
         "url": {
           "select": "",
           "attr": "id",
-          "template": "https://news.ycombinator.com/item?id={{ value | url_query }}"
+          "template": "{{ context.origin }}/item?id={{ value | url_query }}"
         },
         "timestamp": {
           "traverse": {
@@ -219,7 +222,10 @@
         }
       }
     },
-    "cache": "1m"
+    "cache": "1m",
+    "context": {
+      "origin": "https://news.ycombinator.com"
+    }
   },
   "hackernews:show": {
     "metadata": {
@@ -231,14 +237,14 @@
     },
     "loader": {
       "type": "html",
-      "url": "https://news.ycombinator.com/show",
+      "url": "{{ context.origin }}/show",
       "items": ".athing",
       "fields": {
         "title": ".titleline>a",
         "url": {
           "select": "",
           "attr": "id",
-          "template": "https://news.ycombinator.com/item?id={{ value | url_query }}"
+          "template": "{{ context.origin }}/item?id={{ value | url_query }}"
         },
         "timestamp": {
           "traverse": {
@@ -265,7 +271,10 @@
         }
       }
     },
-    "cache": "5m"
+    "cache": "5m",
+    "context": {
+      "origin": "https://news.ycombinator.com"
+    }
   },
   "hackernews:ask": {
     "metadata": {
@@ -277,14 +286,14 @@
     },
     "loader": {
       "type": "html",
-      "url": "https://news.ycombinator.com/ask",
+      "url": "{{ context.origin }}/ask",
       "items": ".athing",
       "fields": {
         "title": ".titleline>a",
         "url": {
           "select": "",
           "attr": "id",
-          "template": "https://news.ycombinator.com/item?id={{ value | url_query }}"
+          "template": "{{ context.origin }}/item?id={{ value | url_query }}"
         },
         "timestamp": {
           "traverse": {
@@ -311,7 +320,10 @@
         }
       }
     },
-    "cache": "5m"
+    "cache": "5m",
+    "context": {
+      "origin": "https://news.ycombinator.com"
+    }
   },
   "linuxdo:latest": {
     "metadata": {
@@ -324,7 +336,7 @@
     },
     "loader": {
       "type": "json",
-      "url": "https://linux.do/latest.json?order=created",
+      "url": "{{ context.origin }}/latest.json?order=created",
       "items": "topic_list.topics[?visible && !archived && !pinned]",
       "fields": {
         "title": "title",
@@ -334,16 +346,19 @@
         },
         "url": {
           "select": "id",
-          "template": "https://linux.do/t/topic/{{ value | url_path }}"
+          "template": "{{ context.origin }}/t/topic/{{ value | url_path }}"
         },
         "inline": {
           "icon": {
-            "template": "{% assign user = json.users | where: 'username', item.last_poster_username | first %}{% if user and user.avatar_template %}{{ user.avatar_template | replace: '{size}', '48' | absolute_url: 'https://linux.do' }}{% endif %}"
+            "template": "{% assign user = json.users | where: 'username', item.last_poster_username | first %}{% if user and user.avatar_template %}{{ user.avatar_template | replace: '{size}', '48' | absolute_url: context.origin }}{% endif %}"
           }
         }
       }
     },
-    "cache": "5m"
+    "cache": "5m",
+    "context": {
+      "origin": "https://linux.do"
+    }
   },
   "linuxdo:top-daily": {
     "metadata": {
@@ -356,22 +371,25 @@
     },
     "loader": {
       "type": "json",
-      "url": "https://linux.do/top/daily.json",
+      "url": "{{ context.origin }}/top/daily.json",
       "items": "topic_list.topics[?visible && !archived && !pinned]",
       "fields": {
         "title": "title",
         "url": {
           "select": "id",
-          "template": "https://linux.do/t/topic/{{ value | url_path }}"
+          "template": "{{ context.origin }}/t/topic/{{ value | url_path }}"
         },
         "inline": {
           "icon": {
-            "template": "{% assign user = json.users | where: 'username', item.last_poster_username | first %}{% if user and user.avatar_template %}{{ user.avatar_template | replace: '{size}', '48' | absolute_url: 'https://linux.do' }}{% endif %}"
+            "template": "{% assign user = json.users | where: 'username', item.last_poster_username | first %}{% if user and user.avatar_template %}{{ user.avatar_template | replace: '{size}', '48' | absolute_url: context.origin }}{% endif %}"
           }
         }
       }
     },
-    "cache": "5m"
+    "cache": "5m",
+    "context": {
+      "origin": "https://linux.do"
+    }
   },
   "netease-music:playlist": {
     "metadata": {
