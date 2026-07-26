@@ -3,8 +3,10 @@ import { browser, defineBackground } from "#imports"
 import { installImageRequestRules } from "@/lib/background/image-request-rules"
 import { registerRadarBadge } from "@/lib/background/radar-badge"
 import { toggleRadarOverlay } from "@/lib/background/radar-overlay"
+import { registerSourceRegistryLoader } from "@/lib/background/registry"
 import { BACKGROUND_SERVICE_KEY, createBackgroundService } from "@/lib/background/service"
 
+registerSourceRegistryLoader()
 const backgroundService = createBackgroundService()
 const DASHBOARD_MENU_ID = "dashboard"
 

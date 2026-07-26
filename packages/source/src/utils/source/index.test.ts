@@ -1,6 +1,10 @@
 import type { SourceConfig } from "./index"
 import { describe, expect, it } from "vitest"
-import { resolveProvider } from "./index"
+import {
+  flattenProviderConfig,
+  resolveProvider,
+  resolveSourceRegistry,
+} from "./index"
 
 function createSourceConfig(radar: NonNullable<SourceConfig["radar"]>): SourceConfig {
   return {
@@ -137,5 +141,53 @@ describe("source template contexts", () => {
         },
       },
     ]))).toThrow("Template root \"source\" is not available")
+  })
+})
+
+describe("source registry", () => {
+  it("resolves a flat registry produced from provider authoring config", () => {
+    const registry = flattenProviderConfig("test", {
+      title: "Test Provider",
+      color: "blue",
+      category: "tech",
+      sources: {
+        latest: {
+          cache: "5m",
+          loader: {
+            type: "rss",
+            url: "https://example.com/feed.xml",
+          },
+        },
+      },
+    })
+
+    expect(resolveSourceRegistry(registry)["test:latest"]).toMatchObject({
+      providerTitle: "Test Provider",
+      color: "blue",
+      category: "tech",
+      key: "latest",
+    })
+  })
+
+  it("rejects provider containers and executable loaders", () => {
+    expect(() => resolveSourceRegistry({
+      test: {
+        sources: {},
+      },
+    })).toThrow("Invalid registry source ID")
+
+    expect(() => resolveSourceRegistry({
+      "test:latest": {
+        metadata: {
+          providerTitle: "Test",
+          color: "blue",
+          category: "tech",
+        },
+        cache: "5m",
+        loader: {
+          type: "custom",
+        },
+      },
+    })).toThrow("unsupported loader type")
   })
 })

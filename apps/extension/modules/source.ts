@@ -5,11 +5,26 @@ import { defineWxtModule } from "wxt/modules"
 
 const SOURCE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../../packages/source")
 const SOURCE_LIB_DIR = resolve(SOURCE_ROOT, "src/lib")
-const SOURCE_BUILD_SCRIPT = "build.ts"
+const REGISTRY_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../../packages/registry")
+const REGISTRY_SOURCE_DIR = resolve(REGISTRY_ROOT, "src")
 const SOURCE_CHANGE_EVENTS = new Set(["add", "change", "unlink"])
 const TEST_FILE_REGEX = /\.(?:test|spec)\.ts$/
+const SOURCE_BUILD_ROOTS = [REGISTRY_ROOT, SOURCE_ROOT]
 
-export function isSourceProviderFile(filePath: string, sourceRoot = SOURCE_ROOT): boolean {
+export function isSourceProviderFile(
+  filePath: string,
+  sourceRoot = SOURCE_ROOT,
+  registryRoot = REGISTRY_ROOT,
+): boolean {
+  const registryPathParts = relative(registryRoot, filePath).split(sep)
+  if (
+    registryPathParts.length === 2
+    && registryPathParts[0] === "src"
+    && registryPathParts[1]?.endsWith(".json")
+  ) {
+    return true
+  }
+
   const pathParts = relative(sourceRoot, filePath).split(sep)
 
   if (
@@ -25,10 +40,10 @@ export function isSourceProviderFile(filePath: string, sourceRoot = SOURCE_ROOT)
     || (pathParts.length === 4 && pathParts[3] === "index.ts")
 }
 
-function runSourceBuild(): Promise<void> {
+function runPackageBuild(packageRoot: string): Promise<void> {
   return new Promise((resolveBuild, rejectBuild) => {
-    const child = spawn("bun", ["run", SOURCE_BUILD_SCRIPT], {
-      cwd: SOURCE_ROOT,
+    const child = spawn("bun", ["run", "build"], {
+      cwd: packageRoot,
       stdio: ["ignore", "pipe", "pipe"],
     })
     let output = ""
@@ -47,6 +62,12 @@ function runSourceBuild(): Promise<void> {
   })
 }
 
+async function runSourceBuilds(): Promise<void> {
+  for (const packageRoot of SOURCE_BUILD_ROOTS) {
+    await runPackageBuild(packageRoot)
+  }
+}
+
 export default defineWxtModule({
   setup(wxt) {
     let activeBuild: Promise<void> | undefined
@@ -61,7 +82,7 @@ export default defineWxtModule({
       activeBuild = (async () => {
         do {
           rebuildRequested = false
-          await runSourceBuild()
+          await runSourceBuilds()
         } while (rebuildRequested)
       })()
 
@@ -80,11 +101,11 @@ export default defineWxtModule({
         }
 
         void generateSource()
-          .then(() => wxt.logger.info("Regenerated source metadata"))
-          .catch(error => wxt.logger.error("Failed to regenerate source metadata", error))
+          .then(() => wxt.logger.info("Regenerated source registry"))
+          .catch(error => wxt.logger.error("Failed to regenerate source registry", error))
       }
 
-      server.watcher.add(SOURCE_LIB_DIR)
+      server.watcher.add([SOURCE_LIB_DIR, REGISTRY_SOURCE_DIR])
       server.watcher.on("all", handleSourceChange)
       wxt.hook("server:closed", () => {
         server.watcher.off("all", handleSourceChange)

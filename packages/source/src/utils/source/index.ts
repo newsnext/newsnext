@@ -288,6 +288,149 @@ export interface ProviderConfig {
   sources: Record<string, SourceConfig>
 }
 
+export type SourceRegistryConfig = SourceConfig & {
+  icon?: string
+}
+
+export type SourceRegistry = Record<string, SourceRegistryConfig>
+
+export const SOURCE_REGISTRY_LIMITS = {
+  maxBytes: 2 * 1024 * 1024,
+  maxSources: 1000,
+  maxSourceIdLength: 200,
+} as const
+
+const REGISTRY_SOURCE_ID_PATTERN = /^[^:\s]+:[^:\s]+$/
+const PROHIBITED_REGISTRY_KEYS = new Set(["__proto__", "constructor", "prototype"])
+const STRUCTURED_LOADER_TYPES = new Set(["html", "json", "rss"])
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+}
+
+export function parseSourceRegistry(input: unknown): SourceRegistry {
+  if (!isRecord(input)) {
+    throw new Error("Source registry must be a JSON object")
+  }
+
+  const serialized = JSON.stringify(input)
+  if (new TextEncoder().encode(serialized).byteLength > SOURCE_REGISTRY_LIMITS.maxBytes) {
+    throw new Error(`Source registry exceeds ${SOURCE_REGISTRY_LIMITS.maxBytes} bytes`)
+  }
+
+  const entries = Object.entries(input)
+  if (entries.length > SOURCE_REGISTRY_LIMITS.maxSources) {
+    throw new Error(`Source registry exceeds ${SOURCE_REGISTRY_LIMITS.maxSources} sources`)
+  }
+
+  return Object.fromEntries(
+    entries.map(([id, source]) => {
+      const idParts = id.split(":")
+      if (
+        id.length > SOURCE_REGISTRY_LIMITS.maxSourceIdLength
+        || !REGISTRY_SOURCE_ID_PATTERN.test(id)
+        || idParts.some(part => PROHIBITED_REGISTRY_KEYS.has(part))
+      ) {
+        throw new Error(`Invalid registry source ID "${id}"`)
+      }
+      if (!isRecord(source) || !isRecord(source.loader)) {
+        throw new Error(`Registry source "${id}" must define a structured loader`)
+      }
+      if (!STRUCTURED_LOADER_TYPES.has(String(source.loader.type))) {
+        throw new Error(`Registry source "${id}" uses an unsupported loader type`)
+      }
+
+      const config = source as unknown as SourceRegistryConfig
+      resolveRegistrySource(id, config)
+      return [id, config]
+    }),
+  )
+}
+
+export function mergeSourceRegistries(...registries: unknown[]): SourceRegistry {
+  return parseSourceRegistry(
+    Object.assign({}, ...registries.map(parseSourceRegistry)),
+  )
+}
+
+export function resolveSourceRegistry(input: unknown): Record<string, RuntimeSource> {
+  return Object.fromEntries(
+    Object.entries(parseSourceRegistry(input)).map(([id, source]) => [
+      id,
+      resolveRegistrySource(id, source),
+    ]),
+  )
+}
+
+export function flattenProviderConfig(
+  id: string,
+  provider: ProviderConfig,
+): SourceRegistry {
+  return Object.fromEntries(
+    Object.entries(provider.sources).map(([sourceId, source]) => [
+      `${id}:${sourceId}`,
+      {
+        ...source,
+        icon: provider.icon,
+        metadata: {
+          providerTitle: provider.title,
+          color: provider.color,
+          category: provider.category ?? "others",
+          desc: provider.desc,
+          home: provider.home,
+          ...source.metadata,
+        },
+        secrets: mergeDefinitions(provider.secrets, source.secrets),
+      },
+    ]),
+  )
+}
+
+export function resolveRegistrySource(
+  id: string,
+  config: SourceRegistryConfig,
+): RuntimeSource {
+  validateSourceTemplates(id, config)
+
+  const key = id.split(":")[1]
+  if (!key) {
+    throw new Error(`Invalid registry source ID "${id}"`)
+  }
+
+  const source = resolveSource(key, config)
+  if (!source.providerTitle || !source.color || !source.category) {
+    throw new Error(`Registry source "${id}" is missing inherited metadata`)
+  }
+
+  const secrets = source.secrets
+  const cookieHosts = (secrets ?? [])
+    .filter(secret => secret.type === "cookie")
+    .map(secret => new URL(secret.origin).hostname)
+
+  return {
+    icon: config.icon,
+    providerTitle: source.providerTitle,
+    sourceIcon: source.sourceIcon,
+    key: source.key,
+    title: source.title,
+    params: source.params,
+    capabilities: {
+      ...source.capabilities,
+      cookies: [...new Set([...source.capabilities.cookies, ...cookieHosts])],
+    },
+    cache: source.cache,
+    color: source.color,
+    desc: source.desc,
+    type: source.type,
+    category: source.category,
+    home: source.home,
+    secrets,
+    radar: source.radar,
+    disable: source.disable,
+    loader: source.loader,
+  }
+}
+
 export function resolveProvider(
   id: string,
   provider: ProviderConfig,

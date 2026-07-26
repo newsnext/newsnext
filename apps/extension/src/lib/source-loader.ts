@@ -4,6 +4,7 @@ import { stableStringify } from "@newsnext/shared/utils"
 import { normalizeSourceParams, resolveSource } from "@newsnext/source/service"
 import { createBackgroundClient } from "./background-client"
 import { readCachedSource, writeCachedSource } from "./source-cache"
+import { loadSourceDescriptor } from "./sources"
 
 const EMPTY_SOURCE_ITEMS_ERROR_MESSAGE = "No source items. Refresh to try again."
 const inFlightSourceLoads = new Map<string, Promise<SourceLoadResult>>()
@@ -49,7 +50,7 @@ export async function loadSource(
   queryParams: Record<string, unknown> = {},
   options: LoadSourceOptions = {},
 ): Promise<SourceLoadResult> {
-  const source = resolveSource(sourceId)
+  const source = await loadSourceDescriptor(sourceId)
   const params = normalizeSourceParams(source, queryParams)
   const key = buildSourceCacheKey(sourceId, source.cache.version, params)
   const cachedResult = options.forceFresh
@@ -69,7 +70,10 @@ export async function loadSource(
     sourceId,
     queryParams,
     key,
-    loadInCurrentContext: () => source.loader(params),
+    loadInCurrentContext: async () => {
+      const runtimeSource = await resolveSource(sourceId)
+      return runtimeSource.loader(params)
+    },
   })
   inFlightSourceLoads.set(key, sourceLoad)
 

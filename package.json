@@ -11,6 +11,7 @@
       "packages/misc/tsconfigs",
       "packages/shared",
       "packages/source",
+      "packages/registry",
       "packages/ui"
     ],
     "catalog": {

@@ -1,3 +1,4 @@
+import { sourceDescriptors } from "@newsnext/source/metadata"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { createBackgroundClient } from "./background-client"
 import { readCachedSource, writeCachedSource } from "./source-cache"
@@ -16,6 +17,15 @@ const createBackgroundClientMock = vi.mocked(createBackgroundClient)
 const readCachedSourceMock = vi.mocked(readCachedSource)
 const writeCachedSourceMock = vi.mocked(writeCachedSource)
 
+function mockBackgroundLoad(load: ReturnType<typeof vi.fn>): void {
+  createBackgroundClientMock.mockReturnValue({
+    registry: {
+      list: vi.fn().mockResolvedValue(sourceDescriptors),
+    },
+    source: { load },
+  } as never)
+}
+
 describe("loadSource", () => {
   afterEach(() => {
     createBackgroundClientMock.mockReset()
@@ -30,7 +40,7 @@ describe("loadSource", () => {
       updatedAt: 123,
     })
 
-    createBackgroundClientMock.mockReturnValue({ source: { load } } as never)
+    mockBackgroundLoad(load)
 
     const result = await loadSource("github:trending", { dateRange: "weekly" })
 
@@ -53,7 +63,7 @@ describe("loadSource", () => {
       updatedAt: 123,
     })
 
-    createBackgroundClientMock.mockReturnValue({ source: { load } } as never)
+    mockBackgroundLoad(load)
 
     await loadSource("netease-music:playlist", {
       id: " 5059661515 ",
@@ -81,7 +91,7 @@ describe("loadSource", () => {
 
     expect(result).toBe(cachedResult)
     expect(readCachedSource).toHaveBeenCalledWith(expect.stringMatching(/^github:trending:/), 15 * 60_000)
-    expect(createBackgroundClient).not.toHaveBeenCalled()
+    expect(createBackgroundClient).toHaveBeenCalledOnce()
     expect(writeCachedSource).not.toHaveBeenCalled()
   })
 
@@ -98,7 +108,7 @@ describe("loadSource", () => {
     })
 
     readCachedSourceMock.mockResolvedValue(cachedResult)
-    createBackgroundClientMock.mockReturnValue({ source: { load } } as never)
+    mockBackgroundLoad(load)
 
     const result = await loadSource("github:trending", { dateRange: "weekly" }, { forceFresh: true })
 
@@ -125,7 +135,7 @@ describe("loadSource", () => {
       items: [],
       updatedAt: 456,
     })
-    createBackgroundClientMock.mockReturnValue({ source: { load } } as never)
+    mockBackgroundLoad(load)
 
     const result = await loadSource("github:trending", { dateRange: "weekly" })
 
@@ -143,7 +153,7 @@ describe("loadSource", () => {
       updatedAt: 789,
     })
 
-    createBackgroundClientMock.mockReturnValue({ source: { load } } as never)
+    mockBackgroundLoad(load)
 
     await expect(loadSource("github:trending", { dateRange: "weekly" }))
       .rejects
@@ -163,7 +173,7 @@ describe("loadSource", () => {
       updatedAt: 789,
     })
 
-    createBackgroundClientMock.mockReturnValue({ source: { load } } as never)
+    mockBackgroundLoad(load)
 
     const [firstResult, secondResult] = await Promise.all([
       loadSource("github:trending", { dateRange: "weekly" }),

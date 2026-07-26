@@ -10,6 +10,7 @@ export default antfu(
     },
     ignores: [
       "public/**",
+      "packages/registry/registry.json",
       "packages/source/src/index.ts",
       "packages/source/src/metadata.ts",
     ],
@@ -23,6 +24,7 @@ export default antfu(
   {
     name: "newsnext/command-line-scripts",
     files: [
+      "packages/registry/build.ts",
       "packages/source/build.ts",
       "packages/ui/scripts/**/*.ts",
     ],
@@ -34,6 +36,7 @@ export default antfu(
     name: "newsnext/esm-top-level-await",
     files: [
       "**/*.{test,spec}.{ts,tsx}",
+      "packages/registry/build.ts",
       "packages/source/build.ts",
     ],
     rules: {

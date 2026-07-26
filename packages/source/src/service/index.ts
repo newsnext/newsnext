@@ -1,7 +1,15 @@
-import type { InferSourceParams, RuntimeSource, SourceParamSchemaMap } from "@newsnext/source/typings"
+import type {
+  InferSourceParams,
+  ProviderDefinition,
+  RuntimeSource,
+  SourceDescriptor,
+  SourceParamSchemaMap,
+} from "@newsnext/source/typings"
+import { getFavicon } from "@newsnext/shared/utils"
 import { SourceParamValueError } from "@newsnext/source/typings"
 import { parseSourceParams } from "@newsnext/source/utils/params"
-import { providers } from "../index"
+import { providers as typescriptProviders } from "../index"
+import { resolveSourceRegistry } from "../utils/source"
 
 export type SourceErrorCode
   = | "SOURCE_NOT_FOUND"
@@ -30,6 +38,88 @@ export interface PreparedSourceRequest<TParams extends SourceParamSchemaMap = So
   params: InferSourceParams<TParams>
 }
 
+const runtimeTypescriptProviders = typescriptProviders as Record<string, ProviderDefinition>
+let registryGeneration = 0
+let registryLoader: SourceRegistryLoader = loadBundledSourceRegistry
+let registrySources: Record<string, RuntimeSource> | undefined
+let registrySourcesPromise: Promise<Record<string, RuntimeSource>> | undefined
+
+export type SourceRegistryLoader = () => Promise<unknown>
+
+export async function loadBundledSourceRegistry(): Promise<unknown> {
+  const { default: registry } = await import("@newsnext/registry", {
+    with: { type: "json" },
+  })
+  return registry
+}
+
+function setSourceRegistryLoader(loader: SourceRegistryLoader): void {
+  registryGeneration += 1
+  registryLoader = loader
+  registrySources = undefined
+  registrySourcesPromise = undefined
+}
+
+export function configureSourceRegistryLoader(loader: SourceRegistryLoader): () => void {
+  const previousLoader = registryLoader
+  setSourceRegistryLoader(loader)
+  return () => setSourceRegistryLoader(previousLoader)
+}
+
+function loadRegistrySources(): Promise<Record<string, RuntimeSource>> {
+  if (registrySources) {
+    return Promise.resolve(registrySources)
+  }
+  if (registrySourcesPromise) {
+    return registrySourcesPromise
+  }
+
+  const generation = registryGeneration
+  registrySourcesPromise = registryLoader()
+    .then(resolveSourceRegistry)
+    .then((sources) => {
+      if (generation === registryGeneration) {
+        registrySources = sources
+      }
+      return sources
+    })
+    .finally(() => {
+      if (generation === registryGeneration) {
+        registrySourcesPromise = undefined
+      }
+    })
+
+  return registrySourcesPromise
+}
+
+export async function loadSources(): Promise<Record<string, RuntimeSource>> {
+  const typescriptSources = Object.fromEntries(
+    Object.entries(runtimeTypescriptProviders).flatMap(([providerId, provider]) =>
+      Object.entries(provider.sources).map(([sourceId, source]) => [
+        `${providerId}:${sourceId}`,
+        source,
+      ]),
+    ),
+  )
+
+  return {
+    ...typescriptSources,
+    ...await loadRegistrySources(),
+  }
+}
+
+export async function loadSourceDescriptors(): Promise<SourceDescriptor[]> {
+  const sources = await loadSources()
+  return Object.entries(sources).map(([id, source]) => {
+    const { disable: _disable, key: _key, loader: _loader, ...descriptor } = source
+    return {
+      ...descriptor,
+      icon: descriptor.icon ?? (descriptor.home ? getFavicon(descriptor.home) : undefined),
+      id,
+    }
+  })
+}
+
 export function parseSourceId(sourceId: string): ParsedSourceId {
   const [provider, source, extra] = sourceId.split(":")
 
@@ -43,29 +133,31 @@ export function parseSourceId(sourceId: string): ParsedSourceId {
   return { provider, source }
 }
 
-export function resolveSource(sourceId: string): RuntimeSource<any> {
+export async function resolveSource(sourceId: string): Promise<RuntimeSource<any>> {
   const { provider, source } = parseSourceId(sourceId)
-  const providerDefinition = providers[provider as keyof typeof providers]
+  const providerDefinition = runtimeTypescriptProviders[provider]
 
-  if (!providerDefinition) {
-    throw new SourceServiceError(
-      "PROVIDER_NOT_FOUND",
-      `Provider '${provider}' not found`,
-    )
+  if (providerDefinition) {
+    const resolvedSource = providerDefinition.sources[source]
+    if (!resolvedSource) {
+      throw new SourceServiceError(
+        "SOURCE_NOT_FOUND",
+        `Source '${source}' not found in provider '${provider}'`,
+      )
+    }
+
+    return resolvedSource
   }
 
-  const resolvedSource = providerDefinition.sources[source]
+  const registrySources = await loadRegistrySources()
+  const resolvedSource = registrySources[sourceId]
   if (!resolvedSource) {
+    const hasProvider = Object.keys(registrySources).some(id => id.startsWith(`${provider}:`))
     throw new SourceServiceError(
-      "SOURCE_NOT_FOUND",
-      `Source '${source}' not found in provider '${provider}'`,
-    )
-  }
-
-  if (!resolvedSource.loader) {
-    throw new SourceServiceError(
-      "LOADER_NOT_FOUND",
-      "Source does not have a loader",
+      hasProvider ? "SOURCE_NOT_FOUND" : "PROVIDER_NOT_FOUND",
+      hasProvider
+        ? `Source '${source}' not found in provider '${provider}'`
+        : `Provider '${provider}' not found`,
     )
   }
 
@@ -87,11 +179,11 @@ export function normalizeSourceParams<TParams extends SourceParamSchemaMap>(
   }
 }
 
-export function prepareSourceRequest<TParams extends SourceParamSchemaMap>(
+export async function prepareSourceRequest<TParams extends SourceParamSchemaMap>(
   sourceId: string,
   queryParams: Record<string, unknown> = {},
-): PreparedSourceRequest<TParams> {
-  const source = resolveSource(sourceId) as RuntimeSource<TParams>
+): Promise<PreparedSourceRequest<TParams>> {
+  const source = await resolveSource(sourceId) as RuntimeSource<TParams>
   const params = normalizeSourceParams(source, queryParams)
 
   return {

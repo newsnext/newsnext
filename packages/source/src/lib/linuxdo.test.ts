@@ -1,8 +1,8 @@
-import type { ProviderConfig } from "../utils/source"
+import type { SourceRegistryConfig } from "../utils/source"
+import jsonSources from "@newsnext/registry" with { type: "json" }
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { myFetch } from "../utils/fetch"
-import { resolveProvider } from "../utils/source"
-import linuxdo from "./linuxdo.json" with { type: "json" }
+import { resolveRegistrySource } from "../utils/source"
 
 vi.mock("../utils/fetch", () => ({
   myFetch: vi.fn(),
@@ -44,7 +44,10 @@ describe("linux.do source", () => {
       ],
     })
 
-    const source = resolveProvider("linuxdo", linuxdo as ProviderConfig).sources.latest
+    const source = resolveRegistrySource(
+      "linuxdo:latest",
+      jsonSources["linuxdo:latest"] as SourceRegistryConfig,
+    )
     const items = await source.loader({})
 
     expect(items).toEqual([

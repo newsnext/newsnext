@@ -11,15 +11,13 @@ import {
 } from "@newsnext/ui/components/command"
 import { useAtomValue } from "jotai"
 import { useEffect, useMemo, useState } from "react"
+import { useSourceDescriptors } from "@/hooks/use-source-descriptors"
 import { buildBoardSources } from "@/lib/source-cards"
-import { getSourceDescriptors } from "@/lib/sources"
 import { cn } from "@/lib/utils"
 import { boardInstancesAtom, boardStarIdsAtom } from "@/store/board"
 import Card from "../card"
 import { PhMagnifyingGlass } from "../icons/ph"
 import "./index.css"
-
-const SOURCES = getSourceDescriptors()
 
 interface SearchItem {
   id: string
@@ -82,7 +80,7 @@ function SearchDialogContent(): ReactNode {
   const [selectedItemId, setSelectedItemId] = useState("")
   const starredInstanceIds = useAtomValue(boardStarIdsAtom("stars"))
   const instances = useAtomValue(boardInstancesAtom("stars"))
-  const sources = SOURCES
+  const { sources } = useSourceDescriptors()
 
   const searchItems = useMemo<SearchItem[]>(() => {
     if (!sources.length) {

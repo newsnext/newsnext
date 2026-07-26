@@ -18,13 +18,15 @@ import {
 import { SegmentedControl } from "../common/segmented-control"
 import { ThemeSelector } from "../common/theme-selector"
 import { PermissionsSettings } from "./permissions"
+import { RegistriesSettings } from "./registries"
 
 const SETTINGS_TAB_KEY = "newsnext-settings-tab"
-export type SettingsTabId = "appearance" | "general" | "permissions"
+export type SettingsTabId = "appearance" | "general" | "permissions" | "registries"
 
 const SETTINGS_TABS: Array<{ id: SettingsTabId, label: string }> = [
   { id: "appearance", label: "Appearance" },
   { id: "general", label: "General" },
+  { id: "registries", label: "Registries" },
   { id: "permissions", label: "Permissions" },
 ]
 
@@ -104,6 +106,7 @@ function SettingsModalContent({
           </DialogHeader>
           {activeTab === "appearance" && <AppearanceSettings />}
           {activeTab === "general" && <GeneralSettings />}
+          {activeTab === "registries" && <RegistriesSettings />}
           {activeTab === "permissions" && <PermissionsSettings />}
         </div>
       </DialogContent>
@@ -122,7 +125,10 @@ function readSettingsTab(initialTab?: SettingsTabId): SettingsTabId {
 }
 
 function isSettingsTabId(value: string | null): value is SettingsTabId {
-  return value === "appearance" || value === "general" || value === "permissions"
+  return value === "appearance"
+    || value === "general"
+    || value === "permissions"
+    || value === "registries"
 }
 
 type DefaultBoardOption = "forks" | "stars" | "last"

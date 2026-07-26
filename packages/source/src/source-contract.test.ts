@@ -1,6 +1,7 @@
+import jsonSourceRegistry from "@newsnext/registry" with { type: "json" }
 import { describe, expect, it } from "vitest"
-import { providers } from "./index"
 import { sourceDescriptors } from "./metadata"
+import { loadSources } from "./service"
 import { matchesCapabilityHost } from "./utils/source/capabilities"
 
 const CACHE_MAX_AGE_PATTERN = /^\d+(?:\.\d+)?[smhd]$/
@@ -10,14 +11,22 @@ function toSerializable(value: unknown): unknown {
   return value === undefined ? undefined : JSON.parse(JSON.stringify(value))
 }
 
+const sources = await loadSources()
+
 describe("source contract", () => {
-  const runtimeSources = Object.entries(providers).flatMap(([providerId, provider]) =>
-    Object.entries(provider.sources).map(([sourceKey, source]) => ({
-      id: `${providerId}:${sourceKey}`,
-      sourceKey,
-      source,
-    })),
-  )
+  const runtimeSources = Object.entries(sources).map(([id, source]) => ({
+    id,
+    sourceKey: id.split(":")[1],
+    source,
+  }))
+
+  it("builds a flat JSON source registry without provider containers", () => {
+    for (const [id, source] of Object.entries(jsonSourceRegistry)) {
+      expect(id.split(":")).toHaveLength(2)
+      expect("sources" in source, id).toBe(false)
+      expect(source.metadata.providerTitle, id).toBeTypeOf("string")
+    }
+  })
 
   it("generates one descriptor for every runtime source", () => {
     expect(sourceDescriptors).toHaveLength(runtimeSources.length)

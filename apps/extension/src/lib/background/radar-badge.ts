@@ -1,17 +1,16 @@
 import type { Browser } from "#imports"
+import { loadSourceDescriptors } from "@newsnext/source/service"
 import { browser } from "#imports"
 import { createRadarMatcher } from "@/lib/radar"
-import { getSourceDescriptors } from "@/lib/sources"
-
-const radarMatcher = createRadarMatcher(getSourceDescriptors())
 
 async function updateRadarBadge(tab: Browser.tabs.Tab): Promise<void> {
   if (tab.id === undefined) {
     return
   }
 
+  const sources = await loadSourceDescriptors()
   const count = tab.url
-    ? radarMatcher.getSuggestions({ url: tab.url, title: tab.title }).length
+    ? createRadarMatcher(sources).getSuggestions({ url: tab.url, title: tab.title }).length
     : 0
 
   await browser.action.setBadgeText({

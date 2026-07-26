@@ -1,8 +1,8 @@
-import type { ProviderConfig } from "../utils/source"
+import type { SourceRegistryConfig } from "../utils/source"
+import jsonSources from "@newsnext/registry" with { type: "json" }
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { myFetch } from "../utils/fetch"
-import { resolveProvider } from "../utils/source"
-import xueqiu from "./xueqiu.json" with { type: "json" }
+import { resolveRegistrySource } from "../utils/source"
 
 vi.mock("../utils/fetch", () => ({
   myFetch: vi.fn(),
@@ -35,7 +35,10 @@ describe("xueqiu source", () => {
       },
     })
 
-    const source = resolveProvider("xueqiu", xueqiu as ProviderConfig).sources["hot-stock"]
+    const source = resolveRegistrySource(
+      "xueqiu:hot-stock",
+      jsonSources["xueqiu:hot-stock"] as SourceRegistryConfig,
+    )
     const items = await source.loader({})
 
     expect(items).toEqual([

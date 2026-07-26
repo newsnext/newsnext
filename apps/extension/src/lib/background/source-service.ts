@@ -19,7 +19,7 @@ export interface BackgroundSourceService {
 export function createBackgroundSourceService(): BackgroundSourceService {
   return {
     async load(input): Promise<LoadBackgroundSourceOutput> {
-      const request = prepareSourceRequest(input.sourceId, input.params ?? {})
+      const request = await prepareSourceRequest(input.sourceId, input.params ?? {})
       const { provider } = parseSourceId(input.sourceId)
       const secrets = await resolveSourceSecrets(request.source, provider)
       const items = await request.source.loader(request.params, {

@@ -1,0 +1,7 @@
+{
+  "extends": "@newsnext/tsconfigs/server.json",
+  "compilerOptions": {
+    "strict": true
+  },
+  "include": ["build.ts"]
+}

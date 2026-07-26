@@ -1,11 +1,10 @@
-import { normalizeSourceParams, resolveSource } from "@newsnext/source/service"
+import { stableStringify } from "@newsnext/shared/utils"
 import { useIsFetching, useQueryClient } from "@tanstack/react-query"
 import { useStore } from "jotai"
 import { useCallback } from "react"
 import { buildBoardSources } from "@/lib/source-cards"
-import { buildSourceCacheKey } from "@/lib/source-loader"
 import { sanitizeSourceParamValues } from "@/lib/source-params"
-import { getSourceDescriptors } from "@/lib/sources"
+import { loadSourceDescriptors } from "@/lib/sources"
 import { boardInstancesAtom, boardStarIdsAtom, currentBoardAtom } from "@/store/board"
 
 const latestSourceRefreshKeys = new Set<string>()
@@ -16,18 +15,16 @@ export interface RefetchTarget {
   params?: Record<string, unknown>
 }
 
-function getLatestSourceRefreshKey(target: RefetchTarget): string {
-  const source = resolveSource(target.sourceId)
-  const params = normalizeSourceParams(source, target.params ?? {})
-  return buildSourceCacheKey(target.sourceId, source.cache.version, params)
+export function getSourceRefreshKey(target: RefetchTarget): string {
+  return `${target.sourceId}:${stableStringify(target.params ?? {})}`
 }
 
 function markLatestSourceRefresh(target: RefetchTarget): void {
-  latestSourceRefreshKeys.add(getLatestSourceRefreshKey(target))
+  latestSourceRefreshKeys.add(getSourceRefreshKey(target))
 }
 
 export function consumeLatestSourceRefresh(target: RefetchTarget): boolean {
-  const key = getLatestSourceRefreshKey(target)
+  const key = getSourceRefreshKey(target)
 
   if (!latestSourceRefreshKeys.has(key)) {
     return false
@@ -44,7 +41,7 @@ export function useSourceRefetch() {
     async (...targets: RefetchTarget[]) => {
       try {
         const uniqueTargets = [...new Map(
-          targets.map(target => [getLatestSourceRefreshKey(target), target]),
+          targets.map(target => [getSourceRefreshKey(target), target]),
         ).values()]
 
         uniqueTargets.forEach(markLatestSourceRefresh)
@@ -52,7 +49,7 @@ export function useSourceRefetch() {
         await Promise.all(
           uniqueTargets.map(target =>
             queryClient.invalidateQueries({
-              queryKey: [...SOURCE_QUERY_KEY, getLatestSourceRefreshKey(target)],
+              queryKey: [...SOURCE_QUERY_KEY, getSourceRefreshKey(target)],
             }),
           ),
         )
@@ -80,7 +77,7 @@ export function useRefetch() {
       const currentBoard = store.get(currentBoardAtom)
       const starredInstanceIds = store.get(boardStarIdsAtom(currentBoard))
       const instances = store.get(boardInstancesAtom(currentBoard))
-      const sources = getSourceDescriptors()
+      const sources = await loadSourceDescriptors()
       const boardSources = buildBoardSources({
         sources,
         boardId: currentBoard,
@@ -96,7 +93,7 @@ export function useRefetch() {
         } satisfies RefetchTarget
       })
       const uniqueTargets = [...new Map(
-        targets.map(target => [getLatestSourceRefreshKey(target), target]),
+        targets.map(target => [getSourceRefreshKey(target), target]),
       ).values()]
 
       uniqueTargets.forEach(markLatestSourceRefresh)
@@ -104,7 +101,7 @@ export function useRefetch() {
       await Promise.all(
         uniqueTargets.map(target =>
           queryClient.invalidateQueries({
-            queryKey: [...SOURCE_QUERY_KEY, getLatestSourceRefreshKey(target)],
+            queryKey: [...SOURCE_QUERY_KEY, getSourceRefreshKey(target)],
           }),
         ),
       )

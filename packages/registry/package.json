@@ -1,0 +1,19 @@
+{
+  "name": "@newsnext/registry",
+  "type": "module",
+  "private": true,
+  "license": "MPL-2.0",
+  "sideEffects": false,
+  "exports": {
+    ".": "./registry.json"
+  },
+  "scripts": {
+    "build": "bun run build.ts",
+    "build:watch": "bun --watch run build.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@newsnext/source": "workspace:*",
+    "@newsnext/tsconfigs": "workspace:*"
+  }
+}

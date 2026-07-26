@@ -82,6 +82,13 @@
     "packages/misc/tsconfigs": {
       "name": "@newsnext/tsconfigs",
     },
+    "packages/registry": {
+      "name": "@newsnext/registry",
+      "devDependencies": {
+        "@newsnext/source": "workspace:*",
+        "@newsnext/tsconfigs": "workspace:*",
+      },
+    },
     "packages/shared": {
       "name": "@newsnext/shared",
       "devDependencies": {
@@ -91,6 +98,8 @@
     "packages/source": {
       "name": "@newsnext/source",
       "dependencies": {
+        "@newsnext/date-parser": "workspace:*",
+        "@newsnext/registry": "workspace:*",
         "@newsnext/shared": "workspace:*",
         "@smithy/md5-js": "^4.4.13",
         "@wxt-dev/browser": "^0.2.2",
@@ -387,6 +396,8 @@
     "@newsnext/date-parser": ["@newsnext/date-parser@workspace:packages/date-parser"],
 
     "@newsnext/extension": ["@newsnext/extension@workspace:apps/extension"],
+
+    "@newsnext/registry": ["@newsnext/registry@workspace:packages/registry"],
 
     "@newsnext/shared": ["@newsnext/shared@workspace:packages/shared"],
 

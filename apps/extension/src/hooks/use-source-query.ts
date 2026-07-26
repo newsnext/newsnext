@@ -1,11 +1,16 @@
 import type { NewsItem } from "@/typings/source"
-import { normalizeSourceParams, resolveSource } from "@newsnext/source/service"
+import { normalizeSourceParams } from "@newsnext/source/service"
 import { useQuery } from "@tanstack/react-query"
 import { useCallback, useMemo, useState } from "react"
-import { buildSourceCacheKey, loadSource } from "@/lib/source-loader"
+import { loadSource } from "@/lib/source-loader"
 // import { useLocalStorageCache } from "./use-local-storage-cache"
 import { getLoginUrlFromError } from "./source-login-error"
-import { consumeLatestSourceRefresh, SOURCE_QUERY_KEY } from "./use-refetch"
+import {
+  consumeLatestSourceRefresh,
+  getSourceRefreshKey,
+  SOURCE_QUERY_KEY,
+} from "./use-refetch"
+import { useSourceDescriptors } from "./use-source-descriptors"
 
 export interface UseSourceQueryOptions {
   sourceId: string
@@ -21,11 +26,18 @@ export function useSourceQuery({
   enabled = true,
   refetchInterval = false,
 }: UseSourceQueryOptions) {
-  const source = useMemo(() => resolveSource(sourceId), [sourceId])
-  const normalizedParams = useMemo(() => normalizeSourceParams(source, params ?? {}), [params, source])
-  const cacheKey = useMemo(
-    () => buildSourceCacheKey(sourceId, source.cache.version, normalizedParams),
-    [normalizedParams, source.cache.version, sourceId],
+  const { sources } = useSourceDescriptors()
+  const source = useMemo(
+    () => sources.find(candidate => candidate.id === sourceId),
+    [sourceId, sources],
+  )
+  const normalizedParams = useMemo(
+    () => source ? normalizeSourceParams(source, params ?? {}) : {},
+    [params, source],
+  )
+  const refreshKey = useMemo(
+    () => getSourceRefreshKey({ sourceId, params: normalizedParams }),
+    [normalizedParams, sourceId],
   )
   // type SourceData = Awaited<ReturnType<typeof loadSource>>
   // const storageKey = `${STORAGE_PREFIX}/${sourceId}`
@@ -33,11 +45,11 @@ export function useSourceQuery({
 
   const [initialUpdatedAt] = useState(Date.now)
   const { data, error, isFetching, isError, refetch: normalRefetch } = useQuery({
-    queryKey: [...SOURCE_QUERY_KEY, cacheKey],
+    queryKey: [...SOURCE_QUERY_KEY, refreshKey],
     queryFn: () => loadSource(sourceId, normalizedParams, {
       forceFresh: consumeLatestSourceRefresh({ sourceId, params: normalizedParams }),
     }),
-    enabled,
+    enabled: enabled && source !== undefined,
     // placeholderData: prev => prev ?? readCache(),
     placeholderData: prev => prev,
     staleTime: 1000 * 60 * 3,

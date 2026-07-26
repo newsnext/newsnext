@@ -37,6 +37,7 @@ export default defineConfig({
       version: "0.9.0",
       permissions: [
         "activeTab",
+        "alarms",
         "contextMenus",
         "declarativeNetRequestWithHostAccess",
         "scripting",
