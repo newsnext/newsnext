@@ -137,6 +137,40 @@ describe("getRadarSuggestions", () => {
     ])
   })
 
+  it("suggests Folo feed and list cards from timeline URLs", () => {
+    expect(getSuggestions({
+      url: "https://app.folo.is/timeline/articles/feed-70006270320504832/pending",
+      title: "AI News | Folo",
+    })).toMatchObject([
+      {
+        sourceId: "folo:feed",
+        paramsPatch: {
+          feedId: "70006270320504832",
+        },
+        metaPatch: {
+          title: "AI News",
+          home: "https://app.folo.is/timeline/articles/feed-70006270320504832/pending",
+        },
+      },
+    ])
+
+    expect(getSuggestions({
+      url: "https://app.folo.is/timeline/articles/list-178752152055448576/pending",
+      title: "Developer Reading — Folo",
+    })).toMatchObject([
+      {
+        sourceId: "folo:list",
+        paramsPatch: {
+          listId: "178752152055448576",
+        },
+        metaPatch: {
+          title: "Developer Reading",
+          home: "https://app.folo.is/timeline/articles/list-178752152055448576/pending",
+        },
+      },
+    ])
+  })
+
   it("suggests V2EX and NewsNow parameterized cards", () => {
     expect(getSuggestions({
       url: "https://v2ex.com/go/share",

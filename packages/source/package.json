@@ -22,6 +22,7 @@
     "test": "bun run vitest"
   },
   "dependencies": {
+    "@newsnext/date-parser": "workspace:*",
     "@newsnext/shared": "workspace:*",
     "@smithy/md5-js": "^4.4.13",
     "@wxt-dev/browser": "^0.2.2",

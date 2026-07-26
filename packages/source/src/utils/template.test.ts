@@ -68,6 +68,20 @@ describe("source templates", () => {
     )).toBe("分享发现")
   })
 
+  it("parses relative dates in the requested timezone", () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date("2025-08-31T12:00:00Z"))
+
+    try {
+      expect(renderTemplate(
+        "{{ value | relative_date_to_ms: 'Asia/Shanghai' }}",
+        { value: "Today 08:00" },
+      )).toBe("1756598400000")
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it("allows source-oriented filters to receive null values", () => {
     expect(renderTemplate("{{ value | css_url }}", { value: null })).toBe("")
     expect(renderTemplate("{{ value | date_to_ms }}", { value: null })).toBe("")

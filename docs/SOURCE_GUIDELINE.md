@@ -261,6 +261,7 @@ NewsNext also registers:
 {{ value | favicon_url }}
 {{ value | css_url }}
 {{ value | date_to_ms }}
+{{ value | relative_date_to_ms: "Asia/Shanghai" }}
 {{ value | regex_extract: "Item (\\d+)", 1 }}
 {{ value | regex_replace: "\\s+", " " }}
 ```
@@ -276,6 +277,8 @@ NewsNext also registers:
 - `favicon_url` returns the configured favicon service URL for a page URL.
 - `css_url` extracts the first `url(...)` value from a CSS declaration.
 - `date_to_ms` parses a date and returns its Unix timestamp in milliseconds.
+- `relative_date_to_ms` parses absolute or relative date text in an optional
+  IANA timezone and returns its Unix timestamp in milliseconds.
 - `regex_extract` returns a numbered capture group, or an empty string when the
   pattern does not match.
 - `regex_replace` replaces every match with the provided replacement.
@@ -945,8 +948,8 @@ and `favicon`.
 
 ## Secrets
 
-Provider secrets describe values collected from a website rather than hard-coded
-in a loader:
+Secrets describe values collected from a website rather than hard-coded in a
+loader. Put shared secrets on the provider:
 
 ```ts
 export default {
@@ -977,6 +980,29 @@ localStorage
 
 Provider secrets are available to its sources. Cookie secret origins also
 contribute their hostnames to each source's cookie capabilities.
+
+Put a secret on an individual source when only that source needs it, or when
+the same website value has different requirements between sources:
+
+```ts
+sources: {
+  public: {
+    // ...
+    secrets: [
+      {
+        key: "session",
+        type: "cookie",
+        origin: "https://account.example.com",
+        itemKey: "session_id",
+        required: false,
+      },
+    ],
+  },
+}
+```
+
+Source secrets are appended to provider secrets. Keep a key in only one scope
+unless the loader intentionally needs both definitions.
 
 A custom loader receives resolved secrets through its loader context:
 
@@ -1032,6 +1058,9 @@ match: {
 
 - `hosts` are normalized to lowercase and ignore a leading `www.`.
 - `paths` use `path-to-regexp` syntax.
+- Capture stable resource IDs embedded in route segments, such as
+  `list-:listId`, and map them explicitly to the corresponding source
+  parameter.
 - An omitted `paths` matches every path on the declared hosts.
 - `includes` requires one of the strings to occur in the full URL.
 

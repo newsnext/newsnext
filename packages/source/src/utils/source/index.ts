@@ -27,6 +27,7 @@ interface SourceConfigBase<TParams extends SourceParamSchemaMap> {
   metadata?: Omit<SourceMetadata, "key">
   params?: TParams
   radar?: SourceRadarRule[]
+  secrets?: SourceSecretDefinition[]
   cache: SourceCacheConfig | SourceCacheMaxAge
 }
 
@@ -181,6 +182,7 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
   const {
     params,
     radar,
+    secrets,
     cache: cacheInput,
     loader,
     capabilities: capabilityOverrides,
@@ -195,6 +197,7 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
     ...metadata,
     params,
     radar,
+    secrets,
     capabilities,
     cache,
   }

@@ -1,0 +1,33 @@
+{
+  "title": "Lianhe Zaobao",
+  "color": "red",
+  "home": "https://www.zaobao.com",
+  "category": "china",
+  "sources": {
+    "realtime": {
+      "metadata": {
+        "title": "Realtime",
+        "type": "timeline",
+        "home": "https://www.zaochenbao.com/realtime/"
+      },
+      "loader": {
+        "type": "html",
+        "url": "https://www.zaochenbao.com/realtime/",
+        "decoding": "gb2312",
+        "items": "div.list-block > a.item",
+        "fields": {
+          "title": ".eps",
+          "url": {
+            "attr": "href",
+            "template": "{{ value | absolute_url: requestUrl }}"
+          },
+          "timestamp": {
+            "select": ".pdt10",
+            "template": "{{ value | remove: '- ' | relative_date_to_ms: 'Asia/Shanghai' }}"
+          }
+        }
+      },
+      "cache": "5m"
+    }
+  }
+}

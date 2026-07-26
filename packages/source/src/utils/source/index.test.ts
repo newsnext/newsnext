@@ -56,6 +56,44 @@ describe("source template contexts", () => {
     })
   })
 
+  it("merges provider and source secrets into capabilities", () => {
+    const provider = resolveProvider("test", {
+      title: "Provider",
+      color: "blue",
+      secrets: [
+        {
+          key: "shared",
+          type: "cookie",
+          origin: "https://account.example.com",
+          itemKey: "shared",
+        },
+      ],
+      sources: {
+        test: {
+          secrets: [
+            {
+              key: "source",
+              type: "localStorage",
+              origin: "https://app.example.com",
+              itemKey: "source",
+            },
+          ],
+          cache: "1h",
+          loader: {
+            type: "custom",
+            load: async () => [],
+          },
+          capabilities: {
+            network: [],
+          },
+        },
+      },
+    })
+
+    expect(provider.sources.test.secrets).toHaveLength(2)
+    expect(provider.sources.test.capabilities.cookies).toEqual(["account.example.com"])
+  })
+
   it("restricts Radar parameter templates to URL variables", () => {
     expect(() => resolveTestSource(createSourceConfig([
       {

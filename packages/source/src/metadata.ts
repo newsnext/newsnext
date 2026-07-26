@@ -24,6 +24,166 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "id": "aihot:all"
   },
   {
+    "icon": "https://icons.folo.is/www.bilibili.com",
+    "providerTitle": "Bilibili",
+    "title": "Hot Search",
+    "capabilities": {
+      "network": [
+        "s.search.bilibili.com"
+      ],
+      "cookies": [],
+      "browser": []
+    },
+    "cache": {
+      "version": 1,
+      "maxAge": "5m"
+    },
+    "color": "blue",
+    "type": "hottest",
+    "category": "china",
+    "home": "https://www.bilibili.com",
+    "id": "bilibili:hotword"
+  },
+  {
+    "icon": "https://icons.folo.is/www.bilibili.com",
+    "providerTitle": "Bilibili",
+    "title": "Following Videos",
+    "capabilities": {
+      "network": [
+        "api.bilibili.com"
+      ],
+      "cookies": [
+        "api.bilibili.com",
+        "www.bilibili.com"
+      ],
+      "browser": []
+    },
+    "cache": {
+      "version": 1,
+      "maxAge": "5m"
+    },
+    "color": "blue",
+    "desc": "Video updates from followed creators",
+    "type": "timeline",
+    "category": "china",
+    "home": "https://www.bilibili.com",
+    "id": "bilibili:following-videos"
+  },
+  {
+    "icon": "https://icons.folo.is/www.bilibili.com",
+    "providerTitle": "Bilibili",
+    "title": "Ranking",
+    "params": {
+      "region": {
+        "type": "select",
+        "title": "Region",
+        "values": [
+          {
+            "label": "All",
+            "value": "0"
+          },
+          {
+            "label": "Animation",
+            "value": "1"
+          },
+          {
+            "label": "Anime",
+            "value": "13"
+          },
+          {
+            "label": "Guochuang",
+            "value": "167"
+          },
+          {
+            "label": "Music",
+            "value": "3"
+          },
+          {
+            "label": "Dance",
+            "value": "129"
+          },
+          {
+            "label": "Games",
+            "value": "4"
+          },
+          {
+            "label": "Knowledge",
+            "value": "36"
+          },
+          {
+            "label": "Technology",
+            "value": "188"
+          },
+          {
+            "label": "Sports",
+            "value": "234"
+          },
+          {
+            "label": "Cars",
+            "value": "223"
+          },
+          {
+            "label": "Life",
+            "value": "160"
+          },
+          {
+            "label": "Food",
+            "value": "211"
+          },
+          {
+            "label": "Animals",
+            "value": "217"
+          },
+          {
+            "label": "Kichiku",
+            "value": "119"
+          },
+          {
+            "label": "Fashion",
+            "value": "155"
+          },
+          {
+            "label": "Entertainment",
+            "value": "5"
+          },
+          {
+            "label": "Film & TV",
+            "value": "181"
+          },
+          {
+            "label": "Documentary",
+            "value": "177"
+          },
+          {
+            "label": "Movies",
+            "value": "23"
+          },
+          {
+            "label": "TV Series",
+            "value": "11"
+          }
+        ],
+        "default": "0"
+      }
+    },
+    "capabilities": {
+      "network": [
+        "api.bilibili.com"
+      ],
+      "cookies": [],
+      "browser": []
+    },
+    "cache": {
+      "version": 1,
+      "maxAge": "15m"
+    },
+    "color": "blue",
+    "type": "hottest",
+    "category": "china",
+    "home": "https://www.bilibili.com",
+    "id": "bilibili:ranking"
+  },
+  {
     "icon": "https://www.google.com/chrome/static/images/favicons/favicon-96x96.png",
     "providerTitle": "Browser",
     "title": "History",
@@ -178,6 +338,110 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "category": "finance",
     "home": "https://www.cls.cn",
     "id": "cls:hot-article"
+  },
+  {
+    "icon": "https://icons.folo.is/folo.is",
+    "providerTitle": "Folo",
+    "title": "Feed",
+    "params": {
+      "feedId": {
+        "type": "text",
+        "title": "Feed ID",
+        "default": "71931642168770560",
+        "pattern": "^\\d+$"
+      }
+    },
+    "capabilities": {
+      "network": [
+        "api.folo.is"
+      ],
+      "cookies": [],
+      "browser": []
+    },
+    "cache": {
+      "version": 1,
+      "maxAge": "5m"
+    },
+    "color": "orange",
+    "type": "timeline",
+    "category": "others",
+    "home": "https://folo.is",
+    "radar": [
+      {
+        "id": "folo-feed",
+        "match": {
+          "hosts": [
+            "app.folo.is"
+          ],
+          "paths": [
+            "/timeline/articles/feed-:feedId/pending"
+          ]
+        },
+        "patch": {
+          "params": {
+            "feedId": "{{ path.feedId }}"
+          },
+          "metadata": {
+            "title": "{{ page.title | normalize_whitespace | regex_replace: '\\\\s*[|–—-]\\\\s*Folo$', '' | default: 'Feed' }}",
+            "home": "https://app.folo.is/timeline/articles/feed-{{ params.feedId }}/pending"
+          }
+        },
+        "confidence": 0.98
+      }
+    ],
+    "id": "folo:feed"
+  },
+  {
+    "icon": "https://icons.folo.is/folo.is",
+    "providerTitle": "Folo",
+    "title": "List",
+    "params": {
+      "listId": {
+        "type": "text",
+        "title": "List ID",
+        "default": "68649150114432000",
+        "pattern": "^\\d+$"
+      }
+    },
+    "capabilities": {
+      "network": [
+        "api.folo.is"
+      ],
+      "cookies": [],
+      "browser": []
+    },
+    "cache": {
+      "version": 1,
+      "maxAge": "5m"
+    },
+    "color": "orange",
+    "type": "timeline",
+    "category": "others",
+    "home": "https://folo.is",
+    "radar": [
+      {
+        "id": "folo-list",
+        "match": {
+          "hosts": [
+            "app.folo.is"
+          ],
+          "paths": [
+            "/timeline/articles/list-:listId/pending"
+          ]
+        },
+        "patch": {
+          "params": {
+            "listId": "{{ path.listId }}"
+          },
+          "metadata": {
+            "title": "{{ page.title | normalize_whitespace | regex_replace: '\\\\s*[|–—-]\\\\s*Folo$', '' | default: 'List' }}",
+            "home": "https://app.folo.is/timeline/articles/list-{{ params.listId }}/pending"
+          }
+        },
+        "confidence": 0.98
+      }
+    ],
+    "id": "folo:list"
   },
   {
     "icon": "https://icons.folo.is/github.com",
@@ -339,6 +603,266 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "category": "others",
     "home": "https://news.ycombinator.com/ask",
     "id": "hackernews:ask"
+  },
+  {
+    "icon": "https://web.okjike.com/favicon.ico",
+    "providerTitle": "Jike",
+    "title": "Following Updates",
+    "capabilities": {
+      "network": [
+        "api.ruguoapp.com"
+      ],
+      "cookies": [
+        "api.ruguoapp.com",
+        "web.okjike.com"
+      ],
+      "browser": []
+    },
+    "cache": {
+      "version": 1,
+      "maxAge": "5m"
+    },
+    "color": "yellow",
+    "desc": "Updates from followed Jike users",
+    "type": "timeline",
+    "category": "others",
+    "home": "https://web.okjike.com",
+    "secrets": [
+      {
+        "key": "accessToken",
+        "type": "localStorage",
+        "origin": "https://web.okjike.com",
+        "itemKey": "JK_ACCESS_TOKEN"
+      },
+      {
+        "key": "refreshToken",
+        "type": "localStorage",
+        "origin": "https://web.okjike.com",
+        "itemKey": "JK_REFRESH_TOKEN"
+      }
+    ],
+    "radar": [
+      {
+        "id": "jike-following-updates",
+        "match": {
+          "hosts": [
+            "web.okjike.com"
+          ],
+          "paths": [
+            "/following"
+          ]
+        },
+        "confidence": 0.95
+      }
+    ],
+    "id": "jike:following-updates"
+  },
+  {
+    "icon": "https://web.okjike.com/favicon.ico",
+    "providerTitle": "Jike",
+    "title": "User Updates",
+    "params": {
+      "username": {
+        "type": "text",
+        "title": "Username",
+        "default": "7f422d5d-d79a-4f45-9880-b89d64d7f37a",
+        "pattern": ".+"
+      }
+    },
+    "capabilities": {
+      "network": [
+        "api.ruguoapp.com"
+      ],
+      "cookies": [
+        "api.ruguoapp.com",
+        "web.okjike.com"
+      ],
+      "browser": []
+    },
+    "cache": {
+      "version": 1,
+      "maxAge": "5m"
+    },
+    "color": "yellow",
+    "desc": "Updates from a Jike user",
+    "type": "timeline",
+    "category": "others",
+    "home": "https://web.okjike.com",
+    "secrets": [
+      {
+        "key": "accessToken",
+        "type": "localStorage",
+        "origin": "https://web.okjike.com",
+        "itemKey": "JK_ACCESS_TOKEN"
+      },
+      {
+        "key": "refreshToken",
+        "type": "localStorage",
+        "origin": "https://web.okjike.com",
+        "itemKey": "JK_REFRESH_TOKEN"
+      }
+    ],
+    "radar": [
+      {
+        "id": "jike-user-profile",
+        "match": {
+          "hosts": [
+            "web.okjike.com"
+          ],
+          "paths": [
+            "/u/:username/*rest"
+          ]
+        },
+        "patch": {
+          "params": {
+            "username": "{{ path.username }}"
+          },
+          "metadata": {
+            "title": "{{ page.title | normalize_whitespace | regex_replace: '[:：].*$', '' | regex_replace: '的主页\\\\s*[-_—|]\\\\s*即刻.*$', '' | default: params.username }}"
+          }
+        },
+        "confidence": 0.9
+      }
+    ],
+    "id": "jike:user-updates"
+  },
+  {
+    "icon": "https://web.okjike.com/favicon.ico",
+    "providerTitle": "Jike",
+    "title": "Topic Recent",
+    "params": {
+      "topicId": {
+        "type": "text",
+        "title": "Topic ID",
+        "default": "5aeaa84029e4000011ac3768",
+        "pattern": ".+"
+      }
+    },
+    "capabilities": {
+      "network": [
+        "api.ruguoapp.com"
+      ],
+      "cookies": [
+        "api.ruguoapp.com",
+        "web.okjike.com"
+      ],
+      "browser": []
+    },
+    "cache": {
+      "version": 1,
+      "maxAge": "5m"
+    },
+    "color": "yellow",
+    "desc": "Recent posts from a Jike topic",
+    "type": "timeline",
+    "category": "others",
+    "home": "https://web.okjike.com",
+    "secrets": [
+      {
+        "key": "accessToken",
+        "type": "localStorage",
+        "origin": "https://web.okjike.com",
+        "itemKey": "JK_ACCESS_TOKEN"
+      },
+      {
+        "key": "refreshToken",
+        "type": "localStorage",
+        "origin": "https://web.okjike.com",
+        "itemKey": "JK_REFRESH_TOKEN"
+      }
+    ],
+    "radar": [
+      {
+        "id": "jike-topic-recent",
+        "match": {
+          "hosts": [
+            "web.okjike.com"
+          ],
+          "paths": [
+            "/topic/:topicId/*rest"
+          ]
+        },
+        "patch": {
+          "params": {
+            "topicId": "{{ path.topicId }}"
+          },
+          "metadata": {
+            "title": "{{ page.title | normalize_whitespace | regex_extract: '^(.+?)(?:\\\\s*[-_—|]\\\\s*即刻.*)?$', 1 | default: params.topicId }}"
+          }
+        },
+        "confidence": 0.9
+      }
+    ],
+    "id": "jike:topic-recent"
+  },
+  {
+    "icon": "https://web.okjike.com/favicon.ico",
+    "providerTitle": "Jike",
+    "title": "Topic Hottest",
+    "params": {
+      "topicId": {
+        "type": "text",
+        "title": "Topic ID",
+        "default": "5aeaa84029e4000011ac3768",
+        "pattern": ".+"
+      }
+    },
+    "capabilities": {
+      "network": [
+        "api.ruguoapp.com"
+      ],
+      "cookies": [
+        "api.ruguoapp.com",
+        "web.okjike.com"
+      ],
+      "browser": []
+    },
+    "cache": {
+      "version": 1,
+      "maxAge": "5m"
+    },
+    "color": "yellow",
+    "desc": "Hottest posts from a Jike topic",
+    "type": "hottest",
+    "category": "others",
+    "home": "https://web.okjike.com",
+    "secrets": [
+      {
+        "key": "accessToken",
+        "type": "localStorage",
+        "origin": "https://web.okjike.com",
+        "itemKey": "JK_ACCESS_TOKEN"
+      },
+      {
+        "key": "refreshToken",
+        "type": "localStorage",
+        "origin": "https://web.okjike.com",
+        "itemKey": "JK_REFRESH_TOKEN"
+      }
+    ],
+    "radar": [
+      {
+        "id": "jike-topic-hottest",
+        "match": {
+          "hosts": [
+            "web.okjike.com"
+          ],
+          "paths": [
+            "/topic/:topicId/*rest"
+          ]
+        },
+        "patch": {
+          "params": {
+            "topicId": "{{ path.topicId }}"
+          },
+          "metadata": {
+            "title": "{{ page.title | normalize_whitespace | regex_extract: '^(.+?)(?:\\\\s*[-_—|]\\\\s*即刻.*)?$', 1 | default: params.topicId }}"
+          }
+        },
+        "confidence": 0.85
+      }
+    ],
+    "id": "jike:topic-hottest"
   },
   {
     "icon": "https://icons.folo.is/linux.do",
@@ -647,6 +1171,555 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "id": "v2ex:feed"
   },
   {
+    "icon": "https://icons.folo.is/s.m.weibo.cn",
+    "providerTitle": "Weibo",
+    "title": "Hot Search",
+    "capabilities": {
+      "network": [
+        "s.m.weibo.cn"
+      ],
+      "cookies": [],
+      "browser": []
+    },
+    "cache": {
+      "version": 1,
+      "maxAge": "5m"
+    },
+    "color": "red",
+    "type": "hottest",
+    "category": "china",
+    "home": "https://s.m.weibo.cn/top/summary?cate=realtimehot",
+    "id": "weibo:hot-search"
+  },
+  {
+    "icon": "https://icons.folo.is/m.weibo.cn",
+    "providerTitle": "Weibo",
+    "title": "User Posts",
+    "params": {
+      "uid": {
+        "type": "text",
+        "title": "User ID",
+        "description": "Numeric Weibo uid.",
+        "default": "1195230310",
+        "pattern": "^\\d+$"
+      }
+    },
+    "capabilities": {
+      "network": [
+        "m.weibo.cn"
+      ],
+      "cookies": [
+        "m.weibo.cn"
+      ],
+      "browser": []
+    },
+    "cache": {
+      "version": 1,
+      "maxAge": "5m"
+    },
+    "color": "red",
+    "desc": "Latest posts from a specified Weibo user",
+    "type": "timeline",
+    "category": "china",
+    "home": "https://m.weibo.cn",
+    "secrets": [
+      {
+        "key": "sub",
+        "type": "cookie",
+        "origin": "https://m.weibo.cn",
+        "itemKey": "SUB",
+        "required": false
+      },
+      {
+        "key": "subp",
+        "type": "cookie",
+        "origin": "https://m.weibo.cn",
+        "itemKey": "SUBP",
+        "required": false
+      },
+      {
+        "key": "ssoLoginState",
+        "type": "cookie",
+        "origin": "https://m.weibo.cn",
+        "itemKey": "SSOLoginState",
+        "required": false
+      }
+    ],
+    "radar": [
+      {
+        "id": "weibo-user",
+        "match": {
+          "hosts": [
+            "m.weibo.cn",
+            "weibo.com"
+          ],
+          "paths": [
+            "/u/:uid",
+            "/profile/:uid",
+            "/:uid"
+          ]
+        },
+        "patch": {
+          "params": {
+            "uid": "{{ path.uid }}"
+          },
+          "metadata": {
+            "title": "{{ page.title | normalize_whitespace | regex_extract: '^@(.+)\\\\s*的个人主页', 1 | regex_replace: '[-_—|].*微博.*$', '' | regex_replace: '的微博.*$', '' | default: params.uid }}"
+          }
+        },
+        "confidence": 0.9
+      }
+    ],
+    "id": "weibo:user"
+  },
+  {
+    "icon": "https://icons.folo.is/m.weibo.cn",
+    "providerTitle": "Weibo",
+    "title": "Keyword",
+    "params": {
+      "keyword": {
+        "type": "text",
+        "title": "Keyword",
+        "default": "MSI",
+        "pattern": ".+"
+      }
+    },
+    "capabilities": {
+      "network": [
+        "m.weibo.cn"
+      ],
+      "cookies": [
+        "m.weibo.cn"
+      ],
+      "browser": []
+    },
+    "cache": {
+      "version": 1,
+      "maxAge": "5m"
+    },
+    "color": "red",
+    "desc": "Latest Weibo posts matching a keyword",
+    "type": "timeline",
+    "category": "china",
+    "home": "https://m.weibo.cn",
+    "secrets": [
+      {
+        "key": "sub",
+        "type": "cookie",
+        "origin": "https://m.weibo.cn",
+        "itemKey": "SUB",
+        "required": false
+      },
+      {
+        "key": "subp",
+        "type": "cookie",
+        "origin": "https://m.weibo.cn",
+        "itemKey": "SUBP",
+        "required": false
+      },
+      {
+        "key": "ssoLoginState",
+        "type": "cookie",
+        "origin": "https://m.weibo.cn",
+        "itemKey": "SSOLoginState",
+        "required": false
+      }
+    ],
+    "radar": [
+      {
+        "id": "weibo-keyword",
+        "match": {
+          "hosts": [
+            "s.weibo.com",
+            "s.m.weibo.cn"
+          ]
+        },
+        "patch": {
+          "params": {
+            "keyword": "{{ query.q | default: query.keyword }}"
+          },
+          "metadata": {
+            "title": "{{ params.keyword }}"
+          }
+        },
+        "confidence": 0.9
+      }
+    ],
+    "id": "weibo:keyword"
+  },
+  {
+    "icon": "https://icons.folo.is/m.weibo.cn",
+    "providerTitle": "Weibo",
+    "title": "Super Topic",
+    "params": {
+      "id": {
+        "type": "text",
+        "title": "Super Topic ID",
+        "description": "A 100808... Weibo super topic ID.",
+        "default": "1008084989d223732bf6f02f75ea30efad58a9",
+        "pattern": "^100808[A-Za-z0-9]+$"
+      },
+      "type": {
+        "type": "select",
+        "title": "Type",
+        "values": [
+          {
+            "label": "Latest comments",
+            "value": "feed"
+          },
+          {
+            "label": "Latest posts",
+            "value": "sort_time"
+          },
+          {
+            "label": "Hot",
+            "value": "hot_sort"
+          },
+          {
+            "label": "Featured",
+            "value": "soul"
+          }
+        ],
+        "default": "feed"
+      }
+    },
+    "capabilities": {
+      "network": [
+        "m.weibo.cn"
+      ],
+      "cookies": [
+        "m.weibo.cn"
+      ],
+      "browser": []
+    },
+    "cache": {
+      "version": 1,
+      "maxAge": "5m"
+    },
+    "color": "red",
+    "desc": "Latest posts from a Weibo super topic",
+    "type": "timeline",
+    "category": "china",
+    "home": "https://m.weibo.cn",
+    "secrets": [
+      {
+        "key": "sub",
+        "type": "cookie",
+        "origin": "https://m.weibo.cn",
+        "itemKey": "SUB",
+        "required": false
+      },
+      {
+        "key": "subp",
+        "type": "cookie",
+        "origin": "https://m.weibo.cn",
+        "itemKey": "SUBP",
+        "required": false
+      },
+      {
+        "key": "ssoLoginState",
+        "type": "cookie",
+        "origin": "https://m.weibo.cn",
+        "itemKey": "SSOLoginState",
+        "required": false
+      }
+    ],
+    "radar": [
+      {
+        "id": "weibo-super-topic",
+        "match": {
+          "hosts": [
+            "m.weibo.cn",
+            "weibo.com"
+          ],
+          "includes": "100808"
+        },
+        "patch": {
+          "params": {
+            "id": "{{ query.containerid | default: hashQuery.containerid | regex_extract: '(100808[A-Za-z0-9]+)', 1 }}",
+            "type": "feed"
+          },
+          "metadata": {
+            "title": "{{ page.title | normalize_whitespace | regex_replace: '[-_—|].*微博.*$', '' | regex_replace: '的微博.*$', '' | regex_extract: '^#?(.+?)超话#?$', 1 | default: params.id }}"
+          }
+        },
+        "confidence": 0.9
+      }
+    ],
+    "id": "weibo:super-topic"
+  },
+  {
+    "icon": "https://icons.folo.is/m.weibo.cn",
+    "providerTitle": "Weibo",
+    "title": "Following Timeline",
+    "capabilities": {
+      "network": [
+        "m.weibo.cn"
+      ],
+      "cookies": [
+        "m.weibo.cn"
+      ],
+      "browser": []
+    },
+    "cache": {
+      "version": 1,
+      "maxAge": "5m"
+    },
+    "color": "red",
+    "desc": "Latest posts from all followed Weibo accounts",
+    "type": "timeline",
+    "category": "china",
+    "home": "https://m.weibo.cn",
+    "secrets": [
+      {
+        "key": "sub",
+        "type": "cookie",
+        "origin": "https://m.weibo.cn",
+        "itemKey": "SUB",
+        "required": true
+      },
+      {
+        "key": "subp",
+        "type": "cookie",
+        "origin": "https://m.weibo.cn",
+        "itemKey": "SUBP",
+        "required": false
+      },
+      {
+        "key": "ssoLoginState",
+        "type": "cookie",
+        "origin": "https://m.weibo.cn",
+        "itemKey": "SSOLoginState",
+        "required": false
+      }
+    ],
+    "id": "weibo:following"
+  },
+  {
+    "icon": "https://x.com/favicon.ico",
+    "providerTitle": "X",
+    "title": "Trending",
+    "params": {
+      "location": {
+        "type": "select",
+        "title": "Location",
+        "values": [
+          {
+            "label": "Worldwide",
+            "value": "1"
+          },
+          {
+            "label": "United States",
+            "value": "23424977"
+          },
+          {
+            "label": "United Kingdom",
+            "value": "23424975"
+          },
+          {
+            "label": "Japan",
+            "value": "23424856"
+          },
+          {
+            "label": "Hong Kong",
+            "value": "24865698"
+          },
+          {
+            "label": "Taiwan",
+            "value": "23424971"
+          },
+          {
+            "label": "Singapore",
+            "value": "23424948"
+          },
+          {
+            "label": "India",
+            "value": "23424848"
+          },
+          {
+            "label": "Brazil",
+            "value": "23424768"
+          },
+          {
+            "label": "Germany",
+            "value": "23424829"
+          }
+        ],
+        "default": "1"
+      }
+    },
+    "capabilities": {
+      "network": [
+        "x.com",
+        "api.x.com"
+      ],
+      "cookies": [
+        "x.com"
+      ],
+      "browser": []
+    },
+    "cache": {
+      "version": 1,
+      "maxAge": "5m"
+    },
+    "color": "slate",
+    "type": "hottest",
+    "category": "world",
+    "home": "https://x.com",
+    "secrets": [
+      {
+        "key": "csrfToken",
+        "type": "cookie",
+        "origin": "https://x.com",
+        "itemKey": "ct0",
+        "cache": false
+      }
+    ],
+    "id": "x:place-trends"
+  },
+  {
+    "icon": "https://x.com/favicon.ico",
+    "providerTitle": "X",
+    "title": "Recommended",
+    "capabilities": {
+      "network": [
+        "x.com",
+        "api.x.com"
+      ],
+      "cookies": [
+        "x.com"
+      ],
+      "browser": []
+    },
+    "cache": {
+      "version": 1,
+      "maxAge": "5m"
+    },
+    "color": "slate",
+    "type": "timeline",
+    "category": "world",
+    "home": "https://x.com",
+    "secrets": [
+      {
+        "key": "csrfToken",
+        "type": "cookie",
+        "origin": "https://x.com",
+        "itemKey": "ct0",
+        "cache": false
+      }
+    ],
+    "id": "x:recommended"
+  },
+  {
+    "icon": "https://x.com/favicon.ico",
+    "providerTitle": "X",
+    "title": "Following",
+    "capabilities": {
+      "network": [
+        "x.com",
+        "api.x.com"
+      ],
+      "cookies": [
+        "x.com"
+      ],
+      "browser": []
+    },
+    "cache": {
+      "version": 1,
+      "maxAge": "5m"
+    },
+    "color": "slate",
+    "type": "timeline",
+    "category": "world",
+    "home": "https://x.com",
+    "secrets": [
+      {
+        "key": "csrfToken",
+        "type": "cookie",
+        "origin": "https://x.com",
+        "itemKey": "ct0",
+        "cache": false
+      }
+    ],
+    "id": "x:following"
+  },
+  {
+    "icon": "https://x.com/favicon.ico",
+    "providerTitle": "X",
+    "title": "User Tweets",
+    "params": {
+      "username": {
+        "type": "text",
+        "title": "Username",
+        "default": "elonmusk",
+        "pattern": "^\\w{1,15}$",
+        "notIn": [
+          "compose",
+          "explore",
+          "home",
+          "i",
+          "intent",
+          "messages",
+          "notifications",
+          "search",
+          "settings",
+          "share"
+        ]
+      }
+    },
+    "capabilities": {
+      "network": [
+        "x.com",
+        "api.x.com"
+      ],
+      "cookies": [
+        "x.com"
+      ],
+      "browser": []
+    },
+    "cache": {
+      "version": 1,
+      "maxAge": "5m"
+    },
+    "color": "slate",
+    "type": "timeline",
+    "category": "world",
+    "home": "https://x.com",
+    "secrets": [
+      {
+        "key": "csrfToken",
+        "type": "cookie",
+        "origin": "https://x.com",
+        "itemKey": "ct0",
+        "cache": false
+      }
+    ],
+    "radar": [
+      {
+        "id": "x-user",
+        "match": {
+          "hosts": [
+            "x.com",
+            "twitter.com"
+          ],
+          "paths": [
+            "/:username/*rest"
+          ]
+        },
+        "patch": {
+          "params": {
+            "username": "{{ path.username }}"
+          },
+          "metadata": {
+            "title": "@{{ params.username }}"
+          }
+        },
+        "confidence": 0.95
+      }
+    ],
+    "id": "x:user"
+  },
+  {
     "icon": "https://icons.folo.is/xueqiu.com",
     "providerTitle": "雪球",
     "capabilities": {
@@ -665,6 +1738,27 @@ export const sourceDescriptors: SourceDescriptor[] = [
     "category": "others",
     "home": "https://xueqiu.com",
     "id": "xueqiu:hot-stock"
+  },
+  {
+    "icon": "https://icons.folo.is/www.zaochenbao.com",
+    "providerTitle": "Lianhe Zaobao",
+    "title": "Realtime",
+    "capabilities": {
+      "network": [
+        "www.zaochenbao.com"
+      ],
+      "cookies": [],
+      "browser": []
+    },
+    "cache": {
+      "version": 1,
+      "maxAge": "5m"
+    },
+    "color": "red",
+    "type": "timeline",
+    "category": "china",
+    "home": "https://www.zaochenbao.com/realtime/",
+    "id": "zaobao:realtime"
   },
   {
     "icon": "https://icons.folo.is/www.zhihu.com",

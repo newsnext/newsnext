@@ -1,4 +1,5 @@
 import type { Template } from "liquidjs"
+import { parseRelativeDate } from "@newsnext/date-parser"
 import { getFavicon } from "@newsnext/shared/utils"
 import { Liquid } from "liquidjs"
 
@@ -89,6 +90,14 @@ function createEngine(output: "html" | "plain"): Liquid {
   })
   engine.registerFilter("regex_replace", (value: unknown, pattern: unknown, replacement: unknown = "") => {
     return getRegexInput(value).replace(getRegex(pattern, true), stringify(replacement))
+  })
+  engine.registerFilter("relative_date_to_ms", (value: unknown, timezone: unknown = undefined) => {
+    const date = parseRelativeDate(
+      stringify(value),
+      timezone === undefined ? undefined : stringify(timezone),
+    )
+    const timestamp = date.getTime()
+    return Number.isFinite(timestamp) ? timestamp : undefined
   })
   engine.registerFilter("url_path", encodeUrlComponent)
   engine.registerFilter("url_query", encodeUrlComponent)
