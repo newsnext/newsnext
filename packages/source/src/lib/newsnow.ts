@@ -35,8 +35,10 @@ export default {
             hosts: ["newsnow.com"],
             paths: ["/:locale/*topic"],
           },
-          metaPatch: {
-            title: "{{ params.topic }}",
+          patch: {
+            metadata: {
+              title: "{{ params.topic }}",
+            },
           },
           confidence: 0.85,
         },
@@ -48,12 +50,12 @@ export default {
         fields: {
           title: ".article-card__headline",
           url: {
-            selector: ".article-card__headline",
+            select: ".article-card__headline",
             attr: "href",
             template: "{{ value | absolute_url: requestUrl }}",
           },
           timestamp: {
-            selector: "[data-timestamp]",
+            select: "[data-timestamp]",
             attr: "data-timestamp",
             template: "{{ value | times: 1000 }}",
           },

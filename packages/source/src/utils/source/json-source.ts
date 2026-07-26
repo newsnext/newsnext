@@ -15,7 +15,7 @@ const jmespathCompiler = jmespath as typeof jmespath & {
   compile: (expression: string) => unknown
 }
 
-export interface JsonFieldResolverContext {
+export interface JsonFieldContext {
   json: unknown
   index: number
   params: Record<string, unknown>
@@ -27,51 +27,45 @@ export interface JsonFieldConfig {
   template?: string
 }
 
-export type FieldResolver<Item = unknown, Result = unknown>
-  = string
-    | JsonFieldConfig
-    | ((item: Item, context: JsonFieldResolverContext) => Result | null | undefined)
+export type JsonField = string | JsonFieldConfig
 
-interface JsonTemplateContext<Item> extends JsonFieldResolverContext {
-  item: Item
+interface JsonTemplateContext extends JsonFieldContext {
+  item: unknown
 }
 
 export interface JsonSourceLoaderContext {
   params?: Record<string, unknown>
 }
 
-export interface JsonSourceOptions<Item = unknown> {
+export interface JsonSourceOptions {
   url: string
   type?: RuntimeSource["type"]
   /**
    * Path to the array of items in the response JSON (e.g. "data.items").
-   * OR a function that returns the items array from the JSON.
-   * OR a function that returns the path string (for dynamic paths).
-   *
    * If not provided, assumes the response itself is the array.
    */
-  items?: string | ((json: any) => Item[] | string)
+  items?: string
   /**
    * Custom fetch function
    */
   fetchOptions?: FetchOptions
   fetch?: (url: string) => Promise<unknown>
   fields: {
-    title: FieldResolver<Item, string>
-    url: FieldResolver<Item, string>
-    mobileUrl?: FieldResolver<Item, string>
-    timestamp?: FieldResolver<Item, number>
+    title: JsonField
+    url: JsonField
+    mobileUrl?: JsonField
+    timestamp?: JsonField
     inline?: {
-      text?: FieldResolver<Item, string>
-      html?: FieldResolver<Item, string>
-      mark?: FieldResolver<Item, NonNullable<NewsItem["inline"]>["mark"]>
-      icon?: FieldResolver<Item, NonNullable<NewsItem["inline"]>["icon"]>
+      text?: JsonField
+      html?: JsonField
+      mark?: JsonField
+      icon?: JsonField
     }
     preview?: {
-      text?: FieldResolver<Item, string>
-      html?: FieldResolver<Item, string>
-      picture?: FieldResolver<Item, NonNullable<NewsItem["preview"]>["picture"]>
-      iframe?: FieldResolver<Item, NonNullable<NewsItem["preview"]>["iframe"]>
+      text?: JsonField
+      html?: JsonField
+      picture?: JsonField
+      iframe?: JsonField
     }
   }
 }
@@ -108,24 +102,20 @@ function assertSafeExpression(value: unknown): void {
   Object.values(node).forEach(assertSafeExpression)
 }
 
-function resolveValue<Item>(
-  item: Item,
-  context: JsonFieldResolverContext,
-  resolver: FieldResolver<Item>,
+function resolveValue(
+  item: unknown,
+  context: JsonFieldContext,
+  field: JsonField,
   escapeTemplateValues = false,
 ): unknown {
-  if (typeof resolver === "function") {
-    return resolver(item, context)
+  if (typeof field === "string") {
+    return selectJson(item, field)
   }
 
-  if (typeof resolver === "string") {
-    return selectJson(item, resolver)
-  }
-
-  const selected = resolver.select === undefined
+  const selected = field.select === undefined
     ? item
-    : selectJson(item, resolver.select)
-  if (!resolver.template) {
+    : selectJson(item, field.select)
+  if (!field.template) {
     return selected
   }
 
@@ -133,17 +123,17 @@ function resolveValue<Item>(
     item,
     value: selected ?? null,
     ...context,
-  } satisfies JsonTemplateContext<Item> & { value: unknown }
+  } satisfies JsonTemplateContext & { value: unknown }
   return escapeTemplateValues
-    ? renderHtmlTemplate(resolver.template, templateContext)
-    : renderTemplate(resolver.template, templateContext)
+    ? renderHtmlTemplate(field.template, templateContext)
+    : renderTemplate(field.template, templateContext)
 }
 
-export async function loadJson<Item = unknown>(
-  opts: JsonSourceOptions<Item>,
+export async function loadJson(
+  opts: JsonSourceOptions,
   loaderContext: JsonSourceLoaderContext = {},
 ): Promise<NewsItem[]> {
-  const { url, type, fetchOptions, fetch, items: itemsResolver, fields } = opts
+  const { url, type, fetchOptions, fetch, items: itemsSelect, fields } = opts
 
   let json: unknown
   if (fetch) {
@@ -152,18 +142,9 @@ export async function loadJson<Item = unknown>(
     json = await myFetch(url, fetchOptions)
   }
 
-  let items: Item[] = []
-  if (itemsResolver) {
-    if (typeof itemsResolver === "function") {
-      const res = itemsResolver(json)
-      if (typeof res === "string") {
-        items = selectJson(json, res) as Item[]
-      } else {
-        items = res
-      }
-    } else if (typeof itemsResolver === "string") {
-      items = selectJson(json, itemsResolver) as Item[]
-    }
+  let items: unknown[] = []
+  if (itemsSelect) {
+    items = selectJson(json, itemsSelect) as unknown[]
   } else {
     items = Array.isArray(json) ? json : []
   }
@@ -174,7 +155,7 @@ export async function loadJson<Item = unknown>(
   }
 
   const news: NewsItem[] = items.map((item, index) => {
-    const context: JsonFieldResolverContext = {
+    const context: JsonFieldContext = {
       json,
       index,
       params: loaderContext.params ?? {},
@@ -202,8 +183,8 @@ export async function loadJson<Item = unknown>(
 
     if (fields.inline) {
       const inline: Record<string, unknown> = {}
-      for (const [key, resolver] of Object.entries(fields.inline)) {
-        const val = resolveValue(item, context, resolver as FieldResolver<Item>, key === "html")
+      for (const [key, field] of Object.entries(fields.inline)) {
+        const val = resolveValue(item, context, field as JsonField, key === "html")
         if (val != null) {
           Object.assign(inline, { [key]: val })
         }
@@ -215,8 +196,8 @@ export async function loadJson<Item = unknown>(
 
     if (fields.preview) {
       const preview: Record<string, unknown> = {}
-      for (const [key, resolver] of Object.entries(fields.preview)) {
-        const val = resolveValue(item, context, resolver as FieldResolver<Item>, key === "html")
+      for (const [key, field] of Object.entries(fields.preview)) {
+        const val = resolveValue(item, context, field as JsonField, key === "html")
         if (val != null) {
           Object.assign(preview, { [key]: val })
         }

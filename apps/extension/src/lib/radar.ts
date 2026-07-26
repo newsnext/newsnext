@@ -2,10 +2,9 @@ import type { Color } from "@newsnext/shared/types"
 import type {
   SourceParamSchemaMap,
   SourceRadarMatch,
-  SourceRadarMetaPatch,
-  SourceRadarPatchValue,
+  SourceRadarMetadata,
+  SourceRadarParamValue,
   SourceRadarRule,
-  SourceRadarValue,
 } from "@newsnext/source/typings"
 import { parseSourceParams } from "@newsnext/source/utils/params"
 import { renderTemplate } from "@newsnext/source/utils/template"
@@ -134,7 +133,7 @@ function isPresent(value: unknown): boolean {
   return value !== undefined && value !== null && String(value).trim().length > 0
 }
 
-function resolveValue(source: SourceRadarValue, context: RadarMatchContext): unknown {
+function resolveParamValue(source: SourceRadarParamValue, context: RadarMatchContext): unknown {
   switch (source.type) {
     case "literal":
       return source.value
@@ -148,48 +147,17 @@ function resolveValue(source: SourceRadarValue, context: RadarMatchContext): unk
       return getPathParts(context.url).find(part => part.startsWith(source.prefix)) ?? ""
     case "first":
       for (const valueSource of source.values) {
-        const value = resolveValue(valueSource, context)
+        const value = resolveParamValue(valueSource, context)
         if (isPresent(value)) {
           return value
         }
       }
       return ""
-    case "pageTitle":
-      return context.input.title ?? ""
   }
-}
-
-function isPatchValue(value: SourceRadarValue | SourceRadarPatchValue): value is SourceRadarPatchValue {
-  return !("type" in value)
-}
-
-function resolvePatchValue(spec: SourceRadarValue | SourceRadarPatchValue, context: RadarMatchContext): unknown {
-  if (!isPatchValue(spec)) {
-    return resolveValue(spec, context)
-  }
-
-  const resolvedValue = resolveValue(spec.value, context)
-  const value = spec.template
-    ? renderTemplate(
-        spec.template,
-        createTemplateVariables(context, { value: resolvedValue }),
-      ).trim()
-    : resolvedValue
-
-  if (isPresent(value)) {
-    return value
-  }
-
-  if (typeof spec.fallback === "string") {
-    return renderTemplate(spec.fallback, createTemplateVariables(context)).trim()
-  }
-
-  return spec.fallback
 }
 
 function createTemplateVariables(
   context: RadarMatchContext,
-  extraVariables: Record<string, unknown> = {},
 ): Record<string, unknown> {
   return {
     path: context.pathParams,
@@ -204,7 +172,6 @@ function createTemplateVariables(
       providerTitle: context.source.providerTitle ?? "",
       title: context.source.title ?? "",
     },
-    ...extraVariables,
   }
 }
 
@@ -326,12 +293,11 @@ function resolveParamsPatch(
 ): Record<string, unknown> | null {
   const rawParams = { ...context.rawParams }
 
-  for (const [key, valueSpec] of Object.entries(rule.paramsPatch ?? {})) {
-    const value = resolvePatchValue(valueSpec, context)
-    if (!isPresent(value)) {
-      return null
+  for (const [key, valueSpec] of Object.entries(rule.patch?.params ?? {})) {
+    const value = resolveParamValue(valueSpec, context)
+    if (isPresent(value)) {
+      rawParams[key] = value
     }
-    rawParams[key] = value
   }
 
   try {
@@ -342,32 +308,28 @@ function resolveParamsPatch(
 }
 
 function resolveMetaPatchValue(
-  valueSpec: string | SourceRadarPatchValue | undefined,
+  valueSpec: string | undefined,
   context: RadarMatchContext,
 ): unknown {
   if (valueSpec === undefined) {
     return undefined
   }
 
-  if (typeof valueSpec === "string") {
-    return renderTemplate(valueSpec, createTemplateVariables(context))
-  }
-
-  return resolvePatchValue(valueSpec, context)
+  return renderTemplate(valueSpec, createTemplateVariables(context))
 }
 
 function resolveMetaPatch(
-  metaPatch: SourceRadarMetaPatch | undefined,
+  metadataPatch: SourceRadarMetadata | undefined,
   context: RadarMatchContext,
 ): RadarSuggestionMetaPatch {
   const resolvedMetaPatch: RadarSuggestionMetaPatch = {
     home: context.url.toString(),
   }
-  const providerTitle = resolveMetaPatchValue(metaPatch?.providerTitle, context)
-  const title = resolveMetaPatchValue(metaPatch?.title, context)
-  const desc = resolveMetaPatchValue(metaPatch?.desc, context)
-  const home = resolveMetaPatchValue(metaPatch?.home, context)
-  const color = resolveMetaPatchValue(metaPatch?.color, context)
+  const providerTitle = resolveMetaPatchValue(metadataPatch?.providerTitle, context)
+  const title = resolveMetaPatchValue(metadataPatch?.title, context)
+  const desc = resolveMetaPatchValue(metadataPatch?.desc, context)
+  const home = resolveMetaPatchValue(metadataPatch?.home, context)
+  const color = resolveMetaPatchValue(metadataPatch?.color, context)
 
   if (isPresent(providerTitle)) {
     resolvedMetaPatch.providerTitle = String(providerTitle)
@@ -429,7 +391,7 @@ function matchCompiledRule(compiledRule: CompiledRadarRule, input: RadarContext,
     ruleId: compiledRule.rule.id,
     sourceId: compiledRule.source.id,
     paramsPatch,
-    metaPatch: resolveMetaPatch(compiledRule.rule.metaPatch, context),
+    metaPatch: resolveMetaPatch(compiledRule.rule.patch?.metadata, context),
     confidence: compiledRule.rule.confidence,
   })
 }

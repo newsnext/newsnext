@@ -11,7 +11,7 @@ vi.mock("../fetch", () => ({
   myFetch: vi.fn(),
 }))
 
-function createJsonTestSource(options: () => JsonSourceOptions<any>) {
+function createJsonTestSource(options: () => JsonSourceOptions) {
   return { loader: async () => loadJson(options()) }
 }
 
@@ -237,7 +237,7 @@ describe("jSON source loader", () => {
     })
   })
 
-  it("should handle function resolvers and itemsPath", async () => {
+  it("should compose JMESPath selection with Liquid formatting", async () => {
     const data = {
       data: [
         { name: "Func", url: "http://f", meta: { score: 99 } },
@@ -247,12 +247,17 @@ describe("jSON source loader", () => {
 
     const source = createJsonTestSource(() => ({
       url: "https://api.example.com",
-      items: json => json.data,
+      items: "data",
       fields: {
-        title: (item: any) => item.name.toUpperCase(),
+        title: {
+          select: "name",
+          template: "{{ value | upcase }}",
+        },
         url: "url",
         inline: {
-          text: item => `Score: ${item.meta.score}`,
+          text: {
+            template: "Score: {{ item.meta.score }}",
+          },
         },
       },
     }))
@@ -312,7 +317,7 @@ describe("jSON source loader", () => {
     })
   })
 
-  it("should expose params, request details, and indexes to field resolvers", async () => {
+  it("should expose params, request details, and indexes to field templates", async () => {
     ;(myFetch as any).mockResolvedValue([
       { id: 7, title: "Context" },
     ])
@@ -325,7 +330,9 @@ describe("jSON source loader", () => {
         type: "json",
         url: "https://api.example.com/{{ params.section | url_path }}",
         fields: {
-          title: (item, context) => `${context.index}: ${item.title}`,
+          title: {
+            template: "{{ index }}: {{ item.title }}",
+          },
           url: {
             select: "id",
             template: "https://example.com/{{ params.section | url_path }}/{{ value | url_path }}",
@@ -359,10 +366,10 @@ describe("jSON source loader", () => {
         title: "title",
         url: "url",
         inline: {
-          text: item => item.source,
+          text: "source",
         },
         preview: {
-          text: item => item.summary,
+          text: "summary",
         },
       },
     }))

@@ -7,23 +7,23 @@ const createLoader = (sub: string) => ({
   fields: {
     title: ".titleline>a",
     url: {
-      selector: "",
+      select: "",
       attr: "id",
       template: "https://news.ycombinator.com/item?id={{ value | url_query }}",
     },
     timestamp: {
       traverse: { type: "next" as const, selector: "tr" },
-      selector: ".age",
+      select: ".age",
       attr: "title",
       template: "{{ value | split: ' ' | last | times: 1000 }}",
     },
     inline: {
       text: {
         traverse: { type: "next" as const, selector: "tr" },
-        selector: ".score",
+        select: ".score",
       },
       icon: {
-        selector: ".titleline>a",
+        select: ".titleline>a",
         attr: "href",
         template: "{{ value | absolute_url: requestUrl | favicon_url }}",
       },

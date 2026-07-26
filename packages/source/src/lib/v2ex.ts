@@ -22,11 +22,9 @@ export default {
             hosts: ["v2ex.com"],
             paths: ["/go/:feed"],
           },
-          metaPatch: {
-            title: {
-              value: { type: "pageTitle" },
-              template: "{{ value | normalize_whitespace | regex_extract: '^.*[>›]\\\\s*(.+)$', 1 }}",
-              fallback: "{{ params.feed }}",
+          patch: {
+            metadata: {
+              title: "{{ page.title | normalize_whitespace | regex_extract: '^.*[>›]\\\\s*(.+)$', 1 | default: params.feed }}",
             },
           },
           confidence: 0.9,

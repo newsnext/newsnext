@@ -34,7 +34,7 @@ type SourceCapabilityOverrides = Partial<SourceCapabilities>
 const JSON_TEMPLATE_ROOTS = ["index", "item", "json", "params", "requestUrl", "value"] as const
 const HTML_TEMPLATE_ROOTS = ["index", "item", "params", "requestUrl", "value"] as const
 const PARAM_TEMPLATE_ROOTS = ["params"] as const
-const RADAR_TEMPLATE_ROOTS = ["page", "params", "path", "source", "value"] as const
+const RADAR_TEMPLATE_ROOTS = ["page", "params", "path", "source"] as const
 
 type IsAny<T> = 0 extends (1 & T) ? true : false
 
@@ -46,13 +46,13 @@ type SourceLoaderOption<TParams extends SourceParamSchemaMap>
     ? (...args: any[]) => Promise<ReturnType<SourceLoader> extends Promise<infer Result> ? Result : never>
     : SourceLoader<TParams>
 
-type StructuredSourceLoaderConfig<TParams extends SourceParamSchemaMap, Item>
+type StructuredSourceLoaderConfig<TParams extends SourceParamSchemaMap>
   = (
     | ({
       type: "json"
       url: SourceOption<TParams, string>
-      fetchOptions?: SourceOption<TParams, NonNullable<JsonSourceOptions<Item>["fetchOptions"]>>
-    } & Omit<JsonSourceOptions<Item>, "url" | "type" | "fetchOptions">)
+      fetchOptions?: SourceOption<TParams, NonNullable<JsonSourceOptions["fetchOptions"]>>
+    } & Omit<JsonSourceOptions, "url" | "type" | "fetchOptions">)
     | ({
       type: "html"
       url: SourceOption<TParams, string>
@@ -64,10 +64,10 @@ type StructuredSourceLoaderConfig<TParams extends SourceParamSchemaMap, Item>
     }
   )
 
-export type SourceConfig<TParams extends SourceParamSchemaMap = any, Item = any>
+export type SourceConfig<TParams extends SourceParamSchemaMap = any>
   = SourceConfigBase<TParams> & (
     | {
-      loader: StructuredSourceLoaderConfig<TParams, Item>
+      loader: StructuredSourceLoaderConfig<TParams>
       capabilities?: SourceCapabilityOverrides
     }
     | {
@@ -150,10 +150,10 @@ type ResolvedSource<TParams extends SourceParamSchemaMap> = Omit<
   "category" | "color" | "providerTitle"
 > & Partial<Pick<RuntimeSource<TParams>, "category" | "color" | "providerTitle">>
 
-function resolveSource<
-  Item = any,
-  const TParams extends SourceParamSchemaMap = Record<string, never>,
->(key: string, config: SourceConfig<TParams, Item>): ResolvedSource<TParams> {
+function resolveSource<const TParams extends SourceParamSchemaMap = Record<string, never>>(
+  key: string,
+  config: SourceConfig<TParams>,
+): ResolvedSource<TParams> {
   const {
     params,
     radar,
@@ -341,8 +341,8 @@ function resolveDefaultParams<TParams extends SourceParamSchemaMap>(
   ) as InferSourceParams<TParams>
 }
 
-function resolveSourceCapabilities<TParams extends SourceParamSchemaMap, Item>(
-  loader: StructuredSourceLoaderConfig<TParams, Item> | { type: "custom", load: SourceLoader<TParams> },
+function resolveSourceCapabilities<TParams extends SourceParamSchemaMap>(
+  loader: StructuredSourceLoaderConfig<TParams> | { type: "custom", load: SourceLoader<TParams> },
   params: TParams | undefined,
   overrides: SourceCapabilityOverrides | undefined,
 ): SourceCapabilities {

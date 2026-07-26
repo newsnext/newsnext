@@ -20,18 +20,17 @@ provider
     └── loader
 ```
 
-Structured source data flows through three distinct layers:
+The configuration follows four pipelines:
 
 ```text
-JMESPath or CSS selectors
-        ↓
-Liquid templates
+parameters  raw → transforms → type coercion → validation
+radar       URL → inferred/mapped parameters → metadata Liquid
+JSON field  JMESPath select → Liquid template
+HTML field  CSS select → text/attr/content → Liquid template
 ```
 
-- JMESPath and CSS selectors select data.
-- Liquid formats text, numbers, dates, URLs, and HTML.
-- TypeScript functions are an escape hatch for built-in sources when declarative
-  configuration is insufficient.
+Structured loaders are declarative. Use a custom loader only when these
+pipelines cannot express the source.
 
 ## Adding a provider
 
@@ -379,15 +378,6 @@ items: "data.items[?ad == `0` || ad == `null`]"
 
 If `items` is omitted, the complete response must be an array.
 
-Built-in sources may use a function for response joins or other operations that
-JMESPath cannot express:
-
-```ts
-items: response => joinTopicsWithUsers(response)
-```
-
-The function must return an array or a JMESPath string.
-
 ### Selecting fields with JMESPath
 
 A string field is always a JMESPath expression evaluated against the current
@@ -531,7 +521,7 @@ loader: {
   fields: {
     title: ".article__title",
     url: {
-      selector: ".article__title",
+      select: ".article__title",
       attr: "href",
     },
   },
@@ -552,14 +542,6 @@ items: ".news-list > article"
 filter: ":not(.advertisement)"
 ```
 
-Built-in sources may use functions for unusual DOM relationships:
-
-```ts
-items: $ => $(".article").filter((_, element) => {
-  return $(element).find(".title").length > 0
-})
-```
-
 ### Fields
 
 A string HTML field is a CSS selector, relative to the current item, whose first
@@ -576,12 +558,12 @@ Use an object to control selection, extraction, and Liquid formatting:
 ```ts
 fields: {
   url: {
-    selector: ".title",
+    select: ".title",
     attr: "href",
     template: "{{ value | absolute_url: requestUrl }}",
   },
   timestamp: {
-    selector: "[data-timestamp]",
+    select: "[data-timestamp]",
     attr: "data-timestamp",
     template: "{{ value | times: 1000 }}",
   },
@@ -591,7 +573,7 @@ fields: {
 HTML field resolution order is:
 
 ```text
-selector → content/attr extraction → template
+select → content/attr extraction → template
 ```
 
 All fields are extracted before any field template is rendered. This two-phase
@@ -613,11 +595,11 @@ The `item` object follows the `NewsItem` field structure:
 ```ts
 fields: {
   title: {
-    selector: ".title",
+    select: ".title",
     template: "{{ value }} — {{ item.inline.text }}",
   },
   url: {
-    selector: ".title",
+    select: ".title",
     attr: "href",
     template: "{{ value | absolute_url: requestUrl }}",
   },
@@ -631,14 +613,14 @@ Here, `item.title`, `item.url`, `item.inline.text`, and other values refer to
 their pre-template values. Templates do not depend on one another, so template
 cycles and declaration-order differences cannot change the result.
 
-### Selector fallbacks
+### Selection fallbacks
 
 Provide an array of selectors when websites use different markup across pages
 or deployments. The first selector with at least one match wins:
 
 ```ts
 title: {
-  selector: [
+  select: [
     ".article-title",
     "h2 > a",
     "[data-role='title']",
@@ -647,7 +629,7 @@ title: {
 ```
 
 Use CSS selector lists such as `".tag, .label"` when all alternatives should be
-part of one result set. Use a selector array only for ordered fallback behavior.
+part of one result set. Use a `select` array only for ordered fallback behavior.
 
 ### Item and document scope
 
@@ -658,13 +640,13 @@ page-level metadata shared by every item:
 preview: {
   text: {
     scope: "document",
-    selector: "meta[property='og:site_name']",
+    select: "meta[property='og:site_name']",
     attr: "content",
   },
 }
 ```
 
-An omitted or empty selector targets the current item itself. This is useful for
+An omitted or empty `select` targets the current item itself. This is useful for
 reading an item attribute:
 
 ```ts
@@ -678,12 +660,12 @@ url: {
 
 Use `traverse` when a field lives in a related element instead of inside the
 item. Traversal happens after choosing the item or document scope and before
-applying `selector`:
+applying `select`:
 
 ```ts
 timestamp: {
   traverse: { type: "next", selector: "tr.metadata" },
-  selector: "time",
+  select: "time",
   attr: "datetime",
   template: "{{ value | date_to_ms }}",
 }
@@ -711,8 +693,8 @@ traverse: [
 ]
 ```
 
-Traversal removes the need for a function transform in common table, card,
-heading/content, and sibling-metadata layouts.
+Traversal handles common table, card, heading/content, and sibling-metadata
+layouts declaratively.
 
 ### Text, attributes, and HTML
 
@@ -722,12 +704,12 @@ Fields extract trimmed text by default. Use `attr` for an attribute, or
 ```ts
 fields: {
   title: {
-    selector: ".title",
+    select: ".title",
     content: "text",
   },
   preview: {
     html: {
-      selector: ".summary",
+      select: ".summary",
       content: "html",
     },
   },
@@ -749,7 +731,7 @@ Use `brSeparator` when `<br>` elements carry meaningful line breaks:
 ```ts
 preview: {
   text: {
-    selector: ".message",
+    select: ".message",
     brSeparator: "\n",
     template: "{{ value | normalize_lines: 2 }}",
   },
@@ -772,7 +754,7 @@ match:
 ```ts
 inline: {
   text: {
-    selector: ".tag",
+    select: ".tag",
     all: true,
     separator: " · ",
   },
@@ -789,7 +771,7 @@ path-relative URLs against the final loader request URL:
 
 ```ts
 url: {
-  selector: ".title",
+  select: ".title",
   attr: "href",
   template: "{{ value | absolute_url: requestUrl }}",
 }
@@ -801,26 +783,6 @@ path:
 ```ts
 template: "{{ value | absolute_url: 'https://www.example.com/archive/' }}"
 ```
-
-### Internal function escape hatch
-
-For built-in sources, `transform` can inspect the selected Cheerio element:
-
-```ts
-timestamp: {
-  transform: (_value, element, context) => {
-    const seconds = element.next("tr").find(".age").attr("data-seconds")
-    return seconds ? Number(seconds) * 1000 : undefined
-  },
-}
-```
-
-When a function `transform` is present, its result is returned directly;
-the Liquid `template` is not evaluated.
-
-The transform context contains `params`, `index`, and `requestUrl`. Function
-resolvers are intended for bundled sources only and cannot be represented in a
-user-authored serialized source.
 
 ### Character decoding and custom fetch
 
@@ -1036,7 +998,7 @@ When a source omits `radar`, has no parameters, and has an HTTP(S) `home`,
 NewsNext automatically creates a default radar rule that matches every page on
 the same host as `home`. A leading `www.` is ignored. Set `radar: []` to opt out
 of this default. Parameterized sources must declare explicit radar rules so
-their parameter patches can be resolved.
+their parameters can be inferred.
 
 ```ts
 radar: [
@@ -1046,14 +1008,10 @@ radar: [
       hosts: ["example.com"],
       paths: ["/topics/:topic"],
     },
-    paramsPatch: {
-      topic: {
-        type: "path",
-        name: "topic",
+    patch: {
+      metadata: {
+        title: "{{ params.topic }}",
       },
-    },
-    metaPatch: {
-      title: "{{ params.topic }}",
     },
     confidence: 0.95,
   },
@@ -1075,9 +1033,11 @@ match: {
 - An omitted `paths` matches every path on the declared hosts.
 - `includes` requires one of the strings to occur in the full URL.
 
-### Radar values
+### Radar parameter values
 
-Radar patches can read:
+Parameters are inferred automatically from same-named path, query, and hash
+query values. Use `patch.params` only to map a differently named URL value or
+to try multiple locations:
 
 ```ts
 { type: "literal", value: "latest" }
@@ -1085,7 +1045,6 @@ Radar patches can read:
 { type: "query", name: "page" }
 { type: "hashQuery", name: "id" }
 { type: "pathSegmentWithPrefix", prefix: "tag-" }
-{ type: "pageTitle" }
 ```
 
 Use `first` to try multiple sources:
@@ -1100,23 +1059,26 @@ Use `first` to try multiple sources:
 }
 ```
 
-### Radar templates and fallbacks
+Missing extracted values are omitted and the parameter schema supplies its
+default. Extracted values then run through the normal parameter transforms,
+type coercion, and validation.
+
+### Radar metadata
+
+Radar metadata values are Liquid strings:
 
 ```ts
-title: {
-  value: { type: "pageTitle" },
-  template: "{{ value | normalize_whitespace | regex_extract: '^(.+?)\\\\s+-\\\\s+Example$', 1 }}",
-  fallback: "Topic {{ params.topic }}",
+patch: {
+  metadata: {
+    title: "{{ page.title | normalize_whitespace | regex_extract: '^(.+?)\\\\s+-\\\\s+Example$', 1 | default: params.topic }}",
+    home: "https://example.com/topics/{{ params.topic | url_path }}",
+  },
 }
 ```
 
-Radar patch values follow `value → template → fallback`. The fallback is used
-when the resolved or rendered value is empty.
-
-Radar templates can access:
+Metadata templates can access:
 
 ```text
-value
 path
 params
 page.title
@@ -1124,8 +1086,7 @@ source.title
 source.providerTitle
 ```
 
-Radar parameter patches are parsed and validated with the source parameter
-schema. A suggestion is discarded if a required patch is empty or invalid.
+An invalid parsed parameter discards the suggestion.
 
 ## Source icons
 

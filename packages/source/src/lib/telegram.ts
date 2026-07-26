@@ -32,18 +32,11 @@ export default {
             hosts: ["t.me", "telegram.me"],
             paths: ["/s/:channel", "/:channel"],
           },
-          paramsPatch: {
-            channel: {
-              value: { type: "path", name: "channel" },
+          patch: {
+            metadata: {
+              title: "{{ page.title | normalize_whitespace | regex_replace: '\\\\s*[–-]\\\\s*Telegram$', '' | default: 'Telegram channel' }}",
+              home: "https://t.me/s/{{ params.channel }}",
             },
-          },
-          metaPatch: {
-            title: {
-              value: { type: "pageTitle" },
-              template: "{{ value | normalize_whitespace | regex_replace: '\\\\s*[–-]\\\\s*Telegram$', '' }}",
-              fallback: "Telegram channel",
-            },
-            home: "https://t.me/s/{{ params.channel }}",
           },
           confidence: 0.95,
         },
@@ -54,34 +47,34 @@ export default {
         items: ".tgme_widget_message:has(.tgme_widget_message_text)",
         fields: {
           title: {
-            selector: ".tgme_widget_message_text",
+            select: ".tgme_widget_message_text",
             brSeparator: "\n",
             template: "{{ value | first_line | truncate: 160, '…' }}",
           },
           url: {
-            selector: ".tgme_widget_message_date",
+            select: ".tgme_widget_message_date",
             attr: "href",
             template: "{{ value | absolute_url: requestUrl }}",
           },
           timestamp: {
-            selector: ".tgme_widget_message_date time",
+            select: ".tgme_widget_message_date time",
             attr: "datetime",
             template: "{{ value | date_to_ms }}",
           },
           inline: {
             text: {
-              selector: ".tgme_widget_message_views",
+              select: ".tgme_widget_message_views",
               template: "{% if value %}{{ value }} views{% endif %}",
             },
           },
           preview: {
             text: {
-              selector: ".tgme_widget_message_text",
+              select: ".tgme_widget_message_text",
               brSeparator: "\n",
               template: "{{ value | normalize_lines: 2 }}",
             },
             picture: {
-              selector: ".tgme_widget_message_photo_wrap, .tgme_widget_message_video_thumb",
+              select: ".tgme_widget_message_photo_wrap, .tgme_widget_message_video_thumb",
               attr: "style",
               template: "{{ value | css_url }}",
             },

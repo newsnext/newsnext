@@ -40,20 +40,13 @@ export type SourceSecretDefinition = SourceCookieSecretDefinition | SourceLocalS
 
 export type SourceSecrets = Record<string, string | undefined>
 
-export type SourceRadarValue
+export type SourceRadarParamValue
   = | { type: "literal", value: unknown }
     | { type: "path", name: string }
     | { type: "query", name: string }
     | { type: "hashQuery", name: string }
     | { type: "pathSegmentWithPrefix", prefix: string }
-    | { type: "first", values: SourceRadarValue[] }
-    | { type: "pageTitle" }
-
-export interface SourceRadarPatchValue {
-  value: SourceRadarValue
-  template?: string
-  fallback?: unknown
-}
+    | { type: "first", values: SourceRadarParamValue[] }
 
 export interface SourceRadarMatch {
   hosts: string[]
@@ -61,21 +54,25 @@ export interface SourceRadarMatch {
   includes?: string | string[]
 }
 
-export type SourceRadarParamPatch = Record<string, SourceRadarValue | SourceRadarPatchValue>
+export type SourceRadarParams = Record<string, SourceRadarParamValue>
 
-export interface SourceRadarMetaPatch {
-  providerTitle?: string | SourceRadarPatchValue
-  title?: string | SourceRadarPatchValue
-  desc?: string | SourceRadarPatchValue
-  home?: string | SourceRadarPatchValue
-  color?: Color | SourceRadarPatchValue
+export interface SourceRadarMetadata {
+  providerTitle?: string
+  title?: string
+  desc?: string
+  home?: string
+  color?: string
+}
+
+export interface SourceRadarPatch {
+  params?: SourceRadarParams
+  metadata?: SourceRadarMetadata
 }
 
 export interface SourceRadarRule {
   id: string
   match: SourceRadarMatch
-  paramsPatch?: SourceRadarParamPatch
-  metaPatch?: SourceRadarMetaPatch
+  patch?: SourceRadarPatch
   confidence?: number
 }
 

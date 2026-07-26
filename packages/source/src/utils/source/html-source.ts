@@ -12,18 +12,11 @@ import { normalizeTimestamp } from "./fields"
 
 const MAX_SELECTED_ITEMS = 2_000
 
-export interface HtmlFieldResolverContext {
+export interface HtmlFieldContext {
   index: number
   params: Record<string, unknown>
   requestUrl: string
 }
-
-export type FieldTransform<T = unknown>
-  = (
-    value: string | undefined,
-    element: cheerio.Cheerio<AnyNode>,
-    context: HtmlFieldResolverContext,
-  ) => T | undefined
 
 export type HtmlTraversal
   = { type: "closest", selector: string }
@@ -32,18 +25,18 @@ export type HtmlTraversal
     | { type: "previous", selector?: string }
     | { type: "siblings", selector?: string }
 
-export interface HtmlFieldConfig<T = unknown> {
+export interface HtmlFieldConfig {
   /**
-   * CSS selector relative to the item. An array provides ordered fallbacks.
-   * An empty or omitted selector targets the item itself.
+   * CSS selection relative to the item. An array provides ordered fallbacks.
+   * An empty or omitted selection targets the item itself.
    */
-  selector?: string | readonly string[]
+  select?: string | readonly string[]
   /**
    * Select from the entire document instead of the current item.
    */
   scope?: "document" | "item"
   /**
-   * Traverse from the selected scope before applying the field selector.
+   * Traverse from the selected scope before applying the field selection.
    */
   traverse?: HtmlTraversal | readonly HtmlTraversal[]
   /**
@@ -64,21 +57,14 @@ export interface HtmlFieldConfig<T = unknown> {
   all?: boolean
   separator?: string
   template?: string
-  /**
-   * Internal escape hatch for built-in sources with unusual DOM relationships.
-   */
-  transform?: FieldTransform<T>
 }
 
-export type FieldSelector<T = unknown> = string | HtmlFieldConfig<T>
-export type ItemsResolver = string | (($: cheerio.CheerioAPI) => cheerio.Cheerio<AnyNode> | AnyNode[])
-export type ItemFilter = string | ((el: cheerio.Cheerio<AnyNode>, index: number, $: cheerio.CheerioAPI) => boolean)
-
+export type HtmlField = string | HtmlFieldConfig
 export interface HtmlSourceLoaderContext {
   params?: Record<string, unknown>
 }
 
-interface HtmlTemplateContext extends HtmlFieldResolverContext {
+interface HtmlTemplateContext extends HtmlFieldContext {
   item: HtmlExtractedItem
   value: unknown
 }
@@ -102,38 +88,38 @@ export interface HtmlSourceOptions {
   url: string
   type?: RuntimeSource["type"]
   /**
-   * Selector or resolver for the source items.
+   * CSS selector for the source items.
    */
-  items?: ItemsResolver
-  filter?: ItemFilter
+  items?: string
+  filter?: string
   // Allow dynamic decoding
   decoding?: string
   fetchOptions?: FetchOptions
   fetch?: (url: string) => Promise<string>
   fields: {
-    title: FieldSelector<string>
-    url: FieldSelector<string>
-    mobileUrl?: FieldSelector<string>
-    timestamp?: FieldSelector<number>
+    title: HtmlField
+    url: HtmlField
+    mobileUrl?: HtmlField
+    timestamp?: HtmlField
     inline?: {
-      text?: FieldSelector<string>
-      html?: FieldSelector<string>
-      mark?: FieldSelector<NonNullable<NewsItem["inline"]>["mark"]>
-      icon?: FieldSelector<NonNullable<NewsItem["inline"]>["icon"]>
+      text?: HtmlField
+      html?: HtmlField
+      mark?: HtmlField
+      icon?: HtmlField
     }
     preview?: {
-      text?: FieldSelector<string>
-      html?: FieldSelector<string>
-      picture?: FieldSelector<NonNullable<NewsItem["preview"]>["picture"]>
-      iframe?: FieldSelector<NonNullable<NewsItem["preview"]>["iframe"]>
+      text?: HtmlField
+      html?: HtmlField
+      picture?: HtmlField
+      iframe?: HtmlField
     }
   }
 }
 
-function resolveFieldSelector(selectorConfig: FieldSelector): HtmlFieldConfig {
-  return typeof selectorConfig === "object"
-    ? selectorConfig
-    : { selector: selectorConfig }
+function resolveFieldConfig(field: HtmlField): HtmlFieldConfig {
+  return typeof field === "object"
+    ? field
+    : { select: field }
 }
 
 function collectFieldEntries(fields: HtmlSourceOptions["fields"]): FieldEntry[] {
@@ -152,9 +138,9 @@ function collectFieldEntries(fields: HtmlSourceOptions["fields"]): FieldEntry[] 
   for (const group of ["inline", "preview"] as const) {
     const fieldGroup = fields[group]
     if (!fieldGroup) continue
-    for (const [key, resolver] of Object.entries(fieldGroup)) {
-      if (resolver) {
-        entries.push(createFieldEntry([group, key], resolver, key === "html"))
+    for (const [key, field] of Object.entries(fieldGroup)) {
+      if (field) {
+        entries.push(createFieldEntry([group, key], field, key === "html"))
       }
     }
   }
@@ -164,11 +150,11 @@ function collectFieldEntries(fields: HtmlSourceOptions["fields"]): FieldEntry[] 
 
 function createFieldEntry(
   path: readonly string[],
-  resolver: FieldSelector,
+  field: HtmlField,
   htmlOutput = false,
 ): FieldEntry {
   return {
-    config: resolveFieldSelector(resolver),
+    config: resolveFieldConfig(field),
     htmlOutput,
     path,
   }
@@ -178,7 +164,6 @@ function extractField(
   $: cheerio.CheerioAPI,
   element: AnyNode,
   config: HtmlFieldConfig,
-  context: HtmlFieldResolverContext,
 ): unknown {
   const target = selectTarget($, element, config)
   const values = config.all
@@ -187,10 +172,6 @@ function extractField(
   const value = config.all
     ? values.filter((entry): entry is string => entry !== undefined).join(config.separator ?? "")
     : values[0]
-
-  if (config.transform) {
-    return config.transform(value, target, context)
-  }
 
   return value
 }
@@ -208,9 +189,9 @@ function selectTarget(
     (current, traversal) => traverse(current, traversal),
     initialRoot,
   )
-  const selectors = typeof config.selector === "string"
-    ? [config.selector]
-    : config.selector ?? [""]
+  const selectors = typeof config.select === "string"
+    ? [config.select]
+    : config.select ?? [""]
 
   for (const selector of selectors) {
     const target = selector ? root.find(selector) : root
@@ -275,10 +256,10 @@ function extractNodeValue(
 function resolveField(
   entry: FieldEntry,
   extractedItem: HtmlExtractedItem,
-  context: HtmlFieldResolverContext,
+  context: HtmlFieldContext,
 ): unknown {
   const value = getPath(extractedItem, entry.path)
-  if (entry.config.transform || !entry.config.template) return value
+  if (!entry.config.template) return value
 
   const templateContext = {
     ...context,
@@ -295,7 +276,7 @@ export async function loadHtml(
   opts: HtmlSourceOptions,
   loaderContext: HtmlSourceLoaderContext = {},
 ): Promise<NewsItem[]> {
-  const { url, type, items: itemsResolver, filter, decoding, fetchOptions, fetch, fields } = opts
+  const { url, type, items: itemsSelect, filter, decoding, fetchOptions, fetch, fields } = opts
 
   let html: string
   if (fetch) {
@@ -309,15 +290,17 @@ export async function loadHtml(
   }
 
   const $ = load(html)
-  const items = resolveItems($, itemsResolver).slice(0, MAX_SELECTED_ITEMS)
+  const items = itemsSelect
+    ? $(itemsSelect).toArray().slice(0, MAX_SELECTED_ITEMS)
+    : []
   const entries = collectFieldEntries(fields)
   const news: NewsItem[] = []
 
   items.forEach((element, index) => {
     const $item = $(element)
-    if (filter && !matchesFilter($item, index, $, filter)) return
+    if (filter && !$item.is(filter)) return
 
-    const context: HtmlFieldResolverContext = {
+    const context: HtmlFieldContext = {
       index,
       params: loaderContext.params ?? {},
       requestUrl: url,
@@ -325,7 +308,7 @@ export async function loadHtml(
     const extractedItem: HtmlExtractedItem = {}
 
     for (const entry of entries) {
-      setPath(extractedItem, entry.path, extractField($, element, entry.config, context))
+      setPath(extractedItem, entry.path, extractField($, element, entry.config))
     }
 
     const resolvedItem: HtmlExtractedItem = {}
@@ -364,29 +347,6 @@ export async function loadHtml(
   }
 
   return news
-}
-
-function resolveItems(
-  $: cheerio.CheerioAPI,
-  resolver: ItemsResolver | undefined,
-): AnyNode[] {
-  if (!resolver) return []
-  if (typeof resolver === "function") {
-    const resolved = resolver($)
-    return Array.isArray(resolved) ? resolved : resolved.toArray()
-  }
-  return $(resolver).toArray()
-}
-
-function matchesFilter(
-  element: cheerio.Cheerio<AnyNode>,
-  index: number,
-  $: cheerio.CheerioAPI,
-  filter: ItemFilter,
-): boolean {
-  return typeof filter === "function"
-    ? filter(element, index, $)
-    : element.is(filter)
 }
 
 function getPath(value: HtmlExtractedItem, path: readonly string[]): unknown {

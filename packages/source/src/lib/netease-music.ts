@@ -29,22 +29,9 @@ export default {
             hosts: ["music.163.com", "y.music.163.com"],
             includes: ["playlist", "toplist"],
           },
-          paramsPatch: {
-            id: {
-              value: {
-                type: "first",
-                values: [
-                  { type: "query", name: "id" },
-                  { type: "hashQuery", name: "id" },
-                ],
-              },
-            },
-          },
-          metaPatch: {
-            title: {
-              value: { type: "pageTitle" },
-              template: "{{ value | normalize_whitespace | regex_extract: '^(.+?)\\\\s*-\\\\s*(?:歌单|排行榜)\\\\s*-\\\\s*网易云音乐$', 1 }}",
-              fallback: "Playlist {{ params.id }}",
+          patch: {
+            metadata: {
+              title: "{% assign title = page.title | normalize_whitespace | regex_extract: '^(.+?)\\\\s*-\\\\s*(?:歌单|排行榜)\\\\s*-\\\\s*网易云音乐$', 1 %}{% if title != empty %}{{ title }}{% else %}Playlist {{ params.id }}{% endif %}",
             },
           },
           confidence: 0.95,

@@ -50,7 +50,7 @@ describe("hTML source loader", () => {
       items: ".list .item",
       fields: {
         title: ".title",
-        url: { selector: ".title", attr: "href" },
+        url: { select: ".title", attr: "href" },
         timestamp: ".date",
       },
     }))
@@ -78,15 +78,15 @@ describe("hTML source loader", () => {
       items: ".item",
       fields: {
         title: {
-          selector: ".title",
+          select: ".title",
           template: "{{ value | upcase }}",
         },
         url: {
-          selector: ".title",
+          select: ".title",
           template: "https://example.com/1",
         },
         timestamp: {
-          selector: ".date",
+          select: ".date",
           attr: "data-ts",
           template: "{{ value | times: 1000 }}",
         },
@@ -112,13 +112,13 @@ describe("hTML source loader", () => {
       fields: {
         title: ".title",
         url: {
-          selector: ".title",
+          select: ".title",
           attr: "href",
           template: "https://example.com{{ value }}",
         },
         preview: {
           html: {
-            selector: ".summary",
+            select: ".summary",
             template: "<strong>{{ value }}</strong>",
           },
         },
@@ -150,11 +150,11 @@ describe("hTML source loader", () => {
         items: ".item",
         fields: {
           title: {
-            selector: ".title",
+            select: ".title",
             template: "{{ params.prefix }}: {{ value | normalize_whitespace }} ({{ item.inline.text }})",
           },
           url: {
-            selector: ".title",
+            select: ".title",
             attr: "href",
             template: "{{ value | absolute_url: requestUrl }}",
           },
@@ -163,7 +163,7 @@ describe("hTML source loader", () => {
           },
           preview: {
             text: {
-              selector: ".category",
+              select: ".category",
               template: "{{ item.title }} #{{ index }} @ {{ requestUrl }}",
             },
           },
@@ -199,17 +199,17 @@ describe("hTML source loader", () => {
       items: ".item",
       fields: {
         title: {
-          selector: [".missing-title", ".fallback-title"],
+          select: [".missing-title", ".fallback-title"],
           content: "html",
         },
         url: {
-          selector: ".fallback-title",
+          select: ".fallback-title",
           attr: "href",
           template: "{{ value | absolute_url: requestUrl }}",
         },
         inline: {
           text: {
-            selector: ".tag",
+            select: ".tag",
             all: true,
             separator: " · ",
           },
@@ -217,11 +217,11 @@ describe("hTML source loader", () => {
         preview: {
           text: {
             scope: "document",
-            selector: "meta[property='og:site_name']",
+            select: "meta[property='og:site_name']",
             attr: "content",
           },
           html: {
-            selector: ".fallback-title",
+            select: ".fallback-title",
             content: "outerHtml",
             template: "<div>{{ value }}</div>",
           },
@@ -256,14 +256,14 @@ describe("hTML source loader", () => {
       fields: {
         title: ".title",
         url: {
-          selector: ".title",
+          select: ".title",
           attr: "href",
           template: "{{ value | absolute_url: requestUrl }}",
         },
         inline: {
           text: {
             traverse: { type: "next", selector: ".metadata" },
-            selector: ".score",
+            select: ".score",
           },
         },
       },
@@ -300,23 +300,23 @@ describe("hTML source loader", () => {
       items: ".message:has(.message-text)",
       fields: {
         title: {
-          selector: ".message-text",
+          select: ".message-text",
           brSeparator: "\n",
           template: "{{ value | first_line | truncate: 16, '…' }}",
         },
         url: {
-          selector: ".message-date",
+          select: ".message-date",
           attr: "href",
           template: "{{ value | absolute_url: requestUrl }}",
         },
         preview: {
           text: {
-            selector: ".message-text",
+            select: ".message-text",
             brSeparator: "\n",
             template: "{{ value | normalize_lines: 2 }}",
           },
           picture: {
-            selector: ".message-photo",
+            select: ".message-photo",
             attr: "style",
             template: "{{ value | css_url }}",
           },
@@ -345,7 +345,7 @@ describe("hTML source loader", () => {
     expect(results[1].preview?.picture).toBeUndefined()
   })
 
-  it("should resolve items with a function and filter items", async () => {
+  it("should select and filter items declaratively", async () => {
     const html = `
       <div class="list">
         <article class="item">
@@ -363,11 +363,11 @@ describe("hTML source loader", () => {
 
     const source = createHtmlTestSource(() => ({
       url: "https://example.com",
-      items: $ => $(".list .item"),
-      filter: el => !el.hasClass("is-ad"),
+      items: ".list .item",
+      filter: ":not(.is-ad)",
       fields: {
         title: ".title",
-        url: { selector: ".title", attr: "href" },
+        url: { select: ".title", attr: "href" },
       },
     }))
 
@@ -397,7 +397,7 @@ describe("hTML source loader", () => {
         items: ".item",
         fields: {
           title: ".title",
-          url: { selector: ".title", attr: "href" },
+          url: { select: ".title", attr: "href" },
           timestamp: ".date",
         },
       },
@@ -422,7 +422,7 @@ describe("hTML source loader", () => {
       filter: ".pinned",
       fields: {
         title: ".title",
-        url: { selector: ".title", attr: "href" },
+        url: { select: ".title", attr: "href" },
       },
     }))
 
@@ -486,7 +486,7 @@ describe("hTML source loader", () => {
       items: ".item",
       fields: {
         title: ".title",
-        url: { transform: () => "http://u" },
+        url: { template: "http://u" },
       },
     }))
 
@@ -507,7 +507,7 @@ describe("hTML source loader", () => {
       items: ".item",
       fields: {
         title: ".title",
-        url: { transform: () => "http://u" },
+        url: { template: "http://u" },
       },
     }))
 

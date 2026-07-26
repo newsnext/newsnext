@@ -41,18 +41,14 @@ export default {
             hosts: ["github.com"],
             paths: ["/trending", "/trending/:language"],
           },
-          paramsPatch: {
-            spokenLanguage: {
-              value: { type: "query", name: "spoken_language_code" },
-              fallback: "",
+          patch: {
+            params: {
+              spokenLanguage: { type: "query", name: "spoken_language_code" },
+              dateRange: { type: "query", name: "since" },
             },
-            dateRange: {
-              value: { type: "query", name: "since" },
-              fallback: "daily",
+            metadata: {
+              title: "Trending {{ params.language }}",
             },
-          },
-          metaPatch: {
-            title: "Trending {{ params.language }}",
           },
           confidence: 0.95,
         },
@@ -63,23 +59,23 @@ export default {
         items: "main .Box div[data-hpc] > article",
         fields: {
           title: {
-            selector: ">h2 a",
+            select: ">h2 a",
             template: "{{ value | normalize_whitespace }}",
           },
           url: {
-            selector: ">h2 a",
+            select: ">h2 a",
             attr: "href",
             template: "{{ value | absolute_url: requestUrl }}",
           },
           inline: {
             text: {
-              selector: "[href$=stargazers]",
+              select: "[href$=stargazers]",
               template: "✰ {{ value | normalize_whitespace }}",
             },
           },
           preview: {
             text: {
-              selector: ">p",
+              select: ">p",
               template: "{{ value | normalize_whitespace }}",
             },
           },

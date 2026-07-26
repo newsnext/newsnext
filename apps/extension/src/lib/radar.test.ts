@@ -21,6 +21,21 @@ describe("getRadarSuggestions", () => {
     ])
   })
 
+  it("uses parameter defaults when mapped URL values are missing", () => {
+    expect(getSuggestions({
+      url: "https://github.com/trending",
+    })).toMatchObject([
+      {
+        sourceId: "github:trending",
+        paramsPatch: {
+          language: "",
+          spokenLanguage: "",
+          dateRange: "daily",
+        },
+      },
+    ])
+  })
+
   it("suggests a NetEase playlist card from hash route URLs", () => {
     expect(getSuggestions({
       url: "https://music.163.com/#/playlist?id=19723756",
@@ -241,12 +256,16 @@ describe("getRadarSuggestions", () => {
             {
               id: "object",
               match: { hosts: ["example.com"], paths: ["/a"] },
-              paramsPatch: { value: { type: "literal", value: "one" } },
+              patch: {
+                params: { value: { type: "literal", value: "one" } },
+              },
             },
             {
               id: "object",
               match: { hosts: ["example.com"], paths: ["/a"] },
-              paramsPatch: { value: { type: "literal", value: "two" } },
+              patch: {
+                params: { value: { type: "literal", value: "two" } },
+              },
             },
           ],
         },
@@ -281,7 +300,9 @@ describe("getRadarSuggestions", () => {
             {
               id: "invalid-pattern",
               match: { hosts: ["example.com"], paths: ["/a"] },
-              paramsPatch: { value: { type: "literal", value: "invalid-pattern" } },
+              patch: {
+                params: { value: { type: "literal", value: "invalid-pattern" } },
+              },
             },
           ],
         },

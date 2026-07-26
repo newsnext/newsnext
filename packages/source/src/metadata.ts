@@ -243,24 +243,20 @@ export const sourceDescriptors: SourceDescriptor[] = [
             "/trending/:language"
           ]
         },
-        "paramsPatch": {
-          "spokenLanguage": {
-            "value": {
+        "patch": {
+          "params": {
+            "spokenLanguage": {
               "type": "query",
               "name": "spoken_language_code"
             },
-            "fallback": ""
-          },
-          "dateRange": {
-            "value": {
+            "dateRange": {
               "type": "query",
               "name": "since"
-            },
-            "fallback": "daily"
+            }
+          },
+          "metadata": {
+            "title": "Trending {{ params.language }}"
           }
-        },
-        "metaPatch": {
-          "title": "Trending {{ params.language }}"
         },
         "confidence": 0.95
       }
@@ -436,30 +432,9 @@ export const sourceDescriptors: SourceDescriptor[] = [
             "toplist"
           ]
         },
-        "paramsPatch": {
-          "id": {
-            "value": {
-              "type": "first",
-              "values": [
-                {
-                  "type": "query",
-                  "name": "id"
-                },
-                {
-                  "type": "hashQuery",
-                  "name": "id"
-                }
-              ]
-            }
-          }
-        },
-        "metaPatch": {
-          "title": {
-            "value": {
-              "type": "pageTitle"
-            },
-            "template": "{{ value | normalize_whitespace | regex_extract: '^(.+?)\\\\s*-\\\\s*(?:歌单|排行榜)\\\\s*-\\\\s*网易云音乐$', 1 }}",
-            "fallback": "Playlist {{ params.id }}"
+        "patch": {
+          "metadata": {
+            "title": "{% assign title = page.title | normalize_whitespace | regex_extract: '^(.+?)\\\\s*-\\\\s*(?:歌单|排行榜)\\\\s*-\\\\s*网易云音乐$', 1 %}{% if title != empty %}{{ title }}{% else %}Playlist {{ params.id }}{% endif %}"
           }
         },
         "confidence": 0.95
@@ -538,8 +513,10 @@ export const sourceDescriptors: SourceDescriptor[] = [
             "/:locale/*topic"
           ]
         },
-        "metaPatch": {
-          "title": "{{ params.topic }}"
+        "patch": {
+          "metadata": {
+            "title": "{{ params.topic }}"
+          }
         },
         "confidence": 0.85
       }
@@ -596,23 +573,11 @@ export const sourceDescriptors: SourceDescriptor[] = [
             "/:channel"
           ]
         },
-        "paramsPatch": {
-          "channel": {
-            "value": {
-              "type": "path",
-              "name": "channel"
-            }
+        "patch": {
+          "metadata": {
+            "title": "{{ page.title | normalize_whitespace | regex_replace: '\\\\s*[–-]\\\\s*Telegram$', '' | default: 'Telegram channel' }}",
+            "home": "https://t.me/s/{{ params.channel }}"
           }
-        },
-        "metaPatch": {
-          "title": {
-            "value": {
-              "type": "pageTitle"
-            },
-            "template": "{{ value | normalize_whitespace | regex_replace: '\\\\s*[–-]\\\\s*Telegram$', '' }}",
-            "fallback": "Telegram channel"
-          },
-          "home": "https://t.me/s/{{ params.channel }}"
         },
         "confidence": 0.95
       }
@@ -681,13 +646,9 @@ export const sourceDescriptors: SourceDescriptor[] = [
             "/go/:feed"
           ]
         },
-        "metaPatch": {
-          "title": {
-            "value": {
-              "type": "pageTitle"
-            },
-            "template": "{{ value | normalize_whitespace | regex_extract: '^.*[>›]\\\\s*(.+)$', 1 }}",
-            "fallback": "{{ params.feed }}"
+        "patch": {
+          "metadata": {
+            "title": "{{ page.title | normalize_whitespace | regex_extract: '^.*[>›]\\\\s*(.+)$', 1 | default: params.feed }}"
           }
         },
         "confidence": 0.9
