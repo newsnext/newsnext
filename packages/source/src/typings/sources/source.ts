@@ -49,16 +49,9 @@ export type SourceRadarValue
     | { type: "first", values: SourceRadarValue[] }
     | { type: "pageTitle" }
 
-export type SourceRadarTransform
-  = | { type: "normalizeWhitespace" }
-    | { type: "replace", pattern: string, replacement: string }
-    | { type: "extract", pattern: string, group?: number, fallbackToEmpty?: boolean }
-    | { type: "prepend", value: string }
-    | { type: "template", value: string }
-
 export interface SourceRadarPatchValue {
   value: SourceRadarValue
-  transforms?: SourceRadarTransform[]
+  template?: string
   fallback?: unknown
 }
 

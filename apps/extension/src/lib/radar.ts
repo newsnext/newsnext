@@ -5,7 +5,6 @@ import type {
   SourceRadarMetaPatch,
   SourceRadarPatchValue,
   SourceRadarRule,
-  SourceRadarTransform,
   SourceRadarValue,
 } from "@newsnext/source/typings"
 import { parseSourceParams } from "@newsnext/source/utils/params"
@@ -76,7 +75,6 @@ export interface RadarMatcher {
 }
 
 const matcherCache = new WeakMap<RadarSourceMetadata[], RadarMatcher>()
-const regexCache = new Map<string, RegExp | null>()
 
 function createRadarSuggestion({
   ruleId,
@@ -116,10 +114,6 @@ function getHostname(url: URL): string {
 
 function normalizeHostname(host: string): string {
   return host.replace(/^www\./, "").toLowerCase()
-}
-
-function normalizeWhitespace(value: string): string {
-  return value.replace(/\s+/g, " ").trim()
 }
 
 function getPathParts(url: URL): string[] {
@@ -165,54 +159,6 @@ function resolveValue(source: SourceRadarValue, context: RadarMatchContext): unk
   }
 }
 
-function applyTransform(value: string, transform: SourceRadarTransform, context: RadarMatchContext): string {
-  switch (transform.type) {
-    case "normalizeWhitespace":
-      return normalizeWhitespace(value)
-    case "replace":
-      return replacePattern(value, transform.pattern, transform.replacement)
-    case "extract":
-      return extractPattern(value, transform)
-    case "prepend":
-      return `${transform.value}${value}`
-    case "template":
-      return renderTemplate(transform.value, createTemplateVariables(context, { value })).trim()
-  }
-}
-
-function getCachedRegex(pattern: string): RegExp | null {
-  if (regexCache.has(pattern)) {
-    return regexCache.get(pattern) ?? null
-  }
-
-  try {
-    const regex = new RegExp(pattern)
-    regexCache.set(pattern, regex)
-    return regex
-  } catch {
-    regexCache.set(pattern, null)
-    return null
-  }
-}
-
-function replacePattern(value: string, pattern: string, replacement: string): string {
-  const regex = getCachedRegex(pattern)
-  return regex ? value.replace(regex, replacement).trim() : value.trim()
-}
-
-function extractPattern(value: string, transform: Extract<SourceRadarTransform, { type: "extract" }>): string {
-  const matchResult = getCachedRegex(transform.pattern)?.exec(value)
-  if (matchResult === undefined) {
-    return transform.fallbackToEmpty ? "" : value
-  }
-
-  if (!matchResult) {
-    return transform.fallbackToEmpty ? "" : value
-  }
-
-  return (matchResult[transform.group ?? 1] ?? matchResult[0] ?? "").trim()
-}
-
 function isPatchValue(value: SourceRadarValue | SourceRadarPatchValue): value is SourceRadarPatchValue {
   return !("type" in value)
 }
@@ -222,10 +168,13 @@ function resolvePatchValue(spec: SourceRadarValue | SourceRadarPatchValue, conte
     return resolveValue(spec, context)
   }
 
-  let value = String(resolveValue(spec.value, context) ?? "")
-  for (const transform of spec.transforms ?? []) {
-    value = applyTransform(value, transform, context)
-  }
+  const resolvedValue = resolveValue(spec.value, context)
+  const value = spec.template
+    ? renderTemplate(
+        spec.template,
+        createTemplateVariables(context, { value: resolvedValue }),
+      ).trim()
+    : resolvedValue
 
   if (isPresent(value)) {
     return value

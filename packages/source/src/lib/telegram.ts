@@ -40,18 +40,10 @@ export default {
           metaPatch: {
             title: {
               value: { type: "pageTitle" },
-              transforms: [
-                { type: "normalizeWhitespace" },
-                { type: "replace", pattern: "\\s*[–-]\\s*Telegram$", replacement: "" },
-              ],
+              template: "{{ value | normalize_whitespace | regex_replace: '\\\\s*[–-]\\\\s*Telegram$', '' }}",
               fallback: "Telegram channel",
             },
-            home: {
-              value: { type: "path", name: "channel" },
-              transforms: [
-                { type: "template", value: "https://t.me/s/{{ value }}" },
-              ],
-            },
+            home: "https://t.me/s/{{ params.channel }}",
           },
           confidence: 0.95,
         },

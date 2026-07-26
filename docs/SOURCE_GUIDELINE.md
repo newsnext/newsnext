@@ -258,6 +258,8 @@ NewsNext also registers:
 {{ value | favicon_url }}
 {{ value | css_url }}
 {{ value | date_to_ms }}
+{{ value | regex_extract: "Item (\\d+)", 1 }}
+{{ value | regex_replace: "\\s+", " " }}
 ```
 
 - `required` throws when a value is `null`, `undefined`, or an empty string.
@@ -271,6 +273,12 @@ NewsNext also registers:
 - `favicon_url` returns the configured favicon service URL for a page URL.
 - `css_url` extracts the first `url(...)` value from a CSS declaration.
 - `date_to_ms` parses a date and returns its Unix timestamp in milliseconds.
+- `regex_extract` returns a numbered capture group, or an empty string when the
+  pattern does not match.
+- `regex_replace` replaces every match with the provided replacement.
+
+Regex filters accept patterns up to 500 characters and input values up to
+20,000 characters. Nested quantified groups are rejected.
 
 Filters compose naturally:
 
@@ -1092,33 +1100,18 @@ Use `first` to try multiple sources:
 }
 ```
 
-### Radar transforms and fallbacks
+### Radar templates and fallbacks
 
 ```ts
 title: {
   value: { type: "pageTitle" },
-  transforms: [
-    { type: "normalizeWhitespace" },
-    {
-      type: "extract",
-      pattern: "^(.+?)\\s+-\\s+Example$",
-      group: 1,
-      fallbackToEmpty: true,
-    },
-  ],
+  template: "{{ value | normalize_whitespace | regex_extract: '^(.+?)\\\\s+-\\\\s+Example$', 1 }}",
   fallback: "Topic {{ params.topic }}",
 }
 ```
 
-Available radar transforms are:
-
-```ts
-{ type: "normalizeWhitespace" }
-{ type: "replace", pattern: string, replacement: string }
-{ type: "extract", pattern: string, group?: number, fallbackToEmpty?: boolean }
-{ type: "prepend", value: string }
-{ type: "template", value: string }
-```
+Radar patch values follow `value → template → fallback`. The fallback is used
+when the resolved or rendered value is empty.
 
 Radar templates can access:
 

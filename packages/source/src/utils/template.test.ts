@@ -50,6 +50,16 @@ describe("source templates", () => {
         value: "https://example.com/article",
       },
     )).toBe("https://icons.folo.is/example.com")
+
+    expect(renderTemplate(
+      "{{ value | regex_replace: '\\\\s*[–-]\\\\s*Telegram$', '' }}",
+      { value: "News – Telegram" },
+    )).toBe("News")
+
+    expect(renderTemplate(
+      "{{ value | regex_extract: '^.*[>›]\\\\s*(.+)$', 1 }}",
+      { value: "V2EX › 分享发现" },
+    )).toBe("分享发现")
   })
 
   it("allows source-oriented filters to receive null values", () => {
@@ -137,5 +147,17 @@ describe("source templates", () => {
     expect(() => renderTemplate("{% liquid\ninclude 'secret'\n%}", {})).toThrow(
       "File inclusion, layouts, and raw blocks are not allowed",
     )
+  })
+
+  it("bounds regular expression filters", () => {
+    expect(() => renderTemplate(
+      "{{ value | regex_extract: '(a+)+$' }}",
+      { value: "a".repeat(100) },
+    )).toThrow("Nested quantified groups are not allowed")
+
+    expect(() => renderTemplate(
+      "{{ value | regex_replace: pattern, '' }}",
+      { pattern: "a".repeat(501), value: "a" },
+    )).toThrow("cannot exceed 500 characters")
   })
 })

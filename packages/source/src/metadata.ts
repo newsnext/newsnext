@@ -458,16 +458,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
             "value": {
               "type": "pageTitle"
             },
-            "transforms": [
-              {
-                "type": "normalizeWhitespace"
-              },
-              {
-                "type": "extract",
-                "pattern": "^(.+?)\\s*-\\s*(?:歌单|排行榜)\\s*-\\s*网易云音乐$",
-                "fallbackToEmpty": true
-              }
-            ],
+            "template": "{{ value | normalize_whitespace | regex_extract: '^(.+?)\\\\s*-\\\\s*(?:歌单|排行榜)\\\\s*-\\\\s*网易云音乐$', 1 }}",
             "fallback": "Playlist {{ params.id }}"
           }
         },
@@ -618,30 +609,10 @@ export const sourceDescriptors: SourceDescriptor[] = [
             "value": {
               "type": "pageTitle"
             },
-            "transforms": [
-              {
-                "type": "normalizeWhitespace"
-              },
-              {
-                "type": "replace",
-                "pattern": "\\s*[–-]\\s*Telegram$",
-                "replacement": ""
-              }
-            ],
+            "template": "{{ value | normalize_whitespace | regex_replace: '\\\\s*[–-]\\\\s*Telegram$', '' }}",
             "fallback": "Telegram channel"
           },
-          "home": {
-            "value": {
-              "type": "path",
-              "name": "channel"
-            },
-            "transforms": [
-              {
-                "type": "template",
-                "value": "https://t.me/s/{{ value }}"
-              }
-            ]
-          }
+          "home": "https://t.me/s/{{ params.channel }}"
         },
         "confidence": 0.95
       }
@@ -715,15 +686,7 @@ export const sourceDescriptors: SourceDescriptor[] = [
             "value": {
               "type": "pageTitle"
             },
-            "transforms": [
-              {
-                "type": "normalizeWhitespace"
-              },
-              {
-                "type": "extract",
-                "pattern": "^.*[>›]\\s*(.+)$"
-              }
-            ],
+            "template": "{{ value | normalize_whitespace | regex_extract: '^.*[>›]\\\\s*(.+)$', 1 }}",
             "fallback": "{{ params.feed }}"
           }
         },

@@ -43,14 +43,7 @@ export default {
           metaPatch: {
             title: {
               value: { type: "pageTitle" },
-              transforms: [
-                { type: "normalizeWhitespace" },
-                {
-                  type: "extract",
-                  pattern: "^(.+?)\\s*-\\s*(?:歌单|排行榜)\\s*-\\s*网易云音乐$",
-                  fallbackToEmpty: true,
-                },
-              ],
+              template: "{{ value | normalize_whitespace | regex_extract: '^(.+?)\\\\s*-\\\\s*(?:歌单|排行榜)\\\\s*-\\\\s*网易云音乐$', 1 }}",
               fallback: "Playlist {{ params.id }}",
             },
           },

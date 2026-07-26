@@ -25,10 +25,7 @@ export default {
           metaPatch: {
             title: {
               value: { type: "pageTitle" },
-              transforms: [
-                { type: "normalizeWhitespace" },
-                { type: "extract", pattern: "^.*[>›]\\s*(.+)$" },
-              ],
+              template: "{{ value | normalize_whitespace | regex_extract: '^.*[>›]\\\\s*(.+)$', 1 }}",
               fallback: "{{ params.feed }}",
             },
           },
