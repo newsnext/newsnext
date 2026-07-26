@@ -1,5 +1,9 @@
 # Project Instructions
 
+## Project Overview
+
+Newsnext is a personalized web crawler that runs inside a browser extension.
+
 - Use English for all code, comments, and user-facing text written in the repository.
 - Avoid creating Markdown documentation files unless the task explicitly requires them.
 
