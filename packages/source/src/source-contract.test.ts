@@ -1,6 +1,5 @@
-import jsonSourceRegistry from "@newsnext/registry" with { type: "json" }
 import { describe, expect, it } from "vitest"
-import { sourceDescriptors } from "./metadata"
+import funcRegistry from "../func-registry.json" with { type: "json" }
 import { loadSources } from "./service"
 import { matchesCapabilityHost } from "./utils/source/capabilities"
 
@@ -20,25 +19,18 @@ describe("source contract", () => {
     source,
   }))
 
-  it("builds a flat JSON source registry without provider containers", () => {
-    for (const [id, source] of Object.entries(jsonSourceRegistry)) {
-      expect(id.split(":")).toHaveLength(2)
-      expect("sources" in source, id).toBe(false)
-      expect(source.metadata.providerTitle, id).toBeTypeOf("string")
-    }
-  })
-
   it("generates one descriptor for every runtime source", () => {
-    expect(sourceDescriptors).toHaveLength(runtimeSources.length)
-    expect(new Set(sourceDescriptors.map(source => source.id)).size).toBe(sourceDescriptors.length)
+    expect(Object.keys(funcRegistry)).toHaveLength(runtimeSources.length)
 
     for (const { id, source } of runtimeSources) {
-      const descriptor = sourceDescriptors.find(candidate => candidate.id === id)
+      const descriptor = funcRegistry[id as keyof typeof funcRegistry]
       expect(descriptor, id).toBeDefined()
       expect(descriptor?.cache, id).toEqual(source.cache)
       expect(descriptor?.capabilities, id).toEqual(source.capabilities)
-      expect(descriptor?.params, id).toEqual(toSerializable(source.params))
-      expect(descriptor?.radar, id).toEqual(toSerializable(source.radar))
+      expect(descriptor && "params" in descriptor ? descriptor.params : undefined, id)
+        .toEqual(toSerializable(source.params))
+      expect(descriptor && "radar" in descriptor ? descriptor.radar : undefined, id)
+        .toEqual(toSerializable(source.radar))
     }
   })
 

@@ -1,5 +1,5 @@
 import type { SourceRegistry } from "@newsnext/source/utils/source"
-import { loadBundledSourceRegistry } from "@newsnext/source/service"
+import bundledSourceRegistry from "@newsnext/registry" with { type: "json" }
 import {
   mergeSourceRegistries,
   parseSourceRegistry,
@@ -192,8 +192,7 @@ export async function updateConfiguredSourceRegistries(
 }
 
 export async function loadConfiguredSourceRegistry(): Promise<SourceRegistry> {
-  const [bundled, urls, cache] = await Promise.all([
-    loadBundledSourceRegistry(),
+  const [urls, cache] = await Promise.all([
     readRegistryUrls(),
     readRegistryCache(),
   ])
@@ -202,5 +201,5 @@ export async function loadConfiguredSourceRegistry(): Promise<SourceRegistry> {
     return entry ? [entry.registry] : []
   })
 
-  return mergeSourceRegistries(bundled, ...remoteRegistries)
+  return mergeSourceRegistries(bundledSourceRegistry, ...remoteRegistries)
 }

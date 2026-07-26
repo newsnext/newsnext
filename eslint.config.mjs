@@ -11,8 +11,8 @@ export default antfu(
     ignores: [
       "public/**",
       "packages/registry/registry.json",
+      "packages/source/func-registry.json",
       "packages/source/src/index.ts",
-      "packages/source/src/metadata.ts",
     ],
     rules: {
       "antfu/curly": "error",

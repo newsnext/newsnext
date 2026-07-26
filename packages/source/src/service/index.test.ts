@@ -131,18 +131,39 @@ describe("source service", () => {
     })
   })
 
-  it("applies Liquid parameter templates before validation", async () => {
-    const source = await resolveSource("telegram:channel")
-    expect(normalizeSourceParams(source, {
+  it("applies Liquid parameter templates before validation", () => {
+    const sourceDefinition = {
+      params: {
+        channel: {
+          type: "text",
+          default: "TestFlightCN",
+          title: "Channel",
+          pattern: "^(?![\\d_])\\w{5,32}$",
+          template: "{{ value | remove_first: '@' }}",
+        },
+      },
+    } satisfies Pick<RuntimeSource, "params">
+
+    expect(normalizeSourceParams(sourceDefinition, {
       channel: "  @TestFlightCN  ",
     })).toEqual({
       channel: "TestFlightCN",
     })
   })
 
-  it("rejects URL-like values for params handled by radar", async () => {
-    const source = await resolveSource("netease-music:playlist")
-    expect(() => normalizeSourceParams(source, {
+  it("rejects URL-like values for params handled by radar", () => {
+    const sourceDefinition = {
+      params: {
+        id: {
+          type: "text",
+          default: "19723756",
+          title: "Playlist",
+          pattern: "^\\d+$",
+        },
+      },
+    } satisfies Pick<RuntimeSource, "params">
+
+    expect(() => normalizeSourceParams(sourceDefinition, {
       id: "https://music.163.com/playlist?id=5059661515&uct2=U2FsdGVkX1+h604nouVzL3eBMasVMbAgGM76vxJxHfw=",
     })).toThrowError(SourceServiceError)
   })

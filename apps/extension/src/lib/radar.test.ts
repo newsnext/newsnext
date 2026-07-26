@@ -1,6 +1,13 @@
-import { sourceDescriptors } from "@newsnext/source/metadata"
+import bundledSourceRegistry from "@newsnext/registry" with { type: "json" }
+import {
+  configureSourceRegistryLoader,
+  loadSourceDescriptors,
+} from "@newsnext/source/service"
 import { describe, expect, it } from "vitest"
 import { createRadarMatcher, getRadarSuggestions } from "./radar"
+
+configureSourceRegistryLoader(async () => bundledSourceRegistry)
+const sourceDescriptors = await loadSourceDescriptors()
 
 function getSuggestions(...args: Parameters<typeof getRadarSuggestions>) {
   return getRadarSuggestions(args[0], args[1] ?? sourceDescriptors)

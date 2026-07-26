@@ -40,18 +40,11 @@ export interface PreparedSourceRequest<TParams extends SourceParamSchemaMap = So
 
 const runtimeTypescriptProviders = typescriptProviders as Record<string, ProviderDefinition>
 let registryGeneration = 0
-let registryLoader: SourceRegistryLoader = loadBundledSourceRegistry
+let registryLoader: SourceRegistryLoader = async () => ({})
 let registrySources: Record<string, RuntimeSource> | undefined
 let registrySourcesPromise: Promise<Record<string, RuntimeSource>> | undefined
 
 export type SourceRegistryLoader = () => Promise<unknown>
-
-export async function loadBundledSourceRegistry(): Promise<unknown> {
-  const { default: registry } = await import("@newsnext/registry", {
-    with: { type: "json" },
-  })
-  return registry
-}
 
 function setSourceRegistryLoader(loader: SourceRegistryLoader): void {
   registryGeneration += 1

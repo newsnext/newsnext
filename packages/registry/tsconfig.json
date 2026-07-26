@@ -3,5 +3,5 @@
   "compilerOptions": {
     "strict": true
   },
-  "include": ["build.ts"]
+  "include": ["build.ts", "*.test.ts"]
 }

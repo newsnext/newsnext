@@ -5,7 +5,7 @@
   "license": "MPL-2.0",
   "exports": {
     ".": "./src/index.ts",
-    "./metadata": "./src/metadata.ts",
+    "./func-registry": "./func-registry.json",
     "./service": "./src/service/index.ts",
     "./typings": "./src/typings/index.ts",
     "./utils/crypto": "./src/utils/crypto.ts",
@@ -23,7 +23,6 @@
   },
   "dependencies": {
     "@newsnext/date-parser": "workspace:*",
-    "@newsnext/registry": "workspace:*",
     "@newsnext/shared": "workspace:*",
     "@smithy/md5-js": "^4.4.13",
     "@wxt-dev/browser": "^0.2.2",
