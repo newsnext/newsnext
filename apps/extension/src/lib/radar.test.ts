@@ -199,6 +199,24 @@ describe("getRadarSuggestions", () => {
     ])
   })
 
+  it("suggests the matching parameterized Weibo hot search board", () => {
+    expect(getSuggestions({
+      url: "https://weibo.com/hot/acg",
+      title: "ACG - 微博",
+    })).toMatchObject([
+      {
+        sourceId: "weibo:hot-search",
+        paramsPatch: {
+          type: "acg",
+        },
+        metaPatch: {
+          title: "ACG",
+          home: "https://weibo.com/hot/acg",
+        },
+      },
+    ])
+  })
+
   it("returns no suggestions for invalid or unknown URLs", () => {
     expect(getSuggestions({ url: "not a url" })).toEqual([])
     expect(getSuggestions({ url: "https://example.com/article" })).toEqual([])

@@ -666,27 +666,91 @@
     ]
   },
   "weibo:hot-search": {
-    "icon": "https://icons.folo.is/s.m.weibo.cn",
+    "icon": "https://weibo.com/favicon.ico",
     "providerTitle": "Weibo",
     "title": "Hot Search",
+    "params": {
+      "type": {
+        "type": "select",
+        "title": "Type",
+        "values": [
+          {
+            "label": "Hot Search",
+            "value": "search"
+          },
+          {
+            "label": "My Hot Search",
+            "value": "mine"
+          },
+          {
+            "label": "Entertainment",
+            "value": "entertainment"
+          },
+          {
+            "label": "Social",
+            "value": "social"
+          },
+          {
+            "label": "Technology",
+            "value": "tech"
+          },
+          {
+            "label": "Life",
+            "value": "life"
+          },
+          {
+            "label": "Sports",
+            "value": "sports"
+          },
+          {
+            "label": "ACG",
+            "value": "acg"
+          }
+        ],
+        "default": "search"
+      }
+    },
     "capabilities": {
       "network": [
-        "s.m.weibo.cn"
+        "weibo.com",
+        "*.sinaimg.cn"
       ],
       "cookies": [],
       "browser": []
     },
     "cache": {
-      "version": 1,
-      "maxAge": "5m"
+      "version": 3,
+      "maxAge": "1m"
     },
     "color": "red",
     "type": "hottest",
     "category": "china",
-    "home": "https://s.m.weibo.cn/top/summary?cate=realtimehot"
+    "radar": [
+      {
+        "id": "weibo-hot-search",
+        "match": {
+          "hosts": [
+            "weibo.com"
+          ],
+          "paths": [
+            "/hot/:type"
+          ]
+        },
+        "patch": {
+          "params": {
+            "type": "{{ path.type }}"
+          },
+          "metadata": {
+            "title": "{{ page.title | regex_replace: '\\\\s*-\\\\s*微博$', '' | default: 'Hot Search' }}",
+            "home": "https://weibo.com/hot/{{ path.type }}"
+          }
+        },
+        "confidence": 1
+      }
+    ]
   },
   "weibo:user": {
-    "icon": "https://icons.folo.is/m.weibo.cn",
+    "icon": "https://weibo.com/favicon.ico",
     "providerTitle": "Weibo",
     "title": "User Posts",
     "params": {
@@ -700,11 +764,10 @@
     },
     "capabilities": {
       "network": [
-        "m.weibo.cn"
+        "weibo.com",
+        "*.sinaimg.cn"
       ],
-      "cookies": [
-        "m.weibo.cn"
-      ],
+      "cookies": [],
       "browser": []
     },
     "cache": {
@@ -715,36 +778,12 @@
     "desc": "Latest posts from a specified Weibo user",
     "type": "timeline",
     "category": "china",
-    "home": "https://m.weibo.cn",
-    "secrets": [
-      {
-        "key": "sub",
-        "type": "cookie",
-        "origin": "https://m.weibo.cn",
-        "itemKey": "SUB",
-        "required": false
-      },
-      {
-        "key": "subp",
-        "type": "cookie",
-        "origin": "https://m.weibo.cn",
-        "itemKey": "SUBP",
-        "required": false
-      },
-      {
-        "key": "ssoLoginState",
-        "type": "cookie",
-        "origin": "https://m.weibo.cn",
-        "itemKey": "SSOLoginState",
-        "required": false
-      }
-    ],
+    "home": "https://weibo.com",
     "radar": [
       {
         "id": "weibo-user",
         "match": {
           "hosts": [
-            "m.weibo.cn",
             "weibo.com"
           ],
           "paths": [
@@ -766,7 +805,7 @@
     ]
   },
   "weibo:keyword": {
-    "icon": "https://icons.folo.is/m.weibo.cn",
+    "icon": "https://weibo.com/favicon.ico",
     "providerTitle": "Weibo",
     "title": "Keyword",
     "params": {
@@ -779,11 +818,10 @@
     },
     "capabilities": {
       "network": [
-        "m.weibo.cn"
+        "m.weibo.cn",
+        "*.sinaimg.cn"
       ],
-      "cookies": [
-        "m.weibo.cn"
-      ],
+      "cookies": [],
       "browser": []
     },
     "cache": {
@@ -794,37 +832,13 @@
     "desc": "Latest Weibo posts matching a keyword",
     "type": "timeline",
     "category": "china",
-    "home": "https://m.weibo.cn",
-    "secrets": [
-      {
-        "key": "sub",
-        "type": "cookie",
-        "origin": "https://m.weibo.cn",
-        "itemKey": "SUB",
-        "required": false
-      },
-      {
-        "key": "subp",
-        "type": "cookie",
-        "origin": "https://m.weibo.cn",
-        "itemKey": "SUBP",
-        "required": false
-      },
-      {
-        "key": "ssoLoginState",
-        "type": "cookie",
-        "origin": "https://m.weibo.cn",
-        "itemKey": "SSOLoginState",
-        "required": false
-      }
-    ],
+    "home": "https://s.weibo.com",
     "radar": [
       {
         "id": "weibo-keyword",
         "match": {
           "hosts": [
-            "s.weibo.com",
-            "s.m.weibo.cn"
+            "s.weibo.com"
           ]
         },
         "patch": {
@@ -840,7 +854,7 @@
     ]
   },
   "weibo:super-topic": {
-    "icon": "https://icons.folo.is/m.weibo.cn",
+    "icon": "https://weibo.com/favicon.ico",
     "providerTitle": "Weibo",
     "title": "Super Topic",
     "params": {
@@ -877,11 +891,10 @@
     },
     "capabilities": {
       "network": [
-        "m.weibo.cn"
+        "weibo.com",
+        "*.sinaimg.cn"
       ],
-      "cookies": [
-        "m.weibo.cn"
-      ],
+      "cookies": [],
       "browser": []
     },
     "cache": {
@@ -892,36 +905,12 @@
     "desc": "Latest posts from a Weibo super topic",
     "type": "timeline",
     "category": "china",
-    "home": "https://m.weibo.cn",
-    "secrets": [
-      {
-        "key": "sub",
-        "type": "cookie",
-        "origin": "https://m.weibo.cn",
-        "itemKey": "SUB",
-        "required": false
-      },
-      {
-        "key": "subp",
-        "type": "cookie",
-        "origin": "https://m.weibo.cn",
-        "itemKey": "SUBP",
-        "required": false
-      },
-      {
-        "key": "ssoLoginState",
-        "type": "cookie",
-        "origin": "https://m.weibo.cn",
-        "itemKey": "SSOLoginState",
-        "required": false
-      }
-    ],
+    "home": "https://weibo.com",
     "radar": [
       {
         "id": "weibo-super-topic",
         "match": {
           "hosts": [
-            "m.weibo.cn",
             "weibo.com"
           ],
           "includes": "100808"
@@ -940,16 +929,15 @@
     ]
   },
   "weibo:following": {
-    "icon": "https://icons.folo.is/m.weibo.cn",
+    "icon": "https://weibo.com/favicon.ico",
     "providerTitle": "Weibo",
     "title": "Following Timeline",
     "capabilities": {
       "network": [
-        "m.weibo.cn"
+        "weibo.com",
+        "*.sinaimg.cn"
       ],
-      "cookies": [
-        "m.weibo.cn"
-      ],
+      "cookies": [],
       "browser": []
     },
     "cache": {
@@ -960,28 +948,19 @@
     "desc": "Latest posts from all followed Weibo accounts",
     "type": "timeline",
     "category": "china",
-    "home": "https://m.weibo.cn",
-    "secrets": [
+    "home": "https://weibo.com",
+    "radar": [
       {
-        "key": "sub",
-        "type": "cookie",
-        "origin": "https://m.weibo.cn",
-        "itemKey": "SUB",
-        "required": true
-      },
-      {
-        "key": "subp",
-        "type": "cookie",
-        "origin": "https://m.weibo.cn",
-        "itemKey": "SUBP",
-        "required": false
-      },
-      {
-        "key": "ssoLoginState",
-        "type": "cookie",
-        "origin": "https://m.weibo.cn",
-        "itemKey": "SSOLoginState",
-        "required": false
+        "id": "weibo-following",
+        "match": {
+          "hosts": [
+            "weibo.com"
+          ],
+          "paths": [
+            "/"
+          ]
+        },
+        "confidence": 0.9
       }
     ]
   },

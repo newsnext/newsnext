@@ -4,51 +4,97 @@ import {
   fetchWeiboKeywordPosts,
   fetchWeiboSuperTopicPosts,
   fetchWeiboUserPosts,
-  optionalWeiboCookieSecrets,
-  requiredWeiboCookieSecrets,
 } from "./utils"
 
 const weiboCapabilities = {
-  network: ["m.weibo.cn"],
-  cookies: ["m.weibo.cn"],
+  network: ["weibo.com", "*.sinaimg.cn"],
+}
+
+const weiboSearchCapabilities = {
+  network: ["m.weibo.cn", "*.sinaimg.cn"],
 }
 
 export default {
   title: "Weibo",
-  home: "https://s.m.weibo.cn/top/summary?cate=realtimehot",
   color: "red",
   category: "china",
+  icon: "https://weibo.com/favicon.ico",
   sources: {
     "hot-search": {
       metadata: {
         title: "Hot Search",
         type: "hottest",
       },
+      params: {
+        type: {
+          type: "select",
+          title: "Type",
+          values: [
+            { label: "Hot Search", value: "search" },
+            { label: "My Hot Search", value: "mine" },
+            { label: "Entertainment", value: "entertainment" },
+            { label: "Social", value: "social" },
+            { label: "Technology", value: "tech" },
+            { label: "Life", value: "life" },
+            { label: "Sports", value: "sports" },
+            { label: "ACG", value: "acg" },
+          ],
+          default: "search",
+        },
+      },
+      radar: [
+        {
+          id: "weibo-hot-search",
+          match: {
+            hosts: ["weibo.com"],
+            paths: ["/hot/:type"],
+          },
+          patch: {
+            params: {
+              type: "{{ path.type }}",
+            },
+            metadata: {
+              title: "{{ page.title | regex_replace: '\\\\s*-\\\\s*微博$', '' | default: 'Hot Search' }}",
+              home: "https://weibo.com/hot/{{ path.type }}",
+            },
+          },
+          confidence: 1,
+        },
+      ],
       loader: {
-        type: "html",
-        url: "https://s.m.weibo.cn/top/summary?cate=realtimehot",
-        items: "#pl_top_realtimehot table tbody tr:nth-child(n+2)",
-        filter: ":not(:has(.ranktop:contains('•')))",
+        type: "json",
+        url: "https://weibo.com/ajax/{% case params.type %}{% when 'search' %}side/hotSearch{% when 'mine' %}statuses/mineBand{% when 'tech' %}statuses/technology{% when 'sports' %}statuses/sport{% else %}statuses/{{ params.type }}{% endcase %}",
+        fetchOptions: {
+          credentials: "include",
+        },
+        items: "(data.realtime || data.band_list)[?is_ad != `1` && (rank != `null` || realpos != `null`)]",
         fields: {
-          title: "td.td-02 a",
+          title: "note || word || name",
           url: {
-            select: "td.td-02 a",
-            attr: "href",
-            template: "{{ value | absolute_url: requestUrl }}",
+            select: "url || word_scheme || word",
+            template: "{% if item.url %}{{ value | replace: 'http://', 'https://' }}{% else %}https://s.weibo.com/weibo?q={{ value | url_query }}{% endif %}",
           },
           inline: {
-            mark: "td.td-03",
+            text: {
+              select: "num || description",
+              template: "{% if value %}{{ value }}{% elsif item.icon_desc %}{{ item.icon_desc }}{% endif %}",
+            },
+            mark: "(icon || icon_url) && {src: icon || icon_url, scale: `1.5`, radius: `0`}",
           },
         },
       },
-      cache: "5m",
+      capabilities: weiboCapabilities,
+      cache: {
+        version: 3,
+        maxAge: "1m",
+      },
     },
     "user": {
       metadata: {
         title: "User Posts",
         desc: "Latest posts from a specified Weibo user",
         type: "timeline",
-        home: "https://m.weibo.cn",
+        home: "https://weibo.com",
       },
       params: {
         uid: {
@@ -63,7 +109,7 @@ export default {
         {
           id: "weibo-user",
           match: {
-            hosts: ["m.weibo.cn", "weibo.com"],
+            hosts: ["weibo.com"],
             paths: ["/u/:uid", "/profile/:uid", "/:uid"],
           },
           patch: {
@@ -77,7 +123,6 @@ export default {
           confidence: 0.9,
         },
       ],
-      secrets: optionalWeiboCookieSecrets,
       loader: {
         type: "custom",
         load: fetchWeiboUserPosts,
@@ -90,7 +135,7 @@ export default {
         title: "Keyword",
         desc: "Latest Weibo posts matching a keyword",
         type: "timeline",
-        home: "https://m.weibo.cn",
+        home: "https://s.weibo.com",
       },
       params: {
         keyword: {
@@ -104,7 +149,7 @@ export default {
         {
           id: "weibo-keyword",
           match: {
-            hosts: ["s.weibo.com", "s.m.weibo.cn"],
+            hosts: ["s.weibo.com"],
           },
           patch: {
             params: {
@@ -117,12 +162,11 @@ export default {
           confidence: 0.9,
         },
       ],
-      secrets: optionalWeiboCookieSecrets,
       loader: {
         type: "custom",
         load: fetchWeiboKeywordPosts,
       },
-      capabilities: weiboCapabilities,
+      capabilities: weiboSearchCapabilities,
       cache: "5m",
     },
     "super-topic": {
@@ -130,7 +174,7 @@ export default {
         title: "Super Topic",
         desc: "Latest posts from a Weibo super topic",
         type: "timeline",
-        home: "https://m.weibo.cn",
+        home: "https://weibo.com",
       },
       params: {
         id: {
@@ -156,7 +200,7 @@ export default {
         {
           id: "weibo-super-topic",
           match: {
-            hosts: ["m.weibo.cn", "weibo.com"],
+            hosts: ["weibo.com"],
             includes: "100808",
           },
           patch: {
@@ -171,7 +215,6 @@ export default {
           confidence: 0.9,
         },
       ],
-      secrets: optionalWeiboCookieSecrets,
       loader: {
         type: "custom",
         load: fetchWeiboSuperTopicPosts,
@@ -184,9 +227,18 @@ export default {
         title: "Following Timeline",
         desc: "Latest posts from all followed Weibo accounts",
         type: "timeline",
-        home: "https://m.weibo.cn",
+        home: "https://weibo.com",
       },
-      secrets: requiredWeiboCookieSecrets,
+      radar: [
+        {
+          id: "weibo-following",
+          match: {
+            hosts: ["weibo.com"],
+            paths: ["/"],
+          },
+          confidence: 0.9,
+        },
+      ],
       loader: {
         type: "custom",
         load: fetchWeiboFollowingTimeline,

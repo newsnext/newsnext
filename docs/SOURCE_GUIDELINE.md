@@ -400,6 +400,21 @@ fetchOptions: {
 }
 ```
 
+Keep browser-derived request options minimal. Stable headers such as `Accept`
+and `X-Requested-With`, `credentials`, and `referrer` may be declared when an
+endpoint requires them. Do not copy transient values such as XSRF tokens,
+browser version client hints, priorities, or deployment version headers into a
+source configuration. A browser extension may ignore `referrer` or a manually
+set `Referer` header. When an endpoint requires it, install a narrowly scoped
+Manifest V3 `declarativeNetRequest` rule for that request URL.
+
+When several variants represent the same source capability, prefer a validated
+parameter over separate source IDs. A templated URL and a shared item selector
+can often cover endpoint variants that return the same logical item shape.
+When a page path exposes the parameter directly, prefer one Radar rule such as
+`/section/:type` over one rule per allowed value. Parameter validation will
+discard unsupported path values.
+
 ## JSON loaders
 
 Use a JSON loader for APIs returning JSON.
@@ -913,6 +928,10 @@ interface NewsItem {
 `inline` and `preview` each use either `text` or `html`. Prefer `text` unless
 markup is necessary.
 
+Picture objects accept optional `scale` and `radius` values. Use `scale`
+sparingly for compact inline icons and marks because transforms do not reserve
+additional layout space.
+
 For `inline.html` and `preview.html`, Liquid values are HTML-escaped
 automatically:
 
@@ -1003,6 +1022,9 @@ capabilities: {
 
 Browser capabilities currently include features such as `history`, `bookmarks`,
 and `favicon`.
+
+Do not declare cookie secrets only to authenticate a request when the browser
+automatically supplies its cookie jar through `credentials: "include"`.
 
 ## Secrets
 
@@ -1265,6 +1287,9 @@ Before submitting a source:
 - Use milliseconds for timestamps.
 - Use `text` instead of `html` when markup is unnecessary.
 - Escape URL components with `url_path` or `url_query`.
+- Prefer the provider's canonical desktop or web origin when equivalent APIs are available.
+- Prefer a stable structured API over parsing page HTML, even when the API uses another provider origin.
+- Declare image hosts that require extension host access for request-header rules.
 - Declare every possible network hostname.
 - Add radar rules for parameterized sources when appropriate.
 - Use a unique radar rule ID within each source.

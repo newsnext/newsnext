@@ -1,44 +1,14 @@
-import type { NewsItem, SourceLoaderContext, SourceSecretDefinition } from "@newsnext/source/typings"
+import type { NewsItem } from "@newsnext/source/typings"
 import { myFetch } from "@newsnext/source/utils/fetch"
 import { load } from "cheerio/slim"
 
-const WEIBO_ORIGIN = "https://m.weibo.cn"
-const WEIBO_SUB_SECRET_KEY = "sub"
-const WEIBO_SUBP_SECRET_KEY = "subp"
-const WEIBO_LOGIN_STATE_SECRET_KEY = "ssoLoginState"
-
-export const optionalWeiboCookieSecrets: SourceSecretDefinition[] = [
-  {
-    key: WEIBO_SUB_SECRET_KEY,
-    type: "cookie",
-    origin: WEIBO_ORIGIN,
-    itemKey: "SUB",
-    required: false,
-  },
-  {
-    key: WEIBO_SUBP_SECRET_KEY,
-    type: "cookie",
-    origin: WEIBO_ORIGIN,
-    itemKey: "SUBP",
-    required: false,
-  },
-  {
-    key: WEIBO_LOGIN_STATE_SECRET_KEY,
-    type: "cookie",
-    origin: WEIBO_ORIGIN,
-    itemKey: "SSOLoginState",
-    required: false,
-  },
-]
-
-export const requiredWeiboCookieSecrets: SourceSecretDefinition[] = optionalWeiboCookieSecrets.map(secret => ({
-  ...secret,
-  required: secret.key === WEIBO_SUB_SECRET_KEY,
-}))
+const WEIBO_ORIGIN = "https://weibo.com"
+const WEIBO_MOBILE_ORIGIN = "https://m.weibo.cn"
 
 interface WeiboApiResponse<T> {
   ok?: number
   msg?: string
+  url?: string
   data?: T
 }
 
@@ -47,7 +17,6 @@ interface WeiboPicture {
   large?: {
     url?: string
   }
-  url?: string
 }
 
 interface WeiboStatus {
@@ -55,13 +24,16 @@ interface WeiboStatus {
   bid?: string
   mblogid?: string
   text?: string
+  text_raw?: string
   created_at?: string
   source?: string
+  isAd?: boolean
   user?: {
     id?: string | number
     profile_image_url?: string
   }
-  pics?: WeiboPicture[] | Record<string, WeiboPicture>
+  pics?: WeiboPicture[]
+  pic_infos?: Record<string, WeiboPicture>
   retweeted_status?: WeiboStatus
   longText?: {
     longTextContent?: string
@@ -75,77 +47,51 @@ interface WeiboCard {
 }
 
 interface WeiboContainerData {
-  tabsInfo?: {
-    tabs?: Array<{
-      tab_type?: string
-      containerid?: string
-    }>
-  }
   cards?: WeiboCard[]
 }
 
-function createCookieHeader(context?: SourceLoaderContext): string | undefined {
-  const entries = [
-    ["SUB", context?.secrets?.[WEIBO_SUB_SECRET_KEY]],
-    ["SUBP", context?.secrets?.[WEIBO_SUBP_SECRET_KEY]],
-    ["SSOLoginState", context?.secrets?.[WEIBO_LOGIN_STATE_SECRET_KEY]],
-  ]
-    .filter((entry): entry is [string, string] => Boolean(entry[1]?.trim()))
-    .map(([key, value]) => `${key}=${value}`)
-  return entries.length ? entries.join("; ") : undefined
-}
-
-async function fetchWeiboApi<T>(
-  url: string,
-  referer: string,
-  context?: SourceLoaderContext,
-): Promise<T> {
-  const cookie = createCookieHeader(context)
-  const response = await myFetch<WeiboApiResponse<T>>(url, {
+async function fetchWeiboDesktop<T>(url: string): Promise<T> {
+  return myFetch<T>(url, {
     headers: {
-      "MWeibo-Pwa": "1",
       "X-Requested-With": "XMLHttpRequest",
-      "Referer": referer,
-      ...(cookie ? { Cookie: cookie } : {}),
     },
     credentials: "include",
   })
-  if (response.ok === -100) throw new Error(response.msg ?? "Weibo login is required.")
-  if (!response.data) throw new Error(response.msg ?? "Weibo returned an empty response.")
-  return response.data
 }
 
 function htmlToText(html?: string): string {
   return html ? load(html).text().replace(/\s+/g, " ").trim() : ""
 }
 
-function normalizePictures(pictures?: WeiboStatus["pics"]): string[] {
+function normalizePictures(pictures?: WeiboStatus["pics"] | WeiboStatus["pic_infos"]): string[] {
   if (!pictures) return []
   const values = Array.isArray(pictures) ? pictures : Object.values(pictures)
   return values
     .filter(picture => picture.type !== "livephoto")
-    .map(picture => picture.large?.url ?? picture.url)
+    .map(picture => picture.large?.url)
     .filter((url): url is string => Boolean(url))
 }
 
 function weiboStatusToNewsItem(status: WeiboStatus): NewsItem | undefined {
-  const bid = status.bid || status.mblogid || (typeof status.id === "string" ? status.id : undefined)
-  const text = htmlToText(status.longText?.longTextContent ?? status.text)
-  if (!bid || !text) return undefined
+  const postId = status.mblogid || status.bid || (typeof status.id === "string" ? status.id : undefined)
+  const text = status.text_raw?.trim() || htmlToText(status.longText?.longTextContent ?? status.text)
+  if (!postId || !text) return undefined
 
   const userId = status.user?.id?.toString()
   const retweetedText = status.retweeted_status
-    ? htmlToText(status.retweeted_status.longText?.longTextContent ?? status.retweeted_status.text)
+    ? (
+        status.retweeted_status.text_raw?.trim()
+        || htmlToText(status.retweeted_status.longText?.longTextContent ?? status.retweeted_status.text)
+      )
     : undefined
   const pictures = [
-    ...normalizePictures(status.pics),
-    ...normalizePictures(status.retweeted_status?.pics),
+    ...normalizePictures(status.pic_infos ?? status.pics),
+    ...normalizePictures(status.retweeted_status?.pic_infos ?? status.retweeted_status?.pics),
   ]
   const timestamp = status.created_at ? Date.parse(status.created_at) : Number.NaN
   const item: NewsItem = {
     title: text,
-    url: userId ? `${WEIBO_ORIGIN}/${userId}/${bid}` : `${WEIBO_ORIGIN}/status/${bid}`,
-    mobileUrl: `${WEIBO_ORIGIN}/status/${bid}`,
+    url: userId ? `${WEIBO_ORIGIN}/${userId}/${postId}` : `${WEIBO_ORIGIN}/status/${postId}`,
     inline: {
       text: status.source ? htmlToText(status.source) : "",
       ...(status.user?.profile_image_url
@@ -161,100 +107,90 @@ function weiboStatusToNewsItem(status: WeiboStatus): NewsItem | undefined {
   return item
 }
 
-function cardsToNewsItems(cards: WeiboCard[]): NewsItem[] {
-  return cards
-    .flatMap(card => [card, ...(card.card_group ?? [])])
-    .filter(card => !card.profile_type_id?.startsWith("proweibotop"))
-    .flatMap((card): NewsItem[] => {
-      const item = card.mblog ? weiboStatusToNewsItem(card.mblog) : undefined
+function statusesToNewsItems(statuses: WeiboStatus[]): NewsItem[] {
+  return statuses
+    .filter(status => !status.isAd)
+    .flatMap((status): NewsItem[] => {
+      const item = weiboStatusToNewsItem(status)
       return item ? [item] : []
     })
     .sort((a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0))
 }
 
+function cardsToNewsItems(cards: WeiboCard[]): NewsItem[] {
+  const statuses = cards
+    .flatMap(card => [card, ...(card.card_group ?? [])])
+    .filter(card => !card.profile_type_id?.startsWith("proweibotop"))
+    .flatMap(card => card.mblog ? [card.mblog] : [])
+  return statusesToNewsItems(statuses)
+}
+
 export async function fetchWeiboUserPosts(
   { uid }: { uid: string },
-  context?: SourceLoaderContext,
 ): Promise<NewsItem[]> {
   const normalizedUid = uid.trim()
   if (!/^\d+$/.test(normalizedUid)) throw new Error("Weibo user ID must be a numeric uid.")
 
-  const userUrl = `${WEIBO_ORIGIN}/u/${normalizedUid}`
-  const containerData = await fetchWeiboApi<WeiboContainerData>(
-    `${WEIBO_ORIGIN}/api/container/getIndex?type=uid&value=${normalizedUid}`,
-    userUrl,
-    context,
+  const response = await fetchWeiboDesktop<WeiboApiResponse<{ list?: WeiboStatus[] }>>(
+    `${WEIBO_ORIGIN}/ajax/statuses/mymblog?uid=${normalizedUid}&page=1&feature=0`,
   )
-  const containerId = containerData.tabsInfo?.tabs?.find(tab => tab.tab_type === "weibo")?.containerid
-  if (!containerId) throw new Error(`Cannot find Weibo timeline container for uid ${normalizedUid}.`)
-
-  const timelineData = await fetchWeiboApi<WeiboContainerData>(
-    `${WEIBO_ORIGIN}/api/container/getIndex?type=uid&value=${normalizedUid}&containerid=${containerId}`,
-    userUrl,
-    context,
-  )
-  return cardsToNewsItems(timelineData.cards ?? [])
+  if (!response.data) throw new Error(response.msg ?? "Weibo returned an empty user timeline.")
+  return statusesToNewsItems(response.data.list ?? [])
 }
 
 export async function fetchWeiboKeywordPosts(
   { keyword }: { keyword: string },
-  context?: SourceLoaderContext,
 ): Promise<NewsItem[]> {
   const normalizedKeyword = keyword.trim()
   if (!normalizedKeyword) throw new Error("Weibo keyword must not be empty.")
 
   const keywordValue = encodeURIComponent(normalizedKeyword)
-  const data = await fetchWeiboApi<WeiboContainerData>(
-    `${WEIBO_ORIGIN}/api/container/getIndex?containerid=100103type%3D61%26q%3D${keywordValue}%26t%3D0`,
-    `${WEIBO_ORIGIN}/p/searchall?containerid=100103type%3D1%26q%3D${keywordValue}`,
-    context,
+  const response = await myFetch<WeiboApiResponse<WeiboContainerData>>(
+    `${WEIBO_MOBILE_ORIGIN}/api/container/getIndex?containerid=100103type%3D61%26q%3D${keywordValue}%26t%3D0`,
+    {
+      headers: {
+        "MWeibo-Pwa": "1",
+        "X-Requested-With": "XMLHttpRequest",
+      },
+      credentials: "include",
+    },
   )
-  return cardsToNewsItems(data.cards ?? [])
+  if (!response.data) throw new Error(response.msg ?? "Weibo returned an empty keyword timeline.")
+  return cardsToNewsItems(response.data.cards ?? [])
 }
 
 const WEIBO_SUPER_TOPIC_TYPES = ["feed", "sort_time", "hot_sort", "soul"]
 
 export async function fetchWeiboSuperTopicPosts(
   { id, type }: { id: string, type: string },
-  context?: SourceLoaderContext,
 ): Promise<NewsItem[]> {
   const normalizedId = id.trim()
   if (!/^100808[a-z\d]+$/i.test(normalizedId)) {
     throw new Error("Weibo super topic ID must start with 100808 and contain only letters or digits.")
   }
   const normalizedType = WEIBO_SUPER_TOPIC_TYPES.includes(type) ? type : "feed"
-  const searchParams = new URLSearchParams({
-    containerid: `${normalizedId}_-_${normalizedType}`,
-    luicode: "10000011",
-    lfid: `${normalizedId}_-_main`,
-  })
-  const data = await fetchWeiboApi<WeiboContainerData>(
-    `${WEIBO_ORIGIN}/api/container/getIndex?${searchParams}`,
-    `${WEIBO_ORIGIN}/p/index?containerid=${normalizedId}_-_soul&luicode=10000011&lfid=${normalizedId}_-_main`,
-    context,
+  const response = await fetchWeiboDesktop<{ items?: Array<{ category?: string, data?: WeiboStatus }> }>(
+    `${WEIBO_ORIGIN}/ajax_proxy/chaohua/page?flowId=${normalizedId}_-_${normalizedType}`,
   )
-  return cardsToNewsItems(data.cards ?? [])
+  return statusesToNewsItems(
+    (response.items ?? [])
+      .flatMap(item => item.category === "feed" && item.data ? [item.data] : []),
+  )
 }
 
-export async function fetchWeiboFollowingTimeline(
-  _params: Record<string, unknown>,
-  context?: SourceLoaderContext,
-): Promise<NewsItem[]> {
-  const config = await fetchWeiboApi<{ uid?: string | number }>(
-    `${WEIBO_ORIGIN}/api/config`,
-    `${WEIBO_ORIGIN}/`,
-    context,
+export async function fetchWeiboFollowingTimeline(): Promise<NewsItem[]> {
+  const listId = "my_follow_all"
+  const searchParams = new URLSearchParams({
+    list_id: listId,
+    refresh: "4",
+    since_id: "0",
+    count: "25",
+  })
+  const response = await fetchWeiboDesktop<WeiboApiResponse<never> & { statuses?: WeiboStatus[] }>(
+    `${WEIBO_ORIGIN}/ajax/feed/friendstimeline?${searchParams}`,
   )
-  const uid = config.uid?.toString()
-  const data = await fetchWeiboApi<{ statuses?: WeiboStatus[] }>(
-    `${WEIBO_ORIGIN}/feed/friends`,
-    uid ? `${WEIBO_ORIGIN}/u/${uid}` : `${WEIBO_ORIGIN}/`,
-    context,
-  )
-  return (data.statuses ?? [])
-    .flatMap((status): NewsItem[] => {
-      const item = weiboStatusToNewsItem(status)
-      return item ? [item] : []
-    })
-    .sort((a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0))
+  if (response.ok === -100) {
+    throw new Error("Please log in to https://weibo.com first.")
+  }
+  return statusesToNewsItems(response.statuses ?? [])
 }

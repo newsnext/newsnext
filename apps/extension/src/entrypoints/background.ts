@@ -1,10 +1,10 @@
 import { registerService } from "@webext-core/proxy-service"
 import { browser, defineBackground } from "#imports"
-import { installImageRequestRules } from "@/lib/background/image-request-rules"
 import { registerRadarBadge } from "@/lib/background/radar-badge"
 import { toggleRadarOverlay } from "@/lib/background/radar-overlay"
 import { registerSourceRegistryLoader } from "@/lib/background/registry"
 import { BACKGROUND_SERVICE_KEY, createBackgroundService } from "@/lib/background/service"
+import { installWeiboRefererRule } from "@/lib/background/weibo-referer-rule"
 
 registerSourceRegistryLoader()
 const backgroundService = createBackgroundService()
@@ -21,7 +21,9 @@ function registerDashboardMenu(): void {
 export default defineBackground(() => {
   registerService(BACKGROUND_SERVICE_KEY, backgroundService)
   registerRadarBadge()
-  void installImageRequestRules()
+  void installWeiboRefererRule().catch((error) => {
+    console.error("Failed to install Weibo referer rule", error)
+  })
 
   browser.runtime.onInstalled.addListener(registerDashboardMenu)
 

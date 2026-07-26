@@ -15,19 +15,19 @@ vi.mock("#imports", () => ({
   browser: browserMock,
 }))
 
-const { installImageRequestRules } = await import("./image-request-rules")
+const { installWeiboRefererRule } = await import("./weibo-referer-rule")
 
-describe("image request rules", () => {
+describe("weibo referer rule", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     browserMock.declarativeNetRequest.updateSessionRules.mockResolvedValue(undefined)
   })
 
   it("installs an extension-scoped Weibo referer rule", async () => {
-    await installImageRequestRules()
+    await installWeiboRefererRule()
 
     expect(browserMock.declarativeNetRequest.updateSessionRules).toHaveBeenCalledWith({
-      removeRuleIds: [expect.any(Number)],
+      removeRuleIds: [expect.any(Number), expect.any(Number), expect.any(Number)],
       addRules: [
         expect.objectContaining({
           action: {
@@ -36,17 +36,24 @@ describe("image request rules", () => {
               {
                 header: "Referer",
                 operation: "set",
-                value: "https://m.weibo.cn/",
+                value: "https://weibo.com/",
               },
             ],
           },
           condition: {
             initiatorDomains: ["test-extension-id"],
-            requestDomains: ["sinaimg.cn"],
+            requestDomains: ["sinaimg.cn", "weibo.com", "s.weibo.com", "m.weibo.cn"],
             resourceTypes: ["image", "xmlhttprequest"],
           },
         }),
       ],
     })
+  })
+
+  it("exposes rule installation failures", async () => {
+    const error = new Error("Invalid request rule")
+    browserMock.declarativeNetRequest.updateSessionRules.mockRejectedValue(error)
+
+    await expect(installWeiboRefererRule()).rejects.toBe(error)
   })
 })

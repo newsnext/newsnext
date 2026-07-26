@@ -1,18 +1,22 @@
 import { browser } from "#imports"
 
-const IMAGE_REQUEST_RULE_ID = 1_000_000_001
+const WEIBO_REFERER_RULE_ID = 1_000_000_001
+const OBSOLETE_WEIBO_RULE_IDS = [1_000_000_002, 1_000_000_003]
 
-export async function installImageRequestRules(): Promise<void> {
+export async function installWeiboRefererRule(): Promise<void> {
   const declarativeNetRequest = browser.declarativeNetRequest
   if (!declarativeNetRequest?.updateSessionRules) {
     return
   }
 
   await declarativeNetRequest.updateSessionRules({
-    removeRuleIds: [IMAGE_REQUEST_RULE_ID],
+    removeRuleIds: [
+      WEIBO_REFERER_RULE_ID,
+      ...OBSOLETE_WEIBO_RULE_IDS,
+    ],
     addRules: [
       {
-        id: IMAGE_REQUEST_RULE_ID,
+        id: WEIBO_REFERER_RULE_ID,
         priority: 1,
         action: {
           type: "modifyHeaders",
@@ -20,16 +24,16 @@ export async function installImageRequestRules(): Promise<void> {
             {
               header: "Referer",
               operation: "set",
-              value: "https://m.weibo.cn/",
+              value: "https://weibo.com/",
             },
           ],
         },
         condition: {
           initiatorDomains: [browser.runtime.id],
-          requestDomains: ["sinaimg.cn"],
+          requestDomains: ["sinaimg.cn", "weibo.com", "s.weibo.com", "m.weibo.cn"],
           resourceTypes: ["image", "xmlhttprequest"],
         },
       },
     ],
-  }).catch(() => undefined)
+  })
 }
