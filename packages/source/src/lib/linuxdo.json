@@ -1,0 +1,60 @@
+{
+  "title": "Linux.do",
+  "color": "slate",
+  "home": "https://linux.do",
+  "category": "tech",
+  "sources": {
+    "latest": {
+      "metadata": {
+        "title": "Latest",
+        "type": "timeline"
+      },
+      "loader": {
+        "type": "json",
+        "url": "https://linux.do/latest.json?order=created",
+        "items": "topic_list.topics[?visible && !archived && !pinned]",
+        "fields": {
+          "title": "title",
+          "timestamp": {
+            "select": "created_at",
+            "template": "{{ value | date_to_ms }}"
+          },
+          "url": {
+            "select": "id",
+            "template": "https://linux.do/t/topic/{{ value | url_path }}"
+          },
+          "inline": {
+            "icon": {
+              "template": "{% assign user = json.users | where: 'username', item.last_poster_username | first %}{% if user and user.avatar_template %}{{ user.avatar_template | replace: '{size}', '48' | absolute_url: 'https://linux.do' }}{% endif %}"
+            }
+          }
+        }
+      },
+      "cache": "5m"
+    },
+    "top-daily": {
+      "metadata": {
+        "title": "Hot",
+        "type": "hottest"
+      },
+      "loader": {
+        "type": "json",
+        "url": "https://linux.do/top/daily.json",
+        "items": "topic_list.topics[?visible && !archived && !pinned]",
+        "fields": {
+          "title": "title",
+          "url": {
+            "select": "id",
+            "template": "https://linux.do/t/topic/{{ value | url_path }}"
+          },
+          "inline": {
+            "icon": {
+              "template": "{% assign user = json.users | where: 'username', item.last_poster_username | first %}{% if user and user.avatar_template %}{{ user.avatar_template | replace: '{size}', '48' | absolute_url: 'https://linux.do' }}{% endif %}"
+            }
+          }
+        }
+      },
+      "cache": "5m"
+    }
+  }
+}

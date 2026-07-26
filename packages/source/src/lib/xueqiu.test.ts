@@ -1,7 +1,8 @@
+import type { ProviderConfig } from "../utils/source"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { myFetch } from "../utils/fetch"
 import { resolveProvider } from "../utils/source"
-import xueqiu from "./xueqiu"
+import xueqiu from "./xueqiu.json" with { type: "json" }
 
 vi.mock("../utils/fetch", () => ({
   myFetch: vi.fn(),
@@ -34,7 +35,7 @@ describe("xueqiu source", () => {
       },
     })
 
-    const source = resolveProvider("xueqiu", xueqiu).sources["hot-stock"]
+    const source = resolveProvider("xueqiu", xueqiu as ProviderConfig).sources["hot-stock"]
     const items = await source.loader({})
 
     expect(items).toEqual([

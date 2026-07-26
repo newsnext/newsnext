@@ -34,8 +34,39 @@ pipelines cannot express the source.
 
 ## Adding a provider
 
-Create a TypeScript file under `packages/source/src/lib`. The source build script
-automatically discovers top-level `.ts` files and nested `index.ts` files.
+Create a TypeScript or JSON file under `packages/source/src/lib`. The source
+build script automatically discovers top-level `.ts` and `.json` files, plus
+nested `index.ts` and `index.json` files. A provider ID comes from the top-level
+filename or the parent directory of a nested index file.
+
+Prefer JSON whenever the provider is fully declarative. Use TypeScript only
+when it needs custom loader functions, imported runtime helpers, browser APIs,
+or computed configuration that cannot be expressed with source templates.
+JSON providers use the same provider and source schema:
+
+```json
+{
+  "title": "Example",
+  "home": "https://example.com",
+  "color": "blue",
+  "sources": {
+    "latest": {
+      "metadata": {
+        "title": "Latest",
+        "type": "timeline"
+      },
+      "loader": {
+        "type": "rss",
+        "url": "https://example.com/feed.xml"
+      },
+      "cache": "5m"
+    }
+  }
+}
+```
+
+Do not define both TypeScript and JSON providers with the same ID; the build
+rejects duplicate provider IDs.
 
 ```ts
 import type { ProviderConfig } from "@newsnext/source/utils/source"

@@ -1,7 +1,8 @@
+import type { ProviderConfig } from "../utils/source"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { myFetch } from "../utils/fetch"
 import { resolveProvider } from "../utils/source"
-import linuxdo from "./linuxdo"
+import linuxdo from "./linuxdo.json" with { type: "json" }
 
 vi.mock("../utils/fetch", () => ({
   myFetch: vi.fn(),
@@ -43,7 +44,7 @@ describe("linux.do source", () => {
       ],
     })
 
-    const source = resolveProvider("linuxdo", linuxdo).sources.latest
+    const source = resolveProvider("linuxdo", linuxdo as ProviderConfig).sources.latest
     const items = await source.loader({})
 
     expect(items).toEqual([
