@@ -1,6 +1,5 @@
+import type { ProviderConfig } from "@newsnext/source/utils/source"
 import { normalizeTextParam } from "@newsnext/source/utils/params"
-import { $radar, pageTitle } from "@newsnext/source/utils/radar"
-import { $provider, $source } from "@newsnext/source/utils/source"
 
 interface Res {
   version: string
@@ -25,15 +24,12 @@ interface Res {
   }[]
 }
 
-export default $provider({
+export default {
   title: "V2EX",
   color: "slate",
   home: "https://v2ex.com/",
-  sources: [
-    $source({
-      metadata: {
-        key: "feed",
-      },
+  sources: {
+    feed: {
       params: {
         feed: {
           type: "text",
@@ -44,18 +40,24 @@ export default $provider({
         },
       },
       radar: [
-        $radar({
+        {
           id: "v2ex-feed",
-          hosts: ["v2ex.com"],
-          path: "/go/:feed",
-          meta: {
-            title: pageTitle()
-              .normalize()
-              .extract("^.*[>›]\\s*(.+)$")
-              .fallback("{feed}"),
+          match: {
+            hosts: ["v2ex.com"],
+            paths: ["/go/:feed"],
+          },
+          metaPatch: {
+            title: {
+              value: { type: "pageTitle" },
+              transforms: [
+                { type: "normalizeWhitespace" },
+                { type: "extract", pattern: "^.*[>›]\\s*(.+)$" },
+              ],
+              fallback: "{feed}",
+            },
           },
           confidence: 0.9,
-        }),
+        },
       ],
       loader: {
         type: "json",
@@ -74,6 +76,6 @@ export default $provider({
         },
       },
       cache: "5m",
-    }),
-  ],
-})
+    },
+  },
+} satisfies ProviderConfig

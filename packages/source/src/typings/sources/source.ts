@@ -121,56 +121,31 @@ export interface SourceCacheConfig {
   maxAge: SourceCacheMaxAge
 }
 
-/**
- * Source configuration authored inside a provider
- */
-export interface SourceRegistration<TParams extends SourceParamSchemaMap = SourceParamSchemaMap> {
+export interface RuntimeSource<TParams extends SourceParamSchemaMap = SourceParamSchemaMap> {
   key: string
   title?: string
   params?: TParams
   capabilities: SourceCapabilities
   cache: SourceCacheConfig
-  color?: Color
-  providerTitle?: string
   sourceIcon?: string
   desc?: string
   type?: "hottest" | "timeline"
-  category?: CategoryId
   home?: string
   secrets?: SourceSecretDefinition[]
   radar?: SourceRadarRule[]
   disable?: boolean
   loader: SourceLoader<TParams>
-}
-
-export type RuntimeSource<TParams extends SourceParamSchemaMap = SourceParamSchemaMap>
-  = Omit<SourceRegistration<TParams>, "providerTitle" | "color" | "category"> & {
-    icon?: string
-    providerTitle: string
-    color: Color
-    category: CategoryId
-  }
-
-/**
- * Provider configuration authored in source definition files.
- */
-export interface ProviderRegistration {
-  id?: string
-  title: string
-  color: Color
   icon?: string
-  desc?: string
-  home?: string
-  category?: CategoryId
-  secrets?: SourceSecretDefinition[]
-  sources: SourceRegistration<any>[]
+  providerTitle: string
+  color: Color
+  category: CategoryId
 }
 
 /**
  * Provider definition after source defaults are expanded
  */
 export interface ProviderDefinition {
-  id?: string
+  id: string
   title: string
   color: Color
   icon?: string

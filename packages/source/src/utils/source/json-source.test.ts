@@ -1,8 +1,9 @@
 import type { NewsItem, SourceParamSchemaMap } from "../../typings"
+import type { SourceConfig } from "./index"
 import type { JsonSourceOptions } from "./json-source"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { myFetch } from "../fetch"
-import { $provider, $source } from "./index"
+import { resolveProvider } from "./index"
 import { loadJson } from "./json-source"
 
 // Mock fetch
@@ -14,7 +15,15 @@ function createJsonTestSource(options: () => JsonSourceOptions<any>) {
   return { loader: async () => loadJson(options()) }
 }
 
-describe("$jsonSourceLoader", () => {
+function createSource(config: SourceConfig) {
+  return resolveProvider("test", {
+    title: "Test",
+    color: "blue",
+    sources: { test: config },
+  }).sources.test
+}
+
+describe("jSON source loader", () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
@@ -75,11 +84,8 @@ describe("$jsonSourceLoader", () => {
     ]
     ;(myFetch as any).mockResolvedValue(data)
 
-    const source = $source({
-      metadata: {
-        key: "test",
-        type: "hottest",
-      },
+    const source = createSource({
+      type: "hottest",
       loader: {
         type: "json",
         url: "https://api.example.com",
@@ -98,7 +104,7 @@ describe("$jsonSourceLoader", () => {
   })
 
   it("infers capabilities and expands cache shorthand", () => {
-    const provider = $provider({
+    const provider = resolveProvider("test", {
       title: "Test",
       color: "blue",
       secrets: [{
@@ -107,11 +113,8 @@ describe("$jsonSourceLoader", () => {
         origin: "https://account.example.com",
         itemKey: "session",
       }],
-      sources: [
-        $source({
-          metadata: {
-            key: "test",
-          },
+      sources: {
+        test: {
           loader: {
             type: "json",
             url: "https://api.example.com/items",
@@ -121,8 +124,8 @@ describe("$jsonSourceLoader", () => {
             },
           },
           cache: "5m",
-        }),
-      ],
+        },
+      },
     })
 
     expect(provider.sources.test.capabilities).toEqual({
@@ -202,10 +205,7 @@ describe("$jsonSourceLoader", () => {
   it("should allow parsed runtime params to flow into fetch options", async () => {
     ;(myFetch as any).mockResolvedValue([{ title: "Parsed", url: "https://example.com" }])
 
-    const source = $source({
-      metadata: {
-        key: "test",
-      },
+    const source = createSource({
       params: {
         headers: {
           type: "text",
@@ -237,10 +237,7 @@ describe("$jsonSourceLoader", () => {
   })
 
   it("rejects requests to hosts not declared by the source", async () => {
-    const source = $source({
-      metadata: {
-        key: "test",
-      },
+    const source = createSource({
       params: {
         endpoint: {
           type: "url",
@@ -270,10 +267,7 @@ describe("$jsonSourceLoader", () => {
   it("supports wildcard network capability declarations", async () => {
     ;(myFetch as any).mockResolvedValue([{ title: "Item", url: "https://example.com/item" }])
 
-    const source = $source({
-      metadata: {
-        key: "test",
-      },
+    const source = createSource({
       params: {
         endpoint: {
           type: "url",

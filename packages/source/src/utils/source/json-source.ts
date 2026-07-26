@@ -1,7 +1,7 @@
 import type { FetchOptions } from "ofetch"
 import type {
   NewsItem,
-  SourceRegistration,
+  RuntimeSource,
 } from "../../typings/sources"
 import { myFetch } from "../fetch"
 
@@ -9,7 +9,7 @@ export type FieldResolver<Item = any, Result = any> = string | ((item: Item) => 
 
 export interface JsonSourceOptions<Item = any> {
   url: string
-  type?: SourceRegistration["type"]
+  type?: RuntimeSource["type"]
   /**
    * Path to the array of items in the response JSON (e.g. "data.items").
    * OR a function that returns the items array from the JSON.

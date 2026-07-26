@@ -14,19 +14,20 @@ import provider_9 from "./lib/tieba"
 import provider_10 from "./lib/v2ex"
 import provider_11 from "./lib/xueqiu"
 import provider_12 from "./lib/zhihu"
+import { resolveProvider } from "./utils/source"
 
 export const providers = {
-  [provider_0.id ?? "aihot"]: provider_0,
-  [provider_1.id ?? "browser"]: provider_1,
-  [provider_2.id ?? "cls"]: provider_2,
-  [provider_3.id ?? "github"]: provider_3,
-  [provider_4.id ?? "hackernews"]: provider_4,
-  [provider_5.id ?? "linuxdo"]: provider_5,
-  [provider_6.id ?? "netease-music"]: provider_6,
-  [provider_7.id ?? "newsnow"]: provider_7,
-  [provider_8.id ?? "telegram"]: provider_8,
-  [provider_9.id ?? "tieba"]: provider_9,
-  [provider_10.id ?? "v2ex"]: provider_10,
-  [provider_11.id ?? "xueqiu"]: provider_11,
-  [provider_12.id ?? "zhihu"]: provider_12
+  "aihot": resolveProvider("aihot", provider_0),
+  "browser": resolveProvider("browser", provider_1),
+  "cls": resolveProvider("cls", provider_2),
+  "github": resolveProvider("github", provider_3),
+  "hackernews": resolveProvider("hackernews", provider_4),
+  "linuxdo": resolveProvider("linuxdo", provider_5),
+  "netease-music": resolveProvider("netease-music", provider_6),
+  "newsnow": resolveProvider("newsnow", provider_7),
+  "telegram": resolveProvider("telegram", provider_8),
+  "tieba": resolveProvider("tieba", provider_9),
+  "v2ex": resolveProvider("v2ex", provider_10),
+  "xueqiu": resolveProvider("xueqiu", provider_11),
+  "zhihu": resolveProvider("zhihu", provider_12)
 }

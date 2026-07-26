@@ -1,6 +1,6 @@
+import type { ProviderConfig } from "@newsnext/source/utils/source"
 import { md5, myCrypto } from "@newsnext/source/utils/crypto"
 import { myFetch } from "@newsnext/source/utils/fetch"
-import { $provider, $source } from "@newsnext/source/utils/source"
 
 interface CLSItem {
   id: number
@@ -49,18 +49,15 @@ async function getSearchParams(moreParams: Record<string, SearchParamValue> = {}
   return searchParams
 }
 
-export default $provider({
+export default {
   title: "财联社",
   home: "https://www.cls.cn",
   color: "red",
   category: "finance",
-  sources: [
-    $source({
-      metadata: {
-        key: "telegraph",
-        title: "电报",
-        type: "timeline",
-      },
+  sources: {
+    "telegraph": {
+      title: "电报",
+      type: "timeline",
       loader: {
         type: "json",
         url: "https://www.cls.cn/v1/roll/get_roll_list",
@@ -85,14 +82,11 @@ export default $provider({
         },
       },
       cache: "1m",
-    }),
-    $source({
-      metadata: {
-        key: "depth",
-        title: "深度",
-        type: "timeline",
-        home: "https://www.cls.cn/depth",
-      },
+    },
+    "depth": {
+      title: "深度",
+      type: "timeline",
+      home: "https://www.cls.cn/depth",
       loader: {
         type: "json",
         url: "https://www.cls.cn/v3/depth/home/assembled/1000",
@@ -111,13 +105,10 @@ export default $provider({
         },
       },
       cache: "5m",
-    }),
-    $source({
-      metadata: {
-        key: "hot-article",
-        title: "热门",
-        type: "hottest",
-      },
+    },
+    "hot-article": {
+      title: "热门",
+      type: "hottest",
       loader: {
         type: "json",
         url: "https://www.cls.cn/v2/article/hot/list",
@@ -135,6 +126,6 @@ export default $provider({
         },
       },
       cache: "5m",
-    }),
-  ],
-})
+    },
+  },
+} satisfies ProviderConfig

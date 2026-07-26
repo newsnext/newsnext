@@ -1,4 +1,4 @@
-import { $provider, $source } from "@newsnext/source/utils/source"
+import type { ProviderConfig } from "@newsnext/source/utils/source"
 
 interface StockItem {
   code: string
@@ -8,16 +8,13 @@ interface StockItem {
   ad: number
 }
 
-export default $provider({
+export default {
   title: "雪球",
   home: "https://xueqiu.com",
   color: "blue",
-  sources: [
-    $source({
-      metadata: {
-        key: "hot-stock",
-        type: "hottest",
-      },
+  sources: {
+    "hot-stock": {
+      type: "hottest",
       loader: {
         type: "json",
         url: "https://stock.xueqiu.com/v5/stock/hot_stock/list.json?size=30&_type=10&type=10",
@@ -31,6 +28,6 @@ export default $provider({
         },
       },
       cache: "5m",
-    }),
-  ],
-})
+    },
+  },
+} satisfies ProviderConfig

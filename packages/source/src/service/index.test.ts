@@ -1,6 +1,6 @@
 import type { RuntimeSource } from "@newsnext/source/typings"
 import { describe, expect, it } from "vitest"
-import neteaseMusic from "../lib/netease-music"
+import { providers } from "../index"
 import {
   normalizeSourceParams,
   parseSourceId,
@@ -104,7 +104,7 @@ describe("source service", () => {
   })
 
   it("rejects URL-like values for params handled by radar", () => {
-    expect(() => normalizeSourceParams(neteaseMusic.sources.playlist, {
+    expect(() => normalizeSourceParams(providers["netease-music"].sources.playlist, {
       id: "https://music.163.com/playlist?id=5059661515&uct2=U2FsdGVkX1+h604nouVzL3eBMasVMbAgGM76vxJxHfw=",
     })).toThrowError(SourceServiceError)
   })

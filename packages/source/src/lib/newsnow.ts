@@ -1,16 +1,12 @@
-import { $radar } from "@newsnext/source/utils/radar"
-import { $provider, $source } from "@newsnext/source/utils/source"
+import type { ProviderConfig } from "@newsnext/source/utils/source"
 
-export default $provider({
+export default {
   title: "NEWS NOW",
   color: "red",
   home: "https://www.newsnow.com",
-  sources: [
-    $source({
-      metadata: {
-        key: "topic-latest",
-        type: "timeline",
-      },
+  sources: {
+    "topic-latest": {
+      type: "timeline",
       params: {
         locale: {
           type: "select",
@@ -33,15 +29,17 @@ export default $provider({
         },
       },
       radar: [
-        $radar({
+        {
           id: "newsnow-topic",
-          hosts: ["newsnow.com"],
-          path: "/:locale/*topic",
-          meta: {
+          match: {
+            hosts: ["newsnow.com"],
+            paths: ["/:locale/*topic"],
+          },
+          metaPatch: {
             title: "{topic}",
           },
           confidence: 0.85,
-        }),
+        },
       ],
       loader: {
         type: "html",
@@ -61,6 +59,6 @@ export default $provider({
         },
       },
       cache: "5m",
-    }),
-  ],
-})
+    },
+  },
+} satisfies ProviderConfig

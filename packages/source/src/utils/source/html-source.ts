@@ -3,7 +3,7 @@ import type { AnyNode } from "domhandler"
 import type { FetchOptions } from "ofetch"
 import type {
   NewsItem,
-  SourceRegistration,
+  RuntimeSource,
 } from "../../typings/sources"
 import { load } from "cheerio/slim"
 import { myFetch } from "../fetch"
@@ -19,7 +19,7 @@ export type ItemFilter = string | ((el: cheerio.Cheerio<AnyNode>, index: number,
 
 export interface HtmlSourceOptions {
   url: string
-  type?: SourceRegistration["type"]
+  type?: RuntimeSource["type"]
   /**
    * Selector or resolver for the source items.
    */

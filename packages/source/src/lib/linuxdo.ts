@@ -1,4 +1,4 @@
-import { $provider, $source } from "@newsnext/source/utils/source"
+import type { ProviderConfig } from "@newsnext/source/utils/source"
 
 interface LinuxDoTopicListResponse {
   topic_list: {
@@ -72,18 +72,15 @@ function getTopicsWithAvatars(res: LinuxDoTopicListResponse): LinuxDoTopicWithAv
   }))
 }
 
-export default $provider({
+export default {
   title: "Linux.do",
   color: "slate",
   home: "https://linux.do",
   category: "tech",
-  sources: [
-    $source({
-      metadata: {
-        key: "latest",
-        title: "Latest",
-        type: "timeline",
-      },
+  sources: {
+    "latest": {
+      title: "Latest",
+      type: "timeline",
       loader: {
         type: "json",
         url: "https://linux.do/latest.json?order=created",
@@ -98,13 +95,10 @@ export default $provider({
         },
       },
       cache: "5m",
-    }),
-    $source({
-      metadata: {
-        key: "top-daily",
-        title: "Hot",
-        type: "hottest",
-      },
+    },
+    "top-daily": {
+      title: "Hot",
+      type: "hottest",
       loader: {
         type: "json",
         url: "https://linux.do/top/daily.json",
@@ -118,6 +112,6 @@ export default $provider({
         },
       },
       cache: "5m",
-    }),
-  ],
-})
+    },
+  },
+} satisfies ProviderConfig

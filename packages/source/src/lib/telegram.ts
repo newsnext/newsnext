@@ -1,7 +1,6 @@
+import type { ProviderConfig } from "@newsnext/source/utils/source"
 import type { Cheerio, CheerioAPI } from "cheerio/slim"
 import type { AnyNode } from "domhandler"
-import { $radar, pageTitle, path } from "@newsnext/source/utils/radar"
-import { $provider, $source } from "@newsnext/source/utils/source"
 
 const DEFAULT_CHANNEL = "TestFlightCN"
 const TELEGRAM_CHANNEL_PATTERN = /^(?![\d_])\w{5,32}$/
@@ -49,19 +48,16 @@ function getTelegramMessageItems($: CheerioAPI): AnyNode[] {
     .toArray()
 }
 
-export default $provider({
+export default {
   title: "Telegram",
   color: "blue",
   home: `https://t.me/s/${DEFAULT_CHANNEL}`,
   category: "tech",
-  sources: [
-    $source({
-      metadata: {
-        key: "channel",
-        title: "科技圈 在花频道",
-        sourceIcon: "https://t.me/i/userpic/320/{channel}.jpg",
-        type: "timeline",
-      },
+  sources: {
+    channel: {
+      title: "科技圈 在花频道",
+      sourceIcon: "https://t.me/i/userpic/320/{channel}.jpg",
+      type: "timeline",
       params: {
         channel: {
           type: "text",
@@ -72,22 +68,35 @@ export default $provider({
         },
       },
       radar: [
-        $radar({
+        {
           id: "telegram-channel",
-          hosts: ["t.me", "telegram.me"],
-          paths: ["/s/:channel", "/:channel"],
-          params: {
-            channel: path("channel"),
+          match: {
+            hosts: ["t.me", "telegram.me"],
+            paths: ["/s/:channel", "/:channel"],
           },
-          meta: {
-            title: pageTitle()
-              .normalize()
-              .replace("\\s*[–-]\\s*Telegram$", "")
-              .fallback("Telegram channel"),
-            home: path("channel").template("https://t.me/s/{value}"),
+          paramsPatch: {
+            channel: {
+              value: { type: "path", name: "channel" },
+            },
+          },
+          metaPatch: {
+            title: {
+              value: { type: "pageTitle" },
+              transforms: [
+                { type: "normalizeWhitespace" },
+                { type: "replace", pattern: "\\s*[–-]\\s*Telegram$", replacement: "" },
+              ],
+              fallback: "Telegram channel",
+            },
+            home: {
+              value: { type: "path", name: "channel" },
+              transforms: [
+                { type: "template", value: "https://t.me/s/{value}" },
+              ],
+            },
           },
           confidence: 0.95,
-        }),
+        },
       ],
       loader: {
         type: "html",
@@ -126,6 +135,6 @@ export default $provider({
         },
       },
       cache: "5m",
-    }),
-  ],
-})
+    },
+  },
+} satisfies ProviderConfig

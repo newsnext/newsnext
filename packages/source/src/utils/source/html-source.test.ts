@@ -1,9 +1,10 @@
 import type { NewsItem, SourceParamSchemaMap } from "../../typings"
+import type { SourceConfig } from "./index"
 import iconv from "iconv-lite"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { myFetch } from "../fetch"
 import { loadHtml } from "./html-source"
-import { $source } from "./index"
+import { resolveProvider } from "./index"
 
 // Mock fetch
 vi.mock("../fetch", () => ({
@@ -14,7 +15,15 @@ function createHtmlTestSource(options: () => Parameters<typeof loadHtml>[0]) {
   return { loader: async () => loadHtml(options()) }
 }
 
-describe("$htmlSourceLoader", () => {
+function createSource(config: SourceConfig) {
+  return resolveProvider("test", {
+    title: "Test",
+    color: "blue",
+    sources: { test: config },
+  }).sources.test
+}
+
+describe("hTML source loader", () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
@@ -134,11 +143,8 @@ describe("$htmlSourceLoader", () => {
     `
     ;(myFetch as any).mockResolvedValue(html)
 
-    const source = $source({
-      metadata: {
-        key: "test",
-        type: "hottest",
-      },
+    const source = createSource({
+      type: "hottest",
       loader: {
         type: "html",
         url: "https://example.com",
@@ -182,10 +188,7 @@ describe("$htmlSourceLoader", () => {
   it("should handle params in url function", async () => {
     ;(myFetch as any).mockResolvedValue("<div class=\"item\"></div>")
 
-    const source = $source({
-      metadata: {
-        key: "test",
-      },
+    const source = createSource({
       params: {
         page: { type: "number", default: 1, title: "Page" },
       } satisfies SourceParamSchemaMap,

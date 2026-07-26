@@ -1,4 +1,4 @@
-import { $provider, $source } from "@newsnext/source/utils/source"
+import type { ProviderConfig } from "@newsnext/source/utils/source"
 
 interface ResItem {
   card_label?: {
@@ -24,17 +24,14 @@ interface ResItem {
   }
 }
 
-export default $provider({
+export default {
   title: "知乎",
   home: "https://www.zhihu.com",
   color: "blue",
-  sources: [
-    $source({
-      metadata: {
-        key: "hot-list",
-        title: "全站热榜",
-        type: "hottest",
-      },
+  sources: {
+    "hot-list": {
+      title: "全站热榜",
+      type: "hottest",
       loader: {
         type: "json",
         url: "https://www.zhihu.com/api/v3/feed/topstory/hot-list-web?limit=50&desktop=true",
@@ -56,6 +53,6 @@ export default $provider({
         },
       },
       cache: "5m",
-    }),
-  ],
-})
+    },
+  },
+} satisfies ProviderConfig

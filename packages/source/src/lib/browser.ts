@@ -1,6 +1,6 @@
 import type { NewsItem } from "@newsnext/source/typings"
+import type { ProviderConfig } from "@newsnext/source/utils/source"
 import type { Browser } from "@wxt-dev/browser"
-import { $provider, $source } from "@newsnext/source/utils/source"
 import { browser } from "@wxt-dev/browser"
 
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000
@@ -203,18 +203,15 @@ async function fetchBrowserBookmarks({
   return browserBookmarkNodesToNewsItems(results).slice(0, maxResults)
 }
 
-export default $provider({
+export default {
   title: "Browser",
   icon: BROWSER_PROVIDER_ICON,
   color: "blue",
   category: "others",
-  sources: [
-    $source({
-      metadata: {
-        key: "history",
-        title: "History",
-        type: "timeline",
-      },
+  sources: {
+    history: {
+      title: "History",
+      type: "timeline",
       params: {
         query: {
           type: "text",
@@ -241,13 +238,10 @@ export default $provider({
       },
       capabilities: { browser: ["history"] },
       cache: "1m",
-    }),
-    $source({
-      metadata: {
-        key: "bookmarks",
-        title: "Bookmarks",
-        type: "timeline",
-      },
+    },
+    bookmarks: {
+      title: "Bookmarks",
+      type: "timeline",
       params: {
         folder: {
           type: "text",
@@ -269,6 +263,6 @@ export default $provider({
       },
       capabilities: { browser: ["bookmarks", "favicon"] },
       cache: "5m",
-    }),
-  ],
-})
+    },
+  },
+} satisfies ProviderConfig

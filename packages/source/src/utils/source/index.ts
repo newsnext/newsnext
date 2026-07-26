@@ -1,7 +1,8 @@
+import type { Color } from "@newsnext/shared/types"
 import type {
+  CategoryId,
   InferSourceParams,
   ProviderDefinition,
-  ProviderRegistration,
   RuntimeSource,
   SourceCacheConfig,
   SourceCacheMaxAge,
@@ -10,7 +11,6 @@ import type {
   SourceMetadata,
   SourceParamSchemaMap,
   SourceRadarRule,
-  SourceRegistration,
   SourceSecretDefinition,
 } from "../../typings/sources"
 import type { HtmlSourceOptions } from "./html-source"
@@ -21,8 +21,7 @@ import { loadHtml } from "./html-source"
 import { loadJson } from "./json-source"
 import { loadRss } from "./rss-source"
 
-interface SourceConfigBase<TParams extends SourceParamSchemaMap> {
-  metadata: SourceMetadata
+interface SourceConfigBase<TParams extends SourceParamSchemaMap> extends Omit<SourceMetadata, "key"> {
   params?: TParams
   radar?: SourceRadarRule[]
   cache: SourceCacheConfig | SourceCacheMaxAge
@@ -30,8 +29,15 @@ interface SourceConfigBase<TParams extends SourceParamSchemaMap> {
 
 type SourceCapabilityOverrides = Partial<SourceCapabilities>
 
+type IsAny<T> = 0 extends (1 & T) ? true : false
+
 type SourceOption<TParams extends SourceParamSchemaMap, TValue>
-  = TValue | ((params: InferSourceParams<TParams>) => TValue)
+  = TValue | ((params: IsAny<TParams> extends true ? any : InferSourceParams<TParams>) => TValue)
+
+type SourceLoaderOption<TParams extends SourceParamSchemaMap>
+  = IsAny<TParams> extends true
+    ? (...args: any[]) => Promise<ReturnType<SourceLoader> extends Promise<infer Result> ? Result : never>
+    : SourceLoader<TParams>
 
 type StructuredSourceLoaderConfig<TParams extends SourceParamSchemaMap, Item>
   = (
@@ -51,7 +57,7 @@ type StructuredSourceLoaderConfig<TParams extends SourceParamSchemaMap, Item>
     }
   )
 
-type SourceConfig<TParams extends SourceParamSchemaMap, Item>
+export type SourceConfig<TParams extends SourceParamSchemaMap = any, Item = any>
   = SourceConfigBase<TParams> & (
     | {
       loader: StructuredSourceLoaderConfig<TParams, Item>
@@ -60,23 +66,35 @@ type SourceConfig<TParams extends SourceParamSchemaMap, Item>
     | {
       loader: {
         type: "custom"
-        load: SourceLoader<TParams>
+        load: SourceLoaderOption<TParams>
       }
       capabilities: SourceCapabilityOverrides
     }
   )
 
-export function $source<
+type ResolvedSource<TParams extends SourceParamSchemaMap> = Omit<
+  RuntimeSource<TParams>,
+  "category" | "color" | "providerTitle"
+> & Partial<Pick<RuntimeSource<TParams>, "category" | "color" | "providerTitle">>
+
+function resolveSource<
   Item = any,
   const TParams extends SourceParamSchemaMap = Record<string, never>,
->(config: SourceConfig<TParams, Item>): SourceRegistration<TParams> {
-  const { metadata, params, radar, cache: cacheInput, loader } = config
-  const capabilityOverrides = config.capabilities
+>(key: string, config: SourceConfig<TParams, Item>): ResolvedSource<TParams> {
+  const {
+    params,
+    radar,
+    cache: cacheInput,
+    loader,
+    capabilities: capabilityOverrides,
+    ...metadata
+  } = config
   const capabilities = resolveSourceCapabilities(loader, params, capabilityOverrides)
   const cache = typeof cacheInput === "string"
     ? { version: 1, maxAge: cacheInput }
     : cacheInput
   const registration = {
+    key,
     ...metadata,
     params,
     radar,
@@ -91,7 +109,7 @@ export function $source<
         ...registration,
         loader: async (loaderParams) => {
           const resolvedUrl = resolveSourceOption(url, loaderParams)
-          assertNetworkCapability(metadata.key, resolvedUrl, capabilities.network)
+          assertNetworkCapability(key, resolvedUrl, capabilities.network)
           return loadJson({
             ...options,
             url: resolvedUrl,
@@ -109,7 +127,7 @@ export function $source<
         ...registration,
         loader: async (loaderParams) => {
           const resolvedUrl = resolveSourceOption(url, loaderParams)
-          assertNetworkCapability(metadata.key, resolvedUrl, capabilities.network)
+          assertNetworkCapability(key, resolvedUrl, capabilities.network)
           return loadHtml({
             ...options,
             url: resolvedUrl,
@@ -127,7 +145,7 @@ export function $source<
         ...registration,
         loader: async (loaderParams) => {
           const resolvedUrl = resolveSourceOption(url, loaderParams)
-          assertNetworkCapability(metadata.key, resolvedUrl, capabilities.network)
+          assertNetworkCapability(key, resolvedUrl, capabilities.network)
           return loadRss({ url: resolvedUrl })
         },
       }
@@ -155,11 +173,24 @@ function mergeDefinitions<T extends SourceSecretDefinition>(
   return [...providerDefinitions, ...sourceDefinitions]
 }
 
-export function $provider(
-  provider: ProviderRegistration,
+export interface ProviderConfig {
+  title: string
+  color: Color
+  icon?: string
+  desc?: string
+  home?: string
+  category?: CategoryId
+  secrets?: SourceSecretDefinition[]
+  sources: Record<string, SourceConfig>
+}
+
+export function resolveProvider(
+  id: string,
+  provider: ProviderConfig,
 ): ProviderDefinition {
   const sources = Object.fromEntries(
-    provider.sources.map((source) => {
+    Object.entries(provider.sources).map(([key, config]) => {
+      const source = resolveSource(key, config)
       const secrets = mergeDefinitions(provider.secrets, source.secrets)
       const cookieHosts = (secrets ?? [])
         .filter(secret => secret.type === "cookie")
@@ -187,12 +218,12 @@ export function $provider(
         loader: source.loader,
       }
 
-      return [source.key, registeredSource]
+      return [key, registeredSource]
     }),
   ) as Record<string, RuntimeSource>
 
   return {
-    id: provider.id,
+    id,
     title: provider.title,
     color: provider.color,
     icon: provider.icon,

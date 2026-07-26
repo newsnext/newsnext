@@ -1,6 +1,5 @@
+import type { ProviderConfig } from "@newsnext/source/utils/source"
 import { normalizeTextParam } from "@newsnext/source/utils/params"
-import { $radar, first, hashQuery, pageTitle, query } from "@newsnext/source/utils/radar"
-import { $provider, $source } from "@newsnext/source/utils/source"
 
 interface NeteaseArtist {
   name?: string
@@ -46,18 +45,15 @@ const formatArtists = (track: NeteaseTrack): string => {
 
 const extractCover = (track: NeteaseTrack): string | undefined => track.al?.picUrl ?? track.album?.picUrl
 
-export default $provider({
+export default {
   title: "网易云音乐",
   home: "https://sg.music.163.com/#/discover/toplist",
   color: "red",
-  sources: [
-    $source({
-      metadata: {
-        key: "playlist",
-        title: "飙升榜",
-        type: "hottest",
-        home: getPlaylistHome(DEFAULT_PLAYLIST_ID),
-      },
+  sources: {
+    playlist: {
+      title: "飙升榜",
+      type: "hottest",
+      home: getPlaylistHome(DEFAULT_PLAYLIST_ID),
       params: {
         id: {
           type: "text",
@@ -68,21 +64,39 @@ export default $provider({
         },
       },
       radar: [
-        $radar({
+        {
           id: "netease-music-playlist",
-          hosts: ["music.163.com", "y.music.163.com"],
-          includes: ["playlist", "toplist"],
-          meta: {
-            title: pageTitle()
-              .normalize()
-              .extract("^(.+?)\\s*-\\s*(?:歌单|排行榜)\\s*-\\s*网易云音乐$", { fallbackToEmpty: true })
-              .fallback("Playlist {id}"),
+          match: {
+            hosts: ["music.163.com", "y.music.163.com"],
+            includes: ["playlist", "toplist"],
           },
-          params: {
-            id: first(query("id"), hashQuery("id")),
+          paramsPatch: {
+            id: {
+              value: {
+                type: "first",
+                values: [
+                  { type: "query", name: "id" },
+                  { type: "hashQuery", name: "id" },
+                ],
+              },
+            },
+          },
+          metaPatch: {
+            title: {
+              value: { type: "pageTitle" },
+              transforms: [
+                { type: "normalizeWhitespace" },
+                {
+                  type: "extract",
+                  pattern: "^(.+?)\\s*-\\s*(?:歌单|排行榜)\\s*-\\s*网易云音乐$",
+                  fallbackToEmpty: true,
+                },
+              ],
+              fallback: "Playlist {id}",
+            },
           },
           confidence: 0.95,
-        }),
+        },
       ],
       loader: {
         type: "json",
@@ -111,6 +125,6 @@ export default $provider({
         },
       },
       cache: "15m",
-    }),
-  ],
-})
+    },
+  },
+} satisfies ProviderConfig

@@ -1,4 +1,4 @@
-import { $provider, $source } from "@newsnext/source/utils/source"
+import type { ProviderConfig } from "@newsnext/source/utils/source"
 
 interface AIHotItem {
   id: string
@@ -16,17 +16,14 @@ interface AIHotResponse {
 
 const AIHOT_API_URL = "https://aihot.virxact.com/api/public/items?mode=all&take=30"
 
-export default $provider({
+export default {
   title: "AIHot",
   color: "blue",
   home: "https://aihot.virxact.com",
   category: "tech",
-  sources: [
-    $source({
-      metadata: {
-        key: "all",
-        type: "timeline",
-      },
+  sources: {
+    all: {
+      type: "timeline",
       loader: {
         type: "json",
         url: AIHOT_API_URL,
@@ -44,6 +41,6 @@ export default $provider({
         },
       },
       cache: "5m",
-    }),
-  ],
-})
+    },
+  },
+} satisfies ProviderConfig

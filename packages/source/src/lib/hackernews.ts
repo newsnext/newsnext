@@ -1,7 +1,7 @@
+import type { ProviderConfig } from "@newsnext/source/utils/source"
 import type * as cheerio from "cheerio"
 import type { AnyNode } from "domhandler"
 import { getFavicon } from "@newsnext/shared/utils"
-import { $provider, $source } from "@newsnext/source/utils/source"
 
 const createLoader = (sub: string) => ({
   type: "html" as const,
@@ -43,47 +43,35 @@ const createLoader = (sub: string) => ({
   },
 })
 
-export default $provider({
+export default {
   title: "Hacker News",
   color: "orange",
   home: "https://news.ycombinator.com/",
-  sources: [
-    $source({
-      metadata: {
-        key: "top",
-        type: "hottest",
-        title: "Hottest",
-      },
+  sources: {
+    top: {
+      type: "hottest",
+      title: "Hottest",
       loader: createLoader("/"),
       cache: "5m",
-    }),
-    $source({
-      metadata: {
-        key: "newest",
-        type: "timeline",
-        title: "Newest",
-        home: "https://news.ycombinator.com/newest",
-      },
+    },
+    newest: {
+      type: "timeline",
+      title: "Newest",
+      home: "https://news.ycombinator.com/newest",
       loader: createLoader("/newest"),
       cache: "1m",
-    }),
-    $source({
-      metadata: {
-        key: "show",
-        title: "Show",
-        home: "https://news.ycombinator.com/show",
-      },
+    },
+    show: {
+      title: "Show",
+      home: "https://news.ycombinator.com/show",
       loader: createLoader("/show"),
       cache: "5m",
-    }),
-    $source({
-      metadata: {
-        key: "ask",
-        title: "Ask",
-        home: "https://news.ycombinator.com/ask",
-      },
+    },
+    ask: {
+      title: "Ask",
+      home: "https://news.ycombinator.com/ask",
       loader: createLoader("/ask"),
       cache: "5m",
-    }),
-  ],
-})
+    },
+  },
+} satisfies ProviderConfig

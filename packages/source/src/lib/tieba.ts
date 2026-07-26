@@ -1,4 +1,4 @@
-import { $provider, $source } from "@newsnext/source/utils/source"
+import type { ProviderConfig } from "@newsnext/source/utils/source"
 
 interface TiebaTopic {
   topic_id: string
@@ -21,18 +21,15 @@ function resolveTopicUrl(url: string): string {
     : `https://tieba.baidu.com${url}`
 }
 
-export default $provider({
+export default {
   title: "百度贴吧",
   home: "https://tieba.baidu.com",
   color: "blue",
   category: "china",
-  sources: [
-    $source({
-      metadata: {
-        key: "hot-topic",
-        title: "热议",
-        type: "hottest",
-      },
+  sources: {
+    "hot-topic": {
+      title: "热议",
+      type: "hottest",
       loader: {
         type: "json",
         url: "https://tieba.baidu.com/hottopic/browse/topicList",
@@ -44,6 +41,6 @@ export default $provider({
         },
       },
       cache: "5m",
-    }),
-  ],
-})
+    },
+  },
+} satisfies ProviderConfig

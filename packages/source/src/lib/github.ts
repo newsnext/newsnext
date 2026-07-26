@@ -1,5 +1,4 @@
-import { $radar, query } from "@newsnext/source/utils/radar"
-import { $provider, $source } from "@newsnext/source/utils/source"
+import type { ProviderConfig } from "@newsnext/source/utils/source"
 
 const baseURL = new URL("https://github.com")
 
@@ -39,17 +38,14 @@ function buildGitHubTrendingUrl({
   return url.toString()
 }
 
-export default $provider({
+export default {
   title: "GitHub",
   home: "https://github.com/trending",
   color: "slate",
-  sources: [
-    $source({
-      metadata: {
-        key: "trending",
-        title: "Trending",
-        type: "hottest",
-      },
+  sources: {
+    trending: {
+      title: "Trending",
+      type: "hottest",
       params: {
         language: {
           type: "text",
@@ -71,19 +67,27 @@ export default $provider({
         },
       },
       radar: [
-        $radar({
+        {
           id: "github-trending",
-          hosts: ["github.com"],
-          paths: ["/trending", "/trending/:language"],
-          params: {
-            spokenLanguage: query("spoken_language_code").default(""),
-            dateRange: query("since").default("daily"),
+          match: {
+            hosts: ["github.com"],
+            paths: ["/trending", "/trending/:language"],
           },
-          meta: {
+          paramsPatch: {
+            spokenLanguage: {
+              value: { type: "query", name: "spoken_language_code" },
+              fallback: "",
+            },
+            dateRange: {
+              value: { type: "query", name: "since" },
+              fallback: "daily",
+            },
+          },
+          metaPatch: {
             title: "Trending {language}",
           },
           confidence: 0.95,
-        }),
+        },
       ],
       loader: {
         type: "html",
@@ -114,6 +118,6 @@ export default $provider({
         },
       },
       cache: "15m",
-    }),
-  ],
-})
+    },
+  },
+} satisfies ProviderConfig
