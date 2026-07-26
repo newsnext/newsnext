@@ -23,7 +23,8 @@ import { loadHtml } from "./html-source"
 import { loadJson, validateJsonExpression } from "./json-source"
 import { loadRss } from "./rss-source"
 
-interface SourceConfigBase<TParams extends SourceParamSchemaMap> extends Omit<SourceMetadata, "key"> {
+interface SourceConfigBase<TParams extends SourceParamSchemaMap> {
+  metadata?: Omit<SourceMetadata, "key">
   params?: TParams
   radar?: SourceRadarRule[]
   cache: SourceCacheConfig | SourceCacheMaxAge
@@ -87,8 +88,8 @@ export function validateSourceTemplates(sourceId: string, config: SourceConfig):
     allowedRoots: PARAM_VALUE_TEMPLATE_ROOTS,
   })
 
-  if (config.sourceIcon) {
-    validateTemplates(config.sourceIcon, `${sourceId}.sourceIcon`, {
+  if (config.metadata?.sourceIcon) {
+    validateTemplates(config.metadata.sourceIcon, `${sourceId}.metadata.sourceIcon`, {
       allowedRoots: PARAM_TEMPLATE_ROOTS,
     })
   }
@@ -183,7 +184,7 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
     cache: cacheInput,
     loader,
     capabilities: capabilityOverrides,
-    ...metadata
+    metadata = {},
   } = config
   const capabilities = resolveSourceCapabilities(loader, params, capabilityOverrides)
   const cache = typeof cacheInput === "string"

@@ -6,8 +6,10 @@ export default {
   color: "blue",
   sources: {
     "hot-list": {
-      title: "全站热榜",
-      type: "hottest",
+      metadata: {
+        title: "全站热榜",
+        type: "hottest",
+      },
       loader: {
         type: "json",
         url: "https://www.zhihu.com/api/v3/feed/topstory/hot-list-web?limit=50&desktop=true",

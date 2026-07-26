@@ -390,7 +390,9 @@ describe("hTML source loader", () => {
     ;(myFetch as any).mockResolvedValue(html)
 
     const source = createSource({
-      type: "hottest",
+      metadata: {
+        type: "hottest",
+      },
       loader: {
         type: "html",
         url: "https://example.com",

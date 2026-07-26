@@ -10,9 +10,11 @@ export default {
   color: "red",
   sources: {
     playlist: {
-      title: "飙升榜",
-      type: "hottest",
-      home: getPlaylistHome(DEFAULT_PLAYLIST_ID),
+      metadata: {
+        title: "飙升榜",
+        type: "hottest",
+        home: getPlaylistHome(DEFAULT_PLAYLIST_ID),
+      },
       params: {
         id: {
           type: "text",

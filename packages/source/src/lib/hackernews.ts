@@ -37,27 +37,35 @@ export default {
   home: "https://news.ycombinator.com/",
   sources: {
     top: {
-      type: "hottest",
-      title: "Hottest",
+      metadata: {
+        type: "hottest",
+        title: "Hottest",
+      },
       loader: createLoader("/"),
       cache: "5m",
     },
     newest: {
-      type: "timeline",
-      title: "Newest",
-      home: "https://news.ycombinator.com/newest",
+      metadata: {
+        type: "timeline",
+        title: "Newest",
+        home: "https://news.ycombinator.com/newest",
+      },
       loader: createLoader("/newest"),
       cache: "1m",
     },
     show: {
-      title: "Show",
-      home: "https://news.ycombinator.com/show",
+      metadata: {
+        title: "Show",
+        home: "https://news.ycombinator.com/show",
+      },
       loader: createLoader("/show"),
       cache: "5m",
     },
     ask: {
-      title: "Ask",
-      home: "https://news.ycombinator.com/ask",
+      metadata: {
+        title: "Ask",
+        home: "https://news.ycombinator.com/ask",
+      },
       loader: createLoader("/ask"),
       cache: "5m",
     },

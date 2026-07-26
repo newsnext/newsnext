@@ -7,8 +7,10 @@ export default {
   category: "china",
   sources: {
     "hot-topic": {
-      title: "热议",
-      type: "hottest",
+      metadata: {
+        title: "热议",
+        type: "hottest",
+      },
       loader: {
         type: "json",
         url: "https://tieba.baidu.com/hottopic/browse/topicList",

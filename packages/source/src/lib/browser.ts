@@ -210,8 +210,10 @@ export default {
   category: "others",
   sources: {
     history: {
-      title: "History",
-      type: "timeline",
+      metadata: {
+        title: "History",
+        type: "timeline",
+      },
       params: {
         query: {
           type: "text",
@@ -240,8 +242,10 @@ export default {
       cache: "1m",
     },
     bookmarks: {
-      title: "Bookmarks",
-      type: "timeline",
+      metadata: {
+        title: "Bookmarks",
+        type: "timeline",
+      },
       params: {
         folder: {
           type: "text",

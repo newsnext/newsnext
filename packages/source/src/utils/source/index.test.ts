@@ -4,7 +4,9 @@ import { resolveProvider } from "./index"
 
 function createSourceConfig(radar: NonNullable<SourceConfig["radar"]>): SourceConfig {
   return {
-    title: "Test",
+    metadata: {
+      title: "Test",
+    },
     cache: "1h",
     radar,
     loader: {
@@ -27,6 +29,33 @@ function resolveTestSource(config: SourceConfig): void {
 }
 
 describe("source template contexts", () => {
+  it("resolves source metadata from the metadata object", () => {
+    const provider = resolveProvider("test", {
+      title: "Provider",
+      color: "blue",
+      sources: {
+        test: {
+          metadata: {
+            title: "Source",
+            type: "timeline",
+            home: "https://example.com/source",
+          },
+          cache: "1h",
+          loader: {
+            type: "rss",
+            url: "https://example.com/feed.xml",
+          },
+        },
+      },
+    })
+
+    expect(provider.sources.test).toMatchObject({
+      title: "Source",
+      type: "timeline",
+      home: "https://example.com/source",
+    })
+  })
+
   it("restricts Radar parameter templates to URL variables", () => {
     expect(() => resolveTestSource(createSourceConfig([
       {

@@ -12,8 +12,10 @@ export default {
   color: "slate",
   sources: {
     trending: {
-      title: "Trending",
-      type: "hottest",
+      metadata: {
+        title: "Trending",
+        type: "hottest",
+      },
       params: {
         language: {
           type: "text",

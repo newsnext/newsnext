@@ -6,7 +6,9 @@ export default {
   home: "https://www.newsnow.com",
   sources: {
     "topic-latest": {
-      type: "timeline",
+      metadata: {
+        type: "timeline",
+      },
       params: {
         locale: {
           type: "select",

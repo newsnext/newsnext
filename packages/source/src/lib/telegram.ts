@@ -10,9 +10,11 @@ export default {
   category: "tech",
   sources: {
     channel: {
-      title: "科技圈 在花频道",
-      sourceIcon: "https://t.me/i/userpic/320/{{ params.channel | required | url_path }}.jpg",
-      type: "timeline",
+      metadata: {
+        title: "科技圈 在花频道",
+        sourceIcon: "https://t.me/i/userpic/320/{{ params.channel | required | url_path }}.jpg",
+        type: "timeline",
+      },
       params: {
         channel: {
           type: "text",

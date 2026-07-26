@@ -224,7 +224,9 @@ describe("jSON source loader", () => {
     ;(myFetch as any).mockResolvedValue(data)
 
     const source = createSource({
-      type: "hottest",
+      metadata: {
+        type: "hottest",
+      },
       loader: {
         type: "json",
         url: "https://api.example.com",

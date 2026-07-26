@@ -56,8 +56,10 @@ export default {
   category: "finance",
   sources: {
     "telegraph": {
-      title: "电报",
-      type: "timeline",
+      metadata: {
+        title: "电报",
+        type: "timeline",
+      },
       loader: {
         type: "json",
         url: "https://www.cls.cn/v1/roll/get_roll_list",
@@ -90,9 +92,11 @@ export default {
       cache: "1m",
     },
     "depth": {
-      title: "深度",
-      type: "timeline",
-      home: "https://www.cls.cn/depth",
+      metadata: {
+        title: "深度",
+        type: "timeline",
+        home: "https://www.cls.cn/depth",
+      },
       loader: {
         type: "json",
         url: "https://www.cls.cn/v3/depth/home/assembled/1000",
@@ -118,8 +122,10 @@ export default {
       cache: "5m",
     },
     "hot-article": {
-      title: "热门",
-      type: "hottest",
+      metadata: {
+        title: "热门",
+        type: "hottest",
+      },
       loader: {
         type: "json",
         url: "https://www.cls.cn/v2/article/hot/list",

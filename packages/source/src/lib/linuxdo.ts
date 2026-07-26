@@ -10,8 +10,10 @@ export default {
   category: "tech",
   sources: {
     "latest": {
-      title: "Latest",
-      type: "timeline",
+      metadata: {
+        title: "Latest",
+        type: "timeline",
+      },
       loader: {
         type: "json",
         url: "https://linux.do/latest.json?order=created",
@@ -36,8 +38,10 @@ export default {
       cache: "5m",
     },
     "top-daily": {
-      title: "Hot",
-      type: "hottest",
+      metadata: {
+        title: "Hot",
+        type: "hottest",
+      },
       loader: {
         type: "json",
         url: "https://linux.do/top/daily.json",

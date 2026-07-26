@@ -47,8 +47,10 @@ export default {
   category: "tech",
   sources: {
     latest: {
-      title: "Latest",
-      type: "timeline",
+      metadata: {
+        title: "Latest",
+        type: "timeline",
+      },
       loader: {
         type: "json",
         url: "https://api.example.com/articles",
@@ -103,10 +105,19 @@ world
 others
 ```
 
-A source may override `title`, `providerTitle`, `sourceIcon`, `desc`, `home`,
-`color`, and `category`.
+A source keeps its display metadata under `metadata`. It may override `title`,
+`providerTitle`, `sourceIcon`, `desc`, `home`, `color`, and `category` there:
 
-The optional source `type` controls ordering:
+```ts
+metadata: {
+  title: "Latest",
+  sourceIcon: "https://example.com/icon.png",
+  home: "https://example.com/latest",
+  type: "timeline",
+}
+```
+
+The optional `metadata.type` controls ordering:
 
 - `hottest` preserves the loader's original order.
 - `timeline` sorts by timestamp descending when the first item has a non-zero timestamp.
@@ -419,8 +430,10 @@ export default {
   category: "tech",
   sources: {
     latest: {
-      title: "Latest",
-      type: "timeline",
+      metadata: {
+        title: "Latest",
+        type: "timeline",
+      },
       params: {
         topic: {
           type: "text",

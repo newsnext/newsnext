@@ -9,7 +9,9 @@ export default {
   category: "tech",
   sources: {
     all: {
-      type: "timeline",
+      metadata: {
+        type: "timeline",
+      },
       loader: {
         type: "json",
         url: AIHOT_API_URL,
