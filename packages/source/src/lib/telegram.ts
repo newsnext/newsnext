@@ -33,6 +33,9 @@ export default {
             paths: ["/s/:channel", "/:channel"],
           },
           patch: {
+            params: {
+              channel: "{{ path.channel }}",
+            },
             metadata: {
               title: "{{ page.title | normalize_whitespace | regex_replace: '\\\\s*[–-]\\\\s*Telegram$', '' | default: 'Telegram channel' }}",
               home: "https://t.me/s/{{ params.channel }}",

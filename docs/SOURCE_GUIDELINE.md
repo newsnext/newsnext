@@ -24,7 +24,7 @@ The configuration follows four pipelines:
 
 ```text
 parameters  raw → transforms → type coercion → validation
-radar       URL → inferred/mapped parameters → metadata Liquid
+radar       URL → explicit parameter Liquid → metadata Liquid
 JSON field  JMESPath select → Liquid template
 HTML field  CSS select → text/attr/content → Liquid template
 ```
@@ -998,7 +998,7 @@ When a source omits `radar`, has no parameters, and has an HTTP(S) `home`,
 NewsNext automatically creates a default radar rule that matches every page on
 the same host as `home`. A leading `www.` is ignored. Set `radar: []` to opt out
 of this default. Parameterized sources must declare explicit radar rules so
-their parameters can be inferred.
+their URL values can be mapped to source parameters.
 
 ```ts
 radar: [
@@ -1009,6 +1009,9 @@ radar: [
       paths: ["/topics/:topic"],
     },
     patch: {
+      params: {
+        topic: "{{ path.topic }}",
+      },
       metadata: {
         title: "{{ params.topic }}",
       },
@@ -1033,35 +1036,29 @@ match: {
 - An omitted `paths` matches every path on the declared hosts.
 - `includes` requires one of the strings to occur in the full URL.
 
-### Radar parameter values
+### Radar parameters
 
-Parameters are inferred automatically from same-named path, query, and hash
-query values. Use `patch.params` only to map a differently named URL value or
-to try multiple locations:
-
-```ts
-{ type: "literal", value: "latest" }
-{ type: "path", name: "topic" }
-{ type: "query", name: "page" }
-{ type: "hashQuery", name: "id" }
-{ type: "pathSegmentWithPrefix", prefix: "tag-" }
-```
-
-Use `first` to try multiple sources:
+Map every Radar source parameter explicitly, even when the source parameter and
+URL variable have the same name. This keeps the parameter origin visible in the
+configuration. Parameter mapping templates can access only `path`, `query`, and
+`hashQuery`:
 
 ```ts
-{
-  type: "first",
-  values: [
-    { type: "query", name: "id" },
-    { type: "hashQuery", name: "id" },
-  ],
+patch: {
+  params: {
+    topic: "{{ path.topic }}",
+    page: "{{ query.page }}",
+    id: "{{ query.id | default: hashQuery.id }}",
+    mode: "latest",
+  },
 }
 ```
 
 Missing extracted values are omitted and the parameter schema supplies its
 default. Extracted values then run through the normal parameter transforms,
 type coercion, and validation.
+
+In `patch.metadata`, `params` contains the final parsed source parameters.
 
 ### Radar metadata
 
@@ -1080,10 +1077,10 @@ Metadata templates can access:
 
 ```text
 path
+query
+hashQuery
 params
 page.title
-source.title
-source.providerTitle
 ```
 
 An invalid parsed parameter discards the suggestion.

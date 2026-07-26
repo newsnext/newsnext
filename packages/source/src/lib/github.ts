@@ -43,8 +43,9 @@ export default {
           },
           patch: {
             params: {
-              spokenLanguage: { type: "query", name: "spoken_language_code" },
-              dateRange: { type: "query", name: "since" },
+              language: "{{ path.language }}",
+              spokenLanguage: "{{ query.spoken_language_code }}",
+              dateRange: "{{ query.since }}",
             },
             metadata: {
               title: "Trending {{ params.language }}",

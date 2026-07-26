@@ -40,21 +40,13 @@ export type SourceSecretDefinition = SourceCookieSecretDefinition | SourceLocalS
 
 export type SourceSecrets = Record<string, string | undefined>
 
-export type SourceRadarParamValue
-  = | { type: "literal", value: unknown }
-    | { type: "path", name: string }
-    | { type: "query", name: string }
-    | { type: "hashQuery", name: string }
-    | { type: "pathSegmentWithPrefix", prefix: string }
-    | { type: "first", values: SourceRadarParamValue[] }
-
 export interface SourceRadarMatch {
   hosts: string[]
   paths?: string[]
   includes?: string | string[]
 }
 
-export type SourceRadarParams = Record<string, SourceRadarParamValue>
+export type SourceRadarParams = Record<string, string>
 
 export interface SourceRadarMetadata {
   providerTitle?: string

@@ -30,6 +30,9 @@ export default {
             includes: ["playlist", "toplist"],
           },
           patch: {
+            params: {
+              id: "{{ query.id | default: hashQuery.id }}",
+            },
             metadata: {
               title: "{% assign title = page.title | normalize_whitespace | regex_extract: '^(.+?)\\\\s*-\\\\s*(?:歌单|排行榜)\\\\s*-\\\\s*网易云音乐$', 1 %}{% if title != empty %}{{ title }}{% else %}Playlist {{ params.id }}{% endif %}",
             },

@@ -36,6 +36,73 @@ describe("getRadarSuggestions", () => {
     ])
   })
 
+  it("renders Radar parameters from URL Liquid variables", () => {
+    expect(getRadarSuggestions(
+      { url: "https://example.com/topics/path-value#/?value=hash-value" },
+      [
+        {
+          id: "test:liquid-params",
+          params: {
+            value: {
+              type: "text",
+              title: "Value",
+              default: "",
+            },
+          },
+          radar: [
+            {
+              id: "liquid-params",
+              match: {
+                hosts: ["example.com"],
+                paths: ["/topics/:topic"],
+              },
+              patch: {
+                params: {
+                  value: "{{ query.value | default: hashQuery.value | default: path.topic }}",
+                },
+              },
+            },
+          ],
+        },
+      ],
+    )).toMatchObject([
+      {
+        paramsPatch: { value: "hash-value" },
+      },
+    ])
+  })
+
+  it("does not infer same-named URL parameters without an explicit mapping", () => {
+    expect(getRadarSuggestions(
+      { url: "https://example.com/topics/url-value?value=query-value" },
+      [
+        {
+          id: "test:explicit-params",
+          params: {
+            value: {
+              type: "text",
+              title: "Value",
+              default: "default-value",
+            },
+          },
+          radar: [
+            {
+              id: "explicit-params",
+              match: {
+                hosts: ["example.com"],
+                paths: ["/topics/:value"],
+              },
+            },
+          ],
+        },
+      ],
+    )).toMatchObject([
+      {
+        paramsPatch: { value: "default-value" },
+      },
+    ])
+  })
+
   it("suggests a NetEase playlist card from hash route URLs", () => {
     expect(getSuggestions({
       url: "https://music.163.com/#/playlist?id=19723756",
@@ -232,6 +299,11 @@ describe("getRadarSuggestions", () => {
             {
               id: "x-user",
               match: { hosts: ["x.com"], paths: ["/:username"] },
+              patch: {
+                params: {
+                  username: "{{ path.username }}",
+                },
+              },
             },
           ],
         },
@@ -257,14 +329,14 @@ describe("getRadarSuggestions", () => {
               id: "object",
               match: { hosts: ["example.com"], paths: ["/a"] },
               patch: {
-                params: { value: { type: "literal", value: "one" } },
+                params: { value: "one" },
               },
             },
             {
               id: "object",
               match: { hosts: ["example.com"], paths: ["/a"] },
               patch: {
-                params: { value: { type: "literal", value: "two" } },
+                params: { value: "two" },
               },
             },
           ],
@@ -301,7 +373,7 @@ describe("getRadarSuggestions", () => {
               id: "invalid-pattern",
               match: { hosts: ["example.com"], paths: ["/a"] },
               patch: {
-                params: { value: { type: "literal", value: "invalid-pattern" } },
+                params: { value: "invalid-pattern" },
               },
             },
           ],

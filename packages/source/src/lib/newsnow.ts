@@ -36,6 +36,10 @@ export default {
             paths: ["/:locale/*topic"],
           },
           patch: {
+            params: {
+              locale: "{{ path.locale }}",
+              topic: "{{ path.topic }}",
+            },
             metadata: {
               title: "{{ params.topic }}",
             },

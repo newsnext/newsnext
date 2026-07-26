@@ -3,7 +3,6 @@ import type {
   SourceParamSchemaMap,
   SourceRadarMatch,
   SourceRadarMetadata,
-  SourceRadarParamValue,
   SourceRadarRule,
 } from "@newsnext/source/typings"
 import { parseSourceParams } from "@newsnext/source/utils/params"
@@ -47,7 +46,6 @@ interface RadarMatchContext {
   input: RadarContext
   url: URL
   pathParams: Record<string, string>
-  rawParams: Record<string, unknown>
   paramsPatch: Record<string, unknown>
   source: RadarSourceMetadata
 }
@@ -115,63 +113,60 @@ function normalizeHostname(host: string): string {
   return host.replace(/^www\./, "").toLowerCase()
 }
 
-function getPathParts(url: URL): string[] {
-  return url.pathname.split("/").map(part => decodeURIComponent(part)).filter(Boolean)
+function createTemplateRecord<T>(
+  entries: Iterable<readonly [string, T]>,
+): Record<string, T | ""> {
+  const values = Object.fromEntries(
+    [...entries].map(([key, value]) => [
+      key,
+      typeof value === "string" ? value.trim() : value,
+    ]),
+  ) as Record<string, T>
+
+  return new Proxy(values, {
+    get(target, property) {
+      if (typeof property !== "string") {
+        return Reflect.get(target, property)
+      }
+      return Object.hasOwn(target, property) ? target[property] : ""
+    },
+    getOwnPropertyDescriptor(target, property) {
+      return Reflect.getOwnPropertyDescriptor(target, property)
+        ?? (typeof property === "string"
+          ? { configurable: true, enumerable: false, value: "", writable: false }
+          : undefined)
+    },
+  })
 }
 
-function getHashQueryValue(url: URL, key: string): string | undefined {
+function getQueryParams(searchParams: URLSearchParams): Record<string, string> {
+  return createTemplateRecord(searchParams)
+}
+
+function getHashQueryParams(url: URL): Record<string, string> {
   const hashSearchIndex = url.hash.indexOf("?")
   if (hashSearchIndex === -1) {
-    return undefined
+    return createTemplateRecord([])
   }
 
-  const hashParams = new URLSearchParams(url.hash.slice(hashSearchIndex + 1))
-  return hashParams.get(key)?.trim() || undefined
+  return getQueryParams(new URLSearchParams(url.hash.slice(hashSearchIndex + 1)))
 }
 
 function isPresent(value: unknown): boolean {
   return value !== undefined && value !== null && String(value).trim().length > 0
 }
 
-function resolveParamValue(source: SourceRadarParamValue, context: RadarMatchContext): unknown {
-  switch (source.type) {
-    case "literal":
-      return source.value
-    case "path":
-      return context.pathParams[source.name] ?? ""
-    case "query":
-      return context.url.searchParams.get(source.name)?.trim() ?? ""
-    case "hashQuery":
-      return getHashQueryValue(context.url, source.name) ?? ""
-    case "pathSegmentWithPrefix":
-      return getPathParts(context.url).find(part => part.startsWith(source.prefix)) ?? ""
-    case "first":
-      for (const valueSource of source.values) {
-        const value = resolveParamValue(valueSource, context)
-        if (isPresent(value)) {
-          return value
-        }
-      }
-      return ""
-  }
-}
-
 function createTemplateVariables(
   context: RadarMatchContext,
 ): Record<string, unknown> {
   return {
-    path: context.pathParams,
-    params: {
-      ...context.rawParams,
-      ...context.paramsPatch,
-    },
+    hashQuery: getHashQueryParams(context.url),
+    path: createTemplateRecord(Object.entries(context.pathParams)),
+    params: createTemplateRecord(Object.entries(context.paramsPatch)),
     page: {
       title: context.input.title ?? "",
     },
-    source: {
-      providerTitle: context.source.providerTitle ?? "",
-      title: context.source.title ?? "",
-    },
+    query: getQueryParams(context.url.searchParams),
   }
 }
 
@@ -257,51 +252,21 @@ function indexRulesByHost(rules: CompiledRadarRule[]): Map<string, CompiledRadar
   return rulesByHost
 }
 
-function inferNamedRawParam(paramName: string, context: Omit<RadarMatchContext, "rawParams" | "paramsPatch">): unknown {
-  const pathValue = context.pathParams[paramName]
-  if (isPresent(pathValue)) {
-    return pathValue
-  }
-
-  const queryValue = context.url.searchParams.get(paramName)?.trim()
-  if (isPresent(queryValue)) {
-    return queryValue
-  }
-
-  return getHashQueryValue(context.url, paramName)
-}
-
-function inferRawParams(
-  source: RadarSourceMetadata,
-  context: Omit<RadarMatchContext, "rawParams" | "paramsPatch">,
-): Record<string, unknown> {
-  const rawParams: Record<string, unknown> = {}
-
-  for (const paramName of Object.keys(source.params ?? {})) {
-    const value = inferNamedRawParam(paramName, context)
-    if (isPresent(value)) {
-      rawParams[paramName] = value
-    }
-  }
-
-  return rawParams
-}
-
 function resolveParamsPatch(
   rule: SourceRadarRule,
   context: RadarMatchContext,
 ): Record<string, unknown> | null {
-  const rawParams = { ...context.rawParams }
-
-  for (const [key, valueSpec] of Object.entries(rule.patch?.params ?? {})) {
-    const value = resolveParamValue(valueSpec, context)
-    if (isPresent(value)) {
-      rawParams[key] = value
-    }
-  }
+  const parameterValues: Record<string, unknown> = {}
 
   try {
-    return parseSourceParams(context.source.params, rawParams)
+    for (const [key, template] of Object.entries(rule.patch?.params ?? {})) {
+      const value = renderTemplate(template, createTemplateVariables(context))
+      if (isPresent(value)) {
+        parameterValues[key] = value
+      }
+    }
+
+    return parseSourceParams(context.source.params, parameterValues)
   } catch {
     return null
   }
@@ -371,19 +336,17 @@ function matchCompiledRule(compiledRule: CompiledRadarRule, input: RadarContext,
     pathParams,
     source: compiledRule.source,
   }
-  const rawParams = inferRawParams(compiledRule.source, baseContext)
-  const contextWithRawParams: RadarMatchContext = {
+  const paramsContext: RadarMatchContext = {
     ...baseContext,
-    rawParams,
     paramsPatch: {},
   }
-  const paramsPatch = resolveParamsPatch(compiledRule.rule, contextWithRawParams)
+  const paramsPatch = resolveParamsPatch(compiledRule.rule, paramsContext)
   if (!paramsPatch) {
     return null
   }
 
   const context: RadarMatchContext = {
-    ...contextWithRawParams,
+    ...paramsContext,
     paramsPatch,
   }
 

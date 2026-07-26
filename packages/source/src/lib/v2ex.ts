@@ -23,6 +23,9 @@ export default {
             paths: ["/go/:feed"],
           },
           patch: {
+            params: {
+              feed: "{{ path.feed }}",
+            },
             metadata: {
               title: "{{ page.title | normalize_whitespace | regex_extract: '^.*[>›]\\\\s*(.+)$', 1 | default: params.feed }}",
             },

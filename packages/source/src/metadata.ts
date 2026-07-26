@@ -245,14 +245,9 @@ export const sourceDescriptors: SourceDescriptor[] = [
         },
         "patch": {
           "params": {
-            "spokenLanguage": {
-              "type": "query",
-              "name": "spoken_language_code"
-            },
-            "dateRange": {
-              "type": "query",
-              "name": "since"
-            }
+            "language": "{{ path.language }}",
+            "spokenLanguage": "{{ query.spoken_language_code }}",
+            "dateRange": "{{ query.since }}"
           },
           "metadata": {
             "title": "Trending {{ params.language }}"
@@ -433,6 +428,9 @@ export const sourceDescriptors: SourceDescriptor[] = [
           ]
         },
         "patch": {
+          "params": {
+            "id": "{{ query.id | default: hashQuery.id }}"
+          },
           "metadata": {
             "title": "{% assign title = page.title | normalize_whitespace | regex_extract: '^(.+?)\\\\s*-\\\\s*(?:歌单|排行榜)\\\\s*-\\\\s*网易云音乐$', 1 %}{% if title != empty %}{{ title }}{% else %}Playlist {{ params.id }}{% endif %}"
           }
@@ -514,6 +512,10 @@ export const sourceDescriptors: SourceDescriptor[] = [
           ]
         },
         "patch": {
+          "params": {
+            "locale": "{{ path.locale }}",
+            "topic": "{{ path.topic }}"
+          },
           "metadata": {
             "title": "{{ params.topic }}"
           }
@@ -574,6 +576,9 @@ export const sourceDescriptors: SourceDescriptor[] = [
           ]
         },
         "patch": {
+          "params": {
+            "channel": "{{ path.channel }}"
+          },
           "metadata": {
             "title": "{{ page.title | normalize_whitespace | regex_replace: '\\\\s*[–-]\\\\s*Telegram$', '' | default: 'Telegram channel' }}",
             "home": "https://t.me/s/{{ params.channel }}"
@@ -647,6 +652,9 @@ export const sourceDescriptors: SourceDescriptor[] = [
           ]
         },
         "patch": {
+          "params": {
+            "feed": "{{ path.feed }}"
+          },
           "metadata": {
             "title": "{{ page.title | normalize_whitespace | regex_extract: '^.*[>›]\\\\s*(.+)$', 1 | default: params.feed }}"
           }

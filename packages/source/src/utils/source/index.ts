@@ -31,10 +31,15 @@ interface SourceConfigBase<TParams extends SourceParamSchemaMap> extends Omit<So
 
 type SourceCapabilityOverrides = Partial<SourceCapabilities>
 
-const JSON_TEMPLATE_ROOTS = ["index", "item", "json", "params", "requestUrl", "value"] as const
-const HTML_TEMPLATE_ROOTS = ["index", "item", "params", "requestUrl", "value"] as const
 const PARAM_TEMPLATE_ROOTS = ["params"] as const
-const RADAR_TEMPLATE_ROOTS = ["page", "params", "path", "source"] as const
+const FIELD_TEMPLATE_ROOTS = ["index", "item", ...PARAM_TEMPLATE_ROOTS, "requestUrl", "value"] as const
+const JSON_FIELD_TEMPLATE_ROOTS = [...FIELD_TEMPLATE_ROOTS, "json"] as const
+const RADAR_URL_TEMPLATE_ROOTS = ["hashQuery", "path", "query"] as const
+const RADAR_METADATA_TEMPLATE_ROOTS = [
+  ...RADAR_URL_TEMPLATE_ROOTS,
+  "page",
+  ...PARAM_TEMPLATE_ROOTS,
+] as const
 
 type IsAny<T> = 0 extends (1 & T) ? true : false
 
@@ -80,8 +85,6 @@ export type SourceConfig<TParams extends SourceParamSchemaMap = any>
   )
 
 export function validateSourceTemplates(sourceId: string, config: SourceConfig): void {
-  validateTemplates(config, sourceId)
-
   if (config.sourceIcon) {
     validateTemplates(config.sourceIcon, `${sourceId}.sourceIcon`, {
       allowedRoots: PARAM_TEMPLATE_ROOTS,
@@ -101,16 +104,29 @@ export function validateSourceTemplates(sourceId: string, config: SourceConfig):
     }
     validateJsonFieldExpressions(loader.fields, `${sourceId}.loader.fields`)
     validateTemplates(loader.fields, `${sourceId}.loader.fields`, {
-      allowedRoots: JSON_TEMPLATE_ROOTS,
+      allowedRoots: JSON_FIELD_TEMPLATE_ROOTS,
     })
   } else if (loader.type === "html") {
     validateTemplates(loader.fields, `${sourceId}.loader.fields`, {
-      allowedRoots: HTML_TEMPLATE_ROOTS,
+      allowedRoots: FIELD_TEMPLATE_ROOTS,
     })
   }
 
-  validateTemplates(config.radar, `${sourceId}.radar`, {
-    allowedRoots: RADAR_TEMPLATE_ROOTS,
+  validateRadarTemplates(config.radar, `${sourceId}.radar`)
+}
+
+function validateRadarTemplates(
+  rules: SourceRadarRule[] | undefined,
+  location: string,
+): void {
+  rules?.forEach((rule, index) => {
+    const patchLocation = `${location}.${index}.patch`
+    validateTemplates(rule.patch?.params, `${patchLocation}.params`, {
+      allowedRoots: RADAR_URL_TEMPLATE_ROOTS,
+    })
+    validateTemplates(rule.patch?.metadata, `${patchLocation}.metadata`, {
+      allowedRoots: RADAR_METADATA_TEMPLATE_ROOTS,
+    })
   })
 }
 
