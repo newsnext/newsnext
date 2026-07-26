@@ -132,6 +132,149 @@ describe("hTML source loader", () => {
     )
   })
 
+  it("should expose the extracted item and loader context to templates", async () => {
+    ;(myFetch as any).mockResolvedValue(`
+      <article class="item">
+        <a class="title" href="/article/1">  Article One  </a>
+        <span class="category">Engineering</span>
+      </article>
+    `)
+
+    const source = createSource({
+      params: {
+        prefix: { type: "text", default: "News", title: "Prefix" },
+      } satisfies SourceParamSchemaMap,
+      loader: {
+        type: "html",
+        url: "https://example.com/news",
+        items: ".item",
+        fields: {
+          title: {
+            selector: ".title",
+            transforms: [{ type: "normalizeWhitespace" }],
+            template: "{{ params.prefix }}: {{ value }} ({{ item.inline.text }})",
+          },
+          url: {
+            selector: ".title",
+            attr: "href",
+            transforms: [{ type: "resolveUrl" }],
+          },
+          inline: {
+            text: ".category",
+          },
+          preview: {
+            text: {
+              selector: ".category",
+              template: "{{ item.title }} #{{ index }} @ {{ requestUrl }}",
+            },
+          },
+        },
+      },
+      cache: "5m",
+    })
+
+    const results = await (source as any).loader({ prefix: "Latest" })
+
+    expect(results[0]).toMatchObject({
+      title: "Latest: Article One (Engineering)",
+      url: "https://example.com/article/1",
+      inline: { text: "Engineering" },
+      preview: {
+        text: "Article One #0 @ https://example.com/news",
+      },
+    })
+  })
+
+  it("should support selector fallbacks, document scope, HTML content, and joined matches", async () => {
+    ;(myFetch as any).mockResolvedValue(`
+      <meta property="og:site_name" content="Example News">
+      <article class="item">
+        <a class="fallback-title" href="/article/1"><strong>Article</strong> One</a>
+        <span class="tag">TypeScript</span>
+        <span class="tag">React</span>
+      </article>
+    `)
+
+    const source = createHtmlTestSource(() => ({
+      url: "https://example.com/news",
+      items: ".item",
+      fields: {
+        title: {
+          selector: [".missing-title", ".fallback-title"],
+          content: "html",
+        },
+        url: {
+          selector: ".fallback-title",
+          attr: "href",
+          transforms: [{ type: "resolveUrl" }],
+        },
+        inline: {
+          text: {
+            selector: ".tag",
+            all: true,
+            separator: " · ",
+          },
+        },
+        preview: {
+          text: {
+            scope: "document",
+            selector: "meta[property='og:site_name']",
+            attr: "content",
+          },
+          html: {
+            selector: ".fallback-title",
+            content: "outerHtml",
+            template: "<div>{{ value }}</div>",
+          },
+        },
+      },
+    }))
+
+    const results = await (source as any).loader({})
+
+    expect(results[0]).toMatchObject({
+      title: "<strong>Article</strong> One",
+      url: "https://example.com/article/1",
+      inline: { text: "TypeScript · React" },
+      preview: {
+        text: "Example News",
+        html: "<div>&lt;a class=&#34;fallback-title&#34; href=&#34;/article/1&#34;&gt;&lt;strong&gt;Article&lt;/strong&gt; One&lt;/a&gt;</div>",
+      },
+    })
+  })
+
+  it("should traverse DOM relationships before selecting a field", async () => {
+    ;(myFetch as any).mockResolvedValue(`
+      <table>
+        <tr class="item"><td><a class="title" href="/1">Article</a></td></tr>
+        <tr class="metadata"><td><span class="score">42 points</span></td></tr>
+      </table>
+    `)
+
+    const source = createHtmlTestSource(() => ({
+      url: "https://example.com/news",
+      items: ".item",
+      fields: {
+        title: ".title",
+        url: {
+          selector: ".title",
+          attr: "href",
+          transforms: [{ type: "resolveUrl" }],
+        },
+        inline: {
+          text: {
+            traverse: { type: "next", selector: ".metadata" },
+            selector: ".score",
+          },
+        },
+      },
+    }))
+
+    const results = await (source as any).loader({})
+
+    expect(results[0].inline?.text).toBe("42 points")
+  })
+
   it("should resolve items with a function and filter items", async () => {
     const html = `
       <div class="list">

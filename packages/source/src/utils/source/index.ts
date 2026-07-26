@@ -33,7 +33,7 @@ interface SourceConfigBase<TParams extends SourceParamSchemaMap> extends Omit<So
 type SourceCapabilityOverrides = Partial<SourceCapabilities>
 
 const JSON_TEMPLATE_ROOTS = ["index", "item", "json", "params", "requestUrl", "value"] as const
-const HTML_TEMPLATE_ROOTS = ["value"] as const
+const HTML_TEMPLATE_ROOTS = ["index", "item", "params", "requestUrl", "value"] as const
 const PARAM_TEMPLATE_ROOTS = ["params"] as const
 const RADAR_TEMPLATE_ROOTS = ["page", "params", "path", "source", "value"] as const
 
@@ -211,6 +211,8 @@ function resolveSource<
               ? undefined
               : resolveSourceOption(fetchOptions, loaderParams),
             type: metadata.type,
+          }, {
+            params: loaderParams,
           })
         },
       }

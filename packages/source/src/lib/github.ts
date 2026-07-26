@@ -69,7 +69,7 @@ export default {
           url: {
             selector: ">h2 a",
             attr: "href",
-            template: "https://github.com{{ value }}",
+            transforms: [{ type: "resolveUrl" }],
           },
           inline: {
             text: {

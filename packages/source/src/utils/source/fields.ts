@@ -5,12 +5,18 @@ export type SourceFieldTransform
     | { type: "normalizeWhitespace" }
     | { type: "parseDate" }
     | { type: "prepend", value: string }
+    | { type: "resolveUrl", base?: string }
     | { type: "trim" }
     | { type: "uppercase" }
+
+export interface SourceFieldTransformContext {
+  requestUrl?: string
+}
 
 export function applyFieldTransforms(
   input: unknown,
   transforms: readonly SourceFieldTransform[] = [],
+  context: SourceFieldTransformContext = {},
 ): unknown {
   if (transforms.length > 16) {
     throw new Error("A field cannot use more than 16 transforms")
@@ -35,6 +41,8 @@ export function applyFieldTransforms(
       }
       case "prepend":
         return `${transform.value}${stringify(value)}`
+      case "resolveUrl":
+        return resolveUrl(value, transform.base ?? context.requestUrl)
       case "trim":
         return stringify(value).trim()
       case "uppercase":
@@ -64,4 +72,14 @@ function multiply(value: unknown, multiplier: number): number | undefined {
   }
   const number = typeof value === "number" ? value : Number(value)
   return Number.isFinite(number) ? number * multiplier : undefined
+}
+
+function resolveUrl(value: unknown, base: string | undefined): string | undefined {
+  const url = stringify(value)
+  if (!url) return undefined
+  if (!base) {
+    throw new Error("The resolveUrl transform requires a base URL or loader request URL")
+  }
+
+  return new URL(url, base).href
 }

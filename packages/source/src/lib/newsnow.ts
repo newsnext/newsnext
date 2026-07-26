@@ -47,7 +47,11 @@ export default {
         items: ".newsfeed .article",
         fields: {
           title: ".article-card__headline",
-          url: { selector: ".article-card__headline", attr: "href" },
+          url: {
+            selector: ".article-card__headline",
+            attr: "href",
+            transforms: [{ type: "resolveUrl" }],
+          },
           timestamp: {
             selector: "[data-timestamp]",
             attr: "data-timestamp",

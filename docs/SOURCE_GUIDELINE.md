@@ -467,7 +467,8 @@ items: $ => $(".article").filter((_, element) => {
 
 ### Fields
 
-A string HTML field is a CSS selector whose text content is trimmed:
+A string HTML field is a CSS selector, relative to the current item, whose first
+match's text content is trimmed:
 
 ```ts
 fields: {
@@ -475,14 +476,14 @@ fields: {
 }
 ```
 
-Use an object to read attributes, apply transforms, or format the result:
+Use an object to control selection, extraction, transforms, and formatting:
 
 ```ts
 fields: {
   url: {
     selector: ".title",
     attr: "href",
-    template: "https://example.com{{ value }}",
+    transforms: [{ type: "resolveUrl" }],
   },
   timestamp: {
     selector: "[data-timestamp]",
@@ -495,20 +496,213 @@ fields: {
 HTML field resolution order is:
 
 ```text
-selector/attr → transforms → template
+selector → content/attr extraction → transforms → template
 ```
 
-HTML field templates can access only:
+All fields are extracted and transformed before any field template is rendered.
+This two-phase model means a template can compose values from the complete
+extracted item regardless of field declaration order.
+
+HTML field templates can access:
 
 ```text
-value
+value       Current extracted and transformed field value
+item        Complete extracted and transformed item
+params      Resolved source parameters
+index       Zero-based item index
+requestUrl  Resolved loader URL
 ```
+
+The `item` object follows the `NewsItem` field structure:
+
+```ts
+fields: {
+  title: {
+    selector: ".title",
+    template: "{{ value }} — {{ item.inline.text }}",
+  },
+  url: {
+    selector: ".title",
+    attr: "href",
+    transforms: [{ type: "resolveUrl" }],
+  },
+  inline: {
+    text: ".category",
+  },
+}
+```
+
+Here, `item.title`, `item.url`, `item.inline.text`, and other values refer to
+their pre-template values. Templates do not depend on one another, so template
+cycles and declaration-order differences cannot change the result.
+
+### Selector fallbacks
+
+Provide an array of selectors when websites use different markup across pages
+or deployments. The first selector with at least one match wins:
+
+```ts
+title: {
+  selector: [
+    ".article-title",
+    "h2 > a",
+    "[data-role='title']",
+  ],
+}
+```
+
+Use CSS selector lists such as `".tag, .label"` when all alternatives should be
+part of one result set. Use a selector array only for ordered fallback behavior.
+
+### Item and document scope
+
+Selectors use the current item as their root by default. Use document scope for
+page-level metadata shared by every item:
+
+```ts
+preview: {
+  text: {
+    scope: "document",
+    selector: "meta[property='og:site_name']",
+    attr: "content",
+  },
+}
+```
+
+An omitted or empty selector targets the current item itself. This is useful for
+reading an item attribute:
+
+```ts
+url: {
+  attr: "data-url",
+  transforms: [{ type: "resolveUrl" }],
+}
+```
+
+### DOM traversal
+
+Use `traverse` when a field lives in a related element instead of inside the
+item. Traversal happens after choosing the item or document scope and before
+applying `selector`:
+
+```ts
+timestamp: {
+  traverse: { type: "next", selector: "tr.metadata" },
+  selector: "time",
+  attr: "datetime",
+  transforms: [{ type: "parseDate" }],
+}
+```
+
+Available traversal operations are:
+
+```ts
+{ type: "parent" }
+{ type: "closest", selector: ".card" }
+{ type: "next" }
+{ type: "next", selector: ".metadata" }
+{ type: "previous" }
+{ type: "previous", selector: ".heading" }
+{ type: "siblings" }
+{ type: "siblings", selector: ".related" }
+```
+
+Provide an array for a traversal chain:
+
+```ts
+traverse: [
+  { type: "parent" },
+  { type: "next", selector: ".metadata" },
+]
+```
+
+Traversal removes the need for a function transform in common table, card,
+heading/content, and sibling-metadata layouts.
+
+### Text, attributes, and HTML
+
+Fields extract trimmed text by default. Use `attr` for an attribute, or
+`content` for explicit content extraction:
+
+```ts
+fields: {
+  title: {
+    selector: ".title",
+    content: "text",
+  },
+  preview: {
+    html: {
+      selector: ".summary",
+      content: "html",
+    },
+  },
+}
+```
+
+Supported content modes are:
+
+```text
+text       Trimmed text content; this is the default
+html       Inner HTML
+outerHtml  The selected element and its HTML
+```
+
+`attr` takes precedence over `content`.
+
+Only use HTML extraction when the output field actually accepts HTML. Liquid
+values inserted into `inline.html` and `preview.html` templates remain escaped;
+the template controls trusted markup, while extracted page content is treated
+as untrusted text.
+
+### Multiple matches
+
+By default, only the first matched element is extracted. Set `all` to join every
+match:
+
+```ts
+inline: {
+  text: {
+    selector: ".tag",
+    all: true,
+    separator: " · ",
+  },
+}
+```
+
+The separator defaults to an empty string. Missing attributes are omitted from
+the joined result.
+
+### Relative URLs
+
+Use `resolveUrl` to resolve protocol-relative, root-relative, and path-relative
+URLs against the final loader request URL:
+
+```ts
+url: {
+  selector: ".title",
+  attr: "href",
+  transforms: [{ type: "resolveUrl" }],
+}
+```
+
+Provide an explicit base only when the page's links use a different origin or
+base path:
+
+```ts
+transforms: [
+  { type: "resolveUrl", base: "https://www.example.com/archive/" },
+]
+```
+
+The same transform is available to JSON fields.
+
+### Internal function escape hatch
 
 For built-in sources, `transform` can inspect the selected Cheerio element:
 
 ```ts
 timestamp: {
-  transform: (_value, element) => {
+  transform: (_value, element, context) => {
     const seconds = element.next("tr").find(".age").attr("data-seconds")
     return seconds ? Number(seconds) * 1000 : undefined
   },
@@ -517,6 +711,10 @@ timestamp: {
 
 When a function `transform` is present, its result is returned directly;
 declarative `transforms` and `template` are not evaluated.
+
+The transform context contains `params`, `index`, and `requestUrl`. Function
+resolvers are intended for bundled sources only and cannot be represented in a
+user-authored serialized source.
 
 ### Character decoding and custom fetch
 
@@ -567,6 +765,8 @@ The same declarative transforms are available to JSON and HTML fields:
 { type: "append", value: " views" }
 { type: "multiply", value: 1000 }
 { type: "parseDate" }
+{ type: "resolveUrl" }
+{ type: "resolveUrl", base: "https://example.com/base/" }
 ```
 
 Examples:
@@ -908,7 +1108,8 @@ JMESPath validation checks:
 - prohibited prototype properties: `__proto__`, `constructor`, and `prototype`
 
 HTML template values are escaped. Template and expression engines do not execute
-JavaScript source text.
+JavaScript source text. An HTML loader processes at most 2,000 selected items
+per request.
 
 Network capabilities are enforced after URL template resolution and before a
 structured loader sends its request.

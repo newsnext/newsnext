@@ -1,6 +1,4 @@
 import type { ProviderConfig } from "@newsnext/source/utils/source"
-import type * as cheerio from "cheerio"
-import type { AnyNode } from "domhandler"
 import { getFavicon } from "@newsnext/shared/utils"
 
 const createLoader = (sub: string) => ({
@@ -15,15 +13,15 @@ const createLoader = (sub: string) => ({
       template: "https://news.ycombinator.com/item?id={{ value | url_query }}",
     },
     timestamp: {
-      transform: (_value: string | undefined, $el: cheerio.Cheerio<AnyNode>) => {
-        const date = $el.next("tr").find(".age").attr("title")?.split(" ")?.[1]
-        return date ? Number(`${date}000`) : undefined
-      },
+      traverse: { type: "next" as const, selector: "tr" },
+      selector: ".age",
+      attr: "title",
+      template: "{{ value | split: ' ' | last | times: 1000 }}",
     },
     inline: {
       text: {
-        attr: "id",
-        transform: (id: string | undefined, $el: cheerio.Cheerio<AnyNode>) => $el.next("tr").find(`#score_${id}`).text(),
+        traverse: { type: "next" as const, selector: "tr" },
+        selector: ".score",
       },
       icon: {
         selector: ".titleline>a",

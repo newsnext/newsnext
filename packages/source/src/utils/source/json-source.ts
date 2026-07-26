@@ -127,7 +127,9 @@ function resolveValue<Item>(
   const selected = resolver.select === undefined
     ? item
     : selectJson(item, resolver.select)
-  const value = applyFieldTransforms(selected, resolver.transforms)
+  const value = applyFieldTransforms(selected, resolver.transforms, {
+    requestUrl: context.requestUrl,
+  })
   if (!resolver.template) {
     return value
   }
