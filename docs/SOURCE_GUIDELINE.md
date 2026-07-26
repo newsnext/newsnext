@@ -160,20 +160,64 @@ String-like parameters support declarative validation:
 }
 ```
 
-Built-in sources may provide runtime parsing or validation functions:
+String-like parameters also support declarative transforms:
 
 ```ts
 {
   type: "text",
   title: "Channel",
   default: "example",
-  parse: value => String(value).trim().replace(/^@/, ""),
-  validate: value => value.length >= 5 || "Channel is too short",
+  transforms: [
+    { type: "trim" },
+    { type: "removePrefix", value: "@" },
+  ],
+  pattern: "^[A-Za-z][A-Za-z0-9_]+$",
 }
 ```
 
-Prefer declarative validation for source definitions intended to be serialized
-or authored by users.
+Available parameter transforms are:
+
+```ts
+{ type: "trim" }
+{ type: "normalizeWhitespace" }
+{ type: "lowercase" }
+{ type: "uppercase" }
+{ type: "removePrefix", value: "@" }
+{ type: "removeSuffix", value: ".json" }
+{ type: "replace", search: "-", replacement: "_" }
+{ type: "replace", search: "-", replacement: "_", all: false }
+```
+
+They run in declaration order before type coercion and validation:
+
+```text
+raw value or default → transforms → type coercion/parse → validation
+```
+
+Parameter transforms are available to `text`, `url`, and `select` parameters.
+A parameter may declare at most eight transforms.
+
+`replace` performs literal string matching, not regular-expression matching.
+It replaces all matches by default; set `all: false` to replace only the first.
+The search value must not be empty. Parameter values are limited to 20,000
+characters and replacement text to 256 characters.
+
+Built-in sources may still provide runtime parsing or validation functions for
+output types or rules that cannot be represented declaratively:
+
+```ts
+{
+  type: "text",
+  title: "Headers",
+  default: "{}",
+  parse: value => JSON.parse(String(value)) as Record<string, string>,
+  validate: value => Object.keys(value).length <= 20 || "Too many headers",
+}
+```
+
+Function-based `parse` and `validate` cannot be represented in serialized
+user-authored sources. Prefer declarative transforms and validation whenever
+they can express the same behavior.
 
 ## Liquid templates
 
@@ -649,6 +693,23 @@ outerHtml  The selected element and its HTML
 
 `attr` takes precedence over `content`.
 
+Use `brSeparator` when `<br>` elements carry meaningful line breaks:
+
+```ts
+preview: {
+  text: {
+    selector: ".message",
+    brSeparator: "\n",
+    transforms: [
+      { type: "normalizeLines", separator: "\n\n" },
+    ],
+  },
+}
+```
+
+`brSeparator` applies only to text extraction. Other element boundaries retain
+their normal Cheerio text behavior.
+
 Only use HTML extraction when the output field actually accepts HTML. Liquid
 values inserted into `inline.html` and `preview.html` templates remain escaped;
 the template controls trusted markup, while extracted page content is treated
@@ -759,15 +820,32 @@ The same declarative transforms are available to JSON and HTML fields:
 ```ts
 { type: "trim" }
 { type: "normalizeWhitespace" }
+{ type: "normalizeLines" }
+{ type: "normalizeLines", separator: "\n\n" }
+{ type: "firstLine" }
 { type: "uppercase" }
 { type: "lowercase" }
 { type: "prepend", value: "Score: " }
 { type: "append", value: " views" }
 { type: "multiply", value: 1000 }
 { type: "parseDate" }
+{ type: "truncate", length: 160 }
+{ type: "truncate", length: 160, omission: "..." }
+{ type: "extractCssUrl" }
 { type: "resolveUrl" }
 { type: "resolveUrl", base: "https://example.com/base/" }
 ```
+
+`firstLine` returns the first non-empty trimmed line. `normalizeLines` trims
+lines, removes empty lines, and joins the result with `separator`, which
+defaults to a single newline.
+
+`truncate` counts Unicode code points and includes the omission text in the
+configured length. Its length must be an integer from 1 through 10,000.
+
+`extractCssUrl` reads the first quoted or unquoted `url(...)` value from a CSS
+declaration such as an inline `background-image` style. It returns the URL
+string directly, which is valid for picture and icon fields.
 
 Examples:
 

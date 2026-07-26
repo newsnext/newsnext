@@ -56,6 +56,10 @@ export interface HtmlFieldConfig<T = unknown> {
    */
   content?: "html" | "outerHtml" | "text"
   /**
+   * Replace each <br> with this text before extracting text content.
+   */
+  brSeparator?: string
+  /**
    * Extract every match and join the values. The default separator is empty.
    */
   all?: boolean
@@ -259,7 +263,16 @@ function extractNodeValue(
       return $.html(target)
     case "text":
     case undefined:
-      return target.text().trim()
+      if (config.brSeparator === undefined) {
+        return target.text().trim()
+      }
+      return target
+        .clone()
+        .find("br")
+        .replaceWith(config.brSeparator)
+        .end()
+        .text()
+        .trim()
   }
 }
 

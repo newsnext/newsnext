@@ -1,52 +1,8 @@
 import type { ProviderConfig } from "@newsnext/source/utils/source"
-import type { Cheerio, CheerioAPI } from "cheerio/slim"
-import type { AnyNode } from "domhandler"
 
 const DEFAULT_CHANNEL = "TestFlightCN"
 const TELEGRAM_CHANNEL_PATTERN = /^(?![\d_])\w{5,32}$/
 const TITLE_MAX_LENGTH = 160
-
-function normalizeTelegramChannel(value: unknown): string {
-  return String(value).trim().replace(/^@/, "")
-}
-
-function getTelegramMessageText(element: Cheerio<AnyNode>): string {
-  const message = element.clone()
-  message.find("br").replaceWith("\n")
-
-  return message.text()
-    .split("\n")
-    .map(line => line.trim())
-    .filter(Boolean)
-    .join("\n\n")
-}
-
-export function getTelegramMessageTitle(element: Cheerio<AnyNode>): string | undefined {
-  const text = getTelegramMessageText(element)
-  if (!text) return undefined
-
-  const [firstLine] = text.split("\n")
-  if (firstLine.length <= TITLE_MAX_LENGTH) return firstLine
-
-  return `${firstLine.slice(0, TITLE_MAX_LENGTH - 1).trimEnd()}…`
-}
-
-export function getTelegramMessagePreview(element: Cheerio<AnyNode>): string | undefined {
-  return getTelegramMessageText(element) || undefined
-}
-
-export function getTelegramMessagePicture(element: Cheerio<AnyNode>): { src: string } | undefined {
-  const style = element.attr("style")
-  const src = style?.match(/background-image\s*:\s*url\((['"]?)(.*?)\1\)/)?.[2]
-
-  return src ? { src } : undefined
-}
-
-function getTelegramMessageItems($: CheerioAPI): AnyNode[] {
-  return $(".tgme_widget_message")
-    .filter((_, element) => $(element).find(".tgme_widget_message_text").length > 0)
-    .toArray()
-}
 
 export default {
   title: "Telegram",
@@ -64,7 +20,10 @@ export default {
           default: DEFAULT_CHANNEL,
           title: "Channel",
           pattern: TELEGRAM_CHANNEL_PATTERN.source,
-          parse: normalizeTelegramChannel,
+          transforms: [
+            { type: "trim" },
+            { type: "removePrefix", value: "@" },
+          ],
         },
       },
       radar: [
@@ -101,15 +60,20 @@ export default {
       loader: {
         type: "html",
         url: "https://t.me/s/{{ params.channel | url_path }}",
-        items: getTelegramMessageItems,
+        items: ".tgme_widget_message:has(.tgme_widget_message_text)",
         fields: {
           title: {
             selector: ".tgme_widget_message_text",
-            transform: (_value, element) => getTelegramMessageTitle(element),
+            brSeparator: "\n",
+            transforms: [
+              { type: "firstLine" },
+              { type: "truncate", length: TITLE_MAX_LENGTH },
+            ],
           },
           url: {
             selector: ".tgme_widget_message_date",
             attr: "href",
+            transforms: [{ type: "resolveUrl" }],
           },
           timestamp: {
             selector: ".tgme_widget_message_date time",
@@ -125,11 +89,15 @@ export default {
           preview: {
             text: {
               selector: ".tgme_widget_message_text",
-              transform: (_value, element) => getTelegramMessagePreview(element),
+              brSeparator: "\n",
+              transforms: [
+                { type: "normalizeLines", separator: "\n\n" },
+              ],
             },
             picture: {
               selector: ".tgme_widget_message_photo_wrap, .tgme_widget_message_video_thumb",
-              transform: (_value, element) => getTelegramMessagePicture(element.first()),
+              attr: "style",
+              transforms: [{ type: "extractCssUrl" }],
             },
           },
         },

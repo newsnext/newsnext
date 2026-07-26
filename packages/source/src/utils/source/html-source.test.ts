@@ -275,6 +275,70 @@ describe("hTML source loader", () => {
     expect(results[0].inline?.text).toBe("42 points")
   })
 
+  it("should declaratively extract multiline messages and CSS background URLs", async () => {
+    ;(myFetch as any).mockResolvedValue(`
+      <article class="message">
+        <div class="message-text">
+          First line that is too long<br>
+          Second line<br><br>
+          Third line
+        </div>
+        <a class="message-date" href="/channel/42">Date</a>
+        <a
+          class="message-photo"
+          style="background-image: url('https://cdn.example.com/photo.jpg')"
+        ></a>
+      </article>
+      <article class="message message-without-text"></article>
+    `)
+
+    const source = createHtmlTestSource(() => ({
+      url: "https://example.com/channel",
+      items: ".message:has(.message-text)",
+      fields: {
+        title: {
+          selector: ".message-text",
+          brSeparator: "\n",
+          transforms: [
+            { type: "firstLine" },
+            { type: "truncate", length: 16 },
+          ],
+        },
+        url: {
+          selector: ".message-date",
+          attr: "href",
+          transforms: [{ type: "resolveUrl" }],
+        },
+        preview: {
+          text: {
+            selector: ".message-text",
+            brSeparator: "\n",
+            transforms: [
+              { type: "normalizeLines", separator: "\n\n" },
+            ],
+          },
+          picture: {
+            selector: ".message-photo",
+            attr: "style",
+            transforms: [{ type: "extractCssUrl" }],
+          },
+        },
+      },
+    }))
+
+    const results = await (source as any).loader({})
+
+    expect(results).toHaveLength(1)
+    expect(results[0]).toMatchObject({
+      title: "First line that…",
+      url: "https://example.com/channel/42",
+      preview: {
+        text: "First line that is too long\n\nSecond line\n\nThird line",
+        picture: "https://cdn.example.com/photo.jpg",
+      },
+    })
+  })
+
   it("should resolve items with a function and filter items", async () => {
     const html = `
       <div class="list">

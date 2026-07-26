@@ -16,6 +16,7 @@ import type {
 import type { HtmlSourceOptions } from "./html-source"
 import type { JsonSourceOptions } from "./json-source"
 
+import { parseSourceParamValue } from "../params"
 import { isTemplate, renderTemplate, validateTemplates } from "../template"
 import { assertNetworkCapability } from "./capabilities"
 import { loadHtml } from "./html-source"
@@ -337,7 +338,7 @@ function resolveDefaultParams<TParams extends SourceParamSchemaMap>(
   return Object.fromEntries(
     Object.entries(params ?? {}).map(([key, param]) => [
       key,
-      param.parse ? param.parse(param.default) : param.default,
+      parseSourceParamValue(param, undefined),
     ]),
   ) as InferSourceParams<TParams>
 }

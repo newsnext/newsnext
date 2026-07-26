@@ -1,5 +1,4 @@
 import type { ProviderConfig } from "@newsnext/source/utils/source"
-import { normalizeTextParam } from "@newsnext/source/utils/params"
 
 const DEFAULT_PLAYLIST_ID = "19723756"
 
@@ -20,7 +19,7 @@ export default {
           default: DEFAULT_PLAYLIST_ID,
           title: "Playlist",
           pattern: "^\\d+$",
-          parse: normalizeTextParam,
+          transforms: [{ type: "trim" }],
         },
       },
       radar: [

@@ -40,6 +40,22 @@ interface BaseParameter<TOutput = unknown> {
   readonly __output?: TOutput
 }
 
+export type SourceParamTransform
+  = { type: "lowercase" }
+    | { type: "normalizeWhitespace" }
+    | { type: "removePrefix", value: string }
+    | { type: "removeSuffix", value: string }
+    | { type: "replace", search: string, replacement: string, all?: boolean }
+    | { type: "trim" }
+    | { type: "uppercase" }
+
+interface StringTransformParameter {
+  /**
+   * Serializable transforms applied before type coercion and validation.
+   */
+  transforms?: readonly SourceParamTransform[]
+}
+
 /**
  * Option for select and multi-select parameters
  */
@@ -57,7 +73,7 @@ export interface SelectOption<K extends string> {
 /**
  * Single-select dropdown parameter
  */
-export interface SelectParameter<K extends string = string> extends BaseParameter<K> {
+export interface SelectParameter<K extends string = string> extends BaseParameter<K>, StringTransformParameter {
   type: "select"
   /**
    * Available options
@@ -87,7 +103,7 @@ export interface MultiSelectParameter<K extends string = string> extends BasePar
 /**
  * Text input parameter
  */
-export interface TextParameter<TOutput = string> extends BaseParameter<TOutput> {
+export interface TextParameter<TOutput = string> extends BaseParameter<TOutput>, StringTransformParameter {
   type: "text"
   /**
    * Default text value
@@ -98,7 +114,7 @@ export interface TextParameter<TOutput = string> extends BaseParameter<TOutput> 
 /**
  * URL input parameter
  */
-export interface UrlParameter<TOutput = string> extends BaseParameter<TOutput> {
+export interface UrlParameter<TOutput = string> extends BaseParameter<TOutput>, StringTransformParameter {
   type: "url"
   /**
    * Default URL value

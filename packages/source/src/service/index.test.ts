@@ -62,6 +62,63 @@ describe("source service", () => {
     })
   })
 
+  it("applies declarative parameter transforms before validation", () => {
+    const sourceDefinition = {
+      params: {
+        channel: {
+          type: "text",
+          default: "example",
+          title: "Channel",
+          transforms: [
+            { type: "trim" },
+            { type: "removePrefix", value: "@" },
+            { type: "replace", search: "-", replacement: "_", all: true },
+            { type: "lowercase" },
+          ],
+          pattern: "^[a-z_]+$",
+        },
+      },
+    } satisfies Pick<RuntimeSource, "params">
+
+    expect(normalizeSourceParams(sourceDefinition, {
+      channel: "  @News-Channel  ",
+    })).toEqual({
+      channel: "news_channel",
+    })
+  })
+
+  it("supports replacing only the first literal match", () => {
+    const sourceDefinition = {
+      params: {
+        path: {
+          type: "text",
+          default: "a.b.c",
+          title: "Path",
+          transforms: [
+            {
+              type: "replace",
+              search: ".",
+              replacement: "/",
+              all: false,
+            },
+          ],
+        },
+      },
+    } satisfies Pick<RuntimeSource, "params">
+
+    expect(normalizeSourceParams(sourceDefinition)).toEqual({
+      path: "a/b.c",
+    })
+  })
+
+  it("normalizes Telegram channel parameters declaratively", () => {
+    expect(normalizeSourceParams(providers.telegram.sources.channel, {
+      channel: "  @TestFlightCN  ",
+    })).toEqual({
+      channel: "TestFlightCN",
+    })
+  })
+
   it("throws a source service error for invalid parameter values", () => {
     const sourceDefinition = {
       params: {

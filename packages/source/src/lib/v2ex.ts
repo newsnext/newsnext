@@ -1,5 +1,4 @@
 import type { ProviderConfig } from "@newsnext/source/utils/source"
-import { normalizeTextParam } from "@newsnext/source/utils/params"
 
 export default {
   title: "V2EX",
@@ -13,7 +12,7 @@ export default {
           title: "Feed",
           default: "ideas",
           pattern: ".+",
-          parse: normalizeTextParam,
+          transforms: [{ type: "trim" }],
         },
       },
       radar: [
