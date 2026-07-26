@@ -1,3 +1,4 @@
+import type { SourceRequestRule } from "@newsnext/source/typings"
 import type { ProviderConfig } from "@newsnext/source/utils/source"
 import {
   fetchWeiboFollowingTimeline,
@@ -13,6 +14,44 @@ const weiboCapabilities = {
 const weiboSearchCapabilities = {
   network: ["m.weibo.cn", "*.sinaimg.cn"],
 }
+
+const weiboRequestRules = [
+  {
+    action: {
+      type: "modifyHeaders",
+      requestHeaders: [
+        {
+          header: "Referer",
+          operation: "set",
+          value: "https://weibo.com/",
+        },
+      ],
+    },
+    condition: {
+      requestDomains: ["weibo.com", "sinaimg.cn"],
+      resourceTypes: ["image", "xmlhttprequest"],
+    },
+  },
+] satisfies SourceRequestRule[]
+
+const weiboSearchRequestRules = [
+  {
+    action: {
+      type: "modifyHeaders",
+      requestHeaders: [
+        {
+          header: "Referer",
+          operation: "set",
+          value: "https://weibo.com/",
+        },
+      ],
+    },
+    condition: {
+      requestDomains: ["m.weibo.cn", "sinaimg.cn"],
+      resourceTypes: ["image", "xmlhttprequest"],
+    },
+  },
+] satisfies SourceRequestRule[]
 
 export default {
   title: "Weibo",
@@ -84,6 +123,7 @@ export default {
         },
       },
       capabilities: weiboCapabilities,
+      requestRules: weiboRequestRules,
       cache: {
         version: 3,
         maxAge: "1m",
@@ -128,6 +168,7 @@ export default {
         load: fetchWeiboUserPosts,
       },
       capabilities: weiboCapabilities,
+      requestRules: weiboRequestRules,
       cache: "5m",
     },
     "keyword": {
@@ -167,6 +208,7 @@ export default {
         load: fetchWeiboKeywordPosts,
       },
       capabilities: weiboSearchCapabilities,
+      requestRules: weiboSearchRequestRules,
       cache: "5m",
     },
     "super-topic": {
@@ -220,6 +262,7 @@ export default {
         load: fetchWeiboSuperTopicPosts,
       },
       capabilities: weiboCapabilities,
+      requestRules: weiboRequestRules,
       cache: "5m",
     },
     "following": {
@@ -244,6 +287,7 @@ export default {
         load: fetchWeiboFollowingTimeline,
       },
       capabilities: weiboCapabilities,
+      requestRules: weiboRequestRules,
       cache: "5m",
     },
   },

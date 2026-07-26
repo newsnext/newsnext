@@ -4,7 +4,7 @@ import { registerRadarBadge } from "@/lib/background/radar-badge"
 import { toggleRadarOverlay } from "@/lib/background/radar-overlay"
 import { registerSourceRegistryLoader } from "@/lib/background/registry"
 import { BACKGROUND_SERVICE_KEY, createBackgroundService } from "@/lib/background/service"
-import { installWeiboRefererRule } from "@/lib/background/weibo-referer-rule"
+import { syncConfiguredSourceRequestRules } from "@/lib/background/source-request-rules"
 
 registerSourceRegistryLoader()
 const backgroundService = createBackgroundService()
@@ -21,8 +21,8 @@ function registerDashboardMenu(): void {
 export default defineBackground(() => {
   registerService(BACKGROUND_SERVICE_KEY, backgroundService)
   registerRadarBadge()
-  void installWeiboRefererRule().catch((error) => {
-    console.error("Failed to install Weibo referer rule", error)
+  void syncConfiguredSourceRequestRules().catch((error) => {
+    console.error("Failed to synchronize source request rules", error)
   })
 
   browser.runtime.onInstalled.addListener(registerDashboardMenu)

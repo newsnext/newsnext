@@ -7,6 +7,7 @@ import {
   REGISTRY_URLS_STORAGE_KEY,
   updateConfiguredSourceRegistries,
 } from "../registry-settings"
+import { syncConfiguredSourceRequestRules } from "./source-request-rules"
 
 const REGISTRY_UPDATE_ALARM = "update-source-registries"
 const REGISTRY_UPDATE_INTERVAL_MINUTES = 24 * 60
@@ -14,6 +15,7 @@ const REGISTRY_UPDATE_INTERVAL_MINUTES = 24 * 60
 export async function updateSourceRegistries(): Promise<RegistryValidationResult[]> {
   const results = await updateConfiguredSourceRegistries()
   configureSourceRegistryLoader(loadConfiguredSourceRegistry)
+  await syncConfiguredSourceRequestRules()
   return results
 }
 
@@ -29,6 +31,9 @@ export function registerSourceRegistryLoader(): void {
       )
     ) {
       configureSourceRegistryLoader(loadConfiguredSourceRegistry)
+      void syncConfiguredSourceRequestRules().catch((error) => {
+        console.error("Failed to synchronize source request rules", error)
+      })
     }
   })
 

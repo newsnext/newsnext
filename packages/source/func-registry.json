@@ -747,6 +747,30 @@
         },
         "confidence": 1
       }
+    ],
+    "requestRules": [
+      {
+        "action": {
+          "type": "modifyHeaders",
+          "requestHeaders": [
+            {
+              "header": "Referer",
+              "operation": "set",
+              "value": "https://weibo.com/"
+            }
+          ]
+        },
+        "condition": {
+          "requestDomains": [
+            "weibo.com",
+            "sinaimg.cn"
+          ],
+          "resourceTypes": [
+            "image",
+            "xmlhttprequest"
+          ]
+        }
+      }
     ]
   },
   "weibo:user": {
@@ -802,6 +826,30 @@
         },
         "confidence": 0.9
       }
+    ],
+    "requestRules": [
+      {
+        "action": {
+          "type": "modifyHeaders",
+          "requestHeaders": [
+            {
+              "header": "Referer",
+              "operation": "set",
+              "value": "https://weibo.com/"
+            }
+          ]
+        },
+        "condition": {
+          "requestDomains": [
+            "weibo.com",
+            "sinaimg.cn"
+          ],
+          "resourceTypes": [
+            "image",
+            "xmlhttprequest"
+          ]
+        }
+      }
     ]
   },
   "weibo:keyword": {
@@ -850,6 +898,30 @@
           }
         },
         "confidence": 0.9
+      }
+    ],
+    "requestRules": [
+      {
+        "action": {
+          "type": "modifyHeaders",
+          "requestHeaders": [
+            {
+              "header": "Referer",
+              "operation": "set",
+              "value": "https://weibo.com/"
+            }
+          ]
+        },
+        "condition": {
+          "requestDomains": [
+            "m.weibo.cn",
+            "sinaimg.cn"
+          ],
+          "resourceTypes": [
+            "image",
+            "xmlhttprequest"
+          ]
+        }
       }
     ]
   },
@@ -926,6 +998,30 @@
         },
         "confidence": 0.9
       }
+    ],
+    "requestRules": [
+      {
+        "action": {
+          "type": "modifyHeaders",
+          "requestHeaders": [
+            {
+              "header": "Referer",
+              "operation": "set",
+              "value": "https://weibo.com/"
+            }
+          ]
+        },
+        "condition": {
+          "requestDomains": [
+            "weibo.com",
+            "sinaimg.cn"
+          ],
+          "resourceTypes": [
+            "image",
+            "xmlhttprequest"
+          ]
+        }
+      }
     ]
   },
   "weibo:following": {
@@ -961,6 +1057,30 @@
           ]
         },
         "confidence": 0.9
+      }
+    ],
+    "requestRules": [
+      {
+        "action": {
+          "type": "modifyHeaders",
+          "requestHeaders": [
+            {
+              "header": "Referer",
+              "operation": "set",
+              "value": "https://weibo.com/"
+            }
+          ]
+        },
+        "condition": {
+          "requestDomains": [
+            "weibo.com",
+            "sinaimg.cn"
+          ],
+          "resourceTypes": [
+            "image",
+            "xmlhttprequest"
+          ]
+        }
       }
     ]
   },

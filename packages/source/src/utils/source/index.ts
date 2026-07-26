@@ -11,6 +11,7 @@ import type {
   SourceMetadata,
   SourceParamSchemaMap,
   SourceRadarRule,
+  SourceRequestRule,
   SourceSecretDefinition,
 } from "../../typings/sources"
 import type { HtmlSourceOptions } from "./html-source"
@@ -18,7 +19,7 @@ import type { JsonSourceOptions } from "./json-source"
 
 import { parseSourceParamValue } from "../params"
 import { renderTemplates, validateTemplates } from "../template"
-import { assertNetworkCapability } from "./capabilities"
+import { assertNetworkCapability, matchesCapabilityHost } from "./capabilities"
 import { loadHtml } from "./html-source"
 import { loadJson, validateJsonExpression } from "./json-source"
 import { loadRss } from "./rss-source"
@@ -27,6 +28,7 @@ interface SourceConfigBase<TParams extends SourceParamSchemaMap> {
   metadata?: Omit<SourceMetadata, "key">
   params?: TParams
   radar?: SourceRadarRule[]
+  requestRules?: readonly SourceRequestRule[]
   secrets?: SourceSecretDefinition[]
   cache: SourceCacheConfig | SourceCacheMaxAge
 }
@@ -182,6 +184,7 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
   const {
     params,
     radar,
+    requestRules,
     secrets,
     cache: cacheInput,
     loader,
@@ -189,6 +192,7 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
     metadata = {},
   } = config
   const capabilities = resolveSourceCapabilities(loader, params, capabilityOverrides)
+  validateSourceRequestRules(key, requestRules, capabilities.network)
   const cache = typeof cacheInput === "string"
     ? { version: 1, maxAge: cacheInput }
     : cacheInput
@@ -197,6 +201,7 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
     ...metadata,
     params,
     radar,
+    requestRules,
     secrets,
     capabilities,
     cache,
@@ -264,15 +269,15 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
   throw new Error(`Unsupported source loader: ${(loader as { type?: unknown }).type}`)
 }
 
-function mergeDefinitions<T extends SourceSecretDefinition>(
-  providerDefinitions: T[] | undefined,
-  sourceDefinitions: T[] | undefined,
+function mergeDefinitions<T>(
+  providerDefinitions: readonly T[] | undefined,
+  sourceDefinitions: readonly T[] | undefined,
 ): T[] | undefined {
   if (!providerDefinitions?.length) {
-    return sourceDefinitions
+    return sourceDefinitions ? [...sourceDefinitions] : undefined
   }
   if (!sourceDefinitions?.length) {
-    return providerDefinitions
+    return [...providerDefinitions]
   }
   return [...providerDefinitions, ...sourceDefinitions]
 }
@@ -285,6 +290,7 @@ export interface ProviderConfig {
   home?: string
   category?: CategoryId
   secrets?: SourceSecretDefinition[]
+  requestRules?: readonly SourceRequestRule[]
   sources: Record<string, SourceConfig>
 }
 
@@ -298,14 +304,115 @@ export const SOURCE_REGISTRY_LIMITS = {
   maxBytes: 2 * 1024 * 1024,
   maxSources: 1000,
   maxSourceIdLength: 200,
+  maxRequestRulesPerSource: 10,
+  maxRequestDomainsPerRule: 20,
+  maxRequestHeadersPerRule: 5,
 } as const
 
 const REGISTRY_SOURCE_ID_PATTERN = /^[^:\s]+:[^:\s]+$/
+const REQUEST_DOMAIN_PATTERN = /^(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)*[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/i
+const REQUEST_RULE_ACTION_TYPES = new Set([
+  "allow",
+  "allowAllRequests",
+  "block",
+  "modifyHeaders",
+  "redirect",
+  "upgradeScheme",
+])
+const REQUEST_HEADER_OPERATIONS = new Set(["append", "remove", "set"])
 const PROHIBITED_REGISTRY_KEYS = new Set(["__proto__", "constructor", "prototype"])
 const STRUCTURED_LOADER_TYPES = new Set(["html", "json", "rss"])
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value)
+}
+
+function validateSourceRequestRules(
+  sourceKey: string,
+  requestRules: unknown,
+  declaredHosts: readonly string[],
+): void {
+  if (requestRules === undefined) {
+    return
+  }
+  if (!Array.isArray(requestRules) || requestRules.length > SOURCE_REGISTRY_LIMITS.maxRequestRulesPerSource) {
+    throw new Error(`Source "${sourceKey}" has invalid request rules`)
+  }
+
+  requestRules.forEach((rule, ruleIndex) => {
+    if (!isRecord(rule)) {
+      throw new Error(`Source "${sourceKey}" request rule ${ruleIndex} must be an object`)
+    }
+
+    const { action, condition, priority } = rule
+    if (!isRecord(action) || !REQUEST_RULE_ACTION_TYPES.has(String(action.type))) {
+      throw new Error(`Source "${sourceKey}" request rule ${ruleIndex} has an invalid action`)
+    }
+    if (!isRecord(condition)) {
+      throw new Error(`Source "${sourceKey}" request rule ${ruleIndex} has an invalid condition`)
+    }
+    if (
+      priority !== undefined
+      && (!Number.isInteger(priority) || typeof priority !== "number" || priority < 1)
+    ) {
+      throw new Error(`Source "${sourceKey}" request rule ${ruleIndex} has an invalid priority`)
+    }
+
+    const { requestDomains } = condition
+    if (
+      !Array.isArray(requestDomains)
+      || requestDomains.length === 0
+      || requestDomains.length > SOURCE_REGISTRY_LIMITS.maxRequestDomainsPerRule
+    ) {
+      throw new Error(`Source "${sourceKey}" request rule ${ruleIndex} has invalid request domains`)
+    }
+    for (const domain of requestDomains) {
+      if (
+        typeof domain !== "string"
+        || !REQUEST_DOMAIN_PATTERN.test(domain)
+        || !declaredHosts.some(host => matchesCapabilityHost(domain, host))
+      ) {
+        throw new Error(
+          `Source "${sourceKey}" request rule ${ruleIndex} uses undeclared domain "${String(domain)}"`,
+        )
+      }
+    }
+
+    if (action.type === "modifyHeaders") {
+      const requestHeaders = action.requestHeaders
+      const responseHeaders = action.responseHeaders
+      const headerModifications = [
+        ...(Array.isArray(requestHeaders) ? requestHeaders : []),
+        ...(Array.isArray(responseHeaders) ? responseHeaders : []),
+      ]
+      if (
+        headerModifications.length === 0
+        || headerModifications.length > SOURCE_REGISTRY_LIMITS.maxRequestHeadersPerRule
+      ) {
+        throw new Error(`Source "${sourceKey}" request rule ${ruleIndex} has invalid header modifications`)
+      }
+      headerModifications.forEach((header, headerIndex) => {
+        if (
+          !isRecord(header)
+          || typeof header.header !== "string"
+          || header.header.length === 0
+          || !REQUEST_HEADER_OPERATIONS.has(String(header.operation))
+          || (
+            header.operation !== "remove"
+            && (
+              typeof header.value !== "string"
+              || header.value.length > 2048
+              || /[\r\n]/.test(header.value)
+            )
+          )
+        ) {
+          throw new Error(
+            `Source "${sourceKey}" request rule ${ruleIndex} header ${headerIndex} is invalid`,
+          )
+        }
+      })
+    }
+  })
 }
 
 export function parseSourceRegistry(input: unknown): SourceRegistry {
@@ -381,6 +488,7 @@ export function flattenProviderConfig(
           ...source.metadata,
         },
         secrets: mergeDefinitions(provider.secrets, source.secrets),
+        requestRules: mergeDefinitions(provider.requestRules, source.requestRules),
       },
     ]),
   )
@@ -426,6 +534,7 @@ export function resolveRegistrySource(
     home: source.home,
     secrets,
     radar: source.radar,
+    requestRules: source.requestRules,
     disable: source.disable,
     loader: source.loader,
   }
@@ -441,7 +550,10 @@ export function resolveProvider(
 
   const sources = Object.fromEntries(
     Object.entries(provider.sources).map(([key, config]) => {
-      const source = resolveSource(key, config)
+      const source = resolveSource(key, {
+        ...config,
+        requestRules: mergeDefinitions(provider.requestRules, config.requestRules),
+      })
       const secrets = mergeDefinitions(provider.secrets, source.secrets)
       const cookieHosts = (secrets ?? [])
         .filter(secret => secret.type === "cookie")
@@ -465,6 +577,7 @@ export function resolveProvider(
         home: source.home ?? provider.home,
         secrets,
         radar: source.radar,
+        requestRules: source.requestRules,
         disable: source.disable,
         loader: source.loader,
       }

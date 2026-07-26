@@ -154,5 +154,22 @@ describe("weibo hot search source", () => {
       expect(source.capabilities.network).toContain("*.sinaimg.cn")
     }
     expect(sources.keyword.capabilities.network).toContain("m.weibo.cn")
+    expect(sources["hot-search"].requestRules).toEqual([
+      expect.objectContaining({
+        action: {
+          type: "modifyHeaders",
+          requestHeaders: [
+            {
+              header: "Referer",
+              operation: "set",
+              value: "https://weibo.com/",
+            },
+          ],
+        },
+        condition: expect.objectContaining({
+          requestDomains: ["weibo.com", "sinaimg.cn"],
+        }),
+      }),
+    ])
   })
 })

@@ -1,3 +1,4 @@
+import type { SourceRequestRule } from "../../typings/sources"
 import type { SourceConfig } from "./index"
 import { describe, expect, it } from "vitest"
 import {
@@ -98,6 +99,41 @@ describe("source template contexts", () => {
     expect(provider.sources.test.capabilities.cookies).toEqual(["account.example.com"])
   })
 
+  it("inherits provider request rules", () => {
+    const requestRule = {
+      action: {
+        type: "modifyHeaders",
+        requestHeaders: [
+          {
+            header: "Referer",
+            operation: "set",
+            value: "https://example.com/",
+          },
+        ],
+      },
+      condition: {
+        requestDomains: ["example.com"],
+        resourceTypes: ["xmlhttprequest"],
+      },
+    } satisfies SourceRequestRule
+    const provider = resolveProvider("test", {
+      title: "Provider",
+      color: "blue",
+      requestRules: [requestRule],
+      sources: {
+        test: {
+          cache: "1h",
+          loader: {
+            type: "rss",
+            url: "https://example.com/feed.xml",
+          },
+        },
+      },
+    })
+
+    expect(provider.sources.test.requestRules).toEqual([requestRule])
+  })
+
   it("restricts Radar parameter templates to URL variables", () => {
     expect(() => resolveTestSource(createSourceConfig([
       {
@@ -189,5 +225,40 @@ describe("source registry", () => {
         },
       },
     })).toThrow("unsupported loader type")
+  })
+
+  it("rejects request rules for undeclared network hosts", () => {
+    expect(() => resolveSourceRegistry({
+      "test:latest": {
+        metadata: {
+          providerTitle: "Test",
+          color: "blue",
+          category: "tech",
+        },
+        cache: "5m",
+        loader: {
+          type: "rss",
+          url: "https://example.com/feed.xml",
+        },
+        requestRules: [
+          {
+            action: {
+              type: "modifyHeaders",
+              requestHeaders: [
+                {
+                  header: "Referer",
+                  operation: "set",
+                  value: "https://example.com/",
+                },
+              ],
+            },
+            condition: {
+              requestDomains: ["other.example"],
+              resourceTypes: ["xmlhttprequest"],
+            },
+          },
+        ],
+      },
+    })).toThrow("uses undeclared domain")
   })
 })

@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 const { browserMock } = vi.hoisted(() => ({
   browserMock: {
     declarativeNetRequest: {
+      getSessionRules: vi.fn(),
       updateSessionRules: vi.fn(),
     },
     runtime: {
@@ -15,21 +16,44 @@ vi.mock("#imports", () => ({
   browser: browserMock,
 }))
 
-const { installWeiboRefererRule } = await import("./weibo-referer-rule")
+const { syncSourceRequestRules } = await import("./source-request-rules")
 
-describe("weibo referer rule", () => {
+const weiboRule = {
+  action: {
+    type: "modifyHeaders",
+    requestHeaders: [
+      {
+        header: "Referer",
+        operation: "set",
+        value: "https://weibo.com/",
+      },
+    ],
+  },
+  condition: {
+    requestDomains: ["weibo.com", "sinaimg.cn"],
+    resourceTypes: ["image", "xmlhttprequest"],
+  },
+} satisfies import("@newsnext/source/typings").SourceRequestRule
+
+describe("source request rules", () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    browserMock.declarativeNetRequest.getSessionRules.mockResolvedValue([
+      { id: 42 },
+      { id: 1_000_000_001 },
+    ])
     browserMock.declarativeNetRequest.updateSessionRules.mockResolvedValue(undefined)
   })
 
-  it("installs an extension-scoped Weibo referer rule", async () => {
-    await installWeiboRefererRule()
+  it("installs deduplicated extension-scoped session rules", async () => {
+    await syncSourceRequestRules([weiboRule, weiboRule])
 
     expect(browserMock.declarativeNetRequest.updateSessionRules).toHaveBeenCalledWith({
-      removeRuleIds: [expect.any(Number), expect.any(Number), expect.any(Number)],
+      removeRuleIds: [1_000_000_001],
       addRules: [
-        expect.objectContaining({
+        {
+          id: 1_000_000_000,
+          priority: 1,
           action: {
             type: "modifyHeaders",
             requestHeaders: [
@@ -42,18 +66,18 @@ describe("weibo referer rule", () => {
           },
           condition: {
             initiatorDomains: ["test-extension-id"],
-            requestDomains: ["sinaimg.cn", "weibo.com", "s.weibo.com", "m.weibo.cn"],
+            requestDomains: ["weibo.com", "sinaimg.cn"],
             resourceTypes: ["image", "xmlhttprequest"],
           },
-        }),
+        },
       ],
     })
   })
 
-  it("exposes rule installation failures", async () => {
+  it("exposes synchronization failures", async () => {
     const error = new Error("Invalid request rule")
     browserMock.declarativeNetRequest.updateSessionRules.mockRejectedValue(error)
 
-    await expect(installWeiboRefererRule()).rejects.toBe(error)
+    await expect(syncSourceRequestRules([weiboRule])).rejects.toBe(error)
   })
 })

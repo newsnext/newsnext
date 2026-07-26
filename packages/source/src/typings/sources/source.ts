@@ -1,4 +1,5 @@
 import type { Color, NewsItem } from "@newsnext/shared/types"
+import type { Browser } from "@wxt-dev/browser"
 import type { InferSourceParams, SourceParamSchemaMap } from "./params"
 
 /**
@@ -96,6 +97,8 @@ export interface SourceCapabilities {
   browser: readonly string[]
 }
 
+export type SourceRequestRule = Omit<Browser.declarativeNetRequest.Rule, "id">
+
 export type SourceCacheMaxAge = `${number}${"s" | "m" | "h" | "d"}`
 
 export interface SourceCacheConfig {
@@ -115,6 +118,7 @@ export interface RuntimeSource<TParams extends SourceParamSchemaMap = SourcePara
   home?: string
   secrets?: SourceSecretDefinition[]
   radar?: SourceRadarRule[]
+  requestRules?: readonly SourceRequestRule[]
   disable?: boolean
   loader: SourceLoader<TParams>
   icon?: string

@@ -405,8 +405,39 @@ and `X-Requested-With`, `credentials`, and `referrer` may be declared when an
 endpoint requires them. Do not copy transient values such as XSRF tokens,
 browser version client hints, priorities, or deployment version headers into a
 source configuration. A browser extension may ignore `referrer` or a manually
-set `Referer` header. When an endpoint requires it, install a narrowly scoped
-Manifest V3 `declarativeNetRequest` rule for that request URL.
+set `Referer` header. When an endpoint requires a protected `Referer` or
+`Origin` header, declare a narrowly scoped `requestRules` entry. The extension
+translates these declarations into Manifest V3 `declarativeNetRequest` session
+rules:
+
+```ts
+requestRules: [
+  {
+    action: {
+      type: "modifyHeaders",
+      requestHeaders: [
+        {
+          header: "Referer",
+          operation: "set",
+          value: "https://example.com/",
+        },
+      ],
+    },
+    condition: {
+      requestDomains: ["api.example.com", "cdn.example.com"],
+      resourceTypes: ["image", "xmlhttprequest"],
+    },
+  },
+],
+```
+
+`requestRules` uses `Omit<Browser.declarativeNetRequest.Rule, "id">` directly.
+The extension assigns session rule IDs automatically. `condition.requestDomains`
+is required and must be covered by the source's `capabilities.network`.
+Request rules may be shared at provider level or declared on an individual
+source. Provider rules are inherited by every source, so every inheriting
+source must declare the covered network hosts. Keep rules limited to the
+domains and resource types that require the header.
 
 When several variants represent the same source capability, prefer a validated
 parameter over separate source IDs. A templated URL and a shared item selector
@@ -1221,6 +1252,10 @@ Runtime source registries:
 - reject prototype-related ID segments
 - allow only declarative `json`, `html`, and `rss` loaders
 - reject provider containers and custom executable loaders
+- allow at most 10 request rules per source, 20 domains per rule, and 5 header
+  modifications per rule
+- scope installed request rules to extension-initiated requests and require
+  every request domain to be declared by the source's network capabilities
 
 The same registry validation runs during the registry build and after bundled
 or HTTP loading.
