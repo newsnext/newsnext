@@ -1,9 +1,8 @@
 import type { Duration } from "date-fns"
 import { tz, tzOffset } from "@date-fns/tz"
-import { add, format, isAfter, parse, set, setDay, sub, subWeeks } from "date-fns"
+import { add, isAfter, parse, set, setDay, sub, subWeeks } from "date-fns"
 
 const DEFAULT_TIMEZONE = "Asia/Shanghai"
-const DAYS_PER_MONTH = 30
 const MS_PER_MINUTE = 60 * 1000
 const TODAY_REGEX = /^(?:今[天日]|to?day?)(.*)/
 const YESTERDAY_REGEX = /^(?:昨[天日]|y(?:ester)?day?)(.*)/
@@ -15,20 +14,28 @@ const THURSDAY_REGEX = /^(?:周|星期)四(.*)/
 const FRIDAY_REGEX = /^(?:周|星期)五(.*)/
 const SATURDAY_REGEX = /^(?:周|星期)六(.*)/
 const SUNDAY_REGEX = /^(?:周|星期)[天日](.*)/
-const TOMORROW_REGEX = /^(?:明[天日]|y(?:ester)?day?)(.*)/
-const DAY_AFTER_TOMORROW_REGEX = /^(?:[后後][天日]|(?:the)?d(?:ay)?a(?:fter)?t(?:omrrow)?)(.*)/
+const TOMORROW_REGEX = /^(?:明[天日]|tomorrow)(.*)/
+const DAY_AFTER_TOMORROW_REGEX = /^(?:[后後][天日]|(?:the)?dayaftertomorrow)(.*)/
 const NORMALIZE_ARTICLE_REGEX = /(^an?\s)|(\san?\s)/g
+const NORMALIZE_HALF_HOUR_REGEX = /半个?小时/g
 const NORMALIZE_SEVERAL_REGEX = /几|幾/g
 const NORMALIZE_SEPARATOR_REGEX = /[\s,]/g
 const RELATIVE_DURATION_REGEX = /\D*\d+(?![:\-/]|(a|p)m)\D+/g
 const BEFORE_REGEX = /(.*)(?:前|ago)$/
 const AFTER_REGEX = /(?:^in(.*)|(.*)[后後])$/
-const MERIDIEM_SUFFIX_REGEX = /a|pm$/
-const MERIDIEM_REPLACE_REGEX = /a|pm/
-const NOW_REGEX = /^刚刚$/
-const FOUR_DIGIT_YEAR_REGEX = /(\d+)(?:年|y(?:ea)?rs?)/
-const MONTH_REGEX = /(\d+)(?:[个個]?月|months?)/
-const WEEK_REGEX = /(\d+)(?:周|[个個]?星期|weeks?)/
+const COMPACT_RELATIVE_REGEX = /^\d+(?:mo|[ywdhms])$/
+const LAST_WEEK_REGEX = /^(?:lastweek|上个?(?:周|星期))$/
+const NEXT_WEEK_REGEX = /^(?:nextweek|下个?(?:周|星期))$/
+const LAST_MONTH_REGEX = /^(?:lastmonth|上个?月)$/
+const NEXT_MONTH_REGEX = /^(?:nextmonth|下个?月)$/
+const LAST_YEAR_REGEX = /^(?:lastyear|去年|上一年)$/
+const NEXT_YEAR_REGEX = /^(?:nextyear|明年|下一年)$/
+const TIME_PREFIX_REGEX = /^(?:at|在|于)/
+const TIME_REGEX = /^(\d{1,2}):(\d{2})(?::(\d{2}))?(am|pm)?$/
+const NOW_REGEX = /^(?:刚刚|刚才|现在|justnow|now)$/
+const FOUR_DIGIT_YEAR_REGEX = /(\d+)(?:年|y(?:ears?)?)/
+const MONTH_REGEX = /(\d+)(?:[个個]?月|months?|mo)/
+const WEEK_REGEX = /(\d+)(?:周|[个個]?星期|w(?:eeks?)?)/
 const DAY_REGEX = /(\d+)(?:天|日|d(?:ay)?s?)/
 const HOUR_REGEX = /(\d+)(?:[个個]?(?:小?时|[時点點])|h(?:(?:ou)?r)?s?)/
 const MINUTE_REGEX = /(\d+)(?:分[鐘钟]?|m(?:in(?:ute)?)?s?)/
@@ -42,7 +49,8 @@ interface WordRule {
 /**
  * Convert a wall-time string from any timezone to UTC timestamp.
  */
-export function tranformToUTC(date: string, formatString?: string, timezone: string = DEFAULT_TIMEZONE): number {
+export function transformToUTC(date: string, formatString?: string, timezone: string = DEFAULT_TIMEZONE): number {
+  assertTimeZone(timezone)
   const base = formatString ? parse(date, formatString, new Date()) : new Date(date)
 
   const y = base.getFullYear()
@@ -59,10 +67,75 @@ export function tranformToUTC(date: string, formatString?: string, timezone: str
   return utcFromWall - offsetMinutes * MS_PER_MINUTE
 }
 
+/** @deprecated Use transformToUTC instead. */
+export function tranformToUTC(date: string, formatString?: string, timezone: string = DEFAULT_TIMEZONE): number {
+  return transformToUTC(date, formatString, timezone)
+}
+
+export function isValidTimeZone(timezone: string): boolean {
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: timezone }).format()
+    return true
+  } catch {
+    return false
+  }
+}
+
+function assertTimeZone(timezone: string): void {
+  if (!isValidTimeZone(timezone)) {
+    throw new RangeError(`Invalid IANA timezone: ${timezone}`)
+  }
+}
+
 function getWeekdayStart(base: Date, weekday: number, context: ReturnType<typeof tz>) {
   const dayStart = set(base, { hours: 0, minutes: 0, seconds: 0, milliseconds: 0 })
   const candidate = setDay(dayStart, weekday, { weekStartsOn: 1, in: context })
-  return isAfter(dayStart, candidate) ? candidate : subWeeks(candidate, 1, { in: context })
+  return isAfter(candidate, dayStart) ? subWeeks(candidate, 1, { in: context }) : candidate
+}
+
+function toUtcDate(date: Date): Date {
+  return new Date(date.getTime())
+}
+
+function setTime(
+  date: Date,
+  time: string,
+  context: ReturnType<typeof tz>,
+): Date {
+  if (!time) {
+    return toUtcDate(date)
+  }
+
+  const match = TIME_REGEX.exec(time.replace(TIME_PREFIX_REGEX, ""))
+  if (!match) {
+    return new Date(Number.NaN)
+  }
+
+  let hours = Number.parseInt(match[1], 10)
+  const minutes = Number.parseInt(match[2], 10)
+  const seconds = Number.parseInt(match[3] ?? "0", 10)
+  const meridiem = match[4]
+
+  if (
+    minutes > 59
+    || seconds > 59
+    || (meridiem ? hours < 1 || hours > 12 : hours > 23)
+  ) {
+    return new Date(Number.NaN)
+  }
+
+  if (meridiem === "am") {
+    hours %= 12
+  } else if (meridiem === "pm") {
+    hours = (hours % 12) + 12
+  }
+
+  return toUtcDate(set(date, {
+    hours,
+    minutes,
+    seconds,
+    milliseconds: 0,
+  }, { in: context }))
 }
 
 // Build dynamic word list; keep here because Cloudflare may return zero when evaluated at module scope.
@@ -96,7 +169,12 @@ const patterns = [
 const patternSize = patterns.length
 
 function normalizeDateString(raw: string) {
-  return raw.toLowerCase().replace(NORMALIZE_ARTICLE_REGEX, "1").replace(NORMALIZE_SEVERAL_REGEX, "3").replace(NORMALIZE_SEPARATOR_REGEX, "")
+  return raw
+    .toLowerCase()
+    .replace(NORMALIZE_ARTICLE_REGEX, "1")
+    .replace(NORMALIZE_HALF_HOUR_REGEX, "30分钟")
+    .replace(NORMALIZE_SEVERAL_REGEX, "3")
+    .replace(NORMALIZE_SEPARATOR_REGEX, "")
 }
 
 function toDurations(matches: string[]) {
@@ -128,10 +206,7 @@ function toDurationObject(matches: string[]): Duration {
   const duration: Duration = {}
 
   if (durationMap.years) duration.years = Number.parseInt(durationMap.years, 10)
-  if (durationMap.months) {
-    const months = Number.parseInt(durationMap.months, 10)
-    duration.days = (duration.days ?? 0) + months * DAYS_PER_MONTH
-  }
+  if (durationMap.months) duration.months = Number.parseInt(durationMap.months, 10)
   if (durationMap.days) duration.days = Number.parseInt(durationMap.days, 10)
   if (durationMap.hours) duration.hours = Number.parseInt(durationMap.hours, 10)
   if (durationMap.minutes) duration.minutes = Number.parseInt(durationMap.minutes, 10)
@@ -140,18 +215,61 @@ function toDurationObject(matches: string[]): Duration {
   return duration
 }
 
-export const parseDate = (date: string | number, formatString?: string, referenceDate: Date = new Date()) => {
+export function parseDate(date: string | number, formatString?: string, referenceDate: Date = new Date()): Date {
   if (typeof date === "number") return new Date(date)
   if (formatString) return parse(date, formatString, referenceDate)
   return new Date(date)
 }
 
-export function parseRelativeDate(date: string, timezone: string = "UTC") {
-  if (NOW_REGEX.test(date)) return new Date()
+function resolveNamedPeriod(
+  normalizedDate: string,
+  now: Date,
+  context: ReturnType<typeof tz>,
+): Date | undefined {
+  if (LAST_WEEK_REGEX.test(normalizedDate)) {
+    return toUtcDate(sub(now, { weeks: 1 }, { in: context }))
+  }
+  if (NEXT_WEEK_REGEX.test(normalizedDate)) {
+    return toUtcDate(add(now, { weeks: 1 }, { in: context }))
+  }
+  if (LAST_MONTH_REGEX.test(normalizedDate)) {
+    return toUtcDate(sub(now, { months: 1 }, { in: context }))
+  }
+  if (NEXT_MONTH_REGEX.test(normalizedDate)) {
+    return toUtcDate(add(now, { months: 1 }, { in: context }))
+  }
+  if (LAST_YEAR_REGEX.test(normalizedDate)) {
+    return toUtcDate(sub(now, { years: 1 }, { in: context }))
+  }
+  if (NEXT_YEAR_REGEX.test(normalizedDate)) {
+    return toUtcDate(add(now, { years: 1 }, { in: context }))
+  }
+  return undefined
+}
+
+export function parseRelativeDate(
+  date: string,
+  timezone: string = "UTC",
+  referenceDate: Date = new Date(),
+): Date {
+  assertTimeZone(timezone)
 
   const context = tz(timezone)
-  const now = context(new Date())
+  const now = context(referenceDate)
   const normalizedDate = normalizeDateString(date)
+
+  if (NOW_REGEX.test(normalizedDate)) {
+    return toUtcDate(now)
+  }
+
+  const namedPeriod = resolveNamedPeriod(normalizedDate, now, context)
+  if (namedPeriod) {
+    return namedPeriod
+  }
+
+  if (COMPACT_RELATIVE_REGEX.test(normalizedDate)) {
+    return toUtcDate(sub(now, toDurationObject([normalizedDate]), { in: context }))
+  }
 
   const matches = normalizedDate.match(RELATIVE_DURATION_REGEX)
 
@@ -163,13 +281,13 @@ export function parseRelativeDate(date: string, timezone: string = "UTC") {
       const beforeMatches = BEFORE_REGEX.exec(lastMatch)
       if (beforeMatches) {
         tokens.push(beforeMatches[1])
-        return sub(now, toDurationObject(tokens), { in: context })
+        return toUtcDate(sub(now, toDurationObject(tokens), { in: context }))
       }
 
       const afterMatches = AFTER_REGEX.exec(lastMatch)
       if (afterMatches) {
         tokens.push(afterMatches[1] ?? afterMatches[2])
-        return add(now, toDurationObject(tokens), { in: context })
+        return toUtcDate(add(now, toDurationObject(tokens), { in: context }))
       }
 
       tokens.push(lastMatch)
@@ -183,7 +301,7 @@ export function parseRelativeDate(date: string, timezone: string = "UTC") {
         if (wordMatches) {
           const durationTokens = [wordMatches[1], ...rest]
           const baseStart = set(rule.startAt, { hours: 0, minutes: 0, seconds: 0, milliseconds: 0 })
-          return add(baseStart, toDurationObject(durationTokens), { in: context })
+          return toUtcDate(add(baseStart, toDurationObject(durationTokens), { in: context }))
         }
       }
     }
@@ -191,10 +309,8 @@ export function parseRelativeDate(date: string, timezone: string = "UTC") {
     for (const rule of buildWordRules(now, context)) {
       const wordMatches = rule.regExp.exec(normalizedDate)
       if (wordMatches) {
-        const timeString = MERIDIEM_SUFFIX_REGEX.test(wordMatches[1]) ? wordMatches[1].replace(MERIDIEM_REPLACE_REGEX, " $&") : wordMatches[1]
-        const dayString = format(rule.startAt, "yyyy-MM-dd", { in: context })
-
-        return context(`${dayString} ${timeString}`)
+        const dayStart = set(rule.startAt, { hours: 0, minutes: 0, seconds: 0, milliseconds: 0 })
+        return setTime(dayStart, wordMatches[1], context)
       }
     }
   }

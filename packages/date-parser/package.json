@@ -1,0 +1,22 @@
+{
+  "name": "@newsnext/date-parser",
+  "type": "module",
+  "private": true,
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "bun run vitest run --config vitest.config.ts"
+  },
+  "dependencies": {
+    "@date-fns/tz": "^1.5.0",
+    "date-fns": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.1",
+    "mockdate": "^3.0.5",
+    "vitest": "^4.1.10"
+  }
+}

@@ -9,7 +9,6 @@
     "./service": "./src/service/index.ts",
     "./typings": "./src/typings/index.ts",
     "./utils/crypto": "./src/utils/crypto.ts",
-    "./utils/date": "./src/utils/date.ts",
     "./utils/fetch": "./src/utils/fetch.ts",
     "./utils/jwt": "./src/utils/jwt.ts",
     "./utils/params": "./src/utils/params.ts",
@@ -22,12 +21,10 @@
     "test": "bun run vitest"
   },
   "dependencies": {
-    "@date-fns/tz": "^1.5.0",
     "@newsnext/shared": "workspace:*",
     "@smithy/md5-js": "^4.4.13",
     "@wxt-dev/browser": "^0.2.2",
     "cheerio": "^1.2.0",
-    "date-fns": "catalog:",
     "fast-xml-parser": "^5.10.1",
     "iconv-lite": "^0.7.3",
     "ofetch": "catalog:"

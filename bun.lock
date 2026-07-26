@@ -67,6 +67,18 @@
         "wxt": "^0.20.27",
       },
     },
+    "packages/date-parser": {
+      "name": "@newsnext/date-parser",
+      "dependencies": {
+        "@date-fns/tz": "^1.5.0",
+        "date-fns": "catalog:",
+      },
+      "devDependencies": {
+        "@types/node": "^26.1.1",
+        "mockdate": "^3.0.5",
+        "vitest": "^4.1.10",
+      },
+    },
     "packages/misc/tsconfigs": {
       "name": "@newsnext/tsconfigs",
     },
@@ -79,12 +91,10 @@
     "packages/source": {
       "name": "@newsnext/source",
       "dependencies": {
-        "@date-fns/tz": "^1.5.0",
         "@newsnext/shared": "workspace:*",
         "@smithy/md5-js": "^4.4.13",
         "@wxt-dev/browser": "^0.2.2",
         "cheerio": "^1.2.0",
-        "date-fns": "catalog:",
         "fast-xml-parser": "^5.10.1",
         "iconv-lite": "^0.7.3",
         "ofetch": "catalog:",
@@ -370,6 +380,8 @@
     "@jridgewell/trace-mapping": ["@jridgewell/trace-mapping@0.3.31", "", { "dependencies": { "@jridgewell/resolve-uri": "^3.1.0", "@jridgewell/sourcemap-codec": "^1.4.14" } }, "sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw=="],
 
     "@napi-rs/wasm-runtime": ["@napi-rs/wasm-runtime@1.1.4", "", { "dependencies": { "@tybys/wasm-util": "^0.10.1" }, "peerDependencies": { "@emnapi/core": "^1.7.1", "@emnapi/runtime": "^1.7.1" } }, "sha512-3NQNNgA1YSlJb/kMH1ildASP9HW7/7kYnRI2szWJaofaS1hWmbGI4H+d3+22aGzXXN9IJ+n+GiFVcGipJP18ow=="],
+
+    "@newsnext/date-parser": ["@newsnext/date-parser@workspace:packages/date-parser"],
 
     "@newsnext/extension": ["@newsnext/extension@workspace:apps/extension"],
 

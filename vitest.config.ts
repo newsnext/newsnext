@@ -34,6 +34,7 @@ export default defineConfig({
     globals: true,
     include: [
       "apps/extension/**/*.{test,spec}.{ts,tsx}",
+      "packages/date-parser/**/*.{test,spec}.{ts,tsx}",
       "packages/shared/**/*.{test,spec}.{ts,tsx}",
       "packages/source/**/*.{test,spec}.{ts,tsx}",
     ],
