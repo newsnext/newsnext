@@ -12,6 +12,15 @@ const OPTIONAL_SOURCE_PERMISSIONS = [
   "history",
 ] as const
 const OPTIONAL_SOURCE_ORIGINS = ["*://*/*"] as const
+const REQUIRED_PERMISSIONS = [
+  "activeTab",
+  "alarms",
+  "contextMenus",
+  "declarativeNetRequestWithHostAccess",
+  "scripting",
+  "storage",
+  "tabs",
+] as const
 
 // See https://wxt.dev/api/config.html
 export default defineConfig({
@@ -30,24 +39,24 @@ export default defineConfig({
   },
   manifest: ({ browser, mode }) => {
     const extensionName = mode === "development" ? "NewsNext Dev" : "NewsNext"
+    const yoloMode = mode === "development" && import.meta.env.WXT_YOLO_MODE === "true"
 
     return {
       name: extensionName,
       description: "Elegant reading experience, Fastest information reception",
       version: "0.9.0",
-      permissions: [
-        "activeTab",
-        "alarms",
-        "contextMenus",
-        "declarativeNetRequestWithHostAccess",
-        "scripting",
-        "storage",
-        "tabs",
-      ],
-      optional_permissions: browser === "firefox"
-        ? [...OPTIONAL_SOURCE_PERMISSIONS, ...OPTIONAL_SOURCE_ORIGINS]
-        : [...OPTIONAL_SOURCE_PERMISSIONS],
-      optional_host_permissions: browser === "firefox" ? undefined : [...OPTIONAL_SOURCE_ORIGINS],
+      permissions: yoloMode
+        ? [...REQUIRED_PERMISSIONS, ...OPTIONAL_SOURCE_PERMISSIONS]
+        : [...REQUIRED_PERMISSIONS],
+      host_permissions: yoloMode ? [...OPTIONAL_SOURCE_ORIGINS] : undefined,
+      optional_permissions: yoloMode
+        ? undefined
+        : browser === "firefox"
+          ? [...OPTIONAL_SOURCE_PERMISSIONS, ...OPTIONAL_SOURCE_ORIGINS]
+          : [...OPTIONAL_SOURCE_PERMISSIONS],
+      optional_host_permissions: yoloMode || browser === "firefox"
+        ? undefined
+        : [...OPTIONAL_SOURCE_ORIGINS],
       web_accessible_resources: browser === "firefox"
         ? ["radar-overlay.html"]
         : [{

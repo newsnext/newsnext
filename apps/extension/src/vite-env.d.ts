@@ -3,6 +3,7 @@
 /// <reference types="unplugin-icons/types/react" />
 
 interface ImportMetaEnv {
+  readonly WXT_YOLO_MODE?: string
   readonly WXT_SOURCE_CONNECTION_WS_URL?: string
 }
 

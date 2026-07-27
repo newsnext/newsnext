@@ -49,6 +49,7 @@
     "typecheck": "tsc -b --noEmit",
     "prepare": "simple-git-hooks",
     "dev": "bun --filter=@newsnext/extension run dev",
+    "dev:yolo": "bun --filter=@newsnext/extension run dev:yolo",
     "dev:chrome": "bun --filter=@newsnext/extension run dev:chrome",
     "dev:firefox": "bun --filter=@newsnext/extension run dev:firefox",
     "newsnext": "bun --filter=@newsnext/cli run newsnext",

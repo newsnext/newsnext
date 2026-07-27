@@ -6,6 +6,7 @@
   "description": "manifest.json description",
   "scripts": {
     "dev": "bun run dev:chrome",
+    "dev:yolo": "WXT_YOLO_MODE=true bun run dev",
     "build": "bun run build:chrome",
     "dev:chrome": "wxt",
     "dev:firefox": "wxt -b firefox",
