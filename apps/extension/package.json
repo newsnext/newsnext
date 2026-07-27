@@ -9,6 +9,7 @@
     "build": "bun run build:chrome",
     "dev:chrome": "wxt",
     "dev:firefox": "wxt -b firefox",
+    "test": "bun run --cwd ../.. test -- apps/extension",
     "build:chrome": "wxt build",
     "build:firefox": "wxt build -b firefox",
     "zip:chrome": "wxt zip",

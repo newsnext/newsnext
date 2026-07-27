@@ -6,6 +6,7 @@
   "license": "MPL-2.0",
   "workspaces": {
     "packages": [
+      "apps/cli",
       "apps/extension",
       "packages/date-parser",
       "packages/misc/tsconfigs",
@@ -50,7 +51,9 @@
     "dev": "bun --filter=@newsnext/extension run dev",
     "dev:chrome": "bun --filter=@newsnext/extension run dev:chrome",
     "dev:firefox": "bun --filter=@newsnext/extension run dev:firefox",
+    "newsnext": "bun --filter=@newsnext/cli run newsnext",
     "build": "bun --filter=@newsnext/extension run build",
+    "build:cli": "bun --filter=@newsnext/cli run build",
     "build:chrome": "bun --filter=@newsnext/extension run build:chrome",
     "build:firefox": "bun --filter=@newsnext/extension run build:firefox"
   },

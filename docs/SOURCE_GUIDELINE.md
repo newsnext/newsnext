@@ -1415,6 +1415,121 @@ structured loader sends its request.
 Meaningful loader, template, transform, validation, or radar changes require
 tests.
 
+### CLI source execution
+
+The NewsNext extension can execute an authoring-format JSON provider directly in
+its background runtime and return the resulting news items over a local
+WebSocket. This is a standard extension capability available in development and
+production builds; there is no separate source debug mode. It does not install
+the provider, update the configured registry, or use the source cache.
+
+The extension always connects to `ws://127.0.0.1:43110`. To use a different
+loopback server URL, set `WXT_SOURCE_CONNECTION_WS_URL` when building or starting
+the extension. Open Settings and check **General → Source Connection** to see
+whether the extension is connecting, connected, or disconnected. The status also
+shows the configured local WebSocket URL.
+
+Start the persistent CLI server before running source commands:
+
+```sh
+bun run newsnext start
+bun run newsnext status
+```
+
+`start` launches the server in the background and returns after it is ready.
+`status` reports the server PID and all connected extension instances. The
+server remains available across CLI invocations. Use `restart` after updating
+the CLI, or stop it explicitly when it is no longer needed:
+
+```sh
+bun run newsnext restart
+bun run newsnext stop
+```
+
+With the server and extension running, execute a source already registered in
+the extension by its full `provider:source` ID:
+
+```sh
+bun run newsnext source run github:trending
+```
+
+List the source IDs available in the connected extension when the exact ID is
+not known:
+
+```sh
+bun run newsnext source list
+```
+
+The list command writes one source ID per line to standard output. Use
+`--browser` to select an instance when multiple extensions are connected and
+`--timeout` to change how long the command waits for a connection.
+
+Registered sources use the provider secrets already stored by the extension.
+To execute a local provider definition instead, pass its JSON file from the
+repository root:
+
+```sh
+bun run newsnext source run packages/registry/src/zhihu.json
+```
+
+The CLI infers the source ID when a provider defines exactly one source. Pass the
+source ID after the provider path when a provider defines multiple sources:
+
+```sh
+bun run newsnext source run packages/registry/src/hackernews.json top
+```
+
+Set source parameters with repeatable `--param` flags or a JSON object:
+
+```sh
+bun run newsnext source run packages/registry/src/telegram.json \
+  --param channel=telegram
+
+bun run newsnext source run packages/registry/src/telegram.json \
+  --params '{"channel":"telegram"}'
+```
+
+Use `--watch` to rerun the source whenever its provider file changes. Each watch
+result is emitted as one line of JSON. Result JSON is written to standard
+output; connection messages, execution summaries, and errors are written to
+standard error, so the output remains pipe-friendly.
+
+```sh
+bun run newsnext source run packages/registry/src/zhihu.json --watch
+```
+
+Pass `-` instead of a provider path to read provider JSON from standard input.
+Standard-input providers use `stdin` as their provider ID. `--watch` is not
+available with standard input. Use `--provider-id` to override the provider ID,
+`--browser` to select a browser when multiple extensions are
+running, `--timeout` to change the connection and execution timeout, and
+`--verbose` to include extension-side stacks in errors. Run the following
+command for the complete option list:
+
+```sh
+bun run newsnext source run --help
+```
+
+The persistent server binds only to the configured loopback host. Source
+commands submit execution requests to that local server, which waits for a
+connected extension, sends a `source.run` request,
+prints the returned `NewsItem[]`, and exits non-zero with actionable validation,
+login, connection, or loader errors when execution fails.
+
+CLI source execution uses the same defaults expansion, registry validation,
+parameter normalization, templates, JMESPath, loaders, capabilities, and
+background secret resolution as normal source execution. Registered source IDs
+resolve directly from the extension registry and use their normal provider
+secret cache. For local provider files, run-resolved secrets are stored under an
+isolated `cli:<provider-id>` cache namespace by default. Pass
+`--use-provider-secrets` only when a local provider run should read and update
+the provider's normal stored secret cache. Browser cookies and local storage are
+still read according to the source secret definitions.
+
+The connection itself does not grant additional browser or host permissions.
+Sources can only use permissions already granted to the extension through the
+normal source authorization flow.
+
 Relevant test files include:
 
 ```text
@@ -1422,6 +1537,12 @@ packages/source/src/utils/template.test.ts
 packages/source/src/utils/source/json-source.test.ts
 packages/source/src/utils/source/html-source.test.ts
 packages/source/src/source-contract.test.ts
+apps/cli/src/source-run/options.test.ts
+apps/cli/src/source-run/session.test.ts
+apps/cli/src/daemon.test.ts
+apps/extension/src/lib/background/source-runner.test.ts
+apps/extension/src/lib/background/source-connection-websocket.test.ts
+apps/extension/src/lib/background/source-connection-service.test.ts
 apps/extension/src/lib/radar.test.ts
 apps/extension/src/lib/source-loader.test.ts
 ```
@@ -1432,6 +1553,7 @@ Run:
 bun run typecheck
 bun run test
 bun run lint
+bun run build:cli
 bun run build:chrome
 git diff --check
 ```

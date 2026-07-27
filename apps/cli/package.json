@@ -1,0 +1,25 @@
+{
+  "name": "@newsnext/cli",
+  "type": "module",
+  "version": "0.0.1",
+  "private": true,
+  "license": "MPL-2.0",
+  "bin": {
+    "newsnext": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "bun build src/index.ts --target bun --outfile dist/newsnext.js",
+    "dev": "bun run src/index.ts restart",
+    "newsnext": "bun run src/index.ts",
+    "test": "vitest run --root ../.. apps/cli",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@newsnext/shared": "workspace:*",
+    "citty": "^0.2.2"
+  },
+  "devDependencies": {
+    "@newsnext/tsconfigs": "workspace:*",
+    "vitest": "^4.1.10"
+  }
+}
