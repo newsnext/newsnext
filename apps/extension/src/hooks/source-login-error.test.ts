@@ -11,7 +11,7 @@ describe("getLoginUrlFromError", () => {
     expect(getLoginUrlFromError(error)).toBe("https://x.com")
   })
 
-  it("treats X login responses as login-required instead of source failures", () => {
+  it("reads login URLs from compatible error messages", () => {
     expect(getLoginUrlFromError(new Error("Please log in to https://x.com first.")))
       .toBe("https://x.com")
   })

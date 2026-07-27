@@ -29,46 +29,17 @@ vi.mock("./source-runner", () => ({
 }))
 
 const {
-  getSourceConnectionStatus,
   parseSourceConnectionRequest,
-  registerSourceConnectionWebSocket,
   resolveSourceConnectionState,
   serializeSourceConnectionError,
-  setSourceConnectionEnabled,
 } = await import("./source-connection-websocket")
 
 describe("source connection WebSocket", () => {
-  it("keeps the connection disabled by default", async () => {
-    browserMock.storage.local.get.mockResolvedValue({})
-
-    await registerSourceConnectionWebSocket()
-
-    expect(browserMock.alarms.clear).toHaveBeenCalledWith(
-      "source-connection-websocket-reconnect",
-    )
-    expect(getSourceConnectionStatus()).toMatchObject({
-      enabled: false,
-      state: "disabled",
-    })
-  })
-
   it("reports the connection state", () => {
     expect(resolveSourceConnectionState(0)).toBe("connecting")
     expect(resolveSourceConnectionState(1)).toBe("connected")
     expect(resolveSourceConnectionState(3)).toBe("disconnected")
     expect(resolveSourceConnectionState()).toBe("disconnected")
-  })
-
-  it("persists disabling the connection and reports the disabled state", async () => {
-    await setSourceConnectionEnabled(false)
-
-    expect(browserMock.storage.local.set).toHaveBeenCalledWith({
-      sourceConnectionEnabled: false,
-    })
-    expect(getSourceConnectionStatus()).toMatchObject({
-      enabled: false,
-      state: "disabled",
-    })
   })
 
   it("preserves actionable login error metadata", () => {

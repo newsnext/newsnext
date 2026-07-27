@@ -40,7 +40,10 @@ Newsnext is a personalized web crawler that runs inside a browser extension (mv3
 - Prefer functional components and composition; extract reusable behavior into custom hooks when it improves clarity.
 - Follow the Rules of Hooks, keep state close to usage, and add effect cleanup when needed.
 - Use semantic HTML and accessible interactions for forms and UI.
-- Add or update tests for meaningful behavior changes, bug fixes, shared logic, and risky integration paths. Avoid adding low-value tests for trivial wiring, mechanical refactors, styling-only changes, or configuration-only changes when type-checking, linting, build output, or targeted manual verification covers the risk.
+- Only add unit tests for deterministic pure functions.
+- Do not test React components, hooks, browser APIs, storage, network requests, WebSockets, CLI orchestration, or thin delegation wrappers with mocks.
+- Extract reusable parsing, normalization, validation, matching, and decision logic into pure functions when it deserves testing.
+- Do not add tests for trivial wiring, type-level guarantees, constants, direct property forwarding, mechanical refactors, styling-only changes, or configuration-only changes.
 - Optimize render performance deliberately rather than by default.
 - Avoid `any`; prefer `unknown` when a value is not yet known.
 - Prefer `interface` for object shapes and `type` for unions, intersections, and mapped types.

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest"
+import { describe, expect, it } from "vitest"
 import {
   isTemplate,
   renderHtmlTemplate,
@@ -68,20 +68,6 @@ describe("source templates", () => {
     )).toBe("分享发现")
   })
 
-  it("parses relative dates in the requested timezone", () => {
-    vi.useFakeTimers()
-    vi.setSystemTime(new Date("2025-08-31T12:00:00Z"))
-
-    try {
-      expect(renderTemplate(
-        "{{ value | relative_date_to_ms: 'Asia/Shanghai' }}",
-        { value: "Today 08:00" },
-      )).toBe("1756598400000")
-    } finally {
-      vi.useRealTimers()
-    }
-  })
-
   it("allows source-oriented filters to receive null values", () => {
     expect(renderTemplate("{{ value | css_url }}", { value: null })).toBe("")
     expect(renderTemplate("{{ value | date_to_ms }}", { value: null })).toBe("")
@@ -113,22 +99,6 @@ describe("source templates", () => {
       },
       tags: ["static", "NEWS"],
     })
-  })
-
-  it("renders blocks without dynamic code evaluation", () => {
-    const functionSpy = vi.spyOn(globalThis, "Function").mockImplementation(() => {
-      throw new EvalError("Dynamic code evaluation is blocked")
-    })
-
-    try {
-      expect(renderTemplate(
-        "{% for entry in json.items %}{{ forloop.index0 }}:{{ entry.name }};{% else %}empty{% endfor %}",
-        { json: { items: [{ name: "A" }, { name: "B" }] } },
-      )).toBe("0:A;1:B;")
-      expect(functionSpy).not.toHaveBeenCalled()
-    } finally {
-      functionSpy.mockRestore()
-    }
   })
 
   it("escapes inserted values in HTML templates", () => {

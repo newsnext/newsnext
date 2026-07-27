@@ -1,28 +1,16 @@
-import { beforeEach, describe, expect, it, vi } from "vitest"
-
-const permissionApi = vi.hoisted(() => ({
-  getAll: vi.fn(),
-  remove: vi.fn(),
-}))
+import { describe, expect, it, vi } from "vitest"
 
 vi.mock("#imports", () => ({
   browser: {
-    permissions: permissionApi,
+    permissions: {},
   },
 }))
 
 const {
-  getGrantedHostPermissionOrigins,
   getHostPermissionOrigins,
   getUserManagedHostPermissionOrigins,
   normalizeCapabilityHost,
-  revokeHostPermissionOrigin,
 } = await import("./host-permissions")
-
-beforeEach(() => {
-  permissionApi.getAll.mockReset()
-  permissionApi.remove.mockReset()
-})
 
 describe("host permissions", () => {
   it("normalizes exact and wildcard capability hosts", () => {
@@ -48,17 +36,6 @@ describe("host permissions", () => {
     ])
   })
 
-  it("lists granted host origins in stable order", async () => {
-    permissionApi.getAll.mockResolvedValue({
-      origins: ["*://b.example/*", "*://a.example/*", "*://b.example/*"],
-    })
-
-    await expect(getGrantedHostPermissionOrigins()).resolves.toEqual([
-      "*://a.example/*",
-      "*://b.example/*",
-    ])
-  })
-
   it("hides WXT localhost access only in development", () => {
     const origins = [
       "http://localhost/*",
@@ -69,20 +46,5 @@ describe("host permissions", () => {
       "*://source.example/*",
     ])
     expect(getUserManagedHostPermissionOrigins(origins, false)).toEqual(origins)
-  })
-
-  it("only revokes an origin that is currently granted", async () => {
-    permissionApi.getAll.mockResolvedValue({
-      origins: ["*://allowed.example/*"],
-    })
-    permissionApi.remove.mockResolvedValue(true)
-
-    await expect(revokeHostPermissionOrigin("*://allowed.example/*")).resolves.toBe(true)
-    await expect(revokeHostPermissionOrigin("*://other.example/*")).resolves.toBe(false)
-
-    expect(permissionApi.remove).toHaveBeenCalledOnce()
-    expect(permissionApi.remove).toHaveBeenCalledWith({
-      origins: ["*://allowed.example/*"],
-    })
   })
 })

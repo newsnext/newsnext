@@ -1,14 +1,13 @@
 import bundledSourceRegistry from "@newsnext/registry" with { type: "json" }
 import { resolveSources } from "@newsnext/registry/loaders"
-import {
-  configureExternalSourcesLoader,
-  loadSourceDescriptors,
-} from "@newsnext/source/runtime"
 import { describe, expect, it } from "vitest"
 import { createRadarMatcher, getRadarSuggestions } from "./radar"
 
-configureExternalSourcesLoader(async () => resolveSources(bundledSourceRegistry))
-const sourceDescriptors = await loadSourceDescriptors()
+const sourceDescriptors = Object.entries(resolveSources(bundledSourceRegistry))
+  .map(([id, source]) => {
+    const { disable: _disable, key: _key, loader: _loader, ...descriptor } = source
+    return { ...descriptor, id }
+  })
 
 function getSuggestions(...args: Parameters<typeof getRadarSuggestions>) {
   return getRadarSuggestions(args[0], args[1] ?? sourceDescriptors)

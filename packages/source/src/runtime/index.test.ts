@@ -1,85 +1,12 @@
 import type { RuntimeSource } from "@newsnext/source/types"
-import { flattenProviderConfig, resolveSourceRegistry } from "@newsnext/source/registry"
-import { describe, expect, it, vi } from "vitest"
+import { describe, expect, it } from "vitest"
 import {
-  configureExternalSourcesLoader,
   normalizeSourceParams,
   parseSourceId,
-  resolveSource,
   SourceRuntimeError,
 } from "./index"
 
 describe("source service", () => {
-  it("deduplicates registry loads and allows the transport to be replaced", async () => {
-    const registry = flattenProviderConfig("remote", {
-      title: "Remote",
-      defaults: {
-        metadata: {
-          color: "blue",
-        },
-      },
-      sources: {
-        latest: {
-          cache: "5m",
-          loader: {
-            type: "rss",
-            url: "https://example.com/feed.xml",
-          },
-        },
-      },
-    })
-    const loader = vi.fn().mockResolvedValue(resolveSourceRegistry(registry))
-    const restoreLoader = configureExternalSourcesLoader(loader)
-
-    try {
-      const [first, second] = await Promise.all([
-        resolveSource("remote:latest"),
-        resolveSource("remote:latest"),
-      ])
-
-      expect(first).toBe(second)
-      expect(loader).toHaveBeenCalledTimes(1)
-    } finally {
-      restoreLoader()
-    }
-  })
-
-  it("retries registry loading after a transient transport failure", async () => {
-    const registry = flattenProviderConfig("remote", {
-      title: "Remote",
-      defaults: {
-        metadata: {
-          color: "blue",
-        },
-      },
-      sources: {
-        latest: {
-          cache: "5m",
-          loader: {
-            type: "rss",
-            url: "https://example.com/feed.xml",
-          },
-        },
-      },
-    })
-    const loader = vi.fn()
-      .mockRejectedValueOnce(new Error("Temporary failure"))
-      .mockResolvedValueOnce(resolveSourceRegistry(registry))
-    const restoreLoader = configureExternalSourcesLoader(loader)
-
-    try {
-      await expect(resolveSource("remote:latest")).rejects.toThrow("Temporary failure")
-      await expect(resolveSource("remote:latest")).resolves.toMatchObject({
-        provider: {
-          title: "Remote",
-        },
-      })
-      expect(loader).toHaveBeenCalledTimes(2)
-    } finally {
-      restoreLoader()
-    }
-  })
-
   it("parses provider-qualified source IDs", () => {
     expect(parseSourceId("rss:latest")).toEqual({
       provider: "rss",
