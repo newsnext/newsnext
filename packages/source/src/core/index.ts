@@ -1,4 +1,9 @@
 export {
+  assertNetworkCapability,
+  matchesCapabilityHost,
+  validateSourceRequestRules,
+} from "./capabilities"
+export {
   getDefaultValues,
   parseSourceParams,
   parseSourceParamValue,

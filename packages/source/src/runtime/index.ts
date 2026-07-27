@@ -1,14 +1,11 @@
 import type {
   InferSourceParams,
-  ProviderDefinition,
   RuntimeSource,
   SourceDescriptor,
   SourceParamSchemaMap,
 } from "@newsnext/source/types"
 import { SourceParamValueError } from "@newsnext/source/types"
 import { parseSourceParams } from "../core/params"
-import { providers as typescriptProviders } from "../index"
-import { resolveSourceRegistry } from "../registry"
 
 export type SourceErrorCode
   = | "SOURCE_NOT_FOUND"
@@ -37,67 +34,53 @@ export interface PreparedSourceRequest<TParams extends SourceParamSchemaMap = So
   params: InferSourceParams<TParams>
 }
 
-const runtimeTypescriptProviders = typescriptProviders as Record<string, ProviderDefinition>
-let registryGeneration = 0
-let registryLoader: SourceRegistryLoader = async () => ({})
-let registrySources: Record<string, RuntimeSource> | undefined
-let registrySourcesPromise: Promise<Record<string, RuntimeSource>> | undefined
+let sourceGeneration = 0
+let externalSourcesLoader: ExternalSourcesLoader = async () => ({})
+let externalSources: Record<string, RuntimeSource> | undefined
+let externalSourcesPromise: Promise<Record<string, RuntimeSource>> | undefined
 
-export type SourceRegistryLoader = () => Promise<unknown>
+export type ExternalSourcesLoader = () => Promise<Record<string, RuntimeSource>>
 
-function setSourceRegistryLoader(loader: SourceRegistryLoader): void {
-  registryGeneration += 1
-  registryLoader = loader
-  registrySources = undefined
-  registrySourcesPromise = undefined
+function setExternalSourcesLoader(loader: ExternalSourcesLoader): void {
+  sourceGeneration += 1
+  externalSourcesLoader = loader
+  externalSources = undefined
+  externalSourcesPromise = undefined
 }
 
-export function configureSourceRegistryLoader(loader: SourceRegistryLoader): () => void {
-  const previousLoader = registryLoader
-  setSourceRegistryLoader(loader)
-  return () => setSourceRegistryLoader(previousLoader)
+export function configureExternalSourcesLoader(loader: ExternalSourcesLoader): () => void {
+  const previousLoader = externalSourcesLoader
+  setExternalSourcesLoader(loader)
+  return () => setExternalSourcesLoader(previousLoader)
 }
 
-function loadRegistrySources(): Promise<Record<string, RuntimeSource>> {
-  if (registrySources) {
-    return Promise.resolve(registrySources)
+function loadExternalSources(): Promise<Record<string, RuntimeSource>> {
+  if (externalSources) {
+    return Promise.resolve(externalSources)
   }
-  if (registrySourcesPromise) {
-    return registrySourcesPromise
+  if (externalSourcesPromise) {
+    return externalSourcesPromise
   }
 
-  const generation = registryGeneration
-  registrySourcesPromise = registryLoader()
-    .then(resolveSourceRegistry)
+  const generation = sourceGeneration
+  externalSourcesPromise = externalSourcesLoader()
     .then((sources) => {
-      if (generation === registryGeneration) {
-        registrySources = sources
+      if (generation === sourceGeneration) {
+        externalSources = sources
       }
       return sources
     })
     .finally(() => {
-      if (generation === registryGeneration) {
-        registrySourcesPromise = undefined
+      if (generation === sourceGeneration) {
+        externalSourcesPromise = undefined
       }
     })
 
-  return registrySourcesPromise
+  return externalSourcesPromise
 }
 
 export async function loadSources(): Promise<Record<string, RuntimeSource>> {
-  const typescriptSources = Object.fromEntries(
-    Object.entries(runtimeTypescriptProviders).flatMap(([providerId, provider]) =>
-      Object.entries(provider.sources).map(([sourceId, source]) => [
-        `${providerId}:${sourceId}`,
-        source,
-      ]),
-    ),
-  )
-
-  return {
-    ...typescriptSources,
-    ...await loadRegistrySources(),
-  }
+  return loadExternalSources()
 }
 
 export async function loadSourceDescriptors(): Promise<SourceDescriptor[]> {
@@ -126,24 +109,10 @@ export function parseSourceId(sourceId: string): ParsedSourceId {
 
 export async function resolveSource(sourceId: string): Promise<RuntimeSource<any>> {
   const { provider, source } = parseSourceId(sourceId)
-  const providerDefinition = runtimeTypescriptProviders[provider]
-
-  if (providerDefinition) {
-    const resolvedSource = providerDefinition.sources[source]
-    if (!resolvedSource) {
-      throw new SourceRuntimeError(
-        "SOURCE_NOT_FOUND",
-        `Source '${source}' not found in provider '${provider}'`,
-      )
-    }
-
-    return resolvedSource
-  }
-
-  const registrySources = await loadRegistrySources()
-  const resolvedSource = registrySources[sourceId]
+  const sources = await loadExternalSources()
+  const resolvedSource = sources[sourceId]
   if (!resolvedSource) {
-    const hasProvider = Object.keys(registrySources).some(id => id.startsWith(`${provider}:`))
+    const hasProvider = Object.keys(sources).some(id => id.startsWith(`${provider}:`))
     throw new SourceRuntimeError(
       hasProvider ? "SOURCE_NOT_FOUND" : "PROVIDER_NOT_FOUND",
       hasProvider

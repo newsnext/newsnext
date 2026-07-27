@@ -1,5 +1,10 @@
+import type { SourceConfig } from "../core/resolver"
 import type { RuntimeSource, SourceProvider } from "../types"
-import type { SourceRegistry, SourceRegistryConfig } from "./types"
+import type {
+  ExecutableSourceLoaders,
+  SourceRegistry,
+  SourceRegistryConfig,
+} from "./types"
 import { SOURCE_REGISTRY_LIMITS } from "../core/limits"
 import { resolveRuntimeSource } from "../core/resolver"
 import {
@@ -28,8 +33,8 @@ export function parseSourceRegistry(input: unknown): SourceRegistry {
   return Object.fromEntries(
     entries.map(([id, source]) => {
       const [providerId] = parseRegistrySourceId(id)
-      if (!isRecord(source) || !isRecord(source.loader)) {
-        throw new Error(`Registry source "${id}" must define a structured loader`)
+      if (!isRecord(source)) {
+        throw new Error(`Registry source "${id}" must be an object`)
       }
       if (!isSourceProvider(source.provider)) {
         throw new Error(`Registry source "${id}" has invalid provider metadata`)
@@ -42,12 +47,24 @@ export function parseSourceRegistry(input: unknown): SourceRegistry {
       }
       providers.set(providerId, currentProvider)
 
-      if (!isStructuredLoaderType(source.loader.type)) {
+      if (
+        source.loader !== undefined
+        && (
+          !isRecord(source.loader)
+          || !isStructuredLoaderType(source.loader.type)
+        )
+      ) {
         throw new Error(`Registry source "${id}" uses an unsupported loader type`)
       }
 
       const config = source as unknown as SourceRegistryConfig
-      resolveRegistrySource(id, config)
+      resolveRegistrySource(
+        id,
+        config,
+        config.loader === undefined
+          ? { [id]: async () => [] }
+          : {},
+      )
       return [id, config]
     }),
   )
@@ -59,11 +76,14 @@ export function mergeSourceRegistries(...registries: unknown[]): SourceRegistry 
   )
 }
 
-export function resolveSourceRegistry(input: unknown): Record<string, RuntimeSource> {
+export function resolveSourceRegistry(
+  input: unknown,
+  executableLoaders: ExecutableSourceLoaders = {},
+): Record<string, RuntimeSource> {
   return Object.fromEntries(
     Object.entries(parseSourceRegistry(input)).map(([id, source]) => [
       id,
-      resolveRegistrySource(id, source),
+      resolveRegistrySource(id, source, executableLoaders),
     ]),
   )
 }
@@ -71,7 +91,26 @@ export function resolveSourceRegistry(input: unknown): Record<string, RuntimeSou
 export function resolveRegistrySource(
   id: string,
   config: SourceRegistryConfig,
+  executableLoaders: ExecutableSourceLoaders = {},
 ): RuntimeSource {
   const [, key] = parseRegistrySourceId(id)
-  return resolveRuntimeSource(id, key, config, config.provider)
+  if (config.loader === undefined) {
+    const load = executableLoaders[id]
+    if (!load) {
+      throw new Error(`Registry source "${id}" requires an executable loader`)
+    }
+    if (!isRecord(config.capabilities)) {
+      throw new Error(`Registry source "${id}" with an executable loader must define capabilities`)
+    }
+    const executableConfig = {
+      ...config,
+      loader: {
+        type: "custom",
+        load,
+      },
+    } as SourceConfig
+    return resolveRuntimeSource(id, key, executableConfig, config.provider)
+  }
+
+  return resolveRuntimeSource(id, key, config as SourceConfig, config.provider)
 }

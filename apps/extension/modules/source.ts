@@ -3,17 +3,13 @@ import { dirname, relative, resolve, sep } from "node:path"
 import { fileURLToPath } from "node:url"
 import { defineWxtModule } from "wxt/modules"
 
-const SOURCE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../../packages/source")
-const SOURCE_PROVIDER_DIR = resolve(SOURCE_ROOT, "src/providers")
 const REGISTRY_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../../packages/registry")
 const REGISTRY_SOURCE_DIR = resolve(REGISTRY_ROOT, "src")
 const SOURCE_CHANGE_EVENTS = new Set(["add", "change", "unlink"])
 const TEST_FILE_REGEX = /\.(?:test|spec)\.ts$/
-const SOURCE_BUILD_ROOTS = [REGISTRY_ROOT, SOURCE_ROOT]
 
 export function isSourceProviderFile(
   filePath: string,
-  sourceRoot = SOURCE_ROOT,
   registryRoot = REGISTRY_ROOT,
 ): boolean {
   const registryPathParts = relative(registryRoot, filePath).split(sep)
@@ -25,19 +21,16 @@ export function isSourceProviderFile(
     return true
   }
 
-  const pathParts = relative(sourceRoot, filePath).split(sep)
-
   if (
-    pathParts[0] !== "src"
-    || pathParts[1] !== "providers"
-    || !pathParts.at(-1)?.endsWith(".ts")
-    || TEST_FILE_REGEX.test(pathParts.at(-1) ?? "")
+    registryPathParts[0] !== "src"
+    || !registryPathParts.at(-1)?.endsWith(".ts")
+    || TEST_FILE_REGEX.test(registryPathParts.at(-1) ?? "")
   ) {
     return false
   }
 
-  return pathParts.length === 3
-    || (pathParts.length === 4 && pathParts[3] === "index.ts")
+  return registryPathParts.length === 2
+    || (registryPathParts.length === 3 && registryPathParts[2] === "index.ts")
 }
 
 function runPackageBuild(packageRoot: string): Promise<void> {
@@ -63,9 +56,7 @@ function runPackageBuild(packageRoot: string): Promise<void> {
 }
 
 async function runSourceBuilds(): Promise<void> {
-  for (const packageRoot of SOURCE_BUILD_ROOTS) {
-    await runPackageBuild(packageRoot)
-  }
+  await runPackageBuild(REGISTRY_ROOT)
 }
 
 export default defineWxtModule({
@@ -105,7 +96,7 @@ export default defineWxtModule({
           .catch(error => wxt.logger.error("Failed to regenerate source registry", error))
       }
 
-      server.watcher.add([SOURCE_PROVIDER_DIR, REGISTRY_SOURCE_DIR])
+      server.watcher.add(REGISTRY_SOURCE_DIR)
       server.watcher.on("all", handleSourceChange)
       wxt.hook("server:closed", () => {
         server.watcher.off("all", handleSourceChange)

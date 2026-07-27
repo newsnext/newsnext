@@ -100,8 +100,12 @@
     },
     "packages/registry": {
       "name": "@newsnext/registry",
-      "devDependencies": {
+      "dependencies": {
         "@newsnext/source": "workspace:*",
+        "@wxt-dev/browser": "^0.2.2",
+        "cheerio": "^1.2.0",
+      },
+      "devDependencies": {
         "@newsnext/tsconfigs": "workspace:*",
       },
     },

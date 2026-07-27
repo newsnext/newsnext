@@ -1,11 +1,10 @@
 import type { SourceDescriptor } from "@newsnext/source/types"
 import type { RegistryValidationResult } from "../registry-settings"
 import {
-  configureSourceRegistryLoader,
+  configureExternalSourcesLoader,
   loadSourceDescriptors,
 } from "@newsnext/source/runtime"
-import { loadConfiguredSourceRegistry } from "../registry-settings"
-import { updateSourceRegistries } from "./registry"
+import { loadConfiguredSources, updateSourceRegistries } from "./registry"
 
 export interface BackgroundRegistryService {
   list: () => Promise<SourceDescriptor[]>
@@ -17,7 +16,7 @@ export function createBackgroundRegistryService(): BackgroundRegistryService {
   return {
     list: loadSourceDescriptors,
     refresh: async () => {
-      configureSourceRegistryLoader(loadConfiguredSourceRegistry)
+      configureExternalSourcesLoader(loadConfiguredSources)
       return loadSourceDescriptors()
     },
     update: updateSourceRegistries,

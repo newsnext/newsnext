@@ -1,5 +1,5 @@
+import { myFetch } from "@newsnext/source/utils"
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { myFetch } from "../../utils"
 import {
   fetchWeiboFollowingTimeline,
   fetchWeiboKeywordPosts,
@@ -7,7 +7,7 @@ import {
   fetchWeiboUserPosts,
 } from "./utils"
 
-vi.mock("../../utils", () => ({
+vi.mock("@newsnext/source/utils", () => ({
   myFetch: vi.fn(),
 }))
 

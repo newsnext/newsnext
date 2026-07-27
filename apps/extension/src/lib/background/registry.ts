@@ -1,5 +1,7 @@
+import type { RuntimeSource } from "@newsnext/source/types"
 import type { RegistryValidationResult } from "../registry-settings"
-import { configureSourceRegistryLoader } from "@newsnext/source/runtime"
+import { resolveSources } from "@newsnext/registry/loaders"
+import { configureExternalSourcesLoader } from "@newsnext/source/runtime"
 import { browser } from "#imports"
 import {
   loadConfiguredSourceRegistry,
@@ -12,15 +14,19 @@ import { syncConfiguredSourceRequestRules } from "./source-request-rules"
 const REGISTRY_UPDATE_ALARM = "update-source-registries"
 const REGISTRY_UPDATE_INTERVAL_MINUTES = 24 * 60
 
+export async function loadConfiguredSources(): Promise<Record<string, RuntimeSource>> {
+  return resolveSources(await loadConfiguredSourceRegistry())
+}
+
 export async function updateSourceRegistries(): Promise<RegistryValidationResult[]> {
   const results = await updateConfiguredSourceRegistries()
-  configureSourceRegistryLoader(loadConfiguredSourceRegistry)
+  configureExternalSourcesLoader(loadConfiguredSources)
   await syncConfiguredSourceRequestRules()
   return results
 }
 
 export function registerSourceRegistryLoader(): void {
-  configureSourceRegistryLoader(loadConfiguredSourceRegistry)
+  configureExternalSourcesLoader(loadConfiguredSources)
 
   browser.storage.onChanged.addListener((changes, areaName) => {
     if (
@@ -30,7 +36,7 @@ export function registerSourceRegistryLoader(): void {
         || REGISTRY_CACHE_STORAGE_KEY in changes
       )
     ) {
-      configureSourceRegistryLoader(loadConfiguredSourceRegistry)
+      configureExternalSourcesLoader(loadConfiguredSources)
       void syncConfiguredSourceRequestRules().catch((error) => {
         console.error("Failed to synchronize source request rules", error)
       })

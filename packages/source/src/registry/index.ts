@@ -15,6 +15,7 @@ export {
   resolveProvider,
 } from "./provider"
 export type {
+  ExecutableSourceLoaders,
   ProviderConfig,
   SourceRegistry,
   SourceRegistryConfig,

@@ -1,6 +1,7 @@
 import bundledSourceRegistry from "@newsnext/registry" with { type: "json" }
+import { resolveSources } from "@newsnext/registry/loaders"
 import {
-  configureSourceRegistryLoader,
+  configureExternalSourcesLoader,
   loadSourceDescriptors,
 } from "@newsnext/source/runtime"
 import { afterEach, describe, expect, it, vi } from "vitest"
@@ -20,7 +21,7 @@ vi.mock("./source-cache", () => ({
 const createBackgroundClientMock = vi.mocked(createBackgroundClient)
 const readCachedSourceMock = vi.mocked(readCachedSource)
 const writeCachedSourceMock = vi.mocked(writeCachedSource)
-configureSourceRegistryLoader(async () => bundledSourceRegistry)
+configureExternalSourcesLoader(async () => resolveSources(bundledSourceRegistry))
 const sourceDescriptors = await loadSourceDescriptors()
 
 function mockBackgroundLoad(load: ReturnType<typeof vi.fn>): void {

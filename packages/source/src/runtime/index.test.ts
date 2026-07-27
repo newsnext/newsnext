@@ -1,8 +1,8 @@
 import type { RuntimeSource } from "@newsnext/source/types"
-import { flattenProviderConfig } from "@newsnext/source/registry"
+import { flattenProviderConfig, resolveSourceRegistry } from "@newsnext/source/registry"
 import { describe, expect, it, vi } from "vitest"
 import {
-  configureSourceRegistryLoader,
+  configureExternalSourcesLoader,
   normalizeSourceParams,
   parseSourceId,
   resolveSource,
@@ -28,8 +28,8 @@ describe("source service", () => {
         },
       },
     })
-    const loader = vi.fn().mockResolvedValue(registry)
-    const restoreLoader = configureSourceRegistryLoader(loader)
+    const loader = vi.fn().mockResolvedValue(resolveSourceRegistry(registry))
+    const restoreLoader = configureExternalSourcesLoader(loader)
 
     try {
       const [first, second] = await Promise.all([
@@ -64,8 +64,8 @@ describe("source service", () => {
     })
     const loader = vi.fn()
       .mockRejectedValueOnce(new Error("Temporary failure"))
-      .mockResolvedValueOnce(registry)
-    const restoreLoader = configureSourceRegistryLoader(loader)
+      .mockResolvedValueOnce(resolveSourceRegistry(registry))
+    const restoreLoader = configureExternalSourcesLoader(loader)
 
     try {
       await expect(resolveSource("remote:latest")).rejects.toThrow("Temporary failure")

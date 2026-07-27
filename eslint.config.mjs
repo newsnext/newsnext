@@ -11,8 +11,7 @@ export default antfu(
     ignores: [
       "public/**",
       "packages/registry/registry.json",
-      "packages/source/func-registry.json",
-      "packages/source/src/index.ts",
+      "packages/registry/loaders.ts",
     ],
     rules: {
       "antfu/curly": "error",
@@ -25,7 +24,6 @@ export default antfu(
     name: "newsnext/command-line-scripts",
     files: [
       "packages/registry/build.ts",
-      "packages/source/build.ts",
       "packages/ui/scripts/**/*.ts",
     ],
     rules: {
@@ -37,7 +35,6 @@ export default antfu(
     files: [
       "**/*.{test,spec}.{ts,tsx}",
       "packages/registry/build.ts",
-      "packages/source/build.ts",
     ],
     rules: {
       "antfu/no-top-level-await": "off",

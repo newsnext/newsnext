@@ -3,7 +3,7 @@ import type {
   SourceConfig,
   SourceConfigDefaults,
 } from "../core/resolver"
-import type { SourceProvider } from "../types"
+import type { SourceLoader, SourceProvider } from "../types"
 
 export interface ProviderConfig {
   title: string
@@ -11,8 +11,11 @@ export interface ProviderConfig {
   sources: Record<string, ProviderSourceConfig>
 }
 
-export type SourceRegistryConfig = SourceConfig & {
+export type SourceRegistryConfig = Omit<SourceConfig, "loader"> & {
+  loader?: SourceConfig["loader"]
   provider: SourceProvider
 }
 
 export type SourceRegistry = Record<string, SourceRegistryConfig>
+
+export type ExecutableSourceLoaders = Record<string, SourceLoader>

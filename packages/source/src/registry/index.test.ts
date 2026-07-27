@@ -492,14 +492,14 @@ describe("source registry", () => {
     })
   })
 
-  it("rejects provider containers and executable loaders", () => {
+  it("rejects provider containers and resolves missing loaders from executable bindings", () => {
     expect(() => resolveSourceRegistry({
       test: {
         sources: {},
       },
     })).toThrow("Invalid registry source ID")
 
-    expect(() => resolveSourceRegistry({
+    const executableRegistry = {
       "test:latest": {
         provider: {
           title: "Test",
@@ -509,11 +509,16 @@ describe("source registry", () => {
           category: "tech",
         },
         cache: "5m",
-        loader: {
-          type: "custom",
+        capabilities: {
+          network: [],
         },
       },
-    })).toThrow("unsupported loader type")
+    }
+    expect(() => resolveSourceRegistry(executableRegistry))
+      .toThrow("requires an executable loader")
+    expect(resolveSourceRegistry(executableRegistry, {
+      "test:latest": async () => [],
+    })["test:latest"]?.loader).toBeTypeOf("function")
   })
 
   it("rejects inconsistent provider identity across flat sources", () => {

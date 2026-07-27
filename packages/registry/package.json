@@ -5,15 +5,20 @@
   "license": "MPL-2.0",
   "sideEffects": false,
   "exports": {
-    ".": "./registry.json"
+    ".": "./registry.json",
+    "./loaders": "./loaders.ts"
   },
   "scripts": {
     "build": "bun run build.ts",
     "build:watch": "bun --watch run build.ts",
     "typecheck": "tsc --noEmit"
   },
-  "devDependencies": {
+  "dependencies": {
     "@newsnext/source": "workspace:*",
+    "@wxt-dev/browser": "^0.2.2",
+    "cheerio": "^1.2.0"
+  },
+  "devDependencies": {
     "@newsnext/tsconfigs": "workspace:*"
   }
 }

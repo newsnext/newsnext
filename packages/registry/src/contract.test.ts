@@ -1,16 +1,12 @@
+import { matchesCapabilityHost } from "@newsnext/source/core"
 import { describe, expect, it } from "vitest"
-import funcRegistry from "../func-registry.json" with { type: "json" }
-import { matchesCapabilityHost } from "./core/capabilities"
-import { loadSources } from "./runtime"
+import { resolveSources } from "../loaders"
+import sourceRegistry from "../registry.json" with { type: "json" }
 
 const CACHE_MAX_AGE_PATTERN = /^\d+(?:\.\d+)?[smhd]$/
 const CAPABILITY_HOST_PATTERN = /^(?:\*|(?:\*\.)?(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)*[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)$/i
 
-function toSerializable(value: unknown): unknown {
-  return value === undefined ? undefined : JSON.parse(JSON.stringify(value))
-}
-
-const sources = await loadSources()
+const sources = resolveSources(sourceRegistry)
 
 describe("source contract", () => {
   const runtimeSources = Object.entries(sources).map(([id, source]) => ({
@@ -18,21 +14,6 @@ describe("source contract", () => {
     sourceKey: id.split(":")[1],
     source,
   }))
-
-  it("generates one descriptor for every runtime source", () => {
-    expect(Object.keys(funcRegistry)).toHaveLength(runtimeSources.length)
-
-    for (const { id, source } of runtimeSources) {
-      const descriptor = funcRegistry[id as keyof typeof funcRegistry]
-      expect(descriptor, id).toBeDefined()
-      expect(descriptor?.cache, id).toEqual(source.cache)
-      expect(descriptor?.capabilities, id).toEqual(source.capabilities)
-      expect(descriptor && "params" in descriptor ? descriptor.params : undefined, id)
-        .toEqual(toSerializable(source.params))
-      expect(descriptor && "radar" in descriptor ? descriptor.radar : undefined, id)
-        .toEqual(toSerializable(source.radar))
-    }
-  })
 
   it("provides executable loaders and valid cache policies", () => {
     for (const { id, sourceKey, source } of runtimeSources) {

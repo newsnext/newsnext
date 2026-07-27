@@ -1,5 +1,5 @@
-import type { NewsItem } from "@newsnext/shared/types"
 import type { ProviderConfig } from "@newsnext/source/registry"
+import type { NewsItem } from "@newsnext/source/types"
 import { myFetch } from "@newsnext/source/utils"
 
 const DYNAMIC_FEED_URL = "https://api.bilibili.com/x/polymer/web-dynamic/v1/feed/all"

@@ -1,10 +1,10 @@
 import type { NewsItem } from "@newsnext/source/types"
+import { resolveProvider } from "@newsnext/source/registry"
+import { myFetch } from "@newsnext/source/utils"
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { resolveProvider } from "../../registry"
-import { myFetch } from "../../utils"
 import weiboProvider from "./index"
 
-vi.mock("../../utils", () => ({
+vi.mock("@newsnext/source/utils", () => ({
   myFetch: vi.fn(),
 }))
 

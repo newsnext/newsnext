@@ -6,7 +6,6 @@
   "exports": {
     ".": "./src/index.ts",
     "./core": "./src/core/index.ts",
-    "./func-registry": "./func-registry.json",
     "./registry": "./src/registry/index.ts",
     "./runtime": "./src/runtime/index.ts",
     "./types": "./src/types/index.ts",
@@ -14,8 +13,6 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "build": "bun run build.ts",
-    "build:watch": "bun --watch run build.ts",
     "test": "bun run vitest"
   },
   "dependencies": {
