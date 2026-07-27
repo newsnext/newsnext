@@ -9,6 +9,10 @@ Newsnext is a personalized web crawler that runs inside a browser extension (mv3
 
 ## Development
 
+### Browser Automation
+
+- Use ego-lite by default for browser control and browser automation tasks.
+
 ### Source Documentation
 
 - `docs/SOURCE_GUIDELINE.md` is the canonical source authoring reference.
