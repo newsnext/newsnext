@@ -1,5 +1,5 @@
 import type { Color } from "@newsnext/shared/types"
-import type { SourceProvider } from "@newsnext/source/typings"
+import type { SourceProvider } from "@newsnext/source/types"
 import type { ReactNode } from "react"
 import { cn } from "@/lib/utils"
 import { SourceIcon } from "./source-icon"

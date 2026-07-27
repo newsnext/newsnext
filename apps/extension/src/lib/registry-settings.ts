@@ -1,10 +1,10 @@
-import type { SourceRegistry } from "@newsnext/source/utils/source"
+import type { SourceRegistry } from "@newsnext/source/registry"
 import bundledSourceRegistry from "@newsnext/registry" with { type: "json" }
 import {
   mergeSourceRegistries,
   parseSourceRegistry,
   SOURCE_REGISTRY_LIMITS,
-} from "@newsnext/source/utils/source"
+} from "@newsnext/source/registry"
 import { browser } from "#imports"
 
 export const REGISTRY_URLS_STORAGE_KEY = "newsnext-registry-urls"

@@ -5,15 +5,12 @@
   "license": "MPL-2.0",
   "exports": {
     ".": "./src/index.ts",
+    "./core": "./src/core/index.ts",
     "./func-registry": "./func-registry.json",
-    "./service": "./src/service/index.ts",
-    "./typings": "./src/typings/index.ts",
-    "./utils/crypto": "./src/utils/crypto.ts",
-    "./utils/fetch": "./src/utils/fetch.ts",
-    "./utils/jwt": "./src/utils/jwt.ts",
-    "./utils/params": "./src/utils/params.ts",
-    "./utils/source": "./src/utils/source/index.ts",
-    "./utils/template": "./src/utils/template.ts"
+    "./registry": "./src/registry/index.ts",
+    "./runtime": "./src/runtime/index.ts",
+    "./types": "./src/types/index.ts",
+    "./utils": "./src/utils/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

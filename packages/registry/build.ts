@@ -1,7 +1,7 @@
-import type { ProviderConfig, SourceRegistryConfig } from "@newsnext/source/utils/source"
+import type { ProviderConfig, SourceRegistryConfig } from "@newsnext/source/registry"
 import { basename, dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
-import { flattenProviderConfig, resolveSourceRegistry } from "@newsnext/source/utils/source"
+import { flattenProviderConfig, resolveSourceRegistry } from "@newsnext/source/registry"
 
 const rootDir = dirname(fileURLToPath(import.meta.url))
 const sourceGlob = new Bun.Glob("src/*.json")

@@ -26,12 +26,12 @@ vi.mock("#imports", () => ({
   browser: browserMock,
 }))
 
-vi.mock("@newsnext/source/utils/fetch", () => ({
+vi.mock("@newsnext/source/utils", () => ({
   myFetch: myFetchMock,
 }))
 
-vi.mock("@newsnext/source/service", async (importOriginal) => {
-  const original = await importOriginal<typeof import("@newsnext/source/service")>()
+vi.mock("@newsnext/source/runtime", async (importOriginal) => {
+  const original = await importOriginal<typeof import("@newsnext/source/runtime")>()
   return {
     ...original,
     loadSourceDescriptors: loadSourceDescriptorsMock,

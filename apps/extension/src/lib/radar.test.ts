@@ -2,7 +2,7 @@ import bundledSourceRegistry from "@newsnext/registry" with { type: "json" }
 import {
   configureSourceRegistryLoader,
   loadSourceDescriptors,
-} from "@newsnext/source/service"
+} from "@newsnext/source/runtime"
 import { describe, expect, it } from "vitest"
 import { createRadarMatcher, getRadarSuggestions } from "./radar"
 

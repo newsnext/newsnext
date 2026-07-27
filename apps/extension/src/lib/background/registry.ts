@@ -1,5 +1,5 @@
 import type { RegistryValidationResult } from "../registry-settings"
-import { configureSourceRegistryLoader } from "@newsnext/source/service"
+import { configureSourceRegistryLoader } from "@newsnext/source/runtime"
 import { browser } from "#imports"
 import {
   loadConfiguredSourceRegistry,

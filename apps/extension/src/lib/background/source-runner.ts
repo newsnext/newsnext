@@ -2,16 +2,16 @@ import type {
   SourceConnectionProviderRunRequest,
   SourceConnectionRegisteredRunRequest,
 } from "@newsnext/shared/types"
-import type { NewsItem } from "@newsnext/source/typings"
-import type { ProviderConfig } from "@newsnext/source/utils/source"
-import {
-  loadSourceDescriptors,
-  normalizeSourceParams,
-} from "@newsnext/source/service"
+import type { ProviderConfig } from "@newsnext/source/registry"
+import type { NewsItem } from "@newsnext/source/types"
 import {
   flattenProviderConfig,
   resolveSourceRegistry,
-} from "@newsnext/source/utils/source"
+} from "@newsnext/source/registry"
+import {
+  loadSourceDescriptors,
+  normalizeSourceParams,
+} from "@newsnext/source/runtime"
 import { resolveSourceSecrets, updateSourceSecrets } from "./source-secrets"
 import { createBackgroundSourceService } from "./source-service"
 

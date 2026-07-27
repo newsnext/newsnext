@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url"
 import { defineWxtModule } from "wxt/modules"
 
 const SOURCE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../../packages/source")
-const SOURCE_LIB_DIR = resolve(SOURCE_ROOT, "src/lib")
+const SOURCE_PROVIDER_DIR = resolve(SOURCE_ROOT, "src/providers")
 const REGISTRY_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../../packages/registry")
 const REGISTRY_SOURCE_DIR = resolve(REGISTRY_ROOT, "src")
 const SOURCE_CHANGE_EVENTS = new Set(["add", "change", "unlink"])
@@ -29,7 +29,7 @@ export function isSourceProviderFile(
 
   if (
     pathParts[0] !== "src"
-    || pathParts[1] !== "lib"
+    || pathParts[1] !== "providers"
     || !pathParts.at(-1)?.endsWith(".ts")
     || TEST_FILE_REGEX.test(pathParts.at(-1) ?? "")
   ) {
@@ -105,7 +105,7 @@ export default defineWxtModule({
           .catch(error => wxt.logger.error("Failed to regenerate source registry", error))
       }
 
-      server.watcher.add([SOURCE_LIB_DIR, REGISTRY_SOURCE_DIR])
+      server.watcher.add([SOURCE_PROVIDER_DIR, REGISTRY_SOURCE_DIR])
       server.watcher.on("all", handleSourceChange)
       wxt.hook("server:closed", () => {
         server.watcher.off("all", handleSourceChange)

@@ -33,7 +33,7 @@ const weiboRule = {
     requestDomains: ["weibo.com", "sinaimg.cn"],
     resourceTypes: ["image", "xmlhttprequest"],
   },
-} satisfies import("@newsnext/source/typings").SourceRequestRule
+} satisfies import("@newsnext/source/types").SourceRequestRule
 
 describe("source request rules", () => {
   beforeEach(() => {

@@ -1,4 +1,4 @@
-import type { SourceCapabilities } from "@newsnext/source/typings"
+import type { SourceCapabilities } from "@newsnext/source/types"
 import { browser } from "#imports"
 import { getHostPermissionOrigins } from "@/lib/host-permissions"
 

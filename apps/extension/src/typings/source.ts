@@ -1,5 +1,5 @@
 import type { NewsItem, SourceType } from "@newsnext/shared/types"
-import type { SourceDescriptor } from "@newsnext/source/typings"
+import type { SourceDescriptor } from "@newsnext/source/types"
 
 export type { NewsItem, SourceDescriptor, SourceType }
 

@@ -1,4 +1,4 @@
-import { isTemplate, renderTemplate } from "@newsnext/source/utils/template"
+import { isTemplate, renderTemplate } from "@newsnext/source/core"
 
 export function resolveSourceIconUrl(
   template: string | undefined,

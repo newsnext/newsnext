@@ -32,9 +32,21 @@ HTML field  CSS select → text/attr/content → Liquid template
 Structured loaders are declarative. Use a custom loader only when these
 pipelines cannot express the source.
 
+The source package is organized by responsibility:
+
+```text
+src/
+├── core/       source resolution, loaders, params, templates, and capabilities
+├── registry/   provider expansion and registry parsing and validation
+├── providers/  executable TypeScript provider definitions
+├── runtime/    source lookup, caching, and request preparation
+├── types/      shared source contracts
+└── utils/      generic crypto, fetch, and JWT helpers with one public entry
+```
+
 ## Adding a provider
 
-Create TypeScript providers under `packages/source/src/lib` and declarative JSON
+Create TypeScript providers under `packages/source/src/providers` and declarative JSON
 providers under `packages/registry/src`. The source build script discovers
 top-level TypeScript files plus nested `index.ts` files. JSON providers are
 flattened into source-only entries by `@newsnext/source` during the JSON package
@@ -47,7 +59,7 @@ TypeScript providers.
 A TypeScript provider ID comes from its top-level filename or the parent
 directory of a nested index file. A JSON provider ID comes from its filename;
 the JSON package build uses `flattenProviderConfig` from
-`@newsnext/source/utils/source` to inherit provider defaults and writes a flat
+`@newsnext/source/registry` to inherit provider defaults and writes a flat
 `packages/registry/registry.json`. Registry keys are complete source IDs such
 as `example:latest`; the generated file contains no provider containers. Each
 flattened source carries its fixed provider identity separately from source
@@ -105,7 +117,7 @@ Do not define the same complete source ID in both TypeScript and JSON. The
 source build rejects duplicate source IDs.
 
 ```ts
-import type { ProviderConfig } from "@newsnext/source/utils/source"
+import type { ProviderConfig } from "@newsnext/source/registry"
 
 export default {
   title: "Example",
@@ -156,7 +168,7 @@ runtime.
 
 ## Registry loading
 
-`@newsnext/source/service` accepts a source-only registry through an asynchronous
+`@newsnext/source/runtime` accepts a source-only registry through an asynchronous
 `SourceRegistryLoader` and does not import a registry package itself. The
 extension owns the bundled `@newsnext/registry` import and configures the loader
 during background startup. Normal source loading performs no network request:
@@ -678,7 +690,7 @@ inline: {
 ### Full JSON example
 
 ```ts
-import type { ProviderConfig } from "@newsnext/source/utils/source"
+import type { ProviderConfig } from "@newsnext/source/registry"
 
 export default {
   title: "Example API",
@@ -1537,10 +1549,11 @@ normal source authorization flow.
 Relevant test files include:
 
 ```text
-packages/source/src/utils/template.test.ts
-packages/source/src/utils/source/json-source.test.ts
-packages/source/src/utils/source/html-source.test.ts
-packages/source/src/source-contract.test.ts
+packages/source/src/core/template.test.ts
+packages/source/src/core/loaders/json.test.ts
+packages/source/src/core/loaders/html.test.ts
+packages/source/src/core/loaders/rss.test.ts
+packages/source/src/contract.test.ts
 apps/cli/src/source-run/options.test.ts
 apps/cli/src/source-run/session.test.ts
 apps/cli/src/daemon.test.ts

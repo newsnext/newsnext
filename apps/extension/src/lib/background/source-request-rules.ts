@@ -1,5 +1,5 @@
-import type { SourceRequestRule } from "@newsnext/source/typings"
-import { loadSourceDescriptors } from "@newsnext/source/service"
+import type { SourceRequestRule } from "@newsnext/source/types"
+import { loadSourceDescriptors } from "@newsnext/source/runtime"
 import { browser } from "#imports"
 
 const MANAGED_RULE_ID_START = 1_000_000_000

@@ -4,10 +4,9 @@ import type {
   SourceRadarMatch,
   SourceRadarMetadata,
   SourceRadarRule,
-} from "@newsnext/source/typings"
+} from "@newsnext/source/types"
 import type { SourceInstanceMetadata, SourceInstancePatch } from "@/lib/source-cards"
-import { parseSourceParams } from "@newsnext/source/utils/params"
-import { renderTemplate } from "@newsnext/source/utils/template"
+import { parseSourceParams, renderTemplate } from "@newsnext/source/core"
 import { match } from "path-to-regexp"
 
 export interface RadarContext {

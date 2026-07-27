@@ -1,5 +1,5 @@
-import type { NewsItem } from "@newsnext/source/typings"
-import { parseSourceId, prepareSourceRequest } from "@newsnext/source/service"
+import type { NewsItem } from "@newsnext/source/types"
+import { parseSourceId, prepareSourceRequest } from "@newsnext/source/runtime"
 import { resolveSourceSecrets, updateSourceSecrets } from "./source-secrets"
 
 export interface LoadBackgroundSourceInput {

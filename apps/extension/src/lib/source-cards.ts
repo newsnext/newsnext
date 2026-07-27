@@ -1,5 +1,5 @@
 import type { BoardType } from "@newsnext/shared/types"
-import type { SourcePatch } from "@newsnext/source/typings"
+import type { SourcePatch } from "@newsnext/source/types"
 import type { BoardSource, SourceDescriptor } from "@/typings/source"
 import { pick } from "es-toolkit"
 

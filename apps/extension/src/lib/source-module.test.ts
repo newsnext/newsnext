@@ -7,11 +7,11 @@ const REGISTRY_ROOT = resolve("/workspace/packages/registry")
 
 describe("source WXT module", () => {
   it.each([
-    ["src/lib/github.ts", true],
-    ["src/lib/jike/index.ts", true],
-    ["src/lib/jike/utils.ts", false],
-    ["src/lib/telegram.test.ts", false],
-    ["src/utils/params.ts", false],
+    ["src/providers/github.ts", true],
+    ["src/providers/jike/index.ts", true],
+    ["src/providers/jike/utils.ts", false],
+    ["src/providers/telegram.test.ts", false],
+    ["src/core/params.ts", false],
   ])("matches provider file %s", (filePath, expected) => {
     expect(
       isSourceProviderFile(resolve(SOURCE_ROOT, filePath), SOURCE_ROOT, REGISTRY_ROOT),

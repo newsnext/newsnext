@@ -1,5 +1,5 @@
 import type { NewsItem } from "@/typings/source"
-import { normalizeSourceParams } from "@newsnext/source/service"
+import { normalizeSourceParams } from "@newsnext/source/runtime"
 import { useQuery } from "@tanstack/react-query"
 import { useCallback, useMemo, useState } from "react"
 import { loadSource } from "@/lib/source-loader"

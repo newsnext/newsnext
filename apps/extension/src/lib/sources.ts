@@ -1,5 +1,5 @@
 import type { SourceDescriptor } from "@/typings/source"
-import { loadSourceDescriptors as loadRuntimeSourceDescriptors } from "@newsnext/source/service"
+import { loadSourceDescriptors as loadRuntimeSourceDescriptors } from "@newsnext/source/runtime"
 import { createBackgroundClient } from "./background-client"
 
 function sortSourceDescriptors(sources: SourceDescriptor[]): SourceDescriptor[] {

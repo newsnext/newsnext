@@ -1,4 +1,4 @@
-import type { RuntimeSource, SourceSecretDefinition, SourceSecrets } from "@newsnext/source/typings"
+import type { RuntimeSource, SourceSecretDefinition, SourceSecrets } from "@newsnext/source/types"
 import { storage } from "wxt/utils/storage"
 import { browser } from "#imports"
 

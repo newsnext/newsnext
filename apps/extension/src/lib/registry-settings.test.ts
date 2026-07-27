@@ -1,4 +1,4 @@
-import { flattenProviderConfig } from "@newsnext/source/utils/source"
+import { flattenProviderConfig } from "@newsnext/source/registry"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 const storageLocal = vi.hoisted(() => ({

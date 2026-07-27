@@ -2,7 +2,7 @@ import bundledSourceRegistry from "@newsnext/registry" with { type: "json" }
 import {
   configureSourceRegistryLoader,
   loadSourceDescriptors,
-} from "@newsnext/source/service"
+} from "@newsnext/source/runtime"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { createBackgroundClient } from "./background-client"
 import { readCachedSource, writeCachedSource } from "./source-cache"

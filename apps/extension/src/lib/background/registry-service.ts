@@ -1,9 +1,9 @@
-import type { SourceDescriptor } from "@newsnext/source/typings"
+import type { SourceDescriptor } from "@newsnext/source/types"
 import type { RegistryValidationResult } from "../registry-settings"
 import {
   configureSourceRegistryLoader,
   loadSourceDescriptors,
-} from "@newsnext/source/service"
+} from "@newsnext/source/runtime"
 import { loadConfiguredSourceRegistry } from "../registry-settings"
 import { updateSourceRegistries } from "./registry"
 
