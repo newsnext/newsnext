@@ -50,17 +50,19 @@ export interface SourceRadarMatch {
 export type SourceRadarParams = Record<string, string>
 
 export interface SourceRadarMetadata {
-  providerTitle?: string
   title?: string
+  icon?: string
   desc?: string
   home?: string
   color?: string
 }
 
-export interface SourceRadarPatch {
-  params?: SourceRadarParams
-  metadata?: SourceRadarMetadata
+export interface SourcePatch<TParams = SourceRadarParams, TMetadata = SourceRadarMetadata> {
+  params?: TParams
+  metadata?: TMetadata
 }
+
+export type SourceRadarPatch = SourcePatch
 
 export interface SourceRadarRule {
   id: string
@@ -82,8 +84,7 @@ export type SourceLoader<TParams extends SourceParamSchemaMap = SourceParamSchem
 export interface SourceMetadata {
   key: string
   title?: string
-  providerTitle?: string
-  sourceIcon?: string
+  icon?: string
   desc?: string
   type?: "hottest" | "timeline"
   category?: CategoryId
@@ -95,6 +96,10 @@ export interface SourceCapabilities {
   network: readonly string[]
   cookies: readonly string[]
   browser: readonly string[]
+}
+
+export interface SourceProvider {
+  title: string
 }
 
 export type SourceTemplateContextValue
@@ -117,12 +122,13 @@ export interface SourceCacheConfig {
 }
 
 export interface RuntimeSource<TParams extends SourceParamSchemaMap = SourceParamSchemaMap> {
+  provider: SourceProvider
   key: string
   title?: string
   params?: TParams
   capabilities: SourceCapabilities
   cache: SourceCacheConfig
-  sourceIcon?: string
+  icon?: string
   desc?: string
   type?: "hottest" | "timeline"
   home?: string
@@ -131,8 +137,6 @@ export interface RuntimeSource<TParams extends SourceParamSchemaMap = SourcePara
   requestRules?: readonly SourceRequestRule[]
   disable?: boolean
   loader: SourceLoader<TParams>
-  icon?: string
-  providerTitle: string
   color: Color
   category: CategoryId
 }
@@ -141,13 +145,6 @@ export interface RuntimeSource<TParams extends SourceParamSchemaMap = SourcePara
  * Provider definition after source defaults are expanded
  */
 export interface ProviderDefinition {
-  id: string
-  title: string
-  color: Color
-  icon?: string
-  desc?: string
-  home?: string
-  category: CategoryId
   sources: Record<string, RuntimeSource<any>>
 }
 

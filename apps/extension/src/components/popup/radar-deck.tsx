@@ -1,7 +1,7 @@
 import type { MotionValue, PanInfo } from "motion/react"
 import type { CSSProperties, PointerEvent } from "react"
 import type { RadarSuggestion } from "@/lib/radar"
-import type { RadarDraftPatch } from "@/lib/radar-board-source"
+import type { SourceInstancePatch } from "@/lib/source-cards"
 import type { BoardSource, SourceDescriptor } from "@/typings/source"
 import { ButtonPrimitive } from "@newsnext/ui/components/button"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
@@ -12,9 +12,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Card from "@/components/card"
 import { IconButton } from "@/components/common/button"
 import { PhArrowCircleLeftDuotone, PhForkDuotone, PhStarFill } from "@/components/icons/ph"
-import { createRadarBoardSource, mergeRadarDraftPatch } from "@/lib/radar-board-source"
+import { createRadarBoardSource } from "@/lib/radar-board-source"
 import { requestRadarOverlayClose } from "@/lib/radar-overlay-message"
-import { createForkedInstance } from "@/lib/source-cards"
+import { createForkedInstance, mergeSourceInstancePatch } from "@/lib/source-cards"
 import { cn } from "@/lib/utils"
 import {
   starInstanceAtom,
@@ -106,7 +106,7 @@ function launchRadarConfetti({ color, kind, originElement }: RadarConfettiOption
 interface RadarSourceCardProps {
   source: BoardSource
   className?: string
-  onDraftSourceChange?: (patch: RadarDraftPatch) => void
+  onDraftSourceChange?: (patch: SourceInstancePatch) => void
 }
 
 function RadarSourceCard({ source, className, onDraftSourceChange }: RadarSourceCardProps) {
@@ -132,7 +132,7 @@ interface RadarTrackCardProps {
   trackItemOffset: number
   x: MotionValue<number>
   onDragHandlePointerDown: (event: PointerEvent<HTMLDivElement>) => void
-  onDraftSourceChange?: (patch: RadarDraftPatch) => void
+  onDraftSourceChange?: (patch: SourceInstancePatch) => void
 }
 
 function RadarTrackCard({
@@ -203,7 +203,7 @@ function RadarDeckContent({ sourceDescriptors, suggestions }: RadarDeckProps) {
   const upsertLocal = useSetAtom(upsertInstanceAtom)
   const starLocal = useSetAtom(starInstanceAtom)
   const [activeIndex, setActiveIndex] = useState(0)
-  const [draftPatches, setDraftPatches] = useState<Record<string, RadarDraftPatch>>({})
+  const [draftPatches, setDraftPatches] = useState<Record<string, SourceInstancePatch>>({})
   const [trackItemOffset, setTrackItemOffset] = useState(1)
   const [hasMeasuredDeck, setHasMeasuredDeck] = useState(false)
   const [celebration, setCelebration] = useState<RadarCelebrationKind | null>(null)
@@ -321,18 +321,14 @@ function RadarDeckContent({ sourceDescriptors, suggestions }: RadarDeckProps) {
     }
 
     return createForkedInstance(
-      activeSource.sourceId,
-      activeSource.paramsValue ?? {},
-      {
-        providerTitle: activeSource.providerTitle,
-        title: activeSource.title,
-        desc: activeSource.desc,
-        home: activeSource.home,
-        color: activeSource.color,
-      },
+      activeSuggestion.sourceId,
+      mergeSourceInstancePatch(
+        activeSuggestion.patch,
+        draftPatches[activeSuggestion.id] ?? {},
+      ),
       { type: "radar", ruleId: activeSuggestion.ruleId },
     )
-  }, [activeSource, activeSuggestion])
+  }, [activeSource, activeSuggestion, draftPatches])
 
   const handleFork = useCallback(() => {
     if (celebration || !activeSource) {
@@ -365,14 +361,14 @@ function RadarDeckContent({ sourceDescriptors, suggestions }: RadarDeckProps) {
     setCelebration("star")
   }, [activeSource, celebration, createActiveForkInstance, starLocal, upsertLocal])
 
-  const handleActiveDraftSourceChange = useCallback((patch: RadarDraftPatch) => {
+  const handleActiveDraftSourceChange = useCallback((patch: SourceInstancePatch) => {
     if (!activeSuggestion) {
       return
     }
 
     setDraftPatches(prev => ({
       ...prev,
-      [activeSuggestion.id]: mergeRadarDraftPatch(prev[activeSuggestion.id], patch),
+      [activeSuggestion.id]: mergeSourceInstancePatch(prev[activeSuggestion.id], patch),
     }))
   }, [activeSuggestion])
 

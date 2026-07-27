@@ -32,7 +32,11 @@ const {
 function createRegistry(title: string) {
   return flattenProviderConfig("remote", {
     title,
-    color: "blue",
+    defaults: {
+      metadata: {
+        color: "blue",
+      },
+    },
     sources: {
       latest: {
         cache: "5m",
@@ -134,7 +138,7 @@ describe("registry settings", () => {
     await updateConfiguredSourceRegistries(fetcher)
     const registry = await loadConfiguredSourceRegistry()
 
-    expect(registry["remote:latest"].metadata?.providerTitle).toBe("Second")
+    expect(registry["remote:latest"].provider.title).toBe("Second")
     expect(storageState["newsnext-registry-cache"]).toMatchObject({
       entries: {
         "https://one.example/registry.json": {
@@ -163,7 +167,7 @@ describe("registry settings", () => {
 
     const registry = await loadConfiguredSourceRegistry()
 
-    expect(registry["remote:latest"].metadata?.providerTitle).toBe("Cached")
+    expect(registry["remote:latest"].provider.title).toBe("Cached")
     expect(fetcher).not.toHaveBeenCalled()
   })
 

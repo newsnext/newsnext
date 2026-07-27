@@ -1,7 +1,11 @@
 {
   "title": "V2EX",
-  "color": "slate",
-  "home": "https://v2ex.com/",
+  "defaults": {
+    "metadata": {
+      "color": "slate",
+      "home": "https://v2ex.com/"
+    }
+  },
   "sources": {
     "feed": {
       "params": {

@@ -89,7 +89,7 @@ interface CardFrontContentProps {
   icon?: string
   isFetching: boolean
   items: NewsItem[]
-  providerTitle: string
+  provider: BoardSource["provider"]
   relativeUpdatedAt: string
   scrollRef: React.RefObject<HTMLDivElement>
   sourceErrorMessage?: string
@@ -104,7 +104,7 @@ function CardFrontContent({
   color,
   icon,
   items,
-  providerTitle,
+  provider,
   relativeUpdatedAt,
   scrollRef,
   sourceErrorMessage,
@@ -120,7 +120,7 @@ function CardFrontContent({
         color={color}
         icon={icon}
         onRequestPermission={onRequestPermission}
-        providerTitle={providerTitle}
+        provider={provider}
       />
     )
   }
@@ -130,7 +130,7 @@ function CardFrontContent({
       <SourceLoginState
         color={color}
         icon={icon}
-        providerTitle={providerTitle}
+        provider={provider}
         loginUrl={sourceLoginUrl}
       />
     )
@@ -142,7 +142,7 @@ function CardFrontContent({
         color={color}
         icon={icon}
         onRefresh={onRefresh}
-        providerTitle={providerTitle}
+        provider={provider}
       />
     )
   }
@@ -185,14 +185,14 @@ function CardFrontComponent({
   actions,
   dragHandle,
 }: CardFrontProps) {
-  const { type, color, desc, icon, providerTitle, sourceIcon, title, home } = source
+  const { type, color, desc, icon, provider, title, home } = source
   const ref = useRef<HTMLDivElement>(null)
   const relativeTime = useRelativeTime({ date: updatedAt })
-  const resolvedSourceIcon = resolveSourceIconUrl(sourceIcon, sourceParams)
+  const resolvedIcon = resolveSourceIconUrl(icon, sourceParams)
   const sourceStatusMessage = sourcePermissionRequired
     ? sourcePermissionDescription
     : sourceLoginUrl
-      ? `Log in to ${providerTitle} to continue.`
+      ? `Log in to ${provider.title} to continue.`
       : sourceErrorMessage
 
   return (
@@ -210,9 +210,8 @@ function CardFrontComponent({
           color={color}
           desc={desc}
           home={home}
-          icon={icon}
-          providerTitle={providerTitle}
-          sourceIcon={resolvedSourceIcon}
+          icon={resolvedIcon}
+          provider={provider}
           title={title}
           subtitle={isFetching ? "Updating..." : relativeTime}
           actions={actions ?? (
@@ -244,7 +243,7 @@ function CardFrontComponent({
             )}
           />
           {sourceStatusMessage && (
-            <SourceStatusPattern icon={icon} />
+            <SourceStatusPattern icon={resolvedIcon} />
           )}
           <div
             ref={ref}
@@ -254,10 +253,10 @@ function CardFrontComponent({
             <div className={cn("min-h-full transition-opacity-500", isFetching && "opacity-20")}>
               <CardFrontContent
                 color={color}
-                icon={icon}
+                icon={resolvedIcon}
                 isFetching={isFetching}
                 items={items}
-                providerTitle={providerTitle}
+                provider={provider}
                 relativeUpdatedAt={relativeTime}
                 scrollRef={ref as React.RefObject<HTMLDivElement>}
                 sourceErrorMessage={sourceErrorMessage}

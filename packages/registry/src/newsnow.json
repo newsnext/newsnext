@@ -1,7 +1,11 @@
 {
   "title": "NEWS NOW",
-  "color": "red",
-  "home": "https://www.newsnow.com",
+  "defaults": {
+    "metadata": {
+      "color": "red",
+      "home": "https://www.newsnow.com"
+    }
+  },
   "sources": {
     "topic-latest": {
       "metadata": {

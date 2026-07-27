@@ -79,13 +79,24 @@ async function loadFoloEntries(body: FoloEntriesRequest): Promise<NewsItem[]> {
 
 export default {
   title: "Folo",
-  color: "orange",
-  home: "https://folo.is",
+  defaults: {
+    cache: "5m",
+    loader: {
+      type: "custom",
+    },
+    capabilities: {
+      network: ["api.folo.is"],
+    },
+    metadata: {
+      color: "orange",
+      home: "https://folo.is",
+      type: "timeline",
+    },
+  },
   sources: {
     feed: {
       metadata: {
         title: "Feed",
-        type: "timeline",
       },
       params: {
         feedId: {
@@ -115,18 +126,12 @@ export default {
         },
       ],
       loader: {
-        type: "custom",
         load: async ({ feedId }) => loadFoloEntries({ feedId }),
       },
-      capabilities: {
-        network: ["api.folo.is"],
-      },
-      cache: "5m",
     },
     list: {
       metadata: {
         title: "List",
-        type: "timeline",
       },
       params: {
         listId: {
@@ -156,13 +161,8 @@ export default {
         },
       ],
       loader: {
-        type: "custom",
         load: async ({ listId }) => loadFoloEntries({ listId }),
       },
-      capabilities: {
-        network: ["api.folo.is"],
-      },
-      cache: "5m",
     },
   },
 } satisfies ProviderConfig

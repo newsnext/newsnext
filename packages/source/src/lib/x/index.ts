@@ -132,19 +132,28 @@ const capabilities = {
 
 export default {
   title: "X",
-  icon: "https://x.com/favicon.ico",
-  color: "slate",
-  home: X_ORIGIN,
-  category: "world",
-  secrets: [
-    {
-      key: X_CSRF_TOKEN_SECRET_KEY,
-      type: "cookie",
-      origin: X_ORIGIN,
-      itemKey: "ct0",
-      cache: false,
+  defaults: {
+    capabilities,
+    cache: "5m",
+    loader: {
+      type: "custom",
     },
-  ],
+    metadata: {
+      color: "slate",
+      home: X_ORIGIN,
+      category: "world",
+      type: "timeline",
+    },
+    secrets: [
+      {
+        key: X_CSRF_TOKEN_SECRET_KEY,
+        type: "cookie",
+        origin: X_ORIGIN,
+        itemKey: "ct0",
+        cache: false,
+      },
+    ],
+  },
   sources: {
     "place-trends": {
       metadata: {
@@ -160,40 +169,28 @@ export default {
         },
       },
       loader: {
-        type: "custom",
         load: fetchXPlaceTrends,
       },
-      capabilities,
-      cache: "5m",
     },
     "recommended": {
       metadata: {
         title: "Recommended",
-        type: "timeline",
       },
       loader: {
-        type: "custom",
         load: (_params, context) => fetchXTimeline(HOME_TIMELINE_URL, context),
       },
-      capabilities,
-      cache: "5m",
     },
     "following": {
       metadata: {
         title: "Following",
-        type: "timeline",
       },
       loader: {
-        type: "custom",
         load: (_params, context) => fetchXTimeline(HOME_LATEST_TIMELINE_URL, context),
       },
-      capabilities,
-      cache: "5m",
     },
     "user": {
       metadata: {
         title: "User Tweets",
-        type: "timeline",
       },
       radar: [
         {
@@ -223,11 +220,8 @@ export default {
         },
       },
       loader: {
-        type: "custom",
         load: fetchXUserTweets,
       },
-      capabilities,
-      cache: "5m",
     },
   },
 } satisfies ProviderConfig

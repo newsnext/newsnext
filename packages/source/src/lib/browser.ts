@@ -4,8 +4,6 @@ import type { Browser } from "@wxt-dev/browser"
 import { browser } from "@wxt-dev/browser"
 
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000
-const BROWSER_PROVIDER_ICON = "https://www.google.com/chrome/static/images/favicons/favicon-96x96.png"
-
 const DATE_RANGE_OPTIONS = [
   { label: "Today", value: "today" },
   { label: "Last 7 days", value: "week" },
@@ -205,14 +203,21 @@ async function fetchBrowserBookmarks({
 
 export default {
   title: "Browser",
-  icon: BROWSER_PROVIDER_ICON,
-  color: "blue",
-  category: "others",
+  defaults: {
+    cache: "5m",
+    loader: {
+      type: "custom",
+    },
+    metadata: {
+      color: "blue",
+      category: "others",
+      type: "timeline",
+    },
+  },
   sources: {
     history: {
       metadata: {
         title: "History",
-        type: "timeline",
       },
       params: {
         query: {
@@ -235,7 +240,6 @@ export default {
         },
       },
       loader: {
-        type: "custom",
         load: fetchBrowserHistory,
       },
       capabilities: { browser: ["history"] },
@@ -244,7 +248,6 @@ export default {
     bookmarks: {
       metadata: {
         title: "Bookmarks",
-        type: "timeline",
       },
       params: {
         folder: {
@@ -262,11 +265,9 @@ export default {
         },
       },
       loader: {
-        type: "custom",
         load: fetchBrowserBookmarks,
       },
       capabilities: { browser: ["bookmarks", "favicon"] },
-      cache: "5m",
     },
   },
 } satisfies ProviderConfig

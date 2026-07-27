@@ -163,29 +163,37 @@ const topicRadar = {
 
 export default {
   title: "Jike",
-  home: JIKE_WEB_ORIGIN,
-  color: "yellow",
-  icon: `${JIKE_WEB_ORIGIN}/favicon.ico`,
-  secrets: [
-    {
-      key: JIKE_ACCESS_TOKEN_SECRET_KEY,
-      type: "localStorage",
-      origin: JIKE_WEB_ORIGIN,
-      itemKey: "JK_ACCESS_TOKEN",
+  defaults: {
+    capabilities: jikeCapabilities,
+    cache: "5m",
+    loader: {
+      type: "custom",
     },
-    {
-      key: JIKE_REFRESH_TOKEN_SECRET_KEY,
-      type: "localStorage",
-      origin: JIKE_WEB_ORIGIN,
-      itemKey: "JK_REFRESH_TOKEN",
+    metadata: {
+      home: JIKE_WEB_ORIGIN,
+      color: "yellow",
+      type: "timeline",
     },
-  ],
+    secrets: [
+      {
+        key: JIKE_ACCESS_TOKEN_SECRET_KEY,
+        type: "localStorage",
+        origin: JIKE_WEB_ORIGIN,
+        itemKey: "JK_ACCESS_TOKEN",
+      },
+      {
+        key: JIKE_REFRESH_TOKEN_SECRET_KEY,
+        type: "localStorage",
+        origin: JIKE_WEB_ORIGIN,
+        itemKey: "JK_REFRESH_TOKEN",
+      },
+    ],
+  },
   sources: {
     "following-updates": {
       metadata: {
         title: "Following Updates",
         desc: "Updates from followed Jike users",
-        type: "timeline",
       },
       radar: [
         {
@@ -198,17 +206,13 @@ export default {
         },
       ],
       loader: {
-        type: "custom",
         load: fetchJikeFollowingUpdates,
       },
-      capabilities: jikeCapabilities,
-      cache: "5m",
     },
     "user-updates": {
       metadata: {
         title: "User Updates",
         desc: "Updates from a Jike user",
-        type: "timeline",
       },
       radar: [
         {
@@ -237,17 +241,13 @@ export default {
         },
       },
       loader: {
-        type: "custom",
         load: fetchJikeUserUpdates,
       },
-      capabilities: jikeCapabilities,
-      cache: "5m",
     },
     "topic-recent": {
       metadata: {
         title: "Topic Recent",
         desc: "Recent posts from a Jike topic",
-        type: "timeline",
       },
       radar: [
         {
@@ -260,11 +260,8 @@ export default {
         topicId: topicIdParam,
       },
       loader: {
-        type: "custom",
         load: (params, context) => fetchJikeTopicFeed(params, "recent", context),
       },
-      capabilities: jikeCapabilities,
-      cache: "5m",
     },
     "topic-hottest": {
       metadata: {
@@ -283,11 +280,8 @@ export default {
         topicId: topicIdParam,
       },
       loader: {
-        type: "custom",
         load: (params, context) => fetchJikeTopicFeed(params, "hottest", context),
       },
-      capabilities: jikeCapabilities,
-      cache: "5m",
     },
   },
 } satisfies ProviderConfig

@@ -6,7 +6,7 @@ describe("source registry", () => {
     for (const [id, source] of Object.entries(sourceRegistry)) {
       expect(id.split(":")).toHaveLength(2)
       expect("sources" in source, id).toBe(false)
-      expect(source.metadata.providerTitle, id).toBeTypeOf("string")
+      expect(source.provider.title, id).toBeTypeOf("string")
     }
   })
 })

@@ -1,10 +1,31 @@
 {
   "title": "Linux.do",
-  "color": "slate",
-  "home": "https://linux.do",
-  "category": "tech",
-  "context": {
-    "origin": "https://linux.do"
+  "defaults": {
+    "cache": "5m",
+    "context": {
+      "origin": "https://linux.do"
+    },
+    "loader": {
+      "type": "json",
+      "items": "topic_list.topics[?visible && !archived && !pinned]",
+      "fields": {
+        "title": "title",
+        "url": {
+          "select": "id",
+          "template": "{{ context.origin }}/t/topic/{{ value | url_path }}"
+        },
+        "inline": {
+          "icon": {
+            "template": "{% assign user = json.users | where: 'username', item.last_poster_username | first %}{% if user and user.avatar_template %}{{ user.avatar_template | replace: '{size}', '48' | absolute_url: context.origin }}{% endif %}"
+          }
+        }
+      }
+    },
+    "metadata": {
+      "color": "slate",
+      "home": "https://linux.do",
+      "category": "tech"
+    }
   },
   "sources": {
     "latest": {
@@ -13,27 +34,14 @@
         "type": "timeline"
       },
       "loader": {
-        "type": "json",
         "url": "{{ context.origin }}/latest.json?order=created",
-        "items": "topic_list.topics[?visible && !archived && !pinned]",
         "fields": {
-          "title": "title",
           "timestamp": {
             "select": "created_at",
             "template": "{{ value | date_to_ms }}"
-          },
-          "url": {
-            "select": "id",
-            "template": "{{ context.origin }}/t/topic/{{ value | url_path }}"
-          },
-          "inline": {
-            "icon": {
-              "template": "{% assign user = json.users | where: 'username', item.last_poster_username | first %}{% if user and user.avatar_template %}{{ user.avatar_template | replace: '{size}', '48' | absolute_url: context.origin }}{% endif %}"
-            }
           }
         }
-      },
-      "cache": "5m"
+      }
     },
     "top-daily": {
       "metadata": {
@@ -41,23 +49,8 @@
         "type": "hottest"
       },
       "loader": {
-        "type": "json",
-        "url": "{{ context.origin }}/top/daily.json",
-        "items": "topic_list.topics[?visible && !archived && !pinned]",
-        "fields": {
-          "title": "title",
-          "url": {
-            "select": "id",
-            "template": "{{ context.origin }}/t/topic/{{ value | url_path }}"
-          },
-          "inline": {
-            "icon": {
-              "template": "{% assign user = json.users | where: 'username', item.last_poster_username | first %}{% if user and user.avatar_template %}{{ user.avatar_template | replace: '{size}', '48' | absolute_url: context.origin }}{% endif %}"
-            }
-          }
-        }
-      },
-      "cache": "5m"
+        "url": "{{ context.origin }}/top/daily.json"
+      }
     }
   }
 }

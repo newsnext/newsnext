@@ -1,6 +1,4 @@
-import type { Color } from "@newsnext/shared/types"
 import type {
-  CategoryId,
   InferSourceParams,
   ProviderDefinition,
   RuntimeSource,
@@ -10,14 +8,20 @@ import type {
   SourceLoader,
   SourceMetadata,
   SourceParamSchemaMap,
+  SourceProvider,
   SourceRadarRule,
   SourceRequestRule,
   SourceSecretDefinition,
   SourceTemplateContext,
+  SourceTemplateContextValue,
 } from "../../typings/sources"
 import type { HtmlSourceOptions } from "./html-source"
 import type { JsonSourceOptions } from "./json-source"
 
+import { COLORS } from "@newsnext/shared/constants"
+import { getFavicon } from "@newsnext/shared/utils"
+import { createDefu } from "defu"
+import { categories } from "../../typings/sources"
 import { parseSourceParamValue } from "../params"
 import { renderTemplates, validateTemplates } from "../template"
 import { assertNetworkCapability, matchesCapabilityHost } from "./capabilities"
@@ -36,6 +40,11 @@ interface SourceConfigBase<TParams extends SourceParamSchemaMap> {
 }
 
 type SourceCapabilityOverrides = Partial<SourceCapabilities>
+type SourceCacheInput = SourceCacheConfig | SourceCacheMaxAge
+type ProviderSourceMetadata = Omit<SourceMetadata, "key">
+type ProviderSourceLoader<TParams extends SourceParamSchemaMap> = Partial<
+  SourceConfig<TParams>["loader"]
+>
 
 const PARAM_TEMPLATE_ROOTS = ["params"] as const
 const LOADER_TEMPLATE_ROOTS = ["context", ...PARAM_TEMPLATE_ROOTS] as const
@@ -89,14 +98,31 @@ export type SourceConfig<TParams extends SourceParamSchemaMap = any>
     }
   )
 
+export type SourceConfigDefaults<TParams extends SourceParamSchemaMap = any> = Partial<
+  Omit<SourceConfig<TParams>, "loader" | "metadata">
+> & {
+  loader?: ProviderSourceLoader<TParams>
+  metadata?: ProviderSourceMetadata
+}
+
+export type ProviderSourceConfig<TParams extends SourceParamSchemaMap = any> = Omit<
+  SourceConfig<TParams>,
+  "cache" | "capabilities" | "loader" | "metadata"
+> & {
+  cache?: SourceCacheInput
+  capabilities?: SourceCapabilityOverrides
+  loader?: ProviderSourceLoader<TParams>
+  metadata?: ProviderSourceMetadata
+}
+
 export function validateSourceTemplates(sourceId: string, config: SourceConfig): void {
   validateSourceContext(config.context, `${sourceId}.context`)
   validateTemplates(config.params, `${sourceId}.params`, {
     allowedRoots: PARAM_VALUE_TEMPLATE_ROOTS,
   })
 
-  if (config.metadata?.sourceIcon) {
-    validateTemplates(config.metadata.sourceIcon, `${sourceId}.metadata.sourceIcon`, {
+  if (config.metadata?.icon) {
+    validateTemplates(config.metadata.icon, `${sourceId}.metadata.icon`, {
       allowedRoots: PARAM_TEMPLATE_ROOTS,
     })
   }
@@ -214,8 +240,8 @@ function validateJsonExpressionAt(expression: string, location: string): void {
 
 type ResolvedSource<TParams extends SourceParamSchemaMap> = Omit<
   RuntimeSource<TParams>,
-  "category" | "color" | "providerTitle"
-> & Partial<Pick<RuntimeSource<TParams>, "category" | "color" | "providerTitle">>
+  "category" | "color" | "provider"
+> & Partial<Pick<RuntimeSource<TParams>, "category" | "color">>
 
 function resolveSource<const TParams extends SourceParamSchemaMap = Record<string, never>>(
   key: string,
@@ -237,9 +263,11 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
   const cache = typeof cacheInput === "string"
     ? { version: 1, maxAge: cacheInput }
     : cacheInput
+  const icon = metadata.icon ?? (metadata.home ? getFavicon(metadata.home) : undefined)
   const registration = {
     key,
     ...metadata,
+    icon,
     params,
     radar,
     requestRules,
@@ -312,50 +340,61 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
   throw new Error(`Unsupported source loader: ${(loader as { type?: unknown }).type}`)
 }
 
-function mergeDefinitions<T>(
-  providerDefinitions: readonly T[] | undefined,
-  sourceDefinitions: readonly T[] | undefined,
-): T[] | undefined {
-  if (!providerDefinitions?.length) {
-    return sourceDefinitions ? [...sourceDefinitions] : undefined
+const assignSourceDefaults = createDefu((object, key, value) => {
+  if (Array.isArray(value) && Array.isArray(object[key])) {
+    object[key] = value
+    return true
   }
-  if (!sourceDefinitions?.length) {
-    return [...providerDefinitions]
-  }
-  return [...providerDefinitions, ...sourceDefinitions]
+})
+
+const BASE_SOURCE_DEFAULTS: SourceConfigDefaults = {
+  metadata: {
+    category: "others",
+  },
 }
 
 function mergeSourceContexts(
   providerContext: SourceTemplateContext | undefined,
   sourceContext: SourceTemplateContext | undefined,
 ): SourceTemplateContext | undefined {
-  if (!providerContext) {
-    return sourceContext
+  return mergeSourceContextValues(providerContext, sourceContext) as
+    | SourceTemplateContext
+    | undefined
+}
+
+function mergeSourceContextValues(
+  defaultValue: SourceTemplateContextValue | undefined,
+  sourceValue: SourceTemplateContextValue | undefined,
+): SourceTemplateContextValue | undefined {
+  if (sourceValue === undefined) {
+    return defaultValue
   }
-  if (!sourceContext) {
-    return providerContext
+  if (!isRecord(defaultValue) || !isRecord(sourceValue)) {
+    return sourceValue
   }
-  return {
-    ...providerContext,
-    ...sourceContext,
+
+  const keys = new Set([...Object.keys(defaultValue), ...Object.keys(sourceValue)])
+  const merged: Record<string, SourceTemplateContextValue> = {}
+  for (const key of keys) {
+    const value = mergeSourceContextValues(
+      defaultValue[key] as SourceTemplateContextValue | undefined,
+      sourceValue[key] as SourceTemplateContextValue | undefined,
+    )
+    if (value !== undefined) {
+      merged[key] = value
+    }
   }
+  return merged
 }
 
 export interface ProviderConfig {
   title: string
-  color: Color
-  icon?: string
-  desc?: string
-  home?: string
-  category?: CategoryId
-  context?: SourceTemplateContext
-  secrets?: SourceSecretDefinition[]
-  requestRules?: readonly SourceRequestRule[]
-  sources: Record<string, SourceConfig>
+  defaults?: SourceConfigDefaults
+  sources: Record<string, ProviderSourceConfig>
 }
 
 export type SourceRegistryConfig = SourceConfig & {
-  icon?: string
+  provider: SourceProvider
 }
 
 export type SourceRegistry = Record<string, SourceRegistryConfig>
@@ -382,9 +421,34 @@ const REQUEST_RULE_ACTION_TYPES = new Set([
 const REQUEST_HEADER_OPERATIONS = new Set(["append", "remove", "set"])
 const PROHIBITED_REGISTRY_KEYS = new Set(["__proto__", "constructor", "prototype"])
 const STRUCTURED_LOADER_TYPES = new Set(["html", "json", "rss"])
+const PROVIDER_CONFIG_KEYS = new Set(["defaults", "sources", "title"])
+const SOURCE_PROVIDER_KEYS = new Set(["title"])
+const SOURCE_COLORS = new Set<string>(COLORS)
+const SOURCE_CATEGORIES = new Set(Object.keys(categories))
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value)
+}
+
+function isValidIdSegment(value: string): boolean {
+  return Boolean(value) && !/[:\s]/.test(value) && !PROHIBITED_REGISTRY_KEYS.has(value)
+}
+
+function hasSourceProviderIdentity(value: unknown): value is SourceProvider {
+  return isRecord(value)
+    && typeof value.title === "string"
+    && value.title.trim().length > 0
+}
+
+function isSourceProvider(value: unknown): value is SourceProvider {
+  return hasSourceProviderIdentity(value)
+    && Object.keys(value).every(key => SOURCE_PROVIDER_KEYS.has(key))
+}
+
+function toSourceProvider(provider: ProviderConfig): SourceProvider {
+  return {
+    title: provider.title,
+  }
 }
 
 function validateSourceRequestRules(
@@ -490,6 +554,7 @@ export function parseSourceRegistry(input: unknown): SourceRegistry {
     throw new Error(`Source registry exceeds ${SOURCE_REGISTRY_LIMITS.maxSources} sources`)
   }
 
+  const providers = new Map<string, SourceProvider>()
   return Object.fromEntries(
     entries.map(([id, source]) => {
       const idParts = id.split(":")
@@ -503,6 +568,21 @@ export function parseSourceRegistry(input: unknown): SourceRegistry {
       if (!isRecord(source) || !isRecord(source.loader)) {
         throw new Error(`Registry source "${id}" must define a structured loader`)
       }
+      if (!isSourceProvider(source.provider)) {
+        throw new Error(`Registry source "${id}" has invalid provider metadata`)
+      }
+
+      const providerId = idParts[0] as string
+      const currentProvider = source.provider
+      const previousProvider = providers.get(providerId)
+      if (
+        previousProvider
+        && previousProvider.title !== currentProvider.title
+      ) {
+        throw new Error(`Provider "${providerId}" has inconsistent metadata`)
+      }
+      providers.set(providerId, currentProvider)
+
       if (!STRUCTURED_LOADER_TYPES.has(String(source.loader.type))) {
         throw new Error(`Registry source "${id}" uses an unsupported loader type`)
       }
@@ -533,42 +613,108 @@ export function flattenProviderConfig(
   id: string,
   provider: ProviderConfig,
 ): SourceRegistry {
+  const sources = expandProviderSources(id, provider)
+  const providerMetadata = toSourceProvider(provider)
+
   return Object.fromEntries(
-    Object.entries(provider.sources).map(([sourceId, source]) => [
+    Object.entries(sources).map(([sourceId, source]) => [
       `${id}:${sourceId}`,
       {
         ...source,
-        icon: provider.icon,
-        metadata: {
-          providerTitle: provider.title,
-          color: provider.color,
-          category: provider.category ?? "others",
-          desc: provider.desc,
-          home: provider.home,
-          ...source.metadata,
-        },
-        context: mergeSourceContexts(provider.context, source.context),
-        secrets: mergeDefinitions(provider.secrets, source.secrets),
-        requestRules: mergeDefinitions(provider.requestRules, source.requestRules),
+        provider: providerMetadata,
       },
     ]),
   )
 }
 
-export function resolveRegistrySource(
+function expandProviderSources(
+  providerId: string,
+  provider: ProviderConfig,
+): Record<string, SourceConfig> {
+  if (!isValidIdSegment(providerId)) {
+    throw new Error(`Invalid provider ID "${providerId}"`)
+  }
+  if (!isRecord(provider)) {
+    throw new Error(`Provider "${providerId}" must be an object`)
+  }
+  const unsupportedKey = Object.keys(provider).find(key => !PROVIDER_CONFIG_KEYS.has(key))
+  if (unsupportedKey) {
+    throw new Error(`Provider "${providerId}" has unsupported property "${unsupportedKey}"`)
+  }
+  if (!hasSourceProviderIdentity(provider)) {
+    throw new Error(`Provider "${providerId}" has invalid identity metadata`)
+  }
+  if (provider.defaults !== undefined && !isRecord(provider.defaults)) {
+    throw new Error(`Provider "${providerId}" has invalid defaults`)
+  }
+  if (!isRecord(provider.sources)) {
+    throw new Error(`Provider "${providerId}" must define sources`)
+  }
+
+  return Object.fromEntries(
+    Object.entries(provider.sources).map(([sourceId, source]) => {
+      if (!isValidIdSegment(sourceId)) {
+        throw new Error(`Provider "${providerId}" has invalid source ID "${sourceId}"`)
+      }
+      if (!isRecord(source)) {
+        throw new Error(`Source "${providerId}:${sourceId}" must be an object`)
+      }
+      const defaultedSource = assignSourceDefaults(
+        source,
+        provider.defaults ?? {},
+        BASE_SOURCE_DEFAULTS,
+      )
+      const sourceKey = `${providerId}:${sourceId}`
+      if (
+        !isRecord(defaultedSource.loader)
+        || (
+          defaultedSource.loader.type === "custom"
+            ? typeof defaultedSource.loader.load !== "function"
+            : (
+                !STRUCTURED_LOADER_TYPES.has(String(defaultedSource.loader.type))
+                || !("url" in defaultedSource.loader)
+                || typeof defaultedSource.loader.url !== "string"
+                || defaultedSource.loader.url.length === 0
+              )
+        )
+      ) {
+        throw new Error(`Source "${sourceKey}" is missing a valid loader`)
+      }
+      if (!defaultedSource.cache) {
+        throw new Error(`Source "${sourceKey}" is missing a cache policy`)
+      }
+      if (!SOURCE_COLORS.has(String(defaultedSource.metadata?.color))) {
+        throw new Error(`Source "${sourceKey}" is missing a valid color`)
+      }
+      if (!SOURCE_CATEGORIES.has(String(defaultedSource.metadata?.category))) {
+        throw new Error(`Source "${sourceKey}" has an invalid category`)
+      }
+
+      return [sourceId, {
+        ...defaultedSource,
+        context: mergeSourceContexts(provider.defaults?.context, source.context),
+      } as SourceConfig]
+    }),
+  )
+}
+
+function resolveRuntimeSource(
   id: string,
-  config: SourceRegistryConfig,
+  key: string,
+  config: SourceConfig,
+  provider: SourceProvider,
 ): RuntimeSource {
   validateSourceTemplates(id, config)
 
-  const key = id.split(":")[1]
-  if (!key) {
-    throw new Error(`Invalid registry source ID "${id}"`)
-  }
-
   const source = resolveSource(key, config)
-  if (!source.providerTitle || !source.color || !source.category) {
-    throw new Error(`Registry source "${id}" is missing inherited metadata`)
+  const category = source.category
+  if (
+    !source.color
+    || !category
+    || !SOURCE_COLORS.has(source.color)
+    || !SOURCE_CATEGORIES.has(category)
+  ) {
+    throw new Error(`Source "${id}" is missing valid display metadata`)
   }
 
   const secrets = source.secrets
@@ -577,88 +723,45 @@ export function resolveRegistrySource(
     .map(secret => new URL(secret.origin).hostname)
 
   return {
-    icon: config.icon,
-    providerTitle: source.providerTitle,
-    sourceIcon: source.sourceIcon,
-    key: source.key,
-    title: source.title,
-    params: source.params,
+    ...source,
+    provider,
+    color: source.color,
+    category,
+    secrets,
     capabilities: {
       ...source.capabilities,
       cookies: [...new Set([...source.capabilities.cookies, ...cookieHosts])],
     },
-    cache: source.cache,
-    color: source.color,
-    desc: source.desc,
-    type: source.type,
-    category: source.category,
-    home: source.home,
-    secrets,
-    radar: source.radar,
-    requestRules: source.requestRules,
-    disable: source.disable,
-    loader: source.loader,
   }
+}
+
+export function resolveRegistrySource(
+  id: string,
+  config: SourceRegistryConfig,
+): RuntimeSource {
+  const key = id.split(":")[1]
+  if (!key) {
+    throw new Error(`Invalid registry source ID "${id}"`)
+  }
+
+  return resolveRuntimeSource(id, key, config, config.provider)
 }
 
 export function resolveProvider(
   id: string,
   provider: ProviderConfig,
 ): ProviderDefinition {
-  for (const [key, config] of Object.entries(provider.sources)) {
-    validateSourceTemplates(`${id}:${key}`, {
-      ...config,
-      context: mergeSourceContexts(provider.context, config.context),
-    })
-  }
+  const sourcesConfig = expandProviderSources(id, provider)
+  const providerMetadata = toSourceProvider(provider)
 
   const sources = Object.fromEntries(
-    Object.entries(provider.sources).map(([key, config]) => {
-      const source = resolveSource(key, {
-        ...config,
-        context: mergeSourceContexts(provider.context, config.context),
-        requestRules: mergeDefinitions(provider.requestRules, config.requestRules),
-      })
-      const secrets = mergeDefinitions(provider.secrets, source.secrets)
-      const cookieHosts = (secrets ?? [])
-        .filter(secret => secret.type === "cookie")
-        .map(secret => new URL(secret.origin).hostname)
-      const registeredSource: RuntimeSource = {
-        icon: provider.icon,
-        providerTitle: source.providerTitle ?? provider.title,
-        sourceIcon: source.sourceIcon,
-        key: source.key,
-        title: source.title,
-        params: source.params,
-        capabilities: {
-          ...source.capabilities,
-          cookies: [...new Set([...source.capabilities.cookies, ...cookieHosts])],
-        },
-        cache: source.cache,
-        color: source.color ?? provider.color,
-        desc: source.desc ?? provider.desc,
-        type: source.type,
-        category: source.category ?? provider.category ?? "others",
-        home: source.home ?? provider.home,
-        secrets,
-        radar: source.radar,
-        requestRules: source.requestRules,
-        disable: source.disable,
-        loader: source.loader,
-      }
-
-      return [key, registeredSource]
-    }),
+    Object.entries(sourcesConfig).map(([key, config]) => [
+      key,
+      resolveRuntimeSource(`${id}:${key}`, key, config, providerMetadata),
+    ]),
   ) as Record<string, RuntimeSource>
 
   return {
-    id,
-    title: provider.title,
-    color: provider.color,
-    icon: provider.icon,
-    desc: provider.desc,
-    home: provider.home,
-    category: provider.category ?? "others",
     sources,
   }
 }

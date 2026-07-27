@@ -1,5 +1,5 @@
 import type { ReactNode } from "react"
-import type { SourceInstanceMeta } from "@/lib/source-cards"
+import type { SourceInstanceMetadata, SourceInstancePatch } from "@/lib/source-cards"
 import type { BoardSource } from "@/typings/source"
 import { useSetAtom } from "jotai"
 import { useInView } from "motion/react"
@@ -12,8 +12,7 @@ import { getSourcePermissionDescription } from "@/lib/source-permissions"
 import { cn } from "@/lib/utils"
 import {
   resetInstanceParamsAtom,
-  setSourceInstanceMetaAtom,
-  upsertInstanceAtom,
+  setSourceInstancePatchAtom,
 } from "@/store/board"
 import { CardBack } from "./card-back"
 import { CardFront } from "./card-front"
@@ -29,13 +28,12 @@ export interface CardProps {
   dragHandle?: ReactNode
   showStar?: boolean
   isDraft?: boolean
-  onDraftSourceChange?: (patch: { paramsPatch?: Record<string, unknown>, metaPatch?: SourceInstanceMeta }) => void
+  onDraftSourceChange?: (patch: SourceInstancePatch) => void
 }
 
 function CardContent({ id, source, dragHandle, showStar = true, isDraft = false, onDraftSourceChange }: CardProps) {
-  const upsertLocal = useSetAtom(upsertInstanceAtom)
+  const setSourceInstancePatch = useSetAtom(setSourceInstancePatchAtom)
   const resetLocalParams = useSetAtom(resetInstanceParamsAtom)
-  const setSourceInstanceMeta = useSetAtom(setSourceInstanceMetaAtom)
   const [isFlipped, setIsFlipped] = useState(false)
   const {
     canLoad,
@@ -76,52 +74,31 @@ function CardContent({ id, source, dragHandle, showStar = true, isDraft = false,
   const handleSaveSourceParams = useCallback(() => {
     const nextParams = saveDraftParams()
     if (onDraftSourceChange) {
-      onDraftSourceChange({ paramsPatch: nextParams })
+      onDraftSourceChange({ params: nextParams })
       return
     }
 
-    const now = Date.now()
-    const metaPatch = source.isCustom
-      ? {
-          providerTitle: source.providerTitle,
-          title: source.title,
-          desc: source.desc,
-          home: source.home,
-          color: source.color,
-        }
-      : undefined
-    const origin = source.isCustom && source.origin !== "default" ? source.origin : "fork"
-    const nextInstance = {
-      instanceId: id,
-      sourceId: source.sourceId,
-      paramsPatch: nextParams,
-      metaPatch,
-      origin,
-      createdAt: now,
-      updatedAt: now,
-    }
-
-    upsertLocal(nextInstance)
-  }, [source, id, onDraftSourceChange, saveDraftParams, upsertLocal])
+    setSourceInstancePatch({ instanceId: id, patch: { params: nextParams } })
+  }, [id, onDraftSourceChange, saveDraftParams, setSourceInstancePatch])
 
   const handleResetSourceParams = useCallback(() => {
     resetDraftParams()
     if (onDraftSourceChange) {
-      onDraftSourceChange({ paramsPatch: {} })
+      onDraftSourceChange({ params: {} })
       return
     }
 
     resetLocalParams(id)
   }, [id, onDraftSourceChange, resetDraftParams, resetLocalParams])
 
-  const handleSaveSourceMeta = useCallback((meta: SourceInstanceMeta) => {
+  const handleSaveSourceMeta = useCallback((metadata: SourceInstanceMetadata) => {
     if (onDraftSourceChange) {
-      onDraftSourceChange({ metaPatch: meta })
+      onDraftSourceChange({ metadata })
       return
     }
 
-    setSourceInstanceMeta({ instanceId: id, meta })
-  }, [id, onDraftSourceChange, setSourceInstanceMeta])
+    setSourceInstancePatch({ instanceId: id, patch: { metadata } })
+  }, [id, onDraftSourceChange, setSourceInstancePatch])
 
   return (
     <FlipAnimate

@@ -1,13 +1,17 @@
 {
   "title": "Telegram",
-  "color": "blue",
-  "home": "https://t.me/s/TestFlightCN",
-  "category": "tech",
+  "defaults": {
+    "metadata": {
+      "color": "blue",
+      "home": "https://t.me/s/TestFlightCN",
+      "category": "tech"
+    }
+  },
   "sources": {
     "channel": {
       "metadata": {
         "title": "科技圈 在花频道",
-        "sourceIcon": "https://t.me/i/userpic/320/{{ params.channel | required | url_path }}.jpg",
+        "icon": "https://t.me/i/userpic/320/{{ params.channel | required | url_path }}.jpg",
         "type": "timeline"
       },
       "params": {

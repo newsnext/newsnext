@@ -1,8 +1,12 @@
 {
   "title": "Lianhe Zaobao",
-  "color": "red",
-  "home": "https://www.zaobao.com",
-  "category": "china",
+  "defaults": {
+    "metadata": {
+      "color": "red",
+      "home": "https://www.zaobao.com",
+      "category": "china"
+    }
+  },
   "sources": {
     "realtime": {
       "metadata": {

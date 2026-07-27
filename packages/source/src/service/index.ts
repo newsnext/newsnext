@@ -5,7 +5,6 @@ import type {
   SourceDescriptor,
   SourceParamSchemaMap,
 } from "@newsnext/source/typings"
-import { getFavicon } from "@newsnext/shared/utils"
 import { SourceParamValueError } from "@newsnext/source/typings"
 import { parseSourceParams } from "@newsnext/source/utils/params"
 import { providers as typescriptProviders } from "../index"
@@ -107,7 +106,6 @@ export async function loadSourceDescriptors(): Promise<SourceDescriptor[]> {
     const { disable: _disable, key: _key, loader: _loader, ...descriptor } = source
     return {
       ...descriptor,
-      icon: descriptor.icon ?? (descriptor.home ? getFavicon(descriptor.home) : undefined),
       id,
     }
   })

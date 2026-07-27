@@ -1,53 +1,57 @@
 {
   "title": "Hacker News",
-  "color": "orange",
-  "home": "https://news.ycombinator.com/",
-  "context": {
-    "origin": "https://news.ycombinator.com"
+  "defaults": {
+    "cache": "5m",
+    "context": {
+      "origin": "https://news.ycombinator.com"
+    },
+    "loader": {
+      "type": "html",
+      "url": "{{ context.origin }}/",
+      "items": ".athing",
+      "fields": {
+        "title": ".titleline>a",
+        "url": {
+          "select": "",
+          "attr": "id",
+          "template": "{{ context.origin }}/item?id={{ value | url_query }}"
+        },
+        "timestamp": {
+          "traverse": {
+            "type": "next",
+            "selector": "tr"
+          },
+          "select": ".age",
+          "attr": "title",
+          "template": "{{ value | split: ' ' | last | times: 1000 }}"
+        },
+        "inline": {
+          "text": {
+            "traverse": {
+              "type": "next",
+              "selector": "tr"
+            },
+            "select": ".score"
+          },
+          "icon": {
+            "select": ".titleline>a",
+            "attr": "href",
+            "template": "{{ value | absolute_url: requestUrl | favicon_url }}"
+          }
+        }
+      }
+    },
+    "metadata": {
+      "color": "orange",
+      "home": "https://news.ycombinator.com/"
+    }
   },
   "sources": {
     "top": {
       "metadata": {
         "type": "hottest",
         "title": "Hottest"
-      },
-      "loader": {
-        "type": "html",
-        "url": "{{ context.origin }}/",
-        "items": ".athing",
-        "fields": {
-          "title": ".titleline>a",
-          "url": {
-            "select": "",
-            "attr": "id",
-            "template": "{{ context.origin }}/item?id={{ value | url_query }}"
-          },
-          "timestamp": {
-            "traverse": {
-              "type": "next",
-              "selector": "tr"
-            },
-            "select": ".age",
-            "attr": "title",
-            "template": "{{ value | split: ' ' | last | times: 1000 }}"
-          },
-          "inline": {
-            "text": {
-              "traverse": {
-                "type": "next",
-                "selector": "tr"
-              },
-              "select": ".score"
-            },
-            "icon": {
-              "select": ".titleline>a",
-              "attr": "href",
-              "template": "{{ value | absolute_url: requestUrl | favicon_url }}"
-            }
-          }
-        }
-      },
-      "cache": "5m"
+      }
     },
     "newest": {
       "metadata": {
@@ -56,40 +60,7 @@
         "home": "https://news.ycombinator.com/newest"
       },
       "loader": {
-        "type": "html",
-        "url": "{{ context.origin }}/newest",
-        "items": ".athing",
-        "fields": {
-          "title": ".titleline>a",
-          "url": {
-            "select": "",
-            "attr": "id",
-            "template": "{{ context.origin }}/item?id={{ value | url_query }}"
-          },
-          "timestamp": {
-            "traverse": {
-              "type": "next",
-              "selector": "tr"
-            },
-            "select": ".age",
-            "attr": "title",
-            "template": "{{ value | split: ' ' | last | times: 1000 }}"
-          },
-          "inline": {
-            "text": {
-              "traverse": {
-                "type": "next",
-                "selector": "tr"
-              },
-              "select": ".score"
-            },
-            "icon": {
-              "select": ".titleline>a",
-              "attr": "href",
-              "template": "{{ value | absolute_url: requestUrl | favicon_url }}"
-            }
-          }
-        }
+        "url": "{{ context.origin }}/newest"
       },
       "cache": "1m"
     },
@@ -99,42 +70,8 @@
         "home": "https://news.ycombinator.com/show"
       },
       "loader": {
-        "type": "html",
-        "url": "{{ context.origin }}/show",
-        "items": ".athing",
-        "fields": {
-          "title": ".titleline>a",
-          "url": {
-            "select": "",
-            "attr": "id",
-            "template": "{{ context.origin }}/item?id={{ value | url_query }}"
-          },
-          "timestamp": {
-            "traverse": {
-              "type": "next",
-              "selector": "tr"
-            },
-            "select": ".age",
-            "attr": "title",
-            "template": "{{ value | split: ' ' | last | times: 1000 }}"
-          },
-          "inline": {
-            "text": {
-              "traverse": {
-                "type": "next",
-                "selector": "tr"
-              },
-              "select": ".score"
-            },
-            "icon": {
-              "select": ".titleline>a",
-              "attr": "href",
-              "template": "{{ value | absolute_url: requestUrl | favicon_url }}"
-            }
-          }
-        }
-      },
-      "cache": "5m"
+        "url": "{{ context.origin }}/show"
+      }
     },
     "ask": {
       "metadata": {
@@ -142,42 +79,8 @@
         "home": "https://news.ycombinator.com/ask"
       },
       "loader": {
-        "type": "html",
-        "url": "{{ context.origin }}/ask",
-        "items": ".athing",
-        "fields": {
-          "title": ".titleline>a",
-          "url": {
-            "select": "",
-            "attr": "id",
-            "template": "{{ context.origin }}/item?id={{ value | url_query }}"
-          },
-          "timestamp": {
-            "traverse": {
-              "type": "next",
-              "selector": "tr"
-            },
-            "select": ".age",
-            "attr": "title",
-            "template": "{{ value | split: ' ' | last | times: 1000 }}"
-          },
-          "inline": {
-            "text": {
-              "traverse": {
-                "type": "next",
-                "selector": "tr"
-              },
-              "select": ".score"
-            },
-            "icon": {
-              "select": ".titleline>a",
-              "attr": "href",
-              "template": "{{ value | absolute_url: requestUrl | favicon_url }}"
-            }
-          }
-        }
-      },
-      "cache": "5m"
+        "url": "{{ context.origin }}/ask"
+      }
     }
   }
 }

@@ -55,9 +55,20 @@ const weiboSearchRequestRules = [
 
 export default {
   title: "Weibo",
-  color: "red",
-  category: "china",
-  icon: "https://weibo.com/favicon.ico",
+  defaults: {
+    capabilities: weiboCapabilities,
+    requestRules: weiboRequestRules,
+    cache: "5m",
+    loader: {
+      type: "custom",
+    },
+    metadata: {
+      color: "red",
+      category: "china",
+      type: "timeline",
+      icon: "https://weibo.com/favicon.ico",
+    },
+  },
   sources: {
     "hot-search": {
       metadata: {
@@ -130,8 +141,6 @@ export default {
           },
         },
       },
-      capabilities: weiboCapabilities,
-      requestRules: weiboRequestRules,
       cache: {
         version: 4,
         maxAge: "1m",
@@ -141,7 +150,6 @@ export default {
       metadata: {
         title: "User Posts",
         desc: "Latest posts from a specified Weibo user",
-        type: "timeline",
         home: "https://weibo.com",
       },
       params: {
@@ -172,18 +180,13 @@ export default {
         },
       ],
       loader: {
-        type: "custom",
         load: fetchWeiboUserPosts,
       },
-      capabilities: weiboCapabilities,
-      requestRules: weiboRequestRules,
-      cache: "5m",
     },
     "keyword": {
       metadata: {
         title: "Keyword",
         desc: "Latest Weibo posts matching a keyword",
-        type: "timeline",
         home: "https://s.weibo.com",
       },
       params: {
@@ -212,18 +215,15 @@ export default {
         },
       ],
       loader: {
-        type: "custom",
         load: fetchWeiboKeywordPosts,
       },
       capabilities: weiboSearchCapabilities,
       requestRules: weiboSearchRequestRules,
-      cache: "5m",
     },
     "super-topic": {
       metadata: {
         title: "Super Topic",
         desc: "Latest posts from a Weibo super topic",
-        type: "timeline",
         home: "https://weibo.com",
       },
       params: {
@@ -266,18 +266,13 @@ export default {
         },
       ],
       loader: {
-        type: "custom",
         load: fetchWeiboSuperTopicPosts,
       },
-      capabilities: weiboCapabilities,
-      requestRules: weiboRequestRules,
-      cache: "5m",
     },
     "following": {
       metadata: {
         title: "Following Timeline",
         desc: "Latest posts from all followed Weibo accounts",
-        type: "timeline",
         home: "https://weibo.com",
       },
       radar: [
@@ -291,12 +286,8 @@ export default {
         },
       ],
       loader: {
-        type: "custom",
         load: fetchWeiboFollowingTimeline,
       },
-      capabilities: weiboCapabilities,
-      requestRules: weiboRequestRules,
-      cache: "5m",
     },
   },
 } satisfies ProviderConfig

@@ -1,8 +1,12 @@
 {
   "title": "AIHot",
-  "color": "blue",
-  "home": "https://aihot.virxact.com",
-  "category": "tech",
+  "defaults": {
+    "metadata": {
+      "color": "blue",
+      "home": "https://aihot.virxact.com",
+      "category": "tech"
+    }
+  },
   "sources": {
     "all": {
       "metadata": {

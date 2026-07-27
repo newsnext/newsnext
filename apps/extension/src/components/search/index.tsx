@@ -14,16 +14,15 @@ import { useEffect, useMemo, useState } from "react"
 import { useSourceDescriptors } from "@/hooks/use-source-descriptors"
 import { buildBoardSources } from "@/lib/source-cards"
 import { cn } from "@/lib/utils"
-import { boardInstancesAtom, boardStarIdsAtom } from "@/store/board"
+import { boardStarIdsAtom, instancesAtom } from "@/store/board"
 import Card from "../card"
+import { SourceIcon } from "../card/source-icon"
 import { PhMagnifyingGlass } from "../icons/ph"
 import "./index.css"
 
 interface SearchItem {
   id: string
   source: BoardSource
-  providerTitle: string
-  title?: string
   isStarred: boolean
 }
 
@@ -79,7 +78,7 @@ export function SearchDialog(): ReactNode {
 function SearchDialogContent(): ReactNode {
   const [selectedItemId, setSelectedItemId] = useState("")
   const starredInstanceIds = useAtomValue(boardStarIdsAtom("stars"))
-  const instances = useAtomValue(boardInstancesAtom("stars"))
+  const instances = useAtomValue(instancesAtom)
   const { sources } = useSourceDescriptors()
 
   const searchItems = useMemo<SearchItem[]>(() => {
@@ -101,8 +100,6 @@ function SearchDialogContent(): ReactNode {
       return {
         id,
         source,
-        providerTitle: source.providerTitle,
-        title: source.title,
         isStarred: starredInstanceIds.includes(id),
       } satisfies SearchItem
     })
@@ -137,23 +134,23 @@ function SearchDialogContent(): ReactNode {
               value={item.id}
               keywords={[
                 item.id,
-                item.providerTitle,
-                item.title ?? "",
+                item.source.provider.title,
+                item.source.title ?? "",
                 "fork forked radar",
                 item.isStarred ? "star starred" : "",
               ]}
             >
               <span className="flex items-center min-w-0 flex-1 gap-2">
-                <span
-                  className="size-4 shrink-0 rounded-full bg-cover bg-center bg-no-repeat"
-                  aria-hidden="true"
-                  style={{
-                    backgroundImage: item.source.icon ? `url(${item.source.icon})` : undefined,
-                  }}
+                <SourceIcon
+                  className="shrink-0 rounded-full"
+                  icon={item.source.icon}
+                  title={item.source.title || item.source.provider.title}
                 />
-                <span className="shrink-0">{item.title || item.providerTitle}</span>
+                <span className="shrink-0">
+                  {item.source.title || item.source.provider.title}
+                </span>
                 <span className="min-w-0 truncate text-xs text-neutral-400/80">
-                  {item.title && item.providerTitle}
+                  {item.source.title && item.source.provider.title}
                 </span>
               </span>
             </CommandItem>

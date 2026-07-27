@@ -51,17 +51,36 @@ async function getSearchParams(moreParams: Record<string, SearchParamValue> = {}
 
 export default {
   title: "财联社",
-  home: "https://www.cls.cn",
-  color: "red",
-  category: "finance",
+  defaults: {
+    cache: "5m",
+    loader: {
+      type: "json",
+      fields: {
+        title: "title || brief",
+        url: {
+          select: "id",
+          template: "https://www.cls.cn/detail/{{ value | url_path }}",
+        },
+        mobileUrl: "shareurl",
+        timestamp: {
+          select: "ctime",
+          template: "{{ value | times: 1000 }}",
+        },
+      },
+    },
+    metadata: {
+      home: "https://www.cls.cn",
+      color: "red",
+      category: "finance",
+      type: "timeline",
+    },
+  },
   sources: {
     "telegraph": {
       metadata: {
         title: "电报",
-        type: "timeline",
       },
       loader: {
-        type: "json",
         url: "https://www.cls.cn/v1/roll/get_roll_list",
         fetch: async (url) => {
           return myFetch<TelegraphResponse>(url, {
@@ -76,29 +95,15 @@ export default {
           })
         },
         items: "data.roll_data[?!is_ad]",
-        fields: {
-          title: "title || brief",
-          url: {
-            select: "id",
-            template: "https://www.cls.cn/detail/{{ value | url_path }}",
-          },
-          mobileUrl: "shareurl",
-          timestamp: {
-            select: "ctime",
-            template: "{{ value | times: 1000 }}",
-          },
-        },
       },
       cache: "1m",
     },
     "depth": {
       metadata: {
         title: "深度",
-        type: "timeline",
         home: "https://www.cls.cn/depth",
       },
       loader: {
-        type: "json",
         url: "https://www.cls.cn/v3/depth/home/assembled/1000",
         fetch: async (url) => {
           return myFetch<DepthResponse>(url, {
@@ -106,20 +111,7 @@ export default {
           })
         },
         items: "reverse(sort_by(data.depth_list, &ctime))",
-        fields: {
-          title: "title || brief",
-          url: {
-            select: "id",
-            template: "https://www.cls.cn/detail/{{ value | url_path }}",
-          },
-          mobileUrl: "shareurl",
-          timestamp: {
-            select: "ctime",
-            template: "{{ value | times: 1000 }}",
-          },
-        },
       },
-      cache: "5m",
     },
     "hot-article": {
       metadata: {
@@ -127,7 +119,6 @@ export default {
         type: "hottest",
       },
       loader: {
-        type: "json",
         url: "https://www.cls.cn/v2/article/hot/list",
         fetch: async (url) => {
           return myFetch<HotResponse>(url, {
@@ -135,20 +126,7 @@ export default {
           })
         },
         items: "data",
-        fields: {
-          title: "title || brief",
-          url: {
-            select: "id",
-            template: "https://www.cls.cn/detail/{{ value | url_path }}",
-          },
-          mobileUrl: "shareurl",
-          timestamp: {
-            select: "ctime",
-            template: "{{ value | times: 1000 }}",
-          },
-        },
       },
-      cache: "5m",
     },
   },
 } satisfies ProviderConfig

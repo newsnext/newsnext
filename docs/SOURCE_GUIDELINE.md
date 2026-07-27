@@ -49,7 +49,27 @@ directory of a nested index file. A JSON provider ID comes from its filename;
 the JSON package build uses `flattenProviderConfig` from
 `@newsnext/source/utils/source` to inherit provider defaults and writes a flat
 `packages/registry/registry.json`. Registry keys are complete source IDs such
-as `example:latest`; the generated file contains no provider containers.
+as `example:latest`; the generated file contains no provider containers. Each
+flattened source carries its fixed provider identity separately from source
+metadata:
+
+```json
+{
+  "example:latest": {
+    "provider": {
+      "title": "Example"
+    },
+    "metadata": {
+      "title": "Latest",
+      "icon": "https://example.com/latest.png"
+    }
+  }
+}
+```
+
+`metadata.icon` becomes the source `icon` displayed by clients. When omitted,
+it defaults to the favicon derived from the source's final `metadata.home`
+value.
 
 Prefer JSON whenever the provider is fully declarative. Use TypeScript only
 when it needs custom loader functions, imported runtime helpers, browser APIs,
@@ -59,8 +79,13 @@ JSON providers use the same provider and source schema:
 ```json
 {
   "title": "Example",
-  "home": "https://example.com",
-  "color": "blue",
+  "defaults": {
+    "cache": "5m",
+    "metadata": {
+      "home": "https://example.com",
+      "color": "blue"
+    }
+  },
   "sources": {
     "latest": {
       "metadata": {
@@ -70,8 +95,7 @@ JSON providers use the same provider and source schema:
       "loader": {
         "type": "rss",
         "url": "https://example.com/feed.xml"
-      },
-      "cache": "5m"
+      }
     }
   }
 }
@@ -85,9 +109,14 @@ import type { ProviderConfig } from "@newsnext/source/utils/source"
 
 export default {
   title: "Example",
-  home: "https://example.com",
-  color: "blue",
-  category: "tech",
+  defaults: {
+    cache: "5m",
+    metadata: {
+      home: "https://example.com",
+      color: "blue",
+      category: "tech",
+    },
+  },
   sources: {
     latest: {
       metadata: {
@@ -103,7 +132,6 @@ export default {
           url: "url",
         },
       },
-      cache: "5m",
     },
   },
 } satisfies ProviderConfig
@@ -168,16 +196,21 @@ responsible for validating and resolving stored JSON regardless of transport.
 
 ## Provider metadata
 
-Provider metadata is inherited by every source unless the source overrides it.
+Provider `title` is the fixed identity field. Every shared source property
+belongs in `defaults` and can be overridden by a source. The only
+provider-level keys are `title`, `defaults`, and `sources`.
 
 ```ts
 export default {
   title: "Example",
-  icon: "example",
-  desc: "Example news sources",
-  home: "https://example.com",
-  color: "blue",
-  category: "tech",
+  defaults: {
+    metadata: {
+      desc: "Example news sources",
+      home: "https://example.com",
+      color: "blue",
+      category: "tech",
+    },
+  },
   sources: {
     // ...
   },
@@ -194,13 +227,16 @@ world
 others
 ```
 
+An omitted category defaults to `others` during provider defaults expansion.
+
 A source keeps its display metadata under `metadata`. It may override `title`,
-`providerTitle`, `sourceIcon`, `desc`, `home`, `color`, and `category` there:
+`icon`, `desc`, `home`, `color`, and `category` there. Provider `title`
+identifies the provider and cannot be overridden by a source:
 
 ```ts
 metadata: {
   title: "Latest",
-  sourceIcon: "https://example.com/icon.png",
+  icon: "https://example.com/icon.png",
   home: "https://example.com/latest",
   type: "timeline",
 }
@@ -211,6 +247,63 @@ The optional `metadata.type` controls ordering:
 - `hottest` preserves the loader's original order.
 - `timeline` sorts by timestamp descending when the first item has a non-zero timestamp.
 - An omitted type uses the same timestamp sorting behavior as `timeline`.
+
+## Source defaults
+
+Use `defaults` for source properties repeated within the same provider. A
+source only needs to declare values that differ from those defaults:
+
+```ts
+export default {
+  title: "Example",
+  defaults: {
+    cache: "5m",
+    capabilities: {
+      network: ["api.example.com"],
+      cookies: [],
+      browser: [],
+    },
+    loader: {
+      type: "custom",
+    },
+    metadata: {
+      color: "blue",
+      type: "timeline",
+    },
+  },
+  sources: {
+    latest: {
+      metadata: {
+        title: "Latest",
+      },
+      loader: {
+        load: fetchLatest,
+      },
+    },
+    popular: {
+      metadata: {
+        title: "Popular",
+        type: "hottest",
+      },
+      loader: {
+        load: fetchPopular,
+      },
+      cache: "15m",
+    },
+  },
+} satisfies ProviderConfig
+```
+
+Defaults recursively fill missing object properties. Source values take
+precedence, and source arrays replace default arrays instead of being
+concatenated. An empty source array therefore disables an inherited `radar`,
+`requestRules`, or `secrets` array. Loader objects use the same recursive
+inheritance, so providers with identical selectors can put the shared loader
+shape in `defaults.loader` and override only fields such as `url`.
+
+`cache`, `capabilities`, `loader`, `metadata`, `context`, `params`, `radar`,
+`requestRules`, and `secrets` can all be placed in `defaults`. The fully
+expanded source is validated after defaults are assigned.
 
 ## Parameters
 
@@ -411,10 +504,10 @@ context
 
 `context` accepts JSON-compatible objects, arrays, strings, finite numbers,
 booleans, and `null`. It is available to loader URLs, nested `fetchOptions`,
-and JSON or HTML field templates. Provider context is inherited by every
-source; source-level keys override provider keys.
+and JSON or HTML field templates. Context in provider `defaults` is inherited
+by every source; source-level keys override default keys.
 
-`sourceIcon` templates can access only `params`.
+Source `icon` templates can access only `params`.
 
 Nested strings in `fetchOptions` may also use parsed parameters:
 
@@ -589,9 +682,13 @@ import type { ProviderConfig } from "@newsnext/source/utils/source"
 
 export default {
   title: "Example API",
-  home: "https://example.com",
-  color: "blue",
-  category: "tech",
+  defaults: {
+    metadata: {
+      home: "https://example.com",
+      color: "blue",
+      category: "tech",
+    },
+  },
   sources: {
     latest: {
       metadata: {
@@ -1085,22 +1182,26 @@ automatically supplies its cookie jar through `credentials: "include"`.
 ## Secrets
 
 Secrets describe values collected from a website rather than hard-coded in a
-loader. Put shared secrets on the provider:
+loader. Put shared secrets in provider defaults:
 
 ```ts
 export default {
   title: "Example",
-  color: "blue",
-  secrets: [
-    {
-      key: "session",
-      type: "cookie",
-      origin: "https://account.example.com",
-      itemKey: "session_id",
-      required: true,
-      cache: true,
+  defaults: {
+    metadata: {
+      color: "blue",
     },
-  ],
+    secrets: [
+      {
+        key: "session",
+        type: "cookie",
+        origin: "https://account.example.com",
+        itemKey: "session_id",
+        required: true,
+        cache: true,
+      },
+    ],
+  },
   sources: {
     // ...
   },
@@ -1154,6 +1255,10 @@ Use `context.updateSecrets` when a loader refreshes a stored value.
 ## Radar discovery
 
 Radar rules detect supported sources from the active page.
+
+Radar rules, resolved suggestions, draft cards, and saved source instances use
+the same patch shape: `patch.params` for source parameters and
+`patch.metadata` for display metadata.
 
 When a source omits `radar`, has no parameters, and has an HTTP(S) `home`,
 NewsNext automatically creates a default radar rule that matches every page on
@@ -1254,13 +1359,13 @@ An invalid parsed parameter discards the suggestion.
 A static icon URL can be assigned directly:
 
 ```ts
-sourceIcon: "https://example.com/icon.png"
+icon: "https://example.com/icon.png"
 ```
 
 A parameterized icon uses Liquid and can access only `params`:
 
 ```ts
-sourceIcon: "https://example.com/users/{{ params.user | required | url_path }}.png"
+icon: "https://example.com/users/{{ params.user | required | url_path }}.png"
 ```
 
 Template failures return no source icon rather than breaking the card.

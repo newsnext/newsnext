@@ -1,8 +1,11 @@
 {
   "bilibili:hotword": {
-    "icon": "https://icons.folo.is/www.bilibili.com",
-    "providerTitle": "Bilibili",
+    "category": "china",
+    "home": "https://www.bilibili.com",
+    "color": "blue",
+    "type": "hottest",
     "title": "Hot Search",
+    "icon": "https://icons.folo.is/www.bilibili.com",
     "capabilities": {
       "network": [
         "s.search.bilibili.com"
@@ -14,15 +17,18 @@
       "version": 1,
       "maxAge": "5m"
     },
-    "color": "blue",
-    "type": "hottest",
-    "category": "china",
-    "home": "https://www.bilibili.com"
+    "provider": {
+      "title": "Bilibili"
+    }
   },
   "bilibili:following-videos": {
-    "icon": "https://icons.folo.is/www.bilibili.com",
-    "providerTitle": "Bilibili",
+    "category": "china",
+    "home": "https://www.bilibili.com",
+    "color": "blue",
+    "type": "timeline",
     "title": "Following Videos",
+    "desc": "Video updates from followed creators",
+    "icon": "https://icons.folo.is/www.bilibili.com",
     "capabilities": {
       "network": [
         "api.bilibili.com"
@@ -37,16 +43,17 @@
       "version": 1,
       "maxAge": "5m"
     },
-    "color": "blue",
-    "desc": "Video updates from followed creators",
-    "type": "timeline",
-    "category": "china",
-    "home": "https://www.bilibili.com"
+    "provider": {
+      "title": "Bilibili"
+    }
   },
   "bilibili:ranking": {
-    "icon": "https://icons.folo.is/www.bilibili.com",
-    "providerTitle": "Bilibili",
+    "category": "china",
+    "home": "https://www.bilibili.com",
+    "color": "blue",
+    "type": "hottest",
     "title": "Ranking",
+    "icon": "https://icons.folo.is/www.bilibili.com",
     "params": {
       "region": {
         "type": "select",
@@ -151,14 +158,14 @@
       "version": 1,
       "maxAge": "15m"
     },
-    "color": "blue",
-    "type": "hottest",
-    "category": "china",
-    "home": "https://www.bilibili.com"
+    "provider": {
+      "title": "Bilibili"
+    }
   },
   "browser:history": {
-    "icon": "https://www.google.com/chrome/static/images/favicons/favicon-96x96.png",
-    "providerTitle": "Browser",
+    "category": "others",
+    "color": "blue",
+    "type": "timeline",
     "title": "History",
     "params": {
       "query": {
@@ -208,13 +215,14 @@
       "version": 1,
       "maxAge": "1m"
     },
-    "color": "blue",
-    "type": "timeline",
-    "category": "others"
+    "provider": {
+      "title": "Browser"
+    }
   },
   "browser:bookmarks": {
-    "icon": "https://www.google.com/chrome/static/images/favicons/favicon-96x96.png",
-    "providerTitle": "Browser",
+    "category": "others",
+    "color": "blue",
+    "type": "timeline",
     "title": "Bookmarks",
     "params": {
       "folder": {
@@ -243,14 +251,17 @@
       "version": 1,
       "maxAge": "5m"
     },
-    "color": "blue",
-    "type": "timeline",
-    "category": "others"
+    "provider": {
+      "title": "Browser"
+    }
   },
   "cls:telegraph": {
-    "icon": "https://icons.folo.is/www.cls.cn",
-    "providerTitle": "财联社",
+    "category": "finance",
+    "home": "https://www.cls.cn",
+    "color": "red",
+    "type": "timeline",
     "title": "电报",
+    "icon": "https://icons.folo.is/www.cls.cn",
     "capabilities": {
       "network": [
         "www.cls.cn"
@@ -262,35 +273,17 @@
       "version": 1,
       "maxAge": "1m"
     },
-    "color": "red",
-    "type": "timeline",
-    "category": "finance",
-    "home": "https://www.cls.cn"
+    "provider": {
+      "title": "财联社"
+    }
   },
   "cls:depth": {
-    "icon": "https://icons.folo.is/www.cls.cn",
-    "providerTitle": "财联社",
-    "title": "深度",
-    "capabilities": {
-      "network": [
-        "www.cls.cn"
-      ],
-      "cookies": [],
-      "browser": []
-    },
-    "cache": {
-      "version": 1,
-      "maxAge": "5m"
-    },
+    "category": "finance",
+    "home": "https://www.cls.cn/depth",
     "color": "red",
     "type": "timeline",
-    "category": "finance",
-    "home": "https://www.cls.cn/depth"
-  },
-  "cls:hot-article": {
+    "title": "深度",
     "icon": "https://icons.folo.is/www.cls.cn",
-    "providerTitle": "财联社",
-    "title": "热门",
     "capabilities": {
       "network": [
         "www.cls.cn"
@@ -302,15 +295,39 @@
       "version": 1,
       "maxAge": "5m"
     },
+    "provider": {
+      "title": "财联社"
+    }
+  },
+  "cls:hot-article": {
+    "category": "finance",
+    "home": "https://www.cls.cn",
     "color": "red",
     "type": "hottest",
-    "category": "finance",
-    "home": "https://www.cls.cn"
+    "title": "热门",
+    "icon": "https://icons.folo.is/www.cls.cn",
+    "capabilities": {
+      "network": [
+        "www.cls.cn"
+      ],
+      "cookies": [],
+      "browser": []
+    },
+    "cache": {
+      "version": 1,
+      "maxAge": "5m"
+    },
+    "provider": {
+      "title": "财联社"
+    }
   },
   "folo:feed": {
-    "icon": "https://icons.folo.is/folo.is",
-    "providerTitle": "Folo",
+    "category": "others",
+    "color": "orange",
+    "home": "https://folo.is",
+    "type": "timeline",
     "title": "Feed",
+    "icon": "https://icons.folo.is/folo.is",
     "params": {
       "feedId": {
         "type": "text",
@@ -319,21 +336,6 @@
         "pattern": "^\\d+$"
       }
     },
-    "capabilities": {
-      "network": [
-        "api.folo.is"
-      ],
-      "cookies": [],
-      "browser": []
-    },
-    "cache": {
-      "version": 1,
-      "maxAge": "5m"
-    },
-    "color": "orange",
-    "type": "timeline",
-    "category": "others",
-    "home": "https://folo.is",
     "radar": [
       {
         "id": "folo-feed",
@@ -356,20 +358,7 @@
         },
         "confidence": 0.98
       }
-    ]
-  },
-  "folo:list": {
-    "icon": "https://icons.folo.is/folo.is",
-    "providerTitle": "Folo",
-    "title": "List",
-    "params": {
-      "listId": {
-        "type": "text",
-        "title": "List ID",
-        "default": "68649150114432000",
-        "pattern": "^\\d+$"
-      }
-    },
+    ],
     "capabilities": {
       "network": [
         "api.folo.is"
@@ -381,10 +370,25 @@
       "version": 1,
       "maxAge": "5m"
     },
-    "color": "orange",
-    "type": "timeline",
+    "provider": {
+      "title": "Folo"
+    }
+  },
+  "folo:list": {
     "category": "others",
+    "color": "orange",
     "home": "https://folo.is",
+    "type": "timeline",
+    "title": "List",
+    "icon": "https://icons.folo.is/folo.is",
+    "params": {
+      "listId": {
+        "type": "text",
+        "title": "List ID",
+        "default": "68649150114432000",
+        "pattern": "^\\d+$"
+      }
+    },
     "radar": [
       {
         "id": "folo-list",
@@ -407,45 +411,30 @@
         },
         "confidence": 0.98
       }
-    ]
-  },
-  "jike:following-updates": {
-    "icon": "https://web.okjike.com/favicon.ico",
-    "providerTitle": "Jike",
-    "title": "Following Updates",
+    ],
     "capabilities": {
       "network": [
-        "api.ruguoapp.com"
+        "api.folo.is"
       ],
-      "cookies": [
-        "api.ruguoapp.com",
-        "web.okjike.com"
-      ],
+      "cookies": [],
       "browser": []
     },
     "cache": {
       "version": 1,
       "maxAge": "5m"
     },
-    "color": "yellow",
-    "desc": "Updates from followed Jike users",
-    "type": "timeline",
+    "provider": {
+      "title": "Folo"
+    }
+  },
+  "jike:following-updates": {
     "category": "others",
     "home": "https://web.okjike.com",
-    "secrets": [
-      {
-        "key": "accessToken",
-        "type": "localStorage",
-        "origin": "https://web.okjike.com",
-        "itemKey": "JK_ACCESS_TOKEN"
-      },
-      {
-        "key": "refreshToken",
-        "type": "localStorage",
-        "origin": "https://web.okjike.com",
-        "itemKey": "JK_REFRESH_TOKEN"
-      }
-    ],
+    "color": "yellow",
+    "type": "timeline",
+    "title": "Following Updates",
+    "desc": "Updates from followed Jike users",
+    "icon": "https://icons.folo.is/web.okjike.com",
     "radar": [
       {
         "id": "jike-following-updates",
@@ -459,39 +448,7 @@
         },
         "confidence": 0.95
       }
-    ]
-  },
-  "jike:user-updates": {
-    "icon": "https://web.okjike.com/favicon.ico",
-    "providerTitle": "Jike",
-    "title": "User Updates",
-    "params": {
-      "username": {
-        "type": "text",
-        "title": "Username",
-        "default": "7f422d5d-d79a-4f45-9880-b89d64d7f37a",
-        "pattern": ".+"
-      }
-    },
-    "capabilities": {
-      "network": [
-        "api.ruguoapp.com"
-      ],
-      "cookies": [
-        "api.ruguoapp.com",
-        "web.okjike.com"
-      ],
-      "browser": []
-    },
-    "cache": {
-      "version": 1,
-      "maxAge": "5m"
-    },
-    "color": "yellow",
-    "desc": "Updates from a Jike user",
-    "type": "timeline",
-    "category": "others",
-    "home": "https://web.okjike.com",
+    ],
     "secrets": [
       {
         "key": "accessToken",
@@ -506,6 +463,40 @@
         "itemKey": "JK_REFRESH_TOKEN"
       }
     ],
+    "capabilities": {
+      "network": [
+        "api.ruguoapp.com"
+      ],
+      "cookies": [
+        "api.ruguoapp.com",
+        "web.okjike.com"
+      ],
+      "browser": []
+    },
+    "cache": {
+      "version": 1,
+      "maxAge": "5m"
+    },
+    "provider": {
+      "title": "Jike"
+    }
+  },
+  "jike:user-updates": {
+    "category": "others",
+    "home": "https://web.okjike.com",
+    "color": "yellow",
+    "type": "timeline",
+    "title": "User Updates",
+    "desc": "Updates from a Jike user",
+    "icon": "https://icons.folo.is/web.okjike.com",
+    "params": {
+      "username": {
+        "type": "text",
+        "title": "Username",
+        "default": "7f422d5d-d79a-4f45-9880-b89d64d7f37a",
+        "pattern": ".+"
+      }
+    },
     "radar": [
       {
         "id": "jike-user-profile",
@@ -527,39 +518,7 @@
         },
         "confidence": 0.9
       }
-    ]
-  },
-  "jike:topic-recent": {
-    "icon": "https://web.okjike.com/favicon.ico",
-    "providerTitle": "Jike",
-    "title": "Topic Recent",
-    "params": {
-      "topicId": {
-        "type": "text",
-        "title": "Topic ID",
-        "default": "5aeaa84029e4000011ac3768",
-        "pattern": ".+"
-      }
-    },
-    "capabilities": {
-      "network": [
-        "api.ruguoapp.com"
-      ],
-      "cookies": [
-        "api.ruguoapp.com",
-        "web.okjike.com"
-      ],
-      "browser": []
-    },
-    "cache": {
-      "version": 1,
-      "maxAge": "5m"
-    },
-    "color": "yellow",
-    "desc": "Recent posts from a Jike topic",
-    "type": "timeline",
-    "category": "others",
-    "home": "https://web.okjike.com",
+    ],
     "secrets": [
       {
         "key": "accessToken",
@@ -574,6 +533,40 @@
         "itemKey": "JK_REFRESH_TOKEN"
       }
     ],
+    "capabilities": {
+      "network": [
+        "api.ruguoapp.com"
+      ],
+      "cookies": [
+        "api.ruguoapp.com",
+        "web.okjike.com"
+      ],
+      "browser": []
+    },
+    "cache": {
+      "version": 1,
+      "maxAge": "5m"
+    },
+    "provider": {
+      "title": "Jike"
+    }
+  },
+  "jike:topic-recent": {
+    "category": "others",
+    "home": "https://web.okjike.com",
+    "color": "yellow",
+    "type": "timeline",
+    "title": "Topic Recent",
+    "desc": "Recent posts from a Jike topic",
+    "icon": "https://icons.folo.is/web.okjike.com",
+    "params": {
+      "topicId": {
+        "type": "text",
+        "title": "Topic ID",
+        "default": "5aeaa84029e4000011ac3768",
+        "pattern": ".+"
+      }
+    },
     "radar": [
       {
         "id": "jike-topic-recent",
@@ -595,39 +588,7 @@
         },
         "confidence": 0.9
       }
-    ]
-  },
-  "jike:topic-hottest": {
-    "icon": "https://web.okjike.com/favicon.ico",
-    "providerTitle": "Jike",
-    "title": "Topic Hottest",
-    "params": {
-      "topicId": {
-        "type": "text",
-        "title": "Topic ID",
-        "default": "5aeaa84029e4000011ac3768",
-        "pattern": ".+"
-      }
-    },
-    "capabilities": {
-      "network": [
-        "api.ruguoapp.com"
-      ],
-      "cookies": [
-        "api.ruguoapp.com",
-        "web.okjike.com"
-      ],
-      "browser": []
-    },
-    "cache": {
-      "version": 1,
-      "maxAge": "5m"
-    },
-    "color": "yellow",
-    "desc": "Hottest posts from a Jike topic",
-    "type": "hottest",
-    "category": "others",
-    "home": "https://web.okjike.com",
+    ],
     "secrets": [
       {
         "key": "accessToken",
@@ -642,6 +603,40 @@
         "itemKey": "JK_REFRESH_TOKEN"
       }
     ],
+    "capabilities": {
+      "network": [
+        "api.ruguoapp.com"
+      ],
+      "cookies": [
+        "api.ruguoapp.com",
+        "web.okjike.com"
+      ],
+      "browser": []
+    },
+    "cache": {
+      "version": 1,
+      "maxAge": "5m"
+    },
+    "provider": {
+      "title": "Jike"
+    }
+  },
+  "jike:topic-hottest": {
+    "category": "others",
+    "home": "https://web.okjike.com",
+    "color": "yellow",
+    "type": "hottest",
+    "title": "Topic Hottest",
+    "desc": "Hottest posts from a Jike topic",
+    "icon": "https://icons.folo.is/web.okjike.com",
+    "params": {
+      "topicId": {
+        "type": "text",
+        "title": "Topic ID",
+        "default": "5aeaa84029e4000011ac3768",
+        "pattern": ".+"
+      }
+    },
     "radar": [
       {
         "id": "jike-topic-hottest",
@@ -663,11 +658,44 @@
         },
         "confidence": 0.85
       }
-    ]
+    ],
+    "secrets": [
+      {
+        "key": "accessToken",
+        "type": "localStorage",
+        "origin": "https://web.okjike.com",
+        "itemKey": "JK_ACCESS_TOKEN"
+      },
+      {
+        "key": "refreshToken",
+        "type": "localStorage",
+        "origin": "https://web.okjike.com",
+        "itemKey": "JK_REFRESH_TOKEN"
+      }
+    ],
+    "capabilities": {
+      "network": [
+        "api.ruguoapp.com"
+      ],
+      "cookies": [
+        "api.ruguoapp.com",
+        "web.okjike.com"
+      ],
+      "browser": []
+    },
+    "cache": {
+      "version": 1,
+      "maxAge": "5m"
+    },
+    "provider": {
+      "title": "Jike"
+    }
   },
   "weibo:hot-search": {
+    "category": "china",
+    "color": "red",
+    "type": "hottest",
     "icon": "https://weibo.com/favicon.ico",
-    "providerTitle": "Weibo",
     "title": "Hot Search",
     "params": {
       "type": {
@@ -710,21 +738,6 @@
         "default": "search"
       }
     },
-    "capabilities": {
-      "network": [
-        "weibo.com",
-        "*.sinaimg.cn"
-      ],
-      "cookies": [],
-      "browser": []
-    },
-    "cache": {
-      "version": 4,
-      "maxAge": "1m"
-    },
-    "color": "red",
-    "type": "hottest",
-    "category": "china",
     "radar": [
       {
         "id": "weibo-hot-search",
@@ -771,21 +784,7 @@
           ]
         }
       }
-    ]
-  },
-  "weibo:user": {
-    "icon": "https://weibo.com/favicon.ico",
-    "providerTitle": "Weibo",
-    "title": "User Posts",
-    "params": {
-      "uid": {
-        "type": "text",
-        "title": "User ID",
-        "description": "Numeric Weibo uid.",
-        "default": "1195230310",
-        "pattern": "^\\d+$"
-      }
-    },
+    ],
     "capabilities": {
       "network": [
         "weibo.com",
@@ -795,14 +794,30 @@
       "browser": []
     },
     "cache": {
-      "version": 1,
-      "maxAge": "5m"
+      "version": 4,
+      "maxAge": "1m"
     },
-    "color": "red",
-    "desc": "Latest posts from a specified Weibo user",
-    "type": "timeline",
+    "provider": {
+      "title": "Weibo"
+    }
+  },
+  "weibo:user": {
     "category": "china",
+    "color": "red",
+    "type": "timeline",
+    "icon": "https://weibo.com/favicon.ico",
+    "title": "User Posts",
+    "desc": "Latest posts from a specified Weibo user",
     "home": "https://weibo.com",
+    "params": {
+      "uid": {
+        "type": "text",
+        "title": "User ID",
+        "description": "Numeric Weibo uid.",
+        "default": "1195230310",
+        "pattern": "^\\d+$"
+      }
+    },
     "radar": [
       {
         "id": "weibo-user",
@@ -850,23 +865,10 @@
           ]
         }
       }
-    ]
-  },
-  "weibo:keyword": {
-    "icon": "https://weibo.com/favicon.ico",
-    "providerTitle": "Weibo",
-    "title": "Keyword",
-    "params": {
-      "keyword": {
-        "type": "text",
-        "title": "Keyword",
-        "default": "MSI",
-        "pattern": ".+"
-      }
-    },
+    ],
     "capabilities": {
       "network": [
-        "m.weibo.cn",
+        "weibo.com",
         "*.sinaimg.cn"
       ],
       "cookies": [],
@@ -876,11 +878,26 @@
       "version": 1,
       "maxAge": "5m"
     },
-    "color": "red",
-    "desc": "Latest Weibo posts matching a keyword",
-    "type": "timeline",
+    "provider": {
+      "title": "Weibo"
+    }
+  },
+  "weibo:keyword": {
     "category": "china",
+    "color": "red",
+    "type": "timeline",
+    "icon": "https://weibo.com/favicon.ico",
+    "title": "Keyword",
+    "desc": "Latest Weibo posts matching a keyword",
     "home": "https://s.weibo.com",
+    "params": {
+      "keyword": {
+        "type": "text",
+        "title": "Keyword",
+        "default": "MSI",
+        "pattern": ".+"
+      }
+    },
     "radar": [
       {
         "id": "weibo-keyword",
@@ -923,12 +940,31 @@
           ]
         }
       }
-    ]
+    ],
+    "capabilities": {
+      "network": [
+        "m.weibo.cn",
+        "*.sinaimg.cn"
+      ],
+      "cookies": [],
+      "browser": []
+    },
+    "cache": {
+      "version": 1,
+      "maxAge": "5m"
+    },
+    "provider": {
+      "title": "Weibo"
+    }
   },
   "weibo:super-topic": {
+    "category": "china",
+    "color": "red",
+    "type": "timeline",
     "icon": "https://weibo.com/favicon.ico",
-    "providerTitle": "Weibo",
     "title": "Super Topic",
+    "desc": "Latest posts from a Weibo super topic",
+    "home": "https://weibo.com",
     "params": {
       "id": {
         "type": "text",
@@ -961,23 +997,6 @@
         "default": "feed"
       }
     },
-    "capabilities": {
-      "network": [
-        "weibo.com",
-        "*.sinaimg.cn"
-      ],
-      "cookies": [],
-      "browser": []
-    },
-    "cache": {
-      "version": 1,
-      "maxAge": "5m"
-    },
-    "color": "red",
-    "desc": "Latest posts from a Weibo super topic",
-    "type": "timeline",
-    "category": "china",
-    "home": "https://weibo.com",
     "radar": [
       {
         "id": "weibo-super-topic",
@@ -1022,12 +1041,7 @@
           ]
         }
       }
-    ]
-  },
-  "weibo:following": {
-    "icon": "https://weibo.com/favicon.ico",
-    "providerTitle": "Weibo",
-    "title": "Following Timeline",
+    ],
     "capabilities": {
       "network": [
         "weibo.com",
@@ -1040,10 +1054,17 @@
       "version": 1,
       "maxAge": "5m"
     },
-    "color": "red",
-    "desc": "Latest posts from all followed Weibo accounts",
-    "type": "timeline",
+    "provider": {
+      "title": "Weibo"
+    }
+  },
+  "weibo:following": {
     "category": "china",
+    "color": "red",
+    "type": "timeline",
+    "icon": "https://weibo.com/favicon.ico",
+    "title": "Following Timeline",
+    "desc": "Latest posts from all followed Weibo accounts",
     "home": "https://weibo.com",
     "radar": [
       {
@@ -1082,12 +1103,30 @@
           ]
         }
       }
-    ]
+    ],
+    "capabilities": {
+      "network": [
+        "weibo.com",
+        "*.sinaimg.cn"
+      ],
+      "cookies": [],
+      "browser": []
+    },
+    "cache": {
+      "version": 1,
+      "maxAge": "5m"
+    },
+    "provider": {
+      "title": "Weibo"
+    }
   },
   "x:place-trends": {
-    "icon": "https://x.com/favicon.ico",
-    "providerTitle": "X",
+    "category": "world",
+    "color": "slate",
+    "home": "https://x.com",
+    "type": "hottest",
     "title": "Trending",
+    "icon": "https://icons.folo.is/x.com",
     "params": {
       "location": {
         "type": "select",
@@ -1137,6 +1176,15 @@
         "default": "1"
       }
     },
+    "secrets": [
+      {
+        "key": "csrfToken",
+        "type": "cookie",
+        "origin": "https://x.com",
+        "itemKey": "ct0",
+        "cache": false
+      }
+    ],
     "capabilities": {
       "network": [
         "x.com",
@@ -1151,24 +1199,26 @@
       "version": 1,
       "maxAge": "5m"
     },
-    "color": "slate",
-    "type": "hottest",
-    "category": "world",
-    "home": "https://x.com",
-    "secrets": [
-      {
-        "key": "csrfToken",
-        "type": "cookie",
-        "origin": "https://x.com",
-        "itemKey": "ct0",
-        "cache": false
-      }
-    ]
+    "provider": {
+      "title": "X"
+    }
   },
   "x:recommended": {
-    "icon": "https://x.com/favicon.ico",
-    "providerTitle": "X",
+    "category": "world",
+    "color": "slate",
+    "home": "https://x.com",
+    "type": "timeline",
     "title": "Recommended",
+    "icon": "https://icons.folo.is/x.com",
+    "secrets": [
+      {
+        "key": "csrfToken",
+        "type": "cookie",
+        "origin": "https://x.com",
+        "itemKey": "ct0",
+        "cache": false
+      }
+    ],
     "capabilities": {
       "network": [
         "x.com",
@@ -1183,24 +1233,26 @@
       "version": 1,
       "maxAge": "5m"
     },
-    "color": "slate",
-    "type": "timeline",
-    "category": "world",
-    "home": "https://x.com",
-    "secrets": [
-      {
-        "key": "csrfToken",
-        "type": "cookie",
-        "origin": "https://x.com",
-        "itemKey": "ct0",
-        "cache": false
-      }
-    ]
+    "provider": {
+      "title": "X"
+    }
   },
   "x:following": {
-    "icon": "https://x.com/favicon.ico",
-    "providerTitle": "X",
+    "category": "world",
+    "color": "slate",
+    "home": "https://x.com",
+    "type": "timeline",
     "title": "Following",
+    "icon": "https://icons.folo.is/x.com",
+    "secrets": [
+      {
+        "key": "csrfToken",
+        "type": "cookie",
+        "origin": "https://x.com",
+        "itemKey": "ct0",
+        "cache": false
+      }
+    ],
     "capabilities": {
       "network": [
         "x.com",
@@ -1215,24 +1267,17 @@
       "version": 1,
       "maxAge": "5m"
     },
-    "color": "slate",
-    "type": "timeline",
-    "category": "world",
-    "home": "https://x.com",
-    "secrets": [
-      {
-        "key": "csrfToken",
-        "type": "cookie",
-        "origin": "https://x.com",
-        "itemKey": "ct0",
-        "cache": false
-      }
-    ]
+    "provider": {
+      "title": "X"
+    }
   },
   "x:user": {
-    "icon": "https://x.com/favicon.ico",
-    "providerTitle": "X",
+    "category": "world",
+    "color": "slate",
+    "home": "https://x.com",
+    "type": "timeline",
     "title": "User Tweets",
+    "icon": "https://icons.folo.is/x.com",
     "params": {
       "username": {
         "type": "text",
@@ -1253,33 +1298,6 @@
         ]
       }
     },
-    "capabilities": {
-      "network": [
-        "x.com",
-        "api.x.com"
-      ],
-      "cookies": [
-        "x.com"
-      ],
-      "browser": []
-    },
-    "cache": {
-      "version": 1,
-      "maxAge": "5m"
-    },
-    "color": "slate",
-    "type": "timeline",
-    "category": "world",
-    "home": "https://x.com",
-    "secrets": [
-      {
-        "key": "csrfToken",
-        "type": "cookie",
-        "origin": "https://x.com",
-        "itemKey": "ct0",
-        "cache": false
-      }
-    ],
     "radar": [
       {
         "id": "x-user",
@@ -1302,6 +1320,32 @@
         },
         "confidence": 0.95
       }
-    ]
+    ],
+    "secrets": [
+      {
+        "key": "csrfToken",
+        "type": "cookie",
+        "origin": "https://x.com",
+        "itemKey": "ct0",
+        "cache": false
+      }
+    ],
+    "capabilities": {
+      "network": [
+        "x.com",
+        "api.x.com"
+      ],
+      "cookies": [
+        "x.com"
+      ],
+      "browser": []
+    },
+    "cache": {
+      "version": 1,
+      "maxAge": "5m"
+    },
+    "provider": {
+      "title": "X"
+    }
   }
 }

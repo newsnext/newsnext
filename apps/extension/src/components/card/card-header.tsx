@@ -1,4 +1,5 @@
 import type { Color } from "@newsnext/shared/types"
+import type { SourceProvider } from "@newsnext/source/typings"
 import type { ReactNode } from "react"
 import { cn } from "@/lib/utils"
 import { SourceIcon } from "./source-icon"
@@ -8,8 +9,7 @@ interface CardHeaderProps {
   desc?: string
   home?: string
   icon?: string
-  providerTitle: string
-  sourceIcon?: string
+  provider: SourceProvider
   title?: string
   subtitle: ReactNode
   actions: ReactNode
@@ -21,15 +21,14 @@ export function CardHeader({
   desc,
   home,
   icon,
-  providerTitle,
-  sourceIcon,
+  provider,
   title,
   subtitle,
   actions,
   className,
 }: CardHeaderProps) {
-  const displayTitle = title || providerTitle
-  const displayProviderTitle = title ? providerTitle.replace(/\s+/g, " ") : undefined
+  const displayTitle = title || provider.title
+  const displayProviderTitle = title ? provider.title.replace(/\s+/g, " ") : undefined
   const isDisplayTitleLonger = displayProviderTitle
     ? displayTitle.length >= displayProviderTitle.length
     : false
@@ -40,14 +39,13 @@ export function CardHeader({
         <button
           type="button"
           className="size-8 shrink-0 rounded-full cursor-pointer"
-          title={desc || providerTitle}
+          title={desc || provider.title}
           onClick={() => window.open(home || "#", "_blank")}
         >
           <SourceIcon
             className="size-full rounded-full after:rounded-full"
             icon={icon}
-            providerTitle={providerTitle}
-            sourceIcon={sourceIcon}
+            title={displayTitle}
           />
         </button>
         <div className="flex flex-col min-w-0 flex-1">

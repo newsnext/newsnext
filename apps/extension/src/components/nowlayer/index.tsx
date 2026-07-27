@@ -4,7 +4,7 @@ import { useAtom, useAtomValue } from "jotai"
 import { useCallback, useMemo, useState } from "react"
 import { useSourceDescriptors } from "@/hooks/use-source-descriptors"
 import { buildBoardSources } from "@/lib/source-cards"
-import { boardInstancesAtom, boardStarIdsAtom, pendingForkFocusAtom } from "@/store/board"
+import { boardStarIdsAtom, instancesAtom, pendingForkFocusAtom } from "@/store/board"
 import { DesktopBoard } from "./desktop-board"
 
 const EMPTY_SOURCE_IDS: string[] = []
@@ -35,7 +35,7 @@ export function NowLayer({
   const [pendingForkFocusId, setPendingForkFocusId] = useAtom(pendingForkFocusAtom)
   const sourceIdOrder = sourceIdOrderState?.boardId === boardId ? sourceIdOrderState.ids : null
   const starredInstanceIds = useAtomValue(boardStarIdsAtom(boardId))
-  const instances = useAtomValue(boardInstancesAtom(boardId))
+  const instances = useAtomValue(instancesAtom)
   const { sources } = useSourceDescriptors()
 
   const { ids: boardSourceIds, map: sourcesMap } = useMemo(() => {

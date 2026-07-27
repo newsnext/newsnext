@@ -18,7 +18,9 @@ export interface SourcePermissionRequest {
 
 export interface SourcePermissionTarget {
   capabilities: SourceCapabilities
-  providerTitle: string
+  provider: {
+    title: string
+  }
   title?: string
 }
 
@@ -63,7 +65,7 @@ export function getSourcePermissionDescription(source: SourcePermissionTarget): 
     return `Authorize access to ${hosts[0]} to load this source.`
   }
 
-  return `Authorize access to ${source.providerTitle} services to continue.`
+  return `Authorize access to ${source.provider.title} services to continue.`
 }
 
 export async function hasPermissionToLoadSource(source: SourcePermissionTarget): Promise<boolean> {

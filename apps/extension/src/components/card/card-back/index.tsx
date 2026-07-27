@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 import type { SourceEditDraft } from "./types"
-import type { SourceInstanceMeta } from "@/lib/source-cards"
+import type { SourceInstanceMetadata } from "@/lib/source-cards"
 import type { BoardSource } from "@/typings/source"
 import { Button } from "@newsnext/ui/components/button"
 import { ScrollArea } from "@newsnext/ui/components/scroll-area"
@@ -31,7 +31,7 @@ export interface CardBackProps {
   onSaveSourceParams: () => void
   onResetSourceParams: () => void
   onDiscardSourceParams: () => void
-  onSaveSourceMeta: (meta: SourceInstanceMeta) => void
+  onSaveSourceMeta: (meta: SourceInstanceMetadata) => void
   onFlip: () => void
   isDraft?: boolean
   dragHandle?: ReactNode
@@ -56,21 +56,21 @@ export function CardBack({
 }: CardBackProps) {
   const isCustom = source.isCustom
 
-  const { desc, color, params, icon, providerTitle, sourceIcon, title, home } = source
+  const { desc, color, params, icon, provider, title, home } = source
   const [editDraft, setEditDraft] = useState<SourceEditDraft | null>(null)
   const canEdit = isCustom && editDraft !== null
-  const previewProviderTitle = canEdit ? editDraft.providerTitle : providerTitle
   const previewTitle = canEdit ? editDraft.title : title
+  const previewIcon = canEdit ? editDraft.icon : icon
   const previewDesc = canEdit ? editDraft.desc : desc
   const previewHome = canEdit ? editDraft.home : home
   const previewColor = canEdit ? editDraft.color : color
   const relativeTime = useRelativeTime({ date: updatedAt })
-  const resolvedSourceIcon = resolveSourceIconUrl(sourceIcon, sourceParams)
+  const resolvedIcon = resolveSourceIconUrl(previewIcon, sourceParams)
   const hasSourceMetaChanges = Boolean(
     editDraft
     && (
-      editDraft.providerTitle !== providerTitle
-      || editDraft.title !== title
+      editDraft.title !== title
+      || editDraft.icon !== icon
       || editDraft.desc !== desc
       || editDraft.home !== home
       || editDraft.color !== color
@@ -79,8 +79,8 @@ export function CardBack({
 
   function createEditDraft(): SourceEditDraft {
     return {
-      providerTitle,
       title,
+      icon,
       desc,
       home,
       color,
@@ -128,9 +128,8 @@ export function CardBack({
           color={previewColor}
           desc={previewDesc}
           home={previewHome}
-          icon={icon}
-          providerTitle={previewProviderTitle}
-          sourceIcon={resolvedSourceIcon}
+          icon={resolvedIcon}
+          provider={provider}
           title={previewTitle}
           subtitle={previewDesc || relativeTime}
           actions={(
@@ -222,7 +221,7 @@ export function CardBack({
                   )}
                 </div>
                 <Info label="Provider Title">
-                  <EditableInput text={previewProviderTitle} editable={canEdit} onChange={value => updateEditDraft({ providerTitle: value })} />
+                  <EditableInput text={provider.title} editable={false} />
                 </Info>
 
                 <Info label="Title">
@@ -238,7 +237,7 @@ export function CardBack({
                 </Info>
 
                 <Info label="Icon">
-                  <EditableInput text={source.icon ?? ""} editable={false} />
+                  <EditableInput text={previewIcon ?? ""} editable={canEdit} onChange={value => updateEditDraft({ icon: value || undefined })} />
                 </Info>
 
                 <Info label="Color">

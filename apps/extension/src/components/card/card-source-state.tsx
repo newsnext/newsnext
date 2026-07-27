@@ -9,7 +9,7 @@ interface SourceActionStateProps {
   icon?: string
   label: string
   onClick: () => void
-  providerTitle: string
+  provider: BoardSource["provider"]
   title: string
 }
 
@@ -18,7 +18,7 @@ export function SourceActionState({
   icon,
   label,
   onClick,
-  providerTitle,
+  provider,
   title,
 }: SourceActionStateProps) {
   return (
@@ -33,7 +33,7 @@ export function SourceActionState({
         aria-label={title}
         title={title}
       >
-        <SourceIcon icon={icon} providerTitle={providerTitle} />
+        <SourceIcon icon={icon} title={provider.title} />
         {label}
       </button>
     </div>
@@ -43,12 +43,12 @@ export function SourceActionState({
 export function SourceLoginState({
   color,
   icon,
-  providerTitle,
+  provider,
   loginUrl,
 }: {
   color: BoardSource["color"]
   icon?: string
-  providerTitle: string
+  provider: BoardSource["provider"]
   loginUrl: string
 }) {
   const handleOpenLoginUrl = useCallback(() => {
@@ -61,8 +61,8 @@ export function SourceLoginState({
       icon={icon}
       label="Log in"
       onClick={handleOpenLoginUrl}
-      providerTitle={providerTitle}
-      title={`Log in to ${providerTitle}`}
+      provider={provider}
+      title={`Log in to ${provider.title}`}
     />
   )
 }
@@ -71,12 +71,12 @@ export function SourceErrorState({
   color,
   icon,
   onRefresh,
-  providerTitle,
+  provider,
 }: {
   color: BoardSource["color"]
   icon?: string
   onRefresh: () => void
-  providerTitle: string
+  provider: BoardSource["provider"]
 }) {
   return (
     <SourceActionState
@@ -84,7 +84,7 @@ export function SourceErrorState({
       icon={icon}
       label="Refresh"
       onClick={onRefresh}
-      providerTitle={providerTitle}
+      provider={provider}
       title="Refresh source"
     />
   )
@@ -94,12 +94,12 @@ export function SourcePermissionState({
   color,
   icon,
   onRequestPermission,
-  providerTitle,
+  provider,
 }: {
   color: BoardSource["color"]
   icon?: string
   onRequestPermission: () => Promise<boolean>
-  providerTitle: string
+  provider: BoardSource["provider"]
 }) {
   const handleAuthorize = useCallback(async () => {
     await onRequestPermission()
@@ -111,7 +111,7 @@ export function SourcePermissionState({
       icon={icon}
       label="Authorize"
       onClick={() => void handleAuthorize()}
-      providerTitle={providerTitle}
+      provider={provider}
       title="Authorize access to this browser source"
     />
   )

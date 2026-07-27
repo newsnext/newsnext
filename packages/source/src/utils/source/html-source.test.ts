@@ -18,7 +18,11 @@ function createHtmlTestSource(options: () => Parameters<typeof loadHtml>[0]) {
 function createSource(config: SourceConfig) {
   return resolveProvider("test", {
     title: "Test",
-    color: "blue",
+    defaults: {
+      metadata: {
+        color: "blue",
+      },
+    },
     sources: { test: config },
   }).sources.test
 }

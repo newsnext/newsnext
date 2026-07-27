@@ -1,7 +1,11 @@
 {
   "title": "GitHub",
-  "home": "https://github.com/trending",
-  "color": "slate",
+  "defaults": {
+    "metadata": {
+      "home": "https://github.com/trending",
+      "color": "slate"
+    }
+  },
   "sources": {
     "trending": {
       "metadata": {

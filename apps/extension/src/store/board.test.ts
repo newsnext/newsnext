@@ -1,11 +1,11 @@
 import { createStore } from "jotai"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import {
-  boardInstancesAtom,
   boardStarIdsAtom,
   deleteInstanceAtom,
   instancesAtom,
   instanceStarredAtom,
+  setSourceInstancePatchAtom,
   starIdsAtom,
   starInstanceAtom,
   upsertInstanceAtom,
@@ -17,32 +17,7 @@ afterEach(() => {
 
 describe("board store selectors", () => {
   it("returns stable board selector atoms", () => {
-    expect(boardInstancesAtom("forks")).toBe(boardInstancesAtom("forks"))
     expect(boardStarIdsAtom("stars")).toBe(boardStarIdsAtom("stars"))
-  })
-
-  it("exposes custom instances to board selectors", () => {
-    const store = createStore()
-    const instancesSelectorAtom = boardInstancesAtom("forks")
-    const customInstance = {
-      instanceId: "github::fork_abc",
-      sourceId: "github",
-      paramsPatch: { tag: "react" },
-      origin: "fork" as const,
-      createdAt: 2,
-      updatedAt: 2,
-    }
-    let notificationCount = 0
-
-    const unsubscribe = store.sub(instancesSelectorAtom, () => {
-      notificationCount += 1
-    })
-
-    store.set(instancesAtom, [customInstance])
-    expect(notificationCount).toBe(1)
-    expect(store.get(instancesSelectorAtom)).toEqual([customInstance])
-
-    unsubscribe()
   })
 
   it("notifies only when the selected star state changes", () => {
@@ -78,8 +53,7 @@ describe("board store selectors", () => {
     const sourceInstance = {
       instanceId: "github::fork_abc",
       sourceId: "github",
-      paramsPatch: {},
-      origin: "fork" as const,
+      patch: {},
       createdAt: 1,
       updatedAt: 1,
     }
@@ -96,6 +70,36 @@ describe("board store selectors", () => {
     expect(notificationCount).toBe(1)
 
     unsubscribe()
+  })
+
+  it("updates params without replacing instance provenance", () => {
+    const store = createStore()
+    const sourceInstance = {
+      instanceId: "github::fork_abc",
+      sourceId: "github",
+      patch: {
+        params: { tag: "react" },
+        metadata: { title: "React" },
+      },
+      originRef: { type: "radar" as const, ruleId: "github-trending" },
+      createdAt: 1,
+      updatedAt: 1,
+    }
+    store.set(instancesAtom, [sourceInstance])
+
+    store.set(setSourceInstancePatchAtom, {
+      instanceId: sourceInstance.instanceId,
+      patch: { params: { tag: "vue" } },
+    })
+
+    expect(store.get(instancesAtom)[0]).toMatchObject({
+      patch: {
+        params: { tag: "vue" },
+        metadata: { title: "React" },
+      },
+      originRef: sourceInstance.originRef,
+      createdAt: 1,
+    })
   })
 
   it("keeps star and delete writes idempotent", () => {
@@ -128,16 +132,14 @@ describe("board store selectors", () => {
     const existingInstance = {
       instanceId: "github::fork_existing",
       sourceId: "github",
-      paramsPatch: { tag: "react" },
-      origin: "fork" as const,
+      patch: { params: { tag: "react" } },
       createdAt: 1,
       updatedAt: 1,
     }
     const newInstance = {
       instanceId: "github::fork_new",
       sourceId: "github",
-      paramsPatch: { tag: "vue" },
-      origin: "fork" as const,
+      patch: { params: { tag: "vue" } },
       createdAt: 2,
       updatedAt: 2,
     }

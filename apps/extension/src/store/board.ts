@@ -1,6 +1,6 @@
 import type { BoardType } from "@newsnext/shared/types"
 import type { Atom } from "jotai"
-import type { SourceInstance, SourceInstanceMeta } from "../lib/source-cards"
+import type { SourceInstance, SourceInstancePatch } from "../lib/source-cards"
 import { atom } from "jotai"
 import { atomWithStorage, selectAtom } from "jotai/utils"
 
@@ -29,18 +29,12 @@ function areStringArraysEqual(a: string[], b: string[]): boolean {
   return a.length === b.length && a.every((value, index) => value === b[index])
 }
 
-function areInstanceArraysEqual(a: SourceInstance[], b: SourceInstance[]): boolean {
-  return a.length === b.length && a.every((value, index) => value === b[index])
-}
-
 function areInstancesEqual(a: SourceInstance, b: SourceInstance): boolean {
   return a.instanceId === b.instanceId
     && a.sourceId === b.sourceId
-    && a.origin === b.origin
     && a.createdAt === b.createdAt
     && a.updatedAt === b.updatedAt
-    && a.paramsPatch === b.paramsPatch
-    && a.metaPatch === b.metaPatch
+    && a.patch === b.patch
 }
 
 function removeTemporarySourceIds(starredInstanceIds: string[]): string[] {
@@ -84,7 +78,7 @@ export const upsertInstanceAtom = atom(null, (_get, set, instance: SourceInstanc
   })
 })
 
-export const setSourceInstanceMetaAtom = atom(null, (_get, set, { instanceId, meta }: { instanceId: string, meta: SourceInstanceMeta }) => {
+export const setSourceInstancePatchAtom = atom(null, (_get, set, { instanceId, patch }: { instanceId: string, patch: SourceInstancePatch }) => {
   set(instancesAtom, prev => prev.map((instance) => {
     if (instance.instanceId !== instanceId) {
       return instance
@@ -92,7 +86,10 @@ export const setSourceInstanceMetaAtom = atom(null, (_get, set, { instanceId, me
 
     return {
       ...instance,
-      metaPatch: meta,
+      patch: {
+        ...instance.patch,
+        ...patch,
+      },
       updatedAt: Date.now(),
     }
   }))
@@ -113,9 +110,13 @@ export const resetInstanceParamsAtom = atom(null, (_get, set, instanceId: string
   set(instancesAtom, (prev) => {
     let didReset = false
     const next = prev.map((instance) => {
-      if (instance.instanceId === instanceId && Object.keys(instance.paramsPatch).length > 0) {
+      if (instance.instanceId === instanceId && Object.keys(instance.patch.params ?? {}).length > 0) {
         didReset = true
-        return { ...instance, paramsPatch: {}, updatedAt: Date.now() }
+        return {
+          ...instance,
+          patch: { ...instance.patch, params: {} },
+          updatedAt: Date.now(),
+        }
       }
 
       return instance
@@ -166,34 +167,11 @@ function createBoardStarIdsAtom(boardId: BoardType): Atom<string[]> {
   )
 }
 
-function createBoardInstancesAtom(boardId: BoardType): Atom<SourceInstance[]> {
-  return selectAtom(
-    instancesAtom,
-    (instances) => {
-      if (boardId === "forks") {
-        return instances
-      }
-
-      return instances
-    },
-    areInstanceArraysEqual,
-  )
-}
-
 const boardStarIdsAtoms: Record<BoardType, Atom<string[]>> = {
   forks: createBoardStarIdsAtom("forks"),
   stars: createBoardStarIdsAtom("stars"),
 }
 
-const boardInstancesAtoms: Record<BoardType, Atom<SourceInstance[]>> = {
-  forks: createBoardInstancesAtom("forks"),
-  stars: createBoardInstancesAtom("stars"),
-}
-
 export function boardStarIdsAtom(boardId: BoardType): Atom<string[]> {
   return boardStarIdsAtoms[boardId]
-}
-
-export function boardInstancesAtom(boardId: BoardType): Atom<SourceInstance[]> {
-  return boardInstancesAtoms[boardId]
 }

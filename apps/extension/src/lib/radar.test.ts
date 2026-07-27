@@ -18,12 +18,14 @@ describe("getRadarSuggestions", () => {
     expect(getSuggestions({ url: "https://github.com/trending/typescript?since=weekly&spoken_language_code=zh" })).toMatchObject([
       {
         sourceId: "github:trending",
-        paramsPatch: {
-          language: "typescript",
-          spokenLanguage: "zh",
-          dateRange: "weekly",
+        patch: {
+          params: {
+            language: "typescript",
+            spokenLanguage: "zh",
+            dateRange: "weekly",
+          },
+          metadata: { title: "Trending typescript" },
         },
-        metaPatch: { title: "Trending typescript" },
       },
     ])
   })
@@ -34,10 +36,12 @@ describe("getRadarSuggestions", () => {
     })).toMatchObject([
       {
         sourceId: "github:trending",
-        paramsPatch: {
-          language: "",
-          spokenLanguage: "",
-          dateRange: "daily",
+        patch: {
+          params: {
+            language: "",
+            spokenLanguage: "",
+            dateRange: "daily",
+          },
         },
       },
     ])
@@ -74,7 +78,7 @@ describe("getRadarSuggestions", () => {
       ],
     )).toMatchObject([
       {
-        paramsPatch: { value: "hash-value" },
+        patch: { params: { value: "hash-value" } },
       },
     ])
   })
@@ -105,7 +109,7 @@ describe("getRadarSuggestions", () => {
       ],
     )).toMatchObject([
       {
-        paramsPatch: { value: "default-value" },
+        patch: { params: { value: "default-value" } },
       },
     ])
   })
@@ -117,8 +121,10 @@ describe("getRadarSuggestions", () => {
     })).toMatchObject([
       {
         sourceId: "netease-music:playlist",
-        paramsPatch: { id: "19723756" },
-        metaPatch: { title: "飙升榜" },
+        patch: {
+          params: { id: "19723756" },
+          metadata: { title: "飙升榜" },
+        },
       },
     ])
 
@@ -128,8 +134,10 @@ describe("getRadarSuggestions", () => {
     })).toMatchObject([
       {
         sourceId: "netease-music:playlist",
-        paramsPatch: { id: "71384707" },
-        metaPatch: { title: "网易云古典榜" },
+        patch: {
+          params: { id: "71384707" },
+          metadata: { title: "网易云古典榜" },
+        },
       },
     ])
 
@@ -139,7 +147,9 @@ describe("getRadarSuggestions", () => {
     })).toMatchObject([
       {
         sourceId: "netease-music:playlist",
-        metaPatch: { title: "Playlist 71384707" },
+        patch: {
+          metadata: { title: "Playlist 71384707" },
+        },
       },
     ])
   })
@@ -151,12 +161,14 @@ describe("getRadarSuggestions", () => {
     })).toMatchObject([
       {
         sourceId: "folo:feed",
-        paramsPatch: {
-          feedId: "70006270320504832",
-        },
-        metaPatch: {
-          title: "AI News",
-          home: "https://app.folo.is/timeline/articles/feed-70006270320504832/pending",
+        patch: {
+          params: {
+            feedId: "70006270320504832",
+          },
+          metadata: {
+            title: "AI News",
+            home: "https://app.folo.is/timeline/articles/feed-70006270320504832/pending",
+          },
         },
       },
     ])
@@ -167,12 +179,14 @@ describe("getRadarSuggestions", () => {
     })).toMatchObject([
       {
         sourceId: "folo:list",
-        paramsPatch: {
-          listId: "178752152055448576",
-        },
-        metaPatch: {
-          title: "Developer Reading",
-          home: "https://app.folo.is/timeline/articles/list-178752152055448576/pending",
+        patch: {
+          params: {
+            listId: "178752152055448576",
+          },
+          metadata: {
+            title: "Developer Reading",
+            home: "https://app.folo.is/timeline/articles/list-178752152055448576/pending",
+          },
         },
       },
     ])
@@ -185,16 +199,20 @@ describe("getRadarSuggestions", () => {
     })).toMatchObject([
       {
         sourceId: "v2ex:feed",
-        paramsPatch: { feed: "share" },
-        metaPatch: { title: "分享发现" },
+        patch: {
+          params: { feed: "share" },
+          metadata: { title: "分享发现" },
+        },
       },
     ])
 
     expect(getSuggestions({ url: "https://www.newsnow.com/us/Technology?type=ln" })).toMatchObject([
       {
         sourceId: "newsnow:topic-latest",
-        paramsPatch: { locale: "us", topic: "Technology" },
-        metaPatch: { title: "Technology" },
+        patch: {
+          params: { locale: "us", topic: "Technology" },
+          metadata: { title: "Technology" },
+        },
       },
     ])
   })
@@ -206,12 +224,14 @@ describe("getRadarSuggestions", () => {
     })).toMatchObject([
       {
         sourceId: "weibo:hot-search",
-        paramsPatch: {
-          type: "acg",
-        },
-        metaPatch: {
-          title: "ACG",
-          home: "https://weibo.com/hot/acg",
+        patch: {
+          params: {
+            type: "acg",
+          },
+          metadata: {
+            title: "ACG",
+            home: "https://weibo.com/hot/acg",
+          },
         },
       },
     ])
@@ -234,8 +254,10 @@ describe("getRadarSuggestions", () => {
     )).toMatchObject([
       {
         sourceId: "github:trending",
-        paramsPatch: { language: "typescript", dateRange: "weekly", spokenLanguage: "en" },
-        metaPatch: { title: "Trending typescript" },
+        patch: {
+          params: { language: "typescript", dateRange: "weekly", spokenLanguage: "en" },
+          metadata: { title: "Trending typescript" },
+        },
       },
     ])
   })
@@ -251,7 +273,7 @@ describe("getRadarSuggestions", () => {
       {
         ruleId: "default-home-origin",
         sourceId: "test:default",
-        paramsPatch: {},
+        patch: { params: {} },
       },
     ])
   })
@@ -306,8 +328,10 @@ describe("getRadarSuggestions", () => {
     expect(matcher.getSuggestions({ url: "https://github.com/trending/typescript?since=weekly&spoken_language_code=en" })).toMatchObject([
       {
         sourceId: "github:trending",
-        paramsPatch: { language: "typescript", dateRange: "weekly", spokenLanguage: "en" },
-        metaPatch: { title: "Trending typescript" },
+        patch: {
+          params: { language: "typescript", dateRange: "weekly", spokenLanguage: "en" },
+          metadata: { title: "Trending typescript" },
+        },
       },
     ])
   })

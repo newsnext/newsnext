@@ -18,7 +18,11 @@ function createJsonTestSource(options: () => JsonSourceOptions) {
 function createSource(config: SourceConfig) {
   return resolveProvider("test", {
     title: "Test",
-    color: "blue",
+    defaults: {
+      metadata: {
+        color: "blue",
+      },
+    },
     sources: { test: config },
   }).sources.test
 }
@@ -277,13 +281,17 @@ describe("jSON source loader", () => {
   it("infers capabilities and expands cache shorthand", () => {
     const provider = resolveProvider("test", {
       title: "Test",
-      color: "blue",
-      secrets: [{
-        key: "session",
-        type: "cookie",
-        origin: "https://account.example.com",
-        itemKey: "session",
-      }],
+      defaults: {
+        metadata: {
+          color: "blue",
+        },
+        secrets: [{
+          key: "session",
+          type: "cookie",
+          origin: "https://account.example.com",
+          itemKey: "session",
+        }],
+      },
       sources: {
         test: {
           loader: {

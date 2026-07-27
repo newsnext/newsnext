@@ -1,7 +1,11 @@
 {
   "title": "网易云音乐",
-  "home": "https://sg.music.163.com/#/discover/toplist",
-  "color": "red",
+  "defaults": {
+    "metadata": {
+      "home": "https://sg.music.163.com/#/discover/toplist",
+      "color": "red"
+    }
+  },
   "sources": {
     "playlist": {
       "metadata": {

@@ -1,8 +1,12 @@
 {
   "title": "百度贴吧",
-  "home": "https://tieba.baidu.com",
-  "color": "blue",
-  "category": "china",
+  "defaults": {
+    "metadata": {
+      "home": "https://tieba.baidu.com",
+      "color": "blue",
+      "category": "china"
+    }
+  },
   "sources": {
     "hot-topic": {
       "metadata": {

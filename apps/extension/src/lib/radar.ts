@@ -5,6 +5,7 @@ import type {
   SourceRadarMetadata,
   SourceRadarRule,
 } from "@newsnext/source/typings"
+import type { SourceInstanceMetadata, SourceInstancePatch } from "@/lib/source-cards"
 import { parseSourceParams } from "@newsnext/source/utils/params"
 import { renderTemplate } from "@newsnext/source/utils/template"
 import { match } from "path-to-regexp"
@@ -14,27 +15,18 @@ export interface RadarContext {
   title?: string
 }
 
-export interface RadarSuggestionMetaPatch {
-  providerTitle?: string
-  title?: string
-  desc?: string
-  home?: string
-  color?: Color
-}
-
 export interface RadarSuggestion {
   id: string
   ruleId: string
   sourceId: string
-  paramsPatch: Record<string, unknown>
-  metaPatch?: RadarSuggestionMetaPatch
+  patch: SourceInstancePatch
   confidence: number
 }
 
 export interface RadarSourceMetadata {
   id: string
-  providerTitle?: string
   title?: string
+  icon?: string
   desc?: string
   home?: string
   color?: Color
@@ -46,7 +38,7 @@ interface RadarMatchContext {
   input: RadarContext
   url: URL
   pathParams: Record<string, string>
-  paramsPatch: Record<string, unknown>
+  params: Record<string, unknown>
   source: RadarSourceMetadata
 }
 
@@ -76,16 +68,14 @@ const matcherCache = new WeakMap<RadarSourceMetadata[], RadarMatcher>()
 function createRadarSuggestion({
   ruleId,
   sourceId,
-  paramsPatch,
-  metaPatch,
+  patch,
   confidence = 1,
 }: Omit<RadarSuggestion, "id" | "confidence"> & { confidence?: number }): RadarSuggestion {
   return {
-    id: `${ruleId}:${sourceId}:${stablePatchKey({ paramsPatch, metaPatch })}`,
+    id: `${ruleId}:${sourceId}:${stablePatchKey(patch)}`,
     ruleId,
     sourceId,
-    paramsPatch,
-    metaPatch,
+    patch,
     confidence,
   }
 }
@@ -162,7 +152,7 @@ function createTemplateVariables(
   return {
     hashQuery: getHashQueryParams(context.url),
     path: createTemplateRecord(Object.entries(context.pathParams)),
-    params: createTemplateRecord(Object.entries(context.paramsPatch)),
+    params: createTemplateRecord(Object.entries(context.params)),
     page: {
       title: context.input.title ?? "",
     },
@@ -286,33 +276,33 @@ function resolveMetaPatchValue(
 function resolveMetaPatch(
   metadataPatch: SourceRadarMetadata | undefined,
   context: RadarMatchContext,
-): RadarSuggestionMetaPatch {
-  const resolvedMetaPatch: RadarSuggestionMetaPatch = {
+): SourceInstanceMetadata {
+  const metadata: SourceInstanceMetadata = {
     home: context.url.toString(),
   }
-  const providerTitle = resolveMetaPatchValue(metadataPatch?.providerTitle, context)
   const title = resolveMetaPatchValue(metadataPatch?.title, context)
+  const icon = resolveMetaPatchValue(metadataPatch?.icon, context)
   const desc = resolveMetaPatchValue(metadataPatch?.desc, context)
   const home = resolveMetaPatchValue(metadataPatch?.home, context)
   const color = resolveMetaPatchValue(metadataPatch?.color, context)
 
-  if (isPresent(providerTitle)) {
-    resolvedMetaPatch.providerTitle = String(providerTitle)
-  }
   if (isPresent(title)) {
-    resolvedMetaPatch.title = String(title)
+    metadata.title = String(title)
+  }
+  if (isPresent(icon)) {
+    metadata.icon = String(icon)
   }
   if (isPresent(desc)) {
-    resolvedMetaPatch.desc = String(desc)
+    metadata.desc = String(desc)
   }
   if (isPresent(home)) {
-    resolvedMetaPatch.home = String(home)
+    metadata.home = String(home)
   }
   if (isPresent(color)) {
-    resolvedMetaPatch.color = color as Color
+    metadata.color = color as Color
   }
 
-  return resolvedMetaPatch
+  return metadata
 }
 
 function matchCompiledRule(compiledRule: CompiledRadarRule, input: RadarContext, url: URL): RadarSuggestion | null {
@@ -338,23 +328,25 @@ function matchCompiledRule(compiledRule: CompiledRadarRule, input: RadarContext,
   }
   const paramsContext: RadarMatchContext = {
     ...baseContext,
-    paramsPatch: {},
+    params: {},
   }
-  const paramsPatch = resolveParamsPatch(compiledRule.rule, paramsContext)
-  if (!paramsPatch) {
+  const params = resolveParamsPatch(compiledRule.rule, paramsContext)
+  if (!params) {
     return null
   }
 
   const context: RadarMatchContext = {
     ...paramsContext,
-    paramsPatch,
+    params,
   }
 
   return createRadarSuggestion({
     ruleId: compiledRule.rule.id,
     sourceId: compiledRule.source.id,
-    paramsPatch,
-    metaPatch: resolveMetaPatch(compiledRule.rule.patch?.metadata, context),
+    patch: {
+      params,
+      metadata: resolveMetaPatch(compiledRule.rule.patch?.metadata, context),
+    },
     confidence: compiledRule.rule.confidence,
   })
 }

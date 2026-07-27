@@ -2,7 +2,7 @@ import type { BoardSource } from "@/typings/source"
 import { useNavigate } from "@tanstack/react-router"
 import { useSetAtom, useStore } from "jotai"
 import { PhForkDuotone, PhTrashDuotone } from "@/components/icons/ph"
-import { createForkedInstance } from "@/lib/source-cards"
+import { createForkedInstance, createSourceInstancePatch } from "@/lib/source-cards"
 import {
   deleteInstanceAtom,
   instanceStarredAtom,
@@ -30,16 +30,7 @@ export function ForkButton({
   function handleFork(): void {
     const forkedInstance = createForkedInstance(
       source.sourceId,
-      sourceParams,
-      source.isCustom
-        ? {
-            providerTitle: source.providerTitle,
-            title: source.title,
-            desc: source.desc,
-            home: source.home,
-            color: source.color,
-          }
-        : undefined,
+      createSourceInstancePatch(source, sourceParams),
       { type: "fork", forkedFromInstanceId: id },
     )
     const isStarred = store.get(instanceStarredAtom(id))

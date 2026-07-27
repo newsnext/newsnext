@@ -5,7 +5,7 @@ import { useCallback } from "react"
 import { buildBoardSources } from "@/lib/source-cards"
 import { sanitizeSourceParamValues } from "@/lib/source-params"
 import { loadSourceDescriptors } from "@/lib/sources"
-import { boardInstancesAtom, boardStarIdsAtom, currentBoardAtom } from "@/store/board"
+import { boardStarIdsAtom, currentBoardAtom, instancesAtom } from "@/store/board"
 
 const latestSourceRefreshKeys = new Set<string>()
 export const SOURCE_QUERY_KEY = ["source"] as const
@@ -76,7 +76,7 @@ export function useRefetch() {
     try {
       const currentBoard = store.get(currentBoardAtom)
       const starredInstanceIds = store.get(boardStarIdsAtom(currentBoard))
-      const instances = store.get(boardInstancesAtom(currentBoard))
+      const instances = store.get(instancesAtom)
       const sources = await loadSourceDescriptors()
       const boardSources = buildBoardSources({
         sources,

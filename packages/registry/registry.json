@@ -1,9 +1,8 @@
 {
   "aihot:all": {
     "metadata": {
-      "providerTitle": "AIHot",
-      "color": "blue",
       "category": "tech",
+      "color": "blue",
       "home": "https://aihot.virxact.com",
       "type": "timeline"
     },
@@ -28,14 +27,16 @@
         }
       }
     },
-    "cache": "5m"
+    "cache": "5m",
+    "provider": {
+      "title": "AIHot"
+    }
   },
   "github:trending": {
     "metadata": {
-      "providerTitle": "GitHub",
-      "color": "slate",
       "category": "others",
       "home": "https://github.com/trending",
+      "color": "slate",
       "title": "Trending",
       "type": "hottest"
     },
@@ -125,16 +126,22 @@
         }
       }
     },
-    "cache": "15m"
+    "cache": "15m",
+    "provider": {
+      "title": "GitHub"
+    }
   },
   "hackernews:top": {
     "metadata": {
-      "providerTitle": "Hacker News",
-      "color": "orange",
       "category": "others",
+      "color": "orange",
       "home": "https://news.ycombinator.com/",
       "type": "hottest",
       "title": "Hottest"
+    },
+    "cache": "5m",
+    "context": {
+      "origin": "https://news.ycombinator.com"
     },
     "loader": {
       "type": "html",
@@ -172,19 +179,21 @@
         }
       }
     },
-    "cache": "5m",
-    "context": {
-      "origin": "https://news.ycombinator.com"
+    "provider": {
+      "title": "Hacker News"
     }
   },
   "hackernews:newest": {
     "metadata": {
-      "providerTitle": "Hacker News",
-      "color": "orange",
       "category": "others",
+      "color": "orange",
       "home": "https://news.ycombinator.com/newest",
       "type": "timeline",
       "title": "Newest"
+    },
+    "cache": "1m",
+    "context": {
+      "origin": "https://news.ycombinator.com"
     },
     "loader": {
       "type": "html",
@@ -222,18 +231,20 @@
         }
       }
     },
-    "cache": "1m",
-    "context": {
-      "origin": "https://news.ycombinator.com"
+    "provider": {
+      "title": "Hacker News"
     }
   },
   "hackernews:show": {
     "metadata": {
-      "providerTitle": "Hacker News",
-      "color": "orange",
       "category": "others",
+      "color": "orange",
       "home": "https://news.ycombinator.com/show",
       "title": "Show"
+    },
+    "cache": "5m",
+    "context": {
+      "origin": "https://news.ycombinator.com"
     },
     "loader": {
       "type": "html",
@@ -271,18 +282,20 @@
         }
       }
     },
-    "cache": "5m",
-    "context": {
-      "origin": "https://news.ycombinator.com"
+    "provider": {
+      "title": "Hacker News"
     }
   },
   "hackernews:ask": {
     "metadata": {
-      "providerTitle": "Hacker News",
-      "color": "orange",
       "category": "others",
+      "color": "orange",
       "home": "https://news.ycombinator.com/ask",
       "title": "Ask"
+    },
+    "cache": "5m",
+    "context": {
+      "origin": "https://news.ycombinator.com"
     },
     "loader": {
       "type": "html",
@@ -320,30 +333,27 @@
         }
       }
     },
-    "cache": "5m",
-    "context": {
-      "origin": "https://news.ycombinator.com"
+    "provider": {
+      "title": "Hacker News"
     }
   },
   "linuxdo:latest": {
     "metadata": {
-      "providerTitle": "Linux.do",
-      "color": "slate",
       "category": "tech",
+      "color": "slate",
       "home": "https://linux.do",
       "title": "Latest",
       "type": "timeline"
     },
+    "cache": "5m",
+    "context": {
+      "origin": "https://linux.do"
+    },
     "loader": {
       "type": "json",
-      "url": "{{ context.origin }}/latest.json?order=created",
       "items": "topic_list.topics[?visible && !archived && !pinned]",
       "fields": {
         "title": "title",
-        "timestamp": {
-          "select": "created_at",
-          "template": "{{ value | date_to_ms }}"
-        },
         "url": {
           "select": "id",
           "template": "{{ context.origin }}/t/topic/{{ value | url_path }}"
@@ -352,26 +362,32 @@
           "icon": {
             "template": "{% assign user = json.users | where: 'username', item.last_poster_username | first %}{% if user and user.avatar_template %}{{ user.avatar_template | replace: '{size}', '48' | absolute_url: context.origin }}{% endif %}"
           }
+        },
+        "timestamp": {
+          "select": "created_at",
+          "template": "{{ value | date_to_ms }}"
         }
-      }
+      },
+      "url": "{{ context.origin }}/latest.json?order=created"
     },
-    "cache": "5m",
-    "context": {
-      "origin": "https://linux.do"
+    "provider": {
+      "title": "Linux.do"
     }
   },
   "linuxdo:top-daily": {
     "metadata": {
-      "providerTitle": "Linux.do",
-      "color": "slate",
       "category": "tech",
+      "color": "slate",
       "home": "https://linux.do",
       "title": "Hot",
       "type": "hottest"
     },
+    "cache": "5m",
+    "context": {
+      "origin": "https://linux.do"
+    },
     "loader": {
       "type": "json",
-      "url": "{{ context.origin }}/top/daily.json",
       "items": "topic_list.topics[?visible && !archived && !pinned]",
       "fields": {
         "title": "title",
@@ -384,19 +400,18 @@
             "template": "{% assign user = json.users | where: 'username', item.last_poster_username | first %}{% if user and user.avatar_template %}{{ user.avatar_template | replace: '{size}', '48' | absolute_url: context.origin }}{% endif %}"
           }
         }
-      }
+      },
+      "url": "{{ context.origin }}/top/daily.json"
     },
-    "cache": "5m",
-    "context": {
-      "origin": "https://linux.do"
+    "provider": {
+      "title": "Linux.do"
     }
   },
   "netease-music:playlist": {
     "metadata": {
-      "providerTitle": "网易云音乐",
-      "color": "red",
       "category": "others",
       "home": "https://music.163.com/#/playlist?id=19723756",
+      "color": "red",
       "title": "飙升榜",
       "type": "hottest"
     },
@@ -453,13 +468,15 @@
         }
       }
     },
-    "cache": "15m"
+    "cache": "15m",
+    "provider": {
+      "title": "网易云音乐"
+    }
   },
   "newsnow:topic-latest": {
     "metadata": {
-      "providerTitle": "NEWS NOW",
-      "color": "red",
       "category": "others",
+      "color": "red",
       "home": "https://www.newsnow.com",
       "type": "timeline"
     },
@@ -549,16 +566,18 @@
         }
       }
     },
-    "cache": "5m"
+    "cache": "5m",
+    "provider": {
+      "title": "NEWS NOW"
+    }
   },
   "telegram:channel": {
     "metadata": {
-      "providerTitle": "Telegram",
-      "color": "blue",
       "category": "tech",
+      "color": "blue",
       "home": "https://t.me/s/TestFlightCN",
       "title": "科技圈 在花频道",
-      "sourceIcon": "https://t.me/i/userpic/320/{{ params.channel | required | url_path }}.jpg",
+      "icon": "https://t.me/i/userpic/320/{{ params.channel | required | url_path }}.jpg",
       "type": "timeline"
     },
     "params": {
@@ -635,14 +654,16 @@
         }
       }
     },
-    "cache": "5m"
+    "cache": "5m",
+    "provider": {
+      "title": "Telegram"
+    }
   },
   "tieba:hot-topic": {
     "metadata": {
-      "providerTitle": "百度贴吧",
-      "color": "blue",
       "category": "china",
       "home": "https://tieba.baidu.com",
+      "color": "blue",
       "title": "热议",
       "type": "hottest"
     },
@@ -662,9 +683,17 @@
         }
       }
     },
-    "cache": "5m"
+    "cache": "5m",
+    "provider": {
+      "title": "百度贴吧"
+    }
   },
   "v2ex:feed": {
+    "metadata": {
+      "category": "others",
+      "color": "slate",
+      "home": "https://v2ex.com/"
+    },
     "params": {
       "feed": {
         "type": "text",
@@ -715,19 +744,15 @@
       }
     },
     "cache": "5m",
-    "metadata": {
-      "providerTitle": "V2EX",
-      "color": "slate",
-      "category": "others",
-      "home": "https://v2ex.com/"
+    "provider": {
+      "title": "V2EX"
     }
   },
   "xueqiu:hot-stock": {
     "metadata": {
-      "providerTitle": "雪球",
-      "color": "blue",
       "category": "others",
       "home": "https://xueqiu.com",
+      "color": "blue",
       "type": "hottest"
     },
     "loader": {
@@ -747,13 +772,15 @@
         }
       }
     },
-    "cache": "5m"
+    "cache": "5m",
+    "provider": {
+      "title": "雪球"
+    }
   },
   "zaobao:realtime": {
     "metadata": {
-      "providerTitle": "Lianhe Zaobao",
-      "color": "red",
       "category": "china",
+      "color": "red",
       "home": "https://www.zaochenbao.com/realtime/",
       "title": "Realtime",
       "type": "timeline"
@@ -775,14 +802,16 @@
         }
       }
     },
-    "cache": "5m"
+    "cache": "5m",
+    "provider": {
+      "title": "Lianhe Zaobao"
+    }
   },
   "zhihu:hot-list": {
     "metadata": {
-      "providerTitle": "知乎",
-      "color": "blue",
       "category": "others",
       "home": "https://www.zhihu.com",
+      "color": "blue",
       "title": "全站热榜",
       "type": "hottest"
     },
@@ -802,6 +831,9 @@
         }
       }
     },
-    "cache": "5m"
+    "cache": "5m",
+    "provider": {
+      "title": "知乎"
+    }
   }
 }

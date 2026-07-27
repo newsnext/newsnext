@@ -13,7 +13,11 @@ describe("source service", () => {
   it("deduplicates registry loads and allows the transport to be replaced", async () => {
     const registry = flattenProviderConfig("remote", {
       title: "Remote",
-      color: "blue",
+      defaults: {
+        metadata: {
+          color: "blue",
+        },
+      },
       sources: {
         latest: {
           cache: "5m",
@@ -43,7 +47,11 @@ describe("source service", () => {
   it("retries registry loading after a transient transport failure", async () => {
     const registry = flattenProviderConfig("remote", {
       title: "Remote",
-      color: "blue",
+      defaults: {
+        metadata: {
+          color: "blue",
+        },
+      },
       sources: {
         latest: {
           cache: "5m",
@@ -62,7 +70,9 @@ describe("source service", () => {
     try {
       await expect(resolveSource("remote:latest")).rejects.toThrow("Temporary failure")
       await expect(resolveSource("remote:latest")).resolves.toMatchObject({
-        providerTitle: "Remote",
+        provider: {
+          title: "Remote",
+        },
       })
       expect(loader).toHaveBeenCalledTimes(2)
     } finally {

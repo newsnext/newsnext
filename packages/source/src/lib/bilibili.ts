@@ -151,14 +151,19 @@ async function fetchBilibiliFollowingVideos(): Promise<NewsItem[]> {
 
 export default {
   title: "Bilibili",
-  home: "https://www.bilibili.com",
-  color: "blue",
-  category: "china",
+  defaults: {
+    cache: "5m",
+    metadata: {
+      home: "https://www.bilibili.com",
+      color: "blue",
+      category: "china",
+      type: "hottest",
+    },
+  },
   sources: {
     "hotword": {
       metadata: {
         title: "Hot Search",
-        type: "hottest",
       },
       loader: {
         type: "json",
@@ -175,7 +180,6 @@ export default {
           },
         },
       },
-      cache: "5m",
     },
     "following-videos": {
       metadata: {
@@ -191,12 +195,10 @@ export default {
         network: ["api.bilibili.com"],
         cookies: ["api.bilibili.com", "www.bilibili.com"],
       },
-      cache: "5m",
     },
     "ranking": {
       metadata: {
         title: "Ranking",
-        type: "hottest",
       },
       params: {
         region: {

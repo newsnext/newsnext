@@ -22,18 +22,20 @@ function createSource({
   browser = [],
   cookies = [],
   network = [],
-  providerTitle = "Test",
+  providerName = "Test",
   title,
 }: {
   browser?: string[]
   cookies?: string[]
   network?: string[]
-  providerTitle?: string
+  providerName?: string
   title?: string
 }) {
   return {
     capabilities: { browser, cookies, network },
-    providerTitle,
+    provider: {
+      title: providerName,
+    },
     title,
   }
 }
@@ -62,7 +64,7 @@ describe("source permissions", () => {
   it("maps runtime-added network sources to a narrow optional origin", () => {
     const source = createSource({
       network: ["user-added.example.com"],
-      providerTitle: "User source",
+      providerName: "User source",
     })
 
     expect(getPermissionRequestForSource(source)).toEqual({

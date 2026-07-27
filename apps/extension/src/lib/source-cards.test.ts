@@ -1,12 +1,18 @@
 import type { SourceInstance } from "./source-cards"
 import type { SourceDescriptor } from "@/typings/source"
 import { describe, expect, it } from "vitest"
-import { buildBoardSources, getDefaultSourceInstanceId } from "./source-cards"
+import {
+  buildBoardSources,
+  createForkedInstance,
+  mergeSourceInstancePatch,
+} from "./source-cards"
 
 const testSources: SourceDescriptor[] = [
   {
     id: "test:feed",
-    providerTitle: "Test",
+    provider: {
+      title: "Test",
+    },
     color: "blue",
     category: "tech",
     home: "https://example.com",
@@ -22,7 +28,9 @@ const testSources: SourceDescriptor[] = [
   },
   {
     id: "test:latest",
-    providerTitle: "Latest",
+    provider: {
+      title: "Latest",
+    },
     color: "green",
     category: "tech",
     home: "https://latest.example.com",
@@ -42,8 +50,7 @@ function createCustomInstance(patch: Partial<SourceInstance> = {}): SourceInstan
   return {
     instanceId: "test:feed::fork_abc",
     sourceId: "test:feed",
-    paramsPatch: {},
-    origin: "fork",
+    patch: {},
     createdAt: 1,
     updatedAt: 1,
     ...patch,
@@ -57,7 +64,7 @@ describe("buildBoardSources", () => {
       boardId: "forks",
       starredSourceInstanceIds: [],
       sourceInstances: [
-        createCustomInstance({ paramsPatch: { topic: "custom" } }),
+        createCustomInstance({ patch: { params: { topic: "custom" } } }),
       ],
       isLocalOnly: true,
     })
@@ -65,7 +72,6 @@ describe("buildBoardSources", () => {
     expect(boardSources.ids).toEqual(["test:feed::fork_abc"])
     expect(boardSources.map["test:feed::fork_abc"]).toMatchObject({
       isCustom: true,
-      origin: "fork",
       paramsValue: { topic: "custom" },
       sourceId: "test:feed",
     })
@@ -78,7 +84,7 @@ describe("buildBoardSources", () => {
       starredSourceInstanceIds: [],
       sourceInstances: [
         createCustomInstance({
-          metaPatch: { title: "Custom Radar Title" },
+          patch: { metadata: { title: "Custom Radar Title" } },
         }),
       ],
       isLocalOnly: true,
@@ -96,12 +102,14 @@ describe("buildBoardSources", () => {
       starredSourceInstanceIds: [],
       sourceInstances: [
         createCustomInstance({
-          metaPatch: {
-            providerTitle: "Custom Provider",
-            title: "Custom Title",
-            desc: "Custom description",
-            home: "https://custom.example.com",
-            color: "red",
+          patch: {
+            metadata: {
+              title: "Custom Title",
+              icon: "https://custom.example.com/icon.png",
+              desc: "Custom description",
+              home: "https://custom.example.com",
+              color: "red",
+            },
           },
         }),
       ],
@@ -109,11 +117,36 @@ describe("buildBoardSources", () => {
     })
 
     expect(boardSources.map["test:feed::fork_abc"]).toMatchObject({
-      providerTitle: "Custom Provider",
       title: "Custom Title",
+      icon: "https://custom.example.com/icon.png",
       desc: "Custom description",
       home: "https://custom.example.com",
       color: "red",
+    })
+  })
+
+  it("does not allow persisted instance metadata to override provider identity", () => {
+    const boardSources = buildBoardSources({
+      sources: testSources,
+      boardId: "forks",
+      starredSourceInstanceIds: [],
+      sourceInstances: [
+        createCustomInstance({
+          patch: {
+            metadata: {
+              provider: {
+                title: "Injected Provider",
+                icon: "https://malicious.example/icon.png",
+              },
+            },
+          } as unknown as SourceInstance["patch"],
+        }),
+      ],
+      isLocalOnly: true,
+    })
+
+    expect(boardSources.map["test:feed::fork_abc"].provider).toEqual({
+      title: "Test",
     })
   })
 
@@ -160,8 +193,44 @@ describe("buildBoardSources", () => {
       sourceId: "test:feed",
     })
   })
+})
 
-  it("uses stable default instance ids for source templates", () => {
-    expect(getDefaultSourceInstanceId("test:feed")).toBe("test:feed::default")
+describe("mergeSourceInstancePatch", () => {
+  it("merges params and metadata independently", () => {
+    expect(mergeSourceInstancePatch(
+      {
+        params: { username: "newsnext_dev" },
+        metadata: { title: "NewsNext" },
+      },
+      {
+        params: { includeReplies: true },
+        metadata: { color: "blue" },
+      },
+    )).toEqual({
+      params: {
+        username: "newsnext_dev",
+        includeReplies: true,
+      },
+      metadata: {
+        title: "NewsNext",
+        color: "blue",
+      },
+    })
+  })
+})
+
+describe("createForkedInstance", () => {
+  it("persists the supplied final patch without rebuilding it from a board source", () => {
+    const patch = {
+      params: { language: "typescript" },
+      metadata: { title: "Trending TypeScript" },
+    }
+    const originRef = { type: "radar", ruleId: "github-trending" } as const
+
+    expect(createForkedInstance("github:trending", patch, originRef)).toMatchObject({
+      sourceId: "github:trending",
+      patch,
+      originRef,
+    })
   })
 })

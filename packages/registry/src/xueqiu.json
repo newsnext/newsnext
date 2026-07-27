@@ -1,7 +1,11 @@
 {
   "title": "雪球",
-  "home": "https://xueqiu.com",
-  "color": "blue",
+  "defaults": {
+    "metadata": {
+      "home": "https://xueqiu.com",
+      "color": "blue"
+    }
+  },
   "sources": {
     "hot-stock": {
       "metadata": {

@@ -1,6 +1,5 @@
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
-import { getFavicon } from "@newsnext/shared/utils"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const rootDir = __dirname
@@ -98,10 +97,7 @@ ${Array.from(providerEntries.entries())
     const { loader, ...meta } = source as any
     const descriptor = { ...meta }
     delete descriptor.key
-    funcRegistry[id] = {
-      ...descriptor,
-      icon: descriptor.icon ?? (descriptor.home ? getFavicon(descriptor.home) : undefined),
-    }
+    funcRegistry[id] = descriptor
   }
 
   const registryContent = `${JSON.stringify(funcRegistry, null, 2)}\n`

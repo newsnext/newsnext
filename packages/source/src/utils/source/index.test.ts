@@ -1,5 +1,5 @@
 import type { SourceRequestRule } from "../../typings/sources"
-import type { SourceConfig } from "./index"
+import type { ProviderConfig, SourceConfig } from "./index"
 import { describe, expect, it } from "vitest"
 import {
   flattenProviderConfig,
@@ -28,16 +28,94 @@ function createSourceConfig(radar: NonNullable<SourceConfig["radar"]>): SourceCo
 function resolveTestSource(config: SourceConfig): void {
   resolveProvider("test", {
     title: "Test",
-    color: "blue",
+    defaults: {
+      metadata: {
+        color: "blue",
+      },
+    },
     sources: { test: config },
   })
 }
 
 describe("source template contexts", () => {
+  it("assigns provider source defaults before resolving sources", () => {
+    const provider = resolveProvider("test", {
+      title: "Provider",
+      defaults: {
+        cache: "5m",
+        capabilities: {
+          network: ["api.example.com"],
+          cookies: ["account.example.com"],
+        },
+        metadata: {
+          color: "blue",
+          home: "https://example.com",
+          type: "timeline",
+        },
+        radar: [
+          {
+            id: "default",
+            match: { hosts: ["example.com"] },
+          },
+        ],
+      },
+      sources: {
+        inherited: {
+          loader: {
+            type: "custom",
+            load: async () => [],
+          },
+        },
+        overridden: {
+          metadata: {
+            title: "Override",
+          },
+          radar: [],
+          loader: {
+            type: "custom",
+            load: async () => [],
+          },
+          capabilities: {
+            network: ["override.example.com"],
+          },
+          cache: "1m",
+        },
+      },
+    })
+
+    expect(provider.sources.inherited).toMatchObject({
+      cache: { version: 1, maxAge: "5m" },
+      capabilities: {
+        network: ["api.example.com"],
+        cookies: ["account.example.com"],
+      },
+      type: "timeline",
+      radar: [
+        {
+          id: "default",
+        },
+      ],
+    })
+    expect(provider.sources.overridden).toMatchObject({
+      cache: { version: 1, maxAge: "1m" },
+      capabilities: {
+        network: ["override.example.com"],
+        cookies: ["account.example.com"],
+      },
+      title: "Override",
+      type: "timeline",
+      radar: [],
+    })
+  })
+
   it("resolves source metadata from the metadata object", () => {
     const provider = resolveProvider("test", {
       title: "Provider",
-      color: "blue",
+      defaults: {
+        metadata: {
+          color: "blue",
+        },
+      },
       sources: {
         test: {
           metadata: {
@@ -58,31 +136,28 @@ describe("source template contexts", () => {
       title: "Source",
       type: "timeline",
       home: "https://example.com/source",
+      icon: "https://icons.folo.is/example.com",
     })
   })
 
-  it("merges provider and source secrets into capabilities", () => {
+  it("inherits provider default secrets into capabilities", () => {
     const provider = resolveProvider("test", {
       title: "Provider",
-      color: "blue",
-      secrets: [
-        {
-          key: "shared",
-          type: "cookie",
-          origin: "https://account.example.com",
-          itemKey: "shared",
+      defaults: {
+        metadata: {
+          color: "blue",
         },
-      ],
+        secrets: [
+          {
+            key: "shared",
+            type: "cookie",
+            origin: "https://account.example.com",
+            itemKey: "shared",
+          },
+        ],
+      },
       sources: {
         test: {
-          secrets: [
-            {
-              key: "source",
-              type: "localStorage",
-              origin: "https://app.example.com",
-              itemKey: "source",
-            },
-          ],
           cache: "1h",
           loader: {
             type: "custom",
@@ -95,7 +170,7 @@ describe("source template contexts", () => {
       },
     })
 
-    expect(provider.sources.test.secrets).toHaveLength(2)
+    expect(provider.sources.test.secrets).toHaveLength(1)
     expect(provider.sources.test.capabilities.cookies).toEqual(["account.example.com"])
   })
 
@@ -118,8 +193,12 @@ describe("source template contexts", () => {
     } satisfies SourceRequestRule
     const provider = resolveProvider("test", {
       title: "Provider",
-      color: "blue",
-      requestRules: [requestRule],
+      defaults: {
+        metadata: {
+          color: "blue",
+        },
+        requestRules: [requestRule],
+      },
       sources: {
         test: {
           cache: "1h",
@@ -137,33 +216,43 @@ describe("source template contexts", () => {
   it("inherits provider context and allows source overrides", () => {
     const provider = resolveProvider("test", {
       title: "Provider",
-      color: "blue",
-      context: {
-        origin: "https://provider.example",
+      defaults: {
+        metadata: {
+          color: "blue",
+        },
+        context: {
+          endpoint: {
+            origin: "https://provider.example",
+            version: "v1",
+          },
+        },
       },
       sources: {
         inherited: {
           cache: "1h",
           loader: {
             type: "rss",
-            url: "{{ context.origin }}/feed.xml",
+            url: "{{ context.endpoint.origin }}/feed.xml",
           },
         },
         overridden: {
           context: {
-            origin: "https://source.example",
+            endpoint: {
+              version: "v2",
+              optional: null,
+            },
           },
           cache: "1h",
           loader: {
             type: "rss",
-            url: "{{ context.origin }}/feed.xml",
+            url: "{{ context.endpoint.origin }}/{{ context.endpoint.version }}/feed.xml",
           },
         },
       },
     })
 
     expect(provider.sources.inherited.capabilities.network).toEqual(["provider.example"])
-    expect(provider.sources.overridden.capabilities.network).toEqual(["source.example"])
+    expect(provider.sources.overridden.capabilities.network).toEqual(["provider.example"])
   })
 
   it("restricts Radar parameter templates to URL variables", () => {
@@ -213,11 +302,175 @@ describe("source template contexts", () => {
 })
 
 describe("source registry", () => {
+  it("rejects legacy provider-level source defaults", () => {
+    expect(() => flattenProviderConfig("test", {
+      title: "Provider",
+      color: "blue",
+      sources: {},
+    } as unknown as ProviderConfig)).toThrow(
+      "Provider \"test\" has unsupported property \"color\"",
+    )
+  })
+
+  it("validates provider authoring containers and IDs at runtime", () => {
+    expect(() => flattenProviderConfig("test", {
+      title: "Provider",
+      defaults: "invalid",
+      sources: {},
+    } as unknown as ProviderConfig)).toThrow(
+      "Provider \"test\" has invalid defaults",
+    )
+
+    expect(() => flattenProviderConfig("test", {
+      title: "Provider",
+      defaults: {
+        cache: "5m",
+        metadata: {
+          color: "blue",
+        },
+      },
+      sources: {
+        "invalid:id": {
+          loader: {
+            type: "rss",
+            url: "https://example.com/feed.xml",
+          },
+        },
+      },
+    })).toThrow(
+      "Provider \"test\" has invalid source ID \"invalid:id\"",
+    )
+  })
+
+  it("keeps provider title fixed while allowing source metadata overrides", () => {
+    const provider = {
+      title: "Provider",
+      defaults: {
+        metadata: {
+          color: "blue",
+        },
+      },
+      sources: {
+        latest: {
+          metadata: {
+            color: "red",
+            icon: "source-icon",
+          },
+          loader: {
+            type: "rss",
+            url: "https://example.com/feed.xml",
+          },
+          cache: "5m",
+        },
+      },
+    } as unknown as ProviderConfig
+
+    expect(flattenProviderConfig("test", provider)["test:latest"]).toMatchObject({
+      provider: {
+        title: "Provider",
+      },
+      metadata: {
+        color: "red",
+        icon: "source-icon",
+      },
+    })
+    expect(resolveProvider("test", provider).sources.latest).toMatchObject({
+      provider: {
+        title: "Provider",
+      },
+      icon: "source-icon",
+      color: "red",
+    })
+  })
+
+  it("flattens provider source defaults into declarative sources", () => {
+    const registry = flattenProviderConfig("test", {
+      title: "Test Provider",
+      defaults: {
+        cache: "5m",
+        context: {
+          endpoint: {
+            origin: "https://example.com",
+            version: "v1",
+          },
+        },
+        loader: {
+          type: "rss",
+          url: "{{ context.endpoint.origin }}/default.xml",
+        },
+        metadata: {
+          color: "blue",
+          home: "https://example.com",
+          type: "timeline",
+        },
+      },
+      sources: {
+        latest: {
+          metadata: {
+            title: "Latest",
+          },
+          context: {
+            endpoint: {
+              optional: null,
+              version: "v2",
+            },
+          },
+          loader: {
+            url: "{{ context.endpoint.origin }}/feed.xml",
+          },
+        },
+      },
+    })
+
+    expect(registry["test:latest"]?.context).toEqual({
+      endpoint: {
+        origin: "https://example.com",
+        optional: null,
+        version: "v2",
+      },
+    })
+    expect(registry["test:latest"]?.loader).toEqual({
+      type: "rss",
+      url: "{{ context.endpoint.origin }}/feed.xml",
+    })
+    expect(registry["test:latest"]?.provider).toEqual({
+      title: "Test Provider",
+    })
+    expect(resolveSourceRegistry(registry)["test:latest"]).toMatchObject({
+      cache: { version: 1, maxAge: "5m" },
+      title: "Latest",
+      type: "timeline",
+    })
+  })
+
+  it("rejects sources missing required properties after defaults are assigned", () => {
+    expect(() => flattenProviderConfig("test", {
+      title: "Test Provider",
+      defaults: {
+        metadata: {
+          color: "blue",
+        },
+      },
+      sources: {
+        latest: {
+          loader: {
+            type: "rss",
+            url: "https://example.com/feed.xml",
+          },
+        },
+      },
+    })).toThrow("Source \"test:latest\" is missing a cache policy")
+  })
+
   it("resolves a flat registry produced from provider authoring config", () => {
     const registry = flattenProviderConfig("test", {
       title: "Test Provider",
-      color: "blue",
-      category: "tech",
+      defaults: {
+        metadata: {
+          color: "blue",
+          category: "tech",
+        },
+      },
       sources: {
         latest: {
           cache: "5m",
@@ -230,7 +483,9 @@ describe("source registry", () => {
     })
 
     expect(resolveSourceRegistry(registry)["test:latest"]).toMatchObject({
-      providerTitle: "Test Provider",
+      provider: {
+        title: "Test Provider",
+      },
       color: "blue",
       category: "tech",
       key: "latest",
@@ -246,8 +501,10 @@ describe("source registry", () => {
 
     expect(() => resolveSourceRegistry({
       "test:latest": {
+        provider: {
+          title: "Test",
+        },
         metadata: {
-          providerTitle: "Test",
           color: "blue",
           category: "tech",
         },
@@ -259,11 +516,91 @@ describe("source registry", () => {
     })).toThrow("unsupported loader type")
   })
 
+  it("rejects inconsistent provider identity across flat sources", () => {
+    const first = flattenProviderConfig("test", {
+      title: "Provider",
+      defaults: {
+        cache: "5m",
+        metadata: {
+          color: "blue",
+        },
+      },
+      sources: {
+        first: {
+          loader: {
+            type: "rss",
+            url: "https://example.com/first.xml",
+          },
+        },
+      },
+    })
+    const second = flattenProviderConfig("test", {
+      title: "Other Provider",
+      defaults: {
+        cache: "5m",
+        metadata: {
+          color: "blue",
+        },
+      },
+      sources: {
+        second: {
+          loader: {
+            type: "rss",
+            url: "https://example.com/second.xml",
+          },
+        },
+      },
+    })
+
+    expect(() => resolveSourceRegistry({
+      ...first,
+      ...second,
+    })).toThrow("Provider \"test\" has inconsistent metadata")
+  })
+
+  it("rejects invalid display metadata in flat registries", () => {
+    expect(() => resolveSourceRegistry({
+      "test:latest": {
+        provider: {
+          title: "Test",
+        },
+        metadata: {
+          color: "not-a-color",
+          category: "tech",
+        },
+        cache: "5m",
+        loader: {
+          type: "rss",
+          url: "https://example.com/feed.xml",
+        },
+      },
+    })).toThrow("Source \"test:latest\" is missing valid display metadata")
+
+    expect(() => resolveSourceRegistry({
+      "test:latest": {
+        provider: {
+          title: "Test",
+        },
+        metadata: {
+          color: "blue",
+          category: "invalid",
+        },
+        cache: "5m",
+        loader: {
+          type: "rss",
+          url: "https://example.com/feed.xml",
+        },
+      },
+    })).toThrow("Source \"test:latest\" is missing valid display metadata")
+  })
+
   it("rejects request rules for undeclared network hosts", () => {
     expect(() => resolveSourceRegistry({
       "test:latest": {
+        provider: {
+          title: "Test",
+        },
         metadata: {
-          providerTitle: "Test",
           color: "blue",
           category: "tech",
         },
