@@ -8,6 +8,7 @@ import { browser } from "#imports"
 import { listConnectedSources, runConnectedSource } from "./source-runner"
 
 const DEFAULT_SOURCE_CONNECTION_WS_URL = "ws://127.0.0.1:43110"
+const SOURCE_CONNECTION_ENABLED_STORAGE_KEY = "sourceConnectionEnabled"
 const SOURCE_CONNECTION_RECONNECT_ALARM = "source-connection-websocket-reconnect"
 const HEARTBEAT_INTERVAL_MS = 20_000
 const RECONNECT_DELAY_MS = 1_000
@@ -16,11 +17,13 @@ const WEBSOCKET_CONNECTING_STATE = 0
 const WEBSOCKET_OPEN_STATE = 1
 
 export type SourceConnectionState
-  = | "connected"
+  = | "disabled"
+    | "connected"
     | "connecting"
     | "disconnected"
 
 export interface SourceConnectionStatus {
+  enabled: boolean
   state: SourceConnectionState
   url: string
   connectedAt?: number
@@ -30,6 +33,7 @@ let socket: WebSocket | undefined
 let heartbeatTimer: ReturnType<typeof setInterval> | undefined
 let reconnectTimer: ReturnType<typeof setTimeout> | undefined
 let connectedAt: number | undefined
+let enabled = false
 const instanceId = crypto.randomUUID()
 
 export function resolveSourceConnectionState(
@@ -46,7 +50,8 @@ export function resolveSourceConnectionState(
 
 export function getSourceConnectionStatus(): SourceConnectionStatus {
   return {
-    state: resolveSourceConnectionState(socket?.readyState),
+    enabled,
+    state: enabled ? resolveSourceConnectionState(socket?.readyState) : "disabled",
     url: import.meta.env.WXT_SOURCE_CONNECTION_WS_URL || DEFAULT_SOURCE_CONNECTION_WS_URL,
     connectedAt,
   }
@@ -186,7 +191,7 @@ function clearConnectionTimers(): void {
 }
 
 function scheduleReconnect(): void {
-  if (reconnectTimer !== undefined) {
+  if (!enabled || reconnectTimer !== undefined) {
     return
   }
   reconnectTimer = setTimeout(() => {
@@ -197,17 +202,23 @@ function scheduleReconnect(): void {
 
 function connect(): void {
   if (
-    socket?.readyState === WebSocket.CONNECTING
+    !enabled
+    || socket?.readyState === WebSocket.CONNECTING
     || socket?.readyState === WebSocket.OPEN
   ) {
     return
   }
 
   clearConnectionTimers()
-  socket = new WebSocket(
+  const nextSocket = new WebSocket(
     import.meta.env.WXT_SOURCE_CONNECTION_WS_URL || DEFAULT_SOURCE_CONNECTION_WS_URL,
   )
-  socket.addEventListener("open", () => {
+  socket = nextSocket
+  nextSocket.addEventListener("open", () => {
+    if (!enabled || socket !== nextSocket) {
+      nextSocket.close()
+      return
+    }
     connectedAt = Date.now()
     send({
       type: "ready",
@@ -221,26 +232,77 @@ function connect(): void {
       send({ type: "ping" })
     }, HEARTBEAT_INTERVAL_MS)
   })
-  socket.addEventListener("message", event => void handleMessage(event))
-  socket.addEventListener("close", () => {
+  nextSocket.addEventListener("message", (event) => {
+    if (enabled && socket === nextSocket) {
+      void handleMessage(event)
+    }
+  })
+  nextSocket.addEventListener("close", () => {
+    if (socket !== nextSocket) {
+      return
+    }
     socket = undefined
     connectedAt = undefined
     clearConnectionTimers()
     scheduleReconnect()
   })
-  socket.addEventListener("error", () => {
-    socket?.close()
+  nextSocket.addEventListener("error", () => {
+    nextSocket.close()
   })
 }
 
-export function registerSourceConnectionWebSocket(): void {
+async function applySourceConnectionEnabled(nextEnabled: boolean): Promise<void> {
+  if (enabled === nextEnabled) {
+    return
+  }
+
+  enabled = nextEnabled
+  if (enabled) {
+    browser.alarms.create(SOURCE_CONNECTION_RECONNECT_ALARM, {
+      periodInMinutes: RECONNECT_ALARM_PERIOD_MINUTES,
+    })
+    connect()
+    return
+  }
+
+  clearConnectionTimers()
+  connectedAt = undefined
+  const currentSocket = socket
+  socket = undefined
+  currentSocket?.close()
+  await browser.alarms.clear(SOURCE_CONNECTION_RECONNECT_ALARM)
+}
+
+export async function setSourceConnectionEnabled(nextEnabled: boolean): Promise<SourceConnectionStatus> {
+  await browser.storage.local.set({
+    [SOURCE_CONNECTION_ENABLED_STORAGE_KEY]: nextEnabled,
+  })
+  await applySourceConnectionEnabled(nextEnabled)
+  return getSourceConnectionStatus()
+}
+
+export async function registerSourceConnectionWebSocket(): Promise<void> {
   browser.alarms.onAlarm.addListener((alarm) => {
-    if (alarm.name === SOURCE_CONNECTION_RECONNECT_ALARM) {
+    if (enabled && alarm.name === SOURCE_CONNECTION_RECONNECT_ALARM) {
       connect()
     }
   })
-  browser.alarms.create(SOURCE_CONNECTION_RECONNECT_ALARM, {
-    periodInMinutes: RECONNECT_ALARM_PERIOD_MINUTES,
+  browser.storage.onChanged.addListener((changes, areaName) => {
+    const change = changes[SOURCE_CONNECTION_ENABLED_STORAGE_KEY]
+    if (areaName === "local" && typeof change?.newValue === "boolean") {
+      void applySourceConnectionEnabled(change.newValue)
+    }
   })
-  connect()
+
+  const stored = await browser.storage.local.get(SOURCE_CONNECTION_ENABLED_STORAGE_KEY)
+  const storedEnabled = stored[SOURCE_CONNECTION_ENABLED_STORAGE_KEY]
+  enabled = typeof storedEnabled === "boolean" ? storedEnabled : false
+  if (enabled) {
+    browser.alarms.create(SOURCE_CONNECTION_RECONNECT_ALARM, {
+      periodInMinutes: RECONNECT_ALARM_PERIOD_MINUTES,
+    })
+    connect()
+  } else {
+    await browser.alarms.clear(SOURCE_CONNECTION_RECONNECT_ALARM)
+  }
 }

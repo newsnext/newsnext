@@ -1,14 +1,26 @@
 import { describe, expect, it, vi } from "vitest"
 
-vi.mock("#imports", () => ({
-  browser: {
-    alarms: {
-      create: vi.fn(),
-      onAlarm: {
-        addListener: vi.fn(),
-      },
+const browserMock = vi.hoisted(() => ({
+  alarms: {
+    clear: vi.fn().mockResolvedValue(true),
+    create: vi.fn(),
+    onAlarm: {
+      addListener: vi.fn(),
     },
   },
+  storage: {
+    local: {
+      get: vi.fn(),
+      set: vi.fn().mockResolvedValue(undefined),
+    },
+    onChanged: {
+      addListener: vi.fn(),
+    },
+  },
+}))
+
+vi.mock("#imports", () => ({
+  browser: browserMock,
 }))
 
 vi.mock("./source-runner", () => ({
@@ -17,17 +29,46 @@ vi.mock("./source-runner", () => ({
 }))
 
 const {
+  getSourceConnectionStatus,
   parseSourceConnectionRequest,
+  registerSourceConnectionWebSocket,
   resolveSourceConnectionState,
   serializeSourceConnectionError,
+  setSourceConnectionEnabled,
 } = await import("./source-connection-websocket")
 
 describe("source connection WebSocket", () => {
+  it("keeps the connection disabled by default", async () => {
+    browserMock.storage.local.get.mockResolvedValue({})
+
+    await registerSourceConnectionWebSocket()
+
+    expect(browserMock.alarms.clear).toHaveBeenCalledWith(
+      "source-connection-websocket-reconnect",
+    )
+    expect(getSourceConnectionStatus()).toMatchObject({
+      enabled: false,
+      state: "disabled",
+    })
+  })
+
   it("reports the connection state", () => {
     expect(resolveSourceConnectionState(0)).toBe("connecting")
     expect(resolveSourceConnectionState(1)).toBe("connected")
     expect(resolveSourceConnectionState(3)).toBe("disconnected")
     expect(resolveSourceConnectionState()).toBe("disconnected")
+  })
+
+  it("persists disabling the connection and reports the disabled state", async () => {
+    await setSourceConnectionEnabled(false)
+
+    expect(browserMock.storage.local.set).toHaveBeenCalledWith({
+      sourceConnectionEnabled: false,
+    })
+    expect(getSourceConnectionStatus()).toMatchObject({
+      enabled: false,
+      state: "disabled",
+    })
   })
 
   it("preserves actionable login error metadata", () => {

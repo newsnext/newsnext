@@ -22,7 +22,9 @@ function registerDashboardMenu(): void {
 export default defineBackground(() => {
   registerService(BACKGROUND_SERVICE_KEY, backgroundService)
   registerRadarBadge()
-  registerSourceConnectionWebSocket()
+  void registerSourceConnectionWebSocket().catch((error) => {
+    console.error("Failed to initialize the source connection", error)
+  })
   void syncConfiguredSourceRequestRules().catch((error) => {
     console.error("Failed to synchronize source request rules", error)
   })

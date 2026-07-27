@@ -1419,15 +1419,19 @@ tests.
 
 The NewsNext extension can execute an authoring-format JSON provider directly in
 its background runtime and return the resulting news items over a local
-WebSocket. This is a standard extension capability available in development and
-production builds; there is no separate source debug mode. It does not install
-the provider, update the configured registry, or use the source cache.
+WebSocket. It does not install the provider, update the configured registry, or
+use the source cache.
 
-The extension always connects to `ws://127.0.0.1:43110`. To use a different
-loopback server URL, set `WXT_SOURCE_CONNECTION_WS_URL` when building or starting
-the extension. Open Settings and check **General → Source Connection** to see
-whether the extension is connecting, connected, or disconnected. The status also
-shows the configured local WebSocket URL.
+CLI connections are disabled by default in all builds. Open
+**Settings → General → CLI Connection** and enable **Enable CLI connection**
+before starting the CLI server. Disabling the setting immediately closes the
+socket and stops heartbeat and reconnect activity.
+
+The extension connects to `ws://127.0.0.1:43110` only while the setting is
+enabled. To use a different loopback server URL, set
+`WXT_SOURCE_CONNECTION_WS_URL` when building or starting the extension. The
+settings panel shows whether the connection is disabled, connecting, connected,
+or disconnected, along with the configured local WebSocket URL.
 
 Start the persistent CLI server before running source commands:
 
