@@ -1,4 +1,4 @@
-import type { SourceRequestRule } from "../types"
+import type { SourceRadarRule, SourceRequestRule } from "../types"
 import type { ProviderConfig, SourceConfig } from "./index"
 import { describe, expect, it } from "vitest"
 import {
@@ -326,6 +326,24 @@ describe("source template vars", () => {
         },
       },
     ]))).not.toThrow()
+  })
+
+  it("rejects Radar icon overrides", () => {
+    const radar = [
+      {
+        id: "test",
+        match: { hosts: ["example.com"] },
+        patch: {
+          metadata: {
+            icon: "https://example.com/dynamic.png",
+          },
+        },
+      },
+    ] as unknown as SourceRadarRule[]
+
+    expect(() => resolveTestSource(createSourceConfig(radar))).toThrow(
+      "Radar cannot modify test:test.radar.0.patch.metadata.icon; use metadata.badge for dynamic images",
+    )
   })
 
   it("does not expose source metadata to Radar templates", () => {

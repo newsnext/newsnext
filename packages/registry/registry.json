@@ -2060,6 +2060,7 @@
           },
           "metadata": {
             "title": "{{ scope.page.title | normalize_whitespace | regex_replace: '\\\\s*[–-]\\\\s*Telegram$', '' | default: 'Telegram channel' }}",
+            "badge": "https://t.me/i/userpic/320/{{ scope.params.channel | url_path }}.jpg",
             "home": "https://t.me/s/{{ scope.params.channel }}"
           }
         },

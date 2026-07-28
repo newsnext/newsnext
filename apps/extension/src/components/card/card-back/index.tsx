@@ -55,11 +55,11 @@ export function CardBack({
 }: CardBackProps) {
   const isCustom = source.isCustom
 
-  const { desc, color, params, icon, provider, title, home } = source
+  const { badge, desc, color, params, icon, provider, title, home } = source
   const [editDraft, setEditDraft] = useState<SourceEditDraft | null>(null)
   const canEdit = isCustom && editDraft !== null
   const previewTitle = canEdit ? editDraft.title : title
-  const previewIcon = canEdit ? editDraft.icon : icon
+  const previewBadge = canEdit ? editDraft.badge : badge
   const previewDesc = canEdit ? editDraft.desc : desc
   const previewHome = canEdit ? editDraft.home : home
   const previewColor = canEdit ? editDraft.color : color
@@ -68,7 +68,7 @@ export function CardBack({
     editDraft
     && (
       editDraft.title !== title
-      || editDraft.icon !== icon
+      || editDraft.badge !== badge
       || editDraft.desc !== desc
       || editDraft.home !== home
       || editDraft.color !== color
@@ -78,7 +78,7 @@ export function CardBack({
   function createEditDraft(): SourceEditDraft {
     return {
       title,
-      icon,
+      badge,
       desc,
       home,
       color,
@@ -122,11 +122,12 @@ export function CardBack({
       />
       <div className="relative flex h-full flex-col p-3 transition-colors duration-300">
         <CardHeader
+          badge={previewBadge}
           className="mb-2"
           color={previewColor}
           desc={previewDesc}
           home={previewHome}
-          icon={previewIcon}
+          icon={icon}
           provider={provider}
           title={previewTitle}
           subtitle={previewDesc || relativeTime}
@@ -235,7 +236,11 @@ export function CardBack({
                 </Info>
 
                 <Info label="Icon">
-                  <EditableInput text={previewIcon ?? ""} editable={canEdit} onChange={value => updateEditDraft({ icon: value || undefined })} />
+                  <EditableInput text={icon ?? ""} editable={false} />
+                </Info>
+
+                <Info label="Badge">
+                  <EditableInput text={previewBadge ?? ""} editable={canEdit} onChange={value => updateEditDraft({ badge: value || undefined })} />
                 </Info>
 
                 <Info label="Color">

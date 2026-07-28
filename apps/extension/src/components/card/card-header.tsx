@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils"
 import { SourceIcon } from "./source-icon"
 
 interface CardHeaderProps {
+  badge?: string
   color: Color
   desc?: string
   home?: string
@@ -17,6 +18,7 @@ interface CardHeaderProps {
 }
 
 export function CardHeader({
+  badge,
   color,
   desc,
   home,
@@ -43,6 +45,7 @@ export function CardHeader({
           onClick={() => window.open(home || "#", "_blank")}
         >
           <SourceIcon
+            badge={badge}
             className="size-full rounded-full after:rounded-full"
             color={color}
             icon={icon}

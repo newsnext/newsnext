@@ -34,6 +34,7 @@ export interface RadarSourceMetadata {
   id: string
   title?: string
   icon?: string
+  badge?: string
   desc?: string
   home?: string
   color?: Color
@@ -329,7 +330,7 @@ function resolveMetaPatch(
     home: context.url.toString(),
   }
   const title = resolveMetaPatchValue(metadataTemplates.title, context)
-  const icon = resolveMetaPatchValue(metadataTemplates.icon, context)
+  const badge = resolveMetaPatchValue(metadataTemplates.badge, context)
   const desc = resolveMetaPatchValue(metadataTemplates.desc, context)
   const home = resolveMetaPatchValue(metadataTemplates.home, context)
   const color = resolveMetaPatchValue(metadataTemplates.color, context)
@@ -337,8 +338,8 @@ function resolveMetaPatch(
   if (isPresent(title)) {
     metadata.title = String(title)
   }
-  if (isPresent(icon)) {
-    metadata.icon = String(icon)
+  if (isPresent(badge)) {
+    metadata.badge = String(badge)
   }
   if (isPresent(desc)) {
     metadata.desc = String(desc)

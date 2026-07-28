@@ -51,7 +51,7 @@ export type SourceRadarParams = Record<string, string>
 
 export interface SourceRadarMetadata {
   title?: string
-  icon?: string
+  badge?: string
   desc?: string
   home?: string
   color?: string
@@ -85,6 +85,7 @@ export interface SourceMetadata {
   key: string
   title?: string
   icon?: string
+  badge?: string
   desc?: string
   type?: "hottest" | "timeline"
   category?: CategoryId
@@ -130,6 +131,7 @@ export interface RuntimeSource<TParams extends SourceParamSchemaMap = SourcePara
   capabilities: SourceCapabilities
   cache: SourceCacheConfig
   icon?: string
+  badge?: string
   desc?: string
   type?: "hottest" | "timeline"
   home?: string

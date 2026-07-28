@@ -5,6 +5,7 @@ import { PhInfoDuotone } from "../icons/ph"
 import { SourceIcon } from "./source-icon"
 
 interface SourceActionStateProps {
+  badge?: string
   color: BoardSource["color"]
   icon?: string
   label: string
@@ -14,6 +15,7 @@ interface SourceActionStateProps {
 }
 
 export function SourceActionState({
+  badge,
   color,
   icon,
   label,
@@ -33,7 +35,7 @@ export function SourceActionState({
         aria-label={title}
         title={title}
       >
-        <SourceIcon color={color} icon={icon} title={provider.title} />
+        <SourceIcon badge={badge} color={color} icon={icon} title={provider.title} />
         {label}
       </button>
     </div>
@@ -41,11 +43,13 @@ export function SourceActionState({
 }
 
 export function SourceLoginState({
+  badge,
   color,
   icon,
   provider,
   loginUrl,
 }: {
+  badge?: string
   color: BoardSource["color"]
   icon?: string
   provider: BoardSource["provider"]
@@ -57,6 +61,7 @@ export function SourceLoginState({
 
   return (
     <SourceActionState
+      badge={badge}
       color={color}
       icon={icon}
       label="Log in"
@@ -68,11 +73,13 @@ export function SourceLoginState({
 }
 
 export function SourceErrorState({
+  badge,
   color,
   icon,
   onRefresh,
   provider,
 }: {
+  badge?: string
   color: BoardSource["color"]
   icon?: string
   onRefresh: () => void
@@ -80,6 +87,7 @@ export function SourceErrorState({
 }) {
   return (
     <SourceActionState
+      badge={badge}
       color={color}
       icon={icon}
       label="Refresh"
@@ -91,11 +99,13 @@ export function SourceErrorState({
 }
 
 export function SourcePermissionState({
+  badge,
   color,
   icon,
   onRequestPermission,
   provider,
 }: {
+  badge?: string
   color: BoardSource["color"]
   icon?: string
   onRequestPermission: () => Promise<boolean>
@@ -107,6 +117,7 @@ export function SourcePermissionState({
 
   return (
     <SourceActionState
+      badge={badge}
       color={color}
       icon={icon}
       label="Authorize"

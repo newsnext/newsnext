@@ -129,6 +129,50 @@ describe("getRadarSuggestions", () => {
     ])
   })
 
+  it("resolves dynamic badges without replacing source icons", () => {
+    expect(getRadarSuggestions(
+      { url: "https://example.com/users/newsnext" },
+      [
+        {
+          id: "test:user",
+          icon: "https://example.com/icon.png",
+          params: {
+            user: {
+              type: "text",
+              title: "User",
+              default: "",
+            },
+          },
+          radar: [
+            {
+              id: "user",
+              match: {
+                hosts: ["example.com"],
+                paths: ["/users/:user"],
+              },
+              patch: {
+                params: {
+                  user: "{{ scope.path.user }}",
+                },
+                metadata: {
+                  badge: "https://example.com/users/{{ scope.params.user }}.png",
+                },
+              },
+            },
+          ],
+        },
+      ],
+    )).toMatchObject([
+      {
+        patch: {
+          metadata: {
+            badge: "https://example.com/users/newsnext.png",
+          },
+        },
+      },
+    ])
+  })
+
   it("does not infer same-named URL parameters without an explicit mapping", () => {
     expect(getRadarSuggestions(
       { url: "https://example.com/topics/url-value?value=query-value" },

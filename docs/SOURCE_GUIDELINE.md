@@ -87,7 +87,8 @@ metadata:
     },
     "metadata": {
       "title": "Latest",
-      "icon": "https://example.com/latest.png"
+      "icon": "https://example.com/latest.png",
+      "badge": "https://example.com/account.png"
     }
   }
 }
@@ -100,6 +101,11 @@ materialized as `metadata.icon` in the generated registry and assigned directly
 to the runtime `source.icon`; clients do not derive it themselves. Clients
 render a blank placeholder tinted with the source color only when the icon is
 unavailable or fails to load.
+
+`metadata.badge` is an optional secondary image displayed as a small circular
+badge at the bottom-right of the source icon. Use it for instance-specific
+identity, such as a channel or user avatar, while keeping the source icon fixed
+to the provider or product identity.
 
 Prefer JSON whenever the provider is fully declarative. Use TypeScript only
 when it needs custom loader functions, imported runtime helpers, browser APIs,
@@ -236,13 +242,14 @@ others
 An omitted category defaults to `others` during provider defaults expansion.
 
 A source keeps its display metadata under `metadata`. It may override `title`,
-`icon`, `desc`, `home`, `color`, and `category` there. Provider `title`
+`icon`, `badge`, `desc`, `home`, `color`, and `category` there. Provider `title`
 identifies the provider and cannot be overridden by a source:
 
 ```ts
 metadata: {
   title: "Latest",
   icon: "https://example.com/icon.png",
+  badge: "https://example.com/account.png",
   home: "https://example.com/latest",
   type: "timeline",
 }
@@ -388,7 +395,8 @@ value as `scope.value` and shared template variables as `source.vars`.
 Liquid is used wherever the source schema explicitly accepts a template,
 including parameters, loader URLs, fetch options, Radar patches, and fields. It
 is not used to select JSON data. Source `metadata` is static and rejects Liquid
-syntax; put dynamic display values in `radar[].patch.metadata`.
+syntax. Put dynamic display values in `radar[].patch.metadata`; dynamic images
+must use `badge` because Radar cannot modify `icon`.
 
 Source registration parses templates, validates their filters and available
 paths, and creates slot-specific bindings. The parsed Liquid program is shared
@@ -1347,7 +1355,8 @@ Radar rules detect supported sources from the active page.
 
 Radar rules, resolved suggestions, draft cards, and saved source instances use
 the same patch shape: `patch.params` for source parameters and
-`patch.metadata` for display metadata.
+`patch.metadata` for mutable display metadata. The patch may modify `title`,
+`badge`, `desc`, `home`, and `color`; it cannot modify the source `icon`.
 
 When a source omits `radar`, has no parameters, and has an HTTP(S) `home`,
 NewsNext automatically creates a default radar rule that matches every page on
@@ -1442,6 +1451,7 @@ Radar metadata values are Liquid strings:
 patch: {
   metadata: {
     title: "{{ scope.page.title | normalize_whitespace | regex_extract: '^(.+?)\\\\s+-\\\\s+Example$', 1 | default: scope.params.topic }}",
+    badge: "https://cdn.example.com/users/{{ scope.params.topic | url_path }}.png",
     home: "https://example.com/topics/{{ scope.params.topic | url_path }}",
   },
 }
@@ -1472,9 +1482,10 @@ A static icon URL can be assigned directly:
 icon: "https://example.com/icon.png"
 ```
 
-A parameterized icon belongs in a Radar metadata patch. Radar resolves
-`patch.params` before rendering `patch.metadata`, so the icon can use the final
-parameter value:
+Source icons are immutable at the instance level. Radar patches and card
+editing cannot replace them. Use `metadata.badge` for a parameterized channel,
+account, or user image. Radar resolves `patch.params` before rendering
+`patch.metadata`, so the badge can use the final parameter value:
 
 ```ts
 radar: [{
@@ -1488,14 +1499,16 @@ radar: [{
       user: "{{ scope.path.user }}",
     },
     metadata: {
-      icon: "https://cdn.example.com/users/{{ scope.params.user | required | url_path }}.png",
+      badge: "https://cdn.example.com/users/{{ scope.params.user | required | url_path }}.png",
     },
   },
 }]
 ```
 
-Do not put Liquid in source `metadata.icon`. Source registration rejects
-templates in every source metadata field.
+The badge is rendered as a small circular overlay at the icon's bottom-right.
+Do not put Liquid in source `metadata.icon` or `metadata.badge`. Source
+registration rejects templates in every source metadata field. Radar
+registration also rejects `patch.metadata.icon`.
 
 ## Validation and security
 

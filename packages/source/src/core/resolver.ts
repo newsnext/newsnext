@@ -210,6 +210,11 @@ function validateRadarTemplates(
       })
     }
     for (const [key, template] of Object.entries(rule.patch?.metadata ?? {})) {
+      if (key === "icon") {
+        throw new TypeError(
+          `Radar cannot modify ${patchLocation}.metadata.icon; use metadata.badge for dynamic images`,
+        )
+      }
       if (template === undefined) continue
       compileSourceTemplate(template, {
         location: `${patchLocation}.metadata.${key}`,

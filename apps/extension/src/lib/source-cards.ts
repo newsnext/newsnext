@@ -18,7 +18,7 @@ export type SourceInstanceOriginRef
 
 const SOURCE_INSTANCE_METADATA_KEYS = [
   "title",
-  "icon",
+  "badge",
   "desc",
   "home",
   "color",
