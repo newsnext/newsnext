@@ -86,7 +86,6 @@ export function CardRefreshButton({
 interface CardFrontContentProps {
   color: BoardSource["color"]
   icon?: string
-  isFetching: boolean
   items: NewsItem[]
   provider: BoardSource["provider"]
   relativeUpdatedAt: string
@@ -187,11 +186,12 @@ function CardFrontComponent({
   const { type, color, desc, icon, provider, title, home } = source
   const ref = useRef<HTMLDivElement>(null)
   const relativeTime = useRelativeTime({ date: updatedAt })
+  const visibleSourceErrorMessage = isFetching ? undefined : sourceErrorMessage
   const sourceStatusMessage = sourcePermissionRequired
     ? sourcePermissionDescription
     : sourceLoginUrl
       ? `Log in to ${provider.title} to continue.`
-      : sourceErrorMessage
+      : visibleSourceErrorMessage
 
   return (
     <div className="relative h-full">
@@ -253,12 +253,11 @@ function CardFrontComponent({
               <CardFrontContent
                 color={color}
                 icon={icon}
-                isFetching={isFetching}
                 items={items}
                 provider={provider}
                 relativeUpdatedAt={relativeTime}
                 scrollRef={ref as React.RefObject<HTMLDivElement>}
-                sourceErrorMessage={sourceErrorMessage}
+                sourceErrorMessage={visibleSourceErrorMessage}
                 sourceLoginUrl={sourceLoginUrl}
                 sourcePermissionRequired={sourcePermissionRequired}
                 type={type}
