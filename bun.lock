@@ -121,7 +121,6 @@
         "@newsnext/date-parser": "workspace:*",
         "@newsnext/shared": "workspace:*",
         "@smithy/md5-js": "^4.4.13",
-        "@wxt-dev/browser": "^0.2.2",
         "cheerio": "^1.2.0",
         "defu": "catalog:",
         "fast-xml-parser": "^5.10.1",
@@ -132,6 +131,7 @@
       },
       "devDependencies": {
         "@types/jmespath": "^0.15.2",
+        "@wxt-dev/browser": "^0.2.2",
         "domhandler": "^6.0.1",
       },
     },
