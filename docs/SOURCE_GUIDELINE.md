@@ -1307,8 +1307,11 @@ the same patch shape: `patch.params` for source parameters and
 When a source omits `radar`, has no parameters, and has an HTTP(S) `home`,
 NewsNext automatically creates a default radar rule that matches every page on
 the same host as `home`. A leading `www.` is ignored. Set `radar: []` to opt out
-of this default. Parameterized sources must declare explicit radar rules so
-their URL values can be mapped to source parameters.
+of this default. Generated origin rules have confidence `0`, while explicit
+rules default to `1`; suggestions are ordered by descending confidence so a
+specific explicit match appears before generic same-origin matches.
+Parameterized sources must declare explicit radar rules so their URL values can
+be mapped to source parameters.
 
 ```ts
 radar: [

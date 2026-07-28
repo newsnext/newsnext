@@ -47,6 +47,7 @@ interface SourceRuleSpec {
 }
 
 const DEFAULT_RADAR_RULE_ID = "default-home-origin"
+const DEFAULT_ORIGIN_RADAR_CONFIDENCE = 0
 
 type PathMatch = (pathname: string) => Record<string, string> | null
 
@@ -391,6 +392,7 @@ function getSourceRuleSpecs(sourceMetadata: RadarSourceMetadata[] | undefined): 
         return [{
           source,
           rules: [{
+            confidence: DEFAULT_ORIGIN_RADAR_CONFIDENCE,
             id: DEFAULT_RADAR_RULE_ID,
             match: { hosts: [home.hostname] },
           }],

@@ -159,12 +159,13 @@ describe("getRadarSuggestions", () => {
     ["anime", "13"],
     ["tech", "188"],
   ])("suggests a Bilibili ranking card for the %s route", (slug, region) => {
-    const suggestion = getSuggestions({
+    const [suggestion] = getSuggestions({
       url: `https://www.bilibili.com/v/popular/rank/${slug}`,
       title: "哔哩哔哩排行榜",
-    }).find(item => item.sourceId === "bilibili:ranking")
+    })
 
     expect(suggestion).toMatchObject({
+      sourceId: "bilibili:ranking",
       patch: {
         params: { region },
       },
@@ -288,6 +289,7 @@ describe("getRadarSuggestions", () => {
       }],
     )).toMatchObject([
       {
+        confidence: 0,
         ruleId: "default-home-origin",
         sourceId: "test:default",
         patch: { params: {} },
@@ -379,6 +381,38 @@ describe("getRadarSuggestions", () => {
         },
       ],
     ).map(suggestion => suggestion.sourceId)).toEqual(["test:high", "test:low"])
+  })
+
+  it("prioritizes explicit path rules over generated origin rules", () => {
+    expect(getRadarSuggestions(
+      { url: "https://example.com/ranking" },
+      [
+        {
+          id: "test:generic-one",
+          home: "https://example.com",
+        },
+        {
+          id: "test:generic-two",
+          home: "https://example.com/feed",
+        },
+        {
+          id: "test:ranking",
+          radar: [
+            {
+              id: "ranking",
+              match: { hosts: ["example.com"], paths: ["/ranking"] },
+            },
+          ],
+        },
+      ],
+    ).map(suggestion => ({
+      confidence: suggestion.confidence,
+      sourceId: suggestion.sourceId,
+    }))).toEqual([
+      { confidence: 1, sourceId: "test:ranking" },
+      { confidence: 0, sourceId: "test:generic-one" },
+      { confidence: 0, sourceId: "test:generic-two" },
+    ])
   })
 
   it("matches notIn values case-insensitively", () => {
