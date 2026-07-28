@@ -673,7 +673,7 @@ JMESPath truthiness differs from JavaScript: numbers, including `0`, are
 truthy. For numeric flags, compare explicitly instead of using negation:
 
 ```ts
-items: "data.items[?ad == `0` || ad == `null`]"
+items: "data.items[?is_ad != `1`]"
 ```
 
 If `items` is omitted, the complete response must be an array.

@@ -93,7 +93,7 @@ export default {
             },
           })
         },
-        items: "data.roll_data[?!is_ad]",
+        items: "data.roll_data[?is_ad != `1`]",
       },
       cache: "1m",
     },
