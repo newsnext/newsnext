@@ -386,8 +386,9 @@ value as `scope.value` and shared template variables as `source.vars`.
 ## Liquid templates
 
 Liquid is used wherever the source schema explicitly accepts a template,
-including parameters, loader URLs, fetch options, Radar patches, metadata icons,
-and fields. It is not used to select JSON data.
+including parameters, loader URLs, fetch options, Radar patches, and fields. It
+is not used to select JSON data. Source `metadata` is static and rejects Liquid
+syntax; put dynamic display values in `radar[].patch.metadata`.
 
 Source registration parses templates, validates their filters and available
 paths, and creates slot-specific bindings. The parsed Liquid program is shared
@@ -407,7 +408,6 @@ not depend on a field-name heuristic.
 | Slot | Available paths | Output |
 | --- | --- | --- |
 | Parameter | `source.vars`, `scope.value` | Plain text |
-| Metadata icon | `source.vars`, `scope.params` | Plain text |
 | Loader URL and `fetchOptions` | `source.vars`, `scope.params` | Plain text |
 | JSON field | `source.vars`, `scope.value`, `scope.item`, `scope.params`, `scope.index`, `scope.request.url`, `scope.response.json` | Plain text, except `inline.html` and `preview.html` |
 | HTML field | `source.vars`, `scope.value`, `scope.item`, `scope.params`, `scope.index`, `scope.request.url` | Plain text, except `inline.html` and `preview.html` |
@@ -415,7 +415,9 @@ not depend on a field-name heuristic.
 | Radar metadata | Radar parameter paths plus `scope.params` and `scope.page` | Plain text |
 
 Only schema fields documented as template slots are rendered. Other source
-strings remain literal even when they contain Liquid syntax.
+strings remain literal even when they contain Liquid syntax, except source
+`metadata`, where Liquid syntax is rejected to prevent unresolved display
+values from reaching clients.
 
 ### Rendering time
 
@@ -430,12 +432,11 @@ Compilation and rendering are separate:
   Every field is extracted before any field template renders.
 - Radar parameter templates render after a URL rule matches. Their values are
   parsed and validated before Radar metadata templates render.
-- Metadata icon templates render when a source card needs its icon.
 
 Registration rejects invalid templates with their exact source location.
 Runtime rendering errors retain the same location. Loader and parameter errors
-propagate to the caller; optional Radar suggestions and icons fail closed and
-emit a diagnostic instead of breaking the surrounding UI.
+propagate to the caller; optional Radar suggestions fail closed and emit a
+diagnostic instead of breaking the surrounding UI.
 
 ### Output and control flow
 
@@ -568,11 +569,10 @@ scope.params
 Source `vars` accepts JSON-compatible objects, arrays, strings, finite
 numbers, booleans, and `null`. Templates access it through `source.vars`,
 which is available to every source template slot:
-parameters, metadata icons, loader URLs, nested `fetchOptions`, JSON and HTML
-fields, and Radar patches. Vars in provider `defaults` are inherited by every
-source; source-level keys override default keys. Put shared origins, endpoint
-paths, and lookup maps in provider vars when multiple source templates reuse
-them.
+parameters, loader URLs, nested `fetchOptions`, JSON and HTML fields, and Radar
+patches. Vars in provider `defaults` are inherited by every source; source-level
+keys override default keys. Put shared origins, endpoint paths, and lookup maps
+in provider vars when multiple source templates reuse them.
 
 Nested strings in `fetchOptions` may also use parsed parameters:
 
@@ -1472,17 +1472,30 @@ A static icon URL can be assigned directly:
 icon: "https://example.com/icon.png"
 ```
 
-A parameterized icon uses Liquid and can access `scope.params` and
-`source.vars`:
+A parameterized icon belongs in a Radar metadata patch. Radar resolves
+`patch.params` before rendering `patch.metadata`, so the icon can use the final
+parameter value:
 
 ```ts
-vars: {
-  assets: "https://cdn.example.com",
-},
-icon: "{{ source.vars.assets }}/users/{{ scope.params.user | required | url_path }}.png"
+radar: [{
+  id: "user",
+  match: {
+    hosts: ["example.com"],
+    paths: ["/users/:user"],
+  },
+  patch: {
+    params: {
+      user: "{{ scope.path.user }}",
+    },
+    metadata: {
+      icon: "https://cdn.example.com/users/{{ scope.params.user | required | url_path }}.png",
+    },
+  },
+}]
 ```
 
-Template failures return no source icon rather than breaking the card.
+Do not put Liquid in source `metadata.icon`. Source registration rejects
+templates in every source metadata field.
 
 ## Validation and security
 

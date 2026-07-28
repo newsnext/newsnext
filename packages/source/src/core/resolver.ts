@@ -36,6 +36,7 @@ import {
   compileSourceTemplate,
   compileSourceTemplateValue,
   createSourceTemplateScope,
+  isTemplate,
 } from "./template"
 
 interface SourceConfigBase<TParams extends SourceParamSchemaMap> {
@@ -115,13 +116,7 @@ export type ProviderSourceConfig<TParams extends SourceParamSchemaMap = any> = O
 export function validateSourceTemplates(sourceId: string, config: SourceConfig): void {
   validateSourceVars(config.vars, `${sourceId}.vars`)
   compileSourceParamTemplates(config.params, `${sourceId}.params`)
-
-  if (config.metadata?.icon) {
-    compileSourceTemplate(config.metadata.icon, {
-      location: `${sourceId}.metadata.icon`,
-      slot: "metadata",
-    })
-  }
+  validateSourceMetadata(config.metadata, `${sourceId}.metadata`)
 
   const { loader } = config
   if (loader.type !== "custom" && typeof loader.url === "string") {
@@ -151,6 +146,19 @@ export function validateSourceTemplates(sourceId: string, config: SourceConfig):
   }
 
   validateRadarTemplates(config.radar, `${sourceId}.radar`)
+}
+
+function validateSourceMetadata(
+  metadata: SourceConfig["metadata"],
+  location: string,
+): void {
+  for (const [key, value] of Object.entries(metadata ?? {})) {
+    if (typeof value === "string" && isTemplate(value)) {
+      throw new TypeError(
+        `Liquid templates are not allowed at ${location}.${key}; use a Radar metadata patch for dynamic values`,
+      )
+    }
+  }
 }
 
 function validateSourceVars(

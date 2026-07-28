@@ -299,6 +299,18 @@ describe("source template vars", () => {
     })).not.toThrow()
   })
 
+  it("rejects Liquid templates in source metadata", () => {
+    expect(() => resolveTestSource({
+      ...createSourceConfig([]),
+      metadata: {
+        title: "Test",
+        icon: "https://example.com/{{ scope.params.value }}.png",
+      },
+    })).toThrow(
+      "Liquid templates are not allowed at test:test.metadata.icon; use a Radar metadata patch for dynamic values",
+    )
+  })
+
   it("allows parsed parameters and page data in Radar metadata templates", () => {
     expect(() => resolveTestSource(createSourceConfig([
       {

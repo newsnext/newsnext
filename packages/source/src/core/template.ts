@@ -10,7 +10,6 @@ export type TemplateOutput = "html" | "plain"
 export type SourceTemplateSlot
   = | "field"
     | "jsonField"
-    | "metadata"
     | "param"
     | "radarMetadata"
     | "radarParams"
@@ -182,7 +181,6 @@ const sourceTemplatePaths = {
     "scope.value",
     "source.vars",
   ],
-  metadata: ["scope.params", "source.vars"],
   param: ["scope.value", "source.vars"],
   radarMetadata: [
     "scope.hashQuery",

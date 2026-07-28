@@ -2029,8 +2029,8 @@
       "color": "blue",
       "home": "https://t.me/s/TestFlightCN",
       "title": "科技圈 在花频道",
-      "icon": "https://t.me/i/userpic/320/{{ scope.params.channel | required | url_path }}.jpg",
-      "type": "timeline"
+      "type": "timeline",
+      "icon": "https://icons.folo.is/t.me"
     },
     "params": {
       "channel": {

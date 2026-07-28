@@ -173,7 +173,7 @@ describe("source templates", () => {
   it("keeps static slot values literal", () => {
     const template = compileSourceTemplate(
       "Literal | raw",
-      { location: "test.metadata.icon", slot: "metadata" },
+      { location: "test.loader.url", slot: "request" },
     )
 
     expect(template.render({})).toBe("Literal | raw")
