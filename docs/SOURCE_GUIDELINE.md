@@ -499,8 +499,12 @@ NewsNext also registers:
 - `favicon_url` returns the configured favicon service URL for a page URL.
 - `css_url` extracts the first `url(...)` value from a CSS declaration.
 - `date_to_ms` parses a date and returns its Unix timestamp in milliseconds.
+  Include an explicit timezone offset in absolute timestamps that do not already
+  provide one.
 - `relative_date_to_ms` parses absolute or relative date text in an optional
-  IANA timezone and returns its Unix timestamp in milliseconds.
+  IANA timezone and returns its Unix timestamp in milliseconds. The timezone
+  controls relative and named dates; an absolute timestamp's own offset takes
+  precedence.
 - `regex_extract` returns a numbered capture group, or an empty string when the
   pattern does not match.
 - `regex_replace` replaces every match with the provided replacement.

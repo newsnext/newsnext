@@ -2928,7 +2928,7 @@
         },
         "timestamp": {
           "select": ".pdt10",
-          "template": "{{ scope.value | remove: '- ' | relative_date_to_ms: 'Asia/Shanghai' }}"
+          "template": "{{ scope.value | replace: '- ', 'T' | append: '+08:00' | date_to_ms }}"
         }
       }
     },
