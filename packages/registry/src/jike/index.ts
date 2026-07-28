@@ -148,14 +148,14 @@ const topicIdParam = {
 const topicRadar = {
   match: {
     hosts: ["web.okjike.com"],
-    paths: ["/topic/:topicId/*rest"],
+    paths: ["/topic/:topicId", "/topic/:topicId/*rest"],
   },
   patch: {
     params: {
       topicId: "{{ path.topicId }}",
     },
     metadata: {
-      title: "{{ page.title | normalize_whitespace | regex_extract: '^(.+?)(?:\\\\s*[-_—|]\\\\s*即刻.*)?$', 1 | default: params.topicId }}",
+      title: "{{ page.title | normalize_whitespace | regex_replace: '\\\\s*[-_—|]\\\\s*即刻.*$', '' | default: params.topicId }}",
     },
   },
 }
@@ -218,7 +218,7 @@ export default {
           id: "jike-user-profile",
           match: {
             hosts: ["web.okjike.com"],
-            paths: ["/u/:username/*rest"],
+            paths: ["/u/:username", "/u/:username/*rest"],
           },
           patch: {
             params: {

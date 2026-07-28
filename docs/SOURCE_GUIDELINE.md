@@ -1333,6 +1333,8 @@ match: {
 
 - `hosts` are normalized to lowercase and ignore a leading `www.`.
 - `paths` use `path-to-regexp` syntax.
+- A wildcard such as `/*rest` requires at least one segment. List the resource
+  root separately when both `/resource/:id` and its child routes should match.
 - Capture stable resource IDs embedded in route segments, such as
   `list-:listId`, and map them explicitly to the corresponding source
   parameter.

@@ -197,7 +197,7 @@ export default {
           id: "x-user",
           match: {
             hosts: ["x.com", "twitter.com"],
-            paths: ["/:username/*rest"],
+            paths: ["/:username", "/:username/*rest"],
           },
           patch: {
             params: {

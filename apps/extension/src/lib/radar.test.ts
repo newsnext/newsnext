@@ -255,6 +255,74 @@ describe("getRadarSuggestions", () => {
     ])
   })
 
+  it.each([
+    ["https://x.com/NewsNext", "@NewsNext"],
+    ["https://twitter.com/NewsNext/status/1234567890", "@NewsNext"],
+  ])("suggests an X user card from %s", (url, title) => {
+    expect(getRadarSuggestions(
+      { url },
+      sourceDescriptors.filter(source => source.id === "x:user"),
+    )).toMatchObject([
+      {
+        sourceId: "x:user",
+        patch: {
+          params: { username: "NewsNext" },
+          metadata: { title },
+        },
+      },
+    ])
+  })
+
+  it("does not treat reserved X routes as user profiles", () => {
+    expect(getRadarSuggestions(
+      { url: "https://x.com/search" },
+      sourceDescriptors.filter(source => source.id === "x:user"),
+    )).toEqual([])
+  })
+
+  it("suggests a Jike user card from a profile root URL", () => {
+    expect(getRadarSuggestions(
+      {
+        url: "https://web.okjike.com/u/ed00c4da-fb80-4072-a6d7-abf011bd30ea",
+        title: "零山浅的主页 - 即刻",
+      },
+      sourceDescriptors.filter(source => source.id === "jike:user-updates"),
+    )).toMatchObject([
+      {
+        sourceId: "jike:user-updates",
+        patch: {
+          params: { username: "ed00c4da-fb80-4072-a6d7-abf011bd30ea" },
+          metadata: { title: "零山浅" },
+        },
+      },
+    ])
+  })
+
+  it.each([
+    "https://web.okjike.com/topic/5aeaa84029e4000011ac3768",
+    "https://web.okjike.com/topic/5aeaa84029e4000011ac3768/square",
+  ])("suggests both Jike topic feeds from %s", (url) => {
+    expect(getRadarSuggestions(
+      { url, title: "即友日记本 - 即刻" },
+      sourceDescriptors.filter(source => source.id.startsWith("jike:topic-")),
+    )).toMatchObject([
+      {
+        sourceId: "jike:topic-recent",
+        patch: {
+          params: { topicId: "5aeaa84029e4000011ac3768" },
+          metadata: { title: "即友日记本" },
+        },
+      },
+      {
+        sourceId: "jike:topic-hottest",
+        patch: {
+          params: { topicId: "5aeaa84029e4000011ac3768" },
+          metadata: { title: "即友日记本" },
+        },
+      },
+    ])
+  })
+
   it("returns no suggestions for invalid or unknown URLs", () => {
     expect(getSuggestions({ url: "not a url" })).toEqual([])
     expect(getSuggestions({ url: "https://example.com/article" })).toEqual([])
