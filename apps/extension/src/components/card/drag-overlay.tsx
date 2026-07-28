@@ -31,28 +31,9 @@ export function DragOverlay({ source }: DragOverlayProps) {
             title={title || provider.title}
           />
           <div className="flex flex-col min-w-0">
-            <div className="flex items-center gap-2 min-w-0 w-full">
-              {(title || provider.title) && (
-                <span
-                  className={cn(
-                    "font-bold truncate min-w-0",
-                    title ? "shrink-0 max-w-[min(14rem,60%)]" : "w-full",
-                  )}
-                >
-                  {title || provider.title}
-                </span>
-              )}
-              {title && (
-                <span
-                  className={cn(
-                    "inline-block min-w-0 flex-1 truncate text-center text-sm px-1 rounded-3xl bg-background/50 opacity-80",
-                    `text-${color}-400`,
-                  )}
-                >
-                  {provider.title.replace(/\s+/g, " ")}
-                </span>
-              )}
-            </div>
+            <span className="w-full min-w-0 truncate font-bold">
+              {title || provider.title}
+            </span>
             <span className="text-xs opacity-70">Dragging</span>
           </div>
         </div>

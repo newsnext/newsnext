@@ -30,10 +30,6 @@ export function CardHeader({
   className,
 }: CardHeaderProps) {
   const displayTitle = title || provider.title
-  const displayProviderTitle = title ? provider.title.replace(/\s+/g, " ") : undefined
-  const isDisplayTitleLonger = displayProviderTitle
-    ? displayTitle.length >= displayProviderTitle.length
-    : false
 
   return (
     <div className={cn("flex justify-between mb-3 items-center mx-1 gap-2", className)}>
@@ -53,30 +49,10 @@ export function CardHeader({
           />
         </button>
         <div className="flex flex-col min-w-0 flex-1">
-          <div className="flex w-fit max-w-full items-center gap-2 min-w-0 text-base">
-            <span
-              className={cn(
-                "font-bold truncate min-w-0",
-                displayProviderTitle
-                  ? isDisplayTitleLonger
-                    ? "flex-[0_1_auto]"
-                    : "max-w-full shrink-0"
-                  : "w-full",
-              )}
-            >
+          <div className="flex max-w-full min-w-0 text-base">
+            <span className="w-full min-w-0 truncate font-bold">
               {displayTitle}
             </span>
-            {displayProviderTitle && (
-              <span
-                className={cn(
-                  "inline-block max-w-full truncate text-sm px-1.5 rounded-3xl text-center bg-background/50 opacity-80",
-                  isDisplayTitleLonger ? "shrink-0" : "min-w-0 flex-[0_1_auto]",
-                  `text-${color}-400`,
-                )}
-              >
-                {displayProviderTitle}
-              </span>
-            )}
           </div>
           <span className="text-xs opacity-70 max-w-full truncate">
             {subtitle}

@@ -151,9 +151,6 @@ function SearchDialogContent(): ReactNode {
                 <span className="shrink-0">
                   {item.source.title || item.source.provider.title}
                 </span>
-                <span className="min-w-0 truncate text-xs text-neutral-400/80">
-                  {item.source.title && item.source.provider.title}
-                </span>
               </span>
             </CommandItem>
           ))}

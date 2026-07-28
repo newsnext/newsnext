@@ -221,10 +221,6 @@ export function CardBack({
                     </div>
                   )}
                 </div>
-                <Info label="Provider Title">
-                  <EditableInput text={provider.title} editable={false} />
-                </Info>
-
                 <Info label="Title">
                   <EditableInput text={previewTitle || ""} editable={canEdit} onChange={value => updateEditDraft({ title: value })} />
                 </Info>
