@@ -23,11 +23,11 @@
           "title": ".eps",
           "url": {
             "attr": "href",
-            "template": "{{ value | absolute_url: requestUrl }}"
+            "template": "{{ scope.value | absolute_url: scope.request.url }}"
           },
           "timestamp": {
             "select": ".pdt10",
-            "template": "{{ value | remove: '- ' | relative_date_to_ms: 'Asia/Shanghai' }}"
+            "template": "{{ scope.value | remove: '- ' | relative_date_to_ms: 'Asia/Shanghai' }}"
           }
         }
       },

@@ -37,7 +37,7 @@ function resolveTestSource(config: SourceConfig): void {
   })
 }
 
-describe("source template contexts", () => {
+describe("source template vars", () => {
   it("assigns provider source defaults before resolving sources", () => {
     const provider = resolveProvider("test", {
       title: "Provider",
@@ -213,14 +213,14 @@ describe("source template contexts", () => {
     expect(provider.sources.test.requestRules).toEqual([requestRule])
   })
 
-  it("inherits provider context and allows source overrides", () => {
+  it("inherits provider vars and allows source overrides", () => {
     const provider = resolveProvider("test", {
       title: "Provider",
       defaults: {
         metadata: {
           color: "blue",
         },
-        context: {
+        vars: {
           endpoint: {
             origin: "https://provider.example",
             version: "v1",
@@ -232,11 +232,11 @@ describe("source template contexts", () => {
           cache: "1h",
           loader: {
             type: "rss",
-            url: "{{ context.endpoint.origin }}/feed.xml",
+            url: "{{ source.vars.endpoint.origin }}/feed.xml",
           },
         },
         overridden: {
-          context: {
+          vars: {
             endpoint: {
               version: "v2",
               optional: null,
@@ -245,7 +245,7 @@ describe("source template contexts", () => {
           cache: "1h",
           loader: {
             type: "rss",
-            url: "{{ context.endpoint.origin }}/{{ context.endpoint.version }}/feed.xml",
+            url: "{{ source.vars.endpoint.origin }}/{{ source.vars.endpoint.version }}/feed.xml",
           },
         },
       },
@@ -253,6 +253,19 @@ describe("source template contexts", () => {
 
     expect(provider.sources.inherited.capabilities.network).toEqual(["provider.example"])
     expect(provider.sources.overridden.capabilities.network).toEqual(["provider.example"])
+    expect(provider.sources.inherited.vars).toEqual({
+      endpoint: {
+        origin: "https://provider.example",
+        version: "v1",
+      },
+    })
+    expect(provider.sources.overridden.vars).toEqual({
+      endpoint: {
+        origin: "https://provider.example",
+        version: "v2",
+        optional: null,
+      },
+    })
   })
 
   it("restricts Radar parameter templates to URL variables", () => {
@@ -262,11 +275,24 @@ describe("source template contexts", () => {
         match: { hosts: ["example.com"] },
         patch: {
           params: {
-            value: "{{ params.value }}",
+            value: "{{ scope.params.value }}",
           },
         },
       },
-    ]))).toThrow("Template root \"params\" is not available")
+    ]))).toThrow("Template path \"scope.params.value\" is not available")
+  })
+
+  it("does not compile Liquid syntax in non-template source fields", () => {
+    expect(() => resolveTestSource({
+      ...createSourceConfig([]),
+      params: {
+        value: {
+          type: "text",
+          title: "Literal {{ label }}",
+          default: "",
+        },
+      },
+    })).not.toThrow()
   })
 
   it("allows parsed parameters and page data in Radar metadata templates", () => {
@@ -276,10 +302,10 @@ describe("source template contexts", () => {
         match: { hosts: ["example.com"] },
         patch: {
           params: {
-            value: "{{ query.value | default: path.value }}",
+            value: "{{ scope.query.value | default: scope.path.value }}",
           },
           metadata: {
-            title: "{{ page.title | default: params.value }}",
+            title: "{{ scope.page.title | default: scope.params.value }}",
           },
         },
       },
@@ -297,7 +323,7 @@ describe("source template contexts", () => {
           },
         },
       },
-    ]))).toThrow("Template root \"source\" is not available")
+    ]))).toThrow("Template path \"source.title\" is not available")
   })
 })
 
@@ -388,7 +414,7 @@ describe("source registry", () => {
       title: "Test Provider",
       defaults: {
         cache: "5m",
-        context: {
+        vars: {
           endpoint: {
             origin: "https://example.com",
             version: "v1",
@@ -396,7 +422,7 @@ describe("source registry", () => {
         },
         loader: {
           type: "rss",
-          url: "{{ context.endpoint.origin }}/default.xml",
+          url: "{{ source.vars.endpoint.origin }}/default.xml",
         },
         metadata: {
           color: "blue",
@@ -409,20 +435,20 @@ describe("source registry", () => {
           metadata: {
             title: "Latest",
           },
-          context: {
+          vars: {
             endpoint: {
               optional: null,
               version: "v2",
             },
           },
           loader: {
-            url: "{{ context.endpoint.origin }}/feed.xml",
+            url: "{{ source.vars.endpoint.origin }}/feed.xml",
           },
         },
       },
     })
 
-    expect(registry["test:latest"]?.context).toEqual({
+    expect(registry["test:latest"]?.vars).toEqual({
       endpoint: {
         origin: "https://example.com",
         optional: null,
@@ -431,7 +457,7 @@ describe("source registry", () => {
     })
     expect(registry["test:latest"]?.loader).toEqual({
       type: "rss",
-      url: "{{ context.endpoint.origin }}/feed.xml",
+      url: "{{ source.vars.endpoint.origin }}/feed.xml",
     })
     expect(registry["test:latest"]?.provider).toEqual({
       title: "Test Provider",

@@ -311,7 +311,7 @@ concatenated. An empty source array therefore disables an inherited `radar`,
 inheritance, so providers with identical selectors can put the shared loader
 shape in `defaults.loader` and override only fields such as `url`.
 
-`cache`, `capabilities`, `loader`, `metadata`, `context`, `params`, `radar`,
+`cache`, `capabilities`, `loader`, `metadata`, `vars`, `params`, `radar`,
 `requestRules`, and `secrets` can all be placed in `defaults`. The fully
 expanded source is validated after defaults are assigned.
 
@@ -363,40 +363,88 @@ All string inputs are trimmed automatically before templates, type coercion,
 and validation.
 
 Use a Liquid template to normalize a parameter before type coercion and
-validation. The raw value or default is available as `value`:
+validation. The raw value or default is available as `scope.value`:
 
 ```ts
 {
   type: "text",
   title: "Channel",
   default: "example",
-  template: "{{ value | remove_first: '@' }}",
+  template: "{{ scope.value | remove_first: '@' }}",
   pattern: "^[A-Za-z][A-Za-z0-9_]+$",
 }
 ```
 
 Parameter templates are serializable and use the same restricted LiquidJS
-environment and filters as other source templates. Only the `value` root is
-available.
+environment and filters as other source templates. They can access the raw
+value as `scope.value` and shared template variables as `source.vars`.
 
 ## Liquid templates
 
 Liquid is used wherever the source schema explicitly accepts a template,
-including parameters, loader URLs, fetch options, Radar patches, metadata, and
-fields. It is not used to select JSON data.
+including parameters, loader URLs, fetch options, Radar patches, metadata icons,
+and fields. It is not used to select JSON data.
+
+Source registration parses templates, validates their filters and available
+paths, and creates slot-specific bindings. The parsed Liquid program is shared
+by identical templates, while each binding retains its own source location for
+runtime errors. Both layers use bounded caches.
+
+Every template has exactly two external roots:
+
+- `source` contains source-definition data. Its currently available branch is
+  `source.vars`.
+- `scope` contains data produced for the current rendering stage.
+
+Each schema slot explicitly fixes its available paths and output mode, so a
+template cannot gain access to data from another stage and output escaping does
+not depend on a field-name heuristic.
+
+| Slot | Available paths | Output |
+| --- | --- | --- |
+| Parameter | `source.vars`, `scope.value` | Plain text |
+| Metadata icon | `source.vars`, `scope.params` | Plain text |
+| Loader URL and `fetchOptions` | `source.vars`, `scope.params` | Plain text |
+| JSON field | `source.vars`, `scope.value`, `scope.item`, `scope.params`, `scope.index`, `scope.request.url`, `scope.response.json` | Plain text, except `inline.html` and `preview.html` |
+| HTML field | `source.vars`, `scope.value`, `scope.item`, `scope.params`, `scope.index`, `scope.request.url` | Plain text, except `inline.html` and `preview.html` |
+| Radar parameters | `source.vars`, `scope.path`, `scope.query`, `scope.hashQuery` | Plain text |
+| Radar metadata | Radar parameter paths plus `scope.params` and `scope.page` | Plain text |
+
+Only schema fields documented as template slots are rendered. Other source
+strings remain literal even when they contain Liquid syntax.
+
+### Rendering time
+
+Compilation and rendering are separate:
+
+- Parameter templates render after trimming the raw value or default and before
+  type coercion and validation.
+- Loader URL and nested `fetchOptions` templates render after all parameters are
+  parsed and immediately before capability checks and the request.
+- JSON field templates render after JMESPath selection.
+- HTML field templates render after selector, traversal, and content extraction.
+  Every field is extracted before any field template renders.
+- Radar parameter templates render after a URL rule matches. Their values are
+  parsed and validated before Radar metadata templates render.
+- Metadata icon templates render when a source card needs its icon.
+
+Registration rejects invalid templates with their exact source location.
+Runtime rendering errors retain the same location. Loader and parameter errors
+propagate to the caller; optional Radar suggestions and icons fail closed and
+emit a diagnostic instead of breaking the surrounding UI.
 
 ### Output and control flow
 
 ```liquid
-{{ params.topic }}
+{{ scope.params.topic }}
 
-{% if item.category %}
-  {{ item.category }}
+{% if scope.item.category %}
+  {{ scope.item.category }}
 {% else %}
   Unknown
 {% endif %}
 
-{% for tag in item.tags %}
+{% for tag in scope.item.tags %}
   {{ tag }}
 {% endfor %}
 ```
@@ -411,20 +459,20 @@ instead of building an equivalent field-transform pipeline.
 NewsNext also registers:
 
 ```liquid
-{{ value | required }}
-{{ value | url_path }}
-{{ value | url_query }}
-{{ value | normalize_whitespace }}
-{{ value | normalize_lines }}
-{{ value | normalize_lines: 2 }}
-{{ value | first_line }}
-{{ value | absolute_url: requestUrl }}
-{{ value | favicon_url }}
-{{ value | css_url }}
-{{ value | date_to_ms }}
-{{ value | relative_date_to_ms: "Asia/Shanghai" }}
-{{ value | regex_extract: "Item (\\d+)", 1 }}
-{{ value | regex_replace: "\\s+", " " }}
+{{ scope.value | required }}
+{{ scope.value | url_path }}
+{{ scope.value | url_query }}
+{{ scope.value | normalize_whitespace }}
+{{ scope.value | normalize_lines }}
+{{ scope.value | normalize_lines: 2 }}
+{{ scope.value | first_line }}
+{{ scope.value | absolute_url: scope.request.url }}
+{{ scope.value | favicon_url }}
+{{ scope.value | css_url }}
+{{ scope.value | date_to_ms }}
+{{ scope.value | relative_date_to_ms: "Asia/Shanghai" }}
+{{ scope.value | regex_extract: "Item (\\d+)", 1 }}
+{{ scope.value | regex_replace: "\\s+", " " }}
 ```
 
 - `required` throws when a value is `null`, `undefined`, or an empty string.
@@ -450,16 +498,16 @@ Regex filters accept patterns up to 500 characters and input values up to
 Filters compose naturally:
 
 ```liquid
-{{ value | first_line | truncate: 160, "…" }}
-{{ value | normalize_whitespace | prepend: "✰ " }}
-{{ value | absolute_url: requestUrl }}
+{{ scope.value | first_line | truncate: 160, "…" }}
+{{ scope.value | normalize_whitespace | prepend: "✰ " }}
+{{ scope.value | absolute_url: scope.request.url }}
 ```
 
 Templates use strict variables and strict filters. Guard optional data with
 `if` or `default`:
 
 ```liquid
-{{ item.subtitle | default: "" }}
+{{ scope.item.subtitle | default: "" }}
 ```
 
 ### Restrictions
@@ -484,15 +532,16 @@ limits. It does not use `eval` or `new Function`.
 Structured loader URLs are strings and may contain Liquid templates.
 
 ```ts
-url: "https://api.example.com/{{ params.topic | url_path }}?page={{ params.page | url_query }}"
+url: "https://api.example.com/{{ scope.params.topic | url_path }}?page={{ scope.params.page | url_query }}"
 ```
 
 When templates need static lookup tables or other shared constants, declare a
-serializable `context` container on the source. Access it with Liquid's dynamic object
-indexing instead of using a long `case` expression:
+serializable `vars` container on the source. Access it through
+`source.vars` with Liquid's dynamic object indexing instead of using a long
+`case` expression:
 
 ```ts
-context: {
+vars: {
   endpoint: {
     latest: "items/latest",
     popular: "rankings/popular",
@@ -500,7 +549,7 @@ context: {
 },
 loader: {
   type: "json",
-  url: "https://api.example.com/{{ context.endpoint[params.type] }}",
+  url: "https://api.example.com/{{ source.vars.endpoint[scope.params.type] }}",
   // ...
 }
 ```
@@ -508,23 +557,25 @@ loader: {
 URL and nested `fetchOptions` templates can access:
 
 ```text
-params
-context
+source.vars
+scope.params
 ```
 
-`context` accepts JSON-compatible objects, arrays, strings, finite numbers,
-booleans, and `null`. It is available to loader URLs, nested `fetchOptions`,
-and JSON or HTML field templates. Context in provider `defaults` is inherited
-by every source; source-level keys override default keys.
-
-Source `icon` templates can access only `params`.
+Source `vars` accepts JSON-compatible objects, arrays, strings, finite
+numbers, booleans, and `null`. Templates access it through `source.vars`,
+which is available to every source template slot:
+parameters, metadata icons, loader URLs, nested `fetchOptions`, JSON and HTML
+fields, and Radar patches. Vars in provider `defaults` are inherited by every
+source; source-level keys override default keys. Put shared origins, endpoint
+paths, and lookup maps in provider vars when multiple source templates reuse
+them.
 
 Nested strings in `fetchOptions` may also use parsed parameters:
 
 ```ts
 fetchOptions: {
   headers: {
-    authorization: "Bearer {{ params.token }}",
+    authorization: "Bearer {{ scope.params.token }}",
   },
 }
 ```
@@ -539,7 +590,7 @@ fetchOptions: {
     "Content-Type": "application/json",
   },
   body: {
-    channel: "{{ params.channel }}",
+    channel: "{{ scope.params.channel }}",
     pageSize: 30,
   },
 }
@@ -660,7 +711,7 @@ field object when formatting is required:
 fields: {
   url: {
     select: "id",
-    template: "https://example.com/articles/{{ value | url_path }}",
+    template: "https://example.com/articles/{{ scope.value | url_path }}",
   },
 }
 ```
@@ -671,32 +722,33 @@ JSON field resolution order is:
 select → template
 ```
 
-If `select` is omitted, `value` starts as the complete current item.
+If `select` is omitted, `scope.value` starts as the complete current item.
 
-### JSON template context
+### JSON template scope
 
 A JSON field template can access:
 
 ```text
-value       selected field value
-item        current response item
-json        complete response body
-params      parsed source parameters
-index       zero-based item index
-requestUrl  resolved request URL
+source.vars       shared template variables
+scope.value          selected field value
+scope.item           current response item
+scope.response.json  complete response body
+scope.params         parsed source parameters
+scope.index          zero-based item index
+scope.request.url    resolved request URL
 ```
 
 ```ts
 title: {
-  template: "{{ json.label }}: {{ item.title }}",
+  template: "{{ scope.response.json.label }}: {{ scope.item.title }}",
 },
 url: {
   select: "id",
-  template: "https://example.com/{{ params.topic | url_path }}/{{ value | url_path }}",
+  template: "https://example.com/{{ scope.params.topic | url_path }}/{{ scope.value | url_path }}",
 },
 inline: {
   text: {
-    template: "{{ item.source }}{% if item.category %} · {{ item.category }}{% endif %}",
+    template: "{{ scope.item.source }}{% if scope.item.category %} · {{ scope.item.category }}{% endif %}",
   },
 },
 ```
@@ -731,28 +783,28 @@ export default {
       },
       loader: {
         type: "json",
-        url: "https://api.example.com/{{ params.topic | url_path }}",
+        url: "https://api.example.com/{{ scope.params.topic | url_path }}",
         items: "data.items[?enabled]",
         fields: {
           title: "title || name",
           url: {
             select: "id",
-            template: "https://example.com/articles/{{ value | url_path }}",
+            template: "https://example.com/articles/{{ scope.value | url_path }}",
           },
           timestamp: {
             select: "published_at",
-            template: "{{ value | date_to_ms }}",
+            template: "{{ scope.value | date_to_ms }}",
           },
           inline: {
             text: {
               select: "score",
-              template: "Score: {{ value }}",
+              template: "Score: {{ scope.value }}",
             },
           },
           preview: {
             html: {
               select: "summary",
-              template: "<strong>{{ value }}</strong>",
+              template: "<strong>{{ scope.value }}</strong>",
             },
             picture: "image.url",
           },
@@ -815,12 +867,12 @@ fields: {
   url: {
     select: ".title",
     attr: "href",
-    template: "{{ value | absolute_url: requestUrl }}",
+    template: "{{ scope.value | absolute_url: scope.request.url }}",
   },
   timestamp: {
     select: "[data-timestamp]",
     attr: "data-timestamp",
-    template: "{{ value | times: 1000 }}",
+    template: "{{ scope.value | times: 1000 }}",
   },
 }
 ```
@@ -838,25 +890,26 @@ regardless of field declaration order.
 HTML field templates can access:
 
 ```text
-value       Current extracted field value
-item        Complete extracted item
-params      Resolved source parameters
-index       Zero-based item index
-requestUrl  Resolved loader URL
+source.vars     Shared template variables
+scope.value        Current extracted field value
+scope.item         Complete extracted item
+scope.params       Resolved source parameters
+scope.index        Zero-based item index
+scope.request.url  Resolved loader URL
 ```
 
-The `item` object follows the `NewsItem` field structure:
+The `scope.item` object follows the `NewsItem` field structure:
 
 ```ts
 fields: {
   title: {
     select: ".title",
-    template: "{{ value }} — {{ item.inline.text }}",
+    template: "{{ scope.value }} — {{ scope.item.inline.text }}",
   },
   url: {
     select: ".title",
     attr: "href",
-    template: "{{ value | absolute_url: requestUrl }}",
+    template: "{{ scope.value | absolute_url: scope.request.url }}",
   },
   inline: {
     text: ".category",
@@ -864,9 +917,10 @@ fields: {
 }
 ```
 
-Here, `item.title`, `item.url`, `item.inline.text`, and other values refer to
-their pre-template values. Templates do not depend on one another, so template
-cycles and declaration-order differences cannot change the result.
+Here, `scope.item.title`, `scope.item.url`, `scope.item.inline.text`, and other
+values refer to their pre-template values. Templates do not depend on one
+another, so template cycles and declaration-order differences cannot change
+the result.
 
 ### Selection fallbacks
 
@@ -907,7 +961,7 @@ reading an item attribute:
 ```ts
 url: {
   attr: "data-url",
-  template: "{{ value | absolute_url: requestUrl }}",
+  template: "{{ scope.value | absolute_url: scope.request.url }}",
 }
 ```
 
@@ -922,7 +976,7 @@ timestamp: {
   traverse: { type: "next", selector: "tr.metadata" },
   select: "time",
   attr: "datetime",
-  template: "{{ value | date_to_ms }}",
+  template: "{{ scope.value | date_to_ms }}",
 }
 ```
 
@@ -988,7 +1042,7 @@ preview: {
   text: {
     select: ".message",
     brSeparator: "\n",
-    template: "{{ value | normalize_lines: 2 }}",
+    template: "{{ scope.value | normalize_lines: 2 }}",
   },
 }
 ```
@@ -1028,7 +1082,7 @@ path-relative URLs against the final loader request URL:
 url: {
   select: ".title",
   attr: "href",
-  template: "{{ value | absolute_url: requestUrl }}",
+  template: "{{ scope.value | absolute_url: scope.request.url }}",
 }
 ```
 
@@ -1036,7 +1090,7 @@ Provide an explicit base when the page's links use a different origin or base
 path:
 
 ```ts
-template: "{{ value | absolute_url: 'https://www.example.com/archive/' }}"
+template: "{{ scope.value | absolute_url: 'https://www.example.com/archive/' }}"
 ```
 
 ### Character decoding and custom fetch
@@ -1118,7 +1172,7 @@ automatically:
 preview: {
   html: {
     select: "summary",
-    template: "<strong>{{ value }}</strong>",
+    template: "<strong>{{ scope.value }}</strong>",
   },
 }
 ```
@@ -1310,10 +1364,10 @@ radar: [
     },
     patch: {
       params: {
-        topic: "{{ path.topic }}",
+        topic: "{{ scope.path.topic }}",
       },
       metadata: {
-        title: "{{ params.topic }}",
+        title: "{{ scope.params.topic }}",
       },
     },
     confidence: 0.95,
@@ -1352,15 +1406,16 @@ match: {
 
 Map every Radar source parameter explicitly, even when the source parameter and
 URL variable have the same name. This keeps the parameter origin visible in the
-configuration. Parameter mapping templates can access only `path`, `query`, and
-`hashQuery`:
+configuration. Parameter mapping templates can access only
+`scope.path`, `scope.query`, and
+`scope.hashQuery` from the matched URL, plus `source.vars`:
 
 ```ts
 patch: {
   params: {
-    topic: "{{ path.topic }}",
-    page: "{{ query.page }}",
-    id: "{{ query.id | default: hashQuery.id }}",
+    topic: "{{ scope.path.topic }}",
+    page: "{{ scope.query.page }}",
+    id: "{{ scope.query.id | default: scope.hashQuery.id }}",
     mode: "latest",
   },
 }
@@ -1370,7 +1425,10 @@ Missing extracted values are omitted and the parameter schema supplies its
 default. Extracted string values are trimmed, then run through the parameter
 Liquid template, type coercion, and validation.
 
-In `patch.metadata`, `params` contains the final parsed source parameters.
+Radar resolves `patch.params` first. It trims, templates, coerces, and validates
+those values against the source parameter schema. Radar metadata then receives
+the final values as `scope.params`. An invalid parameter discards the suggestion
+before metadata renders.
 
 ### Radar metadata
 
@@ -1379,8 +1437,8 @@ Radar metadata values are Liquid strings:
 ```ts
 patch: {
   metadata: {
-    title: "{{ page.title | normalize_whitespace | regex_extract: '^(.+?)\\\\s+-\\\\s+Example$', 1 | default: params.topic }}",
-    home: "https://example.com/topics/{{ params.topic | url_path }}",
+    title: "{{ scope.page.title | normalize_whitespace | regex_extract: '^(.+?)\\\\s+-\\\\s+Example$', 1 | default: scope.params.topic }}",
+    home: "https://example.com/topics/{{ scope.params.topic | url_path }}",
   },
 }
 ```
@@ -1388,11 +1446,12 @@ patch: {
 Metadata templates can access:
 
 ```text
-path
-query
-hashQuery
-params
-page.title
+source.vars
+scope.path
+scope.query
+scope.hashQuery
+scope.params
+scope.page.title
 ```
 
 When a stored select value is an implementation code, map it to its
@@ -1409,10 +1468,14 @@ A static icon URL can be assigned directly:
 icon: "https://example.com/icon.png"
 ```
 
-A parameterized icon uses Liquid and can access only `params`:
+A parameterized icon uses Liquid and can access `scope.params` and
+`source.vars`:
 
 ```ts
-icon: "https://example.com/users/{{ params.user | required | url_path }}.png"
+vars: {
+  assets: "https://cdn.example.com",
+},
+icon: "{{ source.vars.assets }}/users/{{ scope.params.user | required | url_path }}.png"
 ```
 
 Template failures return no source icon rather than breaking the card.
@@ -1441,7 +1504,7 @@ Liquid validation checks:
 
 - syntax
 - unknown filters
-- allowed context roots
+- allowed `source` and `scope` paths
 - prohibited tags and raw output
 
 JMESPath validation checks:

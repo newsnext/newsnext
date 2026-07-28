@@ -66,11 +66,11 @@
           },
           "patch": {
             "params": {
-              "locale": "{{ path.locale }}",
-              "topic": "{{ path.topic }}"
+              "locale": "{{ scope.path.locale }}",
+              "topic": "{{ scope.path.topic }}"
             },
             "metadata": {
-              "title": "{{ params.topic }}"
+              "title": "{{ scope.params.topic }}"
             }
           },
           "confidence": 0.85
@@ -78,19 +78,19 @@
       ],
       "loader": {
         "type": "html",
-        "url": "https://www.newsnow.com/{{ params.locale | url_path }}/{{ params.topic | url_path }}?type=ln",
+        "url": "https://www.newsnow.com/{{ scope.params.locale | url_path }}/{{ scope.params.topic | url_path }}?type=ln",
         "items": ".newsfeed .article",
         "fields": {
           "title": ".article-card__headline",
           "url": {
             "select": ".article-card__headline",
             "attr": "href",
-            "template": "{{ value | absolute_url: requestUrl }}"
+            "template": "{{ scope.value | absolute_url: scope.request.url }}"
           },
           "timestamp": {
             "select": "[data-timestamp]",
             "attr": "data-timestamp",
-            "template": "{{ value | times: 1000 }}"
+            "template": "{{ scope.value | times: 1000 }}"
           },
           "inline": {
             "text": ".article-publisher__name"

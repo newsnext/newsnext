@@ -152,10 +152,10 @@ const topicRadar = {
   },
   patch: {
     params: {
-      topicId: "{{ path.topicId }}",
+      topicId: "{{ scope.path.topicId }}",
     },
     metadata: {
-      title: "{{ page.title | normalize_whitespace | regex_replace: '\\\\s*[-_—|]\\\\s*即刻.*$', '' | default: params.topicId }}",
+      title: "{{ scope.page.title | normalize_whitespace | regex_replace: '\\\\s*[-_—|]\\\\s*即刻.*$', '' | default: scope.params.topicId }}",
     },
   },
 }
@@ -222,10 +222,10 @@ export default {
           },
           patch: {
             params: {
-              username: "{{ path.username }}",
+              username: "{{ scope.path.username }}",
             },
             metadata: {
-              title: "{{ page.title | normalize_whitespace | regex_replace: '[:：].*$', '' | regex_replace: '的主页\\\\s*[-_—|]\\\\s*即刻.*$', '' | default: params.username }}",
+              title: "{{ scope.page.title | normalize_whitespace | regex_replace: '[:：].*$', '' | regex_replace: '的主页\\\\s*[-_—|]\\\\s*即刻.*$', '' | default: scope.params.username }}",
             },
           },
           confidence: 0.9,

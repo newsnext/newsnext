@@ -75,7 +75,7 @@ export default {
         title: "热搜",
         type: "hottest",
       },
-      context: {
+      vars: {
         endpoint: {
           search: "side/hotSearch",
           mine: "statuses/mineBand",
@@ -113,11 +113,11 @@ export default {
           },
           patch: {
             params: {
-              type: "{{ path.type }}",
+              type: "{{ scope.path.type }}",
             },
             metadata: {
-              title: "{{ page.title | regex_replace: '\\\\s*-\\\\s*微博$', '' | default: '热搜' }}",
-              home: "https://weibo.com/hot/{{ path.type }}",
+              title: "{{ scope.page.title | regex_replace: '\\\\s*-\\\\s*微博$', '' | default: '热搜' }}",
+              home: "https://weibo.com/hot/{{ scope.path.type }}",
             },
           },
           confidence: 1,
@@ -125,7 +125,7 @@ export default {
       ],
       loader: {
         type: "json",
-        url: "https://weibo.com/ajax/{{ context.endpoint[params.type] }}",
+        url: "https://weibo.com/ajax/{{ source.vars.endpoint[scope.params.type] }}",
         fetchOptions: {
           credentials: "include",
         },
@@ -134,7 +134,7 @@ export default {
           title: "note || word || name",
           url: {
             select: "url || word_scheme || word",
-            template: "{% if item.url %}{{ value | replace: 'http://', 'https://' }}{% else %}https://s.weibo.com/weibo?q={{ value | url_query }}{% endif %}",
+            template: "{% if scope.item.url %}{{ scope.value | replace: 'http://', 'https://' }}{% else %}https://s.weibo.com/weibo?q={{ scope.value | url_query }}{% endif %}",
           },
           inline: {
             mark: "(icon || icon_url) && {src: icon || icon_url, scale: `1.5`, radius: `0`}",
@@ -170,10 +170,10 @@ export default {
           },
           patch: {
             params: {
-              uid: "{{ path.uid }}",
+              uid: "{{ scope.path.uid }}",
             },
             metadata: {
-              title: "{{ page.title | normalize_whitespace | regex_extract: '^@(.+)\\\\s*的个人主页', 1 | regex_replace: '[-_—|].*微博.*$', '' | regex_replace: '的微博.*$', '' | default: params.uid }}",
+              title: "{{ scope.page.title | normalize_whitespace | regex_extract: '^@(.+)\\\\s*的个人主页', 1 | regex_replace: '[-_—|].*微博.*$', '' | regex_replace: '的微博.*$', '' | default: scope.params.uid }}",
             },
           },
           confidence: 0.9,
@@ -205,10 +205,10 @@ export default {
           },
           patch: {
             params: {
-              keyword: "{{ query.q | default: query.keyword }}",
+              keyword: "{{ scope.query.q | default: scope.query.keyword }}",
             },
             metadata: {
-              title: "{{ params.keyword }}",
+              title: "{{ scope.params.keyword }}",
             },
           },
           confidence: 0.9,
@@ -255,11 +255,11 @@ export default {
           },
           patch: {
             params: {
-              id: "{{ query.containerid | default: hashQuery.containerid | regex_extract: '(100808[A-Za-z0-9]+)', 1 }}",
+              id: "{{ scope.query.containerid | default: scope.hashQuery.containerid | regex_extract: '(100808[A-Za-z0-9]+)', 1 }}",
               type: "feed",
             },
             metadata: {
-              title: "{{ page.title | normalize_whitespace | regex_replace: '[-_—|].*微博.*$', '' | regex_replace: '的微博.*$', '' | regex_extract: '^#?(.+?)超话#?$', 1 | default: params.id }}",
+              title: "{{ scope.page.title | normalize_whitespace | regex_replace: '[-_—|].*微博.*$', '' | regex_replace: '的微博.*$', '' | regex_extract: '^#?(.+?)超话#?$', 1 | default: scope.params.id }}",
             },
           },
           confidence: 0.9,

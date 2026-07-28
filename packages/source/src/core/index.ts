@@ -9,11 +9,18 @@ export {
   parseSourceParamValue,
 } from "./params"
 export {
+  compileSourceTemplate,
+  compileSourceTemplateValue,
+  createSourceTemplateScope,
   isTemplate,
-  renderHtmlTemplate,
-  renderTemplate,
-  renderTemplates,
+  reportTemplateError,
+  TemplateRenderError,
   TemplateValidationError,
-  validateTemplate,
-  validateTemplates,
+} from "./template"
+export type {
+  CompiledSourceTemplate,
+  CompiledSourceTemplateValue,
+  SourceTemplateCompileOptions,
+  SourceTemplateSlot,
+  TemplateOutput,
 } from "./template"

@@ -1,9 +1,37 @@
 import type { Template } from "liquidjs"
+import type { SourceTemplateVars } from "../types"
 import { parseRelativeDate } from "@newsnext/date-parser"
 import { getFavicon } from "@newsnext/shared/utils"
 import { Liquid } from "liquidjs"
 
 type TemplateRenderer = (context: object) => string
+export type TemplateOutput = "html" | "plain"
+
+export type SourceTemplateSlot
+  = | "field"
+    | "jsonField"
+    | "metadata"
+    | "param"
+    | "radarMetadata"
+    | "radarParams"
+    | "request"
+
+export interface CompiledSourceTemplate {
+  readonly location: string
+  readonly output: TemplateOutput
+  readonly render: TemplateRenderer
+  readonly slot: SourceTemplateSlot
+}
+
+export interface CompiledSourceTemplateValue<T> {
+  readonly render: (context: object) => T
+}
+
+export interface SourceTemplateCompileOptions {
+  location: string
+  output?: TemplateOutput
+  slot: SourceTemplateSlot
+}
 
 const PARSE_LIMIT = 20_000
 const RENDER_LIMIT_MS = 50
@@ -15,11 +43,7 @@ const REGEX_PATTERN_LIMIT = 500
 const blockedTags = /\{%-?\s*(?:include|layout|liquid|raw|render)\b/i
 const blockedRawFilter = /\|\s*raw\b/i
 const regexCache = new Map<string, RegExp>()
-
-export interface TemplateValidationOptions {
-  allowedRoots?: readonly string[]
-  output?: "html" | "plain"
-}
+const reportedTemplateErrors = new Map<string, true>()
 
 export class TemplateValidationError extends Error {
   location: string
@@ -30,6 +54,29 @@ export class TemplateValidationError extends Error {
     this.name = "TemplateValidationError"
     this.location = location
   }
+}
+
+export class TemplateRenderError extends Error {
+  readonly location: string
+  readonly slot: SourceTemplateSlot
+
+  constructor(location: string, slot: SourceTemplateSlot, cause: unknown) {
+    const detail = cause instanceof Error ? `: ${cause.message}` : ""
+    super(`Failed to render Liquid template at ${location}${detail}`, { cause })
+    this.name = "TemplateRenderError"
+    this.location = location
+    this.slot = slot
+  }
+}
+
+export function reportTemplateError(error: unknown): void {
+  const key = error instanceof Error
+    ? `${error.name}\0${error.message}`
+    : String(error)
+  if (reportedTemplateErrors.has(key)) return
+
+  setCached(reportedTemplateErrors, key, true)
+  console.error("Source Liquid template failed", error)
 }
 
 function createEngine(output: "html" | "plain"): Liquid {
@@ -117,6 +164,44 @@ const renderers = {
   html: new Map<string, TemplateRenderer>(),
   plain: new Map<string, TemplateRenderer>(),
 }
+const sourceTemplatePaths = {
+  field: [
+    "scope.index",
+    "scope.item",
+    "scope.params",
+    "scope.request.url",
+    "scope.value",
+    "source.vars",
+  ],
+  jsonField: [
+    "scope.index",
+    "scope.item",
+    "scope.params",
+    "scope.request.url",
+    "scope.response.json",
+    "scope.value",
+    "source.vars",
+  ],
+  metadata: ["scope.params", "source.vars"],
+  param: ["scope.value", "source.vars"],
+  radarMetadata: [
+    "scope.hashQuery",
+    "scope.params",
+    "scope.page",
+    "scope.path",
+    "scope.query",
+    "source.vars",
+  ],
+  radarParams: [
+    "scope.hashQuery",
+    "scope.path",
+    "scope.query",
+    "source.vars",
+  ],
+  request: ["scope.params", "source.vars"],
+} as const satisfies Record<SourceTemplateSlot, readonly string[]>
+const sourceTemplatePrograms = new Map<string, TemplateRenderer>()
+const sourceTemplateBindings = new Map<string, CompiledSourceTemplate>()
 
 export function isTemplate(value: string): boolean {
   return value.includes("{{") || value.includes("{%")
@@ -130,64 +215,108 @@ export function renderHtmlTemplate(template: string, context: object): string {
   return getRenderer(template, "html")(context)
 }
 
-export function renderTemplates<T>(value: T, context: object): T {
-  if (typeof value === "string") {
-    return (isTemplate(value) ? renderTemplate(value, context) : value) as T
-  }
-
-  if (Array.isArray(value)) {
-    return value.map(child => renderTemplates(child, context)) as T
-  }
-
-  if (!value || typeof value !== "object" || Object.getPrototypeOf(value) !== Object.prototype) {
-    return value
-  }
-
-  return Object.fromEntries(
-    Object.entries(value).map(([key, child]) => [key, renderTemplates(child, context)]),
-  ) as T
-}
-
-export function validateTemplate(
+export function compileSourceTemplate(
   template: string,
-  options: TemplateValidationOptions = {},
-): void {
-  getParsedTemplate(template, options.output ?? "plain")
+  options: SourceTemplateCompileOptions,
+): CompiledSourceTemplate {
+  const { location, slot, output = "plain" } = options
+  const programKey = `${slot}\0${output}\0${template}`
+  const bindingKey = `${programKey}\0${location}`
+  const cachedBinding = sourceTemplateBindings.get(bindingKey)
+  if (cachedBinding) return cachedBinding
+
+  let program = sourceTemplatePrograms.get(programKey)
+  if (!program) {
+    if (isTemplate(template)) {
+      try {
+        const parsed = getParsedTemplate(template, output)
+        validateTemplatePaths(parsed, sourceTemplatePaths[slot], output)
+        program = getRenderer(template, output)
+      } catch (error) {
+        throw new TemplateValidationError(location, error)
+      }
+    } else {
+      program = () => template
+    }
+    setCached(sourceTemplatePrograms, programKey, program)
+  }
+
+  const compiled = Object.freeze({
+    location,
+    output,
+    render(context: object): string {
+      try {
+        return program(context)
+      } catch (error) {
+        throw new TemplateRenderError(location, slot, error)
+      }
+    },
+    slot,
+  } satisfies CompiledSourceTemplate)
+  setCached(sourceTemplateBindings, bindingKey, compiled)
+  return compiled
 }
 
-export function validateTemplates(
-  value: unknown,
-  location: string,
-  options: TemplateValidationOptions = {},
-): void {
+export function compileSourceTemplateValue<T>(
+  value: T,
+  options: SourceTemplateCompileOptions,
+): CompiledSourceTemplateValue<T> {
   if (typeof value === "string") {
-    if (!isTemplate(value)) return
-
-    const output = options.output
-      ?? (/\.html(?:\.template)?$/.test(location) ? "html" : "plain")
-    try {
-      const parsed = getParsedTemplate(value, output)
-      if (options.allowedRoots) {
-        validateTemplateRoots(parsed, options.allowedRoots, output)
-      }
-    } catch (error) {
-      throw new TemplateValidationError(location, error)
-    }
-    return
+    if (!isTemplate(value)) return constantTemplateValue(value)
+    const binding = compileSourceTemplate(value, options)
+    return Object.freeze({
+      render: (context: object) => binding.render(context) as T,
+    })
   }
 
   if (Array.isArray(value)) {
-    value.forEach((child, index) => validateTemplates(child, `${location}.${index}`, options))
-    return
+    const children = value.map((child, index) => compileSourceTemplateValue(
+      child,
+      {
+        ...options,
+        location: `${options.location}.${index}`,
+      },
+    ))
+    return Object.freeze({
+      render: (context: object) => children.map(child => child.render(context)) as T,
+    })
   }
 
   if (!value || typeof value !== "object" || Object.getPrototypeOf(value) !== Object.prototype) {
-    return
+    return constantTemplateValue(value)
   }
 
-  for (const [key, child] of Object.entries(value)) {
-    validateTemplates(child, `${location}.${key}`, options)
+  const children = Object.entries(value).map(([key, child]) => [
+    key,
+    compileSourceTemplateValue(child, {
+      ...options,
+      location: `${options.location}.${key}`,
+    }),
+  ] as const)
+  return Object.freeze({
+    render: (context: object) => Object.fromEntries(
+      children.map(([key, child]) => [
+        key,
+        child.render(context),
+      ]),
+    ) as T,
+  })
+}
+
+export function createSourceTemplateScope(
+  vars: SourceTemplateVars | undefined,
+  scope: object,
+): object {
+  return {
+    scope,
+    source: {
+      vars: vars ?? {},
+    },
   }
+}
+
+function constantTemplateValue<T>(value: T): CompiledSourceTemplateValue<T> {
+  return Object.freeze({ render: () => value })
 }
 
 function getParsedTemplate(template: string, output: "html" | "plain"): Template[] {
@@ -219,21 +348,31 @@ function getRenderer(template: string, output: "html" | "plain"): TemplateRender
   return renderer
 }
 
-function validateTemplateRoots(
+function validateTemplatePaths(
   template: Template[],
-  allowedRoots: readonly string[],
+  allowedPaths: readonly string[],
   output: "html" | "plain",
 ): void {
-  const allowed = new Set(allowedRoots)
-  const variables = engines[output].globalVariablesSync(template, { partials: false })
+  const variables = engines[output].globalFullVariablesSync(template, { partials: false })
 
-  for (const variable of variables) {
-    if (!allowed.has(variable)) {
+  for (const path of variables) {
+    if (!allowedPaths.some(allowedPath => isAllowedTemplatePath(path, allowedPath))) {
       throw new Error(
-        `Template root "${variable}" is not available; expected one of: ${allowedRoots.join(", ")}`,
+        `Template path "${path}" is not available; expected one of: ${allowedPaths.join(", ")}`,
       )
     }
   }
+}
+
+function isAllowedTemplatePath(path: string, allowedPath: string): boolean {
+  if (
+    path === "scope"
+    || path === "source"
+    || path === allowedPath
+  ) {
+    return true
+  }
+  return path.startsWith(`${allowedPath}.`) || path.startsWith(`${allowedPath}[`)
 }
 
 function assertSafeTemplate(template: string): void {

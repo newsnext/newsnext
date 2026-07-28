@@ -65,7 +65,12 @@ export function CardBack({
   const previewHome = canEdit ? editDraft.home : home
   const previewColor = canEdit ? editDraft.color : color
   const relativeTime = useRelativeTime({ date: updatedAt })
-  const resolvedIcon = resolveSourceIconUrl(previewIcon, sourceParams)
+  const resolvedIcon = resolveSourceIconUrl(
+    previewIcon,
+    sourceParams,
+    source.vars,
+    source.sourceId,
+  )
   const hasSourceMetaChanges = Boolean(
     editDraft
     && (

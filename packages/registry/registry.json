@@ -7,6 +7,17 @@
       "title": "人气榜",
       "type": "hottest"
     },
+    "vars": {
+      "origin": "https://36kr.com",
+      "gateway": "https://gateway.36kr.com",
+      "newsflashCategories": {
+        "0": "全部",
+        "1": "热点",
+        "2": "股市",
+        "3": "公司",
+        "4": "宏观"
+      }
+    },
     "cache": "5m",
     "radar": [
       {
@@ -24,7 +35,7 @@
     ],
     "loader": {
       "type": "json",
-      "url": "https://gateway.36kr.com/api/mis/x/rank/list",
+      "url": "{{ source.vars.gateway }}/api/mis/x/rank/list",
       "fetchOptions": {
         "method": "POST",
         "headers": {
@@ -43,12 +54,12 @@
         "title": "widgetTitle",
         "url": {
           "select": "itemId",
-          "template": "https://36kr.com/p/{{ value }}"
+          "template": "{{ source.vars.origin }}/p/{{ scope.value }}"
         },
         "timestamp": "publishTime",
         "inline": {
           "text": {
-            "template": "{{ item.statHot }}w 热度 · {{ item.authorName }}"
+            "template": "{{ scope.item.statHot }}w 热度 · {{ scope.item.authorName }}"
           }
         },
         "preview": {
@@ -68,6 +79,17 @@
       "color": "blue",
       "title": "资讯",
       "type": "timeline"
+    },
+    "vars": {
+      "origin": "https://36kr.com",
+      "gateway": "https://gateway.36kr.com",
+      "newsflashCategories": {
+        "0": "全部",
+        "1": "热点",
+        "2": "股市",
+        "3": "公司",
+        "4": "宏观"
+      }
     },
     "cache": "5m",
     "params": {
@@ -145,7 +167,7 @@
         },
         "patch": {
           "params": {
-            "channel": "{{ path.channel }}"
+            "channel": "{{ scope.path.channel }}"
           }
         },
         "confidence": 0.9
@@ -153,7 +175,7 @@
     ],
     "loader": {
       "type": "json",
-      "url": "https://gateway.36kr.com/api/mis/nav/ifm/subNav/flow",
+      "url": "{{ source.vars.gateway }}/api/mis/nav/ifm/subNav/flow",
       "fetchOptions": {
         "method": "POST",
         "headers": {
@@ -163,7 +185,7 @@
           "partner_id": "web",
           "param": {
             "subnavType": 1,
-            "subnavNick": "{{ params.channel }}",
+            "subnavNick": "{{ scope.params.channel }}",
             "pageSize": 30,
             "pageEvent": 0,
             "siteId": 1,
@@ -176,7 +198,7 @@
         "title": "templateMaterial.widgetTitle",
         "url": {
           "select": "itemId",
-          "template": "https://36kr.com/p/{{ value }}"
+          "template": "{{ source.vars.origin }}/p/{{ scope.value }}"
         },
         "timestamp": "templateMaterial.publishTime",
         "inline": {
@@ -199,6 +221,17 @@
       "color": "blue",
       "title": "快讯",
       "type": "timeline"
+    },
+    "vars": {
+      "origin": "https://36kr.com",
+      "gateway": "https://gateway.36kr.com",
+      "newsflashCategories": {
+        "0": "全部",
+        "1": "热点",
+        "2": "股市",
+        "3": "公司",
+        "4": "宏观"
+      }
     },
     "cache": "5m",
     "params": {
@@ -245,10 +278,10 @@
         },
         "patch": {
           "params": {
-            "category": "{% if path.type %}{{ path.type }}{% else %}0{% endif %}"
+            "category": "{% if scope.path.type %}{{ scope.path.type }}{% else %}0{% endif %}"
           },
           "metadata": {
-            "title": "快讯 · {% if params.category == '1' %}热点{% elsif params.category == '2' %}股市{% elsif params.category == '3' %}公司{% elsif params.category == '4' %}宏观{% else %}全部{% endif %}"
+            "title": "快讯 · {{ source.vars.newsflashCategories[scope.params.category] | default: '全部' }}"
           }
         },
         "confidence": 0.9
@@ -256,18 +289,18 @@
     ],
     "loader": {
       "type": "html",
-      "url": "https://36kr.com/newsflashes/catalog/{{ params.category | url_path }}",
+      "url": "{{ source.vars.origin }}/newsflashes/catalog/{{ scope.params.category | url_path }}",
       "items": ".newsflash-item",
       "fields": {
         "title": ".item-title",
         "url": {
           "select": ".item-title",
           "attr": "href",
-          "template": "{{ value | absolute_url: requestUrl }}"
+          "template": "{{ scope.value | absolute_url: scope.request.url }}"
         },
         "timestamp": {
           "select": ".time",
-          "template": "{{ value | relative_date_to_ms: 'Asia/Shanghai' }}"
+          "template": "{{ scope.value | relative_date_to_ms: 'Asia/Shanghai' }}"
         },
         "preview": {
           "text": ".item-desc > span"
@@ -294,11 +327,11 @@
         "url": "url",
         "timestamp": {
           "select": "publishedAt",
-          "template": "{{ value | date_to_ms }}"
+          "template": "{{ scope.value | date_to_ms }}"
         },
         "inline": {
           "text": {
-            "template": "{{ item.source }}{% if item.category %} · {{ item.category }}{% endif %}"
+            "template": "{{ scope.item.source }}{% if scope.item.category %} · {{ scope.item.category }}{% endif %}"
           }
         },
         "preview": {
@@ -1102,11 +1135,11 @@
         },
         "patch": {
           "params": {
-            "feedId": "{{ path.feedId }}"
+            "feedId": "{{ scope.path.feedId }}"
           },
           "metadata": {
-            "title": "{{ page.title | normalize_whitespace | regex_replace: '\\\\s*[|–—-]\\\\s*Folo$', '' | default: 'Feed' }}",
-            "home": "https://app.folo.is/timeline/articles/feed-{{ params.feedId }}/pending"
+            "title": "{{ scope.page.title | normalize_whitespace | regex_replace: '\\\\s*[|–—-]\\\\s*Folo$', '' | default: 'Feed' }}",
+            "home": "https://app.folo.is/timeline/articles/feed-{{ scope.params.feedId }}/pending"
           }
         },
         "confidence": 0.98
@@ -1153,11 +1186,11 @@
         },
         "patch": {
           "params": {
-            "listId": "{{ path.listId }}"
+            "listId": "{{ scope.path.listId }}"
           },
           "metadata": {
-            "title": "{{ page.title | normalize_whitespace | regex_replace: '\\\\s*[|–—-]\\\\s*Folo$', '' | default: 'List' }}",
-            "home": "https://app.folo.is/timeline/articles/list-{{ params.listId }}/pending"
+            "title": "{{ scope.page.title | normalize_whitespace | regex_replace: '\\\\s*[|–—-]\\\\s*Folo$', '' | default: 'List' }}",
+            "home": "https://app.folo.is/timeline/articles/list-{{ scope.params.listId }}/pending"
           }
         },
         "confidence": 0.98
@@ -1222,12 +1255,12 @@
         },
         "patch": {
           "params": {
-            "language": "{{ path.language }}",
-            "spokenLanguage": "{{ query.spoken_language_code }}",
-            "dateRange": "{{ query.since }}"
+            "language": "{{ scope.path.language }}",
+            "spokenLanguage": "{{ scope.query.spoken_language_code }}",
+            "dateRange": "{{ scope.query.since }}"
           },
           "metadata": {
-            "title": "Trending {{ params.language }}"
+            "title": "Trending {{ scope.params.language }}"
           }
         },
         "confidence": 0.95
@@ -1235,28 +1268,28 @@
     ],
     "loader": {
       "type": "html",
-      "url": "https://github.com/trending{% if params.language %}/{{ params.language | url_path }}{% endif %}?since={{ params.dateRange | url_query }}{% if params.spokenLanguage %}&spoken_language_code={{ params.spokenLanguage | url_query }}{% endif %}",
+      "url": "https://github.com/trending{% if scope.params.language %}/{{ scope.params.language | url_path }}{% endif %}?since={{ scope.params.dateRange | url_query }}{% if scope.params.spokenLanguage %}&spoken_language_code={{ scope.params.spokenLanguage | url_query }}{% endif %}",
       "items": "main .Box div[data-hpc] > article",
       "fields": {
         "title": {
           "select": ">h2 a",
-          "template": "{{ value | normalize_whitespace }}"
+          "template": "{{ scope.value | normalize_whitespace }}"
         },
         "url": {
           "select": ">h2 a",
           "attr": "href",
-          "template": "{{ value | absolute_url: requestUrl }}"
+          "template": "{{ scope.value | absolute_url: scope.request.url }}"
         },
         "inline": {
           "text": {
             "select": "[href$=stargazers]",
-            "template": "✰ {{ value | normalize_whitespace }}"
+            "template": "✰ {{ scope.value | normalize_whitespace }}"
           }
         },
         "preview": {
           "text": {
             "select": ">p",
-            "template": "{{ value | normalize_whitespace }}"
+            "template": "{{ scope.value | normalize_whitespace }}"
           }
         }
       }
@@ -1274,19 +1307,19 @@
       "title": "Ask"
     },
     "cache": "5m",
-    "context": {
+    "vars": {
       "origin": "https://news.ycombinator.com"
     },
     "loader": {
       "type": "html",
-      "url": "{{ context.origin }}/ask",
+      "url": "{{ source.vars.origin }}/ask",
       "items": ".athing",
       "fields": {
         "title": ".titleline>a",
         "url": {
           "select": "",
           "attr": "id",
-          "template": "{{ context.origin }}/item?id={{ value | url_query }}"
+          "template": "{{ source.vars.origin }}/item?id={{ scope.value | url_query }}"
         },
         "timestamp": {
           "traverse": {
@@ -1295,7 +1328,7 @@
           },
           "select": ".age",
           "attr": "title",
-          "template": "{{ value | split: ' ' | last | times: 1000 }}"
+          "template": "{{ scope.value | split: ' ' | last | times: 1000 }}"
         },
         "inline": {
           "text": {
@@ -1308,7 +1341,7 @@
           "icon": {
             "select": ".titleline>a",
             "attr": "href",
-            "template": "{{ value | absolute_url: requestUrl | favicon_url }}"
+            "template": "{{ scope.value | absolute_url: scope.request.url | favicon_url }}"
           }
         }
       }
@@ -1326,19 +1359,19 @@
       "title": "Newest"
     },
     "cache": "1m",
-    "context": {
+    "vars": {
       "origin": "https://news.ycombinator.com"
     },
     "loader": {
       "type": "html",
-      "url": "{{ context.origin }}/newest",
+      "url": "{{ source.vars.origin }}/newest",
       "items": ".athing",
       "fields": {
         "title": ".titleline>a",
         "url": {
           "select": "",
           "attr": "id",
-          "template": "{{ context.origin }}/item?id={{ value | url_query }}"
+          "template": "{{ source.vars.origin }}/item?id={{ scope.value | url_query }}"
         },
         "timestamp": {
           "traverse": {
@@ -1347,7 +1380,7 @@
           },
           "select": ".age",
           "attr": "title",
-          "template": "{{ value | split: ' ' | last | times: 1000 }}"
+          "template": "{{ scope.value | split: ' ' | last | times: 1000 }}"
         },
         "inline": {
           "text": {
@@ -1360,7 +1393,7 @@
           "icon": {
             "select": ".titleline>a",
             "attr": "href",
-            "template": "{{ value | absolute_url: requestUrl | favicon_url }}"
+            "template": "{{ scope.value | absolute_url: scope.request.url | favicon_url }}"
           }
         }
       }
@@ -1377,19 +1410,19 @@
       "title": "Show"
     },
     "cache": "5m",
-    "context": {
+    "vars": {
       "origin": "https://news.ycombinator.com"
     },
     "loader": {
       "type": "html",
-      "url": "{{ context.origin }}/show",
+      "url": "{{ source.vars.origin }}/show",
       "items": ".athing",
       "fields": {
         "title": ".titleline>a",
         "url": {
           "select": "",
           "attr": "id",
-          "template": "{{ context.origin }}/item?id={{ value | url_query }}"
+          "template": "{{ source.vars.origin }}/item?id={{ scope.value | url_query }}"
         },
         "timestamp": {
           "traverse": {
@@ -1398,7 +1431,7 @@
           },
           "select": ".age",
           "attr": "title",
-          "template": "{{ value | split: ' ' | last | times: 1000 }}"
+          "template": "{{ scope.value | split: ' ' | last | times: 1000 }}"
         },
         "inline": {
           "text": {
@@ -1411,7 +1444,7 @@
           "icon": {
             "select": ".titleline>a",
             "attr": "href",
-            "template": "{{ value | absolute_url: requestUrl | favicon_url }}"
+            "template": "{{ scope.value | absolute_url: scope.request.url | favicon_url }}"
           }
         }
       }
@@ -1429,19 +1462,19 @@
       "title": "Hottest"
     },
     "cache": "5m",
-    "context": {
+    "vars": {
       "origin": "https://news.ycombinator.com"
     },
     "loader": {
       "type": "html",
-      "url": "{{ context.origin }}/",
+      "url": "{{ source.vars.origin }}/",
       "items": ".athing",
       "fields": {
         "title": ".titleline>a",
         "url": {
           "select": "",
           "attr": "id",
-          "template": "{{ context.origin }}/item?id={{ value | url_query }}"
+          "template": "{{ source.vars.origin }}/item?id={{ scope.value | url_query }}"
         },
         "timestamp": {
           "traverse": {
@@ -1450,7 +1483,7 @@
           },
           "select": ".age",
           "attr": "title",
-          "template": "{{ value | split: ' ' | last | times: 1000 }}"
+          "template": "{{ scope.value | split: ' ' | last | times: 1000 }}"
         },
         "inline": {
           "text": {
@@ -1463,7 +1496,7 @@
           "icon": {
             "select": ".titleline>a",
             "attr": "href",
-            "template": "{{ value | absolute_url: requestUrl | favicon_url }}"
+            "template": "{{ scope.value | absolute_url: scope.request.url | favicon_url }}"
           }
         }
       }
@@ -1572,10 +1605,10 @@
         },
         "patch": {
           "params": {
-            "topicId": "{{ path.topicId }}"
+            "topicId": "{{ scope.path.topicId }}"
           },
           "metadata": {
-            "title": "{{ page.title | normalize_whitespace | regex_replace: '\\\\s*[-_—|]\\\\s*即刻.*$', '' | default: params.topicId }}"
+            "title": "{{ scope.page.title | normalize_whitespace | regex_replace: '\\\\s*[-_—|]\\\\s*即刻.*$', '' | default: scope.params.topicId }}"
           }
         },
         "confidence": 0.85
@@ -1641,10 +1674,10 @@
         },
         "patch": {
           "params": {
-            "topicId": "{{ path.topicId }}"
+            "topicId": "{{ scope.path.topicId }}"
           },
           "metadata": {
-            "title": "{{ page.title | normalize_whitespace | regex_replace: '\\\\s*[-_—|]\\\\s*即刻.*$', '' | default: params.topicId }}"
+            "title": "{{ scope.page.title | normalize_whitespace | regex_replace: '\\\\s*[-_—|]\\\\s*即刻.*$', '' | default: scope.params.topicId }}"
           }
         },
         "confidence": 0.9
@@ -1710,10 +1743,10 @@
         },
         "patch": {
           "params": {
-            "username": "{{ path.username }}"
+            "username": "{{ scope.path.username }}"
           },
           "metadata": {
-            "title": "{{ page.title | normalize_whitespace | regex_replace: '[:：].*$', '' | regex_replace: '的主页\\\\s*[-_—|]\\\\s*即刻.*$', '' | default: params.username }}"
+            "title": "{{ scope.page.title | normalize_whitespace | regex_replace: '[:：].*$', '' | regex_replace: '的主页\\\\s*[-_—|]\\\\s*即刻.*$', '' | default: scope.params.username }}"
           }
         },
         "confidence": 0.9
@@ -1740,7 +1773,7 @@
       "type": "timeline"
     },
     "cache": "5m",
-    "context": {
+    "vars": {
       "origin": "https://linux.do"
     },
     "loader": {
@@ -1750,19 +1783,19 @@
         "title": "title",
         "url": {
           "select": "id",
-          "template": "{{ context.origin }}/t/topic/{{ value | url_path }}"
+          "template": "{{ source.vars.origin }}/t/topic/{{ scope.value | url_path }}"
         },
         "inline": {
           "icon": {
-            "template": "{% assign user = json.users | where: 'username', item.last_poster_username | first %}{% if user and user.avatar_template %}{{ user.avatar_template | replace: '{size}', '48' | absolute_url: context.origin }}{% endif %}"
+            "template": "{% assign user = scope.response.json.users | where: 'username', scope.item.last_poster_username | first %}{% if user and user.avatar_template %}{{ user.avatar_template | replace: '{size}', '48' | absolute_url: source.vars.origin }}{% endif %}"
           }
         },
         "timestamp": {
           "select": "created_at",
-          "template": "{{ value | date_to_ms }}"
+          "template": "{{ scope.value | date_to_ms }}"
         }
       },
-      "url": "{{ context.origin }}/latest.json?order=created"
+      "url": "{{ source.vars.origin }}/latest.json?order=created"
     },
     "provider": {
       "title": "Linux.do"
@@ -1777,7 +1810,7 @@
       "type": "hottest"
     },
     "cache": "5m",
-    "context": {
+    "vars": {
       "origin": "https://linux.do"
     },
     "loader": {
@@ -1787,15 +1820,15 @@
         "title": "title",
         "url": {
           "select": "id",
-          "template": "{{ context.origin }}/t/topic/{{ value | url_path }}"
+          "template": "{{ source.vars.origin }}/t/topic/{{ scope.value | url_path }}"
         },
         "inline": {
           "icon": {
-            "template": "{% assign user = json.users | where: 'username', item.last_poster_username | first %}{% if user and user.avatar_template %}{{ user.avatar_template | replace: '{size}', '48' | absolute_url: context.origin }}{% endif %}"
+            "template": "{% assign user = scope.response.json.users | where: 'username', scope.item.last_poster_username | first %}{% if user and user.avatar_template %}{{ user.avatar_template | replace: '{size}', '48' | absolute_url: source.vars.origin }}{% endif %}"
           }
         }
       },
-      "url": "{{ context.origin }}/top/daily.json"
+      "url": "{{ source.vars.origin }}/top/daily.json"
     },
     "provider": {
       "title": "Linux.do"
@@ -1832,10 +1865,10 @@
         },
         "patch": {
           "params": {
-            "id": "{{ query.id | default: hashQuery.id }}"
+            "id": "{{ scope.query.id | default: scope.hashQuery.id }}"
           },
           "metadata": {
-            "title": "{% assign title = page.title | normalize_whitespace | regex_extract: '^(.+?)\\\\s*-\\\\s*(?:歌单|排行榜)\\\\s*-\\\\s*网易云音乐$', 1 %}{% if title != empty %}{{ title }}{% else %}歌单 {{ params.id }}{% endif %}"
+            "title": "{% assign title = scope.page.title | normalize_whitespace | regex_extract: '^(.+?)\\\\s*-\\\\s*(?:歌单|排行榜)\\\\s*-\\\\s*网易云音乐$', 1 %}{% if title != empty %}{{ title }}{% else %}歌单 {{ scope.params.id }}{% endif %}"
           }
         },
         "confidence": 0.95
@@ -1843,17 +1876,17 @@
     ],
     "loader": {
       "type": "json",
-      "url": "https://music.163.com/api/playlist/detail?id={{ params.id | url_query }}",
+      "url": "https://music.163.com/api/playlist/detail?id={{ scope.params.id | url_query }}",
       "items": "(result.tracks || playlist.tracks)[:100]",
       "fields": {
         "title": "name",
         "url": {
           "select": "id",
-          "template": "https://music.163.com/song?id={{ value | url_query }}"
+          "template": "https://music.163.com/song?id={{ scope.value | url_query }}"
         },
         "inline": {
           "text": {
-            "template": "{% assign artists = item.ar | default: item.artists %}{% for artist in artists %}{% unless forloop.first %} / {% endunless %}{{ artist.name }}{% endfor %}{% assign album = item.al.name | default: item.album.name %}{% if artists and album %} · {% endif %}{{ album | default: '' }}"
+            "template": "{% assign artists = scope.item.ar | default: scope.item.artists %}{% for artist in artists %}{% unless forloop.first %} / {% endunless %}{{ artist.name }}{% endfor %}{% assign album = scope.item.al.name | default: scope.item.album.name %}{% if artists and album %} · {% endif %}{{ album | default: '' }}"
           },
           "icon": "al.picUrl || album.picUrl"
         },
@@ -1929,11 +1962,11 @@
         },
         "patch": {
           "params": {
-            "locale": "{{ path.locale }}",
-            "topic": "{{ path.topic }}"
+            "locale": "{{ scope.path.locale }}",
+            "topic": "{{ scope.path.topic }}"
           },
           "metadata": {
-            "title": "{{ params.topic }}"
+            "title": "{{ scope.params.topic }}"
           }
         },
         "confidence": 0.85
@@ -1941,19 +1974,19 @@
     ],
     "loader": {
       "type": "html",
-      "url": "https://www.newsnow.com/{{ params.locale | url_path }}/{{ params.topic | url_path }}?type=ln",
+      "url": "https://www.newsnow.com/{{ scope.params.locale | url_path }}/{{ scope.params.topic | url_path }}?type=ln",
       "items": ".newsfeed .article",
       "fields": {
         "title": ".article-card__headline",
         "url": {
           "select": ".article-card__headline",
           "attr": "href",
-          "template": "{{ value | absolute_url: requestUrl }}"
+          "template": "{{ scope.value | absolute_url: scope.request.url }}"
         },
         "timestamp": {
           "select": "[data-timestamp]",
           "attr": "data-timestamp",
-          "template": "{{ value | times: 1000 }}"
+          "template": "{{ scope.value | times: 1000 }}"
         },
         "inline": {
           "text": ".article-publisher__name"
@@ -1971,7 +2004,7 @@
       "color": "blue",
       "home": "https://t.me/s/TestFlightCN",
       "title": "科技圈 在花频道",
-      "icon": "https://t.me/i/userpic/320/{{ params.channel | required | url_path }}.jpg",
+      "icon": "https://t.me/i/userpic/320/{{ scope.params.channel | required | url_path }}.jpg",
       "type": "timeline"
     },
     "params": {
@@ -1980,7 +2013,7 @@
         "default": "TestFlightCN",
         "title": "Channel",
         "pattern": "^(?![\\d_])\\w{5,32}$",
-        "template": "{{ value | remove_first: '@' }}"
+        "template": "{{ scope.value | remove_first: '@' }}"
       }
     },
     "radar": [
@@ -1998,11 +2031,11 @@
         },
         "patch": {
           "params": {
-            "channel": "{{ path.channel }}"
+            "channel": "{{ scope.path.channel }}"
           },
           "metadata": {
-            "title": "{{ page.title | normalize_whitespace | regex_replace: '\\\\s*[–-]\\\\s*Telegram$', '' | default: 'Telegram channel' }}",
-            "home": "https://t.me/s/{{ params.channel }}"
+            "title": "{{ scope.page.title | normalize_whitespace | regex_replace: '\\\\s*[–-]\\\\s*Telegram$', '' | default: 'Telegram channel' }}",
+            "home": "https://t.me/s/{{ scope.params.channel }}"
           }
         },
         "confidence": 0.95
@@ -2010,40 +2043,40 @@
     ],
     "loader": {
       "type": "html",
-      "url": "https://t.me/s/{{ params.channel | url_path }}",
+      "url": "https://t.me/s/{{ scope.params.channel | url_path }}",
       "items": ".tgme_widget_message:has(.tgme_widget_message_text)",
       "fields": {
         "title": {
           "select": ".tgme_widget_message_text",
           "brSeparator": "\n",
-          "template": "{{ value | first_line | truncate: 160, '…' }}"
+          "template": "{{ scope.value | first_line | truncate: 160, '…' }}"
         },
         "url": {
           "select": ".tgme_widget_message_date",
           "attr": "href",
-          "template": "{{ value | absolute_url: requestUrl }}"
+          "template": "{{ scope.value | absolute_url: scope.request.url }}"
         },
         "timestamp": {
           "select": ".tgme_widget_message_date time",
           "attr": "datetime",
-          "template": "{{ value | date_to_ms }}"
+          "template": "{{ scope.value | date_to_ms }}"
         },
         "inline": {
           "text": {
             "select": ".tgme_widget_message_views",
-            "template": "{% if value %}{{ value }} views{% endif %}"
+            "template": "{% if scope.value %}{{ scope.value }} views{% endif %}"
           }
         },
         "preview": {
           "text": {
             "select": ".tgme_widget_message_text",
             "brSeparator": "\n",
-            "template": "{{ value | normalize_lines: 2 }}"
+            "template": "{{ scope.value | normalize_lines: 2 }}"
           },
           "picture": {
             "select": ".tgme_widget_message_photo_wrap, .tgme_widget_message_video_thumb",
             "attr": "style",
-            "template": "{{ value | css_url }}"
+            "template": "{{ scope.value | css_url }}"
           }
         }
       }
@@ -2069,11 +2102,11 @@
         "title": "topic_name",
         "url": {
           "select": "topic_url",
-          "template": "{{ value | replace: '&amp;', '&' | absolute_url: requestUrl }}"
+          "template": "{{ scope.value | replace: '&amp;', '&' | absolute_url: scope.request.url }}"
         },
         "timestamp": {
           "select": "create_time",
-          "template": "{{ value | times: 1000 }}"
+          "template": "{{ scope.value | times: 1000 }}"
         }
       }
     },
@@ -2109,10 +2142,10 @@
         },
         "patch": {
           "params": {
-            "feed": "{{ path.feed }}"
+            "feed": "{{ scope.path.feed }}"
           },
           "metadata": {
-            "title": "{{ page.title | normalize_whitespace | regex_extract: '^.*[>›]\\\\s*(.+)$', 1 | default: params.feed }}"
+            "title": "{{ scope.page.title | normalize_whitespace | regex_extract: '^.*[>›]\\\\s*(.+)$', 1 | default: scope.params.feed }}"
           }
         },
         "confidence": 0.9
@@ -2120,13 +2153,13 @@
     ],
     "loader": {
       "type": "json",
-      "url": "https://www.v2ex.com/feed/{{ params.feed | url_path }}.json",
+      "url": "https://www.v2ex.com/feed/{{ scope.params.feed | url_path }}.json",
       "items": "items",
       "fields": {
         "title": "title",
         "timestamp": {
           "select": "date_modified || date_published",
-          "template": "{{ value | date_to_ms }}"
+          "template": "{{ scope.value | date_to_ms }}"
         },
         "url": "url",
         "inline": {
@@ -2247,7 +2280,7 @@
       "version": 4,
       "maxAge": "1m"
     },
-    "context": {
+    "vars": {
       "endpoint": {
         "search": "side/hotSearch",
         "mine": "statuses/mineBand",
@@ -2313,11 +2346,11 @@
         },
         "patch": {
           "params": {
-            "type": "{{ path.type }}"
+            "type": "{{ scope.path.type }}"
           },
           "metadata": {
-            "title": "{{ page.title | regex_replace: '\\\\s*-\\\\s*微博$', '' | default: '热搜' }}",
-            "home": "https://weibo.com/hot/{{ path.type }}"
+            "title": "{{ scope.page.title | regex_replace: '\\\\s*-\\\\s*微博$', '' | default: '热搜' }}",
+            "home": "https://weibo.com/hot/{{ scope.path.type }}"
           }
         },
         "confidence": 1
@@ -2388,10 +2421,10 @@
         },
         "patch": {
           "params": {
-            "keyword": "{{ query.q | default: query.keyword }}"
+            "keyword": "{{ scope.query.q | default: scope.query.keyword }}"
           },
           "metadata": {
-            "title": "{{ params.keyword }}"
+            "title": "{{ scope.params.keyword }}"
           }
         },
         "confidence": 0.9
@@ -2487,11 +2520,11 @@
         },
         "patch": {
           "params": {
-            "id": "{{ query.containerid | default: hashQuery.containerid | regex_extract: '(100808[A-Za-z0-9]+)', 1 }}",
+            "id": "{{ scope.query.containerid | default: scope.hashQuery.containerid | regex_extract: '(100808[A-Za-z0-9]+)', 1 }}",
             "type": "feed"
           },
           "metadata": {
-            "title": "{{ page.title | normalize_whitespace | regex_replace: '[-_—|].*微博.*$', '' | regex_replace: '的微博.*$', '' | regex_extract: '^#?(.+?)超话#?$', 1 | default: params.id }}"
+            "title": "{{ scope.page.title | normalize_whitespace | regex_replace: '[-_—|].*微博.*$', '' | regex_replace: '的微博.*$', '' | regex_extract: '^#?(.+?)超话#?$', 1 | default: scope.params.id }}"
           }
         },
         "confidence": 0.9
@@ -2568,10 +2601,10 @@
         },
         "patch": {
           "params": {
-            "uid": "{{ path.uid }}"
+            "uid": "{{ scope.path.uid }}"
           },
           "metadata": {
-            "title": "{{ page.title | normalize_whitespace | regex_extract: '^@(.+)\\\\s*的个人主页', 1 | regex_replace: '[-_—|].*微博.*$', '' | regex_replace: '的微博.*$', '' | default: params.uid }}"
+            "title": "{{ scope.page.title | normalize_whitespace | regex_extract: '^@(.+)\\\\s*的个人主页', 1 | regex_replace: '[-_—|].*微博.*$', '' | regex_replace: '的微博.*$', '' | default: scope.params.uid }}"
           }
         },
         "confidence": 0.9
@@ -2769,10 +2802,10 @@
         },
         "patch": {
           "params": {
-            "username": "{{ path.username }}"
+            "username": "{{ scope.path.username }}"
           },
           "metadata": {
-            "title": "@{{ params.username }}"
+            "title": "@{{ scope.params.username }}"
           }
         },
         "confidence": 0.95
@@ -2816,12 +2849,12 @@
       "fields": {
         "url": {
           "select": "code",
-          "template": "https://xueqiu.com/s/{{ value | url_path }}"
+          "template": "https://xueqiu.com/s/{{ scope.value | url_path }}"
         },
         "title": "name",
         "inline": {
           "html": {
-            "template": "<span style=\"color: {% if item.percent == nil %}#64748b{% elsif item.percent > 0 %}#ef4444{% else %}#22c55e{% endif %}\">{% if item.percent == nil %}--{% else %}{{ item.percent }}%{% endif %}</span> <span>{{ item.exchange }}</span>"
+            "template": "<span style=\"color: {% if scope.item.percent == nil %}#64748b{% elsif scope.item.percent > 0 %}#ef4444{% else %}#22c55e{% endif %}\">{% if scope.item.percent == nil %}--{% else %}{{ scope.item.percent }}%{% endif %}</span> <span>{{ scope.item.exchange }}</span>"
           }
         }
       }
@@ -2848,11 +2881,11 @@
         "title": ".eps",
         "url": {
           "attr": "href",
-          "template": "{{ value | absolute_url: requestUrl }}"
+          "template": "{{ scope.value | absolute_url: scope.request.url }}"
         },
         "timestamp": {
           "select": ".pdt10",
-          "template": "{{ value | remove: '- ' | relative_date_to_ms: 'Asia/Shanghai' }}"
+          "template": "{{ scope.value | remove: '- ' | relative_date_to_ms: 'Asia/Shanghai' }}"
         }
       }
     },

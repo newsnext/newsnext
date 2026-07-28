@@ -4,7 +4,7 @@ import type { ProviderConfig, SourceRegistry } from "./types"
 import {
   assignSourceDefaults,
   BASE_SOURCE_DEFAULTS,
-  mergeSourceContexts,
+  mergeSourceVars,
   resolveRuntimeSource,
 } from "../core/resolver"
 import {
@@ -119,7 +119,7 @@ function expandProviderSources(
 
       return [sourceId, {
         ...defaultedSource,
-        context: mergeSourceContexts(provider.defaults?.context, source.context),
+        vars: mergeSourceVars(provider.defaults?.vars, source.vars),
       } as SourceConfig]
     }),
   )

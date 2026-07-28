@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest"
 import {
+  compileSourceTemplate,
+  compileSourceTemplateValue,
+  createSourceTemplateScope,
   isTemplate,
   renderHtmlTemplate,
   renderTemplate,
-  renderTemplates,
-  validateTemplates,
 } from "./template"
 
 describe("source templates", () => {
@@ -86,19 +87,67 @@ describe("source templates", () => {
   })
 
   it("renders templates recursively in plain objects and arrays", () => {
-    expect(renderTemplates({
+    const templates = compileSourceTemplateValue({
       headers: {
-        authorization: "Bearer {{ params.token }}",
+        authorization: "Bearer {{ scope.params.token }}",
       },
-      tags: ["static", "{{ params.tag | upcase }}"],
+      tags: ["static", "{{ scope.params.tag | upcase }}"],
     }, {
+      location: "test.loader.fetchOptions",
+      slot: "request",
+    })
+
+    expect(templates.render(createSourceTemplateScope(undefined, {
       params: { tag: "news", token: "secret" },
-    })).toEqual({
+    }))).toEqual({
       headers: {
         authorization: "Bearer secret",
       },
       tags: ["static", "NEWS"],
     })
+  })
+
+  it("binds shared source templates to their source locations", () => {
+    const first = compileSourceTemplate(
+      "{{ source.vars.origin }}/{{ scope.params.path }}",
+      { location: "first.loader.url", slot: "request" },
+    )
+    const second = compileSourceTemplate(
+      "{{ source.vars.origin }}/{{ scope.params.path }}",
+      { location: "second.loader.url", slot: "request" },
+    )
+    const repeated = compileSourceTemplate(
+      "{{ source.vars.origin }}/{{ scope.params.path }}",
+      { location: "first.loader.url", slot: "request" },
+    )
+
+    expect(first).not.toBe(second)
+    expect(repeated).toBe(first)
+    expect(first.location).toBe("first.loader.url")
+    expect(second.location).toBe("second.loader.url")
+    expect(first.render(createSourceTemplateScope(
+      { origin: "https://example.com" },
+      {
+        params: { path: "news" },
+      },
+    ))).toBe("https://example.com/news")
+  })
+
+  it("validates paths against the source template slot", () => {
+    expect(() => compileSourceTemplate(
+      "{{ params.value }}",
+      { location: "test.params.value.template", slot: "param" },
+    )).toThrow("Template path \"params.value\" is not available")
+  })
+
+  it("reports source locations for runtime render failures", () => {
+    const template = compileSourceTemplate(
+      "{{ scope.value | required }}",
+      { location: "test.loader.fields.title.template", slot: "field" },
+    )
+
+    expect(() => template.render(createSourceTemplateScope(undefined, { value: "" })))
+      .toThrow("Failed to render Liquid template at test.loader.fields.title.template")
   })
 
   it("escapes inserted values in HTML templates", () => {
@@ -121,26 +170,43 @@ describe("source templates", () => {
     expect(isTemplate("{% if item %}yes{% endif %}")).toBe(true)
   })
 
+  it("keeps static slot values literal", () => {
+    const template = compileSourceTemplate(
+      "Literal | raw",
+      { location: "test.metadata.icon", slot: "metadata" },
+    )
+
+    expect(template.render({})).toBe("Literal | raw")
+  })
+
   it("reports invalid templates with their source location", () => {
-    expect(() => validateTemplates(
-      { loader: { url: "{{ params.id | unknown_filter }}" } },
-      "test:source",
+    expect(() => compileSourceTemplate(
+      "{{ scope.params.id | unknown_filter }}",
+      { location: "test:source.loader.url", slot: "request" },
     )).toThrow("Invalid Liquid template at test:source.loader.url")
   })
 
-  it("validates available context roots", () => {
-    expect(() => validateTemplates(
+  it("validates available template paths", () => {
+    expect(() => compileSourceTemplate(
       "{{ item.id }}",
-      "test:source.loader.url",
-      { allowedRoots: ["params"] },
-    )).toThrow("Template root \"item\" is not available")
+      { location: "test:source.loader.url", slot: "request" },
+    )).toThrow("Template path \"item.id\" is not available")
   })
 
-  it("validates nested HTML templates as HTML output", () => {
-    expect(() => validateTemplates(
-      { html: { template: "<strong>{{ value | raw }}</strong>" } },
-      "test:source.loader.fields.preview",
-    )).toThrow("Invalid Liquid template at test:source.loader.fields.preview.html.template")
+  it("uses the schema-provided output mode for HTML templates", () => {
+    const template = compileSourceTemplate(
+      "<strong>{{ scope.value }}</strong>",
+      {
+        location: "test:source.loader.fields.preview.html.template",
+        output: "html",
+        slot: "field",
+      },
+    )
+
+    expect(template.render(createSourceTemplateScope(undefined, {
+      value: "<em>unsafe</em>",
+    })))
+      .toBe("<strong>&lt;em&gt;unsafe&lt;/em&gt;</strong>")
   })
 
   it("rejects file-backed and raw tags", () => {

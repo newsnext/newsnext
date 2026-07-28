@@ -351,7 +351,7 @@ export default {
           title: "show_name",
           url: {
             select: "keyword",
-            template: "https://search.bilibili.com/all?keyword={{ value | url_query }}",
+            template: "https://search.bilibili.com/all?keyword={{ scope.value | url_query }}",
           },
           inline: {
             mark: "icon",

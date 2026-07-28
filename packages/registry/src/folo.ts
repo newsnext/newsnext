@@ -115,11 +115,11 @@ export default {
           },
           patch: {
             params: {
-              feedId: "{{ path.feedId }}",
+              feedId: "{{ scope.path.feedId }}",
             },
             metadata: {
-              title: "{{ page.title | normalize_whitespace | regex_replace: '\\\\s*[|–—-]\\\\s*Folo$', '' | default: 'Feed' }}",
-              home: "https://app.folo.is/timeline/articles/feed-{{ params.feedId }}/pending",
+              title: "{{ scope.page.title | normalize_whitespace | regex_replace: '\\\\s*[|–—-]\\\\s*Folo$', '' | default: 'Feed' }}",
+              home: "https://app.folo.is/timeline/articles/feed-{{ scope.params.feedId }}/pending",
             },
           },
           confidence: 0.98,
@@ -150,11 +150,11 @@ export default {
           },
           patch: {
             params: {
-              listId: "{{ path.listId }}",
+              listId: "{{ scope.path.listId }}",
             },
             metadata: {
-              title: "{{ page.title | normalize_whitespace | regex_replace: '\\\\s*[|–—-]\\\\s*Folo$', '' | default: 'List' }}",
-              home: "https://app.folo.is/timeline/articles/list-{{ params.listId }}/pending",
+              title: "{{ scope.page.title | normalize_whitespace | regex_replace: '\\\\s*[|–—-]\\\\s*Folo$', '' | default: 'List' }}",
+              home: "https://app.folo.is/timeline/articles/list-{{ scope.params.listId }}/pending",
             },
           },
           confidence: 0.98,

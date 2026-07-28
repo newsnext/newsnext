@@ -2,19 +2,19 @@
   "title": "Hacker News",
   "defaults": {
     "cache": "5m",
-    "context": {
+    "vars": {
       "origin": "https://news.ycombinator.com"
     },
     "loader": {
       "type": "html",
-      "url": "{{ context.origin }}/",
+      "url": "{{ source.vars.origin }}/",
       "items": ".athing",
       "fields": {
         "title": ".titleline>a",
         "url": {
           "select": "",
           "attr": "id",
-          "template": "{{ context.origin }}/item?id={{ value | url_query }}"
+          "template": "{{ source.vars.origin }}/item?id={{ scope.value | url_query }}"
         },
         "timestamp": {
           "traverse": {
@@ -23,7 +23,7 @@
           },
           "select": ".age",
           "attr": "title",
-          "template": "{{ value | split: ' ' | last | times: 1000 }}"
+          "template": "{{ scope.value | split: ' ' | last | times: 1000 }}"
         },
         "inline": {
           "text": {
@@ -36,7 +36,7 @@
           "icon": {
             "select": ".titleline>a",
             "attr": "href",
-            "template": "{{ value | absolute_url: requestUrl | favicon_url }}"
+            "template": "{{ scope.value | absolute_url: scope.request.url | favicon_url }}"
           }
         }
       }
@@ -60,7 +60,7 @@
         "home": "https://news.ycombinator.com/newest"
       },
       "loader": {
-        "url": "{{ context.origin }}/newest"
+        "url": "{{ source.vars.origin }}/newest"
       },
       "cache": "1m"
     },
@@ -70,7 +70,7 @@
         "home": "https://news.ycombinator.com/show"
       },
       "loader": {
-        "url": "{{ context.origin }}/show"
+        "url": "{{ source.vars.origin }}/show"
       }
     },
     "ask": {
@@ -79,7 +79,7 @@
         "home": "https://news.ycombinator.com/ask"
       },
       "loader": {
-        "url": "{{ context.origin }}/ask"
+        "url": "{{ source.vars.origin }}/ask"
       }
     }
   }

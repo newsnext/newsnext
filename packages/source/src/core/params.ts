@@ -3,10 +3,29 @@ import type {
   InferSourceParamValue,
   SourceParamSchema,
   SourceParamSchemaMap,
+  SourceTemplateVars,
 } from "../types"
 
 import { SourceParamGuards, SourceParamValueError } from "../types"
-import { renderTemplate } from "./template"
+import {
+  compileSourceTemplate,
+  createSourceTemplateScope,
+} from "./template"
+
+const parameterTemplates = new WeakMap<object, ReturnType<typeof compileSourceTemplate>>()
+
+export function compileSourceParamTemplates(
+  params: SourceParamSchemaMap | undefined,
+  location: string,
+): void {
+  for (const [key, param] of Object.entries(params ?? {})) {
+    if (!param.template) continue
+    parameterTemplates.set(param, compileSourceTemplate(param.template, {
+      location: `${location}.${key}.template`,
+      slot: "param",
+    }))
+  }
+}
 
 function trimSourceParamInput(value: unknown): unknown {
   if (typeof value === "string") return value.trim()
@@ -73,11 +92,14 @@ function validateSourceParamValue<TParam extends SourceParamSchema>(
 export function parseSourceParamValue<TParam extends SourceParamSchema>(
   param: TParam,
   value: unknown,
+  vars: SourceTemplateVars = {},
 ): InferSourceParamValue<TParam> {
   const input = value === undefined ? param.default : value
   const normalizedInput = trimSourceParamInput(input)
   const templatedInput = param.template
-    ? renderTemplate(param.template, { value: normalizedInput })
+    ? getParameterTemplate(param).render(
+        createSourceTemplateScope(vars, { value: normalizedInput }),
+      )
     : normalizedInput
 
   switch (param.type) {
@@ -111,15 +133,33 @@ export function parseSourceParamValue<TParam extends SourceParamSchema>(
   }
 }
 
+function getParameterTemplate(
+  param: SourceParamSchema,
+): ReturnType<typeof compileSourceTemplate> {
+  const cached = parameterTemplates.get(param)
+  if (cached) return cached
+
+  const compiled = compileSourceTemplate(param.template ?? "", {
+    location: `parameter "${param.title}".template`,
+    slot: "param",
+  })
+  parameterTemplates.set(param, compiled)
+  return compiled
+}
+
 export function parseSourceParams<TParams extends SourceParamSchemaMap>(
   params: TParams | undefined,
   rawValues: Record<string, unknown> = {},
+  vars: SourceTemplateVars = {},
 ): InferSourceParams<TParams> {
   if (!params) {
     return {} as InferSourceParams<TParams>
   }
 
   return Object.fromEntries(
-    Object.entries(params).map(([key, param]) => [key, parseSourceParamValue(param, rawValues[key])]),
+    Object.entries(params).map(([key, param]) => [
+      key,
+      parseSourceParamValue(param, rawValues[key], vars),
+    ]),
   ) as InferSourceParams<TParams>
 }

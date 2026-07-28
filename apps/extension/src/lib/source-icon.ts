@@ -1,8 +1,16 @@
-import { isTemplate, renderTemplate } from "@newsnext/source/core"
+import type { SourceTemplateVars } from "@newsnext/source/types"
+import {
+  compileSourceTemplate,
+  createSourceTemplateScope,
+  isTemplate,
+  reportTemplateError,
+} from "@newsnext/source/core"
 
 export function resolveSourceIconUrl(
   template: string | undefined,
   params: Record<string, unknown>,
+  vars: SourceTemplateVars = {},
+  sourceId = "source",
 ): string | undefined {
   if (!template) {
     return undefined
@@ -13,8 +21,12 @@ export function resolveSourceIconUrl(
   }
 
   try {
-    return renderTemplate(template, { params }) || undefined
-  } catch {
+    return compileSourceTemplate(template, {
+      location: `${sourceId}.metadata.icon`,
+      slot: "metadata",
+    }).render(createSourceTemplateScope(vars, { params })) || undefined
+  } catch (error) {
+    reportTemplateError(error)
     return undefined
   }
 }

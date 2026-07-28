@@ -59,12 +59,12 @@
           },
           "patch": {
             "params": {
-              "language": "{{ path.language }}",
-              "spokenLanguage": "{{ query.spoken_language_code }}",
-              "dateRange": "{{ query.since }}"
+              "language": "{{ scope.path.language }}",
+              "spokenLanguage": "{{ scope.query.spoken_language_code }}",
+              "dateRange": "{{ scope.query.since }}"
             },
             "metadata": {
-              "title": "Trending {{ params.language }}"
+              "title": "Trending {{ scope.params.language }}"
             }
           },
           "confidence": 0.95
@@ -72,28 +72,28 @@
       ],
       "loader": {
         "type": "html",
-        "url": "https://github.com/trending{% if params.language %}/{{ params.language | url_path }}{% endif %}?since={{ params.dateRange | url_query }}{% if params.spokenLanguage %}&spoken_language_code={{ params.spokenLanguage | url_query }}{% endif %}",
+        "url": "https://github.com/trending{% if scope.params.language %}/{{ scope.params.language | url_path }}{% endif %}?since={{ scope.params.dateRange | url_query }}{% if scope.params.spokenLanguage %}&spoken_language_code={{ scope.params.spokenLanguage | url_query }}{% endif %}",
         "items": "main .Box div[data-hpc] > article",
         "fields": {
           "title": {
             "select": ">h2 a",
-            "template": "{{ value | normalize_whitespace }}"
+            "template": "{{ scope.value | normalize_whitespace }}"
           },
           "url": {
             "select": ">h2 a",
             "attr": "href",
-            "template": "{{ value | absolute_url: requestUrl }}"
+            "template": "{{ scope.value | absolute_url: scope.request.url }}"
           },
           "inline": {
             "text": {
               "select": "[href$=stargazers]",
-              "template": "✰ {{ value | normalize_whitespace }}"
+              "template": "✰ {{ scope.value | normalize_whitespace }}"
             }
           },
           "preview": {
             "text": {
               "select": ">p",
-              "template": "{{ value | normalize_whitespace }}"
+              "template": "{{ scope.value | normalize_whitespace }}"
             }
           }
         }

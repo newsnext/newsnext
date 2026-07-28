@@ -29,10 +29,10 @@
           },
           "patch": {
             "params": {
-              "feed": "{{ path.feed }}"
+              "feed": "{{ scope.path.feed }}"
             },
             "metadata": {
-              "title": "{{ page.title | normalize_whitespace | regex_extract: '^.*[>›]\\\\s*(.+)$', 1 | default: params.feed }}"
+              "title": "{{ scope.page.title | normalize_whitespace | regex_extract: '^.*[>›]\\\\s*(.+)$', 1 | default: scope.params.feed }}"
             }
           },
           "confidence": 0.9
@@ -40,13 +40,13 @@
       ],
       "loader": {
         "type": "json",
-        "url": "https://www.v2ex.com/feed/{{ params.feed | url_path }}.json",
+        "url": "https://www.v2ex.com/feed/{{ scope.params.feed | url_path }}.json",
         "items": "items",
         "fields": {
           "title": "title",
           "timestamp": {
             "select": "date_modified || date_published",
-            "template": "{{ value | date_to_ms }}"
+            "template": "{{ scope.value | date_to_ms }}"
           },
           "url": "url",
           "inline": {

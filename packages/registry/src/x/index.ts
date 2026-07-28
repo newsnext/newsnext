@@ -201,10 +201,10 @@ export default {
           },
           patch: {
             params: {
-              username: "{{ path.username }}",
+              username: "{{ scope.path.username }}",
             },
             metadata: {
-              title: "@{{ params.username }}",
+              title: "@{{ scope.params.username }}",
             },
           },
           confidence: 0.95,

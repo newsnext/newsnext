@@ -21,11 +21,11 @@
           "title": "topic_name",
           "url": {
             "select": "topic_url",
-            "template": "{{ value | replace: '&amp;', '&' | absolute_url: requestUrl }}"
+            "template": "{{ scope.value | replace: '&amp;', '&' | absolute_url: scope.request.url }}"
           },
           "timestamp": {
             "select": "create_time",
-            "template": "{{ value | times: 1000 }}"
+            "template": "{{ scope.value | times: 1000 }}"
           }
         }
       },

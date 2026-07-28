@@ -102,15 +102,15 @@ export interface SourceProvider {
   title: string
 }
 
-export type SourceTemplateContextValue
+export type SourceTemplateVarValue
   = | boolean
     | null
     | number
     | string
-    | readonly SourceTemplateContextValue[]
-    | { readonly [key: string]: SourceTemplateContextValue }
+    | readonly SourceTemplateVarValue[]
+    | { readonly [key: string]: SourceTemplateVarValue }
 
-export type SourceTemplateContext = Readonly<Record<string, SourceTemplateContextValue>>
+export type SourceTemplateVars = Readonly<Record<string, SourceTemplateVarValue>>
 
 export type SourceRequestRule = Omit<Browser.declarativeNetRequest.Rule, "id">
 
@@ -125,6 +125,7 @@ export interface RuntimeSource<TParams extends SourceParamSchemaMap = SourcePara
   provider: SourceProvider
   key: string
   title?: string
+  vars?: SourceTemplateVars
   params?: TParams
   capabilities: SourceCapabilities
   cache: SourceCacheConfig

@@ -4,16 +4,20 @@ import type { FetchOptions } from "ofetch"
 import type {
   NewsItem,
   RuntimeSource,
-  SourceTemplateContext,
+  SourceTemplateVars,
 } from "../../types"
 import { load } from "cheerio/slim"
 import { myFetch } from "../../utils"
-import { renderHtmlTemplate, renderTemplate } from "../template"
+import {
+  compileSourceTemplate,
+  createSourceTemplateScope,
+} from "../template"
 
 const MAX_SELECTED_ITEMS = 2_000
+const fieldTemplates = new WeakMap<HtmlFieldConfig, ReturnType<typeof compileSourceTemplate>>()
 
 export interface HtmlFieldContext {
-  context: SourceTemplateContext
+  vars: SourceTemplateVars
   index: number
   params: Record<string, unknown>
   requestUrl: string
@@ -62,13 +66,8 @@ export interface HtmlFieldConfig {
 
 export type HtmlField = string | HtmlFieldConfig
 export interface HtmlSourceLoaderContext {
-  context?: SourceTemplateContext
+  vars?: SourceTemplateVars
   params?: Record<string, unknown>
-}
-
-interface HtmlTemplateContext extends HtmlFieldContext {
-  item: HtmlExtractedItem
-  value: unknown
 }
 
 interface HtmlExtractedItem {
@@ -115,6 +114,20 @@ export interface HtmlSourceOptions {
       picture?: HtmlField
       iframe?: HtmlField
     }
+  }
+}
+
+export function compileHtmlFieldTemplates(
+  fields: HtmlSourceOptions["fields"],
+  location: string,
+): void {
+  for (const entry of collectFieldEntries(fields)) {
+    if (!entry.config.template) continue
+    fieldTemplates.set(entry.config, compileSourceTemplate(entry.config.template, {
+      location: `${location}.${entry.path.join(".")}.template`,
+      output: entry.htmlOutput ? "html" : "plain",
+      slot: "field",
+    }))
   }
 }
 
@@ -263,15 +276,32 @@ function resolveField(
   const value = getPath(extractedItem, entry.path)
   if (!entry.config.template) return value
 
-  const templateContext = {
-    ...context,
-    item: extractedItem,
-    value: value ?? null,
-  } satisfies HtmlTemplateContext
+  return getHtmlFieldTemplate(entry).render(
+    createSourceTemplateScope(context.vars, {
+      index: context.index,
+      item: extractedItem,
+      params: context.params,
+      request: {
+        url: context.requestUrl,
+      },
+      value: value ?? null,
+    }),
+  )
+}
 
-  return entry.htmlOutput
-    ? renderHtmlTemplate(entry.config.template, templateContext)
-    : renderTemplate(entry.config.template, templateContext)
+function getHtmlFieldTemplate(
+  entry: FieldEntry,
+): ReturnType<typeof compileSourceTemplate> {
+  const cached = fieldTemplates.get(entry.config)
+  if (cached) return cached
+
+  const compiled = compileSourceTemplate(entry.config.template ?? "", {
+    location: `HTML field ${entry.path.join(".")}.template`,
+    output: entry.htmlOutput ? "html" : "plain",
+    slot: "field",
+  })
+  fieldTemplates.set(entry.config, compiled)
+  return compiled
 }
 
 export async function loadHtml(
@@ -303,7 +333,7 @@ export async function loadHtml(
     if (filter && !$item.is(filter)) return
 
     const context: HtmlFieldContext = {
-      context: loaderContext.context ?? {},
+      vars: loaderContext.vars ?? {},
       index,
       params: loaderContext.params ?? {},
       requestUrl: url,

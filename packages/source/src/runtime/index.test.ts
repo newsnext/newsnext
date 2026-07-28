@@ -76,7 +76,7 @@ describe("source service", () => {
           default: "TestFlightCN",
           title: "Channel",
           pattern: "^(?![\\d_])\\w{5,32}$",
-          template: "{{ value | remove_first: '@' }}",
+          template: "{{ scope.value | remove_first: '@' }}",
         },
       },
     } satisfies Pick<RuntimeSource, "params">
@@ -85,6 +85,26 @@ describe("source service", () => {
       channel: "  @TestFlightCN  ",
     })).toEqual({
       channel: "TestFlightCN",
+    })
+  })
+
+  it("exposes source vars to parameter templates", () => {
+    const sourceDefinition = {
+      vars: {
+        prefix: "channel-",
+      },
+      params: {
+        channel: {
+          type: "text",
+          default: "news",
+          title: "Channel",
+          template: "{{ source.vars.prefix }}{{ scope.value }}",
+        },
+      },
+    } satisfies Pick<RuntimeSource, "params" | "vars">
+
+    expect(normalizeSourceParams(sourceDefinition)).toEqual({
+      channel: "channel-news",
     })
   })
 

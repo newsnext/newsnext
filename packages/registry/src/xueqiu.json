@@ -18,12 +18,12 @@
         "fields": {
           "url": {
             "select": "code",
-            "template": "https://xueqiu.com/s/{{ value | url_path }}"
+            "template": "https://xueqiu.com/s/{{ scope.value | url_path }}"
           },
           "title": "name",
           "inline": {
             "html": {
-              "template": "<span style=\"color: {% if item.percent == nil %}#64748b{% elsif item.percent > 0 %}#ef4444{% else %}#22c55e{% endif %}\">{% if item.percent == nil %}--{% else %}{{ item.percent }}%{% endif %}</span> <span>{{ item.exchange }}</span>"
+              "template": "<span style=\"color: {% if scope.item.percent == nil %}#64748b{% elsif scope.item.percent > 0 %}#ef4444{% else %}#22c55e{% endif %}\">{% if scope.item.percent == nil %}--{% else %}{{ scope.item.percent }}%{% endif %}</span> <span>{{ scope.item.exchange }}</span>"
             }
           }
         }

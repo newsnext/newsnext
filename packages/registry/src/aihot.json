@@ -21,11 +21,11 @@
           "url": "url",
           "timestamp": {
             "select": "publishedAt",
-            "template": "{{ value | date_to_ms }}"
+            "template": "{{ scope.value | date_to_ms }}"
           },
           "inline": {
             "text": {
-              "template": "{{ item.source }}{% if item.category %} · {{ item.category }}{% endif %}"
+              "template": "{{ scope.item.source }}{% if scope.item.category %} · {{ scope.item.category }}{% endif %}"
             }
           },
           "preview": {

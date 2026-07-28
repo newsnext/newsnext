@@ -125,11 +125,11 @@ export async function resolveSource(sourceId: string): Promise<RuntimeSource<any
 }
 
 export function normalizeSourceParams<TParams extends SourceParamSchemaMap>(
-  source: Pick<RuntimeSource<TParams>, "params">,
+  source: Pick<RuntimeSource<TParams>, "params" | "vars">,
   queryParams: Record<string, unknown> = {},
 ) {
   try {
-    return parseSourceParams(source.params, queryParams)
+    return parseSourceParams(source.params, queryParams, source.vars)
   } catch (error) {
     if (error instanceof SourceParamValueError) {
       throw new SourceRuntimeError("INVALID_PARAMS", error.message)

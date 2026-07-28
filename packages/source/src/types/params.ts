@@ -16,6 +16,7 @@ interface BaseParameter {
   icon?: string
   /**
    * Optional Liquid template applied to the raw value before type coercion.
+   * The template can access `scope.value` and `source.vars`.
    */
   template?: string
   /**

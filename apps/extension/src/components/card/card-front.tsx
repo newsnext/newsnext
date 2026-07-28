@@ -188,7 +188,12 @@ function CardFrontComponent({
   const { type, color, desc, icon, provider, title, home } = source
   const ref = useRef<HTMLDivElement>(null)
   const relativeTime = useRelativeTime({ date: updatedAt })
-  const resolvedIcon = resolveSourceIconUrl(icon, sourceParams)
+  const resolvedIcon = resolveSourceIconUrl(
+    icon,
+    sourceParams,
+    source.vars,
+    source.sourceId,
+  )
   const sourceStatusMessage = sourcePermissionRequired
     ? sourcePermissionDescription
     : sourceLoginUrl

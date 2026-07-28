@@ -2,21 +2,25 @@ import type { FetchOptions } from "ofetch"
 import type {
   NewsItem,
   RuntimeSource,
-  SourceTemplateContext,
+  SourceTemplateVars,
 } from "../../types"
 import * as jmespath from "jmespath"
 import { myFetch } from "../../utils"
-import { renderHtmlTemplate, renderTemplate } from "../template"
+import {
+  compileSourceTemplate,
+  createSourceTemplateScope,
+} from "../template"
 
 const MAX_EXPRESSION_LENGTH = 2_000
 const validatedExpressions = new Set<string>()
 const blockedExpressionNames = new Set(["__proto__", "constructor", "prototype"])
+const fieldTemplates = new WeakMap<JsonFieldConfig, ReturnType<typeof compileSourceTemplate>>()
 const jmespathCompiler = jmespath as typeof jmespath & {
   compile: (expression: string) => unknown
 }
 
 export interface JsonFieldContext {
-  context: SourceTemplateContext
+  vars: SourceTemplateVars
   json: unknown
   index: number
   params: Record<string, unknown>
@@ -30,12 +34,8 @@ export interface JsonFieldConfig {
 
 export type JsonField = string | JsonFieldConfig
 
-interface JsonTemplateContext extends JsonFieldContext {
-  item: unknown
-}
-
 export interface JsonSourceLoaderContext {
-  context?: SourceTemplateContext
+  vars?: SourceTemplateVars
   params?: Record<string, unknown>
 }
 
@@ -69,6 +69,20 @@ export interface JsonSourceOptions {
       picture?: JsonField
       iframe?: JsonField
     }
+  }
+}
+
+export function compileJsonFieldTemplates(
+  fields: JsonSourceOptions["fields"],
+  location: string,
+): void {
+  for (const { field, htmlOutput, path } of collectJsonFields(fields)) {
+    if (typeof field === "string" || !field.template) continue
+    fieldTemplates.set(field, compileSourceTemplate(field.template, {
+      location: `${location}.${path.join(".")}.template`,
+      output: htmlOutput ? "html" : "plain",
+      slot: "jsonField",
+    }))
   }
 }
 
@@ -121,14 +135,68 @@ function resolveValue(
     return selected
   }
 
-  const templateContext = {
-    item,
-    value: selected ?? null,
-    ...context,
-  } satisfies JsonTemplateContext & { value: unknown }
-  return escapeTemplateValues
-    ? renderHtmlTemplate(field.template, templateContext)
-    : renderTemplate(field.template, templateContext)
+  return getJsonFieldTemplate(field, escapeTemplateValues).render(
+    createSourceTemplateScope(context.vars, {
+      index: context.index,
+      item,
+      params: context.params,
+      request: {
+        url: context.requestUrl,
+      },
+      response: {
+        json: context.json,
+      },
+      value: selected ?? null,
+    }),
+  )
+}
+
+function collectJsonFields(
+  fields: JsonSourceOptions["fields"],
+): Array<{ field: JsonField, htmlOutput: boolean, path: readonly string[] }> {
+  const entries: Array<{
+    field: JsonField
+    htmlOutput: boolean
+    path: readonly string[]
+  }> = [
+    { field: fields.title, htmlOutput: false, path: ["title"] },
+    { field: fields.url, htmlOutput: false, path: ["url"] },
+  ]
+
+  if (fields.mobileUrl) {
+    entries.push({ field: fields.mobileUrl, htmlOutput: false, path: ["mobileUrl"] })
+  }
+  if (fields.timestamp) {
+    entries.push({ field: fields.timestamp, htmlOutput: false, path: ["timestamp"] })
+  }
+  for (const group of ["inline", "preview"] as const) {
+    for (const [key, field] of Object.entries(fields[group] ?? {})) {
+      if (field) {
+        entries.push({
+          field,
+          htmlOutput: key === "html",
+          path: [group, key],
+        })
+      }
+    }
+  }
+  return entries
+}
+
+function getJsonFieldTemplate(
+  field: JsonFieldConfig,
+  htmlOutput: boolean,
+): ReturnType<typeof compileSourceTemplate> {
+  const cached = fieldTemplates.get(field)
+  if (cached) return cached
+
+  const compiled = compileSourceTemplate(field.template ?? "", {
+    location: "JSON field template",
+    output: htmlOutput ? "html" : "plain",
+    slot: "jsonField",
+  })
+  fieldTemplates.set(field, compiled)
+  return compiled
 }
 
 export async function loadJson(
@@ -158,7 +226,7 @@ export async function loadJson(
 
   const news: NewsItem[] = items.map((item, index) => {
     const context: JsonFieldContext = {
-      context: loaderContext.context ?? {},
+      vars: loaderContext.vars ?? {},
       json,
       index,
       params: loaderContext.params ?? {},

@@ -58,12 +58,12 @@ export default {
         title: "title || brief",
         url: {
           select: "id",
-          template: "https://www.cls.cn/detail/{{ value | url_path }}",
+          template: "https://www.cls.cn/detail/{{ scope.value | url_path }}",
         },
         mobileUrl: "shareurl",
         timestamp: {
           select: "ctime",
-          template: "{{ value | times: 1000 }}",
+          template: "{{ scope.value | times: 1000 }}",
         },
       },
     },

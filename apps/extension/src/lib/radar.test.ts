@@ -69,7 +69,7 @@ describe("getRadarSuggestions", () => {
               },
               patch: {
                 params: {
-                  value: "{{ query.value | default: hashQuery.value | default: path.topic }}",
+                  value: "{{ scope.query.value | default: scope.hashQuery.value | default: scope.path.topic }}",
                 },
               },
             },
@@ -79,6 +79,52 @@ describe("getRadarSuggestions", () => {
     )).toMatchObject([
       {
         patch: { params: { value: "hash-value" } },
+      },
+    ])
+  })
+
+  it("exposes source vars to Radar parameter and metadata templates", () => {
+    expect(getRadarSuggestions(
+      { url: "https://example.com/topics/news" },
+      [
+        {
+          id: "test:radar-context",
+          vars: {
+            prefix: "topic-",
+            title: "Context title",
+          },
+          params: {
+            value: {
+              type: "text",
+              title: "Value",
+              default: "",
+            },
+          },
+          radar: [
+            {
+              id: "radar-context",
+              match: {
+                hosts: ["example.com"],
+                paths: ["/topics/:topic"],
+              },
+              patch: {
+                params: {
+                  value: "{{ source.vars.prefix }}{{ scope.path.topic }}",
+                },
+                metadata: {
+                  title: "{{ source.vars.title }}: {{ scope.params.value }}",
+                },
+              },
+            },
+          ],
+        },
+      ],
+    )).toMatchObject([
+      {
+        patch: {
+          params: { value: "topic-news" },
+          metadata: { title: "Context title: topic-news" },
+        },
       },
     ])
   })
@@ -503,7 +549,7 @@ describe("getRadarSuggestions", () => {
               match: { hosts: ["x.com"], paths: ["/:username"] },
               patch: {
                 params: {
-                  username: "{{ path.username }}",
+                  username: "{{ scope.path.username }}",
                 },
               },
             },

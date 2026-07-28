@@ -1,6 +1,17 @@
 {
   "title": "36氪",
   "defaults": {
+    "vars": {
+      "origin": "https://36kr.com",
+      "gateway": "https://gateway.36kr.com",
+      "newsflashCategories": {
+        "0": "全部",
+        "1": "热点",
+        "2": "股市",
+        "3": "公司",
+        "4": "宏观"
+      }
+    },
     "metadata": {
       "home": "https://36kr.com",
       "color": "blue",
@@ -90,7 +101,7 @@
           },
           "patch": {
             "params": {
-              "channel": "{{ path.channel }}"
+              "channel": "{{ scope.path.channel }}"
             }
           },
           "confidence": 0.9
@@ -98,7 +109,7 @@
       ],
       "loader": {
         "type": "json",
-        "url": "https://gateway.36kr.com/api/mis/nav/ifm/subNav/flow",
+        "url": "{{ source.vars.gateway }}/api/mis/nav/ifm/subNav/flow",
         "fetchOptions": {
           "method": "POST",
           "headers": {
@@ -108,7 +119,7 @@
             "partner_id": "web",
             "param": {
               "subnavType": 1,
-              "subnavNick": "{{ params.channel }}",
+              "subnavNick": "{{ scope.params.channel }}",
               "pageSize": 30,
               "pageEvent": 0,
               "siteId": 1,
@@ -121,7 +132,7 @@
           "title": "templateMaterial.widgetTitle",
           "url": {
             "select": "itemId",
-            "template": "https://36kr.com/p/{{ value }}"
+            "template": "{{ source.vars.origin }}/p/{{ scope.value }}"
           },
           "timestamp": "templateMaterial.publishTime",
           "inline": {
@@ -184,10 +195,10 @@
           },
           "patch": {
             "params": {
-              "category": "{% if path.type %}{{ path.type }}{% else %}0{% endif %}"
+              "category": "{% if scope.path.type %}{{ scope.path.type }}{% else %}0{% endif %}"
             },
             "metadata": {
-              "title": "快讯 · {% if params.category == '1' %}热点{% elsif params.category == '2' %}股市{% elsif params.category == '3' %}公司{% elsif params.category == '4' %}宏观{% else %}全部{% endif %}"
+              "title": "快讯 · {{ source.vars.newsflashCategories[scope.params.category] | default: '全部' }}"
             }
           },
           "confidence": 0.9
@@ -195,18 +206,18 @@
       ],
       "loader": {
         "type": "html",
-        "url": "https://36kr.com/newsflashes/catalog/{{ params.category | url_path }}",
+        "url": "{{ source.vars.origin }}/newsflashes/catalog/{{ scope.params.category | url_path }}",
         "items": ".newsflash-item",
         "fields": {
           "title": ".item-title",
           "url": {
             "select": ".item-title",
             "attr": "href",
-            "template": "{{ value | absolute_url: requestUrl }}"
+            "template": "{{ scope.value | absolute_url: scope.request.url }}"
           },
           "timestamp": {
             "select": ".time",
-            "template": "{{ value | relative_date_to_ms: 'Asia/Shanghai' }}"
+            "template": "{{ scope.value | relative_date_to_ms: 'Asia/Shanghai' }}"
           },
           "preview": {
             "text": ".item-desc > span"
@@ -236,7 +247,7 @@
       ],
       "loader": {
         "type": "json",
-        "url": "https://gateway.36kr.com/api/mis/x/rank/list",
+        "url": "{{ source.vars.gateway }}/api/mis/x/rank/list",
         "fetchOptions": {
           "method": "POST",
           "headers": {
@@ -255,12 +266,12 @@
           "title": "widgetTitle",
           "url": {
             "select": "itemId",
-            "template": "https://36kr.com/p/{{ value }}"
+            "template": "{{ source.vars.origin }}/p/{{ scope.value }}"
           },
           "timestamp": "publishTime",
           "inline": {
             "text": {
-              "template": "{{ item.statHot }}w 热度 · {{ item.authorName }}"
+              "template": "{{ scope.item.statHot }}w 热度 · {{ scope.item.authorName }}"
             }
           },
           "preview": {
