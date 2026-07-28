@@ -32,7 +32,7 @@ export function SourceIcon({
       />
       <AvatarFallback className={cn("rounded-[inherit]", `bg-${color}-400`)} />
       {badge && (
-        <AvatarBadge className="overflow-hidden bg-transparent ring-0">
+        <AvatarBadge className="-right-0.5 -bottom-0.5 size-4! overflow-hidden bg-transparent drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)] ring-0">
           <img
             className="size-full rounded-full object-cover"
             src={badge}

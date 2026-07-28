@@ -84,7 +84,6 @@ export function CardRefreshButton({
 }
 
 interface CardFrontContentProps {
-  badge?: string
   color: BoardSource["color"]
   icon?: string
   isFetching: boolean
@@ -101,7 +100,6 @@ interface CardFrontContentProps {
 }
 
 function CardFrontContent({
-  badge,
   color,
   icon,
   items,
@@ -118,7 +116,6 @@ function CardFrontContent({
   if (sourcePermissionRequired) {
     return (
       <SourcePermissionState
-        badge={badge}
         color={color}
         icon={icon}
         onRequestPermission={onRequestPermission}
@@ -130,7 +127,6 @@ function CardFrontContent({
   if (sourceLoginUrl) {
     return (
       <SourceLoginState
-        badge={badge}
         color={color}
         icon={icon}
         provider={provider}
@@ -142,7 +138,6 @@ function CardFrontContent({
   if (sourceErrorMessage) {
     return (
       <SourceErrorState
-        badge={badge}
         color={color}
         icon={icon}
         onRefresh={onRefresh}
@@ -256,7 +251,6 @@ function CardFrontComponent({
           >
             <div className={cn("min-h-full transition-opacity-500", isFetching && "opacity-20")}>
               <CardFrontContent
-                badge={displayBadge}
                 color={color}
                 icon={icon}
                 isFetching={isFetching}
