@@ -183,47 +183,16 @@ needed by TypeScript providers. Both are owned by `@newsnext/registry`;
 `@newsnext/source/runtime` accepts resolved sources through an asynchronous
 `ExternalSourcesLoader` and does not import a registry package or understand the
 registry wire format. The extension owns the `@newsnext/registry` imports,
-resolves the bundled and validated remote registries with the executable loader
-map, and configures the loader during background startup. Normal source loading
-performs no network request: the extension reads remote registries from
-extension storage.
+resolves the bundled registry with the executable loader map, and configures
+the loader during background startup. Runtime source loading never fetches a
+registry over HTTP and does not read registry configuration from extension
+storage. Registry changes therefore require rebuilding and releasing the
+extension.
 
-Registries merge in this order:
-
-```text
-bundled registry → first configured URL → ... → last configured URL
-```
-
-Later entries override earlier entries with the same complete source ID. A
-remote registry update failure is isolated to that URL. Its last valid stored
-copy is retained when available, so the bundled registry and other valid
-registries remain available. The resolved result is also cached within the
-current runtime context and concurrent requests share one in-flight promise.
-Changing the saved URL list or stored registry cache resets the runtime cache
-and refreshes runtime source descriptors.
-
-Remote registry updates cannot provide executable code. A structured JSON
-loader runs directly. An entry without `loader` only resolves when the extension
-already bundles an executable loader for that exact source ID; otherwise
-resolution fails. Executable loader changes therefore require an extension
-release, as Manifest V3 does not permit remotely hosted executable code.
-
-Settings accepts up to 10 unique HTTPS URLs and requests access to their
-origins. Each response is limited before JSON parsing and passes the same
-registry validation as the bundled artifact. Registry servers must return JSON
-and should support extension-origin requests. GitHub Raw URLs can be used
-directly.
-
-Remote registries are fetched only when the user chooses **Update now** or when
-the daily background alarm runs. Each successful response replaces that URL's
-entry in the persistent registry cache. Saving URL settings does not fetch
-registries; sources continue to use stored entries until an update succeeds.
-Entries for removed URLs are ignored immediately and pruned on the next update.
-
-Conditional ETag or Last-Modified requests can be added inside the update
-transport without changing source parsing or normal loading. Use a versioned
-URL when the registry wire format changes. The source package remains
-responsible for validating and resolving stored JSON regardless of transport.
+The resolved result is cached within the current runtime context and concurrent
+requests share one in-flight promise. Structured loaders run directly. An entry
+without `loader` resolves only when the extension bundles an executable loader
+for that exact source ID.
 
 ## Provider metadata
 
@@ -1461,8 +1430,8 @@ Runtime source registries:
 - scope installed request rules to extension-initiated requests and require
   every request domain to be declared by the source's network capabilities
 
-The same registry validation runs during the registry build and after bundled
-or HTTP loading.
+The same registry validation runs during the registry build and when the
+bundled artifact is resolved at runtime.
 
 Liquid validation checks:
 
