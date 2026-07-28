@@ -558,6 +558,22 @@ fetchOptions: {
 }
 ```
 
+For JSON APIs that accept an unsigned POST body, pass a JSON-compatible object.
+`ofetch` serializes the body and applies templates to nested strings:
+
+```ts
+fetchOptions: {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: {
+    channel: "{{ params.channel }}",
+    pageSize: 30,
+  },
+}
+```
+
 Keep browser-derived request options minimal. Stable headers such as `Accept`
 and `X-Requested-With`, `credentials`, and `referrer` may be declared when an
 endpoint requires them. Do not copy transient values such as XSRF tokens,
@@ -1352,6 +1368,10 @@ match: {
 - When a finite set of website routes maps to select option values, declare an
   explicit rule for each official route and map its slug to the stored option
   value. Do not assume the website slug and API value are interchangeable.
+- When the same feed has both index and catalog routes, include every official
+  route shape so Radar discovery works from each listing page.
+- A bare index or detail route may omit a parameter value when the parameter's
+  declared default represents that route.
 - An omitted `paths` matches every path on the declared hosts.
 - `includes` requires one of the strings to occur in the full URL.
 
@@ -1401,6 +1421,10 @@ hashQuery
 params
 page.title
 ```
+
+When a stored select value is an implementation code, map it to its
+human-facing option label in parameterized Radar titles instead of exposing the
+raw value.
 
 An invalid parsed parameter discards the suggestion.
 
@@ -1471,6 +1495,15 @@ The NewsNext extension can execute an authoring-format JSON provider directly in
 its background runtime and return the resulting news items over a local
 WebSocket. It does not install the provider, update the configured registry, or
 use the source cache.
+
+Use `newsnext source run` as the primary way to validate a source against its
+live website or API. Do not substitute direct `curl` requests, ad hoc fetch
+scripts, or direct runtime loader calls for this validation. Those paths bypass
+the extension's parameter parsing, host permissions, capability enforcement,
+secret resolution, and background execution environment. Direct requests may
+still be used for read-only endpoint investigation, but a source is not
+considered verified until it succeeds through the CLI and a connected
+extension.
 
 CLI connections are disabled by default in all builds. Open
 **Settings → General → CLI Connection** and enable **Enable CLI connection**
@@ -1637,4 +1670,6 @@ Before submitting a source:
 - Use a unique radar rule ID within each source.
 - Add tests for meaningful parsing and discovery behavior.
 - Regenerate the source index and metadata.
+- Validate live source execution with `newsnext source run`; do not replace this
+  check with direct endpoint or runtime-loader requests.
 - Update this guide when source authoring behavior changes.
