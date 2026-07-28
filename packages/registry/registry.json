@@ -38,8 +38,8 @@
       "home": "https://www.bilibili.com",
       "color": "blue",
       "type": "timeline",
-      "title": "Following Videos",
-      "desc": "Video updates from followed creators"
+      "title": "关注视频",
+      "desc": "已关注 UP 主发布的视频动态"
     },
     "cache": "5m",
     "capabilities": {
@@ -53,7 +53,7 @@
       "browser": []
     },
     "provider": {
-      "title": "Bilibili"
+      "title": "哔哩哔哩"
     }
   },
   "bilibili:hotword": {
@@ -62,11 +62,11 @@
       "home": "https://www.bilibili.com",
       "color": "blue",
       "type": "hottest",
-      "title": "Hot Search"
+      "title": "热搜"
     },
     "cache": "5m",
     "provider": {
-      "title": "Bilibili"
+      "title": "哔哩哔哩"
     },
     "capabilities": {
       "network": [
@@ -79,114 +79,560 @@
   "bilibili:ranking": {
     "metadata": {
       "category": "china",
-      "home": "https://www.bilibili.com",
+      "home": "https://www.bilibili.com/v/popular/rank/all",
       "color": "blue",
       "type": "hottest",
-      "title": "Ranking"
+      "title": "排行榜"
     },
-    "cache": "15m",
+    "cache": {
+      "version": 2,
+      "maxAge": "15m"
+    },
     "params": {
       "region": {
         "type": "select",
-        "title": "Region",
+        "title": "分区",
         "values": [
           {
-            "label": "All",
+            "label": "全部",
             "value": "0"
           },
           {
-            "label": "Animation",
-            "value": "1"
-          },
-          {
-            "label": "Anime",
+            "label": "番剧",
             "value": "13"
           },
           {
-            "label": "Guochuang",
+            "label": "国创",
             "value": "167"
           },
           {
-            "label": "Music",
-            "value": "3"
-          },
-          {
-            "label": "Dance",
-            "value": "129"
-          },
-          {
-            "label": "Games",
-            "value": "4"
-          },
-          {
-            "label": "Knowledge",
-            "value": "36"
-          },
-          {
-            "label": "Technology",
-            "value": "188"
-          },
-          {
-            "label": "Sports",
-            "value": "234"
-          },
-          {
-            "label": "Cars",
-            "value": "223"
-          },
-          {
-            "label": "Life",
-            "value": "160"
-          },
-          {
-            "label": "Food",
-            "value": "211"
-          },
-          {
-            "label": "Animals",
-            "value": "217"
-          },
-          {
-            "label": "Kichiku",
-            "value": "119"
-          },
-          {
-            "label": "Fashion",
-            "value": "155"
-          },
-          {
-            "label": "Entertainment",
-            "value": "5"
-          },
-          {
-            "label": "Film & TV",
-            "value": "181"
-          },
-          {
-            "label": "Documentary",
+            "label": "纪录片",
             "value": "177"
           },
           {
-            "label": "Movies",
+            "label": "电影",
             "value": "23"
           },
           {
-            "label": "TV Series",
+            "label": "电视剧",
             "value": "11"
+          },
+          {
+            "label": "综艺",
+            "value": "71"
+          },
+          {
+            "label": "动画",
+            "value": "1"
+          },
+          {
+            "label": "游戏",
+            "value": "4"
+          },
+          {
+            "label": "鬼畜",
+            "value": "119"
+          },
+          {
+            "label": "音乐",
+            "value": "3"
+          },
+          {
+            "label": "舞蹈",
+            "value": "129"
+          },
+          {
+            "label": "影视",
+            "value": "181"
+          },
+          {
+            "label": "娱乐",
+            "value": "5"
+          },
+          {
+            "label": "知识",
+            "value": "36"
+          },
+          {
+            "label": "科技数码",
+            "value": "188"
+          },
+          {
+            "label": "美食",
+            "value": "211"
+          },
+          {
+            "label": "汽车",
+            "value": "223"
+          },
+          {
+            "label": "时尚美妆",
+            "value": "155"
+          },
+          {
+            "label": "体育运动",
+            "value": "234"
+          },
+          {
+            "label": "动物",
+            "value": "217"
           }
         ],
         "default": "0"
       }
     },
-    "provider": {
-      "title": "Bilibili"
-    },
+    "radar": [
+      {
+        "id": "bilibili-ranking-all",
+        "match": {
+          "hosts": [
+            "bilibili.com"
+          ],
+          "paths": [
+            "/v/popular/rank/all"
+          ]
+        },
+        "patch": {
+          "params": {
+            "region": "0"
+          },
+          "metadata": {
+            "home": "https://www.bilibili.com/v/popular/rank/all",
+            "title": "排行榜"
+          }
+        },
+        "confidence": 1
+      },
+      {
+        "id": "bilibili-ranking-anime",
+        "match": {
+          "hosts": [
+            "bilibili.com"
+          ],
+          "paths": [
+            "/v/popular/rank/anime"
+          ]
+        },
+        "patch": {
+          "params": {
+            "region": "13"
+          },
+          "metadata": {
+            "home": "https://www.bilibili.com/v/popular/rank/anime",
+            "title": "番剧排行榜"
+          }
+        },
+        "confidence": 1
+      },
+      {
+        "id": "bilibili-ranking-guochuang",
+        "match": {
+          "hosts": [
+            "bilibili.com"
+          ],
+          "paths": [
+            "/v/popular/rank/guochuang"
+          ]
+        },
+        "patch": {
+          "params": {
+            "region": "167"
+          },
+          "metadata": {
+            "home": "https://www.bilibili.com/v/popular/rank/guochuang",
+            "title": "国创排行榜"
+          }
+        },
+        "confidence": 1
+      },
+      {
+        "id": "bilibili-ranking-documentary",
+        "match": {
+          "hosts": [
+            "bilibili.com"
+          ],
+          "paths": [
+            "/v/popular/rank/documentary"
+          ]
+        },
+        "patch": {
+          "params": {
+            "region": "177"
+          },
+          "metadata": {
+            "home": "https://www.bilibili.com/v/popular/rank/documentary",
+            "title": "纪录片排行榜"
+          }
+        },
+        "confidence": 1
+      },
+      {
+        "id": "bilibili-ranking-movie",
+        "match": {
+          "hosts": [
+            "bilibili.com"
+          ],
+          "paths": [
+            "/v/popular/rank/movie"
+          ]
+        },
+        "patch": {
+          "params": {
+            "region": "23"
+          },
+          "metadata": {
+            "home": "https://www.bilibili.com/v/popular/rank/movie",
+            "title": "电影排行榜"
+          }
+        },
+        "confidence": 1
+      },
+      {
+        "id": "bilibili-ranking-tv",
+        "match": {
+          "hosts": [
+            "bilibili.com"
+          ],
+          "paths": [
+            "/v/popular/rank/tv"
+          ]
+        },
+        "patch": {
+          "params": {
+            "region": "11"
+          },
+          "metadata": {
+            "home": "https://www.bilibili.com/v/popular/rank/tv",
+            "title": "电视剧排行榜"
+          }
+        },
+        "confidence": 1
+      },
+      {
+        "id": "bilibili-ranking-variety",
+        "match": {
+          "hosts": [
+            "bilibili.com"
+          ],
+          "paths": [
+            "/v/popular/rank/variety"
+          ]
+        },
+        "patch": {
+          "params": {
+            "region": "71"
+          },
+          "metadata": {
+            "home": "https://www.bilibili.com/v/popular/rank/variety",
+            "title": "综艺排行榜"
+          }
+        },
+        "confidence": 1
+      },
+      {
+        "id": "bilibili-ranking-douga",
+        "match": {
+          "hosts": [
+            "bilibili.com"
+          ],
+          "paths": [
+            "/v/popular/rank/douga"
+          ]
+        },
+        "patch": {
+          "params": {
+            "region": "1"
+          },
+          "metadata": {
+            "home": "https://www.bilibili.com/v/popular/rank/douga",
+            "title": "动画排行榜"
+          }
+        },
+        "confidence": 1
+      },
+      {
+        "id": "bilibili-ranking-game",
+        "match": {
+          "hosts": [
+            "bilibili.com"
+          ],
+          "paths": [
+            "/v/popular/rank/game"
+          ]
+        },
+        "patch": {
+          "params": {
+            "region": "4"
+          },
+          "metadata": {
+            "home": "https://www.bilibili.com/v/popular/rank/game",
+            "title": "游戏排行榜"
+          }
+        },
+        "confidence": 1
+      },
+      {
+        "id": "bilibili-ranking-kichiku",
+        "match": {
+          "hosts": [
+            "bilibili.com"
+          ],
+          "paths": [
+            "/v/popular/rank/kichiku"
+          ]
+        },
+        "patch": {
+          "params": {
+            "region": "119"
+          },
+          "metadata": {
+            "home": "https://www.bilibili.com/v/popular/rank/kichiku",
+            "title": "鬼畜排行榜"
+          }
+        },
+        "confidence": 1
+      },
+      {
+        "id": "bilibili-ranking-music",
+        "match": {
+          "hosts": [
+            "bilibili.com"
+          ],
+          "paths": [
+            "/v/popular/rank/music"
+          ]
+        },
+        "patch": {
+          "params": {
+            "region": "3"
+          },
+          "metadata": {
+            "home": "https://www.bilibili.com/v/popular/rank/music",
+            "title": "音乐排行榜"
+          }
+        },
+        "confidence": 1
+      },
+      {
+        "id": "bilibili-ranking-dance",
+        "match": {
+          "hosts": [
+            "bilibili.com"
+          ],
+          "paths": [
+            "/v/popular/rank/dance"
+          ]
+        },
+        "patch": {
+          "params": {
+            "region": "129"
+          },
+          "metadata": {
+            "home": "https://www.bilibili.com/v/popular/rank/dance",
+            "title": "舞蹈排行榜"
+          }
+        },
+        "confidence": 1
+      },
+      {
+        "id": "bilibili-ranking-cinephile",
+        "match": {
+          "hosts": [
+            "bilibili.com"
+          ],
+          "paths": [
+            "/v/popular/rank/cinephile"
+          ]
+        },
+        "patch": {
+          "params": {
+            "region": "181"
+          },
+          "metadata": {
+            "home": "https://www.bilibili.com/v/popular/rank/cinephile",
+            "title": "影视排行榜"
+          }
+        },
+        "confidence": 1
+      },
+      {
+        "id": "bilibili-ranking-ent",
+        "match": {
+          "hosts": [
+            "bilibili.com"
+          ],
+          "paths": [
+            "/v/popular/rank/ent"
+          ]
+        },
+        "patch": {
+          "params": {
+            "region": "5"
+          },
+          "metadata": {
+            "home": "https://www.bilibili.com/v/popular/rank/ent",
+            "title": "娱乐排行榜"
+          }
+        },
+        "confidence": 1
+      },
+      {
+        "id": "bilibili-ranking-knowledge",
+        "match": {
+          "hosts": [
+            "bilibili.com"
+          ],
+          "paths": [
+            "/v/popular/rank/knowledge"
+          ]
+        },
+        "patch": {
+          "params": {
+            "region": "36"
+          },
+          "metadata": {
+            "home": "https://www.bilibili.com/v/popular/rank/knowledge",
+            "title": "知识排行榜"
+          }
+        },
+        "confidence": 1
+      },
+      {
+        "id": "bilibili-ranking-tech",
+        "match": {
+          "hosts": [
+            "bilibili.com"
+          ],
+          "paths": [
+            "/v/popular/rank/tech"
+          ]
+        },
+        "patch": {
+          "params": {
+            "region": "188"
+          },
+          "metadata": {
+            "home": "https://www.bilibili.com/v/popular/rank/tech",
+            "title": "科技数码排行榜"
+          }
+        },
+        "confidence": 1
+      },
+      {
+        "id": "bilibili-ranking-food",
+        "match": {
+          "hosts": [
+            "bilibili.com"
+          ],
+          "paths": [
+            "/v/popular/rank/food"
+          ]
+        },
+        "patch": {
+          "params": {
+            "region": "211"
+          },
+          "metadata": {
+            "home": "https://www.bilibili.com/v/popular/rank/food",
+            "title": "美食排行榜"
+          }
+        },
+        "confidence": 1
+      },
+      {
+        "id": "bilibili-ranking-car",
+        "match": {
+          "hosts": [
+            "bilibili.com"
+          ],
+          "paths": [
+            "/v/popular/rank/car"
+          ]
+        },
+        "patch": {
+          "params": {
+            "region": "223"
+          },
+          "metadata": {
+            "home": "https://www.bilibili.com/v/popular/rank/car",
+            "title": "汽车排行榜"
+          }
+        },
+        "confidence": 1
+      },
+      {
+        "id": "bilibili-ranking-fashion",
+        "match": {
+          "hosts": [
+            "bilibili.com"
+          ],
+          "paths": [
+            "/v/popular/rank/fashion"
+          ]
+        },
+        "patch": {
+          "params": {
+            "region": "155"
+          },
+          "metadata": {
+            "home": "https://www.bilibili.com/v/popular/rank/fashion",
+            "title": "时尚美妆排行榜"
+          }
+        },
+        "confidence": 1
+      },
+      {
+        "id": "bilibili-ranking-sports",
+        "match": {
+          "hosts": [
+            "bilibili.com"
+          ],
+          "paths": [
+            "/v/popular/rank/sports"
+          ]
+        },
+        "patch": {
+          "params": {
+            "region": "234"
+          },
+          "metadata": {
+            "home": "https://www.bilibili.com/v/popular/rank/sports",
+            "title": "体育运动排行榜"
+          }
+        },
+        "confidence": 1
+      },
+      {
+        "id": "bilibili-ranking-animal",
+        "match": {
+          "hosts": [
+            "bilibili.com"
+          ],
+          "paths": [
+            "/v/popular/rank/animal"
+          ]
+        },
+        "patch": {
+          "params": {
+            "region": "217"
+          },
+          "metadata": {
+            "home": "https://www.bilibili.com/v/popular/rank/animal",
+            "title": "动物排行榜"
+          }
+        },
+        "confidence": 1
+      }
+    ],
     "capabilities": {
       "network": [
         "api.bilibili.com"
       ],
       "cookies": [],
       "browser": []
+    },
+    "provider": {
+      "title": "哔哩哔哩"
     }
   },
   "browser:bookmarks": {
@@ -753,8 +1199,8 @@
       "home": "https://web.okjike.com",
       "color": "yellow",
       "type": "timeline",
-      "title": "Following Updates",
-      "desc": "Updates from followed Jike users"
+      "title": "关注动态",
+      "desc": "已关注即刻用户发布的动态"
     },
     "capabilities": {
       "network": [
@@ -796,7 +1242,7 @@
       }
     ],
     "provider": {
-      "title": "Jike"
+      "title": "即刻"
     }
   },
   "jike:topic-hottest": {
@@ -805,8 +1251,8 @@
       "home": "https://web.okjike.com",
       "color": "yellow",
       "type": "hottest",
-      "title": "Topic Hottest",
-      "desc": "Hottest posts from a Jike topic"
+      "title": "主题热门",
+      "desc": "指定即刻主题的热门动态"
     },
     "capabilities": {
       "network": [
@@ -858,13 +1304,13 @@
     "params": {
       "topicId": {
         "type": "text",
-        "title": "Topic ID",
+        "title": "主题 ID",
         "default": "5aeaa84029e4000011ac3768",
         "pattern": ".+"
       }
     },
     "provider": {
-      "title": "Jike"
+      "title": "即刻"
     }
   },
   "jike:topic-recent": {
@@ -873,8 +1319,8 @@
       "home": "https://web.okjike.com",
       "color": "yellow",
       "type": "timeline",
-      "title": "Topic Recent",
-      "desc": "Recent posts from a Jike topic"
+      "title": "主题最新",
+      "desc": "指定即刻主题的最新动态"
     },
     "capabilities": {
       "network": [
@@ -926,13 +1372,13 @@
     "params": {
       "topicId": {
         "type": "text",
-        "title": "Topic ID",
+        "title": "主题 ID",
         "default": "5aeaa84029e4000011ac3768",
         "pattern": ".+"
       }
     },
     "provider": {
-      "title": "Jike"
+      "title": "即刻"
     }
   },
   "jike:user-updates": {
@@ -941,8 +1387,8 @@
       "home": "https://web.okjike.com",
       "color": "yellow",
       "type": "timeline",
-      "title": "User Updates",
-      "desc": "Updates from a Jike user"
+      "title": "用户动态",
+      "desc": "指定即刻用户发布的动态"
     },
     "capabilities": {
       "network": [
@@ -994,13 +1440,13 @@
     "params": {
       "username": {
         "type": "text",
-        "title": "Username",
+        "title": "用户名",
         "default": "7f422d5d-d79a-4f45-9880-b89d64d7f37a",
         "pattern": ".+"
       }
     },
     "provider": {
-      "title": "Jike"
+      "title": "即刻"
     }
   },
   "linuxdo:latest": {
@@ -1008,7 +1454,7 @@
       "category": "tech",
       "color": "slate",
       "home": "https://linux.do",
-      "title": "Latest",
+      "title": "最新",
       "type": "timeline"
     },
     "cache": "5m",
@@ -1045,7 +1491,7 @@
       "category": "tech",
       "color": "slate",
       "home": "https://linux.do",
-      "title": "Hot",
+      "title": "热门",
       "type": "hottest"
     },
     "cache": "5m",
@@ -1085,7 +1531,7 @@
       "id": {
         "type": "text",
         "default": "19723756",
-        "title": "Playlist",
+        "title": "歌单 ID",
         "pattern": "^\\d+$"
       }
     },
@@ -1107,7 +1553,7 @@
             "id": "{{ query.id | default: hashQuery.id }}"
           },
           "metadata": {
-            "title": "{% assign title = page.title | normalize_whitespace | regex_extract: '^(.+?)\\\\s*-\\\\s*(?:歌单|排行榜)\\\\s*-\\\\s*网易云音乐$', 1 %}{% if title != empty %}{{ title }}{% else %}Playlist {{ params.id }}{% endif %}"
+            "title": "{% assign title = page.title | normalize_whitespace | regex_extract: '^(.+?)\\\\s*-\\\\s*(?:歌单|排行榜)\\\\s*-\\\\s*网易云音乐$', 1 %}{% if title != empty %}{{ title }}{% else %}歌单 {{ params.id }}{% endif %}"
           }
         },
         "confidence": 0.95
@@ -1363,7 +1809,7 @@
     "params": {
       "feed": {
         "type": "text",
-        "title": "Feed",
+        "title": "节点",
         "default": "ideas",
         "pattern": ".+"
       }
@@ -1420,8 +1866,8 @@
       "color": "red",
       "type": "timeline",
       "icon": "https://weibo.com/favicon.ico",
-      "title": "Following Timeline",
-      "desc": "Latest posts from all followed Weibo accounts",
+      "title": "关注",
+      "desc": "所有已关注微博账号发布的最新微博",
       "home": "https://weibo.com"
     },
     "capabilities": {
@@ -1472,7 +1918,7 @@
       }
     ],
     "provider": {
-      "title": "Weibo"
+      "title": "微博"
     }
   },
   "weibo:hot-search": {
@@ -1481,7 +1927,7 @@
       "color": "red",
       "type": "hottest",
       "icon": "https://weibo.com/favicon.ico",
-      "title": "Hot Search"
+      "title": "热搜"
     },
     "capabilities": {
       "network": [
@@ -1534,34 +1980,34 @@
     "params": {
       "type": {
         "type": "select",
-        "title": "Type",
+        "title": "类别",
         "values": [
           {
-            "label": "Hot Search",
+            "label": "热搜",
             "value": "search"
           },
           {
-            "label": "My Hot Search",
+            "label": "好友热搜",
             "value": "mine"
           },
           {
-            "label": "Entertainment",
+            "label": "文娱",
             "value": "entertainment"
           },
           {
-            "label": "Social",
+            "label": "要闻",
             "value": "social"
           },
           {
-            "label": "Technology",
+            "label": "科技",
             "value": "tech"
           },
           {
-            "label": "Life",
+            "label": "生活",
             "value": "life"
           },
           {
-            "label": "Sports",
+            "label": "体育",
             "value": "sports"
           },
           {
@@ -1588,7 +2034,7 @@
             "type": "{{ path.type }}"
           },
           "metadata": {
-            "title": "{{ page.title | regex_replace: '\\\\s*-\\\\s*微博$', '' | default: 'Hot Search' }}",
+            "title": "{{ page.title | regex_replace: '\\\\s*-\\\\s*微博$', '' | default: '热搜' }}",
             "home": "https://weibo.com/hot/{{ path.type }}"
           }
         },
@@ -1596,7 +2042,7 @@
       }
     ],
     "provider": {
-      "title": "Weibo"
+      "title": "微博"
     }
   },
   "weibo:keyword": {
@@ -1605,8 +2051,8 @@
       "color": "red",
       "type": "timeline",
       "icon": "https://weibo.com/favicon.ico",
-      "title": "Keyword",
-      "desc": "Latest Weibo posts matching a keyword",
+      "title": "关键词",
+      "desc": "包含指定关键词的最新微博",
       "home": "https://s.weibo.com"
     },
     "capabilities": {
@@ -1645,7 +2091,7 @@
     "params": {
       "keyword": {
         "type": "text",
-        "title": "Keyword",
+        "title": "关键词",
         "default": "MSI",
         "pattern": ".+"
       }
@@ -1670,7 +2116,7 @@
       }
     ],
     "provider": {
-      "title": "Weibo"
+      "title": "微博"
     }
   },
   "weibo:super-topic": {
@@ -1679,8 +2125,8 @@
       "color": "red",
       "type": "timeline",
       "icon": "https://weibo.com/favicon.ico",
-      "title": "Super Topic",
-      "desc": "Latest posts from a Weibo super topic",
+      "title": "超话",
+      "desc": "指定微博超话的最新帖子",
       "home": "https://weibo.com"
     },
     "capabilities": {
@@ -1719,29 +2165,29 @@
     "params": {
       "id": {
         "type": "text",
-        "title": "Super Topic ID",
-        "description": "A 100808... Weibo super topic ID.",
+        "title": "超话 ID",
+        "description": "以 100808 开头的微博超话 ID。",
         "default": "1008084989d223732bf6f02f75ea30efad58a9",
         "pattern": "^100808[A-Za-z0-9]+$"
       },
       "type": {
         "type": "select",
-        "title": "Type",
+        "title": "排序",
         "values": [
           {
-            "label": "Latest comments",
+            "label": "最新评论",
             "value": "feed"
           },
           {
-            "label": "Latest posts",
+            "label": "最新帖子",
             "value": "sort_time"
           },
           {
-            "label": "Hot",
+            "label": "热门",
             "value": "hot_sort"
           },
           {
-            "label": "Featured",
+            "label": "精华",
             "value": "soul"
           }
         ],
@@ -1770,7 +2216,7 @@
       }
     ],
     "provider": {
-      "title": "Weibo"
+      "title": "微博"
     }
   },
   "weibo:user": {
@@ -1779,8 +2225,8 @@
       "color": "red",
       "type": "timeline",
       "icon": "https://weibo.com/favicon.ico",
-      "title": "User Posts",
-      "desc": "Latest posts from a specified Weibo user",
+      "title": "用户微博",
+      "desc": "指定微博用户发布的最新微博",
       "home": "https://weibo.com"
     },
     "capabilities": {
@@ -1819,8 +2265,8 @@
     "params": {
       "uid": {
         "type": "text",
-        "title": "User ID",
-        "description": "Numeric Weibo uid.",
+        "title": "用户 UID",
+        "description": "微博用户的数字 UID。",
         "default": "1195230310",
         "pattern": "^\\d+$"
       }
@@ -1850,7 +2296,7 @@
       }
     ],
     "provider": {
-      "title": "Weibo"
+      "title": "微博"
     }
   },
   "x:following": {
@@ -2102,12 +2548,12 @@
       "title": "雪球"
     }
   },
-  "zaobao:realtime": {
+  "zaochenbao:realtime": {
     "metadata": {
       "category": "china",
       "color": "red",
       "home": "https://www.zaochenbao.com/realtime/",
-      "title": "Realtime",
+      "title": "即时新闻",
       "type": "timeline"
     },
     "loader": {
@@ -2129,7 +2575,7 @@
     },
     "cache": "5m",
     "provider": {
-      "title": "Lianhe Zaobao"
+      "title": "早晨报"
     }
   },
   "zhihu:hot-list": {

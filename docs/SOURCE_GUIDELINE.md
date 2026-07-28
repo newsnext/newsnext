@@ -273,6 +273,14 @@ metadata: {
 }
 ```
 
+Write every human-facing source string in the website's primary interface
+language. This includes the provider title, metadata title and description,
+parameter title and description, select option labels, and human-facing
+fallbacks inside templates. Preserve official brand names and keep parameter
+keys, option values, IDs, selectors, and other implementation details
+unchanged. For multilingual websites, follow the locale represented by the
+source URL or the website's default locale when the source is locale-neutral.
+
 The optional `metadata.type` controls ordering:
 
 - `hottest` preserves the loader's original order.
@@ -1204,6 +1212,11 @@ capabilities: {
 },
 ```
 
+When one source parameter selects official endpoints with incompatible response
+schemas, use a custom loader to branch on the resolved parameter and normalize
+each response into `NewsItem[]`. Keep the endpoint mapping explicit and test
+the request selection and response normalization as pure functions.
+
 Browser capabilities currently include features such as `history`, `bookmarks`,
 and `favicon`.
 
@@ -1333,6 +1346,9 @@ match: {
 - Capture stable resource IDs embedded in route segments, such as
   `list-:listId`, and map them explicitly to the corresponding source
   parameter.
+- When a finite set of website routes maps to select option values, declare an
+  explicit rule for each official route and map its slug to the stored option
+  value. Do not assume the website slug and API value are interchangeable.
 - An omitted `paths` matches every path on the declared hosts.
 - `includes` requires one of the strings to occur in the full URL.
 

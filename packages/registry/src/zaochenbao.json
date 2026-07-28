@@ -1,16 +1,16 @@
 {
-  "title": "Lianhe Zaobao",
+  "title": "早晨报",
   "defaults": {
     "metadata": {
       "color": "red",
-      "home": "https://www.zaobao.com",
+      "home": "https://www.zaochenbao.com",
       "category": "china"
     }
   },
   "sources": {
     "realtime": {
       "metadata": {
-        "title": "Realtime",
+        "title": "即时新闻",
         "type": "timeline",
         "home": "https://www.zaochenbao.com/realtime/"
       },

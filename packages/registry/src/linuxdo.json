@@ -30,7 +30,7 @@
   "sources": {
     "latest": {
       "metadata": {
-        "title": "Latest",
+        "title": "最新",
         "type": "timeline"
       },
       "loader": {
@@ -45,7 +45,7 @@
     },
     "top-daily": {
       "metadata": {
-        "title": "Hot",
+        "title": "热门",
         "type": "hottest"
       },
       "loader": {

@@ -24,29 +24,73 @@ const DYNAMIC_FEED_FEATURES = [
   "eva3CardUser",
 ]
 const BILIBILI_WEB_LOCATION = "333.1365"
-const RANKING_REGION_OPTIONS = [
-  { label: "All", value: "0" },
-  { label: "Animation", value: "1" },
-  { label: "Anime", value: "13" },
-  { label: "Guochuang", value: "167" },
-  { label: "Music", value: "3" },
-  { label: "Dance", value: "129" },
-  { label: "Games", value: "4" },
-  { label: "Knowledge", value: "36" },
-  { label: "Technology", value: "188" },
-  { label: "Sports", value: "234" },
-  { label: "Cars", value: "223" },
-  { label: "Life", value: "160" },
-  { label: "Food", value: "211" },
-  { label: "Animals", value: "217" },
-  { label: "Kichiku", value: "119" },
-  { label: "Fashion", value: "155" },
-  { label: "Entertainment", value: "5" },
-  { label: "Film & TV", value: "181" },
-  { label: "Documentary", value: "177" },
-  { label: "Movies", value: "23" },
-  { label: "TV Series", value: "11" },
+const BILIBILI_RANKING_URL = "https://api.bilibili.com/x/web-interface/ranking/v2"
+const BILIBILI_ANIME_RANKING_URL = "https://api.bilibili.com/pgc/web/rank/list"
+const BILIBILI_PGC_RANKING_URL = "https://api.bilibili.com/pgc/season/rank/web/list"
+const RANKING_REGIONS = [
+  { apiRid: 0, label: "全部", slug: "all", value: "0" },
+  { label: "番剧", pgcUrl: BILIBILI_ANIME_RANKING_URL, seasonType: 1, slug: "anime", value: "13" },
+  { label: "国创", pgcUrl: BILIBILI_PGC_RANKING_URL, seasonType: 4, slug: "guochuang", value: "167" },
+  { label: "纪录片", pgcUrl: BILIBILI_PGC_RANKING_URL, seasonType: 3, slug: "documentary", value: "177" },
+  { label: "电影", pgcUrl: BILIBILI_PGC_RANKING_URL, seasonType: 2, slug: "movie", value: "23" },
+  { label: "电视剧", pgcUrl: BILIBILI_PGC_RANKING_URL, seasonType: 5, slug: "tv", value: "11" },
+  { label: "综艺", pgcUrl: BILIBILI_PGC_RANKING_URL, seasonType: 7, slug: "variety", value: "71" },
+  { apiRid: 1005, label: "动画", slug: "douga", value: "1" },
+  { apiRid: 1008, label: "游戏", slug: "game", value: "4" },
+  { apiRid: 1007, label: "鬼畜", slug: "kichiku", value: "119" },
+  { apiRid: 1003, label: "音乐", slug: "music", value: "3" },
+  { apiRid: 1004, label: "舞蹈", slug: "dance", value: "129" },
+  { apiRid: 1001, label: "影视", slug: "cinephile", value: "181" },
+  { apiRid: 1002, label: "娱乐", slug: "ent", value: "5" },
+  { apiRid: 1010, label: "知识", slug: "knowledge", value: "36" },
+  { apiRid: 1012, label: "科技数码", slug: "tech", value: "188" },
+  { apiRid: 1020, label: "美食", slug: "food", value: "211" },
+  { apiRid: 1013, label: "汽车", slug: "car", value: "223" },
+  { apiRid: 1014, label: "时尚美妆", slug: "fashion", value: "155" },
+  { apiRid: 1018, label: "体育运动", slug: "sports", value: "234" },
+  { apiRid: 1024, label: "动物", slug: "animal", value: "217" },
 ] as const
+const RANKING_REGION_OPTIONS = RANKING_REGIONS.map(({ label, value }) => ({ label, value }))
+
+export interface BilibiliRankingRequest {
+  kind: "pgc" | "video"
+  query: Record<string, number | string>
+  url: string
+}
+
+export interface BilibiliVideoRankingItem {
+  bvid?: string
+  desc?: string
+  owner?: {
+    face?: string
+    name?: string
+  }
+  pic?: string
+  pubdate?: number
+  stat?: {
+    like?: number
+    view?: number
+  }
+  title?: string
+}
+
+export interface BilibiliPgcRankingItem {
+  cover?: string
+  desc?: string
+  icon_font?: {
+    text?: string
+  }
+  new_ep?: {
+    index_show?: string
+  }
+  rating?: string
+  season_id?: number
+  stat?: {
+    view?: number
+  }
+  title?: string
+  url?: string
+}
 
 interface DynamicFeedItem {
   modules?: {
@@ -82,7 +126,93 @@ interface DynamicFeedResponse {
 }
 
 function normalizeBilibiliUrl(url: string): string {
-  return url.startsWith("//") ? `https:${url}` : url
+  if (url.startsWith("//")) return `https:${url}`
+  return url.replace(/^http:/, "https:")
+}
+
+export function getBilibiliRankingRequest(regionValue: string): BilibiliRankingRequest {
+  const region = RANKING_REGIONS.find(candidate => candidate.value === regionValue)
+  if (!region) throw new Error(`Unknown Bilibili ranking region "${regionValue}".`)
+
+  if ("apiRid" in region) {
+    return {
+      kind: "video",
+      url: BILIBILI_RANKING_URL,
+      query: {
+        rid: region.apiRid,
+        type: "all",
+      },
+    }
+  }
+
+  return {
+    kind: "pgc",
+    url: region.pgcUrl,
+    query: {
+      day: 3,
+      season_type: region.seasonType,
+    },
+  }
+}
+
+export function videoRankingItemToNewsItem(item: BilibiliVideoRankingItem): NewsItem | null {
+  if (!item.title || !item.bvid) return null
+
+  const inlineText = [
+    item.owner?.name,
+    item.stat?.view !== undefined ? `${item.stat.view} 播放` : undefined,
+    item.stat?.like !== undefined ? `${item.stat.like} 点赞` : undefined,
+  ].filter(Boolean).join(" · ")
+  const newsItem: NewsItem = {
+    title: item.title,
+    url: `https://www.bilibili.com/video/${item.bvid}`,
+  }
+
+  if (item.pubdate) newsItem.timestamp = item.pubdate * 1000
+  if (inlineText) {
+    newsItem.inline = {
+      text: inlineText,
+      ...(item.owner?.face
+        ? { icon: { src: normalizeBilibiliUrl(item.owner.face), radius: 4 } }
+        : {}),
+    }
+  }
+  if (item.desc || item.pic) {
+    newsItem.preview = {
+      text: item.desc ?? "",
+      ...(item.pic ? { picture: normalizeBilibiliUrl(item.pic) } : {}),
+    }
+  }
+
+  return newsItem
+}
+
+export function pgcRankingItemToNewsItem(item: BilibiliPgcRankingItem): NewsItem | null {
+  const url = item.url
+    ?? (item.season_id ? `https://www.bilibili.com/bangumi/play/ss${item.season_id}` : undefined)
+  if (!item.title || !url) return null
+
+  const views = item.icon_font?.text
+    ?? (item.stat?.view !== undefined ? String(item.stat.view) : undefined)
+  const inlineText = [
+    item.new_ep?.index_show ?? item.desc,
+    item.rating,
+    views ? `${views} 播放` : undefined,
+  ].filter(Boolean).join(" · ")
+  const newsItem: NewsItem = {
+    title: item.title,
+    url: normalizeBilibiliUrl(url),
+  }
+
+  if (inlineText) newsItem.inline = { text: inlineText }
+  if (item.cover) {
+    newsItem.preview = {
+      picture: normalizeBilibiliUrl(item.cover),
+      text: item.desc ?? item.new_ep?.index_show ?? "",
+    }
+  }
+
+  return newsItem
 }
 
 function dynamicArchiveToNewsItem(item: DynamicFeedItem): NewsItem | null {
@@ -92,8 +222,8 @@ function dynamicArchiveToNewsItem(item: DynamicFeedItem): NewsItem | null {
 
   const inlineText = [
     author?.name,
-    archive.stat?.play ? `${archive.stat.play} views` : undefined,
-    archive.stat?.danmaku ? `${archive.stat.danmaku} danmaku` : undefined,
+    archive.stat?.play ? `${archive.stat.play} 播放` : undefined,
+    archive.stat?.danmaku ? `${archive.stat.danmaku} 弹幕` : undefined,
   ].filter(Boolean).join(" · ")
   const newsItem: NewsItem = {
     title: archive.title,
@@ -149,8 +279,56 @@ async function fetchBilibiliFollowingVideos(): Promise<NewsItem[]> {
     .filter((item): item is NewsItem => item !== null)
 }
 
+interface BilibiliVideoRankingResponse {
+  code: number
+  data?: {
+    list?: BilibiliVideoRankingItem[]
+  }
+  message?: string
+}
+
+interface BilibiliPgcRankingResponse {
+  code: number
+  data?: {
+    list?: BilibiliPgcRankingItem[]
+  }
+  message?: string
+  result?: {
+    list?: BilibiliPgcRankingItem[]
+  }
+}
+
+async function fetchBilibiliRanking({ region }: { region: string }): Promise<NewsItem[]> {
+  const request = getBilibiliRankingRequest(region)
+  const fetchOptions = {
+    credentials: "include" as const,
+    headers: {
+      referer: "https://www.bilibili.com/",
+    },
+    query: request.query,
+  }
+
+  if (request.kind === "video") {
+    const response = await myFetch<BilibiliVideoRankingResponse>(request.url, fetchOptions)
+    if (response.code !== 0) {
+      throw new Error(response.message ?? "Failed to load Bilibili video ranking.")
+    }
+    return (response.data?.list ?? [])
+      .map(videoRankingItemToNewsItem)
+      .filter((item): item is NewsItem => item !== null)
+  }
+
+  const response = await myFetch<BilibiliPgcRankingResponse>(request.url, fetchOptions)
+  if (response.code !== 0) {
+    throw new Error(response.message ?? "Failed to load Bilibili PGC ranking.")
+  }
+  return (response.result?.list ?? response.data?.list ?? [])
+    .map(pgcRankingItemToNewsItem)
+    .filter((item): item is NewsItem => item !== null)
+}
+
 export default {
-  title: "Bilibili",
+  title: "哔哩哔哩",
   defaults: {
     cache: "5m",
     metadata: {
@@ -163,7 +341,7 @@ export default {
   sources: {
     "hotword": {
       metadata: {
-        title: "Hot Search",
+        title: "热搜",
       },
       loader: {
         type: "json",
@@ -183,8 +361,8 @@ export default {
     },
     "following-videos": {
       metadata: {
-        title: "Following Videos",
-        desc: "Video updates from followed creators",
+        title: "关注视频",
+        desc: "已关注 UP 主发布的视频动态",
         type: "timeline",
       },
       loader: {
@@ -198,43 +376,45 @@ export default {
     },
     "ranking": {
       metadata: {
-        title: "Ranking",
+        home: "https://www.bilibili.com/v/popular/rank/all",
+        title: "排行榜",
       },
       params: {
         region: {
           type: "select",
-          title: "Region",
+          title: "分区",
           values: RANKING_REGION_OPTIONS,
           default: "0",
         },
       },
-      loader: {
-        type: "json",
-        url: "https://api.bilibili.com/x/web-interface/ranking/v2?rid={{ params.region | url_query }}",
-        items: "data.list",
-        fields: {
-          title: "title",
-          url: {
-            select: "bvid",
-            template: "https://www.bilibili.com/video/{{ value | url_path }}",
+      radar: RANKING_REGIONS.map(({ label, slug, value }) => ({
+        id: `bilibili-ranking-${slug}`,
+        match: {
+          hosts: ["bilibili.com"],
+          paths: [`/v/popular/rank/${slug}`],
+        },
+        patch: {
+          params: {
+            region: value,
           },
-          timestamp: {
-            select: "pubdate",
-            template: "{{ value | times: 1000 }}",
-          },
-          inline: {
-            text: {
-              template: "{{ item.stat.view }} views · {{ item.stat.like }} likes",
-            },
-            icon: "owner.face && {src: owner.face, radius: `4`}",
-          },
-          preview: {
-            text: "desc",
-            picture: "pic",
+          metadata: {
+            home: `https://www.bilibili.com/v/popular/rank/${slug}`,
+            title: label === "全部" ? "排行榜" : `${label}排行榜`,
           },
         },
+        confidence: 1,
+      })),
+      loader: {
+        type: "custom",
+        load: fetchBilibiliRanking,
       },
-      cache: "15m",
+      capabilities: {
+        network: ["api.bilibili.com"],
+      },
+      cache: {
+        version: 2,
+        maxAge: "15m",
+      },
     },
   },
 } satisfies ProviderConfig

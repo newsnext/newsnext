@@ -54,7 +54,7 @@ const weiboSearchRequestRules = [
 ] satisfies SourceRequestRule[]
 
 export default {
-  title: "Weibo",
+  title: "微博",
   defaults: {
     capabilities: weiboCapabilities,
     requestRules: weiboRequestRules,
@@ -72,7 +72,7 @@ export default {
   sources: {
     "hot-search": {
       metadata: {
-        title: "Hot Search",
+        title: "热搜",
         type: "hottest",
       },
       context: {
@@ -90,15 +90,15 @@ export default {
       params: {
         type: {
           type: "select",
-          title: "Type",
+          title: "类别",
           values: [
-            { label: "Hot Search", value: "search" },
-            { label: "My Hot Search", value: "mine" },
-            { label: "Entertainment", value: "entertainment" },
-            { label: "Social", value: "social" },
-            { label: "Technology", value: "tech" },
-            { label: "Life", value: "life" },
-            { label: "Sports", value: "sports" },
+            { label: "热搜", value: "search" },
+            { label: "好友热搜", value: "mine" },
+            { label: "文娱", value: "entertainment" },
+            { label: "要闻", value: "social" },
+            { label: "科技", value: "tech" },
+            { label: "生活", value: "life" },
+            { label: "体育", value: "sports" },
             { label: "ACG", value: "acg" },
           ],
           default: "search",
@@ -116,7 +116,7 @@ export default {
               type: "{{ path.type }}",
             },
             metadata: {
-              title: "{{ page.title | regex_replace: '\\\\s*-\\\\s*微博$', '' | default: 'Hot Search' }}",
+              title: "{{ page.title | regex_replace: '\\\\s*-\\\\s*微博$', '' | default: '热搜' }}",
               home: "https://weibo.com/hot/{{ path.type }}",
             },
           },
@@ -148,15 +148,15 @@ export default {
     },
     "user": {
       metadata: {
-        title: "User Posts",
-        desc: "Latest posts from a specified Weibo user",
+        title: "用户微博",
+        desc: "指定微博用户发布的最新微博",
         home: "https://weibo.com",
       },
       params: {
         uid: {
           type: "text",
-          title: "User ID",
-          description: "Numeric Weibo uid.",
+          title: "用户 UID",
+          description: "微博用户的数字 UID。",
           default: "1195230310",
           pattern: "^\\d+$",
         },
@@ -185,14 +185,14 @@ export default {
     },
     "keyword": {
       metadata: {
-        title: "Keyword",
-        desc: "Latest Weibo posts matching a keyword",
+        title: "关键词",
+        desc: "包含指定关键词的最新微博",
         home: "https://s.weibo.com",
       },
       params: {
         keyword: {
           type: "text",
-          title: "Keyword",
+          title: "关键词",
           default: "MSI",
           pattern: ".+",
         },
@@ -222,26 +222,26 @@ export default {
     },
     "super-topic": {
       metadata: {
-        title: "Super Topic",
-        desc: "Latest posts from a Weibo super topic",
+        title: "超话",
+        desc: "指定微博超话的最新帖子",
         home: "https://weibo.com",
       },
       params: {
         id: {
           type: "text",
-          title: "Super Topic ID",
-          description: "A 100808... Weibo super topic ID.",
+          title: "超话 ID",
+          description: "以 100808 开头的微博超话 ID。",
           default: "1008084989d223732bf6f02f75ea30efad58a9",
           pattern: "^100808[A-Za-z0-9]+$",
         },
         type: {
           type: "select",
-          title: "Type",
+          title: "排序",
           values: [
-            { label: "Latest comments", value: "feed" },
-            { label: "Latest posts", value: "sort_time" },
-            { label: "Hot", value: "hot_sort" },
-            { label: "Featured", value: "soul" },
+            { label: "最新评论", value: "feed" },
+            { label: "最新帖子", value: "sort_time" },
+            { label: "热门", value: "hot_sort" },
+            { label: "精华", value: "soul" },
           ],
           default: "feed",
         },
@@ -271,8 +271,8 @@ export default {
     },
     "following": {
       metadata: {
-        title: "Following Timeline",
-        desc: "Latest posts from all followed Weibo accounts",
+        title: "关注",
+        desc: "所有已关注微博账号发布的最新微博",
         home: "https://weibo.com",
       },
       radar: [

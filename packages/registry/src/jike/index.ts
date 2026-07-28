@@ -141,7 +141,7 @@ const jikeCapabilities = {
 }
 const topicIdParam = {
   type: "text",
-  title: "Topic ID",
+  title: "主题 ID",
   default: "5aeaa84029e4000011ac3768",
   pattern: ".+",
 } as const
@@ -161,7 +161,7 @@ const topicRadar = {
 }
 
 export default {
-  title: "Jike",
+  title: "即刻",
   defaults: {
     capabilities: jikeCapabilities,
     cache: "5m",
@@ -191,8 +191,8 @@ export default {
   sources: {
     "following-updates": {
       metadata: {
-        title: "Following Updates",
-        desc: "Updates from followed Jike users",
+        title: "关注动态",
+        desc: "已关注即刻用户发布的动态",
       },
       radar: [
         {
@@ -210,8 +210,8 @@ export default {
     },
     "user-updates": {
       metadata: {
-        title: "User Updates",
-        desc: "Updates from a Jike user",
+        title: "用户动态",
+        desc: "指定即刻用户发布的动态",
       },
       radar: [
         {
@@ -234,7 +234,7 @@ export default {
       params: {
         username: {
           type: "text",
-          title: "Username",
+          title: "用户名",
           default: "7f422d5d-d79a-4f45-9880-b89d64d7f37a",
           pattern: ".+",
         },
@@ -245,8 +245,8 @@ export default {
     },
     "topic-recent": {
       metadata: {
-        title: "Topic Recent",
-        desc: "Recent posts from a Jike topic",
+        title: "主题最新",
+        desc: "指定即刻主题的最新动态",
       },
       radar: [
         {
@@ -264,8 +264,8 @@ export default {
     },
     "topic-hottest": {
       metadata: {
-        title: "Topic Hottest",
-        desc: "Hottest posts from a Jike topic",
+        title: "主题热门",
+        desc: "指定即刻主题的热门动态",
         type: "hottest",
       },
       radar: [

@@ -148,10 +148,27 @@ describe("getRadarSuggestions", () => {
       {
         sourceId: "netease-music:playlist",
         patch: {
-          metadata: { title: "Playlist 71384707" },
+          metadata: { title: "歌单 71384707" },
         },
       },
     ])
+  })
+
+  it.each([
+    ["all", "0"],
+    ["anime", "13"],
+    ["tech", "188"],
+  ])("suggests a Bilibili ranking card for the %s route", (slug, region) => {
+    const suggestion = getSuggestions({
+      url: `https://www.bilibili.com/v/popular/rank/${slug}`,
+      title: "哔哩哔哩排行榜",
+    }).find(item => item.sourceId === "bilibili:ranking")
+
+    expect(suggestion).toMatchObject({
+      patch: {
+        params: { region },
+      },
+    })
   })
 
   it("suggests Folo feed and list cards from timeline URLs", () => {

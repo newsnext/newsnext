@@ -11,7 +11,7 @@
       "params": {
         "feed": {
           "type": "text",
-          "title": "Feed",
+          "title": "节点",
           "default": "ideas",
           "pattern": ".+"
         }
