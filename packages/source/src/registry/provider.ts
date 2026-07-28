@@ -1,6 +1,7 @@
 import type { SourceConfig } from "../core/resolver"
 import type { ProviderDefinition, RuntimeSource, SourceProvider } from "../types"
 import type { ProviderConfig, SourceRegistry } from "./types"
+import { getFavicon } from "@newsnext/shared/utils"
 import {
   assignSourceDefaults,
   BASE_SOURCE_DEFAULTS,
@@ -16,6 +17,17 @@ import {
   isSupportedProviderKey,
   isValidIdSegment,
 } from "./validation"
+
+type SourceConfigMetadata = NonNullable<SourceConfig["metadata"]>
+
+function materializeSourceIcon(
+  metadata: SourceConfigMetadata = {},
+): SourceConfigMetadata {
+  return {
+    ...metadata,
+    icon: metadata.icon ?? (metadata.home ? getFavicon(metadata.home) : undefined),
+  }
+}
 
 export function flattenProviderConfig(
   id: string,
@@ -119,6 +131,7 @@ function expandProviderSources(
 
       return [sourceId, {
         ...defaultedSource,
+        metadata: materializeSourceIcon(defaultedSource.metadata),
         vars: mergeSourceVars(provider.defaults?.vars, source.vars),
       } as SourceConfig]
     }),

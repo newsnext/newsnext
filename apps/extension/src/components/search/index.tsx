@@ -143,6 +143,7 @@ function SearchDialogContent(): ReactNode {
               <span className="flex items-center min-w-0 flex-1 gap-2">
                 <SourceIcon
                   className="shrink-0 rounded-full"
+                  color={item.source.color}
                   icon={item.source.icon}
                   title={item.source.title || item.source.provider.title}
                 />

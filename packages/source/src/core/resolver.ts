@@ -18,7 +18,6 @@ import type { HtmlSourceOptions } from "./loaders/html"
 import type { JsonSourceOptions } from "./loaders/json"
 
 import { COLORS } from "@newsnext/shared/constants"
-import { getFavicon } from "@newsnext/shared/utils"
 import { createDefu } from "defu"
 import { categories } from "../types"
 import { assertNetworkCapability, validateSourceRequestRules } from "./capabilities"
@@ -274,11 +273,9 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
   const cache = typeof cacheInput === "string"
     ? { version: 1, maxAge: cacheInput }
     : cacheInput
-  const icon = metadata.icon ?? (metadata.home ? getFavicon(metadata.home) : undefined)
   const registration = {
     key,
     ...metadata,
-    icon,
     vars,
     params,
     radar,

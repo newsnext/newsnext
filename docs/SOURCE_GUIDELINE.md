@@ -94,8 +94,12 @@ metadata:
 ```
 
 `metadata.icon` becomes the source `icon` displayed by clients. When omitted,
-it defaults to the favicon derived from the source's final `metadata.home`
-value.
+it defaults to the favicon derived from the source's final `metadata.home`,
+including a home inherited from `defaults.metadata.home`. The resolved URL is
+materialized as `metadata.icon` in the generated registry and assigned directly
+to the runtime `source.icon`; clients do not derive it themselves. Clients
+render a blank placeholder tinted with the source color only when the icon is
+unavailable or fails to load.
 
 Prefer JSON whenever the provider is fully declarative. Use TypeScript only
 when it needs custom loader functions, imported runtime helpers, browser APIs,

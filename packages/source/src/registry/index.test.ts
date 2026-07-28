@@ -89,6 +89,8 @@ describe("source template vars", () => {
         network: ["api.example.com"],
         cookies: ["account.example.com"],
       },
+      home: "https://example.com",
+      icon: "https://icons.folo.is/example.com",
       type: "timeline",
       radar: [
         {
@@ -102,6 +104,8 @@ describe("source template vars", () => {
         network: ["override.example.com"],
         cookies: ["account.example.com"],
       },
+      home: "https://example.com",
+      icon: "https://icons.folo.is/example.com",
       title: "Override",
       type: "timeline",
       radar: [],
@@ -462,8 +466,12 @@ describe("source registry", () => {
     expect(registry["test:latest"]?.provider).toEqual({
       title: "Test Provider",
     })
+    expect(registry["test:latest"]?.metadata?.icon).toBe(
+      "https://icons.folo.is/example.com",
+    )
     expect(resolveSourceRegistry(registry)["test:latest"]).toMatchObject({
       cache: { version: 1, maxAge: "5m" },
+      icon: "https://icons.folo.is/example.com",
       title: "Latest",
       type: "timeline",
     })

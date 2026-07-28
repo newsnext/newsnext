@@ -33,7 +33,7 @@ export function SourceActionState({
         aria-label={title}
         title={title}
       >
-        <SourceIcon icon={icon} title={provider.title} />
+        <SourceIcon color={color} icon={icon} title={provider.title} />
         {label}
       </button>
     </div>

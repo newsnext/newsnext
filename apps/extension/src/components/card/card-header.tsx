@@ -44,6 +44,7 @@ export function CardHeader({
         >
           <SourceIcon
             className="size-full rounded-full after:rounded-full"
+            color={color}
             icon={icon}
             title={displayTitle}
           />

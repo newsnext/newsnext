@@ -1,19 +1,21 @@
+import type { Color } from "@newsnext/shared/types"
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
 } from "@newsnext/ui/components/avatar"
-import PhRssSimpleDuotone from "~icons/ph/rss-simple-duotone"
 import { cn } from "@/lib/utils"
 
 interface SourceIconProps {
   className?: string
+  color: Color
   icon?: string
   title: string
 }
 
 export function SourceIcon({
   className,
+  color,
   icon,
   title,
 }: SourceIconProps) {
@@ -25,9 +27,7 @@ export function SourceIcon({
         alt={`${title} icon`}
         referrerPolicy="no-referrer"
       />
-      <AvatarFallback className="rounded-[inherit]">
-        <PhRssSimpleDuotone aria-hidden className="size-1/2" />
-      </AvatarFallback>
+      <AvatarFallback className={cn("rounded-[inherit]", `bg-${color}-400`)} />
     </Avatar>
   )
 }

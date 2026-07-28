@@ -25,6 +25,7 @@ export function DragOverlay({ source }: DragOverlayProps) {
         <div className="flex gap-2.5 items-center ml-1 min-w-0 flex-1">
           <SourceIcon
             className="size-8 rounded-full cursor-grabbing"
+            color={color}
             icon={icon}
             title={title || provider.title}
           />
