@@ -182,6 +182,10 @@ export default {
       loader: {
         load: fetchWeiboUserPosts,
       },
+      cache: {
+        version: 2,
+        maxAge: "5m",
+      },
     },
     "keyword": {
       metadata: {

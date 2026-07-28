@@ -1,5 +1,13 @@
+import type {
+  SourceLoaderMetadata,
+  SourceLoaderOutput,
+} from "@newsnext/source/types"
 import type { NewsItem } from "@/typings/source"
-import { normalizeSourceParams, resolveSource } from "@newsnext/source/runtime"
+import {
+  normalizeSourceLoaderResult,
+  normalizeSourceParams,
+  resolveSource,
+} from "@newsnext/source/runtime"
 import { createBackgroundClient } from "./background-client"
 import { readCachedSource, writeCachedSource } from "./source-cache"
 import { buildSourceCacheKey, parseCacheMaxAge } from "./source-cache-values"
@@ -14,6 +22,7 @@ export interface SourceLoadResult {
   id: string
   key: string
   items: NewsItem[]
+  metadata?: SourceLoaderMetadata
   updatedAt: number
 }
 
@@ -64,7 +73,7 @@ interface FreshSourceLoad {
   sourceId: string
   queryParams: Record<string, unknown>
   key: string
-  loadInCurrentContext: () => Promise<NewsItem[]>
+  loadInCurrentContext: () => Promise<SourceLoaderOutput>
 }
 
 async function loadFreshSource(request: FreshSourceLoad): Promise<SourceLoadResult> {
@@ -75,7 +84,7 @@ async function loadFreshSource(request: FreshSourceLoad): Promise<SourceLoadResu
         params: request.queryParams,
       })
     : {
-        items: await request.loadInCurrentContext(),
+        ...normalizeSourceLoaderResult(await request.loadInCurrentContext()),
         updatedAt: Date.now(),
       }
 
@@ -83,6 +92,7 @@ async function loadFreshSource(request: FreshSourceLoad): Promise<SourceLoadResu
     id: request.sourceId,
     key: request.key,
     items: loaded.items,
+    metadata: loaded.metadata,
     updatedAt: loaded.updatedAt,
   }
 

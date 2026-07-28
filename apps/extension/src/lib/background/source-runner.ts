@@ -10,6 +10,7 @@ import {
 } from "@newsnext/source/registry"
 import {
   loadSourceDescriptors,
+  normalizeSourceLoaderResult,
   normalizeSourceParams,
 } from "@newsnext/source/runtime"
 import { resolveSourceSecrets, updateSourceSecrets } from "./source-secrets"
@@ -77,13 +78,15 @@ export async function runConnectedSource(
     input.useProviderSecrets,
   )
   const secrets = await resolveSourceSecrets(source, secretProviderId)
-  const data = await source.loader(params, {
-    secrets,
-    updateSecrets: async (updates) => {
-      Object.assign(secrets, updates)
-      await updateSourceSecrets(source, secretProviderId, updates)
-    },
-  })
+  const { items: data } = normalizeSourceLoaderResult(
+    await source.loader(params, {
+      secrets,
+      updateSecrets: async (updates) => {
+        Object.assign(secrets, updates)
+        await updateSourceSecrets(source, secretProviderId, updates)
+      },
+    }),
+  )
 
   return { data }
 }

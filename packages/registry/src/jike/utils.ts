@@ -28,7 +28,7 @@ function getPictureUrl(picture: JikePicture): string | undefined {
   return picture.middlePicUrl ?? picture.picUrl ?? picture.smallPicUrl ?? picture.thumbnailUrl
 }
 
-function getUserAvatar(user: JikeUser | undefined): string | undefined {
+export function getJikeUserAvatar(user: JikeUser | undefined): string | undefined {
   return user?.profileImageUrl ?? getPictureUrl(user?.avatarImage ?? {})
 }
 
@@ -55,7 +55,11 @@ export function isPinnedPersonalUpdate(post: JikePost): boolean {
   return post.pinned?.personalUpdate === true
 }
 
-export function jikePostsToNewsItems(posts: JikePost[]): NewsItem[] {
+export function jikePostsToNewsItems(
+  posts: JikePost[],
+  options: { includeIcon?: boolean } = {},
+): NewsItem[] {
+  const { includeIcon = true } = options
   return posts.flatMap((post): NewsItem[] => {
     const mobileUrl = getPostMobileUrl(post)
     if (!mobileUrl) return []
@@ -68,7 +72,7 @@ export function jikePostsToNewsItems(posts: JikePost[]): NewsItem[] {
       typeof post.likeCount === "number" ? `${post.likeCount} likes` : undefined,
       typeof post.commentCount === "number" ? `${post.commentCount} comments` : undefined,
     ].filter(Boolean).join(" · ")
-    const avatar = getUserAvatar(post.user)
+    const avatar = includeIcon ? getJikeUserAvatar(post.user) : undefined
     const previewText = post.target?.content
       ? `${post.target.user?.screenName ? `${post.target.user.screenName}: ` : ""}${compactText(post.target.content)}`
       : post.linkInfo?.title

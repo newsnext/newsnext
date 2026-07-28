@@ -1,5 +1,12 @@
-import type { NewsItem } from "@newsnext/source/types"
-import { parseSourceId, prepareSourceRequest } from "@newsnext/source/runtime"
+import type {
+  NewsItem,
+  SourceLoaderMetadata,
+} from "@newsnext/source/types"
+import {
+  normalizeSourceLoaderResult,
+  parseSourceId,
+  prepareSourceRequest,
+} from "@newsnext/source/runtime"
 import { resolveSourceSecrets, updateSourceSecrets } from "./source-secrets"
 
 export interface LoadBackgroundSourceInput {
@@ -9,6 +16,7 @@ export interface LoadBackgroundSourceInput {
 
 export interface LoadBackgroundSourceOutput {
   items: NewsItem[]
+  metadata?: SourceLoaderMetadata
   updatedAt: number
 }
 
@@ -22,16 +30,18 @@ export function createBackgroundSourceService(): BackgroundSourceService {
       const request = await prepareSourceRequest(input.sourceId, input.params ?? {})
       const { provider } = parseSourceId(input.sourceId)
       const secrets = await resolveSourceSecrets(request.source, provider)
-      const items = await request.source.loader(request.params, {
-        secrets,
-        updateSecrets: async (updates) => {
-          Object.assign(secrets, updates)
-          await updateSourceSecrets(request.source, provider, updates)
-        },
-      })
+      const result = normalizeSourceLoaderResult(
+        await request.source.loader(request.params, {
+          secrets,
+          updateSecrets: async (updates) => {
+            Object.assign(secrets, updates)
+            await updateSourceSecrets(request.source, provider, updates)
+          },
+        }),
+      )
 
       return {
-        items,
+        ...result,
         updatedAt: Date.now(),
       }
     },

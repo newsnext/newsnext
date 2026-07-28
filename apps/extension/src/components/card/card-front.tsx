@@ -26,6 +26,7 @@ import { Hottest } from "./hottest"
 import { Timeline } from "./timeline"
 
 interface CardFrontProps {
+  badge?: string
   id: string
   source: BoardSource
   items: NewsItem[]
@@ -171,6 +172,7 @@ function CardFrontContent({
 }
 
 function CardFrontComponent({
+  badge: displayBadge,
   id,
   source,
   items,
@@ -187,7 +189,7 @@ function CardFrontComponent({
   actions,
   dragHandle,
 }: CardFrontProps) {
-  const { badge, type, color, desc, icon, provider, title, home } = source
+  const { type, color, desc, icon, provider, title, home } = source
   const ref = useRef<HTMLDivElement>(null)
   const relativeTime = useRelativeTime({ date: updatedAt })
   const sourceStatusMessage = sourcePermissionRequired
@@ -208,7 +210,7 @@ function CardFrontComponent({
       />
       <div className="relative flex h-full flex-col p-3">
         <CardHeader
-          badge={badge}
+          badge={displayBadge}
           color={color}
           desc={desc}
           home={home}
@@ -254,7 +256,7 @@ function CardFrontComponent({
           >
             <div className={cn("min-h-full transition-opacity-500", isFetching && "opacity-20")}>
               <CardFrontContent
-                badge={badge}
+                badge={displayBadge}
                 color={color}
                 icon={icon}
                 isFetching={isFetching}

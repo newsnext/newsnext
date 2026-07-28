@@ -87,6 +87,7 @@ export function useSourceQuery({
     isError,
     errorMessage: error instanceof Error ? error.message : undefined,
     loginUrl: getLoginUrlFromError(error),
+    badge: data?.metadata?.badge,
     updatedAt: data?.updatedAt ?? initialUpdatedAt,
   }
 }

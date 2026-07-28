@@ -1735,7 +1735,10 @@
       ],
       "browser": []
     },
-    "cache": "5m",
+    "cache": {
+      "version": 2,
+      "maxAge": "5m"
+    },
     "secrets": [
       {
         "key": "accessToken",
@@ -2604,7 +2607,10 @@
         }
       }
     ],
-    "cache": "5m",
+    "cache": {
+      "version": 2,
+      "maxAge": "5m"
+    },
     "params": {
       "uid": {
         "type": "text",
@@ -2809,7 +2815,10 @@
       ],
       "browser": []
     },
-    "cache": "5m",
+    "cache": {
+      "version": 2,
+      "maxAge": "5m"
+    },
     "secrets": [
       {
         "key": "csrfToken",

@@ -19,6 +19,7 @@ import { ColorSelector, EditableInput, Info } from "./fields"
 import { ParamField } from "./param-field"
 
 export interface CardBackProps {
+  badge?: string
   id: string
   source: BoardSource
   sourceParams: Record<string, unknown>
@@ -37,6 +38,7 @@ export interface CardBackProps {
 }
 
 export function CardBack({
+  badge: displayBadge,
   id,
   source,
   sourceParams,
@@ -59,7 +61,7 @@ export function CardBack({
   const [editDraft, setEditDraft] = useState<SourceEditDraft | null>(null)
   const canEdit = isCustom && editDraft !== null
   const previewTitle = canEdit ? editDraft.title : title
-  const previewBadge = canEdit ? editDraft.badge : badge
+  const previewBadge = canEdit ? editDraft.badge : displayBadge
   const previewDesc = canEdit ? editDraft.desc : desc
   const previewHome = canEdit ? editDraft.home : home
   const previewColor = canEdit ? editDraft.color : color

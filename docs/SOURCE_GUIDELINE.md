@@ -1141,10 +1141,30 @@ loader: {
 
 RSS items are mapped to `title`, `url`, and an optional parsed `timestamp`.
 
-## News item output
+## Loader output
 
-Every loader returns `NewsItem[]`. A valid item requires non-empty `title` and
-`url`. The simplified output shape is:
+A loader may return `NewsItem[]` or an object containing the items and dynamic
+source metadata:
+
+```ts
+interface SourceLoaderResult {
+  items: NewsItem[]
+  metadata?: {
+    badge?: string
+  }
+}
+```
+
+Use loader metadata for response-derived display values that cannot be known
+from Radar and may expire, such as a signed user avatar URL. Loader metadata is
+cached with its items and takes precedence over static or Radar badge metadata
+while that result is displayed.
+
+Do not repeat a source-level icon on every item. Return it once as
+`metadata.badge` and omit it from item `inline.icon`. Item icons should only be
+used when they genuinely differ between items, such as a multi-author feed.
+
+A valid item requires non-empty `title` and `url`. The simplified item shape is:
 
 ```ts
 interface NewsItem {
@@ -1506,6 +1526,22 @@ radar: [{
 ```
 
 The badge is rendered as a small circular overlay at the icon's bottom-right.
+For signed or expiring avatar URLs, return the current URL explicitly from a
+custom loader:
+
+```ts
+return {
+  items,
+  metadata: {
+    badge: response.user.avatarUrl,
+  },
+}
+```
+
+The loader result badge takes precedence over a Radar badge without persisting
+the expiring URL in the saved source instance. Do not also emit the same avatar
+as every item's `inline.icon`.
+
 Do not put Liquid in source `metadata.icon` or `metadata.badge`. Source
 registration rejects templates in every source metadata field. Radar
 registration also rejects `patch.metadata.icon`.

@@ -82,7 +82,10 @@ export function getTimelineEntries(instructions: XTimelineInstruction[]): XTimel
   return instructions.flatMap(instruction => instruction.entry ? [instruction.entry] : instruction.entries ?? [])
 }
 
-function xTweetToNewsItem(tweet: XTweetResult): NewsItem | undefined {
+function xTweetToNewsItem(
+  tweet: XTweetResult,
+  includeIcon: boolean,
+): NewsItem | undefined {
   const id = tweet.rest_id
   const user = tweet.core?.user_results?.result?.legacy
   const screenName = user?.screen_name
@@ -103,7 +106,9 @@ function xTweetToNewsItem(tweet: XTweetResult): NewsItem | undefined {
     url: `${X_ORIGIN}/${screenName}/status/${id}`,
     inline: {
       text: `${formattedCount} ${favoriteCount === 1 ? "like" : "likes"}`,
-      ...(user.profile_image_url_https ? { icon: { src: user.profile_image_url_https, radius: 999 } } : {}),
+      ...(includeIcon && user.profile_image_url_https
+        ? { icon: { src: user.profile_image_url_https, radius: 999 } }
+        : {}),
     },
   }
 
@@ -117,11 +122,15 @@ function xTweetToNewsItem(tweet: XTweetResult): NewsItem | undefined {
   return item
 }
 
-export function entriesToNewsItems(entries: XTimelineEntry[]): NewsItem[] {
+export function entriesToNewsItems(
+  entries: XTimelineEntry[],
+  options: { includeIcon?: boolean } = {},
+): NewsItem[] {
+  const { includeIcon = true } = options
   const seen = new Set<string>()
   return entries.flatMap((entry): NewsItem[] => {
     const tweet = getTweetResult(entry)
-    const item = tweet ? xTweetToNewsItem(tweet) : undefined
+    const item = tweet ? xTweetToNewsItem(tweet, includeIcon) : undefined
     if (!item || seen.has(item.url)) return []
     seen.add(item.url)
     return [item]

@@ -76,10 +76,21 @@ export interface SourceLoaderContext {
   updateSecrets?: (secrets: SourceSecrets) => Promise<void>
 }
 
+export interface SourceLoaderMetadata {
+  badge?: string
+}
+
+export interface SourceLoaderResult {
+  items: NewsItem[]
+  metadata?: SourceLoaderMetadata
+}
+
+export type SourceLoaderOutput = NewsItem[] | SourceLoaderResult
+
 export type SourceLoader<TParams extends SourceParamSchemaMap = SourceParamSchemaMap> = (
   params: InferSourceParams<TParams>,
   context?: SourceLoaderContext,
-) => Promise<NewsItem[]>
+) => Promise<SourceLoaderOutput>
 
 export interface SourceMetadata {
   key: string

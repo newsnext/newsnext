@@ -84,6 +84,9 @@ export interface XUserByScreenNameResponse {
   data?: {
     user?: {
       result?: {
+        legacy?: {
+          profile_image_url_https?: string
+        }
         rest_id?: string
       }
     }

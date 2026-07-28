@@ -1,4 +1,4 @@
-import type { NewsItem } from "@newsnext/source/types"
+import type { NewsItem, SourceLoaderResult } from "@newsnext/source/types"
 import { myFetch } from "@newsnext/source/utils"
 import { load } from "cheerio/slim"
 
@@ -72,7 +72,10 @@ function normalizePictures(pictures?: WeiboStatus["pics"] | WeiboStatus["pic_inf
     .filter((url): url is string => Boolean(url))
 }
 
-function weiboStatusToNewsItem(status: WeiboStatus): NewsItem | undefined {
+function weiboStatusToNewsItem(
+  status: WeiboStatus,
+  includeIcon: boolean,
+): NewsItem | undefined {
   const postId = status.mblogid || status.bid || (typeof status.id === "string" ? status.id : undefined)
   const text = status.text_raw?.trim() || htmlToText(status.longText?.longTextContent ?? status.text)
   if (!postId || !text) return undefined
@@ -89,14 +92,13 @@ function weiboStatusToNewsItem(status: WeiboStatus): NewsItem | undefined {
     ...normalizePictures(status.retweeted_status?.pic_infos ?? status.retweeted_status?.pics),
   ]
   const timestamp = status.created_at ? Date.parse(status.created_at) : Number.NaN
+  const inlineIcon = includeIcon ? status.user?.profile_image_url : undefined
   const item: NewsItem = {
     title: text,
     url: userId ? `${WEIBO_ORIGIN}/${userId}/${postId}` : `${WEIBO_ORIGIN}/status/${postId}`,
     inline: {
       text: status.source ? htmlToText(status.source) : "",
-      ...(status.user?.profile_image_url
-        ? { icon: { src: status.user.profile_image_url, radius: 999 } }
-        : {}),
+      ...(inlineIcon ? { icon: { src: inlineIcon, radius: 999 } } : {}),
     },
     preview: {
       text: retweetedText ? `${text}\n\nRepost: ${retweetedText}` : text,
@@ -107,11 +109,15 @@ function weiboStatusToNewsItem(status: WeiboStatus): NewsItem | undefined {
   return item
 }
 
-function statusesToNewsItems(statuses: WeiboStatus[]): NewsItem[] {
+function statusesToNewsItems(
+  statuses: WeiboStatus[],
+  options: { includeIcon?: boolean } = {},
+): NewsItem[] {
+  const { includeIcon = true } = options
   return statuses
     .filter(status => !status.isAd)
     .flatMap((status): NewsItem[] => {
-      const item = weiboStatusToNewsItem(status)
+      const item = weiboStatusToNewsItem(status, includeIcon)
       return item ? [item] : []
     })
     .sort((a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0))
@@ -127,7 +133,7 @@ function cardsToNewsItems(cards: WeiboCard[]): NewsItem[] {
 
 export async function fetchWeiboUserPosts(
   { uid }: { uid: string },
-): Promise<NewsItem[]> {
+): Promise<SourceLoaderResult> {
   const normalizedUid = uid.trim()
   if (!/^\d+$/.test(normalizedUid)) throw new Error("Weibo user ID must be a numeric uid.")
 
@@ -135,7 +141,15 @@ export async function fetchWeiboUserPosts(
     `${WEIBO_ORIGIN}/ajax/statuses/mymblog?uid=${normalizedUid}&page=1&feature=0`,
   )
   if (!response.data) throw new Error(response.msg ?? "Weibo returned an empty user timeline.")
-  return statusesToNewsItems(response.data.list ?? [])
+  const statuses = response.data.list ?? []
+  const badge = statuses
+    .find(status => status.user?.profile_image_url)
+    ?.user
+    ?.profile_image_url
+  return {
+    items: statusesToNewsItems(statuses, { includeIcon: false }),
+    ...(badge ? { metadata: { badge } } : {}),
+  }
 }
 
 export async function fetchWeiboKeywordPosts(

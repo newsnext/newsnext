@@ -1,5 +1,9 @@
 import type { ProviderConfig } from "@newsnext/source/registry"
-import type { NewsItem, SourceLoaderContext } from "@newsnext/source/types"
+import type {
+  NewsItem,
+  SourceLoaderContext,
+  SourceLoaderResult,
+} from "@newsnext/source/types"
 import type {
   XHomeTimelineResponse,
   XPlaceTrendResponse,
@@ -82,7 +86,7 @@ async function fetchXTimeline(url: string, context?: SourceLoaderContext): Promi
 async function fetchXUserTweets(
   { username }: { username: string },
   context?: SourceLoaderContext,
-): Promise<NewsItem[]> {
+): Promise<SourceLoaderResult> {
   const screenName = username.trim()
   if (!/^\w{1,15}$/.test(screenName)) throw new Error("X username must be a valid handle.")
 
@@ -101,7 +105,8 @@ async function fetchXUserTweets(
       }),
     },
   })
-  const userId = user.data?.user?.result?.rest_id
+  const userResult = user.data?.user?.result
+  const userId = userResult?.rest_id
   if (!userId) throw new Error(`Cannot find X user: ${screenName}`)
 
   const response = await myFetch<XUserTweetsResponse>(USER_TWEETS_URL, {
@@ -120,9 +125,16 @@ async function fetchXUserTweets(
     },
   })
   const instructions = response.data?.user?.result?.timeline_v2?.timeline?.instructions ?? []
-  return sortNewsItemsByNewest(
-    entriesToNewsItems(getTimelineEntries(instructions).filter(isUserTweetEntry)),
-  )
+  const badge = userResult.legacy?.profile_image_url_https
+  return {
+    items: sortNewsItemsByNewest(
+      entriesToNewsItems(
+        getTimelineEntries(instructions).filter(isUserTweetEntry),
+        { includeIcon: false },
+      ),
+    ),
+    ...(badge ? { metadata: { badge } } : {}),
+  }
 }
 
 const capabilities = {
@@ -221,6 +233,10 @@ export default {
       },
       loader: {
         load: fetchXUserTweets,
+      },
+      cache: {
+        version: 2,
+        maxAge: "5m",
       },
     },
   },

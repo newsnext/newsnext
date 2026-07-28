@@ -1,10 +1,15 @@
 import type { ProviderConfig } from "@newsnext/source/registry"
-import type { NewsItem, SourceLoaderContext } from "@newsnext/source/types"
+import type {
+  NewsItem,
+  SourceLoaderContext,
+  SourceLoaderResult,
+} from "@newsnext/source/types"
 import type { JikeFeedResponse, TopicFeedOrder } from "./types"
 import { isJwtExpired, myFetch } from "@newsnext/source/utils"
 import {
   buildJikeTopicFeedUrl,
   createJikeHeaders,
+  getJikeUserAvatar,
   isJikeAuthFetchError,
   isPinnedPersonalUpdate,
   JIKE_WEB_ORIGIN,
@@ -111,14 +116,19 @@ export async function fetchJikeFollowingUpdates(
 export async function fetchJikeUserUpdates(
   { username }: { username: string },
   context?: SourceLoaderContext,
-): Promise<NewsItem[]> {
+): Promise<SourceLoaderResult> {
   const response = await fetchJikeWithAuth(
     USER_UPDATES_URL,
     { limit: FOLLOWING_UPDATES_LIMIT, username: username.trim() },
     context,
   )
   assertSuccessfulFeed(response, "Failed to load Jike user updates.")
-  return jikePostsToNewsItems((response.data ?? []).filter(post => !isPinnedPersonalUpdate(post)))
+  const posts = (response.data ?? []).filter(post => !isPinnedPersonalUpdate(post))
+  const badge = getJikeUserAvatar(posts.find(post => post.user)?.user)
+  return {
+    items: jikePostsToNewsItems(posts, { includeIcon: false }),
+    ...(badge ? { metadata: { badge } } : {}),
+  }
 }
 
 async function fetchJikeTopicFeed(
@@ -241,6 +251,10 @@ export default {
       },
       loader: {
         load: fetchJikeUserUpdates,
+      },
+      cache: {
+        version: 2,
+        maxAge: "5m",
       },
     },
     "topic-recent": {
