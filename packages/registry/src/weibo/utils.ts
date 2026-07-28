@@ -97,7 +97,6 @@ function weiboStatusToNewsItem(
     title: text,
     url: userId ? `${WEIBO_ORIGIN}/${userId}/${postId}` : `${WEIBO_ORIGIN}/status/${postId}`,
     inline: {
-      text: status.source ? htmlToText(status.source) : "",
       ...(inlineIcon ? { icon: { src: inlineIcon, radius: 999 } } : {}),
     },
     preview: {
