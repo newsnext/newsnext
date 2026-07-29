@@ -6,11 +6,19 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from "@newsnext/ui/components/select"
 import { Switch } from "@newsnext/ui/components/switch"
 import { cn } from "@/lib/utils"
-import { EditableInput, editableSelectClassName, Info, NumberInput, SelectLikeValue, Text } from "./fields"
+import {
+  EditableInput,
+  editableSelectClassName,
+  editableSelectContentClassName,
+  editableSelectItemClassName,
+  Info,
+  NumberInput,
+  SelectLikeValue,
+  Text,
+} from "./fields"
 
 export function ParamField({
   param,
@@ -30,7 +38,7 @@ export function ParamField({
   if (param.type === "switch") {
     return (
       <Info label={param.title}>
-        <div className="flex items-center justify-end gap-3 px-2">
+        <div className={cn("flex w-full items-center gap-3 pl-2", editable ? "justify-start pr-2" : "justify-end")}>
           <span className="text-xs text-muted-foreground">
             {currentValue ? "On" : "Off"}
           </span>
@@ -68,11 +76,17 @@ export function ParamField({
           onValueChange={nextValue => onChange(nextValue)}
         >
           <SelectTrigger className={editableSelectClassName} onClick={e => e.stopPropagation()}>
-            <SelectValue />
+            <span className="flex-1 truncate text-left text-sm">
+              {selectedOption?.label ?? String(currentValue)}
+            </span>
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent
+            align="end"
+            alignItemWithTrigger={false}
+            className={editableSelectContentClassName}
+          >
             {param.values.map(option => (
-              <SelectItem key={option.value} value={option.value}>
+              <SelectItem key={option.value} value={option.value} className={editableSelectItemClassName}>
                 {option.label}
               </SelectItem>
             ))}

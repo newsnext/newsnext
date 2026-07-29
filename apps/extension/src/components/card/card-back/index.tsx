@@ -8,16 +8,13 @@ import { Button } from "@newsnext/ui/components/button"
 import { ScrollArea } from "@newsnext/ui/components/scroll-area"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { useState } from "react"
-import {
-  PhArrowCircleLeftDuotone,
-  PhPencilCircleDuotone,
-} from "@/components/icons/ph"
+import { PhArrowCircleLeftDuotone } from "@/components/icons/ph"
 import { useRelativeTime } from "@/hooks/useRelativeTime"
 import { cn } from "@/lib/utils"
 import { IconButton } from "../../common/button"
 import { CardHeader } from "../card-header"
 import { DeleteForkButton, ForkButton } from "./actions"
-import { ColorSelector, EditableInput, Info, ValueSelector } from "./fields"
+import { ColorSelector, EditableImage, EditableInput, Info, ValueSelector } from "./fields"
 import { ParamField } from "./param-field"
 
 const SOURCE_TYPE_OPTIONS = [
@@ -71,15 +68,17 @@ export function CardBack({
 
   const { badge, category, desc, color, params, icon, provider, title, home, type } = source
   const [editDraft, setEditDraft] = useState<SourceEditDraft | null>(null)
-  const canEdit = isCustom && editDraft !== null
-  const previewTitle = canEdit ? editDraft.title : title
-  const previewBadge = canEdit ? editDraft.badge : displayBadge
-  const previewDesc = canEdit ? editDraft.desc : desc
-  const previewHome = canEdit ? editDraft.home : home
-  const previewColor = canEdit ? editDraft.color : color
-  const previewIcon = canEdit ? editDraft.icon : icon
-  const previewType = (canEdit ? editDraft.type : type) ?? "timeline"
-  const previewCategory = (canEdit ? editDraft.category : category) ?? "others"
+  const [isEditingParams, setIsEditingParams] = useState(false)
+  const isEditingMetadata = isCustom && editDraft !== null
+  const canEditParams = isCustom && isEditingParams
+  const previewTitle = isEditingMetadata ? editDraft.title : title
+  const previewBadge = isEditingMetadata ? editDraft.badge : displayBadge
+  const previewDesc = isEditingMetadata ? editDraft.desc : desc
+  const previewHome = isEditingMetadata ? editDraft.home : home
+  const previewColor = isEditingMetadata ? editDraft.color : color
+  const previewIcon = isEditingMetadata ? editDraft.icon : icon
+  const previewType = (isEditingMetadata ? editDraft.type : type) ?? "timeline"
+  const previewCategory = (isEditingMetadata ? editDraft.category : category) ?? "others"
   const relativeTime = useRelativeTime({ date: updatedAt })
   const hasSourceMetaChanges = Boolean(
     editDraft
@@ -108,20 +107,20 @@ export function CardBack({
     }
   }
 
-  function toggleEdit(): void {
+  function startEditingMetadata(): void {
     if (!isCustom) {
       return
     }
 
-    setEditDraft(prev => prev ? null : createEditDraft())
+    setEditDraft(createEditDraft())
   }
 
   function updateEditDraft(patch: Partial<SourceEditDraft>): void {
     setEditDraft(prev => prev ? { ...prev, ...patch } : prev)
   }
 
-  function discardEditDraft(): void {
-    setEditDraft(createEditDraft())
+  function cancelEditingMetadata(): void {
+    setEditDraft(null)
   }
 
   function saveEditDraft(): void {
@@ -131,6 +130,25 @@ export function CardBack({
 
     onSaveSourceMeta(editDraft)
     setEditDraft(null)
+  }
+
+  function startEditingParams(): void {
+    if (!isCustom) {
+      return
+    }
+
+    onDiscardSourceParams()
+    setIsEditingParams(true)
+  }
+
+  function cancelEditingParams(): void {
+    onDiscardSourceParams()
+    setIsEditingParams(false)
+  }
+
+  function saveParams(): void {
+    onSaveSourceParams()
+    setIsEditingParams(false)
   }
 
   return (
@@ -157,20 +175,6 @@ export function CardBack({
           actions={(
             <>
               {!isDraft && <ForkButton id={id} source={source} sourceParams={sourceParams} />}
-              <IconButton
-                onClick={(e) => {
-                  e.stopPropagation()
-                  if (!isCustom) {
-                    return
-                  }
-
-                  toggleEdit()
-                }}
-                aria-label="Edit"
-                title={isCustom ? "Edit" : "Only custom cards can be edited"}
-              >
-                <PhPencilCircleDuotone className={cn(canEdit && "text-primary", !isCustom && "opacity-40")} />
-              </IconButton>
               {!isDraft && <DeleteForkButton id={id} isCustom={isCustom} />}
               <IconButton
                 onClick={(e) => {
@@ -198,79 +202,95 @@ export function CardBack({
             onPointerDown={event => event.stopPropagation()}
             className="relative size-full rounded-2xl overflow-hidden"
           >
-            <div
-              className="px-3 py-2 space-y-4"
-              onDoubleClick={(e) => {
-                e.stopPropagation() // Prevent flip on double click if that's a thing
-                if (!isCustom) {
-                  return
-                }
-
-                toggleEdit()
-              }}
-            >
+            <div className="p-3 space-y-4">
               <div className="flex flex-col text-sm">
                 <div className="mb-2 flex items-start justify-between">
                   <span className="inline-block border-b border-border/60 pb-1 font-semibold opacity-80">Metadata</span>
-                  {canEdit && (
-                    <div className="flex gap-1.5">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        disabled={!hasSourceMetaChanges}
-                        className={cn(`h-6 px-2 bg-${previewColor}-500/10 hover:bg-${previewColor}-500/20 text-${previewColor}-600 border-${previewColor}-200`)}
-                        onClick={(event) => {
-                          event.stopPropagation()
-                          discardEditDraft()
-                        }}
-                      >
-                        Revert
-                      </Button>
-                      <Button
-                        type="button"
-                        size="sm"
-                        disabled={!hasSourceMetaChanges}
-                        className="h-6 px-2"
-                        onClick={(event) => {
-                          event.stopPropagation()
-                          saveEditDraft()
-                        }}
-                      >
-                        Save
-                      </Button>
-                    </div>
-                  )}
+                  {isEditingMetadata
+                    ? (
+                        <div className="flex gap-1.5">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className={cn(`h-6 px-2 bg-${previewColor}-500/10 hover:bg-${previewColor}-500/20 text-${previewColor}-600 border-${previewColor}-200`)}
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              cancelEditingMetadata()
+                            }}
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            disabled={!hasSourceMetaChanges}
+                            className={cn(`h-6 bg-${previewColor}-500 px-2 hover:bg-${previewColor}-500/80`)}
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              saveEditDraft()
+                            }}
+                          >
+                            Save
+                          </Button>
+                        </div>
+                      )
+                    : (
+                        <Button
+                          type="button"
+                          size="sm"
+                          disabled={!isCustom}
+                          title={isCustom ? "Edit metadata" : "Only custom cards can be edited"}
+                          className={cn(`h-6 bg-${previewColor}-500 px-2 hover:bg-${previewColor}-500/80`)}
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            startEditingMetadata()
+                          }}
+                        >
+                          Edit
+                        </Button>
+                      )}
                 </div>
                 <Info label="Title">
-                  <EditableInput text={previewTitle || ""} editable={canEdit} onChange={value => updateEditDraft({ title: value })} />
+                  <EditableInput text={previewTitle || ""} editable={isEditingMetadata} onChange={value => updateEditDraft({ title: value })} />
                 </Info>
 
                 <Info label="Description">
-                  <EditableInput text={previewDesc || ""} editable={canEdit} onChange={value => updateEditDraft({ desc: value })} />
+                  <EditableInput text={previewDesc || ""} editable={isEditingMetadata} onChange={value => updateEditDraft({ desc: value })} />
                 </Info>
 
                 <Info label="Home">
-                  <EditableInput text={previewHome || ""} editable={canEdit} onChange={value => updateEditDraft({ home: value })} />
+                  <EditableInput text={previewHome || ""} editable={isEditingMetadata} onChange={value => updateEditDraft({ home: value })} />
                 </Info>
 
                 <Info label="Icon">
-                  <EditableInput text={previewIcon ?? ""} editable={canEdit} onChange={value => updateEditDraft({ icon: value || undefined })} />
+                  <EditableImage
+                    src={previewIcon ?? ""}
+                    alt={`${previewTitle || provider.title} icon`}
+                    editable={isEditingMetadata}
+                    onChange={value => updateEditDraft({ icon: value || undefined })}
+                  />
                 </Info>
 
                 <Info label="Badge">
-                  <EditableInput text={previewBadge ?? ""} editable={canEdit} onChange={value => updateEditDraft({ badge: value || undefined })} />
+                  <EditableImage
+                    src={previewBadge ?? ""}
+                    alt={`${previewTitle || provider.title} badge`}
+                    rounded
+                    editable={isEditingMetadata}
+                    onChange={value => updateEditDraft({ badge: value || undefined })}
+                  />
                 </Info>
 
                 <Info label="Color">
-                  <ColorSelector color={previewColor} editable={canEdit} onChange={value => updateEditDraft({ color: value })} />
+                  <ColorSelector color={previewColor} editable={isEditingMetadata} onChange={value => updateEditDraft({ color: value })} />
                 </Info>
 
                 <Info label="Type">
                   <ValueSelector
                     value={previewType}
                     options={SOURCE_TYPE_OPTIONS}
-                    editable={canEdit}
+                    editable={isEditingMetadata}
                     onChange={value => updateEditDraft({ type: value })}
                   />
                 </Info>
@@ -279,7 +299,7 @@ export function CardBack({
                   <ValueSelector
                     value={previewCategory}
                     options={SOURCE_CATEGORY_OPTIONS}
-                    editable={canEdit}
+                    editable={isEditingMetadata}
                     onChange={value => updateEditDraft({ category: value })}
                   />
                 </Info>
@@ -289,55 +309,70 @@ export function CardBack({
                 <div className="flex flex-col text-sm pt-0.5">
                   <div className="mb-2 flex items-start justify-between">
                     <span className="inline-block border-b border-border/60 pb-1 font-semibold opacity-80">Parameters</span>
-                    {canEdit && (
-                      <div className="flex gap-1.5">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          disabled={!hasSourceParamChanges}
-                          className={cn(`h-6 px-2 bg-${previewColor}-500/10 hover:bg-${previewColor}-500/20 text-${previewColor}-600 border-${previewColor}-200`)}
-                          onClick={(event) => {
-                            event.stopPropagation()
-                            onDiscardSourceParams()
-                          }}
-                        >
-                          Revert
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          disabled={!hasSourceParams}
-                          className={cn(`h-6 px-2 bg-${previewColor}-500/10 hover:bg-${previewColor}-500/20 text-${previewColor}-600 border-${previewColor}-200`)}
-                          onClick={(event) => {
-                            event.stopPropagation()
-                            onResetSourceParams()
-                          }}
-                        >
-                          Reset
-                        </Button>
-                        <Button
-                          type="button"
-                          size="sm"
-                          disabled={!hasSourceParamChanges}
-                          className="h-6 px-2"
-                          onClick={(event) => {
-                            event.stopPropagation()
-                            onSaveSourceParams()
-                          }}
-                        >
-                          Save
-                        </Button>
-                      </div>
-                    )}
+                    {canEditParams
+                      ? (
+                          <div className="flex gap-1.5">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className={cn(`h-6 px-2 bg-${previewColor}-500/10 hover:bg-${previewColor}-500/20 text-${previewColor}-600 border-${previewColor}-200`)}
+                              onClick={(event) => {
+                                event.stopPropagation()
+                                cancelEditingParams()
+                              }}
+                            >
+                              Cancel
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              disabled={!hasSourceParams}
+                              className={cn(`h-6 px-2 bg-${previewColor}-500/10 hover:bg-${previewColor}-500/20 text-${previewColor}-600 border-${previewColor}-200`)}
+                              onClick={(event) => {
+                                event.stopPropagation()
+                                onResetSourceParams()
+                              }}
+                            >
+                              Reset
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              disabled={!hasSourceParamChanges}
+                              className={cn(`h-6 bg-${previewColor}-500 px-2 hover:bg-${previewColor}-500/80`)}
+                              onClick={(event) => {
+                                event.stopPropagation()
+                                saveParams()
+                              }}
+                            >
+                              Save
+                            </Button>
+                          </div>
+                        )
+                      : (
+                          <Button
+                            type="button"
+                            size="sm"
+                            disabled={!isCustom}
+                            title={isCustom ? "Edit parameters" : "Only custom cards can be edited"}
+                            className={cn(`h-6 bg-${previewColor}-500 px-2 hover:bg-${previewColor}-500/80`)}
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              startEditingParams()
+                            }}
+                          >
+                            Edit
+                          </Button>
+                        )}
                   </div>
                   {params && Object.entries(params).map(([paramKey, param]) => (
                     <ParamField
                       key={paramKey}
                       param={param}
                       value={draftSourceParams[paramKey]}
-                      editable={canEdit}
+                      editable={canEditParams}
                       color={previewColor}
                       onChange={nextValue => onSourceParamChange(paramKey, nextValue)}
                     />

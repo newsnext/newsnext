@@ -11,13 +11,17 @@ import {
 import { useMemo } from "react"
 import { cn } from "@/lib/utils"
 
-const editableFieldClassName = "h-6 w-full rounded-3xl border border-transparent bg-transparent px-2 text-sm leading-none text-right shadow-none transition-colors hover:bg-background/40 focus-visible:border-input/50 focus-visible:bg-background/60 focus-visible:ring-1 focus-visible:ring-ring/30"
+const editableFieldClassName = "h-6 w-full rounded-3xl border border-transparent bg-transparent px-2 text-sm leading-none text-left shadow-none transition-colors hover:bg-background/40 focus-visible:border-input/50 focus-visible:bg-background/60 focus-visible:ring-1 focus-visible:ring-ring/30"
 
 export const editableSelectClassName = cn(
   editableFieldClassName,
-  "py-0 data-[size=default]:h-6 data-[size=sm]:h-6 justify-end",
-  "[&_[data-slot=select-value]]:justify-end [&_[data-slot=select-value]]:text-right",
+  "justify-between py-0 text-left data-[size=default]:h-6 data-[size=sm]:h-6",
+  "[&_[data-slot=select-value]]:justify-start [&_[data-slot=select-value]]:text-left",
 )
+
+export const editableSelectItemClassName = "h-6 py-0 pl-1"
+
+export const editableSelectContentClassName = "min-w-(--anchor-width) rounded-xl border-0 bg-background/80 p-1 shadow-lg shadow-black/10 backdrop-blur-xl ring-1 ring-border/60 [&_[data-slot=select-item]]:rounded-lg [&_[data-slot=select-item]]:focus:bg-foreground/5"
 
 export function EditableInput({ text, editable = false, onChange }: { text: string, editable?: boolean, onChange?: (value: string) => void }) {
   if (!editable) {
@@ -33,6 +37,44 @@ export function EditableInput({ text, editable = false, onChange }: { text: stri
       }}
       onClick={e => e.stopPropagation()}
     />
+  )
+}
+
+export function EditableImage({
+  src,
+  alt,
+  rounded = false,
+  editable = false,
+  onChange,
+}: {
+  src: string
+  alt: string
+  rounded?: boolean
+  editable?: boolean
+  onChange?: (value: string) => void
+}) {
+  if (editable) {
+    return <EditableInput text={src} editable onChange={onChange} />
+  }
+
+  if (!src) {
+    return <Text text="" />
+  }
+
+  return (
+    <button
+      type="button"
+      className={cn("ml-auto size-5 shrink-0 overflow-hidden bg-background/40", rounded ? "rounded-full" : "rounded-md")}
+      title={src}
+      onClick={() => window.open(src, "_blank")}
+    >
+      <img
+        className="size-full object-cover"
+        src={src}
+        alt={alt}
+        referrerPolicy="no-referrer"
+      />
+    </button>
   )
 }
 
@@ -65,7 +107,7 @@ export function Text({ text }: { text: string }) {
   return (
     <span
       className={cn(
-        "flex h-6 w-full items-center justify-end truncate rounded-3xl border border-transparent px-2 text-right font-normal leading-none",
+        "flex h-6 w-full items-center justify-end truncate rounded-3xl border border-transparent pl-2 text-right font-normal leading-none",
         isLink && "cursor-pointer hover:underline",
       )}
       title={text}
@@ -82,11 +124,10 @@ export function Text({ text }: { text: string }) {
 
 export function SelectLikeValue({ children }: PropsWithChildren) {
   return (
-    <span className="flex h-6 w-full items-center justify-end gap-1.5 rounded-3xl border border-transparent px-2 leading-none">
+    <span className="flex h-6 w-full items-center justify-end rounded-3xl border border-transparent pl-2 text-right leading-none">
       <span className="flex min-w-0 items-center justify-end gap-2">
         {children}
       </span>
-      <span className="size-4 shrink-0" aria-hidden />
     </span>
   )
 }
@@ -122,8 +163,9 @@ export function ColorSelector({ color, editable, onChange }: { color: Color, edi
   if (!editable) {
     return (
       <SelectLikeValue>
-        <ColorSwitch color={color} className="size-3" />
-        <span className="text-sm">{color}</span>
+        <span title={color}>
+          <ColorSwitch color={color} className="size-3" />
+        </span>
       </SelectLikeValue>
     )
   }
@@ -131,12 +173,15 @@ export function ColorSelector({ color, editable, onChange }: { color: Color, edi
   return (
     <Select value={color} onValueChange={val => onChange?.(val as Color)}>
       <SelectTrigger className={editableSelectClassName} onClick={e => e.stopPropagation()}>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-1 items-center justify-start" title={color}>
           <ColorSwitch color={color} className="size-3" />
-          <span className="text-sm">{color}</span>
         </div>
       </SelectTrigger>
-      <SelectContent className="w-42">
+      <SelectContent
+        align="end"
+        alignItemWithTrigger={false}
+        className={cn("w-42", editableSelectContentClassName)}
+      >
         <div className="grid grid-cols-6 place-items-center gap-1 p-1.5">
           {COLORS.map(c => (
             <SelectItem
@@ -181,13 +226,17 @@ export function ValueSelector<T extends string>({
   return (
     <Select value={value} onValueChange={nextValue => onChange?.(nextValue as T)}>
       <SelectTrigger className={editableSelectClassName} onClick={event => event.stopPropagation()}>
-        <span className="truncate text-sm">
+        <span className="flex-1 truncate text-left text-sm">
           {selectedOption?.label ?? value}
         </span>
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent
+        align="end"
+        alignItemWithTrigger={false}
+        className={editableSelectContentClassName}
+      >
         {options.map(option => (
-          <SelectItem key={option.value} value={option.value}>
+          <SelectItem key={option.value} value={option.value} className={editableSelectItemClassName}>
             {option.label}
           </SelectItem>
         ))}
