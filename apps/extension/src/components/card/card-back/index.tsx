@@ -1,9 +1,7 @@
-import type { CategoryId } from "@newsnext/source/types"
 import type { ReactNode } from "react"
 import type { SourceEditDraft } from "./types"
 import type { SourceInstanceMetadata } from "@/lib/source-cards"
 import type { BoardSource } from "@/typings/source"
-import { categories } from "@newsnext/source"
 import { Button } from "@newsnext/ui/components/button"
 import { ScrollArea } from "@newsnext/ui/components/scroll-area"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
@@ -21,11 +19,6 @@ const SOURCE_TYPE_OPTIONS = [
   { label: "Timeline", value: "timeline" },
   { label: "Hottest", value: "hottest" },
 ] as const
-
-const SOURCE_CATEGORY_OPTIONS = Object.entries(categories).map(([value, label]) => ({
-  label,
-  value: value as CategoryId,
-}))
 
 export interface CardBackProps {
   badge?: string
@@ -62,7 +55,7 @@ export function CardBack({
   isDraft = false,
   dragHandle,
 }: CardBackProps) {
-  const { badge, category, desc, color, params, icon, provider, title, home, type } = source
+  const { badge, desc, color, params, icon, provider, title, home, type } = source
   const [editDraft, setEditDraft] = useState<SourceEditDraft | null>(null)
   const [isEditingParams, setIsEditingParams] = useState(false)
   const isEditingMetadata = editDraft !== null
@@ -74,7 +67,6 @@ export function CardBack({
   const previewColor = isEditingMetadata ? editDraft.color : color
   const previewIcon = isEditingMetadata ? editDraft.icon : icon
   const previewType = (isEditingMetadata ? editDraft.type : type) ?? "timeline"
-  const previewCategory = (isEditingMetadata ? editDraft.category : category) ?? "others"
   const relativeTime = useRelativeTime({ date: updatedAt })
   const hasSourceMetaChanges = Boolean(
     editDraft
@@ -86,7 +78,6 @@ export function CardBack({
       || editDraft.home !== home
       || editDraft.color !== color
       || editDraft.type !== type
-      || editDraft.category !== category
     ),
   )
 
@@ -99,7 +90,6 @@ export function CardBack({
       home,
       color,
       type,
-      category,
     }
   }
 
@@ -282,14 +272,6 @@ export function CardBack({
                   />
                 </Info>
 
-                <Info label="Category">
-                  <ValueSelector
-                    value={previewCategory}
-                    options={SOURCE_CATEGORY_OPTIONS}
-                    editable={isEditingMetadata}
-                    onChange={value => updateEditDraft({ category: value })}
-                  />
-                </Info>
               </div>
 
               {hasSourceParams && (

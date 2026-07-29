@@ -50,6 +50,7 @@ async function getSearchParams(moreParams: Record<string, SearchParamValue> = {}
 
 export default {
   title: "财联社",
+  category: "finance",
   defaults: {
     cache: "5m",
     loader: {
@@ -70,7 +71,6 @@ export default {
     metadata: {
       home: "https://www.cls.cn",
       color: "red",
-      category: "finance",
       type: "timeline",
     },
   },

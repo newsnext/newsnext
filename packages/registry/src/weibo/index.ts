@@ -55,6 +55,7 @@ const weiboSearchRequestRules = [
 
 export default {
   title: "微博",
+  category: "social",
   defaults: {
     capabilities: weiboCapabilities,
     requestRules: weiboRequestRules,
@@ -64,7 +65,6 @@ export default {
     },
     metadata: {
       color: "red",
-      category: "china",
       type: "timeline",
       icon: "https://weibo.com/favicon.ico",
     },

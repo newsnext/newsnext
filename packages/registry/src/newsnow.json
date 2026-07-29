@@ -1,5 +1,6 @@
 {
   "title": "NEWS NOW",
+  "category": "news",
   "defaults": {
     "metadata": {
       "color": "red",

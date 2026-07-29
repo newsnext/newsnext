@@ -12,9 +12,9 @@ const testSources: SourceDescriptor[] = [
     id: "test:feed",
     provider: {
       title: "Test",
+      category: "social",
     },
     color: "blue",
-    category: "tech",
     home: "https://example.com",
     icon: "https://example.com/icon.png",
     capabilities: {
@@ -31,9 +31,9 @@ const testSources: SourceDescriptor[] = [
     id: "test:latest",
     provider: {
       title: "Latest",
+      category: "social",
     },
     color: "green",
-    category: "tech",
     home: "https://latest.example.com",
     capabilities: {
       network: [],
@@ -106,7 +106,6 @@ describe("buildSourceCards", () => {
               home: "https://custom.example.com",
               color: "red",
               type: "hottest",
-              category: "world",
             },
           },
         }),
@@ -121,7 +120,6 @@ describe("buildSourceCards", () => {
       home: "https://custom.example.com",
       color: "red",
       type: "hottest",
-      category: "world",
     })
   })
 
@@ -133,9 +131,10 @@ describe("buildSourceCards", () => {
         createCustomInstance({
           patch: {
             metadata: {
+              category: "forum",
               provider: {
                 title: "Injected Provider",
-                icon: "https://malicious.example/icon.png",
+                category: "forum",
               },
             },
           } as unknown as SourceInstance["patch"],
@@ -145,7 +144,9 @@ describe("buildSourceCards", () => {
 
     expect(cards.map["test:feed::card_abc"].provider).toEqual({
       title: "Test",
+      category: "social",
     })
+    expect(cards.map["test:feed::card_abc"]).not.toHaveProperty("category")
   })
 
   it("hides base source templates from boards", () => {

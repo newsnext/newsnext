@@ -329,12 +329,12 @@ async function fetchBilibiliRanking({ region }: { region: string }): Promise<New
 
 export default {
   title: "哔哩哔哩",
+  category: "social",
   defaults: {
     cache: "5m",
     metadata: {
       home: "https://www.bilibili.com",
       color: "blue",
-      category: "china",
       type: "hottest",
     },
   },

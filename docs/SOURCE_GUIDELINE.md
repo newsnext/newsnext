@@ -31,7 +31,6 @@ export default {
     metadata: {
       home: "https://example.com",
       color: "blue",
-      category: "tech",
     },
   },
   sources: {
@@ -64,7 +63,9 @@ bun --filter=@newsnext/registry run build
 
 ## Provider and source configuration
 
-A provider has only `title`, `defaults`, and `sources`.
+A provider has only `title`, optional `category`, `defaults`, and `sources`.
+`title` and `category` identify the provider and cannot be overridden by
+individual sources, Radar rules, or card instances.
 
 `defaults` may contain `cache`, `capabilities`, `loader`, `metadata`, `vars`,
 `params`, `radar`, `requestRules`, and `secrets`. Defaults recursively fill
@@ -81,13 +82,62 @@ metadata: {
   desc: "Example news",
   home: "https://example.com/latest",
   color: "blue",
-  category: "tech",
   type: "timeline",
 }
 ```
 
-Categories are `tech`, `finance`, `china`, `world`, and `others`. An omitted
-category defaults to `others`.
+Provider categories are `social` (social platforms), `forum` (forums), `news`
+(news and readers), `finance` (finance), `developer` (developer platforms), and
+`entertainment` (entertainment). Set `category` at the top level when the
+provider belongs to one of them. Omitting it leaves the provider unclassified.
+
+### Provider category taxonomy
+
+Category describes the provider's primary product and content experience. It
+does not describe an individual source, a temporary topic, the provider's
+country, or the loader implementation. Every source under one provider inherits
+the same category.
+
+Use the following matching rules:
+
+| Category | Match when the provider's primary value is | Current examples |
+| --- | --- | --- |
+| `social` | Identity-based publishing, following, channels, or creator feeds | X, Weibo, Telegram, Jike, Bilibili |
+| `forum` | Topic-based discussion organized around threads, replies, or Q&A | Linux.do, V2EX, Hacker News, Tieba, Zhihu |
+| `news` | Editorial reporting, news aggregation, or feed subscription and reading | 36Kr, AIHot, Folo, NewsNow, Zaobao |
+| `finance` | Financial markets, investing, or finance-specialist reporting and data | CLS, Xueqiu |
+| `developer` | Software development, code collaboration, or developer workflows | GitHub |
+| `entertainment` | Music, video, games, or other media discovery and playback | NetEase Cloud Music |
+
+When a provider could match more than one category, classify its dominant user
+experience rather than isolated features:
+
+1. Prefer a specialist workflow such as `finance` or `developer` over a generic
+   feed or social feature.
+2. Prefer `forum` when threads and replies are the main content structure, even
+   if the provider also aggregates links.
+3. Prefer `social` when following identities, creators, or channels is the main
+   experience, even if most posts contain video or news.
+4. Use `news` for editorial, aggregation, and reader products where consuming
+   information is primary.
+5. Use `entertainment` for media catalogs whose primary experience is discovery
+   or playback rather than creator-following.
+
+For example, Hacker News is `forum` because discussion threads distinguish it
+from a news reader. Folo is `news` because the content experience matters more
+than its implementation as a reading tool. Xueqiu is `finance` because its
+specialist domain takes precedence over its social features.
+
+Leave `category` unset when no category clearly matches. Do not use `others` as
+a placeholder and do not create a category named after one provider.
+
+Create a new category only when it represents a stable product class, has a
+clear boundary from existing categories, and is expected to apply beyond a
+single source configuration. Category IDs must be lowercase English nouns,
+remain concise, and use kebab-case only when multiple words are necessary. Add
+the ID to `CATEGORY_IDS` in `packages/source/src/types/source.ts`, document its
+matching rule and examples here, update affected providers, rebuild the
+registry, and run type-checking and tests.
 
 `type: "hottest"` preserves loader order. `type: "timeline"` and an omitted
 type sort by descending timestamp when the first item has a non-zero timestamp.
@@ -610,7 +660,7 @@ Parse `scope.page.title` only when the value is unavailable from the top-level
 DOM, such as content rendered inside an iframe.
 
 Radar metadata can override every source presentation field: `title`, `icon`,
-`badge`, `desc`, `home`, `color`, `type`, and `category`. Use
+`badge`, `desc`, `home`, `color`, and `type`. Use
 `type: "hottest"` or `type: "timeline"` when a discovered instance needs a
 different card presentation from its source default. Radar metadata uses the
 same selector, traversal, extraction, and template behavior as HTML loader

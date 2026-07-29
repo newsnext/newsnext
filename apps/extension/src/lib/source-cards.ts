@@ -15,7 +15,7 @@ export interface SourceInstance {
   createdAt: number
 }
 
-export type SourceInstanceMetadata = Partial<SourcePresentationMetadata>
+export type SourceInstanceMetadata = SourcePresentationMetadata
 
 export type SourceInstancePatch = SourcePatch<
   Record<string, unknown>,

@@ -19,7 +19,7 @@ import type { JsonSourceOptions } from "./loaders/json"
 
 import { COLORS } from "@newsnext/shared/constants"
 import { createDefu } from "defu"
-import { categories } from "../types"
+import { isSourcePresentationMetadataKey } from "../types"
 import { assertNetworkCapability, validateSourceRequestRules } from "./capabilities"
 import { compileHtmlFieldTemplates, loadHtml } from "./loaders/html"
 import {
@@ -156,6 +156,9 @@ function validateSourceMetadata(
   location: string,
 ): void {
   for (const [key, value] of Object.entries(metadata ?? {})) {
+    if (!isSourcePresentationMetadataKey(key)) {
+      throw new TypeError(`${location}.${key} is not supported`)
+    }
     if (typeof value === "string" && isTemplate(value)) {
       throw new TypeError(
         `Liquid templates are not allowed at ${location}.${key}; use a Radar metadata patch for dynamic values`,
@@ -233,8 +236,8 @@ function validateJsonExpressionAt(expression: string, location: string): void {
 
 type ResolvedSource<TParams extends SourceParamSchemaMap> = Omit<
   RuntimeSource<TParams>,
-  "category" | "color" | "provider"
-> & Partial<Pick<RuntimeSource<TParams>, "category" | "color">>
+  "color" | "provider"
+> & Partial<Pick<RuntimeSource<TParams>, "color">>
 
 function resolveSource<const TParams extends SourceParamSchemaMap = Record<string, never>>(
   key: string,
@@ -369,12 +372,6 @@ export const assignSourceDefaults = createDefu((object, key, value) => {
   }
 })
 
-export const BASE_SOURCE_DEFAULTS: SourceConfigDefaults = {
-  metadata: {
-    category: "others",
-  },
-}
-
 export function mergeSourceVars(
   providerVars: SourceTemplateVars | undefined,
   sourceVars: SourceTemplateVars | undefined,
@@ -410,7 +407,6 @@ function mergeSourceVarValues(
 }
 
 const SOURCE_COLORS = new Set<string>(COLORS)
-const SOURCE_CATEGORIES = new Set(Object.keys(categories))
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value)
@@ -425,12 +421,9 @@ export function resolveRuntimeSource(
   validateSourceTemplates(id, config)
 
   const source = resolveSource(key, config)
-  const category = source.category
   if (
     !source.color
-    || !category
     || !SOURCE_COLORS.has(source.color)
-    || !SOURCE_CATEGORIES.has(category)
   ) {
     throw new Error(`Source "${id}" is missing valid display metadata`)
   }
@@ -444,7 +437,6 @@ export function resolveRuntimeSource(
     ...source,
     provider,
     color: source.color,
-    category,
     secrets,
     capabilities: {
       ...source.capabilities,

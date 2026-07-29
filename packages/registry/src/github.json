@@ -1,5 +1,6 @@
 {
   "title": "GitHub",
+  "category": "developer",
   "defaults": {
     "metadata": {
       "home": "https://github.com/trending",

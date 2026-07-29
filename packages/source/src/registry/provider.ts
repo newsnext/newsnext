@@ -4,14 +4,12 @@ import type { ProviderConfig, SourceRegistry } from "./types"
 import { getFavicon } from "@newsnext/shared/utils"
 import {
   assignSourceDefaults,
-  BASE_SOURCE_DEFAULTS,
   mergeSourceVars,
   resolveRuntimeSource,
 } from "../core/resolver"
 import {
   hasSourceProviderIdentity,
   isRecord,
-  isSourceCategory,
   isSourceColor,
   isStructuredLoaderType,
   isSupportedProviderKey,
@@ -101,7 +99,6 @@ function expandProviderSources(
       const defaultedSource = assignSourceDefaults(
         source,
         provider.defaults ?? {},
-        BASE_SOURCE_DEFAULTS,
       )
       const sourceKey = `${providerId}:${sourceId}`
       if (
@@ -125,10 +122,6 @@ function expandProviderSources(
       if (!isSourceColor(defaultedSource.metadata?.color)) {
         throw new Error(`Source "${sourceKey}" is missing a valid color`)
       }
-      if (!isSourceCategory(defaultedSource.metadata?.category)) {
-        throw new Error(`Source "${sourceKey}" has an invalid category`)
-      }
-
       return [sourceId, {
         ...defaultedSource,
         metadata: materializeSourceIcon(defaultedSource.metadata),
@@ -141,5 +134,6 @@ function expandProviderSources(
 function toSourceProvider(provider: ProviderConfig): SourceProvider {
   return {
     title: provider.title,
+    category: provider.category,
   }
 }

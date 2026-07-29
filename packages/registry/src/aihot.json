@@ -1,10 +1,10 @@
 {
   "title": "AIHot",
+  "category": "news",
   "defaults": {
     "metadata": {
       "color": "blue",
-      "home": "https://aihot.virxact.com",
-      "category": "tech"
+      "home": "https://aihot.virxact.com"
     }
   },
   "sources": {

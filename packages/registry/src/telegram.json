@@ -1,10 +1,10 @@
 {
   "title": "Telegram",
+  "category": "social",
   "defaults": {
     "metadata": {
       "color": "blue",
-      "home": "https://t.me/s/TestFlightCN",
-      "category": "tech"
+      "home": "https://t.me/s/TestFlightCN"
     }
   },
   "sources": {

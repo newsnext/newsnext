@@ -1,4 +1,5 @@
 import type { HtmlFieldConfig, SourceRadarRule } from "../types"
+import { isSourcePresentationMetadataKey } from "../types"
 import { SOURCE_REGISTRY_LIMITS } from "./limits"
 import { compileSourceTemplate } from "./template"
 
@@ -15,6 +16,9 @@ export function validateRadarRules(
       })
     }
     for (const [key, field] of Object.entries(rule.patch?.metadata ?? {})) {
+      if (!isSourcePresentationMetadataKey(key)) {
+        throw new TypeError(`${patchLocation}.metadata.${key} is not supported`)
+      }
       if (field === undefined) continue
       const fieldLocation = `${patchLocation}.metadata.${key}`
       if (typeof field === "string") {

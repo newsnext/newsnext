@@ -1,10 +1,10 @@
 {
   "title": "百度贴吧",
+  "category": "forum",
   "defaults": {
     "metadata": {
       "home": "https://tieba.baidu.com",
-      "color": "blue",
-      "category": "china"
+      "color": "blue"
     }
   },
   "sources": {

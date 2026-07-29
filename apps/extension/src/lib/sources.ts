@@ -4,7 +4,7 @@ import { createBackgroundClient } from "./background-client"
 
 function sortSourceDescriptors(sources: SourceDescriptor[]): SourceDescriptor[] {
   return [...sources].sort((a, b) => {
-    const byCategory = a.category.localeCompare(b.category)
+    const byCategory = (a.provider.category ?? "").localeCompare(b.provider.category ?? "")
     if (byCategory !== 0) {
       return byCategory
     }

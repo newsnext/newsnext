@@ -1,5 +1,6 @@
 {
   "title": "知乎",
+  "category": "forum",
   "defaults": {
     "metadata": {
       "home": "https://www.zhihu.com",

@@ -1,13 +1,5 @@
 {
   "36kr:hot-list": {
-    "metadata": {
-      "category": "tech",
-      "home": "https://36kr.com/hot-list/catalog",
-      "color": "blue",
-      "title": "人气榜",
-      "type": "hottest",
-      "icon": "https://icons.folo.is/36kr.com"
-    },
     "vars": {
       "origin": "https://36kr.com",
       "gateway": "https://gateway.36kr.com",
@@ -18,6 +10,13 @@
         "3": "公司",
         "4": "宏观"
       }
+    },
+    "metadata": {
+      "home": "https://36kr.com/hot-list/catalog",
+      "color": "blue",
+      "title": "人气榜",
+      "type": "hottest",
+      "icon": "https://icons.folo.is/36kr.com"
     },
     "cache": "5m",
     "radar": [
@@ -70,18 +69,11 @@
       }
     },
     "provider": {
-      "title": "36氪"
+      "title": "36氪",
+      "category": "news"
     }
   },
   "36kr:information": {
-    "metadata": {
-      "category": "tech",
-      "home": "https://36kr.com/information/web_news/latest/",
-      "color": "blue",
-      "title": "资讯",
-      "type": "timeline",
-      "icon": "https://icons.folo.is/36kr.com"
-    },
     "vars": {
       "origin": "https://36kr.com",
       "gateway": "https://gateway.36kr.com",
@@ -92,6 +84,13 @@
         "3": "公司",
         "4": "宏观"
       }
+    },
+    "metadata": {
+      "home": "https://36kr.com/information/web_news/latest/",
+      "color": "blue",
+      "title": "资讯",
+      "type": "timeline",
+      "icon": "https://icons.folo.is/36kr.com"
     },
     "cache": "5m",
     "params": {
@@ -213,18 +212,11 @@
       }
     },
     "provider": {
-      "title": "36氪"
+      "title": "36氪",
+      "category": "news"
     }
   },
   "36kr:newsflashes": {
-    "metadata": {
-      "category": "tech",
-      "home": "https://36kr.com/newsflashes/catalog/0",
-      "color": "blue",
-      "title": "快讯",
-      "type": "timeline",
-      "icon": "https://icons.folo.is/36kr.com"
-    },
     "vars": {
       "origin": "https://36kr.com",
       "gateway": "https://gateway.36kr.com",
@@ -235,6 +227,13 @@
         "3": "公司",
         "4": "宏观"
       }
+    },
+    "metadata": {
+      "home": "https://36kr.com/newsflashes/catalog/0",
+      "color": "blue",
+      "title": "快讯",
+      "type": "timeline",
+      "icon": "https://icons.folo.is/36kr.com"
     },
     "cache": "5m",
     "params": {
@@ -311,12 +310,12 @@
       }
     },
     "provider": {
-      "title": "36氪"
+      "title": "36氪",
+      "category": "news"
     }
   },
   "aihot:all": {
     "metadata": {
-      "category": "tech",
       "color": "blue",
       "home": "https://aihot.virxact.com",
       "type": "timeline",
@@ -345,12 +344,13 @@
     },
     "cache": "5m",
     "provider": {
-      "title": "AIHot"
+      "title": "AIHot",
+      "category": "news"
     }
   },
   "bilibili:following-videos": {
+    "cache": "5m",
     "metadata": {
-      "category": "china",
       "home": "https://www.bilibili.com",
       "color": "blue",
       "type": "timeline",
@@ -358,7 +358,6 @@
       "desc": "已关注 UP 主发布的视频动态",
       "icon": "https://icons.folo.is/www.bilibili.com"
     },
-    "cache": "5m",
     "capabilities": {
       "network": [
         "api.bilibili.com"
@@ -370,21 +369,22 @@
       "browser": []
     },
     "provider": {
-      "title": "哔哩哔哩"
+      "title": "哔哩哔哩",
+      "category": "social"
     }
   },
   "bilibili:hotword": {
+    "cache": "5m",
     "metadata": {
-      "category": "china",
       "home": "https://www.bilibili.com",
       "color": "blue",
       "type": "hottest",
       "title": "热搜",
       "icon": "https://icons.folo.is/www.bilibili.com"
     },
-    "cache": "5m",
     "provider": {
-      "title": "哔哩哔哩"
+      "title": "哔哩哔哩",
+      "category": "social"
     },
     "capabilities": {
       "network": [
@@ -395,17 +395,16 @@
     }
   },
   "bilibili:ranking": {
+    "cache": {
+      "version": 2,
+      "maxAge": "15m"
+    },
     "metadata": {
-      "category": "china",
       "home": "https://www.bilibili.com/v/popular/rank/all",
       "color": "blue",
       "type": "hottest",
       "title": "排行榜",
       "icon": "https://icons.folo.is/www.bilibili.com"
-    },
-    "cache": {
-      "version": 2,
-      "maxAge": "15m"
     },
     "params": {
       "region": {
@@ -951,17 +950,17 @@
       "browser": []
     },
     "provider": {
-      "title": "哔哩哔哩"
+      "title": "哔哩哔哩",
+      "category": "social"
     }
   },
   "browser:bookmarks": {
+    "cache": "5m",
     "metadata": {
-      "category": "others",
       "color": "blue",
       "type": "timeline",
       "title": "Bookmarks"
     },
-    "cache": "5m",
     "params": {
       "folder": {
         "type": "text",
@@ -990,13 +989,12 @@
     }
   },
   "browser:history": {
+    "cache": "1m",
     "metadata": {
-      "category": "others",
       "color": "blue",
       "type": "timeline",
       "title": "History"
     },
-    "cache": "1m",
     "params": {
       "query": {
         "type": "text",
@@ -1046,17 +1044,17 @@
     }
   },
   "cls:depth": {
+    "cache": "5m",
     "metadata": {
-      "category": "finance",
       "home": "https://www.cls.cn/depth",
       "color": "red",
       "type": "timeline",
       "title": "深度",
       "icon": "https://icons.folo.is/www.cls.cn"
     },
-    "cache": "5m",
     "provider": {
-      "title": "财联社"
+      "title": "财联社",
+      "category": "finance"
     },
     "capabilities": {
       "network": [
@@ -1067,17 +1065,17 @@
     }
   },
   "cls:hot-article": {
+    "cache": "5m",
     "metadata": {
-      "category": "finance",
       "home": "https://www.cls.cn",
       "color": "red",
       "type": "hottest",
       "title": "热门",
       "icon": "https://icons.folo.is/www.cls.cn"
     },
-    "cache": "5m",
     "provider": {
-      "title": "财联社"
+      "title": "财联社",
+      "category": "finance"
     },
     "capabilities": {
       "network": [
@@ -1088,17 +1086,17 @@
     }
   },
   "cls:telegraph": {
+    "cache": "1m",
     "metadata": {
-      "category": "finance",
       "home": "https://www.cls.cn",
       "color": "red",
       "type": "timeline",
       "title": "电报",
       "icon": "https://icons.folo.is/www.cls.cn"
     },
-    "cache": "1m",
     "provider": {
-      "title": "财联社"
+      "title": "财联社",
+      "category": "finance"
     },
     "capabilities": {
       "network": [
@@ -1109,14 +1107,6 @@
     }
   },
   "folo:feed": {
-    "metadata": {
-      "category": "others",
-      "color": "orange",
-      "home": "https://folo.is",
-      "type": "timeline",
-      "title": "Feed",
-      "icon": "https://icons.folo.is/folo.is"
-    },
     "cache": "5m",
     "capabilities": {
       "network": [
@@ -1124,6 +1114,13 @@
       ],
       "cookies": [],
       "browser": []
+    },
+    "metadata": {
+      "color": "orange",
+      "home": "https://folo.is",
+      "type": "timeline",
+      "title": "Feed",
+      "icon": "https://icons.folo.is/folo.is"
     },
     "params": {
       "feedId": {
@@ -1156,18 +1153,11 @@
       }
     ],
     "provider": {
-      "title": "Folo"
+      "title": "Folo",
+      "category": "news"
     }
   },
   "folo:list": {
-    "metadata": {
-      "category": "others",
-      "color": "orange",
-      "home": "https://folo.is",
-      "type": "timeline",
-      "title": "List",
-      "icon": "https://icons.folo.is/folo.is"
-    },
     "cache": "5m",
     "capabilities": {
       "network": [
@@ -1175,6 +1165,13 @@
       ],
       "cookies": [],
       "browser": []
+    },
+    "metadata": {
+      "color": "orange",
+      "home": "https://folo.is",
+      "type": "timeline",
+      "title": "List",
+      "icon": "https://icons.folo.is/folo.is"
     },
     "params": {
       "listId": {
@@ -1207,12 +1204,12 @@
       }
     ],
     "provider": {
-      "title": "Folo"
+      "title": "Folo",
+      "category": "news"
     }
   },
   "github:trending": {
     "metadata": {
-      "category": "others",
       "home": "https://github.com/trending",
       "color": "slate",
       "title": "Trending",
@@ -1304,17 +1301,11 @@
     },
     "cache": "15m",
     "provider": {
-      "title": "GitHub"
+      "title": "GitHub",
+      "category": "developer"
     }
   },
   "hackernews:ask": {
-    "metadata": {
-      "category": "others",
-      "color": "orange",
-      "home": "https://news.ycombinator.com/ask",
-      "title": "Ask",
-      "icon": "https://icons.folo.is/news.ycombinator.com"
-    },
     "cache": "5m",
     "vars": {
       "origin": "https://news.ycombinator.com"
@@ -1355,19 +1346,18 @@
         }
       }
     },
+    "metadata": {
+      "color": "orange",
+      "home": "https://news.ycombinator.com/ask",
+      "title": "Ask",
+      "icon": "https://icons.folo.is/news.ycombinator.com"
+    },
     "provider": {
-      "title": "Hacker News"
+      "title": "Hacker News",
+      "category": "forum"
     }
   },
   "hackernews:newest": {
-    "metadata": {
-      "category": "others",
-      "color": "orange",
-      "home": "https://news.ycombinator.com/newest",
-      "type": "timeline",
-      "title": "Newest",
-      "icon": "https://icons.folo.is/news.ycombinator.com"
-    },
     "cache": "1m",
     "vars": {
       "origin": "https://news.ycombinator.com"
@@ -1408,18 +1398,19 @@
         }
       }
     },
+    "metadata": {
+      "color": "orange",
+      "home": "https://news.ycombinator.com/newest",
+      "type": "timeline",
+      "title": "Newest",
+      "icon": "https://icons.folo.is/news.ycombinator.com"
+    },
     "provider": {
-      "title": "Hacker News"
+      "title": "Hacker News",
+      "category": "forum"
     }
   },
   "hackernews:show": {
-    "metadata": {
-      "category": "others",
-      "color": "orange",
-      "home": "https://news.ycombinator.com/show",
-      "title": "Show",
-      "icon": "https://icons.folo.is/news.ycombinator.com"
-    },
     "cache": "5m",
     "vars": {
       "origin": "https://news.ycombinator.com"
@@ -1460,19 +1451,18 @@
         }
       }
     },
+    "metadata": {
+      "color": "orange",
+      "home": "https://news.ycombinator.com/show",
+      "title": "Show",
+      "icon": "https://icons.folo.is/news.ycombinator.com"
+    },
     "provider": {
-      "title": "Hacker News"
+      "title": "Hacker News",
+      "category": "forum"
     }
   },
   "hackernews:top": {
-    "metadata": {
-      "category": "others",
-      "color": "orange",
-      "home": "https://news.ycombinator.com/",
-      "type": "hottest",
-      "title": "Hottest",
-      "icon": "https://icons.folo.is/news.ycombinator.com"
-    },
     "cache": "5m",
     "vars": {
       "origin": "https://news.ycombinator.com"
@@ -1513,20 +1503,19 @@
         }
       }
     },
+    "metadata": {
+      "color": "orange",
+      "home": "https://news.ycombinator.com/",
+      "type": "hottest",
+      "title": "Hottest",
+      "icon": "https://icons.folo.is/news.ycombinator.com"
+    },
     "provider": {
-      "title": "Hacker News"
+      "title": "Hacker News",
+      "category": "forum"
     }
   },
   "jike:following-updates": {
-    "metadata": {
-      "category": "others",
-      "home": "https://web.okjike.com",
-      "color": "yellow",
-      "type": "timeline",
-      "title": "关注动态",
-      "desc": "已关注即刻用户发布的动态",
-      "icon": "https://icons.folo.is/web.okjike.com"
-    },
     "capabilities": {
       "network": [
         "api.ruguoapp.com"
@@ -1538,6 +1527,14 @@
       "browser": []
     },
     "cache": "5m",
+    "metadata": {
+      "home": "https://web.okjike.com",
+      "color": "yellow",
+      "type": "timeline",
+      "title": "关注动态",
+      "desc": "已关注即刻用户发布的动态",
+      "icon": "https://icons.folo.is/web.okjike.com"
+    },
     "secrets": [
       {
         "key": "accessToken",
@@ -1567,19 +1564,11 @@
       }
     ],
     "provider": {
-      "title": "即刻"
+      "title": "即刻",
+      "category": "social"
     }
   },
   "jike:topic": {
-    "metadata": {
-      "category": "others",
-      "home": "https://web.okjike.com",
-      "color": "yellow",
-      "type": "timeline",
-      "title": "主题动态",
-      "desc": "指定即刻主题的动态",
-      "icon": "https://icons.folo.is/web.okjike.com"
-    },
     "capabilities": {
       "network": [
         "api.ruguoapp.com"
@@ -1591,6 +1580,14 @@
       "browser": []
     },
     "cache": "5m",
+    "metadata": {
+      "home": "https://web.okjike.com",
+      "color": "yellow",
+      "type": "timeline",
+      "title": "主题动态",
+      "desc": "指定即刻主题的动态",
+      "icon": "https://icons.folo.is/web.okjike.com"
+    },
     "secrets": [
       {
         "key": "accessToken",
@@ -1678,19 +1675,11 @@
       }
     },
     "provider": {
-      "title": "即刻"
+      "title": "即刻",
+      "category": "social"
     }
   },
   "jike:user-updates": {
-    "metadata": {
-      "category": "others",
-      "home": "https://web.okjike.com",
-      "color": "yellow",
-      "type": "timeline",
-      "title": "用户动态",
-      "desc": "指定即刻用户发布的动态",
-      "icon": "https://icons.folo.is/web.okjike.com"
-    },
     "capabilities": {
       "network": [
         "api.ruguoapp.com"
@@ -1704,6 +1693,14 @@
     "cache": {
       "version": 2,
       "maxAge": "5m"
+    },
+    "metadata": {
+      "home": "https://web.okjike.com",
+      "color": "yellow",
+      "type": "timeline",
+      "title": "用户动态",
+      "desc": "指定即刻用户发布的动态",
+      "icon": "https://icons.folo.is/web.okjike.com"
     },
     "secrets": [
       {
@@ -1757,18 +1754,11 @@
       }
     },
     "provider": {
-      "title": "即刻"
+      "title": "即刻",
+      "category": "social"
     }
   },
   "linuxdo:latest": {
-    "metadata": {
-      "category": "tech",
-      "color": "slate",
-      "home": "https://linux.do",
-      "title": "最新",
-      "type": "timeline",
-      "icon": "https://icons.folo.is/linux.do"
-    },
     "cache": "5m",
     "vars": {
       "origin": "https://linux.do"
@@ -1794,19 +1784,19 @@
       },
       "url": "{{ source.vars.origin }}/latest.json?order=created"
     },
+    "metadata": {
+      "color": "slate",
+      "home": "https://linux.do",
+      "title": "最新",
+      "type": "timeline",
+      "icon": "https://icons.folo.is/linux.do"
+    },
     "provider": {
-      "title": "Linux.do"
+      "title": "Linux.do",
+      "category": "forum"
     }
   },
   "linuxdo:top-daily": {
-    "metadata": {
-      "category": "tech",
-      "color": "slate",
-      "home": "https://linux.do",
-      "title": "热门",
-      "type": "hottest",
-      "icon": "https://icons.folo.is/linux.do"
-    },
     "cache": "5m",
     "vars": {
       "origin": "https://linux.do"
@@ -1828,22 +1818,29 @@
       },
       "url": "{{ source.vars.origin }}/top/daily.json"
     },
+    "metadata": {
+      "color": "slate",
+      "home": "https://linux.do",
+      "title": "热门",
+      "type": "hottest",
+      "icon": "https://icons.folo.is/linux.do"
+    },
     "provider": {
-      "title": "Linux.do"
+      "title": "Linux.do",
+      "category": "forum"
     }
   },
   "netease-music:playlist": {
+    "cache": {
+      "version": 2,
+      "maxAge": "15m"
+    },
     "metadata": {
-      "category": "others",
       "home": "https://music.163.com/#/playlist?id=17990594711",
       "color": "red",
       "type": "hottest",
       "title": "歌单",
       "icon": "https://icons.folo.is/music.163.com"
-    },
-    "cache": {
-      "version": 2,
-      "maxAge": "15m"
     },
     "loader": {
       "type": "json",
@@ -1901,21 +1898,21 @@
       }
     ],
     "provider": {
-      "title": "网易云音乐"
+      "title": "网易云音乐",
+      "category": "entertainment"
     }
   },
   "netease-music:ranking": {
+    "cache": {
+      "version": 2,
+      "maxAge": "15m"
+    },
     "metadata": {
-      "category": "others",
       "home": "https://music.163.com/#/discover/toplist?id=19723756",
       "color": "red",
       "type": "hottest",
       "title": "飙升榜",
       "icon": "https://icons.folo.is/music.163.com"
-    },
-    "cache": {
-      "version": 2,
-      "maxAge": "15m"
     },
     "loader": {
       "type": "json",
@@ -1973,12 +1970,12 @@
       }
     ],
     "provider": {
-      "title": "网易云音乐"
+      "title": "网易云音乐",
+      "category": "entertainment"
     }
   },
   "newsnow:topic-latest": {
     "metadata": {
-      "category": "others",
       "color": "red",
       "home": "https://www.newsnow.com",
       "type": "timeline",
@@ -2072,12 +2069,12 @@
     },
     "cache": "5m",
     "provider": {
-      "title": "NEWS NOW"
+      "title": "NEWS NOW",
+      "category": "news"
     }
   },
   "telegram:channel": {
     "metadata": {
-      "category": "tech",
       "color": "blue",
       "home": "https://t.me/s/TestFlightCN",
       "title": "科技圈 在花频道",
@@ -2163,12 +2160,12 @@
     },
     "cache": "5m",
     "provider": {
-      "title": "Telegram"
+      "title": "Telegram",
+      "category": "social"
     }
   },
   "tieba:hot-topic": {
     "metadata": {
-      "category": "china",
       "home": "https://tieba.baidu.com",
       "color": "blue",
       "title": "热议",
@@ -2193,12 +2190,12 @@
     },
     "cache": "5m",
     "provider": {
-      "title": "百度贴吧"
+      "title": "百度贴吧",
+      "category": "forum"
     }
   },
   "v2ex:feed": {
     "metadata": {
-      "category": "others",
       "color": "slate",
       "home": "https://v2ex.com/",
       "icon": "https://icons.folo.is/v2ex.com"
@@ -2257,19 +2254,11 @@
     },
     "cache": "5m",
     "provider": {
-      "title": "V2EX"
+      "title": "V2EX",
+      "category": "forum"
     }
   },
   "weibo:following": {
-    "metadata": {
-      "category": "china",
-      "color": "red",
-      "type": "timeline",
-      "icon": "https://weibo.com/favicon.ico",
-      "title": "关注",
-      "desc": "所有已关注微博账号发布的最新微博",
-      "home": "https://weibo.com"
-    },
     "capabilities": {
       "network": [
         "weibo.com",
@@ -2303,6 +2292,14 @@
       }
     ],
     "cache": "5m",
+    "metadata": {
+      "color": "red",
+      "type": "timeline",
+      "icon": "https://weibo.com/favicon.ico",
+      "title": "关注",
+      "desc": "所有已关注微博账号发布的最新微博",
+      "home": "https://weibo.com"
+    },
     "radar": [
       {
         "id": "weibo-following",
@@ -2318,17 +2315,11 @@
       }
     ],
     "provider": {
-      "title": "微博"
+      "title": "微博",
+      "category": "social"
     }
   },
   "weibo:hot-search": {
-    "metadata": {
-      "category": "china",
-      "color": "red",
-      "type": "hottest",
-      "icon": "https://weibo.com/favicon.ico",
-      "title": "热搜"
-    },
     "capabilities": {
       "network": [
         "weibo.com",
@@ -2364,6 +2355,12 @@
     "cache": {
       "version": 4,
       "maxAge": "1m"
+    },
+    "metadata": {
+      "color": "red",
+      "type": "hottest",
+      "icon": "https://weibo.com/favicon.ico",
+      "title": "热搜"
     },
     "vars": {
       "endpoint": {
@@ -2444,19 +2441,11 @@
       }
     ],
     "provider": {
-      "title": "微博"
+      "title": "微博",
+      "category": "social"
     }
   },
   "weibo:keyword": {
-    "metadata": {
-      "category": "china",
-      "color": "red",
-      "type": "timeline",
-      "icon": "https://weibo.com/favicon.ico",
-      "title": "关键词",
-      "desc": "包含指定关键词的最新微博",
-      "home": "https://s.weibo.com"
-    },
     "capabilities": {
       "network": [
         "m.weibo.cn",
@@ -2490,6 +2479,14 @@
       }
     ],
     "cache": "5m",
+    "metadata": {
+      "color": "red",
+      "type": "timeline",
+      "icon": "https://weibo.com/favicon.ico",
+      "title": "关键词",
+      "desc": "包含指定关键词的最新微博",
+      "home": "https://s.weibo.com"
+    },
     "params": {
       "keyword": {
         "type": "text",
@@ -2518,19 +2515,11 @@
       }
     ],
     "provider": {
-      "title": "微博"
+      "title": "微博",
+      "category": "social"
     }
   },
   "weibo:super-topic": {
-    "metadata": {
-      "category": "china",
-      "color": "red",
-      "type": "timeline",
-      "icon": "https://weibo.com/favicon.ico",
-      "title": "超话",
-      "desc": "指定微博超话的最新帖子",
-      "home": "https://weibo.com"
-    },
     "capabilities": {
       "network": [
         "weibo.com",
@@ -2564,6 +2553,14 @@
       }
     ],
     "cache": "5m",
+    "metadata": {
+      "color": "red",
+      "type": "timeline",
+      "icon": "https://weibo.com/favicon.ico",
+      "title": "超话",
+      "desc": "指定微博超话的最新帖子",
+      "home": "https://weibo.com"
+    },
     "params": {
       "id": {
         "type": "text",
@@ -2620,19 +2617,11 @@
       }
     ],
     "provider": {
-      "title": "微博"
+      "title": "微博",
+      "category": "social"
     }
   },
   "weibo:user": {
-    "metadata": {
-      "category": "china",
-      "color": "red",
-      "type": "timeline",
-      "icon": "https://weibo.com/favicon.ico",
-      "title": "用户微博",
-      "desc": "指定微博用户发布的最新微博",
-      "home": "https://weibo.com"
-    },
     "capabilities": {
       "network": [
         "weibo.com",
@@ -2668,6 +2657,14 @@
     "cache": {
       "version": 2,
       "maxAge": "5m"
+    },
+    "metadata": {
+      "color": "red",
+      "type": "timeline",
+      "icon": "https://weibo.com/favicon.ico",
+      "title": "用户微博",
+      "desc": "指定微博用户发布的最新微博",
+      "home": "https://weibo.com"
     },
     "params": {
       "uid": {
@@ -2705,18 +2702,11 @@
       }
     ],
     "provider": {
-      "title": "微博"
+      "title": "微博",
+      "category": "social"
     }
   },
   "x:following": {
-    "metadata": {
-      "category": "world",
-      "color": "slate",
-      "home": "https://x.com",
-      "type": "timeline",
-      "title": "Following",
-      "icon": "https://icons.folo.is/x.com"
-    },
     "capabilities": {
       "network": [
         "x.com",
@@ -2728,6 +2718,13 @@
       "browser": []
     },
     "cache": "5m",
+    "metadata": {
+      "color": "slate",
+      "home": "https://x.com",
+      "type": "timeline",
+      "title": "Following",
+      "icon": "https://icons.folo.is/x.com"
+    },
     "secrets": [
       {
         "key": "csrfToken",
@@ -2738,18 +2735,11 @@
       }
     ],
     "provider": {
-      "title": "X"
+      "title": "X",
+      "category": "social"
     }
   },
   "x:place-trends": {
-    "metadata": {
-      "category": "world",
-      "color": "slate",
-      "home": "https://x.com",
-      "type": "hottest",
-      "title": "Trending",
-      "icon": "https://icons.folo.is/x.com"
-    },
     "capabilities": {
       "network": [
         "x.com",
@@ -2761,6 +2751,13 @@
       "browser": []
     },
     "cache": "5m",
+    "metadata": {
+      "color": "slate",
+      "home": "https://x.com",
+      "type": "hottest",
+      "title": "Trending",
+      "icon": "https://icons.folo.is/x.com"
+    },
     "secrets": [
       {
         "key": "csrfToken",
@@ -2820,18 +2817,11 @@
       }
     },
     "provider": {
-      "title": "X"
+      "title": "X",
+      "category": "social"
     }
   },
   "x:recommended": {
-    "metadata": {
-      "category": "world",
-      "color": "slate",
-      "home": "https://x.com",
-      "type": "timeline",
-      "title": "Recommended",
-      "icon": "https://icons.folo.is/x.com"
-    },
     "capabilities": {
       "network": [
         "x.com",
@@ -2843,6 +2833,13 @@
       "browser": []
     },
     "cache": "5m",
+    "metadata": {
+      "color": "slate",
+      "home": "https://x.com",
+      "type": "timeline",
+      "title": "Recommended",
+      "icon": "https://icons.folo.is/x.com"
+    },
     "secrets": [
       {
         "key": "csrfToken",
@@ -2853,18 +2850,11 @@
       }
     ],
     "provider": {
-      "title": "X"
+      "title": "X",
+      "category": "social"
     }
   },
   "x:user": {
-    "metadata": {
-      "category": "world",
-      "color": "slate",
-      "home": "https://x.com",
-      "type": "timeline",
-      "title": "User Tweets",
-      "icon": "https://icons.folo.is/x.com"
-    },
     "capabilities": {
       "network": [
         "x.com",
@@ -2878,6 +2868,13 @@
     "cache": {
       "version": 2,
       "maxAge": "5m"
+    },
+    "metadata": {
+      "color": "slate",
+      "home": "https://x.com",
+      "type": "timeline",
+      "title": "User Tweets",
+      "icon": "https://icons.folo.is/x.com"
     },
     "secrets": [
       {
@@ -2938,12 +2935,12 @@
       }
     },
     "provider": {
-      "title": "X"
+      "title": "X",
+      "category": "social"
     }
   },
   "xueqiu:hot-stock": {
     "metadata": {
-      "category": "others",
       "home": "https://xueqiu.com",
       "color": "blue",
       "type": "hottest",
@@ -2968,12 +2965,12 @@
     },
     "cache": "5m",
     "provider": {
-      "title": "雪球"
+      "title": "雪球",
+      "category": "finance"
     }
   },
   "zaochenbao:realtime": {
     "metadata": {
-      "category": "china",
       "color": "red",
       "home": "https://www.zaochenbao.com/realtime/",
       "title": "即时新闻",
@@ -2999,12 +2996,12 @@
     },
     "cache": "5m",
     "provider": {
-      "title": "早晨报"
+      "title": "早晨报",
+      "category": "news"
     }
   },
   "zhihu:hot-list": {
     "metadata": {
-      "category": "others",
       "home": "https://www.zhihu.com",
       "color": "blue",
       "title": "全站热榜",
@@ -3029,7 +3026,8 @@
     },
     "cache": "5m",
     "provider": {
-      "title": "知乎"
+      "title": "知乎",
+      "category": "forum"
     }
   }
 }

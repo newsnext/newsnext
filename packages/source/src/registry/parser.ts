@@ -42,7 +42,13 @@ export function parseSourceRegistry(input: unknown): SourceRegistry {
 
       const currentProvider = source.provider
       const previousProvider = providers.get(providerId)
-      if (previousProvider && previousProvider.title !== currentProvider.title) {
+      if (
+        previousProvider
+        && (
+          previousProvider.title !== currentProvider.title
+          || previousProvider.category !== currentProvider.category
+        )
+      ) {
         throw new Error(`Provider "${providerId}" has inconsistent metadata`)
       }
       providers.set(providerId, currentProvider)

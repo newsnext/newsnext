@@ -1,5 +1,6 @@
 {
   "title": "网易云音乐",
+  "category": "entertainment",
   "defaults": {
     "cache": {
       "version": 2,

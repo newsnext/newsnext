@@ -144,6 +144,7 @@ const capabilities = {
 
 export default {
   title: "X",
+  category: "social",
   defaults: {
     capabilities,
     cache: "5m",
@@ -153,7 +154,6 @@ export default {
     metadata: {
       color: "slate",
       home: X_ORIGIN,
-      category: "world",
       type: "timeline",
     },
     secrets: [

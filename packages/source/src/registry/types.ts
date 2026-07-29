@@ -3,10 +3,11 @@ import type {
   SourceConfig,
   SourceConfigDefaults,
 } from "../core/resolver"
-import type { SourceLoader, SourceProvider } from "../types"
+import type { CategoryId, SourceLoader, SourceProvider } from "../types"
 
 export interface ProviderConfig {
   title: string
+  category?: CategoryId
   defaults?: SourceConfigDefaults
   sources: Record<string, ProviderSourceConfig>
 }

@@ -4,20 +4,18 @@ import type { HtmlField } from "./html-field"
 import type { InferSourceParams, SourceParamSchemaMap } from "./params"
 
 /**
- * Category identifier for organizing sources
+ * Provider category identifiers
  */
-export type CategoryId = "tech" | "finance" | "china" | "world" | "others"
+export const CATEGORY_IDS = [
+  "social",
+  "forum",
+  "news",
+  "finance",
+  "developer",
+  "entertainment",
+] as const
 
-/**
- * Human-readable category names
- */
-export const categories: Record<CategoryId, string> = {
-  tech: "Technology",
-  finance: "Finance & Economics",
-  china: "China",
-  world: "International",
-  others: "Others",
-}
+export type CategoryId = typeof CATEGORY_IDS[number]
 
 /**
  * Loader function for a source
@@ -97,7 +95,6 @@ export interface SourcePresentationMetadata {
   badge?: string
   desc?: string
   type?: "hottest" | "timeline"
-  category?: CategoryId
   home?: string
   color?: Color
 }
@@ -108,10 +105,19 @@ export const SOURCE_PRESENTATION_METADATA_KEYS = [
   "badge",
   "desc",
   "type",
-  "category",
   "home",
   "color",
 ] as const satisfies readonly (keyof SourcePresentationMetadata)[]
+
+const SOURCE_PRESENTATION_METADATA_KEY_SET: ReadonlySet<string> = new Set(
+  SOURCE_PRESENTATION_METADATA_KEYS,
+)
+
+export function isSourcePresentationMetadataKey(
+  value: string,
+): value is keyof SourcePresentationMetadata {
+  return SOURCE_PRESENTATION_METADATA_KEY_SET.has(value)
+}
 
 export interface SourceMetadata extends SourcePresentationMetadata {
   key: string
@@ -125,6 +131,7 @@ export interface SourceCapabilities {
 
 export interface SourceProvider {
   title: string
+  category?: CategoryId
 }
 
 export type SourceTemplateVarValue
@@ -165,7 +172,6 @@ export interface RuntimeSource<TParams extends SourceParamSchemaMap = SourcePara
   disable?: boolean
   loader: SourceLoader<TParams>
   color: Color
-  category: CategoryId
 }
 
 /**
@@ -182,11 +188,3 @@ export type SourceDescriptor<TParams extends SourceParamSchemaMap = SourceParamS
   = Omit<RuntimeSource<TParams>, "key" | "loader" | "disable"> & {
     id: string
   }
-
-/**
- * Map of categories to source descriptors
- */
-export type SourcesByCategory = Record<CategoryId, {
-  key: string
-  sources: SourceDescriptor[]
-}>

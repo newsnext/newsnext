@@ -28,6 +28,7 @@ function createSourceConfig(radar: NonNullable<SourceConfig["radar"]>): SourceCo
 function resolveTestSource(config: SourceConfig): void {
   resolveProvider("test", {
     title: "Test",
+    category: "social",
     defaults: {
       metadata: {
         color: "blue",
@@ -41,6 +42,7 @@ describe("source template vars", () => {
   it("assigns provider source defaults before resolving sources", () => {
     const provider = resolveProvider("test", {
       title: "Provider",
+      category: "social",
       defaults: {
         cache: "5m",
         capabilities: {
@@ -115,6 +117,7 @@ describe("source template vars", () => {
   it("resolves source metadata from the metadata object", () => {
     const provider = resolveProvider("test", {
       title: "Provider",
+      category: "social",
       defaults: {
         metadata: {
           color: "blue",
@@ -147,6 +150,7 @@ describe("source template vars", () => {
   it("inherits provider default secrets into capabilities", () => {
     const provider = resolveProvider("test", {
       title: "Provider",
+      category: "social",
       defaults: {
         metadata: {
           color: "blue",
@@ -197,6 +201,7 @@ describe("source template vars", () => {
     } satisfies SourceRequestRule
     const provider = resolveProvider("test", {
       title: "Provider",
+      category: "social",
       defaults: {
         metadata: {
           color: "blue",
@@ -220,6 +225,7 @@ describe("source template vars", () => {
   it("inherits provider vars and allows source overrides", () => {
     const provider = resolveProvider("test", {
       title: "Provider",
+      category: "social",
       defaults: {
         metadata: {
           color: "blue",
@@ -373,7 +379,7 @@ describe("source template vars", () => {
     )
   })
 
-  it("allows Radar to override all source metadata", () => {
+  it("allows Radar to override source presentation metadata", () => {
     const radar = [
       {
         id: "test",
@@ -387,13 +393,38 @@ describe("source template vars", () => {
             home: "https://example.com/dynamic",
             color: "red",
             type: "hottest",
-            category: "tech",
           },
         },
       },
     ] satisfies SourceRadarRule[]
 
     expect(() => resolveTestSource(createSourceConfig(radar))).not.toThrow()
+  })
+
+  it("rejects category overrides in source and Radar metadata", () => {
+    expect(() => resolveTestSource({
+      ...createSourceConfig([]),
+      metadata: {
+        title: "Test",
+        category: "social",
+      },
+    } as unknown as SourceConfig)).toThrow(
+      "test:test.metadata.category is not supported",
+    )
+
+    expect(() => resolveTestSource(createSourceConfig([
+      {
+        id: "test",
+        match: { hosts: ["example.com"] },
+        patch: {
+          metadata: {
+            category: "social",
+          },
+        },
+      },
+    ] as unknown as SourceRadarRule[]))).toThrow(
+      "test:test.radar.0.patch.metadata.category is not supported",
+    )
   })
 
   it("does not expose source metadata to Radar templates", () => {
@@ -415,6 +446,7 @@ describe("source registry", () => {
   it("rejects legacy provider-level source defaults", () => {
     expect(() => flattenProviderConfig("test", {
       title: "Provider",
+      category: "social",
       color: "blue",
       sources: {},
     } as unknown as ProviderConfig)).toThrow(
@@ -425,6 +457,12 @@ describe("source registry", () => {
   it("validates provider authoring containers and IDs at runtime", () => {
     expect(() => flattenProviderConfig("test", {
       title: "Provider",
+      sources: {},
+    })).not.toThrow()
+
+    expect(() => flattenProviderConfig("test", {
+      title: "Provider",
+      category: "social",
       defaults: "invalid",
       sources: {},
     } as unknown as ProviderConfig)).toThrow(
@@ -433,6 +471,7 @@ describe("source registry", () => {
 
     expect(() => flattenProviderConfig("test", {
       title: "Provider",
+      category: "social",
       defaults: {
         cache: "5m",
         metadata: {
@@ -452,9 +491,10 @@ describe("source registry", () => {
     )
   })
 
-  it("keeps provider title fixed while allowing source metadata overrides", () => {
+  it("keeps provider metadata fixed while allowing source metadata overrides", () => {
     const provider = {
       title: "Provider",
+      category: "social",
       defaults: {
         metadata: {
           color: "blue",
@@ -478,6 +518,7 @@ describe("source registry", () => {
     expect(flattenProviderConfig("test", provider)["test:latest"]).toMatchObject({
       provider: {
         title: "Provider",
+        category: "social",
       },
       metadata: {
         color: "red",
@@ -487,6 +528,7 @@ describe("source registry", () => {
     expect(resolveProvider("test", provider).sources.latest).toMatchObject({
       provider: {
         title: "Provider",
+        category: "social",
       },
       icon: "source-icon",
       color: "red",
@@ -496,6 +538,7 @@ describe("source registry", () => {
   it("flattens provider source defaults into declarative sources", () => {
     const registry = flattenProviderConfig("test", {
       title: "Test Provider",
+      category: "social",
       defaults: {
         cache: "5m",
         vars: {
@@ -545,6 +588,7 @@ describe("source registry", () => {
     })
     expect(registry["test:latest"]?.provider).toEqual({
       title: "Test Provider",
+      category: "social",
     })
     expect(registry["test:latest"]?.metadata?.icon).toBe(
       "https://icons.folo.is/example.com",
@@ -560,6 +604,7 @@ describe("source registry", () => {
   it("rejects sources missing required properties after defaults are assigned", () => {
     expect(() => flattenProviderConfig("test", {
       title: "Test Provider",
+      category: "social",
       defaults: {
         metadata: {
           color: "blue",
@@ -579,10 +624,10 @@ describe("source registry", () => {
   it("resolves a flat registry produced from provider authoring config", () => {
     const registry = flattenProviderConfig("test", {
       title: "Test Provider",
+      category: "social",
       defaults: {
         metadata: {
           color: "blue",
-          category: "tech",
         },
       },
       sources: {
@@ -599,9 +644,9 @@ describe("source registry", () => {
     expect(resolveSourceRegistry(registry)["test:latest"]).toMatchObject({
       provider: {
         title: "Test Provider",
+        category: "social",
       },
       color: "blue",
-      category: "tech",
       key: "latest",
     })
   })
@@ -617,10 +662,10 @@ describe("source registry", () => {
       "test:latest": {
         provider: {
           title: "Test",
+          category: "social",
         },
         metadata: {
           color: "blue",
-          category: "tech",
         },
         cache: "5m",
         capabilities: {
@@ -638,6 +683,7 @@ describe("source registry", () => {
   it("rejects inconsistent provider identity across flat sources", () => {
     const first = flattenProviderConfig("test", {
       title: "Provider",
+      category: "social",
       defaults: {
         cache: "5m",
         metadata: {
@@ -654,7 +700,8 @@ describe("source registry", () => {
       },
     })
     const second = flattenProviderConfig("test", {
-      title: "Other Provider",
+      title: "Provider",
+      category: "forum",
       defaults: {
         cache: "5m",
         metadata: {
@@ -677,15 +724,15 @@ describe("source registry", () => {
     })).toThrow("Provider \"test\" has inconsistent metadata")
   })
 
-  it("rejects invalid display metadata in flat registries", () => {
+  it("rejects invalid display and provider metadata in flat registries", () => {
     expect(() => resolveSourceRegistry({
       "test:latest": {
         provider: {
           title: "Test",
+          category: "social",
         },
         metadata: {
           color: "not-a-color",
-          category: "tech",
         },
         cache: "5m",
         loader: {
@@ -699,10 +746,10 @@ describe("source registry", () => {
       "test:latest": {
         provider: {
           title: "Test",
+          category: "invalid",
         },
         metadata: {
           color: "blue",
-          category: "invalid",
         },
         cache: "5m",
         loader: {
@@ -710,7 +757,7 @@ describe("source registry", () => {
           url: "https://example.com/feed.xml",
         },
       },
-    })).toThrow("Source \"test:latest\" is missing valid display metadata")
+    })).toThrow("Registry source \"test:latest\" has invalid provider metadata")
   })
 
   it("rejects request rules for undeclared network hosts", () => {
@@ -718,10 +765,10 @@ describe("source registry", () => {
       "test:latest": {
         provider: {
           title: "Test",
+          category: "social",
         },
         metadata: {
           color: "blue",
-          category: "tech",
         },
         cache: "5m",
         loader: {

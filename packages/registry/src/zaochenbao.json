@@ -1,10 +1,10 @@
 {
   "title": "早晨报",
+  "category": "news",
   "defaults": {
     "metadata": {
       "color": "red",
-      "home": "https://www.zaochenbao.com",
-      "category": "china"
+      "home": "https://www.zaochenbao.com"
     }
   },
   "sources": {

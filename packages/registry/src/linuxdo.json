@@ -1,5 +1,6 @@
 {
   "title": "Linux.do",
+  "category": "forum",
   "defaults": {
     "cache": "5m",
     "vars": {
@@ -23,8 +24,7 @@
     },
     "metadata": {
       "color": "slate",
-      "home": "https://linux.do",
-      "category": "tech"
+      "home": "https://linux.do"
     }
   },
   "sources": {

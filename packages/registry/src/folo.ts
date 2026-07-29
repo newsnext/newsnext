@@ -79,6 +79,7 @@ async function loadFoloEntries(body: FoloEntriesRequest): Promise<NewsItem[]> {
 
 export default {
   title: "Folo",
+  category: "news",
   defaults: {
     cache: "5m",
     loader: {

@@ -1,15 +1,15 @@
 import type { SourceProvider } from "../types"
 import { COLORS } from "@newsnext/shared/constants"
 import { SOURCE_REGISTRY_LIMITS } from "../core/limits"
-import { categories } from "../types"
+import { CATEGORY_IDS } from "../types"
 
 const REGISTRY_SOURCE_ID_PATTERN = /^[^:\s]+:[^:\s]+$/
 const PROHIBITED_REGISTRY_KEYS = new Set(["__proto__", "constructor", "prototype"])
-const PROVIDER_CONFIG_KEYS = new Set(["defaults", "sources", "title"])
-const SOURCE_PROVIDER_KEYS = new Set(["title"])
+const PROVIDER_CONFIG_KEYS = new Set(["category", "defaults", "sources", "title"])
+const SOURCE_PROVIDER_KEYS = new Set(["category", "title"])
 const STRUCTURED_LOADER_TYPES = new Set(["html", "json", "rss"])
 const SOURCE_COLORS = new Set<string>(COLORS)
-const SOURCE_CATEGORIES = new Set(Object.keys(categories))
+const SOURCE_CATEGORIES: ReadonlySet<string> = new Set(CATEGORY_IDS)
 
 export function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value)
@@ -23,6 +23,7 @@ export function hasSourceProviderIdentity(value: unknown): value is SourceProvid
   return isRecord(value)
     && typeof value.title === "string"
     && value.title.trim().length > 0
+    && (value.category === undefined || isSourceCategory(value.category))
 }
 
 export function isSourceProvider(value: unknown): value is SourceProvider {

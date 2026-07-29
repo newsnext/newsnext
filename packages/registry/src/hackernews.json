@@ -1,5 +1,6 @@
 {
   "title": "Hacker News",
+  "category": "forum",
   "defaults": {
     "cache": "5m",
     "vars": {

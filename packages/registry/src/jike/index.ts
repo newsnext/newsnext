@@ -176,6 +176,7 @@ const topicRadarPatch = {
 
 export default {
   title: "即刻",
+  category: "social",
   defaults: {
     capabilities: jikeCapabilities,
     cache: "5m",

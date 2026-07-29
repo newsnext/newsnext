@@ -210,7 +210,6 @@ export default {
     },
     metadata: {
       color: "blue",
-      category: "others",
       type: "timeline",
     },
   },

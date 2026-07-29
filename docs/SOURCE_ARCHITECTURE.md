@@ -85,20 +85,29 @@ path. Expansion:
 6. derives a favicon from the final `metadata.home` when no icon exists;
 7. validates the complete source.
 
-The base defaults currently set `metadata.category` to `others`. Other required
-values, including cache policy, color, and loader, must come from the provider
-or source.
+Required values, including cache policy, color, and loader, must come from the
+provider or source authoring configuration. Provider category is optional.
 
 Provider identity remains separate from source metadata:
 
 ```ts
 provider: {
   title: "Example",
+  category: "social", // optional
 }
 ```
 
-This prevents a source override from changing the identity shared by its
-provider.
+This prevents a source, Radar rule, or card instance from changing the identity
+shared by its provider.
+
+Provider category is a static registry attribute. Provider expansion copies it
+into every flattened source descriptor, and registry parsing validates it
+against the shared `CategoryId` taxonomy. Runtime resolution does not infer a
+category from source content, parameters, URLs, or loader behavior. An omitted
+category remains absent. Source metadata, Radar patches, loader metadata, and
+persisted card-instance patches cannot add or replace it. See the
+[provider category taxonomy](SOURCE_GUIDELINE.md#provider-category-taxonomy) for
+authoring and matching rules.
 
 ## Registry resolution
 
@@ -257,8 +266,9 @@ Liquid.
 Rules and compiled matchers are cached. Optional Radar failures are reported as
 diagnostics and fail closed instead of interrupting the surrounding UI.
 Radar metadata can replace presentation fields, including icons, card type,
-color, and category, but cannot modify source identity, provider attribution,
-loader behavior, capabilities, secrets, request rules, or cache policy.
+and color, but cannot modify source identity, provider title or category,
+provider attribution, loader behavior, capabilities, secrets, request rules, or
+cache policy.
 Accepting a Radar suggestion creates one card instance with the selected board
 membership. The instance owns its board ID alongside its source ID and patch.
 Moving a card updates only that board ID; source parameters, presentation
@@ -267,7 +277,8 @@ metadata, and cache identity remain unchanged. The board ID is nullable:
 that board. Inbox deliberately skips membership filtering and aggregates every
 card instance.
 The card editor writes the same instance patch shape and exposes every declared
-source parameter plus every source presentation metadata field.
+source parameter plus every source presentation metadata field. Provider title
+and category remain read-only.
 
 ## Capabilities, secrets, and request rules
 
