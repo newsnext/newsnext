@@ -569,6 +569,9 @@ metadata: {
 }
 ```
 
+Prefer stable semantic attributes such as `data-testid` for page metadata
+instead of parsing a browser title that may contain transient UI text.
+
 Radar metadata supports `title`, `badge`, `desc`, `home`, and `color`, but not
 `icon`. It uses the same selector, traversal, extraction, and template behavior
 as HTML loader fields.

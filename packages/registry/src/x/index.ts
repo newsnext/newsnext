@@ -216,7 +216,12 @@ export default {
               username: "{{ scope.path.username }}",
             },
             metadata: {
-              title: "@{{ scope.params.username }}",
+              title: {
+                select: "[data-testid=\"UserName\"]",
+              },
+              desc: {
+                select: "[data-testid=\"UserDescription\"]",
+              },
             },
           },
           confidence: 0.95,
