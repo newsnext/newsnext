@@ -1,4 +1,3 @@
-import type { BoardType } from "@newsnext/shared/types"
 import type {
   SourcePatch,
   SourcePresentationMetadata,
@@ -6,19 +5,15 @@ import type {
 import type { BoardSource, SourceDescriptor } from "@/typings/source"
 import { SOURCE_PRESENTATION_METADATA_KEYS } from "@newsnext/source"
 import { pick } from "es-toolkit"
+import { DEFAULT_BOARD_ID } from "@/lib/boards"
 
 export interface SourceInstance {
   instanceId: string
   sourceId: string
+  boardId: string | null
   patch: SourceInstancePatch
-  originRef?: SourceInstanceOriginRef
   createdAt: number
-  updatedAt: number
 }
-
-export type SourceInstanceOriginRef
-  = | { type: "radar", ruleId: string }
-    | { type: "fork", forkedFromInstanceId: string }
 
 export type SourceInstanceMetadata = Partial<SourcePresentationMetadata>
 
@@ -26,18 +21,6 @@ export type SourceInstancePatch = SourcePatch<
   Record<string, unknown>,
   SourceInstanceMetadata
 >
-
-export function createSourceInstancePatch(
-  source: BoardSource,
-  params: Record<string, unknown>,
-): SourceInstancePatch {
-  return source.isCustom
-    ? {
-        params,
-        metadata: pick(source, SOURCE_PRESENTATION_METADATA_KEYS),
-      }
-    : { params }
-}
 
 export function mergeSourceInstancePatch(
   current: SourceInstancePatch | undefined,
@@ -53,25 +36,19 @@ export function mergeSourceInstancePatch(
   }
 }
 
-function createForkInstanceId(sourceId: string): string {
+function createCardInstanceId(sourceId: string): string {
   const bytes = new Uint8Array(8)
   crypto.getRandomValues(bytes)
   const id = Array.from(bytes, byte => byte.toString(36).padStart(2, "0")).join("")
-  return `${sourceId}::fork_${id}`
+  return `${sourceId}::card_${id}`
 }
 
-type BoardSourceSource = Omit<SourceDescriptor, "params"> & {
-  params?: Record<string, unknown>
-}
-
-function createBoardSource(source: BoardSourceSource, isLocalOnly: boolean): BoardSource {
+function createBoardSource(source: SourceDescriptor): BoardSource {
   return {
     ...source,
-    params: source.params as BoardSource["params"],
     id: source.id,
     sourceId: source.id,
-    isCustom: false,
-    isLocalOnly,
+    boardId: null,
   }
 }
 
@@ -88,74 +65,68 @@ function applyInstanceOverrides(
   }
 }
 
-export function createForkedInstance(
+export function createCardInstance(
   sourceId: string,
+  boardId: string | null,
   patch: SourceInstancePatch,
-  originRef?: SourceInstanceOriginRef,
 ): SourceInstance {
   const now = Date.now()
 
   return {
-    instanceId: createForkInstanceId(sourceId),
+    instanceId: createCardInstanceId(sourceId),
     sourceId,
+    boardId,
     patch,
-    originRef,
     createdAt: now,
-    updatedAt: now,
   }
 }
 
-function buildForkedBoardSources(
-  sources: BoardSourceSource[],
+function buildCardSources(
+  sources: SourceDescriptor[],
   sourceInstances: SourceInstance[],
-  isLocalOnly: boolean,
 ): BoardSource[] {
-  const baseSources = sources.map(source => createBoardSource(source, isLocalOnly))
+  const baseSources = sources.map(createBoardSource)
   const baseSourceIds = new Set(baseSources.map(source => source.sourceId))
-  const customGroups = new Map<string, SourceInstance[]>()
+  const instanceGroups = new Map<string, SourceInstance[]>()
 
   sourceInstances.forEach((instance) => {
     if (!baseSourceIds.has(instance.sourceId)) {
       return
     }
 
-    const currentCustomSources = customGroups.get(instance.sourceId) ?? []
-    currentCustomSources.push(instance)
-    customGroups.set(instance.sourceId, currentCustomSources)
+    const currentInstances = instanceGroups.get(instance.sourceId) ?? []
+    currentInstances.push(instance)
+    instanceGroups.set(instance.sourceId, currentInstances)
   })
 
   return baseSources.flatMap(source =>
-    (customGroups.get(source.sourceId) ?? [])
+    (instanceGroups.get(source.sourceId) ?? [])
       .sort((a, b) => a.createdAt - b.createdAt)
       .map(instance => applyInstanceOverrides({
         ...source,
         id: instance.instanceId,
         sourceId: instance.sourceId,
-        isCustom: true,
+        boardId: instance.boardId,
       }, instance)),
   )
 }
 
-export function buildBoardSources({
+export function buildSourceCards({
   sources,
-  boardId,
-  starredSourceInstanceIds,
   sourceInstances,
-  isLocalOnly = false,
+  boardId,
 }: {
-  sources: BoardSourceSource[]
-  boardId: BoardType
-  starredSourceInstanceIds: string[]
+  sources: SourceDescriptor[]
   sourceInstances: SourceInstance[]
-  isLocalOnly?: boolean
+  boardId: string
 }): { ids: string[], map: Record<string, BoardSource> } {
-  const forkedSources = buildForkedBoardSources(sources, sourceInstances, isLocalOnly)
-  const visibleSources = boardId === "stars"
-    ? forkedSources.filter(source => starredSourceInstanceIds.includes(source.id))
-    : forkedSources
+  const visibleInstances = boardId === DEFAULT_BOARD_ID
+    ? sourceInstances
+    : sourceInstances.filter(instance => instance.boardId === boardId)
+  const cards = buildCardSources(sources, visibleInstances)
 
   return {
-    ids: visibleSources.map(source => source.id),
-    map: Object.fromEntries(visibleSources.map(source => [source.id, source])),
+    ids: cards.map(source => source.id),
+    map: Object.fromEntries(cards.map(source => [source.id, source])),
   }
 }

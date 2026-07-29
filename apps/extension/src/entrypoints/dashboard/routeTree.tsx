@@ -1,6 +1,6 @@
 import { createRoute } from "@tanstack/react-router"
 import { Route as rootRoute } from "@/pages/__root"
-import { BoardIdComponent } from "@/pages/boards/$boardId"
+import { BoardIdComponent } from "@/pages/board/$boardId"
 import { IndexComponent } from "@/pages/index"
 
 const indexRoute = createRoute({
@@ -9,13 +9,13 @@ const indexRoute = createRoute({
   component: IndexComponent,
 })
 
-const boardsBoardIdRoute = createRoute({
+const boardRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/boards/$boardId",
+  path: "/board/$boardId",
   component: BoardIdComponent,
 })
 
 export const routeTree = rootRoute.addChildren([
   indexRoute,
-  boardsBoardIdRoute,
+  boardRoute,
 ])

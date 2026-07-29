@@ -1,23 +1,16 @@
 import type { RefObject } from "react"
 import type { BoardSource } from "@/typings/source"
-import { useAtom, useAtomValue } from "jotai"
+import { useAtomValue } from "jotai"
 import { useCallback, useMemo, useState } from "react"
 import { useSourceDescriptors } from "@/hooks/use-source-descriptors"
-import { buildBoardSources } from "@/lib/source-cards"
-import { boardStarIdsAtom, instancesAtom, pendingForkFocusAtom } from "@/store/board"
+import { buildSourceCards } from "@/lib/source-cards"
+import { boardsAtom, instancesAtom } from "@/store/board"
 import { DesktopBoard } from "./desktop-board"
 
 const EMPTY_SOURCE_IDS: string[] = []
 const EMPTY_SOURCES_MAP: Record<string, BoardSource> = {}
-type NowLayerBoardId = "forks" | "stars"
-
-interface SourceIdOrderState {
-  boardId: NowLayerBoardId
-  ids: string[]
-}
-
 interface NowLayerProps {
-  boardId?: NowLayerBoardId
+  boardId: string
   onSourceIdsChange?: (sourceIds: string[]) => void
   className?: string
   isScattered?: boolean
@@ -25,32 +18,29 @@ interface NowLayerProps {
 }
 
 export function NowLayer({
-  boardId = "stars",
+  boardId,
   onSourceIdsChange,
   className,
   isScattered,
   containerRef,
 }: NowLayerProps) {
-  const [sourceIdOrderState, setSourceIdOrderState] = useState<SourceIdOrderState | null>(null)
-  const [pendingForkFocusId, setPendingForkFocusId] = useAtom(pendingForkFocusAtom)
-  const sourceIdOrder = sourceIdOrderState?.boardId === boardId ? sourceIdOrderState.ids : null
-  const starredInstanceIds = useAtomValue(boardStarIdsAtom(boardId))
+  const [sourceIdOrder, setSourceIdOrder] = useState<string[] | null>(null)
+  const boards = useAtomValue(boardsAtom)
   const instances = useAtomValue(instancesAtom)
   const { sources } = useSourceDescriptors()
+  const currentBoardName = boards.find(board => board.id === boardId)!.name
 
   const { ids: boardSourceIds, map: sourcesMap } = useMemo(() => {
     if (!sources.length) {
       return { ids: EMPTY_SOURCE_IDS, map: EMPTY_SOURCES_MAP }
     }
 
-    return buildBoardSources({
+    return buildSourceCards({
       sources,
-      boardId,
-      starredSourceInstanceIds: starredInstanceIds,
       sourceInstances: instances,
-      isLocalOnly: true,
+      boardId,
     })
-  }, [sources, boardId, starredInstanceIds, instances])
+  }, [boardId, sources, instances])
 
   const sourceIds = useMemo(() => {
     if (!sourceIdOrder) {
@@ -66,30 +56,17 @@ export function NowLayer({
   }, [boardSourceIds, sourceIdOrder])
 
   const handleSourceIdsChange = useCallback((newSourceIds: string[]) => {
-    setSourceIdOrderState({ boardId, ids: newSourceIds })
+    setSourceIdOrder(newSourceIds)
     onSourceIdsChange?.(newSourceIds)
-  }, [boardId, onSourceIdsChange])
+  }, [onSourceIdsChange])
 
-  const handleFocusedSourceComplete = useCallback(() => {
-    setPendingForkFocusId(null)
-  }, [setPendingForkFocusId])
-
-  const focusedSourceId = boardId === "forks" && pendingForkFocusId && sourceIds.includes(pendingForkFocusId)
-    ? pendingForkFocusId
-    : null
-
-  if (boardId === "stars" && sourceIds.length === 0) {
+  if (sourceIds.length === 0) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center px-6 text-center text-sm text-muted-foreground">
-        Star cards from any board to collect them here.
-      </div>
-    )
-  }
-
-  if (boardId === "forks" && sourceIds.length === 0) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center px-6 text-center text-sm text-muted-foreground">
-        Fork a card to collect your source forks here.
+        Use Radar on a page to add a card to
+        {" "}
+        {currentBoardName}
+        .
       </div>
     )
   }
@@ -99,13 +76,11 @@ export function NowLayer({
       key={boardId}
       sourceIds={sourceIds}
       sourcesMap={sourcesMap}
-      isSortable={boardId === "forks" || boardId === "stars"}
+      isSortable
       className={className}
       isScattered={isScattered}
       containerRef={containerRef}
       onSourceIdsChange={handleSourceIdsChange}
-      focusedSourceId={focusedSourceId}
-      onFocusedSourceComplete={handleFocusedSourceComplete}
     />
   )
 }

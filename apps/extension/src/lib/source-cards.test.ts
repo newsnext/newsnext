@@ -2,8 +2,8 @@ import type { SourceInstance } from "./source-cards"
 import type { SourceDescriptor } from "@/typings/source"
 import { describe, expect, it } from "vitest"
 import {
-  buildBoardSources,
-  createForkedInstance,
+  buildSourceCards,
+  createCardInstance,
   mergeSourceInstancePatch,
 } from "./source-cards"
 
@@ -49,58 +49,52 @@ const testSources: SourceDescriptor[] = [
 
 function createCustomInstance(patch: Partial<SourceInstance> = {}): SourceInstance {
   return {
-    instanceId: "test:feed::fork_abc",
+    instanceId: "test:feed::card_abc",
     sourceId: "test:feed",
+    boardId: null,
     patch: {},
     createdAt: 1,
-    updatedAt: 1,
     ...patch,
   }
 }
 
-describe("buildBoardSources", () => {
-  it("shows forked instances on the forks board", () => {
-    const boardSources = buildBoardSources({
+describe("buildSourceCards", () => {
+  it("shows saved card instances", () => {
+    const cards = buildSourceCards({
       sources: testSources,
-      boardId: "forks",
-      starredSourceInstanceIds: [],
+      boardId: "inbox",
       sourceInstances: [
         createCustomInstance({ patch: { params: { topic: "custom" } } }),
       ],
-      isLocalOnly: true,
     })
 
-    expect(boardSources.ids).toEqual(["test:feed::fork_abc"])
-    expect(boardSources.map["test:feed::fork_abc"]).toMatchObject({
-      isCustom: true,
+    expect(cards.ids).toEqual(["test:feed::card_abc"])
+    expect(cards.map["test:feed::card_abc"]).toMatchObject({
       paramsValue: { topic: "custom" },
       sourceId: "test:feed",
     })
   })
 
   it("applies source instance title overrides", () => {
-    const boardSources = buildBoardSources({
+    const cards = buildSourceCards({
       sources: testSources,
-      boardId: "forks",
-      starredSourceInstanceIds: [],
+      boardId: "inbox",
       sourceInstances: [
         createCustomInstance({
           patch: { metadata: { title: "Custom Radar Title" } },
         }),
       ],
-      isLocalOnly: true,
     })
 
-    expect(boardSources.map["test:feed::fork_abc"]).toMatchObject({
+    expect(cards.map["test:feed::card_abc"]).toMatchObject({
       title: "Custom Radar Title",
     })
   })
 
   it("applies source instance metadata overrides", () => {
-    const boardSources = buildBoardSources({
+    const cards = buildSourceCards({
       sources: testSources,
-      boardId: "forks",
-      starredSourceInstanceIds: [],
+      boardId: "inbox",
       sourceInstances: [
         createCustomInstance({
           patch: {
@@ -117,10 +111,9 @@ describe("buildBoardSources", () => {
           },
         }),
       ],
-      isLocalOnly: true,
     })
 
-    expect(boardSources.map["test:feed::fork_abc"]).toMatchObject({
+    expect(cards.map["test:feed::card_abc"]).toMatchObject({
       title: "Custom Title",
       icon: "https://custom.example.com/icon.png",
       badge: "https://custom.example.com/badge.png",
@@ -133,10 +126,9 @@ describe("buildBoardSources", () => {
   })
 
   it("does not allow persisted instance metadata to override provider identity", () => {
-    const boardSources = buildBoardSources({
+    const cards = buildSourceCards({
       sources: testSources,
-      boardId: "forks",
-      starredSourceInstanceIds: [],
+      boardId: "inbox",
       sourceInstances: [
         createCustomInstance({
           patch: {
@@ -149,56 +141,59 @@ describe("buildBoardSources", () => {
           } as unknown as SourceInstance["patch"],
         }),
       ],
-      isLocalOnly: true,
     })
 
-    expect(boardSources.map["test:feed::fork_abc"].provider).toEqual({
+    expect(cards.map["test:feed::card_abc"].provider).toEqual({
       title: "Test",
     })
   })
 
   it("hides base source templates from boards", () => {
-    const boardSources = buildBoardSources({
+    const cards = buildSourceCards({
       sources: testSources,
-      boardId: "forks",
-      starredSourceInstanceIds: [],
+      boardId: "inbox",
       sourceInstances: [],
-      isLocalOnly: true,
     })
 
-    expect(boardSources.ids).toEqual([])
-    expect(boardSources.map).toEqual({})
+    expect(cards.ids).toEqual([])
+    expect(cards.map).toEqual({})
   })
 
-  it("shows only starred forked instances on the stars board", () => {
-    const forkedInstance = createCustomInstance()
-    const boardSources = buildBoardSources({
+  it("shows every card in Inbox", () => {
+    const cards = buildSourceCards({
       sources: testSources,
-      boardId: "stars",
-      starredSourceInstanceIds: [forkedInstance.instanceId, "test:latest::default"],
-      sourceInstances: [forkedInstance],
-      isLocalOnly: true,
-    })
-
-    expect(boardSources.ids).toEqual([forkedInstance.instanceId])
-  })
-
-  it("marks forked sources as local-only", () => {
-    const boardSources = buildBoardSources({
-      sources: testSources,
-      boardId: "forks",
-      starredSourceInstanceIds: [],
+      boardId: "inbox",
       sourceInstances: [
         createCustomInstance(),
+        createCustomInstance({
+          instanceId: "test:latest::card_def",
+          sourceId: "test:latest",
+          boardId: "reading",
+        }),
       ],
-      isLocalOnly: true,
     })
 
-    expect(boardSources.map["test:feed::fork_abc"]).toMatchObject({
-      isCustom: true,
-      isLocalOnly: true,
-      sourceId: "test:feed",
+    expect(cards.ids).toEqual([
+      "test:feed::card_abc",
+      "test:latest::card_def",
+    ])
+  })
+
+  it("filters cards in a custom board", () => {
+    const cards = buildSourceCards({
+      sources: testSources,
+      boardId: "reading",
+      sourceInstances: [
+        createCustomInstance(),
+        createCustomInstance({
+          instanceId: "test:latest::card_def",
+          sourceId: "test:latest",
+          boardId: "reading",
+        }),
+      ],
     })
+
+    expect(cards.ids).toEqual(["test:latest::card_def"])
   })
 })
 
@@ -226,18 +221,16 @@ describe("mergeSourceInstancePatch", () => {
   })
 })
 
-describe("createForkedInstance", () => {
+describe("createCardInstance", () => {
   it("persists the supplied final patch without rebuilding it from a board source", () => {
     const patch = {
       params: { language: "typescript" },
       metadata: { title: "Trending TypeScript" },
     }
-    const originRef = { type: "radar", ruleId: "github-trending" } as const
-
-    expect(createForkedInstance("github:trending", patch, originRef)).toMatchObject({
+    expect(createCardInstance("github:trending", "reading", patch)).toMatchObject({
       sourceId: "github:trending",
+      boardId: "reading",
       patch,
-      originRef,
     })
   })
 })

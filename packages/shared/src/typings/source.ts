@@ -6,11 +6,6 @@ import type { NewsItem } from "./items"
 export type SourceType = "hottest" | "realtime" | "timeline" | "normal"
 
 /**
- * Type of board for displaying sources.
- */
-export type BoardType = "forks" | "stars"
-
-/**
  * Response structure for source data.
  */
 export interface SourceResponse {

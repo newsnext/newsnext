@@ -26,12 +26,11 @@ export interface CardProps {
   sizeClassName?: string
   nodeRef?: (node: HTMLElement | null) => void
   dragHandle?: ReactNode
-  showStar?: boolean
   isDraft?: boolean
   onDraftSourceChange?: (patch: SourceInstancePatch) => void
 }
 
-function CardContent({ id, source, dragHandle, showStar = true, isDraft = false, onDraftSourceChange }: CardProps) {
+function CardContent({ id, source, dragHandle, isDraft = false, onDraftSourceChange }: CardProps) {
   const setSourceInstancePatch = useSetAtom(setSourceInstancePatchAtom)
   const resetLocalParams = useSetAtom(resetInstanceParamsAtom)
   const [isFlipped, setIsFlipped] = useState(false)
@@ -111,7 +110,6 @@ function CardContent({ id, source, dragHandle, showStar = true, isDraft = false,
     >
       <CardFront
         badge={displayBadge}
-        id={id}
         source={displaySource}
         items={items}
         isFetching={isFetching}
@@ -123,14 +121,12 @@ function CardContent({ id, source, dragHandle, showStar = true, isDraft = false,
         onRefresh={refetch}
         onRequestPermission={requestPermission}
         onFlip={handleFlip}
-        showStar={showStar}
         dragHandle={isFlipped ? undefined : dragHandle}
       />
       <CardBack
         badge={displayBadge}
         id={id}
         source={displaySource}
-        sourceParams={savedParams}
         draftSourceParams={draftParams}
         hasSourceParams={hasParams}
         hasSourceParamChanges={isDirty}

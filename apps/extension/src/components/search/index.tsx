@@ -12,9 +12,10 @@ import {
 import { useAtomValue } from "jotai"
 import { useEffect, useMemo, useState } from "react"
 import { useSourceDescriptors } from "@/hooks/use-source-descriptors"
-import { buildBoardSources } from "@/lib/source-cards"
+import { DEFAULT_BOARD_ID } from "@/lib/boards"
+import { buildSourceCards } from "@/lib/source-cards"
 import { cn } from "@/lib/utils"
-import { boardStarIdsAtom, instancesAtom } from "@/store/board"
+import { instancesAtom } from "@/store/board"
 import Card from "../card"
 import { SourceIcon } from "../card/source-icon"
 import { PhMagnifyingGlass } from "../icons/ph"
@@ -23,7 +24,6 @@ import "./index.css"
 interface SearchItem {
   id: string
   source: BoardSource
-  isStarred: boolean
 }
 
 function SearchPreview({ item }: { item?: SearchItem }) {
@@ -77,7 +77,6 @@ export function SearchDialog(): ReactNode {
 
 function SearchDialogContent(): ReactNode {
   const [selectedItemId, setSelectedItemId] = useState("")
-  const starredInstanceIds = useAtomValue(boardStarIdsAtom("stars"))
   const instances = useAtomValue(instancesAtom)
   const { sources } = useSourceDescriptors()
 
@@ -86,24 +85,21 @@ function SearchDialogContent(): ReactNode {
       return []
     }
 
-    const forkedSourcesBoard = buildBoardSources({
+    const cards = buildSourceCards({
       sources,
-      boardId: "forks",
-      starredSourceInstanceIds: [],
       sourceInstances: instances,
-      isLocalOnly: true,
+      boardId: DEFAULT_BOARD_ID,
     })
 
-    return forkedSourcesBoard.ids.map((id) => {
-      const source = forkedSourcesBoard.map[id]
+    return cards.ids.map((id) => {
+      const source = cards.map[id]
 
       return {
         id,
         source,
-        isStarred: starredInstanceIds.includes(id),
       } satisfies SearchItem
     })
-  }, [sources, starredInstanceIds, instances])
+  }, [sources, instances])
 
   const selectedItem = useMemo(
     () => searchItems.find(item => item.id === selectedItemId) ?? searchItems[0],
@@ -125,7 +121,7 @@ function SearchDialogContent(): ReactNode {
       <div className="flex flex-col md:flex-row md:items-stretch md:justify-between gap-2">
         <CommandList className="flex h-125 max-h-125 flex-col gap-0 w-full pl-3 pt-3">
           <CommandEmpty className="flex items-center justify-center py-8 text-sm opacity-70 whitespace-pre-wrap">
-            No forked cards found.
+            No cards found.
           </CommandEmpty>
           {searchItems.map(item => (
             <CommandItem
@@ -136,8 +132,7 @@ function SearchDialogContent(): ReactNode {
                 item.id,
                 item.source.provider.title,
                 item.source.title ?? "",
-                "fork forked radar",
-                item.isStarred ? "star starred" : "",
+                "card radar",
               ]}
             >
               <span className="flex items-center min-w-0 flex-1 gap-2">

@@ -3,7 +3,7 @@ import type { RefObject } from "react"
 import type { BoardSource } from "@/typings/source"
 import { useThrottleFn } from "@newsnext/ui/hooks/use-throttle-fn"
 import { m } from "motion/react"
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { DndContext } from "@/hooks/use-dnd-context"
 import Card from "../card"
 import { DraggableCard } from "../card/draggable-card"
@@ -53,8 +53,6 @@ interface DesktopBoardProps {
   isScattered?: boolean
   onSourceIdsChange?: (sourceIds: string[]) => void
   containerRef?: RefObject<HTMLDivElement | null>
-  focusedSourceId?: string | null
-  onFocusedSourceComplete?: () => void
 }
 
 export function DesktopBoard({
@@ -65,8 +63,6 @@ export function DesktopBoard({
   isScattered,
   onSourceIdsChange,
   containerRef,
-  focusedSourceId,
-  onFocusedSourceComplete,
 }: DesktopBoardProps) {
   const [sourceOrderState, setSourceOrderState] = useState<SourceOrderState>(() => ({
     sourceIds,
@@ -109,29 +105,6 @@ export function DesktopBoard({
     && scatterAnimationState.requestId === scatterRequestIdRef.current
     && scatterAnimationState.visibleSourceIds.length > 0,
   )
-
-  useEffect(() => {
-    if (!focusedSourceId) {
-      return
-    }
-
-    const target = items.get(focusedSourceId)
-    if (!target) {
-      return
-    }
-
-    const frameId = requestAnimationFrame(() => {
-      target.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" })
-    })
-    const timeoutId = window.setTimeout(() => {
-      onFocusedSourceComplete?.()
-    }, 500)
-
-    return () => {
-      cancelAnimationFrame(frameId)
-      window.clearTimeout(timeoutId)
-    }
-  }, [focusedSourceId, items, onFocusedSourceComplete])
 
   const onDragStart = useCallback(() => {
     initialOrderedSourceIdsRef.current = orderedSourceIds

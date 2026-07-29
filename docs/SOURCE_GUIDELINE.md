@@ -555,6 +555,14 @@ radar: [{
 }]
 ```
 
+Each Radar suggestion previews one card. When the user creates it, they select
+a destination board and the resolved parameter and presentation patches are
+persisted as a new local card instance. Radar is the card-creation entry point;
+it does not modify an existing card. A card can be moved to another board later
+without changing its source configuration. Inbox is an aggregate view that
+always shows every card and is not itself a card destination. Selecting
+`Inbox only` leaves the card out of custom boards.
+
 Match rules:
 
 - `hosts` are lowercase and ignore a leading `www.`.
