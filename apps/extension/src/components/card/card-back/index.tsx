@@ -211,7 +211,7 @@ export function CardBack({
             >
               <div className="flex flex-col text-sm">
                 <div className="mb-2 flex items-start justify-between">
-                  <span className="inline-block font-semibold opacity-80">Information</span>
+                  <span className="inline-block border-b border-border/60 pb-1 font-semibold opacity-80">Metadata</span>
                   {canEdit && (
                     <div className="flex gap-1.5">
                       <Button
