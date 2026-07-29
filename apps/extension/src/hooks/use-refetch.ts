@@ -2,10 +2,10 @@ import { stableStringify } from "@newsnext/shared/utils"
 import { useIsFetching, useQueryClient } from "@tanstack/react-query"
 import { useStore } from "jotai"
 import { useCallback } from "react"
-import { buildBoardSources } from "@/lib/source-cards"
+import { buildSourceCards } from "@/lib/source-cards"
 import { sanitizeSourceParamValues } from "@/lib/source-params"
 import { loadSourceDescriptors } from "@/lib/sources"
-import { boardStarIdsAtom, currentBoardAtom, instancesAtom } from "@/store/board"
+import { currentBoardIdAtom, instancesAtom } from "@/store/board"
 
 const latestSourceRefreshKeys = new Set<string>()
 export const SOURCE_QUERY_KEY = ["source"] as const
@@ -70,23 +70,20 @@ export function useRefetch() {
   const isFetching = fetchingCount > 0
 
   /**
-   * Refresh all sources in the current board.
+   * Refresh all cards in the current board.
    */
   const refetchAll = useCallback(async () => {
     try {
-      const currentBoard = store.get(currentBoardAtom)
-      const starredInstanceIds = store.get(boardStarIdsAtom(currentBoard))
       const instances = store.get(instancesAtom)
+      const currentBoardId = store.get(currentBoardIdAtom)
       const sources = await loadSourceDescriptors()
-      const boardSources = buildBoardSources({
+      const cards = buildSourceCards({
         sources,
-        boardId: currentBoard,
-        starredSourceInstanceIds: starredInstanceIds,
         sourceInstances: instances,
-        isLocalOnly: true,
+        boardId: currentBoardId,
       })
-      const targets = boardSources.ids.map((id) => {
-        const source = boardSources.map[id]
+      const targets = cards.ids.map((id) => {
+        const source = cards.map[id]
         return {
           sourceId: source.sourceId,
           params: sanitizeSourceParamValues(source.paramsValue, source.params),
@@ -106,7 +103,7 @@ export function useRefetch() {
         ),
       )
     } catch (e) {
-      console.error("Failed to refresh board sources", e)
+      console.error("Failed to refresh cards", e)
     }
   }, [queryClient, store])
 

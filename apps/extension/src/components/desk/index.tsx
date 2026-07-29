@@ -1,15 +1,10 @@
-import type { BoardType } from "@/store/board"
 import { useEffect, useRef, useState } from "react"
 import { NextLayer } from "@/components/nextlayer"
 import { NowLayer } from "@/components/nowlayer"
 import { useScrollProgressContext } from "@/components/scroll-progress-context"
 import { cn } from "@/lib/utils"
 
-interface DeskProps {
-  boardId?: BoardType
-}
-
-export function Desk({ boardId = "stars" }: DeskProps) {
+export function Desk({ boardId }: { boardId: string }) {
   const [isScattered, setIsScattered] = useState(false)
   const nowLayerRef = useRef<HTMLDivElement>(null)
   const {
@@ -58,7 +53,7 @@ export function Desk({ boardId = "stars" }: DeskProps) {
           isScattered && "pointer-events-none",
         )}
       >
-        <NowLayer isScattered={isScattered} boardId={boardId} containerRef={nowLayerRef} />
+        <NowLayer boardId={boardId} isScattered={isScattered} containerRef={nowLayerRef} />
       </div>
     </div>
   )

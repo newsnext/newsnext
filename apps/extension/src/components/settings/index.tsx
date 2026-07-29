@@ -6,21 +6,29 @@ import {
   DialogTitle,
 } from "@newsnext/ui/components/dialog"
 import { Label } from "@newsnext/ui/components/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from "@newsnext/ui/components/select"
 import { cn } from "@newsnext/ui/lib/utils"
+import { useAtom, useAtomValue } from "jotai"
 import { useEffect, useState } from "react"
-import { DEFAULT_BOARD_KEY } from "@/lib/board-default"
 import {
   handleThemeModeSwitch,
   handleThemeVersionSwitch,
   THEME_MODE_KEY,
   THEME_VERSION_KEY,
 } from "@/lib/utils/swith-theme"
+import { boardsAtom, defaultBoardIdAtom } from "@/store/board"
 import { SegmentedControl } from "../common/segmented-control"
 import { ThemeSelector } from "../common/theme-selector"
 import { PermissionsSettings } from "./permissions"
 import { SourceConnectionSettings } from "./source-connection"
 
 const SETTINGS_TAB_KEY = "newsnext-settings-tab"
+const LAST_USED_BOARD_VALUE = "__last_used__"
 export type SettingsTabId = "appearance" | "general" | "permissions"
 
 const SETTINGS_TABS: Array<{ id: SettingsTabId, label: string }> = [
@@ -28,12 +36,6 @@ const SETTINGS_TABS: Array<{ id: SettingsTabId, label: string }> = [
   { id: "general", label: "General" },
   { id: "permissions", label: "Permissions" },
 ]
-
-const DEFAULT_BOARD_TABS = [
-  { label: "Stars", value: "stars" },
-  { label: "Forks", value: "forks" },
-  { label: "Last Used", value: "last" },
-] as const
 
 export function SettingsModal({
   initialTab,
@@ -128,13 +130,6 @@ function isSettingsTabId(value: string | null): value is SettingsTabId {
     || value === "permissions"
 }
 
-type DefaultBoardOption = "forks" | "stars" | "last"
-
-function readDefaultBoardOption(value: string | null): DefaultBoardOption {
-  if (value === "forks" || value === "stars" || value === "last") return value
-  return "stars"
-}
-
 function AppearanceSettings() {
   const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
     const stored = localStorage.getItem(THEME_MODE_KEY) as ThemeMode | null
@@ -197,27 +192,37 @@ function AppearanceSettings() {
 }
 
 function GeneralSettings() {
-  const [defaultBoard, setDefaultBoard] = useState<DefaultBoardOption>(() => {
-    return readDefaultBoardOption(localStorage.getItem(DEFAULT_BOARD_KEY))
-  })
-
-  const handleDefaultBoardChange = (value: DefaultBoardOption) => {
-    setDefaultBoard(value)
-    localStorage.setItem(DEFAULT_BOARD_KEY, value)
-  }
+  const boards = useAtomValue(boardsAtom)
+  const [defaultBoardId, setDefaultBoardId] = useAtom(defaultBoardIdAtom)
+  const selectedValue = defaultBoardId ?? LAST_USED_BOARD_VALUE
+  const selectedLabel = defaultBoardId === null
+    ? "Last used"
+    : boards.find(board => board.id === defaultBoardId)!.name
 
   return (
     <div className="space-y-8">
       <div className="space-y-2">
-        <Label>Default Tab</Label>
-        <SegmentedControl
-          items={DEFAULT_BOARD_TABS}
-          value={defaultBoard}
-          onValueChange={handleDefaultBoardChange}
-          layoutId="default-board-tab"
-        />
+        <Label>Default Board</Label>
+        <Select
+          value={selectedValue}
+          onValueChange={(value) => {
+            if (value) {
+              setDefaultBoardId(value === LAST_USED_BOARD_VALUE ? null : value)
+            }
+          }}
+        >
+          <SelectTrigger className="w-56">
+            <span className="flex-1 truncate text-left">{selectedLabel}</span>
+          </SelectTrigger>
+          <SelectContent align="start">
+            <SelectItem value={LAST_USED_BOARD_VALUE}>Last used</SelectItem>
+            {boards.map(board => (
+              <SelectItem key={board.id} value={board.id}>{board.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <p className="text-sm text-muted-foreground">
-          Choose which tab to show when the app opens.
+          Choose which board opens from the dashboard root.
         </p>
       </div>
       <SourceConnectionSettings />

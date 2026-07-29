@@ -6,20 +6,19 @@ import type { BoardSource, SourceDescriptor } from "@/typings/source"
 import { ButtonPrimitive } from "@newsnext/ui/components/button"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 import confetti from "canvas-confetti"
-import { useSetAtom } from "jotai"
+import { useAtomValue, useSetAtom } from "jotai"
 import { animate, motion, useDragControls, useMotionValue, useReducedMotion, useTransform } from "motion/react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Card from "@/components/card"
+import { BoardMembershipSelect } from "@/components/common/board-membership-select"
 import { IconButton } from "@/components/common/button"
-import { PhArrowCircleLeftDuotone, PhForkDuotone, PhStarFill } from "@/components/icons/ph"
+import { PhArrowCircleLeftDuotone, PhPlusCircleDuotone } from "@/components/icons/ph"
+import { DEFAULT_BOARD_ID } from "@/lib/boards"
 import { createRadarBoardSource } from "@/lib/radar-board-source"
 import { requestRadarOverlayClose } from "@/lib/radar-overlay-message"
-import { createForkedInstance, mergeSourceInstancePatch } from "@/lib/source-cards"
+import { createCardInstance, mergeSourceInstancePatch } from "@/lib/source-cards"
 import { cn } from "@/lib/utils"
-import {
-  starInstanceAtom,
-  upsertInstanceAtom,
-} from "@/store/board"
+import { addInstanceAtom, currentBoardIdAtom } from "@/store/board"
 
 const RADAR_SWIPE_THRESHOLD = 90
 const RADAR_SWIPE_VELOCITY_THRESHOLD = 500
@@ -50,8 +49,6 @@ const RADAR_CONFETTI_COLORS: Record<BoardSource["color"], string> = {
   slate: "#94a3b8",
 }
 
-type RadarCelebrationKind = "fork" | "star"
-
 function getRadarTrackX(index: number, trackItemOffset: number): number {
   return -(index * trackItemOffset)
 }
@@ -72,11 +69,10 @@ function getRadarActionStyle(color: BoardSource["color"]): RadarActionStyle {
 
 interface RadarConfettiOptions {
   color: BoardSource["color"]
-  kind: RadarCelebrationKind
   originElement: HTMLElement | null
 }
 
-function launchRadarConfetti({ color, kind, originElement }: RadarConfettiOptions): void {
+function launchRadarConfetti({ color, originElement }: RadarConfettiOptions): void {
   const rect = originElement?.getBoundingClientRect()
   const origin = rect
     ? {
@@ -87,7 +83,7 @@ function launchRadarConfetti({ color, kind, originElement }: RadarConfettiOption
   const activeColor = RADAR_CONFETTI_COLORS[color]
 
   void confetti({
-    particleCount: kind === "star" ? 64 : 52,
+    particleCount: 56,
     angle: 78,
     spread: 72,
     startVelocity: 34,
@@ -97,7 +93,7 @@ function launchRadarConfetti({ color, kind, originElement }: RadarConfettiOption
     scalar: 0.72,
     origin,
     colors: [activeColor, "#fbbf24", "#fb7185", "#f8fafc"],
-    shapes: kind === "star" ? ["star", "circle"] : ["square", "circle"],
+    shapes: ["square", "circle"],
     disableForReducedMotion: true,
     zIndex: 50,
   })
@@ -119,7 +115,6 @@ function RadarSourceCard({ source, className, onDraftSourceChange }: RadarSource
         className,
       )}
       sizeClassName="h-[30rem] w-full"
-      showStar={false}
       isDraft
       onDraftSourceChange={onDraftSourceChange}
     />
@@ -200,13 +195,16 @@ export function RadarDeck({ sourceDescriptors, suggestions }: RadarDeckProps) {
 }
 
 function RadarDeckContent({ sourceDescriptors, suggestions }: RadarDeckProps) {
-  const upsertLocal = useSetAtom(upsertInstanceAtom)
-  const starLocal = useSetAtom(starInstanceAtom)
+  const addInstance = useSetAtom(addInstanceAtom)
+  const currentBoardId = useAtomValue(currentBoardIdAtom)
+  const [targetBoardId, setTargetBoardId] = useState<string | null>(
+    currentBoardId === DEFAULT_BOARD_ID ? null : currentBoardId,
+  )
   const [activeIndex, setActiveIndex] = useState(0)
   const [draftPatches, setDraftPatches] = useState<Record<string, SourceInstancePatch>>({})
   const [trackItemOffset, setTrackItemOffset] = useState(1)
   const [hasMeasuredDeck, setHasMeasuredDeck] = useState(false)
-  const [celebration, setCelebration] = useState<RadarCelebrationKind | null>(null)
+  const [isCreated, setIsCreated] = useState(false)
   const actionRef = useRef<HTMLDivElement>(null)
   const deckRef = useRef<HTMLDivElement>(null)
   const resizeObserverRef = useRef<ResizeObserver | null>(null)
@@ -215,7 +213,7 @@ function RadarDeckContent({ sourceDescriptors, suggestions }: RadarDeckProps) {
   const prefersReducedMotion = useReducedMotion() ?? false
 
   useEffect(() => {
-    if (!celebration) {
+    if (!isCreated) {
       return
     }
 
@@ -225,7 +223,7 @@ function RadarDeckContent({ sourceDescriptors, suggestions }: RadarDeckProps) {
     const timeout = window.setTimeout(requestRadarOverlayClose, duration)
 
     return () => window.clearTimeout(timeout)
-  }, [celebration, prefersReducedMotion])
+  }, [isCreated, prefersReducedMotion])
 
   useEffect(() => {
     const targetX = getRadarTrackX(activeIndex, trackItemOffset)
@@ -315,51 +313,22 @@ function RadarDeckContent({ sourceDescriptors, suggestions }: RadarDeckProps) {
     touchAction: "pan-y" as const,
   }), [x])
 
-  const createActiveForkInstance = useCallback(() => {
-    if (!activeSuggestion || !activeSource) {
-      return null
+  const handleCreate = useCallback(() => {
+    if (isCreated || !activeSuggestion || !activeSource) {
+      return
     }
 
-    return createForkedInstance(
+    addInstance(createCardInstance(
       activeSuggestion.sourceId,
+      targetBoardId,
       mergeSourceInstancePatch(
         activeSuggestion.patch,
         draftPatches[activeSuggestion.id] ?? {},
       ),
-      { type: "radar", ruleId: activeSuggestion.ruleId },
-    )
-  }, [activeSource, activeSuggestion, draftPatches])
-
-  const handleFork = useCallback(() => {
-    if (celebration || !activeSource) {
-      return
-    }
-
-    const instance = createActiveForkInstance()
-    if (!instance) {
-      return
-    }
-
-    upsertLocal(instance)
-    launchRadarConfetti({ color: activeSource.color, kind: "fork", originElement: actionRef.current })
-    setCelebration("fork")
-  }, [activeSource, celebration, createActiveForkInstance, upsertLocal])
-
-  const handleForkAndStar = useCallback(() => {
-    if (celebration || !activeSource) {
-      return
-    }
-
-    const instance = createActiveForkInstance()
-    if (!instance) {
-      return
-    }
-
-    upsertLocal(instance)
-    starLocal({ instanceId: instance.instanceId, starred: true })
-    launchRadarConfetti({ color: activeSource.color, kind: "star", originElement: actionRef.current })
-    setCelebration("star")
-  }, [activeSource, celebration, createActiveForkInstance, starLocal, upsertLocal])
+    ))
+    launchRadarConfetti({ color: activeSource.color, originElement: actionRef.current })
+    setIsCreated(true)
+  }, [activeSource, activeSuggestion, addInstance, draftPatches, isCreated, targetBoardId])
 
   const handleActiveDraftSourceChange = useCallback((patch: SourceInstancePatch) => {
     if (!activeSuggestion) {
@@ -382,10 +351,10 @@ function RadarDeckContent({ sourceDescriptors, suggestions }: RadarDeckProps) {
     <motion.section
       className="relative space-y-3"
       aria-label="Radar cards"
-      animate={celebration && !prefersReducedMotion
+      animate={isCreated && !prefersReducedMotion
         ? { scale: [1, 1.008, 0.985], opacity: [1, 1, 0] }
         : undefined}
-      transition={celebration && !prefersReducedMotion
+      transition={isCreated && !prefersReducedMotion
         ? { duration: RADAR_CELEBRATION_DURATION / 1000, times: [0, 0.7, 1], ease: "easeInOut" }
         : undefined}
     >
@@ -416,30 +385,23 @@ function RadarDeckContent({ sourceDescriptors, suggestions }: RadarDeckProps) {
         </div>
       </div>
       <div className="flex items-center justify-between gap-3">
-        <div
-          ref={actionRef}
-          className="relative shrink-0"
-          style={radarActionStyle}
-        >
+        <div ref={actionRef} className="flex min-w-0 items-center gap-1.5" style={radarActionStyle}>
+          <BoardMembershipSelect
+            value={targetBoardId}
+            onValueChange={setTargetBoardId}
+            ariaLabel="Destination board"
+            align="start"
+            className="max-w-36 border-0 bg-background/50 text-xs shadow-none"
+          />
           <ButtonPrimitive
-            onClick={handleForkAndStar}
-            disabled={celebration !== null}
-            aria-label="Fork and star"
-            title="Fork and star"
-            className="flex h-8 items-center gap-1 rounded-3xl bg-(--radar-action-card-bg) py-0.5 pr-2.5 pl-[4.35rem] text-xs font-semibold transition-colors hover:bg-(--radar-action-card-bg-hover) hover:text-foreground"
+            onClick={handleCreate}
+            disabled={isCreated}
+            aria-label="Create card"
+            title="Create card"
+            className="flex h-8 items-center gap-1 rounded-3xl bg-(--radar-action-card-bg) px-3 py-0.5 text-xs font-semibold transition-colors hover:bg-(--radar-action-card-bg-hover) hover:text-foreground"
           >
-            <PhStarFill className="text-sm" />
-            Star
-          </ButtonPrimitive>
-          <ButtonPrimitive
-            onClick={handleFork}
-            disabled={celebration !== null}
-            aria-label="Fork only"
-            title="Fork only"
-            className="absolute top-0.5 left-0.5 inline-flex h-7 items-center gap-1 rounded-3xl bg-background/50 px-2 text-xs font-medium text-(--radar-action-chip-text) opacity-80 transition-all hover:bg-background/70 hover:opacity-100"
-          >
-            <PhForkDuotone className="text-sm" />
-            Fork
+            <PhPlusCircleDuotone className="text-sm text-(--radar-action-chip-text)" />
+            Create card
           </ButtonPrimitive>
         </div>
         <div className="flex shrink-0 items-center gap-1">

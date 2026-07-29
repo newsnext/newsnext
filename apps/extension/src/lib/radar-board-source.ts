@@ -20,8 +20,7 @@ export function createRadarBoardSource(
     ...patch.metadata,
     id: `tmp:radar:${suggestion.id}`,
     sourceId: suggestion.sourceId,
+    boardId: null,
     paramsValue: patch.params,
-    isCustom: true,
-    isLocalOnly: true,
   }
 }

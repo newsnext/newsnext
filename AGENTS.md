@@ -47,6 +47,19 @@ Newsnext is a personalized web crawler that runs inside a browser extension (mv3
 - All commit messages must follow Conventional Commits: `<type>(<scope>): <summary>`.
 - Example: `chore(init): initial import`.
 
+### Code Quality
+
+- Do not introduce duplicated or redundant code.
+- Reuse an existing implementation when the same behavior or transformation
+  already exists. Extract shared logic when multiple call sites would otherwise
+  implement it independently.
+- After every code edit, review the affected code before considering the work
+  complete. Check for duplicated logic, dead code, unused state or parameters,
+  unnecessary compatibility branches, redundant abstractions, and opportunities
+  to express the same behavior more simply.
+- Prefer the simplest implementation that remains clear, maintainable, strictly
+  typed, and correct. Do not trade readability or type safety for fewer lines.
+
 ## General
 
 - Use TypeScript, React 19, Tailwind CSS v4, and Bun.

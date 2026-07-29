@@ -1,18 +1,14 @@
 import type { ReactNode } from "react"
 import type { BoardSource, NewsItem } from "@/typings/source"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
-import { useAtomValue, useSetAtom } from "jotai"
-import { memo, useCallback, useMemo, useRef } from "react"
+import { memo, useRef } from "react"
 import { useRelativeTime } from "@/hooks/useRelativeTime"
 import { cn } from "@/lib/utils"
-import { instanceStarredAtom, starInstanceAtom } from "@/store/board"
 import { IconButton } from "../common/button"
 import {
   PhArrowCounterClockwiseDuotone,
   PhCircleDashedDuotone,
   PhInfoDuotone,
-  PhStarDuotone,
-  PhStarFill,
 } from "../icons/ph"
 import { CardHeader } from "./card-header"
 import {
@@ -27,7 +23,6 @@ import { Timeline } from "./timeline"
 
 interface CardFrontProps {
   badge?: string
-  id: string
   source: BoardSource
   items: NewsItem[]
   isFetching: boolean
@@ -39,28 +34,8 @@ interface CardFrontProps {
   onRefresh: () => void
   onRequestPermission: () => Promise<boolean>
   onFlip?: () => void
-  showStar?: boolean
   actions?: ReactNode
   dragHandle?: ReactNode
-}
-
-function StarButton({ id }: { id: string }) {
-  const isStarredAtom = useMemo(() => instanceStarredAtom(id), [id])
-  const isStarred = useAtomValue(isStarredAtom)
-  const starLocal = useSetAtom(starInstanceAtom)
-
-  const handleToggleStar = useCallback(() => {
-    starLocal({ instanceId: id, starred: !isStarred })
-  }, [id, isStarred, starLocal])
-
-  return (
-    <IconButton
-      onClick={handleToggleStar}
-      aria-label="Star"
-    >
-      {isStarred ? <PhStarFill /> : <PhStarDuotone />}
-    </IconButton>
-  )
 }
 
 export function CardRefreshButton({
@@ -167,7 +142,6 @@ function CardFrontContent({
 
 function CardFrontComponent({
   badge: displayBadge,
-  id,
   source,
   items,
   isFetching,
@@ -179,7 +153,6 @@ function CardFrontComponent({
   onRefresh,
   onRequestPermission,
   onFlip,
-  showStar = true,
   actions,
   dragHandle,
 }: CardFrontProps) {
@@ -216,7 +189,6 @@ function CardFrontComponent({
           actions={actions ?? (
             <>
               <CardRefreshButton isFetching={isFetching} onRefresh={onRefresh} />
-              {showStar && <StarButton id={id} />}
               {onFlip && (
                 <IconButton
                   onClick={onFlip}

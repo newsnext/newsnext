@@ -13,7 +13,7 @@ import { useRelativeTime } from "@/hooks/useRelativeTime"
 import { cn } from "@/lib/utils"
 import { IconButton } from "../../common/button"
 import { CardHeader } from "../card-header"
-import { DeleteForkButton, ForkButton } from "./actions"
+import { CardBoardSelect, DeleteCardButton } from "./actions"
 import { ColorSelector, EditableImage, EditableInput, Info, ValueSelector } from "./fields"
 import { ParamField } from "./param-field"
 
@@ -31,7 +31,6 @@ export interface CardBackProps {
   badge?: string
   id: string
   source: BoardSource
-  sourceParams: Record<string, unknown>
   draftSourceParams: Record<string, unknown>
   hasSourceParams: boolean
   hasSourceParamChanges: boolean
@@ -50,7 +49,6 @@ export function CardBack({
   badge: displayBadge,
   id,
   source,
-  sourceParams,
   draftSourceParams,
   hasSourceParams,
   hasSourceParamChanges,
@@ -64,13 +62,11 @@ export function CardBack({
   isDraft = false,
   dragHandle,
 }: CardBackProps) {
-  const isCustom = source.isCustom
-
   const { badge, category, desc, color, params, icon, provider, title, home, type } = source
   const [editDraft, setEditDraft] = useState<SourceEditDraft | null>(null)
   const [isEditingParams, setIsEditingParams] = useState(false)
-  const isEditingMetadata = isCustom && editDraft !== null
-  const canEditParams = isCustom && isEditingParams
+  const isEditingMetadata = editDraft !== null
+  const canEditParams = isEditingParams
   const previewTitle = isEditingMetadata ? editDraft.title : title
   const previewBadge = isEditingMetadata ? editDraft.badge : displayBadge
   const previewDesc = isEditingMetadata ? editDraft.desc : desc
@@ -108,10 +104,6 @@ export function CardBack({
   }
 
   function startEditingMetadata(): void {
-    if (!isCustom) {
-      return
-    }
-
     setEditDraft(createEditDraft())
   }
 
@@ -133,10 +125,6 @@ export function CardBack({
   }
 
   function startEditingParams(): void {
-    if (!isCustom) {
-      return
-    }
-
     onDiscardSourceParams()
     setIsEditingParams(true)
   }
@@ -174,8 +162,7 @@ export function CardBack({
           subtitle={previewDesc || relativeTime}
           actions={(
             <>
-              {!isDraft && <ForkButton id={id} source={source} sourceParams={sourceParams} />}
-              {!isDraft && <DeleteForkButton id={id} isCustom={isCustom} />}
+              {!isDraft && <DeleteCardButton id={id} />}
               <IconButton
                 onClick={(e) => {
                   e.stopPropagation()
@@ -203,6 +190,7 @@ export function CardBack({
             className="relative size-full rounded-2xl overflow-hidden"
           >
             <div className="p-3 space-y-4">
+              {!isDraft && <CardBoardSelect id={id} boardId={source.boardId} />}
               <div className="flex flex-col text-sm">
                 <div className="mb-2 flex items-start justify-between">
                   <span className="inline-block border-b border-border/60 pb-1 font-semibold opacity-80">Metadata</span>
@@ -239,8 +227,7 @@ export function CardBack({
                         <Button
                           type="button"
                           size="sm"
-                          disabled={!isCustom}
-                          title={isCustom ? "Edit metadata" : "Only custom cards can be edited"}
+                          title="Edit metadata"
                           className={cn(`h-6 bg-${previewColor}-500 px-2 hover:bg-${previewColor}-500/80`)}
                           onClick={(event) => {
                             event.stopPropagation()
@@ -355,8 +342,7 @@ export function CardBack({
                           <Button
                             type="button"
                             size="sm"
-                            disabled={!isCustom}
-                            title={isCustom ? "Edit parameters" : "Only custom cards can be edited"}
+                            title="Edit parameters"
                             className={cn(`h-6 bg-${previewColor}-500 px-2 hover:bg-${previewColor}-500/80`)}
                             onClick={(event) => {
                               event.stopPropagation()

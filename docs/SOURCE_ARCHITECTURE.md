@@ -246,6 +246,7 @@ active tab URL
     → render metadata patches
     → apply source presentation metadata to the discovered instance
     → order suggestions by confidence
+    → persist the accepted suggestion with the selected board membership
 ```
 
 Page-field queries required by matching rules are deduplicated and executed in
@@ -258,6 +259,13 @@ diagnostics and fail closed instead of interrupting the surrounding UI.
 Radar metadata can replace presentation fields, including icons, card type,
 color, and category, but cannot modify source identity, provider attribution,
 loader behavior, capabilities, secrets, request rules, or cache policy.
+Accepting a Radar suggestion creates one card instance with the selected board
+membership. The instance owns its board ID alongside its source ID and patch.
+Moving a card updates only that board ID; source parameters, presentation
+metadata, and cache identity remain unchanged. The board ID is nullable:
+`null` means the card appears only in Inbox, while a custom board ID adds it to
+that board. Inbox deliberately skips membership filtering and aggregates every
+card instance.
 The card editor writes the same instance patch shape and exposes every declared
 source parameter plus every source presentation metadata field.
 

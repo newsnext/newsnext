@@ -10,7 +10,6 @@ export type { NewsItem, SourceDescriptor, SourceType }
 export type BoardSource = Omit<SourceDescriptor, "id"> & {
   id: string
   sourceId: string
+  boardId: string | null
   paramsValue?: Record<string, unknown>
-  isCustom: boolean
-  isLocalOnly?: boolean
 }

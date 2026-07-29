@@ -1,12 +1,10 @@
 import { Navigate } from "@tanstack/react-router"
-import { DEFAULT_BOARD_KEY, LAST_ACTIVE_BOARD_KEY, resolveDefaultBoard } from "@/lib/board-default"
+import { useAtomValue } from "jotai"
+import { currentBoardIdAtom, defaultBoardIdAtom } from "@/store/board"
 
 export function IndexComponent() {
-  const defaultBoard = (() => {
-    const saved = localStorage.getItem(DEFAULT_BOARD_KEY)
-    const lastActiveBoard = localStorage.getItem(LAST_ACTIVE_BOARD_KEY)
-    return resolveDefaultBoard(saved, lastActiveBoard)
-  })()
+  const currentBoardId = useAtomValue(currentBoardIdAtom)
+  const defaultBoardId = useAtomValue(defaultBoardIdAtom)
 
-  return <Navigate to="/boards/$boardId" params={{ boardId: defaultBoard }} />
+  return <Navigate to="/board/$boardId" params={{ boardId: defaultBoardId ?? currentBoardId }} replace />
 }
