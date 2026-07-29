@@ -156,7 +156,9 @@ Loader metadata is response-scoped and remains part of the cached load result.
 While displayed, it overrides the source title, description, and badge without
 persisting those response-derived values into the saved source instance.
 Before the first successful load, the card continues to use static or Radar
-metadata; response metadata does not replace discovery-time configuration.
+metadata. Loader metadata cannot satisfy the required Radar title for a
+parameterized source instance and does not replace discovery-time
+configuration.
 
 The extension prefers background execution so loaders can use extension host
 permissions, cookie and local-storage secrets, and request rules. The direct

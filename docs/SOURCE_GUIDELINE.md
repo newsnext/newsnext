@@ -327,9 +327,8 @@ JSON loader metadata is selected from the complete response. It is cached with
 the items and temporarily overrides the source title, description, or badge
 while that result is displayed.
 
-Loader metadata is unavailable until the first successful request. Keep
-discovery-time values such as a parameterized title in Radar when the source
-card needs them before loading or as a request-failure fallback.
+Loader metadata is unavailable until the first successful request. It does not
+satisfy the Radar title requirement and cannot replace discovery-time metadata.
 
 ## HTML loader
 
@@ -563,6 +562,11 @@ Match rules:
 Map each parameter explicitly in `patch.params`. Values can read
 `scope.path`, `scope.query`, `scope.hashQuery`, and `source.vars`. Missing
 values fall back to parameter defaults; invalid values discard the suggestion.
+
+Every Radar rule that discovers a parameterized source instance must provide a
+non-empty `patch.metadata.title`. This remains required when the loader also
+returns a dynamic title: Radar owns the title before loading and provides the
+fallback when loading fails.
 
 Radar resolves and validates parameters before metadata. Metadata strings can
 then read `scope.params` and `scope.page.title`:
