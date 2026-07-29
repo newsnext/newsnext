@@ -106,10 +106,13 @@ describe("buildBoardSources", () => {
           patch: {
             metadata: {
               title: "Custom Title",
+              icon: "https://custom.example.com/icon.png",
               badge: "https://custom.example.com/badge.png",
               desc: "Custom description",
               home: "https://custom.example.com",
               color: "red",
+              type: "hottest",
+              category: "world",
             },
           },
         }),
@@ -119,34 +122,14 @@ describe("buildBoardSources", () => {
 
     expect(boardSources.map["test:feed::fork_abc"]).toMatchObject({
       title: "Custom Title",
+      icon: "https://custom.example.com/icon.png",
       badge: "https://custom.example.com/badge.png",
-      icon: "https://example.com/icon.png",
       desc: "Custom description",
       home: "https://custom.example.com",
       color: "red",
+      type: "hottest",
+      category: "world",
     })
-  })
-
-  it("ignores persisted instance icon overrides", () => {
-    const boardSources = buildBoardSources({
-      sources: testSources,
-      boardId: "forks",
-      starredSourceInstanceIds: [],
-      sourceInstances: [
-        createCustomInstance({
-          patch: {
-            metadata: {
-              icon: "https://custom.example.com/icon.png",
-            },
-          } as unknown as SourceInstance["patch"],
-        }),
-      ],
-      isLocalOnly: true,
-    })
-
-    expect(boardSources.map["test:feed::fork_abc"].icon).toBe(
-      "https://example.com/icon.png",
-    )
   })
 
   it("does not allow persisted instance metadata to override provider identity", () => {

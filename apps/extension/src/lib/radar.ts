@@ -1,6 +1,7 @@
 import type { Color } from "@newsnext/shared/types"
 import type { CompiledSourceTemplate } from "@newsnext/source/core"
 import type {
+  CategoryId,
   HtmlField,
   SourceParamSchemaMap,
   SourceRadarMatch,
@@ -10,6 +11,7 @@ import type {
 } from "@newsnext/source/types"
 import type { RadarPageQuery } from "@/lib/radar-page-query"
 import type { SourceInstanceMetadata, SourceInstancePatch } from "@/lib/source-cards"
+import { categories } from "@newsnext/source"
 import {
   compileSourceTemplate,
   createSourceTemplateScope,
@@ -427,13 +429,19 @@ function resolveMetaPatch(
       ]),
   )
   const title = resolveMetaPatchValue("title", rule.metadata.title, context, extractedItem)
+  const icon = resolveMetaPatchValue("icon", rule.metadata.icon, context, extractedItem)
   const badge = resolveMetaPatchValue("badge", rule.metadata.badge, context, extractedItem)
   const desc = resolveMetaPatchValue("desc", rule.metadata.desc, context, extractedItem)
   const home = resolveMetaPatchValue("home", rule.metadata.home, context, extractedItem)
   const color = resolveMetaPatchValue("color", rule.metadata.color, context, extractedItem)
+  const type = resolveMetaPatchValue("type", rule.metadata.type, context, extractedItem)
+  const category = resolveMetaPatchValue("category", rule.metadata.category, context, extractedItem)
 
   if (isPresent(title)) {
     metadata.title = String(title)
+  }
+  if (isPresent(icon)) {
+    metadata.icon = String(icon)
   }
   if (isPresent(badge)) {
     metadata.badge = String(badge)
@@ -446,6 +454,12 @@ function resolveMetaPatch(
   }
   if (isPresent(color)) {
     metadata.color = color as Color
+  }
+  if (type === "hottest" || type === "timeline") {
+    metadata.type = type
+  }
+  if (typeof category === "string" && category in categories) {
+    metadata.category = category as CategoryId
   }
 
   return metadata

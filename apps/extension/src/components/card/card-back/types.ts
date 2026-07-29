@@ -1,9 +1,6 @@
 import type { Color } from "@newsnext/shared/types"
+import type { SourceInstanceMetadata } from "@/lib/source-cards"
 
-export interface SourceEditDraft {
-  title?: string
-  badge?: string
-  desc?: string
-  home?: string
+export type SourceEditDraft = SourceInstanceMetadata & {
   color: Color
 }

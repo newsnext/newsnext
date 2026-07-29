@@ -154,3 +154,44 @@ export function ColorSelector({ color, editable, onChange }: { color: Color, edi
     </Select>
   )
 }
+
+export function ValueSelector<T extends string>({
+  value,
+  options,
+  editable,
+  onChange,
+}: {
+  value: T
+  options: readonly { label: string, value: T }[]
+  editable?: boolean
+  onChange?: (value: T) => void
+}) {
+  const selectedOption = options.find(option => option.value === value)
+
+  if (!editable) {
+    return (
+      <SelectLikeValue>
+        <span className="truncate text-sm">
+          {selectedOption?.label ?? value}
+        </span>
+      </SelectLikeValue>
+    )
+  }
+
+  return (
+    <Select value={value} onValueChange={nextValue => onChange?.(nextValue as T)}>
+      <SelectTrigger className={editableSelectClassName} onClick={event => event.stopPropagation()}>
+        <span className="truncate text-sm">
+          {selectedOption?.label ?? value}
+        </span>
+      </SelectTrigger>
+      <SelectContent>
+        {options.map(option => (
+          <SelectItem key={option.value} value={option.value}>
+            {option.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  )
+}

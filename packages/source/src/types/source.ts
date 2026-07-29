@@ -50,12 +50,8 @@ export interface SourceRadarMatch {
 
 export type SourceRadarParams = Record<string, string>
 
-export interface SourceRadarMetadata {
-  title?: HtmlField
-  badge?: HtmlField
-  desc?: HtmlField
-  home?: HtmlField
-  color?: HtmlField
+export type SourceRadarMetadata = {
+  [K in keyof SourcePresentationMetadata]?: HtmlField
 }
 
 export interface SourcePatch<TParams = SourceRadarParams, TMetadata = SourceRadarMetadata> {
@@ -95,8 +91,7 @@ export type SourceLoader<TParams extends SourceParamSchemaMap = SourceParamSchem
   context?: SourceLoaderContext,
 ) => Promise<SourceLoaderOutput>
 
-export interface SourceMetadata {
-  key: string
+export interface SourcePresentationMetadata {
   title?: string
   icon?: string
   badge?: string
@@ -105,6 +100,21 @@ export interface SourceMetadata {
   category?: CategoryId
   home?: string
   color?: Color
+}
+
+export const SOURCE_PRESENTATION_METADATA_KEYS = [
+  "title",
+  "icon",
+  "badge",
+  "desc",
+  "type",
+  "category",
+  "home",
+  "color",
+] as const satisfies readonly (keyof SourcePresentationMetadata)[]
+
+export interface SourceMetadata extends SourcePresentationMetadata {
+  key: string
 }
 
 export interface SourceCapabilities {

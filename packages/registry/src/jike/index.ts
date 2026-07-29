@@ -132,8 +132,7 @@ export async function fetchJikeUserUpdates(
 }
 
 async function fetchJikeTopicFeed(
-  { topicId }: { topicId: string },
-  order: TopicFeedOrder,
+  { topicId, order }: { topicId: string, order: TopicFeedOrder },
   context?: SourceLoaderContext,
 ): Promise<NewsItem[]> {
   const response = await fetchJikeWithAuth(
@@ -155,19 +154,22 @@ const topicIdParam = {
   default: "5aeaa84029e4000011ac3768",
   pattern: ".+",
 } as const
-const topicRadar = {
-  match: {
-    hosts: ["web.okjike.com"],
-    paths: ["/topic/:topicId", "/topic/:topicId/*rest"],
+const topicOrderParam = {
+  type: "select",
+  title: "排序",
+  values: [
+    { label: "最新", value: "recent" },
+    { label: "热门", value: "hottest" },
+  ],
+  default: "recent",
+} as const
+const topicRadarPatch = {
+  params: {
+    topicId: "{{ scope.path.topicId }}",
   },
-  patch: {
-    params: {
-      topicId: "{{ scope.path.topicId }}",
-    },
-    metadata: {
-      title: {
-        select: "[class*=\"_textGroup_\"] > [class*=\"_title_\"]",
-      },
+  metadata: {
+    title: {
+      select: "[class*=\"_textGroup_\"] > [class*=\"_title_\"]",
     },
   },
 }
@@ -265,43 +267,53 @@ export default {
         maxAge: "5m",
       },
     },
-    "topic-recent": {
+    "topic": {
       metadata: {
-        title: "主题最新",
-        desc: "指定即刻主题的最新动态",
+        title: "主题动态",
+        desc: "指定即刻主题的动态",
       },
       radar: [
         {
-          id: "jike-topic-recent",
-          ...topicRadar,
+          id: "jike-topic-square",
+          match: {
+            hosts: ["web.okjike.com"],
+            paths: ["/topic/:topicId/square"],
+          },
+          patch: {
+            ...topicRadarPatch,
+            params: {
+              ...topicRadarPatch.params,
+              order: "recent",
+            },
+          },
           confidence: 0.9,
         },
-      ],
-      params: {
-        topicId: topicIdParam,
-      },
-      loader: {
-        load: (params, context) => fetchJikeTopicFeed(params, "recent", context),
-      },
-    },
-    "topic-hottest": {
-      metadata: {
-        title: "主题热门",
-        desc: "指定即刻主题的热门动态",
-        type: "hottest",
-      },
-      radar: [
         {
-          id: "jike-topic-hottest",
-          ...topicRadar,
+          id: "jike-topic-selected",
+          match: {
+            hosts: ["web.okjike.com"],
+            paths: ["/topic/:topicId/selected"],
+          },
+          patch: {
+            ...topicRadarPatch,
+            params: {
+              ...topicRadarPatch.params,
+              order: "hottest",
+            },
+            metadata: {
+              ...topicRadarPatch.metadata,
+              type: "hottest",
+            },
+          },
           confidence: 0.85,
         },
       ],
       params: {
         topicId: topicIdParam,
+        order: topicOrderParam,
       },
       loader: {
-        load: (params, context) => fetchJikeTopicFeed(params, "hottest", context),
+        load: fetchJikeTopicFeed,
       },
     },
   },

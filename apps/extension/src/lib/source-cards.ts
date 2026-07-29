@@ -1,6 +1,10 @@
 import type { BoardType } from "@newsnext/shared/types"
-import type { SourcePatch } from "@newsnext/source/types"
+import type {
+  SourcePatch,
+  SourcePresentationMetadata,
+} from "@newsnext/source/types"
 import type { BoardSource, SourceDescriptor } from "@/typings/source"
+import { SOURCE_PRESENTATION_METADATA_KEYS } from "@newsnext/source"
 import { pick } from "es-toolkit"
 
 export interface SourceInstance {
@@ -16,17 +20,7 @@ export type SourceInstanceOriginRef
   = | { type: "radar", ruleId: string }
     | { type: "fork", forkedFromInstanceId: string }
 
-const SOURCE_INSTANCE_METADATA_KEYS = [
-  "title",
-  "badge",
-  "desc",
-  "home",
-  "color",
-] as const
-
-export type SourceInstanceMetadata = Partial<
-  Pick<BoardSource, typeof SOURCE_INSTANCE_METADATA_KEYS[number]>
->
+export type SourceInstanceMetadata = Partial<SourcePresentationMetadata>
 
 export type SourceInstancePatch = SourcePatch<
   Record<string, unknown>,
@@ -40,7 +34,7 @@ export function createSourceInstancePatch(
   return source.isCustom
     ? {
         params,
-        metadata: pick(source, SOURCE_INSTANCE_METADATA_KEYS),
+        metadata: pick(source, SOURCE_PRESENTATION_METADATA_KEYS),
       }
     : { params }
 }
@@ -85,7 +79,7 @@ function applyInstanceOverrides(
   source: BoardSource,
   instance: SourceInstance,
 ): BoardSource {
-  const metadata = pick(instance.patch.metadata ?? {}, SOURCE_INSTANCE_METADATA_KEYS)
+  const metadata = pick(instance.patch.metadata ?? {}, SOURCE_PRESENTATION_METADATA_KEYS)
 
   return {
     ...source,

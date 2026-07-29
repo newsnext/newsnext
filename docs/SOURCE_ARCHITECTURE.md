@@ -244,6 +244,7 @@ active tab URL
     → normalize and validate parameters
     → batch page-field extraction
     → render metadata patches
+    → apply source presentation metadata to the discovered instance
     → order suggestions by confidence
 ```
 
@@ -254,6 +255,11 @@ Liquid.
 
 Rules and compiled matchers are cached. Optional Radar failures are reported as
 diagnostics and fail closed instead of interrupting the surrounding UI.
+Radar metadata can replace presentation fields, including icons, card type,
+color, and category, but cannot modify source identity, provider attribution,
+loader behavior, capabilities, secrets, request rules, or cache policy.
+The card editor writes the same instance patch shape and exposes every declared
+source parameter plus every source presentation metadata field.
 
 ## Capabilities, secrets, and request rules
 

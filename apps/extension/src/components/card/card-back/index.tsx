@@ -1,7 +1,9 @@
+import type { CategoryId } from "@newsnext/source/types"
 import type { ReactNode } from "react"
 import type { SourceEditDraft } from "./types"
 import type { SourceInstanceMetadata } from "@/lib/source-cards"
 import type { BoardSource } from "@/typings/source"
+import { categories } from "@newsnext/source"
 import { Button } from "@newsnext/ui/components/button"
 import { ScrollArea } from "@newsnext/ui/components/scroll-area"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
@@ -15,8 +17,18 @@ import { cn } from "@/lib/utils"
 import { IconButton } from "../../common/button"
 import { CardHeader } from "../card-header"
 import { DeleteForkButton, ForkButton } from "./actions"
-import { ColorSelector, EditableInput, Info } from "./fields"
+import { ColorSelector, EditableInput, Info, ValueSelector } from "./fields"
 import { ParamField } from "./param-field"
+
+const SOURCE_TYPE_OPTIONS = [
+  { label: "Timeline", value: "timeline" },
+  { label: "Hottest", value: "hottest" },
+] as const
+
+const SOURCE_CATEGORY_OPTIONS = Object.entries(categories).map(([value, label]) => ({
+  label,
+  value: value as CategoryId,
+}))
 
 export interface CardBackProps {
   badge?: string
@@ -57,7 +69,7 @@ export function CardBack({
 }: CardBackProps) {
   const isCustom = source.isCustom
 
-  const { badge, desc, color, params, icon, provider, title, home } = source
+  const { badge, category, desc, color, params, icon, provider, title, home, type } = source
   const [editDraft, setEditDraft] = useState<SourceEditDraft | null>(null)
   const canEdit = isCustom && editDraft !== null
   const previewTitle = canEdit ? editDraft.title : title
@@ -65,25 +77,34 @@ export function CardBack({
   const previewDesc = canEdit ? editDraft.desc : desc
   const previewHome = canEdit ? editDraft.home : home
   const previewColor = canEdit ? editDraft.color : color
+  const previewIcon = canEdit ? editDraft.icon : icon
+  const previewType = (canEdit ? editDraft.type : type) ?? "timeline"
+  const previewCategory = (canEdit ? editDraft.category : category) ?? "others"
   const relativeTime = useRelativeTime({ date: updatedAt })
   const hasSourceMetaChanges = Boolean(
     editDraft
     && (
       editDraft.title !== title
+      || editDraft.icon !== icon
       || editDraft.badge !== badge
       || editDraft.desc !== desc
       || editDraft.home !== home
       || editDraft.color !== color
+      || editDraft.type !== type
+      || editDraft.category !== category
     ),
   )
 
   function createEditDraft(): SourceEditDraft {
     return {
       title,
+      icon,
       badge,
       desc,
       home,
       color,
+      type,
+      category,
     }
   }
 
@@ -129,7 +150,7 @@ export function CardBack({
           color={previewColor}
           desc={previewDesc}
           home={previewHome}
-          icon={icon}
+          icon={previewIcon}
           provider={provider}
           title={previewTitle}
           subtitle={previewDesc || relativeTime}
@@ -234,7 +255,7 @@ export function CardBack({
                 </Info>
 
                 <Info label="Icon">
-                  <EditableInput text={icon ?? ""} editable={false} />
+                  <EditableInput text={previewIcon ?? ""} editable={canEdit} onChange={value => updateEditDraft({ icon: value || undefined })} />
                 </Info>
 
                 <Info label="Badge">
@@ -243,6 +264,24 @@ export function CardBack({
 
                 <Info label="Color">
                   <ColorSelector color={previewColor} editable={canEdit} onChange={value => updateEditDraft({ color: value })} />
+                </Info>
+
+                <Info label="Type">
+                  <ValueSelector
+                    value={previewType}
+                    options={SOURCE_TYPE_OPTIONS}
+                    editable={canEdit}
+                    onChange={value => updateEditDraft({ type: value })}
+                  />
+                </Info>
+
+                <Info label="Category">
+                  <ValueSelector
+                    value={previewCategory}
+                    options={SOURCE_CATEGORY_OPTIONS}
+                    editable={canEdit}
+                    onChange={value => updateEditDraft({ category: value })}
+                  />
                 </Info>
               </div>
 

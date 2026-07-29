@@ -15,11 +15,6 @@ export function validateRadarRules(
       })
     }
     for (const [key, field] of Object.entries(rule.patch?.metadata ?? {})) {
-      if (key === "icon") {
-        throw new TypeError(
-          `Radar cannot modify ${patchLocation}.metadata.icon; use metadata.badge for dynamic images`,
-        )
-      }
       if (field === undefined) continue
       const fieldLocation = `${patchLocation}.metadata.${key}`
       if (typeof field === "string") {

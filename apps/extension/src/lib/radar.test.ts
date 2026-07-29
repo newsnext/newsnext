@@ -187,7 +187,7 @@ describe("getRadarSuggestions", () => {
     ])
   })
 
-  it("resolves dynamic badges without replacing source icons", () => {
+  it("resolves all source metadata overrides", () => {
     expect(getRadarSuggestions(
       { url: "https://example.com/users/newsnext" },
       [
@@ -213,7 +213,14 @@ describe("getRadarSuggestions", () => {
                   user: "{{ scope.path.user }}",
                 },
                 metadata: {
+                  title: "User {{ scope.params.user }}",
+                  icon: "https://example.com/users/{{ scope.params.user }}/icon.png",
                   badge: "https://example.com/users/{{ scope.params.user }}.png",
+                  desc: "Dynamic profile",
+                  home: "https://example.com/users/{{ scope.params.user }}",
+                  color: "red",
+                  type: "hottest",
+                  category: "world",
                 },
               },
             },
@@ -224,7 +231,14 @@ describe("getRadarSuggestions", () => {
       {
         patch: {
           metadata: {
+            title: "User newsnext",
+            icon: "https://example.com/users/newsnext/icon.png",
             badge: "https://example.com/users/newsnext.png",
+            desc: "Dynamic profile",
+            home: "https://example.com/users/newsnext",
+            color: "red",
+            type: "hottest",
+            category: "world",
           },
         },
       },
@@ -451,31 +465,39 @@ describe("getRadarSuggestions", () => {
   })
 
   it.each([
-    "https://web.okjike.com/topic/5aeaa84029e4000011ac3768",
-    "https://web.okjike.com/topic/5aeaa84029e4000011ac3768/square",
-  ])("suggests both Jike topic feeds from %s", (url) => {
+    {
+      path: "square",
+      order: "recent",
+    },
+    {
+      path: "selected",
+      order: "hottest",
+    },
+  ])("suggests the matching Jike topic feed from /topic/:topicId/$path", ({
+    path,
+    order,
+  }) => {
     expect(getRadarSuggestions(
       {
-        url,
+        url: `https://web.okjike.com/topic/5aeaa84029e4000011ac3768/${path}`,
         pageSelections: selectPageField(
           "[class*=\"_textGroup_\"] > [class*=\"_title_\"]",
           "即友日记本",
         ),
       },
-      sourceDescriptors.filter(source => source.id.startsWith("jike:topic-")),
+      sourceDescriptors.filter(source => source.id === "jike:topic"),
     )).toMatchObject([
       {
-        sourceId: "jike:topic-recent",
+        sourceId: "jike:topic",
         patch: {
-          params: { topicId: "5aeaa84029e4000011ac3768" },
-          metadata: { title: "即友日记本" },
-        },
-      },
-      {
-        sourceId: "jike:topic-hottest",
-        patch: {
-          params: { topicId: "5aeaa84029e4000011ac3768" },
-          metadata: { title: "即友日记本" },
+          params: {
+            topicId: "5aeaa84029e4000011ac3768",
+            order,
+          },
+          metadata: {
+            title: "即友日记本",
+            ...(order === "hottest" ? { type: "hottest" } : {}),
+          },
         },
       },
     ])

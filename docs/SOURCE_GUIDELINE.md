@@ -136,6 +136,10 @@ params: {
 String-like parameters also support `startsWith`, `notIn`, and `description`.
 All string inputs are trimmed before templates, type coercion, and validation.
 
+Prefer one source with a `select` parameter when feed variants share their
+loader and presentation and differ only by a request value. Separate sources
+remain appropriate when variants need different static metadata or card types.
+
 Use `template` to normalize a raw value:
 
 ```ts
@@ -597,16 +601,20 @@ Prefer a stable, unique semantic or structural selector for page metadata.
 Parse `scope.page.title` only when the value is unavailable from the top-level
 DOM, such as content rendered inside an iframe.
 
-Radar metadata supports `title`, `badge`, `desc`, `home`, and `color`, but not
-`icon`. It uses the same selector, traversal, extraction, and template behavior
-as HTML loader fields.
+Radar metadata can override every source presentation field: `title`, `icon`,
+`badge`, `desc`, `home`, `color`, `type`, and `category`. Use
+`type: "hottest"` or `type: "timeline"` when a discovered instance needs a
+different card presentation from its source default. Radar metadata uses the
+same selector, traversal, extraction, and template behavior as HTML loader
+fields.
 
 When a source has no parameters or explicit `radar`, an HTTP(S)
 `metadata.home` creates a same-host rule automatically. Set `radar: []` to opt
 out. Parameterized sources need explicit rules.
 
-Use `badge`, not `icon`, for dynamic instance identity. For signed or expiring
-badges, return loader metadata instead of persisting the URL through Radar.
+Use `badge` for secondary instance identity and `icon` when Radar should replace
+the source icon. For signed or expiring images, return loader metadata instead
+of persisting the URL through Radar.
 
 ## Validation and verification
 

@@ -373,22 +373,27 @@ describe("source template vars", () => {
     )
   })
 
-  it("rejects Radar icon overrides", () => {
+  it("allows Radar to override all source metadata", () => {
     const radar = [
       {
         id: "test",
         match: { hosts: ["example.com"] },
         patch: {
           metadata: {
+            title: "Dynamic title",
             icon: "https://example.com/dynamic.png",
+            badge: "https://example.com/badge.png",
+            desc: "Dynamic description",
+            home: "https://example.com/dynamic",
+            color: "red",
+            type: "hottest",
+            category: "tech",
           },
         },
       },
-    ] as unknown as SourceRadarRule[]
+    ] satisfies SourceRadarRule[]
 
-    expect(() => resolveTestSource(createSourceConfig(radar))).toThrow(
-      "Radar cannot modify test:test.radar.0.patch.metadata.icon; use metadata.badge for dynamic images",
-    )
+    expect(() => resolveTestSource(createSourceConfig(radar))).not.toThrow()
   })
 
   it("does not expose source metadata to Radar templates", () => {
