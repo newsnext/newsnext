@@ -5,3 +5,4 @@ The Next Official version of [ourongxing/newsnow](https://github.com/ourongxing/
 ## Documentation
 
 - [Source authoring guide](docs/SOURCE_GUIDELINE.md)
+- [Source architecture](docs/SOURCE_ARCHITECTURE.md)

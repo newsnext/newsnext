@@ -15,9 +15,26 @@ Newsnext is a personalized web crawler that runs inside a browser extension (mv3
 
 ### Source Documentation
 
-- `docs/SOURCE_GUIDELINE.md` is the canonical source authoring reference.
-- Update `docs/SOURCE_GUIDELINE.md` in the same change whenever modifying source configuration, provider metadata, parameters, loaders, field selectors, transforms, Liquid templates, JMESPath behavior, radar rules, capabilities, secrets, caching, validation, or source security limits.
-- Keep source examples in the guide aligned with the current TypeScript APIs and runtime behavior.
+- `docs/SOURCE_GUIDELINE.md` is the canonical reference for source authors.
+  Update it in the same change when author-facing configuration or behavior
+  changes, including provider metadata, parameters, loaders, field selectors,
+  transforms, Liquid templates, JMESPath, Radar rules, capabilities, secrets,
+  caching, validation, and source security limits.
+- `docs/SOURCE_ARCHITECTURE.md` is the canonical reference for source-system
+  internals. Update it in the same change when registry generation, provider
+  expansion, runtime resolution, extension execution, caching, template
+  compilation, Radar execution, permission enforcement, or security boundaries
+  change.
+- Keep authoring syntax, field semantics, examples, and operational advice in
+  the guide. Keep package boundaries, data flow, implementation lifecycle, and
+  security design in the architecture document. Link between them instead of
+  duplicating explanations.
+- After source-related implementation or debugging work, capture durable
+  lessons, non-obvious constraints, and recurring pitfalls in the appropriate
+  document. Update both documents when a change affects both the public
+  authoring contract and its internal implementation.
+- Keep documentation and examples aligned with the current TypeScript APIs and
+  runtime behavior.
 
 ### Version Control
 
