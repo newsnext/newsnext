@@ -107,7 +107,7 @@ export function Text({ text }: { text: string }) {
   return (
     <span
       className={cn(
-        "flex h-6 w-full items-center justify-end truncate rounded-3xl border border-transparent pl-2 text-right font-normal leading-none",
+        "flex h-6 w-full items-center justify-end rounded-3xl border border-transparent pl-2 font-normal leading-none",
         isLink && "cursor-pointer hover:underline",
       )}
       title={text}
@@ -117,15 +117,17 @@ export function Text({ text }: { text: string }) {
         }
       }}
     >
-      {text}
+      <span className="block max-w-full truncate text-left">
+        {text}
+      </span>
     </span>
   )
 }
 
 export function SelectLikeValue({ children }: PropsWithChildren) {
   return (
-    <span className="flex h-6 w-full items-center justify-end rounded-3xl border border-transparent pl-2 text-right leading-none">
-      <span className="flex min-w-0 items-center justify-end gap-2">
+    <span className="flex h-6 w-full items-center justify-end rounded-3xl border border-transparent pl-2 leading-none">
+      <span className="flex min-w-0 max-w-full items-center gap-2 text-left">
         {children}
       </span>
     </span>
