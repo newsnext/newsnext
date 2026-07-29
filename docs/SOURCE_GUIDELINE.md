@@ -24,7 +24,7 @@ The configuration follows four pipelines:
 
 ```text
 parameters  raw → trim strings → Liquid template → type coercion → validation
-radar       URL → explicit parameter Liquid → metadata Liquid
+radar       URL → parameter Liquid → active-page fields → metadata
 JSON field  JMESPath select → Liquid template
 HTML field  CSS select → text/attr/content → Liquid template
 ```
@@ -439,7 +439,8 @@ Compilation and rendering are separate:
 - HTML field templates render after selector, traversal, and content extraction.
   Every field is extracted before any field template renders.
 - Radar parameter templates render after a URL rule matches. Their values are
-  parsed and validated before Radar metadata templates render.
+  parsed and validated before Radar metadata renders. Object metadata fields
+  use the HTML field pipeline and receive the resolved Radar parameters.
 
 Registration rejects invalid templates with their exact source location.
 Runtime rendering errors retain the same location. Loader and parameter errors
@@ -1469,13 +1470,50 @@ before metadata renders.
 
 ### Radar metadata
 
-Radar metadata values are Liquid strings:
+Radar metadata accepts either a Liquid string or an HTML field object. Use an
+HTML field object when the value comes from the active page:
+
+```ts
+patch: {
+  metadata: {
+    desc: {
+      select: [".profile .bio", ".bio"],
+      template: "{{ scope.value | normalize_whitespace }}",
+    },
+    badge: {
+      select: ".profile img",
+      attr: "src",
+    },
+  },
+}
+```
+
+Object fields use the complete HTML field API documented above: `select`
+fallbacks, `scope`, `traverse`, `attr`, `content`, `brSeparator`, `all`,
+`separator`, and `template`. The active page root is the current item, so
+`scope: "item"` and the default scope both start at `document.documentElement`;
+`scope: "document"` starts at `document`.
+
+All object fields required by matching rules are deduplicated and extracted in
+one active-tab script execution. Every field is extracted before any field
+template renders. Field templates receive the same variables as HTML loader
+fields:
+
+```text
+source.vars
+scope.value        Current extracted metadata value
+scope.item         All extracted metadata values before templates
+scope.params       Resolved Radar parameters
+scope.index        Always 0 for the active page
+scope.request.url  Active tab URL
+```
+
+String metadata fields remain Radar Liquid templates:
 
 ```ts
 patch: {
   metadata: {
     title: "{{ scope.page.title | normalize_whitespace | regex_extract: '^(.+?)\\\\s+-\\\\s+Example$', 1 | default: scope.params.topic }}",
-    badge: "https://cdn.example.com/users/{{ scope.params.topic | url_path }}.png",
     home: "https://example.com/topics/{{ scope.params.topic | url_path }}",
   },
 }
@@ -1491,6 +1529,12 @@ scope.hashQuery
 scope.params
 scope.page.title
 ```
+
+A missing or invalid selector, an unavailable page, or a missing attribute
+produces an empty string. A selector is limited to 500 characters, an attribute
+name to 100 characters, and each extracted value to 20,000 characters.
+Extraction only reads DOM content; it does not execute page scripts or expose
+the document to Liquid.
 
 When a stored select value is an implementation code, map it to its
 human-facing option label in parameterized Radar titles instead of exposing the

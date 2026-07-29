@@ -281,6 +281,12 @@ describe("source template vars", () => {
           params: {
             value: "{{ scope.params.value }}",
           },
+          metadata: {
+            desc: {
+              select: [".profile .bio", ".bio"],
+              template: "{{ scope.value | normalize_whitespace }}",
+            },
+          },
         },
       },
     ]))).toThrow("Template path \"scope.params.value\" is not available")
@@ -321,11 +327,50 @@ describe("source template vars", () => {
             value: "{{ scope.query.value | default: scope.path.value }}",
           },
           metadata: {
+            desc: {
+              select: ".bio",
+              template: "{{ scope.value }}",
+            },
             title: "{{ scope.page.title | default: scope.params.value }}",
           },
         },
       },
     ]))).not.toThrow()
+  })
+
+  it("rejects invalid Radar HTML fields", () => {
+    expect(() => resolveTestSource(createSourceConfig([
+      {
+        id: "test",
+        match: { hosts: ["example.com"] },
+        patch: {
+          metadata: {
+            title: {
+              select: [".page-title", 42],
+            },
+          },
+        },
+      },
+    ] as unknown as SourceRadarRule[]))).toThrow(
+      "test:test.radar.0.patch.metadata.title.select has an invalid CSS selector",
+    )
+
+    expect(() => resolveTestSource(createSourceConfig([
+      {
+        id: "test",
+        match: { hosts: ["example.com"] },
+        patch: {
+          metadata: {
+            desc: {
+              select: ".bio",
+              attr: "invalid attribute",
+            },
+          },
+        },
+      },
+    ]))).toThrow(
+      "test:test.radar.0.patch.metadata.desc.attr has an invalid attribute name",
+    )
   })
 
   it("rejects Radar icon overrides", () => {

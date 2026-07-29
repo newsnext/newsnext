@@ -2,6 +2,7 @@ import bundledSourceRegistry from "@newsnext/registry" with { type: "json" }
 import { resolveSources } from "@newsnext/registry/loaders"
 import { describe, expect, it } from "vitest"
 import { createRadarMatcher, getRadarSuggestions } from "./radar"
+import { getRadarPageQueryKey } from "./radar-page-query"
 
 const sourceDescriptors = Object.entries(resolveSources(bundledSourceRegistry))
   .map(([id, source]) => {
@@ -124,6 +125,57 @@ describe("getRadarSuggestions", () => {
         patch: {
           params: { value: "topic-news" },
           metadata: { title: "Context title: topic-news" },
+        },
+      },
+    ])
+  })
+
+  it("extracts matching page CSS queries for Radar metadata", () => {
+    const matcher = createRadarMatcher([
+      {
+        id: "test:page-query",
+        radar: [
+          {
+            id: "page-query",
+            match: {
+              hosts: ["example.com"],
+              paths: ["/users/:user"],
+            },
+            patch: {
+              metadata: {
+                badge: {
+                  select: ".profile img",
+                  attr: "src",
+                  template: "{{ scope.value | absolute_url: scope.request.url }}",
+                },
+                desc: {
+                  select: [".profile .bio", ".bio"],
+                  template: "{{ scope.value }} · {{ scope.item.badge }}",
+                },
+              },
+            },
+          },
+        ],
+      },
+    ])
+    const context = { url: "https://example.com/users/newsnext" }
+    const avatarQuery = { select: ".profile img", attr: "src" }
+    const descQuery = { select: [".profile .bio", ".bio"] }
+
+    expect(matcher.getPageQueries(context)).toEqual([avatarQuery, descQuery])
+    expect(matcher.getSuggestions({
+      ...context,
+      pageSelections: {
+        [getRadarPageQueryKey(avatarQuery)]: "/avatar.png",
+        [getRadarPageQueryKey(descQuery)]: "A personalized news reader",
+      },
+    })).toMatchObject([
+      {
+        patch: {
+          metadata: {
+            badge: "https://example.com/avatar.png",
+            desc: "A personalized news reader · /avatar.png",
+          },
         },
       },
     ])

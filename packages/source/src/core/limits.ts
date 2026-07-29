@@ -5,4 +5,6 @@ export const SOURCE_REGISTRY_LIMITS = {
   maxRequestRulesPerSource: 10,
   maxRequestDomainsPerRule: 20,
   maxRequestHeadersPerRule: 5,
+  maxRadarFieldSelectorLength: 500,
+  maxRadarFieldAttributeLength: 100,
 } as const

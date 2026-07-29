@@ -235,6 +235,10 @@ export default {
               username: "{{ scope.path.username }}",
             },
             metadata: {
+              desc: {
+                select: "section[class^=\"_bio_\"]",
+                template: "{{ scope.value | normalize_whitespace }}",
+              },
               title: "{{ scope.page.title | normalize_whitespace | regex_replace: '[:：].*$', '' | regex_replace: '的主页\\\\s*[-_—|]\\\\s*即刻.*$', '' | default: scope.params.username }}",
             },
           },

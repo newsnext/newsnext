@@ -2,6 +2,9 @@ import type * as cheerio from "cheerio/slim"
 import type { AnyNode } from "domhandler"
 import type { FetchOptions } from "ofetch"
 import type {
+  HtmlField,
+  HtmlFieldConfig,
+  HtmlTraversal,
   NewsItem,
   RuntimeSource,
   SourceTemplateVars,
@@ -23,48 +26,7 @@ export interface HtmlFieldContext {
   requestUrl: string
 }
 
-export type HtmlTraversal
-  = { type: "closest", selector: string }
-    | { type: "next", selector?: string }
-    | { type: "parent" }
-    | { type: "previous", selector?: string }
-    | { type: "siblings", selector?: string }
-
-export interface HtmlFieldConfig {
-  /**
-   * CSS selection relative to the item. An array provides ordered fallbacks.
-   * An empty or omitted selection targets the item itself.
-   */
-  select?: string | readonly string[]
-  /**
-   * Select from the entire document instead of the current item.
-   */
-  scope?: "document" | "item"
-  /**
-   * Traverse from the selected scope before applying the field selection.
-   */
-  traverse?: HtmlTraversal | readonly HtmlTraversal[]
-  /**
-   * Attribute to extract. By default, the field extracts text.
-   */
-  attr?: string
-  /**
-   * Extract text, inner HTML, or outer HTML.
-   */
-  content?: "html" | "outerHtml" | "text"
-  /**
-   * Replace each <br> with this text before extracting text content.
-   */
-  brSeparator?: string
-  /**
-   * Extract every match and join the values. The default separator is empty.
-   */
-  all?: boolean
-  separator?: string
-  template?: string
-}
-
-export type HtmlField = string | HtmlFieldConfig
+export type { HtmlField, HtmlFieldConfig, HtmlTraversal } from "../../types"
 export interface HtmlSourceLoaderContext {
   vars?: SourceTemplateVars
   params?: Record<string, unknown>

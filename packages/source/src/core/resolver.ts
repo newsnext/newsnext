@@ -32,8 +32,8 @@ import {
   compileSourceParamTemplates,
   parseSourceParamValue,
 } from "./params"
+import { validateRadarRules } from "./radar"
 import {
-  compileSourceTemplate,
   compileSourceTemplateValue,
   createSourceTemplateScope,
   isTemplate,
@@ -145,7 +145,7 @@ export function validateSourceTemplates(sourceId: string, config: SourceConfig):
     compileHtmlFieldTemplates(loader.fields, `${sourceId}.loader.fields`)
   }
 
-  validateRadarTemplates(config.radar, `${sourceId}.radar`)
+  validateRadarRules(config.radar, `${sourceId}.radar`)
 }
 
 function validateSourceMetadata(
@@ -195,33 +195,6 @@ function validateSourceVarValue(value: unknown, location: string): void {
     return
   }
   throw new TypeError(`${location} must contain only serializable values`)
-}
-
-function validateRadarTemplates(
-  rules: SourceRadarRule[] | undefined,
-  location: string,
-): void {
-  rules?.forEach((rule, index) => {
-    const patchLocation = `${location}.${index}.patch`
-    for (const [key, template] of Object.entries(rule.patch?.params ?? {})) {
-      compileSourceTemplate(template, {
-        location: `${patchLocation}.params.${key}`,
-        slot: "radarParams",
-      })
-    }
-    for (const [key, template] of Object.entries(rule.patch?.metadata ?? {})) {
-      if (key === "icon") {
-        throw new TypeError(
-          `Radar cannot modify ${patchLocation}.metadata.icon; use metadata.badge for dynamic images`,
-        )
-      }
-      if (template === undefined) continue
-      compileSourceTemplate(template, {
-        location: `${patchLocation}.metadata.${key}`,
-        slot: "radarMetadata",
-      })
-    }
-  })
 }
 
 function validateJsonFieldExpressions(value: unknown, location: string): void {

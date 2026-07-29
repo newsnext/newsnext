@@ -1,5 +1,6 @@
 import type { Color, NewsItem } from "@newsnext/shared/types"
 import type { Browser } from "@wxt-dev/browser"
+import type { HtmlField } from "./html-field"
 import type { InferSourceParams, SourceParamSchemaMap } from "./params"
 
 /**
@@ -50,11 +51,11 @@ export interface SourceRadarMatch {
 export type SourceRadarParams = Record<string, string>
 
 export interface SourceRadarMetadata {
-  title?: string
-  badge?: string
-  desc?: string
-  home?: string
-  color?: string
+  title?: HtmlField
+  badge?: HtmlField
+  desc?: HtmlField
+  home?: HtmlField
+  color?: HtmlField
 }
 
 export interface SourcePatch<TParams = SourceRadarParams, TMetadata = SourceRadarMetadata> {

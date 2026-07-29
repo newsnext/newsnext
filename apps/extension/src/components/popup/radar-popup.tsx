@@ -5,9 +5,9 @@ import { useSourceDescriptors } from "@/hooks/use-source-descriptors"
 import { createRadarMatcher } from "@/lib/radar"
 
 export function RadarPopup() {
-  const radarContext = useCurrentTabRadarContext()
   const { sources } = useSourceDescriptors()
   const radarMatcher = useMemo(() => createRadarMatcher(sources), [sources])
+  const radarContext = useCurrentTabRadarContext(radarMatcher)
   const suggestions = useMemo(() => {
     return radarContext ? radarMatcher.getSuggestions(radarContext) : []
   }, [radarContext, radarMatcher])

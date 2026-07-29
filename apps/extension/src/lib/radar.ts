@@ -1,12 +1,14 @@
 import type { Color } from "@newsnext/shared/types"
 import type { CompiledSourceTemplate } from "@newsnext/source/core"
 import type {
+  HtmlField,
   SourceParamSchemaMap,
   SourceRadarMatch,
   SourceRadarMetadata,
   SourceRadarRule,
   SourceTemplateVars,
 } from "@newsnext/source/types"
+import type { RadarPageQuery } from "@/lib/radar-page-query"
 import type { SourceInstanceMetadata, SourceInstancePatch } from "@/lib/source-cards"
 import {
   compileSourceTemplate,
@@ -16,10 +18,15 @@ import {
   TemplateRenderError,
 } from "@newsnext/source/core"
 import { match } from "path-to-regexp"
+import {
+  createRadarPageQuery,
+  getRadarPageQueryKey,
+} from "@/lib/radar-page-query"
 
 export interface RadarContext {
   url: string
   title?: string
+  pageSelections?: Record<string, string>
 }
 
 export interface RadarSuggestion {
@@ -44,8 +51,8 @@ export interface RadarSourceMetadata {
 }
 
 interface RadarMatchContext {
-  input: RadarContext
   url: URL
+  page: Record<string, string>
   pathParams: Record<string, string>
   params: Record<string, unknown>
   source: RadarSourceMetadata
@@ -56,13 +63,18 @@ interface SourceRuleSpec {
   rules: SourceRadarRule[]
 }
 
+interface RadarLocation {
+  rules: CompiledRadarRule[]
+  url: URL
+}
+
 const DEFAULT_RADAR_RULE_ID = "default-home-origin"
 const DEFAULT_ORIGIN_RADAR_CONFIDENCE = 0
 
 type PathMatch = (pathname: string) => Record<string, string> | null
 
 interface CompiledRadarRule {
-  metadataTemplates: Partial<Record<keyof SourceRadarMetadata, CompiledSourceTemplate>>
+  metadata: Partial<Record<keyof SourceRadarMetadata, CompiledRadarMetadata>>
   paramTemplates: Record<string, CompiledSourceTemplate>
   source: RadarSourceMetadata
   rule: SourceRadarRule
@@ -71,7 +83,19 @@ interface CompiledRadarRule {
   pathMatches: PathMatch[]
 }
 
+type CompiledRadarMetadata
+  = {
+    kind: "field"
+    query: RadarPageQuery
+    template?: CompiledSourceTemplate
+  }
+  | {
+    kind: "template"
+    template: CompiledSourceTemplate
+  }
+
 export interface RadarMatcher {
+  getPageQueries: (context: RadarContext) => RadarPageQuery[]
   getSuggestions: (context: RadarContext) => RadarSuggestion[]
 }
 
@@ -163,13 +187,34 @@ function createTemplateVariables(
 ): Record<string, unknown> {
   return createSourceTemplateScope(context.source.vars, {
     hashQuery: getHashQueryParams(context.url),
-    page: {
-      title: context.input.title ?? "",
-    },
+    page: context.page,
     params: createTemplateRecord(Object.entries(context.params)),
     path: createTemplateRecord(Object.entries(context.pathParams)),
     query: getQueryParams(context.url.searchParams),
   }) as Record<string, unknown>
+}
+
+function matchRuleLocation(compiledRule: CompiledRadarRule, url: URL): Record<string, string> | null {
+  if (compiledRule.includes.length && !compiledRule.includes.some(value => url.toString().includes(value))) {
+    return null
+  }
+
+  return matchRulePath(compiledRule, url)
+}
+
+function resolveRadarLocation(
+  context: RadarContext,
+  rulesByHost: Map<string, CompiledRadarRule[]>,
+): RadarLocation | null {
+  try {
+    const url = new URL(context.url)
+    return {
+      rules: rulesByHost.get(getHostname(url)) ?? [],
+      url,
+    }
+  } catch {
+    return null
+  }
 }
 
 function getMatchIncludes(matchSpec: SourceRadarMatch): string[] {
@@ -225,6 +270,34 @@ function matchRulePath(rule: CompiledRadarRule, url: URL): Record<string, string
   return null
 }
 
+function compileRadarMetadata(
+  field: HtmlField,
+  location: string,
+): CompiledRadarMetadata {
+  if (typeof field === "string") {
+    return {
+      kind: "template",
+      template: compileSourceTemplate(field, {
+        location,
+        slot: "radarMetadata",
+      }),
+    }
+  }
+
+  return {
+    kind: "field",
+    query: createRadarPageQuery(field),
+    ...(field.template
+      ? {
+          template: compileSourceTemplate(field.template, {
+            location: `${location}.template`,
+            slot: "field",
+          }),
+        }
+      : {}),
+  }
+}
+
 function compileRadarRule(sourceRule: SourceRuleSpec, rule: SourceRadarRule): CompiledRadarRule | null {
   const pathMatches = compilePathMatches(rule.match.paths)
   if (!pathMatches.length) {
@@ -242,24 +315,22 @@ function compileRadarRule(sourceRule: SourceRuleSpec, rule: SourceRadarRule): Co
         }),
       ]),
     )
-    const metadataTemplates = Object.fromEntries(
+    const metadata = Object.fromEntries(
       Object.entries(rule.patch?.metadata ?? {})
-        .filter((entry): entry is [string, string] => entry[1] !== undefined)
-        .map(([key, template]) => [
+        .filter((entry): entry is [keyof SourceRadarMetadata, HtmlField] =>
+          entry[1] !== undefined)
+        .map(([key, field]) => [
           key,
-          compileSourceTemplate(template, {
-            location: `${templateLocation}.metadata.${key}`,
-            slot: "radarMetadata",
-          }),
+          compileRadarMetadata(field, `${templateLocation}.metadata.${key}`),
         ]),
     )
 
     return {
+      metadata,
       source: sourceRule.source,
       rule,
       hosts: rule.match.hosts.map(normalizeHostname),
       includes: getMatchIncludes(rule.match),
-      metadataTemplates,
       paramTemplates,
       pathMatches,
     }
@@ -312,28 +383,54 @@ function resolveParamsPatch(
 }
 
 function resolveMetaPatchValue(
-  template: CompiledSourceTemplate | undefined,
+  key: keyof SourceRadarMetadata,
+  metadata: CompiledRadarMetadata | undefined,
   context: RadarMatchContext,
+  extractedItem: Record<string, string>,
 ): unknown {
-  if (!template) {
+  if (!metadata) {
     return undefined
   }
+  if (metadata.kind === "template") {
+    return metadata.template.render(createTemplateVariables(context))
+  }
 
-  return template.render(createTemplateVariables(context))
+  const value = extractedItem[key] ?? ""
+  return metadata.template
+    ? metadata.template.render(createSourceTemplateScope(context.source.vars, {
+        index: 0,
+        item: extractedItem,
+        params: context.params,
+        request: {
+          url: context.url.toString(),
+        },
+        value,
+      }))
+    : value
 }
 
 function resolveMetaPatch(
-  metadataTemplates: CompiledRadarRule["metadataTemplates"],
+  rule: CompiledRadarRule,
   context: RadarMatchContext,
+  input: RadarContext,
 ): SourceInstanceMetadata {
   const metadata: SourceInstanceMetadata = {
     home: context.url.toString(),
   }
-  const title = resolveMetaPatchValue(metadataTemplates.title, context)
-  const badge = resolveMetaPatchValue(metadataTemplates.badge, context)
-  const desc = resolveMetaPatchValue(metadataTemplates.desc, context)
-  const home = resolveMetaPatchValue(metadataTemplates.home, context)
-  const color = resolveMetaPatchValue(metadataTemplates.color, context)
+  const extractedItem = Object.fromEntries(
+    Object.entries(rule.metadata)
+      .filter((entry): entry is [string, Extract<CompiledRadarMetadata, { kind: "field" }>] =>
+        entry[1]?.kind === "field")
+      .map(([fieldKey, field]) => [
+        fieldKey,
+        input.pageSelections?.[getRadarPageQueryKey(field.query)] ?? "",
+      ]),
+  )
+  const title = resolveMetaPatchValue("title", rule.metadata.title, context, extractedItem)
+  const badge = resolveMetaPatchValue("badge", rule.metadata.badge, context, extractedItem)
+  const desc = resolveMetaPatchValue("desc", rule.metadata.desc, context, extractedItem)
+  const home = resolveMetaPatchValue("home", rule.metadata.home, context, extractedItem)
+  const color = resolveMetaPatchValue("color", rule.metadata.color, context, extractedItem)
 
   if (isPresent(title)) {
     metadata.title = String(title)
@@ -355,22 +452,15 @@ function resolveMetaPatch(
 }
 
 function matchCompiledRule(compiledRule: CompiledRadarRule, input: RadarContext, url: URL): RadarSuggestion | null {
-  const hostname = getHostname(url)
-  if (!compiledRule.hosts.includes(hostname)) {
-    return null
-  }
-
-  if (compiledRule.includes.length && !compiledRule.includes.some(value => url.toString().includes(value))) {
-    return null
-  }
-
-  const pathParams = matchRulePath(compiledRule, url)
+  const pathParams = matchRuleLocation(compiledRule, url)
   if (!pathParams) {
     return null
   }
 
   const baseContext = {
-    input,
+    page: {
+      title: input.title ?? "",
+    },
     url,
     pathParams,
     source: compiledRule.source,
@@ -395,7 +485,7 @@ function matchCompiledRule(compiledRule: CompiledRadarRule, input: RadarContext,
       sourceId: compiledRule.source.id,
       patch: {
         params,
-        metadata: resolveMetaPatch(compiledRule.metadataTemplates, context),
+        metadata: resolveMetaPatch(compiledRule, context, input),
       },
       confidence: compiledRule.rule.confidence,
     })
@@ -405,17 +495,36 @@ function matchCompiledRule(compiledRule: CompiledRadarRule, input: RadarContext,
   }
 }
 
-function createSuggestions(context: RadarContext, rulesByHost: Map<string, CompiledRadarRule[]>): RadarSuggestion[] {
-  let url: URL
-  try {
-    url = new URL(context.url)
-  } catch {
+function getPageQueries(
+  context: RadarContext,
+  rulesByHost: Map<string, CompiledRadarRule[]>,
+): RadarPageQuery[] {
+  const location = resolveRadarLocation(context, rulesByHost)
+  if (!location) {
     return []
   }
 
-  const rules = rulesByHost.get(getHostname(url)) ?? []
-  const suggestions = rules
-    .map(rule => matchCompiledRule(rule, context, url))
+  const queries = new Map<string, RadarPageQuery>()
+  for (const rule of location.rules) {
+    if (!matchRuleLocation(rule, location.url)) continue
+
+    for (const metadata of Object.values(rule.metadata)) {
+      if (metadata?.kind !== "field") continue
+      queries.set(getRadarPageQueryKey(metadata.query), metadata.query)
+    }
+  }
+
+  return [...queries.values()]
+}
+
+function createSuggestions(context: RadarContext, rulesByHost: Map<string, CompiledRadarRule[]>): RadarSuggestion[] {
+  const location = resolveRadarLocation(context, rulesByHost)
+  if (!location) {
+    return []
+  }
+
+  const suggestions = location.rules
+    .map(rule => matchCompiledRule(rule, context, location.url))
     .filter((suggestion): suggestion is RadarSuggestion => suggestion !== null)
   const suggestionsById = new Map<string, RadarSuggestion>()
 
@@ -470,6 +579,7 @@ export function createRadarMatcher(sourceMetadata: RadarSourceMetadata[] = []): 
       .filter((rule): rule is CompiledRadarRule => rule !== null))
   const rulesByHost = indexRulesByHost(compiledRules)
   const radarMatcher: RadarMatcher = {
+    getPageQueries: context => getPageQueries(context, rulesByHost),
     getSuggestions: context => createSuggestions(context, rulesByHost),
   }
 
