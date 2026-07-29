@@ -313,6 +313,24 @@ explicitly:
 items: "data.items[?is_ad != `1`]"
 ```
 
+Map response-level display metadata with the same JMESPath field syntax:
+
+```ts
+metadata: {
+  title: "result.name",
+  desc: "result.description",
+  badge: "result.avatar",
+}
+```
+
+JSON loader metadata is selected from the complete response. It is cached with
+the items and temporarily overrides the source title, description, or badge
+while that result is displayed.
+
+Loader metadata is unavailable until the first successful request. Keep
+discovery-time values such as a parameterized title in Radar when the source
+card needs them before loading or as a request-failure fallback.
+
 ## HTML loader
 
 `items` and `filter` are CSS selectors:
@@ -422,13 +440,15 @@ A loader returns `NewsItem[]` or:
   items,
   metadata: {
     badge: response.user.avatarUrl,
+    desc: response.description,
+    title: response.name,
   },
 }
 ```
 
-Dynamic loader metadata is cached with the items and overrides a static or
-Radar badge while displayed. Use it for response-derived or expiring identity,
-not for an icon repeated by every item.
+Dynamic loader metadata supports `title`, `desc`, and `badge`. It is cached with
+the items and overrides static or Radar metadata while displayed. Use it for
+response-derived values, not for an icon repeated by every item.
 
 Every item needs a non-empty `title` and `url`. Common optional fields are
 `mobileUrl`, `timestamp`, `inline`, and `preview`:
@@ -549,7 +569,7 @@ then read `scope.params` and `scope.page.title`:
 
 ```ts
 metadata: {
-  title: "{{ scope.page.title | normalize_whitespace }}",
+  title: "{{ scope.page.title }}",
   home: "https://example.com/topics/{{ scope.params.topic | url_path }}",
 }
 ```
@@ -569,8 +589,9 @@ metadata: {
 }
 ```
 
-Prefer stable semantic attributes such as `data-testid` for page metadata
-instead of parsing a browser title that may contain transient UI text.
+Prefer a stable, unique semantic or structural selector for page metadata.
+Parse `scope.page.title` only when the value is unavailable from the top-level
+DOM, such as content rendered inside an iframe.
 
 Radar metadata supports `title`, `badge`, `desc`, `home`, and `color`, but not
 `icon`. It uses the same selector, traversal, extraction, and template behavior
@@ -645,7 +666,8 @@ the background runtime.
 Before submitting:
 
 - Prefer a stable structured API over HTML parsing.
-- Prefer parameters over duplicate sources with the same output shape.
+- Prefer parameters over duplicate sources with the same output shape, unless
+  variants have distinct discovery semantics and default identities.
 - Use JMESPath and CSS selectors before writing a custom loader.
 - Declare every possible network hostname.
 - Use milliseconds for timestamps and text instead of HTML when possible.

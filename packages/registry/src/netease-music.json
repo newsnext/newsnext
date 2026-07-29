@@ -1,22 +1,52 @@
 {
   "title": "网易云音乐",
   "defaults": {
+    "cache": {
+      "version": 2,
+      "maxAge": "15m"
+    },
     "metadata": {
-      "home": "https://sg.music.163.com/#/discover/toplist",
-      "color": "red"
+      "home": "https://music.163.com",
+      "color": "red",
+      "type": "hottest"
+    },
+    "loader": {
+      "type": "json",
+      "url": "https://music.163.com/api/playlist/detail?id={{ scope.params.id | url_query }}",
+      "items": "(result.tracks || playlist.tracks)[:100]",
+      "metadata": {
+        "badge": "result.coverImgUrl",
+        "desc": "result.description",
+        "title": "result.name"
+      },
+      "fields": {
+        "title": "name",
+        "url": {
+          "select": "id",
+          "template": "https://music.163.com/song?id={{ scope.value | url_query }}"
+        },
+        "inline": {
+          "text": {
+            "template": "{% assign artists = scope.item.ar | default: scope.item.artists %}{% for artist in artists %}{% unless forloop.first %} / {% endunless %}{{ artist.name }}{% endfor %}{% assign album = scope.item.al.name | default: scope.item.album.name %}{% if artists and album %} · {% endif %}{{ album | default: '' }}"
+          },
+          "icon": "al.picUrl || album.picUrl"
+        },
+        "preview": {
+          "picture": "al.picUrl || album.picUrl"
+        }
+      }
     }
   },
   "sources": {
     "playlist": {
       "metadata": {
-        "title": "飙升榜",
-        "type": "hottest",
-        "home": "https://music.163.com/#/playlist?id=19723756"
+        "title": "歌单",
+        "home": "https://music.163.com/#/playlist?id=17990594711"
       },
       "params": {
         "id": {
           "type": "text",
-          "default": "19723756",
+          "default": "17990594711",
           "title": "歌单 ID",
           "pattern": "^\\d+$"
         }
@@ -29,44 +59,54 @@
               "music.163.com",
               "y.music.163.com"
             ],
-            "includes": [
-              "playlist",
-              "toplist"
-            ]
+            "includes": "playlist"
           },
           "patch": {
             "params": {
               "id": "{{ scope.query.id | default: scope.hashQuery.id }}"
             },
             "metadata": {
-              "title": "{% assign title = scope.page.title | normalize_whitespace | regex_extract: '^(.+?)\\\\s*-\\\\s*(?:歌单|排行榜)\\\\s*-\\\\s*网易云音乐$', 1 %}{% if title != empty %}{{ title }}{% else %}歌单 {{ scope.params.id }}{% endif %}"
+              "title": "{% assign title = scope.page.title | regex_extract: '^(.+?)\\\\s*-\\\\s*歌单\\\\s*-\\\\s*网易云音乐$', 1 %}{% if title != empty %}{{ title }}{% else %}歌单 {{ scope.params.id }}{% endif %}"
             }
           },
           "confidence": 0.95
         }
-      ],
-      "loader": {
-        "type": "json",
-        "url": "https://music.163.com/api/playlist/detail?id={{ scope.params.id | url_query }}",
-        "items": "(result.tracks || playlist.tracks)[:100]",
-        "fields": {
-          "title": "name",
-          "url": {
-            "select": "id",
-            "template": "https://music.163.com/song?id={{ scope.value | url_query }}"
-          },
-          "inline": {
-            "text": {
-              "template": "{% assign artists = scope.item.ar | default: scope.item.artists %}{% for artist in artists %}{% unless forloop.first %} / {% endunless %}{{ artist.name }}{% endfor %}{% assign album = scope.item.al.name | default: scope.item.album.name %}{% if artists and album %} · {% endif %}{{ album | default: '' }}"
-            },
-            "icon": "al.picUrl || album.picUrl"
-          },
-          "preview": {
-            "picture": "al.picUrl || album.picUrl"
-          }
+      ]
+    },
+    "ranking": {
+      "metadata": {
+        "title": "飙升榜",
+        "home": "https://music.163.com/#/discover/toplist?id=19723756"
+      },
+      "params": {
+        "id": {
+          "type": "text",
+          "default": "19723756",
+          "title": "排行榜 ID",
+          "pattern": "^\\d+$"
         }
       },
-      "cache": "15m"
+      "radar": [
+        {
+          "id": "netease-music-ranking",
+          "match": {
+            "hosts": [
+              "music.163.com",
+              "y.music.163.com"
+            ],
+            "includes": "toplist"
+          },
+          "patch": {
+            "params": {
+              "id": "{{ scope.query.id | default: scope.hashQuery.id }}"
+            },
+            "metadata": {
+              "title": "{% assign title = scope.page.title | regex_extract: '^(.+?)\\\\s*-\\\\s*排行榜\\\\s*-\\\\s*网易云音乐$', 1 %}{% if title != empty %}{{ title }}{% else %}排行榜 {{ scope.params.id }}{% endif %}"
+            }
+          },
+          "confidence": 0.95
+        }
+      ]
     }
   }
 }

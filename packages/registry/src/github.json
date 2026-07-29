@@ -87,14 +87,11 @@
           "inline": {
             "text": {
               "select": "[href$=stargazers]",
-              "template": "✰ {{ scope.value | normalize_whitespace }}"
+              "template": "✰ {{ scope.value }}"
             }
           },
           "preview": {
-            "text": {
-              "select": ">p",
-              "template": "{{ scope.value | normalize_whitespace }}"
-            }
+            "text": ">p"
           }
         }
       },

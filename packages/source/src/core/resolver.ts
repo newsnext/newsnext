@@ -24,6 +24,7 @@ import { assertNetworkCapability, validateSourceRequestRules } from "./capabilit
 import { compileHtmlFieldTemplates, loadHtml } from "./loaders/html"
 import {
   compileJsonFieldTemplates,
+  compileJsonMetadataTemplates,
   loadJson,
   validateJsonExpression,
 } from "./loaders/json"
@@ -140,7 +141,9 @@ export function validateSourceTemplates(sourceId: string, config: SourceConfig):
       validateJsonExpressionAt(loader.items, `${sourceId}.loader.items`)
     }
     validateJsonFieldExpressions(loader.fields, `${sourceId}.loader.fields`)
+    validateJsonFieldExpressions(loader.metadata, `${sourceId}.loader.metadata`)
     compileJsonFieldTemplates(loader.fields, `${sourceId}.loader.fields`)
+    compileJsonMetadataTemplates(loader.metadata, `${sourceId}.loader.metadata`)
   } else if (loader.type === "html") {
     compileHtmlFieldTemplates(loader.fields, `${sourceId}.loader.fields`)
   }

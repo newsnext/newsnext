@@ -54,7 +54,7 @@ function CardContent({ id, source, dragHandle, showStar = true, isDraft = false,
     initialValues: source.paramsValue,
   })
 
-  const { items, badge, refetch, isFetching, isError, errorMessage, loginUrl, updatedAt } = useSourceQuery({
+  const { items, metadata, refetch, isFetching, isError, errorMessage, loginUrl, updatedAt } = useSourceQuery({
     sourceId: source.sourceId,
     params: savedParams,
     enabled: canLoad,
@@ -62,7 +62,10 @@ function CardContent({ id, source, dragHandle, showStar = true, isDraft = false,
   const sourceErrorMessage = canLoad && isError
     ? `Failed to load source${errorMessage ? `: ${errorMessage}` : "."}`
     : undefined
-  const displayBadge = badge ?? source.badge
+  const displaySource = metadata
+    ? { ...source, ...metadata }
+    : source
+  const displayBadge = displaySource.badge
 
   // useEffect(() => {
   //   normalRefetch()
@@ -109,7 +112,7 @@ function CardContent({ id, source, dragHandle, showStar = true, isDraft = false,
       <CardFront
         badge={displayBadge}
         id={id}
-        source={source}
+        source={displaySource}
         items={items}
         isFetching={isFetching}
         sourceErrorMessage={sourceErrorMessage}
@@ -126,7 +129,7 @@ function CardContent({ id, source, dragHandle, showStar = true, isDraft = false,
       <CardBack
         badge={displayBadge}
         id={id}
-        source={source}
+        source={displaySource}
         sourceParams={savedParams}
         draftSourceParams={draftParams}
         hasSourceParams={hasParams}

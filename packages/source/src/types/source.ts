@@ -79,6 +79,8 @@ export interface SourceLoaderContext {
 
 export interface SourceLoaderMetadata {
   badge?: string
+  desc?: string
+  title?: string
 }
 
 export interface SourceLoaderResult {

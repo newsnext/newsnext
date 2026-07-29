@@ -14,6 +14,12 @@ function getSuggestions(...args: Parameters<typeof getRadarSuggestions>) {
   return getRadarSuggestions(args[0], args[1] ?? sourceDescriptors)
 }
 
+function selectPageField(select: string, value: string): Record<string, string> {
+  return {
+    [getRadarPageQueryKey({ select })]: value,
+  }
+}
+
 describe("getRadarSuggestions", () => {
   it("suggests a GitHub Trending card with filters", () => {
     expect(getSuggestions({ url: "https://github.com/trending/typescript?since=weekly&spoken_language_code=zh" })).toMatchObject([
@@ -256,7 +262,7 @@ describe("getRadarSuggestions", () => {
     ])
   })
 
-  it("suggests a NetEase playlist card from hash route URLs", () => {
+  it("suggests NetEase playlist and ranking cards from hash route URLs", () => {
     expect(getSuggestions({
       url: "https://music.163.com/#/playlist?id=19723756",
       title: "飙升榜 - 歌单 - 网易云音乐",
@@ -275,7 +281,7 @@ describe("getRadarSuggestions", () => {
       title: "网易云古典榜 - 排行榜 - 网易云音乐",
     })).toMatchObject([
       {
-        sourceId: "netease-music:playlist",
+        sourceId: "netease-music:ranking",
         patch: {
           params: { id: "71384707" },
           metadata: { title: "网易云古典榜" },
@@ -288,9 +294,9 @@ describe("getRadarSuggestions", () => {
       title: "网易云音乐",
     })).toMatchObject([
       {
-        sourceId: "netease-music:playlist",
+        sourceId: "netease-music:ranking",
         patch: {
-          metadata: { title: "歌单 71384707" },
+          metadata: { title: "排行榜 71384707" },
         },
       },
     ])
@@ -326,7 +332,6 @@ describe("getRadarSuggestions", () => {
             feedId: "70006270320504832",
           },
           metadata: {
-            title: "AI News",
             home: "https://app.folo.is/timeline/articles/feed-70006270320504832/pending",
           },
         },
@@ -344,7 +349,6 @@ describe("getRadarSuggestions", () => {
             listId: "178752152055448576",
           },
           metadata: {
-            title: "Developer Reading",
             home: "https://app.folo.is/timeline/articles/list-178752152055448576/pending",
           },
         },
@@ -355,7 +359,7 @@ describe("getRadarSuggestions", () => {
   it("suggests V2EX and NewsNow parameterized cards", () => {
     expect(getSuggestions({
       url: "https://v2ex.com/go/share",
-      title: "V2EX › 分享发现",
+      pageSelections: selectPageField(".node-breadcrumb", "V2EX › 分享发现"),
     })).toMatchObject([
       {
         sourceId: "v2ex:feed",
@@ -380,7 +384,7 @@ describe("getRadarSuggestions", () => {
   it("suggests the matching parameterized Weibo hot search board", () => {
     expect(getSuggestions({
       url: "https://weibo.com/hot/acg",
-      title: "ACG - 微博",
+      pageSelections: selectPageField("a[aria-current=\"page\"] [title]", "ACG"),
     })).toMatchObject([
       {
         sourceId: "weibo:hot-search",
@@ -402,7 +406,10 @@ describe("getRadarSuggestions", () => {
     ["https://twitter.com/NewsNext/status/1234567890", "@NewsNext"],
   ])("suggests an X user card from %s", (url, title) => {
     expect(getRadarSuggestions(
-      { url },
+      {
+        url,
+        pageSelections: selectPageField("[data-testid=\"UserName\"]", title),
+      },
       sourceDescriptors.filter(source => source.id === "x:user"),
     )).toMatchObject([
       {
@@ -426,7 +433,10 @@ describe("getRadarSuggestions", () => {
     expect(getRadarSuggestions(
       {
         url: "https://web.okjike.com/u/ed00c4da-fb80-4072-a6d7-abf011bd30ea",
-        title: "零山浅的主页 - 即刻",
+        pageSelections: selectPageField(
+          "[class*=\"_nameRow_\"] a[aria-current=\"page\"]",
+          "零山浅",
+        ),
       },
       sourceDescriptors.filter(source => source.id === "jike:user-updates"),
     )).toMatchObject([
@@ -445,7 +455,13 @@ describe("getRadarSuggestions", () => {
     "https://web.okjike.com/topic/5aeaa84029e4000011ac3768/square",
   ])("suggests both Jike topic feeds from %s", (url) => {
     expect(getRadarSuggestions(
-      { url, title: "即友日记本 - 即刻" },
+      {
+        url,
+        pageSelections: selectPageField(
+          "[class*=\"_textGroup_\"] > [class*=\"_title_\"]",
+          "即友日记本",
+        ),
+      },
       sourceDescriptors.filter(source => source.id.startsWith("jike:topic-")),
     )).toMatchObject([
       {

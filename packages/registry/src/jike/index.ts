@@ -165,7 +165,9 @@ const topicRadar = {
       topicId: "{{ scope.path.topicId }}",
     },
     metadata: {
-      title: "{{ scope.page.title | normalize_whitespace | regex_replace: '\\\\s*[-_—|]\\\\s*即刻.*$', '' | default: scope.params.topicId }}",
+      title: {
+        select: "[class*=\"_textGroup_\"] > [class*=\"_title_\"]",
+      },
     },
   },
 }
@@ -239,7 +241,9 @@ export default {
                 select: "section[class^=\"_bio_\"]",
                 template: "{{ scope.value | normalize_whitespace }}",
               },
-              title: "{{ scope.page.title | normalize_whitespace | regex_replace: '[:：].*$', '' | regex_replace: '的主页\\\\s*[-_—|]\\\\s*即刻.*$', '' | default: scope.params.username }}",
+              title: {
+                select: "[class*=\"_nameRow_\"] a[aria-current=\"page\"]",
+              },
             },
           },
           confidence: 0.9,

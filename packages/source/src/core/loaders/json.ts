@@ -2,6 +2,8 @@ import type { FetchOptions } from "ofetch"
 import type {
   NewsItem,
   RuntimeSource,
+  SourceLoaderMetadata,
+  SourceLoaderOutput,
   SourceTemplateVars,
 } from "../../types"
 import * as jmespath from "jmespath"
@@ -52,6 +54,11 @@ export interface JsonSourceOptions {
    */
   fetchOptions?: FetchOptions
   fetch?: (url: string) => Promise<unknown>
+  metadata?: {
+    badge?: JsonField
+    desc?: JsonField
+    title?: JsonField
+  }
   fields: {
     title: JsonField
     url: JsonField
@@ -81,6 +88,20 @@ export function compileJsonFieldTemplates(
     fieldTemplates.set(field, compileSourceTemplate(field.template, {
       location: `${location}.${path.join(".")}.template`,
       output: htmlOutput ? "html" : "plain",
+      slot: "jsonField",
+    }))
+  }
+}
+
+export function compileJsonMetadataTemplates(
+  metadata: JsonSourceOptions["metadata"],
+  location: string,
+): void {
+  for (const [key, field] of Object.entries(metadata ?? {})) {
+    if (typeof field === "string" || !field.template) continue
+    fieldTemplates.set(field, compileSourceTemplate(field.template, {
+      location: `${location}.${key}.template`,
+      output: "plain",
       slot: "jsonField",
     }))
   }
@@ -199,11 +220,28 @@ function getJsonFieldTemplate(
   return compiled
 }
 
+export function resolveJsonMetadata(
+  json: unknown,
+  metadata: JsonSourceOptions["metadata"],
+  context: JsonFieldContext,
+): SourceLoaderMetadata | undefined {
+  const resolved = Object.fromEntries(
+    Object.entries(metadata ?? {}).flatMap(([key, field]) => {
+      const value = resolveValue(json, context, field)
+      return value === undefined || value === null || value === ""
+        ? []
+        : [[key, String(value)]]
+    }),
+  ) as SourceLoaderMetadata
+
+  return Object.keys(resolved).length > 0 ? resolved : undefined
+}
+
 export async function loadJson(
   opts: JsonSourceOptions,
   loaderContext: JsonSourceLoaderContext = {},
-): Promise<NewsItem[]> {
-  const { url, type, fetchOptions, fetch, items: itemsSelect, fields } = opts
+): Promise<SourceLoaderOutput> {
+  const { url, type, fetchOptions, fetch, items: itemsSelect, fields, metadata } = opts
 
   let json: unknown
   if (fetch) {
@@ -212,6 +250,13 @@ export async function loadJson(
     json = await myFetch(url, fetchOptions)
   }
 
+  const metadataContext: JsonFieldContext = {
+    vars: loaderContext.vars ?? {},
+    json,
+    index: 0,
+    params: loaderContext.params ?? {},
+    requestUrl: url,
+  }
   let items: unknown[] = []
   if (itemsSelect) {
     items = selectJson(json, itemsSelect) as unknown[]
@@ -221,7 +266,12 @@ export async function loadJson(
 
   if (!Array.isArray(items)) {
     // Fallback or just empty
-    return []
+    return metadata
+      ? {
+          items: [],
+          metadata: resolveJsonMetadata(json, metadata, metadataContext),
+        }
+      : []
   }
 
   const news: NewsItem[] = items.map((item, index) => {
@@ -288,5 +338,12 @@ export async function loadJson(
     news.sort((a, b) => (b.timestamp as number) - (a.timestamp as number))
   }
 
-  return news
+  if (!metadata) {
+    return news
+  }
+
+  return {
+    items: news,
+    metadata: resolveJsonMetadata(json, metadata, metadataContext),
+  }
 }

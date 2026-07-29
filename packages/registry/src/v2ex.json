@@ -32,7 +32,10 @@
               "feed": "{{ scope.path.feed }}"
             },
             "metadata": {
-              "title": "{{ scope.page.title | normalize_whitespace | regex_extract: '^.*[>›]\\\\s*(.+)$', 1 | default: scope.params.feed }}"
+              "title": {
+                "select": ".node-breadcrumb",
+                "template": "{{ scope.value | regex_replace: '^V2EX\\\\s*[>›]\\\\s*', '' }}"
+              }
             }
           },
           "confidence": 0.9

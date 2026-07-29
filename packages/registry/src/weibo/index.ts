@@ -116,7 +116,9 @@ export default {
               type: "{{ scope.path.type }}",
             },
             metadata: {
-              title: "{{ scope.page.title | regex_replace: '\\\\s*-\\\\s*微博$', '' | default: '热搜' }}",
+              title: {
+                select: "a[aria-current=\"page\"] [title]",
+              },
               home: "https://weibo.com/hot/{{ scope.path.type }}",
             },
           },
@@ -173,7 +175,9 @@ export default {
               uid: "{{ scope.path.uid }}",
             },
             metadata: {
-              title: "{{ scope.page.title | normalize_whitespace | regex_extract: '^@(.+)\\\\s*的个人主页', 1 | regex_replace: '[-_—|].*微博.*$', '' | regex_replace: '的微博.*$', '' | default: scope.params.uid }}",
+              title: {
+                select: "[class*=\"_box1_\"] [class*=\"_h3_\"] > [class*=\"_name_\"]",
+              },
             },
           },
           confidence: 0.9,
@@ -263,7 +267,9 @@ export default {
               type: "feed",
             },
             metadata: {
-              title: "{{ scope.page.title | normalize_whitespace | regex_replace: '[-_—|].*微博.*$', '' | regex_replace: '的微博.*$', '' | regex_extract: '^#?(.+?)超话#?$', 1 | default: scope.params.id }}",
+              title: {
+                select: "[class*=\"_infoRow_\"] [class*=\"_nameRow_\"] > [class*=\"_name_\"]",
+              },
             },
           },
           confidence: 0.9,

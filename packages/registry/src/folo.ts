@@ -118,7 +118,6 @@ export default {
               feedId: "{{ scope.path.feedId }}",
             },
             metadata: {
-              title: "{{ scope.page.title | normalize_whitespace | regex_replace: '\\\\s*[|–—-]\\\\s*Folo$', '' | default: 'Feed' }}",
               home: "https://app.folo.is/timeline/articles/feed-{{ scope.params.feedId }}/pending",
             },
           },
@@ -153,7 +152,6 @@ export default {
               listId: "{{ scope.path.listId }}",
             },
             metadata: {
-              title: "{{ scope.page.title | normalize_whitespace | regex_replace: '\\\\s*[|–—-]\\\\s*Folo$', '' | default: 'List' }}",
               home: "https://app.folo.is/timeline/articles/list-{{ scope.params.listId }}/pending",
             },
           },
