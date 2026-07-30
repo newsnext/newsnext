@@ -1,10 +1,7 @@
 import type { SourceParamSchema } from "@newsnext/source/types"
 import type { SourceParamValues } from "@/lib/source-params"
 import { useCallback, useState } from "react"
-import {
-  getDefaultSourceParamValues,
-  sanitizeSourceParamValues,
-} from "@/lib/source-params"
+import { sanitizeSourceParamPatch } from "@/lib/source-params"
 
 export interface UseSourceParamsOptions {
   params?: Record<string, SourceParamSchema>
@@ -22,7 +19,7 @@ function createSourceParamsState(
   params?: Record<string, SourceParamSchema>,
   initialValues?: SourceParamValues,
 ): SourceParamsState {
-  const savedParams = sanitizeSourceParamValues(initialValues, params)
+  const savedParams = sanitizeSourceParamPatch(initialValues, params)
   return {
     initialValues,
     params,
@@ -53,7 +50,7 @@ export function useSourceParams({ params, initialValues }: UseSourceParamsOption
   }, [])
 
   const saveDraftParams = useCallback(() => {
-    const nextParams = sanitizeSourceParamValues(state.draftParams, params)
+    const nextParams = sanitizeSourceParamPatch(state.draftParams, params)
     setStoredState(prev => ({
       ...prev,
       savedParams: nextParams,
@@ -63,13 +60,12 @@ export function useSourceParams({ params, initialValues }: UseSourceParamsOption
   }, [params, state.draftParams])
 
   const resetDraftParams = useCallback(() => {
-    const defaults = getDefaultSourceParamValues(params)
     setStoredState(prev => ({
       ...prev,
-      savedParams: defaults,
-      draftParams: defaults,
+      savedParams: {},
+      draftParams: {},
     }))
-  }, [params])
+  }, [])
 
   const discardDraftParams = useCallback(() => {
     setStoredState(prev => ({

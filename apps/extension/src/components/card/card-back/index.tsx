@@ -55,42 +55,22 @@ export function CardBack({
   isDraft = false,
   dragHandle,
 }: CardBackProps) {
-  const { badge, desc, params, provider, title, home, type } = source
+  const { desc, params, provider, title, home, type } = source
   const { color } = provider
   const [editDraft, setEditDraft] = useState<SourceInstanceMetadata | null>(null)
   const [isEditingParams, setIsEditingParams] = useState(false)
   const isEditingMetadata = editDraft !== null
-  const canEditParams = isEditingParams
-  const previewTitle = isEditingMetadata ? editDraft.title : title
-  const previewBadge = isEditingMetadata ? editDraft.badge : displayBadge
-  const previewDesc = isEditingMetadata ? editDraft.desc : desc
-  const previewHome = isEditingMetadata ? editDraft.home : home
+  const previewTitle = editDraft?.title ?? title
+  const previewBadge = editDraft?.badge ?? displayBadge
+  const previewDesc = editDraft?.desc ?? desc
+  const previewHome = editDraft?.home ?? home
   const icon = useSourceIcon({ provider, home: previewHome })
-  const previewType = (isEditingMetadata ? editDraft.type : type) ?? "timeline"
+  const previewType = editDraft?.type ?? type ?? "timeline"
   const relativeTime = useRelativeTime({ date: updatedAt })
-  const hasSourceMetaChanges = Boolean(
-    editDraft
-    && (
-      editDraft.title !== title
-      || editDraft.badge !== badge
-      || editDraft.desc !== desc
-      || editDraft.home !== home
-      || editDraft.type !== type
-    ),
-  )
-
-  function createEditDraft(): SourceInstanceMetadata {
-    return {
-      title,
-      badge,
-      desc,
-      home,
-      type,
-    }
-  }
+  const hasSourceMetaChanges = Boolean(editDraft && Object.keys(editDraft).length > 0)
 
   function startEditingMetadata(): void {
-    setEditDraft(createEditDraft())
+    setEditDraft({})
   }
 
   function updateEditDraft(patch: Partial<SourceInstanceMetadata>): void {
@@ -242,7 +222,7 @@ export function CardBack({
                     alt={`${previewTitle || provider.title} badge`}
                     rounded
                     editable={isEditingMetadata}
-                    onChange={value => updateEditDraft({ badge: value || undefined })}
+                    onChange={value => updateEditDraft({ badge: value })}
                   />
                 </Info>
 
@@ -261,7 +241,7 @@ export function CardBack({
                 <div className="flex flex-col text-sm pt-0.5">
                   <div className="mb-2 flex items-start justify-between">
                     <span className="inline-block border-b border-border/60 pb-1 font-semibold opacity-80">Parameters</span>
-                    {canEditParams
+                    {isEditingParams
                       ? (
                           <div className="flex gap-1.5">
                             <Button
@@ -323,7 +303,7 @@ export function CardBack({
                       key={paramKey}
                       param={param}
                       value={draftSourceParams[paramKey]}
-                      editable={canEditParams}
+                      editable={isEditingParams}
                       color={color}
                       onChange={nextValue => onSourceParamChange(paramKey, nextValue)}
                     />

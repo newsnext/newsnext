@@ -335,10 +335,17 @@ function RadarDeckContent({ sourceDescriptors, suggestions }: RadarDeckProps) {
       return
     }
 
-    setDraftPatches(prev => ({
-      ...prev,
-      [activeSuggestion.id]: mergeSourceInstancePatch(prev[activeSuggestion.id], patch),
-    }))
+    setDraftPatches((prev) => {
+      const nextPatch = mergeSourceInstancePatch(prev[activeSuggestion.id], patch)
+      const resolvedPatch = patch.params && Object.keys(patch.params).length === 0
+        ? { ...nextPatch, params: {} }
+        : nextPatch
+
+      return {
+        ...prev,
+        [activeSuggestion.id]: resolvedPatch,
+      }
+    })
   }, [activeSuggestion])
 
   if (!activeSuggestion || !activeSource) {

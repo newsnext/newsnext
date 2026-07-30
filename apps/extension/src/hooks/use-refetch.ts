@@ -1,9 +1,9 @@
 import { stableStringify } from "@newsnext/shared/utils"
+import { normalizeSourceParams } from "@newsnext/source/runtime"
 import { useIsFetching, useQueryClient } from "@tanstack/react-query"
 import { useStore } from "jotai"
 import { useCallback } from "react"
 import { buildSourceCards } from "@/lib/source-cards"
-import { sanitizeSourceParamValues } from "@/lib/source-params"
 import { loadSourceDescriptors } from "@/lib/sources"
 import { currentBoardIdAtom, instancesAtom } from "@/store/board"
 
@@ -86,7 +86,7 @@ export function useRefetch() {
         const source = cards.map[id]
         return {
           sourceId: source.sourceId,
-          params: sanitizeSourceParamValues(source.paramsValue, source.params),
+          params: normalizeSourceParams(source, source.paramsValue ?? {}),
         } satisfies RefetchTarget
       })
       const uniqueTargets = [...new Map(

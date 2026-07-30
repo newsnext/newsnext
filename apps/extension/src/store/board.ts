@@ -3,6 +3,10 @@ import type { SourceInstance, SourceInstancePatch } from "../lib/source-cards"
 import { atom } from "jotai"
 import { atomWithStorage } from "jotai/utils"
 import { DEFAULT_BOARD_ID } from "../lib/boards"
+import {
+  mergeSourceInstancePatch,
+
+} from "../lib/source-cards"
 
 const BOARDS_KEY = "newsnext-boards"
 const CURRENT_BOARD_ID_KEY = "newsnext-current-board-id"
@@ -45,10 +49,7 @@ export const setSourceInstancePatchAtom = atom(null, (_get, set, { instanceId, p
 
     return {
       ...instance,
-      patch: {
-        ...instance.patch,
-        ...patch,
-      },
+      patch: mergeSourceInstancePatch(instance.patch, patch),
     }
   }))
 })

@@ -303,7 +303,11 @@ that board. Inbox deliberately skips membership filtering and aggregates every
 card instance.
 The card editor writes the same instance patch shape and exposes every declared
 source parameter plus every source-owned presentation metadata field. Provider
-title, icon, color, and category remain read-only.
+title, icon, color, and category remain read-only. Editing preserves patches as
+sparse overrides: only explicitly changed parameter and metadata fields are
+persisted. Parameter defaults are resolved for display and loading, while
+inherited source metadata is resolved for display, without copying either into
+the instance patch.
 
 ## Capabilities, secrets, and request rules
 

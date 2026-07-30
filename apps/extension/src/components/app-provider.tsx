@@ -4,8 +4,6 @@ import type { ThemeMode } from "@/lib/utils/swith-theme"
 import { isBrowser } from "@newsnext/ui/lib/is-browser"
 import { QueryClientProvider } from "@tanstack/react-query"
 import { domMax, LazyMotion, MotionConfig } from "motion/react"
-import { useEffect } from "react"
-import { clearStoredSourceParamValues } from "@/lib/source-params"
 import {
   handleThemeModeSwitch,
   handleThemeSwitch,
@@ -33,10 +31,6 @@ export function AppProvider({
   children,
   queryClient,
 }: PropsWithChildren<AppProviderProps>) {
-  useEffect(() => {
-    clearStoredSourceParamValues()
-  }, [])
-
   return (
     <MotionConfig reducedMotion="user">
       <LazyMotion features={domMax}>
