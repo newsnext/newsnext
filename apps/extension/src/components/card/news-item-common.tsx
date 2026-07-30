@@ -1,8 +1,28 @@
+import type { ReactNode } from "react"
 import type { NewsItem } from "@/typings/source"
 import { extractPictures } from "@newsnext/shared/types"
 import { cn } from "@/lib/utils"
+import { ProxiedImage } from "../common/proxied-image"
 import { SafeHtml } from "../common/safe-html"
-import { ProxiedImage } from "../preview/proxied-image"
+
+interface NewsItemLinkProps {
+  item: NewsItem
+  className?: string
+  children: ReactNode
+}
+
+export function NewsItemLink({ item, className, children }: NewsItemLinkProps): ReactNode {
+  return (
+    <a
+      href={item.url}
+      target="_blank"
+      rel="noreferrer"
+      className={cn("visited:text-neutral-500 dark:visited:text-neutral-400", className)}
+    >
+      {children}
+    </a>
+  )
+}
 
 interface NewsItemInlineProps {
   item: NewsItem

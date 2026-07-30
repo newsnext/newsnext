@@ -5,8 +5,7 @@ import { AnimatePresence, m } from "motion/react"
 import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
 import { VirtualList } from "../common/virtual-list"
-import { NewsItemLink } from "../preview/news-item-preview"
-import { NewsItemSummary } from "./news-item-common"
+import { NewsItemLink, NewsItemSummary } from "./news-item-common"
 
 interface Props {
   items: NewsItem[]
