@@ -76,7 +76,21 @@ export function EditableImage({
   )
 }
 
-export function NumberInput({ num = 0, step = 1, editable, max = Infinity, min = -Infinity, onChange }: { num?: number, step?: number, editable?: boolean, max?: number, min?: number, onChange?: (value: number) => void }) {
+interface NumberInputProps {
+  num?: number
+  editable?: boolean
+  max?: number
+  min?: number
+  onChange?: (value: number) => void
+}
+
+export function NumberInput({
+  num = 0,
+  editable,
+  max = Infinity,
+  min = -Infinity,
+  onChange,
+}: NumberInputProps) {
   const handleChange = (val: number) => {
     const newValue = Math.max(min, Math.min(max, val))
     onChange?.(newValue)
@@ -92,7 +106,6 @@ export function NumberInput({ num = 0, step = 1, editable, max = Infinity, min =
       className={editableFieldClassName}
       value={num}
       onChange={e => handleChange(Number(e.target.value))}
-      step={step}
       min={min}
       max={max}
       onClick={e => e.stopPropagation()}

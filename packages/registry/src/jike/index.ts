@@ -152,7 +152,6 @@ const topicIdParam = {
   type: "text",
   title: "主题 ID",
   default: "5aeaa84029e4000011ac3768",
-  pattern: ".+",
 } as const
 const topicOrderParam = {
   type: "select",
@@ -259,7 +258,6 @@ export default {
           type: "text",
           title: "用户名",
           default: "7f422d5d-d79a-4f45-9880-b89d64d7f37a",
-          pattern: ".+",
         },
       },
       loader: {

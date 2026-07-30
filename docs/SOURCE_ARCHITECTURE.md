@@ -197,10 +197,14 @@ Parameters use one deterministic pipeline:
 ```text
 raw value or default
     → trim strings
-    → parameter Liquid template
     → type coercion
     → schema validation
 ```
+
+Parameter schemas intentionally avoid arbitrary regex validation and Liquid
+normalization. Discovery-specific extraction and normalization belong in Radar
+parameter patches, while the shared parameter pipeline enforces type,
+selection, and range constraints.
 
 After every parameter is resolved, structured loaders render their URL and
 nested `fetchOptions`. A relative request URL is then resolved against the
@@ -273,7 +277,7 @@ Radar runs against source descriptors rather than executable loaders:
 
 ```text
 active tab URL
-    → host, path, and substring matching
+    → host and included/excluded path or full-URL regex matching
     → render parameter patches
     → normalize and validate parameters
     → batch page-field extraction

@@ -4,17 +4,20 @@ import type {
   SourceDescriptor,
   SourceRadarMatch,
   SourceRadarMetadata,
+  SourceRadarPathPattern,
   SourceRadarRule,
 } from "@newsnext/source/types"
 import type { RadarPageQuery } from "@/lib/radar-page-query"
 import type { SourceInstanceMetadata, SourceInstancePatch } from "@/lib/source-cards"
 import {
+  compileSourceRegex,
   compileSourceTemplate,
   createSourceTemplateScope,
   parseSourceParams,
   reportTemplateError,
   resolveSourceUrl,
   TemplateRenderError,
+  validateSourceRegexInput,
 } from "@newsnext/source/core"
 import { match } from "path-to-regexp"
 import {
@@ -62,7 +65,12 @@ interface RadarLocation {
 const DEFAULT_RADAR_RULE_ID = "default-home-origin"
 const DEFAULT_ORIGIN_RADAR_CONFIDENCE = 0
 
-type PathMatch = (pathname: string) => Record<string, string> | null
+type LocationMatcher = (url: URL) => Record<string, string> | null
+
+interface LocationPatterns {
+  include: SourceRadarPathPattern[]
+  exclude: SourceRadarPathPattern[]
+}
 
 interface CompiledRadarRule {
   metadata: Partial<Record<keyof SourceRadarMetadata, CompiledRadarMetadata>>
@@ -70,8 +78,8 @@ interface CompiledRadarRule {
   source: RadarSourceMetadata
   rule: SourceRadarRule
   hosts: string[]
-  includes: string[]
-  pathMatches: PathMatch[]
+  excludeMatchers: LocationMatcher[]
+  includeMatchers: LocationMatcher[]
 }
 
 type CompiledRadarMetadata
@@ -186,11 +194,15 @@ function createTemplateVariables(
 }
 
 function matchRuleLocation(compiledRule: CompiledRadarRule, url: URL): Record<string, string> | null {
-  if (compiledRule.includes.length && !compiledRule.includes.some(value => url.toString().includes(value))) {
+  if (compiledRule.excludeMatchers.some(matcher => matcher(url) !== null)) {
     return null
   }
 
-  return matchRulePath(compiledRule, url)
+  for (const matcher of compiledRule.includeMatchers) {
+    const params = matcher(url)
+    if (params) return params
+  }
+  return null
 }
 
 function resolveRadarLocation(
@@ -208,20 +220,31 @@ function resolveRadarLocation(
   }
 }
 
-function getMatchIncludes(matchSpec: SourceRadarMatch): string[] {
-  const includes = matchSpec.includes
-  if (!includes) {
-    return []
-  }
-
-  return Array.isArray(includes) ? includes : [includes]
-}
-
-function compilePathMatch(template: string): PathMatch | null {
+function compileLocationMatcher(pattern: SourceRadarPathPattern): LocationMatcher | null {
   try {
-    const matcher = match<Record<string, string | string[]>>(template)
-    return (pathname) => {
-      const result = matcher(pathname)
+    if (typeof pattern !== "string") {
+      const regex = compileSourceRegex(pattern.regex, "i")
+      return (url) => {
+        const input = url.toString()
+        try {
+          validateSourceRegexInput(input)
+        } catch {
+          return null
+        }
+        const result = regex.exec(input)
+        if (!result) {
+          return null
+        }
+        return Object.fromEntries(
+          Object.entries(result.groups ?? {})
+            .filter((entry): entry is [string, string] => entry[1] !== undefined),
+        )
+      }
+    }
+
+    const matcher = match<Record<string, string | string[]>>(pattern)
+    return (url) => {
+      const result = matcher(url.pathname)
       if (!result) {
         return null
       }
@@ -236,29 +259,24 @@ function compilePathMatch(template: string): PathMatch | null {
   }
 }
 
-function compilePathMatches(paths: string[] | undefined): PathMatch[] {
-  if (!paths?.length) {
-    return [() => ({})]
-  }
-
-  return paths
-    .map(compilePathMatch)
-    .filter((pathMatch): pathMatch is PathMatch => pathMatch !== null)
+function compileLocationMatchers(patterns: SourceRadarPathPattern[]): LocationMatcher[] {
+  return patterns
+    .map(compileLocationMatcher)
+    .filter((matcher): matcher is LocationMatcher => matcher !== null)
 }
 
-function matchRulePath(rule: CompiledRadarRule, url: URL): Record<string, string> | null {
-  if (!rule.pathMatches.length) {
-    return null
-  }
-
-  for (const pathMatch of rule.pathMatches) {
-    const params = pathMatch(url.pathname)
-    if (params) {
-      return params
+function getLocationPatterns(matchSpec: SourceRadarMatch): LocationPatterns {
+  if (Array.isArray(matchSpec.paths)) {
+    return {
+      include: matchSpec.paths,
+      exclude: [],
     }
   }
 
-  return null
+  return {
+    include: matchSpec.paths?.include ?? [],
+    exclude: matchSpec.paths?.exclude ?? [],
+  }
 }
 
 function compileRadarMetadata(
@@ -290,8 +308,11 @@ function compileRadarMetadata(
 }
 
 function compileRadarRule(sourceRule: SourceRuleSpec, rule: SourceRadarRule): CompiledRadarRule | null {
-  const pathMatches = compilePathMatches(rule.match.paths)
-  if (!pathMatches.length) {
+  const patterns = getLocationPatterns(rule.match)
+  const includeMatchers = patterns.include.length > 0
+    ? compileLocationMatchers(patterns.include)
+    : [() => ({})]
+  if (!includeMatchers.length) {
     return null
   }
 
@@ -321,9 +342,9 @@ function compileRadarRule(sourceRule: SourceRuleSpec, rule: SourceRadarRule): Co
       source: sourceRule.source,
       rule,
       hosts: rule.match.hosts.map(normalizeHostname),
-      includes: getMatchIncludes(rule.match),
+      excludeMatchers: compileLocationMatchers(patterns.exclude),
+      includeMatchers,
       paramTemplates,
-      pathMatches,
     }
   } catch (error) {
     reportTemplateError(error)
@@ -363,7 +384,6 @@ function resolveParamsPatch(
     return parseSourceParams(
       context.source.params,
       parameterValues,
-      context.source.vars,
     )
   } catch (error) {
     if (error instanceof TemplateRenderError) {

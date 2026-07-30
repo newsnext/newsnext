@@ -161,7 +161,6 @@ export default {
           title: "用户 UID",
           description: "微博用户的数字 UID。",
           default: "1195230310",
-          pattern: "^\\d+$",
         },
       },
       radar: [
@@ -203,7 +202,6 @@ export default {
           type: "text",
           title: "关键词",
           default: "MSI",
-          pattern: ".+",
         },
       },
       radar: [
@@ -241,7 +239,6 @@ export default {
           title: "超话 ID",
           description: "以 100808 开头的微博超话 ID。",
           default: "1008084989d223732bf6f02f75ea30efad58a9",
-          pattern: "^100808[A-Za-z0-9]+$",
         },
         type: {
           type: "select",
@@ -260,11 +257,13 @@ export default {
           id: "weibo-super-topic",
           match: {
             hosts: ["weibo.com"],
-            includes: "100808",
+            paths: {
+              include: [{ regex: "(?<id>100808[A-Za-z0-9]+)" }],
+            },
           },
           patch: {
             params: {
-              id: "{{ scope.query.containerid | default: scope.hashQuery.containerid | regex_extract: '(100808[A-Za-z0-9]+)', 1 }}",
+              id: "{{ scope.path.id }}",
               type: "feed",
             },
             metadata: {

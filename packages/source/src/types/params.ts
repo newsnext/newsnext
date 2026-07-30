@@ -14,23 +14,6 @@ interface BaseParameter {
    * Optional icon identifier
    */
   icon?: string
-  /**
-   * Optional Liquid template applied to the raw value before type coercion.
-   * The template can access `scope.value` and `source.vars`.
-   */
-  template?: string
-  /**
-   * Optional serializable regular expression pattern for string-like values.
-   */
-  pattern?: string
-  /**
-   * Optional serializable prefix constraint for string-like values.
-   */
-  startsWith?: string
-  /**
-   * Optional serializable disallowed values for string-like values.
-   */
-  notIn?: string[]
 }
 
 /**
@@ -116,10 +99,6 @@ export interface NumberParameter extends BaseParameter {
    * Maximum allowed value
    */
   max?: number
-  /**
-   * Step increment
-   */
-  step?: number
 }
 
 /**
@@ -163,53 +142,8 @@ export type InferSourceParams<TParams extends SourceParamSchemaMap> = {
 }
 
 export class SourceParamValueError extends Error {
-  readonly paramTitle: string
-
-  constructor(paramTitle: string, message: string) {
+  constructor(message: string) {
     super(message)
     this.name = "SourceParamValueError"
-    this.paramTitle = paramTitle
   }
-}
-
-/**
- * Type guard utilities for parameter types
- */
-export const SourceParamGuards = {
-  /**
-   * Check if parameter is a number parameter
-   */
-  isNumber(param: SourceParamSchema): param is NumberParameter {
-    return param.type === "number"
-  },
-  /**
-   * Check if parameter is a select parameter
-   */
-  isSelect(param: SourceParamSchema): param is SelectParameter {
-    return param.type === "select"
-  },
-  /**
-   * Check if parameter is a multi-select parameter
-   */
-  isMultiSelect(param: SourceParamSchema): param is MultiSelectParameter {
-    return param.type === "multiselect"
-  },
-  /**
-   * Check if parameter is a text parameter
-   */
-  isText(param: SourceParamSchema): param is TextParameter {
-    return param.type === "text"
-  },
-  /**
-   * Check if parameter is a URL parameter
-   */
-  isUrl(param: SourceParamSchema): param is UrlParameter {
-    return param.type === "url"
-  },
-  /**
-   * Check if parameter is a switch parameter
-   */
-  isSwitch(param: SourceParamSchema): param is SwitchParameter {
-    return param.type === "switch"
-  },
 }

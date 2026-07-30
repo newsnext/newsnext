@@ -34,10 +34,7 @@ import {
   validateJsonExpression,
 } from "./loaders/json"
 import { loadRss } from "./loaders/rss"
-import {
-  compileSourceParamTemplates,
-  parseSourceParamValue,
-} from "./params"
+import { parseSourceParamValue } from "./params"
 import { validateRadarRules } from "./radar"
 import {
   compileSourceTemplateValue,
@@ -125,7 +122,6 @@ export function validateSourceTemplates(sourceId: string, config: SourceConfig):
     parseSourceBaseUrl(config.baseUrl, `${sourceId}.baseUrl`)
   }
   validateSourceVars(config.vars, `${sourceId}.vars`)
-  compileSourceParamTemplates(config.params, `${sourceId}.params`)
   validateSourceMetadata(config.metadata, `${sourceId}.metadata`)
 
   const { loader } = config
@@ -478,12 +474,11 @@ function resolveSourceTemplates<TParams extends SourceParamSchemaMap, TValue>(
 
 function resolveDefaultParams<TParams extends SourceParamSchemaMap>(
   params: TParams | undefined,
-  vars: SourceTemplateVars | undefined,
 ): InferSourceParams<TParams> {
   return Object.fromEntries(
     Object.entries(params ?? {}).map(([key, param]) => [
       key,
-      parseSourceParamValue(param, undefined, vars ?? {}),
+      parseSourceParamValue(param, undefined),
     ]),
   ) as InferSourceParams<TParams>
 }
@@ -499,7 +494,7 @@ function resolveSourceCapabilities<TParams extends SourceParamSchemaMap>(
   const inferredNetworkHosts: string[] = []
 
   if (loader.type !== "custom") {
-    const defaultParams = resolveDefaultParams(params, vars)
+    const defaultParams = resolveDefaultParams(params)
     const requestUrl = resolveSourceUrl(
       resolveSourceTemplates(
         loader.url,

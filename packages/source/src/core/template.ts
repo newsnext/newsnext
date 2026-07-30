@@ -3,6 +3,7 @@ import type { SourceTemplateVars } from "../types"
 import { parseRelativeDate } from "@newsnext/date-parser"
 import { getFavicon } from "@newsnext/shared/utils"
 import { Liquid } from "liquidjs"
+import { compileSourceRegex, validateSourceRegexInput } from "./regex"
 
 type TemplateRenderer = (context: object) => string
 export type TemplateOutput = "html" | "plain"
@@ -10,7 +11,6 @@ export type TemplateOutput = "html" | "plain"
 export type SourceTemplateSlot
   = | "field"
     | "jsonField"
-    | "param"
     | "radarMetadata"
     | "radarParams"
     | "request"
@@ -37,8 +37,6 @@ const RENDER_LIMIT_MS = 50
 const MEMORY_LIMIT = 100_000
 const TEMPLATE_LIMIT = 10_000
 const CACHE_LIMIT = 256
-const REGEX_INPUT_LIMIT = 20_000
-const REGEX_PATTERN_LIMIT = 500
 const blockedTags = /\{%-?\s*(?:include|layout|liquid|raw|render)\b/i
 const blockedRawFilter = /\|\s*raw\b/i
 const regexCache = new Map<string, RegExp>()
@@ -181,7 +179,6 @@ const sourceTemplatePaths = {
     "scope.value",
     "source.vars",
   ],
-  param: ["scope.value", "source.vars"],
   radarMetadata: [
     "scope.hashQuery",
     "scope.params",
@@ -430,107 +427,19 @@ function resolveUrl(value: unknown, base: unknown): string | undefined {
 
 function getRegexInput(value: unknown): string {
   const input = stringify(value)
-  if (input.length > REGEX_INPUT_LIMIT) {
-    throw new Error(`A regex filter input cannot exceed ${REGEX_INPUT_LIMIT} characters`)
-  }
+  validateSourceRegexInput(input)
   return input
 }
 
 function getRegex(patternValue: unknown, global = false): RegExp {
   const pattern = stringify(patternValue)
-  if (!pattern) {
-    throw new Error("A regex filter requires a non-empty pattern")
-  }
-  if (pattern.length > REGEX_PATTERN_LIMIT) {
-    throw new Error(`A regex filter pattern cannot exceed ${REGEX_PATTERN_LIMIT} characters`)
-  }
-  if (hasNestedQuantifiedGroup(pattern)) {
-    throw new Error("Nested quantified groups are not allowed in regex filters")
-  }
-
   const key = `${global ? "g" : ""}:${pattern}`
   const cached = regexCache.get(key)
   if (cached) return cached
 
-  let regex: RegExp
-  try {
-    regex = new RegExp(pattern, global ? "g" : "")
-  } catch (error) {
-    throw new Error("Invalid regex filter pattern", { cause: error })
-  }
+  const regex = compileSourceRegex(pattern, global ? "g" : "")
   setCached(regexCache, key, regex)
   return regex
-}
-
-function hasNestedQuantifiedGroup(pattern: string): boolean {
-  const groups: boolean[] = []
-  let escaped = false
-  let inCharacterClass = false
-
-  for (let index = 0; index < pattern.length; index += 1) {
-    const character = pattern[index]
-    if (escaped) {
-      escaped = false
-      continue
-    }
-    if (character === "\\") {
-      escaped = true
-      continue
-    }
-    if (character === "[") {
-      inCharacterClass = true
-      continue
-    }
-    if (character === "]" && inCharacterClass) {
-      inCharacterClass = false
-      continue
-    }
-    if (inCharacterClass) continue
-
-    if (character === "(") {
-      groups.push(false)
-      continue
-    }
-    if (character === ")") {
-      const containsQuantifier = groups.pop() ?? false
-      const groupIsQuantified = isRegexQuantifierAt(pattern, index + 1)
-      if (containsQuantifier && groupIsQuantified) return true
-      if (groups.length > 0 && (containsQuantifier || groupIsQuantified)) {
-        groups[groups.length - 1] = true
-      }
-      continue
-    }
-    if (
-      groups.length > 0
-      && isRegexQuantifierAt(pattern, index)
-      && !(character === "?" && pattern[index - 1] === "(")
-    ) {
-      groups[groups.length - 1] = true
-    }
-  }
-
-  return false
-}
-
-function isRegexQuantifierAt(pattern: string, index: number): boolean {
-  const character = pattern[index]
-  if (character === "*" || character === "+" || character === "?") return true
-  if (character !== "{") return false
-
-  let cursor = index + 1
-  let digits = 0
-  while (cursor < pattern.length && pattern[cursor] >= "0" && pattern[cursor] <= "9") {
-    cursor += 1
-    digits += 1
-  }
-  if (digits === 0) return false
-  if (pattern[cursor] === ",") {
-    cursor += 1
-    while (cursor < pattern.length && pattern[cursor] >= "0" && pattern[cursor] <= "9") {
-      cursor += 1
-    }
-  }
-  return pattern[cursor] === "}"
 }
 
 function setCached<T>(cache: Map<string, T>, key: string, value: T): void {

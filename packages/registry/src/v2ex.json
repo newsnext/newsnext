@@ -14,8 +14,7 @@
         "feed": {
           "type": "text",
           "title": "节点",
-          "default": "ideas",
-          "pattern": ".+"
+          "default": "ideas"
         }
       },
       "radar": [

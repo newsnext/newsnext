@@ -210,7 +210,10 @@ export default {
           id: "x-user",
           match: {
             hosts: ["x.com", "twitter.com"],
-            paths: ["/:username", "/:username/*rest"],
+            paths: {
+              include: ["/:username", "/:username/*rest"],
+              exclude: X_RADAR_RESERVED_PATHS.flatMap(path => [`/${path}`, `/${path}/*rest`]),
+            },
           },
           patch: {
             params: {
@@ -233,8 +236,6 @@ export default {
           type: "text",
           title: "Username",
           default: "elonmusk",
-          pattern: "^\\w{1,15}$",
-          notIn: X_RADAR_RESERVED_PATHS,
         },
       },
       loader: {

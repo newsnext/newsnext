@@ -135,9 +135,9 @@ describe("source templates", () => {
 
   it("validates paths against the source template slot", () => {
     expect(() => compileSourceTemplate(
-      "{{ params.value }}",
-      { location: "test.params.value.template", slot: "param" },
-    )).toThrow("Template path \"params.value\" is not available")
+      "{{ scope.params.value }}",
+      { location: "test.radar.patch.params.value", slot: "radarParams" },
+    )).toThrow("Template path \"scope.params.value\" is not available")
   })
 
   it("reports source locations for runtime render failures", () => {

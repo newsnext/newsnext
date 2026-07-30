@@ -40,10 +40,20 @@ export type SourceSecretDefinition = SourceCookieSecretDefinition | SourceLocalS
 
 export type SourceSecrets = Record<string, string | undefined>
 
+export interface SourceRadarPathRegex {
+  regex: string
+}
+
+export type SourceRadarPathPattern = string | SourceRadarPathRegex
+
+export interface SourceRadarPaths {
+  include?: SourceRadarPathPattern[]
+  exclude?: SourceRadarPathPattern[]
+}
+
 export interface SourceRadarMatch {
   hosts: string[]
-  paths?: string[]
-  includes?: string | string[]
+  paths?: string[] | SourceRadarPaths
 }
 
 export type SourceRadarParams = Record<string, string>

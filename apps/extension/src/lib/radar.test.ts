@@ -310,6 +310,26 @@ describe("getRadarSuggestions", () => {
     ])
   })
 
+  it("does not treat hash routes as pathname matches", () => {
+    expect(getRadarSuggestions(
+      { url: "https://example.com/#/playlist?id=1" },
+      [
+        {
+          id: "test:hash-path",
+          radar: [
+            {
+              id: "hash-path",
+              match: {
+                hosts: ["example.com"],
+                paths: ["/playlist"],
+              },
+            },
+          ],
+        },
+      ],
+    )).toEqual([])
+  })
+
   it.each([
     ["all", "0"],
     ["anime", "13"],
@@ -657,7 +677,7 @@ describe("getRadarSuggestions", () => {
     ])
   })
 
-  it("matches notIn values case-insensitively", () => {
+  it("excludes matching paths before resolving suggestions", () => {
     expect(getRadarSuggestions(
       { url: "https://x.com/Search" },
       [
@@ -668,13 +688,18 @@ describe("getRadarSuggestions", () => {
               type: "text",
               title: "Username",
               default: "elonmusk",
-              notIn: ["search"],
             },
           },
           radar: [
             {
               id: "x-user",
-              match: { hosts: ["x.com"], paths: ["/:username"] },
+              match: {
+                hosts: ["x.com"],
+                paths: {
+                  include: ["/:username"],
+                  exclude: ["/search"],
+                },
+              },
               patch: {
                 params: {
                   username: "{{ scope.path.username }}",
@@ -685,6 +710,48 @@ describe("getRadarSuggestions", () => {
         },
       ],
     )).toEqual([])
+  })
+
+  it("matches path regexes and exposes named captures", () => {
+    expect(getRadarSuggestions(
+      { url: "https://example.com/users/newsnext" },
+      [
+        {
+          id: "test:regex-path",
+          params: {
+            username: {
+              type: "text",
+              title: "Username",
+              default: "",
+            },
+          },
+          radar: [
+            {
+              id: "regex-path",
+              match: {
+                hosts: ["example.com"],
+                paths: {
+                  include: [{ regex: "/users/(?<username>[^/?#]+)$" }],
+                },
+              },
+              patch: {
+                params: {
+                  username: "{{ scope.path.username }}",
+                },
+              },
+            },
+          ],
+        },
+      ],
+    )).toMatchObject([
+      {
+        patch: {
+          params: {
+            username: "newsnext",
+          },
+        },
+      },
+    ])
   })
 
   it("keeps suggestions distinct when params patches differ", () => {
@@ -721,7 +788,7 @@ describe("getRadarSuggestions", () => {
     )).toHaveLength(2)
   })
 
-  it("ignores invalid matcher and validator patterns without throwing", () => {
+  it("ignores invalid matcher patterns without throwing", () => {
     expect(getRadarSuggestions(
       { url: "https://example.com/a" },
       [
@@ -731,26 +798,6 @@ describe("getRadarSuggestions", () => {
             {
               id: "invalid-path",
               match: { hosts: ["example.com"], paths: ["/*"] },
-            },
-          ],
-        },
-        {
-          id: "test:invalid-pattern",
-          params: {
-            value: {
-              type: "text",
-              title: "Value",
-              default: "",
-              pattern: "[",
-            },
-          },
-          radar: [
-            {
-              id: "invalid-pattern",
-              match: { hosts: ["example.com"], paths: ["/a"] },
-              patch: {
-                params: { value: "invalid-pattern" },
-              },
             },
           ],
         },

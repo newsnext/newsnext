@@ -1,6 +1,11 @@
-import type { HtmlFieldConfig, SourceRadarRule } from "../types"
+import type {
+  HtmlFieldConfig,
+  SourceRadarPathPattern,
+  SourceRadarRule,
+} from "../types"
 import { isSourcePresentationMetadataKey } from "../types"
 import { SOURCE_REGISTRY_LIMITS } from "./limits"
+import { compileSourceRegex } from "./regex"
 import { compileSourceTemplate } from "./template"
 
 export function validateRadarRules(
@@ -8,6 +13,7 @@ export function validateRadarRules(
   location: string,
 ): void {
   rules?.forEach((rule, index) => {
+    validateRadarPathPatterns(rule.match.paths, `${location}.${index}.match.paths`)
     const patchLocation = `${location}.${index}.patch`
     for (const [key, template] of Object.entries(rule.patch?.params ?? {})) {
       compileSourceTemplate(template, {
@@ -29,6 +35,29 @@ export function validateRadarRules(
       } else {
         validateRadarHtmlField(field, fieldLocation)
       }
+    }
+  })
+}
+
+function validateRadarPathPatterns(
+  paths: SourceRadarRule["match"]["paths"],
+  location: string,
+): void {
+  if (Array.isArray(paths)) return
+  validateRadarPathRegexes(paths?.include, `${location}.include`)
+  validateRadarPathRegexes(paths?.exclude, `${location}.exclude`)
+}
+
+function validateRadarPathRegexes(
+  patterns: SourceRadarPathPattern[] | undefined,
+  location: string,
+): void {
+  patterns?.forEach((pattern, index) => {
+    if (typeof pattern === "string") return
+    try {
+      compileSourceRegex(pattern.regex, "i")
+    } catch (error) {
+      throw new TypeError(`${location}.${index}.regex is invalid`, { cause: error })
     }
   })
 }

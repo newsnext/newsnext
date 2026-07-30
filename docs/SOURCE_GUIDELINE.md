@@ -204,7 +204,6 @@ params: {
     type: "text",
     title: "Topic",
     default: "technology",
-    pattern: "^[a-z-]+$",
   },
   page: {
     type: "number",
@@ -212,7 +211,6 @@ params: {
     default: 1,
     min: 1,
     max: 10,
-    step: 1,
   },
   mode: {
     type: "select",
@@ -226,26 +224,15 @@ params: {
 }
 ```
 
-String-like parameters also support `startsWith`, `notIn`, and `description`.
-All string inputs are trimmed before templates, type coercion, and validation.
+Parameters also support `description`. All string inputs are trimmed before
+type coercion and validation. Parameters do not perform arbitrary string
+validation or Liquid transformation. Normalize and reject discovered values in
+the Radar parameter patch, and use structured parameter types for
+user-selectable constraints.
 
 Prefer one source with a `select` parameter when feed variants share their
 loader and presentation and differ only by a request value. Separate sources
 remain appropriate when variants need different static metadata or card types.
-
-Use `template` to normalize a raw value:
-
-```ts
-{
-  type: "text",
-  title: "Channel",
-  default: "example",
-  template: "{{ scope.value | remove_first: '@' }}",
-  pattern: "^[A-Za-z][A-Za-z0-9_]+$",
-}
-```
-
-Parameter templates can read `scope.value` and `source.vars`.
 
 ## Liquid templates
 
@@ -659,9 +646,15 @@ always shows every card and is not itself a card destination. Selecting
 Match rules:
 
 - `hosts` are lowercase and ignore a leading `www.`.
-- `paths` use `path-to-regexp` syntax.
-- Omitting `paths` matches every path on the listed hosts.
-- `includes` requires one of its strings to occur in the full URL.
+- A `paths` array is an include shorthand and uses `path-to-regexp` syntax.
+- Use `paths.include` and `paths.exclude` when both are needed. Exclusions are
+  checked before parameter patches are rendered.
+- Entries inside `paths.include` or `paths.exclude` can use
+  `{ regex: "/users/(?<username>[^/?#]+)$" }`. Named capture groups are exposed
+  through `scope.path`. Regex entries match the complete URL, while string
+  entries match only `URL.pathname`.
+- Omitting `paths`, or using an empty include array, matches every path on the
+  listed hosts.
 - Radar rule IDs must be unique within a source.
 
 Map each parameter explicitly in `patch.params`. Values can read

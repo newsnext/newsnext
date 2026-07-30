@@ -147,7 +147,6 @@ export function ParamField({
           editable={editable}
           min={param.min}
           max={param.max}
-          step={param.step}
           onChange={nextValue => onChange(nextValue)}
         />
       </Info>

@@ -18,9 +18,7 @@
         "channel": {
           "type": "text",
           "default": "TestFlightCN",
-          "title": "Channel",
-          "pattern": "^(?![\\d_])\\w{5,32}$",
-          "template": "{{ scope.value | remove_first: '@' }}"
+          "title": "Channel"
         }
       },
       "radar": [

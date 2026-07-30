@@ -7,10 +7,13 @@ export {
   validateSourceRequestRules,
 } from "./capabilities"
 export {
-  getDefaultValues,
   parseSourceParams,
   parseSourceParamValue,
 } from "./params"
+export {
+  compileSourceRegex,
+  validateSourceRegexInput,
+} from "./regex"
 export {
   compileSourceTemplate,
   compileSourceTemplateValue,

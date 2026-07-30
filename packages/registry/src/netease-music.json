@@ -49,8 +49,7 @@
         "id": {
           "type": "text",
           "default": "17990594711",
-          "title": "歌单 ID",
-          "pattern": "^\\d+$"
+          "title": "歌单 ID"
         }
       },
       "radar": [
@@ -61,7 +60,13 @@
               "music.163.com",
               "y.music.163.com"
             ],
-            "includes": "playlist"
+            "paths": {
+              "include": [
+                {
+                  "regex": "#/playlist(?:\\?|$)"
+                }
+              ]
+            }
           },
           "patch": {
             "params": {
@@ -84,8 +89,7 @@
         "id": {
           "type": "text",
           "default": "19723756",
-          "title": "排行榜 ID",
-          "pattern": "^\\d+$"
+          "title": "排行榜 ID"
         }
       },
       "radar": [
@@ -96,7 +100,13 @@
               "music.163.com",
               "y.music.163.com"
             ],
-            "includes": "toplist"
+            "paths": {
+              "include": [
+                {
+                  "regex": "#/discover/toplist(?:\\?|$)"
+                }
+              ]
+            }
           },
           "patch": {
             "params": {

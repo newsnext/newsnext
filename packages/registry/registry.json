@@ -1123,8 +1123,7 @@
       "feedId": {
         "type": "text",
         "title": "Feed ID",
-        "default": "71931642168770560",
-        "pattern": "^\\d+$"
+        "default": "71931642168770560"
       }
     },
     "radar": [
@@ -1174,8 +1173,7 @@
       "listId": {
         "type": "text",
         "title": "List ID",
-        "default": "68649150114432000",
-        "pattern": "^\\d+$"
+        "default": "68649150114432000"
       }
     },
     "radar": [
@@ -1640,8 +1638,7 @@
       "topicId": {
         "type": "text",
         "title": "主题 ID",
-        "default": "5aeaa84029e4000011ac3768",
-        "pattern": ".+"
+        "default": "5aeaa84029e4000011ac3768"
       },
       "order": {
         "type": "select",
@@ -1735,8 +1732,7 @@
       "username": {
         "type": "text",
         "title": "用户名",
-        "default": "7f422d5d-d79a-4f45-9880-b89d64d7f37a",
-        "pattern": ".+"
+        "default": "7f422d5d-d79a-4f45-9880-b89d64d7f37a"
       }
     },
     "provider": {
@@ -1853,8 +1849,7 @@
       "id": {
         "type": "text",
         "default": "17990594711",
-        "title": "歌单 ID",
-        "pattern": "^\\d+$"
+        "title": "歌单 ID"
       }
     },
     "radar": [
@@ -1865,7 +1860,13 @@
             "music.163.com",
             "y.music.163.com"
           ],
-          "includes": "playlist"
+          "paths": {
+            "include": [
+              {
+                "regex": "#/playlist(?:\\?|$)"
+              }
+            ]
+          }
         },
         "patch": {
           "params": {
@@ -1925,8 +1926,7 @@
       "id": {
         "type": "text",
         "default": "19723756",
-        "title": "排行榜 ID",
-        "pattern": "^\\d+$"
+        "title": "排行榜 ID"
       }
     },
     "radar": [
@@ -1937,7 +1937,13 @@
             "music.163.com",
             "y.music.163.com"
           ],
-          "includes": "toplist"
+          "paths": {
+            "include": [
+              {
+                "regex": "#/discover/toplist(?:\\?|$)"
+              }
+            ]
+          }
         },
         "patch": {
           "params": {
@@ -2065,9 +2071,7 @@
       "channel": {
         "type": "text",
         "default": "TestFlightCN",
-        "title": "Channel",
-        "pattern": "^(?![\\d_])\\w{5,32}$",
-        "template": "{{ scope.value | remove_first: '@' }}"
+        "title": "Channel"
       }
     },
     "radar": [
@@ -2183,8 +2187,7 @@
       "feed": {
         "type": "text",
         "title": "节点",
-        "default": "ideas",
-        "pattern": ".+"
+        "default": "ideas"
       }
     },
     "radar": [
@@ -2472,8 +2475,7 @@
       "keyword": {
         "type": "text",
         "title": "关键词",
-        "default": "MSI",
-        "pattern": ".+"
+        "default": "MSI"
       }
     },
     "radar": [
@@ -2548,8 +2550,7 @@
         "type": "text",
         "title": "超话 ID",
         "description": "以 100808 开头的微博超话 ID。",
-        "default": "1008084989d223732bf6f02f75ea30efad58a9",
-        "pattern": "^100808[A-Za-z0-9]+$"
+        "default": "1008084989d223732bf6f02f75ea30efad58a9"
       },
       "type": {
         "type": "select",
@@ -2582,11 +2583,17 @@
           "hosts": [
             "weibo.com"
           ],
-          "includes": "100808"
+          "paths": {
+            "include": [
+              {
+                "regex": "(?<id>100808[A-Za-z0-9]+)"
+              }
+            ]
+          }
         },
         "patch": {
           "params": {
-            "id": "{{ scope.query.containerid | default: scope.hashQuery.containerid | regex_extract: '(100808[A-Za-z0-9]+)', 1 }}",
+            "id": "{{ scope.path.id }}",
             "type": "feed"
           },
           "metadata": {
@@ -2654,8 +2661,7 @@
         "type": "text",
         "title": "用户 UID",
         "description": "微博用户的数字 UID。",
-        "default": "1195230310",
-        "pattern": "^\\d+$"
+        "default": "1195230310"
       }
     },
     "radar": [
@@ -2877,10 +2883,34 @@
             "x.com",
             "twitter.com"
           ],
-          "paths": [
-            "/:username",
-            "/:username/*rest"
-          ]
+          "paths": {
+            "include": [
+              "/:username",
+              "/:username/*rest"
+            ],
+            "exclude": [
+              "/compose",
+              "/compose/*rest",
+              "/explore",
+              "/explore/*rest",
+              "/home",
+              "/home/*rest",
+              "/i",
+              "/i/*rest",
+              "/intent",
+              "/intent/*rest",
+              "/messages",
+              "/messages/*rest",
+              "/notifications",
+              "/notifications/*rest",
+              "/search",
+              "/search/*rest",
+              "/settings",
+              "/settings/*rest",
+              "/share",
+              "/share/*rest"
+            ]
+          }
         },
         "patch": {
           "params": {
@@ -2902,20 +2932,7 @@
       "username": {
         "type": "text",
         "title": "Username",
-        "default": "elonmusk",
-        "pattern": "^\\w{1,15}$",
-        "notIn": [
-          "compose",
-          "explore",
-          "home",
-          "i",
-          "intent",
-          "messages",
-          "notifications",
-          "search",
-          "settings",
-          "share"
-        ]
+        "default": "elonmusk"
       }
     },
     "provider": {

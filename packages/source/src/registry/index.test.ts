@@ -380,6 +380,20 @@ describe("source template vars", () => {
     ]))).toThrow("Template path \"scope.params.value\" is not available")
   })
 
+  it("rejects unsafe Radar path regexes", () => {
+    expect(() => resolveTestSource(createSourceConfig([
+      {
+        id: "test",
+        match: {
+          hosts: ["example.com"],
+          paths: {
+            include: [{ regex: "^(a+)+$" }],
+          },
+        },
+      },
+    ]))).toThrow("match.paths.include.0.regex is invalid")
+  })
+
   it("does not compile Liquid syntax in non-template source fields", () => {
     expect(() => resolveTestSource({
       ...createSourceConfig([]),

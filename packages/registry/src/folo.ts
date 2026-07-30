@@ -105,7 +105,6 @@ export default {
           type: "text",
           title: "Feed ID",
           default: "71931642168770560",
-          pattern: "^\\d+$",
         },
       },
       radar: [
@@ -139,7 +138,6 @@ export default {
           type: "text",
           title: "List ID",
           default: "68649150114432000",
-          pattern: "^\\d+$",
         },
       },
       radar: [
