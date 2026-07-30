@@ -430,6 +430,90 @@ describe("getRadarSuggestions", () => {
   })
 
   it.each([
+    [
+      "https://www.reddit.com/user/NewsNext/submitted/",
+      "reddit:user",
+      { username: "NewsNext" },
+      {
+        home: "https://www.reddit.com/user/NewsNext/submitted/",
+        title: "u/NewsNext",
+      },
+    ],
+    [
+      "https://old.reddit.com/r/typescript/comments/example/post/",
+      "reddit:subreddit",
+      { sort: "hot", subreddit: "typescript" },
+      {
+        home: "https://www.reddit.com/r/typescript/hot/",
+        title: "r/typescript",
+      },
+    ],
+  ])("suggests a Reddit card from %s", (url, sourceId, params, metadata) => {
+    expect(getRadarSuggestions(
+      { url },
+      sourceDescriptors.filter(source => source.id === sourceId),
+    )).toMatchObject([
+      {
+        sourceId,
+        patch: {
+          params,
+          metadata,
+        },
+      },
+    ])
+  })
+
+  it.each([
+    ["best", "https://www.reddit.com/r/typescript/best/"],
+    ["hot", "https://www.reddit.com/r/typescript/hot/"],
+    ["new", "https://www.reddit.com/r/typescript/new/"],
+    ["rising", "https://www.reddit.com/r/typescript/rising/"],
+  ])("maps the Reddit %s page to the matching Subreddit sort", (sort, url) => {
+    expect(getRadarSuggestions(
+      { url },
+      sourceDescriptors.filter(source => source.id === "reddit:subreddit"),
+    )).toMatchObject([
+      {
+        sourceId: "reddit:subreddit",
+        patch: {
+          params: {
+            sort,
+            subreddit: "typescript",
+          },
+          metadata: {
+            home: url,
+            title: "r/typescript",
+          },
+        },
+      },
+    ])
+  })
+
+  it.each([
+    ["https://www.reddit.com/r/typescript/top/?t=week", "week"],
+    ["https://www.reddit.com/r/typescript/top/", "day"],
+  ])("maps %s to the Reddit Subreddit Top source", (url, period) => {
+    expect(getRadarSuggestions(
+      { url },
+      sourceDescriptors.filter(source => source.id === "reddit:subreddit-top"),
+    )).toMatchObject([
+      {
+        sourceId: "reddit:subreddit-top",
+        patch: {
+          params: {
+            period,
+            subreddit: "typescript",
+          },
+          metadata: {
+            home: `https://www.reddit.com/r/typescript/top/?t=${period}`,
+            title: "r/typescript Top",
+          },
+        },
+      },
+    ])
+  })
+
+  it.each([
     ["https://x.com/NewsNext", "@NewsNext"],
     ["https://twitter.com/NewsNext/status/1234567890", "@NewsNext"],
   ])("suggests an X user card from %s", (url, title) => {

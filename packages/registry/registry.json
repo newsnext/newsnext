@@ -2060,6 +2060,333 @@
       "color": "red"
     }
   },
+  "reddit:subreddit": {
+    "baseUrl": "https://www.reddit.com/",
+    "capabilities": {
+      "network": [
+        "www.reddit.com"
+      ],
+      "cookies": [],
+      "browser": []
+    },
+    "cache": "5m",
+    "metadata": {
+      "home": "/",
+      "type": "timeline",
+      "title": "Subreddit",
+      "desc": "Posts in a Subreddit"
+    },
+    "params": {
+      "subreddit": {
+        "type": "text",
+        "title": "Subreddit",
+        "default": "programming"
+      },
+      "sort": {
+        "type": "select",
+        "title": "Sort",
+        "values": [
+          {
+            "label": "Best",
+            "value": "best"
+          },
+          {
+            "label": "Hot",
+            "value": "hot"
+          },
+          {
+            "label": "New",
+            "value": "new"
+          },
+          {
+            "label": "Rising",
+            "value": "rising"
+          }
+        ],
+        "default": "hot"
+      }
+    },
+    "radar": [
+      {
+        "id": "reddit-subreddit",
+        "match": {
+          "hosts": [
+            "reddit.com",
+            "old.reddit.com",
+            "new.reddit.com"
+          ],
+          "paths": [
+            "/r/:subreddit",
+            "/r/:subreddit/comments/:postId",
+            "/r/:subreddit/comments/:postId/*rest"
+          ]
+        },
+        "patch": {
+          "params": {
+            "subreddit": "{{ scope.path.subreddit }}",
+            "sort": "hot"
+          },
+          "metadata": {
+            "title": "r/{{ scope.params.subreddit }}",
+            "home": "/r/{{ scope.params.subreddit | url_path }}/hot/"
+          }
+        },
+        "confidence": 0.95
+      },
+      {
+        "id": "reddit-subreddit-best",
+        "match": {
+          "hosts": [
+            "reddit.com",
+            "old.reddit.com",
+            "new.reddit.com"
+          ],
+          "paths": [
+            "/r/:subreddit/best",
+            "/r/:subreddit/best/*rest"
+          ]
+        },
+        "patch": {
+          "params": {
+            "subreddit": "{{ scope.path.subreddit }}",
+            "sort": "best"
+          },
+          "metadata": {
+            "title": "r/{{ scope.params.subreddit }}",
+            "home": "/r/{{ scope.params.subreddit | url_path }}/best/"
+          }
+        },
+        "confidence": 0.95
+      },
+      {
+        "id": "reddit-subreddit-hot",
+        "match": {
+          "hosts": [
+            "reddit.com",
+            "old.reddit.com",
+            "new.reddit.com"
+          ],
+          "paths": [
+            "/r/:subreddit/hot",
+            "/r/:subreddit/hot/*rest"
+          ]
+        },
+        "patch": {
+          "params": {
+            "subreddit": "{{ scope.path.subreddit }}",
+            "sort": "hot"
+          },
+          "metadata": {
+            "title": "r/{{ scope.params.subreddit }}",
+            "home": "/r/{{ scope.params.subreddit | url_path }}/hot/"
+          }
+        },
+        "confidence": 0.95
+      },
+      {
+        "id": "reddit-subreddit-new",
+        "match": {
+          "hosts": [
+            "reddit.com",
+            "old.reddit.com",
+            "new.reddit.com"
+          ],
+          "paths": [
+            "/r/:subreddit/new",
+            "/r/:subreddit/new/*rest"
+          ]
+        },
+        "patch": {
+          "params": {
+            "subreddit": "{{ scope.path.subreddit }}",
+            "sort": "new"
+          },
+          "metadata": {
+            "title": "r/{{ scope.params.subreddit }}",
+            "home": "/r/{{ scope.params.subreddit | url_path }}/new/"
+          }
+        },
+        "confidence": 0.95
+      },
+      {
+        "id": "reddit-subreddit-rising",
+        "match": {
+          "hosts": [
+            "reddit.com",
+            "old.reddit.com",
+            "new.reddit.com"
+          ],
+          "paths": [
+            "/r/:subreddit/rising",
+            "/r/:subreddit/rising/*rest"
+          ]
+        },
+        "patch": {
+          "params": {
+            "subreddit": "{{ scope.path.subreddit }}",
+            "sort": "rising"
+          },
+          "metadata": {
+            "title": "r/{{ scope.params.subreddit }}",
+            "home": "/r/{{ scope.params.subreddit | url_path }}/rising/"
+          }
+        },
+        "confidence": 0.95
+      }
+    ],
+    "provider": {
+      "title": "Reddit",
+      "category": "forum",
+      "icon": "https://www.redditstatic.com/desktop2x/img/favicon/favicon-32x32.png",
+      "color": "orange"
+    }
+  },
+  "reddit:subreddit-top": {
+    "baseUrl": "https://www.reddit.com/",
+    "capabilities": {
+      "network": [
+        "www.reddit.com"
+      ],
+      "cookies": [],
+      "browser": []
+    },
+    "cache": "5m",
+    "metadata": {
+      "home": "/",
+      "type": "hottest",
+      "title": "Subreddit Top",
+      "desc": "Top posts in a Subreddit"
+    },
+    "params": {
+      "subreddit": {
+        "type": "text",
+        "title": "Subreddit",
+        "default": "programming"
+      },
+      "period": {
+        "type": "select",
+        "title": "Period",
+        "values": [
+          {
+            "label": "Past Hour",
+            "value": "hour"
+          },
+          {
+            "label": "Past Day",
+            "value": "day"
+          },
+          {
+            "label": "Past Week",
+            "value": "week"
+          },
+          {
+            "label": "Past Month",
+            "value": "month"
+          },
+          {
+            "label": "Past Year",
+            "value": "year"
+          },
+          {
+            "label": "All Time",
+            "value": "all"
+          }
+        ],
+        "default": "day"
+      }
+    },
+    "radar": [
+      {
+        "id": "reddit-subreddit-top",
+        "match": {
+          "hosts": [
+            "reddit.com",
+            "old.reddit.com",
+            "new.reddit.com"
+          ],
+          "paths": [
+            "/r/:subreddit/top",
+            "/r/:subreddit/top/*rest"
+          ]
+        },
+        "patch": {
+          "params": {
+            "period": "{{ scope.query.t | default: 'day' }}",
+            "subreddit": "{{ scope.path.subreddit }}"
+          },
+          "metadata": {
+            "title": "r/{{ scope.params.subreddit }} Top",
+            "home": "/r/{{ scope.params.subreddit | url_path }}/top/?t={{ scope.params.period | url_query }}"
+          }
+        },
+        "confidence": 0.95
+      }
+    ],
+    "provider": {
+      "title": "Reddit",
+      "category": "forum",
+      "icon": "https://www.redditstatic.com/desktop2x/img/favicon/favicon-32x32.png",
+      "color": "orange"
+    }
+  },
+  "reddit:user": {
+    "baseUrl": "https://www.reddit.com/",
+    "capabilities": {
+      "network": [
+        "www.reddit.com"
+      ],
+      "cookies": [],
+      "browser": []
+    },
+    "cache": "5m",
+    "metadata": {
+      "home": "/",
+      "type": "timeline",
+      "title": "User Posts",
+      "desc": "Latest posts submitted by a Reddit user"
+    },
+    "params": {
+      "username": {
+        "type": "text",
+        "title": "Username",
+        "default": "spez"
+      }
+    },
+    "radar": [
+      {
+        "id": "reddit-user",
+        "match": {
+          "hosts": [
+            "reddit.com",
+            "old.reddit.com",
+            "new.reddit.com"
+          ],
+          "paths": [
+            "/user/:username",
+            "/user/:username/*rest",
+            "/u/:username",
+            "/u/:username/*rest"
+          ]
+        },
+        "patch": {
+          "params": {
+            "username": "{{ scope.path.username }}"
+          },
+          "metadata": {
+            "title": "u/{{ scope.params.username }}",
+            "home": "/user/{{ scope.params.username | url_path }}/submitted/"
+          }
+        },
+        "confidence": 0.95
+      }
+    ],
+    "provider": {
+      "title": "Reddit",
+      "category": "forum",
+      "icon": "https://www.redditstatic.com/desktop2x/img/favicon/favicon-32x32.png",
+      "color": "orange"
+    }
+  },
   "telegram:channel": {
     "baseUrl": "https://t.me/",
     "metadata": {

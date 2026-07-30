@@ -15,8 +15,9 @@ import provider_1 from "./src/browser"
 import provider_2 from "./src/cls"
 import provider_3 from "./src/folo"
 import provider_4 from "./src/jike/index"
-import provider_5 from "./src/weibo/index"
-import provider_6 from "./src/x/index"
+import provider_5 from "./src/reddit/index"
+import provider_6 from "./src/weibo/index"
+import provider_7 from "./src/x/index"
 
 const providerConfigs: Record<string, ProviderConfig> = {
   "bilibili": provider_0,
@@ -24,8 +25,9 @@ const providerConfigs: Record<string, ProviderConfig> = {
   "cls": provider_2,
   "folo": provider_3,
   "jike": provider_4,
-  "weibo": provider_5,
-  "x": provider_6
+  "reddit": provider_5,
+  "weibo": provider_6,
+  "x": provider_7
 }
 
 export const executableLoaders: ExecutableSourceLoaders = Object.fromEntries(

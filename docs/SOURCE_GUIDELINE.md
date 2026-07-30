@@ -140,7 +140,7 @@ Use the following matching rules:
 | Category | Match when the provider's primary value is | Current examples |
 | --- | --- | --- |
 | `social` | Identity-based publishing, following, channels, or creator feeds | X, Weibo, Telegram, Jike, Bilibili |
-| `forum` | Topic-based discussion organized around threads, replies, or Q&A | Linux.do, V2EX, Hacker News, Tieba, Zhihu |
+| `forum` | Topic-based discussion organized around threads, replies, or Q&A | Reddit, Linux.do, V2EX, Hacker News, Tieba, Zhihu |
 | `news` | Editorial reporting, news aggregation, or feed subscription and reading | 36Kr, AIHot, Folo, NewsNow, Zaobao |
 | `finance` | Financial markets, investing, or finance-specialist reporting and data | CLS, Xueqiu |
 | `developer` | Software development, code collaboration, or developer workflows | GitHub |
@@ -233,6 +233,8 @@ user-selectable constraints.
 Prefer one source with a `select` parameter when feed variants share their
 loader and presentation and differ only by a request value. Separate sources
 remain appropriate when variants need different static metadata or card types.
+Use a separate source when one variant needs additional parameters that do not
+apply to the others, such as a ranked feed with its own time window.
 Do not expose a variant parameter when the source intentionally promises one
 fixed feed semantic, such as latest posts. Keep that request value in the
 loader so every card follows the source contract.
@@ -558,6 +560,18 @@ Every item needs a non-empty `title` and `url`. Common optional fields are
 Timestamps are milliseconds. `inline` must contain at least one of `text`,
 `html`, `mark`, or `icon`. `preview` uses either `text` or `html` and may also
 contain `picture` or `iframe`.
+
+Minimize request count as part of the source contract. When one listing request
+can return both items and required metadata, directly or through expansion,
+include, or field-selection options, the loader must use that single request.
+Do not add a companion request only to enrich a badge, description, or item
+icon when the listing can provide the same value.
+
+Add another request only when required output is unavailable from the primary
+response. Never make one metadata request per item; use embedded data or a
+single batch endpoint when an additional request is unavoidable. This is
+especially important for authenticated sources because unnecessary API traffic
+can trigger rate limits, anti-abuse systems, or account suspension.
 
 ## Cache, capabilities, and secrets
 
