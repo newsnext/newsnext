@@ -5,13 +5,13 @@
   "defaults": {
     "baseUrl": "https://t.me/",
     "metadata": {
-      "home": "/s/TestFlightCN"
+      "home": "/"
     }
   },
   "sources": {
     "channel": {
       "metadata": {
-        "title": "科技圈 在花频道",
+        "title": "频道",
         "type": "timeline"
       },
       "params": {

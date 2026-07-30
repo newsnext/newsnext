@@ -2057,8 +2057,8 @@
   "telegram:channel": {
     "baseUrl": "https://t.me/",
     "metadata": {
-      "home": "/s/TestFlightCN",
-      "title": "科技圈 在花频道",
+      "home": "/",
+      "title": "频道",
       "type": "timeline"
     },
     "params": {
@@ -2988,7 +2988,7 @@
     "baseUrl": "https://www.zhihu.com/",
     "metadata": {
       "home": "/",
-      "title": "全站热榜",
+      "title": "热榜",
       "type": "hottest"
     },
     "loader": {
