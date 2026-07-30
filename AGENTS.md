@@ -40,7 +40,14 @@ Newsnext is a personalized web crawler that runs inside a browser extension (mv3
 
 - Use `git` as the primary version control system for this repository.
 - Prefer `git` commands and workflows for status checks, history inspection, branches, commits, and pushes.
-- When asked to "separately push" multiple changes, treat that as separate commits pushed sequentially to `main` by default, not separate branches or pull requests, unless explicitly requested.
+- Do not use GitHub `github:yeet` skills in this repository.
+- Do not create branches or pull requests unless the user explicitly requests
+  that exact action. When asked to commit or push without further
+  qualification, commit the intended changes and push directly to the current
+  branch.
+- When asked to "separately push" multiple changes, treat that as separate
+  commits pushed sequentially to the current branch, not separate branches or
+  pull requests, unless explicitly requested.
 
 ### Commit Messages
 
