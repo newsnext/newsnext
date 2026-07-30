@@ -2072,7 +2072,7 @@
     "cache": "5m",
     "metadata": {
       "home": "/",
-      "type": "timeline",
+      "type": "hottest",
       "title": "Subreddit",
       "desc": "Posts in a Subreddit"
     },
@@ -2128,7 +2128,8 @@
           },
           "metadata": {
             "title": "r/{{ scope.params.subreddit }}",
-            "home": "/r/{{ scope.params.subreddit | url_path }}/hot/"
+            "home": "/r/{{ scope.params.subreddit | url_path }}/hot/",
+            "type": "hottest"
           }
         },
         "confidence": 0.95
@@ -2153,7 +2154,8 @@
           },
           "metadata": {
             "title": "r/{{ scope.params.subreddit }}",
-            "home": "/r/{{ scope.params.subreddit | url_path }}/best/"
+            "home": "/r/{{ scope.params.subreddit | url_path }}/best/",
+            "type": "hottest"
           }
         },
         "confidence": 0.95
@@ -2178,7 +2180,8 @@
           },
           "metadata": {
             "title": "r/{{ scope.params.subreddit }}",
-            "home": "/r/{{ scope.params.subreddit | url_path }}/hot/"
+            "home": "/r/{{ scope.params.subreddit | url_path }}/hot/",
+            "type": "hottest"
           }
         },
         "confidence": 0.95
@@ -2203,7 +2206,8 @@
           },
           "metadata": {
             "title": "r/{{ scope.params.subreddit }}",
-            "home": "/r/{{ scope.params.subreddit | url_path }}/new/"
+            "home": "/r/{{ scope.params.subreddit | url_path }}/new/",
+            "type": "timeline"
           }
         },
         "confidence": 0.95
@@ -2228,7 +2232,8 @@
           },
           "metadata": {
             "title": "r/{{ scope.params.subreddit }}",
-            "home": "/r/{{ scope.params.subreddit | url_path }}/rising/"
+            "home": "/r/{{ scope.params.subreddit | url_path }}/rising/",
+            "type": "hottest"
           }
         },
         "confidence": 0.95

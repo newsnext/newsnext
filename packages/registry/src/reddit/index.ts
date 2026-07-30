@@ -145,6 +145,7 @@ const subredditRadarRules = [
       metadata: {
         title: "r/{{ scope.params.subreddit }}",
         home: "/r/{{ scope.params.subreddit | url_path }}/hot/",
+        type: "hottest",
       },
     },
     confidence: 0.95,
@@ -166,6 +167,7 @@ const subredditRadarRules = [
       metadata: {
         title: "r/{{ scope.params.subreddit }}",
         home: `/r/{{ scope.params.subreddit | url_path }}/${value}/`,
+        type: value === "new" ? "timeline" : "hottest",
       },
     },
     confidence: 0.95,
@@ -236,6 +238,7 @@ export default {
       metadata: {
         title: "Subreddit",
         desc: "Posts in a Subreddit",
+        type: "hottest",
       },
       params: {
         subreddit: {

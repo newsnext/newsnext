@@ -446,6 +446,7 @@ describe("getRadarSuggestions", () => {
       {
         home: "https://www.reddit.com/r/typescript/hot/",
         title: "r/typescript",
+        type: "hottest",
       },
     ],
   ])("suggests a Reddit card from %s", (url, sourceId, params, metadata) => {
@@ -483,6 +484,7 @@ describe("getRadarSuggestions", () => {
           metadata: {
             home: url,
             title: "r/typescript",
+            type: sort === "new" ? "timeline" : "hottest",
           },
         },
       },
