@@ -1,6 +1,17 @@
-export function getFavicon(url: string | URL): string {
+export const DEFAULT_FAVICON_URL_TEMPLATE = "https://icons.folo.is/{hostname}"
+
+export function getFavicon(
+  url: string | URL,
+  template = DEFAULT_FAVICON_URL_TEMPLATE,
+): string {
   try {
-    return `https://icons.folo.is/${new URL(url).hostname}`
+    const parsedUrl = new URL(url)
+    const resolved = template
+      .replaceAll("{hostname}", parsedUrl.hostname)
+      .replaceAll("{origin}", encodeURIComponent(parsedUrl.origin))
+      .replaceAll("{url}", encodeURIComponent(parsedUrl.href))
+
+    return template.trim() ? new URL(resolved).href : ""
   } catch {
     return ""
   }

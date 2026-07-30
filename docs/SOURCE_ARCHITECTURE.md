@@ -94,7 +94,6 @@ Provider identity remains separate from source metadata:
 ```ts
 provider: {
   title: "Example",
-  icon: "https://icons.folo.is/example.com", // optional
   color: "blue",
   category: "social", // optional
 }
@@ -104,6 +103,15 @@ Provider expansion treats `icon` as opaque presentation data and preserves
 standard `data:image/...` URLs as well as remote image URLs. Embedded icons are
 serialized directly into the generated registry and rendered as image sources;
 they do not add network or browser capabilities.
+
+When `icon` is absent, the extension presentation layer derives a favicon
+service URL from the resolved source `home` and the user's icon source
+preference. The URL template supports `{hostname}`, `{origin}`, and `{url}`;
+the latter two substitutions are percent-encoded. An empty template disables
+the fallback. The extension persists the selected preset and template as a
+local user setting. This keeps third-party favicon service URLs out of provider
+definitions and the generated registry while allowing instance-specific home
+overrides to select the matching icon.
 
 This prevents a source, Radar rule, or card instance from changing the identity
 and visual treatment shared by its provider.

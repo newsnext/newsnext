@@ -1,7 +1,6 @@
 {
   "title": "36氪",
   "category": "news",
-  "icon": "https://icons.folo.is/36kr.com",
   "color": "blue",
   "defaults": {
     "vars": {

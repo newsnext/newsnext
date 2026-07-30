@@ -1,7 +1,6 @@
 {
   "title": "Telegram",
   "category": "social",
-  "icon": "https://icons.folo.is/t.me",
   "color": "blue",
   "defaults": {
     "metadata": {

@@ -6,6 +6,7 @@ import { ScrollArea } from "@newsnext/ui/components/scroll-area"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { useState } from "react"
 import { PhArrowCircleLeftDuotone } from "@/components/icons/ph"
+import { useSourceIcon } from "@/hooks/use-source-icon"
 import { useRelativeTime } from "@/hooks/useRelativeTime"
 import { cn } from "@/lib/utils"
 import { IconButton } from "../../common/button"
@@ -55,7 +56,7 @@ export function CardBack({
   dragHandle,
 }: CardBackProps) {
   const { badge, desc, params, provider, title, home, type } = source
-  const { color, icon } = provider
+  const { color } = provider
   const [editDraft, setEditDraft] = useState<SourceInstanceMetadata | null>(null)
   const [isEditingParams, setIsEditingParams] = useState(false)
   const isEditingMetadata = editDraft !== null
@@ -64,6 +65,7 @@ export function CardBack({
   const previewBadge = isEditingMetadata ? editDraft.badge : displayBadge
   const previewDesc = isEditingMetadata ? editDraft.desc : desc
   const previewHome = isEditingMetadata ? editDraft.home : home
+  const icon = useSourceIcon({ provider, home: previewHome })
   const previewType = (isEditingMetadata ? editDraft.type : type) ?? "timeline"
   const relativeTime = useRelativeTime({ date: updatedAt })
   const hasSourceMetaChanges = Boolean(

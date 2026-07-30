@@ -1,7 +1,6 @@
 {
   "title": "AIHot",
   "category": "news",
-  "icon": "https://icons.folo.is/aihot.virxact.com",
   "color": "blue",
   "defaults": {
     "metadata": {

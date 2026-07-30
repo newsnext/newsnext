@@ -12,6 +12,7 @@ import {
 import { useAtomValue } from "jotai"
 import { useEffect, useMemo, useState } from "react"
 import { useSourceDescriptors } from "@/hooks/use-source-descriptors"
+import { useSourceIcon } from "@/hooks/use-source-icon"
 import { DEFAULT_BOARD_ID } from "@/lib/boards"
 import { buildSourceCards } from "@/lib/source-cards"
 import { cn } from "@/lib/utils"
@@ -24,6 +25,20 @@ import "./index.css"
 interface SearchItem {
   id: string
   source: BoardSource
+}
+
+function SearchSourceIcon({ source }: { source: BoardSource }): ReactNode {
+  const icon = useSourceIcon(source)
+
+  return (
+    <SourceIcon
+      badge={source.badge}
+      className="shrink-0 rounded-full"
+      color={source.provider.color}
+      icon={icon}
+      title={source.title || source.provider.title}
+    />
+  )
 }
 
 function SearchPreview({ item }: { item?: SearchItem }) {
@@ -136,13 +151,7 @@ function SearchDialogContent(): ReactNode {
               ]}
             >
               <span className="flex items-center min-w-0 flex-1 gap-2">
-                <SourceIcon
-                  badge={item.source.badge}
-                  className="shrink-0 rounded-full"
-                  color={item.source.provider.color}
-                  icon={item.source.provider.icon}
-                  title={item.source.title || item.source.provider.title}
-                />
+                <SearchSourceIcon source={item.source} />
                 <span className="shrink-0">
                   {item.source.title || item.source.provider.title}
                 </span>

@@ -330,7 +330,6 @@ async function fetchBilibiliRanking({ region }: { region: string }): Promise<New
 export default {
   title: "哔哩哔哩",
   category: "social",
-  icon: "https://icons.folo.is/bilibili.com",
   color: "blue",
   defaults: {
     cache: "5m",

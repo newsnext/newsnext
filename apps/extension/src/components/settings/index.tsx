@@ -26,6 +26,7 @@ import { SegmentedControl } from "../common/segmented-control"
 import { ThemeSelector } from "../common/theme-selector"
 import { PermissionsSettings } from "./permissions"
 import { SourceConnectionSettings } from "./source-connection"
+import { SourceIconSettings } from "./source-icon"
 
 const SETTINGS_TAB_KEY = "newsnext-settings-tab"
 const LAST_USED_BOARD_VALUE = "__last_used__"
@@ -225,6 +226,7 @@ function GeneralSettings() {
           Choose which board opens from the dashboard root.
         </p>
       </div>
+      <SourceIconSettings />
       <SourceConnectionSettings />
     </div>
   )

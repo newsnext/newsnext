@@ -1,7 +1,6 @@
 {
   "title": "网易云音乐",
   "category": "entertainment",
-  "icon": "https://icons.folo.is/music.163.com",
   "color": "red",
   "defaults": {
     "cache": {

@@ -2,6 +2,7 @@ import type { ReactNode } from "react"
 import type { BoardSource, NewsItem } from "@/typings/source"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { memo, useRef } from "react"
+import { useSourceIcon } from "@/hooks/use-source-icon"
 import { useRelativeTime } from "@/hooks/useRelativeTime"
 import { cn } from "@/lib/utils"
 import { IconButton } from "../common/button"
@@ -157,7 +158,8 @@ function CardFrontComponent({
   dragHandle,
 }: CardFrontProps) {
   const { type, desc, provider, title, home } = source
-  const { color, icon } = provider
+  const { color } = provider
+  const icon = useSourceIcon(source)
   const ref = useRef<HTMLDivElement>(null)
   const relativeTime = useRelativeTime({ date: updatedAt })
   const visibleSourceErrorMessage = isFetching ? undefined : sourceErrorMessage

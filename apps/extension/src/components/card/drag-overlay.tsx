@@ -1,5 +1,6 @@
 import type { BoardSource } from "@/typings/source"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
+import { useSourceIcon } from "@/hooks/use-source-icon"
 import { cn } from "@/lib/utils"
 import { IconButton } from "../common/button"
 import { PhDotsSixVerticalDuotone } from "../icons/ph"
@@ -11,7 +12,8 @@ interface DragOverlayProps {
 
 export function DragOverlay({ source }: DragOverlayProps) {
   const { badge, provider, title } = source
-  const { color, icon } = provider
+  const { color } = provider
+  const icon = useSourceIcon(source)
   return (
     <div className="relative flex flex-col p-3">
       <SquircleBox

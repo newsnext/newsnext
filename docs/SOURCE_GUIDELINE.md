@@ -26,7 +26,6 @@ import type { ProviderConfig } from "@newsnext/source/registry"
 
 export default {
   title: "Example",
-  icon: "https://icons.folo.is/example.com",
   color: "blue",
   defaults: {
     cache: "5m",
@@ -145,10 +144,12 @@ type sort by descending timestamp when the first item has a non-zero timestamp.
 Write human-facing strings in the website's primary interface language. Keep
 brand names, IDs, parameter keys and values, and selectors unchanged.
 
-Choose one stable provider `icon`, commonly an HTTPS favicon URL. A standard
-`data:image/...` URL is also supported when the icon should be embedded in the
-registry; use the `data:` scheme without `//` and percent-encode SVG markup.
-Choose one provider `color` from the shared color palette. Use
+Leave provider `icon` unset when it would point to a third-party favicon
+service. The extension derives the favicon URL from each source's
+`metadata.home` at render time using the user's selected icon source and URL
+template. Set `icon` only for a stable first-party image or an embedded standard
+`data:image/...` URL; use the `data:` scheme without `//` and percent-encode SVG
+markup. Choose one provider `color` from the shared color palette. Use
 `metadata.badge` for instance-specific identity such as a channel or user
 avatar. Source metadata is static and must not contain Liquid; use a Radar
 metadata patch for dynamic values. Defining `icon` or `color` in source

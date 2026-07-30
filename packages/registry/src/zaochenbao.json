@@ -1,7 +1,6 @@
 {
   "title": "早晨报",
   "category": "news",
-  "icon": "https://icons.folo.is/zaochenbao.com",
   "color": "red",
   "defaults": {
     "metadata": {
