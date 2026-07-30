@@ -1,7 +1,7 @@
 {
   "36kr:hot-list": {
+    "baseUrl": "https://36kr.com/",
     "vars": {
-      "origin": "https://36kr.com",
       "gateway": "https://gateway.36kr.com",
       "newsflashCategories": {
         "0": "全部",
@@ -12,7 +12,7 @@
       }
     },
     "metadata": {
-      "home": "https://36kr.com/hot-list/catalog",
+      "home": "/hot-list/catalog",
       "title": "人气榜",
       "type": "hottest"
     },
@@ -52,7 +52,7 @@
         "title": "widgetTitle",
         "url": {
           "select": "itemId",
-          "template": "{{ source.vars.origin }}/p/{{ scope.value }}"
+          "template": "/p/{{ scope.value }}"
         },
         "timestamp": "publishTime",
         "inline": {
@@ -73,8 +73,8 @@
     }
   },
   "36kr:information": {
+    "baseUrl": "https://36kr.com/",
     "vars": {
-      "origin": "https://36kr.com",
       "gateway": "https://gateway.36kr.com",
       "newsflashCategories": {
         "0": "全部",
@@ -85,7 +85,7 @@
       }
     },
     "metadata": {
-      "home": "https://36kr.com/information/web_news/latest/",
+      "home": "/information/web_news/latest/",
       "title": "资讯",
       "type": "timeline"
     },
@@ -196,7 +196,7 @@
         "title": "templateMaterial.widgetTitle",
         "url": {
           "select": "itemId",
-          "template": "{{ source.vars.origin }}/p/{{ scope.value }}"
+          "template": "/p/{{ scope.value }}"
         },
         "timestamp": "templateMaterial.publishTime",
         "inline": {
@@ -215,8 +215,8 @@
     }
   },
   "36kr:newsflashes": {
+    "baseUrl": "https://36kr.com/",
     "vars": {
-      "origin": "https://36kr.com",
       "gateway": "https://gateway.36kr.com",
       "newsflashCategories": {
         "0": "全部",
@@ -227,7 +227,7 @@
       }
     },
     "metadata": {
-      "home": "https://36kr.com/newsflashes/catalog/0",
+      "home": "/newsflashes/catalog/0",
       "title": "快讯",
       "type": "timeline"
     },
@@ -287,14 +287,13 @@
     ],
     "loader": {
       "type": "html",
-      "url": "{{ source.vars.origin }}/newsflashes/catalog/{{ scope.params.category | url_path }}",
+      "url": "/newsflashes/catalog/{{ scope.params.category | url_path }}",
       "items": ".newsflash-item",
       "fields": {
         "title": ".item-title",
         "url": {
           "select": ".item-title",
-          "attr": "href",
-          "template": "{{ scope.value | absolute_url: scope.request.url }}"
+          "attr": "href"
         },
         "timestamp": {
           "select": ".time",
@@ -312,13 +311,14 @@
     }
   },
   "aihot:all": {
+    "baseUrl": "https://aihot.virxact.com/",
     "metadata": {
-      "home": "https://aihot.virxact.com",
+      "home": "/",
       "type": "timeline"
     },
     "loader": {
       "type": "json",
-      "url": "https://aihot.virxact.com/api/public/items?mode=all&take=30",
+      "url": "/api/public/items?mode=all&take=30",
       "items": "items[?id && title && url]",
       "fields": {
         "title": "title",
@@ -345,9 +345,10 @@
     }
   },
   "bilibili:following-videos": {
+    "baseUrl": "https://www.bilibili.com/",
     "cache": "5m",
     "metadata": {
-      "home": "https://www.bilibili.com",
+      "home": "/",
       "type": "timeline",
       "title": "关注视频",
       "desc": "已关注 UP 主发布的视频动态"
@@ -369,9 +370,10 @@
     }
   },
   "bilibili:hotword": {
+    "baseUrl": "https://www.bilibili.com/",
     "cache": "5m",
     "metadata": {
-      "home": "https://www.bilibili.com",
+      "home": "/",
       "type": "hottest",
       "title": "热搜"
     },
@@ -389,12 +391,13 @@
     }
   },
   "bilibili:ranking": {
+    "baseUrl": "https://www.bilibili.com/",
     "cache": {
       "version": 2,
       "maxAge": "15m"
     },
     "metadata": {
-      "home": "https://www.bilibili.com/v/popular/rank/all",
+      "home": "/v/popular/rank/all",
       "type": "hottest",
       "title": "排行榜"
     },
@@ -507,7 +510,7 @@
             "region": "0"
           },
           "metadata": {
-            "home": "https://www.bilibili.com/v/popular/rank/all",
+            "home": "/v/popular/rank/all",
             "title": "排行榜"
           }
         },
@@ -528,7 +531,7 @@
             "region": "13"
           },
           "metadata": {
-            "home": "https://www.bilibili.com/v/popular/rank/anime",
+            "home": "/v/popular/rank/anime",
             "title": "番剧排行榜"
           }
         },
@@ -549,7 +552,7 @@
             "region": "167"
           },
           "metadata": {
-            "home": "https://www.bilibili.com/v/popular/rank/guochuang",
+            "home": "/v/popular/rank/guochuang",
             "title": "国创排行榜"
           }
         },
@@ -570,7 +573,7 @@
             "region": "177"
           },
           "metadata": {
-            "home": "https://www.bilibili.com/v/popular/rank/documentary",
+            "home": "/v/popular/rank/documentary",
             "title": "纪录片排行榜"
           }
         },
@@ -591,7 +594,7 @@
             "region": "23"
           },
           "metadata": {
-            "home": "https://www.bilibili.com/v/popular/rank/movie",
+            "home": "/v/popular/rank/movie",
             "title": "电影排行榜"
           }
         },
@@ -612,7 +615,7 @@
             "region": "11"
           },
           "metadata": {
-            "home": "https://www.bilibili.com/v/popular/rank/tv",
+            "home": "/v/popular/rank/tv",
             "title": "电视剧排行榜"
           }
         },
@@ -633,7 +636,7 @@
             "region": "71"
           },
           "metadata": {
-            "home": "https://www.bilibili.com/v/popular/rank/variety",
+            "home": "/v/popular/rank/variety",
             "title": "综艺排行榜"
           }
         },
@@ -654,7 +657,7 @@
             "region": "1"
           },
           "metadata": {
-            "home": "https://www.bilibili.com/v/popular/rank/douga",
+            "home": "/v/popular/rank/douga",
             "title": "动画排行榜"
           }
         },
@@ -675,7 +678,7 @@
             "region": "4"
           },
           "metadata": {
-            "home": "https://www.bilibili.com/v/popular/rank/game",
+            "home": "/v/popular/rank/game",
             "title": "游戏排行榜"
           }
         },
@@ -696,7 +699,7 @@
             "region": "119"
           },
           "metadata": {
-            "home": "https://www.bilibili.com/v/popular/rank/kichiku",
+            "home": "/v/popular/rank/kichiku",
             "title": "鬼畜排行榜"
           }
         },
@@ -717,7 +720,7 @@
             "region": "3"
           },
           "metadata": {
-            "home": "https://www.bilibili.com/v/popular/rank/music",
+            "home": "/v/popular/rank/music",
             "title": "音乐排行榜"
           }
         },
@@ -738,7 +741,7 @@
             "region": "129"
           },
           "metadata": {
-            "home": "https://www.bilibili.com/v/popular/rank/dance",
+            "home": "/v/popular/rank/dance",
             "title": "舞蹈排行榜"
           }
         },
@@ -759,7 +762,7 @@
             "region": "181"
           },
           "metadata": {
-            "home": "https://www.bilibili.com/v/popular/rank/cinephile",
+            "home": "/v/popular/rank/cinephile",
             "title": "影视排行榜"
           }
         },
@@ -780,7 +783,7 @@
             "region": "5"
           },
           "metadata": {
-            "home": "https://www.bilibili.com/v/popular/rank/ent",
+            "home": "/v/popular/rank/ent",
             "title": "娱乐排行榜"
           }
         },
@@ -801,7 +804,7 @@
             "region": "36"
           },
           "metadata": {
-            "home": "https://www.bilibili.com/v/popular/rank/knowledge",
+            "home": "/v/popular/rank/knowledge",
             "title": "知识排行榜"
           }
         },
@@ -822,7 +825,7 @@
             "region": "188"
           },
           "metadata": {
-            "home": "https://www.bilibili.com/v/popular/rank/tech",
+            "home": "/v/popular/rank/tech",
             "title": "科技数码排行榜"
           }
         },
@@ -843,7 +846,7 @@
             "region": "211"
           },
           "metadata": {
-            "home": "https://www.bilibili.com/v/popular/rank/food",
+            "home": "/v/popular/rank/food",
             "title": "美食排行榜"
           }
         },
@@ -864,7 +867,7 @@
             "region": "223"
           },
           "metadata": {
-            "home": "https://www.bilibili.com/v/popular/rank/car",
+            "home": "/v/popular/rank/car",
             "title": "汽车排行榜"
           }
         },
@@ -885,7 +888,7 @@
             "region": "155"
           },
           "metadata": {
-            "home": "https://www.bilibili.com/v/popular/rank/fashion",
+            "home": "/v/popular/rank/fashion",
             "title": "时尚美妆排行榜"
           }
         },
@@ -906,7 +909,7 @@
             "region": "234"
           },
           "metadata": {
-            "home": "https://www.bilibili.com/v/popular/rank/sports",
+            "home": "/v/popular/rank/sports",
             "title": "体育运动排行榜"
           }
         },
@@ -927,7 +930,7 @@
             "region": "217"
           },
           "metadata": {
-            "home": "https://www.bilibili.com/v/popular/rank/animal",
+            "home": "/v/popular/rank/animal",
             "title": "动物排行榜"
           }
         },
@@ -1039,9 +1042,10 @@
     }
   },
   "cls:depth": {
+    "baseUrl": "https://www.cls.cn/",
     "cache": "5m",
     "metadata": {
-      "home": "https://www.cls.cn/depth",
+      "home": "/depth",
       "type": "timeline",
       "title": "深度"
     },
@@ -1059,9 +1063,10 @@
     }
   },
   "cls:hot-article": {
+    "baseUrl": "https://www.cls.cn/",
     "cache": "5m",
     "metadata": {
-      "home": "https://www.cls.cn",
+      "home": "/",
       "type": "hottest",
       "title": "热门"
     },
@@ -1079,9 +1084,10 @@
     }
   },
   "cls:telegraph": {
+    "baseUrl": "https://www.cls.cn/",
     "cache": "1m",
     "metadata": {
-      "home": "https://www.cls.cn",
+      "home": "/",
       "type": "timeline",
       "title": "电报"
     },
@@ -1099,6 +1105,7 @@
     }
   },
   "folo:feed": {
+    "baseUrl": "https://folo.is/",
     "cache": "5m",
     "capabilities": {
       "network": [
@@ -1108,7 +1115,7 @@
       "browser": []
     },
     "metadata": {
-      "home": "https://folo.is",
+      "home": "/",
       "type": "timeline",
       "title": "Feed"
     },
@@ -1149,6 +1156,7 @@
     }
   },
   "folo:list": {
+    "baseUrl": "https://folo.is/",
     "cache": "5m",
     "capabilities": {
       "network": [
@@ -1158,7 +1166,7 @@
       "browser": []
     },
     "metadata": {
-      "home": "https://folo.is",
+      "home": "/",
       "type": "timeline",
       "title": "List"
     },
@@ -1199,8 +1207,9 @@
     }
   },
   "github:trending": {
+    "baseUrl": "https://github.com/",
     "metadata": {
-      "home": "https://github.com/trending",
+      "home": "/trending",
       "title": "Trending",
       "type": "hottest"
     },
@@ -1264,7 +1273,7 @@
     ],
     "loader": {
       "type": "html",
-      "url": "https://github.com/trending{% if scope.params.language %}/{{ scope.params.language | url_path }}{% endif %}?since={{ scope.params.dateRange | url_query }}{% if scope.params.spokenLanguage %}&spoken_language_code={{ scope.params.spokenLanguage | url_query }}{% endif %}",
+      "url": "/trending{% if scope.params.language %}/{{ scope.params.language | url_path }}{% endif %}?since={{ scope.params.dateRange | url_query }}{% if scope.params.spokenLanguage %}&spoken_language_code={{ scope.params.spokenLanguage | url_query }}{% endif %}",
       "items": "main .Box div[data-hpc] > article",
       "fields": {
         "title": {
@@ -1273,8 +1282,7 @@
         },
         "url": {
           "select": ">h2 a",
-          "attr": "href",
-          "template": "{{ scope.value | absolute_url: scope.request.url }}"
+          "attr": "href"
         },
         "inline": {
           "text": {
@@ -1295,20 +1303,18 @@
     }
   },
   "hackernews:ask": {
+    "baseUrl": "https://news.ycombinator.com/",
     "cache": "5m",
-    "vars": {
-      "origin": "https://news.ycombinator.com"
-    },
     "loader": {
       "type": "html",
-      "url": "{{ source.vars.origin }}/ask",
+      "url": "/ask",
       "items": ".athing",
       "fields": {
         "title": ".titleline>a",
         "url": {
           "select": "",
           "attr": "id",
-          "template": "{{ source.vars.origin }}/item?id={{ scope.value | url_query }}"
+          "template": "/item?id={{ scope.value | url_query }}"
         },
         "timestamp": {
           "traverse": {
@@ -1336,7 +1342,7 @@
       }
     },
     "metadata": {
-      "home": "https://news.ycombinator.com/ask",
+      "home": "/ask",
       "title": "Ask"
     },
     "provider": {
@@ -1346,20 +1352,18 @@
     }
   },
   "hackernews:newest": {
+    "baseUrl": "https://news.ycombinator.com/",
     "cache": "1m",
-    "vars": {
-      "origin": "https://news.ycombinator.com"
-    },
     "loader": {
       "type": "html",
-      "url": "{{ source.vars.origin }}/newest",
+      "url": "/newest",
       "items": ".athing",
       "fields": {
         "title": ".titleline>a",
         "url": {
           "select": "",
           "attr": "id",
-          "template": "{{ source.vars.origin }}/item?id={{ scope.value | url_query }}"
+          "template": "/item?id={{ scope.value | url_query }}"
         },
         "timestamp": {
           "traverse": {
@@ -1387,7 +1391,7 @@
       }
     },
     "metadata": {
-      "home": "https://news.ycombinator.com/newest",
+      "home": "/newest",
       "type": "timeline",
       "title": "Newest"
     },
@@ -1398,20 +1402,18 @@
     }
   },
   "hackernews:show": {
+    "baseUrl": "https://news.ycombinator.com/",
     "cache": "5m",
-    "vars": {
-      "origin": "https://news.ycombinator.com"
-    },
     "loader": {
       "type": "html",
-      "url": "{{ source.vars.origin }}/show",
+      "url": "/show",
       "items": ".athing",
       "fields": {
         "title": ".titleline>a",
         "url": {
           "select": "",
           "attr": "id",
-          "template": "{{ source.vars.origin }}/item?id={{ scope.value | url_query }}"
+          "template": "/item?id={{ scope.value | url_query }}"
         },
         "timestamp": {
           "traverse": {
@@ -1439,7 +1441,7 @@
       }
     },
     "metadata": {
-      "home": "https://news.ycombinator.com/show",
+      "home": "/show",
       "title": "Show"
     },
     "provider": {
@@ -1449,20 +1451,18 @@
     }
   },
   "hackernews:top": {
+    "baseUrl": "https://news.ycombinator.com/",
     "cache": "5m",
-    "vars": {
-      "origin": "https://news.ycombinator.com"
-    },
     "loader": {
       "type": "html",
-      "url": "{{ source.vars.origin }}/",
+      "url": "/",
       "items": ".athing",
       "fields": {
         "title": ".titleline>a",
         "url": {
           "select": "",
           "attr": "id",
-          "template": "{{ source.vars.origin }}/item?id={{ scope.value | url_query }}"
+          "template": "/item?id={{ scope.value | url_query }}"
         },
         "timestamp": {
           "traverse": {
@@ -1490,7 +1490,7 @@
       }
     },
     "metadata": {
-      "home": "https://news.ycombinator.com/",
+      "home": "/",
       "type": "hottest",
       "title": "Hottest"
     },
@@ -1501,6 +1501,7 @@
     }
   },
   "jike:following-updates": {
+    "baseUrl": "https://web.okjike.com/",
     "capabilities": {
       "network": [
         "api.ruguoapp.com"
@@ -1513,7 +1514,7 @@
     },
     "cache": "5m",
     "metadata": {
-      "home": "https://web.okjike.com",
+      "home": "/",
       "type": "timeline",
       "title": "关注动态",
       "desc": "已关注即刻用户发布的动态"
@@ -1554,6 +1555,7 @@
     }
   },
   "jike:topic": {
+    "baseUrl": "https://web.okjike.com/",
     "capabilities": {
       "network": [
         "api.ruguoapp.com"
@@ -1566,7 +1568,7 @@
     },
     "cache": "5m",
     "metadata": {
-      "home": "https://web.okjike.com",
+      "home": "/",
       "type": "timeline",
       "title": "主题动态",
       "desc": "指定即刻主题的动态"
@@ -1665,6 +1667,7 @@
     }
   },
   "jike:user-updates": {
+    "baseUrl": "https://web.okjike.com/",
     "capabilities": {
       "network": [
         "api.ruguoapp.com"
@@ -1680,7 +1683,7 @@
       "maxAge": "5m"
     },
     "metadata": {
-      "home": "https://web.okjike.com",
+      "home": "/",
       "type": "timeline",
       "title": "用户动态",
       "desc": "指定即刻用户发布的动态"
@@ -1744,10 +1747,8 @@
     }
   },
   "linuxdo:latest": {
+    "baseUrl": "https://linux.do/",
     "cache": "5m",
-    "vars": {
-      "origin": "https://linux.do"
-    },
     "loader": {
       "type": "json",
       "items": "topic_list.topics[?visible && !archived && !pinned]",
@@ -1755,11 +1756,11 @@
         "title": "title",
         "url": {
           "select": "id",
-          "template": "{{ source.vars.origin }}/t/topic/{{ scope.value | url_path }}"
+          "template": "/t/topic/{{ scope.value | url_path }}"
         },
         "inline": {
           "icon": {
-            "template": "{% assign user = scope.response.json.users | where: 'username', scope.item.last_poster_username | first %}{% if user and user.avatar_template %}{{ user.avatar_template | replace: '{size}', '48' | absolute_url: source.vars.origin }}{% endif %}"
+            "template": "{% assign user = scope.response.json.users | where: 'username', scope.item.last_poster_username | first %}{% if user and user.avatar_template %}{{ user.avatar_template | replace: '{size}', '48' }}{% endif %}"
           }
         },
         "timestamp": {
@@ -1767,10 +1768,10 @@
           "template": "{{ scope.value | date_to_ms }}"
         }
       },
-      "url": "{{ source.vars.origin }}/latest.json?order=created"
+      "url": "/latest.json?order=created"
     },
     "metadata": {
-      "home": "https://linux.do",
+      "home": "/",
       "title": "最新",
       "type": "timeline"
     },
@@ -1781,10 +1782,8 @@
     }
   },
   "linuxdo:top-daily": {
+    "baseUrl": "https://linux.do/",
     "cache": "5m",
-    "vars": {
-      "origin": "https://linux.do"
-    },
     "loader": {
       "type": "json",
       "items": "topic_list.topics[?visible && !archived && !pinned]",
@@ -1792,18 +1791,18 @@
         "title": "title",
         "url": {
           "select": "id",
-          "template": "{{ source.vars.origin }}/t/topic/{{ scope.value | url_path }}"
+          "template": "/t/topic/{{ scope.value | url_path }}"
         },
         "inline": {
           "icon": {
-            "template": "{% assign user = scope.response.json.users | where: 'username', scope.item.last_poster_username | first %}{% if user and user.avatar_template %}{{ user.avatar_template | replace: '{size}', '48' | absolute_url: source.vars.origin }}{% endif %}"
+            "template": "{% assign user = scope.response.json.users | where: 'username', scope.item.last_poster_username | first %}{% if user and user.avatar_template %}{{ user.avatar_template | replace: '{size}', '48' }}{% endif %}"
           }
         }
       },
-      "url": "{{ source.vars.origin }}/top/daily.json"
+      "url": "/top/daily.json"
     },
     "metadata": {
-      "home": "https://linux.do",
+      "home": "/",
       "title": "热门",
       "type": "hottest"
     },
@@ -1814,18 +1813,19 @@
     }
   },
   "netease-music:playlist": {
+    "baseUrl": "https://music.163.com/",
     "cache": {
       "version": 2,
       "maxAge": "15m"
     },
     "metadata": {
-      "home": "https://music.163.com/#/playlist?id=17990594711",
+      "home": "/#/playlist?id=17990594711",
       "type": "hottest",
       "title": "歌单"
     },
     "loader": {
       "type": "json",
-      "url": "https://music.163.com/api/playlist/detail?id={{ scope.params.id | url_query }}",
+      "url": "/api/playlist/detail?id={{ scope.params.id | url_query }}",
       "items": "(result.tracks || playlist.tracks)[:100]",
       "metadata": {
         "badge": "result.coverImgUrl",
@@ -1836,7 +1836,7 @@
         "title": "name",
         "url": {
           "select": "id",
-          "template": "https://music.163.com/song?id={{ scope.value | url_query }}"
+          "template": "/song?id={{ scope.value | url_query }}"
         },
         "inline": {
           "text": {
@@ -1885,18 +1885,19 @@
     }
   },
   "netease-music:ranking": {
+    "baseUrl": "https://music.163.com/",
     "cache": {
       "version": 2,
       "maxAge": "15m"
     },
     "metadata": {
-      "home": "https://music.163.com/#/discover/toplist?id=19723756",
+      "home": "/#/discover/toplist?id=19723756",
       "type": "hottest",
       "title": "飙升榜"
     },
     "loader": {
       "type": "json",
-      "url": "https://music.163.com/api/playlist/detail?id={{ scope.params.id | url_query }}",
+      "url": "/api/playlist/detail?id={{ scope.params.id | url_query }}",
       "items": "(result.tracks || playlist.tracks)[:100]",
       "metadata": {
         "badge": "result.coverImgUrl",
@@ -1907,7 +1908,7 @@
         "title": "name",
         "url": {
           "select": "id",
-          "template": "https://music.163.com/song?id={{ scope.value | url_query }}"
+          "template": "/song?id={{ scope.value | url_query }}"
         },
         "inline": {
           "text": {
@@ -1956,8 +1957,9 @@
     }
   },
   "newsnow:topic-latest": {
+    "baseUrl": "https://www.newsnow.com/",
     "metadata": {
-      "home": "https://www.newsnow.com",
+      "home": "/",
       "type": "timeline"
     },
     "params": {
@@ -2027,14 +2029,13 @@
     ],
     "loader": {
       "type": "html",
-      "url": "https://www.newsnow.com/{{ scope.params.locale | url_path }}/{{ scope.params.topic | url_path }}?type=ln",
+      "url": "/{{ scope.params.locale | url_path }}/{{ scope.params.topic | url_path }}?type=ln",
       "items": ".newsfeed .article",
       "fields": {
         "title": ".article-card__headline",
         "url": {
           "select": ".article-card__headline",
-          "attr": "href",
-          "template": "{{ scope.value | absolute_url: scope.request.url }}"
+          "attr": "href"
         },
         "timestamp": {
           "select": "[data-timestamp]",
@@ -2054,8 +2055,9 @@
     }
   },
   "telegram:channel": {
+    "baseUrl": "https://t.me/",
     "metadata": {
-      "home": "https://t.me/s/TestFlightCN",
+      "home": "/s/TestFlightCN",
       "title": "科技圈 在花频道",
       "type": "timeline"
     },
@@ -2089,8 +2091,8 @@
             "title": {
               "select": ".tgme_channel_info_header_title"
             },
-            "badge": "https://t.me/i/userpic/320/{{ scope.params.channel | url_path }}.jpg",
-            "home": "https://t.me/s/{{ scope.params.channel }}"
+            "badge": "/i/userpic/320/{{ scope.params.channel | url_path }}.jpg",
+            "home": "/s/{{ scope.params.channel }}"
           }
         },
         "confidence": 0.95
@@ -2098,7 +2100,7 @@
     ],
     "loader": {
       "type": "html",
-      "url": "https://t.me/s/{{ scope.params.channel | url_path }}",
+      "url": "/s/{{ scope.params.channel | url_path }}",
       "items": ".tgme_widget_message:has(.tgme_widget_message_text)",
       "fields": {
         "title": {
@@ -2108,8 +2110,7 @@
         },
         "url": {
           "select": ".tgme_widget_message_date",
-          "attr": "href",
-          "template": "{{ scope.value | absolute_url: scope.request.url }}"
+          "attr": "href"
         },
         "timestamp": {
           "select": ".tgme_widget_message_date time",
@@ -2144,20 +2145,21 @@
     }
   },
   "tieba:hot-topic": {
+    "baseUrl": "https://tieba.baidu.com/",
     "metadata": {
-      "home": "https://tieba.baidu.com",
+      "home": "/",
       "title": "热议",
       "type": "hottest"
     },
     "loader": {
       "type": "json",
-      "url": "https://tieba.baidu.com/hottopic/browse/topicList",
+      "url": "/hottopic/browse/topicList",
       "items": "data.bang_topic.topic_list",
       "fields": {
         "title": "topic_name",
         "url": {
           "select": "topic_url",
-          "template": "{{ scope.value | replace: '&amp;', '&' | absolute_url: scope.request.url }}"
+          "template": "{{ scope.value | replace: '&amp;', '&' }}"
         },
         "timestamp": {
           "select": "create_time",
@@ -2173,8 +2175,9 @@
     }
   },
   "v2ex:feed": {
+    "baseUrl": "https://v2ex.com/",
     "metadata": {
-      "home": "https://v2ex.com/"
+      "home": "/"
     },
     "params": {
       "feed": {
@@ -2236,6 +2239,7 @@
     }
   },
   "weibo:following": {
+    "baseUrl": "https://weibo.com/",
     "capabilities": {
       "network": [
         "weibo.com",
@@ -2273,7 +2277,7 @@
       "type": "timeline",
       "title": "关注",
       "desc": "所有已关注微博账号发布的最新微博",
-      "home": "https://weibo.com"
+      "home": "/"
     },
     "radar": [
       {
@@ -2297,6 +2301,7 @@
     }
   },
   "weibo:hot-search": {
+    "baseUrl": "https://weibo.com/",
     "capabilities": {
       "network": [
         "weibo.com",
@@ -2409,7 +2414,7 @@
             "title": {
               "select": "a[aria-current=\"page\"] [title]"
             },
-            "home": "https://weibo.com/hot/{{ scope.path.type }}"
+            "home": "/hot/{{ scope.path.type }}"
           }
         },
         "confidence": 1
@@ -2423,6 +2428,7 @@
     }
   },
   "weibo:keyword": {
+    "baseUrl": "https://weibo.com/",
     "capabilities": {
       "network": [
         "m.weibo.cn",
@@ -2497,6 +2503,7 @@
     }
   },
   "weibo:super-topic": {
+    "baseUrl": "https://weibo.com/",
     "capabilities": {
       "network": [
         "weibo.com",
@@ -2534,7 +2541,7 @@
       "type": "timeline",
       "title": "超话",
       "desc": "指定微博超话的最新帖子",
-      "home": "https://weibo.com"
+      "home": "/"
     },
     "params": {
       "id": {
@@ -2599,6 +2606,7 @@
     }
   },
   "weibo:user": {
+    "baseUrl": "https://weibo.com/",
     "capabilities": {
       "network": [
         "weibo.com",
@@ -2639,7 +2647,7 @@
       "type": "timeline",
       "title": "用户微博",
       "desc": "指定微博用户发布的最新微博",
-      "home": "https://weibo.com"
+      "home": "/"
     },
     "params": {
       "uid": {
@@ -2684,6 +2692,7 @@
     }
   },
   "x:following": {
+    "baseUrl": "https://x.com/",
     "capabilities": {
       "network": [
         "x.com",
@@ -2696,7 +2705,7 @@
     },
     "cache": "5m",
     "metadata": {
-      "home": "https://x.com",
+      "home": "/",
       "type": "timeline",
       "title": "Following"
     },
@@ -2716,6 +2725,7 @@
     }
   },
   "x:place-trends": {
+    "baseUrl": "https://x.com/",
     "capabilities": {
       "network": [
         "x.com",
@@ -2728,7 +2738,7 @@
     },
     "cache": "5m",
     "metadata": {
-      "home": "https://x.com",
+      "home": "/",
       "type": "hottest",
       "title": "Trending"
     },
@@ -2797,6 +2807,7 @@
     }
   },
   "x:recommended": {
+    "baseUrl": "https://x.com/",
     "capabilities": {
       "network": [
         "x.com",
@@ -2809,7 +2820,7 @@
     },
     "cache": "5m",
     "metadata": {
-      "home": "https://x.com",
+      "home": "/",
       "type": "timeline",
       "title": "Recommended"
     },
@@ -2829,6 +2840,7 @@
     }
   },
   "x:user": {
+    "baseUrl": "https://x.com/",
     "capabilities": {
       "network": [
         "x.com",
@@ -2844,7 +2856,7 @@
       "maxAge": "5m"
     },
     "metadata": {
-      "home": "https://x.com",
+      "home": "/",
       "type": "timeline",
       "title": "User Tweets"
     },
@@ -2913,8 +2925,9 @@
     }
   },
   "xueqiu:hot-stock": {
+    "baseUrl": "https://xueqiu.com/",
     "metadata": {
-      "home": "https://xueqiu.com",
+      "home": "/",
       "type": "hottest"
     },
     "loader": {
@@ -2924,7 +2937,7 @@
       "fields": {
         "url": {
           "select": "code",
-          "template": "https://xueqiu.com/s/{{ scope.value | url_path }}"
+          "template": "/s/{{ scope.value | url_path }}"
         },
         "title": "name",
         "inline": {
@@ -2942,21 +2955,21 @@
     }
   },
   "zaochenbao:realtime": {
+    "baseUrl": "https://www.zaochenbao.com/",
     "metadata": {
-      "home": "https://www.zaochenbao.com/realtime/",
+      "home": "/realtime/",
       "title": "即时新闻",
       "type": "timeline"
     },
     "loader": {
       "type": "html",
-      "url": "https://www.zaochenbao.com/realtime/",
+      "url": "/realtime/",
       "decoding": "gb2312",
       "items": "div.list-block > a.item",
       "fields": {
         "title": ".eps",
         "url": {
-          "attr": "href",
-          "template": "{{ scope.value | absolute_url: scope.request.url }}"
+          "attr": "href"
         },
         "timestamp": {
           "select": ".pdt10",
@@ -2972,14 +2985,15 @@
     }
   },
   "zhihu:hot-list": {
+    "baseUrl": "https://www.zhihu.com/",
     "metadata": {
-      "home": "https://www.zhihu.com",
+      "home": "/",
       "title": "全站热榜",
       "type": "hottest"
     },
     "loader": {
       "type": "json",
-      "url": "https://www.zhihu.com/api/v3/feed/topstory/hot-list-web?limit=50&desktop=true",
+      "url": "/api/v3/feed/topstory/hot-list-web?limit=50&desktop=true",
       "items": "data",
       "fields": {
         "title": "target.title_area.text",

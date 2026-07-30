@@ -180,13 +180,14 @@ export default {
   icon: "https://web.okjike.com/favicon-32x32.png",
   color: "yellow",
   defaults: {
+    baseUrl: `${JIKE_WEB_ORIGIN}/`,
     capabilities: jikeCapabilities,
     cache: "5m",
     loader: {
       type: "custom",
     },
     metadata: {
-      home: JIKE_WEB_ORIGIN,
+      home: "/",
       type: "timeline",
     },
     secrets: [

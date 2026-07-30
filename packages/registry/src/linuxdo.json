@@ -3,10 +3,8 @@
   "category": "forum",
   "color": "slate",
   "defaults": {
+    "baseUrl": "https://linux.do/",
     "cache": "5m",
-    "vars": {
-      "origin": "https://linux.do"
-    },
     "loader": {
       "type": "json",
       "items": "topic_list.topics[?visible && !archived && !pinned]",
@@ -14,17 +12,17 @@
         "title": "title",
         "url": {
           "select": "id",
-          "template": "{{ source.vars.origin }}/t/topic/{{ scope.value | url_path }}"
+          "template": "/t/topic/{{ scope.value | url_path }}"
         },
         "inline": {
           "icon": {
-            "template": "{% assign user = scope.response.json.users | where: 'username', scope.item.last_poster_username | first %}{% if user and user.avatar_template %}{{ user.avatar_template | replace: '{size}', '48' | absolute_url: source.vars.origin }}{% endif %}"
+            "template": "{% assign user = scope.response.json.users | where: 'username', scope.item.last_poster_username | first %}{% if user and user.avatar_template %}{{ user.avatar_template | replace: '{size}', '48' }}{% endif %}"
           }
         }
       }
     },
     "metadata": {
-      "home": "https://linux.do"
+      "home": "/"
     }
   },
   "sources": {
@@ -34,7 +32,7 @@
         "type": "timeline"
       },
       "loader": {
-        "url": "{{ source.vars.origin }}/latest.json?order=created",
+        "url": "/latest.json?order=created",
         "fields": {
           "timestamp": {
             "select": "created_at",
@@ -49,7 +47,7 @@
         "type": "hottest"
       },
       "loader": {
-        "url": "{{ source.vars.origin }}/top/daily.json"
+        "url": "/top/daily.json"
       }
     }
   }

@@ -53,6 +53,7 @@ export default {
   category: "finance",
   color: "red",
   defaults: {
+    baseUrl: "https://www.cls.cn/",
     cache: "5m",
     loader: {
       type: "json",
@@ -60,7 +61,7 @@ export default {
         title: "title || brief",
         url: {
           select: "id",
-          template: "https://www.cls.cn/detail/{{ scope.value | url_path }}",
+          template: "/detail/{{ scope.value | url_path }}",
         },
         mobileUrl: "shareurl",
         timestamp: {
@@ -70,7 +71,7 @@ export default {
       },
     },
     metadata: {
-      home: "https://www.cls.cn",
+      home: "/",
       type: "timeline",
     },
   },
@@ -80,7 +81,7 @@ export default {
         title: "电报",
       },
       loader: {
-        url: "https://www.cls.cn/v1/roll/get_roll_list",
+        url: "/v1/roll/get_roll_list",
         fetch: async (url) => {
           return myFetch<TelegraphResponse>(url, {
             query: Object.fromEntries(await getSearchParams({
@@ -100,10 +101,10 @@ export default {
     "depth": {
       metadata: {
         title: "深度",
-        home: "https://www.cls.cn/depth",
+        home: "/depth",
       },
       loader: {
-        url: "https://www.cls.cn/v3/depth/home/assembled/1000",
+        url: "/v3/depth/home/assembled/1000",
         fetch: async (url) => {
           return myFetch<DepthResponse>(url, {
             query: Object.fromEntries(await getSearchParams()),
@@ -118,7 +119,7 @@ export default {
         type: "hottest",
       },
       loader: {
-        url: "https://www.cls.cn/v2/article/hot/list",
+        url: "/v2/article/hot/list",
         fetch: async (url) => {
           return myFetch<HotResponse>(url, {
             query: Object.fromEntries(await getSearchParams()),

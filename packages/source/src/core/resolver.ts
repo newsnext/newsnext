@@ -19,6 +19,12 @@ import type { JsonSourceOptions } from "./loaders/json"
 
 import { createDefu } from "defu"
 import { isSourcePresentationMetadataKey } from "../types"
+import {
+  parseSourceBaseUrl,
+  resolveSourceLoaderOutputUrls,
+  resolveSourceMetadataUrls,
+  resolveSourceUrl,
+} from "./base-url"
 import { assertNetworkCapability, validateSourceRequestRules } from "./capabilities"
 import { compileHtmlFieldTemplates, loadHtml } from "./loaders/html"
 import {
@@ -40,6 +46,7 @@ import {
 } from "./template"
 
 interface SourceConfigBase<TParams extends SourceParamSchemaMap> {
+  baseUrl?: string
   metadata?: Omit<SourceMetadata, "key">
   vars?: SourceTemplateVars
   params?: TParams
@@ -114,6 +121,9 @@ export type ProviderSourceConfig<TParams extends SourceParamSchemaMap = any> = O
 }
 
 export function validateSourceTemplates(sourceId: string, config: SourceConfig): void {
+  if (config.baseUrl !== undefined) {
+    parseSourceBaseUrl(config.baseUrl, `${sourceId}.baseUrl`)
+  }
   validateSourceVars(config.vars, `${sourceId}.vars`)
   compileSourceParamTemplates(config.params, `${sourceId}.params`)
   validateSourceMetadata(config.metadata, `${sourceId}.metadata`)
@@ -243,6 +253,7 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
   config: SourceConfig<TParams>,
 ): ResolvedSource<TParams> {
   const {
+    baseUrl: baseUrlInput,
     vars,
     params,
     radar,
@@ -253,11 +264,16 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
     capabilities: capabilityOverrides,
     metadata = {},
   } = config
+  const baseUrl = baseUrlInput === undefined
+    ? undefined
+    : parseSourceBaseUrl(baseUrlInput, `${key}.baseUrl`)
+  const resolvedMetadata = resolveSourceMetadataUrls(metadata, baseUrl)
   const capabilities = resolveSourceCapabilities(
     key,
     loader,
     params,
     vars,
+    baseUrl,
     capabilityOverrides,
   )
   validateSourceRequestRules(key, requestRules, capabilities.network)
@@ -266,7 +282,8 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
     : cacheInput
   const registration = {
     key,
-    ...metadata,
+    ...resolvedMetadata,
+    baseUrl,
     vars,
     params,
     radar,
@@ -276,6 +293,7 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
     cache,
   }
 
+  let resolvedLoader: SourceLoader<TParams>
   switch (loader.type) {
     case "json": {
       const { type: _type, url, fetchOptions, ...options } = loader
@@ -289,23 +307,21 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
             location: `${key}.loader.fetchOptions`,
             slot: "request",
           })
-      return {
-        ...registration,
-        loader: async (loaderParams) => {
-          const scope = createSourceTemplateScope(vars, { params: loaderParams })
-          const resolvedUrl = urlTemplate.render(scope)
-          assertNetworkCapability(key, resolvedUrl, capabilities.network)
-          return loadJson({
-            ...options,
-            url: resolvedUrl,
-            fetchOptions: fetchOptionsTemplate?.render(scope),
-            type: metadata.type,
-          }, {
-            vars,
-            params: loaderParams,
-          })
-        },
+      resolvedLoader = async (loaderParams) => {
+        const scope = createSourceTemplateScope(vars, { params: loaderParams })
+        const resolvedUrl = resolveSourceUrl(urlTemplate.render(scope), baseUrl)
+        assertNetworkCapability(key, resolvedUrl, capabilities.network)
+        return loadJson({
+          ...options,
+          url: resolvedUrl,
+          fetchOptions: fetchOptionsTemplate?.render(scope),
+          type: resolvedMetadata.type,
+        }, {
+          vars,
+          params: loaderParams,
+        })
       }
+      break
     }
     case "html": {
       const { type: _type, url, fetchOptions, ...options } = loader
@@ -319,23 +335,21 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
             location: `${key}.loader.fetchOptions`,
             slot: "request",
           })
-      return {
-        ...registration,
-        loader: async (loaderParams) => {
-          const scope = createSourceTemplateScope(vars, { params: loaderParams })
-          const resolvedUrl = urlTemplate.render(scope)
-          assertNetworkCapability(key, resolvedUrl, capabilities.network)
-          return loadHtml({
-            ...options,
-            url: resolvedUrl,
-            fetchOptions: fetchOptionsTemplate?.render(scope),
-            type: metadata.type,
-          }, {
-            vars,
-            params: loaderParams,
-          })
-        },
+      resolvedLoader = async (loaderParams) => {
+        const scope = createSourceTemplateScope(vars, { params: loaderParams })
+        const resolvedUrl = resolveSourceUrl(urlTemplate.render(scope), baseUrl)
+        assertNetworkCapability(key, resolvedUrl, capabilities.network)
+        return loadHtml({
+          ...options,
+          url: resolvedUrl,
+          fetchOptions: fetchOptionsTemplate?.render(scope),
+          type: resolvedMetadata.type,
+        }, {
+          vars,
+          params: loaderParams,
+        })
       }
+      break
     }
     case "rss": {
       const { url } = loader
@@ -343,25 +357,40 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
         location: `${key}.loader.url`,
         slot: "request",
       })
-      return {
-        ...registration,
-        loader: async (loaderParams) => {
-          const resolvedUrl = urlTemplate.render(
-            createSourceTemplateScope(vars, { params: loaderParams }),
-          )
-          assertNetworkCapability(key, resolvedUrl, capabilities.network)
-          return loadRss({ url: resolvedUrl })
-        },
+      resolvedLoader = async (loaderParams) => {
+        const resolvedUrl = resolveSourceUrl(
+          urlTemplate.render(createSourceTemplateScope(vars, { params: loaderParams })),
+          baseUrl,
+        )
+        assertNetworkCapability(key, resolvedUrl, capabilities.network)
+        return loadRss({ url: resolvedUrl })
       }
+      break
     }
-    case "custom":
-      return {
-        ...registration,
-        loader: loader.load,
-      }
+    case "custom": {
+      resolvedLoader = loader.load
+      break
+    }
+    default:
+      throw new Error(`Unsupported source loader: ${(loader as { type?: unknown }).type}`)
   }
 
-  throw new Error(`Unsupported source loader: ${(loader as { type?: unknown }).type}`)
+  return {
+    ...registration,
+    loader: withResolvedOutputUrls(resolvedLoader, baseUrl),
+  }
+}
+
+function withResolvedOutputUrls<TParams extends SourceParamSchemaMap>(
+  loader: SourceLoader<TParams>,
+  baseUrl: string | undefined,
+): SourceLoader<TParams> {
+  if (baseUrl === undefined) return loader
+
+  return async (params, context) => resolveSourceLoaderOutputUrls(
+    await loader(params, context),
+    baseUrl,
+  )
 }
 
 export const assignSourceDefaults = createDefu((object, key, value) => {
@@ -464,17 +493,21 @@ function resolveSourceCapabilities<TParams extends SourceParamSchemaMap>(
   loader: StructuredSourceLoaderConfig | { type: "custom", load: SourceLoader<TParams> },
   params: TParams | undefined,
   vars: SourceTemplateVars | undefined,
+  baseUrl: string | undefined,
   overrides: SourceCapabilityOverrides | undefined,
 ): SourceCapabilities {
   const inferredNetworkHosts: string[] = []
 
   if (loader.type !== "custom") {
     const defaultParams = resolveDefaultParams(params, vars)
-    const requestUrl = resolveSourceTemplates(
-      loader.url,
-      defaultParams,
-      `${sourceId}.loader.url`,
-      vars,
+    const requestUrl = resolveSourceUrl(
+      resolveSourceTemplates(
+        loader.url,
+        defaultParams,
+        `${sourceId}.loader.url`,
+        vars,
+      ),
+      baseUrl,
     )
 
     inferredNetworkHosts.push(new URL(requestUrl).hostname)

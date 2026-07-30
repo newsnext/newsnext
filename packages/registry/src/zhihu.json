@@ -3,8 +3,9 @@
   "category": "forum",
   "color": "blue",
   "defaults": {
+    "baseUrl": "https://www.zhihu.com/",
     "metadata": {
-      "home": "https://www.zhihu.com"
+      "home": "/"
     }
   },
   "sources": {
@@ -15,7 +16,7 @@
       },
       "loader": {
         "type": "json",
-        "url": "https://www.zhihu.com/api/v3/feed/topstory/hot-list-web?limit=50&desktop=true",
+        "url": "/api/v3/feed/topstory/hot-list-web?limit=50&desktop=true",
         "items": "data",
         "fields": {
           "title": "target.title_area.text",

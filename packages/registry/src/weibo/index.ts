@@ -59,6 +59,7 @@ export default {
   icon: "https://weibo.com/favicon.ico",
   color: "red",
   defaults: {
+    baseUrl: "https://weibo.com/",
     capabilities: weiboCapabilities,
     requestRules: weiboRequestRules,
     cache: "5m",
@@ -119,7 +120,7 @@ export default {
               title: {
                 select: "a[aria-current=\"page\"] [title]",
               },
-              home: "https://weibo.com/hot/{{ scope.path.type }}",
+              home: "/hot/{{ scope.path.type }}",
             },
           },
           confidence: 1,
@@ -127,7 +128,7 @@ export default {
       ],
       loader: {
         type: "json",
-        url: "https://weibo.com/ajax/{{ source.vars.endpoint[scope.params.type] }}",
+        url: "/ajax/{{ source.vars.endpoint[scope.params.type] }}",
         fetchOptions: {
           credentials: "include",
         },
@@ -152,7 +153,7 @@ export default {
       metadata: {
         title: "用户微博",
         desc: "指定微博用户发布的最新微博",
-        home: "https://weibo.com",
+        home: "/",
       },
       params: {
         uid: {
@@ -232,7 +233,7 @@ export default {
       metadata: {
         title: "超话",
         desc: "指定微博超话的最新帖子",
-        home: "https://weibo.com",
+        home: "/",
       },
       params: {
         id: {
@@ -283,7 +284,7 @@ export default {
       metadata: {
         title: "关注",
         desc: "所有已关注微博账号发布的最新微博",
-        home: "https://weibo.com",
+        home: "/",
       },
       radar: [
         {

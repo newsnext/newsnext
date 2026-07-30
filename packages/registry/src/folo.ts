@@ -82,6 +82,7 @@ export default {
   category: "news",
   color: "orange",
   defaults: {
+    baseUrl: "https://folo.is/",
     cache: "5m",
     loader: {
       type: "custom",
@@ -90,7 +91,7 @@ export default {
       network: ["api.folo.is"],
     },
     metadata: {
-      home: "https://folo.is",
+      home: "/",
       type: "timeline",
     },
   },

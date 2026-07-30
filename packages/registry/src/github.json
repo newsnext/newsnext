@@ -3,8 +3,9 @@
   "category": "developer",
   "color": "slate",
   "defaults": {
+    "baseUrl": "https://github.com/",
     "metadata": {
-      "home": "https://github.com/trending"
+      "home": "/trending"
     }
   },
   "sources": {
@@ -73,7 +74,7 @@
       ],
       "loader": {
         "type": "html",
-        "url": "https://github.com/trending{% if scope.params.language %}/{{ scope.params.language | url_path }}{% endif %}?since={{ scope.params.dateRange | url_query }}{% if scope.params.spokenLanguage %}&spoken_language_code={{ scope.params.spokenLanguage | url_query }}{% endif %}",
+        "url": "/trending{% if scope.params.language %}/{{ scope.params.language | url_path }}{% endif %}?since={{ scope.params.dateRange | url_query }}{% if scope.params.spokenLanguage %}&spoken_language_code={{ scope.params.spokenLanguage | url_query }}{% endif %}",
         "items": "main .Box div[data-hpc] > article",
         "fields": {
           "title": {
@@ -82,8 +83,7 @@
           },
           "url": {
             "select": ">h2 a",
-            "attr": "href",
-            "template": "{{ scope.value | absolute_url: scope.request.url }}"
+            "attr": "href"
           },
           "inline": {
             "text": {

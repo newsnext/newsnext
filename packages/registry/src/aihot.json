@@ -3,8 +3,9 @@
   "category": "news",
   "color": "blue",
   "defaults": {
+    "baseUrl": "https://aihot.virxact.com/",
     "metadata": {
-      "home": "https://aihot.virxact.com"
+      "home": "/"
     }
   },
   "sources": {
@@ -14,7 +15,7 @@
       },
       "loader": {
         "type": "json",
-        "url": "https://aihot.virxact.com/api/public/items?mode=all&take=30",
+        "url": "/api/public/items?mode=all&take=30",
         "items": "items[?id && title && url]",
         "fields": {
           "title": "title",

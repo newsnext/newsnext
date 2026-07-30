@@ -3,20 +3,18 @@
   "category": "forum",
   "color": "orange",
   "defaults": {
+    "baseUrl": "https://news.ycombinator.com/",
     "cache": "5m",
-    "vars": {
-      "origin": "https://news.ycombinator.com"
-    },
     "loader": {
       "type": "html",
-      "url": "{{ source.vars.origin }}/",
+      "url": "/",
       "items": ".athing",
       "fields": {
         "title": ".titleline>a",
         "url": {
           "select": "",
           "attr": "id",
-          "template": "{{ source.vars.origin }}/item?id={{ scope.value | url_query }}"
+          "template": "/item?id={{ scope.value | url_query }}"
         },
         "timestamp": {
           "traverse": {
@@ -44,7 +42,7 @@
       }
     },
     "metadata": {
-      "home": "https://news.ycombinator.com/"
+      "home": "/"
     }
   },
   "sources": {
@@ -58,29 +56,29 @@
       "metadata": {
         "type": "timeline",
         "title": "Newest",
-        "home": "https://news.ycombinator.com/newest"
+        "home": "/newest"
       },
       "loader": {
-        "url": "{{ source.vars.origin }}/newest"
+        "url": "/newest"
       },
       "cache": "1m"
     },
     "show": {
       "metadata": {
         "title": "Show",
-        "home": "https://news.ycombinator.com/show"
+        "home": "/show"
       },
       "loader": {
-        "url": "{{ source.vars.origin }}/show"
+        "url": "/show"
       }
     },
     "ask": {
       "metadata": {
         "title": "Ask",
-        "home": "https://news.ycombinator.com/ask"
+        "home": "/ask"
       },
       "loader": {
-        "url": "{{ source.vars.origin }}/ask"
+        "url": "/ask"
       }
     }
   }

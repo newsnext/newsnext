@@ -1,4 +1,7 @@
 export {
+  resolveSourceUrl,
+} from "./base-url"
+export {
   assertNetworkCapability,
   matchesCapabilityHost,
   validateSourceRequestRules,

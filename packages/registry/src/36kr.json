@@ -3,8 +3,8 @@
   "category": "news",
   "color": "blue",
   "defaults": {
+    "baseUrl": "https://36kr.com/",
     "vars": {
-      "origin": "https://36kr.com",
       "gateway": "https://gateway.36kr.com",
       "newsflashCategories": {
         "0": "全部",
@@ -15,7 +15,7 @@
       }
     },
     "metadata": {
-      "home": "https://36kr.com"
+      "home": "/"
     },
     "cache": "5m"
   },
@@ -23,7 +23,7 @@
     "information": {
       "metadata": {
         "title": "资讯",
-        "home": "https://36kr.com/information/web_news/latest/",
+        "home": "/information/web_news/latest/",
         "type": "timeline"
       },
       "params": {
@@ -132,7 +132,7 @@
           "title": "templateMaterial.widgetTitle",
           "url": {
             "select": "itemId",
-            "template": "{{ source.vars.origin }}/p/{{ scope.value }}"
+            "template": "/p/{{ scope.value }}"
           },
           "timestamp": "templateMaterial.publishTime",
           "inline": {
@@ -148,7 +148,7 @@
     "newsflashes": {
       "metadata": {
         "title": "快讯",
-        "home": "https://36kr.com/newsflashes/catalog/0",
+        "home": "/newsflashes/catalog/0",
         "type": "timeline"
       },
       "params": {
@@ -206,14 +206,13 @@
       ],
       "loader": {
         "type": "html",
-        "url": "{{ source.vars.origin }}/newsflashes/catalog/{{ scope.params.category | url_path }}",
+        "url": "/newsflashes/catalog/{{ scope.params.category | url_path }}",
         "items": ".newsflash-item",
         "fields": {
           "title": ".item-title",
           "url": {
             "select": ".item-title",
-            "attr": "href",
-            "template": "{{ scope.value | absolute_url: scope.request.url }}"
+            "attr": "href"
           },
           "timestamp": {
             "select": ".time",
@@ -228,7 +227,7 @@
     "hot-list": {
       "metadata": {
         "title": "人气榜",
-        "home": "https://36kr.com/hot-list/catalog",
+        "home": "/hot-list/catalog",
         "type": "hottest"
       },
       "radar": [
@@ -266,7 +265,7 @@
           "title": "widgetTitle",
           "url": {
             "select": "itemId",
-            "template": "{{ source.vars.origin }}/p/{{ scope.value }}"
+            "template": "/p/{{ scope.value }}"
           },
           "timestamp": "publishTime",
           "inline": {

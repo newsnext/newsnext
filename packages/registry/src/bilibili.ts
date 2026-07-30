@@ -332,9 +332,10 @@ export default {
   category: "social",
   color: "blue",
   defaults: {
+    baseUrl: "https://www.bilibili.com/",
     cache: "5m",
     metadata: {
-      home: "https://www.bilibili.com",
+      home: "/",
       type: "hottest",
     },
   },
@@ -376,7 +377,7 @@ export default {
     },
     "ranking": {
       metadata: {
-        home: "https://www.bilibili.com/v/popular/rank/all",
+        home: "/v/popular/rank/all",
         title: "排行榜",
       },
       params: {
@@ -398,7 +399,7 @@ export default {
             region: value,
           },
           metadata: {
-            home: `https://www.bilibili.com/v/popular/rank/${slug}`,
+            home: `/v/popular/rank/${slug}`,
             title: label === "全部" ? "排行榜" : `${label}排行榜`,
           },
         },

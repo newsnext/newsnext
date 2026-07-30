@@ -3,8 +3,9 @@
   "category": "finance",
   "color": "blue",
   "defaults": {
+    "baseUrl": "https://xueqiu.com/",
     "metadata": {
-      "home": "https://xueqiu.com"
+      "home": "/"
     }
   },
   "sources": {
@@ -19,7 +20,7 @@
         "fields": {
           "url": {
             "select": "code",
-            "template": "https://xueqiu.com/s/{{ scope.value | url_path }}"
+            "template": "/s/{{ scope.value | url_path }}"
           },
           "title": "name",
           "inline": {

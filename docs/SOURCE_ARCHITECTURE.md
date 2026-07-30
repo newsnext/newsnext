@@ -82,8 +82,9 @@ path. Expansion:
 3. recursively fills missing object properties;
 4. replaces inherited arrays with source arrays;
 5. recursively merges `vars`, with source values taking precedence;
-6. attaches provider-owned presentation metadata to every source;
-7. validates the complete source and rejects source-owned `icon` or `color`.
+6. validates and applies the inherited source `baseUrl`;
+7. attaches provider-owned presentation metadata to every source;
+8. validates the complete source and rejects source-owned `icon` or `color`.
 
 Required source values, including cache policy and loader, come from defaults or
 individual source configuration. Provider color is required; provider icon and
@@ -202,11 +203,19 @@ raw value or default
 ```
 
 After every parameter is resolved, structured loaders render their URL and
-nested `fetchOptions`. Network capabilities are checked against the final URL,
-immediately before the request is sent.
+nested `fetchOptions`. A relative request URL is then resolved against the
+source's optional `baseUrl`. Network capabilities are inferred and checked
+against this final absolute URL, immediately before the request is sent.
 
 Custom loaders receive already-normalized parameters. The source runtime cannot
 infer their requests, so custom loader capabilities must be declared.
+
+After any structured, RSS, or custom loader returns, the resolver applies the
+same optional `baseUrl` to explicit URL-bearing result fields. This boundary
+normalization covers item navigation URLs, image and iframe values, and dynamic
+badge metadata without interpreting arbitrary text or rewriting HTML strings.
+Static source home and badge metadata are normalized during registration.
+Radar home and badge patches use the same base during discovery.
 
 ## Structured loader pipelines
 

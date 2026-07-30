@@ -1,11 +1,10 @@
 import type { CompiledSourceTemplate } from "@newsnext/source/core"
 import type {
   HtmlField,
-  SourceParamSchemaMap,
+  SourceDescriptor,
   SourceRadarMatch,
   SourceRadarMetadata,
   SourceRadarRule,
-  SourceTemplateVars,
 } from "@newsnext/source/types"
 import type { RadarPageQuery } from "@/lib/radar-page-query"
 import type { SourceInstanceMetadata, SourceInstancePatch } from "@/lib/source-cards"
@@ -14,6 +13,7 @@ import {
   createSourceTemplateScope,
   parseSourceParams,
   reportTemplateError,
+  resolveSourceUrl,
   TemplateRenderError,
 } from "@newsnext/source/core"
 import { match } from "path-to-regexp"
@@ -36,16 +36,10 @@ export interface RadarSuggestion {
   confidence: number
 }
 
-export interface RadarSourceMetadata {
-  id: string
-  title?: string
-  badge?: string
-  desc?: string
-  home?: string
-  vars?: SourceTemplateVars
-  params?: SourceParamSchemaMap
-  radar?: SourceRadarRule[]
-}
+export type RadarSourceMetadata = Pick<
+  SourceDescriptor,
+  "id" | "baseUrl" | "title" | "badge" | "desc" | "home" | "vars" | "params" | "radar"
+>
 
 interface RadarMatchContext {
   url: URL
@@ -433,13 +427,13 @@ function resolveMetaPatch(
     metadata.title = String(title)
   }
   if (isPresent(badge)) {
-    metadata.badge = String(badge)
+    metadata.badge = resolveSourceUrl(String(badge), context.source.baseUrl)
   }
   if (isPresent(desc)) {
     metadata.desc = String(desc)
   }
   if (isPresent(home)) {
-    metadata.home = String(home)
+    metadata.home = resolveSourceUrl(String(home), context.source.baseUrl)
   }
   if (type === "hottest" || type === "timeline") {
     metadata.type = type

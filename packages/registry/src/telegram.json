@@ -3,8 +3,9 @@
   "category": "social",
   "color": "blue",
   "defaults": {
+    "baseUrl": "https://t.me/",
     "metadata": {
-      "home": "https://t.me/s/TestFlightCN"
+      "home": "/s/TestFlightCN"
     }
   },
   "sources": {
@@ -43,8 +44,8 @@
               "title": {
                 "select": ".tgme_channel_info_header_title"
               },
-              "badge": "https://t.me/i/userpic/320/{{ scope.params.channel | url_path }}.jpg",
-              "home": "https://t.me/s/{{ scope.params.channel }}"
+              "badge": "/i/userpic/320/{{ scope.params.channel | url_path }}.jpg",
+              "home": "/s/{{ scope.params.channel }}"
             }
           },
           "confidence": 0.95
@@ -52,7 +53,7 @@
       ],
       "loader": {
         "type": "html",
-        "url": "https://t.me/s/{{ scope.params.channel | url_path }}",
+        "url": "/s/{{ scope.params.channel | url_path }}",
         "items": ".tgme_widget_message:has(.tgme_widget_message_text)",
         "fields": {
           "title": {
@@ -62,8 +63,7 @@
           },
           "url": {
             "select": ".tgme_widget_message_date",
-            "attr": "href",
-            "template": "{{ scope.value | absolute_url: scope.request.url }}"
+            "attr": "href"
           },
           "timestamp": {
             "select": ".tgme_widget_message_date time",

@@ -193,6 +193,7 @@ describe("getRadarSuggestions", () => {
       [
         {
           id: "test:user",
+          baseUrl: "https://example.com/",
           params: {
             user: {
               type: "text",
@@ -213,9 +214,9 @@ describe("getRadarSuggestions", () => {
                 },
                 metadata: {
                   title: "User {{ scope.params.user }}",
-                  badge: "https://example.com/users/{{ scope.params.user }}.png",
+                  badge: "/users/{{ scope.params.user }}.png",
                   desc: "Dynamic profile",
-                  home: "https://example.com/users/{{ scope.params.user }}",
+                  home: "/users/{{ scope.params.user }}",
                   type: "hottest",
                 },
               },

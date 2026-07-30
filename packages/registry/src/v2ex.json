@@ -3,8 +3,9 @@
   "category": "forum",
   "color": "slate",
   "defaults": {
+    "baseUrl": "https://v2ex.com/",
     "metadata": {
-      "home": "https://v2ex.com/"
+      "home": "/"
     }
   },
   "sources": {

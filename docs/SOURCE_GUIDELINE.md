@@ -28,9 +28,10 @@ export default {
   title: "Example",
   color: "blue",
   defaults: {
+    baseUrl: "https://example.com/",
     cache: "5m",
     metadata: {
-      home: "https://example.com",
+      home: "/",
     },
   },
   sources: {
@@ -41,7 +42,7 @@ export default {
       },
       loader: {
         type: "json",
-        url: "https://api.example.com/articles",
+        url: "/articles",
         items: "data.items",
         fields: {
           title: "title",
@@ -68,10 +69,47 @@ A provider has `title`, `color`, optional `icon` and `category`, `defaults`, and
 cannot be set or overridden by individual sources, Radar rules, or card
 instances. Every source descriptor receives the provider's `icon` and `color`.
 
-`defaults` may contain `cache`, `capabilities`, `loader`, `metadata`, `vars`,
-`params`, `radar`, `requestRules`, and `secrets`. Defaults recursively fill
-missing object properties. Source values win, and source arrays replace default
-arrays.
+`defaults` may contain `baseUrl`, `cache`, `capabilities`, `loader`, `metadata`,
+`vars`, `params`, `radar`, `requestRules`, and `secrets`. Defaults recursively
+fill missing object properties. Source values win, and source arrays replace
+default arrays.
+
+Set `baseUrl` when URLs in a source share one stable origin or directory:
+
+```ts
+defaults: {
+  baseUrl: "https://example.com/",
+  metadata: {
+    home: "/latest",
+    badge: "/account.png",
+  },
+  loader: {
+    type: "json",
+    url: "/api/articles",
+    fields: {
+      title: "title",
+      url: "path",
+    },
+  },
+}
+```
+
+`baseUrl` must be a static, absolute HTTP(S) URL without credentials. It is
+inherited like other defaults and uses standard URL resolution: `/items` starts
+at the origin root, while `items` is relative to the base URL's directory. Keep
+a trailing slash when the base represents a directory.
+
+When `baseUrl` is present, NewsNext resolves the structured loader request URL,
+static and Radar `home` and `badge` metadata, response `metadata.badge`, and
+URL-bearing `NewsItem` values. These item values include `url`, `mobileUrl`,
+image `src` and `href` values, inline icons, preview pictures, and preview
+iframes. The same result normalization applies to RSS and custom loaders.
+Absolute and protocol-relative URLs continue to work.
+
+NewsNext does not rewrite URLs embedded inside `inline.html`, `preview.html`, or
+arbitrary text. Use `absolute_url` there, or when a value must resolve against a
+different base. A source that talks to multiple origins should keep secondary
+request URLs absolute and declare any capabilities that cannot be inferred.
 
 Source metadata supports:
 
@@ -280,7 +318,7 @@ Loader URLs and nested `fetchOptions` strings may use Liquid:
 ```ts
 loader: {
   type: "json",
-  url: "https://api.example.com/{{ scope.params.topic | url_path }}",
+  url: "/api/{{ scope.params.topic | url_path }}",
   fetchOptions: {
     method: "POST",
     headers: {
@@ -396,7 +434,7 @@ satisfy the Radar title requirement and cannot replace discovery-time metadata.
 ```ts
 loader: {
   type: "html",
-  url: "https://example.com/news",
+  url: "/news",
   items: ".article",
   filter: ":not(.advertisement)",
   fields: {
@@ -404,7 +442,6 @@ loader: {
     url: {
       select: ".article__title",
       attr: "href",
-      template: "{{ scope.value | absolute_url: scope.request.url }}",
     },
   },
 }
@@ -456,8 +493,9 @@ Text is the default content mode. Other extraction options are:
 }
 ```
 
-Use HTML extraction only for `inline.html` or `preview.html`. Resolve relative
-URLs with `absolute_url`.
+Use HTML extraction only for `inline.html` or `preview.html`. With `baseUrl`,
+URL-bearing result fields are resolved automatically. Use `absolute_url` for
+embedded HTML URLs or values that need another base.
 
 Set `decoding`, for example `"gb2312"`, for non-UTF-8 pages. Use `fetchOptions`
 for standard requests and a custom `fetch` only for unusual request handling.
@@ -469,7 +507,7 @@ RSS needs only a URL:
 ```ts
 loader: {
   type: "rss",
-  url: "https://example.com/feed.xml",
+  url: "/feed.xml",
 }
 ```
 

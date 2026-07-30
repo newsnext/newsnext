@@ -3,8 +3,9 @@
   "category": "news",
   "color": "red",
   "defaults": {
+    "baseUrl": "https://www.newsnow.com/",
     "metadata": {
-      "home": "https://www.newsnow.com"
+      "home": "/"
     }
   },
   "sources": {
@@ -79,14 +80,13 @@
       ],
       "loader": {
         "type": "html",
-        "url": "https://www.newsnow.com/{{ scope.params.locale | url_path }}/{{ scope.params.topic | url_path }}?type=ln",
+        "url": "/{{ scope.params.locale | url_path }}/{{ scope.params.topic | url_path }}?type=ln",
         "items": ".newsfeed .article",
         "fields": {
           "title": ".article-card__headline",
           "url": {
             "select": ".article-card__headline",
-            "attr": "href",
-            "template": "{{ scope.value | absolute_url: scope.request.url }}"
+            "attr": "href"
           },
           "timestamp": {
             "select": "[data-timestamp]",

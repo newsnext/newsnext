@@ -3,8 +3,9 @@
   "category": "forum",
   "color": "blue",
   "defaults": {
+    "baseUrl": "https://tieba.baidu.com/",
     "metadata": {
-      "home": "https://tieba.baidu.com"
+      "home": "/"
     }
   },
   "sources": {
@@ -15,13 +16,13 @@
       },
       "loader": {
         "type": "json",
-        "url": "https://tieba.baidu.com/hottopic/browse/topicList",
+        "url": "/hottopic/browse/topicList",
         "items": "data.bang_topic.topic_list",
         "fields": {
           "title": "topic_name",
           "url": {
             "select": "topic_url",
-            "template": "{{ scope.value | replace: '&amp;', '&' | absolute_url: scope.request.url }}"
+            "template": "{{ scope.value | replace: '&amp;', '&' }}"
           },
           "timestamp": {
             "select": "create_time",

@@ -147,13 +147,14 @@ export default {
   category: "social",
   color: "slate",
   defaults: {
+    baseUrl: `${X_ORIGIN}/`,
     capabilities,
     cache: "5m",
     loader: {
       type: "custom",
     },
     metadata: {
-      home: X_ORIGIN,
+      home: "/",
       type: "timeline",
     },
     secrets: [

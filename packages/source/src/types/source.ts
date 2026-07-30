@@ -154,6 +154,7 @@ export interface SourceCacheConfig {
 export interface RuntimeSource<TParams extends SourceParamSchemaMap = SourceParamSchemaMap> {
   provider: SourceProvider
   key: string
+  baseUrl?: string
   title?: string
   vars?: SourceTemplateVars
   params?: TParams

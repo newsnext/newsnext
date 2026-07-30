@@ -36,6 +36,70 @@ function resolveTestSource(config: SourceConfig): void {
 }
 
 describe("source template vars", () => {
+  it("inherits a base URL and resolves relative source URLs", async () => {
+    const provider = resolveProvider("test", {
+      title: "Provider",
+      color: "blue",
+      defaults: {
+        baseUrl: "https://example.com/",
+        cache: "5m",
+        capabilities: {
+          network: [],
+        },
+      },
+      sources: {
+        latest: {
+          metadata: {
+            badge: "/badge.png",
+            home: "/latest",
+          },
+          loader: {
+            type: "custom",
+            load: async () => [{
+              title: "Item",
+              url: "/items/1",
+            }],
+          },
+        },
+      },
+    })
+
+    expect(provider.sources.latest).toMatchObject({
+      baseUrl: "https://example.com/",
+      badge: "https://example.com/badge.png",
+      home: "https://example.com/latest",
+    })
+    await expect(provider.sources.latest.loader({})).resolves.toEqual([{
+      title: "Item",
+      url: "https://example.com/items/1",
+    }])
+  })
+
+  it("infers structured loader capabilities from a relative request URL", () => {
+    const provider = resolveProvider("test", {
+      title: "Provider",
+      color: "blue",
+      defaults: {
+        baseUrl: "https://api.example.com/v1/",
+        cache: "5m",
+      },
+      sources: {
+        latest: {
+          loader: {
+            type: "json",
+            url: "items",
+            fields: {
+              title: "title",
+              url: "url",
+            },
+          },
+        },
+      },
+    })
+
+    expect(provider.sources.latest.capabilities.network).toEqual(["api.example.com"])
+  })
+
   it("preserves provider icon data URLs during expansion", () => {
     const icon = "data:image/svg+xml,%3Csvg%2F%3E"
     const provider = resolveProvider("test", {
