@@ -80,6 +80,8 @@ async function loadFoloEntries(body: FoloEntriesRequest): Promise<NewsItem[]> {
 export default {
   title: "Folo",
   category: "news",
+  icon: "https://icons.folo.is/folo.is",
+  color: "orange",
   defaults: {
     cache: "5m",
     loader: {
@@ -89,7 +91,6 @@ export default {
       network: ["api.folo.is"],
     },
     metadata: {
-      color: "orange",
       home: "https://folo.is",
       type: "timeline",
     },

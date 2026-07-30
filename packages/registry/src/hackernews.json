@@ -1,6 +1,8 @@
 {
   "title": "Hacker News",
   "category": "forum",
+  "icon": "https://icons.folo.is/news.ycombinator.com",
+  "color": "orange",
   "defaults": {
     "cache": "5m",
     "vars": {
@@ -43,7 +45,6 @@
       }
     },
     "metadata": {
-      "color": "orange",
       "home": "https://news.ycombinator.com/"
     }
   },

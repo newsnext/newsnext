@@ -1,4 +1,3 @@
-import type { Color } from "@newsnext/shared/types"
 import type { CompiledSourceTemplate } from "@newsnext/source/core"
 import type {
   HtmlField,
@@ -40,11 +39,9 @@ export interface RadarSuggestion {
 export interface RadarSourceMetadata {
   id: string
   title?: string
-  icon?: string
   badge?: string
   desc?: string
   home?: string
-  color?: Color
   vars?: SourceTemplateVars
   params?: SourceParamSchemaMap
   radar?: SourceRadarRule[]
@@ -427,18 +424,13 @@ function resolveMetaPatch(
       ]),
   )
   const title = resolveMetaPatchValue("title", rule.metadata.title, context, extractedItem)
-  const icon = resolveMetaPatchValue("icon", rule.metadata.icon, context, extractedItem)
   const badge = resolveMetaPatchValue("badge", rule.metadata.badge, context, extractedItem)
   const desc = resolveMetaPatchValue("desc", rule.metadata.desc, context, extractedItem)
   const home = resolveMetaPatchValue("home", rule.metadata.home, context, extractedItem)
-  const color = resolveMetaPatchValue("color", rule.metadata.color, context, extractedItem)
   const type = resolveMetaPatchValue("type", rule.metadata.type, context, extractedItem)
 
   if (isPresent(title)) {
     metadata.title = String(title)
-  }
-  if (isPresent(icon)) {
-    metadata.icon = String(icon)
   }
   if (isPresent(badge)) {
     metadata.badge = String(badge)
@@ -448,9 +440,6 @@ function resolveMetaPatch(
   }
   if (isPresent(home)) {
     metadata.home = String(home)
-  }
-  if (isPresent(color)) {
-    metadata.color = color as Color
   }
   if (type === "hottest" || type === "timeline") {
     metadata.type = type

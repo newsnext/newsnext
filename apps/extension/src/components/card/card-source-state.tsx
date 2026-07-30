@@ -5,7 +5,7 @@ import { PhInfoDuotone } from "../icons/ph"
 import { SourceIcon } from "./source-icon"
 
 interface SourceActionStateProps {
-  color: BoardSource["color"]
+  color: BoardSource["provider"]["color"]
   icon?: string
   label: string
   onClick: () => void
@@ -46,7 +46,7 @@ export function SourceLoginState({
   provider,
   loginUrl,
 }: {
-  color: BoardSource["color"]
+  color: BoardSource["provider"]["color"]
   icon?: string
   provider: BoardSource["provider"]
   loginUrl: string
@@ -73,7 +73,7 @@ export function SourceErrorState({
   onRefresh,
   provider,
 }: {
-  color: BoardSource["color"]
+  color: BoardSource["provider"]["color"]
   icon?: string
   onRefresh: () => void
   provider: BoardSource["provider"]
@@ -96,7 +96,7 @@ export function SourcePermissionState({
   onRequestPermission,
   provider,
 }: {
-  color: BoardSource["color"]
+  color: BoardSource["provider"]["color"]
   icon?: string
   onRequestPermission: () => Promise<boolean>
   provider: BoardSource["provider"]

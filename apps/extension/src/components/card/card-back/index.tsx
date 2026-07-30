@@ -1,5 +1,4 @@
 import type { ReactNode } from "react"
-import type { SourceEditDraft } from "./types"
 import type { SourceInstanceMetadata } from "@/lib/source-cards"
 import type { BoardSource } from "@/typings/source"
 import { Button } from "@newsnext/ui/components/button"
@@ -12,7 +11,7 @@ import { cn } from "@/lib/utils"
 import { IconButton } from "../../common/button"
 import { CardHeader } from "../card-header"
 import { CardBoardSelect, DeleteCardButton } from "./actions"
-import { ColorSelector, EditableImage, EditableInput, Info, ValueSelector } from "./fields"
+import { EditableImage, EditableInput, Info, ValueSelector } from "./fields"
 import { ParamField } from "./param-field"
 
 const SOURCE_TYPE_OPTIONS = [
@@ -55,8 +54,9 @@ export function CardBack({
   isDraft = false,
   dragHandle,
 }: CardBackProps) {
-  const { badge, desc, color, params, icon, provider, title, home, type } = source
-  const [editDraft, setEditDraft] = useState<SourceEditDraft | null>(null)
+  const { badge, desc, params, provider, title, home, type } = source
+  const { color, icon } = provider
+  const [editDraft, setEditDraft] = useState<SourceInstanceMetadata | null>(null)
   const [isEditingParams, setIsEditingParams] = useState(false)
   const isEditingMetadata = editDraft !== null
   const canEditParams = isEditingParams
@@ -64,31 +64,25 @@ export function CardBack({
   const previewBadge = isEditingMetadata ? editDraft.badge : displayBadge
   const previewDesc = isEditingMetadata ? editDraft.desc : desc
   const previewHome = isEditingMetadata ? editDraft.home : home
-  const previewColor = isEditingMetadata ? editDraft.color : color
-  const previewIcon = isEditingMetadata ? editDraft.icon : icon
   const previewType = (isEditingMetadata ? editDraft.type : type) ?? "timeline"
   const relativeTime = useRelativeTime({ date: updatedAt })
   const hasSourceMetaChanges = Boolean(
     editDraft
     && (
       editDraft.title !== title
-      || editDraft.icon !== icon
       || editDraft.badge !== badge
       || editDraft.desc !== desc
       || editDraft.home !== home
-      || editDraft.color !== color
       || editDraft.type !== type
     ),
   )
 
-  function createEditDraft(): SourceEditDraft {
+  function createEditDraft(): SourceInstanceMetadata {
     return {
       title,
-      icon,
       badge,
       desc,
       home,
-      color,
       type,
     }
   }
@@ -97,7 +91,7 @@ export function CardBack({
     setEditDraft(createEditDraft())
   }
 
-  function updateEditDraft(patch: Partial<SourceEditDraft>): void {
+  function updateEditDraft(patch: Partial<SourceInstanceMetadata>): void {
     setEditDraft(prev => prev ? { ...prev, ...patch } : prev)
   }
 
@@ -136,17 +130,17 @@ export function CardBack({
         radius="3xl"
         className={cn(
           "pointer-events-none absolute inset-0 transition-colors duration-300",
-          `bg-${previewColor}-400/40`,
+          `bg-${color}-400/40`,
         )}
       />
       <div className="relative flex h-full flex-col p-3 transition-colors duration-300">
         <CardHeader
           badge={previewBadge}
           className="mb-2"
-          color={previewColor}
+          color={color}
           desc={previewDesc}
           home={previewHome}
-          icon={previewIcon}
+          icon={icon}
           provider={provider}
           title={previewTitle}
           subtitle={previewDesc || relativeTime}
@@ -172,7 +166,7 @@ export function CardBack({
             radius="2xl"
             className={cn(
               "pointer-events-none absolute inset-0 bg-background/70",
-              `sunrise-${previewColor}-400`,
+              `sunrise-${color}-400`,
             )}
           />
           <ScrollArea
@@ -191,7 +185,7 @@ export function CardBack({
                             type="button"
                             variant="outline"
                             size="sm"
-                            className={cn(`h-6 px-2 bg-${previewColor}-500/10 hover:bg-${previewColor}-500/20 text-${previewColor}-600 border-${previewColor}-200`)}
+                            className={cn(`h-6 px-2 bg-${color}-500/10 hover:bg-${color}-500/20 text-${color}-600 border-${color}-200`)}
                             onClick={(event) => {
                               event.stopPropagation()
                               cancelEditingMetadata()
@@ -203,7 +197,7 @@ export function CardBack({
                             type="button"
                             size="sm"
                             disabled={!hasSourceMetaChanges}
-                            className={cn(`h-6 bg-${previewColor}-500 px-2 hover:bg-${previewColor}-500/80`)}
+                            className={cn(`h-6 bg-${color}-500 px-2 hover:bg-${color}-500/80`)}
                             onClick={(event) => {
                               event.stopPropagation()
                               saveEditDraft()
@@ -218,7 +212,7 @@ export function CardBack({
                           type="button"
                           size="sm"
                           title="Edit metadata"
-                          className={cn(`h-6 bg-${previewColor}-500 px-2 hover:bg-${previewColor}-500/80`)}
+                          className={cn(`h-6 bg-${color}-500 px-2 hover:bg-${color}-500/80`)}
                           onClick={(event) => {
                             event.stopPropagation()
                             startEditingMetadata()
@@ -240,15 +234,6 @@ export function CardBack({
                   <EditableInput text={previewHome || ""} editable={isEditingMetadata} onChange={value => updateEditDraft({ home: value })} />
                 </Info>
 
-                <Info label="Icon">
-                  <EditableImage
-                    src={previewIcon ?? ""}
-                    alt={`${previewTitle || provider.title} icon`}
-                    editable={isEditingMetadata}
-                    onChange={value => updateEditDraft({ icon: value || undefined })}
-                  />
-                </Info>
-
                 <Info label="Badge">
                   <EditableImage
                     src={previewBadge ?? ""}
@@ -257,10 +242,6 @@ export function CardBack({
                     editable={isEditingMetadata}
                     onChange={value => updateEditDraft({ badge: value || undefined })}
                   />
-                </Info>
-
-                <Info label="Color">
-                  <ColorSelector color={previewColor} editable={isEditingMetadata} onChange={value => updateEditDraft({ color: value })} />
                 </Info>
 
                 <Info label="Type">
@@ -285,7 +266,7 @@ export function CardBack({
                               type="button"
                               variant="outline"
                               size="sm"
-                              className={cn(`h-6 px-2 bg-${previewColor}-500/10 hover:bg-${previewColor}-500/20 text-${previewColor}-600 border-${previewColor}-200`)}
+                              className={cn(`h-6 px-2 bg-${color}-500/10 hover:bg-${color}-500/20 text-${color}-600 border-${color}-200`)}
                               onClick={(event) => {
                                 event.stopPropagation()
                                 cancelEditingParams()
@@ -298,7 +279,7 @@ export function CardBack({
                               variant="outline"
                               size="sm"
                               disabled={!hasSourceParams}
-                              className={cn(`h-6 px-2 bg-${previewColor}-500/10 hover:bg-${previewColor}-500/20 text-${previewColor}-600 border-${previewColor}-200`)}
+                              className={cn(`h-6 px-2 bg-${color}-500/10 hover:bg-${color}-500/20 text-${color}-600 border-${color}-200`)}
                               onClick={(event) => {
                                 event.stopPropagation()
                                 onResetSourceParams()
@@ -310,7 +291,7 @@ export function CardBack({
                               type="button"
                               size="sm"
                               disabled={!hasSourceParamChanges}
-                              className={cn(`h-6 bg-${previewColor}-500 px-2 hover:bg-${previewColor}-500/80`)}
+                              className={cn(`h-6 bg-${color}-500 px-2 hover:bg-${color}-500/80`)}
                               onClick={(event) => {
                                 event.stopPropagation()
                                 saveParams()
@@ -325,7 +306,7 @@ export function CardBack({
                             type="button"
                             size="sm"
                             title="Edit parameters"
-                            className={cn(`h-6 bg-${previewColor}-500 px-2 hover:bg-${previewColor}-500/80`)}
+                            className={cn(`h-6 bg-${color}-500 px-2 hover:bg-${color}-500/80`)}
                             onClick={(event) => {
                               event.stopPropagation()
                               startEditingParams()
@@ -341,7 +322,7 @@ export function CardBack({
                       param={param}
                       value={draftSourceParams[paramKey]}
                       editable={canEditParams}
-                      color={previewColor}
+                      color={color}
                       onChange={nextValue => onSourceParamChange(paramKey, nextValue)}
                     />
                   ))}

@@ -1,9 +1,10 @@
 {
   "title": "NEWS NOW",
   "category": "news",
+  "icon": "https://icons.folo.is/newsnow.com",
+  "color": "red",
   "defaults": {
     "metadata": {
-      "color": "red",
       "home": "https://www.newsnow.com"
     }
   },

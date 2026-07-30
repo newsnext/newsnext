@@ -1,6 +1,4 @@
-import type { Color } from "@newsnext/shared/types"
 import type { PropsWithChildren } from "react"
-import { COLORS } from "@newsnext/shared/constants"
 import { Input } from "@newsnext/ui/components/input"
 import {
   Select,
@@ -134,15 +132,6 @@ export function SelectLikeValue({ children }: PropsWithChildren) {
   )
 }
 
-export function ColorSwitch({ color, className }: { color: Color, className?: string }) {
-  return (
-    <span
-      className={cn("inline-block rounded-full", className)}
-      style={{ backgroundColor: `var(--color-${color}-500)` }}
-    />
-  )
-}
-
 export function Info(props: PropsWithChildren<{
   icon?: React.ReactNode
   label: string
@@ -158,47 +147,6 @@ export function Info(props: PropsWithChildren<{
         {props.children}
       </div>
     </div>
-  )
-}
-
-export function ColorSelector({ color, editable, onChange }: { color: Color, editable?: boolean, onChange?: (color: Color) => void }) {
-  if (!editable) {
-    return (
-      <SelectLikeValue>
-        <span title={color}>
-          <ColorSwitch color={color} className="size-3" />
-        </span>
-      </SelectLikeValue>
-    )
-  }
-
-  return (
-    <Select value={color} onValueChange={val => onChange?.(val as Color)}>
-      <SelectTrigger className={editableSelectClassName} onClick={e => e.stopPropagation()}>
-        <div className="flex flex-1 items-center justify-start" title={color}>
-          <ColorSwitch color={color} className="size-3" />
-        </div>
-      </SelectTrigger>
-      <SelectContent
-        align="end"
-        alignItemWithTrigger={false}
-        className={cn("w-42", editableSelectContentClassName)}
-      >
-        <div className="grid grid-cols-6 place-items-center gap-1 p-1.5">
-          {COLORS.map(c => (
-            <SelectItem
-              key={c}
-              value={c}
-              className="grid size-7 cursor-pointer place-items-center p-0"
-              indicatorClassName="hidden!"
-              title={c}
-            >
-              <ColorSwitch color={c} className="size-4" />
-            </SelectItem>
-          ))}
-        </div>
-      </SelectContent>
-    </Select>
   )
 }
 

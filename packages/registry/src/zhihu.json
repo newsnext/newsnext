@@ -1,10 +1,11 @@
 {
   "title": "知乎",
   "category": "forum",
+  "icon": "https://icons.folo.is/zhihu.com",
+  "color": "blue",
   "defaults": {
     "metadata": {
-      "home": "https://www.zhihu.com",
-      "color": "blue"
+      "home": "https://www.zhihu.com"
     }
   },
   "sources": {

@@ -1,10 +1,11 @@
 {
   "title": "GitHub",
   "category": "developer",
+  "icon": "https://icons.folo.is/github.com",
+  "color": "slate",
   "defaults": {
     "metadata": {
-      "home": "https://github.com/trending",
-      "color": "slate"
+      "home": "https://github.com/trending"
     }
   },
   "sources": {

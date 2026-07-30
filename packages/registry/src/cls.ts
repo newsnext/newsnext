@@ -51,6 +51,8 @@ async function getSearchParams(moreParams: Record<string, SearchParamValue> = {}
 export default {
   title: "财联社",
   category: "finance",
+  icon: "https://icons.folo.is/cls.cn",
+  color: "red",
   defaults: {
     cache: "5m",
     loader: {
@@ -70,7 +72,6 @@ export default {
     },
     metadata: {
       home: "https://www.cls.cn",
-      color: "red",
       type: "timeline",
     },
   },

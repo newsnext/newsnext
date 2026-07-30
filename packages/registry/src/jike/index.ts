@@ -177,6 +177,8 @@ const topicRadarPatch = {
 export default {
   title: "即刻",
   category: "social",
+  icon: "https://web.okjike.com/favicon-32x32.png",
+  color: "yellow",
   defaults: {
     capabilities: jikeCapabilities,
     cache: "5m",
@@ -185,7 +187,6 @@ export default {
     },
     metadata: {
       home: JIKE_WEB_ORIGIN,
-      color: "yellow",
       type: "timeline",
     },
     secrets: [

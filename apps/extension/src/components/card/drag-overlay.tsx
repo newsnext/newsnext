@@ -10,7 +10,8 @@ interface DragOverlayProps {
 }
 
 export function DragOverlay({ source }: DragOverlayProps) {
-  const { badge, color, icon, provider, title } = source
+  const { badge, provider, title } = source
+  const { color, icon } = provider
   return (
     <div className="relative flex flex-col p-3">
       <SquircleBox

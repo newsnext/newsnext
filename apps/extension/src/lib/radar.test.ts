@@ -193,7 +193,6 @@ describe("getRadarSuggestions", () => {
       [
         {
           id: "test:user",
-          icon: "https://example.com/icon.png",
           params: {
             user: {
               type: "text",
@@ -214,11 +213,9 @@ describe("getRadarSuggestions", () => {
                 },
                 metadata: {
                   title: "User {{ scope.params.user }}",
-                  icon: "https://example.com/users/{{ scope.params.user }}/icon.png",
                   badge: "https://example.com/users/{{ scope.params.user }}.png",
                   desc: "Dynamic profile",
                   home: "https://example.com/users/{{ scope.params.user }}",
-                  color: "red",
                   type: "hottest",
                 },
               },
@@ -231,11 +228,9 @@ describe("getRadarSuggestions", () => {
         patch: {
           metadata: {
             title: "User newsnext",
-            icon: "https://example.com/users/newsnext/icon.png",
             badge: "https://example.com/users/newsnext.png",
             desc: "Dynamic profile",
             home: "https://example.com/users/newsnext",
-            color: "red",
             type: "hottest",
           },
         },

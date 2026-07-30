@@ -145,6 +145,8 @@ const capabilities = {
 export default {
   title: "X",
   category: "social",
+  icon: "https://icons.folo.is/x.com",
+  color: "slate",
   defaults: {
     capabilities,
     cache: "5m",
@@ -152,7 +154,6 @@ export default {
       type: "custom",
     },
     metadata: {
-      color: "slate",
       home: X_ORIGIN,
       type: "timeline",
     },

@@ -1,31 +1,19 @@
 import type { SourceConfig } from "../core/resolver"
 import type { ProviderDefinition, RuntimeSource, SourceProvider } from "../types"
 import type { ProviderConfig, SourceRegistry } from "./types"
-import { getFavicon } from "@newsnext/shared/utils"
 import {
   assignSourceDefaults,
   mergeSourceVars,
   resolveRuntimeSource,
+  validateSourceTemplates,
 } from "../core/resolver"
 import {
-  hasSourceProviderIdentity,
+  hasValidSourceProviderMetadata,
   isRecord,
-  isSourceColor,
   isStructuredLoaderType,
   isSupportedProviderKey,
   isValidIdSegment,
 } from "./validation"
-
-type SourceConfigMetadata = NonNullable<SourceConfig["metadata"]>
-
-function materializeSourceIcon(
-  metadata: SourceConfigMetadata = {},
-): SourceConfigMetadata {
-  return {
-    ...metadata,
-    icon: metadata.icon ?? (metadata.home ? getFavicon(metadata.home) : undefined),
-  }
-}
 
 export function flattenProviderConfig(
   id: string,
@@ -78,8 +66,8 @@ function expandProviderSources(
   if (unsupportedKey) {
     throw new Error(`Provider "${providerId}" has unsupported property "${unsupportedKey}"`)
   }
-  if (!hasSourceProviderIdentity(provider)) {
-    throw new Error(`Provider "${providerId}" has invalid identity metadata`)
+  if (!hasValidSourceProviderMetadata(provider)) {
+    throw new Error(`Provider "${providerId}" has invalid metadata`)
   }
   if (provider.defaults !== undefined && !isRecord(provider.defaults)) {
     throw new Error(`Provider "${providerId}" has invalid defaults`)
@@ -119,12 +107,9 @@ function expandProviderSources(
       if (!defaultedSource.cache) {
         throw new Error(`Source "${sourceKey}" is missing a cache policy`)
       }
-      if (!isSourceColor(defaultedSource.metadata?.color)) {
-        throw new Error(`Source "${sourceKey}" is missing a valid color`)
-      }
+      validateSourceTemplates(sourceKey, defaultedSource as SourceConfig)
       return [sourceId, {
         ...defaultedSource,
-        metadata: materializeSourceIcon(defaultedSource.metadata),
         vars: mergeSourceVars(provider.defaults?.vars, source.vars),
       } as SourceConfig]
     }),
@@ -135,5 +120,7 @@ function toSourceProvider(provider: ProviderConfig): SourceProvider {
   return {
     title: provider.title,
     category: provider.category,
+    icon: provider.icon,
+    color: provider.color,
   }
 }

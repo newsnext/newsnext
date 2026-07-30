@@ -29,20 +29,39 @@ function resolveTestSource(config: SourceConfig): void {
   resolveProvider("test", {
     title: "Test",
     category: "social",
-    defaults: {
-      metadata: {
-        color: "blue",
-      },
-    },
+    icon: "provider-icon",
+    color: "blue",
     sources: { test: config },
   })
 }
 
 describe("source template vars", () => {
+  it("preserves provider icon data URLs during expansion", () => {
+    const icon = "data:image/svg+xml,%3Csvg%2F%3E"
+    const provider = resolveProvider("test", {
+      title: "Provider",
+      icon,
+      color: "blue",
+      sources: {
+        test: {
+          cache: "1h",
+          loader: {
+            type: "custom",
+            load: async () => [],
+          },
+        },
+      },
+    })
+
+    expect(provider.sources.test.provider.icon).toBe(icon)
+  })
+
   it("assigns provider source defaults before resolving sources", () => {
     const provider = resolveProvider("test", {
       title: "Provider",
       category: "social",
+      icon: "https://icons.folo.is/example.com",
+      color: "blue",
       defaults: {
         cache: "5m",
         capabilities: {
@@ -50,7 +69,6 @@ describe("source template vars", () => {
           cookies: ["account.example.com"],
         },
         metadata: {
-          color: "blue",
           home: "https://example.com",
           type: "timeline",
         },
@@ -92,7 +110,10 @@ describe("source template vars", () => {
         cookies: ["account.example.com"],
       },
       home: "https://example.com",
-      icon: "https://icons.folo.is/example.com",
+      provider: {
+        icon: "https://icons.folo.is/example.com",
+        color: "blue",
+      },
       type: "timeline",
       radar: [
         {
@@ -107,7 +128,10 @@ describe("source template vars", () => {
         cookies: ["account.example.com"],
       },
       home: "https://example.com",
-      icon: "https://icons.folo.is/example.com",
+      provider: {
+        icon: "https://icons.folo.is/example.com",
+        color: "blue",
+      },
       title: "Override",
       type: "timeline",
       radar: [],
@@ -118,11 +142,8 @@ describe("source template vars", () => {
     const provider = resolveProvider("test", {
       title: "Provider",
       category: "social",
-      defaults: {
-        metadata: {
-          color: "blue",
-        },
-      },
+      icon: "https://icons.folo.is/example.com",
+      color: "blue",
       sources: {
         test: {
           metadata: {
@@ -143,7 +164,10 @@ describe("source template vars", () => {
       title: "Source",
       type: "timeline",
       home: "https://example.com/source",
-      icon: "https://icons.folo.is/example.com",
+      provider: {
+        icon: "https://icons.folo.is/example.com",
+        color: "blue",
+      },
     })
   })
 
@@ -151,10 +175,8 @@ describe("source template vars", () => {
     const provider = resolveProvider("test", {
       title: "Provider",
       category: "social",
+      color: "blue",
       defaults: {
-        metadata: {
-          color: "blue",
-        },
         secrets: [
           {
             key: "shared",
@@ -202,10 +224,8 @@ describe("source template vars", () => {
     const provider = resolveProvider("test", {
       title: "Provider",
       category: "social",
+      color: "blue",
       defaults: {
-        metadata: {
-          color: "blue",
-        },
         requestRules: [requestRule],
       },
       sources: {
@@ -226,10 +246,8 @@ describe("source template vars", () => {
     const provider = resolveProvider("test", {
       title: "Provider",
       category: "social",
+      color: "blue",
       defaults: {
-        metadata: {
-          color: "blue",
-        },
         vars: {
           endpoint: {
             origin: "https://provider.example",
@@ -311,15 +329,25 @@ describe("source template vars", () => {
     })).not.toThrow()
   })
 
-  it("rejects Liquid templates in source metadata", () => {
+  it("rejects provider presentation fields in source metadata", () => {
     expect(() => resolveTestSource({
       ...createSourceConfig([]),
       metadata: {
         title: "Test",
-        icon: "https://example.com/{{ scope.params.value }}.png",
+        icon: "source-icon",
       },
-    })).toThrow(
-      "Liquid templates are not allowed at test:test.metadata.icon; use a Radar metadata patch for dynamic values",
+    } as unknown as SourceConfig)).toThrow(
+      "test:test.metadata.icon is not supported",
+    )
+
+    expect(() => resolveTestSource({
+      ...createSourceConfig([]),
+      metadata: {
+        title: "Test",
+        color: "red",
+      },
+    } as unknown as SourceConfig)).toThrow(
+      "test:test.metadata.color is not supported",
     )
   })
 
@@ -379,7 +407,7 @@ describe("source template vars", () => {
     )
   })
 
-  it("allows Radar to override source presentation metadata", () => {
+  it("allows Radar to override source-owned presentation metadata", () => {
     const radar = [
       {
         id: "test",
@@ -387,11 +415,9 @@ describe("source template vars", () => {
         patch: {
           metadata: {
             title: "Dynamic title",
-            icon: "https://example.com/dynamic.png",
             badge: "https://example.com/badge.png",
             desc: "Dynamic description",
             home: "https://example.com/dynamic",
-            color: "red",
             type: "hottest",
           },
         },
@@ -401,7 +427,7 @@ describe("source template vars", () => {
     expect(() => resolveTestSource(createSourceConfig(radar))).not.toThrow()
   })
 
-  it("rejects category overrides in source and Radar metadata", () => {
+  it("rejects provider metadata overrides in source and Radar metadata", () => {
     expect(() => resolveTestSource({
       ...createSourceConfig([]),
       metadata: {
@@ -425,6 +451,34 @@ describe("source template vars", () => {
     ] as unknown as SourceRadarRule[]))).toThrow(
       "test:test.radar.0.patch.metadata.category is not supported",
     )
+
+    expect(() => resolveTestSource(createSourceConfig([
+      {
+        id: "test",
+        match: { hosts: ["example.com"] },
+        patch: {
+          metadata: {
+            icon: "injected-icon",
+          },
+        },
+      },
+    ] as unknown as SourceRadarRule[]))).toThrow(
+      "test:test.radar.0.patch.metadata.icon is not supported",
+    )
+
+    expect(() => resolveTestSource(createSourceConfig([
+      {
+        id: "test",
+        match: { hosts: ["example.com"] },
+        patch: {
+          metadata: {
+            color: "red",
+          },
+        },
+      },
+    ] as unknown as SourceRadarRule[]))).toThrow(
+      "test:test.radar.0.patch.metadata.color is not supported",
+    )
   })
 
   it("does not expose source metadata to Radar templates", () => {
@@ -443,26 +497,34 @@ describe("source template vars", () => {
 })
 
 describe("source registry", () => {
-  it("rejects legacy provider-level source defaults", () => {
+  it("requires valid provider color metadata", () => {
     expect(() => flattenProviderConfig("test", {
       title: "Provider",
-      category: "social",
-      color: "blue",
       sources: {},
     } as unknown as ProviderConfig)).toThrow(
-      "Provider \"test\" has unsupported property \"color\"",
+      "Provider \"test\" has invalid metadata",
+    )
+
+    expect(() => flattenProviderConfig("test", {
+      title: "Provider",
+      color: "invalid",
+      sources: {},
+    } as unknown as ProviderConfig)).toThrow(
+      "Provider \"test\" has invalid metadata",
     )
   })
 
   it("validates provider authoring containers and IDs at runtime", () => {
     expect(() => flattenProviderConfig("test", {
       title: "Provider",
+      color: "blue",
       sources: {},
     })).not.toThrow()
 
     expect(() => flattenProviderConfig("test", {
       title: "Provider",
       category: "social",
+      color: "blue",
       defaults: "invalid",
       sources: {},
     } as unknown as ProviderConfig)).toThrow(
@@ -472,11 +534,9 @@ describe("source registry", () => {
     expect(() => flattenProviderConfig("test", {
       title: "Provider",
       category: "social",
+      color: "blue",
       defaults: {
         cache: "5m",
-        metadata: {
-          color: "blue",
-        },
       },
       sources: {
         "invalid:id": {
@@ -491,15 +551,12 @@ describe("source registry", () => {
     )
   })
 
-  it("keeps provider metadata fixed while allowing source metadata overrides", () => {
+  it("rejects source overrides for provider presentation metadata", () => {
     const provider = {
       title: "Provider",
       category: "social",
-      defaults: {
-        metadata: {
-          color: "blue",
-        },
-      },
+      icon: "provider-icon",
+      color: "blue",
       sources: {
         latest: {
           metadata: {
@@ -515,30 +572,17 @@ describe("source registry", () => {
       },
     } as unknown as ProviderConfig
 
-    expect(flattenProviderConfig("test", provider)["test:latest"]).toMatchObject({
-      provider: {
-        title: "Provider",
-        category: "social",
-      },
-      metadata: {
-        color: "red",
-        icon: "source-icon",
-      },
-    })
-    expect(resolveProvider("test", provider).sources.latest).toMatchObject({
-      provider: {
-        title: "Provider",
-        category: "social",
-      },
-      icon: "source-icon",
-      color: "red",
-    })
+    expect(() => flattenProviderConfig("test", provider)).toThrow(
+      "test:latest.metadata.color is not supported",
+    )
   })
 
   it("flattens provider source defaults into declarative sources", () => {
     const registry = flattenProviderConfig("test", {
       title: "Test Provider",
       category: "social",
+      icon: "https://icons.folo.is/example.com",
+      color: "blue",
       defaults: {
         cache: "5m",
         vars: {
@@ -552,7 +596,6 @@ describe("source registry", () => {
           url: "{{ source.vars.endpoint.origin }}/default.xml",
         },
         metadata: {
-          color: "blue",
           home: "https://example.com",
           type: "timeline",
         },
@@ -589,15 +632,17 @@ describe("source registry", () => {
     expect(registry["test:latest"]?.provider).toEqual({
       title: "Test Provider",
       category: "social",
+      icon: "https://icons.folo.is/example.com",
+      color: "blue",
     })
-    expect(registry["test:latest"]?.metadata?.icon).toBe(
-      "https://icons.folo.is/example.com",
-    )
     expect(resolveSourceRegistry(registry)["test:latest"]).toMatchObject({
       cache: { version: 1, maxAge: "5m" },
-      icon: "https://icons.folo.is/example.com",
       title: "Latest",
       type: "timeline",
+      provider: {
+        icon: "https://icons.folo.is/example.com",
+        color: "blue",
+      },
     })
   })
 
@@ -605,11 +650,7 @@ describe("source registry", () => {
     expect(() => flattenProviderConfig("test", {
       title: "Test Provider",
       category: "social",
-      defaults: {
-        metadata: {
-          color: "blue",
-        },
-      },
+      color: "blue",
       sources: {
         latest: {
           loader: {
@@ -625,11 +666,7 @@ describe("source registry", () => {
     const registry = flattenProviderConfig("test", {
       title: "Test Provider",
       category: "social",
-      defaults: {
-        metadata: {
-          color: "blue",
-        },
-      },
+      color: "blue",
       sources: {
         latest: {
           cache: "5m",
@@ -645,8 +682,8 @@ describe("source registry", () => {
       provider: {
         title: "Test Provider",
         category: "social",
+        color: "blue",
       },
-      color: "blue",
       key: "latest",
     })
   })
@@ -663,8 +700,6 @@ describe("source registry", () => {
         provider: {
           title: "Test",
           category: "social",
-        },
-        metadata: {
           color: "blue",
         },
         cache: "5m",
@@ -680,15 +715,13 @@ describe("source registry", () => {
     })["test:latest"]?.loader).toBeTypeOf("function")
   })
 
-  it("rejects inconsistent provider identity across flat sources", () => {
+  it("rejects inconsistent provider metadata across flat sources", () => {
     const first = flattenProviderConfig("test", {
       title: "Provider",
       category: "social",
+      color: "blue",
       defaults: {
         cache: "5m",
-        metadata: {
-          color: "blue",
-        },
       },
       sources: {
         first: {
@@ -702,11 +735,9 @@ describe("source registry", () => {
     const second = flattenProviderConfig("test", {
       title: "Provider",
       category: "forum",
+      color: "blue",
       defaults: {
         cache: "5m",
-        metadata: {
-          color: "blue",
-        },
       },
       sources: {
         second: {
@@ -730,8 +761,6 @@ describe("source registry", () => {
         provider: {
           title: "Test",
           category: "social",
-        },
-        metadata: {
           color: "not-a-color",
         },
         cache: "5m",
@@ -740,15 +769,13 @@ describe("source registry", () => {
           url: "https://example.com/feed.xml",
         },
       },
-    })).toThrow("Source \"test:latest\" is missing valid display metadata")
+    })).toThrow("Registry source \"test:latest\" has invalid provider metadata")
 
     expect(() => resolveSourceRegistry({
       "test:latest": {
         provider: {
           title: "Test",
           category: "invalid",
-        },
-        metadata: {
           color: "blue",
         },
         cache: "5m",
@@ -766,8 +793,6 @@ describe("source registry", () => {
         provider: {
           title: "Test",
           category: "social",
-        },
-        metadata: {
           color: "blue",
         },
         cache: "5m",

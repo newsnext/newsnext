@@ -1,6 +1,8 @@
 {
   "title": "Linux.do",
   "category": "forum",
+  "icon": "https://icons.folo.is/linux.do",
+  "color": "slate",
   "defaults": {
     "cache": "5m",
     "vars": {
@@ -23,7 +25,6 @@
       }
     },
     "metadata": {
-      "color": "slate",
       "home": "https://linux.do"
     }
   },

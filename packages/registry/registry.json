@@ -13,10 +13,8 @@
     },
     "metadata": {
       "home": "https://36kr.com/hot-list/catalog",
-      "color": "blue",
       "title": "人气榜",
-      "type": "hottest",
-      "icon": "https://icons.folo.is/36kr.com"
+      "type": "hottest"
     },
     "cache": "5m",
     "radar": [
@@ -70,7 +68,9 @@
     },
     "provider": {
       "title": "36氪",
-      "category": "news"
+      "category": "news",
+      "icon": "https://icons.folo.is/36kr.com",
+      "color": "blue"
     }
   },
   "36kr:information": {
@@ -87,10 +87,8 @@
     },
     "metadata": {
       "home": "https://36kr.com/information/web_news/latest/",
-      "color": "blue",
       "title": "资讯",
-      "type": "timeline",
-      "icon": "https://icons.folo.is/36kr.com"
+      "type": "timeline"
     },
     "cache": "5m",
     "params": {
@@ -213,7 +211,9 @@
     },
     "provider": {
       "title": "36氪",
-      "category": "news"
+      "category": "news",
+      "icon": "https://icons.folo.is/36kr.com",
+      "color": "blue"
     }
   },
   "36kr:newsflashes": {
@@ -230,10 +230,8 @@
     },
     "metadata": {
       "home": "https://36kr.com/newsflashes/catalog/0",
-      "color": "blue",
       "title": "快讯",
-      "type": "timeline",
-      "icon": "https://icons.folo.is/36kr.com"
+      "type": "timeline"
     },
     "cache": "5m",
     "params": {
@@ -311,15 +309,15 @@
     },
     "provider": {
       "title": "36氪",
-      "category": "news"
+      "category": "news",
+      "icon": "https://icons.folo.is/36kr.com",
+      "color": "blue"
     }
   },
   "aihot:all": {
     "metadata": {
-      "color": "blue",
       "home": "https://aihot.virxact.com",
-      "type": "timeline",
-      "icon": "https://icons.folo.is/aihot.virxact.com"
+      "type": "timeline"
     },
     "loader": {
       "type": "json",
@@ -345,18 +343,18 @@
     "cache": "5m",
     "provider": {
       "title": "AIHot",
-      "category": "news"
+      "category": "news",
+      "icon": "https://icons.folo.is/aihot.virxact.com",
+      "color": "blue"
     }
   },
   "bilibili:following-videos": {
     "cache": "5m",
     "metadata": {
       "home": "https://www.bilibili.com",
-      "color": "blue",
       "type": "timeline",
       "title": "关注视频",
-      "desc": "已关注 UP 主发布的视频动态",
-      "icon": "https://icons.folo.is/www.bilibili.com"
+      "desc": "已关注 UP 主发布的视频动态"
     },
     "capabilities": {
       "network": [
@@ -370,21 +368,23 @@
     },
     "provider": {
       "title": "哔哩哔哩",
-      "category": "social"
+      "category": "social",
+      "icon": "https://icons.folo.is/bilibili.com",
+      "color": "blue"
     }
   },
   "bilibili:hotword": {
     "cache": "5m",
     "metadata": {
       "home": "https://www.bilibili.com",
-      "color": "blue",
       "type": "hottest",
-      "title": "热搜",
-      "icon": "https://icons.folo.is/www.bilibili.com"
+      "title": "热搜"
     },
     "provider": {
       "title": "哔哩哔哩",
-      "category": "social"
+      "category": "social",
+      "icon": "https://icons.folo.is/bilibili.com",
+      "color": "blue"
     },
     "capabilities": {
       "network": [
@@ -401,10 +401,8 @@
     },
     "metadata": {
       "home": "https://www.bilibili.com/v/popular/rank/all",
-      "color": "blue",
       "type": "hottest",
-      "title": "排行榜",
-      "icon": "https://icons.folo.is/www.bilibili.com"
+      "title": "排行榜"
     },
     "params": {
       "region": {
@@ -951,13 +949,14 @@
     },
     "provider": {
       "title": "哔哩哔哩",
-      "category": "social"
+      "category": "social",
+      "icon": "https://icons.folo.is/bilibili.com",
+      "color": "blue"
     }
   },
   "browser:bookmarks": {
     "cache": "5m",
     "metadata": {
-      "color": "blue",
       "type": "timeline",
       "title": "Bookmarks"
     },
@@ -985,13 +984,14 @@
       ]
     },
     "provider": {
-      "title": "Browser"
+      "title": "Browser",
+      "icon": "data:image/svg+xml,%3Csvg%20fill%3D%22none%22%20viewBox%3D%220%200%2063%2063%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%20%20%3ClinearGradient%20id%3D%22a%22%20gradientUnits%3D%22userSpaceOnUse%22%20x1%3D%2234.9087%22%20x2%3D%227.63224%22%20y1%3D%2261.029%22%20y2%3D%2213.7847%22%3E%0A%20%20%20%20%3Cstop%20offset%3D%220%22%20stop-color%3D%22%231e8e3e%22%2F%3E%0A%20%20%20%20%3Cstop%20offset%3D%221%22%20stop-color%3D%22%2334a853%22%2F%3E%0A%20%20%3C%2FlinearGradient%3E%0A%20%20%3ClinearGradient%20id%3D%22b%22%20gradientUnits%3D%22userSpaceOnUse%22%20x1%3D%2226.9043%22%20x2%3D%2254.1808%22%20y1%3D%2263.0788%22%20y2%3D%2215.8345%22%3E%0A%20%20%20%20%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23fcc934%22%2F%3E%0A%20%20%20%20%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23fbbc04%22%2F%3E%0A%20%20%3C%2FlinearGradient%3E%0A%20%20%3ClinearGradient%20id%3D%22c%22%20gradientUnits%3D%22userSpaceOnUse%22%20x1%3D%224.22145%22%20x2%3D%2258.7745%22%20y1%3D%2219.6884%22%20y2%3D%2219.6884%22%3E%0A%20%20%20%20%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23d93025%22%2F%3E%0A%20%20%20%20%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23ea4335%22%2F%3E%0A%20%20%3C%2FlinearGradient%3E%0A%20%20%3Cpath%20d%3D%22m31.499%2047.2466c8.6985%200%2015.75-7.0515%2015.75-15.75s-7.0515-15.75-15.75-15.75-15.75%207.0515-15.75%2015.75%207.0515%2015.75%2015.75%2015.75z%22%20fill%3D%22%23fff%22%2F%3E%0A%20%20%3Cpath%20d%3D%22m17.8591%2039.3751-13.63772-23.6212c-2.76527%204.788-4.22118922%2010.2197-4.22137998%2015.7489s1.45535998%2010.961%204.22028998%2015.7492c2.76494%204.7882%206.74181%208.7641%2011.53071%2011.5279%204.7889%202.7637%2010.221%204.2179%2015.7502%204.2164l13.6377-23.6212v-.0041c-1.3813%202.3954-3.369%204.3848-5.7632%205.7681s-5.1104%202.1118-7.8755%202.1122-5.4816-.7272-7.8762-2.1099c-2.3945-1.3826-4.3829-3.3714-5.7649-5.7663z%22%20fill%3D%22url(%23a)%22%2F%3E%0A%20%20%3Cpath%20d%3D%22m45.1379%2039.3741-13.6376%2023.6212c5.5292.0008%2010.9611-1.4542%2015.7496-4.2187%204.7885-2.7644%208.7648-6.7408%2011.5291-11.5294%202.7642-4.7887%204.219-10.2207%204.2181-15.7499-.001-5.5292-1.4577-10.9606-4.2237-15.7483h-27.2754l-.0034.0021c2.7651-.0014%205.4818.7254%207.8769%202.1071%202.3951%201.3818%204.3841%203.3698%205.767%205.7643%201.3829%202.3944%202.1109%205.1108%202.1109%207.8758-.0001%202.7651-.7283%205.4814-2.1113%207.8758z%22%20fill%3D%22url(%23b)%22%2F%3E%0A%20%20%3Cpath%20d%3D%22m31.499%2043.9688c6.8863%200%2012.4688-5.5825%2012.4688-12.4688s-5.5825-12.4688-12.4688-12.4688-12.4687%205.5825-12.4687%2012.4688%205.5824%2012.4688%2012.4687%2012.4688z%22%20fill%3D%22%231a73e8%22%2F%3E%0A%20%20%3Cpath%20d%3D%22m31.4991%2015.75h27.2754c-2.764-4.7888-6.74-8.76553-11.5283-11.53029-4.7883-2.76475-10.2202-4.22010235-15.7494-4.21970992s-10.9608%201.45650992-15.7487%204.22194992c-4.788%202.76543-8.76341%206.74275-11.52666%2011.53185l13.63766%2023.6212.0035.0019c-1.3837-2.394-2.1127-5.11-2.1136-7.8751s.7264-5.4817%202.1086-7.8765c1.3821-2.3948%203.3706-4.3835%205.7652-5.7659%202.3947-1.3825%205.1112-2.11%207.8763-2.1094z%22%20fill%3D%22url(%23c)%22%2F%3E%0A%3C%2Fsvg%3E",
+      "color": "blue"
     }
   },
   "browser:history": {
     "cache": "1m",
     "metadata": {
-      "color": "blue",
       "type": "timeline",
       "title": "History"
     },
@@ -1040,21 +1040,23 @@
       ]
     },
     "provider": {
-      "title": "Browser"
+      "title": "Browser",
+      "icon": "data:image/svg+xml,%3Csvg%20fill%3D%22none%22%20viewBox%3D%220%200%2063%2063%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%20%20%3ClinearGradient%20id%3D%22a%22%20gradientUnits%3D%22userSpaceOnUse%22%20x1%3D%2234.9087%22%20x2%3D%227.63224%22%20y1%3D%2261.029%22%20y2%3D%2213.7847%22%3E%0A%20%20%20%20%3Cstop%20offset%3D%220%22%20stop-color%3D%22%231e8e3e%22%2F%3E%0A%20%20%20%20%3Cstop%20offset%3D%221%22%20stop-color%3D%22%2334a853%22%2F%3E%0A%20%20%3C%2FlinearGradient%3E%0A%20%20%3ClinearGradient%20id%3D%22b%22%20gradientUnits%3D%22userSpaceOnUse%22%20x1%3D%2226.9043%22%20x2%3D%2254.1808%22%20y1%3D%2263.0788%22%20y2%3D%2215.8345%22%3E%0A%20%20%20%20%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23fcc934%22%2F%3E%0A%20%20%20%20%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23fbbc04%22%2F%3E%0A%20%20%3C%2FlinearGradient%3E%0A%20%20%3ClinearGradient%20id%3D%22c%22%20gradientUnits%3D%22userSpaceOnUse%22%20x1%3D%224.22145%22%20x2%3D%2258.7745%22%20y1%3D%2219.6884%22%20y2%3D%2219.6884%22%3E%0A%20%20%20%20%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23d93025%22%2F%3E%0A%20%20%20%20%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23ea4335%22%2F%3E%0A%20%20%3C%2FlinearGradient%3E%0A%20%20%3Cpath%20d%3D%22m31.499%2047.2466c8.6985%200%2015.75-7.0515%2015.75-15.75s-7.0515-15.75-15.75-15.75-15.75%207.0515-15.75%2015.75%207.0515%2015.75%2015.75%2015.75z%22%20fill%3D%22%23fff%22%2F%3E%0A%20%20%3Cpath%20d%3D%22m17.8591%2039.3751-13.63772-23.6212c-2.76527%204.788-4.22118922%2010.2197-4.22137998%2015.7489s1.45535998%2010.961%204.22028998%2015.7492c2.76494%204.7882%206.74181%208.7641%2011.53071%2011.5279%204.7889%202.7637%2010.221%204.2179%2015.7502%204.2164l13.6377-23.6212v-.0041c-1.3813%202.3954-3.369%204.3848-5.7632%205.7681s-5.1104%202.1118-7.8755%202.1122-5.4816-.7272-7.8762-2.1099c-2.3945-1.3826-4.3829-3.3714-5.7649-5.7663z%22%20fill%3D%22url(%23a)%22%2F%3E%0A%20%20%3Cpath%20d%3D%22m45.1379%2039.3741-13.6376%2023.6212c5.5292.0008%2010.9611-1.4542%2015.7496-4.2187%204.7885-2.7644%208.7648-6.7408%2011.5291-11.5294%202.7642-4.7887%204.219-10.2207%204.2181-15.7499-.001-5.5292-1.4577-10.9606-4.2237-15.7483h-27.2754l-.0034.0021c2.7651-.0014%205.4818.7254%207.8769%202.1071%202.3951%201.3818%204.3841%203.3698%205.767%205.7643%201.3829%202.3944%202.1109%205.1108%202.1109%207.8758-.0001%202.7651-.7283%205.4814-2.1113%207.8758z%22%20fill%3D%22url(%23b)%22%2F%3E%0A%20%20%3Cpath%20d%3D%22m31.499%2043.9688c6.8863%200%2012.4688-5.5825%2012.4688-12.4688s-5.5825-12.4688-12.4688-12.4688-12.4687%205.5825-12.4687%2012.4688%205.5824%2012.4688%2012.4687%2012.4688z%22%20fill%3D%22%231a73e8%22%2F%3E%0A%20%20%3Cpath%20d%3D%22m31.4991%2015.75h27.2754c-2.764-4.7888-6.74-8.76553-11.5283-11.53029-4.7883-2.76475-10.2202-4.22010235-15.7494-4.21970992s-10.9608%201.45650992-15.7487%204.22194992c-4.788%202.76543-8.76341%206.74275-11.52666%2011.53185l13.63766%2023.6212.0035.0019c-1.3837-2.394-2.1127-5.11-2.1136-7.8751s.7264-5.4817%202.1086-7.8765c1.3821-2.3948%203.3706-4.3835%205.7652-5.7659%202.3947-1.3825%205.1112-2.11%207.8763-2.1094z%22%20fill%3D%22url(%23c)%22%2F%3E%0A%3C%2Fsvg%3E",
+      "color": "blue"
     }
   },
   "cls:depth": {
     "cache": "5m",
     "metadata": {
       "home": "https://www.cls.cn/depth",
-      "color": "red",
       "type": "timeline",
-      "title": "深度",
-      "icon": "https://icons.folo.is/www.cls.cn"
+      "title": "深度"
     },
     "provider": {
       "title": "财联社",
-      "category": "finance"
+      "category": "finance",
+      "icon": "https://icons.folo.is/cls.cn",
+      "color": "red"
     },
     "capabilities": {
       "network": [
@@ -1068,14 +1070,14 @@
     "cache": "5m",
     "metadata": {
       "home": "https://www.cls.cn",
-      "color": "red",
       "type": "hottest",
-      "title": "热门",
-      "icon": "https://icons.folo.is/www.cls.cn"
+      "title": "热门"
     },
     "provider": {
       "title": "财联社",
-      "category": "finance"
+      "category": "finance",
+      "icon": "https://icons.folo.is/cls.cn",
+      "color": "red"
     },
     "capabilities": {
       "network": [
@@ -1089,14 +1091,14 @@
     "cache": "1m",
     "metadata": {
       "home": "https://www.cls.cn",
-      "color": "red",
       "type": "timeline",
-      "title": "电报",
-      "icon": "https://icons.folo.is/www.cls.cn"
+      "title": "电报"
     },
     "provider": {
       "title": "财联社",
-      "category": "finance"
+      "category": "finance",
+      "icon": "https://icons.folo.is/cls.cn",
+      "color": "red"
     },
     "capabilities": {
       "network": [
@@ -1116,11 +1118,9 @@
       "browser": []
     },
     "metadata": {
-      "color": "orange",
       "home": "https://folo.is",
       "type": "timeline",
-      "title": "Feed",
-      "icon": "https://icons.folo.is/folo.is"
+      "title": "Feed"
     },
     "params": {
       "feedId": {
@@ -1154,7 +1154,9 @@
     ],
     "provider": {
       "title": "Folo",
-      "category": "news"
+      "category": "news",
+      "icon": "https://icons.folo.is/folo.is",
+      "color": "orange"
     }
   },
   "folo:list": {
@@ -1167,11 +1169,9 @@
       "browser": []
     },
     "metadata": {
-      "color": "orange",
       "home": "https://folo.is",
       "type": "timeline",
-      "title": "List",
-      "icon": "https://icons.folo.is/folo.is"
+      "title": "List"
     },
     "params": {
       "listId": {
@@ -1205,16 +1205,16 @@
     ],
     "provider": {
       "title": "Folo",
-      "category": "news"
+      "category": "news",
+      "icon": "https://icons.folo.is/folo.is",
+      "color": "orange"
     }
   },
   "github:trending": {
     "metadata": {
       "home": "https://github.com/trending",
-      "color": "slate",
       "title": "Trending",
-      "type": "hottest",
-      "icon": "https://icons.folo.is/github.com"
+      "type": "hottest"
     },
     "params": {
       "language": {
@@ -1302,7 +1302,9 @@
     "cache": "15m",
     "provider": {
       "title": "GitHub",
-      "category": "developer"
+      "category": "developer",
+      "icon": "https://icons.folo.is/github.com",
+      "color": "slate"
     }
   },
   "hackernews:ask": {
@@ -1347,14 +1349,14 @@
       }
     },
     "metadata": {
-      "color": "orange",
       "home": "https://news.ycombinator.com/ask",
-      "title": "Ask",
-      "icon": "https://icons.folo.is/news.ycombinator.com"
+      "title": "Ask"
     },
     "provider": {
       "title": "Hacker News",
-      "category": "forum"
+      "category": "forum",
+      "icon": "https://icons.folo.is/news.ycombinator.com",
+      "color": "orange"
     }
   },
   "hackernews:newest": {
@@ -1399,15 +1401,15 @@
       }
     },
     "metadata": {
-      "color": "orange",
       "home": "https://news.ycombinator.com/newest",
       "type": "timeline",
-      "title": "Newest",
-      "icon": "https://icons.folo.is/news.ycombinator.com"
+      "title": "Newest"
     },
     "provider": {
       "title": "Hacker News",
-      "category": "forum"
+      "category": "forum",
+      "icon": "https://icons.folo.is/news.ycombinator.com",
+      "color": "orange"
     }
   },
   "hackernews:show": {
@@ -1452,14 +1454,14 @@
       }
     },
     "metadata": {
-      "color": "orange",
       "home": "https://news.ycombinator.com/show",
-      "title": "Show",
-      "icon": "https://icons.folo.is/news.ycombinator.com"
+      "title": "Show"
     },
     "provider": {
       "title": "Hacker News",
-      "category": "forum"
+      "category": "forum",
+      "icon": "https://icons.folo.is/news.ycombinator.com",
+      "color": "orange"
     }
   },
   "hackernews:top": {
@@ -1504,15 +1506,15 @@
       }
     },
     "metadata": {
-      "color": "orange",
       "home": "https://news.ycombinator.com/",
       "type": "hottest",
-      "title": "Hottest",
-      "icon": "https://icons.folo.is/news.ycombinator.com"
+      "title": "Hottest"
     },
     "provider": {
       "title": "Hacker News",
-      "category": "forum"
+      "category": "forum",
+      "icon": "https://icons.folo.is/news.ycombinator.com",
+      "color": "orange"
     }
   },
   "jike:following-updates": {
@@ -1529,11 +1531,9 @@
     "cache": "5m",
     "metadata": {
       "home": "https://web.okjike.com",
-      "color": "yellow",
       "type": "timeline",
       "title": "关注动态",
-      "desc": "已关注即刻用户发布的动态",
-      "icon": "https://icons.folo.is/web.okjike.com"
+      "desc": "已关注即刻用户发布的动态"
     },
     "secrets": [
       {
@@ -1565,7 +1565,9 @@
     ],
     "provider": {
       "title": "即刻",
-      "category": "social"
+      "category": "social",
+      "icon": "https://web.okjike.com/favicon-32x32.png",
+      "color": "yellow"
     }
   },
   "jike:topic": {
@@ -1582,11 +1584,9 @@
     "cache": "5m",
     "metadata": {
       "home": "https://web.okjike.com",
-      "color": "yellow",
       "type": "timeline",
       "title": "主题动态",
-      "desc": "指定即刻主题的动态",
-      "icon": "https://icons.folo.is/web.okjike.com"
+      "desc": "指定即刻主题的动态"
     },
     "secrets": [
       {
@@ -1676,7 +1676,9 @@
     },
     "provider": {
       "title": "即刻",
-      "category": "social"
+      "category": "social",
+      "icon": "https://web.okjike.com/favicon-32x32.png",
+      "color": "yellow"
     }
   },
   "jike:user-updates": {
@@ -1696,11 +1698,9 @@
     },
     "metadata": {
       "home": "https://web.okjike.com",
-      "color": "yellow",
       "type": "timeline",
       "title": "用户动态",
-      "desc": "指定即刻用户发布的动态",
-      "icon": "https://icons.folo.is/web.okjike.com"
+      "desc": "指定即刻用户发布的动态"
     },
     "secrets": [
       {
@@ -1755,7 +1755,9 @@
     },
     "provider": {
       "title": "即刻",
-      "category": "social"
+      "category": "social",
+      "icon": "https://web.okjike.com/favicon-32x32.png",
+      "color": "yellow"
     }
   },
   "linuxdo:latest": {
@@ -1785,15 +1787,15 @@
       "url": "{{ source.vars.origin }}/latest.json?order=created"
     },
     "metadata": {
-      "color": "slate",
       "home": "https://linux.do",
       "title": "最新",
-      "type": "timeline",
-      "icon": "https://icons.folo.is/linux.do"
+      "type": "timeline"
     },
     "provider": {
       "title": "Linux.do",
-      "category": "forum"
+      "category": "forum",
+      "icon": "https://icons.folo.is/linux.do",
+      "color": "slate"
     }
   },
   "linuxdo:top-daily": {
@@ -1819,15 +1821,15 @@
       "url": "{{ source.vars.origin }}/top/daily.json"
     },
     "metadata": {
-      "color": "slate",
       "home": "https://linux.do",
       "title": "热门",
-      "type": "hottest",
-      "icon": "https://icons.folo.is/linux.do"
+      "type": "hottest"
     },
     "provider": {
       "title": "Linux.do",
-      "category": "forum"
+      "category": "forum",
+      "icon": "https://icons.folo.is/linux.do",
+      "color": "slate"
     }
   },
   "netease-music:playlist": {
@@ -1837,10 +1839,8 @@
     },
     "metadata": {
       "home": "https://music.163.com/#/playlist?id=17990594711",
-      "color": "red",
       "type": "hottest",
-      "title": "歌单",
-      "icon": "https://icons.folo.is/music.163.com"
+      "title": "歌单"
     },
     "loader": {
       "type": "json",
@@ -1899,7 +1899,9 @@
     ],
     "provider": {
       "title": "网易云音乐",
-      "category": "entertainment"
+      "category": "entertainment",
+      "icon": "https://icons.folo.is/music.163.com",
+      "color": "red"
     }
   },
   "netease-music:ranking": {
@@ -1909,10 +1911,8 @@
     },
     "metadata": {
       "home": "https://music.163.com/#/discover/toplist?id=19723756",
-      "color": "red",
       "type": "hottest",
-      "title": "飙升榜",
-      "icon": "https://icons.folo.is/music.163.com"
+      "title": "飙升榜"
     },
     "loader": {
       "type": "json",
@@ -1971,15 +1971,15 @@
     ],
     "provider": {
       "title": "网易云音乐",
-      "category": "entertainment"
+      "category": "entertainment",
+      "icon": "https://icons.folo.is/music.163.com",
+      "color": "red"
     }
   },
   "newsnow:topic-latest": {
     "metadata": {
-      "color": "red",
       "home": "https://www.newsnow.com",
-      "type": "timeline",
-      "icon": "https://icons.folo.is/www.newsnow.com"
+      "type": "timeline"
     },
     "params": {
       "locale": {
@@ -2070,16 +2070,16 @@
     "cache": "5m",
     "provider": {
       "title": "NEWS NOW",
-      "category": "news"
+      "category": "news",
+      "icon": "https://icons.folo.is/newsnow.com",
+      "color": "red"
     }
   },
   "telegram:channel": {
     "metadata": {
-      "color": "blue",
       "home": "https://t.me/s/TestFlightCN",
       "title": "科技圈 在花频道",
-      "type": "timeline",
-      "icon": "https://icons.folo.is/t.me"
+      "type": "timeline"
     },
     "params": {
       "channel": {
@@ -2161,16 +2161,16 @@
     "cache": "5m",
     "provider": {
       "title": "Telegram",
-      "category": "social"
+      "category": "social",
+      "icon": "https://icons.folo.is/t.me",
+      "color": "blue"
     }
   },
   "tieba:hot-topic": {
     "metadata": {
       "home": "https://tieba.baidu.com",
-      "color": "blue",
       "title": "热议",
-      "type": "hottest",
-      "icon": "https://icons.folo.is/tieba.baidu.com"
+      "type": "hottest"
     },
     "loader": {
       "type": "json",
@@ -2191,14 +2191,14 @@
     "cache": "5m",
     "provider": {
       "title": "百度贴吧",
-      "category": "forum"
+      "category": "forum",
+      "icon": "https://icons.folo.is/tieba.baidu.com",
+      "color": "blue"
     }
   },
   "v2ex:feed": {
     "metadata": {
-      "color": "slate",
-      "home": "https://v2ex.com/",
-      "icon": "https://icons.folo.is/v2ex.com"
+      "home": "https://v2ex.com/"
     },
     "params": {
       "feed": {
@@ -2255,7 +2255,9 @@
     "cache": "5m",
     "provider": {
       "title": "V2EX",
-      "category": "forum"
+      "category": "forum",
+      "icon": "https://icons.folo.is/v2ex.com",
+      "color": "slate"
     }
   },
   "weibo:following": {
@@ -2293,9 +2295,7 @@
     ],
     "cache": "5m",
     "metadata": {
-      "color": "red",
       "type": "timeline",
-      "icon": "https://weibo.com/favicon.ico",
       "title": "关注",
       "desc": "所有已关注微博账号发布的最新微博",
       "home": "https://weibo.com"
@@ -2316,7 +2316,9 @@
     ],
     "provider": {
       "title": "微博",
-      "category": "social"
+      "category": "social",
+      "icon": "https://weibo.com/favicon.ico",
+      "color": "red"
     }
   },
   "weibo:hot-search": {
@@ -2357,9 +2359,7 @@
       "maxAge": "1m"
     },
     "metadata": {
-      "color": "red",
       "type": "hottest",
-      "icon": "https://weibo.com/favicon.ico",
       "title": "热搜"
     },
     "vars": {
@@ -2442,7 +2442,9 @@
     ],
     "provider": {
       "title": "微博",
-      "category": "social"
+      "category": "social",
+      "icon": "https://weibo.com/favicon.ico",
+      "color": "red"
     }
   },
   "weibo:keyword": {
@@ -2480,9 +2482,7 @@
     ],
     "cache": "5m",
     "metadata": {
-      "color": "red",
       "type": "timeline",
-      "icon": "https://weibo.com/favicon.ico",
       "title": "关键词",
       "desc": "包含指定关键词的最新微博",
       "home": "https://s.weibo.com"
@@ -2516,7 +2516,9 @@
     ],
     "provider": {
       "title": "微博",
-      "category": "social"
+      "category": "social",
+      "icon": "https://weibo.com/favicon.ico",
+      "color": "red"
     }
   },
   "weibo:super-topic": {
@@ -2554,9 +2556,7 @@
     ],
     "cache": "5m",
     "metadata": {
-      "color": "red",
       "type": "timeline",
-      "icon": "https://weibo.com/favicon.ico",
       "title": "超话",
       "desc": "指定微博超话的最新帖子",
       "home": "https://weibo.com"
@@ -2618,7 +2618,9 @@
     ],
     "provider": {
       "title": "微博",
-      "category": "social"
+      "category": "social",
+      "icon": "https://weibo.com/favicon.ico",
+      "color": "red"
     }
   },
   "weibo:user": {
@@ -2659,9 +2661,7 @@
       "maxAge": "5m"
     },
     "metadata": {
-      "color": "red",
       "type": "timeline",
-      "icon": "https://weibo.com/favicon.ico",
       "title": "用户微博",
       "desc": "指定微博用户发布的最新微博",
       "home": "https://weibo.com"
@@ -2703,7 +2703,9 @@
     ],
     "provider": {
       "title": "微博",
-      "category": "social"
+      "category": "social",
+      "icon": "https://weibo.com/favicon.ico",
+      "color": "red"
     }
   },
   "x:following": {
@@ -2719,11 +2721,9 @@
     },
     "cache": "5m",
     "metadata": {
-      "color": "slate",
       "home": "https://x.com",
       "type": "timeline",
-      "title": "Following",
-      "icon": "https://icons.folo.is/x.com"
+      "title": "Following"
     },
     "secrets": [
       {
@@ -2736,7 +2736,9 @@
     ],
     "provider": {
       "title": "X",
-      "category": "social"
+      "category": "social",
+      "icon": "https://icons.folo.is/x.com",
+      "color": "slate"
     }
   },
   "x:place-trends": {
@@ -2752,11 +2754,9 @@
     },
     "cache": "5m",
     "metadata": {
-      "color": "slate",
       "home": "https://x.com",
       "type": "hottest",
-      "title": "Trending",
-      "icon": "https://icons.folo.is/x.com"
+      "title": "Trending"
     },
     "secrets": [
       {
@@ -2818,7 +2818,9 @@
     },
     "provider": {
       "title": "X",
-      "category": "social"
+      "category": "social",
+      "icon": "https://icons.folo.is/x.com",
+      "color": "slate"
     }
   },
   "x:recommended": {
@@ -2834,11 +2836,9 @@
     },
     "cache": "5m",
     "metadata": {
-      "color": "slate",
       "home": "https://x.com",
       "type": "timeline",
-      "title": "Recommended",
-      "icon": "https://icons.folo.is/x.com"
+      "title": "Recommended"
     },
     "secrets": [
       {
@@ -2851,7 +2851,9 @@
     ],
     "provider": {
       "title": "X",
-      "category": "social"
+      "category": "social",
+      "icon": "https://icons.folo.is/x.com",
+      "color": "slate"
     }
   },
   "x:user": {
@@ -2870,11 +2872,9 @@
       "maxAge": "5m"
     },
     "metadata": {
-      "color": "slate",
       "home": "https://x.com",
       "type": "timeline",
-      "title": "User Tweets",
-      "icon": "https://icons.folo.is/x.com"
+      "title": "User Tweets"
     },
     "secrets": [
       {
@@ -2936,15 +2936,15 @@
     },
     "provider": {
       "title": "X",
-      "category": "social"
+      "category": "social",
+      "icon": "https://icons.folo.is/x.com",
+      "color": "slate"
     }
   },
   "xueqiu:hot-stock": {
     "metadata": {
       "home": "https://xueqiu.com",
-      "color": "blue",
-      "type": "hottest",
-      "icon": "https://icons.folo.is/xueqiu.com"
+      "type": "hottest"
     },
     "loader": {
       "type": "json",
@@ -2966,16 +2966,16 @@
     "cache": "5m",
     "provider": {
       "title": "雪球",
-      "category": "finance"
+      "category": "finance",
+      "icon": "https://icons.folo.is/xueqiu.com",
+      "color": "blue"
     }
   },
   "zaochenbao:realtime": {
     "metadata": {
-      "color": "red",
       "home": "https://www.zaochenbao.com/realtime/",
       "title": "即时新闻",
-      "type": "timeline",
-      "icon": "https://icons.folo.is/www.zaochenbao.com"
+      "type": "timeline"
     },
     "loader": {
       "type": "html",
@@ -2997,16 +2997,16 @@
     "cache": "5m",
     "provider": {
       "title": "早晨报",
-      "category": "news"
+      "category": "news",
+      "icon": "https://icons.folo.is/zaochenbao.com",
+      "color": "red"
     }
   },
   "zhihu:hot-list": {
     "metadata": {
       "home": "https://www.zhihu.com",
-      "color": "blue",
       "title": "全站热榜",
-      "type": "hottest",
-      "icon": "https://icons.folo.is/www.zhihu.com"
+      "type": "hottest"
     },
     "loader": {
       "type": "json",
@@ -3027,7 +3027,9 @@
     "cache": "5m",
     "provider": {
       "title": "知乎",
-      "category": "forum"
+      "category": "forum",
+      "icon": "https://icons.folo.is/zhihu.com",
+      "color": "blue"
     }
   }
 }

@@ -28,7 +28,7 @@ const RADAR_CARD_ROTATE_OUTPUT = [-7, 0, 7]
 const RADAR_CARD_Y_OUTPUT = [20, 0, 20]
 const RADAR_CELEBRATION_DURATION = 900
 const RADAR_REDUCED_MOTION_CELEBRATION_DURATION = 180
-const RADAR_CONFETTI_COLORS: Record<BoardSource["color"], string> = {
+const RADAR_CONFETTI_COLORS: Record<BoardSource["provider"]["color"], string> = {
   red: "#f87171",
   rose: "#fb7185",
   pink: "#f472b6",
@@ -59,7 +59,7 @@ interface RadarActionStyle extends CSSProperties {
   "--radar-action-chip-text": string
 }
 
-function getRadarActionStyle(color: BoardSource["color"]): RadarActionStyle {
+function getRadarActionStyle(color: BoardSource["provider"]["color"]): RadarActionStyle {
   return {
     "--radar-action-card-bg": `color-mix(in oklab, var(--color-${color}-400) 40%, transparent)`,
     "--radar-action-card-bg-hover": `color-mix(in oklab, var(--color-${color}-400) 52%, transparent)`,
@@ -68,7 +68,7 @@ function getRadarActionStyle(color: BoardSource["color"]): RadarActionStyle {
 }
 
 interface RadarConfettiOptions {
-  color: BoardSource["color"]
+  color: BoardSource["provider"]["color"]
   originElement: HTMLElement | null
 }
 
@@ -326,7 +326,7 @@ function RadarDeckContent({ sourceDescriptors, suggestions }: RadarDeckProps) {
         draftPatches[activeSuggestion.id] ?? {},
       ),
     ))
-    launchRadarConfetti({ color: activeSource.color, originElement: actionRef.current })
+    launchRadarConfetti({ color: activeSource.provider.color, originElement: actionRef.current })
     setIsCreated(true)
   }, [activeSource, activeSuggestion, addInstance, draftPatches, isCreated, targetBoardId])
 
@@ -345,7 +345,7 @@ function RadarDeckContent({ sourceDescriptors, suggestions }: RadarDeckProps) {
     return <RadarEmptyState />
   }
 
-  const radarActionStyle = getRadarActionStyle(activeSource.color)
+  const radarActionStyle = getRadarActionStyle(activeSource.provider.color)
 
   return (
     <motion.section

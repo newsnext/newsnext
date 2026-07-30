@@ -1,6 +1,8 @@
 {
   "title": "36氪",
   "category": "news",
+  "icon": "https://icons.folo.is/36kr.com",
+  "color": "blue",
   "defaults": {
     "vars": {
       "origin": "https://36kr.com",
@@ -14,8 +16,7 @@
       }
     },
     "metadata": {
-      "home": "https://36kr.com",
-      "color": "blue"
+      "home": "https://36kr.com"
     },
     "cache": "5m"
   },

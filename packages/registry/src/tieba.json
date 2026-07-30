@@ -1,10 +1,11 @@
 {
   "title": "百度贴吧",
   "category": "forum",
+  "icon": "https://icons.folo.is/tieba.baidu.com",
+  "color": "blue",
   "defaults": {
     "metadata": {
-      "home": "https://tieba.baidu.com",
-      "color": "blue"
+      "home": "https://tieba.baidu.com"
     }
   },
   "sources": {

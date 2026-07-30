@@ -13,10 +13,10 @@ const testSources: SourceDescriptor[] = [
     provider: {
       title: "Test",
       category: "social",
+      icon: "https://example.com/icon.png",
+      color: "blue",
     },
-    color: "blue",
     home: "https://example.com",
-    icon: "https://example.com/icon.png",
     capabilities: {
       network: [],
       cookies: [],
@@ -32,8 +32,8 @@ const testSources: SourceDescriptor[] = [
     provider: {
       title: "Latest",
       category: "social",
+      color: "green",
     },
-    color: "green",
     home: "https://latest.example.com",
     capabilities: {
       network: [],
@@ -91,7 +91,7 @@ describe("buildSourceCards", () => {
     })
   })
 
-  it("applies source instance metadata overrides", () => {
+  it("applies source-owned instance metadata overrides", () => {
     const cards = buildSourceCards({
       sources: testSources,
       boardId: "inbox",
@@ -100,11 +100,9 @@ describe("buildSourceCards", () => {
           patch: {
             metadata: {
               title: "Custom Title",
-              icon: "https://custom.example.com/icon.png",
               badge: "https://custom.example.com/badge.png",
               desc: "Custom description",
               home: "https://custom.example.com",
-              color: "red",
               type: "hottest",
             },
           },
@@ -114,16 +112,18 @@ describe("buildSourceCards", () => {
 
     expect(cards.map["test:feed::card_abc"]).toMatchObject({
       title: "Custom Title",
-      icon: "https://custom.example.com/icon.png",
       badge: "https://custom.example.com/badge.png",
       desc: "Custom description",
       home: "https://custom.example.com",
-      color: "red",
       type: "hottest",
+      provider: {
+        icon: "https://example.com/icon.png",
+        color: "blue",
+      },
     })
   })
 
-  it("does not allow persisted instance metadata to override provider identity", () => {
+  it("does not allow persisted instance metadata to override provider metadata", () => {
     const cards = buildSourceCards({
       sources: testSources,
       boardId: "inbox",
@@ -132,6 +132,8 @@ describe("buildSourceCards", () => {
           patch: {
             metadata: {
               category: "forum",
+              icon: "injected-icon",
+              color: "red",
               provider: {
                 title: "Injected Provider",
                 category: "forum",
@@ -145,8 +147,12 @@ describe("buildSourceCards", () => {
     expect(cards.map["test:feed::card_abc"].provider).toEqual({
       title: "Test",
       category: "social",
+      icon: "https://example.com/icon.png",
+      color: "blue",
     })
     expect(cards.map["test:feed::card_abc"]).not.toHaveProperty("category")
+    expect(cards.map["test:feed::card_abc"]).not.toHaveProperty("icon")
+    expect(cards.map["test:feed::card_abc"]).not.toHaveProperty("color")
   })
 
   it("hides base source templates from boards", () => {
@@ -207,7 +213,7 @@ describe("mergeSourceInstancePatch", () => {
       },
       {
         params: { includeReplies: true },
-        metadata: { color: "blue" },
+        metadata: { desc: "Developer news" },
       },
     )).toEqual({
       params: {
@@ -216,7 +222,7 @@ describe("mergeSourceInstancePatch", () => {
       },
       metadata: {
         title: "NewsNext",
-        color: "blue",
+        desc: "Developer news",
       },
     })
   })

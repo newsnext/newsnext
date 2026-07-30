@@ -26,11 +26,12 @@ import type { ProviderConfig } from "@newsnext/source/registry"
 
 export default {
   title: "Example",
+  icon: "https://icons.folo.is/example.com",
+  color: "blue",
   defaults: {
     cache: "5m",
     metadata: {
       home: "https://example.com",
-      color: "blue",
     },
   },
   sources: {
@@ -63,9 +64,10 @@ bun --filter=@newsnext/registry run build
 
 ## Provider and source configuration
 
-A provider has only `title`, optional `category`, `defaults`, and `sources`.
-`title` and `category` identify the provider and cannot be overridden by
-individual sources, Radar rules, or card instances.
+A provider has `title`, `color`, optional `icon` and `category`, `defaults`, and
+`sources`. `title`, `icon`, `color`, and `category` describe the provider and
+cannot be set or overridden by individual sources, Radar rules, or card
+instances. Every source descriptor receives the provider's `icon` and `color`.
 
 `defaults` may contain `cache`, `capabilities`, `loader`, `metadata`, `vars`,
 `params`, `radar`, `requestRules`, and `secrets`. Defaults recursively fill
@@ -77,11 +79,9 @@ Source metadata supports:
 ```ts
 metadata: {
   title: "Latest",
-  icon: "https://example.com/icon.png",
   badge: "https://example.com/account.png",
   desc: "Example news",
   home: "https://example.com/latest",
-  color: "blue",
   type: "timeline",
 }
 ```
@@ -145,10 +145,14 @@ type sort by descending timestamp when the first item has a non-zero timestamp.
 Write human-facing strings in the website's primary interface language. Keep
 brand names, IDs, parameter keys and values, and selectors unchanged.
 
-`metadata.icon` defaults to the favicon derived from the final `metadata.home`.
-Use `metadata.badge` for instance-specific identity such as a channel or user
+Choose one stable provider `icon`, commonly an HTTPS favicon URL. A standard
+`data:image/...` URL is also supported when the icon should be embedded in the
+registry; use the `data:` scheme without `//` and percent-encode SVG markup.
+Choose one provider `color` from the shared color palette. Use
+`metadata.badge` for instance-specific identity such as a channel or user
 avatar. Source metadata is static and must not contain Liquid; use a Radar
-metadata patch for dynamic values.
+metadata patch for dynamic values. Defining `icon` or `color` in source
+metadata is invalid.
 
 ## Parameters
 
@@ -659,20 +663,19 @@ Prefer a stable, unique semantic or structural selector for page metadata.
 Parse `scope.page.title` only when the value is unavailable from the top-level
 DOM, such as content rendered inside an iframe.
 
-Radar metadata can override every source presentation field: `title`, `icon`,
-`badge`, `desc`, `home`, `color`, and `type`. Use
+Radar metadata can override source-owned presentation fields: `title`, `badge`,
+`desc`, `home`, and `type`. Use
 `type: "hottest"` or `type: "timeline"` when a discovered instance needs a
 different card presentation from its source default. Radar metadata uses the
 same selector, traversal, extraction, and template behavior as HTML loader
-fields.
+fields. Provider-owned `icon` and `color` are not valid Radar metadata fields.
 
 When a source has no parameters or explicit `radar`, an HTTP(S)
 `metadata.home` creates a same-host rule automatically. Set `radar: []` to opt
 out. Parameterized sources need explicit rules.
 
-Use `badge` for secondary instance identity and `icon` when Radar should replace
-the source icon. For signed or expiring images, return loader metadata instead
-of persisting the URL through Radar.
+Use `badge` for secondary instance identity. For signed or expiring images,
+return loader metadata instead of persisting the URL through Radar.
 
 ## Validation and verification
 

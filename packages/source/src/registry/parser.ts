@@ -47,6 +47,8 @@ export function parseSourceRegistry(input: unknown): SourceRegistry {
         && (
           previousProvider.title !== currentProvider.title
           || previousProvider.category !== currentProvider.category
+          || previousProvider.icon !== currentProvider.icon
+          || previousProvider.color !== currentProvider.color
         )
       ) {
         throw new Error(`Provider "${providerId}" has inconsistent metadata`)

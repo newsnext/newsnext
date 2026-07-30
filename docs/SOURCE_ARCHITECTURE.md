@@ -46,7 +46,7 @@ packages/registry/loaders.ts
 ```
 
 `registry.json` is a flat object keyed by complete source IDs such as
-`example:latest`. It contains serializable provider identity, expanded source
+`example:latest`. It contains serializable provider metadata, expanded source
 configuration, structured loaders, and resolved capabilities.
 
 `loaders.ts` contains the executable loader map for TypeScript providers. The
@@ -82,23 +82,31 @@ path. Expansion:
 3. recursively fills missing object properties;
 4. replaces inherited arrays with source arrays;
 5. recursively merges `vars`, with source values taking precedence;
-6. derives a favicon from the final `metadata.home` when no icon exists;
-7. validates the complete source.
+6. attaches provider-owned presentation metadata to every source;
+7. validates the complete source and rejects source-owned `icon` or `color`.
 
-Required values, including cache policy, color, and loader, must come from the
-provider or source authoring configuration. Provider category is optional.
+Required source values, including cache policy and loader, come from defaults or
+individual source configuration. Provider color is required; provider icon and
+category are optional.
 
 Provider identity remains separate from source metadata:
 
 ```ts
 provider: {
   title: "Example",
+  icon: "https://icons.folo.is/example.com", // optional
+  color: "blue",
   category: "social", // optional
 }
 ```
 
+Provider expansion treats `icon` as opaque presentation data and preserves
+standard `data:image/...` URLs as well as remote image URLs. Embedded icons are
+serialized directly into the generated registry and rendered as image sources;
+they do not add network or browser capabilities.
+
 This prevents a source, Radar rule, or card instance from changing the identity
-shared by its provider.
+and visual treatment shared by its provider.
 
 Provider category is a static registry attribute. Provider expansion copies it
 into every flattened source descriptor, and registry parsing validates it
@@ -265,10 +273,10 @@ Liquid.
 
 Rules and compiled matchers are cached. Optional Radar failures are reported as
 diagnostics and fail closed instead of interrupting the surrounding UI.
-Radar metadata can replace presentation fields, including icons, card type,
-and color, but cannot modify source identity, provider title or category,
-provider attribution, loader behavior, capabilities, secrets, request rules, or
-cache policy.
+Radar metadata can replace source-owned presentation fields such as title,
+badge, description, home URL, and card type, but cannot modify source identity,
+provider title, icon, color, category, attribution, loader behavior,
+capabilities, secrets, request rules, or cache policy.
 Accepting a Radar suggestion creates one card instance with the selected board
 membership. The instance owns its board ID alongside its source ID and patch.
 Moving a card updates only that board ID; source parameters, presentation
@@ -277,8 +285,8 @@ metadata, and cache identity remain unchanged. The board ID is nullable:
 that board. Inbox deliberately skips membership filtering and aggregates every
 card instance.
 The card editor writes the same instance patch shape and exposes every declared
-source parameter plus every source presentation metadata field. Provider title
-and category remain read-only.
+source parameter plus every source-owned presentation metadata field. Provider
+title, icon, color, and category remain read-only.
 
 ## Capabilities, secrets, and request rules
 

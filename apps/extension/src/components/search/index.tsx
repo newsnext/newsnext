@@ -111,7 +111,7 @@ function SearchDialogContent(): ReactNode {
       value={selectedItem?.id}
       onValueChange={setSelectedItemId}
       disablePointerSelection
-      className={cn(`sunrise-${selectedItem?.source.color ?? "theme"}-400`, "bg-transparent p-0 rounded-none")}
+      className={cn(`sunrise-${selectedItem?.source.provider.color ?? "theme"}-400`, "bg-transparent p-0 rounded-none")}
     >
       <CommandInput
         autoFocus
@@ -139,8 +139,8 @@ function SearchDialogContent(): ReactNode {
                 <SourceIcon
                   badge={item.source.badge}
                   className="shrink-0 rounded-full"
-                  color={item.source.color}
-                  icon={item.source.icon}
+                  color={item.source.provider.color}
+                  icon={item.source.provider.icon}
                   title={item.source.title || item.source.provider.title}
                 />
                 <span className="shrink-0">

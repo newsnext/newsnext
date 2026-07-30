@@ -17,7 +17,6 @@ import type {
 import type { HtmlSourceOptions } from "./loaders/html"
 import type { JsonSourceOptions } from "./loaders/json"
 
-import { COLORS } from "@newsnext/shared/constants"
 import { createDefu } from "defu"
 import { isSourcePresentationMetadataKey } from "../types"
 import { assertNetworkCapability, validateSourceRequestRules } from "./capabilities"
@@ -236,8 +235,8 @@ function validateJsonExpressionAt(expression: string, location: string): void {
 
 type ResolvedSource<TParams extends SourceParamSchemaMap> = Omit<
   RuntimeSource<TParams>,
-  "color" | "provider"
-> & Partial<Pick<RuntimeSource<TParams>, "color">>
+  "provider"
+>
 
 function resolveSource<const TParams extends SourceParamSchemaMap = Record<string, never>>(
   key: string,
@@ -406,8 +405,6 @@ function mergeSourceVarValues(
   return merged
 }
 
-const SOURCE_COLORS = new Set<string>(COLORS)
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value)
 }
@@ -421,12 +418,6 @@ export function resolveRuntimeSource(
   validateSourceTemplates(id, config)
 
   const source = resolveSource(key, config)
-  if (
-    !source.color
-    || !SOURCE_COLORS.has(source.color)
-  ) {
-    throw new Error(`Source "${id}" is missing valid display metadata`)
-  }
 
   const secrets = source.secrets
   const cookieHosts = (secrets ?? [])
@@ -436,7 +427,6 @@ export function resolveRuntimeSource(
   return {
     ...source,
     provider,
-    color: source.color,
     secrets,
     capabilities: {
       ...source.capabilities,

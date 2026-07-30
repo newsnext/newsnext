@@ -91,22 +91,18 @@ export type SourceLoader<TParams extends SourceParamSchemaMap = SourceParamSchem
 
 export interface SourcePresentationMetadata {
   title?: string
-  icon?: string
   badge?: string
   desc?: string
   type?: "hottest" | "timeline"
   home?: string
-  color?: Color
 }
 
 export const SOURCE_PRESENTATION_METADATA_KEYS = [
   "title",
-  "icon",
   "badge",
   "desc",
   "type",
   "home",
-  "color",
 ] as const satisfies readonly (keyof SourcePresentationMetadata)[]
 
 const SOURCE_PRESENTATION_METADATA_KEY_SET: ReadonlySet<string> = new Set(
@@ -132,6 +128,8 @@ export interface SourceCapabilities {
 export interface SourceProvider {
   title: string
   category?: CategoryId
+  icon?: string
+  color: Color
 }
 
 export type SourceTemplateVarValue
@@ -161,7 +159,6 @@ export interface RuntimeSource<TParams extends SourceParamSchemaMap = SourcePara
   params?: TParams
   capabilities: SourceCapabilities
   cache: SourceCacheConfig
-  icon?: string
   badge?: string
   desc?: string
   type?: "hottest" | "timeline"
@@ -171,7 +168,6 @@ export interface RuntimeSource<TParams extends SourceParamSchemaMap = SourcePara
   requestRules?: readonly SourceRequestRule[]
   disable?: boolean
   loader: SourceLoader<TParams>
-  color: Color
 }
 
 /**

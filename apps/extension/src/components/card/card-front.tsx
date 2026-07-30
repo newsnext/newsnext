@@ -59,7 +59,7 @@ export function CardRefreshButton({
 }
 
 interface CardFrontContentProps {
-  color: BoardSource["color"]
+  color: BoardSource["provider"]["color"]
   icon?: string
   items: NewsItem[]
   provider: BoardSource["provider"]
@@ -156,7 +156,8 @@ function CardFrontComponent({
   actions,
   dragHandle,
 }: CardFrontProps) {
-  const { type, color, desc, icon, provider, title, home } = source
+  const { type, desc, provider, title, home } = source
+  const { color, icon } = provider
   const ref = useRef<HTMLDivElement>(null)
   const relativeTime = useRelativeTime({ date: updatedAt })
   const visibleSourceErrorMessage = isFetching ? undefined : sourceErrorMessage
