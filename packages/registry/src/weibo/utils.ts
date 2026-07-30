@@ -172,18 +172,15 @@ export async function fetchWeiboKeywordPosts(
   return cardsToNewsItems(response.data.cards ?? [])
 }
 
-const WEIBO_SUPER_TOPIC_TYPES = ["feed", "sort_time", "hot_sort", "soul"]
-
 export async function fetchWeiboSuperTopicPosts(
-  { id, type }: { id: string, type: string },
+  { id }: { id: string },
 ): Promise<NewsItem[]> {
   const normalizedId = id.trim()
   if (!/^100808[a-z\d]+$/i.test(normalizedId)) {
     throw new Error("Weibo super topic ID must start with 100808 and contain only letters or digits.")
   }
-  const normalizedType = WEIBO_SUPER_TOPIC_TYPES.includes(type) ? type : "feed"
   const response = await fetchWeiboDesktop<{ items?: Array<{ category?: string, data?: WeiboStatus }> }>(
-    `${WEIBO_ORIGIN}/ajax_proxy/chaohua/page?flowId=${normalizedId}_-_${normalizedType}`,
+    `${WEIBO_ORIGIN}/ajax_proxy/chaohua/page?flowId=${normalizedId}_-_sort_time`,
   )
   return statusesToNewsItems(
     (response.items ?? [])

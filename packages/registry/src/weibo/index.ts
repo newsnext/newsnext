@@ -240,17 +240,6 @@ export default {
           description: "以 100808 开头的微博超话 ID。",
           default: "1008084989d223732bf6f02f75ea30efad58a9",
         },
-        type: {
-          type: "select",
-          title: "排序",
-          values: [
-            { label: "最新评论", value: "feed" },
-            { label: "最新帖子", value: "sort_time" },
-            { label: "热门", value: "hot_sort" },
-            { label: "精华", value: "soul" },
-          ],
-          default: "feed",
-        },
       },
       radar: [
         {
@@ -264,7 +253,6 @@ export default {
           patch: {
             params: {
               id: "{{ scope.path.id }}",
-              type: "feed",
             },
             metadata: {
               title: {

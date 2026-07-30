@@ -233,6 +233,9 @@ user-selectable constraints.
 Prefer one source with a `select` parameter when feed variants share their
 loader and presentation and differ only by a request value. Separate sources
 remain appropriate when variants need different static metadata or card types.
+Do not expose a variant parameter when the source intentionally promises one
+fixed feed semantic, such as latest posts. Keep that request value in the
+loader so every card follows the source contract.
 
 ## Liquid templates
 
