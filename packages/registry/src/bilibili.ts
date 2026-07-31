@@ -1,6 +1,6 @@
 import type { ProviderConfig } from "@newsnext/source/registry"
 import type { NewsItem } from "@newsnext/source/types"
-import { myFetch } from "@newsnext/source/utils"
+import { sessionFetch } from "@newsnext/source/utils"
 
 const DYNAMIC_FEED_URL = "https://api.bilibili.com/x/polymer/web-dynamic/v1/feed/all"
 const DYNAMIC_FEED_FEATURES = [
@@ -250,7 +250,7 @@ function dynamicArchiveToNewsItem(item: DynamicFeedItem): NewsItem | null {
 }
 
 async function fetchBilibiliFollowingVideos(): Promise<NewsItem[]> {
-  const response = await myFetch<DynamicFeedResponse>(DYNAMIC_FEED_URL, {
+  const response = await sessionFetch<DynamicFeedResponse>(DYNAMIC_FEED_URL, {
     headers: {
       referer: "https://www.bilibili.com/",
     },
@@ -307,7 +307,7 @@ async function fetchBilibiliRanking({ region }: { region: string }): Promise<New
   }
 
   if (request.kind === "video") {
-    const response = await myFetch<BilibiliVideoRankingResponse>(request.url, fetchOptions)
+    const response = await sessionFetch<BilibiliVideoRankingResponse>(request.url, fetchOptions)
     if (response.code !== 0) {
       throw new Error(response.message ?? "Failed to load Bilibili video ranking.")
     }
@@ -316,7 +316,7 @@ async function fetchBilibiliRanking({ region }: { region: string }): Promise<New
       .filter((item): item is NewsItem => item !== null)
   }
 
-  const response = await myFetch<BilibiliPgcRankingResponse>(request.url, fetchOptions)
+  const response = await sessionFetch<BilibiliPgcRankingResponse>(request.url, fetchOptions)
   if (response.code !== 0) {
     throw new Error(response.message ?? "Failed to load Bilibili PGC ranking.")
   }

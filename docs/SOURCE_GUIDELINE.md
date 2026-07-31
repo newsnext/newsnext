@@ -646,7 +646,8 @@ Custom loaders receive values through `context.secrets` and may persist
 refreshed values with `context.updateSecrets`.
 
 NewsNext requests use the browser's logged-in session by default:
-`myFetch` and the built-in structured loaders set `credentials: "include"`.
+`sessionFetch` and the built-in structured loaders set
+`credentials: "include"`.
 Use `credentials: "omit"` only when a request must be explicitly anonymous.
 Do not declare cookie secrets merely to authenticate a request; cookie secrets
 are for reading a specific value that the loader must inspect.

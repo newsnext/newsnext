@@ -5,7 +5,7 @@ import type {
   SourceLoaderResult,
 } from "@newsnext/source/types"
 import type { JikeFeedResponse, TopicFeedOrder } from "./types"
-import { isJwtExpired, myFetch } from "@newsnext/source/utils"
+import { isJwtExpired, sessionFetch } from "@newsnext/source/utils"
 import {
   buildJikeTopicFeedUrl,
   createJikeHeaders,
@@ -61,7 +61,7 @@ async function requestJikeFeed(
   body: Record<string, unknown>,
   accessToken: string,
 ): Promise<JikeFeedResponse> {
-  return myFetch<JikeFeedResponse>(url, {
+  return sessionFetch<JikeFeedResponse>(url, {
     method: "POST",
     headers: createJikeHeaders(accessToken),
     body,

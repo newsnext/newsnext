@@ -10,7 +10,7 @@ import type {
   XUserByScreenNameResponse,
   XUserTweetsResponse,
 } from "./types"
-import { myFetch } from "@newsnext/source/utils"
+import { sessionFetch } from "@newsnext/source/utils"
 import { LOCATION_OPTIONS } from "./types"
 import {
   createXLoggedInHeaders,
@@ -49,7 +49,7 @@ async function fetchXPlaceTrends(
   { location }: { location: string },
   context?: SourceLoaderContext,
 ): Promise<NewsItem[]> {
-  const response = await myFetch<XPlaceTrendResponse[]>(PLACE_TRENDS_URL, {
+  const response = await sessionFetch<XPlaceTrendResponse[]>(PLACE_TRENDS_URL, {
     headers: createXLoggedInHeaders(context),
     query: { id: location },
   })
@@ -62,7 +62,7 @@ async function fetchXPlaceTrends(
 }
 
 async function fetchXTimeline(url: string, context?: SourceLoaderContext): Promise<NewsItem[]> {
-  const response = await myFetch<XHomeTimelineResponse>(url, {
+  const response = await sessionFetch<XHomeTimelineResponse>(url, {
     method: "POST",
     headers: createXLoggedInHeaders(context),
     body: {
@@ -89,7 +89,7 @@ async function fetchXUserTweets(
   if (!/^\w{1,15}$/.test(screenName)) throw new Error("X username must be a valid handle.")
 
   const headers = createXLoggedInHeaders(context)
-  const user = await myFetch<XUserByScreenNameResponse>(USER_BY_SCREEN_NAME_URL, {
+  const user = await sessionFetch<XUserByScreenNameResponse>(USER_BY_SCREEN_NAME_URL, {
     headers,
     query: {
       variables: JSON.stringify({
@@ -106,7 +106,7 @@ async function fetchXUserTweets(
   const userId = userResult?.rest_id
   if (!userId) throw new Error(`Cannot find X user: ${screenName}`)
 
-  const response = await myFetch<XUserTweetsResponse>(USER_TWEETS_URL, {
+  const response = await sessionFetch<XUserTweetsResponse>(USER_TWEETS_URL, {
     headers,
     query: {
       variables: JSON.stringify({

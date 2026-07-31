@@ -1,6 +1,6 @@
 import type { ProviderConfig } from "@newsnext/source/registry"
 import type { NewsItem } from "@newsnext/source/types"
-import { myFetch } from "@newsnext/source/utils"
+import { sessionFetch } from "@newsnext/source/utils"
 
 interface FoloMedia {
   url?: string
@@ -32,7 +32,7 @@ interface FoloResponse {
 type FoloEntriesRequest = { feedId: string } | { listId: string }
 
 async function loadFoloEntries(body: FoloEntriesRequest): Promise<NewsItem[]> {
-  const response = await myFetch<FoloResponse>("https://api.folo.is/entries", {
+  const response = await sessionFetch<FoloResponse>("https://api.folo.is/entries", {
     method: "POST",
     headers: {
       "content-type": "application/json",

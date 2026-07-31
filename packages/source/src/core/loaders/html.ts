@@ -17,7 +17,7 @@ import type {
   LoaderMetadataFields,
 } from "./shared"
 import { load } from "cheerio/slim"
-import { myFetch } from "../../utils"
+import { sessionFetch } from "../../utils"
 import {
   compileSourceTemplate,
   createSourceTemplateScope,
@@ -288,10 +288,13 @@ export async function loadHtml(
   if (fetch) {
     html = await fetch(url)
   } else if (decoding && decoding.toLowerCase() !== "utf-8") {
-    const response = await myFetch(url, { ...fetchOptions, responseType: "arrayBuffer" }) as ArrayBuffer
+    const response = await sessionFetch(url, {
+      ...fetchOptions,
+      responseType: "arrayBuffer",
+    }) as ArrayBuffer
     html = new TextDecoder(decoding as ConstructorParameters<typeof TextDecoder>[0]).decode(response)
   } else {
-    const res = await myFetch(url, fetchOptions)
+    const res = await sessionFetch(url, fetchOptions)
     html = typeof res === "string" ? res : JSON.stringify(res)
   }
 

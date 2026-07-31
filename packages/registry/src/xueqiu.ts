@@ -1,5 +1,5 @@
 import type { ProviderConfig } from "@newsnext/source/registry"
-import { myFetch } from "@newsnext/source/utils"
+import { sessionFetch } from "@newsnext/source/utils"
 
 const XUEQIU_ORIGIN = "https://xueqiu.com"
 
@@ -22,8 +22,8 @@ export default {
         type: "json",
         url: "https://stock.xueqiu.com/v5/stock/hot_stock/list.json?size=30&_type=10&type=10",
         fetch: async (url) => {
-          await myFetch.raw(`${XUEQIU_ORIGIN}/hq`)
-          return myFetch(url)
+          await sessionFetch.raw(`${XUEQIU_ORIGIN}/hq`)
+          return sessionFetch(url)
         },
         items: "data.items[?ad == `0` || ad == `null`]",
         fields: {

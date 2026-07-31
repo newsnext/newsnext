@@ -12,7 +12,7 @@ import type {
   LoaderMetadataFields,
 } from "./shared"
 import * as jmespath from "jmespath"
-import { myFetch } from "../../utils"
+import { sessionFetch } from "../../utils"
 import {
   compileSourceTemplate,
   createSourceTemplateScope,
@@ -228,7 +228,7 @@ export async function loadJson(
   if (fetch) {
     json = await fetch(url)
   } else {
-    json = await myFetch(url, fetchOptions)
+    json = await sessionFetch(url, fetchOptions)
   }
 
   const metadataContext: JsonFieldContext = {

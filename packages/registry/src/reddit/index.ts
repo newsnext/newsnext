@@ -4,7 +4,7 @@ import type {
   RedditListingResponse,
   RedditPost,
 } from "./types"
-import { myFetch } from "@newsnext/source/utils"
+import { sessionFetch } from "@newsnext/source/utils"
 import { REDDIT_ORIGIN, redditPostsToNewsItems } from "./utils"
 
 const REDDIT_LISTING_LIMIT = 50
@@ -37,7 +37,7 @@ async function fetchRedditListing(
   path: string,
   query: Record<string, string | number> = {},
 ): Promise<RedditListingResponse> {
-  const response = await myFetch<RedditListingResponse>(`${REDDIT_ORIGIN}${path}`, {
+  const response = await sessionFetch<RedditListingResponse>(`${REDDIT_ORIGIN}${path}`, {
     ...redditFetchOptions,
     query: {
       limit: REDDIT_LISTING_LIMIT,

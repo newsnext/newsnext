@@ -1,5 +1,5 @@
 import type { ProviderConfig } from "@newsnext/source/registry"
-import { md5, myCrypto, myFetch } from "@newsnext/source/utils"
+import { md5, myCrypto, sessionFetch } from "@newsnext/source/utils"
 
 interface CLSItem {
   id: number
@@ -83,7 +83,7 @@ export default {
       loader: {
         url: "/v1/roll/get_roll_list",
         fetch: async (url) => {
-          return myFetch<TelegraphResponse>(url, {
+          return sessionFetch<TelegraphResponse>(url, {
             query: Object.fromEntries(await getSearchParams({
               last_time: Math.floor(Date.now() / 1000),
               refresh_type: 1,
@@ -106,7 +106,7 @@ export default {
       loader: {
         url: "/v3/depth/home/assembled/1000",
         fetch: async (url) => {
-          return myFetch<DepthResponse>(url, {
+          return sessionFetch<DepthResponse>(url, {
             query: Object.fromEntries(await getSearchParams()),
           })
         },
@@ -121,7 +121,7 @@ export default {
       loader: {
         url: "/v2/article/hot/list",
         fetch: async (url) => {
-          return myFetch<HotResponse>(url, {
+          return sessionFetch<HotResponse>(url, {
             query: Object.fromEntries(await getSearchParams()),
           })
         },

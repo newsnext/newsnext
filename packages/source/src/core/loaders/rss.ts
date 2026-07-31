@@ -1,6 +1,6 @@
 import type { NewsItem } from "../../types"
 import { XMLParser } from "fast-xml-parser"
-import { myFetch } from "../../utils"
+import { sessionFetch } from "../../utils"
 
 const HTTP_URL_REGEX = /^https?:\/\/[^\s$.?#].\S*/i
 
@@ -27,7 +27,7 @@ export async function loadRss({ url }: { url: string }): Promise<NewsItem[]> {
 async function fetchRss(url: string): Promise<RssFeed | undefined> {
   if (!HTTP_URL_REGEX.test(url)) return
 
-  const data = await myFetch(url)
+  const data = await sessionFetch(url)
   const xml = new XMLParser({
     attributeNamePrefix: "",
     textNodeName: "$text",

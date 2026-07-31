@@ -1,5 +1,5 @@
 import type { NewsItem, SourceLoaderResult } from "@newsnext/source/types"
-import { myFetch } from "@newsnext/source/utils"
+import { sessionFetch } from "@newsnext/source/utils"
 import { load } from "cheerio/slim"
 
 const WEIBO_ORIGIN = "https://weibo.com"
@@ -51,7 +51,7 @@ interface WeiboContainerData {
 }
 
 async function fetchWeiboDesktop<T>(url: string): Promise<T> {
-  return myFetch<T>(url, {
+  return sessionFetch<T>(url, {
     headers: {
       "X-Requested-With": "XMLHttpRequest",
     },
@@ -157,7 +157,7 @@ export async function fetchWeiboKeywordPosts(
   if (!normalizedKeyword) throw new Error("Weibo keyword must not be empty.")
 
   const keywordValue = encodeURIComponent(normalizedKeyword)
-  const response = await myFetch<WeiboApiResponse<WeiboContainerData>>(
+  const response = await sessionFetch<WeiboApiResponse<WeiboContainerData>>(
     `${WEIBO_MOBILE_ORIGIN}/api/container/getIndex?containerid=100103type%3D61%26q%3D${keywordValue}%26t%3D0`,
     {
       headers: {
