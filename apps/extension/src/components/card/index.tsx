@@ -2,10 +2,10 @@ import type { ReactNode } from "react"
 import type { SourceInstanceMetadata, SourceInstancePatch } from "@/lib/source-cards"
 import type { BoardSource } from "@/typings/source"
 import { useSetAtom } from "jotai"
-import { useInView } from "motion/react"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useRef, useState } from "react"
 import { FlipAnimate } from "@/components/common/flip-animate"
 import { useSourceParams } from "@/hooks"
+import { useInView } from "@/hooks/use-in-view"
 import { useSourcePermission } from "@/hooks/use-source-permission"
 import { useSourceQuery } from "@/hooks/use-source-query"
 import { getSourcePermissionDescription } from "@/lib/source-permissions"
@@ -18,6 +18,7 @@ import { CardBack } from "./card-back"
 import { CardFront } from "./card-front"
 
 const CARD_IN_VIEW_MARGIN = "200px"
+const CARD_IN_VIEW_ONCE_DURATION = 60_000
 
 export interface CardProps {
   id: string
@@ -149,19 +150,15 @@ function CardContent({ id, source, dragHandle, isDraft = false, onDraftSourceCha
 
 export default function Card(props: CardProps) {
   const ref = useRef<HTMLDivElement>(null)
-  const [hasEnteredView, setHasEnteredView] = useState(false)
   const setRef = (node: HTMLDivElement | null) => {
     ref.current = node
     props.nodeRef?.(node)
   }
 
-  const isInView = useInView(ref, { once: true, margin: CARD_IN_VIEW_MARGIN })
-
-  useEffect(() => {
-    if (isInView) {
-      setHasEnteredView(true)
-    }
-  }, [isInView])
+  const isInView = useInView(ref, {
+    margin: CARD_IN_VIEW_MARGIN,
+    once: CARD_IN_VIEW_ONCE_DURATION,
+  })
 
   return (
     <div
@@ -172,7 +169,7 @@ export default function Card(props: CardProps) {
         props.className,
       )}
     >
-      {hasEnteredView && (
+      {isInView && (
         <CardContent {...props} />
       )}
     </div>

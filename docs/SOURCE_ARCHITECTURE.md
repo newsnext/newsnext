@@ -201,6 +201,11 @@ each cache entry once and injects stale data into the active query before
 continuing the request. Placeholder data does not satisfy the request, extend
 the entry's freshness, or change forced refresh behavior.
 
+Card queries mount when their container enters the viewport margin. After a card
+leaves that margin, its query remains active for one minute to avoid churn during
+short scrolls, then unmounts. Re-entering during that interval cancels the
+pending unmount.
+
 Loader metadata is response-scoped and remains part of the cached load result.
 It uses the complete source presentation metadata shape: title, badge,
 description, and home URL. While displayed, it has the highest field-level
