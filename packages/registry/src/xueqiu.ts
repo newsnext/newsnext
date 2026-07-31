@@ -22,12 +22,8 @@ export default {
         type: "json",
         url: "https://stock.xueqiu.com/v5/stock/hot_stock/list.json?size=30&_type=10&type=10",
         fetch: async (url) => {
-          await myFetch.raw(`${XUEQIU_ORIGIN}/hq`, {
-            credentials: "include",
-          })
-          return myFetch(url, {
-            credentials: "include",
-          })
+          await myFetch.raw(`${XUEQIU_ORIGIN}/hq`)
+          return myFetch(url)
         },
         items: "data.items[?ad == `0` || ad == `null`]",
         fields: {

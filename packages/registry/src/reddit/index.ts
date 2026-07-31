@@ -28,7 +28,6 @@ type SubredditSort = typeof SUBREDDIT_SORT_OPTIONS[number]["value"]
 type SubredditTopPeriod = typeof SUBREDDIT_TOP_PERIOD_OPTIONS[number]["value"]
 
 const redditFetchOptions = {
-  credentials: "include",
   headers: {
     accept: "application/json",
   },

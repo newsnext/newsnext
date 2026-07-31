@@ -55,7 +55,6 @@ async function fetchWeiboDesktop<T>(url: string): Promise<T> {
     headers: {
       "X-Requested-With": "XMLHttpRequest",
     },
-    credentials: "include",
   })
 }
 
@@ -165,7 +164,6 @@ export async function fetchWeiboKeywordPosts(
         "MWeibo-Pwa": "1",
         "X-Requested-With": "XMLHttpRequest",
       },
-      credentials: "include",
     },
   )
   if (!response.data) throw new Error(response.msg ?? "Weibo returned an empty keyword timeline.")

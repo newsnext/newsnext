@@ -251,7 +251,6 @@ function dynamicArchiveToNewsItem(item: DynamicFeedItem): NewsItem | null {
 
 async function fetchBilibiliFollowingVideos(): Promise<NewsItem[]> {
   const response = await myFetch<DynamicFeedResponse>(DYNAMIC_FEED_URL, {
-    credentials: "include",
     headers: {
       referer: "https://www.bilibili.com/",
     },
@@ -301,7 +300,6 @@ interface BilibiliPgcRankingResponse {
 async function fetchBilibiliRanking({ region }: { region: string }): Promise<NewsItem[]> {
   const request = getBilibiliRankingRequest(region)
   const fetchOptions = {
-    credentials: "include" as const,
     headers: {
       referer: "https://www.bilibili.com/",
     },

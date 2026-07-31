@@ -51,7 +51,6 @@ async function fetchXPlaceTrends(
 ): Promise<NewsItem[]> {
   const response = await myFetch<XPlaceTrendResponse[]>(PLACE_TRENDS_URL, {
     headers: createXLoggedInHeaders(context),
-    credentials: "include",
     query: { id: location },
   })
   const timestamp = response[0]?.created_at ? Date.parse(response[0].created_at) : undefined
@@ -66,7 +65,6 @@ async function fetchXTimeline(url: string, context?: SourceLoaderContext): Promi
   const response = await myFetch<XHomeTimelineResponse>(url, {
     method: "POST",
     headers: createXLoggedInHeaders(context),
-    credentials: "include",
     body: {
       variables: {
         count: HOME_TIMELINE_COUNT,
@@ -93,7 +91,6 @@ async function fetchXUserTweets(
   const headers = createXLoggedInHeaders(context)
   const user = await myFetch<XUserByScreenNameResponse>(USER_BY_SCREEN_NAME_URL, {
     headers,
-    credentials: "include",
     query: {
       variables: JSON.stringify({
         screen_name: screenName,
@@ -111,7 +108,6 @@ async function fetchXUserTweets(
 
   const response = await myFetch<XUserTweetsResponse>(USER_TWEETS_URL, {
     headers,
-    credentials: "include",
     query: {
       variables: JSON.stringify({
         userId,

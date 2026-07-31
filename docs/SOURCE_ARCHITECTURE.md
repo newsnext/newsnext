@@ -330,6 +330,12 @@ Structured loaders infer a static URL hostname and merge it with explicit
 capabilities. Dynamic URLs are checked after template rendering. Custom loaders
 must declare all effects because their behavior cannot be inspected.
 
+The shared HTTP client uses `credentials: "include"` because source execution
+represents the user's logged-in browser session. A loader may explicitly use
+`credentials: "omit"` for an anonymous request. The network capability still
+controls which origins the source may contact; the cookies capability is
+reserved for cookie-backed secrets that read specific values.
+
 The extension resolves cookie and local-storage secrets immediately before a
 background loader runs. A loader receives only the values defined by its source.
 `updateSecrets` persists refreshed values through the same source/provider

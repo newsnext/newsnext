@@ -645,14 +645,17 @@ one scope unless the source intentionally overrides the complete list.
 Custom loaders receive values through `context.secrets` and may persist
 refreshed values with `context.updateSecrets`.
 
-Do not declare cookie secrets merely to authenticate a request when
-`credentials: "include"` supplies the browser cookie jar.
+NewsNext requests use the browser's logged-in session by default:
+`myFetch` and the built-in structured loaders set `credentials: "include"`.
+Use `credentials: "omit"` only when a request must be explicitly anonymous.
+Do not declare cookie secrets merely to authenticate a request; cookie secrets
+are for reading a specific value that the loader must inspect.
 
 When an API requires a cookie issued or refreshed by a page visit, a TypeScript
 structured loader may use a custom `fetch` that first requests the bootstrap
-page with `credentials: "include"` and then fetches the API the same way.
-Declare the bootstrap hostname as a network capability in addition to the
-loader URL's inferred hostname; do not read cookies or construct a `Cookie`
+page and then fetches the API. Both requests inherit the logged-in browser
+session. Declare the bootstrap hostname as a network capability in addition to
+the loader URL's inferred hostname; do not read cookies or construct a `Cookie`
 header when the browser cookie jar is sufficient.
 
 ## Radar discovery

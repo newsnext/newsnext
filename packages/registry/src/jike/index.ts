@@ -63,7 +63,6 @@ async function requestJikeFeed(
 ): Promise<JikeFeedResponse> {
   return myFetch<JikeFeedResponse>(url, {
     method: "POST",
-    credentials: "include",
     headers: createJikeHeaders(accessToken),
     body,
   })

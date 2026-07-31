@@ -129,9 +129,6 @@ export default {
       loader: {
         type: "json",
         url: "/ajax/{{ source.vars.endpoint[scope.params.type] }}",
-        fetchOptions: {
-          credentials: "include",
-        },
         items: "(data.realtime || data.band_list)[?is_ad != `1` && (rank != `null` || realpos != `null`)]",
         fields: {
           title: "note || word || name",
