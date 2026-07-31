@@ -27,6 +27,7 @@ interface CardFrontProps {
   source: BoardSource
   items: NewsItem[]
   isFetching: boolean
+  isRefreshing: boolean
   sourceErrorMessage?: string
   sourceLoginUrl?: string
   sourcePermissionDescription: string
@@ -39,7 +40,7 @@ interface CardFrontProps {
   dragHandle?: ReactNode
 }
 
-export function CardRefreshButton({
+function CardRefreshButton({
   isFetching,
   onRefresh,
 }: {
@@ -143,6 +144,7 @@ function CardFrontComponent({
   source,
   items,
   isFetching,
+  isRefreshing,
   sourceErrorMessage,
   sourceLoginUrl,
   sourcePermissionDescription,
@@ -160,7 +162,7 @@ function CardFrontComponent({
   const icon = useSourceIcon(source)
   const ref = useRef<HTMLDivElement>(null)
   const relativeTime = useRelativeTime({ date: updatedAt })
-  const visibleSourceErrorMessage = isFetching ? undefined : sourceErrorMessage
+  const visibleSourceErrorMessage = isRefreshing ? undefined : sourceErrorMessage
   const sourceStatusMessage = sourcePermissionRequired
     ? sourcePermissionDescription
     : sourceLoginUrl
@@ -211,7 +213,7 @@ function CardFrontComponent({
             className={cn(
               "pointer-events-none absolute inset-0 bg-background/70",
               `sunrise-${color}-400`,
-              isFetching && "animate-pulse",
+              isRefreshing && "animate-pulse",
             )}
           />
           {sourceStatusMessage && (
@@ -222,7 +224,7 @@ function CardFrontComponent({
             onPointerDown={event => event.stopPropagation()}
             className="relative size-full overflow-y-auto px-2 py-2 scrollbar-hidden"
           >
-            <div className={cn("min-h-full transition-opacity-500", isFetching && "opacity-20")}>
+            <div className={cn("min-h-full transition-opacity-500", isRefreshing && "opacity-20")}>
               <CardFrontContent
                 color={color}
                 icon={icon}

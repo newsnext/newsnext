@@ -1,70 +1,97 @@
-import { stableStringify } from "@newsnext/shared/utils"
+import type { SourceQueryTarget } from "./source-query"
 import { normalizeSourceParams } from "@newsnext/source/runtime"
 import { useIsFetching, useQueryClient } from "@tanstack/react-query"
 import { useStore } from "jotai"
-import { useCallback } from "react"
+import { useCallback, useSyncExternalStore } from "react"
 import { buildSourceCards } from "@/lib/source-cards"
 import { loadSourceDescriptors } from "@/lib/sources"
 import { currentBoardIdAtom, instancesAtom } from "@/store/board"
+import {
+  getSourceQueryHash,
+  getSourceQueryKey,
+  refreshSourceQuery,
+  SOURCE_QUERY_KEY,
+} from "./source-query"
 
-const latestSourceRefreshKeys = new Set<string>()
-export const SOURCE_QUERY_KEY = ["source"] as const
+const activeSourceRefreshCounts = new Map<string, number>()
+const sourceRefreshListeners = new Set<() => void>()
 
-export interface RefetchTarget {
-  sourceId: string
-  params?: Record<string, unknown>
-}
-
-export function getSourceRefreshKey(target: RefetchTarget): string {
-  return `${target.sourceId}:${stableStringify(target.params ?? {})}`
-}
-
-function markLatestSourceRefresh(target: RefetchTarget): void {
-  latestSourceRefreshKeys.add(getSourceRefreshKey(target))
-}
-
-export function consumeLatestSourceRefresh(target: RefetchTarget): boolean {
-  const key = getSourceRefreshKey(target)
-
-  if (!latestSourceRefreshKeys.has(key)) {
-    return false
+function updateActiveSourceRefreshes(keys: string[], delta: 1 | -1): void {
+  if (keys.length === 0) {
+    return
   }
 
-  latestSourceRefreshKeys.delete(key)
-  return true
+  keys.forEach((key) => {
+    const nextCount = (activeSourceRefreshCounts.get(key) ?? 0) + delta
+    if (nextCount > 0) {
+      activeSourceRefreshCounts.set(key, nextCount)
+    } else {
+      activeSourceRefreshCounts.delete(key)
+    }
+  })
+  sourceRefreshListeners.forEach(listener => listener())
+}
+
+function subscribeToSourceRefreshes(listener: () => void): () => void {
+  sourceRefreshListeners.add(listener)
+  return () => sourceRefreshListeners.delete(listener)
+}
+
+export function useIsSourceRefreshing(refreshKey: string): boolean {
+  return useSyncExternalStore(
+    subscribeToSourceRefreshes,
+    () => activeSourceRefreshCounts.has(refreshKey),
+    () => false,
+  )
+}
+
+async function withSourceRefreshTracking<T>(
+  refreshKeys: string[],
+  refresh: () => Promise<T>,
+): Promise<T> {
+  updateActiveSourceRefreshes(refreshKeys, 1)
+  try {
+    return await refresh()
+  } finally {
+    updateActiveSourceRefreshes(refreshKeys, -1)
+  }
 }
 
 export function useSourceRefetch() {
   const queryClient = useQueryClient()
 
   return useCallback(
-    async (...targets: RefetchTarget[]) => {
-      try {
-        const uniqueTargets = [...new Map(
-          targets.map(target => [getSourceRefreshKey(target), target]),
-        ).values()]
+    async (...targets: SourceQueryTarget[]) => {
+      const uniqueTargets = [...new Map(
+        targets.map(target => [getSourceQueryHash(target), target]),
+      ).values()]
+      const activeTargets = uniqueTargets.filter(target =>
+        queryClient.getQueryCache().find({
+          queryKey: getSourceQueryKey(target),
+          exact: true,
+        })?.isActive(),
+      )
+      const refreshKeys = activeTargets.map(getSourceQueryHash)
 
-        uniqueTargets.forEach(markLatestSourceRefresh)
-
-        await Promise.all(
-          uniqueTargets.map(target =>
-            queryClient.invalidateQueries({
-              queryKey: [...SOURCE_QUERY_KEY, getSourceRefreshKey(target)],
-            }),
-          ),
+      await withSourceRefreshTracking(refreshKeys, async () => {
+        const results = await Promise.allSettled(
+          activeTargets.map(target => refreshSourceQuery(queryClient, target)),
         )
-      } catch (e) {
-        console.error("Failed to refresh sources", e)
-      }
+
+        results.forEach((result) => {
+          if (result.status === "rejected") {
+            console.error("Failed to refresh source", result.reason)
+          }
+        })
+      })
     },
     [queryClient],
   )
 }
 
 export function useRefetch() {
-  const queryClient = useQueryClient()
   const store = useStore()
-  const refetch = useSourceRefetch()
+  const refetchSources = useSourceRefetch()
   const fetchingCount = useIsFetching({ queryKey: SOURCE_QUERY_KEY })
 
   const isFetching = fetchingCount > 0
@@ -87,28 +114,15 @@ export function useRefetch() {
         return {
           sourceId: source.sourceId,
           params: normalizeSourceParams(source, source.paramsValue ?? {}),
-        } satisfies RefetchTarget
+        } satisfies SourceQueryTarget
       })
-      const uniqueTargets = [...new Map(
-        targets.map(target => [getSourceRefreshKey(target), target]),
-      ).values()]
-
-      uniqueTargets.forEach(markLatestSourceRefresh)
-
-      await Promise.all(
-        uniqueTargets.map(target =>
-          queryClient.invalidateQueries({
-            queryKey: [...SOURCE_QUERY_KEY, getSourceRefreshKey(target)],
-          }),
-        ),
-      )
+      await refetchSources(...targets)
     } catch (e) {
       console.error("Failed to refresh cards", e)
     }
-  }, [queryClient, store])
+  }, [refetchSources, store])
 
   return {
-    refetch,
     refetchAll,
     isFetching,
   }

@@ -1,27 +1,26 @@
 import { normalizeSourceParams } from "@newsnext/source/runtime"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useCallback, useMemo, useState } from "react"
-import { loadSource } from "@/lib/source-loader"
 import { getLoginUrlFromError } from "./source-login-error"
 import {
-  consumeLatestSourceRefresh,
-  getSourceRefreshKey,
-  SOURCE_QUERY_KEY,
-} from "./use-refetch"
+  getSourceQueryHash,
+  getSourceQueryKey,
+  loadSourceQuery,
+  SOURCE_QUERY_INTERVAL,
+} from "./source-query"
+import { useIsSourceRefreshing, useSourceRefetch } from "./use-refetch"
 import { useSourceDescriptors } from "./use-source-descriptors"
 
 export interface UseSourceQueryOptions {
   sourceId: string
   params?: Record<string, unknown>
   enabled?: boolean
-  refetchInterval?: number | false
 }
 
 export function useSourceQuery({
   sourceId,
   params,
   enabled = true,
-  refetchInterval = false,
 }: UseSourceQueryOptions) {
   const { sources } = useSourceDescriptors()
   const source = useMemo(
@@ -32,29 +31,25 @@ export function useSourceQuery({
     () => source ? normalizeSourceParams(source, params ?? {}) : {},
     [params, source],
   )
-  const refreshKey = useMemo(
-    () => getSourceRefreshKey({ sourceId, params: normalizedParams }),
+  const target = useMemo(
+    () => ({ sourceId, params: normalizedParams }),
     [normalizedParams, sourceId],
   )
-  const queryKey = useMemo(
-    () => [...SOURCE_QUERY_KEY, refreshKey] as const,
-    [refreshKey],
-  )
+  const queryKey = useMemo(() => getSourceQueryKey(target), [target])
+  const queryHash = useMemo(() => getSourceQueryHash(target), [target])
   const queryClient = useQueryClient()
+  const refetchSource = useSourceRefetch()
+  const isRefreshing = useIsSourceRefreshing(queryHash)
   const [initialUpdatedAt] = useState(Date.now)
-  const { data, error, isFetching, isError, refetch: normalRefetch } = useQuery({
+  const { data, error, isFetching, isError } = useQuery({
     queryKey,
-    queryFn: () => loadSource(sourceId, normalizedParams, {
-      forceFresh: consumeLatestSourceRefresh({ sourceId, params: normalizedParams }),
-      onCachedResult: result => queryClient.setQueryData(queryKey, result),
-    }),
+    queryFn: () => loadSourceQuery(queryClient, target),
     enabled: enabled && source !== undefined,
     placeholderData: prev => prev,
-    staleTime: 1000 * 60 * 3,
-    refetchOnMount: "always",
-    refetchOnReconnect: false,
+    staleTime: SOURCE_QUERY_INTERVAL,
+    refetchOnReconnect: true,
     refetchOnWindowFocus: true,
-    refetchInterval,
+    refetchInterval: SOURCE_QUERY_INTERVAL,
     refetchIntervalInBackground: true,
     retry: false,
   })
@@ -64,15 +59,14 @@ export function useSourceQuery({
       return
     }
 
-    await normalRefetch()
-  }, [enabled, normalRefetch])
+    await refetchSource(target)
+  }, [enabled, refetchSource, target])
 
   return {
-    data,
     items: data?.items ?? [],
     refetch: handleRefetch,
-    normalRefetch,
     isFetching,
+    isRefreshing,
     isError,
     errorMessage: error instanceof Error ? error.message : undefined,
     loginUrl: getLoginUrlFromError(error),

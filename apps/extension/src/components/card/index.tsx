@@ -54,7 +54,7 @@ function CardContent({ id, source, dragHandle, isDraft = false, onDraftSourceCha
     initialValues: source.paramsValue,
   })
 
-  const { items, metadata, refetch, isFetching, isError, errorMessage, loginUrl, updatedAt } = useSourceQuery({
+  const { items, metadata, refetch, isFetching, isRefreshing, isError, errorMessage, loginUrl, updatedAt } = useSourceQuery({
     sourceId: source.sourceId,
     params: savedParams,
     enabled: canLoad,
@@ -71,10 +71,6 @@ function CardContent({ id, source, dragHandle, isDraft = false, onDraftSourceCha
         },
       }
     : source
-
-  // useEffect(() => {
-  //   normalRefetch()
-  // }, [date, normalRefetch])
 
   const handleFlip = useCallback(() => {
     setIsFlipped(prev => !prev)
@@ -118,6 +114,7 @@ function CardContent({ id, source, dragHandle, isDraft = false, onDraftSourceCha
         source={displaySource}
         items={items}
         isFetching={isFetching}
+        isRefreshing={isRefreshing}
         sourceErrorMessage={sourceErrorMessage}
         sourceLoginUrl={canLoad ? loginUrl : undefined}
         sourcePermissionDescription={getSourcePermissionDescription(source)}

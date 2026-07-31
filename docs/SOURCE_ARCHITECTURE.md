@@ -191,8 +191,13 @@ source ID and raw parameters
 
 In-flight loads are deduplicated by a cache key containing the source ID, cache
 version, and normalized parameters. The key remains internal to the loader and
-cache layers. A forced refresh bypasses stored cache data but still participates
-in in-flight deduplication.
+cache layers. Both individual-card and board-wide user refreshes execute active
+TanStack queries with forced source loads; disabled and unmounted queries are
+not fetched implicitly. A forced load bypasses stored cache data but still
+publishes cached data as a temporary query result and participates in in-flight
+deduplication. Automatic query revalidation uses the normal cache policy.
+Refresh intent is passed directly to the forced query function rather than
+stored as state for a later query execution.
 
 The dashboard also reads the last persisted result as presentation-only
 placeholder data when a card mounts. This survives a dashboard close and reopen
@@ -204,7 +209,11 @@ the entry's freshness, or change forced refresh behavior.
 Card queries mount when their container enters the viewport margin. After a card
 leaves that margin, its query remains active for one minute to avoid churn during
 short scrolls, then unmounts. Re-entering during that interval cancels the
-pending unmount.
+pending unmount. Successful query data remains fresh in memory for one minute;
+this avoids redundant loader and persistent-cache reads without changing the
+source-defined persistent cache duration. Active card queries also revalidate
+once per minute, including while the dashboard is in the background; the source
+loader may still satisfy an automatic revalidation from a fresh persisted result.
 
 Loader metadata is response-scoped and remains part of the cached load result.
 It uses the complete source presentation metadata shape: title, badge,
