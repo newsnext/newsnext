@@ -1,12 +1,9 @@
 import type {
   SourceLoaderMetadata,
-  SourceLoaderOutput,
 } from "@newsnext/source/types"
 import type { NewsItem } from "@/typings/source"
 import {
-  normalizeSourceLoaderResult,
   normalizeSourceParams,
-  resolveSource,
 } from "@newsnext/source/runtime"
 import { createBackgroundClient } from "./background-client"
 import { readCachedSource, writeCachedSource } from "./source-cache"
@@ -19,8 +16,6 @@ const EMPTY_SOURCE_ITEMS_ERROR_MESSAGE = "No source items. Refresh to try again.
 const inFlightSourceLoads = new Map<string, Promise<SourceLoadResult>>()
 
 export interface SourceLoadResult {
-  id: string
-  key: string
   items: NewsItem[]
   metadata?: SourceLoaderMetadata
   updatedAt: number
@@ -37,16 +32,16 @@ export async function loadSource(
 ): Promise<SourceLoadResult> {
   const source = await loadSourceDescriptor(sourceId)
   const params = normalizeSourceParams(source, queryParams)
-  const key = buildSourceCacheKey(sourceId, source.cache.version, params)
+  const cacheKey = buildSourceCacheKey(sourceId, source.cache.version, params)
   const cachedResult = options.forceFresh
     ? undefined
-    : await readCachedSource(key, parseCacheMaxAge(source.cache.maxAge))
+    : await readCachedSource(cacheKey, parseCacheMaxAge(source.cache.maxAge))
 
   if (cachedResult?.items.length) {
     return cachedResult
   }
 
-  const inFlightLoad = inFlightSourceLoads.get(key)
+  const inFlightLoad = inFlightSourceLoads.get(cacheKey)
   if (inFlightLoad) {
     return inFlightLoad
   }
@@ -54,43 +49,30 @@ export async function loadSource(
   const sourceLoad = loadFreshSource({
     sourceId,
     queryParams,
-    key,
-    loadInCurrentContext: async () => {
-      const runtimeSource = await resolveSource(sourceId)
-      return runtimeSource.loader(params)
-    },
+    cacheKey,
   })
-  inFlightSourceLoads.set(key, sourceLoad)
+  inFlightSourceLoads.set(cacheKey, sourceLoad)
 
   try {
     return await sourceLoad
   } finally {
-    inFlightSourceLoads.delete(key)
+    inFlightSourceLoads.delete(cacheKey)
   }
 }
 
 interface FreshSourceLoad {
   sourceId: string
   queryParams: Record<string, unknown>
-  key: string
-  loadInCurrentContext: () => Promise<SourceLoaderOutput>
+  cacheKey: string
 }
 
 async function loadFreshSource(request: FreshSourceLoad): Promise<SourceLoadResult> {
-  const backgroundClient = createBackgroundClient()
-  const loaded = backgroundClient
-    ? await backgroundClient.source.load({
-        sourceId: request.sourceId,
-        params: request.queryParams,
-      })
-    : {
-        ...normalizeSourceLoaderResult(await request.loadInCurrentContext()),
-        updatedAt: Date.now(),
-      }
+  const loaded = await createBackgroundClient().source.load({
+    sourceId: request.sourceId,
+    params: request.queryParams,
+  })
 
   const result = {
-    id: request.sourceId,
-    key: request.key,
     items: loaded.items,
     metadata: loaded.metadata,
     updatedAt: loaded.updatedAt,
@@ -100,9 +82,7 @@ async function loadFreshSource(request: FreshSourceLoad): Promise<SourceLoadResu
     throw new Error(EMPTY_SOURCE_ITEMS_ERROR_MESSAGE)
   }
 
-  if (result.items.length) {
-    await writeCachedSource(result)
-  }
+  await writeCachedSource(request.cacheKey, result)
 
   return result
 }

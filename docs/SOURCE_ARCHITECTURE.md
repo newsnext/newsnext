@@ -59,9 +59,10 @@ The build follows this sequence:
 provider files
     │
     ├─ validate provider and source IDs
-    ├─ apply provider and base defaults
-    ├─ materialize derived metadata and capabilities
+    ├─ apply provider defaults and merge source variables
+    ├─ attach provider metadata
     ├─ flatten providers to complete source IDs
+    ├─ materialize capabilities for executable sources
     ├─ remove executable loaders from serialized entries
     └─ validate the complete generated registry
             │
@@ -78,11 +79,11 @@ only when their content changes.
 path. Expansion:
 
 1. validates the provider shape and IDs;
-2. applies source values over provider defaults and base defaults;
+2. applies source values over provider defaults;
 3. recursively fills missing object properties;
 4. replaces inherited arrays with source arrays;
 5. recursively merges `vars`, with source values taking precedence;
-6. validates and applies the inherited source `baseUrl`;
+6. validates the inherited source `baseUrl`;
 7. attaches provider-owned presentation metadata to every source;
 8. validates the complete source and rejects source-owned `icon` or `color`.
 
@@ -144,6 +145,11 @@ resolveSourceRegistry
 Record<sourceId, RuntimeSource>
 ```
 
+The record key is the canonical source ID, such as `github:trending`.
+`RuntimeSource` does not duplicate either the full ID or its provider-local
+segment. Public descriptors receive an `id` only when the keyed runtime record
+is converted for clients.
+
 Registry parsing validates the entire wire format before resolving entries.
 Declarative registry entries keep their JSON, HTML, or RSS loader. An entry
 without a loader must have an exact match in the executable loader map and is
@@ -171,13 +177,15 @@ source ID and raw parameters
         ├─ resolve required secrets in the background
         ├─ execute the source loader
         ├─ normalize NewsItem[] to SourceLoaderResult
+        ├─ reject an empty item result
         ├─ cache items and dynamic title, description, and badge metadata
         └─ infer the card presentation from item timestamps and order in the UI
 ```
 
-In-flight loads are deduplicated by cache key. The key includes the source ID,
-cache version, and normalized parameters. A forced refresh bypasses stored
-cache data but still participates in in-flight deduplication.
+In-flight loads are deduplicated by a cache key containing the source ID, cache
+version, and normalized parameters. The key remains internal to the loader and
+cache layers. A forced refresh bypasses stored cache data but still participates
+in in-flight deduplication.
 
 Loader metadata is response-scoped and remains part of the cached load result.
 While displayed, it overrides the source title, description, and badge without
@@ -191,14 +199,14 @@ The background and source runtime do not send a declared card type. They
 preserve loader output order, including through caching and transport. The
 frontend renders a timeline only when the non-empty result has a finite
 timestamp on every item and those timestamps are monotonically non-increasing.
-All other results render as a ranking. A provider may deliberately sort inside
-a request, JMESPath selection, or custom loader when chronological order is
-the correct source behavior; generic JSON and HTML loaders do not reorder
-items.
+All other non-empty results render as a ranking. Empty results fail before
+caching or presentation. A provider may deliberately sort inside a request,
+JMESPath selection, or custom loader when chronological order is the correct
+source behavior; generic JSON and HTML loaders do not reorder items.
 
-The extension prefers background execution so loaders can use extension host
-permissions, cookie and local-storage secrets, and request rules. The direct
-in-context path exists for environments without a background client.
+The extension executes registry access and source loaders through its background
+service so loaders can use extension host permissions, cookie and local-storage
+secrets, and request rules.
 
 ## Parameter and request pipeline
 
@@ -315,9 +323,9 @@ bounded scan deduplicates absolute URLs and adds one built-in suggestion per
 feed, up to 20 per page. Each suggestion keeps the page URL as its home, uses
 the page hostname favicon as its initial instance badge, and prefers the
 discovered feed title over the source's static title. After loading, dynamic
-RSS metadata may replace that badge. RSS suggestions rank below every
-registered source match, including generated origin-only rules, so a dedicated
-source remains the primary suggestion.
+RSS metadata may replace that badge. RSS suggestions use lower built-in
+confidence than generated origin-only and default explicit rules, so a
+dedicated source normally remains the primary suggestion.
 Field and feed extraction are isolated from template rendering; page scripts
 are not executed and the document object is never exposed to Liquid.
 Radar renders in the extension action popup, which keeps discovery available
@@ -327,8 +335,8 @@ Rules and compiled matchers are cached. Optional Radar failures are reported as
 diagnostics and fail closed instead of interrupting the surrounding UI.
 Radar metadata can replace source-owned presentation fields such as title,
 badge, description, and home URL, but cannot modify source identity,
-provider title, icon, color, category, attribution, loader behavior,
-capabilities, secrets, request rules, or cache policy.
+provider title, icon, color, category, loader behavior, capabilities, secrets,
+request rules, or cache policy.
 Accepting a Radar suggestion creates one card instance with the selected board
 membership. The instance owns its board ID alongside its source ID and patch.
 Moving a card updates only that board ID; source parameters, presentation
@@ -392,7 +400,7 @@ Other boundaries include:
 - JMESPath length, syntax, and prototype-property checks;
 - bounded template parsing, rendering, memory, and caches;
 - bounded regex patterns and inputs;
-- bounded HTML item selection and extracted values;
+- bounded HTML item selection and Radar page extraction;
 - HTML escaping for untrusted template values;
 - capability checks against resolved request URLs;
 - narrow request-rule counts, domains, and header modifications.

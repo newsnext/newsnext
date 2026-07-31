@@ -1,5 +1,4 @@
 import type { SourceDescriptor } from "@/typings/source"
-import { loadSourceDescriptors as loadRuntimeSourceDescriptors } from "@newsnext/source/runtime"
 import { createBackgroundClient } from "./background-client"
 
 function sortSourceDescriptors(sources: SourceDescriptor[]): SourceDescriptor[] {
@@ -14,10 +13,7 @@ function sortSourceDescriptors(sources: SourceDescriptor[]): SourceDescriptor[] 
 }
 
 export async function loadSourceDescriptors(): Promise<SourceDescriptor[]> {
-  const backgroundClient = createBackgroundClient()
-  const sources = backgroundClient
-    ? await backgroundClient.registry.list()
-    : await loadRuntimeSourceDescriptors()
+  const sources = await createBackgroundClient().registry.list()
   return sortSourceDescriptors(sources)
 }
 

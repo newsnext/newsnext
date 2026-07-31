@@ -25,10 +25,7 @@ export function SourceConnectionSettings(): React.JSX.Element {
   const refreshStatus = useCallback(async (): Promise<void> => {
     try {
       const client = createBackgroundClient()
-      const nextStatus = await client?.sourceConnection.getStatus()
-      if (nextStatus) {
-        setStatus(nextStatus)
-      }
+      setStatus(await client.sourceConnection.getStatus())
     } catch {
       setStatus(undefined)
     }
@@ -52,10 +49,7 @@ export function SourceConnectionSettings(): React.JSX.Element {
     setUpdating(true)
     try {
       const client = createBackgroundClient()
-      const nextStatus = await client?.sourceConnection.setEnabled(enabled)
-      if (nextStatus) {
-        setStatus(nextStatus)
-      }
+      setStatus(await client.sourceConnection.setEnabled(enabled))
     } catch {
       await refreshStatus()
     } finally {

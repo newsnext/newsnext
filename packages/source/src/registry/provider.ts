@@ -16,15 +16,15 @@ import {
 } from "./validation"
 
 export function flattenProviderConfig(
-  id: string,
+  providerId: string,
   provider: ProviderConfig,
 ): SourceRegistry {
-  const sources = expandProviderSources(id, provider)
+  const sources = expandProviderSources(providerId, provider)
   const providerMetadata = toSourceProvider(provider)
 
   return Object.fromEntries(
     Object.entries(sources).map(([sourceId, source]) => [
-      `${id}:${sourceId}`,
+      `${providerId}:${sourceId}`,
       {
         ...source,
         provider: providerMetadata,
@@ -34,16 +34,16 @@ export function flattenProviderConfig(
 }
 
 export function resolveProvider(
-  id: string,
+  providerId: string,
   provider: ProviderConfig,
 ): ProviderDefinition {
-  const sourcesConfig = expandProviderSources(id, provider)
+  const sourcesConfig = expandProviderSources(providerId, provider)
   const providerMetadata = toSourceProvider(provider)
 
   const sources = Object.fromEntries(
-    Object.entries(sourcesConfig).map(([key, config]) => [
-      key,
-      resolveRuntimeSource(`${id}:${key}`, key, config, providerMetadata),
+    Object.entries(sourcesConfig).map(([sourceId, config]) => [
+      sourceId,
+      resolveRuntimeSource(`${providerId}:${sourceId}`, config, providerMetadata),
     ]),
   ) as Record<string, RuntimeSource>
 
@@ -88,7 +88,7 @@ function expandProviderSources(
         source,
         provider.defaults ?? {},
       )
-      const sourceKey = `${providerId}:${sourceId}`
+      const fullSourceId = `${providerId}:${sourceId}`
       if (
         !isRecord(defaultedSource.loader)
         || (
@@ -102,12 +102,12 @@ function expandProviderSources(
               )
         )
       ) {
-        throw new Error(`Source "${sourceKey}" is missing a valid loader`)
+        throw new Error(`Source "${fullSourceId}" is missing a valid loader`)
       }
       if (!defaultedSource.cache) {
-        throw new Error(`Source "${sourceKey}" is missing a cache policy`)
+        throw new Error(`Source "${fullSourceId}" is missing a cache policy`)
       }
-      validateSourceTemplates(sourceKey, defaultedSource as SourceConfig)
+      validateSourceTemplates(fullSourceId, defaultedSource as SourceConfig)
       return [sourceId, {
         ...defaultedSource,
         vars: mergeSourceVars(provider.defaults?.vars, source.vars),

@@ -779,7 +779,6 @@ describe("source registry", () => {
         category: "social",
         color: "blue",
       },
-      key: "latest",
     })
   })
 

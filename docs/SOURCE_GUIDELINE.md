@@ -178,7 +178,7 @@ Do not declare a source presentation type. Loaders return items in their
 meaningful display order. The extension presents the result as a timeline only
 when every item has a finite timestamp and the items are already ordered from
 newest to oldest; otherwise it presents the result as a ranking. An empty
-result is also treated as a ranking.
+loader result is rejected as a load error.
 
 JSON and HTML loaders preserve the selected item order. Express any intentional
 ordering in the upstream request, the JSON `items` JMESPath expression, or
@@ -251,7 +251,6 @@ Liquid is available only in schema fields documented as template slots:
 
 | Slot | Available values |
 | --- | --- |
-| Parameter | `source.vars`, `scope.value` |
 | Loader URL and `fetchOptions` | `source.vars`, `scope.params` |
 | JSON field | `source.vars`, `scope.value`, `scope.item`, `scope.params`, `scope.index`, `scope.request.url`, `scope.response.json` |
 | HTML field | `source.vars`, `scope.value`, `scope.item`, `scope.params`, `scope.index`, `scope.request.url` |
@@ -274,7 +273,7 @@ LiquidJS built-in filters are available. NewsNext adds:
 | `normalize_lines[: spacing]` | Trim non-empty lines and join with 1–4 newlines |
 | `first_line` | Return the first non-empty trimmed line |
 | `absolute_url: base` | Resolve a URL against a base |
-| `favicon_url` | Return the configured favicon service URL |
+| `favicon_url` | Return the default favicon service URL |
 | `css_url` | Extract the first `url(...)` from CSS |
 | `date_to_ms` | Parse a date as milliseconds |
 | `relative_date_to_ms[: timezone]` | Parse absolute or relative date text |
@@ -420,11 +419,6 @@ metadata: {
 
 JSON loader metadata is selected from the complete response.
 
-Structured loader metadata is cached with the items and temporarily overrides
-the source title, description, or badge while that result is displayed. It is
-unavailable until the first successful request, does not satisfy the Radar
-title requirement, and cannot replace discovery-time metadata.
-
 ## HTML loader
 
 `items` is a CSS selector:
@@ -517,7 +511,7 @@ embedded HTML URLs or values that need another base.
 Set `decoding`, for example `"gb2312"`, for non-UTF-8 pages. Use `fetchOptions`
 for standard requests and a custom `fetch` only for unusual request handling.
 
-## RSS and custom loaders
+## RSS, custom loaders, and loader results
 
 RSS needs only a URL:
 
@@ -530,9 +524,7 @@ loader: {
 
 The RSS loader returns the RSS channel title and description, or Atom feed
 title and subtitle, as dynamic loader metadata. For RSS feeds, it also returns
-`channel.image.url` as the dynamic badge when present. After the first
-successful load, this metadata overrides static or Radar title, description,
-and badge metadata.
+`channel.image.url` as the dynamic badge when present.
 
 Use a custom loader only when declarative loaders cannot express the source:
 
@@ -566,7 +558,9 @@ A loader returns `NewsItem[]` or:
 ```
 
 Dynamic loader metadata supports `title`, `desc`, and `badge`. It is cached with
-the items and overrides static or Radar metadata while displayed. Use it for
+the items and overrides static or Radar metadata while displayed. It is
+unavailable until the first successful request, does not satisfy the Radar
+title requirement, and is never persisted into the card instance. Use it for
 response-derived values, not for an icon repeated by every item.
 
 Every item needs a non-empty `title` and `url`. Common optional fields are
@@ -771,24 +765,25 @@ return loader metadata instead of persisting the URL through Radar.
 
 ## Validation and verification
 
-The registry build validates source IDs, schemas, templates, JMESPath,
-selectors, request rules, network capabilities, and security limits. Prefer
-declarative loaders, keep selectors and expressions bounded, and never rely on
-JavaScript execution from configuration.
+The registry build validates source IDs, provider and source metadata, base
+URLs, templates, JMESPath, Radar fields, request rules, network capabilities,
+and security limits. Prefer declarative loaders, keep selectors and expressions
+bounded, and never rely on JavaScript execution from configuration.
 
 Author-facing limits:
 
 | Input | Limit |
 | --- | --- |
-| Runtime registry | 1,000 sources and 2 MiB parsed JSON |
+| Runtime registry | 1,000 sources and 2 MiB serialized JSON |
 | Source ID | 200 characters |
 | Request rules | 10 per source |
 | Request domains | 20 per rule |
 | Header modifications | 5 per rule |
 | JMESPath expression | 2,000 characters |
 | HTML selected items | 2,000 per request |
-| CSS selector | 500 characters |
-| Extracted field value | 20,000 characters |
+| Radar metadata selector | 500 characters |
+| Radar metadata attribute | 100 characters |
+| Radar page extraction | 20,000 characters |
 | Regex pattern/input | 500/20,000 characters |
 
 Runtime registries accept declarative JSON, HTML, and RSS loaders only.

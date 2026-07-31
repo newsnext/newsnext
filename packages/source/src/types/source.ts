@@ -123,10 +123,6 @@ export function isSourcePresentationMetadataKey(
   return SOURCE_PRESENTATION_METADATA_KEY_SET.has(value)
 }
 
-export interface SourceMetadata extends SourcePresentationMetadata {
-  key: string
-}
-
 export interface SourceCapabilities {
   network: readonly string[]
   cookies: readonly string[]
@@ -161,7 +157,6 @@ export interface SourceCacheConfig {
 
 export interface RuntimeSource<TParams extends SourceParamSchemaMap = SourceParamSchemaMap> {
   provider: SourceProvider
-  key: string
   baseUrl?: string
   title?: string
   vars?: SourceTemplateVars
@@ -174,7 +169,6 @@ export interface RuntimeSource<TParams extends SourceParamSchemaMap = SourcePara
   secrets?: SourceSecretDefinition[]
   radar?: SourceRadarRule[]
   requestRules?: readonly SourceRequestRule[]
-  disable?: boolean
   loader: SourceLoader<TParams>
 }
 
@@ -189,6 +183,6 @@ export interface ProviderDefinition {
  * Public descriptor for sources exposed to clients
  */
 export type SourceDescriptor<TParams extends SourceParamSchemaMap = SourceParamSchemaMap>
-  = Omit<RuntimeSource<TParams>, "key" | "loader" | "disable"> & {
+  = Omit<RuntimeSource<TParams>, "loader"> & {
     id: string
   }

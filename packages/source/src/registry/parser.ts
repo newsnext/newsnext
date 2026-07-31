@@ -31,13 +31,13 @@ export function parseSourceRegistry(input: unknown): SourceRegistry {
 
   const providers = new Map<string, SourceProvider>()
   return Object.fromEntries(
-    entries.map(([id, source]) => {
-      const [providerId] = parseRegistrySourceId(id)
+    entries.map(([sourceId, source]) => {
+      const [providerId] = parseRegistrySourceId(sourceId)
       if (!isRecord(source)) {
-        throw new Error(`Registry source "${id}" must be an object`)
+        throw new Error(`Registry source "${sourceId}" must be an object`)
       }
       if (!isSourceProvider(source.provider)) {
-        throw new Error(`Registry source "${id}" has invalid provider metadata`)
+        throw new Error(`Registry source "${sourceId}" has invalid provider metadata`)
       }
 
       const currentProvider = source.provider
@@ -62,18 +62,18 @@ export function parseSourceRegistry(input: unknown): SourceRegistry {
           || !isStructuredLoaderType(source.loader.type)
         )
       ) {
-        throw new Error(`Registry source "${id}" uses an unsupported loader type`)
+        throw new Error(`Registry source "${sourceId}" uses an unsupported loader type`)
       }
 
       const config = source as unknown as SourceRegistryConfig
       resolveRegistrySource(
-        id,
+        sourceId,
         config,
         config.loader === undefined
-          ? { [id]: async () => [] }
+          ? { [sourceId]: async () => [] }
           : {},
       )
-      return [id, config]
+      return [sourceId, config]
     }),
   )
 }
@@ -89,26 +89,26 @@ export function resolveSourceRegistry(
   executableLoaders: ExecutableSourceLoaders = {},
 ): Record<string, RuntimeSource> {
   return Object.fromEntries(
-    Object.entries(parseSourceRegistry(input)).map(([id, source]) => [
-      id,
-      resolveRegistrySource(id, source, executableLoaders),
+    Object.entries(parseSourceRegistry(input)).map(([sourceId, source]) => [
+      sourceId,
+      resolveRegistrySource(sourceId, source, executableLoaders),
     ]),
   )
 }
 
 export function resolveRegistrySource(
-  id: string,
+  sourceId: string,
   config: SourceRegistryConfig,
   executableLoaders: ExecutableSourceLoaders = {},
 ): RuntimeSource {
-  const [, key] = parseRegistrySourceId(id)
+  parseRegistrySourceId(sourceId)
   if (config.loader === undefined) {
-    const load = executableLoaders[id]
+    const load = executableLoaders[sourceId]
     if (!load) {
-      throw new Error(`Registry source "${id}" requires an executable loader`)
+      throw new Error(`Registry source "${sourceId}" requires an executable loader`)
     }
     if (!isRecord(config.capabilities)) {
-      throw new Error(`Registry source "${id}" with an executable loader must define capabilities`)
+      throw new Error(`Registry source "${sourceId}" with an executable loader must define capabilities`)
     }
     const executableConfig = {
       ...config,
@@ -117,8 +117,8 @@ export function resolveRegistrySource(
         load,
       },
     } as SourceConfig
-    return resolveRuntimeSource(id, key, executableConfig, config.provider)
+    return resolveRuntimeSource(sourceId, executableConfig, config.provider)
   }
 
-  return resolveRuntimeSource(id, key, config as SourceConfig, config.provider)
+  return resolveRuntimeSource(sourceId, config as SourceConfig, config.provider)
 }

@@ -17,7 +17,7 @@ export function matchesCapabilityHost(hostname: string, declaredHost: string): b
 }
 
 export function assertNetworkCapability(
-  sourceKey: string,
+  sourceId: string,
   url: string,
   declaredHosts: readonly string[],
 ): void {
@@ -25,11 +25,11 @@ export function assertNetworkCapability(
   try {
     parsedUrl = new URL(url)
   } catch {
-    throw new Error(`Source "${sourceKey}" has an invalid network URL: ${url}`)
+    throw new Error(`Source "${sourceId}" has an invalid network URL: ${url}`)
   }
 
   if (!["http:", "https:"].includes(parsedUrl.protocol)) {
-    throw new Error(`Source "${sourceKey}" cannot request unsupported protocol "${parsedUrl.protocol}"`)
+    throw new Error(`Source "${sourceId}" cannot request unsupported protocol "${parsedUrl.protocol}"`)
   }
 
   if (declaredHosts.some(host => matchesCapabilityHost(parsedUrl.hostname, host))) {
@@ -37,12 +37,12 @@ export function assertNetworkCapability(
   }
 
   throw new Error(
-    `Source "${sourceKey}" attempted to access undeclared host "${parsedUrl.hostname}"`,
+    `Source "${sourceId}" attempted to access undeclared host "${parsedUrl.hostname}"`,
   )
 }
 
 export function validateSourceRequestRules(
-  sourceKey: string,
+  sourceId: string,
   requestRules: unknown,
   declaredHosts: readonly string[],
 ): void {
@@ -61,26 +61,26 @@ export function validateSourceRequestRules(
     return
   }
   if (!Array.isArray(requestRules) || requestRules.length > SOURCE_REGISTRY_LIMITS.maxRequestRulesPerSource) {
-    throw new Error(`Source "${sourceKey}" has invalid request rules`)
+    throw new Error(`Source "${sourceId}" has invalid request rules`)
   }
 
   requestRules.forEach((rule, ruleIndex) => {
     if (!isRecord(rule)) {
-      throw new Error(`Source "${sourceKey}" request rule ${ruleIndex} must be an object`)
+      throw new Error(`Source "${sourceId}" request rule ${ruleIndex} must be an object`)
     }
 
     const { action, condition, priority } = rule
     if (!isRecord(action) || !requestRuleActionTypes.has(String(action.type))) {
-      throw new Error(`Source "${sourceKey}" request rule ${ruleIndex} has an invalid action`)
+      throw new Error(`Source "${sourceId}" request rule ${ruleIndex} has an invalid action`)
     }
     if (!isRecord(condition)) {
-      throw new Error(`Source "${sourceKey}" request rule ${ruleIndex} has an invalid condition`)
+      throw new Error(`Source "${sourceId}" request rule ${ruleIndex} has an invalid condition`)
     }
     if (
       priority !== undefined
       && (!Number.isInteger(priority) || typeof priority !== "number" || priority < 1)
     ) {
-      throw new Error(`Source "${sourceKey}" request rule ${ruleIndex} has an invalid priority`)
+      throw new Error(`Source "${sourceId}" request rule ${ruleIndex} has an invalid priority`)
     }
 
     const { requestDomains } = condition
@@ -89,7 +89,7 @@ export function validateSourceRequestRules(
       || requestDomains.length === 0
       || requestDomains.length > SOURCE_REGISTRY_LIMITS.maxRequestDomainsPerRule
     ) {
-      throw new Error(`Source "${sourceKey}" request rule ${ruleIndex} has invalid request domains`)
+      throw new Error(`Source "${sourceId}" request rule ${ruleIndex} has invalid request domains`)
     }
     for (const domain of requestDomains) {
       if (
@@ -98,7 +98,7 @@ export function validateSourceRequestRules(
         || !declaredHosts.some(host => matchesCapabilityHost(domain, host))
       ) {
         throw new Error(
-          `Source "${sourceKey}" request rule ${ruleIndex} uses undeclared domain "${String(domain)}"`,
+          `Source "${sourceId}" request rule ${ruleIndex} uses undeclared domain "${String(domain)}"`,
         )
       }
     }
@@ -114,7 +114,7 @@ export function validateSourceRequestRules(
         headerModifications.length === 0
         || headerModifications.length > SOURCE_REGISTRY_LIMITS.maxRequestHeadersPerRule
       ) {
-        throw new Error(`Source "${sourceKey}" request rule ${ruleIndex} has invalid header modifications`)
+        throw new Error(`Source "${sourceId}" request rule ${ruleIndex} has invalid header modifications`)
       }
       headerModifications.forEach((header, headerIndex) => {
         if (
@@ -132,7 +132,7 @@ export function validateSourceRequestRules(
           )
         ) {
           throw new Error(
-            `Source "${sourceKey}" request rule ${ruleIndex} header ${headerIndex} is invalid`,
+            `Source "${sourceId}" request rule ${ruleIndex} header ${headerIndex} is invalid`,
           )
         }
       })

@@ -5,8 +5,8 @@ import type {
   SourceCacheMaxAge,
   SourceCapabilities,
   SourceLoader,
-  SourceMetadata,
   SourceParamSchemaMap,
+  SourcePresentationMetadata,
   SourceProvider,
   SourceRadarRule,
   SourceRequestRule,
@@ -46,7 +46,7 @@ import {
 
 interface SourceConfigBase<TParams extends SourceParamSchemaMap> {
   baseUrl?: string
-  metadata?: Omit<SourceMetadata, "key">
+  metadata?: SourcePresentationMetadata
   vars?: SourceTemplateVars
   params?: TParams
   radar?: SourceRadarRule[]
@@ -57,7 +57,6 @@ interface SourceConfigBase<TParams extends SourceParamSchemaMap> {
 
 type SourceCapabilityOverrides = Partial<SourceCapabilities>
 type SourceCacheInput = SourceCacheConfig | SourceCacheMaxAge
-type ProviderSourceMetadata = Omit<SourceMetadata, "key">
 type ProviderLoaderConfig<TParams extends SourceParamSchemaMap> = Partial<
   SourceConfig<TParams>["loader"]
 >
@@ -102,7 +101,7 @@ export type SourceConfigDefaults<TParams extends SourceParamSchemaMap = any> = P
   Omit<SourceConfig<TParams>, "loader" | "metadata">
 > & {
   loader?: ProviderLoaderConfig<TParams>
-  metadata?: ProviderSourceMetadata
+  metadata?: SourcePresentationMetadata
 }
 
 export type ProviderSourceConfig<TParams extends SourceParamSchemaMap = any> = Omit<
@@ -112,7 +111,7 @@ export type ProviderSourceConfig<TParams extends SourceParamSchemaMap = any> = O
   cache?: SourceCacheInput
   capabilities?: SourceCapabilityOverrides
   loader?: ProviderLoaderConfig<TParams>
-  metadata?: ProviderSourceMetadata
+  metadata?: SourcePresentationMetadata
 }
 
 export function validateSourceTemplates(sourceId: string, config: SourceConfig): void {
@@ -242,7 +241,7 @@ type ResolvedSource<TParams extends SourceParamSchemaMap> = Omit<
 >
 
 function resolveSource<const TParams extends SourceParamSchemaMap = Record<string, never>>(
-  key: string,
+  sourceId: string,
   config: SourceConfig<TParams>,
 ): ResolvedSource<TParams> {
   const {
@@ -259,51 +258,39 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
   } = config
   const baseUrl = baseUrlInput === undefined
     ? undefined
-    : parseSourceBaseUrl(baseUrlInput, `${key}.baseUrl`)
+    : parseSourceBaseUrl(baseUrlInput, `${sourceId}.baseUrl`)
   const resolvedMetadata = resolveSourceMetadataUrls(metadata, baseUrl)
   const capabilities = resolveSourceCapabilities(
-    key,
+    sourceId,
     loader,
     params,
     vars,
     baseUrl,
     capabilityOverrides,
   )
-  validateSourceRequestRules(key, requestRules, capabilities.network)
+  validateSourceRequestRules(sourceId, requestRules, capabilities.network)
   const cache = typeof cacheInput === "string"
     ? { version: 1, maxAge: cacheInput }
     : cacheInput
-  const registration = {
-    key,
-    ...resolvedMetadata,
-    baseUrl,
-    vars,
-    params,
-    radar,
-    requestRules,
-    secrets,
-    capabilities,
-    cache,
-  }
 
   let resolvedLoader: SourceLoader<TParams>
   switch (loader.type) {
     case "json": {
       const { type: _type, url, fetchOptions, ...options } = loader
       const urlTemplate = compileSourceTemplateValue(url, {
-        location: `${key}.loader.url`,
+        location: `${sourceId}.loader.url`,
         slot: "request",
       })
       const fetchOptionsTemplate = fetchOptions === undefined
         ? undefined
         : compileSourceTemplateValue(fetchOptions, {
-            location: `${key}.loader.fetchOptions`,
+            location: `${sourceId}.loader.fetchOptions`,
             slot: "request",
           })
       resolvedLoader = async (loaderParams) => {
         const scope = createSourceTemplateScope(vars, { params: loaderParams })
         const resolvedUrl = resolveSourceUrl(urlTemplate.render(scope), baseUrl)
-        assertNetworkCapability(key, resolvedUrl, capabilities.network)
+        assertNetworkCapability(sourceId, resolvedUrl, capabilities.network)
         return loadJson({
           ...options,
           url: resolvedUrl,
@@ -318,19 +305,19 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
     case "html": {
       const { type: _type, url, fetchOptions, ...options } = loader
       const urlTemplate = compileSourceTemplateValue(url, {
-        location: `${key}.loader.url`,
+        location: `${sourceId}.loader.url`,
         slot: "request",
       })
       const fetchOptionsTemplate = fetchOptions === undefined
         ? undefined
         : compileSourceTemplateValue(fetchOptions, {
-            location: `${key}.loader.fetchOptions`,
+            location: `${sourceId}.loader.fetchOptions`,
             slot: "request",
           })
       resolvedLoader = async (loaderParams) => {
         const scope = createSourceTemplateScope(vars, { params: loaderParams })
         const resolvedUrl = resolveSourceUrl(urlTemplate.render(scope), baseUrl)
-        assertNetworkCapability(key, resolvedUrl, capabilities.network)
+        assertNetworkCapability(sourceId, resolvedUrl, capabilities.network)
         return loadHtml({
           ...options,
           url: resolvedUrl,
@@ -345,7 +332,7 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
     case "rss": {
       const { url } = loader
       const urlTemplate = compileSourceTemplateValue(url, {
-        location: `${key}.loader.url`,
+        location: `${sourceId}.loader.url`,
         slot: "request",
       })
       resolvedLoader = async (loaderParams) => {
@@ -353,7 +340,7 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
           urlTemplate.render(createSourceTemplateScope(vars, { params: loaderParams })),
           baseUrl,
         )
-        assertNetworkCapability(key, resolvedUrl, capabilities.network)
+        assertNetworkCapability(sourceId, resolvedUrl, capabilities.network)
         return loadRss({ url: resolvedUrl })
       }
       break
@@ -367,7 +354,15 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
   }
 
   return {
-    ...registration,
+    ...resolvedMetadata,
+    baseUrl,
+    vars,
+    params,
+    radar,
+    requestRules,
+    secrets,
+    capabilities,
+    cache,
     loader: withResolvedOutputUrls(resolvedLoader, baseUrl),
   }
 }
@@ -430,14 +425,13 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 export function resolveRuntimeSource(
-  id: string,
-  key: string,
+  sourceId: string,
   config: SourceConfig,
   provider: SourceProvider,
 ): RuntimeSource {
-  validateSourceTemplates(id, config)
+  validateSourceTemplates(sourceId, config)
 
-  const source = resolveSource(key, config)
+  const source = resolveSource(sourceId, config)
 
   const secrets = source.secrets
   const cookieHosts = (secrets ?? [])

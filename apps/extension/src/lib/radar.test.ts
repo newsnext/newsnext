@@ -6,7 +6,7 @@ import { getRadarPageQueryKey } from "./radar-page-query"
 
 const sourceDescriptors = Object.entries(resolveSources(bundledSourceRegistry))
   .map(([id, source]) => {
-    const { disable: _disable, key: _key, loader: _loader, ...descriptor } = source
+    const { loader: _loader, ...descriptor } = source
     return { ...descriptor, id }
   })
 

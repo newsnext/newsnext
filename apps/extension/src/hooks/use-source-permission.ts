@@ -19,7 +19,7 @@ export interface SourcePermissionState {
 
 interface PermissionState {
   granted: boolean | undefined
-  sourceKey: string
+  permissionKey: string
 }
 
 function getSourcePermissionKey(source: SourcePermissionHookTarget): string {
@@ -29,18 +29,18 @@ function getSourcePermissionKey(source: SourcePermissionHookTarget): string {
 function createPermissionState(source: SourcePermissionHookTarget): PermissionState {
   return {
     granted: getPermissionRequestForSource(source) ? undefined : true,
-    sourceKey: getSourcePermissionKey(source),
+    permissionKey: getSourcePermissionKey(source),
   }
 }
 
 export function useSourcePermission(source: SourcePermissionHookTarget): SourcePermissionState {
-  const sourceKey = getSourcePermissionKey(source)
+  const permissionKey = getSourcePermissionKey(source)
   const requiresPermission = Boolean(getPermissionRequestForSource(source))
   const [storedState, setStoredState] = useState<PermissionState>(() => (
     createPermissionState(source)
   ))
   let permissionState = storedState
-  if (storedState.sourceKey !== sourceKey) {
+  if (storedState.permissionKey !== permissionKey) {
     permissionState = createPermissionState(source)
     setStoredState(permissionState)
   }
@@ -52,7 +52,7 @@ export function useSourcePermission(source: SourcePermissionHookTarget): SourceP
     const refreshPermission = async (): Promise<void> => {
       const granted = await hasPermissionToLoadSource(source)
       if (active) {
-        setStoredState({ granted, sourceKey })
+        setStoredState({ granted, permissionKey })
       }
     }
     const handlePermissionChange = (): void => {
@@ -68,13 +68,13 @@ export function useSourcePermission(source: SourcePermissionHookTarget): SourceP
       browser.permissions.onAdded.removeListener(handlePermissionChange)
       browser.permissions.onRemoved.removeListener(handlePermissionChange)
     }
-  }, [requiresPermission, source, sourceKey])
+  }, [permissionKey, requiresPermission, source])
 
   const requestPermission = useCallback(async () => {
     const granted = await requestPermissionToLoadSource(source)
-    setStoredState({ granted, sourceKey })
+    setStoredState({ granted, permissionKey })
     return granted
-  }, [source, sourceKey])
+  }, [permissionKey, source])
 
   return {
     canLoad: permissionState.granted === true,
