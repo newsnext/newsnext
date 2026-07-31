@@ -18,6 +18,7 @@ import provider_4 from "./src/jike/index"
 import provider_5 from "./src/reddit/index"
 import provider_6 from "./src/weibo/index"
 import provider_7 from "./src/x/index"
+import provider_8 from "./src/xueqiu"
 
 const providerConfigs: Record<string, ProviderConfig> = {
   "bilibili": provider_0,
@@ -27,7 +28,8 @@ const providerConfigs: Record<string, ProviderConfig> = {
   "jike": provider_4,
   "reddit": provider_5,
   "weibo": provider_6,
-  "x": provider_7
+  "x": provider_7,
+  "xueqiu": provider_8
 }
 
 export const executableLoaders: ExecutableSourceLoaders = Object.fromEntries(

@@ -629,6 +629,13 @@ refreshed values with `context.updateSecrets`.
 Do not declare cookie secrets merely to authenticate a request when
 `credentials: "include"` supplies the browser cookie jar.
 
+When an API requires a cookie issued or refreshed by a page visit, a TypeScript
+structured loader may use a custom `fetch` that first requests the bootstrap
+page with `credentials: "include"` and then fetches the API the same way.
+Declare the bootstrap hostname as a network capability in addition to the
+loader URL's inferred hostname; do not read cookies or construct a `Cookie`
+header when the browser cookie jar is sufficient.
+
 ## Radar discovery
 
 Radar detects a source from the active page:
