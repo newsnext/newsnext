@@ -15,7 +15,6 @@ import { IconButton } from "@/components/common/button"
 import { PhArrowCircleLeftDuotone, PhPlusCircleDuotone } from "@/components/icons/ph"
 import { DEFAULT_BOARD_ID } from "@/lib/boards"
 import { createRadarBoardSource } from "@/lib/radar-board-source"
-import { requestRadarOverlayClose } from "@/lib/radar-overlay-message"
 import { createCardInstance, mergeSourceInstancePatch } from "@/lib/source-cards"
 import { cn } from "@/lib/utils"
 import { addInstanceAtom, currentBoardIdAtom } from "@/store/board"
@@ -220,7 +219,7 @@ function RadarDeckContent({ sourceDescriptors, suggestions }: RadarDeckProps) {
     const duration = prefersReducedMotion
       ? RADAR_REDUCED_MOTION_CELEBRATION_DURATION
       : RADAR_CELEBRATION_DURATION
-    const timeout = window.setTimeout(requestRadarOverlayClose, duration)
+    const timeout = window.setTimeout(() => window.close(), duration)
 
     return () => window.clearTimeout(timeout)
   }, [isCreated, prefersReducedMotion])

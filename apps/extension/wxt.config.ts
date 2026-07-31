@@ -57,13 +57,8 @@ export default defineConfig({
       optional_host_permissions: yoloMode || browser === "firefox"
         ? undefined
         : [...OPTIONAL_SOURCE_ORIGINS],
-      web_accessible_resources: browser === "firefox"
-        ? ["radar-overlay.html"]
-        : [{
-            resources: ["radar-overlay.html"],
-            matches: ["http://*/*", "https://*/*"],
-          }],
       action: {
+        default_popup: "radar-popup.html",
         default_title: "NewsNext",
       },
     }

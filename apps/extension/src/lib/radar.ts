@@ -9,6 +9,7 @@ import type {
 } from "@newsnext/source/types"
 import type { RadarPageQuery } from "@/lib/radar-page-query"
 import type { SourceInstanceMetadata, SourceInstancePatch } from "@/lib/source-cards"
+import { getFavicon } from "@newsnext/shared/utils"
 import {
   compileSourceRegex,
   compileSourceTemplate,
@@ -28,7 +29,13 @@ import {
 export interface RadarContext {
   url: string
   title?: string
+  feeds?: RadarFeed[]
   pageSelections?: Record<string, string>
+}
+
+export interface RadarFeed {
+  title?: string
+  url: string
 }
 
 export interface RadarSuggestion {
@@ -64,6 +71,9 @@ interface RadarLocation {
 
 const DEFAULT_RADAR_RULE_ID = "default-home-origin"
 const DEFAULT_ORIGIN_RADAR_CONFIDENCE = 0
+const RSS_RADAR_CONFIDENCE = -1
+const RSS_RADAR_RULE_ID = "page-feed"
+const RSS_SOURCE_ID = "rss:feed"
 
 type LocationMatcher = (url: URL) => Record<string, string> | null
 
@@ -96,6 +106,7 @@ type CompiledRadarMetadata
 export interface RadarMatcher {
   getPageQueries: (context: RadarContext) => RadarPageQuery[]
   getSuggestions: (context: RadarContext) => RadarSuggestion[]
+  shouldDiscoverFeeds: (context: RadarContext) => boolean
 }
 
 const matcherCache = new WeakMap<RadarSourceMetadata[], RadarMatcher>()
@@ -461,7 +472,11 @@ function resolveMetaPatch(
   return metadata
 }
 
-function matchCompiledRule(compiledRule: CompiledRadarRule, input: RadarContext, url: URL): RadarSuggestion | null {
+function matchCompiledRule(
+  compiledRule: CompiledRadarRule,
+  input: RadarContext,
+  url: URL,
+): RadarSuggestion | null {
   const pathParams = matchRuleLocation(compiledRule, url)
   if (!pathParams) {
     return null
@@ -527,14 +542,60 @@ function getPageQueries(
   return [...queries.values()]
 }
 
-function createSuggestions(context: RadarContext, rulesByHost: Map<string, CompiledRadarRule[]>): RadarSuggestion[] {
+function createRssSuggestions(
+  context: RadarContext,
+  pageUrl: URL,
+  rssSource: RadarSourceMetadata | undefined,
+): RadarSuggestion[] {
+  if (
+    !rssSource
+    || !["http:", "https:"].includes(pageUrl.protocol)
+  ) {
+    return []
+  }
+
+  return (context.feeds ?? []).flatMap((feed) => {
+    try {
+      const feedUrl = new URL(feed.url, pageUrl)
+      if (!["http:", "https:"].includes(feedUrl.protocol)) {
+        return []
+      }
+
+      return [createRadarSuggestion({
+        ruleId: RSS_RADAR_RULE_ID,
+        sourceId: RSS_SOURCE_ID,
+        patch: {
+          params: {
+            url: feedUrl.href,
+          },
+          metadata: {
+            badge: getFavicon(pageUrl),
+            home: pageUrl.href,
+            title: feed.title?.trim() || rssSource.title || "RSS Feed",
+          },
+        },
+        confidence: RSS_RADAR_CONFIDENCE,
+      })]
+    } catch {
+      return []
+    }
+  })
+}
+
+function createSuggestions(
+  context: RadarContext,
+  rulesByHost: Map<string, CompiledRadarRule[]>,
+  rssSource: RadarSourceMetadata | undefined,
+): RadarSuggestion[] {
   const location = resolveRadarLocation(context, rulesByHost)
   if (!location) {
     return []
   }
 
-  const suggestions = location.rules
-    .map(rule => matchCompiledRule(rule, context, location.url))
+  const suggestions = [
+    ...location.rules.map(rule => matchCompiledRule(rule, context, location.url)),
+    ...createRssSuggestions(context, location.url, rssSource),
+  ]
     .filter((suggestion): suggestion is RadarSuggestion => suggestion !== null)
   const suggestionsById = new Map<string, RadarSuggestion>()
 
@@ -543,6 +604,21 @@ function createSuggestions(context: RadarContext, rulesByHost: Map<string, Compi
   }
 
   return [...suggestionsById.values()].sort((a, b) => b.confidence - a.confidence)
+}
+
+function shouldDiscoverFeeds(
+  context: RadarContext,
+  rssSource: RadarSourceMetadata | undefined,
+): boolean {
+  if (!rssSource) {
+    return false
+  }
+
+  try {
+    return ["http:", "https:"].includes(new URL(context.url).protocol)
+  } catch {
+    return false
+  }
 }
 
 function getSourceRuleSpecs(sourceMetadata: RadarSourceMetadata[] | undefined): SourceRuleSpec[] {
@@ -588,9 +664,11 @@ export function createRadarMatcher(sourceMetadata: RadarSourceMetadata[] = []): 
       .map(rule => compileRadarRule(sourceRule, rule))
       .filter((rule): rule is CompiledRadarRule => rule !== null))
   const rulesByHost = indexRulesByHost(compiledRules)
+  const rssSource = sourceMetadata.find(source => source.id === RSS_SOURCE_ID)
   const radarMatcher: RadarMatcher = {
     getPageQueries: context => getPageQueries(context, rulesByHost),
-    getSuggestions: context => createSuggestions(context, rulesByHost),
+    getSuggestions: context => createSuggestions(context, rulesByHost, rssSource),
+    shouldDiscoverFeeds: context => shouldDiscoverFeeds(context, rssSource),
   }
 
   matcherCache.set(sourceMetadata, radarMatcher)

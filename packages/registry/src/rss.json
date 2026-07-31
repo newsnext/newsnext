@@ -1,0 +1,34 @@
+{
+  "title": "RSS",
+  "category": "news",
+  "color": "orange",
+  "icon": "https://s3.newsnext.app/icons/rss.png",
+  "defaults": {
+    "metadata": {
+      "title": "RSS Feed",
+      "type": "timeline"
+    },
+    "cache": "1m"
+  },
+  "sources": {
+    "feed": {
+      "params": {
+        "url": {
+          "type": "url",
+          "title": "Feed URL",
+          "description": "The HTTP or HTTPS URL of an RSS or Atom feed.",
+          "default": "https://example.com/feed.xml"
+        }
+      },
+      "loader": {
+        "type": "rss",
+        "url": "{{ scope.params.url }}"
+      },
+      "capabilities": {
+        "network": [
+          "*"
+        ]
+      }
+    }
+  }
+}

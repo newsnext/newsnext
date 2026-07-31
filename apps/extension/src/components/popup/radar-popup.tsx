@@ -14,9 +14,7 @@ export function RadarPopup() {
 
   return (
     <main className="grid-texture-background h-full min-h-0 overflow-y-auto bg-background p-3 text-foreground sunrise-theme-400">
-      <div className="mx-auto w-full max-w-108">
-        <RadarDeck sourceDescriptors={sources} suggestions={suggestions} />
-      </div>
+      <RadarDeck sourceDescriptors={sources} suggestions={suggestions} />
     </main>
   )
 }

@@ -1,9 +1,12 @@
 import type { HtmlTraversal } from "@newsnext/source/types"
+import type { RadarFeed } from "@/lib/radar"
 import type { RadarPageQuery } from "@/lib/radar-page-query"
 import { browser } from "#imports"
 import { getRadarPageQueryKey } from "@/lib/radar-page-query"
 
 const MAX_PAGE_SELECTION_LENGTH = 20_000
+const MAX_PAGE_FEEDS = 20
+const MAX_FEED_TITLE_LENGTH = 500
 
 export async function readRadarPageSelections(
   tabId: number,
@@ -137,4 +140,53 @@ export async function readRadarPageSelections(
     }
   })
   return selections
+}
+
+export async function readRadarPageFeeds(tabId: number): Promise<RadarFeed[]> {
+  const [executionResult] = await browser.scripting.executeScript<
+    [number, number],
+    RadarFeed[]
+  >({
+    target: { tabId },
+    args: [MAX_PAGE_FEEDS, MAX_FEED_TITLE_LENGTH],
+    func: (maxFeeds, maxTitleLength) => {
+      const supportedTypes = new Set([
+        "application/atom+xml",
+        "application/rss+xml",
+      ])
+      const feeds = [...(document.head?.querySelectorAll<HTMLLinkElement>("link[href]") ?? [])]
+        .filter(link =>
+          link.rel.split(/\s+/).some(value => value.toLowerCase() === "alternate")
+          && supportedTypes.has(link.type.split(";", 1)[0]?.trim().toLowerCase() ?? ""))
+        .map(link => ({
+          url: link.href,
+          ...(link.title.trim()
+            ? { title: link.title.trim().slice(0, maxTitleLength) }
+            : {}),
+        }))
+
+      const feedRoot = document
+        .querySelector("#webkit-xml-viewer-source-xml")
+        ?.firstElementChild
+        ?? document.documentElement
+      const feedRootName = feedRoot?.localName.toLowerCase()
+      const isFeedDocument = feedRootName === "feed" || feedRootName === "rss"
+      if (isFeedDocument && /^https?:$/.test(location.protocol)) {
+        feeds.unshift({
+          url: location.href,
+          ...(document.title.trim()
+            ? { title: document.title.trim().slice(0, maxTitleLength) }
+            : {}),
+        })
+      }
+
+      return [...new Map(
+        feeds
+          .filter(feed => /^https?:\/\//i.test(feed.url))
+          .map(feed => [feed.url, feed]),
+      ).values()].slice(0, maxFeeds)
+    },
+  }).catch(() => [])
+
+  return executionResult?.result ?? []
 }

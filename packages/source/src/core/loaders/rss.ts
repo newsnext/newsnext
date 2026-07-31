@@ -1,8 +1,7 @@
-import type { NewsItem } from "../../types"
+import type { SourceLoaderMetadata, SourceLoaderResult } from "../../types"
 import { XMLParser } from "fast-xml-parser"
 import { sessionFetch } from "../../utils"
-
-const HTTP_URL_REGEX = /^https?:\/\/[^\s$.?#].\S*/i
+import { normalizeLoaderMetadata } from "./shared"
 
 interface RssItem {
   created?: string
@@ -10,24 +9,26 @@ interface RssItem {
   title: string
 }
 
-interface RssFeed {
+interface ParsedRssFeed {
   items: RssItem[]
+  metadata?: SourceLoaderMetadata
 }
 
-export async function loadRss({ url }: { url: string }): Promise<NewsItem[]> {
-  const data = await fetchRss(url)
+export async function loadRss({ url }: { url: string }): Promise<SourceLoaderResult> {
+  const data = parseRss(await sessionFetch(url, { responseType: "text" }))
   if (!data?.items.length) throw new Error("Cannot fetch rss data")
-  return data.items.map(item => ({
-    title: item.title,
-    url: item.link,
-    timestamp: item.created ? new Date(item.created).getTime() : undefined,
-  }))
+
+  return {
+    items: data.items.map(item => ({
+      title: item.title,
+      url: item.link,
+      timestamp: item.created ? new Date(item.created).getTime() : undefined,
+    })),
+    metadata: data.metadata,
+  }
 }
 
-async function fetchRss(url: string): Promise<RssFeed | undefined> {
-  if (!HTTP_URL_REGEX.test(url)) return
-
-  const data = await sessionFetch(url)
+export function parseRss(data: string): ParsedRssFeed | undefined {
   const xml = new XMLParser({
     attributeNamePrefix: "",
     textNodeName: "$text",
@@ -36,17 +37,30 @@ async function fetchRss(url: string): Promise<RssFeed | undefined> {
   const result = xml.parse(data as string)
   let channel = result.rss?.channel ?? result.feed ?? result.source
   if (Array.isArray(channel)) channel = channel[0]
+  if (!isRecord(channel)) return
 
-  let items = channel.item || channel.entry || []
-  if (items && !Array.isArray(items)) items = [items]
+  const itemInput = channel.item ?? channel.entry
+  const items = (Array.isArray(itemInput) ? itemInput : itemInput ? [itemInput] : [])
+    .filter(isRecord)
 
   return {
-    items: items.map((item: Record<string, unknown>) => ({
+    items: items.map(item => ({
       title: readText(item.title),
       link: readLink(item.link),
       created: readOptionalText(item.updated ?? item.pubDate ?? item.created),
     })),
+    metadata: normalizeLoaderMetadata({
+      badge: readRssImageUrl(channel.image),
+      desc: readOptionalText(channel.description ?? channel.subtitle),
+      title: readOptionalText(channel.title),
+    }),
   }
+}
+
+function readRssImageUrl(value: unknown): string | undefined {
+  const image = Array.isArray(value) ? value[0] : value
+  if (!isRecord(image)) return
+  return readOptionalText(image.url)
 }
 
 function readLink(value: unknown): string {

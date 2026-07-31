@@ -522,6 +522,12 @@ loader: {
 }
 ```
 
+The RSS loader returns the RSS channel title and description, or Atom feed
+title and subtitle, as dynamic loader metadata. For RSS feeds, it also returns
+`channel.image.url` as the dynamic badge when present. After the first
+successful load, this metadata overrides static or Radar title, description,
+and badge metadata.
+
 Use a custom loader only when declarative loaders cannot express the source:
 
 ```ts

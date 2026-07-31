@@ -255,8 +255,12 @@ All item or metadata fields in a group are extracted before that group's
 templates render. Each template sees its complete pre-template group, which
 makes output independent of declaration order and prevents template cycles.
 
-RSS loaders parse the feed and map entries directly to title, URL, and an
-optional timestamp.
+RSS loaders request the response as text explicitly because fetch clients may
+otherwise represent `application/rss+xml` responses as blobs. They parse the
+channel or feed title, description, and RSS channel image URL into dynamic
+loader metadata, then map entries directly to title, URL, and an optional
+timestamp. RSS metadata uses the same normalization, URL resolution, caching,
+and presentation override pipeline as JSON, HTML, and custom loader metadata.
 
 ## Template compilation
 
@@ -293,9 +297,21 @@ active tab URL
 ```
 
 Page-field queries required by matching rules are deduplicated and executed in
-one active-tab script. Field extraction is isolated from template rendering;
-page scripts are not executed and the document object is never exposed to
-Liquid.
+one active-tab script. When the built-in `rss:feed` source is available, Radar
+also scans the active HTTP(S) document for RSS and Atom alternate links or a
+directly opened feed. Direct feed detection recognizes both RSS or Atom
+document roots and the browser's built-in unstyled XML document view. The
+bounded scan deduplicates absolute URLs and adds one built-in suggestion per
+feed, up to 20 per page. Each suggestion keeps the page URL as its home, uses
+the page hostname favicon as its initial instance badge, and prefers the
+discovered feed title over the source's static title. After loading, dynamic
+RSS metadata may replace that badge. RSS suggestions rank below every
+registered source match, including generated origin-only rules, so a dedicated
+source remains the primary suggestion.
+Field and feed extraction are isolated from template rendering; page scripts
+are not executed and the document object is never exposed to Liquid.
+Radar renders in the extension action popup, which keeps discovery available
+for both regular HTML pages and browser-rendered XML documents.
 
 Rules and compiled matchers are cached. Optional Radar failures are reported as
 diagnostics and fail closed instead of interrupting the surrounding UI.

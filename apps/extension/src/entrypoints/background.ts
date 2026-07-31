@@ -1,7 +1,6 @@
 import { registerService } from "@webext-core/proxy-service"
 import { browser, defineBackground } from "#imports"
 import { registerRadarBadge } from "@/lib/background/radar-badge"
-import { toggleRadarOverlay } from "@/lib/background/radar-overlay"
 import { registerSourceRegistryLoader } from "@/lib/background/registry"
 import { BACKGROUND_SERVICE_KEY, createBackgroundService } from "@/lib/background/service"
 import { registerSourceConnectionWebSocket } from "@/lib/background/source-connection-websocket"
@@ -35,11 +34,5 @@ export default defineBackground(() => {
     if (info.menuItemId === DASHBOARD_MENU_ID) {
       void browser.tabs.create({ url: browser.runtime.getURL("/dashboard.html") })
     }
-  })
-
-  browser.action.onClicked.addListener((tab) => {
-    void toggleRadarOverlay(tab).catch(() => {
-      // Scripts cannot be injected into browser-internal and extension pages.
-    })
   })
 })

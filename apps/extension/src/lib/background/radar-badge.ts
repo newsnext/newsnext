@@ -2,6 +2,7 @@ import type { Browser } from "#imports"
 import { loadSourceDescriptors } from "@newsnext/source/runtime"
 import { browser } from "#imports"
 import { createRadarMatcher } from "@/lib/radar"
+import { readRadarPageFeeds } from "@/lib/radar-page"
 
 async function updateRadarBadge(tab: Browser.tabs.Tab): Promise<void> {
   if (tab.id === undefined) {
@@ -9,8 +10,13 @@ async function updateRadarBadge(tab: Browser.tabs.Tab): Promise<void> {
   }
 
   const sources = await loadSourceDescriptors()
-  const count = tab.url
-    ? createRadarMatcher(sources).getSuggestions({ url: tab.url, title: tab.title }).length
+  const matcher = createRadarMatcher(sources)
+  const baseContext = tab.url ? { url: tab.url, title: tab.title } : undefined
+  const feeds = baseContext && matcher.shouldDiscoverFeeds(baseContext)
+    ? await readRadarPageFeeds(tab.id)
+    : []
+  const count = baseContext
+    ? matcher.getSuggestions({ ...baseContext, feeds }).length
     : 0
 
   await browser.action.setBadgeText({
@@ -38,7 +44,7 @@ export function registerRadarBadge(): void {
     void updateActiveRadarBadge()
   })
   browser.tabs.onUpdated.addListener((_tabId, changeInfo, tab) => {
-    if (!changeInfo.url && !changeInfo.title) {
+    if (!changeInfo.url && !changeInfo.title && changeInfo.status !== "complete") {
       return
     }
 
