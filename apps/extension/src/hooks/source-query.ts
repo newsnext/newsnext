@@ -4,7 +4,6 @@ import { hashKey } from "@tanstack/react-query"
 import { loadSource } from "@/lib/source-loader"
 
 export const SOURCE_QUERY_KEY = ["source"] as const
-export const SOURCE_QUERY_INTERVAL = 60_000
 
 export interface SourceQueryTarget {
   sourceId: string
