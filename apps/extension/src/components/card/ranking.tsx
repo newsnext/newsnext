@@ -99,7 +99,7 @@ function RankChangeBadge({ diff }: { diff?: number }) {
   )
 }
 
-export function Hottest({ items, scrollRef }: Props) {
+export function Ranking({ items, scrollRef }: Props) {
   const rankChanges = useRankChanges(items)
 
   return (

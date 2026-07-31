@@ -12,7 +12,6 @@
     "realtime": {
       "metadata": {
         "title": "即时新闻",
-        "type": "timeline",
         "home": "/realtime/"
       },
       "loader": {

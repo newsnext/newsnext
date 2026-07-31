@@ -5,8 +5,7 @@
   "icon": "https://s3.newsnext.app/icons/rss.png",
   "defaults": {
     "metadata": {
-      "title": "RSS Feed",
-      "type": "timeline"
+      "title": "RSS Feed"
     },
     "cache": "1m"
   },

@@ -1,11 +1,5 @@
 import type { PropsWithChildren } from "react"
 import { Input } from "@newsnext/ui/components/input"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-} from "@newsnext/ui/components/select"
 import { useMemo } from "react"
 import { cn } from "@/lib/utils"
 
@@ -160,50 +154,5 @@ export function Info(props: PropsWithChildren<{
         {props.children}
       </div>
     </div>
-  )
-}
-
-export function ValueSelector<T extends string>({
-  value,
-  options,
-  editable,
-  onChange,
-}: {
-  value: T
-  options: readonly { label: string, value: T }[]
-  editable?: boolean
-  onChange?: (value: T) => void
-}) {
-  const selectedOption = options.find(option => option.value === value)
-
-  if (!editable) {
-    return (
-      <SelectLikeValue>
-        <span className="truncate text-sm">
-          {selectedOption?.label ?? value}
-        </span>
-      </SelectLikeValue>
-    )
-  }
-
-  return (
-    <Select value={value} onValueChange={nextValue => onChange?.(nextValue as T)}>
-      <SelectTrigger className={editableSelectClassName} onClick={event => event.stopPropagation()}>
-        <span className="flex-1 truncate text-left text-sm">
-          {selectedOption?.label ?? value}
-        </span>
-      </SelectTrigger>
-      <SelectContent
-        align="end"
-        alignItemWithTrigger={false}
-        className={editableSelectContentClassName}
-      >
-        {options.map(option => (
-          <SelectItem key={option.value} value={option.value} className={editableSelectItemClassName}>
-            {option.label}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
   )
 }

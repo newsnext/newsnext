@@ -15,9 +15,6 @@ export default {
   },
   sources: {
     "hot-stock": {
-      metadata: {
-        type: "hottest",
-      },
       loader: {
         type: "json",
         url: "https://stock.xueqiu.com/v5/stock/hot_stock/list.json?size=30&_type=10&type=10",

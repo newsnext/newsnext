@@ -6,7 +6,6 @@ import type {
   HtmlFieldConfig,
   HtmlTraversal,
   NewsItem,
-  RuntimeSource,
   SourceLoaderMetadata,
   SourceLoaderOutput,
   SourceTemplateVars,
@@ -22,10 +21,7 @@ import {
   compileSourceTemplate,
   createSourceTemplateScope,
 } from "../template"
-import {
-  normalizeLoaderMetadata,
-  sortLoaderItems,
-} from "./shared"
+import { normalizeLoaderMetadata } from "./shared"
 
 const MAX_SELECTED_ITEMS = 2_000
 const fieldTemplates = new WeakMap<HtmlFieldConfig, ReturnType<typeof compileSourceTemplate>>()
@@ -56,7 +52,6 @@ interface FieldEntry {
 
 export interface HtmlLoaderOptions {
   url: string
-  type?: RuntimeSource["type"]
   /**
    * CSS selector for the source items.
    */
@@ -275,7 +270,6 @@ export async function loadHtml(
 ): Promise<SourceLoaderOutput> {
   const {
     url,
-    type,
     items: itemsSelect,
     decoding,
     fetchOptions,
@@ -348,8 +342,6 @@ export async function loadHtml(
 
     news.push(item)
   })
-
-  sortLoaderItems(news, type)
 
   if (!metadata) return news
 

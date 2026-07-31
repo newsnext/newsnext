@@ -38,7 +38,6 @@ export default {
     latest: {
       metadata: {
         title: "Latest",
-        type: "timeline",
       },
       loader: {
         type: "json",
@@ -119,7 +118,6 @@ metadata: {
   badge: "https://example.com/account.png",
   desc: "Example news",
   home: "https://example.com/latest",
-  type: "timeline",
 }
 ```
 
@@ -176,8 +174,16 @@ the ID to `CATEGORY_IDS` in `packages/source/src/types/source.ts`, document its
 matching rule and examples here, update affected providers, rebuild the
 registry, and run type-checking and tests.
 
-`type: "hottest"` preserves loader order. `type: "timeline"` and an omitted
-type sort by descending timestamp when the first item has a non-zero timestamp.
+Do not declare a source presentation type. Loaders return items in their
+meaningful display order. The extension presents the result as a timeline only
+when every item has a finite timestamp and the items are already ordered from
+newest to oldest; otherwise it presents the result as a ranking. An empty
+result is also treated as a ranking.
+
+JSON and HTML loaders preserve the selected item order. Express any intentional
+ordering in the upstream request, the JSON `items` JMESPath expression, or
+custom loader code. In particular, keep ranked or popularity-based results in
+their upstream order even when every item includes a timestamp.
 
 Write human-facing strings in the website's primary interface language. Keep
 brand names, IDs, parameter keys and values, and selectors unchanged.
@@ -232,7 +238,7 @@ user-selectable constraints.
 
 Prefer one source with a `select` parameter when feed variants share their
 loader and presentation and differ only by a request value. Separate sources
-remain appropriate when variants need different static metadata or card types.
+remain appropriate when variants need different static metadata.
 Use a separate source when one variant needs additional parameters that do not
 apply to the others, such as a ranked feed with its own time window.
 Do not expose a variant parameter when the source intentionally promises one
@@ -706,6 +712,9 @@ Match rules:
   `{ regex: "/users/(?<username>[^/?#]+)$" }`. Named capture groups are exposed
   through `scope.path`. Regex entries match the complete URL, while string
   entries match only `URL.pathname`.
+- Prefer an anchored regex for opaque numeric IDs when the same path position
+  also accepts reserved words or prefixed IDs; this prevents one Radar rule
+  from claiming aggregate or sibling resource routes.
 - Omitting `paths`, or using an empty include array, matches every path on the
   listed hosts.
 - Radar rule IDs must be unique within a source.
@@ -749,11 +758,9 @@ Parse `scope.page.title` only when the value is unavailable from the top-level
 DOM, such as content rendered inside an iframe.
 
 Radar metadata can override source-owned presentation fields: `title`, `badge`,
-`desc`, `home`, and `type`. Use
-`type: "hottest"` or `type: "timeline"` when a discovered instance needs a
-different card presentation from its source default. Radar metadata uses the
-same selector, traversal, extraction, and template behavior as HTML loader
-fields. Provider-owned `icon` and `color` are not valid Radar metadata fields.
+`desc`, and `home`. Radar metadata uses the same selector, traversal,
+extraction, and template behavior as HTML loader fields. Provider-owned `icon`
+and `color` are not valid Radar metadata fields.
 
 When a source has no parameters or explicit `radar`, an HTTP(S)
 `metadata.home` creates a same-host rule automatically. Set `radar: []` to opt

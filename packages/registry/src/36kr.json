@@ -23,8 +23,7 @@
     "information": {
       "metadata": {
         "title": "资讯",
-        "home": "/information/web_news/latest/",
-        "type": "timeline"
+        "home": "/information/web_news/latest/"
       },
       "params": {
         "channel": {
@@ -148,8 +147,7 @@
     "newsflashes": {
       "metadata": {
         "title": "快讯",
-        "home": "/newsflashes/catalog/0",
-        "type": "timeline"
+        "home": "/newsflashes/catalog/0"
       },
       "params": {
         "category": {
@@ -227,8 +225,7 @@
     "hot-list": {
       "metadata": {
         "title": "人气榜",
-        "home": "/hot-list/catalog",
-        "type": "hottest"
+        "home": "/hot-list/catalog"
       },
       "radar": [
         {

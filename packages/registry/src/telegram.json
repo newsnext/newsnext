@@ -11,8 +11,7 @@
   "sources": {
     "channel": {
       "metadata": {
-        "title": "频道",
-        "type": "timeline"
+        "title": "频道"
       },
       "params": {
         "channel": {

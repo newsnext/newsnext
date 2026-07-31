@@ -103,7 +103,6 @@ describe("buildSourceCards", () => {
               badge: "https://custom.example.com/badge.png",
               desc: "Custom description",
               home: "https://custom.example.com",
-              type: "hottest",
             },
           },
         }),
@@ -115,7 +114,6 @@ describe("buildSourceCards", () => {
       badge: "https://custom.example.com/badge.png",
       desc: "Custom description",
       home: "https://custom.example.com",
-      type: "hottest",
       provider: {
         icon: "https://example.com/icon.png",
         color: "blue",

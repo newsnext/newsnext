@@ -66,15 +66,11 @@ export default {
     loader: {
       type: "custom",
     },
-    metadata: {
-      type: "timeline",
-    },
   },
   sources: {
     "hot-search": {
       metadata: {
         title: "热搜",
-        type: "hottest",
       },
       vars: {
         endpoint: {

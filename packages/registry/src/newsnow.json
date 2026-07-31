@@ -10,9 +10,6 @@
   },
   "sources": {
     "topic-latest": {
-      "metadata": {
-        "type": "timeline"
-      },
       "params": {
         "locale": {
           "type": "select",

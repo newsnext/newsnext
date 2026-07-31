@@ -48,13 +48,11 @@
   "sources": {
     "top": {
       "metadata": {
-        "type": "hottest",
         "title": "Hottest"
       }
     },
     "newest": {
       "metadata": {
-        "type": "timeline",
         "title": "Newest",
         "home": "/newest"
       },

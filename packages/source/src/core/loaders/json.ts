@@ -1,7 +1,6 @@
 import type { FetchOptions } from "ofetch"
 import type {
   NewsItem,
-  RuntimeSource,
   SourceLoaderMetadata,
   SourceLoaderOutput,
   SourceTemplateVars,
@@ -17,10 +16,7 @@ import {
   compileSourceTemplate,
   createSourceTemplateScope,
 } from "../template"
-import {
-  normalizeLoaderMetadata,
-  sortLoaderItems,
-} from "./shared"
+import { normalizeLoaderMetadata } from "./shared"
 
 const MAX_EXPRESSION_LENGTH = 2_000
 const validatedExpressions = new Set<string>()
@@ -53,7 +49,6 @@ interface JsonFieldEntry {
 
 export interface JsonLoaderOptions {
   url: string
-  type?: RuntimeSource["type"]
   /**
    * Path to the array of items in the response JSON (e.g. "data.items").
    * If not provided, assumes the response itself is the array.
@@ -222,7 +217,7 @@ export async function loadJson(
   options: JsonLoaderOptions,
   loaderContext: LoaderContext = {},
 ): Promise<SourceLoaderOutput> {
-  const { url, type, fetchOptions, fetch, items: itemsSelect, fields, metadata } = options
+  const { url, fetchOptions, fetch, items: itemsSelect, fields, metadata } = options
 
   let json: unknown
   if (fetch) {
@@ -314,8 +309,6 @@ export async function loadJson(
 
     return newsItem
   }).filter((i): i is NewsItem => i !== null)
-
-  sortLoaderItems(news, type)
 
   if (!metadata) {
     return news

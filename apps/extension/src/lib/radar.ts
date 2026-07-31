@@ -452,7 +452,6 @@ function resolveMetaPatch(
   const badge = resolveMetaPatchValue("badge", rule.metadata.badge, context, extractedItem)
   const desc = resolveMetaPatchValue("desc", rule.metadata.desc, context, extractedItem)
   const home = resolveMetaPatchValue("home", rule.metadata.home, context, extractedItem)
-  const type = resolveMetaPatchValue("type", rule.metadata.type, context, extractedItem)
 
   if (isPresent(title)) {
     metadata.title = String(title)
@@ -465,9 +464,6 @@ function resolveMetaPatch(
   }
   if (isPresent(home)) {
     metadata.home = resolveSourceUrl(String(home), context.source.baseUrl)
-  }
-  if (type === "hottest" || type === "timeline") {
-    metadata.type = type
   }
   return metadata
 }

@@ -9,8 +9,7 @@
       "maxAge": "15m"
     },
     "metadata": {
-      "home": "/",
-      "type": "hottest"
+      "home": "/"
     },
     "loader": {
       "type": "json",

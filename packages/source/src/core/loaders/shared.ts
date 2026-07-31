@@ -1,6 +1,4 @@
 import type {
-  NewsItem,
-  RuntimeSource,
   SourceLoaderMetadata,
   SourceTemplateVars,
 } from "../../types"
@@ -47,13 +45,4 @@ export function normalizeLoaderMetadata(
   ) as SourceLoaderMetadata
 
   return Object.keys(metadata).length > 0 ? metadata : undefined
-}
-
-export function sortLoaderItems(
-  items: NewsItem[],
-  type: RuntimeSource["type"] | undefined,
-): void {
-  if (type !== "hottest" && items[0]?.timestamp !== undefined) {
-    items.sort((a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0))
-  }
 }

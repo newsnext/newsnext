@@ -308,7 +308,6 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
           ...options,
           url: resolvedUrl,
           fetchOptions: fetchOptionsTemplate?.render(scope),
-          type: resolvedMetadata.type,
         }, {
           vars,
           params: loaderParams,
@@ -336,7 +335,6 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
           ...options,
           url: resolvedUrl,
           fetchOptions: fetchOptionsTemplate?.render(scope),
-          type: resolvedMetadata.type,
         }, {
           vars,
           params: loaderParams,

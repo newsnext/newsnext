@@ -151,7 +151,6 @@ export default {
     },
     metadata: {
       home: "/",
-      type: "timeline",
     },
     secrets: [
       {
@@ -167,7 +166,6 @@ export default {
     "place-trends": {
       metadata: {
         title: "Trending",
-        type: "hottest",
       },
       params: {
         location: {

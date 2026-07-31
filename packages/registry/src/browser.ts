@@ -210,9 +210,6 @@ export default {
     loader: {
       type: "custom",
     },
-    metadata: {
-      type: "timeline",
-    },
   },
   sources: {
     history: {

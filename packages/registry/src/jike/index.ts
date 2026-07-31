@@ -186,7 +186,6 @@ export default {
     },
     metadata: {
       home: "/",
-      type: "timeline",
     },
     secrets: [
       {
@@ -302,7 +301,6 @@ export default {
             },
             metadata: {
               ...topicRadarPatch.metadata,
-              type: "hottest",
             },
           },
           confidence: 0.85,

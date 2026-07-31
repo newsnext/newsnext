@@ -103,7 +103,6 @@ export interface SourcePresentationMetadata {
   title?: string
   badge?: string
   desc?: string
-  type?: "hottest" | "timeline"
   home?: string
 }
 
@@ -111,7 +110,6 @@ export const SOURCE_PRESENTATION_METADATA_KEYS = [
   "title",
   "badge",
   "desc",
-  "type",
   "home",
 ] as const satisfies readonly (keyof SourcePresentationMetadata)[]
 
@@ -172,7 +170,6 @@ export interface RuntimeSource<TParams extends SourceParamSchemaMap = SourcePara
   cache: SourceCacheConfig
   badge?: string
   desc?: string
-  type?: "hottest" | "timeline"
   home?: string
   secrets?: SourceSecretDefinition[]
   radar?: SourceRadarRule[]

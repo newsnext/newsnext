@@ -11,8 +11,7 @@
   "sources": {
     "hot-list": {
       "metadata": {
-        "title": "热榜",
-        "type": "hottest"
+        "title": "热榜"
       },
       "loader": {
         "type": "json",

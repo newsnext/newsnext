@@ -72,7 +72,6 @@ export default {
     },
     metadata: {
       home: "/",
-      type: "timeline",
     },
   },
   sources: {
@@ -116,7 +115,6 @@ export default {
     "hot-article": {
       metadata: {
         title: "热门",
-        type: "hottest",
       },
       loader: {
         url: "/v2/article/hot/list",

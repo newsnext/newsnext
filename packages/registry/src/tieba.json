@@ -11,8 +11,7 @@
   "sources": {
     "hot-topic": {
       "metadata": {
-        "title": "热议",
-        "type": "hottest"
+        "title": "热议"
       },
       "loader": {
         "type": "json",

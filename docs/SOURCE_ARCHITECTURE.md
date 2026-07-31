@@ -171,7 +171,8 @@ source ID and raw parameters
         ├─ resolve required secrets in the background
         ├─ execute the source loader
         ├─ normalize NewsItem[] to SourceLoaderResult
-        └─ cache items and dynamic title, description, and badge metadata
+        ├─ cache items and dynamic title, description, and badge metadata
+        └─ infer the card presentation from item timestamps and order in the UI
 ```
 
 In-flight loads are deduplicated by cache key. The key includes the source ID,
@@ -185,6 +186,15 @@ Before the first successful load, the card continues to use static or Radar
 metadata. Loader metadata cannot satisfy the required Radar title for a
 parameterized source instance and does not replace discovery-time
 configuration.
+
+The background and source runtime do not send a declared card type. They
+preserve loader output order, including through caching and transport. The
+frontend renders a timeline only when the non-empty result has a finite
+timestamp on every item and those timestamps are monotonically non-increasing.
+All other results render as a ranking. A provider may deliberately sort inside
+a request, JMESPath selection, or custom loader when chronological order is
+the correct source behavior; generic JSON and HTML loaders do not reorder
+items.
 
 The extension prefers background execution so loaders can use extension host
 permissions, cookie and local-storage secrets, and request rules. The direct
@@ -316,7 +326,7 @@ for both regular HTML pages and browser-rendered XML documents.
 Rules and compiled matchers are cached. Optional Radar failures are reported as
 diagnostics and fail closed instead of interrupting the surrounding UI.
 Radar metadata can replace source-owned presentation fields such as title,
-badge, description, home URL, and card type, but cannot modify source identity,
+badge, description, and home URL, but cannot modify source identity,
 provider title, icon, color, category, attribution, loader behavior,
 capabilities, secrets, request rules, or cache policy.
 Accepting a Radar suggestion creates one card instance with the selected board
@@ -327,7 +337,8 @@ metadata, and cache identity remain unchanged. The board ID is nullable:
 that board. Inbox deliberately skips membership filtering and aggregates every
 card instance.
 The card editor writes the same instance patch shape and exposes every declared
-source parameter plus every source-owned presentation metadata field. Provider
+source parameter plus each editable source-owned presentation metadata field.
+The inferred card presentation is read-only. Provider
 title, icon, color, and category remain read-only. Editing preserves patches as
 sparse overrides: only explicitly changed parameter and metadata fields are
 persisted. Parameter defaults are resolved for display and loading, while

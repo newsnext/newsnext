@@ -13,8 +13,7 @@
     },
     "metadata": {
       "home": "/hot-list/catalog",
-      "title": "人气榜",
-      "type": "hottest"
+      "title": "人气榜"
     },
     "cache": "5m",
     "radar": [
@@ -86,8 +85,7 @@
     },
     "metadata": {
       "home": "/information/web_news/latest/",
-      "title": "资讯",
-      "type": "timeline"
+      "title": "资讯"
     },
     "cache": "5m",
     "params": {
@@ -228,8 +226,7 @@
     },
     "metadata": {
       "home": "/newsflashes/catalog/0",
-      "title": "快讯",
-      "type": "timeline"
+      "title": "快讯"
     },
     "cache": "5m",
     "params": {
@@ -313,8 +310,7 @@
   "aihot:all": {
     "baseUrl": "https://aihot.virxact.com/",
     "metadata": {
-      "home": "/",
-      "type": "timeline"
+      "home": "/"
     },
     "loader": {
       "type": "json",
@@ -349,7 +345,6 @@
     "cache": "5m",
     "metadata": {
       "home": "/",
-      "type": "timeline",
       "title": "关注视频",
       "desc": "已关注 UP 主发布的视频动态"
     },
@@ -374,7 +369,6 @@
     "cache": "5m",
     "metadata": {
       "home": "/",
-      "type": "hottest",
       "title": "热搜"
     },
     "provider": {
@@ -398,7 +392,6 @@
     },
     "metadata": {
       "home": "/v/popular/rank/all",
-      "type": "hottest",
       "title": "排行榜"
     },
     "params": {
@@ -953,7 +946,6 @@
   "browser:bookmarks": {
     "cache": "5m",
     "metadata": {
-      "type": "timeline",
       "title": "Bookmarks"
     },
     "params": {
@@ -988,7 +980,6 @@
   "browser:history": {
     "cache": "1m",
     "metadata": {
-      "type": "timeline",
       "title": "History"
     },
     "params": {
@@ -1046,7 +1037,6 @@
     "cache": "5m",
     "metadata": {
       "home": "/depth",
-      "type": "timeline",
       "title": "深度"
     },
     "provider": {
@@ -1067,7 +1057,6 @@
     "cache": "5m",
     "metadata": {
       "home": "/",
-      "type": "hottest",
       "title": "热门"
     },
     "provider": {
@@ -1088,7 +1077,6 @@
     "cache": "1m",
     "metadata": {
       "home": "/",
-      "type": "timeline",
       "title": "电报"
     },
     "provider": {
@@ -1116,7 +1104,6 @@
     },
     "metadata": {
       "home": "/",
-      "type": "timeline",
       "title": "Feed"
     },
     "params": {
@@ -1133,16 +1120,21 @@
           "hosts": [
             "app.folo.is"
           ],
-          "paths": [
-            "/timeline/articles/feed-:feedId/pending"
-          ]
+          "paths": {
+            "include": [
+              {
+                "regex": "^https://app\\.folo\\.is/timeline/articles/(?<feedId>\\d+)/(?:pending|\\d+)/?(?:[?#]|$)"
+              }
+            ]
+          }
         },
         "patch": {
           "params": {
             "feedId": "{{ scope.path.feedId }}"
           },
           "metadata": {
-            "home": "https://app.folo.is/timeline/articles/feed-{{ scope.params.feedId }}/pending"
+            "title": "{{ scope.page.title | replace: ' | Folo', '' }}",
+            "home": "https://app.folo.is/timeline/articles/{{ scope.params.feedId }}/pending"
           }
         },
         "confidence": 0.98
@@ -1166,7 +1158,6 @@
     },
     "metadata": {
       "home": "/",
-      "type": "timeline",
       "title": "List"
     },
     "params": {
@@ -1183,15 +1174,20 @@
           "hosts": [
             "app.folo.is"
           ],
-          "paths": [
-            "/timeline/articles/list-:listId/pending"
-          ]
+          "paths": {
+            "include": [
+              {
+                "regex": "^https://app\\.folo\\.is/timeline/articles/list-(?<listId>\\d+)/(?:pending|\\d+)/?(?:[?#]|$)"
+              }
+            ]
+          }
         },
         "patch": {
           "params": {
             "listId": "{{ scope.path.listId }}"
           },
           "metadata": {
+            "title": "{{ scope.page.title | replace: ' | Folo', '' }}",
             "home": "https://app.folo.is/timeline/articles/list-{{ scope.params.listId }}/pending"
           }
         },
@@ -1208,8 +1204,7 @@
     "baseUrl": "https://github.com/",
     "metadata": {
       "home": "/trending",
-      "title": "Trending",
-      "type": "hottest"
+      "title": "Trending"
     },
     "params": {
       "language": {
@@ -1390,7 +1385,6 @@
     },
     "metadata": {
       "home": "/newest",
-      "type": "timeline",
       "title": "Newest"
     },
     "provider": {
@@ -1489,7 +1483,6 @@
     },
     "metadata": {
       "home": "/",
-      "type": "hottest",
       "title": "Hottest"
     },
     "provider": {
@@ -1513,7 +1506,6 @@
     "cache": "5m",
     "metadata": {
       "home": "/",
-      "type": "timeline",
       "title": "关注动态",
       "desc": "已关注即刻用户发布的动态"
     },
@@ -1567,7 +1559,6 @@
     "cache": "5m",
     "metadata": {
       "home": "/",
-      "type": "timeline",
       "title": "主题动态",
       "desc": "指定即刻主题的动态"
     },
@@ -1627,8 +1618,7 @@
           "metadata": {
             "title": {
               "select": "[class*=\"_textGroup_\"] > [class*=\"_title_\"]"
-            },
-            "type": "hottest"
+            }
           }
         },
         "confidence": 0.85
@@ -1681,7 +1671,6 @@
     },
     "metadata": {
       "home": "/",
-      "type": "timeline",
       "title": "用户动态",
       "desc": "指定即刻用户发布的动态"
     },
@@ -1768,8 +1757,7 @@
     },
     "metadata": {
       "home": "/",
-      "title": "最新",
-      "type": "timeline"
+      "title": "最新"
     },
     "provider": {
       "title": "Linux.do",
@@ -1799,8 +1787,7 @@
     },
     "metadata": {
       "home": "/",
-      "title": "热门",
-      "type": "hottest"
+      "title": "热门"
     },
     "provider": {
       "title": "Linux.do",
@@ -1816,7 +1803,6 @@
     },
     "metadata": {
       "home": "/#/playlist?id=17990594711",
-      "type": "hottest",
       "title": "歌单"
     },
     "loader": {
@@ -1893,7 +1879,6 @@
     },
     "metadata": {
       "home": "/#/discover/toplist?id=19723756",
-      "type": "hottest",
       "title": "飙升榜"
     },
     "loader": {
@@ -1965,8 +1950,7 @@
   "newsnow:topic-latest": {
     "baseUrl": "https://www.newsnow.com/",
     "metadata": {
-      "home": "/",
-      "type": "timeline"
+      "home": "/"
     },
     "params": {
       "locale": {
@@ -2072,7 +2056,6 @@
     "cache": "5m",
     "metadata": {
       "home": "/",
-      "type": "hottest",
       "title": "Subreddit",
       "desc": "Posts in a Subreddit"
     },
@@ -2128,8 +2111,7 @@
           },
           "metadata": {
             "title": "r/{{ scope.params.subreddit }}",
-            "home": "/r/{{ scope.params.subreddit | url_path }}/hot/",
-            "type": "hottest"
+            "home": "/r/{{ scope.params.subreddit | url_path }}/hot/"
           }
         },
         "confidence": 0.95
@@ -2154,8 +2136,7 @@
           },
           "metadata": {
             "title": "r/{{ scope.params.subreddit }}",
-            "home": "/r/{{ scope.params.subreddit | url_path }}/best/",
-            "type": "hottest"
+            "home": "/r/{{ scope.params.subreddit | url_path }}/best/"
           }
         },
         "confidence": 0.95
@@ -2180,8 +2161,7 @@
           },
           "metadata": {
             "title": "r/{{ scope.params.subreddit }}",
-            "home": "/r/{{ scope.params.subreddit | url_path }}/hot/",
-            "type": "hottest"
+            "home": "/r/{{ scope.params.subreddit | url_path }}/hot/"
           }
         },
         "confidence": 0.95
@@ -2206,8 +2186,7 @@
           },
           "metadata": {
             "title": "r/{{ scope.params.subreddit }}",
-            "home": "/r/{{ scope.params.subreddit | url_path }}/new/",
-            "type": "timeline"
+            "home": "/r/{{ scope.params.subreddit | url_path }}/new/"
           }
         },
         "confidence": 0.95
@@ -2232,8 +2211,7 @@
           },
           "metadata": {
             "title": "r/{{ scope.params.subreddit }}",
-            "home": "/r/{{ scope.params.subreddit | url_path }}/rising/",
-            "type": "hottest"
+            "home": "/r/{{ scope.params.subreddit | url_path }}/rising/"
           }
         },
         "confidence": 0.95
@@ -2258,7 +2236,6 @@
     "cache": "5m",
     "metadata": {
       "home": "/",
-      "type": "hottest",
       "title": "Subreddit Top",
       "desc": "Top posts in a Subreddit"
     },
@@ -2346,7 +2323,6 @@
     "cache": "5m",
     "metadata": {
       "home": "/",
-      "type": "timeline",
       "title": "User Posts",
       "desc": "Latest posts submitted by a Reddit user"
     },
@@ -2394,8 +2370,7 @@
   },
   "rss:feed": {
     "metadata": {
-      "title": "RSS Feed",
-      "type": "timeline"
+      "title": "RSS Feed"
     },
     "cache": "1m",
     "params": {
@@ -2426,8 +2401,7 @@
     "baseUrl": "https://t.me/",
     "metadata": {
       "home": "/",
-      "title": "频道",
-      "type": "timeline"
+      "title": "频道"
     },
     "params": {
       "channel": {
@@ -2514,8 +2488,7 @@
     "baseUrl": "https://tieba.baidu.com/",
     "metadata": {
       "home": "/",
-      "title": "热议",
-      "type": "hottest"
+      "title": "热议"
     },
     "loader": {
       "type": "json",
@@ -2639,7 +2612,6 @@
     ],
     "cache": "5m",
     "metadata": {
-      "type": "timeline",
       "title": "关注",
       "desc": "所有已关注微博账号发布的最新微博",
       "home": "/"
@@ -2704,7 +2676,6 @@
       "maxAge": "1m"
     },
     "metadata": {
-      "type": "hottest",
       "title": "热搜"
     },
     "vars": {
@@ -2828,7 +2799,6 @@
     ],
     "cache": "5m",
     "metadata": {
-      "type": "timeline",
       "title": "关键词",
       "desc": "包含指定关键词的最新微博",
       "home": "https://s.weibo.com"
@@ -2902,7 +2872,6 @@
     ],
     "cache": "5m",
     "metadata": {
-      "type": "timeline",
       "title": "超话",
       "desc": "指定微博超话的最新帖子",
       "home": "/"
@@ -2989,7 +2958,6 @@
       "maxAge": "5m"
     },
     "metadata": {
-      "type": "timeline",
       "title": "用户微博",
       "desc": "指定微博用户发布的最新微博",
       "home": "/"
@@ -3050,7 +3018,6 @@
     "cache": "5m",
     "metadata": {
       "home": "/",
-      "type": "timeline",
       "title": "Following"
     },
     "secrets": [
@@ -3083,7 +3050,6 @@
     "cache": "5m",
     "metadata": {
       "home": "/",
-      "type": "hottest",
       "title": "Trending"
     },
     "secrets": [
@@ -3165,7 +3131,6 @@
     "cache": "5m",
     "metadata": {
       "home": "/",
-      "type": "timeline",
       "title": "Recommended"
     },
     "secrets": [
@@ -3201,7 +3166,6 @@
     },
     "metadata": {
       "home": "/",
-      "type": "timeline",
       "title": "User Tweets"
     },
     "secrets": [
@@ -3282,8 +3246,7 @@
   "xueqiu:hot-stock": {
     "baseUrl": "https://xueqiu.com/",
     "metadata": {
-      "home": "/",
-      "type": "hottest"
+      "home": "/"
     },
     "capabilities": {
       "network": [
@@ -3304,8 +3267,7 @@
     "baseUrl": "https://www.zaochenbao.com/",
     "metadata": {
       "home": "/realtime/",
-      "title": "即时新闻",
-      "type": "timeline"
+      "title": "即时新闻"
     },
     "loader": {
       "type": "html",
@@ -3334,8 +3296,7 @@
     "baseUrl": "https://www.zhihu.com/",
     "metadata": {
       "home": "/",
-      "title": "热榜",
-      "type": "hottest"
+      "title": "热榜"
     },
     "loader": {
       "type": "json",

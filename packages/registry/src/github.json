@@ -11,8 +11,7 @@
   "sources": {
     "trending": {
       "metadata": {
-        "title": "Trending",
-        "type": "hottest"
+        "title": "Trending"
       },
       "params": {
         "language": {

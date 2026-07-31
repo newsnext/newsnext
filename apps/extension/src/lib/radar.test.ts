@@ -292,7 +292,6 @@ describe("getRadarSuggestions", () => {
                   badge: "/users/{{ scope.params.user }}.png",
                   desc: "Dynamic profile",
                   home: "/users/{{ scope.params.user }}",
-                  type: "hottest",
                 },
               },
             },
@@ -307,7 +306,6 @@ describe("getRadarSuggestions", () => {
             badge: "https://example.com/users/newsnext.png",
             desc: "Dynamic profile",
             home: "https://example.com/users/newsnext",
-            type: "hottest",
           },
         },
       },
@@ -425,7 +423,7 @@ describe("getRadarSuggestions", () => {
 
   it("suggests Folo feed and list cards from timeline URLs", () => {
     expect(getSuggestions({
-      url: "https://app.folo.is/timeline/articles/feed-70006270320504832/pending",
+      url: "https://app.folo.is/timeline/articles/70006270320504832/pending",
       title: "AI News | Folo",
     })).toMatchObject([
       {
@@ -435,7 +433,8 @@ describe("getRadarSuggestions", () => {
             feedId: "70006270320504832",
           },
           metadata: {
-            home: "https://app.folo.is/timeline/articles/feed-70006270320504832/pending",
+            title: "AI News",
+            home: "https://app.folo.is/timeline/articles/70006270320504832/pending",
           },
         },
       },
@@ -443,7 +442,7 @@ describe("getRadarSuggestions", () => {
 
     expect(getSuggestions({
       url: "https://app.folo.is/timeline/articles/list-178752152055448576/pending",
-      title: "Developer Reading — Folo",
+      title: "Developer Reading | Folo",
     })).toMatchObject([
       {
         sourceId: "folo:list",
@@ -452,11 +451,59 @@ describe("getRadarSuggestions", () => {
             listId: "178752152055448576",
           },
           metadata: {
+            title: "Developer Reading",
             home: "https://app.folo.is/timeline/articles/list-178752152055448576/pending",
           },
         },
       },
     ])
+
+    expect(getSuggestions({
+      url: "https://app.folo.is/timeline/articles/70006270320504832/1223093117926813696",
+      title: "AI News | Folo",
+    })).toMatchObject([
+      {
+        sourceId: "folo:feed",
+        patch: {
+          params: {
+            feedId: "70006270320504832",
+          },
+          metadata: {
+            title: "AI News",
+            home: "https://app.folo.is/timeline/articles/70006270320504832/pending",
+          },
+        },
+      },
+    ])
+
+    expect(getSuggestions({
+      url: "https://app.folo.is/timeline/articles/list-68649150114432000/1223093117926813696",
+      title: "Developer Reading | Folo",
+    })).toMatchObject([
+      {
+        sourceId: "folo:list",
+        patch: {
+          params: {
+            listId: "68649150114432000",
+          },
+          metadata: {
+            title: "Developer Reading",
+            home: "https://app.folo.is/timeline/articles/list-68649150114432000/pending",
+          },
+        },
+      },
+    ])
+  })
+
+  it("does not treat Folo aggregate and list routes as feeds", () => {
+    const sources = sourceDescriptors.filter(source => source.id === "folo:feed")
+
+    expect(getRadarSuggestions({
+      url: "https://app.folo.is/timeline/articles/all/pending",
+    }, sources)).toEqual([])
+    expect(getRadarSuggestions({
+      url: "https://app.folo.is/timeline/articles/list-178752152055448576/pending",
+    }, sources)).toEqual([])
   })
 
   it("suggests V2EX and NewsNow parameterized cards", () => {
@@ -521,7 +568,6 @@ describe("getRadarSuggestions", () => {
       {
         home: "https://www.reddit.com/r/typescript/hot/",
         title: "r/typescript",
-        type: "hottest",
       },
     ],
   ])("suggests a Reddit card from %s", (url, sourceId, params, metadata) => {
@@ -559,7 +605,6 @@ describe("getRadarSuggestions", () => {
           metadata: {
             home: url,
             title: "r/typescript",
-            type: sort === "new" ? "timeline" : "hottest",
           },
         },
       },
@@ -671,7 +716,6 @@ describe("getRadarSuggestions", () => {
           },
           metadata: {
             title: "即友日记本",
-            ...(order === "hottest" ? { type: "hottest" } : {}),
           },
         },
       },

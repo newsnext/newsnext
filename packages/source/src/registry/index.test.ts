@@ -134,7 +134,6 @@ describe("source template vars", () => {
         },
         metadata: {
           home: "https://example.com",
-          type: "timeline",
         },
         radar: [
           {
@@ -178,7 +177,6 @@ describe("source template vars", () => {
         icon: "https://icons.folo.is/example.com",
         color: "blue",
       },
-      type: "timeline",
       radar: [
         {
           id: "default",
@@ -197,7 +195,6 @@ describe("source template vars", () => {
         color: "blue",
       },
       title: "Override",
-      type: "timeline",
       radar: [],
     })
   })
@@ -212,7 +209,6 @@ describe("source template vars", () => {
         test: {
           metadata: {
             title: "Source",
-            type: "timeline",
             home: "https://example.com/source",
           },
           cache: "1h",
@@ -226,7 +222,6 @@ describe("source template vars", () => {
 
     expect(provider.sources.test).toMatchObject({
       title: "Source",
-      type: "timeline",
       home: "https://example.com/source",
       provider: {
         icon: "https://icons.folo.is/example.com",
@@ -496,13 +491,37 @@ describe("source template vars", () => {
             badge: "https://example.com/badge.png",
             desc: "Dynamic description",
             home: "https://example.com/dynamic",
-            type: "hottest",
           },
         },
       },
     ] satisfies SourceRadarRule[]
 
     expect(() => resolveTestSource(createSourceConfig(radar))).not.toThrow()
+  })
+
+  it("rejects declared source presentation types", () => {
+    expect(() => resolveTestSource({
+      ...createSourceConfig([]),
+      metadata: {
+        type: "timeline",
+      },
+    } as unknown as SourceConfig)).toThrow(
+      "test:test.metadata.type is not supported",
+    )
+
+    expect(() => resolveTestSource(createSourceConfig([
+      {
+        id: "test",
+        match: { hosts: ["example.com"] },
+        patch: {
+          metadata: {
+            type: "ranking",
+          },
+        },
+      },
+    ] as unknown as SourceRadarRule[]))).toThrow(
+      "test:test.radar.0.patch.metadata.type is not supported",
+    )
   })
 
   it("rejects provider metadata overrides in source and Radar metadata", () => {
@@ -675,7 +694,6 @@ describe("source registry", () => {
         },
         metadata: {
           home: "https://example.com",
-          type: "timeline",
         },
       },
       sources: {
@@ -716,7 +734,6 @@ describe("source registry", () => {
     expect(resolveSourceRegistry(registry)["test:latest"]).toMatchObject({
       cache: { version: 1, maxAge: "5m" },
       title: "Latest",
-      type: "timeline",
       provider: {
         icon: "https://icons.folo.is/example.com",
         color: "blue",

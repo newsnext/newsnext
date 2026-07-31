@@ -4,6 +4,7 @@ import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { memo, useRef } from "react"
 import { useSourceIcon } from "@/hooks/use-source-icon"
 import { useRelativeTime } from "@/hooks/useRelativeTime"
+import { isTimelineItems } from "@/lib/source-presentation"
 import { cn } from "@/lib/utils"
 import { IconButton } from "../common/button"
 import {
@@ -19,7 +20,7 @@ import {
   SourceStatusMessage,
   SourceStatusPattern,
 } from "./card-source-state"
-import { Hottest } from "./hottest"
+import { Ranking } from "./ranking"
 import { Timeline } from "./timeline"
 
 interface CardFrontProps {
@@ -69,7 +70,6 @@ interface CardFrontContentProps {
   sourceErrorMessage?: string
   sourceLoginUrl?: string
   sourcePermissionRequired: boolean
-  type: BoardSource["type"]
   onRefresh: () => void
   onRequestPermission: () => Promise<boolean>
 }
@@ -84,7 +84,6 @@ function CardFrontContent({
   sourceErrorMessage,
   sourceLoginUrl,
   sourcePermissionRequired,
-  type,
   onRefresh,
   onRequestPermission,
 }: CardFrontContentProps) {
@@ -121,9 +120,9 @@ function CardFrontContent({
     )
   }
 
-  if (type === "hottest") {
+  if (!isTimelineItems(items)) {
     return (
-      <Hottest
+      <Ranking
         items={items}
         color={color}
         scrollRef={scrollRef}
@@ -157,7 +156,7 @@ function CardFrontComponent({
   actions,
   dragHandle,
 }: CardFrontProps) {
-  const { type, desc, provider, title, home } = source
+  const { desc, provider, title, home } = source
   const { color } = provider
   const icon = useSourceIcon(source)
   const ref = useRef<HTMLDivElement>(null)
@@ -235,7 +234,6 @@ function CardFrontComponent({
                 sourceErrorMessage={visibleSourceErrorMessage}
                 sourceLoginUrl={sourceLoginUrl}
                 sourcePermissionRequired={sourcePermissionRequired}
-                type={type}
                 onRefresh={onRefresh}
                 onRequestPermission={onRequestPermission}
               />

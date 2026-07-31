@@ -28,8 +28,7 @@
   "sources": {
     "latest": {
       "metadata": {
-        "title": "最新",
-        "type": "timeline"
+        "title": "最新"
       },
       "loader": {
         "url": "/latest.json?order=created",
@@ -43,8 +42,7 @@
     },
     "top-daily": {
       "metadata": {
-        "title": "热门",
-        "type": "hottest"
+        "title": "热门"
       },
       "loader": {
         "url": "/top/daily.json"

@@ -334,7 +334,6 @@ export default {
     cache: "5m",
     metadata: {
       home: "/",
-      type: "hottest",
     },
   },
   sources: {
@@ -362,7 +361,6 @@ export default {
       metadata: {
         title: "关注视频",
         desc: "已关注 UP 主发布的视频动态",
-        type: "timeline",
       },
       loader: {
         type: "custom",

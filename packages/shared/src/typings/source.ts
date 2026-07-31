@@ -1,11 +1,6 @@
 import type { NewsItem } from "./items"
 
 /**
- * Type of source based on content update frequency and nature.
- */
-export type SourceType = "hottest" | "realtime" | "timeline" | "normal"
-
-/**
  * Response structure for source data.
  */
 export interface SourceResponse {

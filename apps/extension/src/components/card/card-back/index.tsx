@@ -12,13 +12,8 @@ import { cn } from "@/lib/utils"
 import { IconButton } from "../../common/button"
 import { CardHeader } from "../card-header"
 import { CardBoardSelect, DeleteCardButton } from "./actions"
-import { EditableImage, EditableInput, Info, ValueSelector } from "./fields"
+import { EditableImage, EditableInput, Info } from "./fields"
 import { ParamField } from "./param-field"
-
-const SOURCE_TYPE_OPTIONS = [
-  { label: "Timeline", value: "timeline" },
-  { label: "Hottest", value: "hottest" },
-] as const
 
 export interface CardBackProps {
   badge?: string
@@ -55,7 +50,7 @@ export function CardBack({
   isDraft = false,
   dragHandle,
 }: CardBackProps) {
-  const { desc, params, provider, title, home, type } = source
+  const { desc, params, provider, title, home } = source
   const { color } = provider
   const [editDraft, setEditDraft] = useState<SourceInstanceMetadata | null>(null)
   const [isEditingParams, setIsEditingParams] = useState(false)
@@ -65,7 +60,6 @@ export function CardBack({
   const previewDesc = editDraft?.desc ?? desc
   const previewHome = editDraft?.home ?? home
   const icon = useSourceIcon({ provider, home: previewHome })
-  const previewType = editDraft?.type ?? type ?? "timeline"
   const relativeTime = useRelativeTime({ date: updatedAt })
   const hasSourceMetaChanges = Boolean(editDraft && Object.keys(editDraft).length > 0)
 
@@ -223,15 +217,6 @@ export function CardBack({
                     rounded
                     editable={isEditingMetadata}
                     onChange={value => updateEditDraft({ badge: value })}
-                  />
-                </Info>
-
-                <Info label="Type">
-                  <ValueSelector
-                    value={previewType}
-                    options={SOURCE_TYPE_OPTIONS}
-                    editable={isEditingMetadata}
-                    onChange={value => updateEditDraft({ type: value })}
                   />
                 </Info>
 

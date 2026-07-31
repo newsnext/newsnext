@@ -10,9 +10,6 @@
   },
   "sources": {
     "all": {
-      "metadata": {
-        "type": "timeline"
-      },
       "loader": {
         "type": "json",
         "url": "/api/public/items?mode=all&take=30",

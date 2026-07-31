@@ -394,24 +394,14 @@ No source items. Refresh to try again.
 
 建议为成功空结果提供独立 Empty State，仅将真正的异常视为 Error State。
 
-### 14. 时间排序依赖第一条 Item
+### 14. Loaders own item ordering
 
-JSON 和 HTML Loader 当前只有在第一条 Item 的 `timestamp` 为真值时才排序：
-
-```ts
-if (type !== "hottest" && news.length > 0 && news[0].timestamp) {
-  news.sort(...)
-}
-```
-
-可能的问题：
-
-- 第一条没有 Timestamp，但后续都有时完全不排序。
-- Timestamp 为 `0` 时不排序。
-- 第一条有 Timestamp、后续缺失时，比较器可能产生 `NaN`。
-- 排序行为由第一条数据决定，而不是明确的 Source 配置。
-
-建议明确缺失 Timestamp 的排序位置，并根据有效 Timestamp 集合决定排序行为。
+JSON and HTML loaders preserve the selected item order instead of sorting from
+the first item or source configuration. When chronological ordering is
+required, the request, JMESPath expression, or custom loader must apply it
+explicitly. The frontend renders a timeline only when every item has a valid
+timestamp and the result is already ordered from newest to oldest; all other
+results render as a ranking.
 
 ## 边缘执行路径问题
 
