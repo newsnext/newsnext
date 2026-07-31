@@ -412,23 +412,22 @@ metadata: {
 }
 ```
 
-JSON loader metadata is selected from the complete response. It is cached with
-the items and temporarily overrides the source title, description, or badge
-while that result is displayed.
+JSON loader metadata is selected from the complete response.
 
-Loader metadata is unavailable until the first successful request. It does not
-satisfy the Radar title requirement and cannot replace discovery-time metadata.
+Structured loader metadata is cached with the items and temporarily overrides
+the source title, description, or badge while that result is displayed. It is
+unavailable until the first successful request, does not satisfy the Radar
+title requirement, and cannot replace discovery-time metadata.
 
 ## HTML loader
 
-`items` and `filter` are CSS selectors:
+`items` is a CSS selector:
 
 ```ts
 loader: {
   type: "html",
   url: "/news",
-  items: ".article",
-  filter: ":not(.advertisement)",
+  items: ".article:not(.advertisement)",
   fields: {
     title: ".article__title",
     url: {
@@ -448,6 +447,26 @@ scope/traverse → selector → attr/content extraction → Liquid template
 
 All fields are extracted before templates run, so `scope.item` contains the
 complete pre-template item and field order does not matter.
+
+HTML loaders support the same dynamic metadata keys with document-level fields:
+
+```ts
+metadata: {
+  title: "head > title",
+  desc: {
+    select: "meta[name='description']",
+    attr: "content",
+  },
+  badge: {
+    select: "link[rel='icon']",
+    attr: "href",
+  },
+}
+```
+
+Metadata selectors use the complete document as their root. All metadata fields
+are extracted before their templates run, so `scope.item` contains the complete
+pre-template metadata object.
 
 Use a selector array for ordered fallbacks:
 

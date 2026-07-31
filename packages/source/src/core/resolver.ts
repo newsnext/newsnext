@@ -14,8 +14,8 @@ import type {
   SourceTemplateVars,
   SourceTemplateVarValue,
 } from "../types"
-import type { HtmlSourceOptions } from "./loaders/html"
-import type { JsonSourceOptions } from "./loaders/json"
+import type { HtmlLoaderOptions } from "./loaders/html"
+import type { JsonLoaderOptions } from "./loaders/json"
 
 import { createDefu } from "defu"
 import { isSourcePresentationMetadataKey } from "../types"
@@ -26,10 +26,12 @@ import {
   resolveSourceUrl,
 } from "./base-url"
 import { assertNetworkCapability, validateSourceRequestRules } from "./capabilities"
-import { compileHtmlFieldTemplates, loadHtml } from "./loaders/html"
 import {
-  compileJsonFieldTemplates,
-  compileJsonMetadataTemplates,
+  compileHtmlLoaderTemplates,
+  loadHtml,
+} from "./loaders/html"
+import {
+  compileJsonLoaderTemplates,
   loadJson,
   validateJsonExpression,
 } from "./loaders/json"
@@ -56,29 +58,25 @@ interface SourceConfigBase<TParams extends SourceParamSchemaMap> {
 type SourceCapabilityOverrides = Partial<SourceCapabilities>
 type SourceCacheInput = SourceCacheConfig | SourceCacheMaxAge
 type ProviderSourceMetadata = Omit<SourceMetadata, "key">
-type ProviderSourceLoader<TParams extends SourceParamSchemaMap> = Partial<
+type ProviderLoaderConfig<TParams extends SourceParamSchemaMap> = Partial<
   SourceConfig<TParams>["loader"]
 >
 
 type IsAny<T> = 0 extends (1 & T) ? true : false
 
-type SourceLoaderOption<TParams extends SourceParamSchemaMap>
+type CustomLoaderFunction<TParams extends SourceParamSchemaMap>
   = IsAny<TParams> extends true
     ? (...args: any[]) => Promise<ReturnType<SourceLoader> extends Promise<infer Result> ? Result : never>
     : SourceLoader<TParams>
 
-type StructuredSourceLoaderConfig
+type StructuredLoaderConfig
   = (
     | ({
       type: "json"
-      url: string
-      fetchOptions?: NonNullable<JsonSourceOptions["fetchOptions"]>
-    } & Omit<JsonSourceOptions, "url" | "type" | "fetchOptions">)
+    } & Omit<JsonLoaderOptions, "type">)
     | ({
       type: "html"
-      url: string
-      fetchOptions?: NonNullable<HtmlSourceOptions["fetchOptions"]>
-    } & Omit<HtmlSourceOptions, "url" | "type" | "fetchOptions">)
+    } & Omit<HtmlLoaderOptions, "type">)
     | {
       type: "rss"
       url: string
@@ -88,13 +86,13 @@ type StructuredSourceLoaderConfig
 export type SourceConfig<TParams extends SourceParamSchemaMap = any>
   = SourceConfigBase<TParams> & (
     | {
-      loader: StructuredSourceLoaderConfig
+      loader: StructuredLoaderConfig
       capabilities?: SourceCapabilityOverrides
     }
     | {
       loader: {
         type: "custom"
-        load: SourceLoaderOption<TParams>
+        load: CustomLoaderFunction<TParams>
       }
       capabilities: SourceCapabilityOverrides
     }
@@ -103,7 +101,7 @@ export type SourceConfig<TParams extends SourceParamSchemaMap = any>
 export type SourceConfigDefaults<TParams extends SourceParamSchemaMap = any> = Partial<
   Omit<SourceConfig<TParams>, "loader" | "metadata">
 > & {
-  loader?: ProviderSourceLoader<TParams>
+  loader?: ProviderLoaderConfig<TParams>
   metadata?: ProviderSourceMetadata
 }
 
@@ -113,7 +111,7 @@ export type ProviderSourceConfig<TParams extends SourceParamSchemaMap = any> = O
 > & {
   cache?: SourceCacheInput
   capabilities?: SourceCapabilityOverrides
-  loader?: ProviderSourceLoader<TParams>
+  loader?: ProviderLoaderConfig<TParams>
   metadata?: ProviderSourceMetadata
 }
 
@@ -147,10 +145,9 @@ export function validateSourceTemplates(sourceId: string, config: SourceConfig):
     }
     validateJsonFieldExpressions(loader.fields, `${sourceId}.loader.fields`)
     validateJsonFieldExpressions(loader.metadata, `${sourceId}.loader.metadata`)
-    compileJsonFieldTemplates(loader.fields, `${sourceId}.loader.fields`)
-    compileJsonMetadataTemplates(loader.metadata, `${sourceId}.loader.metadata`)
+    compileJsonLoaderTemplates(loader, `${sourceId}.loader`)
   } else if (loader.type === "html") {
-    compileHtmlFieldTemplates(loader.fields, `${sourceId}.loader.fields`)
+    compileHtmlLoaderTemplates(loader, `${sourceId}.loader`)
   }
 
   validateRadarRules(config.radar, `${sourceId}.radar`)
@@ -485,7 +482,7 @@ function resolveDefaultParams<TParams extends SourceParamSchemaMap>(
 
 function resolveSourceCapabilities<TParams extends SourceParamSchemaMap>(
   sourceId: string,
-  loader: StructuredSourceLoaderConfig | { type: "custom", load: SourceLoader<TParams> },
+  loader: StructuredLoaderConfig | { type: "custom", load: SourceLoader<TParams> },
   params: TParams | undefined,
   vars: SourceTemplateVars | undefined,
   baseUrl: string | undefined,

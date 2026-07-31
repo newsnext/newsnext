@@ -7,19 +7,30 @@ import type {
   HtmlTraversal,
   NewsItem,
   RuntimeSource,
+  SourceLoaderMetadata,
+  SourceLoaderOutput,
   SourceTemplateVars,
 } from "../../types"
+import type {
+  LoaderContext,
+  LoaderFields,
+  LoaderMetadataFields,
+} from "./shared"
 import { load } from "cheerio/slim"
 import { myFetch } from "../../utils"
 import {
   compileSourceTemplate,
   createSourceTemplateScope,
 } from "../template"
+import {
+  normalizeLoaderMetadata,
+  sortLoaderItems,
+} from "./shared"
 
 const MAX_SELECTED_ITEMS = 2_000
 const fieldTemplates = new WeakMap<HtmlFieldConfig, ReturnType<typeof compileSourceTemplate>>()
 
-export interface HtmlFieldContext {
+interface HtmlFieldContext {
   vars: SourceTemplateVars
   index: number
   params: Record<string, unknown>
@@ -27,10 +38,6 @@ export interface HtmlFieldContext {
 }
 
 export type { HtmlField, HtmlFieldConfig, HtmlTraversal } from "../../types"
-export interface HtmlSourceLoaderContext {
-  vars?: SourceTemplateVars
-  params?: Record<string, unknown>
-}
 
 interface HtmlExtractedItem {
   title?: unknown
@@ -47,43 +54,33 @@ interface FieldEntry {
   path: readonly string[]
 }
 
-export interface HtmlSourceOptions {
+export interface HtmlLoaderOptions {
   url: string
   type?: RuntimeSource["type"]
   /**
    * CSS selector for the source items.
    */
   items?: string
-  filter?: string
-  // Allow dynamic decoding
   decoding?: string
   fetchOptions?: FetchOptions
   fetch?: (url: string) => Promise<string>
-  fields: {
-    title: HtmlField
-    url: HtmlField
-    mobileUrl?: HtmlField
-    timestamp?: HtmlField
-    inline?: {
-      text?: HtmlField
-      html?: HtmlField
-      mark?: HtmlField
-      icon?: HtmlField
-    }
-    preview?: {
-      text?: HtmlField
-      html?: HtmlField
-      picture?: HtmlField
-      iframe?: HtmlField
-    }
-  }
+  metadata?: LoaderMetadataFields<HtmlField>
+  fields: LoaderFields<HtmlField>
 }
 
-export function compileHtmlFieldTemplates(
-  fields: HtmlSourceOptions["fields"],
+export function compileHtmlLoaderTemplates(
+  options: Pick<HtmlLoaderOptions, "fields" | "metadata">,
   location: string,
 ): void {
-  for (const entry of collectFieldEntries(fields)) {
+  compileHtmlTemplates(collectFieldEntries(options.fields), `${location}.fields`)
+  compileHtmlTemplates(collectMetadataEntries(options.metadata), `${location}.metadata`)
+}
+
+function compileHtmlTemplates(
+  entries: readonly FieldEntry[],
+  location: string,
+): void {
+  for (const entry of entries) {
     if (!entry.config.template) continue
     fieldTemplates.set(entry.config, compileSourceTemplate(entry.config.template, {
       location: `${location}.${entry.path.join(".")}.template`,
@@ -99,7 +96,7 @@ function resolveFieldConfig(field: HtmlField): HtmlFieldConfig {
     : { select: field }
 }
 
-function collectFieldEntries(fields: HtmlSourceOptions["fields"]): FieldEntry[] {
+function collectFieldEntries(fields: HtmlLoaderOptions["fields"]): FieldEntry[] {
   const entries: FieldEntry[] = [
     createFieldEntry(["title"], fields.title),
     createFieldEntry(["url"], fields.url),
@@ -123,6 +120,12 @@ function collectFieldEntries(fields: HtmlSourceOptions["fields"]): FieldEntry[] 
   }
 
   return entries
+}
+
+function collectMetadataEntries(metadata: HtmlLoaderOptions["metadata"]): FieldEntry[] {
+  return Object.entries(metadata ?? {}).flatMap(([key, field]) => (
+    field === undefined ? [] : [createFieldEntry([key], field)]
+  ))
 }
 
 function createFieldEntry(
@@ -232,16 +235,16 @@ function extractNodeValue(
 
 function resolveField(
   entry: FieldEntry,
-  extractedItem: HtmlExtractedItem,
+  extractedFields: Record<string, unknown>,
   context: HtmlFieldContext,
 ): unknown {
-  const value = getPath(extractedItem, entry.path)
+  const value = getPath(extractedFields, entry.path)
   if (!entry.config.template) return value
 
   return getHtmlFieldTemplate(entry).render(
     createSourceTemplateScope(context.vars, {
       index: context.index,
-      item: extractedItem,
+      item: extractedFields,
       params: context.params,
       request: {
         url: context.requestUrl,
@@ -267,10 +270,19 @@ function getHtmlFieldTemplate(
 }
 
 export async function loadHtml(
-  opts: HtmlSourceOptions,
-  loaderContext: HtmlSourceLoaderContext = {},
-): Promise<NewsItem[]> {
-  const { url, type, items: itemsSelect, filter, decoding, fetchOptions, fetch, fields } = opts
+  options: HtmlLoaderOptions,
+  loaderContext: LoaderContext = {},
+): Promise<SourceLoaderOutput> {
+  const {
+    url,
+    type,
+    items: itemsSelect,
+    decoding,
+    fetchOptions,
+    fetch,
+    fields,
+    metadata,
+  } = options
 
   let html: string
   if (fetch) {
@@ -291,25 +303,18 @@ export async function loadHtml(
   const news: NewsItem[] = []
 
   items.forEach((element, index) => {
-    const $item = $(element)
-    if (filter && !$item.is(filter)) return
-
-    const context: HtmlFieldContext = {
+    const fieldContext: HtmlFieldContext = {
       vars: loaderContext.vars ?? {},
       index,
       params: loaderContext.params ?? {},
       requestUrl: url,
     }
-    const extractedItem: HtmlExtractedItem = {}
-
-    for (const entry of entries) {
-      setPath(extractedItem, entry.path, extractField($, element, entry.config))
-    }
-
-    const resolvedItem: HtmlExtractedItem = {}
-    for (const entry of entries) {
-      setPath(resolvedItem, entry.path, resolveField(entry, extractedItem, context))
-    }
+    const resolvedItem = extractAndResolveFields(
+      $,
+      element,
+      entries,
+      fieldContext,
+    ) as HtmlExtractedItem
 
     const title = resolvedItem.title
     const itemUrl = resolvedItem.url
@@ -341,14 +346,57 @@ export async function loadHtml(
     news.push(item)
   })
 
-  if (type !== "hottest" && news.length > 0 && news[0].timestamp) {
-    news.sort((a, b) => (b.timestamp as number) - (a.timestamp as number))
-  }
+  sortLoaderItems(news, type)
 
-  return news
+  if (!metadata) return news
+
+  return {
+    items: news,
+    metadata: resolveHtmlMetadata($, metadata, {
+      vars: loaderContext.vars ?? {},
+      index: 0,
+      params: loaderContext.params ?? {},
+      requestUrl: url,
+    }),
+  }
 }
 
-function getPath(value: HtmlExtractedItem, path: readonly string[]): unknown {
+function resolveHtmlMetadata(
+  $: cheerio.CheerioAPI,
+  metadata: NonNullable<HtmlLoaderOptions["metadata"]>,
+  context: HtmlFieldContext,
+): SourceLoaderMetadata | undefined {
+  const root = $.root().get(0)
+  if (!root) return undefined
+
+  const resolved = extractAndResolveFields(
+    $,
+    root,
+    collectMetadataEntries(metadata),
+    context,
+  )
+  return normalizeLoaderMetadata(resolved)
+}
+
+function extractAndResolveFields(
+  $: cheerio.CheerioAPI,
+  root: AnyNode,
+  entries: readonly FieldEntry[],
+  context: HtmlFieldContext,
+): Record<string, unknown> {
+  const extracted: Record<string, unknown> = {}
+  for (const entry of entries) {
+    setPath(extracted, entry.path, extractField($, root, entry.config))
+  }
+
+  const resolved: Record<string, unknown> = {}
+  for (const entry of entries) {
+    setPath(resolved, entry.path, resolveField(entry, extracted, context))
+  }
+  return resolved
+}
+
+function getPath(value: Record<string, unknown>, path: readonly string[]): unknown {
   let current: unknown = value
   for (const key of path) {
     if (!current || typeof current !== "object") return undefined
@@ -358,11 +406,11 @@ function getPath(value: HtmlExtractedItem, path: readonly string[]): unknown {
 }
 
 function setPath(
-  value: HtmlExtractedItem,
+  value: Record<string, unknown>,
   path: readonly string[],
   fieldValue: unknown,
 ): void {
-  let current = value as Record<string, unknown>
+  let current = value
   for (const key of path.slice(0, -1)) {
     const child = current[key]
     if (!child || typeof child !== "object") {
@@ -370,7 +418,8 @@ function setPath(
     }
     current = current[key] as Record<string, unknown>
   }
-  current[path.at(-1) as string] = fieldValue
+  const field = path.at(-1)
+  if (field !== undefined) current[field] = fieldValue
 }
 
 function hasValue(value: unknown): boolean {

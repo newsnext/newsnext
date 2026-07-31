@@ -234,21 +234,26 @@ request
     → normalize and validate NewsItem values
 ```
 
+JSON and HTML helper contracts use `*LoaderOptions` for loader configuration
+and the shared `LoaderContext` for per-invocation state. `SourceLoader` and
+`SourceLoaderContext` remain the runtime contract for loading a complete source.
+
 HTML loaders:
 
 ```text
 request
     → decode and parse document
-    → select and filter item roots
+    → select item roots
     → traverse and select every field
     → extract text, attribute, or HTML
     → render field Liquid templates
+    → select and render document metadata
     → normalize and validate NewsItem values
 ```
 
-All fields are extracted before field templates render. Each template sees the
-complete pre-template item, which makes output independent of declaration order
-and prevents template cycles.
+All item or metadata fields in a group are extracted before that group's
+templates render. Each template sees its complete pre-template group, which
+makes output independent of declaration order and prevents template cycles.
 
 RSS loaders parse the feed and map entries directly to title, URL, and an
 optional timestamp.

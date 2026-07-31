@@ -6,12 +6,21 @@ import type {
   SourceLoaderOutput,
   SourceTemplateVars,
 } from "../../types"
+import type {
+  LoaderContext,
+  LoaderFields,
+  LoaderMetadataFields,
+} from "./shared"
 import * as jmespath from "jmespath"
 import { myFetch } from "../../utils"
 import {
   compileSourceTemplate,
   createSourceTemplateScope,
 } from "../template"
+import {
+  normalizeLoaderMetadata,
+  sortLoaderItems,
+} from "./shared"
 
 const MAX_EXPRESSION_LENGTH = 2_000
 const validatedExpressions = new Set<string>()
@@ -21,7 +30,7 @@ const jmespathCompiler = jmespath as typeof jmespath & {
   compile: (expression: string) => unknown
 }
 
-export interface JsonFieldContext {
+interface JsonFieldContext {
   vars: SourceTemplateVars
   json: unknown
   index: number
@@ -36,12 +45,13 @@ export interface JsonFieldConfig {
 
 export type JsonField = string | JsonFieldConfig
 
-export interface JsonSourceLoaderContext {
-  vars?: SourceTemplateVars
-  params?: Record<string, unknown>
+interface JsonFieldEntry {
+  field: JsonField
+  htmlOutput: boolean
+  path: readonly string[]
 }
 
-export interface JsonSourceOptions {
+export interface JsonLoaderOptions {
   url: string
   type?: RuntimeSource["type"]
   /**
@@ -54,36 +64,20 @@ export interface JsonSourceOptions {
    */
   fetchOptions?: FetchOptions
   fetch?: (url: string) => Promise<unknown>
-  metadata?: {
-    badge?: JsonField
-    desc?: JsonField
-    title?: JsonField
-  }
-  fields: {
-    title: JsonField
-    url: JsonField
-    mobileUrl?: JsonField
-    timestamp?: JsonField
-    inline?: {
-      text?: JsonField
-      html?: JsonField
-      mark?: JsonField
-      icon?: JsonField
-    }
-    preview?: {
-      text?: JsonField
-      html?: JsonField
-      picture?: JsonField
-      iframe?: JsonField
-    }
-  }
+  metadata?: LoaderMetadataFields<JsonField>
+  fields: LoaderFields<JsonField>
 }
 
-export function compileJsonFieldTemplates(
-  fields: JsonSourceOptions["fields"],
+export function compileJsonLoaderTemplates(
+  options: Pick<JsonLoaderOptions, "fields" | "metadata">,
   location: string,
 ): void {
-  for (const { field, htmlOutput, path } of collectJsonFields(fields)) {
+  compileJsonTemplates(collectJsonFields(options.fields), `${location}.fields`)
+  compileJsonTemplates(collectJsonMetadata(options.metadata), `${location}.metadata`)
+}
+
+function compileJsonTemplates(entries: readonly JsonFieldEntry[], location: string): void {
+  for (const { field, htmlOutput, path } of entries) {
     if (typeof field === "string" || !field.template) continue
     fieldTemplates.set(field, compileSourceTemplate(field.template, {
       location: `${location}.${path.join(".")}.template`,
@@ -93,21 +87,17 @@ export function compileJsonFieldTemplates(
   }
 }
 
-export function compileJsonMetadataTemplates(
-  metadata: JsonSourceOptions["metadata"],
-  location: string,
-): void {
-  for (const [key, field] of Object.entries(metadata ?? {})) {
-    if (typeof field === "string" || !field.template) continue
-    fieldTemplates.set(field, compileSourceTemplate(field.template, {
-      location: `${location}.${key}.template`,
-      output: "plain",
-      slot: "jsonField",
-    }))
-  }
+function collectJsonMetadata(
+  metadata: JsonLoaderOptions["metadata"],
+): JsonFieldEntry[] {
+  return Object.entries(metadata ?? {}).flatMap(([key, field]) => (
+    field === undefined
+      ? []
+      : [{ field, htmlOutput: false, path: [key] }]
+  ))
 }
 
-export function selectJson(value: unknown, expression: string): unknown {
+function selectJson(value: unknown, expression: string): unknown {
   validateJsonExpression(expression)
   return jmespath.search(value, expression)
 }
@@ -173,13 +163,9 @@ function resolveValue(
 }
 
 function collectJsonFields(
-  fields: JsonSourceOptions["fields"],
-): Array<{ field: JsonField, htmlOutput: boolean, path: readonly string[] }> {
-  const entries: Array<{
-    field: JsonField
-    htmlOutput: boolean
-    path: readonly string[]
-  }> = [
+  fields: JsonLoaderOptions["fields"],
+): JsonFieldEntry[] {
+  const entries: JsonFieldEntry[] = [
     { field: fields.title, htmlOutput: false, path: ["title"] },
     { field: fields.url, htmlOutput: false, path: ["url"] },
   ]
@@ -222,26 +208,21 @@ function getJsonFieldTemplate(
 
 export function resolveJsonMetadata(
   json: unknown,
-  metadata: JsonSourceOptions["metadata"],
+  metadata: JsonLoaderOptions["metadata"],
   context: JsonFieldContext,
 ): SourceLoaderMetadata | undefined {
-  const resolved = Object.fromEntries(
-    Object.entries(metadata ?? {}).flatMap(([key, field]) => {
-      const value = resolveValue(json, context, field)
-      return value === undefined || value === null || value === ""
-        ? []
-        : [[key, String(value)]]
-    }),
-  ) as SourceLoaderMetadata
-
-  return Object.keys(resolved).length > 0 ? resolved : undefined
+  return normalizeLoaderMetadata(Object.fromEntries(
+    Object.entries(metadata ?? {}).flatMap(([key, field]) => (
+      field === undefined ? [] : [[key, resolveValue(json, context, field)]]
+    )),
+  ))
 }
 
 export async function loadJson(
-  opts: JsonSourceOptions,
-  loaderContext: JsonSourceLoaderContext = {},
+  options: JsonLoaderOptions,
+  loaderContext: LoaderContext = {},
 ): Promise<SourceLoaderOutput> {
-  const { url, type, fetchOptions, fetch, items: itemsSelect, fields, metadata } = opts
+  const { url, type, fetchOptions, fetch, items: itemsSelect, fields, metadata } = options
 
   let json: unknown
   if (fetch) {
@@ -275,15 +256,15 @@ export async function loadJson(
   }
 
   const news: NewsItem[] = items.map((item, index) => {
-    const context: JsonFieldContext = {
+    const fieldContext: JsonFieldContext = {
       vars: loaderContext.vars ?? {},
       json,
       index,
       params: loaderContext.params ?? {},
       requestUrl: url,
     }
-    const titleValue = resolveValue(item, context, fields.title)
-    const itemUrlValue = resolveValue(item, context, fields.url)
+    const titleValue = resolveValue(item, fieldContext, fields.title)
+    const itemUrlValue = resolveValue(item, fieldContext, fields.url)
 
     if (!titleValue || !itemUrlValue) return null
 
@@ -293,12 +274,12 @@ export async function loadJson(
     }
 
     if (fields.mobileUrl) {
-      const mobileUrl = resolveValue(item, context, fields.mobileUrl)
+      const mobileUrl = resolveValue(item, fieldContext, fields.mobileUrl)
       if (mobileUrl) newsItem.mobileUrl = String(mobileUrl)
     }
 
     if (fields.timestamp) {
-      const timestampValue = resolveValue(item, context, fields.timestamp)
+      const timestampValue = resolveValue(item, fieldContext, fields.timestamp)
       const timestamp = timestampValue === undefined || timestampValue === null || timestampValue === ""
         ? undefined
         : Number(timestampValue)
@@ -308,7 +289,7 @@ export async function loadJson(
     if (fields.inline) {
       const inline: Record<string, unknown> = {}
       for (const [key, field] of Object.entries(fields.inline)) {
-        const val = resolveValue(item, context, field as JsonField, key === "html")
+        const val = resolveValue(item, fieldContext, field as JsonField, key === "html")
         if (val != null) {
           Object.assign(inline, { [key]: val })
         }
@@ -321,7 +302,7 @@ export async function loadJson(
     if (fields.preview) {
       const preview: Record<string, unknown> = {}
       for (const [key, field] of Object.entries(fields.preview)) {
-        const val = resolveValue(item, context, field as JsonField, key === "html")
+        const val = resolveValue(item, fieldContext, field as JsonField, key === "html")
         if (val != null) {
           Object.assign(preview, { [key]: val })
         }
@@ -334,9 +315,7 @@ export async function loadJson(
     return newsItem
   }).filter((i): i is NewsItem => i !== null)
 
-  if (type !== "hottest" && news.length > 0 && news[0].timestamp) {
-    news.sort((a, b) => (b.timestamp as number) - (a.timestamp as number))
-  }
+  sortLoaderItems(news, type)
 
   if (!metadata) {
     return news
