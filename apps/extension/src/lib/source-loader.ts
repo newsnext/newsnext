@@ -4,7 +4,7 @@ import {
   normalizeSourceParams,
 } from "@newsnext/source/runtime"
 import { createBackgroundClient } from "./background-client"
-import { readCachedSource, writeCachedSource } from "./source-cache"
+import { readSourceCache, writeCachedSource } from "./source-cache"
 import { buildSourceCacheKey, parseCacheMaxAge } from "./source-cache-values"
 import { loadSourceDescriptor } from "./sources"
 
@@ -21,6 +21,7 @@ export interface SourceLoadResult {
 
 export interface LoadSourceOptions {
   forceFresh?: boolean
+  onCachedResult?: (result: SourceLoadResult) => void
 }
 
 export async function loadSource(
@@ -31,12 +32,17 @@ export async function loadSource(
   const source = await loadSourceDescriptor(sourceId)
   const params = normalizeSourceParams(source, queryParams)
   const cacheKey = buildSourceCacheKey(sourceId, source.cache.version, params)
-  const cachedResult = options.forceFresh
-    ? undefined
-    : await readCachedSource(cacheKey, parseCacheMaxAge(source.cache.maxAge))
+  const cached = await readSourceCache(
+    cacheKey,
+    parseCacheMaxAge(source.cache.maxAge),
+  )
 
-  if (cachedResult?.items.length) {
-    return cachedResult
+  if (cached?.result.items.length) {
+    if (!options.forceFresh && cached.isFresh) {
+      return cached.result
+    }
+
+    options.onCachedResult?.(cached.result)
   }
 
   const inFlightLoad = inFlightSourceLoads.get(cacheKey)

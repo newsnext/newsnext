@@ -11,6 +11,11 @@ interface SourceCacheEntry extends SourceLoadResult {
   usedAt: number
 }
 
+export interface SourceCacheReadResult {
+  isFresh: boolean
+  result: SourceLoadResult
+}
+
 interface SourceCacheDatabase extends DBSchema {
   [SOURCE_CACHE_STORE_NAME]: {
     key: string
@@ -38,18 +43,18 @@ function openSourceCacheDatabase(): Promise<IDBPDatabase<SourceCacheDatabase>> {
   return sourceCacheDatabasePromise
 }
 
-export async function readCachedSource(
+export async function readSourceCache(
   cacheKey: string,
   maxAgeMs: number,
   now = Date.now(),
-): Promise<SourceLoadResult | undefined> {
+): Promise<SourceCacheReadResult | undefined> {
   try {
     const database = await openSourceCacheDatabase()
 
     const transaction = database.transaction(SOURCE_CACHE_STORE_NAME, "readwrite")
     const objectStore = transaction.objectStore(SOURCE_CACHE_STORE_NAME)
     const entry = await objectStore.get(cacheKey)
-    if (!entry || now - entry.cachedAt >= maxAgeMs) {
+    if (!entry) {
       return undefined
     }
 
@@ -60,7 +65,10 @@ export async function readCachedSource(
     await transaction.done
 
     const { cachedAt: _cachedAt, usedAt: _usedAt, ...result } = entry
-    return result
+    return {
+      isFresh: now - entry.cachedAt < maxAgeMs,
+      result,
+    }
   } catch {
     return undefined
   }

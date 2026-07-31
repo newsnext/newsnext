@@ -194,6 +194,13 @@ version, and normalized parameters. The key remains internal to the loader and
 cache layers. A forced refresh bypasses stored cache data but still participates
 in in-flight deduplication.
 
+The dashboard also reads the last persisted result as presentation-only
+placeholder data when a card mounts. This survives a dashboard close and reopen
+and may use an expired entry while a fresh request is pending. The loader reads
+each cache entry once and injects stale data into the active query before
+continuing the request. Placeholder data does not satisfy the request, extend
+the entry's freshness, or change forced refresh behavior.
+
 Loader metadata is response-scoped and remains part of the cached load result.
 It uses the complete source presentation metadata shape: title, badge,
 description, and home URL. While displayed, it has the highest field-level

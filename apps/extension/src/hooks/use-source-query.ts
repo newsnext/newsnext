@@ -1,5 +1,5 @@
 import { normalizeSourceParams } from "@newsnext/source/runtime"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useCallback, useMemo, useState } from "react"
 import { loadSource } from "@/lib/source-loader"
 import { getLoginUrlFromError } from "./source-login-error"
@@ -36,11 +36,17 @@ export function useSourceQuery({
     () => getSourceRefreshKey({ sourceId, params: normalizedParams }),
     [normalizedParams, sourceId],
   )
+  const queryKey = useMemo(
+    () => [...SOURCE_QUERY_KEY, refreshKey] as const,
+    [refreshKey],
+  )
+  const queryClient = useQueryClient()
   const [initialUpdatedAt] = useState(Date.now)
   const { data, error, isFetching, isError, refetch: normalRefetch } = useQuery({
-    queryKey: [...SOURCE_QUERY_KEY, refreshKey],
+    queryKey,
     queryFn: () => loadSource(sourceId, normalizedParams, {
       forceFresh: consumeLatestSourceRefresh({ sourceId, params: normalizedParams }),
+      onCachedResult: result => queryClient.setQueryData(queryKey, result),
     }),
     enabled: enabled && source !== undefined,
     placeholderData: prev => prev,
