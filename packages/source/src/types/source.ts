@@ -81,15 +81,16 @@ export interface SourceLoaderContext {
   updateSecrets?: (secrets: SourceSecrets) => Promise<void>
 }
 
-export interface SourceLoaderMetadata {
+export interface SourcePresentationMetadata {
+  title?: string
   badge?: string
   desc?: string
-  title?: string
+  home?: string
 }
 
 export interface SourceLoaderResult {
   items: NewsItem[]
-  metadata?: SourceLoaderMetadata
+  metadata?: SourcePresentationMetadata
 }
 
 export type SourceLoaderOutput = NewsItem[] | SourceLoaderResult
@@ -98,13 +99,6 @@ export type SourceLoader<TParams extends SourceParamSchemaMap = SourceParamSchem
   params: InferSourceParams<TParams>,
   context?: SourceLoaderContext,
 ) => Promise<SourceLoaderOutput>
-
-export interface SourcePresentationMetadata {
-  title?: string
-  badge?: string
-  desc?: string
-  home?: string
-}
 
 export const SOURCE_PRESENTATION_METADATA_KEYS = [
   "title",
@@ -158,14 +152,11 @@ export interface SourceCacheConfig {
 export interface RuntimeSource<TParams extends SourceParamSchemaMap = SourceParamSchemaMap> {
   provider: SourceProvider
   baseUrl?: string
-  title?: string
+  metadata: SourcePresentationMetadata
   vars?: SourceTemplateVars
   params?: TParams
   capabilities: SourceCapabilities
   cache: SourceCacheConfig
-  badge?: string
-  desc?: string
-  home?: string
   secrets?: SourceSecretDefinition[]
   radar?: SourceRadarRule[]
   requestRules?: readonly SourceRequestRule[]

@@ -6,8 +6,8 @@ import type {
   HtmlFieldConfig,
   HtmlTraversal,
   NewsItem,
-  SourceLoaderMetadata,
   SourceLoaderOutput,
+  SourcePresentationMetadata,
   SourceTemplateVars,
 } from "../../types"
 import type {
@@ -360,7 +360,7 @@ function resolveHtmlMetadata(
   $: cheerio.CheerioAPI,
   metadata: NonNullable<HtmlLoaderOptions["metadata"]>,
   context: HtmlFieldContext,
-): SourceLoaderMetadata | undefined {
+): SourcePresentationMetadata | undefined {
   const root = $.root().get(0)
   if (!root) return undefined
 

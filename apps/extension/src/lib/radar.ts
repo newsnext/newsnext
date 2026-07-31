@@ -2,6 +2,7 @@ import type { CompiledSourceTemplate } from "@newsnext/source/core"
 import type {
   HtmlField,
   SourceDescriptor,
+  SourcePresentationMetadata,
   SourceRadarMatch,
   SourceRadarMetadata,
   SourceRadarPathPattern,
@@ -48,8 +49,10 @@ export interface RadarSuggestion {
 
 export type RadarSourceMetadata = Pick<
   SourceDescriptor,
-  "id" | "baseUrl" | "title" | "badge" | "desc" | "home" | "vars" | "params" | "radar"
->
+  "id" | "baseUrl" | "vars" | "params" | "radar"
+> & {
+  metadata?: SourcePresentationMetadata
+}
 
 interface RadarMatchContext {
   url: URL
@@ -567,7 +570,7 @@ function createRssSuggestions(
           metadata: {
             badge: getFavicon(pageUrl),
             home: pageUrl.href,
-            title: feed.title?.trim() || rssSource.title || "RSS Feed",
+            title: feed.title?.trim() || rssSource.metadata?.title || "RSS Feed",
           },
         },
         confidence: RSS_RADAR_CONFIDENCE,
@@ -624,12 +627,13 @@ function getSourceRuleSpecs(sourceMetadata: RadarSourceMetadata[] | undefined): 
         return source.radar.length ? [{ source, rules: source.radar }] : []
       }
 
-      if (!source.home || Object.keys(source.params ?? {}).length > 0) {
+      const homeValue = source.metadata?.home
+      if (!homeValue || Object.keys(source.params ?? {}).length > 0) {
         return []
       }
 
       try {
-        const home = new URL(source.home)
+        const home = new URL(homeValue)
         if (!["http:", "https:"].includes(home.protocol) || !home.hostname) {
           return []
         }

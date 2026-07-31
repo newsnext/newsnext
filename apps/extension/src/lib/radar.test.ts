@@ -752,7 +752,9 @@ describe("getRadarSuggestions", () => {
       { url: "https://example.com/articles/one" },
       [{
         id: "test:default",
-        home: "https://www.example.com/feed",
+        metadata: {
+          home: "https://www.example.com/feed",
+        },
       }],
     )).toMatchObject([
       {
@@ -770,7 +772,9 @@ describe("getRadarSuggestions", () => {
       [
         {
           id: "test:parameterized",
-          home: "https://example.com",
+          metadata: {
+            home: "https://example.com",
+          },
           params: {
             topic: {
               type: "text",
@@ -781,12 +785,16 @@ describe("getRadarSuggestions", () => {
         },
         {
           id: "test:disabled",
-          home: "https://example.com",
+          metadata: {
+            home: "https://example.com",
+          },
           radar: [],
         },
         {
           id: "test:explicit",
-          home: "https://example.com",
+          metadata: {
+            home: "https://example.com",
+          },
           radar: [
             {
               id: "other-path",
@@ -802,8 +810,8 @@ describe("getRadarSuggestions", () => {
     expect(getRadarSuggestions(
       { url: "https://example.com/articles/one" },
       [
-        { id: "test:invalid-home", home: "not a url" },
-        { id: "test:extension-home", home: "chrome-extension://example/page.html" },
+        { id: "test:invalid-home", metadata: { home: "not a url" } },
+        { id: "test:extension-home", metadata: { home: "chrome-extension://example/page.html" } },
       ],
     )).toEqual([])
   })
@@ -856,11 +864,15 @@ describe("getRadarSuggestions", () => {
       [
         {
           id: "test:generic-one",
-          home: "https://example.com",
+          metadata: {
+            home: "https://example.com",
+          },
         },
         {
           id: "test:generic-two",
-          home: "https://example.com/feed",
+          metadata: {
+            home: "https://example.com/feed",
+          },
         },
         {
           id: "test:ranking",

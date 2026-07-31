@@ -66,8 +66,10 @@ describe("source template vars", () => {
 
     expect(provider.sources.latest).toMatchObject({
       baseUrl: "https://example.com/",
-      badge: "https://example.com/badge.png",
-      home: "https://example.com/latest",
+      metadata: {
+        badge: "https://example.com/badge.png",
+        home: "https://example.com/latest",
+      },
     })
     await expect(provider.sources.latest.loader({})).resolves.toEqual([{
       title: "Item",
@@ -172,7 +174,9 @@ describe("source template vars", () => {
         network: ["api.example.com"],
         cookies: ["account.example.com"],
       },
-      home: "https://example.com",
+      metadata: {
+        home: "https://example.com",
+      },
       provider: {
         icon: "https://icons.folo.is/example.com",
         color: "blue",
@@ -189,12 +193,14 @@ describe("source template vars", () => {
         network: ["override.example.com"],
         cookies: ["account.example.com"],
       },
-      home: "https://example.com",
+      metadata: {
+        home: "https://example.com",
+        title: "Override",
+      },
       provider: {
         icon: "https://icons.folo.is/example.com",
         color: "blue",
       },
-      title: "Override",
       radar: [],
     })
   })
@@ -221,8 +227,10 @@ describe("source template vars", () => {
     })
 
     expect(provider.sources.test).toMatchObject({
-      title: "Source",
-      home: "https://example.com/source",
+      metadata: {
+        title: "Source",
+        home: "https://example.com/source",
+      },
       provider: {
         icon: "https://icons.folo.is/example.com",
         color: "blue",
@@ -733,7 +741,9 @@ describe("source registry", () => {
     })
     expect(resolveSourceRegistry(registry)["test:latest"]).toMatchObject({
       cache: { version: 1, maxAge: "5m" },
-      title: "Latest",
+      metadata: {
+        title: "Latest",
+      },
       provider: {
         icon: "https://icons.folo.is/example.com",
         color: "blue",

@@ -60,7 +60,7 @@ export function resolveSourceLoaderOutputUrls(
     items: output.items.map(item => resolveNewsItemUrls(item, baseUrl)),
   }
   if (output.metadata !== undefined) {
-    resolved.metadata = resolveLoaderMetadataUrls(output.metadata, baseUrl)
+    resolved.metadata = resolveSourceMetadataUrls(output.metadata, baseUrl)
   }
   return resolved
 }
@@ -127,15 +127,4 @@ function resolvePicture(
     resolved.href = resolveSourceUrl(picture.href, baseUrl)
   }
   return resolved
-}
-
-function resolveLoaderMetadataUrls(
-  metadata: SourceLoaderResult["metadata"],
-  baseUrl: string,
-): SourceLoaderResult["metadata"] {
-  if (metadata?.badge === undefined) return metadata
-  return {
-    ...metadata,
-    badge: resolveSourceUrl(metadata.badge, baseUrl),
-  }
 }

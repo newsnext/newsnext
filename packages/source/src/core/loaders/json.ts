@@ -1,8 +1,8 @@
 import type { FetchOptions } from "ofetch"
 import type {
   NewsItem,
-  SourceLoaderMetadata,
   SourceLoaderOutput,
+  SourcePresentationMetadata,
   SourceTemplateVars,
 } from "../../types"
 import type {
@@ -205,7 +205,7 @@ export function resolveJsonMetadata(
   json: unknown,
   metadata: JsonLoaderOptions["metadata"],
   context: JsonFieldContext,
-): SourceLoaderMetadata | undefined {
+): SourcePresentationMetadata | undefined {
   return normalizeLoaderMetadata(Object.fromEntries(
     Object.entries(metadata ?? {}).flatMap(([key, field]) => (
       field === undefined ? [] : [[key, resolveValue(json, context, field)]]

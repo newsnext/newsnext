@@ -32,11 +32,11 @@ function SearchSourceIcon({ source }: { source: BoardSource }): ReactNode {
 
   return (
     <SourceIcon
-      badge={source.badge}
+      badge={source.metadata.badge}
       className="shrink-0 rounded-full"
       color={source.provider.color}
       icon={icon}
-      title={source.title || source.provider.title}
+      title={source.metadata.title || source.provider.title}
     />
   )
 }
@@ -146,14 +146,14 @@ function SearchDialogContent(): ReactNode {
               keywords={[
                 item.id,
                 item.source.provider.title,
-                item.source.title ?? "",
+                item.source.metadata.title ?? "",
                 "card radar",
               ]}
             >
               <span className="flex items-center min-w-0 flex-1 gap-2">
                 <SearchSourceIcon source={item.source} />
                 <span className="shrink-0">
-                  {item.source.title || item.source.provider.title}
+                  {item.source.metadata.title || item.source.provider.title}
                 </span>
               </span>
             </CommandItem>

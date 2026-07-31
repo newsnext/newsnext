@@ -62,9 +62,14 @@ function CardContent({ id, source, dragHandle, isDraft = false, onDraftSourceCha
     ? `Failed to load source${errorMessage ? `: ${errorMessage}` : "."}`
     : undefined
   const displaySource = metadata
-    ? { ...source, ...metadata }
+    ? {
+        ...source,
+        metadata: {
+          ...source.metadata,
+          ...metadata,
+        },
+      }
     : source
-  const displayBadge = displaySource.badge
 
   // useEffect(() => {
   //   normalRefetch()
@@ -109,7 +114,6 @@ function CardContent({ id, source, dragHandle, isDraft = false, onDraftSourceCha
       flipped={isFlipped}
     >
       <CardFront
-        badge={displayBadge}
         source={displaySource}
         items={items}
         isFetching={isFetching}
@@ -124,7 +128,6 @@ function CardContent({ id, source, dragHandle, isDraft = false, onDraftSourceCha
         dragHandle={isFlipped ? undefined : dragHandle}
       />
       <CardBack
-        badge={displayBadge}
         id={id}
         source={displaySource}
         draftSourceParams={draftParams}

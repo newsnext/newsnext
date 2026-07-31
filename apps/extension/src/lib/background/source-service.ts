@@ -1,6 +1,6 @@
 import type {
   NewsItem,
-  SourceLoaderMetadata,
+  SourcePresentationMetadata,
 } from "@newsnext/source/types"
 import {
   normalizeSourceLoaderResult,
@@ -16,7 +16,7 @@ export interface LoadBackgroundSourceInput {
 
 export interface LoadBackgroundSourceOutput {
   items: NewsItem[]
-  metadata?: SourceLoaderMetadata
+  metadata?: SourcePresentationMetadata
   updatedAt: number
 }
 

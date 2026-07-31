@@ -60,7 +60,10 @@ function applyInstanceOverrides(
 
   return {
     ...source,
-    ...metadata,
+    metadata: {
+      ...source.metadata,
+      ...metadata,
+    },
     paramsValue: instance.patch.params,
   }
 }

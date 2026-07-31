@@ -16,7 +16,9 @@ const testSources: SourceDescriptor[] = [
       icon: "https://example.com/icon.png",
       color: "blue",
     },
-    home: "https://example.com",
+    metadata: {
+      home: "https://example.com",
+    },
     capabilities: {
       network: [],
       cookies: [],
@@ -34,7 +36,9 @@ const testSources: SourceDescriptor[] = [
       category: "social",
       color: "green",
     },
-    home: "https://latest.example.com",
+    metadata: {
+      home: "https://latest.example.com",
+    },
     capabilities: {
       network: [],
       cookies: [],
@@ -87,7 +91,9 @@ describe("buildSourceCards", () => {
     })
 
     expect(cards.map["test:feed::card_abc"]).toMatchObject({
-      title: "Custom Radar Title",
+      metadata: {
+        title: "Custom Radar Title",
+      },
     })
   })
 
@@ -110,10 +116,12 @@ describe("buildSourceCards", () => {
     })
 
     expect(cards.map["test:feed::card_abc"]).toMatchObject({
-      title: "Custom Title",
-      badge: "https://custom.example.com/badge.png",
-      desc: "Custom description",
-      home: "https://custom.example.com",
+      metadata: {
+        title: "Custom Title",
+        badge: "https://custom.example.com/badge.png",
+        desc: "Custom description",
+        home: "https://custom.example.com",
+      },
       provider: {
         icon: "https://example.com/icon.png",
         color: "blue",

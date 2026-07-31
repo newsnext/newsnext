@@ -1,6 +1,4 @@
-import type {
-  SourceLoaderMetadata,
-} from "@newsnext/source/types"
+import type { SourcePresentationMetadata } from "@newsnext/source/types"
 import type { NewsItem } from "@/typings/source"
 import {
   normalizeSourceParams,
@@ -17,7 +15,7 @@ const inFlightSourceLoads = new Map<string, Promise<SourceLoadResult>>()
 
 export interface SourceLoadResult {
   items: NewsItem[]
-  metadata?: SourceLoaderMetadata
+  metadata?: SourcePresentationMetadata
   updatedAt: number
 }
 

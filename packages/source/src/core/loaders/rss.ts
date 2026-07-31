@@ -1,4 +1,4 @@
-import type { SourceLoaderMetadata, SourceLoaderResult } from "../../types"
+import type { SourceLoaderResult, SourcePresentationMetadata } from "../../types"
 import { XMLParser } from "fast-xml-parser"
 import { sessionFetch } from "../../utils"
 import { normalizeLoaderMetadata } from "./shared"
@@ -11,7 +11,7 @@ interface RssItem {
 
 interface ParsedRssFeed {
   items: RssItem[]
-  metadata?: SourceLoaderMetadata
+  metadata?: SourcePresentationMetadata
 }
 
 export async function loadRss({ url }: { url: string }): Promise<SourceLoaderResult> {
@@ -52,6 +52,7 @@ export function parseRss(data: string): ParsedRssFeed | undefined {
     metadata: normalizeLoaderMetadata({
       badge: readRssImageUrl(channel.image),
       desc: readOptionalText(channel.description ?? channel.subtitle),
+      home: readFeedHome(channel.link),
       title: readOptionalText(channel.title),
     }),
   }
@@ -67,6 +68,23 @@ function readLink(value: unknown): string {
   if (typeof value === "string") return value
   if (!isRecord(value)) return ""
   return typeof value.href === "string" ? value.href : ""
+}
+
+function readFeedHome(value: unknown): string | undefined {
+  const links = Array.isArray(value) ? value : [value]
+  for (const link of links) {
+    if (typeof link === "string" && link) {
+      return link
+    }
+    if (
+      isRecord(link)
+      && link.rel !== "self"
+      && typeof link.href === "string"
+      && link.href
+    ) {
+      return link.href
+    }
+  }
 }
 
 function readOptionalText(value: unknown): string | undefined {

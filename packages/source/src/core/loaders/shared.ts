@@ -1,5 +1,5 @@
 import type {
-  SourceLoaderMetadata,
+  SourcePresentationMetadata,
   SourceTemplateVars,
 } from "../../types"
 
@@ -8,10 +8,8 @@ export interface LoaderContext {
   params?: Record<string, unknown>
 }
 
-export interface LoaderMetadataFields<TField> {
-  badge?: TField
-  desc?: TField
-  title?: TField
+export type LoaderMetadataFields<TField> = {
+  [K in keyof SourcePresentationMetadata]?: TField
 }
 
 export interface LoaderFields<TField> {
@@ -35,14 +33,14 @@ export interface LoaderFields<TField> {
 
 export function normalizeLoaderMetadata(
   values: Record<string, unknown>,
-): SourceLoaderMetadata | undefined {
+): SourcePresentationMetadata | undefined {
   const metadata = Object.fromEntries(
     Object.entries(values).flatMap(([key, value]) => (
       value === undefined || value === null || value === ""
         ? []
         : [[key, String(value)]]
     )),
-  ) as SourceLoaderMetadata
+  ) as SourcePresentationMetadata
 
   return Object.keys(metadata).length > 0 ? metadata : undefined
 }

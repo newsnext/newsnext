@@ -24,7 +24,6 @@ import { Ranking } from "./ranking"
 import { Timeline } from "./timeline"
 
 interface CardFrontProps {
-  badge?: string
   source: BoardSource
   items: NewsItem[]
   isFetching: boolean
@@ -141,7 +140,6 @@ function CardFrontContent({
 }
 
 function CardFrontComponent({
-  badge: displayBadge,
   source,
   items,
   isFetching,
@@ -156,7 +154,8 @@ function CardFrontComponent({
   actions,
   dragHandle,
 }: CardFrontProps) {
-  const { desc, provider, title, home } = source
+  const { provider } = source
+  const { badge, desc, home, title } = source.metadata
   const { color } = provider
   const icon = useSourceIcon(source)
   const ref = useRef<HTMLDivElement>(null)
@@ -180,7 +179,7 @@ function CardFrontComponent({
       />
       <div className="relative flex h-full flex-col p-3">
         <CardHeader
-          badge={displayBadge}
+          badge={badge}
           color={color}
           desc={desc}
           home={home}

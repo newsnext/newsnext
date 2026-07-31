@@ -8,6 +8,7 @@ describe("parseRss", () => {
         <channel>
           <title>阮一峰的网络日志</title>
           <description>Technology articles and notes</description>
+          <link>https://www.ruanyifeng.com/blog/</link>
           <image>
             <url>/feed-icon.png</url>
           </image>
@@ -27,6 +28,7 @@ describe("parseRss", () => {
       metadata: {
         badge: "/feed-icon.png",
         desc: "Technology articles and notes",
+        home: "https://www.ruanyifeng.com/blog/",
         title: "阮一峰的网络日志",
       },
     })
@@ -37,6 +39,8 @@ describe("parseRss", () => {
       <feed xmlns="http://www.w3.org/2005/Atom">
         <title>Example Atom Feed</title>
         <subtitle>Example Atom description</subtitle>
+        <link rel="self" href="https://example.com/feed.xml" />
+        <link rel="alternate" href="https://example.com/" />
         <entry>
           <title>Latest entry</title>
           <link href="https://example.com/entry" />
@@ -50,6 +54,7 @@ describe("parseRss", () => {
       }],
       metadata: {
         desc: "Example Atom description",
+        home: "https://example.com/",
         title: "Example Atom Feed",
       },
     })

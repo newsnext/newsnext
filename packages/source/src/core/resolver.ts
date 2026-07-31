@@ -354,7 +354,7 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
   }
 
   return {
-    ...resolvedMetadata,
+    metadata: resolvedMetadata,
     baseUrl,
     vars,
     params,

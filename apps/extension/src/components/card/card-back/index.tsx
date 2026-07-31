@@ -16,7 +16,6 @@ import { EditableImage, EditableInput, Info } from "./fields"
 import { ParamField } from "./param-field"
 
 export interface CardBackProps {
-  badge?: string
   id: string
   source: BoardSource
   draftSourceParams: Record<string, unknown>
@@ -34,7 +33,6 @@ export interface CardBackProps {
 }
 
 export function CardBack({
-  badge: displayBadge,
   id,
   source,
   draftSourceParams,
@@ -50,16 +48,20 @@ export function CardBack({
   isDraft = false,
   dragHandle,
 }: CardBackProps) {
-  const { desc, params, provider, title, home } = source
+  const { params, provider } = source
+  const { badge, desc, home, title } = source.metadata
   const { color } = provider
   const [editDraft, setEditDraft] = useState<SourceInstanceMetadata | null>(null)
   const [isEditingParams, setIsEditingParams] = useState(false)
   const isEditingMetadata = editDraft !== null
   const previewTitle = editDraft?.title ?? title
-  const previewBadge = editDraft?.badge ?? displayBadge
+  const previewBadge = editDraft?.badge ?? badge
   const previewDesc = editDraft?.desc ?? desc
   const previewHome = editDraft?.home ?? home
-  const icon = useSourceIcon({ provider, home: previewHome })
+  const icon = useSourceIcon({
+    provider,
+    metadata: { home: previewHome },
+  })
   const relativeTime = useRelativeTime({ date: updatedAt })
   const hasSourceMetaChanges = Boolean(editDraft && Object.keys(editDraft).length > 0)
 

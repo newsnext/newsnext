@@ -1,4 +1,4 @@
-import type { SourceCapabilities } from "@newsnext/source/types"
+import type { SourceDescriptor, SourceProvider } from "@newsnext/source/types"
 import { browser } from "#imports"
 import { getHostPermissionOrigins } from "@/lib/host-permissions"
 
@@ -16,12 +16,11 @@ export interface SourcePermissionRequest {
   permissions?: OptionalSourcePermission[]
 }
 
-export interface SourcePermissionTarget {
-  capabilities: SourceCapabilities
-  provider: {
-    title: string
-  }
-  title?: string
+export type SourcePermissionTarget = Pick<
+  SourceDescriptor,
+  "capabilities" | "metadata"
+> & {
+  provider: Pick<SourceProvider, "title">
 }
 
 export function getPermissionRequestForSource(source: SourcePermissionTarget): SourcePermissionRequest | undefined {
@@ -58,7 +57,7 @@ export function getSourcePermissionDescription(source: SourcePermissionTarget): 
   }) ?? []
 
   if (browserData.length > 0 && hosts.length === 0) {
-    return `Authorize access to your browser ${source.title?.toLowerCase() ?? "data"} to continue.`
+    return `Authorize access to your browser ${source.metadata.title?.toLowerCase() ?? "data"} to continue.`
   }
 
   if (hosts.length === 1) {

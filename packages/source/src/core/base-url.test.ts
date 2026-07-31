@@ -44,6 +44,7 @@ describe("source base URL", () => {
       items: [],
       metadata: {
         badge: "/account.png",
+        home: "/account",
         title: "Account",
       },
     }
@@ -51,6 +52,7 @@ describe("source base URL", () => {
       items: [],
       metadata: {
         badge: "https://example.com/account.png",
+        home: "https://example.com/account",
         title: "Account",
       },
     })

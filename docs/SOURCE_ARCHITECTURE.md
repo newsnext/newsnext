@@ -107,7 +107,7 @@ serialized directly into the generated registry and rendered as image sources;
 they do not add network or browser capabilities.
 
 When `icon` is absent, the extension presentation layer derives a favicon
-service URL from the resolved source `home` and the user's icon source
+service URL from the resolved source `metadata.home` and the user's icon source
 preference. The URL template supports `{hostname}`, `{origin}`, and `{url}`;
 the latter two substitutions are percent-encoded. An empty template disables
 the fallback. The extension persists the selected preset and template as a
@@ -150,6 +150,13 @@ The record key is the canonical source ID, such as `github:trending`.
 segment. Public descriptors receive an `id` only when the keyed runtime record
 is converted for clients.
 
+Static source presentation remains nested as
+`RuntimeSource.metadata: SourcePresentationMetadata`. Runtime resolution
+normalizes `metadata.home` and `metadata.badge` but does not flatten presentation
+fields onto the operational source object. Public `SourceDescriptor` and
+extension `BoardSource` preserve the same nested shape, so static metadata,
+instance patches, and loader results share one merge boundary.
+
 Registry parsing validates the entire wire format before resolving entries.
 Declarative registry entries keep their JSON, HTML, or RSS loader. An entry
 without a loader must have an exact match in the executable loader map and is
@@ -178,7 +185,7 @@ source ID and raw parameters
         ├─ execute the source loader
         ├─ normalize NewsItem[] to SourceLoaderResult
         ├─ reject an empty item result
-        ├─ cache items and dynamic title, description, and badge metadata
+        ├─ cache items and dynamic source presentation metadata
         └─ infer the card presentation from item timestamps and order in the UI
 ```
 
@@ -188,12 +195,30 @@ cache layers. A forced refresh bypasses stored cache data but still participates
 in in-flight deduplication.
 
 Loader metadata is response-scoped and remains part of the cached load result.
-While displayed, it overrides the source title, description, and badge without
-persisting those response-derived values into the saved source instance.
-Before the first successful load, the card continues to use static or Radar
+It uses the complete source presentation metadata shape: title, badge,
+description, and home URL. While displayed, it has the highest field-level
+priority over static metadata and persisted Radar or card-instance patches,
+without persisting response-derived values into the saved source instance.
+Before the first successful load, the card continues to use static or instance
 metadata. Loader metadata cannot satisfy the required Radar title for a
 parameterized source instance and does not replace discovery-time
 configuration.
+
+The presentation layer resolves effective metadata without changing the source
+execution configuration:
+
+```text
+RuntimeSource.metadata
+    → persisted instance patch.metadata
+    → SourceLoaderResult.metadata
+```
+
+Each step performs a field-level merge, with later values taking precedence.
+
+Loader metadata reuses responses already required to produce the items. Source
+loaders must not issue profile, community, channel, batch, or other companion
+requests only to enrich metadata. If the required item requests do not expose a
+field, authoring falls back to static or page-derived Radar metadata instead.
 
 The background and source runtime do not send a declared card type. They
 preserve loader output order, including through caching and transport. The
@@ -235,9 +260,9 @@ infer their requests, so custom loader capabilities must be declared.
 After any structured, RSS, or custom loader returns, the resolver applies the
 same optional `baseUrl` to explicit URL-bearing result fields. This boundary
 normalization covers item navigation URLs, image and iframe values, and dynamic
-badge metadata without interpreting arbitrary text or rewriting HTML strings.
-Static source home and badge metadata are normalized during registration.
-Radar home and badge patches use the same base during discovery.
+home and badge metadata without interpreting arbitrary text or rewriting HTML
+strings. Static source home and badge metadata are normalized during
+registration. Radar home and badge patches use the same base during discovery.
 
 ## Structured loader pipelines
 
@@ -275,10 +300,11 @@ makes output independent of declaration order and prevents template cycles.
 
 RSS loaders request the response as text explicitly because fetch clients may
 otherwise represent `application/rss+xml` responses as blobs. They parse the
-channel or feed title, description, and RSS channel image URL into dynamic
-loader metadata, then map entries directly to title, URL, and an optional
-timestamp. RSS metadata uses the same normalization, URL resolution, caching,
-and presentation override pipeline as JSON, HTML, and custom loader metadata.
+RSS channel title, description, home link, and image URL, or the Atom feed
+title, subtitle, and non-self home link, into dynamic loader metadata. They then
+map entries directly to title, URL, and an optional timestamp. RSS metadata uses
+the same normalization, URL resolution, caching, and presentation override
+pipeline as JSON, HTML, and custom loader metadata.
 
 ## Template compilation
 

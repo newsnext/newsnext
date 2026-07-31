@@ -99,7 +99,7 @@ at the origin root, while `items` is relative to the base URL's directory. Keep
 a trailing slash when the base represents a directory.
 
 When `baseUrl` is present, NewsNext resolves the structured loader request URL,
-static and Radar `home` and `badge` metadata, response `metadata.badge`, and
+static, Radar, and response `home` and `badge` metadata, and
 URL-bearing `NewsItem` values. These item values include `url`, `mobileUrl`,
 image `src` and `href` values, inline icons, preview pictures, and preview
 iframes. The same result normalization applies to RSS and custom loaders.
@@ -414,6 +414,7 @@ metadata: {
   title: "result.name",
   desc: "result.description",
   badge: "result.avatar",
+  home: "result.profileUrl",
 }
 ```
 
@@ -459,6 +460,10 @@ metadata: {
   },
   badge: {
     select: "link[rel='icon']",
+    attr: "href",
+  },
+  home: {
+    select: "link[rel='canonical']",
     attr: "href",
   },
 }
@@ -522,9 +527,9 @@ loader: {
 }
 ```
 
-The RSS loader returns the RSS channel title and description, or Atom feed
-title and subtitle, as dynamic loader metadata. For RSS feeds, it also returns
-`channel.image.url` as the dynamic badge when present.
+The RSS loader returns the RSS channel title, description, home link, and image
+as dynamic loader metadata when present. For Atom, it returns the feed title,
+subtitle, and non-self home link.
 
 Use a custom loader only when declarative loaders cannot express the source:
 
@@ -552,16 +557,25 @@ A loader returns `NewsItem[]` or:
   metadata: {
     badge: response.user.avatarUrl,
     desc: response.description,
+    home: response.profileUrl,
     title: response.name,
   },
 }
 ```
 
-Dynamic loader metadata supports `title`, `desc`, and `badge`. It is cached with
-the items and overrides static or Radar metadata while displayed. It is
-unavailable until the first successful request, does not satisfy the Radar
-title requirement, and is never persisted into the card instance. Use it for
-response-derived values, not for an icon repeated by every item.
+Dynamic loader metadata always supports the complete source metadata shape:
+`title`, `badge`, `desc`, and `home`. It is cached with the items and has the
+highest display priority, overriding static metadata and persisted Radar or
+card-instance patches field by field. It is unavailable until the first
+successful request, does not satisfy the Radar title requirement, and is never
+persisted into the card instance.
+
+When authoring a source, prefer loader metadata when a request already required
+to load the items returns the authoritative metadata. Loader metadata must
+never increase the request count: do not add a profile, channel, community, or
+other companion request only to obtain `title`, `badge`, `desc`, or `home`.
+When the required item request does not contain a field, use stable static
+metadata or a Radar metadata patch instead, or leave the optional field unset.
 
 Every item needs a non-empty `title` and `url`. Common optional fields are
 `mobileUrl`, `timestamp`, `inline`, and `preview`:
@@ -587,16 +601,13 @@ Timestamps are milliseconds. `inline` must contain at least one of `text`,
 contain `picture` or `iframe`.
 
 Minimize request count as part of the source contract. When one listing request
-can return both items and required metadata, directly or through expansion,
-include, or field-selection options, the loader must use that single request.
-Do not add a companion request only to enrich a badge, description, or item
-icon when the listing can provide the same value.
-
-Add another request only when required output is unavailable from the primary
-response. Never make one metadata request per item; use embedded data or a
-single batch endpoint when an additional request is unavoidable. This is
-especially important for authenticated sources because unnecessary API traffic
-can trigger rate limits, anti-abuse systems, or account suspension.
+can return both items and metadata, directly or through expansion, include, or
+field-selection options, the loader must use that single request. Metadata
+enrichment never justifies a companion request or batch request. Additional
+requests are allowed only when they are required to produce the items
+themselves. This is especially important for authenticated sources because
+unnecessary API traffic can trigger rate limits, anti-abuse systems, or account
+suspension.
 
 ## Cache, capabilities, and secrets
 
@@ -761,7 +772,8 @@ When a source has no parameters or explicit `radar`, an HTTP(S)
 out. Parameterized sources need explicit rules.
 
 Use `badge` for secondary instance identity. For signed or expiring images,
-return loader metadata instead of persisting the URL through Radar.
+return loader metadata only when the item request already provides the URL.
+Otherwise use page-derived Radar metadata rather than adding a loader request.
 
 ## Validation and verification
 

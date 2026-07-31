@@ -11,7 +11,8 @@ interface DragOverlayProps {
 }
 
 export function DragOverlay({ source }: DragOverlayProps) {
-  const { badge, provider, title } = source
+  const { provider } = source
+  const { badge, title } = source.metadata
   const { color } = provider
   const icon = useSourceIcon(source)
   return (

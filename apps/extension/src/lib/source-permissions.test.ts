@@ -29,7 +29,7 @@ function createSource({
     provider: {
       title: providerName,
     },
-    title,
+    metadata: { title },
   }
 }
 

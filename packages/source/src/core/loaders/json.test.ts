@@ -7,6 +7,7 @@ describe("resolveJsonMetadata", () => {
       result: {
         coverImgUrl: "https://example.com/cover.jpg",
         description: "Frequently updated tracks",
+        homeUrl: "https://example.com/charts/rising",
         name: "Rising Chart",
       },
     }
@@ -16,6 +17,7 @@ describe("resolveJsonMetadata", () => {
       {
         badge: "result.coverImgUrl",
         desc: "result.description",
+        home: "result.homeUrl",
         title: "result.name",
       },
       {
@@ -28,6 +30,7 @@ describe("resolveJsonMetadata", () => {
     )).toEqual({
       badge: "https://example.com/cover.jpg",
       desc: "Frequently updated tracks",
+      home: "https://example.com/charts/rising",
       title: "Rising Chart",
     })
   })

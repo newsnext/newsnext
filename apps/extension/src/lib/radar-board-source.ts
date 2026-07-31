@@ -17,7 +17,10 @@ export function createRadarBoardSource(
 
   return {
     ...descriptor,
-    ...patch.metadata,
+    metadata: {
+      ...descriptor.metadata,
+      ...patch.metadata,
+    },
     id: `tmp:radar:${suggestion.id}`,
     sourceId: suggestion.sourceId,
     boardId: null,
