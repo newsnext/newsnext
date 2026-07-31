@@ -453,6 +453,32 @@ describe("source template vars", () => {
     ]))).not.toThrow()
   })
 
+  it("allows parameterized Radar rules without title metadata", () => {
+    const config = createSourceConfig([
+      {
+        id: "test",
+        match: {
+          hosts: ["example.com"],
+          paths: ["/topics/:value"],
+        },
+        patch: {
+          params: {
+            value: "{{ scope.path.value }}",
+          },
+        },
+      },
+    ])
+    config.params = {
+      value: {
+        type: "text",
+        title: "Value",
+        default: "",
+      },
+    }
+
+    expect(() => resolveTestSource(config)).not.toThrow()
+  })
+
   it("rejects invalid Radar HTML fields", () => {
     expect(() => resolveTestSource(createSourceConfig([
       {

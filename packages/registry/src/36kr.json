@@ -22,8 +22,7 @@
   "sources": {
     "information": {
       "metadata": {
-        "title": "资讯",
-        "home": "/information/web_news/latest/"
+        "title": "资讯"
       },
       "params": {
         "channel": {
@@ -146,8 +145,7 @@
     },
     "newsflashes": {
       "metadata": {
-        "title": "快讯",
-        "home": "/newsflashes/catalog/0"
+        "title": "快讯"
       },
       "params": {
         "category": {

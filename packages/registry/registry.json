@@ -84,7 +84,7 @@
       }
     },
     "metadata": {
-      "home": "/information/web_news/latest/",
+      "home": "/",
       "title": "资讯"
     },
     "cache": "5m",
@@ -225,7 +225,7 @@
       }
     },
     "metadata": {
-      "home": "/newsflashes/catalog/0",
+      "home": "/",
       "title": "快讯"
     },
     "cache": "5m",
@@ -391,7 +391,7 @@
       "maxAge": "15m"
     },
     "metadata": {
-      "home": "/v/popular/rank/all",
+      "home": "/",
       "title": "排行榜"
     },
     "params": {
@@ -1802,7 +1802,7 @@
       "maxAge": "15m"
     },
     "metadata": {
-      "home": "/#/playlist?id=17990594711",
+      "home": "/",
       "title": "歌单"
     },
     "loader": {
@@ -1812,7 +1812,10 @@
       "metadata": {
         "badge": "result.coverImgUrl",
         "desc": "result.description",
-        "title": "result.name"
+        "title": "result.name",
+        "home": {
+          "template": "/#/playlist?id={{ scope.params.id | url_query }}"
+        }
       },
       "fields": {
         "title": "name",
@@ -1878,8 +1881,8 @@
       "maxAge": "15m"
     },
     "metadata": {
-      "home": "/#/discover/toplist?id=19723756",
-      "title": "飙升榜"
+      "home": "/",
+      "title": "排行榜"
     },
     "loader": {
       "type": "json",
@@ -1888,7 +1891,10 @@
       "metadata": {
         "badge": "result.coverImgUrl",
         "desc": "result.description",
-        "title": "result.name"
+        "title": "result.name",
+        "home": {
+          "template": "/#/discover/toplist?id={{ scope.params.id | url_query }}"
+        }
       },
       "fields": {
         "title": "name",

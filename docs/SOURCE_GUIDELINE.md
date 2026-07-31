@@ -121,6 +121,16 @@ metadata: {
 }
 ```
 
+Static source metadata must describe the source definition and remain correct
+for every valid parameter value. Do not put a concrete user, channel, feed,
+community, playlist, ranking, or other instance identity into static `title`,
+`badge`, `desc`, or `home`, even when it matches the parameter default. Use a
+generic static fallback such as `User Posts`, `Channel`, or `Playlist`.
+Resolve the concrete identity through Radar metadata or loader metadata from a
+request already required to load the items. Parameter-dependent home URLs
+belong at the same instance-aware layer; omit the static home when no useful
+parameter-independent URL exists.
+
 Provider categories are `social` (social platforms), `forum` (forums), `news`
 (news and readers), `finance` (finance), `developer` (developer platforms), and
 `entertainment` (entertainment). Set `category` at the top level when the
@@ -567,8 +577,8 @@ Dynamic loader metadata always supports the complete source metadata shape:
 `title`, `badge`, `desc`, and `home`. It is cached with the items and has the
 highest display priority, overriding static metadata and persisted Radar or
 card-instance patches field by field. It is unavailable until the first
-successful request, does not satisfy the Radar title requirement, and is never
-persisted into the card instance.
+successful request and is never persisted into the card instance. A loader
+title may provide the effective title for a card created through Radar.
 
 When authoring a source, prefer loader metadata when a request already required
 to load the items returns the authoritative metadata. Loader metadata must
@@ -728,10 +738,11 @@ Map each parameter explicitly in `patch.params`. Values can read
 `scope.path`, `scope.query`, `scope.hashQuery`, and `source.vars`. Missing
 values fall back to parameter defaults; invalid values discard the suggestion.
 
-Every Radar rule that discovers a parameterized source instance must provide a
-non-empty `patch.metadata.title`. This remains required when the loader also
-returns a dynamic title: Radar owns the title before loading and provides the
-fallback when loading fails.
+`patch.metadata.title` is optional, including for parameterized sources. Omit it
+when the item request already returns the authoritative title through loader
+metadata. Before the first successful load, or when loading fails, the card
+falls back to the static source title and then the provider title. Add a Radar
+title only when the discovered page provides a better preview or fallback.
 
 Radar resolves and validates parameters before metadata. Metadata strings can
 then read `scope.params` and `scope.page.title`:

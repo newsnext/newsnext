@@ -41,8 +41,7 @@
   "sources": {
     "playlist": {
       "metadata": {
-        "title": "歌单",
-        "home": "/#/playlist?id=17990594711"
+        "title": "歌单"
       },
       "params": {
         "id": {
@@ -77,12 +76,18 @@
           },
           "confidence": 0.95
         }
-      ]
+      ],
+      "loader": {
+        "metadata": {
+          "home": {
+            "template": "/#/playlist?id={{ scope.params.id | url_query }}"
+          }
+        }
+      }
     },
     "ranking": {
       "metadata": {
-        "title": "飙升榜",
-        "home": "/#/discover/toplist?id=19723756"
+        "title": "排行榜"
       },
       "params": {
         "id": {
@@ -117,7 +122,14 @@
           },
           "confidence": 0.95
         }
-      ]
+      ],
+      "loader": {
+        "metadata": {
+          "home": {
+            "template": "/#/discover/toplist?id={{ scope.params.id | url_query }}"
+          }
+        }
+      }
     }
   }
 }

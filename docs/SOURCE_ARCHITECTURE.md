@@ -200,9 +200,9 @@ description, and home URL. While displayed, it has the highest field-level
 priority over static metadata and persisted Radar or card-instance patches,
 without persisting response-derived values into the saved source instance.
 Before the first successful load, the card continues to use static or instance
-metadata. Loader metadata cannot satisfy the required Radar title for a
-parameterized source instance and does not replace discovery-time
-configuration.
+metadata and ultimately the provider title. Radar title patches are optional,
+including for parameterized sources; a successful loader result may provide the
+effective title without changing discovery-time configuration.
 
 The presentation layer resolves effective metadata without changing the source
 execution configuration:

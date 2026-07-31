@@ -373,7 +373,6 @@ export default {
     },
     "ranking": {
       metadata: {
-        home: "/v/popular/rank/all",
         title: "排行榜",
       },
       params: {
