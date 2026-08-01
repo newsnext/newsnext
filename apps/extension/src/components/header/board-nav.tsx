@@ -20,11 +20,11 @@ import {
   DialogTitle,
 } from "@newsnext/ui/components/dialog"
 import { Input } from "@newsnext/ui/components/input"
-import { RadioGroup, RadioGroupItem } from "@newsnext/ui/components/radio-group"
 import { useNavigate } from "@tanstack/react-router"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { m } from "motion/react"
 import { useState } from "react"
+import { SegmentedControl } from "@/components/common/segmented-control"
 import { ThemeSelector } from "@/components/common/theme-selector"
 import { PhPlusCircleDuotone, PhTrashDuotone } from "@/components/icons/ph"
 import { getBoardSortPreference } from "@/lib/board-sorting"
@@ -45,6 +45,8 @@ const SORT_OPTIONS: { label: string, value: BoardSortMode }[] = [
   { label: "Date added", value: "createdAt" },
   { label: "Provider name", value: "provider" },
 ]
+
+const BOARD_DIALOG_SURFACE_CLASS = "bg-[color-mix(in_oklab,var(--popover)_60%,var(--color-theme-400)_40%)] ring-0 before:pointer-events-none before:absolute before:inset-0 before:bg-background/80 before:content-['']"
 
 function BoardEditDialog({
   boardId,
@@ -101,10 +103,13 @@ function BoardEditDialog({
           }
         }}
       >
-        <DialogContent className="sm:max-w-lg" surfaceClassName="gap-5">
-          <form className="grid gap-5" onSubmit={handleSubmit}>
+        <DialogContent
+          className="sm:max-w-lg"
+          surfaceClassName={cn(color, BOARD_DIALOG_SURFACE_CLASS)}
+        >
+          <form className="relative grid gap-5" onSubmit={handleSubmit}>
             <DialogHeader>
-              <DialogTitle>Edit tab</DialogTitle>
+              <DialogTitle>Edit board</DialogTitle>
               <DialogDescription>
                 Personalize this board and choose how its cards are arranged.
               </DialogDescription>
@@ -121,13 +126,13 @@ function BoardEditDialog({
                 onChange={event => setName(event.target.value)}
                 aria-invalid={hasDuplicateName}
               />
-              {isAllBoard && <p className="text-xs text-muted-foreground">The All tab has a fixed name.</p>}
+              {isAllBoard && <p className="text-xs text-muted-foreground">The All board has a fixed name.</p>}
               {hasDuplicateName && <p className="text-xs text-destructive">A board with this name already exists.</p>}
             </div>
 
-            <fieldset className="grid gap-3">
+            <fieldset className="grid gap-2">
               <legend className="text-sm font-medium">Theme color</legend>
-              <div className="mx-auto h-40 w-[300px] max-w-full rounded-2xl bg-foreground/3 p-2 ring-1 ring-foreground/5">
+              <div className="h-24">
                 <ThemeSelector
                   value={color}
                   onValueChange={setColor}
@@ -136,33 +141,26 @@ function BoardEditDialog({
               </div>
             </fieldset>
 
-            <fieldset className="grid gap-3">
+            <fieldset className="grid gap-2">
               <legend className="text-sm font-medium">Card order</legend>
-              <RadioGroup
+              <SegmentedControl<BoardSortMode>
+                items={SORT_OPTIONS}
                 value={sortMode}
-                onValueChange={value => setSortMode(value as BoardSortMode)}
-                className="grid gap-2 sm:grid-cols-3"
-              >
-                {SORT_OPTIONS.map(option => (
-                  <label
-                    key={option.value}
-                    className="flex items-center gap-2 rounded-2xl bg-foreground/3 px-3 py-2.5 text-sm ring-1 ring-foreground/5 transition-colors hover:bg-foreground/6 hover:ring-foreground/15 has-[[data-checked]]:bg-primary/10 has-[[data-checked]]:ring-primary/30 has-[[data-checked]]:hover:bg-primary/15"
-                  >
-                    <RadioGroupItem value={option.value} />
-                    {option.label}
-                  </label>
-                ))}
-              </RadioGroup>
+                onValueChange={setSortMode}
+                className="w-full gap-1"
+                itemClassName="min-w-0 flex-1 px-2"
+                layoutId="board-edit-sort-indicator"
+              />
             </fieldset>
 
             <DialogFooter className={cn(!isAllBoard && "sm:justify-between")}>
               {!isAllBoard && (
                 <Button type="button" variant="destructive" onClick={() => setIsDeleteOpen(true)}>
                   <PhTrashDuotone />
-                  Delete tab
+                  Delete board
                 </Button>
               )}
-              <Button type="submit" disabled={!canSave}>Save changes</Button>
+              <Button type="submit" className="text-white" disabled={!canSave}>Save changes</Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -172,15 +170,15 @@ function BoardEditDialog({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {`Delete ${board ? getBoardDisplayName(board) : "this tab"}?`}
+              {`Delete ${board ? getBoardDisplayName(board) : "this board"}?`}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              The tab will be removed. Its cards will remain available in All.
+              The board will be removed. Its cards will remain available in All.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Keep tab</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" onClick={handleDelete}>Delete tab</AlertDialogAction>
+            <AlertDialogCancel>Keep board</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" onClick={handleDelete}>Delete board</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -201,6 +199,8 @@ function CreateBoardDialog({
   const currentBoardId = useAtomValue(currentBoardIdAtom)
   const setCurrentBoardId = useSetAtom(currentBoardIdAtom)
   const [name, setName] = useState("")
+  const currentBoard = boards.find(board => board.id === currentBoardId)
+  const color = currentBoard ? getBoardColor(currentBoard) : "red"
   const normalizedName = name.trim()
   const hasDuplicateName = isBoardNameTaken(boards, normalizedName)
   const canCreate = normalizedName.length > 0 && !hasDuplicateName
@@ -211,8 +211,7 @@ function CreateBoardDialog({
       return
     }
 
-    const currentBoard = boards.find(board => board.id === currentBoardId)
-    const board = createBoard(normalizedName, currentBoard ? getBoardColor(currentBoard) : undefined)
+    const board = createBoard(normalizedName, color)
     addBoard(board)
     setCurrentBoardId(board.id)
     void navigate({ to: "/board/$boardId", params: { boardId: board.id } })
@@ -230,15 +229,17 @@ function CreateBoardDialog({
         onOpenChange(nextOpen)
       }}
     >
-      <DialogContent>
-        <form className="grid gap-6" onSubmit={handleSubmit}>
+      <DialogContent
+        surfaceClassName={cn(color, BOARD_DIALOG_SURFACE_CLASS)}
+      >
+        <form className="relative grid gap-6" onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>Create board</DialogTitle>
             <DialogDescription>
               Group cards around a topic, project, or reading routine.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-2">
+          <div className="grid gap-2">
             <label htmlFor="board-name" className="text-sm font-medium">Board name</label>
             <Input
               id="board-name"
@@ -254,7 +255,7 @@ function CreateBoardDialog({
             )}
           </div>
           <DialogFooter>
-            <Button type="submit" disabled={!canCreate}>Create board</Button>
+            <Button type="submit" className="text-white" disabled={!canCreate}>Create board</Button>
           </DialogFooter>
         </form>
       </DialogContent>

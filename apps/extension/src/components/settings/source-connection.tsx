@@ -3,6 +3,7 @@ import { Switch } from "@newsnext/ui/components/switch"
 import { useCallback, useEffect, useState } from "react"
 import { useRelativeTime } from "@/hooks/useRelativeTime"
 import { createBackgroundClient } from "@/lib/background-client"
+import { SettingsPanel, SettingsSection } from "./layout"
 
 const STATUS_LABELS: Record<SourceConnectionStatus["state"], string> = {
   disabled: "Disabled",
@@ -62,15 +63,11 @@ export function SourceConnectionSettings(): React.JSX.Element {
     date: status?.connectedAt ?? 0,
   })
   return (
-    <section className="space-y-3">
-      <div className="space-y-1">
-        <h3 className="text-sm font-medium">CLI Connection</h3>
-        <p className="text-sm text-muted-foreground">
-          Connection between this extension and the NewsNext CLI.
-        </p>
-      </div>
-
-      <div className="rounded-xl border p-4">
+    <SettingsSection
+      title="CLI connection"
+      description="Connection between this extension and the NewsNext CLI."
+    >
+      <SettingsPanel>
         <div className="flex items-center justify-between gap-4">
           <div className="min-w-0">
             <label htmlFor="source-connection-enabled" className="text-sm font-medium">
@@ -128,7 +125,7 @@ export function SourceConnectionSettings(): React.JSX.Element {
             </p>
           )}
         </div>
-      </div>
-    </section>
+      </SettingsPanel>
+    </SettingsSection>
   )
 }

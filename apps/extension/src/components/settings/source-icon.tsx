@@ -13,6 +13,7 @@ import {
   SOURCE_ICON_PRESETS,
 } from "@/lib/source-icon"
 import { sourceIconSettingsAtom } from "@/store/settings"
+import { SettingsPanel, SettingsSection } from "./layout"
 
 const SOURCE_OPTIONS = [
   { label: SOURCE_ICON_PRESETS.folo.label, value: "folo" },
@@ -43,15 +44,11 @@ export function SourceIconSettings(): React.JSX.Element {
   }
 
   return (
-    <section className="space-y-3">
-      <div className="space-y-1">
-        <h3 className="text-sm font-medium">Source Icons</h3>
-        <p className="text-sm text-muted-foreground">
-          Choose how icons are generated when a provider does not include one.
-        </p>
-      </div>
-
-      <div className="space-y-4 rounded-xl border p-4">
+    <SettingsSection
+      title="Source icons"
+      description="Choose how icons are generated when a provider does not include one."
+    >
+      <SettingsPanel className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="source-icon-service">Icon source</Label>
           <Select value={settings.source} onValueChange={handleSourceChange}>
@@ -106,7 +103,7 @@ export function SourceIconSettings(): React.JSX.Element {
             </div>
           )}
         </div>
-      </div>
-    </section>
+      </SettingsPanel>
+    </SettingsSection>
   )
 }

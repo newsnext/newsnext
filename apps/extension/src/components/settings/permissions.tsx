@@ -1,3 +1,4 @@
+import { Button } from "@newsnext/ui/components/button"
 import { useCallback, useEffect, useState } from "react"
 import { browser } from "#imports"
 import {
@@ -5,6 +6,7 @@ import {
   getUserManagedHostPermissionOrigins,
   revokeHostPermissionOrigin,
 } from "@/lib/host-permissions"
+import { SettingsPanel, SettingsSection } from "./layout"
 
 const MANAGED_PERMISSIONS = [
   {
@@ -100,76 +102,75 @@ export function PermissionsSettings() {
 
   return (
     <div className="space-y-8">
-      <div className="space-y-3">
-        <div className="space-y-1">
-          <h3 className="text-sm font-medium">Browser Permissions</h3>
-          <p className="text-sm text-muted-foreground">
-            Permissions currently granted to NewsNext and what they are used for.
-          </p>
-        </div>
+      <SettingsSection
+        title="Browser permissions"
+        description="Permissions currently granted to NewsNext and what they are used for."
+      >
         {visiblePermissions.length === 0
           ? (
-              <div className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
+              <SettingsPanel className="text-sm text-muted-foreground">
                 No browser permissions have been granted.
-              </div>
+              </SettingsPanel>
             )
           : (
-              <ul className="divide-y rounded-xl border">
-                {visiblePermissions.map(permission => (
-                  <li key={permission.id} className="flex items-center justify-between gap-4 p-3">
-                    <div className="min-w-0 space-y-1">
-                      <div className="text-sm font-medium">{permission.label}</div>
-                      <div className="text-xs leading-5 text-muted-foreground">
-                        {permission.description}
+              <SettingsPanel className="p-0">
+                <ul className="divide-y divide-border/50">
+                  {visiblePermissions.map(permission => (
+                    <li key={permission.id} className="flex items-center justify-between gap-4 px-4 py-3">
+                      <div className="min-w-0 space-y-1">
+                        <div className="text-sm font-medium">{permission.label}</div>
+                        <div className="text-xs leading-5 text-muted-foreground">
+                          {permission.description}
+                        </div>
                       </div>
-                    </div>
-                    <button
-                      type="button"
-                      className="shrink-0 rounded-lg border px-3 py-1.5 text-xs font-medium transition hover:bg-muted disabled:cursor-wait disabled:opacity-50"
-                      disabled={revokingPermission === permission.id}
-                      onClick={() => void handleRevokePermission(permission.id)}
-                    >
-                      {revokingPermission === permission.id ? "Revoking..." : "Revoke"}
-                    </button>
-                  </li>
-                ))}
-              </ul>
+                      <Button
+                        variant="outline"
+                        size="xs"
+                        disabled={revokingPermission === permission.id}
+                        onClick={() => void handleRevokePermission(permission.id)}
+                      >
+                        {revokingPermission === permission.id ? "Revoking..." : "Revoke"}
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              </SettingsPanel>
             )}
-      </div>
+      </SettingsSection>
 
-      <div className="space-y-1">
-        <h3 className="text-sm font-medium">Site Access</h3>
-        <p className="text-sm text-muted-foreground">
-          NewsNext requests access only when a source needs a site. Revoked sources will ask again before loading.
-        </p>
-      </div>
-
-      {origins.length === 0
-        ? (
-            <div className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
-              No site access has been granted.
-            </div>
-          )
-        : (
-            <ul className="divide-y rounded-xl border">
-              {origins.map(origin => (
-                <li key={origin} className="flex items-center justify-between gap-4 p-3">
-                  <div className="min-w-0">
-                    <div className="truncate text-sm font-medium">{getOriginLabel(origin)}</div>
-                    <div className="truncate text-xs text-muted-foreground">{origin}</div>
-                  </div>
-                  <button
-                    type="button"
-                    className="shrink-0 rounded-lg border px-3 py-1.5 text-xs font-medium transition hover:bg-muted disabled:cursor-wait disabled:opacity-50"
-                    disabled={revokingOrigin === origin}
-                    onClick={() => void handleRevokeOrigin(origin)}
-                  >
-                    {revokingOrigin === origin ? "Revoking..." : "Revoke"}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
+      <SettingsSection
+        title="Site access"
+        description="NewsNext requests access only when a source needs a site. Revoked sources will ask again before loading."
+      >
+        {origins.length === 0
+          ? (
+              <SettingsPanel className="text-sm text-muted-foreground">
+                No site access has been granted.
+              </SettingsPanel>
+            )
+          : (
+              <SettingsPanel className="p-0">
+                <ul className="divide-y divide-border/50">
+                  {origins.map(origin => (
+                    <li key={origin} className="flex items-center justify-between gap-4 px-4 py-3">
+                      <div className="min-w-0">
+                        <div className="truncate text-sm font-medium">{getOriginLabel(origin)}</div>
+                        <div className="truncate text-xs text-muted-foreground">{origin}</div>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="xs"
+                        disabled={revokingOrigin === origin}
+                        onClick={() => void handleRevokeOrigin(origin)}
+                      >
+                        {revokingOrigin === origin ? "Revoking..." : "Revoke"}
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              </SettingsPanel>
+            )}
+      </SettingsSection>
     </div>
   )
 }
