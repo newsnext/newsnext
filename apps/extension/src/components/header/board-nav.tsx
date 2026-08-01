@@ -280,6 +280,8 @@ export function BoardNav() {
               type="button"
               whileTap={isActive ? { scale: 0.94 } : undefined}
               transition={{ type: "spring", stiffness: 500, damping: 28 }}
+              onPointerEnter={event => event.currentTarget.toggleAttribute("data-editable", isActive)}
+              onPointerLeave={event => event.currentTarget.removeAttribute("data-editable")}
               onClick={() => {
                 if (isActive) {
                   setEditingBoardId(board.id)
@@ -309,7 +311,7 @@ export function BoardNav() {
               {isActive && (
                 <span
                   aria-hidden="true"
-                  className="absolute bottom-1 left-1/2 z-10 flex -translate-x-1/2 gap-[2px] opacity-0 transition-opacity duration-150 group-hover/board-tab:opacity-80 group-focus-visible/board-tab:opacity-80"
+                  className="absolute bottom-1 left-1/2 z-10 flex -translate-x-1/2 gap-[2px] opacity-0 group-data-[editable]/board-tab:opacity-80"
                 >
                   <span className="size-[3px] rounded-full bg-current" />
                   <span className="size-[3px] rounded-full bg-current" />
