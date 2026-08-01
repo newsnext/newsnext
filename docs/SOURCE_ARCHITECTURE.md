@@ -423,6 +423,18 @@ represents the user's logged-in browser session. A loader may explicitly use
 controls which origins the source may contact; the cookies capability is
 reserved for cookie-backed secrets that read specific values.
 
+The shared `sessionFetch` client queues requests by normalized hostname. Each
+hostname runs one request at a time and observes the centralized minimum start
+interval, while different hostnames remain independent. The queue wraps normal,
+raw, native, derived, and retried `ofetch` calls. Custom loaders must use this
+client rather than global `fetch`; direct browser fetches remain outside the
+queue and are not an accepted source-loader request path.
+
+Each hostname owns a long-lived `p-queue` instance with concurrency `1` and a
+strict sliding-window rate limit. Keeping the queue for the source runtime's
+lifetime preserves the interval across idle periods; discarding an idle queue
+would let the next request bypass the protection window.
+
 The extension resolves cookie and local-storage secrets immediately before a
 background loader runs. A loader receives only the values defined by its source.
 `updateSecrets` persists refreshed values through the same source/provider

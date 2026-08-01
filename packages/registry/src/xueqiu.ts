@@ -19,7 +19,7 @@ export default {
         type: "json",
         url: "https://stock.xueqiu.com/v5/stock/hot_stock/list.json?size=30&_type=10&type=10",
         fetch: async (url) => {
-          await sessionFetch.raw(`${XUEQIU_ORIGIN}/hq`)
+          await sessionFetch(`${XUEQIU_ORIGIN}/hq`)
           return sessionFetch(url)
         },
         items: "data.items[?ad == `0` || ad == `null`]",

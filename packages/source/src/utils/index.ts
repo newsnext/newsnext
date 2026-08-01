@@ -1,3 +1,3 @@
 export * from "./crypto"
-export * from "./fetch"
 export * from "./jwt"
+export * from "./request"

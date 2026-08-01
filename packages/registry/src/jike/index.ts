@@ -33,9 +33,10 @@ async function refreshJikeAccessToken(
   if (!refreshToken) return undefined
 
   try {
-    const response = await fetch(REFRESH_AUTH_TOKEN_URL, {
+    const response = await sessionFetch.raw(REFRESH_AUTH_TOKEN_URL, {
       method: "POST",
       credentials: "include",
+      retry: false,
       headers: {
         "content-type": "application/json",
         "platform": "web",

@@ -688,6 +688,12 @@ Use `credentials: "omit"` only when a request must be explicitly anonymous.
 Do not declare cookie secrets merely to authenticate a request; cookie secrets
 are for reading a specific value that the loader must inspect.
 
+`sessionFetch` serializes requests per hostname and spaces their start times to
+avoid bursts when multiple card instances target the same service. Custom
+loaders and structured-loader custom `fetch` callbacks must use `sessionFetch`
+instead of the global `fetch` so their requests participate in this protection.
+Requests to different hostnames may run in parallel.
+
 When an API requires a cookie issued or refreshed by a page visit, a TypeScript
 structured loader may use a custom `fetch` that first requests the bootstrap
 page and then fetches the API. Both requests inherit the logged-in browser
