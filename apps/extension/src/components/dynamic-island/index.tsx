@@ -124,7 +124,7 @@ function DynamicIsland({
           className,
           isSmall
             ? [
-                "cursor-pointer select-none duration-300 hover:[--scale:1.05]",
+                "select-none duration-300 hover:[--scale:1.05]",
                 (initialAnimation || hasMountedRef.current) && "animate-[turn-to-small_0.4s_ease-out_both]",
                 smallClassName,
               ]

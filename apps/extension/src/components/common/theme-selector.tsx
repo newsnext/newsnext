@@ -18,7 +18,7 @@ export function ThemeSelector({ value, onValueChange, layoutId = "theme-indicato
           key={color}
           type="button"
           className={cn(
-            "text-theme-500 size-8 hover:scale-110 cursor-pointer p-0 relative self-center justify-self-center",
+            "text-theme-500 size-8 hover:scale-110 p-0 relative self-center justify-self-center",
             color,
           )}
           onClick={(e) => {

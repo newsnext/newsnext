@@ -10,7 +10,7 @@ export function Footer(): React.JSX.Element {
     >
       <p className="leading-relaxed flex-center gap-1">
         <Logo className="size-4 text-theme-500" />
-        <WordmarkLogo className="w-[4.6em] h-auto cursor-pointer transition-opacity" accentClassName="text-theme-500" />
+        <WordmarkLogo className="w-[4.6em] h-auto transition-opacity" accentClassName="text-theme-500" />
         <span className="tabular-nums">
           ©
           {CURRENT_YEAR}

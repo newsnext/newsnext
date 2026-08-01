@@ -27,7 +27,7 @@ export function UserMenu() {
       <DropdownMenu>
         <DropdownMenuTrigger
           className={cn(
-            "flex size-10 items-center justify-center rounded-full text-white font-semibold text-base pointer-events-auto cursor-pointer outline-none",
+            "flex size-10 items-center justify-center rounded-full text-white font-semibold text-base pointer-events-auto outline-none",
             "island-pill bg-linear-to-br from-theme-400 to-theme-600 hover:from-theme-500 hover:to-theme-700",
           )}
           title="Settings"

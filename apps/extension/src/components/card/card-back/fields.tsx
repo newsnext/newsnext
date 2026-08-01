@@ -113,7 +113,7 @@ export function Text({ text }: { text: string }) {
     <span
       className={cn(
         "flex h-6 w-full items-center justify-end rounded-3xl border border-transparent pl-2 font-normal leading-none",
-        isLink && "cursor-pointer hover:underline",
+        isLink && "hover:underline",
       )}
       title={text}
       onClick={() => {

@@ -36,7 +36,7 @@ export function CardHeader({
       <div className="flex gap-2.5 items-center ml-1 min-w-0 flex-1">
         <button
           type="button"
-          className="size-8 shrink-0 rounded-full cursor-pointer"
+          className="size-8 shrink-0 rounded-full transition-transform hover:scale-105"
           title={desc || provider.title}
           onClick={() => window.open(home || "#", "_blank")}
         >

@@ -98,7 +98,7 @@ function HeaderProgress({ scrollContainerRef }: HeaderProgressProps) {
                 transition={{ duration: 0.2 }}
               >
                 <Logo className="text-theme-500 size-5" />
-                <WordmarkLogo className="w-[4.6em] h-auto text-xl cursor-pointer transition-opacity" accentClassName="text-theme-500" />
+                <WordmarkLogo className="w-[4.6em] h-auto text-xl transition-opacity" accentClassName="text-theme-500" />
               </m.div>
             )
           : (
@@ -111,7 +111,7 @@ function HeaderProgress({ scrollContainerRef }: HeaderProgressProps) {
                 transition={{ duration: 0.2 }}
               >
                 <PhArrowFatUpDuotone className="text-theme-400 size-5" />
-                <span className="text-xl font-bold whitespace-nowrap cursor-pointer transition-opacity">
+                <span className="text-xl font-bold whitespace-nowrap transition-opacity">
                   Go to top
                 </span>
               </m.div>
@@ -156,7 +156,7 @@ export function TitleIsland({ scrollContainerRef, width = 150 }: TitleIslandProp
       <DynamicIsland
         top={0}
         wrapperClassName="absolute top-[26px] inset-x-0"
-        smallClassName="relative flex gap-2 items-center px-4 shrink-0 pointer-events-auto cursor-pointer island-pill"
+        smallClassName="relative flex gap-2 items-center px-4 shrink-0 pointer-events-auto island-pill"
         largeClassName="p-3 sunrise-theme-500 rounded-2xl pointer-events-auto"
         smallHeight={40}
         smallWidth={width}

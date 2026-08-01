@@ -56,7 +56,7 @@ export function SegmentedControl<T extends string>({
             type="button"
             onClick={() => onValueChange(item.value)}
             className={cn(
-              "relative px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors outline-none cursor-pointer",
+              "relative px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all outline-none hover:scale-105",
               isActive ? "text-white" : "text-muted-foreground hover:text-foreground",
               itemClassName,
             )}

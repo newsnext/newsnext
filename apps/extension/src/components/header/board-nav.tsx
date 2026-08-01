@@ -146,7 +146,7 @@ function BoardEditDialog({
                 {SORT_OPTIONS.map(option => (
                   <label
                     key={option.value}
-                    className="flex cursor-pointer items-center gap-2 rounded-2xl bg-foreground/3 px-3 py-2.5 text-sm ring-1 ring-foreground/5 transition-colors has-[[data-checked]]:bg-primary/10 has-[[data-checked]]:ring-primary/30"
+                    className="flex items-center gap-2 rounded-2xl bg-foreground/3 px-3 py-2.5 text-sm ring-1 ring-foreground/5 transition-colors hover:bg-foreground/6 hover:ring-foreground/15 has-[[data-checked]]:bg-primary/10 has-[[data-checked]]:ring-primary/30 has-[[data-checked]]:hover:bg-primary/15"
                   >
                     <RadioGroupItem value={option.value} />
                     {option.label}
