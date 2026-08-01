@@ -39,6 +39,7 @@ import {
   validateJsonExpression,
 } from "./loaders/json"
 import { loadRss } from "./loaders/rss"
+import { validateSortByTimestamp } from "./loaders/shared"
 import { parseSourceParamValue } from "./params"
 import { validateRadarRules } from "./radar"
 import {
@@ -142,6 +143,10 @@ export function validateSourceTemplates(sourceId: string, config: SourceConfig):
   }
 
   if (loader.type === "json") {
+    validateSortByTimestamp(
+      loader.sortByTimestamp,
+      `${sourceId}.loader.sortByTimestamp`,
+    )
     if (typeof loader.items === "string") {
       validateJsonExpressionAt(loader.items, `${sourceId}.loader.items`)
     }
@@ -149,6 +154,10 @@ export function validateSourceTemplates(sourceId: string, config: SourceConfig):
     validateJsonFieldExpressions(loader.metadata, `${sourceId}.loader.metadata`)
     compileJsonLoaderTemplates(loader, `${sourceId}.loader`)
   } else if (loader.type === "html") {
+    validateSortByTimestamp(
+      loader.sortByTimestamp,
+      `${sourceId}.loader.sortByTimestamp`,
+    )
     compileHtmlLoaderTemplates(loader, `${sourceId}.loader`)
   }
 

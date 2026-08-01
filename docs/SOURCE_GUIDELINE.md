@@ -190,10 +190,18 @@ when every item has a finite timestamp and the items are already ordered from
 newest to oldest; otherwise it presents the result as a ranking. An empty
 loader result is rejected as a load error.
 
-JSON and HTML loaders preserve the selected item order. Express any intentional
-ordering in the upstream request, the JSON `items` JMESPath expression, or
-custom loader code. In particular, keep ranked or popularity-based results in
-their upstream order even when every item includes a timestamp.
+JSON and HTML loaders preserve the selected item order by default. When a page
+groups chronological items instead of ordering them globally, opt into sorting
+the normalized timestamps from newest to oldest:
+
+```ts
+sortByTimestamp: true
+```
+
+Items without timestamps remain last. Prefer upstream order for ranked or
+popularity-based results even when every item includes a timestamp. Other
+intentional ordering belongs in the upstream request, the JSON `items` JMESPath
+expression, or custom loader code.
 
 Write human-facing strings in the website's primary interface language. Keep
 brand names, IDs, parameter keys and values, and selectors unchanged.

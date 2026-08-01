@@ -288,13 +288,16 @@ requests only to enrich metadata. If the required item requests do not expose a
 field, authoring falls back to static or page-derived Radar metadata instead.
 
 The background and source runtime do not send a declared card type. They
-preserve loader output order, including through caching and transport. The
-frontend renders a timeline only when the non-empty result has a finite
-timestamp on every item and those timestamps are monotonically non-increasing.
+preserve loader output order, including through caching and transport. JSON and
+HTML loaders may first apply their shared optional `sortByTimestamp` step after
+field normalization; it orders items newest first and keeps missing timestamps
+last. The frontend renders a timeline only when the non-empty result has a
+finite timestamp on every item and those timestamps are monotonically
+non-increasing.
 All other non-empty results render as a ranking. Empty results fail before
 caching or presentation. A provider may deliberately sort inside a request,
-JMESPath selection, or custom loader when chronological order is the correct
-source behavior; generic JSON and HTML loaders do not reorder items.
+JMESPath selection, structured loader configuration, or custom loader when
+chronological order is the correct source behavior.
 
 The extension executes registry access and source loaders through its background
 service so loaders can use extension host permissions, cookie and local-storage
@@ -364,6 +367,7 @@ request
     → select each field with JMESPath
     → render field Liquid templates
     → normalize and validate NewsItem values
+    → optionally sort normalized timestamps newest first
 ```
 
 JSON and HTML helper contracts use `*LoaderOptions` for loader configuration
@@ -381,6 +385,7 @@ request
     → render field Liquid templates
     → select and render document metadata
     → normalize and validate NewsItem values
+    → optionally sort normalized timestamps newest first
 ```
 
 All item or metadata fields in a group are extracted before that group's

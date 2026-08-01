@@ -3258,7 +3258,8 @@
           "select": ".pdt10",
           "template": "{{ scope.value | replace: '- ', 'T' | append: '+08:00' | date_to_ms }}"
         }
-      }
+      },
+      "sortByTimestamp": true
     },
     "cache": "5m",
     "provider": {

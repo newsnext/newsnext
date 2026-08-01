@@ -14,13 +14,18 @@ import type {
   LoaderFields,
   LoaderMetadataFields,
   LoaderRequestOptions,
+  TimestampSortableLoaderOptions,
 } from "./shared"
 import { load } from "cheerio/slim"
 import {
   compileSourceTemplate,
   createSourceTemplateScope,
 } from "../template"
-import { normalizeLoaderMetadata, requestLoaderResponse } from "./shared"
+import {
+  normalizeLoaderMetadata,
+  requestLoaderResponse,
+  sortLoaderItemsByTimestamp,
+} from "./shared"
 
 const MAX_SELECTED_ITEMS = 2_000
 const fieldTemplates = new WeakMap<HtmlFieldConfig, ReturnType<typeof compileSourceTemplate>>()
@@ -49,7 +54,7 @@ interface FieldEntry {
   path: readonly string[]
 }
 
-interface HtmlLoaderBaseOptions {
+interface HtmlLoaderBaseOptions extends TimestampSortableLoaderOptions {
   url: string
   /**
    * CSS selector for the source items.
@@ -335,10 +340,11 @@ export async function loadHtml(
     news.push(item)
   })
 
-  if (!metadata) return { items: news }
+  const sortedNews = sortLoaderItemsByTimestamp(news, options.sortByTimestamp)
+  if (!metadata) return { items: sortedNews }
 
   return {
-    items: news,
+    items: sortedNews,
     metadata: resolveHtmlMetadata($, metadata, {
       vars: loaderContext.vars ?? {},
       index: 0,

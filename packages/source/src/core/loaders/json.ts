@@ -9,13 +9,18 @@ import type {
   LoaderFields,
   LoaderMetadataFields,
   LoaderRequestOptions,
+  TimestampSortableLoaderOptions,
 } from "./shared"
 import * as jmespath from "jmespath"
 import {
   compileSourceTemplate,
   createSourceTemplateScope,
 } from "../template"
-import { normalizeLoaderMetadata, requestLoaderResponse } from "./shared"
+import {
+  normalizeLoaderMetadata,
+  requestLoaderResponse,
+  sortLoaderItemsByTimestamp,
+} from "./shared"
 
 const MAX_EXPRESSION_LENGTH = 2_000
 const validatedExpressions = new Set<string>()
@@ -46,7 +51,7 @@ interface JsonFieldEntry {
   path: readonly string[]
 }
 
-interface JsonLoaderBaseOptions {
+interface JsonLoaderBaseOptions extends TimestampSortableLoaderOptions {
   url: string
   /**
    * Path to the array of items in the response JSON (e.g. "data.items").
@@ -295,12 +300,13 @@ export async function loadJson(
     return newsItem
   }).filter((i): i is NewsItem => i !== null)
 
+  const sortedNews = sortLoaderItemsByTimestamp(news, options.sortByTimestamp)
   if (!metadata) {
-    return { items: news }
+    return { items: sortedNews }
   }
 
   return {
-    items: news,
+    items: sortedNews,
     metadata: resolveJsonMetadata(json, metadata, metadataContext),
   }
 }

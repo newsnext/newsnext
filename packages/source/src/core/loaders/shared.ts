@@ -1,10 +1,15 @@
 import type { Options } from "ky"
 import type {
+  NewsItem,
   SourceFetch,
   SourcePresentationMetadata,
   SourceTemplateVars,
 } from "../../types"
 import { createSourceFetch, sessionFetch } from "../../utils"
+
+export interface TimestampSortableLoaderOptions {
+  sortByTimestamp?: boolean
+}
 
 export interface LoaderFetchContext {
   fetch: SourceFetch
@@ -72,6 +77,26 @@ export interface LoaderFields<TField> {
     html?: TField
     picture?: TField
     iframe?: TField
+  }
+}
+
+export function sortLoaderItemsByTimestamp(
+  items: NewsItem[],
+  enabled: boolean | undefined,
+): NewsItem[] {
+  if (!enabled) return items
+
+  return items.sort((left, right) => {
+    if (left.timestamp === undefined) return right.timestamp === undefined ? 0 : 1
+    if (right.timestamp === undefined) return -1
+    return right.timestamp - left.timestamp
+  })
+}
+
+export function validateSortByTimestamp(value: unknown, location: string): void {
+  if (value === undefined) return
+  if (typeof value !== "boolean") {
+    throw new TypeError(`${location} must be a boolean`)
   }
 }
 
