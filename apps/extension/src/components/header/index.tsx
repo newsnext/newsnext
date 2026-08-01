@@ -1,5 +1,5 @@
 import type { RefObject } from "react"
-import { useRefetch } from "@/hooks"
+import { useFetchLatest } from "@/hooks"
 import { PhArrowCounterClockwiseDuotone, PhCircleDashedDuotone } from "../icons/ph"
 import { SearchDialog } from "../search"
 import { BoardNav } from "./board-nav"
@@ -11,14 +11,14 @@ interface HeaderProps {
   scrollContainerRef?: RefObject<HTMLElement | null>
 }
 
-function RefreshButton() {
-  const { refetchAll, isFetching } = useRefetch()
+function FetchLatestButton() {
+  const { fetchLatest, isFetching } = useFetchLatest()
   return (
     <button
       type="button"
       className="island-pill flex items-center justify-center size-10 pointer-events-auto"
-      title="Refresh All"
-      onClick={refetchAll}
+      title="Fetch Latest for Active Cards"
+      onClick={fetchLatest}
     >
       {isFetching ? <PhCircleDashedDuotone className="size-5 animate-spin" /> : <PhArrowCounterClockwiseDuotone className="size-5" />}
     </button>
@@ -40,9 +40,9 @@ export function Header({ scrollContainerRef }: HeaderProps) {
           <TitleIsland width={150} scrollContainerRef={scrollContainerRef} />
         </div>
 
-        {/* Right Section - DateTime, Refresh, User */}
+        {/* Right Section - DateTime, Fetch Latest, User */}
         <div className="col-start-3 row-start-1 flex min-w-0 items-center justify-start gap-2 W">
-          <RefreshButton />
+          <FetchLatestButton />
           <DateTime className="max-md:hidden" />
           <UserMenu />
         </div>

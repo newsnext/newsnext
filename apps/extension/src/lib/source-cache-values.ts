@@ -1,6 +1,8 @@
 import type { SourceCacheMaxAge } from "@newsnext/source/types"
 import { stableStringify } from "@newsnext/shared/utils"
 
+const FETCH_LATEST_CACHE_MAX_AGE_MS = 60_000
+
 export function buildSourceCacheKey(
   sourceId: string,
   version: number,
@@ -24,4 +26,13 @@ export function parseCacheMaxAge(maxAge: SourceCacheMaxAge): number {
   }
 
   return value * unitMilliseconds
+}
+
+export function resolveSourceCacheMaxAge(
+  maxAge: SourceCacheMaxAge,
+  fetchLatest: boolean,
+): number {
+  return fetchLatest
+    ? FETCH_LATEST_CACHE_MAX_AGE_MS
+    : parseCacheMaxAge(maxAge)
 }

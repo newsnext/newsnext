@@ -54,7 +54,7 @@ function CardContent({ id, source, dragHandle, isDraft = false, onDraftSourceCha
     initialValues: source.paramsValue,
   })
 
-  const { items, metadata, refetch, isFetching, isRefreshing, isError, errorMessage, loginUrl, updatedAt } = useSourceQuery({
+  const { items, metadata, fetchLatest, isFetching, isFetchingLatest, isError, errorMessage, loginUrl, updatedAt } = useSourceQuery({
     sourceId: source.sourceId,
     params: savedParams,
     enabled: canLoad,
@@ -114,13 +114,13 @@ function CardContent({ id, source, dragHandle, isDraft = false, onDraftSourceCha
         source={displaySource}
         items={items}
         isFetching={isFetching}
-        isRefreshing={isRefreshing}
+        isFetchingLatest={isFetchingLatest}
         sourceErrorMessage={sourceErrorMessage}
         sourceLoginUrl={canLoad ? loginUrl : undefined}
         sourcePermissionDescription={getSourcePermissionDescription(source)}
         sourcePermissionRequired={permissionRequired}
         updatedAt={updatedAt}
-        onRefresh={refetch}
+        onRefresh={fetchLatest}
         onRequestPermission={requestPermission}
         onFlip={handleFlip}
         dragHandle={isFlipped ? undefined : dragHandle}

@@ -637,10 +637,12 @@ cache: {
 ```
 
 Automatic loads, remounts, and background revalidation may reuse a fresh stored
-result according to this cache policy. Explicit user refresh actions bypass the
-stored result and request fresh data, both for an individual card and for every
-active card targeted by Refresh All. Concurrent requests for the same source
-and normalized parameters remain deduplicated during a manual refresh.
+result according to this cache policy. Explicit user refresh actions use Fetch
+Latest, both for an individual card and for every enabled card on the current
+board. Fetch Latest ignores the source-defined duration but reuses a result
+fetched within the previous minute to prevent repeated remote requests.
+Concurrent requests for the same source and normalized parameters also remain
+deduplicated.
 
 Structured loaders infer the hostname of a static URL. Declare every additional
 or dynamically selected hostname:

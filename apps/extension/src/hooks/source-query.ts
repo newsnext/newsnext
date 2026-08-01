@@ -23,17 +23,17 @@ export function getSourceQueryHash(target: SourceQueryTarget): string {
 export function loadSourceQuery(
   queryClient: QueryClient,
   target: SourceQueryTarget,
-  forceFresh = false,
+  fetchLatest = false,
 ): Promise<SourceLoadResult> {
   const queryKey = getSourceQueryKey(target)
 
   return loadSource(target.sourceId, target.params, {
-    forceFresh,
+    fetchLatest,
     onCachedResult: result => queryClient.setQueryData(queryKey, result),
   })
 }
 
-export async function refreshSourceQuery(
+export async function fetchLatestSourceQuery(
   queryClient: QueryClient,
   target: SourceQueryTarget,
 ): Promise<SourceLoadResult> {

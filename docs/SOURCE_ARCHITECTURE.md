@@ -191,20 +191,22 @@ source ID and raw parameters
 
 In-flight loads are deduplicated by a cache key containing the source ID, cache
 version, and normalized parameters. The key remains internal to the loader and
-cache layers. Both individual-card and board-wide user refreshes execute active
-TanStack queries with forced source loads; disabled and unmounted queries are
-not fetched implicitly. A forced load bypasses stored cache data but still
-publishes cached data as a temporary query result and participates in in-flight
-deduplication. Automatic query revalidation uses the normal cache policy.
-Refresh intent is passed directly to the forced query function rather than
-stored as state for a later query execution.
+cache layers. Both individual-card and board-wide user refreshes execute enabled
+TanStack queries that fetch the latest source data; disabled and unmounted
+queries are not fetched implicitly. A fetch-latest request reuses a stored result
+for one minute, regardless of the source-defined cache duration, then requests
+new data. Expired cached data is still published as a temporary query result,
+and concurrent loads participate in in-flight deduplication. Automatic query
+revalidation uses the normal source cache policy. Fetch-latest intent is passed
+directly to the query function rather than stored as state for a later query
+execution.
 
 The dashboard also reads the last persisted result as presentation-only
 placeholder data when a card mounts. This survives a dashboard close and reopen
 and may use an expired entry while a fresh request is pending. The loader reads
 each cache entry once and injects stale data into the active query before
 continuing the request. Placeholder data does not satisfy the request, extend
-the entry's freshness, or change forced refresh behavior.
+the entry's freshness, or change fetch-latest behavior.
 
 Card queries mount when their container enters the viewport margin. After a card
 leaves that margin, its query remains active for one minute to avoid churn during

@@ -7,57 +7,57 @@ import { buildSourceCards } from "@/lib/source-cards"
 import { loadSourceDescriptors } from "@/lib/sources"
 import { currentBoardIdAtom, instancesAtom } from "@/store/board"
 import {
+  fetchLatestSourceQuery,
   getSourceQueryHash,
   getSourceQueryKey,
-  refreshSourceQuery,
   SOURCE_QUERY_KEY,
 } from "./source-query"
 
-const activeSourceRefreshCounts = new Map<string, number>()
-const sourceRefreshListeners = new Set<() => void>()
+const activeFetchLatestCounts = new Map<string, number>()
+const fetchLatestListeners = new Set<() => void>()
 
-function updateActiveSourceRefreshes(keys: string[], delta: 1 | -1): void {
+function updateActiveFetchLatest(keys: string[], delta: 1 | -1): void {
   if (keys.length === 0) {
     return
   }
 
   keys.forEach((key) => {
-    const nextCount = (activeSourceRefreshCounts.get(key) ?? 0) + delta
+    const nextCount = (activeFetchLatestCounts.get(key) ?? 0) + delta
     if (nextCount > 0) {
-      activeSourceRefreshCounts.set(key, nextCount)
+      activeFetchLatestCounts.set(key, nextCount)
     } else {
-      activeSourceRefreshCounts.delete(key)
+      activeFetchLatestCounts.delete(key)
     }
   })
-  sourceRefreshListeners.forEach(listener => listener())
+  fetchLatestListeners.forEach(listener => listener())
 }
 
-function subscribeToSourceRefreshes(listener: () => void): () => void {
-  sourceRefreshListeners.add(listener)
-  return () => sourceRefreshListeners.delete(listener)
+function subscribeToFetchLatest(listener: () => void): () => void {
+  fetchLatestListeners.add(listener)
+  return () => fetchLatestListeners.delete(listener)
 }
 
-export function useIsSourceRefreshing(refreshKey: string): boolean {
+export function useIsSourceFetchingLatest(queryHash: string): boolean {
   return useSyncExternalStore(
-    subscribeToSourceRefreshes,
-    () => activeSourceRefreshCounts.has(refreshKey),
+    subscribeToFetchLatest,
+    () => activeFetchLatestCounts.has(queryHash),
     () => false,
   )
 }
 
-async function withSourceRefreshTracking<T>(
-  refreshKeys: string[],
-  refresh: () => Promise<T>,
+async function withFetchLatestTracking<T>(
+  queryHashes: string[],
+  fetchLatest: () => Promise<T>,
 ): Promise<T> {
-  updateActiveSourceRefreshes(refreshKeys, 1)
+  updateActiveFetchLatest(queryHashes, 1)
   try {
-    return await refresh()
+    return await fetchLatest()
   } finally {
-    updateActiveSourceRefreshes(refreshKeys, -1)
+    updateActiveFetchLatest(queryHashes, -1)
   }
 }
 
-export function useSourceRefetch() {
+export function useFetchLatestSources() {
   const queryClient = useQueryClient()
 
   return useCallback(
@@ -71,16 +71,16 @@ export function useSourceRefetch() {
           exact: true,
         })?.isActive(),
       )
-      const refreshKeys = activeTargets.map(getSourceQueryHash)
+      const queryHashes = activeTargets.map(getSourceQueryHash)
 
-      await withSourceRefreshTracking(refreshKeys, async () => {
+      await withFetchLatestTracking(queryHashes, async () => {
         const results = await Promise.allSettled(
-          activeTargets.map(target => refreshSourceQuery(queryClient, target)),
+          activeTargets.map(target => fetchLatestSourceQuery(queryClient, target)),
         )
 
         results.forEach((result) => {
           if (result.status === "rejected") {
-            console.error("Failed to refresh source", result.reason)
+            console.error("Failed to fetch latest source", result.reason)
           }
         })
       })
@@ -89,17 +89,14 @@ export function useSourceRefetch() {
   )
 }
 
-export function useRefetch() {
+export function useFetchLatest() {
   const store = useStore()
-  const refetchSources = useSourceRefetch()
+  const fetchLatestSources = useFetchLatestSources()
   const fetchingCount = useIsFetching({ queryKey: SOURCE_QUERY_KEY })
 
   const isFetching = fetchingCount > 0
 
-  /**
-   * Refresh all cards in the current board.
-   */
-  const refetchAll = useCallback(async () => {
+  const fetchLatest = useCallback(async () => {
     try {
       const instances = store.get(instancesAtom)
       const currentBoardId = store.get(currentBoardIdAtom)
@@ -116,14 +113,14 @@ export function useRefetch() {
           params: normalizeSourceParams(source, source.paramsValue ?? {}),
         } satisfies SourceQueryTarget
       })
-      await refetchSources(...targets)
+      await fetchLatestSources(...targets)
     } catch (e) {
-      console.error("Failed to refresh cards", e)
+      console.error("Failed to fetch latest cards", e)
     }
-  }, [refetchSources, store])
+  }, [fetchLatestSources, store])
 
   return {
-    refetchAll,
+    fetchLatest,
     isFetching,
   }
 }

@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useCallback, useMemo, useState } from "react"
 import { getLoginUrlFromError } from "./source-login-error"
 import { getSourceQueryHash, getSourceQueryKey, loadSourceQuery } from "./source-query"
-import { useIsSourceRefreshing, useSourceRefetch } from "./use-refetch"
+import { useFetchLatestSources, useIsSourceFetchingLatest } from "./use-refetch"
 import { useSourceDescriptors } from "./use-source-descriptors"
 
 export interface UseSourceQueryOptions {
@@ -33,8 +33,8 @@ export function useSourceQuery({
   const queryKey = useMemo(() => getSourceQueryKey(target), [target])
   const queryHash = useMemo(() => getSourceQueryHash(target), [target])
   const queryClient = useQueryClient()
-  const refetchSource = useSourceRefetch()
-  const isRefreshing = useIsSourceRefreshing(queryHash)
+  const fetchLatestSources = useFetchLatestSources()
+  const isFetchingLatest = useIsSourceFetchingLatest(queryHash)
   const [initialUpdatedAt] = useState(Date.now)
   const { data, error, isFetching, isError } = useQuery({
     queryKey,
@@ -49,19 +49,19 @@ export function useSourceQuery({
     retry: false,
   })
 
-  const handleRefetch = useCallback(async () => {
+  const handleFetchLatest = useCallback(async () => {
     if (!enabled) {
       return
     }
 
-    await refetchSource(target)
-  }, [enabled, refetchSource, target])
+    await fetchLatestSources(target)
+  }, [enabled, fetchLatestSources, target])
 
   return {
     items: data?.items ?? [],
-    refetch: handleRefetch,
+    fetchLatest: handleFetchLatest,
     isFetching,
-    isRefreshing,
+    isFetchingLatest,
     isError,
     errorMessage: error instanceof Error ? error.message : undefined,
     loginUrl: getLoginUrlFromError(error),
