@@ -14,6 +14,7 @@ interface NewsItemLinkProps {
 export function NewsItemLink({ item, className, children }: NewsItemLinkProps): ReactNode {
   return (
     <a
+      data-news-item
       href={item.url}
       target="_blank"
       rel="noreferrer"

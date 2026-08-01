@@ -118,11 +118,16 @@
   }
 
   body {
-    @apply h-screen bg-background text-foreground sunrise-theme-400;
+    @apply h-screen select-none bg-background text-foreground sunrise-theme-400;
   }
 
   #root {
     @apply h-full;
+  }
+
+  [data-news-item],
+  [data-news-item] * {
+    user-select: text;
   }
 
   .grabbing,
