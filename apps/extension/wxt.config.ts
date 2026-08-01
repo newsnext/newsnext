@@ -19,7 +19,6 @@ const REQUIRED_PERMISSIONS = [
   "declarativeNetRequestWithHostAccess",
   "scripting",
   "storage",
-  "tabs",
 ] as const
 
 // See https://wxt.dev/api/config.html
