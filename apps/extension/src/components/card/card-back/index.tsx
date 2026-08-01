@@ -11,6 +11,7 @@ import { useRelativeTime } from "@/hooks/useRelativeTime"
 import { cn } from "@/lib/utils"
 import { IconButton } from "../../common/button"
 import { CardHeader } from "../card-header"
+import { CardSurface } from "../card-surface"
 import { CardBoardSelect, DeleteCardButton } from "./actions"
 import { EditableImage, EditableInput, Info } from "./fields"
 import { ParamField } from "./param-field"
@@ -103,14 +104,7 @@ export function CardBack({
 
   return (
     <div className="relative h-full">
-      <SquircleBox
-        aria-hidden
-        radius="3xl"
-        className={cn(
-          "pointer-events-none absolute inset-0 transition-colors duration-300",
-          `bg-${color}-400/40`,
-        )}
-      />
+      <CardSurface color={color} className="transition-colors duration-300" />
       <div className="relative flex h-full flex-col p-3 transition-colors duration-300">
         <CardHeader
           badge={previewBadge}

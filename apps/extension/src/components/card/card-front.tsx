@@ -20,6 +20,7 @@ import {
   SourceStatusMessage,
   SourceStatusPattern,
 } from "./card-source-state"
+import { CardSurface } from "./card-surface"
 import { Ranking } from "./ranking"
 import { Timeline } from "./timeline"
 
@@ -171,14 +172,7 @@ function CardFrontComponent({
 
   return (
     <div className="relative h-full">
-      <SquircleBox
-        aria-hidden
-        radius="3xl"
-        className={cn(
-          "pointer-events-none absolute inset-0",
-          `bg-${color}-400/40`,
-        )}
-      />
+      <CardSurface color={color} />
       <div className="relative flex h-full flex-col p-3">
         <CardHeader
           badge={badge}
