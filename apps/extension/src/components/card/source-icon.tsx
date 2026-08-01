@@ -12,6 +12,7 @@ interface SourceIconProps {
   className?: string
   color: Color
   icon?: string
+  size?: "default" | "xs" | "sm"
   title: string
 }
 
@@ -20,10 +21,14 @@ export function SourceIcon({
   className,
   color,
   icon,
+  size = "xs",
   title,
 }: SourceIconProps) {
   return (
-    <Avatar className={cn("size-4 rounded-sm after:rounded-sm after:border-0", className)}>
+    <Avatar
+      className={cn("rounded-sm after:rounded-sm after:border-0", className)}
+      size={size}
+    >
       <AvatarImage
         className="rounded-[inherit]"
         src={icon}
@@ -32,7 +37,7 @@ export function SourceIcon({
       />
       <AvatarFallback className={cn("rounded-[inherit]", `bg-${color}-400`)} />
       {badge && (
-        <AvatarBadge className="-right-0.5 -bottom-0.5 size-4! overflow-hidden bg-transparent drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)] ring-0">
+        <AvatarBadge className="-right-0.5 -bottom-0.5 overflow-hidden bg-transparent drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)] ring-0">
           <img
             className="size-full rounded-full object-cover"
             src={badge}

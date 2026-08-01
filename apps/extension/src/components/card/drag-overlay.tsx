@@ -29,9 +29,10 @@ export function DragOverlay({ source }: DragOverlayProps) {
         <div className="flex gap-2.5 items-center ml-1 min-w-0 flex-1">
           <SourceIcon
             badge={badge}
-            className="size-8 rounded-full cursor-grabbing"
+            className="rounded-full cursor-grabbing"
             color={color}
             icon={icon}
+            size="default"
             title={title || provider.title}
           />
           <div className="flex flex-col min-w-0">

@@ -32,10 +32,10 @@ function SearchSourceIcon({ source }: { source: BoardSource }): ReactNode {
 
   return (
     <SourceIcon
-      badge={source.metadata.badge}
       className="shrink-0 rounded-full"
       color={source.provider.color}
       icon={icon}
+      size="sm"
       title={source.metadata.title || source.provider.title}
     />
   )

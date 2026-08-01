@@ -42,9 +42,10 @@ export function CardHeader({
         >
           <SourceIcon
             badge={badge}
-            className="size-full rounded-full after:rounded-full"
+            className="rounded-full after:rounded-full"
             color={color}
             icon={icon}
+            size="default"
             title={displayTitle}
           />
         </button>
