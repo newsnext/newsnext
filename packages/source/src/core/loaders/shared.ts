@@ -1,11 +1,55 @@
+import type { Options } from "ky"
 import type {
+  SourceFetch,
   SourcePresentationMetadata,
   SourceTemplateVars,
 } from "../../types"
+import { createSourceFetch, sessionFetch } from "../../utils"
 
-export interface LoaderContext {
+export interface LoaderFetchContext {
+  fetch: SourceFetch
+  signal?: AbortSignal
+}
+
+export interface LoaderRequestContext extends LoaderFetchContext {
+  url: string
+}
+
+interface DefaultLoaderRequest {
+  fetchOptions?: Options
+  request?: never
+}
+
+interface CustomLoaderRequest {
+  fetchOptions?: never
+  request: (context: LoaderRequestContext) => Promise<Response>
+}
+
+export type LoaderRequestOptions = DefaultLoaderRequest | CustomLoaderRequest
+
+export interface LoaderContext extends Partial<LoaderFetchContext> {
   vars?: SourceTemplateVars
   params?: Record<string, unknown>
+}
+
+function resolveLoaderFetchContext(
+  context: LoaderContext,
+): LoaderFetchContext {
+  return {
+    fetch: context.fetch
+      ?? (context.signal ? createSourceFetch(context.signal) : sessionFetch),
+    signal: context.signal,
+  }
+}
+
+export function requestLoaderResponse(
+  options: { url: string } & LoaderRequestOptions,
+  context: LoaderContext,
+): Promise<Response> {
+  const fetchContext = resolveLoaderFetchContext(context)
+  return options.request
+    ? options.request({ ...fetchContext, url: options.url })
+    : fetchContext.fetch(options.url, options.fetchOptions)
 }
 
 export type LoaderMetadataFields<TField> = {

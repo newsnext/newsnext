@@ -1,5 +1,6 @@
 import type { Color, NewsItem } from "@newsnext/shared/types"
 import type { Browser } from "@wxt-dev/browser"
+import type { KyInstance } from "ky"
 import type { HtmlField } from "./html-field"
 import type { InferSourceParams, SourceParamSchemaMap } from "./params"
 
@@ -76,8 +77,12 @@ export interface SourceRadarRule {
   confidence?: number
 }
 
+export type SourceFetch = KyInstance
+
 export interface SourceLoaderContext {
+  fetch: SourceFetch
   secrets?: SourceSecrets
+  signal: AbortSignal
   updateSecrets?: (secrets: SourceSecrets) => Promise<void>
 }
 
@@ -95,7 +100,7 @@ export interface SourceLoaderResult {
 
 export type SourceLoader<TParams extends SourceParamSchemaMap = SourceParamSchemaMap> = (
   params: InferSourceParams<TParams>,
-  context?: SourceLoaderContext,
+  context: SourceLoaderContext,
 ) => Promise<SourceLoaderResult>
 
 export const SOURCE_PRESENTATION_METADATA_KEYS = [

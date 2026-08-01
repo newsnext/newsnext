@@ -154,6 +154,11 @@ The extension page memoizes its descriptor-list request for the lifetime of the
 page. Card loads therefore reuse the same descriptors instead of listing,
 serializing, and sorting the complete registry for every request. A failed
 descriptor request clears the memoized promise so a later request can retry.
+The dashboard board route also primes the descriptor query with
+`ensureQueryData` before rendering cards. Descriptor query options are shared
+between the route and React consumers and run independently of network status.
+The underlying descriptor-list request remains memoized for the page lifetime
+because the bundled registry cannot change without an extension reload.
 
 Static source presentation remains nested as
 `RuntimeSource.metadata: SourcePresentationMetadata`. Runtime resolution
@@ -194,20 +199,22 @@ source ID and raw parameters
         └─ infer the card presentation from item timestamps and order in the UI
 ```
 
-In-flight loads are deduplicated by a cache key containing the source ID, cache
-version, and normalized parameters. The key remains internal to the loader and
-cache layers. Both individual-card and board-wide user refreshes execute enabled
-TanStack queries that fetch the latest source data; disabled and unmounted
-queries are not fetched implicitly. Fetch Latest ignores normal source-cache
-freshness, but a separate one-minute frequency guard prevents repeated remote
-loads. A protected request still follows the normal user-triggered query path
-and completes transparently from the most recent stored result. Expired cached
-data is otherwise published as a temporary query result while a remote load is
-pending, and concurrent loads participate in in-flight deduplication. Automatic
-query revalidation uses the normal source cache policy. Fetch-latest intent is
-passed directly to the query function rather than stored as state for a later
-query execution. Dashboard query timing and the Fetch Latest protection interval
-are centralized in `apps/extension/src/lib/source-query-policy.ts`.
+In-flight loads are deduplicated by TanStack Query using a key containing the
+source ID and normalized parameters. Source query keys and complete options are
+created together so React observers, imperative Fetch Latest calls, and future
+prefetch consumers share the same identity and lifecycle policy. Both
+individual-card and board-wide user refreshes execute enabled TanStack queries
+that fetch the latest source data; disabled and unmounted queries are not
+fetched implicitly. Fetch Latest ignores normal source-cache freshness, but a
+separate one-minute frequency guard prevents repeated remote loads. A protected
+request still follows the normal user-triggered query path and completes
+transparently from the most recent stored result. Expired cached data is
+otherwise published as a temporary query result while a remote load is pending.
+Automatic query revalidation uses the normal source cache policy. Fetch-latest
+intent is passed directly to the query function rather than stored as state for
+a later query execution. Dashboard query timing and the Fetch Latest protection
+interval are centralized in
+`apps/extension/src/lib/source-query-policy.ts`.
 
 The dashboard also reads the last persisted result as presentation-only
 placeholder data when a card mounts. This survives a dashboard close and reopen
@@ -229,8 +236,30 @@ short scrolls, then unmounts. Re-entering during that interval cancels the
 pending unmount. Successful query data remains fresh in memory for one minute;
 this avoids redundant loader and persistent-cache reads without changing the
 source-defined persistent cache duration. Active card queries also revalidate
-once every five minutes, including while the dashboard is in the background; the source
-loader may still satisfy an automatic revalidation from a fresh persisted result.
+once every five minutes, including while the dashboard is in the background.
+Inactive query data follows TanStack Query's default garbage-collection policy
+and can still be restored from the persistent cache. Source queries use
+offline-first network mode so their query function can consult IndexedDB before
+an unavailable network request is attempted. The source loader may still
+satisfy an automatic revalidation from a fresh persisted result.
+
+Each page-side query request receives a TanStack `AbortSignal`. Because signals
+cannot be transported directly through the extension proxy, the page assigns a
+request ID and sends a separate cancellation command to the background service.
+The background service owns the corresponding `AbortController` and exposes its
+signal through `SourceLoaderContext`. The same context contains a required
+`fetch` client that permanently binds the signal to every normal, raw, native,
+or derived request while retaining the shared session and hostname-queue
+policy. It also checks each effective request URL against the active source's
+declared network capabilities. Structured JSON, HTML, and RSS loaders use it directly;
+custom loaders and structured-loader custom request callbacks receive the same
+bound request capability. The request callback context also contains the resolved
+URL and returns a `Response`, leaving body parsing and HTML decoding at the
+structured-loader boundary. Cancellation therefore removes queued host requests
+and aborts active fetches without relying on each provider to forward a signal.
+TanStack Query remains the single in-flight deduplication layer, which also
+prevents a replacement Fetch Latest request from reusing a cancelled loader
+promise.
 
 Loader metadata is response-scoped and remains part of the cached load result.
 It uses the complete source presentation metadata shape: title, badge,
@@ -297,10 +326,12 @@ normalization. Discovery-specific extraction and normalization belong in Radar
 parameter patches, while the shared parameter pipeline enforces type,
 selection, and range constraints.
 
-After every parameter is resolved, structured loaders render their URL and
-nested `fetchOptions`. A relative request URL is then resolved against the
-source's optional `baseUrl`. Network capabilities are inferred and checked
-against this final absolute URL, immediately before the request is sent.
+After every parameter is resolved, structured loaders render their URL and,
+for default requests, nested `fetchOptions`, whose runtime contract is Ky's
+`Options` shape. A custom `request` and `fetchOptions` are mutually exclusive.
+A relative request URL is then resolved against the source's optional `baseUrl`.
+Network capabilities are inferred and checked against this final absolute URL,
+immediately before the request is sent.
 
 Custom loaders receive already-normalized parameters. The source runtime cannot
 infer their requests, so custom loader capabilities must be declared.
@@ -456,10 +487,21 @@ reserved for cookie-backed secrets that read specific values.
 
 The shared `sessionFetch` client queues requests by normalized hostname. Each
 hostname runs one request at a time and observes the centralized minimum start
-interval, while different hostnames remain independent. The queue wraps normal,
-raw, native, derived, and retried `ofetch` calls. Custom loaders must use this
-client rather than global `fetch`; direct browser fetches remain outside the
-queue and are not an accepted source-loader request path.
+interval, while different hostnames remain independent. A private Ky client
+provides method shortcuts, request serialization, body parsing, timeout
+handling, and retries for transient GET failures. Runtime entry points derive a
+Ky instance for each `SourceLoaderContext`, force the execution signal through
+an init hook, and validate Ky's final normalized request URL in a
+`beforeRequest` hook. Custom loaders use `context.fetch` rather than importing
+the shared client or calling global `fetch`; direct calls would detach the
+request from its execution lifecycle and are not an accepted source-loader
+request path.
+
+The retry policy excludes mutation methods and deterministic client errors. It
+retries rate limits and selected server failures with exponential backoff and
+full jitter. `Retry-After` is honored for `429` and `503`, but both server
+directed waits and client backoff are capped by the shared request timeout so a
+single source cannot stall indefinitely.
 
 Each hostname owns a long-lived `p-queue` instance with concurrency `1` and a
 strict sliding-window rate limit. Keeping the queue for the source runtime's

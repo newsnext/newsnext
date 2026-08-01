@@ -1,12 +1,8 @@
 import { normalizeSourceParams } from "@newsnext/source/runtime"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useCallback, useMemo, useState } from "react"
-import {
-  SOURCE_QUERY_REFETCH_INTERVAL_MS,
-  SOURCE_QUERY_STALE_TIME_MS,
-} from "@/lib/source-query-policy"
 import { getLoginUrlFromError } from "./source-login-error"
-import { getSourceQueryHash, getSourceQueryKey, loadSourceQuery } from "./source-query"
+import { getSourceQueryHash, getSourceQueryOptions } from "./source-query"
 import { useFetchLatestSources, useIsSourceFetchingLatest } from "./use-refetch"
 import { useSourceDescriptors } from "./use-source-descriptors"
 
@@ -34,23 +30,15 @@ export function useSourceQuery({
     () => ({ sourceId, params: normalizedParams }),
     [normalizedParams, sourceId],
   )
-  const queryKey = useMemo(() => getSourceQueryKey(target), [target])
   const queryHash = useMemo(() => getSourceQueryHash(target), [target])
   const queryClient = useQueryClient()
   const fetchLatestSources = useFetchLatestSources()
   const isFetchingLatest = useIsSourceFetchingLatest(queryHash)
   const [initialUpdatedAt] = useState(Date.now)
   const { data, error, isFetching, isError } = useQuery({
-    queryKey,
-    queryFn: () => loadSourceQuery(queryClient, target),
+    ...getSourceQueryOptions(queryClient, target),
     enabled: enabled && source !== undefined,
     placeholderData: prev => prev,
-    staleTime: SOURCE_QUERY_STALE_TIME_MS,
-    refetchOnReconnect: true,
-    refetchOnWindowFocus: true,
-    refetchInterval: SOURCE_QUERY_REFETCH_INTERVAL_MS,
-    refetchIntervalInBackground: true,
-    retry: false,
   })
 
   const handleFetchLatest = useCallback(async () => {

@@ -1,38 +1,15 @@
-import type {
-  $Fetch,
-  FetchOptions,
-  FetchRequest,
-  FetchResponse,
-  MappedResponseType,
-  ResponseType,
-} from "ofetch"
-import { $fetch } from "ofetch"
+import type { Input } from "ky"
+import type { SourceFetch } from "../../types"
+import ky from "ky"
 import {
-  SOURCE_HOST_REQUEST_INTERVAL_MS,
   SOURCE_REQUEST_RETRY_COUNT,
   SOURCE_REQUEST_TIMEOUT_MS,
 } from "./config"
 import { scheduleHostRequest } from "./queue"
 
-const baseSessionFetch = $fetch.create({
-  credentials: "include",
-  timeout: SOURCE_REQUEST_TIMEOUT_MS,
-  retry: SOURCE_REQUEST_RETRY_COUNT,
-  retryDelay: SOURCE_HOST_REQUEST_INTERVAL_MS,
-})
-
-type NativeFetch = $Fetch["native"]
-type NativeFetchRequest = Parameters<NativeFetch>[0]
-
-function getRequestHostname(request: FetchRequest | URL): string | undefined {
-  const value = typeof request === "string"
-    ? request
-    : request instanceof URL
-      ? request.href
-      : request.url
-
+function getRequestHostname(input: Input): string | undefined {
   try {
-    const url = new URL(value)
+    const url = new URL(input instanceof Request ? input.url : input)
     return ["http:", "https:"].includes(url.protocol)
       ? url.hostname.toLowerCase()
       : undefined
@@ -41,46 +18,42 @@ function getRequestHostname(request: FetchRequest | URL): string | undefined {
   }
 }
 
-function runScheduledRequest<T>(
-  request: FetchRequest | URL,
-  execute: () => Promise<T>,
-  signal?: AbortSignal | null,
-): Promise<T> {
-  const hostname = getRequestHostname(request)
-  const requestSignal = signal ?? (request instanceof Request ? request.signal : undefined)
+function queuedFetch(input: Input, init?: RequestInit): Promise<Response> {
+  const hostname = getRequestHostname(input)
+  const execute = () => globalThis.fetch(input, init)
+  const signal = init?.signal ?? (input instanceof Request ? input.signal : undefined)
   return hostname
-    ? scheduleHostRequest(hostname, execute, requestSignal)
+    ? scheduleHostRequest(hostname, execute, signal)
     : execute()
 }
 
-function withHostQueue(fetchClient: $Fetch): $Fetch {
-  const queuedFetch = (async <T = unknown, R extends ResponseType = "json">(
-    request: FetchRequest,
-    options?: FetchOptions<R>,
-  ): Promise<MappedResponseType<R, T>> => runScheduledRequest(
-    request,
-    () => fetchClient<T, R>(request, options),
-    options?.signal,
-  )) as $Fetch
+export const sessionFetch: SourceFetch = ky.create({
+  credentials: "include",
+  fetch: queuedFetch,
+  timeout: SOURCE_REQUEST_TIMEOUT_MS,
+  retry: {
+    afterStatusCodes: [429, 503],
+    backoffLimit: SOURCE_REQUEST_TIMEOUT_MS,
+    jitter: true,
+    limit: SOURCE_REQUEST_RETRY_COUNT,
+    maxRetryAfter: SOURCE_REQUEST_TIMEOUT_MS,
+    methods: ["get"],
+    statusCodes: [429, 500, 502, 503, 504],
+  },
+})
 
-  queuedFetch.raw = <T = unknown, R extends ResponseType = "json">(
-    request: FetchRequest,
-    options?: FetchOptions<R>,
-  ): Promise<FetchResponse<MappedResponseType<R, T>>> => runScheduledRequest(
-    request,
-    () => fetchClient.raw<T, R>(request, options),
-    options?.signal,
-  )
-  queuedFetch.native = ((request: NativeFetchRequest, options?: Parameters<NativeFetch>[1]) => runScheduledRequest(
-    request,
-    () => fetchClient.native(request, options),
-    options?.signal,
-  )) as NativeFetch
-  queuedFetch.create = (defaults, globalOptions) => withHostQueue(
-    fetchClient.create(defaults, globalOptions),
-  )
-
-  return queuedFetch
+export function createSourceFetch(
+  signal: AbortSignal,
+  validateUrl?: (url: string) => void,
+): SourceFetch {
+  return sessionFetch.extend({
+    hooks: {
+      init: [(options) => {
+        options.signal = signal
+      }],
+      beforeRequest: [({ request }) => {
+        validateUrl?.(request.url)
+      }],
+    },
+  })
 }
-
-export const sessionFetch = withHostQueue(baseSessionFetch)

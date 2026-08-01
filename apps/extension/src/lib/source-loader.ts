@@ -9,13 +9,12 @@ import { buildSourceCacheKey } from "./source-cache-values"
 import { shouldReuseCachedSource } from "./source-query-policy"
 import { loadSourceDescriptor } from "./sources"
 
-const inFlightSourceLoads = new Map<string, Promise<SourceLoadResult>>()
-
 export type SourceLoadResult = LoadBackgroundSourceOutput
 
 export interface LoadSourceOptions {
   fetchLatest?: boolean
   onCachedResult?: (result: SourceLoadResult) => void
+  signal?: AbortSignal
 }
 
 export async function loadSource(
@@ -23,7 +22,9 @@ export async function loadSource(
   queryParams: Record<string, unknown> = {},
   options: LoadSourceOptions = {},
 ): Promise<SourceLoadResult> {
+  options.signal?.throwIfAborted()
   const source = await loadSourceDescriptor(sourceId)
+  options.signal?.throwIfAborted()
   const params = normalizeSourceParams(source, queryParams)
   const cacheKey = buildSourceCacheKey(sourceId, source.cache.version, params)
   const cached = await readSourceCache(
@@ -44,38 +45,42 @@ export async function loadSource(
     options.onCachedResult?.(cached.result)
   }
 
-  const inFlightLoad = inFlightSourceLoads.get(cacheKey)
-  if (inFlightLoad) {
-    return inFlightLoad
-  }
-
-  const sourceLoad = loadFreshSource({
+  return loadFreshSource({
     sourceId,
     queryParams,
     cacheKey,
+    signal: options.signal,
   })
-  inFlightSourceLoads.set(cacheKey, sourceLoad)
-
-  try {
-    return await sourceLoad
-  } finally {
-    inFlightSourceLoads.delete(cacheKey)
-  }
 }
 
 interface FreshSourceLoad {
   sourceId: string
   queryParams: Record<string, unknown>
   cacheKey: string
+  signal?: AbortSignal
 }
 
 async function loadFreshSource(request: FreshSourceLoad): Promise<SourceLoadResult> {
-  const result = await createBackgroundClient().source.load({
-    sourceId: request.sourceId,
-    params: request.queryParams,
-  })
+  const client = createBackgroundClient()
+  const requestId = crypto.randomUUID()
+  const cancelRequest = () => {
+    void client.source.cancel({ requestId }).catch(() => undefined)
+  }
+  request.signal?.addEventListener("abort", cancelRequest, { once: true })
 
-  await writeCachedSource(request.cacheKey, result)
+  try {
+    request.signal?.throwIfAborted()
+    const result = await client.source.load({
+      requestId,
+      sourceId: request.sourceId,
+      params: request.queryParams,
+    })
 
-  return result
+    request.signal?.throwIfAborted()
+    await writeCachedSource(request.cacheKey, result)
+
+    return result
+  } finally {
+    request.signal?.removeEventListener("abort", cancelRequest)
+  }
 }

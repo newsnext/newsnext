@@ -24,8 +24,8 @@
     "fast-xml-parser": "^5.10.1",
     "iconv-lite": "^0.7.3",
     "jmespath": "^0.16.0",
+    "ky": "catalog:",
     "liquidjs": "^10.27.2",
-    "ofetch": "catalog:",
     "p-queue": "^9.3.3"
   },
   "devDependencies": {

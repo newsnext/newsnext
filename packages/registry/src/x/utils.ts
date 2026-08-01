@@ -52,8 +52,8 @@ export const X_USER_FEATURES = {
   responsive_web_graphql_timeline_navigation_enabled: true,
 }
 
-export function createXLoggedInHeaders(context?: SourceLoaderContext): Record<string, string> {
-  const csrfToken = context?.secrets?.[X_CSRF_TOKEN_SECRET_KEY]
+export function createXLoggedInHeaders(context: SourceLoaderContext): Record<string, string> {
+  const csrfToken = context.secrets?.[X_CSRF_TOKEN_SECRET_KEY]
   return {
     "authorization": `Bearer ${X_BEARER_TOKEN}`,
     "content-type": "application/json",

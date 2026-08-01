@@ -9,7 +9,6 @@ import type {
   XUserByScreenNameResponse,
   XUserTweetsResponse,
 } from "./types"
-import { sessionFetch } from "@newsnext/source/utils"
 import { LOCATION_OPTIONS } from "./types"
 import {
   createXLoggedInHeaders,
@@ -46,12 +45,12 @@ const X_RADAR_RESERVED_PATHS = [
 
 async function fetchXPlaceTrends(
   { location }: { location: string },
-  context?: SourceLoaderContext,
+  context: SourceLoaderContext,
 ): Promise<SourceLoaderResult> {
-  const response = await sessionFetch<XPlaceTrendResponse[]>(PLACE_TRENDS_URL, {
+  const response = await context.fetch.get(PLACE_TRENDS_URL, {
     headers: createXLoggedInHeaders(context),
-    query: { id: location },
-  })
+    searchParams: { id: location },
+  }).json<XPlaceTrendResponse[]>()
   const timestamp = response[0]?.created_at ? Date.parse(response[0].created_at) : undefined
   return {
     items: (response[0]?.trends ?? []).map(trend => ({
@@ -62,11 +61,10 @@ async function fetchXPlaceTrends(
   }
 }
 
-async function fetchXTimeline(url: string, context?: SourceLoaderContext): Promise<SourceLoaderResult> {
-  const response = await sessionFetch<XHomeTimelineResponse>(url, {
-    method: "POST",
+async function fetchXTimeline(url: string, context: SourceLoaderContext): Promise<SourceLoaderResult> {
+  const response = await context.fetch.post(url, {
     headers: createXLoggedInHeaders(context),
-    body: {
+    json: {
       variables: {
         count: HOME_TIMELINE_COUNT,
         includePromotedContent: true,
@@ -77,7 +75,7 @@ async function fetchXTimeline(url: string, context?: SourceLoaderContext): Promi
       },
       features: X_FEATURES,
     },
-  })
+  }).json<XHomeTimelineResponse>()
   const instructions = response.data?.home?.home_timeline_urt?.instructions ?? []
   return {
     items: sortNewsItemsByNewest(entriesToNewsItems(getTimelineEntries(instructions))),
@@ -86,15 +84,15 @@ async function fetchXTimeline(url: string, context?: SourceLoaderContext): Promi
 
 async function fetchXUserTweets(
   { username }: { username: string },
-  context?: SourceLoaderContext,
+  context: SourceLoaderContext,
 ): Promise<SourceLoaderResult> {
   const screenName = username.trim()
   if (!/^\w{1,15}$/.test(screenName)) throw new Error("X username must be a valid handle.")
 
   const headers = createXLoggedInHeaders(context)
-  const user = await sessionFetch<XUserByScreenNameResponse>(USER_BY_SCREEN_NAME_URL, {
+  const user = await context.fetch.get(USER_BY_SCREEN_NAME_URL, {
     headers,
-    query: {
+    searchParams: {
       variables: JSON.stringify({
         screen_name: screenName,
         withSafetyModeUserFields: false,
@@ -104,14 +102,14 @@ async function fetchXUserTweets(
         withAuxiliaryUserLabels: false,
       }),
     },
-  })
+  }).json<XUserByScreenNameResponse>()
   const userResult = user.data?.user?.result
   const userId = userResult?.rest_id
   if (!userId) throw new Error(`Cannot find X user: ${screenName}`)
 
-  const response = await sessionFetch<XUserTweetsResponse>(USER_TWEETS_URL, {
+  const response = await context.fetch.get(USER_TWEETS_URL, {
     headers,
-    query: {
+    searchParams: {
       variables: JSON.stringify({
         userId,
         count: USER_TWEETS_COUNT,
@@ -122,7 +120,7 @@ async function fetchXUserTweets(
       }),
       features: JSON.stringify(X_FEATURES),
     },
-  })
+  }).json<XUserTweetsResponse>()
   const instructions = response.data?.user?.result?.timeline_v2?.timeline?.instructions ?? []
   const badge = userResult.legacy?.profile_image_url_https
   return {

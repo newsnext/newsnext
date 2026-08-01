@@ -1,7 +1,11 @@
 import type { QueryClient } from "@tanstack/react-query"
 import type { SourceLoadResult } from "@/lib/source-loader"
-import { hashKey } from "@tanstack/react-query"
+import { hashKey, queryOptions } from "@tanstack/react-query"
 import { loadSource } from "@/lib/source-loader"
+import {
+  SOURCE_QUERY_REFETCH_INTERVAL_MS,
+  SOURCE_QUERY_STALE_TIME_MS,
+} from "@/lib/source-query-policy"
 
 export const SOURCE_QUERY_KEY = ["source"] as const
 
@@ -20,16 +24,39 @@ export function getSourceQueryHash(target: SourceQueryTarget): string {
   return hashKey(getSourceQueryKey(target))
 }
 
-export function loadSourceQuery(
+function loadSourceQuery(
   queryClient: QueryClient,
   target: SourceQueryTarget,
   fetchLatest = false,
+  signal?: AbortSignal,
 ): Promise<SourceLoadResult> {
   const queryKey = getSourceQueryKey(target)
 
   return loadSource(target.sourceId, target.params, {
     fetchLatest,
     onCachedResult: result => queryClient.setQueryData(queryKey, result),
+    signal,
+  })
+}
+
+export function getSourceQueryOptions(
+  queryClient: QueryClient,
+  target: SourceQueryTarget,
+  fetchLatest = false,
+): ReturnType<typeof queryOptions<
+  SourceLoadResult,
+  Error,
+  SourceLoadResult,
+  ReturnType<typeof getSourceQueryKey>
+>> {
+  return queryOptions({
+    queryKey: getSourceQueryKey(target),
+    queryFn: ({ signal }) => loadSourceQuery(queryClient, target, fetchLatest, signal),
+    networkMode: "offlineFirst",
+    staleTime: fetchLatest ? 0 : SOURCE_QUERY_STALE_TIME_MS,
+    refetchInterval: SOURCE_QUERY_REFETCH_INTERVAL_MS,
+    refetchIntervalInBackground: true,
+    retry: false,
   })
 }
 
@@ -40,9 +67,5 @@ export async function fetchLatestSourceQuery(
   const queryKey = getSourceQueryKey(target)
 
   await queryClient.cancelQueries({ queryKey, exact: true })
-  return queryClient.fetchQuery({
-    queryKey,
-    queryFn: () => loadSourceQuery(queryClient, target, true),
-    staleTime: 0,
-  })
+  return queryClient.fetchQuery(getSourceQueryOptions(queryClient, target, true))
 }

@@ -1,6 +1,5 @@
 import type { ProviderConfig } from "@newsnext/source/registry"
-import type { NewsItem, SourceLoaderResult } from "@newsnext/source/types"
-import { sessionFetch } from "@newsnext/source/utils"
+import type { NewsItem, SourceLoaderContext, SourceLoaderResult } from "@newsnext/source/types"
 
 interface FoloMedia {
   url?: string
@@ -31,20 +30,21 @@ interface FoloResponse {
 
 type FoloEntriesRequest = { feedId: string } | { listId: string }
 
-async function loadFoloEntries(body: FoloEntriesRequest): Promise<SourceLoaderResult> {
-  const response = await sessionFetch<FoloResponse>("https://api.folo.is/entries", {
-    method: "POST",
+async function loadFoloEntries(
+  body: FoloEntriesRequest,
+  context: SourceLoaderContext,
+): Promise<SourceLoaderResult> {
+  const response = await context.fetch.post("https://api.folo.is/entries", {
     headers: {
-      "content-type": "application/json",
       "x-app-name": "Folo Web",
       "x-app-platform": "desktop/web",
       "x-app-version": "1.10.0",
     },
-    body: {
+    json: {
       view: 0,
       ...body,
     },
-  })
+  }).json<FoloResponse>()
 
   return {
     items: (response.data ?? [])
@@ -132,7 +132,7 @@ export default {
         },
       ],
       loader: {
-        load: async ({ feedId }) => loadFoloEntries({ feedId }),
+        load: loadFoloEntries,
       },
     },
     list: {
@@ -170,7 +170,7 @@ export default {
         },
       ],
       loader: {
-        load: async ({ listId }) => loadFoloEntries({ listId }),
+        load: loadFoloEntries,
       },
     },
   },

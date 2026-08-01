@@ -320,7 +320,8 @@ loader: {
 
 ## Requests
 
-Loader URLs and nested `fetchOptions` strings may use Liquid:
+Loader URLs and nested `fetchOptions` strings may use Liquid. `fetchOptions`
+uses Ky's `Options` shape, including its `json` and `searchParams` helpers:
 
 ```ts
 loader: {
@@ -331,7 +332,7 @@ loader: {
     headers: {
       authorization: "Bearer {{ scope.params.token }}",
     },
-    body: {
+    json: {
       channel: "{{ scope.params.channel }}",
       pageSize: 30,
     },
@@ -524,7 +525,9 @@ URL-bearing result fields are resolved automatically. Use `absolute_url` for
 embedded HTML URLs or values that need another base.
 
 Set `decoding`, for example `"gb2312"`, for non-UTF-8 pages. Use `fetchOptions`
-for standard requests and a custom `fetch` only for unusual request handling.
+for standard requests and a custom `request` only for unusual request handling.
+These options are mutually exclusive: a custom request owns its complete request
+configuration, while the loader still owns response parsing and HTML decoding.
 
 ## RSS, custom loaders, and loader results
 
@@ -549,8 +552,10 @@ Use a custom loader only when declarative loaders cannot express the source:
 loader: {
   type: "custom",
   load: async (params, context) => {
-    const session = context?.secrets?.session
-    // ...
+    const session = context.secrets?.session
+    const items = await context.fetch.get("https://api.example.com/items", {
+      headers: { authorization: `Bearer ${session}` },
+    }).json<NewsItem[]>()
     return { items }
   },
 },
@@ -703,7 +708,37 @@ provider defaults. Source arrays replace default arrays, so keep a secret in
 one scope unless the source intentionally overrides the complete list.
 
 Custom loaders receive values through `context.secrets` and may persist
-refreshed values with `context.updateSecrets`.
+refreshed values with `context.updateSecrets`. Use the required `context.fetch`
+client for every network request. It has the active request's `AbortSignal`
+pre-bound and applies the shared credentials, timeout, retry, hostname queue,
+rate-limit behavior, and declared network capability checks. The underlying
+signal remains available through `context.signal` for non-fetch asynchronous
+work and explicit cancellation checks. Do not catch and convert an abort into a
+normal loader error.
+
+`context.fetch` is a signal-bound Ky instance. Prefer method shortcuts,
+`searchParams`, `json`, and chained body parsing:
+
+```ts
+const items = await context.fetch.post("https://api.example.com/search", {
+  searchParams: { limit: 30 },
+  json: { query: "news" },
+}).json<NewsItem[]>()
+```
+
+GET requests retry transient failures; mutation requests are not retried
+automatically. Non-success HTTP responses reject after the retry policy is
+exhausted. Retries use exponential backoff with full jitter, honor
+`Retry-After` for rate limits and service unavailability, and cap any retry
+delay at the shared request timeout. Use the provided instance directly; do not
+call `create()` and lose the bound request lifecycle and security policy.
+
+Provider-specific response recovery may derive a client with `extend()` and an
+`afterResponse` hook. Guard retries with `retryCount`, return
+`context.fetch.retry()` instead of recursively calling the loader, and use the
+original `context.fetch` for token-refresh requests so the derived hook does not
+intercept its own refresh. Derived requests retain the execution signal,
+hostname queue, and capability checks.
 
 NewsNext requests use the browser's logged-in session by default:
 `sessionFetch` and the built-in structured loaders set
@@ -712,15 +747,25 @@ Use `credentials: "omit"` only when a request must be explicitly anonymous.
 Do not declare cookie secrets merely to authenticate a request; cookie secrets
 are for reading a specific value that the loader must inspect.
 
-`sessionFetch` serializes requests per hostname and spaces their start times to
-avoid bursts when multiple card instances target the same service. Custom
-loaders and structured-loader custom `fetch` callbacks must use `sessionFetch`
-instead of the global `fetch` so their requests participate in this protection.
-Requests to different hostnames may run in parallel.
+The client behind `context.fetch` serializes requests per hostname and spaces
+their start times to avoid bursts when multiple card instances target the same
+service. Custom loaders must not import `sessionFetch` or use the global
+`fetch`; the context client keeps request policy and cancellation attached to
+the current source execution. Requests to different hostnames may run in
+parallel. A structured-loader custom `request` callback receives the resolved
+URL, bound Ky client, and execution signal in one context. It must return a
+`Response`; the structured loader parses the JSON or HTML body:
+
+```ts
+request: async ({ url, fetch }) => {
+  await fetch.get("https://example.com/bootstrap")
+  return fetch.get(url)
+}
+```
 
 When an API requires a cookie issued or refreshed by a page visit, a TypeScript
-structured loader may use a custom `fetch` that first requests the bootstrap
-page and then fetches the API. Both requests inherit the logged-in browser
+structured loader may use a custom `request` that first requests the bootstrap
+page and then fetches the API. Both context requests inherit the logged-in browser
 session. Declare the bootstrap hostname as a network capability in addition to
 the loader URL's inferred hostname; do not read cookies or construct a `Cookie`
 header when the browser cookie jar is sufficient.

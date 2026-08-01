@@ -3,17 +3,21 @@ import type {
   SourceLoaderResult,
   SourcePresentationMetadata,
 } from "../../types"
+import type { LoaderContext } from "./shared"
 import { XMLParser } from "fast-xml-parser"
-import { sessionFetch } from "../../utils"
-import { normalizeLoaderMetadata } from "./shared"
+import { normalizeLoaderMetadata, requestLoaderResponse } from "./shared"
 
 interface ParsedRssFeed {
   items: NewsItem[]
   metadata?: SourcePresentationMetadata
 }
 
-export async function loadRss({ url }: { url: string }): Promise<SourceLoaderResult> {
-  const data = parseRss(await sessionFetch(url, { responseType: "text" }))
+export async function loadRss(
+  { url }: { url: string },
+  loaderContext: LoaderContext = {},
+): Promise<SourceLoaderResult> {
+  const response = await requestLoaderResponse({ url }, loaderContext)
+  const data = parseRss(await response.text())
   if (!data?.items.length) throw new Error("Cannot fetch rss data")
 
   return data

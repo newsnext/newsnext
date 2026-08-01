@@ -39,7 +39,6 @@
     "jotai": "catalog:",
     "lucide-react": "catalog:",
     "motion": "catalog:",
-    "ofetch": "catalog:",
     "path-to-regexp": "^8.4.2",
     "react": "catalog:",
     "react-dom": "catalog:"

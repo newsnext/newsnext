@@ -1,6 +1,5 @@
 import type { ProviderConfig } from "@newsnext/source/registry"
-import type { NewsItem, SourceLoaderResult } from "@newsnext/source/types"
-import { sessionFetch } from "@newsnext/source/utils"
+import type { NewsItem, SourceLoaderContext, SourceLoaderResult } from "@newsnext/source/types"
 
 const DYNAMIC_FEED_URL = "https://api.bilibili.com/x/polymer/web-dynamic/v1/feed/all"
 const DYNAMIC_FEED_FEATURES = [
@@ -249,12 +248,15 @@ function dynamicArchiveToNewsItem(item: DynamicFeedItem): NewsItem | null {
   return newsItem
 }
 
-async function fetchBilibiliFollowingVideos(): Promise<SourceLoaderResult> {
-  const response = await sessionFetch<DynamicFeedResponse>(DYNAMIC_FEED_URL, {
+async function fetchBilibiliFollowingVideos(
+  _params: Record<string, unknown>,
+  context: SourceLoaderContext,
+): Promise<SourceLoaderResult> {
+  const response = await context.fetch.get(DYNAMIC_FEED_URL, {
     headers: {
       referer: "https://www.bilibili.com/",
     },
-    query: {
+    searchParams: {
       "timezone_offset": -480,
       "type": "all",
       "platform": "web",
@@ -267,7 +269,7 @@ async function fetchBilibiliFollowingVideos(): Promise<SourceLoaderResult> {
         spmid: BILIBILI_WEB_LOCATION,
       }),
     },
-  })
+  }).json<DynamicFeedResponse>()
 
   if (response.code !== 0) {
     throw new Error(response.message ?? "Failed to load Bilibili following videos.")
@@ -299,17 +301,20 @@ interface BilibiliPgcRankingResponse {
   }
 }
 
-async function fetchBilibiliRanking({ region }: { region: string }): Promise<SourceLoaderResult> {
+async function fetchBilibiliRanking(
+  { region }: { region: string },
+  context: SourceLoaderContext,
+): Promise<SourceLoaderResult> {
   const request = getBilibiliRankingRequest(region)
   const fetchOptions = {
     headers: {
       referer: "https://www.bilibili.com/",
     },
-    query: request.query,
+    searchParams: request.query,
   }
 
   if (request.kind === "video") {
-    const response = await sessionFetch<BilibiliVideoRankingResponse>(request.url, fetchOptions)
+    const response = await context.fetch.get(request.url, fetchOptions).json<BilibiliVideoRankingResponse>()
     if (response.code !== 0) {
       throw new Error(response.message ?? "Failed to load Bilibili video ranking.")
     }
@@ -320,7 +325,7 @@ async function fetchBilibiliRanking({ region }: { region: string }): Promise<Sou
     }
   }
 
-  const response = await sessionFetch<BilibiliPgcRankingResponse>(request.url, fetchOptions)
+  const response = await context.fetch.get(request.url, fetchOptions).json<BilibiliPgcRankingResponse>()
   if (response.code !== 0) {
     throw new Error(response.message ?? "Failed to load Bilibili PGC ranking.")
   }

@@ -1,31 +1,5 @@
 import type { ProviderConfig } from "@newsnext/source/registry"
-import { md5, myCrypto, sessionFetch } from "@newsnext/source/utils"
-
-interface CLSItem {
-  id: number
-  title?: string
-  brief: string
-  shareurl: string
-  ctime: number
-  is_ad?: number
-}
-
-interface TelegraphResponse {
-  data: {
-    roll_data: CLSItem[]
-  }
-}
-
-interface DepthResponse {
-  data: {
-    top_article: CLSItem[]
-    depth_list: CLSItem[]
-  }
-}
-
-interface HotResponse {
-  data: CLSItem[]
-}
+import { md5, myCrypto } from "@newsnext/source/utils"
 
 const CLS_BASE_PARAMS = {
   appName: "CailianpressWeb",
@@ -81,16 +55,16 @@ export default {
       },
       loader: {
         url: "/v1/roll/get_roll_list",
-        fetch: async (url) => {
-          return sessionFetch<TelegraphResponse>(url, {
-            query: Object.fromEntries(await getSearchParams({
-              last_time: Math.floor(Date.now() / 1000),
-              refresh_type: 1,
-              rn: 30,
-            })),
+        request: async ({ url, fetch }) => {
+          return fetch.get(url, {
             headers: {
               Referer: "https://www.cls.cn/telegraph",
             },
+            searchParams: await getSearchParams({
+              last_time: Math.floor(Date.now() / 1000),
+              refresh_type: 1,
+              rn: 30,
+            }),
           })
         },
         items: "data.roll_data[?is_ad != `1`]",
@@ -104,9 +78,9 @@ export default {
       },
       loader: {
         url: "/v3/depth/home/assembled/1000",
-        fetch: async (url) => {
-          return sessionFetch<DepthResponse>(url, {
-            query: Object.fromEntries(await getSearchParams()),
+        request: async ({ url, fetch }) => {
+          return fetch.get(url, {
+            searchParams: await getSearchParams(),
           })
         },
         items: "reverse(sort_by(data.depth_list, &ctime))",
@@ -118,9 +92,9 @@ export default {
       },
       loader: {
         url: "/v2/article/hot/list",
-        fetch: async (url) => {
-          return sessionFetch<HotResponse>(url, {
-            query: Object.fromEntries(await getSearchParams()),
+        request: async ({ url, fetch }) => {
+          return fetch.get(url, {
+            searchParams: await getSearchParams(),
           })
         },
         items: "data",

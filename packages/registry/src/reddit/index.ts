@@ -1,10 +1,9 @@
 import type { ProviderConfig } from "@newsnext/source/registry"
-import type { SourceLoaderResult } from "@newsnext/source/types"
+import type { SourceLoaderContext, SourceLoaderResult } from "@newsnext/source/types"
 import type {
   RedditListingResponse,
   RedditPost,
 } from "./types"
-import { sessionFetch } from "@newsnext/source/utils"
 import { REDDIT_ORIGIN, redditPostsToNewsItems } from "./utils"
 
 const REDDIT_LISTING_LIMIT = 50
@@ -27,25 +26,22 @@ const SUBREDDIT_TOP_PERIOD_OPTIONS = [
 type SubredditSort = typeof SUBREDDIT_SORT_OPTIONS[number]["value"]
 type SubredditTopPeriod = typeof SUBREDDIT_TOP_PERIOD_OPTIONS[number]["value"]
 
-const redditFetchOptions = {
-  headers: {
-    accept: "application/json",
-  },
-} as const
-
 async function fetchRedditListing(
   path: string,
+  context: SourceLoaderContext,
   query: Record<string, string | number> = {},
 ): Promise<RedditListingResponse> {
-  const response = await sessionFetch<RedditListingResponse>(`${REDDIT_ORIGIN}${path}`, {
-    ...redditFetchOptions,
-    query: {
+  const response = await context.fetch.get(`${REDDIT_ORIGIN}${path}`, {
+    headers: {
+      accept: "application/json",
+    },
+    searchParams: {
       limit: REDDIT_LISTING_LIMIT,
       raw_json: 1,
       sr_detail: 1,
       ...query,
     },
-  })
+  }).json<RedditListingResponse>()
   if (!response.data?.children) {
     throw new Error(response.message ?? "Reddit returned an empty listing.")
   }
@@ -59,6 +55,7 @@ function getRedditPosts(listing: RedditListingResponse): RedditPost[] {
 
 async function fetchRedditUserPosts(
   { username }: { username: string },
+  context: SourceLoaderContext,
 ): Promise<SourceLoaderResult> {
   const normalizedUsername = username.trim()
   if (!/^[\w-]{3,20}$/.test(normalizedUsername)) {
@@ -68,6 +65,7 @@ async function fetchRedditUserPosts(
   const encodedUsername = encodeURIComponent(normalizedUsername)
   const listing = await fetchRedditListing(
     `/user/${encodedUsername}/submitted.json`,
+    context,
     { sort: "new" },
   )
   const posts = getRedditPosts(listing)
@@ -84,19 +82,22 @@ async function fetchRedditUserPosts(
 
 async function fetchSubredditPosts(
   { sort, subreddit }: { sort: SubredditSort, subreddit: string },
+  context: SourceLoaderContext,
 ): Promise<SourceLoaderResult> {
-  return fetchSubredditListing(subreddit, sort)
+  return fetchSubredditListing(subreddit, sort, context)
 }
 
 async function fetchSubredditTopPosts(
   { period, subreddit }: { period: SubredditTopPeriod, subreddit: string },
+  context: SourceLoaderContext,
 ): Promise<SourceLoaderResult> {
-  return fetchSubredditListing(subreddit, "top", { t: period })
+  return fetchSubredditListing(subreddit, "top", context, { t: period })
 }
 
 async function fetchSubredditListing(
   subreddit: string,
   sort: SubredditSort | "top",
+  context: SourceLoaderContext,
   query: Record<string, string | number> = {},
 ): Promise<SourceLoaderResult> {
   const normalizedSubreddit = subreddit.trim()
@@ -107,6 +108,7 @@ async function fetchSubredditListing(
   const encodedSubreddit = encodeURIComponent(normalizedSubreddit)
   const listing = await fetchRedditListing(
     `/r/${encodedSubreddit}/${sort}.json`,
+    context,
     query,
   )
   const posts = getRedditPosts(listing)

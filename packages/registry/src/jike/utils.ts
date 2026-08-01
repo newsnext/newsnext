@@ -9,21 +9,6 @@ function compactText(text: string): string {
   return text.trim().replace(/\s+/g, " ")
 }
 
-function getNumberProperty(value: unknown, key: string): number | undefined {
-  if (!value || typeof value !== "object") return undefined
-  const result = (value as Record<string, unknown>)[key]
-  return typeof result === "number" ? result : undefined
-}
-
-export function isJikeAuthFetchError(error: unknown): boolean {
-  const response = (error as { response?: unknown } | null)?.response
-  const status = getNumberProperty(error, "statusCode")
-    ?? getNumberProperty(error, "status")
-    ?? getNumberProperty(response, "status")
-    ?? getNumberProperty(response, "statusCode")
-  return status === 401 || status === 403
-}
-
 function getPictureUrl(picture: JikePicture): string | undefined {
   return picture.middlePicUrl ?? picture.picUrl ?? picture.smallPicUrl ?? picture.thumbnailUrl
 }
@@ -105,7 +90,6 @@ export function jikePostsToNewsItems(
 export function createJikeHeaders(accessToken: string): Record<string, string> {
   return {
     "accept": "application/json, text/plain, */*",
-    "content-type": "application/json",
     "platform": "web",
     "x-jike-access-token": accessToken,
   }

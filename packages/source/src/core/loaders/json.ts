@@ -1,4 +1,3 @@
-import type { FetchOptions } from "ofetch"
 import type {
   NewsItem,
   SourceLoaderResult,
@@ -9,14 +8,14 @@ import type {
   LoaderContext,
   LoaderFields,
   LoaderMetadataFields,
+  LoaderRequestOptions,
 } from "./shared"
 import * as jmespath from "jmespath"
-import { sessionFetch } from "../../utils"
 import {
   compileSourceTemplate,
   createSourceTemplateScope,
 } from "../template"
-import { normalizeLoaderMetadata } from "./shared"
+import { normalizeLoaderMetadata, requestLoaderResponse } from "./shared"
 
 const MAX_EXPRESSION_LENGTH = 2_000
 const validatedExpressions = new Set<string>()
@@ -47,21 +46,18 @@ interface JsonFieldEntry {
   path: readonly string[]
 }
 
-export interface JsonLoaderOptions {
+interface JsonLoaderBaseOptions {
   url: string
   /**
    * Path to the array of items in the response JSON (e.g. "data.items").
    * If not provided, assumes the response itself is the array.
    */
   items?: string
-  /**
-   * Custom fetch function
-   */
-  fetchOptions?: FetchOptions
-  fetch?: (url: string) => Promise<unknown>
   metadata?: LoaderMetadataFields<JsonField>
   fields: LoaderFields<JsonField>
 }
+
+export type JsonLoaderOptions = JsonLoaderBaseOptions & LoaderRequestOptions
 
 export function compileJsonLoaderTemplates(
   options: Pick<JsonLoaderOptions, "fields" | "metadata">,
@@ -217,14 +213,9 @@ export async function loadJson(
   options: JsonLoaderOptions,
   loaderContext: LoaderContext = {},
 ): Promise<SourceLoaderResult> {
-  const { url, fetchOptions, fetch, items: itemsSelect, fields, metadata } = options
-
-  let json: unknown
-  if (fetch) {
-    json = await fetch(url)
-  } else {
-    json = await sessionFetch(url, fetchOptions)
-  }
+  const { url, items: itemsSelect, fields, metadata } = options
+  const response = await requestLoaderResponse(options, loaderContext)
+  const json: unknown = await response.json()
 
   const metadataContext: JsonFieldContext = {
     vars: loaderContext.vars ?? {},

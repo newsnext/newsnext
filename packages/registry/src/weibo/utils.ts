@@ -1,5 +1,4 @@
-import type { NewsItem, SourceLoaderResult } from "@newsnext/source/types"
-import { sessionFetch } from "@newsnext/source/utils"
+import type { NewsItem, SourceLoaderContext, SourceLoaderResult } from "@newsnext/source/types"
 import { load } from "cheerio/slim"
 
 const WEIBO_ORIGIN = "https://weibo.com"
@@ -50,12 +49,12 @@ interface WeiboContainerData {
   cards?: WeiboCard[]
 }
 
-async function fetchWeiboDesktop<T>(url: string): Promise<T> {
-  return sessionFetch<T>(url, {
+async function fetchWeiboDesktop<T>(url: string, context: SourceLoaderContext): Promise<T> {
+  return context.fetch.get(url, {
     headers: {
       "X-Requested-With": "XMLHttpRequest",
     },
-  })
+  }).json<T>()
 }
 
 function htmlToText(html?: string): string {
@@ -131,12 +130,14 @@ function cardsToNewsItems(cards: WeiboCard[]): NewsItem[] {
 
 export async function fetchWeiboUserPosts(
   { uid }: { uid: string },
+  context: SourceLoaderContext,
 ): Promise<SourceLoaderResult> {
   const normalizedUid = uid.trim()
   if (!/^\d+$/.test(normalizedUid)) throw new Error("Weibo user ID must be a numeric uid.")
 
   const response = await fetchWeiboDesktop<WeiboApiResponse<{ list?: WeiboStatus[] }>>(
     `${WEIBO_ORIGIN}/ajax/statuses/mymblog?uid=${normalizedUid}&page=1&feature=0`,
+    context,
   )
   if (!response.data) throw new Error(response.msg ?? "Weibo returned an empty user timeline.")
   const statuses = response.data.list ?? []
@@ -152,12 +153,13 @@ export async function fetchWeiboUserPosts(
 
 export async function fetchWeiboKeywordPosts(
   { keyword }: { keyword: string },
+  context: SourceLoaderContext,
 ): Promise<SourceLoaderResult> {
   const normalizedKeyword = keyword.trim()
   if (!normalizedKeyword) throw new Error("Weibo keyword must not be empty.")
 
   const keywordValue = encodeURIComponent(normalizedKeyword)
-  const response = await sessionFetch<WeiboApiResponse<WeiboContainerData>>(
+  const response = await context.fetch.get(
     `${WEIBO_MOBILE_ORIGIN}/api/container/getIndex?containerid=100103type%3D61%26q%3D${keywordValue}%26t%3D0`,
     {
       headers: {
@@ -165,13 +167,14 @@ export async function fetchWeiboKeywordPosts(
         "X-Requested-With": "XMLHttpRequest",
       },
     },
-  )
+  ).json<WeiboApiResponse<WeiboContainerData>>()
   if (!response.data) throw new Error(response.msg ?? "Weibo returned an empty keyword timeline.")
   return { items: cardsToNewsItems(response.data.cards ?? []) }
 }
 
 export async function fetchWeiboSuperTopicPosts(
   { id }: { id: string },
+  context: SourceLoaderContext,
 ): Promise<SourceLoaderResult> {
   const normalizedId = id.trim()
   if (!/^100808[a-z\d]+$/i.test(normalizedId)) {
@@ -179,6 +182,7 @@ export async function fetchWeiboSuperTopicPosts(
   }
   const response = await fetchWeiboDesktop<{ items?: Array<{ category?: string, data?: WeiboStatus }> }>(
     `${WEIBO_ORIGIN}/ajax_proxy/chaohua/page?flowId=${normalizedId}_-_sort_time`,
+    context,
   )
   return {
     items: statusesToNewsItems(
@@ -188,7 +192,10 @@ export async function fetchWeiboSuperTopicPosts(
   }
 }
 
-export async function fetchWeiboFollowingTimeline(): Promise<SourceLoaderResult> {
+export async function fetchWeiboFollowingTimeline(
+  _params: Record<string, unknown>,
+  context: SourceLoaderContext,
+): Promise<SourceLoaderResult> {
   const listId = "my_follow_all"
   const searchParams = new URLSearchParams({
     list_id: listId,
@@ -198,6 +205,7 @@ export async function fetchWeiboFollowingTimeline(): Promise<SourceLoaderResult>
   })
   const response = await fetchWeiboDesktop<WeiboApiResponse<never> & { statuses?: WeiboStatus[] }>(
     `${WEIBO_ORIGIN}/ajax/feed/friendstimeline?${searchParams}`,
+    context,
   )
   if (response.ok === -100) {
     throw new Error("Please log in to https://weibo.com first.")

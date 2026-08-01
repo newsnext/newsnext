@@ -1,11 +1,20 @@
-import type { SourceRadarRule, SourceRequestRule } from "../types"
+import type { SourceLoaderContext, SourceRadarRule, SourceRequestRule } from "../types"
 import type { ProviderConfig, SourceConfig } from "./index"
 import { describe, expect, it } from "vitest"
+import { createSourceFetch } from "../utils"
 import {
   flattenProviderConfig,
   resolveProvider,
   resolveSourceRegistry,
 } from "./index"
+
+function createLoaderContext(): SourceLoaderContext {
+  const signal = new AbortController().signal
+  return {
+    fetch: createSourceFetch(signal),
+    signal,
+  }
+}
 
 function createSourceConfig(radar: NonNullable<SourceConfig["radar"]>): SourceConfig {
   return {
@@ -73,7 +82,7 @@ describe("source template vars", () => {
         home: "https://example.com/latest",
       },
     })
-    await expect(provider.sources.latest.loader({})).resolves.toEqual({
+    await expect(provider.sources.latest.loader({}, createLoaderContext())).resolves.toEqual({
       items: [{
         title: "Item",
         url: "https://example.com/items/1",
@@ -100,7 +109,7 @@ describe("source template vars", () => {
       },
     })
 
-    await expect(provider.sources.latest.loader({})).rejects.toThrow(
+    await expect(provider.sources.latest.loader({}, createLoaderContext())).rejects.toThrow(
       "items[0].url must be a non-empty string",
     )
   })

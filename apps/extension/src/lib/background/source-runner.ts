@@ -12,6 +12,7 @@ import {
   loadSourceDescriptors,
   normalizeSourceParams,
 } from "@newsnext/source/runtime"
+import { createBackgroundSourceFetch } from "./source-fetch"
 import { resolveSourceSecrets, updateSourceSecrets } from "./source-secrets"
 import { createBackgroundSourceService } from "./source-service"
 
@@ -77,8 +78,15 @@ export async function runConnectedSource(
     input.useProviderSecrets,
   )
   const secrets = await resolveSourceSecrets(source, secretProviderId)
+  const signal = new AbortController().signal
   const { items: data } = await source.loader(params, {
+    fetch: createBackgroundSourceFetch(
+      sourceId,
+      source.capabilities.network,
+      signal,
+    ),
     secrets,
+    signal,
     updateSecrets: async (updates) => {
       Object.assign(secrets, updates)
       await updateSourceSecrets(source, secretProviderId, updates)

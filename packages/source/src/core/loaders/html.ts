@@ -1,6 +1,5 @@
 import type * as cheerio from "cheerio/slim"
 import type { AnyNode } from "domhandler"
-import type { FetchOptions } from "ofetch"
 import type {
   HtmlField,
   HtmlFieldConfig,
@@ -14,14 +13,14 @@ import type {
   LoaderContext,
   LoaderFields,
   LoaderMetadataFields,
+  LoaderRequestOptions,
 } from "./shared"
 import { load } from "cheerio/slim"
-import { sessionFetch } from "../../utils"
 import {
   compileSourceTemplate,
   createSourceTemplateScope,
 } from "../template"
-import { normalizeLoaderMetadata } from "./shared"
+import { normalizeLoaderMetadata, requestLoaderResponse } from "./shared"
 
 const MAX_SELECTED_ITEMS = 2_000
 const fieldTemplates = new WeakMap<HtmlFieldConfig, ReturnType<typeof compileSourceTemplate>>()
@@ -50,18 +49,18 @@ interface FieldEntry {
   path: readonly string[]
 }
 
-export interface HtmlLoaderOptions {
+interface HtmlLoaderBaseOptions {
   url: string
   /**
    * CSS selector for the source items.
    */
   items?: string
   decoding?: string
-  fetchOptions?: FetchOptions
-  fetch?: (url: string) => Promise<string>
   metadata?: LoaderMetadataFields<HtmlField>
   fields: LoaderFields<HtmlField>
 }
+
+export type HtmlLoaderOptions = HtmlLoaderBaseOptions & LoaderRequestOptions
 
 export function compileHtmlLoaderTemplates(
   options: Pick<HtmlLoaderOptions, "fields" | "metadata">,
@@ -272,24 +271,17 @@ export async function loadHtml(
     url,
     items: itemsSelect,
     decoding,
-    fetchOptions,
-    fetch,
     fields,
     metadata,
   } = options
+  const response = await requestLoaderResponse(options, loaderContext)
 
   let html: string
-  if (fetch) {
-    html = await fetch(url)
-  } else if (decoding && decoding.toLowerCase() !== "utf-8") {
-    const response = await sessionFetch(url, {
-      ...fetchOptions,
-      responseType: "arrayBuffer",
-    }) as ArrayBuffer
-    html = new TextDecoder(decoding as ConstructorParameters<typeof TextDecoder>[0]).decode(response)
+  if (decoding && decoding.toLowerCase() !== "utf-8") {
+    const data = await response.arrayBuffer()
+    html = new TextDecoder(decoding as ConstructorParameters<typeof TextDecoder>[0]).decode(data)
   } else {
-    const res = await sessionFetch(url, fetchOptions)
-    html = typeof res === "string" ? res : JSON.stringify(res)
+    html = await response.text()
   }
 
   const $ = load(html)

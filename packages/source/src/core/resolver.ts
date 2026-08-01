@@ -277,7 +277,7 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
   let resolvedLoader: SourceLoader<TParams>
   switch (loader.type) {
     case "json": {
-      const { type: _type, url, fetchOptions, ...options } = loader
+      const { type: _type, url, fetchOptions, request, ...options } = loader
       const urlTemplate = compileSourceTemplateValue(url, {
         location: `${sourceId}.loader.url`,
         slot: "request",
@@ -288,23 +288,28 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
             location: `${sourceId}.loader.fetchOptions`,
             slot: "request",
           })
-      resolvedLoader = async (loaderParams) => {
+      resolvedLoader = async (loaderParams, context) => {
         const scope = createSourceTemplateScope(vars, { params: loaderParams })
         const resolvedUrl = resolveSourceUrl(urlTemplate.render(scope), baseUrl)
         assertNetworkCapability(sourceId, resolvedUrl, capabilities.network)
-        return loadJson({
-          ...options,
-          url: resolvedUrl,
-          fetchOptions: fetchOptionsTemplate?.render(scope),
-        }, {
+        const loaderOptions: JsonLoaderOptions = request
+          ? { ...options, url: resolvedUrl, request }
+          : {
+              ...options,
+              url: resolvedUrl,
+              fetchOptions: fetchOptionsTemplate?.render(scope),
+            }
+        return loadJson(loaderOptions, {
+          fetch: context.fetch,
           vars,
           params: loaderParams,
+          signal: context.signal,
         })
       }
       break
     }
     case "html": {
-      const { type: _type, url, fetchOptions, ...options } = loader
+      const { type: _type, url, fetchOptions, request, ...options } = loader
       const urlTemplate = compileSourceTemplateValue(url, {
         location: `${sourceId}.loader.url`,
         slot: "request",
@@ -315,17 +320,22 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
             location: `${sourceId}.loader.fetchOptions`,
             slot: "request",
           })
-      resolvedLoader = async (loaderParams) => {
+      resolvedLoader = async (loaderParams, context) => {
         const scope = createSourceTemplateScope(vars, { params: loaderParams })
         const resolvedUrl = resolveSourceUrl(urlTemplate.render(scope), baseUrl)
         assertNetworkCapability(sourceId, resolvedUrl, capabilities.network)
-        return loadHtml({
-          ...options,
-          url: resolvedUrl,
-          fetchOptions: fetchOptionsTemplate?.render(scope),
-        }, {
+        const loaderOptions: HtmlLoaderOptions = request
+          ? { ...options, url: resolvedUrl, request }
+          : {
+              ...options,
+              url: resolvedUrl,
+              fetchOptions: fetchOptionsTemplate?.render(scope),
+            }
+        return loadHtml(loaderOptions, {
+          fetch: context.fetch,
           vars,
           params: loaderParams,
+          signal: context.signal,
         })
       }
       break
@@ -336,13 +346,16 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
         location: `${sourceId}.loader.url`,
         slot: "request",
       })
-      resolvedLoader = async (loaderParams) => {
+      resolvedLoader = async (loaderParams, context) => {
         const resolvedUrl = resolveSourceUrl(
           urlTemplate.render(createSourceTemplateScope(vars, { params: loaderParams })),
           baseUrl,
         )
         assertNetworkCapability(sourceId, resolvedUrl, capabilities.network)
-        return loadRss({ url: resolvedUrl })
+        return loadRss({ url: resolvedUrl }, {
+          fetch: context.fetch,
+          signal: context.signal,
+        })
       }
       break
     }

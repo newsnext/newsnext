@@ -1,14 +1,15 @@
-import { useQuery } from "@tanstack/react-query"
+import { queryOptions, useQuery } from "@tanstack/react-query"
 import { loadSourceDescriptors } from "@/lib/sources"
 
-export const SOURCE_DESCRIPTORS_QUERY_KEY = ["source-descriptors"] as const
+export const sourceDescriptorsQueryOptions = queryOptions({
+  queryKey: ["source-descriptors"],
+  queryFn: loadSourceDescriptors,
+  networkMode: "always",
+  staleTime: Number.POSITIVE_INFINITY,
+})
 
 export function useSourceDescriptors() {
-  const query = useQuery({
-    queryKey: SOURCE_DESCRIPTORS_QUERY_KEY,
-    queryFn: loadSourceDescriptors,
-    staleTime: Number.POSITIVE_INFINITY,
-  })
+  const query = useQuery(sourceDescriptorsQueryOptions)
 
   return {
     ...query,
