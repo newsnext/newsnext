@@ -118,7 +118,6 @@ export function isSourcePresentationMetadataKey(
 export interface SourceCapabilities {
   network: readonly string[]
   cookies: readonly string[]
-  browser: readonly string[]
 }
 
 export interface SourceProvider {

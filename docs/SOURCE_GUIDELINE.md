@@ -557,7 +557,6 @@ loader: {
 capabilities: {
   network: ["api.example.com"],
   cookies: [],
-  browser: [],
 }
 ```
 
@@ -672,14 +671,19 @@ or dynamically selected hostname:
 capabilities: {
   network: ["api.example.com", "*.images.example.com"],
   cookies: [],
-  browser: [],
 }
 ```
 
 Network entries may be an exact hostname, a wildcard subdomain, or `*`. Only
-HTTP and HTTPS requests are accepted. Custom loaders must declare their
-capabilities. Browser capabilities include `history`, `bookmarks`, and
-`favicon`.
+HTTP and HTTPS requests are accepted. Custom loaders must declare every network
+and cookie capability they use; loaders that use neither may omit
+`capabilities`. Browser API permissions are not a source authoring capability:
+the extension owns them for its built-in `browser:*` sources.
+
+The built-in `rss:feed` source is also permission-specialized. Although its
+runtime network capability is `*` so it can validate a user-selected feed, the
+extension requests host access only for the hostname in that card's effective
+`url` parameter. Changing the feed URL recalculates the required origin.
 
 Secrets collect website values instead of hard-coding them:
 

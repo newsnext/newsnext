@@ -8,7 +8,6 @@ import { useSourceParams } from "@/hooks"
 import { useInView } from "@/hooks/use-in-view"
 import { useSourcePermission } from "@/hooks/use-source-permission"
 import { useSourceQuery } from "@/hooks/use-source-query"
-import { getSourcePermissionDescription } from "@/lib/source-permissions"
 import {
   SOURCE_QUERY_OFFSCREEN_RETENTION_MS,
   SOURCE_QUERY_PRELOAD_MARGIN,
@@ -37,11 +36,6 @@ function CardContent({ id, source, dragHandle, isDraft = false, onDraftSourceCha
   const resetLocalParams = useSetAtom(resetInstanceParamsAtom)
   const [isFlipped, setIsFlipped] = useState(false)
   const {
-    canLoad,
-    permissionRequired,
-    requestPermission,
-  } = useSourcePermission(source)
-  const {
     hasParams,
     savedParams,
     draftParams,
@@ -54,6 +48,12 @@ function CardContent({ id, source, dragHandle, isDraft = false, onDraftSourceCha
     params: source.params,
     initialValues: source.paramsValue,
   })
+  const {
+    canLoad,
+    permissionDescription,
+    permissionRequired,
+    requestPermission,
+  } = useSourcePermission(source, savedParams)
 
   const { items, metadata, fetchLatest, isFetching, isFetchingLatest, isError, errorMessage, loginUrl, updatedAt } = useSourceQuery({
     sourceId: source.sourceId,
@@ -118,7 +118,7 @@ function CardContent({ id, source, dragHandle, isDraft = false, onDraftSourceCha
         isFetchingLatest={isFetchingLatest}
         sourceErrorMessage={sourceErrorMessage}
         sourceLoginUrl={canLoad ? loginUrl : undefined}
-        sourcePermissionDescription={getSourcePermissionDescription(source)}
+        sourcePermissionDescription={permissionDescription}
         sourcePermissionRequired={permissionRequired}
         updatedAt={updatedAt}
         onRefresh={fetchLatest}

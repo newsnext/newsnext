@@ -239,7 +239,6 @@ export default {
       loader: {
         load: fetchBrowserHistory,
       },
-      capabilities: { browser: ["history"] },
       cache: "1m",
     },
     bookmarks: {
@@ -264,7 +263,6 @@ export default {
       loader: {
         load: fetchBrowserBookmarks,
       },
-      capabilities: { browser: ["bookmarks", "favicon"] },
     },
   },
 } satisfies ProviderConfig

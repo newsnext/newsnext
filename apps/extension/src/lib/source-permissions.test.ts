@@ -12,23 +12,24 @@ const {
 } = await import("./source-permissions")
 
 function createSource({
-  browser = [],
   cookies = [],
   network = [],
   providerName = "Test",
+  sourceId = "test:source",
   title,
 }: {
-  browser?: string[]
   cookies?: string[]
   network?: string[]
   providerName?: string
+  sourceId?: string
   title?: string
 }) {
   return {
-    capabilities: { browser, cookies, network },
+    capabilities: { cookies, network },
     provider: {
       title: providerName,
     },
+    sourceId,
     metadata: { title },
   }
 }
@@ -36,16 +37,42 @@ function createSource({
 describe("source permissions", () => {
   it("maps browser sources to all optional permissions they use", () => {
     expect(getPermissionRequestForSource(createSource({
-      browser: ["history"],
+      sourceId: "browser:history",
       title: "History",
     }))).toEqual({
       permissions: ["history"],
     })
     expect(getPermissionRequestForSource(createSource({
-      browser: ["bookmarks", "favicon"],
+      sourceId: "browser:bookmarks",
       title: "Bookmarks",
     }))).toEqual({
       permissions: ["bookmarks", "favicon"],
+    })
+  })
+
+  it("maps RSS feeds to the configured feed origin", () => {
+    const source = {
+      ...createSource({
+        network: ["*"],
+        providerName: "RSS",
+        sourceId: "rss:feed",
+      }),
+      params: {
+        url: {
+          type: "url" as const,
+          title: "Feed URL",
+          default: "https://default.example.com/feed.xml",
+        },
+      },
+    }
+
+    expect(getPermissionRequestForSource(source)).toEqual({
+      origins: ["*://default.example.com/*"],
+    })
+    expect(getPermissionRequestForSource(source, {
+      url: "https://feeds.example.org/news.xml",
+    })).toEqual({
+      origins: ["*://feeds.example.org/*"],
     })
   })
 
@@ -58,7 +85,10 @@ describe("source permissions", () => {
     expect(getPermissionRequestForSource(source)).toEqual({
       origins: ["*://user-added.example.com/*"],
     })
-    expect(getSourcePermissionDescription(source))
+    expect(getSourcePermissionDescription(
+      source,
+      getPermissionRequestForSource(source),
+    ))
       .toBe("Authorize access to user-added.example.com to load this source.")
   })
 

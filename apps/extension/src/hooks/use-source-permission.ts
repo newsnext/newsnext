@@ -1,18 +1,16 @@
 import type { SourcePermissionTarget } from "@/lib/source-permissions"
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { browser } from "#imports"
 import {
   getPermissionRequestForSource,
-  hasPermissionToLoadSource,
-  requestPermissionToLoadSource,
+  getSourcePermissionDescription,
+  hasSourcePermission,
+  requestSourcePermission,
 } from "@/lib/source-permissions"
-
-interface SourcePermissionHookTarget extends SourcePermissionTarget {
-  sourceId: string
-}
 
 export interface SourcePermissionState {
   canLoad: boolean
+  permissionDescription: string
   permissionRequired: boolean
   requestPermission: () => Promise<boolean>
 }
@@ -22,26 +20,32 @@ interface PermissionState {
   permissionKey: string
 }
 
-function getSourcePermissionKey(source: SourcePermissionHookTarget): string {
-  return `${source.sourceId}:${JSON.stringify(getPermissionRequestForSource(source) ?? null)}`
-}
-
-function createPermissionState(source: SourcePermissionHookTarget): PermissionState {
+function createPermissionState(
+  permissionKey: string,
+  requiresPermission: boolean,
+): PermissionState {
   return {
-    granted: getPermissionRequestForSource(source) ? undefined : true,
-    permissionKey: getSourcePermissionKey(source),
+    granted: requiresPermission ? undefined : true,
+    permissionKey,
   }
 }
 
-export function useSourcePermission(source: SourcePermissionHookTarget): SourcePermissionState {
-  const permissionKey = getSourcePermissionKey(source)
-  const requiresPermission = Boolean(getPermissionRequestForSource(source))
+export function useSourcePermission(
+  source: SourcePermissionTarget,
+  params: Record<string, unknown>,
+): SourcePermissionState {
+  const permissionRequest = useMemo(
+    () => getPermissionRequestForSource(source, params),
+    [params, source],
+  )
+  const permissionKey = JSON.stringify(permissionRequest ?? null)
+  const requiresPermission = permissionRequest !== undefined
   const [storedState, setStoredState] = useState<PermissionState>(() => (
-    createPermissionState(source)
+    createPermissionState(permissionKey, requiresPermission)
   ))
   let permissionState = storedState
   if (storedState.permissionKey !== permissionKey) {
-    permissionState = createPermissionState(source)
+    permissionState = createPermissionState(permissionKey, requiresPermission)
     setStoredState(permissionState)
   }
 
@@ -50,7 +54,7 @@ export function useSourcePermission(source: SourcePermissionHookTarget): SourceP
 
     let active = true
     const refreshPermission = async (): Promise<void> => {
-      const granted = await hasPermissionToLoadSource(source)
+      const granted = await hasSourcePermission(permissionRequest)
       if (active) {
         setStoredState({ granted, permissionKey })
       }
@@ -68,16 +72,17 @@ export function useSourcePermission(source: SourcePermissionHookTarget): SourceP
       browser.permissions.onAdded.removeListener(handlePermissionChange)
       browser.permissions.onRemoved.removeListener(handlePermissionChange)
     }
-  }, [permissionKey, requiresPermission, source])
+  }, [permissionKey, permissionRequest, requiresPermission])
 
   const requestPermission = useCallback(async () => {
-    const granted = await requestPermissionToLoadSource(source)
+    const granted = await requestSourcePermission(permissionRequest)
     setStoredState({ granted, permissionKey })
     return granted
-  }, [permissionKey, source])
+  }, [permissionKey, permissionRequest])
 
   return {
     canLoad: permissionState.granted === true,
+    permissionDescription: getSourcePermissionDescription(source, permissionRequest),
     permissionRequired: permissionState.granted === false,
     requestPermission,
   }

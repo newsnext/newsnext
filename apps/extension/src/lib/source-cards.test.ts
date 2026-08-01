@@ -22,7 +22,6 @@ const testSources: SourceDescriptor[] = [
     capabilities: {
       network: [],
       cookies: [],
-      browser: [],
     },
     cache: {
       version: 1,
@@ -42,7 +41,6 @@ const testSources: SourceDescriptor[] = [
     capabilities: {
       network: [],
       cookies: [],
-      browser: [],
     },
     cache: {
       version: 1,

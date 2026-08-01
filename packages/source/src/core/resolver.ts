@@ -96,7 +96,7 @@ export type SourceConfig<TParams extends SourceParamSchemaMap = any>
         type: "custom"
         load: CustomLoaderFunction<TParams>
       }
-      capabilities: SourceCapabilityOverrides
+      capabilities?: SourceCapabilityOverrides
     }
   )
 
@@ -501,6 +501,5 @@ function resolveSourceCapabilities<TParams extends SourceParamSchemaMap>(
   return {
     network: [...new Set([...inferredNetworkHosts, ...(overrides?.network ?? [])])],
     cookies: [...new Set(overrides?.cookies ?? [])],
-    browser: [...new Set(overrides?.browser ?? [])],
   }
 }
