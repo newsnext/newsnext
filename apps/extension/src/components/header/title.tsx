@@ -1,7 +1,11 @@
 import type { RefObject } from "react"
+import { useAtomValue, useSetAtom } from "jotai"
 import { AnimatePresence, m, useMotionValue, useMotionValueEvent, useScroll } from "motion/react"
 import { useCallback, useState } from "react"
 import { useScrollProgressContext } from "@/components/scroll-progress-context"
+import { getBoardColor } from "@/lib/boards"
+import { handleThemeSwitch } from "@/lib/utils/swith-theme"
+import { boardsAtom, currentBoardIdAtom, updateBoardAtom } from "@/store/board"
 import { ThemeSelector } from "../common/theme-selector"
 import DynamicIsland from "../dynamic-island"
 import { Logo } from "../icons/logo"
@@ -122,6 +126,27 @@ interface TitleIslandProps {
   width?: number
 }
 
+function CurrentBoardThemeSelector() {
+  const boards = useAtomValue(boardsAtom)
+  const currentBoardId = useAtomValue(currentBoardIdAtom)
+  const updateBoard = useSetAtom(updateBoardAtom)
+  const board = boards.find(candidate => candidate.id === currentBoardId)
+
+  if (!board) {
+    return null
+  }
+
+  return (
+    <ThemeSelector
+      value={getBoardColor(board)}
+      onValueChange={(color) => {
+        updateBoard({ ...board, color })
+        handleThemeSwitch(color)
+      }}
+    />
+  )
+}
+
 export function TitleIsland({ scrollContainerRef, width = 150 }: TitleIslandProps) {
   return (
     <>
@@ -144,7 +169,7 @@ export function TitleIsland({ scrollContainerRef, width = 150 }: TitleIslandProp
                 <HeaderProgress scrollContainerRef={scrollContainerRef} />
               )
             : (
-                <ThemeSelector />
+                <CurrentBoardThemeSelector />
               )}
       </DynamicIsland>
     </>

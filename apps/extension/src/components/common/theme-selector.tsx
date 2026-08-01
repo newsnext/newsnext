@@ -1,21 +1,16 @@
+import type { Color } from "@newsnext/shared/types"
 import { COLORS } from "@newsnext/shared/constants"
 import { m } from "motion/react"
-import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
-import { handleThemeSwitch, THEME_COLOR_KEY } from "@/lib/utils/swith-theme"
 import { Logo } from "../icons/logo"
 
-export function ThemeSelector() {
-  const [currentTheme, setCurrentTheme] = useState(
-    () => localStorage.getItem(THEME_COLOR_KEY) ?? "",
-  )
+interface ThemeSelectorProps {
+  value: Color
+  onValueChange: (color: Color) => void
+  layoutId?: string
+}
 
-  useEffect(() => {
-    if (currentTheme) {
-      handleThemeSwitch(currentTheme)
-    }
-  }, [currentTheme])
-
+export function ThemeSelector({ value, onValueChange, layoutId = "theme-indicator" }: ThemeSelectorProps) {
   return (
     <div className="h-full grid grid-cols-6 w-full">
       {COLORS.map(color => (
@@ -28,14 +23,15 @@ export function ThemeSelector() {
           )}
           onClick={(e) => {
             e.stopPropagation()
-            handleThemeSwitch(color)
-            setCurrentTheme(color)
+            onValueChange(color)
           }}
           title={color}
+          aria-label={`${color} theme`}
+          aria-pressed={value === color}
         >
-          {currentTheme === color && (
+          {value === color && (
             <m.div
-              layoutId="theme-indicator"
+              layoutId={layoutId}
               className="absolute -bottom-1 left-1/2 -translate-x-1/2 size-1 rounded-full bg-theme-500"
               transition={{
                 type: "spring",

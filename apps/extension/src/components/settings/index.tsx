@@ -24,7 +24,6 @@ import {
 } from "@/lib/utils/swith-theme"
 import { boardsAtom, defaultBoardIdAtom } from "@/store/board"
 import { SegmentedControl } from "../common/segmented-control"
-import { ThemeSelector } from "../common/theme-selector"
 import { PermissionsSettings } from "./permissions"
 import { SourceConnectionSettings } from "./source-connection"
 import { SourceIconSettings } from "./source-icon"
@@ -152,12 +151,6 @@ function AppearanceSettings() {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-4">
-        <h3 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Theme Color</h3>
-        <div className="flex w-[300px] h-[160px]">
-          <ThemeSelector />
-        </div>
-      </div>
       <div className="space-y-2">
         <Label>Theme Mode</Label>
         <SegmentedControl<ThemeMode>

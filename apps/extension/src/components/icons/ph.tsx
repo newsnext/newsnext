@@ -12,7 +12,6 @@ import PhLinkDuotone from "~icons/ph/link-duotone"
 import PhMagnifyingGlassDuotone from "~icons/ph/magnifying-glass-duotone"
 import PhPencilCircleDuotone from "~icons/ph/pencil-circle-duotone"
 import PhPlusCircleDuotone from "~icons/ph/plus-circle-duotone"
-import PhSortAscendingDuotone from "~icons/ph/sort-ascending-duotone"
 import PhTrashDuotone from "~icons/ph/trash-duotone"
 import PhUserDuotone from "~icons/ph/user-duotone"
 
@@ -31,7 +30,6 @@ export {
   PhMagnifyingGlassDuotone as PhMagnifyingGlass,
   PhPencilCircleDuotone,
   PhPlusCircleDuotone,
-  PhSortAscendingDuotone,
   PhTrashDuotone,
   PhUserDuotone,
 }

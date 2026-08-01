@@ -108,6 +108,28 @@ export const createBoardAtom = atom(null, (_get, set, board: Board) => {
   set(boardsAtom, prev => [...prev, board])
 })
 
+export const updateBoardAtom = atom(null, (_get, set, board: Board) => {
+  set(boardsAtom, prev => prev.map(current => current.id === board.id ? board : current))
+})
+
+export const deleteBoardAtom = atom(null, (_get, set, boardId: string) => {
+  if (boardId === ALL_BOARD_ID) {
+    return
+  }
+
+  set(boardsAtom, prev => prev.filter(board => board.id !== boardId))
+  set(instancesAtom, prev => prev.map(instance => instance.boardId === boardId
+    ? { ...instance, boardId: null }
+    : instance))
+  set(boardSortPreferencesAtom, (preferences) => {
+    const remainingPreferences = { ...preferences }
+    delete remainingPreferences[boardId]
+    return remainingPreferences
+  })
+  set(currentBoardIdAtom, current => current === boardId ? ALL_BOARD_ID : current)
+  set(defaultBoardIdAtom, current => current === boardId ? ALL_BOARD_ID : current)
+})
+
 export const moveInstanceToBoardAtom = atom(null, (_get, set, { instanceId, boardId }: { instanceId: string, boardId: string | null }) => {
   set(instancesAtom, prev => prev.map(instance => instance.instanceId === instanceId
     ? { ...instance, boardId }
