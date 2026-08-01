@@ -8,12 +8,12 @@ import { syncConfiguredSourceRequestRules } from "@/lib/background/source-reques
 
 registerSourceRegistryLoader()
 const backgroundService = createBackgroundService()
-const DASHBOARD_MENU_ID = "dashboard"
+const APP_MENU_ID = "app"
 
-function registerDashboardMenu(): void {
+function registerAppMenu(): void {
   browser.contextMenus.create({
-    id: DASHBOARD_MENU_ID,
-    title: "Dashboard",
+    id: APP_MENU_ID,
+    title: "Open NewsNext",
     contexts: [import.meta.env.MANIFEST_VERSION === 3 ? "action" : "browser_action"],
   })
 }
@@ -28,11 +28,11 @@ export default defineBackground(() => {
     console.error("Failed to synchronize source request rules", error)
   })
 
-  browser.runtime.onInstalled.addListener(registerDashboardMenu)
+  browser.runtime.onInstalled.addListener(registerAppMenu)
 
   browser.contextMenus.onClicked.addListener((info) => {
-    if (info.menuItemId === DASHBOARD_MENU_ID) {
-      void browser.tabs.create({ url: browser.runtime.getURL("/dashboard.html") })
+    if (info.menuItemId === APP_MENU_ID) {
+      void browser.tabs.create({ url: browser.runtime.getURL("/app.html") })
     }
   })
 })

@@ -2,11 +2,8 @@ import type { Board } from "../lib/boards"
 import type { SourceInstance, SourceInstancePatch } from "../lib/source-cards"
 import { atom } from "jotai"
 import { atomWithStorage } from "jotai/utils"
-import { DEFAULT_BOARD_ID } from "../lib/boards"
-import {
-  mergeSourceInstancePatch,
-
-} from "../lib/source-cards"
+import { ALL_BOARD_ID, ALL_BOARD_NAME } from "../lib/boards"
+import { mergeSourceInstancePatch } from "../lib/source-cards"
 
 const BOARDS_KEY = "newsnext-boards"
 const CURRENT_BOARD_ID_KEY = "newsnext-current-board-id"
@@ -14,19 +11,19 @@ const DEFAULT_BOARD_ID_KEY = "newsnext-default-board-id"
 const SOURCE_INSTANCES_KEY = "newsnext-source-instances"
 export const boardsAtom = atomWithStorage<Board[]>(
   BOARDS_KEY,
-  [{ id: DEFAULT_BOARD_ID, name: "Inbox" }],
+  [{ id: ALL_BOARD_ID, name: ALL_BOARD_NAME }],
   undefined,
   { getOnInit: true },
 )
 export const currentBoardIdAtom = atomWithStorage(
   CURRENT_BOARD_ID_KEY,
-  DEFAULT_BOARD_ID,
+  ALL_BOARD_ID,
   undefined,
   { getOnInit: true },
 )
 export const defaultBoardIdAtom = atomWithStorage<string | null>(
   DEFAULT_BOARD_ID_KEY,
-  DEFAULT_BOARD_ID,
+  ALL_BOARD_ID,
   undefined,
   { getOnInit: true },
 )

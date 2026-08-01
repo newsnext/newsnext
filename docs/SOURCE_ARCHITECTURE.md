@@ -154,7 +154,7 @@ The extension page memoizes its descriptor-list request for the lifetime of the
 page. Card loads therefore reuse the same descriptors instead of listing,
 serializing, and sorting the complete registry for every request. A failed
 descriptor request clears the memoized promise so a later request can retry.
-The dashboard board route also primes the descriptor query with
+The app's board route also primes the descriptor query with
 `ensureQueryData` before rendering cards. Descriptor query options are shared
 between the route and React consumers and run independently of network status.
 The underlying descriptor-list request remains memoized for the page lifetime
@@ -212,12 +212,12 @@ transparently from the most recent stored result. Expired cached data is
 otherwise published as a temporary query result while a remote load is pending.
 Automatic query revalidation uses the normal source cache policy. Fetch-latest
 intent is passed directly to the query function rather than stored as state for
-a later query execution. Dashboard query timing and the Fetch Latest protection
+a later query execution. App query timing and the Fetch Latest protection
 interval are centralized in
 `apps/extension/src/lib/source-query-policy.ts`.
 
-The dashboard also reads the last persisted result as presentation-only
-placeholder data when a card mounts. This survives a dashboard close and reopen
+The app also reads the last persisted result as presentation-only placeholder
+data when a card mounts. This survives an app close and reopen
 and may use an expired entry while a fresh request is pending. The loader reads
 each cache entry once and injects stale data into the active query before
 continuing the request. Placeholder data does not satisfy the request, extend
@@ -236,7 +236,7 @@ short scrolls, then unmounts. Re-entering during that interval cancels the
 pending unmount. Successful query data remains fresh in memory for one minute;
 this avoids redundant loader and persistent-cache reads without changing the
 source-defined persistent cache duration. Active card queries also revalidate
-once every five minutes, including while the dashboard is in the background.
+once every five minutes, including while the app is in the background.
 Inactive query data follows TanStack Query's default garbage-collection policy
 and can still be restored from the persistent cache. Source queries use
 offline-first network mode so their query function can consult IndexedDB before
@@ -457,9 +457,9 @@ Accepting a Radar suggestion creates one card instance with the selected board
 membership. The instance owns its board ID alongside its source ID and patch.
 Moving a card updates only that board ID; source parameters, presentation
 metadata, and cache identity remain unchanged. The board ID is nullable:
-`null` means the card appears only in Inbox, while a custom board ID adds it to
-that board. Inbox deliberately skips membership filtering and aggregates every
-card instance.
+`null` means the card has no custom board, while a custom board ID adds it to
+that board. All deliberately skips membership filtering and aggregates every
+card instance. Its persisted ID remains `inbox` for storage compatibility.
 The card editor writes the same instance patch shape and exposes every declared
 source parameter plus each editable source-owned presentation metadata field.
 The inferred card presentation is read-only. Provider
@@ -558,7 +558,7 @@ Local provider runs use an isolated `cli:<provider-id>` secret namespace unless
 `--use-provider-secrets` is supplied. CLI execution does not install the
 provider, change the bundled registry, populate the normal source cache, or
 grant additional browser permissions. It does use the same loader-result
-validation as registered dashboard loads.
+validation as registered extension app loads.
 
 This is why direct HTTP requests are useful for investigation but are not a
 substitute for extension-backed source verification.

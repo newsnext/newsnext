@@ -13,7 +13,7 @@ import { useAtomValue } from "jotai"
 import { useEffect, useMemo, useState } from "react"
 import { useSourceDescriptors } from "@/hooks/use-source-descriptors"
 import { useSourceIcon } from "@/hooks/use-source-icon"
-import { DEFAULT_BOARD_ID } from "@/lib/boards"
+import { ALL_BOARD_ID } from "@/lib/boards"
 import { buildSourceCards } from "@/lib/source-cards"
 import { cn } from "@/lib/utils"
 import { instancesAtom } from "@/store/board"
@@ -103,7 +103,7 @@ function SearchDialogContent(): ReactNode {
     const cards = buildSourceCards({
       sources,
       sourceInstances: instances,
-      boardId: DEFAULT_BOARD_ID,
+      boardId: ALL_BOARD_ID,
     })
 
     return cards.ids.map((id) => {

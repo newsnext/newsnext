@@ -170,7 +170,7 @@ describe("buildSourceCards", () => {
     expect(cards.map).toEqual({})
   })
 
-  it("shows every card in Inbox", () => {
+  it("shows every card in All", () => {
     const cards = buildSourceCards({
       sources: testSources,
       boardId: "inbox",

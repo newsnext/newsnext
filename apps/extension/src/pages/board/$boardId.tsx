@@ -2,13 +2,23 @@ import { useParams } from "@tanstack/react-router"
 import { useAtomValue, useSetAtom } from "jotai"
 import { useEffect } from "react"
 import { Desk } from "@/components/desk"
+import { getBoardDisplayName } from "@/lib/boards"
 import { boardsAtom, currentBoardIdAtom } from "@/store/board"
 
 export function BoardIdComponent() {
   const { boardId } = useParams({ strict: false }) as { boardId: string }
   const boards = useAtomValue(boardsAtom)
   const setCurrentBoardId = useSetAtom(currentBoardIdAtom)
-  const boardExists = boards.some(board => board.id === boardId)
+  const board = boards.find(board => board.id === boardId)
+  const boardExists = board !== undefined
+
+  useEffect(() => {
+    document.title = board ? `NewsNext | ${getBoardDisplayName(board)}` : "NewsNext"
+
+    return () => {
+      document.title = "NewsNext"
+    }
+  }, [board])
 
   useEffect(() => {
     if (boardExists) {

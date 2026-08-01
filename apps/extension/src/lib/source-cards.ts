@@ -5,7 +5,7 @@ import type {
 import type { BoardSource, SourceDescriptor } from "@/typings/source"
 import { SOURCE_PRESENTATION_METADATA_KEYS } from "@newsnext/source"
 import { pick } from "es-toolkit"
-import { DEFAULT_BOARD_ID } from "@/lib/boards"
+import { ALL_BOARD_ID } from "@/lib/boards"
 
 export interface SourceInstance {
   instanceId: string
@@ -123,7 +123,7 @@ export function buildSourceCards({
   sourceInstances: SourceInstance[]
   boardId: string
 }): { ids: string[], map: Record<string, BoardSource> } {
-  const visibleInstances = boardId === DEFAULT_BOARD_ID
+  const visibleInstances = boardId === ALL_BOARD_ID
     ? sourceInstances
     : sourceInstances.filter(instance => instance.boardId === boardId)
   const cards = buildCardSources(sources, visibleInstances)

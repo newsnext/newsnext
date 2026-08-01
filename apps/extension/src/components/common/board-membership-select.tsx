@@ -5,7 +5,7 @@ import {
   SelectTrigger,
 } from "@newsnext/ui/components/select"
 import { useAtomValue } from "jotai"
-import { DEFAULT_BOARD_ID, INBOX_ONLY_VALUE } from "@/lib/boards"
+import { ALL_BOARD_ID, NO_BOARD_VALUE } from "@/lib/boards"
 import { cn } from "@/lib/utils"
 import { boardsAtom } from "@/store/board"
 
@@ -25,17 +25,17 @@ export function BoardMembershipSelect({
   className,
 }: BoardMembershipSelectProps) {
   const boards = useAtomValue(boardsAtom)
-  const customBoards = boards.filter(board => board.id !== DEFAULT_BOARD_ID)
+  const customBoards = boards.filter(board => board.id !== ALL_BOARD_ID)
   const selectedLabel = value === null
-    ? "Inbox only"
+    ? "No board"
     : customBoards.find(board => board.id === value)!.name
 
   return (
     <Select
-      value={value ?? INBOX_ONLY_VALUE}
+      value={value ?? NO_BOARD_VALUE}
       onValueChange={(nextValue) => {
         if (nextValue) {
-          onValueChange(nextValue === INBOX_ONLY_VALUE ? null : nextValue)
+          onValueChange(nextValue === NO_BOARD_VALUE ? null : nextValue)
         }
       }}
     >
@@ -48,7 +48,7 @@ export function BoardMembershipSelect({
         <span className="flex-1 truncate text-left">{selectedLabel}</span>
       </SelectTrigger>
       <SelectContent align={align}>
-        <SelectItem value={INBOX_ONLY_VALUE}>Inbox only</SelectItem>
+        <SelectItem value={NO_BOARD_VALUE}>No board</SelectItem>
         {customBoards.map(board => (
           <SelectItem key={board.id} value={board.id}>{board.name}</SelectItem>
         ))}

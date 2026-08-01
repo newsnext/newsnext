@@ -15,6 +15,7 @@ import {
 import { cn } from "@newsnext/ui/lib/utils"
 import { useAtom, useAtomValue } from "jotai"
 import { useEffect, useState } from "react"
+import { getBoardDisplayName } from "@/lib/boards"
 import {
   handleThemeModeSwitch,
   handleThemeVersionSwitch,
@@ -198,7 +199,7 @@ function GeneralSettings() {
   const selectedValue = defaultBoardId ?? LAST_USED_BOARD_VALUE
   const selectedLabel = defaultBoardId === null
     ? "Last used"
-    : boards.find(board => board.id === defaultBoardId)!.name
+    : getBoardDisplayName(boards.find(board => board.id === defaultBoardId)!)
 
   return (
     <div className="space-y-8">
@@ -218,12 +219,12 @@ function GeneralSettings() {
           <SelectContent align="start">
             <SelectItem value={LAST_USED_BOARD_VALUE}>Last used</SelectItem>
             {boards.map(board => (
-              <SelectItem key={board.id} value={board.id}>{board.name}</SelectItem>
+              <SelectItem key={board.id} value={board.id}>{getBoardDisplayName(board)}</SelectItem>
             ))}
           </SelectContent>
         </Select>
         <p className="text-sm text-muted-foreground">
-          Choose which board opens from the dashboard root.
+          Choose which board opens when NewsNext starts.
         </p>
       </div>
       <SourceIconSettings />

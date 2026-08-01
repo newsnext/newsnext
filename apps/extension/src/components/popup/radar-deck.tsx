@@ -13,7 +13,7 @@ import Card from "@/components/card"
 import { BoardMembershipSelect } from "@/components/common/board-membership-select"
 import { IconButton } from "@/components/common/button"
 import { PhArrowCircleLeftDuotone, PhPlusCircleDuotone } from "@/components/icons/ph"
-import { DEFAULT_BOARD_ID } from "@/lib/boards"
+import { ALL_BOARD_ID } from "@/lib/boards"
 import { createRadarBoardSource } from "@/lib/radar-board-source"
 import { createCardInstance, mergeSourceInstancePatch } from "@/lib/source-cards"
 import { cn } from "@/lib/utils"
@@ -197,7 +197,7 @@ function RadarDeckContent({ sourceDescriptors, suggestions }: RadarDeckProps) {
   const addInstance = useSetAtom(addInstanceAtom)
   const currentBoardId = useAtomValue(currentBoardIdAtom)
   const [targetBoardId, setTargetBoardId] = useState<string | null>(
-    currentBoardId === DEFAULT_BOARD_ID ? null : currentBoardId,
+    currentBoardId === ALL_BOARD_ID ? null : currentBoardId,
   )
   const [activeIndex, setActiveIndex] = useState(0)
   const [draftPatches, setDraftPatches] = useState<Record<string, SourceInstancePatch>>({})

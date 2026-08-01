@@ -13,7 +13,7 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { m } from "motion/react"
 import { useState } from "react"
 import { PhPlusCircleDuotone } from "@/components/icons/ph"
-import { createBoard } from "@/lib/boards"
+import { createBoard, getBoardDisplayName } from "@/lib/boards"
 import { cn } from "@/lib/utils"
 import { boardsAtom, createBoardAtom, currentBoardIdAtom } from "@/store/board"
 
@@ -31,7 +31,7 @@ function CreateBoardDialog({
   const [name, setName] = useState("")
   const normalizedName = name.trim()
   const hasDuplicateName = boards.some(board =>
-    board.name.localeCompare(normalizedName, undefined, { sensitivity: "accent" }) === 0)
+    getBoardDisplayName(board).localeCompare(normalizedName, undefined, { sensitivity: "accent" }) === 0)
   const canCreate = normalizedName.length > 0 && !hasDuplicateName
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>): void {
@@ -121,7 +121,7 @@ export function BoardNav() {
                   transition={{ type: "spring", stiffness: 380, damping: 30 }}
                 />
               )}
-              <span className="relative z-10">{board.name}</span>
+              <span className="relative z-10">{getBoardDisplayName(board)}</span>
             </button>
           )
         })}

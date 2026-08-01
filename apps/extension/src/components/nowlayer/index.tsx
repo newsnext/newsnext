@@ -3,6 +3,7 @@ import type { BoardSource } from "@/typings/source"
 import { useAtomValue } from "jotai"
 import { useCallback, useMemo, useState } from "react"
 import { useSourceDescriptors } from "@/hooks/use-source-descriptors"
+import { getBoardDisplayName } from "@/lib/boards"
 import { buildSourceCards } from "@/lib/source-cards"
 import { boardsAtom, instancesAtom } from "@/store/board"
 import { DesktopBoard } from "./desktop-board"
@@ -28,7 +29,7 @@ export function NowLayer({
   const boards = useAtomValue(boardsAtom)
   const instances = useAtomValue(instancesAtom)
   const { sources } = useSourceDescriptors()
-  const currentBoardName = boards.find(board => board.id === boardId)!.name
+  const currentBoardName = getBoardDisplayName(boards.find(board => board.id === boardId)!)
 
   const { ids: boardSourceIds, map: sourcesMap } = useMemo(() => {
     if (!sources.length) {

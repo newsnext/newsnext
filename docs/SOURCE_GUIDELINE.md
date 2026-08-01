@@ -616,8 +616,8 @@ Timestamps are milliseconds. `inline` must contain at least one of `text`,
 `html`, `mark`, or `icon`. `preview` uses either `text` or `html` and may also
 contain `picture` or `iframe`.
 
-NewsNext validates loader results at the shared runtime boundary for dashboard
-and CLI execution. Empty item arrays, malformed item objects, non-finite
+NewsNext validates loader results at the shared runtime boundary for extension
+app and CLI execution. Empty item arrays, malformed item objects, non-finite
 timestamps, empty dynamic metadata strings, and unsupported dynamic metadata
 keys fail the load. Invalid `inline` or `preview` content is omitted from that
 item instead of failing the load, so optional presentation data cannot prevent
@@ -799,9 +799,9 @@ Each Radar suggestion previews one card. When the user creates it, they select
 a destination board and the resolved parameter and presentation patches are
 persisted as a new local card instance. Radar is the card-creation entry point;
 it does not modify an existing card. A card can be moved to another board later
-without changing its source configuration. Inbox is an aggregate view that
-always shows every card and is not itself a card destination. Selecting
-`Inbox only` leaves the card out of custom boards.
+without changing its source configuration. All is an aggregate view that always
+shows every card and is not itself a card destination. Selecting `No board`
+leaves the card out of custom boards.
 
 Match rules:
 
