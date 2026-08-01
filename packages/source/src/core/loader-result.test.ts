@@ -27,15 +27,23 @@ describe("source loader result", () => {
     })).toThrowError("items[0].timestamp must be a finite number")
   })
 
-  it("rejects invalid nested content and metadata", () => {
-    expect(() => validateSourceLoaderResult({
+  it("omits invalid inline and preview content without rejecting the item", () => {
+    const result = validateSourceLoaderResult({
       items: [{
         title: "Example",
         url: "https://example.com",
+        inline: {},
         preview: { text: "Text", html: "<p>Text</p>" } as never,
       }],
-    })).toThrowError("items[0].preview must contain exactly one of text or html")
+    })
 
+    expect(result.items).toEqual([{
+      title: "Example",
+      url: "https://example.com",
+    }])
+  })
+
+  it("rejects invalid metadata", () => {
     expect(() => validateSourceLoaderResult({
       items: [{ title: "Example", url: "https://example.com" }],
       metadata: { title: "" },

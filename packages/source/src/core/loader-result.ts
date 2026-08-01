@@ -1,9 +1,12 @@
-import type { SourceLoaderResult } from "../types"
+import type { NewsItem, SourceLoaderResult } from "../types"
 import { isSourcePresentationMetadataKey } from "../types"
 
 export function validateSourceLoaderResult(value: unknown): SourceLoaderResult {
   assertSourceLoaderResult(value)
-  return value
+  const items = value.items.map((item, index) => normalizeNewsItem(item, index))
+  return items.every((item, index) => item === value.items[index])
+    ? value
+    : { ...value, items }
 }
 
 function assertSourceLoaderResult(value: unknown): asserts value is SourceLoaderResult {
@@ -26,8 +29,36 @@ function assertNewsItem(value: unknown, index: number): void {
   if (value.timestamp !== undefined && !Number.isFinite(value.timestamp)) {
     throwInvalidLoaderResult(`${location}.timestamp must be a finite number`)
   }
-  if (value.inline !== undefined) assertInlineContent(value.inline, `${location}.inline`)
-  if (value.preview !== undefined) assertPreviewContent(value.preview, `${location}.preview`)
+}
+
+function normalizeNewsItem(value: NewsItem, index: number): NewsItem {
+  const location = `items[${index}]`
+  const validInline = value.inline === undefined
+    || isValidOptionalContent(value.inline, `${location}.inline`, assertInlineContent)
+  const validPreview = value.preview === undefined
+    || isValidOptionalContent(value.preview, `${location}.preview`, assertPreviewContent)
+  if (validInline && validPreview) return value
+
+  const { inline, preview, ...item } = value
+  return {
+    ...item,
+    ...(validInline && inline !== undefined && { inline }),
+    ...(validPreview && preview !== undefined && { preview }),
+  }
+}
+
+function isValidOptionalContent(
+  value: unknown,
+  location: string,
+  assertContent: (value: unknown, location: string) => void,
+): boolean {
+  try {
+    assertContent(value, location)
+    return true
+  } catch (error) {
+    if (error instanceof TypeError) return false
+    throw error
+  }
 }
 
 function assertInlineContent(value: unknown, location: string): void {

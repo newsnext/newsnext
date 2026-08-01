@@ -618,10 +618,12 @@ contain `picture` or `iframe`.
 
 NewsNext validates loader results at the shared runtime boundary for dashboard
 and CLI execution. Empty item arrays, malformed item objects, non-finite
-timestamps, invalid nested picture, inline, or preview values, empty dynamic
-metadata strings, and unsupported dynamic metadata keys fail the load. Custom
-loaders receive the same validation as structured loaders. Returning a bare
-`NewsItem[]` is not supported; use `{ items }` even when metadata is absent.
+timestamps, empty dynamic metadata strings, and unsupported dynamic metadata
+keys fail the load. Invalid `inline` or `preview` content is omitted from that
+item instead of failing the load, so optional presentation data cannot prevent
+an item with a valid `title` and `url` from rendering. Custom loaders receive
+the same validation as structured loaders. Returning a bare `NewsItem[]` is not
+supported; use `{ items }` even when metadata is absent.
 
 Minimize request count as part of the source contract. When one listing request
 can return both items and metadata, directly or through expansion, include, or

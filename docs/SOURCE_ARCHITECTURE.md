@@ -347,9 +347,11 @@ The resolved-loader boundary validates the `SourceLoaderResult` before applying
 `baseUrl` URL normalization. Structured and custom loaders share this single
 object-shaped result contract; bare item arrays are not accepted. Every
 execution path, including the extension-backed CLI, rejects empty item arrays,
-malformed required item fields, non-finite timestamps, invalid nested inline or
-preview values, and unsupported or invalid response metadata before the result
-reaches a client or cache.
+malformed required item fields, non-finite timestamps, and unsupported or
+invalid response metadata before the result reaches a client or cache. Invalid
+optional `inline` and `preview` values are removed at this boundary rather than
+rejecting the result, keeping card rendering dependent on the required item
+fields instead of optional presentation content.
 
 ## Structured loader pipelines
 
