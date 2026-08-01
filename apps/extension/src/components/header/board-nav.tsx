@@ -1,3 +1,4 @@
+import type { BoardSortMode } from "@/lib/board-sorting"
 import { Button } from "@newsnext/ui/components/button"
 import {
   Dialog,
@@ -7,15 +8,68 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@newsnext/ui/components/dialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@newsnext/ui/components/dropdown-menu"
 import { Input } from "@newsnext/ui/components/input"
 import { useNavigate } from "@tanstack/react-router"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { m } from "motion/react"
 import { useState } from "react"
-import { PhPlusCircleDuotone } from "@/components/icons/ph"
+import { PhPlusCircleDuotone, PhSortAscendingDuotone } from "@/components/icons/ph"
+import { getBoardSortPreference } from "@/lib/board-sorting"
 import { createBoard, getBoardDisplayName } from "@/lib/boards"
 import { cn } from "@/lib/utils"
-import { boardsAtom, createBoardAtom, currentBoardIdAtom } from "@/store/board"
+import {
+  boardsAtom,
+  boardSortPreferencesAtom,
+  createBoardAtom,
+  currentBoardIdAtom,
+  setBoardSortModeAtom,
+} from "@/store/board"
+
+const SORT_OPTIONS: { label: string, value: BoardSortMode }[] = [
+  { label: "Manual", value: "manual" },
+  { label: "Date added", value: "createdAt" },
+  { label: "Provider name", value: "provider" },
+]
+
+function BoardSortMenu({ boardId }: { boardId: string }) {
+  const preferences = useAtomValue(boardSortPreferencesAtom)
+  const setBoardSortMode = useSetAtom(setBoardSortModeAtom)
+  const preference = getBoardSortPreference(preferences, boardId)
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        className="flex size-8 shrink-0 items-center justify-center rounded-full text-lg text-muted-foreground outline-none transition-colors hover:bg-foreground/5 hover:text-foreground focus-visible:ring-2 focus-visible:ring-theme-400"
+        aria-label="Sort cards"
+        title="Sort cards"
+      >
+        <PhSortAscendingDuotone />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="w-52">
+        <DropdownMenuRadioGroup value={preference.mode}>
+          <DropdownMenuLabel>Sort cards</DropdownMenuLabel>
+          {SORT_OPTIONS.map(option => (
+            <DropdownMenuRadioItem
+              key={option.value}
+              value={option.value}
+              onClick={() => setBoardSortMode({ boardId, mode: option.value })}
+            >
+              {option.label}
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
 
 function CreateBoardDialog({
   open,
@@ -99,6 +153,7 @@ export function BoardNav() {
   return (
     <>
       <div className="island-pill flex max-w-[min(70vw,32rem)] items-center gap-1 overflow-x-auto rounded-full p-1 scrollbar-hidden">
+        <BoardSortMenu boardId={currentBoardId} />
         {boards.map((board) => {
           const isActive = currentBoardId === board.id
           return (

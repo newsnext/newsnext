@@ -1,7 +1,9 @@
+import type { BoardSortMode, BoardSortPreference } from "../lib/board-sorting"
 import type { Board } from "../lib/boards"
 import type { SourceInstance, SourceInstancePatch } from "../lib/source-cards"
 import { atom } from "jotai"
 import { atomWithStorage } from "jotai/utils"
+import { getBoardSortPreference } from "../lib/board-sorting"
 import { ALL_BOARD_ID, ALL_BOARD_NAME } from "../lib/boards"
 import { mergeSourceInstancePatch } from "../lib/source-cards"
 
@@ -9,6 +11,7 @@ const BOARDS_KEY = "newsnext-boards"
 const CURRENT_BOARD_ID_KEY = "newsnext-current-board-id"
 const DEFAULT_BOARD_ID_KEY = "newsnext-default-board-id"
 const SOURCE_INSTANCES_KEY = "newsnext-source-instances"
+const BOARD_SORT_PREFERENCES_KEY = "newsnext-board-sort-preferences"
 export const boardsAtom = atomWithStorage<Board[]>(
   BOARDS_KEY,
   [{ id: ALL_BOARD_ID, name: ALL_BOARD_NAME }],
@@ -33,6 +36,49 @@ export const instancesAtom = atomWithStorage<SourceInstance[]>(
   undefined,
   { getOnInit: true },
 )
+export const boardSortPreferencesAtom = atomWithStorage<Record<string, BoardSortPreference>>(
+  BOARD_SORT_PREFERENCES_KEY,
+  {},
+  undefined,
+  { getOnInit: true },
+)
+
+export const setBoardSortModeAtom = atom(null, (_get, set, {
+  boardId,
+  mode,
+}: {
+  boardId: string
+  mode: BoardSortMode
+}) => {
+  set(boardSortPreferencesAtom, (preferences) => {
+    const current = getBoardSortPreference(preferences, boardId)
+    return {
+      ...preferences,
+      [boardId]: {
+        ...current,
+        mode,
+        automaticMode: mode === "manual" ? current.automaticMode : mode,
+      },
+    }
+  })
+})
+
+export const setManualBoardOrderAtom = atom(null, (_get, set, {
+  boardId,
+  sourceIds,
+}: {
+  boardId: string
+  sourceIds: string[]
+}) => {
+  set(boardSortPreferencesAtom, preferences => ({
+    ...preferences,
+    [boardId]: {
+      ...getBoardSortPreference(preferences, boardId),
+      mode: "manual",
+      manualOrder: sourceIds,
+    },
+  }))
+})
 
 export const addInstanceAtom = atom(null, (_get, set, instance: SourceInstance) => {
   set(instancesAtom, prev => [...prev, instance])

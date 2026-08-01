@@ -64,6 +64,7 @@ function applyInstanceOverrides(
       ...source.metadata,
       ...metadata,
     },
+    createdAt: instance.createdAt,
     paramsValue: instance.patch.params,
   }
 }

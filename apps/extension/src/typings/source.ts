@@ -11,5 +11,6 @@ export type BoardSource = Omit<SourceDescriptor, "id"> & {
   id: string
   sourceId: string
   boardId: string | null
+  createdAt?: number
   paramsValue?: Record<string, unknown>
 }

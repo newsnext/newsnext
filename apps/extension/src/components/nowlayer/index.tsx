@@ -1,18 +1,23 @@
 import type { RefObject } from "react"
 import type { BoardSource } from "@/typings/source"
-import { useAtomValue } from "jotai"
-import { useCallback, useMemo, useState } from "react"
+import { useAtomValue, useSetAtom } from "jotai"
+import { useCallback, useMemo } from "react"
 import { useSourceDescriptors } from "@/hooks/use-source-descriptors"
+import { getBoardSortPreference, orderBoardSourceIds } from "@/lib/board-sorting"
 import { getBoardDisplayName } from "@/lib/boards"
 import { buildSourceCards } from "@/lib/source-cards"
-import { boardsAtom, instancesAtom } from "@/store/board"
+import {
+  boardsAtom,
+  boardSortPreferencesAtom,
+  instancesAtom,
+  setManualBoardOrderAtom,
+} from "@/store/board"
 import { DesktopBoard } from "./desktop-board"
 
 const EMPTY_SOURCE_IDS: string[] = []
 const EMPTY_SOURCES_MAP: Record<string, BoardSource> = {}
 interface NowLayerProps {
   boardId: string
-  onSourceIdsChange?: (sourceIds: string[]) => void
   className?: string
   isScattered?: boolean
   containerRef?: RefObject<HTMLDivElement | null>
@@ -20,14 +25,14 @@ interface NowLayerProps {
 
 export function NowLayer({
   boardId,
-  onSourceIdsChange,
   className,
   isScattered,
   containerRef,
 }: NowLayerProps) {
-  const [sourceIdOrder, setSourceIdOrder] = useState<string[] | null>(null)
   const boards = useAtomValue(boardsAtom)
+  const sortPreferences = useAtomValue(boardSortPreferencesAtom)
   const instances = useAtomValue(instancesAtom)
+  const setManualBoardOrder = useSetAtom(setManualBoardOrderAtom)
   const { sources } = useSourceDescriptors()
   const currentBoardName = getBoardDisplayName(boards.find(board => board.id === boardId)!)
 
@@ -43,23 +48,15 @@ export function NowLayer({
     })
   }, [boardId, sources, instances])
 
-  const sourceIds = useMemo(() => {
-    if (!sourceIdOrder) {
-      return boardSourceIds
-    }
-
-    const boardSourceIdSet = new Set(boardSourceIds)
-    const orderedIds = sourceIdOrder.filter(id => boardSourceIdSet.has(id))
-    const orderedIdSet = new Set(orderedIds)
-    const appendedIds = boardSourceIds.filter(id => !orderedIdSet.has(id))
-
-    return [...orderedIds, ...appendedIds]
-  }, [boardSourceIds, sourceIdOrder])
+  const sourceIds = useMemo(() => orderBoardSourceIds({
+    sourceIds: boardSourceIds,
+    sourcesMap,
+    preference: getBoardSortPreference(sortPreferences, boardId),
+  }), [boardId, boardSourceIds, sortPreferences, sourcesMap])
 
   const handleSourceIdsChange = useCallback((newSourceIds: string[]) => {
-    setSourceIdOrder(newSourceIds)
-    onSourceIdsChange?.(newSourceIds)
-  }, [onSourceIdsChange])
+    setManualBoardOrder({ boardId, sourceIds: newSourceIds })
+  }, [boardId, setManualBoardOrder])
 
   if (sourceIds.length === 0) {
     return (
@@ -77,7 +74,6 @@ export function NowLayer({
       key={boardId}
       sourceIds={sourceIds}
       sourcesMap={sourcesMap}
-      isSortable
       className={className}
       isScattered={isScattered}
       containerRef={containerRef}

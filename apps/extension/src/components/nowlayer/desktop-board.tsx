@@ -5,7 +5,6 @@ import { useThrottleFn } from "@newsnext/ui/hooks/use-throttle-fn"
 import { m } from "motion/react"
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { DndContext } from "@/hooks/use-dnd-context"
-import Card from "../card"
 import { DraggableCard } from "../card/draggable-card"
 
 const ANIMATION_DURATION = 0.2 // 200ms
@@ -48,17 +47,15 @@ interface SourceOrderState {
 interface DesktopBoardProps {
   sourceIds: string[]
   sourcesMap: Record<string, BoardSource>
-  isSortable?: boolean
   className?: string
   isScattered?: boolean
-  onSourceIdsChange?: (sourceIds: string[]) => void
+  onSourceIdsChange: (sourceIds: string[]) => void
   containerRef?: RefObject<HTMLDivElement | null>
 }
 
 export function DesktopBoard({
   sourceIds,
   sourcesMap,
-  isSortable = false,
   className,
   isScattered,
   onSourceIdsChange,
@@ -141,7 +138,15 @@ export function DesktopBoard({
       }))
       return
     }
-    onSourceIdsChange?.(orderedSourceIds)
+
+    const hasOrderChanged = orderedSourceIds.some(
+      (id, index) => initialOrderedSourceIdsRef.current[index] !== id,
+    )
+    if (!hasOrderChanged) {
+      return
+    }
+
+    onSourceIdsChange(orderedSourceIds)
   }, [orderedSourceIds, onSourceIdsChange])
 
   // avoid animation jitter
@@ -254,110 +259,100 @@ export function DesktopBoard({
     }
   }, [containerRef, visibleSourceIds, isScattered, items])
 
-  const boardContent = (
-    <m.ol
-      className={className || "flex flex-wrap justify-center gap-2 sm:gap-6"}
-      initial="hidden"
-      animate={isScattered ? "scattered" : "visible"}
-      variants={{
-        hidden: {
-          opacity: 0,
-        },
-        visible: {
-          opacity: 1,
-        },
-        scattered: {
-          transition: {
-            duration: 0,
-          },
-        },
-      }}
-    >
-      {visibleSourceIds.map((id, index) => (
-        <m.li
-          key={id}
-          ref={(el) => {
-            if (el) items.set(id, el)
-            else items.delete(id)
-          }}
-          layout={!isScattered} // Disable layout animation during scatter to prevent conflict
-          initial="hidden"
-          animate={isScatterReady ? "scattered" : "visible"}
-          custom={{
-            index,
-            scatterIndex: scatterAnimationState.visibleSourceIds.indexOf(id),
-            hasScattered,
-            vector: scatterAnimationState.vectors[id],
-          }}
-          transition={{
-            type: "tween",
-            duration: ANIMATION_DURATION,
-          }}
-          variants={{
-            hidden: {
-              y: 20,
-              opacity: 0,
-            },
-            visible: ({ hasScattered, index, scatterIndex }: ScatterItemCustom) => {
-              const isVisibleScatterCard = scatterIndex !== -1
-              return {
-                y: 0,
-                x: 0,
-                scale: 1,
-                opacity: 1,
-                transition: hasScattered
-                  ? isVisibleScatterCard
-                    ? {
-                        delay: scatterIndex * SCATTER_STAGGER,
-                        duration: ANIMATION_DURATION,
-                        type: "tween",
-                      }
-                    : { duration: 0 }
-                  : {
-                      delay: ENTRANCE_DELAY + index * ENTRANCE_STAGGER,
-                      duration: ANIMATION_DURATION,
-                      type: "tween",
-                    },
-              }
-            },
-            scattered: ({ scatterIndex, vector }: ScatterItemCustom) => {
-              if (scatterIndex === -1 || !vector) {
-                return {
-                  opacity: 0,
-                  transition: {
-                    duration: 0,
-                  },
-                }
-              }
-              return {
-                x: vector.x,
-                y: vector.y,
-                scale: 1.1,
-                opacity: 0,
-                transition: {
-                  delay: scatterIndex * SCATTER_STAGGER,
-                  duration: 0.4,
-                  ease: "easeIn",
-                },
-              }
-            },
-          }}
-        >
-          {isSortable
-            ? <DraggableCard id={id} source={sourcesMap[id]} />
-            : <Card id={id} source={sourcesMap[id]} />}
-        </m.li>
-      ))}
-    </m.ol>
-  )
-
-  if (!isSortable) {
-    return boardContent
-  }
-
   return (
     <DndContext onDragStart={onDragStart} onDropTargetChange={run} onDrop={onDrop}>
-      {boardContent}
+      <m.ol
+        className={className || "flex flex-wrap justify-center gap-2 sm:gap-6"}
+        initial="hidden"
+        animate={isScattered ? "scattered" : "visible"}
+        variants={{
+          hidden: {
+            opacity: 0,
+          },
+          visible: {
+            opacity: 1,
+          },
+          scattered: {
+            transition: {
+              duration: 0,
+            },
+          },
+        }}
+      >
+        {visibleSourceIds.map((id, index) => (
+          <m.li
+            key={id}
+            ref={(el) => {
+              if (el) items.set(id, el)
+              else items.delete(id)
+            }}
+            layout={!isScattered} // Disable layout animation during scatter to prevent conflict
+            initial="hidden"
+            animate={isScatterReady ? "scattered" : "visible"}
+            custom={{
+              index,
+              scatterIndex: scatterAnimationState.visibleSourceIds.indexOf(id),
+              hasScattered,
+              vector: scatterAnimationState.vectors[id],
+            }}
+            transition={{
+              type: "tween",
+              duration: ANIMATION_DURATION,
+            }}
+            variants={{
+              hidden: {
+                y: 20,
+                opacity: 0,
+              },
+              visible: ({ hasScattered, index, scatterIndex }: ScatterItemCustom) => {
+                const isVisibleScatterCard = scatterIndex !== -1
+                return {
+                  y: 0,
+                  x: 0,
+                  scale: 1,
+                  opacity: 1,
+                  transition: hasScattered
+                    ? isVisibleScatterCard
+                      ? {
+                          delay: scatterIndex * SCATTER_STAGGER,
+                          duration: ANIMATION_DURATION,
+                          type: "tween",
+                        }
+                      : { duration: 0 }
+                    : {
+                        delay: ENTRANCE_DELAY + index * ENTRANCE_STAGGER,
+                        duration: ANIMATION_DURATION,
+                        type: "tween",
+                      },
+                }
+              },
+              scattered: ({ scatterIndex, vector }: ScatterItemCustom) => {
+                if (scatterIndex === -1 || !vector) {
+                  return {
+                    opacity: 0,
+                    transition: {
+                      duration: 0,
+                    },
+                  }
+                }
+                return {
+                  x: vector.x,
+                  y: vector.y,
+                  scale: 1.1,
+                  opacity: 0,
+                  transition: {
+                    delay: scatterIndex * SCATTER_STAGGER,
+                    duration: 0.4,
+                    ease: "easeIn",
+                  },
+                }
+              },
+            }}
+          >
+            <DraggableCard id={id} source={sourcesMap[id]} />
+          </m.li>
+        ))}
+      </m.ol>
     </DndContext>
   )
 }
