@@ -55,10 +55,12 @@ describe("source template vars", () => {
           },
           loader: {
             type: "custom",
-            load: async () => [{
-              title: "Item",
-              url: "/items/1",
-            }],
+            load: async () => ({
+              items: [{
+                title: "Item",
+                url: "/items/1",
+              }],
+            }),
           },
         },
       },
@@ -71,10 +73,36 @@ describe("source template vars", () => {
         home: "https://example.com/latest",
       },
     })
-    await expect(provider.sources.latest.loader({})).resolves.toEqual([{
-      title: "Item",
-      url: "https://example.com/items/1",
-    }])
+    await expect(provider.sources.latest.loader({})).resolves.toEqual({
+      items: [{
+        title: "Item",
+        url: "https://example.com/items/1",
+      }],
+    })
+  })
+
+  it("validates loader output before resolving relative URLs", async () => {
+    const provider = resolveProvider("test", {
+      title: "Provider",
+      color: "blue",
+      defaults: {
+        baseUrl: "https://example.com/",
+        cache: "5m",
+        capabilities: { network: [] },
+      },
+      sources: {
+        latest: {
+          loader: {
+            type: "custom",
+            load: async () => ({ items: [{ title: "Item", url: "" }] }),
+          },
+        },
+      },
+    })
+
+    await expect(provider.sources.latest.loader({})).rejects.toThrow(
+      "items[0].url must be a non-empty string",
+    )
   })
 
   it("infers structured loader capabilities from a relative request URL", () => {
@@ -113,7 +141,7 @@ describe("source template vars", () => {
           cache: "1h",
           loader: {
             type: "custom",
-            load: async () => [],
+            load: async () => ({ items: [] }),
           },
         },
       },
@@ -148,7 +176,7 @@ describe("source template vars", () => {
         inherited: {
           loader: {
             type: "custom",
-            load: async () => [],
+            load: async () => ({ items: [] }),
           },
         },
         overridden: {
@@ -158,7 +186,7 @@ describe("source template vars", () => {
           radar: [],
           loader: {
             type: "custom",
-            load: async () => [],
+            load: async () => ({ items: [] }),
           },
           capabilities: {
             network: ["override.example.com"],
@@ -258,7 +286,7 @@ describe("source template vars", () => {
           cache: "1h",
           loader: {
             type: "custom",
-            load: async () => [],
+            load: async () => ({ items: [] }),
           },
           capabilities: {
             network: [],
@@ -793,6 +821,36 @@ describe("source registry", () => {
     })).toThrow("Source \"test:latest\" is missing a cache policy")
   })
 
+  it("rejects invalid cache policies during provider expansion", () => {
+    const createProvider = (cache: unknown) => ({
+      title: "Test Provider",
+      color: "blue",
+      sources: {
+        latest: {
+          cache,
+          loader: {
+            type: "rss",
+            url: "https://example.com/feed.xml",
+          },
+        },
+      },
+    })
+
+    expect(() => flattenProviderConfig("test", createProvider("5minutes") as never))
+      .toThrow("test:latest.cache must be a non-negative duration")
+    expect(() => flattenProviderConfig("test", createProvider(`${"9".repeat(308)}d`) as never))
+      .toThrow("test:latest.cache must be a finite duration")
+    expect(() => flattenProviderConfig("test", createProvider({
+      version: 0,
+      maxAge: "5m",
+    }) as never)).toThrow("test:latest.cache.version must be a positive safe integer")
+    expect(() => flattenProviderConfig("test", createProvider({
+      version: 1,
+      maxAge: "5m",
+      legacy: true,
+    }) as never)).toThrow("test:latest.cache.legacy is not supported")
+  })
+
   it("resolves a flat registry produced from provider authoring config", () => {
     const registry = flattenProviderConfig("test", {
       title: "Test Provider",
@@ -841,7 +899,7 @@ describe("source registry", () => {
     expect(() => resolveSourceRegistry(executableRegistry))
       .toThrow("requires an executable loader")
     expect(resolveSourceRegistry(executableRegistry, {
-      "test:latest": async () => [],
+      "test:latest": async () => ({ items: [] }),
     })["test:latest"]?.loader).toBeTypeOf("function")
   })
 

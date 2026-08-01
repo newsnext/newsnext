@@ -1,5 +1,5 @@
 import type { ProviderConfig } from "@newsnext/source/registry"
-import type { NewsItem } from "@newsnext/source/types"
+import type { NewsItem, SourceLoaderResult } from "@newsnext/source/types"
 import type { Browser } from "@wxt-dev/browser"
 import { browser } from "@wxt-dev/browser"
 
@@ -160,7 +160,7 @@ async function fetchBrowserHistory({
   query,
   dateRange,
   maxResults,
-}: BrowserHistoryParams): Promise<NewsItem[]> {
+}: BrowserHistoryParams): Promise<SourceLoaderResult> {
   const searchQuery: Browser.history.HistoryQuery = {
     text: query,
     maxResults,
@@ -171,7 +171,7 @@ async function fetchBrowserHistory({
   }
 
   const historyItems = await browser.history.search(searchQuery)
-  return browserHistoryItemsToNewsItems(historyItems)
+  return { items: browserHistoryItemsToNewsItems(historyItems) }
 }
 
 async function readBookmarks(folder: string): Promise<Browser.bookmarks.BookmarkTreeNode[]> {
@@ -196,9 +196,9 @@ async function readBookmarks(folder: string): Promise<Browser.bookmarks.Bookmark
 async function fetchBrowserBookmarks({
   folder,
   maxResults,
-}: BrowserBookmarksParams): Promise<NewsItem[]> {
+}: BrowserBookmarksParams): Promise<SourceLoaderResult> {
   const results = await readBookmarks(folder)
-  return browserBookmarkNodesToNewsItems(results).slice(0, maxResults)
+  return { items: browserBookmarkNodesToNewsItems(results).slice(0, maxResults) }
 }
 
 export default {

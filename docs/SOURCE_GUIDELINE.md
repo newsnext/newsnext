@@ -539,7 +539,9 @@ loader: {
 
 The RSS loader returns the RSS channel title, description, home link, and image
 as dynamic loader metadata when present. For Atom, it returns the feed title,
-subtitle, and non-self home link.
+subtitle, and non-self home link. Entries without a title or URL are ignored;
+an invalid feed date leaves the item without a timestamp instead of failing the
+complete feed.
 
 Use a custom loader only when declarative loaders cannot express the source:
 
@@ -549,7 +551,7 @@ loader: {
   load: async (params, context) => {
     const session = context?.secrets?.session
     // ...
-    return items
+    return { items }
   },
 },
 capabilities: {
@@ -559,7 +561,7 @@ capabilities: {
 }
 ```
 
-A loader returns `NewsItem[]` or:
+A loader always returns a `SourceLoaderResult` object:
 
 ```ts
 {
@@ -610,6 +612,13 @@ Timestamps are milliseconds. `inline` must contain at least one of `text`,
 `html`, `mark`, or `icon`. `preview` uses either `text` or `html` and may also
 contain `picture` or `iframe`.
 
+NewsNext validates loader results at the shared runtime boundary for dashboard
+and CLI execution. Empty item arrays, malformed item objects, non-finite
+timestamps, invalid nested picture, inline, or preview values, empty dynamic
+metadata strings, and unsupported dynamic metadata keys fail the load. Custom
+loaders receive the same validation as structured loaders. Returning a bare
+`NewsItem[]` is not supported; use `{ items }` even when metadata is absent.
+
 Minimize request count as part of the source contract. When one listing request
 can return both items and metadata, directly or through expansion, include, or
 field-selection options, the loader must use that single request. Metadata
@@ -626,6 +635,10 @@ Cache duration supports seconds, minutes, hours, and days:
 ```ts
 cache: "5m"
 ```
+
+The duration must be a non-negative integer or decimal followed immediately by
+`s`, `m`, `h`, or `d`. Cache configuration objects accept only `version` and
+`maxAge`; `version` must be a positive safe integer.
 
 Use an explicit version to invalidate old results after a behavioral change:
 
@@ -644,6 +657,13 @@ one-minute frequency guard protects remote sources from repeated requests; this
 guard is transparent to the user-triggered query flow and is not part of the
 source cache policy. Concurrent requests for the same source and normalized
 parameters also remain deduplicated.
+
+Persistent entries record their last-use time. Cleanup runs at most once per day
+after a successful write and removes entries unused for 30 days, superseded
+versions for identical source parameters, and least-recently-used entries beyond
+500 records or an estimated 50 MiB. Increasing `cache.version` changes cache
+identity immediately; physical removal of the superseded entry happens during
+cleanup.
 
 Structured loaders infer the hostname of a static URL. Declare every additional
 or dynamically selected hostname:

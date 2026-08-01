@@ -1,8 +1,8 @@
-import type { SourceLoaderOutput } from "../types"
+import type { SourceLoaderResult } from "../types"
 import { describe, expect, it } from "vitest"
 import {
   parseSourceBaseUrl,
-  resolveSourceLoaderOutputUrls,
+  resolveSourceLoaderResultUrls,
   resolveSourceMetadataUrls,
   resolveSourceUrl,
 } from "./base-url"
@@ -40,7 +40,7 @@ describe("source base URL", () => {
       title: "Latest",
     })
 
-    const output: SourceLoaderOutput = {
+    const output: SourceLoaderResult = {
       items: [],
       metadata: {
         badge: "/account.png",
@@ -48,7 +48,7 @@ describe("source base URL", () => {
         title: "Account",
       },
     }
-    expect(resolveSourceLoaderOutputUrls(output, "https://example.com/")).toEqual({
+    expect(resolveSourceLoaderResultUrls(output, "https://example.com/")).toEqual({
       items: [],
       metadata: {
         badge: "https://example.com/account.png",
@@ -59,35 +59,33 @@ describe("source base URL", () => {
   })
 
   it("resolves every URL-bearing news item field", () => {
-    const output = resolveSourceLoaderOutputUrls([{
-      title: "Item",
-      url: "/item",
-      mobileUrl: "/mobile/item",
-      inline: {
-        icon: "/icon.png",
-        mark: [
-          "Featured",
-          { src: "/mark.png", href: "/marks" },
-        ],
-      },
-      preview: {
-        text: "Preview",
-        picture: [
-          "/preview.png",
-          { src: "/preview-2.png", href: "/gallery" },
-        ],
-        iframe: {
-          src: "/embed",
-          title: "Embed",
+    const output = resolveSourceLoaderResultUrls({
+      items: [{
+        title: "Item",
+        url: "/item",
+        mobileUrl: "/mobile/item",
+        inline: {
+          icon: "/icon.png",
+          mark: [
+            "Featured",
+            { src: "/mark.png", href: "/marks" },
+          ],
         },
-      },
-    }], "https://example.com/")
-    expect(Array.isArray(output)).toBe(true)
-    if (!Array.isArray(output)) {
-      throw new TypeError("Expected an item array")
-    }
+        preview: {
+          text: "Preview",
+          picture: [
+            "/preview.png",
+            { src: "/preview-2.png", href: "/gallery" },
+          ],
+          iframe: {
+            src: "/embed",
+            title: "Embed",
+          },
+        },
+      }],
+    }, "https://example.com/")
 
-    expect(output[0]).toMatchObject({
+    expect(output.items[0]).toMatchObject({
       url: "https://example.com/item",
       mobileUrl: "https://example.com/mobile/item",
       inline: {

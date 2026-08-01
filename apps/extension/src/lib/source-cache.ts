@@ -1,6 +1,7 @@
 import type { DBSchema, IDBPDatabase } from "idb"
 import type { SourceLoadResult } from "./source-loader"
 import { openDB } from "idb"
+import { selectSourceCacheKeysToDelete } from "./source-cache-values"
 
 const SOURCE_CACHE_DATABASE_NAME = "newsnext-extension-source-cache"
 const SOURCE_CACHE_DATABASE_VERSION = 3
@@ -25,6 +26,9 @@ interface SourceCacheDatabase extends DBSchema {
 }
 
 let sourceCacheDatabasePromise: Promise<IDBPDatabase<SourceCacheDatabase>> | undefined
+let sourceCacheCleanupPromise: Promise<void> | undefined
+let lastSourceCacheCleanupAt: number | undefined
+const SOURCE_CACHE_CLEANUP_INTERVAL_MS = 24 * 60 * 60 * 1000
 
 function openSourceCacheDatabase(): Promise<IDBPDatabase<SourceCacheDatabase>> {
   sourceCacheDatabasePromise ??= openDB<SourceCacheDatabase>(
@@ -89,7 +93,61 @@ export async function writeCachedSource(
       cachedAt: now,
       usedAt: now,
     }, cacheKey)
+    void scheduleSourceCacheCleanup(database, now).catch(() => undefined)
   } catch {
     // Cache writes should never block source loading.
   }
+}
+
+function scheduleSourceCacheCleanup(
+  database: IDBPDatabase<SourceCacheDatabase>,
+  now: number,
+): Promise<void> {
+  if (sourceCacheCleanupPromise) {
+    return sourceCacheCleanupPromise
+  }
+  if (
+    lastSourceCacheCleanupAt !== undefined
+    && now - lastSourceCacheCleanupAt < SOURCE_CACHE_CLEANUP_INTERVAL_MS
+  ) {
+    return Promise.resolve()
+  }
+
+  sourceCacheCleanupPromise = cleanupSourceCache(database, now)
+    .then(() => {
+      lastSourceCacheCleanupAt = now
+    })
+    .finally(() => {
+      sourceCacheCleanupPromise = undefined
+    })
+  return sourceCacheCleanupPromise
+}
+
+async function cleanupSourceCache(
+  database: IDBPDatabase<SourceCacheDatabase>,
+  now: number,
+): Promise<void> {
+  const transaction = database.transaction(SOURCE_CACHE_STORE_NAME, "readwrite")
+  const objectStore = transaction.objectStore(SOURCE_CACHE_STORE_NAME)
+  const [keys, entries] = await Promise.all([
+    objectStore.getAllKeys(),
+    objectStore.getAll(),
+  ])
+  const textEncoder = new TextEncoder()
+  const cacheEntries = entries.flatMap((entry, index) => {
+    const key = keys[index]
+    return typeof key === "string"
+      ? [{
+          key,
+          size: textEncoder.encode(JSON.stringify(entry)).byteLength,
+          usedAt: entry.usedAt,
+        }]
+      : []
+  })
+
+  await Promise.all(
+    selectSourceCacheKeysToDelete(cacheEntries, now)
+      .map(key => objectStore.delete(key)),
+  )
+  await transaction.done
 }

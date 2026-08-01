@@ -150,6 +150,11 @@ The record key is the canonical source ID, such as `github:trending`.
 segment. Public descriptors receive an `id` only when the keyed runtime record
 is converted for clients.
 
+The extension page memoizes its descriptor-list request for the lifetime of the
+page. Card loads therefore reuse the same descriptors instead of listing,
+serializing, and sorting the complete registry for every request. A failed
+descriptor request clears the memoized promise so a later request can retry.
+
 Static source presentation remains nested as
 `RuntimeSource.metadata: SourcePresentationMetadata`. Runtime resolution
 normalizes `metadata.home` and `metadata.badge` but does not flatten presentation
@@ -183,8 +188,8 @@ source ID and raw parameters
         ├─ return a fresh cached result when available
         ├─ resolve required secrets in the background
         ├─ execute the source loader
-        ├─ normalize NewsItem[] to SourceLoaderResult
-        ├─ reject an empty item result
+        ├─ validate the result, every NewsItem, and response metadata
+        ├─ reject an empty or malformed item result
         ├─ cache items and dynamic source presentation metadata
         └─ infer the card presentation from item timestamps and order in the UI
 ```
@@ -211,13 +216,20 @@ each cache entry once and injects stale data into the active query before
 continuing the request. Placeholder data does not satisfy the request, extend
 the entry's freshness, or change fetch-latest behavior.
 
+The persistent cache is an IndexedDB object store containing the result,
+`cachedAt`, and `usedAt`. Successful reads update `usedAt`. At most once per
+day after a write, cleanup removes entries unused for 30 days, superseded cache
+versions for the same source and normalized parameters, and least-recently-used
+entries beyond 500 records or an estimated 50 MiB. Cache failures remain
+fail-open: they never prevent a source request from completing.
+
 Card queries mount when their container enters the viewport margin. After a card
 leaves that margin, its query remains active for one minute to avoid churn during
 short scrolls, then unmounts. Re-entering during that interval cancels the
 pending unmount. Successful query data remains fresh in memory for one minute;
 this avoids redundant loader and persistent-cache reads without changing the
 source-defined persistent cache duration. Active card queries also revalidate
-once per minute, including while the dashboard is in the background; the source
+once every five minutes, including while the dashboard is in the background; the source
 loader may still satisfy an automatic revalidation from a fresh persisted result.
 
 Loader metadata is response-scoped and remains part of the cached load result.
@@ -290,6 +302,14 @@ home and badge metadata without interpreting arbitrary text or rewriting HTML
 strings. Static source home and badge metadata are normalized during
 registration. Radar home and badge patches use the same base during discovery.
 
+The resolved-loader boundary validates the `SourceLoaderResult` before applying
+`baseUrl` URL normalization. Structured and custom loaders share this single
+object-shaped result contract; bare item arrays are not accepted. Every
+execution path, including the extension-backed CLI, rejects empty item arrays,
+malformed required item fields, non-finite timestamps, invalid nested inline or
+preview values, and unsupported or invalid response metadata before the result
+reaches a client or cache.
+
 ## Structured loader pipelines
 
 JSON loaders:
@@ -328,9 +348,10 @@ RSS loaders request the response as text explicitly because fetch clients may
 otherwise represent `application/rss+xml` responses as blobs. They parse the
 RSS channel title, description, home link, and image URL, or the Atom feed
 title, subtitle, and non-self home link, into dynamic loader metadata. They then
-map entries directly to title, URL, and an optional timestamp. RSS metadata uses
-the same normalization, URL resolution, caching, and presentation override
-pipeline as JSON, HTML, and custom loader metadata.
+map entries directly to title, URL, and an optional timestamp. Entries without
+a title or URL are discarded, and an unparseable date is treated as an omitted
+timestamp. RSS metadata uses the same normalization, URL resolution, caching,
+and presentation override pipeline as JSON, HTML, and custom loader metadata.
 
 ## Template compilation
 
@@ -482,7 +503,8 @@ path as normal source loading.
 Local provider runs use an isolated `cli:<provider-id>` secret namespace unless
 `--use-provider-secrets` is supplied. CLI execution does not install the
 provider, change the bundled registry, populate the normal source cache, or
-grant additional browser permissions.
+grant additional browser permissions. It does use the same loader-result
+validation as registered dashboard loads.
 
 This is why direct HTTP requests are useful for investigation but are not a
 substitute for extension-backed source verification.

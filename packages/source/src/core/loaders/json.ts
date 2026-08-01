@@ -1,7 +1,7 @@
 import type { FetchOptions } from "ofetch"
 import type {
   NewsItem,
-  SourceLoaderOutput,
+  SourceLoaderResult,
   SourcePresentationMetadata,
   SourceTemplateVars,
 } from "../../types"
@@ -216,7 +216,7 @@ export function resolveJsonMetadata(
 export async function loadJson(
   options: JsonLoaderOptions,
   loaderContext: LoaderContext = {},
-): Promise<SourceLoaderOutput> {
+): Promise<SourceLoaderResult> {
   const { url, fetchOptions, fetch, items: itemsSelect, fields, metadata } = options
 
   let json: unknown
@@ -233,24 +233,18 @@ export async function loadJson(
     params: loaderContext.params ?? {},
     requestUrl: url,
   }
-  let items: unknown[] = []
-  if (itemsSelect) {
-    items = selectJson(json, itemsSelect) as unknown[]
-  } else {
-    items = Array.isArray(json) ? json : []
+  const selectedItems = itemsSelect ? selectJson(json, itemsSelect) : json
+
+  if (!Array.isArray(selectedItems)) {
+    return {
+      items: [],
+      metadata: metadata
+        ? resolveJsonMetadata(json, metadata, metadataContext)
+        : undefined,
+    }
   }
 
-  if (!Array.isArray(items)) {
-    // Fallback or just empty
-    return metadata
-      ? {
-          items: [],
-          metadata: resolveJsonMetadata(json, metadata, metadataContext),
-        }
-      : []
-  }
-
-  const news: NewsItem[] = items.map((item, index) => {
+  const news: NewsItem[] = selectedItems.map((item, index) => {
     const fieldContext: JsonFieldContext = {
       vars: loaderContext.vars ?? {},
       json,
@@ -311,7 +305,7 @@ export async function loadJson(
   }).filter((i): i is NewsItem => i !== null)
 
   if (!metadata) {
-    return news
+    return { items: news }
   }
 
   return {

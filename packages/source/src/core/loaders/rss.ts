@@ -1,16 +1,14 @@
-import type { SourceLoaderResult, SourcePresentationMetadata } from "../../types"
+import type {
+  NewsItem,
+  SourceLoaderResult,
+  SourcePresentationMetadata,
+} from "../../types"
 import { XMLParser } from "fast-xml-parser"
 import { sessionFetch } from "../../utils"
 import { normalizeLoaderMetadata } from "./shared"
 
-interface RssItem {
-  created?: string
-  link: string
-  title: string
-}
-
 interface ParsedRssFeed {
-  items: RssItem[]
+  items: NewsItem[]
   metadata?: SourcePresentationMetadata
 }
 
@@ -18,14 +16,7 @@ export async function loadRss({ url }: { url: string }): Promise<SourceLoaderRes
   const data = parseRss(await sessionFetch(url, { responseType: "text" }))
   if (!data?.items.length) throw new Error("Cannot fetch rss data")
 
-  return {
-    items: data.items.map(item => ({
-      title: item.title,
-      url: item.link,
-      timestamp: item.created ? new Date(item.created).getTime() : undefined,
-    })),
-    metadata: data.metadata,
-  }
+  return data
 }
 
 export function parseRss(data: string): ParsedRssFeed | undefined {
@@ -44,11 +35,20 @@ export function parseRss(data: string): ParsedRssFeed | undefined {
     .filter(isRecord)
 
   return {
-    items: items.map(item => ({
-      title: readText(item.title),
-      link: readLink(item.link),
-      created: readOptionalText(item.updated ?? item.pubDate ?? item.created),
-    })),
+    items: items
+      .map((item) => {
+        const title = readText(item.title)
+        const url = readLink(item.link)
+        if (!title || !url) return undefined
+
+        const timestamp = parseOptionalTimestamp(item.updated ?? item.pubDate ?? item.created)
+        return {
+          title,
+          url,
+          ...(timestamp === undefined ? {} : { timestamp }),
+        }
+      })
+      .filter((item): item is NewsItem => item !== undefined),
     metadata: normalizeLoaderMetadata({
       badge: readRssImageUrl(channel.image),
       desc: readOptionalText(channel.description ?? channel.subtitle),
@@ -56,6 +56,14 @@ export function parseRss(data: string): ParsedRssFeed | undefined {
       title: readOptionalText(channel.title),
     }),
   }
+}
+
+function parseOptionalTimestamp(value: unknown): number | undefined {
+  const text = readOptionalText(value)
+  if (!text) return
+
+  const timestamp = new Date(text).getTime()
+  return Number.isFinite(timestamp) ? timestamp : undefined
 }
 
 function readRssImageUrl(value: unknown): string | undefined {

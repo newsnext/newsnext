@@ -2,8 +2,6 @@ import type {
   InferSourceParams,
   RuntimeSource,
   SourceDescriptor,
-  SourceLoaderOutput,
-  SourceLoaderResult,
   SourceParamSchemaMap,
 } from "@newsnext/source/types"
 import { SourceParamValueError } from "@newsnext/source/types"
@@ -42,12 +40,6 @@ let externalSources: Record<string, RuntimeSource> | undefined
 let externalSourcesPromise: Promise<Record<string, RuntimeSource>> | undefined
 
 export type ExternalSourcesLoader = () => Promise<Record<string, RuntimeSource>>
-
-export function normalizeSourceLoaderResult(
-  output: SourceLoaderOutput,
-): SourceLoaderResult {
-  return Array.isArray(output) ? { items: output } : output
-}
 
 function setExternalSourcesLoader(loader: ExternalSourcesLoader): void {
   sourceGeneration += 1

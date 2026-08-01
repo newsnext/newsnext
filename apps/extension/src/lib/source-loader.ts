@@ -1,25 +1,17 @@
-import type { SourcePresentationMetadata } from "@newsnext/source/types"
-import type { NewsItem } from "@/typings/source"
+import type { LoadBackgroundSourceOutput } from "./background/source-service"
+import { parseSourceCacheMaxAge } from "@newsnext/source/core"
 import {
   normalizeSourceParams,
 } from "@newsnext/source/runtime"
 import { createBackgroundClient } from "./background-client"
 import { readSourceCache, writeCachedSource } from "./source-cache"
-import {
-  buildSourceCacheKey,
-  parseCacheMaxAge,
-} from "./source-cache-values"
-import { isFetchLatestRateLimited } from "./source-query-policy"
+import { buildSourceCacheKey } from "./source-cache-values"
+import { shouldReuseCachedSource } from "./source-query-policy"
 import { loadSourceDescriptor } from "./sources"
 
-const EMPTY_SOURCE_ITEMS_ERROR_MESSAGE = "No source items. Refresh to try again."
 const inFlightSourceLoads = new Map<string, Promise<SourceLoadResult>>()
 
-export interface SourceLoadResult {
-  items: NewsItem[]
-  metadata?: SourcePresentationMetadata
-  updatedAt: number
-}
+export type SourceLoadResult = LoadBackgroundSourceOutput
 
 export interface LoadSourceOptions {
   fetchLatest?: boolean
@@ -36,15 +28,16 @@ export async function loadSource(
   const cacheKey = buildSourceCacheKey(sourceId, source.cache.version, params)
   const cached = await readSourceCache(
     cacheKey,
-    parseCacheMaxAge(source.cache.maxAge),
+    parseSourceCacheMaxAge(source.cache.maxAge),
   )
 
   if (cached?.result.items.length) {
-    const shouldReuseResult = options.fetchLatest
-      ? isFetchLatestRateLimited(cached.cachedAt, Date.now())
-      : cached.isFresh
-
-    if (shouldReuseResult) {
+    if (shouldReuseCachedSource({
+      cachedAt: cached.cachedAt,
+      fetchLatest: options.fetchLatest ?? false,
+      isFresh: cached.isFresh,
+      now: Date.now(),
+    })) {
       return cached.result
     }
 
@@ -77,20 +70,10 @@ interface FreshSourceLoad {
 }
 
 async function loadFreshSource(request: FreshSourceLoad): Promise<SourceLoadResult> {
-  const loaded = await createBackgroundClient().source.load({
+  const result = await createBackgroundClient().source.load({
     sourceId: request.sourceId,
     params: request.queryParams,
   })
-
-  const result = {
-    items: loaded.items,
-    metadata: loaded.metadata,
-    updatedAt: loaded.updatedAt,
-  }
-
-  if (!result.items.length) {
-    throw new Error(EMPTY_SOURCE_ITEMS_ERROR_MESSAGE)
-  }
 
   await writeCachedSource(request.cacheKey, result)
 

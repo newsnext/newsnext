@@ -93,12 +93,10 @@ export interface SourceLoaderResult {
   metadata?: SourcePresentationMetadata
 }
 
-export type SourceLoaderOutput = NewsItem[] | SourceLoaderResult
-
 export type SourceLoader<TParams extends SourceParamSchemaMap = SourceParamSchemaMap> = (
   params: InferSourceParams<TParams>,
   context?: SourceLoaderContext,
-) => Promise<SourceLoaderOutput>
+) => Promise<SourceLoaderResult>
 
 export const SOURCE_PRESENTATION_METADATA_KEYS = [
   "title",

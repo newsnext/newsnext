@@ -10,3 +10,21 @@ export function isFetchLatestRateLimited(
 ): boolean {
   return now - lastFetchedAt < FETCH_LATEST_PROTECTION_MS
 }
+
+export interface SourceCacheReuseContext {
+  cachedAt: number
+  fetchLatest: boolean
+  isFresh: boolean
+  now: number
+}
+
+export function shouldReuseCachedSource({
+  cachedAt,
+  fetchLatest,
+  isFresh,
+  now,
+}: SourceCacheReuseContext): boolean {
+  return fetchLatest
+    ? isFetchLatestRateLimited(cachedAt, now)
+    : isFresh
+}

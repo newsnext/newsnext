@@ -1,6 +1,5 @@
 import type { ProviderConfig } from "@newsnext/source/registry"
 import type {
-  NewsItem,
   SourceLoaderContext,
   SourceLoaderResult,
 } from "@newsnext/source/types"
@@ -48,20 +47,22 @@ const X_RADAR_RESERVED_PATHS = [
 async function fetchXPlaceTrends(
   { location }: { location: string },
   context?: SourceLoaderContext,
-): Promise<NewsItem[]> {
+): Promise<SourceLoaderResult> {
   const response = await sessionFetch<XPlaceTrendResponse[]>(PLACE_TRENDS_URL, {
     headers: createXLoggedInHeaders(context),
     query: { id: location },
   })
   const timestamp = response[0]?.created_at ? Date.parse(response[0].created_at) : undefined
-  return (response[0]?.trends ?? []).map(trend => ({
-    title: trend.name,
-    url: normalizeXSearchUrl(trend.url),
-    timestamp,
-  }))
+  return {
+    items: (response[0]?.trends ?? []).map(trend => ({
+      title: trend.name,
+      url: normalizeXSearchUrl(trend.url),
+      timestamp,
+    })),
+  }
 }
 
-async function fetchXTimeline(url: string, context?: SourceLoaderContext): Promise<NewsItem[]> {
+async function fetchXTimeline(url: string, context?: SourceLoaderContext): Promise<SourceLoaderResult> {
   const response = await sessionFetch<XHomeTimelineResponse>(url, {
     method: "POST",
     headers: createXLoggedInHeaders(context),
@@ -78,7 +79,9 @@ async function fetchXTimeline(url: string, context?: SourceLoaderContext): Promi
     },
   })
   const instructions = response.data?.home?.home_timeline_urt?.instructions ?? []
-  return sortNewsItemsByNewest(entriesToNewsItems(getTimelineEntries(instructions)))
+  return {
+    items: sortNewsItemsByNewest(entriesToNewsItems(getTimelineEntries(instructions))),
+  }
 }
 
 async function fetchXUserTweets(

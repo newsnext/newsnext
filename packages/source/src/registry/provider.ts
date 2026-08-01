@@ -1,6 +1,7 @@
 import type { SourceConfig } from "../core/resolver"
 import type { ProviderDefinition, RuntimeSource, SourceProvider } from "../types"
 import type { ProviderConfig, SourceRegistry } from "./types"
+import { resolveSourceCacheConfig } from "../core/cache"
 import {
   assignSourceDefaults,
   mergeSourceVars,
@@ -107,6 +108,7 @@ function expandProviderSources(
       if (!defaultedSource.cache) {
         throw new Error(`Source "${fullSourceId}" is missing a cache policy`)
       }
+      resolveSourceCacheConfig(defaultedSource.cache, `${fullSourceId}.cache`)
       validateSourceTemplates(fullSourceId, defaultedSource as SourceConfig)
       return [sourceId, {
         ...defaultedSource,

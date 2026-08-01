@@ -5,6 +5,7 @@ import type {
   SourceCacheMaxAge,
   SourceCapabilities,
   SourceLoader,
+  SourceLoaderResult,
   SourceParamSchemaMap,
   SourcePresentationMetadata,
   SourceProvider,
@@ -21,11 +22,13 @@ import { createDefu } from "defu"
 import { isSourcePresentationMetadataKey } from "../types"
 import {
   parseSourceBaseUrl,
-  resolveSourceLoaderOutputUrls,
+  resolveSourceLoaderResultUrls,
   resolveSourceMetadataUrls,
   resolveSourceUrl,
 } from "./base-url"
+import { resolveSourceCacheConfig } from "./cache"
 import { assertNetworkCapability, validateSourceRequestRules } from "./capabilities"
+import { validateSourceLoaderResult } from "./loader-result"
 import {
   compileHtmlLoaderTemplates,
   loadHtml,
@@ -65,7 +68,7 @@ type IsAny<T> = 0 extends (1 & T) ? true : false
 
 type CustomLoaderFunction<TParams extends SourceParamSchemaMap>
   = IsAny<TParams> extends true
-    ? (...args: any[]) => Promise<ReturnType<SourceLoader> extends Promise<infer Result> ? Result : never>
+    ? (...args: any[]) => Promise<SourceLoaderResult>
     : SourceLoader<TParams>
 
 type StructuredLoaderConfig
@@ -269,9 +272,7 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
     capabilityOverrides,
   )
   validateSourceRequestRules(sourceId, requestRules, capabilities.network)
-  const cache = typeof cacheInput === "string"
-    ? { version: 1, maxAge: cacheInput }
-    : cacheInput
+  const cache = resolveSourceCacheConfig(cacheInput, `${sourceId}.cache`)
 
   let resolvedLoader: SourceLoader<TParams>
   switch (loader.type) {
@@ -363,20 +364,20 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
     secrets,
     capabilities,
     cache,
-    loader: withResolvedOutputUrls(resolvedLoader, baseUrl),
+    loader: withValidatedLoaderResult(resolvedLoader, baseUrl),
   }
 }
 
-function withResolvedOutputUrls<TParams extends SourceParamSchemaMap>(
+function withValidatedLoaderResult<TParams extends SourceParamSchemaMap>(
   loader: SourceLoader<TParams>,
   baseUrl: string | undefined,
 ): SourceLoader<TParams> {
-  if (baseUrl === undefined) return loader
-
-  return async (params, context) => resolveSourceLoaderOutputUrls(
-    await loader(params, context),
-    baseUrl,
-  )
+  return async (params, context) => {
+    const result = validateSourceLoaderResult(await loader(params, context))
+    return baseUrl === undefined
+      ? result
+      : resolveSourceLoaderResultUrls(result, baseUrl)
+  }
 }
 
 export const assignSourceDefaults = createDefu((object, key, value) => {

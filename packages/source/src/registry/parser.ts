@@ -70,7 +70,7 @@ export function parseSourceRegistry(input: unknown): SourceRegistry {
         sourceId,
         config,
         config.loader === undefined
-          ? { [sourceId]: async () => [] }
+          ? { [sourceId]: async () => ({ items: [] }) }
           : {},
       )
       return [sourceId, config]

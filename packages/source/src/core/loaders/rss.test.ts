@@ -22,8 +22,8 @@ describe("parseRss", () => {
     `)).toEqual({
       items: [{
         title: "Latest article",
-        link: "https://www.ruanyifeng.com/blog/2026/07/example.html",
-        created: "Fri, 24 Jul 2026 08:12:16 +0800",
+        url: "https://www.ruanyifeng.com/blog/2026/07/example.html",
+        timestamp: 1784851936000,
       }],
       metadata: {
         badge: "/feed-icon.png",
@@ -50,7 +50,7 @@ describe("parseRss", () => {
     `)).toMatchObject({
       items: [{
         title: "Latest entry",
-        link: "https://example.com/entry",
+        url: "https://example.com/entry",
       }],
       metadata: {
         desc: "Example Atom description",
@@ -58,5 +58,25 @@ describe("parseRss", () => {
         title: "Example Atom Feed",
       },
     })
+  })
+
+  it("filters invalid entries and omits invalid timestamps", () => {
+    expect(parseRss(`
+      <rss version="2.0">
+        <channel>
+          <item>
+            <title>Valid article</title>
+            <link>https://example.com/valid</link>
+            <pubDate>not a date</pubDate>
+          </item>
+          <item>
+            <title>Missing link</title>
+          </item>
+        </channel>
+      </rss>
+    `)?.items).toEqual([{
+      title: "Valid article",
+      url: "https://example.com/valid",
+    }])
   })
 })

@@ -1,5 +1,5 @@
 import type { ProviderConfig } from "@newsnext/source/registry"
-import type { NewsItem } from "@newsnext/source/types"
+import type { NewsItem, SourceLoaderResult } from "@newsnext/source/types"
 import { sessionFetch } from "@newsnext/source/utils"
 
 interface FoloMedia {
@@ -31,7 +31,7 @@ interface FoloResponse {
 
 type FoloEntriesRequest = { feedId: string } | { listId: string }
 
-async function loadFoloEntries(body: FoloEntriesRequest): Promise<NewsItem[]> {
+async function loadFoloEntries(body: FoloEntriesRequest): Promise<SourceLoaderResult> {
   const response = await sessionFetch<FoloResponse>("https://api.folo.is/entries", {
     method: "POST",
     headers: {
@@ -46,35 +46,37 @@ async function loadFoloEntries(body: FoloEntriesRequest): Promise<NewsItem[]> {
     },
   })
 
-  return (response.data ?? [])
-    .flatMap(({ entries, feeds }): NewsItem[] => {
-      if (!entries?.title || !entries.url) return []
+  return {
+    items: (response.data ?? [])
+      .flatMap(({ entries, feeds }): NewsItem[] => {
+        if (!entries?.title || !entries.url) return []
 
-      const timestampSource = entries.publishedAt ?? entries.insertedAt
-      const timestamp = timestampSource ? Date.parse(timestampSource) : Number.NaN
-      const pictures = entries.media
-        ?.filter((media): media is FoloMedia & { url: string } => media.type === "photo" && Boolean(media.url))
-        .map(media => media.url)
-      const previewText = entries.summary ?? entries.description ?? undefined
-      const item: NewsItem = {
-        title: entries.title,
-        url: entries.url,
-        inline: {
-          text: entries.author ?? feeds?.title ?? "",
-        },
-      }
-
-      if (!Number.isNaN(timestamp)) item.timestamp = timestamp
-      if (previewText || pictures?.length) {
-        item.preview = {
-          text: previewText ?? "",
-          ...(pictures?.length ? { picture: pictures } : {}),
+        const timestampSource = entries.publishedAt ?? entries.insertedAt
+        const timestamp = timestampSource ? Date.parse(timestampSource) : Number.NaN
+        const pictures = entries.media
+          ?.filter((media): media is FoloMedia & { url: string } => media.type === "photo" && Boolean(media.url))
+          .map(media => media.url)
+        const previewText = entries.summary ?? entries.description ?? undefined
+        const item: NewsItem = {
+          title: entries.title,
+          url: entries.url,
+          inline: {
+            text: entries.author ?? feeds?.title ?? "",
+          },
         }
-      }
 
-      return [item]
-    })
-    .sort((a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0))
+        if (!Number.isNaN(timestamp)) item.timestamp = timestamp
+        if (previewText || pictures?.length) {
+          item.preview = {
+            text: previewText ?? "",
+            ...(pictures?.length ? { picture: pictures } : {}),
+          }
+        }
+
+        return [item]
+      })
+      .sort((a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0)),
+  }
 }
 
 export default {

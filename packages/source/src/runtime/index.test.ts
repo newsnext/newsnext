@@ -1,36 +1,12 @@
 import type { RuntimeSource } from "@newsnext/source/types"
 import { describe, expect, it } from "vitest"
 import {
-  normalizeSourceLoaderResult,
   normalizeSourceParams,
   parseSourceId,
   SourceRuntimeError,
 } from "./index"
 
 describe("source service", () => {
-  it("normalizes loader item arrays without metadata", () => {
-    const items = [{
-      title: "Example",
-      url: "https://example.com",
-    }]
-
-    expect(normalizeSourceLoaderResult(items)).toEqual({ items })
-  })
-
-  it("preserves explicit loader metadata", () => {
-    const result = {
-      items: [{
-        title: "Example",
-        url: "https://example.com",
-      }],
-      metadata: {
-        badge: "https://example.com/avatar.png?token=fresh",
-      },
-    }
-
-    expect(normalizeSourceLoaderResult(result)).toBe(result)
-  })
-
   it("parses provider-qualified source IDs", () => {
     expect(parseSourceId("rss:latest")).toEqual({
       provider: "rss",

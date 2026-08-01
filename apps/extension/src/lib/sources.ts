@@ -1,6 +1,8 @@
 import type { SourceDescriptor } from "@/typings/source"
 import { createBackgroundClient } from "./background-client"
 
+let sourceDescriptorsPromise: Promise<SourceDescriptor[]> | undefined
+
 function sortSourceDescriptors(sources: SourceDescriptor[]): SourceDescriptor[] {
   return [...sources].sort((a, b) => {
     const byCategory = (a.provider.category ?? "").localeCompare(b.provider.category ?? "")
@@ -13,8 +15,11 @@ function sortSourceDescriptors(sources: SourceDescriptor[]): SourceDescriptor[] 
 }
 
 export async function loadSourceDescriptors(): Promise<SourceDescriptor[]> {
-  const sources = await createBackgroundClient().registry.list()
-  return sortSourceDescriptors(sources)
+  sourceDescriptorsPromise ??= createBackgroundClient().registry.list().then(sortSourceDescriptors).catch((error) => {
+    sourceDescriptorsPromise = undefined
+    throw error
+  })
+  return sourceDescriptorsPromise
 }
 
 export async function loadSourceDescriptor(sourceId: string): Promise<SourceDescriptor> {

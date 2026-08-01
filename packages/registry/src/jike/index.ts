@@ -1,6 +1,5 @@
 import type { ProviderConfig } from "@newsnext/source/registry"
 import type {
-  NewsItem,
   SourceLoaderContext,
   SourceLoaderResult,
 } from "@newsnext/source/types"
@@ -103,14 +102,14 @@ function assertSuccessfulFeed(response: JikeFeedResponse, fallback: string): voi
 export async function fetchJikeFollowingUpdates(
   _params: Record<string, unknown> = {},
   context?: SourceLoaderContext,
-): Promise<NewsItem[]> {
+): Promise<SourceLoaderResult> {
   const response = await fetchJikeWithAuth(
     FOLLOWING_UPDATES_URL,
     { limit: FOLLOWING_UPDATES_LIMIT },
     context,
   )
   assertSuccessfulFeed(response, "Failed to load Jike following updates.")
-  return jikePostsToNewsItems(response.data ?? [])
+  return { items: jikePostsToNewsItems(response.data ?? []) }
 }
 
 export async function fetchJikeUserUpdates(
@@ -134,14 +133,14 @@ export async function fetchJikeUserUpdates(
 async function fetchJikeTopicFeed(
   { topicId, order }: { topicId: string, order: TopicFeedOrder },
   context?: SourceLoaderContext,
-): Promise<NewsItem[]> {
+): Promise<SourceLoaderResult> {
   const response = await fetchJikeWithAuth(
     buildJikeTopicFeedUrl(order),
     { limit: FOLLOWING_UPDATES_LIMIT, topicId: topicId.trim() },
     context,
   )
   assertSuccessfulFeed(response, "Failed to load Jike topic feed.")
-  return jikePostsToNewsItems(response.data ?? [])
+  return { items: jikePostsToNewsItems(response.data ?? []) }
 }
 
 const jikeCapabilities = {

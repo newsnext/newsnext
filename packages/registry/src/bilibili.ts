@@ -1,5 +1,5 @@
 import type { ProviderConfig } from "@newsnext/source/registry"
-import type { NewsItem } from "@newsnext/source/types"
+import type { NewsItem, SourceLoaderResult } from "@newsnext/source/types"
 import { sessionFetch } from "@newsnext/source/utils"
 
 const DYNAMIC_FEED_URL = "https://api.bilibili.com/x/polymer/web-dynamic/v1/feed/all"
@@ -249,7 +249,7 @@ function dynamicArchiveToNewsItem(item: DynamicFeedItem): NewsItem | null {
   return newsItem
 }
 
-async function fetchBilibiliFollowingVideos(): Promise<NewsItem[]> {
+async function fetchBilibiliFollowingVideos(): Promise<SourceLoaderResult> {
   const response = await sessionFetch<DynamicFeedResponse>(DYNAMIC_FEED_URL, {
     headers: {
       referer: "https://www.bilibili.com/",
@@ -273,9 +273,11 @@ async function fetchBilibiliFollowingVideos(): Promise<NewsItem[]> {
     throw new Error(response.message ?? "Failed to load Bilibili following videos.")
   }
 
-  return (response.data?.items ?? [])
-    .map(dynamicArchiveToNewsItem)
-    .filter((item): item is NewsItem => item !== null)
+  return {
+    items: (response.data?.items ?? [])
+      .map(dynamicArchiveToNewsItem)
+      .filter((item): item is NewsItem => item !== null),
+  }
 }
 
 interface BilibiliVideoRankingResponse {
@@ -297,7 +299,7 @@ interface BilibiliPgcRankingResponse {
   }
 }
 
-async function fetchBilibiliRanking({ region }: { region: string }): Promise<NewsItem[]> {
+async function fetchBilibiliRanking({ region }: { region: string }): Promise<SourceLoaderResult> {
   const request = getBilibiliRankingRequest(region)
   const fetchOptions = {
     headers: {
@@ -311,18 +313,22 @@ async function fetchBilibiliRanking({ region }: { region: string }): Promise<New
     if (response.code !== 0) {
       throw new Error(response.message ?? "Failed to load Bilibili video ranking.")
     }
-    return (response.data?.list ?? [])
-      .map(videoRankingItemToNewsItem)
-      .filter((item): item is NewsItem => item !== null)
+    return {
+      items: (response.data?.list ?? [])
+        .map(videoRankingItemToNewsItem)
+        .filter((item): item is NewsItem => item !== null),
+    }
   }
 
   const response = await sessionFetch<BilibiliPgcRankingResponse>(request.url, fetchOptions)
   if (response.code !== 0) {
     throw new Error(response.message ?? "Failed to load Bilibili PGC ranking.")
   }
-  return (response.result?.list ?? response.data?.list ?? [])
-    .map(pgcRankingItemToNewsItem)
-    .filter((item): item is NewsItem => item !== null)
+  return {
+    items: (response.result?.list ?? response.data?.list ?? [])
+      .map(pgcRankingItemToNewsItem)
+      .filter((item): item is NewsItem => item !== null),
+  }
 }
 
 export default {

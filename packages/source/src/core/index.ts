@@ -2,10 +2,17 @@ export {
   resolveSourceUrl,
 } from "./base-url"
 export {
+  parseSourceCacheMaxAge,
+  resolveSourceCacheConfig,
+} from "./cache"
+export {
   assertNetworkCapability,
   matchesCapabilityHost,
   validateSourceRequestRules,
 } from "./capabilities"
+export {
+  validateSourceLoaderResult,
+} from "./loader-result"
 export {
   parseSourceParams,
   parseSourceParamValue,

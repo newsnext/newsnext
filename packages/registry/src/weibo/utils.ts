@@ -152,7 +152,7 @@ export async function fetchWeiboUserPosts(
 
 export async function fetchWeiboKeywordPosts(
   { keyword }: { keyword: string },
-): Promise<NewsItem[]> {
+): Promise<SourceLoaderResult> {
   const normalizedKeyword = keyword.trim()
   if (!normalizedKeyword) throw new Error("Weibo keyword must not be empty.")
 
@@ -167,12 +167,12 @@ export async function fetchWeiboKeywordPosts(
     },
   )
   if (!response.data) throw new Error(response.msg ?? "Weibo returned an empty keyword timeline.")
-  return cardsToNewsItems(response.data.cards ?? [])
+  return { items: cardsToNewsItems(response.data.cards ?? []) }
 }
 
 export async function fetchWeiboSuperTopicPosts(
   { id }: { id: string },
-): Promise<NewsItem[]> {
+): Promise<SourceLoaderResult> {
   const normalizedId = id.trim()
   if (!/^100808[a-z\d]+$/i.test(normalizedId)) {
     throw new Error("Weibo super topic ID must start with 100808 and contain only letters or digits.")
@@ -180,13 +180,15 @@ export async function fetchWeiboSuperTopicPosts(
   const response = await fetchWeiboDesktop<{ items?: Array<{ category?: string, data?: WeiboStatus }> }>(
     `${WEIBO_ORIGIN}/ajax_proxy/chaohua/page?flowId=${normalizedId}_-_sort_time`,
   )
-  return statusesToNewsItems(
-    (response.items ?? [])
-      .flatMap(item => item.category === "feed" && item.data ? [item.data] : []),
-  )
+  return {
+    items: statusesToNewsItems(
+      (response.items ?? [])
+        .flatMap(item => item.category === "feed" && item.data ? [item.data] : []),
+    ),
+  }
 }
 
-export async function fetchWeiboFollowingTimeline(): Promise<NewsItem[]> {
+export async function fetchWeiboFollowingTimeline(): Promise<SourceLoaderResult> {
   const listId = "my_follow_all"
   const searchParams = new URLSearchParams({
     list_id: listId,
@@ -200,5 +202,5 @@ export async function fetchWeiboFollowingTimeline(): Promise<NewsItem[]> {
   if (response.ok === -100) {
     throw new Error("Please log in to https://weibo.com first.")
   }
-  return statusesToNewsItems(response.statuses ?? [])
+  return { items: statusesToNewsItems(response.statuses ?? []) }
 }

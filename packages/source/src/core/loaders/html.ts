@@ -6,7 +6,7 @@ import type {
   HtmlFieldConfig,
   HtmlTraversal,
   NewsItem,
-  SourceLoaderOutput,
+  SourceLoaderResult,
   SourcePresentationMetadata,
   SourceTemplateVars,
 } from "../../types"
@@ -267,7 +267,7 @@ function getHtmlFieldTemplate(
 export async function loadHtml(
   options: HtmlLoaderOptions,
   loaderContext: LoaderContext = {},
-): Promise<SourceLoaderOutput> {
+): Promise<SourceLoaderResult> {
   const {
     url,
     items: itemsSelect,
@@ -343,7 +343,7 @@ export async function loadHtml(
     news.push(item)
   })
 
-  if (!metadata) return news
+  if (!metadata) return { items: news }
 
   return {
     items: news,

@@ -1,6 +1,5 @@
 import type {
   NewsItem,
-  SourceLoaderOutput,
   SourceLoaderResult,
   SourcePresentationMetadata,
 } from "../types"
@@ -45,22 +44,16 @@ export function resolveSourceMetadataUrls(
   return resolved
 }
 
-export function resolveSourceLoaderOutputUrls(
-  output: SourceLoaderOutput,
-  baseUrl: string | undefined,
-): SourceLoaderOutput {
-  if (baseUrl === undefined) return output
-
-  if (Array.isArray(output)) {
-    return output.map(item => resolveNewsItemUrls(item, baseUrl))
-  }
-
+export function resolveSourceLoaderResultUrls(
+  result: SourceLoaderResult,
+  baseUrl: string,
+): SourceLoaderResult {
   const resolved: SourceLoaderResult = {
-    ...output,
-    items: output.items.map(item => resolveNewsItemUrls(item, baseUrl)),
+    ...result,
+    items: result.items.map(item => resolveNewsItemUrls(item, baseUrl)),
   }
-  if (output.metadata !== undefined) {
-    resolved.metadata = resolveSourceMetadataUrls(output.metadata, baseUrl)
+  if (result.metadata !== undefined) {
+    resolved.metadata = resolveSourceMetadataUrls(result.metadata, baseUrl)
   }
   return resolved
 }
