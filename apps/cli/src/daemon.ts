@@ -84,14 +84,20 @@ export async function getDaemonStatus(wsUrl: URL): Promise<DaemonStatus | undefi
 
 function getDaemonSpawnInvocation(args: string[]): { command: string, args: string[] } {
   const entrypoint = process.argv[1]
-  const isSourceEntrypoint = Boolean(
+  if (
     entrypoint
     && /\.[cm]?[jt]sx?$/.test(entrypoint)
-    && existsSync(entrypoint),
-  )
+    && existsSync(entrypoint)
+  ) {
+    return {
+      command: process.execPath,
+      args: [entrypoint, ...args],
+    }
+  }
+
   return {
     command: process.execPath,
-    args: isSourceEntrypoint ? [entrypoint, ...args] : args,
+    args,
   }
 }
 

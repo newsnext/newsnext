@@ -14,7 +14,7 @@ import { useEffect, useMemo, useState } from "react"
 import { useSourceDescriptors } from "@/hooks/use-source-descriptors"
 import { useSourceIcon } from "@/hooks/use-source-icon"
 import { ALL_BOARD_ID } from "@/lib/boards"
-import { buildSourceCards } from "@/lib/source-cards"
+import { buildSourceCards, getSourceCard } from "@/lib/source-cards"
 import { cn } from "@/lib/utils"
 import { instancesAtom } from "@/store/board"
 import Card from "../card"
@@ -107,11 +107,9 @@ function SearchDialogContent(): ReactNode {
     })
 
     return cards.ids.map((id) => {
-      const source = cards.map[id]
-
       return {
         id,
-        source,
+        source: getSourceCard(cards, id),
       } satisfies SearchItem
     })
   }, [sources, instances])

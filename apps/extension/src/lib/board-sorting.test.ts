@@ -18,7 +18,7 @@ function createSource({
 }): BoardSource {
   return {
     id,
-    sourceId: id.split("::")[0],
+    sourceId: id.split("::")[0] ?? id,
     boardId: "reading",
     createdAt,
     provider: {
@@ -126,5 +126,15 @@ describe("orderBoardSourceIds", () => {
       "alpha:feed::2",
       "beta:feed::1",
     ])
+  })
+
+  it("drops source IDs that no longer have source data", () => {
+    const source = createSource({ id: "test:available::1", provider: "Test", createdAt: 1 })
+
+    expect(orderBoardSourceIds({
+      sourceIds: [source.id, "test:missing::2"],
+      sourcesMap: createSourcesMap([source]),
+      preference: DEFAULT_BOARD_SORT_PREFERENCE,
+    })).toEqual([source.id])
   })
 })

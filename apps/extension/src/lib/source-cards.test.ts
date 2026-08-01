@@ -148,15 +148,17 @@ describe("buildSourceCards", () => {
       ],
     })
 
-    expect(cards.map["test:feed::card_abc"].provider).toEqual({
+    const card = cards.map["test:feed::card_abc"]
+    expect(card).toBeDefined()
+    expect(card?.provider).toEqual({
       title: "Test",
       category: "social",
       icon: "https://example.com/icon.png",
       color: "blue",
     })
-    expect(cards.map["test:feed::card_abc"]).not.toHaveProperty("category")
-    expect(cards.map["test:feed::card_abc"]).not.toHaveProperty("icon")
-    expect(cards.map["test:feed::card_abc"]).not.toHaveProperty("color")
+    expect(card).not.toHaveProperty("category")
+    expect(card).not.toHaveProperty("icon")
+    expect(card).not.toHaveProperty("color")
   })
 
   it("hides base source templates from boards", () => {

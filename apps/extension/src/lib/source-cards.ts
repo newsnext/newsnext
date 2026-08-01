@@ -15,6 +15,11 @@ export interface SourceInstance {
   createdAt: number
 }
 
+export interface SourceCards {
+  ids: string[]
+  map: Record<string, BoardSource>
+}
+
 export type SourceInstanceMetadata = SourcePresentationMetadata
 
 export type SourceInstancePatch = SourcePatch<
@@ -123,7 +128,7 @@ export function buildSourceCards({
   sources: SourceDescriptor[]
   sourceInstances: SourceInstance[]
   boardId: string
-}): { ids: string[], map: Record<string, BoardSource> } {
+}): SourceCards {
   const visibleInstances = boardId === ALL_BOARD_ID
     ? sourceInstances
     : sourceInstances.filter(instance => instance.boardId === boardId)
@@ -133,4 +138,12 @@ export function buildSourceCards({
     ids: cards.map(source => source.id),
     map: Object.fromEntries(cards.map(source => [source.id, source])),
   }
+}
+
+export function getSourceCard(cards: SourceCards, id: string): BoardSource {
+  const source = cards.map[id]
+  if (!source) {
+    throw new Error(`Missing source card: ${id}`)
+  }
+  return source
 }

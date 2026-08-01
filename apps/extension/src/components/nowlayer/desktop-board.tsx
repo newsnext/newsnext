@@ -93,9 +93,16 @@ export function DesktopBoard({
   }
   const hasScattered = hasScatteredRef.current
   const items = useMemo(() => new Map<string, HTMLLIElement>(), [])
-  const visibleSourceIds = useMemo(
-    () => orderedSourceIds.filter(id => Boolean(sourcesMap[id])),
+  const visibleSources = useMemo(
+    () => orderedSourceIds.flatMap((id) => {
+      const source = sourcesMap[id]
+      return source ? [{ id, source }] : []
+    }),
     [orderedSourceIds, sourcesMap],
+  )
+  const visibleSourceIds = useMemo(
+    () => visibleSources.map(({ id }) => id),
+    [visibleSources],
   )
   const isScatterReady = Boolean(
     isScattered
@@ -120,8 +127,7 @@ export function DesktopBoard({
     if (fromIndex === toIndex || fromIndex === -1 || toIndex === -1) return
 
     const newSourceIds = [...orderedSourceIds]
-    const [movedItem] = newSourceIds.splice(fromIndex, 1)
-    newSourceIds.splice(toIndex, 0, movedItem)
+    newSourceIds.splice(toIndex, 0, ...newSourceIds.splice(fromIndex, 1))
 
     setSourceOrderState(prev => ({
       ...prev,
@@ -279,7 +285,7 @@ export function DesktopBoard({
           },
         }}
       >
-        {visibleSourceIds.map((id, index) => (
+        {visibleSources.map(({ id, source }, index) => (
           <m.li
             key={id}
             ref={(el) => {
@@ -349,7 +355,7 @@ export function DesktopBoard({
               },
             }}
           >
-            <DraggableCard id={id} source={sourcesMap[id]} />
+            <DraggableCard id={id} source={source} />
           </m.li>
         ))}
       </m.ol>

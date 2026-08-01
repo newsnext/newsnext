@@ -28,8 +28,8 @@
     "@tanstack/react-query": "catalog:",
     "@tanstack/react-router": "catalog:",
     "@tanstack/react-virtual": "catalog:",
-    "@webext-core/messaging": "^3.0.2",
-    "@webext-core/proxy-service": "^2.0.1",
+    "@webext-core/messaging": "^4.0.0",
+    "@webext-core/proxy-service": "^3.0.2",
     "canvas-confetti": "^1.9.4",
     "date-fns": "catalog:",
     "defu": "catalog:",
@@ -55,6 +55,6 @@
     "unplugin-icons": "catalog:",
     "unplugin-turbo-console": "catalog:",
     "vite": "catalog:",
-    "wxt": "^0.20.27"
+    "wxt": "^0.21.3"
   }
 }

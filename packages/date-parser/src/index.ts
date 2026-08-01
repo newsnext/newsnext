@@ -111,10 +111,14 @@ function setTime(
     return new Date(Number.NaN)
   }
 
-  let hours = Number.parseInt(match[1], 10)
-  const minutes = Number.parseInt(match[2], 10)
-  const seconds = Number.parseInt(match[3] ?? "0", 10)
-  const meridiem = match[4]
+  const [, hoursText, minutesText, secondsText, meridiem] = match
+  if (hoursText === undefined || minutesText === undefined) {
+    return new Date(Number.NaN)
+  }
+
+  let hours = Number.parseInt(hoursText, 10)
+  const minutes = Number.parseInt(minutesText, 10)
+  const seconds = Number.parseInt(secondsText ?? "0", 10)
 
   if (
     minutes > 59
@@ -183,9 +187,12 @@ function toDurations(matches: string[]) {
   let p = 0
   for (const m of matches) {
     for (; p < patternSize; p++) {
-      const match = patterns[p].regExp.exec(m)
-      if (match) {
-        durations[patterns[p].unit] = match[1]
+      const pattern = patterns[p]
+      if (!pattern) break
+
+      const value = pattern.regExp.exec(m)?.[1]
+      if (value !== undefined) {
+        durations[pattern.unit] = value
         break
       }
     }
@@ -279,14 +286,16 @@ export function parseRelativeDate(
 
     if (lastMatch) {
       const beforeMatches = BEFORE_REGEX.exec(lastMatch)
-      if (beforeMatches) {
-        tokens.push(beforeMatches[1])
+      const beforeDuration = beforeMatches?.[1]
+      if (beforeDuration !== undefined) {
+        tokens.push(beforeDuration)
         return toUtcDate(sub(now, toDurationObject(tokens), { in: context }))
       }
 
       const afterMatches = AFTER_REGEX.exec(lastMatch)
-      if (afterMatches) {
-        tokens.push(afterMatches[1] ?? afterMatches[2])
+      const afterDuration = afterMatches?.[1] ?? afterMatches?.[2]
+      if (afterDuration !== undefined) {
+        tokens.push(afterDuration)
         return toUtcDate(add(now, toDurationObject(tokens), { in: context }))
       }
 
@@ -299,7 +308,7 @@ export function parseRelativeDate(
       for (const rule of buildWordRules(now, context)) {
         const wordMatches = rule.regExp.exec(firstMatch)
         if (wordMatches) {
-          const durationTokens = [wordMatches[1], ...rest]
+          const durationTokens = [wordMatches[1] ?? "", ...rest]
           const baseStart = set(rule.startAt, { hours: 0, minutes: 0, seconds: 0, milliseconds: 0 })
           return toUtcDate(add(baseStart, toDurationObject(durationTokens), { in: context }))
         }
@@ -310,7 +319,7 @@ export function parseRelativeDate(
       const wordMatches = rule.regExp.exec(normalizedDate)
       if (wordMatches) {
         const dayStart = set(rule.startAt, { hours: 0, minutes: 0, seconds: 0, milliseconds: 0 })
-        return setTime(dayStart, wordMatches[1], context)
+        return setTime(dayStart, wordMatches[1] ?? "", context)
       }
     }
   }

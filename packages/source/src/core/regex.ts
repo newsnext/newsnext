@@ -82,16 +82,20 @@ function isRegexQuantifierAt(pattern: string, index: number): boolean {
 
   let cursor = index + 1
   let digits = 0
-  while (cursor < pattern.length && pattern[cursor] >= "0" && pattern[cursor] <= "9") {
+  while (isAsciiDigit(pattern[cursor])) {
     cursor += 1
     digits += 1
   }
   if (digits === 0) return false
   if (pattern[cursor] === ",") {
     cursor += 1
-    while (cursor < pattern.length && pattern[cursor] >= "0" && pattern[cursor] <= "9") {
+    while (isAsciiDigit(pattern[cursor])) {
       cursor += 1
     }
   }
   return pattern[cursor] === "}"
+}
+
+function isAsciiDigit(character: string | undefined): boolean {
+  return character !== undefined && character >= "0" && character <= "9"
 }

@@ -59,9 +59,13 @@ function sortAutomatically(
 ): string[] {
   const comparator = mode === "provider" ? compareByProvider : compareByCreatedAt
 
-  return sourceIds.toSorted(
-    (leftId, rightId) => comparator(sourcesMap[leftId], sourcesMap[rightId]),
-  )
+  return sourceIds
+    .flatMap((id) => {
+      const source = sourcesMap[id]
+      return source ? [{ id, source }] : []
+    })
+    .toSorted((left, right) => comparator(left.source, right.source))
+    .map(({ id }) => id)
 }
 
 function reconcileManualOrder(manualOrder: string[], fallbackOrder: string[]): string[] {

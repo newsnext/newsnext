@@ -310,8 +310,9 @@ export class SourceConnectionSession {
     const deadline = Date.now() + timeoutMs
     while (true) {
       const clients = this.matchingClients(browser)
-      if (clients.length === 1) {
-        return clients[0]
+      const client = clients[0]
+      if (client && clients.length === 1) {
+        return client
       }
       if (clients.length > 1) {
         const labels = clients.map(({ ready }) =>

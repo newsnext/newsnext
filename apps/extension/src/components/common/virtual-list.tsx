@@ -66,6 +66,7 @@ export function VirtualList<T>({
     >
       {rowVirtualizer.getVirtualItems().map((virtualItem) => {
         const item = items[virtualItem.index]
+        if (item === undefined) return null
 
         return (
           <VirtualListItem

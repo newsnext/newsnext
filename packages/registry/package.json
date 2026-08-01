@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@newsnext/source": "workspace:*",
-    "@wxt-dev/browser": "^0.2.2",
+    "@wxt-dev/browser": "^0.2.5",
     "cheerio": "^1.2.0"
   },
   "devDependencies": {

@@ -3,7 +3,7 @@ import { normalizeSourceParams } from "@newsnext/source/runtime"
 import { useIsFetching, useQueryClient } from "@tanstack/react-query"
 import { useStore } from "jotai"
 import { useCallback, useSyncExternalStore } from "react"
-import { buildSourceCards } from "@/lib/source-cards"
+import { buildSourceCards, getSourceCard } from "@/lib/source-cards"
 import { loadSourceDescriptors } from "@/lib/sources"
 import { currentBoardIdAtom, instancesAtom } from "@/store/board"
 import {
@@ -107,7 +107,7 @@ export function useFetchLatest() {
         boardId: currentBoardId,
       })
       const targets = cards.ids.map((id) => {
-        const source = cards.map[id]
+        const source = getSourceCard(cards, id)
         return {
           sourceId: source.sourceId,
           params: normalizeSourceParams(source, source.paramsValue ?? {}),

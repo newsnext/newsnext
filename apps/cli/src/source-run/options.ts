@@ -139,6 +139,8 @@ function collectRepeatedOption(args: string[], option: string): string[] {
   const values: string[] = []
   for (let index = 0; index < args.length; index++) {
     const argument = args[index]
+    if (argument === undefined) continue
+
     if (argument === option) {
       const value = args[index + 1]
       if (value === undefined || value.startsWith("-")) {

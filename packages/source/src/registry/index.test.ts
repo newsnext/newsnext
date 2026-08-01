@@ -16,6 +16,13 @@ function createLoaderContext(): SourceLoaderContext {
   }
 }
 
+function requireSource<T>(source: T | undefined, id: string): T {
+  if (source === undefined) {
+    throw new Error(`Expected resolved source: ${id}`)
+  }
+  return source
+}
+
 function createSourceConfig(radar: NonNullable<SourceConfig["radar"]>): SourceConfig {
   return {
     metadata: {
@@ -74,15 +81,16 @@ describe("source template vars", () => {
         },
       },
     })
+    const latest = requireSource(provider.sources.latest, "latest")
 
-    expect(provider.sources.latest).toMatchObject({
+    expect(latest).toMatchObject({
       baseUrl: "https://example.com/",
       metadata: {
         badge: "https://example.com/badge.png",
         home: "https://example.com/latest",
       },
     })
-    await expect(provider.sources.latest.loader({}, createLoaderContext())).resolves.toEqual({
+    await expect(latest.loader({}, createLoaderContext())).resolves.toEqual({
       items: [{
         title: "Item",
         url: "https://example.com/items/1",
@@ -108,8 +116,9 @@ describe("source template vars", () => {
         },
       },
     })
+    const latest = requireSource(provider.sources.latest, "latest")
 
-    await expect(provider.sources.latest.loader({}, createLoaderContext())).rejects.toThrow(
+    await expect(latest.loader({}, createLoaderContext())).rejects.toThrow(
       "items[0].url must be a non-empty string",
     )
   })
@@ -136,7 +145,8 @@ describe("source template vars", () => {
       },
     })
 
-    expect(provider.sources.latest.capabilities.network).toEqual(["api.example.com"])
+    const latest = requireSource(provider.sources.latest, "latest")
+    expect(latest.capabilities.network).toEqual(["api.example.com"])
   })
 
   it("preserves provider icon data URLs during expansion", () => {
@@ -156,7 +166,8 @@ describe("source template vars", () => {
       },
     })
 
-    expect(provider.sources.test.provider.icon).toBe(icon)
+    const source = requireSource(provider.sources.test, "test")
+    expect(source.provider.icon).toBe(icon)
   })
 
   it("assigns provider source defaults before resolving sources", () => {
@@ -304,8 +315,9 @@ describe("source template vars", () => {
       },
     })
 
-    expect(provider.sources.test.secrets).toHaveLength(1)
-    expect(provider.sources.test.capabilities.cookies).toEqual(["account.example.com"])
+    const source = requireSource(provider.sources.test, "test")
+    expect(source.secrets).toHaveLength(1)
+    expect(source.capabilities.cookies).toEqual(["account.example.com"])
   })
 
   it("inherits provider request rules", () => {
@@ -343,7 +355,8 @@ describe("source template vars", () => {
       },
     })
 
-    expect(provider.sources.test.requestRules).toEqual([requestRule])
+    const source = requireSource(provider.sources.test, "test")
+    expect(source.requestRules).toEqual([requestRule])
   })
 
   it("inherits provider vars and allows source overrides", () => {
@@ -382,16 +395,18 @@ describe("source template vars", () => {
         },
       },
     })
+    const inherited = requireSource(provider.sources.inherited, "inherited")
+    const overridden = requireSource(provider.sources.overridden, "overridden")
 
-    expect(provider.sources.inherited.capabilities.network).toEqual(["provider.example"])
-    expect(provider.sources.overridden.capabilities.network).toEqual(["provider.example"])
-    expect(provider.sources.inherited.vars).toEqual({
+    expect(inherited.capabilities.network).toEqual(["provider.example"])
+    expect(overridden.capabilities.network).toEqual(["provider.example"])
+    expect(inherited.vars).toEqual({
       endpoint: {
         origin: "https://provider.example",
         version: "v1",
       },
     })
-    expect(provider.sources.overridden.vars).toEqual({
+    expect(overridden.vars).toEqual({
       endpoint: {
         origin: "https://provider.example",
         version: "v2",
