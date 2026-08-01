@@ -2,7 +2,6 @@
 @import "@newsnext/ui/styles/themes.css";
 @import "@newsnext/ui/styles/utilities.css";
 @import "@newsnext/ui/styles/safalist.css";
-@import "@newsnext/ui/styles/colors.css";
 @import "@newsnext/ui/styles/fonts.css";
 
 @custom-variant dark (&:is(.dark *));

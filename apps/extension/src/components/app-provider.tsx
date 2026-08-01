@@ -8,18 +8,14 @@ import { useEffect } from "react"
 import {
   handleThemeModeSwitch,
   handleThemeSwitch,
-  handleThemeVersionSwitch,
   THEME_COLOR_KEY,
   THEME_MODE_KEY,
-  THEME_VERSION_KEY,
 } from "@/lib/utils/swith-theme"
 
 // Initialize theme as soon as possible to avoid flicker
 if (isBrowser) {
   const storedMode = localStorage.getItem(THEME_MODE_KEY) ?? "system"
   handleThemeModeSwitch(storedMode as ThemeMode)
-  const storedVersion = localStorage.getItem(THEME_VERSION_KEY) ?? "v3"
-  handleThemeVersionSwitch(storedVersion === "v4" ? "v4" : "v3")
   const theme = localStorage.getItem(THEME_COLOR_KEY) ?? "red"
   handleThemeSwitch(theme)
 }

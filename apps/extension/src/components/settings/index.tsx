@@ -1,4 +1,4 @@
-import type { ThemeMode, ThemeVersion } from "@/lib/utils/swith-theme"
+import type { ThemeMode } from "@/lib/utils/swith-theme"
 import {
   Dialog,
   DialogContent,
@@ -18,9 +18,7 @@ import { useEffect, useState } from "react"
 import { getBoardDisplayName } from "@/lib/boards"
 import {
   handleThemeModeSwitch,
-  handleThemeVersionSwitch,
   THEME_MODE_KEY,
-  THEME_VERSION_KEY,
 } from "@/lib/utils/swith-theme"
 import { boardsAtom, defaultBoardIdAtom } from "@/store/board"
 import { SegmentedControl } from "../common/segmented-control"
@@ -144,55 +142,28 @@ function AppearanceSettings() {
     const stored = localStorage.getItem(THEME_MODE_KEY) as ThemeMode | null
     return stored ?? "dark"
   })
-  const [themeVersion, setThemeVersion] = useState<ThemeVersion>(() => {
-    const stored = localStorage.getItem(THEME_VERSION_KEY) as ThemeVersion | null
-    return stored === "v4" ? "v4" : "v3"
-  })
-
   useEffect(() => {
     handleThemeModeSwitch(themeMode)
   }, [themeMode])
 
-  useEffect(() => {
-    handleThemeVersionSwitch(themeVersion)
-  }, [themeVersion])
-
   return (
-    <div className="space-y-6">
-      <SettingsSection
-        title="Theme mode"
-        description="Choose a light or dark interface, or follow your system setting."
-      >
-        <SettingsPanel>
-          <SegmentedControl<ThemeMode>
-            items={[
-              { value: "dark", label: "Dark" },
-              { value: "light", label: "Light" },
-              { value: "system", label: "System" },
-            ]}
-            value={themeMode}
-            onValueChange={setThemeMode}
-            layoutId="theme-mode-toggle"
-          />
-        </SettingsPanel>
-      </SettingsSection>
-      <SettingsSection
-        title="Color palette"
-        description="Switch between the original palette and a more vivid version."
-      >
-        <SettingsPanel>
-          <SegmentedControl<ThemeVersion>
-            items={[
-              { value: "v3", label: "Original" },
-              { value: "v4", label: "Vivid" },
-            ]}
-            value={themeVersion}
-            onValueChange={setThemeVersion}
-            layoutId="color-version-toggle"
-          />
-        </SettingsPanel>
-      </SettingsSection>
-    </div>
+    <SettingsSection
+      title="Theme mode"
+      description="Choose a light or dark interface, or follow your system setting."
+    >
+      <SettingsPanel>
+        <SegmentedControl<ThemeMode>
+          items={[
+            { value: "dark", label: "Dark" },
+            { value: "light", label: "Light" },
+            { value: "system", label: "System" },
+          ]}
+          value={themeMode}
+          onValueChange={setThemeMode}
+          layoutId="theme-mode-toggle"
+        />
+      </SettingsPanel>
+    </SettingsSection>
   )
 }
 
