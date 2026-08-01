@@ -9,6 +9,10 @@ import { useInView } from "@/hooks/use-in-view"
 import { useSourcePermission } from "@/hooks/use-source-permission"
 import { useSourceQuery } from "@/hooks/use-source-query"
 import { getSourcePermissionDescription } from "@/lib/source-permissions"
+import {
+  SOURCE_QUERY_OFFSCREEN_RETENTION_MS,
+  SOURCE_QUERY_PRELOAD_MARGIN,
+} from "@/lib/source-query-policy"
 import { cn } from "@/lib/utils"
 import {
   resetInstanceParamsAtom,
@@ -16,9 +20,6 @@ import {
 } from "@/store/board"
 import { CardBack } from "./card-back"
 import { CardFront } from "./card-front"
-
-const CARD_IN_VIEW_MARGIN = "200px"
-const CARD_IN_VIEW_ONCE_DURATION = 60_000
 
 export interface CardProps {
   id: string
@@ -153,8 +154,8 @@ export default function Card(props: CardProps) {
   }
 
   const isInView = useInView(ref, {
-    margin: CARD_IN_VIEW_MARGIN,
-    once: CARD_IN_VIEW_ONCE_DURATION,
+    margin: SOURCE_QUERY_PRELOAD_MARGIN,
+    once: SOURCE_QUERY_OFFSCREEN_RETENTION_MS,
   })
 
   return (

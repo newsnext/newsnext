@@ -639,10 +639,11 @@ cache: {
 Automatic loads, remounts, and background revalidation may reuse a fresh stored
 result according to this cache policy. Explicit user refresh actions use Fetch
 Latest, both for an individual card and for every enabled card on the current
-board. Fetch Latest ignores the source-defined duration but reuses a result
-fetched within the previous minute to prevent repeated remote requests.
-Concurrent requests for the same source and normalized parameters also remain
-deduplicated.
+board. Fetch Latest ignores the source-defined cache duration. Independently, a
+one-minute frequency guard protects remote sources from repeated requests; this
+guard is transparent to the user-triggered query flow and is not part of the
+source cache policy. Concurrent requests for the same source and normalized
+parameters also remain deduplicated.
 
 Structured loaders infer the hostname of a static URL. Declare every additional
 or dynamically selected hostname:

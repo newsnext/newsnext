@@ -193,13 +193,16 @@ In-flight loads are deduplicated by a cache key containing the source ID, cache
 version, and normalized parameters. The key remains internal to the loader and
 cache layers. Both individual-card and board-wide user refreshes execute enabled
 TanStack queries that fetch the latest source data; disabled and unmounted
-queries are not fetched implicitly. A fetch-latest request reuses a stored result
-for one minute, regardless of the source-defined cache duration, then requests
-new data. Expired cached data is still published as a temporary query result,
-and concurrent loads participate in in-flight deduplication. Automatic query
-revalidation uses the normal source cache policy. Fetch-latest intent is passed
-directly to the query function rather than stored as state for a later query
-execution.
+queries are not fetched implicitly. Fetch Latest ignores normal source-cache
+freshness, but a separate one-minute frequency guard prevents repeated remote
+loads. A protected request still follows the normal user-triggered query path
+and completes transparently from the most recent stored result. Expired cached
+data is otherwise published as a temporary query result while a remote load is
+pending, and concurrent loads participate in in-flight deduplication. Automatic
+query revalidation uses the normal source cache policy. Fetch-latest intent is
+passed directly to the query function rather than stored as state for a later
+query execution. Dashboard query timing and the Fetch Latest protection interval
+are centralized in `apps/extension/src/lib/source-query-policy.ts`.
 
 The dashboard also reads the last persisted result as presentation-only
 placeholder data when a card mounts. This survives a dashboard close and reopen

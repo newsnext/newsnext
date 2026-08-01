@@ -1,6 +1,10 @@
 import { normalizeSourceParams } from "@newsnext/source/runtime"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useCallback, useMemo, useState } from "react"
+import {
+  SOURCE_QUERY_REFETCH_INTERVAL_MS,
+  SOURCE_QUERY_STALE_TIME_MS,
+} from "@/lib/source-query-policy"
 import { getLoginUrlFromError } from "./source-login-error"
 import { getSourceQueryHash, getSourceQueryKey, loadSourceQuery } from "./source-query"
 import { useFetchLatestSources, useIsSourceFetchingLatest } from "./use-refetch"
@@ -41,10 +45,10 @@ export function useSourceQuery({
     queryFn: () => loadSourceQuery(queryClient, target),
     enabled: enabled && source !== undefined,
     placeholderData: prev => prev,
-    staleTime: 60_000,
+    staleTime: SOURCE_QUERY_STALE_TIME_MS,
     refetchOnReconnect: true,
     refetchOnWindowFocus: true,
-    refetchInterval: 5 * 60_000,
+    refetchInterval: SOURCE_QUERY_REFETCH_INTERVAL_MS,
     refetchIntervalInBackground: true,
     retry: false,
   })

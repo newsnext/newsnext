@@ -12,6 +12,7 @@ interface SourceCacheEntry extends SourceLoadResult {
 }
 
 export interface SourceCacheReadResult {
+  cachedAt: number
   isFresh: boolean
   result: SourceLoadResult
 }
@@ -64,9 +65,10 @@ export async function readSourceCache(
     }, cacheKey)
     await transaction.done
 
-    const { cachedAt: _cachedAt, usedAt: _usedAt, ...result } = entry
+    const { cachedAt, usedAt: _usedAt, ...result } = entry
     return {
-      isFresh: now - entry.cachedAt < maxAgeMs,
+      cachedAt,
+      isFresh: now - cachedAt < maxAgeMs,
       result,
     }
   } catch {

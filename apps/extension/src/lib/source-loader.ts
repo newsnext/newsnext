@@ -5,7 +5,11 @@ import {
 } from "@newsnext/source/runtime"
 import { createBackgroundClient } from "./background-client"
 import { readSourceCache, writeCachedSource } from "./source-cache"
-import { buildSourceCacheKey, resolveSourceCacheMaxAge } from "./source-cache-values"
+import {
+  buildSourceCacheKey,
+  parseCacheMaxAge,
+} from "./source-cache-values"
+import { isFetchLatestRateLimited } from "./source-query-policy"
 import { loadSourceDescriptor } from "./sources"
 
 const EMPTY_SOURCE_ITEMS_ERROR_MESSAGE = "No source items. Refresh to try again."
@@ -32,11 +36,15 @@ export async function loadSource(
   const cacheKey = buildSourceCacheKey(sourceId, source.cache.version, params)
   const cached = await readSourceCache(
     cacheKey,
-    resolveSourceCacheMaxAge(source.cache.maxAge, options.fetchLatest ?? false),
+    parseCacheMaxAge(source.cache.maxAge),
   )
 
   if (cached?.result.items.length) {
-    if (cached.isFresh) {
+    const shouldReuseResult = options.fetchLatest
+      ? isFetchLatestRateLimited(cached.cachedAt, Date.now())
+      : cached.isFresh
+
+    if (shouldReuseResult) {
       return cached.result
     }
 
