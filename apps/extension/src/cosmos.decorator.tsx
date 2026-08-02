@@ -25,6 +25,7 @@ function getInitialThemeColor(): Color {
 function CosmosAppearanceControls(): React.JSX.Element {
   const [color, setColor] = useState<Color>(getInitialThemeColor)
   const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains("dark"))
+  const [useBorderRadius, setUseBorderRadius] = useState(false)
 
   function changeColor(nextColor: Color): void {
     setColor(nextColor)
@@ -37,47 +38,61 @@ function CosmosAppearanceControls(): React.JSX.Element {
   }
 
   return (
-    <DynamicIsland
-      wrapperClassName="top-3"
-      smallClassName="relative flex shrink-0 items-center justify-center gap-2 px-4 pointer-events-auto island-pill"
-      largeClassName="rounded-2xl p-3 pointer-events-auto sunrise-theme-500"
-      smallHeight={40}
-      smallWidth={150}
-      largeWidth={320}
-      largeHeight={192}
-    >
-      {isSmall => isSmall
-        ? (
-            <div className="flex size-full items-center justify-center gap-2">
-              <Logo className="size-5 text-theme-500" />
-              <WordmarkLogo className="h-auto w-[4.6em] text-xl" />
-            </div>
-          )
-        : (
-            <section
-              aria-label="Cosmos appearance controls"
-              className="grid size-full content-center gap-4 text-foreground"
-              onClick={event => event.stopPropagation()}
-            >
-              <div className="h-28">
-                <ThemeSelector
-                  value={color}
-                  onValueChange={changeColor}
-                  layoutId="cosmos-global-theme-indicator"
-                />
+    <>
+      {useBorderRadius && <style>{"[data-squircle] { clip-path: none !important; }"}</style>}
+      <DynamicIsland
+        wrapperClassName="top-3"
+        smallClassName="relative flex shrink-0 items-center justify-center gap-2 px-4 pointer-events-auto island-pill"
+        largeClassName="rounded-2xl p-3 pointer-events-auto sunrise-theme-500"
+        smallHeight={40}
+        smallWidth={150}
+        largeWidth={320}
+        largeHeight={192}
+      >
+        {isSmall => isSmall
+          ? (
+              <div className="flex size-full items-center justify-center gap-2">
+                <Logo className="size-5 text-theme-500" />
+                <WordmarkLogo className="h-auto w-[4.6em] text-xl" />
               </div>
-              <label className="mx-auto flex h-8 items-center gap-3 rounded-full bg-background/60 px-3 text-xs font-medium whitespace-nowrap">
-                Dark mode
-                <Switch
-                  checked={isDark}
-                  onCheckedChange={changeMode}
-                  aria-label="Toggle dark mode"
-                  size="sm"
-                />
-              </label>
-            </section>
-          )}
-    </DynamicIsland>
+            )
+          : (
+              <section
+                aria-label="Cosmos appearance controls"
+                className="grid size-full content-center gap-4 text-foreground"
+                onClick={event => event.stopPropagation()}
+              >
+                <div className="h-28">
+                  <ThemeSelector
+                    value={color}
+                    onValueChange={changeColor}
+                    layoutId="cosmos-global-theme-indicator"
+                  />
+                </div>
+                <div className="flex items-center justify-center gap-2">
+                  <label className="flex h-8 items-center gap-2 rounded-full bg-background/60 px-3 text-xs font-medium whitespace-nowrap">
+                    Dark mode
+                    <Switch
+                      checked={isDark}
+                      onCheckedChange={changeMode}
+                      aria-label="Toggle dark mode"
+                      size="sm"
+                    />
+                  </label>
+                  <label className="flex h-8 items-center gap-2 rounded-full bg-background/60 px-3 text-xs font-medium whitespace-nowrap">
+                    Border radius
+                    <Switch
+                      checked={useBorderRadius}
+                      onCheckedChange={setUseBorderRadius}
+                      aria-label="Toggle border radius"
+                      size="sm"
+                    />
+                  </label>
+                </div>
+              </section>
+            )}
+      </DynamicIsland>
+    </>
   )
 }
 

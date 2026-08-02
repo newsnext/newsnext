@@ -23,32 +23,27 @@
  * SOFTWARE.
  */
 
-interface SquirclePathParams {
-  width: number
-  height: number
-  cornerRadius: number
-}
-
 const CORNER_SMOOTHING = 0.8
+
+interface SquircleCornerValues {
+  radius: number
+  p: number
+  arcSection: number
+  a: number
+  ab: number
+  abc: number
+  c: number
+  d: number
+  bc: number
+}
 
 function format(value: number): string {
   return value.toFixed(4)
 }
 
-function getSvgPath({
-  width,
-  height,
-  cornerRadius,
-}: SquirclePathParams): string {
-  const budget = Math.min(width, height) / 2
-  const radius = Math.min(cornerRadius, budget)
-
-  if (radius === 0) {
-    return `M ${width} 0 l 0.0000 0 L ${width} ${height} l 0 0.0000 L 0 ${height} l 0.0000 0 L 0 0 l 0 0.0000 Z`
-  }
-
-  const smoothing = Math.min(CORNER_SMOOTHING, budget / radius - 1)
-  const p = Math.min((1 + smoothing) * radius, budget)
+function getCornerValues(radius: number): SquircleCornerValues {
+  const smoothing = CORNER_SMOOTHING
+  const p = (1 + smoothing) * radius
   const arcMeasure = 90 * (1 - smoothing)
   const arcSection = Math.sin(arcMeasure / 2 * Math.PI / 180) * radius * Math.sqrt(2)
   const angleAlpha = (90 - arcMeasure) / 2
@@ -62,25 +57,36 @@ function getSvgPath({
   const abc = ab + c
   const bc = b + c
 
-  return [
-    `M ${width - p} 0`,
-    `c ${format(a)} 0 ${format(ab)} 0 ${format(abc)} ${format(d)}`,
-    `a ${format(radius)} ${format(radius)} 0 0 1 ${format(arcSection)} ${format(arcSection)}`,
-    `c ${format(d)} ${format(c)} ${format(d)} ${format(bc)} ${format(d)} ${format(abc)}`,
-    `L ${width} ${height - p}`,
-    `c 0 ${format(a)} 0 ${format(ab)} ${format(-d)} ${format(abc)}`,
-    `a ${format(radius)} ${format(radius)} 0 0 1 -${format(arcSection)} ${format(arcSection)}`,
-    `c ${format(-c)} ${format(d)} ${format(-bc)} ${format(d)} ${format(-abc)} ${format(d)}`,
-    `L ${p} ${height}`,
-    `c ${format(-a)} 0 ${format(-ab)} 0 ${format(-abc)} ${format(-d)}`,
-    `a ${format(radius)} ${format(radius)} 0 0 1 -${format(arcSection)} -${format(arcSection)}`,
-    `c ${format(-d)} ${format(-c)} ${format(-d)} ${format(-bc)} ${format(-d)} ${format(-abc)}`,
-    `L 0 ${p}`,
-    `c 0 ${format(-a)} 0 ${format(-ab)} ${format(d)} ${format(-abc)}`,
-    `a ${format(radius)} ${format(radius)} 0 0 1 ${format(arcSection)} -${format(arcSection)}`,
-    `c ${format(c)} ${format(-d)} ${format(bc)} ${format(-d)} ${format(abc)} ${format(-d)}`,
-    "Z",
-  ].join(" ")
+  return { radius, p, arcSection, a, ab, abc, c, d, bc }
 }
 
-export { getSvgPath }
+function getCssShape(cornerRadius: number): string {
+  if (cornerRadius === 0) {
+    return "inset(0)"
+  }
+
+  const { radius, p, arcSection, a, ab, abc, c, d, bc } = getCornerValues(cornerRadius)
+  const px = (value: number) => `${format(value)}px`
+
+  return [
+    `shape(from calc(100% - ${px(p)}) 0`,
+    `curve by ${px(abc)} ${px(d)} with ${px(a)} 0 from start / ${px(ab)} 0 from start`,
+    `arc by ${px(arcSection)} ${px(arcSection)} of ${px(radius)} cw`,
+    `curve by ${px(d)} ${px(abc)} with ${px(d)} ${px(c)} from start / ${px(d)} ${px(bc)} from start`,
+    `line to 100% calc(100% - ${px(p)})`,
+    `curve by ${px(-d)} ${px(abc)} with 0 ${px(a)} from start / 0 ${px(ab)} from start`,
+    `arc by ${px(-arcSection)} ${px(arcSection)} of ${px(radius)} cw`,
+    `curve by ${px(-abc)} ${px(d)} with ${px(-c)} ${px(d)} from start / ${px(-bc)} ${px(d)} from start`,
+    `line to ${px(p)} 100%`,
+    `curve by ${px(-abc)} ${px(-d)} with ${px(-a)} 0 from start / ${px(-ab)} 0 from start`,
+    `arc by ${px(-arcSection)} ${px(-arcSection)} of ${px(radius)} cw`,
+    `curve by ${px(-d)} ${px(-abc)} with ${px(-d)} ${px(-c)} from start / ${px(-d)} ${px(-bc)} from start`,
+    `line to 0 ${px(p)}`,
+    `curve by ${px(d)} ${px(-abc)} with 0 ${px(-a)} from start / 0 ${px(-ab)} from start`,
+    `arc by ${px(arcSection)} ${px(-arcSection)} of ${px(radius)} cw`,
+    `curve by ${px(abc)} ${px(-d)} with ${px(c)} ${px(-d)} from start / ${px(bc)} ${px(-d)} from start`,
+    "close)",
+  ].join(", ")
+}
+
+export { getCssShape }

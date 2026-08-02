@@ -127,11 +127,10 @@ function AlertDialogMedia({
   ...props
 }: React.ComponentProps<"div">) {
   return (
-    <SquircleBox
-      radius="xl"
+    <div
       data-slot="alert-dialog-media"
       className={cn(
-        "inline-flex size-7 items-center justify-center bg-background/25 text-foreground/65 *:[svg:not([class*='size-'])]:size-4",
+        "inline-flex size-7 items-center justify-center rounded-xl bg-background/25 text-foreground/65 *:[svg:not([class*='size-'])]:size-4",
         className,
       )}
       {...props}
