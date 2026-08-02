@@ -37,7 +37,7 @@ const SORT_OPTIONS: { label: string, value: BoardSortMode }[] = [
   { label: "Provider name", value: "provider" },
 ]
 
-const BOARD_DIALOG_SURFACE_CLASS = cn("gap-0 p-2 ring-0", MODAL_SHELL_CLASS)
+const BOARD_DIALOG_SURFACE_CLASS = cn("gap-0 ring-0", MODAL_SHELL_CLASS)
 const BOARD_DIALOG_HEADER_CLASS = "h-10 justify-center px-2 pr-12"
 const BOARD_DIALOG_BODY_CLASS = cn("grid p-6", MODAL_INNER_SURFACE_CLASS)
 
@@ -57,11 +57,11 @@ function BoardEditDialog({
   const board = boards.find(candidate => candidate.id === boardId)
   const preference = getBoardSortPreference(preferences, boardId)
   const isAllBoard = boardId === ALL_BOARD_ID
+  const savedColor = board ? getBoardColor(board) : "red"
   const [name, setName] = useState(() => board ? getBoardDisplayName(board) : "")
-  const [color, setColor] = useState<Color>(() => board ? getBoardColor(board) : "red")
+  const [color, setColor] = useState<Color>(savedColor)
   const [sortMode, setSortMode] = useState<BoardSortMode>(preference.mode)
   const [isDeleteArmed, setIsDeleteArmed] = useState(false)
-  const savedColor = board ? getBoardColor(board) : "red"
   const normalizedName = name.trim()
   const hasDuplicateName = isBoardNameTaken(boards, normalizedName, boardId)
   const canSave = board !== undefined && (isAllBoard || normalizedName.length > 0) && !hasDuplicateName

@@ -16,7 +16,7 @@ export function DragOverlay({ source }: DragOverlayProps) {
   const { color } = provider
   const icon = useSourceIcon(source)
   return (
-    <div className="relative flex flex-col p-3">
+    <div className="relative p-2.5">
       <SquircleBox
         aria-hidden
         radius="3xl"
@@ -42,13 +42,12 @@ export function DragOverlay({ source }: DragOverlayProps) {
             <span className="text-xs opacity-70">Dragging</span>
           </div>
         </div>
-        <div className={cn("flex gap-1 items-center shrink-0", `text-${color}-400`)}>
-          <div className="flex items-center justify-center cursor-grabbing">
-            <IconButton aria-label="Handle">
-              <PhDotsSixVerticalDuotone />
-            </IconButton>
-          </div>
-        </div>
+        <IconButton
+          aria-label="Handle"
+          className={cn("shrink-0 cursor-grabbing", `text-${color}-400`)}
+        >
+          <PhDotsSixVerticalDuotone />
+        </IconButton>
       </div>
     </div>
   )

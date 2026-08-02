@@ -105,7 +105,7 @@ export function CardBack({
   return (
     <div className="relative h-full">
       <CardSurface color={color} className="transition-colors duration-300" />
-      <div className="relative flex h-full flex-col p-3 transition-colors duration-300">
+      <div className="relative flex h-full flex-col p-2.5 transition-colors duration-300">
         <CardHeader
           badge={previewBadge}
           className="mb-2"

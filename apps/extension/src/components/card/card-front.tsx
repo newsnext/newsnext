@@ -173,7 +173,7 @@ function CardFrontComponent({
   return (
     <div className="relative h-full">
       <CardSurface color={color} />
-      <div className="relative flex h-full flex-col p-3">
+      <div className="relative flex h-full flex-col p-2.5">
         <CardHeader
           badge={badge}
           color={color}

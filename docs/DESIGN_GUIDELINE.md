@@ -29,7 +29,7 @@ Cards define the primary NewsNext surface treatment.
   color at 55%.
 - The content panel uses a nested `2xl` squircle with `bg-background/70` and the
   matching `sunrise-*-400` treatment.
-- Use `12px` (`p-3`) between the outer shell and nested content where the card
+- Use `10px` (`p-2.5`) between the outer shell and nested content where the card
   shell must remain visible.
 - Place identity and surface actions in the exposed outer shell. Place editable
   fields and primary content in the quieter inner panel.
@@ -48,7 +48,7 @@ All modal-style UI, including dialogs, alert dialogs, command dialogs, sheets,
 and drawers, must reuse the shared modal overlay instead of defining local
 backdrop values. The shared overlay uses `bg-black/75`, a subtle `2px` backdrop
 blur, and a `150ms` fade. Centered modal surfaces use a `3xl` outer squircle,
-the shared 60% popover / 40% theme shell color, and an `8px` shell inset where a
+the shared 60% popover / 40% theme shell color, and a `10px` shell inset where a
 nested surface is present. Nested content uses a `2xl` shape with
 `bg-background/70` and `sunrise-theme-400`.
 
@@ -73,7 +73,7 @@ They must have:
 - A theme-colored outer `3xl` squircle using the Settings dialog color ratio:
   60% `var(--popover)` and 40% `var(--color-theme-400)`. Its structure follows
   cards, but its restrained color balance follows Settings.
-- `8px` (`p-2`) of outer padding on every side, leaving a visible theme-colored
+- `10px` (`p-2.5`) of outer padding on every side, leaving a visible theme-colored
   shell around the nested content.
 - A compact top shell area containing the dialog title and close button.
 - A nested `2xl` content squircle using `bg-background/70` and

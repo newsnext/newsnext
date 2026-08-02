@@ -80,7 +80,7 @@ function SettingsModalContent({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className="h-[min(37.5rem,calc(100vh-2rem))] w-full max-w-3xl sm:max-w-3xl"
-        surfaceClassName={cn("grid grid-rows-[auto_minmax(0,1fr)] gap-0 p-2", MODAL_SHELL_CLASS)}
+        surfaceClassName={cn("grid grid-rows-[auto_minmax(0,1fr)] gap-0", MODAL_SHELL_CLASS)}
       >
         <DialogHeader className="h-10 flex-row items-center gap-2 px-3 pr-12">
           <DialogTitle className="font-bold">Settings</DialogTitle>
@@ -90,7 +90,7 @@ function SettingsModalContent({
           </h2>
         </DialogHeader>
 
-        <div className="flex min-h-0 gap-0">
+        <div className="flex min-h-0">
           <div className="flex w-32 shrink-0 flex-col gap-1 p-1 pr-2 sm:w-44 sm:p-2 sm:pr-4">
             {SETTINGS_TABS.map(tab => (
               <button
