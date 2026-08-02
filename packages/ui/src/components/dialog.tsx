@@ -1,11 +1,16 @@
 import type { SquircleRadius } from "@newsnext/ui/components/squircle"
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 import { Button } from "@newsnext/ui/components/button"
+import {
+  ModalCloseButton,
+  ModalDescription,
+  ModalOverlay,
+  ModalPopup,
+  ModalTitle,
+} from "@newsnext/ui/components/modal"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 
-import { MODAL_OVERLAY_CLASS } from "@newsnext/ui/lib/modal"
 import { cn } from "@newsnext/ui/lib/utils"
-import { XIcon } from "@phosphor-icons/react"
 import * as React from "react"
 
 function Dialog({ ...props }: DialogPrimitive.Root.Props) {
@@ -31,7 +36,8 @@ function DialogOverlay({
   return (
     <DialogPrimitive.Backdrop
       data-slot="dialog-overlay"
-      className={cn(MODAL_OVERLAY_CLASS, className)}
+      className={className}
+      render={<ModalOverlay />}
       {...props}
     />
   )
@@ -43,27 +49,35 @@ function DialogContent({
   radius = "3xl",
   showCloseButton = true,
   surfaceClassName,
+  variant = "default",
   ...props
 }: DialogPrimitive.Popup.Props & {
   radius?: SquircleRadius | number
   showCloseButton?: boolean
   surfaceClassName?: string
+  variant?: "default" | "themed"
 }) {
   return (
     <DialogPortal>
       <DialogOverlay />
       <DialogPrimitive.Popup
         data-slot="dialog-content"
-        className={cn(
-          "fixed top-1/2 left-1/2 z-50 w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 text-sm text-popover-foreground duration-100 outline-none sm:max-w-md data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
-          className,
+        render={(
+          <ModalPopup
+            className={cn(
+              "max-w-[calc(100%-2rem)] text-sm text-popover-foreground sm:max-w-md",
+              className,
+            )}
+          />
         )}
         {...props}
       >
         <SquircleBox
           radius={radius}
+          variant={variant === "themed" ? "modal-shell" : "default"}
           className={cn(
-            "relative grid size-full gap-6 bg-popover p-6 ring-1 ring-foreground/5",
+            "relative grid size-full ring-1 ring-foreground/5",
+            variant === "default" && "gap-6 bg-popover p-6",
             surfaceClassName,
           )}
         >
@@ -71,17 +85,8 @@ function DialogContent({
           {showCloseButton && (
             <DialogPrimitive.Close
               data-slot="dialog-close"
-              render={(
-                <Button
-                  variant="ghost"
-                  className="absolute top-4 right-4"
-                  size="icon-sm"
-                />
-              )}
-            >
-              <XIcon />
-              <span className="sr-only">Close</span>
-            </DialogPrimitive.Close>
+              render={<ModalCloseButton />}
+            />
           )}
         </SquircleBox>
       </DialogPrimitive.Popup>
@@ -130,10 +135,7 @@ function DialogTitle({ className, ...props }: DialogPrimitive.Title.Props) {
   return (
     <DialogPrimitive.Title
       data-slot="dialog-title"
-      className={cn(
-        "text-base leading-none font-medium",
-        className,
-      )}
+      render={<ModalTitle className={cn("text-base leading-none", className)} />}
       {...props}
     />
   )
@@ -146,9 +148,13 @@ function DialogDescription({
   return (
     <DialogPrimitive.Description
       data-slot="dialog-description"
-      className={cn(
-        "text-sm text-muted-foreground *:[a]:underline *:[a]:underline-offset-3 *:[a]:hover:text-foreground",
-        className,
+      render={(
+        <ModalDescription
+          className={cn(
+            "*:[a]:underline *:[a]:underline-offset-3 *:[a]:hover:text-foreground",
+            className,
+          )}
+        />
       )}
       {...props}
     />

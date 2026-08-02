@@ -9,7 +9,6 @@ import { PhArrowCircleLeftDuotone } from "@/components/icons/ph"
 import { useSourceIcon } from "@/hooks/use-source-icon"
 import { useRelativeTime } from "@/hooks/useRelativeTime"
 import { cn } from "@/lib/utils"
-import { IconButton } from "../../common/button"
 import { CardHeader } from "../card-header"
 import { CardSurface } from "../card-surface"
 import { CardBoardSelect, DeleteCardButton } from "./actions"
@@ -119,14 +118,16 @@ export function CardBack({
           actions={(
             <>
               {!isDraft && <DeleteCardButton id={id} />}
-              <IconButton
+              <Button
+                variant="quiet"
+                size="icon-fit"
                 onClick={(e) => {
                   e.stopPropagation()
                   onFlip()
                 }}
               >
                 <PhArrowCircleLeftDuotone />
-              </IconButton>
+              </Button>
               {dragHandle}
             </>
           )}

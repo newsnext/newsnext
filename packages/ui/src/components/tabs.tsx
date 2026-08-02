@@ -29,6 +29,7 @@ const tabsListVariants = cva(
       variant: {
         default: "bg-muted",
         line: "gap-1 bg-transparent",
+        sidebar: "h-auto w-32 shrink-0 flex-col items-stretch justify-start gap-1 rounded-none bg-transparent p-1 pr-2 sm:w-44 sm:p-2 sm:pr-4",
       },
     },
     defaultVariants: {
@@ -61,6 +62,7 @@ function TabsTrigger({ className, ...props }: TabsPrimitive.Tab.Props) {
         "group-data-[variant=line]/tabs-list:bg-transparent group-data-[variant=line]/tabs-list:data-active:bg-transparent dark:group-data-[variant=line]/tabs-list:data-active:border-transparent dark:group-data-[variant=line]/tabs-list:data-active:bg-transparent",
         "data-active:bg-background data-active:text-foreground dark:data-active:border-input dark:data-active:bg-input/30 dark:data-active:text-foreground",
         "after:absolute after:bg-foreground after:opacity-0 after:transition-opacity group-data-horizontal/tabs:after:inset-x-0 group-data-horizontal/tabs:after:bottom-[-5px] group-data-horizontal/tabs:after:h-0.5 group-data-vertical/tabs:after:inset-y-0 group-data-vertical/tabs:after:-right-1 group-data-vertical/tabs:after:w-0.5 group-data-[variant=line]/tabs-list:data-active:after:opacity-100",
+        "group-data-[variant=sidebar]/tabs-list:h-auto group-data-[variant=sidebar]/tabs-list:w-full group-data-[variant=sidebar]/tabs-list:flex-none group-data-[variant=sidebar]/tabs-list:justify-start group-data-[variant=sidebar]/tabs-list:rounded-full group-data-[variant=sidebar]/tabs-list:px-3 group-data-[variant=sidebar]/tabs-list:py-2 group-data-[variant=sidebar]/tabs-list:text-left group-data-[variant=sidebar]/tabs-list:text-foreground/60 group-data-[variant=sidebar]/tabs-list:hover:bg-background/25 group-data-[variant=sidebar]/tabs-list:hover:text-foreground group-data-[variant=sidebar]/tabs-list:data-active:bg-background/75 group-data-[variant=sidebar]/tabs-list:data-active:text-foreground group-data-[variant=sidebar]/tabs-list:data-active:shadow-sm group-data-[variant=sidebar]/tabs-list:data-active:ring-1 group-data-[variant=sidebar]/tabs-list:data-active:ring-foreground/5",
         className,
       )}
       {...props}

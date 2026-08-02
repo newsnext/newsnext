@@ -2,9 +2,14 @@
 
 import { AlertDialog as AlertDialogPrimitive } from "@base-ui/react/alert-dialog"
 import { Button } from "@newsnext/ui/components/button"
+import {
+  ModalDescription,
+  ModalOverlay,
+  ModalPopup,
+  ModalTitle,
+} from "@newsnext/ui/components/modal"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 
-import { MODAL_INNER_SURFACE_CLASS, MODAL_OVERLAY_CLASS, MODAL_SHELL_CLASS } from "@newsnext/ui/lib/modal"
 import { cn } from "@newsnext/ui/lib/utils"
 import * as React from "react"
 
@@ -31,7 +36,8 @@ function AlertDialogOverlay({
   return (
     <AlertDialogPrimitive.Backdrop
       data-slot="alert-dialog-overlay"
-      className={cn(MODAL_OVERLAY_CLASS, className)}
+      className={className}
+      render={<ModalOverlay />}
       {...props}
     />
   )
@@ -51,14 +57,18 @@ function AlertDialogContent({
       <AlertDialogPrimitive.Popup
         data-slot="alert-dialog-content"
         data-size={size}
-        className={cn(
-          "group/alert-dialog-content fixed top-1/2 left-1/2 z-50 w-full max-w-xs -translate-x-1/2 -translate-y-1/2 text-popover-foreground duration-100 outline-none data-[size=default]:sm:max-w-md data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
-          className,
+        render={(
+          <ModalPopup
+            className={cn(
+              "group/alert-dialog-content max-w-xs text-popover-foreground data-[size=default]:sm:max-w-md",
+              className,
+            )}
+          />
         )}
         {...props}
       >
-        <SquircleBox radius="3xl" className={MODAL_SHELL_CLASS}>
-          <SquircleBox radius="2xl" className={cn("grid gap-6 p-6", MODAL_INNER_SURFACE_CLASS)}>
+        <SquircleBox radius="3xl" variant="modal-shell">
+          <SquircleBox radius="2xl" variant="modal-inner" className="grid gap-6 p-6">
             {children}
           </SquircleBox>
         </SquircleBox>
@@ -122,9 +132,13 @@ function AlertDialogTitle({
   return (
     <AlertDialogPrimitive.Title
       data-slot="alert-dialog-title"
-      className={cn(
-        "text-lg font-medium sm:group-data-[size=default]/alert-dialog-content:group-has-data-[slot=alert-dialog-media]/alert-dialog-content:col-start-2",
-        className,
+      render={(
+        <ModalTitle
+          className={cn(
+            "text-lg sm:group-data-[size=default]/alert-dialog-content:group-has-data-[slot=alert-dialog-media]/alert-dialog-content:col-start-2",
+            className,
+          )}
+        />
       )}
       {...props}
     />
@@ -138,9 +152,13 @@ function AlertDialogDescription({
   return (
     <AlertDialogPrimitive.Description
       data-slot="alert-dialog-description"
-      className={cn(
-        "text-sm text-balance text-muted-foreground md:text-pretty *:[a]:underline *:[a]:underline-offset-3 *:[a]:hover:text-foreground",
-        className,
+      render={(
+        <ModalDescription
+          className={cn(
+            "text-balance md:text-pretty *:[a]:underline *:[a]:underline-offset-3 *:[a]:hover:text-foreground",
+            className,
+          )}
+        />
       )}
       {...props}
     />

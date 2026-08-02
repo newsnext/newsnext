@@ -1,4 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
+import type { SettingsTabId } from "@/components/settings/modal-shell"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -7,6 +8,7 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
+  AlertDialogMedia,
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@newsnext/ui/components/alert-dialog"
@@ -20,28 +22,18 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@newsnext/ui/components/dialog"
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@newsnext/ui/components/drawer"
 import { Input } from "@newsnext/ui/components/input"
 import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@newsnext/ui/components/sheet"
+  ModalCloseButton,
+  ModalDescription,
+  ModalOverlay,
+  ModalPopup,
+  ModalTitle,
+} from "@newsnext/ui/components/modal"
+import { SquircleBox } from "@newsnext/ui/components/squircle"
+import { CircleAlert } from "lucide-react"
 import { useState } from "react"
+import { SettingsModalShell } from "@/components/settings/modal-shell"
 
 function FixtureStage({ children }: React.PropsWithChildren) {
   return <main className="grid min-h-full place-items-center p-8">{children}</main>
@@ -65,6 +57,71 @@ function DialogFixture() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </FixtureStage>
+  )
+}
+
+function SharedModalPartsFixture() {
+  return (
+    <FixtureStage>
+      <section className="relative isolate h-96 w-full max-w-2xl overflow-hidden rounded-3xl border bg-card">
+        <ModalOverlay className="absolute rounded-3xl" data-open />
+        <ModalPopup
+          className="absolute max-w-sm rounded-3xl bg-popover p-6 text-popover-foreground shadow-2xl"
+          data-open
+        >
+          <ModalCloseButton type="button" />
+          <div className="grid gap-2 pr-8">
+            <ModalTitle className="text-lg">Shared modal foundation</ModalTitle>
+            <ModalDescription>
+              Overlay, popup, close control, title, and description are shared React components.
+            </ModalDescription>
+          </div>
+          <div className="mt-6 flex justify-end">
+            <Button>Continue</Button>
+          </div>
+        </ModalPopup>
+      </section>
+    </FixtureStage>
+  )
+}
+
+function ThemedDialogFixture() {
+  return (
+    <FixtureStage>
+      <Dialog defaultOpen>
+        <DialogTrigger render={<Button variant="outline" />}>Open themed dialog</DialogTrigger>
+        <DialogContent variant="themed" surfaceClassName="w-full max-w-lg">
+          <DialogHeader className="px-4 py-3 pr-12">
+            <DialogTitle>Edit board</DialogTitle>
+            <DialogDescription>Preview the shared NewsNext modal surface treatment.</DialogDescription>
+          </DialogHeader>
+          <SquircleBox radius="2xl" variant="modal-inner" className="grid gap-4 p-6">
+            <Input aria-label="Board name" defaultValue="Daily reading" />
+            <DialogFooter>
+              <Button variant="outline">Cancel</Button>
+              <Button>Save changes</Button>
+            </DialogFooter>
+          </SquircleBox>
+        </DialogContent>
+      </Dialog>
+    </FixtureStage>
+  )
+}
+
+function SettingsModalFixture() {
+  const [open, setOpen] = useState(true)
+  const [activeTab, setActiveTab] = useState<SettingsTabId>("appearance")
+
+  return (
+    <FixtureStage>
+      <Button variant="outline" onClick={() => setOpen(true)}>Open settings</Button>
+      <SettingsModalShell
+        activeTab={activeTab}
+        open={open}
+        onOpenChange={setOpen}
+        onTabChange={setActiveTab}
+      />
     </FixtureStage>
   )
 }
@@ -95,60 +152,38 @@ function AlertDialogFixture() {
   )
 }
 
-function BottomDrawerFixture() {
-  return (
-    <FixtureStage>
-      <Drawer defaultOpen>
-        <DrawerTrigger asChild>
-          <Button variant="outline">Open drawer</Button>
-        </DrawerTrigger>
-        <DrawerContent>
-          <DrawerHeader>
-            <DrawerTitle>Move to board</DrawerTitle>
-            <DrawerDescription>Choose where this source should appear.</DrawerDescription>
-          </DrawerHeader>
-          <div className="grid gap-2 px-4">
-            <Button variant="secondary">Daily reading</Button>
-            <Button variant="ghost">Product research</Button>
-          </div>
-          <DrawerFooter>
-            <DrawerClose asChild>
-              <Button variant="outline">Cancel</Button>
-            </DrawerClose>
-          </DrawerFooter>
-        </DrawerContent>
-      </Drawer>
-    </FixtureStage>
-  )
-}
+function CompactAlertDialogFixture() {
+  const [open, setOpen] = useState(true)
 
-function RightSheetFixture() {
   return (
     <FixtureStage>
-      <Sheet defaultOpen>
-        <SheetTrigger render={<Button variant="outline" />}>Open sheet</SheetTrigger>
-        <SheetContent side="right">
-          <SheetHeader>
-            <SheetTitle>Source details</SheetTitle>
-            <SheetDescription>Inspect and update source configuration.</SheetDescription>
-          </SheetHeader>
-          <div className="grid gap-3 px-6">
-            <Input aria-label="Source URL" defaultValue="https://example.com/feed.xml" />
-            <Input aria-label="Refresh interval" defaultValue="30 minutes" />
-          </div>
-          <SheetFooter>
-            <Button>Save</Button>
-            <SheetClose render={<Button variant="outline" />}>Cancel</SheetClose>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
+      <AlertDialog open={open} onOpenChange={setOpen}>
+        <AlertDialogTrigger render={<Button variant="outline" />}>Reconnect source</AlertDialogTrigger>
+        <AlertDialogContent size="sm">
+          <AlertDialogHeader>
+            <AlertDialogMedia>
+              <CircleAlert />
+            </AlertDialogMedia>
+            <AlertDialogTitle>Connection expired</AlertDialogTitle>
+            <AlertDialogDescription>
+              Reconnect this source to continue receiving updates.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Later</AlertDialogCancel>
+            <AlertDialogAction onClick={() => setOpen(false)}>Reconnect</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </FixtureStage>
   )
 }
 
 export default {
-  "Dialog": DialogFixture,
-  "Alert dialog": AlertDialogFixture,
-  "Bottom drawer": BottomDrawerFixture,
-  "Right sheet": RightSheetFixture,
+  "Foundation: Shared parts": SharedModalPartsFixture,
+  "Dialog: Default": DialogFixture,
+  "Dialog: Themed": ThemedDialogFixture,
+  "Dialog: Settings": SettingsModalFixture,
+  "Alert: Default": AlertDialogFixture,
+  "Alert: Compact": CompactAlertDialogFixture,
 }

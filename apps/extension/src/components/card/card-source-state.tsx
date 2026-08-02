@@ -1,4 +1,5 @@
 import type { BoardSource } from "@/typings/source"
+import { Button } from "@newsnext/ui/components/button"
 import { useCallback } from "react"
 import { cn } from "@/lib/utils"
 import { PhInfoDuotone } from "../icons/ph"
@@ -13,7 +14,7 @@ interface SourceActionStateProps {
   title: string
 }
 
-export function SourceActionState({
+function SourceActionState({
   color,
   icon,
   label,
@@ -23,11 +24,12 @@ export function SourceActionState({
 }: SourceActionStateProps) {
   return (
     <div className="flex h-full min-h-56 items-center justify-center px-4 text-center">
-      <button
+      <Button
         type="button"
+        variant="outline"
         onClick={onClick}
         className={cn(
-          "inline-flex h-10 items-center justify-center gap-2 rounded-full border bg-background/50 px-4 text-sm font-semibold shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:bg-background/65 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+          "h-10 gap-2 bg-background/50 px-4 font-semibold shadow-sm backdrop-blur hover:-translate-y-0.5 hover:bg-background/65 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
           `border-${color}-400/25 text-${color}-400 focus-visible:ring-${color}-400`,
         )}
         aria-label={title}
@@ -35,7 +37,7 @@ export function SourceActionState({
       >
         <SourceIcon color={color} icon={icon} title={provider.title} />
         {label}
-      </button>
+      </Button>
     </div>
   )
 }

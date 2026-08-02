@@ -1,6 +1,6 @@
 import type { SVGProps } from "react"
 
-export function Logo({ className, ...props }: SVGProps<SVGSVGElement>) {
+export function Logo({ className, ...props }: SVGProps<SVGSVGElement>): React.JSX.Element {
   return (
     <svg
       className={className}

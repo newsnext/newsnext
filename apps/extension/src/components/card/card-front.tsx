@@ -1,12 +1,12 @@
 import type { ReactNode } from "react"
 import type { BoardSource, NewsItem } from "@/typings/source"
+import { Button } from "@newsnext/ui/components/button"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { memo, useRef } from "react"
 import { useSourceIcon } from "@/hooks/use-source-icon"
 import { useRelativeTime } from "@/hooks/useRelativeTime"
 import { isTimelineItems } from "@/lib/source-presentation"
 import { cn } from "@/lib/utils"
-import { IconButton } from "../common/button"
 import {
   PhArrowCounterClockwiseDuotone,
   PhCircleDashedDuotone,
@@ -49,7 +49,9 @@ function CardRefreshButton({
   onRefresh: () => void
 }) {
   return (
-    <IconButton
+    <Button
+      variant="quiet"
+      size="icon-fit"
       className={cn(
         isFetching && "animate-spin",
       )}
@@ -57,7 +59,7 @@ function CardRefreshButton({
       aria-label="Refresh"
     >
       {isFetching ? <PhCircleDashedDuotone /> : <PhArrowCounterClockwiseDuotone />}
-    </IconButton>
+    </Button>
   )
 }
 
@@ -187,12 +189,14 @@ function CardFrontComponent({
             <>
               <CardRefreshButton isFetching={isFetching} onRefresh={onRefresh} />
               {onFlip && (
-                <IconButton
+                <Button
+                  variant="quiet"
+                  size="icon-fit"
                   onClick={onFlip}
-                  aria-label="Datail"
+                  aria-label="Detail"
                 >
                   <PhInfoDuotone />
-                </IconButton>
+                </Button>
               )}
               {dragHandle}
             </>

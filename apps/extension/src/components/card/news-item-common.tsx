@@ -1,9 +1,9 @@
 import type { ReactNode } from "react"
 import type { NewsItem } from "@/typings/source"
 import { extractPictures } from "@newsnext/shared/types"
+import { ProxiedImage } from "@newsnext/ui/components/proxied-image"
+import { SafeHtml } from "@newsnext/ui/components/safe-html"
 import { cn } from "@/lib/utils"
-import { ProxiedImage } from "../common/proxied-image"
-import { SafeHtml } from "../common/safe-html"
 
 interface NewsItemLinkProps {
   item: NewsItem

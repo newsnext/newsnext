@@ -1,10 +1,10 @@
 import type { CardProps } from "./index"
 import type { BoardSource } from "@/typings/source"
+import { Button } from "@newsnext/ui/components/button"
 import { useCallback, useMemo } from "react"
 import { createRoot } from "react-dom/client"
 import { useSortable } from "@/hooks/use-sortable"
 import { cn } from "@/lib/utils"
-import { IconButton } from "../common/button"
 import { PhDotsSixVerticalDuotone } from "../icons/ph"
 import { DragOverlay } from "./drag-overlay"
 import Card from "./index"
@@ -35,12 +35,14 @@ export function DraggableCard({ id, source, ...props }: DraggableCardProps) {
   const dragHandle = useMemo(
     () => (
       <div ref={setHandleRef} className="flex items-center justify-center">
-        <IconButton
+        <Button
+          variant="quiet"
+          size="icon-fit"
           aria-label="Handle"
           className="cursor-grab active:cursor-grabbing"
         >
           <PhDotsSixVerticalDuotone />
-        </IconButton>
+        </Button>
       </div>
     ),
     [setHandleRef],

@@ -1,4 +1,5 @@
 import { Button } from "@newsnext/ui/components/button"
+import { Card, CardContent } from "@newsnext/ui/components/card"
 import { useCallback, useEffect, useState } from "react"
 import { browser } from "#imports"
 import {
@@ -6,7 +7,7 @@ import {
   getUserManagedHostPermissionOrigins,
   revokeHostPermissionOrigin,
 } from "@/lib/host-permissions"
-import { SettingsPanel, SettingsSection } from "./layout"
+import { SettingsSection } from "./layout"
 
 const MANAGED_PERMISSIONS = [
   {
@@ -108,33 +109,37 @@ export function PermissionsSettings() {
       >
         {visiblePermissions.length === 0
           ? (
-              <SettingsPanel className="text-sm text-muted-foreground">
-                No browser permissions have been granted.
-              </SettingsPanel>
+              <Card variant="subtle">
+                <CardContent className="text-sm text-muted-foreground">
+                  No browser permissions have been granted.
+                </CardContent>
+              </Card>
             )
           : (
-              <SettingsPanel className="p-0">
-                <ul className="divide-y divide-border/50">
-                  {visiblePermissions.map(permission => (
-                    <li key={permission.id} className="flex items-center justify-between gap-4 px-4 py-3">
-                      <div className="min-w-0 space-y-1">
-                        <div className="text-sm font-medium">{permission.label}</div>
-                        <div className="text-xs leading-5 text-muted-foreground">
-                          {permission.description}
+              <Card variant="subtle">
+                <CardContent className="p-0">
+                  <ul className="divide-y divide-border/50">
+                    {visiblePermissions.map(permission => (
+                      <li key={permission.id} className="flex items-center justify-between gap-4 px-4 py-3">
+                        <div className="min-w-0 space-y-1">
+                          <div className="text-sm font-medium">{permission.label}</div>
+                          <div className="text-xs leading-5 text-muted-foreground">
+                            {permission.description}
+                          </div>
                         </div>
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="xs"
-                        disabled={revokingPermission === permission.id}
-                        onClick={() => void handleRevokePermission(permission.id)}
-                      >
-                        {revokingPermission === permission.id ? "Revoking..." : "Revoke"}
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
-              </SettingsPanel>
+                        <Button
+                          variant="outline"
+                          size="xs"
+                          disabled={revokingPermission === permission.id}
+                          onClick={() => void handleRevokePermission(permission.id)}
+                        >
+                          {revokingPermission === permission.id ? "Revoking..." : "Revoke"}
+                        </Button>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
             )}
       </SettingsSection>
 
@@ -144,31 +149,35 @@ export function PermissionsSettings() {
       >
         {origins.length === 0
           ? (
-              <SettingsPanel className="text-sm text-muted-foreground">
-                No site access has been granted.
-              </SettingsPanel>
+              <Card variant="subtle">
+                <CardContent className="text-sm text-muted-foreground">
+                  No site access has been granted.
+                </CardContent>
+              </Card>
             )
           : (
-              <SettingsPanel className="p-0">
-                <ul className="divide-y divide-border/50">
-                  {origins.map(origin => (
-                    <li key={origin} className="flex items-center justify-between gap-4 px-4 py-3">
-                      <div className="min-w-0">
-                        <div className="truncate text-sm font-medium">{getOriginLabel(origin)}</div>
-                        <div className="truncate text-xs text-muted-foreground">{origin}</div>
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="xs"
-                        disabled={revokingOrigin === origin}
-                        onClick={() => void handleRevokeOrigin(origin)}
-                      >
-                        {revokingOrigin === origin ? "Revoking..." : "Revoke"}
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
-              </SettingsPanel>
+              <Card variant="subtle">
+                <CardContent className="p-0">
+                  <ul className="divide-y divide-border/50">
+                    {origins.map(origin => (
+                      <li key={origin} className="flex items-center justify-between gap-4 px-4 py-3">
+                        <div className="min-w-0">
+                          <div className="truncate text-sm font-medium">{getOriginLabel(origin)}</div>
+                          <div className="truncate text-xs text-muted-foreground">{origin}</div>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="xs"
+                          disabled={revokingOrigin === origin}
+                          onClick={() => void handleRevokeOrigin(origin)}
+                        >
+                          {revokingOrigin === origin ? "Revoking..." : "Revoke"}
+                        </Button>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
             )}
       </SettingsSection>
     </div>

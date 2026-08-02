@@ -1,8 +1,8 @@
 import type { BoardSource } from "@/typings/source"
+import { Button } from "@newsnext/ui/components/button"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { useSourceIcon } from "@/hooks/use-source-icon"
 import { cn } from "@/lib/utils"
-import { IconButton } from "../common/button"
 import { PhDotsSixVerticalDuotone } from "../icons/ph"
 import { SourceIcon } from "./source-icon"
 
@@ -42,12 +42,14 @@ export function DragOverlay({ source }: DragOverlayProps) {
             <span className="text-xs opacity-70">Dragging</span>
           </div>
         </div>
-        <IconButton
+        <Button
+          variant="quiet"
+          size="icon-fit"
           aria-label="Handle"
           className={cn("shrink-0 cursor-grabbing", `text-${color}-400`)}
         >
           <PhDotsSixVerticalDuotone />
-        </IconButton>
+        </Button>
       </div>
     </div>
   )

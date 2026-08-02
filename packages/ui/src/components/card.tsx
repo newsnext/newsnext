@@ -1,3 +1,4 @@
+import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { cn } from "@newsnext/ui/lib/utils"
 
 import * as React from "react"
@@ -5,18 +6,35 @@ import * as React from "react"
 function Card({
   className,
   size = "default",
+  variant = "default",
+  children,
   ...props
-}: React.ComponentProps<"div"> & { size?: "default" | "sm" }) {
+}: React.ComponentProps<"div"> & {
+  size?: "default" | "sm"
+  variant?: "default" | "subtle"
+}): React.JSX.Element {
   return (
     <div
       data-slot="card"
       data-size={size}
+      data-variant={variant}
       className={cn(
-        "group/card flex flex-col gap-6 overflow-hidden rounded-2xl bg-card py-6 text-sm text-card-foreground ring-1 ring-foreground/10 has-[>img:first-child]:pt-0 data-[size=sm]:gap-4 data-[size=sm]:py-4 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl",
+        "group/card flex flex-col text-sm text-card-foreground",
+        variant === "default" && "gap-6 overflow-hidden rounded-2xl bg-card py-6 ring-1 ring-foreground/10 has-[>img:first-child]:pt-0 data-[size=sm]:gap-4 data-[size=sm]:py-4 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl",
+        variant === "subtle" && "relative isolate gap-0",
         className,
       )}
       {...props}
-    />
+    >
+      {variant === "subtle" && (
+        <SquircleBox
+          aria-hidden
+          radius="2xl"
+          className="pointer-events-none absolute inset-0 bg-foreground/3 ring-1 ring-foreground/5"
+        />
+      )}
+      {children}
+    </div>
   )
 }
 
@@ -70,7 +88,10 @@ function CardContent({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-content"
-      className={cn("px-6 group-data-[size=sm]/card:px-4", className)}
+      className={cn(
+        "px-6 group-data-[size=sm]/card:px-4 group-data-[variant=subtle]/card:relative group-data-[variant=subtle]/card:p-4",
+        className,
+      )}
       {...props}
     />
   )

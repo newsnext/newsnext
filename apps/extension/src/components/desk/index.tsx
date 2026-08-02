@@ -1,7 +1,7 @@
+import { useScrollProgressContext } from "@newsnext/ui/components/scroll-progress-context"
 import { useEffect, useRef, useState } from "react"
 import { NextLayer } from "@/components/nextlayer"
 import { NowLayer } from "@/components/nowlayer"
-import { useScrollProgressContext } from "@/components/scroll-progress-context"
 import { cn } from "@/lib/utils"
 
 export function Desk({ boardId }: { boardId: string }) {

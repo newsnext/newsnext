@@ -6,7 +6,21 @@ import { cn } from "@newsnext/ui/lib/utils"
 import { CaretDownIcon, CaretUpIcon, CheckIcon } from "@phosphor-icons/react"
 import * as React from "react"
 
-const Select = SelectPrimitive.Root
+type SelectVariant = "default" | "inline"
+
+const SelectVariantContext = React.createContext<SelectVariant>("default")
+
+function Select<Value>({
+  variant = "default",
+  children,
+  ...props
+}: SelectPrimitive.Root.Props<Value> & { variant?: SelectVariant }): React.JSX.Element {
+  return (
+    <SelectVariantContext value={variant}>
+      <SelectPrimitive.Root {...props}>{children}</SelectPrimitive.Root>
+    </SelectVariantContext>
+  )
+}
 
 function SelectGroup({ className, ...props }: SelectPrimitive.Group.Props) {
   return (
@@ -35,13 +49,17 @@ function SelectTrigger({
   ...props
 }: SelectPrimitive.Trigger.Props & {
   size?: "sm" | "default"
-}) {
+}): React.JSX.Element {
+  const variant = React.use(SelectVariantContext)
+
   return (
     <SelectPrimitive.Trigger
       data-slot="select-trigger"
       data-size={size}
+      data-variant={variant}
       className={cn(
         "flex w-fit items-center justify-between gap-1.5 rounded-3xl border border-input bg-input/30 px-3 py-2 text-sm whitespace-nowrap transition-colors outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-[3px] aria-invalid:ring-destructive/20 data-placeholder:text-muted-foreground data-[size=default]:h-9 data-[size=sm]:h-8 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-1.5 dark:hover:bg-input/50 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        variant === "inline" && "h-6 w-full justify-between border-transparent bg-transparent px-2 py-0 text-left leading-none shadow-none hover:bg-background/40 focus-visible:border-input/50 focus-visible:bg-background/60 focus-visible:ring-1 focus-visible:ring-ring/30 data-[size=default]:h-6 data-[size=sm]:h-6 [&_[data-slot=select-value]]:justify-start [&_[data-slot=select-value]]:text-left",
         className,
       )}
       {...props}
@@ -70,6 +88,8 @@ function SelectContent({
     SelectPrimitive.Positioner.Props,
     "align" | "alignOffset" | "side" | "sideOffset" | "alignItemWithTrigger"
   >) {
+  const variant = React.use(SelectVariantContext)
+
   return (
     <SelectPrimitive.Portal>
       <SelectPrimitive.Positioner
@@ -83,7 +103,12 @@ function SelectContent({
         <SelectPrimitive.Popup
           data-slot="select-content"
           data-align-trigger={alignItemWithTrigger}
-          className={cn("relative isolate z-50 max-h-(--available-height) w-(--anchor-width) min-w-36 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-2xl bg-popover text-popover-foreground shadow-2xl ring-1 ring-foreground/5 duration-100 data-[align-trigger=true]:animate-none data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95", className)}
+          data-variant={variant}
+          className={cn(
+            "relative isolate z-50 max-h-(--available-height) w-(--anchor-width) min-w-36 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-2xl bg-popover text-popover-foreground shadow-2xl ring-1 ring-foreground/5 duration-100 data-[align-trigger=true]:animate-none data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+            variant === "inline" && "min-w-(--anchor-width) rounded-xl border-0 bg-background/80 p-1 shadow-lg shadow-black/10 backdrop-blur-xl ring-1 ring-border/60 [&_[data-slot=select-item]]:rounded-lg [&_[data-slot=select-item]]:focus:bg-foreground/5",
+            className,
+          )}
           {...props}
         >
           <SelectScrollUpButton />
@@ -115,12 +140,16 @@ function SelectItem({
   ...props
 }: SelectPrimitive.Item.Props & {
   indicatorClassName?: string
-}) {
+}): React.JSX.Element {
+  const variant = React.use(SelectVariantContext)
+
   return (
     <SelectPrimitive.Item
       data-slot="select-item"
+      data-variant={variant}
       className={cn(
         "relative flex w-full cursor-default items-center gap-2.5 rounded-xl py-2 pr-8 pl-3 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
+        variant === "inline" && "h-6 py-0 pl-1",
         className,
       )}
       {...props}
@@ -203,3 +232,4 @@ export {
   SelectTrigger,
   SelectValue,
 }
+export type { SelectVariant }

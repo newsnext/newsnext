@@ -1,10 +1,10 @@
 import type { QueryClient } from "@tanstack/react-query"
+import { ScrollProgressContext } from "@newsnext/ui/components/scroll-progress-context"
 import { createRootRouteWithContext, Outlet } from "@tanstack/react-router"
 import { Suspense, useMemo, useRef, useState } from "react"
 import { TanStackDevtools } from "@/components/common/devtools"
 import { Footer } from "@/components/footer"
 import { Header } from "@/components/header"
-import { ScrollProgressContext } from "@/components/scroll-progress-context"
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient

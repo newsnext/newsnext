@@ -1,6 +1,7 @@
 import type { Color } from "@newsnext/shared/types"
 import type { SourceProvider } from "@newsnext/source/types"
 import type { ReactNode } from "react"
+import { Button } from "@newsnext/ui/components/button"
 import { cn } from "@/lib/utils"
 import { SourceIcon } from "./source-icon"
 
@@ -34,9 +35,11 @@ export function CardHeader({
   return (
     <div className={cn("flex justify-between mb-3 items-center mx-1 gap-2", className)}>
       <div className="flex gap-2.5 items-center ml-1 min-w-0 flex-1">
-        <button
+        <Button
           type="button"
-          className="size-8 shrink-0 rounded-full transition-transform hover:scale-105"
+          variant="transparent"
+          size="icon-sm"
+          className="shrink-0 rounded-full transition-transform hover:scale-105"
           title={desc || provider.title}
           onClick={() => window.open(home || "#", "_blank")}
         >
@@ -48,7 +51,7 @@ export function CardHeader({
             size="default"
             title={displayTitle}
           />
-        </button>
+        </Button>
         <div className="flex flex-col min-w-0 flex-1">
           <div className="flex max-w-full min-w-0 text-base">
             <span className="w-full min-w-0 truncate font-bold">

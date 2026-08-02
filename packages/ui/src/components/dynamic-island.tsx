@@ -2,9 +2,8 @@ import type { CSSProperties, ReactNode } from "react"
 import { useClickAway } from "@newsnext/ui/hooks/use-click-away"
 import { cn } from "@newsnext/ui/lib/utils"
 import { useCallback, useEffect, useRef, useState } from "react"
-import "./index.css"
 
-const getVal = (val: number | string) => {
+const getVal = (val: number | string): string => {
   return typeof val === "number" ? `${val}px` : val
 }
 
@@ -22,7 +21,6 @@ export interface DynamicIslandProps {
   largeRadius?: number | string
 
   wrapperClassName?: string
-  triggerType?: "click" | "hover"
   initialAnimation?: boolean
 
   onChange?: (isSmall: boolean) => void
@@ -47,7 +45,7 @@ function DynamicIsland({
 
   onChange,
   children,
-}: DynamicIslandProps) {
+}: DynamicIslandProps): React.JSX.Element {
   const hasMountedRef = useRef(false)
   const [isSmall, setIsSmall] = useState(true)
   const wrapperRef = useRef<HTMLDivElement>(null)
@@ -141,4 +139,4 @@ function DynamicIsland({
   )
 }
 
-export default DynamicIsland
+export { DynamicIsland }

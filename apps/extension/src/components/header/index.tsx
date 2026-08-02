@@ -1,4 +1,5 @@
 import type { RefObject } from "react"
+import { Button } from "@newsnext/ui/components/button"
 import { useFetchLatest } from "@/hooks"
 import { PhArrowCounterClockwiseDuotone, PhCircleDashedDuotone } from "../icons/ph"
 import { SearchDialog } from "../search"
@@ -14,14 +15,15 @@ interface HeaderProps {
 function FetchLatestButton() {
   const { fetchLatest, isFetching } = useFetchLatest()
   return (
-    <button
+    <Button
       type="button"
-      className="island-pill flex items-center justify-center size-10 pointer-events-auto"
+      variant="island"
+      size="icon-lg"
       title="Fetch Latest for Active Cards"
       onClick={fetchLatest}
     >
       {isFetching ? <PhCircleDashedDuotone className="size-5 animate-spin" /> : <PhArrowCounterClockwiseDuotone className="size-5" />}
-    </button>
+    </Button>
   )
 }
 

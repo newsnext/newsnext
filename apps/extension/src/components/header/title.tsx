@@ -1,16 +1,16 @@
 import type { RefObject } from "react"
+import { DynamicIsland } from "@newsnext/ui/components/dynamic-island"
+import { Logo } from "@newsnext/ui/components/logo"
+import { useScrollProgressContext } from "@newsnext/ui/components/scroll-progress-context"
+import { ThemeSelector } from "@newsnext/ui/components/theme-selector"
+import { WordmarkLogo } from "@newsnext/ui/components/wordmark-logo"
 import { useAtomValue, useSetAtom } from "jotai"
 import { AnimatePresence, m, useMotionValue, useMotionValueEvent, useScroll } from "motion/react"
 import { useCallback, useState } from "react"
-import { useScrollProgressContext } from "@/components/scroll-progress-context"
 import { getBoardColor } from "@/lib/boards"
 import { handleThemeSwitch } from "@/lib/utils/swith-theme"
 import { boardsAtom, currentBoardIdAtom, updateBoardAtom } from "@/store/board"
-import { ThemeSelector } from "../common/theme-selector"
-import DynamicIsland from "../dynamic-island"
-import { Logo } from "../icons/logo"
 import { PhArrowFatUpDuotone } from "../icons/ph"
-import { WordmarkLogo } from "../icons/wordmark-logo"
 
 interface HeaderProgressProps {
   scrollContainerRef?: RefObject<HTMLElement | null>

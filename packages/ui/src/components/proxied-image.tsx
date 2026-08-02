@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react"
 
-interface ProxiedImageProps extends Omit<React.ImgHTMLAttributes<HTMLImageElement>, "src"> {
+export interface ProxiedImageProps extends Omit<React.ImgHTMLAttributes<HTMLImageElement>, "src"> {
   src: string
   delay?: number
 }
 
-export function ProxiedImage({ src, onError, delay, ...props }: ProxiedImageProps) {
+export function ProxiedImage({ src, onError, delay, ...props }: ProxiedImageProps): React.JSX.Element {
   const [readySrc, setReadySrc] = useState(delay ? "" : src)
   const shouldLoad = !delay || readySrc === src
 

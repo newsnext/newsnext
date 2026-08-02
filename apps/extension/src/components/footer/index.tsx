@@ -1,5 +1,5 @@
-import { Logo } from "../icons/logo"
-import { WordmarkLogo } from "../icons/wordmark-logo"
+import { Logo } from "@newsnext/ui/components/logo"
+import { WordmarkLogo } from "@newsnext/ui/components/wordmark-logo"
 
 const CURRENT_YEAR = new Date().getFullYear()
 

@@ -9,14 +9,13 @@ import {
   DialogTitle,
 } from "@newsnext/ui/components/dialog"
 import { Input } from "@newsnext/ui/components/input"
+import { RadioGroup, RadioGroupItem } from "@newsnext/ui/components/radio-group"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
-import { MODAL_INNER_SURFACE_CLASS, MODAL_SHELL_CLASS } from "@newsnext/ui/lib/modal"
+import { ThemeSelector } from "@newsnext/ui/components/theme-selector"
 import { useNavigate } from "@tanstack/react-router"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { m } from "motion/react"
 import { useState } from "react"
-import { SegmentedControl } from "@/components/common/segmented-control"
-import { ThemeSelector } from "@/components/common/theme-selector"
 import { PhCheckCircleDuotone, PhPlusCircleDuotone, PhTrashDuotone } from "@/components/icons/ph"
 import { getBoardSortPreference } from "@/lib/board-sorting"
 import { ALL_BOARD_ID, createBoard, getBoardColor, getBoardDisplayName, isBoardNameTaken } from "@/lib/boards"
@@ -37,9 +36,9 @@ const SORT_OPTIONS: { label: string, value: BoardSortMode }[] = [
   { label: "Provider name", value: "provider" },
 ]
 
-const BOARD_DIALOG_SURFACE_CLASS = cn("gap-0 ring-0", MODAL_SHELL_CLASS)
+const BOARD_DIALOG_SURFACE_CLASS = "gap-0 ring-0"
 const BOARD_DIALOG_HEADER_CLASS = "h-10 justify-center px-2 pr-12"
-const BOARD_DIALOG_BODY_CLASS = cn("grid p-6", MODAL_INNER_SURFACE_CLASS)
+const BOARD_DIALOG_BODY_CLASS = "grid p-6"
 
 function BoardEditDialog({
   boardId,
@@ -97,6 +96,7 @@ function BoardEditDialog({
       }}
     >
       <DialogContent
+        variant="themed"
         className="sm:max-w-lg"
         surfaceClassName={cn(savedColor, BOARD_DIALOG_SURFACE_CLASS)}
       >
@@ -105,7 +105,7 @@ function BoardEditDialog({
             <DialogTitle className="font-bold">Edit board</DialogTitle>
           </DialogHeader>
 
-          <SquircleBox radius="2xl" className={cn(BOARD_DIALOG_BODY_CLASS, "gap-6")}>
+          <SquircleBox radius="2xl" variant="modal-inner" className={cn(BOARD_DIALOG_BODY_CLASS, "gap-6")}>
             <div className="grid gap-2">
               <label htmlFor="edit-board-name" className="text-sm font-medium">Name</label>
               <Input
@@ -134,14 +134,18 @@ function BoardEditDialog({
 
             <fieldset>
               <legend className="mb-2 text-sm font-medium">Card order</legend>
-              <SegmentedControl<BoardSortMode>
-                items={SORT_OPTIONS}
+              <RadioGroup
+                variant="segmented"
                 value={sortMode}
                 onValueChange={setSortMode}
                 className="w-full gap-1"
-                itemClassName="min-w-0 flex-1 px-2"
-                layoutId="board-edit-sort-indicator"
-              />
+              >
+                {SORT_OPTIONS.map(option => (
+                  <RadioGroupItem key={option.value} value={option.value} className="min-w-0 flex-1 px-2">
+                    {option.label}
+                  </RadioGroupItem>
+                ))}
+              </RadioGroup>
             </fieldset>
 
             <DialogFooter className={cn(!isAllBoard && "sm:justify-between")}>
@@ -217,6 +221,7 @@ function CreateBoardDialog({
       }}
     >
       <DialogContent
+        variant="themed"
         surfaceClassName={cn(color, BOARD_DIALOG_SURFACE_CLASS)}
       >
         <form className="grid" onSubmit={handleSubmit}>
@@ -224,7 +229,7 @@ function CreateBoardDialog({
             <DialogTitle className="font-bold">Create board</DialogTitle>
           </DialogHeader>
 
-          <SquircleBox radius="2xl" className={cn(BOARD_DIALOG_BODY_CLASS, "gap-6")}>
+          <SquircleBox radius="2xl" variant="modal-inner" className={cn(BOARD_DIALOG_BODY_CLASS, "gap-6")}>
             <div className="grid gap-2">
               <label htmlFor="board-name" className="text-sm font-medium">Board name</label>
               <Input
@@ -263,11 +268,17 @@ export function BoardNav() {
         {boards.map((board) => {
           const isActive = currentBoardId === board.id
           return (
-            <m.button
+            <Button
+              render={(
+                <m.button
+                  whileTap={isActive ? { scale: 0.94 } : undefined}
+                  transition={{ type: "spring", stiffness: 500, damping: 28 }}
+                />
+              )}
               key={board.id}
               type="button"
-              whileTap={isActive ? { scale: 0.94 } : undefined}
-              transition={{ type: "spring", stiffness: 500, damping: 28 }}
+              variant="transparent"
+              size="sm"
               onPointerEnter={event => event.currentTarget.toggleAttribute("data-editable", isActive)}
               onPointerLeave={event => event.currentTarget.removeAttribute("data-editable")}
               onClick={() => {
@@ -280,7 +291,7 @@ export function BoardNav() {
                 void navigate({ to: "/board/$boardId", params: { boardId: board.id } })
               }}
               className={cn(
-                "group/board-tab relative shrink-0 rounded-full px-3 py-1.5 text-sm font-medium whitespace-nowrap outline-none transition-colors focus-visible:ring-2 focus-visible:ring-theme-400",
+                "group/board-tab relative h-auto shrink-0 px-3 py-1.5 focus-visible:ring-2 focus-visible:ring-theme-400",
                 isActive ? "text-white" : "text-muted-foreground hover:text-foreground",
               )}
               aria-current={isActive ? "page" : undefined}
@@ -306,18 +317,20 @@ export function BoardNav() {
                   <span className="size-[3px] rounded-full bg-current" />
                 </span>
               )}
-            </m.button>
+            </Button>
           )
         })}
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="icon-sm"
           onClick={() => setIsCreateOpen(true)}
-          className="flex size-8 shrink-0 items-center justify-center rounded-full text-lg text-muted-foreground outline-none transition-colors hover:bg-foreground/5 hover:text-foreground focus-visible:ring-2 focus-visible:ring-theme-400"
+          className="shrink-0 text-muted-foreground hover:bg-foreground/5 hover:text-foreground focus-visible:ring-2 focus-visible:ring-theme-400"
           aria-label="Create board"
           title="Create board"
         >
           <PhPlusCircleDuotone />
-        </button>
+        </Button>
       </div>
       <CreateBoardDialog open={isCreateOpen} onOpenChange={setIsCreateOpen} />
       {editingBoardId && (

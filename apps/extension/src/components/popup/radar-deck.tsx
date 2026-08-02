@@ -3,7 +3,7 @@ import type { CSSProperties, PointerEvent } from "react"
 import type { RadarSuggestion } from "@/lib/radar"
 import type { SourceInstancePatch } from "@/lib/source-cards"
 import type { BoardSource, SourceDescriptor } from "@/typings/source"
-import { ButtonPrimitive } from "@newsnext/ui/components/button"
+import { Button } from "@newsnext/ui/components/button"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 import confetti from "canvas-confetti"
 import { useAtomValue, useSetAtom } from "jotai"
@@ -11,7 +11,6 @@ import { animate, motion, useDragControls, useMotionValue, useReducedMotion, use
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Card from "@/components/card"
 import { BoardMembershipSelect } from "@/components/common/board-membership-select"
-import { IconButton } from "@/components/common/button"
 import { PhArrowCircleLeftDuotone, PhPlusCircleDuotone } from "@/components/icons/ph"
 import { ALL_BOARD_ID } from "@/lib/boards"
 import { createRadarBoardSource } from "@/lib/radar-board-source"
@@ -399,7 +398,8 @@ function RadarDeckContent({ sourceDescriptors, suggestions }: RadarDeckProps) {
             align="start"
             className="max-w-36 border-0 bg-background/50 text-xs shadow-none"
           />
-          <ButtonPrimitive
+          <Button
+            size="sm"
             onClick={handleCreate}
             disabled={isCreated}
             aria-label="Create card"
@@ -408,10 +408,12 @@ function RadarDeckContent({ sourceDescriptors, suggestions }: RadarDeckProps) {
           >
             <PhPlusCircleDuotone className="text-sm text-(--radar-action-chip-text)" />
             Create card
-          </ButtonPrimitive>
+          </Button>
         </div>
         <div className="flex shrink-0 items-center gap-1">
-          <IconButton
+          <Button
+            variant="quiet"
+            size="icon-fit"
             onClick={() => moveDeck(-1)}
             disabled={!canGoPrevious}
             aria-label="Previous radar card"
@@ -419,8 +421,10 @@ function RadarDeckContent({ sourceDescriptors, suggestions }: RadarDeckProps) {
             className={cn("text-xl", !canGoPrevious && "opacity-20")}
           >
             <PhArrowCircleLeftDuotone />
-          </IconButton>
-          <IconButton
+          </Button>
+          <Button
+            variant="quiet"
+            size="icon-fit"
             onClick={() => moveDeck(1)}
             disabled={!canGoNext}
             aria-label="Next radar card"
@@ -428,7 +432,7 @@ function RadarDeckContent({ sourceDescriptors, suggestions }: RadarDeckProps) {
             className={cn("rotate-180 text-xl", !canGoNext && "opacity-20")}
           >
             <PhArrowCircleLeftDuotone />
-          </IconButton>
+          </Button>
         </div>
       </div>
     </motion.section>

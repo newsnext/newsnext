@@ -1,10 +1,10 @@
 import type { Color } from "@newsnext/shared/types"
 import type { RefObject } from "react"
 import type { NewsItem } from "@/typings/source"
+import { VirtualList } from "@newsnext/ui/components/virtual-list"
 import { AnimatePresence, m } from "motion/react"
 import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
-import { VirtualList } from "../common/virtual-list"
 import { NewsItemLink, NewsItemSummary } from "./news-item-common"
 
 interface Props {

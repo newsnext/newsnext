@@ -1,7 +1,7 @@
 import DOMPurify from "dompurify"
 import { useMemo } from "react"
 
-interface SafeHtmlProps {
+export interface SafeHtmlProps {
   as?: "div" | "span"
   className?: string
   html: string

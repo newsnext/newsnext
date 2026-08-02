@@ -1,5 +1,5 @@
 import type { ReactNode } from "react"
-import { cn } from "@/lib/utils"
+import { cn } from "@newsnext/ui/lib/utils"
 
 export interface FlipAnimateProps {
   rotate: "x" | "y"
@@ -15,7 +15,7 @@ export function FlipAnimate({
   className,
   duration = 700,
   children,
-}: FlipAnimateProps) {
+}: FlipAnimateProps): React.JSX.Element {
   const rotateCSS = rotate === "x" ? "[transform:rotateX(180deg)]" : "[transform:rotateY(180deg)]"
   const easeOutExpo = "cubic-bezier(0.16, 1, 0.3, 1)"
 

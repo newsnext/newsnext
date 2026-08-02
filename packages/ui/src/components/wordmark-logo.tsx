@@ -1,10 +1,10 @@
 import type { SVGProps } from "react"
 
-interface WordmarkLogoProps extends SVGProps<SVGSVGElement> {
+export interface WordmarkLogoProps extends SVGProps<SVGSVGElement> {
   accentClassName?: string
 }
 
-export function WordmarkLogo({ accentClassName, className, ...props }: WordmarkLogoProps) {
+export function WordmarkLogo({ accentClassName, className, ...props }: WordmarkLogoProps): React.JSX.Element {
   return (
     <svg
       className={className}

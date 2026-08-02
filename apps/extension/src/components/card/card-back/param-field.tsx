@@ -11,9 +11,6 @@ import { Switch } from "@newsnext/ui/components/switch"
 import { cn } from "@/lib/utils"
 import {
   EditableInput,
-  editableSelectClassName,
-  editableSelectContentClassName,
-  editableSelectItemClassName,
   Info,
   NumberInput,
   SelectLikeValue,
@@ -72,10 +69,11 @@ export function ParamField({
     return (
       <Info label={param.title}>
         <Select
+          variant="inline"
           value={String(currentValue)}
           onValueChange={nextValue => onChange(nextValue)}
         >
-          <SelectTrigger className={editableSelectClassName} onClick={e => e.stopPropagation()}>
+          <SelectTrigger onClick={e => e.stopPropagation()}>
             <span className="flex-1 truncate text-left text-sm">
               {selectedOption?.label ?? String(currentValue)}
             </span>
@@ -83,10 +81,9 @@ export function ParamField({
           <SelectContent
             align="end"
             alignItemWithTrigger={false}
-            className={editableSelectContentClassName}
           >
             {param.values.map(option => (
-              <SelectItem key={option.value} value={option.value} className={editableSelectItemClassName}>
+              <SelectItem key={option.value} value={option.value}>
                 {option.label}
               </SelectItem>
             ))}

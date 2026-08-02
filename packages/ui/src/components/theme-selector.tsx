@@ -1,10 +1,10 @@
 import type { Color } from "@newsnext/shared/types"
 import { COLORS } from "@newsnext/shared/constants"
+import { Logo } from "@newsnext/ui/components/logo"
+import { RadioGroup, RadioGroupItem } from "@newsnext/ui/components/radio-group"
 import { m } from "motion/react"
-import { cn } from "@/lib/utils"
-import { Logo } from "../icons/logo"
 
-interface ThemeSelectorProps {
+export interface ThemeSelectorProps {
   value: Color
   onValueChange: (color: Color) => void
   layoutId?: string
@@ -12,22 +12,19 @@ interface ThemeSelectorProps {
 
 export function ThemeSelector({ value, onValueChange, layoutId = "theme-indicator" }: ThemeSelectorProps): React.JSX.Element {
   return (
-    <div className="grid h-full w-full grid-cols-[repeat(6,2rem)] place-content-center gap-2">
+    <RadioGroup
+      variant="palette"
+      value={value}
+      onValueChange={onValueChange}
+      onClick={event => event.stopPropagation()}
+    >
       {COLORS.map(color => (
-        <button
+        <RadioGroupItem
           key={color}
-          type="button"
-          className={cn(
-            "text-theme-500 size-8 hover:scale-110 p-0 relative self-center justify-self-center",
-            color,
-          )}
-          onClick={(e) => {
-            e.stopPropagation()
-            onValueChange(color)
-          }}
+          value={color}
+          className={color}
           title={color}
           aria-label={`${color} theme`}
-          aria-pressed={value === color}
         >
           {value === color && (
             <m.div
@@ -41,8 +38,8 @@ export function ThemeSelector({ value, onValueChange, layoutId = "theme-indicato
             />
           )}
           <Logo className="size-full p-0.5" />
-        </button>
+        </RadioGroupItem>
       ))}
-    </div>
+    </RadioGroup>
   )
 }

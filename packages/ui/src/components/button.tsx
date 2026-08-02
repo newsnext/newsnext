@@ -19,6 +19,9 @@ const buttonVariants = cva(
         destructive:
           "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
         link: "text-primary underline-offset-4 hover:underline",
+        island: "island-pill pointer-events-auto",
+        quiet: "border-0 bg-transparent text-lg opacity-50 hover:opacity-85 active:not-aria-[haspopup]:translate-y-0",
+        transparent: "bg-transparent",
       },
       size: {
         "default":
@@ -30,6 +33,7 @@ const buttonVariants = cva(
         "icon-xs": "size-6 [&_svg:not([class*='size-'])]:size-3",
         "icon-sm": "size-8",
         "icon-lg": "size-10",
+        "icon-fit": "size-auto gap-0 p-0 [&_svg:not([class*='size-'])]:size-[1.2em]",
       },
     },
     defaultVariants: {
@@ -44,7 +48,7 @@ function Button({
   variant = "default",
   size = "default",
   ...props
-}: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
+}: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>): React.JSX.Element {
   return (
     <ButtonPrimitive
       data-slot="button"
@@ -54,4 +58,4 @@ function Button({
   )
 }
 
-export { Button, ButtonPrimitive, buttonVariants }
+export { Button, buttonVariants }

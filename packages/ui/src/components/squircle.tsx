@@ -5,6 +5,7 @@ import { cn } from "@newsnext/ui/lib/utils"
 import { Squircle } from "@squircle-js/react"
 
 type SquircleRadius = "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "full"
+type SquircleVariant = "default" | "modal-shell" | "modal-inner"
 
 const squircleRadiusValues = {
   "sm": 4,
@@ -23,6 +24,7 @@ interface SquircleBoxProps
   radius?: SquircleRadius | number
   cornerRadius?: number
   cornerSmoothing?: number
+  variant?: SquircleVariant
 }
 
 function resolveRadius(radius: SquircleBoxProps["radius"]) {
@@ -38,17 +40,24 @@ function SquircleBox({
   radius,
   cornerRadius,
   cornerSmoothing = 0.8,
+  variant = "default",
   ...props
 }: SquircleBoxProps) {
   return (
     <Squircle
       cornerRadius={cornerRadius ?? resolveRadius(radius)}
       cornerSmoothing={cornerSmoothing}
-      className={cn("overflow-hidden", className)}
+      data-variant={variant}
+      className={cn(
+        "overflow-hidden",
+        variant === "modal-shell" && "bg-[color-mix(in_oklab,var(--popover)_60%,var(--color-theme-400)_40%)] p-2.5",
+        variant === "modal-inner" && "bg-background/70 sunrise-theme-400",
+        className,
+      )}
       {...props}
     />
   )
 }
 
 export { SquircleBox, squircleRadiusValues }
-export type { SquircleBoxProps, SquircleRadius }
+export type { SquircleBoxProps, SquircleRadius, SquircleVariant }

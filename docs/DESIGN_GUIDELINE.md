@@ -33,6 +33,9 @@ Cards define the primary NewsNext surface treatment.
   shell must remain visible.
 - Place identity and surface actions in the exposed outer shell. Place editable
   fields and primary content in the quieter inner panel.
+- Keep compact card action icons content-sized and background-free. Use the
+  shared Button `quiet` variant with `icon-fit`; hover may raise icon opacity but
+  must not add a filled hover surface or enlarge the action target spacing.
 
 The reference implementation is `CardSurface` in
 `apps/extension/src/components/card/card-surface.tsx`.
@@ -44,18 +47,25 @@ applying one frame treatment to every modal.
 
 ### Shared modal foundation
 
-All modal-style UI, including dialogs, alert dialogs, command dialogs, sheets,
-and drawers, must reuse the shared modal overlay instead of defining local
-backdrop values. The shared overlay uses `bg-black/75`, a subtle `2px` backdrop
-blur, and a `150ms` fade. Centered modal surfaces use a `3xl` outer squircle,
-the shared 60% popover / 40% theme shell color, and a `10px` shell inset where a
-nested surface is present. Nested content uses a `2xl` shape with
-`bg-background/70` and `sunrise-theme-400`.
+All modal-style UI, including dialogs, alert dialogs, and command dialogs, must
+reuse the shared modal components instead of defining local backdrop values or
+motion. `ModalOverlay` uses `bg-black/75` without backdrop blur and applies a
+`150ms` opacity fade. `ModalPopup` owns the centered modal motion, while
+`ModalTitle`, `ModalDescription`, and `ModalCloseButton` own their shared visual
+treatments. Centered surfaces use a `3xl` outer squircle, the shared 60% popover
+/ 40% theme shell color, and a `10px` shell inset where a nested surface is
+present. Nested content uses a `2xl` shape with `bg-background/70` and
+`sunrise-theme-400`.
+
+Primitive-specific components compose `ModalOverlay`, `ModalPopup`,
+`ModalCloseButton`, `ModalTitle`, and `ModalDescription` from
+`@newsnext/ui/components/modal`. Keep the shared styling encapsulated directly
+in these components instead of introducing parallel CSS utilities.
 
 Keep content-specific layouts distinct when needed, but keep overlay opacity,
-blur, shell color, primary radii, close-button treatment when present, and
-motion consistent. Popover menus and anchored transient controls do not use a
-modal overlay.
+shell color, primary radii, close-button treatment when present, and motion
+consistent. Popover menus and anchored transient controls do not use a modal
+overlay.
 
 When a destructive action already lives inside a modal, prefer an inline
 two-step confirmation over opening another modal on top. The first activation

@@ -1,19 +1,58 @@
 export const COSMOS_FIXTURES = [
   {
-    path: "src/cosmos/foundation.fixture.tsx",
+    path: "src/cosmos/Basics.fixture.tsx",
     rendererFixture: { type: "single" as const },
     load: () => import("@/cosmos/foundation.fixture"),
   },
   {
-    path: "src/cosmos/modals.fixture.tsx",
+    path: "src/cosmos/Components.fixture.tsx",
     rendererFixture: {
       type: "multi" as const,
-      fixtureNames: ["Dialog", "Alert dialog", "Bottom drawer", "Right sheet"] as string[],
+      fixtureNames: [
+        "Brand and actions",
+        "Selectors",
+        "Flip animation",
+        "Content safety",
+        "Virtual list",
+        "Dynamic island",
+      ] as string[],
+    },
+    load: () => import("@/cosmos/newsnext-components.fixture"),
+  },
+  {
+    path: "src/cosmos/Cards.fixture.tsx",
+    rendererFixture: {
+      type: "multi" as const,
+      fixtureNames: [
+        "Overview: All colors",
+        "Front: Ranking",
+        "Front: Timeline",
+        "Front: Loading",
+        "Front: Permission",
+        "Front: Error",
+        "Back: Editable",
+        "Drag: Overlay",
+      ] as string[],
+    },
+    load: () => import("@/cosmos/cards.fixture"),
+  },
+  {
+    path: "src/cosmos/Modals.fixture.tsx",
+    rendererFixture: {
+      type: "multi" as const,
+      fixtureNames: [
+        "Foundation: Shared parts",
+        "Dialog: Default",
+        "Dialog: Themed",
+        "Dialog: Settings",
+        "Alert: Default",
+        "Alert: Compact",
+      ] as string[],
     },
     load: () => import("@/cosmos/modals.fixture"),
   },
   {
-    path: "src/cosmos/floating-overlays.fixture.tsx",
+    path: "src/cosmos/Overlays.fixture.tsx",
     rendererFixture: {
       type: "multi" as const,
       fixtureNames: ["Popover", "Dropdown menu", "Select", "Tooltip"] as string[],
@@ -21,7 +60,7 @@ export const COSMOS_FIXTURES = [
     load: () => import("@/cosmos/floating-overlays.fixture"),
   },
   {
-    path: "src/cosmos/forms-feedback.fixture.tsx",
+    path: "src/cosmos/Forms.fixture.tsx",
     rendererFixture: {
       type: "multi" as const,
       fixtureNames: ["Form controls", "Feedback states", "Empty state"] as string[],

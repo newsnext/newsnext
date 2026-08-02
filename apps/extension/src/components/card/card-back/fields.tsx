@@ -1,19 +1,8 @@
 import type { PropsWithChildren } from "react"
+import { Button } from "@newsnext/ui/components/button"
 import { Input } from "@newsnext/ui/components/input"
 import { useMemo } from "react"
 import { cn } from "@/lib/utils"
-
-const editableFieldClassName = "h-6 w-full rounded-3xl border border-transparent bg-transparent px-2 text-sm leading-none text-left shadow-none transition-colors hover:bg-background/40 focus-visible:border-input/50 focus-visible:bg-background/60 focus-visible:ring-1 focus-visible:ring-ring/30"
-
-export const editableSelectClassName = cn(
-  editableFieldClassName,
-  "justify-between py-0 text-left data-[size=default]:h-6 data-[size=sm]:h-6",
-  "[&_[data-slot=select-value]]:justify-start [&_[data-slot=select-value]]:text-left",
-)
-
-export const editableSelectItemClassName = "h-6 py-0 pl-1"
-
-export const editableSelectContentClassName = "min-w-(--anchor-width) rounded-xl border-0 bg-background/80 p-1 shadow-lg shadow-black/10 backdrop-blur-xl ring-1 ring-border/60 [&_[data-slot=select-item]]:rounded-lg [&_[data-slot=select-item]]:focus:bg-foreground/5"
 
 export function EditableInput({ text, editable = false, onChange }: { text: string, editable?: boolean, onChange?: (value: string) => void }) {
   if (!editable) {
@@ -22,7 +11,7 @@ export function EditableInput({ text, editable = false, onChange }: { text: stri
 
   return (
     <Input
-      className={editableFieldClassName}
+      variant="inline"
       value={text}
       onChange={(e) => {
         onChange?.(e.target.value)
@@ -54,9 +43,11 @@ export function EditableImage({
   }
 
   return (
-    <button
+    <Button
       type="button"
-      className={cn("ml-auto size-5 shrink-0 overflow-hidden bg-background/40", rounded ? "rounded-full" : "rounded-md")}
+      variant="transparent"
+      size="icon-xs"
+      className={cn("ml-auto size-5 shrink-0 overflow-hidden bg-background/40 p-0", rounded ? "rounded-full" : "rounded-md")}
       title={src}
       onClick={() => window.open(src, "_blank")}
     >
@@ -66,7 +57,7 @@ export function EditableImage({
         alt={alt}
         referrerPolicy="no-referrer"
       />
-    </button>
+    </Button>
   )
 }
 
@@ -97,7 +88,7 @@ export function NumberInput({
   return (
     <Input
       type="number"
-      className={editableFieldClassName}
+      variant="inline"
       value={num}
       onChange={e => handleChange(Number(e.target.value))}
       min={min}
