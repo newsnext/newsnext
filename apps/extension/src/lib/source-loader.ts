@@ -1,4 +1,5 @@
 import type { LoadBackgroundSourceOutput } from "./background/source-service"
+import type { SourceCacheReadResult } from "./source-cache"
 import { parseSourceCacheMaxAge } from "@newsnext/source/core"
 import {
   normalizeSourceParams,
@@ -17,20 +18,42 @@ export interface LoadSourceOptions {
   signal?: AbortSignal
 }
 
+interface SourceCacheRequest {
+  cacheKey: string
+  maxAgeMs: number
+}
+
+async function resolveSourceCacheRequest(
+  sourceId: string,
+  queryParams: Record<string, unknown>,
+): Promise<SourceCacheRequest> {
+  const source = await loadSourceDescriptor(sourceId)
+  const params = normalizeSourceParams(source, queryParams)
+
+  return {
+    cacheKey: buildSourceCacheKey(sourceId, source.cache.version, params),
+    maxAgeMs: parseSourceCacheMaxAge(source.cache.maxAge),
+  }
+}
+
+export async function readPersistedSourceCache(
+  sourceId: string,
+  queryParams: Record<string, unknown> = {},
+): Promise<SourceCacheReadResult | undefined> {
+  const { cacheKey } = await resolveSourceCacheRequest(sourceId, queryParams)
+
+  return readSourceCache(cacheKey, Number.POSITIVE_INFINITY)
+}
+
 export async function loadSource(
   sourceId: string,
   queryParams: Record<string, unknown> = {},
   options: LoadSourceOptions = {},
 ): Promise<SourceLoadResult> {
   options.signal?.throwIfAborted()
-  const source = await loadSourceDescriptor(sourceId)
+  const { cacheKey, maxAgeMs } = await resolveSourceCacheRequest(sourceId, queryParams)
   options.signal?.throwIfAborted()
-  const params = normalizeSourceParams(source, queryParams)
-  const cacheKey = buildSourceCacheKey(sourceId, source.cache.version, params)
-  const cached = await readSourceCache(
-    cacheKey,
-    parseSourceCacheMaxAge(source.cache.maxAge),
-  )
+  const cached = await readSourceCache(cacheKey, maxAgeMs)
 
   if (cached?.result.items.length) {
     if (shouldReuseCachedSource({

@@ -282,6 +282,18 @@ RuntimeSource.metadata
 
 Each step performs a field-level merge, with later values taking precedence.
 
+Every presentation surface must use this same merge boundary. Cards apply
+loader metadata directly from their active source query. Search subscribes to
+the same normalized source query keys with disabled observers, so an existing
+loader result can update searchable titles and result labels without starting
+loads merely because the Search dialog opened. When an in-memory query has no
+data, Search may hydrate it from the matching persistent source-cache entry.
+That hydration preserves the entry's original `cachedAt` as the TanStack query
+update time, so stale presentation data cannot become artificially fresh or
+suppress normal card revalidation. Until a loader has published and cached its
+first successful result, Search follows the normal static, instance, and
+provider-title fallback behavior.
+
 Loader metadata reuses responses already required to produce the items. Source
 loaders must not issue profile, community, channel, batch, or other companion
 requests only to enrich metadata. If the required item requests do not expose a

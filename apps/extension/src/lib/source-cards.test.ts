@@ -2,8 +2,10 @@ import type { SourceInstance } from "./source-cards"
 import type { SourceDescriptor } from "@/typings/source"
 import { describe, expect, it } from "vitest"
 import {
+  applySourceLoaderMetadata,
   buildSourceCards,
   createCardInstance,
+  getSourceCard,
   mergeSourceInstancePatch,
 } from "./source-cards"
 
@@ -207,6 +209,32 @@ describe("buildSourceCards", () => {
     })
 
     expect(cards.ids).toEqual(["test:latest::card_def"])
+  })
+})
+
+describe("applySourceLoaderMetadata", () => {
+  it("overrides instance presentation fields while preserving missing fields", () => {
+    const cards = buildSourceCards({
+      sources: testSources,
+      boardId: "inbox",
+      sourceInstances: [
+        createCustomInstance({
+          patch: { metadata: { title: "Radar title", desc: "Radar description" } },
+        }),
+      ],
+    })
+    const source = getSourceCard(cards, "test:feed::card_abc")
+
+    expect(applySourceLoaderMetadata(source, {
+      title: "Loader title",
+      home: "https://loader.example.com",
+    })).toMatchObject({
+      metadata: {
+        title: "Loader title",
+        desc: "Radar description",
+        home: "https://loader.example.com",
+      },
+    })
   })
 })
 

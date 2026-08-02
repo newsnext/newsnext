@@ -117,6 +117,39 @@ inside the nested panel. Keep the navigation in the outer tinted surface and
 the active settings content in a nested neutral squircle. Do not copy this
 multi-column frame directly into a single-column dialog.
 
+### Search dialog
+
+The Search dialog is a compact, single-column card locator. Keep its title and
+shortcut hint in the exposed top shell, and place the search field and results
+inside one nested `2xl` neutral squircle. Group results by board in the saved
+board order, omit empty groups, and place unassigned or orphaned cards in a
+final `No board` group. Within each group, show the card title and provider;
+the group heading supplies the board context without repeating it on every row.
+Use `12px` horizontal and `10px` vertical padding for search result rows so the
+single-line identity remains compact without feeling cramped. Keep the title,
+provider, and selected keyboard action on one row; truncate the title first and
+omit the provider label when it duplicates the resolved card title.
+
+Treat the Search input as the top row of the nested content panel, not as a
+separate pill-shaped control. It has no independent radius or filled surface;
+use a quiet bottom divider that strengthens on focus without an outer focus
+ring. The input remains auto-focused and keeps a visible search icon.
+
+The modal shell inherits the current board theme and must remain stable while
+selection changes. Use the selected result's provider color only for its active
+row treatment. This keeps card identity local to the result instead of allowing
+it to recolor the whole dialog. Apply that selected background directly from
+the provider color token; result rows must not carry provider `sunrise-*` theme
+classes. Keep dividers and selection treatments quiet.
+Selected result color must update immediately without a color transition so
+keyboard navigation never feels behind the current selection.
+Activating a result closes the dialog, opens the card's assigned board, and
+scrolls the real card into view. Cards in the final `No board` group open on the
+All board. Do not embed a live card preview in Search: a full card turns the
+locator into a second board, duplicates surface insets, and delays useful
+results while card content loads. Do not add decorative artwork or generic
+helper copy.
+
 ## Copy
 
 - Use English sentence case for user-facing text.

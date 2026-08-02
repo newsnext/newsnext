@@ -45,6 +45,7 @@ export const COSMOS_FIXTURES = [
         "Dialog: Default",
         "Dialog: Themed",
         "Dialog: Settings",
+        "Dialog: Search",
         "Alert: Default",
         "Alert: Compact",
       ] as string[],

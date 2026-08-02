@@ -288,6 +288,7 @@ export function DesktopBoard({
         {visibleSources.map(({ id, source }, index) => (
           <m.li
             key={id}
+            data-card-id={id}
             ref={(el) => {
               if (el) items.set(id, el)
               else items.delete(id)

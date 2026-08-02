@@ -1,8 +1,11 @@
-import { normalizeSourceParams } from "@newsnext/source/runtime"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useCallback, useMemo, useState } from "react"
 import { getLoginUrlFromError } from "./source-login-error"
-import { getSourceQueryHash, getSourceQueryOptions } from "./source-query"
+import {
+  createSourceQueryTarget,
+  getSourceQueryHash,
+  getSourceQueryOptions,
+} from "./source-query"
 import { useFetchLatestSources, useIsSourceFetchingLatest } from "./use-refetch"
 import { useSourceDescriptors } from "./use-source-descriptors"
 
@@ -22,13 +25,11 @@ export function useSourceQuery({
     () => sources.find(candidate => candidate.id === sourceId),
     [sourceId, sources],
   )
-  const normalizedParams = useMemo(
-    () => source ? normalizeSourceParams(source, params ?? {}) : {},
-    [params, source],
-  )
   const target = useMemo(
-    () => ({ sourceId, params: normalizedParams }),
-    [normalizedParams, sourceId],
+    () => source
+      ? createSourceQueryTarget(sourceId, source, params)
+      : { sourceId, params: {} },
+    [params, source, sourceId],
   )
   const queryHash = useMemo(() => getSourceQueryHash(target), [target])
   const queryClient = useQueryClient()

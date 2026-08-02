@@ -147,3 +147,20 @@ export function getSourceCard(cards: SourceCards, id: string): BoardSource {
   }
   return source
 }
+
+export function applySourceLoaderMetadata(
+  source: BoardSource,
+  metadata: SourcePresentationMetadata | undefined,
+): BoardSource {
+  if (!metadata) {
+    return source
+  }
+
+  return {
+    ...source,
+    metadata: {
+      ...source.metadata,
+      ...metadata,
+    },
+  }
+}

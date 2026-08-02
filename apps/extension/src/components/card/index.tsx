@@ -9,6 +9,10 @@ import { useInView } from "@/hooks/use-in-view"
 import { useSourcePermission } from "@/hooks/use-source-permission"
 import { useSourceQuery } from "@/hooks/use-source-query"
 import {
+  applySourceLoaderMetadata,
+
+} from "@/lib/source-cards"
+import {
   SOURCE_QUERY_OFFSCREEN_RETENTION_MS,
   SOURCE_QUERY_PRELOAD_MARGIN,
 } from "@/lib/source-query-policy"
@@ -63,15 +67,7 @@ function CardContent({ id, source, dragHandle, isDraft = false, onDraftSourceCha
   const sourceErrorMessage = canLoad && isError
     ? `Failed to load source${errorMessage ? `: ${errorMessage}` : "."}`
     : undefined
-  const displaySource = metadata
-    ? {
-        ...source,
-        metadata: {
-          ...source.metadata,
-          ...metadata,
-        },
-      }
-    : source
+  const displaySource = applySourceLoaderMetadata(source, metadata)
 
   const handleFlip = useCallback(() => {
     setIsFlipped(prev => !prev)

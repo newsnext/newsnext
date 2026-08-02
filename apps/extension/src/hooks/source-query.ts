@@ -1,5 +1,7 @@
+import type { RuntimeSource } from "@newsnext/source/types"
 import type { QueryClient } from "@tanstack/react-query"
 import type { SourceLoadResult } from "@/lib/source-loader"
+import { normalizeSourceParams } from "@newsnext/source/runtime"
 import { hashKey, queryOptions } from "@tanstack/react-query"
 import { loadSource } from "@/lib/source-loader"
 import {
@@ -12,6 +14,17 @@ export const SOURCE_QUERY_KEY = ["source"] as const
 export interface SourceQueryTarget {
   sourceId: string
   params?: Record<string, unknown>
+}
+
+export function createSourceQueryTarget(
+  sourceId: string,
+  source: Pick<RuntimeSource, "params">,
+  params: Record<string, unknown> = {},
+): SourceQueryTarget {
+  return {
+    sourceId,
+    params: normalizeSourceParams(source, params),
+  }
 }
 
 export function getSourceQueryKey(
