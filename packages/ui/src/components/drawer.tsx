@@ -1,5 +1,6 @@
 "use client"
 
+import { MODAL_OVERLAY_CLASS } from "@newsnext/ui/lib/modal"
 import { cn } from "@newsnext/ui/lib/utils"
 import * as React from "react"
 
@@ -36,10 +37,7 @@ function DrawerOverlay({
   return (
     <DrawerPrimitive.Overlay
       data-slot="drawer-overlay"
-      className={cn(
-        "fixed inset-0 z-50 bg-black/80 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
-        className,
-      )}
+      className={cn(MODAL_OVERLAY_CLASS, className)}
       {...props}
     />
   )

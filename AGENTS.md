@@ -39,6 +39,16 @@ Newsnext is a personalized web crawler that runs inside a browser extension (mv3
 - Keep documentation and examples aligned with the current TypeScript APIs and
   runtime behavior.
 
+### Design Documentation
+
+- `docs/DESIGN_GUIDELINE.md` is the canonical reference for interface styling
+  and interaction-level visual decisions.
+- Update it in the same change when UI work creates, removes, or revises a
+  reusable design rule, including surface treatments, dialog patterns, spacing,
+  typography, theme usage, motion, or user-facing copy conventions.
+- Keep documented design requirements aligned with the implemented React
+  components and Tailwind utilities.
+
 ### Version Control
 
 - Use `git` as the primary version control system for this repository.

@@ -10,9 +10,9 @@ interface ThemeSelectorProps {
   layoutId?: string
 }
 
-export function ThemeSelector({ value, onValueChange, layoutId = "theme-indicator" }: ThemeSelectorProps) {
+export function ThemeSelector({ value, onValueChange, layoutId = "theme-indicator" }: ThemeSelectorProps): React.JSX.Element {
   return (
-    <div className="h-full grid grid-cols-6 w-full">
+    <div className="grid h-full w-full grid-cols-[repeat(6,2rem)] place-content-center gap-2">
       {COLORS.map(color => (
         <button
           key={color}

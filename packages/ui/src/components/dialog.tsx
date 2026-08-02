@@ -3,6 +3,7 @@ import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 import { Button } from "@newsnext/ui/components/button"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 
+import { MODAL_OVERLAY_CLASS } from "@newsnext/ui/lib/modal"
 import { cn } from "@newsnext/ui/lib/utils"
 import { XIcon } from "@phosphor-icons/react"
 import * as React from "react"
@@ -30,10 +31,7 @@ function DialogOverlay({
   return (
     <DialogPrimitive.Backdrop
       data-slot="dialog-overlay"
-      className={cn(
-        "fixed inset-0 isolate z-50 bg-black/80 duration-100 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
-        className,
-      )}
+      className={cn(MODAL_OVERLAY_CLASS, className)}
       {...props}
     />
   )

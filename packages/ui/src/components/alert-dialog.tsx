@@ -2,7 +2,9 @@
 
 import { AlertDialog as AlertDialogPrimitive } from "@base-ui/react/alert-dialog"
 import { Button } from "@newsnext/ui/components/button"
+import { SquircleBox } from "@newsnext/ui/components/squircle"
 
+import { MODAL_INNER_SURFACE_CLASS, MODAL_OVERLAY_CLASS, MODAL_SHELL_CLASS } from "@newsnext/ui/lib/modal"
 import { cn } from "@newsnext/ui/lib/utils"
 import * as React from "react"
 
@@ -29,10 +31,7 @@ function AlertDialogOverlay({
   return (
     <AlertDialogPrimitive.Backdrop
       data-slot="alert-dialog-overlay"
-      className={cn(
-        "fixed inset-0 isolate z-50 bg-black/80 duration-100 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
-        className,
-      )}
+      className={cn(MODAL_OVERLAY_CLASS, className)}
       {...props}
     />
   )
@@ -40,6 +39,7 @@ function AlertDialogOverlay({
 
 function AlertDialogContent({
   className,
+  children,
   size = "default",
   ...props
 }: AlertDialogPrimitive.Popup.Props & {
@@ -52,11 +52,17 @@ function AlertDialogContent({
         data-slot="alert-dialog-content"
         data-size={size}
         className={cn(
-          "group/alert-dialog-content fixed top-1/2 left-1/2 z-50 grid w-full -translate-x-1/2 -translate-y-1/2 gap-6 rounded-3xl bg-popover p-6 text-popover-foreground ring-1 ring-foreground/5 duration-100 outline-none data-[size=default]:max-w-xs data-[size=sm]:max-w-xs data-[size=default]:sm:max-w-md data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+          "group/alert-dialog-content fixed top-1/2 left-1/2 z-50 w-full -translate-x-1/2 -translate-y-1/2 text-popover-foreground duration-100 outline-none data-[size=default]:max-w-xs data-[size=sm]:max-w-xs data-[size=default]:sm:max-w-md data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
           className,
         )}
         {...props}
-      />
+      >
+        <SquircleBox radius="3xl" className={cn("p-2", MODAL_SHELL_CLASS)}>
+          <SquircleBox radius="2xl" className={cn("grid gap-6 p-6", MODAL_INNER_SURFACE_CLASS)}>
+            {children}
+          </SquircleBox>
+        </SquircleBox>
+      </AlertDialogPrimitive.Popup>
     </AlertDialogPortal>
   )
 }

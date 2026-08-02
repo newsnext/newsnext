@@ -2,6 +2,7 @@ import PhArrowCircleLeftDuotone from "~icons/ph/arrow-circle-left-duotone"
 import PhArrowCounterClockwiseDuotone from "~icons/ph/arrow-counter-clockwise-duotone"
 import PhArrowFatUpDuotone from "~icons/ph/arrow-fat-up-duotone"
 import PhArrowsOutSimple from "~icons/ph/arrows-out-simple"
+import PhCheckCircleDuotone from "~icons/ph/check-circle-duotone"
 import PhCircleDashedDuotone from "~icons/ph/circle-dashed-duotone"
 import PhDotsSixVerticalDuotone from "~icons/ph/dots-six-vertical-duotone"
 import PhGearDuotone from "~icons/ph/gear-duotone"
@@ -20,6 +21,7 @@ export {
   PhArrowCounterClockwiseDuotone,
   PhArrowFatUpDuotone,
   PhArrowsOutSimple,
+  PhCheckCircleDuotone,
   PhCircleDashedDuotone,
   PhDotsSixVerticalDuotone,
   PhGearDuotone,

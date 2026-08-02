@@ -13,7 +13,7 @@ export function CardSurface({ color, className }: CardSurfaceProps): React.JSX.E
       aria-hidden
       radius="3xl"
       className={cn("pointer-events-none absolute inset-0", className)}
-      style={{ backgroundColor: `color-mix(in oklab, var(--background) 40%, var(--color-${color}-400) 60%)` }}
+      style={{ backgroundColor: `color-mix(in oklab, var(--background), var(--color-${color}-400) 55%)` }}
     />
   )
 }

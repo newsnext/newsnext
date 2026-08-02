@@ -1,32 +1,23 @@
 import type { Color } from "@newsnext/shared/types"
 import type { BoardSortMode } from "@/lib/board-sorting"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@newsnext/ui/components/alert-dialog"
 import { Button } from "@newsnext/ui/components/button"
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@newsnext/ui/components/dialog"
 import { Input } from "@newsnext/ui/components/input"
+import { SquircleBox } from "@newsnext/ui/components/squircle"
+import { MODAL_INNER_SURFACE_CLASS, MODAL_SHELL_CLASS } from "@newsnext/ui/lib/modal"
 import { useNavigate } from "@tanstack/react-router"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { m } from "motion/react"
 import { useState } from "react"
 import { SegmentedControl } from "@/components/common/segmented-control"
 import { ThemeSelector } from "@/components/common/theme-selector"
-import { PhPlusCircleDuotone, PhTrashDuotone } from "@/components/icons/ph"
+import { PhCheckCircleDuotone, PhPlusCircleDuotone, PhTrashDuotone } from "@/components/icons/ph"
 import { getBoardSortPreference } from "@/lib/board-sorting"
 import { ALL_BOARD_ID, createBoard, getBoardColor, getBoardDisplayName, isBoardNameTaken } from "@/lib/boards"
 import { cn } from "@/lib/utils"
@@ -46,7 +37,9 @@ const SORT_OPTIONS: { label: string, value: BoardSortMode }[] = [
   { label: "Provider name", value: "provider" },
 ]
 
-const BOARD_DIALOG_SURFACE_CLASS = "bg-[color-mix(in_oklab,var(--popover)_60%,var(--color-theme-400)_40%)] ring-0 before:pointer-events-none before:absolute before:inset-0 before:bg-background/80 before:content-['']"
+const BOARD_DIALOG_SURFACE_CLASS = cn("gap-0 p-2 ring-0", MODAL_SHELL_CLASS)
+const BOARD_DIALOG_HEADER_CLASS = "h-10 justify-center px-2 pr-12"
+const BOARD_DIALOG_BODY_CLASS = cn("grid p-6", MODAL_INNER_SURFACE_CLASS)
 
 function BoardEditDialog({
   boardId,
@@ -67,7 +60,8 @@ function BoardEditDialog({
   const [name, setName] = useState(() => board ? getBoardDisplayName(board) : "")
   const [color, setColor] = useState<Color>(() => board ? getBoardColor(board) : "red")
   const [sortMode, setSortMode] = useState<BoardSortMode>(preference.mode)
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false)
+  const [isDeleteArmed, setIsDeleteArmed] = useState(false)
+  const savedColor = board ? getBoardColor(board) : "red"
   const normalizedName = name.trim()
   const hasDuplicateName = isBoardNameTaken(boards, normalizedName, boardId)
   const canSave = board !== undefined && (isAllBoard || normalizedName.length > 0) && !hasDuplicateName
@@ -94,27 +88,24 @@ function BoardEditDialog({
   }
 
   return (
-    <>
-      <Dialog
-        open
-        onOpenChange={(nextOpen) => {
-          if (!nextOpen) {
-            onClose()
-          }
-        }}
+    <Dialog
+      open
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) {
+          onClose()
+        }
+      }}
+    >
+      <DialogContent
+        className="sm:max-w-lg"
+        surfaceClassName={cn(savedColor, BOARD_DIALOG_SURFACE_CLASS)}
       >
-        <DialogContent
-          className="sm:max-w-lg"
-          surfaceClassName={cn(color, BOARD_DIALOG_SURFACE_CLASS)}
-        >
-          <form className="relative grid gap-5" onSubmit={handleSubmit}>
-            <DialogHeader>
-              <DialogTitle>Edit board</DialogTitle>
-              <DialogDescription>
-                Personalize this board and choose how its cards are arranged.
-              </DialogDescription>
-            </DialogHeader>
+        <form className="grid" onSubmit={handleSubmit}>
+          <DialogHeader className={BOARD_DIALOG_HEADER_CLASS}>
+            <DialogTitle className="font-bold">Edit board</DialogTitle>
+          </DialogHeader>
 
+          <SquircleBox radius="2xl" className={cn(BOARD_DIALOG_BODY_CLASS, "gap-6")}>
             <div className="grid gap-2">
               <label htmlFor="edit-board-name" className="text-sm font-medium">Name</label>
               <Input
@@ -130,9 +121,9 @@ function BoardEditDialog({
               {hasDuplicateName && <p className="text-xs text-destructive">A board with this name already exists.</p>}
             </div>
 
-            <fieldset className="grid gap-2">
-              <legend className="text-sm font-medium">Theme color</legend>
-              <div className="h-24">
+            <fieldset>
+              <legend className="mb-2 text-sm font-medium">Theme color</legend>
+              <div className="h-28">
                 <ThemeSelector
                   value={color}
                   onValueChange={setColor}
@@ -141,8 +132,8 @@ function BoardEditDialog({
               </div>
             </fieldset>
 
-            <fieldset className="grid gap-2">
-              <legend className="text-sm font-medium">Card order</legend>
+            <fieldset>
+              <legend className="mb-2 text-sm font-medium">Card order</legend>
               <SegmentedControl<BoardSortMode>
                 items={SORT_OPTIONS}
                 value={sortMode}
@@ -155,34 +146,30 @@ function BoardEditDialog({
 
             <DialogFooter className={cn(!isAllBoard && "sm:justify-between")}>
               {!isAllBoard && (
-                <Button type="button" variant="destructive" onClick={() => setIsDeleteOpen(true)}>
-                  <PhTrashDuotone />
-                  Delete board
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onBlur={() => setIsDeleteArmed(false)}
+                  onClick={() => {
+                    if (isDeleteArmed) {
+                      handleDelete()
+                      return
+                    }
+                    setIsDeleteArmed(true)
+                  }}
+                >
+                  {isDeleteArmed ? <PhCheckCircleDuotone /> : <PhTrashDuotone />}
+                  <span aria-live="polite">
+                    {isDeleteArmed ? "Confirm delete" : "Delete board"}
+                  </span>
                 </Button>
               )}
               <Button type="submit" className="text-white" disabled={!canSave}>Save changes</Button>
             </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {`Delete ${board ? getBoardDisplayName(board) : "this board"}?`}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              The board will be removed. Its cards will remain available in All.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Keep board</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" onClick={handleDelete}>Delete board</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
+          </SquircleBox>
+        </form>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -232,31 +219,31 @@ function CreateBoardDialog({
       <DialogContent
         surfaceClassName={cn(color, BOARD_DIALOG_SURFACE_CLASS)}
       >
-        <form className="relative grid gap-6" onSubmit={handleSubmit}>
-          <DialogHeader>
-            <DialogTitle>Create board</DialogTitle>
-            <DialogDescription>
-              Group cards around a topic, project, or reading routine.
-            </DialogDescription>
+        <form className="grid" onSubmit={handleSubmit}>
+          <DialogHeader className={BOARD_DIALOG_HEADER_CLASS}>
+            <DialogTitle className="font-bold">Create board</DialogTitle>
           </DialogHeader>
-          <div className="grid gap-2">
-            <label htmlFor="board-name" className="text-sm font-medium">Board name</label>
-            <Input
-              id="board-name"
-              autoFocus
-              maxLength={40}
-              placeholder="Product signals"
-              value={name}
-              onChange={event => setName(event.target.value)}
-              aria-invalid={hasDuplicateName}
-            />
-            {hasDuplicateName && (
-              <p className="text-xs text-destructive">A board with this name already exists.</p>
-            )}
-          </div>
-          <DialogFooter>
-            <Button type="submit" className="text-white" disabled={!canCreate}>Create board</Button>
-          </DialogFooter>
+
+          <SquircleBox radius="2xl" className={cn(BOARD_DIALOG_BODY_CLASS, "gap-6")}>
+            <div className="grid gap-2">
+              <label htmlFor="board-name" className="text-sm font-medium">Board name</label>
+              <Input
+                id="board-name"
+                autoFocus
+                maxLength={40}
+                placeholder="Product signals"
+                value={name}
+                onChange={event => setName(event.target.value)}
+                aria-invalid={hasDuplicateName}
+              />
+              {hasDuplicateName && (
+                <p className="text-xs text-destructive">A board with this name already exists.</p>
+              )}
+            </div>
+            <DialogFooter>
+              <Button type="submit" className="text-white" disabled={!canCreate}>Create board</Button>
+            </DialogFooter>
+          </SquircleBox>
         </form>
       </DialogContent>
     </Dialog>

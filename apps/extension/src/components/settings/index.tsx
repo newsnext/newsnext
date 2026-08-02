@@ -12,6 +12,7 @@ import {
   SelectTrigger,
 } from "@newsnext/ui/components/select"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
+import { MODAL_INNER_SURFACE_CLASS, MODAL_SHELL_CLASS } from "@newsnext/ui/lib/modal"
 import { cn } from "@newsnext/ui/lib/utils"
 import { useAtom, useAtomValue } from "jotai"
 import { useEffect, useState } from "react"
@@ -79,41 +80,45 @@ function SettingsModalContent({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className="h-[min(37.5rem,calc(100vh-2rem))] w-full max-w-3xl sm:max-w-3xl"
-        surfaceClassName="flex gap-0 bg-[color-mix(in_oklab,var(--popover)_60%,var(--color-theme-400)_40%)] p-2"
+        surfaceClassName={cn("grid grid-rows-[auto_minmax(0,1fr)] gap-0 p-2", MODAL_SHELL_CLASS)}
       >
-        <div className="flex w-32 shrink-0 flex-col gap-1 p-1 pr-2 sm:w-44 sm:p-2 sm:pr-4">
-          <div className="px-3 py-3 text-sm font-semibold text-foreground/70">Settings</div>
-          {SETTINGS_TABS.map(tab => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => handleTabChange(tab.id)}
-              className={cn(
-                "flex w-full items-center rounded-full px-3 py-2 text-left text-sm font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-theme-400",
-                activeTab === tab.id
-                  ? "bg-background/75 text-foreground shadow-sm ring-1 ring-foreground/5"
-                  : "text-foreground/60 hover:bg-background/25 hover:text-foreground",
-              )}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-        <div className="relative min-w-0 flex-1">
-          <SquircleBox
-            aria-hidden
-            radius="2xl"
-            className="pointer-events-none absolute inset-0 bg-background/80 ring-1 ring-foreground/5"
-          />
-          <div className="relative size-full overflow-y-auto p-4 sm:p-6">
-            <DialogHeader className="mb-6">
-              <DialogTitle className="text-lg">
-                {SETTINGS_TABS.find(t => t.id === activeTab)?.label}
-              </DialogTitle>
-            </DialogHeader>
-            {activeTab === "appearance" && <AppearanceSettings />}
-            {activeTab === "general" && <GeneralSettings />}
-            {activeTab === "permissions" && <PermissionsSettings />}
+        <DialogHeader className="h-10 flex-row items-center gap-2 px-3 pr-12">
+          <DialogTitle className="font-bold">Settings</DialogTitle>
+          <span aria-hidden className="text-foreground/25">/</span>
+          <h2 className="text-sm leading-none font-medium text-foreground/60">
+            {SETTINGS_TABS.find(t => t.id === activeTab)?.label}
+          </h2>
+        </DialogHeader>
+
+        <div className="flex min-h-0 gap-0">
+          <div className="flex w-32 shrink-0 flex-col gap-1 p-1 pr-2 sm:w-44 sm:p-2 sm:pr-4">
+            {SETTINGS_TABS.map(tab => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => handleTabChange(tab.id)}
+                className={cn(
+                  "flex w-full items-center rounded-full px-3 py-2 text-left text-sm font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-theme-400",
+                  activeTab === tab.id
+                    ? "bg-background/75 text-foreground shadow-sm ring-1 ring-foreground/5"
+                    : "text-foreground/60 hover:bg-background/25 hover:text-foreground",
+                )}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+          <div className="relative min-w-0 flex-1">
+            <SquircleBox
+              aria-hidden
+              radius="2xl"
+              className={cn("pointer-events-none absolute inset-0 ring-1 ring-foreground/5", MODAL_INNER_SURFACE_CLASS)}
+            />
+            <div className="relative size-full overflow-y-auto p-4 sm:p-6">
+              {activeTab === "appearance" && <AppearanceSettings />}
+              {activeTab === "general" && <GeneralSettings />}
+              {activeTab === "permissions" && <PermissionsSettings />}
+            </div>
           </div>
         </div>
       </DialogContent>
