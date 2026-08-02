@@ -1,17 +1,17 @@
 import { describe, expect, it } from "vitest"
-import { resolveSquircleStyle, resolveSquircleSupport } from "./use-squircle"
+import { resolveSquircleRendering, resolveSquircleStyle } from "./use-squircle"
 
-describe("resolveSquircleSupport", () => {
+describe("resolveSquircleRendering", () => {
   it("uses shape geometry by default", () => {
-    expect(resolveSquircleSupport("shape")).toBe("shape")
+    expect(resolveSquircleRendering("shape")).toBe("shape")
   })
 
   it("skips shape geometry when border-radius fallback is enabled", () => {
-    expect(resolveSquircleSupport("shape", "border-radius")).toBe("round")
+    expect(resolveSquircleRendering("shape", "border-radius")).toBe("round")
   })
 
   it("preserves native continuous corners regardless of fallback", () => {
-    expect(resolveSquircleSupport("corner-shape", "border-radius")).toBe("corner-shape")
+    expect(resolveSquircleRendering("corner-shape", "border-radius")).toBe("corner-shape")
   })
 })
 

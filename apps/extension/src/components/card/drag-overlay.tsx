@@ -1,6 +1,5 @@
 import type { BoardSource } from "@/typings/source"
 import { Button } from "@newsnext/ui/components/button"
-import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { useSourceIcon } from "@/hooks/use-source-icon"
 import { cn } from "@/lib/utils"
 import { PhDotsSixVerticalDuotone } from "../icons/ph"
@@ -17,11 +16,10 @@ export function DragOverlay({ source }: DragOverlayProps) {
   const icon = useSourceIcon(source)
   return (
     <div className="relative p-2.5">
-      <SquircleBox
+      <div
         aria-hidden
-        radius="3xl"
         className={cn(
-          "pointer-events-none absolute inset-0",
+          "pointer-events-none absolute inset-0 rounded-3xl",
           `bg-${color}-400/40`,
         )}
       />

@@ -16,6 +16,7 @@ export const COSMOS_FIXTURES = [
         "Content safety",
         "Virtual list",
         "Dynamic island",
+        "Corner shapes",
       ] as string[],
     },
     load: () => import("@/cosmos/newsnext-components.fixture"),

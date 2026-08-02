@@ -1,4 +1,4 @@
-import type { SquircleFallback, SquircleStyle } from "@newsnext/ui/hooks/use-squircle"
+import type { SquircleFallback, SquircleRendering, SquircleStyle } from "@newsnext/ui/hooks/use-squircle"
 import type { CSSProperties, ReactNode } from "react"
 import { useClickAway } from "@newsnext/ui/hooks/use-click-away"
 import { useSquircle } from "@newsnext/ui/hooks/use-squircle"
@@ -23,6 +23,7 @@ export interface DynamicIslandProps {
   largeHeight?: number | string
   largeRadius?: number | string
   fallback?: SquircleFallback
+  cornerRendering?: SquircleRendering
 
   wrapperClassName?: string
   initialAnimation?: boolean
@@ -44,6 +45,7 @@ function DynamicIsland({
   largeHeight = 180,
   largeRadius = 32,
   fallback,
+  cornerRendering,
 
   wrapperClassName,
   initialAnimation = false,
@@ -60,7 +62,7 @@ function DynamicIsland({
     ...squircleTreatment
   } = useSquircle(
     canUseSquircle ? largeRadius : 0,
-    fallback,
+    { fallback, rendering: cornerRendering },
   )
 
   const onChangeRef = useRef(onChange)
@@ -149,8 +151,8 @@ function DynamicIsland({
             height: getVal(isSmall ? smallHeight : largeHeight),
             borderRadius: isSmall ? collapsedRadius : expandedRadius,
             boxShadow: isSmall
-              ? "inset 0 0 0 1px rgb(255 255 255 / 0.08), 0 6px 20px rgb(0 0 0 / 0.22)"
-              : "inset 0 0 0 1px rgb(255 255 255 / 0.11), 0 24px 70px rgb(0 0 0 / 0.5)",
+              ? "0 6px 20px rgb(0 0 0 / 0.22)"
+              : "0 24px 70px rgb(0 0 0 / 0.5)",
             opacity: 1,
             scale: 1,
           }}

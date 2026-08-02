@@ -39,7 +39,7 @@ function SquircleBox({
   ...props
 }: SquircleBoxProps): React.JSX.Element {
   const resolvedRadius = resolveRadius(radius)
-  const squircleStyle = useSquircle(resolvedRadius, fallback)
+  const squircleStyle = useSquircle(resolvedRadius, { fallback })
 
   return (
     <div

@@ -2,12 +2,14 @@ import type { Color } from "@newsnext/shared/types"
 import type { PropsWithChildren, ReactNode } from "react"
 import { DynamicIsland } from "@newsnext/ui/components/dynamic-island"
 import { Logo } from "@newsnext/ui/components/logo"
+import { RadioGroup, RadioGroupItem } from "@newsnext/ui/components/radio-group"
 import { Switch } from "@newsnext/ui/components/switch"
 import { ThemeSelector } from "@newsnext/ui/components/theme-selector"
 import { WordmarkLogo } from "@newsnext/ui/components/wordmark-logo"
 import { QueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 import { AppProvider } from "@/components/app-provider"
+import { CornerRenderingProvider, useCornerRendering } from "@/cosmos/corner-rendering-context"
 import {
   handleThemeModeSwitch,
   handleThemeSwitch,
@@ -25,7 +27,7 @@ function getInitialThemeColor(): Color {
 function CosmosAppearanceControls(): React.JSX.Element {
   const [color, setColor] = useState<Color>(getInitialThemeColor)
   const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains("dark"))
-  const [useBorderRadius, setUseBorderRadius] = useState(false)
+  const { rendering, setRendering } = useCornerRendering()
 
   function changeColor(nextColor: Color): void {
     setColor(nextColor)
@@ -40,13 +42,13 @@ function CosmosAppearanceControls(): React.JSX.Element {
   return (
     <>
       <DynamicIsland
-        fallback={useBorderRadius ? "border-radius" : undefined}
+        cornerRendering={rendering}
         wrapperClassName="top-3"
         smallClassName="flex items-center justify-center gap-2 px-4"
         largeClassName="p-3 sunrise-theme-500"
         smallHeight={40}
         smallWidth={150}
-        largeWidth={320}
+        largeWidth={356}
         largeHeight={192}
       >
         {isSmall => isSmall
@@ -79,15 +81,17 @@ function CosmosAppearanceControls(): React.JSX.Element {
                       size="sm"
                     />
                   </label>
-                  <label className="flex h-8 items-center gap-2 rounded-full bg-background/60 px-3 text-xs font-medium whitespace-nowrap">
-                    Border radius
-                    <Switch
-                      checked={useBorderRadius}
-                      onCheckedChange={setUseBorderRadius}
-                      aria-label="Toggle border radius"
-                      size="sm"
-                    />
-                  </label>
+                  <RadioGroup
+                    aria-label="Corner rendering"
+                    className="bg-background/60 p-0.5"
+                    value={rendering}
+                    onValueChange={setRendering}
+                    variant="segmented"
+                  >
+                    <RadioGroupItem className="h-7 px-2 text-xs" value="corner-shape">Native</RadioGroupItem>
+                    <RadioGroupItem className="h-7 px-2 text-xs" value="shape">Shape</RadioGroupItem>
+                    <RadioGroupItem className="h-7 px-2 text-xs" value="round">Round</RadioGroupItem>
+                  </RadioGroup>
                 </div>
               </section>
             )}
@@ -98,11 +102,13 @@ function CosmosAppearanceControls(): React.JSX.Element {
 
 export default function CosmosDecorator({ children }: PropsWithChildren): ReactNode {
   return (
-    <AppProvider queryClient={queryClient}>
-      <CosmosAppearanceControls />
-      <div className="min-h-full pt-16">
-        {children}
-      </div>
-    </AppProvider>
+    <CornerRenderingProvider>
+      <AppProvider queryClient={queryClient}>
+        <CosmosAppearanceControls />
+        <div className="min-h-full pt-16">
+          {children}
+        </div>
+      </AppProvider>
+    </CornerRenderingProvider>
   )
 }

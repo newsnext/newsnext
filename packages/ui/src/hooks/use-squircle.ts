@@ -2,8 +2,13 @@ import type { CSSProperties } from "react"
 import { getCssShape } from "@newsnext/ui/lib/figma-squircle"
 import { useMemo, useSyncExternalStore } from "react"
 
-type SquircleSupport = "corner-shape" | "shape" | "round"
+type SquircleRendering = "corner-shape" | "shape" | "round"
 type SquircleFallback = "border-radius"
+
+interface SquircleOptions {
+  fallback?: SquircleFallback
+  rendering?: SquircleRendering
+}
 
 interface SquircleStyle extends CSSProperties {
   cornerShape?: "squircle"
@@ -11,29 +16,29 @@ interface SquircleStyle extends CSSProperties {
 
 const subscribe = (): (() => void) => () => undefined
 
-function getSquircleSupport(): SquircleSupport {
+function getSquircleRendering(): SquircleRendering {
   if (typeof CSS === "undefined") return "round"
   if (CSS.supports("corner-shape", "squircle")) return "corner-shape"
   if (CSS.supports("clip-path", getCssShape(1))) return "shape"
   return "round"
 }
 
-function getServerSquircleSupport(): SquircleSupport {
+function getServerSquircleRendering(): SquircleRendering {
   return "round"
 }
 
 function resolveSquircleStyle(
   radius: number,
-  support: SquircleSupport,
+  rendering: SquircleRendering,
 ): SquircleStyle {
-  if (support === "corner-shape") {
+  if (rendering === "corner-shape") {
     return {
       borderRadius: radius * 2,
       cornerShape: "squircle",
     }
   }
 
-  if (support === "shape") {
+  if (rendering === "shape") {
     return {
       borderRadius: radius,
       clipPath: getCssShape(radius),
@@ -43,29 +48,29 @@ function resolveSquircleStyle(
   return { borderRadius: radius }
 }
 
-function resolveSquircleSupport(
-  support: SquircleSupport,
+function resolveSquircleRendering(
+  rendering: SquircleRendering,
   fallback?: SquircleFallback,
-): SquircleSupport {
-  if (support === "shape" && fallback === "border-radius") return "round"
-  return support
+): SquircleRendering {
+  if (rendering === "shape" && fallback === "border-radius") return "round"
+  return rendering
 }
 
 function useSquircle(
   radius: number,
-  fallback?: SquircleFallback,
+  { fallback, rendering }: SquircleOptions = {},
 ): SquircleStyle {
-  const detectedSupport = useSyncExternalStore(
+  const detectedRendering = useSyncExternalStore(
     subscribe,
-    getSquircleSupport,
-    getServerSquircleSupport,
+    getSquircleRendering,
+    getServerSquircleRendering,
   )
-  const support = resolveSquircleSupport(detectedSupport, fallback)
+  const resolvedRendering = resolveSquircleRendering(rendering ?? detectedRendering, fallback)
   return useMemo(
-    () => resolveSquircleStyle(radius, support),
-    [radius, support],
+    () => resolveSquircleStyle(radius, resolvedRendering),
+    [radius, resolvedRendering],
   )
 }
 
-export { resolveSquircleStyle, resolveSquircleSupport, useSquircle }
-export type { SquircleFallback, SquircleStyle }
+export { resolveSquircleRendering, resolveSquircleStyle, useSquircle }
+export type { SquircleFallback, SquircleOptions, SquircleRendering, SquircleStyle }
