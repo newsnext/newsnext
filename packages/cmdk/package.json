@@ -1,0 +1,21 @@
+{
+  "name": "@newsnext/cmdk",
+  "type": "module",
+  "version": "0.0.1",
+  "private": true,
+  "license": "MIT",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.tsx"
+  },
+  "scripts": {
+    "test": "bun run vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "react": "catalog:"
+  },
+  "devDependencies": {
+    "@newsnext/tsconfigs": "workspace:*"
+  }
+}
