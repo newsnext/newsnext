@@ -60,17 +60,15 @@ function AlertDialogContent({
         render={(
           <ModalPopup
             className={cn(
-              "group/alert-dialog-content max-w-xs text-popover-foreground data-[size=default]:sm:max-w-md",
+              "group/alert-dialog-content max-w-[calc(100%-2rem)] text-popover-foreground data-[size=sm]:max-w-xs data-[size=default]:sm:max-w-md",
               className,
             )}
           />
         )}
         {...props}
       >
-        <SquircleBox radius="3xl" variant="modal-shell">
-          <SquircleBox radius="2xl" variant="modal-inner" className="grid gap-6 p-6">
-            {children}
-          </SquircleBox>
+        <SquircleBox radius="3xl" variant="modal-shell" className="relative grid ring-1 ring-foreground/5">
+          {children}
         </SquircleBox>
       </AlertDialogPrimitive.Popup>
     </AlertDialogPortal>
@@ -85,9 +83,24 @@ function AlertDialogHeader({
     <div
       data-slot="alert-dialog-header"
       className={cn(
-        "grid grid-rows-[auto_1fr] place-items-center gap-1.5 text-center has-data-[slot=alert-dialog-media]:grid-rows-[auto_auto_1fr] has-data-[slot=alert-dialog-media]:gap-x-6 sm:group-data-[size=default]/alert-dialog-content:place-items-start sm:group-data-[size=default]/alert-dialog-content:text-left sm:group-data-[size=default]/alert-dialog-content:has-data-[slot=alert-dialog-media]:grid-rows-[auto_1fr]",
+        "grid min-h-10 grid-cols-[auto_minmax(0,1fr)] items-center gap-2 px-4 py-3 text-left [&:not(:has([data-slot=alert-dialog-media]))]:grid-cols-1",
         className,
       )}
+      {...props}
+    />
+  )
+}
+
+function AlertDialogBody({
+  className,
+  ...props
+}: React.ComponentProps<"div">) {
+  return (
+    <SquircleBox
+      radius="2xl"
+      variant="modal-inner"
+      data-slot="alert-dialog-body"
+      className={cn("grid gap-6 p-6", className)}
       {...props}
     />
   )
@@ -114,10 +127,11 @@ function AlertDialogMedia({
   ...props
 }: React.ComponentProps<"div">) {
   return (
-    <div
+    <SquircleBox
+      radius="xl"
       data-slot="alert-dialog-media"
       className={cn(
-        "mb-2 inline-flex size-16 items-center justify-center rounded-full bg-muted sm:group-data-[size=default]/alert-dialog-content:row-span-2 *:[svg:not([class*='size-'])]:size-8",
+        "inline-flex size-7 items-center justify-center bg-background/25 text-foreground/65 *:[svg:not([class*='size-'])]:size-4",
         className,
       )}
       {...props}
@@ -135,7 +149,7 @@ function AlertDialogTitle({
       render={(
         <ModalTitle
           className={cn(
-            "text-lg sm:group-data-[size=default]/alert-dialog-content:group-has-data-[slot=alert-dialog-media]/alert-dialog-content:col-start-2",
+            "text-base leading-none font-semibold group-has-data-[slot=alert-dialog-media]/alert-dialog-content:col-start-2",
             className,
           )}
         />
@@ -155,7 +169,7 @@ function AlertDialogDescription({
       render={(
         <ModalDescription
           className={cn(
-            "text-balance md:text-pretty *:[a]:underline *:[a]:underline-offset-3 *:[a]:hover:text-foreground",
+            "text-pretty *:[a]:underline *:[a]:underline-offset-3 *:[a]:hover:text-foreground",
             className,
           )}
         />
@@ -198,6 +212,7 @@ function AlertDialogCancel({
 export {
   AlertDialog,
   AlertDialogAction,
+  AlertDialogBody,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,

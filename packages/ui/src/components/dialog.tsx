@@ -74,10 +74,10 @@ function DialogContent({
       >
         <SquircleBox
           radius={radius}
-          variant={variant === "themed" ? "modal-shell" : "default"}
+          variant="modal-shell"
+          data-dialog-variant={variant}
           className={cn(
             "relative grid size-full ring-1 ring-foreground/5",
-            variant === "default" && "gap-6 bg-popover p-6",
             surfaceClassName,
           )}
         >

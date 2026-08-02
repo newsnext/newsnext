@@ -62,6 +62,15 @@ Primitive-specific components compose `ModalOverlay`, `ModalPopup`,
 `@newsnext/ui/components/modal`. Keep the shared styling encapsulated directly
 in these components instead of introducing parallel CSS utilities.
 
+The Foundation modal structure is mandatory for every centered modal: keep a
+compact header in the exposed top shell, then place all descriptions, fields,
+primary content, and actions in a nested neutral surface below it. The title
+must never move into the nested surface. `DialogContent` provides the shell;
+callers compose `DialogHeader` followed by a `modal-inner` `SquircleBox`.
+`AlertDialogContent` follows the same structure with `AlertDialogHeader` and
+`AlertDialogBody`. When an alert uses an icon, place it in a compact squircle in
+the top header instead of a large circular badge.
+
 Keep content-specific layouts distinct when needed, but keep overlay opacity,
 shell color, primary radii, close-button treatment when present, and motion
 consistent. Popover menus and anchored transient controls do not use a modal

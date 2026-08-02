@@ -5,6 +5,7 @@ import type { BoardSource } from "@/typings/source"
 import {
   AlertDialog,
   AlertDialogAction,
+  AlertDialogBody,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -142,16 +143,18 @@ function DialogFixture() {
       <Dialog defaultOpen>
         <DialogTrigger render={<Button variant="outline" />}>Open dialog</DialogTrigger>
         <DialogContent>
-          <DialogHeader>
+          <DialogHeader className="min-h-10 justify-center px-4 py-3 pr-12">
             <DialogTitle>Edit source</DialogTitle>
+          </DialogHeader>
+          <SquircleBox radius="2xl" variant="modal-inner" className="grid gap-6 p-6">
             <DialogDescription>
               Update the display name used throughout NewsNext.
             </DialogDescription>
-          </DialogHeader>
-          <Input aria-label="Source name" defaultValue="Design systems" />
-          <DialogFooter showCloseButton>
-            <Button>Save changes</Button>
-          </DialogFooter>
+            <Input aria-label="Source name" defaultValue="Design systems" />
+            <DialogFooter showCloseButton>
+              <Button>Save changes</Button>
+            </DialogFooter>
+          </SquircleBox>
         </DialogContent>
       </Dialog>
     </FixtureStage>
@@ -164,36 +167,40 @@ function SharedModalPartsFixture() {
       <section className="relative isolate h-96 w-full max-w-2xl overflow-hidden rounded-3xl border bg-card">
         <ModalOverlay className="absolute rounded-3xl" data-open />
         <ModalPopup
-          className="absolute max-w-sm rounded-3xl bg-popover p-6 text-popover-foreground shadow-2xl"
+          className="absolute max-w-sm text-popover-foreground"
           data-open
         >
-          <ModalCloseButton type="button" />
-          <div className="grid gap-2 pr-8">
-            <ModalTitle className="text-lg">Shared modal foundation</ModalTitle>
-            <ModalDescription>
-              Overlay, popup, close control, title, and description are shared React components.
-            </ModalDescription>
-          </div>
-          <div className="mt-6 flex justify-end">
-            <Button>Continue</Button>
-          </div>
+          <SquircleBox radius="3xl" variant="modal-shell" className="relative ring-1 ring-foreground/5">
+            <ModalCloseButton type="button" />
+            <div className="px-4 py-3 pr-12">
+              <ModalTitle className="text-base leading-none">Shared modal foundation</ModalTitle>
+            </div>
+            <SquircleBox radius="2xl" variant="modal-inner" className="grid gap-6 p-6">
+              <ModalDescription>
+                Shared overlay, motion, shell, inner surface, and close control.
+              </ModalDescription>
+              <div className="flex justify-end">
+                <Button>Continue</Button>
+              </div>
+            </SquircleBox>
+          </SquircleBox>
         </ModalPopup>
       </section>
     </FixtureStage>
   )
 }
 
-function ThemedDialogFixture() {
+function FormDialogFixture() {
   return (
     <FixtureStage>
       <Dialog defaultOpen>
-        <DialogTrigger render={<Button variant="outline" />}>Open themed dialog</DialogTrigger>
-        <DialogContent variant="themed" surfaceClassName="w-full max-w-lg">
-          <DialogHeader className="px-4 py-3 pr-12">
+        <DialogTrigger render={<Button variant="outline" />}>Open form dialog</DialogTrigger>
+        <DialogContent surfaceClassName="w-full max-w-lg">
+          <DialogHeader className="min-h-10 justify-center px-4 py-3 pr-12">
             <DialogTitle>Edit board</DialogTitle>
-            <DialogDescription>Preview the shared NewsNext modal surface treatment.</DialogDescription>
           </DialogHeader>
           <SquircleBox radius="2xl" variant="modal-inner" className="grid gap-4 p-6">
+            <DialogDescription>Preview the shared NewsNext modal surface treatment.</DialogDescription>
             <Input aria-label="Board name" defaultValue="Daily reading" />
             <DialogFooter>
               <Button variant="outline">Cancel</Button>
@@ -264,17 +271,22 @@ function AlertDialogFixture() {
         <AlertDialogTrigger render={<Button variant="destructive" />}>Delete source</AlertDialogTrigger>
         <AlertDialogContent>
           <AlertDialogHeader>
+            <AlertDialogMedia>
+              <CircleAlert />
+            </AlertDialogMedia>
             <AlertDialogTitle>Delete this source?</AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogBody>
             <AlertDialogDescription>
               This removes the source and its cached articles. This action cannot be undone.
             </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" onClick={() => setOpen(false)}>
-              Delete source
-            </AlertDialogAction>
-          </AlertDialogFooter>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction variant="destructive" onClick={() => setOpen(false)}>
+                Delete source
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogBody>
         </AlertDialogContent>
       </AlertDialog>
     </FixtureStage>
@@ -294,14 +306,16 @@ function CompactAlertDialogFixture() {
               <CircleAlert />
             </AlertDialogMedia>
             <AlertDialogTitle>Connection expired</AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogBody>
             <AlertDialogDescription>
               Reconnect this source to continue receiving updates.
             </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Later</AlertDialogCancel>
-            <AlertDialogAction onClick={() => setOpen(false)}>Reconnect</AlertDialogAction>
-          </AlertDialogFooter>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Later</AlertDialogCancel>
+              <AlertDialogAction onClick={() => setOpen(false)}>Reconnect</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogBody>
         </AlertDialogContent>
       </AlertDialog>
     </FixtureStage>
@@ -311,7 +325,7 @@ function CompactAlertDialogFixture() {
 export default {
   "Foundation: Shared parts": SharedModalPartsFixture,
   "Dialog: Default": DialogFixture,
-  "Dialog: Themed": ThemedDialogFixture,
+  "Dialog: Form": FormDialogFixture,
   "Dialog: Settings": SettingsModalFixture,
   "Dialog: Search": SearchModalFixture,
   "Alert: Default": AlertDialogFixture,

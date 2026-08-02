@@ -11,6 +11,7 @@ import {
   InputGroup,
   InputGroupAddon,
 } from "@newsnext/ui/components/input-group"
+import { SquircleBox } from "@newsnext/ui/components/squircle"
 
 import { cn } from "@newsnext/ui/lib/utils"
 import { MagnifyingGlassIcon } from "@phosphor-icons/react"
@@ -49,20 +50,21 @@ function CommandDialog({
 }) {
   return (
     <Dialog {...props}>
-      <DialogHeader className="sr-only">
-        <DialogTitle>{title}</DialogTitle>
-        <DialogDescription>{description}</DialogDescription>
-      </DialogHeader>
       <DialogContent
         radius="4xl"
         className={cn(
           "top-1/3 translate-y-0",
           className,
         )}
-        surfaceClassName="p-0"
         showCloseButton={showCloseButton}
       >
-        {children}
+        <DialogHeader className="min-h-10 justify-center px-4 py-3 pr-12">
+          <DialogTitle>{title}</DialogTitle>
+        </DialogHeader>
+        <SquircleBox radius="2xl" variant="modal-inner" className="p-0">
+          <DialogDescription className="sr-only">{description}</DialogDescription>
+          {children}
+        </SquircleBox>
       </DialogContent>
     </Dialog>
   )
