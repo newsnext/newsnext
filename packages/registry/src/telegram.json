@@ -11,7 +11,7 @@
   "sources": {
     "channel": {
       "metadata": {
-        "title": "频道"
+        "title": "Channel"
       },
       "params": {
         "channel": {
@@ -85,7 +85,8 @@
               "template": "{{ scope.value | css_url }}"
             }
           }
-        }
+        },
+        "sortByTimestamp": true
       },
       "cache": "5m"
     }
