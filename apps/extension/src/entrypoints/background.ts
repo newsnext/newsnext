@@ -9,13 +9,23 @@ import { syncConfiguredSourceRequestRules } from "@/lib/background/source-reques
 registerSourceRegistryLoader()
 const backgroundService = createBackgroundService()
 const APP_MENU_ID = "app"
+const COSMOS_MENU_ID = "cosmos"
+const ACTION_CONTEXT = import.meta.env.MANIFEST_VERSION === 3 ? "action" : "browser_action"
 
-function registerAppMenu(): void {
+function registerActionMenus(): void {
   browser.contextMenus.create({
     id: APP_MENU_ID,
     title: "Open NewsNext",
-    contexts: [import.meta.env.MANIFEST_VERSION === 3 ? "action" : "browser_action"],
+    contexts: [ACTION_CONTEXT],
   })
+
+  if (import.meta.env.DEV) {
+    browser.contextMenus.create({
+      id: COSMOS_MENU_ID,
+      title: "Open Cosmos",
+      contexts: [ACTION_CONTEXT],
+    })
+  }
 }
 
 export default defineBackground(() => {
@@ -28,11 +38,15 @@ export default defineBackground(() => {
     console.error("Failed to synchronize source request rules", error)
   })
 
-  browser.runtime.onInstalled.addListener(registerAppMenu)
+  browser.runtime.onInstalled.addListener(registerActionMenus)
 
   browser.contextMenus.onClicked.addListener((info) => {
     if (info.menuItemId === APP_MENU_ID) {
       void browser.tabs.create({ url: browser.runtime.getURL("/app.html") })
+    }
+
+    if (import.meta.env.DEV && info.menuItemId === COSMOS_MENU_ID) {
+      void browser.tabs.create({ url: browser.runtime.getURL("/cosmos.html") })
     }
   })
 })

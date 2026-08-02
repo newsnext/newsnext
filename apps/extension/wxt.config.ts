@@ -36,6 +36,14 @@ export default defineConfig({
   webExt: {
     disabled: true,
   },
+  hooks: {
+    "entrypoints:resolved": (wxt, entrypoints) => {
+      if (wxt.config.mode === "development") return
+
+      const cosmosEntrypoint = entrypoints.find(entrypoint => entrypoint.name === "cosmos")
+      if (cosmosEntrypoint) cosmosEntrypoint.skipped = true
+    },
+  },
   manifest: ({ browser, mode }) => {
     const extensionName = mode === "development" ? "NewsNext Dev" : "NewsNext"
     const yoloMode = mode === "development" && import.meta.env.WXT_YOLO_MODE === "true"
