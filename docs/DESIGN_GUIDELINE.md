@@ -15,6 +15,8 @@ like generic overlays.
 - Use theme color to communicate context and ownership, not as decoration.
 - Build depth with layered translucent surfaces instead of opaque panels and
   heavy borders.
+- Do not add static hairline rings to card surfaces, modal shells, or nested
+  modal surfaces; their color and layered backgrounds provide the boundary.
 - Prefer squircles for major containers and nested surfaces.
 - Keep supporting decoration quiet. Controls and content should remain the
   visual focus.

@@ -187,7 +187,7 @@ function SharedModalPartsFixture() {
           className="absolute max-w-sm text-popover-foreground"
           data-open
         >
-          <SquircleBox radius="3xl" variant="modal-shell" className="relative ring-1 ring-foreground/5">
+          <SquircleBox radius="3xl" variant="modal-shell" className="relative">
             <ModalCloseButton type="button" />
             <div className="px-4 py-3 pr-12">
               <ModalTitle className="text-base leading-none">Shared modal foundation</ModalTitle>

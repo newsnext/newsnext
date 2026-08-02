@@ -258,7 +258,7 @@ export function SearchModalContent({
       <SquircleBox
         radius="2xl"
         variant="modal-inner"
-        className="min-h-0 ring-1 ring-foreground/5"
+        className="min-h-0"
       >
         <Command className="size-full rounded-none bg-transparent p-0">
           <CommandInput

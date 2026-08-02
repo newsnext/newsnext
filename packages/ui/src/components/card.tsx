@@ -30,7 +30,7 @@ function Card({
         <SquircleBox
           aria-hidden
           radius="2xl"
-          className="pointer-events-none absolute inset-0 bg-foreground/3 ring-1 ring-foreground/5"
+          className="pointer-events-none absolute inset-0 bg-foreground/3"
         />
       )}
       {children}

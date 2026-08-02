@@ -67,7 +67,7 @@ function AlertDialogContent({
         )}
         {...props}
       >
-        <SquircleBox radius="3xl" variant="modal-shell" className="relative grid ring-1 ring-foreground/5">
+        <SquircleBox radius="3xl" variant="modal-shell" className="relative grid">
           {children}
         </SquircleBox>
       </AlertDialogPrimitive.Popup>

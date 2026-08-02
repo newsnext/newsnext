@@ -77,7 +77,7 @@ function DialogContent({
           variant="modal-shell"
           data-dialog-variant={variant}
           className={cn(
-            "relative grid size-full ring-1 ring-foreground/5",
+            "relative grid size-full",
             surfaceClassName,
           )}
         >

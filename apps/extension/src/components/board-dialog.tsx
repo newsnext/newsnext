@@ -125,7 +125,7 @@ export function BoardDialog({
       <DialogContent
         variant="themed"
         className="sm:max-w-lg"
-        surfaceClassName={cn(initialColor, "gap-0 ring-0")}
+        surfaceClassName={cn(initialColor, "gap-0")}
       >
         <form className="grid" onSubmit={handleSubmit}>
           <DialogHeader className="h-10 justify-center px-2 pr-12">

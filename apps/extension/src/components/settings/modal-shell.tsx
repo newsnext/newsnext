@@ -67,7 +67,7 @@ export function SettingsModalShell({
               aria-hidden
               radius="2xl"
               variant="modal-inner"
-              className="pointer-events-none absolute inset-0 ring-1 ring-foreground/5"
+              className="pointer-events-none absolute inset-0"
             />
             {children && (
               <div className="relative size-full overflow-y-auto p-4 sm:p-6">
