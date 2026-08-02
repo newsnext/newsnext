@@ -39,11 +39,11 @@ function CosmosAppearanceControls(): React.JSX.Element {
 
   return (
     <>
-      {useBorderRadius && <style>{"[data-squircle] { clip-path: none !important; }"}</style>}
       <DynamicIsland
+        fallback={useBorderRadius ? "border-radius" : undefined}
         wrapperClassName="top-3"
-        smallClassName="relative flex shrink-0 items-center justify-center gap-2 px-4 pointer-events-auto island-pill"
-        largeClassName="rounded-2xl p-3 pointer-events-auto sunrise-theme-500"
+        smallClassName="flex items-center justify-center gap-2 px-4"
+        largeClassName="p-3 sunrise-theme-500"
         smallHeight={40}
         smallWidth={150}
         largeWidth={320}

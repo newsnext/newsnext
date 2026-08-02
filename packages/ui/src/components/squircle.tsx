@@ -1,7 +1,7 @@
+import type { SquircleFallback } from "@newsnext/ui/hooks/use-squircle"
 import type * as React from "react"
-import { getCssShape } from "@newsnext/ui/lib/figma-squircle"
+import { useSquircle } from "@newsnext/ui/hooks/use-squircle"
 import { cn } from "@newsnext/ui/lib/utils"
-import { useMemo } from "react"
 
 type SquircleRadius = "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl"
 type SquircleVariant = "default" | "modal-shell" | "modal-inner"
@@ -17,6 +17,7 @@ const squircleRadiusValues = {
 } satisfies Record<SquircleRadius, number>
 
 interface SquircleBoxProps extends React.ComponentPropsWithoutRef<"div"> {
+  fallback?: SquircleFallback
   radius?: SquircleRadius | number
   variant?: SquircleVariant
 }
@@ -31,16 +32,14 @@ function resolveRadius(radius: SquircleBoxProps["radius"]) {
 
 function SquircleBox({
   className,
+  fallback,
   radius,
   variant = "default",
   style,
   ...props
 }: SquircleBoxProps): React.JSX.Element {
   const resolvedRadius = resolveRadius(radius)
-  const cssShape = useMemo(
-    () => getCssShape(resolvedRadius),
-    [resolvedRadius],
-  )
+  const squircleStyle = useSquircle(resolvedRadius, fallback)
 
   return (
     <div
@@ -54,8 +53,7 @@ function SquircleBox({
       )}
       style={{
         ...style,
-        borderRadius: resolvedRadius,
-        clipPath: cssShape,
+        ...squircleStyle,
       }}
     />
   )

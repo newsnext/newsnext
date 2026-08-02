@@ -156,8 +156,8 @@ export function TitleIsland({ scrollContainerRef, width = 150 }: TitleIslandProp
       <DynamicIsland
         top={0}
         wrapperClassName="absolute top-[26px] inset-x-0"
-        smallClassName="relative flex gap-2 items-center px-4 shrink-0 pointer-events-auto island-pill"
-        largeClassName="p-3 sunrise-theme-500 rounded-2xl pointer-events-auto"
+        smallClassName="flex items-center gap-2 px-4"
+        largeClassName="p-3 sunrise-theme-500"
         smallHeight={40}
         smallWidth={width}
         largeWidth={300}

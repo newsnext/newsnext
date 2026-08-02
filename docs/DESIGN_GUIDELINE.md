@@ -169,6 +169,37 @@ helper copy.
 - Keep validation and consequence text when it helps users recover or make an
   informed destructive decision.
 
+## Dynamic Islands
+
+Dynamic islands are compact, centered controls that expand in place to reveal
+a single focused interaction. The shared component owns the opaque black
+surface, fine inner highlight, shadow, clipping, and spring-based size and
+radius transition. Its collapsed outline remains a standard round pill, while
+the expanded outline uses the shared progressive squircle capability layer:
+native
+`corner-shape: squircle` first, generated `clip-path: shape()` geometry second,
+and a standard `border-radius` fallback. Keep the animated island's shadow on
+an unclipped Motion shell and apply the squircle treatment to its inner surface
+so fallback clipping does not cut off elevation. Static surfaces should use
+`SquircleBox`, which consumes the same capability layer directly. Callers
+provide layout and theme-aware content, but must not layer `island-pill`,
+another background, a competing radius, or independent width and height
+transitions onto the island surface.
+
+By default, follow the full progressive chain through `clip-path` before using
+standard rounded corners. Set `fallback="border-radius"` only when the fallback
+browser should skip clipping, such as surfaces with their own outset shadows,
+filters, or complex compositing. Native `corner-shape` remains the first choice
+when available.
+
+- Keep the collapsed state short, fully pill-shaped, and visually denser than
+  surrounding translucent header controls.
+- Animate the surface as one continuous shape. Remounted content enters with a
+  brief scale, opacity, and blur transition inside the clipped surface.
+- Keep expanded content to one task and close it on outside click or scroll.
+- Preserve a visible keyboard focus treatment and honor reduced-motion
+  preferences.
+
 ## Implementation Checklist
 
 When changing interface styling:
