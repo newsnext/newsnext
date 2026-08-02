@@ -50,10 +50,7 @@ function CosmosAppearanceControls(): React.JSX.Element {
         ? (
             <div className="flex size-full items-center justify-center gap-2">
               <Logo className="size-5 text-theme-500" />
-              <WordmarkLogo
-                className="h-auto w-[4.6em] text-xl"
-                accentClassName="text-theme-500"
-              />
+              <WordmarkLogo className="h-auto w-[4.6em] text-xl" />
             </div>
           )
         : (

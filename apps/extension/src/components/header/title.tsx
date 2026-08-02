@@ -98,7 +98,7 @@ function HeaderProgress({ scrollContainerRef }: HeaderProgressProps) {
                 transition={{ duration: 0.2 }}
               >
                 <Logo className="text-theme-500 size-5" />
-                <WordmarkLogo className="w-[4.6em] h-auto text-xl transition-opacity" accentClassName="text-theme-500" />
+                <WordmarkLogo className="w-[4.6em] h-auto text-xl transition-opacity" />
               </m.div>
             )
           : (

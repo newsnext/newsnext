@@ -26,7 +26,7 @@ function BrandAndActionsFixture(): React.JSX.Element {
       <h1 className="text-xl font-semibold">Brand and actions</h1>
       <div className="flex items-center gap-4 rounded-2xl bg-card p-6 ring-1 ring-foreground/10">
         <Logo className="size-14 text-theme-500" />
-        <WordmarkLogo className="h-auto w-52" accentClassName="text-theme-500" />
+        <WordmarkLogo className="h-auto w-52" />
       </div>
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" aria-label="Notifications"><Bell /></Button>
