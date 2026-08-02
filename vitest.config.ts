@@ -39,6 +39,7 @@ export default defineConfig({
       "packages/registry/**/*.{test,spec}.{ts,tsx}",
       "packages/shared/**/*.{test,spec}.{ts,tsx}",
       "packages/source/**/*.{test,spec}.{ts,tsx}",
+      "packages/ui/**/*.{test,spec}.{ts,tsx}",
     ],
     exclude: [
       "**/node_modules/**",
