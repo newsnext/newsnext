@@ -11,6 +11,7 @@ export const COSMOS_FIXTURES = [
       fixtureNames: [
         "Brand and actions",
         "Selectors",
+        "Theme selector",
         "Flip animation",
         "Content safety",
         "Virtual list",
@@ -65,7 +66,7 @@ export const COSMOS_FIXTURES = [
     path: "src/cosmos/Forms.fixture.tsx",
     rendererFixture: {
       type: "multi" as const,
-      fixtureNames: ["Form controls", "Feedback states", "Empty state"] as string[],
+      fixtureNames: ["Form controls", "Radio groups", "Feedback states", "Empty state"] as string[],
     },
     load: () => import("@/cosmos/forms-feedback.fixture"),
   },

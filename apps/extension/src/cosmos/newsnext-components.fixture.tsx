@@ -41,7 +41,6 @@ function BrandAndActionsFixture(): React.JSX.Element {
 
 function SelectorsFixture(): React.JSX.Element {
   const [density, setDensity] = useState<"compact" | "comfortable">("comfortable")
-  const [color, setColor] = useState<Color>("orange")
 
   return (
     <FixturePage>
@@ -66,14 +65,27 @@ function SelectorsFixture(): React.JSX.Element {
           </Select>
         </CardContent>
       </Card>
-      <div className="h-28 rounded-2xl bg-card p-4 ring-1 ring-foreground/10">
+      <p className="text-sm text-muted-foreground">
+        Selected:
+        {" "}
+        {density}
+      </p>
+    </FixturePage>
+  )
+}
+
+function ThemeSelectorFixture(): React.JSX.Element {
+  const [color, setColor] = useState<Color>("orange")
+
+  return (
+    <FixturePage>
+      <h1 className="text-xl font-semibold">Theme selector</h1>
+      <div className="h-28 w-full max-w-sm">
         <ThemeSelector value={color} onValueChange={setColor} layoutId="cosmos-theme" />
       </div>
       <p className="text-sm text-muted-foreground">
         Selected:
         {" "}
-        {density}
-        {", "}
         {color}
       </p>
     </FixturePage>
@@ -159,6 +171,7 @@ function DynamicIslandFixture(): React.JSX.Element {
 export default {
   "Brand and actions": BrandAndActionsFixture,
   "Selectors": SelectorsFixture,
+  "Theme selector": ThemeSelectorFixture,
   "Flip animation": FlipFixture,
   "Content safety": ContentSafetyFixture,
   "Virtual list": VirtualListFixture,

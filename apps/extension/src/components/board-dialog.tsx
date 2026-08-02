@@ -168,7 +168,7 @@ export function BoardDialog({
                 variant="segmented"
                 value={sortMode}
                 onValueChange={setSortMode}
-                className="w-full gap-1"
+                className="w-full"
               >
                 {SORT_OPTIONS.map(option => (
                   <RadioGroupItem key={option.value} value={option.value} className="min-w-0 flex-1 px-2">

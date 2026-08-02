@@ -173,6 +173,25 @@ helper copy.
 - Keep validation and consequence text when it helps users recover or make an
   informed destructive decision.
 
+## Segmented Controls
+
+Segmented radio groups use the same interaction language as the board
+navigation pill: `4px` gaps inside the shared island surface, muted inactive
+labels that only increase contrast on hover, and a theme-colored active pill.
+Do not scale or add a filled background on hover. Use the theme-colored focus
+ring and a subtle pressed offset for keyboard and pointer feedback. Move the
+active pill between options with the same shared-layout spring as Board Nav;
+each group must use an isolated layout identity so simultaneous controls do not
+share animation state. The shared `PillGroup`, `pillGroupItemClassName`, and
+`PillGroupIndicator` primitives own the common container, item styling, and
+active background. Navigation and form-control semantics remain in their
+owning components.
+
+The theme selector is a separate palette control, not a RadioGroup visual
+variant. It owns its color grid, logo-shaped choices, hover scaling, and moving
+selection marker while using Base UI radio primitives for accessible selection
+semantics.
+
 ## Dynamic Islands
 
 Dynamic islands are compact, centered controls that expand in place to reveal

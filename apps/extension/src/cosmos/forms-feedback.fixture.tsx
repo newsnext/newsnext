@@ -16,6 +16,7 @@ import { Skeleton } from "@newsnext/ui/components/skeleton"
 import { Slider } from "@newsnext/ui/components/slider"
 import { Switch } from "@newsnext/ui/components/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@newsnext/ui/components/tabs"
+import { useState } from "react"
 
 function FixturePage({ children }: React.PropsWithChildren) {
   return <main className="mx-auto grid min-h-full w-full max-w-2xl content-start gap-8 p-8">{children}</main>
@@ -35,20 +36,6 @@ function FormControlsFixture() {
         Background refresh
         <Switch defaultChecked />
       </label>
-      <RadioGroup aria-label="Refresh interval" defaultValue="30">
-        {["15", "30", "60"].map(value => (
-          <label key={value} className="flex items-center gap-3 text-sm">
-            <RadioGroupItem value={value} />
-            <span>
-              Every
-              {" "}
-              {value}
-              {" "}
-              minutes
-            </span>
-          </label>
-        ))}
-      </RadioGroup>
       <Slider aria-label="Maximum articles" defaultValue={[40]} />
       <Tabs defaultValue="general">
         <TabsList>
@@ -59,6 +46,61 @@ function FormControlsFixture() {
         <TabsContent value="general">Common source settings.</TabsContent>
         <TabsContent value="advanced">Caching and request options.</TabsContent>
       </Tabs>
+    </FixturePage>
+  )
+}
+
+function RadioGroupsFixture(): React.JSX.Element {
+  const [interval, setInterval] = useState("30")
+  const [density, setDensity] = useState("comfortable")
+
+  return (
+    <FixturePage>
+      <h1 className="text-xl font-semibold">Radio groups</h1>
+
+      <section className="grid gap-3">
+        <h2 className="text-sm font-medium">Default</h2>
+        <RadioGroup
+          aria-label="Refresh interval"
+          value={interval}
+          onValueChange={setInterval}
+        >
+          {["15", "30", "60"].map(value => (
+            <label key={value} className="flex items-center gap-3 text-sm">
+              <RadioGroupItem value={value} />
+              <span>
+                Every
+                {" "}
+                {value}
+                {" "}
+                minutes
+              </span>
+            </label>
+          ))}
+        </RadioGroup>
+      </section>
+
+      <section className="grid gap-3">
+        <h2 className="text-sm font-medium">Segmented</h2>
+        <RadioGroup
+          variant="segmented"
+          aria-label="Content density"
+          value={density}
+          onValueChange={setDensity}
+        >
+          <RadioGroupItem value="compact">Compact</RadioGroupItem>
+          <RadioGroupItem value="comfortable">Comfortable</RadioGroupItem>
+          <RadioGroupItem value="spacious">Spacious</RadioGroupItem>
+        </RadioGroup>
+      </section>
+
+      <p className="text-sm text-muted-foreground">
+        Selected:
+        {" "}
+        {interval}
+        {", "}
+        {density}
+      </p>
     </FixturePage>
   )
 }
@@ -106,6 +148,7 @@ function EmptyStateFixture() {
 
 export default {
   "Form controls": FormControlsFixture,
+  "Radio groups": RadioGroupsFixture,
   "Feedback states": FeedbackStatesFixture,
   "Empty state": EmptyStateFixture,
 }

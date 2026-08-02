@@ -2,6 +2,11 @@ import type { BoardDialogTarget } from "@/components/board-dialog"
 import type { BoardSortMode } from "@/lib/board-sorting"
 import type { Board } from "@/lib/boards"
 import { Button } from "@newsnext/ui/components/button"
+import {
+  PillGroup,
+  PillGroupIndicator,
+  pillGroupItemClassName,
+} from "@newsnext/ui/components/pill-group"
 import { useNavigate } from "@tanstack/react-router"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { m } from "motion/react"
@@ -50,7 +55,7 @@ export function BoardNav() {
 
   return (
     <>
-      <div className="island-pill flex max-w-[min(70vw,32rem)] items-center gap-1 overflow-x-auto rounded-full p-1 scrollbar-hidden">
+      <PillGroup className="max-w-[min(70vw,32rem)] overflow-x-auto scrollbar-hidden">
         {boards.map((board) => {
           const isActive = currentBoardId === board.id
           return (
@@ -77,18 +82,14 @@ export function BoardNav() {
                 void navigate({ to: "/board/$boardId", params: { boardId: board.id } })
               }}
               className={cn(
-                "group/board-tab relative h-auto shrink-0 px-3 py-1.5 focus-visible:ring-2 focus-visible:ring-theme-400",
-                isActive ? "text-white" : "text-muted-foreground hover:text-foreground",
+                pillGroupItemClassName({ active: isActive }),
+                "group/board-tab h-auto shrink-0",
               )}
               aria-current={isActive ? "page" : undefined}
               title={isActive ? "Edit tab" : undefined}
             >
               {isActive && (
-                <m.span
-                  layoutId="active-board"
-                  className="absolute inset-0 rounded-full bg-theme-500 shadow-md"
-                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                />
+                <PillGroupIndicator layoutId="active-board" />
               )}
               <span className="relative z-10">
                 {getBoardDisplayName(board)}
@@ -117,7 +118,7 @@ export function BoardNav() {
         >
           <PhPlusCircleDuotone />
         </Button>
-      </div>
+      </PillGroup>
       {dialogTarget && (
         <BoardDialog
           boards={boards}
