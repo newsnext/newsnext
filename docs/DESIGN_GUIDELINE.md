@@ -109,8 +109,10 @@ They must have:
 - No generic descriptive copy between the title and the first field when the
   form labels already make the task clear.
 
-The Board Edit and Add (`Create board`) dialogs are the canonical examples. In
-particular, do not add the following descriptions back to those dialogs:
+The unified Board dialog is the canonical example. Create and edit modes use
+the same name, theme color, and card order fields; only edit mode exposes board
+deletion, while the title and primary action reflect the current mode. In
+particular, do not add the following descriptions back to this dialog:
 
 - `Personalize this board and choose how its cards are arranged.`
 - `Group cards around a topic, project, or reading routine.`

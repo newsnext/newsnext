@@ -1,24 +1,14 @@
-import type { Color } from "@newsnext/shared/types"
+import type { BoardDialogTarget } from "@/components/board-dialog"
 import type { BoardSortMode } from "@/lib/board-sorting"
+import type { Board } from "@/lib/boards"
 import { Button } from "@newsnext/ui/components/button"
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@newsnext/ui/components/dialog"
-import { Input } from "@newsnext/ui/components/input"
-import { RadioGroup, RadioGroupItem } from "@newsnext/ui/components/radio-group"
-import { SquircleBox } from "@newsnext/ui/components/squircle"
-import { ThemeSelector } from "@newsnext/ui/components/theme-selector"
 import { useNavigate } from "@tanstack/react-router"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { m } from "motion/react"
 import { useState } from "react"
-import { PhCheckCircleDuotone, PhPlusCircleDuotone, PhTrashDuotone } from "@/components/icons/ph"
-import { getBoardSortPreference } from "@/lib/board-sorting"
-import { ALL_BOARD_ID, createBoard, getBoardColor, getBoardDisplayName, isBoardNameTaken } from "@/lib/boards"
+import { BoardDialog } from "@/components/board-dialog"
+import { PhPlusCircleDuotone } from "@/components/icons/ph"
+import { ALL_BOARD_ID, getBoardDisplayName } from "@/lib/boards"
 import { cn } from "@/lib/utils"
 import {
   boardsAtom,
@@ -30,237 +20,33 @@ import {
   updateBoardAtom,
 } from "@/store/board"
 
-const SORT_OPTIONS: { label: string, value: BoardSortMode }[] = [
-  { label: "Manual", value: "manual" },
-  { label: "Date added", value: "createdAt" },
-  { label: "Provider name", value: "provider" },
-]
-
-const BOARD_DIALOG_SURFACE_CLASS = "gap-0 ring-0"
-const BOARD_DIALOG_HEADER_CLASS = "h-10 justify-center px-2 pr-12"
-const BOARD_DIALOG_BODY_CLASS = "grid p-6"
-
-function BoardEditDialog({
-  boardId,
-  onClose,
-}: {
-  boardId: string
-  onClose: () => void
-}) {
-  const boards = useAtomValue(boardsAtom)
-  const preferences = useAtomValue(boardSortPreferencesAtom)
-  const navigate = useNavigate()
-  const updateBoard = useSetAtom(updateBoardAtom)
-  const deleteBoard = useSetAtom(deleteBoardAtom)
-  const setBoardSortMode = useSetAtom(setBoardSortModeAtom)
-  const board = boards.find(candidate => candidate.id === boardId)
-  const preference = getBoardSortPreference(preferences, boardId)
-  const isAllBoard = boardId === ALL_BOARD_ID
-  const savedColor = board ? getBoardColor(board) : "red"
-  const [name, setName] = useState(() => board ? getBoardDisplayName(board) : "")
-  const [color, setColor] = useState<Color>(savedColor)
-  const [sortMode, setSortMode] = useState<BoardSortMode>(preference.mode)
-  const [isDeleteArmed, setIsDeleteArmed] = useState(false)
-  const normalizedName = name.trim()
-  const hasDuplicateName = isBoardNameTaken(boards, normalizedName, boardId)
-  const canSave = board !== undefined && (isAllBoard || normalizedName.length > 0) && !hasDuplicateName
-
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>): void {
-    event.preventDefault()
-    if (!board || !canSave) {
-      return
-    }
-
-    updateBoard({
-      ...board,
-      name: isAllBoard ? board.name : normalizedName,
-      color,
-    })
-    setBoardSortMode({ boardId, mode: sortMode })
-    onClose()
-  }
-
-  function handleDelete(): void {
-    deleteBoard(boardId)
-    onClose()
-    void navigate({ to: "/board/$boardId", params: { boardId: ALL_BOARD_ID } })
-  }
-
-  return (
-    <Dialog
-      open
-      onOpenChange={(nextOpen) => {
-        if (!nextOpen) {
-          onClose()
-        }
-      }}
-    >
-      <DialogContent
-        variant="themed"
-        className="sm:max-w-lg"
-        surfaceClassName={cn(savedColor, BOARD_DIALOG_SURFACE_CLASS)}
-      >
-        <form className="grid" onSubmit={handleSubmit}>
-          <DialogHeader className={BOARD_DIALOG_HEADER_CLASS}>
-            <DialogTitle className="font-bold">Edit board</DialogTitle>
-          </DialogHeader>
-
-          <SquircleBox radius="2xl" variant="modal-inner" className={cn(BOARD_DIALOG_BODY_CLASS, "gap-6")}>
-            <div className="grid gap-2">
-              <label htmlFor="edit-board-name" className="text-sm font-medium">Name</label>
-              <Input
-                id="edit-board-name"
-                autoFocus
-                disabled={isAllBoard}
-                maxLength={40}
-                value={name}
-                onChange={event => setName(event.target.value)}
-                aria-invalid={hasDuplicateName}
-              />
-              {isAllBoard && <p className="text-xs text-muted-foreground">The All board has a fixed name.</p>}
-              {hasDuplicateName && <p className="text-xs text-destructive">A board with this name already exists.</p>}
-            </div>
-
-            <fieldset>
-              <legend className="mb-2 text-sm font-medium">Theme color</legend>
-              <div className="h-28">
-                <ThemeSelector
-                  value={color}
-                  onValueChange={setColor}
-                  layoutId="board-edit-theme-indicator"
-                />
-              </div>
-            </fieldset>
-
-            <fieldset>
-              <legend className="mb-2 text-sm font-medium">Card order</legend>
-              <RadioGroup
-                variant="segmented"
-                value={sortMode}
-                onValueChange={setSortMode}
-                className="w-full gap-1"
-              >
-                {SORT_OPTIONS.map(option => (
-                  <RadioGroupItem key={option.value} value={option.value} className="min-w-0 flex-1 px-2">
-                    {option.label}
-                  </RadioGroupItem>
-                ))}
-              </RadioGroup>
-            </fieldset>
-
-            <DialogFooter className={cn(!isAllBoard && "sm:justify-between")}>
-              {!isAllBoard && (
-                <Button
-                  type="button"
-                  variant="destructive"
-                  onBlur={() => setIsDeleteArmed(false)}
-                  onClick={() => {
-                    if (isDeleteArmed) {
-                      handleDelete()
-                      return
-                    }
-                    setIsDeleteArmed(true)
-                  }}
-                >
-                  {isDeleteArmed ? <PhCheckCircleDuotone /> : <PhTrashDuotone />}
-                  <span aria-live="polite">
-                    {isDeleteArmed ? "Confirm delete" : "Delete board"}
-                  </span>
-                </Button>
-              )}
-              <Button type="submit" className="text-white" disabled={!canSave}>Save changes</Button>
-            </DialogFooter>
-          </SquircleBox>
-        </form>
-      </DialogContent>
-    </Dialog>
-  )
-}
-
-function CreateBoardDialog({
-  open,
-  onOpenChange,
-}: {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-}) {
-  const boards = useAtomValue(boardsAtom)
-  const navigate = useNavigate()
-  const addBoard = useSetAtom(createBoardAtom)
-  const currentBoardId = useAtomValue(currentBoardIdAtom)
-  const setCurrentBoardId = useSetAtom(currentBoardIdAtom)
-  const [name, setName] = useState("")
-  const currentBoard = boards.find(board => board.id === currentBoardId)
-  const color = currentBoard ? getBoardColor(currentBoard) : "red"
-  const normalizedName = name.trim()
-  const hasDuplicateName = isBoardNameTaken(boards, normalizedName)
-  const canCreate = normalizedName.length > 0 && !hasDuplicateName
-
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>): void {
-    event.preventDefault()
-    if (!canCreate) {
-      return
-    }
-
-    const board = createBoard(normalizedName, color)
-    addBoard(board)
-    setCurrentBoardId(board.id)
-    void navigate({ to: "/board/$boardId", params: { boardId: board.id } })
-    setName("")
-    onOpenChange(false)
-  }
-
-  return (
-    <Dialog
-      open={open}
-      onOpenChange={(nextOpen) => {
-        if (!nextOpen) {
-          setName("")
-        }
-        onOpenChange(nextOpen)
-      }}
-    >
-      <DialogContent
-        variant="themed"
-        surfaceClassName={cn(color, BOARD_DIALOG_SURFACE_CLASS)}
-      >
-        <form className="grid" onSubmit={handleSubmit}>
-          <DialogHeader className={BOARD_DIALOG_HEADER_CLASS}>
-            <DialogTitle className="font-bold">Create board</DialogTitle>
-          </DialogHeader>
-
-          <SquircleBox radius="2xl" variant="modal-inner" className={cn(BOARD_DIALOG_BODY_CLASS, "gap-6")}>
-            <div className="grid gap-2">
-              <label htmlFor="board-name" className="text-sm font-medium">Board name</label>
-              <Input
-                id="board-name"
-                autoFocus
-                maxLength={40}
-                placeholder="Product signals"
-                value={name}
-                onChange={event => setName(event.target.value)}
-                aria-invalid={hasDuplicateName}
-              />
-              {hasDuplicateName && (
-                <p className="text-xs text-destructive">A board with this name already exists.</p>
-              )}
-            </div>
-            <DialogFooter>
-              <Button type="submit" className="text-white" disabled={!canCreate}>Create board</Button>
-            </DialogFooter>
-          </SquircleBox>
-        </form>
-      </DialogContent>
-    </Dialog>
-  )
-}
-
 export function BoardNav() {
   const boards = useAtomValue(boardsAtom)
   const navigate = useNavigate()
   const [currentBoardId, setCurrentBoardId] = useAtom(currentBoardIdAtom)
-  const [isCreateOpen, setIsCreateOpen] = useState(false)
-  const [editingBoardId, setEditingBoardId] = useState<string | null>(null)
+  const preferences = useAtomValue(boardSortPreferencesAtom)
+  const addBoard = useSetAtom(createBoardAtom)
+  const updateBoard = useSetAtom(updateBoardAtom)
+  const deleteBoard = useSetAtom(deleteBoardAtom)
+  const setBoardSortMode = useSetAtom(setBoardSortModeAtom)
+  const [dialogTarget, setDialogTarget] = useState<BoardDialogTarget | null>(null)
+
+  function handleCreate(board: Board, sortMode: BoardSortMode): void {
+    addBoard(board)
+    setBoardSortMode({ boardId: board.id, mode: sortMode })
+    setCurrentBoardId(board.id)
+    void navigate({ to: "/board/$boardId", params: { boardId: board.id } })
+  }
+
+  function handleUpdate(board: Board, sortMode: BoardSortMode): void {
+    updateBoard(board)
+    setBoardSortMode({ boardId: board.id, mode: sortMode })
+  }
+
+  function handleDelete(boardId: string): void {
+    deleteBoard(boardId)
+    void navigate({ to: "/board/$boardId", params: { boardId: ALL_BOARD_ID } })
+  }
 
   return (
     <>
@@ -283,7 +69,7 @@ export function BoardNav() {
               onPointerLeave={event => event.currentTarget.removeAttribute("data-editable")}
               onClick={() => {
                 if (isActive) {
-                  setEditingBoardId(board.id)
+                  setDialogTarget({ mode: "edit", boardId: board.id })
                   return
                 }
 
@@ -324,7 +110,7 @@ export function BoardNav() {
           type="button"
           variant="ghost"
           size="icon-sm"
-          onClick={() => setIsCreateOpen(true)}
+          onClick={() => setDialogTarget({ mode: "create" })}
           className="shrink-0 text-muted-foreground hover:bg-foreground/5 hover:text-foreground focus-visible:ring-2 focus-visible:ring-theme-400"
           aria-label="Create board"
           title="Create board"
@@ -332,11 +118,16 @@ export function BoardNav() {
           <PhPlusCircleDuotone />
         </Button>
       </div>
-      <CreateBoardDialog open={isCreateOpen} onOpenChange={setIsCreateOpen} />
-      {editingBoardId && (
-        <BoardEditDialog
-          boardId={editingBoardId}
-          onClose={() => setEditingBoardId(null)}
+      {dialogTarget && (
+        <BoardDialog
+          boards={boards}
+          currentBoardId={currentBoardId}
+          preferences={preferences}
+          target={dialogTarget}
+          onClose={() => setDialogTarget(null)}
+          onCreate={handleCreate}
+          onDelete={handleDelete}
+          onUpdate={handleUpdate}
         />
       )}
     </>

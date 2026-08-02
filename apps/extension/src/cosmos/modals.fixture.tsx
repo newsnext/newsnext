@@ -1,6 +1,9 @@
 /* eslint-disable react-refresh/only-export-components */
 import type { ComponentProps } from "react"
+import type { BoardDialogTarget } from "@/components/board-dialog"
 import type { SettingsTabId } from "@/components/settings/modal-shell"
+import type { BoardSortMode, BoardSortPreference } from "@/lib/board-sorting"
+import type { Board } from "@/lib/boards"
 import type { BoardSource } from "@/typings/source"
 import {
   AlertDialog,
@@ -36,8 +39,22 @@ import {
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { CircleAlert } from "lucide-react"
 import { useState } from "react"
+import { BoardDialog } from "@/components/board-dialog"
 import { SearchModalContent } from "@/components/search"
 import { SettingsModalShell } from "@/components/settings/modal-shell"
+
+const BOARD_DIALOG_BOARDS: Board[] = [
+  { id: "inbox", name: "All", color: "slate" },
+  { id: "board-design", name: "Design signals", color: "violet" },
+]
+
+const BOARD_DIALOG_PREFERENCES: Record<string, BoardSortPreference> = {
+  "board-design": {
+    mode: "provider",
+    automaticMode: "provider",
+    manualOrder: [],
+  },
+}
 
 function createSearchSource({
   boardId,
@@ -190,27 +207,44 @@ function SharedModalPartsFixture() {
   )
 }
 
-function FormDialogFixture() {
+function BoardDialogFixture({ target }: { target: BoardDialogTarget }) {
+  const [open, setOpen] = useState(true)
+  const [lastAction, setLastAction] = useState<string>()
+
+  function describeBoardAction(action: string, board: Board, sortMode: BoardSortMode): void {
+    setLastAction(`${action} “${board.name}” · ${sortMode}`)
+  }
+
   return (
     <FixtureStage>
-      <Dialog defaultOpen>
-        <DialogTrigger render={<Button variant="outline" />}>Open form dialog</DialogTrigger>
-        <DialogContent surfaceClassName="w-full max-w-lg">
-          <DialogHeader className="min-h-10 justify-center px-4 py-3 pr-12">
-            <DialogTitle>Edit board</DialogTitle>
-          </DialogHeader>
-          <SquircleBox radius="2xl" variant="modal-inner" className="grid gap-4 p-6">
-            <DialogDescription>Preview the shared NewsNext modal surface treatment.</DialogDescription>
-            <Input aria-label="Board name" defaultValue="Daily reading" />
-            <DialogFooter>
-              <Button variant="outline">Cancel</Button>
-              <Button>Save changes</Button>
-            </DialogFooter>
-          </SquircleBox>
-        </DialogContent>
-      </Dialog>
+      <div className="grid justify-items-center gap-3">
+        <Button variant="outline" onClick={() => setOpen(true)}>
+          Open board dialog
+        </Button>
+        {lastAction && <p className="text-sm text-muted-foreground">{lastAction}</p>}
+      </div>
+      {open && (
+        <BoardDialog
+          boards={BOARD_DIALOG_BOARDS}
+          currentBoardId="board-design"
+          preferences={BOARD_DIALOG_PREFERENCES}
+          target={target}
+          onClose={() => setOpen(false)}
+          onCreate={(board, sortMode) => describeBoardAction("Created", board, sortMode)}
+          onDelete={boardId => setLastAction(`Deleted ${boardId}`)}
+          onUpdate={(board, sortMode) => describeBoardAction("Updated", board, sortMode)}
+        />
+      )}
     </FixtureStage>
   )
+}
+
+function CreateBoardDialogFixture() {
+  return <BoardDialogFixture target={{ mode: "create" }} />
+}
+
+function EditBoardDialogFixture() {
+  return <BoardDialogFixture target={{ mode: "edit", boardId: "board-design" }} />
 }
 
 function SettingsModalFixture() {
@@ -325,7 +359,8 @@ function CompactAlertDialogFixture() {
 export default {
   "Foundation: Shared parts": SharedModalPartsFixture,
   "Dialog: Default": DialogFixture,
-  "Dialog: Form": FormDialogFixture,
+  "Dialog: Board create": CreateBoardDialogFixture,
+  "Dialog: Board edit": EditBoardDialogFixture,
   "Dialog: Settings": SettingsModalFixture,
   "Dialog: Search": SearchModalFixture,
   "Alert: Default": AlertDialogFixture,

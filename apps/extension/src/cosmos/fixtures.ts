@@ -43,7 +43,8 @@ export const COSMOS_FIXTURES = [
       fixtureNames: [
         "Foundation: Shared parts",
         "Dialog: Default",
-        "Dialog: Form",
+        "Dialog: Board create",
+        "Dialog: Board edit",
         "Dialog: Settings",
         "Dialog: Search",
         "Alert: Default",
