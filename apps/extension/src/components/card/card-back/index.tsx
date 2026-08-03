@@ -4,7 +4,7 @@ import type { BoardSource } from "@/typings/source"
 import { Button } from "@newsnext/ui/components/button"
 import { ScrollArea } from "@newsnext/ui/components/scroll-area"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
-import { memo, useCallback, useState } from "react"
+import { useState } from "react"
 import { PhArrowCircleLeftDuotone } from "@/components/icons/ph"
 import { useSourceIcon } from "@/hooks/use-source-icon"
 import { RelativeTime } from "@/hooks/useRelativeTime"
@@ -32,7 +32,7 @@ export interface CardBackProps {
   dragHandle?: ReactNode
 }
 
-interface MemoizedParamFieldProps {
+interface CardParamFieldProps {
   color: BoardSource["provider"]["color"]
   editable: boolean
   onSourceParamChange: (key: string, value: unknown) => void
@@ -41,31 +41,26 @@ interface MemoizedParamFieldProps {
   value: unknown
 }
 
-const MemoizedParamField = memo(({
+function CardParamField({
   color,
   editable,
   onSourceParamChange,
   param,
   paramKey,
   value,
-}: MemoizedParamFieldProps) => {
-  const handleChange = useCallback(
-    (nextValue: unknown) => onSourceParamChange(paramKey, nextValue),
-    [onSourceParamChange, paramKey],
-  )
-
+}: CardParamFieldProps) {
   return (
     <ParamField
       color={color}
       editable={editable}
-      onChange={handleChange}
+      onChange={nextValue => onSourceParamChange(paramKey, nextValue)}
       param={param}
       value={value}
     />
   )
-})
+}
 
-function CardBackComponent({
+export function CardBack({
   id,
   source,
   draftSourceParams,
@@ -313,7 +308,7 @@ function CardBackComponent({
                         )}
                   </div>
                   {params && Object.entries(params).map(([paramKey, param]) => (
-                    <MemoizedParamField
+                    <CardParamField
                       key={paramKey}
                       paramKey={paramKey}
                       param={param}
@@ -332,5 +327,3 @@ function CardBackComponent({
     </div>
   )
 }
-
-export const CardBack = memo(CardBackComponent)

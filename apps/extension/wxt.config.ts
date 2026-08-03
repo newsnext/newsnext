@@ -1,6 +1,7 @@
 import path from "node:path"
+import babel from "@rolldown/plugin-babel"
 import tailwindcss from "@tailwindcss/vite"
-import react from "@vitejs/plugin-react"
+import react, { reactCompilerPreset } from "@vitejs/plugin-react"
 import Icons from "unplugin-icons/vite"
 import TurboConsole from "unplugin-turbo-console/vite"
 import { defineConfig } from "wxt"
@@ -80,6 +81,9 @@ export default defineConfig({
           jsx: "react",
         }),
         react(),
+        babel({
+          presets: [reactCompilerPreset()],
+        }),
       ],
     }
   },

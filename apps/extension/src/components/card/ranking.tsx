@@ -1,5 +1,4 @@
 import type { Color } from "@newsnext/shared/types"
-import type { RefObject } from "react"
 import type { NewsItem } from "@/typings/source"
 import { VirtualList } from "@newsnext/ui/components/virtual-list"
 import { AnimatePresence, m } from "motion/react"
@@ -9,7 +8,7 @@ import { NewsItemLink, NewsItemSummary } from "./news-item-common"
 
 interface Props {
   items: NewsItem[]
-  scrollRef: RefObject<HTMLDivElement>
+  scrollElement: HTMLDivElement | null
   color: Color
 }
 
@@ -99,13 +98,13 @@ function RankChangeBadge({ diff }: { diff?: number }) {
   )
 }
 
-export function Ranking({ items, scrollRef }: Props) {
+export function Ranking({ items, scrollElement }: Props) {
   const rankChanges = useRankChanges(items)
 
   return (
     <VirtualList
       items={items}
-      scrollRef={scrollRef}
+      scrollElement={scrollElement}
       estimateSize={60}
       itemClassName="pb-2 last:pb-0"
       renderItem={(item, index) => (

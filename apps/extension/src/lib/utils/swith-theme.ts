@@ -20,7 +20,7 @@ const APP_BACKGROUNDS = [
 export type AppBackground = typeof APP_BACKGROUNDS[number]
 
 export function isAppBackground(value: string | null): value is AppBackground {
-  return APP_BACKGROUNDS.includes(value)
+  return value !== null && APP_BACKGROUNDS.includes(value as AppBackground)
 }
 
 export function readAppBackground(): AppBackground {

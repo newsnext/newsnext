@@ -1,7 +1,6 @@
 import type { PropsWithChildren } from "react"
 import { Button } from "@newsnext/ui/components/button"
 import { Input } from "@newsnext/ui/components/input"
-import { useMemo } from "react"
 import { cn } from "@/lib/utils"
 
 export function EditableInput({ text, editable = false, onChange }: { text: string, editable?: boolean, onChange?: (value: string) => void }) {
@@ -99,7 +98,7 @@ export function NumberInput({
 }
 
 export function Text({ text }: { text: string }) {
-  const isLink = useMemo(() => text.startsWith("http"), [text])
+  const isLink = text.startsWith("http")
   return (
     <span
       className={cn(

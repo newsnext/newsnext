@@ -2,7 +2,7 @@ import type { ReactNode } from "react"
 import type { BoardSource, NewsItem } from "@/typings/source"
 import { Button } from "@newsnext/ui/components/button"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
-import { memo, useRef } from "react"
+import { useState } from "react"
 import { useSourceIcon } from "@/hooks/use-source-icon"
 import { RelativeTime } from "@/hooks/useRelativeTime"
 import { isTimelineItems } from "@/lib/source-presentation"
@@ -68,7 +68,7 @@ interface CardFrontContentProps {
   icon?: string
   items: NewsItem[]
   provider: BoardSource["provider"]
-  scrollRef: React.RefObject<HTMLDivElement>
+  scrollElement: HTMLDivElement | null
   sourceErrorMessage?: string
   sourceLoginUrl?: string
   sourcePermissionRequired: boolean
@@ -82,7 +82,7 @@ function CardFrontContent({
   icon,
   items,
   provider,
-  scrollRef,
+  scrollElement,
   sourceErrorMessage,
   sourceLoginUrl,
   sourcePermissionRequired,
@@ -128,7 +128,7 @@ function CardFrontContent({
       <Ranking
         items={items}
         color={color}
-        scrollRef={scrollRef}
+        scrollElement={scrollElement}
       />
     )
   }
@@ -138,12 +138,12 @@ function CardFrontContent({
       color={color}
       items={items}
       updatedAt={updatedAt}
-      scrollRef={scrollRef}
+      scrollElement={scrollElement}
     />
   )
 }
 
-function CardFrontComponent({
+export function CardFront({
   source,
   items,
   isFetching,
@@ -163,7 +163,7 @@ function CardFrontComponent({
   const { badge, desc, home, title } = source.metadata
   const { color } = provider
   const icon = useSourceIcon(source)
-  const ref = useRef<HTMLDivElement>(null)
+  const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(null)
   const visibleSourceErrorMessage = isFetchingLatest ? undefined : sourceErrorMessage
   const sourceStatusMessage = sourcePermissionRequired
     ? sourcePermissionDescription
@@ -217,7 +217,7 @@ function CardFrontComponent({
             <SourceStatusPattern icon={icon} />
           )}
           <div
-            ref={ref}
+            ref={setScrollElement}
             onPointerDown={event => event.stopPropagation()}
             className="relative size-full overflow-y-auto px-2 py-2 scrollbar-hidden"
           >
@@ -227,7 +227,7 @@ function CardFrontComponent({
                 icon={icon}
                 items={items}
                 provider={provider}
-                scrollRef={ref as React.RefObject<HTMLDivElement>}
+                scrollElement={scrollElement}
                 sourceErrorMessage={visibleSourceErrorMessage}
                 sourceLoginUrl={sourceLoginUrl}
                 sourcePermissionRequired={sourcePermissionRequired}
@@ -247,5 +247,3 @@ function CardFrontComponent({
     </div>
   )
 }
-
-export const CardFront = memo(CardFrontComponent)

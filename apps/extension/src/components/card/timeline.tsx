@@ -1,5 +1,4 @@
 import type { Color } from "@newsnext/shared/types"
-import type { RefObject } from "react"
 import type { NewsItem } from "@/typings/source"
 import { VirtualList } from "@newsnext/ui/components/virtual-list"
 import { useAtomValue } from "jotai"
@@ -13,7 +12,7 @@ const LABEL_RAIL_PATH = "M16 0 Q3 0 2 20 Q2 35 6 50 Q12 75 6 100"
 
 interface Props {
   items: NewsItem[]
-  scrollRef: RefObject<HTMLDivElement>
+  scrollElement: HTMLDivElement | null
   updatedAt: number
   color: Color
 }
@@ -24,7 +23,7 @@ const TimelineNewsItem = memo(({ item }: { item: NewsItem }) => (
   </NewsItemLink>
 ))
 
-export function Timeline({ items, scrollRef, updatedAt, color }: Props) {
+export function Timeline({ items, scrollElement, updatedAt, color }: Props) {
   const gradientId = useId().replace(/:/g, "")
   const now = useAtomValue(minuteDateAtom)
   const timeLabels = useMemo(() => items.map(item => item.timestamp
@@ -87,7 +86,7 @@ export function Timeline({ items, scrollRef, updatedAt, color }: Props) {
   return (
     <VirtualList
       items={items}
-      scrollRef={scrollRef}
+      scrollElement={scrollElement}
       estimateSize={50}
       className="relative z-0"
       itemClassName=""

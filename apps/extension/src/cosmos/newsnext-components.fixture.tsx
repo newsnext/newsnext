@@ -15,7 +15,7 @@ import { VirtualList } from "@newsnext/ui/components/virtual-list"
 import { WordmarkLogo } from "@newsnext/ui/components/wordmark-logo"
 import { resolveSquircleStyle } from "@newsnext/ui/hooks/use-squircle"
 import { ArrowRight, Bell } from "lucide-react"
-import { useRef, useState } from "react"
+import { useState } from "react"
 import { useCornerRendering } from "@/cosmos/corner-rendering-context"
 
 const CORNER_SHAPES = [
@@ -145,16 +145,16 @@ function ContentSafetyFixture(): React.JSX.Element {
 }
 
 function VirtualListFixture(): React.JSX.Element {
-  const scrollRef = useRef<HTMLDivElement>(null)
+  const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(null)
   const items = Array.from({ length: 100 }, (_, index) => `Article ${index + 1}`)
 
   return (
     <FixturePage>
       <h1 className="text-xl font-semibold">Virtual list</h1>
-      <div ref={scrollRef} className="h-96 overflow-auto rounded-2xl bg-card ring-1 ring-foreground/10">
+      <div ref={setScrollElement} className="h-96 overflow-auto rounded-2xl bg-card ring-1 ring-foreground/10">
         <VirtualList
           items={items}
-          scrollRef={scrollRef}
+          scrollElement={scrollElement}
           estimateSize={52}
           renderItem={(item, index) => (
             <div className="flex h-13 items-center gap-3 border-b px-4">

@@ -1,10 +1,9 @@
-import type { RefObject } from "react"
 import { cn } from "@newsnext/ui/lib/utils"
 import { useVirtualizer } from "@tanstack/react-virtual"
 
 export interface VirtualListProps<T> {
   items: T[]
-  scrollRef: RefObject<HTMLElement | null>
+  scrollElement: HTMLElement | null
   estimateSize?: number
   className?: string
   itemClassName?: string
@@ -44,7 +43,7 @@ function VirtualListItem<T>({
 
 export function VirtualList<T>({
   items,
-  scrollRef,
+  scrollElement,
   estimateSize = 50,
   className,
   itemClassName,
@@ -52,7 +51,7 @@ export function VirtualList<T>({
 }: VirtualListProps<T>): React.JSX.Element {
   const rowVirtualizer = useVirtualizer({
     count: items?.length ?? 0,
-    getScrollElement: () => scrollRef.current,
+    getScrollElement: () => scrollElement,
     estimateSize: () => estimateSize,
     overscan: 5,
   })

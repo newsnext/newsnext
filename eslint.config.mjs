@@ -1,4 +1,6 @@
 import antfu from "@antfu/eslint-config"
+import eslintReact from "@eslint-react/eslint-plugin"
+import reactHooks from "eslint-plugin-react-hooks"
 
 export default antfu(
   {
@@ -28,6 +30,14 @@ export default antfu(
     ],
     rules: {
       "no-console": "off",
+    },
+  },
+  reactHooks.configs.flat["recommended-latest"],
+  eslintReact.configs["disable-conflict-eslint-plugin-react-hooks"],
+  {
+    name: "newsnext/react-compiler-adoption",
+    rules: {
+      "react/refs": "warn",
     },
   },
   {

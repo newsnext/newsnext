@@ -1,7 +1,6 @@
 import { formatDistance } from "date-fns"
 import { enUS } from "date-fns/locale"
 import { atom, useAtomValue } from "jotai"
-import { useMemo } from "react"
 
 /**
  * changed only every minute
@@ -40,8 +39,7 @@ export function formatRelativeTime(date: number, now: Date): string {
 
 export function useRelativeTime({ date }: { date: number }): string {
   const now = useAtomValue(minuteDateAtom)
-  const result = useMemo(() => formatRelativeTime(date, now), [date, now])
-  return result
+  return formatRelativeTime(date, now)
 }
 
 export function RelativeTime({ date }: { date: number }): string {

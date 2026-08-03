@@ -102,21 +102,42 @@ retain their previous reference.
 
 ### Add memo boundaries at independent units
 
-Use `memo` when a component represents an independently updating unit and its
-props can remain stable. Current useful boundaries include:
+Use `memo` when a component represents an independently updating unit, its props
+can remain stable, and React Compiler cannot protect the same boundary. Current
+manual boundaries include:
 
 - `DraggableCard`, so board animation and layout work does not enter card data
-  and query subtrees.
-- `CardBack`, so front-side query loading state does not rebuild the hidden
-  editor.
-- Board selection, deletion, and parameter fields inside the card editor, so
-  typing in one metadata field does not rebuild unrelated controls.
+  and query subtrees while `DesktopBoard` remains excluded from compilation.
 - Timeline news content, so minute-label updates do not rebuild unchanged item
-  titles and inline metadata.
+  titles and inline metadata below the compiler-excluded virtual list.
+
+Compiler-generated caches isolate the card front, card back, board actions, and
+parameter rows. Do not reintroduce manual wrappers around those components
+without profiling evidence that the compiled boundary is insufficient.
 
 Do not add `memo` mechanically. Inline objects, elements, and callbacks can make
 it ineffective, and a comparator that ignores meaningful props can produce
 stale UI. Stabilize the data flow first, then add the narrow boundary.
+
+The extension build uses React Compiler in its default inference mode. Prefer
+letting the compiler memoize new components and hooks automatically. Existing
+manual `memo`, `useMemo`, and `useCallback` boundaries remain intentional and
+must not be removed without profiling because they may preserve identity for
+effects, imperative integrations, or third-party components. Compiler
+diagnostics are split according to the ESLint React migration preset:
+`@eslint-react/eslint-plugin` owns rules with equivalents, while
+`eslint-plugin-react-hooks` remains enabled for Compiler-specific rules such as
+configuration, gating, incompatible libraries, and preservation of manual
+memoization. An unsupported component may be skipped while the rest of the app
+is still compiled.
+
+Compiler diagnostics are warnings during incremental adoption. Ref-driven
+components such as `DesktopBoard`, `DndContext`, and `DynamicIsland` are skipped
+when they update latest-value refs during render. `VirtualList` is also skipped
+because TanStack Virtual returns functions that cannot be memoized safely. Keep
+these diagnostics visible and fix a component only alongside focused behavior
+and performance verification; do not suppress them or broadly rewrite
+imperative integrations merely to increase compiler coverage.
 
 ### Keep refs and callbacks stable
 
@@ -181,6 +202,19 @@ inside the configured preload margin without subscribing to header progress or
 layer activity. Keep the offscreen retention delay to avoid repeated mount work
 during short back-and-forth scrolls.
 
+### Connect virtualizers to committed scroll elements
+
+Pass the committed scroll DOM element to `VirtualList`, not a mutable ref whose
+`current` value changes without rendering. A virtualizer can mount while that
+ref is still null, calculate the correct total height from item count, and yet
+produce no virtual rows because it never subscribed to the scroll element.
+
+Own the scroll element with a callback ref backed by local state. The commit
+then schedules the render that connects TanStack Virtual to the actual element.
+When checking a blank list, compare its total spacer height with its rendered
+`data-index` rows: a non-zero height with zero rows indicates a virtualizer
+attachment or measurement problem rather than missing query data.
+
 ## 2026-08-03 Audit Results
 
 The audit used a 1080 by 1890 viewport and an All board containing 12 cards,
@@ -214,7 +248,12 @@ Before completing React performance work:
 - Let refresh operations reach completion before reading render counts.
 - Verify that editing one instance does not render unrelated card content.
 - Test scroll and animation behavior visually after adding memo boundaries.
+- Switch repeatedly between boards and confirm every populated card renders
+  virtual rows after its scroll element is committed.
 - Remove all temporary profiling globals and callbacks.
+- Confirm compiled components show the `Memo ✨` badge in React DevTools or
+  verify that production output contains Compiler memo-cache code such as
+  `react.memo_cache_sentinel`.
 - Run `bun run lint`, `bun run typecheck`, and `bun run test`.
 - Build the Chrome MV3 production extension and confirm React Scan is absent.
 

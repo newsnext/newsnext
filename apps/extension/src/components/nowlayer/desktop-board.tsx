@@ -261,7 +261,6 @@ export function DesktopBoard({
         }
       })
       // This layout measurement must update before paint to avoid a visible position flash.
-      // eslint-disable-next-line react/set-state-in-effect
       setScatterAnimationState({
         requestId: scatterRequestIdRef.current,
         vectors: newVectors,
