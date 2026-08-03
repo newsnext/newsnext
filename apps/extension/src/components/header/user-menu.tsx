@@ -8,13 +8,14 @@ import {
 } from "@newsnext/ui/components/dropdown-menu"
 import { cn } from "@newsnext/ui/lib/utils"
 import { useState } from "react"
+import { consumeSettingsOpenRequest } from "@/lib/settings-navigation"
 import { PhGearDuotone, PhUserDuotone } from "../icons/ph"
 import { SettingsModal } from "../settings"
 
+const shouldOpenSettingsInitially = consumeSettingsOpenRequest()
+
 export function UserMenu() {
-  const [isSettingsOpen, setIsSettingsOpen] = useState(
-    () => new URLSearchParams(window.location.search).has("settings"),
-  )
+  const [isSettingsOpen, setIsSettingsOpen] = useState(shouldOpenSettingsInitially)
   const [settingsTab, setSettingsTab] = useState<SettingsTabId>("appearance")
 
   function openSettings(tab: SettingsTabId = "appearance"): void {

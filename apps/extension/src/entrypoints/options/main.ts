@@ -1,5 +1,6 @@
 import { browser } from "#imports"
+import { requestSettingsOpen } from "@/lib/settings-navigation"
 
-const settingsUrl = browser.runtime.getURL("/app.html?settings")
+requestSettingsOpen()
 
-window.location.replace(settingsUrl)
+window.location.replace(browser.runtime.getURL("/app.html"))
