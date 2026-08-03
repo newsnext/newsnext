@@ -230,12 +230,15 @@ versions for the same source and normalized parameters, and least-recently-used
 entries beyond 500 records or an estimated 50 MiB. Cache failures remain
 fail-open: they never prevent a source request from completing.
 
-Card queries mount when their container enters the viewport margin. After a card
-leaves that margin, its query remains active for one minute to avoid churn during
-short scrolls, then unmounts. Re-entering during that interval cancels the
-pending unmount. Successful query data remains fresh in memory for one minute;
-this avoids redundant loader and persistent-cache reads without changing the
-source-defined persistent cache duration. Active card queries also revalidate
+Card queries mount when their container enters the preload margin of the app's
+root scroll container. The observer must use that scrolling element as its root;
+using the browser viewport lets the overflow container clip cards before the
+viewport root margin is applied and effectively disables preloading. After a
+card leaves that margin, its query remains active for one minute to avoid churn
+during short scrolls, then unmounts. Re-entering during that interval cancels
+the pending unmount. Successful query data remains fresh in memory for one
+minute; this avoids redundant loader and persistent-cache reads without changing
+the source-defined persistent cache duration. Active card queries also revalidate
 once every five minutes, including while the app is in the background.
 Inactive query data follows TanStack Query's default garbage-collection policy
 and can still be restored from the persistent cache. Source queries use

@@ -2,6 +2,7 @@ import type { ReactNode } from "react"
 import type { SourceInstanceMetadata, SourceInstancePatch } from "@/lib/source-cards"
 import type { BoardSource } from "@/typings/source"
 import { FlipAnimate } from "@newsnext/ui/components/flip-animate"
+import { useScrollProgressActionsContext } from "@newsnext/ui/components/scroll-progress-context"
 import { useSetAtom } from "jotai"
 import { useCallback, useMemo, useRef, useState } from "react"
 import { useSourceParams } from "@/hooks"
@@ -144,6 +145,7 @@ function CardContent({ id, source, dragHandle, isDraft = false, onDraftSourceCha
 
 export default function Card(props: CardProps) {
   const { nodeRef } = props
+  const { rootScrollContainerRef } = useScrollProgressActionsContext()
   const ref = useRef<HTMLDivElement>(null)
   const setRef = useCallback((node: HTMLDivElement | null) => {
     ref.current = node
@@ -151,6 +153,7 @@ export default function Card(props: CardProps) {
   }, [nodeRef])
 
   const isInView = useInView(ref, {
+    root: rootScrollContainerRef,
     margin: SOURCE_QUERY_PRELOAD_MARGIN,
     once: SOURCE_QUERY_OFFSCREEN_RETENTION_MS,
   })

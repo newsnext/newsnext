@@ -168,6 +168,19 @@ virtual lists, and card editor controls.
 Do not remove renders that are required to update Motion props, measured scatter
 vectors, or drag state. Optimize the content boundary instead.
 
+### Observe against the real scroll container
+
+Intersection observers that preload card content must use the root app scroll
+container, not the browser viewport. An intermediate overflow container clips
+the target before a viewport-rooted observer applies its root margin, which
+makes the preload margin ineffective and defers the card's synchronous mount
+work until it is already visible.
+
+Use the stable scroll-container ref from the actions context so cards can mount
+inside the configured preload margin without subscribing to header progress or
+layer activity. Keep the offscreen retention delay to avoid repeated mount work
+during short back-and-forth scrolls.
+
 ## 2026-08-03 Audit Results
 
 The audit used a 1080 by 1890 viewport and an All board containing 12 cards,
