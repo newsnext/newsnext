@@ -48,7 +48,7 @@ function SquircleBox({
       className={cn(
         "overflow-hidden",
         variant === "modal-shell" && "bg-[color-mix(in_oklab,var(--popover)_60%,var(--color-theme-400)_40%)] p-2.5",
-        variant === "modal-inner" && "bg-background/70 sunrise-theme-400",
+        variant === "modal-inner" && "bg-background/70 zenith-theme-400",
         className,
       )}
       style={{

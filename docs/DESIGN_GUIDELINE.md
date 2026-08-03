@@ -25,16 +25,9 @@ like generic overlays.
 
 ### App background
 
-The main app background defaults to the `ambient-theme-400` wash. Appearance
-settings offer eight theme-aware placements and shapes: diagonal `Ambient`,
-top-weighted `Sunrise`, bottom-weighted `Horizon`, side-weighted `Orbit`,
-concentric `Halo`, crossing `Ribbon`, clouded `Nebula`, and layered `Tide`. Show
-each choice as a live color preview, apply it immediately, and persist the
-selection. Apply the selected background utility class directly to the app body
-and remove the previous background utility class when switching; other
-entrypoints and interface surfaces keep their existing `sunrise-*` treatments.
-Keep every background derived from the active board theme color so choosing a
-shape does not introduce an unrelated palette.
+Use the top-weighted `zenith-theme-400` wash for the main app background and
+related interface surfaces. Derive the wash from the active board theme color
+so it reinforces the current context without introducing another palette.
 
 ## Card Surface Language
 
@@ -43,7 +36,7 @@ Cards define the primary NewsNext surface treatment.
 - The outer `3xl` squircle mixes `var(--background)` with the relevant theme
   color at 55%.
 - The content panel uses a nested `2xl` squircle with `bg-background/70` and the
-  matching `sunrise-*-400` treatment.
+  matching `zenith-*-400` treatment.
 - Use `10px` (`p-2.5`) between the outer shell and nested content where the card
   shell must remain visible.
 - Place identity and surface actions in the exposed outer shell. Place editable
@@ -81,7 +74,7 @@ motion. `ModalOverlay` uses `bg-black/75` without backdrop blur and applies a
 treatments. Centered surfaces use a `3xl` outer squircle, the shared 60% popover
 / 40% theme shell color, and a `10px` shell inset where a nested surface is
 present. Nested content uses a `2xl` shape with `bg-background/70` and
-`sunrise-theme-400`.
+`zenith-theme-400`.
 
 Primitive-specific components compose `ModalOverlay`, `ModalPopup`,
 `ModalCloseButton`, `ModalTitle`, and `ModalDescription` from
@@ -123,7 +116,7 @@ They must have:
   shell around the nested content.
 - A compact top shell area containing the dialog title and close button.
 - A nested `2xl` content squircle using `bg-background/70` and
-  `sunrise-theme-400`.
+  `zenith-theme-400`.
 - Content padding of `24px` (`p-6`).
 - A consistent vertical rhythm: `24px` between form sections and `8px`
   between a section title or field label and its control.
@@ -177,7 +170,7 @@ The modal shell inherits the current board theme and must remain stable while
 selection changes. Use the selected result's provider color only for its active
 row treatment. This keeps card identity local to the result instead of allowing
 it to recolor the whole dialog. Apply that selected background directly from
-the provider color token; result rows must not carry provider `sunrise-*` theme
+the provider color token; result rows must not carry provider `zenith-*` theme
 classes. Keep dividers and selection treatments quiet.
 Selected result color must update immediately without a color transition so
 keyboard navigation never feels behind the current selection.

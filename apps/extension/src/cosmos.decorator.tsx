@@ -45,7 +45,7 @@ function CosmosAppearanceControls(): React.JSX.Element {
         cornerRendering={rendering}
         wrapperClassName="top-3"
         smallClassName="flex items-center justify-center gap-2 px-4"
-        largeClassName="p-3 sunrise-theme-500"
+        largeClassName="p-3 zenith-theme-500"
         smallHeight={40}
         smallWidth={150}
         largeWidth={356}

@@ -166,7 +166,7 @@ export function CardBack({
             radius="2xl"
             className={cn(
               "pointer-events-none absolute inset-0 bg-background/70",
-              `sunrise-${color}-400`,
+              `zenith-${color}-400`,
             )}
           />
           <ScrollArea

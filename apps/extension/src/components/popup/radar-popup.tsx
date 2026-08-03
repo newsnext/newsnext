@@ -13,7 +13,7 @@ export function RadarPopup() {
   }, [radarContext, radarMatcher])
 
   return (
-    <main className="grid-texture-background h-full min-h-0 overflow-y-auto bg-background p-3 text-foreground sunrise-theme-400">
+    <main className="grid-texture-background h-full min-h-0 overflow-y-auto bg-background p-3 text-foreground zenith-theme-400">
       <RadarDeck sourceDescriptors={sources} suggestions={suggestions} />
     </main>
   )
