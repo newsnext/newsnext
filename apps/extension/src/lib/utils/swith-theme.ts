@@ -29,7 +29,7 @@ export function readAppBackground(): AppBackground {
 }
 
 export function handleAppBackgroundSwitch(background: AppBackground): void {
-  document.body.dataset.appBackground = background
+  document.body.className = `${background}-theme-400`
   localStorage.setItem(APP_BACKGROUND_KEY, background)
 }
 

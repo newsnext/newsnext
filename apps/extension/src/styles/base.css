@@ -135,38 +135,6 @@
 }
 
 @layer components {
-  .app-background {
-    @apply ambient-theme-400;
-  }
-
-  .app-background[data-app-background="sunrise"] {
-    @apply sunrise-theme-400;
-  }
-
-  .app-background[data-app-background="horizon"] {
-    @apply horizon-theme-400;
-  }
-
-  .app-background[data-app-background="orbit"] {
-    @apply orbit-theme-400;
-  }
-
-  .app-background[data-app-background="halo"] {
-    @apply halo-theme-400;
-  }
-
-  .app-background[data-app-background="ribbon"] {
-    @apply ribbon-theme-400;
-  }
-
-  .app-background[data-app-background="nebula"] {
-    @apply nebula-theme-400;
-  }
-
-  .app-background[data-app-background="tide"] {
-    @apply tide-theme-400;
-  }
-
   body,
   .grid-texture-background {
     position: relative;

@@ -30,11 +30,11 @@ settings offer eight theme-aware placements and shapes: diagonal `Ambient`,
 top-weighted `Sunrise`, bottom-weighted `Horizon`, side-weighted `Orbit`,
 concentric `Halo`, crossing `Ribbon`, clouded `Nebula`, and layered `Tide`. Show
 each choice as a live color preview, apply it immediately, and persist the
-selection. Apply background choices through the app-only `app-background` body
-class and its `data-app-background` value; other entrypoints and interface
-surfaces keep their existing `sunrise-*` treatments. Keep every background
-derived from the active board theme color so choosing a shape does not introduce
-an unrelated palette.
+selection. Apply the selected background utility class directly to the app body
+and remove the previous background utility class when switching; other
+entrypoints and interface surfaces keep their existing `sunrise-*` treatments.
+Keep every background derived from the active board theme color so choosing a
+shape does not introduce an unrelated palette.
 
 ## Card Surface Language
 
