@@ -9,7 +9,6 @@ import {
 } from "@newsnext/ui/components/pill-group"
 import { useNavigate } from "@tanstack/react-router"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
-import { m } from "motion/react"
 import { useState } from "react"
 import { BoardDialog } from "@/components/board-dialog"
 import { PhPlusCircleDuotone } from "@/components/icons/ph"
@@ -60,12 +59,6 @@ export function BoardNav() {
           const isActive = currentBoardId === board.id
           return (
             <Button
-              render={(
-                <m.button
-                  whileTap={isActive ? { scale: 0.94 } : undefined}
-                  transition={{ type: "spring", stiffness: 500, damping: 28 }}
-                />
-              )}
               key={board.id}
               type="button"
               variant="transparent"
