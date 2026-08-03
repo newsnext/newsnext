@@ -4,7 +4,34 @@ import FAVICON_SVG from "/icon.svg?url&raw"
 
 export const THEME_COLOR_KEY = "newsnext-theme-color"
 export const THEME_MODE_KEY = "newsnext-theme-mode"
+export const APP_BACKGROUND_KEY = "newsnext-app-background"
 export type ThemeMode = "light" | "dark" | "system"
+
+const APP_BACKGROUNDS = [
+  "ambient",
+  "sunrise",
+  "horizon",
+  "orbit",
+  "halo",
+  "ribbon",
+  "nebula",
+  "tide",
+] as const
+export type AppBackground = typeof APP_BACKGROUNDS[number]
+
+export function isAppBackground(value: string | null): value is AppBackground {
+  return APP_BACKGROUNDS.includes(value)
+}
+
+export function readAppBackground(): AppBackground {
+  const storedBackground = localStorage.getItem(APP_BACKGROUND_KEY)
+  return isAppBackground(storedBackground) ? storedBackground : "ambient"
+}
+
+export function handleAppBackgroundSwitch(background: AppBackground): void {
+  document.body.dataset.appBackground = background
+  localStorage.setItem(APP_BACKGROUND_KEY, background)
+}
 
 export function isThemeColor(value: string): value is Color {
   return COLORS.includes(value as Color)

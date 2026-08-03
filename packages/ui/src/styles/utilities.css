@@ -10,6 +10,148 @@
   background-size: 100% 115%;
 }
 
+@utility ambient-* {
+  background-image:
+    radial-gradient(
+      ellipse 95% 80% at -10% -15%,
+      --alpha(--value(--color-*)/0.18) 0%,
+      --alpha(--value(--color-*)/0.09) 42%,
+      transparent 72%
+    ),
+    radial-gradient(
+      ellipse 90% 75% at 110% 115%,
+      --alpha(--value(--color-*)/0.12) 0%,
+      --alpha(--value(--color-*)/0.05) 46%,
+      transparent 76%
+    );
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}
+
+@utility horizon-* {
+  background-image:
+    radial-gradient(
+      ellipse 115% 62% at 50% 112%,
+      --alpha(--value(--color-*)/0.2) 0%,
+      --alpha(--value(--color-*)/0.09) 46%,
+      transparent 76%
+    ),
+    radial-gradient(
+      ellipse 80% 45% at 50% -12%,
+      --alpha(--value(--color-*)/0.07) 0%,
+      transparent 72%
+    );
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}
+
+@utility orbit-* {
+  background-image:
+    radial-gradient(
+      ellipse 62% 90% at -12% 48%,
+      --alpha(--value(--color-*)/0.16) 0%,
+      --alpha(--value(--color-*)/0.07) 48%,
+      transparent 76%
+    ),
+    radial-gradient(
+      ellipse 62% 90% at 112% 52%,
+      --alpha(--value(--color-*)/0.14) 0%,
+      --alpha(--value(--color-*)/0.06) 48%,
+      transparent 76%
+    );
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}
+
+@utility halo-* {
+  background-image:
+    radial-gradient(
+      circle at 50% 48%,
+      transparent 0%,
+      transparent 24%,
+      --alpha(--value(--color-*)/0.05) 25%,
+      --alpha(--value(--color-*)/0.18) 34%,
+      --alpha(--value(--color-*)/0.08) 43%,
+      transparent 55%
+    ),
+    radial-gradient(
+      circle at 50% 48%,
+      transparent 0%,
+      transparent 41%,
+      --alpha(--value(--color-*)/0.06) 43%,
+      transparent 66%
+    );
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}
+
+@utility ribbon-* {
+  background-image:
+    linear-gradient(
+      128deg,
+      transparent 16%,
+      --alpha(--value(--color-*)/0.04) 28%,
+      --alpha(--value(--color-*)/0.17) 38%,
+      --alpha(--value(--color-*)/0.06) 47%,
+      transparent 58%
+    ),
+    linear-gradient(
+      52deg,
+      transparent 42%,
+      --alpha(--value(--color-*)/0.05) 50%,
+      --alpha(--value(--color-*)/0.12) 58%,
+      transparent 72%
+    );
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}
+
+@utility nebula-* {
+  background-image:
+    radial-gradient(
+      ellipse 75% 58% at 28% 28%,
+      --alpha(--value(--color-*)/0.19) 0%,
+      --alpha(--value(--color-*)/0.09) 38%,
+      transparent 72%
+    ),
+    radial-gradient(
+      ellipse 62% 72% at 76% 64%,
+      --alpha(--value(--color-*)/0.15) 0%,
+      --alpha(--value(--color-*)/0.06) 44%,
+      transparent 76%
+    ),
+    radial-gradient(
+      ellipse 42% 34% at 58% 18%,
+      --alpha(--value(--color-*)/0.08) 0%,
+      transparent 68%
+    );
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}
+
+@utility tide-* {
+  background-image:
+    radial-gradient(
+      ellipse 92% 30% at 10% 104%,
+      --alpha(--value(--color-*)/0.18) 0%,
+      --alpha(--value(--color-*)/0.08) 48%,
+      transparent 72%
+    ),
+    radial-gradient(
+      ellipse 86% 27% at 88% 91%,
+      --alpha(--value(--color-*)/0.13) 0%,
+      --alpha(--value(--color-*)/0.05) 52%,
+      transparent 76%
+    ),
+    radial-gradient(
+      ellipse 72% 20% at 20% 78%,
+      --alpha(--value(--color-*)/0.06) 0%,
+      transparent 74%
+    );
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}
+
 @utility flex-center {
   @apply flex items-center justify-center;
 }

@@ -1,5 +1,5 @@
 import type { SettingsTabId } from "./modal-shell"
-import type { ThemeMode } from "@/lib/utils/swith-theme"
+import type { AppBackground, ThemeMode } from "@/lib/utils/swith-theme"
 import { Card, CardContent } from "@newsnext/ui/components/card"
 import { RadioGroup, RadioGroupItem } from "@newsnext/ui/components/radio-group"
 import {
@@ -12,8 +12,11 @@ import { TabsContent } from "@newsnext/ui/components/tabs"
 import { useAtom, useAtomValue } from "jotai"
 import { useEffect, useState } from "react"
 import { getBoardDisplayName } from "@/lib/boards"
+import { cn } from "@/lib/utils"
 import {
+  handleAppBackgroundSwitch,
   handleThemeModeSwitch,
+  readAppBackground,
   THEME_MODE_KEY,
 } from "@/lib/utils/swith-theme"
 import { boardsAtom, defaultBoardIdAtom } from "@/store/board"
@@ -25,6 +28,21 @@ import { SourceIconSettings } from "./source-icon"
 
 const SETTINGS_TAB_KEY = "newsnext-settings-tab"
 const LAST_USED_BOARD_VALUE = "__last_used__"
+
+const BACKGROUND_OPTIONS: Array<{
+  className: string
+  label: string
+  value: AppBackground
+}> = [
+  { value: "ambient", label: "Ambient", className: "ambient-theme-400" },
+  { value: "sunrise", label: "Sunrise", className: "sunrise-theme-400" },
+  { value: "horizon", label: "Horizon", className: "horizon-theme-400" },
+  { value: "orbit", label: "Orbit", className: "orbit-theme-400" },
+  { value: "halo", label: "Halo", className: "halo-theme-400" },
+  { value: "ribbon", label: "Ribbon", className: "ribbon-theme-400" },
+  { value: "nebula", label: "Nebula", className: "nebula-theme-400" },
+  { value: "tide", label: "Tide", className: "tide-theme-400" },
+]
 
 export type { SettingsTabId } from "./modal-shell"
 
@@ -97,6 +115,7 @@ function isSettingsTabId(value: string | null): value is SettingsTabId {
 }
 
 function AppearanceSettings() {
+  const [appBackground, setAppBackground] = useState<AppBackground>(readAppBackground)
   const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
     const stored = localStorage.getItem(THEME_MODE_KEY) as ThemeMode | null
     return stored ?? "dark"
@@ -104,26 +123,62 @@ function AppearanceSettings() {
   useEffect(() => {
     handleThemeModeSwitch(themeMode)
   }, [themeMode])
+  useEffect(() => {
+    handleAppBackgroundSwitch(appBackground)
+  }, [appBackground])
 
   return (
-    <SettingsSection
-      title="Theme mode"
-      description="Choose a light or dark interface, or follow your system setting."
-    >
-      <Card variant="subtle">
-        <CardContent>
-          <RadioGroup
-            variant="segmented"
-            value={themeMode}
-            onValueChange={setThemeMode}
-          >
-            <RadioGroupItem value="dark">Dark</RadioGroupItem>
-            <RadioGroupItem value="light">Light</RadioGroupItem>
-            <RadioGroupItem value="system">System</RadioGroupItem>
-          </RadioGroup>
-        </CardContent>
-      </Card>
-    </SettingsSection>
+    <div className="space-y-8">
+      <SettingsSection
+        title="App background"
+        description="Choose how the board theme color blends into the workspace."
+      >
+        <RadioGroup
+          aria-label="App background"
+          variant="preview"
+          value={appBackground}
+          onValueChange={setAppBackground}
+        >
+          {BACKGROUND_OPTIONS.map(option => (
+            <RadioGroupItem
+              key={option.value}
+              value={option.value}
+            >
+              <span
+                aria-hidden
+                className={cn(
+                  "block h-14 w-full rounded-xl bg-background ring-1 ring-foreground/6",
+                  option.className,
+                )}
+              />
+              <span className="mt-2 flex items-center justify-between gap-2 px-1 text-xs font-medium">
+                {option.label}
+                <span className="size-1.5 rounded-full bg-theme-500 opacity-0 transition-opacity group-data-checked/radio-preview:opacity-100" />
+              </span>
+            </RadioGroupItem>
+          ))}
+        </RadioGroup>
+      </SettingsSection>
+
+      <SettingsSection
+        title="Theme mode"
+        description="Choose a light or dark interface, or follow your system setting."
+      >
+        <Card variant="subtle">
+          <CardContent>
+            <RadioGroup
+              variant="segmented"
+              value={themeMode}
+              onValueChange={setThemeMode}
+            >
+              <RadioGroupItem value="dark">Dark</RadioGroupItem>
+              <RadioGroupItem value="light">Light</RadioGroupItem>
+              <RadioGroupItem value="system">System</RadioGroupItem>
+            </RadioGroup>
+          </CardContent>
+        </Card>
+      </SettingsSection>
+    </div>
   )
 }
 

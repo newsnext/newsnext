@@ -2,8 +2,14 @@ import { QueryClient } from "@tanstack/react-query"
 import { createHashHistory, createRouter, RouterProvider } from "@tanstack/react-router"
 import { AppProvider } from "@/components/app-provider"
 import { renderPersistentReactRoot } from "@/lib/react-root"
+import {
+  handleAppBackgroundSwitch,
+  readAppBackground,
+} from "@/lib/utils/swith-theme"
 import { routeTree } from "./routeTree"
 import "@/styles/index.css"
+
+handleAppBackgroundSwitch(readAppBackground())
 
 const queryClient = new QueryClient()
 const hashHistory = createHashHistory()
