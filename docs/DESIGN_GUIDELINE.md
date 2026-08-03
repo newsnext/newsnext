@@ -42,6 +42,17 @@ Cards define the primary NewsNext surface treatment.
 The reference implementation is `CardSurface` in
 `apps/extension/src/components/card/card-surface.tsx`.
 
+### Card reordering
+
+- Keep the drag handle visible and give it an accessible name that identifies
+  the card being moved.
+- Reorder cards according to the closest edge of the card under the pointer so
+  the preview distinguishes insertion before and after a card.
+- Preserve the original order when a drag is cancelled or ends outside the
+  board. Gaps inside the board may retain the most recent valid placement.
+- Keep the source card in the layout while dragging and reduce its opacity so
+  the original position remains understandable.
+
 ## Dialog Patterns
 
 Choose the dialog structure from its information architecture rather than

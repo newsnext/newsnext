@@ -1,10 +1,13 @@
-import type { BaseEventPayload, ElementDragType } from "@atlaskit/pragmatic-drag-and-drop/dist/types/internal-types"
+import type { ElementEventBasePayload } from "@atlaskit/pragmatic-drag-and-drop/element/adapter"
 import type { RefObject } from "react"
 import type { BoardSource } from "@/typings/source"
-import { useThrottleFn } from "@newsnext/ui/hooks/use-throttle-fn"
+import { extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge"
+import { getReorderDestinationIndex } from "@atlaskit/pragmatic-drag-and-drop-hitbox/util/get-reorder-destination-index"
 import { m } from "motion/react"
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { DndContext } from "@/hooks/use-dnd-context"
+import { isSortableData } from "@/lib/sortable-data"
+import { reorder } from "@/lib/utils/reorder"
 import { DraggableCard } from "../card/draggable-card"
 
 const ANIMATION_DURATION = 0.2 // 200ms
@@ -73,7 +76,10 @@ export function DesktopBoard({
       orderedSourceIds,
     })
   }
+  const orderedSourceIdsRef = useRef(orderedSourceIds)
+  orderedSourceIdsRef.current = orderedSourceIds
   const initialOrderedSourceIdsRef = useRef(sourceIds)
+  const boardRef = useRef<HTMLOListElement>(null)
   const [scatterAnimationState, setScatterAnimationState] = useState<ScatterAnimationState>({
     requestId: 0,
     vectors: {},
@@ -111,54 +117,74 @@ export function DesktopBoard({
   )
 
   const onDragStart = useCallback(() => {
-    initialOrderedSourceIdsRef.current = orderedSourceIds
-  }, [orderedSourceIds])
+    initialOrderedSourceIdsRef.current = orderedSourceIdsRef.current
+  }, [])
 
-  const onDropTargetChange = useCallback(({ location, source }: BaseEventPayload<ElementDragType>) => {
+  const onDrag = useCallback(({ location, source }: ElementEventBasePayload) => {
     const target = location.current.dropTargets[0]
-    if (!target?.data || !source?.data) return
+    if (!target || !isSortableData(source.data) || !isSortableData(target.data)) return
 
-    const fromId = source.data.id as string
-    const toId = target.data.id as string
-
-    const fromIndex = orderedSourceIds.indexOf(fromId)
-    const toIndex = orderedSourceIds.indexOf(toId)
-
+    const fromId = source.data.id
+    const toId = target.data.id
+    const currentSourceIds = orderedSourceIdsRef.current
+    const fromIndex = currentSourceIds.indexOf(fromId)
+    const toIndex = currentSourceIds.indexOf(toId)
     if (fromIndex === toIndex || fromIndex === -1 || toIndex === -1) return
 
-    const newSourceIds = [...orderedSourceIds]
-    newSourceIds.splice(toIndex, 0, ...newSourceIds.splice(fromIndex, 1))
+    const closestEdge = extractClosestEdge(target.data)
+    const normalizedEdge = closestEdge === "top" || closestEdge === "left"
+      ? "left"
+      : "right"
+    const destinationIndex = getReorderDestinationIndex({
+      startIndex: fromIndex,
+      indexOfTarget: toIndex,
+      closestEdgeOfTarget: normalizedEdge,
+      axis: "horizontal",
+    })
+    if (fromIndex === destinationIndex) return
 
+    const nextSourceIds = reorder(currentSourceIds, fromIndex, destinationIndex)
+    orderedSourceIdsRef.current = nextSourceIds
     setSourceOrderState(prev => ({
       ...prev,
-      orderedSourceIds: newSourceIds,
+      orderedSourceIds: nextSourceIds,
     }))
-  }, [orderedSourceIds])
+  }, [])
 
-  const onDrop = useCallback(({ location }: BaseEventPayload<ElementDragType>) => {
-    // If dropped outside (no targets), revert
-    if (location.current.dropTargets.length === 0) {
+  const onDrop = useCallback(({ location }: ElementEventBasePayload) => {
+    const board = boardRef.current
+    const { clientX, clientY } = location.current.input
+    const boardRect = board?.getBoundingClientRect()
+    const hasDropTarget = location.current.dropTargets.length > 0
+    const isInsideBoard = Boolean(
+      boardRect
+      && clientX >= boardRect.left
+      && clientX <= boardRect.right
+      && clientY >= boardRect.top
+      && clientY <= boardRect.bottom,
+    )
+
+    if (!hasDropTarget || !isInsideBoard) {
+      const initialSourceIds = initialOrderedSourceIdsRef.current
+      orderedSourceIdsRef.current = initialSourceIds
       setSourceOrderState(prev => ({
         ...prev,
-        orderedSourceIds: initialOrderedSourceIdsRef.current,
+        orderedSourceIds: initialSourceIds,
       }))
       return
     }
 
-    const hasOrderChanged = orderedSourceIds.some(
-      (id, index) => initialOrderedSourceIdsRef.current[index] !== id,
+    const finalSourceIds = orderedSourceIdsRef.current
+    const initialSourceIds = initialOrderedSourceIdsRef.current
+    const hasOrderChanged = finalSourceIds.length !== initialSourceIds.length || finalSourceIds.some(
+      (id, index) => initialSourceIds[index] !== id,
     )
     if (!hasOrderChanged) {
       return
     }
 
-    onSourceIdsChange(orderedSourceIds)
-  }, [orderedSourceIds, onSourceIdsChange])
-
-  // avoid animation jitter
-  const { run } = useThrottleFn(onDropTargetChange, ANIMATION_DURATION * 1000, {
-    edges: ["trailing", "leading"],
-  })
+    onSourceIdsChange(finalSourceIds)
+  }, [onSourceIdsChange])
 
   // Calculate scatter vectors only while the board is scattering away.
   useLayoutEffect(() => {
@@ -266,8 +292,14 @@ export function DesktopBoard({
   }, [containerRef, visibleSourceIds, isScattered, items])
 
   return (
-    <DndContext onDragStart={onDragStart} onDropTargetChange={run} onDrop={onDrop}>
+    <DndContext
+      onDragStart={onDragStart}
+      onDrag={onDrag}
+      onDropTargetChange={onDrag}
+      onDrop={onDrop}
+    >
       <m.ol
+        ref={boardRef}
         className={className || "flex flex-wrap justify-center gap-2 sm:gap-6"}
         initial="hidden"
         animate={isScattered ? "scattered" : "visible"}

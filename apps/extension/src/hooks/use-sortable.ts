@@ -1,8 +1,10 @@
+import { attachClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge"
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine"
 import { draggable, dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter"
 import { preserveOffsetOnSource } from "@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source"
 import { setCustomNativeDragPreview } from "@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview"
 import { createContext, use, useEffect, useState } from "react"
+import { getSortableData, isSortableData } from "@/lib/sortable-data"
 
 export const InstanceIdContext = createContext<string | null>(null)
 
@@ -14,38 +16,20 @@ interface SortableProps {
   }) => void | (() => void)
 }
 
-interface DraggableState {
-  type: "idle" | "dragging"
-}
-
 export function useSortable({ id, onGenerateDragPreview }: SortableProps) {
   const instanceId = use(InstanceIdContext)
-  const [draggableState, setDraggableState] = useState<DraggableState>({
-    type: "idle",
-  })
-
-  useEffect(() => {
-    if (draggableState.type === "idle") {
-      document.querySelector("html")?.classList.remove("grabbing")
-    } else if (draggableState.type === "dragging") {
-      // https://github.com/SortableJS/Vue.Draggable/issues/815#issuecomment-1552904628
-      const timer = setTimeout(() => {
-        document.querySelector("html")?.classList.add("grabbing")
-      }, 50)
-      return () => clearTimeout(timer)
-    }
-  }, [draggableState])
-
+  const [isDragging, setIsDragging] = useState(false)
   const [handleRef, setHandleRef] = useState<HTMLElement | null>(null)
   const [nodeRef, setNodeRef] = useState<HTMLElement | null>(null)
 
   useEffect(() => {
-    if (handleRef && nodeRef) {
+    if (handleRef && nodeRef && instanceId) {
+      const sortableData = getSortableData({ id, instanceId })
       const cleanup = combine(
         draggable({
           element: nodeRef,
           dragHandle: handleRef,
-          getInitialData: () => ({ id, instanceId }),
+          getInitialData: () => sortableData,
           onGenerateDragPreview({ nativeSetDragImage, location }) {
             setCustomNativeDragPreview({
               getOffset: preserveOffsetOnSource({
@@ -53,21 +37,31 @@ export function useSortable({ id, onGenerateDragPreview }: SortableProps) {
                 input: location.current.input,
               }),
               render({ container }) {
-                setDraggableState({ type: "dragging" })
                 return onGenerateDragPreview?.({ container, element: nodeRef })
               },
               nativeSetDragImage,
             })
           },
+          onDragStart: () => {
+            setIsDragging(true)
+          },
           onDrop: () => {
-            setDraggableState({ type: "idle" })
+            setIsDragging(false)
           },
         }),
         dropTargetForElements({
           element: nodeRef,
-          getData: () => ({ id }),
+          getData: ({ element, input }) => attachClosestEdge(
+            sortableData,
+            {
+              element,
+              input,
+              allowedEdges: ["top", "right", "bottom", "left"],
+            },
+          ),
           getIsSticky: () => true,
-          canDrop: ({ source }) => source.data.instanceId === instanceId,
+          canDrop: ({ source }) => isSortableData(source.data)
+            && source.data.instanceId === instanceId,
         }),
       )
       return cleanup
@@ -77,6 +71,6 @@ export function useSortable({ id, onGenerateDragPreview }: SortableProps) {
   return {
     setHandleRef,
     setNodeRef,
-    isDragging: draggableState.type === "dragging",
+    isDragging,
   }
 }

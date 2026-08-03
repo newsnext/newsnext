@@ -36,8 +36,8 @@ export function DraggableCard({ id, source, ...props }: DraggableCardProps) {
       <Button
         variant="quiet"
         size="icon-fit"
-        aria-label="Handle"
-        className="cursor-grab active:cursor-grabbing"
+        aria-label={`Move ${source.metadata.title}`}
+        className="cursor-grab"
       >
         <PhDotsSixVerticalDuotone />
       </Button>

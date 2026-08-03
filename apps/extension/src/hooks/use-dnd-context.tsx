@@ -1,32 +1,30 @@
-import type { ElementAutoScrollArgs } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/dist/types/internal-types"
-import type { AllEvents, ElementDragType } from "@atlaskit/pragmatic-drag-and-drop/dist/types/internal-types"
+import type { ElementDragType, MonitorArgs } from "@atlaskit/pragmatic-drag-and-drop/types"
 import type { PropsWithChildren } from "react"
-import { autoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/element"
-import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine"
 import { monitorForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter"
-import { useEffect, useId } from "react"
+import { useEffect, useId, useRef } from "react"
+import { isSortableData } from "@/lib/sortable-data"
 import { InstanceIdContext } from "./use-sortable"
 
-interface ContextProps extends Partial<AllEvents<ElementDragType>> {
-  autoscroll?: ElementAutoScrollArgs<ElementDragType>
-}
+type ContextProps = Pick<
+  MonitorArgs<ElementDragType>,
+  "onDragStart" | "onDrag" | "onDropTargetChange" | "onDrop"
+>
 
-export function DndContext({ children, autoscroll, ...callback }: PropsWithChildren<ContextProps>) {
+export function DndContext({ children, ...callbacks }: PropsWithChildren<ContextProps>) {
   const instanceId = useId()
+  const callbacksRef = useRef(callbacks)
+  callbacksRef.current = callbacks
 
   useEffect(() => {
-    return (
-      combine(
-        monitorForElements({
-          canMonitor({ source }) {
-            return source.data.instanceId === instanceId
-          },
-          ...callback,
-        }),
-        autoscroll ? autoScrollForElements(autoscroll) : () => {},
-      )
-    )
-  }, [callback, instanceId, autoscroll])
+    return monitorForElements({
+      canMonitor: ({ source }) => isSortableData(source.data)
+        && source.data.instanceId === instanceId,
+      onDragStart: args => callbacksRef.current.onDragStart?.(args),
+      onDrag: args => callbacksRef.current.onDrag?.(args),
+      onDropTargetChange: args => callbacksRef.current.onDropTargetChange?.(args),
+      onDrop: args => callbacksRef.current.onDrop?.(args),
+    })
+  }, [instanceId])
 
   return (
     <InstanceIdContext value={instanceId}>

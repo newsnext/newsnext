@@ -132,11 +132,6 @@
   [data-news-item] * {
     user-select: text;
   }
-
-  .grabbing,
-  .grabbing * {
-    cursor: grabbing !important;
-  }
 }
 
 @layer components {

@@ -18,7 +18,6 @@
     ],
     "catalog": {
       "@atlaskit/pragmatic-drag-and-drop": "^2.0.1",
-      "@atlaskit/pragmatic-drag-and-drop-auto-scroll": "^3.0.0",
       "@atlaskit/pragmatic-drag-and-drop-hitbox": "^2.0.0",
       "@iconify-json/ph": "^1.2.2",
       "@tailwindcss/vite": "^4.3.3",
