@@ -6,7 +6,7 @@ import { ThemeSelector } from "@newsnext/ui/components/theme-selector"
 import { WordmarkLogo } from "@newsnext/ui/components/wordmark-logo"
 import { useAtomValue, useSetAtom } from "jotai"
 import { AnimatePresence, m, useMotionValue, useMotionValueEvent, useScroll } from "motion/react"
-import { useCallback, useState } from "react"
+import { useCallback, useRef, useState } from "react"
 import { getBoardColor } from "@/lib/boards"
 import { handleThemeSwitch } from "@/lib/utils/swith-theme"
 import { boardsAtom, currentBoardIdAtom, updateBoardAtom } from "@/store/board"
@@ -33,6 +33,7 @@ function HeaderProgress({ scrollContainerRef }: HeaderProgressProps) {
   const { scrollYProgress, scrollY } = activeScroll
 
   const [isAtTop, setIsAtTop] = useState(true)
+  const isAtTopRef = useRef(true)
   const opacity = useMotionValue(0)
 
   const handleScrollToTop = useCallback((e: React.MouseEvent) => {
@@ -52,12 +53,16 @@ function HeaderProgress({ scrollContainerRef }: HeaderProgressProps) {
     const threshold = screenHeight * 0.1
     const fadeRange = screenHeight * 0.1
 
-    if (value < threshold) {
+    const nextIsAtTop = value < threshold
+    if (nextIsAtTop !== isAtTopRef.current) {
+      isAtTopRef.current = nextIsAtTop
+      setIsAtTop(nextIsAtTop)
+    }
+
+    if (nextIsAtTop) {
       opacity.set(0)
-      setIsAtTop(true)
     } else {
       opacity.set(Math.min((value - threshold) / fadeRange, 1))
-      setIsAtTop(false)
     }
   })
 

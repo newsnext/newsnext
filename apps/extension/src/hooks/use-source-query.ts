@@ -1,3 +1,4 @@
+import type { NewsItem } from "@/typings/source"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useCallback, useMemo, useState } from "react"
 import { getLoginUrlFromError } from "./source-login-error"
@@ -8,6 +9,8 @@ import {
 } from "./source-query"
 import { useFetchLatestSources, useIsSourceFetchingLatest } from "./use-refetch"
 import { useSourceDescriptors } from "./use-source-descriptors"
+
+const EMPTY_ITEMS: NewsItem[] = []
 
 export interface UseSourceQueryOptions {
   sourceId: string
@@ -51,7 +54,7 @@ export function useSourceQuery({
   }, [enabled, fetchLatestSources, target])
 
   return {
-    items: data?.items ?? [],
+    items: data?.items ?? EMPTY_ITEMS,
     fetchLatest: handleFetchLatest,
     isFetching,
     isFetchingLatest,

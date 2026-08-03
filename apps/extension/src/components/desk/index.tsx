@@ -1,4 +1,4 @@
-import { useScrollProgressContext } from "@newsnext/ui/components/scroll-progress-context"
+import { useScrollProgressActionsContext } from "@newsnext/ui/components/scroll-progress-context"
 import { useEffect, useRef, useState } from "react"
 import { NextLayer } from "@/components/nextlayer"
 import { NowLayer } from "@/components/nowlayer"
@@ -10,7 +10,7 @@ export function Desk({ boardId }: { boardId: string }) {
   const {
     nextLayerScrollContainerRef,
     setIsNextLayerActive,
-  } = useScrollProgressContext()
+  } = useScrollProgressActionsContext()
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -25,11 +25,13 @@ export function Desk({ boardId }: { boardId: string }) {
 
   useEffect(() => {
     setIsNextLayerActive(isScattered)
+  }, [isScattered, setIsNextLayerActive])
 
+  useEffect(() => {
     return () => {
       setIsNextLayerActive(false)
     }
-  }, [isScattered, setIsNextLayerActive])
+  }, [setIsNextLayerActive])
 
   return (
     <div className="relative w-full">

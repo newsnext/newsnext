@@ -2,11 +2,9 @@ import type { Color } from "@newsnext/shared/types"
 import type { RefObject } from "react"
 import type { NewsItem } from "@/typings/source"
 import { VirtualList } from "@newsnext/ui/components/virtual-list"
-import { formatDistance } from "date-fns"
-import { enUS } from "date-fns/locale"
 import { useAtomValue } from "jotai"
-import { useCallback, useId, useMemo } from "react"
-import { minuteDateAtom } from "@/hooks/useRelativeTime"
+import { memo, useCallback, useId, useMemo } from "react"
+import { formatRelativeTime, minuteDateAtom } from "@/hooks/useRelativeTime"
 import { cn } from "@/lib/utils"
 import { NewsItemLink, NewsItemSummary } from "./news-item-common"
 
@@ -16,19 +14,22 @@ const LABEL_RAIL_PATH = "M16 0 Q3 0 2 20 Q2 35 6 50 Q12 75 6 100"
 interface Props {
   items: NewsItem[]
   scrollRef: RefObject<HTMLDivElement>
-  relativeUpdatedAt: string
+  updatedAt: number
   color: Color
 }
 
-export function Timeline({ items, scrollRef, relativeUpdatedAt, color }: Props) {
+const TimelineNewsItem = memo(({ item }: { item: NewsItem }) => (
+  <NewsItemLink item={item} className="flex">
+    <NewsItemSummary item={item} />
+  </NewsItemLink>
+))
+
+export function Timeline({ items, scrollRef, updatedAt, color }: Props) {
   const gradientId = useId().replace(/:/g, "")
   const now = useAtomValue(minuteDateAtom)
   const timeLabels = useMemo(() => items.map(item => item.timestamp
-    ? formatDistance(new Date(item.timestamp), now, {
-        addSuffix: true,
-        locale: enUS,
-      })
-    : relativeUpdatedAt), [items, now, relativeUpdatedAt])
+    ? formatRelativeTime(item.timestamp, now)
+    : formatRelativeTime(updatedAt, now)), [items, now, updatedAt])
   const renderItem = useCallback((item: NewsItem, index: number) => {
     const timeLabel = timeLabels[index]
     const showTimeLabel = index === 0 || timeLabel !== timeLabels[index - 1]
@@ -76,9 +77,7 @@ export function Timeline({ items, scrollRef, relativeUpdatedAt, color }: Props) 
                 </span>
               </div>
             )}
-            <NewsItemLink item={item} className="flex">
-              <NewsItemSummary item={item} />
-            </NewsItemLink>
+            <TimelineNewsItem item={item} />
           </div>
         </div>
       </div>

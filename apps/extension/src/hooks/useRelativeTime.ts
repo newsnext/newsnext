@@ -31,11 +31,19 @@ minuteDateAtom.onMount = (setAtom) => {
   return () => clearTimeout(timer)
 }
 
-export function useRelativeTime({ date }: { date: number }) {
-  const now = useAtomValue(minuteDateAtom)
-  const result = useMemo(() => formatDistance(new Date(date), now, {
+export function formatRelativeTime(date: number, now: Date): string {
+  return formatDistance(new Date(date), now, {
     addSuffix: true,
     locale: enUS,
-  }), [date, now])
+  })
+}
+
+export function useRelativeTime({ date }: { date: number }): string {
+  const now = useAtomValue(minuteDateAtom)
+  const result = useMemo(() => formatRelativeTime(date, now), [date, now])
   return result
+}
+
+export function RelativeTime({ date }: { date: number }): string {
+  return useRelativeTime({ date })
 }

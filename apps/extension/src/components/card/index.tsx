@@ -3,15 +3,12 @@ import type { SourceInstanceMetadata, SourceInstancePatch } from "@/lib/source-c
 import type { BoardSource } from "@/typings/source"
 import { FlipAnimate } from "@newsnext/ui/components/flip-animate"
 import { useSetAtom } from "jotai"
-import { useCallback, useRef, useState } from "react"
+import { useCallback, useMemo, useRef, useState } from "react"
 import { useSourceParams } from "@/hooks"
 import { useInView } from "@/hooks/use-in-view"
 import { useSourcePermission } from "@/hooks/use-source-permission"
 import { useSourceQuery } from "@/hooks/use-source-query"
-import {
-  applySourceLoaderMetadata,
-
-} from "@/lib/source-cards"
+import { applySourceLoaderMetadata } from "@/lib/source-cards"
 import {
   SOURCE_QUERY_OFFSCREEN_RETENTION_MS,
   SOURCE_QUERY_PRELOAD_MARGIN,
@@ -67,7 +64,10 @@ function CardContent({ id, source, dragHandle, isDraft = false, onDraftSourceCha
   const sourceErrorMessage = canLoad && isError
     ? `Failed to load source${errorMessage ? `: ${errorMessage}` : "."}`
     : undefined
-  const displaySource = applySourceLoaderMetadata(source, metadata)
+  const displaySource = useMemo(
+    () => applySourceLoaderMetadata(source, metadata),
+    [metadata, source],
+  )
 
   const handleFlip = useCallback(() => {
     setIsFlipped(prev => !prev)
@@ -143,11 +143,12 @@ function CardContent({ id, source, dragHandle, isDraft = false, onDraftSourceCha
 }
 
 export default function Card(props: CardProps) {
+  const { nodeRef } = props
   const ref = useRef<HTMLDivElement>(null)
-  const setRef = (node: HTMLDivElement | null) => {
+  const setRef = useCallback((node: HTMLDivElement | null) => {
     ref.current = node
-    props.nodeRef?.(node)
-  }
+    nodeRef?.(node)
+  }, [nodeRef])
 
   const isInView = useInView(ref, {
     margin: SOURCE_QUERY_PRELOAD_MARGIN,

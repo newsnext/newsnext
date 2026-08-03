@@ -1,5 +1,9 @@
 import type { QueryClient } from "@tanstack/react-query"
-import { ScrollProgressContext } from "@newsnext/ui/components/scroll-progress-context"
+import type { PropsWithChildren, RefObject } from "react"
+import {
+  ScrollProgressActionsContext,
+  ScrollProgressContext,
+} from "@newsnext/ui/components/scroll-progress-context"
 import { createRootRouteWithContext, Outlet } from "@tanstack/react-router"
 import { Suspense, useMemo, useRef, useState } from "react"
 import { TanStackDevtools } from "@/components/common/devtools"
@@ -17,20 +21,44 @@ function NotFoundComponent() {
   return <div>Not Found</div>
 }
 
+interface ScrollProgressProviderProps {
+  nextLayerScrollContainerRef: RefObject<HTMLDivElement | null>
+  rootScrollContainerRef: RefObject<HTMLDivElement | null>
+}
+
+function ScrollProgressProvider({
+  children,
+  nextLayerScrollContainerRef,
+  rootScrollContainerRef,
+}: PropsWithChildren<ScrollProgressProviderProps>) {
+  const [isNextLayerActive, setIsNextLayerActive] = useState(false)
+  const actionsContextValue = useMemo(() => ({
+    rootScrollContainerRef,
+    nextLayerScrollContainerRef,
+    setIsNextLayerActive,
+  }), [nextLayerScrollContainerRef, rootScrollContainerRef])
+  const scrollProgressContextValue = useMemo(() => ({
+    ...actionsContextValue,
+    isNextLayerActive,
+  }), [actionsContextValue, isNextLayerActive])
+
+  return (
+    <ScrollProgressActionsContext value={actionsContextValue}>
+      <ScrollProgressContext value={scrollProgressContextValue}>
+        {children}
+      </ScrollProgressContext>
+    </ScrollProgressActionsContext>
+  )
+}
+
 function RootComponent() {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const nextLayerScrollContainerRef = useRef<HTMLDivElement>(null)
-  const [isNextLayerActive, setIsNextLayerActive] = useState(false)
-  const scrollProgressContextValue = useMemo(() => ({
-    rootScrollContainerRef: scrollContainerRef,
-    nextLayerScrollContainerRef,
-    isNextLayerActive,
-    setIsNextLayerActive,
-  }), [isNextLayerActive])
 
   return (
-    <ScrollProgressContext
-      value={scrollProgressContextValue}
+    <ScrollProgressProvider
+      rootScrollContainerRef={scrollContainerRef}
+      nextLayerScrollContainerRef={nextLayerScrollContainerRef}
     >
       <div
         ref={scrollContainerRef}
@@ -47,6 +75,6 @@ function RootComponent() {
       <Suspense>
         <TanStackDevtools />
       </Suspense>
-    </ScrollProgressContext>
+    </ScrollProgressProvider>
   )
 }

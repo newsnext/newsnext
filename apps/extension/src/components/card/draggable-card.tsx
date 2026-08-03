@@ -1,5 +1,6 @@
 import type { CardProps } from "./index"
 import { Button } from "@newsnext/ui/components/button"
+import { memo } from "react"
 import { useSortable } from "@/hooks/use-sortable"
 import { cn } from "@/lib/utils"
 import { PhDotsSixVerticalDuotone } from "../icons/ph"
@@ -25,7 +26,7 @@ function generateDragPreview({ container, element }: { container: HTMLElement, e
   return () => preview.remove()
 }
 
-export function DraggableCard({ id, source, ...props }: DraggableCardProps) {
+function DraggableCardComponent({ id, source, ...props }: DraggableCardProps) {
   const { isDragging, setNodeRef, setHandleRef } = useSortable({
     id,
     onGenerateDragPreview: generateDragPreview,
@@ -55,3 +56,5 @@ export function DraggableCard({ id, source, ...props }: DraggableCardProps) {
     />
   )
 }
+
+export const DraggableCard = memo(DraggableCardComponent)

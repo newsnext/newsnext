@@ -49,6 +49,21 @@ Newsnext is a personalized web crawler that runs inside a browser extension (mv3
 - Keep documented design requirements aligned with the implemented React
   components and Tailwind utilities.
 
+### Performance Documentation
+
+- `docs/PERFORMANCE_GUIDELINE.md` is the canonical reference for React
+  rendering performance, profiling workflows, and regression checks in the
+  extension app.
+- Update it in the same change when performance work creates, removes, or
+  revises a reusable rule involving state ownership, context boundaries,
+  referential identity, memoization, subscriptions, query rendering, Motion,
+  virtual lists, or React Scan instrumentation.
+- After React performance implementation or debugging work, capture durable
+  measurements, non-obvious constraints, recurring render pitfalls, and known
+  profiling gaps in the document.
+- Keep its baselines and recommended verification steps aligned with current
+  React components and runtime behavior.
+
 ### Version Control
 
 - Use `git` as the primary version control system for this repository.

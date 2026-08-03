@@ -4,7 +4,7 @@ import { Button } from "@newsnext/ui/components/button"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { memo, useRef } from "react"
 import { useSourceIcon } from "@/hooks/use-source-icon"
-import { useRelativeTime } from "@/hooks/useRelativeTime"
+import { RelativeTime } from "@/hooks/useRelativeTime"
 import { isTimelineItems } from "@/lib/source-presentation"
 import { cn } from "@/lib/utils"
 import {
@@ -68,11 +68,11 @@ interface CardFrontContentProps {
   icon?: string
   items: NewsItem[]
   provider: BoardSource["provider"]
-  relativeUpdatedAt: string
   scrollRef: React.RefObject<HTMLDivElement>
   sourceErrorMessage?: string
   sourceLoginUrl?: string
   sourcePermissionRequired: boolean
+  updatedAt: number
   onRefresh: () => void
   onRequestPermission: () => Promise<boolean>
 }
@@ -82,11 +82,11 @@ function CardFrontContent({
   icon,
   items,
   provider,
-  relativeUpdatedAt,
   scrollRef,
   sourceErrorMessage,
   sourceLoginUrl,
   sourcePermissionRequired,
+  updatedAt,
   onRefresh,
   onRequestPermission,
 }: CardFrontContentProps) {
@@ -137,7 +137,7 @@ function CardFrontContent({
     <Timeline
       color={color}
       items={items}
-      relativeUpdatedAt={relativeUpdatedAt}
+      updatedAt={updatedAt}
       scrollRef={scrollRef}
     />
   )
@@ -164,7 +164,6 @@ function CardFrontComponent({
   const { color } = provider
   const icon = useSourceIcon(source)
   const ref = useRef<HTMLDivElement>(null)
-  const relativeTime = useRelativeTime({ date: updatedAt })
   const visibleSourceErrorMessage = isFetchingLatest ? undefined : sourceErrorMessage
   const sourceStatusMessage = sourcePermissionRequired
     ? sourcePermissionDescription
@@ -184,7 +183,7 @@ function CardFrontComponent({
           icon={icon}
           provider={provider}
           title={title}
-          subtitle={isFetching ? "Updating..." : relativeTime}
+          subtitle={isFetching ? "Updating..." : <RelativeTime date={updatedAt} />}
           actions={actions ?? (
             <>
               <CardRefreshButton isFetching={isFetching} onRefresh={onRefresh} />
@@ -228,11 +227,11 @@ function CardFrontComponent({
                 icon={icon}
                 items={items}
                 provider={provider}
-                relativeUpdatedAt={relativeTime}
                 scrollRef={ref as React.RefObject<HTMLDivElement>}
                 sourceErrorMessage={visibleSourceErrorMessage}
                 sourceLoginUrl={sourceLoginUrl}
                 sourcePermissionRequired={sourcePermissionRequired}
+                updatedAt={updatedAt}
                 onRefresh={onRefresh}
                 onRequestPermission={onRequestPermission}
               />

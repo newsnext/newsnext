@@ -23,5 +23,17 @@ function App() {
   )
 }
 
-const rootElement = document.getElementById("root")!
-renderPersistentReactRoot(rootElement, <App />)
+async function renderApp(): Promise<void> {
+  if (import.meta.env.DEV) {
+    const { scan } = await import("react-scan")
+    scan({
+      showToolbar: true,
+      trackUnnecessaryRenders: true,
+    })
+  }
+
+  const rootElement = document.getElementById("root")!
+  renderPersistentReactRoot(rootElement, <App />)
+}
+
+void renderApp()

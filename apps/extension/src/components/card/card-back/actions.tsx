@@ -1,10 +1,11 @@
 import { Button } from "@newsnext/ui/components/button"
 import { useSetAtom } from "jotai"
+import { memo } from "react"
 import { BoardMembershipSelect } from "@/components/common/board-membership-select"
 import { PhTrashDuotone } from "@/components/icons/ph"
 import { deleteInstanceAtom, moveInstanceToBoardAtom } from "@/store/board"
 
-export function CardBoardSelect({ id, boardId }: { id: string, boardId: string | null }) {
+function CardBoardSelectComponent({ id, boardId }: { id: string, boardId: string | null }) {
   const moveInstance = useSetAtom(moveInstanceToBoardAtom)
 
   return (
@@ -22,7 +23,7 @@ export function CardBoardSelect({ id, boardId }: { id: string, boardId: string |
   )
 }
 
-export function DeleteCardButton({ id }: { id: string }) {
+function DeleteCardButtonComponent({ id }: { id: string }) {
   const deleteLocal = useSetAtom(deleteInstanceAtom)
 
   return (
@@ -40,3 +41,6 @@ export function DeleteCardButton({ id }: { id: string }) {
     </Button>
   )
 }
+
+export const CardBoardSelect = memo(CardBoardSelectComponent)
+export const DeleteCardButton = memo(DeleteCardButtonComponent)

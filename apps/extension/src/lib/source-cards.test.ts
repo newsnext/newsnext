@@ -210,6 +210,37 @@ describe("buildSourceCards", () => {
 
     expect(cards.ids).toEqual(["test:latest::card_def"])
   })
+
+  it("preserves unchanged card objects when another instance changes", () => {
+    const firstInstance = createCustomInstance()
+    const secondInstance = createCustomInstance({
+      instanceId: "test:latest::card_def",
+      sourceId: "test:latest",
+    })
+    const initialCards = buildSourceCards({
+      sources: testSources,
+      boardId: "inbox",
+      sourceInstances: [firstInstance, secondInstance],
+    })
+    const nextCards = buildSourceCards({
+      sources: testSources,
+      boardId: "inbox",
+      sourceInstances: [
+        {
+          ...firstInstance,
+          patch: { metadata: { title: "Updated" } },
+        },
+        secondInstance,
+      ],
+    })
+
+    expect(nextCards.map[firstInstance.instanceId]).not.toBe(
+      initialCards.map[firstInstance.instanceId],
+    )
+    expect(nextCards.map[secondInstance.instanceId]).toBe(
+      initialCards.map[secondInstance.instanceId],
+    )
+  })
 })
 
 describe("applySourceLoaderMetadata", () => {

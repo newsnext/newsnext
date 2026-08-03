@@ -4,10 +4,10 @@ import type { BoardSource } from "@/typings/source"
 import { Button } from "@newsnext/ui/components/button"
 import { ScrollArea } from "@newsnext/ui/components/scroll-area"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
-import { useState } from "react"
+import { memo, useCallback, useState } from "react"
 import { PhArrowCircleLeftDuotone } from "@/components/icons/ph"
 import { useSourceIcon } from "@/hooks/use-source-icon"
-import { useRelativeTime } from "@/hooks/useRelativeTime"
+import { RelativeTime } from "@/hooks/useRelativeTime"
 import { cn } from "@/lib/utils"
 import { CardHeader } from "../card-header"
 import { CardSurface } from "../card-surface"
@@ -32,7 +32,40 @@ export interface CardBackProps {
   dragHandle?: ReactNode
 }
 
-export function CardBack({
+interface MemoizedParamFieldProps {
+  color: BoardSource["provider"]["color"]
+  editable: boolean
+  onSourceParamChange: (key: string, value: unknown) => void
+  param: NonNullable<BoardSource["params"]>[string]
+  paramKey: string
+  value: unknown
+}
+
+const MemoizedParamField = memo(({
+  color,
+  editable,
+  onSourceParamChange,
+  param,
+  paramKey,
+  value,
+}: MemoizedParamFieldProps) => {
+  const handleChange = useCallback(
+    (nextValue: unknown) => onSourceParamChange(paramKey, nextValue),
+    [onSourceParamChange, paramKey],
+  )
+
+  return (
+    <ParamField
+      color={color}
+      editable={editable}
+      onChange={handleChange}
+      param={param}
+      value={value}
+    />
+  )
+})
+
+function CardBackComponent({
   id,
   source,
   draftSourceParams,
@@ -62,7 +95,6 @@ export function CardBack({
     provider,
     metadata: { home: previewHome },
   })
-  const relativeTime = useRelativeTime({ date: updatedAt })
   const hasSourceMetaChanges = Boolean(editDraft && Object.keys(editDraft).length > 0)
 
   function startEditingMetadata(): void {
@@ -114,7 +146,7 @@ export function CardBack({
           icon={icon}
           provider={provider}
           title={previewTitle}
-          subtitle={previewDesc || relativeTime}
+          subtitle={previewDesc || <RelativeTime date={updatedAt} />}
           actions={(
             <>
               {!isDraft && <DeleteCardButton id={id} />}
@@ -281,13 +313,14 @@ export function CardBack({
                         )}
                   </div>
                   {params && Object.entries(params).map(([paramKey, param]) => (
-                    <ParamField
+                    <MemoizedParamField
                       key={paramKey}
+                      paramKey={paramKey}
                       param={param}
                       value={draftSourceParams[paramKey]}
                       editable={isEditingParams}
                       color={color}
-                      onChange={nextValue => onSourceParamChange(paramKey, nextValue)}
+                      onSourceParamChange={onSourceParamChange}
                     />
                   ))}
                 </div>
@@ -299,3 +332,5 @@ export function CardBack({
     </div>
   )
 }
+
+export const CardBack = memo(CardBackComponent)
