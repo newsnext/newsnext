@@ -33,7 +33,7 @@ export function CardHeader({
   const displayTitle = title || provider.title
 
   return (
-    <div className={cn("flex justify-between mb-3 items-center mx-1 gap-2", className)}>
+    <div data-card-header className={cn("flex justify-between mb-3 items-center mx-1 gap-2", className)}>
       <div className="flex gap-2.5 items-center ml-1 min-w-0 flex-1">
         <Button
           type="button"

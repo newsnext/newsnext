@@ -1,51 +1,47 @@
 import type { CardProps } from "./index"
-import type { BoardSource } from "@/typings/source"
 import { Button } from "@newsnext/ui/components/button"
-import { useCallback, useMemo } from "react"
-import { createRoot } from "react-dom/client"
 import { useSortable } from "@/hooks/use-sortable"
 import { cn } from "@/lib/utils"
 import { PhDotsSixVerticalDuotone } from "../icons/ph"
-import { DragOverlay } from "./drag-overlay"
 import Card from "./index"
 
-interface DraggableCardProps extends Omit<CardProps, "nodeRef" | "dragHandle"> {
-  id: string
-  source: BoardSource
+type DraggableCardProps = Omit<CardProps, "nodeRef" | "dragHandle">
+
+function generateDragPreview({ container, element }: { container: HTMLElement, element: HTMLElement }) {
+  const cardHeader = element.querySelector<HTMLElement>("[data-card-header]")
+  const cardSurface = element.querySelector<HTMLElement>("[data-card-surface]")
+  if (!cardHeader || !cardSurface) {
+    return
+  }
+
+  container.style.width = `${element.clientWidth}px`
+  container.style.padding = "0.625rem"
+  container.style.backgroundColor = getComputedStyle(cardSurface).backgroundColor
+  container.className = "rounded-3xl"
+
+  const preview = cardHeader.cloneNode(true) as HTMLElement
+  preview.style.marginBottom = "0"
+  container.append(preview)
+  return () => preview.remove()
 }
 
 export function DraggableCard({ id, source, ...props }: DraggableCardProps) {
-  const onGenerateDragPreview = useCallback(
-    ({ container, element }: { container: HTMLElement, element: HTMLElement }) => {
-      container.style.width = `${element.clientWidth}px`
-      container.className = cn("bg-background")
-
-      const root = createRoot(container)
-      root.render(<DragOverlay source={source} />)
-      return () => root.unmount()
-    },
-    [source],
-  )
-
   const { isDragging, setNodeRef, setHandleRef } = useSortable({
     id,
-    onGenerateDragPreview,
+    onGenerateDragPreview: generateDragPreview,
   })
 
-  const dragHandle = useMemo(
-    () => (
-      <div ref={setHandleRef} className="flex items-center justify-center">
-        <Button
-          variant="quiet"
-          size="icon-fit"
-          aria-label="Handle"
-          className="cursor-grab active:cursor-grabbing"
-        >
-          <PhDotsSixVerticalDuotone />
-        </Button>
-      </div>
-    ),
-    [setHandleRef],
+  const dragHandle = (
+    <div ref={setHandleRef} className="flex items-center justify-center">
+      <Button
+        variant="quiet"
+        size="icon-fit"
+        aria-label="Handle"
+        className="cursor-grab active:cursor-grabbing"
+      >
+        <PhDotsSixVerticalDuotone />
+      </Button>
+    </div>
   )
 
   return (

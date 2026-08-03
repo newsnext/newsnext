@@ -11,6 +11,7 @@ export function CardSurface({ color, className }: CardSurfaceProps): React.JSX.E
   return (
     <SquircleBox
       aria-hidden
+      data-card-surface
       radius="3xl"
       className={cn("pointer-events-none absolute inset-0", className)}
       style={{ backgroundColor: `color-mix(in oklab, var(--background), var(--color-${color}-400) 55%)` }}

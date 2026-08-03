@@ -5,7 +5,6 @@ import { COLORS } from "@newsnext/shared/constants"
 import { useState } from "react"
 import { CardBack } from "@/components/card/card-back"
 import { CardFront } from "@/components/card/card-front"
-import { DragOverlay } from "@/components/card/drag-overlay"
 
 const UPDATED_AT = Date.now() - 4 * 60 * 1000
 
@@ -238,16 +237,6 @@ function ErrorCardFixture() {
   return <FrontFixture items={[]} sourceErrorMessage="The source could not be reached." />
 }
 
-function DragOverlayFixture() {
-  return (
-    <main className="grid min-h-full place-items-center p-8">
-      <div className="w-full max-w-100">
-        <DragOverlay source={SAMPLE_SOURCE} />
-      </div>
-    </main>
-  )
-}
-
 export default {
   "Overview: All colors": AllCardColorsFixture,
   "Front: Ranking": RankingCardFixture,
@@ -256,5 +245,4 @@ export default {
   "Front: Permission": PermissionCardFixture,
   "Front: Error": ErrorCardFixture,
   "Back: Editable": CardBackFixture,
-  "Drag: Overlay": DragOverlayFixture,
 }
