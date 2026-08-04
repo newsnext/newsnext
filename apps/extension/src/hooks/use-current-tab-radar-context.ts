@@ -1,7 +1,7 @@
 import type { RadarContext, RadarMatcher } from "@/lib/radar"
 import { useEffect, useState } from "react"
 import { browser } from "#imports"
-import { readRadarPageFeeds, readRadarPageSelections } from "@/lib/radar-page"
+import { readRadarPageDiscovery, readRadarPageSelections } from "@/lib/radar-page"
 
 export function useCurrentTabRadarContext(radarMatcher: RadarMatcher): RadarContext | null {
   const [context, setContext] = useState<RadarContext | null>(null)
@@ -23,19 +23,18 @@ export function useCurrentTabRadarContext(radarMatcher: RadarMatcher): RadarCont
         title: tab.title,
       }
       const pageQueries = radarMatcher.getPageQueries(nextContext)
-      const [pageSelections, feeds] = tab.id === undefined
-        ? [{}, []]
+      const discoveryOptions = radarMatcher.getDiscoveryOptions(nextContext)
+      const [pageSelections, discovery] = tab.id === undefined
+        ? [{}, { feeds: [] }]
         : await Promise.all([
             readRadarPageSelections(tab.id, pageQueries),
-            radarMatcher.shouldDiscoverFeeds(nextContext)
-              ? readRadarPageFeeds(tab.id)
-              : Promise.resolve([]),
+            readRadarPageDiscovery(tab.id, discoveryOptions),
           ])
 
       if (!isCancelled) {
         setContext({
           ...nextContext,
-          feeds,
+          ...discovery,
           pageSelections,
         })
       }

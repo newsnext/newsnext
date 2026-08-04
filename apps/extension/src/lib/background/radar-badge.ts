@@ -2,7 +2,7 @@ import type { Browser } from "#imports"
 import { loadSourceDescriptors } from "@newsnext/source/runtime"
 import { browser } from "#imports"
 import { createRadarMatcher } from "@/lib/radar"
-import { readRadarPageFeeds } from "@/lib/radar-page"
+import { readRadarPageDiscovery } from "@/lib/radar-page"
 
 async function updateRadarBadge(tab: Browser.tabs.Tab): Promise<void> {
   if (tab.id === undefined) {
@@ -12,11 +12,12 @@ async function updateRadarBadge(tab: Browser.tabs.Tab): Promise<void> {
   const sources = await loadSourceDescriptors()
   const matcher = createRadarMatcher(sources)
   const baseContext = tab.url ? { url: tab.url, title: tab.title } : undefined
-  const feeds = baseContext && matcher.shouldDiscoverFeeds(baseContext)
-    ? await readRadarPageFeeds(tab.id)
-    : []
+  const discoveryOptions = baseContext
+    ? matcher.getDiscoveryOptions(baseContext)
+    : { discourse: false, feeds: false }
+  const discovery = await readRadarPageDiscovery(tab.id, discoveryOptions)
   const count = baseContext
-    ? matcher.getSuggestions({ ...baseContext, feeds }).length
+    ? matcher.getSuggestions({ ...baseContext, ...discovery }).length
     : 0
 
   await browser.action.setBadgeText({

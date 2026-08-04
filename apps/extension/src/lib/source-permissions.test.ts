@@ -76,6 +76,29 @@ describe("source permissions", () => {
     })
   })
 
+  it("maps Discourse sites to the configured site origin", () => {
+    const source = {
+      ...createSource({
+        network: ["*"],
+        providerName: "Discourse",
+        sourceId: "discourse:topics",
+      }),
+      params: {
+        siteUrl: {
+          type: "url" as const,
+          title: "Site URL",
+          default: "https://meta.discourse.org/",
+        },
+      },
+    }
+
+    expect(getPermissionRequestForSource(source, {
+      siteUrl: "https://community.example.org/forum/",
+    })).toEqual({
+      origins: ["*://community.example.org/*"],
+    })
+  })
+
   it("maps runtime-added network sources to a narrow optional origin", () => {
     const source = createSource({
       network: ["user-added.example.com"],

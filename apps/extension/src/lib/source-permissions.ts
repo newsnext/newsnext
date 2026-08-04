@@ -29,8 +29,12 @@ export function getPermissionRequestForSource(
       return { permissions: ["bookmarks", "favicon"] }
     case "browser:history":
       return { permissions: ["history"] }
+    case "discourse:topics": {
+      const origin = getUrlParamPermissionOrigin(source.params?.siteUrl, params.siteUrl)
+      return origin ? { origins: [origin] } : undefined
+    }
     case "rss:feed": {
-      const origin = getRssFeedPermissionOrigin(source.params?.url, params.url)
+      const origin = getUrlParamPermissionOrigin(source.params?.url, params.url)
       return origin ? { origins: [origin] } : undefined
     }
   }
@@ -50,7 +54,7 @@ export function getPermissionRequestForSource(
     : { origins }
 }
 
-function getRssFeedPermissionOrigin(
+function getUrlParamPermissionOrigin(
   schema: SourceParamSchema | undefined,
   value: unknown,
 ): string | undefined {

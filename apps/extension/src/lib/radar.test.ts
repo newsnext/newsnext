@@ -9,6 +9,9 @@ const sourceDescriptors = Object.entries(resolveSources(bundledSourceRegistry))
     const { loader: _loader, ...descriptor } = source
     return { ...descriptor, id }
   })
+const discourseSourceDescriptors = sourceDescriptors.filter(
+  source => source.id === "discourse:topics",
+)
 
 function getSuggestions(...args: Parameters<typeof getRadarSuggestions>) {
   return getRadarSuggestions(args[0], args[1] ?? sourceDescriptors)
@@ -187,6 +190,160 @@ describe("getRadarSuggestions", () => {
     ])
   })
 
+  it("discovers a Discourse site and preserves its base path", () => {
+    const matcher = createRadarMatcher(discourseSourceDescriptors)
+    const context = {
+      url: "https://community.example.com/forum/t/welcome/42",
+      discourse: {
+        baseUrl: "https://community.example.com/forum/",
+        title: "Example Community",
+      },
+    }
+
+    expect(matcher.getDiscoveryOptions(context).discourse).toBe(true)
+    expect(matcher.getSuggestions(context)).toMatchObject([
+      {
+        confidence: -0.5,
+        sourceId: "discourse:topics",
+        patch: {
+          params: {
+            feed: "latest",
+            siteUrl: "https://community.example.com/forum/",
+          },
+          metadata: {
+            badge: "https://favicon.im/community.example.com?larger=true",
+            home: "https://community.example.com/forum/",
+            title: "Example Community",
+          },
+        },
+      },
+    ])
+  })
+
+  it("discovers the current Discourse category and feed", () => {
+    const matcher = createRadarMatcher(discourseSourceDescriptors)
+
+    expect(matcher.getSuggestions({
+      url: "https://community.example.com/forum/c/howto/admins/53/l/top",
+      title: "Admin Guides - Example Community",
+      discourse: {
+        baseUrl: "https://community.example.com/forum/",
+        categoryTitle: "Admin Guides",
+        title: "Example Community",
+      },
+    })).toMatchObject([
+      {
+        sourceId: "discourse:topics",
+        patch: {
+          params: {
+            categoryPath: "howto/admins/53",
+            feed: "top",
+            siteUrl: "https://community.example.com/forum/",
+          },
+          metadata: {
+            home: "https://community.example.com/forum/c/howto/admins/53",
+            title: "Admin Guides",
+          },
+        },
+      },
+    ])
+  })
+
+  it("discovers the current site-wide Discourse feed", () => {
+    const matcher = createRadarMatcher(discourseSourceDescriptors)
+
+    expect(matcher.getSuggestions({
+      url: "https://community.example.com/forum/hot",
+      discourse: {
+        baseUrl: "https://community.example.com/forum/",
+        title: "Example Community",
+      },
+    })).toMatchObject([
+      {
+        sourceId: "discourse:topics",
+        patch: {
+          params: {
+            categoryPath: "",
+            feed: "hot",
+            siteUrl: "https://community.example.com/forum/",
+          },
+        },
+      },
+    ])
+  })
+
+  it("discovers Discourse topics ordered by creation time", () => {
+    const matcher = createRadarMatcher(discourseSourceDescriptors)
+
+    expect(matcher.getSuggestions({
+      url: "https://community.example.com/forum/latest",
+      discourse: {
+        baseUrl: "https://community.example.com/forum/",
+        title: "Example Community",
+      },
+    }).map(suggestion => ({
+      feed: suggestion.patch.params?.feed,
+      title: suggestion.patch.metadata?.title,
+    }))).toEqual([
+      { feed: "latest", title: "Example Community" },
+      { feed: "new", title: "Example Community · New" },
+    ])
+
+    expect(matcher.getSuggestions({
+      url: "https://community.example.com/forum/latest?order=created",
+      discourse: {
+        baseUrl: "https://community.example.com/forum/",
+        title: "Example Community",
+      },
+    }).map(suggestion => suggestion.patch.params?.feed)).toEqual(["new", "latest"])
+
+    expect(matcher.getSuggestions({
+      url: "https://community.example.com/forum/c/howto/admins/53/l/latest?order=created",
+      discourse: {
+        baseUrl: "https://community.example.com/forum/",
+        categoryTitle: "Admin Guides",
+      },
+    }).map(suggestion => suggestion.patch.params)).toMatchObject([
+      { categoryPath: "howto/admins/53", feed: "new" },
+      { categoryPath: "howto/admins/53", feed: "latest" },
+    ])
+  })
+
+  it("rejects a Discourse base URL on another origin", () => {
+    const matcher = createRadarMatcher(discourseSourceDescriptors)
+
+    expect(matcher.getSuggestions({
+      url: "https://community.example.com/latest",
+      discourse: {
+        baseUrl: "https://attacker.example/",
+      },
+    })).toEqual([])
+  })
+
+  it("prioritizes dedicated sources over generic Discourse discovery", () => {
+    const matcher = createRadarMatcher([
+      {
+        id: "test:dedicated",
+        metadata: {
+          home: "https://community.example.com/",
+        },
+      },
+      ...discourseSourceDescriptors,
+    ])
+
+    expect(matcher.getSuggestions({
+      url: "https://community.example.com/latest",
+      discourse: {
+        baseUrl: "https://community.example.com/",
+        title: "Example Community",
+      },
+    }).map(suggestion => suggestion.sourceId)).toEqual([
+      "test:dedicated",
+      "discourse:topics",
+      "discourse:topics",
+    ])
+  })
+
   it("discovers each RSS or Atom feed exposed by the current page", () => {
     const matcher = createRadarMatcher(
       sourceDescriptors.filter(source => source.id === "rss:feed"),
@@ -196,7 +353,7 @@ describe("getRadarSuggestions", () => {
       title: "Example",
     }
 
-    expect(matcher.shouldDiscoverFeeds(context)).toBe(true)
+    expect(matcher.getDiscoveryOptions(context).feeds).toBe(true)
     expect(matcher.getSuggestions({
       ...context,
       feeds: [
@@ -236,7 +393,7 @@ describe("getRadarSuggestions", () => {
       title: "Example",
     }
 
-    expect(matcher.shouldDiscoverFeeds(context)).toBe(true)
+    expect(matcher.getDiscoveryOptions(context).feeds).toBe(true)
     expect(matcher.getSuggestions(context)).toEqual([])
   })
 

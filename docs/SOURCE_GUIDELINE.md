@@ -148,7 +148,7 @@ Use the following matching rules:
 | Category | Match when the provider's primary value is | Current examples |
 | --- | --- | --- |
 | `social` | Identity-based publishing, following, channels, or creator feeds | X, Weibo, Telegram, Jike, Bilibili |
-| `forum` | Topic-based discussion organized around threads, replies, or Q&A | Reddit, Linux.do, V2EX, Hacker News, Tieba, Zhihu |
+| `forum` | Topic-based discussion organized around threads, replies, or Q&A | Discourse, Reddit, V2EX, Hacker News, Tieba, Zhihu |
 | `news` | Editorial reporting, news aggregation, or feed subscription and reading | 36Kr, AIHot, Folo, NewsNow, Zaobao |
 | `finance` | Financial markets, investing, or finance-specialist reporting and data | CLS, Xueqiu |
 | `developer` | Software development, code collaboration, or developer workflows | GitHub |
@@ -705,10 +705,13 @@ and cookie capability they use; loaders that use neither may omit
 `capabilities`. Browser API permissions are not a source authoring capability:
 the extension owns them for its built-in `browser:*` sources.
 
-The built-in `rss:feed` source is also permission-specialized. Although its
-runtime network capability is `*` so it can validate a user-selected feed, the
-extension requests host access only for the hostname in that card's effective
-`url` parameter. Changing the feed URL recalculates the required origin.
+The built-in `rss:feed` and `discourse:topics` sources are also
+permission-specialized. Although their runtime network capability is `*` so
+they can validate a user-selected site, the extension requests host access only
+for the hostname in the card's effective URL parameter (`url` for RSS and
+`siteUrl` for Discourse). Changing that parameter recalculates the required
+origin. Keep this source-ID mapping aligned with the extension permission
+resolver when adding another bundled source that targets a user-selected host.
 
 Secrets collect website values instead of hard-coding them:
 
@@ -885,6 +888,31 @@ and `color` are not valid Radar metadata fields.
 When a source has no parameters or explicit `radar`, an HTTP(S)
 `metadata.home` creates a same-host rule automatically. Set `radar: []` to opt
 out. Parameterized sources need explicit rules.
+
+The bundled `discourse:topics` source is an intentional exception because its
+host is selected at runtime. Radar recognizes the official Discourse
+`meta[name="generator"]` marker, preserves a declared `discourse-base-uri` for
+subpath installations, and recognizes site-wide `/latest`, `/hot`, and `/top`
+feeds plus `/latest?order=created` as New. On `/c/{slug-path}/{id}` and
+`/c/{slug-path}/{id}/l/{latest|hot|top}` pages, it persists the category slug
+path, numeric ID, and selected feed; `order=created` likewise selects New. It
+reads the rendered `.badge-category__name` as the card title and requests the
+matching category list JSON. The tab title is only a fallback when the rendered
+category label is unavailable. Matching dedicated sources rank above the
+generic Discourse suggestion without hiding it. Do not add wildcard Radar hosts
+to reproduce this behavior; arbitrary-host discovery remains extension-owned
+and fail-closed.
+
+Radar emits both Latest and New suggestions on a Latest list page, including
+category Latest pages. The alternate suggestion adds a `Latest` or `New` title
+suffix so the two cards remain distinguishable. Hot and Top pages emit only
+their matching mode.
+
+Discourse Latest requests preserve the upstream default activity order and use
+`bumped_at` so replies and other legitimate bumps remain visible as recent
+activity. New requests append `order=created` to the Latest endpoint and use
+`created_at` for stable chronological topic discovery. Hot and Top preserve
+their upstream ranking even though items also expose timestamps.
 
 Use `badge` for secondary instance identity. For signed or expiring images,
 return loader metadata only when the item request already provides the URL.
