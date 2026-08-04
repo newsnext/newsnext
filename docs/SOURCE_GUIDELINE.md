@@ -461,6 +461,10 @@ loader: {
 ```
 
 A string field selects the first matching element and returns trimmed text.
+Exclude nested quote, reply, or related-content elements when they reuse the
+same class as a primary field; otherwise the first nested match can replace the
+current item's title. When nested content belongs in a secondary field, use an
+ordered selector fallback to select it explicitly before the primary content.
 Object fields resolve in this order:
 
 ```text

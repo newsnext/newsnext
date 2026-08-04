@@ -54,7 +54,7 @@
         "items": ".tgme_widget_message:has(.tgme_widget_message_text)",
         "fields": {
           "title": {
-            "select": ".tgme_widget_message_text",
+            "select": ".tgme_widget_message_text:not(.js-message_reply_text)",
             "brSeparator": "\n",
             "template": "{{ scope.value | first_line | truncate: 160, '…' }}"
           },
@@ -75,7 +75,10 @@
           },
           "preview": {
             "text": {
-              "select": ".tgme_widget_message_text",
+              "select": [
+                ".js-message_reply_text",
+                ".tgme_widget_message_text:not(.js-message_reply_text)"
+              ],
               "brSeparator": "\n",
               "template": "{{ scope.value | normalize_lines: 2 }}"
             },
