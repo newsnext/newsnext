@@ -20,6 +20,8 @@ interface FoloEntry {
 interface FoloDataItem {
   entries?: FoloEntry
   feeds?: {
+    id?: string
+    image?: string | null
     title?: string | null
   }
 }
@@ -46,7 +48,12 @@ async function loadFoloEntries(
     },
   }).json<FoloResponse>()
 
+  const badge = "feedId" in body
+    ? response.data?.find(({ feeds }) => feeds?.id === body.feedId)?.feeds?.image
+    : undefined
+
   return {
+    ...(badge ? { metadata: { badge } } : {}),
     items: (response.data ?? [])
       .flatMap(({ entries, feeds }): NewsItem[] => {
         if (!entries?.title || !entries.url) return []
