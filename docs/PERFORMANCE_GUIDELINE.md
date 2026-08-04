@@ -86,21 +86,26 @@ The scroll progress contexts follow this rule. Layer activity changes update
 `HeaderProgress`, while stable scroll refs and the activity setter are available
 to `Desk` without subscribing the board to header progress state.
 
-### Preserve domain object identity
+### Keep derivation ownership local
 
-Memoization only works when unchanged objects retain their references. Derived
-board cards must reuse a `BoardSource` while both its `SourceDescriptor` and
-`SourceInstance` objects are unchanged.
+`buildSourceCards` is a pure derivation without cross-call caches. Search and
+refresh call it for their own snapshots. The rendered board uses Jotai's
+`splitAtom` with `instanceId` as its stable key so every card subscribes to its
+own `SourceInstance`. `NowLayer` subscribes separately to a lightweight layout
+projection containing only membership and sorting fields.
 
-`buildSourceCards` uses weak caches keyed by the source instance and descriptor.
-Jotai update atoms already preserve unchanged instance objects when mapping an
-instances array. Together, these guarantees allow a single card edit to change
-the edited card's source prop without invalidating every other card.
+Parameter and non-title metadata changes update the affected item atom without
+rebuilding the board. Membership, creation time, source identity, and title
+changes update the layout projection because they can change visibility or
+ordering. Keep dynamically created atom configs referentially stable, and use
+`selectAtom` only where an equality function is required to stabilize a
+structural projection.
 
-Do not mutate cached `BoardSource` objects. A source or instance change must
-produce a new input object and therefore a new derived card object. Keep a unit
-test that verifies changed cards receive a new reference while unchanged cards
-retain their previous reference.
+Do not add module-global identity caches to make `memo` boundaries pass. Such
+caches make correctness depend on an implicit immutability contract and can
+return stale cards after in-place changes. If card-instance updates become a
+measured bottleneck, optimize them at the React or Jotai owner that has the
+complete input lifecycle.
 
 Mirrored persistence must ignore its own `browser.storage.local` echo when the
 normalized value already matches the synchronous `localStorage` snapshot. An
@@ -233,7 +238,6 @@ with eight card contents mounted by the viewport and preload margin.
 | Two Now/Next layer toggles | 1,851 | 61 | Root, header, footer, and card content cascades removed; 96.7% fewer render events. |
 | One minute-boundary update | 1,149 | 266 | Whole card fronts and backs no longer update; 76.8% fewer render events. A subsequent timeline content boundary further isolates unchanged news content. |
 | Single-card refresh | 389 | 252 | Hidden card-back work reduced from three full renders to one data-completion render; 35.2% fewer render events. |
-| Single-card metadata save | All visible card source props changed | One `DraggableCard` and one `Card` changed | The other 11 card content components retained their inputs and did not render. |
 
 Settings tab changes remained inside the settings subtree. Metadata and
 parameter drafts remained inside the edited card. Search open and close did not
@@ -248,7 +252,8 @@ counts. Preserve the isolation properties described in the Result column.
 Before completing React performance work:
 
 - Review every changed state owner and context provider.
-- Confirm unchanged card and item objects preserve reference identity.
+- Confirm unchanged item atoms and card boundary props preserve reference
+  identity.
 - Confirm memoized props do not contain avoidable new arrays, objects,
   callbacks, refs, or React elements.
 - Check both visible and hidden sides of a flipped card.
@@ -266,6 +271,11 @@ Before completing React performance work:
 - Build the Chrome MV3 production extension and confirm React Scan is absent.
 
 ## Known Limitations
+
+The `splitAtom` card-subscription migration received static checks and an
+ego-lite functional smoke test, but React Scan was not enabled on the existing
+development server. Re-baseline the single-card metadata edit scenario before
+treating its render count as measured.
 
 The 2026-08-03 ego-lite audit could not reliably generate the browser's native
 HTML5 drag event chain. Card reordering received code-path review and existing

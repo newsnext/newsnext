@@ -1,19 +1,19 @@
 import type { RefObject } from "react"
-import type { BoardSource } from "@/typings/source"
+import type { DesktopBoardCard } from "./desktop-board"
+import type { BoardSortableSource } from "@/lib/board-sorting"
 import { useAtomValue, useSetAtom } from "jotai"
 import { useCallback, useMemo } from "react"
 import { useSourceDescriptors } from "@/hooks/use-source-descriptors"
 import { orderBoardSourceIds } from "@/lib/board-sorting"
-import { buildSourceCards } from "@/lib/source-cards"
+import { ALL_BOARD_ID } from "@/lib/boards"
 import {
   boardsAtom,
-  instancesAtom,
+  instanceAtomsAtom,
+  instanceLayoutsAtom,
   setManualBoardOrderAtom,
 } from "@/store/board"
 import { DesktopBoard } from "./desktop-board"
 
-const EMPTY_SOURCE_IDS: string[] = []
-const EMPTY_SOURCES_MAP: Record<string, BoardSource> = {}
 interface NowLayerProps {
   boardId: string
   className?: string
@@ -28,29 +28,58 @@ export function NowLayer({
   containerRef,
 }: NowLayerProps) {
   const boards = useAtomValue(boardsAtom)
-  const instances = useAtomValue(instancesAtom)
+  const instanceAtoms = useAtomValue(instanceAtomsAtom)
+  const instanceLayouts = useAtomValue(instanceLayoutsAtom)
   const setManualBoardOrder = useSetAtom(setManualBoardOrderAtom)
   const { sources } = useSourceDescriptors()
   const currentBoard = boards.find(board => board.id === boardId)!
   const currentBoardName = currentBoard.name
 
-  const { ids: boardSourceIds, map: sourcesMap } = useMemo(() => {
-    if (!sources.length) {
-      return { ids: EMPTY_SOURCE_IDS, map: EMPTY_SOURCES_MAP }
-    }
+  const {
+    sourceIds: boardSourceIds,
+    sourceCardsMap,
+    sortSourcesMap,
+  } = useMemo(() => {
+    const descriptorsMap = new Map(sources.map(source => [source.id, source]))
+    const sourceIds: string[] = []
+    const nextSourceCardsMap: Record<string, DesktopBoardCard> = {}
+    const nextSortSourcesMap: Record<string, BoardSortableSource> = {}
 
-    return buildSourceCards({
-      sources,
-      sourceInstances: instances,
-      boardId,
+    instanceLayouts.forEach((layout, index) => {
+      if (boardId !== ALL_BOARD_ID && layout.boardId !== boardId) {
+        return
+      }
+
+      const descriptor = descriptorsMap.get(layout.sourceId)
+      const instanceAtom = instanceAtoms[index]
+      if (!descriptor || !instanceAtom) {
+        return
+      }
+
+      sourceIds.push(layout.instanceId)
+      nextSourceCardsMap[layout.instanceId] = { descriptor, instanceAtom }
+      nextSortSourcesMap[layout.instanceId] = {
+        id: layout.instanceId,
+        createdAt: layout.createdAt,
+        provider: descriptor.provider,
+        metadata: {
+          title: layout.title ?? descriptor.metadata.title,
+        },
+      }
     })
-  }, [boardId, sources, instances])
+
+    return {
+      sourceIds,
+      sourceCardsMap: nextSourceCardsMap,
+      sortSourcesMap: nextSortSourcesMap,
+    }
+  }, [boardId, instanceAtoms, instanceLayouts, sources])
 
   const sourceIds = useMemo(() => orderBoardSourceIds({
     sourceIds: boardSourceIds,
-    sourcesMap,
+    sourcesMap: sortSourcesMap,
     preference: currentBoard.sort,
-  }), [boardSourceIds, currentBoard.sort, sourcesMap])
+  }), [boardSourceIds, currentBoard.sort, sortSourcesMap])
 
   const handleSourceIdsChange = useCallback((newSourceIds: string[]) => {
     setManualBoardOrder({ boardId, sourceIds: newSourceIds })
@@ -71,7 +100,7 @@ export function NowLayer({
     <DesktopBoard
       key={boardId}
       sourceIds={sourceIds}
-      sourcesMap={sourcesMap}
+      sourceCardsMap={sourceCardsMap}
       className={className}
       isScattered={isScattered}
       containerRef={containerRef}

@@ -27,11 +27,6 @@ export type SourceInstancePatch = SourcePatch<
   SourceInstanceMetadata
 >
 
-const boardSourceCache = new WeakMap<
-  SourceInstance,
-  WeakMap<SourceDescriptor, BoardSource>
->()
-
 export function mergeSourceInstancePatch(
   current: SourceInstancePatch | undefined,
   patch: SourceInstancePatch,
@@ -70,25 +65,16 @@ function applyInstanceOverrides(
   }
 }
 
-function getBoardSource(
+export function createBoardSource(
   source: SourceDescriptor,
   instance: SourceInstance,
 ): BoardSource {
-  const cachedSource = boardSourceCache.get(instance)?.get(source)
-  if (cachedSource) {
-    return cachedSource
-  }
-
-  const boardSource = applyInstanceOverrides({
+  return applyInstanceOverrides({
     ...source,
     id: instance.instanceId,
     sourceId: instance.sourceId,
     boardId: instance.boardId,
   }, instance)
-  const instanceCache = boardSourceCache.get(instance) ?? new WeakMap()
-  instanceCache.set(source, boardSource)
-  boardSourceCache.set(instance, instanceCache)
-  return boardSource
 }
 
 export function createCardInstance(
@@ -127,7 +113,7 @@ function buildCardSources(
   return sources.flatMap(source =>
     (instanceGroups.get(source.id) ?? [])
       .sort((a, b) => a.createdAt - b.createdAt)
-      .map(instance => getBoardSource(source, instance)),
+      .map(instance => createBoardSource(source, instance)),
   )
 }
 

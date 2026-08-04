@@ -1,12 +1,18 @@
-import type { CardProps } from "./index"
+import type { Atom } from "jotai"
+import type { SourceInstance } from "@/lib/source-cards"
+import type { SourceDescriptor } from "@/typings/source"
 import { Button } from "@newsnext/ui/components/button"
-import { memo } from "react"
+import { useAtomValue } from "jotai"
+import { memo, useMemo } from "react"
 import { useSortable } from "@/hooks/use-sortable"
-import { cn } from "@/lib/utils"
+import { createBoardSource } from "@/lib/source-cards"
 import { PhDotsSixVerticalDuotone } from "../icons/ph"
 import Card from "./index"
 
-type DraggableCardProps = Omit<CardProps, "nodeRef" | "dragHandle">
+interface DraggableCardProps {
+  descriptor: SourceDescriptor
+  instanceAtom: Atom<SourceInstance>
+}
 
 function generateDragPreview({ container, element }: { container: HTMLElement, element: HTMLElement }) {
   const cardHeader = element.querySelector<HTMLElement>("[data-card-header]")
@@ -26,7 +32,13 @@ function generateDragPreview({ container, element }: { container: HTMLElement, e
   return () => preview.remove()
 }
 
-function DraggableCardComponent({ id, source, ...props }: DraggableCardProps) {
+function DraggableCardComponent({ descriptor, instanceAtom }: DraggableCardProps) {
+  const instance = useAtomValue(instanceAtom)
+  const source = useMemo(
+    () => createBoardSource(descriptor, instance),
+    [descriptor, instance],
+  )
+  const id = instance.instanceId
   const { isDragging, setNodeRef, setHandleRef } = useSortable({
     id,
     onGenerateDragPreview: generateDragPreview,
@@ -51,8 +63,7 @@ function DraggableCardComponent({ id, source, ...props }: DraggableCardProps) {
       source={source}
       nodeRef={setNodeRef}
       dragHandle={dragHandle}
-      {...props}
-      className={cn(isDragging && "opacity-50", props.className)}
+      className={isDragging ? "opacity-50" : undefined}
     />
   )
 }

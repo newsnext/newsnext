@@ -1,6 +1,8 @@
 import type { ElementEventBasePayload } from "@atlaskit/pragmatic-drag-and-drop/element/adapter"
+import type { Atom } from "jotai"
 import type { RefObject } from "react"
-import type { BoardSource } from "@/typings/source"
+import type { SourceInstance } from "@/lib/source-cards"
+import type { SourceDescriptor } from "@/typings/source"
 import { extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge"
 import { getReorderDestinationIndex } from "@atlaskit/pragmatic-drag-and-drop-hitbox/util/get-reorder-destination-index"
 import { m } from "motion/react"
@@ -47,9 +49,14 @@ interface SourceOrderState {
   orderedSourceIds: string[]
 }
 
+export interface DesktopBoardCard {
+  descriptor: SourceDescriptor
+  instanceAtom: Atom<SourceInstance>
+}
+
 interface DesktopBoardProps {
   sourceIds: string[]
-  sourcesMap: Record<string, BoardSource>
+  sourceCardsMap: Record<string, DesktopBoardCard>
   className?: string
   isScattered?: boolean
   onSourceIdsChange: (sourceIds: string[]) => void
@@ -58,7 +65,7 @@ interface DesktopBoardProps {
 
 export function DesktopBoard({
   sourceIds,
-  sourcesMap,
+  sourceCardsMap,
   className,
   isScattered,
   onSourceIdsChange,
@@ -99,16 +106,16 @@ export function DesktopBoard({
   }
   const hasScattered = hasScatteredRef.current
   const items = useMemo(() => new Map<string, HTMLLIElement>(), [])
-  const visibleSources = useMemo(
+  const visibleCards = useMemo(
     () => orderedSourceIds.flatMap((id) => {
-      const source = sourcesMap[id]
-      return source ? [{ id, source }] : []
+      const card = sourceCardsMap[id]
+      return card ? [{ id, ...card }] : []
     }),
-    [orderedSourceIds, sourcesMap],
+    [orderedSourceIds, sourceCardsMap],
   )
   const visibleSourceIds = useMemo(
-    () => visibleSources.map(({ id }) => id),
-    [visibleSources],
+    () => visibleCards.map(({ id }) => id),
+    [visibleCards],
   )
   const isScatterReady = Boolean(
     isScattered
@@ -316,7 +323,7 @@ export function DesktopBoard({
           },
         }}
       >
-        {visibleSources.map(({ id, source }, index) => (
+        {visibleCards.map(({ id, descriptor, instanceAtom }, index) => (
           <m.li
             key={id}
             data-card-id={id}
@@ -387,7 +394,7 @@ export function DesktopBoard({
               },
             }}
           >
-            <DraggableCard id={id} source={source} />
+            <DraggableCard descriptor={descriptor} instanceAtom={instanceAtom} />
           </m.li>
         ))}
       </m.ol>

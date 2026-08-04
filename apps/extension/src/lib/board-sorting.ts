@@ -1,4 +1,13 @@
-import type { BoardSource } from "@/typings/source"
+export interface BoardSortableSource {
+  id: string
+  createdAt?: number
+  metadata: {
+    title?: string
+  }
+  provider: {
+    title: string
+  }
+}
 
 export type AutomaticBoardSortMode = "createdAt" | "provider"
 export type BoardSortMode = AutomaticBoardSortMode | "manual"
@@ -41,7 +50,7 @@ const nameCollator = new Intl.Collator(undefined, {
   sensitivity: "base",
 })
 
-function compareCreatedAt(left: BoardSource, right: BoardSource): number {
+function compareCreatedAt(left: BoardSortableSource, right: BoardSortableSource): number {
   const leftCreatedAt = Number.isFinite(left.createdAt) ? left.createdAt : undefined
   const rightCreatedAt = Number.isFinite(right.createdAt) ? right.createdAt : undefined
 
@@ -50,15 +59,15 @@ function compareCreatedAt(left: BoardSource, right: BoardSource): number {
   return rightCreatedAt - leftCreatedAt
 }
 
-function compareSourceIds(left: BoardSource, right: BoardSource): number {
+function compareSourceIds(left: BoardSortableSource, right: BoardSortableSource): number {
   return nameCollator.compare(left.id, right.id)
 }
 
-function compareByCreatedAt(left: BoardSource, right: BoardSource): number {
+function compareByCreatedAt(left: BoardSortableSource, right: BoardSortableSource): number {
   return compareCreatedAt(left, right) || compareSourceIds(left, right)
 }
 
-function compareByProvider(left: BoardSource, right: BoardSource): number {
+function compareByProvider(left: BoardSortableSource, right: BoardSortableSource): number {
   const providerComparison = nameCollator.compare(
     left.provider.title,
     right.provider.title,
@@ -75,7 +84,7 @@ function compareByProvider(left: BoardSource, right: BoardSource): number {
 
 function sortAutomatically(
   sourceIds: string[],
-  sourcesMap: Record<string, BoardSource>,
+  sourcesMap: Record<string, BoardSortableSource>,
   mode: AutomaticBoardSortMode,
 ): string[] {
   const comparator = mode === "provider" ? compareByProvider : compareByCreatedAt
@@ -106,7 +115,7 @@ export function orderBoardSourceIds({
   preference,
 }: {
   sourceIds: string[]
-  sourcesMap: Record<string, BoardSource>
+  sourcesMap: Record<string, BoardSortableSource>
   preference: BoardSortPreference
 }): string[] {
   const automaticOrder = sortAutomatically(

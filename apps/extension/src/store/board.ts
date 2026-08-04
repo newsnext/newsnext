@@ -1,7 +1,7 @@
 import type { Board } from "../lib/boards"
 import type { SourceInstance, SourceInstancePatch } from "../lib/source-cards"
 import { atom } from "jotai"
-import { atomWithStorage } from "jotai/utils"
+import { atomWithStorage, selectAtom, splitAtom } from "jotai/utils"
 import { ALL_BOARD_ID } from "../lib/boards"
 import {
   createDefaultBoards,
@@ -33,6 +33,50 @@ export const instancesAtom = atomWithStorage<SourceInstance[]>(
     normalize: normalizeSourceInstances,
   }),
   { getOnInit: true },
+)
+
+export interface SourceInstanceLayout {
+  boardId: string | null
+  createdAt: number
+  instanceId: string
+  sourceId: string
+  title?: string
+}
+
+function selectInstanceLayouts(instances: SourceInstance[]): SourceInstanceLayout[] {
+  return instances.map(instance => ({
+    boardId: instance.boardId,
+    createdAt: instance.createdAt,
+    instanceId: instance.instanceId,
+    sourceId: instance.sourceId,
+    title: instance.patch.metadata?.title,
+  }))
+}
+
+function areInstanceLayoutsEqual(
+  left: SourceInstanceLayout[],
+  right: SourceInstanceLayout[],
+): boolean {
+  return left.length === right.length && left.every((layout, index) => {
+    const candidate = right[index]
+    return candidate !== undefined
+      && layout.boardId === candidate.boardId
+      && layout.createdAt === candidate.createdAt
+      && layout.instanceId === candidate.instanceId
+      && layout.sourceId === candidate.sourceId
+      && layout.title === candidate.title
+  })
+}
+
+export const instanceAtomsAtom = splitAtom(
+  instancesAtom,
+  instance => instance.instanceId,
+)
+
+export const instanceLayoutsAtom = selectAtom(
+  instancesAtom,
+  selectInstanceLayouts,
+  areInstanceLayoutsEqual,
 )
 
 export const setManualBoardOrderAtom = atom(null, (_get, set, {

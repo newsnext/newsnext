@@ -1,12 +1,8 @@
 import type { QueryClient } from "@tanstack/react-query"
-import type { PropsWithChildren, RefObject } from "react"
-import {
-  ScrollProgressActionsContext,
-  ScrollProgressContext,
-} from "@newsnext/ui/components/scroll-progress-context"
 import { createRootRouteWithContext, Outlet } from "@tanstack/react-router"
-import { Suspense, useMemo, useRef, useState } from "react"
+import { Suspense, useRef } from "react"
 import { TanStackDevtools } from "@/components/common/devtools"
+import { ScrollProgressProvider } from "@/components/common/scroll-progress-provider"
 import { Footer } from "@/components/footer"
 import { Header } from "@/components/header"
 
@@ -19,36 +15,6 @@ export const Route = createRootRouteWithContext<{
 
 function NotFoundComponent() {
   return <div>Not Found</div>
-}
-
-interface ScrollProgressProviderProps {
-  nextLayerScrollContainerRef: RefObject<HTMLDivElement | null>
-  rootScrollContainerRef: RefObject<HTMLDivElement | null>
-}
-
-function ScrollProgressProvider({
-  children,
-  nextLayerScrollContainerRef,
-  rootScrollContainerRef,
-}: PropsWithChildren<ScrollProgressProviderProps>) {
-  const [isNextLayerActive, setIsNextLayerActive] = useState(false)
-  const actionsContextValue = useMemo(() => ({
-    rootScrollContainerRef,
-    nextLayerScrollContainerRef,
-    setIsNextLayerActive,
-  }), [nextLayerScrollContainerRef, rootScrollContainerRef])
-  const scrollProgressContextValue = useMemo(() => ({
-    ...actionsContextValue,
-    isNextLayerActive,
-  }), [actionsContextValue, isNextLayerActive])
-
-  return (
-    <ScrollProgressActionsContext value={actionsContextValue}>
-      <ScrollProgressContext value={scrollProgressContextValue}>
-        {children}
-      </ScrollProgressContext>
-    </ScrollProgressActionsContext>
-  )
 }
 
 function RootComponent() {
