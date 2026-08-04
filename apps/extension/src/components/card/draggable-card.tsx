@@ -24,6 +24,10 @@ function generateDragPreview({ container, element }: { container: HTMLElement, e
   container.style.width = `${element.clientWidth}px`
   container.style.padding = "0.625rem"
   container.style.backgroundColor = getComputedStyle(cardSurface).backgroundColor
+  container.style.setProperty(
+    "--color-theme-400",
+    getComputedStyle(cardHeader).getPropertyValue("--color-theme-400"),
+  )
   container.className = "rounded-3xl"
 
   const preview = cardHeader.cloneNode(true) as HTMLElement

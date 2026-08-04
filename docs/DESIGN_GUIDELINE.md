@@ -75,6 +75,9 @@ The reference implementation is `CardSurface` in
   board. Gaps inside the board may retain the most recent valid placement.
 - Keep the source card in the layout while dragging and reduce its opacity so
   the original position remains understandable.
+- Keep the drag preview inside the source provider's theme-color scope. Native
+  drag previews are mounted outside the card tree, so inherited theme tokens
+  used by cloned content must be copied to the preview container.
 
 ## Dialog Patterns
 
