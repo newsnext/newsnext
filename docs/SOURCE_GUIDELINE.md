@@ -670,8 +670,12 @@ Latest, both for an individual card and for every enabled card on the current
 board. Fetch Latest ignores the source-defined cache duration. Independently, a
 one-minute frequency guard protects remote sources from repeated requests; this
 guard is transparent to the user-triggered query flow and is not part of the
-source cache policy. Concurrent requests for the same source and normalized
-parameters also remain deduplicated.
+source cache policy. The refresh indicator remains visible briefly when this
+guard reuses the preceding result immediately, so the action still has perceptible
+feedback. The active query records the protected action's completion time, but
+the stored result and guard interval retain the preceding remote-load time.
+Concurrent requests for the same source and normalized parameters also remain
+deduplicated.
 
 Persistent entries record their last-use time. Cleanup runs at most once per day
 after a successful write and removes entries unused for 30 days, superseded

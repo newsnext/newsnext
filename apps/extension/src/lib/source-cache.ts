@@ -8,12 +8,10 @@ const SOURCE_CACHE_DATABASE_VERSION = 3
 const SOURCE_CACHE_STORE_NAME = "source-results"
 
 interface SourceCacheEntry extends SourceLoadResult {
-  cachedAt: number
   usedAt: number
 }
 
-export interface SourceCacheReadResult {
-  cachedAt: number
+interface SourceCacheReadResult {
   isFresh: boolean
   result: SourceLoadResult
 }
@@ -69,10 +67,9 @@ export async function readSourceCache(
     }, cacheKey)
     await transaction.done
 
-    const { cachedAt, usedAt: _usedAt, ...result } = entry
+    const { usedAt: _usedAt, ...result } = entry
     return {
-      cachedAt,
-      isFresh: now - cachedAt < maxAgeMs,
+      isFresh: now - result.updatedAt < maxAgeMs,
       result,
     }
   } catch {
@@ -90,7 +87,6 @@ export async function writeCachedSource(
 
     await database.put(SOURCE_CACHE_STORE_NAME, {
       ...result,
-      cachedAt: now,
       usedAt: now,
     }, cacheKey)
     void scheduleSourceCacheCleanup(database, now).catch(() => undefined)

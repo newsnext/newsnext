@@ -4,6 +4,7 @@ import { useIsFetching, useQueryClient } from "@tanstack/react-query"
 import { useStore } from "jotai"
 import { useCallback, useSyncExternalStore } from "react"
 import { buildSourceCards, getSourceCard } from "@/lib/source-cards"
+import { FETCH_LATEST_MINIMUM_FEEDBACK_MS } from "@/lib/source-query-policy"
 import { loadSourceDescriptors } from "@/lib/sources"
 import { instancesAtom } from "@/store/board"
 import { currentBoardIdAtom } from "@/store/settings"
@@ -46,14 +47,38 @@ export function useIsSourceFetchingLatest(queryHash: string): boolean {
   )
 }
 
-async function withFetchLatestTracking<T>(
+function useIsFetchingLatest(): boolean {
+  return useSyncExternalStore(
+    subscribeToFetchLatest,
+    () => activeFetchLatestCounts.size > 0,
+    () => false,
+  )
+}
+
+async function waitForMinimumFetchLatestFeedback(startedAt: number): Promise<void> {
+  const remainingMs = FETCH_LATEST_MINIMUM_FEEDBACK_MS - (Date.now() - startedAt)
+  if (remainingMs <= 0) {
+    return
+  }
+
+  await new Promise(resolve => setTimeout(resolve, remainingMs))
+}
+
+async function withFetchLatestTracking(
   queryHashes: string[],
-  fetchLatest: () => Promise<T>,
-): Promise<T> {
+  fetchLatest: () => Promise<void>,
+): Promise<void> {
+  if (queryHashes.length === 0) {
+    await fetchLatest()
+    return
+  }
+
+  const startedAt = Date.now()
   updateActiveFetchLatest(queryHashes, 1)
   try {
-    return await fetchLatest()
+    await fetchLatest()
   } finally {
+    await waitForMinimumFetchLatestFeedback(startedAt)
     updateActiveFetchLatest(queryHashes, -1)
   }
 }
@@ -94,8 +119,9 @@ export function useFetchLatest() {
   const store = useStore()
   const fetchLatestSources = useFetchLatestSources()
   const fetchingCount = useIsFetching({ queryKey: SOURCE_QUERY_KEY })
+  const isFetchingLatest = useIsFetchingLatest()
 
-  const isFetching = fetchingCount > 0
+  const isFetching = fetchingCount > 0 || isFetchingLatest
 
   const fetchLatest = useCallback(async () => {
     try {

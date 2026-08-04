@@ -112,7 +112,7 @@ function CardContent({ id, source, dragHandle, isDraft = false, onDraftSourceCha
       <CardFront
         source={displaySource}
         items={items}
-        isFetching={isFetching}
+        isFetching={isFetching || isFetchingLatest}
         isContentFetching={isFetchingLatest || isLoading}
         sourceErrorMessage={sourceErrorMessage}
         sourceLoginUrl={canLoad ? loginUrl : undefined}

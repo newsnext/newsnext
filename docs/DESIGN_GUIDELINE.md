@@ -58,6 +58,8 @@ Cards define the primary NewsNext surface treatment.
 - Fade and pulse card content during an explicit latest-data refresh, or while
   an automatic query is fetching without current or placeholder data. Keep
   renderable previous data visually stable during automatic background refreshes.
+- Keep explicit refresh feedback visible for at least 500ms, including when the
+  one-minute request guard reuses the preceding result immediately.
 - The default Button already uses the current primary theme. Set its `tone` to
   `theme` only when adapting another visual hierarchy, such as `outline`, to
   the current card or provider color. Do not encode color context into new

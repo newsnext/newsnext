@@ -1,5 +1,4 @@
 import type { LoadBackgroundSourceOutput } from "./background/source-service"
-import type { SourceCacheReadResult } from "./source-cache"
 import { parseSourceCacheMaxAge } from "@newsnext/source/core"
 import {
   normalizeSourceParams,
@@ -7,7 +6,7 @@ import {
 import { createBackgroundClient } from "./background-client"
 import { readSourceCache, writeCachedSource } from "./source-cache"
 import { buildSourceCacheKey } from "./source-cache-values"
-import { shouldReuseCachedSource } from "./source-query-policy"
+import { isFetchLatestRateLimited } from "./source-query-policy"
 import { loadSourceDescriptor } from "./sources"
 
 export type SourceLoadResult = LoadBackgroundSourceOutput
@@ -39,10 +38,10 @@ async function resolveSourceCacheRequest(
 export async function readPersistedSourceCache(
   sourceId: string,
   queryParams: Record<string, unknown> = {},
-): Promise<SourceCacheReadResult | undefined> {
+): Promise<SourceLoadResult | undefined> {
   const { cacheKey } = await resolveSourceCacheRequest(sourceId, queryParams)
 
-  return readSourceCache(cacheKey, Number.POSITIVE_INFINITY)
+  return (await readSourceCache(cacheKey, Number.POSITIVE_INFINITY))?.result
 }
 
 export async function loadSource(
@@ -56,13 +55,15 @@ export async function loadSource(
   const cached = await readSourceCache(cacheKey, maxAgeMs)
 
   if (cached?.result.items.length) {
-    if (shouldReuseCachedSource({
-      cachedAt: cached.cachedAt,
-      fetchLatest: options.fetchLatest ?? false,
-      isFresh: cached.isFresh,
-      now: Date.now(),
-    })) {
-      return cached.result
+    const fetchLatest = options.fetchLatest ?? false
+    const now = Date.now()
+    const shouldReuse = fetchLatest
+      ? isFetchLatestRateLimited(cached.result.updatedAt, now)
+      : cached.isFresh
+    if (shouldReuse) {
+      return fetchLatest
+        ? { ...cached.result, updatedAt: now }
+        : cached.result
     }
 
     options.onCachedResult?.(cached.result)

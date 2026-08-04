@@ -206,9 +206,9 @@ function SearchDialogContent({
         return
       }
 
-      const cached = await readPersistedSourceCache(target.sourceId, target.params)
-      if (isActive && cached) {
-        queryClient.setQueryData(queryKey, cached.result, { updatedAt: cached.cachedAt })
+      const cachedResult = await readPersistedSourceCache(target.sourceId, target.params)
+      if (isActive && cachedResult) {
+        queryClient.setQueryData(queryKey, cachedResult, { updatedAt: cachedResult.updatedAt })
       }
     }))
 

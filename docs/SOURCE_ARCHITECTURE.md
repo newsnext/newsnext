@@ -225,7 +225,10 @@ that fetch the latest source data; disabled and unmounted queries are not
 fetched implicitly. Fetch Latest ignores normal source-cache freshness, but a
 separate one-minute frequency guard prevents repeated remote loads. A protected
 request still follows the normal user-triggered query path and completes
-transparently from the most recent stored result. Expired cached data is
+from the most recent stored result, while fetch-latest tracking keeps UI
+feedback visible for a minimum 500ms. The result returned to the active query
+receives the protected action's completion time without rewriting the stored
+entry or extending the guard interval. Expired cached data is
 otherwise published as a temporary query result while a remote load is pending.
 Automatic query revalidation uses the normal source cache policy. Fetch-latest
 intent is passed directly to the query function rather than stored as state for
@@ -240,8 +243,9 @@ each cache entry once and injects stale data into the active query before
 continuing the request. Placeholder data does not satisfy the request, extend
 the entry's freshness, or change fetch-latest behavior.
 
-The persistent cache is an IndexedDB object store containing the result,
-`cachedAt`, and `usedAt`. Successful reads update `usedAt`. At most once per
+The persistent cache is an IndexedDB object store containing the result and
+`usedAt`. The result's `updatedAt` drives freshness and fetch-latest protection;
+successful reads update `usedAt`. At most once per
 day after a write, cleanup removes entries unused for 30 days, superseded cache
 versions for the same source and normalized parameters, and least-recently-used
 entries beyond 500 records or an estimated 50 MiB. Cache failures remain
@@ -308,7 +312,7 @@ the same normalized source query keys with disabled observers, so an existing
 loader result can update searchable titles and result labels without starting
 loads merely because the Search dialog opened. When an in-memory query has no
 data, Search may hydrate it from the matching persistent source-cache entry.
-That hydration preserves the entry's original `cachedAt` as the TanStack query
+That hydration preserves the result's original `updatedAt` as the TanStack query
 update time, so stale presentation data cannot become artificially fresh or
 suppress normal card revalidation. Until a loader has published and cached its
 first successful result, Search follows the normal static, instance, and
