@@ -52,7 +52,7 @@ const BOARD_DIALOG_BOARDS: Board[] = [
   {
     id: "board-design",
     name: "Design signals",
-    color: "violet",
+    color: "purple",
     sort: { mode: "provider", automaticMode: "provider", manualOrder: [] },
   },
 ]

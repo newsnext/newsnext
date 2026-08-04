@@ -1,5 +1,8 @@
-@import "tailwindcss";
+@import "tailwindcss" source(none);
 @import "./base.css";
 
+@source "../../../../packages/cmdk/src";
 @source "../../../../packages/ui/src";
-@source "../";
+@source "../components";
+@source "../entrypoints";
+@source "../pages";

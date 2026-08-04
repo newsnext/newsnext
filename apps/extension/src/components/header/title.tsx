@@ -166,8 +166,8 @@ export function TitleIsland({ scrollContainerRef, width = 150 }: TitleIslandProp
         largeClassName="p-3 zenith-theme-500"
         smallHeight={40}
         smallWidth={width}
-        largeWidth={300}
-        largeHeight={160}
+        largeWidth={280}
+        largeHeight={120}
       >
         {isSmall =>
           isSmall

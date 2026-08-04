@@ -52,9 +52,7 @@ function CardRefreshButton({
     <Button
       variant="quiet"
       size="icon-fit"
-      className={cn(
-        isFetching && "animate-spin",
-      )}
+      className={isFetching ? "animate-spin" : undefined}
       onClick={onRefresh}
       aria-label="Refresh"
     >
@@ -64,7 +62,6 @@ function CardRefreshButton({
 }
 
 interface CardFrontContentProps {
-  color: BoardSource["provider"]["color"]
   icon?: string
   items: NewsItem[]
   provider: BoardSource["provider"]
@@ -78,7 +75,6 @@ interface CardFrontContentProps {
 }
 
 function CardFrontContent({
-  color,
   icon,
   items,
   provider,
@@ -93,7 +89,6 @@ function CardFrontContent({
   if (sourcePermissionRequired) {
     return (
       <SourcePermissionState
-        color={color}
         icon={icon}
         onRequestPermission={onRequestPermission}
         provider={provider}
@@ -104,7 +99,6 @@ function CardFrontContent({
   if (sourceLoginUrl) {
     return (
       <SourceLoginState
-        color={color}
         icon={icon}
         provider={provider}
         loginUrl={sourceLoginUrl}
@@ -115,7 +109,6 @@ function CardFrontContent({
   if (sourceErrorMessage) {
     return (
       <SourceErrorState
-        color={color}
         icon={icon}
         onRefresh={onRefresh}
         provider={provider}
@@ -127,7 +120,6 @@ function CardFrontContent({
     return (
       <Ranking
         items={items}
-        color={color}
         scrollElement={scrollElement}
       />
     )
@@ -135,7 +127,6 @@ function CardFrontContent({
 
   return (
     <Timeline
-      color={color}
       items={items}
       updatedAt={updatedAt}
       scrollElement={scrollElement}
@@ -161,7 +152,6 @@ export function CardFront({
 }: CardFrontProps) {
   const { provider } = source
   const { badge, desc, home, title } = source.metadata
-  const { color } = provider
   const icon = useSourceIcon(source)
   const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(null)
   const visibleSourceErrorMessage = isFetchingLatest ? undefined : sourceErrorMessage
@@ -173,11 +163,10 @@ export function CardFront({
 
   return (
     <div className="relative h-full">
-      <CardSurface color={color} />
+      <CardSurface />
       <div className="relative flex h-full flex-col p-2.5">
         <CardHeader
           badge={badge}
-          color={color}
           desc={desc}
           home={home}
           icon={icon}
@@ -208,8 +197,7 @@ export function CardFront({
             aria-hidden
             radius="2xl"
             className={cn(
-              "pointer-events-none absolute inset-0 bg-background/70",
-              `zenith-${color}-400`,
+              "pointer-events-none absolute inset-0 bg-background/70 zenith-theme-400",
               isFetchingLatest && "animate-pulse",
             )}
           />
@@ -221,9 +209,8 @@ export function CardFront({
             onPointerDown={event => event.stopPropagation()}
             className="relative size-full overflow-y-auto px-2 py-2 scrollbar-hidden"
           >
-            <div className={cn("min-h-full transition-opacity-500", isFetchingLatest && "opacity-20")}>
+            <div className={cn("min-h-full transition-opacity duration-500", isFetchingLatest && "opacity-20")}>
               <CardFrontContent
-                color={color}
                 icon={icon}
                 items={items}
                 provider={provider}

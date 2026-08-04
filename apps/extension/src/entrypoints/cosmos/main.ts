@@ -11,7 +11,7 @@ declare global {
 }
 
 async function mountRenderer(): Promise<void> {
-  await import("@/styles/index.css")
+  await import("@/styles/cosmos.css")
 
   mountDomRenderer({
     rendererConfig: {

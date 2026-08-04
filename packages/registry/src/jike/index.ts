@@ -173,7 +173,7 @@ export default {
   title: "即刻",
   category: "social",
   icon: "https://web.okjike.com/favicon-32x32.png",
-  color: "yellow",
+  color: "amber",
   defaults: {
     baseUrl: `${JIKE_WEB_ORIGIN}/`,
     capabilities: jikeCapabilities,

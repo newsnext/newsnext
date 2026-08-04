@@ -1,4 +1,3 @@
-import type { Color } from "@newsnext/shared/types"
 import type { NewsItem } from "@/typings/source"
 import { VirtualList } from "@newsnext/ui/components/virtual-list"
 import { AnimatePresence, m } from "motion/react"
@@ -9,7 +8,6 @@ import { NewsItemLink, NewsItemSummary } from "./news-item-common"
 interface Props {
   items: NewsItem[]
   scrollElement: HTMLDivElement | null
-  color: Color
 }
 
 const RANK_CHANGE_VISIBLE_MS = 3000
@@ -110,12 +108,9 @@ export function Ranking({ items, scrollElement }: Props) {
       renderItem={(item, index) => (
         <NewsItemLink
           item={item}
-          className={cn(
-            "flex gap-2 items-center relative transition-all",
-            "hover:bg-neutral-400/10 rounded-xl",
-          )}
+          className="relative flex items-center gap-2 rounded-xl transition-colors hover:bg-neutral-400/10"
         >
-          <span className={cn("opacity-80 w-6 min-h-6 self-stretch shrink-0 flex justify-center items-center rounded-full text-sm", "bg-neutral-400/10")}>
+          <span className="flex min-h-6 w-6 shrink-0 self-stretch items-center justify-center rounded-full bg-neutral-400/10 text-sm opacity-80">
             {index + 1}
           </span>
           <RankChangeBadge diff={rankChanges[item.url]} />

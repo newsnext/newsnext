@@ -1,4 +1,3 @@
-import type { Color } from "@newsnext/shared/types"
 import type { NewsItem } from "@/typings/source"
 import { VirtualList } from "@newsnext/ui/components/virtual-list"
 import { useAtomValue } from "jotai"
@@ -9,12 +8,12 @@ import { NewsItemLink, NewsItemSummary } from "./news-item-common"
 
 const RAIL_PATH = "M6 0 Q0 25 6 50 Q12 75 6 100"
 const LABEL_RAIL_PATH = "M16 0 Q3 0 2 20 Q2 35 6 50 Q12 75 6 100"
+const RAIL_COLOR = "var(--color-theme-300)"
 
 interface Props {
   items: NewsItem[]
   scrollElement: HTMLDivElement | null
   updatedAt: number
-  color: Color
 }
 
 const TimelineNewsItem = memo(({ item }: { item: NewsItem }) => (
@@ -23,7 +22,7 @@ const TimelineNewsItem = memo(({ item }: { item: NewsItem }) => (
   </NewsItemLink>
 ))
 
-export function Timeline({ items, scrollElement, updatedAt, color }: Props) {
+export function Timeline({ items, scrollElement, updatedAt }: Props) {
   const gradientId = useId().replace(/:/g, "")
   const now = useAtomValue(minuteDateAtom)
   const timeLabels = useMemo(() => items.map(item => item.timestamp
@@ -50,9 +49,9 @@ export function Timeline({ items, scrollElement, updatedAt, color }: Props) {
                 y2="100"
                 gradientUnits="userSpaceOnUse"
               >
-                <stop offset="0%" stopColor={`var(--color-${color}-300)`} stopOpacity={0.05} />
-                <stop offset="55%" stopColor={`var(--color-${color}-300)`} stopOpacity={0.35} />
-                <stop offset="100%" stopColor={`var(--color-${color}-300)`} stopOpacity={0.05} />
+                <stop offset="0%" stopColor={RAIL_COLOR} stopOpacity={0.05} />
+                <stop offset="55%" stopColor={RAIL_COLOR} stopOpacity={0.35} />
+                <stop offset="100%" stopColor={RAIL_COLOR} stopOpacity={0.05} />
               </linearGradient>
             </defs>
             <path
@@ -81,7 +80,7 @@ export function Timeline({ items, scrollElement, updatedAt, color }: Props) {
         </div>
       </div>
     )
-  }, [color, gradientId, items.length, timeLabels])
+  }, [gradientId, items.length, timeLabels])
 
   return (
     <VirtualList

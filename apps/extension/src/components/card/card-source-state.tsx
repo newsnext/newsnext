@@ -1,12 +1,9 @@
 import type { BoardSource } from "@/typings/source"
 import { Button } from "@newsnext/ui/components/button"
-import { useCallback } from "react"
-import { cn } from "@/lib/utils"
 import { PhInfoDuotone } from "../icons/ph"
 import { SourceIcon } from "./source-icon"
 
 interface SourceActionStateProps {
-  color: BoardSource["provider"]["color"]
   icon?: string
   label: string
   onClick: () => void
@@ -15,7 +12,6 @@ interface SourceActionStateProps {
 }
 
 function SourceActionState({
-  color,
   icon,
   label,
   onClick,
@@ -28,14 +24,11 @@ function SourceActionState({
         type="button"
         variant="outline"
         onClick={onClick}
-        className={cn(
-          "h-10 gap-2 bg-background/50 px-4 font-semibold shadow-sm backdrop-blur hover:-translate-y-0.5 hover:bg-background/65 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-          `border-${color}-400/25 text-${color}-400 focus-visible:ring-${color}-400`,
-        )}
+        className="h-10 gap-2 border-theme-400/25 bg-background/50 px-4 font-semibold text-theme-400 shadow-sm backdrop-blur hover:-translate-y-0.5 hover:bg-background/65 focus-visible:ring-2 focus-visible:ring-theme-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         aria-label={title}
         title={title}
       >
-        <SourceIcon color={color} icon={icon} title={provider.title} />
+        <SourceIcon icon={icon} title={provider.title} />
         {label}
       </Button>
     </div>
@@ -43,26 +36,19 @@ function SourceActionState({
 }
 
 export function SourceLoginState({
-  color,
   icon,
   provider,
   loginUrl,
 }: {
-  color: BoardSource["provider"]["color"]
   icon?: string
   provider: BoardSource["provider"]
   loginUrl: string
 }) {
-  const handleOpenLoginUrl = useCallback(() => {
-    window.open(loginUrl, "_blank")
-  }, [loginUrl])
-
   return (
     <SourceActionState
-      color={color}
       icon={icon}
       label="Log in"
-      onClick={handleOpenLoginUrl}
+      onClick={() => window.open(loginUrl, "_blank")}
       provider={provider}
       title={`Log in to ${provider.title}`}
     />
@@ -70,19 +56,16 @@ export function SourceLoginState({
 }
 
 export function SourceErrorState({
-  color,
   icon,
   onRefresh,
   provider,
 }: {
-  color: BoardSource["provider"]["color"]
   icon?: string
   onRefresh: () => void
   provider: BoardSource["provider"]
 }) {
   return (
     <SourceActionState
-      color={color}
       icon={icon}
       label="Refresh"
       onClick={onRefresh}
@@ -93,26 +76,19 @@ export function SourceErrorState({
 }
 
 export function SourcePermissionState({
-  color,
   icon,
   onRequestPermission,
   provider,
 }: {
-  color: BoardSource["provider"]["color"]
   icon?: string
   onRequestPermission: () => Promise<boolean>
   provider: BoardSource["provider"]
 }) {
-  const handleAuthorize = useCallback(async () => {
-    await onRequestPermission()
-  }, [onRequestPermission])
-
   return (
     <SourceActionState
-      color={color}
       icon={icon}
       label="Authorize"
-      onClick={() => void handleAuthorize()}
+      onClick={() => void onRequestPermission()}
       provider={provider}
       title="Authorize access to this browser source"
     />

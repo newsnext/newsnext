@@ -19,7 +19,7 @@ export function FlipAnimate({
   const rotateCSS = rotate === "x" ? "[transform:rotateX(180deg)]" : "[transform:rotateY(180deg)]"
   const easeOutExpo = "cubic-bezier(0.16, 1, 0.3, 1)"
 
-  const sideCSS = "absolute inset-0 [backface-visibility:hidden] w-full h-full transition-all"
+  const sideCSS = "absolute inset-0 h-full w-full transition-transform [backface-visibility:hidden]"
 
   return (
     <div
@@ -30,7 +30,7 @@ export function FlipAnimate({
     >
       <div
         className={cn(
-          "relative w-full h-full transition-all transform-3d will-change-transform",
+          "relative h-full w-full transform-3d transition-transform will-change-transform",
           flipped && rotateCSS,
         )}
         style={{
@@ -46,7 +46,7 @@ export function FlipAnimate({
             transitionDelay: flipped ? "0ms" : `${duration * 0.3}ms`,
           }}
         >
-          {children?.[0]}
+          {children[0]}
         </div>
         <div
           className={cn(sideCSS, !flipped && "pointer-events-none scale-95", rotateCSS)}
@@ -56,7 +56,7 @@ export function FlipAnimate({
             transitionDelay: !flipped ? "0ms" : `${duration * 0.3}ms`,
           }}
         >
-          {children?.[1]}
+          {children[1]}
         </div>
       </div>
     </div>

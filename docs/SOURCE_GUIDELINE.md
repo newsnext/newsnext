@@ -211,11 +211,12 @@ service. The extension derives the favicon URL from each source's
 `metadata.home` at render time using the user's selected icon source and URL
 template. Set `icon` only for a stable first-party image or an embedded standard
 `data:image/...` URL; use the `data:` scheme without `//` and percent-encode SVG
-markup. Choose one provider `color` from the shared color palette. Use
-`metadata.badge` for instance-specific identity such as a channel or user
-avatar. Source metadata is static and must not contain Liquid; use a Radar
-metadata patch for dynamic values. Defining `icon` or `color` in source
-metadata is invalid.
+markup. Choose one provider `color` from the shared palette: `red`, `pink`,
+`fuchsia`, `purple`, `indigo`, `blue`, `cyan`, `teal`, `green`, `amber`,
+`orange`, or `slate`. Use `metadata.badge` for instance-specific identity such
+as a channel or user avatar. Source metadata is static and must not contain
+Liquid; use a Radar metadata patch for dynamic values. Defining `icon` or
+`color` in source metadata is invalid.
 
 ## Parameters
 

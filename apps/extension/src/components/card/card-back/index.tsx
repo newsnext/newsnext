@@ -8,7 +8,6 @@ import { useState } from "react"
 import { PhArrowCircleLeftDuotone } from "@/components/icons/ph"
 import { useSourceIcon } from "@/hooks/use-source-icon"
 import { RelativeTime } from "@/hooks/useRelativeTime"
-import { cn } from "@/lib/utils"
 import { CardHeader } from "../card-header"
 import { CardSurface } from "../card-surface"
 import { CardBoardSelect, DeleteCardButton } from "./actions"
@@ -32,34 +31,6 @@ export interface CardBackProps {
   dragHandle?: ReactNode
 }
 
-interface CardParamFieldProps {
-  color: BoardSource["provider"]["color"]
-  editable: boolean
-  onSourceParamChange: (key: string, value: unknown) => void
-  param: NonNullable<BoardSource["params"]>[string]
-  paramKey: string
-  value: unknown
-}
-
-function CardParamField({
-  color,
-  editable,
-  onSourceParamChange,
-  param,
-  paramKey,
-  value,
-}: CardParamFieldProps) {
-  return (
-    <ParamField
-      color={color}
-      editable={editable}
-      onChange={nextValue => onSourceParamChange(paramKey, nextValue)}
-      param={param}
-      value={value}
-    />
-  )
-}
-
 export function CardBack({
   id,
   source,
@@ -78,7 +49,6 @@ export function CardBack({
 }: CardBackProps) {
   const { params, provider } = source
   const { badge, desc, home, title } = source.metadata
-  const { color } = provider
   const [editDraft, setEditDraft] = useState<SourceInstanceMetadata | null>(null)
   const [isEditingParams, setIsEditingParams] = useState(false)
   const isEditingMetadata = editDraft !== null
@@ -130,12 +100,11 @@ export function CardBack({
 
   return (
     <div className="relative h-full">
-      <CardSurface color={color} className="transition-colors duration-300" />
+      <CardSurface className="transition-colors duration-300" />
       <div className="relative flex h-full flex-col p-2.5 transition-colors duration-300">
         <CardHeader
           badge={previewBadge}
           className="mb-2"
-          color={color}
           desc={previewDesc}
           home={previewHome}
           icon={icon}
@@ -164,10 +133,7 @@ export function CardBack({
           <SquircleBox
             aria-hidden
             radius="2xl"
-            className={cn(
-              "pointer-events-none absolute inset-0 bg-background/70",
-              `zenith-${color}-400`,
-            )}
+            className="pointer-events-none absolute inset-0 bg-background/70 zenith-theme-400"
           />
           <ScrollArea
             onPointerDown={event => event.stopPropagation()}
@@ -184,8 +150,9 @@ export function CardBack({
                           <Button
                             type="button"
                             variant="outline"
+                            tone="theme"
                             size="sm"
-                            className={cn(`h-6 px-2 bg-${color}-500/10 hover:bg-${color}-500/20 text-${color}-600 border-${color}-200`)}
+                            className="h-6 px-2"
                             onClick={(event) => {
                               event.stopPropagation()
                               cancelEditingMetadata()
@@ -197,7 +164,7 @@ export function CardBack({
                             type="button"
                             size="sm"
                             disabled={!hasSourceMetaChanges}
-                            className={cn(`h-6 bg-${color}-500 px-2 hover:bg-${color}-500/80`)}
+                            className="h-6 px-2"
                             onClick={(event) => {
                               event.stopPropagation()
                               saveEditDraft()
@@ -212,7 +179,7 @@ export function CardBack({
                           type="button"
                           size="sm"
                           title="Edit metadata"
-                          className={cn(`h-6 bg-${color}-500 px-2 hover:bg-${color}-500/80`)}
+                          className="h-6 px-2"
                           onClick={(event) => {
                             event.stopPropagation()
                             startEditingMetadata()
@@ -256,8 +223,9 @@ export function CardBack({
                             <Button
                               type="button"
                               variant="outline"
+                              tone="theme"
                               size="sm"
-                              className={cn(`h-6 px-2 bg-${color}-500/10 hover:bg-${color}-500/20 text-${color}-600 border-${color}-200`)}
+                              className="h-6 px-2"
                               onClick={(event) => {
                                 event.stopPropagation()
                                 cancelEditingParams()
@@ -268,9 +236,10 @@ export function CardBack({
                             <Button
                               type="button"
                               variant="outline"
+                              tone="theme"
                               size="sm"
                               disabled={!hasSourceParams}
-                              className={cn(`h-6 px-2 bg-${color}-500/10 hover:bg-${color}-500/20 text-${color}-600 border-${color}-200`)}
+                              className="h-6 px-2"
                               onClick={(event) => {
                                 event.stopPropagation()
                                 onResetSourceParams()
@@ -282,7 +251,7 @@ export function CardBack({
                               type="button"
                               size="sm"
                               disabled={!hasSourceParamChanges}
-                              className={cn(`h-6 bg-${color}-500 px-2 hover:bg-${color}-500/80`)}
+                              className="h-6 px-2"
                               onClick={(event) => {
                                 event.stopPropagation()
                                 saveParams()
@@ -297,7 +266,7 @@ export function CardBack({
                             type="button"
                             size="sm"
                             title="Edit parameters"
-                            className={cn(`h-6 bg-${color}-500 px-2 hover:bg-${color}-500/80`)}
+                            className="h-6 px-2"
                             onClick={(event) => {
                               event.stopPropagation()
                               startEditingParams()
@@ -308,14 +277,12 @@ export function CardBack({
                         )}
                   </div>
                   {params && Object.entries(params).map(([paramKey, param]) => (
-                    <CardParamField
+                    <ParamField
                       key={paramKey}
-                      paramKey={paramKey}
                       param={param}
                       value={draftSourceParams[paramKey]}
                       editable={isEditingParams}
-                      color={color}
-                      onSourceParamChange={onSourceParamChange}
+                      onChange={nextValue => onSourceParamChange(paramKey, nextValue)}
                     />
                   ))}
                 </div>

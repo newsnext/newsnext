@@ -1525,7 +1525,7 @@
       "title": "即刻",
       "category": "social",
       "icon": "https://web.okjike.com/favicon-32x32.png",
-      "color": "yellow"
+      "color": "amber"
     }
   },
   "jike:topic": {
@@ -1633,7 +1633,7 @@
       "title": "即刻",
       "category": "social",
       "icon": "https://web.okjike.com/favicon-32x32.png",
-      "color": "yellow"
+      "color": "amber"
     }
   },
   "jike:user-updates": {
@@ -1710,7 +1710,7 @@
       "title": "即刻",
       "category": "social",
       "icon": "https://web.okjike.com/favicon-32x32.png",
-      "color": "yellow"
+      "color": "amber"
     }
   },
   "linuxdo:latest": {

@@ -1,4 +1,3 @@
-import type { Color } from "@newsnext/shared/types"
 import type { SourceParamSchema } from "@newsnext/source/types"
 import { Button } from "@newsnext/ui/components/button"
 import {
@@ -21,13 +20,11 @@ export function ParamField({
   param,
   value,
   editable,
-  color,
   onChange,
 }: {
   param: SourceParamSchema
   value: unknown
   editable: boolean
-  color: Color
   onChange: (value: unknown) => void
 }) {
   const currentValue = value ?? param.default
@@ -118,7 +115,8 @@ export function ParamField({
                 type="button"
                 size="xs"
                 variant={isSelected ? "default" : "outline"}
-                className={cn("h-6", !isSelected && `text-${color}-600 border-${color}-200 bg-${color}-500/10`)}
+                tone={isSelected ? undefined : "theme"}
+                className="h-6"
                 onClick={(event) => {
                   event.stopPropagation()
                   const nextValues = isSelected

@@ -88,8 +88,10 @@ path. Expansion:
 8. validates the complete source and rejects source-owned `icon` or `color`.
 
 Required source values, including cache policy and loader, come from defaults or
-individual source configuration. Provider color is required; provider icon and
-category are optional.
+individual source configuration. Provider color is required and registry
+validation accepts only values from the shared `COLORS` palette; provider icon
+and category are optional. The author-facing palette is documented in the
+[Source Guideline](./SOURCE_GUIDELINE.md#provider-and-source-configuration).
 
 Provider identity remains separate from source metadata:
 

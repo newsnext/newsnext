@@ -139,7 +139,7 @@ export function SearchDialog(): ReactNode {
         type="button"
         variant="ghost"
         size="icon"
-        className="island-pill size-10 pointer-events-auto"
+        className="island-pill size-10"
         title="Search"
         onClick={() => setOpen(true)}
       >

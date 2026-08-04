@@ -14,7 +14,7 @@ export function PillGroup({ className, ...props }: React.ComponentProps<"div">):
   return (
     <div
       data-slot="pill-group"
-      className={cn("island-pill flex w-fit items-center gap-1 rounded-full p-1", className)}
+      className={cn("island-pill flex w-fit items-center gap-1 p-1", className)}
       {...props}
     />
   )

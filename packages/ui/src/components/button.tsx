@@ -19,9 +19,12 @@ const buttonVariants = cva(
         destructive:
           "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
         link: "text-primary underline-offset-4 hover:underline",
-        island: "island-pill pointer-events-auto",
+        island: "island-pill",
         quiet: "border-0 bg-transparent text-lg opacity-50 hover:opacity-85 active:not-aria-[haspopup]:translate-y-0",
         transparent: "bg-transparent",
+      },
+      tone: {
+        theme: "",
       },
       size: {
         "default":
@@ -36,6 +39,13 @@ const buttonVariants = cva(
         "icon-fit": "size-auto gap-0 p-0 [&_svg:not([class*='size-'])]:size-[1.2em]",
       },
     },
+    compoundVariants: [
+      {
+        variant: "outline",
+        tone: "theme",
+        className: "border-theme-200 bg-theme-500/10 text-theme-600 hover:bg-theme-500/20",
+      },
+    ],
     defaultVariants: {
       variant: "default",
       size: "default",
@@ -46,13 +56,14 @@ const buttonVariants = cva(
 function Button({
   className,
   variant = "default",
+  tone,
   size = "default",
   ...props
 }: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>): React.JSX.Element {
   return (
     <ButtonPrimitive
       data-slot="button"
-      className={cn(buttonVariants({ variant, size, className }))}
+      className={cn(buttonVariants({ variant, tone, size }), className)}
       {...props}
     />
   )

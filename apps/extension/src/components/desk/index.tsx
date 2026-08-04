@@ -51,7 +51,7 @@ export function Desk({ boardId }: { boardId: string }) {
       <div
         ref={nowLayerRef}
         className={cn(
-          "relative z-0 transition-all duration-300",
+          "relative z-0 transition-[opacity,transform] duration-300",
           isScattered && "pointer-events-none",
         )}
       >

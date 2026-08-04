@@ -22,6 +22,9 @@ like generic overlays.
   visual focus.
 - Reuse existing component treatments and tokens before introducing another
   surface style.
+- Name transition properties explicitly when a component animates one or two
+  properties. Use `transition-all` when more than two properties animate to
+  keep utility declarations concise.
 
 ### App background
 
@@ -36,7 +39,15 @@ Cards define the primary NewsNext surface treatment.
 - The outer `3xl` squircle mixes `var(--background)` with the relevant theme
   color at 55%.
 - The content panel uses a nested `2xl` squircle with `bg-background/70` and the
-  matching `zenith-*-400` treatment.
+  matching `zenith-theme-400` treatment.
+- Scope the provider's existing color class at the card boundary, then consume
+  its inherited `--color-theme-*` properties through static `theme-*` Tailwind
+  utilities instead of constructing palette class names at runtime.
+- Keep Tailwind shades 100–900 available through provider-scoped `theme-*`
+  colors so shared components can add states without changing the theme
+  contract.
+- Keep the selectable theme palette intentionally distinct: red, pink, fuchsia,
+  purple, indigo, blue, cyan, teal, green, amber, orange, and slate.
 - Use `10px` (`p-2.5`) between the outer shell and nested content where the card
   shell must remain visible.
 - Place identity and surface actions in the exposed outer shell. Place editable
@@ -44,6 +55,12 @@ Cards define the primary NewsNext surface treatment.
 - Keep compact card action icons content-sized and background-free. Use the
   shared Button `quiet` variant with `icon-fit`; hover may raise icon opacity but
   must not add a filled hover surface or enlarge the action target spacing.
+- The default Button already uses the current primary theme. Set its `tone` to
+  `theme` only when adapting another visual hierarchy, such as `outline`, to
+  the current card or provider color. Do not encode color context into new
+  compound variant names.
+- The header Dynamic Island expands to a 280px by 120px panel, which fits the
+  shared theme selector's six-column palette with compact shell padding.
 
 The reference implementation is `CardSurface` in
 `apps/extension/src/components/card/card-surface.tsx`.

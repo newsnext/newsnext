@@ -5,6 +5,7 @@ import { COLORS } from "@newsnext/shared/constants"
 import { useState } from "react"
 import { CardBack } from "@/components/card/card-back"
 import { CardFront } from "@/components/card/card-front"
+import { cn } from "@/lib/utils"
 
 const UPDATED_AT = Date.now() - 4 * 60 * 1000
 
@@ -15,7 +16,7 @@ const SAMPLE_SOURCE: BoardSource = {
   provider: {
     title: "Cosmos Design",
     category: "developer",
-    color: "violet",
+    color: "purple",
   },
   metadata: {
     title: "Design Dispatch",
@@ -112,10 +113,24 @@ function createColorSource(color: Color): BoardSource {
   }
 }
 
+interface CardFrameProps extends React.PropsWithChildren {
+  className?: string
+  color: Color
+}
+
+function CardFrame({ children, className, color }: CardFrameProps) {
+  return <div className={cn(color, className)}>{children}</div>
+}
+
 function CardStage({ children }: React.PropsWithChildren) {
   return (
     <main className="grid min-h-full place-items-center p-6 sm:p-10">
-      <div className="h-125 w-full max-w-100">{children}</div>
+      <CardFrame
+        className="h-125 w-full max-w-100"
+        color={SAMPLE_SOURCE.provider.color}
+      >
+        {children}
+      </CardFrame>
     </main>
   )
 }
@@ -201,7 +216,7 @@ function AllCardColorsFixture() {
     <main className="min-h-full p-6 sm:p-10">
       <div className="mx-auto grid max-w-360 grid-cols-[repeat(auto-fit,minmax(20rem,1fr))] gap-6">
         {COLORS.map(color => (
-          <div key={color} className="h-112 min-w-0">
+          <CardFrame key={color} className="h-112 min-w-0" color={color}>
             <CardFront
               source={createColorSource(color)}
               items={RANKING_ITEMS.slice(0, 4)}
@@ -214,7 +229,7 @@ function AllCardColorsFixture() {
               onRequestPermission={async () => true}
               onFlip={() => undefined}
             />
-          </div>
+          </CardFrame>
         ))}
       </div>
     </main>

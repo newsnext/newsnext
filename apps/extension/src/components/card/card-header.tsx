@@ -1,4 +1,3 @@
-import type { Color } from "@newsnext/shared/types"
 import type { SourceProvider } from "@newsnext/source/types"
 import type { ReactNode } from "react"
 import { Button } from "@newsnext/ui/components/button"
@@ -7,7 +6,6 @@ import { SourceIcon } from "./source-icon"
 
 interface CardHeaderProps {
   badge?: string
-  color: Color
   desc?: string
   home?: string
   icon?: string
@@ -20,7 +18,6 @@ interface CardHeaderProps {
 
 export function CardHeader({
   badge,
-  color,
   desc,
   home,
   icon,
@@ -46,7 +43,6 @@ export function CardHeader({
           <SourceIcon
             badge={badge}
             className="rounded-full after:rounded-full"
-            color={color}
             icon={icon}
             size="default"
             title={displayTitle}
@@ -63,7 +59,7 @@ export function CardHeader({
           </span>
         </div>
       </div>
-      <div className={cn("flex gap-1 items-center shrink-0", `text-${color}-400`)} onClick={e => e.stopPropagation()}>
+      <div className="flex shrink-0 items-center gap-1 text-theme-400" onClick={e => e.stopPropagation()}>
         {actions}
       </div>
     </div>

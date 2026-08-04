@@ -107,6 +107,7 @@ function CardContent({ id, source, dragHandle, isDraft = false, onDraftSourceCha
     <FlipAnimate
       rotate="y"
       flipped={isFlipped}
+      className={displaySource.provider.color}
     >
       <CardFront
         source={displaySource}
