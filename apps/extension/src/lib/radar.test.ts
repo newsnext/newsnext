@@ -669,20 +669,7 @@ describe("getRadarSuggestions", () => {
     }, sources)).toEqual([])
   })
 
-  it("suggests V2EX and NewsNow parameterized cards", () => {
-    expect(getSuggestions({
-      url: "https://v2ex.com/go/share",
-      pageSelections: selectPageField(".node-breadcrumb", "V2EX › 分享发现"),
-    })).toMatchObject([
-      {
-        sourceId: "v2ex:feed",
-        patch: {
-          params: { feed: "share" },
-          metadata: { title: "分享发现" },
-        },
-      },
-    ])
-
+  it("suggests a NewsNow parameterized card", () => {
     expect(getSuggestions({ url: "https://www.newsnow.com/us/Technology?type=ln" })).toMatchObject([
       {
         sourceId: "newsnow:topic-latest",
@@ -893,7 +880,7 @@ describe("getRadarSuggestions", () => {
   it("filters suggestions by available source metadata", () => {
     expect(getRadarSuggestions(
       { url: "https://github.com/trending/typescript?since=weekly&spoken_language_code=en" },
-      [{ id: "v2ex:feed" }],
+      [{ id: "missing:source" }],
     )).toEqual([])
 
     expect(getRadarSuggestions(
