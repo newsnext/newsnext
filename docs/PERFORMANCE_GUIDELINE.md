@@ -39,8 +39,8 @@ server with `WXT_ENABLE_REACT_SCAN=true bun run dev` when profiling.
 - Use temporary `onRender` sampling only while auditing. Remove sampling arrays,
   globals, and debug callbacks before completing the change.
 - Use the app's existing development server. Do not start a second server.
-- Use ego-lite for repeatable browser interactions and verify the resulting UI
-  state after each interaction.
+- Follow the browser-automation policy in `AGENTS.md` for repeatable browser
+  interactions and verify the resulting UI state after each interaction.
 
 Use component render events as a diagnostic signal, not an optimization target
 by itself. A render is valid when it updates visible data, animation state,
