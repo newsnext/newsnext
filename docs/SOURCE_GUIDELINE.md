@@ -203,6 +203,13 @@ popularity-based results even when every item includes a timestamp. Other
 intentional ordering belongs in the upstream request, the JSON `items` JMESPath
 expression, or custom loader code.
 
+The RSS loader preserves feed order and only exposes timestamps when every
+valid entry has a parseable date that already follows that order from newest to
+oldest. It prefers publication dates (`published`, `pubDate`, or `created`) when
+they match, otherwise uses `updated` dates when those match. If neither date set
+matches the feed order, it omits timestamps from every item so the feed remains
+a ranking.
+
 Write human-facing strings in the website's primary interface language. Keep
 brand names, IDs, parameter keys and values, and selectors unchanged.
 

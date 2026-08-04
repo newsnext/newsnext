@@ -12,6 +12,15 @@ interface ParsedRssFeed {
   metadata?: SourcePresentationMetadata
 }
 
+interface ParsedRssItem {
+  title: string
+  url: string
+  publishedTimestamp?: number
+  updatedTimestamp?: number
+}
+
+type RssTimestampField = "publishedTimestamp" | "updatedTimestamp"
+
 export async function loadRss(
   { url }: { url: string },
   loaderContext: LoaderContext = {},
@@ -35,24 +44,18 @@ export function parseRss(data: string): ParsedRssFeed | undefined {
   if (!isRecord(channel)) return
 
   const itemInput = channel.item ?? channel.entry
-  const items = (Array.isArray(itemInput) ? itemInput : itemInput ? [itemInput] : [])
+  const parsedItems = (Array.isArray(itemInput) ? itemInput : itemInput ? [itemInput] : [])
     .filter(isRecord)
+    .map(parseRssItem)
+    .filter((item): item is ParsedRssItem => item !== undefined)
+  const timestampField = findOrderedTimestampField(parsedItems)
 
   return {
-    items: items
-      .map((item) => {
-        const title = readText(item.title)
-        const url = readLink(item.link)
-        if (!title || !url) return undefined
-
-        const timestamp = parseOptionalTimestamp(item.updated ?? item.pubDate ?? item.created)
-        return {
-          title,
-          url,
-          ...(timestamp === undefined ? {} : { timestamp }),
-        }
-      })
-      .filter((item): item is NewsItem => item !== undefined),
+    items: parsedItems.map(item => ({
+      title: item.title,
+      url: item.url,
+      ...(timestampField ? { timestamp: item[timestampField] } : {}),
+    })),
     metadata: normalizeLoaderMetadata({
       badge: readRssImageUrl(channel.image),
       desc: readOptionalText(channel.description ?? channel.subtitle),
@@ -60,6 +63,39 @@ export function parseRss(data: string): ParsedRssFeed | undefined {
       title: readOptionalText(channel.title),
     }),
   }
+}
+
+function parseRssItem(item: Record<string, unknown>): ParsedRssItem | undefined {
+  const title = readText(item.title)
+  const url = readLink(item.link)
+  if (!title || !url) return
+
+  return {
+    title,
+    url,
+    publishedTimestamp: parseOptionalTimestamp(
+      item.published ?? item.pubDate ?? item.created,
+    ),
+    updatedTimestamp: parseOptionalTimestamp(item.updated),
+  }
+}
+
+function findOrderedTimestampField(items: ParsedRssItem[]): RssTimestampField | undefined {
+  const fields: RssTimestampField[] = ["publishedTimestamp", "updatedTimestamp"]
+  return fields.find(field => hasDescendingTimestamps(items, field))
+}
+
+function hasDescendingTimestamps(
+  items: ParsedRssItem[],
+  field: RssTimestampField,
+): boolean {
+  let previousTimestamp = Number.POSITIVE_INFINITY
+  for (const item of items) {
+    const timestamp = item[field]
+    if (timestamp === undefined || timestamp > previousTimestamp) return false
+    previousTimestamp = timestamp
+  }
+  return items.length > 0
 }
 
 function parseOptionalTimestamp(value: unknown): number | undefined {

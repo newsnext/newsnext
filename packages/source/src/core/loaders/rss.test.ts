@@ -60,6 +60,94 @@ describe("parseRss", () => {
     })
   })
 
+  it("uses published timestamps when entries are ordered by publication date", () => {
+    expect(parseRss(`
+      <feed xmlns="http://www.w3.org/2005/Atom">
+        <entry>
+          <title>Newer publication</title>
+          <link href="https://example.com/newer" />
+          <published>2026-07-24T00:00:00Z</published>
+          <updated>2026-07-25T00:00:00Z</updated>
+        </entry>
+        <entry>
+          <title>Older publication</title>
+          <link href="https://example.com/older" />
+          <published>2026-07-23T00:00:00Z</published>
+          <updated>2026-07-26T00:00:00Z</updated>
+        </entry>
+      </feed>
+    `)?.items).toEqual([
+      {
+        title: "Newer publication",
+        url: "https://example.com/newer",
+        timestamp: 1784851200000,
+      },
+      {
+        title: "Older publication",
+        url: "https://example.com/older",
+        timestamp: 1784764800000,
+      },
+    ])
+  })
+
+  it("uses updated timestamps when entries are ordered by update date", () => {
+    expect(parseRss(`
+      <feed xmlns="http://www.w3.org/2005/Atom">
+        <entry>
+          <title>Recently updated</title>
+          <link href="https://example.com/recently-updated" />
+          <published>2026-07-23T00:00:00Z</published>
+          <updated>2026-07-26T00:00:00Z</updated>
+        </entry>
+        <entry>
+          <title>Previously updated</title>
+          <link href="https://example.com/previously-updated" />
+          <published>2026-07-24T00:00:00Z</published>
+          <updated>2026-07-25T00:00:00Z</updated>
+        </entry>
+      </feed>
+    `)?.items).toEqual([
+      {
+        title: "Recently updated",
+        url: "https://example.com/recently-updated",
+        timestamp: 1785024000000,
+      },
+      {
+        title: "Previously updated",
+        url: "https://example.com/previously-updated",
+        timestamp: 1784937600000,
+      },
+    ])
+  })
+
+  it("omits timestamps when entries follow neither date order", () => {
+    expect(parseRss(`
+      <feed xmlns="http://www.w3.org/2005/Atom">
+        <entry>
+          <title>First ranked entry</title>
+          <link href="https://example.com/first" />
+          <published>2026-07-23T00:00:00Z</published>
+          <updated>2026-07-25T00:00:00Z</updated>
+        </entry>
+        <entry>
+          <title>Second ranked entry</title>
+          <link href="https://example.com/second" />
+          <published>2026-07-24T00:00:00Z</published>
+          <updated>2026-07-26T00:00:00Z</updated>
+        </entry>
+      </feed>
+    `)?.items).toEqual([
+      {
+        title: "First ranked entry",
+        url: "https://example.com/first",
+      },
+      {
+        title: "Second ranked entry",
+        url: "https://example.com/second",
+      },
+    ])
+  })
+
   it("filters invalid entries and omits invalid timestamps", () => {
     expect(parseRss(`
       <rss version="2.0">

@@ -435,9 +435,13 @@ otherwise represent `application/rss+xml` responses as blobs. They parse the
 RSS channel title, description, home link, and image URL, or the Atom feed
 title, subtitle, and non-self home link, into dynamic loader metadata. They then
 map entries directly to title, URL, and an optional timestamp. Entries without
-a title or URL are discarded, and an unparseable date is treated as an omitted
-timestamp. RSS metadata uses the same normalization, URL resolution, caching,
-and presentation override pipeline as JSON, HTML, and custom loader metadata.
+a title or URL are discarded. After filtering, the loader checks whether every
+entry has a parseable publication timestamp and those timestamps are
+monotonically non-increasing; if so, it exposes those timestamps. Otherwise it
+performs the same check for update timestamps. If neither complete date set
+matches the preserved feed order, it omits timestamps from the entire result.
+RSS metadata uses the same normalization, URL resolution, caching, and
+presentation override pipeline as JSON, HTML, and custom loader metadata.
 
 ## Template compilation
 
