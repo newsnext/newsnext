@@ -205,10 +205,11 @@ expression, or custom loader code.
 
 The RSS loader preserves feed order and only exposes timestamps when every
 valid entry has a parseable date that already follows that order from newest to
-oldest. It prefers publication dates (`published`, `pubDate`, or `created`) when
-they match, otherwise uses `updated` dates when those match. If neither date set
-matches the feed order, it omits timestamps from every item so the feed remains
-a ranking.
+oldest. For RSS and Atom, it prefers publication dates (`published`, `pubDate`,
+or `created`) when they match, otherwise uses `updated` dates. For JSON Feed it
+uses `date_published`, then falls back to `date_modified`. If neither complete
+date set matches the feed order, it omits timestamps from every item so the
+feed remains a ranking.
 
 Write human-facing strings in the website's primary interface language. Keep
 brand names, IDs, parameter keys and values, and selectors unchanged.
@@ -552,7 +553,7 @@ configuration, while the loader still owns response parsing and HTML decoding.
 
 ## RSS, custom loaders, and loader results
 
-RSS needs only a URL:
+The RSS loader accepts RSS, Atom, and JSON Feed and needs only a URL:
 
 ```ts
 loader: {
@@ -561,11 +562,13 @@ loader: {
 }
 ```
 
-The RSS loader returns the RSS channel title, description, home link, and image
-as dynamic loader metadata when present. For Atom, it returns the feed title,
-subtitle, and non-self home link. Entries without a title or URL are ignored;
-an invalid feed date leaves the item without a timestamp instead of failing the
-complete feed.
+The RSS loader returns RSS channel or Atom feed metadata when present. For
+JSON Feed 1.0 and 1.1 it maps `title`, `description`, `home_page_url`, and
+`icon` or `favicon`; it also maps the first author name and avatar to item
+inline metadata. Because JSON Feed item titles are optional, the loader derives
+a bounded title from `summary`, `content_text`, or `content_html` when needed.
+Entries without a usable title or URL are ignored; an invalid date leaves the
+item without a timestamp instead of failing the complete feed.
 
 Use a custom loader only when declarative loaders cannot express the source:
 
@@ -895,10 +898,12 @@ When a source has no parameters or explicit `radar`, an HTTP(S)
 `metadata.home` creates a same-host rule automatically. Set `radar: []` to opt
 out. Parameterized sources need explicit rules.
 
-Do not add engine-specific generic sources for forums that expose RSS or Atom.
+Do not add engine-specific generic sources for forums that expose RSS, Atom, or
+JSON Feed.
 The built-in feed discovery already handles arbitrary hosts without coupling
 the registry to forum routes, templates, or JSON APIs. Add a dedicated forum
-provider only for a site-specific contract that RSS or Atom cannot represent;
+provider only for a site-specific contract that RSS, Atom, or JSON Feed cannot
+represent;
 arbitrary-host discovery remains extension-owned and fail-closed.
 
 Use `badge` for secondary instance identity. For signed or expiring images,

@@ -167,4 +167,84 @@ describe("parseRss", () => {
       url: "https://example.com/valid",
     }])
   })
+
+  it("extracts JSON Feed metadata, authors, and publication timestamps", () => {
+    expect(parseRss(JSON.stringify({
+      version: "https://jsonfeed.org/version/1.1",
+      title: "Example JSON Feed",
+      description: "Example description",
+      home_page_url: "https://example.com/",
+      icon: "/icon.png",
+      items: [{
+        id: "1",
+        url: "https://example.com/newer",
+        title: "Newer item",
+        date_published: "2026-07-24T00:00:00Z",
+        authors: [{ name: "Ada", avatar: "/ada.png" }],
+      }, {
+        id: "2",
+        external_url: "https://example.com/older",
+        title: "Older item",
+        date_published: "2026-07-23T00:00:00Z",
+      }],
+    }))).toEqual({
+      items: [{
+        title: "Newer item",
+        url: "https://example.com/newer",
+        timestamp: 1784851200000,
+        inline: { text: "Ada", icon: "/ada.png" },
+      }, {
+        title: "Older item",
+        url: "https://example.com/older",
+        timestamp: 1784764800000,
+      }],
+      metadata: {
+        badge: "/icon.png",
+        desc: "Example description",
+        home: "https://example.com/",
+        title: "Example JSON Feed",
+      },
+    })
+  })
+
+  it("derives JSON Feed titles and accepts an HTTP item id as its URL", () => {
+    expect(parseRss(JSON.stringify({
+      version: "https://jsonfeed.org/version/1",
+      title: "Example JSON Feed",
+      items: [{
+        id: "https://example.com/text",
+        content_text: `  ${"word ".repeat(60)}  `,
+      }, {
+        id: "2",
+        url: "https://example.com/html",
+        content_html: "<p>Hello <strong>from HTML</strong></p>",
+      }],
+    }))?.items).toEqual([{
+      title: `${"word ".repeat(39)}word…`,
+      url: "https://example.com/text",
+    }, {
+      title: "Hello from HTML",
+      url: "https://example.com/html",
+    }])
+  })
+
+  it("rejects unsupported JSON versions and filters invalid JSON Feed items", () => {
+    expect(parseRss(JSON.stringify({
+      version: "https://jsonfeed.org/version/2",
+      title: "Future feed",
+      items: [],
+    }))).toBeUndefined()
+
+    expect(parseRss(JSON.stringify({
+      version: "https://jsonfeed.org/version/1.1",
+      title: "Example feed",
+      items: [
+        { id: "urn:uuid:1", title: "No usable URL" },
+        { id: "2", url: "https://example.com/valid", summary: "Valid item" },
+      ],
+    }))?.items).toEqual([{
+      title: "Valid item",
+      url: "https://example.com/valid",
+    }])
+  })
 })

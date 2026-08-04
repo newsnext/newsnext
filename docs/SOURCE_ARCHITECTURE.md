@@ -430,18 +430,18 @@ All item or metadata fields in a group are extracted before that group's
 templates render. Each template sees its complete pre-template group, which
 makes output independent of declaration order and prevents template cycles.
 
-RSS loaders request the response as text explicitly because fetch clients may
-otherwise represent `application/rss+xml` responses as blobs. They parse the
-RSS channel title, description, home link, and image URL, or the Atom feed
-title, subtitle, and non-self home link, into dynamic loader metadata. They then
-map entries directly to title, URL, and an optional timestamp. Entries without
-a title or URL are discarded. After filtering, the loader checks whether every
-entry has a parseable publication timestamp and those timestamps are
-monotonically non-increasing; if so, it exposes those timestamps. Otherwise it
-performs the same check for update timestamps. If neither complete date set
-matches the preserved feed order, it omits timestamps from the entire result.
-RSS metadata uses the same normalization, URL resolution, caching, and
-presentation override pipeline as JSON, HTML, and custom loader metadata.
+RSS loaders request the response as text explicitly, sniff JSON versus XML,
+and support RSS, Atom, and JSON Feed 1.0 or 1.1 through one resolution path.
+RSS and Atom map their channel/feed metadata and entries; JSON Feed maps its
+presentation metadata, first item author, and item URL fields. A missing JSON
+Feed item title is derived from its summary, text content, or stripped HTML and
+bounded to 200 characters. Entries without a usable title or URL are discarded.
+After filtering, the loader exposes publication timestamps only when every
+entry has one and they are monotonically non-increasing; otherwise it applies
+the same test to update timestamps. If neither date set matches the preserved
+feed order, it omits timestamps from the entire result. RSS metadata uses the
+same normalization, URL resolution, caching, and presentation override pipeline
+as JSON, HTML, and custom loader metadata.
 
 ## Template compilation
 
@@ -479,9 +479,11 @@ active tab URL
 
 Page-field queries required by matching rules are deduplicated and executed in
 one active-tab script. When the built-in `rss:feed` source is available, Radar
-also scans the active HTTP(S) document for RSS and Atom alternate links or a
-directly opened feed. Direct feed detection recognizes both RSS or Atom
-document roots and the browser's built-in unstyled XML document view. The
+also scans the active HTTP(S) document for RSS, Atom, and JSON Feed alternate
+links or a directly opened feed. Direct detection recognizes RSS or Atom
+document roots, the browser's built-in unstyled XML document view, and bounded
+JSON Feed documents served as `application/feed+json` or `application/json`.
+Generic JSON is parsed and structurally validated before it is accepted. The
 bounded scan deduplicates absolute URLs and adds one built-in suggestion per
 feed, up to 20 per page. Each suggestion keeps the page URL as its home, uses
 the page hostname favicon as its initial instance badge, and prefers the
@@ -490,8 +492,9 @@ RSS metadata may replace that badge. RSS suggestions use lower built-in
 confidence than generated origin-only and default explicit rules, so a
 dedicated source normally remains the primary suggestion.
 This engine-agnostic path is also the generic integration for forums that
-publish RSS or Atom. Radar does not inspect forum generator metadata or couple
-discovery to engine-specific routes. Field and feed metadata extraction are
+publish RSS, Atom, or JSON Feed. Radar does not inspect forum generator metadata
+or couple discovery to engine-specific routes. Field and feed metadata
+extraction is
 isolated from template rendering; page scripts are not executed and the
 document object is never exposed to Liquid.
 Radar renders in the extension action popup, which keeps discovery available
