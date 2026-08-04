@@ -49,8 +49,8 @@ export function SourceIconSettings(): React.JSX.Element {
 
   return (
     <SettingsSection
-      title="Source icons"
-      description="Choose how icons are generated when a provider does not include one."
+      title="Card Icons"
+      description="Choose how icons are generated when a card does not include one."
     >
       <Card variant="subtle">
         <CardContent className="space-y-4">
@@ -72,18 +72,28 @@ export function SourceIconSettings(): React.JSX.Element {
 
           <div className="space-y-2">
             <Label htmlFor="source-icon-template">URL template</Label>
-            <Input
-              id="source-icon-template"
-              value={settings.template}
-              placeholder={DEFAULT_SOURCE_ICON_SETTINGS.template}
-              spellCheck={false}
-              onChange={(event) => {
-                setSettings({
-                  source: "custom",
-                  template: event.target.value,
-                })
-              }}
-            />
+            <div className="flex gap-1 items-center">
+              {preview && (
+                <img
+                  src={preview}
+                  alt=""
+                  className="size-[2em] rounded-sm"
+                  referrerPolicy="no-referrer"
+                />
+              )}
+              <Input
+                id="source-icon-template"
+                value={settings.template}
+                placeholder={DEFAULT_SOURCE_ICON_SETTINGS.template}
+                spellCheck={false}
+                onChange={(event) => {
+                  setSettings({
+                    source: "custom",
+                    template: event.target.value,
+                  })
+                }}
+              />
+            </div>
             <p className="text-xs leading-5 text-muted-foreground">
               Supports
               {" "}
@@ -96,17 +106,6 @@ export function SourceIconSettings(): React.JSX.Element {
               <code>{"{url}"}</code>
               . Leave empty to disable generated icons.
             </p>
-            {preview && (
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <img
-                  src={preview}
-                  alt=""
-                  className="size-5 rounded-sm"
-                  referrerPolicy="no-referrer"
-                />
-                <span className="truncate">{preview}</span>
-              </div>
-            )}
           </div>
         </CardContent>
       </Card>
