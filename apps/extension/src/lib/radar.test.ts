@@ -209,7 +209,7 @@ describe("getRadarSuggestions", () => {
         patch: {
           params: { url: "https://example.com/feed.xml" },
           metadata: {
-            badge: "https://icons.folo.is/example.com",
+            badge: "https://favicon.im/example.com?larger=true",
             home: "https://example.com/articles/one",
             title: "Latest",
           },
@@ -220,7 +220,7 @@ describe("getRadarSuggestions", () => {
         patch: {
           params: { url: "https://example.com/atom.xml" },
           metadata: {
-            badge: "https://icons.folo.is/example.com",
+            badge: "https://favicon.im/example.com?larger=true",
             home: "https://example.com/articles/one",
             title: "RSS Feed",
           },

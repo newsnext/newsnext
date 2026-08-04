@@ -133,7 +133,11 @@ function normalizeSourceIconSettings(
 }
 
 function isSourceIconSource(value: unknown): value is SourceIconSource {
-  return value === "folo" || value === "google" || value === "custom"
+  return value === "faviconIm"
+    || value === "google"
+    || value === "vemetric"
+    || value === "duckDuckGo"
+    || value === "custom"
 }
 
 function isThemeMode(value: unknown): value is ThemeMode {

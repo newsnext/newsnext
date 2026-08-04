@@ -56,7 +56,7 @@ describe("source templates", () => {
         requestUrl: "https://news.ycombinator.com/",
         value: "https://example.com/article",
       },
-    )).toBe("https://icons.folo.is/example.com")
+    )).toBe("https://favicon.im/example.com?larger=true")
 
     expect(renderTemplate(
       "{{ value | regex_replace: '\\\\s*[–-]\\\\s*Telegram$', '' }}",

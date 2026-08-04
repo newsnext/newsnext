@@ -1,4 +1,4 @@
-export const DEFAULT_FAVICON_URL_TEMPLATE = "https://icons.folo.is/{hostname}"
+export const DEFAULT_FAVICON_URL_TEMPLATE = "https://favicon.im/{hostname}?larger=true"
 
 export function getFavicon(
   url: string | URL,

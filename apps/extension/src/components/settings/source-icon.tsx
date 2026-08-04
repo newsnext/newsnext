@@ -10,6 +10,7 @@ import {
 } from "@newsnext/ui/components/select"
 import { useAtom } from "jotai"
 import {
+  DEFAULT_SOURCE_ICON_SETTINGS,
   resolveSourceIcon,
   SOURCE_ICON_PRESETS,
 } from "@/lib/source-icon"
@@ -17,8 +18,10 @@ import { sourceIconSettingsAtom } from "@/store/settings"
 import { SettingsSection } from "./layout"
 
 const SOURCE_OPTIONS = [
-  { label: SOURCE_ICON_PRESETS.folo.label, value: "folo" },
+  { label: SOURCE_ICON_PRESETS.faviconIm.label, value: "faviconIm" },
   { label: SOURCE_ICON_PRESETS.google.label, value: "google" },
+  { label: SOURCE_ICON_PRESETS.vemetric.label, value: "vemetric" },
+  { label: SOURCE_ICON_PRESETS.duckDuckGo.label, value: "duckDuckGo" },
   { label: "Custom", value: "custom" },
 ] as const satisfies ReadonlyArray<{ label: string, value: SourceIconSource }>
 
@@ -72,7 +75,7 @@ export function SourceIconSettings(): React.JSX.Element {
             <Input
               id="source-icon-template"
               value={settings.template}
-              placeholder="https://www.google.com/s2/favicons?domain={hostname}&sz=128"
+              placeholder={DEFAULT_SOURCE_ICON_SETTINGS.template}
               spellCheck={false}
               onChange={(event) => {
                 setSettings({

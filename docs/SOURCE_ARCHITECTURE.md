@@ -112,11 +112,13 @@ When `icon` is absent, the extension presentation layer derives a favicon
 service URL from the resolved source `metadata.home` and the user's icon source
 preference. The URL template supports `{hostname}`, `{origin}`, and `{url}`;
 the latter two substitutions are percent-encoded. An empty template disables
-the fallback. The extension persists the selected preset and template as a
-local user setting. This keeps third-party favicon service URLs out of provider
-definitions and the generated registry while allowing instance-specific home
-overrides to select the matching icon. The preference is part of the portable
-Settings slice. Settings, Board items, and source instances are separate
+the fallback. Favicon.im is the default preset, with Google, Vemetric,
+DuckDuckGo, and custom templates available. The extension persists the selected
+preset and template as a local user setting. This keeps third-party favicon
+service URLs out of provider definitions and the generated registry while
+allowing instance-specific home overrides to select the matching icon. The
+preference is part of the portable Settings slice. Settings, Board items, and
+source instances are separate
 versioned slices so they can be updated and synchronized without rewriting one
 monolithic value. Each Board item owns its sort mode and manual source order,
 so Board export, deletion, and synchronization cannot detach that state from
