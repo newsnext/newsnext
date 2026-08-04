@@ -14,7 +14,7 @@ async function updateRadarBadge(tab: Browser.tabs.Tab): Promise<void> {
   const baseContext = tab.url ? { url: tab.url, title: tab.title } : undefined
   const discoveryOptions = baseContext
     ? matcher.getDiscoveryOptions(baseContext)
-    : { discourse: false, feeds: false }
+    : { feeds: false }
   const discovery = await readRadarPageDiscovery(tab.id, discoveryOptions)
   const count = baseContext
     ? matcher.getSuggestions({ ...baseContext, ...discovery }).length

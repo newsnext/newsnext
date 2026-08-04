@@ -29,10 +29,6 @@ export function getPermissionRequestForSource(
       return { permissions: ["bookmarks", "favicon"] }
     case "browser:history":
       return { permissions: ["history"] }
-    case "discourse:topics": {
-      const origin = getUrlParamPermissionOrigin(source.params?.siteUrl, params.siteUrl)
-      return origin ? { origins: [origin] } : undefined
-    }
     case "rss:feed": {
       const origin = getUrlParamPermissionOrigin(source.params?.url, params.url)
       return origin ? { origins: [origin] } : undefined

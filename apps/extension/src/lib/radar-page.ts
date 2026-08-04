@@ -1,6 +1,5 @@
 import type { HtmlTraversal } from "@newsnext/source/types"
 import type {
-  RadarDiscourseSite,
   RadarDiscoveryOptions,
   RadarFeed,
 } from "@/lib/radar"
@@ -13,7 +12,6 @@ const MAX_PAGE_FEEDS = 20
 const MAX_DISCOVERY_TITLE_LENGTH = 500
 
 export interface RadarPageDiscovery {
-  discourse?: RadarDiscourseSite
   feeds: RadarFeed[]
 }
 
@@ -155,100 +153,56 @@ export async function readRadarPageDiscovery(
   tabId: number,
   options: RadarDiscoveryOptions,
 ): Promise<RadarPageDiscovery> {
-  if (!options.discourse && !options.feeds) {
+  if (!options.feeds) {
     return { feeds: [] }
   }
 
   const [executionResult] = await browser.scripting.executeScript<
-    [number, number, RadarDiscoveryOptions],
+    [number, number],
     RadarPageDiscovery
   >({
     target: { tabId },
-    args: [MAX_PAGE_FEEDS, MAX_DISCOVERY_TITLE_LENGTH, options],
-    func: (maxFeeds, maxTitleLength, discoveryOptions) => {
-      let feeds: RadarFeed[] = []
-      if (discoveryOptions.feeds) {
-        const supportedTypes = new Set([
-          "application/atom+xml",
-          "application/rss+xml",
-        ])
-        feeds = [...(document.head?.querySelectorAll<HTMLLinkElement>("link[href]") ?? [])]
-          .filter(link =>
-            link.rel.split(/\s+/).some(value => value.toLowerCase() === "alternate")
-            && supportedTypes.has(link.type.split(";", 1)[0]?.trim().toLowerCase() ?? ""))
-          .map(link => ({
-            url: link.href,
-            ...(link.title.trim()
-              ? { title: link.title.trim().slice(0, maxTitleLength) }
-              : {}),
-          }))
+    args: [MAX_PAGE_FEEDS, MAX_DISCOVERY_TITLE_LENGTH],
+    func: (maxFeeds, maxTitleLength) => {
+      const supportedTypes = new Set([
+        "application/atom+xml",
+        "application/rss+xml",
+      ])
+      const feeds = [...(document.head?.querySelectorAll<HTMLLinkElement>("link[href]") ?? [])]
+        .filter(link =>
+          link.rel.split(/\s+/).some(value => value.toLowerCase() === "alternate")
+          && supportedTypes.has(link.type.split(";", 1)[0]?.trim().toLowerCase() ?? ""))
+        .map(link => ({
+          url: link.href,
+          ...(link.title.trim()
+            ? { title: link.title.trim().slice(0, maxTitleLength) }
+            : {}),
+        }))
 
-        const feedRoot = document
-          .querySelector("#webkit-xml-viewer-source-xml")
-          ?.firstElementChild
-          ?? document.documentElement
-        const feedRootName = feedRoot?.localName.toLowerCase()
-        if (
-          (feedRootName === "feed" || feedRootName === "rss")
-          && /^https?:$/.test(location.protocol)
-        ) {
-          feeds.unshift({
-            url: location.href,
-            ...(document.title.trim()
-              ? { title: document.title.trim().slice(0, maxTitleLength) }
-              : {}),
-          })
-        }
-
-        feeds = [...new Map(
-          feeds
-            .filter(feed => /^https?:\/\//i.test(feed.url))
-            .map(feed => [feed.url, feed]),
-        ).values()].slice(0, maxFeeds)
+      const feedRoot = document
+        .querySelector("#webkit-xml-viewer-source-xml")
+        ?.firstElementChild
+        ?? document.documentElement
+      const feedRootName = feedRoot?.localName.toLowerCase()
+      if (
+        (feedRootName === "feed" || feedRootName === "rss")
+        && /^https?:$/.test(location.protocol)
+      ) {
+        feeds.unshift({
+          url: location.href,
+          ...(document.title.trim()
+            ? { title: document.title.trim().slice(0, maxTitleLength) }
+            : {}),
+        })
       }
 
-      const generator = discoveryOptions.discourse
-        ? document
-            .querySelector<HTMLMetaElement>("meta[name=generator]")
-            ?.content
-            .trim()
-        : undefined
-      let discourse: RadarDiscourseSite | undefined
-      if (generator?.startsWith("Discourse ") && /^https?:$/.test(location.protocol)) {
-        const basePath = document
-          .querySelector<HTMLMetaElement>("meta[name=discourse-base-uri]")
-          ?.content
-          .trim()
-          || "/"
-        try {
-          const normalizedBasePath = basePath.endsWith("/") ? basePath : `${basePath}/`
-          const baseUrl = new URL(normalizedBasePath, location.origin)
-          if (baseUrl.origin === location.origin) {
-            const siteTitle = document
-              .querySelector<HTMLMetaElement>("meta[property=\"og:site_name\"]")
-              ?.content
-              .trim()
-            const categoryTitle = document
-              .querySelector<HTMLElement>(".badge-category__name")
-              ?.textContent
-              ?.trim()
-            discourse = {
-              baseUrl: baseUrl.href,
-              ...(categoryTitle
-                ? { categoryTitle: categoryTitle.slice(0, maxTitleLength) }
-                : {}),
-              ...(siteTitle ? { title: siteTitle.slice(0, maxTitleLength) } : {}),
-            }
-          }
-        } catch {
-          // Ignore malformed site-owned metadata.
-        }
-      }
+      const uniqueFeeds = [...new Map(
+        feeds
+          .filter(feed => /^https?:\/\//i.test(feed.url))
+          .map(feed => [feed.url, feed]),
+      ).values()].slice(0, maxFeeds)
 
-      return {
-        feeds,
-        ...(discourse ? { discourse } : {}),
-      }
+      return { feeds: uniqueFeeds }
     },
   }).catch(() => [])
 

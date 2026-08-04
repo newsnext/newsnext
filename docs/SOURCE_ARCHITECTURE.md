@@ -345,11 +345,11 @@ Host capabilities and browser API permissions intentionally follow separate
 paths. Ordinary sources expose only `network` and `cookies` capabilities. The
 extension maps the built-in `browser:history` and `browser:bookmarks` source IDs
 to their fixed optional browser permissions; registry authors cannot extend
-that mapping through source configuration. The `rss:feed` and
-`discourse:topics` sources have parameter-aware host-permission resolvers: each
-converts its effective URL parameter into one exact hostname origin instead of
-requesting the wildcard declared for runtime network validation. Permission
-state is recomputed when the corresponding saved parameter changes.
+that mapping through source configuration. The `rss:feed` source has a
+parameter-aware host-permission resolver that converts its effective `url`
+parameter into one exact hostname origin instead of requesting the wildcard
+declared for runtime network validation. Permission state is recomputed when
+the saved parameter changes.
 
 ## Parameter and request pipeline
 
@@ -489,24 +489,11 @@ discovered feed title over the source's static title. After loading, dynamic
 RSS metadata may replace that badge. RSS suggestions use lower built-in
 confidence than generated origin-only and default explicit rules, so a
 dedicated source normally remains the primary suggestion.
-When `discourse:topics` is available, the same bounded page-discovery script
-checks the official Discourse generator metadata. It resolves an optional
-`discourse-base-uri` against the active page origin, rejects cross-origin base
-URLs, and reads `og:site_name` as bounded optional presentation metadata. The
-pure Radar matcher recognizes category list paths relative to the resolved base
-URI, carries their slug path, numeric ID, and Latest/New/Hot/Top mode into the
-generic source parameters, and prefers the rendered `.badge-category__name`
-over the tab title for the category card. It recognizes the same three modes on
-site-wide list routes, treating `latest?order=created` as New; category list
-routes use the same query mapping. Other Discourse routes stay on the site-wide
-Latest default. The resulting generic suggestion ranks below dedicated Radar
-matches and above discovered RSS feeds, so users can choose either the
-site-specific source or the reusable Discourse source.
-Latest list matches emit both Latest and New suggestions; Hot and Top remain
-single suggestions.
-Field, feed, and Discourse metadata extraction are isolated from template
-rendering; page scripts are not executed and the document object is never
-exposed to Liquid.
+This engine-agnostic path is also the generic integration for forums that
+publish RSS or Atom. Radar does not inspect forum generator metadata or couple
+discovery to engine-specific routes. Field and feed metadata extraction are
+isolated from template rendering; page scripts are not executed and the
+document object is never exposed to Liquid.
 Radar renders in the extension action popup, which keeps discovery available
 for both regular HTML pages and browser-rendered XML documents.
 

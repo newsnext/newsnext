@@ -30,15 +30,8 @@ import {
 export interface RadarContext {
   url: string
   title?: string
-  discourse?: RadarDiscourseSite
   feeds?: RadarFeed[]
   pageSelections?: Record<string, string>
-}
-
-export interface RadarDiscourseSite {
-  baseUrl: string
-  categoryTitle?: string
-  title?: string
 }
 
 export interface RadarFeed {
@@ -47,7 +40,6 @@ export interface RadarFeed {
 }
 
 export interface RadarDiscoveryOptions {
-  discourse: boolean
   feeds: boolean
 }
 
@@ -86,9 +78,6 @@ interface RadarLocation {
 
 const DEFAULT_RADAR_RULE_ID = "default-home-origin"
 const DEFAULT_ORIGIN_RADAR_CONFIDENCE = 0
-const DISCOURSE_RADAR_CONFIDENCE = -0.5
-const DISCOURSE_RADAR_RULE_ID = "discourse-site"
-const DISCOURSE_SOURCE_ID = "discourse:topics"
 const RSS_RADAR_CONFIDENCE = -1
 const RSS_RADAR_RULE_ID = "page-feed"
 const RSS_SOURCE_ID = "rss:feed"
@@ -596,124 +585,9 @@ function createRssSuggestions(
   })
 }
 
-function createDiscourseSuggestions(
-  context: RadarContext,
-  pageUrl: URL,
-  discourseSource: RadarSourceMetadata | undefined,
-): RadarSuggestion[] {
-  if (!discourseSource || !context.discourse) {
-    return []
-  }
-
-  try {
-    const baseUrl = new URL(context.discourse.baseUrl, pageUrl)
-    if (
-      !["http:", "https:"].includes(baseUrl.protocol)
-      || baseUrl.origin !== pageUrl.origin
-    ) {
-      return []
-    }
-    const list = resolveDiscourseList(
-      pageUrl,
-      baseUrl,
-      context.discourse.categoryTitle || context.title,
-    )
-    const title = list.title
-      || context.discourse.title?.trim()
-      || discourseSource.metadata?.title
-      || "Topics"
-    const feeds = list.alternateFeed
-      ? [list.feed, list.alternateFeed]
-      : [list.feed]
-
-    return feeds.map(feed => createRadarSuggestion({
-      ruleId: DISCOURSE_RADAR_RULE_ID,
-      sourceId: DISCOURSE_SOURCE_ID,
-      patch: {
-        params: {
-          categoryPath: list.categoryPath,
-          feed,
-          siteUrl: baseUrl.href,
-        },
-        metadata: {
-          badge: getFavicon(baseUrl),
-          home: list.categoryPath
-            ? new URL(`c/${list.categoryPath}`, baseUrl).href
-            : baseUrl.href,
-          title,
-        },
-      },
-      confidence: DISCOURSE_RADAR_CONFIDENCE,
-    }))
-  } catch {
-    return []
-  }
-}
-
-type DiscourseFeed = "hot" | "latest" | "new" | "top"
-
-interface DiscourseList {
-  alternateFeed?: "latest" | "new"
-  categoryPath: string
-  feed: DiscourseFeed
-  title?: string
-}
-
-function resolveDiscourseList(
-  pageUrl: URL,
-  baseUrl: URL,
-  pageTitle: string | undefined,
-): DiscourseList {
-  const basePath = baseUrl.pathname.endsWith("/")
-    ? baseUrl.pathname
-    : `${baseUrl.pathname}/`
-  if (!pageUrl.pathname.startsWith(basePath)) {
-    return { categoryPath: "", feed: "latest" }
-  }
-
-  const relativePath = pageUrl.pathname.slice(basePath.length).replace(/^\/+|\/+$/g, "")
-  const categoryMatch = /^c\/(.+\/[1-9]\d*)(?:\/l\/(hot|latest|top))?$/.exec(relativePath)
-  if (categoryMatch?.[1]) {
-    const feed = resolveDiscourseFeed(categoryMatch[2], pageUrl.searchParams)
-    return {
-      ...((categoryMatch[2] === undefined || categoryMatch[2] === "latest")
-        ? { alternateFeed: getAlternateDiscourseLatestFeed(feed) }
-        : {}),
-      categoryPath: categoryMatch[1],
-      feed,
-      ...(pageTitle?.trim() ? { title: pageTitle.trim() } : {}),
-    }
-  }
-
-  const feedMatch = /^(hot|latest|top)$/.exec(relativePath)
-  const feed = resolveDiscourseFeed(feedMatch?.[1], pageUrl.searchParams)
-  return {
-    ...(feedMatch?.[1] === "latest"
-      ? { alternateFeed: getAlternateDiscourseLatestFeed(feed) }
-      : {}),
-    categoryPath: "",
-    feed,
-  }
-}
-
-function getAlternateDiscourseLatestFeed(feed: DiscourseFeed): "latest" | "new" {
-  return feed === "new" ? "latest" : "new"
-}
-
-function resolveDiscourseFeed(
-  value: string | undefined,
-  searchParams: URLSearchParams,
-): DiscourseFeed {
-  if ((value === undefined || value === "latest") && searchParams.get("order") === "created") {
-    return "new"
-  }
-  return value === "hot" || value === "top" ? value : "latest"
-}
-
 function createSuggestions(
   context: RadarContext,
   rulesByHost: Map<string, CompiledRadarRule[]>,
-  discourseSource: RadarSourceMetadata | undefined,
   rssSource: RadarSourceMetadata | undefined,
 ): RadarSuggestion[] {
   const location = resolveRadarLocation(context, rulesByHost)
@@ -726,11 +600,6 @@ function createSuggestions(
     .filter((suggestion): suggestion is RadarSuggestion => suggestion !== null)
   const suggestions = [
     ...dedicatedSuggestions,
-    ...createDiscourseSuggestions(
-      context,
-      location.url,
-      discourseSource,
-    ),
     ...createRssSuggestions(context, location.url, rssSource),
   ]
   const suggestionsById = new Map<string, RadarSuggestion>()
@@ -794,13 +663,11 @@ export function createRadarMatcher(sourceMetadata: RadarSourceMetadata[] = []): 
       .map(rule => compileRadarRule(sourceRule, rule))
       .filter((rule): rule is CompiledRadarRule => rule !== null))
   const rulesByHost = indexRulesByHost(compiledRules)
-  const discourseSource = sourceMetadata.find(source => source.id === DISCOURSE_SOURCE_ID)
   const rssSource = sourceMetadata.find(source => source.id === RSS_SOURCE_ID)
   const radarMatcher: RadarMatcher = {
     getDiscoveryOptions: (context) => {
       const discover = isDiscoverablePage(context)
       return {
-        discourse: discover && discourseSource !== undefined,
         feeds: discover && rssSource !== undefined,
       }
     },
@@ -808,7 +675,6 @@ export function createRadarMatcher(sourceMetadata: RadarSourceMetadata[] = []): 
     getSuggestions: context => createSuggestions(
       context,
       rulesByHost,
-      discourseSource,
       rssSource,
     ),
   }
