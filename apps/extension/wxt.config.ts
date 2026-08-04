@@ -5,13 +5,8 @@ import react, { reactCompilerPreset } from "@vitejs/plugin-react"
 import Icons from "unplugin-icons/vite"
 import TurboConsole from "unplugin-turbo-console/vite"
 import { defineConfig } from "wxt"
+import { OPTIONAL_SOURCE_PERMISSIONS } from "./src/lib/source-permission-constants"
 
-const OPTIONAL_SOURCE_PERMISSIONS = [
-  "bookmarks",
-  "cookies",
-  "favicon",
-  "history",
-] as const
 const OPTIONAL_SOURCE_ORIGINS = ["*://*/*"] as const
 const REQUIRED_PERMISSIONS = [
   "activeTab",

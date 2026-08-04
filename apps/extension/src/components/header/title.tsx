@@ -9,7 +9,8 @@ import { AnimatePresence, m, useMotionValue, useMotionValueEvent, useScroll } fr
 import { useCallback, useRef, useState } from "react"
 import { getBoardColor } from "@/lib/boards"
 import { handleThemeSwitch } from "@/lib/utils/swith-theme"
-import { boardsAtom, currentBoardIdAtom, updateBoardAtom } from "@/store/board"
+import { boardsAtom, updateBoardAtom } from "@/store/board"
+import { currentBoardIdAtom } from "@/store/settings"
 import { PhArrowFatUpDuotone } from "../icons/ph"
 
 interface HeaderProgressProps {

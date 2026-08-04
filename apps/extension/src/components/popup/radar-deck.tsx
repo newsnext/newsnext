@@ -16,7 +16,8 @@ import { ALL_BOARD_ID } from "@/lib/boards"
 import { createRadarBoardSource } from "@/lib/radar-board-source"
 import { createCardInstance, mergeSourceInstancePatch } from "@/lib/source-cards"
 import { cn } from "@/lib/utils"
-import { addInstanceAtom, currentBoardIdAtom } from "@/store/board"
+import { addInstanceAtom } from "@/store/board"
+import { currentBoardIdAtom } from "@/store/settings"
 
 const RADAR_SWIPE_THRESHOLD = 90
 const RADAR_SWIPE_VELOCITY_THRESHOLD = 500

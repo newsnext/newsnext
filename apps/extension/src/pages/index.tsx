@@ -1,6 +1,6 @@
 import { Navigate } from "@tanstack/react-router"
 import { useAtomValue } from "jotai"
-import { currentBoardIdAtom, defaultBoardIdAtom } from "@/store/board"
+import { currentBoardIdAtom, defaultBoardIdAtom } from "@/store/settings"
 
 export function IndexComponent() {
   const currentBoardId = useAtomValue(currentBoardIdAtom)

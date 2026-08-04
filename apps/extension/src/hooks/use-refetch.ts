@@ -5,7 +5,8 @@ import { useStore } from "jotai"
 import { useCallback, useSyncExternalStore } from "react"
 import { buildSourceCards, getSourceCard } from "@/lib/source-cards"
 import { loadSourceDescriptors } from "@/lib/sources"
-import { currentBoardIdAtom, instancesAtom } from "@/store/board"
+import { instancesAtom } from "@/store/board"
+import { currentBoardIdAtom } from "@/store/settings"
 import {
   fetchLatestSourceQuery,
   getSourceQueryHash,

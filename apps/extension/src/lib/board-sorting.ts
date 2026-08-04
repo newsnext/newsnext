@@ -15,6 +15,27 @@ export const DEFAULT_BOARD_SORT_PREFERENCE: BoardSortPreference = {
   manualOrder: [],
 }
 
+export function createBoardSortPreference(
+  mode: BoardSortMode = DEFAULT_BOARD_SORT_PREFERENCE.mode,
+): BoardSortPreference {
+  return {
+    mode,
+    automaticMode: mode === "manual" ? "createdAt" : mode,
+    manualOrder: [],
+  }
+}
+
+export function updateBoardSortMode(
+  preference: BoardSortPreference,
+  mode: BoardSortMode,
+): BoardSortPreference {
+  return {
+    ...preference,
+    mode,
+    automaticMode: mode === "manual" ? preference.automaticMode : mode,
+  }
+}
+
 const nameCollator = new Intl.Collator(undefined, {
   numeric: true,
   sensitivity: "base",
@@ -77,13 +98,6 @@ function reconcileManualOrder(manualOrder: string[], fallbackOrder: string[]): s
     ...orderedIds,
     ...fallbackOrder.filter(id => !orderedIdSet.has(id)),
   ]
-}
-
-export function getBoardSortPreference(
-  preferences: Record<string, BoardSortPreference>,
-  boardId: string,
-): BoardSortPreference {
-  return preferences[boardId] ?? DEFAULT_BOARD_SORT_PREFERENCE
 }
 
 export function orderBoardSourceIds({

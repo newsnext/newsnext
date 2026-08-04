@@ -26,13 +26,15 @@ export function BoardMembershipSelect({
 }: BoardMembershipSelectProps) {
   const boards = useAtomValue(boardsAtom)
   const customBoards = boards.filter(board => board.id !== ALL_BOARD_ID)
-  const selectedLabel = value === null
-    ? "No board"
-    : customBoards.find(board => board.id === value)!.name
+  const selectedBoard = value === null
+    ? undefined
+    : customBoards.find(board => board.id === value)
+  const selectedValue = selectedBoard?.id ?? NO_BOARD_VALUE
+  const selectedLabel = selectedBoard?.name ?? "No board"
 
   return (
     <Select
-      value={value ?? NO_BOARD_VALUE}
+      value={selectedValue}
       onValueChange={(nextValue) => {
         if (nextValue) {
           onValueChange(nextValue === NO_BOARD_VALUE ? null : nextValue)

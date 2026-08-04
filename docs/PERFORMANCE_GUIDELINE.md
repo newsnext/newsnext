@@ -100,6 +100,12 @@ produce a new input object and therefore a new derived card object. Keep a unit
 test that verifies changed cards receive a new reference while unchanged cards
 retain their previous reference.
 
+Mirrored persistence must ignore its own `browser.storage.local` echo when the
+normalized value already matches the synchronous `localStorage` snapshot. An
+echo must not replace arrays or objects with equal copies and trigger a second
+render after every Board (including sorting), SourceInstance, or Settings update. A real
+background change still replaces the affected slice and notifies its atom.
+
 ### Add memo boundaries at independent units
 
 Use `memo` when a component represents an independently updating unit, its props

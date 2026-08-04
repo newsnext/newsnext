@@ -3,12 +3,10 @@ import type { BoardSource } from "@/typings/source"
 import { useAtomValue, useSetAtom } from "jotai"
 import { useCallback, useMemo } from "react"
 import { useSourceDescriptors } from "@/hooks/use-source-descriptors"
-import { getBoardSortPreference, orderBoardSourceIds } from "@/lib/board-sorting"
-import { getBoardDisplayName } from "@/lib/boards"
+import { orderBoardSourceIds } from "@/lib/board-sorting"
 import { buildSourceCards } from "@/lib/source-cards"
 import {
   boardsAtom,
-  boardSortPreferencesAtom,
   instancesAtom,
   setManualBoardOrderAtom,
 } from "@/store/board"
@@ -30,11 +28,11 @@ export function NowLayer({
   containerRef,
 }: NowLayerProps) {
   const boards = useAtomValue(boardsAtom)
-  const sortPreferences = useAtomValue(boardSortPreferencesAtom)
   const instances = useAtomValue(instancesAtom)
   const setManualBoardOrder = useSetAtom(setManualBoardOrderAtom)
   const { sources } = useSourceDescriptors()
-  const currentBoardName = getBoardDisplayName(boards.find(board => board.id === boardId)!)
+  const currentBoard = boards.find(board => board.id === boardId)!
+  const currentBoardName = currentBoard.name
 
   const { ids: boardSourceIds, map: sourcesMap } = useMemo(() => {
     if (!sources.length) {
@@ -51,8 +49,8 @@ export function NowLayer({
   const sourceIds = useMemo(() => orderBoardSourceIds({
     sourceIds: boardSourceIds,
     sourcesMap,
-    preference: getBoardSortPreference(sortPreferences, boardId),
-  }), [boardId, boardSourceIds, sortPreferences, sourcesMap])
+    preference: currentBoard.sort,
+  }), [boardSourceIds, currentBoard.sort, sourcesMap])
 
   const handleSourceIdsChange = useCallback((newSourceIds: string[]) => {
     setManualBoardOrder({ boardId, sourceIds: newSourceIds })

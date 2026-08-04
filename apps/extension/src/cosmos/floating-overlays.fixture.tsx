@@ -81,7 +81,7 @@ function SelectFixture() {
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="inbox">Inbox</SelectItem>
+          <SelectItem value="all">All</SelectItem>
           <SelectItem value="daily">Daily reading</SelectItem>
           <SelectItem value="research">Product research</SelectItem>
           <SelectItem value="archive" disabled>Archive</SelectItem>

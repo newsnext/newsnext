@@ -1,5 +1,5 @@
 import type { Color } from "@newsnext/shared/types"
-import type { BoardSortMode, BoardSortPreference } from "@/lib/board-sorting"
+import type { BoardSortMode } from "@/lib/board-sorting"
 import type { Board } from "@/lib/boards"
 import { Button } from "@newsnext/ui/components/button"
 import {
@@ -15,13 +15,12 @@ import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { ThemeSelector } from "@newsnext/ui/components/theme-selector"
 import { useState } from "react"
 import { PhCheckCircleDuotone, PhTrashDuotone } from "@/components/icons/ph"
-import { DEFAULT_BOARD_SORT_PREFERENCE, getBoardSortPreference } from "@/lib/board-sorting"
+import { DEFAULT_BOARD_SORT_PREFERENCE, updateBoardSortMode } from "@/lib/board-sorting"
 import {
   ALL_BOARD_ID,
   createBoard,
   DEFAULT_BOARD_COLOR,
   getBoardColor,
-  getBoardDisplayName,
   isBoardNameTaken,
 } from "@/lib/boards"
 import { cn } from "@/lib/utils"
@@ -39,18 +38,16 @@ export type BoardDialogTarget
 interface BoardDialogProps {
   boards: Board[]
   currentBoardId: string
-  preferences: Record<string, BoardSortPreference>
   target: BoardDialogTarget
   onClose: () => void
-  onCreate: (board: Board, sortMode: BoardSortMode) => void
+  onCreate: (board: Board) => void
   onDelete: (boardId: string) => void
-  onUpdate: (board: Board, sortMode: BoardSortMode) => void
+  onUpdate: (board: Board) => void
 }
 
 export function BoardDialog({
   boards,
   currentBoardId,
-  preferences,
   target,
   onClose,
   onCreate,
@@ -66,11 +63,9 @@ export function BoardDialog({
     : currentBoard
       ? getBoardColor(currentBoard)
       : DEFAULT_BOARD_COLOR
-  const initialSortMode = boardId
-    ? getBoardSortPreference(preferences, boardId).mode
-    : DEFAULT_BOARD_SORT_PREFERENCE.mode
+  const initialSortMode = board?.sort.mode ?? DEFAULT_BOARD_SORT_PREFERENCE.mode
   const isAllBoard = boardId === ALL_BOARD_ID
-  const [name, setName] = useState(() => board ? getBoardDisplayName(board) : "")
+  const [name, setName] = useState(() => board?.name ?? "")
   const [color, setColor] = useState<Color>(initialColor)
   const [sortMode, setSortMode] = useState<BoardSortMode>(initialSortMode)
   const [isDeleteArmed, setIsDeleteArmed] = useState(false)
@@ -95,12 +90,13 @@ export function BoardDialog({
         ...board,
         name: isAllBoard ? board.name : normalizedName,
         color,
-      }, sortMode)
+        sort: updateBoardSortMode(board.sort, sortMode),
+      })
       onClose()
       return
     }
 
-    onCreate(createBoard(normalizedName, color), sortMode)
+    onCreate(createBoard(normalizedName, color, sortMode))
     onClose()
   }
 

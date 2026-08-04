@@ -113,7 +113,22 @@ the latter two substitutions are percent-encoded. An empty template disables
 the fallback. The extension persists the selected preset and template as a
 local user setting. This keeps third-party favicon service URLs out of provider
 definitions and the generated registry while allowing instance-specific home
-overrides to select the matching icon.
+overrides to select the matching icon. The preference is part of the portable
+Settings slice. Settings, Board items, and source instances are separate
+versioned slices so they can be updated and synchronized without rewriting one
+monolithic value. Each Board item owns its sort mode and manual source order,
+so Board export, deletion, and synchronization cannot detach that state from
+its owner. Extension pages read synchronous `localStorage`
+snapshots first, then reconcile them with canonical copies in
+`browser.storage.local`; background storage wins when both copies exist.
+A versioned `newsnext-user-data` envelope validates and combines the portable
+slices for import and export. Current board selection, CLI connectivity, browser
+permissions, and caches are device-local and are not part of that envelope.
+The Settings data reset restores every persisted slice to its default, deletes
+the device-local source-secret and IndexedDB source-result caches, clears active
+source queries, and revokes user-granted optional browser and host permissions.
+Required development permissions remain controlled by the extension manifest
+and cannot be removed at runtime.
 
 This prevents a source, Radar rule, or card instance from changing the identity
 and visual treatment shared by its provider.
@@ -479,7 +494,7 @@ Moving a card updates only that board ID; source parameters, presentation
 metadata, and cache identity remain unchanged. The board ID is nullable:
 `null` means the card has no custom board, while a custom board ID adds it to
 that board. All deliberately skips membership filtering and aggregates every
-card instance. Its persisted ID remains `inbox` for storage compatibility.
+card instance. Its persisted ID is `all`, producing the `/board/all` route.
 The card editor writes the same instance patch shape and exposes every declared
 source parameter plus each editable source-owned presentation metadata field.
 The inferred card presentation is read-only. Provider

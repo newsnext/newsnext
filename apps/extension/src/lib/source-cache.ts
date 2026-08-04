@@ -99,6 +99,17 @@ export async function writeCachedSource(
   }
 }
 
+export async function clearSourceCache(): Promise<void> {
+  try {
+    await sourceCacheCleanupPromise?.catch(() => undefined)
+    const database = await openSourceCacheDatabase()
+    await database.clear(SOURCE_CACHE_STORE_NAME)
+    lastSourceCacheCleanupAt = undefined
+  } catch {
+    // Cache cleanup should not prevent the remaining user data from being cleared.
+  }
+}
+
 function scheduleSourceCacheCleanup(
   database: IDBPDatabase<SourceCacheDatabase>,
   now: number,

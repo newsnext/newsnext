@@ -1,9 +1,12 @@
 import type { SourceConnectionStatus } from "@/lib/background/source-connection-websocket"
 import { Card, CardContent } from "@newsnext/ui/components/card"
 import { Switch } from "@newsnext/ui/components/switch"
+import { useAtomValue } from "jotai"
 import { useCallback, useEffect, useState } from "react"
 import { useRelativeTime } from "@/hooks/useRelativeTime"
 import { createBackgroundClient } from "@/lib/background-client"
+import { withSourceConnectionEnabled } from "@/lib/persisted-settings"
+import { persistedDeviceStateAtom } from "@/store/settings"
 import { SettingsSection } from "./layout"
 
 const STATUS_LABELS: Record<SourceConnectionStatus["state"], string> = {
@@ -21,6 +24,7 @@ const STATUS_DOT_CLASSES: Record<SourceConnectionStatus["state"], string> = {
 }
 
 export function SourceConnectionSettings(): React.JSX.Element {
+  const persistedDeviceState = useAtomValue(persistedDeviceStateAtom)
   const [status, setStatus] = useState<SourceConnectionStatus>()
   const [updating, setUpdating] = useState(false)
 
@@ -51,13 +55,16 @@ export function SourceConnectionSettings(): React.JSX.Element {
     setUpdating(true)
     try {
       const client = createBackgroundClient()
-      setStatus(await client.sourceConnection.setEnabled(enabled))
+      setStatus(await client.sourceConnection.setEnabled(
+        enabled,
+        withSourceConnectionEnabled(persistedDeviceState, enabled),
+      ))
     } catch {
       await refreshStatus()
     } finally {
       setUpdating(false)
     }
-  }, [refreshStatus])
+  }, [persistedDeviceState, refreshStatus])
 
   const state = status?.state
   const connectedRelativeTime = useRelativeTime({

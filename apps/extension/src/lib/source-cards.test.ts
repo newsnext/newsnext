@@ -66,7 +66,7 @@ describe("buildSourceCards", () => {
   it("shows saved card instances", () => {
     const cards = buildSourceCards({
       sources: testSources,
-      boardId: "inbox",
+      boardId: "all",
       sourceInstances: [
         createCustomInstance({ patch: { params: { topic: "custom" } } }),
       ],
@@ -82,7 +82,7 @@ describe("buildSourceCards", () => {
   it("applies source instance title overrides", () => {
     const cards = buildSourceCards({
       sources: testSources,
-      boardId: "inbox",
+      boardId: "all",
       sourceInstances: [
         createCustomInstance({
           patch: { metadata: { title: "Custom Radar Title" } },
@@ -100,7 +100,7 @@ describe("buildSourceCards", () => {
   it("applies source-owned instance metadata overrides", () => {
     const cards = buildSourceCards({
       sources: testSources,
-      boardId: "inbox",
+      boardId: "all",
       sourceInstances: [
         createCustomInstance({
           patch: {
@@ -132,7 +132,7 @@ describe("buildSourceCards", () => {
   it("does not allow persisted instance metadata to override provider metadata", () => {
     const cards = buildSourceCards({
       sources: testSources,
-      boardId: "inbox",
+      boardId: "all",
       sourceInstances: [
         createCustomInstance({
           patch: {
@@ -166,7 +166,7 @@ describe("buildSourceCards", () => {
   it("hides base source templates from boards", () => {
     const cards = buildSourceCards({
       sources: testSources,
-      boardId: "inbox",
+      boardId: "all",
       sourceInstances: [],
     })
 
@@ -177,7 +177,7 @@ describe("buildSourceCards", () => {
   it("shows every card in All", () => {
     const cards = buildSourceCards({
       sources: testSources,
-      boardId: "inbox",
+      boardId: "all",
       sourceInstances: [
         createCustomInstance(),
         createCustomInstance({
@@ -219,12 +219,12 @@ describe("buildSourceCards", () => {
     })
     const initialCards = buildSourceCards({
       sources: testSources,
-      boardId: "inbox",
+      boardId: "all",
       sourceInstances: [firstInstance, secondInstance],
     })
     const nextCards = buildSourceCards({
       sources: testSources,
-      boardId: "inbox",
+      boardId: "all",
       sourceInstances: [
         {
           ...firstInstance,
@@ -247,7 +247,7 @@ describe("applySourceLoaderMetadata", () => {
   it("overrides instance presentation fields while preserving missing fields", () => {
     const cards = buildSourceCards({
       sources: testSources,
-      boardId: "inbox",
+      boardId: "all",
       sourceInstances: [
         createCustomInstance({
           patch: { metadata: { title: "Radar title", desc: "Radar description" } },

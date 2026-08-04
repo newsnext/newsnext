@@ -3,10 +3,9 @@ import type {
   SourceParamSchema,
   SourceProvider,
 } from "@newsnext/source/types"
+import type { OptionalSourcePermission } from "@/lib/source-permission-constants"
 import { browser } from "#imports"
 import { getHostPermissionOrigins } from "@/lib/host-permissions"
-
-type OptionalSourcePermission = "bookmarks" | "cookies" | "favicon" | "history"
 
 export interface SourcePermissionRequest {
   origins?: string[]

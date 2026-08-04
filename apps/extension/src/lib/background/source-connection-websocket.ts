@@ -4,11 +4,16 @@ import type {
   SourceConnectionRunRequest,
   SourceConnectionSerializedError,
 } from "@newsnext/shared/types"
+import type { PersistedDeviceState } from "../persisted-settings"
 import { browser } from "#imports"
+import { PERSISTED_DATA_SLICES } from "../persisted-data"
+import {
+  normalizePersistedDeviceState,
+  withSourceConnectionEnabled,
+} from "../persisted-settings"
 import { listConnectedSources, runConnectedSource } from "./source-runner"
 
 const DEFAULT_SOURCE_CONNECTION_WS_URL = "ws://127.0.0.1:43110"
-const SOURCE_CONNECTION_ENABLED_STORAGE_KEY = "sourceConnectionEnabled"
 const SOURCE_CONNECTION_RECONNECT_ALARM = "source-connection-websocket-reconnect"
 const HEARTBEAT_INTERVAL_MS = 20_000
 const RECONNECT_DELAY_MS = 1_000
@@ -273,9 +278,19 @@ async function applySourceConnectionEnabled(nextEnabled: boolean): Promise<void>
   await browser.alarms.clear(SOURCE_CONNECTION_RECONNECT_ALARM)
 }
 
-export async function setSourceConnectionEnabled(nextEnabled: boolean): Promise<SourceConnectionStatus> {
+export async function setSourceConnectionEnabled(
+  nextEnabled: boolean,
+  frontendState?: PersistedDeviceState,
+): Promise<SourceConnectionStatus> {
+  const stored = await browser.storage.local.get(PERSISTED_DATA_SLICES.deviceState.key)
+  const state = normalizePersistedDeviceState(
+    stored[PERSISTED_DATA_SLICES.deviceState.key] ?? frontendState,
+  )
   await browser.storage.local.set({
-    [SOURCE_CONNECTION_ENABLED_STORAGE_KEY]: nextEnabled,
+    [PERSISTED_DATA_SLICES.deviceState.key]: withSourceConnectionEnabled(
+      state,
+      nextEnabled,
+    ),
   })
   await applySourceConnectionEnabled(nextEnabled)
   return getSourceConnectionStatus()
@@ -288,15 +303,18 @@ export async function registerSourceConnectionWebSocket(): Promise<void> {
     }
   })
   browser.storage.onChanged.addListener((changes, areaName) => {
-    const change = changes[SOURCE_CONNECTION_ENABLED_STORAGE_KEY]
-    if (areaName === "local" && typeof change?.newValue === "boolean") {
-      void applySourceConnectionEnabled(change.newValue)
+    const change = changes[PERSISTED_DATA_SLICES.deviceState.key]
+    if (areaName === "local" && change) {
+      const state = normalizePersistedDeviceState(change.newValue)
+      void applySourceConnectionEnabled(
+        state.sourceConnectionEnabled,
+      )
     }
   })
 
-  const stored = await browser.storage.local.get(SOURCE_CONNECTION_ENABLED_STORAGE_KEY)
-  const storedEnabled = stored[SOURCE_CONNECTION_ENABLED_STORAGE_KEY]
-  enabled = typeof storedEnabled === "boolean" ? storedEnabled : false
+  const stored = await browser.storage.local.get(PERSISTED_DATA_SLICES.deviceState.key)
+  const persisted = stored[PERSISTED_DATA_SLICES.deviceState.key]
+  enabled = normalizePersistedDeviceState(persisted).sourceConnectionEnabled
   if (enabled) {
     browser.alarms.create(SOURCE_CONNECTION_RECONNECT_ALARM, {
       periodInMinutes: RECONNECT_ALARM_PERIOD_MINUTES,

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react"
+import type { SettingsTabId } from "@/lib/persisted-settings"
 import {
   Dialog,
   DialogContent,
@@ -8,7 +9,7 @@ import {
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { Tabs, TabsList, TabsTrigger } from "@newsnext/ui/components/tabs"
 
-export type SettingsTabId = "appearance" | "general" | "permissions"
+export type { SettingsTabId } from "@/lib/persisted-settings"
 
 interface SettingsModalShellProps {
   activeTab: SettingsTabId
@@ -22,6 +23,7 @@ const SETTINGS_TABS: Array<{ id: SettingsTabId, label: string }> = [
   { id: "appearance", label: "Appearance" },
   { id: "general", label: "General" },
   { id: "permissions", label: "Permissions" },
+  { id: "data", label: "Data" },
 ]
 
 export function SettingsModalShell({

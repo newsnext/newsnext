@@ -29,7 +29,7 @@ import {
 } from "@/hooks/source-query"
 import { useSourceDescriptors } from "@/hooks/use-source-descriptors"
 import { useSourceIcon } from "@/hooks/use-source-icon"
-import { ALL_BOARD_ID, getBoardDisplayName } from "@/lib/boards"
+import { ALL_BOARD_ID } from "@/lib/boards"
 import {
   applySourceLoaderMetadata,
   buildSourceCards,
@@ -69,7 +69,7 @@ function groupSearchItems(searchSources: BoardSource[], boards: Board[]): Search
   const boardGroups = boards.flatMap((board) => {
     const items = itemsByBoardId.get(board.id)
     return items?.length
-      ? [{ id: board.id, name: getBoardDisplayName(board), items, targetBoardId: board.id }]
+      ? [{ id: board.id, name: board.name, items, targetBoardId: board.id }]
       : []
   })
 

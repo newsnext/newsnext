@@ -1,5 +1,4 @@
 import type { BoardDialogTarget } from "@/components/board-dialog"
-import type { BoardSortMode } from "@/lib/board-sorting"
 import type { Board } from "@/lib/boards"
 import { Button } from "@newsnext/ui/components/button"
 import {
@@ -12,39 +11,33 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { useState } from "react"
 import { BoardDialog } from "@/components/board-dialog"
 import { PhPlusCircleDuotone } from "@/components/icons/ph"
-import { ALL_BOARD_ID, getBoardDisplayName } from "@/lib/boards"
+import { ALL_BOARD_ID } from "@/lib/boards"
 import { cn } from "@/lib/utils"
 import {
   boardsAtom,
-  boardSortPreferencesAtom,
   createBoardAtom,
-  currentBoardIdAtom,
   deleteBoardAtom,
-  setBoardSortModeAtom,
   updateBoardAtom,
 } from "@/store/board"
+import { currentBoardIdAtom } from "@/store/settings"
 
 export function BoardNav() {
   const boards = useAtomValue(boardsAtom)
   const navigate = useNavigate()
   const [currentBoardId, setCurrentBoardId] = useAtom(currentBoardIdAtom)
-  const preferences = useAtomValue(boardSortPreferencesAtom)
   const addBoard = useSetAtom(createBoardAtom)
   const updateBoard = useSetAtom(updateBoardAtom)
   const deleteBoard = useSetAtom(deleteBoardAtom)
-  const setBoardSortMode = useSetAtom(setBoardSortModeAtom)
   const [dialogTarget, setDialogTarget] = useState<BoardDialogTarget | null>(null)
 
-  function handleCreate(board: Board, sortMode: BoardSortMode): void {
+  function handleCreate(board: Board): void {
     addBoard(board)
-    setBoardSortMode({ boardId: board.id, mode: sortMode })
     setCurrentBoardId(board.id)
     void navigate({ to: "/board/$boardId", params: { boardId: board.id } })
   }
 
-  function handleUpdate(board: Board, sortMode: BoardSortMode): void {
+  function handleUpdate(board: Board): void {
     updateBoard(board)
-    setBoardSortMode({ boardId: board.id, mode: sortMode })
   }
 
   function handleDelete(boardId: string): void {
@@ -85,7 +78,7 @@ export function BoardNav() {
                 <PillGroupIndicator layoutId="active-board" />
               )}
               <span className="relative z-10">
-                {getBoardDisplayName(board)}
+                {board.name}
               </span>
               {isActive && (
                 <span
@@ -116,7 +109,6 @@ export function BoardNav() {
         <BoardDialog
           boards={boards}
           currentBoardId={currentBoardId}
-          preferences={preferences}
           target={dialogTarget}
           onClose={() => setDialogTarget(null)}
           onCreate={handleCreate}

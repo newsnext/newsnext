@@ -2,7 +2,6 @@
 import type { ComponentProps } from "react"
 import type { BoardDialogTarget } from "@/components/board-dialog"
 import type { SettingsTabId } from "@/components/settings/modal-shell"
-import type { BoardSortMode, BoardSortPreference } from "@/lib/board-sorting"
 import type { Board } from "@/lib/boards"
 import type { BoardSource } from "@/typings/source"
 import {
@@ -44,17 +43,19 @@ import { SearchModalContent } from "@/components/search"
 import { SettingsModalShell } from "@/components/settings/modal-shell"
 
 const BOARD_DIALOG_BOARDS: Board[] = [
-  { id: "inbox", name: "All", color: "slate" },
-  { id: "board-design", name: "Design signals", color: "violet" },
-]
-
-const BOARD_DIALOG_PREFERENCES: Record<string, BoardSortPreference> = {
-  "board-design": {
-    mode: "provider",
-    automaticMode: "provider",
-    manualOrder: [],
+  {
+    id: "all",
+    name: "All",
+    color: "slate",
+    sort: { mode: "createdAt", automaticMode: "createdAt", manualOrder: [] },
   },
-}
+  {
+    id: "board-design",
+    name: "Design signals",
+    color: "violet",
+    sort: { mode: "provider", automaticMode: "provider", manualOrder: [] },
+  },
+]
 
 function createSearchSource({
   boardId,
@@ -137,7 +138,7 @@ const SEARCH_GROUPS = [
   {
     id: "no-board",
     name: "No board",
-    targetBoardId: "inbox",
+    targetBoardId: "all",
     items: [
       createSearchSource({
         id: "rss:feed::cosmos-v2ex",
@@ -211,8 +212,8 @@ function BoardDialogFixture({ target }: { target: BoardDialogTarget }) {
   const [open, setOpen] = useState(true)
   const [lastAction, setLastAction] = useState<string>()
 
-  function describeBoardAction(action: string, board: Board, sortMode: BoardSortMode): void {
-    setLastAction(`${action} “${board.name}” · ${sortMode}`)
+  function describeBoardAction(action: string, board: Board): void {
+    setLastAction(`${action} “${board.name}” · ${board.sort.mode}`)
   }
 
   return (
@@ -227,12 +228,11 @@ function BoardDialogFixture({ target }: { target: BoardDialogTarget }) {
         <BoardDialog
           boards={BOARD_DIALOG_BOARDS}
           currentBoardId="board-design"
-          preferences={BOARD_DIALOG_PREFERENCES}
           target={target}
           onClose={() => setOpen(false)}
-          onCreate={(board, sortMode) => describeBoardAction("Created", board, sortMode)}
+          onCreate={board => describeBoardAction("Created", board)}
           onDelete={boardId => setLastAction(`Deleted ${boardId}`)}
-          onUpdate={(board, sortMode) => describeBoardAction("Updated", board, sortMode)}
+          onUpdate={board => describeBoardAction("Updated", board)}
         />
       )}
     </FixtureStage>

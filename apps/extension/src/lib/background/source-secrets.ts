@@ -1,10 +1,11 @@
 import type { RuntimeSource, SourceSecretDefinition, SourceSecrets } from "@newsnext/source/types"
 import { storage } from "wxt/utils/storage"
 import { browser } from "#imports"
+import { PERSISTED_DATA_SLICES } from "../persisted-data"
 
 type SourceSecretCache = Record<string, Record<string, string>>
 const SOURCE_LOGIN_REQUIRED_ERROR_CODE = "SOURCE_LOGIN_REQUIRED"
-const SOURCE_SECRET_CACHE_STORAGE_KEY = "local:newsnext_source_secrets"
+const SOURCE_SECRET_CACHE_STORAGE_KEY = `local:${PERSISTED_DATA_SLICES.secrets.key}` as const
 
 export class SourceLoginRequiredError extends Error {
   readonly code = SOURCE_LOGIN_REQUIRED_ERROR_CODE

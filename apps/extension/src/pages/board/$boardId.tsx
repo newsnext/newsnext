@@ -2,9 +2,10 @@ import { useParams } from "@tanstack/react-router"
 import { useAtomValue, useSetAtom } from "jotai"
 import { useEffect } from "react"
 import { Desk } from "@/components/desk"
-import { getBoardColor, getBoardDisplayName } from "@/lib/boards"
+import { getBoardColor } from "@/lib/boards"
 import { handleThemeSwitch } from "@/lib/utils/swith-theme"
-import { boardsAtom, currentBoardIdAtom } from "@/store/board"
+import { boardsAtom } from "@/store/board"
+import { currentBoardIdAtom } from "@/store/settings"
 
 export function BoardIdComponent() {
   const { boardId } = useParams({ strict: false }) as { boardId: string }
@@ -14,7 +15,7 @@ export function BoardIdComponent() {
   const boardExists = board !== undefined
 
   useEffect(() => {
-    document.title = board ? `NewsNext | ${getBoardDisplayName(board)}` : "NewsNext"
+    document.title = board ? `NewsNext | ${board.name}` : "NewsNext"
     if (board) {
       handleThemeSwitch(getBoardColor(board))
     }

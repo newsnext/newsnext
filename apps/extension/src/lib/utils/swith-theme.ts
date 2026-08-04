@@ -3,7 +3,6 @@ import { COLORS } from "@newsnext/shared/constants"
 import FAVICON_SVG from "/icon.svg?url&raw"
 
 export const THEME_COLOR_KEY = "newsnext-theme-color"
-export const THEME_MODE_KEY = "newsnext-theme-mode"
 export type ThemeMode = "light" | "dark" | "system"
 
 export function isThemeColor(value: string): value is Color {
@@ -47,5 +46,4 @@ export function handleThemeModeSwitch(mode: ThemeMode) {
   const isDark = mode === "dark" || (mode === "system" && prefersDark())
   root.classList.toggle("dark", isDark)
   root.style.colorScheme = isDark ? "dark" : "light"
-  localStorage.setItem(THEME_MODE_KEY, mode)
 }
