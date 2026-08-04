@@ -5,6 +5,7 @@ import react, { reactCompilerPreset } from "@vitejs/plugin-react"
 import Icons from "unplugin-icons/vite"
 import TurboConsole from "unplugin-turbo-console/vite"
 import { defineConfig } from "wxt"
+import packageJson from "./package.json"
 import { OPTIONAL_SOURCE_PERMISSIONS } from "./src/lib/source-permission-constants"
 
 const OPTIONAL_SOURCE_ORIGINS = ["*://*/*"] as const
@@ -16,6 +17,7 @@ const REQUIRED_PERMISSIONS = [
   "scripting",
   "storage",
 ] as const
+const manifestVersion = packageJson.version.split("-", 1)[0]
 
 // See https://wxt.dev/api/config.html
 export default defineConfig({
@@ -47,7 +49,8 @@ export default defineConfig({
     return {
       name: extensionName,
       description: "Elegant reading experience, Fastest information reception",
-      version: "0.9.0",
+      version: manifestVersion,
+      version_name: packageJson.version,
       permissions: yoloMode
         ? [...REQUIRED_PERMISSIONS, ...OPTIONAL_SOURCE_PERMISSIONS]
         : [...REQUIRED_PERMISSIONS],

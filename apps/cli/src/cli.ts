@@ -1,6 +1,7 @@
 import type { ArgsDef, CommandDef } from "citty"
 import type { CliIO } from "./io"
 import { defineCommand, renderUsage, runCommand } from "citty"
+import packageJson from "../package.json"
 import {
   DAEMON_COMMAND_ARGS,
   runDaemon,
@@ -15,7 +16,7 @@ import { runSourceListCommand, SOURCE_LIST_ARGS } from "./source-list"
 import { runSourceRunCommand } from "./source-run/command"
 import { SOURCE_RUN_ARGS } from "./source-run/options"
 
-const VERSION = "0.0.1"
+const VERSION = packageJson.version
 
 type ExitCodeHandler = (exitCode: number) => void
 
