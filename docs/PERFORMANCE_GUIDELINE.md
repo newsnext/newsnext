@@ -23,12 +23,14 @@ remain separate concerns.
 ## Measurement Workflow
 
 Measure before and after a change with the same board, viewport, loaded card
-count, and interaction sequence. Development mode includes React Scan through a
-dynamic import in `apps/extension/src/entrypoints/app/main.tsx`.
+count, and interaction sequence. React Scan is opt-in through a dynamic import
+in `apps/extension/src/entrypoints/app/main.tsx`. Start the existing development
+server with `WXT_ENABLE_REACT_SCAN=true bun run dev` when profiling.
 
 - React Scan must load before the React root mounts.
-- React Scan must remain development-only. Production builds must not contain
-  React Scan code or strings.
+- React Scan must load only when `WXT_ENABLE_REACT_SCAN` is exactly `true` in a
+  development build. Production builds must not contain React Scan code or
+  strings.
 - Do not pass `enabled` during initialization. React Scan defaults to enabled
   on first use and persists the toolbar power toggle in `react-scan-options`;
   forcing the option during hot reload overrides the stored user preference.

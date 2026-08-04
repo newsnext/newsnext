@@ -24,7 +24,10 @@ function App() {
 }
 
 async function renderApp(): Promise<void> {
-  if (import.meta.env.DEV) {
+  if (
+    import.meta.env.DEV
+      && import.meta.env.WXT_ENABLE_REACT_SCAN === "true"
+  ) {
     const { scan } = await import("react-scan")
     scan({
       showToolbar: true,
