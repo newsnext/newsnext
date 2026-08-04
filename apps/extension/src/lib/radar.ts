@@ -640,9 +640,7 @@ function createDiscourseSuggestions(
           home: list.categoryPath
             ? new URL(`c/${list.categoryPath}`, baseUrl).href
             : baseUrl.href,
-          title: feed === list.feed
-            ? title
-            : `${title} · ${feed === "new" ? "New" : "Latest"}`,
+          title,
         },
       },
       confidence: DISCOURSE_RADAR_CONFIDENCE,

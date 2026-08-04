@@ -286,7 +286,7 @@ describe("getRadarSuggestions", () => {
       title: suggestion.patch.metadata?.title,
     }))).toEqual([
       { feed: "latest", title: "Example Community" },
-      { feed: "new", title: "Example Community · New" },
+      { feed: "new", title: "Example Community" },
     ])
 
     expect(matcher.getSuggestions({
@@ -295,7 +295,13 @@ describe("getRadarSuggestions", () => {
         baseUrl: "https://community.example.com/forum/",
         title: "Example Community",
       },
-    }).map(suggestion => suggestion.patch.params?.feed)).toEqual(["new", "latest"])
+    }).map(suggestion => ({
+      feed: suggestion.patch.params?.feed,
+      title: suggestion.patch.metadata?.title,
+    }))).toEqual([
+      { feed: "new", title: "Example Community" },
+      { feed: "latest", title: "Example Community" },
+    ])
 
     expect(matcher.getSuggestions({
       url: "https://community.example.com/forum/c/howto/admins/53/l/latest?order=created",

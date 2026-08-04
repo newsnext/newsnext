@@ -904,15 +904,17 @@ to reproduce this behavior; arbitrary-host discovery remains extension-owned
 and fail-closed.
 
 Radar emits both Latest and New suggestions on a Latest list page, including
-category Latest pages. The alternate suggestion adds a `Latest` or `New` title
-suffix so the two cards remain distinguishable. Hot and Top pages emit only
-their matching mode.
+category Latest pages. Both suggestions preserve the site or category title
+without a feed-name suffix. Hot and Top pages emit only their matching mode.
 
 Discourse Latest requests preserve the upstream default activity order and use
 `bumped_at` so replies and other legitimate bumps remain visible as recent
 activity. New requests append `order=created` to the Latest endpoint and use
 `created_at` for stable chronological topic discovery. Hot and Top preserve
-their upstream ranking even though items also expose timestamps.
+their upstream ranking even though items also expose timestamps. Each topic's
+inline icon is the original poster's avatar, resolved from the first `posters`
+entry and the response-level `users` collection; it does not change when a
+later reply bumps the topic.
 
 Use `badge` for secondary instance identity. For signed or expiring images,
 return loader metadata only when the item request already provides the URL.

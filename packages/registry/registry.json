@@ -1137,7 +1137,7 @@
         },
         "inline": {
           "icon": {
-            "template": "{% assign user = scope.response.json.users | where: 'username', scope.item.last_poster_username | first %}{% if user and user.avatar_template %}{{ user.avatar_template | replace: '{size}', '48' | absolute_url: scope.params.siteUrl }}{% endif %}"
+            "template": "{% assign poster = scope.item.posters | first %}{% assign user = scope.response.json.users | where: 'id', poster.user_id | first %}{% if user and user.avatar_template %}{{ user.avatar_template | replace: '{size}', '48' | absolute_url: scope.params.siteUrl }}{% endif %}"
           }
         },
         "preview": {
