@@ -55,6 +55,9 @@ Cards define the primary NewsNext surface treatment.
 - Keep compact card action icons content-sized and background-free. Use the
   shared Button `quiet` variant with `icon-fit`; hover may raise icon opacity but
   must not add a filled hover surface or enlarge the action target spacing.
+- Fade and pulse card content during an explicit latest-data refresh, or while
+  an automatic query is fetching without current or placeholder data. Keep
+  renderable previous data visually stable during automatic background refreshes.
 - The default Button already uses the current primary theme. Set its `tone` to
   `theme` only when adapting another visual hierarchy, such as `outline`, to
   the current card or provider color. Do not encode color context into new

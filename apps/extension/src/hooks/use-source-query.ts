@@ -39,7 +39,7 @@ export function useSourceQuery({
   const fetchLatestSources = useFetchLatestSources()
   const isFetchingLatest = useIsSourceFetchingLatest(queryHash)
   const [initialUpdatedAt] = useState(Date.now)
-  const { data, error, isFetching, isError } = useQuery({
+  const { data, error, isFetching, isError, isLoading } = useQuery({
     ...getSourceQueryOptions(queryClient, target),
     enabled: enabled && source !== undefined,
     placeholderData: prev => prev,
@@ -58,6 +58,7 @@ export function useSourceQuery({
     fetchLatest: handleFetchLatest,
     isFetching,
     isFetchingLatest,
+    isLoading,
     isError,
     errorMessage: error instanceof Error ? error.message : undefined,
     loginUrl: getLoginUrlFromError(error),

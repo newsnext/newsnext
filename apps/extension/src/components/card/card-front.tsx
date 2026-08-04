@@ -28,7 +28,7 @@ interface CardFrontProps {
   source: BoardSource
   items: NewsItem[]
   isFetching: boolean
-  isFetchingLatest: boolean
+  isContentFetching: boolean
   sourceErrorMessage?: string
   sourceLoginUrl?: string
   sourcePermissionDescription: string
@@ -138,7 +138,7 @@ export function CardFront({
   source,
   items,
   isFetching,
-  isFetchingLatest,
+  isContentFetching,
   sourceErrorMessage,
   sourceLoginUrl,
   sourcePermissionDescription,
@@ -154,7 +154,7 @@ export function CardFront({
   const { badge, desc, home, title } = source.metadata
   const icon = useSourceIcon(source)
   const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(null)
-  const visibleSourceErrorMessage = isFetchingLatest ? undefined : sourceErrorMessage
+  const visibleSourceErrorMessage = isContentFetching ? undefined : sourceErrorMessage
   const sourceStatusMessage = sourcePermissionRequired
     ? sourcePermissionDescription
     : sourceLoginUrl
@@ -198,7 +198,7 @@ export function CardFront({
             radius="2xl"
             className={cn(
               "pointer-events-none absolute inset-0 bg-background/70 zenith-theme-400",
-              isFetchingLatest && "animate-pulse",
+              isContentFetching && "animate-pulse",
             )}
           />
           {sourceStatusMessage && (
@@ -209,7 +209,7 @@ export function CardFront({
             onPointerDown={event => event.stopPropagation()}
             className="relative size-full overflow-y-auto px-2 py-2 scrollbar-hidden"
           >
-            <div className={cn("min-h-full transition-opacity duration-500", isFetchingLatest && "opacity-20")}>
+            <div className={cn("min-h-full transition-opacity duration-500", isContentFetching && "opacity-20")}>
               <CardFrontContent
                 icon={icon}
                 items={items}

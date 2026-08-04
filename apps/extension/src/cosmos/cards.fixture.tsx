@@ -138,6 +138,7 @@ function CardStage({ children }: React.PropsWithChildren) {
 interface FrontFixtureProps {
   items?: NewsItem[]
   isFetching?: boolean
+  isContentFetching?: boolean
   sourceErrorMessage?: string
   sourcePermissionRequired?: boolean
 }
@@ -145,6 +146,7 @@ interface FrontFixtureProps {
 function FrontFixture({
   items = RANKING_ITEMS,
   isFetching = false,
+  isContentFetching = false,
   sourceErrorMessage,
   sourcePermissionRequired = false,
 }: FrontFixtureProps) {
@@ -156,7 +158,7 @@ function FrontFixture({
         source={SAMPLE_SOURCE}
         items={items}
         isFetching={isFetching}
-        isFetchingLatest={false}
+        isContentFetching={isContentFetching}
         sourceErrorMessage={sourceErrorMessage}
         sourcePermissionDescription="Allow access to reactcosmos.org to load this source."
         sourcePermissionRequired={sourcePermissionRequired}
@@ -221,7 +223,7 @@ function AllCardColorsFixture() {
               source={createColorSource(color)}
               items={RANKING_ITEMS.slice(0, 4)}
               isFetching={false}
-              isFetchingLatest={false}
+              isContentFetching={false}
               sourcePermissionDescription=""
               sourcePermissionRequired={false}
               updatedAt={UPDATED_AT}
@@ -241,7 +243,7 @@ function TimelineCardFixture() {
 }
 
 function LoadingCardFixture() {
-  return <FrontFixture items={TIMELINE_ITEMS} isFetching />
+  return <FrontFixture items={TIMELINE_ITEMS} isFetching isContentFetching />
 }
 
 function PermissionCardFixture() {
