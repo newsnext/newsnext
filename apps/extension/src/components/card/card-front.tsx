@@ -1,6 +1,5 @@
 import type { ReactNode } from "react"
 import type { BoardSource, NewsItem } from "@/typings/source"
-import { Button } from "@newsnext/ui/components/button"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { useState } from "react"
 import { useSourceIcon } from "@/hooks/use-source-icon"
@@ -12,7 +11,7 @@ import {
   PhCircleDashedDuotone,
   PhInfoDuotone,
 } from "../icons/ph"
-import { CardHeader } from "./card-header"
+import { CardHeader, CardHeaderActionButton } from "./card-header"
 import {
   SourceErrorState,
   SourceLoginState,
@@ -49,15 +48,13 @@ function CardRefreshButton({
   onRefresh: () => void
 }) {
   return (
-    <Button
-      variant="quiet"
-      size="icon-fit"
+    <CardHeaderActionButton
       className={isFetching ? "animate-spin" : undefined}
       onClick={onRefresh}
       aria-label="Refresh"
     >
       {isFetching ? <PhCircleDashedDuotone /> : <PhArrowCounterClockwiseDuotone />}
-    </Button>
+    </CardHeaderActionButton>
   )
 }
 
@@ -177,14 +174,12 @@ export function CardFront({
             <>
               <CardRefreshButton isFetching={isFetching} onRefresh={onRefresh} />
               {onFlip && (
-                <Button
-                  variant="quiet"
-                  size="icon-fit"
+                <CardHeaderActionButton
                   onClick={onFlip}
                   aria-label="Detail"
                 >
                   <PhInfoDuotone />
-                </Button>
+                </CardHeaderActionButton>
               )}
               {dragHandle}
             </>

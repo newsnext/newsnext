@@ -2,13 +2,13 @@ import type { Atom } from "jotai"
 import type { BoardFilter } from "@/lib/board-filter"
 import type { SourceInstance } from "@/lib/source-cards"
 import type { SourceDescriptor } from "@/typings/source"
-import { Button } from "@newsnext/ui/components/button"
 import { useAtomValue } from "jotai"
 import { memo, useMemo } from "react"
 import { useSortable } from "@/hooks/use-sortable"
 import { createBoardSource } from "@/lib/source-cards"
 import { PhDotsSixVerticalDuotone } from "../icons/ph"
-import Card from "./index"
+import { CardHeaderActionButton } from "./card-header"
+import { SourceCard } from "./index"
 
 interface DraggableCardProps {
   descriptor: SourceDescriptor
@@ -53,19 +53,17 @@ function DraggableCardComponent({ descriptor, filter, forceMount, instanceAtom }
 
   const dragHandle = (
     <div ref={setHandleRef} className="flex items-center justify-center">
-      <Button
-        variant="quiet"
-        size="icon-fit"
+      <CardHeaderActionButton
         aria-label={`Move ${source.metadata.title}`}
         className="cursor-grab"
       >
         <PhDotsSixVerticalDuotone />
-      </Button>
+      </CardHeaderActionButton>
     </div>
   )
 
   return (
-    <Card
+    <SourceCard
       id={id}
       source={source}
       filter={filter}

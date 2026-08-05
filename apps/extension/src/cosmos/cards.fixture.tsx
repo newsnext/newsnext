@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils"
 
 const UPDATED_AT = Date.now() - 4 * 60 * 1000
 
-const SAMPLE_SOURCE: BoardSource = {
+export const SAMPLE_SOURCE: BoardSource = {
   id: "cosmos-source",
   sourceId: "cosmos.design",
   boardId: "all",
@@ -261,5 +261,5 @@ export default {
   "Front: Loading": LoadingCardFixture,
   "Front: Permission": PermissionCardFixture,
   "Front: Error": ErrorCardFixture,
-  "Back: Editable": CardBackFixture,
+  "Card editable": CardBackFixture,
 }

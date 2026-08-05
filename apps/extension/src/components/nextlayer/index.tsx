@@ -61,7 +61,7 @@ function MixedItemRow({
         <div className="min-w-0 flex-1">
           {showTimeLabel && (
             <div className="-ml-4 mb-2 mt-1">
-              <span className="inline-flex rounded-3xl bg-neutral-400/10 p-1 text-xs leading-none text-muted-foreground">
+              <span className="inline-flex rounded-3xl bg-muted p-1 text-xs leading-none text-muted-foreground">
                 {timeLabel}
               </span>
             </div>

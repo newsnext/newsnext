@@ -1,8 +1,8 @@
-import { Button } from "@newsnext/ui/components/button"
 import { useSetAtom } from "jotai"
 import { BoardMembershipSelect } from "@/components/common/board-membership-select"
 import { PhTrashDuotone } from "@/components/icons/ph"
 import { deleteInstanceAtom, moveInstanceToBoardAtom } from "@/store/board"
+import { CardHeaderActionButton } from "../card-header"
 
 export function CardBoardSelect({ id, boardId }: { id: string, boardId: string | null }) {
   const moveInstance = useSetAtom(moveInstanceToBoardAtom)
@@ -26,9 +26,7 @@ export function DeleteCardButton({ id }: { id: string }) {
   const deleteLocal = useSetAtom(deleteInstanceAtom)
 
   return (
-    <Button
-      variant="quiet"
-      size="icon-fit"
+    <CardHeaderActionButton
       onClick={(e) => {
         e.stopPropagation()
         deleteLocal(id)
@@ -37,6 +35,6 @@ export function DeleteCardButton({ id }: { id: string }) {
       title="Delete card"
     >
       <PhTrashDuotone />
-    </Button>
+    </CardHeaderActionButton>
   )
 }

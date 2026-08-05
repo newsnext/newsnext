@@ -19,8 +19,6 @@ const buttonVariants = cva(
         destructive:
           "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
         link: "text-primary underline-offset-4 hover:underline",
-        island: "island-pill",
-        quiet: "border-0 bg-transparent text-lg opacity-50 hover:opacity-85 active:not-aria-[haspopup]:translate-y-0",
         transparent: "bg-transparent",
       },
       tone: {
@@ -41,9 +39,14 @@ const buttonVariants = cva(
     },
     compoundVariants: [
       {
+        variant: "default",
+        tone: "theme",
+        className: "bg-theme-500 text-primary-foreground hover:bg-theme-500/80",
+      },
+      {
         variant: "outline",
         tone: "theme",
-        className: "border-theme-200 bg-theme-500/10 text-theme-600 hover:bg-theme-500/20",
+        className: "border-theme-400/30 bg-transparent text-theme-600 hover:bg-theme-500/10 hover:text-theme-700 focus-visible:border-theme-400 focus-visible:ring-theme-400/30 dark:text-theme-300 dark:hover:text-theme-200",
       },
     ],
     defaultVariants: {

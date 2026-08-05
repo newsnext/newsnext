@@ -17,8 +17,9 @@ function FetchLatestButton() {
   return (
     <Button
       type="button"
-      variant="island"
+      variant="transparent"
       size="icon-lg"
+      className="island-pill bg-black/10 hover:bg-black/10"
       title="Fetch Latest for Active Cards"
       onClick={fetchLatest}
     >

@@ -115,7 +115,7 @@ export function ParamField({
                 type="button"
                 size="xs"
                 variant={isSelected ? "default" : "outline"}
-                tone={isSelected ? undefined : "theme"}
+                tone="theme"
                 className="h-6"
                 onClick={(event) => {
                   event.stopPropagation()

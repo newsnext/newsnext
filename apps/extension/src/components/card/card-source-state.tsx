@@ -23,8 +23,9 @@ function SourceActionState({
       <Button
         type="button"
         variant="outline"
+        tone="theme"
         onClick={onClick}
-        className="h-10 gap-2 border-theme-400/25 bg-background/50 px-4 font-semibold text-theme-400 shadow-sm backdrop-blur hover:-translate-y-0.5 hover:bg-background/65 focus-visible:ring-2 focus-visible:ring-theme-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        className="h-10 gap-2 bg-background/50 px-4 font-semibold shadow-sm backdrop-blur"
         aria-label={title}
         title={title}
       >

@@ -76,7 +76,7 @@ export function BgIllustrationLayer(): React.ReactPortal | null {
     center.y,
   )
   const style: CSSProperties = {
-    backgroundColor: `color-mix(in oklab, color-mix(in oklab, var(--foreground), var(--color-theme-500) 45%) ${normalizeBgIllustrationOpacity(opacity)}%, transparent)`,
+    backgroundColor: `color-mix(in oklab, color-mix(in oklab, var(--foreground), var(--primary) 45%) ${normalizeBgIllustrationOpacity(opacity)}%, transparent)`,
     height: layout.height,
     left: layout.left,
     mask: `url("${illustration}") right bottom / 100% 100% no-repeat`,

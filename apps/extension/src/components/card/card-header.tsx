@@ -1,5 +1,5 @@
 import type { SourceProvider } from "@newsnext/source/types"
-import type { ReactNode } from "react"
+import type { ComponentProps, ReactNode } from "react"
 import { Button } from "@newsnext/ui/components/button"
 import { cn } from "@/lib/utils"
 import { SourceIcon } from "./source-icon"
@@ -14,6 +14,19 @@ interface CardHeaderProps {
   subtitle: ReactNode
   actions: ReactNode
   className?: string
+}
+
+type CardHeaderActionButtonProps = Omit<ComponentProps<typeof Button>, "size" | "variant">
+
+export function CardHeaderActionButton({ className, ...props }: CardHeaderActionButtonProps): React.JSX.Element {
+  return (
+    <Button
+      variant="transparent"
+      size="icon-fit"
+      className={cn("border-0 text-lg opacity-50 hover:opacity-85 active:not-aria-[haspopup]:translate-y-0", className)}
+      {...props}
+    />
+  )
 }
 
 export function CardHeader({

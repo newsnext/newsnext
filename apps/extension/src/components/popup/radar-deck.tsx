@@ -9,7 +9,7 @@ import confetti from "canvas-confetti"
 import { useAtomValue, useSetAtom } from "jotai"
 import { animate, motion, useDragControls, useMotionValue, useReducedMotion, useTransform } from "motion/react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import Card from "@/components/card"
+import { SourceCard } from "@/components/card"
 import { BoardMembershipSelect } from "@/components/common/board-membership-select"
 import { PhArrowCircleLeftDuotone, PhPlusCircleDuotone } from "@/components/icons/ph"
 import { ALL_BOARD_ID } from "@/lib/boards"
@@ -26,6 +26,7 @@ const RADAR_DECK_SPRING = { type: "spring", stiffness: 300, damping: 30 } as con
 const RADAR_CARD_ROTATE_OUTPUT = [-7, 0, 7]
 const RADAR_CARD_Y_OUTPUT = [20, 0, 20]
 const RADAR_CELEBRATION_DURATION = 900
+const RADAR_DECK_NAV_BUTTON_CLASS_NAME = "border-0 text-xl opacity-50 hover:opacity-85 active:not-aria-[haspopup]:translate-y-0"
 const RADAR_REDUCED_MOTION_CELEBRATION_DURATION = 180
 const RADAR_CONFETTI_COLORS: Record<BoardSource["provider"]["color"], string> = {
   red: "#f87171",
@@ -100,7 +101,7 @@ interface RadarSourceCardProps {
 
 function RadarSourceCard({ source, className, onDraftSourceChange }: RadarSourceCardProps) {
   return (
-    <Card
+    <SourceCard
       id={source.id}
       source={source}
       className={cn(
@@ -407,24 +408,24 @@ function RadarDeckContent({ sourceDescriptors, suggestions }: RadarDeckProps) {
         </div>
         <div className="flex shrink-0 items-center gap-1">
           <Button
-            variant="quiet"
+            variant="transparent"
             size="icon-fit"
             onClick={() => moveDeck(-1)}
             disabled={!canGoPrevious}
             aria-label="Previous radar card"
             title="Previous radar card"
-            className={cn("text-xl", !canGoPrevious && "opacity-20")}
+            className={cn(RADAR_DECK_NAV_BUTTON_CLASS_NAME, !canGoPrevious && "opacity-20")}
           >
             <PhArrowCircleLeftDuotone />
           </Button>
           <Button
-            variant="quiet"
+            variant="transparent"
             size="icon-fit"
             onClick={() => moveDeck(1)}
             disabled={!canGoNext}
             aria-label="Next radar card"
             title="Next radar card"
-            className={cn("rotate-180 text-xl", !canGoNext && "opacity-20")}
+            className={cn(RADAR_DECK_NAV_BUTTON_CLASS_NAME, "rotate-180", !canGoNext && "opacity-20")}
           >
             <PhArrowCircleLeftDuotone />
           </Button>

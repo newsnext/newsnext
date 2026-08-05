@@ -286,7 +286,7 @@ export function BgIllustrationSettings(): React.JSX.Element {
 
   const previewStyle: CSSProperties | undefined = previewIllustration && previewIllustrationLayout && previewIllustrationTranslation
     ? {
-        backgroundColor: `color-mix(in oklab, color-mix(in oklab, var(--foreground), var(--color-theme-500) 45%) ${illustrationOpacity}%, transparent)`,
+        backgroundColor: `color-mix(in oklab, color-mix(in oklab, var(--foreground), var(--primary) 45%) ${illustrationOpacity}%, transparent)`,
         height: previewIllustrationLayout.height,
         left: previewIllustrationLayout.left,
         top: previewIllustrationLayout.top,

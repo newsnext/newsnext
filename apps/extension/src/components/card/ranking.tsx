@@ -108,9 +108,9 @@ export function Ranking({ items, scrollElement }: Props) {
       renderItem={(item, index) => (
         <NewsItemLink
           item={item}
-          className="relative flex items-center gap-2 rounded-xl transition-colors hover:bg-neutral-400/10"
+          className="relative flex items-center gap-2 rounded-xl transition-colors hover:bg-muted"
         >
-          <span className="flex min-h-6 w-6 shrink-0 self-stretch items-center justify-center rounded-full bg-neutral-400/10 text-sm opacity-80">
+          <span className="flex min-h-6 w-6 shrink-0 self-stretch items-center justify-center rounded-full bg-muted text-sm opacity-80">
             {index + 1}
           </span>
           <RankChangeBadge diff={rankChanges[item.url]} />

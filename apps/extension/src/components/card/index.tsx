@@ -28,7 +28,7 @@ import { CardFront } from "./card-front"
 
 const EMPTY_ITEMS: BoardSourceItems["items"] = []
 
-export interface CardProps {
+export interface SourceCardProps {
   filter?: BoardFilter
   id: string
   source: BoardSource
@@ -41,7 +41,7 @@ export interface CardProps {
   onDraftSourceChange?: (patch: SourceInstancePatch) => void
 }
 
-function CardContent({ filter, id, source, dragHandle, isDraft = false, onDraftSourceChange }: CardProps) {
+function SourceCardContent({ filter, id, source, dragHandle, isDraft = false, onDraftSourceChange }: SourceCardProps) {
   const reportBoardSourceItems = useReportBoardSourceItems()
   const setSourceInstancePatch = useSetAtom(setSourceInstancePatchAtom)
   const resetLocalParams = useSetAtom(resetInstanceParamsAtom)
@@ -170,7 +170,7 @@ function CardContent({ filter, id, source, dragHandle, isDraft = false, onDraftS
   )
 }
 
-export default function Card(props: CardProps) {
+export function SourceCard(props: SourceCardProps): React.JSX.Element {
   const { forceMount = false, nodeRef } = props
   const { rootScrollContainerRef } = useScrollProgressActionsContext()
   const ref = useRef<HTMLDivElement>(null)
@@ -195,7 +195,7 @@ export default function Card(props: CardProps) {
       )}
     >
       {(isInView || forceMount) && (
-        <CardContent {...props} />
+        <SourceCardContent {...props} />
       )}
     </div>
   )

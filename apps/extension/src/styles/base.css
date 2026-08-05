@@ -8,43 +8,43 @@
   --background: var(--color-neutral-100);
   --background-grid-line: color-mix(in oklab, var(--foreground) 1%, transparent);
   --foreground: var(--color-neutral-900);
-  --card: oklch(0.985 0 0);
-  --card-foreground: oklch(0.205 0 0);
-  --popover: oklch(0.985 0 0);
-  --popover-foreground: oklch(0.205 0 0);
+  --card: var(--color-neutral-50);
+  --card-foreground: var(--color-neutral-900);
+  --popover: var(--color-neutral-50);
+  --popover-foreground: var(--color-neutral-900);
   --primary: var(--color-theme-500);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.985 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.985 0 0);
-  --muted-foreground: oklch(0.205 0 0);
-  --accent: oklch(0.985 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  --primary-foreground: var(--color-white);
+  --secondary: var(--color-neutral-50);
+  --secondary-foreground: var(--color-neutral-900);
+  --muted: color-mix(in oklab, var(--color-neutral-400) 10%, transparent);
+  --muted-foreground: var(--color-neutral-900);
+  --accent: var(--color-neutral-50);
+  --accent-foreground: var(--color-neutral-900);
+  --destructive: var(--color-red-500);
+  --border: color-mix(in oklab, var(--color-white) 10%, transparent);
+  --input: color-mix(in oklab, var(--color-white) 15%, transparent);
+  --ring: var(--color-neutral-500);
 }
 
 .dark {
   --background: var(--color-neutral-900);
   --foreground: var(--color-neutral-300);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
+  --card: var(--color-neutral-900);
+  --card-foreground: var(--color-neutral-50);
+  --popover: var(--color-neutral-900);
+  --popover-foreground: var(--color-neutral-50);
   --primary: var(--color-theme-500);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  --primary-foreground: var(--color-white);
+  --secondary: var(--color-neutral-800);
+  --secondary-foreground: var(--color-neutral-50);
+  --muted: color-mix(in oklab, var(--color-neutral-400) 10%, transparent);
+  --muted-foreground: var(--color-neutral-400);
+  --accent: var(--color-neutral-800);
+  --accent-foreground: var(--color-neutral-50);
+  --destructive: var(--color-red-500);
+  --border: color-mix(in oklab, var(--color-white) 10%, transparent);
+  --input: color-mix(in oklab, var(--color-white) 15%, transparent);
+  --ring: var(--color-neutral-500);
 }
 
 @theme inline {
@@ -114,7 +114,7 @@
       linear-gradient(to right, var(--background-grid-line) 1px, transparent 1px),
       linear-gradient(to bottom, var(--background-grid-line) 1px, transparent 1px);
     background-size: var(--background-grid-size, 24px 32px);
-    mask-image: radial-gradient(ellipse 70% 60% at 50% 100%, #000 60%, transparent 100%);
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 100%, var(--color-black) 60%, transparent 100%);
   }
 
   body::before {

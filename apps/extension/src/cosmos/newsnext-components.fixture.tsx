@@ -44,7 +44,7 @@ function BrandAndActionsFixture(): React.JSX.Element {
     <FixturePage>
       <h1 className="text-xl font-semibold">Brand and actions</h1>
       <div className="flex items-center gap-4 rounded-2xl bg-card p-6 ring-1 ring-foreground/10">
-        <Logo className="size-14 text-theme-500" />
+        <Logo className="size-14 text-primary" />
         <WordmarkLogo className="h-auto w-52" />
       </div>
       <div className="flex items-center gap-3">
@@ -122,7 +122,7 @@ function FlipFixture(): React.JSX.Element {
       </div>
       <FlipAnimate className="h-64" rotate="y" flipped={flipped}>
         <section className="grid place-items-center rounded-3xl bg-card text-xl ring-1 ring-foreground/10">Front</section>
-        <section className="grid place-items-center rounded-3xl bg-theme-500 text-xl text-white">Back</section>
+        <section className="grid place-items-center rounded-3xl bg-primary text-xl text-primary-foreground">Back</section>
       </FlipAnimate>
     </FixturePage>
   )
@@ -176,7 +176,7 @@ function DynamicIslandFixture(): React.JSX.Element {
           ? <div className="grid h-full place-items-center text-xs">Open controls</div>
           : (
               <div className="grid h-full place-content-center gap-3 p-6">
-                <Logo className="mx-auto size-12 text-theme-500" />
+                <Logo className="mx-auto size-12 text-primary" />
                 <strong>Dynamic island</strong>
                 <span className="text-xs text-muted-foreground">Click outside or scroll to close.</span>
               </div>
@@ -207,7 +207,7 @@ function CornerShapesFixture(): React.JSX.Element {
             <div className="flex h-28 w-full items-end justify-center">
               <div
                 data-squircle
-                className="bg-theme-500 shadow-lg shadow-theme-500/15 ring-1 ring-white/20"
+                className="bg-primary shadow-lg shadow-primary/15 ring-1 ring-primary-foreground/20"
                 style={{
                   height: shape.height,
                   width: shape.width,

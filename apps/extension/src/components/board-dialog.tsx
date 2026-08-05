@@ -244,7 +244,7 @@ export function BoardDialog({
                   </span>
                 </Button>
               )}
-              <Button type="submit" className="text-white" disabled={!canSubmit}>
+              <Button type="submit" disabled={!canSubmit}>
                 {isEditing ? "Save changes" : "Create board"}
               </Button>
             </DialogFooter>

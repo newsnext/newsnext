@@ -115,6 +115,17 @@ Cards define the primary NewsNext surface treatment.
 - Keep Tailwind shades 100–900 available through provider-scoped `theme-*`
   colors so shared components can add states without changing the theme
   contract.
+- Use the semantic `primary` color for the current app-level accent instead of
+  writing `theme-500` directly. Reserve explicit `theme-*` shades for locally
+  scoped palettes, such as provider-colored cards, theme choices, and tonal
+  gradients.
+- Build semantic surface colors from Tailwind palette variables when an exact
+  palette value exists; avoid duplicating those colors as raw OKLCH or hex
+  literals.
+- Keep the standard `muted` surface aligned with the cards' translucent
+  `neutral-400/10` treatment. Use explicit Tailwind shades only where a card
+  state cannot preserve its established light and dark colors through an
+  existing semantic token.
 - Keep the selectable theme palette intentionally distinct: red, pink, fuchsia,
   purple, indigo, blue, cyan, teal, green, amber, orange, and slate.
 - Use `10px` (`p-2.5`) between the outer shell and nested content where the card
@@ -122,17 +133,19 @@ Cards define the primary NewsNext surface treatment.
 - Place identity and surface actions in the exposed outer shell. Place editable
   fields and primary content in the quieter inner panel.
 - Keep compact card action icons content-sized and background-free. Use the
-  shared Button `quiet` variant with `icon-fit`; hover may raise icon opacity but
-  must not add a filled hover surface or enlarge the action target spacing.
+  shared `CardHeaderActionButton`; hover may raise icon opacity but must not add
+  a filled hover surface or enlarge the action target spacing.
 - Fade and pulse card content during an explicit latest-data refresh, or while
   an automatic query is fetching without current or placeholder data. Keep
   renderable previous data visually stable during automatic background refreshes.
 - Keep explicit refresh feedback visible for at least 500ms, including when the
   one-minute request guard reuses the preceding result immediately.
-- The default Button already uses the current primary theme. Set its `tone` to
-  `theme` only when adapting another visual hierarchy, such as `outline`, to
-  the current card or provider color. Do not encode color context into new
-  compound variant names.
+- The default Button uses the app-level primary theme. Set its `tone` to
+  `theme` for both filled and outline actions inside provider-colored cards so
+  their highlight follows the card's scoped `theme-*` palette. Do not encode
+  color context into new compound variant names. Keep theme outline actions
+  transparent at rest and reveal their tinted surface on hover or focus so
+  secondary actions do not compete with the filled primary action.
 - The header Dynamic Island expands to a 280px by 120px panel, which fits the
   shared theme selector's six-column palette with compact shell padding.
 
@@ -284,7 +297,7 @@ with a clearly visible themed range and a 14px thumb filled with a light theme
 shade; the track and thumb must remain legible against nested tinted surfaces.
 Use 32px buttons for ordinary settings
 actions, keep adjacent actions the same height and text size, and use `ghost`
-rather than the icon-oriented `quiet` variant for text-only tertiary actions.
+rather than the icon-oriented card action composition for text-only tertiary actions.
 Keep destructive removal actions inside the same button group and use the
 `destructive` treatment instead of presenting them as detached text. Theme-
 colored buttons use white text in both light and dark modes.
@@ -336,6 +349,46 @@ helper copy.
   field labels, or visible controls.
 - Keep validation and consequence text when it helps users recover or make an
   informed destructive decision.
+
+## Component previews
+
+Organize Cosmos as a component catalog with three clear levels: `Basics` for
+reusable UI primitives, `Patterns` for NewsNext-specific compositions, and
+`Cards` for complete source-card states. Business dialogs and full source
+cards must not appear in Basics when only one of their underlying controls is
+being documented.
+
+Use the shared Cosmos specimen layout for Basics pages: a category label,
+component title, one-sentence usage description, and quiet bordered specimen
+sections. Use monospace state labels only when comparing meaningful states
+such as hierarchy, size, invalid, or disabled. Keep the catalog canvas neutral
+and let the rendered component carry the visual emphasis.
+
+Keep a Typography fixture in Basics that covers the actual NewsNext hierarchy:
+display and section headings, feed titles, reading text, metadata, links, labels,
+tabular numbers, and code identifiers. Use representative product content so
+the specimen validates reading rhythm rather than isolated font sizes.
+
+Keep a single Colors fixture in Basics as the palette reference. Group all
+semantic surface and foreground pairs, supporting control colors, and every
+provider theme scale there. Component fixtures may still demonstrate their
+color-dependent states, but must not become competing palette references.
+
+Give Buttons and Badges separate Basics fixtures. The Buttons reference covers
+every public variant and size once, then demonstrates supported states, icon
+placement, provider theme tone, and render-prop composition without expanding
+them into a redundant matrix of every possible combination. Keep the actual
+card button families together in a provider-scoped specimen: header icon
+controls, compact edit actions, parameter choices, and source-state actions.
+Show those controls without moving a complete source card into Basics. Preserve
+their intrinsic content width in the catalog and cap them at the specimen width;
+grid-based fixture containers must not stretch buttons into full-width actions.
+
+Keep shared Button variants limited to reusable visual hierarchy. Contextual
+treatments are compositions: card header icons use `CardHeaderActionButton`,
+and top-level translucent controls apply `island-pill` to a transparent Button.
+Do not add `quiet`, `island`, or other business-context names back to the shared
+variant API.
 
 ## Segmented Controls
 

@@ -89,7 +89,7 @@ function HeaderProgress({ scrollContainerRef }: HeaderProgressProps) {
           strokeWidth="1"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className="text-theme-500"
+          className="text-primary"
         />
       </svg>
       <AnimatePresence mode="popLayout" initial={false}>
@@ -103,7 +103,7 @@ function HeaderProgress({ scrollContainerRef }: HeaderProgressProps) {
                 exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.2 }}
               >
-                <Logo className="text-theme-500 size-5" />
+                <Logo className="text-primary size-5" />
                 <WordmarkLogo className="w-[4.6em] h-auto text-xl transition-opacity" />
               </m.div>
             )
@@ -163,7 +163,7 @@ export function TitleIsland({ scrollContainerRef, width = 150 }: TitleIslandProp
         top={0}
         wrapperClassName="absolute top-[26px] inset-x-0"
         smallClassName="flex items-center gap-2 px-4"
-        largeClassName="p-3 zenith-theme-500"
+        largeClassName="p-3 zenith-primary"
         smallHeight={40}
         smallWidth={width}
         largeWidth={280}

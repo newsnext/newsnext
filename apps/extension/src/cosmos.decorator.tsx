@@ -45,7 +45,7 @@ function CosmosAppearanceControls(): React.JSX.Element {
         cornerRendering={rendering}
         wrapperClassName="top-3"
         smallClassName="flex items-center justify-center gap-2 px-4"
-        largeClassName="p-3 zenith-theme-500"
+        largeClassName="p-3 zenith-primary"
         smallHeight={40}
         smallWidth={150}
         largeWidth={356}
@@ -54,7 +54,7 @@ function CosmosAppearanceControls(): React.JSX.Element {
         {isSmall => isSmall
           ? (
               <div className="flex size-full items-center justify-center gap-2">
-                <Logo className="size-5 text-theme-500" />
+                <Logo className="size-5 text-primary" />
                 <WordmarkLogo className="h-auto w-[4.6em] text-xl" />
               </div>
             )
