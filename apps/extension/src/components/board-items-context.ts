@@ -1,0 +1,25 @@
+import type { BoardFilter } from "@/lib/board-filter"
+import type { BoardSource, NewsItem } from "@/typings/source"
+import { createContext, use } from "react"
+
+export interface BoardSourceItems {
+  card: BoardSource
+  filter?: BoardFilter
+  id: string
+  items: NewsItem[]
+  isLoading: boolean
+  updatedAt: number
+}
+
+export type ReportBoardSourceItems = (result: BoardSourceItems) => void
+
+export const BoardItemsContext = createContext<Record<string, BoardSourceItems>>({})
+export const BoardItemsReportContext = createContext<ReportBoardSourceItems | null>(null)
+
+export function useBoardItems(): Record<string, BoardSourceItems> {
+  return use(BoardItemsContext)
+}
+
+export function useReportBoardSourceItems(): ReportBoardSourceItems | null {
+  return use(BoardItemsReportContext)
+}

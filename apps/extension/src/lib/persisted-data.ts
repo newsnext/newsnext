@@ -4,6 +4,7 @@ import type { Board } from "./boards"
 import type { PersistedSettings } from "./persisted-settings"
 import type { SourceInstance, SourceInstancePatch } from "./source-cards"
 import { COLORS } from "@newsnext/shared/constants"
+import { normalizeBoardFilter } from "./board-filter"
 import { createBoardSortPreference } from "./board-sorting"
 import { ALL_BOARD_ID, ALL_BOARD_NAME } from "./boards"
 import { normalizePersistedSettings } from "./persisted-settings"
@@ -83,11 +84,13 @@ export function normalizeBoards(value: unknown): Board[] {
       return []
     }
     seenIds.add(candidate.id)
+    const filter = normalizeBoardFilter(candidate.filter)
     return [{
       id: candidate.id,
       name: candidate.name,
       sort: normalizeBoardSortPreference(candidate.sort),
       ...(isColor(candidate.color) ? { color: candidate.color } : {}),
+      ...(filter ? { filter } : {}),
     }]
   })
 

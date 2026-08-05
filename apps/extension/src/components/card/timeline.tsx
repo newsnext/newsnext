@@ -5,10 +5,7 @@ import { memo, useCallback, useId, useMemo } from "react"
 import { formatRelativeTime, minuteDateAtom } from "@/hooks/useRelativeTime"
 import { cn } from "@/lib/utils"
 import { NewsItemLink, NewsItemSummary } from "./news-item-common"
-
-const RAIL_PATH = "M6 0 Q0 25 6 50 Q12 75 6 100"
-const LABEL_RAIL_PATH = "M16 0 Q3 0 2 20 Q2 35 6 50 Q12 75 6 100"
-const RAIL_COLOR = "var(--color-theme-300)"
+import { TimelineRail } from "./timeline-rail"
 
 interface Props {
   items: NewsItem[]
@@ -34,37 +31,11 @@ export function Timeline({ items, scrollElement, updatedAt }: Props) {
 
     return (
       <div className={cn("relative min-w-0 pb-2", index === items.length - 1 && "pb-0")}>
-        <div className="-ml-0.5 pointer-events-none absolute inset-y-0 w-4" aria-hidden>
-          <svg
-            className="pointer-events-none absolute inset-0 h-full w-full"
-            viewBox="0 0 14 100"
-            preserveAspectRatio="none"
-          >
-            <defs>
-              <linearGradient
-                id={`${gradientId}-${index}`}
-                x1="0"
-                y1="0"
-                x2="0"
-                y2="100"
-                gradientUnits="userSpaceOnUse"
-              >
-                <stop offset="0%" stopColor={RAIL_COLOR} stopOpacity={0.05} />
-                <stop offset="55%" stopColor={RAIL_COLOR} stopOpacity={0.35} />
-                <stop offset="100%" stopColor={RAIL_COLOR} stopOpacity={0.05} />
-              </linearGradient>
-            </defs>
-            <path
-              d={showTimeLabel ? LABEL_RAIL_PATH : RAIL_PATH}
-              className="fill-none"
-              stroke={`url(#${gradientId}-${index})`}
-              vectorEffect="non-scaling-stroke"
-              strokeWidth={1.25}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </div>
+        <TimelineRail
+          gradientId={gradientId}
+          index={index}
+          showLabel={showTimeLabel}
+        />
         <div className="flex min-w-0 rounded-xl hover:bg-neutral-400/10">
           <div className="w-5 shrink-0" aria-hidden />
           <div className="min-w-0 flex flex-1 flex-col">

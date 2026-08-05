@@ -1,8 +1,7 @@
 import type { ElementEventBasePayload } from "@atlaskit/pragmatic-drag-and-drop/element/adapter"
-import type { Atom } from "jotai"
 import type { RefObject } from "react"
-import type { SourceInstance } from "@/lib/source-cards"
-import type { SourceDescriptor } from "@/typings/source"
+import type { BoardSourceCard } from "@/hooks/use-board-source-cards"
+import type { BoardFilter } from "@/lib/board-filter"
 import { extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge"
 import { getReorderDestinationIndex } from "@atlaskit/pragmatic-drag-and-drop-hitbox/util/get-reorder-destination-index"
 import { m } from "motion/react"
@@ -49,14 +48,10 @@ interface SourceOrderState {
   orderedSourceIds: string[]
 }
 
-export interface DesktopBoardCard {
-  descriptor: SourceDescriptor
-  instanceAtom: Atom<SourceInstance>
-}
-
 interface DesktopBoardProps {
+  filter?: BoardFilter
   sourceIds: string[]
-  sourceCardsMap: Record<string, DesktopBoardCard>
+  sourceCardsMap: Record<string, BoardSourceCard>
   className?: string
   isScattered?: boolean
   onSourceIdsChange: (sourceIds: string[]) => void
@@ -64,6 +59,7 @@ interface DesktopBoardProps {
 }
 
 export function DesktopBoard({
+  filter,
   sourceIds,
   sourceCardsMap,
   className,
@@ -394,7 +390,12 @@ export function DesktopBoard({
               },
             }}
           >
-            <DraggableCard descriptor={descriptor} instanceAtom={instanceAtom} />
+            <DraggableCard
+              descriptor={descriptor}
+              filter={filter}
+              forceMount={isScattered}
+              instanceAtom={instanceAtom}
+            />
           </m.li>
         ))}
       </m.ol>

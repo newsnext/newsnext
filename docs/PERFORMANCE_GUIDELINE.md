@@ -107,6 +107,13 @@ return stale cards after in-place changes. If card-instance updates become a
 measured bottleneck, optimize them at the React or Jotai owner that has the
 complete input lifecycle.
 
+Board item filters are applied after each source query and before Now or Next
+presentation. Both layers must reuse the same pure matcher. With no active
+keywords, return the original items array so the Board setting does not defeat
+card memoization or virtual-list identity. Saving a changed filter is expected
+to update every card on that board because their visible item sets may change;
+source queries and cached results remain unchanged.
+
 Background artwork extraction runs only after the user selects an image or
 changes the edge-detail control. Debounce detail changes, resize the longest
 image dimension to at most 1400 pixels before reading pixel data, and persist
@@ -153,11 +160,12 @@ is still compiled.
 
 Compiler diagnostics are warnings during incremental adoption. Ref-driven
 components such as `DesktopBoard`, `DndContext`, and `DynamicIsland` are skipped
-when they update latest-value refs during render. `VirtualList` is also skipped
-because TanStack Virtual returns functions that cannot be memoized safely. Keep
-these diagnostics visible and fix a component only alongside focused behavior
-and performance verification; do not suppress them or broadly rewrite
-imperative integrations merely to increase compiler coverage.
+when they update latest-value refs during render. `VirtualList` and Next Layer's
+`VirtualTimeline` are also skipped because TanStack Virtual returns functions
+that cannot be memoized safely. Keep these diagnostics visible and fix a
+component only alongside focused behavior and performance verification; do not
+suppress them or broadly rewrite imperative integrations merely to increase
+compiler coverage.
 
 ### Keep refs and callbacks stable
 
@@ -191,6 +199,13 @@ A card query may render at request start, when fetching-latest tracking changes,
 and when data completes. These renders are expected on the front side because
 the loading and content UI changes.
 
+Now Layer and Next Layer are two presentations of the same Board data. Card
+content reports its resolved metadata and already-filtered items through the
+Board items provider, and Next Layer consumes that shared result. Do not mount a
+second parameter, permission, or query subscription for Next Layer. When Next
+Layer opens, force-mount unloaded Board cards so their single existing query
+path can populate the shared timeline.
+
 The hidden card back should render only when one of its own props changes, such
 as loader metadata or `updatedAt`. Loading flags that are not card-back props
 must not rebuild the editor.
@@ -208,6 +223,13 @@ virtual lists, and card editor controls.
 
 Do not remove renders that are required to update Motion props, measured scatter
 vectors, or drag state. Optimize the content boundary instead.
+
+The Now/Next transition must not animate a transform on the full mixed timeline
+or combine that transform with a large backdrop filter while cards scatter.
+The card scatter is the transition's primary motion; Next Layer may follow with
+a brief, delayed opacity-only reveal. Keep its timeline virtualized against the
+committed Next Layer scroll element so only visible waveform SVGs and rows are
+mounted during the transition and subsequent scrolling.
 
 ### Observe against the real scroll container
 
@@ -289,6 +311,11 @@ HTML5 drag event chain. Card reordering received code-path review and existing
 pure reorder coverage, but did not receive React Scan event sampling for a real
 drag. Repeat that scenario manually or with a browser harness that produces
 trusted native drag events before treating drag render behavior as measured.
+
+The 2026-08-04 Next Layer transition optimization received static verification,
+type checking, and production-build coverage, but no React Scan capture. Re-run
+the Now/Next transition scenario with the same populated board before treating
+its frame-time improvement as measured.
 
 React Scan adds development overhead, especially when unnecessary-render
 tracking or per-render callbacks are enabled. Compare relative results under

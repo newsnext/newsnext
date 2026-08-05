@@ -1,4 +1,5 @@
 import type { Atom } from "jotai"
+import type { BoardFilter } from "@/lib/board-filter"
 import type { SourceInstance } from "@/lib/source-cards"
 import type { SourceDescriptor } from "@/typings/source"
 import { Button } from "@newsnext/ui/components/button"
@@ -11,6 +12,8 @@ import Card from "./index"
 
 interface DraggableCardProps {
   descriptor: SourceDescriptor
+  filter?: BoardFilter
+  forceMount?: boolean
   instanceAtom: Atom<SourceInstance>
 }
 
@@ -36,7 +39,7 @@ function generateDragPreview({ container, element }: { container: HTMLElement, e
   return () => preview.remove()
 }
 
-function DraggableCardComponent({ descriptor, instanceAtom }: DraggableCardProps) {
+function DraggableCardComponent({ descriptor, filter, forceMount, instanceAtom }: DraggableCardProps) {
   const instance = useAtomValue(instanceAtom)
   const source = useMemo(
     () => createBoardSource(descriptor, instance),
@@ -65,6 +68,8 @@ function DraggableCardComponent({ descriptor, instanceAtom }: DraggableCardProps
     <Card
       id={id}
       source={source}
+      filter={filter}
+      forceMount={forceMount}
       nodeRef={setNodeRef}
       dragHandle={dragHandle}
       className={isDragging ? "opacity-50" : undefined}

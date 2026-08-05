@@ -87,6 +87,41 @@ Cards define the primary NewsNext surface treatment.
 The reference implementation is `CardSurface` in
 `apps/extension/src/components/card/card-surface.tsx`.
 
+### Next Layer mixed timeline
+
+Next Layer recomposes the current board's card items into one continuous feed.
+It is a reading view of the same source data, not another board or a second card
+design. Combine all source items into a newest-first timeline. Use the source
+update time when an item has no timestamp, matching the existing card timeline
+semantics. Break equal timestamps by original rank and then card order so tied
+items remain predictably mixed. Keep source identity and effective timeline
+placement legible through the grouped time labels, but do not display ranking
+numbers in the mixed timeline.
+
+Render the mixed feed as a visible timeline, using the shared waveform rail and
+grouped relative-time labels from card timelines. Let each rail segment inherit
+its source color so source changes are legible without creating separate card
+surfaces. The timeline rail and time groups own the sequence; avoid adding a
+second visible order indicator inside the item row.
+
+Use the shared `NewsItemSummary` treatment for mixed timeline content. Its
+three-line clamp bounds long items while preserving inline icons and metadata;
+let the virtualizer measure the resulting row instead of assigning separate
+fixed mobile and desktop heights. Time-group labels remain outside the measured
+content row.
+
+Reveal Next Layer with one brief, slightly delayed opacity fade so it follows
+the card scatter without competing with it. Do not scale or blur the full
+timeline during this transition.
+
+Treat the entire Next Layer page as the expanded card. Do not add another card
+shell, nested content squircle, panel shadow, or per-item card inside it. Place
+the compact Timeline title and source/item counts directly in the page flow,
+then continue into the timeline without a surface boundary. Provider theme
+colors stay local to the timeline rail, source identity, and hover state while
+the page inherits the active board theme. Do not place filter controls in Next
+Layer; configure the shared Now/Next item filter in the Board dialog.
+
 ### Card reordering
 
 - Keep the drag handle visible and give it an accessible name that identifies
@@ -171,8 +206,11 @@ They must have:
   form labels already make the task clear.
 
 The unified Board dialog is the canonical example. Create and edit modes use
-the same name, theme color, and card order fields; only edit mode exposes board
-deletion, while the title and primary action reflect the current mode. In
+the same name, theme color, card order, and item filter fields; only edit mode
+exposes board deletion, while the title and primary action reflect the current
+mode. The item filter uses one segmented `Show matches` / `Hide matches` mode
+and one comma-separated keyword field. Keep the short matching-scope note
+because it explains that titles and inline text are both searched. In
 particular, do not add the following descriptions back to this dialog:
 
 - `Personalize this board and choose how its cards are arranged.`

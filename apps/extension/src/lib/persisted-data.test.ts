@@ -21,6 +21,10 @@ describe("persisted user data", () => {
           id: "reading",
           name: "Reading",
           color: "blue" as const,
+          filter: {
+            mode: "exclude" as const,
+            keywords: ["spoiler", "rumor"],
+          },
           sort: {
             mode: "manual" as const,
             automaticMode: "createdAt" as const,

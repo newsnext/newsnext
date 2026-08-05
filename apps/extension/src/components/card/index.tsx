@@ -1,14 +1,18 @@
 import type { ReactNode } from "react"
+import type { BoardSourceItems } from "@/components/board-items-context"
+import type { BoardFilter } from "@/lib/board-filter"
 import type { SourceInstanceMetadata, SourceInstancePatch } from "@/lib/source-cards"
 import type { BoardSource } from "@/typings/source"
 import { FlipAnimate } from "@newsnext/ui/components/flip-animate"
 import { useScrollProgressActionsContext } from "@newsnext/ui/components/scroll-progress-context"
 import { useSetAtom } from "jotai"
-import { useCallback, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useReportBoardSourceItems } from "@/components/board-items-context"
 import { useSourceParams } from "@/hooks"
 import { useInView } from "@/hooks/use-in-view"
 import { useSourcePermission } from "@/hooks/use-source-permission"
 import { useSourceQuery } from "@/hooks/use-source-query"
+import { filterBoardItems } from "@/lib/board-filter"
 import { applySourceLoaderMetadata } from "@/lib/source-cards"
 import {
   SOURCE_QUERY_OFFSCREEN_RETENTION_MS,
@@ -22,18 +26,23 @@ import {
 import { CardBack } from "./card-back"
 import { CardFront } from "./card-front"
 
+const EMPTY_ITEMS: BoardSourceItems["items"] = []
+
 export interface CardProps {
+  filter?: BoardFilter
   id: string
   source: BoardSource
   className?: string
   sizeClassName?: string
   nodeRef?: (node: HTMLElement | null) => void
   dragHandle?: ReactNode
+  forceMount?: boolean
   isDraft?: boolean
   onDraftSourceChange?: (patch: SourceInstancePatch) => void
 }
 
-function CardContent({ id, source, dragHandle, isDraft = false, onDraftSourceChange }: CardProps) {
+function CardContent({ filter, id, source, dragHandle, isDraft = false, onDraftSourceChange }: CardProps) {
+  const reportBoardSourceItems = useReportBoardSourceItems()
   const setSourceInstancePatch = useSetAtom(setSourceInstancePatchAtom)
   const resetLocalParams = useSetAtom(resetInstanceParamsAtom)
   const [isFlipped, setIsFlipped] = useState(false)
@@ -69,6 +78,23 @@ function CardContent({ id, source, dragHandle, isDraft = false, onDraftSourceCha
     () => applySourceLoaderMetadata(source, metadata),
     [metadata, source],
   )
+  const visibleItems = useMemo(
+    () => filterBoardItems(items, filter),
+    [filter, items],
+  )
+
+  useEffect(() => {
+    if (isDraft) return
+
+    reportBoardSourceItems?.({
+      card: displaySource,
+      filter,
+      id,
+      items: canLoad ? visibleItems : EMPTY_ITEMS,
+      isLoading,
+      updatedAt,
+    })
+  }, [canLoad, displaySource, filter, id, isDraft, isLoading, reportBoardSourceItems, updatedAt, visibleItems])
 
   const handleFlip = useCallback(() => {
     setIsFlipped(prev => !prev)
@@ -111,7 +137,7 @@ function CardContent({ id, source, dragHandle, isDraft = false, onDraftSourceCha
     >
       <CardFront
         source={displaySource}
-        items={items}
+        items={visibleItems}
         isFetching={isFetching || isFetchingLatest}
         isContentFetching={isFetchingLatest || isLoading}
         sourceErrorMessage={sourceErrorMessage}
@@ -145,7 +171,7 @@ function CardContent({ id, source, dragHandle, isDraft = false, onDraftSourceCha
 }
 
 export default function Card(props: CardProps) {
-  const { nodeRef } = props
+  const { forceMount = false, nodeRef } = props
   const { rootScrollContainerRef } = useScrollProgressActionsContext()
   const ref = useRef<HTMLDivElement>(null)
   const setRef = useCallback((node: HTMLDivElement | null) => {
@@ -168,7 +194,7 @@ export default function Card(props: CardProps) {
         props.className,
       )}
     >
-      {isInView && (
+      {(isInView || forceMount) && (
         <CardContent {...props} />
       )}
     </div>

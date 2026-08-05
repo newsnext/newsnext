@@ -1,4 +1,5 @@
 import type { Color } from "@newsnext/shared/types"
+import type { BoardFilterMode } from "@/lib/board-filter"
 import type { BoardSortMode } from "@/lib/board-sorting"
 import type { Board } from "@/lib/boards"
 import { Button } from "@newsnext/ui/components/button"
@@ -15,6 +16,7 @@ import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { ThemeSelector } from "@newsnext/ui/components/theme-selector"
 import { useState } from "react"
 import { PhCheckCircleDuotone, PhTrashDuotone } from "@/components/icons/ph"
+import { createBoardFilter } from "@/lib/board-filter"
 import { DEFAULT_BOARD_SORT_PREFERENCE, updateBoardSortMode } from "@/lib/board-sorting"
 import {
   ALL_BOARD_ID,
@@ -29,6 +31,11 @@ const SORT_OPTIONS: { label: string, value: BoardSortMode }[] = [
   { label: "Manual", value: "manual" },
   { label: "Date added", value: "createdAt" },
   { label: "Provider name", value: "provider" },
+]
+
+const FILTER_OPTIONS: { label: string, value: BoardFilterMode }[] = [
+  { label: "Show matches", value: "include" },
+  { label: "Hide matches", value: "exclude" },
 ]
 
 export type BoardDialogTarget
@@ -64,10 +71,14 @@ export function BoardDialog({
       ? getBoardColor(currentBoard)
       : DEFAULT_BOARD_COLOR
   const initialSortMode = board?.sort.mode ?? DEFAULT_BOARD_SORT_PREFERENCE.mode
+  const initialFilterMode = board?.filter?.mode ?? "include"
+  const initialFilterKeywords = board?.filter?.keywords.join(", ") ?? ""
   const isAllBoard = boardId === ALL_BOARD_ID
   const [name, setName] = useState(() => board?.name ?? "")
   const [color, setColor] = useState<Color>(initialColor)
   const [sortMode, setSortMode] = useState<BoardSortMode>(initialSortMode)
+  const [filterMode, setFilterMode] = useState<BoardFilterMode>(initialFilterMode)
+  const [filterKeywords, setFilterKeywords] = useState(initialFilterKeywords)
   const [isDeleteArmed, setIsDeleteArmed] = useState(false)
   const normalizedName = name.trim()
   const hasDuplicateName = isBoardNameTaken(boards, normalizedName, boardId)
@@ -80,23 +91,35 @@ export function BoardDialog({
     if (!canSubmit) {
       return
     }
+    const filter = createBoardFilter(filterMode, filterKeywords)
 
     if (isEditing) {
       if (!board) {
         return
       }
 
-      onUpdate({
+      const nextBoard: Board = {
         ...board,
         name: isAllBoard ? board.name : normalizedName,
         color,
         sort: updateBoardSortMode(board.sort, sortMode),
-      })
+      }
+      if (filter) {
+        nextBoard.filter = filter
+      } else {
+        delete nextBoard.filter
+      }
+      onUpdate(nextBoard)
       onClose()
       return
     }
 
-    onCreate(createBoard(normalizedName, color, sortMode))
+    onCreate(createBoard(
+      normalizedName,
+      color,
+      sortMode,
+      filter,
+    ))
     onClose()
   }
 
@@ -172,6 +195,33 @@ export function BoardDialog({
                   </RadioGroupItem>
                 ))}
               </RadioGroup>
+            </fieldset>
+
+            <fieldset className="grid gap-2">
+              <legend className="text-sm font-medium">Item filter</legend>
+              <RadioGroup
+                variant="segmented"
+                value={filterMode}
+                onValueChange={setFilterMode}
+                className="w-full"
+              >
+                {FILTER_OPTIONS.map(option => (
+                  <RadioGroupItem key={option.value} value={option.value} className="min-w-0 flex-1 px-2">
+                    {option.label}
+                  </RadioGroupItem>
+                ))}
+              </RadioGroup>
+              <label htmlFor="board-filter-keywords" className="sr-only">Keywords</label>
+              <Input
+                id="board-filter-keywords"
+                maxLength={500}
+                placeholder="AI, browser, crypto"
+                value={filterKeywords}
+                onChange={event => setFilterKeywords(event.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Separate keywords with commas. Matches titles and inline text.
+              </p>
             </fieldset>
 
             <DialogFooter className={cn(isEditing && !isAllBoard && "sm:justify-between")}>

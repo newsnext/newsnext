@@ -1,4 +1,5 @@
 import type { Color } from "@newsnext/shared/types"
+import type { BoardFilter } from "./board-filter"
 import type { BoardSortMode, BoardSortPreference } from "./board-sorting"
 import { createBoardSortPreference } from "./board-sorting"
 
@@ -8,6 +9,7 @@ export const NO_BOARD_VALUE = "__no_board__"
 export const DEFAULT_BOARD_COLOR: Color = "red"
 
 export interface Board {
+  filter?: BoardFilter
   sort: BoardSortPreference
   id: string
   name: string
@@ -28,11 +30,13 @@ export function createBoard(
   name: string,
   color: Color = DEFAULT_BOARD_COLOR,
   sortMode?: BoardSortMode,
+  filter?: BoardFilter,
 ): Board {
   return {
     id: `board_${crypto.randomUUID()}`,
     name: name.trim(),
     color,
+    ...(filter ? { filter } : {}),
     sort: createBoardSortPreference(sortMode),
   }
 }
