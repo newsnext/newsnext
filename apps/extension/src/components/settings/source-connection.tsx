@@ -73,7 +73,6 @@ export function SourceConnectionSettings(): React.JSX.Element {
   return (
     <SettingsSection
       title="CLI connection"
-      description="Connection between this extension and the NewsNext CLI."
     >
       <Card variant="subtle">
         <CardContent>

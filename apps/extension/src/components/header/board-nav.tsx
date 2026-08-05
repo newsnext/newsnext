@@ -72,7 +72,7 @@ export function BoardNav() {
                 "group/board-tab h-auto shrink-0",
               )}
               aria-current={isActive ? "page" : undefined}
-              title={isActive ? "Edit tab" : undefined}
+              title={isActive ? "Edit board" : undefined}
             >
               {isActive && (
                 <PillGroupIndicator layoutId="active-board" />

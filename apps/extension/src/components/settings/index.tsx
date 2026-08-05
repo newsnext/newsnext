@@ -97,7 +97,6 @@ function AppearanceSettings() {
     <div className="space-y-6">
       <SettingsSection
         title="Theme mode"
-        description="Choose a light or dark interface, or follow your system setting."
       >
         <Card variant="subtle">
           <CardContent className="p-2.5">

@@ -16,7 +16,7 @@ const squircleRadiusValues = {
   "4xl": 32,
 } satisfies Record<SquircleRadius, number>
 
-interface SquircleBoxProps extends React.ComponentPropsWithoutRef<"div"> {
+interface SquircleBoxProps extends React.ComponentPropsWithRef<"div"> {
   fallback?: SquircleFallback
   radius?: SquircleRadius | number
   variant?: SquircleVariant

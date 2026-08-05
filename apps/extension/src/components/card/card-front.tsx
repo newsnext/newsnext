@@ -176,7 +176,7 @@ export function CardFront({
               {onFlip && (
                 <CardHeaderActionButton
                   onClick={onFlip}
-                  aria-label="Detail"
+                  aria-label="Show card details"
                 >
                   <PhInfoDuotone />
                 </CardHeaderActionButton>

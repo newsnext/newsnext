@@ -4,7 +4,6 @@ import type { RadarSuggestion } from "@/lib/radar"
 import type { SourceInstancePatch } from "@/lib/source-cards"
 import type { BoardSource, SourceDescriptor } from "@/typings/source"
 import { Button } from "@newsnext/ui/components/button"
-import { SquircleBox } from "@newsnext/ui/components/squircle"
 import confetti from "canvas-confetti"
 import { useAtomValue, useSetAtom } from "jotai"
 import { animate, motion, useDragControls, useMotionValue, useReducedMotion, useTransform } from "motion/react"
@@ -161,14 +160,9 @@ function RadarTrackCard({
 
 function RadarEmptyState() {
   return (
-    <div className="relative flex min-h-36 items-center justify-center overflow-hidden rounded-2xl border border-border/70 bg-background/70 px-5 text-center text-sm text-muted-foreground">
-      <SquircleBox
-        aria-hidden
-        radius="2xl"
-        className="pointer-events-none absolute inset-0 bg-muted/40"
-      />
-      <span className="relative">No radar cards for this page.</span>
-    </div>
+    <p className="px-5 py-12 text-center text-sm text-muted-foreground">
+      No radar cards for this page.
+    </p>
   )
 }
 

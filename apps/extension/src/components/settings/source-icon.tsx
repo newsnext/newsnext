@@ -49,7 +49,7 @@ export function SourceIconSettings(): React.JSX.Element {
 
   return (
     <SettingsSection
-      title="Card Icons"
+      title="Card icons"
       description="Choose how icons are generated when a card does not include one."
     >
       <Card variant="subtle">

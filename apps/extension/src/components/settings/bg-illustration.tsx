@@ -3,6 +3,7 @@ import type { BgIllustrationTransform } from "@/lib/bg-illustration"
 import { Button } from "@newsnext/ui/components/button"
 import { Card, CardContent } from "@newsnext/ui/components/card"
 import { Slider } from "@newsnext/ui/components/slider"
+import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { useAtom } from "jotai"
 import { useEffect, useRef, useState } from "react"
 import { PhArrowCounterClockwiseDuotone } from "@/components/icons/ph"
@@ -328,7 +329,8 @@ export function BgIllustrationSettings(): React.JSX.Element {
       title="Background illustration"
       description="Extract a photo's edges locally, or use an SVG directly as a quiet background illustration."
     >
-      <div
+      <SquircleBox
+        radius="2xl"
         ref={setPreviewCanvasElement}
         role="group"
         aria-label={previewIllustration
@@ -336,7 +338,7 @@ export function BgIllustrationSettings(): React.JSX.Element {
           : "Choose or drop an image or SVG for background illustration"}
         style={previewCanvasStyle}
         className={cn(
-          "grid-texture-background relative mx-auto overflow-hidden rounded-2xl bg-background transition-[box-shadow] zenith-theme-400",
+          "grid-texture-background relative mx-auto bg-background transition-[box-shadow] zenith-theme-400",
           isDragging && "ring-2 ring-primary ring-offset-2 ring-offset-background",
         )}
         onClick={() => {
@@ -393,7 +395,7 @@ export function BgIllustrationSettings(): React.JSX.Element {
             {status.message}
           </p>
         )}
-      </div>
+      </SquircleBox>
 
       <Card variant="subtle">
         <CardContent>

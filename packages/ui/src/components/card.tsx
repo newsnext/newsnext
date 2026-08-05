@@ -14,27 +14,21 @@ function Card({
   variant?: "default" | "subtle"
 }): React.JSX.Element {
   return (
-    <div
+    <SquircleBox
+      radius="2xl"
       data-slot="card"
       data-size={size}
       data-variant={variant}
       className={cn(
         "group/card flex flex-col text-sm text-card-foreground",
-        variant === "default" && "gap-6 overflow-hidden rounded-2xl bg-card py-6 ring-1 ring-foreground/10 has-[>img:first-child]:pt-0 data-[size=sm]:gap-4 data-[size=sm]:py-4 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl",
-        variant === "subtle" && "relative isolate gap-0",
+        variant === "default" && "gap-6 bg-card py-6 has-[>img:first-child]:pt-0 data-[size=sm]:gap-4 data-[size=sm]:py-4",
+        variant === "subtle" && "relative isolate gap-0 bg-foreground/3",
         className,
       )}
       {...props}
     >
-      {variant === "subtle" && (
-        <SquircleBox
-          aria-hidden
-          radius="2xl"
-          className="pointer-events-none absolute inset-0 bg-foreground/3"
-        />
-      )}
       {children}
-    </div>
+    </SquircleBox>
   )
 }
 
