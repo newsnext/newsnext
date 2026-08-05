@@ -1,21 +1,22 @@
-import type { BackgroundArtworkTransform } from "./background-artwork-config"
+import type { BgIllustrationTransform } from "./config"
+import { decodeSvgIllustrationDataUrl } from "./config"
 
-const BACKGROUND_ARTWORK_DIMENSIONS_ERROR = "The background artwork dimensions are unavailable."
+const BG_ILLUSTRATION_DIMENSIONS_ERROR = "The background illustration dimensions are unavailable."
 
-interface BackgroundArtworkLayout {
+interface BgIllustrationLayout {
   height: number
   left: number
   top: number
   width: number
 }
 
-interface BackgroundArtworkTranslation {
+interface BgIllustrationTranslation {
   x: number
   y: number
 }
 
-export async function loadBackgroundArtworkAspectRatio(artwork: string): Promise<number> {
-  const svgAspectRatio = readGeneratedSvgAspectRatio(artwork)
+export async function loadBgIllustrationAspectRatio(illustration: string): Promise<number> {
+  const svgAspectRatio = readSvgIllustrationAspectRatio(illustration)
   if (svgAspectRatio !== null) return svgAspectRatio
 
   return new Promise((resolve, reject) => {
@@ -24,40 +25,35 @@ export async function loadBackgroundArtworkAspectRatio(artwork: string): Promise
       if (image.naturalWidth > 0 && image.naturalHeight > 0) {
         resolve(image.naturalWidth / image.naturalHeight)
       } else {
-        reject(new Error(BACKGROUND_ARTWORK_DIMENSIONS_ERROR))
+        reject(new Error(BG_ILLUSTRATION_DIMENSIONS_ERROR))
       }
     }, { once: true })
     image.addEventListener("error", () => {
-      reject(new Error(BACKGROUND_ARTWORK_DIMENSIONS_ERROR))
+      reject(new Error(BG_ILLUSTRATION_DIMENSIONS_ERROR))
     }, { once: true })
-    image.src = artwork
+    image.src = illustration
   })
 }
 
-export function readGeneratedSvgAspectRatio(artwork: string): number | null {
-  const prefix = "data:image/svg+xml;base64,"
-  if (!artwork.startsWith(prefix)) return null
+export function readSvgIllustrationAspectRatio(illustration: string): number | null {
+  const svg = decodeSvgIllustrationDataUrl(illustration)
+  if (!svg) return null
 
-  try {
-    const svg = atob(artwork.slice(prefix.length))
-    const viewBox = svg.match(/viewBox=["']\s*[-\d.]+\s+[-\d.]+\s+([\d.]+)\s+([\d.]+)\s*["']/i)
-    const width = Number(viewBox?.[1])
-    const height = Number(viewBox?.[2])
-    return width > 0 && height > 0 ? width / height : null
-  } catch {
-    return null
-  }
+  const viewBox = svg.match(/viewBox=["']\s*[-\d.]+\s+[-\d.]+\s+([\d.]+)\s+([\d.]+)\s*["']/i)
+  const width = Number(viewBox?.[1])
+  const height = Number(viewBox?.[2])
+  return width > 0 && height > 0 ? width / height : null
 }
 
-export function resolveBackgroundArtworkLayout(
+export function resolveBgIllustrationLayout(
   viewportWidth: number,
   viewportHeight: number,
-  artworkAspectRatio: number,
-): BackgroundArtworkLayout {
+  illustrationAspectRatio: number,
+): BgIllustrationLayout {
   const safeWidth = Math.max(viewportWidth, 1)
   const safeHeight = Math.max(viewportHeight, 1)
-  const safeAspectRatio = artworkAspectRatio > 0 && Number.isFinite(artworkAspectRatio)
-    ? artworkAspectRatio
+  const safeAspectRatio = illustrationAspectRatio > 0 && Number.isFinite(illustrationAspectRatio)
+    ? illustrationAspectRatio
     : 1
   const topInset = clamp(safeHeight * 0.1, 80, 128)
   const rightInset = clamp(-safeWidth * 0.05, -128, -48)
@@ -76,23 +72,23 @@ export function resolveBackgroundArtworkLayout(
   }
 }
 
-export function resolveBackgroundArtworkTranslation(
-  layout: BackgroundArtworkLayout,
+export function resolveBgIllustrationTranslation(
+  layout: BgIllustrationLayout,
   viewportWidth: number,
   viewportHeight: number,
   centerX: number,
   centerY: number,
-): BackgroundArtworkTranslation {
+): BgIllustrationTranslation {
   return {
     x: centerX / 100 * viewportWidth - (layout.left + layout.width / 2),
     y: centerY / 100 * viewportHeight - (layout.top + layout.height / 2),
   }
 }
 
-export function resolveBackgroundArtworkCenter(
-  layout: BackgroundArtworkLayout,
+export function resolveBgIllustrationCenter(
+  layout: BgIllustrationLayout,
   viewportHeight: number,
-  transform: BackgroundArtworkTransform,
+  transform: BgIllustrationTransform,
 ): { x: number, y: number } {
   if (transform.positionMode === "viewport-center") {
     return { x: transform.x, y: transform.y }

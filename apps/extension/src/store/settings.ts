@@ -1,4 +1,4 @@
-import type { BackgroundArtworkTransform } from "@/lib/background-artwork"
+import type { BgIllustrationTransform } from "@/lib/bg-illustration"
 import type {
   PersistedDeviceState,
   PersistedSettings,
@@ -56,35 +56,35 @@ export const themeModeAtom = atom(
   },
 )
 
-export const backgroundArtworkAtom = atom(
-  get => get(persistedSettingsAtom).appearance.backgroundArtwork,
-  (get, set, backgroundArtwork: string | null) => {
+export const bgIllustrationAtom = atom(
+  get => get(persistedSettingsAtom).appearance.bgIllustration,
+  (get, set, bgIllustration: string | null) => {
     const settings = get(persistedSettingsAtom)
     set(persistedSettingsAtom, {
       ...settings,
-      appearance: { ...settings.appearance, backgroundArtwork },
+      appearance: { ...settings.appearance, bgIllustration },
     })
   },
 )
 
-export const backgroundArtworkOpacityAtom = atom(
-  get => get(persistedSettingsAtom).appearance.backgroundArtworkOpacity,
-  (get, set, backgroundArtworkOpacity: number) => {
+export const bgIllustrationOpacityAtom = atom(
+  get => get(persistedSettingsAtom).appearance.bgIllustrationOpacity,
+  (get, set, bgIllustrationOpacity: number) => {
     const settings = get(persistedSettingsAtom)
     set(persistedSettingsAtom, {
       ...settings,
-      appearance: { ...settings.appearance, backgroundArtworkOpacity },
+      appearance: { ...settings.appearance, bgIllustrationOpacity },
     })
   },
 )
 
-export const backgroundArtworkTransformAtom = atom(
-  get => get(persistedSettingsAtom).appearance.backgroundArtworkTransform,
-  (get, set, backgroundArtworkTransform: BackgroundArtworkTransform) => {
+export const bgIllustrationTransformAtom = atom(
+  get => get(persistedSettingsAtom).appearance.bgIllustrationTransform,
+  (get, set, bgIllustrationTransform: BgIllustrationTransform) => {
     const settings = get(persistedSettingsAtom)
     set(persistedSettingsAtom, {
       ...settings,
-      appearance: { ...settings.appearance, backgroundArtworkTransform },
+      appearance: { ...settings.appearance, bgIllustrationTransform },
     })
   },
 )

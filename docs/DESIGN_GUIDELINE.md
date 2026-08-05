@@ -32,64 +32,63 @@ Use the top-weighted `zenith-theme-400` wash for the main app background and
 related interface surfaces. Derive the wash from the active board theme color
 so it reinforces the current context without introducing another palette.
 
-The Appearance settings may let the user choose a local image and extract its
-edges into background artwork. Keep processing in the browser, resize large
-inputs before pixel work, and show the extracted result before it is applied.
-The preview is also the primary drop target and file picker trigger; give it
-keyboard access and a visible drag-over state. Keep the preview canvas on its
+The Appearance settings may let the user choose a local raster image and extract
+its edges into background illustration, or use a local SVG directly. Keep processing
+in the browser, sanitize direct SVG illustration, resize large raster inputs before
+pixel work, and show the result before it is applied.
+The preview is also the primary drop target and pointer-based file picker trigger;
+give it a visible drag-over state. Keep the preview canvas on its
 own background and outside the padded settings card that contains its controls.
 Make the preview a scaled representation of the app background by reusing its
-base background color, theme wash, fading grid texture, artwork color mix, and
-current artwork opacity. Preserve the current app viewport's aspect ratio, and
-scale the grid spacing and artwork insets by the same ratio. Cap the preview at
+base background color, theme wash, fading grid texture, illustration color mix, and
+current illustration opacity. Preserve the current app viewport's aspect ratio, and
+scale the grid spacing and illustration insets by the same ratio. Cap the preview at
 16rem high and reduce its width proportionally when the viewport is tall.
-Use the same artwork placement in the preview and the app. When artwork is
+Use the same illustration placement in the preview and the app. When illustration is
 present, let the user drag it to reposition, scale it proportionally from corner
 handles, and rotate it from a dedicated handle. Size the transform target to
-the artwork's actual contained bounds rather than the larger mask positioning
-region, and use the same bounds for the applied background. Allow arrow-key position nudging
-and provide themed snap guides for the preview
-edges, center lines, and quarter-turn rotations. Do not duplicate the direct
+the illustration's actual contained bounds rather than the larger mask positioning
+region, and use the same bounds for the applied background. Provide themed snap
+guides for the preview center lines and quarter-turn rotations. Do not duplicate the direct
 manipulation handles with alignment buttons or scale and rotation sliders.
 Offer the reset action as a single icon button in the preview's upper-right
 corner. Keep the transform control box synchronized when reset or another
-programmatic adjustment changes the target. Load the transform editor only when
-a preview target exists. Keep transform edits in the draft until
-`Apply background` saves the artwork and its transform together. Persist the
-artwork center as horizontal and vertical percentages of the viewport rather
+programmatic adjustment changes the target. Keep transform edits in the draft until
+`Apply background` saves the illustration and its transform together. Persist the
+illustration center as horizontal and vertical percentages of the viewport rather
 than persisting an offset from the responsive default layout. Resolve the
-required translation from that center after recalculating the contained artwork
+required translation from that center after recalculating the contained illustration
 bounds, so placement remains stable when the window size changes.
 Use bottom alignment with horizontal centering as the default placement and
-preserve that responsive anchor until the user directly transforms the artwork.
+preserve that responsive anchor until the user directly transforms the illustration.
 Reset must restore this bottom-center anchor, 100% scale, and 0° rotation.
 Provide one edge-detail control whose explanation makes the threshold direction
-clear. Applying and removing artwork are explicit actions; selecting or
+clear. Applying and removing illustration are explicit actions; selecting or
 dropping a file, or changing the detail preview, must not overwrite the saved
-background. While the source image is still available, offer SVG and WebP as a
-segmented choice in the preview's lower-left corner and regenerate only the
-draft when it changes. Hide the format control after the source leaves memory,
-and prevent it from triggering the preview's file picker.
+background. Raster sources always produce SVG line art. Direct SVG uploads
+bypass edge extraction and use the sanitized vector as the draft. Store both
+generated and uploaded illustration as percent-encoded `data:image/svg+xml` URLs,
+without base64 encoding.
 
-Render saved SVG or WebP artwork as a transparent mask mixed from the foreground
+Render saved SVG illustration as a transparent mask mixed from the foreground
 and active theme colors so it adapts to light, dark, and board themes. Keep it
-non-interactive, above the grid texture but below app content, and use a
-user-adjustable opacity
+in a fixed, non-interactive React layer portaled to `body`, above the grid
+texture but below app content. Pass its mask, bounds, color, opacity, and
+transform through typed inline style rather than global CSS custom properties.
+Use a user-adjustable opacity
 from 1% to 20%, defaulting to 7%; cards and controls must remain visually
 dominant. Use a fixed 1% grid-line opacity across themes and surfaces, regardless
-of whether artwork is active or which artwork opacity is selected. Allow the two
+of whether illustration is active or which illustration opacity is selected. Allow the two
 transparent layers to blend naturally without adding a backing color beneath
-artwork pixels. Scope the artwork to the main app entry point rather than popup
+illustration pixels. Scope the illustration to the main app entry point rather than popup
 or component-preview surfaces. Process and store the image locally; do not
 upload it or retain the original input file.
 Bridge only short gaps whose endpoint directions align so faint strokes remain
-continuous without joining unrelated nearby contours. Apply this connection
-step only to SVG. WebP must use the original graded Sobel raster extraction
-without sharpening, Canny thinning, or SVG path work.
-Remove small isolated edge components from both formats, then crop the generated
-SVG view box or WebP canvas to the cleaned line-art bounds with a small safety
-margin. The artwork's intrinsic size and transform target must therefore follow
-the visible strokes rather than the source image canvas.
+continuous without joining unrelated nearby contours. Remove small isolated
+edge components, then crop the generated SVG view box to the cleaned line-art
+bounds with a small safety margin. The illustration's intrinsic size and transform
+target must therefore follow the visible strokes rather than the source image
+canvas.
 
 ## Card Surface Language
 
@@ -315,7 +314,7 @@ Activating a result closes the dialog, opens the card's assigned board, and
 scrolls the real card into view. Cards in the final `No board` group open on the
 All board. Do not embed a live card preview in Search: a full card turns the
 locator into a second board, duplicates surface insets, and delays useful
-results while card content loads. Do not add decorative artwork or generic
+results while card content loads. Do not add decorative illustration or generic
 helper copy.
 
 ## Copy

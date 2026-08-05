@@ -17,7 +17,7 @@ import {
   settingsTabAtom,
   themeModeAtom,
 } from "@/store/settings"
-import { BackgroundArtworkSettings } from "./background-artwork"
+import { BgIllustrationSettings } from "./bg-illustration"
 import { DataTransferSettings } from "./data-transfer"
 import { SettingsSection } from "./layout"
 import { SettingsModalShell } from "./modal-shell"
@@ -113,7 +113,7 @@ function AppearanceSettings() {
           </CardContent>
         </Card>
       </SettingsSection>
-      <BackgroundArtworkSettings />
+      <BgIllustrationSettings />
     </div>
   )
 }

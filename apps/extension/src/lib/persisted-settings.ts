@@ -1,25 +1,25 @@
-import type { BackgroundArtworkTransform } from "./background-artwork-config"
+import type { BgIllustrationTransform } from "./bg-illustration/config"
 import type { SourceIconSettings, SourceIconSource } from "./source-icon"
 import type { ThemeMode } from "./utils/swith-theme"
 import {
-  DEFAULT_BACKGROUND_ARTWORK_OPACITY,
-  DEFAULT_BACKGROUND_ARTWORK_TRANSFORM,
-  normalizeBackgroundArtwork,
-  normalizeBackgroundArtworkOpacity,
-  normalizeBackgroundArtworkTransform,
-} from "./background-artwork-config"
+  DEFAULT_BG_ILLUSTRATION_OPACITY,
+  DEFAULT_BG_ILLUSTRATION_TRANSFORM,
+  normalizeBgIllustration,
+  normalizeBgIllustrationOpacity,
+  normalizeBgIllustrationTransform,
+} from "./bg-illustration/config"
 import { ALL_BOARD_ID } from "./boards"
 import { DEFAULT_SOURCE_ICON_SETTINGS } from "./source-icon"
 
-export const PERSISTED_SETTINGS_VERSION = 1
+export const PERSISTED_SETTINGS_VERSION = 2
 
 export type SettingsTabId = "appearance" | "general" | "permissions" | "data"
 
 export interface PersistedSettings {
   appearance: {
-    backgroundArtwork: string | null
-    backgroundArtworkOpacity: number
-    backgroundArtworkTransform: BackgroundArtworkTransform
+    bgIllustration: string | null
+    bgIllustrationOpacity: number
+    bgIllustrationTransform: BgIllustrationTransform
     themeMode: ThemeMode
   }
   general: {
@@ -39,9 +39,9 @@ export interface PersistedDeviceState {
 export function createDefaultPersistedSettings(): PersistedSettings {
   return {
     appearance: {
-      backgroundArtwork: null,
-      backgroundArtworkOpacity: DEFAULT_BACKGROUND_ARTWORK_OPACITY,
-      backgroundArtworkTransform: { ...DEFAULT_BACKGROUND_ARTWORK_TRANSFORM },
+      bgIllustration: null,
+      bgIllustrationOpacity: DEFAULT_BG_ILLUSTRATION_OPACITY,
+      bgIllustrationTransform: { ...DEFAULT_BG_ILLUSTRATION_TRANSFORM },
       themeMode: "system",
     },
     general: {
@@ -72,9 +72,9 @@ export function normalizePersistedSettings(value: unknown): PersistedSettings {
 
   return {
     appearance: {
-      backgroundArtwork: normalizeBackgroundArtwork(appearance?.backgroundArtwork),
-      backgroundArtworkOpacity: normalizeBackgroundArtworkOpacity(appearance?.backgroundArtworkOpacity),
-      backgroundArtworkTransform: normalizeBackgroundArtworkTransform(appearance?.backgroundArtworkTransform),
+      bgIllustration: normalizeBgIllustration(appearance?.bgIllustration),
+      bgIllustrationOpacity: normalizeBgIllustrationOpacity(appearance?.bgIllustrationOpacity),
+      bgIllustrationTransform: normalizeBgIllustrationTransform(appearance?.bgIllustrationTransform),
       themeMode: isThemeMode(appearance?.themeMode)
         ? appearance.themeMode
         : defaults.appearance.themeMode,

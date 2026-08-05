@@ -1,9 +1,6 @@
 export const DEFAULT_LINE_ART_THRESHOLD = 36
 export const NO_CLEAR_LINE_ART_ERROR_MESSAGE = "No clear line art was found. Try lowering Edge detail."
 
-export type BackgroundArtworkFormat = "svg" | "webp"
-
-export const MAX_WEBP_LINE_ART_DIMENSION = 1400
 export const MAX_SVG_LINE_ART_DIMENSION = 1800
 const GAUSSIAN_KERNEL = [1, 4, 6, 4, 1] as const
 const GAUSSIAN_WEIGHT = 16
@@ -30,68 +27,11 @@ interface EdgePoint {
   y: number
 }
 
-interface CroppedLineArtPixels {
-  height: number
-  pixels: Uint8ClampedArray<ArrayBuffer>
-  width: number
-}
-
 interface PixelBounds {
   height: number
   width: number
   x: number
   y: number
-}
-
-export function extractLineArtPixels(
-  pixels: Uint8ClampedArray,
-  width: number,
-  height: number,
-  threshold: number,
-): Uint8ClampedArray<ArrayBuffer> {
-  return renderWebpLineArtPixels(
-    extractWebpLineArtMagnitude(pixels, width, height),
-    threshold,
-  )
-}
-
-export function extractWebpLineArtMagnitude(
-  pixels: Uint8ClampedArray,
-  width: number,
-  height: number,
-): Float32Array<ArrayBuffer> {
-  const grayscale = createGrayscalePixels(pixels, width, height)
-  const magnitude = new Float32Array(width * height)
-  for (let y = 1; y < height - 1; y += 1) {
-    for (let x = 1; x < width - 1; x += 1) {
-      const index = y * width + x
-      const topLeft = grayscale[index - width - 1] ?? 0
-      const top = grayscale[index - width] ?? 0
-      const topRight = grayscale[index - width + 1] ?? 0
-      const left = grayscale[index - 1] ?? 0
-      const right = grayscale[index + 1] ?? 0
-      const bottomLeft = grayscale[index + width - 1] ?? 0
-      const bottom = grayscale[index + width] ?? 0
-      const bottomRight = grayscale[index + width + 1] ?? 0
-      const gradientX = -topLeft + topRight - 2 * left + 2 * right - bottomLeft + bottomRight
-      const gradientY = -topLeft - 2 * top - topRight + bottomLeft + 2 * bottom + bottomRight
-      magnitude[index] = Math.hypot(gradientX, gradientY) / 4
-    }
-  }
-
-  return magnitude
-}
-
-export function renderWebpLineArtPixels(
-  magnitude: Float32Array,
-  threshold: number,
-): Uint8ClampedArray<ArrayBuffer> {
-  const output = new Uint8ClampedArray(new ArrayBuffer(magnitude.length * 4))
-  for (let index = 0; index < magnitude.length; index += 1) {
-    output[index * 4 + 3] = Math.min(255, Math.max(0, ((magnitude[index] ?? 0) - threshold) * 5))
-  }
-
-  return output
 }
 
 export function extractSvgLineArtMagnitude(
@@ -238,41 +178,6 @@ export function removeSmallEdgeComponents(
   }
 
   return output
-}
-
-export function cleanAndCropLineArtPixels(
-  pixels: Uint8ClampedArray,
-  width: number,
-  height: number,
-): CroppedLineArtPixels | null {
-  const alphaEdges = new Uint8Array(width * height)
-  for (let index = 0; index < alphaEdges.length; index += 1) {
-    if ((pixels[index * 4 + 3] ?? 0) > 0) alphaEdges[index] = 1
-  }
-
-  const cleanedEdges = removeSmallEdgeComponents(alphaEdges, width, height)
-  const bounds = resolvePixelBounds(cleanedEdges, width, height, LINE_ART_BOUNDS_PADDING)
-  if (!bounds) return null
-
-  const croppedPixels = new Uint8ClampedArray(new ArrayBuffer(bounds.width * bounds.height * 4))
-  for (let y = 0; y < bounds.height; y += 1) {
-    for (let x = 0; x < bounds.width; x += 1) {
-      const sourcePixelIndex = (bounds.y + y) * width + bounds.x + x
-      if (cleanedEdges[sourcePixelIndex] === 0) continue
-      const sourceIndex = sourcePixelIndex * 4
-      const targetIndex = (y * bounds.width + x) * 4
-      croppedPixels[targetIndex] = pixels[sourceIndex] ?? 0
-      croppedPixels[targetIndex + 1] = pixels[sourceIndex + 1] ?? 0
-      croppedPixels[targetIndex + 2] = pixels[sourceIndex + 2] ?? 0
-      croppedPixels[targetIndex + 3] = pixels[sourceIndex + 3] ?? 0
-    }
-  }
-
-  return {
-    height: bounds.height,
-    pixels: croppedPixels,
-    width: bounds.width,
-  }
 }
 
 export function traceEdgePaths(

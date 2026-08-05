@@ -38,8 +38,7 @@
     "motion": "catalog:",
     "path-to-regexp": "^8.4.2",
     "react": "catalog:",
-    "react-dom": "catalog:",
-    "react-moveable": "^0.56.0"
+    "react-dom": "catalog:"
   },
   "devDependencies": {
     "@babel/core": "^8.0.1",

@@ -114,23 +114,24 @@ card memoization or virtual-list identity. Saving a changed filter is expected
 to update every card on that board because their visible item sets may change;
 source queries and cached results remain unchanged.
 
-Background artwork extraction runs only after the user selects an image or
-changes the edge-detail control or output format. Debounce detail changes,
-resize the longest image dimension to at most 1400 pixels for WebP or 1800 pixels
-for SVG before reading pixel data, and persist only the selected processed result: a simplified
-centerline SVG or transparent WebP. Run decoding, pixel reads, edge extraction,
-path tracing, and encoding in the dedicated background-artwork worker rather
-than the UI thread. Cache one intermediate edge-magnitude result per selected
-file and output format: Sobel magnitude for WebP and the thinned Canny magnitude
-for SVG. Threshold changes reuse those results; selecting a different file
+Background illustration extraction runs only after the user selects an image or
+changes the edge-detail control. Debounce detail changes, resize the longest
+image dimension to at most 1800 pixels before reading pixel data, and persist
+only the selected processed result: a simplified centerline SVG. Run decoding,
+pixel reads, edge extraction, path tracing, and encoding in the dedicated
+bg-illustration worker rather than the UI thread. Cache one thinned Canny
+edge-magnitude result per selected file. Threshold changes reuse that result;
+selecting a different file
 replaces the cache, and closing the settings surface releases it. App startup
 and ordinary renders must only restore the saved result as a CSS mask; they must
 not decode the original upload or repeat edge extraction.
-Opacity changes must persist only the numeric setting and update the CSS custom
-property; they must not rerun image decoding or edge extraction.
-WebP encoding must use the original graded Sobel pixel result and skip
-sharpening, Canny thinning, SVG gap bridging, path tracing, and simplification.
-
+Direct SVG uploads bypass raster decoding and edge extraction. Sanitize and
+percent-encode them once on selection, then use the resulting SVG data URL as
+the draft. Generated SVG uses the same non-base64 data URL representation.
+The fixed React illustration layer owns its viewport subscription and derives
+its typed inline mask style directly from the three illustration setting atoms.
+Opacity changes must persist only the numeric setting and rerender that layer;
+they must not rerun image decoding or edge extraction.
 Mirrored persistence must ignore its own `browser.storage.local` echo when the
 normalized value already matches the synchronous `localStorage` snapshot. An
 echo must not replace arrays or objects with equal copies and trigger a second

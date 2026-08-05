@@ -21,26 +21,26 @@ describe("persisted settings", () => {
     expect(settings).toEqual(createDefaultPersistedSettings())
   })
 
-  it("keeps a valid locally generated background artwork image", () => {
-    const artwork = "data:image/webp;base64,AAAA"
+  it("keeps valid locally generated SVG background illustration", () => {
+    const illustration = `data:image/svg+xml,${encodeURIComponent("<svg></svg>")}`
     expect(normalizePersistedSettings({
-      appearance: { backgroundArtwork: artwork },
-    }).appearance.backgroundArtwork).toBe(artwork)
+      appearance: { bgIllustration: illustration },
+    }).appearance.bgIllustration).toBe(illustration)
   })
 
-  it("normalizes the background artwork opacity", () => {
+  it("normalizes the background illustration opacity", () => {
     expect(normalizePersistedSettings({
-      appearance: { backgroundArtworkOpacity: 12.4 },
-    }).appearance.backgroundArtworkOpacity).toBe(12)
+      appearance: { bgIllustrationOpacity: 12.4 },
+    }).appearance.bgIllustrationOpacity).toBe(12)
     expect(normalizePersistedSettings({
-      appearance: { backgroundArtworkOpacity: 100 },
-    }).appearance.backgroundArtworkOpacity).toBe(20)
+      appearance: { bgIllustrationOpacity: 100 },
+    }).appearance.bgIllustrationOpacity).toBe(20)
   })
 
-  it("normalizes the background artwork transform", () => {
+  it("normalizes the background illustration transform", () => {
     expect(normalizePersistedSettings({
       appearance: {
-        backgroundArtworkTransform: {
+        bgIllustrationTransform: {
           positionMode: "viewport-center",
           x: 12.345,
           y: -500,
@@ -48,7 +48,7 @@ describe("persisted settings", () => {
           rotation: "sideways",
         },
       },
-    }).appearance.backgroundArtworkTransform).toEqual({
+    }).appearance.bgIllustrationTransform).toEqual({
       positionMode: "viewport-center",
       x: 12.35,
       y: -100,

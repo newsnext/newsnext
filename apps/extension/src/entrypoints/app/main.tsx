@@ -1,6 +1,7 @@
 import { QueryClient } from "@tanstack/react-query"
 import { createHashHistory, createRouter, RouterProvider } from "@tanstack/react-router"
 import { AppProvider } from "@/components/app-provider"
+import { BgIllustrationLayer } from "@/components/bg-illustration-layer"
 import { renderPersistentReactRoot } from "@/lib/react-root"
 import { routeTree } from "./routeTree"
 import "@/styles/index.css"
@@ -18,6 +19,7 @@ const router = createRouter({
 function App() {
   return (
     <AppProvider queryClient={queryClient}>
+      <BgIllustrationLayer />
       <RouterProvider router={router} />
     </AppProvider>
   )
