@@ -382,6 +382,17 @@ export function BgIllustrationSettings(): React.JSX.Element {
             <PhArrowCounterClockwiseDuotone />
           </Button>
         )}
+        {status && (
+          <p
+            role={status.kind === "error" ? "alert" : "status"}
+            className={cn(
+              "absolute bottom-3 left-3 z-10 max-w-[calc(100%_-_1.5rem)] rounded-lg bg-background/85 px-3 py-2 text-left text-sm shadow-sm backdrop-blur",
+              status.kind === "error" ? "text-destructive" : "text-muted-foreground",
+            )}
+          >
+            {status.message}
+          </p>
+        )}
       </div>
 
       <Card variant="subtle">
@@ -459,15 +470,6 @@ export function BgIllustrationSettings(): React.JSX.Element {
               </Button>
             )}
           </div>
-
-          {status && (
-            <p
-              role={status.kind === "error" ? "alert" : "status"}
-              className={status.kind === "error" ? "text-sm text-destructive" : "text-sm text-muted-foreground"}
-            >
-              {status.message}
-            </p>
-          )}
         </CardContent>
       </Card>
     </SettingsSection>

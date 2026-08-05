@@ -48,6 +48,8 @@ pixel work, and show the result before it is applied.
 The preview is also the primary drop target and pointer-based file picker trigger;
 give it a visible drag-over state. Keep the preview canvas on its
 own background and outside the padded settings card that contains its controls.
+Show file validation errors and processing progress inside the bottom-left of
+the preview so feedback stays attached to the affected content.
 Make the preview a scaled representation of the app background by reusing its
 base background color, theme wash, fading grid texture, illustration color mix, and
 current illustration opacity. Preserve the current app viewport's aspect ratio, and
