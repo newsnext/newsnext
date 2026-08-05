@@ -23,6 +23,15 @@ interface ProcessingStatus {
   message: string
 }
 
+interface PreviewCanvasStyle extends CSSProperties {
+  "--background-grid-size": string
+}
+
+interface ViewportSize {
+  height: number
+  width: number
+}
+
 export function BackgroundArtworkSettings(): React.JSX.Element {
   const [savedArtwork, setSavedArtwork] = useAtom(backgroundArtworkAtom)
   const [backgroundOpacity, setBackgroundOpacity] = useAtom(backgroundArtworkOpacityAtom)
@@ -32,8 +41,24 @@ export function BackgroundArtworkSettings(): React.JSX.Element {
   const [format, setFormat] = useState<BackgroundArtworkFormat>("svg")
   const [status, setStatus] = useState<ProcessingStatus | null>(null)
   const [isDragging, setIsDragging] = useState(false)
+  const [viewportSize, setViewportSize] = useState<ViewportSize>(() => ({
+    height: window.innerHeight,
+    width: window.innerWidth,
+  }))
   const fileInputRef = useRef<HTMLInputElement>(null)
   const processingIdRef = useRef(0)
+
+  useEffect(() => {
+    function updateViewportSize(): void {
+      setViewportSize({
+        height: window.innerHeight,
+        width: window.innerWidth,
+      })
+    }
+
+    window.addEventListener("resize", updateViewportSize)
+    return () => window.removeEventListener("resize", updateViewportSize)
+  }, [])
 
   useEffect(() => {
     if (!sourceFile) return
@@ -118,12 +143,25 @@ export function BackgroundArtworkSettings(): React.JSX.Element {
     setStatus(null)
   }
 
+  const viewportWidth = Math.max(viewportSize.width, 1)
+  const viewportHeight = Math.max(viewportSize.height, 1)
+  const previewCanvasStyle: PreviewCanvasStyle = {
+    "--background-grid-size": `${24 / viewportWidth * 100}% ${32 / viewportHeight * 100}%`,
+    aspectRatio: `${viewportWidth} / ${viewportHeight}`,
+    maxHeight: "16rem",
+    maxWidth: `${viewportWidth / viewportHeight * 16}rem`,
+    width: "100%",
+  }
   const previewArtwork = draftArtwork ?? savedArtwork
   const previewStyle: CSSProperties | undefined = previewArtwork
     ? {
-        backgroundColor: "color-mix(in oklab, var(--foreground), var(--color-theme-500) 45%)",
-        WebkitMask: `url("${previewArtwork}") center / contain no-repeat`,
-        mask: `url("${previewArtwork}") center / contain no-repeat`,
+        backgroundColor: `color-mix(in oklab, color-mix(in oklab, var(--foreground), var(--color-theme-500) 45%) ${backgroundOpacity}%, transparent)`,
+        bottom: `${Math.max(-128, Math.min(-viewportHeight * 0.1, -64)) / viewportHeight * 100}%`,
+        left: `${Math.max(16, Math.min(viewportWidth * 0.08, 128)) / viewportWidth * 100}%`,
+        right: `${Math.max(-128, Math.min(-viewportWidth * 0.05, -48)) / viewportWidth * 100}%`,
+        top: `${Math.max(80, Math.min(viewportHeight * 0.1, 128)) / viewportHeight * 100}%`,
+        WebkitMask: `url("${previewArtwork}") right bottom / contain no-repeat`,
+        mask: `url("${previewArtwork}") right bottom / contain no-repeat`,
       }
     : undefined
   const isProcessing = status?.kind === "progress"
@@ -135,7 +173,7 @@ export function BackgroundArtworkSettings(): React.JSX.Element {
       </p>
     )
   } else if (previewStyle) {
-    previewContent = <div className="absolute inset-3 opacity-55" style={previewStyle} />
+    previewContent = <div className="absolute" style={previewStyle} />
   } else {
     previewContent = (
       <p className="absolute inset-0 flex items-center justify-center px-6 text-center text-sm text-muted-foreground">
@@ -149,59 +187,53 @@ export function BackgroundArtworkSettings(): React.JSX.Element {
       title="Background artwork"
       description="Choose a photo and extract its edges locally into a quiet background illustration."
     >
+      <div
+        role="button"
+        tabIndex={0}
+        aria-label="Choose or drop an image to extract line art"
+        style={previewCanvasStyle}
+        className={cn(
+          "grid-texture-background relative mx-auto overflow-hidden rounded-2xl bg-background transition-[box-shadow] zenith-theme-400 focus-visible:ring-2 focus-visible:ring-primary",
+          isDragging && "ring-2 ring-primary ring-offset-2 ring-offset-background",
+        )}
+        onClick={() => fileInputRef.current?.click()}
+        onKeyDown={handlePreviewKeyDown}
+        onDragEnter={(event) => {
+          event.preventDefault()
+          setIsDragging(true)
+        }}
+        onDragOver={(event) => {
+          event.preventDefault()
+          event.dataTransfer.dropEffect = "copy"
+        }}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
+        {previewContent}
+        {sourceFile && (
+          <div
+            className="absolute bottom-3 left-3 z-10"
+            onClick={event => event.stopPropagation()}
+            onKeyDown={event => event.stopPropagation()}
+          >
+            <RadioGroup
+              variant="segmented"
+              aria-label="Background artwork output format"
+              value={format}
+              onValueChange={(value) => {
+                if (value === "svg" || value === "webp") setFormat(value)
+              }}
+            >
+              <RadioGroupItem value="svg">SVG</RadioGroupItem>
+              <RadioGroupItem value="webp">WebP</RadioGroupItem>
+            </RadioGroup>
+          </div>
+        )}
+      </div>
+
       <Card variant="subtle">
         <CardContent>
-          <div
-            role="button"
-            tabIndex={0}
-            aria-label="Choose or drop an image to extract line art"
-            className={cn(
-              "relative aspect-[8/3] overflow-hidden rounded-2xl bg-background/70 transition-[box-shadow] focus-visible:ring-2 focus-visible:ring-primary",
-              isDragging && "ring-2 ring-primary ring-offset-2 ring-offset-background",
-            )}
-            onClick={() => fileInputRef.current?.click()}
-            onKeyDown={handlePreviewKeyDown}
-            onDragEnter={(event) => {
-              event.preventDefault()
-              setIsDragging(true)
-            }}
-            onDragOver={(event) => {
-              event.preventDefault()
-              event.dataTransfer.dropEffect = "copy"
-            }}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-          >
-            <div
-              className="pointer-events-none absolute inset-0"
-              style={{
-                backgroundImage: "linear-gradient(to right, var(--background-grid-line) 1px, transparent 1px), linear-gradient(to bottom, var(--background-grid-line) 1px, transparent 1px)",
-                backgroundSize: "24px 32px",
-              }}
-            />
-            {previewContent}
-            {sourceFile && (
-              <div
-                className="absolute bottom-3 left-3 z-10"
-                onClick={event => event.stopPropagation()}
-                onKeyDown={event => event.stopPropagation()}
-              >
-                <RadioGroup
-                  variant="segmented"
-                  aria-label="Background artwork output format"
-                  value={format}
-                  onValueChange={(value) => {
-                    if (value === "svg" || value === "webp") setFormat(value)
-                  }}
-                >
-                  <RadioGroupItem value="svg">SVG</RadioGroupItem>
-                  <RadioGroupItem value="webp">WebP</RadioGroupItem>
-                </RadioGroup>
-              </div>
-            )}
-          </div>
-
-          <div className="mt-4 grid gap-x-6 gap-y-4 sm:grid-cols-2">
+          <div className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
             <div className="space-y-2">
               <div className="flex items-center justify-between gap-4 text-sm">
                 <label htmlFor="background-artwork-detail" className="font-medium">Edge detail</label>

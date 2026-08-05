@@ -45,16 +45,8 @@ export function SettingsModalShell({
       <DialogContent
         variant="themed"
         className="h-[min(37.5rem,calc(100vh-2rem))] w-full max-w-3xl sm:max-w-3xl"
-        surfaceClassName="grid grid-rows-[auto_minmax(0,1fr)] gap-0"
+        surfaceClassName="grid min-h-0"
       >
-        <DialogHeader className="h-10 flex-row items-center gap-2 px-3 pr-12">
-          <DialogTitle className="font-bold">Settings</DialogTitle>
-          <span aria-hidden className="text-foreground/25">/</span>
-          <h2 className="text-sm leading-none font-medium text-foreground/60">
-            {SETTINGS_TABS.find(tab => tab.id === activeTab)?.label}
-          </h2>
-        </DialogHeader>
-
         <Tabs
           orientation="vertical"
           value={activeTab}
@@ -66,11 +58,16 @@ export function SettingsModalShell({
           }}
           className="flex min-h-0 gap-0"
         >
-          <TabsList variant="sidebar">
-            {SETTINGS_TABS.map(tab => (
-              <TabsTrigger key={tab.id} value={tab.id}>{tab.label}</TabsTrigger>
-            ))}
-          </TabsList>
+          <div className="w-32 shrink-0 sm:w-44">
+            <DialogHeader className="h-10 flex-row items-center px-3">
+              <DialogTitle className="font-bold">Settings</DialogTitle>
+            </DialogHeader>
+            <TabsList variant="sidebar" className="w-full sm:w-full">
+              {SETTINGS_TABS.map(tab => (
+                <TabsTrigger key={tab.id} value={tab.id}>{tab.label}</TabsTrigger>
+              ))}
+            </TabsList>
+          </div>
           <div className="relative min-w-0 flex-1">
             <SquircleBox
               aria-hidden

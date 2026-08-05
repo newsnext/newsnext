@@ -36,14 +36,22 @@ The Appearance settings may let the user choose a local image and extract its
 edges into background artwork. Keep processing in the browser, resize large
 inputs before pixel work, and show the extracted result before it is applied.
 The preview is also the primary drop target and file picker trigger; give it
-keyboard access and a visible drag-over state. Provide one edge-detail control
-whose explanation makes the threshold direction clear. Applying and removing
-artwork are explicit actions; selecting or dropping a file, or changing the
-detail preview, must not overwrite the saved background. While the source image
-is still available, offer SVG and WebP as a segmented choice in the preview's
-lower-left corner and regenerate only the draft when it changes. Hide the
-format control after the source leaves memory, and prevent it from triggering
-the preview's file picker.
+keyboard access and a visible drag-over state. Keep the preview canvas on its
+own background and outside the padded settings card that contains its controls.
+Make the preview a scaled representation of the app background by reusing its
+base background color, theme wash, fading grid texture, artwork color mix, and
+current artwork opacity. Preserve the current app viewport's aspect ratio, and
+scale the grid spacing and artwork insets by the same ratio. Cap the preview at
+16rem high and reduce its width proportionally when the viewport is tall.
+Anchor its artwork to the bottom-right and let it extend slightly beyond the
+preview bounds, matching the app composition.
+Provide one edge-detail control whose explanation makes the threshold direction
+clear. Applying and removing artwork are explicit actions; selecting or
+dropping a file, or changing the detail preview, must not overwrite the saved
+background. While the source image is still available, offer SVG and WebP as a
+segmented choice in the preview's lower-left corner and regenerate only the
+draft when it changes. Hide the format control after the source leaves memory,
+and prevent it from triggering the preview's file picker.
 
 Render saved SVG or WebP artwork as a transparent mask mixed from the foreground
 and active theme colors so it adapts to light, dark, and board themes. Keep it
@@ -231,14 +239,13 @@ particular, do not add the following descriptions back to this dialog:
 ### Multi-column settings dialog
 
 The Settings dialog may use a perimeter frame because its navigation rail and
-content panel create a clear multi-column relationship. Reserve a shared top
-shell area for the `Settings` title, active tab subtitle, and close button. Show
-the title and subtitle as one compact hierarchy, such as `Settings / General`:
-the dialog title is primary, while the active tab is smaller and muted. Do not
-split them into competing column headings or repeat the active tab subtitle
-inside the nested panel. Keep the navigation in the outer tinted surface and
-the active settings content in a nested neutral squircle. Do not copy this
-multi-column frame directly into a single-column dialog.
+content panel create a clear multi-column relationship. Place the `Settings`
+title above the navigation rail instead of reserving a shared header row, so
+the active content panel reaches the top of the dialog without an outer gap.
+Do not show the active tab as a subtitle above the panel. Keep the navigation
+in the outer tinted surface and retain the active settings content's internal
+padding inside its nested neutral squircle. Do not copy this multi-column frame
+directly into a single-column dialog.
 
 Keep settings controls compact and visually consistent. Use a 6px slider track
 with a clearly visible themed range and a 14px thumb filled with a light theme
