@@ -14,6 +14,7 @@ import {
 import {
   backgroundArtworkAtom,
   backgroundArtworkOpacityAtom,
+  backgroundArtworkTransformAtom,
   readCachedPersistedSettings,
 } from "@/store/settings"
 
@@ -23,6 +24,7 @@ if (isBrowser) {
   applyBackgroundArtwork(
     settings.appearance.backgroundArtwork,
     settings.appearance.backgroundArtworkOpacity,
+    settings.appearance.backgroundArtworkTransform,
   )
   handleThemeModeSwitch(settings.appearance.themeMode)
   const theme = localStorage.getItem(THEME_COLOR_KEY) ?? "red"
@@ -39,10 +41,11 @@ export function AppProvider({
 }: PropsWithChildren<AppProviderProps>) {
   const backgroundArtwork = useAtomValue(backgroundArtworkAtom)
   const backgroundArtworkOpacity = useAtomValue(backgroundArtworkOpacityAtom)
+  const backgroundArtworkTransform = useAtomValue(backgroundArtworkTransformAtom)
 
   useEffect(() => {
-    applyBackgroundArtwork(backgroundArtwork, backgroundArtworkOpacity)
-  }, [backgroundArtwork, backgroundArtworkOpacity])
+    applyBackgroundArtwork(backgroundArtwork, backgroundArtworkOpacity, backgroundArtworkTransform)
+  }, [backgroundArtwork, backgroundArtworkOpacity, backgroundArtworkTransform])
 
   useEffect(() => {
     const preventContextMenuOutsideNewsItems = (event: MouseEvent) => {

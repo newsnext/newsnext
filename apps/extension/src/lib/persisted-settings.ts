@@ -1,9 +1,12 @@
+import type { BackgroundArtworkTransform } from "./background-artwork-config"
 import type { SourceIconSettings, SourceIconSource } from "./source-icon"
 import type { ThemeMode } from "./utils/swith-theme"
 import {
   DEFAULT_BACKGROUND_ARTWORK_OPACITY,
+  DEFAULT_BACKGROUND_ARTWORK_TRANSFORM,
   normalizeBackgroundArtwork,
   normalizeBackgroundArtworkOpacity,
+  normalizeBackgroundArtworkTransform,
 } from "./background-artwork-config"
 import { ALL_BOARD_ID } from "./boards"
 import { DEFAULT_SOURCE_ICON_SETTINGS } from "./source-icon"
@@ -16,6 +19,7 @@ export interface PersistedSettings {
   appearance: {
     backgroundArtwork: string | null
     backgroundArtworkOpacity: number
+    backgroundArtworkTransform: BackgroundArtworkTransform
     themeMode: ThemeMode
   }
   general: {
@@ -37,6 +41,7 @@ export function createDefaultPersistedSettings(): PersistedSettings {
     appearance: {
       backgroundArtwork: null,
       backgroundArtworkOpacity: DEFAULT_BACKGROUND_ARTWORK_OPACITY,
+      backgroundArtworkTransform: { ...DEFAULT_BACKGROUND_ARTWORK_TRANSFORM },
       themeMode: "system",
     },
     general: {
@@ -69,6 +74,7 @@ export function normalizePersistedSettings(value: unknown): PersistedSettings {
     appearance: {
       backgroundArtwork: normalizeBackgroundArtwork(appearance?.backgroundArtwork),
       backgroundArtworkOpacity: normalizeBackgroundArtworkOpacity(appearance?.backgroundArtworkOpacity),
+      backgroundArtworkTransform: normalizeBackgroundArtworkTransform(appearance?.backgroundArtworkTransform),
       themeMode: isThemeMode(appearance?.themeMode)
         ? appearance.themeMode
         : defaults.appearance.themeMode,

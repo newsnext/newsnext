@@ -1,4 +1,5 @@
 export const DEFAULT_LINE_ART_THRESHOLD = 36
+export const NO_CLEAR_LINE_ART_ERROR_MESSAGE = "No clear line art was found. Try lowering Edge detail."
 
 export type BackgroundArtworkFormat = "svg" | "webp"
 
@@ -21,8 +22,23 @@ const REVERSE_DIRECTIONS = [7, 6, 5, 4, 3, 2, 1, 0] as const
 const PATH_SIMPLIFICATION_TOLERANCE = 0.5
 const MAX_GAP_BRIDGE_DISTANCE = 12
 const MIN_GAP_ALIGNMENT = 0.7
+const MIN_EDGE_COMPONENT_SIZE = 6
+const LINE_ART_BOUNDS_PADDING = 4
 
 interface EdgePoint {
+  x: number
+  y: number
+}
+
+interface CroppedLineArtPixels {
+  height: number
+  pixels: Uint8ClampedArray<ArrayBuffer>
+  width: number
+}
+
+interface PixelBounds {
+  height: number
+  width: number
   x: number
   y: number
 }
@@ -186,6 +202,79 @@ export function selectConnectedEdges(
   return states
 }
 
+export function removeSmallEdgeComponents(
+  edges: Uint8Array,
+  width: number,
+  height: number,
+  minSize = MIN_EDGE_COMPONENT_SIZE,
+): Uint8Array<ArrayBuffer> {
+  const output = new Uint8Array(edges.length)
+  const visited = new Uint8Array(edges.length)
+  const queue = new Int32Array(edges.length)
+
+  for (let startIndex = 0; startIndex < edges.length; startIndex += 1) {
+    if (edges[startIndex] === 0 || visited[startIndex] !== 0) continue
+
+    let queueStart = 0
+    let queueEnd = 1
+    queue[0] = startIndex
+    visited[startIndex] = 1
+    while (queueStart < queueEnd) {
+      const index = queue[queueStart] ?? 0
+      queueStart += 1
+      for (let direction = 0; direction < NEIGHBOR_OFFSETS.length; direction += 1) {
+        const neighborIndex = getNeighborIndex(index, direction, edges, width, height)
+        if (neighborIndex === -1 || visited[neighborIndex] !== 0) continue
+        visited[neighborIndex] = 1
+        queue[queueEnd] = neighborIndex
+        queueEnd += 1
+      }
+    }
+
+    if (queueEnd < minSize) continue
+    for (let queueIndex = 0; queueIndex < queueEnd; queueIndex += 1) {
+      output[queue[queueIndex] ?? 0] = 1
+    }
+  }
+
+  return output
+}
+
+export function cleanAndCropLineArtPixels(
+  pixels: Uint8ClampedArray,
+  width: number,
+  height: number,
+): CroppedLineArtPixels | null {
+  const alphaEdges = new Uint8Array(width * height)
+  for (let index = 0; index < alphaEdges.length; index += 1) {
+    if ((pixels[index * 4 + 3] ?? 0) > 0) alphaEdges[index] = 1
+  }
+
+  const cleanedEdges = removeSmallEdgeComponents(alphaEdges, width, height)
+  const bounds = resolvePixelBounds(cleanedEdges, width, height, LINE_ART_BOUNDS_PADDING)
+  if (!bounds) return null
+
+  const croppedPixels = new Uint8ClampedArray(new ArrayBuffer(bounds.width * bounds.height * 4))
+  for (let y = 0; y < bounds.height; y += 1) {
+    for (let x = 0; x < bounds.width; x += 1) {
+      const sourcePixelIndex = (bounds.y + y) * width + bounds.x + x
+      if (cleanedEdges[sourcePixelIndex] === 0) continue
+      const sourceIndex = sourcePixelIndex * 4
+      const targetIndex = (y * bounds.width + x) * 4
+      croppedPixels[targetIndex] = pixels[sourceIndex] ?? 0
+      croppedPixels[targetIndex + 1] = pixels[sourceIndex + 1] ?? 0
+      croppedPixels[targetIndex + 2] = pixels[sourceIndex + 2] ?? 0
+      croppedPixels[targetIndex + 3] = pixels[sourceIndex + 3] ?? 0
+    }
+  }
+
+  return {
+    height: bounds.height,
+    pixels: croppedPixels,
+    width: bounds.width,
+  }
+}
+
 export function traceEdgePaths(
   edges: Uint8Array,
   width: number,
@@ -325,13 +414,53 @@ export function createLineArtSvg(
   width: number,
   height: number,
 ): string {
-  const commands = traceEdgePaths(bridgeEdgeGaps(edges, width, height), width, height).map((path) => {
+  const cleanedEdges = removeSmallEdgeComponents(edges, width, height)
+  const bridgedEdges = bridgeEdgeGaps(cleanedEdges, width, height)
+  const bounds = resolvePixelBounds(bridgedEdges, width, height, LINE_ART_BOUNDS_PADDING)
+  if (!bounds) throw new Error(NO_CLEAR_LINE_ART_ERROR_MESSAGE)
+
+  const commands = traceEdgePaths(bridgedEdges, width, height).map((path) => {
     const [first, ...rest] = path
     if (!first) return ""
     return `M${first.x} ${first.y}${rest.map(point => `L${point.x} ${point.y}`).join("")}`
   }).join("")
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" shape-rendering="geometricPrecision"><path d="${commands}" transform="translate(.5 .5)" fill="none" stroke="#000" stroke-width=".8" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${bounds.x} ${bounds.y} ${bounds.width} ${bounds.height}" shape-rendering="geometricPrecision"><path d="${commands}" transform="translate(.5 .5)" fill="none" stroke="#000" stroke-width=".8" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+}
+
+function resolvePixelBounds(
+  edges: Uint8Array,
+  width: number,
+  height: number,
+  padding: number,
+): PixelBounds | null {
+  let minX = width
+  let minY = height
+  let maxX = -1
+  let maxY = -1
+
+  for (let index = 0; index < edges.length; index += 1) {
+    if (edges[index] === 0) continue
+    const x = index % width
+    const y = Math.floor(index / width)
+    minX = Math.min(minX, x)
+    minY = Math.min(minY, y)
+    maxX = Math.max(maxX, x)
+    maxY = Math.max(maxY, y)
+  }
+
+  if (maxX === -1 || maxY === -1) return null
+
+  const x = Math.max(0, minX - padding)
+  const y = Math.max(0, minY - padding)
+  const right = Math.min(width - 1, maxX + padding)
+  const bottom = Math.min(height - 1, maxY + padding)
+  return {
+    height: bottom - y + 1,
+    width: right - x + 1,
+    x,
+    y,
+  }
 }
 
 function createGrayscalePixels(

@@ -37,6 +37,26 @@ describe("persisted settings", () => {
     }).appearance.backgroundArtworkOpacity).toBe(20)
   })
 
+  it("normalizes the background artwork transform", () => {
+    expect(normalizePersistedSettings({
+      appearance: {
+        backgroundArtworkTransform: {
+          positionMode: "viewport-center",
+          x: 12.345,
+          y: -500,
+          scale: 10,
+          rotation: "sideways",
+        },
+      },
+    }).appearance.backgroundArtworkTransform).toEqual({
+      positionMode: "viewport-center",
+      x: 12.35,
+      y: -100,
+      scale: 4,
+      rotation: 0,
+    })
+  })
+
   it("updates the CLI preference without changing other settings", () => {
     const state = createDefaultPersistedDeviceState()
     state.currentBoardId = "reading"

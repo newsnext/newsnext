@@ -125,6 +125,7 @@ export function DataTransferSettings({
         applyBackgroundArtwork(
           selectedData.settings.appearance.backgroundArtwork,
           selectedData.settings.appearance.backgroundArtworkOpacity,
+          selectedData.settings.appearance.backgroundArtworkTransform,
         )
         handleThemeModeSwitch(selectedData.settings.appearance.themeMode)
       }

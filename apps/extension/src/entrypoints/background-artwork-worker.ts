@@ -6,11 +6,13 @@ import type {
 } from "../lib/background-artwork-worker-protocol"
 import { defineUnlistedScript } from "#imports"
 import {
+  cleanAndCropLineArtPixels,
   createLineArtSvg,
   extractSvgLineArtMagnitude,
   extractWebpLineArtMagnitude,
   MAX_SVG_LINE_ART_DIMENSION,
   MAX_WEBP_LINE_ART_DIMENSION,
+  NO_CLEAR_LINE_ART_ERROR_MESSAGE,
   renderWebpLineArtPixels,
   selectConnectedEdges,
 } from "../lib/background-artwork-processing"
@@ -115,12 +117,15 @@ async function readPixels(
 }
 
 async function createWebp(cache: LineArtMagnitude, threshold: number): Promise<string> {
-  const canvas = new OffscreenCanvas(cache.width, cache.height)
+  const pixels = renderWebpLineArtPixels(cache.magnitude, threshold)
+  const cropped = cleanAndCropLineArtPixels(pixels, cache.width, cache.height)
+  if (!cropped) throw new Error(NO_CLEAR_LINE_ART_ERROR_MESSAGE)
+
+  const canvas = new OffscreenCanvas(cropped.width, cropped.height)
   const context = canvas.getContext("2d")
   if (!context) throw new Error("Canvas processing is unavailable.")
 
-  const pixels = renderWebpLineArtPixels(cache.magnitude, threshold)
-  context.putImageData(new ImageData(pixels, cache.width, cache.height), 0, 0)
+  context.putImageData(new ImageData(cropped.pixels, cropped.width, cropped.height), 0, 0)
   const blob = await canvas.convertToBlob({ type: "image/webp", quality: 0.9 })
   return blobToDataUrl(blob)
 }

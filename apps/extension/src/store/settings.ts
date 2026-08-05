@@ -1,3 +1,4 @@
+import type { BackgroundArtworkTransform } from "@/lib/background-artwork"
 import type {
   PersistedDeviceState,
   PersistedSettings,
@@ -73,6 +74,17 @@ export const backgroundArtworkOpacityAtom = atom(
     set(persistedSettingsAtom, {
       ...settings,
       appearance: { ...settings.appearance, backgroundArtworkOpacity },
+    })
+  },
+)
+
+export const backgroundArtworkTransformAtom = atom(
+  get => get(persistedSettingsAtom).appearance.backgroundArtworkTransform,
+  (get, set, backgroundArtworkTransform: BackgroundArtworkTransform) => {
+    const settings = get(persistedSettingsAtom)
+    set(persistedSettingsAtom, {
+      ...settings,
+      appearance: { ...settings.appearance, backgroundArtworkTransform },
     })
   },
 )

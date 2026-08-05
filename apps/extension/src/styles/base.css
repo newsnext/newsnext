@@ -120,10 +120,12 @@
     content: "";
     pointer-events: none;
     position: fixed;
-    top: clamp(5rem, 10vh, 8rem);
-    right: clamp(-8rem, -5vw, -3rem);
-    bottom: clamp(-8rem, -10vh, -4rem);
-    left: clamp(1rem, 8vw, 8rem);
+    top: var(--app-background-artwork-top, clamp(5rem, 10vh, 8rem));
+    right: var(--app-background-artwork-right, clamp(-8rem, -5vw, -3rem));
+    bottom: var(--app-background-artwork-bottom, clamp(-8rem, -10vh, -4rem));
+    left: var(--app-background-artwork-left, clamp(1rem, 8vw, 8rem));
+    width: var(--app-background-artwork-width, auto);
+    height: var(--app-background-artwork-height, auto);
     z-index: 1;
     background-color: color-mix(
       in oklab,
@@ -131,8 +133,20 @@
         var(--app-background-artwork-opacity, 7%),
       transparent
     );
-    -webkit-mask: var(--app-background-artwork, none) right bottom / contain no-repeat;
-    mask: var(--app-background-artwork, none) right bottom / contain no-repeat;
+    -webkit-mask: var(--app-background-artwork, none) right bottom / var(--app-background-artwork-mask-size, contain) no-repeat;
+    mask: var(--app-background-artwork, none) right bottom / var(--app-background-artwork-mask-size, contain) no-repeat;
+    transform:
+      translate(
+        var(--app-background-artwork-x, 0%),
+        var(--app-background-artwork-y, 0%)
+      )
+      rotate(var(--app-background-artwork-rotation, 0deg))
+      scale(var(--app-background-artwork-scale, 1));
+    transform-origin: center;
+  }
+
+  .background-artwork-moveable {
+    --moveable-color: var(--primary);
   }
 
   body > * {
