@@ -3,8 +3,11 @@ import { createHashHistory, createRouter, RouterProvider } from "@tanstack/react
 import { AppProvider } from "@/components/app-provider"
 import { BgIllustrationLayer } from "@/components/bg-illustration-layer"
 import { renderPersistentReactRoot } from "@/lib/react-root"
+import { syncThemeFavicon, THEME_COLOR_KEY } from "@/lib/utils/swith-theme"
 import { routeTree } from "./routeTree"
 import "@/styles/index.css"
+
+syncThemeFavicon(localStorage.getItem(THEME_COLOR_KEY) ?? "red")
 
 const queryClient = new QueryClient()
 const hashHistory = createHashHistory()

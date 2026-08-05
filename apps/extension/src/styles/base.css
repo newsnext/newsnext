@@ -73,8 +73,13 @@
     @apply border-border outline-ring/0 outline-none m-0 p-0;
   }
 
+  html,
   body {
-    @apply h-screen select-none bg-background text-foreground zenith-theme-400;
+    @apply bg-background;
+  }
+
+  body {
+    @apply h-screen select-none text-foreground zenith-theme-400;
   }
 
   #root {

@@ -1,23 +1,8 @@
 import type { QueryClient } from "@tanstack/react-query"
 import type { PropsWithChildren } from "react"
-import { isBrowser } from "@newsnext/ui/lib/is-browser"
 import { QueryClientProvider } from "@tanstack/react-query"
 import { domMax, LazyMotion, MotionConfig } from "motion/react"
 import { useEffect } from "react"
-import {
-  handleThemeModeSwitch,
-  handleThemeSwitch,
-  THEME_COLOR_KEY,
-} from "@/lib/utils/swith-theme"
-import { readCachedPersistedSettings } from "@/store/settings"
-
-// Initialize theme as soon as possible to avoid flicker
-if (isBrowser) {
-  const settings = readCachedPersistedSettings()
-  handleThemeModeSwitch(settings.appearance.themeMode)
-  const theme = localStorage.getItem(THEME_COLOR_KEY) ?? "red"
-  handleThemeSwitch(theme)
-}
 
 interface AppProviderProps {
   queryClient: QueryClient

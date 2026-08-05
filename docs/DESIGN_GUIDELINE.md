@@ -32,6 +32,15 @@ Use the top-weighted `zenith-theme-400` wash for the main app background and
 related interface surfaces. Derive the wash from the active board theme color
 so it reinforces the current context without introducing another palette.
 
+Resolve the persisted light, dark, or system appearance mode and theme color in
+a blocking head script before loading the application entry. Apply the resolved
+mode and color class to the document element, and keep both `html` and `body` on
+`var(--background)` so the browser's initial frame matches the user's preference
+instead of exposing its default canvas color or default theme wash.
+Synchronize the themed favicon in the app entry before mounting React. Keep this
+separate from the head bootstrap and provider composition so favicon work does
+not delay the initial background or depend on board effects.
+
 The Appearance settings may let the user choose a local raster image and extract
 its edges into background illustration, or use a local SVG directly. Keep processing
 in the browser, sanitize direct SVG illustration, resize large raster inputs before

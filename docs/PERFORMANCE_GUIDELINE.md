@@ -20,6 +20,17 @@ This guideline covers React renders and related component work. Network latency,
 source execution, background service performance, and persisted cache policy
 remain separate concerns.
 
+### Initial theme path
+
+Resolve the appearance mode and theme color in the shared blocking head script
+before mounting React. Every HTML entry that mounts `AppProvider` must run this
+bootstrap so the provider stays theme-agnostic and has no module-level DOM or
+storage side effects. Keep later theme synchronization idempotent so an unchanged
+theme does not rewrite local storage or remove and re-add its document class.
+Synchronize the favicon once in the app entry before mounting React, and remember
+the applied color in memory so board resolution with the same color does not
+repeat SVG parsing and serialization.
+
 ## Measurement Workflow
 
 Measure before and after a change with the same board, viewport, loaded card
