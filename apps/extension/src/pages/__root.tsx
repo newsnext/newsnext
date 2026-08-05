@@ -3,7 +3,6 @@ import { createRootRouteWithContext, Outlet } from "@tanstack/react-router"
 import { Suspense, useRef } from "react"
 import { TanStackDevtools } from "@/components/common/devtools"
 import { ScrollProgressProvider } from "@/components/common/scroll-progress-provider"
-import { Footer } from "@/components/footer"
 import { Header } from "@/components/header"
 
 export const Route = createRootRouteWithContext<{
@@ -35,7 +34,6 @@ function RootComponent() {
           <main className="flex grow shrink-0 flex-col px-2 sm:px-6">
             <Outlet />
           </main>
-          <Footer />
         </div>
       </div>
       <Suspense>
