@@ -39,15 +39,27 @@ The preview is also the primary drop target and file picker trigger; give it
 keyboard access and a visible drag-over state. Provide one edge-detail control
 whose explanation makes the threshold direction clear. Applying and removing
 artwork are explicit actions; selecting or dropping a file, or changing the
-detail preview, must not overwrite the saved background.
+detail preview, must not overwrite the saved background. While the source image
+is still available, offer SVG and WebP as a segmented choice in the preview's
+lower-left corner and regenerate only the draft when it changes. Hide the
+format control after the source leaves memory, and prevent it from triggering
+the preview's file picker.
 
-Render saved artwork as a transparent raster mask mixed from the foreground and
-active theme colors so it adapts to light, dark, and board themes. Keep it
-non-interactive, anchored to the bottom-right, partially outside the viewport,
-and below 8% opacity; the grid, cards, and controls must remain visually
-dominant. Scope the artwork to the main app entry point rather than popup or
-component-preview surfaces. Process and store the image locally; do not upload
-it or retain the original input file.
+Render saved SVG or WebP artwork as a transparent mask mixed from the foreground
+and active theme colors so it adapts to light, dark, and board themes. Keep it
+non-interactive, above the grid texture but below app content, anchored to the
+bottom-right, partially outside the viewport, and use a user-adjustable opacity
+from 1% to 20%, defaulting to 7%; cards and controls must remain visually
+dominant. Use a fixed 1% grid-line opacity across themes and surfaces, regardless
+of whether artwork is active or which artwork opacity is selected. Allow the two
+transparent layers to blend naturally without adding a backing color beneath
+artwork pixels. Scope the artwork to the main app entry point rather than popup
+or component-preview surfaces. Process and store the image locally; do not
+upload it or retain the original input file.
+Bridge only short gaps whose endpoint directions align so faint strokes remain
+continuous without joining unrelated nearby contours. Apply this connection
+step only to SVG. WebP must use the original graded Sobel raster extraction
+without sharpening, Canny thinning, or SVG path work.
 
 ## Card Surface Language
 
@@ -227,6 +239,22 @@ split them into competing column headings or repeat the active tab subtitle
 inside the nested panel. Keep the navigation in the outer tinted surface and
 the active settings content in a nested neutral squircle. Do not copy this
 multi-column frame directly into a single-column dialog.
+
+Keep settings controls compact and visually consistent. Use a 6px slider track
+with a clearly visible themed range and a 14px thumb filled with a light theme
+shade; the track and thumb must remain legible against nested tinted surfaces.
+Use 32px buttons for ordinary settings
+actions, keep adjacent actions the same height and text size, and use `ghost`
+rather than the icon-oriented `quiet` variant for text-only tertiary actions.
+Keep destructive removal actions inside the same button group and use the
+`destructive` treatment instead of presenting them as detached text. Theme-
+colored buttons use white text in both light and dark modes.
+Group closely related controls in columns when the available width permits it,
+while keeping labels, values, and necessary recovery guidance adjacent to their
+control. Omit helper text when the label and visible control already explain the
+setting.
+Reset the shared settings content scroller to the top when the active tab
+changes; do not remount tab content or discard unsaved control state to do so.
 
 ### Search dialog
 

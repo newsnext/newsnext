@@ -28,6 +28,15 @@ describe("persisted settings", () => {
     }).appearance.backgroundArtwork).toBe(artwork)
   })
 
+  it("normalizes the background artwork opacity", () => {
+    expect(normalizePersistedSettings({
+      appearance: { backgroundArtworkOpacity: 12.4 },
+    }).appearance.backgroundArtworkOpacity).toBe(12)
+    expect(normalizePersistedSettings({
+      appearance: { backgroundArtworkOpacity: 100 },
+    }).appearance.backgroundArtworkOpacity).toBe(20)
+  })
+
   it("updates the CLI preference without changing other settings", () => {
     const state = createDefaultPersistedDeviceState()
     state.currentBoardId = "reading"

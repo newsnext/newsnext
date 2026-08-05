@@ -122,7 +122,10 @@ export function DataTransferSettings({
 
       importData(selectedData)
       if (selectedData.settings) {
-        applyBackgroundArtwork(selectedData.settings.appearance.backgroundArtwork)
+        applyBackgroundArtwork(
+          selectedData.settings.appearance.backgroundArtwork,
+          selectedData.settings.appearance.backgroundArtworkOpacity,
+        )
         handleThemeModeSwitch(selectedData.settings.appearance.themeMode)
       }
       setStatus({
@@ -166,7 +169,7 @@ export function DataTransferSettings({
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <SettingsSection
         title="Import and export"
         description="Choose which data to include. Importing replaces only selected data found in the file. Browser permissions and device-only state are excluded."
@@ -192,12 +195,13 @@ export function DataTransferSettings({
             </div>
 
             <div className="flex flex-wrap gap-2 border-t border-border/60 pt-4">
-              <Button type="button" disabled={!hasSelection} onClick={handleExport}>
+              <Button type="button" size="sm" disabled={!hasSelection} onClick={handleExport}>
                 Export selected
               </Button>
               <Button
                 type="button"
                 variant="outline"
+                size="sm"
                 disabled={!hasSelection}
                 onClick={() => fileInputRef.current?.click()}
               >
@@ -235,6 +239,7 @@ export function DataTransferSettings({
             <Button
               type="button"
               variant="destructive"
+              size="sm"
               disabled={clearing}
               onBlur={() => setClearArmed(false)}
               onClick={() => void handleClear()}

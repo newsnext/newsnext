@@ -66,6 +66,17 @@ export const backgroundArtworkAtom = atom(
   },
 )
 
+export const backgroundArtworkOpacityAtom = atom(
+  get => get(persistedSettingsAtom).appearance.backgroundArtworkOpacity,
+  (get, set, backgroundArtworkOpacity: number) => {
+    const settings = get(persistedSettingsAtom)
+    set(persistedSettingsAtom, {
+      ...settings,
+      appearance: { ...settings.appearance, backgroundArtworkOpacity },
+    })
+  },
+)
+
 export const defaultBoardIdAtom = atom(
   get => get(persistedSettingsAtom).general.defaultBoardId,
   (get, set, update: SettingsValueUpdate<string | null>) => {

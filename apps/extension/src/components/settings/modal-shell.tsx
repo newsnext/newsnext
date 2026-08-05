@@ -8,6 +8,7 @@ import {
 } from "@newsnext/ui/components/dialog"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { Tabs, TabsList, TabsTrigger } from "@newsnext/ui/components/tabs"
+import { useEffect, useRef } from "react"
 
 export type { SettingsTabId } from "@/lib/persisted-settings"
 
@@ -33,6 +34,12 @@ export function SettingsModalShell({
   onOpenChange,
   onTabChange,
 }: SettingsModalShellProps): React.JSX.Element {
+  const contentRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    contentRef.current?.scrollTo({ top: 0 })
+  }, [activeTab])
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
@@ -72,7 +79,7 @@ export function SettingsModalShell({
               className="pointer-events-none absolute inset-0"
             />
             {children && (
-              <div className="relative size-full overflow-y-auto p-4 sm:p-6">
+              <div ref={contentRef} className="relative size-full overflow-y-auto p-4 sm:p-6">
                 {children}
               </div>
             )}

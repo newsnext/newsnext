@@ -94,13 +94,13 @@ function AppearanceSettings() {
   }, [themeMode])
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <SettingsSection
         title="Theme mode"
         description="Choose a light or dark interface, or follow your system setting."
       >
         <Card variant="subtle">
-          <CardContent>
+          <CardContent className="p-2.5">
             <RadioGroup
               variant="segmented"
               value={themeMode}
@@ -127,13 +127,13 @@ function GeneralSettings() {
     : boards.find(board => board.id === defaultBoardId)!.name
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <SettingsSection
         title="Default board"
         description="Choose which board opens when NewsNext starts."
       >
         <Card variant="subtle">
-          <CardContent>
+          <CardContent className="p-3">
             <Select
               value={selectedValue}
               onValueChange={(value) => {

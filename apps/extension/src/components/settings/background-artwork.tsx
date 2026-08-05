@@ -1,6 +1,8 @@
 import type { ChangeEvent, CSSProperties, DragEvent, KeyboardEvent, ReactNode } from "react"
+import type { BackgroundArtworkFormat } from "@/lib/background-artwork"
 import { Button } from "@newsnext/ui/components/button"
 import { Card, CardContent } from "@newsnext/ui/components/card"
+import { RadioGroup, RadioGroupItem } from "@newsnext/ui/components/radio-group"
 import { Slider } from "@newsnext/ui/components/slider"
 import { useAtom } from "jotai"
 import { useEffect, useRef, useState } from "react"
@@ -8,9 +10,12 @@ import {
   createBackgroundLineArt,
   DEFAULT_LINE_ART_THRESHOLD,
   MAX_BACKGROUND_ARTWORK_FILE_SIZE,
+  MAX_BACKGROUND_ARTWORK_OPACITY,
+  MIN_BACKGROUND_ARTWORK_OPACITY,
+  releaseBackgroundArtworkSource,
 } from "@/lib/background-artwork"
 import { cn } from "@/lib/utils"
-import { backgroundArtworkAtom } from "@/store/settings"
+import { backgroundArtworkAtom, backgroundArtworkOpacityAtom } from "@/store/settings"
 import { SettingsSection } from "./layout"
 
 interface ProcessingStatus {
@@ -20,9 +25,11 @@ interface ProcessingStatus {
 
 export function BackgroundArtworkSettings(): React.JSX.Element {
   const [savedArtwork, setSavedArtwork] = useAtom(backgroundArtworkAtom)
+  const [backgroundOpacity, setBackgroundOpacity] = useAtom(backgroundArtworkOpacityAtom)
   const [draftArtwork, setDraftArtwork] = useState<string | null>(null)
   const [sourceFile, setSourceFile] = useState<File | null>(null)
   const [threshold, setThreshold] = useState(DEFAULT_LINE_ART_THRESHOLD)
+  const [format, setFormat] = useState<BackgroundArtworkFormat>("svg")
   const [status, setStatus] = useState<ProcessingStatus | null>(null)
   const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -35,7 +42,7 @@ export function BackgroundArtworkSettings(): React.JSX.Element {
     processingIdRef.current = processingId
     const timeoutId = window.setTimeout(() => {
       setStatus({ kind: "progress", message: "Extracting line art…" })
-      void createBackgroundLineArt(sourceFile, threshold).then((artwork) => {
+      void createBackgroundLineArt(sourceFile, threshold, format).then((artwork) => {
         if (processingIdRef.current !== processingId) return
         setDraftArtwork(artwork)
         setStatus(null)
@@ -54,7 +61,12 @@ export function BackgroundArtworkSettings(): React.JSX.Element {
         processingIdRef.current += 1
       }
     }
-  }, [sourceFile, threshold])
+  }, [format, sourceFile, threshold])
+
+  useEffect(() => {
+    if (!sourceFile) return
+    return () => releaseBackgroundArtworkSource(sourceFile)
+  }, [sourceFile])
 
   function selectFile(file: File): void {
     if (!file.type.startsWith("image/")) {
@@ -138,13 +150,13 @@ export function BackgroundArtworkSettings(): React.JSX.Element {
       description="Choose a photo and extract its edges locally into a quiet background illustration."
     >
       <Card variant="subtle">
-        <CardContent className="space-y-4">
+        <CardContent>
           <div
             role="button"
             tabIndex={0}
             aria-label="Choose or drop an image to extract line art"
             className={cn(
-              "relative aspect-[16/7] overflow-hidden rounded-2xl bg-background/70 transition-[box-shadow] focus-visible:ring-2 focus-visible:ring-primary",
+              "relative aspect-[8/3] overflow-hidden rounded-2xl bg-background/70 transition-[box-shadow] focus-visible:ring-2 focus-visible:ring-primary",
               isDragging && "ring-2 ring-primary ring-offset-2 ring-offset-background",
             )}
             onClick={() => fileInputRef.current?.click()}
@@ -161,40 +173,81 @@ export function BackgroundArtworkSettings(): React.JSX.Element {
             onDrop={handleDrop}
           >
             <div
-              className="pointer-events-none absolute inset-0 opacity-25"
+              className="pointer-events-none absolute inset-0"
               style={{
                 backgroundImage: "linear-gradient(to right, var(--background-grid-line) 1px, transparent 1px), linear-gradient(to bottom, var(--background-grid-line) 1px, transparent 1px)",
                 backgroundSize: "24px 32px",
               }}
             />
             {previewContent}
+            {sourceFile && (
+              <div
+                className="absolute bottom-3 left-3 z-10"
+                onClick={event => event.stopPropagation()}
+                onKeyDown={event => event.stopPropagation()}
+              >
+                <RadioGroup
+                  variant="segmented"
+                  aria-label="Background artwork output format"
+                  value={format}
+                  onValueChange={(value) => {
+                    if (value === "svg" || value === "webp") setFormat(value)
+                  }}
+                >
+                  <RadioGroupItem value="svg">SVG</RadioGroupItem>
+                  <RadioGroupItem value="webp">WebP</RadioGroupItem>
+                </RadioGroup>
+              </div>
+            )}
           </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center justify-between gap-4 text-sm">
-              <label htmlFor="background-artwork-detail" className="font-medium">Edge detail</label>
-              <span className="tabular-nums text-muted-foreground">{threshold}</span>
+          <div className="mt-4 grid gap-x-6 gap-y-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-4 text-sm">
+                <label htmlFor="background-artwork-detail" className="font-medium">Edge detail</label>
+                <span className="tabular-nums text-muted-foreground">{threshold}</span>
+              </div>
+              <Slider
+                id="background-artwork-detail"
+                aria-label="Edge detail"
+                min={12}
+                max={96}
+                step={2}
+                value={[threshold]}
+                disabled={!sourceFile}
+                onValueChange={(value) => {
+                  const nextValue = Array.isArray(value) ? value[0] : value
+                  if (nextValue !== undefined) setThreshold(nextValue)
+                }}
+              />
             </div>
-            <Slider
-              id="background-artwork-detail"
-              aria-label="Edge detail"
-              min={12}
-              max={96}
-              step={2}
-              value={[threshold]}
-              disabled={!sourceFile}
-              onValueChange={(value) => {
-                const nextValue = Array.isArray(value) ? value[0] : value
-                if (nextValue !== undefined) setThreshold(nextValue)
-              }}
-            />
-            <p className="text-xs text-muted-foreground">
-              Lower values keep more texture; higher values keep only stronger edges.
-            </p>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-4 text-sm">
+                <label htmlFor="background-artwork-opacity" className="font-medium">Opacity</label>
+                <span className="tabular-nums text-muted-foreground">
+                  {backgroundOpacity}
+                  %
+                </span>
+              </div>
+              <Slider
+                id="background-artwork-opacity"
+                aria-label="Background opacity"
+                min={MIN_BACKGROUND_ARTWORK_OPACITY}
+                max={MAX_BACKGROUND_ARTWORK_OPACITY}
+                step={1}
+                value={[backgroundOpacity]}
+                onValueChange={(value) => {
+                  const nextValue = Array.isArray(value) ? value[0] : value
+                  if (nextValue !== undefined) setBackgroundOpacity(nextValue)
+                }}
+              />
+            </div>
+
           </div>
 
-          <div className="flex flex-wrap gap-2 border-t border-border/60 pt-4">
-            <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>
+          <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border/60 pt-3">
+            <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
               Choose image
             </Button>
             <input
@@ -206,13 +259,14 @@ export function BackgroundArtworkSettings(): React.JSX.Element {
             />
             <Button
               type="button"
+              size="sm"
               disabled={!draftArtwork || draftArtwork === savedArtwork || isProcessing}
               onClick={() => setSavedArtwork(draftArtwork)}
             >
-              Use as background
+              Apply background
             </Button>
             {savedArtwork && (
-              <Button type="button" variant="quiet" onClick={handleRemove}>
+              <Button type="button" variant="destructive" size="sm" onClick={handleRemove}>
                 Remove
               </Button>
             )}

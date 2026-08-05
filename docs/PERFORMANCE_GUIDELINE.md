@@ -115,11 +115,21 @@ to update every card on that board because their visible item sets may change;
 source queries and cached results remain unchanged.
 
 Background artwork extraction runs only after the user selects an image or
-changes the edge-detail control. Debounce detail changes, resize the longest
-image dimension to at most 1400 pixels before reading pixel data, and persist
-only the processed WebP result. App startup and ordinary renders must only
-restore that result as a CSS mask; they must not decode the original upload or
-repeat edge extraction.
+changes the edge-detail control or output format. Debounce detail changes,
+resize the longest image dimension to at most 1400 pixels for WebP or 1800 pixels
+for SVG before reading pixel data, and persist only the selected processed result: a simplified
+centerline SVG or transparent WebP. Run decoding, pixel reads, edge extraction,
+path tracing, and encoding in the dedicated background-artwork worker rather
+than the UI thread. Cache one intermediate edge-magnitude result per selected
+file and output format: Sobel magnitude for WebP and the thinned Canny magnitude
+for SVG. Threshold changes reuse those results; selecting a different file
+replaces the cache, and closing the settings surface releases it. App startup
+and ordinary renders must only restore the saved result as a CSS mask; they must
+not decode the original upload or repeat edge extraction.
+Opacity changes must persist only the numeric setting and update the CSS custom
+property; they must not rerun image decoding or edge extraction.
+WebP encoding must use the original graded Sobel pixel result and skip
+sharpening, Canny thinning, SVG gap bridging, path tracing, and simplification.
 
 Mirrored persistence must ignore its own `browser.storage.local` echo when the
 normalized value already matches the synchronous `localStorage` snapshot. An

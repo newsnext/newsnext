@@ -6,7 +6,7 @@
 
 :root {
   --background: var(--color-neutral-100);
-  --background-grid-line: oklch(0.929 0.013 255.508 / 70%);
+  --background-grid-line: color-mix(in oklab, var(--foreground) 1%, transparent);
   --foreground: var(--color-neutral-900);
   --card: oklch(0.985 0 0);
   --card-foreground: oklch(0.205 0 0);
@@ -28,14 +28,13 @@
 
 .dark {
   --background: var(--color-neutral-900);
-  --background-grid-line: oklch(1 0 0 / 4%);
   --foreground: var(--color-neutral-300);
   --card: oklch(0.205 0 0);
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
   --primary: var(--color-theme-500);
-  --primary-foreground: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
@@ -125,14 +124,22 @@
     right: clamp(-8rem, -5vw, -3rem);
     bottom: clamp(-8rem, -10vh, -4rem);
     left: clamp(1rem, 8vw, 8rem);
-    z-index: 0;
-    background-color: color-mix(in oklab, var(--foreground), var(--color-theme-500) 45%);
-    opacity: 0.055;
+    z-index: 1;
+    background-color: color-mix(
+      in oklab,
+      color-mix(in oklab, var(--foreground), var(--color-theme-500) 45%)
+        var(--app-background-artwork-opacity, 7%),
+      transparent
+    );
     -webkit-mask: var(--app-background-artwork, none) right bottom / contain no-repeat;
     mask: var(--app-background-artwork, none) right bottom / contain no-repeat;
   }
 
-  body > *,
+  body > * {
+    position: relative;
+    z-index: 2;
+  }
+
   .grid-texture-background > * {
     position: relative;
     z-index: 1;
@@ -142,7 +149,4 @@
     isolation: isolate;
   }
 
-  .dark body.app-background.background-artwork-active::after {
-    opacity: 0.07;
-  }
 }

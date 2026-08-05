@@ -102,7 +102,7 @@ export function PermissionsSettings() {
   ))
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <SettingsSection
         title="Browser permissions"
         description="Permissions currently granted to NewsNext and what they are used for."

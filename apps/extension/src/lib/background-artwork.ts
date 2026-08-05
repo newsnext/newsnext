@@ -1,93 +1,106 @@
-export const DEFAULT_LINE_ART_THRESHOLD = 36
-export const MAX_BACKGROUND_ARTWORK_FILE_SIZE = 12 * 1024 * 1024
-export const MAX_BACKGROUND_ARTWORK_DATA_URL_LENGTH = 1_000_000
+import type { BackgroundArtworkFormat } from "./background-artwork-processing"
+import type {
+  BackgroundArtworkWorkerRequest,
+  BackgroundArtworkWorkerResponse,
+} from "./background-artwork-worker-protocol"
+import { browser } from "#imports"
+import {
+  DEFAULT_BACKGROUND_ARTWORK_OPACITY,
+  normalizeBackgroundArtwork,
+  normalizeBackgroundArtworkOpacity,
+} from "./background-artwork-config"
 
-const MAX_LINE_ART_DIMENSION = 1400
-const WEBP_DATA_URL_PATTERN = /^data:image\/webp;base64,[A-Za-z0-9+/]+={0,2}$/
+export {
+  DEFAULT_BACKGROUND_ARTWORK_OPACITY,
+  MAX_BACKGROUND_ARTWORK_DATA_URL_LENGTH,
+  MAX_BACKGROUND_ARTWORK_FILE_SIZE,
+  MAX_BACKGROUND_ARTWORK_OPACITY,
+  MIN_BACKGROUND_ARTWORK_OPACITY,
+  normalizeBackgroundArtwork,
+  normalizeBackgroundArtworkOpacity,
+} from "./background-artwork-config"
+export type { BackgroundArtworkFormat } from "./background-artwork-processing"
+export {
+  DEFAULT_LINE_ART_THRESHOLD,
+} from "./background-artwork-processing"
 
-export function normalizeBackgroundArtwork(value: unknown): string | null {
-  return typeof value === "string"
-    && value.length <= MAX_BACKGROUND_ARTWORK_DATA_URL_LENGTH
-    && WEBP_DATA_URL_PATTERN.test(value)
-    ? value
-    : null
+interface PendingWorkerRequest {
+  reject: (reason: Error) => void
+  resolve: (artwork: string) => void
 }
 
-export function extractLineArtPixels(
-  pixels: Uint8ClampedArray,
-  width: number,
-  height: number,
-  threshold: number,
-): Uint8ClampedArray<ArrayBuffer> {
-  const grayscale = new Float32Array(width * height)
-  for (let index = 0; index < grayscale.length; index += 1) {
-    const pixelIndex = index * 4
-    grayscale[index] = (
-      (pixels[pixelIndex] ?? 0) * 0.2126
-      + (pixels[pixelIndex + 1] ?? 0) * 0.7152
-      + (pixels[pixelIndex + 2] ?? 0) * 0.0722
-    )
-  }
+let artworkWorker: Worker | undefined
+let activeSourceFile: File | undefined
+let activeSourceId = 0
+let nextRequestId = 0
+const pendingWorkerRequests = new Map<number, PendingWorkerRequest>()
 
-  const output = new Uint8ClampedArray(new ArrayBuffer(pixels.length))
-  for (let y = 1; y < height - 1; y += 1) {
-    for (let x = 1; x < width - 1; x += 1) {
-      const index = y * width + x
-      const topLeft = grayscale[index - width - 1] ?? 0
-      const top = grayscale[index - width] ?? 0
-      const topRight = grayscale[index - width + 1] ?? 0
-      const left = grayscale[index - 1] ?? 0
-      const right = grayscale[index + 1] ?? 0
-      const bottomLeft = grayscale[index + width - 1] ?? 0
-      const bottom = grayscale[index + width] ?? 0
-      const bottomRight = grayscale[index + width + 1] ?? 0
-      const gradientX = -topLeft + topRight - 2 * left + 2 * right - bottomLeft + bottomRight
-      const gradientY = -topLeft - 2 * top - topRight + bottomLeft + 2 * bottom + bottomRight
-      const magnitude = Math.hypot(gradientX, gradientY) / 4
-      const alpha = Math.min(255, Math.max(0, (magnitude - threshold) * 5))
-      const pixelIndex = index * 4
-      output[pixelIndex + 3] = alpha
-    }
-  }
-
-  return output
-}
-
-export async function createBackgroundLineArt(
+export function createBackgroundLineArt(
   file: File,
   threshold: number,
+  format: BackgroundArtworkFormat,
 ): Promise<string> {
-  const image = await createImageBitmap(file, { imageOrientation: "from-image" })
-  try {
-    const scale = Math.min(1, MAX_LINE_ART_DIMENSION / Math.max(image.width, image.height))
-    const width = Math.max(1, Math.round(image.width * scale))
-    const height = Math.max(1, Math.round(image.height * scale))
-    const canvas = document.createElement("canvas")
-    canvas.width = width
-    canvas.height = height
-    const context = canvas.getContext("2d", { willReadFrequently: true })
-    if (!context) {
-      throw new Error("Canvas processing is unavailable.")
+  return new Promise((resolve, reject) => {
+    let worker: Worker
+    try {
+      worker = getArtworkWorker()
+    } catch (error: unknown) {
+      reject(error instanceof Error ? error : new Error("Background artwork processing is unavailable."))
+      return
     }
 
-    context.drawImage(image, 0, 0, width, height)
-    const source = context.getImageData(0, 0, width, height)
-    const lineArt = extractLineArtPixels(source.data, width, height, threshold)
-    context.putImageData(new ImageData(lineArt, width, height), 0, 0)
-    const artwork = await blobToDataUrl(await canvasToBlob(canvas))
-    if (!normalizeBackgroundArtwork(artwork)) {
-      throw new Error("The processed image is too detailed. Try a simpler image.")
+    const requestId = nextRequestId + 1
+    nextRequestId = requestId
+    let workerFile: File | undefined
+    if (activeSourceFile !== file) {
+      activeSourceFile = file
+      activeSourceId += 1
+      workerFile = file
     }
-    return artwork
-  } finally {
-    image.close()
-  }
+
+    pendingWorkerRequests.set(requestId, { resolve, reject })
+    const request: BackgroundArtworkWorkerRequest = {
+      type: "process",
+      requestId,
+      sourceId: activeSourceId,
+      threshold,
+      format,
+      ...(workerFile ? { file: workerFile } : {}),
+    }
+    try {
+      worker.postMessage(request)
+    } catch (error: unknown) {
+      pendingWorkerRequests.delete(requestId)
+      reject(error instanceof Error ? error : new Error("The image could not be sent for processing."))
+    }
+  })
 }
 
-export function applyBackgroundArtwork(artwork: string | null): void {
+export function releaseBackgroundArtworkSource(file: File): void {
+  if (!artworkWorker || activeSourceFile !== file) return
+
+  try {
+    artworkWorker.postMessage({
+      type: "release-source",
+      sourceId: activeSourceId,
+    } satisfies BackgroundArtworkWorkerRequest)
+  } catch {
+    handleWorkerError()
+  }
+  activeSourceFile = undefined
+}
+
+export function applyBackgroundArtwork(
+  artwork: string | null,
+  opacity = DEFAULT_BACKGROUND_ARTWORK_OPACITY,
+): void {
   if (typeof document === "undefined") return
 
   document.body?.classList.toggle("background-artwork-active", artwork !== null)
+  document.documentElement.style.setProperty(
+    "--app-background-artwork-opacity",
+    `${normalizeBackgroundArtworkOpacity(opacity)}%`,
+  )
   if (artwork) {
     document.documentElement.style.setProperty(
       "--app-background-artwork",
@@ -98,23 +111,36 @@ export function applyBackgroundArtwork(artwork: string | null): void {
   }
 }
 
-function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
-  return new Promise((resolve, reject) => {
-    canvas.toBlob((blob) => {
-      if (blob) resolve(blob)
-      else reject(new Error("The browser could not encode the processed image."))
-    }, "image/webp", 0.9)
-  })
+function getArtworkWorker(): Worker {
+  if (artworkWorker) return artworkWorker
+
+  artworkWorker = new Worker(browser.runtime.getURL("/background-artwork-worker.js"))
+  artworkWorker.addEventListener("message", handleWorkerMessage)
+  artworkWorker.addEventListener("error", handleWorkerError)
+  artworkWorker.addEventListener("messageerror", handleWorkerError)
+  return artworkWorker
 }
 
-function blobToDataUrl(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.addEventListener("load", () => {
-      if (typeof reader.result === "string") resolve(reader.result)
-      else reject(new Error("The processed image could not be read."))
-    }, { once: true })
-    reader.addEventListener("error", () => reject(reader.error ?? new Error("Image reading failed.")), { once: true })
-    reader.readAsDataURL(blob)
-  })
+function handleWorkerMessage(event: MessageEvent<BackgroundArtworkWorkerResponse>): void {
+  const pending = pendingWorkerRequests.get(event.data.requestId)
+  if (!pending) return
+
+  pendingWorkerRequests.delete(event.data.requestId)
+  if ("error" in event.data) {
+    pending.reject(new Error(event.data.error))
+    return
+  }
+
+  const artwork = normalizeBackgroundArtwork(event.data.artwork)
+  if (artwork) pending.resolve(artwork)
+  else pending.reject(new Error("The processed image is too detailed. Try a simpler image."))
+}
+
+function handleWorkerError(): void {
+  const error = new Error("Background artwork processing stopped unexpectedly.")
+  for (const pending of pendingWorkerRequests.values()) pending.reject(error)
+  pendingWorkerRequests.clear()
+  artworkWorker?.terminate()
+  artworkWorker = undefined
+  activeSourceFile = undefined
 }

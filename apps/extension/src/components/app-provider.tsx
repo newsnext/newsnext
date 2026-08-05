@@ -11,12 +11,19 @@ import {
   handleThemeSwitch,
   THEME_COLOR_KEY,
 } from "@/lib/utils/swith-theme"
-import { backgroundArtworkAtom, readCachedPersistedSettings } from "@/store/settings"
+import {
+  backgroundArtworkAtom,
+  backgroundArtworkOpacityAtom,
+  readCachedPersistedSettings,
+} from "@/store/settings"
 
 // Initialize theme as soon as possible to avoid flicker
 if (isBrowser) {
   const settings = readCachedPersistedSettings()
-  applyBackgroundArtwork(settings.appearance.backgroundArtwork)
+  applyBackgroundArtwork(
+    settings.appearance.backgroundArtwork,
+    settings.appearance.backgroundArtworkOpacity,
+  )
   handleThemeModeSwitch(settings.appearance.themeMode)
   const theme = localStorage.getItem(THEME_COLOR_KEY) ?? "red"
   handleThemeSwitch(theme)
@@ -31,10 +38,11 @@ export function AppProvider({
   queryClient,
 }: PropsWithChildren<AppProviderProps>) {
   const backgroundArtwork = useAtomValue(backgroundArtworkAtom)
+  const backgroundArtworkOpacity = useAtomValue(backgroundArtworkOpacityAtom)
 
   useEffect(() => {
-    applyBackgroundArtwork(backgroundArtwork)
-  }, [backgroundArtwork])
+    applyBackgroundArtwork(backgroundArtwork, backgroundArtworkOpacity)
+  }, [backgroundArtwork, backgroundArtworkOpacity])
 
   useEffect(() => {
     const preventContextMenuOutsideNewsItems = (event: MouseEvent) => {
