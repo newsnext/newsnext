@@ -8,6 +8,7 @@ import { useNavigate } from "@tanstack/react-router"
 import { useAtomValue, useSetAtom } from "jotai"
 import { useRef, useState } from "react"
 import { PhCheckCircleDuotone, PhTrashDuotone } from "@/components/icons/ph"
+import { applyBackgroundArtwork } from "@/lib/background-artwork"
 import { ALL_BOARD_ID, DEFAULT_BOARD_COLOR } from "@/lib/boards"
 import { clearNonPortableUserData } from "@/lib/clear-user-data"
 import {
@@ -121,6 +122,7 @@ export function DataTransferSettings({
 
       importData(selectedData)
       if (selectedData.settings) {
+        applyBackgroundArtwork(selectedData.settings.appearance.backgroundArtwork)
         handleThemeModeSwitch(selectedData.settings.appearance.themeMode)
       }
       setStatus({
@@ -146,6 +148,7 @@ export function DataTransferSettings({
       await clearNonPortableUserData()
       clearPersistedData()
       queryClient.clear()
+      applyBackgroundArtwork(null)
       handleThemeModeSwitch("system")
       handleThemeSwitch(DEFAULT_BOARD_COLOR)
       await navigate({

@@ -117,6 +117,21 @@
     position: fixed;
   }
 
+  body.app-background.background-artwork-active::after {
+    content: "";
+    pointer-events: none;
+    position: fixed;
+    top: clamp(5rem, 10vh, 8rem);
+    right: clamp(-8rem, -5vw, -3rem);
+    bottom: clamp(-8rem, -10vh, -4rem);
+    left: clamp(1rem, 8vw, 8rem);
+    z-index: 0;
+    background-color: color-mix(in oklab, var(--foreground), var(--color-theme-500) 45%);
+    opacity: 0.055;
+    -webkit-mask: var(--app-background-artwork, none) right bottom / contain no-repeat;
+    mask: var(--app-background-artwork, none) right bottom / contain no-repeat;
+  }
+
   body > *,
   .grid-texture-background > * {
     position: relative;
@@ -125,5 +140,9 @@
 
   .grid-texture-background {
     isolation: isolate;
+  }
+
+  .dark body.app-background.background-artwork-active::after {
+    opacity: 0.07;
   }
 }

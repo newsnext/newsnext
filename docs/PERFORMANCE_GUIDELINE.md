@@ -107,6 +107,13 @@ return stale cards after in-place changes. If card-instance updates become a
 measured bottleneck, optimize them at the React or Jotai owner that has the
 complete input lifecycle.
 
+Background artwork extraction runs only after the user selects an image or
+changes the edge-detail control. Debounce detail changes, resize the longest
+image dimension to at most 1400 pixels before reading pixel data, and persist
+only the processed WebP result. App startup and ordinary renders must only
+restore that result as a CSS mask; they must not decode the original upload or
+repeat edge extraction.
+
 Mirrored persistence must ignore its own `browser.storage.local` echo when the
 normalized value already matches the synchronous `localStorage` snapshot. An
 echo must not replace arrays or objects with equal copies and trigger a second

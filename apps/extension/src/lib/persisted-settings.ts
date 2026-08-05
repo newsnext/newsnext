@@ -1,5 +1,6 @@
 import type { SourceIconSettings, SourceIconSource } from "./source-icon"
 import type { ThemeMode } from "./utils/swith-theme"
+import { normalizeBackgroundArtwork } from "./background-artwork"
 import { ALL_BOARD_ID } from "./boards"
 import { DEFAULT_SOURCE_ICON_SETTINGS } from "./source-icon"
 
@@ -9,6 +10,7 @@ export type SettingsTabId = "appearance" | "general" | "permissions" | "data"
 
 export interface PersistedSettings {
   appearance: {
+    backgroundArtwork: string | null
     themeMode: ThemeMode
   }
   general: {
@@ -28,6 +30,7 @@ export interface PersistedDeviceState {
 export function createDefaultPersistedSettings(): PersistedSettings {
   return {
     appearance: {
+      backgroundArtwork: null,
       themeMode: "system",
     },
     general: {
@@ -58,6 +61,7 @@ export function normalizePersistedSettings(value: unknown): PersistedSettings {
 
   return {
     appearance: {
+      backgroundArtwork: normalizeBackgroundArtwork(appearance?.backgroundArtwork),
       themeMode: isThemeMode(appearance?.themeMode)
         ? appearance.themeMode
         : defaults.appearance.themeMode,

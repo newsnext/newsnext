@@ -32,6 +32,23 @@ Use the top-weighted `zenith-theme-400` wash for the main app background and
 related interface surfaces. Derive the wash from the active board theme color
 so it reinforces the current context without introducing another palette.
 
+The Appearance settings may let the user choose a local image and extract its
+edges into background artwork. Keep processing in the browser, resize large
+inputs before pixel work, and show the extracted result before it is applied.
+The preview is also the primary drop target and file picker trigger; give it
+keyboard access and a visible drag-over state. Provide one edge-detail control
+whose explanation makes the threshold direction clear. Applying and removing
+artwork are explicit actions; selecting or dropping a file, or changing the
+detail preview, must not overwrite the saved background.
+
+Render saved artwork as a transparent raster mask mixed from the foreground and
+active theme colors so it adapts to light, dark, and board themes. Keep it
+non-interactive, anchored to the bottom-right, partially outside the viewport,
+and below 8% opacity; the grid, cards, and controls must remain visually
+dominant. Scope the artwork to the main app entry point rather than popup or
+component-preview surfaces. Process and store the image locally; do not upload
+it or retain the original input file.
+
 ## Card Surface Language
 
 Cards define the primary NewsNext surface treatment.

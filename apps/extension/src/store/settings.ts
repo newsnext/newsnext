@@ -55,6 +55,17 @@ export const themeModeAtom = atom(
   },
 )
 
+export const backgroundArtworkAtom = atom(
+  get => get(persistedSettingsAtom).appearance.backgroundArtwork,
+  (get, set, backgroundArtwork: string | null) => {
+    const settings = get(persistedSettingsAtom)
+    set(persistedSettingsAtom, {
+      ...settings,
+      appearance: { ...settings.appearance, backgroundArtwork },
+    })
+  },
+)
+
 export const defaultBoardIdAtom = atom(
   get => get(persistedSettingsAtom).general.defaultBoardId,
   (get, set, update: SettingsValueUpdate<string | null>) => {

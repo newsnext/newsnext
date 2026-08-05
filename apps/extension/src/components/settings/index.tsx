@@ -17,6 +17,7 @@ import {
   settingsTabAtom,
   themeModeAtom,
 } from "@/store/settings"
+import { BackgroundArtworkSettings } from "./background-artwork"
 import { DataTransferSettings } from "./data-transfer"
 import { SettingsSection } from "./layout"
 import { SettingsModalShell } from "./modal-shell"
@@ -93,24 +94,27 @@ function AppearanceSettings() {
   }, [themeMode])
 
   return (
-    <SettingsSection
-      title="Theme mode"
-      description="Choose a light or dark interface, or follow your system setting."
-    >
-      <Card variant="subtle">
-        <CardContent>
-          <RadioGroup
-            variant="segmented"
-            value={themeMode}
-            onValueChange={setThemeMode}
-          >
-            <RadioGroupItem value="dark">Dark</RadioGroupItem>
-            <RadioGroupItem value="light">Light</RadioGroupItem>
-            <RadioGroupItem value="system">System</RadioGroupItem>
-          </RadioGroup>
-        </CardContent>
-      </Card>
-    </SettingsSection>
+    <div className="space-y-8">
+      <SettingsSection
+        title="Theme mode"
+        description="Choose a light or dark interface, or follow your system setting."
+      >
+        <Card variant="subtle">
+          <CardContent>
+            <RadioGroup
+              variant="segmented"
+              value={themeMode}
+              onValueChange={setThemeMode}
+            >
+              <RadioGroupItem value="dark">Dark</RadioGroupItem>
+              <RadioGroupItem value="light">Light</RadioGroupItem>
+              <RadioGroupItem value="system">System</RadioGroupItem>
+            </RadioGroup>
+          </CardContent>
+        </Card>
+      </SettingsSection>
+      <BackgroundArtworkSettings />
+    </div>
   )
 }
 

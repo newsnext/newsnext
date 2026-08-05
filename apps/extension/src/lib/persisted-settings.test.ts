@@ -21,6 +21,13 @@ describe("persisted settings", () => {
     expect(settings).toEqual(createDefaultPersistedSettings())
   })
 
+  it("keeps a valid locally generated background artwork image", () => {
+    const artwork = "data:image/webp;base64,AAAA"
+    expect(normalizePersistedSettings({
+      appearance: { backgroundArtwork: artwork },
+    }).appearance.backgroundArtwork).toBe(artwork)
+  })
+
   it("updates the CLI preference without changing other settings", () => {
     const state = createDefaultPersistedDeviceState()
     state.currentBoardId = "reading"
