@@ -67,6 +67,14 @@ export const COSMOS_FIXTURES = [
     load: () => import("@/cosmos/modals.fixture"),
   },
   {
+    path: "src/cosmos/Patterns/Assistant.fixture.tsx",
+    rendererFixture: {
+      type: "multi" as const,
+      fixtureNames: ["Provider required", "Empty conversation", "Conversation"] as string[],
+    },
+    load: () => import("@/cosmos/assistant.fixture"),
+  },
+  {
     path: "src/cosmos/Cards.fixture.tsx",
     rendererFixture: {
       type: "multi" as const,

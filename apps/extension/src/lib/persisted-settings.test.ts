@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest"
 import {
   createDefaultPersistedDeviceState,
   createDefaultPersistedSettings,
+  DEFAULT_CHAT_PROVIDER_SETTINGS,
+  getChatProviderPermissionOrigin,
+  normalizeChatProviderSettings,
   normalizePersistedDeviceState,
   normalizePersistedSettings,
   withSourceConnectionEnabled,
@@ -73,5 +76,27 @@ describe("persisted settings", () => {
       settingsTab: "advanced",
       sourceConnectionEnabled: "yes",
     })).toEqual(createDefaultPersistedDeviceState())
+  })
+
+  it("normalizes chat provider fields", () => {
+    expect(normalizeChatProviderSettings({
+      apiKey: "  secret  ",
+      baseUrl: " ",
+      model: " custom-model ",
+      name: 42,
+    })).toEqual({
+      ...DEFAULT_CHAT_PROVIDER_SETTINGS,
+      apiKey: "secret",
+      model: "custom-model",
+    })
+  })
+
+  it("creates a site-access origin from a provider URL", () => {
+    expect(getChatProviderPermissionOrigin("https://api.example.com/v1/chat"))
+      .toBe("https://api.example.com/*")
+    expect(getChatProviderPermissionOrigin("file:///tmp/provider"))
+      .toBeUndefined()
+    expect(getChatProviderPermissionOrigin("not a URL"))
+      .toBeUndefined()
   })
 })

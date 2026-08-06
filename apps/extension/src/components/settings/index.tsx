@@ -22,6 +22,7 @@ import { DataTransferSettings } from "./data-transfer"
 import { SettingsSection } from "./layout"
 import { SettingsModalShell } from "./modal-shell"
 import { PermissionsSettings } from "./permissions"
+import { ProviderSettings } from "./provider"
 import { SourceConnectionSettings } from "./source-connection"
 import { SourceIconSettings } from "./source-icon"
 
@@ -79,6 +80,7 @@ function SettingsModalContent({
     >
       <TabsContent value="appearance"><AppearanceSettings /></TabsContent>
       <TabsContent value="general"><GeneralSettings /></TabsContent>
+      <TabsContent value="provider"><ProviderSettings /></TabsContent>
       <TabsContent value="permissions"><PermissionsSettings /></TabsContent>
       <TabsContent value="data">
         <DataTransferSettings onCleared={() => onOpenChange(false)} />

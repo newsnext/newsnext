@@ -11,9 +11,23 @@ import {
 import { ALL_BOARD_ID } from "./boards"
 import { DEFAULT_SOURCE_ICON_SETTINGS } from "./source-icon"
 
-export const PERSISTED_SETTINGS_VERSION = 2
+export const PERSISTED_SETTINGS_VERSION = 3
 
-export type SettingsTabId = "appearance" | "general" | "permissions" | "data"
+export type SettingsTabId = "appearance" | "general" | "provider" | "permissions" | "data"
+
+export interface ChatProviderSettings {
+  apiKey: string
+  baseUrl: string
+  model: string
+  name: string
+}
+
+export const DEFAULT_CHAT_PROVIDER_SETTINGS: ChatProviderSettings = {
+  apiKey: "",
+  baseUrl: "https://api.openai.com/v1",
+  model: "gpt-4o-mini",
+  name: "OpenAI",
+}
 
 export interface PersistedSettings {
   appearance: {
@@ -30,6 +44,7 @@ export interface PersistedSettings {
 }
 
 export interface PersistedDeviceState {
+  chatProvider: ChatProviderSettings
   currentBoardId: string
   settingsTab: SettingsTabId
   sourceConnectionEnabled: boolean
@@ -54,6 +69,7 @@ export function createDefaultPersistedSettings(): PersistedSettings {
 
 export function createDefaultPersistedDeviceState(): PersistedDeviceState {
   return {
+    chatProvider: { ...DEFAULT_CHAT_PROVIDER_SETTINGS },
     currentBoardId: ALL_BOARD_ID,
     settingsTab: "appearance",
     sourceConnectionEnabled: false,
@@ -101,6 +117,7 @@ export function normalizePersistedDeviceState(value: unknown): PersistedDeviceSt
   }
 
   return {
+    chatProvider: normalizeChatProviderSettings(value.chatProvider),
     currentBoardId: typeof value.currentBoardId === "string"
       ? value.currentBoardId
       : defaults.currentBoardId,
@@ -124,11 +141,47 @@ export function withSourceConnectionEnabled(
   }
 }
 
-function isSettingsTabId(value: unknown): value is SettingsTabId {
+export function isSettingsTabId(value: unknown): value is SettingsTabId {
   return value === "appearance"
     || value === "general"
+    || value === "provider"
     || value === "permissions"
     || value === "data"
+}
+
+export function normalizeChatProviderSettings(value: unknown): ChatProviderSettings {
+  const defaults = DEFAULT_CHAT_PROVIDER_SETTINGS
+  if (!isRecord(value)) {
+    return { ...defaults }
+  }
+
+  return {
+    apiKey: typeof value.apiKey === "string" ? value.apiKey.trim() : defaults.apiKey,
+    baseUrl: normalizeNonEmptyString(value.baseUrl, defaults.baseUrl),
+    model: normalizeNonEmptyString(value.model, defaults.model),
+    name: normalizeNonEmptyString(value.name, defaults.name),
+  }
+}
+
+export function getChatProviderPermissionOrigin(baseUrl: string): string | undefined {
+  try {
+    const url = new URL(baseUrl)
+    if ((url.protocol !== "http:" && url.protocol !== "https:")
+      || url.username
+      || url.password) {
+      return undefined
+    }
+    return `${url.origin}/*`
+  } catch {
+    return undefined
+  }
+}
+
+function normalizeNonEmptyString(value: unknown, fallback: string): string {
+  if (typeof value !== "string") {
+    return fallback
+  }
+  return value.trim() || fallback
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

@@ -145,7 +145,7 @@ export function PermissionsSettings() {
 
       <SettingsSection
         title="Site access"
-        description="NewsNext requests access only when a source needs a site. Revoked sources will ask again before loading."
+        description="NewsNext requests access when a source or chat provider needs a site. Revoked access is requested again when required."
       >
         {origins.length === 0
           ? (

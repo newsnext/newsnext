@@ -201,6 +201,36 @@ Layer; configure the shared Now/Next item filter in the Board dialog.
   drag previews are mounted outside the card tree, so inherited theme tokens
   used by cloned content must be copied to the preview container.
 
+## Assistant Side Panel
+
+Treat chat as a companion to the current board rather than a modal task. Host it
+in Chrome's native Side Panel so the browser owns placement, resizing, pinning,
+and dismissal. The app header action opens the native panel directly from the
+user gesture; do not recreate side-panel width, overlay, or close behavior in
+the app shell.
+
+Inside the browser panel, reuse the card color composition instead of the modal
+shell color: mix `var(--background)` with the active theme color at 55%, then
+overlay `bg-background/70` with `zenith-theme-400`. Do not use `var(--popover)`.
+Compose both color layers edge to edge without inset, padding, or container
+rounding, so theme color shows through the translucent content layer across the
+entire native Side Panel viewport. Reuse the card color composition, not its
+rounded card geometry. Place the conversation, empty state, and composer
+together inside this content surface.
+Chrome already provides the panel boundary, so do not place another floating
+card around these layers. Do not add a top header or repeat the Assistant logo
+and name. Place only provider/model status and the settings action in one
+compact metadata row directly below the composer; keep the same row at the
+bottom of the unconfigured state. Chrome supplies the panel close action. User
+messages use the active theme color. Assistant messages remain unboxed and use
+a small identity marker so long responses read like notes in the main content
+flow. The composer may float above the bottom edge with a focused control
+surface, but it must not create another full-height container. Let its
+semi-transparent background retain the panel's theme color, keep the footer
+transparent without a background gradient, and reserve the theme-color ring
+for keyboard or text focus. Do not use a foreground-colored default shadow. When no provider is configured,
+replace the composer with one focused action that opens Provider settings.
+
 ## Dialog Patterns
 
 Choose the dialog structure from its information architecture rather than
@@ -305,6 +335,10 @@ Group closely related controls in columns when the available width permits it,
 while keeping labels, values, and necessary recovery guidance adjacent to their
 control. Omit helper text when the label and visible control already explain the
 setting.
+Provider settings should offer an outline `Test connection` action beside the
+filled save action. Test the current draft without saving it, keep both actions
+disabled while the request is active, and show the provider's success or failure
+next to the controls rather than in a separate dialog.
 Reset the shared settings content scroller to the top when the active tab
 changes; do not remount tab content or discard unsaved control state to do so.
 

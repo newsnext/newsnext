@@ -1,7 +1,8 @@
 import type { RefObject } from "react"
 import { Button } from "@newsnext/ui/components/button"
+import { browser } from "#imports"
 import { useFetchLatest } from "@/hooks"
-import { PhArrowCounterClockwiseDuotone, PhCircleDashedDuotone } from "../icons/ph"
+import { PhArrowCounterClockwiseDuotone, PhChatCircleDotsDuotone, PhCircleDashedDuotone } from "../icons/ph"
 import { SearchDialog } from "../search"
 import { BoardNav } from "./board-nav"
 import { DateTime } from "./date-time"
@@ -29,6 +30,30 @@ function FetchLatestButton() {
   )
 }
 
+function ChatSidePanelButton(): React.JSX.Element | null {
+  if (!browser.sidePanel) {
+    return null
+  }
+
+  return (
+    <Button
+      type="button"
+      variant="transparent"
+      size="icon-lg"
+      className="island-pill bg-black/10 hover:bg-black/10"
+      aria-label="Open chat side panel"
+      title="Open chat side panel"
+      onClick={() => {
+        void browser.sidePanel
+          .open({ windowId: browser.windows.WINDOW_ID_CURRENT })
+          .catch(() => undefined)
+      }}
+    >
+      <PhChatCircleDotsDuotone className="size-5" />
+    </Button>
+  )
+}
+
 export function Header({ scrollContainerRef }: HeaderProps) {
   return (
     <header className="sticky top-0 inset-x-0 z-50 shrink-0 py-6 pointer-events-none">
@@ -46,6 +71,7 @@ export function Header({ scrollContainerRef }: HeaderProps) {
 
         {/* Right Section - DateTime, Fetch Latest, User */}
         <div className="col-start-3 row-start-1 flex min-w-0 items-center justify-start gap-2">
+          <ChatSidePanelButton />
           <FetchLatestButton />
           <DateTime className="max-md:hidden" />
           <UserMenu />

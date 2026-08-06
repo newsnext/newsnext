@@ -81,6 +81,14 @@ audit. Confirm that no temporary probe values remain in local storage.
 
 ## Rendering Rules
 
+### Defer optional integrations
+
+Keep optional, dependency-heavy surfaces outside the main app entrypoint. The
+assistant runs in the dedicated Side Panel entrypoint, so assistant-ui and Pi
+Agent Core are not loaded when rendering or reading a board. Do not import the
+chat panel back into the app route tree; the header should call Chrome's Side
+Panel API without loading the chat runtime.
+
 ### Isolate frequently changing state
 
 Place state below stable application structure whenever possible. A provider

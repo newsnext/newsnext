@@ -7,16 +7,18 @@ import {
   DropdownMenuTrigger,
 } from "@newsnext/ui/components/dropdown-menu"
 import { cn } from "@newsnext/ui/lib/utils"
-import { useState } from "react"
-import { consumeSettingsOpenRequest } from "@/lib/settings-navigation"
+import { useEffect, useState } from "react"
+import { consumeSettingsOpenRequest, subscribeToSettingsOpenRequests } from "@/lib/settings-navigation"
 import { PhGearDuotone, PhUserDuotone } from "../icons/ph"
 import { SettingsModal } from "../settings"
 
-const shouldOpenSettingsInitially = consumeSettingsOpenRequest()
+const initialSettingsTab = consumeSettingsOpenRequest()
 
 export function UserMenu() {
-  const [isSettingsOpen, setIsSettingsOpen] = useState(shouldOpenSettingsInitially)
-  const [settingsTab, setSettingsTab] = useState<SettingsTabId>("appearance")
+  const [isSettingsOpen, setIsSettingsOpen] = useState(Boolean(initialSettingsTab))
+  const [settingsTab, setSettingsTab] = useState<SettingsTabId>(initialSettingsTab ?? "appearance")
+
+  useEffect(() => subscribeToSettingsOpenRequests(openSettings), [])
 
   function openSettings(tab: SettingsTabId = "appearance"): void {
     setSettingsTab(tab)
