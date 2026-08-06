@@ -31,7 +31,7 @@ function RootComponent() {
       >
         <div className="flex min-h-full w-full flex-col">
           <Header scrollContainerRef={scrollContainerRef} />
-          <main className="flex grow shrink-0 flex-col px-2 sm:px-6">
+          <main className="flex grow shrink-0 flex-col px-2 pb-6 sm:px-6">
             <Outlet />
           </main>
         </div>
