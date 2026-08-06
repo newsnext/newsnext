@@ -174,7 +174,7 @@ export function isSettingsTabId(value: unknown): value is SettingsTabId {
 }
 
 export function isSourceCardHeight(value: unknown): value is SourceCardHeight {
-  return SOURCE_CARD_HEIGHTS.includes(value)
+  return typeof value === "string" && SOURCE_CARD_HEIGHTS.includes(value as SourceCardHeight)
 }
 
 export function normalizeChatProviderSettings(value: unknown): ChatProviderSettings {
