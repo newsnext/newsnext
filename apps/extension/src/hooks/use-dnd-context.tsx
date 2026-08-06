@@ -1,7 +1,7 @@
 import type { ElementDragType, MonitorArgs } from "@atlaskit/pragmatic-drag-and-drop/types"
 import type { PropsWithChildren } from "react"
 import { monitorForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter"
-import { useEffect, useId, useRef } from "react"
+import { useEffect, useEffectEvent, useId } from "react"
 import { isSortableData } from "@/lib/sortable-data"
 import { InstanceIdContext } from "./use-sortable"
 
@@ -10,19 +10,31 @@ type ContextProps = Pick<
   "onDragStart" | "onDrag" | "onDropTargetChange" | "onDrop"
 >
 
+type MonitorCallbackArgs<Key extends keyof ContextProps> = Parameters<NonNullable<ContextProps[Key]>>[0]
+
 export function DndContext({ children, ...callbacks }: PropsWithChildren<ContextProps>) {
   const instanceId = useId()
-  const callbacksRef = useRef(callbacks)
-  callbacksRef.current = callbacks
+  const handleDragStart = useEffectEvent((args: MonitorCallbackArgs<"onDragStart">) => {
+    callbacks.onDragStart?.(args)
+  })
+  const handleDrag = useEffectEvent((args: MonitorCallbackArgs<"onDrag">) => {
+    callbacks.onDrag?.(args)
+  })
+  const handleDropTargetChange = useEffectEvent((args: MonitorCallbackArgs<"onDropTargetChange">) => {
+    callbacks.onDropTargetChange?.(args)
+  })
+  const handleDrop = useEffectEvent((args: MonitorCallbackArgs<"onDrop">) => {
+    callbacks.onDrop?.(args)
+  })
 
   useEffect(() => {
     return monitorForElements({
       canMonitor: ({ source }) => isSortableData(source.data)
         && source.data.instanceId === instanceId,
-      onDragStart: args => callbacksRef.current.onDragStart?.(args),
-      onDrag: args => callbacksRef.current.onDrag?.(args),
-      onDropTargetChange: args => callbacksRef.current.onDropTargetChange?.(args),
-      onDrop: args => callbacksRef.current.onDrop?.(args),
+      onDragStart: handleDragStart,
+      onDrag: handleDrag,
+      onDropTargetChange: handleDropTargetChange,
+      onDrop: handleDrop,
     })
   }, [instanceId])
 

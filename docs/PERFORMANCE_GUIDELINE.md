@@ -164,9 +164,7 @@ can remain stable, and React Compiler cannot protect the same boundary. Current
 manual boundaries include:
 
 - `DraggableCard`, so board animation and layout work does not enter card data
-  and query subtrees while `DesktopBoard` remains excluded from compilation.
-- Timeline news content, so minute-label updates do not rebuild unchanged item
-  titles and inline metadata below the compiler-excluded virtual list.
+  and query subtrees during board renders.
 
 Compiler-generated caches isolate the card front, card back, board actions, and
 parameter rows. Do not reintroduce manual wrappers around those components
@@ -188,14 +186,25 @@ configuration, gating, incompatible libraries, and preservation of manual
 memoization. An unsupported component may be skipped while the rest of the app
 is still compiled.
 
-Compiler diagnostics are warnings during incremental adoption. Ref-driven
-components such as `DesktopBoard`, `DndContext`, and `DynamicIsland` are skipped
-when they update latest-value refs during render. `VirtualList` and Next Layer's
-`VirtualTimeline` are also skipped because TanStack Virtual returns functions
-that cannot be memoized safely. Keep these diagnostics visible and fix a
-component only alongside focused behavior and performance verification; do not
-suppress them or broadly rewrite imperative integrations merely to increase
-compiler coverage.
+Keep render functions free of ref reads and writes. `DndContext` uses an Effect
+Event so its long-lived drag monitor always invokes the latest callbacks without
+resubscribing. Ordinary UI callbacks such as `DynamicIsland` open and close
+handlers should instead depend directly on the values they use. `DesktopBoard`
+synchronizes its imperative drag-order ref in a layout effect and keeps scatter
+history in React state.
+
+TanStack Virtual returns functions that React Compiler cannot memoize safely.
+Keep `VirtualList` and Next Layer's `VirtualTimeline` virtualized, and apply the
+`react-hooks/incompatible-library` exception only at their `useVirtualizer`
+calls with an explanatory comment. Do not disable the diagnostic globally or
+pass virtualizer functions through separately memoized boundaries.
+
+The scatter transition measures rendered card bounds and must publish its Motion
+variants synchronously in a layout effect before paint. Keep the targeted
+`react/set-state-in-effect` exception at that state update; moving it to a passive
+effect or timer introduces a visible position flash. Other synchronous Effect
+state updates remain actionable warnings. `bun run lint` should complete with
+zero warnings outside these documented, line-level exceptions.
 
 ### Keep refs and callbacks stable
 

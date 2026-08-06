@@ -38,7 +38,7 @@ interface ScatterItemCustom {
 }
 
 interface ScatterAnimationState {
-  requestId: number
+  hasScattered: boolean
   vectors: Record<string, ScatterVector>
   visibleSourceIds: string[]
 }
@@ -80,27 +80,14 @@ export function DesktopBoard({
     })
   }
   const orderedSourceIdsRef = useRef(orderedSourceIds)
-  orderedSourceIdsRef.current = orderedSourceIds
   const initialOrderedSourceIdsRef = useRef(sourceIds)
   const boardRef = useRef<HTMLOListElement>(null)
   const [scatterAnimationState, setScatterAnimationState] = useState<ScatterAnimationState>({
-    requestId: 0,
+    hasScattered: false,
     vectors: {},
     visibleSourceIds: [],
   })
-  const hasScatteredRef = useRef(false)
-  const scatterRequestIdRef = useRef(0)
-  const previousIsScatteredRef = useRef(isScattered)
-  if (previousIsScatteredRef.current !== isScattered) {
-    previousIsScatteredRef.current = isScattered
-    if (isScattered) {
-      scatterRequestIdRef.current += 1
-    }
-  }
-  if (isScattered) {
-    hasScatteredRef.current = true
-  }
-  const hasScattered = hasScatteredRef.current
+  const hasScattered = scatterAnimationState.hasScattered
   const items = useMemo(() => new Map<string, HTMLLIElement>(), [])
   const visibleCards = useMemo(
     () => orderedSourceIds.flatMap((id) => {
@@ -115,9 +102,12 @@ export function DesktopBoard({
   )
   const isScatterReady = Boolean(
     isScattered
-    && scatterAnimationState.requestId === scatterRequestIdRef.current
     && scatterAnimationState.visibleSourceIds.length > 0,
   )
+
+  useLayoutEffect(() => {
+    orderedSourceIdsRef.current = orderedSourceIds
+  }, [orderedSourceIds])
 
   const onDragStart = useCallback(() => {
     initialOrderedSourceIdsRef.current = orderedSourceIdsRef.current
@@ -264,8 +254,9 @@ export function DesktopBoard({
         }
       })
       // This layout measurement must update before paint to avoid a visible position flash.
+      // eslint-disable-next-line react/set-state-in-effect
       setScatterAnimationState({
-        requestId: scatterRequestIdRef.current,
+        hasScattered: true,
         vectors: newVectors,
         visibleSourceIds: newVisibleSourceIds,
       })

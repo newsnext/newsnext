@@ -65,21 +65,18 @@ function DynamicIsland({
     { fallback, rendering: cornerRendering },
   )
 
-  const onChangeRef = useRef(onChange)
-  onChangeRef.current = onChange
-
   const onOpen = useCallback(() => {
     if (!isSmall) return
     navigator.vibrate?.(30)
     setIsSmall(false)
-    onChangeRef.current?.(false)
-  }, [isSmall])
+    onChange?.(false)
+  }, [isSmall, onChange])
 
   const onClose = useCallback(() => {
     if (isSmall) return
     setIsSmall(true)
-    onChangeRef.current?.(true)
-  }, [isSmall])
+    onChange?.(true)
+  }, [isSmall, onChange])
 
   const shapeTransition = shouldReduceMotion
     ? { duration: 0.15, ease: "easeOut" as const }

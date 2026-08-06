@@ -120,6 +120,8 @@ function VirtualTimeline({
       ? `${entry.source.id}:${entry.rank}:${entry.item.url}`
       : index
   }, [items])
+  // TanStack Virtual returns unstable functions by design, so React Compiler must skip this boundary.
+  // eslint-disable-next-line react-hooks/incompatible-library
   const rowVirtualizer = useVirtualizer({
     count: items.length,
     estimateSize: () => 76,

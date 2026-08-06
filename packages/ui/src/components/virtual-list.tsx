@@ -49,6 +49,8 @@ export function VirtualList<T>({
   itemClassName,
   renderItem,
 }: VirtualListProps<T>): React.JSX.Element {
+  // TanStack Virtual returns unstable functions by design, so React Compiler must skip this boundary.
+  // eslint-disable-next-line react-hooks/incompatible-library
   const rowVirtualizer = useVirtualizer({
     count: items?.length ?? 0,
     getScrollElement: () => scrollElement,
