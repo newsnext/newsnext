@@ -12,6 +12,8 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "react": "catalog:"
+    "@newsnext/tsconfigs": "workspace:*",
+    "react": "catalog:",
+    "vitest": "catalog:"
   }
 }

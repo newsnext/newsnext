@@ -64,6 +64,7 @@
     "unplugin-icons": "catalog:",
     "unplugin-turbo-console": "catalog:",
     "vite": "catalog:",
+    "vitest": "catalog:",
     "wxt": "^0.21.3"
   }
 }

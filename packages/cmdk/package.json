@@ -16,6 +16,7 @@
     "react": "catalog:"
   },
   "devDependencies": {
-    "@newsnext/tsconfigs": "workspace:*"
+    "@newsnext/tsconfigs": "workspace:*",
+    "vitest": "catalog:"
   }
 }

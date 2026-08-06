@@ -15,10 +15,11 @@
   },
   "dependencies": {
     "@newsnext/source": "workspace:*",
-    "@wxt-dev/browser": "^0.2.5",
-    "cheerio": "^1.2.0"
+    "@wxt-dev/browser": "catalog:",
+    "cheerio": "catalog:"
   },
   "devDependencies": {
-    "@newsnext/tsconfigs": "workspace:*"
+    "@newsnext/tsconfigs": "workspace:*",
+    "vitest": "catalog:"
   }
 }

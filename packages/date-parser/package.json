@@ -15,8 +15,9 @@
     "date-fns": "catalog:"
   },
   "devDependencies": {
-    "@types/node": "^26.1.2",
+    "@newsnext/tsconfigs": "workspace:*",
+    "@types/node": "catalog:",
     "mockdate": "^3.0.5",
-    "vitest": "^4.1.10"
+    "vitest": "catalog:"
   }
 }

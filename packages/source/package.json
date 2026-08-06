@@ -19,19 +19,20 @@
     "@newsnext/date-parser": "workspace:*",
     "@newsnext/shared": "workspace:*",
     "@smithy/md5-js": "^4.4.16",
-    "cheerio": "^1.2.0",
+    "cheerio": "catalog:",
     "defu": "catalog:",
     "entities": "^7.0.1",
     "fast-xml-parser": "^5.10.1",
-    "iconv-lite": "^0.7.3",
     "jmespath": "^0.16.0",
     "ky": "catalog:",
     "liquidjs": "^10.28.0",
     "p-queue": "^9.3.3"
   },
   "devDependencies": {
+    "@newsnext/tsconfigs": "workspace:*",
     "@types/jmespath": "^0.15.2",
-    "@wxt-dev/browser": "^0.2.5",
-    "domhandler": "^6.0.1"
+    "@wxt-dev/browser": "catalog:",
+    "domhandler": "^5.0.3",
+    "vitest": "catalog:"
   }
 }

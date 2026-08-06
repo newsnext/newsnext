@@ -20,6 +20,6 @@
   },
   "devDependencies": {
     "@newsnext/tsconfigs": "workspace:*",
-    "vitest": "^4.1.10"
+    "vitest": "catalog:"
   }
 }
