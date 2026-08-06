@@ -232,9 +232,12 @@ of focused buttons. Single-key commands defer to text entry, while modified
 global commands such as Search can remain active there. Users can change or
 clear a binding when they prefer the key's native control behavior.
 Size shortcut rows from their settings-panel container rather than the viewport:
-stack command details above controls in narrow panels, size the binding to its
-content, and keep reset as a compact labeled icon action. Render bindings as
-quiet `kbd` text rather than monospace labels.
+stack command details above controls in narrow panels, keep every binding button
+the same width with its label centered, and keep reset as a compact labeled icon
+action. Give the binding and reset controls the same `40px` height, with reset
+using a `40px` square hit area. Apply the shared `island-pill` surface treatment
+to both controls. Render bindings as quiet `kbd` text rather than monospace
+labels.
 Read every visible shortcut hint from the saved binding instead of duplicating
 defaults in feature UI. Hide a hint when its command binding is cleared.
 Previous and next board commands wrap across the ordered board list. Keep their

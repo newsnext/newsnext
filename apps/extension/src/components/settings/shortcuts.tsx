@@ -128,10 +128,10 @@ function ShortcutRow({
       <div className="flex min-w-0 items-center gap-1.5 @min-[26rem]:justify-end">
         <Button
           type="button"
-          variant="outline"
-          size="xs"
+          variant="ghost"
+          size="lg"
           className={cn(
-            "max-w-full px-2.5",
+            "island-pill w-28 max-w-full",
             isRecording && "border-theme-400 ring-2 ring-theme-400/40",
           )}
           aria-label={isRecording
@@ -142,7 +142,7 @@ function ShortcutRow({
         >
           <kbd
             className={cn(
-              "truncate font-sans text-[11px] font-medium leading-none text-foreground/70",
+              "w-full truncate text-center font-sans text-[11px] font-medium leading-none text-foreground/70",
               !hotkey && "text-muted-foreground",
             )}
           >
@@ -152,7 +152,8 @@ function ShortcutRow({
         <Button
           type="button"
           variant="ghost"
-          size="icon-xs"
+          size="icon-lg"
+          className="island-pill"
           disabled={isDefault}
           aria-label={`Reset ${label} shortcut`}
           title={`Reset ${label} shortcut`}
