@@ -18,9 +18,9 @@ function FetchLatestButton() {
   return (
     <Button
       type="button"
-      variant="transparent"
+      variant="ghost"
       size="icon-lg"
-      className="island-pill bg-black/10 hover:bg-black/10"
+      className="island-pill"
       aria-label="Fetch latest for active cards"
       title="Fetch latest for active cards"
       onClick={fetchLatest}
@@ -38,9 +38,9 @@ function ChatSidePanelButton(): React.JSX.Element | null {
   return (
     <Button
       type="button"
-      variant="transparent"
+      variant="ghost"
       size="icon-lg"
-      className="island-pill bg-black/10 hover:bg-black/10"
+      className="island-pill"
       aria-label="Open chat side panel"
       title="Open chat side panel"
       onClick={() => {

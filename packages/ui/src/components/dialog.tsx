@@ -1,8 +1,6 @@
 import type { SquircleRadius } from "@newsnext/ui/components/squircle"
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
-import { Button } from "@newsnext/ui/components/button"
 import {
-  ModalCloseButton,
   ModalDescription,
   ModalOverlay,
   ModalPopup,
@@ -47,13 +45,11 @@ function DialogContent({
   className,
   children,
   radius = "3xl",
-  showCloseButton = true,
   surfaceClassName,
   variant = "default",
   ...props
 }: DialogPrimitive.Popup.Props & {
   radius?: SquircleRadius | number
-  showCloseButton?: boolean
   surfaceClassName?: string
   variant?: "default" | "themed"
 }) {
@@ -82,12 +78,6 @@ function DialogContent({
           )}
         >
           {children}
-          {showCloseButton && (
-            <DialogPrimitive.Close
-              data-slot="dialog-close"
-              render={<ModalCloseButton />}
-            />
-          )}
         </SquircleBox>
       </DialogPrimitive.Popup>
     </DialogPortal>
@@ -106,12 +96,9 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
 
 function DialogFooter({
   className,
-  showCloseButton = false,
   children,
   ...props
-}: React.ComponentProps<"div"> & {
-  showCloseButton?: boolean
-}) {
+}: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="dialog-footer"
@@ -122,11 +109,6 @@ function DialogFooter({
       {...props}
     >
       {children}
-      {showCloseButton && (
-        <DialogPrimitive.Close render={<Button variant="outline" />}>
-          Close
-        </DialogPrimitive.Close>
-      )}
     </div>
   )
 }

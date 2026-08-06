@@ -154,7 +154,7 @@ function ConfigurableBoardDialog({
         surfaceClassName={cn(initialColor, "gap-0")}
       >
         <form className="grid" onSubmit={handleSubmit}>
-          <DialogHeader className="h-10 justify-center px-2 pr-12">
+          <DialogHeader className="h-10 justify-center px-2">
             <DialogTitle className="font-bold">
               {isEditing ? "Edit board" : "Create board"}
             </DialogTitle>

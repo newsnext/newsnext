@@ -1,6 +1,4 @@
-import { Button } from "@newsnext/ui/components/button"
 import { cn } from "@newsnext/ui/lib/utils"
-import { XIcon } from "@phosphor-icons/react"
 import * as React from "react"
 
 function ModalOverlay({ className, ...props }: React.ComponentProps<"div">): React.JSX.Element {
@@ -27,20 +25,6 @@ function ModalPopup({ className, ...props }: React.ComponentProps<"div">): React
   )
 }
 
-function ModalCloseButton({ className, ...props }: React.ComponentProps<typeof Button>): React.JSX.Element {
-  return (
-    <Button
-      variant="ghost"
-      size="icon-sm"
-      className={cn("absolute top-4 right-4", className)}
-      {...props}
-    >
-      <XIcon />
-      <span className="sr-only">Close</span>
-    </Button>
-  )
-}
-
 function ModalTitle({ className, ...props }: React.ComponentProps<"h2">): React.JSX.Element {
   return <h2 className={cn("font-medium text-foreground", className)} {...props} />
 }
@@ -50,7 +34,6 @@ function ModalDescription({ className, ...props }: React.ComponentProps<"p">): R
 }
 
 export {
-  ModalCloseButton,
   ModalDescription,
   ModalOverlay,
   ModalPopup,

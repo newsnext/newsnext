@@ -29,7 +29,6 @@ import {
 } from "@newsnext/ui/components/dialog"
 import { Input } from "@newsnext/ui/components/input"
 import {
-  ModalCloseButton,
   ModalDescription,
   ModalOverlay,
   ModalPopup,
@@ -161,7 +160,7 @@ function DialogFixture() {
       <Dialog defaultOpen>
         <DialogTrigger render={<Button variant="outline" />}>Open dialog</DialogTrigger>
         <DialogContent>
-          <DialogHeader className="min-h-10 justify-center px-4 py-3 pr-12">
+          <DialogHeader className="min-h-10 justify-center px-4 py-3">
             <DialogTitle>Edit source</DialogTitle>
           </DialogHeader>
           <SquircleBox radius="2xl" variant="modal-inner" className="grid gap-6 p-6">
@@ -169,7 +168,7 @@ function DialogFixture() {
               Update the display name used throughout NewsNext.
             </DialogDescription>
             <Input aria-label="Source name" defaultValue="Design systems" />
-            <DialogFooter showCloseButton>
+            <DialogFooter>
               <Button>Save changes</Button>
             </DialogFooter>
           </SquircleBox>
@@ -189,13 +188,12 @@ function SharedModalPartsFixture() {
           data-open
         >
           <SquircleBox radius="3xl" variant="modal-shell" className="relative">
-            <ModalCloseButton type="button" />
-            <div className="px-4 py-3 pr-12">
+            <div className="px-4 py-3">
               <ModalTitle className="text-base leading-none">Shared modal foundation</ModalTitle>
             </div>
             <SquircleBox radius="2xl" variant="modal-inner" className="grid gap-6 p-6">
               <ModalDescription>
-                Shared overlay, motion, shell, inner surface, and close control.
+                Shared overlay, motion, shell, and inner surface.
               </ModalDescription>
               <div className="flex justify-end">
                 <Button>Continue</Button>
@@ -285,7 +283,6 @@ function SearchModalFixture() {
         {open && (
           <SearchModalContent
             groups={SEARCH_GROUPS}
-            hotkey="Mod+K"
             onSelectItem={(source) => {
               setLastOpenedTitle(source.metadata.title || source.provider.title)
               setOpen(false)

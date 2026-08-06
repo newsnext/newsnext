@@ -7,19 +7,19 @@
 :root {
   --background: var(--color-neutral-100);
   --background-grid-line: color-mix(in oklab, var(--foreground) 1%, transparent);
-  --foreground: var(--color-neutral-900);
+  --foreground: var(--color-neutral-700);
   --primary: var(--color-theme-500);
   --primary-foreground: var(--color-white);
   --secondary: var(--color-neutral-50);
-  --secondary-foreground: var(--color-neutral-900);
+  --secondary-foreground: var(--foreground);
   --muted: color-mix(in oklab, var(--color-neutral-400) 10%, transparent);
-  --muted-foreground: var(--color-neutral-900);
+  --muted-foreground: var(--color-neutral-600);
   --accent: var(--color-neutral-50);
-  --accent-foreground: var(--color-neutral-900);
+  --accent-foreground: var(--foreground);
   --destructive: var(--color-red-500);
   --border: color-mix(in oklab, var(--color-white) 10%, transparent);
   --input: color-mix(in oklab, var(--color-white) 15%, transparent);
-  --ring: var(--color-neutral-500);
+  --ring: var(--color-theme-400);
 }
 
 .dark {

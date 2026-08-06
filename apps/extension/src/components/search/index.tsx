@@ -1,4 +1,3 @@
-import type { Hotkey } from "@tanstack/react-hotkeys"
 import type { ReactNode } from "react"
 import type { Board } from "@/lib/boards"
 import type { BoardSource } from "@/typings/source"
@@ -15,7 +14,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogHeader,
   DialogTitle,
 } from "@newsnext/ui/components/dialog"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
@@ -155,7 +153,6 @@ export function SearchDialog(): ReactNode {
       <Dialog open={open} onOpenChange={setOpen}>
         {open && (
           <SearchDialogContent
-            hotkey={shortcuts.search}
             onSelectItem={handleSelectItem}
           />
         )}
@@ -165,10 +162,8 @@ export function SearchDialog(): ReactNode {
 }
 
 function SearchDialogContent({
-  hotkey,
   onSelectItem,
 }: {
-  hotkey: Hotkey | null
   onSelectItem: (source: BoardSource, targetBoardId: string) => void
 }): ReactNode {
   const boards = useAtomValue(boardsAtom)
@@ -245,7 +240,6 @@ function SearchDialogContent({
   return (
     <SearchModalContent
       groups={searchGroups}
-      hotkey={hotkey}
       onSelectItem={onSelectItem}
     />
   )
@@ -253,30 +247,21 @@ function SearchDialogContent({
 
 export function SearchModalContent({
   groups,
-  hotkey,
   onSelectItem,
 }: {
   groups: SearchGroup[]
-  hotkey: Hotkey | null
   onSelectItem: (source: BoardSource, targetBoardId: string) => void
 }): ReactNode {
   return (
     <DialogContent
       variant="themed"
       className="h-[min(32rem,calc(100vh-2rem))] w-full sm:max-w-xl"
-      surfaceClassName="grid grid-rows-[auto_minmax(0,1fr)] gap-0"
+      surfaceClassName="grid-rows-[minmax(0,1fr)]"
     >
-      <DialogHeader className="h-10 flex-row items-center gap-3 px-3 pr-12">
-        <DialogTitle className="font-bold">Search cards</DialogTitle>
-        <DialogDescription className="sr-only">
-          Find and open cards from all boards.
-        </DialogDescription>
-        {hotkey && (
-          <kbd className="ml-auto rounded-md bg-background/25 px-1.5 py-0.5 font-sans text-[10px] font-medium text-foreground/45 ring-1 ring-foreground/10">
-            {formatForDisplay(hotkey)}
-          </kbd>
-        )}
-      </DialogHeader>
+      <DialogTitle className="sr-only">Search cards</DialogTitle>
+      <DialogDescription className="sr-only">
+        Find and open cards from all boards.
+      </DialogDescription>
 
       <SquircleBox
         radius="2xl"
