@@ -19,7 +19,6 @@
     "postinstall": "wxt prepare"
   },
   "dependencies": {
-    "@assistant-ui/react": "^0.15.4",
     "@atlaskit/pragmatic-drag-and-drop": "catalog:",
     "@atlaskit/pragmatic-drag-and-drop-hitbox": "catalog:",
     "@earendil-works/pi-agent-core": "^0.83.0",

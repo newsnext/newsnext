@@ -25,6 +25,8 @@ export default defineConfig({
   srcDir: "./src",
   alias: {
     "@": path.resolve(__dirname, "src"),
+    // pi-ai references node:fs only from a Bun-specific environment fallback.
+    "node:fs": path.resolve(__dirname, "src/lib/browser-node-fs.ts"),
   },
   dev: {
     server: {
@@ -40,6 +42,37 @@ export default defineConfig({
 
       const cosmosEntrypoint = entrypoints.find(entrypoint => entrypoint.name === "cosmos")
       if (cosmosEntrypoint) cosmosEntrypoint.skipped = true
+    },
+    "vite:build:extendConfig": (entrypoints, viteConfig) => {
+      // WXT's background build is an IIFE, which cannot use code splitting.
+      if (!entrypoints.every(entrypoint => entrypoint.inputPath.endsWith(".html"))) return
+
+      viteConfig.build ??= {}
+      viteConfig.build.rolldownOptions = {
+        ...viteConfig.build.rolldownOptions,
+        output: {
+          codeSplitting: {
+            groups: [
+              {
+                name: "react-vendor",
+                test: /node_modules\/(?:@tanstack|jotai|react|react-dom|scheduler)\//,
+              },
+              {
+                name: "base-ui-vendor",
+                test: /node_modules\/(?:@base-ui|lucide-react)\//,
+              },
+              {
+                name: "motion-vendor",
+                test: /node_modules\/motion\//,
+              },
+              {
+                name: "ai-vendor",
+                test: /node_modules\/(?:@earendil-works|openai|partial-json)\//,
+              },
+            ],
+          },
+        },
+      }
     },
   },
   manifest: ({ browser, mode }) => {
