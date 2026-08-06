@@ -1,13 +1,12 @@
-import type { Color } from "@newsnext/shared/types"
 import type { BoardSortPreference } from "./board-sorting"
 import type { Board } from "./boards"
 import type { PersistedSettings } from "./persisted-settings"
 import type { SourceInstance, SourceInstancePatch } from "./source-cards"
-import { COLORS } from "@newsnext/shared/constants"
 import { normalizeBoardFilter } from "./board-filter"
 import { createBoardSortPreference } from "./board-sorting"
-import { ALL_BOARD_ID, ALL_BOARD_NAME } from "./boards"
+import { ALL_BOARD_ID } from "./boards"
 import { normalizePersistedSettings } from "./persisted-settings"
+import { isThemeColor } from "./theme-color"
 
 export const PERSISTED_DATA_EXPORT_VERSION = 1
 export const PERSISTED_DATA_EXPORT_KIND = "newsnext-user-data"
@@ -57,17 +56,9 @@ export interface PersistedDataExport {
   version: typeof PERSISTED_DATA_EXPORT_VERSION
 }
 
-export function createDefaultBoards(): Board[] {
-  return [{
-    id: ALL_BOARD_ID,
-    name: ALL_BOARD_NAME,
-    sort: createBoardSortPreference(),
-  }]
-}
-
 export function normalizeBoards(value: unknown): Board[] {
   if (!Array.isArray(value)) {
-    return createDefaultBoards()
+    return []
   }
 
   const seenIds = new Set<string>()
@@ -76,6 +67,7 @@ export function normalizeBoards(value: unknown): Board[] {
       !isRecord(candidate)
       || typeof candidate.id !== "string"
       || typeof candidate.name !== "string"
+      || candidate.id === ALL_BOARD_ID
     ) {
       return []
     }
@@ -89,14 +81,11 @@ export function normalizeBoards(value: unknown): Board[] {
       id: candidate.id,
       name: candidate.name,
       sort: normalizeBoardSortPreference(candidate.sort),
-      ...(isColor(candidate.color) ? { color: candidate.color } : {}),
+      ...(isThemeColor(candidate.color) ? { color: candidate.color } : {}),
       ...(filter ? { filter } : {}),
     }]
   })
 
-  if (!seenIds.has(ALL_BOARD_ID)) {
-    boards.unshift(...createDefaultBoards())
-  }
   return boards
 }
 
@@ -207,7 +196,7 @@ export function normalizePersistedUserData(
   data: PersistedUserData,
 ): PersistedUserData {
   const boards = normalizeBoards(data.boards)
-  const boardIds = new Set(boards.map(board => board.id))
+  const boardIds = new Set([ALL_BOARD_ID, ...boards.map(board => board.id)])
   const instances = normalizeSourceInstances(data.instances).map(instance => (
     instance.boardId === null || boardIds.has(instance.boardId)
       ? instance
@@ -229,7 +218,7 @@ export function normalizePersistedUserData(
         manualOrder: board.sort.manualOrder.filter((id) => {
           const instance = instancesById.get(id)
           return instance !== undefined
-            && (board.id === ALL_BOARD_ID || instance.boardId === board.id)
+            && instance.boardId === board.id
         }),
       },
     })),
@@ -289,10 +278,6 @@ function isBoardSortMode(value: unknown): boolean {
 
 function isAutomaticBoardSortMode(value: unknown): boolean {
   return value === "createdAt" || value === "provider"
-}
-
-function isColor(value: unknown): value is Color {
-  return typeof value === "string" && COLORS.includes(value as Color)
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

@@ -52,6 +52,7 @@ interface DesktopBoardProps {
   filter?: BoardFilter
   sourceIds: string[]
   sourceCardsMap: Record<string, BoardSourceCard>
+  sortable?: boolean
   className?: string
   isScattered?: boolean
   onSourceIdsChange: (sourceIds: string[]) => void
@@ -62,6 +63,7 @@ export function DesktopBoard({
   filter,
   sourceIds,
   sourceCardsMap,
+  sortable = true,
   className,
   isScattered,
   onSourceIdsChange,
@@ -386,6 +388,7 @@ export function DesktopBoard({
               filter={filter}
               forceMount={isScattered}
               instanceAtom={instanceAtom}
+              sortable={sortable}
             />
           </m.li>
         ))}

@@ -52,7 +52,15 @@ interface BoardDialogProps {
   onUpdate: (board: Board) => void
 }
 
-export function BoardDialog({
+export function BoardDialog(props: BoardDialogProps) {
+  if (props.target.mode === "edit" && props.target.boardId === ALL_BOARD_ID) {
+    return null
+  }
+
+  return <ConfigurableBoardDialog {...props} />
+}
+
+function ConfigurableBoardDialog({
   boards,
   currentBoardId,
   target,
@@ -73,7 +81,6 @@ export function BoardDialog({
   const initialSortMode = board?.sort.mode ?? DEFAULT_BOARD_SORT_PREFERENCE.mode
   const initialFilterMode = board?.filter?.mode ?? "include"
   const initialFilterKeywords = board?.filter?.keywords.join(", ") ?? ""
-  const isAllBoard = boardId === ALL_BOARD_ID
   const [name, setName] = useState(() => board?.name ?? "")
   const [color, setColor] = useState<Color>(initialColor)
   const [sortMode, setSortMode] = useState<BoardSortMode>(initialSortMode)
@@ -83,7 +90,7 @@ export function BoardDialog({
   const normalizedName = name.trim()
   const hasDuplicateName = isBoardNameTaken(boards, normalizedName, boardId)
   const canSubmit = (!isEditing || board !== undefined)
-    && (isAllBoard || normalizedName.length > 0)
+    && normalizedName.length > 0
     && !hasDuplicateName
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>): void {
@@ -100,7 +107,7 @@ export function BoardDialog({
 
       const nextBoard: Board = {
         ...board,
-        name: isAllBoard ? board.name : normalizedName,
+        name: normalizedName,
         color,
         sort: updateBoardSortMode(board.sort, sortMode),
       }
@@ -124,7 +131,7 @@ export function BoardDialog({
   }
 
   function handleDelete(): void {
-    if (!boardId || isAllBoard) {
+    if (!boardId) {
       return
     }
 
@@ -159,14 +166,12 @@ export function BoardDialog({
               <Input
                 id="board-name"
                 autoFocus
-                disabled={isAllBoard}
                 maxLength={40}
                 placeholder={isEditing ? undefined : "Product signals"}
                 value={name}
                 onChange={event => setName(event.target.value)}
                 aria-invalid={hasDuplicateName}
               />
-              {isAllBoard && <p className="text-xs text-muted-foreground">The All board has a fixed name.</p>}
               {hasDuplicateName && <p className="text-xs text-destructive">A board with this name already exists.</p>}
             </div>
 
@@ -224,8 +229,8 @@ export function BoardDialog({
               </p>
             </fieldset>
 
-            <DialogFooter className={cn(isEditing && !isAllBoard && "sm:justify-between")}>
-              {isEditing && !isAllBoard && (
+            <DialogFooter className={cn(isEditing && "sm:justify-between")}>
+              {isEditing && (
                 <Button
                   type="button"
                   variant="destructive"

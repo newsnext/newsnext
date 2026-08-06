@@ -9,6 +9,7 @@ import { getSortableData, isSortableData } from "@/lib/sortable-data"
 export const InstanceIdContext = createContext<string | null>(null)
 
 interface SortableProps {
+  enabled?: boolean
   id: string
   onGenerateDragPreview?: (args: {
     container: HTMLElement
@@ -16,14 +17,14 @@ interface SortableProps {
   }) => void | (() => void)
 }
 
-export function useSortable({ id, onGenerateDragPreview }: SortableProps) {
+export function useSortable({ enabled = true, id, onGenerateDragPreview }: SortableProps) {
   const instanceId = use(InstanceIdContext)
   const [isDragging, setIsDragging] = useState(false)
   const [handleRef, setHandleRef] = useState<HTMLElement | null>(null)
   const [nodeRef, setNodeRef] = useState<HTMLElement | null>(null)
 
   useEffect(() => {
-    if (handleRef && nodeRef && instanceId) {
+    if (enabled && handleRef && nodeRef && instanceId) {
       const sortableData = getSortableData({ id, instanceId })
       const cleanup = combine(
         draggable({
@@ -66,7 +67,7 @@ export function useSortable({ id, onGenerateDragPreview }: SortableProps) {
       )
       return cleanup
     }
-  }, [handleRef, id, instanceId, nodeRef, onGenerateDragPreview])
+  }, [enabled, handleRef, id, instanceId, nodeRef, onGenerateDragPreview])
 
   return {
     setHandleRef,

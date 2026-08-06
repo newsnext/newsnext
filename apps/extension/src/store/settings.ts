@@ -1,3 +1,4 @@
+import type { Color } from "@newsnext/shared/types"
 import type { BgIllustrationTransform } from "@/lib/bg-illustration"
 import type {
   PersistedDeviceState,
@@ -52,6 +53,17 @@ export const themeModeAtom = atom(
     set(persistedSettingsAtom, {
       ...settings,
       appearance: { ...settings.appearance, themeMode },
+    })
+  },
+)
+
+export const allBoardColorAtom = atom(
+  get => get(persistedSettingsAtom).appearance.allBoardColor,
+  (get, set, allBoardColor: Color) => {
+    const settings = get(persistedSettingsAtom)
+    set(persistedSettingsAtom, {
+      ...settings,
+      appearance: { ...settings.appearance, allBoardColor },
     })
   },
 )

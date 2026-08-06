@@ -2,26 +2,36 @@ import type { Board } from "../lib/boards"
 import type { SourceInstance, SourceInstancePatch } from "../lib/source-cards"
 import { atom } from "jotai"
 import { atomWithStorage, selectAtom, splitAtom } from "jotai/utils"
-import { ALL_BOARD_ID } from "../lib/boards"
+import { ALL_BOARD_ID, createAllBoard, getBoardColor } from "../lib/boards"
 import {
-  createDefaultBoards,
   normalizeBoards,
   normalizeSourceInstances,
   PERSISTED_DATA_SLICES,
 } from "../lib/persisted-data"
 import { mergeSourceInstancePatch } from "../lib/source-cards"
 import { createMirroredStorage } from "./persisted-storage"
-import { currentBoardIdAtom, defaultBoardIdAtom } from "./settings"
+import { allBoardColorAtom, currentBoardIdAtom, defaultBoardIdAtom } from "./settings"
 
-export const boardsAtom = atomWithStorage<Board[]>(
+const persistedBoardsAtom = atomWithStorage<Board[]>(
   PERSISTED_DATA_SLICES.boards.key,
-  createDefaultBoards(),
+  [],
   createMirroredStorage({
-    defaultValue: createDefaultBoards,
+    defaultValue: () => [],
     key: PERSISTED_DATA_SLICES.boards.key,
     normalize: normalizeBoards,
   }),
   { getOnInit: true },
+)
+
+type BoardsUpdate = Board[] | ((boards: Board[]) => Board[])
+
+export const boardsAtom = atom(
+  get => [createAllBoard(get(allBoardColorAtom)), ...get(persistedBoardsAtom)],
+  (get, set, update: BoardsUpdate) => {
+    const boards = get(boardsAtom)
+    const nextBoards = typeof update === "function" ? update(boards) : update
+    set(persistedBoardsAtom, normalizeBoards(nextBoards))
+  },
 )
 
 export const instancesAtom = atomWithStorage<SourceInstance[]>(
@@ -86,6 +96,10 @@ export const setManualBoardOrderAtom = atom(null, (_get, set, {
   boardId: string
   sourceIds: string[]
 }) => {
+  if (boardId === ALL_BOARD_ID) {
+    return
+  }
+
   set(boardsAtom, boards => boards.map(board => board.id === boardId
     ? {
         ...board,
@@ -139,6 +153,11 @@ export const createBoardAtom = atom(null, (_get, set, board: Board) => {
 })
 
 export const updateBoardAtom = atom(null, (_get, set, board: Board) => {
+  if (board.id === ALL_BOARD_ID) {
+    set(allBoardColorAtom, getBoardColor(board))
+    return
+  }
+
   set(boardsAtom, prev => prev.map(current => current.id === board.id ? board : current))
 })
 

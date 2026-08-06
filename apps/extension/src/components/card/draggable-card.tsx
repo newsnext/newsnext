@@ -15,6 +15,7 @@ interface DraggableCardProps {
   filter?: BoardFilter
   forceMount?: boolean
   instanceAtom: Atom<SourceInstance>
+  sortable?: boolean
 }
 
 function generateDragPreview({ container, element }: { container: HTMLElement, element: HTMLElement }) {
@@ -39,7 +40,7 @@ function generateDragPreview({ container, element }: { container: HTMLElement, e
   return () => preview.remove()
 }
 
-function DraggableCardComponent({ descriptor, filter, forceMount, instanceAtom }: DraggableCardProps) {
+function DraggableCardComponent({ descriptor, filter, forceMount, instanceAtom, sortable = true }: DraggableCardProps) {
   const instance = useAtomValue(instanceAtom)
   const source = useMemo(
     () => createBoardSource(descriptor, instance),
@@ -47,20 +48,23 @@ function DraggableCardComponent({ descriptor, filter, forceMount, instanceAtom }
   )
   const id = instance.instanceId
   const { isDragging, setNodeRef, setHandleRef } = useSortable({
+    enabled: sortable,
     id,
     onGenerateDragPreview: generateDragPreview,
   })
 
-  const dragHandle = (
-    <div ref={setHandleRef} className="flex items-center justify-center">
-      <CardHeaderActionButton
-        aria-label={`Move ${source.metadata.title}`}
-        className="cursor-grab"
-      >
-        <PhDotsSixVerticalDuotone />
-      </CardHeaderActionButton>
-    </div>
-  )
+  const dragHandle = sortable
+    ? (
+        <div ref={setHandleRef} className="flex items-center justify-center">
+          <CardHeaderActionButton
+            aria-label={`Move ${source.metadata.title}`}
+            className="cursor-grab"
+          >
+            <PhDotsSixVerticalDuotone />
+          </CardHeaderActionButton>
+        </div>
+      )
+    : undefined
 
   return (
     <SourceCard

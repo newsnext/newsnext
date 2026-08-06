@@ -1,15 +1,11 @@
 import type { Color } from "@newsnext/shared/types"
-import { COLORS } from "@newsnext/shared/constants"
+import { isThemeColor } from "../theme-color"
 import FAVICON_SVG from "/icon.svg?url&raw"
 
 export const THEME_COLOR_KEY = "newsnext-theme-color"
 export type ThemeMode = "light" | "dark" | "system"
 
 let syncedFaviconColor: Color | null = null
-
-export function isThemeColor(value: string): value is Color {
-  return COLORS.includes(value as Color)
-}
 
 export function handleThemeSwitch(color: string): void {
   const root = document.documentElement

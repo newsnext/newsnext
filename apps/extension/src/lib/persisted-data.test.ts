@@ -13,11 +13,6 @@ describe("persisted user data", () => {
       settings: createDefaultPersistedSettings(),
       boards: [
         {
-          id: "all",
-          name: "All",
-          sort: { mode: "createdAt" as const, automaticMode: "createdAt" as const, manualOrder: [] },
-        },
-        {
           id: "reading",
           name: "Reading",
           color: "blue" as const,
@@ -66,11 +61,7 @@ describe("persisted user data", () => {
   it("exports only selected data slices", () => {
     const data = {
       settings: createDefaultPersistedSettings(),
-      boards: [{
-        id: "all",
-        name: "All",
-        sort: { mode: "createdAt" as const, automaticMode: "createdAt" as const, manualOrder: [] },
-      }],
+      boards: [],
       instances: [],
     }
 
@@ -85,11 +76,6 @@ describe("persisted user data", () => {
     const current = {
       settings,
       boards: [
-        {
-          id: "all",
-          name: "All",
-          sort: { mode: "createdAt" as const, automaticMode: "createdAt" as const, manualOrder: [] },
-        },
         {
           id: "reading",
           name: "Reading",
@@ -106,28 +92,26 @@ describe("persisted user data", () => {
     }
 
     const merged = mergePersistedUserData(current, {
-      boards: [{
-        id: "all",
-        name: "All",
-        sort: { mode: "createdAt", automaticMode: "createdAt", manualOrder: [] },
-      }],
+      boards: [],
     })
 
     expect(merged.settings.general.defaultBoardId).toBe("all")
     expect(merged.instances[0]?.boardId).toBeNull()
   })
 
-  it("deduplicates boards and restores the required All board", () => {
+  it("deduplicates boards and discards persisted All board settings", () => {
     expect(normalizeBoards([
+      {
+        id: "all",
+        name: "Renamed All",
+        color: "blue",
+        filter: { mode: "include", keywords: ["saved"] },
+        sort: { mode: "manual", automaticMode: "provider", manualOrder: ["saved"] },
+      },
       { id: "reading", name: "Reading" },
       { id: "reading", name: "Duplicate" },
       { id: 42, name: "Invalid" },
     ])).toEqual([
-      {
-        id: "all",
-        name: "All",
-        sort: { mode: "createdAt", automaticMode: "createdAt", manualOrder: [] },
-      },
       {
         id: "reading",
         name: "Reading",

@@ -50,17 +50,22 @@ export function BoardNav() {
       <PillGroup className="max-w-[min(70vw,32rem)] overflow-x-auto scrollbar-hidden">
         {boards.map((board) => {
           const isActive = currentBoardId === board.id
+          const isEditable = isActive && board.id !== ALL_BOARD_ID
           return (
             <Button
               key={board.id}
               type="button"
               variant="transparent"
               size="sm"
-              onPointerEnter={event => event.currentTarget.toggleAttribute("data-editable", isActive)}
+              onPointerEnter={event => event.currentTarget.toggleAttribute("data-editable", isEditable)}
               onPointerLeave={event => event.currentTarget.removeAttribute("data-editable")}
               onClick={() => {
-                if (isActive) {
+                if (isEditable) {
                   setDialogTarget({ mode: "edit", boardId: board.id })
+                  return
+                }
+
+                if (isActive) {
                   return
                 }
 
@@ -72,7 +77,7 @@ export function BoardNav() {
                 "group/board-tab h-auto shrink-0",
               )}
               aria-current={isActive ? "page" : undefined}
-              title={isActive ? "Edit board" : undefined}
+              title={isEditable ? "Edit board" : undefined}
             >
               {isActive && (
                 <PillGroupIndicator layoutId="active-board" />
@@ -80,7 +85,7 @@ export function BoardNav() {
               <span className="relative z-10">
                 {board.name}
               </span>
-              {isActive && (
+              {isEditable && (
                 <span
                   aria-hidden="true"
                   className="absolute bottom-1 left-1/2 z-10 flex -translate-x-1/2 gap-[2px] opacity-0 group-data-[editable]/board-tab:opacity-80"

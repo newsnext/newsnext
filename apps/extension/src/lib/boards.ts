@@ -16,6 +16,15 @@ export interface Board {
   color?: Color
 }
 
+export function createAllBoard(color: Color): Board {
+  return {
+    color,
+    id: ALL_BOARD_ID,
+    name: ALL_BOARD_NAME,
+    sort: createBoardSortPreference("createdAt"),
+  }
+}
+
 export function getBoardColor(board: Board): Color {
   return board.color ?? DEFAULT_BOARD_COLOR
 }

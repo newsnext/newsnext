@@ -1,3 +1,4 @@
+import type { Color } from "@newsnext/shared/types"
 import type { BgIllustrationTransform } from "./bg-illustration/config"
 import type { SourceIconSettings, SourceIconSource } from "./source-icon"
 import type { ThemeMode } from "./utils/swith-theme"
@@ -8,10 +9,11 @@ import {
   normalizeBgIllustrationOpacity,
   normalizeBgIllustrationTransform,
 } from "./bg-illustration/config"
-import { ALL_BOARD_ID } from "./boards"
+import { ALL_BOARD_ID, DEFAULT_BOARD_COLOR } from "./boards"
 import { DEFAULT_SOURCE_ICON_SETTINGS } from "./source-icon"
+import { isThemeColor } from "./theme-color"
 
-export const PERSISTED_SETTINGS_VERSION = 3
+export const PERSISTED_SETTINGS_VERSION = 4
 
 export type SettingsTabId = "appearance" | "general" | "provider" | "permissions" | "data"
 
@@ -34,6 +36,7 @@ export interface PersistedSettings {
     bgIllustration: string | null
     bgIllustrationOpacity: number
     bgIllustrationTransform: BgIllustrationTransform
+    allBoardColor: Color
     themeMode: ThemeMode
   }
   general: {
@@ -57,6 +60,7 @@ export function createDefaultPersistedSettings(): PersistedSettings {
       bgIllustration: null,
       bgIllustrationOpacity: DEFAULT_BG_ILLUSTRATION_OPACITY,
       bgIllustrationTransform: { ...DEFAULT_BG_ILLUSTRATION_TRANSFORM },
+      allBoardColor: DEFAULT_BOARD_COLOR,
       themeMode: "system",
     },
     general: {
@@ -91,6 +95,9 @@ export function normalizePersistedSettings(value: unknown): PersistedSettings {
       bgIllustration: normalizeBgIllustration(appearance?.bgIllustration),
       bgIllustrationOpacity: normalizeBgIllustrationOpacity(appearance?.bgIllustrationOpacity),
       bgIllustrationTransform: normalizeBgIllustrationTransform(appearance?.bgIllustrationTransform),
+      allBoardColor: isThemeColor(appearance?.allBoardColor)
+        ? appearance.allBoardColor
+        : defaults.appearance.allBoardColor,
       themeMode: isThemeMode(appearance?.themeMode)
         ? appearance.themeMode
         : defaults.appearance.themeMode,

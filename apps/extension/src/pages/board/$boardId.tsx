@@ -39,5 +39,5 @@ export function BoardIdComponent() {
     )
   }
 
-  return <Desk boardId={boardId} />
+  return <Desk key={boardId} boardId={boardId} />
 }

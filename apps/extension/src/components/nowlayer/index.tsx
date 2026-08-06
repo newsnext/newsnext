@@ -2,6 +2,7 @@ import type { RefObject } from "react"
 import { useSetAtom } from "jotai"
 import { useCallback } from "react"
 import { useBoardSourceCards } from "@/hooks/use-board-source-cards"
+import { ALL_BOARD_ID } from "@/lib/boards"
 import { setManualBoardOrderAtom } from "@/store/board"
 import { DesktopBoard } from "./desktop-board"
 
@@ -42,6 +43,7 @@ export function NowLayer({
       key={boardId}
       sourceIds={sourceIds}
       sourceCardsMap={sourceCardsMap}
+      sortable={boardId !== ALL_BOARD_ID}
       filter={currentBoard.filter}
       className={className}
       isScattered={isScattered}

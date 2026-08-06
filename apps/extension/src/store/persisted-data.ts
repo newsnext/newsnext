@@ -2,7 +2,6 @@ import type { PersistedUserData } from "@/lib/persisted-data"
 import { atom } from "jotai"
 import { ALL_BOARD_ID } from "@/lib/boards"
 import {
-  createDefaultBoards,
   mergePersistedUserData,
 } from "@/lib/persisted-data"
 import {
@@ -21,7 +20,7 @@ import {
 
 export const persistedUserDataAtom = atom<PersistedUserData>(get => ({
   settings: get(persistedSettingsAtom),
-  boards: get(boardsAtom),
+  boards: get(boardsAtom).filter(board => board.id !== ALL_BOARD_ID),
   instances: get(instancesAtom),
 }))
 
@@ -43,6 +42,6 @@ export const importPersistedUserDataAtom = atom(
 export const clearPersistedUserDataAtom = atom(null, (_get, set) => {
   set(persistedSettingsAtom, createDefaultPersistedSettings())
   set(persistedDeviceStateAtom, createDefaultPersistedDeviceState())
-  set(boardsAtom, createDefaultBoards())
+  set(boardsAtom, [])
   set(instancesAtom, [])
 })

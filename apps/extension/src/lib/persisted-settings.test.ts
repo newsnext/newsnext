@@ -31,6 +31,15 @@ describe("persisted settings", () => {
     }).appearance.bgIllustration).toBe(illustration)
   })
 
+  it("normalizes the All board color", () => {
+    expect(normalizePersistedSettings({
+      appearance: { allBoardColor: "blue" },
+    }).appearance.allBoardColor).toBe("blue")
+    expect(normalizePersistedSettings({
+      appearance: { allBoardColor: "invalid" },
+    }).appearance.allBoardColor).toBe("red")
+  })
+
   it("normalizes the background illustration opacity", () => {
     expect(normalizePersistedSettings({
       appearance: { bgIllustrationOpacity: 12.4 },

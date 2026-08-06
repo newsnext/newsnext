@@ -148,7 +148,8 @@ Cards define the primary NewsNext surface treatment.
   transparent at rest and reveal their tinted surface on hover or focus so
   secondary actions do not compete with the filled primary action.
 - The header Dynamic Island expands to a 280px by 120px panel, which fits the
-  shared theme selector's six-column palette with compact shell padding.
+  shared theme selector's six-column palette with compact shell padding. The All
+  board permits theme color changes here while keeping its other behavior fixed.
 
 The reference implementation is `CardSurface` in
 `apps/extension/src/components/card/card-surface.tsx`.
@@ -157,7 +158,9 @@ The reference implementation is `CardSurface` in
 
 Next Layer recomposes the current board's card items into one continuous feed.
 It is a reading view of the same source data, not another board or a second card
-design. Combine all source items into a newest-first timeline. Use the source
+design. Do not expose Next Layer on the All board; it is available only for
+configurable boards. Combine all source items into a newest-first timeline. Use
+the source
 update time when an item has no timestamp, matching the existing card timeline
 semantics. Break equal timestamps by original rank and then card order so tied
 items remain predictably mixed. Keep source identity and effective timeline
@@ -194,6 +197,8 @@ Layer; configure the shared Now/Next item filter in the Board dialog.
 
 ### Card reordering
 
+- Keep the All board in its fixed newest-first order and omit drag handles there;
+  reordering is a configurable-board interaction.
 - Keep the drag handle visible and give it an accessible name that identifies
   the card being moved.
 - Reorder cards according to the closest edge of the card under the pointer so
