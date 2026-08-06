@@ -1,7 +1,7 @@
 import type { NewsItem } from "@/typings/source"
 import { VirtualList } from "@newsnext/ui/components/virtual-list"
 import { useAtomValue } from "jotai"
-import { memo, useCallback, useId, useMemo } from "react"
+import { useCallback, useId, useMemo } from "react"
 import { formatRelativeTime, minuteDateAtom } from "@/hooks/useRelativeTime"
 import { cn } from "@/lib/utils"
 import { NewsItemLink, NewsItemSummary } from "./news-item-common"
@@ -12,12 +12,6 @@ interface Props {
   scrollElement: HTMLDivElement | null
   updatedAt: number
 }
-
-const TimelineNewsItem = memo(({ item }: { item: NewsItem }) => (
-  <NewsItemLink item={item} className="flex">
-    <NewsItemSummary item={item} />
-  </NewsItemLink>
-))
 
 export function Timeline({ items, scrollElement, updatedAt }: Props) {
   const gradientId = useId().replace(/:/g, "")
@@ -36,7 +30,10 @@ export function Timeline({ items, scrollElement, updatedAt }: Props) {
           index={index}
           showLabel={showTimeLabel}
         />
-        <div className="flex min-w-0 rounded-xl hover:bg-muted">
+        <NewsItemLink
+          item={item}
+          className="flex min-w-0 rounded-xl transition-colors outline-none hover:bg-muted focus-visible:bg-muted focus-visible:ring-2 focus-visible:ring-theme-400"
+        >
           <div className="w-5 shrink-0" aria-hidden />
           <div className="min-w-0 flex flex-1 flex-col">
             {showTimeLabel && (
@@ -46,9 +43,9 @@ export function Timeline({ items, scrollElement, updatedAt }: Props) {
                 </span>
               </div>
             )}
-            <TimelineNewsItem item={item} />
+            <NewsItemSummary item={item} />
           </div>
-        </div>
+        </NewsItemLink>
       </div>
     )
   }, [gradientId, items.length, timeLabels])

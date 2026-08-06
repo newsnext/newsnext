@@ -164,6 +164,10 @@ items remain predictably mixed. Keep source identity and effective timeline
 placement legible through the grouped time labels, but do not display ranking
 numbers in the mixed timeline.
 
+When a news item row has a hover surface, make the entire surfaced row its link
+target and provide an equivalent visible keyboard-focus state. Do not place a
+smaller link inside a larger hover-only container.
+
 Render the mixed feed as a visible timeline, using the shared waveform rail and
 grouped relative-time labels from card timelines. Let each rail segment inherit
 its source color so source changes are legible without creating separate card
