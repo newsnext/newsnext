@@ -41,6 +41,18 @@ describe("persisted settings", () => {
     }).appearance.allBoardColor).toBe("red")
   })
 
+  it("normalizes the source card height", () => {
+    expect(normalizePersistedSettings({
+      appearance: { sourceCardHeight: "compact" },
+    }).appearance.sourceCardHeight).toBe("compact")
+    expect(normalizePersistedSettings({
+      appearance: { sourceCardHeight: "tall" },
+    }).appearance.sourceCardHeight).toBe("tall")
+    expect(normalizePersistedSettings({
+      appearance: { sourceCardHeight: "giant" },
+    }).appearance.sourceCardHeight).toBe("balanced")
+  })
+
   it("normalizes the background illustration opacity", () => {
     expect(normalizePersistedSettings({
       appearance: { bgIllustrationOpacity: 12.4 },

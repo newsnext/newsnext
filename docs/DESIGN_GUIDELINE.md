@@ -134,6 +134,14 @@ Cards define the primary NewsNext surface treatment.
   purple, indigo, blue, cyan, teal, green, amber, orange, and slate.
 - Use `10px` (`p-2.5`) between the outer shell and nested content where the card
   shell must remain visible.
+- Let users choose a desktop source-card height in Appearance settings:
+  `Compact` (`480px`), `Balanced` (`500px`), or `Tall` (`576px`). Default to
+  `Balanced`. Allow specialized responsive surfaces such as Radar to provide
+  their own card dimensions.
+- Present card-height choices with equal-width silhouettes rendered at their
+  actual heights. Order them from compact to tall, with the default balanced
+  height in the middle. Keep option backgrounds transparent and confine the
+  selected theme accent to the silhouette outline and shape label.
 - Place identity and surface actions in the exposed outer shell. Place editable
   fields and primary content in the quieter inner panel.
 - Keep compact card action icons content-sized and background-free. Use the

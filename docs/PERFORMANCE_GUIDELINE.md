@@ -128,6 +128,11 @@ refresh call it for their own snapshots. The rendered board uses Jotai's
 own `SourceInstance`. `NowLayer` subscribes separately to a lightweight layout
 projection containing only membership and sorting fields.
 
+Resolve board-only appearance settings at the draggable-card boundary and pass
+their result into the shared card shell. Do not make the base `SourceCard`
+subscribe to board appearance when specialized consumers such as Radar provide
+their own dimensions.
+
 Parameter and non-title metadata changes update the affected item atom without
 rebuilding the board. Membership, creation time, source identity, and title
 changes update the layout projection because they can change visibility or

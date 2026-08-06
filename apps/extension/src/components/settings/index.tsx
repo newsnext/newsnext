@@ -1,5 +1,6 @@
-import type { SettingsTabId } from "@/lib/persisted-settings"
+import type { SettingsTabId, SourceCardHeight } from "@/lib/persisted-settings"
 import { Card, CardContent } from "@newsnext/ui/components/card"
+import { Label } from "@newsnext/ui/components/label"
 import { RadioGroup, RadioGroupItem } from "@newsnext/ui/components/radio-group"
 import {
   Select,
@@ -10,11 +11,13 @@ import {
 import { TabsContent } from "@newsnext/ui/components/tabs"
 import { useAtom, useAtomValue } from "jotai"
 import { useEffect } from "react"
+import { cn } from "@/lib/utils"
 import { handleThemeModeSwitch } from "@/lib/utils/swith-theme"
 import { boardsAtom } from "@/store/board"
 import {
   defaultBoardIdAtom,
   settingsTabAtom,
+  sourceCardHeightAtom,
   themeModeAtom,
 } from "@/store/settings"
 import { BgIllustrationSettings } from "./bg-illustration"
@@ -28,6 +31,30 @@ import { SourceConnectionSettings } from "./source-connection"
 import { SourceIconSettings } from "./source-icon"
 
 const LAST_USED_BOARD_VALUE = "__last_used__"
+
+interface SourceCardHeightOption {
+  label: string
+  previewClassName: string
+  value: SourceCardHeight
+}
+
+const SOURCE_CARD_HEIGHT_OPTIONS: SourceCardHeightOption[] = [
+  {
+    label: "Compact",
+    previewClassName: "h-12",
+    value: "compact",
+  },
+  {
+    label: "Balanced",
+    previewClassName: "h-12.5",
+    value: "balanced",
+  },
+  {
+    label: "Tall",
+    previewClassName: "h-14.5",
+    value: "tall",
+  },
+]
 
 export type { SettingsTabId } from "@/lib/persisted-settings"
 
@@ -116,8 +143,65 @@ function AppearanceSettings() {
           </CardContent>
         </Card>
       </SettingsSection>
+      <SourceCardHeightSettings />
       <BgIllustrationSettings />
     </div>
+  )
+}
+
+function SourceCardHeightSettings() {
+  const [sourceCardHeight, setSourceCardHeight] = useAtom(sourceCardHeightAtom)
+
+  return (
+    <SettingsSection
+      title="Card height"
+      description="Choose how tall source cards appear on the board."
+    >
+      <Card variant="subtle">
+        <CardContent className="p-2.5">
+          <RadioGroup
+            className="grid w-full grid-cols-3 gap-2"
+            value={sourceCardHeight}
+            onValueChange={setSourceCardHeight}
+          >
+            {SOURCE_CARD_HEIGHT_OPTIONS.map((option) => {
+              const isSelected = option.value === sourceCardHeight
+              return (
+                <Label key={option.value} className="cursor-pointer">
+                  <RadioGroupItem
+                    aria-label={option.label}
+                    value={option.value}
+                    className="peer sr-only"
+                  />
+                  <span className={cn(
+                    "flex min-h-28 flex-1 flex-col items-center justify-center gap-2 rounded-2xl px-2 py-2 text-center text-muted-foreground transition-colors outline-none hover:text-foreground peer-focus-visible:ring-2 peer-focus-visible:ring-theme-400",
+                    isSelected && "text-foreground",
+                  )}
+                  >
+                    <span className="flex h-16 items-center justify-center" aria-hidden>
+                      <span className={cn(
+                        "flex w-10 flex-col rounded-xl border bg-background/35 p-1.5 transition-all",
+                        option.previewClassName,
+                        isSelected
+                          ? "border-primary text-primary ring-2 ring-primary/15"
+                          : "border-foreground/20",
+                      )}
+                      >
+                        <span className="h-1 w-3/5 rounded-full bg-current/55" />
+                        <span className="mt-1 min-h-0 flex-1 rounded-sm bg-current/15" />
+                      </span>
+                    </span>
+                    <span className={cn("font-semibold leading-tight", isSelected && "text-primary")}>
+                      {option.label}
+                    </span>
+                  </span>
+                </Label>
+              )
+            })}
+          </RadioGroup>
+        </CardContent>
+      </Card>
+    </SettingsSection>
   )
 }
 

@@ -4,6 +4,7 @@ import type {
   PersistedDeviceState,
   PersistedSettings,
   SettingsTabId,
+  SourceCardHeight,
 } from "@/lib/persisted-settings"
 import type { ShortcutSettings } from "@/lib/shortcuts"
 import type { SourceIconSettings } from "@/lib/source-icon"
@@ -54,6 +55,17 @@ export const themeModeAtom = atom(
     set(persistedSettingsAtom, {
       ...settings,
       appearance: { ...settings.appearance, themeMode },
+    })
+  },
+)
+
+export const sourceCardHeightAtom = atom(
+  get => get(persistedSettingsAtom).appearance.sourceCardHeight,
+  (get, set, sourceCardHeight: SourceCardHeight) => {
+    const settings = get(persistedSettingsAtom)
+    set(persistedSettingsAtom, {
+      ...settings,
+      appearance: { ...settings.appearance, sourceCardHeight },
     })
   },
 )

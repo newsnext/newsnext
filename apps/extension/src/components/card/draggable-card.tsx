@@ -1,14 +1,22 @@
 import type { Atom } from "jotai"
 import type { BoardFilter } from "@/lib/board-filter"
+import type { SourceCardHeight } from "@/lib/persisted-settings"
 import type { SourceInstance } from "@/lib/source-cards"
 import type { SourceDescriptor } from "@/typings/source"
 import { useAtomValue } from "jotai"
 import { memo, useMemo } from "react"
 import { useSortable } from "@/hooks/use-sortable"
 import { createBoardSource } from "@/lib/source-cards"
+import { sourceCardHeightAtom } from "@/store/settings"
 import { PhDotsSixVerticalDuotone } from "../icons/ph"
 import { CardHeaderActionButton } from "./card-header"
 import { SourceCard } from "./index"
+
+const SOURCE_CARD_SIZE_CLASS_NAMES: Record<SourceCardHeight, string> = {
+  compact: "h-120 w-100",
+  balanced: "h-125 w-100",
+  tall: "h-144 w-100",
+}
 
 interface DraggableCardProps {
   descriptor: SourceDescriptor
@@ -42,6 +50,7 @@ function generateDragPreview({ container, element }: { container: HTMLElement, e
 
 function DraggableCardComponent({ descriptor, filter, forceMount, instanceAtom, sortable = true }: DraggableCardProps) {
   const instance = useAtomValue(instanceAtom)
+  const sourceCardHeight = useAtomValue(sourceCardHeightAtom)
   const source = useMemo(
     () => createBoardSource(descriptor, instance),
     [descriptor, instance],
@@ -74,6 +83,7 @@ function DraggableCardComponent({ descriptor, filter, forceMount, instanceAtom, 
       forceMount={forceMount}
       nodeRef={setNodeRef}
       dragHandle={dragHandle}
+      sizeClassName={SOURCE_CARD_SIZE_CLASS_NAMES[sourceCardHeight]}
       className={isDragging ? "opacity-50" : undefined}
     />
   )

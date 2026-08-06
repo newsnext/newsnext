@@ -15,7 +15,13 @@ import { DEFAULT_SHORTCUT_SETTINGS, normalizeShortcutSettings } from "./shortcut
 import { DEFAULT_SOURCE_ICON_SETTINGS } from "./source-icon"
 import { isThemeColor } from "./theme-color"
 
-export const PERSISTED_SETTINGS_VERSION = 5
+export const PERSISTED_SETTINGS_VERSION = 6
+
+export const SOURCE_CARD_HEIGHTS = ["compact", "balanced", "tall"] as const
+
+export type SourceCardHeight = typeof SOURCE_CARD_HEIGHTS[number]
+
+export const DEFAULT_SOURCE_CARD_HEIGHT: SourceCardHeight = "balanced"
 
 export type SettingsTabId = "appearance" | "general" | "shortcuts" | "provider" | "permissions" | "data"
 
@@ -39,6 +45,7 @@ export interface PersistedSettings {
     bgIllustrationOpacity: number
     bgIllustrationTransform: BgIllustrationTransform
     allBoardColor: Color
+    sourceCardHeight: SourceCardHeight
     themeMode: ThemeMode
   }
   general: {
@@ -64,6 +71,7 @@ export function createDefaultPersistedSettings(): PersistedSettings {
       bgIllustrationOpacity: DEFAULT_BG_ILLUSTRATION_OPACITY,
       bgIllustrationTransform: { ...DEFAULT_BG_ILLUSTRATION_TRANSFORM },
       allBoardColor: DEFAULT_BOARD_COLOR,
+      sourceCardHeight: DEFAULT_SOURCE_CARD_HEIGHT,
       themeMode: "system",
     },
     general: {
@@ -102,6 +110,9 @@ export function normalizePersistedSettings(value: unknown): PersistedSettings {
       allBoardColor: isThemeColor(appearance?.allBoardColor)
         ? appearance.allBoardColor
         : defaults.appearance.allBoardColor,
+      sourceCardHeight: isSourceCardHeight(appearance?.sourceCardHeight)
+        ? appearance.sourceCardHeight
+        : defaults.appearance.sourceCardHeight,
       themeMode: isThemeMode(appearance?.themeMode)
         ? appearance.themeMode
         : defaults.appearance.themeMode,
@@ -160,6 +171,10 @@ export function isSettingsTabId(value: unknown): value is SettingsTabId {
     || value === "provider"
     || value === "permissions"
     || value === "data"
+}
+
+export function isSourceCardHeight(value: unknown): value is SourceCardHeight {
+  return SOURCE_CARD_HEIGHTS.includes(value)
 }
 
 export function normalizeChatProviderSettings(value: unknown): ChatProviderSettings {
