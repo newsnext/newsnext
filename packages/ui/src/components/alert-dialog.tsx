@@ -60,7 +60,7 @@ function AlertDialogContent({
         render={(
           <ModalPopup
             className={cn(
-              "group/alert-dialog-content max-w-[calc(100%-2rem)] text-popover-foreground data-[size=sm]:max-w-xs data-[size=default]:sm:max-w-md",
+              "group/alert-dialog-content max-w-[calc(100%-2rem)] text-foreground data-[size=sm]:max-w-xs data-[size=default]:sm:max-w-md",
               className,
             )}
           />

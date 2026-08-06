@@ -211,7 +211,7 @@ the app shell.
 
 Inside the browser panel, reuse the card color composition instead of the modal
 shell color: mix `var(--background)` with the active theme color at 55%, then
-overlay `bg-background/70` with `zenith-theme-400`. Do not use `var(--popover)`.
+overlay `bg-background/70` with `zenith-theme-400`.
 Compose both color layers edge to edge without inset, padding, or container
 rounding, so theme color shows through the translucent content layer across the
 entire native Side Panel viewport. Reuse the card color composition, not its
@@ -243,8 +243,8 @@ reuse the shared modal components instead of defining local backdrop values or
 motion. `ModalOverlay` uses `bg-black/75` without backdrop blur and applies a
 `150ms` opacity fade. `ModalPopup` owns the centered modal motion, while
 `ModalTitle`, `ModalDescription`, and `ModalCloseButton` own their shared visual
-treatments. Centered surfaces use a `3xl` outer squircle, the shared 60% popover
-/ 40% theme shell color, and a `10px` shell inset where a nested surface is
+treatments. Centered surfaces use a `3xl` outer squircle, the shared 60%
+background / 40% theme shell color, and a `10px` shell inset where a nested surface is
 present. Nested content uses a `2xl` shape with `bg-background/70` and
 `zenith-theme-400`.
 
@@ -282,7 +282,7 @@ Single-column dialogs related to boards should use the card surface language.
 They must have:
 
 - A theme-colored outer `3xl` squircle using the Settings dialog color ratio:
-  60% `var(--popover)` and 40% `var(--color-theme-400)`. Its structure follows
+  60% `var(--background)` and 40% `var(--color-theme-400)`. Its structure follows
   cards, but its restrained color balance follows Settings.
 - `10px` (`p-2.5`) of outer padding on every side, leaving a visible theme-colored
   shell around the nested content.

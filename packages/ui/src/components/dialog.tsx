@@ -65,7 +65,7 @@ function DialogContent({
         render={(
           <ModalPopup
             className={cn(
-              "max-w-[calc(100%-2rem)] text-sm text-popover-foreground sm:max-w-md",
+              "max-w-[calc(100%-2rem)] text-sm text-foreground sm:max-w-md",
               className,
             )}
           />

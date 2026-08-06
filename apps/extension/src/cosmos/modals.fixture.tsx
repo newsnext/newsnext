@@ -185,7 +185,7 @@ function SharedModalPartsFixture() {
       <section className="relative isolate h-96 w-full max-w-2xl overflow-hidden rounded-3xl border bg-card">
         <ModalOverlay className="absolute rounded-3xl" data-open />
         <ModalPopup
-          className="absolute max-w-sm text-popover-foreground"
+          className="absolute max-w-sm text-foreground"
           data-open
         >
           <SquircleBox radius="3xl" variant="modal-shell" className="relative">

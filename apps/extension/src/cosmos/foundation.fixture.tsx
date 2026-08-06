@@ -22,7 +22,6 @@ import { FixturePage, FixtureSection, FixtureState } from "@/cosmos/fixture-layo
 const SEMANTIC_COLORS = [
   { name: "Background", variable: "--background", foreground: "--foreground" },
   { name: "Card", variable: "--card", foreground: "--card-foreground" },
-  { name: "Popover", variable: "--popover", foreground: "--popover-foreground" },
   { name: "Primary", variable: "--primary", foreground: "--primary-foreground" },
   { name: "Secondary", variable: "--secondary", foreground: "--secondary-foreground" },
   { name: "Muted", variable: "--muted", foreground: "--muted-foreground" },

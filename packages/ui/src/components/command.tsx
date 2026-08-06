@@ -25,7 +25,7 @@ function Command({
     <CommandRoot
       data-slot="command"
       className={cn(
-        "flex size-full flex-col overflow-hidden rounded-3xl bg-popover p-1 text-popover-foreground",
+        "flex size-full flex-col overflow-hidden rounded-3xl bg-background p-1 text-foreground",
         className,
       )}
       {...props}
