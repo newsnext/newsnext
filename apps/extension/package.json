@@ -27,6 +27,7 @@
     "@newsnext/registry": "workspace:*",
     "@newsnext/source": "workspace:*",
     "@newsnext/ui": "workspace:*",
+    "@tanstack/react-hotkeys": "catalog:",
     "@tanstack/react-query": "catalog:",
     "@tanstack/react-router": "catalog:",
     "@webext-core/messaging": "^4.0.0",

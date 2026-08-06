@@ -1,3 +1,4 @@
+import type { Hotkey } from "@tanstack/react-hotkeys"
 import type { ReactNode } from "react"
 import type { Board } from "@/lib/boards"
 import type { BoardSource } from "@/typings/source"
@@ -18,6 +19,7 @@ import {
   DialogTitle,
 } from "@newsnext/ui/components/dialog"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
+import { formatForDisplay, useHotkey } from "@tanstack/react-hotkeys"
 import { useQueries, useQueryClient } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
 import { useAtomValue } from "jotai"
@@ -30,6 +32,7 @@ import {
 import { useSourceDescriptors } from "@/hooks/use-source-descriptors"
 import { useSourceIcon } from "@/hooks/use-source-icon"
 import { ALL_BOARD_ID } from "@/lib/boards"
+import { DEFAULT_SHORTCUT_SETTINGS, SHORTCUT_DEFINITIONS } from "@/lib/shortcuts"
 import {
   applySourceLoaderMetadata,
   buildSourceCards,
@@ -37,6 +40,7 @@ import {
 } from "@/lib/source-cards"
 import { readPersistedSourceCache } from "@/lib/source-loader"
 import { boardsAtom, instancesAtom } from "@/store/board"
+import { shortcutSettingsAtom } from "@/store/settings"
 import { SourceIcon } from "../card/source-icon"
 import { PhMagnifyingGlass } from "../icons/ph"
 
@@ -113,19 +117,21 @@ function SearchSourceIcon({ source }: { source: BoardSource }): ReactNode {
 
 export function SearchDialog(): ReactNode {
   const [open, setOpen] = useState(false)
+  const shortcuts = useAtomValue(shortcutSettingsAtom)
   const navigate = useNavigate()
 
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key.toLowerCase() === "k" && (event.metaKey || event.ctrlKey)) {
-        event.preventDefault()
-        setOpen(prev => !prev)
-      }
-    }
-
-    window.addEventListener("keydown", onKeyDown)
-    return () => window.removeEventListener("keydown", onKeyDown)
-  }, [])
+  useHotkey(
+    shortcuts.search ?? DEFAULT_SHORTCUT_SETTINGS.search,
+    () => setOpen(prev => !prev),
+    {
+      enabled: shortcuts.search !== null,
+      meta: {
+        name: SHORTCUT_DEFINITIONS.search.label,
+        description: SHORTCUT_DEFINITIONS.search.description,
+      },
+      requireReset: true,
+    },
+  )
 
   async function handleSelectItem(source: BoardSource, targetBoardId: string): Promise<void> {
     setOpen(false)
@@ -140,22 +146,29 @@ export function SearchDialog(): ReactNode {
         variant="ghost"
         size="icon"
         className="island-pill size-10"
-        title="Search"
+        title={shortcuts.search ? `Search (${formatForDisplay(shortcuts.search)})` : "Search"}
         onClick={() => setOpen(true)}
       >
         <PhMagnifyingGlass className="size-5" />
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        {open && <SearchDialogContent onSelectItem={handleSelectItem} />}
+        {open && (
+          <SearchDialogContent
+            hotkey={shortcuts.search}
+            onSelectItem={handleSelectItem}
+          />
+        )}
       </Dialog>
     </>
   )
 }
 
 function SearchDialogContent({
+  hotkey,
   onSelectItem,
 }: {
+  hotkey: Hotkey | null
   onSelectItem: (source: BoardSource, targetBoardId: string) => void
 }): ReactNode {
   const boards = useAtomValue(boardsAtom)
@@ -229,14 +242,22 @@ function SearchDialogContent({
     [boards, resolvedSearchItems],
   )
 
-  return <SearchModalContent groups={searchGroups} onSelectItem={onSelectItem} />
+  return (
+    <SearchModalContent
+      groups={searchGroups}
+      hotkey={hotkey}
+      onSelectItem={onSelectItem}
+    />
+  )
 }
 
 export function SearchModalContent({
   groups,
+  hotkey,
   onSelectItem,
 }: {
   groups: SearchGroup[]
+  hotkey: Hotkey | null
   onSelectItem: (source: BoardSource, targetBoardId: string) => void
 }): ReactNode {
   return (
@@ -250,9 +271,11 @@ export function SearchModalContent({
         <DialogDescription className="sr-only">
           Find and open cards from all boards.
         </DialogDescription>
-        <kbd className="ml-auto rounded-md bg-background/25 px-1.5 py-0.5 font-sans text-[10px] font-medium text-foreground/45 ring-1 ring-foreground/10">
-          {navigator.platform.includes("Mac") ? "⌘ K" : "Ctrl K"}
-        </kbd>
+        {hotkey && (
+          <kbd className="ml-auto rounded-md bg-background/25 px-1.5 py-0.5 font-sans text-[10px] font-medium text-foreground/45 ring-1 ring-foreground/10">
+            {formatForDisplay(hotkey)}
+          </kbd>
+        )}
       </DialogHeader>
 
       <SquircleBox

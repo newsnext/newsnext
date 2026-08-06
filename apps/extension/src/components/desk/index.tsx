@@ -1,13 +1,18 @@
 import { useScrollProgressActionsContext } from "@newsnext/ui/components/scroll-progress-context"
+import { useHotkey } from "@tanstack/react-hotkeys"
+import { useAtomValue } from "jotai"
 import { useEffect, useRef, useState } from "react"
 import { BoardItemsProvider } from "@/components/board-items-provider"
 import { NextLayer } from "@/components/nextlayer"
 import { NowLayer } from "@/components/nowlayer"
 import { ALL_BOARD_ID } from "@/lib/boards"
+import { DEFAULT_SHORTCUT_SETTINGS, SHORTCUT_DEFINITIONS } from "@/lib/shortcuts"
 import { cn } from "@/lib/utils"
+import { shortcutSettingsAtom } from "@/store/settings"
 
 export function Desk({ boardId }: { boardId: string }) {
   const supportsNextLayer = boardId !== ALL_BOARD_ID
+  const shortcuts = useAtomValue(shortcutSettingsAtom)
   const [isScattered, setIsScattered] = useState(false)
   const nowLayerRef = useRef<HTMLDivElement>(null)
   const {
@@ -15,20 +20,18 @@ export function Desk({ boardId }: { boardId: string }) {
     setIsNextLayerActive,
   } = useScrollProgressActionsContext()
 
-  useEffect(() => {
-    if (!supportsNextLayer) {
-      return
-    }
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Tab") {
-        e.preventDefault()
-        setIsScattered(prev => !prev)
-      }
-    }
-    window.addEventListener("keydown", handleKeyDown)
-    return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [supportsNextLayer])
+  useHotkey(
+    shortcuts.toggleNextLayer ?? DEFAULT_SHORTCUT_SETTINGS.toggleNextLayer,
+    () => setIsScattered(prev => !prev),
+    {
+      enabled: supportsNextLayer && shortcuts.toggleNextLayer !== null,
+      meta: {
+        name: SHORTCUT_DEFINITIONS.toggleNextLayer.label,
+        description: SHORTCUT_DEFINITIONS.toggleNextLayer.description,
+      },
+      requireReset: true,
+    },
+  )
 
   useEffect(() => {
     setIsNextLayerActive(isScattered)

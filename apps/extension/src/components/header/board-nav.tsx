@@ -6,12 +6,14 @@ import {
   PillGroupIndicator,
   pillGroupItemClassName,
 } from "@newsnext/ui/components/pill-group"
+import { useHotkeys } from "@tanstack/react-hotkeys"
 import { useNavigate } from "@tanstack/react-router"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { useState } from "react"
 import { BoardDialog } from "@/components/board-dialog"
 import { PhPlusCircleDuotone } from "@/components/icons/ph"
-import { ALL_BOARD_ID } from "@/lib/boards"
+import { ALL_BOARD_ID, getAdjacentBoardId } from "@/lib/boards"
+import { DEFAULT_SHORTCUT_SETTINGS, SHORTCUT_DEFINITIONS } from "@/lib/shortcuts"
 import { cn } from "@/lib/utils"
 import {
   boardsAtom,
@@ -19,21 +21,90 @@ import {
   deleteBoardAtom,
   updateBoardAtom,
 } from "@/store/board"
-import { currentBoardIdAtom } from "@/store/settings"
+import { currentBoardIdAtom, shortcutSettingsAtom } from "@/store/settings"
+
+const INTERACTIVE_BOARD_NAV_SELECTOR = [
+  "button",
+  "input",
+  "textarea",
+  "select",
+  "[contenteditable]",
+  "[role=dialog]",
+  "[role=menu]",
+  "[role=tab]",
+  "[role=slider]",
+  "[role=menuitem]",
+  "[role=listbox]",
+  "[role=option]",
+].join(", ")
 
 export function BoardNav() {
   const boards = useAtomValue(boardsAtom)
   const navigate = useNavigate()
   const [currentBoardId, setCurrentBoardId] = useAtom(currentBoardIdAtom)
+  const shortcuts = useAtomValue(shortcutSettingsAtom)
   const addBoard = useSetAtom(createBoardAtom)
   const updateBoard = useSetAtom(updateBoardAtom)
   const deleteBoard = useSetAtom(deleteBoardAtom)
   const [dialogTarget, setDialogTarget] = useState<BoardDialogTarget | null>(null)
 
+  function openBoard(boardId: string): void {
+    setCurrentBoardId(boardId)
+    void navigate({ to: "/board/$boardId", params: { boardId } })
+  }
+
+  function switchBoard(offset: -1 | 1, event: KeyboardEvent): void {
+    const target = event.target
+    if (target instanceof HTMLElement) {
+      const interactive = target.closest<HTMLElement>(INTERACTIVE_BOARD_NAV_SELECTOR)
+      if (interactive && !interactive.hasAttribute("data-board-tab")) {
+        return
+      }
+    }
+
+    const nextBoardId = getAdjacentBoardId(boards, currentBoardId, offset)
+    if (!nextBoardId) return
+
+    event.preventDefault()
+    event.stopPropagation()
+    openBoard(nextBoardId)
+  }
+
+  useHotkeys(
+    [
+      {
+        hotkey: shortcuts.previousBoard ?? DEFAULT_SHORTCUT_SETTINGS.previousBoard,
+        callback: event => switchBoard(-1, event),
+        options: {
+          enabled: shortcuts.previousBoard !== null,
+          meta: {
+            name: SHORTCUT_DEFINITIONS.previousBoard.label,
+            description: SHORTCUT_DEFINITIONS.previousBoard.description,
+          },
+        },
+      },
+      {
+        hotkey: shortcuts.nextBoard ?? DEFAULT_SHORTCUT_SETTINGS.nextBoard,
+        callback: event => switchBoard(1, event),
+        options: {
+          enabled: shortcuts.nextBoard !== null,
+          meta: {
+            name: SHORTCUT_DEFINITIONS.nextBoard.label,
+            description: SHORTCUT_DEFINITIONS.nextBoard.description,
+          },
+        },
+      },
+    ],
+    {
+      preventDefault: false,
+      requireReset: true,
+      stopPropagation: false,
+    },
+  )
+
   function handleCreate(board: Board): void {
     addBoard(board)
-    setCurrentBoardId(board.id)
-    void navigate({ to: "/board/$boardId", params: { boardId: board.id } })
+    openBoard(board.id)
   }
 
   function handleUpdate(board: Board): void {
@@ -42,7 +113,7 @@ export function BoardNav() {
 
   function handleDelete(boardId: string): void {
     deleteBoard(boardId)
-    void navigate({ to: "/board/$boardId", params: { boardId: ALL_BOARD_ID } })
+    openBoard(ALL_BOARD_ID)
   }
 
   return (
@@ -54,6 +125,7 @@ export function BoardNav() {
           return (
             <Button
               key={board.id}
+              data-board-tab=""
               type="button"
               variant="transparent"
               size="sm"
@@ -69,8 +141,7 @@ export function BoardNav() {
                   return
                 }
 
-                setCurrentBoardId(board.id)
-                void navigate({ to: "/board/$boardId", params: { boardId: board.id } })
+                openBoard(board.id)
               }}
               className={cn(
                 pillGroupItemClassName({ active: isActive }),

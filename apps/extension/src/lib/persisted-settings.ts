@@ -1,5 +1,6 @@
 import type { Color } from "@newsnext/shared/types"
 import type { BgIllustrationTransform } from "./bg-illustration/config"
+import type { ShortcutSettings } from "./shortcuts"
 import type { SourceIconSettings, SourceIconSource } from "./source-icon"
 import type { ThemeMode } from "./utils/swith-theme"
 import {
@@ -10,12 +11,13 @@ import {
   normalizeBgIllustrationTransform,
 } from "./bg-illustration/config"
 import { ALL_BOARD_ID, DEFAULT_BOARD_COLOR } from "./boards"
+import { DEFAULT_SHORTCUT_SETTINGS, normalizeShortcutSettings } from "./shortcuts"
 import { DEFAULT_SOURCE_ICON_SETTINGS } from "./source-icon"
 import { isThemeColor } from "./theme-color"
 
-export const PERSISTED_SETTINGS_VERSION = 4
+export const PERSISTED_SETTINGS_VERSION = 5
 
-export type SettingsTabId = "appearance" | "general" | "provider" | "permissions" | "data"
+export type SettingsTabId = "appearance" | "general" | "shortcuts" | "provider" | "permissions" | "data"
 
 export interface ChatProviderSettings {
   apiKey: string
@@ -43,6 +45,7 @@ export interface PersistedSettings {
     defaultBoardId: string | null
     sourceIcon: SourceIconSettings
   }
+  shortcuts: ShortcutSettings
   version: typeof PERSISTED_SETTINGS_VERSION
 }
 
@@ -67,6 +70,7 @@ export function createDefaultPersistedSettings(): PersistedSettings {
       defaultBoardId: ALL_BOARD_ID,
       sourceIcon: { ...DEFAULT_SOURCE_ICON_SETTINGS },
     },
+    shortcuts: { ...DEFAULT_SHORTCUT_SETTINGS },
     version: PERSISTED_SETTINGS_VERSION,
   }
 }
@@ -113,6 +117,7 @@ export function normalizePersistedSettings(value: unknown): PersistedSettings {
         defaults.general.sourceIcon,
       ),
     },
+    shortcuts: normalizeShortcutSettings(value.shortcuts),
     version: PERSISTED_SETTINGS_VERSION,
   }
 }
@@ -151,6 +156,7 @@ export function withSourceConnectionEnabled(
 export function isSettingsTabId(value: unknown): value is SettingsTabId {
   return value === "appearance"
     || value === "general"
+    || value === "shortcuts"
     || value === "provider"
     || value === "permissions"
     || value === "data"

@@ -9,6 +9,7 @@ import {
   normalizePersistedSettings,
   withSourceConnectionEnabled,
 } from "./persisted-settings"
+import { DEFAULT_SHORTCUT_SETTINGS } from "./shortcuts"
 
 describe("persisted settings", () => {
   it("normalizes invalid imported fields to their defaults", () => {
@@ -67,6 +68,25 @@ describe("persisted settings", () => {
       scale: 4,
       rotation: 0,
     })
+  })
+
+  it("normalizes keyboard shortcuts", () => {
+    expect(normalizePersistedSettings({
+      shortcuts: { search: "Mod+F", toggleNextLayer: "Mod+Shift+L" },
+    }).shortcuts).toEqual({
+      ...DEFAULT_SHORTCUT_SETTINGS,
+      search: "Mod+F",
+      toggleNextLayer: "Mod+Shift+L",
+    })
+    expect(normalizePersistedSettings({
+      shortcuts: { toggleNextLayer: null },
+    }).shortcuts.toggleNextLayer).toBeNull()
+    expect(normalizePersistedSettings({
+      shortcuts: { search: "esc" },
+    }).shortcuts.search).toBe("Escape")
+    expect(normalizePersistedSettings({
+      shortcuts: { search: "Not+A+Hotkey", toggleNextLayer: "Not+A+Hotkey" },
+    }).shortcuts).toEqual(DEFAULT_SHORTCUT_SETTINGS)
   })
 
   it("updates the CLI preference without changing other settings", () => {

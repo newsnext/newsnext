@@ -195,6 +195,29 @@ colors stay local to the timeline rail, source identity, and hover state while
 the page inherits the active board theme. Do not place filter controls in Next
 Layer; configure the shared Now/Next item filter in the Board dialog.
 
+### Keyboard shortcut settings
+
+Keep user-editable keyboard shortcuts in a dedicated Settings tab. Present each
+command as a compact row with its purpose, platform-aware binding, and reset
+action. Start recording from the binding itself, preserve the current binding,
+and indicate capture with a theme-colored ring. Keep cancellation and clearing
+instructions visible in the section description. Store portable bindings so the
+same setting can render native modifier labels on each platform. A cleared
+binding disables the command without removing it from the editor. Outside
+text-entry controls, single-action commands own their configured key regardless
+of focused buttons. Single-key commands defer to text entry, while modified
+global commands such as Search can remain active there. Users can change or
+clear a binding when they prefer the key's native control behavior.
+Size shortcut rows from their settings-panel container rather than the viewport:
+stack command details above controls in narrow panels, size the binding to its
+content, and keep reset as a compact labeled icon action. Render bindings as
+quiet `kbd` text rather than monospace labels.
+Read every visible shortcut hint from the saved binding instead of duplicating
+defaults in feature UI. Hide a hint when its command binding is cleared.
+Previous and next board commands wrap across the ordered board list. Keep their
+default arrow bindings active from the page and focused board tabs, while
+preserving directional-key behavior inside other interactive controls.
+
 ### Card reordering
 
 - Keep the All board in its fixed newest-first order and omit drag handles there;

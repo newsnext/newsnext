@@ -285,6 +285,7 @@ function SearchModalFixture() {
         {open && (
           <SearchModalContent
             groups={SEARCH_GROUPS}
+            hotkey="Mod+K"
             onSelectItem={(source) => {
               setLastOpenedTitle(source.metadata.title || source.provider.title)
               setOpen(false)

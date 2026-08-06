@@ -5,6 +5,7 @@ import type {
   PersistedSettings,
   SettingsTabId,
 } from "@/lib/persisted-settings"
+import type { ShortcutSettings } from "@/lib/shortcuts"
 import type { SourceIconSettings } from "@/lib/source-icon"
 import type { ThemeMode } from "@/lib/utils/swith-theme"
 import { atom } from "jotai"
@@ -123,6 +124,17 @@ export const sourceIconSettingsAtom = atom(
       ...settings,
       general: { ...settings.general, sourceIcon },
     })
+  },
+)
+
+export const shortcutSettingsAtom = atom(
+  get => get(persistedSettingsAtom).shortcuts,
+  (get, set, update: SettingsValueUpdate<ShortcutSettings>) => {
+    const settings = get(persistedSettingsAtom)
+    const shortcuts = typeof update === "function"
+      ? update(settings.shortcuts)
+      : update
+    set(persistedSettingsAtom, { ...settings, shortcuts })
   },
 )
 

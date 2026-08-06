@@ -29,6 +29,17 @@ export function getBoardColor(board: Board): Color {
   return board.color ?? DEFAULT_BOARD_COLOR
 }
 
+export function getAdjacentBoardId(
+  boards: readonly Pick<Board, "id">[],
+  currentBoardId: string,
+  offset: -1 | 1,
+): string | undefined {
+  if (boards.length < 2) return undefined
+  const currentIndex = boards.findIndex(board => board.id === currentBoardId)
+  if (currentIndex === -1) return undefined
+  return boards[(currentIndex + offset + boards.length) % boards.length]?.id
+}
+
 export function isBoardNameTaken(boards: Board[], name: string, excludedBoardId?: string): boolean {
   const normalizedName = name.trim()
   return boards.some(board => board.id !== excludedBoardId
