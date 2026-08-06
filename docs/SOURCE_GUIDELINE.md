@@ -567,6 +567,8 @@ JSON Feed 1.0 and 1.1 it maps `title`, `description`, `home_page_url`, and
 `icon` or `favicon`; it also maps the first author name and avatar to item
 inline metadata. Because JSON Feed item titles are optional, the loader derives
 a bounded title from `summary`, `content_text`, or `content_html` when needed.
+RSS and Atom text fields decode HTML character references once after XML
+parsing, including references preserved literally inside CDATA sections.
 Entries without a usable title or URL are ignored; an invalid date leaves the
 item without a timestamp instead of failing the complete feed.
 

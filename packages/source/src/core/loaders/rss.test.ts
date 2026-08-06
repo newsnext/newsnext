@@ -60,6 +60,30 @@ describe("parseRss", () => {
     })
   })
 
+  it("decodes HTML entities preserved inside XML CDATA", () => {
+    expect(parseRss(`
+      <rss version="2.0">
+        <channel>
+          <title><![CDATA[AI &amp; Technology]]></title>
+          <description><![CDATA[News about &quot;AI&quot;]]></description>
+          <item>
+            <title><![CDATA[Launch &quot;Project Star&quot;]]></title>
+            <link>https://example.com/project-star</link>
+          </item>
+        </channel>
+      </rss>
+    `)).toEqual({
+      items: [{
+        title: "Launch \"Project Star\"",
+        url: "https://example.com/project-star",
+      }],
+      metadata: {
+        desc: "News about \"AI\"",
+        title: "AI & Technology",
+      },
+    })
+  })
+
   it("uses published timestamps when entries are ordered by publication date", () => {
     expect(parseRss(`
       <feed xmlns="http://www.w3.org/2005/Atom">

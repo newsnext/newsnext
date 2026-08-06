@@ -4,6 +4,7 @@ import type {
 } from "../../types"
 import type { LoaderContext } from "./shared"
 import { load } from "cheerio/slim"
+import { decodeHTMLStrict } from "entities"
 import { XMLParser } from "fast-xml-parser"
 import { resolveSourceLoaderResultUrls } from "../base-url"
 import { normalizeLoaderMetadata, requestLoaderResponse } from "./shared"
@@ -252,9 +253,9 @@ function readXmlOptionalText(value: unknown): string | undefined {
 }
 
 function readXmlText(value: unknown): string {
-  if (typeof value === "string") return value
+  if (typeof value === "string") return decodeHTMLStrict(value)
   if (!isRecord(value)) return ""
-  return typeof value.$text === "string" ? value.$text : ""
+  return typeof value.$text === "string" ? decodeHTMLStrict(value.$text) : ""
 }
 
 function readString(value: unknown): string {

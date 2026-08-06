@@ -21,6 +21,7 @@
     "@smithy/md5-js": "^4.4.16",
     "cheerio": "^1.2.0",
     "defu": "catalog:",
+    "entities": "^7.0.1",
     "fast-xml-parser": "^5.10.1",
     "iconv-lite": "^0.7.3",
     "jmespath": "^0.16.0",

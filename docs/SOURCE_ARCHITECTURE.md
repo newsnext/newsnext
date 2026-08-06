@@ -433,9 +433,12 @@ makes output independent of declaration order and prevents template cycles.
 RSS loaders request the response as text explicitly, sniff JSON versus XML,
 and support RSS, Atom, and JSON Feed 1.0 or 1.1 through one resolution path.
 RSS and Atom map their channel/feed metadata and entries; JSON Feed maps its
-presentation metadata, first item author, and item URL fields. A missing JSON
-Feed item title is derived from its summary, text content, or stripped HTML and
-bounded to 200 characters. Entries without a usable title or URL are discarded.
+presentation metadata, first item author, and item URL fields. XML text values
+receive one strict HTML character-reference decoding pass after parsing so
+entities left literal by CDATA-producing feeds do not leak into presentation.
+A missing JSON Feed item title is derived from its summary, text content, or
+stripped HTML and bounded to 200 characters. Entries without a usable title or
+URL are discarded.
 After filtering, the loader exposes publication timestamps only when every
 entry has one and they are monotonically non-increasing; otherwise it applies
 the same test to update timestamps. If neither date set matches the preserved
