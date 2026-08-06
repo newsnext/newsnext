@@ -120,6 +120,9 @@ Cards define the primary NewsNext surface treatment.
   writing `theme-500` directly. Reserve explicit `theme-*` shades for locally
   scoped palettes, such as provider-colored cards, theme choices, and tonal
   gradients.
+- Keep standard `Card` and `Alert` surfaces on the shared semantic `background`
+  and `foreground` colors. Do not introduce a separate card color pair; create
+  hierarchy with the established translucent or theme-mixed surface treatments.
 - Build semantic surface colors from Tailwind palette variables when an exact
   palette value exists; avoid duplicating those colors as raw OKLCH or hex
   literals.

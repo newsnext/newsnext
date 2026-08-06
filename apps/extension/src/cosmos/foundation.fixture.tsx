@@ -21,7 +21,6 @@ import { FixturePage, FixtureSection, FixtureState } from "@/cosmos/fixture-layo
 
 const SEMANTIC_COLORS = [
   { name: "Background", variable: "--background", foreground: "--foreground" },
-  { name: "Card", variable: "--card", foreground: "--card-foreground" },
   { name: "Primary", variable: "--primary", foreground: "--primary-foreground" },
   { name: "Secondary", variable: "--secondary", foreground: "--secondary-foreground" },
   { name: "Muted", variable: "--muted", foreground: "--muted-foreground" },
@@ -81,7 +80,7 @@ function ColorsFixture(): React.JSX.Element {
       <FixtureSection title="Control colors" description="Borders, inputs, and focus rings are supporting colors rather than standalone surfaces.">
         <div className="grid gap-3 sm:grid-cols-3">
           {CONTROL_COLORS.map(color => (
-            <div key={color.variable} className="flex items-center gap-3 rounded-xl bg-card p-3 ring-1 ring-foreground/10">
+            <div key={color.variable} className="flex items-center gap-3 rounded-xl bg-background p-3 ring-1 ring-foreground/10">
               <span
                 aria-hidden="true"
                 className="size-10 shrink-0 rounded-lg ring-1 ring-foreground/10"

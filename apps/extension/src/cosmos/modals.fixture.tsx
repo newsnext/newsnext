@@ -182,7 +182,7 @@ function DialogFixture() {
 function SharedModalPartsFixture() {
   return (
     <FixtureStage>
-      <section className="relative isolate h-96 w-full max-w-2xl overflow-hidden rounded-3xl border bg-card">
+      <section className="relative isolate h-96 w-full max-w-2xl overflow-hidden rounded-3xl border bg-background">
         <ModalOverlay className="absolute rounded-3xl" data-open />
         <ModalPopup
           className="absolute max-w-sm text-foreground"

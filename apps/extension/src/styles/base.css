@@ -8,8 +8,6 @@
   --background: var(--color-neutral-100);
   --background-grid-line: color-mix(in oklab, var(--foreground) 1%, transparent);
   --foreground: var(--color-neutral-900);
-  --card: var(--color-neutral-50);
-  --card-foreground: var(--color-neutral-900);
   --primary: var(--color-theme-500);
   --primary-foreground: var(--color-white);
   --secondary: var(--color-neutral-50);
@@ -27,8 +25,6 @@
 .dark {
   --background: var(--color-neutral-900);
   --foreground: var(--color-neutral-300);
-  --card: var(--color-neutral-900);
-  --card-foreground: var(--color-neutral-50);
   --primary: var(--color-theme-500);
   --primary-foreground: var(--color-white);
   --secondary: var(--color-neutral-800);
@@ -46,8 +42,6 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);

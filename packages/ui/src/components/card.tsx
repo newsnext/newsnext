@@ -20,8 +20,8 @@ function Card({
       data-size={size}
       data-variant={variant}
       className={cn(
-        "group/card flex flex-col text-sm text-card-foreground",
-        variant === "default" && "gap-6 bg-card py-6 has-[>img:first-child]:pt-0 data-[size=sm]:gap-4 data-[size=sm]:py-4",
+        "group/card flex flex-col text-sm text-foreground",
+        variant === "default" && "gap-6 bg-background py-6 has-[>img:first-child]:pt-0 data-[size=sm]:gap-4 data-[size=sm]:py-4",
         variant === "subtle" && "relative isolate gap-0 bg-foreground/3",
         className,
       )}

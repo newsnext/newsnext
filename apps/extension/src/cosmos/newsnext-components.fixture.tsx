@@ -43,7 +43,7 @@ function BrandAndActionsFixture(): React.JSX.Element {
   return (
     <FixturePage>
       <h1 className="text-xl font-semibold">Brand and actions</h1>
-      <div className="flex items-center gap-4 rounded-2xl bg-card p-6 ring-1 ring-foreground/10">
+      <div className="flex items-center gap-4 rounded-2xl bg-background p-6 ring-1 ring-foreground/10">
         <Logo className="size-14 text-primary" />
         <WordmarkLogo className="h-auto w-52" />
       </div>
@@ -121,7 +121,7 @@ function FlipFixture(): React.JSX.Element {
         <Button variant="outline" onClick={() => setFlipped(value => !value)}>Flip card</Button>
       </div>
       <FlipAnimate className="h-64" rotate="y" flipped={flipped}>
-        <section className="grid place-items-center rounded-3xl bg-card text-xl ring-1 ring-foreground/10">Front</section>
+        <section className="grid place-items-center rounded-3xl bg-background text-xl ring-1 ring-foreground/10">Front</section>
         <section className="grid place-items-center rounded-3xl bg-primary text-xl text-primary-foreground">Back</section>
       </FlipAnimate>
     </FixturePage>
@@ -136,7 +136,7 @@ function ContentSafetyFixture(): React.JSX.Element {
       <h1 className="text-xl font-semibold">Sanitized content and delayed media</h1>
       <SafeHtml
         as="div"
-        className="prose rounded-2xl bg-card p-5 ring-1 ring-foreground/10"
+        className="prose rounded-2xl bg-background p-5 ring-1 ring-foreground/10"
         html={"<h2>Imported article</h2><p>Allowed <strong>formatting</strong> remains.</p><img src=x onerror=\"document.body.dataset.unsafe=1\">"}
       />
       <ProxiedImage className="h-40 w-80 rounded-3xl object-cover" src={image} delay={600} />
@@ -151,7 +151,7 @@ function VirtualListFixture(): React.JSX.Element {
   return (
     <FixturePage>
       <h1 className="text-xl font-semibold">Virtual list</h1>
-      <div ref={setScrollElement} className="h-96 overflow-auto rounded-2xl bg-card ring-1 ring-foreground/10">
+      <div ref={setScrollElement} className="h-96 overflow-auto rounded-2xl bg-background ring-1 ring-foreground/10">
         <VirtualList
           items={items}
           scrollElement={scrollElement}
