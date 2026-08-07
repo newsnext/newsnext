@@ -9,7 +9,7 @@ import {
 import { cn } from "@newsnext/ui/lib/utils"
 import { useEffect, useState } from "react"
 import { consumeSettingsOpenRequest, subscribeToSettingsOpenRequests } from "@/lib/settings-navigation"
-import { PhGearDuotone, PhUserDuotone } from "../icons/ph"
+import { PhGear, PhUser } from "../icons/ph"
 import { SettingsModal } from "../settings"
 
 const initialSettingsTab = consumeSettingsOpenRequest()
@@ -35,12 +35,12 @@ export function UserMenu() {
           )}
           title="Settings"
         >
-          <PhUserDuotone className="size-5" />
+          <PhUser className="size-5" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-64">
           <DropdownMenuGroup>
             <DropdownMenuItem onClick={() => openSettings()}>
-              <PhGearDuotone className="size-4" />
+              <PhGear className="size-4" />
               Settings
             </DropdownMenuItem>
           </DropdownMenuGroup>

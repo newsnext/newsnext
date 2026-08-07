@@ -7,7 +7,7 @@ import { useQueryClient } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
 import { useAtomValue, useSetAtom } from "jotai"
 import { useRef, useState } from "react"
-import { PhCheckCircleDuotone, PhTrashDuotone } from "@/components/icons/ph"
+import { PhCheckCircle, PhTrash } from "@/components/icons/ph"
 import { ALL_BOARD_ID, DEFAULT_BOARD_COLOR } from "@/lib/boards"
 import { clearNonPortableUserData } from "@/lib/clear-user-data"
 import {
@@ -239,8 +239,8 @@ export function DataTransferSettings({
               onClick={() => void handleClear()}
             >
               {clearArmed
-                ? <PhCheckCircleDuotone data-icon="inline-start" />
-                : <PhTrashDuotone data-icon="inline-start" />}
+                ? <PhCheckCircle data-icon="inline-start" />
+                : <PhTrash data-icon="inline-start" />}
               {clearing
                 ? "Clearing..."
                 : clearArmed ? "Confirm clear all data" : "Clear all user data"}

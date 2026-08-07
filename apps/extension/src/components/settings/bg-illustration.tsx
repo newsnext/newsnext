@@ -6,7 +6,7 @@ import { Slider } from "@newsnext/ui/components/slider"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { useAtom } from "jotai"
 import { useEffect, useRef, useState } from "react"
-import { PhArrowCounterClockwiseDuotone } from "@/components/icons/ph"
+import { PhArrowCounterClockwise } from "@/components/icons/ph"
 import {
   areBgIllustrationTransformsEqual,
   createBgIllustrationFromImage,
@@ -381,7 +381,7 @@ export function BgIllustrationSettings(): React.JSX.Element {
               replaceDraftTransform(DEFAULT_BG_ILLUSTRATION_TRANSFORM)
             }}
           >
-            <PhArrowCounterClockwiseDuotone />
+            <PhArrowCounterClockwise />
           </Button>
         )}
         {status && (

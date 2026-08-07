@@ -8,7 +8,7 @@ import {
 } from "@tanstack/react-hotkeys"
 import { useAtom } from "jotai"
 import { useState } from "react"
-import { PhArrowCounterClockwiseDuotone } from "@/components/icons/ph"
+import { PhArrowCounterClockwise } from "@/components/icons/ph"
 import {
   DEFAULT_SHORTCUT_SETTINGS,
   SHORTCUT_DEFINITIONS,
@@ -159,7 +159,7 @@ function ShortcutRow({
           title={`Reset ${label} shortcut`}
           onClick={onReset}
         >
-          <PhArrowCounterClockwiseDuotone />
+          <PhArrowCounterClockwise />
         </Button>
       </div>
     </div>

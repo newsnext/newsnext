@@ -1,6 +1,6 @@
 import type { BoardSource } from "@/typings/source"
 import { Button } from "@newsnext/ui/components/button"
-import { PhInfoDuotone } from "../icons/ph"
+import { PhInfo } from "../icons/ph"
 import { SourceIcon } from "./source-icon"
 
 interface SourceActionStateProps {
@@ -126,7 +126,7 @@ export function SourceStatusMessage({
   return (
     <div className="absolute inset-x-0 bottom-0 z-10 border-t border-foreground/10 bg-background/45 px-3 py-2 backdrop-blur-sm">
       <span className="line-clamp-2 text-pretty text-center text-xs leading-5 text-muted-foreground">
-        <PhInfoDuotone className="mr-1 inline size-[1em] align-[-0.125em]" />
+        <PhInfo className="mr-1 inline size-[1em] align-[-0.125em]" />
         {message}
       </span>
     </div>

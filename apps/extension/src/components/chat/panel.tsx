@@ -5,10 +5,10 @@ import { useAtomValue } from "jotai"
 import { useEffect, useRef, useState } from "react"
 import { browser } from "#imports"
 import {
-  PhArrowFatUpDuotone,
-  PhChatCircleDotsDuotone,
-  PhCircleDashedDuotone,
-  PhGearDuotone,
+  PhArrowFatUp,
+  PhChatCircleDots,
+  PhCircleDashed,
+  PhGear,
 } from "@/components/icons/ph"
 import { usePiChat } from "@/hooks/use-pi-chat"
 import { requestSettingsOpen } from "@/lib/settings-navigation"
@@ -85,7 +85,7 @@ function ProviderEmptyState({
     <div className="relative flex min-h-0 flex-1 flex-col px-4">
       <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-4 pb-10 text-center">
         <div className="mb-5 flex size-12 items-center justify-center rounded-[1.15rem] bg-primary/10 text-primary shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--primary)_10%,transparent)]">
-          <PhChatCircleDotsDuotone className="size-5.5" />
+          <PhChatCircleDots className="size-5.5" />
         </div>
         <div className="max-w-64 space-y-2">
           <h2 className="text-base font-semibold tracking-[-0.015em]">Connect your model</h2>
@@ -94,7 +94,7 @@ function ProviderEmptyState({
           </p>
         </div>
         <Button type="button" className="mt-6 rounded-full px-5" onClick={() => void onOpenProviderSettings()}>
-          <PhGearDuotone data-icon="inline-start" />
+          <PhGear data-icon="inline-start" />
           Configure provider
         </Button>
       </div>
@@ -152,7 +152,7 @@ function ChatThread({
         {!hasMessages && (
           <div className="flex flex-1 flex-col items-center justify-center px-6 pb-24 text-center">
             <div className="mb-5 flex size-12 items-center justify-center rounded-[1.15rem] bg-primary/10 text-primary shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--primary)_10%,transparent)]">
-              <PhChatCircleDotsDuotone className="size-5.5" />
+              <PhChatCircleDots className="size-5.5" />
             </div>
             <div className="max-w-64 space-y-2">
               <h2 className="text-base font-semibold tracking-[-0.015em]">What are you exploring?</h2>
@@ -193,7 +193,7 @@ function AssistantMessage({ message }: { message: ChatMessage }): React.JSX.Elem
   return (
     <div className="mb-7 grid grid-cols-[1.25rem_minmax(0,1fr)] gap-x-2.5 pr-3">
       <div className="mt-0.5 flex size-5 items-center justify-center rounded-full bg-primary/10 text-primary">
-        <PhChatCircleDotsDuotone className="size-3" />
+        <PhChatCircleDots className="size-3" />
       </div>
       <div className="min-w-0">
         <p className="mb-1.5 font-mono text-[9px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">Assistant</p>
@@ -227,7 +227,7 @@ function ProviderMetaBar({
         title="Chat provider settings"
         onClick={() => void onOpenProviderSettings()}
       >
-        <PhGearDuotone />
+        <PhGear />
       </Button>
     </div>
   )
@@ -287,7 +287,7 @@ function ChatComposer({ isRunning, onSend, onStop }: ChatComposerProps): React.J
               aria-label="Send message"
               disabled={!input.trim()}
             >
-              <PhArrowFatUpDuotone className="size-4" />
+              <PhArrowFatUp className="size-4" />
             </button>
           )
         : (
@@ -297,7 +297,7 @@ function ChatComposer({ isRunning, onSend, onStop }: ChatComposerProps): React.J
               aria-label="Stop response"
               onClick={onStop}
             >
-              <PhCircleDashedDuotone className="size-4 animate-spin" />
+              <PhCircleDashed className="size-4 animate-spin" />
             </button>
           )}
     </form>

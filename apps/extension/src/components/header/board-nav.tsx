@@ -11,7 +11,7 @@ import { useNavigate } from "@tanstack/react-router"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { useState } from "react"
 import { BoardDialog } from "@/components/board-dialog"
-import { PhPlusCircleDuotone } from "@/components/icons/ph"
+import { PhPlusCircle } from "@/components/icons/ph"
 import { ALL_BOARD_ID, getAdjacentBoardId } from "@/lib/boards"
 import { DEFAULT_SHORTCUT_SETTINGS, SHORTCUT_DEFINITIONS } from "@/lib/shortcuts"
 import { cn } from "@/lib/utils"
@@ -178,7 +178,7 @@ export function BoardNav() {
           aria-label="Create board"
           title="Create board"
         >
-          <PhPlusCircleDuotone />
+          <PhPlusCircle />
         </Button>
       </PillGroup>
       {dialogTarget && (

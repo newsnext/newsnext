@@ -14,6 +14,7 @@ import {
   PhArrowCircleLeftDuotone,
   PhArrowCounterClockwiseDuotone,
   PhDotsSixVerticalDuotone,
+  PhInfo,
   PhInfoDuotone,
   PhTrashDuotone,
 } from "@/components/icons/ph"
@@ -302,7 +303,7 @@ function ButtonsFixture(): React.JSX.Element {
                 tone="theme"
                 className="h-10 max-w-full gap-2 bg-background/50 px-4 font-semibold shadow-sm backdrop-blur"
               >
-                <PhInfoDuotone />
+                <PhInfo />
                 Authorize
               </Button>
             </div>

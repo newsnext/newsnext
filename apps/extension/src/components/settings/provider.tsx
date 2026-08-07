@@ -5,7 +5,7 @@ import { Input } from "@newsnext/ui/components/input"
 import { useAtom } from "jotai"
 import { useState } from "react"
 import { browser } from "#imports"
-import { PhCheckCircleDuotone, PhEyeDuotone, PhEyeSlashDuotone } from "@/components/icons/ph"
+import { PhCheckCircle, PhEye, PhEyeSlash } from "@/components/icons/ph"
 import { getChatProviderPermissionOrigin } from "@/lib/persisted-settings"
 import { chatProviderSettingsAtom } from "@/store/settings"
 import { SettingsSection } from "./layout"
@@ -144,7 +144,7 @@ export function ProviderSettings(): React.JSX.Element {
                   title={showApiKey ? "Hide API key" : "Show API key"}
                   onClick={() => setShowApiKey(value => !value)}
                 >
-                  {showApiKey ? <PhEyeSlashDuotone /> : <PhEyeDuotone />}
+                  {showApiKey ? <PhEyeSlash /> : <PhEye />}
                 </Button>
               </div>
             </div>
@@ -155,7 +155,7 @@ export function ProviderSettings(): React.JSX.Element {
                   ? "min-w-0 flex-1 text-xs leading-5 text-destructive"
                   : "min-w-0 flex-1 text-xs leading-5 text-muted-foreground"}
               >
-                {status?.kind === "success" && <PhCheckCircleDuotone className="mr-1 inline size-3.5 text-primary" />}
+                {status?.kind === "success" && <PhCheckCircle className="mr-1 inline size-3.5 text-primary" />}
                 {status?.message ?? "Testing or saving requests site access for the provider endpoint."}
               </p>
               <div className="flex gap-2">

@@ -32,6 +32,9 @@ like generic overlays.
 - Prefer squircles for major containers and nested surfaces.
 - Keep supporting decoration quiet. Controls and content should remain the
   visual focus.
+- Use Phosphor Bold icons throughout the interface so compact controls remain
+  legible. Preserve Phosphor Duotone icons in card header actions, where their
+  softer treatment belongs to the established card language.
 - Reuse existing component treatments and tokens before introducing another
   surface style.
 - Keep 24px of breathing room at both the top and bottom of the main app page.

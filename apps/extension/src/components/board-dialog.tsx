@@ -15,7 +15,7 @@ import { RadioGroup, RadioGroupItem } from "@newsnext/ui/components/radio-group"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { ThemeSelector } from "@newsnext/ui/components/theme-selector"
 import { useState } from "react"
-import { PhCheckCircleDuotone, PhTrashDuotone } from "@/components/icons/ph"
+import { PhCheckCircle, PhTrash } from "@/components/icons/ph"
 import { createBoardFilter } from "@/lib/board-filter"
 import { DEFAULT_BOARD_SORT_PREFERENCE, updateBoardSortMode } from "@/lib/board-sorting"
 import {
@@ -243,7 +243,7 @@ function ConfigurableBoardDialog({
                     setIsDeleteArmed(true)
                   }}
                 >
-                  {isDeleteArmed ? <PhCheckCircleDuotone /> : <PhTrashDuotone />}
+                  {isDeleteArmed ? <PhCheckCircle /> : <PhTrash />}
                   <span aria-live="polite">
                     {isDeleteArmed ? "Confirm delete" : "Delete board"}
                   </span>

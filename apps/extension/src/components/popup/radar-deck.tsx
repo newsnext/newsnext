@@ -10,7 +10,7 @@ import { animate, motion, useDragControls, useMotionValue, useReducedMotion, use
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { SourceCard } from "@/components/card"
 import { BoardMembershipSelect } from "@/components/common/board-membership-select"
-import { PhArrowCircleLeftDuotone, PhPlusCircleDuotone } from "@/components/icons/ph"
+import { PhArrowCircleLeft, PhPlusCircle } from "@/components/icons/ph"
 import { ALL_BOARD_ID } from "@/lib/boards"
 import { createRadarBoardSource } from "@/lib/radar-board-source"
 import { createCardInstance, mergeSourceInstancePatch } from "@/lib/source-cards"
@@ -396,7 +396,7 @@ function RadarDeckContent({ sourceDescriptors, suggestions }: RadarDeckProps) {
             title="Create card"
             className="flex h-8 items-center gap-1 rounded-3xl bg-(--radar-action-card-bg) px-3 py-0.5 text-xs font-semibold transition-colors hover:bg-(--radar-action-card-bg-hover) hover:text-foreground"
           >
-            <PhPlusCircleDuotone className="text-sm text-(--radar-action-chip-text)" />
+            <PhPlusCircle className="text-sm text-(--radar-action-chip-text)" />
             Create card
           </Button>
         </div>
@@ -410,7 +410,7 @@ function RadarDeckContent({ sourceDescriptors, suggestions }: RadarDeckProps) {
             title="Previous radar card"
             className={cn(RADAR_DECK_NAV_BUTTON_CLASS_NAME, !canGoPrevious && "opacity-20")}
           >
-            <PhArrowCircleLeftDuotone />
+            <PhArrowCircleLeft />
           </Button>
           <Button
             variant="transparent"
@@ -421,7 +421,7 @@ function RadarDeckContent({ sourceDescriptors, suggestions }: RadarDeckProps) {
             title="Next radar card"
             className={cn(RADAR_DECK_NAV_BUTTON_CLASS_NAME, "rotate-180", !canGoNext && "opacity-20")}
           >
-            <PhArrowCircleLeftDuotone />
+            <PhArrowCircleLeft />
           </Button>
         </div>
       </div>

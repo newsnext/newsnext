@@ -1,7 +1,7 @@
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react"
 import type { BgIllustrationTransform } from "@/lib/bg-illustration"
 import { useRef, useState } from "react"
-import { PhArrowCounterClockwiseDuotone } from "@/components/icons/ph"
+import { PhArrowCounterClockwise } from "@/components/icons/ph"
 import {
   MAX_BG_ILLUSTRATION_SCALE,
   MIN_BG_ILLUSTRATION_SCALE,
@@ -221,7 +221,7 @@ export default function BgIllustrationControls({
           onPointerDown={event => startInteraction(event, "rotate")}
           {...interactionHandlers}
         >
-          <PhArrowCounterClockwiseDuotone className="size-3.5" />
+          <PhArrowCounterClockwise className="size-3.5" />
         </button>
       </div>
     </>

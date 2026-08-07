@@ -11,7 +11,7 @@ import { getBoardColor } from "@/lib/boards"
 import { handleThemeSwitch } from "@/lib/utils/swith-theme"
 import { boardsAtom, updateBoardAtom } from "@/store/board"
 import { currentBoardIdAtom } from "@/store/settings"
-import { PhArrowFatUpDuotone } from "../icons/ph"
+import { PhArrowFatUp } from "../icons/ph"
 
 interface HeaderProgressProps {
   scrollContainerRef?: RefObject<HTMLElement | null>
@@ -116,7 +116,7 @@ function HeaderProgress({ scrollContainerRef }: HeaderProgressProps) {
                 exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.2 }}
               >
-                <PhArrowFatUpDuotone className="text-theme-400 size-5" />
+                <PhArrowFatUp className="text-theme-400 size-5" />
                 <span className="text-xl font-bold whitespace-nowrap transition-opacity">
                   Go to top
                 </span>
