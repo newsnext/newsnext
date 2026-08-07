@@ -347,11 +347,18 @@ The chat adapter exposes these repository operations as four read-only tools:
 `get_source_history_observation`, and `compare_source_history_observations`.
 The tools use TypeBox schemas for model-call validation and return the same
 repository DTO as JSON; they contain no additional ranking or timeline
-interpretation. The agent is instructed to call them only for requests that
-require local history and to treat all returned source content as untrusted
-data rather than instructions. Tool results become part of the configured chat
-provider request, so this boundary must remain read-only and intentionally
-scoped to the user's history-related request.
+interpretation. The chat adapter composes its base prompt with a dedicated
+source-history skill. The skill tells the agent to use observations for coverage
+discovery, exact-time summaries, two-point comparisons, ranking movement,
+timeline arrival patterns, item-field changes, and evidence-supported trends
+across multiple samples. It also defines the analysis boundary: observation
+time is not publication time, position does not establish popularity or cause,
+`missing` does not mean deleted, and successful remote-load samples are not
+continuous monitoring. The agent must surface completeness warnings, call the
+tools only for requests that require local history, and treat all returned
+source content as untrusted data rather than instructions. Tool results become
+part of the configured chat provider request, so this boundary must remain
+read-only and intentionally scoped to the user's history-related request.
 
 Card queries mount when their container enters the preload margin of the app's
 root scroll container. The observer must use that scrolling element as its root;
