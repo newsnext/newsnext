@@ -4,7 +4,7 @@ import { draggable, dropTargetForElements } from "@atlaskit/pragmatic-drag-and-d
 import { preserveOffsetOnSource } from "@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source"
 import { setCustomNativeDragPreview } from "@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview"
 import { createContext, use, useEffect, useState } from "react"
-import { getSortableData, isSortableData } from "@/lib/sortable-data"
+import { getSortableData, isSortableData } from "@/lib/board"
 
 export const InstanceIdContext = createContext<string | null>(null)
 

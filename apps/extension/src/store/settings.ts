@@ -4,20 +4,14 @@ import type {
   PersistedDeviceState,
   PersistedSettings,
   SettingsTabId,
+  ShortcutSettings,
   SourceCardHeight,
-} from "@/lib/persisted-settings"
-import type { ShortcutSettings } from "@/lib/shortcuts"
-import type { SourceIconSettings } from "@/lib/source-icon"
+} from "@/lib/settings"
+import type { SourceIconSettings } from "@/lib/source"
 import type { ThemeMode } from "@/lib/utils/swith-theme"
 import { atom } from "jotai"
 import { atomWithStorage } from "jotai/utils"
-import { PERSISTED_DATA_SLICES } from "@/lib/persisted-data"
-import {
-  createDefaultPersistedDeviceState,
-  createDefaultPersistedSettings,
-  normalizePersistedDeviceState,
-  normalizePersistedSettings,
-} from "@/lib/persisted-settings"
+import { createDefaultPersistedDeviceState, createDefaultPersistedSettings, normalizePersistedDeviceState, normalizePersistedSettings, PERSISTED_DATA_SLICES } from "@/lib/settings"
 import { createMirroredStorage, readCachedValue } from "./persisted-storage"
 
 type SettingsValueUpdate<Value> = Value | ((current: Value) => Value)

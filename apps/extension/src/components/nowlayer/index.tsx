@@ -2,7 +2,7 @@ import type { RefObject } from "react"
 import { useSetAtom } from "jotai"
 import { useCallback } from "react"
 import { useBoardSourceCards } from "@/hooks/use-board-source-cards"
-import { ALL_BOARD_ID } from "@/lib/boards"
+import { ALL_BOARD_ID } from "@/lib/board"
 import { setManualBoardOrderAtom } from "@/store/board"
 import { DesktopBoard } from "./desktop-board"
 

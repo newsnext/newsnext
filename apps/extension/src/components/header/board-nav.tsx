@@ -1,5 +1,5 @@
 import type { BoardDialogTarget } from "@/components/board-dialog"
-import type { Board } from "@/lib/boards"
+import type { Board } from "@/lib/board"
 import { Button } from "@newsnext/ui/components/button"
 import {
   PillGroup,
@@ -12,8 +12,8 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { useState } from "react"
 import { BoardDialog } from "@/components/board-dialog"
 import { PhPlusCircle } from "@/components/icons/ph"
-import { ALL_BOARD_ID, getAdjacentBoardId } from "@/lib/boards"
-import { DEFAULT_SHORTCUT_SETTINGS, SHORTCUT_DEFINITIONS } from "@/lib/shortcuts"
+import { ALL_BOARD_ID, getAdjacentBoardId } from "@/lib/board"
+import { DEFAULT_SHORTCUT_SETTINGS, SHORTCUT_DEFINITIONS } from "@/lib/settings"
 import { cn } from "@/lib/utils"
 import {
   boardsAtom,

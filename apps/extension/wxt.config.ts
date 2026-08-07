@@ -6,7 +6,7 @@ import Icons from "unplugin-icons/vite"
 import TurboConsole from "unplugin-turbo-console/vite"
 import { defineConfig } from "wxt"
 import packageJson from "./package.json"
-import { OPTIONAL_SOURCE_PERMISSIONS } from "./src/lib/source-permission-constants"
+import { OPTIONAL_SOURCE_PERMISSIONS } from "./src/lib/source/permission-constants"
 
 const OPTIONAL_SOURCE_ORIGINS = ["*://*/*"] as const
 const REQUIRED_PERMISSIONS = [

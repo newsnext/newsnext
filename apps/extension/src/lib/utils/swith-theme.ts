@@ -1,5 +1,5 @@
 import type { Color } from "@newsnext/shared/types"
-import { isThemeColor } from "../theme-color"
+import { isThemeColor } from "../settings/theme-color"
 import FAVICON_SVG from "/icon.svg?url&raw"
 
 export const THEME_COLOR_KEY = "newsnext-theme-color"

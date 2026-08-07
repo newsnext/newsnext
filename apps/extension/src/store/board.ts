@@ -1,14 +1,14 @@
-import type { Board } from "../lib/boards"
-import type { SourceInstance, SourceInstancePatch } from "../lib/source-cards"
+import type { Board } from "../lib/board"
+import type { SourceInstance, SourceInstancePatch } from "../lib/source"
 import { atom } from "jotai"
 import { atomWithStorage, selectAtom, splitAtom } from "jotai/utils"
-import { ALL_BOARD_ID, createAllBoard, getBoardColor } from "../lib/boards"
+import { ALL_BOARD_ID, createAllBoard, getBoardColor } from "../lib/board"
 import {
   normalizeBoards,
   normalizeSourceInstances,
   PERSISTED_DATA_SLICES,
-} from "../lib/persisted-data"
-import { mergeSourceInstancePatch } from "../lib/source-cards"
+} from "../lib/settings"
+import { mergeSourceInstancePatch } from "../lib/source"
 import { createMirroredStorage } from "./persisted-storage"
 import { allBoardColorAtom, currentBoardIdAtom, defaultBoardIdAtom } from "./settings"
 

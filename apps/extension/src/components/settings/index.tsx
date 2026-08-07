@@ -1,4 +1,4 @@
-import type { SettingsTabId, SourceCardHeight } from "@/lib/persisted-settings"
+import type { SettingsTabId, SourceCardHeight } from "@/lib/settings"
 import { Card, CardContent } from "@newsnext/ui/components/card"
 import { Label } from "@newsnext/ui/components/label"
 import { RadioGroup, RadioGroupItem } from "@newsnext/ui/components/radio-group"
@@ -56,7 +56,7 @@ const SOURCE_CARD_HEIGHT_OPTIONS: SourceCardHeightOption[] = [
   },
 ]
 
-export type { SettingsTabId } from "@/lib/persisted-settings"
+export type { SettingsTabId } from "@/lib/settings"
 
 export function SettingsModal({
   initialTab,

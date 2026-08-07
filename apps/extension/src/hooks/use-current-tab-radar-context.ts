@@ -1,7 +1,7 @@
 import type { RadarContext, RadarMatcher } from "@/lib/radar"
 import { useEffect, useState } from "react"
 import { browser } from "#imports"
-import { readRadarPageDiscovery, readRadarPageSelections } from "@/lib/radar-page"
+import { readRadarPageDiscovery, readRadarPageSelections } from "@/lib/radar"
 
 export function useCurrentTabRadarContext(radarMatcher: RadarMatcher): RadarContext | null {
   const [context, setContext] = useState<RadarContext | null>(null)

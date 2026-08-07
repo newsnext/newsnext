@@ -1,9 +1,9 @@
 import type { AgentContext, AgentMessage, StreamFn } from "@earendil-works/pi-agent-core"
 import type { Message, Model } from "@earendil-works/pi-ai"
-import type { ChatProviderSettings } from "./persisted-settings"
+import type { ChatProviderSettings } from "./settings/persisted-settings"
 import { Agent, agentLoop } from "@earendil-works/pi-agent-core"
 import { streamSimple } from "@earendil-works/pi-ai/api/openai-completions"
-import { sourceHistoryTools } from "./source-history-tools"
+import { sourceHistoryTools } from "./source/history/tools"
 
 export interface ChatProviderTestResult {
   message: string

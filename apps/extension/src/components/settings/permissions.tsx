@@ -6,7 +6,7 @@ import {
   getGrantedHostPermissionOrigins,
   getUserManagedHostPermissionOrigins,
   revokeHostPermissionOrigin,
-} from "@/lib/host-permissions"
+} from "@/lib/source"
 import { SettingsSection } from "./layout"
 
 const MANAGED_PERMISSIONS = [

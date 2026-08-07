@@ -1,5 +1,5 @@
 import type { ChatController, ChatMessage } from "@/hooks/use-pi-chat"
-import type { ChatProviderSettings } from "@/lib/persisted-settings"
+import type { ChatProviderSettings } from "@/lib/settings"
 import { Button } from "@newsnext/ui/components/button"
 import { useAtomValue } from "jotai"
 import { useEffect, useRef, useState } from "react"
@@ -11,7 +11,7 @@ import {
   PhGear,
 } from "@/components/icons/ph"
 import { usePiChat } from "@/hooks/use-pi-chat"
-import { requestSettingsOpen } from "@/lib/settings-navigation"
+import { requestSettingsOpen } from "@/lib/settings"
 import { chatProviderSettingsAtom } from "@/store/settings"
 
 export function ChatPanel(): React.JSX.Element {

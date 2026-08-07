@@ -1,13 +1,11 @@
-import type { PersistedUserData } from "@/lib/persisted-data"
+import type { PersistedUserData } from "@/lib/settings"
 import { atom } from "jotai"
-import { ALL_BOARD_ID } from "@/lib/boards"
-import {
-  mergePersistedUserData,
-} from "@/lib/persisted-data"
+import { ALL_BOARD_ID } from "@/lib/board"
 import {
   createDefaultPersistedDeviceState,
   createDefaultPersistedSettings,
-} from "@/lib/persisted-settings"
+  mergePersistedUserData,
+} from "@/lib/settings"
 import {
   boardsAtom,
   instancesAtom,

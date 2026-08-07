@@ -1,5 +1,5 @@
 import type { Agent, AgentMessage } from "@earendil-works/pi-agent-core"
-import type { ChatProviderSettings } from "@/lib/persisted-settings"
+import type { ChatProviderSettings } from "@/lib/settings"
 import { useCallback, useEffect, useState } from "react"
 import { createPiChatAgent } from "@/lib/pi-chat-adapter"
 

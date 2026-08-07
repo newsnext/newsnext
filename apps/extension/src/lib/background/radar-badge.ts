@@ -1,8 +1,7 @@
 import type { Browser } from "#imports"
 import { loadSourceDescriptors } from "@newsnext/source/runtime"
 import { browser } from "#imports"
-import { createRadarMatcher } from "@/lib/radar"
-import { readRadarPageDiscovery } from "@/lib/radar-page"
+import { createRadarMatcher, readRadarPageDiscovery } from "@/lib/radar"
 
 async function updateRadarBadge(tab: Browser.tabs.Tab): Promise<void> {
   if (tab.id === undefined) {

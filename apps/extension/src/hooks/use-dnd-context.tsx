@@ -2,7 +2,7 @@ import type { ElementDragType, MonitorArgs } from "@atlaskit/pragmatic-drag-and-
 import type { PropsWithChildren } from "react"
 import { monitorForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter"
 import { useEffect, useEffectEvent, useId } from "react"
-import { isSortableData } from "@/lib/sortable-data"
+import { isSortableData } from "@/lib/board"
 import { InstanceIdContext } from "./use-sortable"
 
 type ContextProps = Pick<

@@ -1,7 +1,7 @@
 import type { SourceParamSchema } from "@newsnext/source/types"
-import type { SourceParamValues } from "@/lib/source-params"
+import type { SourceParamValues } from "@/lib/source"
 import { useCallback, useState } from "react"
-import { sanitizeSourceParamPatch } from "@/lib/source-params"
+import { sanitizeSourceParamPatch } from "@/lib/source"
 
 export interface UseSourceParamsOptions {
   params?: Record<string, SourceParamSchema>

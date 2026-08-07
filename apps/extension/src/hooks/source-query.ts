@@ -1,13 +1,9 @@
 import type { RuntimeSource } from "@newsnext/source/types"
 import type { QueryClient } from "@tanstack/react-query"
-import type { SourceLoadResult } from "@/lib/source-loader"
+import type { SourceLoadResult } from "@/lib/source"
 import { normalizeSourceParams } from "@newsnext/source/runtime"
 import { hashKey, queryOptions } from "@tanstack/react-query"
-import { loadSource } from "@/lib/source-loader"
-import {
-  SOURCE_QUERY_REFETCH_INTERVAL_MS,
-  SOURCE_QUERY_STALE_TIME_MS,
-} from "@/lib/source-query-policy"
+import { loadSource, SOURCE_QUERY_REFETCH_INTERVAL_MS, SOURCE_QUERY_STALE_TIME_MS } from "@/lib/source"
 
 export const SOURCE_QUERY_KEY = ["source"] as const
 

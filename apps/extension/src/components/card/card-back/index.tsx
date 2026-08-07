@@ -1,5 +1,5 @@
 import type { ReactNode } from "react"
-import type { SourceInstanceMetadata } from "@/lib/source-cards"
+import type { SourceInstanceMetadata } from "@/lib/source"
 import type { BoardSource } from "@/typings/source"
 import { ScrollArea } from "@newsnext/ui/components/scroll-area"
 import { SquircleBox } from "@newsnext/ui/components/squircle"

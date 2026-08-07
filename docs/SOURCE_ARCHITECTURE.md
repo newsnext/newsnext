@@ -19,6 +19,21 @@ apps/extension
   owns browser integration, permissions, secrets, caching, and execution
 ```
 
+Extension library code is grouped behind responsibility-level entry points:
+
+```text
+apps/extension/src/lib/
+├── background/  background services and the frontend service client
+├── board/       board models, filtering, sorting, and mixed timelines
+├── radar/       page discovery, matching, and suggestion conversion
+├── settings/    persisted user data, preferences, and settings helpers
+└── source/      source cards, loading, caching, permissions, and history
+```
+
+App code imports these directory entry points. Modules inside a responsibility
+use direct relative imports so their dependencies remain explicit and do not
+loop back through their own barrel.
+
 `@newsnext/source` does not import concrete providers. It receives resolved
 sources through an `ExternalSourcesLoader`, which keeps the source runtime
 independent from the bundled registry and its wire format.
@@ -236,7 +251,7 @@ Automatic query revalidation uses the normal source cache policy. Fetch-latest
 intent is passed directly to the query function rather than stored as state for
 a later query execution. App query timing and the Fetch Latest protection
 interval are centralized in
-`apps/extension/src/lib/source-query-policy.ts`.
+`apps/extension/src/lib/source/query-policy.ts`.
 
 The app also reads the last persisted result as presentation-only placeholder
 data when a card mounts. This survives an app close and reopen

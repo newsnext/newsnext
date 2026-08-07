@@ -10,7 +10,7 @@ import { QueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 import { AppProvider } from "@/components/app-provider"
 import { CornerRenderingProvider, useCornerRendering } from "@/cosmos/corner-rendering-context"
-import { isThemeColor } from "@/lib/theme-color"
+import { isThemeColor } from "@/lib/settings"
 import {
   handleThemeModeSwitch,
   handleThemeSwitch,

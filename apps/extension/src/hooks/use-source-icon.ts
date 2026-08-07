@@ -1,6 +1,6 @@
 import type { SourceDescriptor } from "@/typings/source"
 import { useAtomValue } from "jotai"
-import { resolveSourceIcon } from "@/lib/source-icon"
+import { resolveSourceIcon } from "@/lib/source"
 import { sourceIconSettingsAtom } from "@/store/settings"
 
 type SourceIconDescriptor = Pick<SourceDescriptor, "metadata" | "provider">

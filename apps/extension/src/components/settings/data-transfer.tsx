@@ -1,5 +1,5 @@
 import type { ChangeEvent } from "react"
-import type { PersistedPortableSliceId } from "@/lib/persisted-data"
+import type { PersistedPortableSliceId } from "@/lib/settings"
 import { Button } from "@newsnext/ui/components/button"
 import { Card, CardContent } from "@newsnext/ui/components/card"
 import { Checkbox } from "@newsnext/ui/components/checkbox"
@@ -8,14 +8,8 @@ import { useNavigate } from "@tanstack/react-router"
 import { useAtomValue, useSetAtom } from "jotai"
 import { useRef, useState } from "react"
 import { PhCheckCircle, PhTrash } from "@/components/icons/ph"
-import { ALL_BOARD_ID, DEFAULT_BOARD_COLOR } from "@/lib/boards"
-import { clearNonPortableUserData } from "@/lib/clear-user-data"
-import {
-  parsePersistedDataExport,
-  PERSISTED_PORTABLE_SLICE_IDS,
-  selectPersistedUserData,
-  serializePersistedDataExport,
-} from "@/lib/persisted-data"
+import { ALL_BOARD_ID, DEFAULT_BOARD_COLOR } from "@/lib/board"
+import { clearNonPortableUserData, parsePersistedDataExport, PERSISTED_PORTABLE_SLICE_IDS, selectPersistedUserData, serializePersistedDataExport } from "@/lib/settings"
 import { handleThemeModeSwitch, handleThemeSwitch } from "@/lib/utils/swith-theme"
 import {
   clearPersistedUserDataAtom,

@@ -5,7 +5,7 @@ import {
   SelectTrigger,
 } from "@newsnext/ui/components/select"
 import { useAtomValue } from "jotai"
-import { ALL_BOARD_ID, NO_BOARD_VALUE } from "@/lib/boards"
+import { ALL_BOARD_ID, NO_BOARD_VALUE } from "@/lib/board"
 import { cn } from "@/lib/utils"
 import { boardsAtom } from "@/store/board"
 

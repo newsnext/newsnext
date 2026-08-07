@@ -1,5 +1,5 @@
 import { browser } from "#imports"
-import { ensureSettingsOpenRequest } from "@/lib/settings-navigation"
+import { ensureSettingsOpenRequest } from "@/lib/settings"
 
 ensureSettingsOpenRequest()
 

@@ -4,7 +4,7 @@ import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { useState } from "react"
 import { useSourceIcon } from "@/hooks/use-source-icon"
 import { RelativeTime } from "@/hooks/useRelativeTime"
-import { isTimelineItems } from "@/lib/source-presentation"
+import { isTimelineItems } from "@/lib/source"
 import { cn } from "@/lib/utils"
 import {
   PhArrowCounterClockwiseDuotone,

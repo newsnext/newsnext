@@ -1,5 +1,5 @@
 import type { Hotkey } from "@tanstack/react-hotkeys"
-import type { ShortcutId } from "@/lib/shortcuts"
+import type { ShortcutId } from "@/lib/settings"
 import { Button } from "@newsnext/ui/components/button"
 import { Card, CardContent } from "@newsnext/ui/components/card"
 import {
@@ -13,7 +13,7 @@ import {
   DEFAULT_SHORTCUT_SETTINGS,
   SHORTCUT_DEFINITIONS,
   SHORTCUT_ORDER,
-} from "@/lib/shortcuts"
+} from "@/lib/settings"
 import { cn } from "@/lib/utils"
 import { shortcutSettingsAtom } from "@/store/settings"
 import { SettingsSection } from "./layout"

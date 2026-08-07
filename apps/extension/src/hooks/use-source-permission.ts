@@ -1,4 +1,4 @@
-import type { SourcePermissionTarget } from "@/lib/source-permissions"
+import type { SourcePermissionTarget } from "@/lib/source"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { browser } from "#imports"
 import {
@@ -6,7 +6,7 @@ import {
   getSourcePermissionDescription,
   hasSourcePermission,
   requestSourcePermission,
-} from "@/lib/source-permissions"
+} from "@/lib/source"
 
 export interface SourcePermissionState {
   canLoad: boolean

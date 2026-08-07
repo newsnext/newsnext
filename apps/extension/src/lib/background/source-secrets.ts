@@ -1,7 +1,7 @@
 import type { RuntimeSource, SourceSecretDefinition, SourceSecrets } from "@newsnext/source/types"
 import { storage } from "wxt/utils/storage"
 import { browser } from "#imports"
-import { PERSISTED_DATA_SLICES } from "../persisted-data"
+import { PERSISTED_DATA_SLICES } from "../settings/persisted-data"
 
 type SourceSecretCache = Record<string, Record<string, string>>
 const SOURCE_LOGIN_REQUIRED_ERROR_CODE = "SOURCE_LOGIN_REQUIRED"

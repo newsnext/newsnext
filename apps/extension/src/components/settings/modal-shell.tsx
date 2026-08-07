@@ -1,5 +1,5 @@
 import type { ReactNode } from "react"
-import type { SettingsTabId } from "@/lib/persisted-settings"
+import type { SettingsTabId } from "@/lib/settings"
 import {
   Dialog,
   DialogContent,
@@ -10,7 +10,7 @@ import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { Tabs, TabsList, TabsTrigger } from "@newsnext/ui/components/tabs"
 import { useEffect, useRef } from "react"
 
-export type { SettingsTabId } from "@/lib/persisted-settings"
+export type { SettingsTabId } from "@/lib/settings"
 
 interface SettingsModalShellProps {
   activeTab: SettingsTabId

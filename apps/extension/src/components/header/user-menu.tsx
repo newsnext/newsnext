@@ -8,7 +8,7 @@ import {
 } from "@newsnext/ui/components/dropdown-menu"
 import { cn } from "@newsnext/ui/lib/utils"
 import { useEffect, useState } from "react"
-import { consumeSettingsOpenRequest, subscribeToSettingsOpenRequests } from "@/lib/settings-navigation"
+import { consumeSettingsOpenRequest, subscribeToSettingsOpenRequests } from "@/lib/settings"
 import { PhGear, PhUser } from "../icons/ph"
 import { SettingsModal } from "../settings"
 

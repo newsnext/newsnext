@@ -1,4 +1,4 @@
-import type { PersistedDeviceState } from "../persisted-settings"
+import type { PersistedDeviceState } from "../settings/persisted-settings"
 import type { SourceConnectionStatus } from "./source-connection-websocket"
 import {
   getSourceConnectionStatus,

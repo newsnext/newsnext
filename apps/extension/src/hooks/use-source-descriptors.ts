@@ -1,5 +1,5 @@
 import { queryOptions, useQuery } from "@tanstack/react-query"
-import { loadSourceDescriptors } from "@/lib/sources"
+import { loadSourceDescriptors } from "@/lib/source"
 
 export const sourceDescriptorsQueryOptions = queryOptions({
   queryKey: ["source-descriptors"],

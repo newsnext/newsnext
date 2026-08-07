@@ -2,7 +2,7 @@
 import type { ComponentProps } from "react"
 import type { BoardDialogTarget } from "@/components/board-dialog"
 import type { SettingsTabId } from "@/components/settings/modal-shell"
-import type { Board } from "@/lib/boards"
+import type { Board } from "@/lib/board"
 import type { BoardSource } from "@/typings/source"
 import {
   AlertDialog,

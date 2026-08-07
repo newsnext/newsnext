@@ -1,7 +1,5 @@
 import type { Color } from "@newsnext/shared/types"
-import type { BoardFilterMode } from "@/lib/board-filter"
-import type { BoardSortMode } from "@/lib/board-sorting"
-import type { Board } from "@/lib/boards"
+import type { Board, BoardFilterMode, BoardSortMode } from "@/lib/board"
 import { Button } from "@newsnext/ui/components/button"
 import {
   Dialog,
@@ -16,15 +14,7 @@ import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { ThemeSelector } from "@newsnext/ui/components/theme-selector"
 import { useState } from "react"
 import { PhCheckCircle, PhTrash } from "@/components/icons/ph"
-import { createBoardFilter } from "@/lib/board-filter"
-import { DEFAULT_BOARD_SORT_PREFERENCE, updateBoardSortMode } from "@/lib/board-sorting"
-import {
-  ALL_BOARD_ID,
-  createBoard,
-  DEFAULT_BOARD_COLOR,
-  getBoardColor,
-  isBoardNameTaken,
-} from "@/lib/boards"
+import { ALL_BOARD_ID, createBoard, createBoardFilter, DEFAULT_BOARD_COLOR, DEFAULT_BOARD_SORT_PREFERENCE, getBoardColor, isBoardNameTaken, updateBoardSortMode } from "@/lib/board"
 import { cn } from "@/lib/utils"
 
 const SORT_OPTIONS: { label: string, value: BoardSortMode }[] = [

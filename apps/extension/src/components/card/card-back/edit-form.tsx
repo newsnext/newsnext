@@ -1,4 +1,4 @@
-import type { SourceInstanceMetadata } from "@/lib/source-cards"
+import type { SourceInstanceMetadata } from "@/lib/source"
 import type { BoardSource } from "@/typings/source"
 import { Button } from "@newsnext/ui/components/button"
 import { useEffect, useState } from "react"

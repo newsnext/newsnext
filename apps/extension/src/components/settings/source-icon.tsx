@@ -1,4 +1,4 @@
-import type { SourceIconSource } from "@/lib/source-icon"
+import type { SourceIconSource } from "@/lib/source"
 import { Card, CardContent } from "@newsnext/ui/components/card"
 import { Input } from "@newsnext/ui/components/input"
 import { Label } from "@newsnext/ui/components/label"
@@ -13,7 +13,7 @@ import {
   DEFAULT_SOURCE_ICON_SETTINGS,
   resolveSourceIcon,
   SOURCE_ICON_PRESETS,
-} from "@/lib/source-icon"
+} from "@/lib/source"
 import { sourceIconSettingsAtom } from "@/store/settings"
 import { SettingsSection } from "./layout"
 

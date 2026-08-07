@@ -1,7 +1,7 @@
 import type { ReactNode } from "react"
 import type { BoardSourceItems } from "@/components/board-items-context"
-import type { BoardFilter } from "@/lib/board-filter"
-import type { SourceInstanceMetadata, SourceInstancePatch } from "@/lib/source-cards"
+import type { BoardFilter } from "@/lib/board"
+import type { SourceInstanceMetadata, SourceInstancePatch } from "@/lib/source"
 import type { BoardSource } from "@/typings/source"
 import { FlipAnimate } from "@newsnext/ui/components/flip-animate"
 import { useScrollProgressActionsContext } from "@newsnext/ui/components/scroll-progress-context"
@@ -12,12 +12,8 @@ import { useSourceParams } from "@/hooks"
 import { useInView } from "@/hooks/use-in-view"
 import { useSourcePermission } from "@/hooks/use-source-permission"
 import { useSourceQuery } from "@/hooks/use-source-query"
-import { filterBoardItems } from "@/lib/board-filter"
-import { applySourceLoaderMetadata } from "@/lib/source-cards"
-import {
-  SOURCE_QUERY_OFFSCREEN_RETENTION_MS,
-  SOURCE_QUERY_PRELOAD_MARGIN,
-} from "@/lib/source-query-policy"
+import { filterBoardItems } from "@/lib/board"
+import { applySourceLoaderMetadata, SOURCE_QUERY_OFFSCREEN_RETENTION_MS, SOURCE_QUERY_PRELOAD_MARGIN } from "@/lib/source"
 import { cn } from "@/lib/utils"
 import {
   resetInstanceParamsAtom,

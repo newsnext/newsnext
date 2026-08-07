@@ -4,13 +4,13 @@ import type {
   SourceConnectionRunRequest,
   SourceConnectionSerializedError,
 } from "@newsnext/shared/types"
-import type { PersistedDeviceState } from "../persisted-settings"
+import type { PersistedDeviceState } from "../settings/persisted-settings"
 import { browser } from "#imports"
-import { PERSISTED_DATA_SLICES } from "../persisted-data"
+import { PERSISTED_DATA_SLICES } from "../settings/persisted-data"
 import {
   normalizePersistedDeviceState,
   withSourceConnectionEnabled,
-} from "../persisted-settings"
+} from "../settings/persisted-settings"
 import { listConnectedSources, runConnectedSource } from "./source-runner"
 
 const DEFAULT_SOURCE_CONNECTION_WS_URL = "ws://127.0.0.1:43110"

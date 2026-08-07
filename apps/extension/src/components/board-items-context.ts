@@ -1,4 +1,4 @@
-import type { BoardFilter } from "@/lib/board-filter"
+import type { BoardFilter } from "@/lib/board"
 import type { BoardSource, NewsItem } from "@/typings/source"
 import { createContext, use } from "react"
 

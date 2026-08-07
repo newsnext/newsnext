@@ -1,5 +1,5 @@
 import type { ReactNode } from "react"
-import type { Board } from "@/lib/boards"
+import type { Board } from "@/lib/board"
 import type { BoardSource } from "@/typings/source"
 import { Button } from "@newsnext/ui/components/button"
 import {
@@ -29,14 +29,14 @@ import {
 } from "@/hooks/source-query"
 import { useSourceDescriptors } from "@/hooks/use-source-descriptors"
 import { useSourceIcon } from "@/hooks/use-source-icon"
-import { ALL_BOARD_ID } from "@/lib/boards"
-import { DEFAULT_SHORTCUT_SETTINGS, SHORTCUT_DEFINITIONS } from "@/lib/shortcuts"
+import { ALL_BOARD_ID } from "@/lib/board"
+import { DEFAULT_SHORTCUT_SETTINGS, SHORTCUT_DEFINITIONS } from "@/lib/settings"
 import {
   applySourceLoaderMetadata,
   buildSourceCards,
   getSourceCard,
-} from "@/lib/source-cards"
-import { readPersistedSourceCache } from "@/lib/source-loader"
+  readPersistedSourceCache,
+} from "@/lib/source"
 import { boardsAtom, instancesAtom } from "@/store/board"
 import { shortcutSettingsAtom } from "@/store/settings"
 import { SourceIcon } from "../card/source-icon"
