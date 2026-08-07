@@ -6,6 +6,7 @@ import {
   listSourceHistoryDatasets,
   listSourceHistoryObservations,
 } from "./repository"
+import { SOURCE_HISTORY_TOOL_LABELS } from "./tool-metadata"
 
 const sourceParamsSchema = Type.Record(Type.String(), Type.Unknown())
 
@@ -44,7 +45,7 @@ const listDatasetsTool: AgentTool<typeof listDatasetsSchema, unknown> = {
     signal?.throwIfAborted()
     return toToolResult(await listSourceHistoryDatasets(input))
   },
-  label: "List source histories",
+  label: SOURCE_HISTORY_TOOL_LABELS.list_source_history_datasets,
   name: "list_source_history_datasets",
   parameters: listDatasetsSchema,
 }
@@ -55,7 +56,7 @@ const listObservationsTool: AgentTool<typeof listObservationsSchema, unknown> = 
     signal?.throwIfAborted()
     return toToolResult(await listSourceHistoryObservations(input))
   },
-  label: "List source observations",
+  label: SOURCE_HISTORY_TOOL_LABELS.list_source_history_observations,
   name: "list_source_history_observations",
   parameters: listObservationsSchema,
 }
@@ -66,7 +67,7 @@ const getObservationTool: AgentTool<typeof getObservationSchema, unknown> = {
     signal?.throwIfAborted()
     return toToolResult(await getSourceHistoryObservation(input))
   },
-  label: "Read source observation",
+  label: SOURCE_HISTORY_TOOL_LABELS.get_source_history_observation,
   name: "get_source_history_observation",
   parameters: getObservationSchema,
 }
@@ -77,7 +78,7 @@ const compareObservationsTool: AgentTool<typeof compareObservationsSchema, unkno
     signal?.throwIfAborted()
     return toToolResult(await compareSourceHistoryObservations(input))
   },
-  label: "Compare source observations",
+  label: SOURCE_HISTORY_TOOL_LABELS.compare_source_history_observations,
   name: "compare_source_history_observations",
   parameters: compareObservationsSchema,
 }

@@ -13,6 +13,22 @@ const SAMPLE_MESSAGES: ChatMessage[] = [
     id: "fixture-assistant-message",
     role: "assistant",
     text: "Your design board has three new articles. The main themes are accessible color systems, variable fonts, and motion that respects reduced-motion preferences.",
+    tools: [
+      {
+        id: "fixture-list",
+        label: "List source observations",
+        status: "complete",
+        summary: "12 observations",
+        target: "design-weekly",
+      },
+      {
+        id: "fixture-read",
+        label: "Read source observation",
+        status: "complete",
+        summary: "24 items",
+        target: "design-weekly",
+      },
+    ],
   },
 ]
 

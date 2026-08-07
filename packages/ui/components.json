@@ -21,6 +21,7 @@
   "menuColor": "default",
   "menuAccent": "subtle",
   "registries": {
+    "@assistant-ui": "https://r.assistant-ui.com/styles/{style}/{name}.json",
     "@hooks": "https://shadcn-hooks.vercel.app/r/{name}.json"
   }
 }

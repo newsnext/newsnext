@@ -1,6 +1,8 @@
 @import "tailwindcss" source(none);
+@import "streamdown/styles.css";
 @import "./base.css";
 
+@source "../../node_modules/streamdown/dist/*.js";
 @source "../../../../packages/cmdk/src";
 @source "../../../../packages/ui/src";
 @source "../components";

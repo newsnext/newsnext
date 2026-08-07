@@ -280,17 +280,39 @@ entire native Side Panel viewport. Reuse the card color composition, not its
 rounded card geometry. Place the conversation, empty state, and composer
 together inside this content surface.
 Chrome already provides the panel boundary, so do not place another floating
-card around these layers. Do not add a top header or repeat the Assistant logo
-and name. Place only provider/model status and the settings action in one
-compact metadata row directly below the composer; keep the same row at the
-bottom of the unconfigured state. Chrome supplies the panel close action. User
-messages use the active theme color. Assistant messages remain unboxed and use
-a small identity marker so long responses read like notes in the main content
-flow. The composer may float above the bottom edge with a focused control
-surface, but it must not create another full-height container. Let its
-semi-transparent background retain the panel's theme color, keep the footer
-transparent without a background gradient, and reserve the theme-color ring
-for keyboard or text focus. Do not use a foreground-colored default shadow. When no provider is configured,
+card around these layers. Follow the assistant-ui shadcn Thread composition for
+the presentational layer while keeping the Pi Agent controller independent of
+assistant-ui runtime hooks. Structure the panel as one scrollable viewport with
+a centered welcome, a message group, a sticky viewport footer, and a vertically
+composed message field and action row. Do not add a top header or repeat the
+Assistant logo and name. Chrome supplies the panel close action.
+
+Keep assistant messages unboxed and omit a repeated avatar or role label so long
+responses read as the primary thread content. Use the quiet `muted` surface for
+right-aligned user messages. Reveal compact, accessible message actions on hover
+or keyboard focus, and keep them available without reserving visible chrome at
+rest. Render assistant text with Streamdown so incomplete streaming Markdown,
+GitHub-flavored tables and lists, links, and code blocks remain legible throughout
+generation. The empty thread may offer a small set of concrete source-history
+prompts as wrapping outline pills.
+
+Group tool calls from one assistant turn into one compact timeline before the
+answer. The timeline trigger summarizes the run, remains expanded throughout
+the complete assistant turn, and collapses only after that turn finishes; users
+can reopen it to inspect ordered tool labels, source targets, statuses, and
+concise result counts.
+Keep the timeline unboxed, use a quiet vertical rail to communicate sequence,
+and reserve motion and theme emphasis for the currently running step.
+
+Use the assistant-ui Elements Chat Panel composer treatment: one fixed-height,
+quiet `foreground`-mixed field with a full pill shape, text on the left, and one
+compact circular send or stop action on the right. Do not wrap it in a second
+bordered surface or place metadata inside the input. Keep provider/model status
+and its settings action in a separate low-height row below the field. Keep the
+footer transparent and free of gradients, blur, rounded shells, or opaque
+background fills; the input pill is the only composer surface. Use the field's
+foreground focus treatment instead of adding a theme-colored border, and do not
+use a foreground-colored default shadow. When no provider is configured,
 replace the composer with one focused action that opens Provider settings.
 
 ## Dialog Patterns
