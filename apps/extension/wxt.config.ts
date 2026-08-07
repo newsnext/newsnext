@@ -48,31 +48,45 @@ export default defineConfig({
       if (!entrypoints.every(entrypoint => entrypoint.inputPath.endsWith(".html"))) return
 
       viteConfig.build ??= {}
-      viteConfig.build.rolldownOptions = {
-        ...viteConfig.build.rolldownOptions,
-        output: {
-          codeSplitting: {
-            groups: [
-              {
-                name: "react-vendor",
-                test: /node_modules\/(?:@tanstack|jotai|react|react-dom|scheduler)\//,
-              },
-              {
-                name: "base-ui-vendor",
-                test: /node_modules\/(?:@base-ui|lucide-react)\//,
-              },
-              {
-                name: "motion-vendor",
-                test: /node_modules\/motion\//,
-              },
-              {
-                name: "ai-vendor",
-                test: /node_modules\/(?:@earendil-works|openai|partial-json)\//,
-              },
-            ],
+      const rolldownOptions = viteConfig.build.rolldownOptions ?? viteConfig.build.rollupOptions ?? {}
+      const codeSplitting = {
+        groups: [
+          {
+            name: "react-vendor",
+            test: /node_modules\/(?:@tanstack|jotai|react|react-dom|scheduler)\//,
           },
-        },
+          {
+            name: "base-ui-vendor",
+            test: /node_modules\/(?:@base-ui|lucide-react)\//,
+          },
+          {
+            name: "motion-vendor",
+            test: /node_modules\/motion\//,
+          },
+          {
+            name: "ai-vendor",
+            test: /node_modules\/(?:@earendil-works|openai|partial-json)\//,
+          },
+        ],
       }
+      const output = Array.isArray(rolldownOptions.output)
+        ? rolldownOptions.output.map(item => ({
+            ...item,
+            codeSplitting,
+          }))
+        : {
+            ...rolldownOptions.output,
+            codeSplitting,
+          }
+      const mergedRolldownOptions = {
+        ...rolldownOptions,
+        output,
+      }
+
+      // Vite 8 treats rollupOptions as an alias. Keep both references identical so
+      // WXT's entry naming survives when adding Rolldown-specific chunk groups.
+      viteConfig.build.rollupOptions = mergedRolldownOptions
+      viteConfig.build.rolldownOptions = mergedRolldownOptions
     },
   },
   manifest: ({ browser, mode }) => {
