@@ -1,14 +1,20 @@
-import type { DBSchema, IDBPDatabase } from "idb"
+import type { Table } from "dexie"
 import type { SourceLoadResult } from "./source-loader"
-import { openDB } from "idb"
+import Dexie from "dexie"
 import { selectSourceCacheKeysToDelete } from "./source-cache-values"
 
 const SOURCE_CACHE_DATABASE_NAME = "newsnext-extension-source-cache"
-const SOURCE_CACHE_DATABASE_VERSION = 3
-const SOURCE_CACHE_STORE_NAME = "source-results"
+const SOURCE_CACHE_CLEANUP_INTERVAL_MS = 24 * 60 * 60 * 1000
+const CACHE_CLEANUP_KEY = "cleanup"
 
-interface SourceCacheEntry extends SourceLoadResult {
+interface SourceCacheRecord extends SourceLoadResult {
+  cacheKey: string
   usedAt: number
+}
+
+interface SourceCacheMetadataRecord {
+  key: string
+  value: number
 }
 
 interface SourceCacheReadResult {
@@ -16,35 +22,21 @@ interface SourceCacheReadResult {
   result: SourceLoadResult
 }
 
-interface SourceCacheDatabase extends DBSchema {
-  [SOURCE_CACHE_STORE_NAME]: {
-    key: string
-    value: SourceCacheEntry
+class SourceCacheDatabase extends Dexie {
+  metadata!: Table<SourceCacheMetadataRecord, string>
+  sourceResults!: Table<SourceCacheRecord, string>
+
+  constructor() {
+    super(SOURCE_CACHE_DATABASE_NAME)
+    this.version(1).stores({
+      metadata: "key",
+      sourceResults: "cacheKey",
+    })
   }
 }
 
-let sourceCacheDatabasePromise: Promise<IDBPDatabase<SourceCacheDatabase>> | undefined
-let sourceCacheCleanupPromise: Promise<void> | undefined
-let lastSourceCacheCleanupAt: number | undefined
-const SOURCE_CACHE_CLEANUP_INTERVAL_MS = 24 * 60 * 60 * 1000
-
-function openSourceCacheDatabase(): Promise<IDBPDatabase<SourceCacheDatabase>> {
-  sourceCacheDatabasePromise ??= openDB<SourceCacheDatabase>(
-    SOURCE_CACHE_DATABASE_NAME,
-    SOURCE_CACHE_DATABASE_VERSION,
-    {
-      upgrade(database) {
-        if (database.objectStoreNames.contains(SOURCE_CACHE_STORE_NAME)) {
-          database.deleteObjectStore(SOURCE_CACHE_STORE_NAME)
-        }
-
-        database.createObjectStore(SOURCE_CACHE_STORE_NAME)
-      },
-    },
-  )
-
-  return sourceCacheDatabasePromise
-}
+const database = new SourceCacheDatabase()
+let cleanupPromise: Promise<void> | undefined
 
 export async function readSourceCache(
   cacheKey: string,
@@ -52,22 +44,18 @@ export async function readSourceCache(
   now = Date.now(),
 ): Promise<SourceCacheReadResult | undefined> {
   try {
-    const database = await openSourceCacheDatabase()
-
-    const transaction = database.transaction(SOURCE_CACHE_STORE_NAME, "readwrite")
-    const objectStore = transaction.objectStore(SOURCE_CACHE_STORE_NAME)
-    const entry = await objectStore.get(cacheKey)
-    if (!entry) {
-      return undefined
-    }
-
-    await objectStore.put({
-      ...entry,
-      usedAt: now,
-    }, cacheKey)
-    await transaction.done
-
-    const { usedAt: _usedAt, ...result } = entry
+    const entry = await database.transaction(
+      "rw",
+      database.sourceResults,
+      async (transaction) => {
+        const sourceResults = transaction.table<SourceCacheRecord, string>("sourceResults")
+        const cached = await sourceResults.get(cacheKey)
+        if (cached) await sourceResults.update(cacheKey, { usedAt: now })
+        return cached
+      },
+    )
+    if (!entry) return
+    const { cacheKey: _cacheKey, usedAt: _usedAt, ...result } = entry
     return {
       isFresh: now - result.updatedAt < maxAgeMs,
       result,
@@ -83,13 +71,12 @@ export async function writeCachedSource(
   now = Date.now(),
 ): Promise<void> {
   try {
-    const database = await openSourceCacheDatabase()
-
-    await database.put(SOURCE_CACHE_STORE_NAME, {
+    await database.sourceResults.put({
       ...result,
+      cacheKey,
       usedAt: now,
-    }, cacheKey)
-    void scheduleSourceCacheCleanup(database, now).catch(() => undefined)
+    })
+    void scheduleSourceCacheCleanup(now).catch(() => undefined)
   } catch {
     // Cache writes should never block source loading.
   }
@@ -97,64 +84,51 @@ export async function writeCachedSource(
 
 export async function clearSourceCache(): Promise<void> {
   try {
-    await sourceCacheCleanupPromise?.catch(() => undefined)
-    const database = await openSourceCacheDatabase()
-    await database.clear(SOURCE_CACHE_STORE_NAME)
-    lastSourceCacheCleanupAt = undefined
+    await cleanupPromise?.catch(() => undefined)
+    await database.transaction(
+      "rw",
+      [database.metadata, database.sourceResults],
+      async (transaction) => {
+        const metadata = transaction.table<SourceCacheMetadataRecord, string>("metadata")
+        const sourceResults = transaction.table<SourceCacheRecord, string>("sourceResults")
+        await Promise.all([
+          sourceResults.clear(),
+          metadata.put({ key: CACHE_CLEANUP_KEY, value: 0 }),
+        ])
+      },
+    )
   } catch {
     // Cache cleanup should not prevent the remaining user data from being cleared.
   }
 }
 
-function scheduleSourceCacheCleanup(
-  database: IDBPDatabase<SourceCacheDatabase>,
-  now: number,
-): Promise<void> {
-  if (sourceCacheCleanupPromise) {
-    return sourceCacheCleanupPromise
-  }
-  if (
-    lastSourceCacheCleanupAt !== undefined
-    && now - lastSourceCacheCleanupAt < SOURCE_CACHE_CLEANUP_INTERVAL_MS
-  ) {
-    return Promise.resolve()
-  }
-
-  sourceCacheCleanupPromise = cleanupSourceCache(database, now)
-    .then(() => {
-      lastSourceCacheCleanupAt = now
-    })
+function scheduleSourceCacheCleanup(now: number): Promise<void> {
+  if (cleanupPromise) return cleanupPromise
+  cleanupPromise = runScheduledSourceCacheCleanup(now)
     .finally(() => {
-      sourceCacheCleanupPromise = undefined
+      cleanupPromise = undefined
     })
-  return sourceCacheCleanupPromise
+  return cleanupPromise
 }
 
-async function cleanupSourceCache(
-  database: IDBPDatabase<SourceCacheDatabase>,
-  now: number,
-): Promise<void> {
-  const transaction = database.transaction(SOURCE_CACHE_STORE_NAME, "readwrite")
-  const objectStore = transaction.objectStore(SOURCE_CACHE_STORE_NAME)
-  const [keys, entries] = await Promise.all([
-    objectStore.getAllKeys(),
-    objectStore.getAll(),
-  ])
-  const textEncoder = new TextEncoder()
-  const cacheEntries = entries.flatMap((entry, index) => {
-    const key = keys[index]
-    return typeof key === "string"
-      ? [{
-          key,
-          size: textEncoder.encode(JSON.stringify(entry)).byteLength,
-          usedAt: entry.usedAt,
-        }]
-      : []
-  })
-
-  await Promise.all(
-    selectSourceCacheKeysToDelete(cacheEntries, now)
-      .map(key => objectStore.delete(key)),
+async function runScheduledSourceCacheCleanup(now: number): Promise<void> {
+  const lastCleanupAt = (await database.metadata.get(CACHE_CLEANUP_KEY))?.value
+  if (lastCleanupAt !== undefined && now - lastCleanupAt < SOURCE_CACHE_CLEANUP_INTERVAL_MS) return
+  await database.transaction(
+    "rw",
+    [database.metadata, database.sourceResults],
+    async (transaction) => {
+      const metadata = transaction.table<SourceCacheMetadataRecord, string>("metadata")
+      const sourceResults = transaction.table<SourceCacheRecord, string>("sourceResults")
+      const entries = await sourceResults.toArray()
+      const textEncoder = new TextEncoder()
+      const cacheEntries = entries.map(entry => ({
+        key: entry.cacheKey,
+        size: textEncoder.encode(JSON.stringify(entry)).byteLength,
+        usedAt: entry.usedAt,
+      }))
+      await sourceResults.bulkDelete(selectSourceCacheKeysToDelete(cacheEntries, now))
+      await metadata.put({ key: CACHE_CLEANUP_KEY, value: now })
+    },
   )
-  await transaction.done
 }

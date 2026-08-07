@@ -2,10 +2,12 @@ import type { LoadBackgroundSourceOutput } from "./background/source-service"
 import { parseSourceCacheMaxAge } from "@newsnext/source/core"
 import {
   normalizeSourceParams,
+  parseSourceId,
 } from "@newsnext/source/runtime"
 import { createBackgroundClient } from "./background-client"
 import { readSourceCache, writeCachedSource } from "./source-cache"
 import { buildSourceCacheKey } from "./source-cache-values"
+import { recordSourceObservation, seedSourceHistoryFromCache } from "./source-history"
 import { isFetchLatestRateLimited } from "./source-query-policy"
 import { loadSourceDescriptor } from "./sources"
 
@@ -20,6 +22,9 @@ export interface LoadSourceOptions {
 interface SourceCacheRequest {
   cacheKey: string
   maxAgeMs: number
+  params: Record<string, unknown>
+  providerId: string
+  sourceVersion: number
 }
 
 async function resolveSourceCacheRequest(
@@ -32,6 +37,9 @@ async function resolveSourceCacheRequest(
   return {
     cacheKey: buildSourceCacheKey(sourceId, source.cache.version, params),
     maxAgeMs: parseSourceCacheMaxAge(source.cache.maxAge),
+    params,
+    providerId: parseSourceId(sourceId).provider,
+    sourceVersion: source.cache.version,
   }
 }
 
@@ -50,11 +58,18 @@ export async function loadSource(
   options: LoadSourceOptions = {},
 ): Promise<SourceLoadResult> {
   options.signal?.throwIfAborted()
-  const { cacheKey, maxAgeMs } = await resolveSourceCacheRequest(sourceId, queryParams)
+  const request = await resolveSourceCacheRequest(sourceId, queryParams)
   options.signal?.throwIfAborted()
-  const cached = await readSourceCache(cacheKey, maxAgeMs)
+  const cached = await readSourceCache(request.cacheKey, request.maxAgeMs)
 
   if (cached?.result.items.length) {
+    await seedSourceHistoryFromCache({
+      params: request.params,
+      providerId: request.providerId,
+      result: cached.result,
+      sourceId,
+      sourceVersion: request.sourceVersion,
+    })
     const fetchLatest = options.fetchLatest ?? false
     const now = Date.now()
     const shouldReuse = fetchLatest
@@ -71,9 +86,11 @@ export async function loadSource(
 
   return loadFreshSource({
     sourceId,
-    queryParams,
-    cacheKey,
+    queryParams: request.params,
+    cacheKey: request.cacheKey,
+    providerId: request.providerId,
     signal: options.signal,
+    sourceVersion: request.sourceVersion,
   })
 }
 
@@ -81,7 +98,9 @@ interface FreshSourceLoad {
   sourceId: string
   queryParams: Record<string, unknown>
   cacheKey: string
+  providerId: string
   signal?: AbortSignal
+  sourceVersion: number
 }
 
 async function loadFreshSource(request: FreshSourceLoad): Promise<SourceLoadResult> {
@@ -101,7 +120,16 @@ async function loadFreshSource(request: FreshSourceLoad): Promise<SourceLoadResu
     })
 
     request.signal?.throwIfAborted()
-    await writeCachedSource(request.cacheKey, result)
+    await Promise.all([
+      writeCachedSource(request.cacheKey, result),
+      recordSourceObservation({
+        params: request.queryParams,
+        providerId: request.providerId,
+        result,
+        sourceId: request.sourceId,
+        sourceVersion: request.sourceVersion,
+      }),
+    ])
 
     return result
   } finally {

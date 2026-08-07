@@ -245,13 +245,98 @@ each cache entry once and injects stale data into the active query before
 continuing the request. Placeholder data does not satisfy the request, extend
 the entry's freshness, or change fetch-latest behavior.
 
-The persistent cache is an IndexedDB object store containing the result and
-`usedAt`. The result's `updatedAt` drives freshness and fetch-latest protection;
-successful reads update `usedAt`. At most once per
-day after a write, cleanup removes entries unused for 30 days, superseded cache
+The persistent cache uses Dexie over an IndexedDB object store containing the
+result and `usedAt`. The result's `updatedAt` drives freshness and fetch-latest
+protection; successful reads update `usedAt` in the same read-write transaction
+that returns the cached record. Clearing and cleanup group their related table
+changes in Dexie transactions. The cache record primary key is its only index; cleanup
+scans the small cache table around its configured 500-record cap, so indexing
+`usedAt` would add write and storage overhead without serving a query. At most
+once per day after a write, cleanup removes entries unused for 30 days, superseded cache
 versions for the same source and normalized parameters, and least-recently-used
 entries beyond 500 records or an estimated 50 MiB. Cache failures remain
 fail-open: they never prevent a source request from completing.
+
+Source history is stored separately from this freshness cache. Its dataset
+identity is the source ID plus normalized parameters, so cards on different
+boards reuse the same observations. Cache version is recorded on each
+observation rather than included in dataset identity; this preserves continuity
+while allowing analysis to identify behavioral version boundaries.
+
+Every successful remote load appends an observation using the background
+result's `updatedAt`. Cache hits, stale placeholder publication, and protected
+Fetch Latest actions do not create observations. When a dataset has no history,
+the extension may seed it once from its existing persistent cache using that
+result's original update time. History writes are fail-open and independent of
+the latest-result cache.
+
+The history database uses Dexie over IndexedDB and normalizes results into
+provider-scoped items, item revisions, ordered snapshots, and observations.
+Datasets and items use numeric primary keys in snapshot and observation records
+to avoid repeating source parameters and URLs. A unique compound
+`[providerId+url]` index enforces exact-URL item identity within one provider;
+the same URL from different providers is never shared. A compound
+`[itemId+digest]` index supports batched revision reuse. Candidate revisions are
+serialized from their stored `NewsItem` and compared after a digest match, so a
+second copy of the complete item JSON is not persisted. Sources and parameter
+sets belonging to the same provider may reuse an item revision, while
+observations and snapshot order remain dataset-specific.
+
+Only fields used by a lookup or ordered cleanup are indexed: dataset identity,
+provider plus URL, item plus digest, dataset plus observation time, and
+observation time. Snapshot references and denormalized bookkeeping fields
+remain unindexed to avoid IndexedDB write amplification. Multi-table writes,
+clears, and reference-count cleanup use transaction-bound Dexie tables; no
+network or unrelated asynchronous work runs inside those transactions.
+
+Consecutive identical results reuse an ordered snapshot but retain every real
+observation time. The snapshot stores only a short digest alongside the ordered
+revision IDs and verifies the full identity before reuse. Snapshot order
+represents rank. Timeline and ranking semantics continue to be inferred per
+result using the normal presentation rule, so a dataset that changes
+interpretation can be reported as mixed without adding an author-facing source
+type.
+
+History range reads use keyset pagination over the compound
+`[datasetId+observedAt]` index. Observation summaries resolve only their
+snapshot metadata, while an exact observation read hydrates its ordered item
+revisions in one read-only transaction. This avoids offset scans, per-record
+IndexedDB reads, and loading item contents before they are requested. History
+cleanup runs at most once per day after a write, or immediately when the
+estimated 100 MiB limit is exceeded. It removes expired or globally oldest
+observations in bounded batches and uses persisted dataset, snapshot, revision,
+and item reference counts to garbage-collect newly unreachable records without
+scanning the whole database. The retention window remains 30 days. Deleting one
+card does not delete shared history. Clearing all user data clears both the
+freshness cache and history.
+
+The agent-facing boundary is the neutral source-history repository rather than
+the Dexie tables. It normalizes raw source parameters before resolving a dataset
+and exposes four operations: dataset discovery, cursor-paginated observation
+summaries, one hydrated observation, and a deterministic comparison between two
+observations. Public records contain provider-scoped item identity, one-based
+snapshot position, the observed `NewsItem`, source version, and collection
+metadata; internal dataset, snapshot, revision, and reference-count identifiers
+never cross this boundary.
+
+Observation comparison reports only directly supported facts: items added to
+the returned snapshot, items missing from it, position changes, and changed
+top-level `NewsItem` fields. In particular, `missing` is not labeled as removed
+or dropped because a returned list may cover only part of a source. Repository
+responses include completeness warnings when a referenced snapshot or revision
+is unavailable. Product- or agent-specific interpretations are derived by the
+consumer and are not part of persistence or repository code.
+
+The chat adapter exposes these repository operations as four read-only tools:
+`list_source_history_datasets`, `list_source_history_observations`,
+`get_source_history_observation`, and `compare_source_history_observations`.
+The tools use TypeBox schemas for model-call validation and return the same
+repository DTO as JSON; they contain no additional ranking or timeline
+interpretation. The agent is instructed to call them only for requests that
+require local history and to treat all returned source content as untrusted
+data rather than instructions. Tool results become part of the configured chat
+provider request, so this boundary must remain read-only and intentionally
+scoped to the user's history-related request.
 
 Card queries mount when their container enters the preload margin of the app's
 root scroll container. The observer must use that scrolling element as its root;
