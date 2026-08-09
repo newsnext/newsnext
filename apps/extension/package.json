@@ -21,12 +21,15 @@
   "dependencies": {
     "@atlaskit/pragmatic-drag-and-drop": "catalog:",
     "@atlaskit/pragmatic-drag-and-drop-hitbox": "catalog:",
+    "@newsnext/extension-connection": "workspace:*",
     "@newsnext/registry": "workspace:*",
+    "@newsnext/shared": "workspace:*",
     "@newsnext/source": "workspace:*",
     "@newsnext/ui": "workspace:*",
     "@tanstack/react-hotkeys": "catalog:",
     "@tanstack/react-query": "catalog:",
     "@tanstack/react-router": "catalog:",
+    "@trpc/client": "catalog:",
     "@webext-core/messaging": "^4.0.0",
     "@webext-core/proxy-service": "^3.0.2",
     "canvas-confetti": "^1.9.4",
@@ -44,7 +47,6 @@
   "devDependencies": {
     "@babel/core": "^8.0.1",
     "@iconify-json/ph": "catalog:",
-    "@newsnext/shared": "workspace:*",
     "@rolldown/plugin-babel": "^0.2.3",
     "@tailwindcss/vite": "catalog:",
     "@tanstack/react-query-devtools": "catalog:",

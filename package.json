@@ -20,6 +20,8 @@
       "@tanstack/react-router": "^1.170.20",
       "@tanstack/react-router-devtools": "^1.167.1",
       "@tanstack/react-virtual": "^3.14.9",
+      "@trpc/client": "^11.18.0",
+      "@trpc/server": "^11.18.0",
       "@types/node": "^26.1.2",
       "@vitejs/plugin-react": "^6.0.5",
       "@wxt-dev/browser": "^0.2.5",

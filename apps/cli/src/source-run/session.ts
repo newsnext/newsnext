@@ -1,194 +1,138 @@
-import type {
-  SourceConnectionCommandRequest,
-  SourceConnectionReadyResponse,
-  SourceConnectionResponse,
-  SourceConnectionSerializedError,
-} from "@newsnext/shared/types"
-import type { ServerWebSocket } from "bun"
-import type { Buffer } from "node:buffer"
+import type { ServerType } from "@hono/node-server"
 import type {
   DaemonExecuteInput,
   DaemonExecuteResponse,
+  DaemonRouterContext,
   DaemonStatus,
-} from "../daemon-protocol"
+  ExtensionConnectionCommandRequest,
+  ExtensionConnectionCommandResult,
+  ExtensionConnectionInstance,
+  ExtensionConnectionSerializedError,
+} from "@newsnext/extension-connection"
+import { EventEmitter, on } from "node:events"
 import process from "node:process"
+import { serve, upgradeWebSocket } from "@hono/node-server"
 import {
-  DAEMON_EXECUTE_PATH,
-  DAEMON_STATUS_PATH,
-  DAEMON_STOP_PATH,
-} from "../daemon-protocol"
+  DAEMON_TRPC_PATH,
+  daemonRouter,
+  parseExtensionConnectionInstance,
+} from "@newsnext/extension-connection"
+import { fetchRequestHandler } from "@trpc/server/adapters/fetch"
+import { applyWSSHandler } from "@trpc/server/adapters/ws"
+import { Hono } from "hono"
+import { WebSocketServer } from "ws"
 import { CliError } from "../errors"
 
-type SocketData = undefined
-
 interface PendingRequest {
-  socket: ServerWebSocket<SocketData>
-  resolve: (response: Extract<SourceConnectionResponse, { type: "command.result" }>) => void
+  client: ReadyClient
+  resolve: (response: ExtensionConnectionCommandResult) => void
   reject: (error: Error) => void
   timer: ReturnType<typeof setTimeout>
 }
 
 interface ReadyClient {
-  socket: ServerWebSocket<SocketData>
-  ready: SourceConnectionReadyResponse
+  abortController: AbortController
+  events: EventEmitter
+  instance: ExtensionConnectionInstance
 }
 
 interface SourceConnectionSessionOptions {
-  onStop?: () => void
+  onStop: () => void
 }
 
 export class SourceConnectionRemoteError extends Error {
-  readonly remote: SourceConnectionSerializedError
+  readonly remote: ExtensionConnectionSerializedError
 
-  constructor(remote: SourceConnectionSerializedError) {
+  constructor(remote: ExtensionConnectionSerializedError) {
     super(remote.message)
     this.name = remote.name
     this.remote = remote
   }
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value)
-}
-
-function getOptionalString(
-  value: Record<string, unknown>,
-  key: string,
-): string | undefined {
-  return typeof value[key] === "string" ? value[key] : undefined
-}
-
-export function parseSourceConnectionResponse(value: unknown): SourceConnectionResponse | undefined {
-  if (!isRecord(value) || typeof value.type !== "string") {
-    return
-  }
-  if (value.type === "ping") {
-    return { type: "ping" }
-  }
-  if (value.type === "pong") {
-    return {
-      id: typeof value.id === "string" ? value.id : undefined,
-      type: "pong",
-    }
-  }
-  if (value.type === "ready" && isRecord(value.instance)) {
-    const { instance } = value
-    if (
-      typeof instance.id === "string"
-      && typeof instance.browser === "string"
-      && typeof instance.extensionVersion === "string"
-    ) {
-      return {
-        type: "ready",
-        instance: {
-          id: instance.id,
-          browser: instance.browser,
-          extensionVersion: instance.extensionVersion,
-        },
-      }
-    }
-    return
-  }
-  if (
-    value.type !== "command.result"
-    || typeof value.id !== "string"
-    || typeof value.ok !== "boolean"
-  ) {
-    return
-  }
-  if (value.ok) {
-    return {
-      id: value.id,
-      type: "command.result",
-      ok: true,
-      data: value.data,
-    }
-  }
-  if (
-    !isRecord(value.error)
-    || typeof value.error.name !== "string"
-    || typeof value.error.message !== "string"
-  ) {
-    return
-  }
-  return {
-    id: value.id,
-    type: "command.result",
-    ok: false,
-    error: {
-      name: value.error.name,
-      message: value.error.message,
-      stack: getOptionalString(value.error, "stack"),
-      code: getOptionalString(value.error, "code"),
-      loginUrl: getOptionalString(value.error, "loginUrl"),
-    },
-  }
-}
-
 export class SourceConnectionSession {
   readonly url: URL
-  private readonly server: ReturnType<typeof Bun.serve<SocketData>>
+  readonly ready: Promise<void>
+  private readonly server: ServerType
+  private readonly webSocketServer: WebSocketServer
   private readonly startedAt = Date.now()
-  private readonly readyClients = new Map<ServerWebSocket<SocketData>, SourceConnectionReadyResponse>()
+  private readonly readyClients = new Map<string, ReadyClient>()
   private readonly pending = new Map<string, PendingRequest>()
   private readonly changeWaiters = new Set<() => void>()
 
-  constructor(url: URL, options: SourceConnectionSessionOptions = {}) {
+  constructor(url: URL, options: SourceConnectionSessionOptions) {
     this.url = url
-    try {
-      this.server = Bun.serve<SocketData>({
-        hostname: url.hostname,
-        port: Number(url.port),
-        fetch: async (request, server) => {
-          const pathname = new URL(request.url).pathname
-          const isControlRequest = pathname === DAEMON_STATUS_PATH
-            || pathname === DAEMON_EXECUTE_PATH
-            || pathname === DAEMON_STOP_PATH
-          if (isControlRequest && request.headers.has("origin")) {
-            return new Response("Forbidden", { status: 403 })
-          }
-          if (pathname === DAEMON_STATUS_PATH && request.method === "GET") {
-            return Response.json(this.getStatus())
-          }
-          if (pathname === DAEMON_EXECUTE_PATH && request.method === "POST") {
-            return await this.handleExecuteRequest(request)
-          }
-          if (pathname === DAEMON_STOP_PATH && request.method === "POST") {
-            setTimeout(() => options.onStop?.(), 50)
-            return Response.json({ ok: true })
-          }
-          if (
-            pathname === url.pathname
-            && server.upgrade(request)
-          ) {
-            return
-          }
-          return new Response("Not found", { status: 404 })
-        },
-        websocket: {
-          open: () => {
-            this.notifyChange()
-          },
-          message: (socket, message) => {
-            this.handleMessage(socket, message)
-          },
-          close: (socket) => {
-            this.readyClients.delete(socket)
-            for (const [id, request] of this.pending) {
-              if (request.socket === socket) {
-                clearTimeout(request.timer)
-                request.reject(new CliError("The extension disconnected during the request"))
-                this.pending.delete(id)
-              }
-            }
-            this.notifyChange()
-          },
-        },
-      })
-    } catch (error) {
-      const detail = error instanceof Error ? error.message : String(error)
-      throw new CliError(`Could not start source connection server at ${url.href}: ${detail}`)
+    const app = new Hono()
+    const daemonContext: DaemonRouterContext = {
+      role: "control",
+      execute: input => this.executeForDaemon(input),
+      getStatus: () => this.getStatus(),
+      stop: options.onStop,
     }
+    app.use(`${DAEMON_TRPC_PATH}/*`, async (context, next) => {
+      if (context.req.header("origin")) {
+        return context.text("Forbidden", 403)
+      }
+      return next()
+    })
+    app.all(`${DAEMON_TRPC_PATH}/*`, context => fetchRequestHandler({
+      createContext: () => daemonContext,
+      endpoint: DAEMON_TRPC_PATH,
+      req: context.req.raw,
+      router: daemonRouter,
+    }))
+    app.use(url.pathname, async (context, next) => {
+      const origin = context.req.header("origin")
+      if (
+        origin
+        && !origin.startsWith("chrome-extension://")
+        && !origin.startsWith("moz-extension://")
+      ) {
+        return context.text("Forbidden", 403)
+      }
+      return next()
+    })
+    app.get(url.pathname, upgradeWebSocket(() => ({})))
+
+    this.webSocketServer = new WebSocketServer({ noServer: true })
+    applyWSSHandler({
+      createContext: ({ info }) => {
+        const client: ReadyClient = {
+          abortController: new AbortController(),
+          events: new EventEmitter(),
+          instance: parseExtensionConnectionInstance(info.connectionParams),
+        }
+        return {
+          role: "extension",
+          complete: result => this.complete(client, result),
+          subscribe: signal => this.subscribe(client, signal),
+        } satisfies DaemonRouterContext
+      },
+      keepAlive: {
+        enabled: true,
+        pingMs: 20_000,
+        pongWaitMs: 5_000,
+      },
+      router: daemonRouter,
+      wss: this.webSocketServer,
+    })
+    let resolveReady!: () => void
+    let rejectReady!: (error: Error) => void
+    this.ready = new Promise<void>((resolve, reject) => {
+      resolveReady = resolve
+      rejectReady = reject
+    })
+    this.server = serve({
+      fetch: app.fetch,
+      hostname: url.hostname,
+      port: Number(url.port),
+      websocket: { server: this.webSocketServer },
+    }, resolveReady)
+    this.server.once("error", (error) => {
+      rejectReady(new CliError(
+        `Could not start source connection server at ${url.href}: ${error.message}`,
+      ))
+    })
   }
 
   private getStatus(): DaemonStatus {
@@ -196,52 +140,24 @@ export class SourceConnectionSession {
       pid: process.pid,
       startedAt: this.startedAt,
       url: this.url.href,
-      instances: [...this.readyClients.values()].map(ready => ready.instance),
+      instances: [...this.readyClients.values()].map(client => client.instance),
     }
   }
 
-  private async handleExecuteRequest(request: Request): Promise<Response> {
-    let input: DaemonExecuteInput
-    try {
-      input = await request.json() as DaemonExecuteInput
-      if (
-        !isRecord(input)
-        || !isRecord(input.request)
-        || ![
-          "source.list",
-          "source.run",
-          "source-history.datasets",
-          "source-history.observations",
-          "source-history.get",
-          "source-history.compare",
-        ].includes(input.request.type)
-        || typeof input.request.id !== "string"
-        || (typeof input.browser !== "string" && input.browser !== undefined)
-        || typeof input.timeoutMs !== "number"
-        || !Number.isFinite(input.timeoutMs)
-        || input.timeoutMs <= 0
-      ) {
-        throw new Error("Invalid execution request")
-      }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error)
-      return Response.json({ error: message }, { status: 400 })
-    }
-
-    let result: DaemonExecuteResponse
+  private async executeForDaemon(input: DaemonExecuteInput): Promise<DaemonExecuteResponse> {
     try {
       const execution = await this.execute(
         input.request,
         input.browser,
         input.timeoutMs,
       )
-      result = {
+      return {
         ok: true,
         data: execution.data,
         instance: execution.instance,
       }
     } catch (error) {
-      result = error instanceof SourceConnectionRemoteError
+      return error instanceof SourceConnectionRemoteError
         ? {
             ok: false,
             kind: "extension",
@@ -255,7 +171,66 @@ export class SourceConnectionSession {
             },
           }
     }
-    return Response.json(result)
+  }
+
+  private disconnect(client: ReadyClient): void {
+    client.abortController.abort()
+    if (this.readyClients.get(client.instance.id) === client) {
+      this.readyClients.delete(client.instance.id)
+    }
+    for (const [id, request] of this.pending) {
+      if (request.client === client) {
+        clearTimeout(request.timer)
+        request.reject(new CliError("The extension disconnected during the request"))
+        this.pending.delete(id)
+      }
+    }
+    this.notifyChange()
+  }
+
+  private async* subscribe(
+    client: ReadyClient,
+    signal?: AbortSignal,
+  ): AsyncIterable<ExtensionConnectionCommandRequest> {
+    const existing = this.readyClients.get(client.instance.id)
+    if (existing) {
+      this.disconnect(existing)
+    }
+    this.readyClients.set(client.instance.id, client)
+    this.notifyChange()
+    const abortClient = (): void => client.abortController.abort()
+    if (signal?.aborted) {
+      abortClient()
+    } else {
+      signal?.addEventListener("abort", abortClient, { once: true })
+    }
+    try {
+      for await (const [request] of on(client.events, "command", {
+        signal: client.abortController.signal,
+      })) {
+        yield request as ExtensionConnectionCommandRequest
+      }
+    } catch (error) {
+      if (!client.abortController.signal.aborted) {
+        throw error
+      }
+    } finally {
+      signal?.removeEventListener("abort", abortClient)
+      this.disconnect(client)
+    }
+  }
+
+  private complete(
+    client: ReadyClient,
+    response: ExtensionConnectionCommandResult,
+  ): void {
+    const request = this.pending.get(response.id)
+    if (!request || request.client !== client) {
+      return
+    }
+    clearTimeout(request.timer)
+    this.pending.delete(response.id)
+    request.resolve(response)
   }
 
   private notifyChange(): void {
@@ -265,48 +240,9 @@ export class SourceConnectionSession {
     this.changeWaiters.clear()
   }
 
-  private handleMessage(
-    socket: ServerWebSocket<SocketData>,
-    message: string | Buffer,
-  ): void {
-    let value: unknown
-    try {
-      value = JSON.parse(String(message)) as unknown
-    } catch {
-      return
-    }
-    const response = parseSourceConnectionResponse(value)
-    if (!response) {
-      return
-    }
-
-    if (response.type === "ready") {
-      this.readyClients.set(socket, response)
-      this.notifyChange()
-      return
-    }
-    if (response.type === "ping") {
-      socket.send(JSON.stringify({ type: "pong" }))
-      return
-    }
-    if (response.type !== "command.result") {
-      return
-    }
-
-    const request = this.pending.get(response.id)
-    if (!request || request.socket !== socket) {
-      return
-    }
-    clearTimeout(request.timer)
-    this.pending.delete(response.id)
-    request.resolve(response)
-  }
-
   private matchingClients(browser?: string): ReadyClient[] {
-    return [...this.readyClients].flatMap(([socket, ready]) =>
-      !browser || ready.instance.browser === browser
-        ? [{ socket, ready }]
-        : [],
+    return [...this.readyClients.values()].filter(client =>
+      !browser || client.instance.browser === browser,
     )
   }
 
@@ -322,8 +258,8 @@ export class SourceConnectionSession {
         return client
       }
       if (clients.length > 1) {
-        const labels = clients.map(({ ready }) =>
-          `${ready.instance.browser} ${ready.instance.extensionVersion} (${ready.instance.id.slice(0, 8)})`,
+        const labels = clients.map(({ instance }) =>
+          `${instance.browser} ${instance.extensionVersion} (${instance.id.slice(0, 8)})`,
         )
         throw new CliError(
           `Multiple extensions matched: ${labels.join(", ")}. Close extra profiles or use --browser.`,
@@ -352,24 +288,24 @@ export class SourceConnectionSession {
   }
 
   async execute(
-    request: SourceConnectionCommandRequest,
+    request: ExtensionConnectionCommandRequest,
     browser: string | undefined,
     timeoutMs: number,
-  ): Promise<{ data: unknown, instance: SourceConnectionReadyResponse["instance"] }> {
+  ): Promise<{ data: unknown, instance: ExtensionConnectionInstance }> {
     const client = await this.waitForClient(browser, timeoutMs)
-    const response = await new Promise<Extract<SourceConnectionResponse, { type: "command.result" }>>(
+    const response = await new Promise<ExtensionConnectionCommandResult>(
       (resolve, reject) => {
         const timer = setTimeout(() => {
           this.pending.delete(request.id)
           reject(new CliError("Timed out waiting for the extension result"))
         }, timeoutMs)
         this.pending.set(request.id, {
-          socket: client.socket,
+          client,
           resolve,
           reject,
           timer,
         })
-        client.socket.send(JSON.stringify(request))
+        client.events.emit("command", request)
       },
     )
 
@@ -378,7 +314,7 @@ export class SourceConnectionSession {
     }
     return {
       data: response.data,
-      instance: client.ready.instance,
+      instance: client.instance,
     }
   }
 
@@ -388,6 +324,11 @@ export class SourceConnectionSession {
       request.reject(new CliError("Source connection session closed"))
     }
     this.pending.clear()
-    await this.server.stop(true)
+    for (const client of this.webSocketServer.clients) {
+      client.terminate()
+    }
+    await new Promise<void>((resolve, reject) => {
+      this.server.close(error => error ? reject(error) : resolve())
+    })
   }
 }

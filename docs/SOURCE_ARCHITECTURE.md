@@ -719,6 +719,24 @@ extension. The extension executes the same provider expansion, parameter
 normalization, registry validation, capabilities, secrets, and background loader
 path as normal source loading.
 
+The distributed CLI bundle runs on Node.js. Its loopback daemon uses Hono with
+the Node adapter for HTTP and WebSocket upgrades. CLI control calls use tRPC
+over HTTP. Each enabled extension connects as a tRPC WebSocket client, subscribes
+to its command stream, and returns command results through a mutation on the
+same socket. The router contract keeps both transports aligned without
+making the extension depend on the CLI application package. The contract,
+runtime validation, and router live in the dedicated
+`@newsnext/extension-connection` package so generic shared utilities and source
+runtime packages do not depend on tRPC.
+
+HTTP control procedures reject browser origins and cannot be called from an
+extension WebSocket context. The WebSocket path accepts extension origins and
+rejects ordinary web-page origins. A disconnect rejects every in-flight command
+assigned to that extension. Commands are not replayed after reconnection because
+source execution is not guaranteed to be idempotent. The daemon sends a
+20-second WebSocket heartbeat for MV3 service-worker lifetime, and the extension
+uses a browser alarm only as a recovery fallback.
+
 Local provider runs use an isolated `cli:<provider-id>` secret namespace unless
 `--use-provider-secrets` is supplied. CLI execution does not install the
 provider, change the bundled registry, populate the normal source cache, or

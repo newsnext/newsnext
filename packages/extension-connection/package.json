@@ -1,0 +1,19 @@
+{
+  "name": "@newsnext/extension-connection",
+  "type": "module",
+  "private": true,
+  "license": "MPL-2.0",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@trpc/server": "catalog:"
+  },
+  "devDependencies": {
+    "@newsnext/tsconfigs": "workspace:*",
+    "vitest": "catalog:"
+  }
+}

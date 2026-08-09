@@ -1,4 +1,4 @@
-import type { SourceConnectionRunRequest } from "@newsnext/shared/types"
+import type { ExtensionConnectionRunRequest } from "@newsnext/extension-connection"
 import type { CliIO } from "../io"
 import type { LoadedSourceRunTarget, SourceRunCommandOptions } from "./options"
 import { watch } from "node:fs"
@@ -49,7 +49,7 @@ async function executeOnce(
   loadedTarget?: LoadedSourceRunTarget,
 ): Promise<void> {
   const target = loadedTarget ?? await loadSourceRunTarget(options)
-  const request: SourceConnectionRunRequest = target.kind === "registered"
+  const request: ExtensionConnectionRunRequest = target.kind === "registered"
     ? {
         id: crypto.randomUUID(),
         type: "source.run",

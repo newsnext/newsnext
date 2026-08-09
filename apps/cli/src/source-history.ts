@@ -4,7 +4,7 @@ import type {
   SourceHistoryGetObservationRequest,
   SourceHistoryListDatasetsRequest,
   SourceHistoryListObservationsRequest,
-} from "@newsnext/shared/types"
+} from "@newsnext/extension-connection"
 import type { CliIO } from "./io"
 import type {
   SourceConnectionOptions,

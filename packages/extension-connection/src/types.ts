@@ -1,27 +1,27 @@
-interface SourceConnectionRunRequestBase {
+interface ExtensionConnectionRunRequestBase {
   id: string
   type: "source.run"
   sourceId: string
   params?: Record<string, unknown>
 }
 
-export interface SourceConnectionRegisteredRunRequest extends SourceConnectionRunRequestBase {
+export interface ExtensionConnectionRegisteredRunRequest extends ExtensionConnectionRunRequestBase {
   providerId?: never
   provider?: never
   useProviderSecrets?: never
 }
 
-export interface SourceConnectionProviderRunRequest extends SourceConnectionRunRequestBase {
+export interface ExtensionConnectionProviderRunRequest extends ExtensionConnectionRunRequestBase {
   providerId: string
   provider: unknown
   useProviderSecrets?: boolean
 }
 
-export type SourceConnectionRunRequest
-  = | SourceConnectionRegisteredRunRequest
-    | SourceConnectionProviderRunRequest
+export type ExtensionConnectionRunRequest
+  = | ExtensionConnectionRegisteredRunRequest
+    | ExtensionConnectionProviderRunRequest
 
-export interface SourceConnectionListRequest {
+export interface ExtensionConnectionListRequest {
   id: string
   type: "source.list"
 }
@@ -68,12 +68,18 @@ export type SourceHistoryCommandRequest
     | SourceHistoryGetObservationRequest
     | SourceHistoryCompareObservationsRequest
 
-export type SourceConnectionCommandRequest
-  = | SourceConnectionListRequest
-    | SourceConnectionRunRequest
+export type ExtensionConnectionCommandRequest
+  = | ExtensionConnectionListRequest
+    | ExtensionConnectionRunRequest
     | SourceHistoryCommandRequest
 
-export interface SourceConnectionSerializedError {
+export interface ExtensionConnectionInstance {
+  id: string
+  browser: string
+  extensionVersion: string
+}
+
+export interface ExtensionConnectionSerializedError {
   message: string
   name: string
   stack?: string
@@ -81,40 +87,14 @@ export interface SourceConnectionSerializedError {
   loginUrl?: string
 }
 
-export interface SourceConnectionReadyResponse {
-  type: "ready"
-  instance: {
-    id: string
-    browser: string
-    extensionVersion: string
-  }
-}
-
-export type SourceConnectionRequest
-  = | SourceConnectionCommandRequest
-    | {
-      id?: string
-      type: "ping"
-    }
-
-export type SourceConnectionResponse
+export type ExtensionConnectionCommandResult
   = | {
     id: string
-    type: "command.result"
     ok: true
-    data: unknown
+    data?: unknown
   }
   | {
     id: string
-    type: "command.result"
     ok: false
-    error: SourceConnectionSerializedError
+    error: ExtensionConnectionSerializedError
   }
-  | {
-    id?: string
-    type: "pong"
-  }
-  | {
-    type: "ping"
-  }
-  | SourceConnectionReadyResponse
