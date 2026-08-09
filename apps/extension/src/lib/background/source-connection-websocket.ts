@@ -275,14 +275,14 @@ async function handleMessage(event: MessageEvent): Promise<void> {
     const data = await executeRequest(request)
     send({
       id: request.id,
-      type: "source.result",
+      type: "command.result",
       ok: true,
       data,
     })
   } catch (error) {
     send({
       id: request.id,
-      type: "source.result",
+      type: "command.result",
       ok: false,
       error: serializeSourceConnectionError(error),
     })
@@ -419,13 +419,7 @@ export async function registerSourceConnectionWebSocket(): Promise<void> {
 
   const stored = await browser.storage.local.get(PERSISTED_DATA_SLICES.deviceState.key)
   const persisted = stored[PERSISTED_DATA_SLICES.deviceState.key]
-  const normalized = normalizePersistedDeviceState(persisted)
-  if (persisted !== undefined && JSON.stringify(persisted) !== JSON.stringify(normalized)) {
-    await browser.storage.local.set({
-      [PERSISTED_DATA_SLICES.deviceState.key]: normalized,
-    })
-  }
-  enabled = normalized.sourceConnectionEnabled
+  enabled = normalizePersistedDeviceState(persisted).sourceConnectionEnabled
   if (enabled) {
     browser.alarms.create(SOURCE_CONNECTION_RECONNECT_ALARM, {
       periodInMinutes: RECONNECT_ALARM_PERIOD_MINUTES,

@@ -29,7 +29,7 @@ export type DaemonExecuteResponse
   }
   | {
     ok: false
-    kind: "source"
+    kind: "extension"
     error: SourceConnectionSerializedError
   }
   | {

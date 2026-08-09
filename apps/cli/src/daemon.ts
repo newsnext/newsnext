@@ -220,7 +220,7 @@ export async function executeThroughDaemon(
   if (result.ok) {
     return result
   }
-  if (result.kind === "source") {
+  if (result.kind === "extension") {
     throw new SourceConnectionRemoteError(result.error)
   }
   throw new CliError(result.error.message)

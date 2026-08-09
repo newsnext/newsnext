@@ -110,12 +110,6 @@ describe("persisted settings", () => {
 
   it("normalizes invalid device-only fields", () => {
     expect(normalizePersistedDeviceState({
-      chatProvider: {
-        apiKey: "legacy-secret",
-        baseUrl: "https://api.example.com/v1",
-        model: "legacy-model",
-        name: "Legacy provider",
-      },
       currentBoardId: 42,
       settingsTab: "advanced",
       sourceConnectionEnabled: "yes",

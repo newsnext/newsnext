@@ -23,7 +23,7 @@ type SocketData = undefined
 
 interface PendingRequest {
   socket: ServerWebSocket<SocketData>
-  resolve: (response: Extract<SourceConnectionResponse, { type: "source.result" }>) => void
+  resolve: (response: Extract<SourceConnectionResponse, { type: "command.result" }>) => void
   reject: (error: Error) => void
   timer: ReturnType<typeof setTimeout>
 }
@@ -90,7 +90,7 @@ export function parseSourceConnectionResponse(value: unknown): SourceConnectionR
     return
   }
   if (
-    value.type !== "source.result"
+    value.type !== "command.result"
     || typeof value.id !== "string"
     || typeof value.ok !== "boolean"
   ) {
@@ -99,7 +99,7 @@ export function parseSourceConnectionResponse(value: unknown): SourceConnectionR
   if (value.ok) {
     return {
       id: value.id,
-      type: "source.result",
+      type: "command.result",
       ok: true,
       data: value.data,
     }
@@ -113,7 +113,7 @@ export function parseSourceConnectionResponse(value: unknown): SourceConnectionR
   }
   return {
     id: value.id,
-    type: "source.result",
+    type: "command.result",
     ok: false,
     error: {
       name: value.error.name,
@@ -244,7 +244,7 @@ export class SourceConnectionSession {
       result = error instanceof SourceConnectionRemoteError
         ? {
             ok: false,
-            kind: "source",
+            kind: "extension",
             error: error.remote,
           }
         : {
@@ -289,7 +289,7 @@ export class SourceConnectionSession {
       socket.send(JSON.stringify({ type: "pong" }))
       return
     }
-    if (response.type !== "source.result") {
+    if (response.type !== "command.result") {
       return
     }
 
@@ -357,7 +357,7 @@ export class SourceConnectionSession {
     timeoutMs: number,
   ): Promise<{ data: unknown, instance: SourceConnectionReadyResponse["instance"] }> {
     const client = await this.waitForClient(browser, timeoutMs)
-    const response = await new Promise<Extract<SourceConnectionResponse, { type: "source.result" }>>(
+    const response = await new Promise<Extract<SourceConnectionResponse, { type: "command.result" }>>(
       (resolve, reject) => {
         const timer = setTimeout(() => {
           this.pending.delete(request.id)

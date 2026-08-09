@@ -100,13 +100,13 @@ export type SourceConnectionRequest
 export type SourceConnectionResponse
   = | {
     id: string
-    type: "source.result"
+    type: "command.result"
     ok: true
     data: unknown
   }
   | {
     id: string
-    type: "source.result"
+    type: "command.result"
     ok: false
     error: SourceConnectionSerializedError
   }

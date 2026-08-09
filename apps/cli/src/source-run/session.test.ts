@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { parseSourceConnectionResponse } from "./session"
 
-describe("source run protocol", () => {
+describe("source connection protocol", () => {
   it("accepts ready metadata", () => {
     expect(parseSourceConnectionResponse({
       type: "ready",
@@ -23,7 +23,7 @@ describe("source run protocol", () => {
   it("preserves structured execution errors", () => {
     expect(parseSourceConnectionResponse({
       id: "request-id",
-      type: "source.result",
+      type: "command.result",
       ok: false,
       error: {
         name: "SourceLoginRequiredError",
@@ -50,7 +50,7 @@ describe("source run protocol", () => {
     })).toBeUndefined()
     expect(parseSourceConnectionResponse({
       id: "request-id",
-      type: "source.result",
+      type: "command.result",
       ok: false,
       error: "failed",
     })).toBeUndefined()
