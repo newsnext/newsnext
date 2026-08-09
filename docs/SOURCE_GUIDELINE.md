@@ -968,6 +968,21 @@ list with:
 bun run newsnext source run --help
 ```
 
+Inspect the successful source observations stored by the extension:
+
+```sh
+bun run newsnext history datasets --source-id github:trending
+bun run newsnext history observations github:trending
+bun run newsnext history get github:trending 1786212000000
+bun run newsnext history compare github:trending 1786212000000 1786215600000
+```
+
+Use `--params` to select the same normalized parameter set used by a source
+card. Observation times may be Unix milliseconds or ISO 8601 values. Start with
+`datasets`, then list `observations` before using exact timestamps with `get` or
+`compare`. These commands are read-only and return completeness warnings when
+retained history cannot fully reconstruct a result.
+
 Direct requests are useful for endpoint investigation, but they do not verify
 parameter parsing, extension permissions, capability enforcement, secrets, or
 the background runtime.

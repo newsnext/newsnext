@@ -11,6 +11,12 @@ import {
   normalizePersistedDeviceState,
   withSourceConnectionEnabled,
 } from "../settings/persisted-settings"
+import {
+  compareSourceHistoryObservations,
+  getSourceHistoryObservation,
+  listSourceHistoryDatasets,
+  listSourceHistoryObservations,
+} from "../source/history/repository"
 import { listConnectedSources, runConnectedSource } from "./source-runner"
 
 const DEFAULT_SOURCE_CONNECTION_WS_URL = "ws://127.0.0.1:43110"
@@ -94,6 +100,14 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value)
 }
 
+function isOptionalFiniteNumber(value: unknown): value is number | undefined {
+  return value === undefined || (typeof value === "number" && Number.isFinite(value))
+}
+
+function isOptionalString(value: unknown): value is string | undefined {
+  return value === undefined || typeof value === "string"
+}
+
 export function parseSourceConnectionRequest(value: unknown): SourceConnectionRequest {
   if (typeof value !== "string") {
     throw new TypeError("Source connection messages must be JSON strings")
@@ -101,7 +115,7 @@ export function parseSourceConnectionRequest(value: unknown): SourceConnectionRe
 
   const request = JSON.parse(value) as unknown
   if (!isRecord(request)) {
-    throw new Error("Invalid source run message")
+    throw new Error("Invalid source connection message")
   }
 
   if (request.type === "ping") {
@@ -134,7 +148,7 @@ export function parseSourceConnectionRequest(value: unknown): SourceConnectionRe
       } satisfies SourceConnectionRunRequest
     }
     if (typeof request.providerId !== "string" || !isRecord(request.provider)) {
-      throw new Error("Unsupported source run message")
+      throw new Error("Unsupported source connection message")
     }
     return {
       id: request.id,
@@ -147,7 +161,100 @@ export function parseSourceConnectionRequest(value: unknown): SourceConnectionRe
     } satisfies SourceConnectionRunRequest
   }
 
-  throw new Error("Unsupported source run message")
+  if (
+    request.type === "source-history.datasets"
+    && typeof request.id === "string"
+    && isOptionalString(request.cursor)
+    && isOptionalFiniteNumber(request.limit)
+    && isOptionalString(request.providerId)
+    && isOptionalString(request.sourceId)
+  ) {
+    return {
+      id: request.id,
+      type: "source-history.datasets",
+      cursor: request.cursor,
+      limit: request.limit,
+      providerId: request.providerId,
+      sourceId: request.sourceId,
+    }
+  }
+  if (
+    request.type === "source-history.observations"
+    && typeof request.id === "string"
+    && typeof request.sourceId === "string"
+    && (request.params === undefined || isRecord(request.params))
+    && isOptionalFiniteNumber(request.cursor)
+    && isOptionalFiniteNumber(request.from)
+    && isOptionalFiniteNumber(request.limit)
+    && isOptionalFiniteNumber(request.to)
+  ) {
+    return {
+      id: request.id,
+      type: "source-history.observations",
+      sourceId: request.sourceId,
+      params: request.params,
+      cursor: request.cursor,
+      from: request.from,
+      limit: request.limit,
+      to: request.to,
+    }
+  }
+  if (
+    request.type === "source-history.get"
+    && typeof request.id === "string"
+    && typeof request.sourceId === "string"
+    && (request.params === undefined || isRecord(request.params))
+    && typeof request.observedAt === "number"
+    && Number.isFinite(request.observedAt)
+  ) {
+    return {
+      id: request.id,
+      type: "source-history.get",
+      sourceId: request.sourceId,
+      params: request.params,
+      observedAt: request.observedAt,
+    }
+  }
+  if (
+    request.type === "source-history.compare"
+    && typeof request.id === "string"
+    && typeof request.sourceId === "string"
+    && (request.params === undefined || isRecord(request.params))
+    && typeof request.before === "number"
+    && Number.isFinite(request.before)
+    && typeof request.after === "number"
+    && Number.isFinite(request.after)
+  ) {
+    return {
+      id: request.id,
+      type: "source-history.compare",
+      sourceId: request.sourceId,
+      params: request.params,
+      before: request.before,
+      after: request.after,
+    }
+  }
+
+  throw new Error("Unsupported source connection message")
+}
+
+async function executeRequest(request: SourceConnectionRequest): Promise<unknown> {
+  switch (request.type) {
+    case "source.list":
+      return (await listConnectedSources()).data
+    case "source.run":
+      return (await runConnectedSource(request)).data
+    case "source-history.datasets":
+      return await listSourceHistoryDatasets(request)
+    case "source-history.observations":
+      return await listSourceHistoryObservations(request)
+    case "source-history.get":
+      return await getSourceHistoryObservation(request)
+    case "source-history.compare":
+      return await compareSourceHistoryObservations(request)
+    default:
+      throw new TypeError(`Unsupported command: ${request.type}`)
+  }
 }
 
 async function handleMessage(event: MessageEvent): Promise<void> {
@@ -155,7 +262,7 @@ async function handleMessage(event: MessageEvent): Promise<void> {
   try {
     request = parseSourceConnectionRequest(event.data)
   } catch (error) {
-    console.error("Failed to parse source run message", error)
+    console.error("Failed to parse source connection message", error)
     return
   }
 
@@ -165,14 +272,12 @@ async function handleMessage(event: MessageEvent): Promise<void> {
   }
 
   try {
-    const result = request.type === "source.list"
-      ? await listConnectedSources()
-      : await runConnectedSource(request)
+    const data = await executeRequest(request)
     send({
       id: request.id,
       type: "source.result",
       ok: true,
-      data: result.data,
+      data,
     })
   } catch (error) {
     send({
@@ -314,7 +419,13 @@ export async function registerSourceConnectionWebSocket(): Promise<void> {
 
   const stored = await browser.storage.local.get(PERSISTED_DATA_SLICES.deviceState.key)
   const persisted = stored[PERSISTED_DATA_SLICES.deviceState.key]
-  enabled = normalizePersistedDeviceState(persisted).sourceConnectionEnabled
+  const normalized = normalizePersistedDeviceState(persisted)
+  if (persisted !== undefined && JSON.stringify(persisted) !== JSON.stringify(normalized)) {
+    await browser.storage.local.set({
+      [PERSISTED_DATA_SLICES.deviceState.key]: normalized,
+    })
+  }
+  enabled = normalized.sourceConnectionEnabled
   if (enabled) {
     browser.alarms.create(SOURCE_CONNECTION_RECONNECT_ALARM, {
       periodInMinutes: RECONNECT_ALARM_PERIOD_MINUTES,

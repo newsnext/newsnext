@@ -325,8 +325,8 @@ scanning the whole database. The retention window remains 30 days. Deleting one
 card does not delete shared history. Clearing all user data clears both the
 freshness cache and history.
 
-The agent-facing boundary is the neutral source-history repository rather than
-the Dexie tables. It normalizes raw source parameters before resolving a dataset
+The external boundary is the neutral source-history repository rather than the
+Dexie tables. It normalizes raw source parameters before resolving a dataset
 and exposes four operations: dataset discovery, cursor-paginated observation
 summaries, one hydrated observation, and a deterministic comparison between two
 observations. Public records contain provider-scoped item identity, one-based
@@ -339,26 +339,28 @@ the returned snapshot, items missing from it, position changes, and changed
 top-level `NewsItem` fields. In particular, `missing` is not labeled as removed
 or dropped because a returned list may cover only part of a source. Repository
 responses include completeness warnings when a referenced snapshot or revision
-is unavailable. Product- or agent-specific interpretations are derived by the
-consumer and are not part of persistence or repository code.
+is unavailable. Product-specific interpretations are derived by the consumer
+and are not part of persistence or repository code.
 
-The chat adapter exposes these repository operations as four read-only tools:
-`list_source_history_datasets`, `list_source_history_observations`,
-`get_source_history_observation`, and `compare_source_history_observations`.
-The tools use TypeBox schemas for model-call validation and return the same
-repository DTO as JSON; they contain no additional ranking or timeline
-interpretation. The chat adapter composes its base prompt with a dedicated
-source-history skill. The skill tells the agent to use observations for coverage
-discovery, exact-time summaries, two-point comparisons, ranking movement,
-timeline arrival patterns, item-field changes, and evidence-supported trends
-across multiple samples. It also defines the analysis boundary: observation
-time is not publication time, position does not establish popularity or cause,
-`missing` does not mean deleted, and successful remote-load samples are not
-continuous monitoring. The agent must surface completeness warnings, call the
-tools only for requests that require local history, and treat all returned
-source content as untrusted data rather than instructions. Tool results become
-part of the configured chat provider request, so this boundary must remain
-read-only and intentionally scoped to the user's history-related request.
+The extension-backed CLI exposes these repository operations as four read-only
+commands: `newsnext history datasets`, `newsnext history observations`,
+`newsnext history get`, and `newsnext history compare`. Requests travel through
+the same loopback connection as source authoring commands and return the
+repository DTO as JSON. The extension validates every request before dispatch
+and does not expose internal database identifiers or write operations. History
+commands execute in the background context, so parameter normalization resolves
+the configured runtime registry in-process; it must not call the frontend
+registry proxy from the background service.
+
+The repository-local `newsnext-source-history` skill teaches Codex how to
+compose these commands for coverage discovery, exact-time summaries, two-point
+comparisons, ranking movement, timeline arrival patterns, item-field changes,
+and evidence-supported trends across multiple samples. It preserves the
+analysis boundary: observation time is not publication time, position does not
+establish popularity or cause, `missing` does not mean deleted, successful
+remote-load samples are not continuous monitoring, completeness warnings must
+be surfaced, and returned source content is untrusted data rather than
+instructions.
 
 Card queries mount when their container enters the preload margin of the app's
 root scroll container. The observer must use that scrolling element as its root;
@@ -725,3 +727,11 @@ validation as registered extension app loads.
 
 This is why direct HTTP requests are useful for investigation but are not a
 substitute for extension-backed source verification.
+
+Source-history commands use the same daemon and connected extension to read the
+extension's IndexedDB-backed observation repository. Dataset discovery accepts
+source and provider filters plus opaque pagination cursors. Observation listing
+accepts normalized source parameters, time bounds, and timestamp pagination.
+Exact reads and comparisons require observation timestamps returned by the
+listing command. CLI history access is read-only and preserves repository
+completeness warnings.

@@ -207,7 +207,14 @@ export class SourceConnectionSession {
       if (
         !isRecord(input)
         || !isRecord(input.request)
-        || !["source.list", "source.run"].includes(input.request.type)
+        || ![
+          "source.list",
+          "source.run",
+          "source-history.datasets",
+          "source-history.observations",
+          "source-history.get",
+          "source-history.compare",
+        ].includes(input.request.type)
         || typeof input.request.id !== "string"
         || (typeof input.browser !== "string" && input.browser !== undefined)
         || typeof input.timeoutMs !== "number"

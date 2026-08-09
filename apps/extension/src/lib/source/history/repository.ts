@@ -10,8 +10,7 @@ import type {
   SourceHistoryObservationDiff,
 } from "./repository-values"
 import type { SourceHistoryKind } from "./values"
-import { normalizeSourceParams } from "@newsnext/source/runtime"
-import { loadSourceDescriptor } from "../registry"
+import { loadSourceDescriptors, normalizeSourceParams } from "@newsnext/source/runtime"
 import {
   sourceHistoryDatabase as database,
   requireSourceHistoryId as requireId,
@@ -287,7 +286,10 @@ async function resolveDatasetIdentity(
   sourceId: string,
   params: Record<string, unknown>,
 ): Promise<string> {
-  const source = await loadSourceDescriptor(sourceId)
+  const source = (await loadSourceDescriptors()).find(candidate => candidate.id === sourceId)
+  if (!source) {
+    throw new Error(`Source '${sourceId}' not found`)
+  }
   return buildSourceHistoryDatasetKey(sourceId, normalizeSourceParams(source, params))
 }
 

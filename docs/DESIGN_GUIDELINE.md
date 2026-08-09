@@ -263,58 +263,6 @@ preserving directional-key behavior inside other interactive controls.
   drag previews are mounted outside the card tree, so inherited theme tokens
   used by cloned content must be copied to the preview container.
 
-## Assistant Side Panel
-
-Treat chat as a companion to the current board rather than a modal task. Host it
-in Chrome's native Side Panel so the browser owns placement, resizing, pinning,
-and dismissal. The app header action opens the native panel directly from the
-user gesture; do not recreate side-panel width, overlay, or close behavior in
-the app shell.
-
-Inside the browser panel, reuse the card color composition instead of the modal
-shell color: mix `var(--background)` with the active theme color at 55%, then
-overlay `bg-background/70` with `zenith-theme-400`.
-Compose both color layers edge to edge without inset, padding, or container
-rounding, so theme color shows through the translucent content layer across the
-entire native Side Panel viewport. Reuse the card color composition, not its
-rounded card geometry. Place the conversation, empty state, and composer
-together inside this content surface.
-Chrome already provides the panel boundary, so do not place another floating
-card around these layers. Follow the assistant-ui shadcn Thread composition for
-the presentational layer while keeping the Pi Agent controller independent of
-assistant-ui runtime hooks. Structure the panel as one scrollable viewport with
-a centered welcome, a message group, a sticky viewport footer, and a vertically
-composed message field and action row. Do not add a top header or repeat the
-Assistant logo and name. Chrome supplies the panel close action.
-
-Keep assistant messages unboxed and omit a repeated avatar or role label so long
-responses read as the primary thread content. Use the quiet `muted` surface for
-right-aligned user messages. Reveal compact, accessible message actions on hover
-or keyboard focus, and keep them available without reserving visible chrome at
-rest. Render assistant text with Streamdown so incomplete streaming Markdown,
-GitHub-flavored tables and lists, links, and code blocks remain legible throughout
-generation. The empty thread may offer a small set of concrete source-history
-prompts as wrapping outline pills.
-
-Group tool calls from one assistant turn into one compact timeline before the
-answer. The timeline trigger summarizes the run, remains expanded throughout
-the complete assistant turn, and collapses only after that turn finishes; users
-can reopen it to inspect ordered tool labels, source targets, statuses, and
-concise result counts.
-Keep the timeline unboxed, use a quiet vertical rail to communicate sequence,
-and reserve motion and theme emphasis for the currently running step.
-
-Use the assistant-ui Elements Chat Panel composer treatment: one fixed-height,
-quiet `foreground`-mixed field with a full pill shape, text on the left, and one
-compact circular send or stop action on the right. Do not wrap it in a second
-bordered surface or place metadata inside the input. Keep provider/model status
-and its settings action in a separate low-height row below the field. Keep the
-footer transparent and free of gradients, blur, rounded shells, or opaque
-background fills; the input pill is the only composer surface. Use the field's
-foreground focus treatment instead of adding a theme-colored border, and do not
-use a foreground-colored default shadow. When no provider is configured,
-replace the composer with one focused action that opens Provider settings.
-
 ## Dialog Patterns
 
 Choose the dialog structure from its information architecture rather than
@@ -422,10 +370,6 @@ Group closely related controls in columns when the available width permits it,
 while keeping labels, values, and necessary recovery guidance adjacent to their
 control. Omit helper text when the label and visible control already explain the
 setting.
-Provider settings should offer an outline `Test connection` action beside the
-filled save action. Test the current draft without saving it, keep both actions
-disabled while the request is active, and show the provider's success or failure
-next to the controls rather than in a separate dialog.
 Reset the shared settings content scroller to the top when the active tab
 changes; do not remount tab content or discard unsaved control state to do so.
 

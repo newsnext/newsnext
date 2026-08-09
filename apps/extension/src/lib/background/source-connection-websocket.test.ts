@@ -28,6 +28,13 @@ vi.mock("./source-runner", () => ({
   runConnectedSource: vi.fn(),
 }))
 
+vi.mock("../source/history/repository", () => ({
+  compareSourceHistoryObservations: vi.fn(),
+  getSourceHistoryObservation: vi.fn(),
+  listSourceHistoryDatasets: vi.fn(),
+  listSourceHistoryObservations: vi.fn(),
+}))
+
 const {
   parseSourceConnectionRequest,
   resolveSourceConnectionState,
@@ -98,13 +105,74 @@ describe("source connection WebSocket", () => {
       providerId: "example",
       sourceId: "latest",
       params: [],
-    }))).toThrow("Unsupported source run message")
+    }))).toThrow("Unsupported source connection message")
 
     expect(() => parseSourceConnectionRequest(JSON.stringify({
       id: "request-id",
       type: "source.run",
       providerId: "example",
       sourceId: "latest",
-    }))).toThrow("Unsupported source run message")
+    }))).toThrow("Unsupported source connection message")
+  })
+
+  it("validates source-history requests", () => {
+    expect(parseSourceConnectionRequest(JSON.stringify({
+      id: "datasets",
+      type: "source-history.datasets",
+      sourceId: "github:trending",
+      limit: 25,
+    }))).toMatchObject({
+      id: "datasets",
+      type: "source-history.datasets",
+      sourceId: "github:trending",
+      limit: 25,
+    })
+
+    expect(parseSourceConnectionRequest(JSON.stringify({
+      id: "observations",
+      type: "source-history.observations",
+      sourceId: "github:trending",
+      params: { language: "typescript" },
+      from: 1_786_212_000_000,
+    }))).toMatchObject({
+      id: "observations",
+      type: "source-history.observations",
+      sourceId: "github:trending",
+      params: { language: "typescript" },
+      from: 1_786_212_000_000,
+    })
+
+    expect(parseSourceConnectionRequest(JSON.stringify({
+      id: "get",
+      type: "source-history.get",
+      sourceId: "github:trending",
+      observedAt: 1_786_212_000_000,
+    }))).toMatchObject({
+      id: "get",
+      type: "source-history.get",
+      sourceId: "github:trending",
+      observedAt: 1_786_212_000_000,
+    })
+
+    expect(parseSourceConnectionRequest(JSON.stringify({
+      id: "compare",
+      type: "source-history.compare",
+      sourceId: "github:trending",
+      before: 1_786_212_000_000,
+      after: 1_786_215_600_000,
+    }))).toMatchObject({
+      id: "compare",
+      type: "source-history.compare",
+      sourceId: "github:trending",
+      before: 1_786_212_000_000,
+      after: 1_786_215_600_000,
+    })
+
+    expect(() => parseSourceConnectionRequest(JSON.stringify({
+      id: "get",
+      type: "source-history.get",
+      sourceId: "github:trending",
+      observedAt: "yesterday",
+    }))).toThrow("Unsupported source connection message")
   })
 })

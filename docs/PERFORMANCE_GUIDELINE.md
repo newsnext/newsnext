@@ -81,29 +81,6 @@ audit. Confirm that no temporary probe values remain in local storage.
 
 ## Rendering Rules
 
-### Defer optional integrations
-
-Keep optional, dependency-heavy surfaces outside the main app entrypoint. The
-assistant runs in the dedicated Side Panel entrypoint, so Pi Agent Core and the
-provider client are not loaded when rendering or reading a board. Do not import
-the chat panel back into the app route tree; the header should call Chrome's
-Side Panel API without loading the chat runtime.
-
-The Side Panel uses a local React controller over Pi Agent Core instead of a
-general-purpose chat UI runtime. Keep completed messages sourced from
-`agent.state.messages` and the active response sourced separately from
-`agent.state.streamingMessage`. Agent events should update only the Side Panel,
-and `message_end` must replace the streaming view with the completed transcript
-entry without rendering both copies. Preserve abort cleanup when the controller
-unmounts or provider settings replace its Agent instance.
-
-The 2026-08-06 production Chrome build removed the 294.04 kB assistant-ui
-vendor chunk. Pi Agent event handling added about 7.7 kB to the existing AI
-vendor chunk and the custom Side Panel UI grew by about 3.4 kB, reducing the
-extension output from 2.57 MB to 2.29 MB. Treat these as build snapshots rather
-than permanent budgets; preserve the dependency boundary and verify the output
-again when changing the chat runtime.
-
 ### Isolate frequently changing state
 
 Place state below stable application structure whenever possible. A provider

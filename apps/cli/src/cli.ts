@@ -12,6 +12,16 @@ import {
 } from "./daemon"
 import { CliError } from "./errors"
 import { writeLine } from "./io"
+import {
+  runHistoryCompareCommand,
+  runHistoryDatasetsCommand,
+  runHistoryGetCommand,
+  runHistoryObservationsCommand,
+  SOURCE_HISTORY_COMPARE_ARGS,
+  SOURCE_HISTORY_DATASETS_ARGS,
+  SOURCE_HISTORY_GET_ARGS,
+  SOURCE_HISTORY_OBSERVATIONS_ARGS,
+} from "./source-history"
 import { runSourceListCommand, SOURCE_LIST_ARGS } from "./source-list"
 import { runSourceRunCommand } from "./source-run/command"
 import { SOURCE_RUN_ARGS } from "./source-run/options"
@@ -88,6 +98,38 @@ function createCommandSet(io: CliIO, setExitCode: ExitCodeHandler) {
     args: SOURCE_LIST_ARGS,
     run: ({ rawArgs }) => runWithExitCode(() => runSourceListCommand(rawArgs, io)),
   })
+  const historyDatasets = defineCommand({
+    meta: {
+      name: "datasets",
+      description: "List locally stored source-history datasets",
+    },
+    args: SOURCE_HISTORY_DATASETS_ARGS,
+    run: ({ rawArgs }) => runWithExitCode(() => runHistoryDatasetsCommand(rawArgs, io)),
+  })
+  const historyObservations = defineCommand({
+    meta: {
+      name: "observations",
+      description: "List observation metadata for a source and parameter set",
+    },
+    args: SOURCE_HISTORY_OBSERVATIONS_ARGS,
+    run: ({ rawArgs }) => runWithExitCode(() => runHistoryObservationsCommand(rawArgs, io)),
+  })
+  const historyGet = defineCommand({
+    meta: {
+      name: "get",
+      description: "Read the complete items from an exact source observation",
+    },
+    args: SOURCE_HISTORY_GET_ARGS,
+    run: ({ rawArgs }) => runWithExitCode(() => runHistoryGetCommand(rawArgs, io)),
+  })
+  const historyCompare = defineCommand({
+    meta: {
+      name: "compare",
+      description: "Compare two exact source observations",
+    },
+    args: SOURCE_HISTORY_COMPARE_ARGS,
+    run: ({ rawArgs }) => runWithExitCode(() => runHistoryCompareCommand(rawArgs, io)),
+  })
 
   let source: CommandDef
   const sourceHelp = defineCommand({
@@ -108,6 +150,30 @@ function createCommandSet(io: CliIO, setExitCode: ExitCodeHandler) {
       help: sourceHelp,
       list: sourceList,
       run: sourceRun,
+    },
+  })
+
+  let history: CommandDef
+  const historyHelp = defineCommand({
+    meta: {
+      name: "help",
+      description: "Show source-history command help",
+      hidden: true,
+    },
+    run: () => writeUsage(io, history),
+  })
+  history = defineCommand({
+    meta: {
+      name: "history",
+      description: "Inspect locally observed source history",
+    },
+    default: "help",
+    subCommands: {
+      compare: historyCompare,
+      datasets: historyDatasets,
+      get: historyGet,
+      help: historyHelp,
+      observations: historyObservations,
     },
   })
 
@@ -139,6 +205,7 @@ function createCommandSet(io: CliIO, setExitCode: ExitCodeHandler) {
     subCommands: {
       __daemon: daemon,
       help: mainHelp,
+      history,
       restart,
       source,
       start,
@@ -147,7 +214,37 @@ function createCommandSet(io: CliIO, setExitCode: ExitCodeHandler) {
     },
   })
 
-  return { main, restart, source, sourceList, sourceRun, start, status, stop }
+  const helpWriters = new Map<string, () => Promise<void>>([
+    ["history", () => writeUsage(io, history)],
+    ["history compare", () => writeUsage(io, historyCompare)],
+    ["history datasets", () => writeUsage(io, historyDatasets)],
+    ["history get", () => writeUsage(io, historyGet)],
+    ["history observations", () => writeUsage(io, historyObservations)],
+    ["restart", () => writeUsage(io, restart)],
+    ["source", () => writeUsage(io, source)],
+    ["source list", () => writeUsage(io, sourceList)],
+    ["source run", () => writeUsage(io, sourceRun)],
+    ["start", () => writeUsage(io, start)],
+    ["status", () => writeUsage(io, status)],
+    ["stop", () => writeUsage(io, stop)],
+  ])
+
+  return {
+    helpWriters,
+    history,
+    historyCompare,
+    historyDatasets,
+    historyGet,
+    historyObservations,
+    main,
+    restart,
+    source,
+    sourceList,
+    sourceRun,
+    start,
+    status,
+    stop,
+  }
 }
 
 export function createNewsnextCommand(
@@ -162,23 +259,9 @@ export async function runCli(args: string[], io: CliIO): Promise<number> {
   const commands = createCommandSet(io, value => exitCode = value)
 
   if (args.includes("--help") || args.includes("-h")) {
-    if (args[0] === "source" && args[1] === "list") {
-      await writeUsage(io, commands.sourceList)
-    } else if (args[0] === "source" && args[1] === "run") {
-      await writeUsage(io, commands.sourceRun)
-    } else if (args[0] === "source") {
-      await writeUsage(io, commands.source)
-    } else if (args[0] === "start") {
-      await writeUsage(io, commands.start)
-    } else if (args[0] === "restart") {
-      await writeUsage(io, commands.restart)
-    } else if (args[0] === "status") {
-      await writeUsage(io, commands.status)
-    } else if (args[0] === "stop") {
-      await writeUsage(io, commands.stop)
-    } else {
-      await writeUsage(io, commands.main)
-    }
+    const commandPath = args.slice(0, 2).filter(argument => !argument.startsWith("-")).join(" ")
+    const writeCommandUsage = commands.helpWriters.get(commandPath)
+    await (writeCommandUsage ? writeCommandUsage() : writeUsage(io, commands.main))
     return 0
   }
   if (args.length === 1 && (args[0] === "--version" || args[0] === "-V")) {

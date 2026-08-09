@@ -25,8 +25,6 @@ export default defineConfig({
   srcDir: "./src",
   alias: {
     "@": path.resolve(__dirname, "src"),
-    // pi-ai references node:fs only from a Bun-specific environment fallback.
-    "node:fs": path.resolve(__dirname, "src/lib/browser-node-fs.ts"),
   },
   dev: {
     server: {
@@ -62,10 +60,6 @@ export default defineConfig({
           {
             name: "motion-vendor",
             test: /node_modules\/motion\//,
-          },
-          {
-            name: "ai-vendor",
-            test: /node_modules\/(?:@earendil-works|openai|partial-json)\//,
           },
         ],
       }
