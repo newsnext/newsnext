@@ -2,12 +2,6 @@ import type { SettingsTabId, SourceCardHeight } from "@/lib/settings"
 import { Card, CardContent } from "@newsnext/ui/components/card"
 import { Label } from "@newsnext/ui/components/label"
 import { RadioGroup, RadioGroupItem } from "@newsnext/ui/components/radio-group"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-} from "@newsnext/ui/components/select"
 import { TabsContent } from "@newsnext/ui/components/tabs"
 import { useAtom, useAtomValue } from "jotai"
 import { useEffect } from "react"
@@ -203,9 +197,6 @@ function GeneralSettings() {
   const boards = useAtomValue(boardsAtom)
   const [defaultBoardId, setDefaultBoardId] = useAtom(defaultBoardIdAtom)
   const selectedValue = defaultBoardId ?? LAST_USED_BOARD_VALUE
-  const selectedLabel = defaultBoardId === null
-    ? "Last used"
-    : boards.find(board => board.id === defaultBoardId)!.name
 
   return (
     <div className="space-y-6">
@@ -214,25 +205,20 @@ function GeneralSettings() {
         description="Choose which board opens when NewsNext starts."
       >
         <Card variant="subtle">
-          <CardContent className="p-3">
-            <Select
+          <CardContent className="overflow-x-auto p-2.5 scrollbar-hidden">
+            <RadioGroup
+              aria-label="Default board"
+              variant="segmented"
               value={selectedValue}
-              onValueChange={(value) => {
-                if (value) {
-                  setDefaultBoardId(value === LAST_USED_BOARD_VALUE ? null : value)
-                }
+              onValueChange={(value: string) => {
+                setDefaultBoardId(value === LAST_USED_BOARD_VALUE ? null : value)
               }}
             >
-              <SelectTrigger className="w-56 max-w-full">
-                <span className="flex-1 truncate text-left">{selectedLabel}</span>
-              </SelectTrigger>
-              <SelectContent align="start">
-                <SelectItem value={LAST_USED_BOARD_VALUE}>Last used</SelectItem>
-                {boards.map(board => (
-                  <SelectItem key={board.id} value={board.id}>{board.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              {boards.map(board => (
+                <RadioGroupItem key={board.id} value={board.id}>{board.name}</RadioGroupItem>
+              ))}
+              <RadioGroupItem value={LAST_USED_BOARD_VALUE}>Last used</RadioGroupItem>
+            </RadioGroup>
           </CardContent>
         </Card>
       </SettingsSection>
