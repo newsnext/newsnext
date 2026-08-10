@@ -1,6 +1,6 @@
 const RAIL_PATH = "M6 0 Q0 25 6 50 Q12 75 6 100"
 const LABEL_RAIL_PATH = "M16 0 Q3 0 2 20 Q2 35 6 50 Q12 75 6 100"
-const RAIL_COLOR = "var(--color-theme-300)"
+const RAIL_COLOR = "var(--timeline-rail-color)"
 
 interface TimelineRailProps {
   gradientId: string
@@ -18,7 +18,7 @@ export function TimelineRail({
   return (
     <div className="-ml-0.5 pointer-events-none absolute inset-y-0 w-4" aria-hidden>
       <svg
-        className="pointer-events-none absolute inset-0 h-full w-full"
+        className="pointer-events-none absolute inset-0 h-full w-full [--timeline-rail-color:var(--color-theme-500)] dark:[--timeline-rail-color:var(--color-theme-300)]"
         viewBox="0 0 14 100"
         preserveAspectRatio="none"
       >
