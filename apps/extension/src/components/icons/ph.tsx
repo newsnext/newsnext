@@ -13,7 +13,10 @@ import PhGear from "~icons/ph/gear-bold"
 import PhInfo from "~icons/ph/info-bold"
 import PhInfoDuotone from "~icons/ph/info-duotone"
 import PhMagnifyingGlass from "~icons/ph/magnifying-glass-bold"
+import PhMonitor from "~icons/ph/monitor-bold"
+import PhMoon from "~icons/ph/moon-bold"
 import PhPlusCircle from "~icons/ph/plus-circle-bold"
+import PhSun from "~icons/ph/sun-bold"
 import PhTrash from "~icons/ph/trash-bold"
 import PhTrashDuotone from "~icons/ph/trash-duotone"
 import PhUser from "~icons/ph/user-bold"
@@ -34,7 +37,10 @@ export {
   PhInfo,
   PhInfoDuotone,
   PhMagnifyingGlass,
+  PhMonitor,
+  PhMoon,
   PhPlusCircle,
+  PhSun,
   PhTrash,
   PhTrashDuotone,
   PhUser,

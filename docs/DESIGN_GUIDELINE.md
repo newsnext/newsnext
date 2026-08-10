@@ -173,9 +173,19 @@ Cards define the primary NewsNext surface treatment.
   color context into new compound variant names. Keep theme outline actions
   transparent at rest and reveal their tinted surface on hover or focus so
   secondary actions do not compete with the filled primary action.
-- The header Dynamic Island expands to a 280px by 120px panel, which fits the
-  shared theme selector's six-column palette with compact shell padding. The All
-  board permits theme color changes here while keeping its other behavior fixed.
+- The header Dynamic Island expands to a 280px by 160px appearance panel. Keep
+  the shared theme selector's six-column palette as the primary control and place
+  the same segmented theme-mode control used in Appearance settings below it.
+  Present its Dark, Light, and System options as moon, sun, and monitor icons in
+  both locations, with accessible labels and tooltips. Keep the default 40px
+  control height in Settings and use the compact 32px height in the island so it
+  matches the palette icons. Icon-only segmented items must be square with equal
+  padding on every side: 32px items in Settings and 28px items in the island.
+  On the island's opaque black surface, give the control a translucent white shell
+  and fine white inset edge so its boundary remains visible. Reserve an 80px fixed
+  region for the palette and 16px between the mode control and palette so their
+  internal and outer spacing remain stable. The All board permits theme color
+  changes here while keeping its other behavior fixed.
 
 The reference implementation is `CardSurface` in
 `apps/extension/src/components/card/card-surface.tsx`.

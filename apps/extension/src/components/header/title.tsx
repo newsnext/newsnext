@@ -4,14 +4,15 @@ import { Logo } from "@newsnext/ui/components/logo"
 import { useScrollProgressContext } from "@newsnext/ui/components/scroll-progress-context"
 import { ThemeSelector } from "@newsnext/ui/components/theme-selector"
 import { WordmarkLogo } from "@newsnext/ui/components/wordmark-logo"
-import { useAtomValue, useSetAtom } from "jotai"
+import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { AnimatePresence, m, useMotionValue, useMotionValueEvent, useScroll } from "motion/react"
 import { useCallback, useRef, useState } from "react"
 import { getBoardColor } from "@/lib/board"
-import { handleThemeSwitch } from "@/lib/utils/swith-theme"
+import { handleThemeModeSwitch, handleThemeSwitch } from "@/lib/utils/swith-theme"
 import { boardsAtom, updateBoardAtom } from "@/store/board"
-import { currentBoardIdAtom } from "@/store/settings"
+import { currentBoardIdAtom, themeModeAtom } from "@/store/settings"
 import { PhArrowFatUp } from "../icons/ph"
+import { ThemeModeSelector } from "../theme-mode-selector"
 
 interface HeaderProgressProps {
   scrollContainerRef?: RefObject<HTMLElement | null>
@@ -132,24 +133,44 @@ interface TitleIslandProps {
   width?: number
 }
 
-function CurrentBoardThemeSelector() {
+function CurrentBoardAppearanceControls() {
   const boards = useAtomValue(boardsAtom)
   const currentBoardId = useAtomValue(currentBoardIdAtom)
   const updateBoard = useSetAtom(updateBoardAtom)
+  const [themeMode, setThemeMode] = useAtom(themeModeAtom)
   const board = boards.find(candidate => candidate.id === currentBoardId)
 
   if (!board) {
     return null
   }
 
+  const handleThemeModeChange = (nextMode: typeof themeMode): void => {
+    setThemeMode(nextMode)
+    handleThemeModeSwitch(nextMode)
+  }
+
   return (
-    <ThemeSelector
-      value={getBoardColor(board)}
-      onValueChange={(color) => {
-        updateBoard({ ...board, color })
-        handleThemeSwitch(color)
-      }}
-    />
+    <section
+      aria-label="Appearance controls"
+      className="grid size-full content-center gap-4 text-foreground"
+      onClick={event => event.stopPropagation()}
+    >
+      <div className="h-20 w-full">
+        <ThemeSelector
+          value={getBoardColor(board)}
+          onValueChange={(color) => {
+            updateBoard({ ...board, color })
+            handleThemeSwitch(color)
+          }}
+        />
+      </div>
+      <ThemeModeSelector
+        className="mx-auto dark:bg-white/10 dark:shadow-inner dark:shadow-white/5 dark:ring-1 dark:ring-white/10 dark:hover:bg-white/15"
+        size="sm"
+        value={themeMode}
+        onValueChange={handleThemeModeChange}
+      />
+    </section>
   )
 }
 
@@ -167,7 +188,7 @@ export function TitleIsland({ scrollContainerRef, width = 150 }: TitleIslandProp
         smallHeight={40}
         smallWidth={width}
         largeWidth={280}
-        largeHeight={120}
+        largeHeight={160}
       >
         {isSmall =>
           isSmall
@@ -175,7 +196,7 @@ export function TitleIsland({ scrollContainerRef, width = 150 }: TitleIslandProp
                 <HeaderProgress scrollContainerRef={scrollContainerRef} />
               )
             : (
-                <CurrentBoardThemeSelector />
+                <CurrentBoardAppearanceControls />
               )}
       </DynamicIsland>
     </>

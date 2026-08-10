@@ -20,6 +20,7 @@ import {
   sourceCardHeightAtom,
   themeModeAtom,
 } from "@/store/settings"
+import { ThemeModeSelector } from "../theme-mode-selector"
 import { BgIllustrationSettings } from "./bg-illustration"
 import { DataTransferSettings } from "./data-transfer"
 import { SettingsSection } from "./layout"
@@ -129,15 +130,10 @@ function AppearanceSettings() {
       >
         <Card variant="subtle">
           <CardContent className="p-2.5">
-            <RadioGroup
-              variant="segmented"
+            <ThemeModeSelector
               value={themeMode}
               onValueChange={setThemeMode}
-            >
-              <RadioGroupItem value="dark">Dark</RadioGroupItem>
-              <RadioGroupItem value="light">Light</RadioGroupItem>
-              <RadioGroupItem value="system">System</RadioGroupItem>
-            </RadioGroup>
+            />
           </CardContent>
         </Card>
       </SettingsSection>
