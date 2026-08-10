@@ -50,7 +50,12 @@ interface DaemonControlContext {
 interface ExtensionConnectionContext {
   role: "extension"
   complete: (result: ExtensionConnectionCommandResult) => void
+  info: DaemonInfo
   subscribe: (signal?: AbortSignal) => AsyncIterable<ExtensionConnectionCommandRequest>
+}
+
+export interface DaemonInfo {
+  version: string
 }
 
 export type DaemonRouterContext = DaemonControlContext | ExtensionConnectionContext
@@ -270,6 +275,7 @@ export const daemonRouter = t.router({
     .input(parseDaemonExecuteInput)
     .mutation(({ ctx, input }) => ctx.execute(input)),
   extension: t.router({
+    info: extensionProcedure.query(({ ctx }) => ctx.info),
     commands: extensionProcedure.subscription(({ ctx, signal }) => ctx.subscribe(signal)),
     complete: extensionProcedure
       .input(parseExtensionConnectionCommandResult)

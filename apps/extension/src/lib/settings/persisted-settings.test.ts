@@ -115,4 +115,8 @@ describe("persisted settings", () => {
       sourceConnectionEnabled: "yes",
     })).toEqual(createDefaultPersistedDeviceState())
   })
+
+  it("keeps the CLI connection settings tab", () => {
+    expect(normalizePersistedDeviceState({ settingsTab: "cli" }).settingsTab).toBe("cli")
+  })
 })

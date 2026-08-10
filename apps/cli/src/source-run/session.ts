@@ -21,6 +21,7 @@ import { fetchRequestHandler } from "@trpc/server/adapters/fetch"
 import { applyWSSHandler } from "@trpc/server/adapters/ws"
 import { Hono } from "hono"
 import { WebSocketServer } from "ws"
+import packageJson from "../../package.json"
 import { CliError } from "../errors"
 
 interface PendingRequest {
@@ -105,6 +106,7 @@ export class SourceConnectionSession {
         return {
           role: "extension",
           complete: result => this.complete(client, result),
+          info: { version: packageJson.version },
           subscribe: signal => this.subscribe(client, signal),
         } satisfies DaemonRouterContext
       },

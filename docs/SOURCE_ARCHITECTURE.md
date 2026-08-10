@@ -729,6 +729,11 @@ runtime validation, and router live in the dedicated
 `@newsnext/extension-connection` package so generic shared utilities and source
 runtime packages do not depend on tRPC.
 
+After the WebSocket opens, the extension queries daemon metadata over the same
+tRPC connection and exposes the CLI version in Settings. Treat this value as
+connection metadata only; source execution compatibility continues to be
+enforced by the shared router contract and runtime validation.
+
 HTTP control procedures reject browser origins and cannot be called from an
 extension WebSocket context. The WebSocket path accepts extension origins and
 rejects ordinary web-page origins. A disconnect rejects every in-flight command

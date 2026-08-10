@@ -31,10 +31,8 @@ export type SourceConnectionState
     | "disconnected"
 
 export interface SourceConnectionStatus {
-  enabled: boolean
+  cliVersion?: string
   state: SourceConnectionState
-  url: string
-  connectedAt?: number
 }
 
 type SourceConnectionClient = ReturnType<typeof createTRPCClient<DaemonRouter>>
@@ -44,8 +42,8 @@ type SourceConnectionSubscription = ReturnType<SourceConnectionClient["extension
 let client: SourceConnectionClient | undefined
 let socketClient: SourceConnectionWebSocketClient | undefined
 let subscription: SourceConnectionSubscription | undefined
+let cliVersion: string | undefined
 let connectionState: SourceConnectionState = "disconnected"
-let connectedAt: number | undefined
 let enabled = false
 const instanceId = crypto.randomUUID()
 
@@ -55,10 +53,8 @@ function getConnectionUrl(): string {
 
 export function getSourceConnectionStatus(): SourceConnectionStatus {
   return {
-    enabled,
+    cliVersion,
     state: enabled ? connectionState : "disabled",
-    url: getConnectionUrl(),
-    connectedAt,
   }
 }
 
@@ -110,7 +106,7 @@ function disconnect(): void {
   socketClient?.close()
   socketClient = undefined
   client = undefined
-  connectedAt = undefined
+  cliVersion = undefined
   connectionState = "disconnected"
 }
 
@@ -120,6 +116,7 @@ function connect(): void {
   }
 
   connectionState = "connecting"
+  cliVersion = undefined
   const nextSocketClient = createWSClient({
     connectionParams: () => ({
       id: instanceId,
@@ -128,7 +125,6 @@ function connect(): void {
     }),
     onClose: () => {
       if (socketClient === nextSocketClient) {
-        connectedAt = undefined
         connectionState = "disconnected"
       }
     },
@@ -137,7 +133,6 @@ function connect(): void {
         nextSocketClient.close()
         return
       }
-      connectedAt = Date.now()
       connectionState = "connected"
     },
     url: getConnectionUrl(),
@@ -147,6 +142,11 @@ function connect(): void {
   })
   socketClient = nextSocketClient
   client = nextClient
+  void nextClient.extension.info.query().then((info) => {
+    if (enabled && client === nextClient) {
+      cliVersion = info.version
+    }
+  }).catch(() => undefined)
   subscription = nextClient.extension.commands.subscribe(undefined, {
     onData: request => void executeCommand(nextClient, request).catch((error) => {
       console.error("Failed to return source connection result", error)

@@ -23,7 +23,7 @@ export type SourceCardHeight = typeof SOURCE_CARD_HEIGHTS[number]
 
 export const DEFAULT_SOURCE_CARD_HEIGHT: SourceCardHeight = "balanced"
 
-export type SettingsTabId = "appearance" | "general" | "shortcuts" | "permissions" | "data"
+export type SettingsTabId = "appearance" | "general" | "cli" | "shortcuts" | "permissions" | "data"
 
 export interface PersistedSettings {
   appearance: {
@@ -150,6 +150,7 @@ export function withSourceConnectionEnabled(
 export function isSettingsTabId(value: unknown): value is SettingsTabId {
   return value === "appearance"
     || value === "general"
+    || value === "cli"
     || value === "shortcuts"
     || value === "permissions"
     || value === "data"

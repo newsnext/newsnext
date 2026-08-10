@@ -102,6 +102,7 @@ function SettingsModalContent({
     >
       <TabsContent value="appearance"><AppearanceSettings /></TabsContent>
       <TabsContent value="general"><GeneralSettings /></TabsContent>
+      <TabsContent value="cli"><SourceConnectionSettings /></TabsContent>
       <TabsContent value="shortcuts"><ShortcutsSettings /></TabsContent>
       <TabsContent value="permissions"><PermissionsSettings /></TabsContent>
       <TabsContent value="data">
@@ -223,7 +224,6 @@ function GeneralSettings() {
         </Card>
       </SettingsSection>
       <SourceIconSettings />
-      <SourceConnectionSettings />
     </div>
   )
 }

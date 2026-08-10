@@ -23,6 +23,7 @@ interface SettingsModalShellProps {
 const SETTINGS_TABS: Array<{ id: SettingsTabId, label: string }> = [
   { id: "appearance", label: "Appearance" },
   { id: "general", label: "General" },
+  { id: "cli", label: "CLI connection" },
   { id: "shortcuts", label: "Shortcuts" },
   { id: "permissions", label: "Permissions" },
   { id: "data", label: "Data" },

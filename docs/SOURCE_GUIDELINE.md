@@ -939,7 +939,7 @@ Runtime registries accept declarative JSON, HTML, and RSS loaders only.
 Prototype-related source ID segments and JMESPath properties are rejected.
 
 Use the extension-backed CLI to validate live behavior. Enable
-**Settings → General → CLI Connection**, then start the local server:
+**Settings → CLI connection**, then start the local server:
 
 ```sh
 bun run newsnext start
