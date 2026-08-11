@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url"
 import { parseArgs } from "citty"
 import { CliError } from "../errors"
 import { parseJsonObject } from "../json-options"
+import { collectRepeatedOption } from "../repeated-option"
 import {
   normalizeSourceConnectionOptions,
   SOURCE_CONNECTION_ARGS,
@@ -121,26 +122,6 @@ function parseParamEntries(entries: string[] | undefined): Record<string, unknow
   }))
 }
 
-function collectRepeatedOption(args: string[], option: string): string[] {
-  const values: string[] = []
-  for (let index = 0; index < args.length; index++) {
-    const argument = args[index]
-    if (argument === undefined) continue
-
-    if (argument === option) {
-      const value = args[index + 1]
-      if (value === undefined || value.startsWith("-")) {
-        throw new CliError(`${option} requires a value`, 2)
-      }
-      values.push(value)
-      index++
-    } else if (argument.startsWith(`${option}=`)) {
-      values.push(argument.slice(option.length + 1))
-    }
-  }
-  return values
-}
-
 export function parseSourceRunOptions(args: string[]): SourceRunCommandOptions {
   let values: SourceRunValues & { _: string[] }
   try {
@@ -160,7 +141,7 @@ export function parseSourceRunOptions(args: string[]): SourceRunCommandOptions {
     ...(values.params !== undefined
       ? parseJsonObject(values.params, "--params")
       : {}),
-    ...parseParamEntries(collectRepeatedOption(args, "--param")),
+    ...parseParamEntries(collectRepeatedOption(args, ["--param"])),
   }
   const connection = normalizeSourceConnectionOptions(values)
 

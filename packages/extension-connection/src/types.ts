@@ -26,6 +26,23 @@ export interface ExtensionConnectionListRequest {
   type: "source.list"
 }
 
+export interface ExtensionConnectionFetchRequest {
+  id: string
+  type: "fetch"
+  url: string
+  method: string
+  headers: [string, string][]
+  timeoutMs: number
+  body?: string
+}
+
+export interface ExtensionConnectionFetchResponse {
+  status: number
+  statusText: string
+  headers: [string, string][]
+  body: string
+}
+
 interface SourceHistoryRequestBase {
   id: string
 }
@@ -69,7 +86,8 @@ export type SourceHistoryCommandRequest
     | SourceHistoryCompareObservationsRequest
 
 export type ExtensionConnectionCommandRequest
-  = | ExtensionConnectionListRequest
+  = | ExtensionConnectionFetchRequest
+    | ExtensionConnectionListRequest
     | ExtensionConnectionRunRequest
     | SourceHistoryCommandRequest
 

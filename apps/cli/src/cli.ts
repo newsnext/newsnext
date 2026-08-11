@@ -11,6 +11,7 @@ import {
   runStopCommand,
 } from "./daemon"
 import { CliError } from "./errors"
+import { FETCH_ARGS, runFetchCommand } from "./fetch"
 import { writeLine } from "./io"
 import {
   runHistoryCompareCommand,
@@ -81,6 +82,14 @@ function createCommandSet(io: CliIO, setExitCode: ExitCodeHandler) {
     },
     args: DAEMON_COMMAND_ARGS,
     run: ({ rawArgs }) => runWithExitCode(() => runStopCommand(rawArgs, io)),
+  })
+  const fetch = defineCommand({
+    meta: {
+      name: "fetch",
+      description: "Fetch a URL in a connected extension with browser cookies",
+    },
+    args: FETCH_ARGS,
+    run: ({ rawArgs }) => runWithExitCode(() => runFetchCommand(rawArgs, io)),
   })
   const sourceRun = defineCommand({
     meta: {
@@ -204,6 +213,7 @@ function createCommandSet(io: CliIO, setExitCode: ExitCodeHandler) {
     default: "help",
     subCommands: {
       __daemon: daemon,
+      fetch,
       help: mainHelp,
       history,
       restart,
@@ -215,6 +225,7 @@ function createCommandSet(io: CliIO, setExitCode: ExitCodeHandler) {
   })
 
   const helpWriters = new Map<string, () => Promise<void>>([
+    ["fetch", () => writeUsage(io, fetch)],
     ["history", () => writeUsage(io, history)],
     ["history compare", () => writeUsage(io, historyCompare)],
     ["history datasets", () => writeUsage(io, historyDatasets)],
@@ -237,6 +248,7 @@ function createCommandSet(io: CliIO, setExitCode: ExitCodeHandler) {
     historyGet,
     historyObservations,
     main,
+    fetch,
     restart,
     source,
     sourceList,

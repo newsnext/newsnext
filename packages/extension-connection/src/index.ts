@@ -1,6 +1,7 @@
 import type {
   ExtensionConnectionCommandRequest,
   ExtensionConnectionCommandResult,
+  ExtensionConnectionFetchResponse,
   ExtensionConnectionInstance,
   ExtensionConnectionSerializedError,
 } from "./types"
@@ -72,6 +73,49 @@ function isOptionalString(value: unknown): value is string | undefined {
   return value === undefined || typeof value === "string"
 }
 
+function isStringPair(value: unknown): value is [string, string] {
+  return Array.isArray(value)
+    && value.length === 2
+    && value.every(item => typeof item === "string")
+}
+
+export function isExtensionFetchUrl(value: string): boolean {
+  try {
+    const url = new URL(value)
+    return ["http:", "https:"].includes(url.protocol) && !url.username && !url.password
+  } catch {
+    return false
+  }
+}
+
+export function isExtensionFetchMethod(value: string): boolean {
+  const method = value.toUpperCase()
+  return /^[!#$%&'*+.^_`|~0-9A-Z-]+$/.test(method)
+    && !["CONNECT", "TRACE", "TRACK"].includes(method)
+}
+
+export function parseExtensionFetchResponse(
+  value: unknown,
+): ExtensionConnectionFetchResponse {
+  if (
+    !isRecord(value)
+    || typeof value.status !== "number"
+    || !Number.isFinite(value.status)
+    || typeof value.statusText !== "string"
+    || !Array.isArray(value.headers)
+    || !value.headers.every(isStringPair)
+    || typeof value.body !== "string"
+  ) {
+    throw new Error("The extension returned an invalid fetch response")
+  }
+  return {
+    status: value.status,
+    statusText: value.statusText,
+    headers: value.headers,
+    body: value.body,
+  }
+}
+
 export function parseExtensionConnectionCommandRequest(
   value: unknown,
 ): ExtensionConnectionCommandRequest {
@@ -82,6 +126,30 @@ export function parseExtensionConnectionCommandRequest(
     return {
       id: value.id,
       type: "source.list",
+    }
+  }
+  if (
+    value.type === "fetch"
+    && typeof value.url === "string"
+    && isExtensionFetchUrl(value.url)
+    && typeof value.method === "string"
+    && isExtensionFetchMethod(value.method)
+    && Array.isArray(value.headers)
+    && value.headers.every(isStringPair)
+    && isOptionalString(value.body)
+    && (value.body === undefined || !["GET", "HEAD"].includes(value.method.toUpperCase()))
+    && typeof value.timeoutMs === "number"
+    && Number.isFinite(value.timeoutMs)
+    && value.timeoutMs > 0
+  ) {
+    return {
+      id: value.id,
+      type: "fetch",
+      url: value.url,
+      method: value.method,
+      headers: value.headers,
+      timeoutMs: value.timeoutMs,
+      body: value.body,
     }
   }
   if (
@@ -293,6 +361,8 @@ export type DaemonRouter = typeof daemonRouter
 export type {
   ExtensionConnectionCommandRequest,
   ExtensionConnectionCommandResult,
+  ExtensionConnectionFetchRequest,
+  ExtensionConnectionFetchResponse,
   ExtensionConnectionInstance,
   ExtensionConnectionListRequest,
   ExtensionConnectionProviderRunRequest,

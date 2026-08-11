@@ -982,6 +982,22 @@ list with:
 bun run newsnext source run --help
 ```
 
+Fetch an endpoint directly from the connected extension when investigating
+authentication, headers, or raw responses:
+
+```sh
+bun run newsnext fetch https://example.com/api
+bun run newsnext fetch https://example.com/api \
+  -H 'Accept: application/json' -i
+```
+
+The request runs in the extension background and uses the browser's cookie jar.
+The target must already have host permission; the CLI never grants permissions.
+`-X` selects a method, `-H` adds a repeatable header, `-d` supplies a text body,
+and `-i` includes response status and headers. Browser-managed cookies cannot be
+overridden with a `Cookie` header. Use this command for raw endpoint debugging,
+then run `source run` to verify the complete source behavior.
+
 Inspect the successful source observations stored by the extension:
 
 ```sh
@@ -997,7 +1013,7 @@ card. Observation times may be Unix milliseconds or ISO 8601 values. Start with
 `compare`. These commands are read-only and return completeness warnings when
 retained history cannot fully reconstruct a result.
 
-Direct requests are useful for endpoint investigation, but they do not verify
+Direct `fetch` requests are useful for endpoint investigation, but they do not verify
 parameter parsing, extension permissions, capability enforcement, secrets, or
 the background runtime.
 

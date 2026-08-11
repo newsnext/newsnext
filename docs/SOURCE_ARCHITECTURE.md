@@ -726,6 +726,15 @@ extension. The extension executes the same provider expansion, parameter
 normalization, registry validation, capabilities, secrets, and background loader
 path as normal source loading.
 
+`newsnext fetch` uses the same command transport but calls the browser's native
+`fetch` in the extension background with `credentials: "include"`. It returns the
+status, response headers, and decoded text body to the CLI. The command accepts
+HTTP(S) URLs without embedded credentials and never serializes browser cookies
+into the command or response. Browser host permissions still govern access; the
+command neither requests nor expands them. Request headers remain subject to the
+browser Fetch API's forbidden-header rules. The CLI execution timeout also
+aborts the browser-side network request.
+
 The distributed CLI bundle runs on Node.js. Its loopback daemon uses Hono with
 the Node adapter for HTTP and WebSocket upgrades. CLI control calls use tRPC
 over HTTP. Each enabled extension connects as a tRPC WebSocket client, subscribes

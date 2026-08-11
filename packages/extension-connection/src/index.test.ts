@@ -6,6 +6,7 @@ import {
   parseExtensionConnectionCommandRequest,
   parseExtensionConnectionCommandResult,
   parseExtensionConnectionInstance,
+  parseExtensionFetchResponse,
 } from "."
 
 describe("extension connection protocol", () => {
@@ -28,6 +29,39 @@ describe("extension connection protocol", () => {
   })
 
   it("validates command-specific fields", () => {
+    expect(parseExtensionConnectionCommandRequest({
+      id: "request-id",
+      type: "fetch",
+      url: "https://example.com/api",
+      method: "POST",
+      headers: [["content-type", "application/json"]],
+      body: "{}",
+      timeoutMs: 10_000,
+    })).toEqual({
+      id: "request-id",
+      type: "fetch",
+      url: "https://example.com/api",
+      method: "POST",
+      headers: [["content-type", "application/json"]],
+      body: "{}",
+      timeoutMs: 10_000,
+    })
+    expect(() => parseExtensionConnectionCommandRequest({
+      id: "request-id",
+      type: "fetch",
+      url: "https://example.com/api",
+      method: "GET",
+      headers: { accept: "application/json" },
+      timeoutMs: 10_000,
+    })).toThrow("Invalid extension command")
+    expect(() => parseExtensionConnectionCommandRequest({
+      id: "request-id",
+      type: "fetch",
+      url: "file:///tmp/example",
+      method: "GET",
+      headers: [],
+      timeoutMs: 10_000,
+    })).toThrow("Invalid extension command")
     expect(parseExtensionConnectionCommandRequest({
       id: "request-id",
       type: "source.run",
@@ -75,5 +109,25 @@ describe("extension connection protocol", () => {
       ok: false,
       error: { code: "SOURCE_LOGIN_REQUIRED" },
     })
+  })
+
+  it("validates fetch responses", () => {
+    expect(parseExtensionFetchResponse({
+      status: 200,
+      statusText: "OK",
+      headers: [["content-type", "application/json"]],
+      body: "{}",
+    })).toEqual({
+      status: 200,
+      statusText: "OK",
+      headers: [["content-type", "application/json"]],
+      body: "{}",
+    })
+    expect(() => parseExtensionFetchResponse({
+      status: 200,
+      statusText: "OK",
+      headers: { "content-type": "application/json" },
+      body: "{}",
+    })).toThrow("invalid fetch response")
   })
 })

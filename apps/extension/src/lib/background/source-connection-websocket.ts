@@ -2,6 +2,7 @@ import type {
   DaemonRouter,
   ExtensionConnectionCommandRequest,
   ExtensionConnectionCommandResult,
+  ExtensionConnectionFetchResponse,
 } from "@newsnext/extension-connection"
 import type { PersistedDeviceState } from "../settings/persisted-settings"
 import { createTRPCClient, createWSClient, wsLink } from "@trpc/client"
@@ -51,6 +52,31 @@ function getConnectionUrl(): string {
   return import.meta.env.WXT_SOURCE_CONNECTION_WS_URL || DEFAULT_SOURCE_CONNECTION_WS_URL
 }
 
+async function executeFetchRequest(
+  request: Extract<ExtensionConnectionCommandRequest, { type: "fetch" }>,
+): Promise<ExtensionConnectionFetchResponse> {
+  const url = new URL(request.url)
+  const hasHostPermission = await browser.permissions.contains({
+    origins: [`${url.protocol}//${url.hostname}/*`],
+  })
+  if (!hasHostPermission) {
+    throw new Error(`Extension does not have host permission for ${url.origin}`)
+  }
+  const response = await fetch(request.url, {
+    method: request.method,
+    headers: request.headers,
+    body: request.body,
+    credentials: "include",
+    signal: AbortSignal.timeout(request.timeoutMs),
+  })
+  return {
+    status: response.status,
+    statusText: response.statusText,
+    headers: [...response.headers.entries()],
+    body: await response.text(),
+  }
+}
+
 export function getSourceConnectionStatus(): SourceConnectionStatus {
   return {
     cliVersion,
@@ -60,6 +86,8 @@ export function getSourceConnectionStatus(): SourceConnectionStatus {
 
 async function executeRequest(request: ExtensionConnectionCommandRequest): Promise<unknown> {
   switch (request.type) {
+    case "fetch":
+      return await executeFetchRequest(request)
     case "source.list":
       return (await listConnectedSources()).data
     case "source.run":
