@@ -14,13 +14,31 @@ export interface XTimelineInstruction {
 
 export interface XTimelineEntry {
   entryId?: string
-  content?: {
-    itemContent?: {
-      tweet_results?: {
-        result?: XTweetResult
-      }
+  content?: XTimelineEntryContent
+}
+
+interface XUserResult {
+  avatar?: {
+    image_url?: string
+  }
+  core?: {
+    screen_name?: string
+  }
+  rest_id?: string
+}
+
+interface XTimelineEntryContent {
+  itemContent?: {
+    tweet_results?: {
+      result?: XTweetResult
     }
   }
+  items?: XTimelineModuleItem[]
+}
+
+interface XTimelineModuleItem {
+  entryId?: string
+  item?: XTimelineEntryContent
 }
 
 export interface XTweetResult {
@@ -29,12 +47,7 @@ export interface XTweetResult {
   rest_id?: string
   core?: {
     user_results?: {
-      result?: {
-        legacy?: {
-          profile_image_url_https?: string
-          screen_name?: string
-        }
-      }
+      result?: XUserResult
     }
   }
   legacy?: {
@@ -54,19 +67,29 @@ export interface XTweetResult {
       }
     }
   }
+  grok_translated_post_with_availability?: {
+    is_available?: boolean
+    data?: {
+      translation?: string
+    }
+  }
 }
+
+export type XTweetTextMode = "original" | "translation"
 
 export interface XUserTweetsResponse {
   data?: {
     user?: {
       result?: {
-        timeline_v2?: {
-          timeline?: {
-            instructions?: XTimelineInstruction[]
-          }
-        }
+        timeline?: XUserTimeline
       }
     }
+  }
+}
+
+interface XUserTimeline {
+  timeline?: {
+    instructions?: XTimelineInstruction[]
   }
 }
 
@@ -80,15 +103,22 @@ export interface XHomeTimelineResponse {
   }
 }
 
+export interface XListTweetsResponse {
+  data?: {
+    list?: {
+      tweets_timeline?: {
+        timeline?: {
+          instructions?: XTimelineInstruction[]
+        }
+      }
+    }
+  }
+}
+
 export interface XUserByScreenNameResponse {
   data?: {
     user?: {
-      result?: {
-        legacy?: {
-          profile_image_url_https?: string
-        }
-        rest_id?: string
-      }
+      result?: XUserResult
     }
   }
 }

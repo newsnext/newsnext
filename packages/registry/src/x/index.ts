@@ -5,7 +5,9 @@ import type {
 } from "@newsnext/source/types"
 import type {
   XHomeTimelineResponse,
+  XListTweetsResponse,
   XPlaceTrendResponse,
+  XTweetTextMode,
   XUserByScreenNameResponse,
   XUserTweetsResponse,
 } from "./types"
@@ -14,19 +16,20 @@ import {
   createXLoggedInHeaders,
   entriesToNewsItems,
   getTimelineEntries,
+  HOME_LATEST_TIMELINE_QUERY_ID,
   HOME_LATEST_TIMELINE_URL,
-  HOME_TIMELINE_COUNT,
   HOME_TIMELINE_URL,
   isUserTweetEntry,
+  LIST_LATEST_TWEETS_URL,
   normalizeXSearchUrl,
   PLACE_TRENDS_URL,
   sortNewsItemsByNewest,
   USER_BY_SCREEN_NAME_URL,
-  USER_TWEETS_COUNT,
   USER_TWEETS_URL,
   X_CSRF_TOKEN_SECRET_KEY,
-  X_FEATURES,
   X_ORIGIN,
+  X_TIMELINE_COUNT,
+  X_TIMELINE_FEATURES,
   X_USER_FEATURES,
 } from "./utils"
 
@@ -42,6 +45,41 @@ const X_RADAR_RESERVED_PATHS = [
   "settings",
   "share",
 ]
+
+interface XTweetTextParams {
+  text: XTweetTextMode
+}
+
+interface XListParams extends XTweetTextParams {
+  listId: string
+}
+
+interface XUserParams extends XTweetTextParams {
+  username: string
+}
+
+const tweetTextParam = {
+  type: "select",
+  title: "Content",
+  values: [
+    { label: "Original", value: "original" },
+    { label: "Translation", value: "translation" },
+  ],
+  default: "original",
+} as const
+
+function createXHomeRadar(id: string) {
+  return [
+    {
+      id,
+      match: {
+        hosts: ["x.com", "twitter.com"],
+        paths: ["/home"],
+      },
+      confidence: 1,
+    },
+  ]
+}
 
 async function fetchXPlaceTrends(
   { location }: { location: string },
@@ -61,29 +99,88 @@ async function fetchXPlaceTrends(
   }
 }
 
-async function fetchXTimeline(url: string, context: SourceLoaderContext): Promise<SourceLoaderResult> {
-  const response = await context.fetch.post(url, {
+function xHomeTimelineToResult(
+  response: XHomeTimelineResponse,
+  textMode: XTweetTextMode,
+): SourceLoaderResult {
+  const instructions = response.data?.home?.home_timeline_urt?.instructions ?? []
+  return {
+    items: sortNewsItemsByNewest(
+      entriesToNewsItems(getTimelineEntries(instructions), { textMode }),
+    ),
+  }
+}
+
+async function fetchXRecommended(
+  { text }: XTweetTextParams,
+  context: SourceLoaderContext,
+): Promise<SourceLoaderResult> {
+  const response = await context.fetch.get(HOME_TIMELINE_URL, {
+    headers: createXLoggedInHeaders(context),
+    searchParams: {
+      variables: JSON.stringify({
+        count: X_TIMELINE_COUNT,
+        includePromotedContent: true,
+        requestContext: "launch",
+        withCommunity: true,
+      }),
+      features: JSON.stringify(X_TIMELINE_FEATURES),
+      fieldToggles: JSON.stringify({
+        withArticlePlainText: false,
+      }),
+    },
+  }).json<XHomeTimelineResponse>()
+  return xHomeTimelineToResult(response, text)
+}
+
+async function fetchXFollowing(
+  { text }: XTweetTextParams,
+  context: SourceLoaderContext,
+): Promise<SourceLoaderResult> {
+  const response = await context.fetch.post(HOME_LATEST_TIMELINE_URL, {
     headers: createXLoggedInHeaders(context),
     json: {
       variables: {
-        count: HOME_TIMELINE_COUNT,
+        count: X_TIMELINE_COUNT,
+        enableRanking: true,
         includePromotedContent: true,
-        latestControlAvailable: true,
         requestContext: "launch",
-        withCommunity: true,
         seenTweetIds: [],
       },
-      features: X_FEATURES,
+      features: X_TIMELINE_FEATURES,
+      queryId: HOME_LATEST_TIMELINE_QUERY_ID,
     },
   }).json<XHomeTimelineResponse>()
-  const instructions = response.data?.home?.home_timeline_urt?.instructions ?? []
+  return xHomeTimelineToResult(response, text)
+}
+
+async function fetchXListTweets(
+  { listId, text }: XListParams,
+  context: SourceLoaderContext,
+): Promise<SourceLoaderResult> {
+  const id = listId.trim()
+  if (!/^\d{1,20}$/.test(id)) throw new Error("X list ID must be a valid numeric ID.")
+
+  const response = await context.fetch.get(LIST_LATEST_TWEETS_URL, {
+    headers: createXLoggedInHeaders(context),
+    searchParams: {
+      variables: JSON.stringify({
+        listId: id,
+        count: X_TIMELINE_COUNT,
+      }),
+      features: JSON.stringify(X_TIMELINE_FEATURES),
+    },
+  }).json<XListTweetsResponse>()
+  const instructions = response.data?.list?.tweets_timeline?.timeline?.instructions ?? []
   return {
-    items: sortNewsItemsByNewest(entriesToNewsItems(getTimelineEntries(instructions))),
+    items: sortNewsItemsByNewest(
+      entriesToNewsItems(getTimelineEntries(instructions), { textMode: text }),
+    ),
   }
 }
 
 async function fetchXUserTweets(
-  { username }: { username: string },
+  { text, username }: XUserParams,
   context: SourceLoaderContext,
 ): Promise<SourceLoaderResult> {
   const screenName = username.trim()
@@ -95,11 +192,12 @@ async function fetchXUserTweets(
     searchParams: {
       variables: JSON.stringify({
         screen_name: screenName,
-        withSafetyModeUserFields: false,
+        withGrokTranslatedBio: true,
       }),
       features: JSON.stringify(X_USER_FEATURES),
       fieldToggles: JSON.stringify({
-        withAuxiliaryUserLabels: false,
+        withPayments: false,
+        withAuxiliaryUserLabels: true,
       }),
     },
   }).json<XUserByScreenNameResponse>()
@@ -112,22 +210,24 @@ async function fetchXUserTweets(
     searchParams: {
       variables: JSON.stringify({
         userId,
-        count: USER_TWEETS_COUNT,
+        count: X_TIMELINE_COUNT,
         includePromotedContent: true,
         withQuickPromoteEligibilityTweetFields: true,
         withVoice: true,
-        withV2Timeline: true,
       }),
-      features: JSON.stringify(X_FEATURES),
+      features: JSON.stringify(X_TIMELINE_FEATURES),
+      fieldToggles: JSON.stringify({
+        withArticlePlainText: false,
+      }),
     },
   }).json<XUserTweetsResponse>()
-  const instructions = response.data?.user?.result?.timeline_v2?.timeline?.instructions ?? []
-  const badge = userResult.legacy?.profile_image_url_https
+  const instructions = response.data?.user?.result?.timeline?.timeline?.instructions ?? []
+  const badge = userResult.avatar?.image_url
   return {
     items: sortNewsItemsByNewest(
       entriesToNewsItems(
         getTimelineEntries(instructions).filter(isUserTweetEntry),
-        { includeIcon: false },
+        { includeIcon: false, textMode: text },
       ),
     ),
     ...(badge ? { metadata: { badge } } : {}),
@@ -184,16 +284,63 @@ export default {
       metadata: {
         title: "Recommended",
       },
+      radar: createXHomeRadar("x-recommended"),
+      params: {
+        text: tweetTextParam,
+      },
       loader: {
-        load: (_params, context) => fetchXTimeline(HOME_TIMELINE_URL, context),
+        load: fetchXRecommended,
       },
     },
     "following": {
       metadata: {
         title: "Following",
       },
+      radar: createXHomeRadar("x-following"),
+      params: {
+        text: tweetTextParam,
+      },
       loader: {
-        load: (_params, context) => fetchXTimeline(HOME_LATEST_TIMELINE_URL, context),
+        load: fetchXFollowing,
+      },
+    },
+    "list": {
+      metadata: {
+        title: "List",
+      },
+      radar: [
+        {
+          id: "x-list",
+          match: {
+            hosts: ["x.com", "twitter.com"],
+            paths: {
+              include: ["/i/lists/:listId"],
+            },
+          },
+          patch: {
+            params: {
+              listId: "{{ scope.path.listId }}",
+            },
+            metadata: {
+              title: {
+                select: "[data-testid=\"primaryColumn\"] h2",
+              },
+              home: `${X_ORIGIN}/i/lists/{{ scope.params.listId }}`,
+            },
+          },
+          confidence: 0.98,
+        },
+      ],
+      params: {
+        listId: {
+          type: "text",
+          title: "List ID",
+          default: "1678002608919937029",
+        },
+        text: tweetTextParam,
+      },
+      loader: {
+        load: fetchXListTweets,
       },
     },
     "user": {
@@ -227,6 +374,7 @@ export default {
         },
       ],
       params: {
+        text: tweetTextParam,
         username: {
           type: "text",
           title: "Username",

@@ -2885,6 +2885,119 @@
         "cache": false
       }
     ],
+    "radar": [
+      {
+        "id": "x-following",
+        "match": {
+          "hosts": [
+            "x.com",
+            "twitter.com"
+          ],
+          "paths": [
+            "/home"
+          ]
+        },
+        "confidence": 1
+      }
+    ],
+    "params": {
+      "text": {
+        "type": "select",
+        "title": "Content",
+        "values": [
+          {
+            "label": "Original",
+            "value": "original"
+          },
+          {
+            "label": "Translation",
+            "value": "translation"
+          }
+        ],
+        "default": "original"
+      }
+    },
+    "provider": {
+      "title": "X",
+      "category": "social",
+      "color": "slate"
+    }
+  },
+  "x:list": {
+    "baseUrl": "https://x.com/",
+    "capabilities": {
+      "network": [
+        "x.com",
+        "api.x.com"
+      ],
+      "cookies": [
+        "x.com"
+      ]
+    },
+    "cache": "5m",
+    "metadata": {
+      "home": "/",
+      "title": "List"
+    },
+    "secrets": [
+      {
+        "key": "csrfToken",
+        "type": "cookie",
+        "origin": "https://x.com",
+        "itemKey": "ct0",
+        "cache": false
+      }
+    ],
+    "radar": [
+      {
+        "id": "x-list",
+        "match": {
+          "hosts": [
+            "x.com",
+            "twitter.com"
+          ],
+          "paths": {
+            "include": [
+              "/i/lists/:listId"
+            ]
+          }
+        },
+        "patch": {
+          "params": {
+            "listId": "{{ scope.path.listId }}"
+          },
+          "metadata": {
+            "title": {
+              "select": "[data-testid=\"primaryColumn\"] h2"
+            },
+            "home": "https://x.com/i/lists/{{ scope.params.listId }}"
+          }
+        },
+        "confidence": 0.98
+      }
+    ],
+    "params": {
+      "listId": {
+        "type": "text",
+        "title": "List ID",
+        "default": "1678002608919937029"
+      },
+      "text": {
+        "type": "select",
+        "title": "Content",
+        "values": [
+          {
+            "label": "Original",
+            "value": "original"
+          },
+          {
+            "label": "Translation",
+            "value": "translation"
+          }
+        ],
+        "default": "original"
+      }
+    },
     "provider": {
       "title": "X",
       "category": "social",
@@ -2996,6 +3109,38 @@
         "cache": false
       }
     ],
+    "radar": [
+      {
+        "id": "x-recommended",
+        "match": {
+          "hosts": [
+            "x.com",
+            "twitter.com"
+          ],
+          "paths": [
+            "/home"
+          ]
+        },
+        "confidence": 1
+      }
+    ],
+    "params": {
+      "text": {
+        "type": "select",
+        "title": "Content",
+        "values": [
+          {
+            "label": "Original",
+            "value": "original"
+          },
+          {
+            "label": "Translation",
+            "value": "translation"
+          }
+        ],
+        "default": "original"
+      }
+    },
     "provider": {
       "title": "X",
       "category": "social",
@@ -3084,6 +3229,21 @@
       }
     ],
     "params": {
+      "text": {
+        "type": "select",
+        "title": "Content",
+        "values": [
+          {
+            "label": "Original",
+            "value": "original"
+          },
+          {
+            "label": "Translation",
+            "value": "translation"
+          }
+        ],
+        "default": "original"
+      },
       "username": {
         "type": "text",
         "title": "Username",

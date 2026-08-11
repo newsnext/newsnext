@@ -591,6 +591,20 @@ capabilities: {
 }
 ```
 
+When a timeline API groups related items into modules or conversations, inspect
+both top-level entries and nested module items. Normalize both shapes through
+one shared parser before mapping them to news items; otherwise list and thread
+timelines can appear to load successfully while returning no items.
+
+When one page represents multiple independent sources, give each source its own
+Radar rule for that page. Radar can then return every matching source instead of
+forcing discovery to choose one stream.
+
+When a source offers original and translated text, expose the choice as a
+parameter. Use the selected variant as the item title and place the other
+available variant in `preview.text`. Fall back to the original when a
+translation is unavailable.
+
 A loader always returns a `SourceLoaderResult` object:
 
 ```ts

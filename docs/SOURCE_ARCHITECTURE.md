@@ -486,6 +486,13 @@ immediately before the request is sent.
 Custom loaders receive already-normalized parameters. The source runtime cannot
 infer their requests, so custom loader capabilities must be declared.
 
+Custom provider parsers map the response shape of the current endpoint before
+creating `NewsItem` values. X timeline responses expose user handles and avatars
+through `core` and `avatar`, and the current `UserTweets` operation returns
+entries through `timeline.timeline`. X translations are selected by the
+persisted GraphQL operation as well as feature flags, so its operation hash,
+variables, feature set, response path, and parser must be updated together.
+
 After any structured, RSS, or custom loader returns, the resolver applies the
 same optional `baseUrl` to explicit URL-bearing result fields. This boundary
 normalization covers item navigation URLs, image and iframe values, and dynamic
