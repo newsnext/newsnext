@@ -1003,9 +1003,9 @@ Inspect the successful source observations stored by the extension:
 ```sh
 bun run newsnext board list
 bun run newsnext instance list
-bun run newsnext history observations github:trending::card_example
-bun run newsnext history get github:trending::card_example 1786212000000
-bun run newsnext history compare github:trending::card_example \
+bun run newsnext history observations github:trending::V1StGXR8_Z5j
+bun run newsnext history get github:trending::V1StGXR8_Z5j 1786212000000
+bun run newsnext history compare github:trending::V1StGXR8_Z5j \
   1786212000000 1786215600000
 ```
 

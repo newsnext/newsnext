@@ -652,6 +652,9 @@ provider title, icon, color, category, loader behavior, capabilities, secrets,
 request rules, or cache policy.
 Accepting a Radar suggestion creates one card instance with the selected board
 membership. The instance owns its board ID alongside its source ID and patch.
+New instance IDs combine the source ID and a 12-character Nano ID with `::`;
+custom Board IDs use the Nano ID directly. Both remain opaque strings so data
+persisted with older ID formats continues to resolve without migration.
 Moving a card updates only that board ID; source parameters, presentation
 metadata, and cache identity remain unchanged. The board ID is nullable:
 `null` means the card has no custom board, while a custom board ID adds it to

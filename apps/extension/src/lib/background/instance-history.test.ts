@@ -18,15 +18,15 @@ function createInstance(
 describe("instance history", () => {
   it("resolves the source and parameters from the saved instance", () => {
     expect(resolveInstanceHistoryTarget([
-      createInstance("github:trending::card_example", { language: "typescript" }),
-    ], "github:trending::card_example")).toEqual({
+      createInstance("github:trending::V1StGXR8_Z5j", { language: "typescript" }),
+    ], "github:trending::V1StGXR8_Z5j")).toEqual({
       sourceId: "github:trending",
       params: { language: "typescript" },
     })
   })
 
   it("rejects an unknown instance", () => {
-    expect(() => resolveInstanceHistoryTarget([], "missing::card_example"))
-      .toThrow("Instance 'missing::card_example' not found")
+    expect(() => resolveInstanceHistoryTarget([], "missing::V1StGXR8_Z5j"))
+      .toThrow("Instance 'missing::V1StGXR8_Z5j' not found")
   })
 })

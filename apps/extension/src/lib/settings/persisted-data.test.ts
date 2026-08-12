@@ -23,12 +23,12 @@ describe("persisted user data", () => {
           sort: {
             mode: "manual" as const,
             automaticMode: "createdAt" as const,
-            manualOrder: ["rss:feed::card_1"],
+            manualOrder: ["rss:feed::R5xK2mN8qP4s"],
           },
         },
       ],
       instances: [{
-        instanceId: "rss:feed::card_1",
+        instanceId: "rss:feed::R5xK2mN8qP4s",
         sourceId: "rss:feed",
         boardId: "reading",
         patch: { params: { url: "https://example.com/feed.xml" } },
@@ -83,7 +83,7 @@ describe("persisted user data", () => {
         },
       ],
       instances: [{
-        instanceId: "rss:feed::card_1",
+        instanceId: "rss:feed::R5xK2mN8qP4s",
         sourceId: "rss:feed",
         boardId: "reading",
         patch: {},
