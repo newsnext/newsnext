@@ -369,6 +369,14 @@ read `browser.storage.local` directly because frontend Jotai atoms are
 unavailable there. Normal user-history workflows do not require source IDs or
 parameter JSON.
 
+The CLI daemon owns both the loopback HTTP server and a no-server WebSocket
+server. Shutdown terminates connected extension sockets and closes both server
+objects, then explicitly exits the internal daemon process. Bun can otherwise
+retain a busy kqueue or fail to complete a close callback, leaving the detached
+process alive after `newsnext stop` even though the port and status endpoint are
+gone. Graceful close therefore has a short deadline before the internal process
+exits.
+
 The repository-local `newsnext-source-history` skill teaches Codex how to
 compose these commands for coverage discovery, exact-time summaries, two-point
 comparisons, ranking movement, timeline arrival patterns, item-field changes,

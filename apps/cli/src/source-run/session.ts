@@ -329,8 +329,13 @@ export class SourceConnectionSession {
     for (const client of this.webSocketServer.clients) {
       client.terminate()
     }
-    await new Promise<void>((resolve, reject) => {
-      this.server.close(error => error ? reject(error) : resolve())
-    })
+    await Promise.all([
+      new Promise<void>((resolve, reject) => {
+        this.server.close(error => error ? reject(error) : resolve())
+      }),
+      new Promise<void>((resolve, reject) => {
+        this.webSocketServer.close(error => error ? reject(error) : resolve())
+      }),
+    ])
   }
 }

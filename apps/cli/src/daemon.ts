@@ -22,6 +22,7 @@ import { SourceConnectionRemoteError, SourceConnectionSession } from "./source-r
 const DAEMON_START_TIMEOUT_MS = 5_000
 const DAEMON_REQUEST_TIMEOUT_MS = 1_000
 const DAEMON_POLL_INTERVAL_MS = 50
+const DAEMON_SHUTDOWN_TIMEOUT_MS = 500
 
 interface DaemonCommandOptions {
   wsUrl: URL
@@ -230,6 +231,9 @@ export async function runDaemon(args: string[]): Promise<number> {
   await stopped
   process.off("SIGINT", handleSignal)
   process.off("SIGTERM", handleSignal)
-  await session.close()
-  return 0
+  await Promise.race([
+    session.close(),
+    delay(DAEMON_SHUTDOWN_TIMEOUT_MS),
+  ])
+  process.exit(0)
 }
