@@ -13,11 +13,11 @@ import {
   withSourceConnectionEnabled,
 } from "../settings/persisted-settings"
 import {
-  compareSourceHistoryObservations,
-  getSourceHistoryObservation,
   listSourceHistoryDatasets,
-  listSourceHistoryObservations,
 } from "../source/history/repository"
+import { listConnectedBoards } from "./board-list"
+import { executeInstanceHistoryRequest } from "./instance-history"
+import { listConnectedInstances } from "./instance-list"
 import { serializeSourceConnectionError } from "./source-connection-error"
 import { listConnectedSources, runConnectedSource } from "./source-runner"
 
@@ -86,8 +86,12 @@ export function getSourceConnectionStatus(): SourceConnectionStatus {
 
 async function executeRequest(request: ExtensionConnectionCommandRequest): Promise<unknown> {
   switch (request.type) {
+    case "board.list":
+      return await listConnectedBoards()
     case "fetch":
       return await executeFetchRequest(request)
+    case "instance.list":
+      return await listConnectedInstances()
     case "source.list":
       return (await listConnectedSources()).data
     case "source.run":
@@ -95,11 +99,9 @@ async function executeRequest(request: ExtensionConnectionCommandRequest): Promi
     case "source-history.datasets":
       return await listSourceHistoryDatasets(request)
     case "source-history.observations":
-      return await listSourceHistoryObservations(request)
     case "source-history.get":
-      return await getSourceHistoryObservation(request)
     case "source-history.compare":
-      return await compareSourceHistoryObservations(request)
+      return await executeInstanceHistoryRequest(request)
   }
 }
 

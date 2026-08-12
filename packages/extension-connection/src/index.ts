@@ -122,6 +122,18 @@ export function parseExtensionConnectionCommandRequest(
   if (!isRecord(value) || typeof value.id !== "string") {
     throw new Error("Invalid extension command")
   }
+  if (value.type === "board.list") {
+    return {
+      id: value.id,
+      type: "board.list",
+    }
+  }
+  if (value.type === "instance.list") {
+    return {
+      id: value.id,
+      type: "instance.list",
+    }
+  }
   if (value.type === "source.list") {
     return {
       id: value.id,
@@ -195,8 +207,7 @@ export function parseExtensionConnectionCommandRequest(
   }
   if (
     value.type === "source-history.observations"
-    && typeof value.sourceId === "string"
-    && (value.params === undefined || isRecord(value.params))
+    && typeof value.instanceId === "string"
     && isOptionalFiniteNumber(value.cursor)
     && isOptionalFiniteNumber(value.from)
     && isOptionalFiniteNumber(value.limit)
@@ -205,8 +216,7 @@ export function parseExtensionConnectionCommandRequest(
     return {
       id: value.id,
       type: "source-history.observations",
-      sourceId: value.sourceId,
-      params: value.params,
+      instanceId: value.instanceId,
       cursor: value.cursor,
       from: value.from,
       limit: value.limit,
@@ -215,23 +225,20 @@ export function parseExtensionConnectionCommandRequest(
   }
   if (
     value.type === "source-history.get"
-    && typeof value.sourceId === "string"
-    && (value.params === undefined || isRecord(value.params))
+    && typeof value.instanceId === "string"
     && typeof value.observedAt === "number"
     && Number.isFinite(value.observedAt)
   ) {
     return {
       id: value.id,
       type: "source-history.get",
-      sourceId: value.sourceId,
-      params: value.params,
+      instanceId: value.instanceId,
       observedAt: value.observedAt,
     }
   }
   if (
     value.type === "source-history.compare"
-    && typeof value.sourceId === "string"
-    && (value.params === undefined || isRecord(value.params))
+    && typeof value.instanceId === "string"
     && typeof value.before === "number"
     && Number.isFinite(value.before)
     && typeof value.after === "number"
@@ -240,8 +247,7 @@ export function parseExtensionConnectionCommandRequest(
     return {
       id: value.id,
       type: "source-history.compare",
-      sourceId: value.sourceId,
-      params: value.params,
+      instanceId: value.instanceId,
       before: value.before,
       after: value.after,
     }
@@ -359,11 +365,13 @@ export const daemonRouter = t.router({
 export type DaemonRouter = typeof daemonRouter
 
 export type {
+  ExtensionConnectionBoardListRequest,
   ExtensionConnectionCommandRequest,
   ExtensionConnectionCommandResult,
   ExtensionConnectionFetchRequest,
   ExtensionConnectionFetchResponse,
   ExtensionConnectionInstance,
+  ExtensionConnectionInstanceListRequest,
   ExtensionConnectionListRequest,
   ExtensionConnectionProviderRunRequest,
   ExtensionConnectionRegisteredRunRequest,

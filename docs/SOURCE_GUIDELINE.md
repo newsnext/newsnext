@@ -1001,17 +1001,30 @@ then run `source run` to verify the complete source behavior.
 Inspect the successful source observations stored by the extension:
 
 ```sh
-bun run newsnext history datasets --source-id github:trending
-bun run newsnext history observations github:trending
-bun run newsnext history get github:trending 1786212000000
-bun run newsnext history compare github:trending 1786212000000 1786215600000
+bun run newsnext board list
+bun run newsnext instance list
+bun run newsnext history observations github:trending::card_example
+bun run newsnext history get github:trending::card_example 1786212000000
+bun run newsnext history compare github:trending::card_example \
+  1786212000000 1786215600000
 ```
 
-Use `--params` to select the same normalized parameter set used by a source
-card. Observation times may be Unix milliseconds or ISO 8601 values. Start with
-`datasets`, then list `observations` before using exact timestamps with `get` or
-`compare`. These commands are read-only and return completeness warnings when
-retained history cannot fully reconstruct a result.
+Use `board list` when starting from a user-visible Board, or `instance list`
+when the Board is irrelevant. History commands accept the saved `instanceId`;
+the extension resolves its current source and parameter patch and normalizes
+the parameters internally. This keeps CLI results aligned with the card the
+user sees and avoids manually copying source parameters. If an instance's
+parameters change, its ID selects the dataset for its current configuration;
+older parameter configurations remain separate stored datasets.
+
+`board list` groups instances under their configured custom Board and reports
+instances without valid custom Board membership in `unassignedInstances`; the
+aggregate All Board is not duplicated. Observation times may be Unix
+milliseconds or ISO 8601 values. List `observations` before using exact
+timestamps with `get` or `compare`. The read-only `history datasets` command is
+available for storage diagnostics. Add `--compact` when consuming JSON
+programmatically. History responses include completeness warnings when retained
+data cannot fully reconstruct a result.
 
 Direct `fetch` requests are useful for endpoint investigation, but they do not verify
 parameter parsing, extension permissions, capability enforcement, secrets, or

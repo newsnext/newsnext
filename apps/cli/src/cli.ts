@@ -13,6 +13,7 @@ import {
 import { CliError } from "./errors"
 import { FETCH_ARGS, runFetchCommand } from "./fetch"
 import { writeLine } from "./io"
+import { JSON_LIST_ARGS, runJsonListCommand } from "./json-list"
 import {
   runHistoryCompareCommand,
   runHistoryDatasetsCommand,
@@ -99,6 +100,22 @@ function createCommandSet(io: CliIO, setExitCode: ExitCodeHandler) {
     args: SOURCE_RUN_ARGS,
     run: ({ rawArgs }) => runWithExitCode(() => runSourceRunCommand(rawArgs, io)),
   })
+  const boardList = defineCommand({
+    meta: {
+      name: "list",
+      description: "List saved boards with their card instances",
+    },
+    args: JSON_LIST_ARGS,
+    run: ({ rawArgs }) => runWithExitCode(() => runJsonListCommand(rawArgs, "board.list", io)),
+  })
+  const instanceList = defineCommand({
+    meta: {
+      name: "list",
+      description: "List saved card instances",
+    },
+    args: JSON_LIST_ARGS,
+    run: ({ rawArgs }) => runWithExitCode(() => runJsonListCommand(rawArgs, "instance.list", io)),
+  })
   const sourceList = defineCommand({
     meta: {
       name: "list",
@@ -110,7 +127,7 @@ function createCommandSet(io: CliIO, setExitCode: ExitCodeHandler) {
   const historyDatasets = defineCommand({
     meta: {
       name: "datasets",
-      description: "List locally stored source-history datasets",
+      description: "List locally stored history datasets",
     },
     args: SOURCE_HISTORY_DATASETS_ARGS,
     run: ({ rawArgs }) => runWithExitCode(() => runHistoryDatasetsCommand(rawArgs, io)),
@@ -118,7 +135,7 @@ function createCommandSet(io: CliIO, setExitCode: ExitCodeHandler) {
   const historyObservations = defineCommand({
     meta: {
       name: "observations",
-      description: "List observation metadata for a source and parameter set",
+      description: "List observation metadata for a saved card instance",
     },
     args: SOURCE_HISTORY_OBSERVATIONS_ARGS,
     run: ({ rawArgs }) => runWithExitCode(() => runHistoryObservationsCommand(rawArgs, io)),
@@ -126,7 +143,7 @@ function createCommandSet(io: CliIO, setExitCode: ExitCodeHandler) {
   const historyGet = defineCommand({
     meta: {
       name: "get",
-      description: "Read the complete items from an exact source observation",
+      description: "Read an exact observation for a saved card instance",
     },
     args: SOURCE_HISTORY_GET_ARGS,
     run: ({ rawArgs }) => runWithExitCode(() => runHistoryGetCommand(rawArgs, io)),
@@ -134,7 +151,7 @@ function createCommandSet(io: CliIO, setExitCode: ExitCodeHandler) {
   const historyCompare = defineCommand({
     meta: {
       name: "compare",
-      description: "Compare two exact source observations",
+      description: "Compare two observations for a saved card instance",
     },
     args: SOURCE_HISTORY_COMPARE_ARGS,
     run: ({ rawArgs }) => runWithExitCode(() => runHistoryCompareCommand(rawArgs, io)),
@@ -152,7 +169,7 @@ function createCommandSet(io: CliIO, setExitCode: ExitCodeHandler) {
   source = defineCommand({
     meta: {
       name: "source",
-      description: "Source authoring commands",
+      description: "Source commands",
     },
     default: "help",
     subCommands: {
@@ -166,7 +183,7 @@ function createCommandSet(io: CliIO, setExitCode: ExitCodeHandler) {
   const historyHelp = defineCommand({
     meta: {
       name: "help",
-      description: "Show source-history command help",
+      description: "Show history command help",
       hidden: true,
     },
     run: () => writeUsage(io, history),
@@ -174,7 +191,7 @@ function createCommandSet(io: CliIO, setExitCode: ExitCodeHandler) {
   history = defineCommand({
     meta: {
       name: "history",
-      description: "Inspect locally observed source history",
+      description: "Inspect locally observed instance history",
     },
     default: "help",
     subCommands: {
@@ -183,6 +200,48 @@ function createCommandSet(io: CliIO, setExitCode: ExitCodeHandler) {
       get: historyGet,
       help: historyHelp,
       observations: historyObservations,
+    },
+  })
+
+  let instance: CommandDef
+  const instanceHelp = defineCommand({
+    meta: {
+      name: "help",
+      description: "Show instance command help",
+      hidden: true,
+    },
+    run: () => writeUsage(io, instance),
+  })
+  instance = defineCommand({
+    meta: {
+      name: "instance",
+      description: "Inspect saved card instances",
+    },
+    default: "help",
+    subCommands: {
+      help: instanceHelp,
+      list: instanceList,
+    },
+  })
+
+  let board: CommandDef
+  const boardHelp = defineCommand({
+    meta: {
+      name: "help",
+      description: "Show board command help",
+      hidden: true,
+    },
+    run: () => writeUsage(io, board),
+  })
+  board = defineCommand({
+    meta: {
+      name: "board",
+      description: "Inspect saved boards and card instances",
+    },
+    default: "help",
+    subCommands: {
+      help: boardHelp,
+      list: boardList,
     },
   })
 
@@ -213,9 +272,11 @@ function createCommandSet(io: CliIO, setExitCode: ExitCodeHandler) {
     default: "help",
     subCommands: {
       __daemon: daemon,
+      board,
       fetch,
       help: mainHelp,
       history,
+      instance,
       restart,
       source,
       start,
@@ -225,12 +286,16 @@ function createCommandSet(io: CliIO, setExitCode: ExitCodeHandler) {
   })
 
   const helpWriters = new Map<string, () => Promise<void>>([
+    ["board", () => writeUsage(io, board)],
+    ["board list", () => writeUsage(io, boardList)],
     ["fetch", () => writeUsage(io, fetch)],
     ["history", () => writeUsage(io, history)],
     ["history compare", () => writeUsage(io, historyCompare)],
     ["history datasets", () => writeUsage(io, historyDatasets)],
     ["history get", () => writeUsage(io, historyGet)],
     ["history observations", () => writeUsage(io, historyObservations)],
+    ["instance", () => writeUsage(io, instance)],
+    ["instance list", () => writeUsage(io, instanceList)],
     ["restart", () => writeUsage(io, restart)],
     ["source", () => writeUsage(io, source)],
     ["source list", () => writeUsage(io, sourceList)],
@@ -241,12 +306,16 @@ function createCommandSet(io: CliIO, setExitCode: ExitCodeHandler) {
   ])
 
   return {
+    board,
+    boardList,
     helpWriters,
     history,
     historyCompare,
     historyDatasets,
     historyGet,
     historyObservations,
+    instance,
+    instanceList,
     main,
     fetch,
     restart,

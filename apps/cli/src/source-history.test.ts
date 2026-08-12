@@ -6,11 +6,9 @@ import {
 } from "./source-history"
 
 describe("source history options", () => {
-  it("parses observation filters and source parameters", () => {
+  it("parses instance observation filters", () => {
     const options = parseHistoryObservationsOptions([
-      "github:trending",
-      "--params",
-      "{\"language\":\"typescript\"}",
+      "github:trending::card_example",
       "--from",
       "2026-08-08T10:00:00Z",
       "--limit",
@@ -19,8 +17,7 @@ describe("source history options", () => {
 
     expect(options.request).toMatchObject({
       type: "source-history.observations",
-      sourceId: "github:trending",
-      params: { language: "typescript" },
+      instanceId: "github:trending::card_example",
       from: Date.parse("2026-08-08T10:00:00Z"),
       limit: 25,
     })
@@ -34,12 +31,13 @@ describe("source history options", () => {
 
   it("preserves comparison order", () => {
     const options = parseHistoryCompareOptions([
-      "github:trending",
+      "github:trending::card_example",
       "1786212000000",
       "1786215600000",
     ])
 
     expect(options.request).toMatchObject({
+      instanceId: "github:trending::card_example",
       before: 1_786_212_000_000,
       after: 1_786_215_600_000,
     })
@@ -47,7 +45,7 @@ describe("source history options", () => {
 
   it("rejects invalid limits and timestamps", () => {
     expect(() => parseHistoryObservationsOptions([
-      "github:trending",
+      "github:trending::card_example",
       "--limit",
       "0",
     ])).toThrow("--limit must be an integer between 1 and 250")

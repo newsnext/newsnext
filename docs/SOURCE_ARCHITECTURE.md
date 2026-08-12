@@ -344,13 +344,30 @@ and are not part of persistence or repository code.
 
 The extension-backed CLI exposes these repository operations as four read-only
 commands: `newsnext history datasets`, `newsnext history observations`,
-`newsnext history get`, and `newsnext history compare`. Requests travel through
-the same loopback connection as source authoring commands and return the
-repository DTO as JSON. The extension validates every request before dispatch
-and does not expose internal database identifiers or write operations. History
-commands execute in the background context, so parameter normalization resolves
-the configured runtime registry in-process; it must not call the frontend
-registry proxy from the background service.
+`newsnext history get`, and `newsnext history compare`. The adjacent read-only
+`newsnext board list` and `newsnext instance list` commands read the canonical
+Board and source-instance browser-storage slices and normalize them with the
+same functions used by the UI. Board listing returns each configured custom
+Board with its complete persisted instances. Instances with null or stale Board
+membership are returned separately as `unassignedInstances`; the aggregate All
+Board is omitted because it would duplicate every instance and does not
+represent persisted membership. Instance listing returns the normalized flat
+instance collection.
+
+Requests travel through the same loopback connection as source authoring
+commands and return JSON. The extension validates every request before dispatch
+and does not expose write operations. History commands execute in the background
+context. Observation, get, and compare requests identify the user-visible card
+by `instanceId`; the background resolves the current persisted instance to its
+source ID and parameter patch before the repository normalizes parameters and
+selects its dataset. An instance whose parameters later change therefore points
+to the dataset for its current configuration, while old parameter datasets
+remain stored. Parameter normalization resolves the configured runtime registry
+in-process; it must not call the frontend registry proxy from the background
+service. Board and instance listing also execute in the background context and
+read `browser.storage.local` directly because frontend Jotai atoms are
+unavailable there. Normal user-history workflows do not require source IDs or
+parameter JSON.
 
 The repository-local `newsnext-source-history` skill teaches Codex how to
 compose these commands for coverage discovery, exact-time summaries, two-point

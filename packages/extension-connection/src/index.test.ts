@@ -10,6 +10,26 @@ import {
 } from "."
 
 describe("extension connection protocol", () => {
+  it("parses board list requests", () => {
+    expect(parseExtensionConnectionCommandRequest({
+      id: "board-list",
+      type: "board.list",
+    })).toEqual({
+      id: "board-list",
+      type: "board.list",
+    })
+  })
+
+  it("parses instance list requests", () => {
+    expect(parseExtensionConnectionCommandRequest({
+      id: "instance-list",
+      type: "instance.list",
+    })).toEqual({
+      id: "instance-list",
+      type: "instance.list",
+    })
+  })
+
   it("maps WebSocket URLs to the daemon tRPC endpoint", () => {
     expect(getDaemonEndpoint(new URL("ws://127.0.0.1:43110")).href)
       .toBe(`http://127.0.0.1:43110${DAEMON_TRPC_PATH}`)
@@ -81,9 +101,18 @@ describe("extension connection protocol", () => {
     expect(() => parseExtensionConnectionCommandRequest({
       id: "request-id",
       type: "source-history.get",
-      sourceId: "github:trending",
+      instanceId: "github:trending::card_example",
       observedAt: "yesterday",
     })).toThrow("Invalid extension command")
+    expect(parseExtensionConnectionCommandRequest({
+      id: "request-id",
+      type: "source-history.get",
+      instanceId: "github:trending::card_example",
+      observedAt: 1_786_212_000_000,
+    })).toMatchObject({
+      instanceId: "github:trending::card_example",
+      observedAt: 1_786_212_000_000,
+    })
   })
 
   it("validates extension metadata and results", () => {

@@ -14,7 +14,6 @@ import { parseArgs } from "citty"
 import { executeThroughDaemon } from "./daemon"
 import { CliError } from "./errors"
 import { writeLine } from "./io"
-import { parseJsonObject } from "./json-options"
 import {
   normalizeSourceConnectionOptions,
   SOURCE_CONNECTION_ARGS,
@@ -22,7 +21,6 @@ import {
 
 interface CommonHistoryValues extends SourceConnectionValues {
   compact?: boolean
-  params?: string
 }
 
 interface DatasetValues extends CommonHistoryValues {
@@ -44,23 +42,17 @@ const COMPACT_ARG = {
   description: "Print result JSON on one line",
 } as const
 
-const PARAMS_ARG = {
-  type: "string",
-  description: "Select a source parameter set from a JSON object",
-  valueHint: "JSON",
-} as const
-
 const LIMIT_ARG = {
   type: "string",
   description: "Maximum results to return (1-250)",
   valueHint: "COUNT",
 } as const
 
-const SOURCE_ID_ARG = {
+const INSTANCE_ID_ARG = {
   type: "positional",
-  description: "Registered source ID",
+  description: "Saved card instance ID",
   required: true,
-  valueHint: "SOURCE_ID",
+  valueHint: "INSTANCE_ID",
 } as const
 
 const OBSERVED_AT_ARG = {
@@ -93,7 +85,7 @@ export const SOURCE_HISTORY_DATASETS_ARGS = {
 
 export const SOURCE_HISTORY_OBSERVATIONS_ARGS = {
   ...SOURCE_CONNECTION_ARGS,
-  "source-id": SOURCE_ID_ARG,
+  "instance-id": INSTANCE_ID_ARG,
   "compact": COMPACT_ARG,
   "cursor": {
     type: "string",
@@ -106,7 +98,6 @@ export const SOURCE_HISTORY_OBSERVATIONS_ARGS = {
     valueHint: "TIME",
   },
   "limit": LIMIT_ARG,
-  "params": PARAMS_ARG,
   "to": {
     type: "string",
     description: "Include observations at or before this time",
@@ -116,15 +107,14 @@ export const SOURCE_HISTORY_OBSERVATIONS_ARGS = {
 
 export const SOURCE_HISTORY_GET_ARGS = {
   ...SOURCE_CONNECTION_ARGS,
-  "source-id": SOURCE_ID_ARG,
+  "instance-id": INSTANCE_ID_ARG,
   "observed-at": OBSERVED_AT_ARG,
   "compact": COMPACT_ARG,
-  "params": PARAMS_ARG,
 } as const
 
 export const SOURCE_HISTORY_COMPARE_ARGS = {
   ...SOURCE_CONNECTION_ARGS,
-  "source-id": SOURCE_ID_ARG,
+  "instance-id": INSTANCE_ID_ARG,
   "before": {
     ...OBSERVED_AT_ARG,
     description: "Earlier observation time as Unix milliseconds or an ISO 8601 date",
@@ -136,7 +126,6 @@ export const SOURCE_HISTORY_COMPARE_ARGS = {
     valueHint: "AFTER",
   },
   "compact": COMPACT_ARG,
-  "params": PARAMS_ARG,
 } as const
 
 interface ParsedHistoryCommand<Request extends SourceHistoryCommandRequest> {
@@ -174,10 +163,6 @@ export function parseHistoryTime(value: string, label: string): number {
     throw new CliError(`${label} must be Unix milliseconds or an ISO 8601 date`, 2)
   }
   return timestamp
-}
-
-function parseParams(value: string | undefined): Record<string, unknown> | undefined {
-  return value === undefined ? undefined : parseJsonObject(value, "--params")
 }
 
 function requirePositionals(values: { _: string[] }, labels: []): []
@@ -225,15 +210,14 @@ export function parseHistoryObservationsOptions(
   args: string[],
 ): ParsedHistoryCommand<SourceHistoryListObservationsRequest> {
   const values = parseValues<ObservationValues>(args, SOURCE_HISTORY_OBSERVATIONS_ARGS)
-  const [sourceId] = requirePositionals(values, ["Source ID"])
+  const [instanceId] = requirePositionals(values, ["Instance ID"])
   return {
     compact: values.compact ?? false,
     connection: normalizeSourceConnectionOptions(values),
     request: {
       id: crypto.randomUUID(),
       type: "source-history.observations",
-      sourceId,
-      params: parseParams(values.params),
+      instanceId,
       cursor: values.cursor === undefined ? undefined : parseHistoryTime(values.cursor, "--cursor"),
       from: values.from === undefined ? undefined : parseHistoryTime(values.from, "--from"),
       limit: parseLimit(values.limit),
@@ -246,15 +230,14 @@ export function parseHistoryGetOptions(
   args: string[],
 ): ParsedHistoryCommand<SourceHistoryGetObservationRequest> {
   const values = parseValues<CommonHistoryValues>(args, SOURCE_HISTORY_GET_ARGS)
-  const [sourceId, observedAt] = requirePositionals(values, ["Source ID", "Observation time"])
+  const [instanceId, observedAt] = requirePositionals(values, ["Instance ID", "Observation time"])
   return {
     compact: values.compact ?? false,
     connection: normalizeSourceConnectionOptions(values),
     request: {
       id: crypto.randomUUID(),
       type: "source-history.get",
-      sourceId,
-      params: parseParams(values.params),
+      instanceId,
       observedAt: parseHistoryTime(observedAt, "Observation time"),
     },
   }
@@ -264,9 +247,9 @@ export function parseHistoryCompareOptions(
   args: string[],
 ): ParsedHistoryCommand<SourceHistoryCompareObservationsRequest> {
   const values = parseValues<CommonHistoryValues>(args, SOURCE_HISTORY_COMPARE_ARGS)
-  const [sourceId, before, after] = requirePositionals(
+  const [instanceId, before, after] = requirePositionals(
     values,
-    ["Source ID", "Earlier observation time", "Later observation time"],
+    ["Instance ID", "Earlier observation time", "Later observation time"],
   )
   return {
     compact: values.compact ?? false,
@@ -274,8 +257,7 @@ export function parseHistoryCompareOptions(
     request: {
       id: crypto.randomUUID(),
       type: "source-history.compare",
-      sourceId,
-      params: parseParams(values.params),
+      instanceId,
       before: parseHistoryTime(before, "Earlier observation time"),
       after: parseHistoryTime(after, "Later observation time"),
     },

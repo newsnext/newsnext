@@ -26,6 +26,16 @@ export interface ExtensionConnectionListRequest {
   type: "source.list"
 }
 
+export interface ExtensionConnectionBoardListRequest {
+  id: string
+  type: "board.list"
+}
+
+export interface ExtensionConnectionInstanceListRequest {
+  id: string
+  type: "instance.list"
+}
+
 export interface ExtensionConnectionFetchRequest {
   id: string
   type: "fetch"
@@ -55,12 +65,11 @@ export interface SourceHistoryListDatasetsRequest extends SourceHistoryRequestBa
   sourceId?: string
 }
 
-interface SourceHistoryDatasetRequestBase extends SourceHistoryRequestBase {
-  sourceId: string
-  params?: Record<string, unknown>
+interface SourceHistoryInstanceRequestBase extends SourceHistoryRequestBase {
+  instanceId: string
 }
 
-export interface SourceHistoryListObservationsRequest extends SourceHistoryDatasetRequestBase {
+export interface SourceHistoryListObservationsRequest extends SourceHistoryInstanceRequestBase {
   type: "source-history.observations"
   cursor?: number
   from?: number
@@ -68,12 +77,12 @@ export interface SourceHistoryListObservationsRequest extends SourceHistoryDatas
   to?: number
 }
 
-export interface SourceHistoryGetObservationRequest extends SourceHistoryDatasetRequestBase {
+export interface SourceHistoryGetObservationRequest extends SourceHistoryInstanceRequestBase {
   type: "source-history.get"
   observedAt: number
 }
 
-export interface SourceHistoryCompareObservationsRequest extends SourceHistoryDatasetRequestBase {
+export interface SourceHistoryCompareObservationsRequest extends SourceHistoryInstanceRequestBase {
   type: "source-history.compare"
   after: number
   before: number
@@ -86,7 +95,9 @@ export type SourceHistoryCommandRequest
     | SourceHistoryCompareObservationsRequest
 
 export type ExtensionConnectionCommandRequest
-  = | ExtensionConnectionFetchRequest
+  = | ExtensionConnectionBoardListRequest
+    | ExtensionConnectionFetchRequest
+    | ExtensionConnectionInstanceListRequest
     | ExtensionConnectionListRequest
     | ExtensionConnectionRunRequest
     | SourceHistoryCommandRequest
