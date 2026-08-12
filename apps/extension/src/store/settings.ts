@@ -163,14 +163,6 @@ export const settingsTabAtom = atom(
   },
 )
 
-export const chatProviderSettingsAtom = atom(
-  get => get(persistedDeviceStateAtom).chatProvider,
-  (get, set, chatProvider: PersistedDeviceState["chatProvider"]) => {
-    const state = get(persistedDeviceStateAtom)
-    set(persistedDeviceStateAtom, { ...state, chatProvider })
-  },
-)
-
 export function readCachedPersistedSettings(): PersistedSettings {
   return readCachedValue(persistedSettingsStorageOptions)
 }

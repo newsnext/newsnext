@@ -325,8 +325,8 @@ scanning the whole database. The retention window remains 30 days. Deleting one
 card does not delete shared history. Clearing all user data clears both the
 freshness cache and history.
 
-The agent-facing boundary is the neutral source-history repository rather than
-the Dexie tables. It normalizes raw source parameters before resolving a dataset
+The external boundary is the neutral source-history repository rather than the
+Dexie tables. It normalizes raw source parameters before resolving a dataset
 and exposes four operations: dataset discovery, cursor-paginated observation
 summaries, one hydrated observation, and a deterministic comparison between two
 observations. Public records contain provider-scoped item identity, one-based
@@ -339,26 +339,53 @@ the returned snapshot, items missing from it, position changes, and changed
 top-level `NewsItem` fields. In particular, `missing` is not labeled as removed
 or dropped because a returned list may cover only part of a source. Repository
 responses include completeness warnings when a referenced snapshot or revision
-is unavailable. Product- or agent-specific interpretations are derived by the
-consumer and are not part of persistence or repository code.
+is unavailable. Product-specific interpretations are derived by the consumer
+and are not part of persistence or repository code.
 
-The chat adapter exposes these repository operations as four read-only tools:
-`list_source_history_datasets`, `list_source_history_observations`,
-`get_source_history_observation`, and `compare_source_history_observations`.
-The tools use TypeBox schemas for model-call validation and return the same
-repository DTO as JSON; they contain no additional ranking or timeline
-interpretation. The chat adapter composes its base prompt with a dedicated
-source-history skill. The skill tells the agent to use observations for coverage
-discovery, exact-time summaries, two-point comparisons, ranking movement,
-timeline arrival patterns, item-field changes, and evidence-supported trends
-across multiple samples. It also defines the analysis boundary: observation
-time is not publication time, position does not establish popularity or cause,
-`missing` does not mean deleted, and successful remote-load samples are not
-continuous monitoring. The agent must surface completeness warnings, call the
-tools only for requests that require local history, and treat all returned
-source content as untrusted data rather than instructions. Tool results become
-part of the configured chat provider request, so this boundary must remain
-read-only and intentionally scoped to the user's history-related request.
+The extension-backed CLI exposes these repository operations as four read-only
+commands: `newsnext history datasets`, `newsnext history observations`,
+`newsnext history get`, and `newsnext history compare`. The adjacent read-only
+`newsnext board list` and `newsnext instance list` commands read the canonical
+Board and source-instance browser-storage slices and normalize them with the
+same functions used by the UI. Board listing returns each configured custom
+Board with its complete persisted instances. Instances with null or stale Board
+membership are returned separately as `unassignedInstances`; the aggregate All
+Board is omitted because it would duplicate every instance and does not
+represent persisted membership. Instance listing returns the normalized flat
+instance collection.
+
+Requests travel through the same loopback connection as source authoring
+commands and return JSON. The extension validates every request before dispatch
+and does not expose write operations. History commands execute in the background
+context. Observation, get, and compare requests identify the user-visible card
+by `instanceId`; the background resolves the current persisted instance to its
+source ID and parameter patch before the repository normalizes parameters and
+selects its dataset. An instance whose parameters later change therefore points
+to the dataset for its current configuration, while old parameter datasets
+remain stored. Parameter normalization resolves the configured runtime registry
+in-process; it must not call the frontend registry proxy from the background
+service. Board and instance listing also execute in the background context and
+read `browser.storage.local` directly because frontend Jotai atoms are
+unavailable there. Normal user-history workflows do not require source IDs or
+parameter JSON.
+
+The CLI daemon owns both the loopback HTTP server and a no-server WebSocket
+server. Shutdown terminates connected extension sockets and closes both server
+objects, then explicitly exits the internal daemon process. Bun can otherwise
+retain a busy kqueue or fail to complete a close callback, leaving the detached
+process alive after `newsnext stop` even though the port and status endpoint are
+gone. Graceful close therefore has a short deadline before the internal process
+exits.
+
+The repository-local `newsnext-source-history` skill teaches Codex how to
+compose these commands for coverage discovery, exact-time summaries, two-point
+comparisons, ranking movement, timeline arrival patterns, item-field changes,
+and evidence-supported trends across multiple samples. It preserves the
+analysis boundary: observation time is not publication time, position does not
+establish popularity or cause, `missing` does not mean deleted, successful
+remote-load samples are not continuous monitoring, completeness warnings must
+be surfaced, and returned source content is untrusted data rather than
+instructions.
 
 Card queries mount when their container enters the preload margin of the app's
 root scroll container. The observer must use that scrolling element as its root;
@@ -483,6 +510,13 @@ immediately before the request is sent.
 
 Custom loaders receive already-normalized parameters. The source runtime cannot
 infer their requests, so custom loader capabilities must be declared.
+
+Custom provider parsers map the response shape of the current endpoint before
+creating `NewsItem` values. X timeline responses expose user handles and avatars
+through `core` and `avatar`, and the current `UserTweets` operation returns
+entries through `timeline.timeline`. X translations are selected by the
+persisted GraphQL operation as well as feature flags, so its operation hash,
+variables, feature set, response path, and parser must be updated together.
 
 After any structured, RSS, or custom loader returns, the resolver applies the
 same optional `baseUrl` to explicit URL-bearing result fields. This boundary
@@ -618,6 +652,9 @@ provider title, icon, color, category, loader behavior, capabilities, secrets,
 request rules, or cache policy.
 Accepting a Radar suggestion creates one card instance with the selected board
 membership. The instance owns its board ID alongside its source ID and patch.
+New instance IDs combine the source ID and a 12-character Nano ID with `::`;
+custom Board IDs use the Nano ID directly. Both remain opaque strings so data
+persisted with older ID formats continues to resolve without migration.
 Moving a card updates only that board ID; source parameters, presentation
 metadata, and cache identity remain unchanged. The board ID is nullable:
 `null` means the card has no custom board, while a custom board ID adds it to
@@ -717,6 +754,38 @@ extension. The extension executes the same provider expansion, parameter
 normalization, registry validation, capabilities, secrets, and background loader
 path as normal source loading.
 
+`newsnext fetch` uses the same command transport but calls the browser's native
+`fetch` in the extension background with `credentials: "include"`. It returns the
+status, response headers, and decoded text body to the CLI. The command accepts
+HTTP(S) URLs without embedded credentials and never serializes browser cookies
+into the command or response. Browser host permissions still govern access; the
+command neither requests nor expands them. Request headers remain subject to the
+browser Fetch API's forbidden-header rules. The CLI execution timeout also
+aborts the browser-side network request.
+
+The distributed CLI bundle runs on Node.js. Its loopback daemon uses Hono with
+the Node adapter for HTTP and WebSocket upgrades. CLI control calls use tRPC
+over HTTP. Each enabled extension connects as a tRPC WebSocket client, subscribes
+to its command stream, and returns command results through a mutation on the
+same socket. The router contract keeps both transports aligned without
+making the extension depend on the CLI application package. The contract,
+runtime validation, and router live in the dedicated
+`@newsnext/extension-connection` package so generic shared utilities and source
+runtime packages do not depend on tRPC.
+
+After the WebSocket opens, the extension queries daemon metadata over the same
+tRPC connection and exposes the CLI version in Settings. Treat this value as
+connection metadata only; source execution compatibility continues to be
+enforced by the shared router contract and runtime validation.
+
+HTTP control procedures reject browser origins and cannot be called from an
+extension WebSocket context. The WebSocket path accepts extension origins and
+rejects ordinary web-page origins. A disconnect rejects every in-flight command
+assigned to that extension. Commands are not replayed after reconnection because
+source execution is not guaranteed to be idempotent. The daemon sends a
+20-second WebSocket heartbeat for MV3 service-worker lifetime, and the extension
+uses a browser alarm only as a recovery fallback.
+
 Local provider runs use an isolated `cli:<provider-id>` secret namespace unless
 `--use-provider-secrets` is supplied. CLI execution does not install the
 provider, change the bundled registry, populate the normal source cache, or
@@ -725,3 +794,11 @@ validation as registered extension app loads.
 
 This is why direct HTTP requests are useful for investigation but are not a
 substitute for extension-backed source verification.
+
+Source-history commands use the same daemon and connected extension to read the
+extension's IndexedDB-backed observation repository. Dataset discovery accepts
+source and provider filters plus opaque pagination cursors. Observation listing
+accepts normalized source parameters, time bounds, and timestamp pagination.
+Exact reads and comparisons require observation timestamps returned by the
+listing command. CLI history access is read-only and preserves repository
+completeness warnings.

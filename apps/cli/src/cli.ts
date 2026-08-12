@@ -11,7 +11,19 @@ import {
   runStopCommand,
 } from "./daemon"
 import { CliError } from "./errors"
+import { FETCH_ARGS, runFetchCommand } from "./fetch"
 import { writeLine } from "./io"
+import { JSON_LIST_ARGS, runJsonListCommand } from "./json-list"
+import {
+  runHistoryCompareCommand,
+  runHistoryDatasetsCommand,
+  runHistoryGetCommand,
+  runHistoryObservationsCommand,
+  SOURCE_HISTORY_COMPARE_ARGS,
+  SOURCE_HISTORY_DATASETS_ARGS,
+  SOURCE_HISTORY_GET_ARGS,
+  SOURCE_HISTORY_OBSERVATIONS_ARGS,
+} from "./source-history"
 import { runSourceListCommand, SOURCE_LIST_ARGS } from "./source-list"
 import { runSourceRunCommand } from "./source-run/command"
 import { SOURCE_RUN_ARGS } from "./source-run/options"
@@ -72,6 +84,14 @@ function createCommandSet(io: CliIO, setExitCode: ExitCodeHandler) {
     args: DAEMON_COMMAND_ARGS,
     run: ({ rawArgs }) => runWithExitCode(() => runStopCommand(rawArgs, io)),
   })
+  const fetch = defineCommand({
+    meta: {
+      name: "fetch",
+      description: "Fetch a URL in a connected extension with browser cookies",
+    },
+    args: FETCH_ARGS,
+    run: ({ rawArgs }) => runWithExitCode(() => runFetchCommand(rawArgs, io)),
+  })
   const sourceRun = defineCommand({
     meta: {
       name: "run",
@@ -80,6 +100,22 @@ function createCommandSet(io: CliIO, setExitCode: ExitCodeHandler) {
     args: SOURCE_RUN_ARGS,
     run: ({ rawArgs }) => runWithExitCode(() => runSourceRunCommand(rawArgs, io)),
   })
+  const boardList = defineCommand({
+    meta: {
+      name: "list",
+      description: "List saved boards with their card instances",
+    },
+    args: JSON_LIST_ARGS,
+    run: ({ rawArgs }) => runWithExitCode(() => runJsonListCommand(rawArgs, "board.list", io)),
+  })
+  const instanceList = defineCommand({
+    meta: {
+      name: "list",
+      description: "List saved card instances",
+    },
+    args: JSON_LIST_ARGS,
+    run: ({ rawArgs }) => runWithExitCode(() => runJsonListCommand(rawArgs, "instance.list", io)),
+  })
   const sourceList = defineCommand({
     meta: {
       name: "list",
@@ -87,6 +123,38 @@ function createCommandSet(io: CliIO, setExitCode: ExitCodeHandler) {
     },
     args: SOURCE_LIST_ARGS,
     run: ({ rawArgs }) => runWithExitCode(() => runSourceListCommand(rawArgs, io)),
+  })
+  const historyDatasets = defineCommand({
+    meta: {
+      name: "datasets",
+      description: "List locally stored history datasets",
+    },
+    args: SOURCE_HISTORY_DATASETS_ARGS,
+    run: ({ rawArgs }) => runWithExitCode(() => runHistoryDatasetsCommand(rawArgs, io)),
+  })
+  const historyObservations = defineCommand({
+    meta: {
+      name: "observations",
+      description: "List observation metadata for a saved card instance",
+    },
+    args: SOURCE_HISTORY_OBSERVATIONS_ARGS,
+    run: ({ rawArgs }) => runWithExitCode(() => runHistoryObservationsCommand(rawArgs, io)),
+  })
+  const historyGet = defineCommand({
+    meta: {
+      name: "get",
+      description: "Read an exact observation for a saved card instance",
+    },
+    args: SOURCE_HISTORY_GET_ARGS,
+    run: ({ rawArgs }) => runWithExitCode(() => runHistoryGetCommand(rawArgs, io)),
+  })
+  const historyCompare = defineCommand({
+    meta: {
+      name: "compare",
+      description: "Compare two observations for a saved card instance",
+    },
+    args: SOURCE_HISTORY_COMPARE_ARGS,
+    run: ({ rawArgs }) => runWithExitCode(() => runHistoryCompareCommand(rawArgs, io)),
   })
 
   let source: CommandDef
@@ -101,13 +169,79 @@ function createCommandSet(io: CliIO, setExitCode: ExitCodeHandler) {
   source = defineCommand({
     meta: {
       name: "source",
-      description: "Source authoring commands",
+      description: "Source commands",
     },
     default: "help",
     subCommands: {
       help: sourceHelp,
       list: sourceList,
       run: sourceRun,
+    },
+  })
+
+  let history: CommandDef
+  const historyHelp = defineCommand({
+    meta: {
+      name: "help",
+      description: "Show history command help",
+      hidden: true,
+    },
+    run: () => writeUsage(io, history),
+  })
+  history = defineCommand({
+    meta: {
+      name: "history",
+      description: "Inspect locally observed instance history",
+    },
+    default: "help",
+    subCommands: {
+      compare: historyCompare,
+      datasets: historyDatasets,
+      get: historyGet,
+      help: historyHelp,
+      observations: historyObservations,
+    },
+  })
+
+  let instance: CommandDef
+  const instanceHelp = defineCommand({
+    meta: {
+      name: "help",
+      description: "Show instance command help",
+      hidden: true,
+    },
+    run: () => writeUsage(io, instance),
+  })
+  instance = defineCommand({
+    meta: {
+      name: "instance",
+      description: "Inspect saved card instances",
+    },
+    default: "help",
+    subCommands: {
+      help: instanceHelp,
+      list: instanceList,
+    },
+  })
+
+  let board: CommandDef
+  const boardHelp = defineCommand({
+    meta: {
+      name: "help",
+      description: "Show board command help",
+      hidden: true,
+    },
+    run: () => writeUsage(io, board),
+  })
+  board = defineCommand({
+    meta: {
+      name: "board",
+      description: "Inspect saved boards and card instances",
+    },
+    default: "help",
+    subCommands: {
+      help: boardHelp,
+      list: boardList,
     },
   })
 
@@ -138,7 +272,11 @@ function createCommandSet(io: CliIO, setExitCode: ExitCodeHandler) {
     default: "help",
     subCommands: {
       __daemon: daemon,
+      board,
+      fetch,
       help: mainHelp,
+      history,
+      instance,
       restart,
       source,
       start,
@@ -147,7 +285,47 @@ function createCommandSet(io: CliIO, setExitCode: ExitCodeHandler) {
     },
   })
 
-  return { main, restart, source, sourceList, sourceRun, start, status, stop }
+  const helpWriters = new Map<string, () => Promise<void>>([
+    ["board", () => writeUsage(io, board)],
+    ["board list", () => writeUsage(io, boardList)],
+    ["fetch", () => writeUsage(io, fetch)],
+    ["history", () => writeUsage(io, history)],
+    ["history compare", () => writeUsage(io, historyCompare)],
+    ["history datasets", () => writeUsage(io, historyDatasets)],
+    ["history get", () => writeUsage(io, historyGet)],
+    ["history observations", () => writeUsage(io, historyObservations)],
+    ["instance", () => writeUsage(io, instance)],
+    ["instance list", () => writeUsage(io, instanceList)],
+    ["restart", () => writeUsage(io, restart)],
+    ["source", () => writeUsage(io, source)],
+    ["source list", () => writeUsage(io, sourceList)],
+    ["source run", () => writeUsage(io, sourceRun)],
+    ["start", () => writeUsage(io, start)],
+    ["status", () => writeUsage(io, status)],
+    ["stop", () => writeUsage(io, stop)],
+  ])
+
+  return {
+    board,
+    boardList,
+    helpWriters,
+    history,
+    historyCompare,
+    historyDatasets,
+    historyGet,
+    historyObservations,
+    instance,
+    instanceList,
+    main,
+    fetch,
+    restart,
+    source,
+    sourceList,
+    sourceRun,
+    start,
+    status,
+    stop,
+  }
 }
 
 export function createNewsnextCommand(
@@ -162,23 +340,9 @@ export async function runCli(args: string[], io: CliIO): Promise<number> {
   const commands = createCommandSet(io, value => exitCode = value)
 
   if (args.includes("--help") || args.includes("-h")) {
-    if (args[0] === "source" && args[1] === "list") {
-      await writeUsage(io, commands.sourceList)
-    } else if (args[0] === "source" && args[1] === "run") {
-      await writeUsage(io, commands.sourceRun)
-    } else if (args[0] === "source") {
-      await writeUsage(io, commands.source)
-    } else if (args[0] === "start") {
-      await writeUsage(io, commands.start)
-    } else if (args[0] === "restart") {
-      await writeUsage(io, commands.restart)
-    } else if (args[0] === "status") {
-      await writeUsage(io, commands.status)
-    } else if (args[0] === "stop") {
-      await writeUsage(io, commands.stop)
-    } else {
-      await writeUsage(io, commands.main)
-    }
+    const commandPath = args.slice(0, 2).filter(argument => !argument.startsWith("-")).join(" ")
+    const writeCommandUsage = commands.helpWriters.get(commandPath)
+    await (writeCommandUsage ? writeCommandUsage() : writeUsage(io, commands.main))
     return 0
   }
   if (args.length === 1 && (args[0] === "--version" || args[0] === "-V")) {

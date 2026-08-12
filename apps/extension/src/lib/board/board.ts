@@ -1,6 +1,7 @@
 import type { Color } from "@newsnext/shared/types"
 import type { BoardFilter } from "./filter"
 import type { BoardSortMode, BoardSortPreference } from "./sorting"
+import { createId } from "@/lib/id"
 import { createBoardSortPreference } from "./sorting"
 
 export const ALL_BOARD_ID = "all"
@@ -53,7 +54,7 @@ export function createBoard(
   filter?: BoardFilter,
 ): Board {
   return {
-    id: `board_${crypto.randomUUID()}`,
+    id: createId(),
     name: name.trim(),
     color,
     ...(filter ? { filter } : {}),

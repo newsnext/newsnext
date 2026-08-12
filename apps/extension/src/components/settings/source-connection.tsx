@@ -3,30 +3,35 @@ import { Card, CardContent } from "@newsnext/ui/components/card"
 import { Switch } from "@newsnext/ui/components/switch"
 import { useAtomValue } from "jotai"
 import { useCallback, useEffect, useState } from "react"
-import { useRelativeTime } from "@/hooks/useRelativeTime"
 import { createBackgroundClient } from "@/lib/background"
 import { withSourceConnectionEnabled } from "@/lib/settings"
 import { persistedDeviceStateAtom } from "@/store/settings"
 import { SettingsSection } from "./layout"
 
-const STATUS_LABELS: Record<SourceConnectionStatus["state"], string> = {
-  disabled: "Disabled",
-  connected: "Connected",
-  connecting: "Connecting",
-  disconnected: "Disconnected",
+interface StatusPresentation {
+  dotClassName: string
+  label: string
 }
 
-const STATUS_DOT_CLASSES: Record<SourceConnectionStatus["state"], string> = {
-  disabled: "bg-muted-foreground/50",
-  connected: "bg-emerald-500",
-  connecting: "bg-amber-500",
-  disconnected: "bg-destructive",
+const STATUS_PRESENTATION: Record<SourceConnectionStatus["state"], StatusPresentation> = {
+  disabled: { dotClassName: "bg-muted-foreground/50", label: "Disabled" },
+  connected: { dotClassName: "bg-emerald-500", label: "Connected" },
+  connecting: { dotClassName: "bg-amber-500", label: "Connecting" },
+  disconnected: { dotClassName: "bg-destructive", label: "Disconnected" },
+}
+
+const CHECKING_PRESENTATION: StatusPresentation = {
+  dotClassName: "bg-muted-foreground/50",
+  label: "Checking",
 }
 
 export function SourceConnectionSettings(): React.JSX.Element {
   const persistedDeviceState = useAtomValue(persistedDeviceStateAtom)
   const [status, setStatus] = useState<SourceConnectionStatus>()
   const [updating, setUpdating] = useState(false)
+  const state = status?.state
+  const isEnabled = state !== undefined && state !== "disabled"
+  const presentation = state ? STATUS_PRESENTATION[state] : CHECKING_PRESENTATION
 
   const refreshStatus = useCallback(async (): Promise<void> => {
     try {
@@ -42,14 +47,14 @@ export function SourceConnectionSettings(): React.JSX.Element {
   }, [refreshStatus])
 
   useEffect(() => {
-    if (!status?.enabled) {
+    if (!isEnabled) {
       return
     }
     const timer = setInterval(() => {
       void refreshStatus()
     }, 1_000)
     return () => clearInterval(timer)
-  }, [refreshStatus, status?.enabled])
+  }, [isEnabled, refreshStatus])
 
   const handleEnabledChange = useCallback(async (enabled: boolean): Promise<void> => {
     setUpdating(true)
@@ -66,73 +71,46 @@ export function SourceConnectionSettings(): React.JSX.Element {
     }
   }, [persistedDeviceState, refreshStatus])
 
-  const state = status?.state
-  const connectedRelativeTime = useRelativeTime({
-    date: status?.connectedAt ?? 0,
-  })
   return (
     <SettingsSection
-      title="CLI connection"
+      title="CLI access"
+      description="Allow the NewsNext CLI on this device to run sources in this browser."
     >
       <Card variant="subtle">
         <CardContent>
           <div className="flex items-center justify-between gap-4">
-            <div className="min-w-0">
-              <label htmlFor="source-connection-enabled" className="text-sm font-medium">
-                Enable CLI connection
-              </label>
-              <p id="source-connection-description" className="mt-1 text-xs leading-5 text-muted-foreground">
-                Allow the NewsNext CLI on this device to run sources in this browser.
-              </p>
+            <div
+              className="flex min-w-0 items-center gap-2 text-sm font-medium"
+              role="status"
+              aria-live="polite"
+            >
+              <span
+                aria-hidden="true"
+                className={`size-2 shrink-0 rounded-full ${presentation.dotClassName}`}
+              />
+              <span>{presentation.label}</span>
+              {state === "connected" && status?.cliVersion && (
+                <span className="font-mono text-xs font-normal text-muted-foreground">
+                  {`v${status.cliVersion}`}
+                </span>
+              )}
             </div>
             <Switch
-              id="source-connection-enabled"
-              checked={status?.enabled ?? false}
+              checked={isEnabled}
               disabled={!status || updating}
-              aria-describedby="source-connection-description"
+              aria-label="Enable CLI connection"
               onCheckedChange={enabled => void handleEnabledChange(enabled)}
             />
           </div>
 
-          <div
-            className="mt-4 border-t pt-3"
-            role="status"
-            aria-live="polite"
-          >
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-2 text-sm font-medium">
-                <span
-                  aria-hidden="true"
-                  className={`size-2 rounded-full ${state ? STATUS_DOT_CLASSES[state] : "bg-muted-foreground/50"}`}
-                />
-                {state ? STATUS_LABELS[state] : "Checking"}
-              </div>
-              {status?.connectedAt && (
-                <span className="text-xs text-muted-foreground">
-                  {connectedRelativeTime}
-                </span>
-              )}
-            </div>
-
-            {status?.enabled && (
-              <div className="mt-3 break-all font-mono text-xs text-muted-foreground">
-                {status.url}
-              </div>
-            )}
-            {state === "disabled" && (
-              <p className="mt-3 text-xs leading-5 text-muted-foreground">
-                Local CLI access stays off until you enable it here.
-              </p>
-            )}
-            {state === "disconnected" && (
-              <p className="mt-3 text-xs leading-5 text-muted-foreground">
-                The CLI is not listening. Run
-                {" "}
-                <code>newsnext source run &lt;source-id|provider.json&gt;</code>
-                .
-              </p>
-            )}
-          </div>
+          {state === "disconnected" && (
+            <p className="mt-3 border-t pt-3 text-xs leading-5 text-muted-foreground">
+              Start the local server with
+              {" "}
+              <code>newsnext start</code>
+              .
+            </p>
+          )}
         </CardContent>
       </Card>
     </SettingsSection>

@@ -8,6 +8,8 @@ import process from "node:process"
 import { fileURLToPath } from "node:url"
 import { parseArgs } from "citty"
 import { CliError } from "../errors"
+import { parseJsonObject } from "../json-options"
+import { collectRepeatedOption } from "../repeated-option"
 import {
   normalizeSourceConnectionOptions,
   SOURCE_CONNECTION_ARGS,
@@ -97,21 +99,6 @@ export type LoadedSourceRunTarget
       sourceId: string
     }
 
-function parseJsonObject(value: string, label: string): Record<string, unknown> {
-  let parsed: unknown
-  try {
-    parsed = JSON.parse(value) as unknown
-  } catch (error) {
-    const detail = error instanceof Error ? `: ${error.message}` : ""
-    throw new CliError(`Could not parse ${label} as JSON${detail}`, 2)
-  }
-
-  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-    throw new CliError(`${label} must be a JSON object`, 2)
-  }
-  return parsed as Record<string, unknown>
-}
-
 function parseParamValue(value: string): unknown {
   try {
     return JSON.parse(value) as unknown
@@ -135,26 +122,6 @@ function parseParamEntries(entries: string[] | undefined): Record<string, unknow
   }))
 }
 
-function collectRepeatedOption(args: string[], option: string): string[] {
-  const values: string[] = []
-  for (let index = 0; index < args.length; index++) {
-    const argument = args[index]
-    if (argument === undefined) continue
-
-    if (argument === option) {
-      const value = args[index + 1]
-      if (value === undefined || value.startsWith("-")) {
-        throw new CliError(`${option} requires a value`, 2)
-      }
-      values.push(value)
-      index++
-    } else if (argument.startsWith(`${option}=`)) {
-      values.push(argument.slice(option.length + 1))
-    }
-  }
-  return values
-}
-
 export function parseSourceRunOptions(args: string[]): SourceRunCommandOptions {
   let values: SourceRunValues & { _: string[] }
   try {
@@ -174,7 +141,7 @@ export function parseSourceRunOptions(args: string[]): SourceRunCommandOptions {
     ...(values.params !== undefined
       ? parseJsonObject(values.params, "--params")
       : {}),
-    ...parseParamEntries(collectRepeatedOption(args, "--param")),
+    ...parseParamEntries(collectRepeatedOption(args, ["--param"])),
   }
   const connection = normalizeSourceConnectionOptions(values)
 

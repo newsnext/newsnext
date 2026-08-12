@@ -1,7 +1,7 @@
 import type {
-  SourceConnectionProviderRunRequest,
-  SourceConnectionRegisteredRunRequest,
-} from "@newsnext/shared/types"
+  ExtensionConnectionProviderRunRequest,
+  ExtensionConnectionRegisteredRunRequest,
+} from "@newsnext/extension-connection"
 import type { ProviderConfig } from "@newsnext/source/registry"
 import type { NewsItem } from "@newsnext/source/types"
 import {
@@ -17,8 +17,8 @@ import { resolveSourceSecrets, updateSourceSecrets } from "./source-secrets"
 import { createBackgroundSourceService } from "./source-service"
 
 export type RunConnectedSourceInput
-  = | Omit<SourceConnectionRegisteredRunRequest, "id" | "type">
-    | Omit<SourceConnectionProviderRunRequest, "id" | "type">
+  = | Omit<ExtensionConnectionRegisteredRunRequest, "id" | "type">
+    | Omit<ExtensionConnectionProviderRunRequest, "id" | "type">
 
 export interface RunConnectedSourceOutput {
   data: NewsItem[]

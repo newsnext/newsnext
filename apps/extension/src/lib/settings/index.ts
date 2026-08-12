@@ -20,7 +20,6 @@ export {
   serializePersistedDataExport,
 } from "./persisted-data"
 export type {
-  ChatProviderSettings,
   PersistedDeviceState,
   PersistedSettings,
   SettingsTabId,
@@ -29,7 +28,6 @@ export type {
 export {
   createDefaultPersistedDeviceState,
   createDefaultPersistedSettings,
-  getChatProviderPermissionOrigin,
   normalizePersistedDeviceState,
   normalizePersistedSettings,
   withSourceConnectionEnabled,

@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest"
 import {
   applySourceLoaderMetadata,
   buildSourceCards,
-  createCardInstance,
+  createSourceInstance,
   getSourceCard,
   mergeSourceInstancePatch,
 } from "./cards"
@@ -53,7 +53,7 @@ const testSources: SourceDescriptor[] = [
 
 function createCustomInstance(patch: Partial<SourceInstance> = {}): SourceInstance {
   return {
-    instanceId: "test:feed::card_abc",
+    instanceId: "test:feed::AbCdEfGh1234",
     sourceId: "test:feed",
     boardId: null,
     patch: {},
@@ -72,8 +72,8 @@ describe("buildSourceCards", () => {
       ],
     })
 
-    expect(cards.ids).toEqual(["test:feed::card_abc"])
-    expect(cards.map["test:feed::card_abc"]).toMatchObject({
+    expect(cards.ids).toEqual(["test:feed::AbCdEfGh1234"])
+    expect(cards.map["test:feed::AbCdEfGh1234"]).toMatchObject({
       paramsValue: { topic: "custom" },
       sourceId: "test:feed",
     })
@@ -90,7 +90,7 @@ describe("buildSourceCards", () => {
       ],
     })
 
-    expect(cards.map["test:feed::card_abc"]).toMatchObject({
+    expect(cards.map["test:feed::AbCdEfGh1234"]).toMatchObject({
       metadata: {
         title: "Custom Radar Title",
       },
@@ -115,7 +115,7 @@ describe("buildSourceCards", () => {
       ],
     })
 
-    expect(cards.map["test:feed::card_abc"]).toMatchObject({
+    expect(cards.map["test:feed::AbCdEfGh1234"]).toMatchObject({
       metadata: {
         title: "Custom Title",
         badge: "https://custom.example.com/badge.png",
@@ -150,7 +150,7 @@ describe("buildSourceCards", () => {
       ],
     })
 
-    const card = cards.map["test:feed::card_abc"]
+    const card = cards.map["test:feed::AbCdEfGh1234"]
     expect(card).toBeDefined()
     expect(card?.provider).toEqual({
       title: "Test",
@@ -181,7 +181,7 @@ describe("buildSourceCards", () => {
       sourceInstances: [
         createCustomInstance(),
         createCustomInstance({
-          instanceId: "test:latest::card_def",
+          instanceId: "test:latest::ZyXwVuTs9876",
           sourceId: "test:latest",
           boardId: "reading",
         }),
@@ -189,8 +189,8 @@ describe("buildSourceCards", () => {
     })
 
     expect(cards.ids).toEqual([
-      "test:feed::card_abc",
-      "test:latest::card_def",
+      "test:feed::AbCdEfGh1234",
+      "test:latest::ZyXwVuTs9876",
     ])
   })
 
@@ -201,14 +201,14 @@ describe("buildSourceCards", () => {
       sourceInstances: [
         createCustomInstance(),
         createCustomInstance({
-          instanceId: "test:latest::card_def",
+          instanceId: "test:latest::ZyXwVuTs9876",
           sourceId: "test:latest",
           boardId: "reading",
         }),
       ],
     })
 
-    expect(cards.ids).toEqual(["test:latest::card_def"])
+    expect(cards.ids).toEqual(["test:latest::ZyXwVuTs9876"])
   })
 })
 
@@ -223,7 +223,7 @@ describe("applySourceLoaderMetadata", () => {
         }),
       ],
     })
-    const source = getSourceCard(cards, "test:feed::card_abc")
+    const source = getSourceCard(cards, "test:feed::AbCdEfGh1234")
 
     expect(applySourceLoaderMetadata(source, {
       title: "Loader title",
@@ -262,13 +262,13 @@ describe("mergeSourceInstancePatch", () => {
   })
 })
 
-describe("createCardInstance", () => {
+describe("createSourceInstance", () => {
   it("persists the supplied final patch without rebuilding it from a board source", () => {
     const patch = {
       params: { language: "typescript" },
       metadata: { title: "Trending TypeScript" },
     }
-    expect(createCardInstance("github:trending", "reading", patch)).toMatchObject({
+    expect(createSourceInstance("github:trending", "reading", patch)).toMatchObject({
       sourceId: "github:trending",
       boardId: "reading",
       patch,

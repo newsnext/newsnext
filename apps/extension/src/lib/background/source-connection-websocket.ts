@@ -1,25 +1,29 @@
 import type {
-  SourceConnectionRequest,
-  SourceConnectionResponse,
-  SourceConnectionRunRequest,
-  SourceConnectionSerializedError,
-} from "@newsnext/shared/types"
+  DaemonRouter,
+  ExtensionConnectionCommandRequest,
+  ExtensionConnectionCommandResult,
+  ExtensionConnectionFetchResponse,
+} from "@newsnext/extension-connection"
 import type { PersistedDeviceState } from "../settings/persisted-settings"
+import { createTRPCClient, createWSClient, wsLink } from "@trpc/client"
 import { browser } from "#imports"
 import { PERSISTED_DATA_SLICES } from "../settings/persisted-data"
 import {
   normalizePersistedDeviceState,
   withSourceConnectionEnabled,
 } from "../settings/persisted-settings"
+import {
+  listSourceHistoryDatasets,
+} from "../source/history/repository"
+import { listConnectedBoards } from "./board-list"
+import { executeInstanceHistoryRequest } from "./instance-history"
+import { listConnectedInstances } from "./instance-list"
+import { serializeSourceConnectionError } from "./source-connection-error"
 import { listConnectedSources, runConnectedSource } from "./source-runner"
 
 const DEFAULT_SOURCE_CONNECTION_WS_URL = "ws://127.0.0.1:43110"
 const SOURCE_CONNECTION_RECONNECT_ALARM = "source-connection-websocket-reconnect"
-const HEARTBEAT_INTERVAL_MS = 20_000
-const RECONNECT_DELAY_MS = 1_000
 const RECONNECT_ALARM_PERIOD_MINUTES = 0.5
-const WEBSOCKET_CONNECTING_STATE = 0
-const WEBSOCKET_OPEN_STATE = 1
 
 export type SourceConnectionState
   = | "disabled"
@@ -28,231 +32,156 @@ export type SourceConnectionState
     | "disconnected"
 
 export interface SourceConnectionStatus {
-  enabled: boolean
+  cliVersion?: string
   state: SourceConnectionState
-  url: string
-  connectedAt?: number
 }
 
-let socket: WebSocket | undefined
-let heartbeatTimer: ReturnType<typeof setInterval> | undefined
-let reconnectTimer: ReturnType<typeof setTimeout> | undefined
-let connectedAt: number | undefined
+type SourceConnectionClient = ReturnType<typeof createTRPCClient<DaemonRouter>>
+type SourceConnectionWebSocketClient = ReturnType<typeof createWSClient>
+type SourceConnectionSubscription = ReturnType<SourceConnectionClient["extension"]["commands"]["subscribe"]>
+
+let client: SourceConnectionClient | undefined
+let socketClient: SourceConnectionWebSocketClient | undefined
+let subscription: SourceConnectionSubscription | undefined
+let cliVersion: string | undefined
+let connectionState: SourceConnectionState = "disconnected"
 let enabled = false
 const instanceId = crypto.randomUUID()
 
-export function resolveSourceConnectionState(
-  readyState?: number,
-): SourceConnectionState {
-  if (readyState === WEBSOCKET_OPEN_STATE) {
-    return "connected"
+function getConnectionUrl(): string {
+  return import.meta.env.WXT_SOURCE_CONNECTION_WS_URL || DEFAULT_SOURCE_CONNECTION_WS_URL
+}
+
+async function executeFetchRequest(
+  request: Extract<ExtensionConnectionCommandRequest, { type: "fetch" }>,
+): Promise<ExtensionConnectionFetchResponse> {
+  const url = new URL(request.url)
+  const hasHostPermission = await browser.permissions.contains({
+    origins: [`${url.protocol}//${url.hostname}/*`],
+  })
+  if (!hasHostPermission) {
+    throw new Error(`Extension does not have host permission for ${url.origin}`)
   }
-  if (readyState === WEBSOCKET_CONNECTING_STATE) {
-    return "connecting"
+  const response = await fetch(request.url, {
+    method: request.method,
+    headers: request.headers,
+    body: request.body,
+    credentials: "include",
+    signal: AbortSignal.timeout(request.timeoutMs),
+  })
+  return {
+    status: response.status,
+    statusText: response.statusText,
+    headers: [...response.headers.entries()],
+    body: await response.text(),
   }
-  return "disconnected"
 }
 
 export function getSourceConnectionStatus(): SourceConnectionStatus {
   return {
-    enabled,
-    state: enabled ? resolveSourceConnectionState(socket?.readyState) : "disabled",
-    url: import.meta.env.WXT_SOURCE_CONNECTION_WS_URL || DEFAULT_SOURCE_CONNECTION_WS_URL,
-    connectedAt,
+    cliVersion,
+    state: enabled ? connectionState : "disabled",
   }
 }
 
-function getStringProperty(value: object, key: string): string | undefined {
-  const property = (value as Record<string, unknown>)[key]
-  return typeof property === "string" ? property : undefined
-}
-
-export function serializeSourceConnectionError(error: unknown): SourceConnectionSerializedError {
-  if (error instanceof Error) {
-    return {
-      name: error.name,
-      message: error.message,
-      stack: error.stack,
-      code: getStringProperty(error, "code"),
-      loginUrl: getStringProperty(error, "loginUrl"),
-    }
-  }
-
-  return {
-    name: "Error",
-    message: String(error),
-  }
-}
-
-function send(response: SourceConnectionResponse): void {
-  if (socket?.readyState === WebSocket.OPEN) {
-    socket.send(JSON.stringify(response))
+async function executeRequest(request: ExtensionConnectionCommandRequest): Promise<unknown> {
+  switch (request.type) {
+    case "board.list":
+      return await listConnectedBoards()
+    case "fetch":
+      return await executeFetchRequest(request)
+    case "instance.list":
+      return await listConnectedInstances()
+    case "source.list":
+      return (await listConnectedSources()).data
+    case "source.run":
+      return (await runConnectedSource(request)).data
+    case "source-history.datasets":
+      return await listSourceHistoryDatasets(request)
+    case "source-history.observations":
+    case "source-history.get":
+    case "source-history.compare":
+      return await executeInstanceHistoryRequest(request)
   }
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value)
-}
-
-export function parseSourceConnectionRequest(value: unknown): SourceConnectionRequest {
-  if (typeof value !== "string") {
-    throw new TypeError("Source connection messages must be JSON strings")
-  }
-
-  const request = JSON.parse(value) as unknown
-  if (!isRecord(request)) {
-    throw new Error("Invalid source run message")
-  }
-
-  if (request.type === "ping") {
-    return {
-      id: typeof request.id === "string" ? request.id : undefined,
-      type: "ping",
-    }
-  }
-  if (
-    request.type === "source.list"
-    && typeof request.id === "string"
-  ) {
-    return {
-      id: request.id,
-      type: "source.list",
-    }
-  }
-  if (
-    request.type === "source.run"
-    && typeof request.id === "string"
-    && typeof request.sourceId === "string"
-    && (request.params === undefined || isRecord(request.params))
-  ) {
-    if (request.providerId === undefined && request.provider === undefined) {
-      return {
-        id: request.id,
-        type: "source.run",
-        sourceId: request.sourceId,
-        params: request.params,
-      } satisfies SourceConnectionRunRequest
-    }
-    if (typeof request.providerId !== "string" || !isRecord(request.provider)) {
-      throw new Error("Unsupported source run message")
-    }
-    return {
-      id: request.id,
-      type: "source.run",
-      providerId: request.providerId,
-      sourceId: request.sourceId,
-      provider: request.provider,
-      params: request.params,
-      useProviderSecrets: request.useProviderSecrets === true,
-    } satisfies SourceConnectionRunRequest
-  }
-
-  throw new Error("Unsupported source run message")
-}
-
-async function handleMessage(event: MessageEvent): Promise<void> {
-  let request: SourceConnectionRequest
+async function executeCommand(
+  connection: SourceConnectionClient,
+  request: ExtensionConnectionCommandRequest,
+): Promise<void> {
+  let result: ExtensionConnectionCommandResult
   try {
-    request = parseSourceConnectionRequest(event.data)
-  } catch (error) {
-    console.error("Failed to parse source run message", error)
-    return
-  }
-
-  if (request.type === "ping") {
-    send({ id: request.id, type: "pong" })
-    return
-  }
-
-  try {
-    const result = request.type === "source.list"
-      ? await listConnectedSources()
-      : await runConnectedSource(request)
-    send({
+    result = {
       id: request.id,
-      type: "source.result",
       ok: true,
-      data: result.data,
-    })
+      data: await executeRequest(request),
+    }
   } catch (error) {
-    send({
+    result = {
       id: request.id,
-      type: "source.result",
       ok: false,
       error: serializeSourceConnectionError(error),
-    })
+    }
   }
-}
 
-function clearConnectionTimers(): void {
-  if (heartbeatTimer !== undefined) {
-    clearInterval(heartbeatTimer)
-    heartbeatTimer = undefined
-  }
-  if (reconnectTimer !== undefined) {
-    clearTimeout(reconnectTimer)
-    reconnectTimer = undefined
-  }
-}
-
-function scheduleReconnect(): void {
-  if (!enabled || reconnectTimer !== undefined) {
+  if (!enabled || client !== connection) {
     return
   }
-  reconnectTimer = setTimeout(() => {
-    reconnectTimer = undefined
-    connect()
-  }, RECONNECT_DELAY_MS)
+  await connection.extension.complete.mutate(result)
+}
+
+function disconnect(): void {
+  subscription?.unsubscribe()
+  subscription = undefined
+  socketClient?.close()
+  socketClient = undefined
+  client = undefined
+  cliVersion = undefined
+  connectionState = "disconnected"
 }
 
 function connect(): void {
-  if (
-    !enabled
-    || socket?.readyState === WebSocket.CONNECTING
-    || socket?.readyState === WebSocket.OPEN
-  ) {
+  if (!enabled || socketClient) {
     return
   }
 
-  clearConnectionTimers()
-  const nextSocket = new WebSocket(
-    import.meta.env.WXT_SOURCE_CONNECTION_WS_URL || DEFAULT_SOURCE_CONNECTION_WS_URL,
-  )
-  socket = nextSocket
-  nextSocket.addEventListener("open", () => {
-    if (!enabled || socket !== nextSocket) {
-      nextSocket.close()
-      return
-    }
-    connectedAt = Date.now()
-    send({
-      type: "ready",
-      instance: {
-        id: instanceId,
-        browser: import.meta.env.BROWSER,
-        extensionVersion: browser.runtime.getManifest().version,
-      },
-    })
-    heartbeatTimer = setInterval(() => {
-      send({ type: "ping" })
-    }, HEARTBEAT_INTERVAL_MS)
+  connectionState = "connecting"
+  cliVersion = undefined
+  const nextSocketClient = createWSClient({
+    connectionParams: () => ({
+      id: instanceId,
+      browser: import.meta.env.BROWSER,
+      extensionVersion: browser.runtime.getManifest().version,
+    }),
+    onClose: () => {
+      if (socketClient === nextSocketClient) {
+        connectionState = "disconnected"
+      }
+    },
+    onOpen: () => {
+      if (!enabled || socketClient !== nextSocketClient) {
+        nextSocketClient.close()
+        return
+      }
+      connectionState = "connected"
+    },
+    url: getConnectionUrl(),
   })
-  nextSocket.addEventListener("message", (event) => {
-    if (enabled && socket === nextSocket) {
-      void handleMessage(event)
-    }
+  const nextClient = createTRPCClient<DaemonRouter>({
+    links: [wsLink({ client: nextSocketClient })],
   })
-  nextSocket.addEventListener("close", () => {
-    if (socket !== nextSocket) {
-      return
+  socketClient = nextSocketClient
+  client = nextClient
+  void nextClient.extension.info.query().then((info) => {
+    if (enabled && client === nextClient) {
+      cliVersion = info.version
     }
-    socket = undefined
-    connectedAt = undefined
-    clearConnectionTimers()
-    scheduleReconnect()
-  })
-  nextSocket.addEventListener("error", () => {
-    nextSocket.close()
+  }).catch(() => undefined)
+  subscription = nextClient.extension.commands.subscribe(undefined, {
+    onData: request => void executeCommand(nextClient, request).catch((error) => {
+      console.error("Failed to return source connection result", error)
+    }),
+    onError: error => console.error("Source connection subscription failed", error),
   })
 }
 
@@ -270,11 +199,7 @@ async function applySourceConnectionEnabled(nextEnabled: boolean): Promise<void>
     return
   }
 
-  clearConnectionTimers()
-  connectedAt = undefined
-  const currentSocket = socket
-  socket = undefined
-  currentSocket?.close()
+  disconnect()
   await browser.alarms.clear(SOURCE_CONNECTION_RECONNECT_ALARM)
 }
 
@@ -298,7 +223,12 @@ export async function setSourceConnectionEnabled(
 
 export async function registerSourceConnectionWebSocket(): Promise<void> {
   browser.alarms.onAlarm.addListener((alarm) => {
-    if (enabled && alarm.name === SOURCE_CONNECTION_RECONNECT_ALARM) {
+    if (
+      enabled
+      && alarm.name === SOURCE_CONNECTION_RECONNECT_ALARM
+      && connectionState === "disconnected"
+    ) {
+      disconnect()
       connect()
     }
   })
@@ -306,9 +236,7 @@ export async function registerSourceConnectionWebSocket(): Promise<void> {
     const change = changes[PERSISTED_DATA_SLICES.deviceState.key]
     if (areaName === "local" && change) {
       const state = normalizePersistedDeviceState(change.newValue)
-      void applySourceConnectionEnabled(
-        state.sourceConnectionEnabled,
-      )
+      void applySourceConnectionEnabled(state.sourceConnectionEnabled)
     }
   })
 

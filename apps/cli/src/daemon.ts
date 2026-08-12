@@ -1,20 +1,17 @@
 import type {
   DaemonExecuteInput,
   DaemonExecuteResponse,
+  DaemonRouter,
   DaemonStatus,
-} from "./daemon-protocol"
+} from "@newsnext/extension-connection"
 import type { CliIO } from "./io"
 import type { SourceConnectionOptions } from "./source-connection-options"
 import { spawn } from "node:child_process"
 import { existsSync } from "node:fs"
 import process from "node:process"
+import { getDaemonEndpoint } from "@newsnext/extension-connection"
+import { createTRPCClient, httpLink, TRPCClientError } from "@trpc/client"
 import { parseArgs } from "citty"
-import {
-  DAEMON_EXECUTE_PATH,
-  DAEMON_STATUS_PATH,
-  DAEMON_STOP_PATH,
-  getDaemonEndpoint,
-} from "./daemon-protocol"
 import { CliError } from "./errors"
 import { writeLine } from "./io"
 import {
@@ -25,6 +22,7 @@ import { SourceConnectionRemoteError, SourceConnectionSession } from "./source-r
 const DAEMON_START_TIMEOUT_MS = 5_000
 const DAEMON_REQUEST_TIMEOUT_MS = 1_000
 const DAEMON_POLL_INTERVAL_MS = 50
+const DAEMON_SHUTDOWN_TIMEOUT_MS = 500
 
 interface DaemonCommandOptions {
   wsUrl: URL
@@ -59,25 +57,21 @@ function parseDaemonCommandOptions(args: string[]): DaemonCommandOptions {
   }
 }
 
-async function fetchDaemon(
+function createDaemonClient(
   wsUrl: URL,
-  pathname: string,
-  init?: RequestInit,
-  timeoutMs = DAEMON_REQUEST_TIMEOUT_MS,
-): Promise<Response> {
-  return await fetch(getDaemonEndpoint(wsUrl, pathname), {
-    ...init,
-    signal: AbortSignal.timeout(timeoutMs),
+): ReturnType<typeof createTRPCClient<DaemonRouter>> {
+  return createTRPCClient<DaemonRouter>({
+    links: [httpLink({
+      url: getDaemonEndpoint(wsUrl).href,
+    })],
   })
 }
 
 export async function getDaemonStatus(wsUrl: URL): Promise<DaemonStatus | undefined> {
   try {
-    const response = await fetchDaemon(wsUrl, DAEMON_STATUS_PATH)
-    if (!response.ok) {
-      return
-    }
-    return await response.json() as DaemonStatus
+    return await createDaemonClient(wsUrl).status.query(undefined, {
+      signal: AbortSignal.timeout(DAEMON_REQUEST_TIMEOUT_MS),
+    })
   } catch {
   }
 }
@@ -174,7 +168,9 @@ async function stopDaemon(options: DaemonCommandOptions, io: CliIO): Promise<num
     return 0
   }
 
-  await fetchDaemon(options.wsUrl, DAEMON_STOP_PATH, { method: "POST" })
+  await createDaemonClient(options.wsUrl).stop.mutate(undefined, {
+    signal: AbortSignal.timeout(DAEMON_REQUEST_TIMEOUT_MS),
+  })
   const remaining = await waitForDaemon(options.wsUrl, value => value === undefined)
   if (remaining) {
     throw new CliError(`Could not stop NewsNext server (PID ${remaining.pid})`)
@@ -197,30 +193,22 @@ export async function executeThroughDaemon(
   input: DaemonExecuteInput,
   options: Pick<SourceConnectionOptions, "wsUrl" | "timeoutMs">,
 ): Promise<Extract<DaemonExecuteResponse, { ok: true }>> {
-  let response: Response
+  let result: DaemonExecuteResponse
   try {
-    response = await fetchDaemon(
-      options.wsUrl,
-      DAEMON_EXECUTE_PATH,
-      {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(input),
-      },
-      options.timeoutMs + DAEMON_REQUEST_TIMEOUT_MS,
-    )
-  } catch {
+    result = await createDaemonClient(options.wsUrl).execute.mutate(input, {
+      signal: AbortSignal.timeout(options.timeoutMs + DAEMON_REQUEST_TIMEOUT_MS),
+    })
+  } catch (error) {
+    if (error instanceof TRPCClientError && error.data) {
+      throw new CliError(error.message)
+    }
     throw new CliError("NewsNext server is not running. Start it with: newsnext start")
   }
 
-  if (!response.ok) {
-    throw new CliError(`NewsNext server returned HTTP ${response.status}`)
-  }
-  const result = await response.json() as DaemonExecuteResponse
   if (result.ok) {
     return result
   }
-  if (result.kind === "source") {
+  if (result.kind === "extension") {
     throw new SourceConnectionRemoteError(result.error)
   }
   throw new CliError(result.error.message)
@@ -236,12 +224,16 @@ export async function runDaemon(args: string[]): Promise<number> {
   const session = new SourceConnectionSession(options.wsUrl, {
     onStop: () => stop?.(),
   })
+  await session.ready
   const handleSignal = (): void => stop?.()
   process.once("SIGINT", handleSignal)
   process.once("SIGTERM", handleSignal)
   await stopped
   process.off("SIGINT", handleSignal)
   process.off("SIGTERM", handleSignal)
-  await session.close()
-  return 0
+  await Promise.race([
+    session.close(),
+    delay(DAEMON_SHUTDOWN_TIMEOUT_MS),
+  ])
+  process.exit(0)
 }

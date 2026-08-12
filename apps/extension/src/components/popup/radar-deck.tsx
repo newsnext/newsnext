@@ -13,7 +13,7 @@ import { BoardMembershipSelect } from "@/components/common/board-membership-sele
 import { PhArrowCircleLeft, PhPlusCircle } from "@/components/icons/ph"
 import { ALL_BOARD_ID } from "@/lib/board"
 import { createRadarBoardSource } from "@/lib/radar"
-import { createCardInstance, mergeSourceInstancePatch } from "@/lib/source"
+import { createSourceInstance, mergeSourceInstancePatch } from "@/lib/source"
 import { cn } from "@/lib/utils"
 import { addInstanceAtom } from "@/store/board"
 import { currentBoardIdAtom } from "@/store/settings"
@@ -306,7 +306,7 @@ function RadarDeckContent({ sourceDescriptors, suggestions }: RadarDeckProps) {
       return
     }
 
-    addInstance(createCardInstance(
+    addInstance(createSourceInstance(
       activeSuggestion.sourceId,
       targetBoardId,
       mergeSourceInstancePatch(

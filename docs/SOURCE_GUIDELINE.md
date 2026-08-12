@@ -591,6 +591,20 @@ capabilities: {
 }
 ```
 
+When a timeline API groups related items into modules or conversations, inspect
+both top-level entries and nested module items. Normalize both shapes through
+one shared parser before mapping them to news items; otherwise list and thread
+timelines can appear to load successfully while returning no items.
+
+When one page represents multiple independent sources, give each source its own
+Radar rule for that page. Radar can then return every matching source instead of
+forcing discovery to choose one stream.
+
+When a source offers original and translated text, expose the choice as a
+parameter. Use the selected variant as the item title and place the other
+available variant in `preview.text`. Fall back to the original when a
+translation is unavailable.
+
 A loader always returns a `SourceLoaderResult` object:
 
 ```ts
@@ -939,7 +953,7 @@ Runtime registries accept declarative JSON, HTML, and RSS loaders only.
 Prototype-related source ID segments and JMESPath properties are rejected.
 
 Use the extension-backed CLI to validate live behavior. Enable
-**Settings → General → CLI Connection**, then start the local server:
+**Settings → CLI connection**, then start the local server:
 
 ```sh
 bun run newsnext start
@@ -968,7 +982,51 @@ list with:
 bun run newsnext source run --help
 ```
 
-Direct requests are useful for endpoint investigation, but they do not verify
+Fetch an endpoint directly from the connected extension when investigating
+authentication, headers, or raw responses:
+
+```sh
+bun run newsnext fetch https://example.com/api
+bun run newsnext fetch https://example.com/api \
+  -H 'Accept: application/json' -i
+```
+
+The request runs in the extension background and uses the browser's cookie jar.
+The target must already have host permission; the CLI never grants permissions.
+`-X` selects a method, `-H` adds a repeatable header, `-d` supplies a text body,
+and `-i` includes response status and headers. Browser-managed cookies cannot be
+overridden with a `Cookie` header. Use this command for raw endpoint debugging,
+then run `source run` to verify the complete source behavior.
+
+Inspect the successful source observations stored by the extension:
+
+```sh
+bun run newsnext board list
+bun run newsnext instance list
+bun run newsnext history observations github:trending::V1StGXR8_Z5j
+bun run newsnext history get github:trending::V1StGXR8_Z5j 1786212000000
+bun run newsnext history compare github:trending::V1StGXR8_Z5j \
+  1786212000000 1786215600000
+```
+
+Use `board list` when starting from a user-visible Board, or `instance list`
+when the Board is irrelevant. History commands accept the saved `instanceId`;
+the extension resolves its current source and parameter patch and normalizes
+the parameters internally. This keeps CLI results aligned with the card the
+user sees and avoids manually copying source parameters. If an instance's
+parameters change, its ID selects the dataset for its current configuration;
+older parameter configurations remain separate stored datasets.
+
+`board list` groups instances under their configured custom Board and reports
+instances without valid custom Board membership in `unassignedInstances`; the
+aggregate All Board is not duplicated. Observation times may be Unix
+milliseconds or ISO 8601 values. List `observations` before using exact
+timestamps with `get` or `compare`. The read-only `history datasets` command is
+available for storage diagnostics. Add `--compact` when consuming JSON
+programmatically. History responses include completeness warnings when retained
+data cannot fully reconstruct a result.
+
+Direct `fetch` requests are useful for endpoint investigation, but they do not verify
 parameter parsing, extension permissions, capability enforcement, secrets, or
 the background runtime.
 

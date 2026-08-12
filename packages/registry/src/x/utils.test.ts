@@ -1,0 +1,147 @@
+import type { XTweetResult } from "./types"
+import { describe, expect, it } from "vitest"
+import {
+  entriesToNewsItems,
+  getTimelineEntries,
+} from "./utils"
+
+function createTweet(id: string, screenName: string): XTweetResult {
+  return {
+    __typename: "Tweet",
+    rest_id: id,
+    core: {
+      user_results: {
+        result: {
+          avatar: {
+            image_url: `https://pbs.twimg.com/profile_images/${id}/avatar_normal.jpg`,
+          },
+          core: {
+            screen_name: screenName,
+          },
+        },
+      },
+    },
+    legacy: {
+      created_at: "Tue Aug 11 08:48:53 +0000 2026",
+      favorite_count: 1,
+      full_text: `Tweet ${id}`,
+    },
+    grok_translated_post_with_availability: {
+      is_available: true,
+      data: {
+        translation: `Translated tweet ${id}`,
+      },
+    },
+  }
+}
+
+describe("getTimelineEntries", () => {
+  it("parses direct tweets with the current X user shape", () => {
+    const entries = getTimelineEntries([
+      {
+        entries: [
+          {
+            entryId: "tweet-2087098918509457746",
+            content: {
+              itemContent: {
+                tweet_results: {
+                  result: createTweet("2087098918509457746", "jesselaunz"),
+                },
+              },
+            },
+          },
+        ],
+      },
+    ])
+
+    expect(entriesToNewsItems(entries)).toEqual([
+      expect.objectContaining({
+        title: "Tweet 2087098918509457746",
+        url: "https://x.com/jesselaunz/status/2087098918509457746",
+        inline: {
+          text: "1 like",
+          icon: {
+            src: "https://pbs.twimg.com/profile_images/2087098918509457746/avatar_normal.jpg",
+            radius: 999,
+          },
+        },
+        preview: {
+          text: "Translated tweet 2087098918509457746",
+        },
+      }),
+    ])
+
+    expect(entriesToNewsItems(entries, { textMode: "translation" })).toEqual([
+      expect.objectContaining({
+        title: "Translated tweet 2087098918509457746",
+        preview: {
+          text: "Tweet 2087098918509457746",
+        },
+      }),
+    ])
+  })
+
+  it("parses tweets nested inside timeline conversation modules", () => {
+    const entries = getTimelineEntries([
+      {
+        entries: [
+          {
+            entryId: "profile-conversation-2087102520374591488",
+            content: {
+              items: [
+                {
+                  entryId: "profile-conversation-2087102520374591488-tweet-2087081719090614299",
+                  item: {
+                    itemContent: {
+                      tweet_results: {
+                        result: createTweet("2087081719090614299", "op7418"),
+                      },
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    ])
+
+    expect(entries.map(entry => entry.entryId)).toEqual([
+      "profile-conversation-2087102520374591488",
+      "profile-conversation-2087102520374591488-tweet-2087081719090614299",
+    ])
+    expect(entriesToNewsItems(entries)).toEqual([
+      expect.objectContaining({
+        title: "Tweet 2087081719090614299",
+        url: "https://x.com/op7418/status/2087081719090614299",
+        inline: {
+          text: "1 like",
+          icon: {
+            src: "https://pbs.twimg.com/profile_images/2087081719090614299/avatar_normal.jpg",
+            radius: 999,
+          },
+        },
+      }),
+    ])
+  })
+
+  it("falls back to original text when a translation is unavailable", () => {
+    const tweet = createTweet("2086353229894529148", "thsottiaux")
+    delete tweet.grok_translated_post_with_availability
+
+    expect(entriesToNewsItems([
+      {
+        entryId: "tweet-2086353229894529148",
+        content: {
+          itemContent: {
+            tweet_results: { result: tweet },
+          },
+        },
+      },
+    ], { textMode: "translation" })).toEqual([
+      expect.objectContaining({
+        title: "Tweet 2086353229894529148",
+      }),
+    ])
+  })
+})

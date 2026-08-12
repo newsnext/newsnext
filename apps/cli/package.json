@@ -5,21 +5,30 @@
   "private": true,
   "license": "MPL-2.0",
   "bin": {
-    "newsnext": "./src/index.ts"
+    "newsnext": "./dist/newsnext.js"
+  },
+  "engines": {
+    "node": ">=20"
   },
   "scripts": {
-    "build": "bun build src/index.ts --target bun --outfile dist/newsnext.js",
+    "build": "bun build src/index.ts --target node --outfile dist/newsnext.js",
     "dev": "bun run src/index.ts restart",
     "newsnext": "bun run src/index.ts",
     "test": "vitest run --root ../.. apps/cli",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@newsnext/shared": "workspace:*",
-    "citty": "^0.2.2"
+    "@hono/node-server": "^2.1.0",
+    "@newsnext/extension-connection": "workspace:*",
+    "@trpc/client": "catalog:",
+    "@trpc/server": "catalog:",
+    "citty": "^0.2.2",
+    "hono": "^4.13.1",
+    "ws": "^8.21.0"
   },
   "devDependencies": {
     "@newsnext/tsconfigs": "workspace:*",
+    "@types/ws": "^8.18.1",
     "vitest": "catalog:"
   }
 }

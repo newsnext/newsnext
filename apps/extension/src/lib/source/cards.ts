@@ -6,6 +6,7 @@ import type { BoardSource, SourceDescriptor } from "@/typings/source"
 import { SOURCE_PRESENTATION_METADATA_KEYS } from "@newsnext/source"
 import { pick } from "es-toolkit"
 import { ALL_BOARD_ID } from "@/lib/board"
+import { createId } from "@/lib/id"
 
 export interface SourceInstance {
   instanceId: string
@@ -41,13 +42,6 @@ export function mergeSourceInstancePatch(
   }
 }
 
-function createCardInstanceId(sourceId: string): string {
-  const bytes = new Uint8Array(8)
-  crypto.getRandomValues(bytes)
-  const id = Array.from(bytes, byte => byte.toString(36).padStart(2, "0")).join("")
-  return `${sourceId}::card_${id}`
-}
-
 function applyInstanceOverrides(
   source: BoardSource,
   instance: SourceInstance,
@@ -77,19 +71,17 @@ export function createBoardSource(
   }, instance)
 }
 
-export function createCardInstance(
+export function createSourceInstance(
   sourceId: string,
   boardId: string | null,
   patch: SourceInstancePatch,
 ): SourceInstance {
-  const now = Date.now()
-
   return {
-    instanceId: createCardInstanceId(sourceId),
+    instanceId: `${sourceId}::${createId()}`,
     sourceId,
     boardId,
     patch,
-    createdAt: now,
+    createdAt: Date.now(),
   }
 }
 

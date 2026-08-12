@@ -1,0 +1,129 @@
+interface ExtensionConnectionRunRequestBase {
+  id: string
+  type: "source.run"
+  sourceId: string
+  params?: Record<string, unknown>
+}
+
+export interface ExtensionConnectionRegisteredRunRequest extends ExtensionConnectionRunRequestBase {
+  providerId?: never
+  provider?: never
+  useProviderSecrets?: never
+}
+
+export interface ExtensionConnectionProviderRunRequest extends ExtensionConnectionRunRequestBase {
+  providerId: string
+  provider: unknown
+  useProviderSecrets?: boolean
+}
+
+export type ExtensionConnectionRunRequest
+  = | ExtensionConnectionRegisteredRunRequest
+    | ExtensionConnectionProviderRunRequest
+
+export interface ExtensionConnectionListRequest {
+  id: string
+  type: "source.list"
+}
+
+export interface ExtensionConnectionBoardListRequest {
+  id: string
+  type: "board.list"
+}
+
+export interface ExtensionConnectionInstanceListRequest {
+  id: string
+  type: "instance.list"
+}
+
+export interface ExtensionConnectionFetchRequest {
+  id: string
+  type: "fetch"
+  url: string
+  method: string
+  headers: [string, string][]
+  timeoutMs: number
+  body?: string
+}
+
+export interface ExtensionConnectionFetchResponse {
+  status: number
+  statusText: string
+  headers: [string, string][]
+  body: string
+}
+
+interface SourceHistoryRequestBase {
+  id: string
+}
+
+export interface SourceHistoryListDatasetsRequest extends SourceHistoryRequestBase {
+  type: "source-history.datasets"
+  cursor?: string
+  limit?: number
+  providerId?: string
+  sourceId?: string
+}
+
+interface SourceHistoryInstanceRequestBase extends SourceHistoryRequestBase {
+  instanceId: string
+}
+
+export interface SourceHistoryListObservationsRequest extends SourceHistoryInstanceRequestBase {
+  type: "source-history.observations"
+  cursor?: number
+  from?: number
+  limit?: number
+  to?: number
+}
+
+export interface SourceHistoryGetObservationRequest extends SourceHistoryInstanceRequestBase {
+  type: "source-history.get"
+  observedAt: number
+}
+
+export interface SourceHistoryCompareObservationsRequest extends SourceHistoryInstanceRequestBase {
+  type: "source-history.compare"
+  after: number
+  before: number
+}
+
+export type SourceHistoryCommandRequest
+  = | SourceHistoryListDatasetsRequest
+    | SourceHistoryListObservationsRequest
+    | SourceHistoryGetObservationRequest
+    | SourceHistoryCompareObservationsRequest
+
+export type ExtensionConnectionCommandRequest
+  = | ExtensionConnectionBoardListRequest
+    | ExtensionConnectionFetchRequest
+    | ExtensionConnectionInstanceListRequest
+    | ExtensionConnectionListRequest
+    | ExtensionConnectionRunRequest
+    | SourceHistoryCommandRequest
+
+export interface ExtensionConnectionInstance {
+  id: string
+  browser: string
+  extensionVersion: string
+}
+
+export interface ExtensionConnectionSerializedError {
+  message: string
+  name: string
+  stack?: string
+  code?: string
+  loginUrl?: string
+}
+
+export type ExtensionConnectionCommandResult
+  = | {
+    id: string
+    ok: true
+    data?: unknown
+  }
+  | {
+    id: string
+    ok: false
+    error: ExtensionConnectionSerializedError
+  }
