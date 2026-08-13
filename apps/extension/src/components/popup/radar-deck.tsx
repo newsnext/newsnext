@@ -2,7 +2,7 @@ import type { MotionValue, PanInfo } from "motion/react"
 import type { CSSProperties, PointerEvent } from "react"
 import type { RadarSuggestion } from "@/lib/radar"
 import type { SourceInstancePatch } from "@/lib/source"
-import type { BoardSource, SourceDescriptor } from "@/typings/source"
+import type { CardViewModel, SourceDescriptor } from "@/typings/source"
 import { Button } from "@newsnext/ui/components/button"
 import confetti from "canvas-confetti"
 import { useAtomValue, useSetAtom } from "jotai"
@@ -11,9 +11,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { SourceCard } from "@/components/card"
 import { BoardMembershipSelect } from "@/components/common/board-membership-select"
 import { PhArrowCircleLeft, PhPlusCircle } from "@/components/icons/ph"
+import { useAsyncAction } from "@/hooks/use-async-action"
 import { ALL_BOARD_ID } from "@/lib/board"
 import { createRadarBoardSource } from "@/lib/radar"
-import { createSourceInstance, mergeSourceInstancePatch } from "@/lib/source"
+import { mergeSourceInstancePatch } from "@/lib/source"
 import { cn } from "@/lib/utils"
 import { addInstanceAtom } from "@/store/board"
 import { currentBoardIdAtom } from "@/store/settings"
@@ -27,7 +28,7 @@ const RADAR_CARD_Y_OUTPUT = [20, 0, 20]
 const RADAR_CELEBRATION_DURATION = 900
 const RADAR_DECK_NAV_BUTTON_CLASS_NAME = "border-0 text-xl opacity-50 hover:opacity-85 active:not-aria-[haspopup]:translate-y-0"
 const RADAR_REDUCED_MOTION_CELEBRATION_DURATION = 180
-const RADAR_CONFETTI_COLORS: Record<BoardSource["provider"]["color"], string> = {
+const RADAR_CONFETTI_COLORS: Record<CardViewModel["provider"]["color"], string> = {
   red: "#f87171",
   pink: "#f472b6",
   fuchsia: "#e879f9",
@@ -52,7 +53,7 @@ interface RadarActionStyle extends CSSProperties {
   "--radar-action-chip-text": string
 }
 
-function getRadarActionStyle(color: BoardSource["provider"]["color"]): RadarActionStyle {
+function getRadarActionStyle(color: CardViewModel["provider"]["color"]): RadarActionStyle {
   return {
     "--radar-action-card-bg": `color-mix(in oklab, var(--color-${color}-400) 40%, transparent)`,
     "--radar-action-card-bg-hover": `color-mix(in oklab, var(--color-${color}-400) 52%, transparent)`,
@@ -61,7 +62,7 @@ function getRadarActionStyle(color: BoardSource["provider"]["color"]): RadarActi
 }
 
 interface RadarConfettiOptions {
-  color: BoardSource["provider"]["color"]
+  color: CardViewModel["provider"]["color"]
   originElement: HTMLElement | null
 }
 
@@ -93,7 +94,7 @@ function launchRadarConfetti({ color, originElement }: RadarConfettiOptions): vo
 }
 
 interface RadarSourceCardProps {
-  source: BoardSource
+  source: CardViewModel
   className?: string
   onDraftSourceChange?: (patch: SourceInstancePatch) => void
 }
@@ -116,7 +117,7 @@ function RadarSourceCard({ source, className, onDraftSourceChange }: RadarSource
 
 interface RadarTrackCardProps {
   index: number
-  source: BoardSource
+  source: CardViewModel
   trackItemOffset: number
   x: MotionValue<number>
   onDragHandlePointerDown: (event: PointerEvent<HTMLDivElement>) => void
@@ -193,6 +194,9 @@ function RadarDeckContent({ sourceDescriptors, suggestions }: RadarDeckProps) {
   const [trackItemOffset, setTrackItemOffset] = useState(1)
   const [hasMeasuredDeck, setHasMeasuredDeck] = useState(false)
   const [isCreated, setIsCreated] = useState(false)
+  const { error: createError, isPending: isCreating, run: runCreate } = useAsyncAction(
+    "The card could not be created.",
+  )
   const actionRef = useRef<HTMLDivElement>(null)
   const deckRef = useRef<HTMLDivElement>(null)
   const resizeObserverRef = useRef<ResizeObserver | null>(null)
@@ -301,22 +305,24 @@ function RadarDeckContent({ sourceDescriptors, suggestions }: RadarDeckProps) {
     touchAction: "pan-y" as const,
   }), [x])
 
-  const handleCreate = useCallback(() => {
+  const handleCreate = useCallback(async () => {
     if (isCreated || !activeSuggestion || !activeSource) {
       return
     }
 
-    addInstance(createSourceInstance(
-      activeSuggestion.sourceId,
-      targetBoardId,
-      mergeSourceInstancePatch(
-        activeSuggestion.patch,
-        draftPatches[activeSuggestion.id] ?? {},
-      ),
-    ))
-    launchRadarConfetti({ color: activeSource.provider.color, originElement: actionRef.current })
-    setIsCreated(true)
-  }, [activeSource, activeSuggestion, addInstance, draftPatches, isCreated, targetBoardId])
+    await runCreate(async () => {
+      await addInstance({
+        collectionId: targetBoardId,
+        sourceId: activeSuggestion.sourceId,
+        patch: mergeSourceInstancePatch(
+          activeSuggestion.patch,
+          draftPatches[activeSuggestion.id] ?? {},
+        ),
+      })
+      launchRadarConfetti({ color: activeSource.provider.color, originElement: actionRef.current })
+      setIsCreated(true)
+    })
+  }, [activeSource, activeSuggestion, addInstance, draftPatches, isCreated, runCreate, targetBoardId])
 
   const handleActiveDraftSourceChange = useCallback((patch: SourceInstancePatch) => {
     if (!activeSuggestion) {
@@ -391,7 +397,7 @@ function RadarDeckContent({ sourceDescriptors, suggestions }: RadarDeckProps) {
           <Button
             size="sm"
             onClick={handleCreate}
-            disabled={isCreated}
+            disabled={isCreated || isCreating}
             aria-label="Create card"
             title="Create card"
             className="flex h-8 items-center gap-1 rounded-3xl bg-(--radar-action-card-bg) px-3 py-0.5 text-xs font-semibold transition-colors hover:bg-(--radar-action-card-bg-hover) hover:text-foreground"
@@ -399,6 +405,7 @@ function RadarDeckContent({ sourceDescriptors, suggestions }: RadarDeckProps) {
             <PhPlusCircle className="text-sm text-(--radar-action-chip-text)" />
             Create card
           </Button>
+          {createError && <span role="alert" className="text-xs text-destructive">{createError}</span>}
         </div>
         <div className="flex shrink-0 items-center gap-1">
           <Button

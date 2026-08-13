@@ -10,8 +10,10 @@ export type {
   PersistedUserData,
 } from "./persisted-data"
 export {
+  hasPersistedUserDataSlice,
   mergePersistedUserData,
-  normalizeBoards,
+  normalizeApplicationData,
+  normalizeCollections,
   normalizeSourceInstances,
   parsePersistedDataExport,
   PERSISTED_DATA_SLICES,

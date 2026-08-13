@@ -3,8 +3,9 @@ import { normalizeSourceParams } from "@newsnext/source/runtime"
 import { useIsFetching, useQueryClient } from "@tanstack/react-query"
 import { useStore } from "jotai"
 import { useCallback, useSyncExternalStore } from "react"
+import { ALL_BOARD_ID } from "@/lib/board"
 import { buildSourceCards, FETCH_LATEST_MINIMUM_FEEDBACK_MS, getSourceCard, loadSourceDescriptors } from "@/lib/source"
-import { instancesAtom } from "@/store/board"
+import { collectionEntriesAtom, instancesAtom } from "@/store/board"
 import { currentBoardIdAtom } from "@/store/settings"
 import {
   fetchLatestSourceQuery,
@@ -124,12 +125,18 @@ export function useFetchLatest() {
   const fetchLatest = useCallback(async () => {
     try {
       const instances = store.get(instancesAtom)
+      const collectionEntries = store.get(collectionEntriesAtom)
       const currentBoardId = store.get(currentBoardIdAtom)
       const sources = await loadSourceDescriptors()
       const cards = buildSourceCards({
         sources,
         sourceInstances: instances,
-        boardId: currentBoardId,
+        collectionId: currentBoardId === ALL_BOARD_ID ? null : currentBoardId,
+        collectionInstanceIds: currentBoardId === ALL_BOARD_ID
+          ? undefined
+          : collectionEntries
+              .filter(entry => entry.collectionId === currentBoardId)
+              .map(entry => entry.instanceId),
       })
       const targets = cards.ids.map((id) => {
         const source = getSourceCard(cards, id)

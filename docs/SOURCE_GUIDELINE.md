@@ -974,14 +974,14 @@ Messaging transport.
 Run a registered source:
 
 ```sh
-bun run newsnext source run github:trending
+bun run newsnext run github:trending
 ```
 
 Run a local provider, optionally choosing a source and parameters:
 
 ```sh
-bun run newsnext source run packages/registry/src/hackernews.json top
-bun run newsnext source run packages/registry/src/telegram.json \
+bun run newsnext run packages/registry/src/hackernews.json top
+bun run newsnext run packages/registry/src/telegram.json \
   --param channel=telegram
 ```
 
@@ -990,7 +990,7 @@ Useful options include `--params`, `--watch`, `--browser`, `--timeout`,
 list with:
 
 ```sh
-bun run newsnext source run --help
+bun run newsnext run --help
 ```
 
 Fetch an endpoint directly from the connected extension when investigating
@@ -1007,31 +1007,69 @@ The target must already have host permission; the CLI never grants permissions.
 `-X` selects a method, `-H` adds a repeatable header, `-d` supplies a text body,
 and `-i` includes response status and headers. Browser-managed cookies cannot be
 overridden with a `Cookie` header. Use this command for raw endpoint debugging,
-then run `source run` to verify the complete source behavior.
+then run `run` to verify the complete source behavior.
 
 Inspect the successful source observations stored by the extension:
 
 ```sh
-bun run newsnext board list
-bun run newsnext instance list
+bun run newsnext query execute collection.list
+bun run newsnext query execute instance.list
 bun run newsnext history observations github:trending::V1StGXR8_Z5j
 bun run newsnext history get github:trending::V1StGXR8_Z5j 1786212000000
 bun run newsnext history compare github:trending::V1StGXR8_Z5j \
   1786212000000 1786215600000
 ```
 
-Use `board list` when starting from a user-visible Board, or `instance list`
-when the Board is irrelevant. History commands accept the saved `instanceId`;
-the extension resolves its current source and parameter patch and normalizes
-the parameters internally. This keeps CLI results aligned with the card the
-user sees and avoids manually copying source parameters. If an instance's
-parameters change, its ID selects the dataset for its current configuration;
-older parameter configurations remain separate stored datasets.
+Discover and use the canonical application control surface:
 
-`board list` groups instances under their configured custom Board and reports
-instances without valid custom Board membership in `unassignedInstances`; the
-aggregate All Board is not duplicated. Observation times may be Unix
-milliseconds or ISO 8601 values. List `observations` before using exact
+```sh
+bun run newsnext action list
+bun run newsnext query list
+bun run newsnext query execute source.list
+bun run newsnext query execute source.get --input \
+  '{"sourceId":"github:trending"}'
+bun run newsnext query execute collection.list
+bun run newsnext query execute view.getContext
+bun run newsnext query execute view.getCollection --input \
+  '{"collectionId":"COLLECTION_ID"}'
+bun run newsnext query execute view.getVisibleCards
+bun run newsnext action execute collection.create --input \
+  '{"name":"Research","view":{"color":"blue","sortMode":"createdAt"}}'
+bun run newsnext action execute collection.update --input \
+  '{"collectionId":"COLLECTION_ID","name":"Research queue","view":{"color":"purple"}}'
+bun run newsnext action execute view.configureCollection --input \
+  '{"collectionId":"COLLECTION_ID","color":"blue","sortMode":"createdAt"}'
+bun run newsnext action execute instance.create --input \
+  '{"sourceId":"github:trending","collectionId":null,"patch":{"params":{"language":"typescript"}}}'
+```
+
+Catalog listings include descriptions and JSON input/output schemas. Every
+execute input must be a JSON object. The extension performs runtime shape and
+domain validation, then uses the same Application Action or Query as the UI.
+Enabling CLI access permits destructive operations such as
+`collection.delete` and `instance.delete`; inspect `action list` before
+automation and use stable Data identities rather than Board labels.
+
+Use `collection.create` with its nested `view` object when creation includes
+Board preferences, and `collection.update` when one intent changes Collection
+data and Board preferences together. These composite Actions persist once and
+cannot be interleaved with another UI or Agent mutation. Use
+`view.configureCollection` only for a View-only change.
+
+Use `query execute view.getContext` when starting from the currently visible
+Board, then `query execute collection.listInstances --input
+'{"collectionId":"COLLECTION_ID"}'` for a custom Board. Use `query execute
+instance.list` when the Board is irrelevant. History commands accept the saved
+`instanceId`; the extension resolves its current source and parameter patch and
+normalizes the parameters internally. This keeps CLI results aligned with the
+Card the user sees and avoids manually copying source parameters. If an
+Instance's parameters change, its ID selects the dataset for its current
+configuration; older parameter configurations remain separate stored datasets.
+
+Application Queries return canonical Collections and Instances without a
+parallel CLI-only Board representation. An Instance may be returned by several
+Collection queries when it has several memberships. Observation times may be
+Unix milliseconds or ISO 8601 values. List `observations` before using exact
 timestamps with `get` or `compare`. The read-only `history datasets` command is
 available for storage diagnostics. Add `--compact` when consuming JSON
 programmatically. History responses include completeness warnings when retained
@@ -1051,6 +1089,6 @@ Before submitting:
 - Use milliseconds for timestamps and text instead of HTML when possible.
 - Add Radar rules for parameterized sources when appropriate.
 - Regenerate registry artifacts.
-- Validate the source through `newsnext source run`.
+- Validate the source through `newsnext run`.
 - Run `bun run typecheck`, `bun run test`, and `git diff --check`.
 - Update this guide whenever source authoring behavior changes.

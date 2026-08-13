@@ -1,122 +1,151 @@
+import type { PersistedUserData } from "./persisted-data"
 import { describe, expect, it } from "vitest"
 import {
   mergePersistedUserData,
-  normalizeBoards,
+  normalizeApplicationData,
   parsePersistedDataExport,
   serializePersistedDataExport,
 } from "./persisted-data"
 import { createDefaultPersistedSettings } from "./persisted-settings"
 
+function createData(): PersistedUserData {
+  return {
+    settings: createDefaultPersistedSettings(),
+    collections: [{ id: "reading", name: "Reading", createdAt: 1 }],
+    collectionViews: [{
+      collectionId: "reading",
+      color: "blue",
+      filter: { mode: "exclude", keywords: ["spoiler"] },
+      sortMode: "manual",
+      automaticSortMode: "createdAt",
+    }],
+    collectionEntries: [{
+      collectionId: "reading",
+      instanceId: "rss:feed::R5xK2mN8qP4s",
+      addedAt: 1,
+      position: 0,
+    }],
+    instances: [{
+      instanceId: "rss:feed::R5xK2mN8qP4s",
+      sourceId: "rss:feed",
+      patch: { params: { url: "https://example.com/feed.xml" } },
+      createdAt: 1,
+    }],
+  }
+}
+
 describe("persisted user data", () => {
-  it("round-trips portable settings, boards, instances, and sort preferences", () => {
-    const data = {
-      settings: createDefaultPersistedSettings(),
-      boards: [
-        {
-          id: "reading",
-          name: "Reading",
-          color: "blue" as const,
-          filter: {
-            mode: "exclude" as const,
-            keywords: ["spoiler", "rumor"],
-          },
-          sort: {
-            mode: "manual" as const,
-            automaticMode: "createdAt" as const,
-            manualOrder: ["rss:feed::R5xK2mN8qP4s"],
-          },
-        },
+  it("enforces canonical IDs, names, and contiguous membership positions", () => {
+    const data = normalizeApplicationData({
+      collections: [
+        { id: "reading", name: "Reading", createdAt: 1 },
+        { id: "duplicate", name: "reading", createdAt: 2 },
+        { id: "", name: "Invalid", createdAt: 3 },
       ],
-      instances: [{
-        instanceId: "rss:feed::R5xK2mN8qP4s",
-        sourceId: "rss:feed",
-        boardId: "reading",
-        patch: { params: { url: "https://example.com/feed.xml" } },
-        createdAt: 1,
-      }],
-    }
-
-    expect(parsePersistedDataExport(serializePersistedDataExport(data)))
-      ?.toEqual(expect.objectContaining({ data }))
-  })
-
-  it("rejects another export kind or version", () => {
-    expect(parsePersistedDataExport(JSON.stringify({
-      kind: "other-app",
-      version: 1,
-      data: {},
-    }))).toBeUndefined()
-    expect(parsePersistedDataExport(JSON.stringify({
-      kind: "newsnext-user-data",
-      version: 2,
-      data: {},
-    }))).toBeUndefined()
-    expect(parsePersistedDataExport(JSON.stringify({
-      kind: "newsnext-user-data",
-      version: 1,
-      data: {},
-    }))).toBeUndefined()
-  })
-
-  it("exports only selected data slices", () => {
-    const data = {
-      settings: createDefaultPersistedSettings(),
-      boards: [],
-      instances: [],
-    }
-
-    expect(parsePersistedDataExport(
-      serializePersistedDataExport(data, ["boards"]),
-    )?.data).toEqual({ boards: data.boards })
-  })
-
-  it("merges selected data and repairs cross-slice references", () => {
-    const settings = createDefaultPersistedSettings()
-    settings.general.defaultBoardId = "reading"
-    const current = {
-      settings,
-      boards: [
-        {
-          id: "reading",
-          name: "Reading",
-          sort: { mode: "createdAt" as const, automaticMode: "createdAt" as const, manualOrder: [] },
-        },
+      collectionViews: [],
+      instances: [
+        { instanceId: "second", sourceId: "rss:feed", patch: {}, createdAt: 2 },
+        { instanceId: "first", sourceId: "rss:feed", patch: {}, createdAt: 1 },
+        { instanceId: "", sourceId: "rss:feed", patch: {}, createdAt: 3 },
       ],
-      instances: [{
-        instanceId: "rss:feed::R5xK2mN8qP4s",
-        sourceId: "rss:feed",
-        boardId: "reading",
-        patch: {},
-        createdAt: 1,
-      }],
-    }
-
-    const merged = mergePersistedUserData(current, {
-      boards: [],
+      collectionEntries: [
+        { collectionId: "reading", instanceId: "second", addedAt: 2, position: 9 },
+        { collectionId: "reading", instanceId: "first", addedAt: 1, position: 4 },
+        { collectionId: "reading", instanceId: "first", addedAt: 1, position: -1 },
+      ],
     })
 
-    expect(merged.settings.general.defaultBoardId).toBe("all")
-    expect(merged.instances[0]?.boardId).toBeNull()
+    expect(data.collections.map(collection => collection.id)).toEqual(["reading"])
+    expect(data.instances.map(instance => instance.instanceId)).toEqual(["second", "first"])
+    expect(data.collectionEntries).toEqual([
+      { collectionId: "reading", instanceId: "first", addedAt: 1, position: 0 },
+      { collectionId: "reading", instanceId: "second", addedAt: 2, position: 1 },
+    ])
   })
 
-  it("deduplicates boards and discards persisted All board settings", () => {
-    expect(normalizeBoards([
-      {
-        id: "all",
-        name: "Renamed All",
+  it("round-trips Collections, memberships, Instances, Views, and settings", () => {
+    const data = createData()
+    expect(parsePersistedDataExport(serializePersistedDataExport(data))?.data).toEqual(data)
+  })
+
+  it("imports legacy v1 Board and Instance exports into Collections", () => {
+    const settings = createDefaultPersistedSettings()
+    const imported = parsePersistedDataExport(JSON.stringify({
+      kind: "newsnext-user-data",
+      version: 1,
+      data: {
+        settings,
+        boards: [{
+          id: "reading",
+          name: "Reading",
+          color: "blue",
+          sort: {
+            mode: "manual",
+            automaticMode: "provider",
+            manualOrder: ["rss:feed::legacy"],
+          },
+        }],
+        instances: [{
+          instanceId: "rss:feed::legacy",
+          sourceId: "rss:feed",
+          boardId: "reading",
+          patch: {},
+          createdAt: 10,
+        }],
+      },
+    }))
+
+    expect(imported?.version).toBe(2)
+    expect(imported?.data).toMatchObject({
+      collections: [{ id: "reading", name: "Reading", createdAt: 0 }],
+      collectionViews: [{
+        collectionId: "reading",
         color: "blue",
-        filter: { mode: "include", keywords: ["saved"] },
-        sort: { mode: "manual", automaticMode: "provider", manualOrder: ["saved"] },
-      },
-      { id: "reading", name: "Reading" },
-      { id: "reading", name: "Duplicate" },
-      { id: 42, name: "Invalid" },
-    ])).toEqual([
-      {
-        id: "reading",
-        name: "Reading",
-        sort: { mode: "createdAt", automaticMode: "createdAt", manualOrder: [] },
-      },
-    ])
+        sortMode: "manual",
+        automaticSortMode: "provider",
+      }],
+      collectionEntries: [{
+        collectionId: "reading",
+        instanceId: "rss:feed::legacy",
+        addedAt: 10,
+        position: 0,
+      }],
+      instances: [{
+        instanceId: "rss:feed::legacy",
+        sourceId: "rss:feed",
+        patch: {},
+        createdAt: 10,
+      }],
+    })
+  })
+
+  it("rejects another export kind or unsupported version", () => {
+    expect(parsePersistedDataExport(JSON.stringify({ kind: "other-app", version: 2, data: {} })))
+      .toBeUndefined()
+    expect(parsePersistedDataExport(JSON.stringify({ kind: "newsnext-user-data", version: 3, data: {} })))
+      .toBeUndefined()
+  })
+
+  it("exports Board and Instance slices independently", () => {
+    const data = createData()
+    expect(parsePersistedDataExport(serializePersistedDataExport(data, ["boards"]))?.data)
+      .toEqual({
+        collections: data.collections,
+        collectionEntries: data.collectionEntries,
+        collectionViews: data.collectionViews,
+      })
+  })
+
+  it("repairs memberships after a partial import", () => {
+    const current = createData()
+    current.settings.general.defaultBoardId = "reading"
+    const merged = mergePersistedUserData(current, {
+      collections: [],
+      collectionEntries: [],
+      collectionViews: [],
+    })
+    expect(merged.settings.general.defaultBoardId).toBe("all")
+    expect(merged.collectionEntries).toEqual([])
+    expect(merged.instances).toEqual(current.instances)
   })
 })

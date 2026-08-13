@@ -4,24 +4,28 @@ import {
 } from "."
 
 describe("extension connection protocol", () => {
-  it("parses board list requests", () => {
+  it("parses application operation requests", () => {
     expect(parseExtensionConnectionCommandRequest({
-      id: "board-list",
-      type: "board.list",
+      id: "action-id",
+      type: "application.action.execute",
+      name: "collection.delete",
+      input: { collectionId: "reading" },
     })).toEqual({
-      id: "board-list",
-      type: "board.list",
+      id: "action-id",
+      type: "application.action.execute",
+      name: "collection.delete",
+      input: { collectionId: "reading" },
     })
-  })
-
-  it("parses instance list requests", () => {
     expect(parseExtensionConnectionCommandRequest({
-      id: "instance-list",
-      type: "instance.list",
-    })).toEqual({
-      id: "instance-list",
-      type: "instance.list",
-    })
+      id: "query-id",
+      type: "application.query.list",
+    })).toEqual({ id: "query-id", type: "application.query.list" })
+    expect(() => parseExtensionConnectionCommandRequest({
+      id: "action-id",
+      type: "application.action.execute",
+      name: "collection.delete",
+      input: null,
+    })).toThrow("Invalid extension command")
   })
 
   it("validates command-specific fields", () => {

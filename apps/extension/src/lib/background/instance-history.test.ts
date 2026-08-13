@@ -9,7 +9,6 @@ function createInstance(
   return {
     instanceId,
     sourceId: "github:trending",
-    boardId: "technology",
     patch: { params },
     createdAt: 1,
   }

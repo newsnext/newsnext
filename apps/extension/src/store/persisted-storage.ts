@@ -5,26 +5,44 @@ interface MirroredStorageOptions<Value> {
   defaultValue: () => Value
   key: string
   normalize: (value: unknown) => Value
+  readOnly?: boolean
 }
 
 export function createMirroredStorage<Value>(
   options: MirroredStorageOptions<Value>,
 ): SyncStorage<Value> {
+  let lastKnownSerialized: string | undefined
+
+  function cacheValue(value: Value): void {
+    lastKnownSerialized = serializeValue(value)
+    writeCachedValue(options, value)
+  }
+
+  function readValue(): Value {
+    const value = readCachedValue(options)
+    lastKnownSerialized = serializeValue(value)
+    return value
+  }
+
   return {
-    getItem: () => readCachedValue(options),
+    getItem: readValue,
     setItem: (_key, value) => {
       const normalized = options.normalize(value)
-      writeCachedValue(options, normalized)
-      void browser.storage.local.set({ [options.key]: normalized }).catch(() => undefined)
+      cacheValue(normalized)
+      if (!options.readOnly) {
+        void browser.storage.local.set({ [options.key]: normalized }).catch(() => undefined)
+      }
     },
     removeItem: () => {
+      lastKnownSerialized = undefined
       localStorage.removeItem(options.key)
-      void browser.storage.local.remove(options.key).catch(() => undefined)
+      if (!options.readOnly) {
+        void browser.storage.local.remove(options.key).catch(() => undefined)
+      }
     },
     subscribe: (_key, callback) => {
       let active = true
-      const initialValue = readCachedValue(options)
-      const initialSerialized = serializeValue(initialValue)
+      readValue()
       const handleStorageChange: Parameters<
         typeof browser.storage.onChanged.addListener
       >[0] = (changes, areaName): void => {
@@ -34,16 +52,19 @@ export function createMirroredStorage<Value>(
         }
 
         const value = options.normalize(change.newValue)
-        if (localStorage.getItem(options.key) === serializeValue(value)) {
+        const serialized = serializeValue(value)
+        if (lastKnownSerialized === serialized) {
           return
         }
-        writeCachedValue(options, value)
+        cacheValue(value)
         callback(value)
       }
 
       browser.storage.onChanged.addListener(handleStorageChange)
       void reconcileValue(options).then((value) => {
-        if (active && serializeValue(value) !== initialSerialized) {
+        const serialized = serializeValue(value)
+        if (active && serialized !== lastKnownSerialized) {
+          cacheValue(value)
           callback(value)
         }
       }).catch(() => undefined)
@@ -89,14 +110,16 @@ async function reconcileValue<Value>(
   if (canonical !== undefined) {
     const value = options.normalize(canonical)
     writeCachedValue(options, value)
-    if (JSON.stringify(value) !== JSON.stringify(canonical)) {
+    if (!options.readOnly && JSON.stringify(value) !== JSON.stringify(canonical)) {
       await browser.storage.local.set({ [options.key]: value })
     }
     return value
   }
 
   const value = readCachedValue(options)
-  await browser.storage.local.set({ [options.key]: value })
+  if (!options.readOnly) {
+    await browser.storage.local.set({ [options.key]: value })
+  }
   return value
 }
 

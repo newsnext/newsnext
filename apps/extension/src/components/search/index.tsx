@@ -1,6 +1,7 @@
 import type { ReactNode } from "react"
 import type { Board } from "@/lib/board"
-import type { BoardSource } from "@/typings/source"
+import type { CollectionEntry } from "@/lib/collection"
+import type { CardViewModel } from "@/typings/source"
 import { Button } from "@newsnext/ui/components/button"
 import {
   Command,
@@ -37,7 +38,7 @@ import {
   getSourceCard,
   readPersistedSourceCache,
 } from "@/lib/source"
-import { boardsAtom, instancesAtom } from "@/store/board"
+import { boardsAtom, collectionEntriesAtom, instancesAtom } from "@/store/board"
 import { shortcutSettingsAtom } from "@/store/settings"
 import { SourceIcon } from "../card/source-icon"
 import { PhMagnifyingGlass } from "../icons/ph"
@@ -45,27 +46,40 @@ import { PhMagnifyingGlass } from "../icons/ph"
 interface SearchGroup {
   id: string
   name: string
-  items: BoardSource[]
+  items: CardViewModel[]
   targetBoardId: string
 }
 
-function groupSearchItems(searchSources: BoardSource[], boards: Board[]): SearchGroup[] {
-  const itemsByBoardId = new Map<string, BoardSource[]>()
+function groupSearchItems(
+  searchSources: CardViewModel[],
+  boards: Board[],
+  collectionEntries: CollectionEntry[],
+): SearchGroup[] {
+  const itemsByBoardId = new Map<string, CardViewModel[]>()
   const knownBoardIds = new Set(
     boards.filter(board => board.id !== ALL_BOARD_ID).map(board => board.id),
   )
-  const noBoardItems: BoardSource[] = []
+  const noBoardItems: CardViewModel[] = []
+  const collectionIdsByInstance = new Map<string, string[]>()
+  for (const entry of collectionEntries) {
+    const collectionIds = collectionIdsByInstance.get(entry.instanceId) ?? []
+    collectionIds.push(entry.collectionId)
+    collectionIdsByInstance.set(entry.instanceId, collectionIds)
+  }
 
   searchSources.forEach((source) => {
-    const boardId = source.boardId
-    if (!boardId || !knownBoardIds.has(boardId)) {
+    const collectionIds = (collectionIdsByInstance.get(source.id) ?? [])
+      .filter(collectionId => knownBoardIds.has(collectionId))
+    if (collectionIds.length === 0) {
       noBoardItems.push(source)
       return
     }
 
-    const items = itemsByBoardId.get(boardId) ?? []
-    items.push(source)
-    itemsByBoardId.set(boardId, items)
+    for (const collectionId of collectionIds) {
+      const items = itemsByBoardId.get(collectionId) ?? []
+      items.push({ ...source, collectionId })
+      itemsByBoardId.set(collectionId, items)
+    }
   })
 
   const boardGroups = boards.flatMap((board) => {
@@ -99,7 +113,7 @@ function revealCard(id: string, attemptsRemaining = 20): void {
   }
 }
 
-function SearchSourceIcon({ source }: { source: BoardSource }): ReactNode {
+function SearchSourceIcon({ source }: { source: CardViewModel }): ReactNode {
   const icon = useSourceIcon(source)
 
   return (
@@ -131,7 +145,7 @@ export function SearchDialog(): ReactNode {
     },
   )
 
-  async function handleSelectItem(source: BoardSource, targetBoardId: string): Promise<void> {
+  async function handleSelectItem(source: CardViewModel, targetBoardId: string): Promise<void> {
     setOpen(false)
     await navigate({ to: "/board/$boardId", params: { boardId: targetBoardId } })
     revealCard(source.id)
@@ -164,14 +178,15 @@ export function SearchDialog(): ReactNode {
 function SearchDialogContent({
   onSelectItem,
 }: {
-  onSelectItem: (source: BoardSource, targetBoardId: string) => void
+  onSelectItem: (source: CardViewModel, targetBoardId: string) => void
 }): ReactNode {
   const boards = useAtomValue(boardsAtom)
+  const collectionEntries = useAtomValue(collectionEntriesAtom)
   const instances = useAtomValue(instancesAtom)
   const queryClient = useQueryClient()
   const { sources } = useSourceDescriptors()
 
-  const searchSources = useMemo<BoardSource[]>(() => {
+  const searchSources = useMemo<CardViewModel[]>(() => {
     if (!sources.length) {
       return []
     }
@@ -179,7 +194,7 @@ function SearchDialogContent({
     const cards = buildSourceCards({
       sources,
       sourceInstances: instances,
-      boardId: ALL_BOARD_ID,
+      collectionId: null,
     })
 
     return cards.ids.map(id => getSourceCard(cards, id))
@@ -233,8 +248,8 @@ function SearchDialogContent({
   )
 
   const searchGroups = useMemo(
-    () => groupSearchItems(resolvedSearchItems, boards),
-    [boards, resolvedSearchItems],
+    () => groupSearchItems(resolvedSearchItems, boards, collectionEntries),
+    [boards, collectionEntries, resolvedSearchItems],
   )
 
   return (
@@ -250,7 +265,7 @@ export function SearchModalContent({
   onSelectItem,
 }: {
   groups: SearchGroup[]
-  onSelectItem: (source: BoardSource, targetBoardId: string) => void
+  onSelectItem: (source: CardViewModel, targetBoardId: string) => void
 }): ReactNode {
   return (
     <DialogContent
@@ -298,7 +313,7 @@ export function SearchModalContent({
                       style={{
                         "--search-item-active": `color-mix(in oklab, var(--color-${source.provider.color}-400) 18%, transparent)`,
                       } as React.CSSProperties}
-                      value={source.id}
+                      value={`${group.id}:${source.id}`}
                       keywords={[
                         source.id,
                         source.provider.title,

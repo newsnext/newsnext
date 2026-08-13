@@ -1,9 +1,9 @@
 import type { BoardFilter } from "@/lib/board"
-import type { BoardSource, NewsItem } from "@/typings/source"
+import type { CardViewModel, NewsItem } from "@/typings/source"
 import { createContext, use } from "react"
 
 export interface BoardSourceItems {
-  card: BoardSource
+  card: CardViewModel
   filter?: BoardFilter
   id: string
   items: NewsItem[]

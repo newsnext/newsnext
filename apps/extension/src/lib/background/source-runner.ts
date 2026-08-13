@@ -8,10 +8,7 @@ import {
   flattenProviderConfig,
   resolveSourceRegistry,
 } from "@newsnext/source/registry"
-import {
-  loadSourceDescriptors,
-  normalizeSourceParams,
-} from "@newsnext/source/runtime"
+import { normalizeSourceParams } from "@newsnext/source/runtime"
 import { createBackgroundSourceFetch } from "./source-fetch"
 import { resolveSourceSecrets, updateSourceSecrets } from "./source-secrets"
 import { createBackgroundSourceService } from "./source-service"
@@ -22,10 +19,6 @@ export type RunConnectedSourceInput
 
 export interface RunConnectedSourceOutput {
   data: NewsItem[]
-}
-
-export interface ListConnectedSourcesOutput {
-  data: string[]
 }
 
 function assertIdSegment(value: unknown, name: string): asserts value is string {
@@ -39,13 +32,6 @@ export function getConnectedSourceSecretProviderId(
   useProviderSecrets = false,
 ): string {
   return useProviderSecrets ? providerId : `cli:${providerId}`
-}
-
-export async function listConnectedSources(): Promise<ListConnectedSourcesOutput> {
-  const sources = await loadSourceDescriptors()
-  return {
-    data: sources.map(source => source.id).sort(),
-  }
 }
 
 export async function runConnectedSource(

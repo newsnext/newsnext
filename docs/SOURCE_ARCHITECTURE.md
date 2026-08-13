@@ -132,17 +132,19 @@ DuckDuckGo, and custom templates available. The extension persists the selected
 preset and template as a local user setting. This keeps third-party favicon
 service URLs out of provider definitions and the generated registry while
 allowing instance-specific home overrides to select the matching icon. The
-preference is part of the portable Settings slice. Settings, Board items, and
-source instances are separate
-versioned slices so they can be updated and synchronized without rewriting one
-monolithic value. Each Board item owns its sort mode and manual source order,
-so Board export, deletion, and synchronization cannot detach that state from
-its owner. Extension pages read synchronous `localStorage`
+preference is part of the portable Settings slice. Application Data persists
+Collections, Collection entries, Collection Views, and source Instances in one
+normalized envelope. An Instance never stores a Board identifier. Collection
+entries own membership and manual position; Collection Views own Board color,
+filtering, and sort mode. Extension pages read synchronous `localStorage`
 snapshots first, then reconcile them with canonical copies in
 `browser.storage.local`; background storage wins when both copies exist.
 A versioned `newsnext-user-data` envelope validates and combines the portable
-slices for import and export. Current board selection, CLI connectivity, browser
-permissions, and caches are device-local and are not part of that envelope.
+slices for import and export. Version 2 exports Application Data; version 1
+files remain accepted only at the import boundary, where Boards and
+`Instance.boardId` values become Collections, Views, and entries. Current board
+selection, CLI connectivity, browser permissions, and caches are device-local
+and are not part of that envelope.
 The Settings data reset restores every persisted slice to its default, deletes
 the device-local source-secret and IndexedDB source-result caches, clears active
 source queries, and revokes user-granted optional browser and host permissions.
@@ -344,28 +346,52 @@ and are not part of persistence or repository code.
 
 The extension-backed CLI exposes these repository operations as four read-only
 commands: `newsnext history datasets`, `newsnext history observations`,
-`newsnext history get`, and `newsnext history compare`. The adjacent read-only
-`newsnext board list` and `newsnext instance list` commands read the canonical
-Board and source-instance browser-storage slices and normalize them with the
-same functions used by the UI. Board listing returns each configured custom
-Board with its complete persisted instances. Instances with null or stale Board
-membership are returned separately as `unassignedInstances`; the aggregate All
-Board is omitted because it would duplicate every instance and does not
-represent persisted membership. Instance listing returns the normalized flat
-instance collection.
+`newsnext history get`, and `newsnext history compare`. Collection and Instance
+discovery goes through the canonical Query catalog, including
+`collection.list`, `collection.listInstances`, `instance.list`, and the
+`view.*` context Queries. There are no separate Native or CLI Board/Instance
+listing protocols; adapters return the same Data identities and View references
+as every other Query consumer.
+
+The same transport exposes canonical application control through
+`newsnext action list`, `newsnext action execute`, `newsnext query list`, and
+`newsnext query execute`. Catalog listing returns stable names, descriptions,
+and JSON input/output schemas. Execute requests carry a name and JSON object;
+the extension parses that object through the canonical catalog before calling
+the same Action executor or Query implementation used by the frontend. Agent
+Source discovery and frontend Source picker discovery both execute
+`source.list` through this boundary; there is no parallel Registry or Native
+listing service. Native and frontend Action writes enter the same background
+queue, are normalized and
+persisted to `browser.storage.local`, and propagate to open extension pages
+through read-only storage subscriptions. Bulk import and reset use the same
+queued background repository replacement rather than setting frontend atoms.
+Composite Collection create/update and manual-order Actions apply their Data
+and View changes to one in-memory envelope and perform one storage write.
+Action transports return only compact receipts; the updated envelope reaches
+each frontend through its own subscription state rather than a duplicate proxy
+payload.
+The Application Data mirror never initializes or normalizes browser storage
+from a frontend page; the background runtime is the only persistent writer.
+`view.getContext` resolves the current Board to its Collection identity, while
+`view.getVisibleCards` returns the Cards logically displayed by that Board with
+their Instance and membership identities.
 
 Requests travel through the same loopback connection as source authoring
-commands and return JSON. The extension validates every request before dispatch
-and does not expose write operations. History commands execute in the background
-context. Observation, get, and compare requests identify the user-visible card
+commands and return JSON. The extension validates every request before
+dispatch. Enabling CLI access authorizes the local NewsNext CLI to mutate
+Collections and Instances, including destructive Actions; it does not grant
+web content or arbitrary processes direct extension access. History commands
+execute in the background context. Observation, get, and compare requests
+identify the user-visible card
 by `instanceId`; the background resolves the current persisted instance to its
 source ID and parameter patch before the repository normalizes parameters and
 selects its dataset. An instance whose parameters later change therefore points
 to the dataset for its current configuration, while old parameter datasets
 remain stored. Parameter normalization resolves the configured runtime registry
 in-process; it must not call the frontend registry proxy from the background
-service. Board and instance listing also execute in the background context and
-read `browser.storage.local` directly because frontend Jotai atoms are
+service. Board and Instance listing also execute in the background context and
+read the Application Data envelope from `browser.storage.local` because frontend Jotai atoms are
 unavailable there. Normal user-history workflows do not require source IDs or
 parameter JSON.
 
@@ -745,7 +771,7 @@ raw output, and dynamic include/render features are disabled.
 
 ## CLI execution
 
-`newsnext source run` sends a request through the local daemon to a connected
+`newsnext run` sends a request through the local daemon to a connected
 extension. The extension executes the same provider expansion, parameter
 normalization, registry validation, capabilities, secrets, and background loader
 path as normal source loading.
@@ -776,6 +802,9 @@ commands and completions by request ID, rejects
 ambiguous browser selection, expires pending executions, and never replays a
 command after reconnection because source execution is not guaranteed to be
 idempotent. Settings exposes the daemon version as connection metadata only.
+Protocol version 2 adds canonical Application Action and Query discovery and
+execution; incompatible daemon and extension versions disconnect instead of
+silently accepting a partial control surface.
 
 Native Messaging registration is the browser-facing security boundary. Chrome,
 Chromium, and Edge manifests restrict `allowed_origins` to the installed
@@ -789,9 +818,10 @@ Production packaging should replace the experimental fixed loopback address
 with a per-user named pipe or Unix socket before treating local IPC as a hard
 security boundary.
 
-The Rust CLI implements daemon lifecycle and tray status plus the `fetch`,
-`source`, `board`, `instance`, and `history` command families. All extension-
-backed commands use the same typed execute/result IPC path. `source run` retains
+The Rust CLI implements daemon lifecycle and tray status plus the `run`,
+`fetch`, `action`, `query`, and `history` commands and command families. All
+extension-backed commands use the same typed execute/result IPC path. `run`
+retains
 registered sources, provider files, standard input, parameter overrides,
 provider-secret selection, compact output, verbose remote errors, and watch
 mode.

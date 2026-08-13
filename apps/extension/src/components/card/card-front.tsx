@@ -1,5 +1,5 @@
 import type { ReactNode } from "react"
-import type { BoardSource, NewsItem } from "@/typings/source"
+import type { CardViewModel, NewsItem } from "@/typings/source"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { useState } from "react"
 import { useSourceIcon } from "@/hooks/use-source-icon"
@@ -24,7 +24,7 @@ import { Ranking } from "./ranking"
 import { Timeline } from "./timeline"
 
 interface CardFrontProps {
-  source: BoardSource
+  source: CardViewModel
   items: NewsItem[]
   isFetching: boolean
   isContentFetching: boolean
@@ -61,7 +61,7 @@ function CardRefreshButton({
 interface CardFrontContentProps {
   icon?: string
   items: NewsItem[]
-  provider: BoardSource["provider"]
+  provider: CardViewModel["provider"]
   scrollElement: HTMLDivElement | null
   sourceErrorMessage?: string
   sourceLoginUrl?: string

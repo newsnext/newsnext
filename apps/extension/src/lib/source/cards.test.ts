@@ -4,7 +4,6 @@ import { describe, expect, it } from "vitest"
 import {
   applySourceLoaderMetadata,
   buildSourceCards,
-  createSourceInstance,
   getSourceCard,
   mergeSourceInstancePatch,
 } from "./cards"
@@ -55,7 +54,6 @@ function createCustomInstance(patch: Partial<SourceInstance> = {}): SourceInstan
   return {
     instanceId: "test:feed::AbCdEfGh1234",
     sourceId: "test:feed",
-    boardId: null,
     patch: {},
     createdAt: 1,
     ...patch,
@@ -66,7 +64,7 @@ describe("buildSourceCards", () => {
   it("shows saved card instances", () => {
     const cards = buildSourceCards({
       sources: testSources,
-      boardId: "all",
+      collectionId: null,
       sourceInstances: [
         createCustomInstance({ patch: { params: { topic: "custom" } } }),
       ],
@@ -82,7 +80,7 @@ describe("buildSourceCards", () => {
   it("applies source instance title overrides", () => {
     const cards = buildSourceCards({
       sources: testSources,
-      boardId: "all",
+      collectionId: null,
       sourceInstances: [
         createCustomInstance({
           patch: { metadata: { title: "Custom Radar Title" } },
@@ -100,7 +98,7 @@ describe("buildSourceCards", () => {
   it("applies source-owned instance metadata overrides", () => {
     const cards = buildSourceCards({
       sources: testSources,
-      boardId: "all",
+      collectionId: null,
       sourceInstances: [
         createCustomInstance({
           patch: {
@@ -132,7 +130,7 @@ describe("buildSourceCards", () => {
   it("does not allow persisted instance metadata to override provider metadata", () => {
     const cards = buildSourceCards({
       sources: testSources,
-      boardId: "all",
+      collectionId: null,
       sourceInstances: [
         createCustomInstance({
           patch: {
@@ -166,7 +164,7 @@ describe("buildSourceCards", () => {
   it("hides base source templates from boards", () => {
     const cards = buildSourceCards({
       sources: testSources,
-      boardId: "all",
+      collectionId: null,
       sourceInstances: [],
     })
 
@@ -177,13 +175,12 @@ describe("buildSourceCards", () => {
   it("shows every card in All", () => {
     const cards = buildSourceCards({
       sources: testSources,
-      boardId: "all",
+      collectionId: null,
       sourceInstances: [
         createCustomInstance(),
         createCustomInstance({
           instanceId: "test:latest::ZyXwVuTs9876",
           sourceId: "test:latest",
-          boardId: "reading",
         }),
       ],
     })
@@ -197,13 +194,13 @@ describe("buildSourceCards", () => {
   it("filters cards in a custom board", () => {
     const cards = buildSourceCards({
       sources: testSources,
-      boardId: "reading",
+      collectionId: "reading",
+      collectionInstanceIds: ["test:latest::ZyXwVuTs9876"],
       sourceInstances: [
         createCustomInstance(),
         createCustomInstance({
           instanceId: "test:latest::ZyXwVuTs9876",
           sourceId: "test:latest",
-          boardId: "reading",
         }),
       ],
     })
@@ -216,7 +213,7 @@ describe("applySourceLoaderMetadata", () => {
   it("overrides instance presentation fields while preserving missing fields", () => {
     const cards = buildSourceCards({
       sources: testSources,
-      boardId: "all",
+      collectionId: null,
       sourceInstances: [
         createCustomInstance({
           patch: { metadata: { title: "Radar title", desc: "Radar description" } },
@@ -258,20 +255,6 @@ describe("mergeSourceInstancePatch", () => {
         title: "NewsNext",
         desc: "Developer news",
       },
-    })
-  })
-})
-
-describe("createSourceInstance", () => {
-  it("persists the supplied final patch without rebuilding it from a board source", () => {
-    const patch = {
-      params: { language: "typescript" },
-      metadata: { title: "Trending TypeScript" },
-    }
-    expect(createSourceInstance("github:trending", "reading", patch)).toMatchObject({
-      sourceId: "github:trending",
-      boardId: "reading",
-      patch,
     })
   })
 })

@@ -1,61 +1,66 @@
-import type { Board } from "../lib/board"
-import type { SourceInstance, SourceInstancePatch } from "../lib/source"
+import type { ApplicationAction, ApplicationData } from "../lib/application"
+import type { Board, BoardCreateInput } from "../lib/board"
+import type { SourceInstancePatch } from "../lib/source"
 import { atom } from "jotai"
 import { atomWithStorage, selectAtom, splitAtom } from "jotai/utils"
+import { createBackgroundClient } from "../lib/background"
 import { ALL_BOARD_ID, createAllBoard, getBoardColor } from "../lib/board"
-import {
-  normalizeBoards,
-  normalizeSourceInstances,
-  PERSISTED_DATA_SLICES,
-} from "../lib/settings"
-import { mergeSourceInstancePatch } from "../lib/source"
+import { projectCollectionBoard } from "../lib/collection"
+import { normalizeApplicationData, PERSISTED_DATA_SLICES } from "../lib/settings"
 import { createMirroredStorage } from "./persisted-storage"
-import { allBoardColorAtom, currentBoardIdAtom, defaultBoardIdAtom } from "./settings"
+import { allBoardColorAtom } from "./settings"
 
-const persistedBoardsAtom = atomWithStorage<Board[]>(
-  PERSISTED_DATA_SLICES.boards.key,
-  [],
+const persistedApplicationDataAtom = atomWithStorage<ApplicationData>(
+  PERSISTED_DATA_SLICES.application.key,
+  normalizeApplicationData(undefined),
   createMirroredStorage({
-    defaultValue: () => [],
-    key: PERSISTED_DATA_SLICES.boards.key,
-    normalize: normalizeBoards,
+    defaultValue: () => normalizeApplicationData(undefined),
+    key: PERSISTED_DATA_SLICES.application.key,
+    normalize: normalizeApplicationData,
+    readOnly: true,
   }),
   { getOnInit: true },
 )
 
-type BoardsUpdate = Board[] | ((boards: Board[]) => Board[])
+export const applicationDataAtom = atom(get => get(persistedApplicationDataAtom))
 
-export const boardsAtom = atom(
-  get => [createAllBoard(get(allBoardColorAtom)), ...get(persistedBoardsAtom)],
-  (get, set, update: BoardsUpdate) => {
-    const boards = get(boardsAtom)
-    const nextBoards = typeof update === "function" ? update(boards) : update
-    set(persistedBoardsAtom, normalizeBoards(nextBoards))
-  },
-)
+export const collectionsAtom = selectAtom(applicationDataAtom, data => data.collections)
+export const collectionEntriesAtom = selectAtom(applicationDataAtom, data => data.collectionEntries)
+export const collectionViewsAtom = selectAtom(applicationDataAtom, data => data.collectionViews)
+export const instancesAtom = selectAtom(applicationDataAtom, data => data.instances)
 
-export const instancesAtom = atomWithStorage<SourceInstance[]>(
-  PERSISTED_DATA_SLICES.instances.key,
-  [],
-  createMirroredStorage({
-    defaultValue: () => [],
-    key: PERSISTED_DATA_SLICES.instances.key,
-    normalize: normalizeSourceInstances,
+export const boardsAtom = atom(get => [
+  createAllBoard(get(allBoardColorAtom)),
+  ...get(collectionsAtom).flatMap((collection) => {
+    const view = get(collectionViewsAtom).find(candidate => candidate.collectionId === collection.id)
+    return view ? [projectCollectionBoard(collection, view, get(collectionEntriesAtom))] : []
   }),
-  { getOnInit: true },
+])
+
+export const executeApplicationActionAtom = atom(
+  null,
+  async (_get, _set, action: ApplicationAction) => (
+    await createBackgroundClient().application.execute(action)
+  ),
 )
 
-export interface SourceInstanceLayout {
-  boardId: string | null
+export interface InstanceViewLayout {
+  collectionIds: string[]
   createdAt: number
   instanceId: string
   sourceId: string
   title?: string
 }
 
-function selectInstanceLayouts(instances: SourceInstance[]): SourceInstanceLayout[] {
-  return instances.map(instance => ({
-    boardId: instance.boardId,
+function selectInstanceLayouts(data: ApplicationData): InstanceViewLayout[] {
+  const collectionIdsByInstance = new Map<string, string[]>()
+  for (const entry of data.collectionEntries) {
+    const collectionIds = collectionIdsByInstance.get(entry.instanceId) ?? []
+    collectionIds.push(entry.collectionId)
+    collectionIdsByInstance.set(entry.instanceId, collectionIds)
+  }
+  return data.instances.map(instance => ({
+    collectionIds: collectionIdsByInstance.get(instance.instanceId) ?? [],
     createdAt: instance.createdAt,
     instanceId: instance.instanceId,
     sourceId: instance.sourceId,
@@ -63,153 +68,120 @@ function selectInstanceLayouts(instances: SourceInstance[]): SourceInstanceLayou
   }))
 }
 
-function areInstanceLayoutsEqual(
-  left: SourceInstanceLayout[],
-  right: SourceInstanceLayout[],
-): boolean {
+function areInstanceLayoutsEqual(left: InstanceViewLayout[], right: InstanceViewLayout[]): boolean {
   return left.length === right.length && left.every((layout, index) => {
     const candidate = right[index]
     return candidate !== undefined
-      && layout.boardId === candidate.boardId
       && layout.createdAt === candidate.createdAt
       && layout.instanceId === candidate.instanceId
       && layout.sourceId === candidate.sourceId
       && layout.title === candidate.title
+      && layout.collectionIds.length === candidate.collectionIds.length
+      && layout.collectionIds.every((collectionId, collectionIndex) => (
+        collectionId === candidate.collectionIds[collectionIndex]
+      ))
   })
 }
 
-export const instanceAtomsAtom = splitAtom(
-  instancesAtom,
-  instance => instance.instanceId,
-)
-
+export const instanceAtomsAtom = splitAtom(instancesAtom, instance => instance.instanceId)
 export const instanceLayoutsAtom = selectAtom(
-  instancesAtom,
+  applicationDataAtom,
   selectInstanceLayouts,
   areInstanceLayoutsEqual,
 )
 
-export const setManualBoardOrderAtom = atom(null, (_get, set, {
-  boardId,
-  sourceIds,
-}: {
+export const setManualBoardOrderAtom = atom(null, async (_get, set, input: {
   boardId: string
-  sourceIds: string[]
+  instanceIds: string[]
 }) => {
-  if (boardId === ALL_BOARD_ID) {
-    return
-  }
-
-  set(boardsAtom, boards => boards.map(board => board.id === boardId
-    ? {
-        ...board,
-        sort: {
-          ...board.sort,
-          mode: "manual",
-          manualOrder: sourceIds,
-        },
-      }
-    : board))
-})
-
-export const addInstanceAtom = atom(null, (_get, set, instance: SourceInstance) => {
-  set(instancesAtom, prev => [...prev, instance])
-})
-
-export const setSourceInstancePatchAtom = atom(null, (_get, set, { instanceId, patch }: { instanceId: string, patch: SourceInstancePatch }) => {
-  set(instancesAtom, prev => prev.map((instance) => {
-    if (instance.instanceId !== instanceId) {
-      return instance
-    }
-
-    return {
-      ...instance,
-      patch: mergeSourceInstancePatch(instance.patch, patch),
-    }
-  }))
-})
-
-export const deleteInstanceAtom = atom(null, (_get, set, instanceId: string) => {
-  set(instancesAtom, (prev) => {
-    const next = prev.filter(instance => instance.instanceId !== instanceId)
-    return next.length === prev.length ? prev : next
-  })
-  set(boardsAtom, (boards) => {
-    let didChange = false
-    const next = boards.map((board) => {
-      const manualOrder = board.sort.manualOrder.filter(id => id !== instanceId)
-      if (manualOrder.length === board.sort.manualOrder.length) {
-        return board
-      }
-      didChange = true
-      return { ...board, sort: { ...board.sort, manualOrder } }
+  if (input.boardId !== ALL_BOARD_ID) {
+    await set(executeApplicationActionAtom, {
+      type: "collection.reorderInstances",
+      input: { collectionId: input.boardId, instanceIds: input.instanceIds },
     })
-    return didChange ? next : boards
+  }
+})
+
+export const addInstanceAtom = atom(null, (_get, set, input: {
+  collectionId: string | null
+  patch: SourceInstancePatch
+  sourceId: string
+}) => set(executeApplicationActionAtom, {
+  type: "instance.create",
+  input,
+}))
+
+export const setSourceInstancePatchAtom = atom(null, (_get, set, input: {
+  instanceId: string
+  patch: SourceInstancePatch
+}) => set(executeApplicationActionAtom, {
+  type: "instance.configure",
+  input,
+}))
+
+export const deleteInstanceAtom = atom(null, (_get, set, instanceId: string) => (
+  set(executeApplicationActionAtom, {
+    type: "instance.delete",
+    input: { instanceId },
   })
+))
+
+export const createBoardAtom = atom(null, async (_get, set, input: BoardCreateInput) => {
+  const result = await set(executeApplicationActionAtom, {
+    type: "collection.create",
+    input: {
+      name: input.name,
+      view: {
+        color: input.color,
+        filter: input.filter ?? null,
+        sortMode: input.sortMode,
+      },
+    },
+  })
+  return result
 })
 
-export const createBoardAtom = atom(null, (_get, set, board: Board) => {
-  set(boardsAtom, prev => [...prev, board])
-})
-
-export const updateBoardAtom = atom(null, (_get, set, board: Board) => {
+export const updateBoardAtom = atom(null, async (_get, set, board: Board) => {
   if (board.id === ALL_BOARD_ID) {
     set(allBoardColorAtom, getBoardColor(board))
     return
   }
-
-  set(boardsAtom, prev => prev.map(current => current.id === board.id ? board : current))
-})
-
-export const deleteBoardAtom = atom(null, (_get, set, boardId: string) => {
-  if (boardId === ALL_BOARD_ID) {
-    return
-  }
-
-  set(boardsAtom, prev => prev.filter(board => board.id !== boardId))
-  set(instancesAtom, prev => prev.map(instance => instance.boardId === boardId
-    ? { ...instance, boardId: null }
-    : instance))
-  set(currentBoardIdAtom, current => current === boardId ? ALL_BOARD_ID : current)
-  set(defaultBoardIdAtom, current => current === boardId ? ALL_BOARD_ID : current)
-})
-
-export const moveInstanceToBoardAtom = atom(null, (_get, set, { instanceId, boardId }: { instanceId: string, boardId: string | null }) => {
-  set(instancesAtom, prev => prev.map(instance => instance.instanceId === instanceId
-    ? { ...instance, boardId }
-    : instance))
-  set(boardsAtom, (boards) => {
-    let didChange = false
-    const next = boards.map((board) => {
-      if (board.id === ALL_BOARD_ID || board.id === boardId) {
-        return board
-      }
-      const manualOrder = board.sort.manualOrder.filter(id => id !== instanceId)
-      if (manualOrder.length === board.sort.manualOrder.length) {
-        return board
-      }
-      didChange = true
-      return { ...board, sort: { ...board.sort, manualOrder } }
-    })
-    return didChange ? next : boards
+  await set(executeApplicationActionAtom, {
+    type: "collection.update",
+    input: {
+      collectionId: board.id,
+      name: board.name,
+      view: {
+        color: getBoardColor(board),
+        filter: board.filter ?? null,
+        sortMode: board.sort.mode,
+      },
+    },
   })
 })
 
-export const resetInstanceParamsAtom = atom(null, (_get, set, instanceId: string) => {
-  set(instancesAtom, (prev) => {
-    let didReset = false
-    const next = prev.map((instance) => {
-      if (instance.instanceId === instanceId && Object.keys(instance.patch.params ?? {}).length > 0) {
-        didReset = true
-        return {
-          ...instance,
-          patch: { ...instance.patch, params: {} },
-        }
-      }
+export const deleteBoardAtom = atom(null, async (_get, set, boardId: string) => {
+  if (boardId === ALL_BOARD_ID) return
+  await set(executeApplicationActionAtom, {
+    type: "collection.delete",
+    input: { collectionId: boardId },
+  })
+})
 
-      return instance
-    })
+export const setInstanceCollectionMembershipAtom = atom(null, (_get, set, input: {
+  collectionId: string
+  instanceId: string
+  member: boolean
+}) => set(executeApplicationActionAtom, {
+  type: input.member ? "collection.addInstance" : "collection.removeInstance",
+  input: { collectionId: input.collectionId, instanceId: input.instanceId },
+}))
 
-    return didReset ? next : prev
+export const resetInstanceParamsAtom = atom(null, (get, set, instanceId: string) => {
+  const instance = get(instancesAtom).find(candidate => candidate.instanceId === instanceId)
+  if (!instance || Object.keys(instance.patch.params ?? {}).length === 0) return
+  return set(executeApplicationActionAtom, {
+    type: "instance.resetParams",
+    input: { instanceId },
   })
 })

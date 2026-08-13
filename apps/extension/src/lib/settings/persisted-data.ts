@@ -1,11 +1,14 @@
+import type { ApplicationData } from "../application/data"
 import type { Board, BoardSortPreference } from "../board"
-import type { SourceInstance, SourceInstancePatch } from "../source/cards"
+import type { Collection, CollectionEntry, CollectionView } from "../collection"
+import type { SourceInstance, SourceInstancePatch } from "../source"
 import type { PersistedSettings } from "./persisted-settings"
+import { createEmptyApplicationData } from "../application/data"
 import { ALL_BOARD_ID, createBoardSortPreference, normalizeBoardFilter } from "../board"
 import { normalizePersistedSettings } from "./persisted-settings"
 import { isThemeColor } from "./theme-color"
 
-export const PERSISTED_DATA_EXPORT_VERSION = 1
+export const PERSISTED_DATA_EXPORT_VERSION = 2
 export const PERSISTED_DATA_EXPORT_KIND = "newsnext-user-data"
 export const PERSISTED_PORTABLE_SLICE_IDS = [
   "settings",
@@ -20,12 +23,8 @@ export const PERSISTED_DATA_SLICES = {
     key: "newsnext-settings",
     scope: "portable",
   },
-  boards: {
-    key: "newsnext-board-items",
-    scope: "portable",
-  },
-  instances: {
-    key: "newsnext-source-instances",
+  application: {
+    key: "newsnext-application-data",
     scope: "portable",
   },
   deviceState: {
@@ -41,9 +40,7 @@ export const PERSISTED_DATA_SLICES = {
   scope: "device" | "portable"
 }>
 
-export interface PersistedUserData {
-  boards: Board[]
-  instances: SourceInstance[]
+export interface PersistedUserData extends ApplicationData {
   settings: PersistedSettings
 }
 
@@ -53,62 +50,78 @@ export interface PersistedDataExport {
   version: typeof PERSISTED_DATA_EXPORT_VERSION
 }
 
-export function normalizeBoards(value: unknown): Board[] {
-  if (!Array.isArray(value)) {
-    return []
+interface LegacySourceInstance extends SourceInstance {
+  boardId: string | null
+}
+
+export function normalizeApplicationData(value: unknown): ApplicationData {
+  if (!isRecord(value)) {
+    return createEmptyApplicationData()
   }
 
+  const collections = normalizeCollections(value.collections)
+  const collectionIds = new Set(collections.map(collection => collection.id))
+  const instances = normalizeSourceInstances(value.instances)
+  const instanceIds = new Set(instances.map(instance => instance.instanceId))
+  const collectionViews = normalizeCollectionViews(value.collectionViews, collectionIds)
+  const collectionEntries = normalizeCollectionEntries(
+    value.collectionEntries,
+    collectionIds,
+    instanceIds,
+  )
+
+  return { collections, collectionEntries, collectionViews, instances }
+}
+
+export function normalizeCollections(value: unknown): Collection[] {
+  if (!Array.isArray(value)) return []
   const seenIds = new Set<string>()
-  const boards = value.flatMap((candidate) => {
-    if (
-      !isRecord(candidate)
+  const seenNames: string[] = []
+  return value.flatMap((candidate) => {
+    if (!isRecord(candidate)
       || typeof candidate.id !== "string"
-      || typeof candidate.name !== "string"
+      || candidate.id.trim().length === 0
       || candidate.id === ALL_BOARD_ID
-    ) {
+      || typeof candidate.name !== "string"
+      || candidate.name.trim().length === 0
+      || typeof candidate.createdAt !== "number"
+      || !Number.isFinite(candidate.createdAt)
+      || seenIds.has(candidate.id)) {
       return []
     }
-
-    if (seenIds.has(candidate.id)) {
+    const name = candidate.name.trim()
+    if (seenNames.some(existingName => existingName.localeCompare(
+      name,
+      undefined,
+      { sensitivity: "accent" },
+    ) === 0)) {
       return []
     }
     seenIds.add(candidate.id)
-    const filter = normalizeBoardFilter(candidate.filter)
-    return [{
-      id: candidate.id,
-      name: candidate.name,
-      sort: normalizeBoardSortPreference(candidate.sort),
-      ...(isThemeColor(candidate.color) ? { color: candidate.color } : {}),
-      ...(filter ? { filter } : {}),
-    }]
+    seenNames.push(name)
+    return [{ id: candidate.id, name, createdAt: candidate.createdAt }]
   })
-
-  return boards
 }
 
 export function normalizeSourceInstances(value: unknown): SourceInstance[] {
-  if (!Array.isArray(value)) {
-    return []
-  }
-
+  if (!Array.isArray(value)) return []
   const seenIds = new Set<string>()
   return value.flatMap((candidate) => {
     if (!isRecord(candidate)
       || typeof candidate.instanceId !== "string"
+      || candidate.instanceId.trim().length === 0
       || typeof candidate.sourceId !== "string"
-      || !(typeof candidate.boardId === "string" || candidate.boardId === null)
+      || candidate.sourceId.trim().length === 0
       || typeof candidate.createdAt !== "number"
       || !Number.isFinite(candidate.createdAt)
       || !isSourceInstancePatch(candidate.patch)
       || seenIds.has(candidate.instanceId)) {
       return []
     }
-
     seenIds.add(candidate.instanceId)
     return [{
       instanceId: candidate.instanceId,
       sourceId: candidate.sourceId,
-      boardId: candidate.boardId,
       patch: candidate.patch,
       createdAt: candidate.createdAt,
     }]
@@ -126,22 +139,21 @@ export function createPersistedDataExport(
   }
 }
 
-export function parsePersistedDataExport(
-  serialized: string,
-): PersistedDataExport | undefined {
+export function parsePersistedDataExport(serialized: string): PersistedDataExport | undefined {
   try {
     const value: unknown = JSON.parse(serialized)
     if (!isRecord(value)
       || value.kind !== PERSISTED_DATA_EXPORT_KIND
-      || value.version !== PERSISTED_DATA_EXPORT_VERSION
       || !isRecord(value.data)) {
       return undefined
     }
 
-    const data = normalizePartialPersistedUserData(value.data)
-    if (Object.keys(data).length === 0) {
-      return undefined
-    }
+    const data = value.version === PERSISTED_DATA_EXPORT_VERSION
+      ? normalizePartialPersistedUserData(value.data)
+      : value.version === 1
+        ? migrateLegacyPersistedUserData(value.data)
+        : undefined
+    if (!data || Object.keys(data).length === 0) return undefined
 
     return {
       data,
@@ -166,16 +178,27 @@ export function selectPersistedUserData(
 ): Partial<PersistedUserData> {
   const selected = new Set(sliceIds)
   return {
-    ...(selected.has("settings") && data.settings !== undefined
-      ? { settings: data.settings }
+    ...(selected.has("settings") && data.settings !== undefined ? { settings: data.settings } : {}),
+    ...(selected.has("boards")
+      ? {
+          ...(data.collections !== undefined ? { collections: data.collections } : {}),
+          ...(data.collectionEntries !== undefined ? { collectionEntries: data.collectionEntries } : {}),
+          ...(data.collectionViews !== undefined ? { collectionViews: data.collectionViews } : {}),
+        }
       : {}),
-    ...(selected.has("boards") && data.boards !== undefined
-      ? { boards: data.boards }
-      : {}),
-    ...(selected.has("instances") && data.instances !== undefined
-      ? { instances: data.instances }
-      : {}),
+    ...(selected.has("instances") && data.instances !== undefined ? { instances: data.instances } : {}),
   }
+}
+
+export function hasPersistedUserDataSlice(
+  data: Partial<PersistedUserData>,
+  sliceId: PersistedPortableSliceId,
+): boolean {
+  if (sliceId === "settings") return data.settings !== undefined
+  if (sliceId === "instances") return data.instances !== undefined
+  return data.collections !== undefined
+    || data.collectionEntries !== undefined
+    || data.collectionViews !== undefined
 }
 
 export function mergePersistedUserData(
@@ -184,96 +207,245 @@ export function mergePersistedUserData(
 ): PersistedUserData {
   return normalizePersistedUserData({
     settings: imported.settings ?? current.settings,
-    boards: imported.boards ?? current.boards,
+    collections: imported.collections ?? current.collections,
+    collectionEntries: imported.collectionEntries ?? current.collectionEntries,
+    collectionViews: imported.collectionViews ?? current.collectionViews,
     instances: imported.instances ?? current.instances,
   })
 }
 
-export function normalizePersistedUserData(
-  data: PersistedUserData,
-): PersistedUserData {
-  const boards = normalizeBoards(data.boards)
-  const boardIds = new Set([ALL_BOARD_ID, ...boards.map(board => board.id)])
-  const instances = normalizeSourceInstances(data.instances).map(instance => (
-    instance.boardId === null || boardIds.has(instance.boardId)
-      ? instance
-      : { ...instance, boardId: null }
-  ))
-  const instancesById = new Map(instances.map(instance => [instance.instanceId, instance]))
+export function normalizePersistedUserData(data: PersistedUserData): PersistedUserData {
+  const application = normalizeApplicationData(data)
+  const collectionIds = new Set(application.collections.map(collection => collection.id))
   const settings = normalizePersistedSettings(data.settings)
   if (settings.general.defaultBoardId !== null
-    && !boardIds.has(settings.general.defaultBoardId)) {
+    && settings.general.defaultBoardId !== ALL_BOARD_ID
+    && !collectionIds.has(settings.general.defaultBoardId)) {
     settings.general.defaultBoardId = ALL_BOARD_ID
   }
-
-  return {
-    settings,
-    boards: boards.map(board => ({
-      ...board,
-      sort: {
-        ...board.sort,
-        manualOrder: board.sort.manualOrder.filter((id) => {
-          const instance = instancesById.get(id)
-          return instance !== undefined
-            && instance.boardId === board.id
-        }),
-      },
-    })),
-    instances,
-  }
+  return { ...application, settings }
 }
 
 function normalizePartialPersistedUserData(
   data: Record<string, unknown>,
 ): Partial<PersistedUserData> {
+  const collections = normalizeCollections(data.collections)
+  const instances = normalizeSourceInstances(data.instances)
+  const collectionIds = Object.hasOwn(data, "collections")
+    ? new Set(collections.map(collection => collection.id))
+    : undefined
+  const instanceIds = Object.hasOwn(data, "instances")
+    ? new Set(instances.map(instance => instance.instanceId))
+    : undefined
   return {
-    ...(Object.hasOwn(data, "settings")
-      ? { settings: normalizePersistedSettings(data.settings) }
+    ...(Object.hasOwn(data, "settings") ? { settings: normalizePersistedSettings(data.settings) } : {}),
+    ...(Object.hasOwn(data, "collections") ? { collections } : {}),
+    ...(Object.hasOwn(data, "collectionEntries")
+      ? {
+          collectionEntries: normalizeCollectionEntries(data.collectionEntries, collectionIds, instanceIds),
+        }
       : {}),
-    ...(Object.hasOwn(data, "boards")
-      ? { boards: normalizeBoards(data.boards) }
+    ...(Object.hasOwn(data, "collectionViews")
+      ? {
+          collectionViews: normalizeCollectionViews(data.collectionViews, collectionIds),
+        }
       : {}),
-    ...(Object.hasOwn(data, "instances")
-      ? { instances: normalizeSourceInstances(data.instances) }
+    ...(Object.hasOwn(data, "instances") ? { instances } : {}),
+  }
+}
+
+function migrateLegacyPersistedUserData(
+  data: Record<string, unknown>,
+): Partial<PersistedUserData> {
+  const boards = Object.hasOwn(data, "boards") ? normalizeLegacyBoards(data.boards) : undefined
+  const instances = Object.hasOwn(data, "instances")
+    ? normalizeLegacySourceInstances(data.instances)
+    : undefined
+  const collections = boards?.map((board, index) => ({
+    id: board.id,
+    name: board.name,
+    createdAt: index,
+  }))
+  const collectionIds = new Set(collections?.map(collection => collection.id) ?? [])
+  const collectionEntries = instances?.flatMap((instance, index) => (
+    instance.boardId && collectionIds.has(instance.boardId)
+      ? [{
+          collectionId: instance.boardId,
+          instanceId: instance.instanceId,
+          addedAt: instance.createdAt,
+          position: getLegacyPosition(boards ?? [], instance.boardId, instance.instanceId, index),
+        }]
+      : []
+  ))
+
+  return {
+    ...(Object.hasOwn(data, "settings") ? { settings: normalizePersistedSettings(data.settings) } : {}),
+    ...(boards
+      ? {
+          collections,
+          collectionViews: boards.map(board => ({
+            collectionId: board.id,
+            color: board.color,
+            filter: board.filter,
+            sortMode: board.sort.mode,
+            automaticSortMode: board.sort.automaticMode,
+          })),
+          collectionEntries: collectionEntries ?? [],
+        }
+      : {}),
+    ...(instances
+      ? {
+          instances: instances.map(({ boardId: _boardId, ...instance }) => instance),
+          ...(!boards ? { collectionEntries: [] } : {}),
+        }
       : {}),
   }
 }
 
-function isBoardSortPreference(value: unknown): value is BoardSortPreference {
-  if (!isRecord(value)
-    || !isBoardSortMode(value.mode)
-    || !isAutomaticBoardSortMode(value.automaticMode)
-    || !Array.isArray(value.manualOrder)) {
-    return false
-  }
-  return value.manualOrder.every(id => typeof id === "string")
-}
-
-function normalizeBoardSortPreference(
-  value: unknown,
-): BoardSortPreference {
-  if (isBoardSortPreference(value)) {
-    return {
-      ...value,
-      manualOrder: [...value.manualOrder],
+function normalizeCollectionViews(value: unknown, collectionIds?: Set<string>): CollectionView[] {
+  if (!Array.isArray(value)) return []
+  const views = new Map<string, CollectionView>()
+  for (const candidate of value) {
+    if (!isRecord(candidate)
+      || typeof candidate.collectionId !== "string"
+      || (collectionIds && !collectionIds.has(candidate.collectionId))
+      || !isBoardSortMode(candidate.sortMode)
+      || !isAutomaticBoardSortMode(candidate.automaticSortMode)) {
+      continue
     }
+    const filter = normalizeBoardFilter(candidate.filter)
+    views.set(candidate.collectionId, {
+      collectionId: candidate.collectionId,
+      sortMode: candidate.sortMode,
+      automaticSortMode: candidate.automaticSortMode,
+      ...(isThemeColor(candidate.color) ? { color: candidate.color } : {}),
+      ...(filter ? { filter } : {}),
+    })
+  }
+  if (!collectionIds) return [...views.values()]
+  return [...collectionIds].map(collectionId => views.get(collectionId) ?? {
+    collectionId,
+    sortMode: "createdAt",
+    automaticSortMode: "createdAt",
+  })
+}
+
+function normalizeCollectionEntries(
+  value: unknown,
+  collectionIds?: Set<string>,
+  instanceIds?: Set<string>,
+): CollectionEntry[] {
+  if (!Array.isArray(value)) return []
+  const seen = new Set<string>()
+  const entries = value.flatMap((candidate, inputIndex) => {
+    if (!isRecord(candidate)
+      || typeof candidate.collectionId !== "string"
+      || candidate.collectionId.trim().length === 0
+      || typeof candidate.instanceId !== "string"
+      || candidate.instanceId.trim().length === 0
+      || typeof candidate.addedAt !== "number"
+      || !Number.isFinite(candidate.addedAt)
+      || typeof candidate.position !== "number"
+      || !Number.isInteger(candidate.position)
+      || candidate.position < 0
+      || (collectionIds && !collectionIds.has(candidate.collectionId))
+      || (instanceIds && !instanceIds.has(candidate.instanceId))) {
+      return []
+    }
+    const key = `${candidate.collectionId}\0${candidate.instanceId}`
+    if (seen.has(key)) return []
+    seen.add(key)
+    return [{
+      collectionId: candidate.collectionId,
+      instanceId: candidate.instanceId,
+      addedAt: candidate.addedAt,
+      position: candidate.position,
+      inputIndex,
+    }]
+  })
+  const entriesByCollection = new Map<string, typeof entries>()
+  for (const entry of entries) {
+    const collectionEntries = entriesByCollection.get(entry.collectionId) ?? []
+    collectionEntries.push(entry)
+    entriesByCollection.set(entry.collectionId, collectionEntries)
+  }
+  return [...entriesByCollection.values()].flatMap(collectionEntries => (
+    collectionEntries
+      .toSorted((left, right) => (
+        left.position - right.position
+        || left.addedAt - right.addedAt
+        || left.inputIndex - right.inputIndex
+      ))
+      .map(({ inputIndex: _inputIndex, ...entry }, position) => ({ ...entry, position }))
+  ))
+}
+
+function normalizeLegacyBoards(value: unknown): Board[] {
+  if (!Array.isArray(value)) return []
+  const seenIds = new Set<string>()
+  return value.flatMap((candidate) => {
+    if (!isRecord(candidate)
+      || typeof candidate.id !== "string"
+      || candidate.id === ALL_BOARD_ID
+      || typeof candidate.name !== "string"
+      || seenIds.has(candidate.id)) {
+      return []
+    }
+    seenIds.add(candidate.id)
+    const filter = normalizeBoardFilter(candidate.filter)
+    return [{
+      id: candidate.id,
+      name: candidate.name,
+      sort: normalizeBoardSortPreference(candidate.sort),
+      ...(isThemeColor(candidate.color) ? { color: candidate.color } : {}),
+      ...(filter ? { filter } : {}),
+    }]
+  })
+}
+
+function normalizeLegacySourceInstances(value: unknown): LegacySourceInstance[] {
+  if (!Array.isArray(value)) return []
+  return normalizeSourceInstances(value).map((instance) => {
+    const candidate = value.find(value => isRecord(value) && value.instanceId === instance.instanceId)
+    return {
+      ...instance,
+      boardId: isRecord(candidate) && typeof candidate.boardId === "string" ? candidate.boardId : null,
+    }
+  })
+}
+
+function getLegacyPosition(
+  boards: Board[],
+  collectionId: string,
+  instanceId: string,
+  fallback: number,
+): number {
+  const position = boards.find(board => board.id === collectionId)?.sort.manualOrder.indexOf(instanceId)
+  return position === undefined || position < 0 ? fallback : position
+}
+
+function normalizeBoardSortPreference(value: unknown): BoardSortPreference {
+  if (isRecord(value)
+    && isBoardSortMode(value.mode)
+    && isAutomaticBoardSortMode(value.automaticMode)
+    && Array.isArray(value.manualOrder)
+    && value.manualOrder.every(id => typeof id === "string")) {
+    return { mode: value.mode, automaticMode: value.automaticMode, manualOrder: [...value.manualOrder] }
   }
   return createBoardSortPreference()
 }
 
 function isSourceInstancePatch(value: unknown): value is SourceInstancePatch {
-  if (!isRecord(value)) {
-    return false
-  }
-  return (value.params === undefined || isRecord(value.params))
+  return isRecord(value)
+    && (value.params === undefined || isRecord(value.params))
     && (value.metadata === undefined || isRecord(value.metadata))
 }
 
-function isBoardSortMode(value: unknown): boolean {
+function isBoardSortMode(value: unknown): value is CollectionView["sortMode"] {
   return value === "createdAt" || value === "provider" || value === "manual"
 }
 
-function isAutomaticBoardSortMode(value: unknown): boolean {
+function isAutomaticBoardSortMode(value: unknown): value is CollectionView["automaticSortMode"] {
   return value === "createdAt" || value === "provider"
 }
 

@@ -1,20 +1,21 @@
 import type { SourceInstanceMetadata } from "@/lib/source"
-import type { BoardSource } from "@/typings/source"
+import type { CardViewModel } from "@/typings/source"
 import { Button } from "@newsnext/ui/components/button"
 import { useEffect, useState } from "react"
+import { useAsyncAction } from "@/hooks/use-async-action"
 import { EditableImage, EditableInput, Info } from "./fields"
 import { ParamField } from "./param-field"
 
 export interface CardEditFormProps {
-  source: BoardSource
+  source: CardViewModel
   draftSourceParams: Record<string, unknown>
   hasSourceParams: boolean
   hasSourceParamChanges: boolean
   onSourceParamChange: (key: string, value: unknown) => void
-  onSaveSourceParams: () => void
-  onResetSourceParams: () => void
+  onSaveSourceParams: () => Promise<void> | void
+  onResetSourceParams: () => Promise<void> | void
   onDiscardSourceParams: () => void
-  onSaveSourceMeta: (meta: SourceInstanceMetadata) => void
+  onSaveSourceMeta: (meta: SourceInstanceMetadata) => Promise<void> | void
   onPreviewMetadataChange?: (meta: SourceInstanceMetadata | null) => void
 }
 
@@ -34,6 +35,9 @@ export function CardEditForm({
   const { badge, desc, home, title } = source.metadata
   const [editDraft, setEditDraft] = useState<SourceInstanceMetadata | null>(null)
   const [isEditingParams, setIsEditingParams] = useState(false)
+  const { error: saveError, isPending: isSaving, run: runSave } = useAsyncAction(
+    "The card could not be saved.",
+  )
   const isEditingMetadata = editDraft !== null
   const previewTitle = editDraft?.title ?? title
   const previewBadge = editDraft?.badge ?? badge
@@ -49,10 +53,12 @@ export function CardEditForm({
     setEditDraft(prev => prev ? { ...prev, ...patch } : prev)
   }
 
-  function saveEditDraft(): void {
+  async function saveEditDraft(): Promise<void> {
     if (!editDraft) return
-    onSaveSourceMeta(editDraft)
-    setEditDraft(null)
+    await runSave(async () => {
+      await onSaveSourceMeta(editDraft)
+      setEditDraft(null)
+    })
   }
 
   function startEditingParams(): void {
@@ -65,9 +71,18 @@ export function CardEditForm({
     setIsEditingParams(false)
   }
 
-  function saveParams(): void {
-    onSaveSourceParams()
-    setIsEditingParams(false)
+  async function saveParams(): Promise<void> {
+    await runSave(async () => {
+      await onSaveSourceParams()
+      setIsEditingParams(false)
+    })
+  }
+
+  async function resetParams(): Promise<void> {
+    await runSave(async () => {
+      await onResetSourceParams()
+      setIsEditingParams(false)
+    })
   }
 
   return (
@@ -78,10 +93,10 @@ export function CardEditForm({
           {isEditingMetadata
             ? (
                 <div className="flex gap-1.5">
-                  <Button type="button" variant="outline" tone="theme" size="sm" className="h-6 px-2" onClick={() => setEditDraft(null)}>
+                  <Button type="button" variant="outline" tone="theme" size="sm" disabled={isSaving} className="h-6 px-2" onClick={() => setEditDraft(null)}>
                     Cancel
                   </Button>
-                  <Button type="button" size="sm" tone="theme" disabled={!hasSourceMetaChanges} className="h-6 px-2" onClick={saveEditDraft}>
+                  <Button type="button" size="sm" tone="theme" disabled={!hasSourceMetaChanges || isSaving} className="h-6 px-2" onClick={() => void saveEditDraft()}>
                     Save
                   </Button>
                 </div>
@@ -119,13 +134,13 @@ export function CardEditForm({
             {isEditingParams
               ? (
                   <div className="flex gap-1.5">
-                    <Button type="button" variant="outline" tone="theme" size="sm" className="h-6 px-2" onClick={cancelEditingParams}>
+                    <Button type="button" variant="outline" tone="theme" size="sm" disabled={isSaving} className="h-6 px-2" onClick={cancelEditingParams}>
                       Cancel
                     </Button>
-                    <Button type="button" variant="outline" tone="theme" size="sm" disabled={!hasSourceParams} className="h-6 px-2" onClick={onResetSourceParams}>
+                    <Button type="button" variant="outline" tone="theme" size="sm" disabled={!hasSourceParams || isSaving} className="h-6 px-2" onClick={() => void resetParams()}>
                       Reset
                     </Button>
-                    <Button type="button" size="sm" tone="theme" disabled={!hasSourceParamChanges} className="h-6 px-2" onClick={saveParams}>
+                    <Button type="button" size="sm" tone="theme" disabled={!hasSourceParamChanges || isSaving} className="h-6 px-2" onClick={() => void saveParams()}>
                       Save
                     </Button>
                   </div>
@@ -147,6 +162,7 @@ export function CardEditForm({
           ))}
         </section>
       )}
+      {saveError && <p role="alert" className="text-sm text-destructive">{saveError}</p>}
     </div>
   )
 }

@@ -40,79 +40,79 @@ interface ScatterItemCustom {
 interface ScatterAnimationState {
   hasScattered: boolean
   vectors: Record<string, ScatterVector>
-  visibleSourceIds: string[]
+  visibleInstanceIds: string[]
 }
 
-interface SourceOrderState {
-  sourceIds: string[]
-  orderedSourceIds: string[]
+interface InstanceOrderState {
+  instanceIds: string[]
+  orderedInstanceIds: string[]
 }
 
 interface DesktopBoardProps {
   filter?: BoardFilter
-  sourceIds: string[]
-  sourceCardsMap: Record<string, BoardSourceCard>
+  instanceIds: string[]
+  cardsByInstanceId: Record<string, BoardSourceCard>
   sortable?: boolean
   className?: string
   isScattered?: boolean
-  onSourceIdsChange: (sourceIds: string[]) => void
+  onInstanceIdsChange: (instanceIds: string[]) => void
   containerRef?: RefObject<HTMLDivElement | null>
 }
 
 export function DesktopBoard({
   filter,
-  sourceIds,
-  sourceCardsMap,
+  instanceIds,
+  cardsByInstanceId,
   sortable = true,
   className,
   isScattered,
-  onSourceIdsChange,
+  onInstanceIdsChange,
   containerRef,
 }: DesktopBoardProps) {
-  const [sourceOrderState, setSourceOrderState] = useState<SourceOrderState>(() => ({
-    sourceIds,
-    orderedSourceIds: sourceIds,
+  const [instanceOrderState, setInstanceOrderState] = useState<InstanceOrderState>(() => ({
+    instanceIds,
+    orderedInstanceIds: instanceIds,
   }))
-  let orderedSourceIds = sourceOrderState.orderedSourceIds
-  if (sourceOrderState.sourceIds !== sourceIds) {
-    orderedSourceIds = sourceIds
-    setSourceOrderState({
-      sourceIds,
-      orderedSourceIds,
+  let orderedInstanceIds = instanceOrderState.orderedInstanceIds
+  if (instanceOrderState.instanceIds !== instanceIds) {
+    orderedInstanceIds = instanceIds
+    setInstanceOrderState({
+      instanceIds,
+      orderedInstanceIds,
     })
   }
-  const orderedSourceIdsRef = useRef(orderedSourceIds)
-  const initialOrderedSourceIdsRef = useRef(sourceIds)
+  const orderedInstanceIdsRef = useRef(orderedInstanceIds)
+  const initialOrderedInstanceIdsRef = useRef(instanceIds)
   const boardRef = useRef<HTMLOListElement>(null)
   const [scatterAnimationState, setScatterAnimationState] = useState<ScatterAnimationState>({
     hasScattered: false,
     vectors: {},
-    visibleSourceIds: [],
+    visibleInstanceIds: [],
   })
   const hasScattered = scatterAnimationState.hasScattered
   const items = useMemo(() => new Map<string, HTMLLIElement>(), [])
   const visibleCards = useMemo(
-    () => orderedSourceIds.flatMap((id) => {
-      const card = sourceCardsMap[id]
+    () => orderedInstanceIds.flatMap((id) => {
+      const card = cardsByInstanceId[id]
       return card ? [{ id, ...card }] : []
     }),
-    [orderedSourceIds, sourceCardsMap],
+    [orderedInstanceIds, cardsByInstanceId],
   )
-  const visibleSourceIds = useMemo(
+  const visibleInstanceIds = useMemo(
     () => visibleCards.map(({ id }) => id),
     [visibleCards],
   )
   const isScatterReady = Boolean(
     isScattered
-    && scatterAnimationState.visibleSourceIds.length > 0,
+    && scatterAnimationState.visibleInstanceIds.length > 0,
   )
 
   useLayoutEffect(() => {
-    orderedSourceIdsRef.current = orderedSourceIds
-  }, [orderedSourceIds])
+    orderedInstanceIdsRef.current = orderedInstanceIds
+  }, [orderedInstanceIds])
 
   const onDragStart = useCallback(() => {
-    initialOrderedSourceIdsRef.current = orderedSourceIdsRef.current
+    initialOrderedInstanceIdsRef.current = orderedInstanceIdsRef.current
   }, [])
 
   const onDrag = useCallback(({ location, source }: ElementEventBasePayload) => {
@@ -121,9 +121,9 @@ export function DesktopBoard({
 
     const fromId = source.data.id
     const toId = target.data.id
-    const currentSourceIds = orderedSourceIdsRef.current
-    const fromIndex = currentSourceIds.indexOf(fromId)
-    const toIndex = currentSourceIds.indexOf(toId)
+    const currentInstanceIds = orderedInstanceIdsRef.current
+    const fromIndex = currentInstanceIds.indexOf(fromId)
+    const toIndex = currentInstanceIds.indexOf(toId)
     if (fromIndex === toIndex || fromIndex === -1 || toIndex === -1) return
 
     const closestEdge = extractClosestEdge(target.data)
@@ -138,11 +138,11 @@ export function DesktopBoard({
     })
     if (fromIndex === destinationIndex) return
 
-    const nextSourceIds = reorder(currentSourceIds, fromIndex, destinationIndex)
-    orderedSourceIdsRef.current = nextSourceIds
-    setSourceOrderState(prev => ({
+    const nextInstanceIds = reorder(currentInstanceIds, fromIndex, destinationIndex)
+    orderedInstanceIdsRef.current = nextInstanceIds
+    setInstanceOrderState(prev => ({
       ...prev,
-      orderedSourceIds: nextSourceIds,
+      orderedInstanceIds: nextInstanceIds,
     }))
   }, [])
 
@@ -160,26 +160,26 @@ export function DesktopBoard({
     )
 
     if (!hasDropTarget || !isInsideBoard) {
-      const initialSourceIds = initialOrderedSourceIdsRef.current
-      orderedSourceIdsRef.current = initialSourceIds
-      setSourceOrderState(prev => ({
+      const initialInstanceIds = initialOrderedInstanceIdsRef.current
+      orderedInstanceIdsRef.current = initialInstanceIds
+      setInstanceOrderState(prev => ({
         ...prev,
-        orderedSourceIds: initialSourceIds,
+        orderedInstanceIds: initialInstanceIds,
       }))
       return
     }
 
-    const finalSourceIds = orderedSourceIdsRef.current
-    const initialSourceIds = initialOrderedSourceIdsRef.current
-    const hasOrderChanged = finalSourceIds.length !== initialSourceIds.length || finalSourceIds.some(
-      (id, index) => initialSourceIds[index] !== id,
+    const finalInstanceIds = orderedInstanceIdsRef.current
+    const initialInstanceIds = initialOrderedInstanceIdsRef.current
+    const hasOrderChanged = finalInstanceIds.length !== initialInstanceIds.length || finalInstanceIds.some(
+      (id, index) => initialInstanceIds[index] !== id,
     )
     if (!hasOrderChanged) {
       return
     }
 
-    onSourceIdsChange(finalSourceIds)
-  }, [onSourceIdsChange])
+    onInstanceIdsChange(finalInstanceIds)
+  }, [onInstanceIdsChange])
 
   // Calculate scatter vectors only while the board is scattering away.
   useLayoutEffect(() => {
@@ -221,18 +221,18 @@ export function DesktopBoard({
       if (!container) return
 
       const newVectors: Record<string, ScatterVector> = {}
-      const newVisibleSourceIds: string[] = []
+      const newVisibleInstanceIds: string[] = []
       const { visibleRect } = getVisibleBounds(container)
       const centerX = visibleRect.left + visibleRect.width / 2
       const centerY = visibleRect.top + visibleRect.height / 2
 
       items.forEach((el, id) => {
-        if (!visibleSourceIds.includes(id)) return // cleanup old refs
+        if (!visibleInstanceIds.includes(id)) return // cleanup old refs
 
         const rect = el.getBoundingClientRect()
         if (!isRectVisible(rect, visibleRect)) return
 
-        newVisibleSourceIds.push(id)
+        newVisibleInstanceIds.push(id)
         const elCenterX = rect.left + rect.width / 2
         const elCenterY = rect.top + rect.height / 2
 
@@ -260,7 +260,7 @@ export function DesktopBoard({
       setScatterAnimationState({
         hasScattered: true,
         vectors: newVectors,
-        visibleSourceIds: newVisibleSourceIds,
+        visibleInstanceIds: newVisibleInstanceIds,
       })
     }
 
@@ -284,7 +284,7 @@ export function DesktopBoard({
       window.removeEventListener("resize", calculateVectors)
       resizeObserver?.disconnect()
     }
-  }, [containerRef, visibleSourceIds, isScattered, items])
+  }, [containerRef, visibleInstanceIds, isScattered, items])
 
   return (
     <DndContext
@@ -312,7 +312,7 @@ export function DesktopBoard({
           },
         }}
       >
-        {visibleCards.map(({ id, descriptor, instanceAtom }, index) => (
+        {visibleCards.map(({ id, collectionId, descriptor, instanceAtom }, index) => (
           <m.li
             key={id}
             data-card-id={id}
@@ -325,7 +325,7 @@ export function DesktopBoard({
             animate={isScatterReady ? "scattered" : "visible"}
             custom={{
               index,
-              scatterIndex: scatterAnimationState.visibleSourceIds.indexOf(id),
+              scatterIndex: scatterAnimationState.visibleInstanceIds.indexOf(id),
               hasScattered,
               vector: scatterAnimationState.vectors[id],
             }}
@@ -384,6 +384,7 @@ export function DesktopBoard({
             }}
           >
             <DraggableCard
+              collectionId={collectionId}
               descriptor={descriptor}
               filter={filter}
               forceMount={isScattered}

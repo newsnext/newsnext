@@ -7,10 +7,10 @@ export type { NewsItem, SourceDescriptor }
  * Frontend source shape used by draggable cards and boards.
  * `id` is the unique card instance identifier used across the UI.
  */
-export type BoardSource = Omit<SourceDescriptor, "id"> & {
+export type CardViewModel = Omit<SourceDescriptor, "id"> & {
   id: string
   sourceId: string
-  boardId: string | null
+  collectionId: string | null
   createdAt?: number
   paramsValue?: Record<string, unknown>
 }

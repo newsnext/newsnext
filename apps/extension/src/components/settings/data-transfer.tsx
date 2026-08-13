@@ -8,8 +8,9 @@ import { useNavigate } from "@tanstack/react-router"
 import { useAtomValue, useSetAtom } from "jotai"
 import { useRef, useState } from "react"
 import { PhCheckCircle, PhTrash } from "@/components/icons/ph"
+import { useAsyncAction } from "@/hooks/use-async-action"
 import { ALL_BOARD_ID, DEFAULT_BOARD_COLOR } from "@/lib/board"
-import { clearNonPortableUserData, parsePersistedDataExport, PERSISTED_PORTABLE_SLICE_IDS, selectPersistedUserData, serializePersistedDataExport } from "@/lib/settings"
+import { clearNonPortableUserData, hasPersistedUserDataSlice, parsePersistedDataExport, PERSISTED_PORTABLE_SLICE_IDS, selectPersistedUserData, serializePersistedDataExport } from "@/lib/settings"
 import { handleThemeModeSwitch, handleThemeSwitch } from "@/lib/utils/swith-theme"
 import {
   clearPersistedUserDataAtom,
@@ -31,12 +32,12 @@ const DATA_SLICE_OPTIONS: Array<{
   {
     id: "boards",
     label: "Boards",
-    description: "Board names, colors, and card sorting preferences.",
+    description: "Collections, Board preferences, memberships, and card order.",
   },
   {
     id: "instances",
     label: "Source instances",
-    description: "Configured sources, parameters, and board membership.",
+    description: "Configured Source Instances and their parameters.",
   },
 ]
 
@@ -61,8 +62,12 @@ export function DataTransferSettings({
   )
   const [status, setStatus] = useState<TransferStatus>()
   const [clearArmed, setClearArmed] = useState(false)
-  const [clearError, setClearError] = useState<string>()
-  const [clearing, setClearing] = useState(false)
+  const {
+    error: clearError,
+    isPending: clearing,
+    resetError: resetClearError,
+    run: runClear,
+  } = useAsyncAction("NewsNext could not clear all user data.")
   const hasSelection = selectedSliceIds.length > 0
 
   function setSliceSelected(
@@ -104,7 +109,7 @@ export function DataTransferSettings({
       }
 
       const selectedData = selectPersistedUserData(imported.data, selectedSliceIds)
-      const importedSliceIds = selectedSliceIds.filter(id => selectedData[id] !== undefined)
+      const importedSliceIds = selectedSliceIds.filter(id => hasPersistedUserDataSlice(selectedData, id))
       if (importedSliceIds.length === 0) {
         setStatus({
           kind: "error",
@@ -113,7 +118,7 @@ export function DataTransferSettings({
         return
       }
 
-      importData(selectedData)
+      await importData(selectedData)
       if (selectedData.settings) {
         handleThemeModeSwitch(selectedData.settings.appearance.themeMode)
       }
@@ -131,14 +136,13 @@ export function DataTransferSettings({
   async function handleClear(): Promise<void> {
     if (!clearArmed) {
       setClearArmed(true)
-      setClearError(undefined)
+      resetClearError()
       return
     }
 
-    setClearing(true)
-    try {
+    await runClear(async () => {
       await clearNonPortableUserData()
-      clearPersistedData()
+      await clearPersistedData()
       queryClient.clear()
       handleThemeModeSwitch("system")
       handleThemeSwitch(DEFAULT_BOARD_COLOR)
@@ -148,12 +152,8 @@ export function DataTransferSettings({
         replace: true,
       })
       onCleared()
-    } catch {
-      setClearError("NewsNext could not clear all user data.")
-    } finally {
-      setClearArmed(false)
-      setClearing(false)
-    }
+    })
+    setClearArmed(false)
   }
 
   return (

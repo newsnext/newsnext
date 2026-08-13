@@ -1,8 +1,8 @@
-export type { Board } from "./board"
+export type { Board, BoardCreateInput } from "./board"
 export {
   ALL_BOARD_ID,
+  ALL_BOARD_NAME,
   createAllBoard,
-  createBoard,
   DEFAULT_BOARD_COLOR,
   getAdjacentBoardId,
   getBoardColor,
@@ -18,13 +18,13 @@ export {
 export { mixSourceItems } from "./next-layer"
 export { getSortableData, isSortableData } from "./sortable-data"
 export type {
-  BoardSortableSource,
   BoardSortMode,
   BoardSortPreference,
+  SortableCardView,
 } from "./sorting"
 export {
   createBoardSortPreference,
   DEFAULT_BOARD_SORT_PREFERENCE,
-  orderBoardSourceIds,
+  orderCardInstanceIds,
   updateBoardSortMode,
 } from "./sorting"

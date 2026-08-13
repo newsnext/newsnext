@@ -2,23 +2,20 @@ import type {
   SourcePatch,
   SourcePresentationMetadata,
 } from "@newsnext/source/types"
-import type { BoardSource, SourceDescriptor } from "@/typings/source"
+import type { CardViewModel, SourceDescriptor } from "@/typings/source"
 import { SOURCE_PRESENTATION_METADATA_KEYS } from "@newsnext/source"
 import { pick } from "es-toolkit"
-import { ALL_BOARD_ID } from "@/lib/board"
-import { createId } from "@/lib/id"
 
 export interface SourceInstance {
   instanceId: string
   sourceId: string
-  boardId: string | null
   patch: SourceInstancePatch
   createdAt: number
 }
 
 export interface SourceCards {
   ids: string[]
-  map: Record<string, BoardSource>
+  map: Record<string, CardViewModel>
 }
 
 export type SourceInstanceMetadata = SourcePresentationMetadata
@@ -43,9 +40,9 @@ export function mergeSourceInstancePatch(
 }
 
 function applyInstanceOverrides(
-  source: BoardSource,
+  source: CardViewModel,
   instance: SourceInstance,
-): BoardSource {
+): CardViewModel {
   const metadata = pick(instance.patch.metadata ?? {}, SOURCE_PRESENTATION_METADATA_KEYS)
 
   return {
@@ -62,33 +59,20 @@ function applyInstanceOverrides(
 export function createBoardSource(
   source: SourceDescriptor,
   instance: SourceInstance,
-): BoardSource {
+  collectionId: string | null = null,
+): CardViewModel {
   return applyInstanceOverrides({
     ...source,
     id: instance.instanceId,
     sourceId: instance.sourceId,
-    boardId: instance.boardId,
+    collectionId,
   }, instance)
-}
-
-export function createSourceInstance(
-  sourceId: string,
-  boardId: string | null,
-  patch: SourceInstancePatch,
-): SourceInstance {
-  return {
-    instanceId: `${sourceId}::${createId()}`,
-    sourceId,
-    boardId,
-    patch,
-    createdAt: Date.now(),
-  }
 }
 
 function buildCardSources(
   sources: SourceDescriptor[],
   sourceInstances: SourceInstance[],
-): BoardSource[] {
+): CardViewModel[] {
   const sourceIds = new Set(sources.map(source => source.id))
   const instanceGroups = new Map<string, SourceInstance[]>()
 
@@ -112,16 +96,20 @@ function buildCardSources(
 export function buildSourceCards({
   sources,
   sourceInstances,
-  boardId,
+  collectionId,
+  collectionInstanceIds,
 }: {
   sources: SourceDescriptor[]
   sourceInstances: SourceInstance[]
-  boardId: string
+  collectionId: string | null
+  collectionInstanceIds?: readonly string[]
 }): SourceCards {
-  const visibleInstances = boardId === ALL_BOARD_ID
-    ? sourceInstances
-    : sourceInstances.filter(instance => instance.boardId === boardId)
+  const visibleIds = collectionInstanceIds ? new Set(collectionInstanceIds) : undefined
+  const visibleInstances = visibleIds
+    ? sourceInstances.filter(instance => visibleIds.has(instance.instanceId))
+    : sourceInstances
   const cards = buildCardSources(sources, visibleInstances)
+    .map(card => ({ ...card, collectionId }))
 
   return {
     ids: cards.map(source => source.id),
@@ -129,7 +117,7 @@ export function buildSourceCards({
   }
 }
 
-export function getSourceCard(cards: SourceCards, id: string): BoardSource {
+export function getSourceCard(cards: SourceCards, id: string): CardViewModel {
   const source = cards.map[id]
   if (!source) {
     throw new Error(`Missing source card: ${id}`)
@@ -138,9 +126,9 @@ export function getSourceCard(cards: SourceCards, id: string): BoardSource {
 }
 
 export function applySourceLoaderMetadata(
-  source: BoardSource,
+  source: CardViewModel,
   metadata: SourcePresentationMetadata | undefined,
-): BoardSource {
+): CardViewModel {
   if (!metadata) {
     return source
   }

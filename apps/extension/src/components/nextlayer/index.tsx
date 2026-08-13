@@ -1,5 +1,5 @@
 import type { RefObject } from "react"
-import type { BoardSource } from "@/typings/source"
+import type { CardViewModel } from "@/typings/source"
 import { useVirtualizer } from "@tanstack/react-virtual"
 import { useAtomValue } from "jotai"
 import { m } from "motion/react"
@@ -23,7 +23,7 @@ interface NextLayerProps {
 }
 
 interface NextLayerSource {
-  card: BoardSource
+  card: CardViewModel
   icon?: string
   id: string
 }
@@ -189,10 +189,10 @@ export function NextLayer({
   const iconSettings = useAtomValue(sourceIconSettingsAtom)
   const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(null)
   const sourceResults = useBoardItems()
-  const { currentBoard, sourceIds } = useBoardSourceCards(boardId)
+  const { currentBoard, instanceIds } = useBoardSourceCards(boardId)
 
   const mixedItems = useMemo(() => mixSourceItems(
-    sourceIds.flatMap((id) => {
+    instanceIds.flatMap((id) => {
       const result = sourceResults[id]
       if (!result || result.filter !== currentBoard.filter) return []
 
@@ -210,12 +210,12 @@ export function NextLayer({
         updatedAt: result.updatedAt,
       }]
     }),
-  ), [currentBoard.filter, iconSettings.template, sourceIds, sourceResults])
+  ), [currentBoard.filter, iconSettings.template, instanceIds, sourceResults])
   const timeLabels = useMemo(
     () => mixedItems.map(entry => formatRelativeTime(entry.timestamp, now)),
     [mixedItems, now],
   )
-  const isLoading = sourceIds.some((id) => {
+  const isLoading = instanceIds.some((id) => {
     const result = sourceResults[id]
     return !result || result.filter !== currentBoard.filter || result.isLoading
   })
@@ -256,9 +256,9 @@ export function NextLayer({
               Timeline
             </h1>
             <p className="truncate text-xs opacity-70">
-              {sourceIds.length}
+              {instanceIds.length}
               {" "}
-              {sourceIds.length === 1 ? "source" : "sources"}
+              {instanceIds.length === 1 ? "source" : "sources"}
               <span className="px-1" aria-hidden>·</span>
               {mixedItems.length}
               {" "}
@@ -278,9 +278,9 @@ export function NextLayer({
             : (
                 <div className="flex min-h-52 items-center justify-center p-8">
                   <p className="text-center text-sm text-muted-foreground">
-                    {sourceIds.length > 0 && isLoading
+                    {instanceIds.length > 0 && isLoading
                       ? "Loading items…"
-                      : sourceIds.length > 0
+                      : instanceIds.length > 0
                         ? "No items to show."
                         : "Add a card to see its items here."}
                   </p>

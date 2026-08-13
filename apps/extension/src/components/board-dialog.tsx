@@ -1,5 +1,5 @@
 import type { Color } from "@newsnext/shared/types"
-import type { Board, BoardFilterMode, BoardSortMode } from "@/lib/board"
+import type { Board, BoardCreateInput, BoardFilterMode, BoardSortMode } from "@/lib/board"
 import { Button } from "@newsnext/ui/components/button"
 import {
   Dialog,
@@ -14,7 +14,8 @@ import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { ThemeSelector } from "@newsnext/ui/components/theme-selector"
 import { useState } from "react"
 import { PhCheckCircle, PhTrash } from "@/components/icons/ph"
-import { ALL_BOARD_ID, createBoard, createBoardFilter, DEFAULT_BOARD_COLOR, DEFAULT_BOARD_SORT_PREFERENCE, getBoardColor, isBoardNameTaken, updateBoardSortMode } from "@/lib/board"
+import { useAsyncAction } from "@/hooks/use-async-action"
+import { ALL_BOARD_ID, createBoardFilter, DEFAULT_BOARD_COLOR, DEFAULT_BOARD_SORT_PREFERENCE, getBoardColor, isBoardNameTaken, updateBoardSortMode } from "@/lib/board"
 import { cn } from "@/lib/utils"
 
 const SORT_OPTIONS: { label: string, value: BoardSortMode }[] = [
@@ -37,9 +38,9 @@ interface BoardDialogProps {
   currentBoardId: string
   target: BoardDialogTarget
   onClose: () => void
-  onCreate: (board: Board) => void
-  onDelete: (boardId: string) => void
-  onUpdate: (board: Board) => void
+  onCreate: (input: BoardCreateInput) => Promise<void> | void
+  onDelete: (boardId: string) => Promise<void> | void
+  onUpdate: (board: Board) => Promise<void> | void
 }
 
 export function BoardDialog(props: BoardDialogProps) {
@@ -77,56 +78,61 @@ function ConfigurableBoardDialog({
   const [filterMode, setFilterMode] = useState<BoardFilterMode>(initialFilterMode)
   const [filterKeywords, setFilterKeywords] = useState(initialFilterKeywords)
   const [isDeleteArmed, setIsDeleteArmed] = useState(false)
+  const { error: submitError, isPending: isSubmitting, run: runAction } = useAsyncAction(
+    "The board could not be saved.",
+  )
   const normalizedName = name.trim()
   const hasDuplicateName = isBoardNameTaken(boards, normalizedName, boardId)
   const canSubmit = (!isEditing || board !== undefined)
     && normalizedName.length > 0
     && !hasDuplicateName
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>): void {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault()
     if (!canSubmit) {
       return
     }
     const filter = createBoardFilter(filterMode, filterKeywords)
-
     if (isEditing) {
-      if (!board) {
-        return
-      }
-
-      const nextBoard: Board = {
-        ...board,
-        name: normalizedName,
-        color,
-        sort: updateBoardSortMode(board.sort, sortMode),
-      }
-      if (filter) {
-        nextBoard.filter = filter
-      } else {
-        delete nextBoard.filter
-      }
-      onUpdate(nextBoard)
-      onClose()
+      if (!board) return
+      const succeeded = await runAction(async () => {
+        const nextBoard: Board = {
+          ...board,
+          name: normalizedName,
+          color,
+          sort: updateBoardSortMode(board.sort, sortMode),
+        }
+        if (filter) {
+          nextBoard.filter = filter
+        } else {
+          delete nextBoard.filter
+        }
+        await onUpdate(nextBoard)
+      })
+      if (succeeded) onClose()
       return
     }
 
-    onCreate(createBoard(
-      normalizedName,
-      color,
-      sortMode,
-      filter,
-    ))
-    onClose()
+    const succeeded = await runAction(async () => {
+      await onCreate({
+        name: normalizedName,
+        color,
+        filter,
+        sortMode,
+      })
+    })
+    if (succeeded) onClose()
   }
 
-  function handleDelete(): void {
+  async function handleDelete(): Promise<void> {
     if (!boardId) {
       return
     }
 
-    onDelete(boardId)
-    onClose()
+    const succeeded = await runAction(async () => {
+      await onDelete(boardId)
+    }, "The board could not be deleted.")
+    if (succeeded) onClose()
   }
 
   return (
@@ -224,10 +230,11 @@ function ConfigurableBoardDialog({
                 <Button
                   type="button"
                   variant="destructive"
+                  disabled={isSubmitting}
                   onBlur={() => setIsDeleteArmed(false)}
                   onClick={() => {
                     if (isDeleteArmed) {
-                      handleDelete()
+                      void handleDelete()
                       return
                     }
                     setIsDeleteArmed(true)
@@ -239,10 +246,13 @@ function ConfigurableBoardDialog({
                   </span>
                 </Button>
               )}
-              <Button type="submit" disabled={!canSubmit}>
-                {isEditing ? "Save changes" : "Create board"}
+              <Button type="submit" disabled={!canSubmit || isSubmitting}>
+                {isSubmitting ? "Saving…" : isEditing ? "Save changes" : "Create board"}
               </Button>
             </DialogFooter>
+            {submitError && (
+              <p role="alert" className="text-sm text-destructive">{submitError}</p>
+            )}
           </SquircleBox>
         </form>
       </DialogContent>

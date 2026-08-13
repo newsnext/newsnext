@@ -1,22 +1,23 @@
 import type { Atom } from "jotai"
-import type { Board, BoardSortableSource } from "@/lib/board"
+import type { Board, SortableCardView } from "@/lib/board"
 import type { SourceInstance } from "@/lib/source"
 import type { SourceDescriptor } from "@/typings/source"
 import { useAtomValue } from "jotai"
 import { useMemo } from "react"
-import { ALL_BOARD_ID, orderBoardSourceIds } from "@/lib/board"
+import { ALL_BOARD_ID, orderCardInstanceIds } from "@/lib/board"
 import { boardsAtom, instanceAtomsAtom, instanceLayoutsAtom } from "@/store/board"
 import { useSourceDescriptors } from "./use-source-descriptors"
 
 export interface BoardSourceCard {
+  collectionId: string | null
   descriptor: SourceDescriptor
   instanceAtom: Atom<SourceInstance>
 }
 
 interface BoardSourceCardsResult {
   currentBoard: Board
-  sourceCardsMap: Record<string, BoardSourceCard>
-  sourceIds: string[]
+  cardsByInstanceId: Record<string, BoardSourceCard>
+  instanceIds: string[]
 }
 
 export function useBoardSourceCards(boardId: string): BoardSourceCardsResult {
@@ -26,14 +27,14 @@ export function useBoardSourceCards(boardId: string): BoardSourceCardsResult {
   const { sources } = useSourceDescriptors()
   const currentBoard = boards.find(board => board.id === boardId)!
 
-  const { sourceIds, sourceCardsMap, sortSourcesMap } = useMemo(() => {
+  const { instanceIds, cardsByInstanceId, sortSourcesMap } = useMemo(() => {
     const descriptorsMap = new Map(sources.map(source => [source.id, source]))
-    const nextSourceIds: string[] = []
-    const nextSourceCardsMap: Record<string, BoardSourceCard> = {}
-    const nextSortSourcesMap: Record<string, BoardSortableSource> = {}
+    const nextInstanceIds: string[] = []
+    const nextCardsByInstanceId: Record<string, BoardSourceCard> = {}
+    const nextSortSourcesMap: Record<string, SortableCardView> = {}
 
     instanceLayouts.forEach((layout, index) => {
-      if (boardId !== ALL_BOARD_ID && layout.boardId !== boardId) {
+      if (boardId !== ALL_BOARD_ID && !layout.collectionIds.includes(boardId)) {
         return
       }
 
@@ -43,8 +44,12 @@ export function useBoardSourceCards(boardId: string): BoardSourceCardsResult {
         return
       }
 
-      nextSourceIds.push(layout.instanceId)
-      nextSourceCardsMap[layout.instanceId] = { descriptor, instanceAtom }
+      nextInstanceIds.push(layout.instanceId)
+      nextCardsByInstanceId[layout.instanceId] = {
+        collectionId: boardId === ALL_BOARD_ID ? null : boardId,
+        descriptor,
+        instanceAtom,
+      }
       nextSortSourcesMap[layout.instanceId] = {
         id: layout.instanceId,
         createdAt: layout.createdAt,
@@ -56,21 +61,21 @@ export function useBoardSourceCards(boardId: string): BoardSourceCardsResult {
     })
 
     return {
-      sourceIds: nextSourceIds,
-      sourceCardsMap: nextSourceCardsMap,
+      instanceIds: nextInstanceIds,
+      cardsByInstanceId: nextCardsByInstanceId,
       sortSourcesMap: nextSortSourcesMap,
     }
   }, [boardId, instanceAtoms, instanceLayouts, sources])
 
-  const orderedSourceIds = useMemo(() => orderBoardSourceIds({
-    sourceIds,
-    sourcesMap: sortSourcesMap,
+  const orderedInstanceIds = useMemo(() => orderCardInstanceIds({
+    instanceIds,
+    cardsByInstanceId: sortSourcesMap,
     preference: currentBoard.sort,
-  }), [currentBoard.sort, sortSourcesMap, sourceIds])
+  }), [currentBoard.sort, sortSourcesMap, instanceIds])
 
   return {
     currentBoard,
-    sourceCardsMap,
-    sourceIds: orderedSourceIds,
+    cardsByInstanceId,
+    instanceIds: orderedInstanceIds,
   }
 }

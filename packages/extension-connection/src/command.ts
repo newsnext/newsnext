@@ -39,14 +39,37 @@ export function parseExtensionConnectionCommandRequest(
   if (!isRecord(value) || typeof value.id !== "string") {
     throw new Error("Invalid extension command")
   }
-  if (value.type === "board.list") {
-    return { id: value.id, type: "board.list" }
+  if (value.type === "application.action.list") {
+    return { id: value.id, type: "application.action.list" }
   }
-  if (value.type === "instance.list") {
-    return { id: value.id, type: "instance.list" }
+  if (
+    value.type === "application.action.execute"
+    && typeof value.name === "string"
+    && value.name.length > 0
+    && isRecord(value.input)
+  ) {
+    return {
+      id: value.id,
+      type: "application.action.execute",
+      name: value.name,
+      input: value.input,
+    }
   }
-  if (value.type === "source.list") {
-    return { id: value.id, type: "source.list" }
+  if (value.type === "application.query.list") {
+    return { id: value.id, type: "application.query.list" }
+  }
+  if (
+    value.type === "application.query.execute"
+    && typeof value.name === "string"
+    && value.name.length > 0
+    && isRecord(value.input)
+  ) {
+    return {
+      id: value.id,
+      type: "application.query.execute",
+      name: value.name,
+      input: value.input,
+    }
   }
   if (
     value.type === "fetch"

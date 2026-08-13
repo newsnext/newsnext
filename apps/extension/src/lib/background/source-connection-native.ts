@@ -10,20 +10,28 @@ import {
   parseExtensionConnectionCommandRequest,
 } from "@newsnext/extension-connection"
 import { browser } from "#imports"
+import {
+  listApplicationActions,
+  listApplicationQueries,
+  parseApplicationAction,
+  parseApplicationQuery,
+} from "../application"
 import { PERSISTED_DATA_SLICES } from "../settings/persisted-data"
 import {
   normalizePersistedDeviceState,
   withSourceConnectionEnabled,
 } from "../settings/persisted-settings"
 import { listSourceHistoryDatasets } from "../source/history/repository"
-import { listConnectedBoards } from "./board-list"
+import {
+  executeBackgroundApplicationAction,
+  executeBackgroundApplicationQuery,
+} from "./application-service"
 import { executeInstanceHistoryRequest } from "./instance-history"
-import { listConnectedInstances } from "./instance-list"
 import { serializeSourceConnectionError } from "./source-connection-error"
-import { listConnectedSources, runConnectedSource } from "./source-runner"
+import { runConnectedSource } from "./source-runner"
 
 const NATIVE_HOST_NAME = "com.newsnext.host"
-const PROTOCOL_VERSION = 1
+const PROTOCOL_VERSION = 2
 const SOURCE_CONNECTION_RECONNECT_ALARM = "source-connection-native-reconnect"
 const RECONNECT_ALARM_PERIOD_MINUTES = 0.5
 
@@ -126,14 +134,22 @@ export function getSourceConnectionStatus(): SourceConnectionStatus {
 
 async function executeRequest(request: ExtensionConnectionCommandRequest): Promise<unknown> {
   switch (request.type) {
-    case "board.list":
-      return await listConnectedBoards()
+    case "application.action.list":
+      return listApplicationActions()
+    case "application.action.execute":
+      return await executeBackgroundApplicationAction(parseApplicationAction({
+        type: request.name,
+        input: request.input,
+      }))
+    case "application.query.list":
+      return listApplicationQueries()
+    case "application.query.execute":
+      return await executeBackgroundApplicationQuery(parseApplicationQuery({
+        type: request.name,
+        input: request.input,
+      }))
     case "fetch":
       return await executeFetchRequest(request)
-    case "instance.list":
-      return await listConnectedInstances()
-    case "source.list":
-      return (await listConnectedSources()).data
     case "source.run":
       return (await runConnectedSource(request)).data
     case "source-history.datasets":

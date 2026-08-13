@@ -1,5 +1,5 @@
 import type { BoardDialogTarget } from "@/components/board-dialog"
-import type { Board } from "@/lib/board"
+import type { Board, BoardCreateInput } from "@/lib/board"
 import { Button } from "@newsnext/ui/components/button"
 import {
   PillGroup,
@@ -102,17 +102,19 @@ export function BoardNav() {
     },
   )
 
-  function handleCreate(board: Board): void {
-    addBoard(board)
-    openBoard(board.id)
+  async function handleCreate(input: BoardCreateInput): Promise<void> {
+    const result = await addBoard(input)
+    if (result?.collectionId) {
+      openBoard(result.collectionId)
+    }
   }
 
-  function handleUpdate(board: Board): void {
-    updateBoard(board)
+  async function handleUpdate(board: Board): Promise<void> {
+    await updateBoard(board)
   }
 
-  function handleDelete(boardId: string): void {
-    deleteBoard(boardId)
+  async function handleDelete(boardId: string): Promise<void> {
+    await deleteBoard(boardId)
     openBoard(ALL_BOARD_ID)
   }
 

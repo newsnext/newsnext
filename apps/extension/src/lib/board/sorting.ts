@@ -1,4 +1,4 @@
-export interface BoardSortableSource {
+export interface SortableCardView {
   id: string
   createdAt?: number
   metadata: {
@@ -50,7 +50,7 @@ const nameCollator = new Intl.Collator(undefined, {
   sensitivity: "base",
 })
 
-function compareCreatedAt(left: BoardSortableSource, right: BoardSortableSource): number {
+function compareCreatedAt(left: SortableCardView, right: SortableCardView): number {
   const leftCreatedAt = Number.isFinite(left.createdAt) ? left.createdAt : undefined
   const rightCreatedAt = Number.isFinite(right.createdAt) ? right.createdAt : undefined
 
@@ -59,15 +59,15 @@ function compareCreatedAt(left: BoardSortableSource, right: BoardSortableSource)
   return rightCreatedAt - leftCreatedAt
 }
 
-function compareSourceIds(left: BoardSortableSource, right: BoardSortableSource): number {
+function compareInstanceIds(left: SortableCardView, right: SortableCardView): number {
   return nameCollator.compare(left.id, right.id)
 }
 
-function compareByCreatedAt(left: BoardSortableSource, right: BoardSortableSource): number {
-  return compareCreatedAt(left, right) || compareSourceIds(left, right)
+function compareByCreatedAt(left: SortableCardView, right: SortableCardView): number {
+  return compareCreatedAt(left, right) || compareInstanceIds(left, right)
 }
 
-function compareByProvider(left: BoardSortableSource, right: BoardSortableSource): number {
+function compareByProvider(left: SortableCardView, right: SortableCardView): number {
   const providerComparison = nameCollator.compare(
     left.provider.title,
     right.provider.title,
@@ -79,28 +79,28 @@ function compareByProvider(left: BoardSortableSource, right: BoardSortableSource
 
   return nameCollator.compare(leftTitle, rightTitle)
     || compareCreatedAt(left, right)
-    || compareSourceIds(left, right)
+    || compareInstanceIds(left, right)
 }
 
 function sortAutomatically(
-  sourceIds: string[],
-  sourcesMap: Record<string, BoardSortableSource>,
+  instanceIds: string[],
+  cardsByInstanceId: Record<string, SortableCardView>,
   mode: AutomaticBoardSortMode,
 ): string[] {
   const comparator = mode === "provider" ? compareByProvider : compareByCreatedAt
 
-  return sourceIds
+  return instanceIds
     .flatMap((id) => {
-      const source = sourcesMap[id]
-      return source ? [{ id, source }] : []
+      const card = cardsByInstanceId[id]
+      return card ? [{ id, card }] : []
     })
-    .toSorted((left, right) => comparator(left.source, right.source))
+    .toSorted((left, right) => comparator(left.card, right.card))
     .map(({ id }) => id)
 }
 
 function reconcileManualOrder(manualOrder: string[], fallbackOrder: string[]): string[] {
-  const sourceIdSet = new Set(fallbackOrder)
-  const orderedIds = manualOrder.filter(id => sourceIdSet.has(id))
+  const instanceIdSet = new Set(fallbackOrder)
+  const orderedIds = manualOrder.filter(id => instanceIdSet.has(id))
   const orderedIdSet = new Set(orderedIds)
 
   return [
@@ -109,18 +109,18 @@ function reconcileManualOrder(manualOrder: string[], fallbackOrder: string[]): s
   ]
 }
 
-export function orderBoardSourceIds({
-  sourceIds,
-  sourcesMap,
+export function orderCardInstanceIds({
+  instanceIds,
+  cardsByInstanceId,
   preference,
 }: {
-  sourceIds: string[]
-  sourcesMap: Record<string, BoardSortableSource>
+  instanceIds: string[]
+  cardsByInstanceId: Record<string, SortableCardView>
   preference: BoardSortPreference
 }): string[] {
   const automaticOrder = sortAutomatically(
-    sourceIds,
-    sourcesMap,
+    instanceIds,
+    cardsByInstanceId,
     preference.mode === "manual" ? preference.automaticMode : preference.mode,
   )
 

@@ -3,7 +3,7 @@ use serde_json::Value;
 use ts_rs::TS;
 
 pub const NATIVE_HOST_NAME: &str = "com.newsnext.host";
-pub const PROTOCOL_VERSION: u32 = 1;
+pub const PROTOCOL_VERSION: u32 = 2;
 
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
@@ -44,12 +44,24 @@ pub struct SerializedError {
     export_to = "../../../packages/extension-connection/src/generated/"
 )]
 pub enum ExtensionCommand {
-    #[serde(rename = "board.list")]
-    BoardList { id: String },
-    #[serde(rename = "instance.list")]
-    InstanceList { id: String },
-    #[serde(rename = "source.list")]
-    SourceList { id: String },
+    #[serde(rename = "application.action.list")]
+    ApplicationActionList { id: String },
+    #[serde(rename = "application.action.execute", rename_all = "camelCase")]
+    ApplicationActionExecute {
+        id: String,
+        name: String,
+        #[ts(type = "unknown")]
+        input: Value,
+    },
+    #[serde(rename = "application.query.list")]
+    ApplicationQueryList { id: String },
+    #[serde(rename = "application.query.execute", rename_all = "camelCase")]
+    ApplicationQueryExecute {
+        id: String,
+        name: String,
+        #[ts(type = "unknown")]
+        input: Value,
+    },
     #[serde(rename = "fetch", rename_all = "camelCase")]
     Fetch {
         id: String,
@@ -133,9 +145,10 @@ pub enum ExtensionCommand {
 impl ExtensionCommand {
     pub fn id(&self) -> &str {
         match self {
-            Self::BoardList { id }
-            | Self::InstanceList { id }
-            | Self::SourceList { id }
+            Self::ApplicationActionList { id }
+            | Self::ApplicationActionExecute { id, .. }
+            | Self::ApplicationQueryList { id }
+            | Self::ApplicationQueryExecute { id, .. }
             | Self::Fetch { id, .. }
             | Self::SourceRun { id, .. }
             | Self::SourceHistoryDatasets { id, .. }

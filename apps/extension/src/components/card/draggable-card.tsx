@@ -19,6 +19,7 @@ const SOURCE_CARD_SIZE_CLASS_NAMES: Record<SourceCardHeight, string> = {
 }
 
 interface DraggableCardProps {
+  collectionId: string | null
   descriptor: SourceDescriptor
   filter?: BoardFilter
   forceMount?: boolean
@@ -48,12 +49,12 @@ function generateDragPreview({ container, element }: { container: HTMLElement, e
   return () => preview.remove()
 }
 
-function DraggableCardComponent({ descriptor, filter, forceMount, instanceAtom, sortable = true }: DraggableCardProps) {
+function DraggableCardComponent({ collectionId, descriptor, filter, forceMount, instanceAtom, sortable = true }: DraggableCardProps) {
   const instance = useAtomValue(instanceAtom)
   const sourceCardHeight = useAtomValue(sourceCardHeightAtom)
   const source = useMemo(
-    () => createBoardSource(descriptor, instance),
-    [descriptor, instance],
+    () => createBoardSource(descriptor, instance, collectionId),
+    [collectionId, descriptor, instance],
   )
   const id = instance.instanceId
   const { isDragging, setNodeRef, setHandleRef } = useSortable({

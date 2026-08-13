@@ -2,8 +2,8 @@
 import type { ComponentProps } from "react"
 import type { BoardDialogTarget } from "@/components/board-dialog"
 import type { SettingsTabId } from "@/components/settings/modal-shell"
-import type { Board } from "@/lib/board"
-import type { BoardSource } from "@/typings/source"
+import type { Board, BoardCreateInput } from "@/lib/board"
+import type { CardViewModel } from "@/typings/source"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -64,15 +64,15 @@ function createSearchSource({
   title,
 }: {
   boardId: string | null
-  color: BoardSource["provider"]["color"]
+  color: CardViewModel["provider"]["color"]
   id: string
   providerTitle: string
   title: string
-}): BoardSource {
+}): CardViewModel {
   return {
     id,
     sourceId: id.split("::")[0] ?? id,
-    boardId,
+    collectionId: boardId,
     provider: {
       title: providerTitle,
       category: "developer",
@@ -214,6 +214,10 @@ function BoardDialogFixture({ target }: { target: BoardDialogTarget }) {
     setLastAction(`${action} “${board.name}” · ${board.sort.mode}`)
   }
 
+  function describeCreateAction(input: BoardCreateInput): void {
+    setLastAction(`Created “${input.name}” · ${input.sortMode}`)
+  }
+
   return (
     <FixtureStage>
       <div className="grid justify-items-center gap-3">
@@ -228,7 +232,7 @@ function BoardDialogFixture({ target }: { target: BoardDialogTarget }) {
           currentBoardId="board-design"
           target={target}
           onClose={() => setOpen(false)}
-          onCreate={board => describeBoardAction("Created", board)}
+          onCreate={describeCreateAction}
           onDelete={boardId => setLastAction(`Deleted ${boardId}`)}
           onUpdate={board => describeBoardAction("Updated", board)}
         />

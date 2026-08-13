@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 import type { SourceInstanceMetadata } from "@/lib/source"
-import type { BoardSource } from "@/typings/source"
+import type { CardViewModel } from "@/typings/source"
 import { ScrollArea } from "@newsnext/ui/components/scroll-area"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { useState } from "react"
@@ -14,16 +14,16 @@ import { CardEditForm } from "./edit-form"
 
 export interface CardBackProps {
   id: string
-  source: BoardSource
+  source: CardViewModel
   draftSourceParams: Record<string, unknown>
   hasSourceParams: boolean
   hasSourceParamChanges: boolean
   updatedAt: number
   onSourceParamChange: (key: string, value: unknown) => void
-  onSaveSourceParams: () => void
-  onResetSourceParams: () => void
+  onSaveSourceParams: () => Promise<void> | void
+  onResetSourceParams: () => Promise<void> | void
   onDiscardSourceParams: () => void
-  onSaveSourceMeta: (meta: SourceInstanceMetadata) => void
+  onSaveSourceMeta: (meta: SourceInstanceMetadata) => Promise<void> | void
   onFlip: () => void
   isDraft?: boolean
   dragHandle?: ReactNode
@@ -97,7 +97,7 @@ export function CardBack({
             className="relative size-full rounded-2xl overflow-hidden"
           >
             <div className="p-3 space-y-4">
-              {!isDraft && <CardBoardSelect id={id} boardId={source.boardId} />}
+              {!isDraft && <CardBoardSelect id={id} />}
               <CardEditForm
                 source={source}
                 draftSourceParams={draftSourceParams}

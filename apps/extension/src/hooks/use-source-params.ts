@@ -49,21 +49,15 @@ export function useSourceParams({ params, initialValues }: UseSourceParamsOption
     }))
   }, [])
 
-  const saveDraftParams = useCallback(() => {
-    const nextParams = sanitizeSourceParamPatch(state.draftParams, params)
+  const getDraftParams = useCallback(() => (
+    sanitizeSourceParamPatch(state.draftParams, params)
+  ), [params, state.draftParams])
+
+  const commitParams = useCallback((nextParams: SourceParamValues) => {
     setStoredState(prev => ({
       ...prev,
       savedParams: nextParams,
       draftParams: nextParams,
-    }))
-    return nextParams
-  }, [params, state.draftParams])
-
-  const resetDraftParams = useCallback(() => {
-    setStoredState(prev => ({
-      ...prev,
-      savedParams: {},
-      draftParams: {},
     }))
   }, [])
 
@@ -83,8 +77,8 @@ export function useSourceParams({ params, initialValues }: UseSourceParamsOption
     draftParams: state.draftParams,
     isDirty,
     updateDraftParam,
-    saveDraftParams,
-    resetDraftParams,
+    getDraftParams,
+    commitParams,
     discardDraftParams,
   }
 }

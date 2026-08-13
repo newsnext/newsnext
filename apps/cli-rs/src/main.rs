@@ -18,7 +18,7 @@ use tray_icon::menu::{Menu, MenuEvent, MenuItem, PredefinedMenuItem};
 use tray_icon::{Icon, TrayIcon, TrayIconBuilder};
 
 use crate::daemon::DaemonEvent;
-use crate::protocol::{BridgeToDaemon, DaemonToBridge, ExtensionCommand, NATIVE_HOST_NAME};
+use crate::protocol::{BridgeToDaemon, DaemonToBridge, NATIVE_HOST_NAME};
 
 const DEFAULT_IPC_ADDRESS: &str = "127.0.0.1:43110";
 const DEVELOPMENT_CHROME_EXTENSION_ID: &str = "cffgbnjiaakknooiegnjkojemhidheke";
@@ -48,20 +48,17 @@ enum Command {
     Restart,
     /// Fetch a URL in a connected extension with browser cookies.
     Fetch(commands::FetchArgs),
-    /// Source commands.
-    Source {
+    /// Run a registered or local JSON source in a connected extension.
+    Run(commands::SourceRunArgs),
+    /// Discover and execute canonical application Actions.
+    Action {
         #[command(subcommand)]
-        command: commands::SourceCommand,
+        command: commands::ApplicationActionCommand,
     },
-    /// Inspect saved boards and card instances.
-    Board {
+    /// Discover and execute canonical application Queries.
+    Query {
         #[command(subcommand)]
-        command: BoardCommand,
-    },
-    /// Inspect saved card instances.
-    Instance {
-        #[command(subcommand)]
-        command: InstanceCommand,
+        command: commands::ApplicationQueryCommand,
     },
     /// Inspect locally observed instance history.
     History {
@@ -81,18 +78,6 @@ enum Command {
     /// Run the foreground daemon process.
     #[command(name = "__daemon", hide = true)]
     Daemon,
-}
-
-#[derive(Subcommand)]
-enum BoardCommand {
-    /// List saved boards with their card instances.
-    List(commands::JsonListArgs),
-}
-
-#[derive(Subcommand)]
-enum InstanceCommand {
-    /// List saved card instances.
-    List(commands::JsonListArgs),
 }
 
 #[derive(Clone, Copy, ValueEnum)]
@@ -115,25 +100,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Command::Stop => stop(),
         Command::Restart => restart(),
         Command::Fetch(args) => commands::run_fetch(&ipc_address(), args),
-        Command::Source { command } => commands::run_source(&ipc_address(), command),
-        Command::Board { command } => match command {
-            BoardCommand::List(args) => commands::run_json_list(
-                &ipc_address(),
-                args,
-                ExtensionCommand::BoardList {
-                    id: uuid::Uuid::new_v4().to_string(),
-                },
-            ),
-        },
-        Command::Instance { command } => match command {
-            InstanceCommand::List(args) => commands::run_json_list(
-                &ipc_address(),
-                args,
-                ExtensionCommand::InstanceList {
-                    id: uuid::Uuid::new_v4().to_string(),
-                },
-            ),
-        },
+        Command::Run(args) => commands::run_source(&ipc_address(), args),
+        Command::Action { command } => commands::run_application_action(&ipc_address(), command),
+        Command::Query { command } => commands::run_application_query(&ipc_address(), command),
         Command::History { command } => commands::run_history(&ipc_address(), command),
         Command::InstallNativeHost {
             browser,

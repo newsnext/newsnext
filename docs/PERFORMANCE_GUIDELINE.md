@@ -73,7 +73,9 @@ Profile at least the scenarios affected by a change:
 - Single-card refresh from request start through completion.
 - Global refresh with multiple active cards.
 - Minute-boundary relative-time updates.
-- Card instance changes that update the Jotai storage atoms.
+- Application Actions that update Instances, Collections, entries, or
+  Collection Views through the background mutation runtime and its read-only
+  frontend Application Data subscription.
 - Card reorder, cancelled drag, and a drop that changes order.
 
 Restore any card metadata, parameters, board membership, or order changed by an
@@ -99,11 +101,13 @@ to `Desk` without subscribing the board to header progress state.
 
 ### Keep derivation ownership local
 
-`buildSourceCards` is a pure derivation without cross-call caches. Search and
+`buildSourceCards` is a pure derivation without cross-call caches. Collection
+membership is selected before projection; the Instance contains no Board
+identifier. Search and
 refresh call it for their own snapshots. The rendered board uses Jotai's
 `splitAtom` with `instanceId` as its stable key so every card subscribes to its
 own `SourceInstance`. `NowLayer` subscribes separately to a lightweight layout
-projection containing only membership and sorting fields.
+projection containing only Collection IDs and sorting fields.
 
 Resolve board-only appearance settings at the draggable-card boundary and pass
 their result into the shared card shell. Do not make the base `SourceCard`
@@ -153,6 +157,26 @@ normalized value already matches the synchronous `localStorage` snapshot. An
 echo must not replace arrays or objects with equal copies and trigger a second
 render after every Board (including sorting), SourceInstance, or Settings update. A real
 background change still replaces the affected slice and notifies its atom.
+Application Data differs from ordinary frontend-owned settings: React dispatch
+atoms await the background Application service and never write the persisted
+Application Data atom. Its mirrored adapter is read-only, so initialization and
+normalization update only the frontend cache. The background serializes UI and
+Agent mutations, writes one normalized envelope, and the storage subscription
+publishes that envelope to React. Do not add optimistic Application Data writes
+unless profiling proves the storage round trip is a visible bottleneck and the
+design includes conflict reconciliation.
+
+Mirrored storage deduplication must compare against state held by each adapter
+instance, not shared `localStorage`. Several extension documents share the same
+cache but own independent atom trees; one document updating the cache must not
+cause another document to skip its `browser.storage.onChanged` notification.
+Background Action proxies return only compact receipts such as `collectionId`
+or `instanceId`; the normalized Application Data envelope propagates once via
+the storage subscription instead of being serialized again as an Action result.
+Board rendering names must reflect identity: arrays and maps keyed by configured
+cards use `instanceIds` and `cardsByInstanceId`. Reserve `sourceId` for the
+reusable Source descriptor identity so performance selectors do not obscure
+which entity invalidated.
 
 ### Add memo boundaries at independent units
 

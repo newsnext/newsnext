@@ -1,8 +1,8 @@
-import type { BoardSource } from "@/typings/source"
+import type { CardViewModel } from "@/typings/source"
 import { describe, expect, it } from "vitest"
 import {
   DEFAULT_BOARD_SORT_PREFERENCE,
-  orderBoardSourceIds,
+  orderCardInstanceIds,
 } from "./sorting"
 
 function createSource({
@@ -15,11 +15,11 @@ function createSource({
   provider: string
   title?: string
   createdAt: number
-}): BoardSource {
+}): CardViewModel {
   return {
     id,
     sourceId: id.split("::")[0] ?? id,
-    boardId: "reading",
+    collectionId: "reading",
     createdAt,
     provider: {
       title: provider,
@@ -39,11 +39,11 @@ function createSource({
   }
 }
 
-function createSourcesMap(sources: BoardSource[]): Record<string, BoardSource> {
-  return Object.fromEntries(sources.map(source => [source.id, source]))
+function createSourcesMap(sources: CardViewModel[]): Record<string, CardViewModel> {
+  return Object.fromEntries(sources.map(card => [card.id, card]))
 }
 
-describe("orderBoardSourceIds", () => {
+describe("orderCardInstanceIds", () => {
   it("sorts newly added cards first by default", () => {
     const sources = [
       createSource({ id: "test:old::1", provider: "Test", createdAt: 1 }),
@@ -51,9 +51,9 @@ describe("orderBoardSourceIds", () => {
       createSource({ id: "test:middle::3", provider: "Test", createdAt: 2 }),
     ]
 
-    expect(orderBoardSourceIds({
-      sourceIds: sources.map(source => source.id),
-      sourcesMap: createSourcesMap(sources),
+    expect(orderCardInstanceIds({
+      instanceIds: sources.map(card => card.id),
+      cardsByInstanceId: createSourcesMap(sources),
       preference: DEFAULT_BOARD_SORT_PREFERENCE,
     })).toEqual([
       "test:new::2",
@@ -70,9 +70,9 @@ describe("orderBoardSourceIds", () => {
       createSource({ id: "alpha:fallback::4", provider: "Alpha", createdAt: 1 }),
     ]
 
-    expect(orderBoardSourceIds({
-      sourceIds: sources.map(source => source.id),
-      sourcesMap: createSourcesMap(sources),
+    expect(orderCardInstanceIds({
+      instanceIds: sources.map(card => card.id),
+      cardsByInstanceId: createSourcesMap(sources),
       preference: {
         mode: "provider",
         automaticMode: "provider",
@@ -93,9 +93,9 @@ describe("orderBoardSourceIds", () => {
       createSource({ id: "test:middle::3", provider: "Test", createdAt: 2 }),
     ]
 
-    expect(orderBoardSourceIds({
-      sourceIds: sources.map(source => source.id),
-      sourcesMap: createSourcesMap(sources),
+    expect(orderCardInstanceIds({
+      instanceIds: sources.map(card => card.id),
+      cardsByInstanceId: createSourcesMap(sources),
       preference: {
         mode: "manual",
         automaticMode: "createdAt",
@@ -114,9 +114,9 @@ describe("orderBoardSourceIds", () => {
       createSource({ id: "alpha:feed::2", provider: "Alpha", createdAt: 1 }),
     ]
 
-    expect(orderBoardSourceIds({
-      sourceIds: sources.map(source => source.id),
-      sourcesMap: createSourcesMap(sources),
+    expect(orderCardInstanceIds({
+      instanceIds: sources.map(card => card.id),
+      cardsByInstanceId: createSourcesMap(sources),
       preference: {
         mode: "manual",
         automaticMode: "provider",
@@ -128,13 +128,13 @@ describe("orderBoardSourceIds", () => {
     ])
   })
 
-  it("drops source IDs that no longer have source data", () => {
-    const source = createSource({ id: "test:available::1", provider: "Test", createdAt: 1 })
+  it("drops card IDs that no longer have card data", () => {
+    const card = createSource({ id: "test:available::1", provider: "Test", createdAt: 1 })
 
-    expect(orderBoardSourceIds({
-      sourceIds: [source.id, "test:missing::2"],
-      sourcesMap: createSourcesMap([source]),
+    expect(orderCardInstanceIds({
+      instanceIds: [card.id, "test:missing::2"],
+      cardsByInstanceId: createSourcesMap([card]),
       preference: DEFAULT_BOARD_SORT_PREFERENCE,
-    })).toEqual([source.id])
+    })).toEqual([card.id])
   })
 })

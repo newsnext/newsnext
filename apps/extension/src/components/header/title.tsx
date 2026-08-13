@@ -159,8 +159,12 @@ function CurrentBoardAppearanceControls() {
         <ThemeSelector
           value={getBoardColor(board)}
           onValueChange={(color) => {
-            updateBoard({ ...board, color })
+            const previousColor = getBoardColor(board)
             handleThemeSwitch(color)
+            void updateBoard({ ...board, color }).catch((error) => {
+              handleThemeSwitch(previousColor)
+              console.error("Failed to update Board color", error)
+            })
           }}
         />
       </div>

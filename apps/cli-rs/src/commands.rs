@@ -47,6 +47,36 @@ pub struct JsonListArgs {
     compact: bool,
 }
 
+#[derive(Subcommand)]
+pub enum ApplicationActionCommand {
+    /// List available application Actions and their schemas.
+    List(JsonListArgs),
+    /// Execute an application Action.
+    Execute(ApplicationOperationArgs),
+}
+
+#[derive(Subcommand)]
+pub enum ApplicationQueryCommand {
+    /// List available application Queries and their schemas.
+    List(JsonListArgs),
+    /// Execute an application Query.
+    Execute(ApplicationOperationArgs),
+}
+
+#[derive(Args)]
+pub struct ApplicationOperationArgs {
+    /// Stable application operation name.
+    name: String,
+    /// JSON object passed to the operation.
+    #[arg(long, default_value = "{}")]
+    input: String,
+    #[command(flatten)]
+    connection: ConnectionArgs,
+    /// Print result JSON on one line.
+    #[arg(long)]
+    compact: bool,
+}
+
 #[derive(Args)]
 pub struct FetchArgs {
     /// HTTP(S) URL to fetch in the connected extension.
@@ -65,14 +95,6 @@ pub struct FetchArgs {
     /// Include response status and headers.
     #[arg(short = 'i', long)]
     include: bool,
-}
-
-#[derive(Subcommand)]
-pub enum SourceCommand {
-    /// List sources registered in a connected extension.
-    List(ConnectionArgs),
-    /// Run a registered or local JSON source in a connected extension.
-    Run(SourceRunArgs),
 }
 
 #[derive(Args)]
@@ -256,46 +278,62 @@ pub fn run_json_list(
     print_json(&success_data(execution.result)?, args.compact)
 }
 
-pub fn run_source(address: &str, command: SourceCommand) -> Result<(), Box<dyn std::error::Error>> {
+pub fn run_application_action(
+    address: &str,
+    command: ApplicationActionCommand,
+) -> Result<(), Box<dyn std::error::Error>> {
     match command {
-        SourceCommand::List(connection) => run_source_list(address, connection),
-        SourceCommand::Run(args) => run_source_run(address, args),
+        ApplicationActionCommand::List(args) => run_json_list(
+            address,
+            args,
+            ExtensionCommand::ApplicationActionList { id: request_id() },
+        ),
+        ApplicationActionCommand::Execute(args) => {
+            run_application_operation(address, args, |id, name, input| {
+                ExtensionCommand::ApplicationActionExecute { id, name, input }
+            })
+        }
     }
 }
 
-fn run_source_list(
+pub fn run_application_query(
     address: &str,
-    connection: ConnectionArgs,
+    command: ApplicationQueryCommand,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let timeout = connection.timeout()?;
+    match command {
+        ApplicationQueryCommand::List(args) => run_json_list(
+            address,
+            args,
+            ExtensionCommand::ApplicationQueryList { id: request_id() },
+        ),
+        ApplicationQueryCommand::Execute(args) => {
+            run_application_operation(address, args, |id, name, input| {
+                ExtensionCommand::ApplicationQueryExecute { id, name, input }
+            })
+        }
+    }
+}
+
+fn run_application_operation(
+    address: &str,
+    args: ApplicationOperationArgs,
+    create_command: impl FnOnce(String, String, Value) -> ExtensionCommand,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let input = serde_json::from_str::<Value>(&args.input)?;
+    if !input.is_object() {
+        return Err("--input must be a JSON object".into());
+    }
+    let timeout = args.connection.timeout()?;
     let execution = execute(
         address,
-        connection.browser,
-        ExtensionCommand::SourceList { id: request_id() },
+        args.connection.browser,
+        create_command(request_id(), args.name, input),
         timeout,
     )?;
-    let data = success_data(execution.result)?;
-    let sources = data
-        .as_array()
-        .filter(|values| values.iter().all(Value::is_string))
-        .ok_or("The extension returned an invalid source list")?;
-    for source in sources {
-        println!("{}", source.as_str().expect("source list was validated"));
-    }
-    eprintln!(
-        "✓ {} {} via {}",
-        sources.len(),
-        if sources.len() == 1 {
-            "source"
-        } else {
-            "sources"
-        },
-        execution.instance.browser
-    );
-    Ok(())
+    print_json(&success_data(execution.result)?, args.compact)
 }
 
-fn run_source_run(address: &str, args: SourceRunArgs) -> Result<(), Box<dyn std::error::Error>> {
+pub fn run_source(address: &str, args: SourceRunArgs) -> Result<(), Box<dyn std::error::Error>> {
     if args.watch && args.input == "-" {
         return Err("--watch cannot be used when reading a provider from standard input".into());
     }

@@ -2,7 +2,7 @@ import type { ReactNode } from "react"
 import type { BoardSourceItems } from "@/components/board-items-context"
 import type { BoardFilter } from "@/lib/board"
 import type { SourceInstanceMetadata, SourceInstancePatch } from "@/lib/source"
-import type { BoardSource } from "@/typings/source"
+import type { CardViewModel } from "@/typings/source"
 import { FlipAnimate } from "@newsnext/ui/components/flip-animate"
 import { useScrollProgressActionsContext } from "@newsnext/ui/components/scroll-progress-context"
 import { useSetAtom } from "jotai"
@@ -27,7 +27,7 @@ const EMPTY_ITEMS: BoardSourceItems["items"] = []
 export interface SourceCardProps {
   filter?: BoardFilter
   id: string
-  source: BoardSource
+  source: CardViewModel
   className?: string
   sizeClassName?: string
   nodeRef?: (node: HTMLElement | null) => void
@@ -48,8 +48,8 @@ function SourceCardContent({ filter, id, source, dragHandle, isDraft = false, on
     draftParams,
     isDirty,
     updateDraftParam,
-    saveDraftParams,
-    resetDraftParams,
+    getDraftParams,
+    commitParams,
     discardDraftParams,
   } = useSourceParams({
     params: source.params,
@@ -96,33 +96,36 @@ function SourceCardContent({ filter, id, source, dragHandle, isDraft = false, on
     setIsFlipped(prev => !prev)
   }, [])
 
-  const handleSaveSourceParams = useCallback(() => {
-    const nextParams = saveDraftParams()
+  const handleSaveSourceParams = useCallback(async () => {
+    const nextParams = getDraftParams()
     if (onDraftSourceChange) {
       onDraftSourceChange({ params: nextParams })
+      commitParams(nextParams)
       return
     }
 
-    setSourceInstancePatch({ instanceId: id, patch: { params: nextParams } })
-  }, [id, onDraftSourceChange, saveDraftParams, setSourceInstancePatch])
+    await setSourceInstancePatch({ instanceId: id, patch: { params: nextParams } })
+    commitParams(nextParams)
+  }, [commitParams, getDraftParams, id, onDraftSourceChange, setSourceInstancePatch])
 
-  const handleResetSourceParams = useCallback(() => {
-    resetDraftParams()
+  const handleResetSourceParams = useCallback(async () => {
     if (onDraftSourceChange) {
       onDraftSourceChange({ params: {} })
+      commitParams({})
       return
     }
 
-    resetLocalParams(id)
-  }, [id, onDraftSourceChange, resetDraftParams, resetLocalParams])
+    await resetLocalParams(id)
+    commitParams({})
+  }, [commitParams, id, onDraftSourceChange, resetLocalParams])
 
-  const handleSaveSourceMeta = useCallback((metadata: SourceInstanceMetadata) => {
+  const handleSaveSourceMeta = useCallback(async (metadata: SourceInstanceMetadata) => {
     if (onDraftSourceChange) {
       onDraftSourceChange({ metadata })
       return
     }
 
-    setSourceInstancePatch({ instanceId: id, patch: { metadata } })
+    await setSourceInstancePatch({ instanceId: id, patch: { metadata } })
   }, [id, onDraftSourceChange, setSourceInstancePatch])
 
   return (

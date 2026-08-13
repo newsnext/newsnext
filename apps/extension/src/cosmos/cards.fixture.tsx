@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import type { Color } from "@newsnext/shared/types"
-import type { BoardSource, NewsItem } from "@/typings/source"
+import type { CardViewModel, NewsItem } from "@/typings/source"
 import { COLORS } from "@newsnext/shared/constants"
 import { useState } from "react"
 import { CardBack } from "@/components/card/card-back"
@@ -9,10 +9,10 @@ import { cn } from "@/lib/utils"
 
 const UPDATED_AT = Date.now() - 4 * 60 * 1000
 
-export const SAMPLE_SOURCE: BoardSource = {
+export const SAMPLE_SOURCE: CardViewModel = {
   id: "cosmos-source",
   sourceId: "cosmos.design",
-  boardId: "all",
+  collectionId: "all",
   provider: {
     title: "Cosmos Design",
     category: "developer",
@@ -95,7 +95,7 @@ const TIMELINE_ITEMS: NewsItem[] = RANKING_ITEMS.map((item, index) => ({
   timestamp: Date.now() - index * 48 * 60 * 1000,
 }))
 
-function createColorSource(color: Color): BoardSource {
+function createColorSource(color: Color): CardViewModel {
   const label = `${color.charAt(0).toUpperCase()}${color.slice(1)}`
   return {
     ...SAMPLE_SOURCE,

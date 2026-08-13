@@ -20,20 +20,23 @@ If the server is stopped, run `bun run newsnext start`. If no extension is conne
 ## Query workflow
 
 1. When the user identifies a Board instead of an exact source instance, list
-   every configured Board and its instances:
+   Collections, match the Board name case-insensitively, then list its Instances:
 
    ```sh
-   bun run newsnext board list --compact
+   bun run newsnext query execute collection.list --compact
+   bun run newsnext query execute collection.listInstances \
+     --input '{"collectionId":"COLLECTION_ID"}' --compact
    ```
 
-   Match Board names case-insensitively. Use each returned `instanceId` for
-   subsequent history queries. The aggregate All Board is intentionally omitted;
-   `unassignedInstances` contains null or stale custom Board memberships.
+   Use each returned `instanceId` for subsequent history queries. For the
+   currently visible Board, `query execute view.getContext --compact` resolves
+   the Board to its underlying `collectionId`; a null `collectionId` represents
+   the aggregate All Board.
 
 2. When no Board is relevant, list saved instances directly:
 
    ```sh
-   bun run newsnext instance list --compact
+   bun run newsnext query execute instance.list --compact
    ```
 
 3. List observation metadata before reading or comparing exact times:

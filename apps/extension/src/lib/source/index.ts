@@ -7,7 +7,6 @@ export {
   applySourceLoaderMetadata,
   buildSourceCards,
   createBoardSource,
-  createSourceInstance,
   getSourceCard,
   mergeSourceInstancePatch,
 } from "./cards"

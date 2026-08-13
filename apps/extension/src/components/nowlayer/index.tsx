@@ -20,14 +20,16 @@ export function NowLayer({
   containerRef,
 }: NowLayerProps) {
   const setManualBoardOrder = useSetAtom(setManualBoardOrderAtom)
-  const { currentBoard, sourceCardsMap, sourceIds } = useBoardSourceCards(boardId)
+  const { currentBoard, cardsByInstanceId, instanceIds } = useBoardSourceCards(boardId)
   const currentBoardName = currentBoard.name
 
-  const handleSourceIdsChange = useCallback((newSourceIds: string[]) => {
-    setManualBoardOrder({ boardId, sourceIds: newSourceIds })
+  const handleInstanceIdsChange = useCallback((newInstanceIds: string[]) => {
+    void setManualBoardOrder({ boardId, instanceIds: newInstanceIds }).catch((error) => {
+      console.error("Failed to save manual Card order", error)
+    })
   }, [boardId, setManualBoardOrder])
 
-  if (sourceIds.length === 0) {
+  if (instanceIds.length === 0) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center px-6 text-center text-sm text-muted-foreground">
         Use Radar on a page to add a card to
@@ -41,14 +43,14 @@ export function NowLayer({
   return (
     <DesktopBoard
       key={boardId}
-      sourceIds={sourceIds}
-      sourceCardsMap={sourceCardsMap}
+      instanceIds={instanceIds}
+      cardsByInstanceId={cardsByInstanceId}
       sortable={boardId !== ALL_BOARD_ID}
       filter={currentBoard.filter}
       className={className}
       isScattered={isScattered}
       containerRef={containerRef}
-      onSourceIdsChange={handleSourceIdsChange}
+      onInstanceIdsChange={handleInstanceIdsChange}
     />
   )
 }

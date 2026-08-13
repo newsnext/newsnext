@@ -2,6 +2,7 @@ import { Button } from "@newsnext/ui/components/button"
 import { Card, CardContent } from "@newsnext/ui/components/card"
 import { useCallback, useEffect, useState } from "react"
 import { browser } from "#imports"
+import { useKeyedAsyncAction } from "@/hooks/use-async-action"
 import {
   getGrantedHostPermissionOrigins,
   getUserManagedHostPermissionOrigins,
@@ -36,9 +37,12 @@ function getOriginLabel(origin: string): string {
 
 export function PermissionsSettings() {
   const [origins, setOrigins] = useState<string[]>([])
-  const [revokingOrigin, setRevokingOrigin] = useState<string>()
   const [grantedPermissions, setGrantedPermissions] = useState<ManagedPermission[]>([])
-  const [revokingPermission, setRevokingPermission] = useState<ManagedPermission>()
+  const {
+    error: revokeError,
+    isPending: isRevoking,
+    run: runRevoke,
+  } = useKeyedAsyncAction<string>("NewsNext could not revoke this permission.")
 
   const refreshOrigins = useCallback(async (): Promise<void> => {
     const grantedOrigins = await getGrantedHostPermissionOrigins()
@@ -75,26 +79,20 @@ export function PermissionsSettings() {
   }, [refreshOrigins, refreshPermissions])
 
   const handleRevokeOrigin = useCallback(async (origin: string): Promise<void> => {
-    setRevokingOrigin(origin)
-    try {
+    await runRevoke(origin, async () => {
       await revokeHostPermissionOrigin(origin)
       await refreshOrigins()
-    } finally {
-      setRevokingOrigin(undefined)
-    }
-  }, [refreshOrigins])
+    }, "NewsNext could not revoke this site access.")
+  }, [refreshOrigins, runRevoke])
 
   const handleRevokePermission = useCallback(
     async (permission: ManagedPermission): Promise<void> => {
-      setRevokingPermission(permission)
-      try {
+      await runRevoke(permission, async () => {
         await browser.permissions.remove({ permissions: [permission] }).catch(() => false)
         await refreshPermissions()
-      } finally {
-        setRevokingPermission(undefined)
-      }
+      })
     },
-    [refreshPermissions],
+    [refreshPermissions, runRevoke],
   )
 
   const visiblePermissions = MANAGED_PERMISSIONS.filter(permission => (
@@ -130,10 +128,10 @@ export function PermissionsSettings() {
                         <Button
                           variant="outline"
                           size="xs"
-                          disabled={revokingPermission === permission.id}
+                          disabled={isRevoking(permission.id)}
                           onClick={() => void handleRevokePermission(permission.id)}
                         >
-                          {revokingPermission === permission.id ? "Revoking..." : "Revoke"}
+                          {isRevoking(permission.id) ? "Revoking..." : "Revoke"}
                         </Button>
                       </li>
                     ))}
@@ -168,10 +166,10 @@ export function PermissionsSettings() {
                         <Button
                           variant="outline"
                           size="xs"
-                          disabled={revokingOrigin === origin}
+                          disabled={isRevoking(origin)}
                           onClick={() => void handleRevokeOrigin(origin)}
                         >
-                          {revokingOrigin === origin ? "Revoking..." : "Revoke"}
+                          {isRevoking(origin) ? "Revoking..." : "Revoke"}
                         </Button>
                       </li>
                     ))}
@@ -180,6 +178,7 @@ export function PermissionsSettings() {
               </Card>
             )}
       </SettingsSection>
+      {revokeError && <p role="alert" className="text-sm text-destructive">{revokeError}</p>}
     </div>
   )
 }

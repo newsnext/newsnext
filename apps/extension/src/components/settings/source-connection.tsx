@@ -3,6 +3,7 @@ import { Card, CardContent } from "@newsnext/ui/components/card"
 import { Switch } from "@newsnext/ui/components/switch"
 import { useAtomValue } from "jotai"
 import { useCallback, useEffect, useState } from "react"
+import { useAsyncAction } from "@/hooks/use-async-action"
 import { createBackgroundClient } from "@/lib/background"
 import { withSourceConnectionEnabled } from "@/lib/settings"
 import { persistedDeviceStateAtom } from "@/store/settings"
@@ -28,7 +29,9 @@ const CHECKING_PRESENTATION: StatusPresentation = {
 export function SourceConnectionSettings(): React.JSX.Element {
   const persistedDeviceState = useAtomValue(persistedDeviceStateAtom)
   const [status, setStatus] = useState<SourceConnectionStatus>()
-  const [updating, setUpdating] = useState(false)
+  const { error: updateError, isPending: updating, run: runUpdate } = useAsyncAction(
+    "NewsNext could not update CLI access.",
+  )
   const state = status?.state
   const isEnabled = state !== undefined && state !== "disabled"
   const presentation = state ? STATUS_PRESENTATION[state] : CHECKING_PRESENTATION
@@ -57,24 +60,22 @@ export function SourceConnectionSettings(): React.JSX.Element {
   }, [isEnabled, refreshStatus])
 
   const handleEnabledChange = useCallback(async (enabled: boolean): Promise<void> => {
-    setUpdating(true)
-    try {
+    const succeeded = await runUpdate(async () => {
       const client = createBackgroundClient()
       setStatus(await client.sourceConnection.setEnabled(
         enabled,
         withSourceConnectionEnabled(persistedDeviceState, enabled),
       ))
-    } catch {
+    })
+    if (!succeeded) {
       await refreshStatus()
-    } finally {
-      setUpdating(false)
     }
-  }, [persistedDeviceState, refreshStatus])
+  }, [persistedDeviceState, refreshStatus, runUpdate])
 
   return (
     <SettingsSection
       title="CLI access"
-      description="Allow the NewsNext CLI on this device to run sources in this browser."
+      description="Allow the NewsNext CLI on this device to read and modify Collections and Instances, and run sources in this browser."
     >
       <Card variant="subtle">
         <CardContent>
@@ -109,6 +110,11 @@ export function SourceConnectionSettings(): React.JSX.Element {
               {" "}
               <code>newsnext start</code>
               .
+            </p>
+          )}
+          {updateError && (
+            <p role="alert" className="mt-3 text-xs text-destructive">
+              {updateError}
             </p>
           )}
         </CardContent>

@@ -15,7 +15,9 @@ function sortSourceDescriptors(sources: SourceDescriptor[]): SourceDescriptor[] 
 }
 
 export async function loadSourceDescriptors(): Promise<SourceDescriptor[]> {
-  sourceDescriptorsPromise ??= createBackgroundClient().registry.list().then(sortSourceDescriptors).catch((error) => {
+  sourceDescriptorsPromise ??= createBackgroundClient().application.query({
+    type: "source.list",
+  }).then(sortSourceDescriptors).catch((error) => {
     sourceDescriptorsPromise = undefined
     throw error
   })

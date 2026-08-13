@@ -2,15 +2,12 @@ import type { ExtensionCommand } from "./generated/ExtensionCommand"
 import type { ExtensionInstance } from "./generated/ExtensionInstance"
 import type { SerializedError } from "./generated/SerializedError"
 
-export type ExtensionConnectionBoardListRequest
-  = Extract<ExtensionCommand, { type: "board.list" }>
+export type ExtensionConnectionApplicationActionRequest
+  = Extract<ExtensionCommand, { type: "application.action.execute" }>
+export type ExtensionConnectionApplicationQueryRequest
+  = Extract<ExtensionCommand, { type: "application.query.execute" }>
 export type ExtensionConnectionFetchRequest
   = Extract<ExtensionCommand, { type: "fetch" }>
-export type ExtensionConnectionInstanceListRequest
-  = Extract<ExtensionCommand, { type: "instance.list" }>
-export type ExtensionConnectionListRequest
-  = Extract<ExtensionCommand, { type: "source.list" }>
-
 type GeneratedRunRequest = Extract<ExtensionCommand, { type: "source.run" }>
 
 export interface ExtensionConnectionRegisteredRunRequest extends GeneratedRunRequest {

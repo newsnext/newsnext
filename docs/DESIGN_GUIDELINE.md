@@ -342,6 +342,10 @@ They must have:
 - Theme color edits remain draft state until the user saves. Changing the
   selected option must not alter the existing board theme or the dialog shell
   before `Save changes` is activated.
+- Disable the relevant controls while an asynchronous Application Action is
+  pending. Close an editor or commit its local draft only after success, and
+  keep an inline `role="alert"` message attached to the affected form when the
+  Action fails.
 - No generic descriptive copy between the title and the first field when the
   form labels already make the task clear.
 
@@ -355,6 +359,17 @@ particular, do not add the following descriptions back to this dialog:
 
 - `Personalize this board and choose how its cards are arranged.`
 - `Group cards around a topic, project, or reading routine.`
+
+### Card Collection membership
+
+The Card back edits Collection membership with a checkbox menu, not a
+single-choice Board select. An Instance may belong to zero, one, or several
+Collections. The compact trigger shows `No boards`, the sole Board name, or the
+membership count; the menu lists every custom Board with independent checked
+state. Toggling one row must not remove other memberships. The aggregate All
+Board is a system View and never appears as a membership option.
+Disable only the membership row whose Action is pending so other memberships
+remain readable and independently controllable.
 
 ### Multi-column settings dialog
 
