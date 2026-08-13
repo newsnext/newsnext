@@ -2,6 +2,7 @@ mod commands;
 mod control;
 mod daemon;
 mod framing;
+mod ipc;
 mod native_host;
 mod protocol;
 
@@ -20,7 +21,6 @@ use tray_icon::{Icon, TrayIcon, TrayIconBuilder};
 use crate::daemon::DaemonEvent;
 use crate::protocol::{BridgeToDaemon, DaemonToBridge, NATIVE_HOST_NAME};
 
-const DEFAULT_IPC_ADDRESS: &str = "127.0.0.1:43110";
 const DEVELOPMENT_CHROME_EXTENSION_ID: &str = "cffgbnjiaakknooiegnjkojemhidheke";
 const FIREFOX_EXTENSION_ID: &str = "newsnext@ourongxing.com";
 
@@ -91,7 +91,7 @@ enum Browser {
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let arguments = std::env::args_os().collect::<Vec<_>>();
     if is_native_host_invocation(&arguments) {
-        return tokio::runtime::Runtime::new()?.block_on(native_host::run(&ipc_address()));
+        return tokio::runtime::Runtime::new()?.block_on(native_host::run(&ipc::endpoint_name()));
     }
     let cli = Cli::parse_from(arguments);
     match cli.command {
@@ -99,11 +99,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Command::Status => status(),
         Command::Stop => stop(),
         Command::Restart => restart(),
-        Command::Fetch(args) => commands::run_fetch(&ipc_address(), args),
-        Command::Run(args) => commands::run_source(&ipc_address(), args),
-        Command::Action { command } => commands::run_application_action(&ipc_address(), command),
-        Command::Query { command } => commands::run_application_query(&ipc_address(), command),
-        Command::History { command } => commands::run_history(&ipc_address(), command),
+        Command::Fetch(args) => commands::run_fetch(&ipc::endpoint_name(), args),
+        Command::Run(args) => commands::run_source(&ipc::endpoint_name(), args),
+        Command::Action { command } => {
+            commands::run_application_action(&ipc::endpoint_name(), command)
+        }
+        Command::Query { command } => {
+            commands::run_application_query(&ipc::endpoint_name(), command)
+        }
+        Command::History { command } => commands::run_history(&ipc::endpoint_name(), command),
         Command::InstallNativeHost {
             browser,
             extension_id,
@@ -117,7 +121,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }),
         ),
         Command::NativeHost => {
-            tokio::runtime::Runtime::new()?.block_on(native_host::run(&ipc_address()))
+            tokio::runtime::Runtime::new()?.block_on(native_host::run(&ipc::endpoint_name()))
         }
         Command::Daemon => run_daemon(),
     }
@@ -134,10 +138,6 @@ fn is_native_host_invocation(arguments: &[std::ffi::OsString]) -> bool {
             && std::path::Path::new(first.as_ref())
                 .file_name()
                 .is_some_and(|name| name == "com.newsnext.host.json"))
-}
-
-fn ipc_address() -> String {
-    std::env::var("NEWSNEXT_IPC_ADDRESS").unwrap_or_else(|_| DEFAULT_IPC_ADDRESS.into())
 }
 
 fn install_native_host(
@@ -239,7 +239,7 @@ fn register_windows_manifest(
 }
 
 fn start() -> Result<(), Box<dyn std::error::Error>> {
-    if control::status(&ipc_address()).is_ok() {
+    if control::status(&ipc::endpoint_name()).is_ok() {
         println!("NewsNext is already running.");
         return Ok(());
     }
@@ -252,7 +252,7 @@ fn start() -> Result<(), Box<dyn std::error::Error>> {
         .spawn()?;
 
     for _ in 0..50 {
-        if let Ok(status) = control::status(&ipc_address()) {
+        if let Ok(status) = control::status(&ipc::endpoint_name()) {
             println!("NewsNext started (PID {}).", status.pid);
             return Ok(());
         }
@@ -262,7 +262,7 @@ fn start() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn status() -> Result<(), Box<dyn std::error::Error>> {
-    let status = control::status(&ipc_address())?;
+    let status = control::status(&ipc::endpoint_name())?;
     println!("NewsNext is running (PID {}).", status.pid);
     println!("Extensions: {}", status.instances.len());
     for instance in status.instances {
@@ -278,7 +278,7 @@ fn status() -> Result<(), Box<dyn std::error::Error>> {
 
 fn stop() -> Result<(), Box<dyn std::error::Error>> {
     match control::request(
-        &ipc_address(),
+        &ipc::endpoint_name(),
         BridgeToDaemon::Stop,
         Duration::from_millis(250),
     )? {
@@ -291,10 +291,10 @@ fn stop() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn restart() -> Result<(), Box<dyn std::error::Error>> {
-    if control::status(&ipc_address()).is_ok() {
+    if control::status(&ipc::endpoint_name()).is_ok() {
         stop()?;
         for _ in 0..50 {
-            if control::status(&ipc_address()).is_err() {
+            if control::status(&ipc::endpoint_name()).is_err() {
                 break;
             }
             std::thread::sleep(Duration::from_millis(100));
@@ -310,10 +310,11 @@ fn run_daemon() -> Result<(), Box<dyn std::error::Error>> {
     MenuEvent::set_event_handler(Some(move |event| {
         let _ = menu_proxy.send_event(DaemonEvent::Menu(event));
     }));
-    let address = ipc_address();
+    let endpoint = ipc::endpoint_name();
+    let cleanup_endpoint = endpoint.clone();
     std::thread::spawn(move || {
         let runtime = tokio::runtime::Runtime::new().expect("failed to create daemon runtime");
-        if let Err(error) = runtime.block_on(daemon::serve(address, proxy.clone())) {
+        if let Err(error) = runtime.block_on(daemon::serve(endpoint, proxy.clone())) {
             eprintln!("NewsNext daemon failed: {error}");
             let _ = proxy.send_event(DaemonEvent::StopRequested);
         }
@@ -334,13 +335,22 @@ fn run_daemon() -> Result<(), Box<dyn std::error::Error>> {
             }
             Event::UserEvent(DaemonEvent::Menu(event)) => {
                 if tray.as_ref().is_some_and(|tray| event.id == tray.quit.id()) {
-                    *control_flow = ControlFlow::Exit;
+                    exit_daemon(&cleanup_endpoint, control_flow);
                 }
             }
-            Event::UserEvent(DaemonEvent::StopRequested) => *control_flow = ControlFlow::Exit,
+            Event::UserEvent(DaemonEvent::StopRequested) => {
+                exit_daemon(&cleanup_endpoint, control_flow);
+            }
             _ => {}
         }
     });
+}
+
+fn exit_daemon(endpoint: &str, control_flow: &mut ControlFlow) {
+    if let Err(error) = ipc::cleanup_listener_endpoint(endpoint) {
+        eprintln!("Could not clean up NewsNext IPC endpoint: {error}");
+    }
+    *control_flow = ControlFlow::Exit;
 }
 
 struct TrayState {

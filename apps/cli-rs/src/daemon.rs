@@ -2,10 +2,11 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use tokio::net::{TcpListener, TcpStream};
+use interprocess::local_socket::tokio::{Stream, prelude::*};
 use tokio::sync::{Mutex, mpsc, oneshot};
 
 use crate::framing::{MAX_IPC_MESSAGE_BYTES, read_json_async, write_json_async};
+use crate::ipc;
 use crate::protocol::{
     BridgeToDaemon, DaemonStatus, DaemonToBridge, ExtensionInstance, PROTOCOL_VERSION,
 };
@@ -51,10 +52,10 @@ impl State {
 }
 
 pub async fn serve(
-    address: String,
+    endpoint: String,
     events: tao::event_loop::EventLoopProxy<DaemonEvent>,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let listener = TcpListener::bind(&address).await?;
+    let listener = ipc::listen(&endpoint)?;
     let state = Arc::new(Mutex::new(State {
         clients: HashMap::new(),
         next_connection_id: 1,
@@ -63,7 +64,11 @@ pub async fn serve(
     }));
 
     loop {
-        let (stream, _) = listener.accept().await?;
+        let stream = listener.accept().await?;
+        if let Err(error) = ipc::authenticate_peer(&stream) {
+            eprintln!("Rejected NewsNext IPC connection: {error}");
+            continue;
+        }
         let state = Arc::clone(&state);
         let events = events.clone();
         tokio::spawn(async move {
@@ -75,11 +80,11 @@ pub async fn serve(
 }
 
 async fn handle_connection(
-    stream: TcpStream,
+    stream: Stream,
     state: Arc<Mutex<State>>,
     events: tao::event_loop::EventLoopProxy<DaemonEvent>,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let (mut reader, mut writer) = stream.into_split();
+    let (mut reader, mut writer) = stream.split();
     let first = read_json_async::<_, BridgeToDaemon>(&mut reader, MAX_IPC_MESSAGE_BYTES)
         .await?
         .ok_or("IPC client closed before registration")?;

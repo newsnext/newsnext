@@ -16,6 +16,8 @@ ctrlc.workspace = true
 
 http.workspace = true
 
+interprocess.workspace = true
+
 notify.workspace = true
 
 serde.workspace = true
@@ -36,3 +38,6 @@ uuid.workspace = true
 
 [target.'cfg(windows)'.dependencies]
 winreg = "0.55.0"
+
+[target.'cfg(unix)'.dependencies]
+libc.workspace = true

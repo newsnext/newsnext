@@ -377,7 +377,7 @@ from a frontend page; the background runtime is the only persistent writer.
 `view.getVisibleCards` returns the Cards logically displayed by that Board with
 their Instance and membership identities.
 
-Requests travel through the same loopback connection as source authoring
+Requests travel through the same per-user local IPC connection as source authoring
 commands and return JSON. The extension validates every request before
 dispatch. Enabling CLI access authorizes the local NewsNext CLI to mutate
 Collections and Instances, including destructive Actions; it does not grant
@@ -395,9 +395,11 @@ read the Application Data envelope from `browser.storage.local` because frontend
 unavailable there. Normal user-history workflows do not require source IDs or
 parameter JSON.
 
-The Rust CLI daemon owns the loopback framed-JSON control listener. Shutdown
-closes connected Native Messaging bridges, fails pending commands, removes the
-daemon state file, and exits the detached process.
+The Rust CLI daemon owns the local-socket framed-JSON control listener. Shutdown
+closes connected Native Messaging bridges, fails pending commands, removes any
+filesystem-backed socket endpoint, and exits the detached process. Startup also
+reclaims a stale filesystem socket left by an ungraceful previous exit, but it
+does not replace a non-socket file at that path.
 
 The repository-local `newsnext-source-history` skill teaches Codex how to
 compose these commands for coverage discovery, exact-time summaries, two-point
@@ -789,7 +791,7 @@ The CLI runtime is a Rust binary in `apps/cli-rs`. One executable
 provides CLI control commands, the long-lived daemon and tray icon, and the
 short-lived Native Messaging host mode. The browser starts one host process per
 `runtime.connectNative()` port. That process only translates the browser's
-length-prefixed stdio messages to the daemon's loopback IPC; it does not own
+length-prefixed stdio messages to the daemon's per-user local IPC; it does not own
 daemon state. This separation preserves one daemon and one tray icon across
 multiple browsers and profiles.
 
@@ -813,10 +815,15 @@ extension ID; Firefox uses `allowed_extensions` and the stable
 arbitrary executable or network endpoint. Native messages are UTF-8 JSON framed
 by a native-endian 32-bit byte length. The host caps every incoming and outgoing
 browser message at 1 MiB, writes protocol data only to stdout, and reserves
-stderr for diagnostics. The internal daemon listener binds only to loopback.
-Production packaging should replace the experimental fixed loopback address
-with a per-user named pipe or Unix socket before treating local IPC as a hard
-security boundary.
+stderr for diagnostics. The internal daemon listener uses a Unix domain socket
+on Unix platforms and a named pipe on Windows instead of opening a TCP port.
+Default endpoint names are scoped to the effective Unix user or the Windows
+local application-data location; `NEWSNEXT_IPC_NAME` can override the name for
+isolated development runs. Both sides verify Unix peer credentials before
+exchanging protocol messages. Windows named pipes retain the access control
+derived from the creating user's process token. Filesystem-backed Unix sockets
+are removed during normal shutdown and reclaimed on the next startup after an
+ungraceful exit.
 
 The Rust CLI implements daemon lifecycle and tray status plus the `run`,
 `fetch`, `action`, `query`, and `history` commands and command families. All

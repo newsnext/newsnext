@@ -1,17 +1,18 @@
 use std::io::{self, BufWriter};
 
-use tokio::net::TcpStream;
+use interprocess::local_socket::tokio::prelude::*;
 use tokio::sync::mpsc;
 
 use crate::framing::{
     MAX_IPC_MESSAGE_BYTES, MAX_NATIVE_MESSAGE_BYTES, read_json, read_json_async, write_json,
     write_json_async,
 };
+use crate::ipc;
 use crate::protocol::{
     BridgeToDaemon, DaemonToBridge, ExtensionToHost, HostToExtension, PROTOCOL_VERSION,
 };
 
-pub async fn run(address: &str) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn run(endpoint: &str) -> Result<(), Box<dyn std::error::Error>> {
     let first = tokio::task::spawn_blocking(|| {
         let mut input = io::stdin().lock();
         read_json::<_, ExtensionToHost>(&mut input, MAX_NATIVE_MESSAGE_BYTES)
@@ -36,8 +37,8 @@ pub async fn run(address: &str) -> Result<(), Box<dyn std::error::Error>> {
         return Ok(());
     }
 
-    let stream = TcpStream::connect(address).await?;
-    let (mut daemon_reader, mut daemon_writer) = stream.into_split();
+    let stream = ipc::connect(endpoint).await?;
+    let (mut daemon_reader, mut daemon_writer) = stream.split();
     write_json_async(
         &mut daemon_writer,
         &BridgeToDaemon::Register {

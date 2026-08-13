@@ -1,6 +1,7 @@
 use std::time::Duration;
 
 use crate::framing::{MAX_IPC_MESSAGE_BYTES, read_json_async, write_json_async};
+use crate::ipc;
 use crate::protocol::{
     BridgeToDaemon, CommandResult, DaemonStatus, DaemonToBridge, ExtensionCommand,
     ExtensionInstance,
@@ -12,13 +13,13 @@ pub struct Execution {
 }
 
 pub fn request(
-    address: &str,
+    endpoint: &str,
     request: BridgeToDaemon,
     timeout: Duration,
 ) -> Result<DaemonToBridge, Box<dyn std::error::Error>> {
     tokio::runtime::Runtime::new()?.block_on(async {
         tokio::time::timeout(timeout, async {
-            let mut stream = tokio::net::TcpStream::connect(address).await?;
+            let mut stream = ipc::connect(endpoint).await?;
             write_json_async(&mut stream, &request, MAX_IPC_MESSAGE_BYTES).await?;
             read_json_async(&mut stream, MAX_IPC_MESSAGE_BYTES)
                 .await?
@@ -29,21 +30,21 @@ pub fn request(
     })
 }
 
-pub fn status(address: &str) -> Result<DaemonStatus, Box<dyn std::error::Error>> {
-    match request(address, BridgeToDaemon::Status, Duration::from_millis(250))? {
+pub fn status(endpoint: &str) -> Result<DaemonStatus, Box<dyn std::error::Error>> {
+    match request(endpoint, BridgeToDaemon::Status, Duration::from_millis(250))? {
         DaemonToBridge::Status { status } => Ok(status),
         _ => Err("daemon returned an unexpected status response".into()),
     }
 }
 
 pub fn execute(
-    address: &str,
+    endpoint: &str,
     browser: Option<String>,
     command: ExtensionCommand,
     timeout: Duration,
 ) -> Result<Execution, Box<dyn std::error::Error>> {
     let response = request(
-        address,
+        endpoint,
         BridgeToDaemon::Execute {
             browser,
             request: command,
