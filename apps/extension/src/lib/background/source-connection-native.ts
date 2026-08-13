@@ -30,7 +30,7 @@ import { executeInstanceHistoryRequest } from "./instance-history"
 import { serializeSourceConnectionError } from "./source-connection-error"
 import { runConnectedSource } from "./source-runner"
 
-const NATIVE_HOST_NAME = "com.newsnext.host"
+const NATIVE_HOST_NAME = "app.newsnext.host"
 const PROTOCOL_VERSION = 3
 const SOURCE_CONNECTION_INSTANCE_ID_KEY = "newsnext.sourceConnectionInstanceId"
 const SOURCE_CONNECTION_RECONNECT_ALARM = "source-connection-native-reconnect"

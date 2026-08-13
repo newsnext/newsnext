@@ -811,12 +811,40 @@ opens its own packaged `app.html` URL through the browser tabs API. Incompatible
 daemon and extension versions disconnect instead of silently accepting a
 partial control surface.
 
-Native Messaging registration is the browser-facing security boundary. Chrome,
-Chromium, and Edge manifests restrict `allowed_origins` to the installed
-extension ID; Firefox uses `allowed_extensions` and the stable
-`newsnext@ourongxing.com` Gecko ID. The extension cannot choose an
-arbitrary executable or network endpoint. Native messages are UTF-8 JSON framed
-by a native-endian 32-bit byte length. The host caps every incoming and outgoing
+Native Messaging registration is the browser-facing security boundary. The
+host uses the reverse-domain name `app.newsnext.host` for `newsnext.app`.
+Chromium family uses manifests that restrict `allowed_origins` to the installed
+extension IDs. The development ID is always included; the optional production
+Chrome Web Store ID is configured by `PRODUCTION_CHROMIUM_EXTENSION_ID` in the
+installer's `browser` module. Firefox uses `allowed_extensions` and the stable
+`addon@newsnext.app` Gecko ID. Chrome, Chromium, Edge, and Firefox are
+supported across desktop platforms. Ego Lite, Dia, and Arc use their dedicated
+Chromium user-data roots and are currently registered on macOS only.
+Interactive registration lists detected browser installations and defaults the
+selection to all of them. Explicit browser arguments bypass selection for
+automation; non-interactive registration uses all detected browsers. Detection
+does not inspect browser profiles, so an explicit argument can still register a
+browser missed by detection. Windows stores a separate manifest per browser
+because Firefox and Chromium-family manifests use different authorization
+fields. A current-directory mode writes either manifest family without platform
+registration, supporting manual installation for browsers outside the detection
+table. The `native_messaging::installer` module owns browser metadata, manifest
+generation, installation, and platform-specific filesystem or registry
+integration, including registration-state detection and uninstall. The
+`cli::commands::install_native_host` module only owns command arguments,
+interactive selection, validation, and user-facing output. The tray's browser
+integration menu lists detected installations only, calls the same installer
+API, and refreshes each checkbox from the resulting registration state after an
+operation. The binary `main.rs` is a thin entry point into the Rust library;
+`lib.rs` owns the module tree, `cli` owns Clap parsing and dispatch,
+`cli::service` owns daemon lifecycle commands, and `tray` owns the desktop event
+loop and menu. Other CLI commands are split by capability under `cli::commands`,
+with shared connection and output behavior in `common`. Native Messaging process
+invocation detection and its tests live with the bridge runtime in
+`native_messaging::host`. The extension cannot choose an arbitrary executable or
+network endpoint.
+Native messages are UTF-8 JSON framed by a native-endian 32-bit byte length. The
+host caps every incoming and outgoing
 browser message at 1 MiB, writes protocol data only to stdout, and reserves
 stderr for diagnostics. The internal daemon listener uses a Unix domain socket
 on Unix platforms and a named pipe on Windows instead of opening a TCP port.

@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use ts_rs::TS;
 
-pub const NATIVE_HOST_NAME: &str = "com.newsnext.host";
+pub const NATIVE_HOST_NAME: &str = "app.newsnext.host";
 pub const PROTOCOL_VERSION: u32 = 3;
 
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]

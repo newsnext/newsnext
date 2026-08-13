@@ -13,6 +13,19 @@ use crate::protocol::{
     BridgeToDaemon, DaemonToBridge, ExtensionToHost, HostToExtension, PROTOCOL_VERSION,
 };
 
+pub fn is_invocation(arguments: &[std::ffi::OsString]) -> bool {
+    let Some(first) = arguments.get(1) else {
+        return false;
+    };
+    let first = first.to_string_lossy();
+    first.starts_with("chrome-extension://")
+        || first.starts_with("moz-extension://")
+        || (arguments.len() >= 3
+            && std::path::Path::new(first.as_ref())
+                .file_name()
+                .is_some_and(|name| name == "app.newsnext.host.json"))
+}
+
 pub async fn run(endpoint: &str) -> Result<(), Box<dyn std::error::Error>> {
     let first = tokio::task::spawn_blocking(|| {
         let mut input = io::stdin().lock();
@@ -148,4 +161,36 @@ fn launching_executable_name() -> Option<String> {
         .strip_suffix(".exe")
         .unwrap_or(executable_name);
     Some(executable_name.to_owned())
+}
+
+#[cfg(test)]
+mod tests {
+    use std::ffi::OsString;
+
+    use super::is_invocation;
+
+    #[test]
+    fn detects_chromium_invocation() {
+        let arguments = [
+            OsString::from("newsnext"),
+            OsString::from("chrome-extension://extension-id/"),
+        ];
+        assert!(is_invocation(&arguments));
+    }
+
+    #[test]
+    fn detects_firefox_invocation() {
+        let arguments = [
+            OsString::from("newsnext"),
+            OsString::from("/tmp/app.newsnext.host.json"),
+            OsString::from("newsnext@example.com"),
+        ];
+        assert!(is_invocation(&arguments));
+    }
+
+    #[test]
+    fn rejects_cli_command_invocation() {
+        let arguments = [OsString::from("newsnext"), OsString::from("status")];
+        assert!(!is_invocation(&arguments));
+    }
 }

@@ -959,17 +959,34 @@ start the daemon:
 
 ```sh
 bun run build:cli
-target/release/newsnext install-native-host chrome
+target/release/newsnext install-native-host
 target/release/newsnext start
 target/release/newsnext status
 ```
 
-Pass `--extension-id` when testing an extension build whose ID differs from the
-development ID. Use `firefox`, `chromium`, or `edge` instead of `chrome` to
-write that browser's host manifest. Firefox defaults to the extension's stable
-`newsnext@ourongxing.com` Gecko ID. Browser processes must be restarted after
-host registration. The commands below use the Rust control client and Native
-Messaging transport.
+The installer presents detected browsers only and selects all of them by
+default. Pass one or more browser names, such as `install-native-host chrome
+firefox`, to skip the interactive selector. In non-interactive environments,
+omitting browser names installs for every detected browser. Firefox uses the
+extension's stable `addon@newsnext.app` Gecko ID. Ego Lite, Dia, and Arc
+registration is supported on macOS and uses each browser's own Chromium
+user-data root; pass `ego-lite`, `dia`, or `arc` explicitly when needed. Browser
+processes must be restarted after host registration. While the daemon is running, the tray's
+**Browser Integration** submenu lists detected browsers and provides the same
+controls: selecting a browser installs its host registration, and clearing it
+removes the manifest and any platform registration. The commands below use the
+Rust control client and Native Messaging transport.
+
+For a browser whose installation path is not known to NewsNext, write a manifest
+to the current directory for manual placement:
+
+```sh
+target/release/newsnext install-native-host --current-dir
+target/release/newsnext install-native-host --current-dir chromium-based
+target/release/newsnext install-native-host --current-dir firefox-based
+```
+
+This mode does not modify browser directories or the Windows registry.
 
 Run a registered source:
 
