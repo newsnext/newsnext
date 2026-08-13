@@ -31,7 +31,8 @@ import { serializeSourceConnectionError } from "./source-connection-error"
 import { runConnectedSource } from "./source-runner"
 
 const NATIVE_HOST_NAME = "com.newsnext.host"
-const PROTOCOL_VERSION = 2
+const PROTOCOL_VERSION = 3
+const SOURCE_CONNECTION_INSTANCE_ID_KEY = "newsnext.sourceConnectionInstanceId"
 const SOURCE_CONNECTION_RECONNECT_ALARM = "source-connection-native-reconnect"
 const RECONNECT_ALARM_PERIOD_MINUTES = 0.5
 
@@ -59,7 +60,7 @@ let port: NativePort | undefined
 let cliVersion: string | undefined
 let connectionState: SourceConnectionState = "disconnected"
 let enabled = false
-const instanceId = crypto.randomUUID()
+let instanceId = ""
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value)
@@ -134,6 +135,9 @@ export function getSourceConnectionStatus(): SourceConnectionStatus {
 
 async function executeRequest(request: ExtensionConnectionCommandRequest): Promise<unknown> {
   switch (request.type) {
+    case "app.open":
+      await browser.tabs.create({ url: browser.runtime.getURL("/app.html") })
+      return null
     case "application.action.list":
       return listApplicationActions()
     case "application.action.execute":
@@ -197,7 +201,7 @@ function disconnect(): void {
 }
 
 function connect(): void {
-  if (!enabled || port) {
+  if (!enabled || !instanceId || port) {
     return
   }
 
@@ -303,9 +307,20 @@ export async function registerSourceConnectionNative(): Promise<void> {
     }
   })
 
-  const stored = await browser.storage.local.get(PERSISTED_DATA_SLICES.deviceState.key)
+  const stored = await browser.storage.local.get([
+    PERSISTED_DATA_SLICES.deviceState.key,
+    SOURCE_CONNECTION_INSTANCE_ID_KEY,
+  ])
+  const storedInstanceId = stored[SOURCE_CONNECTION_INSTANCE_ID_KEY]
+  instanceId = typeof storedInstanceId === "string" && storedInstanceId
+    ? storedInstanceId
+    : crypto.randomUUID()
+  if (instanceId !== storedInstanceId) {
+    await browser.storage.local.set({ [SOURCE_CONNECTION_INSTANCE_ID_KEY]: instanceId })
+  }
   const persisted = stored[PERSISTED_DATA_SLICES.deviceState.key]
-  enabled = normalizePersistedDeviceState(persisted).sourceConnectionEnabled
+  const state = normalizePersistedDeviceState(persisted)
+  enabled = state.sourceConnectionEnabled
   if (enabled) {
     browser.alarms.create(SOURCE_CONNECTION_RECONNECT_ALARM, {
       periodInMinutes: RECONNECT_ALARM_PERIOD_MINUTES,

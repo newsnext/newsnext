@@ -3,7 +3,7 @@ use serde_json::Value;
 use ts_rs::TS;
 
 pub const NATIVE_HOST_NAME: &str = "com.newsnext.host";
-pub const PROTOCOL_VERSION: u32 = 2;
+pub const PROTOCOL_VERSION: u32 = 3;
 
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
@@ -44,6 +44,8 @@ pub struct SerializedError {
     export_to = "../../../packages/extension-connection/src/generated/"
 )]
 pub enum ExtensionCommand {
+    #[serde(rename = "app.open")]
+    AppOpen { id: String },
     #[serde(rename = "application.action.list")]
     ApplicationActionList { id: String },
     #[serde(rename = "application.action.execute", rename_all = "camelCase")]
@@ -145,7 +147,8 @@ pub enum ExtensionCommand {
 impl ExtensionCommand {
     pub fn id(&self) -> &str {
         match self {
-            Self::ApplicationActionList { id }
+            Self::AppOpen { id }
+            | Self::ApplicationActionList { id }
             | Self::ApplicationActionExecute { id, .. }
             | Self::ApplicationQueryList { id }
             | Self::ApplicationQueryExecute { id, .. }
@@ -270,6 +273,7 @@ pub enum BridgeToDaemon {
     },
     Execute {
         browser: Option<String>,
+        instance_id: Option<String>,
         request: ExtensionCommand,
         timeout_ms: u64,
     },

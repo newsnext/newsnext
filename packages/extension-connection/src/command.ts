@@ -39,6 +39,9 @@ export function parseExtensionConnectionCommandRequest(
   if (!isRecord(value) || typeof value.id !== "string") {
     throw new Error("Invalid extension command")
   }
+  if (value.type === "app.open") {
+    return { id: value.id, type: "app.open" }
+  }
   if (value.type === "application.action.list") {
     return { id: value.id, type: "application.action.list" }
   }

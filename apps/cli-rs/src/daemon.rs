@@ -37,6 +37,11 @@ struct State {
     started_at: u64,
 }
 
+enum ClientSelector<'a> {
+    Instance(&'a str),
+    Browser(Option<&'a str>),
+}
+
 impl State {
     fn status(&self) -> DaemonStatus {
         DaemonStatus {
@@ -48,6 +53,19 @@ impl State {
                 .map(|client| client.instance.clone())
                 .collect(),
         }
+    }
+
+    fn matching_clients(&self, selector: ClientSelector<'_>) -> Vec<Client> {
+        self.clients
+            .values()
+            .filter(|client| match selector {
+                ClientSelector::Instance(instance_id) => client.instance.id == instance_id,
+                ClientSelector::Browser(browser) => {
+                    browser.is_none_or(|browser| client.instance.browser == browser)
+                }
+            })
+            .cloned()
+            .collect()
     }
 }
 
@@ -194,6 +212,7 @@ async fn handle_connection(
         }
         BridgeToDaemon::Execute {
             browser,
+            instance_id,
             request,
             timeout_ms,
         } => {
@@ -201,16 +220,11 @@ async fn handle_connection(
             let (result_sender, result_receiver) = oneshot::channel();
             let selection = {
                 let mut state = state.lock().await;
-                let matches = state
-                    .clients
-                    .values()
-                    .filter(|client| {
-                        browser
-                            .as_ref()
-                            .is_none_or(|browser| client.instance.browser == *browser)
-                    })
-                    .cloned()
-                    .collect::<Vec<_>>();
+                let selector = instance_id.as_deref().map_or_else(
+                    || ClientSelector::Browser(browser.as_deref()),
+                    ClientSelector::Instance,
+                );
+                let matches = state.matching_clients(selector);
                 if matches.len() != 1 {
                     Err(if matches.is_empty() {
                         "No matching NewsNext extension is connected"

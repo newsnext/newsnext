@@ -6,6 +6,7 @@ mod ipc;
 mod native_host;
 mod protocol;
 
+use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 use std::process::{Command as ProcessCommand, Stdio};
@@ -15,11 +16,11 @@ use clap::{Parser, Subcommand, ValueEnum};
 use serde_json::json;
 use tao::event::{Event, StartCause};
 use tao::event_loop::{ControlFlow, EventLoopBuilder};
-use tray_icon::menu::{Menu, MenuEvent, MenuItem, PredefinedMenuItem};
+use tray_icon::menu::{Menu, MenuEvent, MenuId, MenuItem, PredefinedMenuItem, Submenu};
 use tray_icon::{Icon, TrayIcon, TrayIconBuilder};
 
 use crate::daemon::DaemonEvent;
-use crate::protocol::{BridgeToDaemon, DaemonToBridge, NATIVE_HOST_NAME};
+use crate::protocol::{BridgeToDaemon, DaemonToBridge, ExtensionInstance, NATIVE_HOST_NAME};
 
 const DEVELOPMENT_CHROME_EXTENSION_ID: &str = "cffgbnjiaakknooiegnjkojemhidheke";
 const FIREFOX_EXTENSION_ID: &str = "newsnext@ourongxing.com";
@@ -329,12 +330,19 @@ fn run_daemon() -> Result<(), Box<dyn std::error::Error>> {
                 Err(error) => eprintln!("Could not create NewsNext tray icon: {error}"),
             },
             Event::UserEvent(DaemonEvent::StatusChanged(status)) => {
-                if let Some(tray) = &mut tray {
-                    tray.set_extension_count(status.instances.len());
+                if let Some(tray) = &mut tray
+                    && let Err(error) = tray.set_instances(status.instances)
+                {
+                    eprintln!("Could not update NewsNext tray menu: {error}");
                 }
             }
             Event::UserEvent(DaemonEvent::Menu(event)) => {
-                if tray.as_ref().is_some_and(|tray| event.id == tray.quit.id()) {
+                if let Some(instance_id) = tray
+                    .as_ref()
+                    .and_then(|tray| tray.open_instance_id(&event.id))
+                {
+                    open_app(cleanup_endpoint.clone(), instance_id);
+                } else if tray.as_ref().is_some_and(|tray| event.id == tray.quit_id) {
                     exit_daemon(&cleanup_endpoint, control_flow);
                 }
             }
@@ -342,6 +350,14 @@ fn run_daemon() -> Result<(), Box<dyn std::error::Error>> {
                 exit_daemon(&cleanup_endpoint, control_flow);
             }
             _ => {}
+        }
+    });
+}
+
+fn open_app(endpoint: String, instance_id: String) {
+    std::thread::spawn(move || {
+        if let Err(error) = control::open_app(&endpoint, instance_id, Duration::from_secs(10)) {
+            eprintln!("Could not open NewsNext: {error}");
         }
     });
 }
@@ -354,19 +370,14 @@ fn exit_daemon(endpoint: &str, control_flow: &mut ControlFlow) {
 }
 
 struct TrayState {
-    _icon: TrayIcon,
-    status: MenuItem,
-    quit: MenuItem,
+    icon: TrayIcon,
+    open_instances: HashMap<MenuId, String>,
+    quit_id: MenuId,
 }
 
 impl TrayState {
     fn new() -> Result<Self, Box<dyn std::error::Error>> {
-        let menu = Menu::new();
-        let status = MenuItem::new("Running · 0 extensions", false, None);
-        let quit = MenuItem::new("Quit NewsNext", true, None);
-        menu.append(&status)?;
-        menu.append(&PredefinedMenuItem::separator())?;
-        menu.append(&quit)?;
+        let (menu, quit_id, open_instances) = create_tray_menu(&[])?;
         let icon = TrayIconBuilder::new()
             .with_menu(Box::new(menu))
             .with_menu_on_left_click(true)
@@ -375,18 +386,95 @@ impl TrayState {
             .with_icon_as_template(true)
             .build()?;
         Ok(Self {
-            _icon: icon,
-            status,
-            quit,
+            icon,
+            open_instances,
+            quit_id,
         })
     }
 
-    fn set_extension_count(&mut self, count: usize) {
-        self.status.set_text(format!(
+    fn set_instances(
+        &mut self,
+        mut instances: Vec<ExtensionInstance>,
+    ) -> Result<(), tray_icon::menu::Error> {
+        instances.sort_by(|left, right| {
+            left.browser
+                .cmp(&right.browser)
+                .then_with(|| left.id.cmp(&right.id))
+        });
+        let (menu, quit_id, open_instances) = create_tray_menu(&instances)?;
+        self.icon.set_menu(Some(Box::new(menu)));
+        self.open_instances = open_instances;
+        self.quit_id = quit_id;
+        Ok(())
+    }
+
+    fn open_instance_id(&self, menu_id: &MenuId) -> Option<String> {
+        self.open_instances.get(menu_id).cloned()
+    }
+}
+
+type TrayMenu = (Menu, MenuId, HashMap<MenuId, String>);
+
+fn create_tray_menu(instances: &[ExtensionInstance]) -> Result<TrayMenu, tray_icon::menu::Error> {
+    let menu = Menu::new();
+    let mut open_instances = HashMap::new();
+    match instances {
+        [] => menu.append(&MenuItem::new("Open NewsNext", false, None))?,
+        [instance] => {
+            let open = MenuItem::new("Open NewsNext", true, None);
+            open_instances.insert(open.id().clone(), instance.id.clone());
+            menu.append(&open)?;
+        }
+        instances => {
+            let open = Submenu::new("Open NewsNext", true);
+            for instance in instances {
+                let item = MenuItem::new(instance_menu_label(instance, instances), true, None);
+                open_instances.insert(item.id().clone(), instance.id.clone());
+                open.append(&item)?;
+            }
+            menu.append(&open)?;
+        }
+    }
+    menu.append(&PredefinedMenuItem::separator())?;
+    let count = instances.len();
+    menu.append(&MenuItem::new(
+        format!(
             "Running · {count} extension{}",
             if count == 1 { "" } else { "s" }
-        ));
+        ),
+        false,
+        None,
+    ))?;
+    menu.append(&PredefinedMenuItem::separator())?;
+    let quit = MenuItem::new("Quit NewsNext", true, None);
+    let quit_id = quit.id().clone();
+    menu.append(&quit)?;
+    Ok((menu, quit_id, open_instances))
+}
+
+fn instance_menu_label(instance: &ExtensionInstance, instances: &[ExtensionInstance]) -> String {
+    let identity = shortest_unique_id_prefix(instance, instances);
+    format!("{} · {identity}", instance.browser)
+}
+
+fn shortest_unique_id_prefix(
+    instance: &ExtensionInstance,
+    instances: &[ExtensionInstance],
+) -> String {
+    let id_length = instance.id.chars().count();
+    let mut prefix_length = id_length.min(8);
+    while prefix_length < id_length {
+        let prefix = instance.id.chars().take(prefix_length).collect::<String>();
+        if instances.iter().all(|candidate| {
+            candidate.id == instance.id
+                || candidate.browser != instance.browser
+                || !candidate.id.starts_with(&prefix)
+        }) {
+            break;
+        }
+        prefix_length += 1;
     }
+    instance.id.chars().take(prefix_length).collect()
 }
 
 fn create_icon() -> Result<Icon, tray_icon::BadIcon> {
@@ -407,7 +495,8 @@ fn create_icon() -> Result<Icon, tray_icon::BadIcon> {
 mod tests {
     use std::ffi::OsString;
 
-    use super::is_native_host_invocation;
+    use super::{instance_menu_label, is_native_host_invocation};
+    use crate::protocol::ExtensionInstance;
 
     #[test]
     fn detects_chromium_native_host_invocation() {
@@ -432,5 +521,29 @@ mod tests {
     fn leaves_cli_commands_to_clap() {
         let arguments = [OsString::from("newsnext"), OsString::from("status")];
         assert!(!is_native_host_invocation(&arguments));
+    }
+
+    #[test]
+    fn disambiguates_instance_menu_labels_with_shared_prefixes() {
+        let instances = [
+            ExtensionInstance {
+                id: "chrome-profile-a".into(),
+                browser: "chrome".into(),
+                extension_version: "test".into(),
+            },
+            ExtensionInstance {
+                id: "chrome-profile-b".into(),
+                browser: "chrome".into(),
+                extension_version: "test".into(),
+            },
+        ];
+        assert_eq!(
+            instance_menu_label(&instances[0], &instances),
+            "chrome · chrome-profile-a"
+        );
+        assert_eq!(
+            instance_menu_label(&instances[1], &instances),
+            "chrome · chrome-profile-b"
+        );
     }
 }

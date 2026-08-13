@@ -1,6 +1,7 @@
 use std::io::{self, BufWriter};
 
 use interprocess::local_socket::tokio::prelude::*;
+use sysinfo::{ProcessRefreshKind, ProcessesToUpdate, System, UpdateKind};
 use tokio::sync::mpsc;
 
 use crate::framing::{
@@ -22,7 +23,7 @@ pub async fn run(endpoint: &str) -> Result<(), Box<dyn std::error::Error>> {
 
     let ExtensionToHost::Hello {
         protocol_version,
-        instance,
+        mut instance,
     } = first
     else {
         return Err("first native message must be hello".into());
@@ -35,6 +36,10 @@ pub async fn run(endpoint: &str) -> Result<(), Box<dyn std::error::Error>> {
             ),
         })?;
         return Ok(());
+    }
+
+    if let Some(executable_name) = launching_executable_name() {
+        instance.browser = executable_name;
     }
 
     let stream = ipc::connect(endpoint).await?;
@@ -121,4 +126,26 @@ pub async fn run(endpoint: &str) -> Result<(), Box<dyn std::error::Error>> {
 fn write_native(message: &HostToExtension) -> io::Result<()> {
     let mut output = BufWriter::new(io::stdout().lock());
     write_json(&mut output, message, MAX_NATIVE_MESSAGE_BYTES)
+}
+
+fn launching_executable_name() -> Option<String> {
+    let current_pid = sysinfo::get_current_pid().ok()?;
+    let mut system = System::new();
+    system.refresh_processes_specifics(
+        ProcessesToUpdate::Some(&[current_pid]),
+        false,
+        ProcessRefreshKind::nothing(),
+    );
+    let parent_pid = system.process(current_pid)?.parent()?;
+    system.refresh_processes_specifics(
+        ProcessesToUpdate::Some(&[parent_pid]),
+        false,
+        ProcessRefreshKind::nothing().with_exe(UpdateKind::Always),
+    );
+    let executable_name = system.process(parent_pid)?.exe()?.file_name()?.to_str()?;
+    #[cfg(windows)]
+    let executable_name = executable_name
+        .strip_suffix(".exe")
+        .unwrap_or(executable_name);
+    Some(executable_name.to_owned())
 }

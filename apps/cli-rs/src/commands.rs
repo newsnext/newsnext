@@ -12,7 +12,7 @@ use serde_json::{Map, Value};
 use url::Url;
 use uuid::Uuid;
 
-use crate::control::execute;
+use crate::control::{execute, success_data};
 use crate::protocol::{CommandResult, ExtensionCommand};
 
 const DEFAULT_TIMEOUT_SECONDS: f64 = 60.0;
@@ -525,15 +525,6 @@ pub fn run_history(
 
 fn request_id() -> String {
     Uuid::new_v4().to_string()
-}
-
-fn success_data(result: CommandResult) -> Result<Value, Box<dyn std::error::Error>> {
-    match result {
-        CommandResult::Success { data, .. } => Ok(data.unwrap_or(Value::Null)),
-        CommandResult::Failure { error, .. } => {
-            Err(format!("{}: {}", error.name, error.message).into())
-        }
-    }
 }
 
 fn print_json(value: &Value, compact: bool) -> Result<(), Box<dyn std::error::Error>> {

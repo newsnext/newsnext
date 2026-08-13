@@ -1,5 +1,7 @@
 use std::time::Duration;
 
+use serde_json::Value;
+
 use crate::framing::{MAX_IPC_MESSAGE_BYTES, read_json_async, write_json_async};
 use crate::ipc;
 use crate::protocol::{
@@ -43,10 +45,21 @@ pub fn execute(
     command: ExtensionCommand,
     timeout: Duration,
 ) -> Result<Execution, Box<dyn std::error::Error>> {
+    execute_selected(endpoint, browser, None, command, timeout)
+}
+
+fn execute_selected(
+    endpoint: &str,
+    browser: Option<String>,
+    instance_id: Option<String>,
+    command: ExtensionCommand,
+    timeout: Duration,
+) -> Result<Execution, Box<dyn std::error::Error>> {
     let response = request(
         endpoint,
         BridgeToDaemon::Execute {
             browser,
+            instance_id,
             request: command,
             timeout_ms: timeout.as_millis() as u64,
         },
@@ -56,5 +69,31 @@ pub fn execute(
         DaemonToBridge::ExecuteResult { instance, result } => Ok(Execution { instance, result }),
         DaemonToBridge::Error { message, .. } => Err(message.into()),
         _ => Err("daemon returned an unexpected execution response".into()),
+    }
+}
+
+pub fn open_app(
+    endpoint: &str,
+    instance_id: String,
+    timeout: Duration,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let execution = execute_selected(
+        endpoint,
+        None,
+        Some(instance_id),
+        ExtensionCommand::AppOpen {
+            id: uuid::Uuid::new_v4().to_string(),
+        },
+        timeout,
+    )?;
+    success_data(execution.result).map(|_| ())
+}
+
+pub fn success_data(result: CommandResult) -> Result<Value, Box<dyn std::error::Error>> {
+    match result {
+        CommandResult::Success { data, .. } => Ok(data.unwrap_or(Value::Null)),
+        CommandResult::Failure { error, .. } => {
+            Err(format!("{}: {}", error.name, error.message).into())
+        }
     }
 }

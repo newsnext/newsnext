@@ -4,6 +4,13 @@ import {
 } from "."
 
 describe("extension connection protocol", () => {
+  it("parses the native open-app request", () => {
+    expect(parseExtensionConnectionCommandRequest({
+      id: "open-id",
+      type: "app.open",
+    })).toEqual({ id: "open-id", type: "app.open" })
+  })
+
   it("parses application operation requests", () => {
     expect(parseExtensionConnectionCommandRequest({
       id: "action-id",

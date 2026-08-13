@@ -805,8 +805,11 @@ ambiguous browser selection, expires pending executions, and never replays a
 command after reconnection because source execution is not guaranteed to be
 idempotent. Settings exposes the daemon version as connection metadata only.
 Protocol version 2 adds canonical Application Action and Query discovery and
-execution; incompatible daemon and extension versions disconnect instead of
-silently accepting a partial control surface.
+execution. Protocol version 3 adds the `app.open` command used by the desktop
+tray. The command is routed to an exact connected extension instance, which
+opens its own packaged `app.html` URL through the browser tabs API. Incompatible
+daemon and extension versions disconnect instead of silently accepting a
+partial control surface.
 
 Native Messaging registration is the browser-facing security boundary. Chrome,
 Chromium, and Edge manifests restrict `allowed_origins` to the installed
@@ -832,6 +835,21 @@ retains
 registered sources, provider files, standard input, parameter overrides,
 provider-secret selection, compact output, verbose remote errors, and watch
 mode.
+
+The Native Host replaces the extension build target with the launching parent
+process executable name when it is available. The name remains unchanged except
+that Windows strips a trailing `.exe`. This keeps Chromium derivatives distinct
+while retaining the build target as a cross-platform fallback. The extension
+persists a generated connection instance ID in profile-local storage so the tray
+identity remains stable across Manifest V3 service-worker restarts. Chrome does
+not expose its local profile display name to extensions, so the connection does
+not claim to identify it or request account identity permissions as a substitute.
+
+The tray exposes Open NewsNext only while an extension is connected. With one
+connection the item targets that instance directly. With multiple connections
+it becomes a submenu sorted by browser and instance ID. Each child displays the
+detected browser and a short unique instance ID, and targets the exact instance
+rather than using the CLI's potentially ambiguous browser-name selector.
 
 Local provider runs use an isolated `cli:<provider-id>` secret namespace unless
 `--use-provider-secrets` is supplied. CLI execution does not install the
