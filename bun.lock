@@ -28,7 +28,7 @@
     },
     "apps/extension": {
       "name": "@newsnext/extension",
-      "version": "1.0.0-beta.2",
+      "version": "1.0.0-beta.3",
       "dependencies": {
         "@atlaskit/pragmatic-drag-and-drop": "catalog:",
         "@atlaskit/pragmatic-drag-and-drop-hitbox": "catalog:",
@@ -80,7 +80,7 @@
     },
     "packages/cmdk": {
       "name": "@newsnext/cmdk",
-      "version": "1.0.0-beta.2",
+      "version": "1.0.0-beta.3",
       "dependencies": {
         "react": "catalog:",
       },
@@ -157,7 +157,7 @@
     },
     "packages/ui": {
       "name": "@newsnext/ui",
-      "version": "1.0.0-beta.2",
+      "version": "1.0.0-beta.3",
       "dependencies": {
         "@base-ui/react": "^1.7.0",
         "@newsnext/cmdk": "workspace:*",
