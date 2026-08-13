@@ -1,9 +1,9 @@
 import type { PersistedDeviceState } from "../settings/persisted-settings"
-import type { SourceConnectionStatus } from "./source-connection-websocket"
+import type { SourceConnectionStatus } from "./source-connection-native"
 import {
   getSourceConnectionStatus,
   setSourceConnectionEnabled,
-} from "./source-connection-websocket"
+} from "./source-connection-native"
 
 export interface BackgroundSourceConnectionService {
   getStatus: () => Promise<SourceConnectionStatus>

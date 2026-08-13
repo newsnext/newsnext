@@ -1,17 +1,25 @@
-interface ExtensionConnectionRunRequestBase {
-  id: string
-  type: "source.run"
-  sourceId: string
-  params?: Record<string, unknown>
-}
+import type { ExtensionCommand } from "./generated/ExtensionCommand"
+import type { ExtensionInstance } from "./generated/ExtensionInstance"
+import type { SerializedError } from "./generated/SerializedError"
 
-export interface ExtensionConnectionRegisteredRunRequest extends ExtensionConnectionRunRequestBase {
+export type ExtensionConnectionBoardListRequest
+  = Extract<ExtensionCommand, { type: "board.list" }>
+export type ExtensionConnectionFetchRequest
+  = Extract<ExtensionCommand, { type: "fetch" }>
+export type ExtensionConnectionInstanceListRequest
+  = Extract<ExtensionCommand, { type: "instance.list" }>
+export type ExtensionConnectionListRequest
+  = Extract<ExtensionCommand, { type: "source.list" }>
+
+type GeneratedRunRequest = Extract<ExtensionCommand, { type: "source.run" }>
+
+export interface ExtensionConnectionRegisteredRunRequest extends GeneratedRunRequest {
   providerId?: never
   provider?: never
   useProviderSecrets?: never
 }
 
-export interface ExtensionConnectionProviderRunRequest extends ExtensionConnectionRunRequestBase {
+export interface ExtensionConnectionProviderRunRequest extends GeneratedRunRequest {
   providerId: string
   provider: unknown
   useProviderSecrets?: boolean
@@ -21,30 +29,23 @@ export type ExtensionConnectionRunRequest
   = | ExtensionConnectionRegisteredRunRequest
     | ExtensionConnectionProviderRunRequest
 
-export interface ExtensionConnectionListRequest {
-  id: string
-  type: "source.list"
-}
+export type ExtensionConnectionCommandRequest
+  = | Exclude<ExtensionCommand, { type: "source.run" }>
+    | ExtensionConnectionRunRequest
 
-export interface ExtensionConnectionBoardListRequest {
-  id: string
-  type: "board.list"
-}
+export type SourceHistoryListDatasetsRequest
+  = Extract<ExtensionCommand, { type: "source-history.datasets" }>
+export type SourceHistoryListObservationsRequest
+  = Extract<ExtensionCommand, { type: "source-history.observations" }>
+export type SourceHistoryGetObservationRequest
+  = Extract<ExtensionCommand, { type: "source-history.get" }>
+export type SourceHistoryCompareObservationsRequest
+  = Extract<ExtensionCommand, { type: "source-history.compare" }>
+export type SourceHistoryCommandRequest
+  = Extract<ExtensionCommand, { type: `source-history.${string}` }>
 
-export interface ExtensionConnectionInstanceListRequest {
-  id: string
-  type: "instance.list"
-}
-
-export interface ExtensionConnectionFetchRequest {
-  id: string
-  type: "fetch"
-  url: string
-  method: string
-  headers: [string, string][]
-  timeoutMs: number
-  body?: string
-}
+export type ExtensionConnectionInstance = ExtensionInstance
+export type ExtensionConnectionSerializedError = SerializedError
 
 export interface ExtensionConnectionFetchResponse {
   status: number
@@ -52,78 +53,3 @@ export interface ExtensionConnectionFetchResponse {
   headers: [string, string][]
   body: string
 }
-
-interface SourceHistoryRequestBase {
-  id: string
-}
-
-export interface SourceHistoryListDatasetsRequest extends SourceHistoryRequestBase {
-  type: "source-history.datasets"
-  cursor?: string
-  limit?: number
-  providerId?: string
-  sourceId?: string
-}
-
-interface SourceHistoryInstanceRequestBase extends SourceHistoryRequestBase {
-  instanceId: string
-}
-
-export interface SourceHistoryListObservationsRequest extends SourceHistoryInstanceRequestBase {
-  type: "source-history.observations"
-  cursor?: number
-  from?: number
-  limit?: number
-  to?: number
-}
-
-export interface SourceHistoryGetObservationRequest extends SourceHistoryInstanceRequestBase {
-  type: "source-history.get"
-  observedAt: number
-}
-
-export interface SourceHistoryCompareObservationsRequest extends SourceHistoryInstanceRequestBase {
-  type: "source-history.compare"
-  after: number
-  before: number
-}
-
-export type SourceHistoryCommandRequest
-  = | SourceHistoryListDatasetsRequest
-    | SourceHistoryListObservationsRequest
-    | SourceHistoryGetObservationRequest
-    | SourceHistoryCompareObservationsRequest
-
-export type ExtensionConnectionCommandRequest
-  = | ExtensionConnectionBoardListRequest
-    | ExtensionConnectionFetchRequest
-    | ExtensionConnectionInstanceListRequest
-    | ExtensionConnectionListRequest
-    | ExtensionConnectionRunRequest
-    | SourceHistoryCommandRequest
-
-export interface ExtensionConnectionInstance {
-  id: string
-  browser: string
-  extensionVersion: string
-}
-
-export interface ExtensionConnectionSerializedError {
-  message: string
-  name: string
-  stack?: string
-  code?: string
-  loginUrl?: string
-}
-
-export type ExtensionConnectionCommandResult
-  = | {
-    id: string
-    ok: true
-    data?: unknown
-  }
-  | {
-    id: string
-    ok: false
-    error: ExtensionConnectionSerializedError
-  }

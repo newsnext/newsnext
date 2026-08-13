@@ -14,6 +14,7 @@ const REQUIRED_PERMISSIONS = [
   "alarms",
   "contextMenus",
   "declarativeNetRequestWithHostAccess",
+  "nativeMessaging",
   "scripting",
   "storage",
 ] as const
@@ -108,6 +109,13 @@ export default defineConfig({
         default_popup: "radar-popup.html",
         default_title: "NewsNext",
       },
+      browser_specific_settings: browser === "firefox"
+        ? {
+            gecko: {
+              id: "newsnext@ourongxing.com",
+            },
+          }
+        : undefined,
     }
   },
   vite: () => {

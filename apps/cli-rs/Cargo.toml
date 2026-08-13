@@ -1,0 +1,38 @@
+[package]
+name = "newsnext"
+
+version.workspace = true
+
+edition.workspace = true
+
+license.workspace = true
+
+[dependencies]
+clap.workspace = true
+
+chrono.workspace = true
+
+ctrlc.workspace = true
+
+http.workspace = true
+
+notify.workspace = true
+
+serde.workspace = true
+
+serde_json.workspace = true
+
+tao.workspace = true
+
+tokio.workspace = true
+
+tray-icon.workspace = true
+
+ts-rs.workspace = true
+
+url.workspace = true
+
+uuid.workspace = true
+
+[target.'cfg(windows)'.dependencies]
+winreg = "0.55.0"

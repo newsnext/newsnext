@@ -953,12 +953,23 @@ Runtime registries accept declarative JSON, HTML, and RSS loaders only.
 Prototype-related source ID segments and JMESPath properties are rejected.
 
 Use the extension-backed CLI to validate live behavior. Enable
-**Settings → CLI connection**, then start the local server:
+**Settings → CLI connection**. For the experimental Rust transport, build the
+binary, register its Native Messaging host for the development extension, and
+start the daemon:
 
 ```sh
-bun run newsnext start
-bun run newsnext status
+bun run build:cli
+target/release/newsnext install-native-host chrome
+target/release/newsnext start
+target/release/newsnext status
 ```
+
+Pass `--extension-id` when testing an extension build whose ID differs from the
+development ID. Use `firefox`, `chromium`, or `edge` instead of `chrome` to
+write that browser's host manifest. Firefox defaults to the extension's stable
+`newsnext@ourongxing.com` Gecko ID. Browser processes must be restarted after
+host registration. The commands below use the Rust control client and Native
+Messaging transport.
 
 Run a registered source:
 

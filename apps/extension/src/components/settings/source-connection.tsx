@@ -1,4 +1,4 @@
-import type { SourceConnectionStatus } from "@/lib/background/source-connection-websocket"
+import type { SourceConnectionStatus } from "@/lib/background/source-connection-native"
 import { Card, CardContent } from "@newsnext/ui/components/card"
 import { Switch } from "@newsnext/ui/components/switch"
 import { useAtomValue } from "jotai"

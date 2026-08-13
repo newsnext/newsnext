@@ -20,8 +20,6 @@
       "@tanstack/react-router": "^1.170.20",
       "@tanstack/react-router-devtools": "^1.167.1",
       "@tanstack/react-virtual": "^3.14.9",
-      "@trpc/client": "^11.18.0",
-      "@trpc/server": "^11.18.0",
       "@types/node": "^26.1.2",
       "@vitejs/plugin-react": "^6.0.5",
       "@wxt-dev/browser": "^0.2.5",
@@ -51,13 +49,15 @@
     "dev:yolo": "bun --filter=@newsnext/extension run dev:yolo",
     "dev:chrome": "bun --filter=@newsnext/extension run dev:chrome",
     "dev:firefox": "bun --filter=@newsnext/extension run dev:firefox",
-    "newsnext": "bun --filter=@newsnext/cli run newsnext",
+    "newsnext": "cargo run --quiet -p newsnext --",
     "update-deps": "taze -r -w && bun install",
     "release": "bumpp --recursive --install --all --git-check",
     "build": "bun --filter=@newsnext/extension run build",
-    "build:cli": "bun --filter=@newsnext/cli run build",
+    "build:cli": "cargo build --release -p newsnext",
     "build:chrome": "bun --filter=@newsnext/extension run build:chrome",
-    "build:firefox": "bun --filter=@newsnext/extension run build:firefox"
+    "build:firefox": "bun --filter=@newsnext/extension run build:firefox",
+    "generate:native-protocol": "cargo test -p newsnext export_bindings",
+    "test:rust": "cargo test --workspace"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^9.3.0",

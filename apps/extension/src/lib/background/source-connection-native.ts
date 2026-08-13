@@ -1,28 +1,30 @@
 import type {
-  DaemonRouter,
   ExtensionConnectionCommandRequest,
-  ExtensionConnectionCommandResult,
   ExtensionConnectionFetchResponse,
+  ExtensionToHost,
+  HostToExtension,
+  NativeCommandResult,
 } from "@newsnext/extension-connection"
 import type { PersistedDeviceState } from "../settings/persisted-settings"
-import { createTRPCClient, createWSClient, wsLink } from "@trpc/client"
+import {
+  parseExtensionConnectionCommandRequest,
+} from "@newsnext/extension-connection"
 import { browser } from "#imports"
 import { PERSISTED_DATA_SLICES } from "../settings/persisted-data"
 import {
   normalizePersistedDeviceState,
   withSourceConnectionEnabled,
 } from "../settings/persisted-settings"
-import {
-  listSourceHistoryDatasets,
-} from "../source/history/repository"
+import { listSourceHistoryDatasets } from "../source/history/repository"
 import { listConnectedBoards } from "./board-list"
 import { executeInstanceHistoryRequest } from "./instance-history"
 import { listConnectedInstances } from "./instance-list"
 import { serializeSourceConnectionError } from "./source-connection-error"
 import { listConnectedSources, runConnectedSource } from "./source-runner"
 
-const DEFAULT_SOURCE_CONNECTION_WS_URL = "ws://127.0.0.1:43110"
-const SOURCE_CONNECTION_RECONNECT_ALARM = "source-connection-websocket-reconnect"
+const NATIVE_HOST_NAME = "com.newsnext.host"
+const PROTOCOL_VERSION = 1
+const SOURCE_CONNECTION_RECONNECT_ALARM = "source-connection-native-reconnect"
 const RECONNECT_ALARM_PERIOD_MINUTES = 0.5
 
 export type SourceConnectionState
@@ -36,20 +38,58 @@ export interface SourceConnectionStatus {
   state: SourceConnectionState
 }
 
-type SourceConnectionClient = ReturnType<typeof createTRPCClient<DaemonRouter>>
-type SourceConnectionWebSocketClient = ReturnType<typeof createWSClient>
-type SourceConnectionSubscription = ReturnType<SourceConnectionClient["extension"]["commands"]["subscribe"]>
+type NativePort = ReturnType<typeof browser.runtime.connectNative>
+type ParsedHostMessage
+  = | Extract<HostToExtension, { type: "ready" }>
+    | Extract<HostToExtension, { type: "error" }>
+    | {
+      type: "execute"
+      request: ExtensionConnectionCommandRequest
+    }
 
-let client: SourceConnectionClient | undefined
-let socketClient: SourceConnectionWebSocketClient | undefined
-let subscription: SourceConnectionSubscription | undefined
+let port: NativePort | undefined
 let cliVersion: string | undefined
 let connectionState: SourceConnectionState = "disconnected"
 let enabled = false
 const instanceId = crypto.randomUUID()
 
-function getConnectionUrl(): string {
-  return import.meta.env.WXT_SOURCE_CONNECTION_WS_URL || DEFAULT_SOURCE_CONNECTION_WS_URL
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value)
+}
+
+function parseHostMessage(value: unknown): ParsedHostMessage {
+  if (!isRecord(value) || typeof value.type !== "string") {
+    throw new Error("The native host returned an invalid message")
+  }
+  if (
+    value.type === "ready"
+    && typeof value.protocolVersion === "number"
+    && typeof value.daemonVersion === "string"
+  ) {
+    return {
+      type: "ready",
+      protocolVersion: value.protocolVersion,
+      daemonVersion: value.daemonVersion,
+    }
+  }
+  if (value.type === "execute") {
+    return {
+      type: "execute",
+      request: parseExtensionConnectionCommandRequest(value.request),
+    }
+  }
+  if (
+    value.type === "error"
+    && (typeof value.requestId === "string" || value.requestId === null)
+    && typeof value.message === "string"
+  ) {
+    return {
+      type: "error",
+      requestId: value.requestId,
+      message: value.message,
+    }
+  }
+  throw new Error("The native host returned an unsupported message")
 }
 
 async function executeFetchRequest(
@@ -106,83 +146,91 @@ async function executeRequest(request: ExtensionConnectionCommandRequest): Promi
 }
 
 async function executeCommand(
-  connection: SourceConnectionClient,
+  connection: NativePort,
   request: ExtensionConnectionCommandRequest,
 ): Promise<void> {
-  let result: ExtensionConnectionCommandResult
+  let result: NativeCommandResult
   try {
     result = {
-      id: request.id,
       ok: true,
       data: await executeRequest(request),
     }
   } catch (error) {
     result = {
-      id: request.id,
       ok: false,
       error: serializeSourceConnectionError(error),
     }
   }
 
-  if (!enabled || client !== connection) {
+  if (!enabled || port !== connection) {
     return
   }
-  await connection.extension.complete.mutate(result)
+  const message: ExtensionToHost = {
+    type: "complete",
+    requestId: request.id,
+    result,
+  }
+  connection.postMessage(message)
 }
 
 function disconnect(): void {
-  subscription?.unsubscribe()
-  subscription = undefined
-  socketClient?.close()
-  socketClient = undefined
-  client = undefined
+  port?.disconnect()
+  port = undefined
   cliVersion = undefined
   connectionState = "disconnected"
 }
 
 function connect(): void {
-  if (!enabled || socketClient) {
+  if (!enabled || port) {
     return
   }
 
   connectionState = "connecting"
   cliVersion = undefined
-  const nextSocketClient = createWSClient({
-    connectionParams: () => ({
+  const nextPort = browser.runtime.connectNative(NATIVE_HOST_NAME)
+  port = nextPort
+  nextPort.onDisconnect.addListener(() => {
+    if (port === nextPort) {
+      port = undefined
+      cliVersion = undefined
+      connectionState = "disconnected"
+    }
+  })
+  nextPort.onMessage.addListener((value: unknown) => {
+    if (!enabled || port !== nextPort) {
+      return
+    }
+    try {
+      const message = parseHostMessage(value)
+      if (message.type === "ready") {
+        if (message.protocolVersion !== PROTOCOL_VERSION) {
+          throw new Error(`Unsupported native protocol version ${message.protocolVersion}`)
+        }
+        cliVersion = message.daemonVersion
+        connectionState = "connected"
+      } else if (message.type === "execute") {
+        void executeCommand(nextPort, message.request).catch((error) => {
+          console.error("Failed to return native source connection result", error)
+        })
+      } else {
+        console.error("NewsNext native host error", message.message)
+      }
+    } catch (error) {
+      console.error("Failed to process NewsNext native host message", error)
+      disconnect()
+    }
+  })
+
+  const hello: ExtensionToHost = {
+    type: "hello",
+    protocolVersion: PROTOCOL_VERSION,
+    instance: {
       id: instanceId,
       browser: import.meta.env.BROWSER,
       extensionVersion: browser.runtime.getManifest().version,
-    }),
-    onClose: () => {
-      if (socketClient === nextSocketClient) {
-        connectionState = "disconnected"
-      }
     },
-    onOpen: () => {
-      if (!enabled || socketClient !== nextSocketClient) {
-        nextSocketClient.close()
-        return
-      }
-      connectionState = "connected"
-    },
-    url: getConnectionUrl(),
-  })
-  const nextClient = createTRPCClient<DaemonRouter>({
-    links: [wsLink({ client: nextSocketClient })],
-  })
-  socketClient = nextSocketClient
-  client = nextClient
-  void nextClient.extension.info.query().then((info) => {
-    if (enabled && client === nextClient) {
-      cliVersion = info.version
-    }
-  }).catch(() => undefined)
-  subscription = nextClient.extension.commands.subscribe(undefined, {
-    onData: request => void executeCommand(nextClient, request).catch((error) => {
-      console.error("Failed to return source connection result", error)
-    }),
-    onError: error => console.error("Source connection subscription failed", error),
-  })
+  }
+  nextPort.postMessage(hello)
 }
 
 async function applySourceConnectionEnabled(nextEnabled: boolean): Promise<void> {
@@ -221,14 +269,13 @@ export async function setSourceConnectionEnabled(
   return getSourceConnectionStatus()
 }
 
-export async function registerSourceConnectionWebSocket(): Promise<void> {
+export async function registerSourceConnectionNative(): Promise<void> {
   browser.alarms.onAlarm.addListener((alarm) => {
     if (
       enabled
       && alarm.name === SOURCE_CONNECTION_RECONNECT_ALARM
       && connectionState === "disconnected"
     ) {
-      disconnect()
       connect()
     }
   })

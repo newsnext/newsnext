@@ -369,13 +369,9 @@ read `browser.storage.local` directly because frontend Jotai atoms are
 unavailable there. Normal user-history workflows do not require source IDs or
 parameter JSON.
 
-The CLI daemon owns both the loopback HTTP server and a no-server WebSocket
-server. Shutdown terminates connected extension sockets and closes both server
-objects, then explicitly exits the internal daemon process. Bun can otherwise
-retain a busy kqueue or fail to complete a close callback, leaving the detached
-process alive after `newsnext stop` even though the port and status endpoint are
-gone. Graceful close therefore has a short deadline before the internal process
-exits.
+The Rust CLI daemon owns the loopback framed-JSON control listener. Shutdown
+closes connected Native Messaging bridges, fails pending commands, removes the
+daemon state file, and exits the detached process.
 
 The repository-local `newsnext-source-history` skill teaches Codex how to
 compose these commands for coverage discovery, exact-time summaries, two-point
@@ -749,7 +745,7 @@ raw output, and dynamic include/render features are disabled.
 
 ## CLI execution
 
-`newsnext source run` sends a request through a loopback WebSocket to a connected
+`newsnext source run` sends a request through the local daemon to a connected
 extension. The extension executes the same provider expansion, parameter
 normalization, registry validation, capabilities, secrets, and background loader
 path as normal source loading.
@@ -763,28 +759,42 @@ command neither requests nor expands them. Request headers remain subject to the
 browser Fetch API's forbidden-header rules. The CLI execution timeout also
 aborts the browser-side network request.
 
-The distributed CLI bundle runs on Node.js. Its loopback daemon uses Hono with
-the Node adapter for HTTP and WebSocket upgrades. CLI control calls use tRPC
-over HTTP. Each enabled extension connects as a tRPC WebSocket client, subscribes
-to its command stream, and returns command results through a mutation on the
-same socket. The router contract keeps both transports aligned without
-making the extension depend on the CLI application package. The contract,
-runtime validation, and router live in the dedicated
-`@newsnext/extension-connection` package so generic shared utilities and source
-runtime packages do not depend on tRPC.
+The CLI runtime is a Rust binary in `apps/cli-rs`. One executable
+provides CLI control commands, the long-lived daemon and tray icon, and the
+short-lived Native Messaging host mode. The browser starts one host process per
+`runtime.connectNative()` port. That process only translates the browser's
+length-prefixed stdio messages to the daemon's loopback IPC; it does not own
+daemon state. This separation preserves one daemon and one tray icon across
+multiple browsers and profiles.
 
-After the WebSocket opens, the extension queries daemon metadata over the same
-tRPC connection and exposes the CLI version in Settings. Treat this value as
-connection metadata only; source execution compatibility continues to be
-enforced by the shared router contract and runtime validation.
+Rust `serde` enums are the canonical wire contract. `ts-rs` exports their
+TypeScript projections into `packages/extension-connection/src/generated`; do
+not edit those files manually. Browser runtime code imports protocol types and
+validation from the browser-safe `@newsnext/extension-connection` package.
+Extension messages carry an explicit protocol version. The daemon associates
+commands and completions by request ID, rejects
+ambiguous browser selection, expires pending executions, and never replays a
+command after reconnection because source execution is not guaranteed to be
+idempotent. Settings exposes the daemon version as connection metadata only.
 
-HTTP control procedures reject browser origins and cannot be called from an
-extension WebSocket context. The WebSocket path accepts extension origins and
-rejects ordinary web-page origins. A disconnect rejects every in-flight command
-assigned to that extension. Commands are not replayed after reconnection because
-source execution is not guaranteed to be idempotent. The daemon sends a
-20-second WebSocket heartbeat for MV3 service-worker lifetime, and the extension
-uses a browser alarm only as a recovery fallback.
+Native Messaging registration is the browser-facing security boundary. Chrome,
+Chromium, and Edge manifests restrict `allowed_origins` to the installed
+extension ID; Firefox uses `allowed_extensions` and the stable
+`newsnext@ourongxing.com` Gecko ID. The extension cannot choose an
+arbitrary executable or network endpoint. Native messages are UTF-8 JSON framed
+by a native-endian 32-bit byte length. The host caps every incoming and outgoing
+browser message at 1 MiB, writes protocol data only to stdout, and reserves
+stderr for diagnostics. The internal daemon listener binds only to loopback.
+Production packaging should replace the experimental fixed loopback address
+with a per-user named pipe or Unix socket before treating local IPC as a hard
+security boundary.
+
+The Rust CLI implements daemon lifecycle and tray status plus the `fetch`,
+`source`, `board`, `instance`, and `history` command families. All extension-
+backed commands use the same typed execute/result IPC path. `source run` retains
+registered sources, provider files, standard input, parameter overrides,
+provider-secret selection, compact output, verbose remote errors, and watch
+mode.
 
 Local provider runs use an isolated `cli:<provider-id>` secret namespace unless
 `--use-provider-secrets` is supplied. CLI execution does not install the

@@ -29,7 +29,6 @@
     "@tanstack/react-hotkeys": "catalog:",
     "@tanstack/react-query": "catalog:",
     "@tanstack/react-router": "catalog:",
-    "@trpc/client": "catalog:",
     "@webext-core/messaging": "^4.0.0",
     "@webext-core/proxy-service": "^3.0.2",
     "canvas-confetti": "^1.9.4",

@@ -12,6 +12,7 @@ export default antfu(
     },
     ignores: [
       "public/**",
+      "packages/extension-connection/src/generated/**",
       "packages/registry/registry.json",
       "packages/registry/loaders.ts",
     ],

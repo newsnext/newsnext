@@ -3,7 +3,7 @@ import { browser, defineBackground } from "#imports"
 import { registerRadarBadge } from "@/lib/background/radar-badge"
 import { registerSourceRegistryLoader } from "@/lib/background/registry"
 import { BACKGROUND_SERVICE_KEY, createBackgroundService } from "@/lib/background/service"
-import { registerSourceConnectionWebSocket } from "@/lib/background/source-connection-websocket"
+import { registerSourceConnectionNative } from "@/lib/background/source-connection-native"
 import { syncConfiguredSourceRequestRules } from "@/lib/background/source-request-rules"
 
 registerSourceRegistryLoader()
@@ -31,7 +31,7 @@ function registerActionMenus(): void {
 export default defineBackground(() => {
   registerService(BACKGROUND_SERVICE_KEY, backgroundService)
   registerRadarBadge()
-  void registerSourceConnectionWebSocket().catch((error) => {
+  void registerSourceConnectionNative().catch((error) => {
     console.error("Failed to initialize the source connection", error)
   })
   void syncConfiguredSourceRequestRules().catch((error) => {
