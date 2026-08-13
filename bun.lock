@@ -80,7 +80,6 @@
     },
     "packages/cmdk": {
       "name": "@newsnext/cmdk",
-      "version": "1.0.0-beta.3",
       "dependencies": {
         "react": "catalog:",
       },
@@ -157,7 +156,6 @@
     },
     "packages/ui": {
       "name": "@newsnext/ui",
-      "version": "1.0.0-beta.3",
       "dependencies": {
         "@base-ui/react": "^1.7.0",
         "@newsnext/cmdk": "workspace:*",
