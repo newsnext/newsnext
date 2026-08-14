@@ -542,6 +542,11 @@ when available.
 
 - Keep the collapsed state short, fully pill-shaped, and visually denser than
   surrounding translucent header controls.
+- When the collapsed header island shows scroll progress, tint the completed
+  outline with the active theme color and give that path a restrained matching
+  glow outside the opaque surface. Render that glow on the unclipped shell so
+  it can extend beyond the island edge, and keep it tied to the progress path
+  and its visibility instead of illuminating the entire island at rest.
 - Animate the surface as one continuous shape. Remounted content enters with a
   brief scale, opacity, and blur transition inside the clipped surface.
 - Keep expanded content to one task and close it on outside click or scroll.

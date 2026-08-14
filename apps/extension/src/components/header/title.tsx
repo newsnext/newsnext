@@ -1,3 +1,4 @@
+import type { MotionValue } from "motion/react"
 import type { RefObject } from "react"
 import { DynamicIsland } from "@newsnext/ui/components/dynamic-island"
 import { Logo } from "@newsnext/ui/components/logo"
@@ -14,11 +15,14 @@ import { currentBoardIdAtom, themeModeAtom } from "@/store/settings"
 import { PhArrowFatUp } from "../icons/ph"
 import { ThemeModeSelector } from "../theme-mode-selector"
 
-interface HeaderProgressProps {
-  scrollContainerRef?: RefObject<HTMLElement | null>
+interface HeaderProgressState {
+  handleScrollToTop: (event: React.MouseEvent) => void
+  isAtTop: boolean
+  opacity: MotionValue<number>
+  scrollYProgress: MotionValue<number>
 }
 
-function HeaderProgress({ scrollContainerRef }: HeaderProgressProps) {
+function useHeaderProgress(scrollContainerRef?: RefObject<HTMLElement | null>): HeaderProgressState {
   const {
     nextLayerScrollContainerRef,
     isNextLayerActive,
@@ -38,8 +42,8 @@ function HeaderProgress({ scrollContainerRef }: HeaderProgressProps) {
   const isAtTopRef = useRef(true)
   const opacity = useMotionValue(0)
 
-  const handleScrollToTop = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation()
+  const handleScrollToTop = useCallback((event: React.MouseEvent) => {
+    event.stopPropagation()
     const container = isNextLayerActive
       ? nextLayerScrollContainerRef.current
       : scrollContainerRef?.current
@@ -68,6 +72,15 @@ function HeaderProgress({ scrollContainerRef }: HeaderProgressProps) {
     }
   })
 
+  return { handleScrollToTop, isAtTop, opacity, scrollYProgress }
+}
+
+function HeaderProgress({
+  handleScrollToTop,
+  isAtTop,
+  opacity,
+  scrollYProgress,
+}: HeaderProgressState) {
   return (
     <div
       className="flex items-center gap-2 size-full justify-center"
@@ -90,7 +103,7 @@ function HeaderProgress({ scrollContainerRef }: HeaderProgressProps) {
           strokeWidth="1"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className="text-primary"
+          className="text-theme-400"
         />
       </svg>
       <AnimatePresence mode="popLayout" initial={false}>
@@ -125,6 +138,35 @@ function HeaderProgress({ scrollContainerRef }: HeaderProgressProps) {
             )}
       </AnimatePresence>
     </div>
+  )
+}
+
+function HeaderProgressGlow({
+  opacity,
+  scrollYProgress,
+}: Pick<HeaderProgressState, "opacity" | "scrollYProgress">) {
+  return (
+    <svg className="pointer-events-none absolute inset-0 size-full overflow-visible" aria-hidden="true">
+      <m.rect
+        x="0.5"
+        y="0.5"
+        style={{
+          width: "calc(100% - 1px)",
+          height: "calc(100% - 1px)",
+          pathLength: scrollYProgress,
+          opacity,
+          filter: "blur(4px)",
+        }}
+        rx="20"
+        ry="20"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="text-theme-400"
+      />
+    </svg>
   )
 }
 
@@ -179,6 +221,8 @@ function CurrentBoardAppearanceControls() {
 }
 
 export function TitleIsland({ scrollContainerRef, width = 150 }: TitleIslandProps) {
+  const headerProgress = useHeaderProgress(scrollContainerRef)
+
   return (
     <>
       {/* Placeholder */}
@@ -193,11 +237,19 @@ export function TitleIsland({ scrollContainerRef, width = 150 }: TitleIslandProp
         smallWidth={width}
         largeWidth={280}
         largeHeight={160}
+        outerDecoration={isSmall => isSmall
+          ? (
+              <HeaderProgressGlow
+                opacity={headerProgress.opacity}
+                scrollYProgress={headerProgress.scrollYProgress}
+              />
+            )
+          : null}
       >
         {isSmall =>
           isSmall
             ? (
-                <HeaderProgress scrollContainerRef={scrollContainerRef} />
+                <HeaderProgress {...headerProgress} />
               )
             : (
                 <CurrentBoardAppearanceControls />

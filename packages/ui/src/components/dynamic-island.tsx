@@ -29,6 +29,7 @@ export interface DynamicIslandProps {
   initialAnimation?: boolean
 
   onChange?: (isSmall: boolean) => void
+  outerDecoration?: (isSmall: boolean) => ReactNode
   children?: (isSmall: boolean, helpers: { close: () => void }) => ReactNode
 }
 
@@ -51,6 +52,7 @@ function DynamicIsland({
   initialAnimation = false,
 
   onChange,
+  outerDecoration,
   children,
 }: DynamicIslandProps): React.JSX.Element {
   const [isSmall, setIsSmall] = useState(true)
@@ -168,6 +170,7 @@ function DynamicIsland({
             onOpen()
           }}
         >
+          {outerDecoration?.(isSmall)}
           <div
             style={activeSquircleStyle}
             className={cn(
