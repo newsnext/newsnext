@@ -95,7 +95,7 @@ export function NewsItemSummary({ item, itemTemplate, className, markScale }: Ne
         <SemanticImage
           picture={item.icon}
           delay={500}
-          className="mr-1"
+          className="mr-1 rounded"
         />
       )}
       <span className="mr-1 text-base align-middle">
