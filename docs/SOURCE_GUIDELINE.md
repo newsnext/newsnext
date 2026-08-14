@@ -419,7 +419,7 @@ loader: {
     },
   },
   itemTemplate: {
-    inline: "{{ scope.item.author.name }} · {{ scope.item.stats.likes | compact_number }} likes",
+    inline: "{{ scope.item.author.name }}",
   },
 }
 ```
@@ -629,7 +629,7 @@ A loader always returns a `SourceLoaderResult` object:
 {
   items,
   itemTemplate: {
-    inline: "{{ scope.item.author.name }} · {{ scope.item.stats.comments | compact_number }} comments",
+    inline: "{{ scope.item.author.name }}",
   },
   metadata: {
     badge: response.user.avatarUrl,
@@ -700,8 +700,9 @@ with conditional object spreads in each source.
 
 Times are milliseconds. `publishedAt` is the original publication time;
 `updatedAt` is the last content update time. `author` retains identity,
-`stats` uses the shared `likes`, `comments`, `reposts`, `views`, and `score`
-keys, and `attributes` stores source-specific string, number, or boolean facts.
+`stats` uses the shared `likes`, `comments`, `reposts`, `views`, `stars`, and
+`score` keys, and `attributes` stores source-specific string, number, or
+boolean facts. `score` may be negative; the shared count fields must not be.
 Both `icon` and the singular `mark` require `src`; their optional `kind` is
 machine-readable and `label` is human-readable. Use `icon` for the regular
 picture shared by the source's items and `mark` only for an exceptional visual
@@ -710,10 +711,17 @@ cannot be configured by a source. `content` holds text or HTML plus optional
 pictures or iframe; `pictures` accepts one URL string or an array of URL
 strings.
 
+For an aggregate source that mixes entries from multiple feeds, use each
+feed's own image as the item `icon` with `kind: "source"` and a feed-title
+label. Omit that repeated item icon from a single-feed source when the card
+badge already establishes the same identity.
+
 Presentation belongs to the loader result, not each item. `itemTemplate.inline`
 is a plain-text Liquid template scoped only to `scope.item`; use it to compose
-the semantic fields for a compact row. When it is absent, the frontend composes
-a readable fallback from author, attributes, and stats. Templates are cached
+author and source-specific attributes for a compact row. The frontend always
+renders shared `stats` separately as icon-and-count pairs, so do not include
+stats in this template. When the template is absent, the frontend composes a
+readable fallback from author and attributes. Templates are cached
 with the source result but are not item facts and therefore are not stored in
 item history. Do not repeat context already established by the source instance:
 for example, a topic-specific source should retain the topic in each item's

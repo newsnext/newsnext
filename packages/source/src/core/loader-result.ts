@@ -1,8 +1,7 @@
 import type { SourceLoaderResult } from "../types"
+import { NEWS_ITEM_STAT_KEYS } from "@newsnext/shared/types"
 import { isSourcePresentationMetadataKey } from "../types"
 import { compileSourceTemplate } from "./template"
-
-const STAT_KEYS = new Set(["likes", "comments", "reposts", "views", "score"])
 
 export function validateSourceLoaderResult(value: unknown): SourceLoaderResult {
   const normalized = normalizeSourceLoaderResult(value)
@@ -86,7 +85,7 @@ function assertAuthor(value: unknown, location: string): void {
 
 function assertStats(value: unknown, location: string): void {
   if (!isRecord(value)) throwInvalidLoaderResult(`${location} must be an object`)
-  assertOnlyKeys(value, [...STAT_KEYS], location)
+  assertOnlyKeys(value, NEWS_ITEM_STAT_KEYS, location)
   if (Object.keys(value).length === 0) throwInvalidLoaderResult(`${location} must not be empty`)
   for (const [key, stat] of Object.entries(value)) {
     if (!Number.isFinite(stat)) throwInvalidLoaderResult(`${location}.${key} must be a finite number`)

@@ -563,10 +563,11 @@ the result reaches a client or cache.
 `NewsItem` stores semantic facts: publication and update times, author,
 well-known stats, source-specific scalar attributes, semantic pictures, and
 content. The result-level `itemTemplate.inline` composes those facts for the
-compact card row and may access only `scope.item`. It travels with cached and
-transported loader results, while history snapshots continue to store only the
+compact card row and may access only `scope.item`, but shared stats are excluded
+because the frontend renders them consistently as icon-and-count pairs. It
+travels with cached and transported loader results, while history snapshots continue to store only the
 items so presentation changes do not become historical fact changes. The UI
-uses a deterministic author/attribute/stat fallback when no template exists.
+uses a deterministic author/attribute fallback when no template exists.
 Source-specific templates omit facts already conveyed by the source instance,
 while those facts remain on the item for history and analysis.
 The default inline composer also omits the author name when an
@@ -623,6 +624,15 @@ request
     → normalize and validate NewsItem values
     → optionally sort by updatedAt or publishedAt newest first
 ```
+
+The Hacker News provider intentionally remains a single-request HTML loader.
+Each `.athing` title row is followed by a metadata row, so author, time, score,
+and comments traverse to the next `tr`. The comment selector targets the last
+direct link in `.subline`; a broader `:last-child` selector also matches the
+age link nested inside its span. Numeric extraction does not depend on spaces
+because Hacker News separates comment counts with a non-breaking space. The HN
+discussion URL remains the item identity, while the article URL, site, and
+visible rank are retained as source-specific attributes.
 
 All item or metadata fields in a group are extracted before that group's
 templates render. Each template sees its complete pre-template group, which

@@ -76,7 +76,7 @@ describe("source loader result", () => {
         title: "Example",
         url: "https://example.com",
         author: { name: undefined },
-        stats: { likes: 0, comments: undefined },
+        stats: { likes: 0, comments: undefined, stars: 12 },
         attributes: { featured: false, topic: "" },
         icon: { kind: "author", src: undefined },
         content: { text: undefined, pictures: [] },
@@ -85,7 +85,7 @@ describe("source loader result", () => {
       items: [{
         title: "Example",
         url: "https://example.com",
-        stats: { likes: 0 },
+        stats: { likes: 0, stars: 12 },
         attributes: { featured: false },
       }],
     })

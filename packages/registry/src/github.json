@@ -85,7 +85,7 @@
             "attr": "href"
           },
           "stats": {
-            "score": {
+            "stars": {
               "select": "[href$=stargazers]",
               "template": "{{ scope.value | replace: ',', '' }}"
             }
@@ -93,9 +93,6 @@
           "content": {
             "text": ">p"
           }
-        },
-        "itemTemplate": {
-          "inline": "{{ scope.item.stats.score | compact_number }} stars"
         }
       },
       "cache": "15m"

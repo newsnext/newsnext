@@ -32,7 +32,6 @@ import {
   X_TIMELINE_COUNT,
   X_TIMELINE_FEATURES,
   X_USER_FEATURES,
-  X_USER_ITEM_TEMPLATE,
 } from "./utils"
 
 const X_RADAR_RESERVED_PATHS = [
@@ -234,7 +233,6 @@ async function fetchXUserTweets(
         { includeIcon: false, textMode: text },
       ),
     ),
-    itemTemplate: X_USER_ITEM_TEMPLATE,
     metadata: badge ? { badge } : undefined,
   }
 }

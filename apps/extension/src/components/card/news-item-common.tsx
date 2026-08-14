@@ -4,6 +4,7 @@ import type { NewsItem, SemanticPicture } from "@/typings/source"
 import { compileSourceTemplate, createSourceTemplateScope, reportTemplateError } from "@newsnext/source/core"
 import { ProxiedImage } from "@newsnext/ui/components/proxied-image"
 import { cn } from "@/lib/utils"
+import { PhArrowFatUp, PhChatCircle, PhEye, PhHeart, PhRepeat, PhStar } from "../icons/ph"
 
 interface NewsItemLinkProps {
   item: NewsItem
@@ -44,26 +45,52 @@ function SemanticImage({ picture, className, scale, delay }: {
   )
 }
 
-function formatStat(value: number, singular: string, plural: string): string {
-  const formatted = new Intl.NumberFormat("en-US", {
-    notation: "compact",
-    maximumFractionDigits: 1,
-  }).format(value)
-  return `${formatted} ${value === 1 ? singular : plural}`
+const statNumberFormatter = new Intl.NumberFormat("en-US", {
+  notation: "compact",
+  maximumFractionDigits: 1,
+})
+const exactStatNumberFormatter = new Intl.NumberFormat("en-US")
+
+function Stat({ label, value, children }: {
+  label: string
+  value: number
+  children: ReactNode
+}) {
+  const accessibleLabel = `${exactStatNumberFormatter.format(value)} ${label}`
+  return (
+    <span
+      className="inline-flex items-center gap-0.5"
+      title={accessibleLabel}
+      aria-label={accessibleLabel}
+    >
+      <span className="size-3.5" aria-hidden>{children}</span>
+      <span className="tabular-nums">{statNumberFormatter.format(value)}</span>
+    </span>
+  )
+}
+
+function NewsItemStats({ item }: { item: NewsItem }) {
+  const { likes, comments, reposts, views, stars, score } = item.stats ?? {}
+  if (likes === undefined && comments === undefined && reposts === undefined && views === undefined && stars === undefined && score === undefined) {
+    return null
+  }
+
+  return (
+    <span className="inline-flex items-center gap-2 text-xs leading-none text-neutral-400/80">
+      {likes !== undefined && <Stat label={likes === 1 ? "like" : "likes"} value={likes}><PhHeart /></Stat>}
+      {comments !== undefined && <Stat label={comments === 1 ? "comment" : "comments"} value={comments}><PhChatCircle /></Stat>}
+      {reposts !== undefined && <Stat label={reposts === 1 ? "repost" : "reposts"} value={reposts}><PhRepeat /></Stat>}
+      {views !== undefined && <Stat label={views === 1 ? "view" : "views"} value={views}><PhEye /></Stat>}
+      {stars !== undefined && <Stat label={stars === 1 ? "star" : "stars"} value={stars}><PhStar /></Stat>}
+      {score !== undefined && <Stat label={score === 1 ? "point" : "points"} value={score}><PhArrowFatUp /></Stat>}
+    </span>
+  )
 }
 
 function getDefaultInlineText(item: NewsItem): string {
   const values: string[] = []
   if (item.author && item.icon?.kind !== "author") values.push(item.author.name)
   if (item.attributes) values.push(...Object.values(item.attributes).map(String))
-  if (item.stats) {
-    const { likes, comments, reposts, views, score } = item.stats
-    if (likes !== undefined) values.push(formatStat(likes, "like", "likes"))
-    if (comments !== undefined) values.push(formatStat(comments, "comment", "comments"))
-    if (reposts !== undefined) values.push(formatStat(reposts, "repost", "reposts"))
-    if (views !== undefined) values.push(formatStat(views, "view", "views"))
-    if (score !== undefined) values.push(formatStat(score, "point", "points"))
-  }
   return values.join(" · ")
 }
 
@@ -101,7 +128,7 @@ export function NewsItemSummary({ item, itemTemplate, className, markScale }: Ne
       <span className="mr-1 text-base align-middle">
         {item.title}
       </span>
-      {(item.mark || inlineText) && (
+      {(item.mark || inlineText || item.stats) && (
         <span className="inline-flex max-w-full items-center gap-1 align-middle leading-none">
           {item.mark && (
             <SemanticImage
@@ -114,6 +141,7 @@ export function NewsItemSummary({ item, itemTemplate, className, markScale }: Ne
               {inlineText}
             </span>
           )}
+          <NewsItemStats item={item} />
         </span>
       )}
     </span>

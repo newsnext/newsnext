@@ -8,10 +8,10 @@ import { REDDIT_ORIGIN, redditPostsToNewsItems } from "./utils"
 
 const REDDIT_LISTING_LIMIT = 50
 const REDDIT_USER_ITEM_TEMPLATE = {
-  inline: "{% if scope.item.attributes.community %}{{ scope.item.attributes.community }} · {% endif %}{{ scope.item.stats.score | compact_number }} points · {{ scope.item.stats.comments | compact_number }} comments",
+  inline: "{{ scope.item.attributes.community }}",
 } as const
 const REDDIT_SUBREDDIT_ITEM_TEMPLATE = {
-  inline: "{% if scope.item.author %}{{ scope.item.author.name }} · {% endif %}{{ scope.item.stats.score | compact_number }} points · {{ scope.item.stats.comments | compact_number }} comments",
+  inline: "{{ scope.item.author.name }}",
 } as const
 const REDDIT_RADAR_HOSTS = ["reddit.com", "old.reddit.com", "new.reddit.com"]
 const SUBREDDIT_SORT_OPTIONS = [

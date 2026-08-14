@@ -22,6 +22,7 @@ export interface JikePost {
   actionTime?: string
   commentCount?: number
   likeCount?: number
+  repostCount?: number
   pictures?: JikePicture[]
   target?: JikePost
   topic?: {

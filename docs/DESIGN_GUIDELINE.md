@@ -220,6 +220,12 @@ instead of assigning separate fixed mobile and desktop heights. Render item
 icons and marks at the same 16px height with intrinsic width, object-contain,
 and standard-rounded treatment; sources do not control image scale or corner
 radius.
+Render shared item stats after the authored inline details as compact
+icon-and-count pairs. Use one stable icon for each shared stat, compact number
+formatting, tabular numerals, and a text alternative or tooltip with the full
+meaning. Source templates must not repeat stats as prose; keeping author and
+source-specific attributes textual makes the two kinds of metadata easy to
+scan without adding badges or another surface.
 Before rendering marks from a source, scan the first mark for meaningful
 symmetrical vertical padding and derive one scale for the remaining items. Aim
 for a 14px visible-content height inside the 16px image box; this reproduces the

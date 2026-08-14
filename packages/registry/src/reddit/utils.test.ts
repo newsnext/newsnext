@@ -16,7 +16,7 @@ describe("redditPostsToNewsItems", () => {
         author: "first_author",
         subreddit: "typescript",
         created_utc: 100,
-        score: 1,
+        score: -1,
         num_comments: 2,
         selftext: "Post body",
         gallery_data: {
@@ -54,7 +54,7 @@ describe("redditPostsToNewsItems", () => {
           name: "u/first_author",
           home: "https://www.reddit.com/user/first_author/",
         },
-        stats: { score: 1, comments: 2 },
+        stats: { score: -1, comments: 2 },
         attributes: { community: "r/typescript" },
         content: {
           text: "Post body",

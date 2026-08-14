@@ -8,10 +8,7 @@ import type {
 
 export const X_ORIGIN = "https://x.com"
 export const X_ITEM_TEMPLATE = {
-  inline: "{% unless scope.item.icon.kind == 'author' %}{{ scope.item.author.name }} · {% endunless %}{{ scope.item.stats.likes | compact_number }} likes{% if scope.item.stats.comments != nil %} · {{ scope.item.stats.comments | compact_number }} comments{% endif %}{% if scope.item.stats.reposts != nil %} · {{ scope.item.stats.reposts | compact_number }} reposts{% endif %}",
-} as const
-export const X_USER_ITEM_TEMPLATE = {
-  inline: "{{ scope.item.stats.likes | compact_number }} likes{% if scope.item.stats.comments != nil %} · {{ scope.item.stats.comments | compact_number }} comments{% endif %}{% if scope.item.stats.reposts != nil %} · {{ scope.item.stats.reposts | compact_number }} reposts{% endif %}",
+  inline: "{% unless scope.item.icon.kind == 'author' %}{{ scope.item.author.name }}{% endunless %}",
 } as const
 export const PLACE_TRENDS_URL = "https://api.x.com/1.1/trends/place.json"
 export const HOME_TIMELINE_URL = `${X_ORIGIN}/i/api/graphql/wp06oo3fRGU4P1sK8rECqQ/HomeTimeline`

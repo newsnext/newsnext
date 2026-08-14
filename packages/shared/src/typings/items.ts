@@ -14,13 +14,10 @@ export interface NewsItemAuthor {
   home?: string
 }
 
-export interface NewsItemStats {
-  likes?: number
-  comments?: number
-  reposts?: number
-  views?: number
-  score?: number
-}
+export const NEWS_ITEM_STAT_KEYS = ["likes", "comments", "reposts", "views", "stars", "score"] as const
+
+export type NewsItemStatKey = (typeof NEWS_ITEM_STAT_KEYS)[number]
+export type NewsItemStats = Partial<Record<NewsItemStatKey, number>>
 
 export type NewsItemAttributeValue = boolean | number | string
 

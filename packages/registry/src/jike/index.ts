@@ -23,13 +23,13 @@ const FOLLOWING_UPDATES_LIMIT = 50
 const JIKE_ACCESS_TOKEN_SECRET_KEY = "accessToken"
 const JIKE_REFRESH_TOKEN_SECRET_KEY = "refreshToken"
 const JIKE_ITEM_TEMPLATE = {
-  inline: "{% unless scope.item.icon.kind == 'author' %}{{ scope.item.author.name }} · {% endunless %}{% if scope.item.attributes.topic %}#{{ scope.item.attributes.topic }} · {% endif %}{{ scope.item.stats.likes | compact_number }} likes · {{ scope.item.stats.comments | compact_number }} comments",
+  inline: "{% unless scope.item.icon.kind == 'author' %}{{ scope.item.author.name }}{% if scope.item.attributes.topic %} · {% endif %}{% endunless %}{% if scope.item.attributes.topic %}#{{ scope.item.attributes.topic }}{% endif %}",
 } as const
 const JIKE_USER_ITEM_TEMPLATE = {
-  inline: "{% if scope.item.attributes.topic %}#{{ scope.item.attributes.topic }} · {% endif %}{{ scope.item.stats.likes | compact_number }} likes · {{ scope.item.stats.comments | compact_number }} comments",
+  inline: "#{{ scope.item.attributes.topic }}",
 } as const
 const JIKE_TOPIC_ITEM_TEMPLATE = {
-  inline: "{% unless scope.item.icon.kind == 'author' %}{{ scope.item.author.name }} · {% endunless %}{{ scope.item.stats.likes | compact_number }} likes · {{ scope.item.stats.comments | compact_number }} comments",
+  inline: "{% unless scope.item.icon.kind == 'author' %}{{ scope.item.author.name }}{% endunless %}",
 } as const
 const JIKE_ACCESS_TOKEN_EXPIRY_BUFFER_SECONDS = 30
 

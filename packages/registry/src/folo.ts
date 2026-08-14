@@ -36,6 +36,7 @@ async function loadFoloEntries(
   body: FoloEntriesRequest,
   context: SourceLoaderContext,
 ): Promise<SourceLoaderOutput> {
+  const isList = "listId" in body
   const response = await context.fetch.post("https://api.folo.is/entries", {
     headers: {
       "x-app-name": "Folo Web",
@@ -48,7 +49,7 @@ async function loadFoloEntries(
     },
   }).json<FoloResponse>()
 
-  const badge = "feedId" in body
+  const badge = !isList
     ? response.data?.find(({ feeds }) => feeds?.id === body.feedId)?.feeds?.image
     : undefined
 
@@ -70,6 +71,13 @@ async function loadFoloEntries(
           publishedAt: timestamp,
           author: { name: entries.author },
           attributes: { source: feeds?.title },
+          icon: isList && feeds?.image
+            ? {
+                src: feeds.image,
+                kind: "source",
+                label: feeds.title ?? undefined,
+              }
+            : undefined,
           content: {
             text: previewText,
             pictures,

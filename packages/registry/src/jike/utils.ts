@@ -50,7 +50,8 @@ export function jikePostsToNewsItems(
     if (!mobileUrl) return []
 
     const timestampSource = post.actionTime ?? post.createdAt
-    const timestamp = timestampSource ? Date.parse(timestampSource) : Number.NaN
+    const parsedTimestamp = timestampSource ? Date.parse(timestampSource) : Number.NaN
+    const publishedAt = Number.isFinite(parsedTimestamp) ? parsedTimestamp : undefined
     const authorName = post.user?.screenName
     const avatar = includeIcon ? getJikeUserAvatar(post.user) : undefined
     const previewText = post.target?.content
@@ -63,7 +64,7 @@ export function jikePostsToNewsItems(
       title: getPostTitle(post),
       url: getPostWebUrl(post) ?? mobileUrl,
       mobileUrl,
-      publishedAt: timestamp,
+      publishedAt,
       author: {
         name: authorName,
         home: post.user?.username ? `${JIKE_WEB_ORIGIN}/u/${post.user.username}` : undefined,
@@ -71,6 +72,7 @@ export function jikePostsToNewsItems(
       stats: {
         likes: post.likeCount,
         comments: post.commentCount,
+        reposts: post.repostCount,
       },
       attributes: { topic: post.topic?.content },
       icon: {

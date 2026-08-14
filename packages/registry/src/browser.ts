@@ -163,7 +163,7 @@ async function fetchBrowserHistory({
   const historyItems = await browser.history.search(searchQuery)
   return {
     items: browserHistoryItemsToNewsItems(historyItems),
-    itemTemplate: { inline: "{{ scope.item.attributes.site }} · {{ scope.item.stats.views | compact_number }} visits" },
+    itemTemplate: { inline: "{{ scope.item.attributes.site }}" },
   }
 }
 

@@ -1,3 +1,4 @@
+import type { NewsItemStats } from "@newsnext/shared/types"
 import type { Options } from "ky"
 import type {
   NewsItem,
@@ -71,13 +72,7 @@ export interface LoaderFields<TField> {
     name: TField
     home?: TField
   }
-  stats?: {
-    likes?: TField
-    comments?: TField
-    reposts?: TField
-    views?: TField
-    score?: TField
-  }
+  stats?: { [K in keyof NewsItemStats]?: TField }
   attributes?: Record<string, TField>
   icon?: {
     src: TField
