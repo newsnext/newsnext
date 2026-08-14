@@ -1082,6 +1082,13 @@ list with:
 bun run newsnext run --help
 ```
 
+The command prints the complete source result as `data`, `metadata`, and
+`itemTemplate`; normalized parameters and timing under `execution`; and every
+underlying request and response under `fetches`. Each fetch entry includes its
+duration, the request URL and method, and the response URL, status, headers, and
+text body. This output is intended for source testing and debugging and may
+contain sensitive response data.
+
 Fetch an endpoint directly from the connected extension when investigating
 authentication, headers, or raw responses:
 

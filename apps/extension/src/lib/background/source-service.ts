@@ -1,6 +1,7 @@
 import type {
   SourceLoaderResult,
 } from "@newsnext/source/types"
+import type { BackgroundSourceFetchResult } from "./source-fetch"
 import {
   parseSourceId,
   prepareSourceRequest,
@@ -12,6 +13,11 @@ export interface LoadBackgroundSourceInput {
   requestId?: string
   sourceId: string
   params?: Record<string, unknown>
+}
+
+interface BackgroundSourceServiceOptions {
+  fetchResults?: BackgroundSourceFetchResult[]
+  onRequestPrepared?: (params: Record<string, unknown>) => void
 }
 
 export interface CancelBackgroundSourceInput {
@@ -27,7 +33,9 @@ export interface BackgroundSourceService {
   load: (input: LoadBackgroundSourceInput) => Promise<LoadBackgroundSourceOutput>
 }
 
-export function createBackgroundSourceService(): BackgroundSourceService {
+export function createBackgroundSourceService(
+  options: BackgroundSourceServiceOptions = {},
+): BackgroundSourceService {
   const activeRequests = new Map<string, AbortController>()
 
   return {
@@ -43,6 +51,7 @@ export function createBackgroundSourceService(): BackgroundSourceService {
 
       try {
         const request = await prepareSourceRequest(input.sourceId, input.params ?? {})
+        options.onRequestPrepared?.(request.params)
         signal.throwIfAborted()
         const { provider } = parseSourceId(input.sourceId)
         const secrets = await resolveSourceSecrets(request.source, provider)
@@ -52,6 +61,7 @@ export function createBackgroundSourceService(): BackgroundSourceService {
             input.sourceId,
             request.source.capabilities.network,
             signal,
+            options.fetchResults,
           ),
           secrets,
           signal,

@@ -819,10 +819,16 @@ raw output, and dynamic include/render features are disabled.
 `newsnext run` sends a request through the local daemon to a connected
 extension. The extension executes the same provider expansion, parameter
 normalization, registry validation, capabilities, secrets, and background loader
-path as normal source loading.
+path as normal source loading. For CLI runs only, the background fetch wrapper
+clones each response before the loader consumes it and returns request metadata
+and duration plus the response status, headers, and text body alongside the
+complete loader result, normalized parameters, and execution timing. Normal
+extension source loads do not pay this capture cost.
 
-`newsnext fetch` uses the same command transport but calls the browser's native
-`fetch` in the extension background with `credentials: "include"`. It returns the
+`newsnext fetch` uses the same command transport and shared source fetch
+infrastructure in the extension background, including browser credentials and
+per-host request scheduling. It disables source retries and HTTP status errors
+so the command preserves the requested one-shot raw response. It returns the
 status, response headers, and decoded text body to the CLI. The command accepts
 HTTP(S) URLs without embedded credentials and never serializes browser cookies
 into the command or response. Browser host permissions still govern access; the

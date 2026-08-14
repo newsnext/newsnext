@@ -9,6 +9,7 @@ import type { PersistedDeviceState } from "../settings/persisted-settings"
 import {
   parseExtensionConnectionCommandRequest,
 } from "@newsnext/extension-connection"
+import { createSourceFetch } from "@newsnext/source/utils"
 import { browser } from "#imports"
 import {
   listApplicationActions,
@@ -111,12 +112,14 @@ async function executeFetchRequest(
   if (!hasHostPermission) {
     throw new Error(`Extension does not have host permission for ${url.origin}`)
   }
-  const response = await fetch(request.url, {
+  const signal = AbortSignal.timeout(request.timeoutMs)
+  const response = await createSourceFetch(signal)(request.url, {
     method: request.method,
     headers: request.headers,
     body: request.body,
-    credentials: "include",
-    signal: AbortSignal.timeout(request.timeoutMs),
+    retry: 0,
+    throwHttpErrors: false,
+    timeout: false,
   })
   return {
     status: response.status,
@@ -155,7 +158,7 @@ async function executeRequest(request: ExtensionConnectionCommandRequest): Promi
     case "fetch":
       return await executeFetchRequest(request)
     case "source.run":
-      return (await runConnectedSource(request)).data
+      return await runConnectedSource(request)
     case "source-history.datasets":
       return await listSourceHistoryDatasets(request)
     case "source-history.observations":

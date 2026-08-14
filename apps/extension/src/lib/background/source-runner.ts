@@ -3,7 +3,8 @@ import type {
   ExtensionConnectionRegisteredRunRequest,
 } from "@newsnext/extension-connection"
 import type { ProviderConfig } from "@newsnext/source/registry"
-import type { NewsItem } from "@newsnext/source/types"
+import type { SourceLoaderResult } from "@newsnext/source/types"
+import type { BackgroundSourceFetchResult } from "./source-fetch"
 import {
   flattenProviderConfig,
   resolveSourceRegistry,
@@ -17,8 +18,14 @@ export type RunConnectedSourceInput
   = | Omit<ExtensionConnectionRegisteredRunRequest, "id" | "type">
     | Omit<ExtensionConnectionProviderRunRequest, "id" | "type">
 
-export interface RunConnectedSourceOutput {
-  data: NewsItem[]
+export interface RunConnectedSourceOutput extends Omit<SourceLoaderResult, "items"> {
+  data: SourceLoaderResult["items"]
+  execution: {
+    durationMs: number
+    params: Record<string, unknown>
+    sourceId: string
+  }
+  fetches: BackgroundSourceFetchResult[]
 }
 
 function assertIdSegment(value: unknown, name: string): asserts value is string {
@@ -34,15 +41,42 @@ export function getConnectedSourceSecretProviderId(
   return useProviderSecrets ? providerId : `cli:${providerId}`
 }
 
+function createRunOutput(
+  result: SourceLoaderResult,
+  sourceId: string,
+  params: Record<string, unknown>,
+  fetches: BackgroundSourceFetchResult[],
+  startedAt: number,
+): RunConnectedSourceOutput {
+  return {
+    data: result.items,
+    execution: {
+      durationMs: Math.round(performance.now() - startedAt),
+      params,
+      sourceId,
+    },
+    fetches,
+    itemTemplate: result.itemTemplate,
+    metadata: result.metadata,
+  }
+}
+
 export async function runConnectedSource(
   input: RunConnectedSourceInput,
 ): Promise<RunConnectedSourceOutput> {
+  const startedAt = performance.now()
+  const fetches: BackgroundSourceFetchResult[] = []
+
   if (input.providerId === undefined) {
-    const result = await createBackgroundSourceService().load({
+    let params: Record<string, unknown> = {}
+    const result = await createBackgroundSourceService({
+      fetchResults: fetches,
+      onRequestPrepared: preparedParams => params = preparedParams,
+    }).load({
       sourceId: input.sourceId,
       params: input.params,
     })
-    return { data: result.items }
+    return createRunOutput(result, input.sourceId, params, fetches, startedAt)
   }
 
   assertIdSegment(input.providerId, "providerId")
@@ -65,11 +99,12 @@ export async function runConnectedSource(
   )
   const secrets = await resolveSourceSecrets(source, secretProviderId)
   const signal = new AbortController().signal
-  const { items: data } = await source.loader(params, {
+  const result = await source.loader(params, {
     fetch: createBackgroundSourceFetch(
       sourceId,
       source.capabilities.network,
       signal,
+      fetches,
     ),
     secrets,
     signal,
@@ -79,5 +114,5 @@ export async function runConnectedSource(
     },
   })
 
-  return { data }
+  return createRunOutput(result, sourceId, params, fetches, startedAt)
 }

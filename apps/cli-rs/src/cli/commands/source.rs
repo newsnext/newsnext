@@ -125,7 +125,8 @@ fn execute_source_once(
     };
     print_json(&result, args.compact || args.watch)?;
     let count = result
-        .as_array()
+        .get("data")
+        .and_then(Value::as_array)
         .map(|items| {
             format!(
                 "{} {}",
