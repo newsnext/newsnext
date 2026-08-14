@@ -65,19 +65,54 @@ export interface LoaderFields<TField> {
   title: TField
   url: TField
   mobileUrl?: TField
-  timestamp?: TField
-  inline?: {
-    text?: TField
-    html?: TField
-    mark?: TField
-    icon?: TField
+  publishedAt?: TField
+  updatedAt?: TField
+  author?: {
+    name: TField
+    home?: TField
   }
-  preview?: {
+  stats?: {
+    likes?: TField
+    comments?: TField
+    reposts?: TField
+    views?: TField
+    score?: TField
+  }
+  attributes?: Record<string, TField>
+  icon?: {
+    src: TField
+    kind?: TField
+    label?: TField
+  }
+  mark?: {
+    src: TField
+    kind?: TField
+    label?: TField
+  }
+  content?: {
     text?: TField
     html?: TField
-    picture?: TField
+    pictures?: TField
     iframe?: TField
   }
+}
+
+export function isCompleteLoaderFieldGroup(
+  group: string,
+  value: Record<string, unknown>,
+): boolean {
+  if (Object.keys(value).length === 0) return false
+  if (group === "author") return value.name !== undefined
+  if (group === "icon" || group === "mark") return value.src !== undefined
+  return true
+}
+
+export function normalizeLoaderNestedValue(group: string, value: unknown): unknown {
+  if (value === undefined || value === null || value === "") return undefined
+  if (group !== "stats") return value
+
+  const number = Number(value)
+  return Number.isFinite(number) ? number : undefined
 }
 
 export function sortLoaderItemsByTimestamp(
@@ -87,9 +122,11 @@ export function sortLoaderItemsByTimestamp(
   if (!enabled) return items
 
   return items.sort((left, right) => {
-    if (left.timestamp === undefined) return right.timestamp === undefined ? 0 : 1
-    if (right.timestamp === undefined) return -1
-    return right.timestamp - left.timestamp
+    const leftTime = left.publishedAt ?? left.updatedAt
+    const rightTime = right.publishedAt ?? right.updatedAt
+    if (leftTime === undefined) return rightTime === undefined ? 0 : 1
+    if (rightTime === undefined) return -1
+    return rightTime - leftTime
   })
 }
 

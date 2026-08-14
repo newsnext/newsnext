@@ -5,7 +5,7 @@
   "defaults": {
     "baseUrl": "https://music.163.com/",
     "cache": {
-      "version": 2,
+      "version": 3,
       "maxAge": "15m"
     },
     "metadata": {
@@ -26,15 +26,22 @@
           "select": "id",
           "template": "/song?id={{ scope.value | url_query }}"
         },
-        "inline": {
-          "text": {
+        "attributes": {
+          "artists": {
             "template": "{% assign artists = scope.item.ar | default: scope.item.artists %}{% for artist in artists %}{% unless forloop.first %} / {% endunless %}{{ artist.name }}{% endfor %}{% assign album = scope.item.al.name | default: scope.item.album.name %}{% if artists and album %} · {% endif %}{{ album | default: '' }}"
-          },
-          "icon": "al.picUrl || album.picUrl"
+          }
         },
-        "preview": {
-          "picture": "al.picUrl || album.picUrl"
+        "icon": {
+          "src": "al.picUrl || album.picUrl",
+          "kind": { "template": "cover" },
+          "label": "al.name || album.name"
+        },
+        "content": {
+          "pictures": "al.picUrl || album.picUrl"
         }
+      },
+      "itemTemplate": {
+        "inline": "{{ scope.item.attributes.artists }}"
       }
     }
   },

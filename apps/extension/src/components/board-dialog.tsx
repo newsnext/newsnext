@@ -221,7 +221,7 @@ function ConfigurableBoardDialog({
                 onChange={event => setFilterKeywords(event.target.value)}
               />
               <p className="text-xs text-muted-foreground">
-                Separate keywords with commas. Matches titles and inline text.
+                Separate keywords with commas. Matches titles and item details.
               </p>
             </fieldset>
 

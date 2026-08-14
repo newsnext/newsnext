@@ -53,16 +53,20 @@
           "select": "itemId",
           "template": "/p/{{ scope.value }}"
         },
-        "timestamp": "publishTime",
-        "inline": {
-          "text": {
-            "template": "{{ scope.item.statHot }}w 热度 · {{ scope.item.authorName }}"
-          }
+        "publishedAt": "publishTime",
+        "author": {
+          "name": "authorName"
         },
-        "preview": {
+        "attributes": {
+          "heat": "statHot"
+        },
+        "content": {
           "text": "summary",
-          "picture": "widgetImage"
+          "pictures": "widgetImage"
         }
+      },
+      "itemTemplate": {
+        "inline": "{{ scope.item.attributes.heat }}w heat · {{ scope.item.author.name }}"
       }
     },
     "provider": {
@@ -196,13 +200,13 @@
           "select": "itemId",
           "template": "/p/{{ scope.value }}"
         },
-        "timestamp": "templateMaterial.publishTime",
-        "inline": {
-          "text": "templateMaterial.authorName"
+        "publishedAt": "templateMaterial.publishTime",
+        "author": {
+          "name": "templateMaterial.authorName"
         },
-        "preview": {
+        "content": {
           "text": "templateMaterial.summary",
-          "picture": "templateMaterial.widgetImage"
+          "pictures": "templateMaterial.widgetImage"
         }
       }
     },
@@ -292,11 +296,11 @@
           "select": ".item-title",
           "attr": "href"
         },
-        "timestamp": {
+        "publishedAt": {
           "select": ".time",
           "template": "{{ scope.value | relative_date_to_ms: 'Asia/Shanghai' }}"
         },
-        "preview": {
+        "content": {
           "text": ".item-desc > span"
         }
       }
@@ -319,18 +323,20 @@
       "fields": {
         "title": "title",
         "url": "url",
-        "timestamp": {
+        "publishedAt": {
           "select": "publishedAt",
           "template": "{{ scope.value | date_to_ms }}"
         },
-        "inline": {
-          "text": {
-            "template": "{{ scope.item.source }}{% if scope.item.category %} · {{ scope.item.category }}{% endif %}"
-          }
+        "attributes": {
+          "source": "source",
+          "category": "category"
         },
-        "preview": {
+        "content": {
           "text": "summary"
         }
+      },
+      "itemTemplate": {
+        "inline": "{{ scope.item.attributes.source }}{% if scope.item.attributes.category %} · {{ scope.item.attributes.category }}{% endif %}"
       }
     },
     "cache": "5m",
@@ -385,7 +391,7 @@
   "bilibili:ranking": {
     "baseUrl": "https://www.bilibili.com/",
     "cache": {
-      "version": 2,
+      "version": 3,
       "maxAge": "15m"
     },
     "metadata": {
@@ -1262,15 +1268,18 @@
           "select": ">h2 a",
           "attr": "href"
         },
-        "inline": {
-          "text": {
+        "stats": {
+          "score": {
             "select": "[href$=stargazers]",
-            "template": "✰ {{ scope.value }}"
+            "template": "{{ scope.value | replace: ',', '' }}"
           }
         },
-        "preview": {
+        "content": {
           "text": ">p"
         }
+      },
+      "itemTemplate": {
+        "inline": "{{ scope.item.stats.score | compact_number }} stars"
       }
     },
     "cache": "15m",
@@ -1294,7 +1303,7 @@
           "attr": "id",
           "template": "/item?id={{ scope.value | url_query }}"
         },
-        "timestamp": {
+        "publishedAt": {
           "traverse": {
             "type": "next",
             "selector": "tr"
@@ -1303,20 +1312,47 @@
           "attr": "title",
           "template": "{{ scope.value | split: ' ' | last | times: 1000 }}"
         },
-        "inline": {
-          "text": {
+        "author": {
+          "name": {
             "traverse": {
               "type": "next",
               "selector": "tr"
             },
-            "select": ".score"
+            "select": ".hnuser"
+          }
+        },
+        "stats": {
+          "score": {
+            "traverse": {
+              "type": "next",
+              "selector": "tr"
+            },
+            "select": ".score",
+            "template": "{{ scope.value | regex_extract: '(\\d+)', 1 }}"
           },
-          "icon": {
+          "comments": {
+            "traverse": {
+              "type": "next",
+              "selector": "tr"
+            },
+            "select": "a[href^='item?id=']:last-child",
+            "template": "{{ scope.value | regex_extract: '(\\d+) comment', 1 }}"
+          }
+        },
+        "icon": {
+          "src": {
             "select": ".titleline>a",
             "attr": "href",
             "template": "{{ scope.value | absolute_url: scope.request.url | favicon_url }}"
-          }
+          },
+          "kind": {
+            "template": "site"
+          },
+          "label": ".sitestr"
         }
+      },
+      "itemTemplate": {
+        "inline": "{% if scope.item.author %}{{ scope.item.author.name }} · {% endif %}{{ scope.item.stats.score | compact_number }} points{% if scope.item.stats.comments != nil %} · {{ scope.item.stats.comments | compact_number }} comments{% endif %}"
       }
     },
     "metadata": {
@@ -1343,7 +1379,7 @@
           "attr": "id",
           "template": "/item?id={{ scope.value | url_query }}"
         },
-        "timestamp": {
+        "publishedAt": {
           "traverse": {
             "type": "next",
             "selector": "tr"
@@ -1352,20 +1388,47 @@
           "attr": "title",
           "template": "{{ scope.value | split: ' ' | last | times: 1000 }}"
         },
-        "inline": {
-          "text": {
+        "author": {
+          "name": {
             "traverse": {
               "type": "next",
               "selector": "tr"
             },
-            "select": ".score"
+            "select": ".hnuser"
+          }
+        },
+        "stats": {
+          "score": {
+            "traverse": {
+              "type": "next",
+              "selector": "tr"
+            },
+            "select": ".score",
+            "template": "{{ scope.value | regex_extract: '(\\d+)', 1 }}"
           },
-          "icon": {
+          "comments": {
+            "traverse": {
+              "type": "next",
+              "selector": "tr"
+            },
+            "select": "a[href^='item?id=']:last-child",
+            "template": "{{ scope.value | regex_extract: '(\\d+) comment', 1 }}"
+          }
+        },
+        "icon": {
+          "src": {
             "select": ".titleline>a",
             "attr": "href",
             "template": "{{ scope.value | absolute_url: scope.request.url | favicon_url }}"
-          }
+          },
+          "kind": {
+            "template": "site"
+          },
+          "label": ".sitestr"
         }
+      },
+      "itemTemplate": {
+        "inline": "{% if scope.item.author %}{{ scope.item.author.name }} · {% endif %}{{ scope.item.stats.score | compact_number }} points{% if scope.item.stats.comments != nil %} · {{ scope.item.stats.comments | compact_number }} comments{% endif %}"
       }
     },
     "metadata": {
@@ -1392,7 +1455,7 @@
           "attr": "id",
           "template": "/item?id={{ scope.value | url_query }}"
         },
-        "timestamp": {
+        "publishedAt": {
           "traverse": {
             "type": "next",
             "selector": "tr"
@@ -1401,20 +1464,47 @@
           "attr": "title",
           "template": "{{ scope.value | split: ' ' | last | times: 1000 }}"
         },
-        "inline": {
-          "text": {
+        "author": {
+          "name": {
             "traverse": {
               "type": "next",
               "selector": "tr"
             },
-            "select": ".score"
+            "select": ".hnuser"
+          }
+        },
+        "stats": {
+          "score": {
+            "traverse": {
+              "type": "next",
+              "selector": "tr"
+            },
+            "select": ".score",
+            "template": "{{ scope.value | regex_extract: '(\\d+)', 1 }}"
           },
-          "icon": {
+          "comments": {
+            "traverse": {
+              "type": "next",
+              "selector": "tr"
+            },
+            "select": "a[href^='item?id=']:last-child",
+            "template": "{{ scope.value | regex_extract: '(\\d+) comment', 1 }}"
+          }
+        },
+        "icon": {
+          "src": {
             "select": ".titleline>a",
             "attr": "href",
             "template": "{{ scope.value | absolute_url: scope.request.url | favicon_url }}"
-          }
+          },
+          "kind": {
+            "template": "site"
+          },
+          "label": ".sitestr"
         }
+      },
+      "itemTemplate": {
+        "inline": "{% if scope.item.author %}{{ scope.item.author.name }} · {% endif %}{{ scope.item.stats.score | compact_number }} points{% if scope.item.stats.comments != nil %} · {{ scope.item.stats.comments | compact_number }} comments{% endif %}"
       }
     },
     "metadata": {
@@ -1441,7 +1531,7 @@
           "attr": "id",
           "template": "/item?id={{ scope.value | url_query }}"
         },
-        "timestamp": {
+        "publishedAt": {
           "traverse": {
             "type": "next",
             "selector": "tr"
@@ -1450,20 +1540,47 @@
           "attr": "title",
           "template": "{{ scope.value | split: ' ' | last | times: 1000 }}"
         },
-        "inline": {
-          "text": {
+        "author": {
+          "name": {
             "traverse": {
               "type": "next",
               "selector": "tr"
             },
-            "select": ".score"
+            "select": ".hnuser"
+          }
+        },
+        "stats": {
+          "score": {
+            "traverse": {
+              "type": "next",
+              "selector": "tr"
+            },
+            "select": ".score",
+            "template": "{{ scope.value | regex_extract: '(\\d+)', 1 }}"
           },
-          "icon": {
+          "comments": {
+            "traverse": {
+              "type": "next",
+              "selector": "tr"
+            },
+            "select": "a[href^='item?id=']:last-child",
+            "template": "{{ scope.value | regex_extract: '(\\d+) comment', 1 }}"
+          }
+        },
+        "icon": {
+          "src": {
             "select": ".titleline>a",
             "attr": "href",
             "template": "{{ scope.value | absolute_url: scope.request.url | favicon_url }}"
-          }
+          },
+          "kind": {
+            "template": "site"
+          },
+          "label": ".sitestr"
         }
+      },
+      "itemTemplate": {
+        "inline": "{% if scope.item.author %}{{ scope.item.author.name }} · {% endif %}{{ scope.item.stats.score | compact_number }} points{% if scope.item.stats.comments != nil %} · {{ scope.item.stats.comments | compact_number }} comments{% endif %}"
       }
     },
     "metadata": {
@@ -1648,7 +1765,7 @@
       ]
     },
     "cache": {
-      "version": 2,
+      "version": 3,
       "maxAge": "5m"
     },
     "metadata": {
@@ -1716,7 +1833,7 @@
   "netease-music:playlist": {
     "baseUrl": "https://music.163.com/",
     "cache": {
-      "version": 2,
+      "version": 3,
       "maxAge": "15m"
     },
     "metadata": {
@@ -1741,15 +1858,24 @@
           "select": "id",
           "template": "/song?id={{ scope.value | url_query }}"
         },
-        "inline": {
-          "text": {
+        "attributes": {
+          "artists": {
             "template": "{% assign artists = scope.item.ar | default: scope.item.artists %}{% for artist in artists %}{% unless forloop.first %} / {% endunless %}{{ artist.name }}{% endfor %}{% assign album = scope.item.al.name | default: scope.item.album.name %}{% if artists and album %} · {% endif %}{{ album | default: '' }}"
-          },
-          "icon": "al.picUrl || album.picUrl"
+          }
         },
-        "preview": {
-          "picture": "al.picUrl || album.picUrl"
+        "icon": {
+          "src": "al.picUrl || album.picUrl",
+          "kind": {
+            "template": "cover"
+          },
+          "label": "al.name || album.name"
+        },
+        "content": {
+          "pictures": "al.picUrl || album.picUrl"
         }
+      },
+      "itemTemplate": {
+        "inline": "{{ scope.item.attributes.artists }}"
       }
     },
     "params": {
@@ -1795,7 +1921,7 @@
   "netease-music:ranking": {
     "baseUrl": "https://music.163.com/",
     "cache": {
-      "version": 2,
+      "version": 3,
       "maxAge": "15m"
     },
     "metadata": {
@@ -1820,15 +1946,24 @@
           "select": "id",
           "template": "/song?id={{ scope.value | url_query }}"
         },
-        "inline": {
-          "text": {
+        "attributes": {
+          "artists": {
             "template": "{% assign artists = scope.item.ar | default: scope.item.artists %}{% for artist in artists %}{% unless forloop.first %} / {% endunless %}{{ artist.name }}{% endfor %}{% assign album = scope.item.al.name | default: scope.item.album.name %}{% if artists and album %} · {% endif %}{{ album | default: '' }}"
-          },
-          "icon": "al.picUrl || album.picUrl"
+          }
         },
-        "preview": {
-          "picture": "al.picUrl || album.picUrl"
+        "icon": {
+          "src": "al.picUrl || album.picUrl",
+          "kind": {
+            "template": "cover"
+          },
+          "label": "al.name || album.name"
+        },
+        "content": {
+          "pictures": "al.picUrl || album.picUrl"
         }
+      },
+      "itemTemplate": {
+        "inline": "{{ scope.item.attributes.artists }}"
       }
     },
     "params": {
@@ -1951,14 +2086,17 @@
           "select": ".article-card__headline",
           "attr": "href"
         },
-        "timestamp": {
+        "publishedAt": {
           "select": "[data-timestamp]",
           "attr": "data-timestamp",
           "template": "{{ scope.value | times: 1000 }}"
         },
-        "inline": {
-          "text": ".article-publisher__name"
+        "attributes": {
+          "publisher": ".article-publisher__name"
         }
+      },
+      "itemTemplate": {
+        "inline": "{{ scope.item.attributes.publisher }}"
       }
     },
     "cache": "5m",
@@ -2373,18 +2511,17 @@
           "select": ".tgme_widget_message_date",
           "attr": "href"
         },
-        "timestamp": {
+        "publishedAt": {
           "select": ".tgme_widget_message_date time",
           "attr": "datetime",
           "template": "{{ scope.value | date_to_ms }}"
         },
-        "inline": {
-          "text": {
-            "select": ".tgme_widget_message_views",
-            "template": "{% if scope.value %}{{ scope.value }} views{% endif %}"
+        "attributes": {
+          "views": {
+            "select": ".tgme_widget_message_views"
           }
         },
-        "preview": {
+        "content": {
           "text": {
             "select": [
               ".js-message_reply_text",
@@ -2393,12 +2530,15 @@
             "brSeparator": "\n",
             "template": "{{ scope.value | normalize_lines: 2 }}"
           },
-          "picture": {
+          "pictures": {
             "select": ".tgme_widget_message_photo_wrap, .tgme_widget_message_video_thumb",
             "attr": "style",
             "template": "{{ scope.value | css_url }}"
           }
         }
+      },
+      "itemTemplate": {
+        "inline": "{{ scope.item.attributes.views }} views"
       },
       "sortByTimestamp": true
     },
@@ -2425,7 +2565,7 @@
           "select": "topic_url",
           "template": "{{ scope.value | replace: '&amp;', '&' }}"
         },
-        "timestamp": {
+        "publishedAt": {
           "select": "create_time",
           "template": "{{ scope.value | times: 1000 }}"
         }
@@ -2532,7 +2672,7 @@
       }
     ],
     "cache": {
-      "version": 4,
+      "version": 5,
       "maxAge": "1m"
     },
     "metadata": {
@@ -2811,7 +2951,7 @@
       }
     ],
     "cache": {
-      "version": 2,
+      "version": 3,
       "maxAge": "5m"
     },
     "metadata": {
@@ -3159,7 +3299,7 @@
       ]
     },
     "cache": {
-      "version": 2,
+      "version": 3,
       "maxAge": "5m"
     },
     "metadata": {
@@ -3291,7 +3431,7 @@
         "url": {
           "attr": "href"
         },
-        "timestamp": {
+        "publishedAt": {
           "select": ".pdt10",
           "template": "{{ scope.value | replace: '- ', 'T' | append: '+08:00' | date_to_ms }}"
         }
@@ -3318,12 +3458,16 @@
       "fields": {
         "title": "target.title_area.text",
         "url": "target.link.url",
-        "inline": {
-          "mark": "card_label.night_icon && {src: card_label.night_icon, radius: `0`}"
+        "mark": {
+          "src": "card_label.night_icon",
+          "kind": {
+            "template": "trend"
+          },
+          "label": "card_label.text"
         },
-        "preview": {
+        "content": {
           "text": "target.excerpt_area.text",
-          "picture": "target.image_area.url"
+          "pictures": "target.image_area.url"
         }
       }
     },

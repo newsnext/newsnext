@@ -1,5 +1,5 @@
 import type { ProviderConfig } from "@newsnext/source/registry"
-import type { NewsItem, SourceLoaderContext, SourceLoaderResult } from "@newsnext/source/types"
+import type { NewsItemInput, SourceLoaderContext, SourceLoaderOutput } from "@newsnext/source/types"
 
 interface FoloMedia {
   url?: string
@@ -35,7 +35,7 @@ type FoloEntriesRequest = { feedId: string } | { listId: string }
 async function loadFoloEntries(
   body: FoloEntriesRequest,
   context: SourceLoaderContext,
-): Promise<SourceLoaderResult> {
+): Promise<SourceLoaderOutput> {
   const response = await context.fetch.post("https://api.folo.is/entries", {
     headers: {
       "x-app-name": "Folo Web",
@@ -53,9 +53,9 @@ async function loadFoloEntries(
     : undefined
 
   return {
-    ...(badge ? { metadata: { badge } } : {}),
+    metadata: badge ? { badge } : undefined,
     items: (response.data ?? [])
-      .flatMap(({ entries, feeds }): NewsItem[] => {
+      .flatMap(({ entries, feeds }): NewsItemInput[] => {
         if (!entries?.title || !entries.url) return []
 
         const timestampSource = entries.publishedAt ?? entries.insertedAt
@@ -64,25 +64,22 @@ async function loadFoloEntries(
           ?.filter((media): media is FoloMedia & { url: string } => media.type === "photo" && Boolean(media.url))
           .map(media => media.url)
         const previewText = entries.summary ?? entries.description ?? undefined
-        const item: NewsItem = {
+        return [{
           title: entries.title,
           url: entries.url,
-          inline: {
-            text: entries.author ?? feeds?.title ?? "",
+          publishedAt: timestamp,
+          author: { name: entries.author },
+          attributes: { source: feeds?.title },
+          content: {
+            text: previewText,
+            pictures,
           },
-        }
-
-        if (!Number.isNaN(timestamp)) item.timestamp = timestamp
-        if (previewText || pictures?.length) {
-          item.preview = {
-            text: previewText ?? "",
-            ...(pictures?.length ? { picture: pictures } : {}),
-          }
-        }
-
-        return [item]
+        }]
       })
-      .sort((a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0)),
+      .sort((a, b) => (b.publishedAt ?? 0) - (a.publishedAt ?? 0)),
+    itemTemplate: {
+      inline: "{% if scope.item.author %}{{ scope.item.author.name }}{% else %}{{ scope.item.attributes.source }}{% endif %}",
+    },
   }
 }
 

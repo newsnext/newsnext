@@ -67,57 +67,40 @@ function resolveNewsItemUrls(item: NewsItem, baseUrl: string): NewsItem {
   if (item.mobileUrl !== undefined) {
     resolved.mobileUrl = resolveSourceUrl(item.mobileUrl, baseUrl)
   }
-  if (item.inline !== undefined) {
-    resolved.inline = { ...item.inline }
-    if (item.inline.icon !== undefined) {
-      resolved.inline.icon = resolvePicture(item.inline.icon, baseUrl)
-    }
-    if (Array.isArray(item.inline.mark)) {
-      resolved.inline.mark = item.inline.mark.map(value =>
-        typeof value === "string" ? value : resolvePicture(value, baseUrl))
-    } else if (typeof item.inline.mark === "object") {
-      resolved.inline.mark = resolvePicture(item.inline.mark, baseUrl)
+  if (item.author?.home !== undefined) {
+    resolved.author = {
+      ...item.author,
+      home: resolveSourceUrl(item.author.home, baseUrl),
     }
   }
-  if (item.preview !== undefined) {
-    resolved.preview = { ...item.preview }
-    if (item.preview.picture !== undefined) {
-      resolved.preview.picture = Array.isArray(item.preview.picture)
-        ? item.preview.picture.map(value => resolvePicture(value, baseUrl))
-        : resolvePicture(item.preview.picture, baseUrl)
+  if (item.icon !== undefined) {
+    resolved.icon = {
+      ...item.icon,
+      src: resolveSourceUrl(item.icon.src, baseUrl),
     }
-    if (typeof item.preview.iframe === "string") {
-      resolved.preview.iframe = resolveSourceUrl(item.preview.iframe, baseUrl)
-    } else if (item.preview.iframe !== undefined) {
-      resolved.preview.iframe = { ...item.preview.iframe }
-      if (typeof item.preview.iframe.src === "string") {
-        resolved.preview.iframe.src = resolveSourceUrl(item.preview.iframe.src, baseUrl)
+  }
+  if (item.mark !== undefined) {
+    resolved.mark = {
+      ...item.mark,
+      src: resolveSourceUrl(item.mark.src, baseUrl),
+    }
+  }
+  if (item.content !== undefined) {
+    resolved.content = { ...item.content }
+    if (item.content.pictures !== undefined) {
+      resolved.content.pictures = Array.isArray(item.content.pictures)
+        ? item.content.pictures.map(value => resolveSourceUrl(value, baseUrl))
+        : resolveSourceUrl(item.content.pictures, baseUrl)
+    }
+    if (typeof item.content.iframe === "string") {
+      resolved.content.iframe = resolveSourceUrl(item.content.iframe, baseUrl)
+    } else if (item.content.iframe !== undefined) {
+      resolved.content.iframe = { ...item.content.iframe }
+      if (typeof item.content.iframe.src === "string") {
+        resolved.content.iframe.src = resolveSourceUrl(item.content.iframe.src, baseUrl)
       }
     }
   }
 
-  return resolved
-}
-
-interface UrlPicture {
-  src: string
-  href?: string
-}
-
-function resolvePicture(
-  picture: string | UrlPicture,
-  baseUrl: string,
-): string | UrlPicture {
-  if (typeof picture === "string") {
-    return resolveSourceUrl(picture, baseUrl)
-  }
-
-  const resolved = {
-    ...picture,
-    src: resolveSourceUrl(picture.src, baseUrl),
-  }
-  if (picture.href !== undefined) {
-    resolved.href = resolveSourceUrl(picture.href, baseUrl)
-  }
   return resolved
 }

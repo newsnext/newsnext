@@ -1,4 +1,5 @@
 import type { NewsItem } from "@/typings/source"
+import { getNewsItemTime } from "@/lib/source/presentation"
 
 export interface NextLayerSourceItems<TSource> {
   items: NewsItem[]
@@ -26,7 +27,7 @@ export function mixSourceItems<TSource>(
       rank: index + 1,
       source,
       sourceIndex,
-      timestamp: item.timestamp ?? updatedAt,
+      timestamp: getNewsItemTime(item) ?? updatedAt,
     })))
     .sort((left, right) => (
       right.timestamp - left.timestamp

@@ -1,12 +1,52 @@
-import type { NewsItem, SourceLoaderResult } from "../types"
+import type { SourceLoaderResult } from "../types"
 import { isSourcePresentationMetadataKey } from "../types"
+import { compileSourceTemplate } from "./template"
+
+const STAT_KEYS = new Set(["likes", "comments", "reposts", "views", "score"])
 
 export function validateSourceLoaderResult(value: unknown): SourceLoaderResult {
-  assertSourceLoaderResult(value)
-  const items = value.items.map((item, index) => normalizeNewsItem(item, index))
-  return items.every((item, index) => item === value.items[index])
-    ? value
-    : { ...value, items }
+  const normalized = normalizeSourceLoaderResult(value)
+  assertSourceLoaderResult(normalized)
+  return normalized
+}
+
+function normalizeSourceLoaderResult(value: unknown): unknown {
+  if (!isRecord(value) || !Array.isArray(value.items)) return value
+  return {
+    ...value,
+    items: value.items.map(normalizeNewsItem),
+  }
+}
+
+function normalizeNewsItem(value: unknown): unknown {
+  if (!isRecord(value)) return value
+  const item = withoutEmptyValues(value)
+
+  for (const field of ["author", "stats", "attributes", "content"] as const) {
+    const nested = item[field]
+    if (!isRecord(nested)) continue
+    const normalized = withoutEmptyValues(nested)
+    if (field === "content" && Array.isArray(normalized.pictures) && normalized.pictures.length === 0) {
+      delete normalized.pictures
+    }
+    if (field === "author" && normalized.name === undefined) delete item[field]
+    else if (Object.keys(normalized).length === 0) delete item[field]
+    else item[field] = normalized
+  }
+  for (const field of ["icon", "mark"] as const) {
+    const picture = item[field]
+    if (!isRecord(picture)) continue
+    const normalized = withoutEmptyValues(picture)
+    if (normalized.src === undefined) delete item[field]
+    else item[field] = normalized
+  }
+  return item
+}
+
+function withoutEmptyValues(value: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(value).filter(([, entry]) => entry !== undefined && entry !== null && entry !== ""),
+  )
 }
 
 function assertSourceLoaderResult(value: unknown): asserts value is SourceLoaderResult {
@@ -17,6 +57,7 @@ function assertSourceLoaderResult(value: unknown): asserts value is SourceLoader
     throwInvalidLoaderResult("No source items. Refresh to try again.")
   }
   value.items.forEach((item, index) => assertNewsItem(item, index))
+  if (value.itemTemplate !== undefined) assertItemTemplate(value.itemTemplate)
   if (value.metadata !== undefined) assertSourceLoaderMetadata(value.metadata)
 }
 
@@ -26,88 +67,90 @@ function assertNewsItem(value: unknown, index: number): void {
   assertNonEmptyString(value.title, `${location}.title`)
   assertNonEmptyString(value.url, `${location}.url`)
   assertOptionalString(value.mobileUrl, `${location}.mobileUrl`)
-  if (value.timestamp !== undefined && !Number.isFinite(value.timestamp)) {
-    throwInvalidLoaderResult(`${location}.timestamp must be a finite number`)
-  }
+  assertOptionalTimestamp(value.publishedAt, `${location}.publishedAt`)
+  assertOptionalTimestamp(value.updatedAt, `${location}.updatedAt`)
+  if (value.author !== undefined) assertAuthor(value.author, `${location}.author`)
+  if (value.stats !== undefined) assertStats(value.stats, `${location}.stats`)
+  if (value.attributes !== undefined) assertAttributes(value.attributes, `${location}.attributes`)
+  if (value.icon !== undefined) assertSemanticPicture(value.icon, `${location}.icon`)
+  if (value.mark !== undefined) assertSemanticPicture(value.mark, `${location}.mark`)
+  if (value.content !== undefined) assertContent(value.content, `${location}.content`)
 }
 
-function normalizeNewsItem(value: NewsItem, index: number): NewsItem {
-  const location = `items[${index}]`
-  const validInline = value.inline === undefined
-    || isValidOptionalContent(value.inline, `${location}.inline`, assertInlineContent)
-  const validPreview = value.preview === undefined
-    || isValidOptionalContent(value.preview, `${location}.preview`, assertPreviewContent)
-  if (validInline && validPreview) return value
-
-  const { inline, preview, ...item } = value
-  return {
-    ...item,
-    ...(validInline && inline !== undefined && { inline }),
-    ...(validPreview && preview !== undefined && { preview }),
-  }
-}
-
-function isValidOptionalContent(
-  value: unknown,
-  location: string,
-  assertContent: (value: unknown, location: string) => void,
-): boolean {
-  try {
-    assertContent(value, location)
-    return true
-  } catch (error) {
-    if (error instanceof TypeError) return false
-    throw error
-  }
-}
-
-function assertInlineContent(value: unknown, location: string): void {
+function assertAuthor(value: unknown, location: string): void {
   if (!isRecord(value)) throwInvalidLoaderResult(`${location} must be an object`)
+  assertOnlyKeys(value, ["name", "home"], location)
+  assertNonEmptyString(value.name, `${location}.name`)
+  assertOptionalString(value.home, `${location}.home`)
+}
+
+function assertStats(value: unknown, location: string): void {
+  if (!isRecord(value)) throwInvalidLoaderResult(`${location} must be an object`)
+  assertOnlyKeys(value, [...STAT_KEYS], location)
+  if (Object.keys(value).length === 0) throwInvalidLoaderResult(`${location} must not be empty`)
+  for (const [key, stat] of Object.entries(value)) {
+    if (!Number.isFinite(stat)) throwInvalidLoaderResult(`${location}.${key} must be a finite number`)
+    if (key !== "score" && (stat as number) < 0) {
+      throwInvalidLoaderResult(`${location}.${key} must not be negative`)
+    }
+  }
+}
+
+function assertAttributes(value: unknown, location: string): void {
+  if (!isRecord(value)) throwInvalidLoaderResult(`${location} must be an object`)
+  if (Object.keys(value).length === 0) throwInvalidLoaderResult(`${location} must not be empty`)
+  for (const [key, attribute] of Object.entries(value)) {
+    if (!key || ["__proto__", "constructor", "prototype"].includes(key)) {
+      throwInvalidLoaderResult(`${location} contains an invalid key`)
+    }
+    if (!["boolean", "number", "string"].includes(typeof attribute)) {
+      throwInvalidLoaderResult(`${location}.${key} must be a boolean, number, or string`)
+    }
+    if (typeof attribute === "number" && !Number.isFinite(attribute)) {
+      throwInvalidLoaderResult(`${location}.${key} must be finite`)
+    }
+  }
+}
+
+function assertContent(value: unknown, location: string): void {
+  if (!isRecord(value)) throwInvalidLoaderResult(`${location} must be an object`)
+  assertOnlyKeys(value, ["text", "html", "pictures", "iframe"], location)
   assertOptionalString(value.text, `${location}.text`)
   assertOptionalString(value.html, `${location}.html`)
-  if (value.icon !== undefined) assertPicture(value.icon, `${location}.icon`)
-  if (value.mark !== undefined) {
-    const marks = Array.isArray(value.mark) ? value.mark : [value.mark]
-    if (marks.length === 0) throwInvalidLoaderResult(`${location}.mark must not be empty`)
-    marks.forEach((mark, index) => assertPicture(mark, `${location}.mark[${index}]`))
+  if (hasContent(value.text) && hasContent(value.html)) {
+    throwInvalidLoaderResult(`${location} cannot contain both text and html`)
   }
-  if (![value.text, value.html, value.icon, value.mark].some(hasContent)) {
-    throwInvalidLoaderResult(`${location} must contain text, html, icon, or mark`)
-  }
-}
-
-function assertPreviewContent(value: unknown, location: string): void {
-  if (!isRecord(value)) throwInvalidLoaderResult(`${location} must be an object`)
-  const hasText = hasContent(value.text)
-  const hasHtml = hasContent(value.html)
-  if (hasText === hasHtml) {
-    throwInvalidLoaderResult(`${location} must contain exactly one of text or html`)
-  }
-  assertOptionalString(value.text, `${location}.text`)
-  assertOptionalString(value.html, `${location}.html`)
-  if (value.picture !== undefined) {
-    const pictures = Array.isArray(value.picture) ? value.picture : [value.picture]
-    if (pictures.length === 0) throwInvalidLoaderResult(`${location}.picture must not be empty`)
-    pictures.forEach((picture, index) => assertPicture(picture, `${location}.picture[${index}]`))
+  if (value.pictures !== undefined) {
+    const pictures = Array.isArray(value.pictures) ? value.pictures : [value.pictures]
+    if (pictures.length === 0) throwInvalidLoaderResult(`${location}.pictures must not be empty`)
+    pictures.forEach((picture, index) => {
+      assertNonEmptyString(picture, `${location}.pictures[${index}]`)
+    })
   }
   if (value.iframe !== undefined && typeof value.iframe !== "string" && !isRecord(value.iframe)) {
     throwInvalidLoaderResult(`${location}.iframe must be a string or object`)
   }
+  if (![value.text, value.html, value.pictures, value.iframe].some(hasContent)) {
+    throwInvalidLoaderResult(`${location} must contain text, html, pictures, or iframe`)
+  }
 }
 
-function assertPicture(value: unknown, location: string): void {
-  if (typeof value === "string") {
-    assertNonEmptyString(value, location)
-    return
-  }
-  if (!isRecord(value)) throwInvalidLoaderResult(`${location} must be a string or picture object`)
+function assertSemanticPicture(value: unknown, location: string): void {
+  if (!isRecord(value)) throwInvalidLoaderResult(`${location} must be a picture object`)
+  assertOnlyKeys(value, ["src", "kind", "label"], location)
   assertNonEmptyString(value.src, `${location}.src`)
-  assertOptionalString(value.href, `${location}.href`)
-  for (const key of ["radius", "scale"] as const) {
-    if (value[key] !== undefined && !Number.isFinite(value[key])) {
-      throwInvalidLoaderResult(`${location}.${key} must be a finite number`)
-    }
-  }
+  assertOptionalString(value.kind, `${location}.kind`)
+  assertOptionalString(value.label, `${location}.label`)
+}
+
+function assertItemTemplate(value: unknown): void {
+  if (!isRecord(value)) throwInvalidLoaderResult("itemTemplate must be an object")
+  assertOnlyKeys(value, ["inline"], "itemTemplate")
+  assertNonEmptyString(value.inline, "itemTemplate.inline")
+  compileSourceTemplate(value.inline as string, {
+    location: "source result.itemTemplate.inline",
+    slot: "item",
+  })
 }
 
 function assertSourceLoaderMetadata(value: unknown): void {
@@ -117,6 +160,18 @@ function assertSourceLoaderMetadata(value: unknown): void {
       throwInvalidLoaderResult(`metadata.${key} is not supported`)
     }
     assertNonEmptyString(metadataValue, `metadata.${key}`)
+  }
+}
+
+function assertOnlyKeys(value: Record<string, unknown>, keys: readonly string[], location: string): void {
+  const allowed = new Set(keys)
+  const invalidKey = Object.keys(value).find(key => !allowed.has(key))
+  if (invalidKey) throwInvalidLoaderResult(`${location}.${invalidKey} is not supported`)
+}
+
+function assertOptionalTimestamp(value: unknown, location: string): void {
+  if (value !== undefined && !Number.isFinite(value)) {
+    throwInvalidLoaderResult(`${location} must be a finite number`)
   }
 }
 

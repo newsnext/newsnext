@@ -132,13 +132,13 @@
             "select": "itemId",
             "template": "/p/{{ scope.value }}"
           },
-          "timestamp": "templateMaterial.publishTime",
-          "inline": {
-            "text": "templateMaterial.authorName"
+          "publishedAt": "templateMaterial.publishTime",
+          "author": {
+            "name": "templateMaterial.authorName"
           },
-          "preview": {
+          "content": {
             "text": "templateMaterial.summary",
-            "picture": "templateMaterial.widgetImage"
+            "pictures": "templateMaterial.widgetImage"
           }
         }
       }
@@ -210,11 +210,11 @@
             "select": ".item-title",
             "attr": "href"
           },
-          "timestamp": {
+          "publishedAt": {
             "select": ".time",
             "template": "{{ scope.value | relative_date_to_ms: 'Asia/Shanghai' }}"
           },
-          "preview": {
+          "content": {
             "text": ".item-desc > span"
           }
         }
@@ -262,16 +262,20 @@
             "select": "itemId",
             "template": "/p/{{ scope.value }}"
           },
-          "timestamp": "publishTime",
-          "inline": {
-            "text": {
-              "template": "{{ scope.item.statHot }}w 热度 · {{ scope.item.authorName }}"
-            }
+          "publishedAt": "publishTime",
+          "author": {
+            "name": "authorName"
           },
-          "preview": {
+          "attributes": {
+            "heat": "statHot"
+          },
+          "content": {
             "text": "summary",
-            "picture": "widgetImage"
+            "pictures": "widgetImage"
           }
+        },
+        "itemTemplate": {
+          "inline": "{{ scope.item.attributes.heat }}w heat · {{ scope.item.author.name }}"
         }
       }
     }

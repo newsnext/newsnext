@@ -23,7 +23,7 @@
             "select": "topic_url",
             "template": "{{ scope.value | replace: '&amp;', '&' }}"
           },
-          "timestamp": {
+          "publishedAt": {
             "select": "create_time",
             "template": "{{ scope.value | times: 1000 }}"
           }

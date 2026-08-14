@@ -1,4 +1,4 @@
-import type { Color, NewsItem } from "@newsnext/shared/types"
+import type { Color, NewsItem, NewsItemInput } from "@newsnext/shared/types"
 import type { Browser } from "@wxt-dev/browser"
 import type { KyInstance } from "ky"
 import type { HtmlField } from "./html-field"
@@ -93,10 +93,26 @@ export interface SourcePresentationMetadata {
   home?: string
 }
 
+export interface SourceItemTemplate {
+  inline: string
+}
+
 export interface SourceLoaderResult {
   items: NewsItem[]
+  itemTemplate?: SourceItemTemplate
   metadata?: SourcePresentationMetadata
 }
+
+export interface SourceLoaderOutput {
+  items: NewsItemInput[]
+  itemTemplate?: SourceItemTemplate
+  metadata?: SourcePresentationMetadata
+}
+
+export type SourceLoaderDefinition<TParams extends SourceParamSchemaMap = SourceParamSchemaMap> = (
+  params: InferSourceParams<TParams>,
+  context: SourceLoaderContext,
+) => Promise<SourceLoaderOutput>
 
 export type SourceLoader<TParams extends SourceParamSchemaMap = SourceParamSchemaMap> = (
   params: InferSourceParams<TParams>,

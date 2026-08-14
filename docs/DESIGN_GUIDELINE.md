@@ -196,10 +196,10 @@ Next Layer recomposes the current board's card items into one continuous feed.
 It is a reading view of the same source data, not another board or a second card
 design. Do not expose Next Layer on the All board; it is available only for
 configurable boards. Combine all source items into a newest-first timeline. Use
-the source
-update time when an item has no timestamp, matching the existing card timeline
-semantics. Break equal timestamps by original rank and then card order so tied
-items remain predictably mixed. Keep source identity and effective timeline
+`publishedAt`, falling back to `updatedAt`, and use the source update time when
+an item has neither, matching the existing card timeline semantics. Break equal
+times by original rank and then card order so tied items remain predictably
+mixed. Keep source identity and effective timeline
 placement legible through the grouped time labels, but do not display ranking
 numbers in the mixed timeline.
 
@@ -214,10 +214,21 @@ surfaces. The timeline rail and time groups own the sequence; avoid adding a
 second visible order indicator inside the item row.
 
 Use the shared `NewsItemSummary` treatment for mixed timeline content. Its
-three-line clamp bounds long items while preserving inline icons and metadata;
-let the virtualizer measure the resulting row instead of assigning separate
-fixed mobile and desktop heights. Time-group labels remain outside the measured
-content row.
+three-line clamp bounds long items while preserving semantic icons, marks, and
+the composed item details; let the virtualizer measure the resulting row
+instead of assigning separate fixed mobile and desktop heights. Render item
+icons and marks at the same 16px height with intrinsic width, object-contain,
+and standard-rounded treatment; sources do not control image scale or corner
+radius.
+Before rendering marks from a source, scan the first mark for meaningful
+symmetrical vertical padding and derive one scale for the remaining items. Aim
+for a 14px visible-content height inside the 16px image box; this reproduces the
+established `1.5` scale for the Weibo mark without treating `1.5` as a universal
+cap. Apply the result as a centered CSS transform rather than changing layout
+height or clipping the image. Preserve intrinsic horizontal proportions and do
+not redraw each image. Keep icons on their original image path to avoid
+pixel-analysis work across avatar-heavy feeds.
+Time-group labels remain outside the measured content row.
 
 Reveal Next Layer with one brief, slightly delayed opacity fade so it follows
 the card scatter without competing with it. Do not scale or blur the full
@@ -354,7 +365,7 @@ the same name, theme color, card order, and item filter fields; only edit mode
 exposes board deletion, while the title and primary action reflect the current
 mode. The item filter uses one segmented `Show matches` / `Hide matches` mode
 and one comma-separated keyword field. Keep the short matching-scope note
-because it explains that titles and inline text are both searched. In
+because it explains that titles and structured item details are both searched. In
 particular, do not add the following descriptions back to this dialog:
 
 - `Personalize this board and choose how its cards are arranged.`

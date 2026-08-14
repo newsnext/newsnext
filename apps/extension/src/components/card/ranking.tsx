@@ -1,3 +1,4 @@
+import type { SourceItemTemplate } from "@newsnext/source/types"
 import type { NewsItem } from "@/typings/source"
 import { VirtualList } from "@newsnext/ui/components/virtual-list"
 import { AnimatePresence, m } from "motion/react"
@@ -7,6 +8,8 @@ import { NewsItemLink, NewsItemSummary } from "./news-item-common"
 
 interface Props {
   items: NewsItem[]
+  itemTemplate?: SourceItemTemplate
+  markScale?: number
   scrollElement: HTMLDivElement | null
 }
 
@@ -96,7 +99,7 @@ function RankChangeBadge({ diff }: { diff?: number }) {
   )
 }
 
-export function Ranking({ items, scrollElement }: Props) {
+export function Ranking({ items, itemTemplate, markScale, scrollElement }: Props) {
   const rankChanges = useRankChanges(items)
 
   return (
@@ -114,7 +117,11 @@ export function Ranking({ items, scrollElement }: Props) {
             {index + 1}
           </span>
           <RankChangeBadge diff={rankChanges[item.url]} />
-          <NewsItemSummary item={item} />
+          <NewsItemSummary
+            item={item}
+            itemTemplate={itemTemplate}
+            markScale={markScale}
+          />
         </NewsItemLink>
       )}
     />

@@ -46,6 +46,11 @@ describe("source templates", () => {
     )).toBe("https://example.com/image.jpg")
 
     expect(renderTemplate(
+      "{{ value | compact_number }}",
+      { value: 12_300 },
+    )).toBe("12.3K")
+
+    expect(renderTemplate(
       "{{ value | date_to_ms }}",
       { value: "2024-01-01T00:00:00Z" },
     )).toBe("1704067200000")
@@ -197,7 +202,7 @@ describe("source templates", () => {
     const template = compileSourceTemplate(
       "<strong>{{ scope.value }}</strong>",
       {
-        location: "test:source.loader.fields.preview.html.template",
+        location: "test:source.loader.fields.content.html.template",
         output: "html",
         slot: "field",
       },

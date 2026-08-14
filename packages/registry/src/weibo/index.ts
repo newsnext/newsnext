@@ -132,13 +132,15 @@ export default {
             select: "url || word_scheme || word",
             template: "{% if scope.item.url %}{{ scope.value | replace: 'http://', 'https://' }}{% else %}https://s.weibo.com/weibo?q={{ scope.value | url_query }}{% endif %}",
           },
-          inline: {
-            mark: "(icon || icon_url) && {src: icon || icon_url, scale: `1.5`, radius: `0`}",
+          mark: {
+            src: "icon || icon_url",
+            kind: { template: "trend" },
+            label: "word",
           },
         },
       },
       cache: {
-        version: 4,
+        version: 5,
         maxAge: "1m",
       },
     },
@@ -180,7 +182,7 @@ export default {
         load: fetchWeiboUserPosts,
       },
       cache: {
-        version: 2,
+        version: 3,
         maxAge: "5m",
       },
     },

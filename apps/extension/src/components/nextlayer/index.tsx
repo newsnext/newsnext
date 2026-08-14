@@ -1,3 +1,4 @@
+import type { SourceItemTemplate } from "@newsnext/source/types"
 import type { RefObject } from "react"
 import type { CardViewModel } from "@/typings/source"
 import { useVirtualizer } from "@tanstack/react-virtual"
@@ -6,6 +7,7 @@ import { m } from "motion/react"
 import { useCallback, useEffect, useId, useMemo, useState } from "react"
 import { useBoardItems } from "@/components/board-items-context"
 import { useBoardSourceCards } from "@/hooks/use-board-source-cards"
+import { useSourceMarkScales } from "@/hooks/use-source-mark-scales"
 import { formatRelativeTime, minuteDateAtom } from "@/hooks/useRelativeTime"
 import { mixSourceItems } from "@/lib/board"
 import { resolveSourceIcon } from "@/lib/source"
@@ -26,6 +28,7 @@ interface NextLayerSource {
   card: CardViewModel
   icon?: string
   id: string
+  itemTemplate?: SourceItemTemplate
 }
 
 type MixedItem = ReturnType<typeof mixSourceItems<NextLayerSource>>[number]
@@ -35,6 +38,7 @@ function MixedItemRow({
   gradientId,
   index,
   isLast,
+  markScale,
   showTimeLabel,
   timeLabel,
 }: {
@@ -42,6 +46,7 @@ function MixedItemRow({
   gradientId: string
   index: number
   isLast: boolean
+  markScale?: number
   showTimeLabel: boolean
   timeLabel: string
 }) {
@@ -73,6 +78,8 @@ function MixedItemRow({
             <span className="flex min-w-0 flex-col gap-1.5">
               <NewsItemSummary
                 item={item}
+                itemTemplate={result.itemTemplate}
+                markScale={markScale}
                 className="font-medium leading-snug text-foreground group-hover:text-theme-700 dark:group-hover:text-theme-200"
               />
               <span className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground sm:hidden">
@@ -103,6 +110,7 @@ function MixedItemRow({
 interface VirtualTimelineProps {
   gradientId: string
   items: MixedItem[]
+  markScales: ReadonlyMap<string, number>
   scrollElement: HTMLDivElement | null
   timeLabels: string[]
 }
@@ -110,6 +118,7 @@ interface VirtualTimelineProps {
 function VirtualTimeline({
   gradientId,
   items,
+  markScales,
   scrollElement,
   timeLabels,
 }: VirtualTimelineProps) {
@@ -168,6 +177,7 @@ function VirtualTimeline({
               gradientId={gradientId}
               index={index}
               isLast={index === items.length - 1}
+              markScale={markScales.get(entry.source.id)}
               showTimeLabel={index === 0 || timeLabels[index] !== timeLabels[index - 1]}
               timeLabel={timeLabels[index] ?? ""}
             />
@@ -191,26 +201,31 @@ export function NextLayer({
   const sourceResults = useBoardItems()
   const { currentBoard, instanceIds } = useBoardSourceCards(boardId)
 
-  const mixedItems = useMemo(() => mixSourceItems(
-    instanceIds.flatMap((id) => {
-      const result = sourceResults[id]
-      if (!result || result.filter !== currentBoard.filter) return []
+  const sourceEntries = useMemo(() => instanceIds.flatMap((id) => {
+    const result = sourceResults[id]
+    if (!result || result.filter !== currentBoard.filter) return []
 
-      return [{
-        items: result.items,
-        source: {
-          card: result.card,
-          id: result.id,
-          icon: resolveSourceIcon(
-            result.card.provider.icon,
-            result.card.metadata.home,
-            iconSettings.template,
-          ),
-        },
-        updatedAt: result.updatedAt,
-      }]
-    }),
-  ), [currentBoard.filter, iconSettings.template, instanceIds, sourceResults])
+    return [{
+      items: result.items,
+      source: {
+        card: result.card,
+        id: result.id,
+        itemTemplate: result.itemTemplate,
+        icon: resolveSourceIcon(
+          result.card.provider.icon,
+          result.card.metadata.home,
+          iconSettings.template,
+        ),
+      },
+      updatedAt: result.updatedAt,
+    }]
+  }), [currentBoard.filter, iconSettings.template, instanceIds, sourceResults])
+  const mixedItems = useMemo(() => mixSourceItems(sourceEntries), [sourceEntries])
+  const markScaleGroups = useMemo(
+    () => sourceEntries.map(({ items, source }) => ({ items, sourceKey: source.id })),
+    [sourceEntries],
+  )
+  const markScales = useSourceMarkScales(markScaleGroups)
   const timeLabels = useMemo(
     () => mixedItems.map(entry => formatRelativeTime(entry.timestamp, now)),
     [mixedItems, now],
@@ -271,6 +286,7 @@ export function NextLayer({
                 <VirtualTimeline
                   gradientId={gradientId}
                   items={mixedItems}
+                  markScales={markScales}
                   scrollElement={scrollElement}
                   timeLabels={timeLabels}
                 />

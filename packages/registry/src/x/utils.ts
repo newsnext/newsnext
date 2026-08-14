@@ -1,4 +1,4 @@
-import type { NewsItem, SourceLoaderContext } from "@newsnext/source/types"
+import type { NewsItemInput, SourceLoaderContext } from "@newsnext/source/types"
 import type {
   XTimelineEntry,
   XTimelineInstruction,
@@ -7,6 +7,12 @@ import type {
 } from "./types"
 
 export const X_ORIGIN = "https://x.com"
+export const X_ITEM_TEMPLATE = {
+  inline: "{% unless scope.item.icon.kind == 'author' %}{{ scope.item.author.name }} · {% endunless %}{{ scope.item.stats.likes | compact_number }} likes{% if scope.item.stats.comments != nil %} · {{ scope.item.stats.comments | compact_number }} comments{% endif %}{% if scope.item.stats.reposts != nil %} · {{ scope.item.stats.reposts | compact_number }} reposts{% endif %}",
+} as const
+export const X_USER_ITEM_TEMPLATE = {
+  inline: "{{ scope.item.stats.likes | compact_number }} likes{% if scope.item.stats.comments != nil %} · {{ scope.item.stats.comments | compact_number }} comments{% endif %}{% if scope.item.stats.reposts != nil %} · {{ scope.item.stats.reposts | compact_number }} reposts{% endif %}",
+} as const
 export const PLACE_TRENDS_URL = "https://api.x.com/1.1/trends/place.json"
 export const HOME_TIMELINE_URL = `${X_ORIGIN}/i/api/graphql/wp06oo3fRGU4P1sK8rECqQ/HomeTimeline`
 export const HOME_LATEST_TIMELINE_QUERY_ID = "BLQWpfVqtgBqAqwRRJcJjA"
@@ -78,14 +84,15 @@ export const X_USER_FEATURES = {
 
 export function createXLoggedInHeaders(context: SourceLoaderContext): Record<string, string> {
   const csrfToken = context.secrets?.[X_CSRF_TOKEN_SECRET_KEY]
-  return {
+  const headers: Record<string, string> = {
     "authorization": `Bearer ${X_BEARER_TOKEN}`,
     "content-type": "application/json",
     "referer": X_ORIGIN,
     "x-twitter-active-user": "yes",
     "x-twitter-auth-type": "OAuth2Session",
-    ...(csrfToken ? { "x-csrf-token": csrfToken } : {}),
   }
+  if (csrfToken) headers["x-csrf-token"] = csrfToken
+  return headers
 }
 
 export function normalizeXSearchUrl(url: string): string {
@@ -119,10 +126,11 @@ function xTweetToNewsItem(
   tweet: XTweetResult,
   includeIcon: boolean,
   textMode: XTweetTextMode,
-): NewsItem | undefined {
+): NewsItemInput | undefined {
   const id = tweet.rest_id
   const user = tweet.core?.user_results?.result
   const screenName = user?.core?.screen_name
+  const authorName = user?.core?.name ?? `@${screenName}`
   const profileImage = user?.avatar?.image_url
   const originalText = tweet.note_tweet?.note_tweet_results?.result?.text ?? tweet.legacy?.full_text
   const translationResult = tweet.grok_translated_post_with_availability
@@ -136,42 +144,42 @@ function xTweetToNewsItem(
   if (!id || !screenName || !title) return undefined
 
   const favoriteCount = tweet.legacy?.favorite_count ?? 0
-  const formattedCount = new Intl.NumberFormat("en-US", {
-    notation: "compact",
-    maximumFractionDigits: 1,
-  }).format(favoriteCount)
   const timestamp = tweet.legacy?.created_at ? Date.parse(tweet.legacy.created_at) : Number.NaN
   const pictures = tweet.legacy?.entities?.media
     ?.map(media => media.media_url_https)
     .filter((url): url is string => Boolean(url))
-  const item: NewsItem = {
+  return {
     title,
     url: `${X_ORIGIN}/${screenName}/status/${id}`,
-    inline: {
-      text: `${formattedCount} ${favoriteCount === 1 ? "like" : "likes"}`,
-      ...(includeIcon && profileImage
-        ? { icon: { src: profileImage, radius: 999 } }
-        : {}),
+    publishedAt: timestamp,
+    author: {
+      name: authorName,
+      home: `${X_ORIGIN}/${screenName}`,
+    },
+    stats: {
+      likes: favoriteCount,
+      comments: tweet.legacy?.reply_count,
+      reposts: tweet.legacy?.retweet_count,
+    },
+    icon: {
+      kind: "author",
+      label: authorName,
+      src: includeIcon ? profileImage : undefined,
+    },
+    content: {
+      text: alternateText,
+      pictures,
     },
   }
-
-  if (!Number.isNaN(timestamp)) item.timestamp = timestamp
-  if (alternateText || pictures?.length) {
-    item.preview = {
-      text: alternateText ?? title,
-      ...(pictures?.length ? { picture: pictures } : {}),
-    }
-  }
-  return item
 }
 
 export function entriesToNewsItems(
   entries: XTimelineEntry[],
   options: { includeIcon?: boolean, textMode?: XTweetTextMode } = {},
-): NewsItem[] {
+): NewsItemInput[] {
   const { includeIcon = true, textMode = "original" } = options
   const seen = new Set<string>()
-  return entries.flatMap((entry): NewsItem[] => {
+  return entries.flatMap((entry): NewsItemInput[] => {
     const tweet = getTweetResult(entry)
     const item = tweet ? xTweetToNewsItem(tweet, includeIcon, textMode) : undefined
     if (!item || seen.has(item.url)) return []
@@ -180,6 +188,6 @@ export function entriesToNewsItems(
   })
 }
 
-export function sortNewsItemsByNewest(items: NewsItem[]): NewsItem[] {
-  return items.sort((a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0))
+export function sortNewsItemsByNewest(items: NewsItemInput[]): NewsItemInput[] {
+  return items.sort((a, b) => (b.publishedAt ?? b.updatedAt ?? 0) - (a.publishedAt ?? a.updatedAt ?? 0))
 }

@@ -1,7 +1,7 @@
 import type { ProviderConfig } from "@newsnext/source/registry"
 import type {
   SourceLoaderContext,
-  SourceLoaderResult,
+  SourceLoaderOutput,
 } from "@newsnext/source/types"
 import type { JikeFeedResponse, TopicFeedOrder } from "./types"
 import { isJwtExpired } from "@newsnext/source/utils"
@@ -22,6 +22,15 @@ const USER_UPDATES_URL = "https://api.ruguoapp.com/1.0/personalUpdate/single"
 const FOLLOWING_UPDATES_LIMIT = 50
 const JIKE_ACCESS_TOKEN_SECRET_KEY = "accessToken"
 const JIKE_REFRESH_TOKEN_SECRET_KEY = "refreshToken"
+const JIKE_ITEM_TEMPLATE = {
+  inline: "{% unless scope.item.icon.kind == 'author' %}{{ scope.item.author.name }} · {% endunless %}{% if scope.item.attributes.topic %}#{{ scope.item.attributes.topic }} · {% endif %}{{ scope.item.stats.likes | compact_number }} likes · {{ scope.item.stats.comments | compact_number }} comments",
+} as const
+const JIKE_USER_ITEM_TEMPLATE = {
+  inline: "{% if scope.item.attributes.topic %}#{{ scope.item.attributes.topic }} · {% endif %}{{ scope.item.stats.likes | compact_number }} likes · {{ scope.item.stats.comments | compact_number }} comments",
+} as const
+const JIKE_TOPIC_ITEM_TEMPLATE = {
+  inline: "{% unless scope.item.icon.kind == 'author' %}{{ scope.item.author.name }} · {% endunless %}{{ scope.item.stats.likes | compact_number }} likes · {{ scope.item.stats.comments | compact_number }} comments",
+} as const
 const JIKE_ACCESS_TOKEN_EXPIRY_BUFFER_SECONDS = 30
 
 async function refreshJikeAccessToken(
@@ -99,20 +108,20 @@ function assertSuccessfulFeed(response: JikeFeedResponse, fallback: string): voi
 export async function fetchJikeFollowingUpdates(
   _params: Record<string, unknown>,
   context: SourceLoaderContext,
-): Promise<SourceLoaderResult> {
+): Promise<SourceLoaderOutput> {
   const response = await fetchJikeWithAuth(
     FOLLOWING_UPDATES_URL,
     { limit: FOLLOWING_UPDATES_LIMIT },
     context,
   )
   assertSuccessfulFeed(response, "Failed to load Jike following updates.")
-  return { items: jikePostsToNewsItems(response.data ?? []) }
+  return { items: jikePostsToNewsItems(response.data ?? []), itemTemplate: JIKE_ITEM_TEMPLATE }
 }
 
 export async function fetchJikeUserUpdates(
   { username }: { username: string },
   context: SourceLoaderContext,
-): Promise<SourceLoaderResult> {
+): Promise<SourceLoaderOutput> {
   const response = await fetchJikeWithAuth(
     USER_UPDATES_URL,
     { limit: FOLLOWING_UPDATES_LIMIT, username: username.trim() },
@@ -123,21 +132,22 @@ export async function fetchJikeUserUpdates(
   const badge = getJikeUserAvatar(posts.find(post => post.user)?.user)
   return {
     items: jikePostsToNewsItems(posts, { includeIcon: false }),
-    ...(badge ? { metadata: { badge } } : {}),
+    itemTemplate: JIKE_USER_ITEM_TEMPLATE,
+    metadata: badge ? { badge } : undefined,
   }
 }
 
 async function fetchJikeTopicFeed(
   { topicId, order }: { topicId: string, order: TopicFeedOrder },
   context: SourceLoaderContext,
-): Promise<SourceLoaderResult> {
+): Promise<SourceLoaderOutput> {
   const response = await fetchJikeWithAuth(
     buildJikeTopicFeedUrl(order),
     { limit: FOLLOWING_UPDATES_LIMIT, topicId: topicId.trim() },
     context,
   )
   assertSuccessfulFeed(response, "Failed to load Jike topic feed.")
-  return { items: jikePostsToNewsItems(response.data ?? []) }
+  return { items: jikePostsToNewsItems(response.data ?? []), itemTemplate: JIKE_TOPIC_ITEM_TEMPLATE }
 }
 
 const jikeCapabilities = {
@@ -259,7 +269,7 @@ export default {
         load: fetchJikeUserUpdates,
       },
       cache: {
-        version: 2,
+        version: 3,
         maxAge: "5m",
       },
     },

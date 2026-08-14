@@ -1,4 +1,4 @@
-import type { NewsItem, SourceLoaderContext, SourceLoaderResult } from "@newsnext/source/types"
+import type { NewsItemInput, SourceLoaderContext, SourceLoaderOutput } from "@newsnext/source/types"
 import { load } from "cheerio/slim"
 
 const WEIBO_ORIGIN = "https://weibo.com"
@@ -29,8 +29,12 @@ interface WeiboStatus {
   isAd?: boolean
   user?: {
     id?: string | number
+    screen_name?: string
     profile_image_url?: string
   }
+  attitudes_count?: number
+  comments_count?: number
+  reposts_count?: number
   pics?: WeiboPicture[]
   pic_infos?: Record<string, WeiboPicture>
   retweeted_status?: WeiboStatus
@@ -73,7 +77,7 @@ function normalizePictures(pictures?: WeiboStatus["pics"] | WeiboStatus["pic_inf
 function weiboStatusToNewsItem(
   status: WeiboStatus,
   includeIcon: boolean,
-): NewsItem | undefined {
+): NewsItemInput | undefined {
   const postId = status.mblogid || status.bid || (typeof status.id === "string" ? status.id : undefined)
   const text = status.text_raw?.trim() || htmlToText(status.longText?.longTextContent ?? status.text)
   if (!postId || !text) return undefined
@@ -91,36 +95,47 @@ function weiboStatusToNewsItem(
   ]
   const timestamp = status.created_at ? Date.parse(status.created_at) : Number.NaN
   const inlineIcon = includeIcon ? status.user?.profile_image_url : undefined
-  const item: NewsItem = {
+  const authorName = status.user?.screen_name
+  return {
     title: text,
     url: userId ? `${WEIBO_ORIGIN}/${userId}/${postId}` : `${WEIBO_ORIGIN}/status/${postId}`,
-    inline: {
-      ...(inlineIcon ? { icon: { src: inlineIcon, radius: 999 } } : {}),
+    publishedAt: timestamp,
+    author: {
+      name: authorName,
+      home: userId ? `${WEIBO_ORIGIN}/u/${userId}` : undefined,
     },
-    preview: {
+    stats: {
+      likes: status.attitudes_count,
+      comments: status.comments_count,
+      reposts: status.reposts_count,
+    },
+    icon: {
+      kind: "author",
+      label: authorName,
+      src: inlineIcon,
+    },
+    content: {
       text: retweetedText ? `${text}\n\nRepost: ${retweetedText}` : text,
-      ...(pictures.length ? { picture: pictures } : {}),
+      pictures,
     },
   }
-  if (!Number.isNaN(timestamp)) item.timestamp = timestamp
-  return item
 }
 
 function statusesToNewsItems(
   statuses: WeiboStatus[],
   options: { includeIcon?: boolean } = {},
-): NewsItem[] {
+): NewsItemInput[] {
   const { includeIcon = true } = options
   return statuses
     .filter(status => !status.isAd)
-    .flatMap((status): NewsItem[] => {
+    .flatMap((status): NewsItemInput[] => {
       const item = weiboStatusToNewsItem(status, includeIcon)
       return item ? [item] : []
     })
-    .sort((a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0))
+    .sort((a, b) => (b.publishedAt ?? 0) - (a.publishedAt ?? 0))
 }
 
-function cardsToNewsItems(cards: WeiboCard[]): NewsItem[] {
+function cardsToNewsItems(cards: WeiboCard[]): NewsItemInput[] {
   const statuses = cards
     .flatMap(card => [card, ...(card.card_group ?? [])])
     .filter(card => !card.profile_type_id?.startsWith("proweibotop"))
@@ -131,7 +146,7 @@ function cardsToNewsItems(cards: WeiboCard[]): NewsItem[] {
 export async function fetchWeiboUserPosts(
   { uid }: { uid: string },
   context: SourceLoaderContext,
-): Promise<SourceLoaderResult> {
+): Promise<SourceLoaderOutput> {
   const normalizedUid = uid.trim()
   if (!/^\d+$/.test(normalizedUid)) throw new Error("Weibo user ID must be a numeric uid.")
 
@@ -147,14 +162,14 @@ export async function fetchWeiboUserPosts(
     ?.profile_image_url
   return {
     items: statusesToNewsItems(statuses, { includeIcon: false }),
-    ...(badge ? { metadata: { badge } } : {}),
+    metadata: badge ? { badge } : undefined,
   }
 }
 
 export async function fetchWeiboKeywordPosts(
   { keyword }: { keyword: string },
   context: SourceLoaderContext,
-): Promise<SourceLoaderResult> {
+): Promise<SourceLoaderOutput> {
   const normalizedKeyword = keyword.trim()
   if (!normalizedKeyword) throw new Error("Weibo keyword must not be empty.")
 
@@ -175,7 +190,7 @@ export async function fetchWeiboKeywordPosts(
 export async function fetchWeiboSuperTopicPosts(
   { id }: { id: string },
   context: SourceLoaderContext,
-): Promise<SourceLoaderResult> {
+): Promise<SourceLoaderOutput> {
   const normalizedId = id.trim()
   if (!/^100808[a-z\d]+$/i.test(normalizedId)) {
     throw new Error("Weibo super topic ID must start with 100808 and contain only letters or digits.")
@@ -195,7 +210,7 @@ export async function fetchWeiboSuperTopicPosts(
 export async function fetchWeiboFollowingTimeline(
   _params: Record<string, unknown>,
   context: SourceLoaderContext,
-): Promise<SourceLoaderResult> {
+): Promise<SourceLoaderOutput> {
   const listId = "my_follow_all"
   const searchParams = new URLSearchParams({
     list_id: listId,

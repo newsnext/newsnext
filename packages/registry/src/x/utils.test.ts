@@ -1,4 +1,5 @@
 import type { XTweetResult } from "./types"
+import { validateSourceLoaderResult } from "@newsnext/source/core"
 import { describe, expect, it } from "vitest"
 import {
   entriesToNewsItems,
@@ -35,6 +36,10 @@ function createTweet(id: string, screenName: string): XTweetResult {
   }
 }
 
+function normalize(items: ReturnType<typeof entriesToNewsItems>) {
+  return validateSourceLoaderResult({ items }).items
+}
+
 describe("getTimelineEntries", () => {
   it("parses direct tweets with the current X user shape", () => {
     const entries = getTimelineEntries([
@@ -54,27 +59,30 @@ describe("getTimelineEntries", () => {
       },
     ])
 
-    expect(entriesToNewsItems(entries)).toEqual([
+    expect(normalize(entriesToNewsItems(entries))).toEqual([
       expect.objectContaining({
         title: "Tweet 2087098918509457746",
         url: "https://x.com/jesselaunz/status/2087098918509457746",
-        inline: {
-          text: "1 like",
-          icon: {
-            src: "https://pbs.twimg.com/profile_images/2087098918509457746/avatar_normal.jpg",
-            radius: 999,
-          },
+        author: {
+          name: "@jesselaunz",
+          home: "https://x.com/jesselaunz",
         },
-        preview: {
+        stats: { likes: 1 },
+        icon: {
+          kind: "author",
+          label: "@jesselaunz",
+          src: "https://pbs.twimg.com/profile_images/2087098918509457746/avatar_normal.jpg",
+        },
+        content: {
           text: "Translated tweet 2087098918509457746",
         },
       }),
     ])
 
-    expect(entriesToNewsItems(entries, { textMode: "translation" })).toEqual([
+    expect(normalize(entriesToNewsItems(entries, { textMode: "translation" }))).toEqual([
       expect.objectContaining({
         title: "Translated tweet 2087098918509457746",
-        preview: {
+        content: {
           text: "Tweet 2087098918509457746",
         },
       }),
@@ -110,16 +118,19 @@ describe("getTimelineEntries", () => {
       "profile-conversation-2087102520374591488",
       "profile-conversation-2087102520374591488-tweet-2087081719090614299",
     ])
-    expect(entriesToNewsItems(entries)).toEqual([
+    expect(normalize(entriesToNewsItems(entries))).toEqual([
       expect.objectContaining({
         title: "Tweet 2087081719090614299",
         url: "https://x.com/op7418/status/2087081719090614299",
-        inline: {
-          text: "1 like",
-          icon: {
-            src: "https://pbs.twimg.com/profile_images/2087081719090614299/avatar_normal.jpg",
-            radius: 999,
-          },
+        author: {
+          name: "@op7418",
+          home: "https://x.com/op7418",
+        },
+        stats: { likes: 1 },
+        icon: {
+          kind: "author",
+          label: "@op7418",
+          src: "https://pbs.twimg.com/profile_images/2087081719090614299/avatar_normal.jpg",
         },
       }),
     ])
@@ -129,7 +140,7 @@ describe("getTimelineEntries", () => {
     const tweet = createTweet("2086353229894529148", "thsottiaux")
     delete tweet.grok_translated_post_with_availability
 
-    expect(entriesToNewsItems([
+    expect(normalize(entriesToNewsItems([
       {
         entryId: "tweet-2086353229894529148",
         content: {
@@ -138,7 +149,7 @@ describe("getTimelineEntries", () => {
           },
         },
       },
-    ], { textMode: "translation" })).toEqual([
+    ], { textMode: "translation" }))).toEqual([
       expect.objectContaining({
         title: "Tweet 2086353229894529148",
       }),

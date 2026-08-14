@@ -1,21 +1,36 @@
 import type { NewsItem } from "@/typings/source"
 
-export function isTimelineItems(items: readonly NewsItem[]): boolean {
-  if (items.length === 0) {
-    return false
-  }
+export function getNewsItemTime(item: NewsItem): number | undefined {
+  return item.publishedAt ?? item.updatedAt
+}
 
+function getDescendingItemTimes(
+  items: readonly NewsItem[],
+  field: "publishedAt" | "updatedAt",
+): number[] | undefined {
+  const times: number[] = []
   let previousTimestamp = Number.POSITIVE_INFINITY
   for (const item of items) {
-    if (
-      item.timestamp === undefined
-      || !Number.isFinite(item.timestamp)
-      || item.timestamp > previousTimestamp
-    ) {
-      return false
+    const timestamp = item[field]
+    if (timestamp === undefined || !Number.isFinite(timestamp) || timestamp > previousTimestamp) {
+      return undefined
     }
-    previousTimestamp = item.timestamp
+    times.push(timestamp)
+    previousTimestamp = timestamp
   }
 
-  return true
+  return times
+}
+
+export function getTimelineItemTimes(items: readonly NewsItem[]): number[] | undefined {
+  if (items.length === 0) {
+    return undefined
+  }
+
+  return getDescendingItemTimes(items, "publishedAt")
+    ?? getDescendingItemTimes(items, "updatedAt")
+}
+
+export function isTimelineItems(items: readonly NewsItem[]): boolean {
+  return getTimelineItemTimes(items) !== undefined
 }

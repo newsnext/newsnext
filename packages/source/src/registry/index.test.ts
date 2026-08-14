@@ -217,7 +217,7 @@ describe("source template vars", () => {
     })
 
     expect(provider.sources.inherited).toMatchObject({
-      cache: { version: 1, maxAge: "5m" },
+      cache: { version: 2, maxAge: "5m" },
       capabilities: {
         network: ["api.example.com"],
         cookies: ["account.example.com"],
@@ -236,7 +236,7 @@ describe("source template vars", () => {
       ],
     })
     expect(provider.sources.overridden).toMatchObject({
-      cache: { version: 1, maxAge: "1m" },
+      cache: { version: 2, maxAge: "1m" },
       capabilities: {
         network: ["override.example.com"],
         cookies: ["account.example.com"],
@@ -818,7 +818,7 @@ describe("source registry", () => {
       color: "blue",
     })
     expect(resolveSourceRegistry(registry)["test:latest"]).toMatchObject({
-      cache: { version: 1, maxAge: "5m" },
+      cache: { version: 2, maxAge: "5m" },
       metadata: {
         title: "Latest",
       },

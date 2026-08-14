@@ -10,6 +10,7 @@ export type TemplateOutput = "html" | "plain"
 
 export type SourceTemplateSlot
   = | "field"
+    | "item"
     | "jsonField"
     | "radarMetadata"
     | "radarParams"
@@ -101,6 +102,14 @@ function createEngine(output: "html" | "plain"): Liquid {
   engine.registerFilter("css_url", (value: unknown) => {
     return extractCssUrl(value)
   })
+  engine.registerFilter("compact_number", (value: unknown) => {
+    const number = Number(value)
+    if (!Number.isFinite(number)) return ""
+    return new Intl.NumberFormat("en-US", {
+      notation: "compact",
+      maximumFractionDigits: 1,
+    }).format(number)
+  })
   engine.registerFilter("date_to_ms", (value: unknown) => {
     const timestamp = Date.parse(stringify(value))
     return Number.isFinite(timestamp) ? timestamp : undefined
@@ -169,6 +178,9 @@ const sourceTemplatePaths = {
     "scope.request.url",
     "scope.value",
     "source.vars",
+  ],
+  item: [
+    "scope.item",
   ],
   jsonField: [
     "scope.index",

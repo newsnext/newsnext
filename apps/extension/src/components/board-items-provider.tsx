@@ -15,6 +15,7 @@ export function BoardItemsProvider({ children }: { children: ReactNode }): React
       if (previous?.card === result.card
         && previous.filter === result.filter
         && previous.items === result.items
+        && previous.itemTemplate === result.itemTemplate
         && previous.isLoading === result.isLoading
         && previous.updatedAt === result.updatedAt) {
         return current

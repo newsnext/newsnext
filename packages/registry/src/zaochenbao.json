@@ -24,7 +24,7 @@
           "url": {
             "attr": "href"
           },
-          "timestamp": {
+          "publishedAt": {
             "select": ".pdt10",
             "template": "{{ scope.value | replace: '- ', 'T' | append: '+08:00' | date_to_ms }}"
           }

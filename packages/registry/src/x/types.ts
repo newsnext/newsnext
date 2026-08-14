@@ -22,6 +22,7 @@ interface XUserResult {
     image_url?: string
   }
   core?: {
+    name?: string
     screen_name?: string
   }
   rest_id?: string
@@ -53,6 +54,9 @@ export interface XTweetResult {
   legacy?: {
     created_at?: string
     favorite_count?: number
+    reply_count?: number
+    retweet_count?: number
+    quote_count?: number
     full_text?: string
     entities?: {
       media?: Array<{

@@ -17,18 +17,20 @@
         "fields": {
           "title": "title",
           "url": "url",
-          "timestamp": {
+          "publishedAt": {
             "select": "publishedAt",
             "template": "{{ scope.value | date_to_ms }}"
           },
-          "inline": {
-            "text": {
-              "template": "{{ scope.item.source }}{% if scope.item.category %} · {{ scope.item.category }}{% endif %}"
-            }
+          "attributes": {
+            "source": "source",
+            "category": "category"
           },
-          "preview": {
+          "content": {
             "text": "summary"
           }
+        },
+        "itemTemplate": {
+          "inline": "{{ scope.item.attributes.source }}{% if scope.item.attributes.category %} · {{ scope.item.attributes.category }}{% endif %}"
         }
       },
       "cache": "5m"

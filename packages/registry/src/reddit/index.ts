@@ -1,5 +1,5 @@
 import type { ProviderConfig } from "@newsnext/source/registry"
-import type { SourceLoaderContext, SourceLoaderResult } from "@newsnext/source/types"
+import type { SourceLoaderContext, SourceLoaderOutput, SourcePresentationMetadata } from "@newsnext/source/types"
 import type {
   RedditListingResponse,
   RedditPost,
@@ -7,6 +7,12 @@ import type {
 import { REDDIT_ORIGIN, redditPostsToNewsItems } from "./utils"
 
 const REDDIT_LISTING_LIMIT = 50
+const REDDIT_USER_ITEM_TEMPLATE = {
+  inline: "{% if scope.item.attributes.community %}{{ scope.item.attributes.community }} · {% endif %}{{ scope.item.stats.score | compact_number }} points · {{ scope.item.stats.comments | compact_number }} comments",
+} as const
+const REDDIT_SUBREDDIT_ITEM_TEMPLATE = {
+  inline: "{% if scope.item.author %}{{ scope.item.author.name }} · {% endif %}{{ scope.item.stats.score | compact_number }} points · {{ scope.item.stats.comments | compact_number }} comments",
+} as const
 const REDDIT_RADAR_HOSTS = ["reddit.com", "old.reddit.com", "new.reddit.com"]
 const SUBREDDIT_SORT_OPTIONS = [
   { label: "Best", value: "best" },
@@ -56,7 +62,7 @@ function getRedditPosts(listing: RedditListingResponse): RedditPost[] {
 async function fetchRedditUserPosts(
   { username }: { username: string },
   context: SourceLoaderContext,
-): Promise<SourceLoaderResult> {
+): Promise<SourceLoaderOutput> {
   const normalizedUsername = username.trim()
   if (!/^[\w-]{3,20}$/.test(normalizedUsername)) {
     throw new Error("Reddit username must contain 3–20 letters, numbers, underscores, or hyphens.")
@@ -71,9 +77,9 @@ async function fetchRedditUserPosts(
   const posts = getRedditPosts(listing)
   return {
     items: redditPostsToNewsItems(posts, {
-      includeAuthor: false,
       includeSubredditIcon: true,
     }),
+    itemTemplate: REDDIT_USER_ITEM_TEMPLATE,
     metadata: {
       title: `u/${normalizedUsername}`,
     },
@@ -83,14 +89,14 @@ async function fetchRedditUserPosts(
 async function fetchSubredditPosts(
   { sort, subreddit }: { sort: SubredditSort, subreddit: string },
   context: SourceLoaderContext,
-): Promise<SourceLoaderResult> {
+): Promise<SourceLoaderOutput> {
   return fetchSubredditListing(subreddit, sort, context)
 }
 
 async function fetchSubredditTopPosts(
   { period, subreddit }: { period: SubredditTopPeriod, subreddit: string },
   context: SourceLoaderContext,
-): Promise<SourceLoaderResult> {
+): Promise<SourceLoaderOutput> {
   return fetchSubredditListing(subreddit, "top", context, { t: period })
 }
 
@@ -99,7 +105,7 @@ async function fetchSubredditListing(
   sort: SubredditSort | "top",
   context: SourceLoaderContext,
   query: Record<string, string | number> = {},
-): Promise<SourceLoaderResult> {
+): Promise<SourceLoaderOutput> {
   const normalizedSubreddit = subreddit.trim()
   if (!/^\w{2,21}$/.test(normalizedSubreddit)) {
     throw new Error("Subreddit name must contain 2–21 letters, numbers, or underscores.")
@@ -115,15 +121,13 @@ async function fetchSubredditListing(
   const community = posts.find(post => post.sr_detail)?.sr_detail
   const displayName = community?.display_name ?? normalizedSubreddit
   const badge = community?.community_icon || community?.icon_img
+  const metadata: SourcePresentationMetadata = { title: `r/${displayName}` }
+  if (community?.public_description) metadata.desc = community.public_description
+  if (badge) metadata.badge = badge
   return {
-    items: redditPostsToNewsItems(posts, {
-      includeSubreddit: false,
-    }),
-    metadata: {
-      title: `r/${displayName}`,
-      ...(community?.public_description ? { desc: community.public_description } : {}),
-      ...(badge ? { badge } : {}),
-    },
+    items: redditPostsToNewsItems(posts),
+    itemTemplate: REDDIT_SUBREDDIT_ITEM_TEMPLATE,
+    metadata,
   }
 }
 

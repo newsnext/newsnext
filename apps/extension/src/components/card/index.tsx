@@ -62,7 +62,7 @@ function SourceCardContent({ filter, id, source, dragHandle, isDraft = false, on
     requestPermission,
   } = useSourcePermission(source, savedParams)
 
-  const { items, metadata, fetchLatest, isFetching, isFetchingLatest, isLoading, isError, errorMessage, loginUrl, updatedAt } = useSourceQuery({
+  const { items, itemTemplate, metadata, fetchLatest, isFetching, isFetchingLatest, isLoading, isError, errorMessage, loginUrl, updatedAt } = useSourceQuery({
     sourceId: source.sourceId,
     params: savedParams,
     enabled: canLoad,
@@ -87,10 +87,11 @@ function SourceCardContent({ filter, id, source, dragHandle, isDraft = false, on
       filter,
       id,
       items: canLoad ? visibleItems : EMPTY_ITEMS,
+      itemTemplate,
       isLoading,
       updatedAt,
     })
-  }, [canLoad, displaySource, filter, id, isDraft, isLoading, reportBoardSourceItems, updatedAt, visibleItems])
+  }, [canLoad, displaySource, filter, id, isDraft, isLoading, itemTemplate, reportBoardSourceItems, updatedAt, visibleItems])
 
   const handleFlip = useCallback(() => {
     setIsFlipped(prev => !prev)
@@ -137,6 +138,7 @@ function SourceCardContent({ filter, id, source, dragHandle, isDraft = false, on
       <CardFront
         source={displaySource}
         items={visibleItems}
+        itemTemplate={itemTemplate}
         isFetching={isFetching || isFetchingLatest}
         isContentFetching={isFetchingLatest || isLoading}
         sourceErrorMessage={sourceErrorMessage}

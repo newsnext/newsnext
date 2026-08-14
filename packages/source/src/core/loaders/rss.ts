@@ -1,5 +1,6 @@
 import type {
-  NewsItem,
+  NewsItemInput,
+  SourceLoaderOutput,
   SourceLoaderResult,
 } from "../../types"
 import type { LoaderContext } from "./shared"
@@ -7,6 +8,7 @@ import { load } from "cheerio/slim"
 import { decodeHTMLStrict } from "entities"
 import { XMLParser } from "fast-xml-parser"
 import { resolveSourceLoaderResultUrls } from "../base-url"
+import { validateSourceLoaderResult } from "../loader-result"
 import { normalizeLoaderMetadata, requestLoaderResponse } from "./shared"
 
 const JSON_FEED_VERSIONS = new Set([
@@ -14,13 +16,6 @@ const JSON_FEED_VERSIONS = new Set([
   "https://jsonfeed.org/version/1.1",
 ])
 const MAX_DERIVED_TITLE_LENGTH = 200
-
-interface ParsedRssItem extends NewsItem {
-  publishedTimestamp?: number
-  updatedTimestamp?: number
-}
-
-type RssTimestampField = "publishedTimestamp" | "updatedTimestamp"
 
 export async function loadRss(
   { url }: { url: string },
@@ -35,15 +30,16 @@ export async function loadRss(
 
 export function parseRss(data: string): SourceLoaderResult | undefined {
   try {
-    return data.trimStart().startsWith("{")
+    const result = data.trimStart().startsWith("{")
       ? parseJsonFeed(data)
       : parseXmlFeed(data)
+    return result ? validateSourceLoaderResult(result) : undefined
   } catch {
     return undefined
   }
 }
 
-function parseXmlFeed(data: string): SourceLoaderResult | undefined {
+function parseXmlFeed(data: string): SourceLoaderOutput | undefined {
   const xml = new XMLParser({
     attributeNamePrefix: "",
     textNodeName: "$text",
@@ -58,7 +54,7 @@ function parseXmlFeed(data: string): SourceLoaderResult | undefined {
   const parsedItems = (Array.isArray(itemInput) ? itemInput : itemInput ? [itemInput] : [])
     .filter(isRecord)
     .map(parseXmlFeedItem)
-    .filter((item): item is ParsedRssItem => item !== undefined)
+    .filter((item): item is NewsItemInput => item !== undefined)
 
   return createParsedFeed(parsedItems, {
     badge: readXmlImageUrl(channel.image),
@@ -68,7 +64,7 @@ function parseXmlFeed(data: string): SourceLoaderResult | undefined {
   })
 }
 
-function parseXmlFeedItem(item: Record<string, unknown>): ParsedRssItem | undefined {
+function parseXmlFeedItem(item: Record<string, unknown>): NewsItemInput | undefined {
   const title = readXmlText(item.title)
   const url = readXmlLink(item.link)
   if (!title || !url) return
@@ -76,14 +72,14 @@ function parseXmlFeedItem(item: Record<string, unknown>): ParsedRssItem | undefi
   return {
     title,
     url,
-    publishedTimestamp: parseOptionalTimestamp(
-      item.published ?? item.pubDate ?? item.created,
-    ),
-    updatedTimestamp: parseOptionalTimestamp(item.updated),
+    publishedAt: parseOptionalTimestamp(item.published ?? item.pubDate ?? item.created),
+    updatedAt: parseOptionalTimestamp(item.updated),
+    author: parseXmlAuthor(item.author ?? item.creator ?? item["dc:creator"]),
+    content: parseXmlContent(item),
   }
 }
 
-function parseJsonFeed(data: string): SourceLoaderResult | undefined {
+function parseJsonFeed(data: string): SourceLoaderOutput | undefined {
   const feed: unknown = JSON.parse(data)
   if (!isRecord(feed)) return
 
@@ -99,7 +95,7 @@ function parseJsonFeed(data: string): SourceLoaderResult | undefined {
   const parsedItems = feed.items
     .filter(isRecord)
     .map(parseJsonFeedItem)
-    .filter((item): item is ParsedRssItem => item !== undefined)
+    .filter((item): item is NewsItemInput => item !== undefined)
 
   return createParsedFeed(parsedItems, {
     badge: readString(feed.icon) || readString(feed.favicon),
@@ -109,7 +105,7 @@ function parseJsonFeed(data: string): SourceLoaderResult | undefined {
   })
 }
 
-function parseJsonFeedItem(item: Record<string, unknown>): ParsedRssItem | undefined {
+function parseJsonFeedItem(item: Record<string, unknown>): NewsItemInput | undefined {
   const title = readJsonFeedItemTitle(item)
   const url = readJsonFeedItemUrl(item)
   if (!title || !url) return
@@ -123,16 +119,15 @@ function parseJsonFeedItem(item: Record<string, unknown>): ParsedRssItem | undef
   return {
     title,
     url,
-    publishedTimestamp: parseOptionalTimestamp(item.date_published),
-    updatedTimestamp: parseOptionalTimestamp(item.date_modified),
-    ...((authorName || authorAvatar)
-      ? {
-          inline: {
-            ...(authorName ? { text: authorName } : {}),
-            ...(authorAvatar ? { icon: authorAvatar } : {}),
-          },
-        }
-      : {}),
+    publishedAt: parseOptionalTimestamp(item.date_published),
+    updatedAt: parseOptionalTimestamp(item.date_modified),
+    author: { name: authorName || undefined },
+    icon: {
+      kind: "author",
+      label: authorName || undefined,
+      src: authorAvatar || undefined,
+    },
+    content: parseJsonFeedContent(item),
   }
 }
 
@@ -169,45 +164,42 @@ function deriveTitle(value: string): string {
 }
 
 function createParsedFeed(
-  parsedItems: ParsedRssItem[],
+  parsedItems: NewsItemInput[],
   metadata: Record<string, unknown>,
-): SourceLoaderResult {
-  const timestampField = findOrderedTimestampField(parsedItems)
+): SourceLoaderOutput {
   return {
-    items: parsedItems.map(({
-      publishedTimestamp,
-      updatedTimestamp,
-      ...item
-    }) => ({
-      ...item,
-      ...(timestampField
-        ? {
-            timestamp: timestampField === "publishedTimestamp"
-              ? publishedTimestamp
-              : updatedTimestamp,
-          }
-        : {}),
-    })),
+    items: parsedItems,
     metadata: normalizeLoaderMetadata(metadata),
   }
 }
 
-function findOrderedTimestampField(items: ParsedRssItem[]): RssTimestampField | undefined {
-  const fields: RssTimestampField[] = ["publishedTimestamp", "updatedTimestamp"]
-  return fields.find(field => hasDescendingTimestamps(items, field))
+function parseXmlAuthor(value: unknown): NewsItemInput["author"] {
+  const authorValue = Array.isArray(value) ? value[0] : value
+  const name = isRecord(authorValue)
+    ? readXmlText(authorValue.name) || readXmlText(authorValue)
+    : readXmlText(authorValue)
+  if (!name) return undefined
+  const home = isRecord(authorValue) ? readXmlLink(authorValue.uri ?? authorValue.url) : ""
+  return { name, home: home || undefined }
 }
 
-function hasDescendingTimestamps(
-  items: ParsedRssItem[],
-  field: RssTimestampField,
-): boolean {
-  let previousTimestamp = Number.POSITIVE_INFINITY
-  for (const item of items) {
-    const timestamp = item[field]
-    if (timestamp === undefined || timestamp > previousTimestamp) return false
-    previousTimestamp = timestamp
+function parseXmlContent(item: Record<string, unknown>): NewsItemInput["content"] {
+  const html = readXmlOptionalText(item["content:encoded"])
+  if (html) return { html }
+  const text = readXmlOptionalText(item.summary ?? item.description ?? item.content)
+  return text ? { text } : undefined
+}
+
+function parseJsonFeedContent(item: Record<string, unknown>): NewsItemInput["content"] {
+  const html = readString(item.content_html)
+  const text = readString(item.summary) || readString(item.content_text)
+  const image = readString(item.image) || readString(item.banner_image)
+  if (!html && !text && !image) return undefined
+  return {
+    html: html || undefined,
+    text: html ? undefined : text || undefined,
+    pictures: image || undefined,
   }
-  return items.length > 0
 }
 
 function parseOptionalTimestamp(value: unknown): number | undefined {

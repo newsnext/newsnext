@@ -1,3 +1,4 @@
+import type { SourceItemTemplate } from "@newsnext/source/types"
 import type { BoardFilter } from "@/lib/board"
 import type { CardViewModel, NewsItem } from "@/typings/source"
 import { createContext, use } from "react"
@@ -7,6 +8,7 @@ export interface BoardSourceItems {
   filter?: BoardFilter
   id: string
   items: NewsItem[]
+  itemTemplate?: SourceItemTemplate
   isLoading: boolean
   updatedAt: number
 }

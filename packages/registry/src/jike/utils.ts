@@ -1,4 +1,4 @@
-import type { NewsItem } from "@newsnext/source/types"
+import type { NewsItemInput } from "@newsnext/source/types"
 import type { JikePicture, JikePost, JikeUser, TopicFeedOrder } from "./types"
 
 export const JIKE_WEB_ORIGIN = "https://web.okjike.com"
@@ -43,20 +43,15 @@ export function isPinnedPersonalUpdate(post: JikePost): boolean {
 export function jikePostsToNewsItems(
   posts: JikePost[],
   options: { includeIcon?: boolean } = {},
-): NewsItem[] {
+): NewsItemInput[] {
   const { includeIcon = true } = options
-  return posts.flatMap((post): NewsItem[] => {
+  return posts.flatMap((post): NewsItemInput[] => {
     const mobileUrl = getPostMobileUrl(post)
     if (!mobileUrl) return []
 
     const timestampSource = post.actionTime ?? post.createdAt
     const timestamp = timestampSource ? Date.parse(timestampSource) : Number.NaN
-    const inlineText = [
-      post.user?.screenName,
-      post.topic?.content ? `#${post.topic.content}` : undefined,
-      typeof post.likeCount === "number" ? `${post.likeCount} likes` : undefined,
-      typeof post.commentCount === "number" ? `${post.commentCount} comments` : undefined,
-    ].filter(Boolean).join(" · ")
+    const authorName = post.user?.screenName
     const avatar = includeIcon ? getJikeUserAvatar(post.user) : undefined
     const previewText = post.target?.content
       ? `${post.target.user?.screenName ? `${post.target.user.screenName}: ` : ""}${compactText(post.target.content)}`
@@ -64,24 +59,29 @@ export function jikePostsToNewsItems(
     const pictures = (post.pictures?.length ? post.pictures : post.target?.pictures)
       ?.map(getPictureUrl)
       .filter((url): url is string => Boolean(url))
-    const item: NewsItem = {
+    const item: NewsItemInput = {
       title: getPostTitle(post),
       url: getPostWebUrl(post) ?? mobileUrl,
       mobileUrl,
-    }
-
-    if (!Number.isNaN(timestamp)) item.timestamp = timestamp
-    if (inlineText || avatar) {
-      item.inline = {
-        text: inlineText,
-        ...(avatar ? { icon: { src: avatar, radius: 4 } } : {}),
-      }
-    }
-    if (previewText || pictures?.length || post.linkInfo?.pictureUrl) {
-      item.preview = {
-        text: previewText ?? "",
-        picture: pictures?.length ? pictures : post.linkInfo?.pictureUrl,
-      }
+      publishedAt: timestamp,
+      author: {
+        name: authorName,
+        home: post.user?.username ? `${JIKE_WEB_ORIGIN}/u/${post.user.username}` : undefined,
+      },
+      stats: {
+        likes: post.likeCount,
+        comments: post.commentCount,
+      },
+      attributes: { topic: post.topic?.content },
+      icon: {
+        kind: "author",
+        label: authorName,
+        src: avatar,
+      },
+      content: {
+        text: previewText,
+        pictures: pictures?.length ? pictures : post.linkInfo?.pictureUrl,
+      },
     }
     return [item]
   })

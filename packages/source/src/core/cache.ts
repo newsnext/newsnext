@@ -10,6 +10,7 @@ const SOURCE_CACHE_UNIT_MILLISECONDS = {
   h: 60 * 60 * 1000,
   d: 24 * 60 * 60 * 1000,
 } as const
+const DEFAULT_SOURCE_CACHE_VERSION = 2
 
 export function parseSourceCacheMaxAge(
   value: unknown,
@@ -34,7 +35,7 @@ export function resolveSourceCacheConfig(
 ): SourceCacheConfig {
   if (typeof value === "string") {
     parseSourceCacheMaxAge(value, location)
-    return { version: 1, maxAge: value as SourceCacheMaxAge }
+    return { version: DEFAULT_SOURCE_CACHE_VERSION, maxAge: value as SourceCacheMaxAge }
   }
   if (!isRecord(value)) {
     throw new TypeError(`${location} must be a duration or cache configuration object`)

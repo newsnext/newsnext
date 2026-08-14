@@ -22,7 +22,9 @@ import {
   createSourceTemplateScope,
 } from "../template"
 import {
+  isCompleteLoaderFieldGroup,
   normalizeLoaderMetadata,
+  normalizeLoaderNestedValue,
   requestLoaderResponse,
   sortLoaderItemsByTimestamp,
 } from "./shared"
@@ -43,9 +45,14 @@ interface HtmlExtractedItem {
   title?: unknown
   url?: unknown
   mobileUrl?: unknown
-  timestamp?: unknown
-  inline?: Record<string, unknown>
-  preview?: Record<string, unknown>
+  publishedAt?: unknown
+  updatedAt?: unknown
+  author?: Record<string, unknown>
+  stats?: Record<string, unknown>
+  attributes?: Record<string, unknown>
+  icon?: Record<string, unknown>
+  mark?: Record<string, unknown>
+  content?: Record<string, unknown>
 }
 
 interface FieldEntry {
@@ -62,17 +69,24 @@ interface HtmlLoaderBaseOptions extends TimestampSortableLoaderOptions {
   items?: string
   decoding?: string
   metadata?: LoaderMetadataFields<HtmlField>
+  itemTemplate?: SourceLoaderResult["itemTemplate"]
   fields: LoaderFields<HtmlField>
 }
 
 export type HtmlLoaderOptions = HtmlLoaderBaseOptions & LoaderRequestOptions
 
 export function compileHtmlLoaderTemplates(
-  options: Pick<HtmlLoaderOptions, "fields" | "metadata">,
+  options: Pick<HtmlLoaderOptions, "fields" | "itemTemplate" | "metadata">,
   location: string,
 ): void {
   compileHtmlTemplates(collectFieldEntries(options.fields), `${location}.fields`)
   compileHtmlTemplates(collectMetadataEntries(options.metadata), `${location}.metadata`)
+  if (options.itemTemplate) {
+    compileSourceTemplate(options.itemTemplate.inline, {
+      location: `${location}.itemTemplate.inline`,
+      slot: "item",
+    })
+  }
 }
 
 function compileHtmlTemplates(
@@ -104,16 +118,16 @@ function collectFieldEntries(fields: HtmlLoaderOptions["fields"]): FieldEntry[] 
   if (fields.mobileUrl) {
     entries.push(createFieldEntry(["mobileUrl"], fields.mobileUrl))
   }
-  if (fields.timestamp) {
-    entries.push(createFieldEntry(["timestamp"], fields.timestamp))
+  for (const fieldName of ["publishedAt", "updatedAt"] as const) {
+    const field = fields[fieldName]
+    if (field) entries.push(createFieldEntry([fieldName], field))
   }
-
-  for (const group of ["inline", "preview"] as const) {
+  for (const group of ["author", "stats", "attributes", "icon", "mark", "content"] as const) {
     const fieldGroup = fields[group]
     if (!fieldGroup) continue
     for (const [key, field] of Object.entries(fieldGroup)) {
       if (field) {
-        entries.push(createFieldEntry([group, key], field, key === "html"))
+        entries.push(createFieldEntry([group, key], field, group === "content" && key === "html"))
       }
     }
   }
@@ -177,7 +191,7 @@ function selectTarget(
     if (target.length > 0) return target
   }
 
-  return $([])
+  return root.slice(0, 0)
 }
 
 function traverse(
@@ -323,34 +337,39 @@ export async function loadHtml(
       item.mobileUrl = String(resolvedItem.mobileUrl)
     }
 
-    const timestamp = resolvedItem.timestamp === undefined
-      || resolvedItem.timestamp === null
-      || resolvedItem.timestamp === ""
-      ? undefined
-      : Number(resolvedItem.timestamp)
-    if (timestamp !== undefined && Number.isFinite(timestamp)) item.timestamp = timestamp
-
-    if (resolvedItem.inline && Object.values(resolvedItem.inline).some(hasValue)) {
-      item.inline = omitEmpty(resolvedItem.inline) as NonNullable<NewsItem["inline"]>
+    for (const fieldName of ["publishedAt", "updatedAt"] as const) {
+      const rawValue = resolvedItem[fieldName]
+      const timestamp = rawValue === undefined || rawValue === null || rawValue === ""
+        ? undefined
+        : Number(rawValue)
+      if (timestamp !== undefined && Number.isFinite(timestamp)) item[fieldName] = timestamp
     }
-    if (resolvedItem.preview && Object.values(resolvedItem.preview).some(hasValue)) {
-      item.preview = omitEmpty(resolvedItem.preview) as NonNullable<NewsItem["preview"]>
+    for (const group of ["author", "stats", "attributes", "icon", "mark", "content"] as const) {
+      const value = resolvedItem[group]
+      if (value && Object.values(value).some(hasValue)) {
+        const normalized = Object.fromEntries(Object.entries(value).flatMap(([key, rawValue]) => {
+          const nextValue = normalizeLoaderNestedValue(group, rawValue)
+          return hasValue(nextValue) ? [[key, nextValue]] : []
+        }))
+        if (isCompleteLoaderFieldGroup(group, normalized)) Object.assign(item, { [group]: normalized })
+      }
     }
 
     news.push(item)
   })
 
   const sortedNews = sortLoaderItemsByTimestamp(news, options.sortByTimestamp)
-  if (!metadata) return { items: sortedNews }
-
   return {
     items: sortedNews,
-    metadata: resolveHtmlMetadata($, metadata, {
-      vars: loaderContext.vars ?? {},
-      index: 0,
-      params: loaderContext.params ?? {},
-      requestUrl: url,
-    }),
+    itemTemplate: options.itemTemplate,
+    metadata: metadata
+      ? resolveHtmlMetadata($, metadata, {
+          vars: loaderContext.vars ?? {},
+          index: 0,
+          params: loaderContext.params ?? {},
+          requestUrl: url,
+        })
+      : undefined,
   }
 }
 
@@ -417,8 +436,4 @@ function setPath(
 
 function hasValue(value: unknown): boolean {
   return value !== undefined && value !== null && value !== ""
-}
-
-function omitEmpty(value: Record<string, unknown>): Record<string, unknown> {
-  return Object.fromEntries(Object.entries(value).filter(([, entry]) => hasValue(entry)))
 }

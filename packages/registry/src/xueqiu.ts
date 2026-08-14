@@ -61,11 +61,13 @@ export default {
             template: "/s/{{ scope.value | url_path }}",
           },
           title: "name",
-          inline: {
-            html: {
-              template: "<span style=\"color: {% if scope.item.percent == nil %}#64748b{% elsif scope.item.percent > 0 %}#ef4444{% else %}#22c55e{% endif %}\">{% if scope.item.percent == nil %}--{% else %}{{ scope.item.percent }}%{% endif %}</span> <span>{{ scope.item.exchange }}</span>",
-            },
+          attributes: {
+            exchange: "exchange",
+            changePercent: "percent",
           },
+        },
+        itemTemplate: {
+          inline: "{% if scope.item.attributes.changePercent == nil %}--{% else %}{{ scope.item.attributes.changePercent }}%{% endif %} · {{ scope.item.attributes.exchange }}",
         },
       },
       capabilities: {

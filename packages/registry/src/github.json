@@ -84,15 +84,18 @@
             "select": ">h2 a",
             "attr": "href"
           },
-          "inline": {
-            "text": {
+          "stats": {
+            "score": {
               "select": "[href$=stargazers]",
-              "template": "✰ {{ scope.value }}"
+              "template": "{{ scope.value | replace: ',', '' }}"
             }
           },
-          "preview": {
+          "content": {
             "text": ">p"
           }
+        },
+        "itemTemplate": {
+          "inline": "{{ scope.item.stats.score | compact_number }} stars"
         }
       },
       "cache": "15m"

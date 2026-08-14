@@ -229,10 +229,10 @@ source ID and raw parameters
         ├─ return a fresh cached result when available
         ├─ resolve required secrets in the background
         ├─ execute the source loader
-        ├─ validate the result, every NewsItem, and response metadata
+        ├─ validate the result, every NewsItem, item template, and response metadata
         ├─ reject an empty or malformed item result
-        ├─ cache items and dynamic source presentation metadata
-        └─ infer the card presentation from item timestamps and order in the UI
+        ├─ cache items, the item template, and dynamic source presentation metadata
+        └─ infer the card presentation from effective item times and order in the UI
 ```
 
 In-flight loads are deduplicated by TanStack Query using a key containing the
@@ -486,10 +486,12 @@ field, authoring falls back to static or page-derived Radar metadata instead.
 The background and source runtime do not send a declared card type. They
 preserve loader output order, including through caching and transport. JSON and
 HTML loaders may first apply their shared optional `sortByTimestamp` step after
-field normalization; it orders items newest first and keeps missing timestamps
-last. The frontend renders a timeline only when the non-empty result has a
-finite timestamp on every item and those timestamps are monotonically
-non-increasing.
+field normalization; it orders items by `publishedAt`, falling back to
+`updatedAt`, and keeps items without either time last. The frontend renders a
+timeline when the non-empty result has finite, monotonically
+non-increasing `publishedAt` values on every item. If that check fails, it
+applies the same test to `updatedAt`. A result is a timeline when either
+complete field passes.
 All other non-empty results render as a ranking. Empty results fail before
 caching or presentation. A provider may deliberately sort inside a request,
 JMESPath selection, structured loader configuration, or custom loader when
@@ -544,20 +546,51 @@ variables, feature set, response path, and parser must be updated together.
 
 After any structured, RSS, or custom loader returns, the resolver applies the
 same optional `baseUrl` to explicit URL-bearing result fields. This boundary
-normalization covers item navigation URLs, image and iframe values, and dynamic
-home and badge metadata without interpreting arbitrary text or rewriting HTML
-strings. Static source home and badge metadata are normalized during
+normalization covers item navigation URLs, `author.home`, semantic `icon` and
+`mark` pictures, content pictures and iframes, and dynamic home and badge
+metadata without interpreting arbitrary text or rewriting HTML strings. Static
+source home and badge metadata are normalized during
 registration. Radar home and badge patches use the same base during discovery.
 
 The resolved-loader boundary validates the `SourceLoaderResult` before applying
 `baseUrl` URL normalization. Structured and custom loaders share this single
 object-shaped result contract; bare item arrays are not accepted. Every
 execution path, including the extension-backed CLI, rejects empty item arrays,
-malformed required item fields, non-finite timestamps, and unsupported or
-invalid response metadata before the result reaches a client or cache. Invalid
-optional `inline` and `preview` values are removed at this boundary rather than
-rejecting the result, keeping card rendering dependent on the required item
-fields instead of optional presentation content.
+malformed or unsupported semantic item fields, non-finite times and stats,
+invalid item templates, and unsupported or invalid response metadata before
+the result reaches a client or cache.
+
+`NewsItem` stores semantic facts: publication and update times, author,
+well-known stats, source-specific scalar attributes, semantic pictures, and
+content. The result-level `itemTemplate.inline` composes those facts for the
+compact card row and may access only `scope.item`. It travels with cached and
+transported loader results, while history snapshots continue to store only the
+items so presentation changes do not become historical fact changes. The UI
+uses a deterministic author/attribute/stat fallback when no template exists.
+Source-specific templates omit facts already conveyed by the source instance,
+while those facts remain on the item for history and analysis.
+The default inline composer also omits the author name when an
+`icon.kind: "author"` picture is present. Explicit source templates follow the
+same rule and fall back to the name when that semantic icon is absent.
+Semantic pictures carry only `src`, optional `kind`, and optional `label`;
+frontend components own their uniform height, intrinsic width, crop, and corner
+treatment. Content pictures remain URL strings rather than presentation
+objects.
+The card presentation layer scans the first mark from each source instance for
+symmetric top and bottom transparent padding, derives a scale targeting 14px of
+visible content inside the 16px image box, and caches it for the remaining
+marks. Width and height are sampled independently so wide assets retain enough
+vertical resolution. The frontend applies the value as a centered CSS transform
+without changing the fixed image height or clipping the image; horizontal
+proportions remain intrinsic. Decode, CORS, or size-limit failures fall back to
+the original image layout.
+The shared loader-result boundary removes nullish nested item values and empty
+semantic groups after any loader returns. This keeps normalization out of
+individual providers and preserves numeric zero and boolean false.
+The semantic item migration advances the default source cache version to `2`;
+sources with explicit versions advance independently. This prevents legacy
+`timestamp`, `inline`, and `preview` observations from sharing a dataset with
+the new item schema.
 
 ## Structured loader pipelines
 
@@ -570,7 +603,7 @@ request
     → select each field with JMESPath
     → render field Liquid templates
     → normalize and validate NewsItem values
-    → optionally sort normalized timestamps newest first
+    → optionally sort by updatedAt or publishedAt newest first
 ```
 
 JSON and HTML helper contracts use `*LoaderOptions` for loader configuration
@@ -588,12 +621,15 @@ request
     → render field Liquid templates
     → select and render document metadata
     → normalize and validate NewsItem values
-    → optionally sort normalized timestamps newest first
+    → optionally sort by updatedAt or publishedAt newest first
 ```
 
 All item or metadata fields in a group are extracted before that group's
 templates render. Each template sees its complete pre-template group, which
 makes output independent of declaration order and prevents template cycles.
+When every fallback selector for an optional field misses, the HTML loader
+returns an empty Cheerio collection derived from the current root; it must not
+send an empty synthetic selector back through the CSS selector parser.
 
 RSS loaders request the response as text explicitly, sniff JSON versus XML,
 and support RSS, Atom, and JSON Feed 1.0 or 1.1 through one resolution path.
@@ -603,13 +639,10 @@ receive one strict HTML character-reference decoding pass after parsing so
 entities left literal by CDATA-producing feeds do not leak into presentation.
 A missing JSON Feed item title is derived from its summary, text content, or
 stripped HTML and bounded to 200 characters. Entries without a usable title or
-URL are discarded.
-After filtering, the loader exposes publication timestamps only when every
-entry has one and they are monotonically non-increasing; otherwise it applies
-the same test to update timestamps. If neither date set matches the preserved
-feed order, it omits timestamps from the entire result. RSS metadata uses the
-same normalization, URL resolution, caching, and presentation override pipeline
-as JSON, HTML, and custom loader metadata.
+URL are discarded. After filtering, the loader independently retains parseable publication and
+update times on each entry without using feed order to discard either fact.
+RSS metadata uses the same normalization, URL resolution, caching, and
+presentation override pipeline as JSON, HTML, and custom loader metadata.
 
 ## Template compilation
 

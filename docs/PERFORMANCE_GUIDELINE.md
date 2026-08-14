@@ -239,6 +239,15 @@ registrations.
 - Use a small wrapper component when a list item needs to bind a stable parent
   callback to an item key.
 
+### Own source-wide image analysis above item rows
+
+Semantic mark normalization is source-wide work. Card content and Next Layer
+find the first mark for each source instance, scan at most a 128px image once,
+and pass the cached, capped scale into item summaries. Keep pixel
+analysis effects, promises, and profile state out of virtualized item rows.
+Failed image requests must leave the source cache retryable on the next result
+update; a confirmed no-padding result may remain cached.
+
 ### Localize time subscriptions
 
 The shared minute atom intentionally updates once per minute. Subscribe at the

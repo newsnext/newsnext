@@ -101,12 +101,12 @@ a trailing slash when the base represents a directory.
 When `baseUrl` is present, NewsNext resolves the structured loader request URL,
 static, Radar, and response `home` and `badge` metadata, and
 URL-bearing `NewsItem` values. These item values include `url`, `mobileUrl`,
-image `src` and `href` values, inline icons, preview pictures, and preview
+`author.home`, `icon` and `mark` image values, and content pictures and
 iframes. The same result normalization applies to RSS and custom loaders.
 Absolute and protocol-relative URLs continue to work.
 
-NewsNext does not rewrite URLs embedded inside `inline.html`, `preview.html`, or
-arbitrary text. Use `absolute_url` there, or when a value must resolve against a
+NewsNext does not rewrite URLs embedded inside `content.html` or arbitrary
+text. Use `absolute_url` there, or when a value must resolve against a
 different base. A source that talks to multiple origins should keep secondary
 request URLs absolute and declare any capabilities that cannot be inferred.
 
@@ -186,30 +186,30 @@ registry, and run type-checking and tests.
 
 Do not declare a source presentation type. Loaders return items in their
 meaningful display order. The extension presents the result as a timeline only
-when every item has a finite timestamp and the items are already ordered from
-newest to oldest; otherwise it presents the result as a ranking. An empty
-loader result is rejected as a load error.
+when every item has a finite `publishedAt` and those values are ordered from
+newest to oldest, or, when that check fails, every item has an equivalently
+ordered finite `updatedAt`. Otherwise it presents the result as a ranking. An
+empty loader result is rejected as a load error.
 
 JSON and HTML loaders preserve the selected item order by default. When a page
 groups chronological items instead of ordering them globally, opt into sorting
-the normalized timestamps from newest to oldest:
+items from newest to oldest by `publishedAt`, falling back to `updatedAt` when
+an item has no publication time:
 
 ```ts
 sortByTimestamp: true
 ```
 
-Items without timestamps remain last. Prefer upstream order for ranked or
-popularity-based results even when every item includes a timestamp. Other
+Items without either time remain last. Prefer upstream order for ranked or
+popularity-based results even when every item includes a time. Other
 intentional ordering belongs in the upstream request, the JSON `items` JMESPath
 expression, or custom loader code.
 
-The RSS loader preserves feed order and only exposes timestamps when every
-valid entry has a parseable date that already follows that order from newest to
-oldest. For RSS and Atom, it prefers publication dates (`published`, `pubDate`,
-or `created`) when they match, otherwise uses `updated` dates. For JSON Feed it
-uses `date_published`, then falls back to `date_modified`. If neither complete
-date set matches the feed order, it omits timestamps from every item so the
-feed remains a ranking.
+The RSS loader preserves feed order and independently retains every parseable
+publication and update time. RSS and Atom map `published`, `pubDate`, or
+`created` to `publishedAt` and `updated` to `updatedAt`; JSON Feed maps
+`date_published` and `date_modified`. Feed order still determines whether the
+frontend treats the result as a ranking or timeline.
 
 Write human-facing strings in the website's primary interface language. Keep
 brand names, IDs, parameter keys and values, and selectors unchanged.
@@ -303,6 +303,7 @@ LiquidJS built-in filters are available. NewsNext adds:
 | `absolute_url: base` | Resolve a URL against a base |
 | `favicon_url` | Return the default favicon service URL |
 | `css_url` | Extract the first `url(...)` from CSS |
+| `compact_number` | Format a finite number with compact English notation |
 | `date_to_ms` | Parse a date as milliseconds |
 | `relative_date_to_ms[: timezone]` | Parse absolute or relative date text |
 | `regex_extract: pattern, group` | Return a capture group or an empty string |
@@ -316,7 +317,7 @@ Examples:
 {{ scope.value | relative_date_to_ms: "Asia/Shanghai" }}
 ```
 
-Values inserted into `inline.html` and `preview.html` are HTML-escaped. File
+Values inserted into `content.html` are HTML-escaped. File
 access, raw output, and the `include`, `layout`, `liquid`, `raw`, and `render`
 tags are unavailable.
 
@@ -400,10 +401,25 @@ loader: {
       select: "id",
       template: "https://example.com/articles/{{ scope.value | url_path }}",
     },
-    timestamp: {
+    publishedAt: {
       select: "published_at",
       template: "{{ scope.value | date_to_ms }}",
     },
+    author: {
+      name: "author.name",
+      home: "author.url",
+    },
+    stats: {
+      likes: "metrics.likes",
+      comments: "metrics.comments",
+    },
+    content: {
+      text: "summary",
+      pictures: "images[].url",
+    },
+  },
+  itemTemplate: {
+    inline: "{{ scope.item.author.name }} · {{ scope.item.stats.likes | compact_number }} likes",
   },
 }
 ```
@@ -421,11 +437,13 @@ JMESPath select → Liquid template
 If `select` is omitted, `scope.value` is the current item. JSON templates may
 also read the full response from `scope.response.json`.
 
-JMESPath can construct structured values:
+JMESPath can select semantic picture fields:
 
 ```ts
-inline: {
-  mark: "card_label.icon && {src: card_label.icon, radius: `0`}",
+mark: {
+  src: "card_label.icon",
+  kind: "'promotion'",
+  label: "card_label.text",
 }
 ```
 
@@ -542,7 +560,7 @@ Text is the default content mode. Other extraction options are:
 }
 ```
 
-Use HTML extraction only for `inline.html` or `preview.html`. With `baseUrl`,
+Use HTML extraction only for `content.html`. With `baseUrl`,
 URL-bearing result fields are resolved automatically. Use `absolute_url` for
 embedded HTML URLs or values that need another base.
 
@@ -565,12 +583,12 @@ loader: {
 The RSS loader returns RSS channel or Atom feed metadata when present. For
 JSON Feed 1.0 and 1.1 it maps `title`, `description`, `home_page_url`, and
 `icon` or `favicon`; it also maps the first author name and avatar to item
-inline metadata. Because JSON Feed item titles are optional, the loader derives
+semantic fields. Because JSON Feed item titles are optional, the loader derives
 a bounded title from `summary`, `content_text`, or `content_html` when needed.
 RSS and Atom text fields decode HTML character references once after XML
 parsing, including references preserved literally inside CDATA sections.
 Entries without a usable title or URL are ignored; an invalid date leaves the
-item without a timestamp instead of failing the complete feed.
+corresponding item time unset instead of failing the complete feed.
 
 Use a custom loader only when declarative loaders cannot express the source:
 
@@ -602,7 +620,7 @@ forcing discovery to choose one stream.
 
 When a source offers original and translated text, expose the choice as a
 parameter. Use the selected variant as the item title and place the other
-available variant in `preview.text`. Fall back to the original when a
+available variant in `content.text`. Fall back to the original when a
 translation is unavailable.
 
 A loader always returns a `SourceLoaderResult` object:
@@ -610,6 +628,9 @@ A loader always returns a `SourceLoaderResult` object:
 ```ts
 {
   items,
+  itemTemplate: {
+    inline: "{{ scope.item.author.name }} · {{ scope.item.stats.comments | compact_number }} comments",
+  },
   metadata: {
     badge: response.user.avatarUrl,
     desc: response.description,
@@ -633,36 +654,79 @@ other companion request only to obtain `title`, `badge`, `desc`, or `home`.
 When the required item request does not contain a field, use stable static
 metadata or a Radar metadata patch instead, or leave the optional field unset.
 
-Every item needs a non-empty `title` and `url`. Common optional fields are
-`mobileUrl`, `timestamp`, `inline`, and `preview`:
+Every item needs a non-empty `title` and `url`. Optional fields store facts,
+not preformatted presentation strings:
 
 ```ts
 {
   title: "Example",
   url: "https://example.com/article",
-  timestamp: 1767225600000,
-  inline: {
-    text: "Category",
-    mark: "NEW",
+  publishedAt: 1767225600000,
+  updatedAt: 1767312000000,
+  author: {
+    name: "Ada",
+    home: "https://example.com/authors/ada",
   },
-  preview: {
+  stats: {
+    likes: 12,
+    comments: 3,
+    reposts: 1,
+  },
+  attributes: {
+    category: "Research",
+  },
+  icon: {
+    src: "https://example.com/ada.png",
+    kind: "author",
+    label: "Ada",
+  },
+  mark: {
+    src: "https://example.com/hot.svg",
+    kind: "heat",
+    label: "Trending",
+  },
+  content: {
     text: "Summary",
-    picture: "https://example.com/image.jpg",
+    pictures: "https://example.com/image.jpg",
   },
 }
 ```
 
-Timestamps are milliseconds. `inline` must contain at least one of `text`,
-`html`, `mark`, or `icon`. `preview` uses either `text` or `html` and may also
-contain `picture` or `iframe`.
+Custom loaders should write this semantic shape directly and may leave
+unavailable nested values as `undefined`. The shared loader-result boundary
+removes those values, empty nested objects, and empty picture arrays while
+preserving meaningful `0` and `false` values. Do not assemble optional fields
+with conditional object spreads in each source.
+
+Times are milliseconds. `publishedAt` is the original publication time;
+`updatedAt` is the last content update time. `author` retains identity,
+`stats` uses the shared `likes`, `comments`, `reposts`, `views`, and `score`
+keys, and `attributes` stores source-specific string, number, or boolean facts.
+Both `icon` and the singular `mark` require `src`; their optional `kind` is
+machine-readable and `label` is human-readable. Use `icon` for the regular
+picture shared by the source's items and `mark` only for an exceptional visual
+distinction. Image size, shape, and interaction belong to the frontend and
+cannot be configured by a source. `content` holds text or HTML plus optional
+pictures or iframe; `pictures` accepts one URL string or an array of URL
+strings.
+
+Presentation belongs to the loader result, not each item. `itemTemplate.inline`
+is a plain-text Liquid template scoped only to `scope.item`; use it to compose
+the semantic fields for a compact row. When it is absent, the frontend composes
+a readable fallback from author, attributes, and stats. Templates are cached
+with the source result but are not item facts and therefore are not stored in
+item history. Do not repeat context already established by the source instance:
+for example, a topic-specific source should retain the topic in each item's
+semantic `attributes`, but omit it from that source's inline template. Likewise,
+when `icon.kind` is `author`, omit the author's name from inline presentation;
+the avatar already identifies the author, while `author` remains available as
+semantic data.
 
 NewsNext validates loader results at the shared runtime boundary for extension
 app and CLI execution. Empty item arrays, malformed item objects, non-finite
-timestamps, empty dynamic metadata strings, and unsupported dynamic metadata
-keys fail the load. Invalid `inline` or `preview` content is omitted from that
-item instead of failing the load, so optional presentation data cannot prevent
-an item with a valid `title` and `url` from rendering. Custom loaders receive
-the same validation as structured loaders. Returning a bare `NewsItem[]` is not
+times or stats, invalid semantic fields or item templates, empty dynamic
+metadata strings, and unsupported dynamic metadata keys fail the load. Custom
+loaders receive the same validation as structured loaders. Returning a bare `NewsItem[]` is not
 supported; use `{ items }` even when metadata is absent.
 
 Minimize request count as part of the source contract. When one listing request
@@ -1103,7 +1167,8 @@ Before submitting:
   variants have distinct discovery semantics and default identities.
 - Use JMESPath and CSS selectors before writing a custom loader.
 - Declare every possible network hostname.
-- Use milliseconds for timestamps and text instead of HTML when possible.
+- Use milliseconds for `publishedAt` and `updatedAt`, and text instead of HTML
+  when possible.
 - Add Radar rules for parameterized sources when appropriate.
 - Regenerate registry artifacts.
 - Validate the source through `newsnext run`.

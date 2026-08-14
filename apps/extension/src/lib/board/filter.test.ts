@@ -12,12 +12,12 @@ const ITEMS: NewsItem[] = [
   {
     title: "Product update",
     url: "https://example.com/product",
-    inline: { text: "New browser tools" },
+    content: { text: "New browser tools" },
   },
   {
     title: "Market report",
     url: "https://example.com/market",
-    inline: { html: "<strong>Crypto</strong> prices" },
+    content: { html: "<strong>Crypto</strong> prices" },
   },
 ]
 
@@ -30,7 +30,7 @@ describe("board filter", () => {
     expect(createBoardFilter("include", " , \n ")).toBeUndefined()
   })
 
-  it("includes items matching titles or inline content without case sensitivity", () => {
+  it("includes items matching titles or content without case sensitivity", () => {
     expect(filterBoardItems(ITEMS, {
       mode: "include",
       keywords: ["ai", "CRYPTO"],

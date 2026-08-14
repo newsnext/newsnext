@@ -1,5 +1,5 @@
 import type { ProviderConfig } from "@newsnext/source/registry"
-import type { NewsItem, SourceLoaderResult } from "@newsnext/source/types"
+import type { NewsItemInput, SourceLoaderOutput } from "@newsnext/source/types"
 import type { Browser } from "@wxt-dev/browser"
 import { browser } from "@wxt-dev/browser"
 
@@ -52,14 +52,9 @@ function getFaviconUrl(url: string): string | undefined {
   return faviconUrl.toString()
 }
 
-function formatVisitCount(count: number | undefined): string {
-  const visits = count ?? 0
-  return `${visits} ${visits === 1 ? "visit" : "visits"}`
-}
-
-function browserHistoryItemsToNewsItems(historyItems: Browser.history.HistoryItem[]): NewsItem[] {
+function browserHistoryItemsToNewsItems(historyItems: Browser.history.HistoryItem[]): NewsItemInput[] {
   const seen = new Set<string>()
-  const items: NewsItem[] = []
+  const items: NewsItemInput[] = []
 
   for (const historyItem of historyItems) {
     const url = historyItem.url
@@ -71,25 +66,23 @@ function browserHistoryItemsToNewsItems(historyItems: Browser.history.HistoryIte
     const hostname = getHostname(url)
     const favicon = getFaviconUrl(url)
     const title = historyItem.title?.trim() || hostname || url
-    const item: NewsItem = {
+    const item: NewsItemInput = {
       title,
       url,
-      inline: {
-        text: hostname
-          ? `${hostname} · ${formatVisitCount(historyItem.visitCount)}`
-          : formatVisitCount(historyItem.visitCount),
-        ...(favicon ? { icon: { src: favicon, radius: 4 } } : {}),
+      updatedAt: historyItem.lastVisitTime,
+      attributes: { site: hostname },
+      stats: { views: historyItem.visitCount ?? 0 },
+      icon: {
+        kind: "site",
+        label: hostname,
+        src: favicon,
       },
-    }
-
-    if (typeof historyItem.lastVisitTime === "number") {
-      item.timestamp = historyItem.lastVisitTime
     }
 
     items.push(item)
   }
 
-  return items.sort((a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0))
+  return items.sort((a, b) => (b.updatedAt ?? 0) - (a.updatedAt ?? 0))
 }
 
 function flattenBookmarkNodes(nodes: Browser.bookmarks.BookmarkTreeNode[]): Browser.bookmarks.BookmarkTreeNode[] {
@@ -132,27 +125,24 @@ function findBookmarkFolder(
   return undefined
 }
 
-function browserBookmarkNodesToNewsItems(bookmarkNodes: Browser.bookmarks.BookmarkTreeNode[]): NewsItem[] {
+function browserBookmarkNodesToNewsItems(bookmarkNodes: Browser.bookmarks.BookmarkTreeNode[]): NewsItemInput[] {
   return flattenBookmarkNodes(bookmarkNodes)
     .filter((node): node is Browser.bookmarks.BookmarkTreeNode & { url: string } => Boolean(node.url))
     .sort((a, b) => (b.dateAdded ?? 0) - (a.dateAdded ?? 0))
     .map((node) => {
       const hostname = getHostname(node.url)
       const favicon = getFaviconUrl(node.url)
-      const item: NewsItem = {
+      return {
         title: node.title?.trim() || hostname || node.url,
         url: node.url,
-        inline: {
-          text: hostname ?? "Bookmark",
-          ...(favicon ? { icon: { src: favicon, radius: 4 } } : {}),
+        publishedAt: node.dateAdded,
+        attributes: { site: hostname ?? "Bookmark" },
+        icon: {
+          kind: "site",
+          label: hostname,
+          src: favicon,
         },
       }
-
-      if (typeof node.dateAdded === "number") {
-        item.timestamp = node.dateAdded
-      }
-
-      return item
     })
 }
 
@@ -160,7 +150,7 @@ async function fetchBrowserHistory({
   query,
   dateRange,
   maxResults,
-}: BrowserHistoryParams): Promise<SourceLoaderResult> {
+}: BrowserHistoryParams): Promise<SourceLoaderOutput> {
   const searchQuery: Browser.history.HistoryQuery = {
     text: query,
     maxResults,
@@ -171,7 +161,10 @@ async function fetchBrowserHistory({
   }
 
   const historyItems = await browser.history.search(searchQuery)
-  return { items: browserHistoryItemsToNewsItems(historyItems) }
+  return {
+    items: browserHistoryItemsToNewsItems(historyItems),
+    itemTemplate: { inline: "{{ scope.item.attributes.site }} · {{ scope.item.stats.views | compact_number }} visits" },
+  }
 }
 
 async function readBookmarks(folder: string): Promise<Browser.bookmarks.BookmarkTreeNode[]> {
@@ -196,9 +189,12 @@ async function readBookmarks(folder: string): Promise<Browser.bookmarks.Bookmark
 async function fetchBrowserBookmarks({
   folder,
   maxResults,
-}: BrowserBookmarksParams): Promise<SourceLoaderResult> {
+}: BrowserBookmarksParams): Promise<SourceLoaderOutput> {
   const results = await readBookmarks(folder)
-  return { items: browserBookmarkNodesToNewsItems(results).slice(0, maxResults) }
+  return {
+    items: browserBookmarkNodesToNewsItems(results).slice(0, maxResults),
+    itemTemplate: { inline: "{{ scope.item.attributes.site }}" },
+  }
 }
 
 export default {

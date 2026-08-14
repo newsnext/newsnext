@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 import { mixSourceItems } from "./next-layer"
 
 function item(title: string, timestamp?: number) {
-  return { title, url: `https://example.com/${title}`, timestamp }
+  return { title, url: `https://example.com/${title}`, publishedAt: timestamp }
 }
 
 describe("mixSourceItems", () => {

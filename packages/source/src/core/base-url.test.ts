@@ -64,18 +64,17 @@ describe("source base URL", () => {
         title: "Item",
         url: "/item",
         mobileUrl: "/mobile/item",
-        inline: {
-          icon: "/icon.png",
-          mark: [
-            "Featured",
-            { src: "/mark.png", href: "/marks" },
-          ],
+        author: {
+          name: "Author",
+          home: "/authors/author",
         },
-        preview: {
+        icon: { src: "/icon.png", kind: "author", label: "Author" },
+        mark: { src: "/mark.png", kind: "trend", label: "Hot" },
+        content: {
           text: "Preview",
-          picture: [
+          pictures: [
             "/preview.png",
-            { src: "/preview-2.png", href: "/gallery" },
+            "/preview-2.png",
           ],
           iframe: {
             src: "/embed",
@@ -88,23 +87,17 @@ describe("source base URL", () => {
     expect(output.items[0]).toMatchObject({
       url: "https://example.com/item",
       mobileUrl: "https://example.com/mobile/item",
-      inline: {
-        icon: "https://example.com/icon.png",
-        mark: [
-          "Featured",
-          {
-            src: "https://example.com/mark.png",
-            href: "https://example.com/marks",
-          },
-        ],
+      author: {
+        home: "https://example.com/authors/author",
       },
-      preview: {
-        picture: [
+      icon: { src: "https://example.com/icon.png" },
+      mark: {
+        src: "https://example.com/mark.png",
+      },
+      content: {
+        pictures: [
           "https://example.com/preview.png",
-          {
-            src: "https://example.com/preview-2.png",
-            href: "https://example.com/gallery",
-          },
+          "https://example.com/preview-2.png",
         ],
         iframe: {
           src: "https://example.com/embed",

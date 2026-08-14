@@ -68,17 +68,17 @@ const RANKING_ITEMS: NewsItem[] = [
   {
     title: "Designing UI states that are easy to verify",
     url: "https://example.com/designing-ui-states",
-    inline: { text: "A practical guide to loading, empty, error, and success states." },
+    attributes: { category: "UI states" },
   },
   {
     title: "A component API that stays flexible",
     url: "https://example.com/component-api",
-    inline: { text: "Patterns for composition without unnecessary wrappers." },
+    attributes: { category: "Composition" },
   },
   {
     title: "What makes a useful visual fixture?",
     url: "https://example.com/visual-fixtures",
-    inline: { text: "Representative content, real interactions, and intentional edge cases." },
+    attributes: { category: "Testing" },
   },
   {
     title: "Color systems for light and dark themes",
@@ -92,7 +92,7 @@ const RANKING_ITEMS: NewsItem[] = [
 
 const TIMELINE_ITEMS: NewsItem[] = RANKING_ITEMS.map((item, index) => ({
   ...item,
-  timestamp: Date.now() - index * 48 * 60 * 1000,
+  publishedAt: Date.now() - index * 48 * 60 * 1000,
 }))
 
 function createColorSource(color: Color): CardViewModel {

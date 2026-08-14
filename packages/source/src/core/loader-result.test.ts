@@ -8,7 +8,7 @@ describe("source loader result", () => {
       metadata: { badge: "https://example.com/avatar.png" },
     }
 
-    expect(validateSourceLoaderResult(result)).toBe(result)
+    expect(validateSourceLoaderResult(result)).toEqual(result)
   })
 
   it("rejects empty loader results", () => {
@@ -23,24 +23,72 @@ describe("source loader result", () => {
     })).toThrowError("items[0].title must be a non-empty string")
 
     expect(() => validateSourceLoaderResult({
-      items: [{ title: "Example", url: "https://example.com", timestamp: Number.NaN }],
-    })).toThrowError("items[0].timestamp must be a finite number")
+      items: [{ title: "Example", url: "https://example.com", publishedAt: Number.NaN }],
+    })).toThrowError("items[0].publishedAt must be a finite number")
   })
 
-  it("omits invalid inline and preview content without rejecting the item", () => {
-    const result = validateSourceLoaderResult({
+  it("rejects invalid semantic content", () => {
+    expect(() => validateSourceLoaderResult({
       items: [{
         title: "Example",
         url: "https://example.com",
-        inline: {},
-        preview: { text: "Text", html: "<p>Text</p>" } as never,
+        content: { text: "Text", html: "<p>Text</p>" },
+      }],
+    })).toThrowError("items[0].content cannot contain both text and html")
+  })
+
+  it("rejects source-controlled picture presentation", () => {
+    expect(() => validateSourceLoaderResult({
+      items: [{
+        title: "Example",
+        url: "https://example.com",
+        icon: { src: "https://example.com/avatar.png", radius: 999 },
+      }],
+    })).toThrowError("items[0].icon.radius is not supported")
+
+    expect(() => validateSourceLoaderResult({
+      items: [{
+        title: "Example",
+        url: "https://example.com",
+        content: {
+          pictures: [{ src: "https://example.com/picture.png", href: "https://example.com" }],
+        },
+      }],
+    })).toThrowError("items[0].content.pictures[0] must be a non-empty string")
+  })
+
+  it("validates source-level item templates", () => {
+    const result = {
+      items: [{ title: "Example", url: "https://example.com", stats: { likes: 0 } }],
+      itemTemplate: { inline: "{{ scope.item.stats.likes }} likes" },
+    }
+    expect(validateSourceLoaderResult(result)).toEqual(result)
+
+    expect(() => validateSourceLoaderResult({
+      ...result,
+      itemTemplate: { inline: "{{ scope.params.secret }}" },
+    })).toThrowError("expected one of: scope.item")
+  })
+
+  it("normalizes absent optional item fields after loading", () => {
+    expect(validateSourceLoaderResult({
+      items: [{
+        title: "Example",
+        url: "https://example.com",
+        author: { name: undefined },
+        stats: { likes: 0, comments: undefined },
+        attributes: { featured: false, topic: "" },
+        icon: { kind: "author", src: undefined },
+        content: { text: undefined, pictures: [] },
+      }],
+    })).toEqual({
+      items: [{
+        title: "Example",
+        url: "https://example.com",
+        stats: { likes: 0 },
+        attributes: { featured: false },
       }],
     })
-
-    expect(result.items).toEqual([{
-      title: "Example",
-      url: "https://example.com",
-    }])
   })
 
   it("rejects invalid metadata", () => {

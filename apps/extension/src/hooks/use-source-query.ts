@@ -55,6 +55,7 @@ export function useSourceQuery({
 
   return {
     items: data?.items ?? EMPTY_ITEMS,
+    itemTemplate: data?.itemTemplate,
     fetchLatest: handleFetchLatest,
     isFetching,
     isFetchingLatest,

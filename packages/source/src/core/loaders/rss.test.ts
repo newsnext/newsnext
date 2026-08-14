@@ -23,7 +23,7 @@ describe("parseRss", () => {
       items: [{
         title: "Latest article",
         url: "https://www.ruanyifeng.com/blog/2026/07/example.html",
-        timestamp: 1784851936000,
+        publishedAt: 1784851936000,
       }],
       metadata: {
         badge: "/feed-icon.png",
@@ -51,6 +51,7 @@ describe("parseRss", () => {
       items: [{
         title: "Latest entry",
         url: "https://example.com/entry",
+        updatedAt: 1784851936000,
       }],
       metadata: {
         desc: "Example Atom description",
@@ -84,7 +85,7 @@ describe("parseRss", () => {
     })
   })
 
-  it("uses published timestamps when entries are ordered by publication date", () => {
+  it("preserves publication and update timestamps independently", () => {
     expect(parseRss(`
       <feed xmlns="http://www.w3.org/2005/Atom">
         <entry>
@@ -104,17 +105,19 @@ describe("parseRss", () => {
       {
         title: "Newer publication",
         url: "https://example.com/newer",
-        timestamp: 1784851200000,
+        publishedAt: 1784851200000,
+        updatedAt: 1784937600000,
       },
       {
         title: "Older publication",
         url: "https://example.com/older",
-        timestamp: 1784764800000,
+        publishedAt: 1784764800000,
+        updatedAt: 1785024000000,
       },
     ])
   })
 
-  it("uses updated timestamps when entries are ordered by update date", () => {
+  it("preserves timestamps without changing feed order", () => {
     expect(parseRss(`
       <feed xmlns="http://www.w3.org/2005/Atom">
         <entry>
@@ -134,17 +137,19 @@ describe("parseRss", () => {
       {
         title: "Recently updated",
         url: "https://example.com/recently-updated",
-        timestamp: 1785024000000,
+        publishedAt: 1784764800000,
+        updatedAt: 1785024000000,
       },
       {
         title: "Previously updated",
         url: "https://example.com/previously-updated",
-        timestamp: 1784937600000,
+        publishedAt: 1784851200000,
+        updatedAt: 1784937600000,
       },
     ])
   })
 
-  it("omits timestamps when entries follow neither date order", () => {
+  it("retains timestamps when feed order expresses a different ranking", () => {
     expect(parseRss(`
       <feed xmlns="http://www.w3.org/2005/Atom">
         <entry>
@@ -164,10 +169,14 @@ describe("parseRss", () => {
       {
         title: "First ranked entry",
         url: "https://example.com/first",
+        publishedAt: 1784764800000,
+        updatedAt: 1784937600000,
       },
       {
         title: "Second ranked entry",
         url: "https://example.com/second",
+        publishedAt: 1784851200000,
+        updatedAt: 1785024000000,
       },
     ])
   })
@@ -215,12 +224,13 @@ describe("parseRss", () => {
       items: [{
         title: "Newer item",
         url: "https://example.com/newer",
-        timestamp: 1784851200000,
-        inline: { text: "Ada", icon: "/ada.png" },
+        publishedAt: 1784851200000,
+        author: { name: "Ada" },
+        icon: { kind: "author", label: "Ada", src: "/ada.png" },
       }, {
         title: "Older item",
         url: "https://example.com/older",
-        timestamp: 1784764800000,
+        publishedAt: 1784764800000,
       }],
       metadata: {
         badge: "/icon.png",
@@ -246,9 +256,11 @@ describe("parseRss", () => {
     }))?.items).toEqual([{
       title: `${"word ".repeat(39)}word…`,
       url: "https://example.com/text",
+      content: { text: "word ".repeat(60).trim() },
     }, {
       title: "Hello from HTML",
       url: "https://example.com/html",
+      content: { html: "<p>Hello <strong>from HTML</strong></p>" },
     }])
   })
 
@@ -269,6 +281,7 @@ describe("parseRss", () => {
     }))?.items).toEqual([{
       title: "Valid item",
       url: "https://example.com/valid",
+      content: { text: "Valid item" },
     }])
   })
 })

@@ -62,18 +62,17 @@
             "select": ".tgme_widget_message_date",
             "attr": "href"
           },
-          "timestamp": {
+          "publishedAt": {
             "select": ".tgme_widget_message_date time",
             "attr": "datetime",
             "template": "{{ scope.value | date_to_ms }}"
           },
-          "inline": {
-            "text": {
-              "select": ".tgme_widget_message_views",
-              "template": "{% if scope.value %}{{ scope.value }} views{% endif %}"
+          "attributes": {
+            "views": {
+              "select": ".tgme_widget_message_views"
             }
           },
-          "preview": {
+          "content": {
             "text": {
               "select": [
                 ".js-message_reply_text",
@@ -82,12 +81,15 @@
               "brSeparator": "\n",
               "template": "{{ scope.value | normalize_lines: 2 }}"
             },
-            "picture": {
+            "pictures": {
               "select": ".tgme_widget_message_photo_wrap, .tgme_widget_message_video_thumb",
               "attr": "style",
               "template": "{{ scope.value | css_url }}"
             }
           }
+        },
+        "itemTemplate": {
+          "inline": "{{ scope.item.attributes.views }} views"
         },
         "sortByTimestamp": true
       },

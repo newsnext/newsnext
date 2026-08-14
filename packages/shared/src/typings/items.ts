@@ -1,37 +1,28 @@
 import type { IframeHTMLAttributes } from "react"
-import type { Either, MaybeArray } from "./util"
+import type { MaybeArray } from "./util"
 
-interface Picture {
+export interface SemanticPicture {
   src: string
-  scale?: number
-  radius?: number
-  /**
-   * Href of the picture when clicked
-   */
-  href?: string
+  /** Machine-readable role or distinction represented by the picture. */
+  kind?: string
+  /** Human-readable meaning of the picture. */
+  label?: string
 }
 
-type RichText = Either<{
-  text: string
-}, {
-  html: string
-}>
-
-interface InlineDecorations {
-  /**
-   * Mark displayed at the end of the item
-   */
-  mark?: MaybeArray<string | Picture>
-  /**
-   * Icon displayed at the start of the item
-   */
-  icon?: string | Picture
+export interface NewsItemAuthor {
+  name: string
+  home?: string
 }
 
-interface InlineContent extends InlineDecorations {
-  text?: string
-  html?: string
+export interface NewsItemStats {
+  likes?: number
+  comments?: number
+  reposts?: number
+  views?: number
+  score?: number
 }
+
+export type NewsItemAttributeValue = boolean | number | string
 
 export interface AdvancedIframe extends IframeHTMLAttributes<HTMLIFrameElement> {
   selector?: string
@@ -39,39 +30,58 @@ export interface AdvancedIframe extends IframeHTMLAttributes<HTMLIFrameElement> 
   aspectRatio?: number
 }
 
-export interface NewsItem {
-  /**
-   * Title of the news item
-   */
-  title: string
-  /**
-   * URL of the news item (used as unique identifier)
-   */
-  url: string
-  /**
-   * Mobile-optimized URL
-   * @default url
-   */
-  mobileUrl?: string
-  /**
-   * Timestamp in milliseconds
-   */
-  timestamp?: number
-  inline?: InlineContent
-  /**
-   * Previewed information shown on hover
-   */
-  preview?: RichText & {
-    picture?: MaybeArray<string | Picture>
-    iframe?: string | AdvancedIframe
-  }
+export interface NewsItemContent {
+  text?: string
+  html?: string
+  pictures?: MaybeArray<string>
+  iframe?: string | AdvancedIframe
 }
 
-export const extractPictures = (pictures: MaybeArray<string | Picture>): Picture[] => {
-  return (Array.isArray(pictures) ? pictures : [pictures]).map((p) => {
-    if (typeof p === "string") {
-      return { src: p }
-    }
-    return p
-  })
+export interface NewsItem {
+  /** Title of the news item. */
+  title: string
+  /** URL of the news item, used as its unique identifier. */
+  url: string
+  /** Mobile-optimized URL. Defaults to `url`. */
+  mobileUrl?: string
+  /** Original publication time in milliseconds. */
+  publishedAt?: number
+  /** Last content update time in milliseconds. */
+  updatedAt?: number
+  author?: NewsItemAuthor
+  stats?: NewsItemStats
+  /** Source-specific facts that do not belong to the shared fields. */
+  attributes?: Record<string, NewsItemAttributeValue>
+  /** The regular identifying picture used by items from this source. */
+  icon?: SemanticPicture
+  /** A visual distinction present only on exceptional items. */
+  mark?: SemanticPicture
+  /** Content beyond the item title, independent of how the UI presents it. */
+  content?: NewsItemContent
+}
+
+type OptionalValue<T> = T | null | undefined
+
+export interface NewsItemInput {
+  title: string
+  url: string
+  mobileUrl?: OptionalValue<string>
+  publishedAt?: OptionalValue<number>
+  updatedAt?: OptionalValue<number>
+  author?: OptionalValue<{
+    name?: OptionalValue<string>
+    home?: OptionalValue<string>
+  }>
+  stats?: OptionalValue<{
+    [K in keyof NewsItemStats]?: OptionalValue<NewsItemStats[K]>
+  }>
+  attributes?: OptionalValue<Record<string, NewsItemAttributeValue | null | undefined>>
+  icon?: OptionalValue<Omit<Partial<SemanticPicture>, "src"> & { src?: OptionalValue<string> }>
+  mark?: OptionalValue<Omit<Partial<SemanticPicture>, "src"> & { src?: OptionalValue<string> }>
+  content?: OptionalValue<{
+    text?: OptionalValue<string>
+    html?: OptionalValue<string>
+    pictures?: OptionalValue<NewsItemContent["pictures"]>
+    iframe?: OptionalValue<NewsItemContent["iframe"]>
+  }>
 }

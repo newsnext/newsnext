@@ -1,10 +1,12 @@
+import type { SourceItemTemplate } from "@newsnext/source/types"
 import type { ReactNode } from "react"
 import type { CardViewModel, NewsItem } from "@/typings/source"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { useSourceIcon } from "@/hooks/use-source-icon"
+import { useSourceMarkScales } from "@/hooks/use-source-mark-scales"
 import { RelativeTime } from "@/hooks/useRelativeTime"
-import { isTimelineItems } from "@/lib/source"
+import { getTimelineItemTimes } from "@/lib/source"
 import { cn } from "@/lib/utils"
 import {
   PhArrowCounterClockwiseDuotone,
@@ -26,6 +28,7 @@ import { Timeline } from "./timeline"
 interface CardFrontProps {
   source: CardViewModel
   items: NewsItem[]
+  itemTemplate?: SourceItemTemplate
   isFetching: boolean
   isContentFetching: boolean
   sourceErrorMessage?: string
@@ -61,12 +64,13 @@ function CardRefreshButton({
 interface CardFrontContentProps {
   icon?: string
   items: NewsItem[]
+  itemTemplate?: SourceItemTemplate
+  markScale?: number
   provider: CardViewModel["provider"]
   scrollElement: HTMLDivElement | null
   sourceErrorMessage?: string
   sourceLoginUrl?: string
   sourcePermissionRequired: boolean
-  updatedAt: number
   onRefresh: () => void
   onRequestPermission: () => Promise<boolean>
 }
@@ -74,12 +78,13 @@ interface CardFrontContentProps {
 function CardFrontContent({
   icon,
   items,
+  itemTemplate,
+  markScale,
   provider,
   scrollElement,
   sourceErrorMessage,
   sourceLoginUrl,
   sourcePermissionRequired,
-  updatedAt,
   onRefresh,
   onRequestPermission,
 }: CardFrontContentProps) {
@@ -113,10 +118,13 @@ function CardFrontContent({
     )
   }
 
-  if (!isTimelineItems(items)) {
+  const timelineTimes = getTimelineItemTimes(items)
+  if (!timelineTimes) {
     return (
       <Ranking
         items={items}
+        itemTemplate={itemTemplate}
+        markScale={markScale}
         scrollElement={scrollElement}
       />
     )
@@ -125,8 +133,10 @@ function CardFrontContent({
   return (
     <Timeline
       items={items}
-      updatedAt={updatedAt}
+      itemTemplate={itemTemplate}
+      markScale={markScale}
       scrollElement={scrollElement}
+      times={timelineTimes}
     />
   )
 }
@@ -134,6 +144,7 @@ function CardFrontContent({
 export function CardFront({
   source,
   items,
+  itemTemplate,
   isFetching,
   isContentFetching,
   sourceErrorMessage,
@@ -151,6 +162,11 @@ export function CardFront({
   const { badge, desc, home, title } = source.metadata
   const icon = useSourceIcon(source)
   const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(null)
+  const markScaleGroups = useMemo(
+    () => [{ items, sourceKey: source.id }],
+    [items, source.id],
+  )
+  const markScale = useSourceMarkScales(markScaleGroups).get(source.id)
   const visibleSourceErrorMessage = isContentFetching ? undefined : sourceErrorMessage
   const sourceStatusMessage = sourcePermissionRequired
     ? sourcePermissionDescription
@@ -208,12 +224,13 @@ export function CardFront({
               <CardFrontContent
                 icon={icon}
                 items={items}
+                itemTemplate={itemTemplate}
+                markScale={markScale}
                 provider={provider}
                 scrollElement={scrollElement}
                 sourceErrorMessage={visibleSourceErrorMessage}
                 sourceLoginUrl={sourceLoginUrl}
                 sourcePermissionRequired={sourcePermissionRequired}
-                updatedAt={updatedAt}
                 onRefresh={onRefresh}
                 onRequestPermission={onRequestPermission}
               />

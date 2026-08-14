@@ -58,8 +58,10 @@ export function filterBoardItems(
   return items.filter((item) => {
     const searchableText = [
       item.title,
-      item.inline?.text,
-      item.inline?.html?.replace(/<[^>]*>/g, " "),
+      item.author?.name,
+      item.content?.text,
+      item.content?.html?.replace(/<[^>]*>/g, " "),
+      ...Object.values(item.attributes ?? {}).map(String),
     ].filter(value => value !== undefined).join(" ").toLowerCase()
     const matches = keywords.some(keyword => searchableText.includes(keyword))
     return filter.mode === "include" ? matches : !matches

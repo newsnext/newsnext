@@ -20,12 +20,14 @@
         "fields": {
           "title": "target.title_area.text",
           "url": "target.link.url",
-          "inline": {
-            "mark": "card_label.night_icon && {src: card_label.night_icon, radius: `0`}"
+          "mark": {
+            "src": "card_label.night_icon",
+            "kind": { "template": "trend" },
+            "label": "card_label.text"
           },
-          "preview": {
+          "content": {
             "text": "target.excerpt_area.text",
-            "picture": "target.image_area.url"
+            "pictures": "target.image_area.url"
           }
         }
       },

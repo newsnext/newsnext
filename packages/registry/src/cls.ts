@@ -38,7 +38,7 @@ export default {
           template: "/detail/{{ scope.value | url_path }}",
         },
         mobileUrl: "shareurl",
-        timestamp: {
+        publishedAt: {
           select: "ctime",
           template: "{{ scope.value | times: 1000 }}",
         },

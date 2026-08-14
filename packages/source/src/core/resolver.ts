@@ -5,7 +5,8 @@ import type {
   SourceCacheMaxAge,
   SourceCapabilities,
   SourceLoader,
-  SourceLoaderResult,
+  SourceLoaderDefinition,
+  SourceLoaderOutput,
   SourceParamSchemaMap,
   SourcePresentationMetadata,
   SourceProvider,
@@ -69,8 +70,8 @@ type IsAny<T> = 0 extends (1 & T) ? true : false
 
 type CustomLoaderFunction<TParams extends SourceParamSchemaMap>
   = IsAny<TParams> extends true
-    ? (...args: any[]) => Promise<SourceLoaderResult>
-    : SourceLoader<TParams>
+    ? (...args: any[]) => Promise<SourceLoaderOutput>
+    : SourceLoaderDefinition<TParams>
 
 type StructuredLoaderConfig
   = (
@@ -283,7 +284,7 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
   validateSourceRequestRules(sourceId, requestRules, capabilities.network)
   const cache = resolveSourceCacheConfig(cacheInput, `${sourceId}.cache`)
 
-  let resolvedLoader: SourceLoader<TParams>
+  let resolvedLoader: SourceLoaderDefinition<TParams>
   switch (loader.type) {
     case "json": {
       const { type: _type, url, fetchOptions, request, ...options } = loader
@@ -391,7 +392,7 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
 }
 
 function withValidatedLoaderResult<TParams extends SourceParamSchemaMap>(
-  loader: SourceLoader<TParams>,
+  loader: SourceLoaderDefinition<TParams>,
   baseUrl: string | undefined,
 ): SourceLoader<TParams> {
   return async (params, context) => {
@@ -497,7 +498,7 @@ function resolveDefaultParams<TParams extends SourceParamSchemaMap>(
 
 function resolveSourceCapabilities<TParams extends SourceParamSchemaMap>(
   sourceId: string,
-  loader: StructuredLoaderConfig | { type: "custom", load: SourceLoader<TParams> },
+  loader: StructuredLoaderConfig | { type: "custom", load: SourceLoaderDefinition<TParams> },
   params: TParams | undefined,
   vars: SourceTemplateVars | undefined,
   baseUrl: string | undefined,

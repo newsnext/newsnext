@@ -1,5 +1,5 @@
 import type { ProviderConfig } from "@newsnext/source/registry"
-import type { NewsItem, SourceLoaderContext, SourceLoaderResult } from "@newsnext/source/types"
+import type { NewsItemInput, SourceLoaderContext, SourceLoaderOutput } from "@newsnext/source/types"
 
 const DYNAMIC_FEED_URL = "https://api.bilibili.com/x/polymer/web-dynamic/v1/feed/all"
 const DYNAMIC_FEED_FEATURES = [
@@ -26,6 +26,12 @@ const BILIBILI_WEB_LOCATION = "333.1365"
 const BILIBILI_RANKING_URL = "https://api.bilibili.com/x/web-interface/ranking/v2"
 const BILIBILI_ANIME_RANKING_URL = "https://api.bilibili.com/pgc/web/rank/list"
 const BILIBILI_PGC_RANKING_URL = "https://api.bilibili.com/pgc/season/rank/web/list"
+const BILIBILI_FOLLOWING_ITEM_TEMPLATE = {
+  inline: "{% unless scope.item.icon.kind == 'author' %}{% if scope.item.author %}{{ scope.item.author.name }} · {% endif %}{% endunless %}{% if scope.item.attributes.views %}{{ scope.item.attributes.views }} views{% endif %}{% if scope.item.attributes.danmaku %} · {{ scope.item.attributes.danmaku }} danmaku{% endif %}",
+} as const
+const BILIBILI_PGC_ITEM_TEMPLATE = {
+  inline: "{% if scope.item.attributes.episode %}{{ scope.item.attributes.episode }}{% endif %}{% if scope.item.attributes.rating %} · {{ scope.item.attributes.rating }} rating{% endif %}{% if scope.item.attributes.views %} · {{ scope.item.attributes.views }} views{% endif %}",
+} as const
 const RANKING_REGIONS = [
   { apiRid: 0, label: "全部", slug: "all", value: "0" },
   { label: "番剧", pgcUrl: BILIBILI_ANIME_RANKING_URL, seasonType: 1, slug: "anime", value: "13" },
@@ -154,104 +160,85 @@ export function getBilibiliRankingRequest(regionValue: string): BilibiliRankingR
   }
 }
 
-export function videoRankingItemToNewsItem(item: BilibiliVideoRankingItem): NewsItem | null {
+export function videoRankingItemToNewsItem(item: BilibiliVideoRankingItem): NewsItemInput | null {
   if (!item.title || !item.bvid) return null
 
-  const inlineText = [
-    item.owner?.name,
-    item.stat?.view !== undefined ? `${item.stat.view} 播放` : undefined,
-    item.stat?.like !== undefined ? `${item.stat.like} 点赞` : undefined,
-  ].filter(Boolean).join(" · ")
-  const newsItem: NewsItem = {
+  return {
     title: item.title,
     url: `https://www.bilibili.com/video/${item.bvid}`,
+    publishedAt: item.pubdate ? item.pubdate * 1000 : undefined,
+    author: { name: item.owner?.name },
+    stats: {
+      views: item.stat?.view,
+      likes: item.stat?.like,
+    },
+    icon: {
+      kind: "author",
+      label: item.owner?.name,
+      src: item.owner?.face ? normalizeBilibiliUrl(item.owner.face) : undefined,
+    },
+    content: {
+      text: item.desc,
+      pictures: item.pic ? normalizeBilibiliUrl(item.pic) : undefined,
+    },
   }
-
-  if (item.pubdate) newsItem.timestamp = item.pubdate * 1000
-  if (inlineText) {
-    newsItem.inline = {
-      text: inlineText,
-      ...(item.owner?.face
-        ? { icon: { src: normalizeBilibiliUrl(item.owner.face), radius: 4 } }
-        : {}),
-    }
-  }
-  if (item.desc || item.pic) {
-    newsItem.preview = {
-      text: item.desc ?? "",
-      ...(item.pic ? { picture: normalizeBilibiliUrl(item.pic) } : {}),
-    }
-  }
-
-  return newsItem
 }
 
-export function pgcRankingItemToNewsItem(item: BilibiliPgcRankingItem): NewsItem | null {
+export function pgcRankingItemToNewsItem(item: BilibiliPgcRankingItem): NewsItemInput | null {
   const url = item.url
     ?? (item.season_id ? `https://www.bilibili.com/bangumi/play/ss${item.season_id}` : undefined)
   if (!item.title || !url) return null
 
   const views = item.icon_font?.text
     ?? (item.stat?.view !== undefined ? String(item.stat.view) : undefined)
-  const inlineText = [
-    item.new_ep?.index_show ?? item.desc,
-    item.rating,
-    views ? `${views} 播放` : undefined,
-  ].filter(Boolean).join(" · ")
-  const newsItem: NewsItem = {
+  return {
     title: item.title,
     url: normalizeBilibiliUrl(url),
+    stats: { views: item.stat?.view },
+    attributes: {
+      views,
+      episode: item.new_ep?.index_show,
+      rating: item.rating,
+    },
+    content: {
+      pictures: item.cover ? normalizeBilibiliUrl(item.cover) : undefined,
+      text: item.desc ?? item.new_ep?.index_show,
+    },
   }
-
-  if (inlineText) newsItem.inline = { text: inlineText }
-  if (item.cover) {
-    newsItem.preview = {
-      picture: normalizeBilibiliUrl(item.cover),
-      text: item.desc ?? item.new_ep?.index_show ?? "",
-    }
-  }
-
-  return newsItem
 }
 
-function dynamicArchiveToNewsItem(item: DynamicFeedItem): NewsItem | null {
+function dynamicArchiveToNewsItem(item: DynamicFeedItem): NewsItemInput | null {
   const archive = item.modules?.module_dynamic?.major?.archive
   const author = item.modules?.module_author
   if (!archive?.title || !archive.bvid) return null
 
-  const inlineText = [
-    author?.name,
-    archive.stat?.play ? `${archive.stat.play} 播放` : undefined,
-    archive.stat?.danmaku ? `${archive.stat.danmaku} 弹幕` : undefined,
-  ].filter(Boolean).join(" · ")
-  const newsItem: NewsItem = {
+  return {
     title: archive.title,
     url: archive.jump_url
       ? normalizeBilibiliUrl(archive.jump_url)
       : `https://www.bilibili.com/video/${archive.bvid}`,
+    publishedAt: author?.pub_ts ? author.pub_ts * 1000 : undefined,
+    author: { name: author?.name },
+    attributes: {
+      views: archive.stat?.play,
+      danmaku: archive.stat?.danmaku,
+    },
+    icon: {
+      kind: "author",
+      label: author?.name,
+      src: author?.face,
+    },
+    content: {
+      text: archive.desc,
+      pictures: archive.cover ? normalizeBilibiliUrl(archive.cover) : undefined,
+    },
   }
-
-  if (author?.pub_ts) newsItem.timestamp = author.pub_ts * 1000
-  if (inlineText) {
-    newsItem.inline = {
-      text: inlineText,
-      ...(author?.face ? { icon: { src: author.face, radius: 4 } } : {}),
-    }
-  }
-  if (archive.desc || archive.cover) {
-    newsItem.preview = {
-      text: archive.desc ?? "",
-      ...(archive.cover ? { picture: normalizeBilibiliUrl(archive.cover) } : {}),
-    }
-  }
-
-  return newsItem
 }
 
 async function fetchBilibiliFollowingVideos(
   _params: Record<string, unknown>,
   context: SourceLoaderContext,
-): Promise<SourceLoaderResult> {
+): Promise<SourceLoaderOutput> {
   const response = await context.fetch.get(DYNAMIC_FEED_URL, {
     headers: {
       referer: "https://www.bilibili.com/",
@@ -278,7 +265,8 @@ async function fetchBilibiliFollowingVideos(
   return {
     items: (response.data?.items ?? [])
       .map(dynamicArchiveToNewsItem)
-      .filter((item): item is NewsItem => item !== null),
+      .filter((item): item is NewsItemInput => item !== null),
+    itemTemplate: BILIBILI_FOLLOWING_ITEM_TEMPLATE,
   }
 }
 
@@ -304,7 +292,7 @@ interface BilibiliPgcRankingResponse {
 async function fetchBilibiliRanking(
   { region }: { region: string },
   context: SourceLoaderContext,
-): Promise<SourceLoaderResult> {
+): Promise<SourceLoaderOutput> {
   const request = getBilibiliRankingRequest(region)
   const fetchOptions = {
     headers: {
@@ -321,7 +309,7 @@ async function fetchBilibiliRanking(
     return {
       items: (response.data?.list ?? [])
         .map(videoRankingItemToNewsItem)
-        .filter((item): item is NewsItem => item !== null),
+        .filter((item): item is NewsItemInput => item !== null),
     }
   }
 
@@ -332,7 +320,8 @@ async function fetchBilibiliRanking(
   return {
     items: (response.result?.list ?? response.data?.list ?? [])
       .map(pgcRankingItemToNewsItem)
-      .filter((item): item is NewsItem => item !== null),
+      .filter((item): item is NewsItemInput => item !== null),
+    itemTemplate: BILIBILI_PGC_ITEM_TEMPLATE,
   }
 }
 
@@ -362,8 +351,10 @@ export default {
             select: "keyword",
             template: "https://search.bilibili.com/all?keyword={{ scope.value | url_query }}",
           },
-          inline: {
-            mark: "icon",
+          mark: {
+            src: "icon",
+            kind: { template: "trend" },
+            label: "show_name",
           },
         },
       },
@@ -419,7 +410,7 @@ export default {
         network: ["api.bilibili.com"],
       },
       cache: {
-        version: 2,
+        version: 3,
         maxAge: "15m",
       },
     },

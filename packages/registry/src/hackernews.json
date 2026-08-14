@@ -16,7 +16,7 @@
           "attr": "id",
           "template": "/item?id={{ scope.value | url_query }}"
         },
-        "timestamp": {
+        "publishedAt": {
           "traverse": {
             "type": "next",
             "selector": "tr"
@@ -25,20 +25,45 @@
           "attr": "title",
           "template": "{{ scope.value | split: ' ' | last | times: 1000 }}"
         },
-        "inline": {
-          "text": {
+        "author": {
+          "name": {
             "traverse": {
               "type": "next",
               "selector": "tr"
             },
-            "select": ".score"
+            "select": ".hnuser"
+          }
+        },
+        "stats": {
+          "score": {
+            "traverse": {
+              "type": "next",
+              "selector": "tr"
+            },
+            "select": ".score",
+            "template": "{{ scope.value | regex_extract: '(\\d+)', 1 }}"
           },
-          "icon": {
+          "comments": {
+            "traverse": {
+              "type": "next",
+              "selector": "tr"
+            },
+            "select": "a[href^='item?id=']:last-child",
+            "template": "{{ scope.value | regex_extract: '(\\d+) comment', 1 }}"
+          }
+        },
+        "icon": {
+          "src": {
             "select": ".titleline>a",
             "attr": "href",
             "template": "{{ scope.value | absolute_url: scope.request.url | favicon_url }}"
-          }
+          },
+          "kind": { "template": "site" },
+          "label": ".sitestr"
         }
+      },
+      "itemTemplate": {
+        "inline": "{% if scope.item.author %}{{ scope.item.author.name }} · {% endif %}{{ scope.item.stats.score | compact_number }} points{% if scope.item.stats.comments != nil %} · {{ scope.item.stats.comments | compact_number }} comments{% endif %}"
       }
     },
     "metadata": {

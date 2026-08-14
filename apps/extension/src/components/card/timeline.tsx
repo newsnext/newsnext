@@ -1,3 +1,4 @@
+import type { SourceItemTemplate } from "@newsnext/source/types"
 import type { NewsItem } from "@/typings/source"
 import { VirtualList } from "@newsnext/ui/components/virtual-list"
 import { useAtomValue } from "jotai"
@@ -9,16 +10,19 @@ import { TimelineRail } from "./timeline-rail"
 
 interface Props {
   items: NewsItem[]
+  itemTemplate?: SourceItemTemplate
+  markScale?: number
   scrollElement: HTMLDivElement | null
-  updatedAt: number
+  times: readonly number[]
 }
 
-export function Timeline({ items, scrollElement, updatedAt }: Props) {
+export function Timeline({ items, itemTemplate, markScale, scrollElement, times }: Props) {
   const gradientId = useId().replace(/:/g, "")
   const now = useAtomValue(minuteDateAtom)
-  const timeLabels = useMemo(() => items.map(item => item.timestamp
-    ? formatRelativeTime(item.timestamp, now)
-    : formatRelativeTime(updatedAt, now)), [items, now, updatedAt])
+  const timeLabels = useMemo(
+    () => times.map(timestamp => formatRelativeTime(timestamp, now)),
+    [now, times],
+  )
   const renderItem = useCallback((item: NewsItem, index: number) => {
     const timeLabel = timeLabels[index]
     const showTimeLabel = index === 0 || timeLabel !== timeLabels[index - 1]
@@ -43,12 +47,16 @@ export function Timeline({ items, scrollElement, updatedAt }: Props) {
                 </span>
               </div>
             )}
-            <NewsItemSummary item={item} />
+            <NewsItemSummary
+              item={item}
+              itemTemplate={itemTemplate}
+              markScale={markScale}
+            />
           </div>
         </NewsItemLink>
       </div>
     )
-  }, [gradientId, items.length, timeLabels])
+  }, [gradientId, itemTemplate, items.length, markScale, timeLabels])
 
   return (
     <VirtualList

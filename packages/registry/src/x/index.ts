@@ -1,7 +1,7 @@
 import type { ProviderConfig } from "@newsnext/source/registry"
 import type {
   SourceLoaderContext,
-  SourceLoaderResult,
+  SourceLoaderOutput,
 } from "@newsnext/source/types"
 import type {
   XHomeTimelineResponse,
@@ -27,10 +27,12 @@ import {
   USER_BY_SCREEN_NAME_URL,
   USER_TWEETS_URL,
   X_CSRF_TOKEN_SECRET_KEY,
+  X_ITEM_TEMPLATE,
   X_ORIGIN,
   X_TIMELINE_COUNT,
   X_TIMELINE_FEATURES,
   X_USER_FEATURES,
+  X_USER_ITEM_TEMPLATE,
 } from "./utils"
 
 const X_RADAR_RESERVED_PATHS = [
@@ -84,7 +86,7 @@ function createXHomeRadar(id: string) {
 async function fetchXPlaceTrends(
   { location }: { location: string },
   context: SourceLoaderContext,
-): Promise<SourceLoaderResult> {
+): Promise<SourceLoaderOutput> {
   const response = await context.fetch.get(PLACE_TRENDS_URL, {
     headers: createXLoggedInHeaders(context),
     searchParams: { id: location },
@@ -94,7 +96,7 @@ async function fetchXPlaceTrends(
     items: (response[0]?.trends ?? []).map(trend => ({
       title: trend.name,
       url: normalizeXSearchUrl(trend.url),
-      timestamp,
+      publishedAt: timestamp,
     })),
   }
 }
@@ -102,19 +104,20 @@ async function fetchXPlaceTrends(
 function xHomeTimelineToResult(
   response: XHomeTimelineResponse,
   textMode: XTweetTextMode,
-): SourceLoaderResult {
+): SourceLoaderOutput {
   const instructions = response.data?.home?.home_timeline_urt?.instructions ?? []
   return {
     items: sortNewsItemsByNewest(
       entriesToNewsItems(getTimelineEntries(instructions), { textMode }),
     ),
+    itemTemplate: X_ITEM_TEMPLATE,
   }
 }
 
 async function fetchXRecommended(
   { text }: XTweetTextParams,
   context: SourceLoaderContext,
-): Promise<SourceLoaderResult> {
+): Promise<SourceLoaderOutput> {
   const response = await context.fetch.get(HOME_TIMELINE_URL, {
     headers: createXLoggedInHeaders(context),
     searchParams: {
@@ -136,7 +139,7 @@ async function fetchXRecommended(
 async function fetchXFollowing(
   { text }: XTweetTextParams,
   context: SourceLoaderContext,
-): Promise<SourceLoaderResult> {
+): Promise<SourceLoaderOutput> {
   const response = await context.fetch.post(HOME_LATEST_TIMELINE_URL, {
     headers: createXLoggedInHeaders(context),
     json: {
@@ -157,7 +160,7 @@ async function fetchXFollowing(
 async function fetchXListTweets(
   { listId, text }: XListParams,
   context: SourceLoaderContext,
-): Promise<SourceLoaderResult> {
+): Promise<SourceLoaderOutput> {
   const id = listId.trim()
   if (!/^\d{1,20}$/.test(id)) throw new Error("X list ID must be a valid numeric ID.")
 
@@ -176,13 +179,14 @@ async function fetchXListTweets(
     items: sortNewsItemsByNewest(
       entriesToNewsItems(getTimelineEntries(instructions), { textMode: text }),
     ),
+    itemTemplate: X_ITEM_TEMPLATE,
   }
 }
 
 async function fetchXUserTweets(
   { text, username }: XUserParams,
   context: SourceLoaderContext,
-): Promise<SourceLoaderResult> {
+): Promise<SourceLoaderOutput> {
   const screenName = username.trim()
   if (!/^\w{1,15}$/.test(screenName)) throw new Error("X username must be a valid handle.")
 
@@ -230,7 +234,8 @@ async function fetchXUserTweets(
         { includeIcon: false, textMode: text },
       ),
     ),
-    ...(badge ? { metadata: { badge } } : {}),
+    itemTemplate: X_USER_ITEM_TEMPLATE,
+    metadata: badge ? { badge } : undefined,
   }
 }
 
@@ -385,7 +390,7 @@ export default {
         load: fetchXUserTweets,
       },
       cache: {
-        version: 2,
+        version: 3,
         maxAge: "5m",
       },
     },

@@ -85,14 +85,17 @@
             "select": ".article-card__headline",
             "attr": "href"
           },
-          "timestamp": {
+          "publishedAt": {
             "select": "[data-timestamp]",
             "attr": "data-timestamp",
             "template": "{{ scope.value | times: 1000 }}"
           },
-          "inline": {
-            "text": ".article-publisher__name"
+          "attributes": {
+            "publisher": ".article-publisher__name"
           }
+        },
+        "itemTemplate": {
+          "inline": "{{ scope.item.attributes.publisher }}"
         }
       },
       "cache": "5m"

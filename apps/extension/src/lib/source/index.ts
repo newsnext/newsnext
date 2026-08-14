@@ -32,7 +32,7 @@ export {
   hasSourcePermission,
   requestSourcePermission,
 } from "./permissions"
-export { isTimelineItems } from "./presentation"
+export { getTimelineItemTimes, isTimelineItems } from "./presentation"
 export {
   FETCH_LATEST_MINIMUM_FEEDBACK_MS,
   SOURCE_QUERY_OFFSCREEN_RETENTION_MS,

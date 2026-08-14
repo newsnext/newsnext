@@ -17,7 +17,9 @@ import {
   createSourceTemplateScope,
 } from "../template"
 import {
+  isCompleteLoaderFieldGroup,
   normalizeLoaderMetadata,
+  normalizeLoaderNestedValue,
   requestLoaderResponse,
   sortLoaderItemsByTimestamp,
 } from "./shared"
@@ -59,17 +61,24 @@ interface JsonLoaderBaseOptions extends TimestampSortableLoaderOptions {
    */
   items?: string
   metadata?: LoaderMetadataFields<JsonField>
+  itemTemplate?: SourceLoaderResult["itemTemplate"]
   fields: LoaderFields<JsonField>
 }
 
 export type JsonLoaderOptions = JsonLoaderBaseOptions & LoaderRequestOptions
 
 export function compileJsonLoaderTemplates(
-  options: Pick<JsonLoaderOptions, "fields" | "metadata">,
+  options: Pick<JsonLoaderOptions, "fields" | "itemTemplate" | "metadata">,
   location: string,
 ): void {
   compileJsonTemplates(collectJsonFields(options.fields), `${location}.fields`)
   compileJsonTemplates(collectJsonMetadata(options.metadata), `${location}.metadata`)
+  if (options.itemTemplate) {
+    compileSourceTemplate(options.itemTemplate.inline, {
+      location: `${location}.itemTemplate.inline`,
+      slot: "item",
+    })
+  }
 }
 
 function compileJsonTemplates(entries: readonly JsonFieldEntry[], location: string): void {
@@ -169,21 +178,26 @@ function collectJsonFields(
   if (fields.mobileUrl) {
     entries.push({ field: fields.mobileUrl, htmlOutput: false, path: ["mobileUrl"] })
   }
-  if (fields.timestamp) {
-    entries.push({ field: fields.timestamp, htmlOutput: false, path: ["timestamp"] })
+  for (const fieldName of ["publishedAt", "updatedAt"] as const) {
+    const field = fields[fieldName]
+    if (field) entries.push({ field, htmlOutput: false, path: [fieldName] })
   }
-  for (const group of ["inline", "preview"] as const) {
-    for (const [key, field] of Object.entries(fields[group] ?? {})) {
-      if (field) {
-        entries.push({
-          field,
-          htmlOutput: key === "html",
-          path: [group, key],
-        })
-      }
+  collectNestedJsonFields(entries, fields, ["author", "stats", "attributes", "icon", "mark", "content"])
+  return entries
+}
+
+function collectNestedJsonFields(
+  entries: JsonFieldEntry[],
+  fields: LoaderFields<JsonField>,
+  groups: readonly (keyof LoaderFields<JsonField>)[],
+): void {
+  for (const group of groups) {
+    const value = fields[group]
+    if (!value) continue
+    for (const [key, field] of Object.entries(value)) {
+      if (field) entries.push({ field, htmlOutput: group === "content" && key === "html", path: [group, key] })
     }
   }
-  return entries
 }
 
 function getJsonFieldTemplate(
@@ -263,50 +277,40 @@ export async function loadJson(
       if (mobileUrl) newsItem.mobileUrl = String(mobileUrl)
     }
 
-    if (fields.timestamp) {
-      const timestampValue = resolveValue(item, fieldContext, fields.timestamp)
-      const timestamp = timestampValue === undefined || timestampValue === null || timestampValue === ""
-        ? undefined
-        : Number(timestampValue)
-      if (timestamp !== undefined && Number.isFinite(timestamp)) newsItem.timestamp = timestamp
-    }
-
-    if (fields.inline) {
-      const inline: Record<string, unknown> = {}
-      for (const [key, field] of Object.entries(fields.inline)) {
-        const val = resolveValue(item, fieldContext, field as JsonField, key === "html")
-        if (val != null) {
-          Object.assign(inline, { [key]: val })
-        }
-      }
-      if (Object.keys(inline).length > 0) {
-        newsItem.inline = inline as NonNullable<NewsItem["inline"]>
-      }
-    }
-
-    if (fields.preview) {
-      const preview: Record<string, unknown> = {}
-      for (const [key, field] of Object.entries(fields.preview)) {
-        const val = resolveValue(item, fieldContext, field as JsonField, key === "html")
-        if (val != null) {
-          Object.assign(preview, { [key]: val })
-        }
-      }
-      if (Object.keys(preview).length > 0) {
-        newsItem.preview = preview as NonNullable<NewsItem["preview"]>
-      }
-    }
+    assignResolvedJsonFields(newsItem, fields, item, fieldContext)
 
     return newsItem
   }).filter((i): i is NewsItem => i !== null)
 
   const sortedNews = sortLoaderItemsByTimestamp(news, options.sortByTimestamp)
-  if (!metadata) {
-    return { items: sortedNews }
-  }
-
   return {
     items: sortedNews,
-    metadata: resolveJsonMetadata(json, metadata, metadataContext),
+    itemTemplate: options.itemTemplate,
+    metadata: metadata ? resolveJsonMetadata(json, metadata, metadataContext) : undefined,
+  }
+}
+
+function assignResolvedJsonFields(
+  newsItem: NewsItem,
+  fields: LoaderFields<JsonField>,
+  input: unknown,
+  context: JsonFieldContext,
+): void {
+  for (const fieldName of ["publishedAt", "updatedAt"] as const) {
+    const field = fields[fieldName]
+    if (!field) continue
+    const value = resolveValue(input, context, field)
+    const timestamp = value === undefined || value === null || value === "" ? undefined : Number(value)
+    if (timestamp !== undefined && Number.isFinite(timestamp)) newsItem[fieldName] = timestamp
+  }
+  for (const group of ["author", "stats", "attributes", "icon", "mark", "content"] as const) {
+    const fieldGroup = fields[group]
+    if (!fieldGroup) continue
+    const resolved = Object.fromEntries(Object.entries(fieldGroup).flatMap(([key, field]) => {
+      const rawValue = resolveValue(input, context, field as JsonField, group === "content" && key === "html")
+      const value = normalizeLoaderNestedValue(group, rawValue)
+      return value === undefined || value === null || value === "" ? [] : [[key, value]]
+    }))
+    if (isCompleteLoaderFieldGroup(group, resolved)) Object.assign(newsItem, { [group]: resolved })
   }
 }
