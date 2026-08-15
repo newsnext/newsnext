@@ -57,7 +57,6 @@ export function Desk({ boardId, defaultView }: { boardId: string, defaultView: B
           <NextLayer
             boardId={boardId}
             isVisible={isScattered}
-            onClose={() => setIsScattered(false)}
             scrollContainerRef={nextLayerScrollContainerRef}
           />
         </div>

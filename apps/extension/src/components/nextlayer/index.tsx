@@ -4,7 +4,7 @@ import type { CardViewModel } from "@/typings/source"
 import { useVirtualizer } from "@tanstack/react-virtual"
 import { useAtomValue } from "jotai"
 import { m } from "motion/react"
-import { useCallback, useEffect, useId, useMemo, useState } from "react"
+import { useCallback, useId, useMemo, useState } from "react"
 import { useBoardInstanceResults } from "@/hooks/use-board-instance-results"
 import { useBoardSourceCards } from "@/hooks/use-board-source-cards"
 import { useSourceMarkScales } from "@/hooks/use-source-mark-scales"
@@ -20,7 +20,6 @@ import { TimelineRail } from "../card/timeline-rail"
 interface NextLayerProps {
   boardId: string
   isVisible: boolean
-  onClose: () => void
   scrollContainerRef?: RefObject<HTMLDivElement | null>
 }
 
@@ -191,7 +190,6 @@ function VirtualTimeline({
 export function NextLayer({
   boardId,
   isVisible,
-  onClose,
   scrollContainerRef,
 }: NextLayerProps) {
   const gradientId = useId().replace(/:/g, "")
@@ -235,16 +233,6 @@ export function NextLayer({
     () => mixedItems.map(entry => formatRelativeTime(entry.timestamp, now)),
     [mixedItems, now],
   )
-  useEffect(() => {
-    if (!isVisible) return
-
-    const handleKeyDown = (event: KeyboardEvent): void => {
-      if (event.key === "Escape") onClose()
-    }
-    window.addEventListener("keydown", handleKeyDown)
-    return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [isVisible, onClose])
-
   const setScrollContainer = useCallback((node: HTMLDivElement | null) => {
     if (scrollContainerRef) {
       scrollContainerRef.current = node
@@ -256,7 +244,6 @@ export function NextLayer({
     <div
       ref={setScrollContainer}
       className="h-full w-full overflow-y-auto bg-transparent scrollbar-hidden"
-      onClick={onClose}
     >
       {isVisible && (
         <m.main
@@ -264,7 +251,6 @@ export function NextLayer({
           animate={{ opacity: 1 }}
           transition={{ delay: 0.12, duration: 0.25, ease: "easeOut" }}
           className="mx-auto min-h-full w-full max-w-3xl px-1 pb-24 pt-28 sm:px-6"
-          onClick={event => event.stopPropagation()}
         >
           <div className="mx-5 mb-4 flex min-w-0 flex-col sm:mx-6">
             <h1 className="truncate text-base font-bold">

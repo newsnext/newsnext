@@ -247,6 +247,10 @@ then continue into the timeline without a surface boundary. Provider theme
 colors stay local to the timeline rail, source identity, and hover state while
 the page inherits the active board theme. Do not place filter controls in Next
 Layer; configure the shared Now/Next item filter in the Board dialog.
+Blank page space is part of the reading surface and must not switch back to Now
+Layer when clicked. Now Layer and Next Layer are peer views, so switch between
+them only through the shared Layer control or its configured keyboard shortcut;
+do not treat Escape as a way to leave Next Layer.
 
 ### Keyboard shortcut settings
 
