@@ -1,5 +1,5 @@
 import type { Color } from "@newsnext/shared/types"
-import type { Board, BoardCreateInput, BoardFilterMode, BoardSortMode } from "@/lib/board"
+import type { Board, BoardCreateInput, BoardFilterMode, BoardSortMode, BoardViewMode } from "@/lib/board"
 import { Button } from "@newsnext/ui/components/button"
 import {
   Dialog,
@@ -15,7 +15,7 @@ import { ThemeSelector } from "@newsnext/ui/components/theme-selector"
 import { useState } from "react"
 import { PhCheckCircle, PhTrash } from "@/components/icons/ph"
 import { useAsyncAction } from "@/hooks/use-async-action"
-import { ALL_BOARD_ID, createBoardFilter, DEFAULT_BOARD_COLOR, DEFAULT_BOARD_SORT_PREFERENCE, getBoardColor, isBoardNameTaken, updateBoardSortMode } from "@/lib/board"
+import { ALL_BOARD_ID, createBoardFilter, DEFAULT_BOARD_COLOR, DEFAULT_BOARD_SORT_PREFERENCE, DEFAULT_BOARD_VIEW_MODE, getBoardColor, isBoardNameTaken, updateBoardSortMode } from "@/lib/board"
 import { cn } from "@/lib/utils"
 
 const SORT_OPTIONS: { label: string, value: BoardSortMode }[] = [
@@ -27,6 +27,11 @@ const SORT_OPTIONS: { label: string, value: BoardSortMode }[] = [
 const FILTER_OPTIONS: { label: string, value: BoardFilterMode }[] = [
   { label: "Show matches", value: "include" },
   { label: "Hide matches", value: "exclude" },
+]
+
+const VIEW_OPTIONS: { label: string, value: BoardViewMode }[] = [
+  { label: "Now", value: "now" },
+  { label: "Next", value: "next" },
 ]
 
 export type BoardDialogTarget
@@ -70,11 +75,13 @@ function ConfigurableBoardDialog({
       ? getBoardColor(currentBoard)
       : DEFAULT_BOARD_COLOR
   const initialSortMode = board?.sort.mode ?? DEFAULT_BOARD_SORT_PREFERENCE.mode
+  const initialDefaultView = board?.defaultView ?? DEFAULT_BOARD_VIEW_MODE
   const initialFilterMode = board?.filter?.mode ?? "include"
   const initialFilterKeywords = board?.filter?.keywords.join(", ") ?? ""
   const [name, setName] = useState(() => board?.name ?? "")
   const [color, setColor] = useState<Color>(initialColor)
   const [sortMode, setSortMode] = useState<BoardSortMode>(initialSortMode)
+  const [defaultView, setDefaultView] = useState<BoardViewMode>(initialDefaultView)
   const [filterMode, setFilterMode] = useState<BoardFilterMode>(initialFilterMode)
   const [filterKeywords, setFilterKeywords] = useState(initialFilterKeywords)
   const [isDeleteArmed, setIsDeleteArmed] = useState(false)
@@ -100,6 +107,7 @@ function ConfigurableBoardDialog({
           ...board,
           name: normalizedName,
           color,
+          defaultView,
           sort: updateBoardSortMode(board.sort, sortMode),
         }
         if (filter) {
@@ -117,6 +125,7 @@ function ConfigurableBoardDialog({
       await onCreate({
         name: normalizedName,
         color,
+        defaultView,
         filter,
         sortMode,
       })
@@ -196,6 +205,25 @@ function ConfigurableBoardDialog({
                   </RadioGroupItem>
                 ))}
               </RadioGroup>
+            </fieldset>
+
+            <fieldset className="grid gap-2">
+              <legend className="text-sm font-medium">Default view</legend>
+              <RadioGroup
+                variant="segmented"
+                value={defaultView}
+                onValueChange={setDefaultView}
+                className="w-full"
+              >
+                {VIEW_OPTIONS.map(option => (
+                  <RadioGroupItem key={option.value} value={option.value} className="min-w-0 flex-1 px-2">
+                    {option.label}
+                  </RadioGroupItem>
+                ))}
+              </RadioGroup>
+              <p className="text-xs text-muted-foreground">
+                Choose which view opens with this board.
+              </p>
             </fieldset>
 
             <fieldset className="grid gap-2">

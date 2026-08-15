@@ -1,5 +1,5 @@
 import type { Color } from "@newsnext/shared/types"
-import type { BoardFilter, BoardSortMode } from "../board"
+import type { BoardFilter, BoardSortMode, BoardViewMode } from "../board"
 import type { CollectionView } from "../collection"
 import type { SourceInstancePatch } from "../source/cards"
 import type { ApplicationData } from "./data"
@@ -8,6 +8,7 @@ import { mergeSourceInstancePatch } from "../source/cards"
 
 export interface CollectionViewConfiguration {
   color?: Color
+  defaultView?: BoardViewMode
   filter?: BoardFilter | null
   sortMode?: BoardSortMode
 }
@@ -285,6 +286,7 @@ function configureCollectionView(
   return {
     ...view,
     ...(configuration.color !== undefined ? { color: configuration.color } : {}),
+    ...(configuration.defaultView !== undefined ? { defaultView: configuration.defaultView } : {}),
     ...(Object.hasOwn(configuration, "filter")
       ? { filter: configuration.filter ?? undefined }
       : {}),

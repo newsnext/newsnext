@@ -445,6 +445,19 @@ TanStack Query remains the single in-flight deduplication layer, which also
 prevents a replacement Fetch Latest request from reusing a cancelled loader
 promise.
 
+Instance-facing consumers resolve `instanceId` through the saved Instance and
+active Source descriptor before accessing stored results. The resulting target
+contains `sourceId` and normalized effective parameters. Both persistent Cache
+reads and History reads consume this target, so default parameters cannot make
+the two stores address different data. The Instance remains the Board and
+Widget reference; the resolved Source target remains the execution and storage
+identity.
+
+Next Layer subscribes to the same disabled TanStack Query observers as other
+cache-only presentation surfaces and hydrates missing in-memory values from the
+persistent Source cache. Opening Next Layer must not mount offscreen Cards or
+start Source execution solely to populate the presentation.
+
 Loader metadata is response-scoped and remains part of the cached load result.
 It uses the complete source presentation metadata shape: title, badge,
 description, and home URL. While displayed, it has the highest field-level

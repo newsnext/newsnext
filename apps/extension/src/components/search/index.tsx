@@ -25,8 +25,8 @@ import { useAtomValue } from "jotai"
 import { useEffect, useMemo, useState } from "react"
 import {
   createSourceQueryTarget,
-  getSourceQueryKey,
   getSourceQueryOptions,
+  hydrateSourceQueryCache,
 } from "@/hooks/source-query"
 import { useSourceDescriptors } from "@/hooks/use-source-descriptors"
 import { useSourceIcon } from "@/hooks/use-source-icon"
@@ -36,7 +36,6 @@ import {
   applySourceLoaderMetadata,
   buildSourceCards,
   getSourceCard,
-  readPersistedSourceCache,
 } from "@/lib/source"
 import { boardsAtom, collectionEntriesAtom, instancesAtom } from "@/store/board"
 import { shortcutSettingsAtom } from "@/store/settings"
@@ -221,23 +220,9 @@ function SearchDialogContent({
   })
 
   useEffect(() => {
-    let isActive = true
-
-    void Promise.all(sourceQueryTargets.map(async (target) => {
-      const queryKey = getSourceQueryKey(target)
-      if (queryClient.getQueryData(queryKey)) {
-        return
-      }
-
-      const cachedResult = await readPersistedSourceCache(target.sourceId, target.params)
-      if (isActive && cachedResult) {
-        queryClient.setQueryData(queryKey, cachedResult, { updatedAt: cachedResult.updatedAt })
-      }
-    }))
-
-    return () => {
-      isActive = false
-    }
+    void Promise.all(sourceQueryTargets.map(target => (
+      hydrateSourceQueryCache(queryClient, target)
+    )))
   }, [queryClient, sourceQueryTargets])
 
   const resolvedSearchItems = useMemo(

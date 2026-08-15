@@ -387,7 +387,6 @@ export function DesktopBoard({
               collectionId={collectionId}
               descriptor={descriptor}
               filter={filter}
-              forceMount={isScattered}
               instanceAtom={instanceAtom}
               sortable={sortable}
             />

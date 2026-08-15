@@ -8,7 +8,12 @@ export const ALL_BOARD_NAME = "All"
 export const NO_BOARD_VALUE = "__no_board__"
 export const DEFAULT_BOARD_COLOR: Color = "red"
 
+export type BoardViewMode = "now" | "next"
+
+export const DEFAULT_BOARD_VIEW_MODE: BoardViewMode = "now"
+
 export interface Board {
+  defaultView: BoardViewMode
   filter?: BoardFilter
   sort: BoardSortPreference
   id: string
@@ -18,6 +23,7 @@ export interface Board {
 
 export interface BoardCreateInput {
   color: Color
+  defaultView: BoardViewMode
   filter?: BoardFilter
   name: string
   sortMode: BoardSortMode
@@ -26,10 +32,15 @@ export interface BoardCreateInput {
 export function createAllBoard(color: Color): Board {
   return {
     color,
+    defaultView: DEFAULT_BOARD_VIEW_MODE,
     id: ALL_BOARD_ID,
     name: ALL_BOARD_NAME,
     sort: createBoardSortPreference("createdAt"),
   }
+}
+
+export function normalizeBoardViewMode(value: unknown): BoardViewMode {
+  return value === "next" ? "next" : DEFAULT_BOARD_VIEW_MODE
 }
 
 export function getBoardColor(board: Board): Color {

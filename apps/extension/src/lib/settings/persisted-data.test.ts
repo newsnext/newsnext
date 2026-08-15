@@ -15,6 +15,7 @@ function createData(): PersistedUserData {
     collectionViews: [{
       collectionId: "reading",
       color: "blue",
+      defaultView: "next",
       filter: { mode: "exclude", keywords: ["spoiler"] },
       sortMode: "manual",
       automaticSortMode: "createdAt",
@@ -57,6 +58,12 @@ describe("persisted user data", () => {
 
     expect(data.collections.map(collection => collection.id)).toEqual(["reading"])
     expect(data.instances.map(instance => instance.instanceId)).toEqual(["second", "first"])
+    expect(data.collectionViews).toEqual([{
+      automaticSortMode: "createdAt",
+      collectionId: "reading",
+      defaultView: "now",
+      sortMode: "createdAt",
+    }])
     expect(data.collectionEntries).toEqual([
       { collectionId: "reading", instanceId: "first", addedAt: 1, position: 0 },
       { collectionId: "reading", instanceId: "second", addedAt: 2, position: 1 },

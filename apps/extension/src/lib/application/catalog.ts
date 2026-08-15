@@ -1,5 +1,5 @@
 import type { Color } from "@newsnext/shared/types"
-import type { BoardFilter, BoardSortMode } from "../board"
+import type { BoardFilter, BoardSortMode, BoardViewMode } from "../board"
 import type { SourceInstancePatch } from "../source"
 import type {
   ApplicationAction,
@@ -53,6 +53,7 @@ const FILTER_SCHEMA = {
 } as const
 const COLLECTION_VIEW_PROPERTIES = {
   color: { enum: COLORS },
+  defaultView: { enum: ["now", "next"] },
   filter: { anyOf: [FILTER_SCHEMA, { type: "null" }] },
   sortMode: { enum: ["createdAt", "provider", "manual"] },
 } as const
@@ -127,7 +128,7 @@ const actionDefinitions: {
     outputSchema: EMPTY_OBJECT_SCHEMA,
     parseInput: (value) => {
       const input = requireRecord(value)
-      requireOnlyKeys(input, ["collectionId", "color", "filter", "sortMode"])
+      requireOnlyKeys(input, ["collectionId", "color", "defaultView", "filter", "sortMode"])
       const { collectionId, ...configuration } = input
       return {
         collectionId: requireIdentifier(collectionId, "collectionId"),
@@ -475,11 +476,21 @@ function requireSortMode(value: unknown): BoardSortMode {
   return value
 }
 
+function requireBoardViewMode(value: unknown): BoardViewMode {
+  if (value !== "now" && value !== "next") {
+    throw new Error("'defaultView' must be now or next")
+  }
+  return value
+}
+
 function parseCollectionViewConfiguration(value: unknown): CollectionViewConfiguration {
   const configuration = requireRecord(value)
-  requireOnlyKeys(configuration, ["color", "filter", "sortMode"])
+  requireOnlyKeys(configuration, ["color", "defaultView", "filter", "sortMode"])
   return {
     ...(configuration.color !== undefined ? { color: requireColor(configuration.color) } : {}),
+    ...(configuration.defaultView !== undefined
+      ? { defaultView: requireBoardViewMode(configuration.defaultView) }
+      : {}),
     ...(Object.hasOwn(configuration, "filter")
       ? { filter: configuration.filter === null ? null : parseOptionalFilter(configuration.filter) }
       : {}),

@@ -22,7 +22,6 @@ interface DraggableCardProps {
   collectionId: string | null
   descriptor: SourceDescriptor
   filter?: BoardFilter
-  forceMount?: boolean
   instanceAtom: Atom<SourceInstance>
   sortable?: boolean
 }
@@ -49,7 +48,7 @@ function generateDragPreview({ container, element }: { container: HTMLElement, e
   return () => preview.remove()
 }
 
-function DraggableCardComponent({ collectionId, descriptor, filter, forceMount, instanceAtom, sortable = true }: DraggableCardProps) {
+function DraggableCardComponent({ collectionId, descriptor, filter, instanceAtom, sortable = true }: DraggableCardProps) {
   const instance = useAtomValue(instanceAtom)
   const sourceCardHeight = useAtomValue(sourceCardHeightAtom)
   const source = useMemo(
@@ -81,7 +80,6 @@ function DraggableCardComponent({ collectionId, descriptor, filter, forceMount, 
       id={id}
       source={source}
       filter={filter}
-      forceMount={forceMount}
       nodeRef={setNodeRef}
       dragHandle={dragHandle}
       sizeClassName={SOURCE_CARD_SIZE_CLASS_NAMES[sourceCardHeight]}

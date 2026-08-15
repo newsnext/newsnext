@@ -1,36 +1,35 @@
-import type { RuntimeSource } from "@newsnext/source/types"
 import type { QueryClient } from "@tanstack/react-query"
 import type { SourceLoadResult } from "@/lib/source"
-import { normalizeSourceParams } from "@newsnext/source/runtime"
+import type { SourceQueryTarget } from "@/lib/source/query-target"
 import { hashKey, queryOptions } from "@tanstack/react-query"
-import { loadSource, SOURCE_QUERY_REFETCH_INTERVAL_MS, SOURCE_QUERY_STALE_TIME_MS } from "@/lib/source"
+import { loadSource, readPersistedSourceCache, SOURCE_QUERY_REFETCH_INTERVAL_MS, SOURCE_QUERY_STALE_TIME_MS } from "@/lib/source"
+
+export type { SourceQueryTarget } from "@/lib/source/query-target"
+export { createSourceQueryTarget } from "@/lib/source/query-target"
 
 export const SOURCE_QUERY_KEY = ["source"] as const
-
-export interface SourceQueryTarget {
-  sourceId: string
-  params?: Record<string, unknown>
-}
-
-export function createSourceQueryTarget(
-  sourceId: string,
-  source: Pick<RuntimeSource, "params">,
-  params: Record<string, unknown> = {},
-): SourceQueryTarget {
-  return {
-    sourceId,
-    params: normalizeSourceParams(source, params),
-  }
-}
 
 export function getSourceQueryKey(
   target: SourceQueryTarget,
 ): readonly ["source", string, Record<string, unknown>] {
-  return [...SOURCE_QUERY_KEY, target.sourceId, target.params ?? {}] as const
+  return [...SOURCE_QUERY_KEY, target.sourceId, target.params] as const
 }
 
 export function getSourceQueryHash(target: SourceQueryTarget): string {
   return hashKey(getSourceQueryKey(target))
+}
+
+export async function hydrateSourceQueryCache(
+  queryClient: QueryClient,
+  target: SourceQueryTarget,
+): Promise<void> {
+  const queryKey = getSourceQueryKey(target)
+  if (queryClient.getQueryData(queryKey) !== undefined) return
+
+  const cachedResult = await readPersistedSourceCache(target.sourceId, target.params)
+  if (cachedResult) {
+    queryClient.setQueryData(queryKey, cachedResult, { updatedAt: cachedResult.updatedAt })
+  }
 }
 
 function loadSourceQuery(

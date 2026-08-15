@@ -147,6 +147,26 @@ interface InstanceResult {
 Cards project this state for human presentation. Agent queries may consume the
 same state in a structured form without constructing Card components.
 
+`instanceId` is the stable application reference, while Source execution and
+storage resolve it to the Instance's `sourceId` and normalized effective
+parameters. Cache and History share that resolved target:
+
+```text
+instanceId -> sourceId + normalized params
+                        +-- current result in Cache
+                        +-- observations in History
+```
+
+Now Layer reads the current result. Next Layer may read the same current result
+or its observations. Neither Layer passes result data to the other through
+Card-owned React state. Identical resolved targets may share Source execution
+and storage while remaining distinct Instances in Collections and Views.
+
+Now Layer and Next Layer are two Views of one Board, not separate Data
+containers. A persisted `defaultView` preference selects which View opens with
+each custom Board. Switching Views changes presentation only and preserves the
+Board, Collection, Instances, Cache entries, and History observations.
+
 ## View Layer
 
 ### Board
@@ -159,6 +179,7 @@ being embedded in the Collection's membership model.
 interface CollectionViewPreferences {
   collectionId: string
   color: Color
+  defaultView: "now" | "next"
   filter?: BoardFilter
   sort: BoardSort
 }
@@ -167,6 +188,7 @@ interface BoardView {
   cards: CardView[]
   collectionId: string
   color: Color
+  defaultView: "now" | "next"
   filter?: BoardFilter
   name: string
   sort: BoardSort
@@ -445,6 +467,11 @@ The migration is proceeding incrementally:
     `source.list` and remove the parallel Registry/Native listing services.
 14. Completed: make Board creation, editing, and manual ordering atomic while
     retaining explicit nested Data and View fields.
+15. Completed: introduce the shared Instance data target used by persistent
+    Cache reads and History queries, and remove the Card-to-Next-Layer result
+    reporting path.
+16. Completed: persist each custom Board's default Now or Next View in its
+    Collection View preferences.
 
 The architecture migration described by this document is complete. Future
 features must extend the Data, Action, Query, and View contracts instead of

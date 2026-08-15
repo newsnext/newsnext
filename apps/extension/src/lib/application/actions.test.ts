@@ -12,6 +12,7 @@ function createData(): ApplicationData {
     collections: [{ id: "reading", name: "Reading", createdAt: 1 }],
     collectionViews: [{
       collectionId: "reading",
+      defaultView: "now",
       sortMode: "createdAt",
       automaticSortMode: "createdAt",
     }],
@@ -31,7 +32,7 @@ describe("application actions", () => {
       type: "collection.create",
       input: {
         name: "  AI  ",
-        view: { color: "purple", sortMode: "provider" },
+        view: { color: "purple", defaultView: "next", sortMode: "provider" },
       },
     }, dependencies)
 
@@ -44,6 +45,7 @@ describe("application actions", () => {
     expect(execution.data.collectionViews.at(-1)).toMatchObject({
       collectionId: "collection-new",
       color: "purple",
+      defaultView: "next",
       sortMode: "provider",
     })
   })
@@ -54,13 +56,14 @@ describe("application actions", () => {
       input: {
         collectionId: "reading",
         name: "Research",
-        view: { color: "purple", sortMode: "provider" },
+        view: { color: "purple", defaultView: "next", sortMode: "provider" },
       },
     }, dependencies)
 
     expect(configured.data.collections[0]?.name).toBe("Research")
     expect(configured.data.collectionViews[0]).toMatchObject({
       color: "purple",
+      defaultView: "next",
       sortMode: "provider",
       automaticSortMode: "provider",
     })
@@ -71,6 +74,7 @@ describe("application actions", () => {
     initial.collections.push({ id: "ai", name: "AI", createdAt: 2 })
     initial.collectionViews.push({
       collectionId: "ai",
+      defaultView: "now",
       sortMode: "createdAt",
       automaticSortMode: "createdAt",
     })
@@ -144,6 +148,7 @@ describe("application actions", () => {
     initial.collections.push({ id: "ai", name: "AI", createdAt: 2 })
     initial.collectionViews.push({
       collectionId: "ai",
+      defaultView: "now",
       sortMode: "createdAt",
       automaticSortMode: "createdAt",
     })

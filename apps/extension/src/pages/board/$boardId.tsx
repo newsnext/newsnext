@@ -39,5 +39,11 @@ export function BoardIdComponent() {
     )
   }
 
-  return <Desk key={boardId} boardId={boardId} />
+  return (
+    <Desk
+      key={`${boardId}:${board.defaultView}`}
+      boardId={boardId}
+      defaultView={board.defaultView}
+    />
+  )
 }

@@ -5,7 +5,7 @@ import { useVirtualizer } from "@tanstack/react-virtual"
 import { useAtomValue } from "jotai"
 import { m } from "motion/react"
 import { useCallback, useEffect, useId, useMemo, useState } from "react"
-import { useBoardItems } from "@/components/board-items-context"
+import { useBoardInstanceResults } from "@/hooks/use-board-instance-results"
 import { useBoardSourceCards } from "@/hooks/use-board-source-cards"
 import { useSourceMarkScales } from "@/hooks/use-source-mark-scales"
 import { formatRelativeTime, minuteDateAtom } from "@/hooks/useRelativeTime"
@@ -198,18 +198,23 @@ export function NextLayer({
   const now = useAtomValue(minuteDateAtom)
   const iconSettings = useAtomValue(sourceIconSettingsAtom)
   const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(null)
-  const sourceResults = useBoardItems()
   const { currentBoard, instanceIds } = useBoardSourceCards(boardId)
+  const { isHydrating, results: sourceResults } = useBoardInstanceResults({
+    boardId,
+    enabled: isVisible,
+    filter: currentBoard.filter,
+    instanceIds,
+  })
 
   const sourceEntries = useMemo(() => instanceIds.flatMap((id) => {
     const result = sourceResults[id]
-    if (!result || result.filter !== currentBoard.filter) return []
+    if (!result) return []
 
     return [{
       items: result.items,
       source: {
         card: result.card,
-        id: result.id,
+        id,
         itemTemplate: result.itemTemplate,
         icon: resolveSourceIcon(
           result.card.provider.icon,
@@ -219,7 +224,7 @@ export function NextLayer({
       },
       updatedAt: result.updatedAt,
     }]
-  }), [currentBoard.filter, iconSettings.template, instanceIds, sourceResults])
+  }), [iconSettings.template, instanceIds, sourceResults])
   const mixedItems = useMemo(() => mixSourceItems(sourceEntries), [sourceEntries])
   const markScaleGroups = useMemo(
     () => sourceEntries.map(({ items, source }) => ({ items, sourceKey: source.id })),
@@ -230,11 +235,6 @@ export function NextLayer({
     () => mixedItems.map(entry => formatRelativeTime(entry.timestamp, now)),
     [mixedItems, now],
   )
-  const isLoading = instanceIds.some((id) => {
-    const result = sourceResults[id]
-    return !result || result.filter !== currentBoard.filter || result.isLoading
-  })
-
   useEffect(() => {
     if (!isVisible) return
 
@@ -294,7 +294,7 @@ export function NextLayer({
             : (
                 <div className="flex min-h-52 items-center justify-center p-8">
                   <p className="text-center text-sm text-muted-foreground">
-                    {instanceIds.length > 0 && isLoading
+                    {instanceIds.length > 0 && isHydrating
                       ? "Loading items…"
                       : instanceIds.length > 0
                         ? "No items to show."

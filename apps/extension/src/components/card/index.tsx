@@ -1,13 +1,11 @@
 import type { ReactNode } from "react"
-import type { BoardSourceItems } from "@/components/board-items-context"
 import type { BoardFilter } from "@/lib/board"
 import type { SourceInstanceMetadata, SourceInstancePatch } from "@/lib/source"
 import type { CardViewModel } from "@/typings/source"
 import { FlipAnimate } from "@newsnext/ui/components/flip-animate"
 import { useScrollProgressActionsContext } from "@newsnext/ui/components/scroll-progress-context"
 import { useSetAtom } from "jotai"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { useReportBoardSourceItems } from "@/components/board-items-context"
+import { useCallback, useMemo, useRef, useState } from "react"
 import { useSourceParams } from "@/hooks"
 import { useInView } from "@/hooks/use-in-view"
 import { useSourcePermission } from "@/hooks/use-source-permission"
@@ -22,8 +20,6 @@ import {
 import { CardBack } from "./card-back"
 import { CardFront } from "./card-front"
 
-const EMPTY_ITEMS: BoardSourceItems["items"] = []
-
 export interface SourceCardProps {
   filter?: BoardFilter
   id: string
@@ -32,13 +28,11 @@ export interface SourceCardProps {
   sizeClassName?: string
   nodeRef?: (node: HTMLElement | null) => void
   dragHandle?: ReactNode
-  forceMount?: boolean
   isDraft?: boolean
   onDraftSourceChange?: (patch: SourceInstancePatch) => void
 }
 
 function SourceCardContent({ filter, id, source, dragHandle, isDraft = false, onDraftSourceChange }: SourceCardProps) {
-  const reportBoardSourceItems = useReportBoardSourceItems()
   const setSourceInstancePatch = useSetAtom(setSourceInstancePatchAtom)
   const resetLocalParams = useSetAtom(resetInstanceParamsAtom)
   const [isFlipped, setIsFlipped] = useState(false)
@@ -78,20 +72,6 @@ function SourceCardContent({ filter, id, source, dragHandle, isDraft = false, on
     () => filterBoardItems(items, filter),
     [filter, items],
   )
-
-  useEffect(() => {
-    if (isDraft) return
-
-    reportBoardSourceItems?.({
-      card: displaySource,
-      filter,
-      id,
-      items: canLoad ? visibleItems : EMPTY_ITEMS,
-      itemTemplate,
-      isLoading,
-      updatedAt,
-    })
-  }, [canLoad, displaySource, filter, id, isDraft, isLoading, itemTemplate, reportBoardSourceItems, updatedAt, visibleItems])
 
   const handleFlip = useCallback(() => {
     setIsFlipped(prev => !prev)
@@ -172,7 +152,7 @@ function SourceCardContent({ filter, id, source, dragHandle, isDraft = false, on
 }
 
 export function SourceCard(props: SourceCardProps): React.JSX.Element {
-  const { forceMount = false, nodeRef } = props
+  const { nodeRef } = props
   const { rootScrollContainerRef } = useScrollProgressActionsContext()
   const ref = useRef<HTMLDivElement>(null)
   const setRef = useCallback((node: HTMLDivElement | null) => {
@@ -195,7 +175,7 @@ export function SourceCard(props: SourceCardProps): React.JSX.Element {
         props.className,
       )}
     >
-      {(isInView || forceMount) && (
+      {isInView && (
         <SourceCardContent {...props} />
       )}
     </div>

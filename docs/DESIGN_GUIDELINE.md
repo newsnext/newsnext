@@ -367,9 +367,11 @@ They must have:
   form labels already make the task clear.
 
 The unified Board dialog is the canonical example. Create and edit modes use
-the same name, theme color, card order, and item filter fields; only edit mode
-exposes board deletion, while the title and primary action reflect the current
-mode. The item filter uses one segmented `Show matches` / `Hide matches` mode
+the same name, theme color, card order, default view, and item filter fields;
+only edit mode exposes board deletion, while the title and primary action
+reflect the current mode. Default view uses a compact segmented `Now` / `Next`
+control and determines which Board view opens by default. The item filter uses
+one segmented `Show matches` / `Hide matches` mode
 and one comma-separated keyword field. Keep the short matching-scope note
 because it explains that titles and structured item details are both searched. In
 particular, do not add the following descriptions back to this dialog:

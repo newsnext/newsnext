@@ -53,16 +53,20 @@ describe("application operation catalog", () => {
       input: {
         collectionId: "reading",
         name: "Research",
-        view: { color: "purple" },
+        view: { color: "purple", defaultView: "next" },
       },
     })).toEqual({
       type: "collection.update",
       input: {
         collectionId: "reading",
         name: "Research",
-        view: { color: "purple" },
+        view: { color: "purple", defaultView: "next" },
       },
     })
+    expect(() => parseApplicationAction({
+      type: "view.configureCollection",
+      input: { collectionId: "reading", defaultView: "future" },
+    })).toThrow("must be now or next")
   })
 
   it("describes and parses canonical Queries", () => {
