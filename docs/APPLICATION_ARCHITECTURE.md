@@ -157,10 +157,15 @@ instanceId -> sourceId + normalized params
                         +-- observations in History
 ```
 
-Now Layer reads the current result. Next Layer may read the same current result
-or its observations. Neither Layer passes result data to the other through
-Card-owned React state. Identical resolved targets may share Source execution
-and storage while remaining distinct Instances in Collections and Views.
+Now Layer owns the interactive request lifecycle for current results through
+independent Instance queries. A direct Next Layer Widget declares one Instance,
+several Instances, or the complete Board, then reads cache results, History
+observations, or both through its own data boundary. A materialized Widget reads
+a persisted result produced asynchronously by an Agent-owned refresh and
+processing task. Neither mode subscribes to the Now Layer's per-Instance query
+path or passes result data through Card-owned React state. Identical resolved
+targets may share Source execution and storage while remaining distinct
+Instances in Collections and Views.
 
 Now Layer and Next Layer are two Views of one Board, not separate Data
 containers. A persisted `defaultView` preference selects which View opens with

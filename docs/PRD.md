@@ -164,6 +164,15 @@ Next Layer depends on the news available to the Board. It is not an independent
 Board, a second data-collection path, or a standalone generated application.
 Moving between Layers must preserve the current Board identity and context.
 
+A Widget chooses its execution mode explicitly. A direct Widget reads selected
+cache or History data in the UI when it only needs deterministic presentation
+such as filtering, sorting, mixing, or visualization. A materialized Widget is
+Agent-driven: the Agent refreshes inputs when required, processes them, and
+persists the result before the user opens Next Layer. Opening a materialized
+Widget displays that saved result and does not repeat its data refresh or
+transformation. The number of selected Instances does not determine the mode;
+the need for durable or derived processing does.
+
 ### Stable data streams are the foundation
 
 A configured Source Instance produces a recurring stream of normalized results
@@ -441,7 +450,7 @@ must not be described to users as available until its acceptance criteria pass.
 | Instance and Collection data | Implemented | Canonical Instances, Collections, membership, manual order, and Board view preferences | No material data-model gap for the first Widget phase |
 | UI and Agent control | Implemented foundation | UI and CLI use the same typed Actions and Queries and the same background persistence boundary | Widget and Source-lifecycle operations are not exposed yet |
 | Now Layer | Implemented | Each Instance is independently presented as a Card using the unified Card model | Preserve this contract while Next Layer evolves |
-| Next Layer | Partial | One shared mixed Timeline reorganizes current Board results and reuses the Now Layer query path | No durable Widget, layout, personalization, or Agent management model |
+| Next Layer | Partial | One shared mixed Timeline selects every current Board Instance through an independent cache-data path; the data boundary also supports one or several Instances and History reads | No durable Widget, layout, personalization, or Agent management model |
 | History | Implemented foundation | Successful observations can be listed, read at an exact time, and compared for added, missing, position, and top-level field changes | No general derived-data contract or Widget binding contract |
 | Provenance | Partial | Source and Instance identities remain stable; history comparisons preserve supported factual boundaries | Derived Widget inputs, transformations, warnings, and claims need an explicit UI contract |
 | Code Widgets | Not implemented | None | Sandbox, resource limits, versioning, preview, failure isolation, and rollback |
@@ -509,6 +518,7 @@ The remaining product gaps are:
 | NXT-07 | Corrected or reconciled values remain derived | Widget processing never silently changes stored Source results or historical observations |
 | NXT-08 | Widgets expose useful runtime states | Empty, loading, stale, partial, failed, and ready states are distinguishable and accessible |
 | NXT-09 | Widget layout is personalized without becoming a separate Board | The layout belongs to the current Board's Next Layer and retains its underlying Collection identity |
+| NXT-10 | A Widget declares direct or materialized execution | Direct Widgets read selected stored inputs in the UI; materialized Widgets display an Agent-produced persisted result without rerunning its refresh or transformation on open |
 
 ### Agent and CLI requirements
 
@@ -587,8 +597,11 @@ The remaining product gaps are:
 
 ### Performance
 
-- Next Layer must reuse the current canonical Instance results instead of
-  subscribing to or executing every Source again.
+- Direct Widgets must select one, several, or all Board Instances and read their
+  canonical cache results, History observations, or both without subscribing to
+  or executing Sources.
+- Materialized Widgets must render their persisted result without repeating
+  Agent-owned refresh or processing when the user opens Next Layer.
 - Widget computation must be incremental or bounded so one expensive Widget
   cannot block interaction with the Board.
 - Long lists and timelines must remain virtualized where rendering cost would

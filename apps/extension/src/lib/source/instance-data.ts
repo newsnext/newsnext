@@ -10,21 +10,27 @@ import type { InstanceDataTarget } from "./instance-data-target"
 import {
   compareSourceHistoryObservations,
   getSourceHistoryObservation,
-  listSourceHistoryObservations,
+  listSourceHistoryObservationsByIdentity,
 } from "./history/repository"
+import { buildSourceHistoryDatasetKey } from "./history/values"
+
+export type ListInstanceHistoryInput = Omit<
+  ListSourceHistoryObservationsInput,
+  "params" | "sourceId"
+>
+export type { SourceHistoryObservationPage } from "./history/repository"
 
 export type { InstanceDataTarget } from "./instance-data-target"
 export { createInstanceDataTarget, resolveInstanceDataTarget } from "./instance-data-target"
 
 export function listInstanceHistory(
   target: InstanceDataTarget,
-  input: Omit<ListSourceHistoryObservationsInput, "params" | "sourceId">,
+  input: ListInstanceHistoryInput,
 ): Promise<SourceHistoryObservationPage> {
-  return listSourceHistoryObservations({
-    ...input,
-    params: target.params,
-    sourceId: target.sourceId,
-  })
+  return listSourceHistoryObservationsByIdentity(
+    buildSourceHistoryDatasetKey(target.sourceId, target.params),
+    input,
+  )
 }
 
 export function getInstanceHistoryObservation(

@@ -453,10 +453,22 @@ the two stores address different data. The Instance remains the Board and
 Widget reference; the resolved Source target remains the execution and storage
 identity.
 
-Next Layer subscribes to the same disabled TanStack Query observers as other
-cache-only presentation surfaces and hydrates missing in-memory values from the
-persistent Source cache. Opening Next Layer must not mount offscreen Cards or
-start Source execution solely to populate the presentation.
+Direct Next Layer Widgets resolve an explicit Instance selection scoped to the
+current Board. The selection may contain one Instance, several Instances, or
+every Instance on the Board. Their data boundary can observe current cache
+results, read History, or combine both without creating TanStack Query observers
+or depending on the Now Layer's in-memory Source query cache. Cache selections
+use one Dexie live query with a bulk read; matching persistent changes from
+other extension contexts notify the same observer. History selections address
+normalized dataset identities directly and never resolve through a Source
+loader. Results remain keyed by `instanceId` so Widgets retain input identity
+and provenance even when several Instances resolve to the same Source target.
+
+Materialized Widgets instead display a persisted result produced by an
+Agent-owned asynchronous task. That task may refresh selected Sources, consume
+cache and History inputs, process them, and save a provenance-bearing result.
+Opening Next Layer must not repeat Agent-owned refresh or processing, mount
+offscreen Cards, or start Source execution solely to populate the presentation.
 
 Loader metadata is response-scoped and remains part of the cached load result.
 It uses the complete source presentation metadata shape: title, badge,

@@ -134,11 +134,18 @@ card memoization or virtual-list identity. Saving a changed filter is expected
 to update every card on that board because their visible item sets may change;
 source queries and cached results remain unchanged.
 
-Next Layer must subscribe directly to the normalized Source query keys for its
-Instances with disabled observers. Hydrate a missing in-memory value from the
-matching persistent cache entry without enabling a Source query. Do not route
-results through Card effects or force-mount offscreen Cards when switching
-Layers; Layer presentation must not determine whether a Source executes.
+Each direct Next Layer consumer must declare the smallest useful Instance
+selection: one Instance, several Instances, or the complete Board. Use one live
+cache observer for that selection and bulk-read its resolved targets from
+persistent storage. Do not create Source query observers, route results through
+Card effects, reuse the Now Layer's in-memory query cache, or force-mount
+offscreen Cards when switching Layers. Results should preserve `instanceId`
+keys while allowing one storage operation to serve all selected inputs. Keep
+live observers disabled while their consumers are hidden.
+
+Materialized Widgets must read their saved output without rerunning Agent-owned
+refresh or processing in React. Layer presentation must not determine whether a
+Source executes.
 
 Background illustration extraction runs only after the user selects an image or
 changes the edge-detail control. Debounce detail changes, resize the longest

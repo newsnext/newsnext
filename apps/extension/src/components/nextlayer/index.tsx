@@ -5,8 +5,7 @@ import { useVirtualizer } from "@tanstack/react-virtual"
 import { useAtomValue } from "jotai"
 import { m } from "motion/react"
 import { useCallback, useId, useMemo, useState } from "react"
-import { useBoardInstanceResults } from "@/hooks/use-board-instance-results"
-import { useBoardSourceCards } from "@/hooks/use-board-source-cards"
+import { useNextLayerCache } from "@/hooks/use-next-layer-cache"
 import { useSourceMarkScales } from "@/hooks/use-source-mark-scales"
 import { formatRelativeTime, minuteDateAtom } from "@/hooks/useRelativeTime"
 import { mixSourceItems } from "@/lib/board"
@@ -31,6 +30,7 @@ interface NextLayerSource {
 }
 
 type MixedItem = ReturnType<typeof mixSourceItems<NextLayerSource>>[number]
+const BOARD_INSTANCE_SELECTION = { scope: "board" } as const
 
 function MixedItemRow({
   entry,
@@ -196,12 +196,10 @@ export function NextLayer({
   const now = useAtomValue(minuteDateAtom)
   const iconSettings = useAtomValue(sourceIconSettingsAtom)
   const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(null)
-  const { currentBoard, instanceIds } = useBoardSourceCards(boardId)
-  const { isHydrating, results: sourceResults } = useBoardInstanceResults({
+  const { instanceIds, isLoading, results: sourceResults } = useNextLayerCache({
     boardId,
     enabled: isVisible,
-    filter: currentBoard.filter,
-    instanceIds,
+    selection: BOARD_INSTANCE_SELECTION,
   })
 
   const sourceEntries = useMemo(() => instanceIds.flatMap((id) => {
@@ -280,7 +278,7 @@ export function NextLayer({
             : (
                 <div className="flex min-h-52 items-center justify-center p-8">
                   <p className="text-center text-sm text-muted-foreground">
-                    {instanceIds.length > 0 && isHydrating
+                    {instanceIds.length > 0 && isLoading
                       ? "Loading items…"
                       : instanceIds.length > 0
                         ? "No items to show."

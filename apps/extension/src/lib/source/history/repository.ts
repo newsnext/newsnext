@@ -131,6 +131,13 @@ export async function listSourceHistoryObservations(
   input: ListSourceHistoryObservationsInput,
 ): Promise<SourceHistoryObservationPage> {
   const identity = await resolveDatasetIdentity(input.sourceId, input.params ?? {})
+  return await listSourceHistoryObservationsByIdentity(identity, input)
+}
+
+export async function listSourceHistoryObservationsByIdentity(
+  identity: string,
+  input: Omit<ListSourceHistoryObservationsInput, "params" | "sourceId"> = {},
+): Promise<SourceHistoryObservationPage> {
   const limit = normalizePageSize(input.limit)
   return await database.transaction(
     "r",

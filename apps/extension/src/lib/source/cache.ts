@@ -1,6 +1,6 @@
 import type { Table } from "dexie"
 import type { SourceLoadResult } from "./loader"
-import Dexie from "dexie"
+import Dexie, { liveQuery } from "dexie"
 import { selectSourceCacheKeysToDelete } from "./cache-values"
 
 const SOURCE_CACHE_DATABASE_NAME = "newsnext-extension-source-cache"
@@ -20,6 +20,14 @@ interface SourceCacheMetadataRecord {
 interface SourceCacheReadResult {
   isFresh: boolean
   result: SourceLoadResult
+}
+
+function omitSourceCacheFields(
+  entry: SourceCacheRecord | undefined,
+): SourceLoadResult | undefined {
+  if (!entry) return undefined
+  const { cacheKey: _cacheKey, usedAt: _usedAt, ...result } = entry
+  return result
 }
 
 class SourceCacheDatabase extends Dexie {
@@ -55,7 +63,8 @@ export async function readSourceCache(
       },
     )
     if (!entry) return
-    const { cacheKey: _cacheKey, usedAt: _usedAt, ...result } = entry
+    const result = omitSourceCacheFields(entry)
+    if (!result) return
     return {
       isFresh: now - result.updatedAt < maxAgeMs,
       result,
@@ -63,6 +72,52 @@ export async function readSourceCache(
   } catch {
     return undefined
   }
+}
+
+async function touchSourceCaches(
+  cacheKeys: readonly string[],
+  now = Date.now(),
+): Promise<void> {
+  if (cacheKeys.length === 0) return
+
+  try {
+    await database.sourceResults.bulkUpdate(cacheKeys.map(cacheKey => ({
+      changes: { usedAt: now },
+      key: cacheKey,
+    })))
+  } catch {
+    // Cache usage tracking should never block readers.
+  }
+}
+
+export function observeSourceCaches(
+  cacheKeys: readonly string[],
+  onResults: (results: (SourceLoadResult | undefined)[]) => void,
+): () => void {
+  if (cacheKeys.length === 0) {
+    let isActive = true
+    queueMicrotask(() => {
+      if (isActive) onResults([])
+    })
+    return () => {
+      isActive = false
+    }
+  }
+
+  const subscription = liveQuery(async () => {
+    try {
+      const entries = await database.sourceResults.bulkGet([...cacheKeys])
+      return entries.map(omitSourceCacheFields)
+    } catch {
+      return cacheKeys.map(() => undefined)
+    }
+  }).subscribe({
+    next: onResults,
+    error: () => onResults(cacheKeys.map(() => undefined)),
+  })
+
+  void touchSourceCaches(cacheKeys)
+  return () => subscription.unsubscribe()
 }
 
 export async function writeCachedSource(
