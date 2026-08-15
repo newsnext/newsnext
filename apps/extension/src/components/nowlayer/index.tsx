@@ -4,7 +4,7 @@ import { useCallback } from "react"
 import { useBoardSourceCards } from "@/hooks/use-board-source-cards"
 import { ALL_BOARD_ID } from "@/lib/board"
 import { setManualBoardOrderAtom } from "@/store/board"
-import { DesktopBoard } from "./desktop-board"
+import { CardContainer } from "./card-container"
 
 interface NowLayerProps {
   boardId: string
@@ -41,7 +41,7 @@ export function NowLayer({
   }
 
   return (
-    <DesktopBoard
+    <CardContainer
       key={boardId}
       instanceIds={instanceIds}
       cardsByInstanceId={cardsByInstanceId}

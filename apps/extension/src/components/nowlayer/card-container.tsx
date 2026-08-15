@@ -48,7 +48,7 @@ interface InstanceOrderState {
   orderedInstanceIds: string[]
 }
 
-interface DesktopBoardProps {
+interface CardContainerProps {
   filter?: BoardFilter
   instanceIds: string[]
   cardsByInstanceId: Record<string, BoardSourceCard>
@@ -59,7 +59,7 @@ interface DesktopBoardProps {
   containerRef?: RefObject<HTMLDivElement | null>
 }
 
-export function DesktopBoard({
+export function CardContainer({
   filter,
   instanceIds,
   cardsByInstanceId,
@@ -68,7 +68,7 @@ export function DesktopBoard({
   isScattered,
   onInstanceIdsChange,
   containerRef,
-}: DesktopBoardProps) {
+}: CardContainerProps) {
   const [instanceOrderState, setInstanceOrderState] = useState<InstanceOrderState>(() => ({
     instanceIds,
     orderedInstanceIds: instanceIds,
@@ -83,7 +83,7 @@ export function DesktopBoard({
   }
   const orderedInstanceIdsRef = useRef(orderedInstanceIds)
   const initialOrderedInstanceIdsRef = useRef(instanceIds)
-  const boardRef = useRef<HTMLOListElement>(null)
+  const listRef = useRef<HTMLOListElement>(null)
   const [scatterAnimationState, setScatterAnimationState] = useState<ScatterAnimationState>({
     hasScattered: false,
     vectors: {},
@@ -147,19 +147,19 @@ export function DesktopBoard({
   }, [])
 
   const onDrop = useCallback(({ location }: ElementEventBasePayload) => {
-    const board = boardRef.current
+    const list = listRef.current
     const { clientX, clientY } = location.current.input
-    const boardRect = board?.getBoundingClientRect()
+    const listRect = list?.getBoundingClientRect()
     const hasDropTarget = location.current.dropTargets.length > 0
-    const isInsideBoard = Boolean(
-      boardRect
-      && clientX >= boardRect.left
-      && clientX <= boardRect.right
-      && clientY >= boardRect.top
-      && clientY <= boardRect.bottom,
+    const isInsideList = Boolean(
+      listRect
+      && clientX >= listRect.left
+      && clientX <= listRect.right
+      && clientY >= listRect.top
+      && clientY <= listRect.bottom,
     )
 
-    if (!hasDropTarget || !isInsideBoard) {
+    if (!hasDropTarget || !isInsideList) {
       const initialInstanceIds = initialOrderedInstanceIdsRef.current
       orderedInstanceIdsRef.current = initialInstanceIds
       setInstanceOrderState(prev => ({
@@ -294,7 +294,7 @@ export function DesktopBoard({
       onDrop={onDrop}
     >
       <m.ol
-        ref={boardRef}
+        ref={listRef}
         className={className || "flex flex-wrap justify-center gap-2 sm:gap-6"}
         initial="hidden"
         animate={isScattered ? "scattered" : "visible"}

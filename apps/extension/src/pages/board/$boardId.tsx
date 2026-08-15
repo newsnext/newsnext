@@ -1,7 +1,7 @@
 import { useParams } from "@tanstack/react-router"
 import { useAtomValue, useSetAtom } from "jotai"
 import { useEffect } from "react"
-import { Desk } from "@/components/desk"
+import { BoardView } from "@/components/board-view"
 import { getBoardColor } from "@/lib/board"
 import { handleThemeSwitch } from "@/lib/utils/swith-theme"
 import { boardsAtom } from "@/store/board"
@@ -40,7 +40,7 @@ export function BoardIdComponent() {
   }
 
   return (
-    <Desk
+    <BoardView
       key={`${boardId}:${board.defaultView}`}
       boardId={boardId}
       defaultView={board.defaultView}

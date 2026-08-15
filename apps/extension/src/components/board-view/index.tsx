@@ -10,10 +10,10 @@ import { DEFAULT_SHORTCUT_SETTINGS, SHORTCUT_DEFINITIONS } from "@/lib/settings"
 import { cn } from "@/lib/utils"
 import { shortcutSettingsAtom } from "@/store/settings"
 
-export function Desk({ boardId, defaultView }: { boardId: string, defaultView: BoardViewMode }) {
+export function BoardView({ boardId, defaultView }: { boardId: string, defaultView: BoardViewMode }) {
   const supportsNextLayer = boardId !== ALL_BOARD_ID
   const shortcuts = useAtomValue(shortcutSettingsAtom)
-  const [isScattered, setIsScattered] = useState(
+  const [isNextLayerVisible, setIsNextLayerVisible] = useState(
     supportsNextLayer && defaultView === "next",
   )
   const nowLayerRef = useRef<HTMLDivElement>(null)
@@ -24,7 +24,7 @@ export function Desk({ boardId, defaultView }: { boardId: string, defaultView: B
 
   useHotkey(
     shortcuts.toggleNextLayer ?? DEFAULT_SHORTCUT_SETTINGS.toggleNextLayer,
-    () => setIsScattered(prev => !prev),
+    () => setIsNextLayerVisible(prev => !prev),
     {
       enabled: supportsNextLayer && shortcuts.toggleNextLayer !== null,
       meta: {
@@ -36,8 +36,8 @@ export function Desk({ boardId, defaultView }: { boardId: string, defaultView: B
   )
 
   useEffect(() => {
-    setIsNextLayerActive(isScattered)
-  }, [isScattered, setIsNextLayerActive])
+    setIsNextLayerActive(isNextLayerVisible)
+  }, [isNextLayerVisible, setIsNextLayerActive])
 
   useEffect(() => {
     return () => {
@@ -51,12 +51,12 @@ export function Desk({ boardId, defaultView }: { boardId: string, defaultView: B
         <div
           className={cn(
             "pointer-events-none fixed inset-x-0 top-0 bottom-0 z-10 px-2 sm:px-6",
-            isScattered && "pointer-events-auto",
+            isNextLayerVisible && "pointer-events-auto",
           )}
         >
           <NextLayer
             boardId={boardId}
-            isVisible={isScattered}
+            isVisible={isNextLayerVisible}
             scrollContainerRef={nextLayerScrollContainerRef}
           />
         </div>
@@ -66,10 +66,10 @@ export function Desk({ boardId, defaultView }: { boardId: string, defaultView: B
         ref={nowLayerRef}
         className={cn(
           "relative z-0 transition-[opacity,transform] duration-300",
-          isScattered && "pointer-events-none",
+          isNextLayerVisible && "pointer-events-none",
         )}
       >
-        <NowLayer boardId={boardId} isScattered={isScattered} containerRef={nowLayerRef} />
+        <NowLayer boardId={boardId} isScattered={isNextLayerVisible} containerRef={nowLayerRef} />
       </div>
     </div>
   )

@@ -97,7 +97,7 @@ Separate context values by update frequency:
 
 The scroll progress contexts follow this rule. Layer activity changes update
 `HeaderProgress`, while stable scroll refs and the activity setter are available
-to `Desk` without subscribing the board to header progress state.
+to `BoardView` without subscribing the board to header progress state.
 
 ### Keep derivation ownership local
 
@@ -223,7 +223,7 @@ is still compiled.
 Keep render functions free of ref reads and writes. `DndContext` uses an Effect
 Event so its long-lived drag monitor always invokes the latest callbacks without
 resubscribing. Ordinary UI callbacks such as `DynamicIsland` open and close
-handlers should instead depend directly on the values they use. `DesktopBoard`
+handlers should instead depend directly on the values they use. `CardContainer`
 synchronizes its imperative drag-order ref in a layout effect and keeps scatter
 history in React state.
 
@@ -301,8 +301,8 @@ vectors, or drag state. Optimize the content boundary instead.
 
 The Now/Next transition must not animate a transform on the full mixed timeline
 or combine that transform with a large backdrop filter while cards scatter.
-The card scatter is the transition's primary motion; Next Layer may follow with
-a brief, delayed opacity-only reveal. Keep its timeline virtualized against the
+The card scatter is the transition's primary motion; `WidgetContainer` owns the
+brief, delayed opacity-only reveal. Keep its timeline virtualized against the
 committed Next Layer scroll element so only visible waveform SVGs and rows are
 mounted during the transition and subsequent scrolling.
 
