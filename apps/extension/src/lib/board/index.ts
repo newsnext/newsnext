@@ -11,12 +11,6 @@ export {
   NO_BOARD_VALUE,
   normalizeBoardViewMode,
 } from "./board"
-export type { BoardFilter, BoardFilterMode } from "./filter"
-export {
-  createBoardFilter,
-  filterBoardItems,
-  normalizeBoardFilter,
-} from "./filter"
 export { mixSourceItems } from "./next-layer"
 export { getSortableData, isSortableData } from "./sortable-data"
 export type {

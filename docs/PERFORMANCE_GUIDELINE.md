@@ -127,13 +127,6 @@ return stale cards after in-place changes. If card-instance updates become a
 measured bottleneck, optimize them at the React or Jotai owner that has the
 complete input lifecycle.
 
-Board item filters are applied after each source query and before Now or Next
-presentation. Both layers must reuse the same pure matcher. With no active
-keywords, return the original items array so the Board setting does not defeat
-card memoization or virtual-list identity. Saving a changed filter is expected
-to update every card on that board because their visible item sets may change;
-source queries and cached results remain unchanged.
-
 Each direct Next Layer consumer must declare the smallest useful Instance
 selection: one Instance, several Instances, or the complete Board. Use one live
 cache observer for that selection and bulk-read its resolved targets from

@@ -1,10 +1,10 @@
 import type { SettingsTabId, SourceCardHeight } from "@/lib/settings"
-import { Card, CardContent } from "@newsnext/ui/components/card"
 import { Label } from "@newsnext/ui/components/label"
 import { RadioGroup, RadioGroupItem } from "@newsnext/ui/components/radio-group"
 import { TabsContent } from "@newsnext/ui/components/tabs"
 import { useAtom, useAtomValue } from "jotai"
 import { useEffect } from "react"
+import { ConfigSection } from "@/components/common/config-section"
 import { cn } from "@/lib/utils"
 import { handleThemeModeSwitch } from "@/lib/utils/swith-theme"
 import { boardsAtom } from "@/store/board"
@@ -17,7 +17,6 @@ import {
 import { ThemeModeSelector } from "../theme-mode-selector"
 import { BgIllustrationSettings } from "./bg-illustration"
 import { DataTransferSettings } from "./data-transfer"
-import { SettingsSection } from "./layout"
 import { SettingsModalShell } from "./modal-shell"
 import { PermissionsSettings } from "./permissions"
 import { ShortcutsSettings } from "./shortcuts"
@@ -120,18 +119,14 @@ function AppearanceSettings() {
 
   return (
     <div className="space-y-6">
-      <SettingsSection
+      <ConfigSection
         title="Theme mode"
       >
-        <Card variant="subtle">
-          <CardContent className="p-2.5">
-            <ThemeModeSelector
-              value={themeMode}
-              onValueChange={setThemeMode}
-            />
-          </CardContent>
-        </Card>
-      </SettingsSection>
+        <ThemeModeSelector
+          value={themeMode}
+          onValueChange={setThemeMode}
+        />
+      </ConfigSection>
       <SourceCardHeightSettings />
       <BgIllustrationSettings />
     </div>
@@ -142,55 +137,51 @@ function SourceCardHeightSettings() {
   const [sourceCardHeight, setSourceCardHeight] = useAtom(sourceCardHeightAtom)
 
   return (
-    <SettingsSection
+    <ConfigSection
       title="Card height"
       description="Choose how tall source cards appear on the board."
     >
-      <Card variant="subtle">
-        <CardContent className="p-2.5">
-          <RadioGroup
-            className="grid w-full grid-cols-3 gap-2"
-            value={sourceCardHeight}
-            onValueChange={setSourceCardHeight}
-          >
-            {SOURCE_CARD_HEIGHT_OPTIONS.map((option) => {
-              const isSelected = option.value === sourceCardHeight
-              return (
-                <Label key={option.value} className="cursor-pointer">
-                  <RadioGroupItem
-                    aria-label={option.label}
-                    value={option.value}
-                    className="peer sr-only"
-                  />
+      <RadioGroup
+        className="grid w-full grid-cols-3 gap-2"
+        value={sourceCardHeight}
+        onValueChange={setSourceCardHeight}
+      >
+        {SOURCE_CARD_HEIGHT_OPTIONS.map((option) => {
+          const isSelected = option.value === sourceCardHeight
+          return (
+            <Label key={option.value} className="cursor-pointer">
+              <RadioGroupItem
+                aria-label={option.label}
+                value={option.value}
+                className="peer sr-only"
+              />
+              <span className={cn(
+                "flex min-h-28 flex-1 flex-col items-center justify-center gap-2 rounded-2xl px-2 py-2 text-center text-muted-foreground transition-colors outline-none hover:text-foreground peer-focus-visible:ring-2 peer-focus-visible:ring-theme-400",
+                isSelected && "text-foreground",
+              )}
+              >
+                <span className="flex h-16 items-center justify-center" aria-hidden>
                   <span className={cn(
-                    "flex min-h-28 flex-1 flex-col items-center justify-center gap-2 rounded-2xl px-2 py-2 text-center text-muted-foreground transition-colors outline-none hover:text-foreground peer-focus-visible:ring-2 peer-focus-visible:ring-theme-400",
-                    isSelected && "text-foreground",
+                    "flex w-10 flex-col rounded-xl border bg-background/35 p-1.5 transition-all",
+                    option.previewClassName,
+                    isSelected
+                      ? "border-primary text-primary ring-2 ring-primary/15"
+                      : "border-foreground/20",
                   )}
                   >
-                    <span className="flex h-16 items-center justify-center" aria-hidden>
-                      <span className={cn(
-                        "flex w-10 flex-col rounded-xl border bg-background/35 p-1.5 transition-all",
-                        option.previewClassName,
-                        isSelected
-                          ? "border-primary text-primary ring-2 ring-primary/15"
-                          : "border-foreground/20",
-                      )}
-                      >
-                        <span className="h-1 w-3/5 rounded-full bg-current/55" />
-                        <span className="mt-1 min-h-0 flex-1 rounded-sm bg-current/15" />
-                      </span>
-                    </span>
-                    <span className={cn("font-semibold leading-tight", isSelected && "text-primary")}>
-                      {option.label}
-                    </span>
+                    <span className="h-1 w-3/5 rounded-full bg-current/55" />
+                    <span className="mt-1 min-h-0 flex-1 rounded-sm bg-current/15" />
                   </span>
-                </Label>
-              )
-            })}
-          </RadioGroup>
-        </CardContent>
-      </Card>
-    </SettingsSection>
+                </span>
+                <span className={cn("font-semibold leading-tight", isSelected && "text-primary")}>
+                  {option.label}
+                </span>
+              </span>
+            </Label>
+          )
+        })}
+      </RadioGroup>
+    </ConfigSection>
   )
 }
 
@@ -201,28 +192,25 @@ function GeneralSettings() {
 
   return (
     <div className="space-y-6">
-      <SettingsSection
+      <ConfigSection
         title="Default board"
         description="Choose which board opens when NewsNext starts."
+        surfaceClassName="overflow-x-auto scrollbar-hidden"
       >
-        <Card variant="subtle">
-          <CardContent className="overflow-x-auto p-2.5 scrollbar-hidden">
-            <RadioGroup
-              aria-label="Default board"
-              variant="segmented"
-              value={selectedValue}
-              onValueChange={(value: string) => {
-                setDefaultBoardId(value === LAST_USED_BOARD_VALUE ? null : value)
-              }}
-            >
-              {boards.map(board => (
-                <RadioGroupItem key={board.id} value={board.id}>{board.name}</RadioGroupItem>
-              ))}
-              <RadioGroupItem value={LAST_USED_BOARD_VALUE}>Last used</RadioGroupItem>
-            </RadioGroup>
-          </CardContent>
-        </Card>
-      </SettingsSection>
+        <RadioGroup
+          aria-label="Default board"
+          variant="segmented"
+          value={selectedValue}
+          onValueChange={(value: string) => {
+            setDefaultBoardId(value === LAST_USED_BOARD_VALUE ? null : value)
+          }}
+        >
+          {boards.map(board => (
+            <RadioGroupItem key={board.id} value={board.id}>{board.name}</RadioGroupItem>
+          ))}
+          <RadioGroupItem value={LAST_USED_BOARD_VALUE}>Last used</RadioGroupItem>
+        </RadioGroup>
+      </ConfigSection>
       <SourceIconSettings />
     </div>
   )

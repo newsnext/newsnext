@@ -7,7 +7,6 @@ import type {
 import type { CardViewModel, NewsItem } from "@/typings/source"
 import { useAtomValue } from "jotai"
 import { useEffect, useMemo, useState } from "react"
-import { filterBoardItems } from "@/lib/board"
 import {
   observeNextLayerCache,
   selectNextLayerInstanceIds,
@@ -54,7 +53,7 @@ export function useNextLayerCache({
   results: Record<string, NextLayerInstanceCache>
 } {
   const instances = useAtomValue(instancesAtom)
-  const { currentBoard, instanceIds: boardInstanceIds } = useBoardSourceCards(boardId)
+  const { instanceIds: boardInstanceIds } = useBoardSourceCards(boardId)
   const { isLoading: areSourcesLoading, sources } = useSourceDescriptors()
   const instanceIds = useMemo(
     () => selectNextLayerInstanceIds(boardInstanceIds, selection),
@@ -106,13 +105,13 @@ export function useNextLayerCache({
 
       availableResults[entry.target.instanceId] = {
         card: applySourceLoaderMetadata(entry.card, current.metadata),
-        items: filterBoardItems(current.items, currentBoard.filter),
+        items: current.items,
         itemTemplate: current.itemTemplate,
         updatedAt: current.updatedAt,
       }
     }
     return availableResults
-  }, [currentBoard.filter, entries, rawResults])
+  }, [entries, rawResults])
 
   return {
     instanceIds,

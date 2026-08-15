@@ -1,5 +1,5 @@
 import type { Color } from "@newsnext/shared/types"
-import type { BoardFilter, BoardSortMode, BoardViewMode } from "../board"
+import type { BoardSortMode, BoardViewMode } from "../board"
 import type { SourceInstancePatch } from "../source"
 import type {
   ApplicationAction,
@@ -42,19 +42,9 @@ const PATCH_SCHEMA = {
   },
   additionalProperties: false,
 } as const
-const FILTER_SCHEMA = {
-  type: "object",
-  properties: {
-    keywords: { type: "array", items: { type: "string" } },
-    mode: { enum: ["include", "exclude"] },
-  },
-  required: ["keywords", "mode"],
-  additionalProperties: false,
-} as const
 const COLLECTION_VIEW_PROPERTIES = {
   color: { enum: COLORS },
   defaultView: { enum: ["now", "next"] },
-  filter: { anyOf: [FILTER_SCHEMA, { type: "null" }] },
   sortMode: { enum: ["createdAt", "provider", "manual"] },
 } as const
 const COLLECTION_VIEW_CONFIGURATION_SCHEMA = objectSchema(COLLECTION_VIEW_PROPERTIES, [])
@@ -128,7 +118,7 @@ const actionDefinitions: {
     outputSchema: EMPTY_OBJECT_SCHEMA,
     parseInput: (value) => {
       const input = requireRecord(value)
-      requireOnlyKeys(input, ["collectionId", "color", "defaultView", "filter", "sortMode"])
+      requireOnlyKeys(input, ["collectionId", "color", "defaultView", "sortMode"])
       const { collectionId, ...configuration } = input
       return {
         collectionId: requireIdentifier(collectionId, "collectionId"),
@@ -485,32 +475,16 @@ function requireBoardViewMode(value: unknown): BoardViewMode {
 
 function parseCollectionViewConfiguration(value: unknown): CollectionViewConfiguration {
   const configuration = requireRecord(value)
-  requireOnlyKeys(configuration, ["color", "defaultView", "filter", "sortMode"])
+  requireOnlyKeys(configuration, ["color", "defaultView", "sortMode"])
   return {
     ...(configuration.color !== undefined ? { color: requireColor(configuration.color) } : {}),
     ...(configuration.defaultView !== undefined
       ? { defaultView: requireBoardViewMode(configuration.defaultView) }
       : {}),
-    ...(Object.hasOwn(configuration, "filter")
-      ? { filter: configuration.filter === null ? null : parseOptionalFilter(configuration.filter) }
-      : {}),
     ...(configuration.sortMode !== undefined
       ? { sortMode: requireSortMode(configuration.sortMode) }
       : {}),
   }
-}
-
-function parseOptionalFilter(value: unknown): BoardFilter | undefined {
-  if (value === undefined) return undefined
-  const filter = requireRecord(value)
-  requireOnlyKeys(filter, ["keywords", "mode"])
-  if (filter.mode !== "include" && filter.mode !== "exclude") {
-    throw new Error("'filter.mode' must be include or exclude")
-  }
-  if (!Array.isArray(filter.keywords) || !filter.keywords.every(keyword => typeof keyword === "string")) {
-    throw new Error("'filter.keywords' must be an array of strings")
-  }
-  return { mode: filter.mode, keywords: filter.keywords }
 }
 
 function requireSourceInstancePatch(value: unknown): SourceInstancePatch {

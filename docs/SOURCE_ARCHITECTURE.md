@@ -24,7 +24,7 @@ Extension library code is grouped behind responsibility-level entry points:
 ```text
 apps/extension/src/lib/
 ├── background/  background services and the frontend service client
-├── board/       board models, filtering, sorting, and mixed timelines
+├── board/       board models, sorting, and mixed timelines
 ├── radar/       page discovery, matching, and suggestion conversion
 ├── settings/    persisted user data, preferences, and settings helpers
 └── source/      source cards, loading, caching, permissions, and history
@@ -136,7 +136,7 @@ preference is part of the portable Settings slice. Application Data persists
 Collections, Collection entries, Collection Views, and source Instances in one
 normalized envelope. An Instance never stores a Board identifier. Collection
 entries own membership and manual position; Collection Views own Board color,
-filtering, and sort mode. Extension pages read synchronous `localStorage`
+default view, and sort mode. Extension pages read synchronous `localStorage`
 snapshots first, then reconcile them with canonical copies in
 `browser.storage.local`; background storage wins when both copies exist.
 A versioned `newsnext-user-data` envelope validates and combines the portable

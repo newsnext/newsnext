@@ -134,7 +134,6 @@ export const createBoardAtom = atom(null, async (_get, set, input: BoardCreateIn
       view: {
         color: input.color,
         defaultView: input.defaultView,
-        filter: input.filter ?? null,
         sortMode: input.sortMode,
       },
     },
@@ -155,7 +154,6 @@ export const updateBoardAtom = atom(null, async (_get, set, board: Board) => {
       view: {
         color: getBoardColor(board),
         defaultView: board.defaultView,
-        filter: board.filter ?? null,
         sortMode: board.sort.mode,
       },
     },

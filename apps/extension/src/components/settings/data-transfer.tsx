@@ -1,12 +1,12 @@
 import type { ChangeEvent } from "react"
 import type { PersistedPortableSliceId } from "@/lib/settings"
 import { Button } from "@newsnext/ui/components/button"
-import { Card, CardContent } from "@newsnext/ui/components/card"
 import { Checkbox } from "@newsnext/ui/components/checkbox"
 import { useQueryClient } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
 import { useAtomValue, useSetAtom } from "jotai"
 import { useRef, useState } from "react"
+import { ConfigSection } from "@/components/common/config-section"
 import { PhCheckCircle, PhTrash } from "@/components/icons/ph"
 import { useAsyncAction } from "@/hooks/use-async-action"
 import { ALL_BOARD_ID, DEFAULT_BOARD_COLOR } from "@/lib/board"
@@ -17,7 +17,6 @@ import {
   importPersistedUserDataAtom,
   persistedUserDataAtom,
 } from "@/store/persisted-data"
-import { SettingsSection } from "./layout"
 
 const DATA_SLICE_OPTIONS: Array<{
   description: string
@@ -158,95 +157,89 @@ export function DataTransferSettings({
 
   return (
     <div className="space-y-6">
-      <SettingsSection
+      <ConfigSection
         title="Import and export"
         description="Choose which data to include. Importing replaces only selected data found in the file. Browser permissions and device-only state are excluded."
+        surfaceClassName="gap-5 p-4"
       >
-        <Card variant="subtle">
-          <CardContent className="space-y-5">
-            <div className="space-y-4">
-              {DATA_SLICE_OPTIONS.map(option => (
-                <label key={option.id} className="flex cursor-pointer items-start gap-3">
-                  <Checkbox
-                    checked={selectedSliceIds.includes(option.id)}
-                    onCheckedChange={checked => setSliceSelected(option.id, checked)}
-                    className="mt-0.5"
-                  />
-                  <span className="space-y-0.5">
-                    <span className="block text-sm font-medium">{option.label}</span>
-                    <span className="block text-sm leading-5 text-muted-foreground">
-                      {option.description}
-                    </span>
-                  </span>
-                </label>
-              ))}
-            </div>
-
-            <div className="flex flex-wrap gap-2 border-t border-border/60 pt-4">
-              <Button type="button" size="sm" disabled={!hasSelection} onClick={handleExport}>
-                Export selected
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={!hasSelection}
-                onClick={() => fileInputRef.current?.click()}
-              >
-                Import selected
-              </Button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="application/json,.json"
-                className="sr-only"
-                onChange={event => void handleImport(event)}
+        <div className="space-y-4">
+          {DATA_SLICE_OPTIONS.map(option => (
+            <label key={option.id} className="flex cursor-pointer items-start gap-3">
+              <Checkbox
+                checked={selectedSliceIds.includes(option.id)}
+                onCheckedChange={checked => setSliceSelected(option.id, checked)}
+                className="mt-0.5"
               />
-            </div>
+              <span className="space-y-0.5">
+                <span className="block text-sm font-medium">{option.label}</span>
+                <span className="block text-sm leading-5 text-muted-foreground">
+                  {option.description}
+                </span>
+              </span>
+            </label>
+          ))}
+        </div>
 
-            {status && (
-              <p
-                role={status.kind === "error" ? "alert" : "status"}
-                className={status.kind === "error"
-                  ? "text-sm text-destructive"
-                  : "text-sm text-muted-foreground"}
-              >
-                {status.message}
-              </p>
-            )}
-          </CardContent>
-        </Card>
-      </SettingsSection>
+        <div className="flex flex-wrap gap-2 border-t border-border/60 pt-4">
+          <Button type="button" size="sm" disabled={!hasSelection} onClick={handleExport}>
+            Export selected
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={!hasSelection}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            Import selected
+          </Button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="application/json,.json"
+            className="sr-only"
+            onChange={event => void handleImport(event)}
+          />
+        </div>
 
-      <SettingsSection
+        {status && (
+          <p
+            role={status.kind === "error" ? "alert" : "status"}
+            className={status.kind === "error"
+              ? "text-sm text-destructive"
+              : "text-sm text-muted-foreground"}
+          >
+            {status.message}
+          </p>
+        )}
+      </ConfigSection>
+
+      <ConfigSection
         title="Clear user data"
         description="Delete all boards, source instances, settings, saved source secrets, cached source data, and granted browser permissions. This cannot be undone."
+        surfaceClassName="p-4"
       >
-        <Card variant="subtle">
-          <CardContent>
-            <Button
-              type="button"
-              variant="destructive"
-              size="sm"
-              disabled={clearing}
-              onBlur={() => setClearArmed(false)}
-              onClick={() => void handleClear()}
-            >
-              {clearArmed
-                ? <PhCheckCircle data-icon="inline-start" />
-                : <PhTrash data-icon="inline-start" />}
-              {clearing
-                ? "Clearing..."
-                : clearArmed ? "Confirm clear all data" : "Clear all user data"}
-            </Button>
-            {clearError && (
-              <p role="alert" className="mt-3 text-sm text-destructive">
-                {clearError}
-              </p>
-            )}
-          </CardContent>
-        </Card>
-      </SettingsSection>
+        <Button
+          type="button"
+          variant="destructive"
+          size="sm"
+          disabled={clearing}
+          onBlur={() => setClearArmed(false)}
+          onClick={() => void handleClear()}
+        >
+          {clearArmed
+            ? <PhCheckCircle data-icon="inline-start" />
+            : <PhTrash data-icon="inline-start" />}
+          {clearing
+            ? "Clearing..."
+            : clearArmed ? "Confirm clear all data" : "Clear all user data"}
+        </Button>
+        {clearError && (
+          <p role="alert" className="text-sm text-destructive">
+            {clearError}
+          </p>
+        )}
+      </ConfigSection>
     </div>
   )
 }

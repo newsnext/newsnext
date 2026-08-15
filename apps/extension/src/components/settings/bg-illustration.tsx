@@ -6,6 +6,7 @@ import { Slider } from "@newsnext/ui/components/slider"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { useAtom } from "jotai"
 import { useEffect, useRef, useState } from "react"
+import { ConfigSection } from "@/components/common/config-section"
 import { PhArrowCounterClockwise } from "@/components/icons/ph"
 import {
   areBgIllustrationTransformsEqual,
@@ -31,7 +32,6 @@ import {
   bgIllustrationTransformAtom,
 } from "@/store/settings"
 import BgIllustrationControls from "./bg-illustration-controls"
-import { SettingsSection } from "./layout"
 
 interface ProcessingStatus {
   kind: "error" | "progress"
@@ -325,9 +325,10 @@ export function BgIllustrationSettings(): React.JSX.Element {
   )
 
   return (
-    <SettingsSection
+    <ConfigSection
       title="Background illustration"
       description="Extract a photo's edges locally, or use an SVG directly as a quiet background illustration."
+      surface={false}
     >
       <SquircleBox
         radius="2xl"
@@ -400,11 +401,13 @@ export function BgIllustrationSettings(): React.JSX.Element {
       <Card variant="subtle">
         <CardContent>
           <div className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between gap-4 text-sm">
-                <label htmlFor="bg-illustration-detail" className="font-medium">Edge detail</label>
-                <span className="tabular-nums text-muted-foreground">{threshold}</span>
-              </div>
+            <ConfigSection
+              variant="field"
+              title="Edge detail"
+              htmlFor="bg-illustration-detail"
+              surface={false}
+              titleAccessory={<span className="tabular-nums text-muted-foreground">{threshold}</span>}
+            >
               <Slider
                 id="bg-illustration-detail"
                 aria-label="Edge detail"
@@ -418,16 +421,20 @@ export function BgIllustrationSettings(): React.JSX.Element {
                   if (nextValue !== undefined) setThreshold(nextValue)
                 }}
               />
-            </div>
+            </ConfigSection>
 
-            <div className="space-y-2">
-              <div className="flex items-center justify-between gap-4 text-sm">
-                <label htmlFor="bg-illustration-opacity" className="font-medium">Opacity</label>
+            <ConfigSection
+              variant="field"
+              title="Opacity"
+              htmlFor="bg-illustration-opacity"
+              surface={false}
+              titleAccessory={(
                 <span className="tabular-nums text-muted-foreground">
                   {illustrationOpacity}
                   %
                 </span>
-              </div>
+              )}
+            >
               <Slider
                 id="bg-illustration-opacity"
                 aria-label="Illustration opacity"
@@ -440,7 +447,7 @@ export function BgIllustrationSettings(): React.JSX.Element {
                   if (nextValue !== undefined) setIllustrationOpacity(nextValue)
                 }}
               />
-            </div>
+            </ConfigSection>
 
           </div>
 
@@ -474,6 +481,6 @@ export function BgIllustrationSettings(): React.JSX.Element {
           </div>
         </CardContent>
       </Card>
-    </SettingsSection>
+    </ConfigSection>
   )
 }

@@ -1,5 +1,4 @@
 import type { Color } from "@newsnext/shared/types"
-import type { BoardFilter } from "./filter"
 import type { BoardSortMode, BoardSortPreference } from "./sorting"
 import { createBoardSortPreference } from "./sorting"
 
@@ -14,7 +13,6 @@ export const DEFAULT_BOARD_VIEW_MODE: BoardViewMode = "now"
 
 export interface Board {
   defaultView: BoardViewMode
-  filter?: BoardFilter
   sort: BoardSortPreference
   id: string
   name: string
@@ -24,7 +22,6 @@ export interface Board {
 export interface BoardCreateInput {
   color: Color
   defaultView: BoardViewMode
-  filter?: BoardFilter
   name: string
   sortMode: BoardSortMode
 }

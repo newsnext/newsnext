@@ -1,5 +1,4 @@
 import type { ReactNode } from "react"
-import type { BoardFilter } from "@/lib/board"
 import type { SourceInstanceMetadata, SourceInstancePatch } from "@/lib/source"
 import type { CardViewModel } from "@/typings/source"
 import { FlipAnimate } from "@newsnext/ui/components/flip-animate"
@@ -10,7 +9,6 @@ import { useSourceParams } from "@/hooks"
 import { useInView } from "@/hooks/use-in-view"
 import { useSourcePermission } from "@/hooks/use-source-permission"
 import { useSourceQuery } from "@/hooks/use-source-query"
-import { filterBoardItems } from "@/lib/board"
 import { applySourceLoaderMetadata, SOURCE_QUERY_OFFSCREEN_RETENTION_MS, SOURCE_QUERY_PRELOAD_MARGIN } from "@/lib/source"
 import { cn } from "@/lib/utils"
 import {
@@ -21,7 +19,6 @@ import { CardBack } from "./card-back"
 import { CardFront } from "./card-front"
 
 export interface SourceCardProps {
-  filter?: BoardFilter
   id: string
   source: CardViewModel
   className?: string
@@ -32,7 +29,7 @@ export interface SourceCardProps {
   onDraftSourceChange?: (patch: SourceInstancePatch) => void
 }
 
-function SourceCardContent({ filter, id, source, dragHandle, isDraft = false, onDraftSourceChange }: SourceCardProps) {
+function SourceCardContent({ id, source, dragHandle, isDraft = false, onDraftSourceChange }: SourceCardProps) {
   const setSourceInstancePatch = useSetAtom(setSourceInstancePatchAtom)
   const resetLocalParams = useSetAtom(resetInstanceParamsAtom)
   const [isFlipped, setIsFlipped] = useState(false)
@@ -68,11 +65,6 @@ function SourceCardContent({ filter, id, source, dragHandle, isDraft = false, on
     () => applySourceLoaderMetadata(source, metadata),
     [metadata, source],
   )
-  const visibleItems = useMemo(
-    () => filterBoardItems(items, filter),
-    [filter, items],
-  )
-
   const handleFlip = useCallback(() => {
     setIsFlipped(prev => !prev)
   }, [])
@@ -117,7 +109,7 @@ function SourceCardContent({ filter, id, source, dragHandle, isDraft = false, on
     >
       <CardFront
         source={displaySource}
-        items={visibleItems}
+        items={items}
         itemTemplate={itemTemplate}
         isFetching={isFetching || isFetchingLatest}
         isContentFetching={isFetchingLatest || isLoading}

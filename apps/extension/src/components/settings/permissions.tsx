@@ -1,14 +1,13 @@
 import { Button } from "@newsnext/ui/components/button"
-import { Card, CardContent } from "@newsnext/ui/components/card"
 import { useCallback, useEffect, useState } from "react"
 import { browser } from "#imports"
+import { ConfigSection } from "@/components/common/config-section"
 import { useKeyedAsyncAction } from "@/hooks/use-async-action"
 import {
   getGrantedHostPermissionOrigins,
   getUserManagedHostPermissionOrigins,
   revokeHostPermissionOrigin,
 } from "@/lib/source"
-import { SettingsSection } from "./layout"
 
 const MANAGED_PERMISSIONS = [
   {
@@ -101,83 +100,73 @@ export function PermissionsSettings() {
 
   return (
     <div className="space-y-6">
-      <SettingsSection
+      <ConfigSection
         title="Browser permissions"
         description="Permissions currently granted to NewsNext and what they are used for."
+        surfaceClassName="p-0"
       >
         {visiblePermissions.length === 0
           ? (
-              <Card variant="subtle">
-                <CardContent className="text-sm text-muted-foreground">
-                  No browser permissions have been granted.
-                </CardContent>
-              </Card>
+              <p className="p-4 text-sm text-muted-foreground">
+                No browser permissions have been granted.
+              </p>
             )
           : (
-              <Card variant="subtle">
-                <CardContent className="p-0">
-                  <ul className="divide-y divide-border/50">
-                    {visiblePermissions.map(permission => (
-                      <li key={permission.id} className="flex items-center justify-between gap-4 px-4 py-3">
-                        <div className="min-w-0 space-y-1">
-                          <div className="text-sm font-medium">{permission.label}</div>
-                          <div className="text-xs leading-5 text-muted-foreground">
-                            {permission.description}
-                          </div>
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="xs"
-                          disabled={isRevoking(permission.id)}
-                          onClick={() => void handleRevokePermission(permission.id)}
-                        >
-                          {isRevoking(permission.id) ? "Revoking..." : "Revoke"}
-                        </Button>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
+              <ul className="divide-y divide-border/50">
+                {visiblePermissions.map(permission => (
+                  <li key={permission.id} className="flex items-center justify-between gap-4 px-4 py-3">
+                    <div className="min-w-0 space-y-1">
+                      <div className="text-sm font-medium">{permission.label}</div>
+                      <div className="text-xs leading-5 text-muted-foreground">
+                        {permission.description}
+                      </div>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="xs"
+                      disabled={isRevoking(permission.id)}
+                      onClick={() => void handleRevokePermission(permission.id)}
+                    >
+                      {isRevoking(permission.id) ? "Revoking..." : "Revoke"}
+                    </Button>
+                  </li>
+                ))}
+              </ul>
             )}
-      </SettingsSection>
+      </ConfigSection>
 
-      <SettingsSection
+      <ConfigSection
         title="Site access"
         description="NewsNext requests access when a source needs a site. Revoked access is requested again when required."
+        surfaceClassName="p-0"
       >
         {origins.length === 0
           ? (
-              <Card variant="subtle">
-                <CardContent className="text-sm text-muted-foreground">
-                  No site access has been granted.
-                </CardContent>
-              </Card>
+              <p className="p-4 text-sm text-muted-foreground">
+                No site access has been granted.
+              </p>
             )
           : (
-              <Card variant="subtle">
-                <CardContent className="p-0">
-                  <ul className="divide-y divide-border/50">
-                    {origins.map(origin => (
-                      <li key={origin} className="flex items-center justify-between gap-4 px-4 py-3">
-                        <div className="min-w-0">
-                          <div className="truncate text-sm font-medium">{getOriginLabel(origin)}</div>
-                          <div className="truncate text-xs text-muted-foreground">{origin}</div>
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="xs"
-                          disabled={isRevoking(origin)}
-                          onClick={() => void handleRevokeOrigin(origin)}
-                        >
-                          {isRevoking(origin) ? "Revoking..." : "Revoke"}
-                        </Button>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
+              <ul className="divide-y divide-border/50">
+                {origins.map(origin => (
+                  <li key={origin} className="flex items-center justify-between gap-4 px-4 py-3">
+                    <div className="min-w-0">
+                      <div className="truncate text-sm font-medium">{getOriginLabel(origin)}</div>
+                      <div className="truncate text-xs text-muted-foreground">{origin}</div>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="xs"
+                      disabled={isRevoking(origin)}
+                      onClick={() => void handleRevokeOrigin(origin)}
+                    >
+                      {isRevoking(origin) ? "Revoking..." : "Revoke"}
+                    </Button>
+                  </li>
+                ))}
+              </ul>
             )}
-      </SettingsSection>
+      </ConfigSection>
       {revokeError && <p role="alert" className="text-sm text-destructive">{revokeError}</p>}
     </div>
   )

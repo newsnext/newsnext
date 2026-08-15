@@ -16,7 +16,6 @@ function createData(): PersistedUserData {
       collectionId: "reading",
       color: "blue",
       defaultView: "next",
-      filter: { mode: "exclude", keywords: ["spoiler"] },
       sortMode: "manual",
       automaticSortMode: "createdAt",
     }],
@@ -43,7 +42,13 @@ describe("persisted user data", () => {
         { id: "duplicate", name: "reading", createdAt: 2 },
         { id: "", name: "Invalid", createdAt: 3 },
       ],
-      collectionViews: [],
+      collectionViews: [{
+        collectionId: "reading",
+        defaultView: "now",
+        filter: { mode: "exclude", keywords: ["spoiler"] },
+        sortMode: "createdAt",
+        automaticSortMode: "createdAt",
+      }],
       instances: [
         { instanceId: "second", sourceId: "rss:feed", patch: {}, createdAt: 2 },
         { instanceId: "first", sourceId: "rss:feed", patch: {}, createdAt: 1 },

@@ -46,7 +46,6 @@ export function NowLayer({
       instanceIds={instanceIds}
       cardsByInstanceId={cardsByInstanceId}
       sortable={boardId !== ALL_BOARD_ID}
-      filter={currentBoard.filter}
       className={className}
       isScattered={isScattered}
       containerRef={containerRef}

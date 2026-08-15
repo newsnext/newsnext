@@ -245,8 +245,7 @@ shell, nested content squircle, panel shadow, or per-item card inside it. Place
 the compact Timeline title and source/item counts directly in the page flow,
 then continue into the timeline without a surface boundary. Provider theme
 colors stay local to the timeline rail, source identity, and hover state while
-the page inherits the active board theme. Do not place filter controls in Next
-Layer; configure the shared Now/Next item filter in the Board dialog.
+the page inherits the active board theme.
 Blank page space is part of the reading surface and must not switch back to Now
 Layer when clicked. Now Layer and Next Layer are peer views, so switch between
 them only through the shared Layer control or its configured keyboard shortcut;
@@ -357,7 +356,9 @@ They must have:
   `zenith-theme-400`.
 - Content padding of `24px` (`p-6`).
 - A consistent vertical rhythm: `24px` between form sections and `8px`
-  between a section title or field label and its control.
+  between a section title or field label and its control. Use `ConfigSection`
+  for section, single-field, and grouped-field layouts instead of recreating
+  the spacing at each call site.
 - Theme color choices arranged as a centered grid with an equal `8px` gap on
   both axes. Do not stretch the columns to fill a wide dialog.
 - Theme color edits remain draft state until the user saves. Changing the
@@ -371,14 +372,11 @@ They must have:
   form labels already make the task clear.
 
 The unified Board dialog is the canonical example. Create and edit modes use
-the same name, theme color, card order, default view, and item filter fields;
+the same name, theme color, card order, and default view fields;
 only edit mode exposes board deletion, while the title and primary action
 reflect the current mode. Default view uses a compact segmented `Now` / `Next`
-control and determines which Board view opens by default. The item filter uses
-one segmented `Show matches` / `Hide matches` mode
-and one comma-separated keyword field. Keep the short matching-scope note
-because it explains that titles and structured item details are both searched. In
-particular, do not add the following descriptions back to this dialog:
+control and determines which Board view opens by default. In particular, do not
+add the following descriptions back to this dialog:
 
 - `Personalize this board and choose how its cards are arranged.`
 - `Group cards around a topic, project, or reading routine.`
@@ -418,6 +416,14 @@ Group closely related controls in columns when the available width permits it,
 while keeping labels, values, and necessary recovery guidance adjacent to their
 control. Omit helper text when the label and visible control already explain the
 setting.
+Use `ConfigSection` for Settings panel headings and vertical form fields so
+both retain the shared 8px title-to-content rhythm. Choose its semantic variant
+for a section heading, a single labeled control, or a grouped control. These
+variants share the same title weight, horizontal inset, description placement,
+and spacing; only their HTML semantics differ. Its standard surface defaults to
+the subtle `2xl` Card background and compact `10px` content inset used by
+Settings controls. Disable it only for nested fields or specialized list and
+preview layouts that already provide their own surface.
 Reset the shared settings content scroller to the top when the active tab
 changes; do not remount tab content or discard unsaved control state to do so.
 

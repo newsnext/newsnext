@@ -1,7 +1,6 @@
 import type { ElementEventBasePayload } from "@atlaskit/pragmatic-drag-and-drop/element/adapter"
 import type { RefObject } from "react"
 import type { BoardSourceCard } from "@/hooks/use-board-source-cards"
-import type { BoardFilter } from "@/lib/board"
 import { extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge"
 import { getReorderDestinationIndex } from "@atlaskit/pragmatic-drag-and-drop-hitbox/util/get-reorder-destination-index"
 import { m } from "motion/react"
@@ -49,7 +48,6 @@ interface InstanceOrderState {
 }
 
 interface CardContainerProps {
-  filter?: BoardFilter
   instanceIds: string[]
   cardsByInstanceId: Record<string, BoardSourceCard>
   sortable?: boolean
@@ -60,7 +58,6 @@ interface CardContainerProps {
 }
 
 export function CardContainer({
-  filter,
   instanceIds,
   cardsByInstanceId,
   sortable = true,
@@ -386,7 +383,6 @@ export function CardContainer({
             <DraggableCard
               collectionId={collectionId}
               descriptor={descriptor}
-              filter={filter}
               instanceAtom={instanceAtom}
               sortable={sortable}
             />

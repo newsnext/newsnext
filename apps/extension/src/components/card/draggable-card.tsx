@@ -1,5 +1,4 @@
 import type { Atom } from "jotai"
-import type { BoardFilter } from "@/lib/board"
 import type { SourceCardHeight } from "@/lib/settings"
 import type { SourceInstance } from "@/lib/source"
 import type { SourceDescriptor } from "@/typings/source"
@@ -21,7 +20,6 @@ const SOURCE_CARD_SIZE_CLASS_NAMES: Record<SourceCardHeight, string> = {
 interface DraggableCardProps {
   collectionId: string | null
   descriptor: SourceDescriptor
-  filter?: BoardFilter
   instanceAtom: Atom<SourceInstance>
   sortable?: boolean
 }
@@ -48,7 +46,7 @@ function generateDragPreview({ container, element }: { container: HTMLElement, e
   return () => preview.remove()
 }
 
-function DraggableCardComponent({ collectionId, descriptor, filter, instanceAtom, sortable = true }: DraggableCardProps) {
+function DraggableCardComponent({ collectionId, descriptor, instanceAtom, sortable = true }: DraggableCardProps) {
   const instance = useAtomValue(instanceAtom)
   const sourceCardHeight = useAtomValue(sourceCardHeightAtom)
   const source = useMemo(
@@ -79,7 +77,6 @@ function DraggableCardComponent({ collectionId, descriptor, filter, instanceAtom
     <SourceCard
       id={id}
       source={source}
-      filter={filter}
       nodeRef={setNodeRef}
       dragHandle={dragHandle}
       sizeClassName={SOURCE_CARD_SIZE_CLASS_NAMES[sourceCardHeight]}

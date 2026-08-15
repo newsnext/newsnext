@@ -67,6 +67,10 @@ describe("application operation catalog", () => {
       type: "view.configureCollection",
       input: { collectionId: "reading", defaultView: "future" },
     })).toThrow("must be now or next")
+    expect(() => parseApplicationAction({
+      type: "view.configureCollection",
+      input: { collectionId: "reading", filter: null },
+    })).toThrow("Unsupported input field")
   })
 
   it("describes and parses canonical Queries", () => {

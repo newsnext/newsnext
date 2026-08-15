@@ -185,7 +185,6 @@ interface CollectionViewPreferences {
   collectionId: string
   color: Color
   defaultView: "now" | "next"
-  filter?: BoardFilter
   sort: BoardSort
 }
 
@@ -194,7 +193,6 @@ interface BoardView {
   collectionId: string
   color: Color
   defaultView: "now" | "next"
-  filter?: BoardFilter
   name: string
   sort: BoardSort
 }
@@ -235,7 +233,7 @@ also need `collectionId`.
 
 ### View State
 
-Durable presentation preferences may include Board color, filtering, and
+Durable presentation preferences may include Board color, default view, and
 sorting. Ephemeral View state includes the current route, open dialog, focus,
 selection, hover state, animation state, Card face, and unsubmitted form
 drafts.
@@ -286,7 +284,7 @@ view.configureCollection
 ```
 
 `collection.rename` changes only canonical Data. `view.configureCollection`
-changes only Board color, filter, or sort mode. `collection.create` accepts an
+changes only Board color, default view, or sort mode. `collection.create` accepts an
 optional nested View configuration and persists the Collection and its View in
 one operation. `collection.update` atomically combines an optional name change
 with an optional nested View change when one human intent spans both layers.

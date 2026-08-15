@@ -1,5 +1,5 @@
 import type { Color } from "@newsnext/shared/types"
-import type { Board, BoardCreateInput, BoardFilterMode, BoardSortMode, BoardViewMode } from "@/lib/board"
+import type { Board, BoardCreateInput, BoardSortMode, BoardViewMode } from "@/lib/board"
 import { Button } from "@newsnext/ui/components/button"
 import {
   Dialog,
@@ -13,20 +13,16 @@ import { RadioGroup, RadioGroupItem } from "@newsnext/ui/components/radio-group"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { ThemeSelector } from "@newsnext/ui/components/theme-selector"
 import { useState } from "react"
+import { ConfigSection } from "@/components/common/config-section"
 import { PhCheckCircle, PhTrash } from "@/components/icons/ph"
 import { useAsyncAction } from "@/hooks/use-async-action"
-import { ALL_BOARD_ID, createBoardFilter, DEFAULT_BOARD_COLOR, DEFAULT_BOARD_SORT_PREFERENCE, DEFAULT_BOARD_VIEW_MODE, getBoardColor, isBoardNameTaken, updateBoardSortMode } from "@/lib/board"
+import { ALL_BOARD_ID, DEFAULT_BOARD_COLOR, DEFAULT_BOARD_SORT_PREFERENCE, DEFAULT_BOARD_VIEW_MODE, getBoardColor, isBoardNameTaken, updateBoardSortMode } from "@/lib/board"
 import { cn } from "@/lib/utils"
 
 const SORT_OPTIONS: { label: string, value: BoardSortMode }[] = [
   { label: "Manual", value: "manual" },
   { label: "Date added", value: "createdAt" },
   { label: "Provider name", value: "provider" },
-]
-
-const FILTER_OPTIONS: { label: string, value: BoardFilterMode }[] = [
-  { label: "Show matches", value: "include" },
-  { label: "Hide matches", value: "exclude" },
 ]
 
 const VIEW_OPTIONS: { label: string, value: BoardViewMode }[] = [
@@ -76,14 +72,10 @@ function ConfigurableBoardDialog({
       : DEFAULT_BOARD_COLOR
   const initialSortMode = board?.sort.mode ?? DEFAULT_BOARD_SORT_PREFERENCE.mode
   const initialDefaultView = board?.defaultView ?? DEFAULT_BOARD_VIEW_MODE
-  const initialFilterMode = board?.filter?.mode ?? "include"
-  const initialFilterKeywords = board?.filter?.keywords.join(", ") ?? ""
   const [name, setName] = useState(() => board?.name ?? "")
   const [color, setColor] = useState<Color>(initialColor)
   const [sortMode, setSortMode] = useState<BoardSortMode>(initialSortMode)
   const [defaultView, setDefaultView] = useState<BoardViewMode>(initialDefaultView)
-  const [filterMode, setFilterMode] = useState<BoardFilterMode>(initialFilterMode)
-  const [filterKeywords, setFilterKeywords] = useState(initialFilterKeywords)
   const [isDeleteArmed, setIsDeleteArmed] = useState(false)
   const { error: submitError, isPending: isSubmitting, run: runAction } = useAsyncAction(
     "The board could not be saved.",
@@ -99,7 +91,6 @@ function ConfigurableBoardDialog({
     if (!canSubmit) {
       return
     }
-    const filter = createBoardFilter(filterMode, filterKeywords)
     if (isEditing) {
       if (!board) return
       const succeeded = await runAction(async () => {
@@ -109,11 +100,6 @@ function ConfigurableBoardDialog({
           color,
           defaultView,
           sort: updateBoardSortMode(board.sort, sortMode),
-        }
-        if (filter) {
-          nextBoard.filter = filter
-        } else {
-          delete nextBoard.filter
         }
         await onUpdate(nextBoard)
       })
@@ -126,7 +112,6 @@ function ConfigurableBoardDialog({
         name: normalizedName,
         color,
         defaultView,
-        filter,
         sortMode,
       })
     })
@@ -166,8 +151,7 @@ function ConfigurableBoardDialog({
           </DialogHeader>
 
           <SquircleBox radius="2xl" variant="modal-inner" className="grid gap-6 p-6">
-            <div className="grid gap-2">
-              <label htmlFor="board-name" className="text-sm font-medium">Name</label>
+            <ConfigSection variant="field" title="Name" htmlFor="board-name">
               <Input
                 id="board-name"
                 autoFocus
@@ -178,10 +162,9 @@ function ConfigurableBoardDialog({
                 aria-invalid={hasDuplicateName}
               />
               {hasDuplicateName && <p className="text-xs text-destructive">A board with this name already exists.</p>}
-            </div>
+            </ConfigSection>
 
-            <fieldset>
-              <legend className="mb-2 text-sm font-medium">Theme color</legend>
+            <ConfigSection variant="group" title="Theme color">
               <div className="h-28">
                 <ThemeSelector
                   value={color}
@@ -189,10 +172,9 @@ function ConfigurableBoardDialog({
                   layoutId="board-dialog-theme-indicator"
                 />
               </div>
-            </fieldset>
+            </ConfigSection>
 
-            <fieldset>
-              <legend className="mb-2 text-sm font-medium">Card order</legend>
+            <ConfigSection variant="group" title="Card order">
               <RadioGroup
                 variant="segmented"
                 value={sortMode}
@@ -205,10 +187,13 @@ function ConfigurableBoardDialog({
                   </RadioGroupItem>
                 ))}
               </RadioGroup>
-            </fieldset>
+            </ConfigSection>
 
-            <fieldset className="grid gap-2">
-              <legend className="text-sm font-medium">Default view</legend>
+            <ConfigSection
+              variant="group"
+              title="Default view"
+              description="Choose which view opens with this board."
+            >
               <RadioGroup
                 variant="segmented"
                 value={defaultView}
@@ -221,37 +206,7 @@ function ConfigurableBoardDialog({
                   </RadioGroupItem>
                 ))}
               </RadioGroup>
-              <p className="text-xs text-muted-foreground">
-                Choose which view opens with this board.
-              </p>
-            </fieldset>
-
-            <fieldset className="grid gap-2">
-              <legend className="text-sm font-medium">Item filter</legend>
-              <RadioGroup
-                variant="segmented"
-                value={filterMode}
-                onValueChange={setFilterMode}
-                className="w-full"
-              >
-                {FILTER_OPTIONS.map(option => (
-                  <RadioGroupItem key={option.value} value={option.value} className="min-w-0 flex-1 px-2">
-                    {option.label}
-                  </RadioGroupItem>
-                ))}
-              </RadioGroup>
-              <label htmlFor="board-filter-keywords" className="sr-only">Keywords</label>
-              <Input
-                id="board-filter-keywords"
-                maxLength={500}
-                placeholder="AI, browser, crypto"
-                value={filterKeywords}
-                onChange={event => setFilterKeywords(event.target.value)}
-              />
-              <p className="text-xs text-muted-foreground">
-                Separate keywords with commas. Matches titles and item details.
-              </p>
-            </fieldset>
+            </ConfigSection>
 
             <DialogFooter className={cn(isEditing && "sm:justify-between")}>
               {isEditing && (

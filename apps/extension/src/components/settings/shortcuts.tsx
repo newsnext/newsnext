@@ -8,6 +8,7 @@ import {
 } from "@tanstack/react-hotkeys"
 import { useAtom } from "jotai"
 import { useState } from "react"
+import { ConfigSection } from "@/components/common/config-section"
 import { PhArrowCounterClockwise } from "@/components/icons/ph"
 import {
   DEFAULT_SHORTCUT_SETTINGS,
@@ -16,7 +17,6 @@ import {
 } from "@/lib/settings"
 import { cn } from "@/lib/utils"
 import { shortcutSettingsAtom } from "@/store/settings"
-import { SettingsSection } from "./layout"
 
 interface ShortcutRowProps {
   description: string
@@ -76,9 +76,10 @@ export function ShortcutsSettings(): React.JSX.Element {
   }
 
   return (
-    <SettingsSection
+    <ConfigSection
       title="Keyboard shortcuts"
       description="Select a shortcut to record a new key combination. Press Escape to cancel, or Backspace or Delete to clear it."
+      surface={false}
     >
       <Card variant="subtle">
         <CardContent className="@container divide-y divide-border/50 p-0">
@@ -102,7 +103,7 @@ export function ShortcutsSettings(): React.JSX.Element {
       <p role="status" className={status ? "px-0.5 text-xs text-destructive" : "sr-only"}>
         {status || (recorder.isRecording ? "Recording shortcut" : "")}
       </p>
-    </SettingsSection>
+    </ConfigSection>
   )
 }
 
