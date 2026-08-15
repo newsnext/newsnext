@@ -121,7 +121,7 @@ function DynamicIsland({
     <div
       ref={wrapperRef}
       className={cn(
-        "pointer-events-none fixed inset-x-0 top-[--top] z-9999 dark",
+        "pointer-events-none fixed inset-x-0 top-[--top] z-9999",
         wrapperClassName,
       )}
       style={
@@ -150,8 +150,8 @@ function DynamicIsland({
             height: getVal(isSmall ? smallHeight : largeHeight),
             borderRadius: isSmall ? collapsedRadius : expandedRadius,
             boxShadow: isSmall
-              ? "0 6px 20px rgb(0 0 0 / 0.22)"
-              : "0 24px 70px rgb(0 0 0 / 0.5)",
+              ? "var(--dynamic-island-shadow-small)"
+              : "var(--dynamic-island-shadow-large)",
             opacity: 1,
             scale: 1,
           }}
@@ -160,7 +160,7 @@ function DynamicIsland({
           whileHover={isSmall && !shouldReduceMotion ? { scale: 1.025 } : undefined}
           whileTap={isSmall && !shouldReduceMotion ? { scale: 0.975 } : undefined}
           className={cn(
-            "relative transform-gpu",
+            "dynamic-island-shell relative transform-gpu",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
           )}
           onClick={isSmall ? onOpen : onClose}
@@ -172,9 +172,10 @@ function DynamicIsland({
         >
           {outerDecoration?.(isSmall)}
           <div
+            data-state={isSmall ? "small" : "large"}
             style={activeSquircleStyle}
             className={cn(
-              "absolute inset-0 overflow-hidden rounded-[inherit] bg-black text-white backdrop-blur-2xl",
+              "dynamic-island-surface absolute inset-0 overflow-hidden rounded-[inherit] text-foreground",
               className,
               isSmall
                 ? ["select-none", smallClassName]
@@ -192,7 +193,7 @@ function DynamicIsland({
                   ? { opacity: 0 }
                   : { opacity: 0, scale: 0.96, filter: "blur(3px)" }}
                 transition={{ duration: shouldReduceMotion ? 0.1 : 0.18, ease: "easeOut" }}
-                className="absolute inset-0"
+                className="absolute inset-0 z-1"
               >
                 {children?.(isSmall, { close: onClose })}
               </m.div>

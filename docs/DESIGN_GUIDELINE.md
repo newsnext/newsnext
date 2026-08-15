@@ -181,11 +181,12 @@ Cards define the primary NewsNext surface treatment.
   control height in Settings and use the compact 32px height in the island so it
   matches the palette icons. Icon-only segmented items must be square with equal
   padding on every side: 32px items in Settings and 28px items in the island.
-  On the island's opaque black surface, give the control a translucent white shell
-  and fine white inset edge so its boundary remains visible. Reserve an 80px fixed
-  region for the palette and 16px between the mode control and palette so their
-  internal and outer spacing remain stable. The All board permits theme color
-  changes here while keeping its other behavior fixed.
+  Let the mode control follow the actual appearance: use the shared translucent
+  background treatment in light mode and a translucent white shell with a fine
+  white inset edge in dark mode. Reserve an 80px fixed region for the palette and
+  16px between the mode control and palette so their internal and outer spacing
+  remain stable. The All board permits theme color changes here while keeping its
+  other behavior fixed.
 
 The reference implementation is `CardSurface` in
 `apps/extension/src/components/card/card-surface.tsx`.
@@ -532,9 +533,25 @@ semantics.
 ## Dynamic Islands
 
 Dynamic islands are compact, centered controls that expand in place to reveal
-a single focused interaction. The shared component owns the opaque black
-surface, fine inner highlight, shadow, clipping, and spring-based size and
-radius transition. Its collapsed outline remains a standard round pill, while
+a single focused interaction. The shared component owns a dense, translucent
+surface that softly mixes the app background with the active `theme-400` color,
+plus the fine inner highlight, appearance-aware shadow, clipping, and
+spring-based size and radius transition. In light mode, keep the surface tint
+restrained and carry more of the Board color in the collapsed state's ambient
+shadow. In dark mode, reduce the tint further and use a neutral deep shadow. Keep
+the surface and its content tied to the actual light or dark appearance instead
+of forcing dark-mode colors. Build material depth with a directional highlight
+from the upper-left, a restrained theme-color refraction toward the lower-right,
+asymmetric inner edge lighting, and separate contact and ambient shadows. Do not
+use a uniform border or visible noise texture to simulate depth. Give the
+collapsed surface a short localized specular highlight that shifts subtly on
+hover. Treat the expanded state as the same material at a calmer scale: let a
+low-opacity mix of the app background and active theme reveal the surrounding
+environment through blur and restrained saturation, then replace the collapsed
+state's diagonal refraction and moving highlight with one broad vertical top
+light. Keep a neutral ambient shadow and do not allow caller-provided background
+washes. Preserve reduced-motion behavior for the collapsed highlight. Its collapsed
+outline remains a standard round pill, while
 the expanded outline uses the shared progressive squircle capability layer:
 native
 `corner-shape: squircle` first, generated `clip-path: shape()` geometry second,
