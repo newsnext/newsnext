@@ -110,6 +110,9 @@ function createEngine(output: "html" | "plain"): Liquid {
       maximumFractionDigits: 1,
     }).format(number)
   })
+  engine.registerFilter("parse_compact_number", (value: unknown) => {
+    return parseCompactNumber(value)
+  })
   engine.registerFilter("date_to_ms", (value: unknown) => {
     const timestamp = Date.parse(stringify(value))
     return Number.isFinite(timestamp) ? timestamp : undefined
@@ -156,6 +159,23 @@ function createEngine(output: "html" | "plain"): Liquid {
   engine.registerFilter("url_query", encodeUrlComponent)
 
   return engine
+}
+
+function parseCompactNumber(value: unknown): number | undefined {
+  if (typeof value === "number") return Number.isFinite(value) ? value : undefined
+
+  const match = stringify(value).trim().match(/^([+-]?(?:\d{1,3}(?:,\d{3})*|\d+)(?:\.\d+)?)\s*([KMBT])?$/i)
+  if (!match) return undefined
+
+  const number = Number(match[1]?.replaceAll(",", ""))
+  const multiplier = {
+    K: 1_000,
+    M: 1_000_000,
+    B: 1_000_000_000,
+    T: 1_000_000_000_000,
+  }[match[2]?.toUpperCase() ?? ""] ?? 1
+  const result = number * multiplier
+  return Number.isFinite(result) ? result : undefined
 }
 
 const engines = {

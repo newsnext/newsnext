@@ -51,6 +51,16 @@ describe("source templates", () => {
     )).toBe("12.3K")
 
     expect(renderTemplate(
+      "{{ value | parse_compact_number }}",
+      { value: "1.2k" },
+    )).toBe("1200")
+
+    expect(renderTemplate(
+      "{{ value | parse_compact_number }}",
+      { value: "2.5M" },
+    )).toBe("2500000")
+
+    expect(renderTemplate(
       "{{ value | date_to_ms }}",
       { value: "2024-01-01T00:00:00Z" },
     )).toBe("1704067200000")

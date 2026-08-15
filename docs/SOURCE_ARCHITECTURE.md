@@ -696,6 +696,9 @@ Radar patch that failed.
 
 Plain-text and HTML output use separate renderers. In HTML fields, literal
 template markup remains markup while inserted values are escaped.
+Source-specific compact counts are normalized through the shared
+`parse_compact_number` Liquid filter before the loader-result boundary validates
+them as finite numeric stats.
 
 ## Radar pipeline
 

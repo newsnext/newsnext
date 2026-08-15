@@ -67,9 +67,10 @@
             "attr": "datetime",
             "template": "{{ scope.value | date_to_ms }}"
           },
-          "attributes": {
+          "stats": {
             "views": {
-              "select": ".tgme_widget_message_views"
+              "select": ".tgme_widget_message_views",
+              "template": "{{ scope.value | parse_compact_number }}"
             }
           },
           "content": {
@@ -87,9 +88,6 @@
               "template": "{{ scope.value | css_url }}"
             }
           }
-        },
-        "itemTemplate": {
-          "inline": "{{ scope.item.attributes.views }} views"
         },
         "sortByTimestamp": true
       },

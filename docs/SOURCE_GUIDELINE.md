@@ -304,6 +304,7 @@ LiquidJS built-in filters are available. NewsNext adds:
 | `favicon_url` | Return the default favicon service URL |
 | `css_url` | Extract the first `url(...)` from CSS |
 | `compact_number` | Format a finite number with compact English notation |
+| `parse_compact_number` | Parse a number with an optional `K`, `M`, `B`, or `T` suffix |
 | `date_to_ms` | Parse a date as milliseconds |
 | `relative_date_to_ms[: timezone]` | Parse absolute or relative date text |
 | `regex_extract: pattern, group` | Return a capture group or an empty string |
@@ -315,6 +316,7 @@ Examples:
 {{ scope.value | absolute_url: scope.request.url }}
 {{ scope.value | first_line | truncate: 160, "…" }}
 {{ scope.value | relative_date_to_ms: "Asia/Shanghai" }}
+{{ scope.value | parse_compact_number }}
 ```
 
 Values inserted into `content.html` are HTML-escaped. File
