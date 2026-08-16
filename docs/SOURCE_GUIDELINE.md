@@ -1031,15 +1031,15 @@ Author-facing limits:
 Runtime registries accept declarative JSON, HTML, and RSS loaders only.
 Prototype-related source ID segments and JMESPath properties are rejected.
 
-Use the extension-backed CLI to validate live behavior. Enable
-**Settings → CLI connection**. Development builds connect only to the
-development Native Messaging host. Build and register its CLI executable, then
+Use the separately distributed NewsNext App CLI to validate live behavior.
+Enable **Settings → CLI connection**. Development builds connect only to the
+development Native Messaging host. Register the installed executable, then
 start the daemon:
 
 ```sh
-bun run host:dev
-bun run newsnext start
-bun run newsnext status
+newsnext install-native-host
+newsnext start
+newsnext status
 ```
 
 The installer presents detected browsers only and selects all of them by
@@ -1060,9 +1060,9 @@ For a browser whose installation path is not known to NewsNext, write a manifest
 to the current directory for manual placement:
 
 ```sh
-target/release/newsnext install-native-host --current-dir
-target/release/newsnext install-native-host --current-dir chromium-based
-target/release/newsnext install-native-host --current-dir firefox-based
+newsnext install-native-host --current-dir
+newsnext install-native-host --current-dir chromium-based
+newsnext install-native-host --current-dir firefox-based
 ```
 
 This mode does not modify browser directories or the Windows registry.
@@ -1070,14 +1070,14 @@ This mode does not modify browser directories or the Windows registry.
 Run a registered source:
 
 ```sh
-bun run newsnext run github:trending
+newsnext run github:trending
 ```
 
 Run a local provider, optionally choosing a source and parameters:
 
 ```sh
-bun run newsnext run packages/registry/src/hackernews.json top
-bun run newsnext run packages/registry/src/telegram.json \
+newsnext run packages/registry/src/hackernews.json top
+newsnext run packages/registry/src/telegram.json \
   --param channel=telegram
 ```
 
@@ -1086,7 +1086,7 @@ Useful options include `--params`, `--watch`, `--browser`, `--timeout`,
 list with:
 
 ```sh
-bun run newsnext run --help
+newsnext run --help
 ```
 
 The command prints the complete source result as `data`, `metadata`, and
@@ -1100,8 +1100,8 @@ Fetch an endpoint directly from the connected extension when investigating
 authentication, headers, or raw responses:
 
 ```sh
-bun run newsnext fetch https://example.com/api
-bun run newsnext fetch https://example.com/api \
+newsnext fetch https://example.com/api
+newsnext fetch https://example.com/api \
   -H 'Accept: application/json' -i
 ```
 
@@ -1112,37 +1112,38 @@ and `-i` includes response status and headers. Browser-managed cookies cannot be
 overridden with a `Cookie` header. Use this command for raw endpoint debugging,
 then run `run` to verify the complete source behavior.
 
-Inspect the successful source observations stored by the extension:
+Explicitly retain a successful Source result, then inspect it through the
+daemon-owned local database:
 
 ```sh
-bun run newsnext query execute collection.list
-bun run newsnext query execute instance.list
-bun run newsnext history observations github:trending::V1StGXR8_Z5j
-bun run newsnext history get github:trending::V1StGXR8_Z5j 1786212000000
-bun run newsnext history compare github:trending::V1StGXR8_Z5j \
+newsnext run github:trending --retain
+newsnext history datasets --source-id github:trending
+newsnext history observations DATASET_ID
+newsnext history get DATASET_ID 1786212000000
+newsnext history compare DATASET_ID \
   1786212000000 1786215600000
 ```
 
 Discover and use the canonical application control surface:
 
 ```sh
-bun run newsnext action list
-bun run newsnext query list
-bun run newsnext query execute source.list
-bun run newsnext query execute source.get --input \
+newsnext action list
+newsnext query list
+newsnext query execute source.list
+newsnext query execute source.get --input \
   '{"sourceId":"github:trending"}'
-bun run newsnext query execute collection.list
-bun run newsnext query execute view.getContext
-bun run newsnext query execute view.getCollection --input \
+newsnext query execute collection.list
+newsnext query execute view.getContext
+newsnext query execute view.getCollection --input \
   '{"collectionId":"COLLECTION_ID"}'
-bun run newsnext query execute view.getVisibleCards
-bun run newsnext action execute collection.create --input \
+newsnext query execute view.getVisibleCards
+newsnext action execute collection.create --input \
   '{"name":"Research","view":{"color":"blue","sortMode":"createdAt"}}'
-bun run newsnext action execute collection.update --input \
+newsnext action execute collection.update --input \
   '{"collectionId":"COLLECTION_ID","name":"Research queue","view":{"color":"purple"}}'
-bun run newsnext action execute view.configureCollection --input \
+newsnext action execute view.configureCollection --input \
   '{"collectionId":"COLLECTION_ID","color":"blue","sortMode":"createdAt"}'
-bun run newsnext action execute instance.create --input \
+newsnext action execute instance.create --input \
   '{"sourceId":"github:trending","collectionId":null,"patch":{"params":{"language":"typescript"}}}'
 ```
 
@@ -1162,21 +1163,19 @@ cannot be interleaved with another UI or Agent mutation. Use
 Use `query execute view.getContext` when starting from the currently visible
 Board, then `query execute collection.listInstances --input
 '{"collectionId":"COLLECTION_ID"}'` for a custom Board. Use `query execute
-instance.list` when the Board is irrelevant. History commands accept the saved
-`instanceId`; the extension resolves its current source and parameter patch and
-normalizes the parameters internally. This keeps CLI results aligned with the
-Card the user sees and avoids manually copying source parameters. If an
-Instance's parameters change, its ID selects the dataset for its current
-configuration; older parameter configurations remain separate stored datasets.
+instance.list` when the Board is irrelevant. History commands intentionally use
+the opaque ID returned by `history datasets`; they do not resolve extension
+Instance state. Filter dataset discovery by Source or provider when selecting a
+retained parameter configuration.
 
 Application Queries return canonical Collections and Instances without a
 parallel CLI-only Board representation. An Instance may be returned by several
-Collection queries when it has several memberships. Observation times may be
-Unix milliseconds or ISO 8601 values. List `observations` before using exact
-timestamps with `get` or `compare`. The read-only `history datasets` command is
-available for storage diagnostics. Add `--compact` when consuming JSON
-programmatically. History responses include completeness warnings when retained
-data cannot fully reconstruct a result.
+Collection queries when it has several memberships. Ordinary Now Layer loads
+remain cache-only and do not create History. Observation times may be Unix
+milliseconds or ISO 8601 values. List `observations` before using exact
+timestamps with `get` or `compare`. Add `--compact` when consuming JSON
+programmatically. History reads require the daemon but not a connected browser;
+`run --retain` requires both because Source execution remains browser-owned.
 
 Direct `fetch` requests are useful for endpoint investigation, but they do not verify
 parameter parsing, extension permissions, capability enforcement, secrets, or

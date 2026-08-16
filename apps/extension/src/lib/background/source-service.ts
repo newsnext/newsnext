@@ -17,7 +17,7 @@ export interface LoadBackgroundSourceInput {
 
 interface BackgroundSourceServiceOptions {
   fetchResults?: BackgroundSourceFetchResult[]
-  onRequestPrepared?: (params: Record<string, unknown>) => void
+  onRequestPrepared?: (params: Record<string, unknown>, sourceVersion: number) => void
 }
 
 export interface CancelBackgroundSourceInput {
@@ -51,7 +51,7 @@ export function createBackgroundSourceService(
 
       try {
         const request = await prepareSourceRequest(input.sourceId, input.params ?? {})
-        options.onRequestPrepared?.(request.params)
+        options.onRequestPrepared?.(request.params, request.source.cache.version)
         signal.throwIfAborted()
         const { provider } = parseSourceId(input.sourceId)
         const secrets = await resolveSourceSecrets(request.source, provider)

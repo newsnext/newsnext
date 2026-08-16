@@ -1,4 +1,0 @@
-interface:
-  display_name: "NewsNext Source History"
-  short_description: "Analyze locally observed NewsNext source history"
-  default_prompt: "Use $newsnext-source-history to inspect and compare my locally observed NewsNext source data."

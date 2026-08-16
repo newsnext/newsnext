@@ -21,14 +21,11 @@ export {
   resolveSourceIcon,
   SOURCE_ICON_PRESETS,
 } from "./icon"
-export type { InstanceDataTarget } from "./instance-data"
+export type { InstanceDataTarget } from "./instance-data-target"
 export {
-  compareInstanceHistoryObservations,
   createInstanceDataTarget,
-  getInstanceHistoryObservation,
-  listInstanceHistory,
   resolveInstanceDataTarget,
-} from "./instance-data"
+} from "./instance-data-target"
 export type { SourceLoadResult } from "./loader"
 export { loadSource, readPersistedSourceCache } from "./loader"
 export type { SourceParamValues } from "./params"

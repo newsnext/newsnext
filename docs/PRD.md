@@ -232,8 +232,8 @@ without copying extension storage between browser profiles. Development and
 production remain isolated so routine CLI testing cannot corrupt or pollute the
 user's production data.
 
-The embedded database is SQLite-compatible and implemented through the
-Turso/libSQL ecosystem. The local file is the source of truth for the first
+The embedded database is SQLite-compatible and implemented with the Turso
+Database engine and Rust `turso` crate. The local file is the source of truth for the first
 increment. A Turso account, network connection, remote replica, and cloud sync
 are not required to use the product. Compatibility with later encrypted sync or
 replication is a design constraint, not an MVP dependency.
@@ -559,29 +559,29 @@ must not be described to users as available until its acceptance criteria pass.
 | Area | Status | Implemented baseline | Primary gap |
 | --- | --- | --- | --- |
 | Source definitions | Implemented foundation | Registry providers, parameters, metadata, loaders, transforms, templates, Radar rules, capabilities, secrets, and security limits | Registry health, version lifecycle, and dependency diagnostics |
-| Source execution | Implemented foundation | Registered and local Sources can run through the extension runtime and CLI; direct extension-backed fetch supports debugging | Add Agent-owned scheduling and durable handoff without duplicating the extension runtime |
-| Shared local database | Not implemented | Browser extension storage and IndexedDB currently own durable application and History data | Introduce the single-writer Turso/libSQL database with dev/prod isolation and migrations |
+| Source execution | Implemented foundation | Registered and local Sources run through the extension runtime and CLI; `run --retain` provides an explicit durable handoff to the daemon | Add Agent-owned scheduling without duplicating the extension runtime |
+| Shared local database | Partial | The daemon owns an embedded Turso database with dev/prod file isolation, ordered migrations, structured errors, and a serialized writer for retained History | Move remaining Board, Widget, and task state out of extension storage |
 | Instance and Collection data | Implemented in extension storage | Canonical Instances, Collections, membership, manual order, and Board view preferences | Move canonical durable state behind App/CLI Actions and Queries for cross-browser use |
 | UI and Agent control | Implemented foundation | UI and CLI use the same typed Actions and Queries and the same background persistence boundary | Database-backed Widget, task, and Source-health operations are not exposed yet |
 | Now Layer | Implemented | Each Instance is independently presented as a Card using the unified Card model | Make view-driven refresh explicit and keep current results cache-only |
-| Next Layer | Partial | One shared mixed Timeline selects every current Board Instance through an independent cache-data path; the data boundary also supports one or several Instances and History reads | Move retained inputs and materialized outputs to Agent-owned durable tasks |
-| History | Implemented foundation in IndexedDB | Successful observations can be listed, read at an exact time, and compared for added, missing, position, and top-level field changes | Migrate retained observations required by Agent tasks; stop treating every current refresh as History |
+| Next Layer | Partial | One shared mixed Timeline selects every current Board Instance through an independent cache-data path | Add Agent-owned retained inputs and materialized outputs |
+| History | Implemented foundation in Turso | Explicit `run --retain` results are committed transactionally by the daemon and can be listed, read at an exact time, and compared without a connected browser | Add task-owned retention policies, scheduling, and provenance |
 | Provenance | Partial | Source and Instance identities remain stable; history comparisons preserve supported factual boundaries | Derived Widget inputs, transformations, warnings, and claims need an explicit UI contract |
 | Code Widgets | Not implemented | None | Sandbox, resource limits, versioning, preview, failure isolation, and rollback |
 
 The current CLI includes these relevant control surfaces:
 
 ```sh
-bun run newsnext run <source-or-provider>
-bun run newsnext fetch <url>
-bun run newsnext action list
-bun run newsnext action execute <action> --input '<json>'
-bun run newsnext query list
-bun run newsnext query execute <query> --input '<json>'
-bun run newsnext history datasets
-bun run newsnext history observations <instance-id>
-bun run newsnext history get <instance-id> <time>
-bun run newsnext history compare <instance-id> <from> <to>
+newsnext run <source-or-provider> --retain
+newsnext fetch <url>
+newsnext action list
+newsnext action execute <action> --input '<json>'
+newsnext query list
+newsnext query execute <query> --input '<json>'
+newsnext history datasets
+newsnext history observations <dataset-id>
+newsnext history get <dataset-id> <time>
+newsnext history compare <dataset-id> <from> <to>
 ```
 
 The implemented history comparison reports only directly supported facts. An
@@ -590,10 +590,8 @@ publication time, and position alone does not establish popularity or cause.
 
 The remaining product gaps are:
 
-- A shared local database, migration framework, environment-specific files, and
-  daemon-owned access boundary.
-- Migration of canonical durable application data and explicitly retained
-  observations out of per-browser extension storage.
+- Migration of canonical Board and Instance data out of per-browser extension
+  storage and into the existing daemon-owned database boundary.
 - Agent-owned scheduling and durable handoff from the extension Source runtime.
 - A durable Widget model and Next Layer layout model.
 - Multi-Instance Widget inputs with explicit provenance and dependency state.
@@ -615,7 +613,7 @@ The remaining product gaps are:
 | DAT-04 | Database setup is local-first | First launch creates and migrates the local database without a Turso account, remote connection, or network access |
 | DAT-05 | Schema changes are ordered and atomic | The daemon applies versioned migrations before accepting requests and leaves either the previous or next valid schema after interruption |
 | DAT-06 | Logical mutations are transactional | A failed Board, Widget, observation, or task mutation leaves no partially updated durable state |
-| DAT-07 | Concurrent clients use one ordered writer | WAL mode permits bounded reads while the daemon serializes writes and returns structured busy or retry errors instead of hanging |
+| DAT-07 | Concurrent clients use one ordered writer | Independent bounded-wait reads remain available while the daemon serializes immediate write transactions and returns structured busy errors instead of hanging |
 | DAT-08 | Now Layer does not create implicit History | Repeated view-driven refresh replaces current cache data and does not insert observation rows unless an explicit Agent task or retention action requests it |
 | DAT-09 | Next Layer background work is Agent-owned | Agent task state, retained inputs, provenance, and materialized output commit together; opening Next Layer performs no implicit refresh or transformation |
 | DAT-10 | Source execution remains browser-owned | Agent tasks request registered Source execution from a connected extension and receive normalized output without receiving browser credentials or duplicating the Source runtime |
@@ -811,7 +809,7 @@ without changing the two-Layer Board contract.
 - Read and follow the applicable official documentation indexed by
   `https://docs.turso.tech/llms.txt` before selecting dependencies or writing
   database code.
-- Add the embedded Turso/libSQL database to the Rust desktop runtime.
+- Extend the embedded Turso database already used by retained History.
 - Resolve the platform application data directory and select
   `newsnext.dev.db` or `newsnext.prod.db` from the existing runtime environment.
 - Add schema versioning, migrations, WAL configuration, transactional helpers,
@@ -826,8 +824,8 @@ without changing the two-Layer Board contract.
   never receive a database path or connection.
 - Reuse the connected extension Source runtime and add a durable handoff from
   normalized output to Agent-owned database transactions.
-- Add a migration path from current extension-owned durable state before making
-  the database authoritative for production users.
+- Replace current extension-owned durable state directly; legacy IndexedDB data
+  is not imported.
 
 Phase 0 exits when `DAT-*`, `BRD-01` through `BRD-04`, `NOW-04`, and `NOW-05`
 pass for both dev and production environments; two supported production

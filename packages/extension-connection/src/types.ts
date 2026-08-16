@@ -30,17 +30,6 @@ export type ExtensionConnectionCommandRequest
   = | Exclude<ExtensionCommand, { type: "source.run" }>
     | ExtensionConnectionRunRequest
 
-export type SourceHistoryListDatasetsRequest
-  = Extract<ExtensionCommand, { type: "source-history.datasets" }>
-export type SourceHistoryListObservationsRequest
-  = Extract<ExtensionCommand, { type: "source-history.observations" }>
-export type SourceHistoryGetObservationRequest
-  = Extract<ExtensionCommand, { type: "source-history.get" }>
-export type SourceHistoryCompareObservationsRequest
-  = Extract<ExtensionCommand, { type: "source-history.compare" }>
-export type SourceHistoryCommandRequest
-  = Extract<ExtensionCommand, { type: `source-history.${string}` }>
-
 export type ExtensionConnectionInstance = ExtensionInstance
 export type ExtensionConnectionSerializedError = SerializedError
 

@@ -9,7 +9,7 @@ import {
   flattenProviderConfig,
   resolveSourceRegistry,
 } from "@newsnext/source/registry"
-import { normalizeSourceParams } from "@newsnext/source/runtime"
+import { normalizeSourceParams, parseSourceId } from "@newsnext/source/runtime"
 import { createBackgroundSourceFetch } from "./source-fetch"
 import { resolveSourceSecrets, updateSourceSecrets } from "./source-secrets"
 import { createBackgroundSourceService } from "./source-service"
@@ -22,8 +22,11 @@ export interface RunConnectedSourceOutput extends Omit<SourceLoaderResult, "item
   data: SourceLoaderResult["items"]
   execution: {
     durationMs: number
+    observedAt: number
     params: Record<string, unknown>
+    providerId: string
     sourceId: string
+    sourceVersion: number
   }
   fetches: BackgroundSourceFetchResult[]
 }
@@ -43,7 +46,9 @@ export function getConnectedSourceSecretProviderId(
 
 function createRunOutput(
   result: SourceLoaderResult,
+  providerId: string,
   sourceId: string,
+  sourceVersion: number,
   params: Record<string, unknown>,
   fetches: BackgroundSourceFetchResult[],
   startedAt: number,
@@ -52,8 +57,11 @@ function createRunOutput(
     data: result.items,
     execution: {
       durationMs: Math.round(performance.now() - startedAt),
+      observedAt: Date.now(),
       params,
+      providerId,
       sourceId,
+      sourceVersion,
     },
     fetches,
     itemTemplate: result.itemTemplate,
@@ -69,14 +77,26 @@ export async function runConnectedSource(
 
   if (input.providerId === undefined) {
     let params: Record<string, unknown> = {}
+    let sourceVersion = 0
     const result = await createBackgroundSourceService({
       fetchResults: fetches,
-      onRequestPrepared: preparedParams => params = preparedParams,
+      onRequestPrepared(preparedParams, preparedSourceVersion) {
+        params = preparedParams
+        sourceVersion = preparedSourceVersion
+      },
     }).load({
       sourceId: input.sourceId,
       params: input.params,
     })
-    return createRunOutput(result, input.sourceId, params, fetches, startedAt)
+    return createRunOutput(
+      result,
+      parseSourceId(input.sourceId).provider,
+      input.sourceId,
+      sourceVersion,
+      params,
+      fetches,
+      startedAt,
+    )
   }
 
   assertIdSegment(input.providerId, "providerId")
@@ -114,5 +134,13 @@ export async function runConnectedSource(
     },
   })
 
-  return createRunOutput(result, sourceId, params, fetches, startedAt)
+  return createRunOutput(
+    result,
+    input.providerId,
+    sourceId,
+    source.cache.version,
+    params,
+    fetches,
+    startedAt,
+  )
 }

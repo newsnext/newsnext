@@ -22,19 +22,17 @@ import {
   normalizePersistedDeviceState,
   withSourceConnectionEnabled,
 } from "../settings/persisted-settings"
-import { listSourceHistoryDatasets } from "../source/history/repository"
 import {
   executeBackgroundApplicationAction,
   executeBackgroundApplicationQuery,
 } from "./application-service"
-import { executeInstanceHistoryRequest } from "./instance-history"
 import { serializeSourceConnectionError } from "./source-connection-error"
 import { runConnectedSource } from "./source-runner"
 
 const NATIVE_HOST_NAME = import.meta.env.DEV
   ? "app.newsnext.host.dev"
   : "app.newsnext.host"
-const PROTOCOL_VERSION = 3
+const PROTOCOL_VERSION = 4
 const SOURCE_CONNECTION_INSTANCE_ID_KEY = "newsnext.sourceConnectionInstanceId"
 const SOURCE_CONNECTION_RECONNECT_ALARM = "source-connection-native-reconnect"
 const RECONNECT_ALARM_PERIOD_MINUTES = 0.5
@@ -161,12 +159,6 @@ async function executeRequest(request: ExtensionConnectionCommandRequest): Promi
       return await executeFetchRequest(request)
     case "source.run":
       return await runConnectedSource(request)
-    case "source-history.datasets":
-      return await listSourceHistoryDatasets(request)
-    case "source-history.observations":
-    case "source-history.get":
-    case "source-history.compare":
-      return await executeInstanceHistoryRequest(request)
   }
 }
 

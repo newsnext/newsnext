@@ -65,20 +65,6 @@ Newsnext is a personalized web crawler that runs inside a browser extension (mv3
 - Keep its baselines and recommended verification steps aligned with current
   React components and runtime behavior.
 
-### Database Documentation
-
-- `https://docs.turso.tech/llms.txt` is the sole authoritative specification
-  for every Turso API, configuration option, connection mode, query,
-  transaction, migration, replication, and error-handling pattern used in this
-  repository.
-- Read the relevant official documentation linked from that index before
-  implementing or reviewing Turso code. Do not substitute behavior remembered
-  from SQLite, libSQL, another Turso SDK, cached documentation, or third-party
-  examples.
-- If a required Turso behavior is absent or ambiguous in the official
-  documentation index and its linked pages, stop and surface the gap instead
-  of inventing an API or compatibility path.
-
 ### Version Control
 
 - Use `git` as the primary version control system for this repository.

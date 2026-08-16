@@ -49,17 +49,11 @@
     "dev:yolo": "bun --filter=@newsnext/extension run dev:yolo",
     "dev:chrome": "bun --filter=@newsnext/extension run dev:chrome",
     "dev:firefox": "bun --filter=@newsnext/extension run dev:firefox",
-    "newsnext": "cargo run --quiet -p newsnext --",
     "update-deps": "taze -r -w && bun install",
     "release": "bumpp --recursive --install --all --git-check",
     "build": "bun --filter=@newsnext/extension run build",
-    "build:cli": "cargo build --release -p newsnext",
-    "build:app": "cargo packager --release -p newsnext",
-    "host:dev": "cargo run --quiet -p newsnext -- install-native-host",
     "build:chrome": "bun --filter=@newsnext/extension run build:chrome",
-    "build:firefox": "bun --filter=@newsnext/extension run build:firefox",
-    "generate:native-protocol": "cargo test -p newsnext export_bindings",
-    "test:rust": "cargo test --workspace"
+    "build:firefox": "bun --filter=@newsnext/extension run build:firefox"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^9.3.0",

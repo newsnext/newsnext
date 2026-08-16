@@ -4,10 +4,6 @@ export function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value)
 }
 
-function isOptionalFiniteNumber(value: unknown): value is number | undefined {
-  return value === undefined || (typeof value === "number" && Number.isFinite(value))
-}
-
 function isOptionalString(value: unknown): value is string | undefined {
   return value === undefined || typeof value === "string"
 }
@@ -101,12 +97,14 @@ export function parseExtensionConnectionCommandRequest(
   if (
     value.type === "source.run"
     && typeof value.sourceId === "string"
+    && typeof value.retain === "boolean"
     && (value.params === undefined || isRecord(value.params))
   ) {
     if (value.providerId === undefined && value.provider === undefined) {
       return {
         id: value.id,
         type: "source.run",
+        retain: value.retain,
         sourceId: value.sourceId,
         params: value.params,
       }
@@ -115,75 +113,13 @@ export function parseExtensionConnectionCommandRequest(
       return {
         id: value.id,
         type: "source.run",
+        retain: value.retain,
         providerId: value.providerId,
         sourceId: value.sourceId,
         provider: value.provider,
         params: value.params,
         useProviderSecrets: value.useProviderSecrets === true,
       }
-    }
-  }
-  if (
-    value.type === "source-history.datasets"
-    && isOptionalString(value.cursor)
-    && isOptionalFiniteNumber(value.limit)
-    && isOptionalString(value.providerId)
-    && isOptionalString(value.sourceId)
-  ) {
-    return {
-      id: value.id,
-      type: "source-history.datasets",
-      cursor: value.cursor,
-      limit: value.limit,
-      providerId: value.providerId,
-      sourceId: value.sourceId,
-    }
-  }
-  if (
-    value.type === "source-history.observations"
-    && typeof value.instanceId === "string"
-    && isOptionalFiniteNumber(value.cursor)
-    && isOptionalFiniteNumber(value.from)
-    && isOptionalFiniteNumber(value.limit)
-    && isOptionalFiniteNumber(value.to)
-  ) {
-    return {
-      id: value.id,
-      type: "source-history.observations",
-      instanceId: value.instanceId,
-      cursor: value.cursor,
-      from: value.from,
-      limit: value.limit,
-      to: value.to,
-    }
-  }
-  if (
-    value.type === "source-history.get"
-    && typeof value.instanceId === "string"
-    && typeof value.observedAt === "number"
-    && Number.isFinite(value.observedAt)
-  ) {
-    return {
-      id: value.id,
-      type: "source-history.get",
-      instanceId: value.instanceId,
-      observedAt: value.observedAt,
-    }
-  }
-  if (
-    value.type === "source-history.compare"
-    && typeof value.instanceId === "string"
-    && typeof value.before === "number"
-    && Number.isFinite(value.before)
-    && typeof value.after === "number"
-    && Number.isFinite(value.after)
-  ) {
-    return {
-      id: value.id,
-      type: "source-history.compare",
-      instanceId: value.instanceId,
-      before: value.before,
-      after: value.after,
     }
   }
   throw new Error("Invalid extension command")

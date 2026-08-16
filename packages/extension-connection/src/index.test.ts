@@ -72,6 +72,7 @@ describe("extension connection protocol", () => {
     expect(parseExtensionConnectionCommandRequest({
       id: "request-id",
       type: "source.run",
+      retain: true,
       sourceId: "github:trending",
       params: { language: "typescript" },
     })).toMatchObject({
@@ -82,23 +83,9 @@ describe("extension connection protocol", () => {
     expect(() => parseExtensionConnectionCommandRequest({
       id: "request-id",
       type: "source.run",
+      retain: true,
       providerId: "github",
       sourceId: "github:trending",
     })).toThrow("Invalid extension command")
-    expect(() => parseExtensionConnectionCommandRequest({
-      id: "request-id",
-      type: "source-history.get",
-      instanceId: "github:trending::V1StGXR8_Z5j",
-      observedAt: "yesterday",
-    })).toThrow("Invalid extension command")
-    expect(parseExtensionConnectionCommandRequest({
-      id: "request-id",
-      type: "source-history.get",
-      instanceId: "github:trending::V1StGXR8_Z5j",
-      observedAt: 1_786_212_000_000,
-    })).toMatchObject({
-      instanceId: "github:trending::V1StGXR8_Z5j",
-      observedAt: 1_786_212_000_000,
-    })
   })
 })

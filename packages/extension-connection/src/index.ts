@@ -19,9 +19,4 @@ export type {
   ExtensionConnectionRegisteredRunRequest,
   ExtensionConnectionRunRequest,
   ExtensionConnectionSerializedError,
-  SourceHistoryCommandRequest,
-  SourceHistoryCompareObservationsRequest,
-  SourceHistoryGetObservationRequest,
-  SourceHistoryListDatasetsRequest,
-  SourceHistoryListObservationsRequest,
 } from "./types"

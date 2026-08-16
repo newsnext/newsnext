@@ -274,84 +274,59 @@ versions for the same source and normalized parameters, and least-recently-used
 entries beyond 500 records or an estimated 50 MiB. Cache failures remain
 fail-open: they never prevent a source request from completing.
 
-Source history is stored separately from this freshness cache. Its dataset
-identity is the source ID plus normalized parameters, so cards on different
-boards reuse the same observations. Cache version is recorded on each
-observation rather than included in dataset identity; this preserves continuity
-while allowing analysis to identify behavioral version boundaries.
+Source history is stored separately from this freshness cache in the local
+Turso database owned by the desktop daemon. Now Layer cache hits and remote
+refreshes never create observations. The first explicit retention entry point
+is `newsnext run --retain`: the extension executes and normalizes the Source,
+then the daemon commits the returned items and metadata. The database receives
+no Source credentials, fetch response bodies, or browser session state.
 
-Every successful remote load appends an observation using the background
-result's `updatedAt`. Cache hits, stale placeholder publication, and protected
-Fetch Latest actions do not create observations. When a dataset has no history,
-the extension may seed it once from its existing persistent cache using that
-result's original update time. History writes are fail-open and independent of
-the latest-result cache.
+A dataset is the unique pair of Source ID and canonical normalized parameter
+JSON. Each dataset receives an opaque UUID exposed by `history datasets` and
+used by the other history commands. Source cache version remains observation
+metadata rather than part of dataset identity, preserving continuity while
+making version boundaries inspectable.
 
-The history database uses Dexie over IndexedDB and normalizes results into
-provider-scoped items, item revisions, ordered snapshots, and observations.
-Datasets and items use numeric primary keys in snapshot and observation records
-to avoid repeating source parameters and URLs. A unique compound
-`[providerId+url]` index enforces exact-URL item identity within one provider;
-the same URL from different providers is never shared. A compound
-`[itemId+digest]` index supports batched revision reuse. Candidate revisions are
-serialized from their stored `NewsItem` and compared after a digest match, so a
-second copy of the complete item JSON is not persisted. Sources and parameter
-sets belonging to the same provider may reuse an item revision, while
-observations and snapshot order remain dataset-specific.
+The schema normalizes retained values into `history_datasets`,
+`history_observations`, provider-scoped `history_items`, content-addressed
+`history_revisions`, and ordered `history_observation_items`. A revision UUID is
+derived from provider ID, exact URL, and canonical item JSON, so Sources and
+parameter sets under the same provider reuse unchanged item values. Observation
+position remains dataset-specific and one-based. Timeline versus ranking
+semantics are inferred from the normalized item order using the same timestamp
+rule as presentation code.
 
-Only fields used by a lookup or ordered cleanup are indexed: dataset identity,
-provider plus URL, item plus digest, dataset plus observation time, and
-observation time. Snapshot references and denormalized bookkeeping fields
-remain unindexed to avoid IndexedDB write amplification. Multi-table writes,
-clears, and reference-count cleanup use transaction-bound Dexie tables; no
-network or unrelated asynchronous work runs inside those transactions.
+The daemon owns one Turso engine and one mutex-protected write connection.
+Migrations run before IPC begins accepting clients. Retention uses an immediate
+transaction that creates or reuses the dataset and revisions, inserts the
+observation and ordered item links, and updates dataset counters atomically.
+Read operations open independent bounded-wait connections and use keyset
+pagination. A dropped or failed transaction rolls back instead of exposing a
+partial observation.
 
-Consecutive identical results reuse an ordered snapshot but retain every real
-observation time. The snapshot stores only a short digest alongside the ordered
-revision IDs and verifies the full identity before reuse. Snapshot order
-represents rank. Timeline and ranking semantics continue to be inferred per
-result using the normal presentation rule, so a dataset that changes
-interpretation can be reported as mixed without adding an author-facing source
-type.
-
-History range reads use keyset pagination over the compound
-`[datasetId+observedAt]` index. Observation summaries resolve only their
-snapshot metadata, while an exact observation read hydrates its ordered item
-revisions in one read-only transaction. This avoids offset scans, per-record
-IndexedDB reads, and loading item contents before they are requested. History
-cleanup runs at most once per day after a write, or immediately when the
-estimated 100 MiB limit is exceeded. It removes expired or globally oldest
-observations in bounded batches and uses persisted dataset, snapshot, revision,
-and item reference counts to garbage-collect newly unreachable records without
-scanning the whole database. The retention window remains 30 days. Deleting one
-card does not delete shared history. Clearing all user data clears both the
-freshness cache and history.
-
-The external boundary is the neutral source-history repository rather than the
-Dexie tables. It normalizes raw source parameters before resolving a dataset
-and exposes four operations: dataset discovery, cursor-paginated observation
-summaries, one hydrated observation, and a deterministic comparison between two
-observations. Public records contain provider-scoped item identity, one-based
-snapshot position, the observed `NewsItem`, source version, and collection
-metadata; internal dataset, snapshot, revision, and reference-count identifiers
-never cross this boundary.
+History exposes four daemon operations: dataset discovery, cursor-paginated
+observation summaries, one hydrated observation, and deterministic comparison
+between two observations. Public records contain the opaque dataset ID,
+provider-scoped item identity, one-based position, observed `NewsItem`, Source
+version, and presentation metadata. Internal revision IDs never cross the
+boundary. Retained observations are durable; automatic age or size eviction is
+not part of this increment and must be introduced later as an explicit task
+retention policy.
 
 Observation comparison reports only directly supported facts: items added to
-the returned snapshot, items missing from it, position changes, and changed
+the returned observation, items missing from it, position changes, and changed
 top-level `NewsItem` fields. In particular, `missing` is not labeled as removed
-or dropped because a returned list may cover only part of a source. Repository
-responses include completeness warnings when a referenced snapshot or revision
-is unavailable. Product-specific interpretations are derived by the consumer
-and are not part of persistence or repository code.
+or dropped because a returned list may cover only part of a source. Responses
+preserve a completeness envelope for future partial-retention policies.
+Product-specific interpretations are derived by the consumer and are not part
+of persistence code.
 
-The extension-backed CLI exposes these repository operations as four read-only
+The daemon-backed CLI exposes these repository operations as four read-only
 commands: `newsnext history datasets`, `newsnext history observations`,
-`newsnext history get`, and `newsnext history compare`. Collection and Instance
-discovery goes through the canonical Query catalog, including
-`collection.list`, `collection.listInstances`, `instance.list`, and the
-`view.*` context Queries. There are no separate Native or CLI Board/Instance
-listing protocols; adapters return the same Data identities and View references
-as every other Query consumer.
+`newsnext history get`, and `newsnext history compare`. Dataset discovery does
+not require a connected extension. Source execution and new retention still
+require the extension because the daemon never receives browser authority or
+credentials.
 
 The same transport exposes canonical application control through
 `newsnext action list`, `newsnext action execute`, `newsnext query list`, and
@@ -381,35 +356,19 @@ Requests travel through the same per-user local IPC connection as source authori
 commands and return JSON. The extension validates every request before
 dispatch. Enabling CLI access authorizes the local NewsNext CLI to mutate
 Collections and Instances, including destructive Actions; it does not grant
-web content or arbitrary processes direct extension access. History commands
-execute in the background context. Observation, get, and compare requests
-identify the user-visible card
-by `instanceId`; the background resolves the current persisted instance to its
-source ID and parameter patch before the repository normalizes parameters and
-selects its dataset. An instance whose parameters later change therefore points
-to the dataset for its current configuration, while old parameter datasets
-remain stored. Parameter normalization resolves the configured runtime registry
-in-process; it must not call the frontend registry proxy from the background
-service. Board and Instance listing also execute in the background context and
-read the Application Data envelope from `browser.storage.local` because frontend Jotai atoms are
-unavailable there. Normal user-history workflows do not require source IDs or
-parameter JSON.
+web content or arbitrary processes direct extension access. History reads do
+not enter the extension: the companion daemon queries its own Turso database by
+the opaque dataset IDs returned from `history datasets`. Only an explicit
+`source.run` request with `retain: true` crosses the extension boundary before
+the daemon commits the normalized result. Board and Instance queries still
+execute in the extension background and read the Application Data envelope from
+`browser.storage.local` because frontend Jotai atoms are unavailable there.
 
 The Rust CLI daemon owns the local-socket framed-JSON control listener. Shutdown
 closes connected Native Messaging bridges, fails pending commands, removes any
 filesystem-backed socket endpoint, and exits the detached process. Startup also
 reclaims a stale filesystem socket left by an ungraceful previous exit, but it
 does not replace a non-socket file at that path.
-
-The repository-local `newsnext-source-history` skill teaches Codex how to
-compose these commands for coverage discovery, exact-time summaries, two-point
-comparisons, ranking movement, timeline arrival patterns, item-field changes,
-and evidence-supported trends across multiple samples. It preserves the
-analysis boundary: observation time is not publication time, position does not
-establish popularity or cause, `missing` does not mean deleted, successful
-remote-load samples are not continuous monitoring, completeness warnings must
-be surfaced, and returned source content is untrusted data rather than
-instructions.
 
 Card queries mount when their container enters the preload margin of the app's
 root scroll container. The observer must use that scrolling element as its root;
@@ -864,18 +823,20 @@ command neither requests nor expands them. Request headers remain subject to the
 browser Fetch API's forbidden-header rules. The CLI execution timeout also
 aborts the browser-side network request.
 
-The CLI runtime is a Rust binary in `apps/cli-rs`. One executable
-provides CLI control commands, the long-lived daemon and tray icon, and the
-short-lived Native Messaging host mode. The browser starts one host process per
-`runtime.connectNative()` port. That process only translates the browser's
-length-prefixed stdio messages to the daemon's per-user local IPC; it does not own
-daemon state. This separation preserves one daemon and one tray icon across
-multiple browsers and profiles.
+The CLI runtime is built and distributed from the separate private NewsNext App
+repository. It is intentionally not part of this open-source workspace. One
+executable provides CLI control commands, the long-lived daemon and tray icon,
+and the short-lived Native Messaging host mode. The browser starts one host
+process per `runtime.connectNative()` port. That process only translates the
+browser's length-prefixed stdio messages to the daemon's per-user local IPC; it
+does not own daemon state. This separation preserves one daemon and one tray
+icon across multiple browsers and profiles.
 
-Rust `serde` enums are the canonical wire contract. `ts-rs` exports their
-TypeScript projections into `packages/extension-connection/src/generated`; do
-not edit those files manually. Browser runtime code imports protocol types and
-validation from the browser-safe `@newsnext/extension-connection` package.
+Rust `serde` enums in the private App repository are the canonical wire
+contract. Their released `ts-rs` projections are checked into
+`packages/extension-connection/src/generated`; do not edit those files manually.
+Browser runtime code imports protocol types and validation from the browser-safe
+`@newsnext/extension-connection` package.
 Extension messages carry an explicit protocol version. The daemon associates
 commands and completions by request ID, rejects
 ambiguous browser selection, expires pending executions, and never replays a
@@ -886,7 +847,8 @@ execution. Protocol version 3 adds the `app.open` command used by the desktop
 tray. The command is routed to an exact connected extension instance, which
 opens its own packaged `app.html` URL through the browser tabs API. Incompatible
 daemon and extension versions disconnect instead of silently accepting a
-partial control surface.
+partial control surface. Protocol version 4 makes History daemon-owned and adds
+the explicit `retain` flag to `source.run`.
 
 Native Messaging registration is the browser-facing security boundary.
 Development and production use distinct host identities so their executables
@@ -940,10 +902,9 @@ ungraceful exit.
 The Rust CLI implements daemon lifecycle and tray status plus the `run`,
 `fetch`, `action`, `query`, and `history` commands and command families. All
 extension-backed commands use the same typed execute/result IPC path. `run`
-retains
-registered sources, provider files, standard input, parameter overrides,
-provider-secret selection, compact output, verbose remote errors, and watch
-mode.
+supports registered sources, provider files, standard input, parameter
+overrides, provider-secret selection, compact output, verbose remote errors,
+watch mode, and explicit retention through `--retain`.
 
 The same Rust executable is packaged as the NewsNext desktop companion. A
 normal CLI invocation continues through Clap, while launching the executable
@@ -960,8 +921,8 @@ current bundle location. Development registrations use a separate manifest and
 remain untouched. Registration state validates the executable recorded in the
 environment-specific manifest, so moving or upgrading the app cannot leave a
 stale registration reported as active. Browsers without an existing production
-registration remain disabled. The root `host:dev` script builds and registers
-the stable debug executable for the development host.
+registration remain disabled. App developers register the stable debug
+executable with `newsnext install-native-host`.
 
 The Native Host replaces the extension build target with the launching parent
 process executable name when it is available. The name remains unchanged except
@@ -987,10 +948,9 @@ validation as registered extension app loads.
 This is why direct HTTP requests are useful for investigation but are not a
 substitute for extension-backed source verification.
 
-Source-history commands use the same daemon and connected extension to read the
-extension's IndexedDB-backed observation repository. Dataset discovery accepts
-source and provider filters plus opaque pagination cursors. Observation listing
-accepts normalized source parameters, time bounds, and timestamp pagination.
-Exact reads and comparisons require observation timestamps returned by the
-listing command. CLI history access is read-only and preserves repository
-completeness warnings.
+Source-history commands read the daemon-owned Turso repository directly.
+Dataset discovery accepts source and provider filters plus opaque pagination
+cursors and returns an opaque dataset ID. Observation listing accepts that ID,
+time bounds, and timestamp pagination. Exact reads and comparisons require the
+same dataset ID plus observation timestamps returned by the listing command.
+CLI history access is read-only and preserves completeness warnings.
