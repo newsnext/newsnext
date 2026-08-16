@@ -18,7 +18,6 @@ import {
   getTimelineEntries,
   HOME_LATEST_TIMELINE_QUERY_ID,
   HOME_LATEST_TIMELINE_URL,
-  HOME_TIMELINE_URL,
   isUserTweetEntry,
   LIST_LATEST_TWEETS_URL,
   normalizeXSearchUrl,
@@ -113,28 +112,6 @@ function xHomeTimelineToResult(
   }
 }
 
-async function fetchXRecommended(
-  { text }: XTweetTextParams,
-  context: SourceLoaderContext,
-): Promise<SourceLoaderOutput> {
-  const response = await context.fetch.get(HOME_TIMELINE_URL, {
-    headers: createXLoggedInHeaders(context),
-    searchParams: {
-      variables: JSON.stringify({
-        count: X_TIMELINE_COUNT,
-        includePromotedContent: true,
-        requestContext: "launch",
-        withCommunity: true,
-      }),
-      features: JSON.stringify(X_TIMELINE_FEATURES),
-      fieldToggles: JSON.stringify({
-        withArticlePlainText: false,
-      }),
-    },
-  }).json<XHomeTimelineResponse>()
-  return xHomeTimelineToResult(response, text)
-}
-
 async function fetchXFollowing(
   { text }: XTweetTextParams,
   context: SourceLoaderContext,
@@ -145,7 +122,7 @@ async function fetchXFollowing(
       variables: {
         count: X_TIMELINE_COUNT,
         enableRanking: true,
-        includePromotedContent: true,
+        includePromotedContent: false,
         requestContext: "launch",
         seenTweetIds: [],
       },
@@ -214,7 +191,7 @@ async function fetchXUserTweets(
       variables: JSON.stringify({
         userId,
         count: X_TIMELINE_COUNT,
-        includePromotedContent: true,
+        includePromotedContent: false,
         withQuickPromoteEligibilityTweetFields: true,
         withVoice: true,
       }),
@@ -281,18 +258,6 @@ export default {
       },
       loader: {
         load: fetchXPlaceTrends,
-      },
-    },
-    "recommended": {
-      metadata: {
-        title: "Recommended",
-      },
-      radar: createXHomeRadar("x-recommended"),
-      params: {
-        text: tweetTextParam,
-      },
-      loader: {
-        load: fetchXRecommended,
       },
     },
     "following": {

@@ -3299,69 +3299,6 @@
       "color": "slate"
     }
   },
-  "x:recommended": {
-    "baseUrl": "https://x.com/",
-    "capabilities": {
-      "network": [
-        "x.com",
-        "api.x.com"
-      ],
-      "cookies": [
-        "x.com"
-      ]
-    },
-    "cache": "5m",
-    "metadata": {
-      "home": "/",
-      "title": "Recommended"
-    },
-    "secrets": [
-      {
-        "key": "csrfToken",
-        "type": "cookie",
-        "origin": "https://x.com",
-        "itemKey": "ct0",
-        "cache": false
-      }
-    ],
-    "radar": [
-      {
-        "id": "x-recommended",
-        "match": {
-          "hosts": [
-            "x.com",
-            "twitter.com"
-          ],
-          "paths": [
-            "/home"
-          ]
-        },
-        "confidence": 1
-      }
-    ],
-    "params": {
-      "text": {
-        "type": "select",
-        "title": "Content",
-        "values": [
-          {
-            "label": "Original",
-            "value": "original"
-          },
-          {
-            "label": "Translation",
-            "value": "translation"
-          }
-        ],
-        "default": "original"
-      }
-    },
-    "provider": {
-      "title": "X",
-      "category": "social",
-      "color": "slate"
-    }
-  },
   "x:user": {
     "baseUrl": "https://x.com/",
     "capabilities": {

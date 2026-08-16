@@ -73,6 +73,11 @@ instances. Every source descriptor receives the provider's `icon` and `color`.
 fill missing object properties. Source values win, and source arrays replace
 default arrays.
 
+Prefer streams whose membership follows an explicit user choice, such as
+followed accounts, lists, or selected topics. Do not register opaque
+personalized recommendation timelines whose contents can change independently
+of the source parameters and the user's subscriptions.
+
 Set `baseUrl` when URLs in a source share one stable origin or directory:
 
 ```ts
