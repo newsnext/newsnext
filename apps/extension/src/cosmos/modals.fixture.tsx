@@ -293,6 +293,7 @@ function SearchModalFixture() {
               setLastOpenedTitle(source.metadata.title || source.provider.title)
               setOpen(false)
             }}
+            searchShortcut="Mod+K"
           />
         )}
       </Dialog>

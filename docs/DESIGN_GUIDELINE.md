@@ -431,16 +431,20 @@ changes; do not remount tab content or discard unsaved control state to do so.
 ### Search dialog
 
 The Search dialog is a compact, single-column card locator. Do not show a
-visible title, header, or shortcut hint; open directly into the search field
-and results inside one nested `2xl` neutral squircle. Retain a screen-reader-only
-title and description for dialog semantics. Group results by board in the saved
-board order, omit empty groups, and place unassigned or orphaned cards in a
-final `No board` group. Within each group, show the card title and provider;
+visible title or header; open directly into the search field and results inside
+one nested `2xl` neutral squircle. Retain a screen-reader-only title and
+description for dialog semantics. Keep the saved Search binding plus navigation,
+open, and close keyboard hints in one quiet footer below and outside the nested
+result surface instead of repeating the action inside the selected row. Hide
+the Search hint when its binding is cleared. Render shortcuts as soft filled
+keycaps without borders, shadows, or separators. Group results by board in the
+saved board order, omit empty groups, and place unassigned or orphaned cards in
+a final `No board` group. Within each group, show the card title and provider;
 the group heading supplies the board context without repeating it on every row.
 Use `12px` horizontal and `10px` vertical padding for search result rows so the
-single-line identity remains compact without feeling cramped. Keep the title,
-provider, and selected keyboard action on one row; truncate the title first and
-omit the provider label when it duplicates the resolved card title.
+single-line identity remains compact without feeling cramped. Keep the title
+and provider on one row; truncate the title first and omit the provider label
+when it duplicates the resolved card title.
 
 Treat the Search input as the top row of the nested content panel, not as a
 separate pill-shaped control. It has no independent radius or filled surface;

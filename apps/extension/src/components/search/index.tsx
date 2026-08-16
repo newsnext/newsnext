@@ -1,3 +1,4 @@
+import type { Hotkey } from "@tanstack/react-hotkeys"
 import type { ReactNode } from "react"
 import type { Board } from "@/lib/board"
 import type { CollectionEntry } from "@/lib/collection"
@@ -126,6 +127,30 @@ function SearchSourceIcon({ source }: { source: CardViewModel }): ReactNode {
   )
 }
 
+function SearchShortcutHint({
+  keys,
+  label,
+}: {
+  keys: readonly string[]
+  label: string
+}): ReactNode {
+  return (
+    <span className="flex items-center gap-1.5 text-foreground/45">
+      <span className="flex gap-0.5">
+        {keys.map(key => (
+          <kbd
+            key={key}
+            className="flex h-5 min-w-5 items-center justify-center rounded-md bg-foreground/5 px-1.5 font-sans text-[10px] font-medium leading-none text-foreground/60"
+          >
+            {key}
+          </kbd>
+        ))}
+      </span>
+      {label}
+    </span>
+  )
+}
+
 export function SearchDialog(): ReactNode {
   const [open, setOpen] = useState(false)
   const shortcuts = useAtomValue(shortcutSettingsAtom)
@@ -167,6 +192,7 @@ export function SearchDialog(): ReactNode {
         {open && (
           <SearchDialogContent
             onSelectItem={handleSelectItem}
+            searchShortcut={shortcuts.search}
           />
         )}
       </Dialog>
@@ -176,8 +202,10 @@ export function SearchDialog(): ReactNode {
 
 function SearchDialogContent({
   onSelectItem,
+  searchShortcut,
 }: {
   onSelectItem: (source: CardViewModel, targetBoardId: string) => void
+  searchShortcut: Hotkey | null
 }): ReactNode {
   const boards = useAtomValue(boardsAtom)
   const collectionEntries = useAtomValue(collectionEntriesAtom)
@@ -241,6 +269,7 @@ function SearchDialogContent({
     <SearchModalContent
       groups={searchGroups}
       onSelectItem={onSelectItem}
+      searchShortcut={searchShortcut}
     />
   )
 }
@@ -248,15 +277,17 @@ function SearchDialogContent({
 export function SearchModalContent({
   groups,
   onSelectItem,
+  searchShortcut,
 }: {
   groups: SearchGroup[]
   onSelectItem: (source: CardViewModel, targetBoardId: string) => void
+  searchShortcut: Hotkey | null
 }): ReactNode {
   return (
     <DialogContent
       variant="themed"
       className="h-[min(32rem,calc(100vh-2rem))] w-full sm:max-w-xl"
-      surfaceClassName="grid-rows-[minmax(0,1fr)]"
+      surfaceClassName="grid-rows-[minmax(0,1fr)_auto]"
     >
       <DialogTitle className="sr-only">Search cards</DialogTitle>
       <DialogDescription className="sr-only">
@@ -316,9 +347,6 @@ export function SearchModalContent({
                           {source.provider.title}
                         </span>
                       )}
-                      <kbd className="hidden shrink-0 rounded-md bg-foreground/5 px-1.5 py-0.5 font-sans text-[10px] text-foreground/45 group-data-[selected=true]/command-item:block">
-                        ↵ Open
-                      </kbd>
                     </CommandItem>
                   )
                 })}
@@ -327,6 +355,22 @@ export function SearchModalContent({
           </CommandList>
         </Command>
       </SquircleBox>
+      <footer
+        aria-label="Search keyboard shortcuts"
+        className="flex min-h-8 items-center justify-between px-2 pt-2 text-[11px]"
+      >
+        <span className="flex items-center gap-3">
+          {searchShortcut && (
+            <SearchShortcutHint
+              keys={[formatForDisplay(searchShortcut)]}
+              label="Search"
+            />
+          )}
+          <SearchShortcutHint keys={["↑", "↓"]} label="Navigate" />
+          <SearchShortcutHint keys={["↵"]} label="Open" />
+        </span>
+        <SearchShortcutHint keys={["Esc"]} label="Close" />
+      </footer>
     </DialogContent>
   )
 }
