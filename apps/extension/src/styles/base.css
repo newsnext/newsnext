@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: var(--color-neutral-100);
+  --background: var(--color-neutral-200);
   --background-grid-line: color-mix(in oklab, var(--foreground) 1%, transparent);
   --foreground: var(--color-neutral-700);
   --primary: var(--color-theme-500);
