@@ -9,7 +9,6 @@ lerna-debug.log*
 
 node_modules
 *.tsbuildinfo
-.output
 stats.html
 stats-*.json
 .wxt
@@ -22,7 +21,6 @@ web-ext.config.ts
 *.njsproj
 *.sln
 *.sw?
-.output/
 .tanstack/
 
 .env*

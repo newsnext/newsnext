@@ -14,7 +14,7 @@ Newsnext is a personalized web crawler that runs inside a browser extension (mv3
 - Only use ego-lite for browser debugging or automation tasks when the user
   explicitly requests it.
 - Debug the extension UI by opening
-  `chrome-extension://cffgbnjiaakknooiegnjkojemhidheke/app.html`
+  `chrome-extension://blkhpdbooolmhamhbpnfinmfghginnbh/app.html`
   directly. The user runs the development server; do not start another one.
 
 ### Source Documentation

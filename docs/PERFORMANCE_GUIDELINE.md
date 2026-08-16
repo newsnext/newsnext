@@ -9,7 +9,7 @@ behavior changes.
 
 The primary performance target is the extension app at:
 
-`chrome-extension://cffgbnjiaakknooiegnjkojemhidheke/app.html`
+`chrome-extension://blkhpdbooolmhamhbpnfinmfghginnbh/app.html`
 
 The app displays many independently updating cards inside an animated and
 sortable board. Performance work should keep an update local to the smallest

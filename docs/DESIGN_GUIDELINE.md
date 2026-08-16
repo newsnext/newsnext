@@ -603,6 +603,6 @@ When changing interface styling:
 3. Verify hierarchy, squircle clipping, padding, close-button alignment, focus
    states, and both light and dark themes.
 4. Use ego-lite to inspect extension UI changes at
-   `chrome-extension://cffgbnjiaakknooiegnjkojemhidheke/app.html`.
+   `chrome-extension://blkhpdbooolmhamhbpnfinmfghginnbh/app.html`.
 5. Update this document when the change creates, removes, or revises a durable
    design rule.

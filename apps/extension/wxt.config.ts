@@ -9,6 +9,7 @@ import packageJson from "./package.json"
 import { OPTIONAL_SOURCE_PERMISSIONS } from "./src/lib/source/permission-constants"
 
 const OPTIONAL_SOURCE_ORIGINS = ["*://*/*"] as const
+const DEVELOPMENT_CHROMIUM_KEY = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnMP+yuUF0ux7GhQjicLdzMrMW9SFYE1VOQTGQpy5RJ9VpSh/TLQ1Ho9wjupXD+KAcxP8c7mVOuirth3MQal/aRB0tvB/i2Tk61jvtrlGL99Juj1o14kixPgKUkOp5CR+4YT5I+zFG8aQsvI5FKirMIwbMQjBeiS3h19+ONvuu3IaoipawdmWlvnnKKKbYvtASv8TJTHM6GyWeNUhPE0DTAo+zN0ZkZ04okeYL4+t1npn/Ntvd8Sxd/faZhqSIry5NkzV1dOTbYXMDGV0nFp1LnRbe4DDp09chlJdYf+xhwf6TSZPUk88A8bWYQeoB/UnYhbPqwhoP+7RoGuXAu80GQIDAQAB"
 const REQUIRED_PERMISSIONS = [
   "activeTab",
   "alarms",
@@ -24,6 +25,7 @@ const manifestVersion = packageJson.version.split("-", 1)[0]
 export default defineConfig({
   imports: false,
   srcDir: "./src",
+  outDir: "dist",
   alias: {
     "@": path.resolve(__dirname, "src"),
   },
@@ -90,6 +92,9 @@ export default defineConfig({
 
     return {
       name: extensionName,
+      key: mode === "development" && browser !== "firefox"
+        ? DEVELOPMENT_CHROMIUM_KEY
+        : undefined,
       description: "Elegant reading experience, Fastest information reception",
       version: manifestVersion,
       version_name: packageJson.version,
