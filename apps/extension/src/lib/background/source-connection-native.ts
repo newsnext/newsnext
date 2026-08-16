@@ -4,6 +4,7 @@ import type {
   ExtensionToHost,
   HostToExtension,
   NativeCommandResult,
+  NativeExtensionBoard,
 } from "@newsnext/extension-connection"
 import type { PersistedDeviceState } from "../settings/persisted-settings"
 import {
@@ -17,7 +18,8 @@ import {
   parseApplicationAction,
   parseApplicationQuery,
 } from "../application"
-import { PERSISTED_DATA_SLICES } from "../settings/persisted-data"
+import { ALL_BOARD_ID, ALL_BOARD_NAME } from "../board"
+import { normalizeApplicationData, PERSISTED_DATA_SLICES } from "../settings/persisted-data"
 import {
   normalizePersistedDeviceState,
   withSourceConnectionEnabled,
@@ -32,7 +34,7 @@ import { runConnectedSource } from "./source-runner"
 const NATIVE_HOST_NAME = import.meta.env.DEV
   ? "app.newsnext.host.dev"
   : "app.newsnext.host"
-const PROTOCOL_VERSION = 4
+const PROTOCOL_VERSION = 5
 const SOURCE_CONNECTION_INSTANCE_ID_KEY = "newsnext.sourceConnectionInstanceId"
 const SOURCE_CONNECTION_RECONNECT_ALARM = "source-connection-native-reconnect"
 const RECONNECT_ALARM_PERIOD_MINUTES = 0.5
@@ -62,6 +64,18 @@ let cliVersion: string | undefined
 let connectionState: SourceConnectionState = "disconnected"
 let enabled = false
 let instanceId = ""
+let boards: NativeExtensionBoard[] = []
+
+function connectionBoards(value: unknown): NativeExtensionBoard[] {
+  const application = normalizeApplicationData(value)
+  return [
+    { id: ALL_BOARD_ID, name: ALL_BOARD_NAME },
+    ...application.collections.map(collection => ({
+      id: collection.id,
+      name: collection.name,
+    })),
+  ]
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value)
@@ -136,10 +150,28 @@ export function getSourceConnectionStatus(): SourceConnectionStatus {
   }
 }
 
+async function openBoard(boardId: string): Promise<void> {
+  const appUrl = browser.runtime.getURL("/app.html")
+  const boardUrl = `${appUrl}#/board/${encodeURIComponent(boardId)}`
+  const appTabs = await browser.tabs.query({ url: `${appUrl}*` })
+  const existing = appTabs.find(tab => tab.active) ?? appTabs[0]
+
+  if (existing?.id === undefined) {
+    await browser.tabs.create({ url: boardUrl })
+    return
+  }
+
+  await browser.tabs.update(existing.id, {
+    active: true,
+    ...(existing.url === boardUrl ? {} : { url: boardUrl }),
+  })
+  await browser.windows.update(existing.windowId, { focused: true })
+}
+
 async function executeRequest(request: ExtensionConnectionCommandRequest): Promise<unknown> {
   switch (request.type) {
     case "app.open":
-      await browser.tabs.create({ url: browser.runtime.getURL("/app.html") })
+      await openBoard(request.boardId)
       return null
     case "application.action.list":
       return listApplicationActions()
@@ -245,6 +277,7 @@ function connect(): void {
       id: instanceId,
       browser: import.meta.env.BROWSER,
       extensionVersion: browser.runtime.getManifest().version,
+      boards,
     },
   }
   nextPort.postMessage(hello)
@@ -297,6 +330,14 @@ export async function registerSourceConnectionNative(): Promise<void> {
     }
   })
   browser.storage.onChanged.addListener((changes, areaName) => {
+    const applicationChange = changes[PERSISTED_DATA_SLICES.application.key]
+    if (areaName === "local" && applicationChange) {
+      boards = connectionBoards(applicationChange.newValue)
+      if (port) {
+        const message: ExtensionToHost = { type: "boardsChanged", boards }
+        port.postMessage(message)
+      }
+    }
     const change = changes[PERSISTED_DATA_SLICES.deviceState.key]
     if (areaName === "local" && change) {
       const state = normalizePersistedDeviceState(change.newValue)
@@ -306,6 +347,7 @@ export async function registerSourceConnectionNative(): Promise<void> {
 
   const stored = await browser.storage.local.get([
     PERSISTED_DATA_SLICES.deviceState.key,
+    PERSISTED_DATA_SLICES.application.key,
     SOURCE_CONNECTION_INSTANCE_ID_KEY,
   ])
   const storedInstanceId = stored[SOURCE_CONNECTION_INSTANCE_ID_KEY]
@@ -316,6 +358,7 @@ export async function registerSourceConnectionNative(): Promise<void> {
     await browser.storage.local.set({ [SOURCE_CONNECTION_INSTANCE_ID_KEY]: instanceId })
   }
   const persisted = stored[PERSISTED_DATA_SLICES.deviceState.key]
+  boards = connectionBoards(stored[PERSISTED_DATA_SLICES.application.key])
   const state = normalizePersistedDeviceState(persisted)
   enabled = state.sourceConnectionEnabled
   if (enabled) {

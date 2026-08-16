@@ -8,7 +8,12 @@ describe("extension connection protocol", () => {
     expect(parseExtensionConnectionCommandRequest({
       id: "open-id",
       type: "app.open",
-    })).toEqual({ id: "open-id", type: "app.open" })
+      boardId: "reading",
+    })).toEqual({ id: "open-id", type: "app.open", boardId: "reading" })
+    expect(() => parseExtensionConnectionCommandRequest({
+      id: "open-id",
+      type: "app.open",
+    })).toThrow("Invalid extension command")
   })
 
   it("parses application operation requests", () => {

@@ -35,8 +35,12 @@ export function parseExtensionConnectionCommandRequest(
   if (!isRecord(value) || typeof value.id !== "string") {
     throw new Error("Invalid extension command")
   }
-  if (value.type === "app.open") {
-    return { id: value.id, type: "app.open" }
+  if (
+    value.type === "app.open"
+    && typeof value.boardId === "string"
+    && value.boardId.length > 0
+  ) {
+    return { id: value.id, type: "app.open", boardId: value.boardId }
   }
   if (value.type === "application.action.list") {
     return { id: value.id, type: "application.action.list" }

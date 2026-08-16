@@ -845,10 +845,14 @@ idempotent. Settings exposes the daemon version as connection metadata only.
 Protocol version 2 adds canonical Application Action and Query discovery and
 execution. Protocol version 3 adds the `app.open` command used by the desktop
 tray. The command is routed to an exact connected extension instance, which
-opens its own packaged `app.html` URL through the browser tabs API. Incompatible
-daemon and extension versions disconnect instead of silently accepting a
-partial control surface. Protocol version 4 makes History daemon-owned and adds
-the explicit `retain` flag to `source.run`.
+opens its own packaged `app.html` URL through the browser tabs API. An existing
+NewsNext app tab is navigated to the requested Board and focused; a new tab is
+created only when none exists. Incompatible daemon and extension versions
+disconnect instead of silently accepting a partial control surface. Protocol
+version 4 makes History daemon-owned and adds the explicit `retain` flag to
+`source.run`. Protocol version 5 publishes each
+connected extension's Board summaries to the menu-bar app, keeps them current
+after collection changes, and makes `app.open` target an explicit Board route.
 
 Native Messaging registration is the browser-facing security boundary.
 Development and production use distinct host identities so their executables
