@@ -239,10 +239,12 @@ are not required to use the product. Compatibility with later encrypted sync or
 replication is a design constraint, not an MVP dependency.
 
 Every Turso API, configuration, connection, query, transaction, migration, and
-error-handling choice must follow `docs/TURSO_MANUAL.md`. The implementation
-must not infer Turso behavior from generic SQLite or libSQL usage. A missing or
-ambiguous manual contract blocks that implementation decision until the gap is
-resolved.
+error-handling choice must follow the official documentation index at
+`https://docs.turso.tech/llms.txt` and the pages it links. This official index is
+the sole authoritative specification; cached documentation, generic SQLite or
+libSQL behavior, and third-party examples are not substitutes. A missing or
+ambiguous official contract blocks that implementation decision until the gap
+is resolved.
 
 ### Storage responsibilities
 
@@ -619,7 +621,7 @@ The remaining product gaps are:
 | DAT-10 | Source execution remains browser-owned | Agent tasks request registered Source execution from a connected extension and receive normalized output without receiving browser credentials or duplicating the Source runtime |
 | DAT-11 | Credentials remain browser-owned | Source credentials and browser session secrets never enter Native Messaging, IPC, logs, task inputs, materialized outputs, or database fields |
 | DAT-12 | Database failures are diagnosable | CLI status and errors distinguish missing files, migration failure, incompatible schema, lock contention, corruption, disk exhaustion, and unavailable browser Fetch authority |
-| DAT-13 | Turso usage follows the repository manual | Every Turso API and behavior used by production code is traceable to `docs/TURSO_MANUAL.md`; undocumented assumptions are rejected during review |
+| DAT-13 | Turso usage follows the official specification | Every Turso API and behavior used by production code is traceable through `https://docs.turso.tech/llms.txt`; undocumented assumptions are rejected during review |
 
 ### Board and Layer requirements
 
@@ -806,8 +808,9 @@ without changing the two-Layer Board contract.
 
 ### Phase 0: Shared local database and daemon boundary
 
-- Read and follow the applicable `docs/TURSO_MANUAL.md` sections before
-  selecting dependencies or writing database code.
+- Read and follow the applicable official documentation indexed by
+  `https://docs.turso.tech/llms.txt` before selecting dependencies or writing
+  database code.
 - Add the embedded Turso/libSQL database to the Rust desktop runtime.
 - Resolve the platform application data directory and select
   `newsnext.dev.db` or `newsnext.prod.db` from the existing runtime environment.

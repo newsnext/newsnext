@@ -67,14 +67,17 @@ Newsnext is a personalized web crawler that runs inside a browser extension (mv3
 
 ### Database Documentation
 
-- `docs/TURSO_MANUAL.md` is the canonical implementation reference for every
-  Turso API, configuration option, connection mode, query, transaction,
-  migration, replication, and error-handling pattern used in this repository.
-- Read the relevant manual sections before implementing or reviewing Turso
-  code. Do not substitute behavior remembered from SQLite, libSQL, another
-  Turso SDK, or external examples when it is not documented in the manual.
-- If a required Turso behavior is absent or ambiguous in the manual, stop and
-  surface the gap instead of inventing an API or compatibility path.
+- `https://docs.turso.tech/llms.txt` is the sole authoritative specification
+  for every Turso API, configuration option, connection mode, query,
+  transaction, migration, replication, and error-handling pattern used in this
+  repository.
+- Read the relevant official documentation linked from that index before
+  implementing or reviewing Turso code. Do not substitute behavior remembered
+  from SQLite, libSQL, another Turso SDK, cached documentation, or third-party
+  examples.
+- If a required Turso behavior is absent or ambiguous in the official
+  documentation index and its linked pages, stop and surface the gap instead
+  of inventing an API or compatibility path.
 
 ### Version Control
 
