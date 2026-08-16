@@ -807,8 +807,7 @@ capabilities: {
 Network entries may be an exact hostname, a wildcard subdomain, or `*`. Only
 HTTP and HTTPS requests are accepted. Custom loaders must declare every network
 and cookie capability they use; loaders that use neither may omit
-`capabilities`. Browser API permissions are not a source authoring capability:
-the extension owns them for its built-in `browser:*` sources.
+`capabilities`.
 
 The built-in `rss:feed` source is also permission-specialized. Although its
 runtime network capability is `*` so it can validate a user-selected feed, the

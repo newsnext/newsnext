@@ -16,13 +16,11 @@ function createSource({
   network = [],
   providerName = "Test",
   sourceId = "test:source",
-  title,
 }: {
   cookies?: string[]
   network?: string[]
   providerName?: string
   sourceId?: string
-  title?: string
 }) {
   return {
     capabilities: { cookies, network },
@@ -30,26 +28,10 @@ function createSource({
       title: providerName,
     },
     sourceId,
-    metadata: { title },
   }
 }
 
 describe("source permissions", () => {
-  it("maps browser sources to all optional permissions they use", () => {
-    expect(getPermissionRequestForSource(createSource({
-      sourceId: "browser:history",
-      title: "History",
-    }))).toEqual({
-      permissions: ["history"],
-    })
-    expect(getPermissionRequestForSource(createSource({
-      sourceId: "browser:bookmarks",
-      title: "Bookmarks",
-    }))).toEqual({
-      permissions: ["bookmarks", "favicon"],
-    })
-  })
-
   it("maps RSS feeds to the configured feed origin", () => {
     const source = {
       ...createSource({

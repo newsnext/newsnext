@@ -485,15 +485,11 @@ The extension executes registry access and source loaders through its background
 service so loaders can use extension host permissions, cookie and local-storage
 secrets, and request rules.
 
-Host capabilities and browser API permissions intentionally follow separate
-paths. Ordinary sources expose only `network` and `cookies` capabilities. The
-extension maps the built-in `browser:history` and `browser:bookmarks` source IDs
-to their fixed optional browser permissions; registry authors cannot extend
-that mapping through source configuration. The `rss:feed` source has a
-parameter-aware host-permission resolver that converts its effective `url`
-parameter into one exact hostname origin instead of requesting the wildcard
-declared for runtime network validation. Permission state is recomputed when
-the saved parameter changes.
+Sources expose only `network` and `cookies` capabilities. The `rss:feed` source
+has a parameter-aware host-permission resolver that converts its effective
+`url` parameter into one exact hostname origin instead of requesting the
+wildcard declared for runtime network validation. Permission state is
+recomputed when the saved parameter changes.
 
 ## Parameter and request pipeline
 
@@ -728,8 +724,7 @@ the instance patch.
 Capabilities describe effects a source may perform:
 
 - `network` controls permitted HTTP and HTTPS hostnames;
-- `cookies` identifies origins used by cookie-backed secrets;
-- `browser` controls browser features such as history or bookmarks.
+- `cookies` identifies origins used by cookie-backed secrets.
 
 Structured loaders infer a static URL hostname and merge it with explicit
 capabilities. Dynamic URLs are checked after template rendering. Custom loaders

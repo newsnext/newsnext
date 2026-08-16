@@ -11,25 +11,23 @@ import {
   resolveSourceRegistry,
 } from "@newsnext/source/registry"
 import provider_0 from "./src/bilibili"
-import provider_1 from "./src/browser"
-import provider_2 from "./src/cls"
-import provider_3 from "./src/folo"
-import provider_4 from "./src/jike/index"
-import provider_5 from "./src/reddit/index"
-import provider_6 from "./src/weibo/index"
-import provider_7 from "./src/x/index"
-import provider_8 from "./src/xueqiu"
+import provider_1 from "./src/cls"
+import provider_2 from "./src/folo"
+import provider_3 from "./src/jike/index"
+import provider_4 from "./src/reddit/index"
+import provider_5 from "./src/weibo/index"
+import provider_6 from "./src/x/index"
+import provider_7 from "./src/xueqiu"
 
 const providerConfigs: Record<string, ProviderConfig> = {
   "bilibili": provider_0,
-  "browser": provider_1,
-  "cls": provider_2,
-  "folo": provider_3,
-  "jike": provider_4,
-  "reddit": provider_5,
-  "weibo": provider_6,
-  "x": provider_7,
-  "xueqiu": provider_8
+  "cls": provider_1,
+  "folo": provider_2,
+  "jike": provider_3,
+  "reddit": provider_4,
+  "weibo": provider_5,
+  "x": provider_6,
+  "xueqiu": provider_7
 }
 
 export const executableLoaders: ExecutableSourceLoaders = Object.fromEntries(

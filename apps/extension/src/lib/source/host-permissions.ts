@@ -39,10 +39,5 @@ export function getUserManagedHostPermissionOrigins(
 }
 
 export async function revokeHostPermissionOrigin(origin: string): Promise<boolean> {
-  const grantedOrigins = await getGrantedHostPermissionOrigins()
-  if (!grantedOrigins.includes(origin)) {
-    return false
-  }
-
   return browser.permissions.remove({ origins: [origin] }).catch(() => false)
 }

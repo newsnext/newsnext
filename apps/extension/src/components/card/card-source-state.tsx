@@ -91,7 +91,7 @@ export function SourcePermissionState({
       label="Authorize"
       onClick={() => void onRequestPermission()}
       provider={provider}
-      title="Authorize access to this browser source"
+      title="Authorize access to this source"
     />
   )
 }

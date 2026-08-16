@@ -14,7 +14,7 @@ export interface SourcePermissionRequest {
 
 export type SourcePermissionTarget = Pick<
   SourceDescriptor,
-  "capabilities" | "metadata" | "params"
+  "capabilities" | "params"
 > & {
   provider: Pick<SourceProvider, "title">
   sourceId: string
@@ -24,15 +24,9 @@ export function getPermissionRequestForSource(
   source: SourcePermissionTarget,
   params: Record<string, unknown> = {},
 ): SourcePermissionRequest | undefined {
-  switch (source.sourceId) {
-    case "browser:bookmarks":
-      return { permissions: ["bookmarks", "favicon"] }
-    case "browser:history":
-      return { permissions: ["history"] }
-    case "rss:feed": {
-      const origin = getUrlParamPermissionOrigin(source.params?.url, params.url)
-      return origin ? { origins: [origin] } : undefined
-    }
+  if (source.sourceId === "rss:feed") {
+    const origin = getUrlParamPermissionOrigin(source.params?.url, params.url)
+    return origin ? { origins: [origin] } : undefined
   }
 
   const requiresCookies = source.capabilities.cookies.length > 0
@@ -77,7 +71,6 @@ export function getSourcePermissionDescription(
     return "Authorize the permissions required to load this source."
   }
 
-  const browserData = request.permissions?.filter(permission => permission !== "cookies") ?? []
   const hosts = request.origins?.map((origin) => {
     try {
       return new URL(origin.replace("*://", "https://")).hostname
@@ -85,10 +78,6 @@ export function getSourcePermissionDescription(
       return origin
     }
   }) ?? []
-
-  if (browserData.length > 0 && hosts.length === 0) {
-    return `Authorize access to your browser ${source.metadata.title?.toLowerCase() ?? "data"} to continue.`
-  }
 
   if (hosts.length === 1) {
     return `Authorize access to ${hosts[0]} to load this source.`
