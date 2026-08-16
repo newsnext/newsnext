@@ -42,12 +42,42 @@ describe("application operation catalog", () => {
       type: "collection.create",
       input: { name: "AI", color: "invisible" },
     })).toThrow("Unsupported input field")
+    expect(parseApplicationAction({
+      type: "collection.delete",
+      input: { collectionId: "reading", deleteInstances: true },
+    })).toEqual({
+      type: "collection.delete",
+      input: { collectionId: "reading", deleteInstances: true },
+    })
+    expect(() => parseApplicationAction({
+      type: "collection.delete",
+      input: { collectionId: "reading", deleteInstances: "yes" },
+    })).toThrow("must be a boolean")
     expect(() => parseApplicationAction({
       type: "view.configureCollection",
       input: { collectionId: "reading", color: "invisible" },
     })).toThrow("supported theme color")
     expect(() => parseApplicationAction({ type: "unknown", input: {} }))
       .toThrow("Unknown application Action")
+    expect(parseApplicationAction({
+      type: "collection.create",
+      input: {
+        name: "Subscriptions",
+        instances: [{
+          sourceId: "rss:feed",
+          patch: { params: { url: "https://example.com/feed.xml" } },
+        }],
+      },
+    })).toEqual({
+      type: "collection.create",
+      input: {
+        name: "Subscriptions",
+        instances: [{
+          sourceId: "rss:feed",
+          patch: { params: { url: "https://example.com/feed.xml" } },
+        }],
+      },
+    })
     expect(parseApplicationAction({
       type: "collection.update",
       input: {

@@ -12,8 +12,14 @@ export interface CollectionViewConfiguration {
   sortMode?: BoardSortMode
 }
 
+interface ApplicationInstanceCreationInput {
+  patch: SourceInstancePatch
+  sourceId: string
+}
+
 export interface ApplicationActionInputMap {
   "collection.create": {
+    instances?: ApplicationInstanceCreationInput[]
     name: string
     view?: CollectionViewConfiguration
   }
@@ -27,14 +33,15 @@ export interface ApplicationActionInputMap {
     view?: CollectionViewConfiguration
   }
   "view.configureCollection": CollectionViewConfiguration & { collectionId: string }
-  "collection.delete": { collectionId: string }
+  "collection.delete": {
+    collectionId: string
+    deleteInstances?: boolean
+  }
   "collection.reorderInstances": { collectionId: string, instanceIds: string[] }
   "collection.addInstance": { collectionId: string, instanceId: string }
   "collection.removeInstance": { collectionId: string, instanceId: string }
-  "instance.create": {
+  "instance.create": ApplicationInstanceCreationInput & {
     collectionId: string | null
-    patch: SourceInstancePatch
-    sourceId: string
   }
   "instance.configure": { instanceId: string, patch: SourceInstancePatch }
   "instance.resetParams": { instanceId: string }
@@ -73,22 +80,29 @@ export function executeApplicationAction(
   switch (action.type) {
     case "collection.create": {
       const name = action.input.name.trim()
-      assertCollectionNameAvailable(data, name)
+      assertCollectionName(name)
       const collectionId = dependencies.createId()
       const view = configureCollectionView(
         createCollectionView(collectionId),
         action.input.view ?? {},
       )
+      let nextData: ApplicationData = {
+        ...data,
+        collections: [...data.collections, {
+          id: collectionId,
+          name,
+          createdAt: dependencies.now(),
+        }],
+        collectionViews: [...data.collectionViews, view],
+      }
+      for (const instance of action.input.instances ?? []) {
+        nextData = executeApplicationAction(nextData, {
+          type: "instance.create",
+          input: { ...instance, collectionId },
+        }, dependencies).data
+      }
       return {
-        data: {
-          ...data,
-          collections: [...data.collections, {
-            id: collectionId,
-            name,
-            createdAt: dependencies.now(),
-          }],
-          collectionViews: [...data.collectionViews, view],
-        },
+        data: nextData,
         result: { collectionId },
       }
     }
@@ -96,7 +110,7 @@ export function executeApplicationAction(
       const { collectionId } = action.input
       const name = action.input.name.trim()
       assertCollectionExists(data, collectionId)
-      assertCollectionNameAvailable(data, name, collectionId)
+      assertCollectionName(name)
       return {
         data: {
           ...data,
@@ -114,7 +128,7 @@ export function executeApplicationAction(
       }
       const name = action.input.name?.trim()
       if (name !== undefined) {
-        assertCollectionNameAvailable(data, name, collectionId)
+        assertCollectionName(name)
       }
       return {
         data: {
@@ -141,14 +155,20 @@ export function executeApplicationAction(
       }
     }
     case "collection.delete": {
-      const { collectionId } = action.input
+      const { collectionId, deleteInstances = false } = action.input
       assertCollectionExists(data, collectionId)
+      const deletedInstanceIds = deleteInstances
+        ? getExclusiveCollectionInstanceIds(data, collectionId)
+        : undefined
       return {
         data: {
           ...data,
           collections: data.collections.filter(collection => collection.id !== collectionId),
           collectionEntries: data.collectionEntries.filter(entry => entry.collectionId !== collectionId),
           collectionViews: data.collectionViews.filter(view => view.collectionId !== collectionId),
+          instances: deletedInstanceIds
+            ? data.instances.filter(instance => !deletedInstanceIds.has(instance.instanceId))
+            : data.instances,
         },
       }
     }
@@ -264,6 +284,19 @@ export function executeApplicationAction(
   }
 }
 
+function getExclusiveCollectionInstanceIds(
+  data: ApplicationData,
+  collectionId: string,
+): Set<string> {
+  const otherCollectionInstanceIds = new Set(data.collectionEntries
+    .filter(entry => entry.collectionId !== collectionId)
+    .map(entry => entry.instanceId))
+  return new Set(data.collectionEntries
+    .filter(entry => entry.collectionId === collectionId
+      && !otherCollectionInstanceIds.has(entry.instanceId))
+    .map(entry => entry.instanceId))
+}
+
 function updateCollectionViews(
   data: ApplicationData,
   collectionId: string,
@@ -315,14 +348,6 @@ function assertInstanceExists(data: ApplicationData, instanceId: string): void {
   }
 }
 
-function assertCollectionNameAvailable(
-  data: ApplicationData,
-  name: string,
-  excludedCollectionId?: string,
-): void {
+function assertCollectionName(name: string): void {
   if (!name) throw new Error("Collection name is required")
-  if (data.collections.some(collection => collection.id !== excludedCollectionId
-    && collection.name.localeCompare(name, undefined, { sensitivity: "accent" }) === 0)) {
-    throw new Error(`Collection '${name}' already exists`)
-  }
 }

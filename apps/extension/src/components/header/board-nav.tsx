@@ -1,6 +1,24 @@
+import type { ChangeEvent } from "react"
 import type { BoardDialogTarget } from "@/components/board-dialog"
-import type { Board, BoardCreateInput } from "@/lib/board"
+import type { BoardCreateInput } from "@/lib/board"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogBody,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
+} from "@newsnext/ui/components/alert-dialog"
 import { Button } from "@newsnext/ui/components/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@newsnext/ui/components/dropdown-menu"
 import {
   PillGroup,
   PillGroupIndicator,
@@ -9,15 +27,18 @@ import {
 import { useHotkeys } from "@tanstack/react-hotkeys"
 import { useNavigate } from "@tanstack/react-router"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
-import { useState } from "react"
+import { CircleAlert } from "lucide-react"
+import { useRef, useState } from "react"
 import { BoardDialog } from "@/components/board-dialog"
-import { PhPlusCircle } from "@/components/icons/ph"
+import { PhCircleDashed, PhFileArrowUp, PhPlusCircle } from "@/components/icons/ph"
 import { ALL_BOARD_ID, getAdjacentBoardId } from "@/lib/board"
+import { OpmlImportError, parseOpml } from "@/lib/opml"
 import { DEFAULT_SHORTCUT_SETTINGS, SHORTCUT_DEFINITIONS } from "@/lib/settings"
 import { cn } from "@/lib/utils"
 import {
   boardsAtom,
   createBoardAtom,
+  createBoardFromOpmlAtom,
   deleteBoardAtom,
   updateBoardAtom,
 } from "@/store/board"
@@ -44,9 +65,13 @@ export function BoardNav() {
   const [currentBoardId, setCurrentBoardId] = useAtom(currentBoardIdAtom)
   const shortcuts = useAtomValue(shortcutSettingsAtom)
   const addBoard = useSetAtom(createBoardAtom)
+  const addBoardFromOpml = useSetAtom(createBoardFromOpmlAtom)
   const updateBoard = useSetAtom(updateBoardAtom)
   const deleteBoard = useSetAtom(deleteBoardAtom)
   const [dialogTarget, setDialogTarget] = useState<BoardDialogTarget | null>(null)
+  const [importError, setImportError] = useState<string>()
+  const [isImporting, setIsImporting] = useState(false)
+  const opmlInputRef = useRef<HTMLInputElement>(null)
 
   function openBoard(boardId: string): void {
     setCurrentBoardId(boardId)
@@ -109,13 +134,30 @@ export function BoardNav() {
     }
   }
 
-  async function handleUpdate(board: Board): Promise<void> {
-    await updateBoard(board)
+  async function handleDelete(boardId: string, deleteCards: boolean): Promise<void> {
+    await deleteBoard({ boardId, deleteCards })
+    openBoard(ALL_BOARD_ID)
   }
 
-  async function handleDelete(boardId: string): Promise<void> {
-    await deleteBoard(boardId)
-    openBoard(ALL_BOARD_ID)
+  async function handleOpmlImport(event: ChangeEvent<HTMLInputElement>): Promise<void> {
+    const input = event.currentTarget
+    const file = input.files?.[0]
+    if (!file) return
+
+    setImportError(undefined)
+    setIsImporting(true)
+    try {
+      const imported = parseOpml(await file.text())
+      const result = await addBoardFromOpml(imported)
+      if (result.collectionId) openBoard(result.collectionId)
+    } catch (error) {
+      setImportError(error instanceof OpmlImportError
+        ? error.message
+        : "NewsNext could not create the Board or import its RSS feeds.")
+    } finally {
+      input.value = ""
+      setIsImporting(false)
+    }
   }
 
   return (
@@ -155,7 +197,10 @@ export function BoardNav() {
               {isActive && (
                 <PillGroupIndicator layoutId="active-board" />
               )}
-              <span className="relative z-10">
+              <span
+                className="relative z-10 block max-w-8 truncate sm:max-w-16"
+                title={board.name}
+              >
                 {board.name}
               </span>
               {isEditable && (
@@ -171,17 +216,40 @@ export function BoardNav() {
             </Button>
           )
         })}
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-sm"
-          onClick={() => setDialogTarget({ mode: "create" })}
-          className="shrink-0 text-muted-foreground hover:bg-foreground/5 hover:text-foreground focus-visible:ring-2 focus-visible:ring-theme-400"
-          aria-label="Create board"
-          title="Create board"
-        >
-          <PhPlusCircle />
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            render={(
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                disabled={isImporting}
+                className="shrink-0 text-muted-foreground hover:bg-foreground/5 hover:text-foreground focus-visible:ring-2 focus-visible:ring-theme-400"
+              />
+            )}
+            aria-label="Create board"
+            title="Create board"
+          >
+            {isImporting ? <PhCircleDashed className="animate-spin" /> : <PhPlusCircle />}
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-60">
+            <DropdownMenuItem onClick={() => setDialogTarget({ mode: "create" })}>
+              <PhPlusCircle />
+              Create board
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => opmlInputRef.current?.click()}>
+              <PhFileArrowUp />
+              Create board from OPML
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <input
+          ref={opmlInputRef}
+          type="file"
+          accept=".opml,.xml,text/x-opml,text/xml,application/xml"
+          className="sr-only"
+          onChange={event => void handleOpmlImport(event)}
+        />
       </PillGroup>
       {dialogTarget && (
         <BoardDialog
@@ -191,9 +259,30 @@ export function BoardNav() {
           onClose={() => setDialogTarget(null)}
           onCreate={handleCreate}
           onDelete={handleDelete}
-          onUpdate={handleUpdate}
+          onUpdate={updateBoard}
         />
       )}
+      <AlertDialog
+        open={importError !== undefined}
+        onOpenChange={(open) => {
+          if (!open) setImportError(undefined)
+        }}
+      >
+        <AlertDialogContent size="sm">
+          <AlertDialogHeader>
+            <AlertDialogMedia><CircleAlert /></AlertDialogMedia>
+            <AlertDialogTitle>Couldn’t import OPML</AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogBody>
+            <AlertDialogDescription>{importError}</AlertDialogDescription>
+            <AlertDialogFooter>
+              <AlertDialogAction className="col-span-2" onClick={() => setImportError(undefined)}>
+                Close
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogBody>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   )
 }

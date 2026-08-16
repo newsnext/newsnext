@@ -285,8 +285,10 @@ view.configureCollection
 
 `collection.rename` changes only canonical Data. `view.configureCollection`
 changes only Board color, default view, or sort mode. `collection.create` accepts an
-optional nested View configuration and persists the Collection and its View in
-one operation. `collection.update` atomically combines an optional name change
+optional nested View configuration and an optional list of configured Instances,
+then persists the Collection, View, Instances, and memberships in one operation.
+This is the atomic boundary used by bulk imports such as creating a Board from
+OPML. `collection.update` atomically combines an optional name change
 with an optional nested View change when one human intent spans both layers.
 `collection.reorderInstances` atomically records the complete manual order and
 selects manual View sorting.
@@ -303,14 +305,22 @@ collection.addInstance({
 
 Removing a Card from one Board executes `collection.removeInstance`. Deleting
 the underlying configured Instance executes `instance.delete` and removes all
-of its Collection entries.
+of its Collection entries. `collection.delete` preserves Instances by default;
+setting `deleteInstances` deletes each Instance used only by that Collection,
+which also removes it from All. Shared Instances remain in their other
+Collections.
 
-Application-level composite actions may capture common atomic intent. A future
-action for adding a Source to a Collection may instantiate the Source and
-create the Collection entry as one operation:
+Application-level composite actions capture common atomic intent. Creating a
+Collection with `instances` configures every Source Instance and creates its
+Collection entry in the same operation:
 
 ```ts
-collection.addSource({ collectionId, params, sourceId })
+collection.create({
+  name: "Subscriptions",
+  instances: [
+    { sourceId: "rss:feed", patch: { params: { url: feedUrl } } },
+  ],
+})
 ```
 
 Consumers must not be required to reproduce that orchestration themselves.

@@ -10,6 +10,7 @@ import PhCircleDashed from "~icons/ph/circle-dashed-bold"
 import PhCircleDashedDuotone from "~icons/ph/circle-dashed-duotone"
 import PhDotsSixVerticalDuotone from "~icons/ph/dots-six-vertical-duotone"
 import PhEye from "~icons/ph/eye-bold"
+import PhFileArrowUp from "~icons/ph/file-arrow-up-bold"
 import PhGear from "~icons/ph/gear-bold"
 import PhHeart from "~icons/ph/heart-bold"
 import PhInfo from "~icons/ph/info-bold"
@@ -38,6 +39,7 @@ export {
   PhCircleDashedDuotone,
   PhDotsSixVerticalDuotone,
   PhEye,
+  PhFileArrowUp,
   PhGear,
   PhHeart,
   PhInfo,

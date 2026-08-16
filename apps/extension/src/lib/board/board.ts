@@ -54,9 +54,3 @@ export function getAdjacentBoardId(
   if (currentIndex === -1) return undefined
   return boards[(currentIndex + offset + boards.length) % boards.length]?.id
 }
-
-export function isBoardNameTaken(boards: Board[], name: string, excludedBoardId?: string): boolean {
-  const normalizedName = name.trim()
-  return boards.some(board => board.id !== excludedBoardId
-    && board.name.localeCompare(normalizedName, undefined, { sensitivity: "accent" }) === 0)
-}

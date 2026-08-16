@@ -30,10 +30,17 @@ export async function executeBackgroundApplicationAction(
 ): Promise<ApplicationActionResult> {
   const parsedAction = parseApplicationAction(action)
   const execution = mutationQueue.then(async () => {
-    if (parsedAction.type === "instance.create") {
+    const sourceIds = parsedAction.type === "instance.create"
+      ? [parsedAction.input.sourceId]
+      : parsedAction.type === "collection.create"
+        ? (parsedAction.input.instances ?? []).map(instance => instance.sourceId)
+        : []
+    if (sourceIds.length > 0) {
       const sources = await loadSourceDescriptors()
-      if (!sources.some(source => source.id === parsedAction.input.sourceId)) {
-        throw new Error(`Source '${parsedAction.input.sourceId}' not found`)
+      const registeredSourceIds = new Set(sources.map(source => source.id))
+      const missingSourceId = sourceIds.find(sourceId => !registeredSourceIds.has(sourceId))
+      if (missingSourceId) {
+        throw new Error(`Source '${missingSourceId}' not found`)
       }
     }
     const data = await readApplicationData()

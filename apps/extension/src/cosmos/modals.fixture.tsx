@@ -235,7 +235,9 @@ function BoardDialogFixture({ target }: { target: BoardDialogTarget }) {
           target={target}
           onClose={() => setOpen(false)}
           onCreate={describeCreateAction}
-          onDelete={boardId => setLastAction(`Deleted ${boardId}`)}
+          onDelete={(boardId, deleteCards) => setLastAction(
+            `Deleted ${boardId}${deleteCards ? " with cards" : ""}`,
+          )}
           onUpdate={board => describeBoardAction("Updated", board)}
         />
       )}

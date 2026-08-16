@@ -16,7 +16,7 @@ import { useState } from "react"
 import { ConfigSection } from "@/components/common/config-section"
 import { PhCheckCircle, PhTrash } from "@/components/icons/ph"
 import { useAsyncAction } from "@/hooks/use-async-action"
-import { ALL_BOARD_ID, DEFAULT_BOARD_COLOR, DEFAULT_BOARD_SORT_PREFERENCE, DEFAULT_BOARD_VIEW_MODE, getBoardColor, isBoardNameTaken, updateBoardSortMode } from "@/lib/board"
+import { ALL_BOARD_ID, DEFAULT_BOARD_COLOR, DEFAULT_BOARD_SORT_PREFERENCE, DEFAULT_BOARD_VIEW_MODE, getBoardColor, updateBoardSortMode } from "@/lib/board"
 import { cn } from "@/lib/utils"
 
 const SORT_OPTIONS: { label: string, value: BoardSortMode }[] = [
@@ -30,6 +30,19 @@ const VIEW_OPTIONS: { label: string, value: BoardViewMode }[] = [
   { label: "Next", value: "next" },
 ]
 
+const DELETE_OPTIONS = [
+  {
+    confirmLabel: "Confirm board only",
+    deleteCards: false,
+    label: "Delete board",
+  },
+  {
+    confirmLabel: "Confirm board + cards",
+    deleteCards: true,
+    label: "Delete board with cards",
+  },
+] as const
+
 export type BoardDialogTarget
   = | { mode: "create" }
     | { mode: "edit", boardId: string }
@@ -40,7 +53,7 @@ interface BoardDialogProps {
   target: BoardDialogTarget
   onClose: () => void
   onCreate: (input: BoardCreateInput) => Promise<void> | void
-  onDelete: (boardId: string) => Promise<void> | void
+  onDelete: (boardId: string, deleteCards: boolean) => Promise<void> | void
   onUpdate: (board: Board) => Promise<void> | void
 }
 
@@ -76,15 +89,13 @@ function ConfigurableBoardDialog({
   const [color, setColor] = useState<Color>(initialColor)
   const [sortMode, setSortMode] = useState<BoardSortMode>(initialSortMode)
   const [defaultView, setDefaultView] = useState<BoardViewMode>(initialDefaultView)
-  const [isDeleteArmed, setIsDeleteArmed] = useState(false)
+  const [armedDeleteCards, setArmedDeleteCards] = useState<boolean>()
   const { error: submitError, isPending: isSubmitting, run: runAction } = useAsyncAction(
     "The board could not be saved.",
   )
   const normalizedName = name.trim()
-  const hasDuplicateName = isBoardNameTaken(boards, normalizedName, boardId)
   const canSubmit = (!isEditing || board !== undefined)
     && normalizedName.length > 0
-    && !hasDuplicateName
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault()
@@ -118,13 +129,13 @@ function ConfigurableBoardDialog({
     if (succeeded) onClose()
   }
 
-  async function handleDelete(): Promise<void> {
+  async function handleDelete(deleteCards: boolean): Promise<void> {
     if (!boardId) {
       return
     }
 
     const succeeded = await runAction(async () => {
-      await onDelete(boardId)
+      await onDelete(boardId, deleteCards)
     }, "The board could not be deleted.")
     if (succeeded) onClose()
   }
@@ -155,13 +166,10 @@ function ConfigurableBoardDialog({
               <Input
                 id="board-name"
                 autoFocus
-                maxLength={40}
                 placeholder={isEditing ? undefined : "Product signals"}
                 value={name}
                 onChange={event => setName(event.target.value)}
-                aria-invalid={hasDuplicateName}
               />
-              {hasDuplicateName && <p className="text-xs text-destructive">A board with this name already exists.</p>}
             </ConfigSection>
 
             <ConfigSection variant="group" title="Theme color">
@@ -210,29 +218,41 @@ function ConfigurableBoardDialog({
 
             <DialogFooter className={cn(isEditing && "sm:justify-between")}>
               {isEditing && (
-                <Button
-                  type="button"
-                  variant="destructive"
-                  disabled={isSubmitting}
-                  onBlur={() => setIsDeleteArmed(false)}
-                  onClick={() => {
-                    if (isDeleteArmed) {
-                      void handleDelete()
-                      return
-                    }
-                    setIsDeleteArmed(true)
-                  }}
-                >
-                  {isDeleteArmed ? <PhCheckCircle /> : <PhTrash />}
-                  <span aria-live="polite">
-                    {isDeleteArmed ? "Confirm delete" : "Delete board"}
-                  </span>
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                  {DELETE_OPTIONS.map(option => (
+                    <Button
+                      key={option.label}
+                      type="button"
+                      variant="destructive"
+                      disabled={isSubmitting}
+                      onBlur={() => setArmedDeleteCards(undefined)}
+                      onClick={() => {
+                        if (armedDeleteCards === option.deleteCards) {
+                          void handleDelete(option.deleteCards)
+                          return
+                        }
+                        setArmedDeleteCards(option.deleteCards)
+                      }}
+                    >
+                      {armedDeleteCards === option.deleteCards ? <PhCheckCircle /> : <PhTrash />}
+                      <span aria-live="polite">
+                        {armedDeleteCards === option.deleteCards ? option.confirmLabel : option.label}
+                      </span>
+                    </Button>
+                  ))}
+                </div>
               )}
               <Button type="submit" disabled={!canSubmit || isSubmitting}>
                 {isSubmitting ? "Saving…" : isEditing ? "Save changes" : "Create board"}
               </Button>
             </DialogFooter>
+            {armedDeleteCards !== undefined && (
+              <p role="status" className="text-xs text-destructive">
+                {armedDeleteCards
+                  ? "Deletes cards not used by other boards. Shared cards stay in those boards."
+                  : "Cards remain available in All and any other boards."}
+              </p>
+            )}
             {submitError && (
               <p role="alert" className="text-sm text-destructive">{submitError}</p>
             )}

@@ -42,6 +42,14 @@ const PATCH_SCHEMA = {
   },
   additionalProperties: false,
 } as const
+const INSTANCE_CREATION_PROPERTIES = {
+  patch: PATCH_SCHEMA,
+  sourceId: IDENTIFIER_SCHEMA,
+} as const
+const INSTANCE_CREATION_SCHEMA = objectSchema(
+  INSTANCE_CREATION_PROPERTIES,
+  ["patch", "sourceId"],
+)
 const COLLECTION_VIEW_PROPERTIES = {
   color: { enum: COLORS },
   defaultView: { enum: ["now", "next"] },
@@ -54,16 +62,18 @@ const actionDefinitions: {
 } = {
   "collection.create": {
     name: "collection.create",
-    description: "Create a Collection and its human Board preferences.",
+    description: "Create a Collection, its Board preferences, and optional configured Instances.",
     inputSchema: objectSchema({
+      instances: { type: "array", items: INSTANCE_CREATION_SCHEMA },
       name: IDENTIFIER_SCHEMA,
       view: COLLECTION_VIEW_CONFIGURATION_SCHEMA,
     }, ["name"]),
     outputSchema: objectSchema({ collectionId: IDENTIFIER_SCHEMA }, ["collectionId"]),
     parseInput: (value) => {
       const input = requireRecord(value)
-      requireOnlyKeys(input, ["name", "view"])
+      requireOnlyKeys(input, ["instances", "name", "view"])
       return {
+        ...(input.instances !== undefined ? { instances: parseInstanceCreations(input.instances) } : {}),
         name: requireIdentifier(input.name, "name"),
         ...(input.view !== undefined ? { view: parseCollectionViewConfiguration(input.view) } : {}),
       }
@@ -126,11 +136,28 @@ const actionDefinitions: {
       }
     },
   },
-  "collection.delete": simpleIdAction(
-    "collection.delete",
-    "Delete a Collection without deleting its Instances.",
-    "collectionId",
-  ),
+  "collection.delete": {
+    name: "collection.delete",
+    description: "Delete a Collection, optionally deleting Instances not used by other Collections.",
+    inputSchema: objectSchema({
+      collectionId: IDENTIFIER_SCHEMA,
+      deleteInstances: { type: "boolean" },
+    }, ["collectionId"]),
+    outputSchema: EMPTY_OBJECT_SCHEMA,
+    parseInput: (value) => {
+      const input = requireRecord(value)
+      requireOnlyKeys(input, ["collectionId", "deleteInstances"])
+      if (input.deleteInstances !== undefined && typeof input.deleteInstances !== "boolean") {
+        throw new Error("'deleteInstances' must be a boolean")
+      }
+      return {
+        collectionId: requireIdentifier(input.collectionId, "collectionId"),
+        ...(input.deleteInstances !== undefined
+          ? { deleteInstances: input.deleteInstances }
+          : {}),
+      }
+    },
+  },
   "collection.reorderInstances": {
     name: "collection.reorderInstances",
     description: "Set the complete manual Instance order for a Collection.",
@@ -161,8 +188,7 @@ const actionDefinitions: {
     description: "Create a configured Source Instance and optionally add it to a Collection.",
     inputSchema: objectSchema({
       collectionId: NULLABLE_IDENTIFIER_SCHEMA,
-      patch: PATCH_SCHEMA,
-      sourceId: IDENTIFIER_SCHEMA,
+      ...INSTANCE_CREATION_PROPERTIES,
     }, ["collectionId", "patch", "sourceId"]),
     outputSchema: objectSchema({ instanceId: IDENTIFIER_SCHEMA }, ["instanceId"]),
     parseInput: (value) => {
@@ -170,8 +196,7 @@ const actionDefinitions: {
       requireOnlyKeys(input, ["collectionId", "patch", "sourceId"])
       return {
         collectionId: requireNullableIdentifier(input.collectionId, "collectionId"),
-        patch: requireSourceInstancePatch(input.patch),
-        sourceId: requireIdentifier(input.sourceId, "sourceId"),
+        ...parseInstanceCreationFields(input),
       }
     },
   },
@@ -353,7 +378,7 @@ export function parseApplicationQuery(value: unknown): ApplicationQuery {
 }
 
 function simpleIdAction<
-  Name extends "collection.delete" | "instance.resetParams" | "instance.delete",
+  Name extends "instance.resetParams" | "instance.delete",
   Key extends keyof ApplicationActionInputMap[Name] & string,
 >(
   name: Name,
@@ -497,6 +522,24 @@ function requireSourceInstancePatch(value: unknown): SourceInstancePatch {
   return {
     ...(patch.params !== undefined ? { params: patch.params } : {}),
     ...(patch.metadata !== undefined ? { metadata: patch.metadata } : {}),
+  }
+}
+
+function parseInstanceCreations(
+  value: unknown,
+): NonNullable<ApplicationActionInputMap["collection.create"]["instances"]> {
+  if (!Array.isArray(value)) throw new Error("'instances' must be an array")
+  return value.map((candidate) => {
+    const input = requireRecord(candidate)
+    requireOnlyKeys(input, ["patch", "sourceId"])
+    return parseInstanceCreationFields(input)
+  })
+}
+
+function parseInstanceCreationFields(input: Record<string, unknown>) {
+  return {
+    patch: requireSourceInstancePatch(input.patch),
+    sourceId: requireIdentifier(input.sourceId, "sourceId"),
   }
 }
 

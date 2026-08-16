@@ -7,7 +7,6 @@ export {
   DEFAULT_BOARD_VIEW_MODE,
   getAdjacentBoardId,
   getBoardColor,
-  isBoardNameTaken,
   NO_BOARD_VALUE,
   normalizeBoardViewMode,
 } from "./board"

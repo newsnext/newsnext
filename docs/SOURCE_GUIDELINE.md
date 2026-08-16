@@ -1151,10 +1151,14 @@ domain validation, then uses the same Application Action or Query as the UI.
 Enabling CLI access permits destructive operations such as
 `collection.delete` and `instance.delete`; inspect `action list` before
 automation and use stable Data identities rather than Board labels.
+Passing `deleteInstances: true` to `collection.delete` also deletes Instances
+used only by that Collection. Instances shared with other Collections remain.
 
 Use `collection.create` with its nested `view` object when creation includes
-Board preferences, and `collection.update` when one intent changes Collection
-data and Board preferences together. These composite Actions persist once and
+Board preferences. It also accepts an `instances` array of Source IDs and
+patches when a Collection and its configured Instances must be created in one
+atomic import. Use `collection.update` when one intent changes Collection data
+and Board preferences together. These composite Actions persist once and
 cannot be interleaved with another UI or Agent mutation. Use
 `view.configureCollection` only for a View-only change.
 

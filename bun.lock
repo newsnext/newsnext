@@ -47,6 +47,7 @@
         "defu": "catalog:",
         "dexie": "^4.4.3",
         "es-toolkit": "catalog:",
+        "fast-xml-parser": "^5.10.1",
         "jotai": "catalog:",
         "lucide-react": "catalog:",
         "motion": "catalog:",
