@@ -1,20 +1,9 @@
 import type { HtmlTraversal } from "@newsnext/source/types"
-import type {
-  RadarDiscoveryOptions,
-  RadarFeed,
-} from "./matcher"
 import type { RadarPageQuery } from "./page-query"
 import { browser } from "#imports"
 import { getRadarPageQueryKey } from "./page-query"
 
 const MAX_PAGE_SELECTION_LENGTH = 20_000
-const MAX_PAGE_FEEDS = 20
-const MAX_DISCOVERY_TITLE_LENGTH = 500
-const MAX_DIRECT_JSON_FEED_LENGTH = 1_000_000
-
-export interface RadarPageDiscovery {
-  feeds: RadarFeed[]
-}
 
 export async function readRadarPageSelections(
   tabId: number,
@@ -148,101 +137,4 @@ export async function readRadarPageSelections(
     }
   })
   return selections
-}
-
-export async function readRadarPageDiscovery(
-  tabId: number,
-  options: RadarDiscoveryOptions,
-): Promise<RadarPageDiscovery> {
-  if (!options.feeds) {
-    return { feeds: [] }
-  }
-
-  const [executionResult] = await browser.scripting.executeScript<
-    [number, number, number],
-    RadarPageDiscovery
-  >({
-    target: { tabId },
-    args: [MAX_PAGE_FEEDS, MAX_DISCOVERY_TITLE_LENGTH, MAX_DIRECT_JSON_FEED_LENGTH],
-    func: (maxFeeds, maxTitleLength, maxJsonLength) => {
-      const supportedTypes = new Set([
-        "application/atom+xml",
-        "application/feed+json",
-        "application/rss+xml",
-      ])
-      const feeds = [...(document.head?.querySelectorAll<HTMLLinkElement>("link[href]") ?? [])]
-        .filter(link =>
-          link.rel.split(/\s+/).some(value => value.toLowerCase() === "alternate")
-          && supportedTypes.has(link.type.split(";", 1)[0]?.trim().toLowerCase() ?? ""))
-        .map(link => ({
-          url: link.href,
-          ...(link.title.trim()
-            ? { title: link.title.trim().slice(0, maxTitleLength) }
-            : {}),
-        }))
-
-      const feedRoot = document
-        .querySelector("#webkit-xml-viewer-source-xml")
-        ?.firstElementChild
-        ?? document.documentElement
-      const feedRootName = feedRoot?.localName.toLowerCase()
-      if (
-        (feedRootName === "feed" || feedRootName === "rss")
-        && /^https?:$/.test(location.protocol)
-      ) {
-        feeds.unshift({
-          url: location.href,
-          ...(document.title.trim()
-            ? { title: document.title.trim().slice(0, maxTitleLength) }
-            : {}),
-        })
-      }
-
-      const contentType = document.contentType.split(";", 1)[0]?.trim().toLowerCase()
-      if (
-        (contentType === "application/feed+json" || contentType === "application/json")
-        && /^https?:$/.test(location.protocol)
-      ) {
-        const content = document.body?.textContent?.trim() ?? ""
-        if (content && content.length <= maxJsonLength) {
-          try {
-            const value: unknown = JSON.parse(content)
-            if (
-              typeof value === "object"
-              && value !== null
-              && !Array.isArray(value)
-            ) {
-              const feed = value as Record<string, unknown>
-              const title = typeof feed.title === "string" ? feed.title.trim() : ""
-              if (
-                [
-                  "https://jsonfeed.org/version/1",
-                  "https://jsonfeed.org/version/1.1",
-                ].includes(typeof feed.version === "string" ? feed.version : "")
-                && title
-                && Array.isArray(feed.items)
-              ) {
-                feeds.unshift({
-                  url: location.href,
-                  title: title.slice(0, maxTitleLength),
-                })
-              }
-            }
-          } catch {
-            // Ignore ordinary JSON documents.
-          }
-        }
-      }
-
-      const uniqueFeeds = [...new Map(
-        feeds
-          .filter(feed => /^https?:\/\//i.test(feed.url))
-          .map(feed => [feed.url, feed]),
-      ).values()].slice(0, maxFeeds)
-
-      return { feeds: uniqueFeeds }
-    },
-  }).catch(() => [])
-
-  return executionResult?.result ?? { feeds: [] }
 }

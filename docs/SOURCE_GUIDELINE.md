@@ -994,11 +994,10 @@ out. Parameterized sources need explicit rules.
 
 Do not add engine-specific generic sources for forums that expose RSS, Atom, or
 JSON Feed.
-The built-in feed discovery already handles arbitrary hosts without coupling
-the registry to forum routes, templates, or JSON APIs. Add a dedicated forum
-provider only for a site-specific contract that RSS, Atom, or JSON Feed cannot
-represent;
-arbitrary-host discovery remains extension-owned and fail-closed.
+The built-in `rss:feed` source accepts arbitrary feed URLs without coupling the
+registry to forum routes, templates, or JSON APIs. Users add the feed URL
+explicitly; Radar does not scan pages for feeds. Add a dedicated forum provider
+only for a site-specific contract that RSS, Atom, or JSON Feed cannot represent.
 
 Use `badge` for secondary instance identity. For signed or expiring images,
 return loader metadata only when the item request already provides the URL.

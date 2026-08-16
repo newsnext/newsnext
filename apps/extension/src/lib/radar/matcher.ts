@@ -10,7 +10,6 @@ import type {
 } from "@newsnext/source/types"
 import type { RadarPageQuery } from "./page-query"
 import type { SourceInstanceMetadata, SourceInstancePatch } from "@/lib/source"
-import { getFavicon } from "@newsnext/shared/utils"
 import {
   compileSourceRegex,
   compileSourceTemplate,
@@ -30,17 +29,7 @@ import {
 export interface RadarContext {
   url: string
   title?: string
-  feeds?: RadarFeed[]
   pageSelections?: Record<string, string>
-}
-
-export interface RadarFeed {
-  title?: string
-  url: string
-}
-
-export interface RadarDiscoveryOptions {
-  feeds: boolean
 }
 
 export interface RadarSuggestion {
@@ -78,9 +67,6 @@ interface RadarLocation {
 
 const DEFAULT_RADAR_RULE_ID = "default-home-origin"
 const DEFAULT_ORIGIN_RADAR_CONFIDENCE = 0
-const RSS_RADAR_CONFIDENCE = -1
-const RSS_RADAR_RULE_ID = "page-feed"
-const RSS_SOURCE_ID = "rss:feed"
 
 type LocationMatcher = (url: URL) => Record<string, string> | null
 
@@ -111,7 +97,6 @@ type CompiledRadarMetadata
   }
 
 export interface RadarMatcher {
-  getDiscoveryOptions: (context: RadarContext) => RadarDiscoveryOptions
   getPageQueries: (context: RadarContext) => RadarPageQuery[]
   getSuggestions: (context: RadarContext) => RadarSuggestion[]
 }
@@ -545,63 +530,18 @@ function getPageQueries(
   return [...queries.values()]
 }
 
-function createRssSuggestions(
-  context: RadarContext,
-  pageUrl: URL,
-  rssSource: RadarSourceMetadata | undefined,
-): RadarSuggestion[] {
-  if (
-    !rssSource
-    || !["http:", "https:"].includes(pageUrl.protocol)
-  ) {
-    return []
-  }
-
-  return (context.feeds ?? []).flatMap((feed) => {
-    try {
-      const feedUrl = new URL(feed.url, pageUrl)
-      if (!["http:", "https:"].includes(feedUrl.protocol)) {
-        return []
-      }
-
-      return [createRadarSuggestion({
-        ruleId: RSS_RADAR_RULE_ID,
-        sourceId: RSS_SOURCE_ID,
-        patch: {
-          params: {
-            url: feedUrl.href,
-          },
-          metadata: {
-            badge: getFavicon(pageUrl),
-            home: pageUrl.href,
-            title: feed.title?.trim() || rssSource.metadata?.title || "RSS Feed",
-          },
-        },
-        confidence: RSS_RADAR_CONFIDENCE,
-      })]
-    } catch {
-      return []
-    }
-  })
-}
-
 function createSuggestions(
   context: RadarContext,
   rulesByHost: Map<string, CompiledRadarRule[]>,
-  rssSource: RadarSourceMetadata | undefined,
 ): RadarSuggestion[] {
   const location = resolveRadarLocation(context, rulesByHost)
   if (!location) {
     return []
   }
 
-  const dedicatedSuggestions = location.rules
+  const suggestions = location.rules
     .map(rule => matchCompiledRule(rule, context, location.url))
     .filter((suggestion): suggestion is RadarSuggestion => suggestion !== null)
-  const suggestions = [
-    ...dedicatedSuggestions,
-    ...createRssSuggestions(context, location.url, rssSource),
-  ]
   const suggestionsById = new Map<string, RadarSuggestion>()
 
   for (const suggestion of suggestions) {
@@ -609,14 +549,6 @@ function createSuggestions(
   }
 
   return [...suggestionsById.values()].sort((a, b) => b.confidence - a.confidence)
-}
-
-function isDiscoverablePage(context: RadarContext): boolean {
-  try {
-    return ["http:", "https:"].includes(new URL(context.url).protocol)
-  } catch {
-    return false
-  }
 }
 
 function getSourceRuleSpecs(sourceMetadata: RadarSourceMetadata[] | undefined): SourceRuleSpec[] {
@@ -663,20 +595,9 @@ export function createRadarMatcher(sourceMetadata: RadarSourceMetadata[] = []): 
       .map(rule => compileRadarRule(sourceRule, rule))
       .filter((rule): rule is CompiledRadarRule => rule !== null))
   const rulesByHost = indexRulesByHost(compiledRules)
-  const rssSource = sourceMetadata.find(source => source.id === RSS_SOURCE_ID)
   const radarMatcher: RadarMatcher = {
-    getDiscoveryOptions: (context) => {
-      const discover = isDiscoverablePage(context)
-      return {
-        feeds: discover && rssSource !== undefined,
-      }
-    },
     getPageQueries: context => getPageQueries(context, rulesByHost),
-    getSuggestions: context => createSuggestions(
-      context,
-      rulesByHost,
-      rssSource,
-    ),
+    getSuggestions: context => createSuggestions(context, rulesByHost),
   }
 
   matcherCache.set(sourceMetadata, radarMatcher)

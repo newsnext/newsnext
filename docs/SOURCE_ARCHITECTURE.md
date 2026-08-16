@@ -672,27 +672,11 @@ active tab URL
 ```
 
 Page-field queries required by matching rules are deduplicated and executed in
-one active-tab script. When the built-in `rss:feed` source is available, Radar
-also scans the active HTTP(S) document for RSS, Atom, and JSON Feed alternate
-links or a directly opened feed. Direct detection recognizes RSS or Atom
-document roots, the browser's built-in unstyled XML document view, and bounded
-JSON Feed documents served as `application/feed+json` or `application/json`.
-Generic JSON is parsed and structurally validated before it is accepted. The
-bounded scan deduplicates absolute URLs and adds one built-in suggestion per
-feed, up to 20 per page. Each suggestion keeps the page URL as its home, uses
-the page hostname favicon as its initial instance badge, and prefers the
-discovered feed title over the source's static title. After loading, dynamic
-RSS metadata may replace that badge. RSS suggestions use lower built-in
-confidence than generated origin-only and default explicit rules, so a
-dedicated source normally remains the primary suggestion.
-This engine-agnostic path is also the generic integration for forums that
-publish RSS, Atom, or JSON Feed. Radar does not inspect forum generator metadata
-or couple discovery to engine-specific routes. Field and feed metadata
-extraction is
-isolated from template rendering; page scripts are not executed and the
-document object is never exposed to Liquid.
-Radar renders in the extension action popup, which keeps discovery available
-for both regular HTML pages and browser-rendered XML documents.
+one active-tab script. Field extraction is isolated from template rendering;
+page scripts are not executed and the document object is never exposed to
+Liquid. Radar does not scan pages for RSS, Atom, or JSON Feed links; users can
+still add those URLs through the built-in `rss:feed` source.
+Radar renders in the extension action popup.
 
 Rules and compiled matchers are cached. Optional Radar failures are reported as
 diagnostics and fail closed instead of interrupting the surrounding UI.
