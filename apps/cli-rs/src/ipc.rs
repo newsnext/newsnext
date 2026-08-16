@@ -9,7 +9,7 @@ use interprocess::local_socket::tokio::{Listener, Stream, prelude::*};
 use interprocess::local_socket::traits::StreamCommon;
 use interprocess::local_socket::{GenericNamespaced, Name, ToNsName};
 
-const DEFAULT_IPC_NAME_PREFIX: &str = "com.newsnext.daemon";
+use crate::runtime_environment::RuntimeEnvironment;
 const IPC_NAME_ENV: &str = "NEWSNEXT_IPC_NAME";
 
 pub fn endpoint_name() -> String {
@@ -98,16 +98,23 @@ fn cleanup_filesystem_socket(_endpoint: &str) -> io::Result<()> {
 
 #[cfg(unix)]
 fn default_endpoint_name() -> String {
-    format!("{DEFAULT_IPC_NAME_PREFIX}.{}", effective_user_id())
+    format!("{}.{}", default_endpoint_prefix(), effective_user_id())
 }
 
 #[cfg(windows)]
 fn default_endpoint_name() -> String {
     let user_scope = std::env::var_os("LOCALAPPDATA").unwrap_or_default();
     format!(
-        "{DEFAULT_IPC_NAME_PREFIX}.{:016x}",
+        "{}.{:016x}",
+        default_endpoint_prefix(),
         stable_os_string_hash(&user_scope)
     )
+}
+
+fn default_endpoint_prefix() -> &'static str {
+    RuntimeEnvironment::current()
+        .unwrap_or(RuntimeEnvironment::Development)
+        .ipc_name_prefix()
 }
 
 #[cfg(unix)]

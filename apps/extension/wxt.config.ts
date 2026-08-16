@@ -112,7 +112,7 @@ export default defineConfig({
       browser_specific_settings: browser === "firefox"
         ? {
             gecko: {
-              id: "addon@newsnext.app",
+              id: mode === "development" ? "dev@newsnext.app" : "addon@newsnext.app",
             },
           }
         : undefined,

@@ -24,19 +24,23 @@ pub(super) fn is_installed(browser: Browser) -> bool {
     implementation::is_installed(browser)
 }
 
-pub(super) fn manifest_path(browser: Browser) -> Result<PathBuf, Box<dyn std::error::Error>> {
-    implementation::manifest_path(browser)
+pub(super) fn manifest_path(
+    browser: Browser,
+    host_name: &str,
+) -> Result<PathBuf, Box<dyn std::error::Error>> {
+    implementation::manifest_path(browser, host_name)
 }
 
 pub(super) fn register(
     browser: Browser,
     manifest_path: &Path,
+    host_name: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
     #[cfg(windows)]
-    return implementation::register(browser, manifest_path);
+    return implementation::register(browser, manifest_path, host_name);
     #[cfg(not(windows))]
     {
-        let _ = (browser, manifest_path);
+        let _ = (browser, manifest_path, host_name);
         Ok(())
     }
 }

@@ -1032,22 +1032,22 @@ Runtime registries accept declarative JSON, HTML, and RSS loaders only.
 Prototype-related source ID segments and JMESPath properties are rejected.
 
 Use the extension-backed CLI to validate live behavior. Enable
-**Settings → CLI connection**. For the experimental Rust transport, build the
-binary, register its Native Messaging host for the development extension, and
+**Settings → CLI connection**. Development builds connect only to the
+development Native Messaging host. Build and register its CLI executable, then
 start the daemon:
 
 ```sh
-bun run build:cli
-target/release/newsnext install-native-host
-target/release/newsnext start
-target/release/newsnext status
+bun run host:dev
+bun run newsnext start
+bun run newsnext status
 ```
 
 The installer presents detected browsers only and selects all of them by
 default. Pass one or more browser names, such as `install-native-host chrome
 firefox`, to skip the interactive selector. In non-interactive environments,
-omitting browser names installs for every detected browser. Firefox uses the
-extension's stable `addon@newsnext.app` Gecko ID. Ego Lite, Dia, and Arc
+omitting browser names installs for every detected browser. Development Firefox
+uses `dev@newsnext.app`; the packaged extension and app use
+`addon@newsnext.app` through a separate production host. Ego Lite, Dia, and Arc
 registration is supported on macOS and uses each browser's own Chromium
 user-data root; pass `ego-lite`, `dia`, or `arc` explicitly when needed. Browser
 processes must be restarted after host registration. While the daemon is running, the tray's

@@ -54,6 +54,8 @@
     "release": "bumpp --recursive --install --all --git-check",
     "build": "bun --filter=@newsnext/extension run build",
     "build:cli": "cargo build --release -p newsnext",
+    "build:app": "cargo packager --release -p newsnext",
+    "host:dev": "cargo run --quiet -p newsnext -- install-native-host",
     "build:chrome": "bun --filter=@newsnext/extension run build:chrome",
     "build:firefox": "bun --filter=@newsnext/extension run build:firefox",
     "generate:native-protocol": "cargo test -p newsnext export_bindings",

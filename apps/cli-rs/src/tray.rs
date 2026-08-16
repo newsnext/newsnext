@@ -11,6 +11,7 @@ use tray_icon::{Icon, TrayIcon, TrayIconBuilder};
 use crate::daemon::DaemonEvent;
 use crate::native_messaging::installer::{self, Browser};
 use crate::protocol::ExtensionInstance;
+use crate::runtime_environment::RuntimeEnvironment;
 use crate::{control, daemon, ipc};
 
 pub fn run_daemon() -> Result<(), Box<dyn std::error::Error>> {
@@ -81,6 +82,7 @@ fn exit_daemon(endpoint: &str, control_flow: &mut ControlFlow) {
 
 struct TrayState {
     icon: TrayIcon,
+    app_name: &'static str,
     open_instances: HashMap<MenuId, String>,
     browser_registrations: HashMap<MenuId, BrowserRegistration>,
     quit_id: MenuId,
@@ -93,16 +95,19 @@ struct BrowserRegistration {
 
 impl TrayState {
     fn new() -> Result<Self, Box<dyn std::error::Error>> {
-        let (menu, quit_id, open_instances, browser_registrations) = create_tray_menu(&[])?;
+        let app_name = RuntimeEnvironment::current()?.display_name();
+        let (menu, quit_id, open_instances, browser_registrations) =
+            create_tray_menu(&[], app_name)?;
         let icon = TrayIconBuilder::new()
             .with_menu(Box::new(menu))
             .with_menu_on_left_click(true)
-            .with_tooltip("NewsNext")
+            .with_tooltip(app_name)
             .with_icon(create_icon()?)
             .with_icon_as_template(true)
             .build()?;
         Ok(Self {
             icon,
+            app_name,
             open_instances,
             browser_registrations,
             quit_id,
@@ -118,7 +123,8 @@ impl TrayState {
                 .cmp(&right.browser)
                 .then_with(|| left.id.cmp(&right.id))
         });
-        let (menu, quit_id, open_instances, browser_registrations) = create_tray_menu(&instances)?;
+        let (menu, quit_id, open_instances, browser_registrations) =
+            create_tray_menu(&instances, self.app_name)?;
         self.icon.set_menu(Some(Box::new(menu)));
         self.open_instances = open_instances;
         self.browser_registrations = browser_registrations;
@@ -160,18 +166,21 @@ type TrayMenu = (
     HashMap<MenuId, BrowserRegistration>,
 );
 
-fn create_tray_menu(instances: &[ExtensionInstance]) -> Result<TrayMenu, tray_icon::menu::Error> {
+fn create_tray_menu(
+    instances: &[ExtensionInstance],
+    app_name: &str,
+) -> Result<TrayMenu, tray_icon::menu::Error> {
     let menu = Menu::new();
     let mut open_instances = HashMap::new();
     match instances {
-        [] => menu.append(&MenuItem::new("Open NewsNext", false, None))?,
+        [] => menu.append(&MenuItem::new(format!("Open {app_name}"), false, None))?,
         [instance] => {
-            let open = MenuItem::new("Open NewsNext", true, None);
+            let open = MenuItem::new(format!("Open {app_name}"), true, None);
             open_instances.insert(open.id().clone(), instance.id.clone());
             menu.append(&open)?;
         }
         instances => {
-            let open = Submenu::new("Open NewsNext", true);
+            let open = Submenu::new(format!("Open {app_name}"), true);
             for instance in instances {
                 let item = MenuItem::new(instance_menu_label(instance, instances), true, None);
                 open_instances.insert(item.id().clone(), instance.id.clone());
@@ -214,7 +223,7 @@ fn create_tray_menu(instances: &[ExtensionInstance]) -> Result<TrayMenu, tray_ic
         menu.append(&browser_menu)?;
     }
     menu.append(&PredefinedMenuItem::separator())?;
-    let quit = MenuItem::new("Quit NewsNext", true, None);
+    let quit = MenuItem::new(format!("Quit {app_name}"), true, None);
     let quit_id = quit.id().clone();
     menu.append(&quit)?;
     Ok((menu, quit_id, open_instances, browser_registrations))

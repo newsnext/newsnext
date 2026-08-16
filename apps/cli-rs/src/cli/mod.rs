@@ -3,6 +3,7 @@ mod service;
 
 use clap::{Parser, Subcommand};
 
+use crate::runtime_environment::RuntimeEnvironment;
 use crate::{ipc, native_messaging, tray};
 
 #[derive(Parser)]
@@ -62,6 +63,15 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
         return tokio::runtime::Runtime::new()?
             .block_on(native_messaging::run(&ipc::endpoint_name()));
     }
+    if is_app_bundle_invocation(&arguments) {
+        for (browser, error) in native_messaging::installer::repair_existing_registrations() {
+            eprintln!(
+                "Could not update Native Messaging registration for {}: {error}",
+                browser.display_name()
+            );
+        }
+        return tray::run_daemon();
+    }
     let cli = Cli::parse_from(arguments);
     match cli.command {
         Command::Start => service::start(),
@@ -82,5 +92,31 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
             tokio::runtime::Runtime::new()?.block_on(native_messaging::run(&ipc::endpoint_name()))
         }
         Command::Daemon => tray::run_daemon(),
+    }
+}
+
+fn is_app_bundle_invocation(arguments: &[std::ffi::OsString]) -> bool {
+    arguments.len() == 1
+        && RuntimeEnvironment::from_executable(std::path::Path::new(&arguments[0]))
+            == RuntimeEnvironment::Production
+}
+
+#[cfg(all(test, target_os = "macos"))]
+mod tests {
+    use super::is_app_bundle_invocation;
+    use std::ffi::OsString;
+
+    #[test]
+    fn recognizes_no_argument_app_bundle_launch() {
+        assert!(is_app_bundle_invocation(&[OsString::from(
+            "/Applications/NewsNext.app/Contents/MacOS/newsnext",
+        )]));
+        assert!(!is_app_bundle_invocation(&[
+            OsString::from("/Applications/NewsNext.app/Contents/MacOS/newsnext"),
+            OsString::from("status"),
+        ]));
+        assert!(!is_app_bundle_invocation(&[OsString::from(
+            "/usr/local/bin/newsnext"
+        )]));
     }
 }

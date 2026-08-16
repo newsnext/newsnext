@@ -5,7 +5,6 @@ use winreg::RegKey;
 use winreg::enums::{HKEY_CURRENT_USER, KEY_READ};
 
 use super::super::Browser;
-use crate::protocol::NATIVE_HOST_NAME;
 
 pub(super) fn is_supported(browser: Browser) -> bool {
     matches!(
@@ -33,27 +32,34 @@ pub(super) fn is_installed(browser: Browser) -> bool {
         })
 }
 
-pub(super) fn manifest_path(browser: Browser) -> Result<PathBuf, Box<dyn std::error::Error>> {
+pub(super) fn manifest_path(
+    browser: Browser,
+    host_name: &str,
+) -> Result<PathBuf, Box<dyn std::error::Error>> {
     let data = env::var_os("LOCALAPPDATA").ok_or("LOCALAPPDATA is not set")?;
     Ok(PathBuf::from(data)
         .join("NewsNext")
         .join("NativeMessagingHosts")
         .join(browser.identifier())
-        .join(format!("{NATIVE_HOST_NAME}.json")))
+        .join(format!("{host_name}.json")))
 }
 
 pub(super) fn register(
     browser: Browser,
     manifest_path: &Path,
+    host_name: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let path = registry_path(browser, NATIVE_HOST_NAME)?;
+    let path = registry_path(browser, host_name)?;
     let (key, _) = RegKey::predef(HKEY_CURRENT_USER).create_subkey(path)?;
     key.set_value("", &manifest_path.to_string_lossy().as_ref())?;
     Ok(())
 }
 
 pub(super) fn is_registered(browser: Browser, manifest_path: &Path) -> bool {
-    let Ok(path) = registry_path(browser, NATIVE_HOST_NAME) else {
+    let Some(host_name) = manifest_path.file_stem().and_then(|name| name.to_str()) else {
+        return false;
+    };
+    let Ok(path) = registry_path(browser, host_name) else {
         return false;
     };
     let root = RegKey::predef(HKEY_CURRENT_USER);

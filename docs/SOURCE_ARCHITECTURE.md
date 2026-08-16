@@ -888,15 +888,16 @@ opens its own packaged `app.html` URL through the browser tabs API. Incompatible
 daemon and extension versions disconnect instead of silently accepting a
 partial control surface.
 
-Native Messaging registration is the browser-facing security boundary. The
-host uses the reverse-domain name `app.newsnext.host` for `newsnext.app`.
-Chromium family uses manifests that restrict `allowed_origins` to the installed
-extension IDs. The development ID is always included; the optional production
-Chrome Web Store ID is configured by `PRODUCTION_CHROMIUM_EXTENSION_ID` in the
-installer's `browser` module. Firefox uses `allowed_extensions` and the stable
-`addon@newsnext.app` Gecko ID. Chrome, Chromium, Edge, and Firefox are
-supported across desktop platforms. Ego Lite, Dia, and Arc use their dedicated
-Chromium user-data roots and are currently registered on macOS only.
+Native Messaging registration is the browser-facing security boundary.
+Development and production use distinct host identities so their executables
+and extension permissions cannot overwrite or authorize each other. A regular
+CLI executable registers `app.newsnext.host.dev` for the development Chromium
+ID or `dev@newsnext.app` Firefox ID. An executable inside the packaged app
+registers `app.newsnext.host` for the Chrome Web Store ID or the stable
+`addon@newsnext.app` Firefox ID. The extension selects the matching host from
+its WXT build mode. Chrome, Chromium, Edge, and Firefox are supported across
+desktop platforms. Ego Lite, Dia, and Arc use their dedicated Chromium
+user-data roots and are currently registered on macOS only.
 Interactive registration lists detected browser installations and defaults the
 selection to all of them. Explicit browser arguments bypass selection for
 automation; non-interactive registration uses all detected browsers. Detection
@@ -926,8 +927,11 @@ browser message at 1 MiB, writes protocol data only to stdout, and reserves
 stderr for diagnostics. The internal daemon listener uses a Unix domain socket
 on Unix platforms and a named pipe on Windows instead of opening a TCP port.
 Default endpoint names are scoped to the effective Unix user or the Windows
-local application-data location; `NEWSNEXT_IPC_NAME` can override the name for
-isolated development runs. Both sides verify Unix peer credentials before
+local application-data location. Development CLI processes use
+`com.newsnext.daemon.dev`, while packaged app processes use
+`com.newsnext.daemon`, preventing a correctly bound Native Messaging host from
+crossing into the other environment's daemon. `NEWSNEXT_IPC_NAME` can override
+the name for isolated test runs. Both sides verify Unix peer credentials before
 exchanging protocol messages. Windows named pipes retain the access control
 derived from the creating user's process token. Filesystem-backed Unix sockets
 are removed during normal shutdown and reclaimed on the next startup after an
@@ -940,6 +944,24 @@ retains
 registered sources, provider files, standard input, parameter overrides,
 provider-secret selection, compact output, verbose remote errors, and watch
 mode.
+
+The same Rust executable is packaged as the NewsNext desktop companion. A
+normal CLI invocation continues through Clap, while launching the executable
+without arguments from a macOS application bundle starts the tray daemon
+directly. The bundle is a background application, so macOS exposes it through
+the menu bar without adding a Dock icon. The tray keeps an icon-only menu bar
+presence; its tooltip and menu actions use `NewsNext Dev` for a CLI daemon and
+`NewsNext` for the packaged app so both can run without becoming ambiguous.
+Packaging preserves one executable for the CLI, daemon, tray, and Native
+Messaging host rather than introducing a second runtime or protocol boundary.
+On bundle launch, existing production
+Native Messaging registrations are repaired to reference the executable at the
+current bundle location. Development registrations use a separate manifest and
+remain untouched. Registration state validates the executable recorded in the
+environment-specific manifest, so moving or upgrading the app cannot leave a
+stale registration reported as active. Browsers without an existing production
+registration remain disabled. The root `host:dev` script builds and registers
+the stable debug executable for the development host.
 
 The Native Host replaces the extension build target with the launching parent
 process executable name when it is available. The name remains unchanged except

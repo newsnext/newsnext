@@ -10,7 +10,8 @@ use crate::framing::{
 };
 use crate::ipc;
 use crate::protocol::{
-    BridgeToDaemon, DaemonToBridge, ExtensionToHost, HostToExtension, PROTOCOL_VERSION,
+    BridgeToDaemon, DEVELOPMENT_NATIVE_HOST_NAME, DaemonToBridge, ExtensionToHost, HostToExtension,
+    PRODUCTION_NATIVE_HOST_NAME, PROTOCOL_VERSION,
 };
 
 pub fn is_invocation(arguments: &[std::ffi::OsString]) -> bool {
@@ -23,7 +24,11 @@ pub fn is_invocation(arguments: &[std::ffi::OsString]) -> bool {
         || (arguments.len() >= 3
             && std::path::Path::new(first.as_ref())
                 .file_name()
-                .is_some_and(|name| name == "app.newsnext.host.json"))
+                .and_then(|name| name.to_str())
+                .and_then(|name| name.strip_suffix(".json"))
+                .is_some_and(|name| {
+                    name == DEVELOPMENT_NATIVE_HOST_NAME || name == PRODUCTION_NATIVE_HOST_NAME
+                }))
 }
 
 pub async fn run(endpoint: &str) -> Result<(), Box<dyn std::error::Error>> {
@@ -186,6 +191,13 @@ mod tests {
             OsString::from("newsnext@example.com"),
         ];
         assert!(is_invocation(&arguments));
+
+        let development_arguments = [
+            OsString::from("newsnext"),
+            OsString::from("/tmp/app.newsnext.host.dev.json"),
+            OsString::from("dev@newsnext.app"),
+        ];
+        assert!(is_invocation(&development_arguments));
     }
 
     #[test]

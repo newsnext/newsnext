@@ -1,8 +1,11 @@
 use clap::ValueEnum;
 
-const DEVELOPMENT_CHROME_EXTENSION_ID: &str = "cffgbnjiaakknooiegnjkojemhidheke";
-const PRODUCTION_CHROMIUM_EXTENSION_ID: Option<&str> = Some("fabmpgknlkdgcgaidafajbhfnnlabaja");
-const FIREFOX_EXTENSION_ID: &str = "addon@newsnext.app";
+const DEVELOPMENT_CHROMIUM_EXTENSION_ID: &str = "cffgbnjiaakknooiegnjkojemhidheke";
+const PRODUCTION_CHROMIUM_EXTENSION_ID: &str = "fabmpgknlkdgcgaidafajbhfnnlabaja";
+const DEVELOPMENT_FIREFOX_EXTENSION_ID: &str = "dev@newsnext.app";
+const PRODUCTION_FIREFOX_EXTENSION_ID: &str = "addon@newsnext.app";
+
+use crate::runtime_environment::RuntimeEnvironment;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, ValueEnum)]
 pub enum BrowserFamily {
@@ -20,19 +23,23 @@ impl BrowserFamily {
         }
     }
 
-    pub(super) fn extension_ids(self) -> impl Iterator<Item = &'static str> {
-        let ids = match self {
-            Self::ChromiumBased => [
-                Some(DEVELOPMENT_CHROME_EXTENSION_ID),
-                PRODUCTION_CHROMIUM_EXTENSION_ID,
-            ],
-            Self::FirefoxBased => [Some(FIREFOX_EXTENSION_ID), None],
-        };
-        ids.into_iter().flatten()
-    }
-
     pub(super) fn is_firefox(self) -> bool {
         self == Self::FirefoxBased
+    }
+
+    pub(super) fn extension_id(self, environment: RuntimeEnvironment) -> &'static str {
+        match (self, environment) {
+            (Self::ChromiumBased, RuntimeEnvironment::Development) => {
+                DEVELOPMENT_CHROMIUM_EXTENSION_ID
+            }
+            (Self::ChromiumBased, RuntimeEnvironment::Production) => {
+                PRODUCTION_CHROMIUM_EXTENSION_ID
+            }
+            (Self::FirefoxBased, RuntimeEnvironment::Development) => {
+                DEVELOPMENT_FIREFOX_EXTENSION_ID
+            }
+            (Self::FirefoxBased, RuntimeEnvironment::Production) => PRODUCTION_FIREFOX_EXTENSION_ID,
+        }
     }
 }
 

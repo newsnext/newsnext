@@ -2,7 +2,6 @@ use std::env;
 use std::path::PathBuf;
 
 use super::super::Browser;
-use crate::protocol::NATIVE_HOST_NAME;
 
 pub(super) fn is_supported(browser: Browser) -> bool {
     matches!(
@@ -29,7 +28,10 @@ pub(super) fn is_installed(browser: Browser) -> bool {
     })
 }
 
-pub(super) fn manifest_path(browser: Browser) -> Result<PathBuf, Box<dyn std::error::Error>> {
+pub(super) fn manifest_path(
+    browser: Browser,
+    host_name: &str,
+) -> Result<PathBuf, Box<dyn std::error::Error>> {
     let home = env::var_os("HOME").ok_or("HOME is not set")?;
     let directory = match browser {
         Browser::Chrome => ".config/google-chrome/NativeMessagingHosts",
@@ -46,5 +48,5 @@ pub(super) fn manifest_path(browser: Browser) -> Result<PathBuf, Box<dyn std::er
     };
     Ok(PathBuf::from(home)
         .join(directory)
-        .join(format!("{NATIVE_HOST_NAME}.json")))
+        .join(format!("{host_name}.json")))
 }
