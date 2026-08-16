@@ -27,10 +27,10 @@ const BILIBILI_RANKING_URL = "https://api.bilibili.com/x/web-interface/ranking/v
 const BILIBILI_ANIME_RANKING_URL = "https://api.bilibili.com/pgc/web/rank/list"
 const BILIBILI_PGC_RANKING_URL = "https://api.bilibili.com/pgc/season/rank/web/list"
 const BILIBILI_FOLLOWING_ITEM_TEMPLATE = {
-  inline: "{% unless scope.item.icon.kind == 'author' %}{% if scope.item.author %}{{ scope.item.author.name }} · {% endif %}{% endunless %}{% if scope.item.attributes.views %}{{ scope.item.attributes.views }} views{% endif %}{% if scope.item.attributes.danmaku %} · {{ scope.item.attributes.danmaku }} danmaku{% endif %}",
+  inline: "{% unless scope.item.icon.kind == 'author' %}{% if scope.item.author %}{{ scope.item.author.name }}{% endif %}{% endunless %}",
 } as const
 const BILIBILI_PGC_ITEM_TEMPLATE = {
-  inline: "{% if scope.item.attributes.episode %}{{ scope.item.attributes.episode }}{% endif %}{% if scope.item.attributes.rating %} · {{ scope.item.attributes.rating }} rating{% endif %}{% if scope.item.attributes.views %} · {{ scope.item.attributes.views }} views{% endif %}",
+  inline: "{% if scope.item.attributes.episode %}{{ scope.item.attributes.episode }}{% endif %}{% if scope.item.attributes.rating %} · {{ scope.item.attributes.rating }} rating{% endif %}",
 } as const
 const RANKING_REGIONS = [
   { apiRid: 0, label: "全部", slug: "all", value: "0" },
@@ -73,7 +73,10 @@ export interface BilibiliVideoRankingItem {
   pic?: string
   pubdate?: number
   stat?: {
+    favorite?: number
     like?: number
+    reply?: number
+    share?: number
     view?: number
   }
   title?: string
@@ -97,7 +100,7 @@ export interface BilibiliPgcRankingItem {
   url?: string
 }
 
-interface DynamicFeedItem {
+export interface DynamicFeedItem {
   modules?: {
     module_author?: {
       face?: string
@@ -112,12 +115,16 @@ interface DynamicFeedItem {
           desc?: string
           jump_url?: string
           stat?: {
-            danmaku?: string
             play?: string
           }
           title?: string
         }
       } | null
+    }
+    module_stat?: {
+      comment?: { count?: number }
+      forward?: { count?: number }
+      like?: { count?: number }
     }
   }
 }
@@ -133,6 +140,15 @@ interface DynamicFeedResponse {
 function normalizeBilibiliUrl(url: string): string {
   if (url.startsWith("//")) return `https:${url}`
   return url.replace(/^http:/, "https:")
+}
+
+export function parseBilibiliCount(value: string | undefined): number | undefined {
+  const match = value?.trim().match(/^(\d+(?:\.\d+)?)\s*([万亿])?/)
+  if (!match) return undefined
+
+  const count = Number(match[1])
+  const multiplier = match[2] === "亿" ? 100_000_000 : match[2] === "万" ? 10_000 : 1
+  return Number.isFinite(count) ? Math.round(count * multiplier) : undefined
 }
 
 export function getBilibiliRankingRequest(regionValue: string): BilibiliRankingRequest {
@@ -171,6 +187,9 @@ export function videoRankingItemToNewsItem(item: BilibiliVideoRankingItem): News
     stats: {
       views: item.stat?.view,
       likes: item.stat?.like,
+      comments: item.stat?.reply,
+      reposts: item.stat?.share,
+      stars: item.stat?.favorite,
     },
     icon: {
       kind: "author",
@@ -189,14 +208,11 @@ export function pgcRankingItemToNewsItem(item: BilibiliPgcRankingItem): NewsItem
     ?? (item.season_id ? `https://www.bilibili.com/bangumi/play/ss${item.season_id}` : undefined)
   if (!item.title || !url) return null
 
-  const views = item.icon_font?.text
-    ?? (item.stat?.view !== undefined ? String(item.stat.view) : undefined)
   return {
     title: item.title,
     url: normalizeBilibiliUrl(url),
-    stats: { views: item.stat?.view },
+    stats: { views: item.stat?.view ?? parseBilibiliCount(item.icon_font?.text) },
     attributes: {
-      views,
       episode: item.new_ep?.index_show,
       rating: item.rating,
     },
@@ -210,6 +226,7 @@ export function pgcRankingItemToNewsItem(item: BilibiliPgcRankingItem): NewsItem
 function dynamicArchiveToNewsItem(item: DynamicFeedItem): NewsItemInput | null {
   const archive = item.modules?.module_dynamic?.major?.archive
   const author = item.modules?.module_author
+  const stats = item.modules?.module_stat
   if (!archive?.title || !archive.bvid) return null
 
   return {
@@ -219,9 +236,11 @@ function dynamicArchiveToNewsItem(item: DynamicFeedItem): NewsItemInput | null {
       : `https://www.bilibili.com/video/${archive.bvid}`,
     publishedAt: author?.pub_ts ? author.pub_ts * 1000 : undefined,
     author: { name: author?.name },
-    attributes: {
-      views: archive.stat?.play,
-      danmaku: archive.stat?.danmaku,
+    stats: {
+      likes: stats?.like?.count,
+      comments: stats?.comment?.count,
+      reposts: stats?.forward?.count,
+      views: parseBilibiliCount(archive.stat?.play),
     },
     icon: {
       kind: "author",
@@ -233,6 +252,15 @@ function dynamicArchiveToNewsItem(item: DynamicFeedItem): NewsItemInput | null {
       pictures: archive.cover ? normalizeBilibiliUrl(archive.cover) : undefined,
     },
   }
+}
+
+export function dynamicFeedItemsToNewsItems(items: DynamicFeedItem[]): NewsItemInput[] {
+  // Bilibili places older folded siblings directly after their group parent.
+  // Restore chronological order after flattening those groups into plain items.
+  return items
+    .map(dynamicArchiveToNewsItem)
+    .filter((item): item is NewsItemInput => item !== null)
+    .sort((left, right) => (right.publishedAt ?? 0) - (left.publishedAt ?? 0))
 }
 
 async function fetchBilibiliFollowingVideos(
@@ -263,9 +291,7 @@ async function fetchBilibiliFollowingVideos(
   }
 
   return {
-    items: (response.data?.items ?? [])
-      .map(dynamicArchiveToNewsItem)
-      .filter((item): item is NewsItemInput => item !== null),
+    items: dynamicFeedItemsToNewsItems(response.data?.items ?? []),
     itemTemplate: BILIBILI_FOLLOWING_ITEM_TEMPLATE,
   }
 }
@@ -328,7 +354,7 @@ async function fetchBilibiliRanking(
 export default {
   title: "哔哩哔哩",
   category: "social",
-  color: "blue",
+  color: "red",
   defaults: {
     baseUrl: "https://www.bilibili.com/",
     cache: "5m",

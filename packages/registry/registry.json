@@ -366,7 +366,7 @@
     "provider": {
       "title": "哔哩哔哩",
       "category": "social",
-      "color": "blue"
+      "color": "red"
     }
   },
   "bilibili:hotword": {
@@ -379,7 +379,7 @@
     "provider": {
       "title": "哔哩哔哩",
       "category": "social",
-      "color": "blue"
+      "color": "red"
     },
     "capabilities": {
       "network": [
@@ -943,7 +943,7 @@
     "provider": {
       "title": "哔哩哔哩",
       "category": "social",
-      "color": "blue"
+      "color": "red"
     }
   },
   "cls:depth": {
