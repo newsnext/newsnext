@@ -1,8 +1,9 @@
 # NewsNext Product Requirements
 
-Status: draft product requirements for phased delivery. Phase 1 is the minimum
-product increment; later phases remain target scope. This document does not
-imply that every capability described below is implemented.
+Status: draft product requirements for phased delivery. The shared local
+database foundation is the next implementation increment; later phases remain
+target scope. This document does not imply that every capability described
+below is implemented.
 
 Document purpose: align product, design, engineering, and Agent behavior around
 one target model; distinguish the implemented baseline from planned work; and
@@ -12,13 +13,13 @@ provide acceptance criteria for incremental delivery.
 
 NewsNext is an agent-programmable board powered by stable data streams.
 
-Users create Boards for subjects they want to understand over time. Sources
-continuously collect and normalize relevant information. Each Board has two
-views, named Now Layer and Next Layer. Now Layer presents current news through
-one unified Card model. Next Layer lets personalized Widgets process any
-combination of the Board's data
+Users create Boards for subjects they want to understand over time. Registered
+Sources acquire and normalize relevant information when a current view or
+Agent-owned task requires it. Each Board has two views, named Now Layer and Next
+Layer. Now Layer presents current news through one unified Card model. Next
+Layer lets personalized Widgets process any combination of the Board's data
 streams. An Agent can operate the same product through the CLI: it can discover
-or author Sources, configure data streams, organize Boards, analyze
+Sources, configure data streams, organize Boards, analyze retained
 observations, and create or maintain Widgets.
 
 The primary product distinction is not generated UI. It is the durable data
@@ -61,8 +62,9 @@ NewsNext must combine both sides:
    data stream in Now Layer.
 3. Let Next Layer combine Board data into personalized Widgets whose purposes
    are not limited to a predefined analysis catalog.
-4. Let an Agent create and maintain Sources, Instances, Boards, and Widgets
-   through typed CLI operations that share the application's business rules.
+4. Let an Agent select and maintain registered Sources, Instances, Boards, and
+   Widgets through typed CLI operations that share the application's business
+   rules and durable local data.
 5. Make every derived result traceable to its inputs, observation coverage,
    transformations, and limitations.
 6. Keep permission changes, secrets, destructive operations, and executable
@@ -96,13 +98,15 @@ Priority describes product sequencing, not implementation status.
 | Priority | Scope | Outcome |
 | --- | --- | --- |
 | P0 | Preserve the unified Now Layer Card contract | Every Instance remains independently readable and operable |
+| P0 | Shared local database owned by the desktop runtime | CLI, App, and authorized browser extensions use one durable data model |
+| P0 | Development and production data isolation | Daily CLI testing cannot mutate production App data |
 | P0 | Durable Next Layer Widget and layout model | A Board can save personalized Widget composition |
 | P0 | Multi-Instance Widget inputs | One Widget can combine any selected Board data streams |
 | P0 | Widget CLI discovery, preview, and mutation | An Agent can fully manage Next Layer |
 | P0 | Provenance, dependency, loading, and failure state | Derived results remain inspectable and trustworthy |
 | P0 | No duplicate Source execution for presentation | Both Layers reuse canonical Instance results |
-| P1 | Agent-managed Source draft-to-install workflow | An Agent can establish missing stable data streams |
-| P1 | Stream scheduling, health, versioning, and repair | Installed streams remain maintainable over time |
+| P1 | Registry-first Source selection and maintenance | An Agent reuses stable product Sources instead of creating personalized Sources by default |
+| P1 | Agent-owned stream scheduling, health, versioning, and repair | Next Layer inputs remain maintainable over time |
 | P1 | Typed transformations and reusable derived data | Widget logic can be composed without repeated ad hoc work |
 | P1 | Widget and Board templates | Useful solutions can be reused without fixing the possibility space |
 | P2 | Restricted TypeScript and React Code Widgets | The Agent can implement presentations beyond declarative renderers |
@@ -165,21 +169,24 @@ Board, a second data-collection path, or a standalone generated application.
 Moving between Layers must preserve the current Board identity and context.
 
 A Widget chooses its execution mode explicitly. A direct Widget reads selected
-cache or History data in the UI when it only needs deterministic presentation
-such as filtering, sorting, mixing, or visualization. A materialized Widget is
-Agent-driven: the Agent refreshes inputs when required, processes them, and
-persists the result before the user opens Next Layer. Opening a materialized
-Widget displays that saved result and does not repeat its data refresh or
-transformation. The number of selected Instances does not determine the mode;
+cache or retained observation data in the UI when it only needs deterministic
+presentation such as filtering, sorting, mixing, or visualization. A
+materialized Widget is Agent-driven: the Agent refreshes inputs when required,
+processes them, and persists the result before the user opens Next Layer.
+Opening a materialized Widget displays that saved result and does not repeat
+its data refresh or transformation. The number of selected Instances does not
+determine the mode;
 the need for durable or derived processing does.
 
 ### Stable data streams are the foundation
 
-A configured Source Instance produces a recurring stream of normalized results
-and saved observations. Stability means that the stream has a durable identity,
-repeatable configuration, visible provenance, observable health, and useful
-history. It does not imply that every remote source is continuously available
-or that every returned list is complete.
+A configured Source Instance has a durable identity and repeatable
+configuration. Now Layer keeps only the latest cached result needed for current
+reading; it does not create History merely because a person opened the Board.
+Saved observations exist only when an Agent-owned Next Layer task or an
+explicit retention action requires them. Stability therefore does not imply
+that every current refresh becomes durable history, that every remote source is
+continuously available, or that every returned list is complete.
 
 Persistent streams enable questions that a one-time search cannot reliably
 answer:
@@ -195,14 +202,17 @@ answer:
 The Agent must use the same Sources, Instances, Collections, observations,
 Actions, and Queries as the human interface. Agent automation must not create a
 parallel Board model or bypass application validation, permissions, or
-persistence rules.
+persistence rules. Browser extensions, the CLI, and the packaged App must not
+maintain competing durable copies of that model.
 
 ### Collection and processing remain separate
 
 Sources collect and normalize data. Widgets process, query, and present that
 data in Next Layer. A Widget must not hide an independent web crawler inside
-its rendering code. When a Widget exposes a data gap, the Agent should create
-or revise a Source instead.
+its rendering code. When a Widget exposes a data gap, the Agent should first
+reuse another registered Source or revise Instance configuration. Personalized
+Source authoring remains an expert development capability, not the recommended
+product workflow.
 
 ### Claims remain auditable
 
@@ -210,6 +220,109 @@ Summaries, trends, and forecasts must retain links to their input datasets,
 observation windows, transformations, and limitations. Observation time is not
 publication time, position does not necessarily represent popularity, and an
 item missing from a partial result is not proven to have been deleted.
+
+## Shared Local Database Project
+
+### Product outcome
+
+NewsNext uses the desktop companion as the durable local data layer shared by
+authorized browser extensions and Agent CLI operations. A user can open the
+same production Boards and Next Layer results from multiple supported browsers
+without copying extension storage between browser profiles. Development and
+production remain isolated so routine CLI testing cannot corrupt or pollute the
+user's production data.
+
+The embedded database is SQLite-compatible and implemented through the
+Turso/libSQL ecosystem. The local file is the source of truth for the first
+increment. A Turso account, network connection, remote replica, and cloud sync
+are not required to use the product. Compatibility with later encrypted sync or
+replication is a design constraint, not an MVP dependency.
+
+Every Turso API, configuration, connection, query, transaction, migration, and
+error-handling choice must follow `docs/TURSO_MANUAL.md`. The implementation
+must not infer Turso behavior from generic SQLite or libSQL usage. A missing or
+ambiguous manual contract blocks that implementation decision until the gap is
+resolved.
+
+### Storage responsibilities
+
+| Data | Storage owner | Retention contract |
+| --- | --- | --- |
+| Boards, Collections, Instances, membership, and preferences | Shared local database | Durable until changed or deleted |
+| Next Layer Widgets, layouts, task definitions, and materialized outputs | Shared local database | Durable and schema-versioned |
+| Agent-owned observations, transformations, provenance, and task health | Shared local database | Durable according to explicit task policy |
+| Now Layer current results | Cache | Replaceable latest data; no implicit History |
+| Source registry definitions | Packaged or managed registry | Product-managed; not personalized per user by default |
+| Source credentials | Browser extension secret storage | Resolved only inside extension Source execution; never sent to the App, CLI, or database |
+| Native Messaging manifests and IPC endpoints | Platform integration directories | Configuration only; never product data |
+
+### Files and environment isolation
+
+On macOS, both database files live in the standard application data directory:
+
+```text
+~/Library/Application Support/NewsNext/newsnext.dev.db
+~/Library/Application Support/NewsNext/newsnext.prod.db
+```
+
+The regular CLI and development extension use `newsnext.dev.db`. The packaged
+App and production extension use `newsnext.prod.db`. SQLite sidecar files such
+as `-wal` and `-shm` remain adjacent to their corresponding database. Linux and
+Windows use the equivalent user data root while preserving the same filenames.
+An explicit test-only override may select another path, but product code must
+never infer an environment from a browser profile.
+
+### Runtime and refresh ownership
+
+```text
+Human opens Now Layer
+    -> refresh current Instance
+    -> extension executes the Source with browser permissions and credentials
+    -> replace Now Layer cache
+
+Agent owns a Next Layer task
+    -> App/CLI scheduler decides when refresh is required
+    -> scheduler requests Source execution from a connected extension
+    -> extension fetches, parses, transforms, and returns normalized output
+    -> one database transaction stores observations, provenance, task state,
+       and materialized Widget output
+    -> opening Next Layer reads the saved output without repeating the task
+```
+
+Chrome Alarms may wake or reconnect extension work, but they are not the
+authoritative scheduler for Agent-owned refresh. Viewing Now Layer is the
+refresh trigger for the human-facing current cache. The App/CLI runtime owns
+background Next Layer schedules and durable results.
+
+Source execution remains extension-owned. Browser cookies, stored Source
+credentials, permissions, request rules, and session state never cross the
+extension boundary. The extension returns normalized Source output or a
+structured error; it never forwards credential values to the App, CLI, or
+database. The desktop daemon owns scheduling and persistence, not Source
+evaluation.
+
+### Ownership and access
+
+The App/CLI daemon is the single database owner and writer. Extensions and
+Agents use canonical Actions and Queries over Native Messaging and local IPC;
+they never open the SQLite file directly. The daemon enables WAL mode, wraps
+each logical mutation in a transaction, serializes migrations before serving
+requests, and exposes structured busy, migration, corruption, and disk errors.
+Multiple browsers may connect concurrently, but they observe one ordered
+production mutation stream.
+
+The first schema increment covers:
+
+- schema version and migration journal;
+- Boards, Collections, Instances, membership, order, and preferences;
+- Next Layer Widget definitions, layout, and dependency declarations;
+- Agent task definitions, schedules, leases, attempts, and health;
+- retained observations and normalized items required by those tasks;
+- materialized Widget outputs and their provenance;
+- timestamps and origin metadata for inspectable Agent mutations.
+
+Now Layer response bodies, transient preview output, logs, and secrets are not
+part of the first durable schema.
 
 ## Product Model
 
@@ -222,8 +335,8 @@ Board
     +-- Data foundation
     |      +-- Source Instances
     |             +-- Stable data streams
-    |                    +-- current news
-    |                    +-- observations and changes
+    |                    +-- current cache for Now Layer
+    |                    +-- Agent-retained observations for Next Layer
     |
     +-- Experience
            +-- Now Layer
@@ -248,7 +361,7 @@ The canonical concepts remain:
 | --- | --- |
 | Source | Reusable definition of how to acquire and normalize data |
 | Instance | Configured Source with a durable dataset identity |
-| Observation | A saved result from an Instance at a known observation time |
+| Observation | An explicitly retained Instance result at a known observation time |
 | Collection | Durable organization of Instances |
 | Board | Human presentation of a Collection through Now Layer and Next Layer |
 | Now Layer | Separate Instance results presented through a unified Card model |
@@ -265,18 +378,14 @@ The user describes what they want to keep understanding. The Agent creates or
 selects a Board, finds existing Sources, identifies missing coverage, configures
 Instances, and explains the resulting data scope.
 
-### Turn an investigation into a stable stream
+### Configure a stable stream
 
-The user or Agent may begin with an exploratory fetch or local Source run. A
-useful exploration can progress through explicit lifecycle states:
-
-```text
-One-time exploration -> Source draft -> validated Source -> installed Source
-                     -> configured Instance -> observed stable stream
-```
-
-An incidental question must not silently create permanent background work,
-request new permissions, or retain unnecessary data.
+The user or Agent begins by discovering a registered Source, configuring an
+Instance, and adding it to a Board. If the requested data is not covered, the
+product should report the gap instead of silently generating a personalized
+Source. Expert Source development remains possible outside the default product
+flow. An incidental question must not silently create permanent background
+work, request new permissions, or retain unnecessary data.
 
 ### Understand current information
 
@@ -299,8 +408,8 @@ continues to update with its dependencies.
 
 ### Improve coverage from analysis
 
-A Widget or analysis may reveal missing evidence. The Agent can propose an
-additional Source, a parameter change, a revised collection frequency, or the
+A Widget or analysis may reveal missing evidence. The Agent can propose another
+registered Source, a parameter change, a revised collection frequency, or the
 retirement of an unhelpful stream. This creates a feedback loop:
 
 ```text
@@ -317,27 +426,28 @@ The CLI must expose machine-readable catalogs and schemas for available
 Sources, Actions, Queries, Widget types, and data transformations. The Agent
 must be able to inspect existing Board context before making changes.
 
-### Source creation and maintenance
+### Source selection and maintenance
 
 The Agent must be able to:
 
-- Search existing Sources before authoring a duplicate.
-- Create a local Source draft using supported authoring primitives.
-- Run the draft against the extension runtime and inspect normalized output.
+- Discover registered Sources and explain their coverage before configuring an
+  Instance.
+- Run a registered Source through a connected extension and inspect normalized
+  output.
 - Validate parameters, item fields, identities, pagination, declared domains,
   capabilities, security limits, and required secrets.
-- Receive a structured quality report suitable for iterative repair.
 - Request approval for new host permissions, secrets, or materially expanded
   collection scope.
-- Install or register an approved Source and configure an Instance on a Board.
+- Configure an Instance on a Board from an approved registered Source.
 - Observe run health and diagnose or propose repairs when the stream fails.
 - Preserve Source versions and identify which Instances and Widgets depend on
   them.
 
-Source validation should report more than syntax success. It should make
+Source execution diagnostics should make
 missing fields, unstable identities, duplicates, incomplete pagination,
 unexpected result sizes, permission requirements, and potentially sensitive
-responses visible to the Agent and user.
+responses visible to the Agent and user. Personalized Source creation and
+installation are not required Agent product capabilities.
 
 ### Board operation
 
@@ -433,7 +543,8 @@ versioned, inspectable, and reversible.
 The product must show, for each stable stream:
 
 - Why it exists and which Board goal it serves.
-- Its Source, normalized parameters, domains, permissions, and secrets used.
+- Its Source, normalized parameters, domains, permissions, secret requirements,
+  and whether required credentials are configured, without exposing values.
 - Its latest success, latest failure, and relevant completeness warnings.
 - Its Source version and configuration history.
 - Its dependent Boards and Widgets.
@@ -445,13 +556,14 @@ must not be described to users as available until its acceptance criteria pass.
 
 | Area | Status | Implemented baseline | Primary gap |
 | --- | --- | --- | --- |
-| Source definitions | Implemented foundation | Registry providers, parameters, metadata, loaders, transforms, templates, Radar rules, capabilities, secrets, and security limits | Agent-oriented draft, quality report, installation, and version lifecycle |
-| Source execution | Implemented foundation | Registered and local Sources can run through the extension runtime and CLI; direct extension-backed fetch supports debugging | Durable scheduling, health policy, and automatic maintenance |
-| Instance and Collection data | Implemented | Canonical Instances, Collections, membership, manual order, and Board view preferences | No material data-model gap for the first Widget phase |
-| UI and Agent control | Implemented foundation | UI and CLI use the same typed Actions and Queries and the same background persistence boundary | Widget and Source-lifecycle operations are not exposed yet |
-| Now Layer | Implemented | Each Instance is independently presented as a Card using the unified Card model | Preserve this contract while Next Layer evolves |
-| Next Layer | Partial | One shared mixed Timeline selects every current Board Instance through an independent cache-data path; the data boundary also supports one or several Instances and History reads | No durable Widget, layout, personalization, or Agent management model |
-| History | Implemented foundation | Successful observations can be listed, read at an exact time, and compared for added, missing, position, and top-level field changes | No general derived-data contract or Widget binding contract |
+| Source definitions | Implemented foundation | Registry providers, parameters, metadata, loaders, transforms, templates, Radar rules, capabilities, secrets, and security limits | Registry health, version lifecycle, and dependency diagnostics |
+| Source execution | Implemented foundation | Registered and local Sources can run through the extension runtime and CLI; direct extension-backed fetch supports debugging | Add Agent-owned scheduling and durable handoff without duplicating the extension runtime |
+| Shared local database | Not implemented | Browser extension storage and IndexedDB currently own durable application and History data | Introduce the single-writer Turso/libSQL database with dev/prod isolation and migrations |
+| Instance and Collection data | Implemented in extension storage | Canonical Instances, Collections, membership, manual order, and Board view preferences | Move canonical durable state behind App/CLI Actions and Queries for cross-browser use |
+| UI and Agent control | Implemented foundation | UI and CLI use the same typed Actions and Queries and the same background persistence boundary | Database-backed Widget, task, and Source-health operations are not exposed yet |
+| Now Layer | Implemented | Each Instance is independently presented as a Card using the unified Card model | Make view-driven refresh explicit and keep current results cache-only |
+| Next Layer | Partial | One shared mixed Timeline selects every current Board Instance through an independent cache-data path; the data boundary also supports one or several Instances and History reads | Move retained inputs and materialized outputs to Agent-owned durable tasks |
+| History | Implemented foundation in IndexedDB | Successful observations can be listed, read at an exact time, and compared for added, missing, position, and top-level field changes | Migrate retained observations required by Agent tasks; stop treating every current refresh as History |
 | Provenance | Partial | Source and Instance identities remain stable; history comparisons preserve supported factual boundaries | Derived Widget inputs, transformations, warnings, and claims need an explicit UI contract |
 | Code Widgets | Not implemented | None | Sandbox, resource limits, versioning, preview, failure isolation, and rollback |
 
@@ -476,17 +588,38 @@ publication time, and position alone does not establish popularity or cause.
 
 The remaining product gaps are:
 
+- A shared local database, migration framework, environment-specific files, and
+  daemon-owned access boundary.
+- Migration of canonical durable application data and explicitly retained
+  observations out of per-browser extension storage.
+- Agent-owned scheduling and durable handoff from the extension Source runtime.
 - A durable Widget model and Next Layer layout model.
 - Multi-Instance Widget inputs with explicit provenance and dependency state.
 - CLI discovery and mutation APIs for Widgets.
-- Source draft, validation-report, installation, versioning, and dependency
-  workflows suitable for Agent operation.
 - Stream scheduling, health, maintenance policy, and user-visible diagnostics.
 - Derived dataset and transformation contracts.
 - Safe execution boundaries for code Widgets, if and when they are introduced.
 - Provenance and evidence presentation for Agent-generated analysis.
 
 ## Functional Requirements and Acceptance Criteria
+
+### Shared database and runtime requirements
+
+| ID | Requirement | Acceptance criteria |
+| --- | --- | --- |
+| DAT-01 | The desktop daemon is the only process that opens the product database | Browser extensions and CLI clients can read and mutate durable state only through canonical Actions and Queries |
+| DAT-02 | Development and production use separate files | CLI/dev operations open `newsnext.dev.db`; packaged App/production operations open `newsnext.prod.db`; an automated test proves neither environment writes the other file |
+| DAT-03 | Production data is shared across supported browsers | A mutation submitted from one authorized production extension is visible from another through the same daemon without copying browser storage |
+| DAT-04 | Database setup is local-first | First launch creates and migrates the local database without a Turso account, remote connection, or network access |
+| DAT-05 | Schema changes are ordered and atomic | The daemon applies versioned migrations before accepting requests and leaves either the previous or next valid schema after interruption |
+| DAT-06 | Logical mutations are transactional | A failed Board, Widget, observation, or task mutation leaves no partially updated durable state |
+| DAT-07 | Concurrent clients use one ordered writer | WAL mode permits bounded reads while the daemon serializes writes and returns structured busy or retry errors instead of hanging |
+| DAT-08 | Now Layer does not create implicit History | Repeated view-driven refresh replaces current cache data and does not insert observation rows unless an explicit Agent task or retention action requests it |
+| DAT-09 | Next Layer background work is Agent-owned | Agent task state, retained inputs, provenance, and materialized output commit together; opening Next Layer performs no implicit refresh or transformation |
+| DAT-10 | Source execution remains browser-owned | Agent tasks request registered Source execution from a connected extension and receive normalized output without receiving browser credentials or duplicating the Source runtime |
+| DAT-11 | Credentials remain browser-owned | Source credentials and browser session secrets never enter Native Messaging, IPC, logs, task inputs, materialized outputs, or database fields |
+| DAT-12 | Database failures are diagnosable | CLI status and errors distinguish missing files, migration failure, incompatible schema, lock contention, corruption, disk exhaustion, and unavailable browser Fetch authority |
+| DAT-13 | Turso usage follows the repository manual | Every Turso API and behavior used by production code is traceable to `docs/TURSO_MANUAL.md`; undocumented assumptions are rejected during review |
 
 ### Board and Layer requirements
 
@@ -504,6 +637,8 @@ The remaining product gaps are:
 | NOW-01 | One Instance is shown through one independent Card placement in a Board | Items from another Instance are never merged into that Card's result |
 | NOW-02 | All Sources use the shared Card model | Source metadata and item templates can vary content, but shared Card identity, status, configuration, and interactions remain available |
 | NOW-03 | Next Layer personalization does not mutate Now Layer structure | Adding, editing, moving, or deleting a Widget leaves Now Layer Card composition unchanged |
+| NOW-04 | Visible Now Layer content refreshes as current data | Viewing an active Board may refresh stale Instances and replace their cache without creating observations |
+| NOW-05 | Now Layer remains cache-only | Clearing the cache removes current results but never deletes durable Board, Widget, Agent task, or retained Next Layer data |
 
 ### Next Layer and Widget requirements
 
@@ -519,6 +654,7 @@ The remaining product gaps are:
 | NXT-08 | Widgets expose useful runtime states | Empty, loading, stale, partial, failed, and ready states are distinguishable and accessible |
 | NXT-09 | Widget layout is personalized without becoming a separate Board | The layout belongs to the current Board's Next Layer and retains its underlying Collection identity |
 | NXT-10 | A Widget declares direct or materialized execution | Direct Widgets read selected stored inputs in the UI; materialized Widgets display an Agent-produced persisted result without rerunning its refresh or transformation on open |
+| NXT-11 | Background refresh belongs to an Agent task | A task records its schedule, last attempt, last success, failure, retained inputs, and next eligible run independently of whether Next Layer is open |
 
 ### Agent and CLI requirements
 
@@ -528,16 +664,17 @@ The remaining product gaps are:
 | AGT-02 | The Agent can inspect Board data before authoring a Widget | Queries expose the current Board, available Instances, fields, observations, existing Widgets, and dependency health |
 | AGT-03 | The Agent can preview before persistence | A preview returns the proposed result, provenance, warnings, and resource failures without modifying the Board |
 | AGT-04 | The Agent can create, update, order, and delete Widgets | CLI changes use canonical Actions, validate at runtime, persist once, and propagate to open UI pages |
-| AGT-05 | Agent changes are inspectable | Each durable Agent-created Source or Widget records its origin, version, configuration, and update time |
-| AGT-06 | The Agent reuses existing capabilities | Before creating a Source or equivalent derived dataset, discovery can identify an existing suitable Source, Instance, transformation, or template |
+| AGT-05 | Agent changes are inspectable | Each durable Agent-created Widget, task, or derived dataset records its origin, version, configuration, and update time |
+| AGT-06 | The Agent reuses existing capabilities | Before requesting new collection coverage or creating derived data, discovery identifies suitable registered Sources, Instances, transformations, or templates |
+| AGT-07 | The Agent sees one environment-specific data model | Dev CLI queries use the dev database and production App queries use the production database without browser-profile-specific results |
 
 ### Source lifecycle requirements
 
 | ID | Requirement | Acceptance criteria |
 | --- | --- | --- |
-| SRC-01 | The Agent can create a Source draft | Draft creation does not install the Source, request permission, or create durable background work |
-| SRC-02 | Validation returns a structured quality report | The report covers syntax, fields, stable identity, duplicates, pagination, domains, permissions, secrets, result size, and security limits where applicable |
-| SRC-03 | Installation is an explicit promotion | Only a validated and approved draft can become an installed Source and configured Instance |
+| SRC-01 | The Agent discovers registered Sources before configuring coverage | Discovery returns stable identities, capabilities, parameters, permissions, health, and supported environments |
+| SRC-02 | Source execution returns structured diagnostics | Diagnostics cover fields, stable identity, duplicates, pagination, domains, permissions, secrets, result size, and security limits where applicable |
+| SRC-03 | Instance creation uses an approved registered Source | The default product workflow cannot silently install or generate a personalized Source |
 | SRC-04 | Material authority changes require approval | New host permissions, secrets, private data, executable logic, or expanded collection scope cannot be granted silently |
 | SRC-05 | Installed streams expose health | Latest success, latest failure, Source version, configuration, schedule, warnings, and dependent Widgets are inspectable |
 | SRC-06 | Maintenance is versioned and reversible | Automated repair is limited by the maintenance grant and retains the previous working version for rollback |
@@ -598,10 +735,14 @@ The remaining product gaps are:
 ### Performance
 
 - Direct Widgets must select one, several, or all Board Instances and read their
-  canonical cache results, History observations, or both without subscribing to
-  or executing Sources.
+  declared cached or retained inputs without subscribing to or executing
+  Sources.
 - Materialized Widgets must render their persisted result without repeating
   Agent-owned refresh or processing when the user opens Next Layer.
+- Database reads and writes must not run on the extension service worker's
+  critical interaction path; Native Messaging and IPC calls must be bounded and
+  cancelable.
+- Current cache cleanup and durable database retention are separate operations.
 - Widget computation must be incremental or bounded so one expensive Widget
   cannot block interaction with the Board.
 - Long lists and timelines must remain virtualized where rendering cost would
@@ -614,6 +755,10 @@ The remaining product gaps are:
 - Stable identities must survive display-name, layout, and presentation
   changes.
 - Widget persistence must be atomic at the application Action boundary.
+- Database startup must complete migrations before serving reads or writes and
+  must refuse an unknown newer schema without modifying it.
+- A daemon crash must not leave a successfully acknowledged mutation partially
+  committed.
 - A renderer or transformation failure must be isolated to the affected
   Widget.
 - Installed Source and Code Widget changes must be versioned before automated
@@ -625,6 +770,12 @@ The remaining product gaps are:
 - Code Widgets must run inside a restricted environment with explicit CPU,
   memory, time, storage, and output limits.
 - Widgets cannot read secrets directly or perform undeclared network requests.
+- Source credentials remain in browser extension secret storage and are
+  resolved only during authorized extension Source execution. The App and CLI
+  receive normalized output or a structured error, never credential values.
+- Phase 0 introduces no application-managed database encryption key or Turso
+  Cloud credential. Local database protection relies on platform file
+  permissions and the user's operating-system disk protection.
 - Logs, previews, and validation reports must avoid persisting sensitive
   response bodies unless the user explicitly requests diagnostic retention.
 
@@ -641,15 +792,44 @@ The remaining product gaps are:
 
 - Widget, transformation, and Source schemas require explicit versions and
   migration paths.
+- Database paths, schema versions, and environment selection must be derived by
+  shared runtime code rather than duplicated in browser-specific adapters.
 - The CLI and frontend must consume the same canonical schemas and operations.
 - Built-in Widgets and Agent-created Widgets must use the same data input and
   provenance contracts wherever their capabilities overlap.
 
 ## Delivery Strategy
 
-Phase 1 is the minimum product increment for the new Next Layer model. Later
-phases expand how data streams are created and what Widgets can compute without
-changing the two-Layer Board contract.
+The shared local database is the immediate implementation increment. Later
+phases build the Next Layer model and stream maintenance on that boundary
+without changing the two-Layer Board contract.
+
+### Phase 0: Shared local database and daemon boundary
+
+- Read and follow the applicable `docs/TURSO_MANUAL.md` sections before
+  selecting dependencies or writing database code.
+- Add the embedded Turso/libSQL database to the Rust desktop runtime.
+- Resolve the platform application data directory and select
+  `newsnext.dev.db` or `newsnext.prod.db` from the existing runtime environment.
+- Add schema versioning, migrations, WAL configuration, transactional helpers,
+  and structured database errors.
+- Persist Boards, Collections, Instances, membership, order, and Board
+  preferences behind canonical Actions and Queries.
+- Add Agent task, retained observation, materialized output, and provenance
+  tables required by the next phase without yet implementing every Widget.
+- Keep Now Layer results in replaceable cache storage and prove that normal
+  viewing does not add observation rows.
+- Route every database operation through the daemon; extensions and CLI clients
+  never receive a database path or connection.
+- Reuse the connected extension Source runtime and add a durable handoff from
+  normalized output to Agent-owned database transactions.
+- Add a migration path from current extension-owned durable state before making
+  the database authoritative for production users.
+
+Phase 0 exits when `DAT-*`, `BRD-01` through `BRD-04`, `NOW-04`, and `NOW-05`
+pass for both dev and production environments; two supported production
+browsers can observe the same Board mutation; and no test requires a Turso
+account or network connection.
 
 ### Phase 1: Agent-composable built-in Widgets
 
@@ -665,26 +845,25 @@ changing the two-Layer Board contract.
   configuration, and layout without changing Now Layer's Card model.
 - Expose Widget discovery, preview, and mutation through canonical CLI
   operations.
-- Bind Widgets to existing current results and history without duplicate Source
-  execution.
+- Bind Widgets to declared current inputs and Agent-retained observations
+  without duplicate Source execution.
 
 Phase 1 exits when the P0 scope and `BRD-*`, `NOW-*`, `NXT-*`, `AGT-01` through
 `AGT-04`, and applicable `PRV-*` requirements pass end-to-end through both the
 UI and CLI.
 
-### Phase 2: Agent-managed stable streams
+### Phase 2: Agent-managed registry streams
 
-- Formalize Source draft and validation-report formats.
-- Let the Agent move a tested Source through review, installation, Instance
-  creation, and Board membership.
+- Expose registered Source discovery and structured execution diagnostics.
+- Let the Agent configure approved Sources as Instances and Board membership.
 - Add stream scheduling, health state, dependency inspection, versioning, and
   permission-aware repair workflows.
 - Let Widget analysis propose coverage changes without silently applying
   material permission or retention changes.
 
 Phase 2 exits when `SRC-*`, `AGT-05`, and `AGT-06` pass with permission review,
-health inspection, failed-run diagnosis, and rollback demonstrated on at least
-one declarative and one TypeScript-backed Source.
+health inspection, failed-run diagnosis, and rollback demonstrated on registry
+Sources. Personalized Source authoring remains outside the default workflow.
 
 ### Phase 3: Derived data and reusable intelligence
 
@@ -711,6 +890,12 @@ performing undeclared requests, or breaking unrelated Board content.
 
 The product direction is succeeding when:
 
+- The CLI, App, and multiple production browsers observe one canonical durable
+  production state while development remains isolated.
+- Now Layer stays responsive with replaceable current data and does not grow
+  History merely because the user reads a Board.
+- Agent-owned Next Layer tasks refresh and persist before viewing, and opening
+  Next Layer does not rerun them.
 - A user can describe a subject and obtain a useful Board without manually
   authoring every Source or Widget.
 - Different Sources remain understandable through the unified Now Layer Card
@@ -751,6 +936,9 @@ defines what to measure before asserting numerical improvement.
 | Unauthorized authority changes | New permissions, secrets, destructive writes, or executable capabilities applied without required approval | Must remain zero |
 | Duplicate presentation execution | Additional Source executions caused only by rendering Next Layer | Must remain zero |
 | Widget failure containment | Widget failures that prevent unrelated Cards or Widgets from operating | Must remain zero |
+| Cross-browser consistency | Acknowledged durable mutations that are not visible to another connected production browser | Must remain zero |
+| Implicit Now History writes | Observation rows created only because Now Layer was viewed or refreshed | Must remain zero |
+| Environment isolation | Dev operations that create or mutate the production database, or the reverse | Must remain zero |
 
 Qualitative research should additionally test whether users understand:
 
@@ -765,7 +953,10 @@ Qualitative research should additionally test whether users understand:
 | Risk | Impact | Mitigation |
 | --- | --- | --- |
 | Open-ended Widgets become an unsafe arbitrary application runtime | Security, reliability, and maintainability regress | Start with typed declarative contracts; gate code execution behind a restricted sandbox and explicit capability review |
-| Agent creates redundant or low-quality Sources | Noisy Boards, unnecessary requests, and fragile maintenance | Require discovery before creation, structured validation, explicit promotion, health reporting, and retirement suggestions |
+| Agent requests personalized Sources instead of reusing the registry | Noisy Boards, unnecessary permissions, and fragile maintenance | Make registry discovery the default, report coverage gaps explicitly, and keep Source authoring outside the normal product workflow |
+| Two browsers or runtimes write competing durable state | Lost updates and inconsistent Boards | Make the environment-specific daemon the single database owner and require all clients to use canonical Actions and Queries |
+| Now Layer refresh silently grows History | Storage growth and a misleading retention contract | Keep current results cache-only and require an explicit Agent task or retention action for observations |
+| Local database adoption creates a cloud dependency | Offline use and first-run reliability regress | Use an embedded local file as the initial source of truth; defer optional Turso sync |
 | Cross-source fusion hides disagreement or provenance | Users trust an unsupported corrected result | Preserve every input identity, distinguish observed and derived values, and make reconciliation logic inspectable |
 | Sparse observations are mistaken for continuous monitoring | Trend and forecast claims become misleading | Carry observation coverage and completeness warnings into every transformation and Widget |
 | Widget computation harms extension performance | Board interaction becomes slow or unstable | Bound resources, isolate failures, virtualize long content, and avoid hidden subscriptions or duplicate Source execution |
@@ -774,9 +965,10 @@ Qualitative research should additionally test whether users understand:
 | Schema evolution breaks saved Widgets | Durable Boards stop rendering after upgrades | Version all durable schemas, provide migrations, retain failure-safe editing, and support rollback for executable logic |
 
 The major implementation dependencies are the canonical application Action and
-Query boundary, stable Instance and Collection identities, the source-history
-repository, the Source runtime and permission model, and a versioned Widget
-input and transformation contract.
+Query boundary, runtime environment detection, the desktop daemon and Native
+Messaging connection, stable Instance and Collection identities, the existing
+source-history repository migration, the Source runtime and permission model,
+and a versioned Widget input and transformation contract.
 
 ## Non-Goals
 
@@ -787,19 +979,29 @@ input and transformation contract.
 - Allowing Widgets to perform undeclared collection or unrestricted network
   access.
 - Treating one-time web search results as stable data streams.
+- Treating personalized Source creation as a default Agent workflow.
+- Persisting Now Layer current results as History without an explicit retention
+  owner.
+- Letting extensions, browsers, or Agents open the database file directly.
+- Requiring Turso Cloud or cross-device sync for the first local database
+  increment.
+- Introducing application-managed database encryption keys in the first local
+  database increment.
 - Claiming continuous monitoring when only intermittent observations exist.
 - Presenting forecasts as facts or hiding their evidence and uncertainty.
 - Creating a CLI-only copy of Board, Source, Instance, or Widget state.
 
 ## Open Product Questions
 
-- What event or policy determines the refresh cadence of a stable stream?
+- What Agent task policy determines Next Layer refresh cadence, retry, and
+  retention?
 - Which Source changes can an Agent apply automatically under a maintenance
   grant, and which always require review?
 - Should Widget instances always belong to one Board's Next Layer while their
   definitions can be reused as templates across Boards?
-- What is the minimal derived-data contract that supports comparison and
-  analysis without becoming a general-purpose database?
+- What is the minimal retained-observation and derived-data schema that supports
+  comparison without turning the product database into an unrestricted data
+  warehouse?
 - Which declarative Widget set is sufficient before code Widgets are justified?
 - How should the product communicate sparse observation coverage in trend and
   forecast Widgets?
