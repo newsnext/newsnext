@@ -21,6 +21,10 @@ async function updateRadarBadge(tab: Browser.tabs.Tab): Promise<void> {
   })
 
   if (count > 0) {
+    await browser.action.setBadgeTextColor({
+      tabId: tab.id,
+      color: "#fff1da",
+    })
     await browser.action.setBadgeBackgroundColor({
       tabId: tab.id,
       color: "#ef4444",
