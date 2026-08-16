@@ -12,6 +12,28 @@ than a conventional dashboard. Reuse the card visual language across related
 surfaces so dialogs and controls feel native to the board instead of looking
 like generic overlays.
 
+### Landing page
+
+The public landing page presents NewsNext as one product made from the browser
+extension and the separately distributed desktop App. Explain their boundary
+and connection directly: the extension owns live Source execution, browser
+sessions, and the human Board surface; the App owns local History, durable data,
+CLI and agent access, and desktop integration.
+
+Use the public landing page as the expressive side of the NewsNext identity,
+not as a simulation of the product UI. Until real product imagery is ready,
+avoid mock browser windows, desktop windows, Cards, menus, and terminal output.
+Build the story from large typography and a continuous "thread" motif using the
+brand red and cream plus the product's blue, purple, green, and amber theme
+families. Treat those secondary colors as distinct live signals that converge
+into the red NewsNext horizon, rather than as a generic grid of decorative
+blocks. Let the composition explain that live browser signals flow into a local
+desktop foundation without pretending the abstract marks are controls.
+Use the extension's checked-in `public/icon.svg` directly for public web icon
+metadata; do not redraw or approximate the brand icon in another app.
+Keep copy factual about public and separately distributed components. Treat
+motion as one restrained entry sequence and respect reduced-motion preferences.
+
 - Use theme color to communicate context and ownership, not as decoration.
 - In light mode, use `neutral-700` for the shared foreground and
   `neutral-600` for muted foreground text. Let weight and semantic color create

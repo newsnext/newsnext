@@ -1,5 +1,6 @@
 {
   "references": [
+    { "path": "./apps/landing/tsconfig.json" },
     { "path": "./apps/extension/tsconfig.json" },
     { "path": "./packages/cmdk/tsconfig.json" },
     { "path": "./packages/date-parser/tsconfig.json" },

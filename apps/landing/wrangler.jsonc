@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "newsnext-landing",
+  "compatibility_date": "2026-08-16",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "@tanstack/react-start/server-entry",
+  "workers_dev": false,
+  "routes": [
+    {
+      "pattern": "newsnext.app",
+      "custom_domain": true
+    }
+  ]
+}

@@ -22,6 +22,7 @@ web-ext.config.ts
 *.sln
 *.sw?
 .tanstack/
+.wrangler/
 
 .env*
 !.env.example

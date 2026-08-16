@@ -11,6 +11,8 @@ export default antfu(
       quotes: "double",
     },
     ignores: [
+      "**/.wrangler/**",
+      "apps/landing/src/routeTree.gen.ts",
       "public/**",
       "packages/extension-connection/src/generated/**",
       "packages/registry/registry.json",
@@ -58,6 +60,7 @@ export default antfu(
       "apps/extension/src/entrypoints/**/*.{ts,tsx}",
       "apps/extension/src/pages/**/*.{ts,tsx}",
       "packages/ui/src/components/**/*.{ts,tsx}",
+      "apps/landing/src/routes/**/*.{ts,tsx}",
     ],
     rules: {
       "react-refresh/only-export-components": "off",

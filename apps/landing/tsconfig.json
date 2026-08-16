@@ -1,0 +1,11 @@
+{
+  "extends": "@newsnext/tsconfigs/web.json",
+  "compilerOptions": {
+    "composite": true,
+    "paths": {
+      "~/*": ["./src/*"]
+    },
+    "types": ["vite/client"]
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx", "vite.config.ts"]
+}

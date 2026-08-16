@@ -12,13 +12,15 @@
     "catalog": {
       "@atlaskit/pragmatic-drag-and-drop": "^2.0.2",
       "@atlaskit/pragmatic-drag-and-drop-hitbox": "^2.0.0",
+      "@cloudflare/vite-plugin": "^1.52.1",
       "@iconify-json/ph": "^1.2.2",
       "@tailwindcss/vite": "^4.3.3",
       "@tanstack/react-hotkeys": "^0.10.0",
       "@tanstack/react-query": "^5.101.4",
       "@tanstack/react-query-devtools": "^5.101.4",
-      "@tanstack/react-router": "^1.170.20",
+      "@tanstack/react-router": "^1.170.29",
       "@tanstack/react-router-devtools": "^1.167.1",
+      "@tanstack/react-start": "^1.168.46",
       "@tanstack/react-virtual": "^3.14.9",
       "@types/node": "^26.1.2",
       "@vitejs/plugin-react": "^6.0.5",
@@ -37,7 +39,8 @@
       "unplugin-icons": "^23.0.1",
       "unplugin-turbo-console": "^2.3.3",
       "vite": "^8.2.0",
-      "vitest": "^4.1.10"
+      "vitest": "^4.1.10",
+      "wrangler": "^4.123.0"
     }
   },
   "scripts": {
@@ -49,6 +52,9 @@
     "dev:yolo": "bun --filter=@newsnext/extension run dev:yolo",
     "dev:chrome": "bun --filter=@newsnext/extension run dev:chrome",
     "dev:firefox": "bun --filter=@newsnext/extension run dev:firefox",
+    "landing:dev": "bun --filter=@newsnext/landing run dev",
+    "landing:build": "bun --filter=@newsnext/landing run build",
+    "landing:deploy": "bun --filter=@newsnext/landing run deploy",
     "update-deps": "taze -r -w && bun install",
     "release": "bumpp --recursive --install --all --git-check",
     "build": "bun --filter=@newsnext/extension run build",

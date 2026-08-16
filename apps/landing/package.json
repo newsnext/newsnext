@@ -1,0 +1,31 @@
+{
+  "name": "@newsnext/landing",
+  "type": "module",
+  "version": "1.0.0-beta.3",
+  "private": true,
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build && tsc --noEmit",
+    "preview": "vite preview",
+    "deploy": "bun run build && wrangler deploy",
+    "cf-typegen": "wrangler types"
+  },
+  "dependencies": {
+    "@newsnext/ui": "workspace:*",
+    "@phosphor-icons/react": "^2.1.10",
+    "@tanstack/react-router": "catalog:",
+    "@tanstack/react-start": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@cloudflare/vite-plugin": "catalog:",
+    "@tailwindcss/vite": "catalog:",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@vitejs/plugin-react": "catalog:",
+    "tailwindcss": "catalog:",
+    "vite": "catalog:",
+    "wrangler": "catalog:"
+  }
+}
