@@ -1,7 +1,5 @@
-import type { SourceConfig } from "../core/resolver"
 import type { RuntimeSource, SourceProvider } from "../types"
 import type {
-  ExecutableSourceLoaders,
   SourceRegistry,
   SourceRegistryConfig,
 } from "./types"
@@ -18,6 +16,7 @@ export function parseSourceRegistry(input: unknown): SourceRegistry {
   if (!isRecord(input)) {
     throw new Error("Source registry must be a JSON object")
   }
+  assertJsonValue(input, "Source registry", new WeakSet())
 
   const serialized = JSON.stringify(input)
   if (new TextEncoder().encode(serialized).byteLength > SOURCE_REGISTRY_LIMITS.maxBytes) {
@@ -55,27 +54,47 @@ export function parseSourceRegistry(input: unknown): SourceRegistry {
       }
       providers.set(providerId, currentProvider)
 
-      if (
-        source.loader !== undefined
-        && (
-          !isRecord(source.loader)
-          || !isStructuredLoaderType(source.loader.type)
-        )
-      ) {
+      if (!isRecord(source.loader) || !isStructuredLoaderType(source.loader.type)) {
         throw new Error(`Registry source "${sourceId}" uses an unsupported loader type`)
       }
 
       const config = source as unknown as SourceRegistryConfig
-      resolveRegistrySource(
-        sourceId,
-        config,
-        config.loader === undefined
-          ? { [sourceId]: async () => ({ items: [] }) }
-          : {},
-      )
+      resolveRegistrySource(sourceId, config)
       return [sourceId, config]
     }),
   )
+}
+
+function assertJsonValue(
+  value: unknown,
+  location: string,
+  ancestors: WeakSet<object>,
+): void {
+  if (
+    value === null
+    || typeof value === "string"
+    || typeof value === "boolean"
+    || (typeof value === "number" && Number.isFinite(value))
+  ) {
+    return
+  }
+  if (typeof value !== "object" || ancestors.has(value)) {
+    throw new Error(`${location} must contain only JSON values`)
+  }
+
+  ancestors.add(value)
+  if (Array.isArray(value)) {
+    value.forEach((item, index) => assertJsonValue(item, `${location}.${index}`, ancestors))
+  } else {
+    const prototype = Object.getPrototypeOf(value)
+    if (prototype !== Object.prototype && prototype !== null) {
+      throw new Error(`${location} must contain only JSON values`)
+    }
+    Object.entries(value).forEach(([key, item]) => (
+      assertJsonValue(item, `${location}.${key}`, ancestors)
+    ))
+  }
+  ancestors.delete(value)
 }
 
 export function mergeSourceRegistries(...registries: unknown[]): SourceRegistry {
@@ -86,12 +105,11 @@ export function mergeSourceRegistries(...registries: unknown[]): SourceRegistry 
 
 export function resolveSourceRegistry(
   input: unknown,
-  executableLoaders: ExecutableSourceLoaders = {},
 ): Record<string, RuntimeSource> {
   return Object.fromEntries(
     Object.entries(parseSourceRegistry(input)).map(([sourceId, source]) => [
       sourceId,
-      resolveRegistrySource(sourceId, source, executableLoaders),
+      resolveRegistrySource(sourceId, source),
     ]),
   )
 }
@@ -99,26 +117,7 @@ export function resolveSourceRegistry(
 export function resolveRegistrySource(
   sourceId: string,
   config: SourceRegistryConfig,
-  executableLoaders: ExecutableSourceLoaders = {},
 ): RuntimeSource {
   parseRegistrySourceId(sourceId)
-  if (config.loader === undefined) {
-    const load = executableLoaders[sourceId]
-    if (!load) {
-      throw new Error(`Registry source "${sourceId}" requires an executable loader`)
-    }
-    if (!isRecord(config.capabilities)) {
-      throw new Error(`Registry source "${sourceId}" with an executable loader must define capabilities`)
-    }
-    const executableConfig = {
-      ...config,
-      loader: {
-        type: "custom",
-        load,
-      },
-    } as SourceConfig
-    return resolveRuntimeSource(sourceId, executableConfig, config.provider)
-  }
-
-  return resolveRuntimeSource(sourceId, config as SourceConfig, config.provider)
+  return resolveRuntimeSource(sourceId, config, config.provider)
 }

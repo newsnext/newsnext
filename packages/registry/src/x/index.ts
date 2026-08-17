@@ -3,6 +3,7 @@ import type {
   SourceLoaderContext,
   SourceLoaderOutput,
 } from "@newsnext/source/types"
+import type { IdentityParams } from "../shared/identity"
 import type {
   XHomeTimelineResponse,
   XListTweetsResponse,
@@ -11,6 +12,7 @@ import type {
   XUserByScreenNameResponse,
   XUserTweetsResponse,
 } from "./types"
+import { assertIdentity, identityParam } from "../shared/identity"
 import { LOCATION_OPTIONS } from "./types"
 import {
   createXLoggedInHeaders,
@@ -21,6 +23,7 @@ import {
   isUserTweetEntry,
   LIST_LATEST_TWEETS_URL,
   normalizeXSearchUrl,
+  parseXUserIdCookie,
   PLACE_TRENDS_URL,
   sortNewsItemsByNewest,
   USER_BY_SCREEN_NAME_URL,
@@ -45,10 +48,13 @@ const X_RADAR_RESERVED_PATHS = [
   "settings",
   "share",
 ]
+const X_USER_ID_SECRET_KEY = "userId"
 
 interface XTweetTextParams {
   text: XTweetTextMode
 }
+
+type XFollowingParams = IdentityParams & XTweetTextParams
 
 interface XListParams extends XTweetTextParams {
   listId: string
@@ -68,17 +74,8 @@ const tweetTextParam = {
   default: "original",
 } as const
 
-function createXHomeRadar(id: string) {
-  return [
-    {
-      id,
-      match: {
-        hosts: ["x.com", "twitter.com"],
-        paths: ["/home"],
-      },
-      confidence: 1,
-    },
-  ]
+function getXIdentity(context: SourceLoaderContext): string | undefined {
+  return parseXUserIdCookie(context.secrets?.[X_USER_ID_SECRET_KEY])
 }
 
 async function fetchXPlaceTrends(
@@ -113,7 +110,7 @@ function xHomeTimelineToResult(
 }
 
 async function fetchXFollowing(
-  { text }: XTweetTextParams,
+  { identity, text }: XFollowingParams,
   context: SourceLoaderContext,
 ): Promise<SourceLoaderOutput> {
   const response = await context.fetch.post(HOME_LATEST_TIMELINE_URL, {
@@ -130,6 +127,7 @@ async function fetchXFollowing(
       queryId: HOME_LATEST_TIMELINE_QUERY_ID,
     },
   }).json<XHomeTimelineResponse>()
+  await assertIdentity(identity, () => getXIdentity(context), "X")
   return xHomeTimelineToResult(response, text)
 }
 
@@ -235,6 +233,14 @@ export default {
     },
     secrets: [
       {
+        key: X_USER_ID_SECRET_KEY,
+        type: "cookie",
+        origin: X_ORIGIN,
+        itemKey: "twid",
+        cache: false,
+        required: false,
+      },
+      {
         key: X_CSRF_TOKEN_SECRET_KEY,
         type: "cookie",
         origin: X_ORIGIN,
@@ -264,8 +270,36 @@ export default {
       metadata: {
         title: "Following",
       },
-      radar: createXHomeRadar("x-following"),
+      radar: [
+        {
+          id: "x-following",
+          match: {
+            hosts: ["x.com", "twitter.com"],
+            paths: ["/home"],
+          },
+          patch: {
+            params: {
+              identity: () => {
+                const page = globalThis as unknown as { document: { cookie: string } }
+                const value = page.document.cookie
+                  .split(";")
+                  .map(cookie => cookie.trim())
+                  .find(cookie => cookie.startsWith("twid="))
+                  ?.slice("twid=".length)
+                if (!value) return undefined
+                try {
+                  return decodeURIComponent(value).match(/^u=(\d+)$/)?.[1]
+                } catch {
+                  return undefined
+                }
+              },
+            },
+          },
+          confidence: 1,
+        },
+      ],
       params: {
+        identity: identityParam,
         text: tweetTextParam,
       },
       loader: {

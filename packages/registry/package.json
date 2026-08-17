@@ -6,7 +6,7 @@
   "sideEffects": false,
   "exports": {
     ".": "./registry.json",
-    "./loaders": "./loaders.ts"
+    "./sources": "./sources.ts"
   },
   "scripts": {
     "build": "bun run build.ts",

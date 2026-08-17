@@ -1,4 +1,4 @@
 export { createRadarBoardSource } from "./board-source"
-export type { RadarContext, RadarMatcher, RadarSuggestion } from "./matcher"
+export type { RadarContext, RadarMatcher, RadarPageScript, RadarSuggestion } from "./matcher"
 export { createRadarMatcher } from "./matcher"
-export { readRadarPageSelections } from "./page"
+export { readRadarPageScriptValues, readRadarPageSelections } from "./page"

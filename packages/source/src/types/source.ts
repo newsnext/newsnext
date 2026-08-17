@@ -57,7 +57,11 @@ export interface SourceRadarMatch {
   paths?: string[] | SourceRadarPaths
 }
 
-export type SourceRadarParams = Record<string, string>
+export type SourceRadarParamScript = () => unknown | Promise<unknown>
+
+export type SourceRadarParam = string | SourceRadarParamScript
+
+export type SourceRadarParams = Record<string, SourceRadarParam>
 
 export type SourceRadarMetadata = {
   [K in keyof SourcePresentationMetadata]?: HtmlField

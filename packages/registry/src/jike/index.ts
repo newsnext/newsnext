@@ -69,7 +69,7 @@ async function fetchJikeWithAuth(
   if (!refreshToken) throw new Error("Jike refreshToken secret is required.")
 
   const storedAccessToken = context.secrets?.[JIKE_ACCESS_TOKEN_SECRET_KEY]?.trim()
-  const accessToken = !storedAccessToken
+  let accessToken = !storedAccessToken
     || isJwtExpired(storedAccessToken, { bufferSeconds: JIKE_ACCESS_TOKEN_EXPIRY_BUFFER_SECONDS })
     ? await refreshJikeAccessToken(refreshToken, context) ?? storedAccessToken
     : storedAccessToken
@@ -82,6 +82,7 @@ async function fetchJikeWithAuth(
 
         const refreshedAccessToken = await refreshJikeAccessToken(refreshToken, context)
         if (!refreshedAccessToken) return
+        accessToken = refreshedAccessToken
 
         const headers = new Headers(request.headers)
         headers.set("x-jike-access-token", refreshedAccessToken)
@@ -106,7 +107,7 @@ function assertSuccessfulFeed(response: JikeFeedResponse, fallback: string): voi
 }
 
 export async function fetchJikeFollowingUpdates(
-  _params: Record<string, unknown>,
+  _params: unknown,
   context: SourceLoaderContext,
 ): Promise<SourceLoaderOutput> {
   const response = await fetchJikeWithAuth(

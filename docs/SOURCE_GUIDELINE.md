@@ -15,9 +15,13 @@ Add providers under `packages/registry/src`:
   the provider ID.
 - Source IDs have the form `<provider>:<source>`.
 
-Do not define the same source ID in both JSON and TypeScript. Do not edit
-`packages/registry/registry.json` or `packages/registry/loaders.ts`; they are
-generated.
+Do not split one provider between JSON and TypeScript files; a provider and all
+of its Sources must use one format. Do not edit
+`packages/registry/registry.json` or `packages/registry/sources.ts`; they are
+generated. JSON providers are emitted only to `registry.json`; TypeScript
+providers are emitted as complete executable Runtime Sources only to
+`sources.ts`. This keeps JSON registry updates independent from TypeScript
+Source versions.
 
 Minimal TypeScript provider:
 
@@ -268,6 +272,37 @@ type coercion and validation. Parameters do not perform arbitrary string
 validation or Liquid transformation. Normalize and reject discovered values in
 the Radar parameter patch, and use structured parameter types for
 user-selectable constraints.
+
+Every value in a Radar `patch.params` object may be either its existing Liquid
+string or a JavaScript function. The function runs in the matched browser tab
+and may return a value or a Promise. Keep it closure-free because the browser
+serializes the function for page execution:
+
+```ts
+patch: {
+  params: {
+    identity: () => globalThis.localStorage.getItem("userId"),
+  },
+},
+```
+
+The returned value follows normal defaults and parameter validation.
+
+For a source whose results depend on the current signed-in user, expose an
+`identity` text parameter and obtain it through the matching Radar rule's
+parameter function. The value need not be a public account ID; it may be any
+stable, non-secret value that uniquely separates users. Instance
+creation stores the Radar result as an ordinary parameter, so instances,
+caches, and retained History from different accounts do not share the same
+normalized parameters. The loader must accept the parameter, determine the
+actual account used by its content request, and throw when non-empty values
+differ. Prefer an identity already present in the content response or the
+credential used by that request; do not add a separate identity request. Radar
+and the loader must return the same canonical identity. Never persist a raw
+credential as the ordinary parameter. Do not return the identity in loader
+metadata or items. Treat an empty `identity` as an unbound legacy instance and
+skip comparison. If no stable, non-secret identity is available without an
+extra request, leave the Source unbound.
 
 Prefer one source with a `select` parameter when feed variants share their
 loader and presentation and differ only by a request value. Separate sources

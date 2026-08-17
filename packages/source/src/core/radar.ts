@@ -16,6 +16,7 @@ export function validateRadarRules(
     validateRadarPathPatterns(rule.match.paths, `${location}.${index}.match.paths`)
     const patchLocation = `${location}.${index}.patch`
     for (const [key, template] of Object.entries(rule.patch?.params ?? {})) {
+      if (typeof template === "function") continue
       compileSourceTemplate(template, {
         location: `${patchLocation}.params.${key}`,
         slot: "radarParams",

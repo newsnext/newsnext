@@ -57,36 +57,38 @@ It then produces:
 
 ```text
 packages/registry/registry.json
-packages/registry/loaders.ts
+packages/registry/sources.ts
 ```
 
 `registry.json` is a flat object keyed by complete source IDs such as
-`example:latest`. It contains serializable provider metadata, expanded source
-configuration, structured loaders, and resolved capabilities.
+`example:latest`. It contains only JSON providers: serializable provider
+metadata, expanded source configuration, structured loaders, and resolved
+capabilities.
 
-`loaders.ts` contains the executable loader map for TypeScript providers. The
-registry entry for such a source omits its loader function; at runtime the
-generated map restores it by complete source ID.
+`sources.ts` contains complete resolved Runtime Sources for TypeScript
+providers, including configuration, cache version, Radar, and loader behavior.
+TypeScript Sources have no projection in `registry.json`.
 
 The build follows this sequence:
 
 ```text
 provider files
     │
-    ├─ validate provider and source IDs
-    ├─ apply provider defaults and merge source variables
-    ├─ attach provider metadata
-    ├─ flatten providers to complete source IDs
-    ├─ materialize capabilities for executable sources
-    ├─ remove executable loaders from serialized entries
-    └─ validate the complete generated registry
-            │
-            ├─ registry.json
-            └─ loaders.ts
+    ├─ JSON providers
+    │      ├─ expand and validate serializable configuration
+    │      └─ registry.json
+    │
+    └─ TypeScript providers
+           ├─ resolve complete executable Runtime Sources
+           └─ sources.ts
+
+registry.json + executable Runtime Sources
+    └─ reject provider IDs that mix JSON and TypeScript Sources
 ```
 
-Duplicate provider or source IDs fail the build. Generated files are rewritten
-only when their content changes.
+Duplicate provider or source IDs fail the build. A provider ID also cannot
+appear in both formats, even when its local Source IDs differ. Generated files
+are rewritten only when their content changes.
 
 ## Defaults and provider expansion
 
@@ -171,13 +173,16 @@ resolves both artifacts:
 
 ```text
 bundled registry.json
-        +
-generated executable loader map
         │
-        ▼
-resolveSourceRegistry
+        └─ resolveSourceRegistry ── JSON Runtime Sources
+
+generated complete TypeScript Runtime Sources
         │
-        ▼
+        └──────────────────────────┐
+                                   ▼
+                          reject duplicate IDs
+                                   │
+                                   ▼
 Record<sourceId, RuntimeSource>
 ```
 
@@ -203,10 +208,15 @@ fields onto the operational source object. Public `SourceDescriptor` and
 extension `BoardSource` preserve the same nested shape, so static metadata,
 instance patches, and loader results share one merge boundary.
 
-Registry parsing validates the entire wire format before resolving entries.
-Declarative registry entries keep their JSON, HTML, or RSS loader. An entry
-without a loader must have an exact match in the executable loader map and is
-resolved as a custom loader.
+Registry parsing validates the entire JSON wire format before resolving entries.
+Every registry entry owns its structured JSON, HTML, or RSS loader; missing or
+custom executable loaders are rejected. TypeScript Sources bypass the JSON
+registry parser because provider expansion already resolves their complete
+trusted runtime definition. Their JavaScript Radar parameter values remain
+available to the background Radar service.
+Public descriptors strip those functions before extension messaging; the Radar
+popup asks the background service to execute matching functions in the active
+tab and receives only serializable suggestions.
 
 Resolved sources are cached within the active runtime context. Concurrent
 requests share the same in-flight registry promise. Reconfiguring the external
@@ -286,6 +296,19 @@ JSON. Each dataset receives an opaque UUID exposed by `history datasets` and
 used by the other history commands. Source cache version remains observation
 metadata rather than part of dataset identity, preserving continuity while
 making version boundaries inspectable.
+
+Account-scoped Sources include an explicit, non-secret `identity` parameter in
+that normalized JSON. Radar obtains it from the active browser tab using a
+JavaScript parameter function before creation persists the ordinary parameter.
+After fetching personalized content, the loader independently resolves the
+user actually represented by the request in the same canonical representation
+as Radar and rejects a mismatch. Resolution reuses the content response or a
+stable, non-secret identifier already available to that request rather than
+issuing an identity-only request. Raw credentials never enter params. A Source
+without such an identifier remains unbound. The loader result does not expose
+the identifier; its persisted role remains dataset separation. An empty
+identifier represents an unbound legacy Instance and bypasses identity
+resolution and comparison.
 
 The schema normalizes retained values into `history_datasets`,
 `history_observations`, provider-scoped `history_items`, content-addressed
@@ -657,14 +680,15 @@ them as finite numeric stats.
 
 ## Radar pipeline
 
-Radar runs against source descriptors rather than executable loaders:
+Radar ignores executable loaders but retains bundled JavaScript parameter
+functions in its background-only runtime matcher:
 
 ```text
 active tab URL
     → host and included/excluded path or full-URL regex matching
-    → render parameter patches
+    → batch page-field extraction and matching JavaScript parameter functions
+    → render Liquid parameter patches and apply JavaScript results
     → normalize and validate parameters
-    → batch page-field extraction
     → render metadata patches
     → apply source presentation metadata to the discovered instance
     → order suggestions by confidence
@@ -672,10 +696,13 @@ active tab URL
 ```
 
 Page-field queries required by matching rules are deduplicated and executed in
-one active-tab script. Field extraction is isolated from template rendering;
-page scripts are not executed and the document object is never exposed to
-Liquid. Radar does not scan pages for RSS, Atom, or JSON Feed links; users can
-still add those URLs through the built-in `rss:feed` source.
+one active-tab script. Each matching JavaScript parameter function executes in
+the active tab through the browser scripting API; failures omit that discovered
+value and let normal parameter defaults apply. Functions are bundled trusted
+code, must be closure-free, and never cross extension messaging. Field and
+function results are isolated from Liquid rendering, and the document object is
+never exposed to Liquid. Radar does not scan pages for RSS, Atom, or JSON Feed
+links; users can still add those URLs through the built-in `rss:feed` source.
 Radar renders in the extension action popup.
 
 Rules and compiled matchers are cached. Optional Radar failures are reported as
@@ -761,9 +788,9 @@ Validation occurs twice:
 2. registry parsing validates the generated wire format before runtime
    resolution.
 
-The runtime registry accepts only declarative structured loaders. Executable
-functions must come from the bundled loader map, so registry data cannot inject
-code.
+The JSON registry accepts only declarative structured loaders. Function loaders
+and JavaScript Radar parameters must come from bundled TypeScript Runtime
+Sources, so registry data cannot inject code.
 
 Other boundaries include:
 

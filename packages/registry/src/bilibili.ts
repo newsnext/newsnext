@@ -1,7 +1,10 @@
 import type { ProviderConfig } from "@newsnext/source/registry"
 import type { NewsItemInput, SourceLoaderContext, SourceLoaderOutput } from "@newsnext/source/types"
+import type { IdentityParams } from "./shared/identity"
+import { assertIdentity, identityParam } from "./shared/identity"
 
 const DYNAMIC_FEED_URL = "https://api.bilibili.com/x/polymer/web-dynamic/v1/feed/all"
+const BILIBILI_USER_ID_SECRET_KEY = "userId"
 const DYNAMIC_FEED_FEATURES = [
   "itemOpusStyle",
   "listOnlyfans",
@@ -137,6 +140,11 @@ interface DynamicFeedResponse {
   }
 }
 
+function getBilibiliIdentity(context: SourceLoaderContext): string | undefined {
+  const identity = context.secrets?.[BILIBILI_USER_ID_SECRET_KEY]?.trim()
+  return identity && /^\d+$/.test(identity) ? identity : undefined
+}
+
 function normalizeBilibiliUrl(url: string): string {
   if (url.startsWith("//")) return `https:${url}`
   return url.replace(/^http:/, "https:")
@@ -264,7 +272,7 @@ export function dynamicFeedItemsToNewsItems(items: DynamicFeedItem[]): NewsItemI
 }
 
 async function fetchBilibiliFollowingVideos(
-  _params: Record<string, unknown>,
+  { identity }: IdentityParams,
   context: SourceLoaderContext,
 ): Promise<SourceLoaderOutput> {
   const response = await context.fetch.get(DYNAMIC_FEED_URL, {
@@ -289,6 +297,8 @@ async function fetchBilibiliFollowingVideos(
   if (response.code !== 0) {
     throw new Error(response.message ?? "Failed to load Bilibili following videos.")
   }
+
+  await assertIdentity(identity, () => getBilibiliIdentity(context), "Bilibili")
 
   return {
     items: dynamicFeedItemsToNewsItems(response.data?.items ?? []),
@@ -355,6 +365,7 @@ export default {
   title: "哔哩哔哩",
   category: "social",
   color: "red",
+  icon: "https://i0.hdslb.com/bfs/static/jinkela/long/images/512.png",
   defaults: {
     baseUrl: "https://www.bilibili.com/",
     cache: "5m",
@@ -390,10 +401,46 @@ export default {
         title: "关注视频",
         desc: "已关注 UP 主发布的视频动态",
       },
+      params: {
+        identity: identityParam,
+      },
+      radar: [
+        {
+          id: "bilibili-following-videos",
+          match: {
+            hosts: ["bilibili.com", "t.bilibili.com"],
+            paths: ["/"],
+          },
+          patch: {
+            params: {
+              identity: () => {
+                const page = globalThis as unknown as { document: { cookie: string } }
+                const cookieString = page.document.cookie
+                const cookie = cookieString
+                  .split(";")
+                  .map(value => value.trim())
+                  .find(value => value.startsWith("DedeUserID="))
+                return cookie?.slice("DedeUserID=".length)
+              },
+            },
+          },
+          confidence: 0.9,
+        },
+      ],
       loader: {
         type: "custom",
         load: fetchBilibiliFollowingVideos,
       },
+      secrets: [
+        {
+          key: BILIBILI_USER_ID_SECRET_KEY,
+          type: "cookie",
+          origin: "https://www.bilibili.com",
+          itemKey: "DedeUserID",
+          cache: false,
+          required: false,
+        },
+      ],
       capabilities: {
         network: ["api.bilibili.com"],
         cookies: ["api.bilibili.com", "www.bilibili.com"],

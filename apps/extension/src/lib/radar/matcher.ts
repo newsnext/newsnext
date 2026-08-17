@@ -5,6 +5,7 @@ import type {
   SourcePresentationMetadata,
   SourceRadarMatch,
   SourceRadarMetadata,
+  SourceRadarParamScript,
   SourceRadarPathPattern,
   SourceRadarRule,
 } from "@newsnext/source/types"
@@ -30,6 +31,12 @@ export interface RadarContext {
   url: string
   title?: string
   pageSelections?: Record<string, string>
+  pageScriptValues?: Record<string, unknown>
+}
+
+export interface RadarPageScript {
+  key: string
+  script: SourceRadarParamScript
 }
 
 export interface RadarSuggestion {
@@ -78,6 +85,7 @@ interface LocationPatterns {
 interface CompiledRadarRule {
   metadata: Partial<Record<keyof SourceRadarMetadata, CompiledRadarMetadata>>
   paramTemplates: Record<string, CompiledSourceTemplate>
+  paramScripts: Record<string, RadarPageScript>
   source: RadarSourceMetadata
   rule: SourceRadarRule
   hosts: string[]
@@ -98,6 +106,7 @@ type CompiledRadarMetadata
 
 export interface RadarMatcher {
   getPageQueries: (context: RadarContext) => RadarPageQuery[]
+  getPageScripts: (context: RadarContext) => RadarPageScript[]
   getSuggestions: (context: RadarContext) => RadarSuggestion[]
 }
 
@@ -322,13 +331,28 @@ function compileRadarRule(sourceRule: SourceRuleSpec, rule: SourceRadarRule): Co
   try {
     const templateLocation = `${sourceRule.source.id}.radar.${rule.id}.patch`
     const paramTemplates = Object.fromEntries(
-      Object.entries(rule.patch?.params ?? {}).map(([key, template]) => [
-        key,
-        compileSourceTemplate(template, {
-          location: `${templateLocation}.params.${key}`,
-          slot: "radarParams",
-        }),
-      ]),
+      Object.entries(rule.patch?.params ?? {})
+        .filter((entry): entry is [string, string] => typeof entry[1] === "string")
+        .map(([key, template]) => [
+          key,
+          compileSourceTemplate(template, {
+            location: `${templateLocation}.params.${key}`,
+            slot: "radarParams",
+          }),
+        ]),
+    )
+    const paramScripts = Object.fromEntries(
+      Object.entries(rule.patch?.params ?? {})
+        .filter((entry): entry is [string, SourceRadarParamScript] => (
+          typeof entry[1] === "function"
+        ))
+        .map(([key, script]) => [
+          key,
+          {
+            key: `${sourceRule.source.id}:${rule.id}:${key}`,
+            script,
+          },
+        ]),
     )
     const metadata = Object.fromEntries(
       Object.entries(rule.patch?.metadata ?? {})
@@ -347,6 +371,7 @@ function compileRadarRule(sourceRule: SourceRuleSpec, rule: SourceRadarRule): Co
       hosts: rule.match.hosts.map(normalizeHostname),
       excludeMatchers: compileLocationMatchers(patterns.exclude),
       includeMatchers,
+      paramScripts,
       paramTemplates,
     }
   } catch (error) {
@@ -372,6 +397,7 @@ function indexRulesByHost(rules: CompiledRadarRule[]): Map<string, CompiledRadar
 function resolveParamsPatch(
   rule: CompiledRadarRule,
   context: RadarMatchContext,
+  input: RadarContext,
 ): Record<string, unknown> | null {
   const parameterValues: Record<string, unknown> = {}
 
@@ -379,6 +405,12 @@ function resolveParamsPatch(
     const scope = createTemplateVariables(context)
     for (const [key, template] of Object.entries(rule.paramTemplates)) {
       const value = template.render(scope)
+      if (isPresent(value)) {
+        parameterValues[key] = value
+      }
+    }
+    for (const [key, pageScript] of Object.entries(rule.paramScripts)) {
+      const value = input.pageScriptValues?.[pageScript.key]
       if (isPresent(value)) {
         parameterValues[key] = value
       }
@@ -482,7 +514,7 @@ function matchCompiledRule(
     ...baseContext,
     params: {},
   }
-  const params = resolveParamsPatch(compiledRule, paramsContext)
+  const params = resolveParamsPatch(compiledRule, paramsContext, input)
   if (!params) {
     return null
   }
@@ -528,6 +560,23 @@ function getPageQueries(
   }
 
   return [...queries.values()]
+}
+
+function getPageScripts(
+  context: RadarContext,
+  rulesByHost: Map<string, CompiledRadarRule[]>,
+): RadarPageScript[] {
+  const location = resolveRadarLocation(context, rulesByHost)
+  if (!location) return []
+
+  const scripts = new Map<string, RadarPageScript>()
+  for (const rule of location.rules) {
+    if (!matchRuleLocation(rule, location.url)) continue
+    for (const pageScript of Object.values(rule.paramScripts)) {
+      scripts.set(pageScript.key, pageScript)
+    }
+  }
+  return [...scripts.values()]
 }
 
 function createSuggestions(
@@ -597,6 +646,7 @@ export function createRadarMatcher(sourceMetadata: RadarSourceMetadata[] = []): 
   const rulesByHost = indexRulesByHost(compiledRules)
   const radarMatcher: RadarMatcher = {
     getPageQueries: context => getPageQueries(context, rulesByHost),
+    getPageScripts: context => getPageScripts(context, rulesByHost),
     getSuggestions: context => createSuggestions(context, rulesByHost),
   }
 

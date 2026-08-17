@@ -16,7 +16,7 @@ export default antfu(
       "public/**",
       "packages/extension-connection/src/generated/**",
       "packages/registry/registry.json",
-      "packages/registry/loaders.ts",
+      "packages/registry/sources.ts",
     ],
     rules: {
       "antfu/curly": "error",

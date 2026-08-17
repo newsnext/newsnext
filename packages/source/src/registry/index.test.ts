@@ -817,7 +817,7 @@ describe("source registry", () => {
       icon: "https://icons.folo.is/example.com",
       color: "blue",
     })
-    expect(resolveSourceRegistry(registry)["test:latest"]).toMatchObject({
+    expect(resolveSourceRegistry(JSON.parse(JSON.stringify(registry)))["test:latest"]).toMatchObject({
       cache: { version: 2, maxAge: "5m" },
       metadata: {
         title: "Latest",
@@ -891,7 +891,8 @@ describe("source registry", () => {
       },
     })
 
-    expect(resolveSourceRegistry(registry)["test:latest"]).toMatchObject({
+    const serializedRegistry = JSON.parse(JSON.stringify(registry))
+    expect(resolveSourceRegistry(serializedRegistry)["test:latest"]).toMatchObject({
       provider: {
         title: "Test Provider",
         category: "social",
@@ -900,14 +901,14 @@ describe("source registry", () => {
     })
   })
 
-  it("rejects provider containers and resolves missing loaders from executable bindings", () => {
+  it("rejects provider containers and executable registry sources", () => {
     expect(() => resolveSourceRegistry({
       test: {
         sources: {},
       },
     })).toThrow("Invalid registry source ID")
 
-    const executableRegistry = {
+    const invalidRegistry = {
       "test:latest": {
         provider: {
           title: "Test",
@@ -920,11 +921,23 @@ describe("source registry", () => {
         },
       },
     }
-    expect(() => resolveSourceRegistry(executableRegistry))
-      .toThrow("requires an executable loader")
-    expect(resolveSourceRegistry(executableRegistry, {
-      "test:latest": async () => ({ items: [] }),
-    })["test:latest"]?.loader).toBeTypeOf("function")
+    expect(() => resolveSourceRegistry(invalidRegistry))
+      .toThrow("uses an unsupported loader type")
+
+    expect(() => resolveSourceRegistry({
+      "test:scripted": {
+        ...invalidRegistry["test:latest"],
+        loader: {
+          type: "rss",
+          url: "https://example.com/feed.xml",
+        },
+        radar: [{
+          id: "scripted",
+          match: { hosts: ["example.com"] },
+          patch: { params: { value: () => "not-json" } },
+        }],
+      },
+    })).toThrow("must contain only JSON values")
   })
 
   it("rejects inconsistent provider metadata across flat sources", () => {
@@ -961,10 +974,9 @@ describe("source registry", () => {
       },
     })
 
-    expect(() => resolveSourceRegistry({
-      ...first,
-      ...second,
-    })).toThrow("Provider \"test\" has inconsistent metadata")
+    const registry = JSON.parse(JSON.stringify({ ...first, ...second }))
+    expect(() => resolveSourceRegistry(registry))
+      .toThrow("Provider \"test\" has inconsistent metadata")
   })
 
   it("rejects invalid display and provider metadata in flat registries", () => {

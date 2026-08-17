@@ -1,9 +1,26 @@
 import type { HtmlTraversal } from "@newsnext/source/types"
+import type { RadarPageScript } from "./matcher"
 import type { RadarPageQuery } from "./page-query"
 import { browser } from "#imports"
 import { getRadarPageQueryKey } from "./page-query"
 
 const MAX_PAGE_SELECTION_LENGTH = 20_000
+
+export async function readRadarPageScriptValues(
+  tabId: number,
+  scripts: readonly RadarPageScript[],
+): Promise<Record<string, unknown>> {
+  const entries = await Promise.all(scripts.map(async ({ key, script }) => {
+    const [executionResult] = await browser.scripting.executeScript({
+      target: { tabId },
+      func: script,
+    }).catch(() => [])
+    return [key, executionResult?.result] as const
+  }))
+  return Object.fromEntries(entries.filter((entry): entry is readonly [string, unknown] => (
+    entry[1] !== undefined && entry[1] !== null
+  )))
+}
 
 export async function readRadarPageSelections(
   tabId: number,

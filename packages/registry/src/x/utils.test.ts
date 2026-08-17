@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest"
 import {
   entriesToNewsItems,
   getTimelineEntries,
+  parseXUserIdCookie,
 } from "./utils"
 
 function createTweet(id: string, screenName: string): XTweetResult {
@@ -39,6 +40,19 @@ function createTweet(id: string, screenName: string): XTweetResult {
 function normalize(items: ReturnType<typeof entriesToNewsItems>) {
   return validateSourceLoaderResult({ items }).items
 }
+
+describe("parseXUserIdCookie", () => {
+  it("reads the numeric user ID from X's encoded cookie", () => {
+    expect(parseXUserIdCookie("u%3D1234567890")).toBe("1234567890")
+    expect(parseXUserIdCookie("u=1234567890")).toBe("1234567890")
+  })
+
+  it("rejects malformed cookie values", () => {
+    expect(parseXUserIdCookie("screen_name=user")).toBeUndefined()
+    expect(parseXUserIdCookie("%E0%A4%A")).toBeUndefined()
+    expect(parseXUserIdCookie(undefined)).toBeUndefined()
+  })
+})
 
 describe("getTimelineEntries", () => {
   it("parses direct tweets with the current X user shape", () => {

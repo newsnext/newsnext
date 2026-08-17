@@ -90,6 +90,19 @@ export async function loadSourceDescriptors(): Promise<SourceDescriptor[]> {
     return {
       ...descriptor,
       id,
+      radar: descriptor.radar?.map(rule => ({
+        ...rule,
+        patch: rule.patch
+          ? {
+              ...rule.patch,
+              params: Object.fromEntries(
+                Object.entries(rule.patch.params ?? {}).filter((entry): entry is [string, string] => (
+                  typeof entry[1] === "string"
+                )),
+              ),
+            }
+          : undefined,
+      })),
     }
   })
 }

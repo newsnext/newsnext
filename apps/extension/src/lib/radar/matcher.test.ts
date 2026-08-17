@@ -1,5 +1,5 @@
 import bundledSourceRegistry from "@newsnext/registry" with { type: "json" }
-import { resolveSources } from "@newsnext/registry/loaders"
+import { resolveSources } from "@newsnext/registry/sources"
 import { describe, expect, it } from "vitest"
 import { createRadarMatcher, getRadarSuggestions } from "./matcher"
 import { getRadarPageQueryKey } from "./page-query"
@@ -86,6 +86,42 @@ describe("getRadarSuggestions", () => {
       {
         patch: { params: { value: "hash-value" } },
       },
+    ])
+  })
+
+  it("renders Radar parameters from page JavaScript", () => {
+    const script = () => "current-account"
+    const matcher = createRadarMatcher([
+      {
+        id: "test:script-params",
+        params: {
+          identity: {
+            type: "text",
+            title: "Identity",
+            default: "",
+          },
+        },
+        radar: [
+          {
+            id: "script-params",
+            match: { hosts: ["example.com"] },
+            patch: { params: { identity: script } },
+          },
+        ],
+      },
+    ])
+    const context = { url: "https://example.com/" }
+
+    expect(matcher.getPageScripts(context)).toEqual([
+      { key: "test:script-params:script-params:identity", script },
+    ])
+    expect(matcher.getSuggestions({
+      ...context,
+      pageScriptValues: {
+        "test:script-params:script-params:identity": "current-account",
+      },
+    })).toMatchObject([
+      { patch: { params: { identity: "current-account" } } },
     ])
   })
 
