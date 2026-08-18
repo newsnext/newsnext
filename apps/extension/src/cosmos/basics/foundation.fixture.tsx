@@ -257,10 +257,7 @@ export function ButtonsFixture(): React.JSX.Element {
       </div>
 
       <FixtureSection title="LiveCard buttons" description="LiveCard controls stay inside the provider theme scope without moving the complete LiveCard into Basics.">
-        <div
-          className="purple grid gap-5 rounded-2xl p-4"
-          style={{ backgroundColor: "color-mix(in oklab, var(--background), var(--color-theme-400) 55%)" }}
-        >
+        <div className="purple grid gap-5 rounded-2xl bg-theme-400/45 p-4">
           <FixtureState label="Header controls">
             <div className="flex items-center gap-3 text-theme-400">
               <Button variant="transparent" size="icon-sm" className="rounded-full" aria-label="Open provider">

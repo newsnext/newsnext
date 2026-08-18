@@ -47,7 +47,7 @@ function SquircleBox({
       data-squircle
       className={cn(
         "overflow-hidden",
-        variant === "modal-shell" && "bg-[color-mix(in_oklab,var(--background)_60%,var(--color-theme-400)_40%)] p-2.5",
+        variant === "modal-shell" && "relative isolate bg-background p-2.5 before:pointer-events-none before:absolute before:inset-0 before:-z-10 before:bg-theme-400/45 before:content-['']",
         variant === "modal-inner" && "bg-background/70 zenith-theme-400",
         className,
       )}

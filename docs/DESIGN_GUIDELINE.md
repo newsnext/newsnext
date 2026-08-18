@@ -143,8 +143,8 @@ canvas.
 
 LiveCards define the primary NewsNext surface treatment.
 
-- The outer `3xl` squircle mixes `var(--background)` with the relevant theme
-  color at 55%.
+- The outer `3xl` squircle uses the relevant theme color at 45% opacity through
+  `bg-theme-400/45`.
 - The content panel uses a nested `2xl` squircle with `bg-background/70` and the
   matching `zenith-theme-400` treatment.
 - Scope the provider's existing color class at the LiveCard boundary, then consume
@@ -335,10 +335,10 @@ shared modal components instead of defining local backdrop values or motion.
 `ModalOverlay` uses `bg-black/75` without backdrop blur and applies a
 `150ms` opacity fade. `ModalPopup` owns the centered modal motion, while
 `ModalTitle` and `ModalDescription` own their shared visual
-treatments. Centered surfaces use a `3xl` outer squircle, the shared 60%
-background / 40% theme shell color, and a `10px` shell inset where a nested surface is
-present. Nested content uses a `2xl` shape with `bg-background/70` and
-`zenith-theme-400`.
+treatments. Centered surfaces use a `3xl` outer squircle with an opaque
+`bg-background` base beneath a `bg-theme-400/45` overlay, and a `10px` shell
+inset where a nested surface is present. Nested content uses a `2xl` shape with
+`bg-background/70` and `zenith-theme-400`.
 
 Primitive-specific components compose `ModalOverlay`, `ModalPopup`,
 `ModalTitle` and `ModalDescription` from
@@ -378,9 +378,9 @@ reset it after three seconds without confirmation.
 Single-column dialogs related to boards should use the LiveCard surface language.
 They must have:
 
-- A theme-colored outer `3xl` squircle using the Settings dialog color ratio:
-  60% `var(--background)` and 40% `var(--color-theme-400)`. Its structure follows
-  LiveCards, but its restrained color balance follows Settings.
+- A theme-colored outer `3xl` squircle with an opaque `bg-background` base and
+  a `bg-theme-400/45` overlay. Its structure follows LiveCards, but its
+  restrained theme opacity follows Settings.
 - `10px` (`p-2.5`) of outer padding on every side, leaving a visible theme-colored
   shell around the nested content.
 - A compact top shell area containing the dialog title for task-oriented forms.
@@ -576,25 +576,22 @@ semantics.
 ## Dynamic Islands
 
 Dynamic islands are compact, centered controls that expand in place to reveal
-a single focused interaction. The shared component owns a dense, translucent
-surface that softly mixes the app background with the active `theme-400` color,
-plus the fine inner highlight, appearance-aware shadow, clipping, and
-spring-based size and radius transition. In light mode, keep the surface tint
-restrained and carry more of the Board color in the collapsed state's ambient
+a single focused interaction. The shared component owns a translucent semantic
+background layer with a restrained `theme-400` wash, plus the subtle top light,
+appearance-aware shadow, clipping, and spring-based size and radius transition.
+In light mode, keep the surface tint restrained and carry more of the Board
+color in the collapsed state's ambient
 shadow. In dark mode, reduce the tint further and use a neutral deep shadow. Keep
 the surface and its content tied to the actual light or dark appearance instead
-of forcing dark-mode colors. Build material depth with a directional highlight
-from the upper-left, a restrained theme-color refraction toward the lower-right,
-asymmetric inner edge lighting, and separate contact and ambient shadows. Do not
-use a uniform border or visible noise texture to simulate depth. Give the
-collapsed surface a short localized specular highlight that shifts subtly on
-hover. Treat the expanded state as the same material at a calmer scale: let a
-low-opacity mix of the app background and active theme reveal the surrounding
-environment through blur and restrained saturation, then replace the collapsed
-state's diagonal refraction and moving highlight with one broad vertical top
-light. Keep a neutral ambient shadow and do not allow caller-provided background
-washes. Preserve reduced-motion behavior for the collapsed highlight. Its collapsed
-outline remains a standard round pill, while
+of forcing dark-mode colors. Build restrained material depth with a subtle
+vertical top light, asymmetric inner edge lighting, and separate contact and
+ambient shadows. Do not use a uniform border, visible noise texture, directional
+theme refraction, or animated specular highlight. Treat the expanded state as
+the same material at a calmer scale: let the translucent background reveal the
+surrounding environment through blur, retain only faint active-theme identity,
+and keep the broad vertical top light. Keep a neutral ambient shadow and do not allow
+caller-provided background washes. Its collapsed outline remains a standard
+round pill, while
 the expanded outline uses the shared progressive squircle capability layer:
 native
 `corner-shape: squircle` first, generated `clip-path: shape()` geometry second,

@@ -12,7 +12,7 @@ export function LiveCardSurface({ className }: LiveCardSurfaceProps): React.JSX.
       data-live-card-surface
       radius="3xl"
       className={cn(
-        "pointer-events-none absolute inset-0 bg-[color-mix(in_oklab,var(--background),var(--color-theme-400)_55%)]",
+        "pointer-events-none absolute inset-0 bg-theme-400/45",
         className,
       )}
     />
