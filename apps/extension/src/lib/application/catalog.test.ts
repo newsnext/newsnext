@@ -26,18 +26,26 @@ describe("application operation catalog", () => {
     expect(parseApplicationAction({
       type: "instance.create",
       input: {
-        collectionId: null,
+        collectionIds: ["reading", "ai"],
         sourceId: "github:trending",
         patch: { params: { language: "typescript" } },
       },
     })).toEqual({
       type: "instance.create",
       input: {
-        collectionId: null,
+        collectionIds: ["reading", "ai"],
         sourceId: "github:trending",
         patch: { params: { language: "typescript" } },
       },
     })
+    expect(() => parseApplicationAction({
+      type: "instance.create",
+      input: {
+        collectionId: "reading",
+        sourceId: "github:trending",
+        patch: {},
+      },
+    })).toThrow("Unsupported input field")
     expect(() => parseApplicationAction({
       type: "collection.create",
       input: { name: "AI", color: "invisible" },

@@ -271,11 +271,13 @@ describe("application actions", () => {
       .toEqual(["reading", "ai"])
   })
 
-  it("creates an Instance and optional Collection membership atomically", () => {
-    const execution = executeApplicationAction(createData(), {
+  it("creates an Instance and multiple Collection memberships atomically", () => {
+    const initial = createData()
+    initial.collections.push({ id: "ai", name: "AI", createdAt: 2 })
+    const execution = executeApplicationAction(initial, {
       type: "instance.create",
       input: {
-        collectionId: "reading",
+        collectionIds: ["reading", "ai"],
         sourceId: "github:trending",
         patch: { params: { language: "typescript" } },
       },
@@ -288,12 +290,20 @@ describe("application actions", () => {
       patch: { params: { language: "typescript" } },
       createdAt: 100,
     })
-    expect(execution.data.collectionEntries.at(-1)).toEqual({
-      collectionId: "reading",
-      instanceId: "github:trending::collection-new",
-      addedAt: 100,
-      position: 0,
-    })
+    expect(execution.data.collectionEntries.slice(-2)).toEqual([
+      {
+        collectionId: "reading",
+        instanceId: "github:trending::collection-new",
+        addedAt: 100,
+        position: 0,
+      },
+      {
+        collectionId: "ai",
+        instanceId: "github:trending::collection-new",
+        addedAt: 100,
+        position: 0,
+      },
+    ])
   })
 
   it("resets Instance parameters without removing metadata", () => {

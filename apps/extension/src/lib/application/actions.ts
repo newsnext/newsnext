@@ -41,7 +41,7 @@ export interface ApplicationActionInputMap {
   "collection.addInstance": { collectionId: string, instanceId: string }
   "collection.removeInstance": { collectionId: string, instanceId: string }
   "instance.create": ApplicationInstanceCreationInput & {
-    collectionId: string | null
+    collectionIds: string[]
   }
   "instance.configure": { instanceId: string, patch: SourceInstancePatch }
   "instance.resetParams": { instanceId: string }
@@ -98,7 +98,7 @@ export function executeApplicationAction(
       for (const instance of action.input.instances ?? []) {
         nextData = executeApplicationAction(nextData, {
           type: "instance.create",
-          input: { ...instance, collectionId },
+          input: { ...instance, collectionIds: [collectionId] },
         }, dependencies).data
       }
       return {
@@ -228,9 +228,11 @@ export function executeApplicationAction(
       }
     }
     case "instance.create": {
-      const { collectionId, patch, sourceId } = action.input
+      const { collectionIds, patch, sourceId } = action.input
       if (!sourceId.trim()) throw new Error("Source ID is required")
-      if (collectionId) assertCollectionExists(data, collectionId)
+      for (const collectionId of collectionIds) {
+        assertCollectionExists(data, collectionId)
+      }
       const instanceId = `${sourceId}::${dependencies.createId()}`
       if (data.instances.some(instance => instance.instanceId === instanceId)) {
         throw new Error(`Instance '${instanceId}' already exists`)
@@ -240,14 +242,15 @@ export function executeApplicationAction(
         data: {
           ...data,
           instances: [...data.instances, { instanceId, sourceId, patch, createdAt }],
-          collectionEntries: collectionId
-            ? [...data.collectionEntries, createCollectionEntry(
-                data,
-                collectionId,
-                instanceId,
-                createdAt,
-              )]
-            : data.collectionEntries,
+          collectionEntries: [
+            ...data.collectionEntries,
+            ...collectionIds.map(collectionId => createCollectionEntry(
+              data,
+              collectionId,
+              instanceId,
+              createdAt,
+            )),
+          ],
         },
         result: { instanceId },
       }

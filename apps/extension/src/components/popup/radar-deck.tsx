@@ -105,7 +105,7 @@ function RadarSourceCard({ source, className, onDraftSourceChange }: RadarSource
       id={source.id}
       source={source}
       className={cn(
-        "overflow-hidden rounded-3xl [&_[data-card-header]]:pr-20",
+        "overflow-hidden rounded-3xl",
         className,
       )}
       sizeClassName="h-[30rem] w-full"
@@ -159,14 +159,6 @@ function RadarTrackCard({
   )
 }
 
-function RadarEmptyState() {
-  return (
-    <p className="px-5 py-12 text-center text-sm text-muted-foreground">
-      No radar cards for this page.
-    </p>
-  )
-}
-
 interface RadarDeckProps {
   sourceDescriptors: SourceDescriptor[]
   suggestions: RadarSuggestion[]
@@ -186,8 +178,8 @@ export function RadarDeck({ sourceDescriptors, suggestions }: RadarDeckProps) {
 function RadarDeckContent({ sourceDescriptors, suggestions }: RadarDeckProps) {
   const addInstance = useSetAtom(addInstanceAtom)
   const currentBoardId = useAtomValue(currentBoardIdAtom)
-  const [targetBoardId, setTargetBoardId] = useState<string | null>(
-    currentBoardId === ALL_BOARD_ID ? null : currentBoardId,
+  const [targetBoardIds, setTargetBoardIds] = useState<string[]>(
+    currentBoardId === ALL_BOARD_ID ? [] : [currentBoardId],
   )
   const [activeIndex, setActiveIndex] = useState(0)
   const [draftPatches, setDraftPatches] = useState<Record<string, SourceInstancePatch>>({})
@@ -250,19 +242,17 @@ function RadarDeckContent({ sourceDescriptors, suggestions }: RadarDeckProps) {
     resizeObserverRef.current = resizeObserver
   }, [measureDeck])
 
-  const activeSuggestion = suggestions[activeIndex]
-  const activeSource = activeSuggestion
-    ? createRadarBoardSource(activeSuggestion, sourceDescriptors, draftPatches[activeSuggestion.id])
-    : null
-  const canGoPrevious = activeIndex > 0
-  const canGoNext = activeIndex < suggestions.length - 1
-  const canDragDeck = hasMeasuredDeck && suggestions.length > 0
   const radarSources = useMemo(() => {
     return suggestions.map(suggestion => ({
       suggestion,
       source: createRadarBoardSource(suggestion, sourceDescriptors, draftPatches[suggestion.id]),
     }))
   }, [draftPatches, sourceDescriptors, suggestions])
+  const activeSuggestion = suggestions[activeIndex]
+  const activeSource = radarSources[activeIndex]?.source ?? null
+  const canGoPrevious = activeIndex > 0
+  const canGoNext = activeIndex < suggestions.length - 1
+  const canDragDeck = hasMeasuredDeck && suggestions.length > 0
 
   const moveDeck = useCallback((direction: number) => {
     setActiveIndex(prev => Math.min(Math.max(prev + direction, 0), suggestions.length - 1))
@@ -312,7 +302,7 @@ function RadarDeckContent({ sourceDescriptors, suggestions }: RadarDeckProps) {
 
     await runCreate(async () => {
       await addInstance({
-        collectionId: targetBoardId,
+        collectionIds: targetBoardIds,
         sourceId: activeSuggestion.sourceId,
         patch: mergeSourceInstancePatch(
           activeSuggestion.patch,
@@ -322,7 +312,7 @@ function RadarDeckContent({ sourceDescriptors, suggestions }: RadarDeckProps) {
       launchRadarConfetti({ color: activeSource.provider.color, originElement: actionRef.current })
       setIsCreated(true)
     })
-  }, [activeSource, activeSuggestion, addInstance, draftPatches, isCreated, runCreate, targetBoardId])
+  }, [activeSource, activeSuggestion, addInstance, draftPatches, isCreated, runCreate, targetBoardIds])
 
   const handleActiveDraftSourceChange = useCallback((patch: SourceInstancePatch) => {
     if (!activeSuggestion) {
@@ -343,7 +333,7 @@ function RadarDeckContent({ sourceDescriptors, suggestions }: RadarDeckProps) {
   }, [activeSuggestion])
 
   if (!activeSuggestion || !activeSource) {
-    return <RadarEmptyState />
+    return null
   }
 
   const radarActionStyle = getRadarActionStyle(activeSource.provider.color)
@@ -386,27 +376,6 @@ function RadarDeckContent({ sourceDescriptors, suggestions }: RadarDeckProps) {
         </div>
       </div>
       <div className="flex items-center justify-between gap-3">
-        <div ref={actionRef} className="flex min-w-0 items-center gap-1.5" style={radarActionStyle}>
-          <BoardMembershipSelect
-            value={targetBoardId}
-            onValueChange={setTargetBoardId}
-            ariaLabel="Destination board"
-            align="start"
-            className="max-w-36 border-0 bg-background/50 text-xs shadow-none"
-          />
-          <Button
-            size="sm"
-            onClick={handleCreate}
-            disabled={isCreated || isCreating}
-            aria-label="Create card"
-            title="Create card"
-            className="flex h-8 items-center gap-1 rounded-3xl bg-(--radar-action-card-bg) px-3 py-0.5 text-xs font-semibold transition-colors hover:bg-(--radar-action-card-bg-hover) hover:text-foreground"
-          >
-            <PhPlusCircle className="text-sm text-(--radar-action-chip-text)" />
-            Create card
-          </Button>
-          {createError && <span role="alert" className="text-xs text-destructive">{createError}</span>}
-        </div>
         <div className="flex shrink-0 items-center gap-1">
           <Button
             variant="transparent"
@@ -430,6 +399,31 @@ function RadarDeckContent({ sourceDescriptors, suggestions }: RadarDeckProps) {
           >
             <PhArrowCircleLeft />
           </Button>
+        </div>
+        <div ref={actionRef} className="flex min-w-0 items-center gap-1.5" style={radarActionStyle}>
+          <BoardMembershipSelect
+            value={targetBoardIds}
+            onMembershipChange={(boardId, member) => {
+              setTargetBoardIds(current => member
+                ? current.includes(boardId) ? current : [...current, boardId]
+                : current.filter(candidate => candidate !== boardId))
+            }}
+            ariaLabel="Destination board"
+            align="end"
+            className="max-w-36 border-0 bg-background/50 text-xs shadow-none"
+          />
+          <Button
+            size="sm"
+            onClick={handleCreate}
+            disabled={isCreated || isCreating}
+            aria-label="Create card"
+            title="Create card"
+            className="flex h-8 items-center gap-1 rounded-3xl bg-(--radar-action-card-bg) px-3 py-0.5 text-xs font-semibold transition-colors hover:bg-(--radar-action-card-bg-hover) hover:text-foreground"
+          >
+            <PhPlusCircle className="text-sm text-(--radar-action-chip-text)" />
+            Create card
+          </Button>
+          {createError && <span role="alert" className="text-xs text-destructive">{createError}</span>}
         </div>
       </div>
     </motion.section>

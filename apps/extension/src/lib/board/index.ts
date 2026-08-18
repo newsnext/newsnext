@@ -7,7 +7,6 @@ export {
   DEFAULT_BOARD_VIEW_MODE,
   getAdjacentBoardId,
   getBoardColor,
-  NO_BOARD_VALUE,
   normalizeBoardViewMode,
 } from "./board"
 export { mixSourceItems } from "./next-layer"

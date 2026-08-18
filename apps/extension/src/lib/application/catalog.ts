@@ -31,8 +31,10 @@ const EMPTY_OBJECT_SCHEMA = {
 } as const
 
 const IDENTIFIER_SCHEMA = { type: "string", minLength: 1 } as const
-const NULLABLE_IDENTIFIER_SCHEMA = {
-  anyOf: [IDENTIFIER_SCHEMA, { type: "null" }],
+const IDENTIFIER_ARRAY_SCHEMA = {
+  type: "array",
+  items: IDENTIFIER_SCHEMA,
+  uniqueItems: true,
 } as const
 const PATCH_SCHEMA = {
   type: "object",
@@ -163,7 +165,7 @@ const actionDefinitions: {
     description: "Set the complete manual Instance order for a Collection.",
     inputSchema: objectSchema({
       collectionId: IDENTIFIER_SCHEMA,
-      instanceIds: { type: "array", items: IDENTIFIER_SCHEMA, uniqueItems: true },
+      instanceIds: IDENTIFIER_ARRAY_SCHEMA,
     }, ["collectionId", "instanceIds"]),
     outputSchema: EMPTY_OBJECT_SCHEMA,
     parseInput: (value) => {
@@ -185,17 +187,17 @@ const actionDefinitions: {
   ),
   "instance.create": {
     name: "instance.create",
-    description: "Create a configured Source Instance and optionally add it to a Collection.",
+    description: "Create a configured Source Instance and add it to zero or more Collections.",
     inputSchema: objectSchema({
-      collectionId: NULLABLE_IDENTIFIER_SCHEMA,
+      collectionIds: IDENTIFIER_ARRAY_SCHEMA,
       ...INSTANCE_CREATION_PROPERTIES,
-    }, ["collectionId", "patch", "sourceId"]),
+    }, ["collectionIds", "patch", "sourceId"]),
     outputSchema: objectSchema({ instanceId: IDENTIFIER_SCHEMA }, ["instanceId"]),
     parseInput: (value) => {
       const input = requireRecord(value)
-      requireOnlyKeys(input, ["collectionId", "patch", "sourceId"])
+      requireOnlyKeys(input, ["collectionIds", "patch", "sourceId"])
       return {
-        collectionId: requireNullableIdentifier(input.collectionId, "collectionId"),
+        collectionIds: requireIdentifierArray(input.collectionIds, "collectionIds"),
         ...parseInstanceCreationFields(input),
       }
     },
@@ -468,13 +470,13 @@ function requireIdentifier(value: unknown, field: string): string {
   return value
 }
 
-function requireNullableIdentifier(value: unknown, field: string): string | null {
-  return value === null ? null : requireIdentifier(value, field)
-}
-
 function requireIdentifierArray(value: unknown, field: string): string[] {
   if (!Array.isArray(value)) throw new Error(`'${field}' must be an array`)
-  return value.map(item => requireIdentifier(item, field))
+  const identifiers = value.map(item => requireIdentifier(item, field))
+  if (new Set(identifiers).size !== identifiers.length) {
+    throw new Error(`'${field}' must contain unique values`)
+  }
+  return identifiers
 }
 
 function requireColor(value: unknown): Color {

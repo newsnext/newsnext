@@ -110,7 +110,7 @@ export const setManualBoardOrderAtom = atom(null, async (_get, set, input: {
 })
 
 export const addInstanceAtom = atom(null, (_get, set, input: {
-  collectionId: string | null
+  collectionIds: string[]
   patch: SourceInstancePatch
   sourceId: string
 }) => set(executeApplicationActionAtom, {

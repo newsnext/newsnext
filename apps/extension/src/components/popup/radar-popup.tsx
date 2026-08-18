@@ -1,4 +1,5 @@
 import { Button } from "@newsnext/ui/components/button"
+import { Logo } from "@newsnext/ui/components/logo"
 import { useRef } from "react"
 import { ScrollProgressProvider } from "@/components/common/scroll-progress-provider"
 import { PhGear, PhHouse } from "@/components/icons/ph"
@@ -7,30 +8,49 @@ import { useCurrentTabRadarSuggestions } from "@/hooks/use-current-tab-radar-sug
 import { useSourceDescriptors } from "@/hooks/use-source-descriptors"
 import { openAppTab } from "@/lib/app-tab"
 import { openSettings } from "@/lib/settings"
+import { cn } from "@/lib/utils"
 
-function RadarOverlayActions(): React.JSX.Element {
+interface RadarOverlayHeaderProps {
+  count: number
+  isScanning: boolean
+}
+
+function RadarOverlayHeader({ count, isScanning }: RadarOverlayHeaderProps): React.JSX.Element {
+  const statusLabel = isScanning
+    ? "Radar · Scanning…"
+    : `Radar · ${count} ${count === 1 ? "card" : "cards"}`
+
   return (
-    <div className="absolute right-4 top-4 z-20 flex items-center gap-2">
-      <Button
-        variant="transparent"
-        size="icon-lg"
-        onClick={() => void openAppTab()}
-        aria-label="Open NewsNext"
-        title="Open NewsNext"
-        className="island-pill text-primary"
+    <div className="relative z-20 flex h-10 shrink-0 items-center justify-between gap-3">
+      <div
+        className="flex h-10 items-center gap-2 px-1 text-lg font-bold text-muted-foreground"
+        role="status"
       >
-        <PhHouse className="size-5" />
-      </Button>
-      <Button
-        variant="transparent"
-        size="icon-lg"
-        onClick={() => void openSettings()}
-        aria-label="Open options"
-        title="Open options"
-        className="island-pill text-muted-foreground hover:text-foreground"
-      >
-        <PhGear className="size-5" />
-      </Button>
+        <Logo className="size-5 shrink-0 text-primary" />
+        <span>{statusLabel}</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <Button
+          variant="transparent"
+          size="icon-lg"
+          onClick={() => void openAppTab()}
+          aria-label="Open NewsNext"
+          title="Open NewsNext"
+          className="island-pill text-primary"
+        >
+          <PhHouse className="size-5" />
+        </Button>
+        <Button
+          variant="transparent"
+          size="icon-lg"
+          onClick={() => void openSettings()}
+          aria-label="Open options"
+          title="Open options"
+          className="island-pill text-muted-foreground hover:text-foreground"
+        >
+          <PhGear className="size-5" />
+        </Button>
+      </div>
     </div>
   )
 }
@@ -40,6 +60,7 @@ export function RadarPopup() {
   const nextLayerScrollContainerRef = useRef<HTMLDivElement>(null)
   const { sources } = useSourceDescriptors()
   const suggestions = useCurrentTabRadarSuggestions()
+  const suggestionCount = suggestions?.length ?? 0
 
   return (
     <ScrollProgressProvider
@@ -48,9 +69,12 @@ export function RadarPopup() {
     >
       <main
         ref={scrollContainerRef}
-        className="grid-texture-background relative h-full min-h-0 overflow-y-auto bg-background p-3 text-foreground zenith-theme-400"
+        className={cn(
+          "grid-texture-background relative flex min-h-0 flex-col gap-2 overflow-y-auto bg-background p-3 text-foreground zenith-theme-400",
+          suggestionCount > 0 ? "h-[600px]" : "h-16",
+        )}
       >
-        <RadarOverlayActions />
+        <RadarOverlayHeader count={suggestionCount} isScanning={suggestions === null} />
         <RadarDeck sourceDescriptors={sources} suggestions={suggestions ?? []} />
       </main>
     </ScrollProgressProvider>

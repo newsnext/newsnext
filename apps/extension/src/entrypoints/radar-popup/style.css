@@ -2,7 +2,7 @@ html,
 body,
 #root {
   width: 420px;
-  height: 558px;
+  height: auto;
   min-height: 0;
   overflow: hidden;
 }

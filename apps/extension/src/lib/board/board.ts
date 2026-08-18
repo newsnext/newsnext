@@ -4,7 +4,6 @@ import { createBoardSortPreference } from "./sorting"
 
 export const ALL_BOARD_ID = "all"
 export const ALL_BOARD_NAME = "All"
-export const NO_BOARD_VALUE = "__no_board__"
 export const DEFAULT_BOARD_COLOR: Color = "red"
 
 export type BoardViewMode = "now" | "next"
