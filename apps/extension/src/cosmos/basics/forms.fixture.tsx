@@ -1,4 +1,3 @@
-/* eslint-disable react-refresh/only-export-components */
 import { Alert, AlertDescription, AlertTitle } from "@newsnext/ui/components/alert"
 import { Button } from "@newsnext/ui/components/button"
 import { Checkbox } from "@newsnext/ui/components/checkbox"
@@ -15,9 +14,7 @@ import { Switch } from "@newsnext/ui/components/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@newsnext/ui/components/tabs"
 import { Textarea } from "@newsnext/ui/components/textarea"
 import { useState } from "react"
-import { LiveCardEditForm } from "@/components/live-card/card-back/edit-form"
 import { FixturePage, FixtureSection, FixtureState } from "@/cosmos/fixture-layout"
-import { SAMPLE_SOURCE } from "@/cosmos/live-cards.fixture"
 
 function TextInputsFixture(): React.JSX.Element {
   return (
@@ -134,11 +131,11 @@ function SelectionControlsFixture(): React.JSX.Element {
   )
 }
 
-function FeedbackFixture(): React.JSX.Element {
+export function FeedbackFixture(): React.JSX.Element {
   return (
     <FixturePage
       category="Basics"
-      title="Feedback"
+      title="Messages and loading"
       description="Persistent messages, progress, and loading placeholders with representative copy."
     >
       <div className="grid gap-6 md:grid-cols-2">
@@ -169,7 +166,7 @@ function FeedbackFixture(): React.JSX.Element {
   )
 }
 
-function EmptyStateFixture(): React.JSX.Element {
+export function EmptyStateFixture(): React.JSX.Element {
   return (
     <FixturePage
       category="Basics"
@@ -188,45 +185,7 @@ function EmptyStateFixture(): React.JSX.Element {
   )
 }
 
-function LiveCardEditingFormFixture(): React.JSX.Element {
-  const [source, setSource] = useState(SAMPLE_SOURCE)
-  const [savedParams, setSavedParams] = useState<Record<string, unknown>>(SAMPLE_SOURCE.paramsValue ?? {})
-  const [draftParams, setDraftParams] = useState(savedParams)
-  const hasChanges = JSON.stringify(draftParams) !== JSON.stringify(savedParams)
-
-  return (
-    <FixturePage
-      category="Basics"
-      title="LiveCard editing form"
-      description="The real metadata and parameter editor isolated from the LiveCard shell."
-      width="md"
-    >
-      <FixtureSection title="Source fields" description="The provider theme stays scoped to this form specimen.">
-        <div className={source.provider.color}>
-          <LiveCardEditForm
-            source={source}
-            draftSourceParams={draftParams}
-            hasSourceParams
-            hasSourceParamChanges={hasChanges}
-            onSourceParamChange={(key, value) => setDraftParams(current => ({ ...current, [key]: value }))}
-            onSaveSourceParams={() => setSavedParams(draftParams)}
-            onResetSourceParams={() => setDraftParams({ category: "design", compact: false, limit: 20 })}
-            onDiscardSourceParams={() => setDraftParams(savedParams)}
-            onSaveSourceMeta={metadata => setSource(current => ({
-              ...current,
-              metadata: { ...current.metadata, ...metadata },
-            }))}
-          />
-        </div>
-      </FixtureSection>
-    </FixturePage>
-  )
-}
-
 export default {
   "Text inputs": TextInputsFixture,
   "Selection controls": SelectionControlsFixture,
-  "Feedback": FeedbackFixture,
-  "Empty state": EmptyStateFixture,
-  "LiveCard editing form": LiveCardEditingFormFixture,
 }

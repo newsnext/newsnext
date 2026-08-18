@@ -26,6 +26,7 @@ import PhSun from "~icons/ph/sun-bold"
 import PhTrash from "~icons/ph/trash-bold"
 import PhTrashDuotone from "~icons/ph/trash-duotone"
 import PhUser from "~icons/ph/user-bold"
+import PhWarningCircle from "~icons/ph/warning-circle-bold"
 
 export {
   PhArrowCircleLeft,
@@ -56,4 +57,5 @@ export {
   PhTrash,
   PhTrashDuotone,
   PhUser,
+  PhWarningCircle,
 }

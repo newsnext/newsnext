@@ -261,11 +261,11 @@ function ErrorCardFixture() {
 }
 
 export default {
-  "Overview: All colors": AllCardColorsFixture,
-  "Front: Ranking": RankingCardFixture,
-  "Front: Timeline": TimelineCardFixture,
-  "Front: Loading": LoadingCardFixture,
-  "Front: Permission": PermissionCardFixture,
-  "Front: Error": ErrorCardFixture,
-  "Editable LiveCard": LiveCardBackFixture,
+  Overview: AllCardColorsFixture,
+  Ranking: RankingCardFixture,
+  Timeline: TimelineCardFixture,
+  Loading: LoadingCardFixture,
+  Permission: PermissionCardFixture,
+  Error: ErrorCardFixture,
+  Editable: LiveCardBackFixture,
 }

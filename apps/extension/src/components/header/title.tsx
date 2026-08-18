@@ -1,5 +1,6 @@
 import type { MotionValue } from "motion/react"
 import type { RefObject } from "react"
+import type { HeaderNotification } from "./notification"
 import { DynamicIsland } from "@newsnext/ui/components/dynamic-island"
 import { Logo } from "@newsnext/ui/components/logo"
 import { useScrollProgressContext } from "@newsnext/ui/components/scroll-progress-context"
@@ -7,13 +8,19 @@ import { ThemeSelector } from "@newsnext/ui/components/theme-selector"
 import { WordmarkLogo } from "@newsnext/ui/components/wordmark-logo"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { AnimatePresence, m, useMotionValue, useMotionValueEvent, useScroll } from "motion/react"
-import { useCallback, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { getBoardColor } from "@/lib/board"
 import { handleThemeModeSwitch, handleThemeSwitch } from "@/lib/utils/swith-theme"
 import { boardsAtom, updateBoardAtom } from "@/store/board"
 import { currentBoardIdAtom, themeModeAtom } from "@/store/settings"
 import { PhArrowFatUp } from "../icons/ph"
 import { ThemeModeSelector } from "../theme-mode-selector"
+import { IslandNotification } from "./island-notification"
+import {
+  HEADER_NOTIFICATION_DURATION,
+  HEADER_NOTIFICATION_HEIGHT,
+  HEADER_NOTIFICATION_WIDTH,
+} from "./notification"
 
 interface HeaderProgressState {
   handleScrollToTop: (event: React.MouseEvent) => void
@@ -171,6 +178,8 @@ function HeaderProgressGlow({
 }
 
 interface TitleIslandProps {
+  notification: HeaderNotification | null
+  onDismissNotification: () => void
   scrollContainerRef?: RefObject<HTMLElement | null>
   width?: number
 }
@@ -220,8 +229,23 @@ function CurrentBoardAppearanceControls() {
   )
 }
 
-export function TitleIsland({ scrollContainerRef, width = 150 }: TitleIslandProps) {
+export function TitleIsland({
+  notification,
+  onDismissNotification,
+  scrollContainerRef,
+  width = 150,
+}: TitleIslandProps) {
   const headerProgress = useHeaderProgress(scrollContainerRef)
+  const [appearanceExpanded, setAppearanceExpanded] = useState(false)
+
+  useEffect(() => {
+    if (!notification) return
+
+    const timeout = window.setTimeout(onDismissNotification, HEADER_NOTIFICATION_DURATION)
+    return () => window.clearTimeout(timeout)
+  }, [notification, onDismissNotification])
+
+  const expanded = appearanceExpanded || notification !== null
 
   return (
     <>
@@ -229,14 +253,29 @@ export function TitleIsland({ scrollContainerRef, width = 150 }: TitleIslandProp
       <div className="h-11 shrink-0" style={{ width: `${width}px` }} />
 
       <DynamicIsland
-        top={0}
-        wrapperClassName="absolute top-[26px] inset-x-0"
+        top={26}
+        expanded={expanded}
+        blockOutsideInteraction={notification === null}
+        wrapperClassName="absolute inset-x-0"
         smallClassName="flex items-center gap-2 px-4"
-        largeClassName="p-3"
+        largeClassName={notification ? undefined : "p-3"}
         smallHeight={40}
         smallWidth={width}
-        largeWidth={280}
-        largeHeight={160}
+        largeWidth={notification ? HEADER_NOTIFICATION_WIDTH : 280}
+        largeHeight={notification ? HEADER_NOTIFICATION_HEIGHT : 160}
+        onChange={(isSmall) => {
+          if (!isSmall) {
+            setAppearanceExpanded(true)
+            return
+          }
+
+          if (notification) {
+            onDismissNotification()
+            return
+          }
+
+          setAppearanceExpanded(false)
+        }}
         outerDecoration={isSmall => isSmall
           ? (
               <HeaderProgressGlow
@@ -246,14 +285,15 @@ export function TitleIsland({ scrollContainerRef, width = 150 }: TitleIslandProp
             )
           : null}
       >
-        {isSmall =>
-          isSmall
-            ? (
-                <HeaderProgress {...headerProgress} />
-              )
-            : (
-                <CurrentBoardAppearanceControls />
-              )}
+        {(isSmall) => {
+          if (notification) {
+            return <IslandNotification notification={notification} />
+          }
+
+          return isSmall
+            ? <HeaderProgress {...headerProgress} />
+            : <CurrentBoardAppearanceControls />
+        }}
       </DynamicIsland>
     </>
   )

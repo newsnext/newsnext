@@ -4,38 +4,8 @@ import type { BoardDialogTarget } from "@/components/board-dialog"
 import type { SettingsTabId } from "@/components/settings/modal-shell"
 import type { Board, BoardCreateInput } from "@/lib/board"
 import type { LiveCardViewModel } from "@/typings/source"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogBody,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogMedia,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@newsnext/ui/components/alert-dialog"
 import { Button } from "@newsnext/ui/components/button"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@newsnext/ui/components/dialog"
-import { Input } from "@newsnext/ui/components/input"
-import {
-  ModalDescription,
-  ModalOverlay,
-  ModalPopup,
-  ModalTitle,
-} from "@newsnext/ui/components/modal"
-import { SquircleBox } from "@newsnext/ui/components/squircle"
-import { CircleAlert } from "lucide-react"
+import { Dialog } from "@newsnext/ui/components/dialog"
 import { useState } from "react"
 import { BoardDialog } from "@/components/board-dialog"
 import { SearchModalContent } from "@/components/search"
@@ -156,58 +126,6 @@ function FixtureStage({ children }: React.PropsWithChildren) {
   return <main className="grid min-h-full place-items-center p-8">{children}</main>
 }
 
-function DialogFixture() {
-  return (
-    <FixtureStage>
-      <Dialog defaultOpen>
-        <DialogTrigger render={<Button variant="outline" />}>Open dialog</DialogTrigger>
-        <DialogContent>
-          <DialogHeader className="min-h-10 justify-center px-4 py-3">
-            <DialogTitle>Edit source</DialogTitle>
-          </DialogHeader>
-          <SquircleBox radius="2xl" variant="modal-inner" className="grid gap-6 p-6">
-            <DialogDescription>
-              Update the display name used throughout NewsNext.
-            </DialogDescription>
-            <Input aria-label="Source name" defaultValue="Design systems" />
-            <DialogFooter>
-              <Button>Save changes</Button>
-            </DialogFooter>
-          </SquircleBox>
-        </DialogContent>
-      </Dialog>
-    </FixtureStage>
-  )
-}
-
-function SharedModalPartsFixture() {
-  return (
-    <FixtureStage>
-      <section className="relative isolate h-96 w-full max-w-2xl overflow-hidden rounded-3xl border bg-background">
-        <ModalOverlay className="absolute rounded-3xl" data-open />
-        <ModalPopup
-          className="absolute max-w-sm text-foreground"
-          data-open
-        >
-          <SquircleBox radius="3xl" variant="modal-shell" className="relative">
-            <div className="px-4 py-3">
-              <ModalTitle className="text-base leading-none">Shared modal foundation</ModalTitle>
-            </div>
-            <SquircleBox radius="2xl" variant="modal-inner" className="grid gap-6 p-6">
-              <ModalDescription>
-                Shared overlay, motion, shell, and inner surface.
-              </ModalDescription>
-              <div className="flex justify-end">
-                <Button>Continue</Button>
-              </div>
-            </SquircleBox>
-          </SquircleBox>
-        </ModalPopup>
-      </section>
-    </FixtureStage>
-  )
-}
-
 function BoardDialogFixture({ target }: { target: BoardDialogTarget }) {
   const [open, setOpen] = useState(true)
   const [lastAction, setLastAction] = useState<string>()
@@ -303,73 +221,9 @@ function SearchModalFixture() {
   )
 }
 
-function AlertDialogFixture() {
-  const [open, setOpen] = useState(true)
-
-  return (
-    <FixtureStage>
-      <AlertDialog open={open} onOpenChange={setOpen}>
-        <AlertDialogTrigger render={<Button variant="destructive" />}>Delete source</AlertDialogTrigger>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogMedia>
-              <CircleAlert />
-            </AlertDialogMedia>
-            <AlertDialogTitle>Delete this source?</AlertDialogTitle>
-          </AlertDialogHeader>
-          <AlertDialogBody>
-            <AlertDialogDescription>
-              This removes the source and its cached articles. This action cannot be undone.
-            </AlertDialogDescription>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction variant="destructive" onClick={() => setOpen(false)}>
-                Delete source
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogBody>
-        </AlertDialogContent>
-      </AlertDialog>
-    </FixtureStage>
-  )
-}
-
-function CompactAlertDialogFixture() {
-  const [open, setOpen] = useState(true)
-
-  return (
-    <FixtureStage>
-      <AlertDialog open={open} onOpenChange={setOpen}>
-        <AlertDialogTrigger render={<Button variant="outline" />}>Reconnect source</AlertDialogTrigger>
-        <AlertDialogContent size="sm">
-          <AlertDialogHeader>
-            <AlertDialogMedia>
-              <CircleAlert />
-            </AlertDialogMedia>
-            <AlertDialogTitle>Connection expired</AlertDialogTitle>
-          </AlertDialogHeader>
-          <AlertDialogBody>
-            <AlertDialogDescription>
-              Reconnect this source to continue receiving updates.
-            </AlertDialogDescription>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Later</AlertDialogCancel>
-              <AlertDialogAction onClick={() => setOpen(false)}>Reconnect</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogBody>
-        </AlertDialogContent>
-      </AlertDialog>
-    </FixtureStage>
-  )
-}
-
 export default {
-  "Foundation: Shared parts": SharedModalPartsFixture,
-  "Dialog: Default": DialogFixture,
-  "Dialog: Board create": CreateBoardDialogFixture,
-  "Dialog: Board edit": EditBoardDialogFixture,
-  "Dialog: Settings": SettingsModalFixture,
-  "Dialog: Search": SearchModalFixture,
-  "Alert: Default": AlertDialogFixture,
-  "Alert: Compact": CompactAlertDialogFixture,
+  "Board create": CreateBoardDialogFixture,
+  "Board edit": EditBoardDialogFixture,
+  "Settings": SettingsModalFixture,
+  "Search": SearchModalFixture,
 }

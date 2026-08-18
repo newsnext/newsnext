@@ -13,6 +13,8 @@ const getVal = (val: number | string): string => {
 export interface DynamicIslandProps {
   className?: string
   top?: number | string
+  expanded?: boolean
+  blockOutsideInteraction?: boolean
 
   smallClassName?: string
   smallWidth?: number | string
@@ -36,6 +38,8 @@ export interface DynamicIslandProps {
 function DynamicIsland({
   className,
   top = 10,
+  expanded,
+  blockOutsideInteraction = true,
 
   smallClassName,
   smallWidth = 96,
@@ -55,7 +59,9 @@ function DynamicIsland({
   outerDecoration,
   children,
 }: DynamicIslandProps): React.JSX.Element {
-  const [isSmall, setIsSmall] = useState(true)
+  const [uncontrolledIsSmall, setUncontrolledIsSmall] = useState(true)
+  const isControlled = expanded !== undefined
+  const isSmall = isControlled ? !expanded : uncontrolledIsSmall
   const wrapperRef = useRef<HTMLDivElement>(null)
   const shouldReduceMotion = useReducedMotion()
   const canUseSquircle = typeof largeRadius === "number"
@@ -70,15 +76,15 @@ function DynamicIsland({
   const onOpen = useCallback(() => {
     if (!isSmall) return
     navigator.vibrate?.(30)
-    setIsSmall(false)
+    if (!isControlled) setUncontrolledIsSmall(false)
     onChange?.(false)
-  }, [isSmall, onChange])
+  }, [isControlled, isSmall, onChange])
 
   const onClose = useCallback(() => {
     if (isSmall) return
-    setIsSmall(true)
+    if (!isControlled) setUncontrolledIsSmall(true)
     onChange?.(true)
-  }, [isSmall, onChange])
+  }, [isControlled, isSmall, onChange])
 
   const shapeTransition = shouldReduceMotion
     ? { duration: 0.15, ease: "easeOut" as const }
@@ -121,7 +127,7 @@ function DynamicIsland({
     <div
       ref={wrapperRef}
       className={cn(
-        "pointer-events-none fixed inset-x-0 top-[--top] z-9999",
+        "pointer-events-none fixed inset-x-0 top-(--top) z-9999",
         wrapperClassName,
       )}
       style={
@@ -130,12 +136,9 @@ function DynamicIsland({
         } as CSSProperties
       }
     >
-      <div
-        className={cn(
-          !isSmall && "pointer-events-auto fixed inset-0",
-        )}
-        onClick={onClose}
-      />
+      {!isSmall && blockOutsideInteraction && (
+        <div className="pointer-events-auto fixed inset-0" onClick={onClose} />
+      )}
 
       <div className="pointer-events-auto absolute left-1/2 top-0 -translate-x-1/2">
         <m.div

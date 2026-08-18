@@ -321,18 +321,18 @@ preserving directional-key behavior inside other interactive controls.
 Choose the dialog structure from its information architecture rather than
 applying one frame treatment to every modal.
 
-Search, Settings, single-column task dialogs, and alerts are not exceptions to
-a default dialog layout. They are distinct compositions for different tasks
-and content relationships, while sharing the same surface language, theme
-treatment, hierarchy, motion, and interaction principles. Structural
-consistency means applying that common foundation coherently, not forcing every
-dialog into the same arrangement.
+Search, Settings, and single-column task dialogs are not exceptions to a default
+dialog layout. They are distinct compositions for different tasks and content
+relationships, while sharing the same surface language, theme treatment,
+hierarchy, motion, and interaction principles. Structural consistency means
+applying that common foundation coherently, not forcing every dialog into the
+same arrangement.
 
 ### Shared modal foundation
 
-All modal-style UI, including dialogs, alert dialogs, and command dialogs, must
-reuse the shared modal components instead of defining local backdrop values or
-motion. `ModalOverlay` uses `bg-black/75` without backdrop blur and applies a
+All modal-style UI, including task dialogs and command dialogs, must reuse the
+shared modal components instead of defining local backdrop values or motion.
+`ModalOverlay` uses `bg-black/75` without backdrop blur and applies a
 `150ms` opacity fade. `ModalPopup` owns the centered modal motion, while
 `ModalTitle` and `ModalDescription` own their shared visual
 treatments. Centered surfaces use a `3xl` outer squircle, the shared 60%
@@ -353,11 +353,6 @@ the nested surface. `DialogContent` provides the shell; callers compose
 dialogs such as Search may omit the visible header and begin directly with the
 nested interactive surface, while retaining an accessible hidden title and
 description.
-
-`AlertDialogContent` follows the same structure with `AlertDialogHeader` and
-`AlertDialogBody`. When an alert uses an icon, place it in a compact standard
-rounded surface in the top header instead of applying squircle clipping to such
-a small element or using a large circular badge.
 
 Keep content-specific layouts distinct when needed, but keep overlay opacity,
 shell color, primary radii, and motion consistent. Popover menus and anchored
@@ -520,6 +515,13 @@ reusable UI primitives, `Patterns` for NewsNext-specific compositions, and
 must not appear in Basics when only one of their underlying controls is
 being documented.
 
+Keep the catalog navigation task-oriented and shallow. Group Basics by
+foundation, actions, forms, feedback, surfaces, navigation, overlays, and
+shapes. Group Patterns by theme, Dynamic Island, notifications, and dialogs.
+Do not register the same fixture in multiple catalog locations, and remove
+generic implementation demos when an existing component or LiveCard specimen
+already demonstrates the behavior in its real product context.
+
 Use the shared Cosmos specimen layout for Basics pages: a category label,
 component title, one-sentence usage description, and quiet bordered specimen
 sections. Use monospace state labels only when comparing meaningful states
@@ -609,6 +611,17 @@ standard rounded corners. Set `fallback="border-radius"` only when the fallback
 browser should skip clipping, such as surfaces with their own outset shadows,
 filters, or complex compositing. Native `corner-shape` remains the first choice
 when available.
+
+Use the header Dynamic Island for non-blocking notifications that report an
+outcome and require no decision, such as an OPML import failure. The
+notification temporarily takes priority over the island's usual content and
+expands the existing surface automatically; do not open a dialog or render a
+separate toast surface for the same event. Keep the page interactive, do not
+move focus, and announce failures with alert semantics. Do not add a dedicated
+dismiss control; reuse the Dynamic Island's outside-click and scroll dismissal,
+and dismiss the notification automatically after eight seconds. If the
+appearance panel was already expanded, restore it when the notification ends;
+otherwise return the island to its collapsed state.
 
 - Keep the collapsed state short, fully pill-shaped, and visually denser than
   surrounding translucent header controls.

@@ -1,4 +1,3 @@
-/* eslint-disable react-refresh/only-export-components */
 import type { Color } from "@newsnext/shared/types"
 import { COLORS } from "@newsnext/shared/constants"
 import { Avatar, AvatarBadge, AvatarFallback, AvatarGroup, AvatarGroupCount } from "@newsnext/ui/components/avatar"
@@ -188,7 +187,7 @@ function TypographyFixture(): React.JSX.Element {
   )
 }
 
-function ButtonsFixture(): React.JSX.Element {
+export function ButtonsFixture(): React.JSX.Element {
   return (
     <FixturePage
       category="Basics"
@@ -321,7 +320,7 @@ function ButtonsFixture(): React.JSX.Element {
   )
 }
 
-function BadgesFixture(): React.JSX.Element {
+export function BadgesFixture(): React.JSX.Element {
   return (
     <FixturePage
       category="Basics"
@@ -342,11 +341,11 @@ function BadgesFixture(): React.JSX.Element {
   )
 }
 
-function SurfacesFixture(): React.JSX.Element {
+export function SurfacesFixture(): React.JSX.Element {
   return (
     <FixturePage
       category="Basics"
-      title="Surfaces and identity"
+      title="Card and avatars"
       description="Container hierarchy and identity primitives shown on the same quiet catalog canvas."
     >
       <div className="grid gap-6 md:grid-cols-2">
@@ -387,11 +386,11 @@ function SurfacesFixture(): React.JSX.Element {
   )
 }
 
-function NavigationAndDataFixture(): React.JSX.Element {
+export function NavigationAndDataFixture(): React.JSX.Element {
   return (
     <FixturePage
       category="Basics"
-      title="Navigation and data"
+      title="Pill, command, and scroll"
       description="Compact selection, command discovery, and constrained scrolling for dense extension surfaces."
     >
       <FixtureSection title="Pill navigation" description="The moving indicator communicates the selected board or view.">
@@ -442,10 +441,6 @@ function NavigationAndDataFixture(): React.JSX.Element {
 }
 
 export default {
-  "Colors": ColorsFixture,
-  "Typography": TypographyFixture,
-  "Buttons": ButtonsFixture,
-  "Badges": BadgesFixture,
-  "Surfaces and identity": SurfacesFixture,
-  "Navigation and data": NavigationAndDataFixture,
+  Colors: ColorsFixture,
+  Typography: TypographyFixture,
 }

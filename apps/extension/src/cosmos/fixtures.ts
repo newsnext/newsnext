@@ -3,17 +3,49 @@ export const COSMOS_FIXTURES = [
     path: "src/cosmos/Basics/Foundation.fixture.tsx",
     rendererFixture: {
       type: "multi" as const,
-      fixtureNames: ["Colors", "Typography", "Buttons", "Badges", "Surfaces and identity", "Navigation and data"] as string[],
+      fixtureNames: ["Colors", "Typography"] as string[],
     },
-    load: () => import("@/cosmos/foundation.fixture"),
+    load: () => import("@/cosmos/basics/foundation.fixture"),
+  },
+  {
+    path: "src/cosmos/Basics/Actions.fixture.tsx",
+    rendererFixture: {
+      type: "multi" as const,
+      fixtureNames: ["Buttons", "Badges"] as string[],
+    },
+    load: () => import("@/cosmos/basics/actions.fixture"),
   },
   {
     path: "src/cosmos/Basics/Forms.fixture.tsx",
     rendererFixture: {
       type: "multi" as const,
-      fixtureNames: ["Text inputs", "Selection controls", "Feedback", "Empty state", "LiveCard editing form"] as string[],
+      fixtureNames: ["Text inputs", "Selection controls"] as string[],
     },
-    load: () => import("@/cosmos/forms-feedback.fixture"),
+    load: () => import("@/cosmos/basics/forms.fixture"),
+  },
+  {
+    path: "src/cosmos/Basics/Feedback.fixture.tsx",
+    rendererFixture: {
+      type: "multi" as const,
+      fixtureNames: ["Messages and loading", "Empty state"] as string[],
+    },
+    load: () => import("@/cosmos/basics/feedback.fixture"),
+  },
+  {
+    path: "src/cosmos/Basics/Surfaces.fixture.tsx",
+    rendererFixture: {
+      type: "multi" as const,
+      fixtureNames: ["Card and avatars"] as string[],
+    },
+    load: () => import("@/cosmos/basics/surfaces.fixture"),
+  },
+  {
+    path: "src/cosmos/Basics/Navigation.fixture.tsx",
+    rendererFixture: {
+      type: "multi" as const,
+      fixtureNames: ["Pill, command, and scroll"] as string[],
+    },
+    load: () => import("@/cosmos/basics/navigation.fixture"),
   },
   {
     path: "src/cosmos/Basics/Overlays.fixture.tsx",
@@ -21,65 +53,54 @@ export const COSMOS_FIXTURES = [
       type: "multi" as const,
       fixtureNames: ["Popover", "Dropdown menu", "Tooltip"] as string[],
     },
-    load: () => import("@/cosmos/floating-overlays.fixture"),
+    load: () => import("@/cosmos/basics/overlays.fixture"),
   },
   {
-    path: "src/cosmos/Basics/Modals.fixture.tsx",
+    path: "src/cosmos/Basics/Shapes.fixture.tsx",
     rendererFixture: {
       type: "multi" as const,
-      fixtureNames: [
-        "Foundation: Shared parts",
-        "Dialog: Default",
-        "Alert: Default",
-        "Alert: Compact",
-      ] as string[],
+      fixtureNames: ["Corner shapes"] as string[],
     },
-    load: () => import("@/cosmos/modals.fixture"),
+    load: () => import("@/cosmos/basics/shapes.fixture"),
   },
   {
-    path: "src/cosmos/Patterns/Components.fixture.tsx",
+    path: "src/cosmos/Patterns/Appearance.fixture.tsx",
     rendererFixture: {
       type: "multi" as const,
-      fixtureNames: [
-        "Brand and actions",
-        "Selectors",
-        "Theme selector",
-        "Flip animation",
-        "Content safety",
-        "Virtual list",
-        "Dynamic island",
-        "Corner shapes",
-      ] as string[],
+      fixtureNames: ["Theme selector"] as string[],
     },
-    load: () => import("@/cosmos/newsnext-components.fixture"),
+    load: () => import("@/cosmos/patterns/theme.fixture"),
+  },
+  {
+    path: "src/cosmos/Patterns/Dynamic Island.fixture.tsx",
+    rendererFixture: {
+      type: "multi" as const,
+      fixtureNames: ["Default"] as string[],
+    },
+    load: () => import("@/cosmos/patterns/dynamic-island.fixture"),
+  },
+  {
+    path: "src/cosmos/Patterns/Notifications.fixture.tsx",
+    rendererFixture: {
+      type: "multi" as const,
+      fixtureNames: ["Import failure"] as string[],
+    },
+    load: () => import("@/cosmos/patterns/notifications.fixture"),
   },
   {
     path: "src/cosmos/Patterns/Dialogs.fixture.tsx",
     rendererFixture: {
       type: "multi" as const,
-      fixtureNames: [
-        "Dialog: Board create",
-        "Dialog: Board edit",
-        "Dialog: Settings",
-        "Dialog: Search",
-      ] as string[],
+      fixtureNames: ["Board create", "Board edit", "Settings", "Search"] as string[],
     },
-    load: () => import("@/cosmos/modals.fixture"),
+    load: () => import("@/cosmos/patterns/dialogs.fixture"),
   },
   {
     path: "src/cosmos/LiveCards.fixture.tsx",
     rendererFixture: {
       type: "multi" as const,
-      fixtureNames: [
-        "Overview: All colors",
-        "Front: Ranking",
-        "Front: Timeline",
-        "Front: Loading",
-        "Front: Permission",
-        "Front: Error",
-        "Editable LiveCard",
-      ] as string[],
+      fixtureNames: ["Overview", "Ranking", "Timeline", "Loading", "Permission", "Error", "Editable"] as string[],
     },
-    load: () => import("@/cosmos/live-cards.fixture"),
+    load: () => import("@/cosmos/live-cards/index.fixture"),
   },
 ] as const

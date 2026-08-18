@@ -1,5 +1,7 @@
 import type { RefObject } from "react"
+import type { HeaderNotification } from "./notification"
 import { Button } from "@newsnext/ui/components/button"
+import { useCallback, useState } from "react"
 import { useFetchLatest } from "@/hooks"
 import { PhArrowCounterClockwise, PhCircleDashed } from "../icons/ph"
 import { SearchDialog } from "../search"
@@ -30,18 +32,26 @@ function FetchLatestButton() {
 }
 
 export function Header({ scrollContainerRef }: HeaderProps) {
+  const [notification, setNotification] = useState<HeaderNotification | null>(null)
+  const dismissNotification = useCallback(() => setNotification(null), [])
+
   return (
     <header className="sticky top-0 inset-x-0 z-50 shrink-0 py-6 pointer-events-none">
       <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] grid-rows-[2.75rem_auto] items-center gap-2 md:h-11 md:grid-rows-1">
         {/* Left Section */}
         <div className="col-span-3 row-start-2 flex min-w-0 items-center justify-center gap-2 md:col-span-1 md:col-start-1 md:row-start-1 md:justify-end">
-          <BoardNav />
+          <BoardNav onNotify={setNotification} />
           <SearchDialog />
         </div>
 
         {/* Center Section - Title Island */}
         <div className="col-start-2 row-start-1">
-          <TitleIsland width={150} scrollContainerRef={scrollContainerRef} />
+          <TitleIsland
+            width={150}
+            scrollContainerRef={scrollContainerRef}
+            notification={notification}
+            onDismissNotification={dismissNotification}
+          />
         </div>
 
         {/* Right Section - DateTime, Fetch Latest, User */}

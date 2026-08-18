@@ -1,17 +1,7 @@
 import type { ChangeEvent } from "react"
 import type { BoardDialogTarget } from "@/components/board-dialog"
+import type { HeaderNotification } from "@/components/header/notification"
 import type { BoardCreateInput } from "@/lib/board"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogBody,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogMedia,
-  AlertDialogTitle,
-} from "@newsnext/ui/components/alert-dialog"
 import { Button } from "@newsnext/ui/components/button"
 import {
   DropdownMenu,
@@ -27,7 +17,6 @@ import {
 import { useHotkeys } from "@tanstack/react-hotkeys"
 import { useNavigate } from "@tanstack/react-router"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
-import { CircleAlert } from "lucide-react"
 import { useRef, useState } from "react"
 import { BoardDialog } from "@/components/board-dialog"
 import { PhCircleDashed, PhFileArrowUp, PhPlusCircle } from "@/components/icons/ph"
@@ -59,7 +48,11 @@ const INTERACTIVE_BOARD_NAV_SELECTOR = [
   "[role=option]",
 ].join(", ")
 
-export function BoardNav() {
+interface BoardNavProps {
+  onNotify: (notification: HeaderNotification) => void
+}
+
+export function BoardNav({ onNotify }: BoardNavProps) {
   const boards = useAtomValue(boardsAtom)
   const navigate = useNavigate()
   const [currentBoardId, setCurrentBoardId] = useAtom(currentBoardIdAtom)
@@ -69,7 +62,6 @@ export function BoardNav() {
   const updateBoard = useSetAtom(updateBoardAtom)
   const deleteBoard = useSetAtom(deleteBoardAtom)
   const [dialogTarget, setDialogTarget] = useState<BoardDialogTarget | null>(null)
-  const [importError, setImportError] = useState<string>()
   const [isImporting, setIsImporting] = useState(false)
   const opmlInputRef = useRef<HTMLInputElement>(null)
 
@@ -144,16 +136,19 @@ export function BoardNav() {
     const file = input.files?.[0]
     if (!file) return
 
-    setImportError(undefined)
     setIsImporting(true)
     try {
       const imported = parseOpml(await file.text())
       const result = await addBoardFromOpml(imported)
       if (result.collectionId) openBoard(result.collectionId)
     } catch (error) {
-      setImportError(error instanceof OpmlImportError
-        ? error.message
-        : "NewsNext could not create the Board or import its RSS feeds.")
+      onNotify({
+        title: "Couldn’t import OPML",
+        description: error instanceof OpmlImportError
+          ? error.message
+          : "NewsNext could not create the Board or import its RSS feeds.",
+        tone: "error",
+      })
     } finally {
       input.value = ""
       setIsImporting(false)
@@ -262,27 +257,6 @@ export function BoardNav() {
           onUpdate={updateBoard}
         />
       )}
-      <AlertDialog
-        open={importError !== undefined}
-        onOpenChange={(open) => {
-          if (!open) setImportError(undefined)
-        }}
-      >
-        <AlertDialogContent size="sm">
-          <AlertDialogHeader>
-            <AlertDialogMedia><CircleAlert /></AlertDialogMedia>
-            <AlertDialogTitle>Couldn’t import OPML</AlertDialogTitle>
-          </AlertDialogHeader>
-          <AlertDialogBody>
-            <AlertDialogDescription>{importError}</AlertDialogDescription>
-            <AlertDialogFooter>
-              <AlertDialogAction className="col-span-2" onClick={() => setImportError(undefined)}>
-                Close
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogBody>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   )
 }
