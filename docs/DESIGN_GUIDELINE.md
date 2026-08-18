@@ -321,6 +321,13 @@ preserving directional-key behavior inside other interactive controls.
 Choose the dialog structure from its information architecture rather than
 applying one frame treatment to every modal.
 
+Search, Settings, single-column task dialogs, and alerts are not exceptions to
+a default dialog layout. They are distinct compositions for different tasks
+and content relationships, while sharing the same surface language, theme
+treatment, hierarchy, motion, and interaction principles. Structural
+consistency means applying that common foundation coherently, not forcing every
+dialog into the same arrangement.
+
 ### Shared modal foundation
 
 All modal-style UI, including dialogs, alert dialogs, and command dialogs, must
@@ -357,13 +364,19 @@ shell color, primary radii, and motion consistent. Popover menus and anchored
 transient controls do not use a modal overlay.
 
 Use the shared inline two-step confirmation for destructive actions instead of
-opening another modal. Keep the initial action neutral, then switch to the
-destructive treatment and a concise confirmation label after the first
-activation. Change its icon to a confirmation icon so the state is not conveyed
-by text or color alone. The second activation performs the operation, while
-moving focus away cancels it. In a space-constrained LiveCard header, keep the
-idle action icon-only, expand it into a compact labeled button when armed, use a
-restrained 150ms reveal, and reset it after three seconds without confirmation.
+opening another modal. Never apply the `destructive` variant, destructive text,
+or destructive background color to the idle action. Destructive color is
+reserved exclusively for the armed second-confirmation state. NewsNext uses red
+as its default theme, so showing destructive red at rest would compete with
+ordinary theme-accented actions and make danger indistinguishable from product
+emphasis. Keep the initial action neutral, then switch to the destructive
+treatment and a concise confirmation label after the first activation. Change
+its icon to a confirmation icon so the state is not conveyed by text or color
+alone. The second activation performs the operation, while moving focus away
+cancels it.
+In a space-constrained LiveCard header, keep the idle action icon-only, expand
+it into a compact labeled button when armed, use a restrained 150ms reveal, and
+reset it after three seconds without confirmation.
 
 ### Single-column dialogs
 
@@ -433,9 +446,10 @@ shade; the track and thumb must remain legible against nested tinted surfaces.
 Use 32px buttons for ordinary settings
 actions, keep adjacent actions the same height and text size, and use `ghost`
 rather than the icon-oriented LiveCard action composition for text-only tertiary actions.
-Keep destructive removal actions inside the same button group and use the
-`destructive` treatment instead of presenting them as detached text. Theme-
-colored buttons use white text in both light and dark modes.
+Keep removal actions inside the same button group and neutral until the user
+arms their second confirmation; only that armed state uses the `destructive`
+treatment. Do not present removal actions as detached text. Theme-colored
+buttons use white text in both light and dark modes.
 Group closely related controls in columns when the available width permits it,
 while keeping labels, values, and necessary recovery guidance adjacent to their
 control. Omit helper text when the label and visible control already explain the
