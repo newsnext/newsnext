@@ -1,11 +1,11 @@
 import type { SourceItemTemplate } from "@newsnext/source/types"
-import type { CardViewModel } from "@/typings/source"
+import type { LiveCardViewModel } from "@/typings/source"
 import { useVirtualizer } from "@tanstack/react-virtual"
 import { useAtomValue } from "jotai"
 import { useCallback, useId, useMemo, useState } from "react"
-import { NewsItemLink, NewsItemSummary } from "@/components/card/news-item-common"
-import { SourceIcon } from "@/components/card/source-icon"
-import { TimelineRail } from "@/components/card/timeline-rail"
+import { NewsItemLink, NewsItemSummary } from "@/components/live-card/news-item-common"
+import { SourceIcon } from "@/components/live-card/source-icon"
+import { TimelineRail } from "@/components/live-card/timeline-rail"
 import { useNextLayerCache } from "@/hooks/use-next-layer-cache"
 import { useSourceMarkScales } from "@/hooks/use-source-mark-scales"
 import { formatRelativeTime, minuteDateAtom } from "@/hooks/useRelativeTime"
@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils"
 import { sourceIconSettingsAtom } from "@/store/settings"
 
 interface TimelineSource {
-  card: CardViewModel
+  liveCard: LiveCardViewModel
   icon?: string
   id: string
   itemTemplate?: SourceItemTemplate
@@ -42,8 +42,8 @@ function MixedItemRow({
   timeLabel: string
 }) {
   const { item, source: result } = entry
-  const { badge, title } = result.card.metadata
-  const displayTitle = title || result.card.provider.title
+  const { badge, title } = result.liveCard.metadata
+  const displayTitle = title || result.liveCard.provider.title
 
   return (
     <div className={cn("relative min-w-0 pb-2", isLast && "pb-0")}>
@@ -157,7 +157,7 @@ function VirtualTimeline({
             data-index={index}
             className={cn(
               "absolute left-0 top-0 w-full",
-              entry.source.card.provider.color,
+              entry.source.liveCard.provider.color,
             )}
             style={{
               transform: `translateY(${virtualItem.start - scrollMargin}px)`,
@@ -201,12 +201,12 @@ export function TimelineWidget({
     return [{
       items: result.items,
       source: {
-        card: result.card,
+        liveCard: result.liveCard,
         id,
         itemTemplate: result.itemTemplate,
         icon: resolveSourceIcon(
-          result.card.provider.icon,
-          result.card.metadata.home,
+          result.liveCard.provider.icon,
+          result.liveCard.metadata.home,
           iconSettings.template,
         ),
       },
@@ -258,7 +258,7 @@ export function TimelineWidget({
                   ? "Loading items…"
                   : instanceIds.length > 0
                     ? "No items to show."
-                    : "Add a card to see its items here."}
+                    : "Add a LiveCard to see its items here."}
               </p>
             </div>
           )}

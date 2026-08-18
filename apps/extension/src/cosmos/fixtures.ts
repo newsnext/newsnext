@@ -11,7 +11,7 @@ export const COSMOS_FIXTURES = [
     path: "src/cosmos/Basics/Forms.fixture.tsx",
     rendererFixture: {
       type: "multi" as const,
-      fixtureNames: ["Text inputs", "Selection controls", "Feedback", "Empty state", "Card editing form"] as string[],
+      fixtureNames: ["Text inputs", "Selection controls", "Feedback", "Empty state", "LiveCard editing form"] as string[],
     },
     load: () => import("@/cosmos/forms-feedback.fixture"),
   },
@@ -67,7 +67,7 @@ export const COSMOS_FIXTURES = [
     load: () => import("@/cosmos/modals.fixture"),
   },
   {
-    path: "src/cosmos/Cards.fixture.tsx",
+    path: "src/cosmos/LiveCards.fixture.tsx",
     rendererFixture: {
       type: "multi" as const,
       fixtureNames: [
@@ -77,9 +77,9 @@ export const COSMOS_FIXTURES = [
         "Front: Loading",
         "Front: Permission",
         "Front: Error",
-        "Card editable",
+        "Editable LiveCard",
       ] as string[],
     },
-    load: () => import("@/cosmos/cards.fixture"),
+    load: () => import("@/cosmos/live-cards.fixture"),
   },
 ] as const

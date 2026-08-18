@@ -1,6 +1,6 @@
 import type { SourceDescriptor } from "@newsnext/source/types"
 import type { Collection, CollectionEntry, CollectionView } from "../collection"
-import type { SourceInstance } from "../source/cards"
+import type { SourceInstance } from "../source/live-cards"
 import type { ApplicationData } from "./data"
 import { ALL_BOARD_ID, ALL_BOARD_NAME } from "../board"
 
@@ -14,7 +14,7 @@ export type ApplicationQuery
     | { type: "instance.get", input: { instanceId: string } }
     | { type: "view.getContext" }
     | { type: "view.getCollection", input: { collectionId: string } }
-    | { type: "view.getVisibleCards" }
+    | { type: "view.getVisibleLiveCards" }
 
 export interface ApplicationQueryContext {
   currentBoardId?: string
@@ -27,7 +27,7 @@ export interface ApplicationViewContext {
   collectionId: string | null
 }
 
-export interface ApplicationVisibleCard {
+export interface ApplicationVisibleLiveCard {
   collectionId: string | null
   collectionIds: string[]
   instanceId: string
@@ -59,8 +59,8 @@ export type ApplicationQueryResult<Query extends ApplicationQuery>
                   ? ApplicationViewContext
                   : Query extends { type: "view.getCollection" }
                     ? CollectionView
-                    : Query extends { type: "view.getVisibleCards" }
-                      ? ApplicationVisibleCard[]
+                    : Query extends { type: "view.getVisibleLiveCards" }
+                      ? ApplicationVisibleLiveCard[]
                       : never
 
 export function executeApplicationQuery<Query extends ApplicationQuery>(
@@ -107,7 +107,7 @@ export function executeApplicationQuery<Query extends ApplicationQuery>(
       if (!view) throw new Error(`Collection View '${query.input.collectionId}' not found`)
       return view as ApplicationQueryResult<Query>
     }
-    case "view.getVisibleCards": {
+    case "view.getVisibleLiveCards": {
       const view = resolveViewContext(data, context)
       const collectionIdsByInstance = new Map<string, string[]>()
       for (const entry of data.collectionEntries) {

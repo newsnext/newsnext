@@ -7,9 +7,9 @@ import {
   deleteInstanceAtom,
   setInstanceCollectionMembershipAtom,
 } from "@/store/board"
-import { CardHeaderActionButton } from "../card-header"
+import { LiveCardHeaderActionButton } from "../card-header"
 
-export function CardBoardSelect({ id }: { id: string }) {
+export function LiveCardBoardSelect({ id }: { id: string }) {
   const entries = useAtomValue(collectionEntriesAtom)
   const setMembership = useSetAtom(setInstanceCollectionMembershipAtom)
   const {
@@ -40,10 +40,10 @@ export function CardBoardSelect({ id }: { id: string }) {
   )
 }
 
-export function DeleteCardButton({ id }: { id: string }) {
+export function DeleteLiveCardButton({ id }: { id: string }) {
   const deleteLocal = useSetAtom(deleteInstanceAtom)
   const { error: deleteError, isPending: isDeleting, run: runDelete } = useAsyncAction(
-    "The card could not be deleted.",
+    "The LiveCard could not be deleted.",
   )
 
   async function handleDelete(): Promise<void> {
@@ -54,17 +54,17 @@ export function DeleteCardButton({ id }: { id: string }) {
 
   return (
     <>
-      <CardHeaderActionButton
+      <LiveCardHeaderActionButton
         disabled={isDeleting}
         onClick={(e) => {
           e.stopPropagation()
           void handleDelete()
         }}
-        aria-label="Delete card"
-        title={deleteError ?? "Delete card"}
+        aria-label="Delete LiveCard"
+        title={deleteError ?? "Delete LiveCard"}
       >
         <PhTrashDuotone />
-      </CardHeaderActionButton>
+      </LiveCardHeaderActionButton>
       {deleteError && <span role="alert" className="sr-only">{deleteError}</span>}
     </>
   )

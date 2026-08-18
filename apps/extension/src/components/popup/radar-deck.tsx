@@ -2,18 +2,18 @@ import type { MotionValue, PanInfo } from "motion/react"
 import type { CSSProperties, PointerEvent } from "react"
 import type { RadarSuggestion } from "@/lib/radar"
 import type { SourceInstancePatch } from "@/lib/source"
-import type { CardViewModel, SourceDescriptor } from "@/typings/source"
+import type { LiveCardViewModel, SourceDescriptor } from "@/typings/source"
 import { Button } from "@newsnext/ui/components/button"
 import confetti from "canvas-confetti"
 import { useAtomValue, useSetAtom } from "jotai"
 import { animate, motion, useDragControls, useMotionValue, useReducedMotion, useTransform } from "motion/react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { SourceCard } from "@/components/card"
 import { BoardMembershipSelect } from "@/components/common/board-membership-select"
 import { PhArrowCircleLeft, PhPlusCircle } from "@/components/icons/ph"
+import { LiveCard } from "@/components/live-card"
 import { useAsyncAction } from "@/hooks/use-async-action"
 import { ALL_BOARD_ID } from "@/lib/board"
-import { createRadarBoardSource } from "@/lib/radar"
+import { createRadarLiveCard } from "@/lib/radar"
 import { mergeSourceInstancePatch } from "@/lib/source"
 import { cn } from "@/lib/utils"
 import { addInstanceAtom } from "@/store/board"
@@ -28,7 +28,7 @@ const RADAR_CARD_Y_OUTPUT = [20, 0, 20]
 const RADAR_CELEBRATION_DURATION = 900
 const RADAR_DECK_NAV_BUTTON_CLASS_NAME = "border-0 text-xl opacity-50 hover:opacity-85 active:not-aria-[haspopup]:translate-y-0"
 const RADAR_REDUCED_MOTION_CELEBRATION_DURATION = 180
-const RADAR_CONFETTI_COLORS: Record<CardViewModel["provider"]["color"], string> = {
+const RADAR_CONFETTI_COLORS: Record<LiveCardViewModel["provider"]["color"], string> = {
   red: "#f87171",
   pink: "#f472b6",
   fuchsia: "#e879f9",
@@ -53,7 +53,7 @@ interface RadarActionStyle extends CSSProperties {
   "--radar-action-chip-text": string
 }
 
-function getRadarActionStyle(color: CardViewModel["provider"]["color"]): RadarActionStyle {
+function getRadarActionStyle(color: LiveCardViewModel["provider"]["color"]): RadarActionStyle {
   return {
     "--radar-action-card-bg": `color-mix(in oklab, var(--color-${color}-400) 40%, transparent)`,
     "--radar-action-card-bg-hover": `color-mix(in oklab, var(--color-${color}-400) 52%, transparent)`,
@@ -62,7 +62,7 @@ function getRadarActionStyle(color: CardViewModel["provider"]["color"]): RadarAc
 }
 
 interface RadarConfettiOptions {
-  color: CardViewModel["provider"]["color"]
+  color: LiveCardViewModel["provider"]["color"]
   originElement: HTMLElement | null
 }
 
@@ -93,17 +93,17 @@ function launchRadarConfetti({ color, originElement }: RadarConfettiOptions): vo
   })
 }
 
-interface RadarSourceCardProps {
-  source: CardViewModel
+interface RadarLiveCardProps {
+  liveCard: LiveCardViewModel
   className?: string
   onDraftSourceChange?: (patch: SourceInstancePatch) => void
 }
 
-function RadarSourceCard({ source, className, onDraftSourceChange }: RadarSourceCardProps) {
+function RadarLiveCard({ liveCard, className, onDraftSourceChange }: RadarLiveCardProps) {
   return (
-    <SourceCard
-      id={source.id}
-      source={source}
+    <LiveCard
+      id={liveCard.id}
+      source={liveCard}
       className={cn(
         "overflow-hidden rounded-3xl",
         className,
@@ -117,7 +117,7 @@ function RadarSourceCard({ source, className, onDraftSourceChange }: RadarSource
 
 interface RadarTrackCardProps {
   index: number
-  source: CardViewModel
+  liveCard: LiveCardViewModel
   trackItemOffset: number
   x: MotionValue<number>
   onDragHandlePointerDown: (event: PointerEvent<HTMLDivElement>) => void
@@ -126,7 +126,7 @@ interface RadarTrackCardProps {
 
 function RadarTrackCard({
   index,
-  source,
+  liveCard,
   trackItemOffset,
   x,
   onDragHandlePointerDown,
@@ -150,8 +150,8 @@ function RadarTrackCard({
         style={{ touchAction: "pan-y" }}
         onPointerDown={onDragHandlePointerDown}
       >
-        <RadarSourceCard
-          source={source}
+        <RadarLiveCard
+          liveCard={liveCard}
           onDraftSourceChange={onDraftSourceChange}
         />
       </div>
@@ -187,7 +187,7 @@ function RadarDeckContent({ sourceDescriptors, suggestions }: RadarDeckProps) {
   const [hasMeasuredDeck, setHasMeasuredDeck] = useState(false)
   const [isCreated, setIsCreated] = useState(false)
   const { error: createError, isPending: isCreating, run: runCreate } = useAsyncAction(
-    "The card could not be created.",
+    "The LiveCard could not be created.",
   )
   const actionRef = useRef<HTMLDivElement>(null)
   const deckRef = useRef<HTMLDivElement>(null)
@@ -242,14 +242,14 @@ function RadarDeckContent({ sourceDescriptors, suggestions }: RadarDeckProps) {
     resizeObserverRef.current = resizeObserver
   }, [measureDeck])
 
-  const radarSources = useMemo(() => {
+  const radarLiveCards = useMemo(() => {
     return suggestions.map(suggestion => ({
       suggestion,
-      source: createRadarBoardSource(suggestion, sourceDescriptors, draftPatches[suggestion.id]),
+      liveCard: createRadarLiveCard(suggestion, sourceDescriptors, draftPatches[suggestion.id]),
     }))
   }, [draftPatches, sourceDescriptors, suggestions])
   const activeSuggestion = suggestions[activeIndex]
-  const activeSource = radarSources[activeIndex]?.source ?? null
+  const activeLiveCard = radarLiveCards[activeIndex]?.liveCard ?? null
   const canGoPrevious = activeIndex > 0
   const canGoNext = activeIndex < suggestions.length - 1
   const canDragDeck = hasMeasuredDeck && suggestions.length > 0
@@ -296,7 +296,7 @@ function RadarDeckContent({ sourceDescriptors, suggestions }: RadarDeckProps) {
   }), [x])
 
   const handleCreate = useCallback(async () => {
-    if (isCreated || !activeSuggestion || !activeSource) {
+    if (isCreated || !activeSuggestion || !activeLiveCard) {
       return
     }
 
@@ -309,10 +309,10 @@ function RadarDeckContent({ sourceDescriptors, suggestions }: RadarDeckProps) {
           draftPatches[activeSuggestion.id] ?? {},
         ),
       })
-      launchRadarConfetti({ color: activeSource.provider.color, originElement: actionRef.current })
+      launchRadarConfetti({ color: activeLiveCard.provider.color, originElement: actionRef.current })
       setIsCreated(true)
     })
-  }, [activeSource, activeSuggestion, addInstance, draftPatches, isCreated, runCreate, targetBoardIds])
+  }, [activeLiveCard, activeSuggestion, addInstance, draftPatches, isCreated, runCreate, targetBoardIds])
 
   const handleActiveDraftSourceChange = useCallback((patch: SourceInstancePatch) => {
     if (!activeSuggestion) {
@@ -332,16 +332,16 @@ function RadarDeckContent({ sourceDescriptors, suggestions }: RadarDeckProps) {
     })
   }, [activeSuggestion])
 
-  if (!activeSuggestion || !activeSource) {
+  if (!activeSuggestion || !activeLiveCard) {
     return null
   }
 
-  const radarActionStyle = getRadarActionStyle(activeSource.provider.color)
+  const radarActionStyle = getRadarActionStyle(activeLiveCard.provider.color)
 
   return (
     <motion.section
       className="relative space-y-3"
-      aria-label="Radar cards"
+      aria-label="Radar suggestions"
       animate={isCreated && !prefersReducedMotion
         ? { scale: [1, 1.008, 0.985], opacity: [1, 1, 0] }
         : undefined}
@@ -361,11 +361,11 @@ function RadarDeckContent({ sourceDescriptors, suggestions }: RadarDeckProps) {
             style={trackStyle}
             onDragEnd={handleDragEnd}
           >
-            {radarSources.map(({ suggestion, source }, index) => source && (
+            {radarLiveCards.map(({ suggestion, liveCard }, index) => liveCard && (
               <RadarTrackCard
                 key={suggestion.id}
                 index={index}
-                source={source}
+                liveCard={liveCard}
                 trackItemOffset={trackItemOffset}
                 x={x}
                 onDragHandlePointerDown={handleDragHandlePointerDown}
@@ -382,8 +382,8 @@ function RadarDeckContent({ sourceDescriptors, suggestions }: RadarDeckProps) {
             size="icon-fit"
             onClick={() => moveDeck(-1)}
             disabled={!canGoPrevious}
-            aria-label="Previous radar card"
-            title="Previous radar card"
+            aria-label="Previous Radar suggestion"
+            title="Previous Radar suggestion"
             className={cn(RADAR_DECK_NAV_BUTTON_CLASS_NAME, !canGoPrevious && "opacity-20")}
           >
             <PhArrowCircleLeft />
@@ -393,8 +393,8 @@ function RadarDeckContent({ sourceDescriptors, suggestions }: RadarDeckProps) {
             size="icon-fit"
             onClick={() => moveDeck(1)}
             disabled={!canGoNext}
-            aria-label="Next radar card"
-            title="Next radar card"
+            aria-label="Next Radar suggestion"
+            title="Next Radar suggestion"
             className={cn(RADAR_DECK_NAV_BUTTON_CLASS_NAME, "rotate-180", !canGoNext && "opacity-20")}
           >
             <PhArrowCircleLeft />
@@ -416,12 +416,12 @@ function RadarDeckContent({ sourceDescriptors, suggestions }: RadarDeckProps) {
             size="sm"
             onClick={handleCreate}
             disabled={isCreated || isCreating}
-            aria-label="Create card"
-            title="Create card"
+            aria-label="Create LiveCard"
+            title="Create LiveCard"
             className="flex h-8 items-center gap-1 rounded-3xl bg-(--radar-action-card-bg) px-3 py-0.5 text-xs font-semibold transition-colors hover:bg-(--radar-action-card-bg-hover) hover:text-foreground"
           >
             <PhPlusCircle className="text-sm text-(--radar-action-chip-text)" />
-            Create card
+            Create LiveCard
           </Button>
           {createError && <span role="alert" className="text-xs text-destructive">{createError}</span>}
         </div>

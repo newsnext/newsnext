@@ -33,13 +33,13 @@ const VIEW_OPTIONS: { label: string, value: BoardViewMode }[] = [
 const DELETE_OPTIONS = [
   {
     confirmLabel: "Confirm board only",
-    deleteCards: false,
+    deleteLiveCards: false,
     label: "Delete board",
   },
   {
-    confirmLabel: "Confirm board + cards",
-    deleteCards: true,
-    label: "Delete board with cards",
+    confirmLabel: "Confirm board and LiveCards",
+    deleteLiveCards: true,
+    label: "Delete board with LiveCards",
   },
 ] as const
 
@@ -53,7 +53,7 @@ interface BoardDialogProps {
   target: BoardDialogTarget
   onClose: () => void
   onCreate: (input: BoardCreateInput) => Promise<void> | void
-  onDelete: (boardId: string, deleteCards: boolean) => Promise<void> | void
+  onDelete: (boardId: string, deleteLiveCards: boolean) => Promise<void> | void
   onUpdate: (board: Board) => Promise<void> | void
 }
 
@@ -89,7 +89,7 @@ function ConfigurableBoardDialog({
   const [color, setColor] = useState<Color>(initialColor)
   const [sortMode, setSortMode] = useState<BoardSortMode>(initialSortMode)
   const [defaultView, setDefaultView] = useState<BoardViewMode>(initialDefaultView)
-  const [armedDeleteCards, setArmedDeleteCards] = useState<boolean>()
+  const [armedDeleteLiveCards, setArmedDeleteLiveCards] = useState<boolean>()
   const { error: submitError, isPending: isSubmitting, run: runAction } = useAsyncAction(
     "The board could not be saved.",
   )
@@ -129,13 +129,13 @@ function ConfigurableBoardDialog({
     if (succeeded) onClose()
   }
 
-  async function handleDelete(deleteCards: boolean): Promise<void> {
+  async function handleDelete(deleteLiveCards: boolean): Promise<void> {
     if (!boardId) {
       return
     }
 
     const succeeded = await runAction(async () => {
-      await onDelete(boardId, deleteCards)
+      await onDelete(boardId, deleteLiveCards)
     }, "The board could not be deleted.")
     if (succeeded) onClose()
   }
@@ -182,7 +182,7 @@ function ConfigurableBoardDialog({
               </div>
             </ConfigSection>
 
-            <ConfigSection variant="group" title="Card order">
+            <ConfigSection variant="group" title="LiveCard order">
               <RadioGroup
                 variant="segmented"
                 value={sortMode}
@@ -225,18 +225,18 @@ function ConfigurableBoardDialog({
                       type="button"
                       variant="destructive"
                       disabled={isSubmitting}
-                      onBlur={() => setArmedDeleteCards(undefined)}
+                      onBlur={() => setArmedDeleteLiveCards(undefined)}
                       onClick={() => {
-                        if (armedDeleteCards === option.deleteCards) {
-                          void handleDelete(option.deleteCards)
+                        if (armedDeleteLiveCards === option.deleteLiveCards) {
+                          void handleDelete(option.deleteLiveCards)
                           return
                         }
-                        setArmedDeleteCards(option.deleteCards)
+                        setArmedDeleteLiveCards(option.deleteLiveCards)
                       }}
                     >
-                      {armedDeleteCards === option.deleteCards ? <PhCheckCircle /> : <PhTrash />}
+                      {armedDeleteLiveCards === option.deleteLiveCards ? <PhCheckCircle /> : <PhTrash />}
                       <span aria-live="polite">
-                        {armedDeleteCards === option.deleteCards ? option.confirmLabel : option.label}
+                        {armedDeleteLiveCards === option.deleteLiveCards ? option.confirmLabel : option.label}
                       </span>
                     </Button>
                   ))}
@@ -246,11 +246,11 @@ function ConfigurableBoardDialog({
                 {isSubmitting ? "Saving…" : isEditing ? "Save changes" : "Create board"}
               </Button>
             </DialogFooter>
-            {armedDeleteCards !== undefined && (
+            {armedDeleteLiveCards !== undefined && (
               <p role="status" className="text-xs text-destructive">
-                {armedDeleteCards
-                  ? "Deletes cards not used by other boards. Shared cards stay in those boards."
-                  : "Cards remain available in All and any other boards."}
+                {armedDeleteLiveCards
+                  ? "Deletes LiveCards not used by other boards. Shared LiveCards stay in place."
+                  : "LiveCards remain available in All and their other boards."}
               </p>
             )}
             {submitError && (

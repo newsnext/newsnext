@@ -9,7 +9,6 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { PillGroup, PillGroupIndicator, pillGroupItemClassName } from "@newsnext/ui/components/pill-group"
 import { ScrollArea } from "@newsnext/ui/components/scroll-area"
 import { ArrowRight, Bell, MoreHorizontal, Plus, Trash2 } from "lucide-react"
-import { CardHeaderActionButton } from "@/components/card/card-header"
 import {
   PhArrowCircleLeftDuotone,
   PhArrowCounterClockwiseDuotone,
@@ -18,6 +17,7 @@ import {
   PhInfoDuotone,
   PhTrashDuotone,
 } from "@/components/icons/ph"
+import { LiveCardHeaderActionButton } from "@/components/live-card/card-header"
 import { FixturePage, FixtureSection, FixtureState } from "@/cosmos/fixture-layout"
 
 const SEMANTIC_COLORS = [
@@ -128,7 +128,7 @@ function TypographyFixture(): React.JSX.Element {
     <FixturePage
       category="Basics"
       title="Typography"
-      description="The reading hierarchy used across navigation, source cards, settings, and article metadata."
+      description="The reading hierarchy used across navigation, LiveCards, settings, and article metadata."
     >
       <FixtureSection title="Type scale" description="A compact sans-serif scale keeps dense extension surfaces readable without flattening hierarchy.">
         <div className="divide-y divide-border/60">
@@ -257,7 +257,7 @@ function ButtonsFixture(): React.JSX.Element {
         </FixtureSection>
       </div>
 
-      <FixtureSection title="Card buttons" description="Card controls stay inside the provider theme scope without moving the complete card into Basics.">
+      <FixtureSection title="LiveCard buttons" description="LiveCard controls stay inside the provider theme scope without moving the complete LiveCard into Basics.">
         <div
           className="purple grid gap-5 rounded-2xl p-4"
           style={{ backgroundColor: "color-mix(in oklab, var(--background), var(--color-theme-400) 55%)" }}
@@ -268,11 +268,11 @@ function ButtonsFixture(): React.JSX.Element {
                 <span className="grid size-8 place-items-center rounded-full bg-theme-500 text-xs font-bold text-white">NN</span>
               </Button>
               <div className="flex items-center gap-2">
-                <CardHeaderActionButton aria-label="Refresh"><PhArrowCounterClockwiseDuotone /></CardHeaderActionButton>
-                <CardHeaderActionButton aria-label="View details"><PhInfoDuotone /></CardHeaderActionButton>
-                <CardHeaderActionButton aria-label="Delete card"><PhTrashDuotone /></CardHeaderActionButton>
-                <CardHeaderActionButton aria-label="Flip card"><PhArrowCircleLeftDuotone /></CardHeaderActionButton>
-                <CardHeaderActionButton className="cursor-grab" aria-label="Move card"><PhDotsSixVerticalDuotone /></CardHeaderActionButton>
+                <LiveCardHeaderActionButton aria-label="Refresh"><PhArrowCounterClockwiseDuotone /></LiveCardHeaderActionButton>
+                <LiveCardHeaderActionButton aria-label="View details"><PhInfoDuotone /></LiveCardHeaderActionButton>
+                <LiveCardHeaderActionButton aria-label="Delete LiveCard"><PhTrashDuotone /></LiveCardHeaderActionButton>
+                <LiveCardHeaderActionButton aria-label="Flip LiveCard"><PhArrowCircleLeftDuotone /></LiveCardHeaderActionButton>
+                <LiveCardHeaderActionButton className="cursor-grab" aria-label="Move LiveCard"><PhDotsSixVerticalDuotone /></LiveCardHeaderActionButton>
               </div>
             </div>
           </FixtureState>

@@ -1,4 +1,4 @@
-import type { SettingsTabId, SourceCardHeight } from "@/lib/settings"
+import type { LiveCardHeight, SettingsTabId } from "@/lib/settings"
 import { Label } from "@newsnext/ui/components/label"
 import { RadioGroup, RadioGroupItem } from "@newsnext/ui/components/radio-group"
 import { TabsContent } from "@newsnext/ui/components/tabs"
@@ -10,8 +10,8 @@ import { handleThemeModeSwitch } from "@/lib/utils/swith-theme"
 import { boardsAtom } from "@/store/board"
 import {
   defaultBoardIdAtom,
+  liveCardHeightAtom,
   settingsTabAtom,
-  sourceCardHeightAtom,
   themeModeAtom,
 } from "@/store/settings"
 import { ThemeModeSelector } from "../theme-mode-selector"
@@ -25,13 +25,13 @@ import { SourceIconSettings } from "./source-icon"
 
 const LAST_USED_BOARD_VALUE = "__last_used__"
 
-interface SourceCardHeightOption {
+interface LiveCardHeightOption {
   label: string
   previewClassName: string
-  value: SourceCardHeight
+  value: LiveCardHeight
 }
 
-const SOURCE_CARD_HEIGHT_OPTIONS: SourceCardHeightOption[] = [
+const LIVE_CARD_HEIGHT_OPTIONS: LiveCardHeightOption[] = [
   {
     label: "Compact",
     previewClassName: "h-12",
@@ -127,27 +127,27 @@ function AppearanceSettings() {
           onValueChange={setThemeMode}
         />
       </ConfigSection>
-      <SourceCardHeightSettings />
+      <LiveCardHeightSettings />
       <BgIllustrationSettings />
     </div>
   )
 }
 
-function SourceCardHeightSettings() {
-  const [sourceCardHeight, setSourceCardHeight] = useAtom(sourceCardHeightAtom)
+function LiveCardHeightSettings() {
+  const [liveCardHeight, setLiveCardHeight] = useAtom(liveCardHeightAtom)
 
   return (
     <ConfigSection
-      title="Card height"
-      description="Choose how tall source cards appear on the board."
+      title="LiveCard height"
+      description="Choose how tall LiveCards appear on the board."
     >
       <RadioGroup
         className="grid w-full grid-cols-3 gap-2"
-        value={sourceCardHeight}
-        onValueChange={setSourceCardHeight}
+        value={liveCardHeight}
+        onValueChange={setLiveCardHeight}
       >
-        {SOURCE_CARD_HEIGHT_OPTIONS.map((option) => {
-          const isSelected = option.value === sourceCardHeight
+        {LIVE_CARD_HEIGHT_OPTIONS.map((option) => {
+          const isSelected = option.value === liveCardHeight
           return (
             <Label key={option.value} className="cursor-pointer">
               <RadioGroupItem

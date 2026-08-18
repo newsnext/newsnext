@@ -14,11 +14,11 @@ export { getSortableData, isSortableData } from "./sortable-data"
 export type {
   BoardSortMode,
   BoardSortPreference,
-  SortableCardView,
+  SortableLiveCardView,
 } from "./sorting"
 export {
   createBoardSortPreference,
   DEFAULT_BOARD_SORT_PREFERENCE,
-  orderCardInstanceIds,
+  orderLiveCardInstanceIds,
   updateBoardSortMode,
 } from "./sorting"

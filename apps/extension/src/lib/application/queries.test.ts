@@ -71,7 +71,7 @@ describe("application queries", () => {
       boardName: "Reading",
       collectionId: "reading",
     })
-    expect(executeApplicationQuery(createData(), { type: "view.getVisibleCards" }, {
+    expect(executeApplicationQuery(createData(), { type: "view.getVisibleLiveCards" }, {
       currentBoardId: "reading",
     })).toEqual([
       {

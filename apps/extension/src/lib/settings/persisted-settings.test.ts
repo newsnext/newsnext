@@ -38,16 +38,22 @@ describe("persisted settings", () => {
     }).appearance.allBoardColor).toBe("red")
   })
 
-  it("normalizes the source card height", () => {
+  it("normalizes the LiveCard height", () => {
     expect(normalizePersistedSettings({
-      appearance: { sourceCardHeight: "compact" },
-    }).appearance.sourceCardHeight).toBe("compact")
+      appearance: { liveCardHeight: "compact" },
+    }).appearance.liveCardHeight).toBe("compact")
+    expect(normalizePersistedSettings({
+      appearance: { liveCardHeight: "tall" },
+    }).appearance.liveCardHeight).toBe("tall")
+    expect(normalizePersistedSettings({
+      appearance: { liveCardHeight: "giant" },
+    }).appearance.liveCardHeight).toBe("balanced")
+  })
+
+  it("migrates the previous source card height setting", () => {
     expect(normalizePersistedSettings({
       appearance: { sourceCardHeight: "tall" },
-    }).appearance.sourceCardHeight).toBe("tall")
-    expect(normalizePersistedSettings({
-      appearance: { sourceCardHeight: "giant" },
-    }).appearance.sourceCardHeight).toBe("balanced")
+    }).appearance.liveCardHeight).toBe("tall")
   })
 
   it("normalizes the background illustration opacity", () => {

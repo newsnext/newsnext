@@ -189,14 +189,14 @@ export const updateBoardAtom = atom(null, async (_get, set, board: Board) => {
 
 export const deleteBoardAtom = atom(null, (_get, set, input: {
   boardId: string
-  deleteCards: boolean
+  deleteLiveCards: boolean
 }) => {
   if (input.boardId === ALL_BOARD_ID) return
   return set(executeApplicationActionAtom, {
     type: "collection.delete",
     input: {
       collectionId: input.boardId,
-      ...(input.deleteCards ? { deleteInstances: true } : {}),
+      ...(input.deleteLiveCards ? { deleteInstances: true } : {}),
     },
   })
 })

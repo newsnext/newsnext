@@ -1,4 +1,4 @@
-import type { CardViewModel } from "@/typings/source"
+import type { LiveCardViewModel } from "@/typings/source"
 import { Button } from "@newsnext/ui/components/button"
 import { PhInfo } from "../icons/ph"
 import { SourceIcon } from "./source-icon"
@@ -7,7 +7,7 @@ interface SourceActionStateProps {
   icon?: string
   label: string
   onClick: () => void
-  provider: CardViewModel["provider"]
+  provider: LiveCardViewModel["provider"]
   title: string
 }
 
@@ -42,7 +42,7 @@ export function SourceLoginState({
   loginUrl,
 }: {
   icon?: string
-  provider: CardViewModel["provider"]
+  provider: LiveCardViewModel["provider"]
   loginUrl: string
 }) {
   return (
@@ -63,7 +63,7 @@ export function SourceErrorState({
 }: {
   icon?: string
   onRefresh: () => void
-  provider: CardViewModel["provider"]
+  provider: LiveCardViewModel["provider"]
 }) {
   return (
     <SourceActionState
@@ -83,7 +83,7 @@ export function SourcePermissionState({
 }: {
   icon?: string
   onRequestPermission: () => Promise<boolean>
-  provider: CardViewModel["provider"]
+  provider: LiveCardViewModel["provider"]
 }) {
   return (
     <SourceActionState

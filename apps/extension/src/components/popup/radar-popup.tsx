@@ -18,7 +18,7 @@ interface RadarOverlayHeaderProps {
 function RadarOverlayHeader({ count, isScanning }: RadarOverlayHeaderProps): React.JSX.Element {
   const statusLabel = isScanning
     ? "Radar · Scanning…"
-    : `Radar · ${count} ${count === 1 ? "card" : "cards"}`
+    : `Radar · ${count} ${count === 1 ? "LiveCard" : "LiveCards"}`
 
   return (
     <div className="relative z-20 flex h-10 shrink-0 items-center justify-between gap-3">

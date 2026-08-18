@@ -4,7 +4,7 @@ import { useIsFetching, useQueryClient } from "@tanstack/react-query"
 import { useStore } from "jotai"
 import { useCallback, useSyncExternalStore } from "react"
 import { ALL_BOARD_ID } from "@/lib/board"
-import { buildSourceCards, FETCH_LATEST_MINIMUM_FEEDBACK_MS, getSourceCard, loadSourceDescriptors } from "@/lib/source"
+import { buildLiveCards, FETCH_LATEST_MINIMUM_FEEDBACK_MS, loadSourceDescriptors } from "@/lib/source"
 import { collectionEntriesAtom, instancesAtom } from "@/store/board"
 import { currentBoardIdAtom } from "@/store/settings"
 import {
@@ -128,7 +128,7 @@ export function useFetchLatest() {
       const collectionEntries = store.get(collectionEntriesAtom)
       const currentBoardId = store.get(currentBoardIdAtom)
       const sources = await loadSourceDescriptors()
-      const cards = buildSourceCards({
+      const targets = buildLiveCards({
         sources,
         sourceInstances: instances,
         collectionId: currentBoardId === ALL_BOARD_ID ? null : currentBoardId,
@@ -137,17 +137,15 @@ export function useFetchLatest() {
           : collectionEntries
               .filter(entry => entry.collectionId === currentBoardId)
               .map(entry => entry.instanceId),
-      })
-      const targets = cards.ids.map((id) => {
-        const source = getSourceCard(cards, id)
+      }).map((liveCard) => {
         return {
-          sourceId: source.sourceId,
-          params: normalizeSourceParams(source, source.paramsValue ?? {}),
+          sourceId: liveCard.sourceId,
+          params: normalizeSourceParams(liveCard, liveCard.paramsValue ?? {}),
         } satisfies SourceQueryTarget
       })
       await fetchLatestSources(...targets)
     } catch (e) {
-      console.error("Failed to fetch latest cards", e)
+      console.error("Failed to fetch latest LiveCards", e)
     }
   }, [fetchLatestSources, store])
 

@@ -3,7 +3,7 @@ import type { ComponentProps } from "react"
 import type { BoardDialogTarget } from "@/components/board-dialog"
 import type { SettingsTabId } from "@/components/settings/modal-shell"
 import type { Board, BoardCreateInput } from "@/lib/board"
-import type { CardViewModel } from "@/typings/source"
+import type { LiveCardViewModel } from "@/typings/source"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -66,11 +66,11 @@ function createSearchSource({
   title,
 }: {
   boardId: string | null
-  color: CardViewModel["provider"]["color"]
+  color: LiveCardViewModel["provider"]["color"]
   id: string
   providerTitle: string
   title: string
-}): CardViewModel {
+}): LiveCardViewModel {
   return {
     id,
     sourceId: id.split("::")[0] ?? id,
@@ -235,8 +235,8 @@ function BoardDialogFixture({ target }: { target: BoardDialogTarget }) {
           target={target}
           onClose={() => setOpen(false)}
           onCreate={describeCreateAction}
-          onDelete={(boardId, deleteCards) => setLastAction(
-            `Deleted ${boardId}${deleteCards ? " with cards" : ""}`,
+          onDelete={(boardId, deleteLiveCards) => setLastAction(
+            `Deleted ${boardId}${deleteLiveCards ? " with cards" : ""}`,
           )}
           onUpdate={board => describeBoardAction("Updated", board)}
         />

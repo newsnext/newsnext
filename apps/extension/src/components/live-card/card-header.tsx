@@ -4,7 +4,7 @@ import { Button } from "@newsnext/ui/components/button"
 import { cn } from "@/lib/utils"
 import { SourceIcon } from "./source-icon"
 
-interface CardHeaderProps {
+interface LiveCardHeaderProps {
   badge?: string
   desc?: string
   home?: string
@@ -16,9 +16,9 @@ interface CardHeaderProps {
   className?: string
 }
 
-type CardHeaderActionButtonProps = Omit<ComponentProps<typeof Button>, "size" | "variant">
+type LiveCardHeaderActionButtonProps = Omit<ComponentProps<typeof Button>, "size" | "variant">
 
-export function CardHeaderActionButton({ className, ...props }: CardHeaderActionButtonProps): React.JSX.Element {
+export function LiveCardHeaderActionButton({ className, ...props }: LiveCardHeaderActionButtonProps): React.JSX.Element {
   return (
     <Button
       variant="transparent"
@@ -29,7 +29,7 @@ export function CardHeaderActionButton({ className, ...props }: CardHeaderAction
   )
 }
 
-export function CardHeader({
+export function LiveCardHeader({
   badge,
   desc,
   home,
@@ -39,11 +39,11 @@ export function CardHeader({
   subtitle,
   actions,
   className,
-}: CardHeaderProps) {
+}: LiveCardHeaderProps) {
   const displayTitle = title || provider.title
 
   return (
-    <div data-card-header className={cn("flex justify-between mb-3 items-center mx-1 gap-2", className)}>
+    <div data-live-card-header className={cn("flex justify-between mb-3 items-center mx-1 gap-2", className)}>
       <div className="flex gap-2.5 items-center ml-1 min-w-0 flex-1">
         <Button
           type="button"

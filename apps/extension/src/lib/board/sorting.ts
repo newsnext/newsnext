@@ -1,4 +1,4 @@
-export interface SortableCardView {
+export interface SortableLiveCardView {
   id: string
   createdAt?: number
   metadata: {
@@ -50,7 +50,7 @@ const nameCollator = new Intl.Collator(undefined, {
   sensitivity: "base",
 })
 
-function compareCreatedAt(left: SortableCardView, right: SortableCardView): number {
+function compareCreatedAt(left: SortableLiveCardView, right: SortableLiveCardView): number {
   const leftCreatedAt = Number.isFinite(left.createdAt) ? left.createdAt : undefined
   const rightCreatedAt = Number.isFinite(right.createdAt) ? right.createdAt : undefined
 
@@ -59,15 +59,15 @@ function compareCreatedAt(left: SortableCardView, right: SortableCardView): numb
   return rightCreatedAt - leftCreatedAt
 }
 
-function compareInstanceIds(left: SortableCardView, right: SortableCardView): number {
+function compareInstanceIds(left: SortableLiveCardView, right: SortableLiveCardView): number {
   return nameCollator.compare(left.id, right.id)
 }
 
-function compareByCreatedAt(left: SortableCardView, right: SortableCardView): number {
+function compareByCreatedAt(left: SortableLiveCardView, right: SortableLiveCardView): number {
   return compareCreatedAt(left, right) || compareInstanceIds(left, right)
 }
 
-function compareByProvider(left: SortableCardView, right: SortableCardView): number {
+function compareByProvider(left: SortableLiveCardView, right: SortableLiveCardView): number {
   const providerComparison = nameCollator.compare(
     left.provider.title,
     right.provider.title,
@@ -84,17 +84,17 @@ function compareByProvider(left: SortableCardView, right: SortableCardView): num
 
 function sortAutomatically(
   instanceIds: string[],
-  cardsByInstanceId: Record<string, SortableCardView>,
+  liveCardsByInstanceId: Record<string, SortableLiveCardView>,
   mode: AutomaticBoardSortMode,
 ): string[] {
   const comparator = mode === "provider" ? compareByProvider : compareByCreatedAt
 
   return instanceIds
     .flatMap((id) => {
-      const card = cardsByInstanceId[id]
-      return card ? [{ id, card }] : []
+      const liveCard = liveCardsByInstanceId[id]
+      return liveCard ? [{ id, liveCard }] : []
     })
-    .toSorted((left, right) => comparator(left.card, right.card))
+    .toSorted((left, right) => comparator(left.liveCard, right.liveCard))
     .map(({ id }) => id)
 }
 
@@ -109,18 +109,18 @@ function reconcileManualOrder(manualOrder: string[], fallbackOrder: string[]): s
   ]
 }
 
-export function orderCardInstanceIds({
+export function orderLiveCardInstanceIds({
   instanceIds,
-  cardsByInstanceId,
+  liveCardsByInstanceId,
   preference,
 }: {
   instanceIds: string[]
-  cardsByInstanceId: Record<string, SortableCardView>
+  liveCardsByInstanceId: Record<string, SortableLiveCardView>
   preference: BoardSortPreference
 }): string[] {
   const automaticOrder = sortAutomatically(
     instanceIds,
-    cardsByInstanceId,
+    liveCardsByInstanceId,
     preference.mode === "manual" ? preference.automaticMode : preference.mode,
   )
 

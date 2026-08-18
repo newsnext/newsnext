@@ -1,15 +1,3 @@
-export type {
-  SourceInstance,
-  SourceInstanceMetadata,
-  SourceInstancePatch,
-} from "./cards"
-export {
-  applySourceLoaderMetadata,
-  buildSourceCards,
-  createBoardSource,
-  getSourceCard,
-  mergeSourceInstancePatch,
-} from "./cards"
 export {
   getGrantedHostPermissionOrigins,
   getUserManagedHostPermissionOrigins,
@@ -26,6 +14,17 @@ export {
   createInstanceDataTarget,
   resolveInstanceDataTarget,
 } from "./instance-data-target"
+export type {
+  SourceInstance,
+  SourceInstanceMetadata,
+  SourceInstancePatch,
+} from "./live-cards"
+export {
+  applySourceLoaderMetadata,
+  buildLiveCards,
+  createLiveCard,
+  mergeSourceInstancePatch,
+} from "./live-cards"
 export type { SourceLoadResult } from "./loader"
 export { loadSource, readPersistedSourceCache } from "./loader"
 export type { SourceParamValues } from "./params"

@@ -1,13 +1,13 @@
 import type { RadarSuggestion } from "./matcher"
 import type { SourceInstancePatch } from "@/lib/source"
-import type { CardViewModel, SourceDescriptor } from "@/typings/source"
+import type { LiveCardViewModel, SourceDescriptor } from "@/typings/source"
 import { mergeSourceInstancePatch } from "@/lib/source"
 
-export function createRadarBoardSource(
+export function createRadarLiveCard(
   suggestion: RadarSuggestion,
   descriptors: SourceDescriptor[],
   draftPatch?: SourceInstancePatch,
-): CardViewModel | null {
+): LiveCardViewModel | null {
   const descriptor = descriptors.find(source => source.id === suggestion.sourceId)
   if (!descriptor) {
     return null

@@ -15,9 +15,9 @@ import { Switch } from "@newsnext/ui/components/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@newsnext/ui/components/tabs"
 import { Textarea } from "@newsnext/ui/components/textarea"
 import { useState } from "react"
-import { CardEditForm } from "@/components/card/card-back/edit-form"
-import { SAMPLE_SOURCE } from "@/cosmos/cards.fixture"
+import { LiveCardEditForm } from "@/components/live-card/card-back/edit-form"
 import { FixturePage, FixtureSection, FixtureState } from "@/cosmos/fixture-layout"
+import { SAMPLE_SOURCE } from "@/cosmos/live-cards.fixture"
 
 function TextInputsFixture(): React.JSX.Element {
   return (
@@ -188,7 +188,7 @@ function EmptyStateFixture(): React.JSX.Element {
   )
 }
 
-function CardEditingFormFixture(): React.JSX.Element {
+function LiveCardEditingFormFixture(): React.JSX.Element {
   const [source, setSource] = useState(SAMPLE_SOURCE)
   const [savedParams, setSavedParams] = useState<Record<string, unknown>>(SAMPLE_SOURCE.paramsValue ?? {})
   const [draftParams, setDraftParams] = useState(savedParams)
@@ -197,13 +197,13 @@ function CardEditingFormFixture(): React.JSX.Element {
   return (
     <FixturePage
       category="Basics"
-      title="Card editing form"
-      description="The real metadata and parameter editor isolated from the source card shell."
+      title="LiveCard editing form"
+      description="The real metadata and parameter editor isolated from the LiveCard shell."
       width="md"
     >
       <FixtureSection title="Source fields" description="The provider theme stays scoped to this form specimen.">
         <div className={source.provider.color}>
-          <CardEditForm
+          <LiveCardEditForm
             source={source}
             draftSourceParams={draftParams}
             hasSourceParams
@@ -228,5 +228,5 @@ export default {
   "Selection controls": SelectionControlsFixture,
   "Feedback": FeedbackFixture,
   "Empty state": EmptyStateFixture,
-  "Card editing form": CardEditingFormFixture,
+  "LiveCard editing form": LiveCardEditingFormFixture,
 }

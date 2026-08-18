@@ -4,5 +4,5 @@ export type { ApplicationOperationDescriptor, ApplicationQueryName, ApplicationS
 export { listApplicationActions, listApplicationQueries, parseApplicationAction, parseApplicationQuery } from "./catalog"
 export type { ApplicationData } from "./data"
 export { createEmptyApplicationData } from "./data"
-export type { ApplicationQuery, ApplicationQueryContext, ApplicationQueryResult, ApplicationViewContext, ApplicationVisibleCard, CollectionDetail } from "./queries"
+export type { ApplicationQuery, ApplicationQueryContext, ApplicationQueryResult, ApplicationViewContext, ApplicationVisibleLiveCard, CollectionDetail } from "./queries"
 export { executeApplicationQuery } from "./queries"

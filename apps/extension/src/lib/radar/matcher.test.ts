@@ -20,7 +20,7 @@ function selectPageField(select: string, value: string): Record<string, string> 
 }
 
 describe("getRadarSuggestions", () => {
-  it("suggests a GitHub Trending card with filters", () => {
+  it("suggests a GitHub Trending LiveCard with filters", () => {
     expect(getSuggestions({ url: "https://github.com/trending/typescript?since=weekly&spoken_language_code=zh" })).toMatchObject([
       {
         sourceId: "github:trending",
@@ -303,7 +303,7 @@ describe("getRadarSuggestions", () => {
     ])
   })
 
-  it("suggests NetEase playlist and ranking cards from hash route URLs", () => {
+  it("suggests NetEase playlist and ranking LiveCards from hash route URLs", () => {
     expect(getSuggestions({
       url: "https://music.163.com/#/playlist?id=19723756",
       title: "飙升榜 - 歌单 - 网易云音乐",
@@ -367,7 +367,7 @@ describe("getRadarSuggestions", () => {
     ["all", "0"],
     ["anime", "13"],
     ["tech", "188"],
-  ])("suggests a Bilibili ranking card for the %s route", (slug, region) => {
+  ])("suggests a Bilibili ranking LiveCard for the %s route", (slug, region) => {
     const [suggestion] = getSuggestions({
       url: `https://www.bilibili.com/v/popular/rank/${slug}`,
       title: "哔哩哔哩排行榜",
@@ -381,7 +381,7 @@ describe("getRadarSuggestions", () => {
     })
   })
 
-  it("suggests Folo feed and list cards from timeline URLs", () => {
+  it("suggests Folo feed and list LiveCards from timeline URLs", () => {
     expect(getSuggestions({
       url: "https://app.folo.is/timeline/articles/70006270320504832/pending",
       title: "AI News | Folo",
@@ -466,7 +466,7 @@ describe("getRadarSuggestions", () => {
     }, sources)).toEqual([])
   })
 
-  it("suggests a NewsNow parameterized card", () => {
+  it("suggests a NewsNow parameterized LiveCard", () => {
     expect(getSuggestions({ url: "https://www.newsnow.com/us/Technology?type=ln" })).toMatchObject([
       {
         sourceId: "newsnow:topic-latest",
@@ -517,7 +517,7 @@ describe("getRadarSuggestions", () => {
         title: "r/typescript",
       },
     ],
-  ])("suggests a Reddit card from %s", (url, sourceId, params, metadata) => {
+  ])("suggests a Reddit LiveCard from %s", (url, sourceId, params, metadata) => {
     expect(getRadarSuggestions(
       { url },
       sourceDescriptors.filter(source => source.id === sourceId),
@@ -585,7 +585,7 @@ describe("getRadarSuggestions", () => {
   it.each([
     ["https://x.com/NewsNext", "@NewsNext"],
     ["https://twitter.com/NewsNext/status/1234567890", "@NewsNext"],
-  ])("suggests an X user card from %s", (url, title) => {
+  ])("suggests an X user LiveCard from %s", (url, title) => {
     expect(getRadarSuggestions(
       {
         url,
@@ -610,7 +610,7 @@ describe("getRadarSuggestions", () => {
     )).toEqual([])
   })
 
-  it("suggests a Jike user card from a profile root URL", () => {
+  it("suggests a Jike user LiveCard from a profile root URL", () => {
     expect(getRadarSuggestions(
       {
         url: "https://web.okjike.com/u/ed00c4da-fb80-4072-a6d7-abf011bd30ea",

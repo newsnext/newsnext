@@ -1,6 +1,6 @@
 import type { SourceItemTemplate } from "@newsnext/source/types"
 import type { ReactNode } from "react"
-import type { CardViewModel, NewsItem } from "@/typings/source"
+import type { LiveCardViewModel, NewsItem } from "@/typings/source"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { useMemo, useState } from "react"
 import { useSourceIcon } from "@/hooks/use-source-icon"
@@ -13,7 +13,7 @@ import {
   PhCircleDashedDuotone,
   PhInfoDuotone,
 } from "../icons/ph"
-import { CardHeader, CardHeaderActionButton } from "./card-header"
+import { LiveCardHeader, LiveCardHeaderActionButton } from "./card-header"
 import {
   SourceErrorState,
   SourceLoginState,
@@ -21,12 +21,12 @@ import {
   SourceStatusMessage,
   SourceStatusPattern,
 } from "./card-source-state"
-import { CardSurface } from "./card-surface"
+import { LiveCardSurface } from "./card-surface"
 import { Ranking } from "./ranking"
 import { Timeline } from "./timeline"
 
-interface CardFrontProps {
-  source: CardViewModel
+interface LiveCardFrontProps {
+  source: LiveCardViewModel
   items: NewsItem[]
   itemTemplate?: SourceItemTemplate
   isFetching: boolean
@@ -43,7 +43,7 @@ interface CardFrontProps {
   dragHandle?: ReactNode
 }
 
-function CardRefreshButton({
+function LiveCardRefreshButton({
   isFetching,
   onRefresh,
 }: {
@@ -51,22 +51,22 @@ function CardRefreshButton({
   onRefresh: () => void
 }) {
   return (
-    <CardHeaderActionButton
+    <LiveCardHeaderActionButton
       className={isFetching ? "animate-spin" : undefined}
       onClick={onRefresh}
       aria-label="Refresh"
     >
       {isFetching ? <PhCircleDashedDuotone /> : <PhArrowCounterClockwiseDuotone />}
-    </CardHeaderActionButton>
+    </LiveCardHeaderActionButton>
   )
 }
 
-interface CardFrontContentProps {
+interface LiveCardFrontContentProps {
   icon?: string
   items: NewsItem[]
   itemTemplate?: SourceItemTemplate
   markScale?: number
-  provider: CardViewModel["provider"]
+  provider: LiveCardViewModel["provider"]
   scrollElement: HTMLDivElement | null
   sourceErrorMessage?: string
   sourceLoginUrl?: string
@@ -75,7 +75,7 @@ interface CardFrontContentProps {
   onRequestPermission: () => Promise<boolean>
 }
 
-function CardFrontContent({
+function LiveCardFrontContent({
   icon,
   items,
   itemTemplate,
@@ -87,7 +87,7 @@ function CardFrontContent({
   sourcePermissionRequired,
   onRefresh,
   onRequestPermission,
-}: CardFrontContentProps) {
+}: LiveCardFrontContentProps) {
   if (sourcePermissionRequired) {
     return (
       <SourcePermissionState
@@ -141,7 +141,7 @@ function CardFrontContent({
   )
 }
 
-export function CardFront({
+export function LiveCardFront({
   source,
   items,
   itemTemplate,
@@ -157,7 +157,7 @@ export function CardFront({
   onFlip,
   actions,
   dragHandle,
-}: CardFrontProps) {
+}: LiveCardFrontProps) {
   const { provider } = source
   const { badge, desc, home, title } = source.metadata
   const icon = useSourceIcon(source)
@@ -176,9 +176,9 @@ export function CardFront({
 
   return (
     <div className="relative h-full">
-      <CardSurface />
+      <LiveCardSurface />
       <div className="relative flex h-full flex-col p-2.5">
-        <CardHeader
+        <LiveCardHeader
           badge={badge}
           desc={desc}
           home={home}
@@ -188,14 +188,14 @@ export function CardFront({
           subtitle={isFetching ? "Updating..." : <RelativeTime date={updatedAt} />}
           actions={actions ?? (
             <>
-              <CardRefreshButton isFetching={isFetching} onRefresh={onRefresh} />
+              <LiveCardRefreshButton isFetching={isFetching} onRefresh={onRefresh} />
               {onFlip && (
-                <CardHeaderActionButton
+                <LiveCardHeaderActionButton
                   onClick={onFlip}
-                  aria-label="Show card details"
+                  aria-label="Show LiveCard details"
                 >
                   <PhInfoDuotone />
-                </CardHeaderActionButton>
+                </LiveCardHeaderActionButton>
               )}
               {dragHandle}
             </>
@@ -221,7 +221,7 @@ export function CardFront({
             className="relative size-full overflow-y-auto px-2 py-2 scrollbar-hidden"
           >
             <div className={cn("min-h-full transition-opacity duration-500", isContentFetching && "opacity-20")}>
-              <CardFrontContent
+              <LiveCardFrontContent
                 icon={icon}
                 items={items}
                 itemTemplate={itemTemplate}

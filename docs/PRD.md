@@ -16,7 +16,7 @@ NewsNext is an agent-programmable board powered by stable data streams.
 Users create Boards for subjects they want to understand over time. Registered
 Sources acquire and normalize relevant information when a current view or
 Agent-owned task requires it. Each Board has two views, named Now Layer and Next
-Layer. Now Layer presents current news through one unified Card model. Next
+Layer. Now Layer presents current news through one unified LiveCard model. Next
 Layer lets personalized Widgets process any combination of the Board's data
 streams. An Agent can operate the same product through the CLI: it can discover
 Sources, configure data streams, organize Boards, analyze retained
@@ -46,7 +46,7 @@ usually limit users to predefined list views and simple filters.
 NewsNext must combine both sides:
 
 - Stable, inspectable data collection that continues after the initial request.
-- One consistent Card experience for reading current news from different
+- One consistent LiveCard experience for reading current news from different
   Sources in Now Layer.
 - Flexible, agent-created processing and Widgets that answer the user's
   evolving questions in Next Layer.
@@ -97,7 +97,7 @@ Priority describes product sequencing, not implementation status.
 
 | Priority | Scope | Outcome |
 | --- | --- | --- |
-| P0 | Preserve the unified Now Layer Card contract | Every Instance remains independently readable and operable |
+| P0 | Preserve the unified Now Layer LiveCard contract | Every Instance remains independently readable and operable |
 | P0 | Shared local database owned by the desktop runtime | CLI, App, and authorized browser extensions use one durable data model |
 | P0 | Development and production data isolation | Daily CLI testing cannot mutate production App data |
 | P0 | Durable Next Layer Widget and layout model | A Board can save personalized Widget composition |
@@ -127,8 +127,8 @@ agent-generated applications.
 Now Layer and Next Layer are two complementary views of the same Board:
 
 - Now Layer shows the news currently returned by the Board's Source Instances.
-  Each Instance keeps its data separate and is projected through its own Card
-  using the shared Card model.
+  Each Instance keeps its data separate and is projected through its own LiveCard
+  using the shared LiveCard model.
 - Next Layer processes those news items and, when relevant, their saved
   observations. One Widget can consume one, several, or all of the Board's
   Instance data streams and turn them into one personalized result.
@@ -136,12 +136,12 @@ Now Layer and Next Layer are two complementary views of the same Board:
 The Layers therefore have intentionally different product contracts:
 
 ```text
-Now Layer: unified Cards
+Now Layer: unified LiveCards
 Next Layer: personalized Widgets
 ```
 
 Source-specific metadata and item templates may vary the content shown inside a
-Card, but they must not replace the shared Now Layer Card model. Next Layer is
+LiveCard, but they must not replace the shared Now Layer LiveCard model. Next Layer is
 where presentation and processing can diverge for a particular purpose.
 Each custom Board persists whether Now or Next opens by default. Switching the
 active view never creates another Board or changes its underlying data.
@@ -149,7 +149,7 @@ active view never creates another Board or changes its underlying data.
 ### Independent in Now, composable in Next
 
 Now Layer preserves Source boundaries. It does not merge the result of one
-Instance into another Instance's Card. This keeps provenance, status, settings,
+Instance into another Instance's LiveCard. This keeps provenance, status, settings,
 and direct reading understandable.
 
 Next Layer can cross those boundaries. A Widget may correlate, validate, fuse,
@@ -342,9 +342,9 @@ Board
     |
     +-- Experience
            +-- Now Layer
-           |      +-- Instance A -> Card A
-           |      +-- Instance B -> Card B
-           |      +-- Instance C -> Card C
+           |      +-- Instance A -> LiveCard A
+           |      +-- Instance B -> LiveCard B
+           |      +-- Instance C -> LiveCard C
            |
            +-- Next Layer
                   +-- Widget inputs
@@ -366,9 +366,9 @@ The canonical concepts remain:
 | Observation | An explicitly retained Instance result at a known observation time |
 | Collection | Durable organization of Instances |
 | Board | Human presentation of a Collection through Now Layer and Next Layer |
-| Now Layer | Separate Instance results presented through a unified Card model |
+| Now Layer | Separate Instance results presented through a unified LiveCard model |
 | Next Layer | Open composition of Board data through personalized Widgets |
-| Card | Shared Now Layer model for reading and operating one Source Instance |
+| LiveCard | Shared Now Layer model for reading and operating one Source Instance |
 | Widget | Personalized result computed from one or more Board data streams |
 | Agent | CLI user that operates the same application capabilities as the UI |
 
@@ -392,7 +392,7 @@ work, request new permissions, or retain unnecessary data.
 ### Understand current information
 
 The user can browse each Instance's latest news independently in Now Layer
-through one consistent Card model. This default reading experience remains
+through one consistent LiveCard model. This default reading experience remains
 predictable without requiring an Agent-generated Widget or custom interface.
 
 ### Understand change
@@ -456,7 +456,7 @@ installation are not required Agent product capabilities.
 The Agent must be able to create, inspect, update, and organize Collections and
 their Board presentation through canonical application Actions and Queries. It
 must preserve the relationship between each Board's Now Layer and Next Layer.
-It must also preserve the unified Card contract in Now Layer while personalizing
+It must also preserve the unified LiveCard contract in Now Layer while personalizing
 Widgets in Next Layer. All operations must use stable Data identities rather
 than display labels.
 
@@ -521,7 +521,7 @@ derived results may differ by Board and user:
 Next Layer is the programmable processing layer for these and as-yet-unimagined
 Widgets. Its current mixed timeline is one built-in organization of the news,
 not the definition of the Layer. Now Layer keeps Instance results separate in
-unified Cards; Next Layer owns open-ended composition, derived processing, and
+unified LiveCards; Next Layer owns open-ended composition, derived processing, and
 personalized presentation. Both must reuse the same Board Instance results and
 must not create duplicate Source subscriptions solely for presentation.
 
@@ -563,7 +563,7 @@ must not be described to users as available until its acceptance criteria pass.
 | Shared local database | Partial | The daemon owns an embedded Turso database with dev/prod file isolation, ordered migrations, structured errors, and a serialized writer for retained History | Move remaining Board, Widget, and task state out of extension storage |
 | Instance and Collection data | Implemented in extension storage | Canonical Instances, Collections, membership, manual order, and Board view preferences | Move canonical durable state behind App/CLI Actions and Queries for cross-browser use |
 | UI and Agent control | Implemented foundation | UI and CLI use the same typed Actions and Queries and the same background persistence boundary | Database-backed Widget, task, and Source-health operations are not exposed yet |
-| Now Layer | Implemented | Each Instance is independently presented as a Card using the unified Card model | Make view-driven refresh explicit and keep current results cache-only |
+| Now Layer | Implemented | Each Instance is independently presented as a LiveCard using the unified LiveCard model | Make view-driven refresh explicit and keep current results cache-only |
 | Next Layer | Partial | One shared mixed Timeline selects every current Board Instance through an independent cache-data path | Add Agent-owned retained inputs and materialized outputs |
 | History | Implemented foundation in Turso | Explicit `run --retain` results are committed transactionally by the daemon and can be listed, read at an exact time, and compared without a connected browser | Add task-owned retention policies, scheduling, and provenance |
 | Provenance | Partial | Source and Instance identities remain stable; history comparisons preserve supported factual boundaries | Derived Widget inputs, transformations, warnings, and claims need an explicit UI contract |
@@ -634,9 +634,9 @@ The remaining product gaps are:
 
 | ID | Requirement | Acceptance criteria |
 | --- | --- | --- |
-| NOW-01 | One Instance is shown through one independent Card placement in a Board | Items from another Instance are never merged into that Card's result |
-| NOW-02 | All Sources use the shared Card model | Source metadata and item templates can vary content, but shared Card identity, status, configuration, and interactions remain available |
-| NOW-03 | Next Layer personalization does not mutate Now Layer structure | Adding, editing, moving, or deleting a Widget leaves Now Layer Card composition unchanged |
+| NOW-01 | One Instance is shown through one independent LiveCard placement in a Board | Items from another Instance are never merged into that LiveCard's result |
+| NOW-02 | All Sources use the shared LiveCard model | Source metadata and item templates can vary content, but shared LiveCard identity, status, configuration, and interactions remain available |
+| NOW-03 | Next Layer personalization does not mutate Now Layer structure | Adding, editing, moving, or deleting a Widget leaves Now Layer LiveCard composition unchanged |
 | NOW-04 | Visible Now Layer content refreshes as current data | Viewing an active Board may refresh stale Instances and replace their cache without creating observations |
 | NOW-05 | Now Layer remains cache-only | Clearing the cache removes current results but never deletes durable Board, Widget, Agent task, or retained Next Layer data |
 
@@ -649,7 +649,7 @@ The remaining product gaps are:
 | NXT-03 | A Widget can consume current results, observation ranges, and supported derived data | Each input declares its kind, dataset scope, time scope, and completeness state |
 | NXT-04 | A Widget can create an open-ended derived result | The runtime is extensible beyond the initial built-in categories without changing the Board or Now Layer data model |
 | NXT-05 | A Widget exposes provenance | The user or Agent can inspect input Instances, observation window, transformation version, warnings, and last computation time |
-| NXT-06 | A Widget isolates failures | One failed transformation or renderer exposes a local error state and does not prevent other Cards or Widgets from working |
+| NXT-06 | A Widget isolates failures | One failed transformation or renderer exposes a local error state and does not prevent other LiveCards or Widgets from working |
 | NXT-07 | Corrected or reconciled values remain derived | Widget processing never silently changes stored Source results or historical observations |
 | NXT-08 | Widgets expose useful runtime states | Empty, loading, stale, partial, failed, and ready states are distinguishable and accessible |
 | NXT-09 | Widget layout is personalized without becoming a separate Board | The layout belongs to the current Board's Next Layer and retains its underlying Collection identity |
@@ -836,14 +836,14 @@ account or network connection.
 
 - Define the durable Widget schema and its relationship to a Collection's Board
   and Next Layer.
-- Preserve Now Layer as the unified Card experience for current news.
+- Preserve Now Layer as the unified LiveCard experience for current news.
 - Treat the existing Next Layer mixed timeline as a built-in Widget.
 - Add built-in organization, comparison, change, and summary Widgets to Next
   Layer.
 - Allow a Widget to consume and derive results from any selected combination of
   Board Instances.
 - Allow each Board and user to personalize Next Layer Widget selection,
-  configuration, and layout without changing Now Layer's Card model.
+  configuration, and layout without changing Now Layer's LiveCard model.
 - Expose Widget discovery, preview, and mutation through canonical CLI
   operations.
 - Bind Widgets to declared current inputs and Agent-retained observations
@@ -899,9 +899,9 @@ The product direction is succeeding when:
   Next Layer does not rerun them.
 - A user can describe a subject and obtain a useful Board without manually
   authoring every Source or Widget.
-- Different Sources remain understandable through the unified Now Layer Card
+- Different Sources remain understandable through the unified Now Layer LiveCard
   model.
-- Each Now Layer Card continues to represent one Instance's independent result.
+- Each Now Layer LiveCard continues to represent one Instance's independent result.
 - Next Layer Widgets reflect the needs of the current Board and user rather than
   imposing one global processed view.
 - One Next Layer Widget can combine several Instance streams without losing
@@ -936,7 +936,7 @@ defines what to measure before asserting numerical improvement.
 | Provenance coverage | Share of derived Widget results with complete input, transformation, warning, and update metadata | Must reach 100% before broad release |
 | Unauthorized authority changes | New permissions, secrets, destructive writes, or executable capabilities applied without required approval | Must remain zero |
 | Duplicate presentation execution | Additional Source executions caused only by rendering Next Layer | Must remain zero |
-| Widget failure containment | Widget failures that prevent unrelated Cards or Widgets from operating | Must remain zero |
+| Widget failure containment | Widget failures that prevent unrelated LiveCards or Widgets from operating | Must remain zero |
 | Cross-browser consistency | Acknowledged durable mutations that are not visible to another connected production browser | Must remain zero |
 | Implicit Now History writes | Observation rows created only because Now Layer was viewed or refreshed | Must remain zero |
 | Environment isolation | Dev operations that create or mutate the production database, or the reverse | Must remain zero |
@@ -944,7 +944,7 @@ defines what to measure before asserting numerical improvement.
 Qualitative research should additionally test whether users understand:
 
 - The difference between Now Layer and Next Layer.
-- That a Card is one independent Instance while a Widget may combine many.
+- That a LiveCard is one independent Instance while a Widget may combine many.
 - Which parts of a Widget are observed facts versus derived interpretation.
 - Why an Agent is requesting a new Source, permission, secret, or permanent
   background task.

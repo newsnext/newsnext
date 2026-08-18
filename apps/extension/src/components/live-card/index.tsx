@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 import type { SourceInstanceMetadata, SourceInstancePatch } from "@/lib/source"
-import type { CardViewModel } from "@/typings/source"
+import type { LiveCardViewModel } from "@/typings/source"
 import { FlipAnimate } from "@newsnext/ui/components/flip-animate"
 import { useScrollProgressActionsContext } from "@newsnext/ui/components/scroll-progress-context"
 import { useSetAtom } from "jotai"
@@ -15,12 +15,12 @@ import {
   resetInstanceParamsAtom,
   setSourceInstancePatchAtom,
 } from "@/store/board"
-import { CardBack } from "./card-back"
-import { CardFront } from "./card-front"
+import { LiveCardBack } from "./card-back"
+import { LiveCardFront } from "./card-front"
 
-export interface SourceCardProps {
+export interface LiveCardProps {
   id: string
-  source: CardViewModel
+  source: LiveCardViewModel
   className?: string
   sizeClassName?: string
   nodeRef?: (node: HTMLElement | null) => void
@@ -29,7 +29,7 @@ export interface SourceCardProps {
   onDraftSourceChange?: (patch: SourceInstancePatch) => void
 }
 
-function SourceCardContent({ id, source, dragHandle, isDraft = false, onDraftSourceChange }: SourceCardProps) {
+function LiveCardContent({ id, source, dragHandle, isDraft = false, onDraftSourceChange }: LiveCardProps) {
   const setSourceInstancePatch = useSetAtom(setSourceInstancePatchAtom)
   const resetLocalParams = useSetAtom(resetInstanceParamsAtom)
   const [isFlipped, setIsFlipped] = useState(false)
@@ -107,7 +107,7 @@ function SourceCardContent({ id, source, dragHandle, isDraft = false, onDraftSou
       flipped={isFlipped}
       className={displaySource.provider.color}
     >
-      <CardFront
+      <LiveCardFront
         source={displaySource}
         items={items}
         itemTemplate={itemTemplate}
@@ -123,7 +123,7 @@ function SourceCardContent({ id, source, dragHandle, isDraft = false, onDraftSou
         onFlip={handleFlip}
         dragHandle={isFlipped ? undefined : dragHandle}
       />
-      <CardBack
+      <LiveCardBack
         id={id}
         source={displaySource}
         draftSourceParams={draftParams}
@@ -143,7 +143,7 @@ function SourceCardContent({ id, source, dragHandle, isDraft = false, onDraftSou
   )
 }
 
-export function SourceCard(props: SourceCardProps): React.JSX.Element {
+export function LiveCard(props: LiveCardProps): React.JSX.Element {
   const { nodeRef } = props
   const { rootScrollContainerRef } = useScrollProgressActionsContext()
   const ref = useRef<HTMLDivElement>(null)
@@ -168,7 +168,7 @@ export function SourceCard(props: SourceCardProps): React.JSX.Element {
       )}
     >
       {isInView && (
-        <SourceCardContent {...props} />
+        <LiveCardContent {...props} />
       )}
     </div>
   )

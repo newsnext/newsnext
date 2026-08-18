@@ -69,7 +69,7 @@ bun --filter=@newsnext/registry run build
 
 A provider has `title`, `color`, optional `icon` and `category`, `defaults`, and
 `sources`. `title`, `icon`, `color`, and `category` describe the provider and
-cannot be set or overridden by individual sources, Radar rules, or card
+cannot be set or overridden by individual sources, Radar rules, or LiveCard
 instances. Every source descriptor receives the provider's `icon` and `color`.
 
 `defaults` may contain `baseUrl`, `cache`, `capabilities`, `loader`, `metadata`,
@@ -311,7 +311,7 @@ Use a separate source when one variant needs additional parameters that do not
 apply to the others, such as a ranked feed with its own time window.
 Do not expose a variant parameter when the source intentionally promises one
 fixed feed semantic, such as latest posts. Keep that request value in the
-loader so every card follows the source contract.
+loader so every LiveCard follows the source contract.
 
 ## Liquid templates
 
@@ -685,9 +685,9 @@ A loader always returns a `SourceLoaderResult` object:
 Dynamic loader metadata always supports the complete source metadata shape:
 `title`, `badge`, `desc`, and `home`. It is cached with the items and has the
 highest display priority, overriding static metadata and persisted Radar or
-card-instance patches field by field. It is unavailable until the first
-successful request and is never persisted into the card instance. A loader
-title may provide the effective title for a card created through Radar.
+Instance metadata patches field by field. It is unavailable until the first
+successful request and is never persisted into the Instance. A loader
+title may provide the effective title for a LiveCard created through Radar.
 
 When authoring a source, prefer loader metadata when a request already required
 to load the items returns the authoritative metadata. Loader metadata must
@@ -755,7 +755,7 @@ strings.
 
 For an aggregate source that mixes entries from multiple feeds, use each
 feed's own image as the item `icon` with `kind: "source"` and a feed-title
-label. Omit that repeated item icon from a single-feed source when the card
+label. Omit that repeated item icon from a single-feed source when the LiveCard
 badge already establishes the same identity.
 
 Presentation belongs to the loader result, not each item. `itemTemplate.inline`
@@ -765,7 +765,7 @@ renders shared `stats` separately as icon-and-count pairs, so do not include
 stats in this template. When the template is absent, the frontend composes a
 readable fallback from author and attributes. Templates are cached
 with the source result but are not item facts and therefore are not stored in
-item history. Do not repeat context already established by the source instance:
+item history. Do not repeat context already established by the Instance:
 for example, a topic-specific source should retain the topic in each item's
 semantic `attributes`, but omit it from that source's inline template. Likewise,
 when `icon.kind` is `author`, omit the author's name from inline presentation;
@@ -811,8 +811,8 @@ cache: {
 
 Automatic loads, remounts, and background revalidation may reuse a fresh stored
 result according to this cache policy. Explicit user refresh actions use Fetch
-Latest, both for an individual card and for every enabled card on the current
-board. Fetch Latest ignores the source-defined cache duration. Independently, a
+Latest, both for one LiveCard and for every enabled LiveCard on the current board.
+Fetch Latest ignores the source-defined cache duration. Independently, a
 one-minute frequency guard protects remote sources from repeated requests; this
 guard is transparent to the user-triggered query flow and is not part of the
 source cache policy. The refresh indicator remains visible briefly when this
@@ -846,7 +846,7 @@ and cookie capability they use; loaders that use neither may omit
 
 The built-in `rss:feed` source is also permission-specialized. Although its
 runtime network capability is `*` so it can validate a user-selected feed, the
-extension requests host access only for the hostname in the card's effective
+extension requests host access only for the hostname in the LiveCard's effective
 `url` parameter. Changing that parameter recalculates the required origin. Keep
 this source-ID mapping aligned with the extension permission resolver when
 adding another bundled source that targets a user-selected host.
@@ -909,7 +909,7 @@ Do not declare cookie secrets merely to authenticate a request; cookie secrets
 are for reading a specific value that the loader must inspect.
 
 The client behind `context.fetch` serializes requests per hostname and spaces
-their start times to avoid bursts when multiple card instances target the same
+their start times to avoid bursts when multiple Instances target the same
 service. Custom loaders must not import `sessionFetch` or use the global
 `fetch`; the context client keeps request policy and cancellation attached to
 the current source execution. Requests to different hostnames may run in
@@ -954,13 +954,12 @@ radar: [{
 }]
 ```
 
-Each Radar suggestion previews one card. When the user creates it, they select
-a destination board and the resolved parameter and presentation patches are
-persisted as a new local card instance. Radar is the card-creation entry point;
-it does not modify an existing card. A card can be moved to another board later
-without changing its source configuration. All is an aggregate view that always
-shows every card and is not itself a card destination. Selecting `No board`
-leaves the card out of custom boards.
+Each Radar suggestion previews one LiveCard. Creating it persists a new Instance
+with the resolved parameter and presentation patches, plus Collection membership
+when the user selects a destination board. Radar does not modify an existing
+LiveCard. Moving a LiveCard later changes only its Collection membership. All is
+an aggregate view, not a destination. Selecting `No board` leaves the Instance
+out of custom Collections while keeping it visible in All.
 
 Match rules:
 
@@ -985,7 +984,7 @@ values fall back to parameter defaults; invalid values discard the suggestion.
 
 `patch.metadata.title` is optional, including for parameterized sources. Omit it
 when the item request already returns the authoritative title through loader
-metadata. Before the first successful load, or when loading fails, the card
+metadata. Before the first successful load, or when loading fails, the LiveCard
 falls back to the static source title and then the provider title. Add a Radar
 title only when the discovered page provides a better preview or fallback.
 
@@ -1169,7 +1168,7 @@ newsnext query execute collection.list
 newsnext query execute view.getContext
 newsnext query execute view.getCollection --input \
   '{"collectionId":"COLLECTION_ID"}'
-newsnext query execute view.getVisibleCards
+newsnext query execute view.getVisibleLiveCards
 newsnext action execute collection.create --input \
   '{"name":"Research","view":{"color":"blue","sortMode":"createdAt"}}'
 newsnext action execute collection.update --input \

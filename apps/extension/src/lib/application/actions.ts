@@ -1,10 +1,10 @@
 import type { Color } from "@newsnext/shared/types"
 import type { BoardSortMode, BoardViewMode } from "../board"
 import type { CollectionView } from "../collection"
-import type { SourceInstancePatch } from "../source/cards"
+import type { SourceInstancePatch } from "../source/live-cards"
 import type { ApplicationData } from "./data"
 import { createCollectionView } from "../collection"
-import { mergeSourceInstancePatch } from "../source/cards"
+import { mergeSourceInstancePatch } from "../source/live-cards"
 
 export interface CollectionViewConfiguration {
   color?: Color

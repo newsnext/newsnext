@@ -31,7 +31,7 @@ const DATA_SLICE_OPTIONS: Array<{
   {
     id: "boards",
     label: "Boards",
-    description: "Collections, Board preferences, memberships, and card order.",
+    description: "Collections, board preferences, memberships, and LiveCard order.",
   },
   {
     id: "instances",

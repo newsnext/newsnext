@@ -1,5 +1,5 @@
 import type { RuntimeSource } from "@newsnext/source/types"
-import type { SourceInstance } from "./cards"
+import type { SourceInstance } from "./live-cards"
 import type { SourceQueryTarget } from "./query-target"
 import { createSourceQueryTarget } from "./query-target"
 

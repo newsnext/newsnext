@@ -134,8 +134,8 @@ export function BoardNav() {
     }
   }
 
-  async function handleDelete(boardId: string, deleteCards: boolean): Promise<void> {
-    await deleteBoard({ boardId, deleteCards })
+  async function handleDelete(boardId: string, deleteLiveCards: boolean): Promise<void> {
+    await deleteBoard({ boardId, deleteLiveCards })
     openBoard(ALL_BOARD_ID)
   }
 

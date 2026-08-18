@@ -7,8 +7,8 @@ reusable design rule.
 
 ## Visual Direction
 
-NewsNext should feel like a collection of live, tactile information cards rather
-than a conventional dashboard. Reuse the card visual language across related
+NewsNext should feel like a collection of live, tactile LiveCards rather
+than a conventional dashboard. Reuse the LiveCard visual language across related
 surfaces so dialogs and controls feel native to the board instead of looking
 like generic overlays.
 
@@ -22,7 +22,7 @@ CLI and agent access, and desktop integration.
 
 Use the public landing page as the expressive side of the NewsNext identity,
 not as a simulation of the product UI. Until real product imagery is ready,
-avoid mock browser windows, desktop windows, Cards, menus, and terminal output.
+avoid mock browser windows, desktop windows, LiveCards, menus, and terminal output.
 Build the story from large typography and a continuous "thread" motif using the
 brand red and cream plus the product's blue, purple, green, and amber theme
 families. Treat those secondary colors as distinct live signals that converge
@@ -45,7 +45,7 @@ motion as one restrained entry sequence and respect reduced-motion preferences.
   deeper `bg-black/10` treatment in dark mode.
 - Build depth with layered translucent surfaces instead of opaque panels and
   heavy borders.
-- Do not add static hairline rings to card surfaces, modal shells, or nested
+- Do not add static hairline rings to LiveCard surfaces, modal shells, or nested
   modal surfaces; their color and layered backgrounds provide the boundary.
 - Do not render dedicated close buttons on modal or popup surfaces. Preserve
   Escape and backdrop dismissal for non-blocking dialogs, and keep explicit
@@ -55,8 +55,8 @@ motion as one restrained entry sequence and respect reduced-motion preferences.
 - Keep supporting decoration quiet. Controls and content should remain the
   visual focus.
 - Use Phosphor Bold icons throughout the interface so compact controls remain
-  legible. Preserve Phosphor Duotone icons in card header actions, where their
-  softer treatment belongs to the established card language.
+  legible. Preserve Phosphor Duotone icons in LiveCard header actions, where their
+  softer treatment belongs to the established LiveCard language.
 - Reuse existing component treatments and tokens before introducing another
   surface style.
 - Keep 24px of breathing room at both the top and bottom of the main app page.
@@ -125,7 +125,7 @@ in a fixed, non-interactive React layer portaled to `body`, above the grid
 texture but below app content. Pass its mask, bounds, color, opacity, and
 transform through typed inline style rather than global CSS custom properties.
 Use a user-adjustable opacity
-from 1% to 20%, defaulting to 7%; cards and controls must remain visually
+from 1% to 20%, defaulting to 7%; LiveCards and controls must remain visually
 dominant. Use a fixed 1% grid-line opacity across themes and surfaces, regardless
 of whether illustration is active or which illustration opacity is selected. Allow the two
 transparent layers to blend naturally without adding a backing color beneath
@@ -139,15 +139,15 @@ bounds with a small safety margin. The illustration's intrinsic size and transfo
 target must therefore follow the visible strokes rather than the source image
 canvas.
 
-## Card Surface Language
+## LiveCard Surface Language
 
-Cards define the primary NewsNext surface treatment.
+LiveCards define the primary NewsNext surface treatment.
 
 - The outer `3xl` squircle mixes `var(--background)` with the relevant theme
   color at 55%.
 - The content panel uses a nested `2xl` squircle with `bg-background/70` and the
   matching `zenith-theme-400` treatment.
-- Scope the provider's existing color class at the card boundary, then consume
+- Scope the provider's existing color class at the LiveCard boundary, then consume
   its inherited `--color-theme-*` properties through static `theme-*` Tailwind
   utilities instead of constructing palette class names at runtime.
 - Keep Tailwind shades 100–900 available through provider-scoped `theme-*`
@@ -155,43 +155,43 @@ Cards define the primary NewsNext surface treatment.
   contract.
 - Use the semantic `primary` color for the current app-level accent instead of
   writing `theme-500` directly. Reserve explicit `theme-*` shades for locally
-  scoped palettes, such as provider-colored cards, theme choices, and tonal
+  scoped palettes, such as provider-colored LiveCards, theme choices, and tonal
   gradients.
 - Keep standard `Card` and `Alert` surfaces on the shared semantic `background`
-  and `foreground` colors. Do not introduce a separate card color pair; create
+  and `foreground` colors. Do not introduce a separate LiveCard color pair; create
   hierarchy with the established translucent or theme-mixed surface treatments.
 - Build semantic surface colors from Tailwind palette variables when an exact
   palette value exists; avoid duplicating those colors as raw OKLCH or hex
   literals.
-- Keep the standard `muted` surface aligned with the cards' translucent
-  `neutral-400/10` treatment. Use explicit Tailwind shades only where a card
+- Keep the standard `muted` surface aligned with the LiveCards' translucent
+  `neutral-400/10` treatment. Use explicit Tailwind shades only where a LiveCard
   state cannot preserve its established light and dark colors through an
   existing semantic token.
 - Keep the selectable theme palette intentionally distinct: red, pink, fuchsia,
   purple, indigo, blue, cyan, teal, green, amber, orange, and slate.
-- Use `10px` (`p-2.5`) between the outer shell and nested content where the card
+- Use `10px` (`p-2.5`) between the outer shell and nested content where the LiveCard
   shell must remain visible.
-- Let users choose a desktop source-card height in Appearance settings:
+- Let users choose a desktop LiveCard height in Appearance settings:
   `Compact` (`480px`), `Balanced` (`500px`), or `Tall` (`576px`). Default to
   `Balanced`. Allow specialized responsive surfaces such as Radar to provide
-  their own card dimensions.
-- Present card-height choices with equal-width silhouettes rendered at their
+  their own LiveCard dimensions.
+- Present LiveCard height choices with equal-width silhouettes rendered at their
   actual heights. Order them from compact to tall, with the default balanced
   height in the middle. Keep option backgrounds transparent and confine the
   selected theme accent to the silhouette outline and shape label.
 - Place identity and surface actions in the exposed outer shell. Place editable
   fields and primary content in the quieter inner panel.
-- Keep compact card action icons content-sized and background-free. Use the
-  shared `CardHeaderActionButton`; hover may raise icon opacity but must not add
+- Keep compact LiveCard action icons content-sized and background-free. Use the
+  shared `LiveCardHeaderActionButton`; hover may raise icon opacity but must not add
   a filled hover surface or enlarge the action target spacing.
-- Fade and pulse card content during an explicit latest-data refresh, or while
+- Fade and pulse LiveCard content during an explicit latest-data refresh, or while
   an automatic query is fetching without current or placeholder data. Keep
   renderable previous data visually stable during automatic background refreshes.
 - Keep explicit refresh feedback visible for at least 500ms, including when the
   one-minute request guard reuses the preceding result immediately.
 - The default Button uses the app-level primary theme. Set its `tone` to
-  `theme` for both filled and outline actions inside provider-colored cards so
-  their highlight follows the card's scoped `theme-*` palette. Do not encode
+  `theme` for both filled and outline actions inside provider-colored LiveCards so
+  their highlight follows the LiveCard's scoped `theme-*` palette. Do not encode
   color context into new compound variant names. Keep theme outline actions
   transparent at rest and reveal their tinted surface on hover or focus so
   secondary actions do not compete with the filled primary action.
@@ -210,18 +210,18 @@ Cards define the primary NewsNext surface treatment.
   remain stable. The All board permits theme color changes here while keeping its
   other behavior fixed.
 
-The reference implementation is `CardSurface` in
-`apps/extension/src/components/card/card-surface.tsx`.
+The reference implementation is `LiveCardSurface` in
+`apps/extension/src/components/live-card/card-surface.tsx`.
 
 ### Next Layer mixed timeline
 
-Next Layer recomposes the current board's card items into one continuous feed.
-It is a reading view of the same source data, not another board or a second card
+Next Layer recomposes the current board's LiveCard items into one continuous feed.
+It is a reading view of the same source data, not another board or a second LiveCard
 design. Do not expose Next Layer on the All board; it is available only for
 configurable boards. Combine all source items into a newest-first timeline. Use
 `publishedAt`, falling back to `updatedAt`, and use the source update time when
-an item has neither, matching the existing card timeline semantics. Break equal
-times by original rank and then card order so tied items remain predictably
+an item has neither, matching the existing LiveCard timeline semantics. Break equal
+times by original rank and then LiveCard order so tied items remain predictably
 mixed. Keep source identity and effective timeline
 placement legible through the grouped time labels, but do not display ranking
 numbers in the mixed timeline.
@@ -231,8 +231,8 @@ target and provide an equivalent visible keyboard-focus state. Do not place a
 smaller link inside a larger hover-only container.
 
 Render the mixed feed as a visible timeline, using the shared waveform rail and
-grouped relative-time labels from card timelines. Let each rail segment inherit
-its source color so source changes are legible without creating separate card
+grouped relative-time labels from LiveCard timelines. Let each rail segment inherit
+its source color so source changes are legible without creating separate LiveCard
 surfaces. The timeline rail and time groups own the sequence; avoid adding a
 second visible order indicator inside the item row.
 
@@ -260,11 +260,11 @@ pixel-analysis work across avatar-heavy feeds.
 Time-group labels remain outside the measured content row.
 
 Reveal Next Layer with one brief, slightly delayed opacity fade so it follows
-the card scatter without competing with it. Do not scale or blur the full
+the LiveCard scatter without competing with it. Do not scale or blur the full
 timeline during this transition.
 
-Treat the entire Next Layer page as the expanded card. Do not add another card
-shell, nested content squircle, panel shadow, or per-item card inside it. Place
+Treat the entire Next Layer page as the expanded LiveCard. Do not add another LiveCard
+shell, nested content squircle, panel shadow, or per-item LiveCard inside it. Place
 the compact Timeline title and source/item counts directly in the page flow,
 then continue into the timeline without a surface boundary. Provider theme
 colors stay local to the timeline rail, source identity, and hover state while
@@ -300,20 +300,20 @@ Previous and next board commands wrap across the ordered board list. Keep their
 default arrow bindings active from the page and focused board tabs, while
 preserving directional-key behavior inside other interactive controls.
 
-### Card reordering
+### LiveCard reordering
 
 - Keep the All board in its fixed newest-first order and omit drag handles there;
   reordering is a configurable-board interaction.
 - Keep the drag handle visible and give it an accessible name that identifies
-  the card being moved.
-- Reorder cards according to the closest edge of the card under the pointer so
-  the preview distinguishes insertion before and after a card.
+  the LiveCard being moved.
+- Reorder LiveCards according to the closest edge of the LiveCard under the pointer so
+  the preview distinguishes insertion before and after a LiveCard.
 - Preserve the original order when a drag is cancelled or ends outside the
   board. Gaps inside the board may retain the most recent valid placement.
-- Keep the source card in the layout while dragging and reduce its opacity so
+- Keep the LiveCard in the layout while dragging and reduce its opacity so
   the original position remains understandable.
 - Keep the drag preview inside the source provider's theme-color scope. Native
-  drag previews are mounted outside the card tree, so inherited theme tokens
+  drag previews are mounted outside the LiveCard tree, so inherited theme tokens
   used by cloned content must be copied to the preview container.
 
 ## Dialog Patterns
@@ -366,12 +366,12 @@ cancel the armed state.
 
 ### Single-column dialogs
 
-Single-column dialogs related to boards should use the card surface language.
+Single-column dialogs related to boards should use the LiveCard surface language.
 They must have:
 
 - A theme-colored outer `3xl` squircle using the Settings dialog color ratio:
   60% `var(--background)` and 40% `var(--color-theme-400)`. Its structure follows
-  cards, but its restrained color balance follows Settings.
+  LiveCards, but its restrained color balance follows Settings.
 - `10px` (`p-2.5`) of outer padding on every side, leaving a visible theme-colored
   shell around the nested content.
 - A compact top shell area containing the dialog title for task-oriented forms.
@@ -395,18 +395,18 @@ They must have:
   form labels already make the task clear.
 
 The unified Board dialog is the canonical example. Create and edit modes use
-the same name, theme color, card order, and default view fields;
+the same name, theme color, LiveCard order, and default view fields;
 only edit mode exposes board deletion, while the title and primary action
 reflect the current mode. Default view uses a compact segmented `Now` / `Next`
 control and determines which Board view opens by default. In particular, do not
 add the following descriptions back to this dialog:
 
-- `Personalize this board and choose how its cards are arranged.`
-- `Group cards around a topic, project, or reading routine.`
+- `Personalize this board and choose how its LiveCards are arranged.`
+- `Group LiveCards around a topic, project, or reading routine.`
 
-### Card Collection membership
+### LiveCard Collection membership
 
-The Card back edits Collection membership with a checkbox menu, not a
+The LiveCard back edits Collection membership with a checkbox menu, not a
 single-choice Board select. An Instance may belong to zero, one, or several
 Collections. The compact trigger shows `No boards`, the sole Board name, or the
 membership count; the menu lists every custom Board with independent checked
@@ -431,7 +431,7 @@ with a clearly visible themed range and a 14px thumb filled with a light theme
 shade; the track and thumb must remain legible against nested tinted surfaces.
 Use 32px buttons for ordinary settings
 actions, keep adjacent actions the same height and text size, and use `ghost`
-rather than the icon-oriented card action composition for text-only tertiary actions.
+rather than the icon-oriented LiveCard action composition for text-only tertiary actions.
 Keep destructive removal actions inside the same button group and use the
 `destructive` treatment instead of presenting them as detached text. Theme-
 colored buttons use white text in both light and dark modes.
@@ -444,7 +444,7 @@ both retain the shared 8px title-to-content rhythm. Choose its semantic variant
 for a section heading, a single labeled control, or a grouped control. These
 variants share the same title weight, horizontal inset, description placement,
 and spacing; only their HTML semantics differ. Its standard surface defaults to
-the subtle `2xl` Card background and compact `10px` content inset used by
+the subtle `2xl` LiveCard background and compact `10px` content inset used by
 Settings controls. Disable it only for nested fields or specialized list and
 preview layouts that already provide their own surface.
 Reset the shared settings content scroller to the top when the active tab
@@ -452,7 +452,7 @@ changes; do not remount tab content or discard unsaved control state to do so.
 
 ### Search dialog
 
-The Search dialog is a compact, single-column card locator. Do not show a
+The Search dialog is a compact, single-column LiveCard locator. Do not show a
 visible title or header; open directly into the search field and results inside
 one nested `2xl` neutral squircle. Retain a screen-reader-only title and
 description for dialog semantics. Keep the saved Search binding plus navigation,
@@ -460,13 +460,13 @@ open, and close keyboard hints in one quiet footer below and outside the nested
 result surface instead of repeating the action inside the selected row. Hide
 the Search hint when its binding is cleared. Render shortcuts as soft filled
 keycaps without borders, shadows, or separators. Group results by board in the
-saved board order, omit empty groups, and place unassigned or orphaned cards in
-a final `No board` group. Within each group, show the card title and provider;
+saved board order, omit empty groups, and place unassigned or orphaned LiveCards in
+a final `No board` group. Within each group, show the LiveCard title and provider;
 the group heading supplies the board context without repeating it on every row.
 Use `12px` horizontal and `10px` vertical padding for search result rows so the
 single-line identity remains compact without feeling cramped. Keep the title
 and provider on one row; truncate the title first and omit the provider label
-when it duplicates the resolved card title.
+when it duplicates the resolved LiveCard title.
 
 Treat the Search input as the top row of the nested content panel, not as a
 separate pill-shaped control. It has no independent radius or filled surface;
@@ -475,17 +475,17 @@ ring. The input remains auto-focused and keeps a visible search icon.
 
 The modal shell inherits the current board theme and must remain stable while
 selection changes. Use the selected result's provider color only for its active
-row treatment. This keeps card identity local to the result instead of allowing
+row treatment. This keeps LiveCard identity local to the result instead of allowing
 it to recolor the whole dialog. Apply that selected background directly from
 the provider color token; result rows must not carry provider `zenith-*` theme
 classes. Keep dividers and selection treatments quiet.
 Selected result color must update immediately without a color transition so
 keyboard navigation never feels behind the current selection.
-Activating a result closes the dialog, opens the card's assigned board, and
-scrolls the real card into view. Cards in the final `No board` group open on the
-All board. Do not embed a live card preview in Search: a full card turns the
+Activating a result closes the dialog, opens the LiveCard's assigned board, and
+scrolls the real LiveCard into view. LiveCards in the final `No board` group open on the
+All board. Do not embed a LiveCard preview in Search: a full LiveCard turns the
 locator into a second board, duplicates surface insets, and delays useful
-results while card content loads. Do not add decorative illustration or generic
+results while LiveCard content loads. Do not add decorative illustration or generic
 helper copy.
 
 ## Copy
@@ -501,8 +501,8 @@ helper copy.
 
 Organize Cosmos as a component catalog with three clear levels: `Basics` for
 reusable UI primitives, `Patterns` for NewsNext-specific compositions, and
-`Cards` for complete source-card states. Business dialogs and full source
-cards must not appear in Basics when only one of their underlying controls is
+`LiveCards` for complete LiveCard states. Business dialogs and full LiveCards
+must not appear in Basics when only one of their underlying controls is
 being documented.
 
 Use the shared Cosmos specimen layout for Basics pages: a category label,
@@ -525,14 +525,14 @@ Give Buttons and Badges separate Basics fixtures. The Buttons reference covers
 every public variant and size once, then demonstrates supported states, icon
 placement, provider theme tone, and render-prop composition without expanding
 them into a redundant matrix of every possible combination. Keep the actual
-card button families together in a provider-scoped specimen: header icon
+LiveCard button families together in a provider-scoped specimen: header icon
 controls, compact edit actions, parameter choices, and source-state actions.
-Show those controls without moving a complete source card into Basics. Preserve
+Show those controls without moving a complete LiveCard into Basics. Preserve
 their intrinsic content width in the catalog and cap them at the specimen width;
 grid-based fixture containers must not stretch buttons into full-width actions.
 
 Keep shared Button variants limited to reusable visual hierarchy. Contextual
-treatments are compositions: card header icons use `CardHeaderActionButton`,
+treatments are compositions: LiveCard header icons use `LiveCardHeaderActionButton`,
 and top-level translucent controls apply `island-pill` to a transparent Button.
 Do not add `quiet`, `island`, or other business-context names back to the shared
 variant API.
@@ -622,7 +622,7 @@ so the menu does not reorder as connections report status.
 
 When changing interface styling:
 
-1. Check whether an existing card, dialog, control, or surface already provides
+1. Check whether an existing LiveCard, dialog, control, or surface already provides
    the intended treatment.
 2. Keep theme variables and shared Tailwind utilities intact instead of using
    isolated literal colors.

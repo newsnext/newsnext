@@ -27,7 +27,7 @@ apps/extension/src/lib/
 ├── board/       board models, sorting, and mixed timelines
 ├── radar/       page discovery, matching, and suggestion conversion
 ├── settings/    persisted user data, preferences, and settings helpers
-└── source/      source cards, loading, caching, permissions, and history
+└── source/      LiveCards, loading, caching, permissions, and history
 ```
 
 App code imports these directory entry points. Modules inside a responsibility
@@ -153,15 +153,15 @@ source queries, and revokes user-granted optional browser and host permissions.
 Required development permissions remain controlled by the extension manifest
 and cannot be removed at runtime.
 
-This prevents a source, Radar rule, or card instance from changing the identity
-and visual treatment shared by its provider.
+This prevents a source definition, Radar rule, or Instance patch from changing
+the identity and visual treatment shared by its provider.
 
 Provider category is a static registry attribute. Provider expansion copies it
 into every flattened source descriptor, and registry parsing validates it
 against the shared `CategoryId` taxonomy. Runtime resolution does not infer a
 category from source content, parameters, URLs, or loader behavior. An omitted
 category remains absent. Source metadata, Radar patches, loader metadata, and
-persisted card-instance patches cannot add or replace it. See the
+persisted Instance patches cannot add or replace it. See the
 [provider category taxonomy](SOURCE_GUIDELINE.md#provider-category-taxonomy) for
 authoring and matching rules.
 
@@ -192,11 +192,11 @@ segment. Public descriptors receive an `id` only when the keyed runtime record
 is converted for clients.
 
 The extension page memoizes its descriptor-list request for the lifetime of the
-page. Card loads therefore reuse the same descriptors instead of listing,
+page. LiveCard loads therefore reuse the same descriptors instead of listing,
 serializing, and sorting the complete registry for every request. A failed
 descriptor request clears the memoized promise so a later request can retry.
 The app's board route also primes the descriptor query with
-`ensureQueryData` before rendering cards. Descriptor query options are shared
+`ensureQueryData` before rendering LiveCards. Descriptor query options are shared
 between the route and React consumers and run independently of network status.
 The underlying descriptor-list request remains memoized for the page lifetime
 because the bundled registry cannot change without an extension reload.
@@ -242,14 +242,14 @@ source ID and raw parameters
         ├─ validate the result, every NewsItem, item template, and response metadata
         ├─ reject an empty or malformed item result
         ├─ cache items, the item template, and dynamic source presentation metadata
-        └─ infer the card presentation from effective item times and order in the UI
+        └─ infer the LiveCard presentation from effective item times and order in the UI
 ```
 
 In-flight loads are deduplicated by TanStack Query using a key containing the
 source ID and normalized parameters. Source query keys and complete options are
 created together so React observers, imperative Fetch Latest calls, and future
 prefetch consumers share the same identity and lifecycle policy. Both
-individual-card and board-wide user refreshes execute enabled TanStack queries
+individual LiveCard and board-wide user refreshes execute enabled TanStack queries
 that fetch the latest source data; disabled and unmounted queries are not
 fetched implicitly. Fetch Latest ignores normal source-cache freshness, but a
 separate one-minute frequency guard prevents repeated remote loads. A protected
@@ -266,7 +266,7 @@ interval are centralized in
 `apps/extension/src/lib/source/query-policy.ts`.
 
 The app also reads the last persisted result as presentation-only placeholder
-data when a card mounts. This survives an app close and reopen
+data when a LiveCard mounts. This survives an app close and reopen
 and may use an expired entry while a fresh request is pending. The loader reads
 each cache entry once and injects stale data into the active query before
 continuing the request. Placeholder data does not satisfy the request, extend
@@ -372,7 +372,7 @@ payload.
 The Application Data mirror never initializes or normalizes browser storage
 from a frontend page; the background runtime is the only persistent writer.
 `view.getContext` resolves the current Board to its Collection identity, while
-`view.getVisibleCards` returns the Cards logically displayed by that Board with
+`view.getVisibleLiveCards` returns the LiveCards logically displayed by that Board with
 their Instance and membership identities.
 
 Requests travel through the same per-user local IPC connection as source authoring
@@ -393,15 +393,15 @@ filesystem-backed socket endpoint, and exits the detached process. Startup also
 reclaims a stale filesystem socket left by an ungraceful previous exit, but it
 does not replace a non-socket file at that path.
 
-Card queries mount when their container enters the preload margin of the app's
+LiveCard queries mount when their container enters the preload margin of the app's
 root scroll container. The observer must use that scrolling element as its root;
-using the browser viewport lets the overflow container clip cards before the
+using the browser viewport lets the overflow container clip LiveCards before the
 viewport root margin is applied and effectively disables preloading. After a
-card leaves that margin, its query remains active for one minute to avoid churn
+LiveCard leaves that margin, its query remains active for one minute to avoid churn
 during short scrolls, then unmounts. Re-entering during that interval cancels
 the pending unmount. Successful query data remains fresh in memory for one
 minute; this avoids redundant loader and persistent-cache reads without changing
-the source-defined persistent cache duration. Active card queries also revalidate
+the source-defined persistent cache duration. Active LiveCard queries also revalidate
 once every five minutes, including while the app is in the background.
 Inactive query data follows TanStack Query's default garbage-collection policy
 and can still be restored from the persistent cache. Source queries use
@@ -450,14 +450,14 @@ Materialized Widgets instead display a persisted result produced by an
 Agent-owned asynchronous task. That task may refresh selected Sources, consume
 cache and History inputs, process them, and save a provenance-bearing result.
 Opening Next Layer must not repeat Agent-owned refresh or processing, mount
-offscreen Cards, or start Source execution solely to populate the presentation.
+offscreen LiveCards, or start Source execution solely to populate the presentation.
 
 Loader metadata is response-scoped and remains part of the cached load result.
 It uses the complete source presentation metadata shape: title, badge,
 description, and home URL. While displayed, it has the highest field-level
-priority over static metadata and persisted Radar or card-instance patches,
-without persisting response-derived values into the saved source instance.
-Before the first successful load, the card continues to use static or instance
+priority over static metadata and persisted Radar or Instance patches, without
+persisting response-derived values into the saved Instance. Before the first
+successful load, the LiveCard continues to use static or Instance
 metadata and ultimately the provider title. Radar title patches are optional,
 including for parameterized sources; a successful loader result may provide the
 effective title without changing discovery-time configuration.
@@ -473,7 +473,7 @@ RuntimeSource.metadata
 
 Each step performs a field-level merge, with later values taking precedence.
 
-Every presentation surface must use this same merge boundary. Cards apply
+Every presentation surface must use this same merge boundary. LiveCards apply
 loader metadata directly from their active source query. Search subscribes to
 the same normalized source query keys with disabled observers, so an existing
 loader result can update searchable titles and result labels without starting
@@ -481,7 +481,7 @@ loads merely because the Search dialog opened. When an in-memory query has no
 data, Search may hydrate it from the matching persistent source-cache entry.
 That hydration preserves the result's original `updatedAt` as the TanStack query
 update time, so stale presentation data cannot become artificially fresh or
-suppress normal card revalidation. Until a loader has published and cached its
+suppress normal LiveCard revalidation. Until a loader has published and cached its
 first successful result, Search follows the normal static, instance, and
 provider-title fallback behavior.
 
@@ -490,7 +490,7 @@ loaders must not issue profile, community, channel, batch, or other companion
 requests only to enrich metadata. If the required item requests do not expose a
 field, authoring falls back to static or page-derived Radar metadata instead.
 
-The background and source runtime do not send a declared card type. They
+The background and source runtime do not send a declared LiveCard type. They
 preserve loader output order, including through caching and transport. JSON and
 HTML loaders may first apply their shared optional `sortByTimestamp` step after
 field normalization; it orders items by `publishedAt`, falling back to
@@ -566,12 +566,12 @@ the result reaches a client or cache.
 `NewsItem` stores semantic facts: publication and update times, author,
 well-known stats, source-specific scalar attributes, semantic pictures, and
 content. The result-level `itemTemplate.inline` composes those facts for the
-compact card row and may access only `scope.item`, but shared stats are excluded
+compact LiveCard row and may access only `scope.item`, but shared stats are excluded
 because the frontend renders them consistently as icon-and-count pairs. It
 travels with cached and transported loader results, while history snapshots continue to store only the
 items so presentation changes do not become historical fact changes. The UI
 uses a deterministic author/attribute fallback when no template exists.
-Source-specific templates omit facts already conveyed by the source instance,
+Source-specific templates omit facts already conveyed by the Instance,
 while those facts remain on the item for history and analysis.
 The default inline composer also omits the author name when an
 `icon.kind: "author"` picture is present. Explicit source templates follow the
@@ -580,7 +580,7 @@ Semantic pictures carry only `src`, optional `kind`, and optional `label`;
 frontend components own their uniform height, intrinsic width, crop, and corner
 treatment. Content pictures remain URL strings rather than presentation
 objects.
-The card presentation layer scans the first mark from each source instance for
+The LiveCard presentation layer scans the first mark from each Instance for
 symmetric top and bottom transparent padding, derives a scale targeting 14px of
 visible content inside the 16px image box, and caches it for the remaining
 marks. Width and height are sampled independently so wide assets retain enough
@@ -711,19 +711,20 @@ Radar metadata can replace source-owned presentation fields such as title,
 badge, description, and home URL, but cannot modify source identity,
 provider title, icon, color, category, loader behavior, capabilities, secrets,
 request rules, or cache policy.
-Accepting a Radar suggestion creates one card instance with the selected board
-membership. The instance owns its board ID alongside its source ID and patch.
-New instance IDs combine the source ID and a 12-character Nano ID with `::`;
+Accepting a Radar suggestion creates one Instance and, when a custom Board is
+selected, one Collection entry. The Instance owns its Source ID and patch;
+Collection entries own membership. New Instance IDs combine the Source ID and a
+12-character Nano ID with `::`;
 custom Board IDs use the Nano ID directly. Both remain opaque strings so data
 persisted with older ID formats continues to resolve without migration.
-Moving a card updates only that board ID; source parameters, presentation
-metadata, and cache identity remain unchanged. The board ID is nullable:
-`null` means the card has no custom board, while a custom board ID adds it to
-that board. All deliberately skips membership filtering and aggregates every
-card instance. Its persisted ID is `all`, producing the `/board/all` route.
-The card editor writes the same instance patch shape and exposes every declared
+Moving a LiveCard updates only Collection membership; Source parameters,
+presentation metadata, and cache identity remain unchanged. An Instance without
+a Collection entry appears only in All. All deliberately skips membership
+filtering and aggregates every Instance. Its view ID is `all`, producing the
+`/board/all` route.
+The LiveCard editor writes the same instance patch shape and exposes every declared
 source parameter plus each editable source-owned presentation metadata field.
-The inferred card presentation is read-only. Provider
+The inferred LiveCard presentation is read-only. Provider
 title, icon, color, and category remain read-only. Editing preserves patches as
 sparse overrides: only explicitly changed parameter and metadata fields are
 persisted. Parameter defaults are resolved for display and loading, while

@@ -286,9 +286,9 @@ const queryDescriptors: Record<ApplicationQueryName, ApplicationOperationDescrip
     inputSchema: objectSchema({ collectionId: IDENTIFIER_SCHEMA }, ["collectionId"]),
     outputSchema: { type: "object" },
   },
-  "view.getVisibleCards": {
-    name: "view.getVisibleCards",
-    description: "List the Cards logically displayed by the current Board.",
+  "view.getVisibleLiveCards": {
+    name: "view.getVisibleLiveCards",
+    description: "List the LiveCards logically displayed by the current Board.",
     inputSchema: EMPTY_OBJECT_SCHEMA,
     outputSchema: { type: "array", items: { type: "object" } },
   },
@@ -373,9 +373,9 @@ export function parseApplicationQuery(value: unknown): ApplicationQuery {
         input: { collectionId: requireIdentifier(input.collectionId, "collectionId") },
       }
     }
-    case "view.getVisibleCards":
+    case "view.getVisibleLiveCards":
       requireEmptyInput(query.input)
-      return { type: "view.getVisibleCards" }
+      return { type: "view.getVisibleLiveCards" }
   }
 }
 

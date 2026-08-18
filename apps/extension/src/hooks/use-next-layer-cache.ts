@@ -4,7 +4,7 @@ import type {
   NextLayerCacheTarget,
   NextLayerInstanceSelection,
 } from "@/lib/board/next-layer-data"
-import type { CardViewModel, NewsItem } from "@/typings/source"
+import type { LiveCardViewModel, NewsItem } from "@/typings/source"
 import { useAtomValue } from "jotai"
 import { useEffect, useMemo, useState } from "react"
 import {
@@ -13,22 +13,22 @@ import {
 } from "@/lib/board/next-layer-data"
 import {
   applySourceLoaderMetadata,
-  createBoardSource,
   createInstanceDataTarget,
+  createLiveCard,
 } from "@/lib/source"
 import { instancesAtom } from "@/store/board"
-import { useBoardSourceCards } from "./use-board-source-cards"
+import { useBoardLiveCards } from "./use-board-live-cards"
 import { useSourceDescriptors } from "./use-source-descriptors"
 
 export interface NextLayerInstanceCache {
-  card: CardViewModel
+  liveCard: LiveCardViewModel
   items: NewsItem[]
   itemTemplate?: SourceItemTemplate
   updatedAt: number
 }
 
 interface NextLayerCacheEntry {
-  card: CardViewModel
+  liveCard: LiveCardViewModel
   target: NextLayerCacheTarget
 }
 
@@ -53,7 +53,7 @@ export function useNextLayerCache({
   results: Record<string, NextLayerInstanceCache>
 } {
   const instances = useAtomValue(instancesAtom)
-  const { instanceIds: boardInstanceIds } = useBoardSourceCards(boardId)
+  const { instanceIds: boardInstanceIds } = useBoardLiveCards(boardId)
   const { isLoading: areSourcesLoading, sources } = useSourceDescriptors()
   const instanceIds = useMemo(
     () => selectNextLayerInstanceIds(boardInstanceIds, selection),
@@ -71,7 +71,7 @@ export function useNextLayerCache({
       const target = createInstanceDataTarget(instance, source)
 
       return [{
-        card: createBoardSource(source, instance, boardId),
+        liveCard: createLiveCard(source, instance, boardId),
         target: {
           ...target,
           cacheVersion: source.cache.version,
@@ -104,7 +104,7 @@ export function useNextLayerCache({
       if (!current) continue
 
       availableResults[entry.target.instanceId] = {
-        card: applySourceLoaderMetadata(entry.card, current.metadata),
+        liveCard: applySourceLoaderMetadata(entry.liveCard, current.metadata),
         items: current.items,
         itemTemplate: current.itemTemplate,
         updatedAt: current.updatedAt,

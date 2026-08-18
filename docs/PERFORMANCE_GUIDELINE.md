@@ -11,10 +11,10 @@ The primary performance target is the extension app at:
 
 `chrome-extension://blkhpdbooolmhamhbpnfinmfghginnbh/app.html`
 
-The app displays many independently updating cards inside an animated and
+The app displays many independently updating LiveCards inside an animated and
 sortable board. Performance work should keep an update local to the smallest
 subtree that owns the changed data. A board-level interaction must not cause
-card content to render unless that content or its visible state changed.
+LiveCard content to render unless that content or its visible state changed.
 
 This guideline covers React renders and related component work. Network latency,
 source execution, background service performance, and persisted cache policy
@@ -33,7 +33,7 @@ repeat SVG parsing and serialization.
 
 ## Measurement Workflow
 
-Measure before and after a change with the same board, viewport, loaded card
+Measure before and after a change with the same board, viewport, loaded LiveCard
 count, and interaction sequence. React Scan is opt-in through a dynamic import
 in `apps/extension/src/entrypoints/app/main.tsx`. Start the existing development
 server with `WXT_ENABLE_REACT_SCAN=true bun run dev` when profiling.
@@ -62,23 +62,23 @@ with unchanged inputs or renders that spread far beyond the state owner.
 
 Profile at least the scenarios affected by a change:
 
-- Initial app load with visible and preloaded offscreen cards.
+- Initial app load with visible and preloaded offscreen LiveCards.
 - Board navigation.
 - Now/Next layer transitions.
-- Root and card scrolling.
+- Root and LiveCard scrolling.
 - Search open, input, selection, and close.
 - Settings open, tab changes, setting changes, and close.
-- Card front/back transitions.
+- LiveCard front/back transitions.
 - Metadata and parameter editing, saving, cancelling, and resetting.
-- Single-card refresh from request start through completion.
-- Global refresh with multiple active cards.
+- Single LiveCard refresh from request start through completion.
+- Global refresh with multiple active LiveCards.
 - Minute-boundary relative-time updates.
 - Application Actions that update Instances, Collections, entries, or
   Collection Views through the background mutation runtime and its read-only
   frontend Application Data subscription.
-- Card reorder, cancelled drag, and a drop that changes order.
+- LiveCard reorder, cancelled drag, and a drop that changes order.
 
-Restore any card metadata, parameters, board membership, or order changed by an
+Restore any LiveCard metadata, parameters, board membership, or order changed by an
 audit. Confirm that no temporary probe values remain in local storage.
 
 ## Rendering Rules
@@ -101,16 +101,16 @@ to `BoardView` without subscribing the board to header progress state.
 
 ### Keep derivation ownership local
 
-`buildSourceCards` is a pure derivation without cross-call caches. Collection
+`buildLiveCards` is a pure derivation without cross-call caches. Collection
 membership is selected before projection; the Instance contains no Board
 identifier. Search and
 refresh call it for their own snapshots. The rendered board uses Jotai's
-`splitAtom` with `instanceId` as its stable key so every card subscribes to its
+`splitAtom` with `instanceId` as its stable key so every LiveCard subscribes to its
 own `SourceInstance`. `NowLayer` subscribes separately to a lightweight layout
 projection containing only Collection IDs and sorting fields.
 
-Resolve board-only appearance settings at the draggable-card boundary and pass
-their result into the shared card shell. Do not make the base `SourceCard`
+Resolve board-only appearance settings at the `DraggableLiveCard` boundary and pass
+their result into the shared LiveCard shell. Do not make the base `LiveCard`
 subscribe to board appearance when specialized consumers such as Radar provide
 their own dimensions.
 
@@ -123,7 +123,7 @@ structural projection.
 
 Do not add module-global identity caches to make `memo` boundaries pass. Such
 caches make correctness depend on an implicit immutability contract and can
-return stale cards after in-place changes. If card-instance updates become a
+return stale LiveCards after in-place changes. If Instance updates become a
 measured bottleneck, optimize them at the React or Jotai owner that has the
 complete input lifecycle.
 
@@ -131,8 +131,8 @@ Each direct Next Layer consumer must declare the smallest useful Instance
 selection: one Instance, several Instances, or the complete Board. Use one live
 cache observer for that selection and bulk-read its resolved targets from
 persistent storage. Do not create Source query observers, route results through
-Card effects, reuse the Now Layer's in-memory query cache, or force-mount
-offscreen Cards when switching Layers. Results should preserve `instanceId`
+LiveCard effects, reuse the Now Layer's in-memory query cache, or force-mount
+offscreen LiveCards when switching Layers. Results should preserve `instanceId`
 keys while allowing one storage operation to serve all selected inputs. Keep
 live observers disabled while their consumers are hidden.
 
@@ -180,7 +180,7 @@ Background Action proxies return only compact receipts such as `collectionId`
 or `instanceId`; the normalized Application Data envelope propagates once via
 the storage subscription instead of being serialized again as an Action result.
 Board rendering names must reflect identity: arrays and maps keyed by configured
-cards use `instanceIds` and `cardsByInstanceId`. Reserve `sourceId` for the
+LiveCards use `instanceIds` and `liveCardsByInstanceId`. Reserve `sourceId` for the
 reusable Source descriptor identity so performance selectors do not obscure
 which entity invalidated.
 
@@ -190,10 +190,10 @@ Use `memo` when a component represents an independently updating unit, its props
 can remain stable, and React Compiler cannot protect the same boundary. Current
 manual boundaries include:
 
-- `DraggableCard`, so board animation and layout work does not enter card data
+- `DraggableLiveCard`, so board animation and layout work does not enter LiveCard data
   and query subtrees during board renders.
 
-Compiler-generated caches isolate the card front, card back, board actions, and
+Compiler-generated caches isolate the LiveCard front, LiveCard back, board actions, and
 parameter rows. Do not reintroduce manual wrappers around those components
 without profiling evidence that the compiled boundary is insufficient.
 
@@ -216,7 +216,7 @@ is still compiled.
 Keep render functions free of ref reads and writes. `DndContext` uses an Effect
 Event so its long-lived drag monitor always invokes the latest callbacks without
 resubscribing. Ordinary UI callbacks such as `DynamicIsland` open and close
-handlers should instead depend directly on the values they use. `CardContainer`
+handlers should instead depend directly on the values they use. `LiveCardContainer`
 synchronizes its imperative drag-order ref in a layout effect and keeps scatter
 history in React state.
 
@@ -226,7 +226,7 @@ Keep `VirtualList` and Next Layer's `VirtualTimeline` virtualized, and apply the
 calls with an explanatory comment. Do not disable the diagnostic globally or
 pass virtualizer functions through separately memoized boundaries.
 
-The scatter transition measures rendered card bounds and must publish its Motion
+The scatter transition measures rendered LiveCard bounds and must publish its Motion
 variants synchronously in a layout effect before paint. Keep the targeted
 `react/set-state-in-effect` exception at that state update; moving it to a passive
 effect or timer introduces a visible position flash. Other synchronous Effect
@@ -247,8 +247,8 @@ registrations.
 
 ### Own source-wide image analysis above item rows
 
-Semantic mark normalization is source-wide work. Card content and Next Layer
-find the first mark for each source instance, scan at most a 128px image once,
+Semantic mark normalization is source-wide work. LiveCard content and Next Layer
+find the first mark for each Instance, scan at most a 128px image once,
 and pass the cached, capped scale into item summaries. Keep pixel
 analysis effects, promises, and profile state out of virtualized item rows.
 Failed image requests must leave the source cache retryable on the next result
@@ -259,55 +259,55 @@ update; a confirmed no-padding result may remain cached.
 The shared minute atom intentionally updates once per minute. Subscribe at the
 smallest component that renders time-dependent text.
 
-- `RelativeTime` owns card header subtitle updates.
+- `RelativeTime` owns LiveCard header subtitle updates.
 - `Timeline` owns grouped item time labels.
-- Card front and back surfaces must not subscribe merely to pass a formatted
+- LiveCard front and back surfaces must not subscribe merely to pass a formatted
   string through a large subtree.
 - Memoize time-independent news content below a time-labeling row.
 
-An invisible card side may stay mounted for flip animation, but its entire form
+An invisible LiveCard side may stay mounted for flip animation, but its entire form
 must not render at every minute boundary.
 
 ### Separate query state from hidden UI
 
-A card query may render at request start, when fetching-latest tracking changes,
+A LiveCard query may render at request start, when fetching-latest tracking changes,
 and when data completes. These renders are expected on the front side because
 the loading and content UI changes.
 
-The hidden card back should render only when one of its own props changes, such
-as loader metadata or `updatedAt`. Loading flags that are not card-back props
+The hidden LiveCard back should render only when one of its own props changes, such
+as loader metadata or `updatedAt`. Loading flags that are not LiveCard back props
 must not rebuild the editor.
 
 Use stable empty arrays and stable merged metadata objects. Expressions such as
 `data?.items ?? []` create a new fallback array on every render and defeat
 downstream memoization.
 
-### Keep animation work above card content
+### Keep animation work above LiveCard content
 
 Board and Motion components may render multiple times while calculating scatter
 vectors or layout transitions. Keep that animation work in the board item and
-Motion layers. Stable `DraggableCard` props prevent it from entering queries,
-virtual lists, and card editor controls.
+Motion layers. Stable `DraggableLiveCard` props prevent it from entering queries,
+virtual lists, and LiveCard editor controls.
 
 Do not remove renders that are required to update Motion props, measured scatter
 vectors, or drag state. Optimize the content boundary instead.
 
 The Now/Next transition must not animate a transform on the full mixed timeline
-or combine that transform with a large backdrop filter while cards scatter.
-The card scatter is the transition's primary motion; `WidgetContainer` owns the
+or combine that transform with a large backdrop filter while LiveCards scatter.
+The LiveCard scatter is the transition's primary motion; `WidgetContainer` owns the
 brief, delayed opacity-only reveal. Keep its timeline virtualized against the
 committed Next Layer scroll element so only visible waveform SVGs and rows are
 mounted during the transition and subsequent scrolling.
 
 ### Observe against the real scroll container
 
-Intersection observers that preload card content must use the root app scroll
+Intersection observers that preload LiveCard content must use the root app scroll
 container, not the browser viewport. An intermediate overflow container clips
 the target before a viewport-rooted observer applies its root margin, which
-makes the preload margin ineffective and defers the card's synchronous mount
+makes the preload margin ineffective and defers the LiveCard's synchronous mount
 work until it is already visible.
 
-Use the stable scroll-container ref from the actions context so cards can mount
+Use the stable scroll-container ref from the actions context so LiveCards can mount
 inside the configured preload margin without subscribing to header progress or
 layer activity. Keep the offscreen retention delay to avoid repeated mount work
 during short back-and-forth scrolls.
@@ -327,18 +327,18 @@ attachment or measurement problem rather than missing query data.
 
 ## 2026-08-03 Audit Results
 
-The audit used a 1080 by 1890 viewport and an All board containing 12 cards,
-with eight card contents mounted by the viewport and preload margin.
+The audit used a 1080 by 1890 viewport and an All board containing 12 LiveCards,
+with eight LiveCard contents mounted by the viewport and preload margin.
 
 | Scenario | Before | After measured | Result |
 | --- | ---: | ---: | --- |
-| Two Now/Next layer toggles | 1,851 | 61 | Root, header, footer, and card content cascades removed; 96.7% fewer render events. |
-| One minute-boundary update | 1,149 | 266 | Whole card fronts and backs no longer update; 76.8% fewer render events. A subsequent timeline content boundary further isolates unchanged news content. |
-| Single-card refresh | 389 | 252 | Hidden card-back work reduced from three full renders to one data-completion render; 35.2% fewer render events. |
+| Two Now/Next layer toggles | 1,851 | 61 | Root, header, footer, and LiveCard content cascades removed; 96.7% fewer render events. |
+| One minute-boundary update | 1,149 | 266 | Whole LiveCard fronts and backs no longer update; 76.8% fewer render events. A subsequent timeline content boundary further isolates unchanged news content. |
+| Single LiveCard refresh | 389 | 252 | Hidden LiveCard back work reduced from three full renders to one data-completion render; 35.2% fewer render events. |
 
 Settings tab changes remained inside the settings subtree. Metadata and
-parameter drafts remained inside the edited card. Search open and close did not
-update card content.
+parameter drafts remained inside the edited LiveCard. Search open and close did not
+update LiveCard content.
 
 These numbers are comparison baselines, not permanent budgets. Data volume,
 viewport size, React, Motion, and component implementation can change the raw
@@ -349,16 +349,16 @@ counts. Preserve the isolation properties described in the Result column.
 Before completing React performance work:
 
 - Review every changed state owner and context provider.
-- Confirm unchanged item atoms and card boundary props preserve reference
+- Confirm unchanged item atoms and LiveCard boundary props preserve reference
   identity.
 - Confirm memoized props do not contain avoidable new arrays, objects,
   callbacks, refs, or React elements.
-- Check both visible and hidden sides of a flipped card.
+- Check both visible and hidden sides of a flipped LiveCard.
 - Cross a real minute boundary; do not infer timer behavior from static code.
 - Let refresh operations reach completion before reading render counts.
-- Verify that editing one instance does not render unrelated card content.
+- Verify that editing one instance does not render unrelated LiveCard content.
 - Test scroll and animation behavior visually after adding memo boundaries.
-- Switch repeatedly between boards and confirm every populated card renders
+- Switch repeatedly between boards and confirm every populated LiveCard renders
   virtual rows after its scroll element is committed.
 - Remove all temporary profiling globals and callbacks.
 - Confirm compiled components show the `Memo ✨` badge in React DevTools or
@@ -369,13 +369,13 @@ Before completing React performance work:
 
 ## Known Limitations
 
-The `splitAtom` card-subscription migration received static checks and an
+The `splitAtom` LiveCard subscription migration received static checks and an
 ego-lite functional smoke test, but React Scan was not enabled on the existing
-development server. Re-baseline the single-card metadata edit scenario before
+development server. Re-baseline the single LiveCard metadata edit scenario before
 treating its render count as measured.
 
 The 2026-08-03 ego-lite audit could not reliably generate the browser's native
-HTML5 drag event chain. Card reordering received code-path review and existing
+HTML5 drag event chain. LiveCard reordering received code-path review and existing
 pure reorder coverage, but did not receive React Scan event sampling for a real
 drag. Repeat that scenario manually or with a browser harness that produces
 trusted native drag events before treating drag render behavior as measured.

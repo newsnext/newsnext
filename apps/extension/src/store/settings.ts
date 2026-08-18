@@ -1,11 +1,11 @@
 import type { Color } from "@newsnext/shared/types"
 import type { BgIllustrationTransform } from "@/lib/bg-illustration"
 import type {
+  LiveCardHeight,
   PersistedDeviceState,
   PersistedSettings,
   SettingsTabId,
   ShortcutSettings,
-  SourceCardHeight,
 } from "@/lib/settings"
 import type { SourceIconSettings } from "@/lib/source"
 import type { ThemeMode } from "@/lib/utils/swith-theme"
@@ -53,13 +53,13 @@ export const themeModeAtom = atom(
   },
 )
 
-export const sourceCardHeightAtom = atom(
-  get => get(persistedSettingsAtom).appearance.sourceCardHeight,
-  (get, set, sourceCardHeight: SourceCardHeight) => {
+export const liveCardHeightAtom = atom(
+  get => get(persistedSettingsAtom).appearance.liveCardHeight,
+  (get, set, liveCardHeight: LiveCardHeight) => {
     const settings = get(persistedSettingsAtom)
     set(persistedSettingsAtom, {
       ...settings,
-      appearance: { ...settings.appearance, sourceCardHeight },
+      appearance: { ...settings.appearance, liveCardHeight },
     })
   },
 )

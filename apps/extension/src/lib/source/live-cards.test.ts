@@ -1,12 +1,11 @@
-import type { SourceInstance } from "./cards"
+import type { SourceInstance } from "./live-cards"
 import type { SourceDescriptor } from "@/typings/source"
 import { describe, expect, it } from "vitest"
 import {
   applySourceLoaderMetadata,
-  buildSourceCards,
-  getSourceCard,
+  buildLiveCards,
   mergeSourceInstancePatch,
-} from "./cards"
+} from "./live-cards"
 
 const testSources: SourceDescriptor[] = [
   {
@@ -60,9 +59,9 @@ function createCustomInstance(patch: Partial<SourceInstance> = {}): SourceInstan
   }
 }
 
-describe("buildSourceCards", () => {
-  it("shows saved card instances", () => {
-    const cards = buildSourceCards({
+describe("buildLiveCards", () => {
+  it("projects saved Instances as LiveCards", () => {
+    const liveCards = buildLiveCards({
       sources: testSources,
       collectionId: null,
       sourceInstances: [
@@ -70,15 +69,15 @@ describe("buildSourceCards", () => {
       ],
     })
 
-    expect(cards.ids).toEqual(["test:feed::AbCdEfGh1234"])
-    expect(cards.map["test:feed::AbCdEfGh1234"]).toMatchObject({
+    expect(liveCards).toHaveLength(1)
+    expect(liveCards[0]).toMatchObject({
       paramsValue: { topic: "custom" },
       sourceId: "test:feed",
     })
   })
 
   it("applies source instance title overrides", () => {
-    const cards = buildSourceCards({
+    const liveCards = buildLiveCards({
       sources: testSources,
       collectionId: null,
       sourceInstances: [
@@ -88,7 +87,7 @@ describe("buildSourceCards", () => {
       ],
     })
 
-    expect(cards.map["test:feed::AbCdEfGh1234"]).toMatchObject({
+    expect(liveCards[0]).toMatchObject({
       metadata: {
         title: "Custom Radar Title",
       },
@@ -96,7 +95,7 @@ describe("buildSourceCards", () => {
   })
 
   it("applies source-owned instance metadata overrides", () => {
-    const cards = buildSourceCards({
+    const liveCards = buildLiveCards({
       sources: testSources,
       collectionId: null,
       sourceInstances: [
@@ -113,7 +112,7 @@ describe("buildSourceCards", () => {
       ],
     })
 
-    expect(cards.map["test:feed::AbCdEfGh1234"]).toMatchObject({
+    expect(liveCards[0]).toMatchObject({
       metadata: {
         title: "Custom Title",
         badge: "https://custom.example.com/badge.png",
@@ -128,7 +127,7 @@ describe("buildSourceCards", () => {
   })
 
   it("does not allow persisted instance metadata to override provider metadata", () => {
-    const cards = buildSourceCards({
+    const liveCards = buildLiveCards({
       sources: testSources,
       collectionId: null,
       sourceInstances: [
@@ -148,32 +147,31 @@ describe("buildSourceCards", () => {
       ],
     })
 
-    const card = cards.map["test:feed::AbCdEfGh1234"]
-    expect(card).toBeDefined()
-    expect(card?.provider).toEqual({
+    const liveCard = liveCards[0]
+    expect(liveCard).toBeDefined()
+    expect(liveCard?.provider).toEqual({
       title: "Test",
       category: "social",
       icon: "https://example.com/icon.png",
       color: "blue",
     })
-    expect(card).not.toHaveProperty("category")
-    expect(card).not.toHaveProperty("icon")
-    expect(card).not.toHaveProperty("color")
+    expect(liveCard).not.toHaveProperty("category")
+    expect(liveCard).not.toHaveProperty("icon")
+    expect(liveCard).not.toHaveProperty("color")
   })
 
   it("hides base source templates from boards", () => {
-    const cards = buildSourceCards({
+    const liveCards = buildLiveCards({
       sources: testSources,
       collectionId: null,
       sourceInstances: [],
     })
 
-    expect(cards.ids).toEqual([])
-    expect(cards.map).toEqual({})
+    expect(liveCards).toEqual([])
   })
 
-  it("shows every card in All", () => {
-    const cards = buildSourceCards({
+  it("shows every LiveCard in All", () => {
+    const liveCards = buildLiveCards({
       sources: testSources,
       collectionId: null,
       sourceInstances: [
@@ -185,14 +183,14 @@ describe("buildSourceCards", () => {
       ],
     })
 
-    expect(cards.ids).toEqual([
+    expect(liveCards.map(liveCard => liveCard.id)).toEqual([
       "test:feed::AbCdEfGh1234",
       "test:latest::ZyXwVuTs9876",
     ])
   })
 
-  it("filters cards in a custom board", () => {
-    const cards = buildSourceCards({
+  it("filters LiveCards in a custom board", () => {
+    const liveCards = buildLiveCards({
       sources: testSources,
       collectionId: "reading",
       collectionInstanceIds: ["test:latest::ZyXwVuTs9876"],
@@ -205,13 +203,13 @@ describe("buildSourceCards", () => {
       ],
     })
 
-    expect(cards.ids).toEqual(["test:latest::ZyXwVuTs9876"])
+    expect(liveCards.map(liveCard => liveCard.id)).toEqual(["test:latest::ZyXwVuTs9876"])
   })
 })
 
 describe("applySourceLoaderMetadata", () => {
   it("overrides instance presentation fields while preserving missing fields", () => {
-    const cards = buildSourceCards({
+    const liveCards = buildLiveCards({
       sources: testSources,
       collectionId: null,
       sourceInstances: [
@@ -220,9 +218,9 @@ describe("applySourceLoaderMetadata", () => {
         }),
       ],
     })
-    const source = getSourceCard(cards, "test:feed::AbCdEfGh1234")
+    const [liveCard] = liveCards
 
-    expect(applySourceLoaderMetadata(source, {
+    expect(applySourceLoaderMetadata(liveCard!, {
       title: "Loader title",
       home: "https://loader.example.com",
     })).toMatchObject({

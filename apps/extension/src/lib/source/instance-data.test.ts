@@ -1,5 +1,5 @@
-import type { SourceInstance } from "./cards"
 import type { InstanceDataSource } from "./instance-data-target"
+import type { SourceInstance } from "./live-cards"
 import { describe, expect, it } from "vitest"
 import { createInstanceDataTarget, resolveInstanceDataTarget } from "./instance-data-target"
 

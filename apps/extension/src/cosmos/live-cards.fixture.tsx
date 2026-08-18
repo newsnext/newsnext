@@ -1,15 +1,15 @@
 /* eslint-disable react-refresh/only-export-components */
 import type { Color } from "@newsnext/shared/types"
-import type { CardViewModel, NewsItem } from "@/typings/source"
+import type { LiveCardViewModel, NewsItem } from "@/typings/source"
 import { COLORS } from "@newsnext/shared/constants"
 import { useState } from "react"
-import { CardBack } from "@/components/card/card-back"
-import { CardFront } from "@/components/card/card-front"
+import { LiveCardBack } from "@/components/live-card/card-back"
+import { LiveCardFront } from "@/components/live-card/card-front"
 import { cn } from "@/lib/utils"
 
 const UPDATED_AT = Date.now() - 4 * 60 * 1000
 
-export const SAMPLE_SOURCE: CardViewModel = {
+export const SAMPLE_SOURCE: LiveCardViewModel = {
   id: "cosmos-source",
   sourceId: "cosmos.design",
   collectionId: "all",
@@ -95,7 +95,7 @@ const TIMELINE_ITEMS: NewsItem[] = RANKING_ITEMS.map((item, index) => ({
   publishedAt: Date.now() - index * 48 * 60 * 1000,
 }))
 
-function createColorSource(color: Color): CardViewModel {
+function createColorSource(color: Color): LiveCardViewModel {
   const label = `${color.charAt(0).toUpperCase()}${color.slice(1)}`
   return {
     ...SAMPLE_SOURCE,
@@ -113,24 +113,24 @@ function createColorSource(color: Color): CardViewModel {
   }
 }
 
-interface CardFrameProps extends React.PropsWithChildren {
+interface LiveCardFrameProps extends React.PropsWithChildren {
   className?: string
   color: Color
 }
 
-function CardFrame({ children, className, color }: CardFrameProps) {
+function LiveCardFrame({ children, className, color }: LiveCardFrameProps) {
   return <div className={cn(color, className)}>{children}</div>
 }
 
-function CardStage({ children }: React.PropsWithChildren) {
+function LiveCardStage({ children }: React.PropsWithChildren) {
   return (
     <main className="grid min-h-full place-items-center p-6 sm:p-10">
-      <CardFrame
+      <LiveCardFrame
         className="h-125 w-full max-w-100"
         color={SAMPLE_SOURCE.provider.color}
       >
         {children}
-      </CardFrame>
+      </LiveCardFrame>
     </main>
   )
 }
@@ -153,8 +153,8 @@ function FrontFixture({
   const [updatedAt, setUpdatedAt] = useState(UPDATED_AT)
 
   return (
-    <CardStage>
-      <CardFront
+    <LiveCardStage>
+      <LiveCardFront
         source={SAMPLE_SOURCE}
         items={items}
         isFetching={isFetching}
@@ -167,11 +167,11 @@ function FrontFixture({
         onRequestPermission={async () => true}
         onFlip={() => undefined}
       />
-    </CardStage>
+    </LiveCardStage>
   )
 }
 
-function CardBackFixture() {
+function LiveCardBackFixture() {
   const [source, setSource] = useState(SAMPLE_SOURCE)
   const [savedParams, setSavedParams] = useState<Record<string, unknown>>(
     SAMPLE_SOURCE.paramsValue ?? {},
@@ -180,8 +180,8 @@ function CardBackFixture() {
   const hasChanges = JSON.stringify(draftParams) !== JSON.stringify(savedParams)
 
   return (
-    <CardStage>
-      <CardBack
+    <LiveCardStage>
+      <LiveCardBack
         id={source.id}
         source={source}
         draftSourceParams={draftParams}
@@ -205,7 +205,7 @@ function CardBackFixture() {
         }}
         onFlip={() => undefined}
       />
-    </CardStage>
+    </LiveCardStage>
   )
 }
 
@@ -218,8 +218,8 @@ function AllCardColorsFixture() {
     <main className="min-h-full p-6 sm:p-10">
       <div className="mx-auto grid max-w-360 grid-cols-[repeat(auto-fit,minmax(20rem,1fr))] gap-6">
         {COLORS.map(color => (
-          <CardFrame key={color} className="h-112 min-w-0" color={color}>
-            <CardFront
+          <LiveCardFrame key={color} className="h-112 min-w-0" color={color}>
+            <LiveCardFront
               source={createColorSource(color)}
               items={RANKING_ITEMS.slice(0, 4)}
               isFetching={false}
@@ -231,7 +231,7 @@ function AllCardColorsFixture() {
               onRequestPermission={async () => true}
               onFlip={() => undefined}
             />
-          </CardFrame>
+          </LiveCardFrame>
         ))}
       </div>
     </main>
@@ -261,5 +261,5 @@ export default {
   "Front: Loading": LoadingCardFixture,
   "Front: Permission": PermissionCardFixture,
   "Front: Error": ErrorCardFixture,
-  "Card editable": CardBackFixture,
+  "Editable LiveCard": LiveCardBackFixture,
 }

@@ -47,8 +47,8 @@ export function SourceIconSettings(): React.JSX.Element {
 
   return (
     <ConfigSection
-      title="Card icons"
-      description="Choose how icons are generated when a card does not include one."
+      title="LiveCard icons"
+      description="Choose how icons are generated when a LiveCard does not include one."
       surfaceClassName="gap-4 p-4"
     >
       <ConfigSection

@@ -1,6 +1,6 @@
 # Application Architecture
 
-Status: active architecture. The Collection/Instance data model, Board/Card
+Status: active architecture. The Collection/Instance data model, Board/LiveCard
 projections, shared Application Actions and Queries, and v1 import migration
 are implemented. Native Agent read/write adapters and operation discovery are
 implemented. Frontend and Agent writes share the background mutation runtime.
@@ -27,7 +27,7 @@ Result and item
 The central rule is:
 
 > Humans and agents operate Collections and Instances. Humans see Collections
-> as Boards and Instances as Cards.
+> as Boards and Instances as LiveCards.
 
 Isomorphism belongs to the Data and Actions layers. It does not require human
 and agent views to use the same representation.
@@ -46,7 +46,7 @@ Collection ---- contains ----> Instance
 
 Human View layer
 
-Board -------- displays -------> Card
+Board -------- displays -------> LiveCard
 ```
 
 The canonical correspondences are:
@@ -54,12 +54,12 @@ The canonical correspondences are:
 | Data concept | Human View | Meaning |
 | --- | --- | --- |
 | Source | Source picker item | A capability that can create configured Instances |
-| Instance | Card | A configured Source and its runtime state |
+| Instance | LiveCard | A configured Source and its runtime state |
 | Collection | Board | An organization of Instances |
-| Collection entry | Card placement | An Instance's membership and position in a Collection |
+| Collection entry | LiveCard placement | An Instance's membership and position in a Collection |
 | Result item | Item view | Content returned by an Instance |
 
-Board and Card are not separate copies of Collection and Instance data. They
+Board and LiveCard are not separate copies of Collection and Instance data. They
 are projections that retain stable references to their underlying Data
 identities.
 
@@ -133,7 +133,7 @@ View preferences instead.
 ### Results and Items
 
 Source results and returned items belong to the Instance that produced them,
-not to a Card component.
+not to a LiveCard component.
 
 ```ts
 interface InstanceResult {
@@ -144,8 +144,8 @@ interface InstanceResult {
 }
 ```
 
-Cards project this state for human presentation. Agent queries may consume the
-same state in a structured form without constructing Card components.
+LiveCards project this state for human presentation. Agent queries may consume the
+same state in a structured form without constructing LiveCard components.
 
 `instanceId` is the stable application reference, while Source execution and
 storage resolve it to the Instance's `sourceId` and normalized effective
@@ -163,7 +163,7 @@ several Instances, or the complete Board, then reads cache results, History
 observations, or both through its own data boundary. A materialized Widget reads
 a persisted result produced asynchronously by an Agent-owned refresh and
 processing task. Neither mode subscribes to the Now Layer's per-Instance query
-path or passes result data through Card-owned React state. Identical resolved
+path or passes result data through React state owned by a LiveCard. Identical resolved
 targets may share Source execution and storage while remaining distinct
 Instances in Collections and Views.
 
@@ -189,7 +189,7 @@ interface CollectionViewPreferences {
 }
 
 interface BoardView {
-  cards: CardView[]
+  liveCards: LiveCardView[]
   collectionId: string
   color: Color
   defaultView: "now" | "next"
@@ -202,26 +202,26 @@ A normal Board has no independent domain identity: its stable identity is the
 underlying `collectionId`. System views such as All may project a Collection
 query rather than require a persisted aggregate Collection.
 
-### Card
+### LiveCard
 
-A Card is the human presentation of an Instance in a Collection context.
+A LiveCard is the human presentation of an Instance in a Collection context.
 
 ```ts
-interface CardView {
+interface LiveCardView {
   collectionId: string | null
   instanceId: string
   items: NewsItemView[]
   sourceId: string
-  status: CardStatusView
+  status: LiveCardStatusView
   title: string
 }
 ```
 
-A Card has no independent domain identity. The complete reference for a Card
+A LiveCard has no independent domain identity. The complete reference for a LiveCard
 placement is the pair of `collectionId` and `instanceId`:
 
 ```ts
-interface CardViewReference {
+interface LiveCardViewReference {
   collectionId: string
   instanceId: string
 }
@@ -235,7 +235,7 @@ also need `collectionId`.
 
 Durable presentation preferences may include Board color, default view, and
 sorting. Ephemeral View state includes the current route, open dialog, focus,
-selection, hover state, animation state, Card face, and unsubmitted form
+selection, hover state, animation state, LiveCard face, and unsubmitted form
 drafts.
 
 Neither durable nor ephemeral View state may become an alternative owner of
@@ -293,17 +293,17 @@ with an optional nested View change when one human intent spans both layers.
 `collection.reorderInstances` atomically records the complete manual order and
 selects manual View sorting.
 
-For example, adding a Card to a Board and an agent adding an Instance to a
+For example, adding a LiveCard to a Board and an agent adding an Instance to a
 Collection both execute the same action:
 
 ```ts
 collection.addInstance({
   collectionId: board.collectionId,
-  instanceId: card.instanceId,
+  instanceId: liveCard.instanceId,
 })
 ```
 
-Removing a Card from one Board executes `collection.removeInstance`. Deleting
+Removing a LiveCard from one Board executes `collection.removeInstance`. Deleting
 the underlying configured Instance executes `instance.delete` and removes all
 of its Collection entries. `collection.delete` preserves Instances by default;
 setting `deleteInstances` deletes each Instance used only by that Collection,
@@ -354,18 +354,18 @@ collection.listInstances
 ```
 
 View queries expose presentation context when an agent needs to resolve human
-references such as "this Card" or "the current Board":
+references such as "this LiveCard" or "the current Board":
 
 ```text
 view.getContext
 view.getCollection
-view.getVisibleCards
+view.getVisibleLiveCards
 ```
 
 Every View reference returned by these queries must include the corresponding
 Collection and Instance identities.
 
-`view.getVisibleCards` means Cards logically displayed by the current Board,
+`view.getVisibleLiveCards` means LiveCards logically displayed by the current Board,
 not only mounted DOM nodes inside the viewport. NewsNext does not currently
 have cross-adapter selection or focus semantics, so the query contract does not
 invent them.
@@ -374,7 +374,7 @@ invent them.
 
 ### Human adapter
 
-React renders Board and Card projections. Clicks, forms, drag operations, and
+React renders Board and LiveCard projections. Clicks, forms, drag operations, and
 shortcuts dispatch Actions with the Collection and Instance identities carried
 by those projections.
 
@@ -425,7 +425,7 @@ button clicks, dialog submissions, and drag events are not canonical Actions.
 - Deleting a Collection removes its entries but does not implicitly delete its
   Instances.
 - A Board projection cannot be the owner of Collection membership.
-- A Card projection cannot be the owner of Instance configuration or results.
+- A LiveCard projection cannot be the owner of Instance configuration or results.
 - View preferences cannot be required to interpret canonical Collection or
   Instance data.
 - Every persistent mutation passes through the application execution boundary.
@@ -457,7 +457,7 @@ The migration is proceeding incrementally:
 
 1. Completed: define canonical Source, Instance, Collection, and
    CollectionEntry contracts.
-2. Completed: add pure Board and Card projections that retain Data identities.
+2. Completed: add pure Board and LiveCard projections that retain Data identities.
 3. Completed: introduce typed application Query and Action execution
    boundaries.
 4. Completed: route existing Jotai write atoms through the Action boundary.
@@ -472,7 +472,7 @@ The migration is proceeding incrementally:
    input/output schemas.
 10. Completed: move frontend Action execution into the background-owned runtime
     so frontend and Agent writes share one serialized mutation queue.
-11. Completed: expose current-Board and logically visible-Card View queries with
+11. Completed: expose current Board and logically visible LiveCard View queries with
     stable Collection and Instance identities.
 12. Completed: remove the parallel Native/CLI Board and Instance listing
     commands; all application discovery now uses the canonical Query catalog.
@@ -481,8 +481,8 @@ The migration is proceeding incrementally:
 14. Completed: make Board creation, editing, and manual ordering atomic while
     retaining explicit nested Data and View fields.
 15. Completed: introduce the shared Instance data target used by persistent
-    Cache reads and History queries, and remove the Card-to-Next-Layer result
-    reporting path.
+    Cache reads and History queries, and remove the React-owned result handoff to
+    Next Layer.
 16. Completed: persist each custom Board's default Now or Next View in its
     Collection View preferences.
 

@@ -15,13 +15,13 @@ import { DEFAULT_SOURCE_ICON_SETTINGS } from "../source/icon"
 import { DEFAULT_SHORTCUT_SETTINGS, normalizeShortcutSettings } from "./shortcuts"
 import { isThemeColor } from "./theme-color"
 
-export const PERSISTED_SETTINGS_VERSION = 6
+export const PERSISTED_SETTINGS_VERSION = 7
 
-export const SOURCE_CARD_HEIGHTS = ["compact", "balanced", "tall"] as const
+export const LIVE_CARD_HEIGHTS = ["compact", "balanced", "tall"] as const
 
-export type SourceCardHeight = typeof SOURCE_CARD_HEIGHTS[number]
+export type LiveCardHeight = typeof LIVE_CARD_HEIGHTS[number]
 
-export const DEFAULT_SOURCE_CARD_HEIGHT: SourceCardHeight = "balanced"
+export const DEFAULT_LIVE_CARD_HEIGHT: LiveCardHeight = "balanced"
 
 export type SettingsTabId = "appearance" | "general" | "cli" | "shortcuts" | "permissions" | "data"
 
@@ -31,7 +31,7 @@ export interface PersistedSettings {
     bgIllustrationOpacity: number
     bgIllustrationTransform: BgIllustrationTransform
     allBoardColor: Color
-    sourceCardHeight: SourceCardHeight
+    liveCardHeight: LiveCardHeight
     themeMode: ThemeMode
   }
   general: {
@@ -56,7 +56,7 @@ export function createDefaultPersistedSettings(): PersistedSettings {
       bgIllustrationOpacity: DEFAULT_BG_ILLUSTRATION_OPACITY,
       bgIllustrationTransform: { ...DEFAULT_BG_ILLUSTRATION_TRANSFORM },
       allBoardColor: DEFAULT_BOARD_COLOR,
-      sourceCardHeight: DEFAULT_SOURCE_CARD_HEIGHT,
+      liveCardHeight: DEFAULT_LIVE_CARD_HEIGHT,
       themeMode: "system",
     },
     general: {
@@ -85,6 +85,7 @@ export function normalizePersistedSettings(value: unknown): PersistedSettings {
 
   const appearance = isRecord(value.appearance) ? value.appearance : undefined
   const general = isRecord(value.general) ? value.general : undefined
+  const liveCardHeight = appearance?.liveCardHeight ?? appearance?.sourceCardHeight
 
   return {
     appearance: {
@@ -94,9 +95,9 @@ export function normalizePersistedSettings(value: unknown): PersistedSettings {
       allBoardColor: isThemeColor(appearance?.allBoardColor)
         ? appearance.allBoardColor
         : defaults.appearance.allBoardColor,
-      sourceCardHeight: isSourceCardHeight(appearance?.sourceCardHeight)
-        ? appearance.sourceCardHeight
-        : defaults.appearance.sourceCardHeight,
+      liveCardHeight: isLiveCardHeight(liveCardHeight)
+        ? liveCardHeight
+        : defaults.appearance.liveCardHeight,
       themeMode: isThemeMode(appearance?.themeMode)
         ? appearance.themeMode
         : defaults.appearance.themeMode,
@@ -156,8 +157,8 @@ export function isSettingsTabId(value: unknown): value is SettingsTabId {
     || value === "data"
 }
 
-export function isSourceCardHeight(value: unknown): value is SourceCardHeight {
-  return typeof value === "string" && SOURCE_CARD_HEIGHTS.includes(value as SourceCardHeight)
+export function isLiveCardHeight(value: unknown): value is LiveCardHeight {
+  return typeof value === "string" && LIVE_CARD_HEIGHTS.includes(value as LiveCardHeight)
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

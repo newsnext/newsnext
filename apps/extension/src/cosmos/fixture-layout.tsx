@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils"
 
 interface FixturePageProps extends React.PropsWithChildren {
-  category: "Basics" | "Cards" | "Patterns"
+  category: "Basics" | "LiveCards" | "Patterns"
   description: string
   title: string
   width?: "md" | "lg" | "xl"

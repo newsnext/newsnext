@@ -20,8 +20,8 @@ function FetchLatestButton() {
       variant="ghost"
       size="icon-lg"
       className="island-pill"
-      aria-label="Fetch latest for active cards"
-      title="Fetch latest for active cards"
+      aria-label="Fetch latest for active LiveCards"
+      title="Fetch latest for active LiveCards"
       onClick={fetchLatest}
     >
       {isFetching ? <PhCircleDashed className="size-5 animate-spin" /> : <PhArrowCounterClockwise className="size-5" />}

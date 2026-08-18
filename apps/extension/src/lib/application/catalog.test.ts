@@ -122,7 +122,7 @@ describe("application operation catalog", () => {
       "instance.get",
       "view.getContext",
       "view.getCollection",
-      "view.getVisibleCards",
+      "view.getVisibleLiveCards",
     ])
     expect(parseApplicationQuery({
       type: "collection.get",

@@ -1,6 +1,6 @@
 import type { ElementEventBasePayload } from "@atlaskit/pragmatic-drag-and-drop/element/adapter"
 import type { RefObject } from "react"
-import type { BoardSourceCard } from "@/hooks/use-board-source-cards"
+import type { BoardLiveCard } from "@/hooks/use-board-live-cards"
 import { extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge"
 import { getReorderDestinationIndex } from "@atlaskit/pragmatic-drag-and-drop-hitbox/util/get-reorder-destination-index"
 import { m } from "motion/react"
@@ -8,7 +8,7 @@ import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { DndContext } from "@/hooks/use-dnd-context"
 import { isSortableData } from "@/lib/board"
 import { reorder } from "@/lib/utils/reorder"
-import { DraggableCard } from "../card/draggable-card"
+import { DraggableLiveCard } from "../live-card/draggable-live-card"
 
 const ANIMATION_DURATION = 0.2 // 200ms
 const ENTRANCE_DELAY = 0.1
@@ -47,9 +47,9 @@ interface InstanceOrderState {
   orderedInstanceIds: string[]
 }
 
-interface CardContainerProps {
+interface LiveCardContainerProps {
   instanceIds: string[]
-  cardsByInstanceId: Record<string, BoardSourceCard>
+  liveCardsByInstanceId: Record<string, BoardLiveCard>
   sortable?: boolean
   className?: string
   isScattered?: boolean
@@ -57,15 +57,15 @@ interface CardContainerProps {
   containerRef?: RefObject<HTMLDivElement | null>
 }
 
-export function CardContainer({
+export function LiveCardContainer({
   instanceIds,
-  cardsByInstanceId,
+  liveCardsByInstanceId,
   sortable = true,
   className,
   isScattered,
   onInstanceIdsChange,
   containerRef,
-}: CardContainerProps) {
+}: LiveCardContainerProps) {
   const [instanceOrderState, setInstanceOrderState] = useState<InstanceOrderState>(() => ({
     instanceIds,
     orderedInstanceIds: instanceIds,
@@ -88,16 +88,16 @@ export function CardContainer({
   })
   const hasScattered = scatterAnimationState.hasScattered
   const items = useMemo(() => new Map<string, HTMLLIElement>(), [])
-  const visibleCards = useMemo(
+  const visibleLiveCards = useMemo(
     () => orderedInstanceIds.flatMap((id) => {
-      const card = cardsByInstanceId[id]
-      return card ? [{ id, ...card }] : []
+      const liveCard = liveCardsByInstanceId[id]
+      return liveCard ? [{ id, ...liveCard }] : []
     }),
-    [orderedInstanceIds, cardsByInstanceId],
+    [orderedInstanceIds, liveCardsByInstanceId],
   )
   const visibleInstanceIds = useMemo(
-    () => visibleCards.map(({ id }) => id),
-    [visibleCards],
+    () => visibleLiveCards.map(({ id }) => id),
+    [visibleLiveCards],
   )
   const isScatterReady = Boolean(
     isScattered
@@ -309,10 +309,10 @@ export function CardContainer({
           },
         }}
       >
-        {visibleCards.map(({ id, collectionId, descriptor, instanceAtom }, index) => (
+        {visibleLiveCards.map(({ id, collectionId, descriptor, instanceAtom }, index) => (
           <m.li
             key={id}
-            data-card-id={id}
+            data-live-card-id={id}
             ref={(el) => {
               if (el) items.set(id, el)
               else items.delete(id)
@@ -380,7 +380,7 @@ export function CardContainer({
               },
             }}
           >
-            <DraggableCard
+            <DraggableLiveCard
               collectionId={collectionId}
               descriptor={descriptor}
               instanceAtom={instanceAtom}

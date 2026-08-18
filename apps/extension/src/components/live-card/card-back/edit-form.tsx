@@ -1,13 +1,13 @@
 import type { SourceInstanceMetadata } from "@/lib/source"
-import type { CardViewModel } from "@/typings/source"
+import type { LiveCardViewModel } from "@/typings/source"
 import { Button } from "@newsnext/ui/components/button"
 import { useEffect, useState } from "react"
 import { useAsyncAction } from "@/hooks/use-async-action"
 import { EditableImage, EditableInput, Info } from "./fields"
 import { ParamField } from "./param-field"
 
-export interface CardEditFormProps {
-  source: CardViewModel
+export interface LiveCardEditFormProps {
+  source: LiveCardViewModel
   draftSourceParams: Record<string, unknown>
   hasSourceParams: boolean
   hasSourceParamChanges: boolean
@@ -19,7 +19,7 @@ export interface CardEditFormProps {
   onPreviewMetadataChange?: (meta: SourceInstanceMetadata | null) => void
 }
 
-export function CardEditForm({
+export function LiveCardEditForm({
   source,
   draftSourceParams,
   hasSourceParams,
@@ -30,13 +30,13 @@ export function CardEditForm({
   onDiscardSourceParams,
   onSaveSourceMeta,
   onPreviewMetadataChange,
-}: CardEditFormProps): React.JSX.Element {
+}: LiveCardEditFormProps): React.JSX.Element {
   const { params, provider } = source
   const { badge, desc, home, title } = source.metadata
   const [editDraft, setEditDraft] = useState<SourceInstanceMetadata | null>(null)
   const [isEditingParams, setIsEditingParams] = useState(false)
   const { error: saveError, isPending: isSaving, run: runSave } = useAsyncAction(
-    "The card could not be saved.",
+    "The LiveCard could not be saved.",
   )
   const isEditingMetadata = editDraft !== null
   const previewTitle = editDraft?.title ?? title

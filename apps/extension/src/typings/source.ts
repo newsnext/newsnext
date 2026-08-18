@@ -4,10 +4,10 @@ import type { SourceDescriptor } from "@newsnext/source/types"
 export type { NewsItem, SemanticPicture, SourceDescriptor }
 
 /**
- * Frontend source shape used by draggable cards and boards.
- * `id` is the unique card instance identifier used across the UI.
+ * Frontend source shape used by draggable LiveCards and Boards.
+ * `id` is the Instance identifier carried by the LiveCard projection.
  */
-export type CardViewModel = Omit<SourceDescriptor, "id"> & {
+export type LiveCardViewModel = Omit<SourceDescriptor, "id"> & {
   id: string
   sourceId: string
   collectionId: string | null

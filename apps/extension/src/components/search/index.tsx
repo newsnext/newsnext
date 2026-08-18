@@ -2,7 +2,7 @@ import type { Hotkey } from "@tanstack/react-hotkeys"
 import type { ReactNode } from "react"
 import type { Board } from "@/lib/board"
 import type { CollectionEntry } from "@/lib/collection"
-import type { CardViewModel } from "@/typings/source"
+import type { LiveCardViewModel } from "@/typings/source"
 import { Button } from "@newsnext/ui/components/button"
 import {
   Command,
@@ -35,31 +35,30 @@ import { ALL_BOARD_ID } from "@/lib/board"
 import { DEFAULT_SHORTCUT_SETTINGS, SHORTCUT_DEFINITIONS } from "@/lib/settings"
 import {
   applySourceLoaderMetadata,
-  buildSourceCards,
-  getSourceCard,
+  buildLiveCards,
 } from "@/lib/source"
 import { boardsAtom, collectionEntriesAtom, instancesAtom } from "@/store/board"
 import { shortcutSettingsAtom } from "@/store/settings"
-import { SourceIcon } from "../card/source-icon"
 import { PhMagnifyingGlass } from "../icons/ph"
+import { SourceIcon } from "../live-card/source-icon"
 
 interface SearchGroup {
   id: string
   name: string
-  items: CardViewModel[]
+  items: LiveCardViewModel[]
   targetBoardId: string
 }
 
 function groupSearchItems(
-  searchSources: CardViewModel[],
+  liveCards: LiveCardViewModel[],
   boards: Board[],
   collectionEntries: CollectionEntry[],
 ): SearchGroup[] {
-  const itemsByBoardId = new Map<string, CardViewModel[]>()
+  const itemsByBoardId = new Map<string, LiveCardViewModel[]>()
   const knownBoardIds = new Set(
     boards.filter(board => board.id !== ALL_BOARD_ID).map(board => board.id),
   )
-  const noBoardItems: CardViewModel[] = []
+  const noBoardItems: LiveCardViewModel[] = []
   const collectionIdsByInstance = new Map<string, string[]>()
   for (const entry of collectionEntries) {
     const collectionIds = collectionIdsByInstance.get(entry.instanceId) ?? []
@@ -67,17 +66,17 @@ function groupSearchItems(
     collectionIdsByInstance.set(entry.instanceId, collectionIds)
   }
 
-  searchSources.forEach((source) => {
-    const collectionIds = (collectionIdsByInstance.get(source.id) ?? [])
+  liveCards.forEach((liveCard) => {
+    const collectionIds = (collectionIdsByInstance.get(liveCard.id) ?? [])
       .filter(collectionId => knownBoardIds.has(collectionId))
     if (collectionIds.length === 0) {
-      noBoardItems.push(source)
+      noBoardItems.push(liveCard)
       return
     }
 
     for (const collectionId of collectionIds) {
       const items = itemsByBoardId.get(collectionId) ?? []
-      items.push({ ...source, collectionId })
+      items.push({ ...liveCard, collectionId })
       itemsByBoardId.set(collectionId, items)
     }
   })
@@ -101,28 +100,28 @@ function groupSearchItems(
   return boardGroups
 }
 
-function revealCard(id: string, attemptsRemaining = 20): void {
-  const card = document.querySelector<HTMLElement>(`[data-card-id="${CSS.escape(id)}"]`)
-  if (card) {
-    card.scrollIntoView({ behavior: "smooth", block: "center" })
+function revealLiveCard(id: string, attemptsRemaining = 20): void {
+  const liveCard = document.querySelector<HTMLElement>(`[data-live-card-id="${CSS.escape(id)}"]`)
+  if (liveCard) {
+    liveCard.scrollIntoView({ behavior: "smooth", block: "center" })
     return
   }
 
   if (attemptsRemaining > 0) {
-    window.setTimeout(revealCard, 50, id, attemptsRemaining - 1)
+    window.setTimeout(revealLiveCard, 50, id, attemptsRemaining - 1)
   }
 }
 
-function SearchSourceIcon({ source }: { source: CardViewModel }): ReactNode {
-  const icon = useSourceIcon(source)
+function SearchLiveCardIcon({ liveCard }: { liveCard: LiveCardViewModel }): ReactNode {
+  const icon = useSourceIcon(liveCard)
 
   return (
     <SourceIcon
       className="shrink-0 rounded-full"
-      color={source.provider.color}
+      color={liveCard.provider.color}
       icon={icon}
       size="sm"
-      title={source.metadata.title || source.provider.title}
+      title={liveCard.metadata.title || liveCard.provider.title}
     />
   )
 }
@@ -169,10 +168,10 @@ export function SearchDialog(): ReactNode {
     },
   )
 
-  async function handleSelectItem(source: CardViewModel, targetBoardId: string): Promise<void> {
+  async function handleSelectItem(liveCard: LiveCardViewModel, targetBoardId: string): Promise<void> {
     setOpen(false)
     await navigate({ to: "/board/$boardId", params: { boardId: targetBoardId } })
-    revealCard(source.id)
+    revealLiveCard(liveCard.id)
   }
 
   return (
@@ -204,7 +203,7 @@ function SearchDialogContent({
   onSelectItem,
   searchShortcut,
 }: {
-  onSelectItem: (source: CardViewModel, targetBoardId: string) => void
+  onSelectItem: (liveCard: LiveCardViewModel, targetBoardId: string) => void
   searchShortcut: Hotkey | null
 }): ReactNode {
   const boards = useAtomValue(boardsAtom)
@@ -213,27 +212,25 @@ function SearchDialogContent({
   const queryClient = useQueryClient()
   const { sources } = useSourceDescriptors()
 
-  const searchSources = useMemo<CardViewModel[]>(() => {
+  const liveCards = useMemo<LiveCardViewModel[]>(() => {
     if (!sources.length) {
       return []
     }
 
-    const cards = buildSourceCards({
+    return buildLiveCards({
       sources,
       sourceInstances: instances,
       collectionId: null,
     })
-
-    return cards.ids.map(id => getSourceCard(cards, id))
   }, [sources, instances])
 
   const sourceQueryTargets = useMemo(
-    () => searchSources.map(source => createSourceQueryTarget(
-      source.sourceId,
-      source,
-      source.paramsValue,
+    () => liveCards.map(liveCard => createSourceQueryTarget(
+      liveCard.sourceId,
+      liveCard,
+      liveCard.paramsValue,
     )),
-    [searchSources],
+    [liveCards],
   )
   const sourceQueryOptions = useMemo(
     () => sourceQueryTargets.map(target => ({
@@ -253,16 +250,16 @@ function SearchDialogContent({
     )))
   }, [queryClient, sourceQueryTargets])
 
-  const resolvedSearchItems = useMemo(
-    () => searchSources.map((source, index) => (
-      applySourceLoaderMetadata(source, loaderMetadata[index])
+  const resolvedLiveCards = useMemo(
+    () => liveCards.map((liveCard, index) => (
+      applySourceLoaderMetadata(liveCard, loaderMetadata[index])
     )),
-    [loaderMetadata, searchSources],
+    [liveCards, loaderMetadata],
   )
 
   const searchGroups = useMemo(
-    () => groupSearchItems(resolvedSearchItems, boards, collectionEntries),
-    [boards, collectionEntries, resolvedSearchItems],
+    () => groupSearchItems(resolvedLiveCards, boards, collectionEntries),
+    [boards, collectionEntries, resolvedLiveCards],
   )
 
   return (
@@ -280,7 +277,7 @@ export function SearchModalContent({
   searchShortcut,
 }: {
   groups: SearchGroup[]
-  onSelectItem: (source: CardViewModel, targetBoardId: string) => void
+  onSelectItem: (liveCard: LiveCardViewModel, targetBoardId: string) => void
   searchShortcut: Hotkey | null
 }): ReactNode {
   return (
@@ -289,9 +286,9 @@ export function SearchModalContent({
       className="h-[min(32rem,calc(100vh-2rem))] w-full sm:max-w-xl"
       surfaceClassName="grid-rows-[minmax(0,1fr)_auto]"
     >
-      <DialogTitle className="sr-only">Search cards</DialogTitle>
+      <DialogTitle className="sr-only">Search LiveCards</DialogTitle>
       <DialogDescription className="sr-only">
-        Find and open cards from all boards.
+        Find and open LiveCards from all boards.
       </DialogDescription>
 
       <SquircleBox
@@ -302,16 +299,16 @@ export function SearchModalContent({
         <Command className="size-full rounded-none bg-transparent p-0">
           <CommandInput
             autoFocus
-            aria-label="Search cards"
-            placeholder="Search by card, source, or board"
+            aria-label="Search LiveCards"
+            placeholder="Search by LiveCard, source, or board"
             wrapperClassName="p-0"
             inputGroupClassName="h-12 rounded-none border-0 border-b border-foreground/5 bg-transparent px-1 shadow-none transition-none has-[[data-slot=input-group-control]:focus-visible]:border-foreground/15 has-[[data-slot=input-group-control]:focus-visible]:ring-0"
             className="text-sm placeholder:text-foreground/40"
           />
           <CommandList className="min-h-0 max-h-none flex-1 p-2">
             <CommandEmpty className="flex h-full min-h-32 flex-col items-center justify-center gap-1 px-6 text-center">
-              <span className="font-medium text-foreground">No cards found</span>
-              <span className="text-xs text-muted-foreground">Try a card, source, or board name.</span>
+              <span className="font-medium text-foreground">No LiveCards found</span>
+              <span className="text-xs text-muted-foreground">Try a LiveCard, source, or board name.</span>
             </CommandEmpty>
             {groups.map(group => (
               <CommandGroup
@@ -319,32 +316,32 @@ export function SearchModalContent({
                 heading={group.name}
                 className="p-0 pb-2 last:pb-0 **:[[cmdk-group-heading]]:px-3 **:[[cmdk-group-heading]]:py-2"
               >
-                {group.items.map((source) => {
-                  const title = source.metadata.title || source.provider.title
+                {group.items.map((liveCard) => {
+                  const title = liveCard.metadata.title || liveCard.provider.title
 
                   return (
                     <CommandItem
-                      key={source.id}
+                      key={liveCard.id}
                       className="gap-3 rounded-xl px-3 py-2.5 data-[selected=true]:bg-(--search-item-active)"
                       style={{
-                        "--search-item-active": `color-mix(in oklab, var(--color-${source.provider.color}-400) 18%, transparent)`,
+                        "--search-item-active": `color-mix(in oklab, var(--color-${liveCard.provider.color}-400) 18%, transparent)`,
                       } as React.CSSProperties}
-                      value={`${group.id}:${source.id}`}
+                      value={`${group.id}:${liveCard.id}`}
                       keywords={[
-                        source.id,
-                        source.provider.title,
-                        source.metadata.title ?? "",
+                        liveCard.id,
+                        liveCard.provider.title,
+                        liveCard.metadata.title ?? "",
                         group.name,
                       ]}
-                      onSelect={() => onSelectItem(source, group.targetBoardId)}
+                      onSelect={() => onSelectItem(liveCard, group.targetBoardId)}
                     >
-                      <SearchSourceIcon source={source} />
+                      <SearchLiveCardIcon liveCard={liveCard} />
                       <span className="min-w-0 flex-1 truncate font-medium">
                         {title}
                       </span>
-                      {title !== source.provider.title && (
+                      {title !== liveCard.provider.title && (
                         <span className="shrink-0 text-xs text-muted-foreground group-data-[selected=true]/command-item:text-foreground/55">
-                          {source.provider.title}
+                          {liveCard.provider.title}
                         </span>
                       )}
                     </CommandItem>

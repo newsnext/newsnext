@@ -1,23 +1,23 @@
 import type { Atom } from "jotai"
-import type { SourceCardHeight } from "@/lib/settings"
+import type { LiveCardHeight } from "@/lib/settings"
 import type { SourceInstance } from "@/lib/source"
 import type { SourceDescriptor } from "@/typings/source"
 import { useAtomValue } from "jotai"
 import { memo, useMemo } from "react"
 import { useSortable } from "@/hooks/use-sortable"
-import { createBoardSource } from "@/lib/source"
-import { sourceCardHeightAtom } from "@/store/settings"
+import { createLiveCard } from "@/lib/source"
+import { liveCardHeightAtom } from "@/store/settings"
 import { PhDotsSixVerticalDuotone } from "../icons/ph"
-import { CardHeaderActionButton } from "./card-header"
-import { SourceCard } from "./index"
+import { LiveCardHeaderActionButton } from "./card-header"
+import { LiveCard } from "./index"
 
-const SOURCE_CARD_SIZE_CLASS_NAMES: Record<SourceCardHeight, string> = {
+const LIVE_CARD_SIZE_CLASS_NAMES: Record<LiveCardHeight, string> = {
   compact: "h-120 w-100",
   balanced: "h-125 w-100",
   tall: "h-144 w-100",
 }
 
-interface DraggableCardProps {
+interface DraggableLiveCardProps {
   collectionId: string | null
   descriptor: SourceDescriptor
   instanceAtom: Atom<SourceInstance>
@@ -25,8 +25,8 @@ interface DraggableCardProps {
 }
 
 function generateDragPreview({ container, element }: { container: HTMLElement, element: HTMLElement }) {
-  const cardHeader = element.querySelector<HTMLElement>("[data-card-header]")
-  const cardSurface = element.querySelector<HTMLElement>("[data-card-surface]")
+  const cardHeader = element.querySelector<HTMLElement>("[data-live-card-header]")
+  const cardSurface = element.querySelector<HTMLElement>("[data-live-card-surface]")
   if (!cardHeader || !cardSurface) {
     return
   }
@@ -46,11 +46,11 @@ function generateDragPreview({ container, element }: { container: HTMLElement, e
   return () => preview.remove()
 }
 
-function DraggableCardComponent({ collectionId, descriptor, instanceAtom, sortable = true }: DraggableCardProps) {
+function DraggableLiveCardComponent({ collectionId, descriptor, instanceAtom, sortable = true }: DraggableLiveCardProps) {
   const instance = useAtomValue(instanceAtom)
-  const sourceCardHeight = useAtomValue(sourceCardHeightAtom)
+  const liveCardHeight = useAtomValue(liveCardHeightAtom)
   const source = useMemo(
-    () => createBoardSource(descriptor, instance, collectionId),
+    () => createLiveCard(descriptor, instance, collectionId),
     [collectionId, descriptor, instance],
   )
   const id = instance.instanceId
@@ -63,26 +63,26 @@ function DraggableCardComponent({ collectionId, descriptor, instanceAtom, sortab
   const dragHandle = sortable
     ? (
         <div ref={setHandleRef} className="flex items-center justify-center">
-          <CardHeaderActionButton
+          <LiveCardHeaderActionButton
             aria-label={`Move ${source.metadata.title}`}
             className="cursor-grab"
           >
             <PhDotsSixVerticalDuotone />
-          </CardHeaderActionButton>
+          </LiveCardHeaderActionButton>
         </div>
       )
     : undefined
 
   return (
-    <SourceCard
+    <LiveCard
       id={id}
       source={source}
       nodeRef={setNodeRef}
       dragHandle={dragHandle}
-      sizeClassName={SOURCE_CARD_SIZE_CLASS_NAMES[sourceCardHeight]}
+      sizeClassName={LIVE_CARD_SIZE_CLASS_NAMES[liveCardHeight]}
       className={isDragging ? "opacity-50" : undefined}
     />
   )
 }
 
-export const DraggableCard = memo(DraggableCardComponent)
+export const DraggableLiveCard = memo(DraggableLiveCardComponent)

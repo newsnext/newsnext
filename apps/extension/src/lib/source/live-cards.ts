@@ -2,7 +2,7 @@ import type {
   SourcePatch,
   SourcePresentationMetadata,
 } from "@newsnext/source/types"
-import type { CardViewModel, SourceDescriptor } from "@/typings/source"
+import type { LiveCardViewModel, SourceDescriptor } from "@/typings/source"
 import { SOURCE_PRESENTATION_METADATA_KEYS } from "@newsnext/source"
 import { pick } from "es-toolkit"
 
@@ -11,11 +11,6 @@ export interface SourceInstance {
   sourceId: string
   patch: SourceInstancePatch
   createdAt: number
-}
-
-export interface SourceCards {
-  ids: string[]
-  map: Record<string, CardViewModel>
 }
 
 export type SourceInstanceMetadata = SourcePresentationMetadata
@@ -40,15 +35,15 @@ export function mergeSourceInstancePatch(
 }
 
 function applyInstanceOverrides(
-  source: CardViewModel,
+  liveCard: LiveCardViewModel,
   instance: SourceInstance,
-): CardViewModel {
+): LiveCardViewModel {
   const metadata = pick(instance.patch.metadata ?? {}, SOURCE_PRESENTATION_METADATA_KEYS)
 
   return {
-    ...source,
+    ...liveCard,
     metadata: {
-      ...source.metadata,
+      ...liveCard.metadata,
       ...metadata,
     },
     createdAt: instance.createdAt,
@@ -56,11 +51,11 @@ function applyInstanceOverrides(
   }
 }
 
-export function createBoardSource(
+export function createLiveCard(
   source: SourceDescriptor,
   instance: SourceInstance,
   collectionId: string | null = null,
-): CardViewModel {
+): LiveCardViewModel {
   return applyInstanceOverrides({
     ...source,
     id: instance.instanceId,
@@ -69,15 +64,22 @@ export function createBoardSource(
   }, instance)
 }
 
-function buildCardSources(
-  sources: SourceDescriptor[],
-  sourceInstances: SourceInstance[],
-): CardViewModel[] {
-  const sourceIds = new Set(sources.map(source => source.id))
+export function buildLiveCards({
+  sources,
+  sourceInstances,
+  collectionId,
+  collectionInstanceIds,
+}: {
+  sources: SourceDescriptor[]
+  sourceInstances: SourceInstance[]
+  collectionId: string | null
+  collectionInstanceIds?: readonly string[]
+}): LiveCardViewModel[] {
   const instanceGroups = new Map<string, SourceInstance[]>()
+  const visibleIds = collectionInstanceIds ? new Set(collectionInstanceIds) : undefined
 
   sourceInstances.forEach((instance) => {
-    if (!sourceIds.has(instance.sourceId)) {
+    if (visibleIds && !visibleIds.has(instance.instanceId)) {
       return
     }
 
@@ -89,54 +91,22 @@ function buildCardSources(
   return sources.flatMap(source =>
     (instanceGroups.get(source.id) ?? [])
       .sort((a, b) => a.createdAt - b.createdAt)
-      .map(instance => createBoardSource(source, instance)),
+      .map(instance => createLiveCard(source, instance, collectionId)),
   )
 }
 
-export function buildSourceCards({
-  sources,
-  sourceInstances,
-  collectionId,
-  collectionInstanceIds,
-}: {
-  sources: SourceDescriptor[]
-  sourceInstances: SourceInstance[]
-  collectionId: string | null
-  collectionInstanceIds?: readonly string[]
-}): SourceCards {
-  const visibleIds = collectionInstanceIds ? new Set(collectionInstanceIds) : undefined
-  const visibleInstances = visibleIds
-    ? sourceInstances.filter(instance => visibleIds.has(instance.instanceId))
-    : sourceInstances
-  const cards = buildCardSources(sources, visibleInstances)
-    .map(card => ({ ...card, collectionId }))
-
-  return {
-    ids: cards.map(source => source.id),
-    map: Object.fromEntries(cards.map(source => [source.id, source])),
-  }
-}
-
-export function getSourceCard(cards: SourceCards, id: string): CardViewModel {
-  const source = cards.map[id]
-  if (!source) {
-    throw new Error(`Missing source card: ${id}`)
-  }
-  return source
-}
-
 export function applySourceLoaderMetadata(
-  source: CardViewModel,
+  liveCard: LiveCardViewModel,
   metadata: SourcePresentationMetadata | undefined,
-): CardViewModel {
+): LiveCardViewModel {
   if (!metadata) {
-    return source
+    return liveCard
   }
 
   return {
-    ...source,
+    ...liveCard,
     metadata: {
-      ...source.metadata,
+      ...liveCard.metadata,
       ...metadata,
     },
   }

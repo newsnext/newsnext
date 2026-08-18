@@ -25,11 +25,11 @@ export const SHORTCUT_DEFINITIONS: Record<ShortcutId, ShortcutDefinition> = {
     label: "Previous board",
   },
   search: {
-    description: "Open or close card search.",
+    description: "Open or close LiveCard search.",
     label: "Search",
   },
   toggleNextLayer: {
-    description: "Switch between board cards and the mixed timeline.",
+    description: "Switch between LiveCards and the mixed timeline.",
     label: "Toggle Next Layer",
   },
 }
