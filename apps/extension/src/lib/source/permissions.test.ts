@@ -71,7 +71,7 @@ describe("source permissions", () => {
       source,
       getPermissionRequestForSource(source),
     ))
-      .toBe("Authorize access to user-added.example.com to load this source.")
+      .toBe("NewsNext needs access to user-added.example.com to load this source.")
   })
 
   it("deduplicates network and cookie origins", () => {

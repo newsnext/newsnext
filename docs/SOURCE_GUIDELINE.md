@@ -1138,7 +1138,10 @@ newsnext fetch https://example.com/api \
 ```
 
 The request runs in the extension background and uses the browser's cookie jar.
-The target must already have host permission; the CLI never grants permissions.
+When the target does not already have host permission, NewsNext opens a scoped
+extension window where the user can review and authorize the exact site before
+the request continues.
+
 `-X` selects a method, `-H` adds a repeatable header, `-d` supplies a text body,
 and `-i` includes response status and headers. Browser-managed cookies cannot be
 overridden with a `Cookie` header. Use this command for raw endpoint debugging,

@@ -68,7 +68,7 @@ export function getSourcePermissionDescription(
   request: SourcePermissionRequest | undefined,
 ): string {
   if (!request) {
-    return "Authorize the permissions required to load this source."
+    return "NewsNext needs additional access to load this source."
   }
 
   const hosts = request.origins?.map((origin) => {
@@ -80,10 +80,10 @@ export function getSourcePermissionDescription(
   }) ?? []
 
   if (hosts.length === 1) {
-    return `Authorize access to ${hosts[0]} to load this source.`
+    return `NewsNext needs access to ${hosts[0]} to load this source.`
   }
 
-  return `Authorize access to ${source.provider.title} services to continue.`
+  return `NewsNext needs access to ${source.provider.title} services to load this source.`
 }
 
 export async function hasSourcePermission(

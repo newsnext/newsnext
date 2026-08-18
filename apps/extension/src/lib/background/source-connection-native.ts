@@ -25,10 +25,12 @@ import {
   normalizePersistedDeviceState,
   withSourceConnectionEnabled,
 } from "../settings/persisted-settings"
+import { getPermissionRequestForSource } from "../source/permissions"
 import {
   executeBackgroundApplicationAction,
   executeBackgroundApplicationQuery,
 } from "./application-service"
+import { requestCliPermission } from "./cli-permission"
 import { serializeSourceConnectionError } from "./source-connection-error"
 import { runConnectedSource } from "./source-runner"
 
@@ -121,11 +123,12 @@ async function executeFetchRequest(
   request: Extract<ExtensionConnectionCommandRequest, { type: "fetch" }>,
 ): Promise<ExtensionConnectionFetchResponse> {
   const url = new URL(request.url)
-  const hasHostPermission = await browser.permissions.contains({
-    origins: [`${url.protocol}//${url.hostname}/*`],
-  })
-  if (!hasHostPermission) {
-    throw new Error(`Extension does not have host permission for ${url.origin}`)
+  const permissionRequest = { origins: [`${url.protocol}//${url.hostname}/*`] }
+  if (!await requestCliPermission(
+    permissionRequest,
+    "Required to complete this fetch.",
+  )) {
+    throw new Error(`Site access was not granted for ${url.origin}`)
   }
   const signal = AbortSignal.timeout(request.timeoutMs)
   const response = await createSourceFetch(signal)(request.url, {
@@ -141,6 +144,21 @@ async function executeFetchRequest(
     statusText: response.statusText,
     headers: [...response.headers.entries()],
     body: await response.text(),
+  }
+}
+
+async function authorizeConnectedSource(
+  source: Parameters<typeof getPermissionRequestForSource>[0],
+  params: Record<string, unknown>,
+): Promise<void> {
+  const permissionRequest = getPermissionRequestForSource(source, params)
+  if (!permissionRequest) return
+  const granted = await requestCliPermission(
+    permissionRequest,
+    "Required to load this source.",
+  )
+  if (!granted) {
+    throw new Error("Site access was not granted for this source")
   }
 }
 
@@ -179,7 +197,7 @@ async function executeRequest(request: ExtensionConnectionCommandRequest): Promi
     case "fetch":
       return await executeFetchRequest(request)
     case "source.run":
-      return await runConnectedSource(request)
+      return await runConnectedSource(request, authorizeConnectedSource)
   }
 }
 

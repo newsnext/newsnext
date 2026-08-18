@@ -825,10 +825,13 @@ per-host request scheduling. It disables source retries and HTTP status errors
 so the command preserves the requested one-shot raw response. It returns the
 status, response headers, and decoded text body to the CLI. The command accepts
 HTTP(S) URLs without embedded credentials and never serializes browser cookies
-into the command or response. Browser host permissions still govern access; the
-command neither requests nor expands them. Request headers remain subject to the
-browser Fetch API's forbidden-header rules. The CLI execution timeout also
-aborts the browser-side network request.
+into the command or response. Browser host permissions still govern access. If
+the exact target has not been granted, the extension opens a dedicated approval
+window and waits for the user to authorize that origin before continuing. The
+same approval flow runs before `source.run` when the resolved Source and params
+require permissions that are not already granted. Request headers remain subject
+to the browser Fetch API's forbidden-header rules. The CLI execution timeout
+also aborts the browser-side network request.
 
 The CLI runtime is built and distributed from the separate private NewsNext App
 repository. It is intentionally not part of this open-source workspace. One

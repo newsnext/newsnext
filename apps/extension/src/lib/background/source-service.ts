@@ -1,4 +1,5 @@
 import type {
+  RuntimeSource,
   SourceLoaderResult,
 } from "@newsnext/source-kit/types"
 import type { BackgroundSourceFetchResult } from "./source-fetch"
@@ -17,7 +18,11 @@ export interface LoadBackgroundSourceInput {
 
 interface BackgroundSourceServiceOptions {
   fetchResults?: BackgroundSourceFetchResult[]
-  onRequestPrepared?: (params: Record<string, unknown>, sourceVersion: number) => void
+  onRequestPrepared?: (
+    params: Record<string, unknown>,
+    sourceVersion: number,
+    source: RuntimeSource,
+  ) => Promise<void> | void
 }
 
 export interface CancelBackgroundSourceInput {
@@ -51,7 +56,11 @@ export function createBackgroundSourceService(
 
       try {
         const request = await prepareSourceRequest(input.sourceId, input.params ?? {})
-        options.onRequestPrepared?.(request.params, request.source.cache.version)
+        await options.onRequestPrepared?.(
+          request.params,
+          request.source.cache.version,
+          request.source,
+        )
         signal.throwIfAborted()
         const { provider } = parseSourceId(input.sourceId)
         const secrets = await resolveSourceSecrets(request.source, provider)

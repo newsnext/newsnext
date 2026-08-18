@@ -4,6 +4,7 @@ import type {
 } from "@newsnext/extension-connection"
 import type { ProviderConfig } from "@newsnext/source-kit/registry"
 import type { SourceLoaderResult } from "@newsnext/source-kit/types"
+import type { SourcePermissionTarget } from "../source/permissions"
 import type { BackgroundSourceFetchResult } from "./source-fetch"
 import {
   flattenProviderConfig,
@@ -30,6 +31,11 @@ export interface RunConnectedSourceOutput extends Omit<SourceLoaderResult, "item
   }
   fetches: BackgroundSourceFetchResult[]
 }
+
+export type AuthorizeConnectedSource = (
+  source: SourcePermissionTarget,
+  params: Record<string, unknown>,
+) => Promise<void>
 
 function assertIdSegment(value: unknown, name: string): asserts value is string {
   if (typeof value !== "string" || !value || /[:\s]/.test(value)) {
@@ -71,6 +77,7 @@ function createRunOutput(
 
 export async function runConnectedSource(
   input: RunConnectedSourceInput,
+  authorize: AuthorizeConnectedSource,
 ): Promise<RunConnectedSourceOutput> {
   const startedAt = performance.now()
   const fetches: BackgroundSourceFetchResult[] = []
@@ -80,9 +87,10 @@ export async function runConnectedSource(
     let sourceVersion = 0
     const result = await createBackgroundSourceService({
       fetchResults: fetches,
-      onRequestPrepared(preparedParams, preparedSourceVersion) {
+      async onRequestPrepared(preparedParams, preparedSourceVersion, source) {
         params = preparedParams
         sourceVersion = preparedSourceVersion
+        await authorize({ ...source, sourceId: input.sourceId }, preparedParams)
       },
     }).load({
       sourceId: input.sourceId,
@@ -113,6 +121,7 @@ export async function runConnectedSource(
   }
 
   const params = normalizeSourceParams(source, input.params ?? {})
+  await authorize({ ...source, sourceId }, params)
   const secretProviderId = getConnectedSourceSecretProviderId(
     input.providerId,
     input.useProviderSecrets,
