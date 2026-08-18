@@ -167,6 +167,10 @@ path or passes result data through React state owned by a LiveCard. Identical re
 targets may share Source execution and storage while remaining distinct
 Instances in Collections and Views.
 
+The proposed processing model for recurring Runs, retained Observations,
+incremental changes, time windows, and materialized outputs is defined in
+[Data Stream Architecture](DATA_STREAM_ARCHITECTURE.md).
+
 Now Layer and Next Layer are two Views of one Board, not separate Data
 containers. A persisted `defaultView` preference selects which View opens with
 each custom Board. Switching Views changes presentation only and preserves the

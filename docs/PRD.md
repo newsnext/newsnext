@@ -188,6 +188,10 @@ explicit retention action requires them. Stability therefore does not imply
 that every current refresh becomes durable history, that every remote source is
 continuously available, or that every returned list is complete.
 
+The proposed engineering model for incrementally processing and reusing these
+observations is defined in
+[Data Stream Architecture](DATA_STREAM_ARCHITECTURE.md).
+
 Persistent streams enable questions that a one-time search cannot reliably
 answer:
 
