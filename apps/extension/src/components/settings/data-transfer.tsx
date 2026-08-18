@@ -7,7 +7,7 @@ import { useNavigate } from "@tanstack/react-router"
 import { useAtomValue, useSetAtom } from "jotai"
 import { useRef, useState } from "react"
 import { ConfigSection } from "@/components/common/config-section"
-import { PhCheckCircle, PhTrash } from "@/components/icons/ph"
+import { ConfirmDestructiveButton } from "@/components/common/confirm-destructive-button"
 import { useAsyncAction } from "@/hooks/use-async-action"
 import { ALL_BOARD_ID, DEFAULT_BOARD_COLOR } from "@/lib/board"
 import { clearNonPortableUserData, hasPersistedUserDataSlice, parsePersistedDataExport, PERSISTED_PORTABLE_SLICE_IDS, selectPersistedUserData, serializePersistedDataExport } from "@/lib/settings"
@@ -35,8 +35,8 @@ const DATA_SLICE_OPTIONS: Array<{
   },
   {
     id: "instances",
-    label: "Source instances",
-    description: "Configured Source Instances and their parameters.",
+    label: "LiveCards",
+    description: "Configured LiveCards and their source settings.",
   },
 ]
 
@@ -60,7 +60,6 @@ export function DataTransferSettings({
     () => [...PERSISTED_PORTABLE_SLICE_IDS],
   )
   const [status, setStatus] = useState<TransferStatus>()
-  const [clearArmed, setClearArmed] = useState(false)
   const {
     error: clearError,
     isPending: clearing,
@@ -133,12 +132,6 @@ export function DataTransferSettings({
   }
 
   async function handleClear(): Promise<void> {
-    if (!clearArmed) {
-      setClearArmed(true)
-      resetClearError()
-      return
-    }
-
     await runClear(async () => {
       await clearNonPortableUserData()
       await clearPersistedData()
@@ -152,7 +145,6 @@ export function DataTransferSettings({
       })
       onCleared()
     })
-    setClearArmed(false)
   }
 
   return (
@@ -216,24 +208,19 @@ export function DataTransferSettings({
 
       <ConfigSection
         title="Clear user data"
-        description="Delete all boards, source instances, settings, saved source secrets, cached source data, and granted browser permissions. This cannot be undone."
+        description="Delete all boards, LiveCards, settings, saved source secrets, cached source data, and site permissions. This cannot be undone."
         surfaceClassName="p-4"
       >
-        <Button
+        <ConfirmDestructiveButton
           type="button"
-          variant="destructive"
           size="sm"
-          disabled={clearing}
-          onBlur={() => setClearArmed(false)}
-          onClick={() => void handleClear()}
-        >
-          {clearArmed
-            ? <PhCheckCircle data-icon="inline-start" />
-            : <PhTrash data-icon="inline-start" />}
-          {clearing
-            ? "Clearing..."
-            : clearArmed ? "Confirm clear all data" : "Clear all user data"}
-        </Button>
+          label="Clear all user data"
+          confirmLabel="Confirm clear"
+          pending={clearing}
+          pendingLabel="Clearing…"
+          onArm={resetClearError}
+          onConfirm={handleClear}
+        />
         {clearError && (
           <p role="alert" className="text-sm text-destructive">
             {clearError}

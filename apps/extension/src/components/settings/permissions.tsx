@@ -5,7 +5,7 @@ import { useAtomValue, useSetAtom } from "jotai"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { browser } from "#imports"
 import { ConfigSection } from "@/components/common/config-section"
-import { PhCheckCircle } from "@/components/icons/ph"
+import { ConfirmDestructiveButton } from "@/components/common/confirm-destructive-button"
 import { useKeyedAsyncAction } from "@/hooks/use-async-action"
 import { useSourceDescriptors } from "@/hooks/use-source-descriptors"
 import {
@@ -22,12 +22,8 @@ interface PermissionLiveCard {
   title: string
 }
 
-interface ArmedRevokeAction {
-  origin: string
-  removeCards: boolean
-}
-
-const PERMISSION_ACTION_CLASS = "pointer-events-none shrink-0 opacity-0 transition-[opacity,color,background-color,border-color] duration-300 ease-out group-hover/permission:pointer-events-auto group-hover/permission:opacity-100 group-focus-within/permission:pointer-events-auto group-focus-within/permission:opacity-100 motion-reduce:transition-none"
+const PERMISSION_ACTION_CLASS = "pointer-events-none shrink-0 opacity-0 group-hover/permission:pointer-events-auto group-hover/permission:opacity-100 group-focus-within/permission:pointer-events-auto group-focus-within/permission:opacity-100"
+const REVOKE_SITE_ACCESS_ERROR = "NewsNext could not revoke this site access."
 
 function grantedOriginIncludes(grantedOrigin: string, requestedOrigin: string): boolean {
   return grantedOrigin === requestedOrigin || grantedOrigin === "*://*/*"
@@ -70,7 +66,6 @@ export function PermissionsSettings({
   onOpenLiveCard: (id: string) => Promise<void> | void
 }) {
   const [origins, setOrigins] = useState<string[]>([])
-  const [armedAction, setArmedAction] = useState<ArmedRevokeAction>()
   const instances = useAtomValue(instancesAtom)
   const deleteInstance = useSetAtom(deleteInstanceAtom)
   const { isLoading: areSourcesLoading, sources } = useSourceDescriptors()
@@ -79,7 +74,7 @@ export function PermissionsSettings({
     isPending: isRevoking,
     resetError: resetRevokeError,
     run: runRevoke,
-  } = useKeyedAsyncAction<string>("NewsNext could not revoke this permission.")
+  } = useKeyedAsyncAction<string>(REVOKE_SITE_ACCESS_ERROR)
 
   const cardsByOrigin = useMemo(() => new Map(origins.map(origin => [
     origin,
@@ -111,10 +106,10 @@ export function PermissionsSettings({
     removeCards: boolean,
   ): Promise<void> => {
     const cards = cardsByOrigin.get(origin) ?? []
-    const succeeded = await runRevoke(origin, async () => {
+    await runRevoke(origin, async () => {
       const revoked = await revokeHostPermissionOrigin(origin)
       if (!revoked) {
-        throw new Error("NewsNext could not revoke this site access.")
+        throw new Error(REVOKE_SITE_ACCESS_ERROR)
       }
       if (removeCards) {
         for (const card of cards) {
@@ -122,27 +117,14 @@ export function PermissionsSettings({
         }
       }
       await refreshOrigins()
-    }, removeCards
-      ? "NewsNext could not revoke this site access and remove its LiveCards."
-      : "NewsNext could not revoke this site access.")
-
-    if (succeeded) setArmedAction(undefined)
+    })
   }, [cardsByOrigin, deleteInstance, refreshOrigins, runRevoke])
-
-  const handleRevokeClick = useCallback((origin: string, removeCards: boolean): void => {
-    if (armedAction?.origin === origin && armedAction.removeCards === removeCards) {
-      void handleRevokeOrigin(origin, removeCards)
-      return
-    }
-    resetRevokeError()
-    setArmedAction({ origin, removeCards })
-  }, [armedAction, handleRevokeOrigin, resetRevokeError])
 
   return (
     <>
       <ConfigSection
         title="Site access"
-        description="NewsNext requests access when a source needs a site. See which LiveCards depend on each permission before revoking it."
+        description="See which sites NewsNext can access and the LiveCards that depend on them."
         surfaceClassName="p-0"
       >
         {origins.length === 0
@@ -156,28 +138,22 @@ export function PermissionsSettings({
                 {origins.map((origin) => {
                   const cards = cardsByOrigin.get(origin) ?? []
                   const isOriginRevoking = isRevoking(origin)
-                  const isRevokeArmed = armedAction?.origin === origin && !armedAction.removeCards
-                  const isRemoveArmed = armedAction?.origin === origin && armedAction.removeCards
                   return (
                     <li key={origin} className="group/permission px-4 py-3">
                       <div className="flex min-w-0 items-center justify-between gap-4">
                         <div className="min-w-0 flex-1 truncate text-sm font-medium">{getPermissionOriginLabel(origin)}</div>
                         {!areSourcesLoading && (
-                          <Button
-                            variant={isRevokeArmed ? "destructive" : "outline"}
+                          <ConfirmDestructiveButton
+                            type="button"
                             size="xs"
                             className={PERMISSION_ACTION_CLASS}
-                            disabled={isOriginRevoking}
-                            onBlur={() => setArmedAction(undefined)}
-                            onClick={() => handleRevokeClick(origin, false)}
-                          >
-                            {isRevokeArmed && <PhCheckCircle />}
-                            <span aria-live="polite">
-                              {isOriginRevoking && !armedAction?.removeCards
-                                ? "Revoking..."
-                                : isRevokeArmed ? "Confirm Revoke" : "Revoke"}
-                            </span>
-                          </Button>
+                            label="Revoke"
+                            confirmLabel="Confirm revoke"
+                            pending={isOriginRevoking}
+                            pendingLabel="Revoking…"
+                            onArm={resetRevokeError}
+                            onConfirm={() => handleRevokeOrigin(origin, false)}
+                          />
                         )}
                       </div>
                       {areSourcesLoading
@@ -205,21 +181,17 @@ export function PermissionsSettings({
                                 ))}
                               </ul>
                             </div>
-                            <Button
-                              variant={isRemoveArmed ? "destructive" : "outline"}
+                            <ConfirmDestructiveButton
+                              type="button"
                               size="xs"
                               className={PERMISSION_ACTION_CLASS}
-                              disabled={isOriginRevoking}
-                              onBlur={() => setArmedAction(undefined)}
-                              onClick={() => handleRevokeClick(origin, true)}
-                            >
-                              {isRemoveArmed && <PhCheckCircle />}
-                              <span aria-live="polite">
-                                {isOriginRevoking && armedAction?.removeCards
-                                  ? "Removing..."
-                                  : isRemoveArmed ? "Confirm Remove Cards" : "Revoke and Remove Cards"}
-                              </span>
-                            </Button>
+                              label="Revoke and remove LiveCards"
+                              confirmLabel="Confirm revoke and remove"
+                              pending={isOriginRevoking}
+                              pendingLabel="Removing…"
+                              onArm={resetRevokeError}
+                              onConfirm={() => handleRevokeOrigin(origin, true)}
+                            />
                           </div>
                         )}
                     </li>

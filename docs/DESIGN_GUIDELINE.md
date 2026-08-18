@@ -356,13 +356,14 @@ Keep content-specific layouts distinct when needed, but keep overlay opacity,
 shell color, primary radii, and motion consistent. Popover menus and anchored
 transient controls do not use a modal overlay.
 
-When a destructive action already lives inside a modal, prefer an inline
-two-step confirmation over opening another modal on top. The first activation
-arms the existing destructive button and changes its label to an explicit
-confirmation action. Its icon must also change from the original action icon to
-a warning or confirmation icon so the state change is not communicated by text
-alone. The second activation performs the operation. Moving focus away must
-cancel the armed state.
+Use the shared inline two-step confirmation for destructive actions instead of
+opening another modal. Keep the initial action neutral, then switch to the
+destructive treatment and a concise confirmation label after the first
+activation. Change its icon to a confirmation icon so the state is not conveyed
+by text or color alone. The second activation performs the operation, while
+moving focus away cancels it. In a space-constrained LiveCard header, keep the
+idle action icon-only, expand it into a compact labeled button when armed, use a
+restrained 150ms reveal, and reset it after three seconds without confirmation.
 
 ### Single-column dialogs
 

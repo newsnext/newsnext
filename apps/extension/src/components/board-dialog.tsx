@@ -14,7 +14,7 @@ import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { ThemeSelector } from "@newsnext/ui/components/theme-selector"
 import { useState } from "react"
 import { ConfigSection } from "@/components/common/config-section"
-import { PhCheckCircle, PhTrash } from "@/components/icons/ph"
+import { ConfirmDestructiveButton } from "@/components/common/confirm-destructive-button"
 import { useAsyncAction } from "@/hooks/use-async-action"
 import { ALL_BOARD_ID, DEFAULT_BOARD_COLOR, DEFAULT_BOARD_SORT_PREFERENCE, DEFAULT_BOARD_VIEW_MODE, getBoardColor, updateBoardSortMode } from "@/lib/board"
 import { cn } from "@/lib/utils"
@@ -32,14 +32,14 @@ const VIEW_OPTIONS: { label: string, value: BoardViewMode }[] = [
 
 const DELETE_OPTIONS = [
   {
-    confirmLabel: "Confirm board only",
+    confirmLabel: "Confirm delete",
     deleteLiveCards: false,
     label: "Delete board",
   },
   {
-    confirmLabel: "Confirm board and LiveCards",
+    confirmLabel: "Confirm with LiveCards",
     deleteLiveCards: true,
-    label: "Delete board with LiveCards",
+    label: "Delete with LiveCards",
   },
 ] as const
 
@@ -89,7 +89,6 @@ function ConfigurableBoardDialog({
   const [color, setColor] = useState<Color>(initialColor)
   const [sortMode, setSortMode] = useState<BoardSortMode>(initialSortMode)
   const [defaultView, setDefaultView] = useState<BoardViewMode>(initialDefaultView)
-  const [armedDeleteLiveCards, setArmedDeleteLiveCards] = useState<boolean>()
   const { error: submitError, isPending: isSubmitting, run: runAction } = useAsyncAction(
     "The board could not be saved.",
   )
@@ -220,25 +219,16 @@ function ConfigurableBoardDialog({
               {isEditing && (
                 <div className="flex flex-wrap gap-2">
                   {DELETE_OPTIONS.map(option => (
-                    <Button
+                    <ConfirmDestructiveButton
                       key={option.label}
                       type="button"
-                      variant="destructive"
                       disabled={isSubmitting}
-                      onBlur={() => setArmedDeleteLiveCards(undefined)}
-                      onClick={() => {
-                        if (armedDeleteLiveCards === option.deleteLiveCards) {
-                          void handleDelete(option.deleteLiveCards)
-                          return
-                        }
-                        setArmedDeleteLiveCards(option.deleteLiveCards)
-                      }}
-                    >
-                      {armedDeleteLiveCards === option.deleteLiveCards ? <PhCheckCircle /> : <PhTrash />}
-                      <span aria-live="polite">
-                        {armedDeleteLiveCards === option.deleteLiveCards ? option.confirmLabel : option.label}
-                      </span>
-                    </Button>
+                      label={option.label}
+                      confirmLabel={option.confirmLabel}
+                      pending={isSubmitting}
+                      pendingLabel="Deleting…"
+                      onConfirm={() => handleDelete(option.deleteLiveCards)}
+                    />
                   ))}
                 </div>
               )}
@@ -246,13 +236,6 @@ function ConfigurableBoardDialog({
                 {isSubmitting ? "Saving…" : isEditing ? "Save changes" : "Create board"}
               </Button>
             </DialogFooter>
-            {armedDeleteLiveCards !== undefined && (
-              <p role="status" className="text-xs text-destructive">
-                {armedDeleteLiveCards
-                  ? "Deletes LiveCards not used by other boards. Shared LiveCards stay in place."
-                  : "LiveCards remain available in All and their other boards."}
-              </p>
-            )}
             {submitError && (
               <p role="alert" className="text-sm text-destructive">{submitError}</p>
             )}

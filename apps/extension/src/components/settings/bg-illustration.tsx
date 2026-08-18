@@ -7,6 +7,7 @@ import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { useAtom } from "jotai"
 import { useEffect, useRef, useState } from "react"
 import { ConfigSection } from "@/components/common/config-section"
+import { ConfirmDestructiveButton } from "@/components/common/confirm-destructive-button"
 import { PhArrowCounterClockwise } from "@/components/icons/ph"
 import {
   areBgIllustrationTransformsEqual,
@@ -474,9 +475,13 @@ export function BgIllustrationSettings(): React.JSX.Element {
               Apply background
             </Button>
             {savedIllustration && (
-              <Button type="button" variant="destructive" size="sm" onClick={handleRemove}>
-                Remove
-              </Button>
+              <ConfirmDestructiveButton
+                type="button"
+                size="sm"
+                label="Remove"
+                confirmLabel="Confirm remove"
+                onConfirm={handleRemove}
+              />
             )}
           </div>
         </CardContent>

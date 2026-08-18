@@ -1,5 +1,6 @@
 import { useAtomValue, useSetAtom } from "jotai"
 import { BoardMembershipSelect } from "@/components/common/board-membership-select"
+import { ConfirmDestructiveButton } from "@/components/common/confirm-destructive-button"
 import { PhTrashDuotone } from "@/components/icons/ph"
 import { useAsyncAction, useKeyedAsyncAction } from "@/hooks/use-async-action"
 import {
@@ -7,7 +8,6 @@ import {
   deleteInstanceAtom,
   setInstanceCollectionMembershipAtom,
 } from "@/store/board"
-import { LiveCardHeaderActionButton } from "../card-header"
 
 export function LiveCardBoardSelect({ id }: { id: string }) {
   const entries = useAtomValue(collectionEntriesAtom)
@@ -42,9 +42,12 @@ export function LiveCardBoardSelect({ id }: { id: string }) {
 
 export function DeleteLiveCardButton({ id }: { id: string }) {
   const deleteLocal = useSetAtom(deleteInstanceAtom)
-  const { error: deleteError, isPending: isDeleting, run: runDelete } = useAsyncAction(
-    "The LiveCard could not be deleted.",
-  )
+  const {
+    error: deleteError,
+    isPending: isDeleting,
+    resetError: resetDeleteError,
+    run: runDelete,
+  } = useAsyncAction("The LiveCard could not be deleted.")
 
   async function handleDelete(): Promise<void> {
     await runDelete(async () => {
@@ -54,17 +57,20 @@ export function DeleteLiveCardButton({ id }: { id: string }) {
 
   return (
     <>
-      <LiveCardHeaderActionButton
-        disabled={isDeleting}
-        onClick={(e) => {
-          e.stopPropagation()
-          void handleDelete()
-        }}
-        aria-label="Delete LiveCard"
-        title={deleteError ?? "Delete LiveCard"}
-      >
-        <PhTrashDuotone />
-      </LiveCardHeaderActionButton>
+      <ConfirmDestructiveButton
+        appearance="icon-expand"
+        size="icon-fit"
+        icon={<PhTrashDuotone />}
+        label="Delete LiveCard"
+        confirmLabel="Delete"
+        resetAfterMs={3000}
+        pending={isDeleting}
+        pendingLabel="Deleting LiveCard…"
+        className="border-0 text-lg opacity-50 hover:opacity-85 data-[confirmation=armed]:h-6 data-[confirmation=armed]:gap-0.5 data-[confirmation=armed]:px-2 data-[confirmation=armed]:text-xs data-[confirmation=armed]:opacity-100 active:not-aria-[haspopup]:translate-y-0"
+        title={deleteError ?? undefined}
+        onArm={resetDeleteError}
+        onConfirm={handleDelete}
+      />
       {deleteError && <span role="alert" className="sr-only">{deleteError}</span>}
     </>
   )
