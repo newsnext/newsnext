@@ -1,5 +1,5 @@
-import type { RuntimeSource } from "@newsnext/source/types"
-import { normalizeSourceParams } from "@newsnext/source/runtime"
+import type { RuntimeSource } from "@newsnext/source-kit/types"
+import { normalizeSourceParams } from "@newsnext/source-kit/runtime"
 
 export interface SourceQueryTarget {
   params: Record<string, unknown>

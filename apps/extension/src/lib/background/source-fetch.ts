@@ -1,7 +1,7 @@
 import type { ExtensionConnectionFetchResponse } from "@newsnext/extension-connection"
-import type { SourceFetch } from "@newsnext/source/types"
-import { assertNetworkCapability } from "@newsnext/source/core"
-import { createSourceFetch } from "@newsnext/source/utils"
+import type { SourceFetch } from "@newsnext/source-kit/types"
+import { assertNetworkCapability } from "@newsnext/source-kit/core"
+import { createSourceFetch } from "@newsnext/source-kit/utils"
 
 export interface BackgroundSourceFetchResult {
   durationMs: number

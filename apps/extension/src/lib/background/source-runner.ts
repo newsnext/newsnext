@@ -2,14 +2,14 @@ import type {
   ExtensionConnectionProviderRunRequest,
   ExtensionConnectionRegisteredRunRequest,
 } from "@newsnext/extension-connection"
-import type { ProviderConfig } from "@newsnext/source/registry"
-import type { SourceLoaderResult } from "@newsnext/source/types"
+import type { ProviderConfig } from "@newsnext/source-kit/registry"
+import type { SourceLoaderResult } from "@newsnext/source-kit/types"
 import type { BackgroundSourceFetchResult } from "./source-fetch"
 import {
   flattenProviderConfig,
   resolveSourceRegistry,
-} from "@newsnext/source/registry"
-import { normalizeSourceParams, parseSourceId } from "@newsnext/source/runtime"
+} from "@newsnext/source-kit/registry"
+import { normalizeSourceParams, parseSourceId } from "@newsnext/source-kit/runtime"
 import { createBackgroundSourceFetch } from "./source-fetch"
 import { resolveSourceSecrets, updateSourceSecrets } from "./source-secrets"
 import { createBackgroundSourceService } from "./source-service"

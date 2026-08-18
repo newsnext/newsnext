@@ -10,7 +10,7 @@ import type { PersistedDeviceState } from "../settings/persisted-settings"
 import {
   parseExtensionConnectionCommandRequest,
 } from "@newsnext/extension-connection"
-import { createSourceFetch } from "@newsnext/source/utils"
+import { createSourceFetch } from "@newsnext/source-kit/utils"
 import { browser } from "#imports"
 import { openAppTab } from "../app-tab"
 import {

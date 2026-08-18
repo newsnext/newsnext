@@ -7,7 +7,8 @@
   "workspaces": {
     "packages": [
       "apps/*",
-      "packages/*"
+      "packages/*",
+      "registry"
     ],
     "catalog": {
       "@atlaskit/pragmatic-drag-and-drop": "^2.0.2",

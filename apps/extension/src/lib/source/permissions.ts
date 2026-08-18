@@ -2,7 +2,7 @@ import type {
   SourceDescriptor,
   SourceParamSchema,
   SourceProvider,
-} from "@newsnext/source/types"
+} from "@newsnext/source-kit/types"
 import type { OptionalSourcePermission } from "./permission-constants"
 import { browser } from "#imports"
 import { getHostPermissionOrigins } from "./host-permissions"

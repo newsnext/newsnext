@@ -2,7 +2,7 @@ import { resolve } from "node:path"
 import { describe, expect, it } from "vitest"
 import { isSourceProviderFile } from "../../../modules/source"
 
-const REGISTRY_ROOT = resolve("/workspace/packages/registry")
+const REGISTRY_ROOT = resolve("/workspace/registry")
 
 describe("source WXT module", () => {
   it.each([

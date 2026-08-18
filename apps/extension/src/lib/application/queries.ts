@@ -1,4 +1,4 @@
-import type { SourceDescriptor } from "@newsnext/source/types"
+import type { SourceDescriptor } from "@newsnext/source-kit/types"
 import type { Collection, CollectionEntry, CollectionView } from "../collection"
 import type { SourceInstance } from "../source/live-cards"
 import type { ApplicationData } from "./data"

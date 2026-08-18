@@ -1,4 +1,4 @@
-import type { SourceItemTemplate } from "@newsnext/source/types"
+import type { SourceItemTemplate } from "@newsnext/source-kit/types"
 import type { LiveCardViewModel } from "@/typings/source"
 import { useVirtualizer } from "@tanstack/react-virtual"
 import { useAtomValue } from "jotai"

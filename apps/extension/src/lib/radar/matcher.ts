@@ -1,4 +1,4 @@
-import type { CompiledSourceTemplate } from "@newsnext/source/core"
+import type { CompiledSourceTemplate } from "@newsnext/source-kit/core"
 import type {
   HtmlField,
   SourceDescriptor,
@@ -8,7 +8,7 @@ import type {
   SourceRadarParamScript,
   SourceRadarPathPattern,
   SourceRadarRule,
-} from "@newsnext/source/types"
+} from "@newsnext/source-kit/types"
 import type { RadarPageQuery } from "./page-query"
 import type { SourceInstanceMetadata, SourceInstancePatch } from "@/lib/source"
 import {
@@ -20,7 +20,7 @@ import {
   resolveSourceUrl,
   TemplateRenderError,
   validateSourceRegexInput,
-} from "@newsnext/source/core"
+} from "@newsnext/source-kit/core"
 import { match } from "path-to-regexp"
 import {
   createRadarPageQuery,

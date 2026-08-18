@@ -1,5 +1,5 @@
 import type { RadarMatcher, RadarSuggestion } from "@/lib/radar"
-import { loadSources } from "@newsnext/source/runtime"
+import { loadSources } from "@newsnext/source-kit/runtime"
 import {
   createRadarMatcher,
   readRadarPageScriptValues,

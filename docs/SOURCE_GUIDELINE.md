@@ -6,7 +6,7 @@ see the [source architecture](SOURCE_ARCHITECTURE.md).
 
 ## Quick start
 
-Add providers under `packages/registry/src`:
+Add providers under `registry/src`:
 
 - Use JSON for declarative JSON, HTML, and RSS loaders.
 - Use TypeScript for custom loaders, browser APIs, imported helpers, or computed
@@ -17,7 +17,7 @@ Add providers under `packages/registry/src`:
 
 Do not split one provider between JSON and TypeScript files; a provider and all
 of its Sources must use one format. Do not edit
-`packages/registry/registry.json` or `packages/registry/sources.ts`; they are
+`registry/registry.json` or `registry/sources.ts`; they are
 generated. JSON providers are emitted only to `registry.json`; TypeScript
 providers are emitted as complete executable Runtime Sources only to
 `sources.ts`. This keeps JSON registry updates independent from TypeScript
@@ -26,7 +26,7 @@ Source versions.
 Minimal TypeScript provider:
 
 ```ts
-import type { ProviderConfig } from "@newsnext/source/registry"
+import type { ProviderConfig } from "@newsnext/source-kit/registry"
 
 export default {
   title: "Example",
@@ -189,7 +189,7 @@ Create a new category only when it represents a stable product class, has a
 clear boundary from existing categories, and is expected to apply beyond a
 single source configuration. Category IDs must be lowercase English nouns,
 remain concise, and use kebab-case only when multiple words are necessary. Add
-the ID to `CATEGORY_IDS` in `packages/source/src/types/source.ts`, document its
+the ID to `CATEGORY_IDS` in `packages/source-kit/src/types/source.ts`, document its
 matching rule and examples here, update affected providers, rebuild the
 registry, and run type-checking and tests.
 
@@ -1108,8 +1108,8 @@ newsnext run github:trending
 Run a local provider, optionally choosing a source and parameters:
 
 ```sh
-newsnext run packages/registry/src/hackernews.json top
-newsnext run packages/registry/src/telegram.json \
+newsnext run registry/src/hackernews.json top
+newsnext run registry/src/telegram.json \
   --param channel=telegram
 ```
 

@@ -1,4 +1,4 @@
-import type { SourceParamSchema } from "@newsnext/source/types"
+import type { SourceParamSchema } from "@newsnext/source-kit/types"
 import type { SourceParamValues } from "@/lib/source"
 import { useCallback, useState } from "react"
 import { sanitizeSourceParamPatch } from "@/lib/source"

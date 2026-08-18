@@ -1,9 +1,9 @@
 import type {
   SourcePatch,
   SourcePresentationMetadata,
-} from "@newsnext/source/types"
+} from "@newsnext/source-kit/types"
 import type { LiveCardViewModel, SourceDescriptor } from "@/typings/source"
-import { SOURCE_PRESENTATION_METADATA_KEYS } from "@newsnext/source"
+import { SOURCE_PRESENTATION_METADATA_KEYS } from "@newsnext/source-kit"
 import { pick } from "es-toolkit"
 
 export interface SourceInstance {

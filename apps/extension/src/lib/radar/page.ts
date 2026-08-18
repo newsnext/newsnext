@@ -1,4 +1,4 @@
-import type { HtmlTraversal } from "@newsnext/source/types"
+import type { HtmlTraversal } from "@newsnext/source-kit/types"
 import type { RadarPageScript } from "./matcher"
 import type { RadarPageQuery } from "./page-query"
 import { browser } from "#imports"

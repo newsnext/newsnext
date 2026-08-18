@@ -1,4 +1,4 @@
-import type { HtmlFieldConfig } from "@newsnext/source/types"
+import type { HtmlFieldConfig } from "@newsnext/source-kit/types"
 
 export type RadarPageQuery = Omit<HtmlFieldConfig, "template">
 

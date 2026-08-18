@@ -1,4 +1,4 @@
-import type { SourceItemTemplate } from "@newsnext/source/types"
+import type { SourceItemTemplate } from "@newsnext/source-kit/types"
 import type { ReactNode } from "react"
 import type { LiveCardViewModel, NewsItem } from "@/typings/source"
 import { SquircleBox } from "@newsnext/ui/components/squircle"

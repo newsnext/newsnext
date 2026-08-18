@@ -1,4 +1,4 @@
-import type { SourceDescriptor } from "@newsnext/source/types"
+import type { SourceDescriptor } from "@newsnext/source-kit/types"
 import type { ApplicationData } from "./data"
 import { describe, expect, it } from "vitest"
 import { executeApplicationQuery } from "./queries"

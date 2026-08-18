@@ -1,4 +1,4 @@
-import type { RuntimeSource, SourceSecretDefinition, SourceSecrets } from "@newsnext/source/types"
+import type { RuntimeSource, SourceSecretDefinition, SourceSecrets } from "@newsnext/source-kit/types"
 import { storage } from "wxt/utils/storage"
 import { browser } from "#imports"
 import { PERSISTED_DATA_SLICES } from "../settings/persisted-data"

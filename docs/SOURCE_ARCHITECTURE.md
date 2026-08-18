@@ -9,10 +9,10 @@ authoring examples, see the [source authoring guide](SOURCE_GUIDELINE.md).
 Source support is split across three packages:
 
 ```text
-packages/registry
+registry
   owns provider definitions and generated registry artifacts
 
-packages/source
+packages/source-kit
   owns source contracts, validation, resolution, and structured loaders
 
 apps/extension
@@ -34,14 +34,14 @@ App code imports these directory entry points. Modules inside a responsibility
 use direct relative imports so their dependencies remain explicit and do not
 loop back through their own barrel.
 
-`@newsnext/source` does not import concrete providers. It receives resolved
+`@newsnext/source-kit` does not import concrete providers. It receives resolved
 sources through an `ExternalSourcesLoader`, which keeps the source runtime
 independent from the bundled registry and its wire format.
 
 The main source package is organized by responsibility:
 
 ```text
-packages/source/src/
+packages/source-kit/src/
 ├── core/       defaults, parameters, templates, loaders, and capabilities
 ├── registry/   provider expansion and registry parsing
 ├── runtime/    source lookup and request preparation
@@ -51,13 +51,13 @@ packages/source/src/
 
 ## Build pipeline
 
-Providers live under `packages/registry/src`. The registry build discovers
+Providers live under `registry/src`. The registry build discovers
 top-level TypeScript files, nested `index.ts` files, and top-level JSON files.
 It then produces:
 
 ```text
-packages/registry/registry.json
-packages/registry/sources.ts
+registry/registry.json
+registry/sources.ts
 ```
 
 `registry.json` is a flat object keyed by complete source IDs such as

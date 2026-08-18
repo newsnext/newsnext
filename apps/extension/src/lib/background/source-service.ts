@@ -1,11 +1,11 @@
 import type {
   SourceLoaderResult,
-} from "@newsnext/source/types"
+} from "@newsnext/source-kit/types"
 import type { BackgroundSourceFetchResult } from "./source-fetch"
 import {
   parseSourceId,
   prepareSourceRequest,
-} from "@newsnext/source/runtime"
+} from "@newsnext/source-kit/runtime"
 import { createBackgroundSourceFetch } from "./source-fetch"
 import { resolveSourceSecrets, updateSourceSecrets } from "./source-secrets"
 

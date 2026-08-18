@@ -1,5 +1,5 @@
 import type { SourceQueryTarget } from "./source-query"
-import { normalizeSourceParams } from "@newsnext/source/runtime"
+import { normalizeSourceParams } from "@newsnext/source-kit/runtime"
 import { useIsFetching, useQueryClient } from "@tanstack/react-query"
 import { useStore } from "jotai"
 import { useCallback, useSyncExternalStore } from "react"

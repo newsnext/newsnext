@@ -6,7 +6,7 @@ import { defineConfig } from "vitest/config"
 const rootDir = process.cwd()
 const workspaceAliasRoots = [
   "apps/extension",
-  "packages/source",
+  "packages/source-kit",
 ]
 
 export default defineConfig({
@@ -38,9 +38,9 @@ export default defineConfig({
       "packages/cmdk/**/*.{test,spec}.{ts,tsx}",
       "packages/date-parser/**/*.{test,spec}.{ts,tsx}",
       "packages/extension-connection/**/*.{test,spec}.{ts,tsx}",
-      "packages/registry/**/*.{test,spec}.{ts,tsx}",
+      "registry/**/*.{test,spec}.{ts,tsx}",
       "packages/shared/**/*.{test,spec}.{ts,tsx}",
-      "packages/source/**/*.{test,spec}.{ts,tsx}",
+      "packages/source-kit/**/*.{test,spec}.{ts,tsx}",
       "packages/ui/**/*.{test,spec}.{ts,tsx}",
     ],
     exclude: [

@@ -1,4 +1,4 @@
-import type { SourceParamSchema } from "@newsnext/source/types"
+import type { SourceParamSchema } from "@newsnext/source-kit/types"
 import { describe, expect, it } from "vitest"
 import { sanitizeSourceParamPatch } from "./params"
 

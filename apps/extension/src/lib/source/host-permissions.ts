@@ -1,4 +1,4 @@
-import type { SourceCapabilities } from "@newsnext/source/types"
+import type { SourceCapabilities } from "@newsnext/source-kit/types"
 import { browser } from "#imports"
 
 const CAPABILITY_HOST_PATTERN = /^(?:\*|(?:\*\.)?(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)*[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)$/i

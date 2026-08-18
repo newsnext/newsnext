@@ -3,7 +3,7 @@ import { dirname, relative, resolve, sep } from "node:path"
 import { fileURLToPath } from "node:url"
 import { defineWxtModule } from "wxt/modules"
 
-const REGISTRY_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../../packages/registry")
+const REGISTRY_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../../registry")
 const REGISTRY_SOURCE_DIR = resolve(REGISTRY_ROOT, "src")
 const REGISTRY_OUTPUT_PATH = resolve(REGISTRY_ROOT, "registry.json")
 const SOURCE_CHANGE_EVENTS = new Set(["add", "change", "unlink"])
@@ -14,30 +14,27 @@ export function isSourceProviderFile(
   registryRoot = REGISTRY_ROOT,
 ): boolean {
   const registryPathParts = relative(registryRoot, filePath).split(sep)
-  if (
-    registryPathParts.length === 2
-    && registryPathParts[0] === "src"
-    && registryPathParts[1]?.endsWith(".json")
-  ) {
-    return true
-  }
+  const fileName = registryPathParts.at(-1)
 
   if (
     registryPathParts[0] !== "src"
-    || !registryPathParts.at(-1)?.endsWith(".ts")
-    || TEST_FILE_REGEX.test(registryPathParts.at(-1) ?? "")
+    || !fileName
+    || TEST_FILE_REGEX.test(fileName)
   ) {
     return false
   }
 
-  return registryPathParts.length === 2
-    || (registryPathParts.length === 3 && registryPathParts[2] === "index.ts")
+  if (registryPathParts.length === 2) {
+    return fileName.endsWith(".json") || fileName.endsWith(".ts")
+  }
+
+  return registryPathParts.length === 3 && fileName === "index.ts"
 }
 
-function runPackageBuild(packageRoot: string): Promise<void> {
+function runRegistryBuild(): Promise<void> {
   return new Promise((resolveBuild, rejectBuild) => {
     const child = spawn("bun", ["run", "build"], {
-      cwd: packageRoot,
+      cwd: REGISTRY_ROOT,
       stdio: ["ignore", "pipe", "pipe"],
     })
     let output = ""
@@ -56,10 +53,6 @@ function runPackageBuild(packageRoot: string): Promise<void> {
   })
 }
 
-async function runSourceBuilds(): Promise<void> {
-  await runPackageBuild(REGISTRY_ROOT)
-}
-
 export default defineWxtModule({
   setup(wxt) {
     let activeBuild: Promise<void> | undefined
@@ -75,7 +68,7 @@ export default defineWxtModule({
       activeBuild = (async () => {
         do {
           rebuildRequested = false
-          await runSourceBuilds()
+          await runRegistryBuild()
         } while (rebuildRequested)
       })()
 

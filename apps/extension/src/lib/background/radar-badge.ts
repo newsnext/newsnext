@@ -1,5 +1,5 @@
 import type { Browser } from "#imports"
-import { loadSourceDescriptors } from "@newsnext/source/runtime"
+import { loadSourceDescriptors } from "@newsnext/source-kit/runtime"
 import { browser } from "#imports"
 import { createRadarMatcher } from "@/lib/radar"
 

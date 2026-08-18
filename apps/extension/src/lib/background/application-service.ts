@@ -6,7 +6,7 @@ import type {
   ApplicationQueryResult,
   ApplicationVisibleLiveCard,
 } from "../application"
-import { loadSourceDescriptors } from "@newsnext/source/runtime"
+import { loadSourceDescriptors } from "@newsnext/source-kit/runtime"
 import { browser } from "#imports"
 import {
   executeApplicationAction,

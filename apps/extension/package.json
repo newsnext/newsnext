@@ -24,7 +24,7 @@
     "@newsnext/extension-connection": "workspace:*",
     "@newsnext/registry": "workspace:*",
     "@newsnext/shared": "workspace:*",
-    "@newsnext/source": "workspace:*",
+    "@newsnext/source-kit": "workspace:*",
     "@newsnext/ui": "workspace:*",
     "@tanstack/react-hotkeys": "catalog:",
     "@tanstack/react-query": "catalog:",

@@ -1,4 +1,4 @@
-import type { SourceProvider } from "@newsnext/source/types"
+import type { SourceProvider } from "@newsnext/source-kit/types"
 import type { ComponentProps, ReactNode } from "react"
 import { Button } from "@newsnext/ui/components/button"
 import { cn } from "@/lib/utils"

@@ -1,8 +1,8 @@
 import type { LoadBackgroundSourceOutput } from "../background/source-service"
-import { parseSourceCacheMaxAge } from "@newsnext/source/core"
+import { parseSourceCacheMaxAge } from "@newsnext/source-kit/core"
 import {
   normalizeSourceParams,
-} from "@newsnext/source/runtime"
+} from "@newsnext/source-kit/runtime"
 import { createBackgroundClient } from "../background/client"
 import { readSourceCache, writeCachedSource } from "./cache"
 import { buildSourceCacheKey } from "./cache-values"

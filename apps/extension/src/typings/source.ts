@@ -1,5 +1,5 @@
 import type { NewsItem, SemanticPicture } from "@newsnext/shared/types"
-import type { SourceDescriptor } from "@newsnext/source/types"
+import type { SourceDescriptor } from "@newsnext/source-kit/types"
 
 export type { NewsItem, SemanticPicture, SourceDescriptor }
 

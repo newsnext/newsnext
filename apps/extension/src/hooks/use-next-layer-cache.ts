@@ -1,4 +1,4 @@
-import type { SourceItemTemplate } from "@newsnext/source/types"
+import type { SourceItemTemplate } from "@newsnext/source-kit/types"
 import type {
   NextLayerCacheResults,
   NextLayerCacheTarget,

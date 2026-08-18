@@ -1,4 +1,4 @@
-import type { SourceItemTemplate } from "@newsnext/source/types"
+import type { SourceItemTemplate } from "@newsnext/source-kit/types"
 import type { NewsItem } from "@/typings/source"
 import { VirtualList } from "@newsnext/ui/components/virtual-list"
 import { AnimatePresence, m } from "motion/react"
