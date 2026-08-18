@@ -1,5 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import type { Color } from "@newsnext/shared/types"
+import type { SourcePermissionRequest } from "@/lib/source"
 import type { LiveCardViewModel, NewsItem } from "@/typings/source"
 import { COLORS } from "@newsnext/shared/constants"
 import { useState } from "react"
@@ -55,8 +56,8 @@ export const SAMPLE_SOURCE: LiveCardViewModel = {
     limit: 20,
   },
   capabilities: {
-    network: ["https://reactcosmos.org/*"],
-    cookies: [],
+    network: ["reactcosmos.org"],
+    cookies: ["reactcosmos.org"],
   },
   cache: {
     version: 1,
@@ -140,7 +141,7 @@ interface FrontFixtureProps {
   isFetching?: boolean
   isContentFetching?: boolean
   sourceErrorMessage?: string
-  sourcePermissionRequired?: boolean
+  sourcePermissionRequest?: SourcePermissionRequest
 }
 
 function FrontFixture({
@@ -148,7 +149,7 @@ function FrontFixture({
   isFetching = false,
   isContentFetching = false,
   sourceErrorMessage,
-  sourcePermissionRequired = false,
+  sourcePermissionRequest,
 }: FrontFixtureProps) {
   const [updatedAt, setUpdatedAt] = useState(UPDATED_AT)
 
@@ -160,8 +161,7 @@ function FrontFixture({
         isFetching={isFetching}
         isContentFetching={isContentFetching}
         sourceErrorMessage={sourceErrorMessage}
-        sourcePermissionDescription="Allow access to reactcosmos.org to load this source."
-        sourcePermissionRequired={sourcePermissionRequired}
+        sourcePermissionRequest={sourcePermissionRequest}
         updatedAt={updatedAt}
         onRefresh={() => setUpdatedAt(Date.now())}
         onRequestPermission={async () => true}
@@ -224,8 +224,6 @@ function AllCardColorsFixture() {
               items={RANKING_ITEMS.slice(0, 4)}
               isFetching={false}
               isContentFetching={false}
-              sourcePermissionDescription=""
-              sourcePermissionRequired={false}
               updatedAt={UPDATED_AT}
               onRefresh={() => undefined}
               onRequestPermission={async () => true}
@@ -247,7 +245,15 @@ function LoadingCardFixture() {
 }
 
 function PermissionCardFixture() {
-  return <FrontFixture items={[]} sourcePermissionRequired />
+  return (
+    <FrontFixture
+      items={[]}
+      sourcePermissionRequest={{
+        origins: ["*://reactcosmos.org/*"],
+        permissions: ["cookies"],
+      }}
+    />
+  )
 }
 
 function ErrorCardFixture() {

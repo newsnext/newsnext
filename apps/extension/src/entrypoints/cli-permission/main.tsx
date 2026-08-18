@@ -4,6 +4,7 @@ import { Logo } from "@newsnext/ui/components/logo"
 import { useEffect, useState } from "react"
 import { browser } from "#imports"
 import { renderPersistentReactRoot } from "@/lib/react-root"
+import { getPermissionOriginLabel } from "@/lib/source"
 import "@/styles/index.css"
 import "./style.css"
 
@@ -17,12 +18,6 @@ const REQUEST_UNAVAILABLE_MESSAGE = "This request is no longer available. Rerun 
 
 function getRequestId(): string {
   return decodeURIComponent(window.location.hash.slice(1))
-}
-
-function getOriginLabel(origin: string): string {
-  return origin
-    .replace(/^\*:\/\//, "")
-    .replace(/\/\*$/, "")
 }
 
 function CliPermissionApp(): React.JSX.Element {
@@ -106,7 +101,7 @@ function CliPermissionApp(): React.JSX.Element {
                       className="max-w-full truncate rounded-full bg-secondary px-3 py-1.5 font-mono text-xs text-foreground"
                       title={origin}
                     >
-                      {getOriginLabel(origin)}
+                      {getPermissionOriginLabel(origin)}
                     </li>
                   ))}
                 </ul>

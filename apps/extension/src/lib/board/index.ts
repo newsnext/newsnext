@@ -10,6 +10,7 @@ export {
   normalizeBoardViewMode,
 } from "./board"
 export { mixSourceItems } from "./next-layer"
+export { revealLiveCard } from "./reveal-live-card"
 export { getSortableData, isSortableData } from "./sortable-data"
 export type {
   BoardSortMode,

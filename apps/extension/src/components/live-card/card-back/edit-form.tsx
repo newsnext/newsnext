@@ -3,6 +3,8 @@ import type { LiveCardViewModel } from "@/typings/source"
 import { Button } from "@newsnext/ui/components/button"
 import { useEffect, useState } from "react"
 import { useAsyncAction } from "@/hooks/use-async-action"
+import { getHostPermissionOrigins, getPermissionRequestForSource } from "@/lib/source"
+import { SourcePermissionDetails } from "../source-permission-details"
 import { EditableImage, EditableInput, Info } from "./fields"
 import { ParamField } from "./param-field"
 
@@ -44,6 +46,11 @@ export function LiveCardEditForm({
   const previewDesc = editDraft?.desc ?? desc
   const previewHome = editDraft?.home ?? home
   const hasSourceMetaChanges = Boolean(editDraft && Object.keys(editDraft).length > 0)
+  const permissionRequest = getPermissionRequestForSource(source, draftSourceParams)
+  const cookieOrigins = getHostPermissionOrigins({
+    cookies: source.capabilities.cookies,
+    network: [],
+  })
 
   useEffect(() => {
     onPreviewMetadataChange?.(editDraft)
@@ -162,6 +169,14 @@ export function LiveCardEditForm({
           ))}
         </section>
       )}
+      <section className="flex flex-col pt-0.5 text-sm">
+        <div className="mb-2 flex items-start justify-between">
+          <span className="inline-block border-b border-border/60 pb-1 font-semibold opacity-80">Permissions</span>
+        </div>
+        {permissionRequest
+          ? <SourcePermissionDetails cookieOrigins={cookieOrigins} request={permissionRequest} />
+          : <p className="text-muted-foreground">No additional permissions</p>}
+      </section>
       {saveError && <p role="alert" className="text-sm text-destructive">{saveError}</p>}
     </div>
   )

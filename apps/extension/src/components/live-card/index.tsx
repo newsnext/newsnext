@@ -48,8 +48,7 @@ function LiveCardContent({ id, source, dragHandle, isDraft = false, onDraftSourc
   })
   const {
     canLoad,
-    permissionDescription,
-    permissionRequired,
+    missingPermission,
     requestPermission,
   } = useSourcePermission(source, savedParams)
 
@@ -115,8 +114,7 @@ function LiveCardContent({ id, source, dragHandle, isDraft = false, onDraftSourc
         isContentFetching={isFetchingLatest || isLoading}
         sourceErrorMessage={sourceErrorMessage}
         sourceLoginUrl={canLoad ? loginUrl : undefined}
-        sourcePermissionDescription={permissionDescription}
-        sourcePermissionRequired={permissionRequired}
+        sourcePermissionRequest={missingPermission}
         updatedAt={updatedAt}
         onRefresh={fetchLatest}
         onRequestPermission={requestPermission}

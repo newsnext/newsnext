@@ -31,7 +31,7 @@ import {
 } from "@/hooks/source-query"
 import { useSourceDescriptors } from "@/hooks/use-source-descriptors"
 import { useSourceIcon } from "@/hooks/use-source-icon"
-import { ALL_BOARD_ID } from "@/lib/board"
+import { ALL_BOARD_ID, revealLiveCard } from "@/lib/board"
 import { DEFAULT_SHORTCUT_SETTINGS, SHORTCUT_DEFINITIONS } from "@/lib/settings"
 import {
   applySourceLoaderMetadata,
@@ -98,18 +98,6 @@ function groupSearchItems(
   }
 
   return boardGroups
-}
-
-function revealLiveCard(id: string, attemptsRemaining = 20): void {
-  const liveCard = document.querySelector<HTMLElement>(`[data-live-card-id="${CSS.escape(id)}"]`)
-  if (liveCard) {
-    liveCard.scrollIntoView({ behavior: "smooth", block: "center" })
-    return
-  }
-
-  if (attemptsRemaining > 0) {
-    window.setTimeout(revealLiveCard, 50, id, attemptsRemaining - 1)
-  }
 }
 
 function SearchLiveCardIcon({ liveCard }: { liveCard: LiveCardViewModel }): ReactNode {

@@ -44,6 +44,12 @@ export function getPermissionRequestForSource(
     : { origins }
 }
 
+export function getPermissionOriginLabel(origin: string): string {
+  return origin
+    .replace(/^\*:\/\//, "")
+    .replace(/\/\*$/, "")
+}
+
 function getUrlParamPermissionOrigin(
   schema: SourceParamSchema | undefined,
   value: unknown,
@@ -61,29 +67,6 @@ function getUrlParamPermissionOrigin(
   } catch {
     return undefined
   }
-}
-
-export function getSourcePermissionDescription(
-  source: SourcePermissionTarget,
-  request: SourcePermissionRequest | undefined,
-): string {
-  if (!request) {
-    return "NewsNext needs additional access to load this source."
-  }
-
-  const hosts = request.origins?.map((origin) => {
-    try {
-      return new URL(origin.replace("*://", "https://")).hostname
-    } catch {
-      return origin
-    }
-  }) ?? []
-
-  if (hosts.length === 1) {
-    return `NewsNext needs access to ${hosts[0]} to load this source.`
-  }
-
-  return `NewsNext needs access to ${source.provider.title} services to load this source.`
 }
 
 export async function hasSourcePermission(

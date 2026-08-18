@@ -1,17 +1,15 @@
-import type { SourcePermissionTarget } from "@/lib/source"
+import type { SourcePermissionRequest, SourcePermissionTarget } from "@/lib/source"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { browser } from "#imports"
 import {
   getPermissionRequestForSource,
-  getSourcePermissionDescription,
   hasSourcePermission,
   requestSourcePermission,
 } from "@/lib/source"
 
 export interface SourcePermissionState {
   canLoad: boolean
-  permissionDescription: string
-  permissionRequired: boolean
+  missingPermission?: SourcePermissionRequest
   requestPermission: () => Promise<boolean>
 }
 
@@ -82,8 +80,7 @@ export function useSourcePermission(
 
   return {
     canLoad: permissionState.granted === true,
-    permissionDescription: getSourcePermissionDescription(source, permissionRequest),
-    permissionRequired: permissionState.granted === false,
+    missingPermission: permissionState.granted === false ? permissionRequest : undefined,
     requestPermission,
   }
 }

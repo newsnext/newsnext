@@ -7,8 +7,8 @@ vi.mock("#imports", () => ({
 }))
 
 const {
+  getPermissionOriginLabel,
   getPermissionRequestForSource,
-  getSourcePermissionDescription,
 } = await import("./permissions")
 
 function createSource({
@@ -67,11 +67,8 @@ describe("source permissions", () => {
     expect(getPermissionRequestForSource(source)).toEqual({
       origins: ["*://user-added.example.com/*"],
     })
-    expect(getSourcePermissionDescription(
-      source,
-      getPermissionRequestForSource(source),
-    ))
-      .toBe("NewsNext needs access to user-added.example.com to load this source.")
+    expect(getPermissionOriginLabel("*://user-added.example.com/*"))
+      .toBe("user-added.example.com")
   })
 
   it("deduplicates network and cookie origins", () => {

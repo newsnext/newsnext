@@ -1,3 +1,4 @@
+import type { ReactNode } from "react"
 import type { LiveCardViewModel } from "@/typings/source"
 import { Button } from "@newsnext/ui/components/button"
 import { PhInfo } from "../icons/ph"
@@ -121,14 +122,14 @@ export function SourceStatusPattern({
 export function SourceStatusMessage({
   message,
 }: {
-  message: string
+  message: ReactNode
 }) {
   return (
-    <div className="absolute inset-x-0 bottom-0 z-10 border-t border-foreground/10 bg-background/45 px-3 py-2 backdrop-blur-sm">
-      <span className="line-clamp-2 text-pretty text-center text-xs leading-5 text-muted-foreground">
-        <PhInfo className="mr-1 inline size-[1em] align-[-0.125em]" />
-        {message}
-      </span>
+    <div className="absolute inset-x-0 bottom-0 z-10 max-h-24 overflow-y-auto border-t border-foreground/10 bg-background/45 px-3 py-2 backdrop-blur-sm scrollbar-hidden">
+      <div className="flex items-start justify-center gap-1 text-pretty text-center text-xs leading-5 text-muted-foreground">
+        <PhInfo className="mt-1 size-[1em] shrink-0" />
+        <div className="min-w-0 flex-1">{message}</div>
+      </div>
     </div>
   )
 }

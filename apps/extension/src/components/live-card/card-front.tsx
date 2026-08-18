@@ -1,12 +1,13 @@
 import type { SourceItemTemplate } from "@newsnext/source-kit/types"
 import type { ReactNode } from "react"
+import type { SourcePermissionRequest } from "@/lib/source"
 import type { LiveCardViewModel, NewsItem } from "@/typings/source"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { useMemo, useState } from "react"
 import { useSourceIcon } from "@/hooks/use-source-icon"
 import { useSourceMarkScales } from "@/hooks/use-source-mark-scales"
 import { RelativeTime } from "@/hooks/useRelativeTime"
-import { getTimelineItemTimes } from "@/lib/source"
+import { getHostPermissionOrigins, getTimelineItemTimes } from "@/lib/source"
 import { cn } from "@/lib/utils"
 import {
   PhArrowCounterClockwiseDuotone,
@@ -23,6 +24,7 @@ import {
 } from "./card-source-state"
 import { LiveCardSurface } from "./card-surface"
 import { Ranking } from "./ranking"
+import { SourcePermissionDetails } from "./source-permission-details"
 import { Timeline } from "./timeline"
 
 interface LiveCardFrontProps {
@@ -33,8 +35,7 @@ interface LiveCardFrontProps {
   isContentFetching: boolean
   sourceErrorMessage?: string
   sourceLoginUrl?: string
-  sourcePermissionDescription: string
-  sourcePermissionRequired: boolean
+  sourcePermissionRequest?: SourcePermissionRequest
   updatedAt: number
   onRefresh: () => void
   onRequestPermission: () => Promise<boolean>
@@ -70,7 +71,7 @@ interface LiveCardFrontContentProps {
   scrollElement: HTMLDivElement | null
   sourceErrorMessage?: string
   sourceLoginUrl?: string
-  sourcePermissionRequired: boolean
+  sourcePermissionRequest?: SourcePermissionRequest
   onRefresh: () => void
   onRequestPermission: () => Promise<boolean>
 }
@@ -84,11 +85,11 @@ function LiveCardFrontContent({
   scrollElement,
   sourceErrorMessage,
   sourceLoginUrl,
-  sourcePermissionRequired,
+  sourcePermissionRequest,
   onRefresh,
   onRequestPermission,
 }: LiveCardFrontContentProps) {
-  if (sourcePermissionRequired) {
+  if (sourcePermissionRequest) {
     return (
       <SourcePermissionState
         icon={icon}
@@ -149,8 +150,7 @@ export function LiveCardFront({
   isContentFetching,
   sourceErrorMessage,
   sourceLoginUrl,
-  sourcePermissionDescription,
-  sourcePermissionRequired,
+  sourcePermissionRequest,
   updatedAt,
   onRefresh,
   onRequestPermission,
@@ -168,8 +168,16 @@ export function LiveCardFront({
   )
   const markScale = useSourceMarkScales(markScaleGroups).get(source.id)
   const visibleSourceErrorMessage = isContentFetching ? undefined : sourceErrorMessage
-  const sourceStatusMessage = sourcePermissionRequired
-    ? sourcePermissionDescription
+  const sourceStatusMessage = sourcePermissionRequest
+    ? (
+        <SourcePermissionDetails
+          cookieOrigins={getHostPermissionOrigins({
+            cookies: source.capabilities.cookies,
+            network: [],
+          })}
+          request={sourcePermissionRequest}
+        />
+      )
     : sourceLoginUrl
       ? `Log in to ${provider.title} to continue.`
       : visibleSourceErrorMessage
@@ -230,7 +238,7 @@ export function LiveCardFront({
                 scrollElement={scrollElement}
                 sourceErrorMessage={visibleSourceErrorMessage}
                 sourceLoginUrl={sourceLoginUrl}
-                sourcePermissionRequired={sourcePermissionRequired}
+                sourcePermissionRequest={sourcePermissionRequest}
                 onRefresh={onRefresh}
                 onRequestPermission={onRequestPermission}
               />

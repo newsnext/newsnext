@@ -1,5 +1,6 @@
 export {
   getGrantedHostPermissionOrigins,
+  getHostPermissionOrigins,
   getUserManagedHostPermissionOrigins,
   revokeHostPermissionOrigin,
 } from "./host-permissions"
@@ -29,10 +30,10 @@ export type { SourceLoadResult } from "./loader"
 export { loadSource, readPersistedSourceCache } from "./loader"
 export type { SourceParamValues } from "./params"
 export { sanitizeSourceParamPatch } from "./params"
-export type { SourcePermissionTarget } from "./permissions"
+export type { SourcePermissionRequest, SourcePermissionTarget } from "./permissions"
 export {
+  getPermissionOriginLabel,
   getPermissionRequestForSource,
-  getSourcePermissionDescription,
   hasSourcePermission,
   requestSourcePermission,
 } from "./permissions"

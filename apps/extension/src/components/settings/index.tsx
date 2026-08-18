@@ -2,9 +2,11 @@ import type { LiveCardHeight, SettingsTabId } from "@/lib/settings"
 import { Label } from "@newsnext/ui/components/label"
 import { RadioGroup, RadioGroupItem } from "@newsnext/ui/components/radio-group"
 import { TabsContent } from "@newsnext/ui/components/tabs"
+import { useNavigate } from "@tanstack/react-router"
 import { useAtom, useAtomValue } from "jotai"
 import { useEffect } from "react"
 import { ConfigSection } from "@/components/common/config-section"
+import { ALL_BOARD_ID, revealLiveCard } from "@/lib/board"
 import { cn } from "@/lib/utils"
 import { handleThemeModeSwitch } from "@/lib/utils/swith-theme"
 import { boardsAtom } from "@/store/board"
@@ -81,6 +83,7 @@ function SettingsModalContent({
   onOpenChange: (open: boolean) => void
 }) {
   const [activeTab, setActiveTab] = useAtom(settingsTabAtom)
+  const navigate = useNavigate()
 
   useEffect(() => {
     if (initialTab) {
@@ -90,6 +93,12 @@ function SettingsModalContent({
 
   const handleTabChange = (tabId: SettingsTabId) => {
     setActiveTab(tabId)
+  }
+
+  async function handleOpenLiveCard(id: string): Promise<void> {
+    onOpenChange(false)
+    await navigate({ to: "/board/$boardId", params: { boardId: ALL_BOARD_ID } })
+    revealLiveCard(id)
   }
 
   return (
@@ -103,7 +112,9 @@ function SettingsModalContent({
       <TabsContent value="general"><GeneralSettings /></TabsContent>
       <TabsContent value="cli"><SourceConnectionSettings /></TabsContent>
       <TabsContent value="shortcuts"><ShortcutsSettings /></TabsContent>
-      <TabsContent value="permissions"><PermissionsSettings /></TabsContent>
+      <TabsContent value="permissions">
+        <PermissionsSettings onOpenLiveCard={handleOpenLiveCard} />
+      </TabsContent>
       <TabsContent value="data">
         <DataTransferSettings onCleared={() => onOpenChange(false)} />
       </TabsContent>
