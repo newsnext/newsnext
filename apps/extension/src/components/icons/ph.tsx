@@ -13,6 +13,7 @@ import PhEye from "~icons/ph/eye-bold"
 import PhFileArrowUp from "~icons/ph/file-arrow-up-bold"
 import PhGear from "~icons/ph/gear-bold"
 import PhHeart from "~icons/ph/heart-bold"
+import PhHouse from "~icons/ph/house-bold"
 import PhInfo from "~icons/ph/info-bold"
 import PhInfoDuotone from "~icons/ph/info-duotone"
 import PhMagnifyingGlass from "~icons/ph/magnifying-glass-bold"
@@ -42,6 +43,7 @@ export {
   PhFileArrowUp,
   PhGear,
   PhHeart,
+  PhHouse,
   PhInfo,
   PhInfoDuotone,
   PhMagnifyingGlass,

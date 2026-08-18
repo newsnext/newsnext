@@ -1,5 +1,6 @@
 import { registerService } from "@webext-core/proxy-service"
 import { browser, defineBackground } from "#imports"
+import { openAppTab } from "@/lib/app-tab"
 import { registerRadarBadge } from "@/lib/background/radar-badge"
 import { registerSourceRegistryLoader } from "@/lib/background/registry"
 import { BACKGROUND_SERVICE_KEY, createBackgroundService } from "@/lib/background/service"
@@ -42,7 +43,7 @@ export default defineBackground(() => {
 
   browser.contextMenus.onClicked.addListener((info) => {
     if (info.menuItemId === APP_MENU_ID) {
-      void browser.tabs.create({ url: browser.runtime.getURL("/app.html") })
+      void openAppTab()
     }
 
     if (import.meta.env.DEV && info.menuItemId === COSMOS_MENU_ID) {

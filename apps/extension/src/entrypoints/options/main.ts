@@ -1,6 +1,3 @@
-import { browser } from "#imports"
-import { ensureSettingsOpenRequest } from "@/lib/settings"
+import { openSettings } from "@/lib/settings"
 
-ensureSettingsOpenRequest()
-
-window.location.replace(browser.runtime.getURL("/app.html"))
+void openSettings().then(() => window.close())

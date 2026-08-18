@@ -1,8 +1,7 @@
 export { clearNonPortableUserData } from "./clear-user-data"
 export {
   consumeSettingsOpenRequest,
-  ensureSettingsOpenRequest,
-  requestSettingsOpen,
+  openSettings,
   subscribeToSettingsOpenRequests,
 } from "./navigation"
 export type {

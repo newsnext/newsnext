@@ -105,7 +105,7 @@ function RadarSourceCard({ source, className, onDraftSourceChange }: RadarSource
       id={source.id}
       source={source}
       className={cn(
-        "overflow-hidden rounded-3xl",
+        "overflow-hidden rounded-3xl [&_[data-card-header]]:pr-20",
         className,
       )}
       sizeClassName="h-[30rem] w-full"

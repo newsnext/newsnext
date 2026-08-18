@@ -12,6 +12,7 @@ import {
 } from "@newsnext/extension-connection"
 import { createSourceFetch } from "@newsnext/source/utils"
 import { browser } from "#imports"
+import { openAppTab } from "../app-tab"
 import {
   listApplicationActions,
   listApplicationQueries,
@@ -153,19 +154,7 @@ export function getSourceConnectionStatus(): SourceConnectionStatus {
 async function openBoard(boardId: string): Promise<void> {
   const appUrl = browser.runtime.getURL("/app.html")
   const boardUrl = `${appUrl}#/board/${encodeURIComponent(boardId)}`
-  const appTabs = await browser.tabs.query({ url: `${appUrl}*` })
-  const existing = appTabs.find(tab => tab.active) ?? appTabs[0]
-
-  if (existing?.id === undefined) {
-    await browser.tabs.create({ url: boardUrl })
-    return
-  }
-
-  await browser.tabs.update(existing.id, {
-    active: true,
-    ...(existing.url === boardUrl ? {} : { url: boardUrl }),
-  })
-  await browser.windows.update(existing.windowId, { focused: true })
+  await openAppTab(boardUrl)
 }
 
 async function executeRequest(request: ExtensionConnectionCommandRequest): Promise<unknown> {

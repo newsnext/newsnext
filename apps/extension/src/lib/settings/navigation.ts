@@ -1,12 +1,16 @@
 import type { SettingsTabId } from "./persisted-settings"
+import { openAppTab } from "../app-tab"
 import { isSettingsTabId } from "./persisted-settings"
 
 const OPEN_SETTINGS_INTENT_KEY = "newsnext-open-settings"
-const OPEN_SETTINGS_EVENT = "newsnext:open-settings"
 
-export function requestSettingsOpen(tab: SettingsTabId = "appearance"): void {
+function requestSettingsOpen(tab: SettingsTabId): void {
   localStorage.setItem(OPEN_SETTINGS_INTENT_KEY, tab)
-  window.dispatchEvent(new CustomEvent<SettingsTabId>(OPEN_SETTINGS_EVENT, { detail: tab }))
+}
+
+export async function openSettings(tab: SettingsTabId = "appearance"): Promise<void> {
+  requestSettingsOpen(tab)
+  await openAppTab()
 }
 
 export function consumeSettingsOpenRequest(): SettingsTabId | undefined {
@@ -15,21 +19,22 @@ export function consumeSettingsOpenRequest(): SettingsTabId | undefined {
   return isSettingsTabId(tab) ? tab : undefined
 }
 
-export function ensureSettingsOpenRequest(tab: SettingsTabId = "appearance"): void {
-  if (!isSettingsTabId(localStorage.getItem(OPEN_SETTINGS_INTENT_KEY))) {
-    requestSettingsOpen(tab)
-  }
-}
-
 export function subscribeToSettingsOpenRequests(
   listener: (tab: SettingsTabId) => void,
 ): () => void {
-  const handleRequest = (event: Event): void => {
-    if (event instanceof CustomEvent && isSettingsTabId(event.detail)) {
-      localStorage.removeItem(OPEN_SETTINGS_INTENT_KEY)
-      listener(event.detail)
+  const openRequestedTab = (tab: unknown): void => {
+    if (!isSettingsTabId(tab)) {
+      return
+    }
+
+    localStorage.removeItem(OPEN_SETTINGS_INTENT_KEY)
+    listener(tab)
+  }
+  const handleStorage = (event: StorageEvent): void => {
+    if (event.storageArea === localStorage && event.key === OPEN_SETTINGS_INTENT_KEY) {
+      openRequestedTab(event.newValue)
     }
   }
-  window.addEventListener(OPEN_SETTINGS_EVENT, handleRequest)
-  return () => window.removeEventListener(OPEN_SETTINGS_EVENT, handleRequest)
+  window.addEventListener("storage", handleStorage)
+  return () => window.removeEventListener("storage", handleStorage)
 }
