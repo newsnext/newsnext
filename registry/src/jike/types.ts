@@ -41,6 +41,7 @@ export interface JikePost {
 export interface JikeFeedResponse {
   success?: boolean
   data?: JikePost[]
+  loadMoreKey?: unknown
   error?: {
     message?: string
   }

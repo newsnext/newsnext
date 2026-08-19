@@ -3,7 +3,7 @@ import type {
   SourceLoaderContext,
   SourceLoaderOutput,
 } from "@newsnext/source-kit/types"
-import type { JikeFeedResponse, TopicFeedOrder } from "./types"
+import type { JikeFeedResponse, JikePost, TopicFeedOrder } from "./types"
 import { isJwtExpired } from "@newsnext/source-kit/utils"
 import {
   buildJikeTopicFeedUrl,
@@ -19,7 +19,15 @@ export { jikePostsToNewsItems } from "./utils"
 const REFRESH_AUTH_TOKEN_URL = "https://api.ruguoapp.com/app_auth_tokens.refresh"
 const FOLLOWING_UPDATES_URL = "https://api.ruguoapp.com/1.0/personalUpdate/followingUpdates"
 const USER_UPDATES_URL = "https://api.ruguoapp.com/1.0/personalUpdate/single"
+const SEARCH_URL = "https://api.ruguoapp.com/1.0/search/userPosts"
 const FOLLOWING_UPDATES_LIMIT = 50
+const SEARCH_RESULT_LIMIT = 50
+const SEARCH_MAX_PAGES = 2
+type JikeSearchSort = "newest" | "hot"
+const JIKE_SEARCH_SORT_LABELS: Record<JikeSearchSort, string> = {
+  newest: "最新",
+  hot: "最热",
+}
 const JIKE_ACCESS_TOKEN_SECRET_KEY = "accessToken"
 const JIKE_REFRESH_TOKEN_SECRET_KEY = "refreshToken"
 const JIKE_ITEM_TEMPLATE = {
@@ -151,6 +159,41 @@ async function fetchJikeTopicFeed(
   return { items: jikePostsToNewsItems(response.data ?? []), itemTemplate: JIKE_TOPIC_ITEM_TEMPLATE }
 }
 
+export async function fetchJikeSearch(
+  { keyword, sortBy }: { keyword: string, sortBy: JikeSearchSort },
+  context: SourceLoaderContext,
+): Promise<SourceLoaderOutput> {
+  const normalizedKeyword = keyword.trim()
+  if (!normalizedKeyword) throw new Error("Jike search keyword is required.")
+  const posts: JikePost[] = []
+  let loadMoreKey: unknown
+  for (let page = 0; page < SEARCH_MAX_PAGES && posts.length < SEARCH_RESULT_LIMIT; page += 1) {
+    const response = await fetchJikeWithAuth(
+      SEARCH_URL,
+      {
+        keywords: normalizedKeyword,
+        loadMoreKey,
+        scope: 0,
+        sortBy,
+      },
+      context,
+    )
+    assertSuccessfulFeed(response, "Failed to search Jike updates.")
+    const pagePosts = (response.data ?? []).filter(post => post.type === "ORIGINAL_POST")
+    posts.push(...pagePosts)
+    loadMoreKey = response.loadMoreKey
+    if (pagePosts.length === 0 || loadMoreKey == null) break
+  }
+  return {
+    items: jikePostsToNewsItems(posts.slice(0, SEARCH_RESULT_LIMIT)),
+    itemTemplate: JIKE_ITEM_TEMPLATE,
+    metadata: {
+      title: `${normalizedKeyword} · ${JIKE_SEARCH_SORT_LABELS[sortBy]}`,
+      home: `${JIKE_WEB_ORIGIN}/search?q=${encodeURIComponent(normalizedKeyword)}`,
+    },
+  }
+}
+
 const jikeCapabilities = {
   network: ["api.ruguoapp.com"],
   cookies: ["api.ruguoapp.com", "web.okjike.com"],
@@ -178,6 +221,26 @@ const topicRadarPatch = {
       select: "[class*=\"_textGroup_\"] > [class*=\"_title_\"]",
     },
   },
+}
+function createJikeSearchRadar(id: string, sortBy: JikeSearchSort) {
+  return {
+    id,
+    match: {
+      hosts: ["web.okjike.com"],
+      paths: ["/search"],
+    },
+    patch: {
+      params: {
+        keyword: "{{ scope.query.q }}",
+        sortBy,
+      },
+      metadata: {
+        title: `{{ scope.params.keyword }} · ${JIKE_SEARCH_SORT_LABELS[sortBy]}`,
+        home: "https://web.okjike.com/search?q={{ scope.params.keyword | url_query }}",
+      },
+    },
+    confidence: 0.95,
+  }
 }
 
 export default {
@@ -272,6 +335,35 @@ export default {
       cache: {
         version: 3,
         maxAge: "5m",
+      },
+    },
+    "search": {
+      metadata: {
+        title: "动态搜索",
+        desc: "按最新或最热排序显示匹配关键词的即刻动态",
+      },
+      radar: [
+        createJikeSearchRadar("jike-search-newest", "newest"),
+        createJikeSearchRadar("jike-search-hot", "hot"),
+      ],
+      params: {
+        keyword: {
+          type: "text",
+          title: "关键词",
+          default: "AI",
+        },
+        sortBy: {
+          type: "select",
+          title: "排序",
+          values: [
+            { label: "最新", value: "newest" },
+            { label: "最热", value: "hot" },
+          ],
+          default: "newest",
+        },
+      },
+      loader: {
+        load: fetchJikeSearch,
       },
     },
     "topic": {
