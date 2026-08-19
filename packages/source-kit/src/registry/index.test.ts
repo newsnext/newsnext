@@ -435,18 +435,59 @@ describe("source template vars", () => {
     ]))).toThrow("Template path \"scope.params.value\" is not available")
   })
 
-  it("rejects unsafe Radar path regexes", () => {
-    expect(() => resolveTestSource(createSourceConfig([
-      {
-        id: "test",
-        match: {
-          hosts: ["example.com"],
-          paths: {
-            include: [{ regex: "^(a+)+$" }],
-          },
+  it("rejects unsupported Radar match fields", () => {
+    expect(() => resolveTestSource(createSourceConfig([{
+      id: "test",
+      match: {
+        hosts: ["example.com"],
+        url: { regex: "/users/" },
+      },
+    } as unknown as SourceRadarRule]))).toThrow("match must be a structured Radar match")
+  })
+
+  it("rejects unsupported Radar locations", () => {
+    expect(() => resolveTestSource(createSourceConfig([{
+      id: "test",
+      match: {
+        hosts: ["example.com"],
+        location: "fragment",
+      },
+    } as unknown as SourceRadarRule]))).toThrow("match.location must be \"url\" or \"hash\"")
+  })
+
+  it("rejects Radar-side parameter validation", () => {
+    expect(() => resolveTestSource(createSourceConfig([{
+      id: "test",
+      match: {
+        hosts: ["example.com"],
+        paths: [{
+          path: "/users/:id",
+          params: { id: { format: "digits" } },
+        }],
+      },
+    } as unknown as SourceRadarRule]))).toThrow("match.paths.0 must be a Radar path")
+
+    expect(() => resolveTestSource(createSourceConfig([{
+      id: "test",
+      match: {
+        hosts: ["example.com"],
+        query: { id: { format: "digits" } },
+      },
+    } as unknown as SourceRadarRule]))).toThrow("match.query must be a non-empty array of unique query keys")
+  })
+
+  it("rejects unsafe parameter validation regexes", () => {
+    expect(() => resolveTestSource({
+      ...createSourceConfig([]),
+      params: {
+        id: {
+          type: "text",
+          title: "ID",
+          default: "123",
+          validate: { regex: "^(a+)+$" },
         },
       },
-    ]))).toThrow("match.paths.include.0.regex is invalid")
+    })).toThrow("test:test.params.id.validate.regex is invalid")
   })
 
   it("does not compile Liquid syntax in non-template source fields", () => {
@@ -565,6 +606,17 @@ describe("source template vars", () => {
       "test:test.radar.0.patch.metadata.desc.attr has an invalid attribute name",
     )
   })
+
+  it.each([0.1, Number.NaN, Number.POSITIVE_INFINITY, Number.MAX_SAFE_INTEGER + 1])(
+    "rejects invalid Radar priority %s",
+    (priority) => {
+      expect(() => resolveTestSource(createSourceConfig([{
+        id: "test",
+        match: { hosts: ["example.com"] },
+        priority,
+      }]))).toThrow("test:test.radar.0.priority must be a safe integer")
+    },
+  )
 
   it("allows Radar to override source-owned presentation metadata", () => {
     const radar = [

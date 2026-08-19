@@ -1,11 +1,9 @@
 import type {
   HtmlFieldConfig,
-  SourceRadarPathPattern,
   SourceRadarRule,
 } from "../types"
 import { isSourcePresentationMetadataKey } from "../types"
 import { SOURCE_REGISTRY_LIMITS } from "./limits"
-import { compileSourceRegex } from "./regex"
 import { compileSourceTemplate } from "./template"
 
 export function validateRadarRules(
@@ -13,7 +11,10 @@ export function validateRadarRules(
   location: string,
 ): void {
   rules?.forEach((rule, index) => {
-    validateRadarPathPatterns(rule.match.paths, `${location}.${index}.match.paths`)
+    if (rule.priority !== undefined && !Number.isSafeInteger(rule.priority)) {
+      throw new TypeError(`${location}.${index}.priority must be a safe integer`)
+    }
+    validateRadarMatch(rule.match, `${location}.${index}.match`)
     const patchLocation = `${location}.${index}.patch`
     for (const [key, template] of Object.entries(rule.patch?.params ?? {})) {
       if (typeof template === "function") continue
@@ -40,27 +41,74 @@ export function validateRadarRules(
   })
 }
 
-function validateRadarPathPatterns(
-  paths: SourceRadarRule["match"]["paths"],
-  location: string,
-): void {
-  if (Array.isArray(paths)) return
-  validateRadarPathRegexes(paths?.include, `${location}.include`)
-  validateRadarPathRegexes(paths?.exclude, `${location}.exclude`)
+function validateRadarMatch(match: unknown, location: string): void {
+  if (
+    !isRecord(match)
+    || Object.keys(match).some(key => !["hosts", "location", "paths", "query"].includes(key))
+    || !Array.isArray(match.hosts)
+    || match.hosts.length === 0
+    || match.hosts.some(host => typeof host !== "string" || !host.trim())
+  ) {
+    throw new TypeError(`${location} must be a structured Radar match`)
+  }
+  if (
+    match.location !== undefined
+    && match.location !== "url"
+    && match.location !== "hash"
+  ) {
+    throw new TypeError(`${location}.location must be "url" or "hash"`)
+  }
+  validateRadarPathPatterns(match.paths, `${location}.paths`)
+  validateRadarQueryKeys(match.query, `${location}.query`)
 }
 
-function validateRadarPathRegexes(
-  patterns: SourceRadarPathPattern[] | undefined,
+function validateRadarPathPatterns(
+  paths: unknown,
   location: string,
 ): void {
-  patterns?.forEach((pattern, index) => {
-    if (typeof pattern === "string") return
-    try {
-      compileSourceRegex(pattern.regex, "i")
-    } catch (error) {
-      throw new TypeError(`${location}.${index}.regex is invalid`, { cause: error })
+  if (paths === undefined) return
+  if (Array.isArray(paths)) {
+    validateRadarPathPatternList(paths, location)
+    return
+  }
+  if (
+    !isRecord(paths)
+    || Object.keys(paths).some(key => key !== "include" && key !== "exclude")
+  ) {
+    throw new TypeError(`${location} must be Radar paths`)
+  }
+  validateRadarPathPatternList(paths?.include, `${location}.include`)
+  validateRadarPathPatternList(paths?.exclude, `${location}.exclude`)
+}
+
+function validateRadarPathPatternList(
+  patterns: unknown,
+  location: string,
+): void {
+  if (patterns === undefined) return
+  if (!Array.isArray(patterns)) {
+    throw new TypeError(`${location} must be an array`)
+  }
+  patterns.forEach((pattern, index) => {
+    if (typeof pattern !== "string" || !pattern) {
+      throw new TypeError(`${location}.${index} must be a Radar path`)
     }
   })
+}
+
+function validateRadarQueryKeys(
+  keys: unknown,
+  location: string,
+): void {
+  if (keys === undefined) return
+  if (
+    !Array.isArray(keys)
+    || keys.length === 0
+    || keys.some(key => typeof key !== "string" || !key)
+    || new Set(keys).size !== keys.length
+  ) {
+    throw new TypeError(`${location} must be a non-empty array of unique query keys`)
+  }
 }
 
 function validateRadarHtmlField(

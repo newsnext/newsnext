@@ -2,6 +2,7 @@ import type { ProviderSourceConfig } from "@newsnext/source-kit/registry"
 import type { NewsItemInput, SourceLoaderContext, SourceLoaderOutput } from "@newsnext/source-kit/types"
 import {
   bilibiliApiCapabilities,
+  bilibiliUserIdParam,
   compactBilibiliTitle,
   normalizeBilibiliUrl,
   parseBilibiliCount,
@@ -177,28 +178,21 @@ export function upAudioItemToNewsItem(item: BilibiliUpAudioItem): NewsItemInput 
   }
 }
 
-function normalizeBilibiliUpId(mid: string): string {
-  const normalizedMid = mid.trim()
-  if (!/^\d+$/.test(normalizedMid)) throw new Error("Bilibili UP ID must contain only digits.")
-  return normalizedMid
-}
-
 async function fetchBilibiliUpVideo(
   { mid, order }: { mid: string, order: BilibiliUpVideoOrder },
   context: SourceLoaderContext,
 ): Promise<SourceLoaderOutput> {
-  const normalizedMid = normalizeBilibiliUpId(mid)
   const { imgUrl, subUrl } = await getBilibiliWbiKeys(context)
 
   const searchParams = await signBilibiliWbiParams({
-    mid: normalizedMid,
+    mid,
     order,
     pn: 1,
     ps: UP_RESULT_LIMIT,
     tid: 0,
   }, imgUrl, subUrl)
   const response = await context.fetch.get(UP_VIDEO_URL, {
-    headers: { referer: `https://space.bilibili.com/${normalizedMid}/upload/video` },
+    headers: { referer: `https://space.bilibili.com/${mid}/upload/video` },
     searchParams,
   }).json<BilibiliUpVideoResponse>()
   if (response.code !== 0) {
@@ -207,7 +201,7 @@ async function fetchBilibiliUpVideo(
 
   const videos = response.data?.list?.vlist ?? []
   const authorName = videos
-    .find(item => String(item.mid) === normalizedMid && item.author?.trim())
+    .find(item => String(item.mid) === mid && item.author?.trim())
     ?.author
     ?.trim()
     ?? videos.find(item => item.author?.trim())?.author?.trim()
@@ -216,8 +210,8 @@ async function fetchBilibiliUpVideo(
       .map(upVideoItemToNewsItem)
       .filter((item): item is NewsItemInput => item !== null),
     metadata: {
-      title: `${authorName ?? "UP 主视频"}｜${BILIBILI_UP_VIDEO_ORDER_LABELS[order]}`,
-      home: `https://space.bilibili.com/${normalizedMid}/upload/video`,
+      title: `${authorName ?? "UP 主视频"} | ${BILIBILI_UP_VIDEO_ORDER_LABELS[order]}`,
+      home: `https://space.bilibili.com/${mid}/upload/video`,
     },
   }
 }
@@ -226,15 +220,14 @@ async function fetchBilibiliUpOpus(
   { mid }: { mid: string },
   context: SourceLoaderContext,
 ): Promise<SourceLoaderOutput> {
-  const normalizedMid = normalizeBilibiliUpId(mid)
   const opusItems: BilibiliUpOpusItem[] = []
   let offset: string | undefined
 
   for (let page = 1; page <= UP_OPUS_MAX_PAGES && opusItems.length < UP_RESULT_LIMIT; page += 1) {
     const response = await context.fetch.get(UP_OPUS_URL, {
-      headers: { referer: `https://space.bilibili.com/${normalizedMid}/upload/opus` },
+      headers: { referer: `https://space.bilibili.com/${mid}/upload/opus` },
       searchParams: {
-        host_mid: normalizedMid,
+        host_mid: mid,
         page,
         offset: offset ?? "",
         type: "all",
@@ -258,8 +251,8 @@ async function fetchBilibiliUpOpus(
       .filter((item): item is NewsItemInput => item !== null)
       .slice(0, UP_RESULT_LIMIT),
     metadata: {
-      title: author?.name ? `${author.name}｜图文` : "UP 主图文",
-      home: `https://space.bilibili.com/${normalizedMid}/upload/opus`,
+      title: author?.name ? `${author.name} | 图文` : "UP 主图文",
+      home: `https://space.bilibili.com/${mid}/upload/opus`,
     },
   }
 }
@@ -268,14 +261,13 @@ async function fetchBilibiliUpAudio(
   { mid }: { mid: string },
   context: SourceLoaderContext,
 ): Promise<SourceLoaderOutput> {
-  const normalizedMid = normalizeBilibiliUpId(mid)
   const response = await context.fetch.get(UP_AUDIO_URL, {
-    headers: { referer: `https://space.bilibili.com/${normalizedMid}/upload/audio` },
+    headers: { referer: `https://space.bilibili.com/${mid}/upload/audio` },
     searchParams: {
       pn: 1,
       ps: 42,
       order: 1,
-      uid: normalizedMid,
+      uid: mid,
     },
   }).json<BilibiliUpAudioResponse>()
 
@@ -291,27 +283,20 @@ async function fetchBilibiliUpAudio(
       .filter((item): item is NewsItemInput => item !== null)
       .slice(0, UP_RESULT_LIMIT),
     metadata: {
-      title: authorName ? `${authorName}｜音频` : "UP 主音频",
-      home: `https://space.bilibili.com/${normalizedMid}/upload/audio`,
+      title: authorName ? `${authorName} | 音频` : "UP 主音频",
+      home: `https://space.bilibili.com/${mid}/upload/audio`,
     },
   }
 }
 
-const upIdParam = {
-  type: "text",
-  title: "UP 主 ID",
-  description: "UP 主空间地址中的数字 ID。",
-  default: "2",
-} as const
-
 export const upSources = {
   "up-video": {
     metadata: {
-      title: "UP 主视频｜最新发布",
+      title: "UP 主视频 | 最新发布",
       desc: "指定 UP 主的视频投稿",
     },
     params: {
-      mid: upIdParam,
+      mid: bilibiliUserIdParam,
       order: {
         type: "select",
         title: "排序",
@@ -328,13 +313,7 @@ export const upSources = {
         id: "bilibili-up-video",
         match: {
           hosts: ["space.bilibili.com"],
-          paths: {
-            include: [
-              {
-                regex: "^https://space\\.bilibili\\.com/(?<mid>\\d+)/upload/video(?:[/?#]|$)",
-              },
-            ],
-          },
+          paths: ["/:mid/upload/video"],
         },
         patch: {
           params: {
@@ -349,14 +328,13 @@ export const upSources = {
               }
               const filters = Array.from(page.document.querySelectorAll(".radio-filter__item")).slice(0, 3)
               const activeIndex = filters.findIndex(filter => filter.classList.contains("radio-filter__item--active"))
-              return (["pubdate", "click", "stow"] as const)[activeIndex] ?? "pubdate"
+              return (["pubdate", "click", "stow"] as const)[activeIndex]
             },
           },
           metadata: {
             home: "https://space.bilibili.com/{{ scope.params.mid | url_path }}/upload/video",
           },
         },
-        confidence: 1,
       },
     ],
     loader: {
@@ -371,20 +349,14 @@ export const upSources = {
       desc: "指定 UP 主发布的图文",
     },
     params: {
-      mid: upIdParam,
+      mid: bilibiliUserIdParam,
     },
     radar: [
       {
         id: "bilibili-up-opus",
         match: {
           hosts: ["space.bilibili.com"],
-          paths: {
-            include: [
-              {
-                regex: "^https://space\\.bilibili\\.com/(?<mid>\\d+)/upload/opus(?:[/?#]|$)",
-              },
-            ],
-          },
+          paths: ["/:mid/upload/opus"],
         },
         patch: {
           params: {
@@ -393,12 +365,11 @@ export const upSources = {
           metadata: {
             title: {
               select: ".nickname",
-              template: "{{ scope.value }}｜图文",
+              template: "{{ scope.value }} | 图文",
             },
             home: "https://space.bilibili.com/{{ scope.params.mid | url_path }}/upload/opus",
           },
         },
-        confidence: 1,
       },
     ],
     loader: {
@@ -413,20 +384,14 @@ export const upSources = {
       desc: "指定 UP 主发布的音频",
     },
     params: {
-      mid: upIdParam,
+      mid: bilibiliUserIdParam,
     },
     radar: [
       {
         id: "bilibili-up-audio",
         match: {
           hosts: ["space.bilibili.com"],
-          paths: {
-            include: [
-              {
-                regex: "^https://space\\.bilibili\\.com/(?<mid>\\d+)/upload/audio(?:[/?#]|$)",
-              },
-            ],
-          },
+          paths: ["/:mid/upload/audio"],
         },
         patch: {
           params: {
@@ -435,12 +400,11 @@ export const upSources = {
           metadata: {
             title: {
               select: ".nickname",
-              template: "{{ scope.value }}｜音频",
+              template: "{{ scope.value }} | 音频",
             },
             home: "https://space.bilibili.com/{{ scope.params.mid | url_path }}/upload/audio",
           },
         },
-        confidence: 1,
       },
     ],
     loader: {

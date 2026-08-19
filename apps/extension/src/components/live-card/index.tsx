@@ -37,6 +37,7 @@ function LiveCardContent({ id, source, dragHandle, isDraft = false, onDraftSourc
     hasParams,
     savedParams,
     draftParams,
+    validation,
     isDirty,
     updateDraftParam,
     getDraftParams,
@@ -127,6 +128,7 @@ function LiveCardContent({ id, source, dragHandle, isDraft = false, onDraftSourc
         draftSourceParams={draftParams}
         hasSourceParams={hasParams}
         hasSourceParamChanges={isDirty}
+        sourceParamValidation={validation}
         updatedAt={updatedAt}
         onSourceParamChange={updateDraftParam}
         onSaveSourceParams={handleSaveSourceParams}

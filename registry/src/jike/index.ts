@@ -133,7 +133,7 @@ export async function fetchJikeUserUpdates(
 ): Promise<SourceLoaderOutput> {
   const response = await fetchJikeWithAuth(
     USER_UPDATES_URL,
-    { limit: FOLLOWING_UPDATES_LIMIT, username: username.trim() },
+    { limit: FOLLOWING_UPDATES_LIMIT, username },
     context,
   )
   assertSuccessfulFeed(response, "Failed to load Jike user updates.")
@@ -152,7 +152,7 @@ async function fetchJikeTopicFeed(
 ): Promise<SourceLoaderOutput> {
   const response = await fetchJikeWithAuth(
     buildJikeTopicFeedUrl(order),
-    { limit: FOLLOWING_UPDATES_LIMIT, topicId: topicId.trim() },
+    { limit: FOLLOWING_UPDATES_LIMIT, topicId },
     context,
   )
   assertSuccessfulFeed(response, "Failed to load Jike topic feed.")
@@ -163,15 +163,13 @@ export async function fetchJikeSearch(
   { keyword, sortBy }: { keyword: string, sortBy: JikeSearchSort },
   context: SourceLoaderContext,
 ): Promise<SourceLoaderOutput> {
-  const normalizedKeyword = keyword.trim()
-  if (!normalizedKeyword) throw new Error("Jike search keyword is required.")
   const posts: JikePost[] = []
   let loadMoreKey: unknown
   for (let page = 0; page < SEARCH_MAX_PAGES && posts.length < SEARCH_RESULT_LIMIT; page += 1) {
     const response = await fetchJikeWithAuth(
       SEARCH_URL,
       {
-        keywords: normalizedKeyword,
+        keywords: keyword,
         loadMoreKey,
         scope: 0,
         sortBy,
@@ -188,8 +186,8 @@ export async function fetchJikeSearch(
     items: jikePostsToNewsItems(posts.slice(0, SEARCH_RESULT_LIMIT)),
     itemTemplate: JIKE_ITEM_TEMPLATE,
     metadata: {
-      title: `${normalizedKeyword} · ${JIKE_SEARCH_SORT_LABELS[sortBy]}`,
-      home: `${JIKE_WEB_ORIGIN}/search?q=${encodeURIComponent(normalizedKeyword)}`,
+      title: `${keyword} | ${JIKE_SEARCH_SORT_LABELS[sortBy]}`,
+      home: `${JIKE_WEB_ORIGIN}/search?q=${encodeURIComponent(keyword)}`,
     },
   }
 }
@@ -202,6 +200,7 @@ const topicIdParam = {
   type: "text",
   title: "主题 ID",
   default: "5aeaa84029e4000011ac3768",
+  required: true,
 } as const
 const topicOrderParam = {
   type: "select",
@@ -228,6 +227,7 @@ function createJikeSearchRadar(id: string, sortBy: JikeSearchSort) {
     match: {
       hosts: ["web.okjike.com"],
       paths: ["/search"],
+      query: ["q"],
     },
     patch: {
       params: {
@@ -235,11 +235,10 @@ function createJikeSearchRadar(id: string, sortBy: JikeSearchSort) {
         sortBy,
       },
       metadata: {
-        title: `{{ scope.params.keyword }} · ${JIKE_SEARCH_SORT_LABELS[sortBy]}`,
+        title: `{{ scope.params.keyword }} | ${JIKE_SEARCH_SORT_LABELS[sortBy]}`,
         home: "https://web.okjike.com/search?q={{ scope.params.keyword | url_query }}",
       },
     },
-    confidence: 0.95,
   }
 }
 
@@ -286,7 +285,6 @@ export default {
             hosts: ["web.okjike.com"],
             paths: ["/following"],
           },
-          confidence: 0.95,
         },
       ],
       loader: {
@@ -319,7 +317,6 @@ export default {
               },
             },
           },
-          confidence: 0.9,
         },
       ],
       params: {
@@ -327,6 +324,7 @@ export default {
           type: "text",
           title: "用户名",
           default: "7f422d5d-d79a-4f45-9880-b89d64d7f37a",
+          required: true,
         },
       },
       loader: {
@@ -351,6 +349,7 @@ export default {
           type: "text",
           title: "关键词",
           default: "AI",
+          required: true,
         },
         sortBy: {
           type: "select",
@@ -385,7 +384,6 @@ export default {
               order: "recent",
             },
           },
-          confidence: 0.9,
         },
         {
           id: "jike-topic-selected",
@@ -403,7 +401,6 @@ export default {
               ...topicRadarPatch.metadata,
             },
           },
-          confidence: 0.85,
         },
       ],
       params: {

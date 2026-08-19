@@ -16,7 +16,7 @@
           "type": "url",
           "title": "Feed URL",
           "description": "The HTTP or HTTPS URL of an RSS, Atom, or JSON Feed.",
-          "default": "https://example.com/feed.xml"
+          "default": "https://sspai.com/feed"
         }
       },
       "loader": {

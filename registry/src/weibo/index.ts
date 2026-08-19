@@ -120,7 +120,6 @@ export default {
               home: "/hot/{{ scope.path.type }}",
             },
           },
-          confidence: 1,
         },
       ],
       loader: {
@@ -157,6 +156,8 @@ export default {
           title: "用户 UID",
           description: "微博用户的数字 UID。",
           default: "1195230310",
+          required: true,
+          validate: { format: "digits" },
         },
       },
       radar: [
@@ -176,7 +177,6 @@ export default {
               },
             },
           },
-          confidence: 0.9,
         },
       ],
       loader: {
@@ -198,6 +198,7 @@ export default {
           type: "text",
           title: "关键词",
           default: "MSI",
+          required: true,
         },
       },
       radar: [
@@ -214,7 +215,6 @@ export default {
               title: "{{ scope.params.keyword }}",
             },
           },
-          confidence: 0.9,
         },
       ],
       loader: {
@@ -235,6 +235,8 @@ export default {
           title: "超话 ID",
           description: "以 100808 开头的微博超话 ID。",
           default: "1008084989d223732bf6f02f75ea30efad58a9",
+          required: true,
+          validate: { regex: "^100808[A-Za-z0-9]+$" },
         },
       },
       radar: [
@@ -242,9 +244,7 @@ export default {
           id: "weibo-super-topic",
           match: {
             hosts: ["weibo.com"],
-            paths: {
-              include: [{ regex: "(?<id>100808[A-Za-z0-9]+)" }],
-            },
+            paths: ["/p/:id", "/p/:id/*rest"],
           },
           patch: {
             params: {
@@ -256,7 +256,6 @@ export default {
               },
             },
           },
-          confidence: 0.9,
         },
       ],
       loader: {
@@ -286,13 +285,12 @@ export default {
                   document: { documentElement: { innerHTML: string } }
                 }
                 const match = page.document.documentElement.innerHTML.match(
-                  /"uid":\s*(?:"(\d+)"|(\d+))\s*,\s*"apmSampleRate"/,
+                  /"uid":\s*(?:"([^"]+)"|([^,\s]+))\s*,\s*"apmSampleRate"/,
                 )
                 return match?.[1] ?? match?.[2]
               },
             },
           },
-          confidence: 0.9,
         },
       ],
       loader: {

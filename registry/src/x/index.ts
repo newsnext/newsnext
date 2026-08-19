@@ -135,14 +135,11 @@ async function fetchXListTweets(
   { listId, text }: XListParams,
   context: SourceLoaderContext,
 ): Promise<SourceLoaderOutput> {
-  const id = listId.trim()
-  if (!/^\d{1,20}$/.test(id)) throw new Error("X list ID must be a valid numeric ID.")
-
   const response = await context.fetch.get(LIST_LATEST_TWEETS_URL, {
     headers: createXLoggedInHeaders(context),
     searchParams: {
       variables: JSON.stringify({
-        listId: id,
+        listId,
         count: X_TIMELINE_COUNT,
       }),
       features: JSON.stringify(X_TIMELINE_FEATURES),
@@ -161,15 +158,12 @@ async function fetchXUserTweets(
   { text, username }: XUserParams,
   context: SourceLoaderContext,
 ): Promise<SourceLoaderOutput> {
-  const screenName = username.trim()
-  if (!/^\w{1,15}$/.test(screenName)) throw new Error("X username must be a valid handle.")
-
   const headers = createXLoggedInHeaders(context)
   const user = await context.fetch.get(USER_BY_SCREEN_NAME_URL, {
     headers,
     searchParams: {
       variables: JSON.stringify({
-        screen_name: screenName,
+        screen_name: username,
         withGrokTranslatedBio: true,
       }),
       features: JSON.stringify(X_USER_FEATURES),
@@ -181,7 +175,7 @@ async function fetchXUserTweets(
   }).json<XUserByScreenNameResponse>()
   const userResult = user.data?.user?.result
   const userId = userResult?.rest_id
-  if (!userId) throw new Error(`Cannot find X user: ${screenName}`)
+  if (!userId) throw new Error(`Cannot find X user: ${username}`)
 
   const response = await context.fetch.get(USER_TWEETS_URL, {
     headers,
@@ -288,14 +282,14 @@ export default {
                   ?.slice("twid=".length)
                 if (!value) return undefined
                 try {
-                  return decodeURIComponent(value).match(/^u=(\d+)$/)?.[1]
+                  const decoded = decodeURIComponent(value)
+                  return decoded.startsWith("u=") ? decoded.slice(2) : undefined
                 } catch {
                   return undefined
                 }
               },
             },
           },
-          confidence: 1,
         },
       ],
       params: {
@@ -330,7 +324,6 @@ export default {
               home: `${X_ORIGIN}/i/lists/{{ scope.params.listId }}`,
             },
           },
-          confidence: 0.98,
         },
       ],
       params: {
@@ -338,6 +331,8 @@ export default {
           type: "text",
           title: "List ID",
           default: "1678002608919937029",
+          required: true,
+          validate: { regex: "^\\d{1,20}$" },
         },
         text: tweetTextParam,
       },
@@ -372,7 +367,6 @@ export default {
               },
             },
           },
-          confidence: 0.95,
         },
       ],
       params: {
@@ -381,6 +375,8 @@ export default {
           type: "text",
           title: "Username",
           default: "elonmusk",
+          required: true,
+          validate: { regex: "^\\w{1,15}$" },
         },
       },
       loader: {

@@ -28,6 +28,13 @@ const SUBREDDIT_TOP_PERIOD_OPTIONS = [
   { label: "Past Year", value: "year" },
   { label: "All Time", value: "all" },
 ] as const
+const SUBREDDIT_PARAM = {
+  type: "text",
+  title: "Subreddit",
+  default: "programming",
+  required: true,
+  validate: { regex: "^\\w{2,21}$" },
+} as const
 
 type SubredditSort = typeof SUBREDDIT_SORT_OPTIONS[number]["value"]
 type SubredditTopPeriod = typeof SUBREDDIT_TOP_PERIOD_OPTIONS[number]["value"]
@@ -63,12 +70,7 @@ async function fetchRedditUserPosts(
   { username }: { username: string },
   context: SourceLoaderContext,
 ): Promise<SourceLoaderOutput> {
-  const normalizedUsername = username.trim()
-  if (!/^[\w-]{3,20}$/.test(normalizedUsername)) {
-    throw new Error("Reddit username must contain 3–20 letters, numbers, underscores, or hyphens.")
-  }
-
-  const encodedUsername = encodeURIComponent(normalizedUsername)
+  const encodedUsername = encodeURIComponent(username)
   const listing = await fetchRedditListing(
     `/user/${encodedUsername}/submitted.json`,
     context,
@@ -81,7 +83,7 @@ async function fetchRedditUserPosts(
     }),
     itemTemplate: REDDIT_USER_ITEM_TEMPLATE,
     metadata: {
-      title: `u/${normalizedUsername}`,
+      title: `u/${username}`,
     },
   }
 }
@@ -106,12 +108,7 @@ async function fetchSubredditListing(
   context: SourceLoaderContext,
   query: Record<string, string | number> = {},
 ): Promise<SourceLoaderOutput> {
-  const normalizedSubreddit = subreddit.trim()
-  if (!/^\w{2,21}$/.test(normalizedSubreddit)) {
-    throw new Error("Subreddit name must contain 2–21 letters, numbers, or underscores.")
-  }
-
-  const encodedSubreddit = encodeURIComponent(normalizedSubreddit)
+  const encodedSubreddit = encodeURIComponent(subreddit)
   const listing = await fetchRedditListing(
     `/r/${encodedSubreddit}/${sort}.json`,
     context,
@@ -119,7 +116,7 @@ async function fetchSubredditListing(
   )
   const posts = getRedditPosts(listing)
   const community = posts.find(post => post.sr_detail)?.sr_detail
-  const displayName = community?.display_name ?? normalizedSubreddit
+  const displayName = community?.display_name ?? subreddit
   const badge = community?.community_icon || community?.icon_img
   const metadata: SourcePresentationMetadata = { title: `r/${displayName}` }
   if (community?.public_description) metadata.desc = community.public_description
@@ -152,7 +149,6 @@ const subredditRadarRules = [
         home: "/r/{{ scope.params.subreddit | url_path }}/hot/",
       },
     },
-    confidence: 0.95,
   },
   ...SUBREDDIT_SORT_OPTIONS.map(({ value }) => ({
     id: `reddit-subreddit-${value}`,
@@ -173,7 +169,6 @@ const subredditRadarRules = [
         home: `/r/{{ scope.params.subreddit | url_path }}/${value}/`,
       },
     },
-    confidence: 0.95,
   })),
 ]
 
@@ -206,6 +201,8 @@ export default {
           type: "text",
           title: "Username",
           default: "spez",
+          required: true,
+          validate: { regex: "^[\\w-]{3,20}$" },
         },
       },
       radar: [
@@ -229,7 +226,6 @@ export default {
               home: "/user/{{ scope.params.username | url_path }}/submitted/",
             },
           },
-          confidence: 0.95,
         },
       ],
       loader: {
@@ -242,11 +238,7 @@ export default {
         desc: "Posts in a Subreddit",
       },
       params: {
-        subreddit: {
-          type: "text",
-          title: "Subreddit",
-          default: "programming",
-        },
+        subreddit: SUBREDDIT_PARAM,
         sort: {
           type: "select",
           title: "Sort",
@@ -265,11 +257,7 @@ export default {
         desc: "Top posts in a Subreddit",
       },
       params: {
-        subreddit: {
-          type: "text",
-          title: "Subreddit",
-          default: "programming",
-        },
+        subreddit: SUBREDDIT_PARAM,
         period: {
           type: "select",
           title: "Period",
@@ -289,7 +277,7 @@ export default {
           },
           patch: {
             params: {
-              period: "{{ scope.query.t | default: 'day' }}",
+              period: "{{ scope.query.t }}",
               subreddit: "{{ scope.path.subreddit }}",
             },
             metadata: {
@@ -297,7 +285,6 @@ export default {
               home: "/r/{{ scope.params.subreddit | url_path }}/top/?t={{ scope.params.period | url_query }}",
             },
           },
-          confidence: 0.95,
         },
       ],
       loader: {

@@ -1,6 +1,10 @@
 /**
  * Base properties shared by all parameter types
  */
+export type SourceParamValidation
+  = | { format: "digits" }
+    | { regex: string }
+
 interface BaseParameter {
   /**
    * Display title for the parameter
@@ -14,6 +18,14 @@ interface BaseParameter {
    * Optional icon identifier
    */
   icon?: string
+  /**
+   * Whether an empty value is invalid
+   */
+  required?: boolean
+  /**
+   * Optional serializable validation applied after type normalization
+   */
+  validate?: SourceParamValidation
 }
 
 /**

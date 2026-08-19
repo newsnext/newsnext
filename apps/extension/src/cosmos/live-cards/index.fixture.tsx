@@ -187,6 +187,7 @@ function LiveCardBackFixture() {
         draftSourceParams={draftParams}
         hasSourceParams
         hasSourceParamChanges={hasChanges}
+        sourceParamValidation={{ errors: {}, valid: true }}
         updatedAt={UPDATED_AT}
         isDraft
         onSourceParamChange={(key, value) => {

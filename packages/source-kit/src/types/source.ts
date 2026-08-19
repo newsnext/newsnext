@@ -41,20 +41,16 @@ export type SourceSecretDefinition = SourceCookieSecretDefinition | SourceLocalS
 
 export type SourceSecrets = Record<string, string | undefined>
 
-export interface SourceRadarPathRegex {
-  regex: string
-}
-
-export type SourceRadarPathPattern = string | SourceRadarPathRegex
-
 export interface SourceRadarPaths {
-  include?: SourceRadarPathPattern[]
-  exclude?: SourceRadarPathPattern[]
+  include?: string[]
+  exclude?: string[]
 }
 
 export interface SourceRadarMatch {
   hosts: string[]
+  location?: "url" | "hash"
   paths?: string[] | SourceRadarPaths
+  query?: string[]
 }
 
 export type SourceRadarParamScript = () => unknown | Promise<unknown>
@@ -78,7 +74,7 @@ export interface SourceRadarRule {
   id: string
   match: SourceRadarMatch
   patch?: SourceRadarPatch
-  confidence?: number
+  priority?: number
 }
 
 export type SourceFetch = KyInstance

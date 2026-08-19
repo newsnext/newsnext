@@ -16,6 +16,13 @@ export {
 export {
   parseSourceParams,
   parseSourceParamValue,
+  validateSourceParamDefinitions,
+  validateSourceParamPatch,
+  validateSourceParamValue,
+} from "./params"
+export type {
+  SourceParamsValidationResult,
+  SourceParamValidationResult,
 } from "./params"
 export {
   compileSourceRegex,

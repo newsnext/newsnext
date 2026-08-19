@@ -4,8 +4,10 @@ import type { IdentityParams } from "../shared/identity"
 import { assertIdentity, identityParam } from "../shared/identity"
 import {
   BILIBILI_WEB_LOCATION,
+  bilibiliApiCapabilities,
   bilibiliAuthenticatedCapabilities,
   bilibiliIdentitySecret,
+  bilibiliUserIdParam,
   compactBilibiliTitle,
   getBilibiliIdentity,
   normalizeBilibiliUrl,
@@ -15,7 +17,8 @@ import {
   readBilibiliUserId,
 } from "./shared"
 
-const DYNAMIC_FEED_URL = "https://api.bilibili.com/x/polymer/web-dynamic/v1/feed/all"
+const FOLLOWING_DYNAMIC_FEED_URL = "https://api.bilibili.com/x/polymer/web-dynamic/v1/feed/all"
+const USER_DYNAMIC_FEED_URL = "https://api.bilibili.com/x/polymer/web-dynamic/v1/feed/space"
 const DYNAMIC_MAX_PAGES = 2
 const DYNAMIC_RESULT_LIMIT = 30
 const DYNAMIC_FEED_FEATURES = [
@@ -243,48 +246,43 @@ export function followingDynamicItemsToNewsItems(
   items: DynamicFeedItem[],
   content: BilibiliFollowingContent,
 ): NewsItemInput[] {
+  return dynamicItemsToNewsItems(items.filter((item) => {
+    if (content === "pgc") return item.type === "DYNAMIC_TYPE_PGC_UNION"
+    if (!item.type || !BILIBILI_FOLLOWING_DYNAMIC_TYPES.has(item.type)) return false
+    if (content === "video") return item.type === "DYNAMIC_TYPE_AV"
+    if (content === "article") return item.type !== "DYNAMIC_TYPE_AV"
+    return true
+  }))
+}
+
+export function dynamicItemsToNewsItems(items: DynamicFeedItem[]): NewsItemInput[] {
   return items
-    .filter((item) => {
-      if (content === "pgc") return item.type === "DYNAMIC_TYPE_PGC_UNION"
-      if (!item.type || !BILIBILI_FOLLOWING_DYNAMIC_TYPES.has(item.type)) return false
-      if (content === "video") return item.type === "DYNAMIC_TYPE_AV"
-      if (content === "article") return item.type !== "DYNAMIC_TYPE_AV"
-      return true
-    })
     .map(dynamicItemToNewsItem)
     .filter((item): item is NewsItemInput => item !== null)
     .sort((left, right) => (right.publishedAt ?? 0) - (left.publishedAt ?? 0))
 }
 
-async function fetchBilibiliFollowing(
-  { content, identity }: IdentityParams & { content: BilibiliFollowingContent },
+async function fetchBilibiliDynamicItems(
+  url: string,
+  searchParams: Record<string, string | number>,
   context: SourceLoaderContext,
-): Promise<SourceLoaderOutput> {
+  errorMessage: string,
+): Promise<DynamicFeedItem[]> {
   const dynamicItems: DynamicFeedItem[] = []
   let offset: string | undefined
   for (let page = 0; page < DYNAMIC_MAX_PAGES; page += 1) {
-    const response = await context.fetch.get(DYNAMIC_FEED_URL, {
+    const response = await context.fetch.get(url, {
       headers: {
         referer: "https://www.bilibili.com/",
       },
       searchParams: {
-        "timezone_offset": -480,
-        "type": content === "pgc" ? "pgc" : "all",
-        "platform": "web",
-        "page": 1,
-        "features": DYNAMIC_FEED_FEATURES.join(","),
-        "web_location": BILIBILI_WEB_LOCATION,
-        "x-bili-device-req-json": JSON.stringify({
-          platform: "web",
-          device: "pc",
-          spmid: BILIBILI_WEB_LOCATION,
-        }),
+        ...searchParams,
         ...(offset ? { offset } : {}),
       },
     }).json<DynamicFeedResponse>()
 
     if (response.code !== 0) {
-      throw new Error(response.message ?? "Failed to load Bilibili following dynamics.")
+      throw new Error(response.message ?? errorMessage)
     }
 
     dynamicItems.push(...(response.data?.items ?? []))
@@ -292,6 +290,31 @@ async function fetchBilibiliFollowing(
     if (!response.data?.has_more || !nextOffset || nextOffset === offset) break
     offset = nextOffset
   }
+  return dynamicItems
+}
+
+async function fetchBilibiliFollowing(
+  { content, identity }: IdentityParams & { content: BilibiliFollowingContent },
+  context: SourceLoaderContext,
+): Promise<SourceLoaderOutput> {
+  const dynamicItems = await fetchBilibiliDynamicItems(
+    FOLLOWING_DYNAMIC_FEED_URL,
+    {
+      "timezone_offset": -480,
+      "type": content === "pgc" ? "pgc" : "all",
+      "platform": "web",
+      "page": 1,
+      "features": DYNAMIC_FEED_FEATURES.join(","),
+      "web_location": BILIBILI_WEB_LOCATION,
+      "x-bili-device-req-json": JSON.stringify({
+        platform: "web",
+        device: "pc",
+        spmid: BILIBILI_WEB_LOCATION,
+      }),
+    },
+    context,
+    "Failed to load Bilibili following dynamics.",
+  )
 
   await assertIdentity(identity, () => getBilibiliIdentity(context), "Bilibili")
 
@@ -299,14 +322,43 @@ async function fetchBilibiliFollowing(
     items: followingDynamicItemsToNewsItems(dynamicItems, content).slice(0, DYNAMIC_RESULT_LIMIT),
     itemTemplate: BILIBILI_FOLLOWING_ITEM_TEMPLATE,
     metadata: {
-      title: `动态｜${BILIBILI_FOLLOWING_CONTENT_LABELS[content]}`,
+      title: `动态 | ${BILIBILI_FOLLOWING_CONTENT_LABELS[content]}`,
+    },
+  }
+}
+
+async function fetchBilibiliUserDynamics(
+  { mid }: { mid: string },
+  context: SourceLoaderContext,
+): Promise<SourceLoaderOutput> {
+  const dynamicItems = await fetchBilibiliDynamicItems(
+    USER_DYNAMIC_FEED_URL,
+    { host_mid: mid },
+    context,
+    "Failed to load Bilibili user dynamics.",
+  )
+  const author = dynamicItems
+    .map(item => item.modules?.module_author)
+    .find(item => String(item?.mid) === mid)
+
+  return {
+    items: dynamicItemsToNewsItems(dynamicItems)
+      .slice(0, DYNAMIC_RESULT_LIMIT)
+      .map(item => ({ ...item, icon: undefined })),
+    itemTemplate: {
+      inline: "{{ scope.item.attributes.type }}",
+    },
+    metadata: {
+      title: author?.name ? `${author.name} | 动态` : "用户动态",
+      badge: author?.face ? normalizeBilibiliUrl(author.face) : undefined,
+      home: `https://space.bilibili.com/${mid}/dynamic`,
     },
   }
 }
 
 export const followingSource = {
   metadata: {
-    title: "动态｜全部",
+    title: "动态 | 全部",
     desc: "已关注 UP 主发布的最新动态",
   },
   params: {
@@ -327,16 +379,15 @@ export const followingSource = {
     {
       id: "bilibili-following",
       match: {
-        hosts: ["bilibili.com", "t.bilibili.com"],
+        hosts: ["t.bilibili.com"],
         paths: ["/"],
       },
       patch: {
         params: {
           identity: readBilibiliUserId,
-          content: "{{ scope.query.tab | default: 'all' }}",
+          content: "{{ scope.query.tab }}",
         },
       },
-      confidence: 0.9,
     },
   ],
   loader: {
@@ -345,4 +396,40 @@ export const followingSource = {
   },
   secrets: [bilibiliIdentitySecret],
   capabilities: bilibiliAuthenticatedCapabilities,
+} satisfies ProviderSourceConfig
+
+export const userDynamicsSource = {
+  metadata: {
+    title: "用户动态",
+    desc: "指定用户发布的动态",
+  },
+  params: {
+    mid: bilibiliUserIdParam,
+  },
+  radar: [
+    {
+      id: "bilibili-user-dynamics",
+      match: {
+        hosts: ["space.bilibili.com"],
+        paths: ["/:mid/dynamic"],
+      },
+      patch: {
+        params: {
+          mid: "{{ scope.path.mid }}",
+        },
+        metadata: {
+          title: {
+            select: ".nickname",
+            template: "{{ scope.value }} | 动态",
+          },
+          home: "https://space.bilibili.com/{{ scope.params.mid | url_path }}/dynamic",
+        },
+      },
+    },
+  ],
+  loader: {
+    type: "custom",
+    load: fetchBilibiliUserDynamics,
+  },
+  capabilities: bilibiliApiCapabilities,
 } satisfies ProviderSourceConfig

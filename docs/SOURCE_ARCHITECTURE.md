@@ -525,10 +525,11 @@ raw value or default
     → schema validation
 ```
 
-Parameter schemas intentionally avoid arbitrary regex validation and Liquid
-normalization. Discovery-specific extraction and normalization belong in Radar
-parameter patches, while the shared parameter pipeline enforces type,
-selection, and range constraints.
+Parameter schemas use serializable validation rules rather than JavaScript
+callbacks so the same contract can cross into the UI. The shared pipeline
+enforces type, selection, range, built-in format, and bounded regex constraints.
+Radar extracts candidate values but does not duplicate their reusable semantic
+validation.
 
 After every parameter is resolved, structured loaders render their URL and,
 for default requests, nested `fetchOptions`, whose runtime contract is Ky's
@@ -685,13 +686,15 @@ functions in its background-only runtime matcher:
 
 ```text
 active tab URL
-    → host and included/excluded path or full-URL regex matching
+    → select and parse the URL or hash location
+    → match and validate structured URL components
     → batch page-field extraction and matching JavaScript parameter functions
     → render Liquid parameter patches and apply JavaScript results
     → normalize and validate parameters
     → render metadata patches
     → apply source presentation metadata to the discovered instance
-    → order suggestions by confidence
+    → rank simultaneous matches by query/hash, path, and host specificity
+    → break equal-specificity ties with explicit rule priority
     → persist the accepted suggestion with the selected board membership
 ```
 
@@ -709,6 +712,33 @@ Radar discovery is complete only when the suggestion captures the active page's
 full Source configuration. Its intended interaction is review followed by one
 `Create` action, without making the user re-enter filters, sorting, identity, or
 other choices already expressed by the page.
+
+Each rule selects one URL-like location. The default uses the ordinary pathname
+and query; `location: "hash"` parses a Hash Router path and query or a bare
+fragment parameter string. Both expose the same `scope.path` and `scope.query`,
+so the schema and matcher do not duplicate URL semantics. Plain fragment
+anchors are ignored. Path matchers return named captures without validating
+their values. A rule may require query keys but never matches their values;
+every query value remains available independently so a patch may map optional
+page state without making it an eligibility condition. Radar does not accept
+arbitrary regex or parameter validation. Reusable value semantics belong in the
+Source parameter schema. The runtime normalizes and validates that schema before
+invoking a loader, so loaders consume parameter values directly instead of
+repeating parameter or parameter-combination policy. Loaders still validate
+untrusted external data at the response boundary.
+
+Radar parameter patches remain sparse. Radar validates only discovered values
+and stores only those values in the Instance patch; defaults are combined with
+the patch when producing the effective parameters used by metadata templates
+and Source execution.
+
+Structured specificity is a lexicographic tuple: query or hash state above
+path above host, followed by exact, parameterized, and wildcard path kind,
+static segment count, path depth, required-query-key count, and fewer dynamic or
+wildcard segments. The matcher evaluates every matching include pattern and
+retains the most specific one. Only equally specific suggestions consult the
+rule's optional integer `priority`. Generated same-origin fallback rules do not
+set one.
 
 Rules and compiled matchers are cached. Optional Radar failures are reported as
 diagnostics and fail closed instead of interrupting the surrounding UI.
@@ -735,6 +765,13 @@ sparse overrides: only explicitly changed parameter and metadata fields are
 persisted. Parameter defaults are resolved for display and loading, while
 inherited source metadata is resolved for display, without copying either into
 the instance patch.
+
+Parameter normalization and validation live in `source-kit` rather than in a
+specific caller. A serializable parameter `validate` rule travels with public
+Source descriptors, allowing the LiveCard editor to report invalid input before
+save while the background runtime, CLI preparation, and Radar use the same pure
+helpers. Radar only extracts candidate values; its resolved patch passes through
+the complete parameter schema before metadata renders or a suggestion appears.
 
 ## Capabilities, secrets, and request rules
 

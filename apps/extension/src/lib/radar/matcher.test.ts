@@ -36,18 +36,14 @@ describe("getRadarSuggestions", () => {
     ])
   })
 
-  it("uses parameter defaults when mapped URL values are missing", () => {
+  it("omits mapped parameters missing from a sparse Radar patch", () => {
     expect(getSuggestions({
       url: "https://github.com/trending",
     })).toMatchObject([
       {
         sourceId: "github:trending",
         patch: {
-          params: {
-            language: "",
-            spokenLanguage: "",
-            dateRange: "daily",
-          },
+          params: {},
         },
       },
     ])
@@ -55,7 +51,7 @@ describe("getRadarSuggestions", () => {
 
   it("renders Radar parameters from URL Liquid variables", () => {
     expect(getRadarSuggestions(
-      { url: "https://example.com/topics/path-value#/?value=hash-value" },
+      { url: "https://example.com/#/topics/path-value?value=hash-value" },
       [
         {
           id: "test:liquid-params",
@@ -71,11 +67,12 @@ describe("getRadarSuggestions", () => {
               id: "liquid-params",
               match: {
                 hosts: ["example.com"],
+                location: "hash",
                 paths: ["/topics/:topic"],
               },
               patch: {
                 params: {
-                  value: "{{ scope.query.value | default: scope.hashQuery.value | default: scope.path.topic }}",
+                  value: "{{ scope.query.value | default: scope.path.topic }}",
                 },
               },
             },
@@ -87,6 +84,37 @@ describe("getRadarSuggestions", () => {
         patch: { params: { value: "hash-value" } },
       },
     ])
+  })
+
+  it("treats a bare hash parameter string as query state", () => {
+    const sources: Parameters<typeof getRadarSuggestions>[1] = [{
+      id: "test:hash-query",
+      params: {
+        value: { type: "text", title: "Value", default: "" },
+      },
+      radar: [{
+        id: "hash-query",
+        match: {
+          hosts: ["example.com"],
+          location: "hash",
+          query: ["a"],
+        },
+        patch: { params: { value: "{{ scope.query.a }}" } },
+      }],
+    }]
+
+    expect(getRadarSuggestions(
+      { url: "https://example.com/#a=b" },
+      sources,
+    )).toMatchObject([{ patch: { params: { value: "b" } } }])
+    expect(getRadarSuggestions(
+      { url: "https://example.com/#other=b" },
+      sources,
+    )).toEqual([])
+    expect(getRadarSuggestions(
+      { url: "https://example.com/#comments" },
+      sources,
+    )).toEqual([])
   })
 
   it("renders Radar parameters from page JavaScript", () => {
@@ -272,7 +300,7 @@ describe("getRadarSuggestions", () => {
     ])
   })
 
-  it("does not infer same-named URL parameters without an explicit mapping", () => {
+  it("does not add defaults or infer URL values without an explicit mapping", () => {
     expect(getRadarSuggestions(
       { url: "https://example.com/topics/url-value?value=query-value" },
       [
@@ -298,7 +326,7 @@ describe("getRadarSuggestions", () => {
       ],
     )).toMatchObject([
       {
-        patch: { params: { value: "default-value" } },
+        patch: { params: {} },
       },
     ])
   })
@@ -498,6 +526,19 @@ describe("getRadarSuggestions", () => {
     ])
   })
 
+  it("validates the Weibo super-topic path capture through its parameter", () => {
+    expect(getSuggestions({
+      url: "https://weibo.com/p/100808Example123/super_index",
+    })).toMatchObject([{
+      sourceId: "weibo:super-topic",
+      patch: { params: { id: "100808Example123" } },
+    }])
+
+    expect(getSuggestions({
+      url: "https://weibo.com/p/not-a-super-topic/super_index",
+    }).some(suggestion => suggestion.sourceId === "weibo:super-topic")).toBe(false)
+  })
+
   it.each([
     [
       "https://www.reddit.com/user/NewsNext/submitted/",
@@ -570,7 +611,7 @@ describe("getRadarSuggestions", () => {
         sourceId: "reddit:subreddit-top",
         patch: {
           params: {
-            period,
+            ...(period === "week" ? { period } : {}),
             subreddit: "typescript",
           },
           metadata: {
@@ -669,6 +710,61 @@ describe("getRadarSuggestions", () => {
     ])
   })
 
+  it("separates Bilibili followed and user dynamics", () => {
+    expect(getSuggestions({
+      url: "https://space.bilibili.com/437393493/dynamic",
+      pageSelections: selectPageField(".nickname", "二萌_er"),
+    })).toMatchObject([
+      {
+        sourceId: "bilibili:user-dynamics",
+        patch: {
+          params: { mid: "437393493" },
+          metadata: {
+            home: "https://space.bilibili.com/437393493/dynamic",
+            title: "二萌_er | 动态",
+          },
+        },
+      },
+    ])
+
+    expect(getSuggestions({ url: "https://www.bilibili.com/" })
+      .some(suggestion => suggestion.sourceId === "bilibili:following"))
+      .toBe(false)
+    expect(getSuggestions({ url: "https://t.bilibili.com/" })
+      .some(suggestion => suggestion.sourceId === "bilibili:following"))
+      .toBe(true)
+    expect(getSuggestions({ url: "https://space.bilibili.com/not-a-mid/dynamic" })
+      .some(suggestion => suggestion.sourceId === "bilibili:user-dynamics"))
+      .toBe(false)
+  })
+
+  it("ranks Bilibili series above the broader favorites match", () => {
+    const followedSeries = getSuggestions({
+      url: "https://space.bilibili.com/12505602/favlist?fid=7701562&ftype=collect&ctype=21",
+    })
+    expect(followedSeries[0]).toMatchObject({
+      sourceId: "bilibili:series",
+      patch: { params: { seasonId: "7701562" } },
+    })
+    expect(followedSeries.some(suggestion => suggestion.sourceId === "bilibili:favorites"))
+      .toBe(true)
+
+    const createdFolder = getSuggestions({
+      url: "https://space.bilibili.com/12505602/favlist?fid=73908302&ftype=create",
+    })
+    expect(createdFolder.some(suggestion => suggestion.sourceId === "bilibili:favorites"))
+      .toBe(true)
+    expect(createdFolder.some(suggestion => suggestion.sourceId === "bilibili:series"))
+      .toBe(false)
+
+    expect(getSuggestions({
+      url: "https://space.bilibili.com/3546631548963188/lists/7701562?type=season",
+    })).toMatchObject([{
+      sourceId: "bilibili:series",
+      patch: { params: { seasonId: "7701562" } },
+    }])
+  })
+
   it("returns no suggestions for invalid or unknown URLs", () => {
     expect(getSuggestions({ url: "not a url" })).toEqual([])
     expect(getSuggestions({ url: "https://example.com/article" })).toEqual([])
@@ -705,7 +801,6 @@ describe("getRadarSuggestions", () => {
       }],
     )).toMatchObject([
       {
-        confidence: 0,
         ruleId: "default-home-origin",
         sourceId: "test:default",
         patch: { params: {} },
@@ -777,7 +872,7 @@ describe("getRadarSuggestions", () => {
     ])
   })
 
-  it("sorts suggestions by confidence", () => {
+  it("uses priority to break equal-specificity ties", () => {
     expect(getRadarSuggestions(
       { url: "https://example.com/a" },
       [
@@ -787,7 +882,7 @@ describe("getRadarSuggestions", () => {
             {
               id: "low",
               match: { hosts: ["example.com"], paths: ["/a"] },
-              confidence: 0.1,
+              priority: 1,
             },
           ],
         },
@@ -797,12 +892,178 @@ describe("getRadarSuggestions", () => {
             {
               id: "high",
               match: { hosts: ["example.com"], paths: ["/a"] },
-              confidence: 0.9,
+              priority: 2,
             },
           ],
         },
       ],
     ).map(suggestion => suggestion.sourceId)).toEqual(["test:high", "test:low"])
+  })
+
+  it("orders simultaneous matches by query, path, and host granularity", () => {
+    const suggestions = getRadarSuggestions(
+      { url: "https://example.com/topics/news?view=latest" },
+      [
+        {
+          id: "test:host-only",
+          radar: [{ id: "host-only", match: { hosts: ["example.com"] } }],
+        },
+        {
+          id: "test:wildcard",
+          radar: [{ id: "wildcard", match: { hosts: ["example.com"], paths: ["/topics/*rest"] } }],
+        },
+        {
+          id: "test:generic-params",
+          radar: [{ id: "generic-params", match: { hosts: ["example.com"], paths: ["/:section/:topic"] } }],
+        },
+        {
+          id: "test:specific-param",
+          radar: [{ id: "specific-param", match: { hosts: ["example.com"], paths: ["/topics/:topic"] } }],
+        },
+        {
+          id: "test:exact",
+          radar: [{ id: "exact", match: { hosts: ["example.com"], paths: ["/topics/news"] } }],
+        },
+        {
+          id: "test:query",
+          radar: [{
+            id: "query",
+            match: {
+              hosts: ["example.com"],
+              paths: ["/topics/news"],
+              query: ["view"],
+            },
+            priority: 100,
+          }],
+        },
+      ],
+    )
+
+    expect(suggestions.map(suggestion => suggestion.sourceId)).toEqual([
+      "test:query",
+      "test:exact",
+      "test:specific-param",
+      "test:generic-params",
+      "test:wildcard",
+      "test:host-only",
+    ])
+  })
+
+  it("matches structured path, query, and hash constraints", () => {
+    expect(getRadarSuggestions(
+      { url: "https://example.com/#/library/42?kind=album&item=7&tab=latest" },
+      [{
+        id: "test:structured",
+        params: {
+          album: {
+            type: "text",
+            title: "Album",
+            default: "",
+            validate: { format: "digits" },
+          },
+          item: {
+            type: "text",
+            title: "Item",
+            default: "",
+            validate: { format: "digits" },
+          },
+        },
+        radar: [{
+          id: "structured",
+          match: {
+            hosts: ["example.com"],
+            location: "hash",
+            paths: ["/library/:album"],
+            query: ["item", "kind"],
+          },
+          patch: {
+            params: {
+              album: "{{ scope.path.album }}",
+              item: "{{ scope.query.item }}",
+            },
+          },
+        }],
+      }],
+    )).toMatchObject([{ patch: { params: { album: "42", item: "7" } } }])
+
+    expect(getRadarSuggestions(
+      { url: "https://example.com/#/library/not-an-id?kind=album" },
+      [{
+        id: "test:structured",
+        params: {
+          album: {
+            type: "text",
+            title: "Album",
+            default: "",
+            validate: { format: "digits" },
+          },
+        },
+        radar: [{
+          id: "structured",
+          match: {
+            hosts: ["example.com"],
+            location: "hash",
+            paths: ["/library/:album"],
+          },
+          patch: { params: { album: "{{ scope.path.album }}" } },
+        }],
+      }],
+    )).toEqual([])
+  })
+
+  it("uses the most specific matching include pattern", () => {
+    expect(getRadarSuggestions(
+      { url: "https://example.com/topics/news" },
+      [{
+        id: "test:overlap",
+        params: {
+          value: {
+            type: "text",
+            title: "Value",
+            default: "",
+          },
+        },
+        radar: [{
+          id: "overlap",
+          match: {
+            hosts: ["example.com"],
+            paths: ["/topics/:topic", "/topics/news"],
+          },
+          patch: {
+            params: {
+              value: "{{ scope.path.topic | default: 'exact' }}",
+            },
+          },
+        }],
+      }],
+    )).toMatchObject([{ patch: { params: { value: "exact" } } }])
+  })
+
+  it("uses priority only after match specificity", () => {
+    expect(getRadarSuggestions(
+      { url: "https://example.com/topics/news" },
+      [
+        {
+          id: "test:host-high-priority",
+          radar: [{
+            id: "host-high-priority",
+            match: { hosts: ["example.com"] },
+            priority: 100,
+          }],
+        },
+        {
+          id: "test:path-low-priority",
+          radar: [{
+            id: "path-low-priority",
+            match: { hosts: ["example.com"], paths: ["/topics/news"] },
+            priority: -100,
+          }],
+        },
+      ],
+    ).map(suggestion => suggestion.sourceId)).toEqual([
+      "test:path-low-priority",
+      "test:host-high-priority",
+    ])
   })
 
   it("prioritizes explicit path rules over generated origin rules", () => {
@@ -831,13 +1092,10 @@ describe("getRadarSuggestions", () => {
           ],
         },
       ],
-    ).map(suggestion => ({
-      confidence: suggestion.confidence,
-      sourceId: suggestion.sourceId,
-    }))).toEqual([
-      { confidence: 1, sourceId: "test:ranking" },
-      { confidence: 0, sourceId: "test:generic-one" },
-      { confidence: 0, sourceId: "test:generic-two" },
+    ).map(suggestion => suggestion.sourceId)).toEqual([
+      "test:ranking",
+      "test:generic-one",
+      "test:generic-two",
     ])
   })
 
@@ -874,48 +1132,6 @@ describe("getRadarSuggestions", () => {
         },
       ],
     )).toEqual([])
-  })
-
-  it("matches path regexes and exposes named captures", () => {
-    expect(getRadarSuggestions(
-      { url: "https://example.com/users/newsnext" },
-      [
-        {
-          id: "test:regex-path",
-          params: {
-            username: {
-              type: "text",
-              title: "Username",
-              default: "",
-            },
-          },
-          radar: [
-            {
-              id: "regex-path",
-              match: {
-                hosts: ["example.com"],
-                paths: {
-                  include: [{ regex: "/users/(?<username>[^/?#]+)$" }],
-                },
-              },
-              patch: {
-                params: {
-                  username: "{{ scope.path.username }}",
-                },
-              },
-            },
-          ],
-        },
-      ],
-    )).toMatchObject([
-      {
-        patch: {
-          params: {
-            username: "newsnext",
-          },
-        },
-      },
-    ])
   })
 
   it("keeps suggestions distinct when params patches differ", () => {

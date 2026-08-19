@@ -25,6 +25,15 @@ export const bilibiliAuthenticatedCapabilities = {
   cookies: ["api.bilibili.com", "www.bilibili.com"],
 } as const
 
+export const bilibiliUserIdParam = {
+  type: "text",
+  title: "用户 ID",
+  description: "用户空间地址中的数字 ID。",
+  default: "282994",
+  required: true,
+  validate: { format: "digits" },
+} as const
+
 export function readBilibiliUserId(): string | undefined {
   const page = globalThis as unknown as { document: { cookie: string } }
   const cookie = page.document.cookie

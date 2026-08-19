@@ -1,6 +1,6 @@
 import type { SourceParamSchema } from "@newsnext/source-kit/types"
 import { describe, expect, it } from "vitest"
-import { sanitizeSourceParamPatch } from "./params"
+import { mergeSourceParamValues, sanitizeSourceParamPatch } from "./params"
 
 const params = {
   topic: {
@@ -35,5 +35,33 @@ describe("sanitizeSourceParamPatch", () => {
 
   it("does not materialize defaults for a missing patch", () => {
     expect(sanitizeSourceParamPatch(undefined, params)).toEqual({})
+  })
+})
+
+describe("mergeSourceParamValues", () => {
+  it("applies defined shallow overrides without concatenating arrays", () => {
+    expect(mergeSourceParamValues(
+      {
+        empty: "default",
+        enabled: true,
+        ignored: "current",
+        items: ["current"],
+        page: 1,
+      },
+      {
+        empty: "",
+        enabled: false,
+        ignored: undefined,
+        items: [],
+        missing: null,
+        page: 0,
+      },
+    )).toEqual({
+      empty: "",
+      enabled: false,
+      ignored: "current",
+      items: [],
+      page: 0,
+    })
   })
 })

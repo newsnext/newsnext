@@ -67,8 +67,7 @@
             "metadata": {
               "title": "Trending {{ scope.params.language }}"
             }
-          },
-          "confidence": 0.95
+          }
         }
       ],
       "loader": {

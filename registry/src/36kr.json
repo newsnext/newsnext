@@ -2,6 +2,7 @@
   "title": "36氪",
   "category": "news",
   "color": "blue",
+  "icon": "https://36kr.com/favicon.ico",
   "defaults": {
     "baseUrl": "https://36kr.com/",
     "vars": {
@@ -101,8 +102,7 @@
             "params": {
               "channel": "{{ scope.path.channel }}"
             }
-          },
-          "confidence": 0.9
+          }
         }
       ],
       "loader": {
@@ -110,10 +110,7 @@
         "url": "{{ source.vars.gateway }}/api/mis/nav/ifm/subNav/flow",
         "fetchOptions": {
           "method": "POST",
-          "headers": {
-            "Content-Type": "application/json"
-          },
-          "body": {
+          "json": {
             "partner_id": "web",
             "param": {
               "subnavType": 1,
@@ -191,31 +188,40 @@
           },
           "patch": {
             "params": {
-              "category": "{% if scope.path.type %}{{ scope.path.type }}{% else %}0{% endif %}"
+              "category": "{{ scope.path.type }}"
             },
             "metadata": {
-              "title": "快讯 · {{ source.vars.newsflashCategories[scope.params.category] | default: '全部' }}"
+              "title": "快讯 | {{ source.vars.newsflashCategories[scope.params.category] | default: '全部' }}"
             }
-          },
-          "confidence": 0.9
+          }
         }
       ],
       "loader": {
-        "type": "html",
-        "url": "/newsflashes/catalog/{{ scope.params.category | url_path }}",
-        "items": ".newsflash-item",
+        "type": "json",
+        "url": "{{ source.vars.gateway }}/api/mis/nav/newsflash/flow",
+        "fetchOptions": {
+          "method": "POST",
+          "json": {
+            "partner_id": "web",
+            "param": {
+              "siteId": 1,
+              "platformId": 2,
+              "pageSize": 20,
+              "pageEvent": 0,
+              "type": "{{ scope.params.category }}"
+            }
+          }
+        },
+        "items": "data.itemList[?itemType == `20`]",
         "fields": {
-          "title": ".item-title",
+          "title": "templateMaterial.widgetTitle",
           "url": {
-            "select": ".item-title",
-            "attr": "href"
+            "select": "itemId",
+            "template": "/newsflashes/{{ scope.value }}"
           },
-          "publishedAt": {
-            "select": ".time",
-            "template": "{{ scope.value | relative_date_to_ms: 'Asia/Shanghai' }}"
-          },
+          "publishedAt": "templateMaterial.publishTime",
           "content": {
-            "text": ".item-desc > span"
+            "text": "templateMaterial.widgetContent"
           }
         }
       }
@@ -235,8 +241,7 @@
             "paths": [
               "/hot-list/*rest"
             ]
-          },
-          "confidence": 0.9
+          }
         }
       ],
       "loader": {
@@ -244,10 +249,7 @@
         "url": "{{ source.vars.gateway }}/api/mis/x/rank/list",
         "fetchOptions": {
           "method": "POST",
-          "headers": {
-            "Content-Type": "application/json"
-          },
-          "body": {
+          "json": {
             "partner_id": "web",
             "param": {
               "siteId": 1,

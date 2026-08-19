@@ -118,6 +118,8 @@ export default {
           type: "text",
           title: "Feed ID",
           default: "71931642168770560",
+          required: true,
+          validate: { format: "digits" },
         },
       },
       radar: [
@@ -125,11 +127,7 @@ export default {
           id: "folo-feed",
           match: {
             hosts: ["app.folo.is"],
-            paths: {
-              include: [{
-                regex: "^https://app\\.folo\\.is/timeline/articles/(?<feedId>\\d+)/(?:pending|\\d+)/?(?:[?#]|$)",
-              }],
-            },
+            paths: ["/timeline/articles/:feedId/*rest"],
           },
           patch: {
             params: {
@@ -140,7 +138,6 @@ export default {
               home: "https://app.folo.is/timeline/articles/{{ scope.params.feedId }}/pending",
             },
           },
-          confidence: 0.98,
         },
       ],
       loader: {
@@ -156,6 +153,8 @@ export default {
           type: "text",
           title: "List ID",
           default: "68649150114432000",
+          required: true,
+          validate: { format: "digits" },
         },
       },
       radar: [
@@ -163,11 +162,7 @@ export default {
           id: "folo-list",
           match: {
             hosts: ["app.folo.is"],
-            paths: {
-              include: [{
-                regex: "^https://app\\.folo\\.is/timeline/articles/list-(?<listId>\\d+)/(?:pending|\\d+)/?(?:[?#]|$)",
-              }],
-            },
+            paths: ["/timeline/articles/list-:listId/*rest"],
           },
           patch: {
             params: {
@@ -178,7 +173,6 @@ export default {
               home: "https://app.folo.is/timeline/articles/list-{{ scope.params.listId }}/pending",
             },
           },
-          confidence: 0.98,
         },
       ],
       loader: {

@@ -1,5 +1,10 @@
 import type { ProviderSourceConfig } from "@newsnext/source-kit/registry"
-import type { NewsItemInput, SourceLoaderContext, SourceLoaderOutput } from "@newsnext/source-kit/types"
+import type {
+  NewsItemInput,
+  SourceLoaderContext,
+  SourceLoaderOutput,
+  SourceRadarRule,
+} from "@newsnext/source-kit/types"
 import type { IdentityParams } from "../shared/identity"
 import { assertIdentity, identityParam } from "../shared/identity"
 import {
@@ -127,13 +132,8 @@ async function fetchBilibiliFavorites(
   const actualIdentity = getBilibiliIdentity(context)
   await assertIdentity(identity, () => actualIdentity, "Bilibili")
 
-  let mediaId = folder.trim()
-  const normalizedMid = mid.trim()
-  if (mediaId && !/^\d+$/.test(mediaId)) throw new Error("Bilibili favorite folder ID must contain only digits.")
-  if (normalizedMid && !/^\d+$/.test(normalizedMid)) {
-    throw new Error("Bilibili user ID must contain only digits.")
-  }
-  const targetMid = normalizedMid || actualIdentity
+  let mediaId = folder
+  const targetMid = mid || actualIdentity
   if (!mediaId) {
     if (!targetMid) throw new Error("Provide a Bilibili user ID or sign in to load a default favorite folder.")
     const response = await context.fetch.get(FAVORITE_FOLDERS_URL, {
@@ -179,7 +179,7 @@ async function fetchBilibiliFavorites(
       .filter((item): item is NewsItemInput => item !== null)
       .slice(0, FAVORITE_RESULT_LIMIT),
     metadata: {
-      title: `${folderInfo?.title ?? "收藏夹"}｜${BILIBILI_FAVORITE_ORDER_LABELS[order]}`,
+      title: `${folderInfo?.title ?? "收藏夹"} | ${BILIBILI_FAVORITE_ORDER_LABELS[order]}`,
       badge: folderInfo?.cover ? normalizeBilibiliUrl(folderInfo.cover) : undefined,
       home: ownerId
         ? `https://space.bilibili.com/${ownerId}/favlist?fid=${mediaId}&ftype=create`
@@ -192,13 +192,10 @@ async function fetchBilibiliSeries(
   { seasonId }: { seasonId: string },
   context: SourceLoaderContext,
 ): Promise<SourceLoaderOutput> {
-  const normalizedSeasonId = seasonId.trim()
-  if (!/^\d+$/.test(normalizedSeasonId)) throw new Error("Bilibili series ID must contain only digits.")
-
   const response = await context.fetch.get(SERIES_RESOURCES_URL, {
     headers: { referer: "https://www.bilibili.com/" },
     searchParams: {
-      season_id: normalizedSeasonId,
+      season_id: seasonId,
       pn: 1,
       ps: 30,
       web_location: BILIBILI_WEB_LOCATION,
@@ -228,7 +225,7 @@ async function fetchBilibiliSeries(
 export const favoriteSources = {
   favorites: {
     metadata: {
-      title: "收藏｜最近收藏",
+      title: "收藏 | 最近收藏",
       desc: "收藏夹中的视频",
     },
     params: {
@@ -238,12 +235,14 @@ export const favoriteSources = {
         title: "用户 ID",
         description: "收藏夹所属账号的空间 ID；留空时使用当前登录账号。",
         default: "",
+        validate: { format: "digits" },
       },
       folder: {
         type: "text",
         title: "收藏夹 ID",
         description: "留空时使用当前账号的默认收藏夹。",
         default: "",
+        validate: { format: "digits" },
       },
       order: {
         type: "select",
@@ -261,23 +260,12 @@ export const favoriteSources = {
         id: "bilibili-favorites",
         match: {
           hosts: ["space.bilibili.com"],
-          paths: {
-            include: [
-              {
-                regex: "^https://space\\.bilibili\\.com/(?<mid>\\d+)/favlist(?:[/?#]|$)",
-              },
-            ],
-            exclude: [
-              {
-                regex: "[?&]ftype=collect(?:[&#]|$)",
-              },
-            ],
-          },
+          paths: ["/:mid/favlist"],
         },
         patch: {
           params: {
             identity: readBilibiliUserId,
-            folder: "{{ scope.query.fid | default: '' }}",
+            folder: "{{ scope.query.fid }}",
             mid: "{{ scope.path.mid }}",
             order: () => {
               const page = globalThis as unknown as {
@@ -289,13 +277,12 @@ export const favoriteSources = {
               }
               const filters = Array.from(page.document.querySelectorAll(".radio-filter__item"))
               const activeIndex = filters.findIndex(filter => filter.classList.contains("radio-filter__item--active"))
-              return (["mtime", "view", "pubtime"] as const)[activeIndex] ?? "mtime"
+              return (["mtime", "view", "pubtime"] as const)[activeIndex]
             },
           },
         },
-        confidence: 1,
       },
-    ],
+    ] satisfies SourceRadarRule[],
     loader: {
       type: "custom",
       load: fetchBilibiliFavorites,
@@ -313,7 +300,9 @@ export const favoriteSources = {
         type: "text",
         title: "合集 ID",
         description: "合集页面地址中的数字 ID。",
-        default: "",
+        default: "7701562",
+        required: true,
+        validate: { format: "digits" },
       },
     },
     radar: [
@@ -321,35 +310,23 @@ export const favoriteSources = {
         id: "bilibili-followed-series",
         match: {
           hosts: ["space.bilibili.com"],
-          paths: {
-            include: [
-              {
-                regex: "^https://space\\.bilibili\\.com/(?<mid>\\d+)/favlist(?=[^#]*[?&]ftype=collect(?:[&#]|$))(?=[^#]*[?&]ctype=21(?:[&#]|$))(?=[^#]*[?&]fid=(?<seasonId>\\d+)(?:[&#]|$)).*$",
-              },
-            ],
-          },
+          paths: ["/:mid/favlist"],
+          query: ["ctype", "fid", "ftype"],
         },
         patch: {
           params: {
-            seasonId: "{{ scope.path.seasonId }}",
+            seasonId: "{{ scope.query.fid }}",
           },
           metadata: {
             home: "https://space.bilibili.com/{{ scope.path.mid | url_path }}/favlist?fid={{ scope.params.seasonId | url_query }}&ftype=collect&ctype=21",
           },
         },
-        confidence: 1,
       },
       {
         id: "bilibili-series",
         match: {
           hosts: ["space.bilibili.com"],
-          paths: {
-            include: [
-              {
-                regex: "^https://space\\.bilibili\\.com/(?<mid>\\d+)/lists/(?<seasonId>\\d+)(?=[^#]*[?&]type=season(?:[&#]|$)).*$",
-              },
-            ],
-          },
+          paths: ["/:mid/lists/:seasonId"],
         },
         patch: {
           params: {
@@ -359,9 +336,8 @@ export const favoriteSources = {
             home: "https://space.bilibili.com/{{ scope.path.mid | url_path }}/lists/{{ scope.params.seasonId | url_path }}?type=season",
           },
         },
-        confidence: 1,
       },
-    ],
+    ] satisfies SourceRadarRule[],
     loader: {
       type: "custom",
       load: fetchBilibiliSeries,

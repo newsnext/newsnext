@@ -241,7 +241,7 @@ describe("mergeSourceInstancePatch", () => {
         metadata: { title: "NewsNext" },
       },
       {
-        params: { includeReplies: true },
+        params: { includeReplies: true, username: undefined },
         metadata: { desc: "Developer news" },
       },
     )).toEqual({

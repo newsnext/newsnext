@@ -1,5 +1,5 @@
 import type { ProviderConfig } from "@newsnext/source-kit/registry"
-import { followingSource } from "./dynamics"
+import { followingSource, userDynamicsSource } from "./dynamics"
 import { favoriteSources } from "./favorites"
 import { rankingSource } from "./ranking"
 import { searchSource } from "./search"
@@ -19,7 +19,7 @@ export default {
   },
   sources: {
     ...upSources,
-    hotword: {
+    "hotword": {
       metadata: {
         title: "热搜",
       },
@@ -41,9 +41,10 @@ export default {
         },
       },
     },
-    search: searchSource,
-    following: followingSource,
+    "search": searchSource,
+    "following": followingSource,
+    "user-dynamics": userDynamicsSource,
     ...favoriteSources,
-    ranking: rankingSource,
+    "ranking": rankingSource,
   },
 } satisfies ProviderConfig

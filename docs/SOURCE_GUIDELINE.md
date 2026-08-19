@@ -140,6 +140,10 @@ request already required to load the items. Parameter-dependent home URLs
 belong at the same instance-aware layer; omit the static home when no useful
 parameter-independent URL exists.
 
+Use ` | ` to separate an Instance identity or query from its selected variant,
+such as `NewsNext | Latest`. Reserve compact separators such as `·` for inline
+item attributes rather than Source or Instance titles.
+
 Provider categories are `social` (social platforms), `forum` (forums), `news`
 (news and readers), `finance` (finance), `developer` (developer platforms), and
 `entertainment` (entertainment). Set `category` at the top level when the
@@ -268,10 +272,53 @@ params: {
 ```
 
 Parameters also support `description`. All string inputs are trimmed before
-type coercion and validation. Parameters do not perform arbitrary string
-validation or Liquid transformation. Normalize and reject discovered values in
-the Radar parameter patch, and use structured parameter types for
-user-selectable constraints.
+type coercion and validation. Add a serializable `validate` rule when a value
+has a stricter string contract than its parameter type:
+
+```ts
+params: {
+  userId: {
+    type: "text",
+    title: "User ID",
+    default: "42",
+    required: true,
+    validate: { format: "digits" },
+  },
+  optionalFolderId: {
+    type: "text",
+    title: "Folder ID",
+    default: "",
+    validate: { format: "digits" },
+  },
+  keyword: {
+    type: "text",
+    title: "Keyword",
+    default: "news",
+    required: true,
+  },
+}
+```
+
+Set `required: true` when an empty value is invalid. Validation rules apply only
+to non-empty values: `format: "digits"` handles decimal IDs, while bounded
+`regex` handles uncommon site-specific contracts. Prefer a format and use regex
+only when no structured format expresses the contract. Validation runs after
+normal type coercion for defaults, user edits, CLI execution, loading, and Radar
+patches. URL parameters accept only absolute HTTP(S) URLs, number parameters
+require finite values in their declared range, switch inputs accept only boolean
+or standard `0`/`1` forms, and select values must be declared options. Custom
+loaders receive these normalized, validated values and should not repeat
+single-parameter trimming or validation.
+
+Validation rules are data rather than JavaScript functions because parameter
+definitions cross the background-to-UI serialization boundary. The shared
+`validateSourceParamValue` and `validateSourceParamPatch` helpers execute the
+same rules wherever immediate validation feedback is needed. Parameter patches
+are sparse: validation examines only keys explicitly present with a defined
+non-null value. Missing, `undefined`, and `null` values do not fail `required`,
+add defaults to the patch, or overwrite existing values. Empty strings, zero,
+false, and arrays remain explicit overrides. Full Source execution applies
+defaults and checks the resulting parameter record before invoking the loader.
 
 Every value in a Radar `patch.params` object may be either its existing Liquid
 string or a JavaScript function. The function runs in the matched browser tab
@@ -322,7 +369,7 @@ Liquid is available only in schema fields documented as template slots:
 | Loader URL and `fetchOptions` | `source.vars`, `scope.params` |
 | JSON field | `source.vars`, `scope.value`, `scope.item`, `scope.params`, `scope.index`, `scope.request.url`, `scope.response.json` |
 | HTML field | `source.vars`, `scope.value`, `scope.item`, `scope.params`, `scope.index`, `scope.request.url` |
-| Radar parameters | `source.vars`, `scope.path`, `scope.query`, `scope.hashQuery` |
+| Radar parameters | `source.vars`, `scope.path`, `scope.query` |
 | Radar metadata | Radar parameter values plus `scope.params` and `scope.page.title` |
 
 Templates use strict variables and filters. Guard optional values:
@@ -958,7 +1005,6 @@ radar: [{
       title: "{{ scope.params.topic }}",
     },
   },
-  confidence: 0.95,
 }]
 ```
 
@@ -972,23 +1018,48 @@ out of custom Collections while keeping it visible in All.
 Match rules:
 
 - `hosts` are lowercase and ignore a leading `www.`.
+- `location` selects which URL-like location supplies `paths`, `query`, and
+  their template scopes. It defaults to `"url"`; use `"hash"` for a Hash
+  Router or fragment parameters. Hash locations accept `#/path?key=value`,
+  `#?key=value`, and `#key=value`. Plain anchors such as `#comments` are not
+  matchable locations.
 - A `paths` array is an include shorthand and uses `path-to-regexp` syntax.
 - Use `paths.include` and `paths.exclude` when both are needed. Exclusions are
   checked before parameter patches are rendered.
-- Entries inside `paths.include` or `paths.exclude` can use
-  `{ regex: "/users/(?<username>[^/?#]+)$" }`. Named capture groups are exposed
-  through `scope.path`. Regex entries match the complete URL, while string
-  entries match only `URL.pathname`.
-- Prefer an anchored regex for opaque numeric IDs when the same path position
-  also accepts reserved words or prefixed IDs; this prevents one Radar rule
-  from claiming aggregate or sibling resource routes.
+- `query` is an array of required query keys. Radar checks only that each key is
+  present; their values remain available through `scope.query` and are validated
+  by the Source parameter schema after the patch is resolved. Keys read only by
+  a patch do not need to appear in `query`.
 - Omitting `paths`, or using an empty include array, matches every path on the
   listed hosts.
 - Radar rule IDs must be unique within a source.
 
+When several suggestions match the same page, Radar orders them by the matched
+location's granularity: query, path, then host-only. Within
+the path level, exact paths outrank parameterized paths, which outrank
+wildcards. More static segments, greater path depth, and more required query
+keys increase specificity; fewer dynamic and wildcard segments win the remaining
+ties. When several include patterns match, Radar uses the most specific one.
+
+Radar derives specificity as an ordered set of structural fields rather than a
+weighted score. This makes ordering deterministic and explainable without
+author-tuned weights.
+
+The optional rule `priority` is a safe integer used only as a tie-breaker
+between suggestions with equal structural specificity. It cannot override a
+more specific location match. It is not required; omit it unless two
+structurally equivalent rules need an intentional order.
+
 Map each parameter explicitly in `patch.params`. Values can read
-`scope.path`, `scope.query`, `scope.hashQuery`, and `source.vars`. Missing
-values fall back to parameter defaults; invalid values discard the suggestion.
+`scope.path`, `scope.query`, and `source.vars`. Both scopes refer to the
+selected `location`. Match structure and required query keys decide eligibility
+and populate captures; patches map those captures to Source parameters. Missing
+values fall back to parameter defaults. Radar applies every declared parameter
+type and `validate` rule after resolving the complete patch; any invalid value
+discards the suggestion. Do not repeat parameter defaults or validation in
+Liquid or JavaScript Radar patches. When page state is unavailable, let a
+template render empty or return `undefined` from a script so the parameter
+schema supplies its default.
 
 Prefer URL-derived state because it is stable and directly testable. Many
 single-page applications do not serialize every choice into the URL. When a

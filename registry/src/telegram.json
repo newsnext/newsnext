@@ -44,8 +44,7 @@
               "badge": "/i/userpic/320/{{ scope.params.channel | url_path }}.jpg",
               "home": "/s/{{ scope.params.channel }}"
             }
-          },
-          "confidence": 0.95
+          }
         }
       ],
       "loader": {

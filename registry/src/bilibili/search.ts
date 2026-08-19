@@ -20,11 +20,11 @@ const BILIBILI_SEARCH_ORDER_LABELS: Record<BilibiliSearchOrder, string> = {
   pubdate: "最新发布",
   stow: "最多收藏",
 }
-const BILIBILI_SEARCH_DATE_DAYS: Partial<Record<BilibiliSearchDate, number>> = {
+const BILIBILI_SEARCH_DATE_DAYS = {
   day: 1,
   halfyear: 180,
   week: 7,
-}
+} as const satisfies Record<Exclude<BilibiliSearchDate, "all" | "custom">, number>
 
 interface BilibiliSearchVideoItem {
   arcurl?: string
@@ -63,11 +63,8 @@ function formatBilibiliSearchDate(timestamp: number): string {
   }).format(timestamp)
 }
 
-function parseBilibiliSearchDate(value: string): number | undefined {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return undefined
-  const timestamp = Date.parse(`${value}T00:00:00${BILIBILI_SEARCH_TIMEZONE_OFFSET}`)
-  if (!Number.isFinite(timestamp)) return undefined
-  return formatBilibiliSearchDate(timestamp) === value ? Math.floor(timestamp / 1000) : undefined
+function parseBilibiliSearchDate(value: string): number {
+  return Math.floor(Date.parse(`${value}T00:00:00${BILIBILI_SEARCH_TIMEZONE_OFFSET}`) / 1000)
 }
 
 export function getBilibiliSearchDateRange(
@@ -81,18 +78,12 @@ export function getBilibiliSearchDateRange(
   if (date === "custom") {
     const begin = parseBilibiliSearchDate(startDate)
     const endStart = parseBilibiliSearchDate(endDate)
-    if (begin === undefined || endStart === undefined) {
-      throw new Error("Custom Bilibili search dates must use YYYY-MM-DD.")
-    }
-    if (begin > endStart) throw new Error("Bilibili search start date must not be after the end date.")
     return { begin, end: endStart + 86_399 }
   }
 
   const days = BILIBILI_SEARCH_DATE_DAYS[date]
-  if (!days) throw new Error(`Unknown Bilibili search date range "${date}".`)
   const today = formatBilibiliSearchDate(now)
   const todayStart = parseBilibiliSearchDate(today)
-  if (todayStart === undefined) throw new Error("Failed to resolve the current Bilibili search date.")
   return {
     begin: todayStart - (days - 1) * 86_400,
     end: todayStart + 86_399,
@@ -158,13 +149,11 @@ async function fetchBilibiliSearch(
   },
   context: SourceLoaderContext,
 ): Promise<SourceLoaderOutput> {
-  const normalizedKeyword = keyword.trim()
-  if (!normalizedKeyword) throw new Error("Bilibili search keyword must not be empty.")
   const range = getBilibiliSearchDateRange(date, startDate, endDate)
   const { imgUrl, subUrl } = await getBilibiliWbiKeys(context)
   const searchParams = await signBilibiliWbiParams({
     duration: Number(duration),
-    keyword: normalizedKeyword,
+    keyword,
     order,
     page: 1,
     page_size: 42,
@@ -183,7 +172,7 @@ async function fetchBilibiliSearch(
   }
 
   const homeParams = new URLSearchParams({
-    keyword: normalizedKeyword,
+    keyword,
     order,
   })
   if (duration !== "0") homeParams.set("duration", duration)
@@ -196,24 +185,18 @@ async function fetchBilibiliSearch(
       .map(searchVideoItemToNewsItem)
       .filter((item): item is NewsItemInput => item !== null),
     metadata: {
-      title: `${normalizedKeyword}｜${BILIBILI_SEARCH_ORDER_LABELS[order]}`,
+      title: `${keyword} | ${BILIBILI_SEARCH_ORDER_LABELS[order]}`,
       home: `https://search.bilibili.com/video?${homeParams}`,
     },
   }
 }
 
-function readSearchOrder(): BilibiliSearchOrder {
-  const page = globalThis as unknown as { location: { href: string } }
-  const order = new URL(page.location.href).searchParams.get("order")
-  return order === "click" || order === "dm" || order === "stow" ? order : "pubdate"
-}
-
-function readSearchDateRange(): BilibiliSearchDate {
+function readSearchDateRange(): BilibiliSearchDate | undefined {
   const page = globalThis as unknown as { location: { href: string } }
   const params = new URL(page.location.href).searchParams
   const begin = Number(params.get("pubtime_begin_s"))
   const end = Number(params.get("pubtime_end_s"))
-  if (!begin || !end || begin > end) return "all"
+  if (!begin || !end || begin > end) return undefined
   const days = Math.trunc((end - begin) / 86_400) + 1
   if (days === 1) return "day"
   if (days === 7) return "week"
@@ -223,7 +206,7 @@ function readSearchDateRange(): BilibiliSearchDate {
 
 export const searchSource = {
   metadata: {
-    title: "视频搜索｜最新发布",
+    title: "视频搜索 | 最新发布",
     desc: "按关键词搜索哔哩哔哩视频",
   },
   params: {
@@ -231,6 +214,7 @@ export const searchSource = {
       type: "text",
       title: "关键词",
       default: "科技",
+      required: true,
     },
     order: {
       type: "select",
@@ -260,12 +244,14 @@ export const searchSource = {
       title: "开始日期",
       description: "自定义日期使用 YYYY-MM-DD。",
       default: "",
+      validate: { regex: "^\\d{4}-\\d{2}-\\d{2}$" },
     },
     endDate: {
       type: "text",
       title: "结束日期",
       description: "自定义日期使用 YYYY-MM-DD。",
       default: "",
+      validate: { regex: "^\\d{4}-\\d{2}-\\d{2}$" },
     },
     duration: {
       type: "select",
@@ -286,16 +272,17 @@ export const searchSource = {
       match: {
         hosts: ["search.bilibili.com"],
         paths: ["/video"],
+        query: ["keyword"],
       },
       patch: {
         params: {
           keyword: "{{ scope.query.keyword }}",
-          order: readSearchOrder,
+          order: "{{ scope.query.order }}",
           date: readSearchDateRange,
           startDate: () => {
             const page = globalThis as unknown as { location: { href: string } }
             const value = Number(new URL(page.location.href).searchParams.get("pubtime_begin_s"))
-            if (!value) return ""
+            if (!value) return undefined
             return new Intl.DateTimeFormat("en-CA", {
               day: "2-digit",
               month: "2-digit",
@@ -306,7 +293,7 @@ export const searchSource = {
           endDate: () => {
             const page = globalThis as unknown as { location: { href: string } }
             const value = Number(new URL(page.location.href).searchParams.get("pubtime_end_s"))
-            if (!value) return ""
+            if (!value) return undefined
             return new Intl.DateTimeFormat("en-CA", {
               day: "2-digit",
               month: "2-digit",
@@ -314,10 +301,9 @@ export const searchSource = {
               year: "numeric",
             }).format(value * 1000)
           },
-          duration: "{{ scope.query.duration | default: '0' }}",
+          duration: "{{ scope.query.duration }}",
         },
       },
-      confidence: 1,
     },
   ],
   loader: {

@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest"
-import { followingDynamicItemsToNewsItems } from "./dynamics"
+import { dynamicItemsToNewsItems, followingDynamicItemsToNewsItems } from "./dynamics"
 import { favoriteMediaToNewsItem } from "./favorites"
-import bilibiliProvider from "./index"
 import { pgcRankingItemToNewsItem, videoRankingItemToNewsItem } from "./ranking"
 import {
   getBilibiliSearchDateRange,
@@ -19,32 +18,6 @@ import {
 } from "./up"
 import { signBilibiliWbiParams } from "./wbi"
 
-describe("bilibili Radar", () => {
-  it("routes followed series away from created favorite folders", () => {
-    const followedSeriesUrl = "https://space.bilibili.com/12505602/favlist?fid=7701562&ftype=collect&ctype=21"
-    const reorderedUrl = "https://space.bilibili.com/12505602/favlist?ctype=21&ftype=collect&fid=7701562"
-    const canonicalUrl = "https://space.bilibili.com/3546631548963188/lists/7701562?type=season"
-    const createdFolderUrl = "https://space.bilibili.com/12505602/favlist?fid=73908302&ftype=create"
-    const favoriteExclude = bilibiliProvider.sources.favorites.radar[0]!.match.paths.exclude[0]!.regex
-    const followedSeriesPattern = bilibiliProvider.sources.series.radar[0]!.match.paths.include[0]!.regex
-    const canonicalSeriesPattern = bilibiliProvider.sources.series.radar[1]!.match.paths.include[0]!.regex
-
-    expect(new RegExp(favoriteExclude).test(followedSeriesUrl)).toBe(true)
-    expect(new RegExp(favoriteExclude).test(createdFolderUrl)).toBe(false)
-    for (const url of [followedSeriesUrl, reorderedUrl]) {
-      expect(new RegExp(followedSeriesPattern).exec(url)?.groups).toEqual(expect.objectContaining({
-        mid: "12505602",
-        seasonId: "7701562",
-      }))
-    }
-    expect(new RegExp(followedSeriesPattern).test(createdFolderUrl)).toBe(false)
-    expect(new RegExp(canonicalSeriesPattern).exec(canonicalUrl)?.groups).toEqual(expect.objectContaining({
-      mid: "3546631548963188",
-      seasonId: "7701562",
-    }))
-  })
-})
-
 describe("bilibili search", () => {
   it("resolves preset and custom date ranges in Shanghai time", () => {
     const now = Date.parse("2026-08-19T12:00:00+08:00")
@@ -55,6 +28,10 @@ describe("bilibili search", () => {
     expect(getBilibiliSearchDateRange("custom", "2026-08-01", "2026-08-03")).toEqual({
       begin: Date.parse("2026-08-01T00:00:00+08:00") / 1000,
       end: Date.parse("2026-08-03T23:59:59+08:00") / 1000,
+    })
+    expect(getBilibiliSearchDateRange("custom", "2026-08-03", "2026-08-01")).toEqual({
+      begin: Date.parse("2026-08-03T00:00:00+08:00") / 1000,
+      end: Date.parse("2026-08-01T23:59:59+08:00") / 1000,
     })
   })
 
@@ -232,6 +209,34 @@ describe("bilibili video items", () => {
         label: "Example UP",
         src: "https://example.com/avatar.jpg",
       })
+  })
+
+  it("keeps all supported item types in a user dynamic feed", () => {
+    const dynamics = [
+      dynamicVideo("Video", "BV1video", 2_000),
+      {
+        id_str: "forward",
+        type: "DYNAMIC_TYPE_FORWARD",
+        modules: {
+          module_author: { pub_ts: 3_000 },
+          module_dynamic: { desc: { text: "Forward comment" } },
+        },
+        orig: {
+          modules: {
+            module_dynamic: { desc: { text: "Original post" } },
+          },
+        },
+      },
+    ]
+
+    expect(dynamicItemsToNewsItems(dynamics)).toEqual([
+      expect.objectContaining({
+        title: "Forward comment",
+        url: "https://www.bilibili.com/opus/forward",
+        content: { text: "Forward comment\n\nOriginal post" },
+      }),
+      expect.objectContaining({ title: "Video" }),
+    ])
   })
 
   it("maps independent UP video, opus, and audio items", () => {

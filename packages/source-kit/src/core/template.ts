@@ -212,7 +212,6 @@ const sourceTemplatePaths = {
     "source.vars",
   ],
   radarMetadata: [
-    "scope.hashQuery",
     "scope.params",
     "scope.page",
     "scope.path",
@@ -220,7 +219,6 @@ const sourceTemplatePaths = {
     "source.vars",
   ],
   radarParams: [
-    "scope.hashQuery",
     "scope.path",
     "scope.query",
     "source.vars",

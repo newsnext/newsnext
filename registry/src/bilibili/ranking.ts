@@ -230,7 +230,6 @@ export const rankingSource = {
         title: label === "全部" ? "排行榜" : `${label}排行榜`,
       },
     },
-    confidence: 1,
   })),
   loader: {
     type: "custom",

@@ -29,7 +29,7 @@ export {
 export type { SourceLoadResult } from "./loader"
 export { loadSource, readPersistedSourceCache } from "./loader"
 export type { SourceParamValues } from "./params"
-export { sanitizeSourceParamPatch } from "./params"
+export { mergeSourceParamValues, sanitizeSourceParamPatch } from "./params"
 export type { SourcePermissionRequest, SourcePermissionTarget } from "./permissions"
 export {
   getPermissionOriginLabel,

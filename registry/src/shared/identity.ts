@@ -3,6 +3,7 @@ export const identityParam = {
   title: "Identity",
   description: "Uniquely identifies the signed-in user so personalized data remains separate. This value is not sent to the provider.",
   default: "",
+  validate: { format: "digits" },
 } as const
 
 export interface IdentityParams {
@@ -14,9 +15,9 @@ export async function assertIdentity(
   resolveActualIdentity: () => string | undefined | Promise<string | undefined>,
   provider: string,
 ): Promise<void> {
-  const expected = expectedIdentity.trim().toLowerCase()
+  const expected = expectedIdentity
   if (!expected) return
-  const actual = (await resolveActualIdentity())?.trim().toLowerCase()
+  const actual = (await resolveActualIdentity())?.trim()
   if (!actual) {
     throw new Error(`Cannot determine the signed-in ${provider} user.`)
   }

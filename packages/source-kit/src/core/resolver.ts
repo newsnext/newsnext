@@ -41,7 +41,7 @@ import {
 } from "./loaders/json"
 import { loadRss } from "./loaders/rss"
 import { validateSortByTimestamp } from "./loaders/shared"
-import { parseSourceParamValue } from "./params"
+import { parseSourceParamValue, validateSourceParamDefinitions } from "./params"
 import { validateRadarRules } from "./radar"
 import {
   compileSourceTemplateValue,
@@ -269,6 +269,7 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
     capabilities: capabilityOverrides,
     metadata = {},
   } = config
+  validateSourceParamDefinitions(params, `${sourceId}.params`)
   const baseUrl = baseUrlInput === undefined
     ? undefined
     : parseSourceBaseUrl(baseUrlInput, `${sourceId}.baseUrl`)

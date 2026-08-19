@@ -153,11 +153,8 @@ export async function fetchWeiboUserPosts(
   { uid }: { uid: string },
   context: SourceLoaderContext,
 ): Promise<SourceLoaderOutput> {
-  const normalizedUid = uid.trim()
-  if (!/^\d+$/.test(normalizedUid)) throw new Error("Weibo user ID must be a numeric uid.")
-
   const response = await fetchWeiboDesktop<WeiboApiResponse<{ list?: WeiboStatus[] }>>(
-    `${WEIBO_ORIGIN}/ajax/statuses/mymblog?uid=${normalizedUid}&page=1&feature=0`,
+    `${WEIBO_ORIGIN}/ajax/statuses/mymblog?uid=${uid}&page=1&feature=0`,
     context,
   )
   if (!response.data) throw new Error(response.msg ?? "Weibo returned an empty user timeline.")
@@ -176,10 +173,7 @@ export async function fetchWeiboKeywordPosts(
   { keyword }: { keyword: string },
   context: SourceLoaderContext,
 ): Promise<SourceLoaderOutput> {
-  const normalizedKeyword = keyword.trim()
-  if (!normalizedKeyword) throw new Error("Weibo keyword must not be empty.")
-
-  const keywordValue = encodeURIComponent(normalizedKeyword)
+  const keywordValue = encodeURIComponent(keyword)
   const response = await context.fetch.get(
     `${WEIBO_MOBILE_ORIGIN}/api/container/getIndex?containerid=100103type%3D61%26q%3D${keywordValue}%26t%3D0`,
     {
@@ -197,12 +191,8 @@ export async function fetchWeiboSuperTopicPosts(
   { id }: { id: string },
   context: SourceLoaderContext,
 ): Promise<SourceLoaderOutput> {
-  const normalizedId = id.trim()
-  if (!/^100808[a-z\d]+$/i.test(normalizedId)) {
-    throw new Error("Weibo super topic ID must start with 100808 and contain only letters or digits.")
-  }
   const response = await fetchWeiboDesktop<{ items?: Array<{ category?: string, data?: WeiboStatus }> }>(
-    `${WEIBO_ORIGIN}/ajax_proxy/chaohua/page?flowId=${normalizedId}_-_sort_time`,
+    `${WEIBO_ORIGIN}/ajax_proxy/chaohua/page?flowId=${id}_-_sort_time`,
     context,
   )
   return {

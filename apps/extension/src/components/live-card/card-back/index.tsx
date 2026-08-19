@@ -1,4 +1,5 @@
 import type { ReactNode } from "react"
+import type { SourceParamValidationState } from "./edit-form"
 import type { SourceInstanceMetadata } from "@/lib/source"
 import type { LiveCardViewModel } from "@/typings/source"
 import { ScrollArea } from "@newsnext/ui/components/scroll-area"
@@ -18,6 +19,7 @@ export interface LiveCardBackProps {
   draftSourceParams: Record<string, unknown>
   hasSourceParams: boolean
   hasSourceParamChanges: boolean
+  sourceParamValidation: SourceParamValidationState
   updatedAt: number
   onSourceParamChange: (key: string, value: unknown) => void
   onSaveSourceParams: () => Promise<void> | void
@@ -35,6 +37,7 @@ export function LiveCardBack({
   draftSourceParams,
   hasSourceParams,
   hasSourceParamChanges,
+  sourceParamValidation,
   updatedAt,
   onSourceParamChange,
   onSaveSourceParams,
@@ -103,6 +106,7 @@ export function LiveCardBack({
                 draftSourceParams={draftSourceParams}
                 hasSourceParams={hasSourceParams}
                 hasSourceParamChanges={hasSourceParamChanges}
+                sourceParamValidation={sourceParamValidation}
                 onSourceParamChange={onSourceParamChange}
                 onSaveSourceParams={onSaveSourceParams}
                 onResetSourceParams={onResetSourceParams}

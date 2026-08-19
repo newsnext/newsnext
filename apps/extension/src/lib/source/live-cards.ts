@@ -5,6 +5,7 @@ import type {
 import type { LiveCardViewModel, SourceDescriptor } from "@/typings/source"
 import { SOURCE_PRESENTATION_METADATA_KEYS } from "@newsnext/source-kit"
 import { pick } from "es-toolkit"
+import { mergeSourceParamValues } from "./params"
 
 export interface SourceInstance {
   instanceId: string
@@ -26,7 +27,7 @@ export function mergeSourceInstancePatch(
 ): SourceInstancePatch {
   return {
     params: current?.params || patch.params
-      ? { ...current?.params, ...patch.params }
+      ? mergeSourceParamValues(current?.params, patch.params)
       : undefined,
     metadata: current?.metadata || patch.metadata
       ? { ...current?.metadata, ...patch.metadata }

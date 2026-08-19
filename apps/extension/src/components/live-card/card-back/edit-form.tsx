@@ -13,6 +13,7 @@ export interface LiveCardEditFormProps {
   draftSourceParams: Record<string, unknown>
   hasSourceParams: boolean
   hasSourceParamChanges: boolean
+  sourceParamValidation: SourceParamValidationState
   onSourceParamChange: (key: string, value: unknown) => void
   onSaveSourceParams: () => Promise<void> | void
   onResetSourceParams: () => Promise<void> | void
@@ -21,11 +22,17 @@ export interface LiveCardEditFormProps {
   onPreviewMetadataChange?: (meta: SourceInstanceMetadata | null) => void
 }
 
+export interface SourceParamValidationState {
+  errors: Record<string, string | undefined>
+  valid: boolean
+}
+
 export function LiveCardEditForm({
   source,
   draftSourceParams,
   hasSourceParams,
   hasSourceParamChanges,
+  sourceParamValidation,
   onSourceParamChange,
   onSaveSourceParams,
   onResetSourceParams,
@@ -147,7 +154,7 @@ export function LiveCardEditForm({
                     <Button type="button" variant="outline" tone="theme" size="sm" disabled={!hasSourceParams || isSaving} className="h-6 px-2" onClick={() => void resetParams()}>
                       Reset
                     </Button>
-                    <Button type="button" size="sm" tone="theme" disabled={!hasSourceParamChanges || isSaving} className="h-6 px-2" onClick={() => void saveParams()}>
+                    <Button type="button" size="sm" tone="theme" disabled={!hasSourceParamChanges || !sourceParamValidation.valid || isSaving} className="h-6 px-2" onClick={() => void saveParams()}>
                       Save
                     </Button>
                   </div>
@@ -158,15 +165,24 @@ export function LiveCardEditForm({
                   </Button>
                 )}
           </div>
-          {params && Object.entries(params).map(([paramKey, param]) => (
-            <ParamField
-              key={paramKey}
-              param={param}
-              value={draftSourceParams[paramKey]}
-              editable={isEditingParams}
-              onChange={nextValue => onSourceParamChange(paramKey, nextValue)}
-            />
-          ))}
+          {params && Object.entries(params).map(([paramKey, param]) => {
+            const error = sourceParamValidation.errors[paramKey]
+            return (
+              <div key={paramKey}>
+                <ParamField
+                  param={param}
+                  value={draftSourceParams[paramKey]}
+                  editable={isEditingParams}
+                  onChange={nextValue => onSourceParamChange(paramKey, nextValue)}
+                />
+                {isEditingParams && error && (
+                  <p role="alert" className="mb-1 text-right text-xs text-destructive">
+                    {error}
+                  </p>
+                )}
+              </div>
+            )
+          })}
         </section>
       )}
       <section className="flex flex-col pt-0.5 text-sm">

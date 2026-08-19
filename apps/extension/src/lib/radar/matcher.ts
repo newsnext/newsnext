@@ -6,20 +6,18 @@ import type {
   SourceRadarMatch,
   SourceRadarMetadata,
   SourceRadarParamScript,
-  SourceRadarPathPattern,
   SourceRadarRule,
 } from "@newsnext/source-kit/types"
 import type { RadarPageQuery } from "./page-query"
 import type { SourceInstanceMetadata, SourceInstancePatch } from "@/lib/source"
 import {
-  compileSourceRegex,
   compileSourceTemplate,
   createSourceTemplateScope,
   parseSourceParams,
   reportTemplateError,
   resolveSourceUrl,
   TemplateRenderError,
-  validateSourceRegexInput,
+  validateSourceParamPatch,
 } from "@newsnext/source-kit/core"
 import { match } from "path-to-regexp"
 import {
@@ -44,7 +42,6 @@ export interface RadarSuggestion {
   ruleId: string
   sourceId: string
   patch: SourceInstancePatch
-  confidence: number
 }
 
 export type RadarSourceMetadata = Pick<
@@ -58,6 +55,7 @@ interface RadarMatchContext {
   url: URL
   page: Record<string, string>
   pathParams: Record<string, string>
+  queryParams: Record<string, string>
   params: Record<string, unknown>
   source: RadarSourceMetadata
 }
@@ -73,13 +71,52 @@ interface RadarLocation {
 }
 
 const DEFAULT_RADAR_RULE_ID = "default-home-origin"
-const DEFAULT_ORIGIN_RADAR_CONFIDENCE = 0
+const HOST_MATCH_GRANULARITY = 0
+const PATH_MATCH_GRANULARITY = 1
+const QUERY_MATCH_GRANULARITY = 2
+const HOST_PATH_KIND = 0
+const WILDCARD_PATH_KIND = 1
+const PARAMETERIZED_PATH_KIND = 2
+const EXACT_PATH_KIND = 3
 
-type LocationMatcher = (url: URL) => Record<string, string> | null
+interface LocationMatch {
+  pathParams: Record<string, string>
+  queryParams: Record<string, string>
+  specificity: MatchSpecificity
+}
+
+interface MatchSpecificity {
+  dynamicSegments: number
+  granularity: number
+  pathDepth: number
+  pathKind: number
+  requiredQueryKeys: number
+  staticSegments: number
+  wildcardSegments: number
+}
+
+const HOST_SPECIFICITY: MatchSpecificity = {
+  dynamicSegments: 0,
+  granularity: HOST_MATCH_GRANULARITY,
+  pathDepth: 0,
+  pathKind: HOST_PATH_KIND,
+  requiredQueryKeys: 0,
+  staticSegments: 0,
+  wildcardSegments: 0,
+}
+
+type LocationMatcher = (url: URL) => LocationMatch | null
+
+interface PathMatch {
+  params: Record<string, string>
+  specificity: MatchSpecificity
+}
+
+type PathMatcher = (pathname: string) => PathMatch | null
 
 interface LocationPatterns {
-  include: SourceRadarPathPattern[]
-  exclude: SourceRadarPathPattern[]
+  include: string[]
+  exclude: string[]
 }
 
 interface CompiledRadarRule {
@@ -89,8 +126,13 @@ interface CompiledRadarRule {
   source: RadarSourceMetadata
   rule: SourceRadarRule
   hosts: string[]
-  excludeMatchers: LocationMatcher[]
-  includeMatchers: LocationMatcher[]
+  locationMatcher: LocationMatcher
+}
+
+interface RankedRadarSuggestion {
+  priority: number
+  specificity: MatchSpecificity
+  suggestion: RadarSuggestion
 }
 
 type CompiledRadarMetadata
@@ -116,14 +158,12 @@ function createRadarSuggestion({
   ruleId,
   sourceId,
   patch,
-  confidence = 1,
-}: Omit<RadarSuggestion, "id" | "confidence"> & { confidence?: number }): RadarSuggestion {
+}: Omit<RadarSuggestion, "id">): RadarSuggestion {
   return {
     id: `${ruleId}:${sourceId}:${stablePatchKey(patch)}`,
     ruleId,
     sourceId,
     patch,
-    confidence,
   }
 }
 
@@ -176,17 +216,37 @@ function createTemplateRecord<T>(
   })
 }
 
-function getQueryParams(searchParams: URLSearchParams): Record<string, string> {
-  return createTemplateRecord(searchParams)
+interface ParsedRadarLocation {
+  pathname: string
+  searchParams: URLSearchParams
 }
 
-function getHashQueryParams(url: URL): Record<string, string> {
-  const hashSearchIndex = url.hash.indexOf("?")
-  if (hashSearchIndex === -1) {
-    return createTemplateRecord([])
+function getHashLocation(url: URL): ParsedRadarLocation | null {
+  const value = url.hash.slice(1)
+  if (!value) return null
+  if (value.startsWith("?")) {
+    return {
+      pathname: "/",
+      searchParams: new URLSearchParams(value.slice(1)),
+    }
   }
+  if (!value.startsWith("/")) {
+    return value.includes("=")
+      ? { pathname: "/", searchParams: new URLSearchParams(value) }
+      : null
+  }
+  const searchIndex = value.indexOf("?")
+  const rawPathname = searchIndex === -1 ? value : value.slice(0, searchIndex)
+  return {
+    pathname: rawPathname || "/",
+    searchParams: new URLSearchParams(searchIndex === -1 ? "" : value.slice(searchIndex + 1)),
+  }
+}
 
-  return getQueryParams(new URLSearchParams(url.hash.slice(hashSearchIndex + 1)))
+function getRadarLocation(url: URL, location: SourceRadarMatch["location"]): ParsedRadarLocation | null {
+  return location === "hash"
+    ? getHashLocation(url)
+    : { pathname: url.pathname, searchParams: url.searchParams }
 }
 
 function isPresent(value: unknown): boolean {
@@ -197,24 +257,11 @@ function createTemplateVariables(
   context: RadarMatchContext,
 ): Record<string, unknown> {
   return createSourceTemplateScope(context.source.vars, {
-    hashQuery: getHashQueryParams(context.url),
     page: context.page,
     params: createTemplateRecord(Object.entries(context.params)),
     path: createTemplateRecord(Object.entries(context.pathParams)),
-    query: getQueryParams(context.url.searchParams),
+    query: context.queryParams,
   }) as Record<string, unknown>
-}
-
-function matchRuleLocation(compiledRule: CompiledRadarRule, url: URL): Record<string, string> | null {
-  if (compiledRule.excludeMatchers.some(matcher => matcher(url) !== null)) {
-    return null
-  }
-
-  for (const matcher of compiledRule.includeMatchers) {
-    const params = matcher(url)
-    if (params) return params
-  }
-  return null
 }
 
 function resolveRadarLocation(
@@ -232,63 +279,124 @@ function resolveRadarLocation(
   }
 }
 
-function compileLocationMatcher(pattern: SourceRadarPathPattern): LocationMatcher | null {
-  try {
-    if (typeof pattern !== "string") {
-      const regex = compileSourceRegex(pattern.regex, "i")
-      return (url) => {
-        const input = url.toString()
-        try {
-          validateSourceRegexInput(input)
-        } catch {
-          return null
-        }
-        const result = regex.exec(input)
-        if (!result) {
-          return null
-        }
-        return Object.fromEntries(
-          Object.entries(result.groups ?? {})
-            .filter((entry): entry is [string, string] => entry[1] !== undefined),
-        )
-      }
-    }
-
-    const matcher = match<Record<string, string | string[]>>(pattern)
-    return (url) => {
-      const result = matcher(url.pathname)
-      if (!result) {
-        return null
-      }
-
-      return Object.fromEntries(
-        Object.entries(result.params)
-          .map(([key, value]) => [key, Array.isArray(value) ? value.join("/") : value]),
-      )
-    }
-  } catch {
-    return null
-  }
+function hasRequiredQueryKeys(
+  keys: string[],
+  values: URLSearchParams,
+): boolean {
+  return keys.every(key => values.has(key))
 }
 
-function compileLocationMatchers(patterns: SourceRadarPathPattern[]): LocationMatcher[] {
-  return patterns
-    .map(compileLocationMatcher)
-    .filter((matcher): matcher is LocationMatcher => matcher !== null)
-}
-
-function getLocationPatterns(matchSpec: SourceRadarMatch): LocationPatterns {
-  if (Array.isArray(matchSpec.paths)) {
-    return {
-      include: matchSpec.paths,
-      exclude: [],
-    }
+function getLocationPatterns(
+  paths: SourceRadarMatch["paths"],
+): LocationPatterns {
+  if (Array.isArray(paths)) {
+    return { include: paths, exclude: [] }
   }
-
   return {
-    include: matchSpec.paths?.include ?? [],
-    exclude: matchSpec.paths?.exclude ?? [],
+    include: paths?.include ?? [],
+    exclude: paths?.exclude ?? [],
   }
+}
+
+function compilePathMatcher(pattern: string): PathMatcher {
+  const pathMatcher = match<Record<string, string | string[]>>(pattern)
+  const specificity = getPathSpecificity(pattern)
+  return (pathname) => {
+    const result = pathMatcher(pathname)
+    if (!result) return null
+    const params = Object.fromEntries(
+      Object.entries(result.params)
+        .map(([key, value]) => [key, Array.isArray(value) ? value.join("/") : value]),
+    )
+    return { params, specificity }
+  }
+}
+
+function compilePathMatchers(patterns: string[]): PathMatcher[] {
+  return patterns.map(compilePathMatcher)
+}
+
+function matchPathPatterns(
+  includeMatchers: PathMatcher[],
+  excludeMatchers: PathMatcher[],
+  pathname: string,
+): PathMatch | null {
+  if (excludeMatchers.some(matcher => matcher(pathname) !== null)) return null
+  if (includeMatchers.length === 0) {
+    return { params: {}, specificity: HOST_SPECIFICITY }
+  }
+
+  let bestMatch: PathMatch | null = null
+  for (const matcher of includeMatchers) {
+    const pathMatch = matcher(pathname)
+    if (
+      pathMatch
+      && (!bestMatch || compareMatchSpecificity(pathMatch.specificity, bestMatch.specificity) > 0)
+    ) {
+      bestMatch = pathMatch
+    }
+  }
+  return bestMatch
+}
+
+function getPathSpecificity(pattern: string): MatchSpecificity {
+  const segments = pattern.split("/").filter(Boolean)
+  const dynamicSegments = segments.filter(segment => /[:*]/.test(segment)).length
+  const wildcardSegments = segments.filter(segment => segment.includes("*")).length
+  return {
+    pathKind: dynamicSegments === 0
+      ? EXACT_PATH_KIND
+      : wildcardSegments > 0
+        ? WILDCARD_PATH_KIND
+        : PARAMETERIZED_PATH_KIND,
+    dynamicSegments,
+    granularity: PATH_MATCH_GRANULARITY,
+    pathDepth: segments.length,
+    staticSegments: segments.length - dynamicSegments,
+    requiredQueryKeys: 0,
+    wildcardSegments,
+  }
+}
+
+function addQuerySpecificity(
+  base: MatchSpecificity,
+  requiredQueryKeys: number,
+): MatchSpecificity {
+  return {
+    ...base,
+    granularity: requiredQueryKeys > 0 ? QUERY_MATCH_GRANULARITY : base.granularity,
+    requiredQueryKeys: base.requiredQueryKeys + requiredQueryKeys,
+  }
+}
+
+function compileLocationMatcher(matchSpec: SourceRadarMatch): LocationMatcher {
+  const pathPatterns = getLocationPatterns(matchSpec.paths)
+  const pathIncludes = compilePathMatchers(pathPatterns.include)
+  const pathExcludes = compilePathMatchers(pathPatterns.exclude)
+  const queryKeys = matchSpec.query ?? []
+
+  return (url) => {
+    const location = getRadarLocation(url, matchSpec.location)
+    if (!location) return null
+    const pathMatch = matchPathPatterns(pathIncludes, pathExcludes, location.pathname)
+    if (!pathMatch || !hasRequiredQueryKeys(queryKeys, location.searchParams)) return null
+
+    return {
+      pathParams: pathMatch.params,
+      queryParams: createTemplateRecord(location.searchParams),
+      specificity: addQuerySpecificity(pathMatch.specificity, queryKeys.length),
+    }
+  }
+}
+
+function compareMatchSpecificity(left: MatchSpecificity, right: MatchSpecificity): number {
+  return left.granularity - right.granularity
+    || left.pathKind - right.pathKind
+    || left.staticSegments - right.staticSegments
+    || left.pathDepth - right.pathDepth
+    || left.requiredQueryKeys - right.requiredQueryKeys
+    || right.dynamicSegments - left.dynamicSegments
+    || right.wildcardSegments - left.wildcardSegments
 }
 
 function compileRadarMetadata(
@@ -320,14 +428,6 @@ function compileRadarMetadata(
 }
 
 function compileRadarRule(sourceRule: SourceRuleSpec, rule: SourceRadarRule): CompiledRadarRule | null {
-  const patterns = getLocationPatterns(rule.match)
-  const includeMatchers = patterns.include.length > 0
-    ? compileLocationMatchers(patterns.include)
-    : [() => ({})]
-  if (!includeMatchers.length) {
-    return null
-  }
-
   try {
     const templateLocation = `${sourceRule.source.id}.radar.${rule.id}.patch`
     const paramTemplates = Object.fromEntries(
@@ -369,8 +469,7 @@ function compileRadarRule(sourceRule: SourceRuleSpec, rule: SourceRadarRule): Co
       source: sourceRule.source,
       rule,
       hosts: rule.match.hosts.map(normalizeHostname),
-      excludeMatchers: compileLocationMatchers(patterns.exclude),
-      includeMatchers,
+      locationMatcher: compileLocationMatcher(rule.match),
       paramScripts,
       paramTemplates,
     }
@@ -416,10 +515,8 @@ function resolveParamsPatch(
       }
     }
 
-    return parseSourceParams(
-      context.source.params,
-      parameterValues,
-    )
+    const validation = validateSourceParamPatch(context.source.params, parameterValues)
+    return validation.valid ? validation.values : null
   } catch (error) {
     if (error instanceof TemplateRenderError) {
       reportTemplateError(error)
@@ -496,9 +593,9 @@ function matchCompiledRule(
   compiledRule: CompiledRadarRule,
   input: RadarContext,
   url: URL,
-): RadarSuggestion | null {
-  const pathParams = matchRuleLocation(compiledRule, url)
-  if (!pathParams) {
+): RankedRadarSuggestion | null {
+  const locationMatch = compiledRule.locationMatcher(url)
+  if (!locationMatch) {
     return null
   }
 
@@ -507,7 +604,8 @@ function matchCompiledRule(
       title: input.title ?? "",
     },
     url,
-    pathParams,
+    pathParams: locationMatch.pathParams,
+    queryParams: locationMatch.queryParams,
     source: compiledRule.source,
   }
   const paramsContext: RadarMatchContext = {
@@ -521,23 +619,34 @@ function matchCompiledRule(
 
   const context: RadarMatchContext = {
     ...paramsContext,
-    params,
+    params: parseSourceParams(compiledRule.source.params, params),
   }
 
   try {
-    return createRadarSuggestion({
-      ruleId: compiledRule.rule.id,
-      sourceId: compiledRule.source.id,
-      patch: {
-        params,
-        metadata: resolveMetaPatch(compiledRule, context, input),
-      },
-      confidence: compiledRule.rule.confidence,
-    })
+    return {
+      priority: compiledRule.rule.priority ?? 0,
+      specificity: locationMatch.specificity,
+      suggestion: createRadarSuggestion({
+        ruleId: compiledRule.rule.id,
+        sourceId: compiledRule.source.id,
+        patch: {
+          params,
+          metadata: resolveMetaPatch(compiledRule, context, input),
+        },
+      }),
+    }
   } catch (error) {
     reportTemplateError(error)
     return null
   }
+}
+
+function compareRankedSuggestions(
+  left: RankedRadarSuggestion,
+  right: RankedRadarSuggestion,
+): number {
+  return compareMatchSpecificity(left.specificity, right.specificity)
+    || left.priority - right.priority
 }
 
 function getPageQueries(
@@ -551,7 +660,7 @@ function getPageQueries(
 
   const queries = new Map<string, RadarPageQuery>()
   for (const rule of location.rules) {
-    if (!matchRuleLocation(rule, location.url)) continue
+    if (!rule.locationMatcher(location.url)) continue
 
     for (const metadata of Object.values(rule.metadata)) {
       if (metadata?.kind !== "field") continue
@@ -571,7 +680,7 @@ function getPageScripts(
 
   const scripts = new Map<string, RadarPageScript>()
   for (const rule of location.rules) {
-    if (!matchRuleLocation(rule, location.url)) continue
+    if (!rule.locationMatcher(location.url)) continue
     for (const pageScript of Object.values(rule.paramScripts)) {
       scripts.set(pageScript.key, pageScript)
     }
@@ -588,16 +697,24 @@ function createSuggestions(
     return []
   }
 
-  const suggestions = location.rules
+  const rankedSuggestions = location.rules
     .map(rule => matchCompiledRule(rule, context, location.url))
-    .filter((suggestion): suggestion is RadarSuggestion => suggestion !== null)
-  const suggestionsById = new Map<string, RadarSuggestion>()
+    .filter((suggestion): suggestion is RankedRadarSuggestion => suggestion !== null)
+  const suggestionsById = new Map<string, RankedRadarSuggestion>()
 
-  for (const suggestion of suggestions) {
-    suggestionsById.set(suggestion.id, suggestion)
+  for (const rankedSuggestion of rankedSuggestions) {
+    const existing = suggestionsById.get(rankedSuggestion.suggestion.id)
+    if (
+      !existing
+      || compareRankedSuggestions(rankedSuggestion, existing) > 0
+    ) {
+      suggestionsById.set(rankedSuggestion.suggestion.id, rankedSuggestion)
+    }
   }
 
-  return [...suggestionsById.values()].sort((a, b) => b.confidence - a.confidence)
+  return [...suggestionsById.values()]
+    .sort((left, right) => compareRankedSuggestions(right, left))
+    .map(({ suggestion }) => suggestion)
 }
 
 function getSourceRuleSpecs(sourceMetadata: RadarSourceMetadata[] | undefined): SourceRuleSpec[] {
@@ -621,7 +738,6 @@ function getSourceRuleSpecs(sourceMetadata: RadarSourceMetadata[] | undefined): 
         return [{
           source,
           rules: [{
-            confidence: DEFAULT_ORIGIN_RADAR_CONFIDENCE,
             id: DEFAULT_RADAR_RULE_ID,
             match: { hosts: [home.hostname] },
           }],

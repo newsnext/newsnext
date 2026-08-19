@@ -54,7 +54,8 @@
         "id": {
           "type": "text",
           "default": "17990594711",
-          "title": "歌单 ID"
+          "title": "歌单 ID",
+          "validate": { "format": "digits" }
         }
       },
       "radar": [
@@ -65,23 +66,20 @@
               "music.163.com",
               "y.music.163.com"
             ],
-            "paths": {
-              "include": [
-                {
-                  "regex": "#/playlist(?:\\?|$)"
-                }
-              ]
-            }
+            "location": "hash",
+            "paths": [
+              "/playlist"
+            ],
+            "query": ["id"]
           },
           "patch": {
             "params": {
-              "id": "{{ scope.query.id | default: scope.hashQuery.id }}"
+              "id": "{{ scope.query.id }}"
             },
             "metadata": {
               "title": "{% assign title = scope.page.title | regex_extract: '^(.+?)\\\\s*-\\\\s*歌单\\\\s*-\\\\s*网易云音乐$', 1 %}{% if title != empty %}{{ title }}{% else %}歌单 {{ scope.params.id }}{% endif %}"
             }
-          },
-          "confidence": 0.95
+          }
         }
       ],
       "loader": {
@@ -100,7 +98,8 @@
         "id": {
           "type": "text",
           "default": "19723756",
-          "title": "排行榜 ID"
+          "title": "排行榜 ID",
+          "validate": { "format": "digits" }
         }
       },
       "radar": [
@@ -111,23 +110,20 @@
               "music.163.com",
               "y.music.163.com"
             ],
-            "paths": {
-              "include": [
-                {
-                  "regex": "#/discover/toplist(?:\\?|$)"
-                }
-              ]
-            }
+            "location": "hash",
+            "paths": [
+              "/discover/toplist"
+            ],
+            "query": ["id"]
           },
           "patch": {
             "params": {
-              "id": "{{ scope.query.id | default: scope.hashQuery.id }}"
+              "id": "{{ scope.query.id }}"
             },
             "metadata": {
               "title": "{% assign title = scope.page.title | regex_extract: '^(.+?)\\\\s*-\\\\s*排行榜\\\\s*-\\\\s*网易云音乐$', 1 %}{% if title != empty %}{{ title }}{% else %}排行榜 {{ scope.params.id }}{% endif %}"
             }
-          },
-          "confidence": 0.95
+          }
         }
       ],
       "loader": {
