@@ -189,6 +189,7 @@
     "registry": {
       "name": "@newsnext/registry",
       "dependencies": {
+        "@newsnext/date-parser": "workspace:*",
         "@newsnext/source-kit": "workspace:*",
         "cheerio": "catalog:",
       },

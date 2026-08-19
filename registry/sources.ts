@@ -7,7 +7,7 @@ import {
   resolveProvider,
   resolveSourceRegistry,
 } from "@newsnext/source-kit/registry"
-import provider_0 from "./src/bilibili"
+import provider_0 from "./src/bilibili/index"
 import provider_1 from "./src/cls"
 import provider_2 from "./src/folo"
 import provider_3 from "./src/jike/index"

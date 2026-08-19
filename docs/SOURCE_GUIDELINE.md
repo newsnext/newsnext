@@ -935,6 +935,14 @@ header when the browser cookie jar is sufficient.
 
 Radar detects a source from the active page:
 
+Radar's UX contract is one-click Instance creation. Treat the matched page as
+the user's fully configured view, not merely evidence that a Source exists. A
+suggestion should resolve every parameter that the page already expresses,
+including account or resource identity, search terms, content type, filters,
+sorting, and time range. The expected user flow is to review the preview and
+click `Create`; do not require the user to reopen the editor and repeat choices
+that are already visible on the page.
+
 ```ts
 radar: [{
   id: "example-topic",
@@ -981,6 +989,40 @@ Match rules:
 Map each parameter explicitly in `patch.params`. Values can read
 `scope.path`, `scope.query`, `scope.hashQuery`, and `source.vars`. Missing
 values fall back to parameter defaults; invalid values discard the suggestion.
+
+Prefer URL-derived state because it is stable and directly testable. Many
+single-page applications do not serialize every choice into the URL. When a
+meaningful parameter exists only in page state, use a JavaScript Radar parameter
+function to inspect a stable semantic attribute or the active control. If the
+controls have a fixed order but no useful value attribute, map the active
+control's position to the Source's canonical parameter value:
+
+```ts
+patch: {
+  params: {
+    sort: () => {
+      const page = globalThis as unknown as {
+        document: {
+          querySelectorAll: (selector: string) => ArrayLike<{
+            classList: { contains: (className: string) => boolean }
+          }>
+        }
+      }
+      const controls = Array.from(page.document.querySelectorAll(".sort-option"))
+      const activeIndex = controls.findIndex(
+        control => control.classList.contains("is-active"),
+      )
+      return (["latest", "popular", "oldest"] as const)[activeIndex] ?? "latest"
+    },
+  },
+},
+```
+
+Prefer stable attributes over CSS position, and CSS position over localized
+visible labels. Use the parameter default only as a deliberate fallback when
+the page does not expose the state. Verify every meaningful interactive state,
+including states that leave the URL unchanged, and confirm that each produces a
+ready-to-create suggestion with the complete normalized parameter patch.
 
 `patch.metadata.title` is optional, including for parameterized sources. Omit it
 when the item request already returns the authoritative title through loader
@@ -1033,9 +1075,13 @@ registry to forum routes, templates, or JSON APIs. Users add the feed URL
 explicitly; Radar does not scan pages for feeds. Add a dedicated forum provider
 only for a site-specific contract that RSS, Atom, or JSON Feed cannot represent.
 
-Use `badge` for secondary instance identity. For signed or expiring images,
-return loader metadata only when the item request already provides the URL.
-Otherwise use page-derived Radar metadata rather than adding a loader request.
+Use `badge` for secondary instance identity. Reuse a stable image URL from the
+required item request whenever it is available. Page-derived Radar badges must
+also be stable because their resolved URLs are persisted with the Instance; do
+not capture signed, expiring, session-bound, or transiently transformed image
+URLs from the DOM. When the required item request has no stable badge and the
+page exposes only a transient one, omit the badge instead of adding a
+metadata-only request.
 
 ## Validation and verification
 
@@ -1230,6 +1276,8 @@ Before submitting:
 - Use milliseconds for `publishedAt` and `updatedAt`, and text instead of HTML
   when possible.
 - Add Radar rules for parameterized sources when appropriate.
+- Confirm each Radar suggestion captures all parameters expressed by the page
+  and needs no post-creation editing.
 - Regenerate registry artifacts.
 - Validate the source through `newsnext run`.
 - Run `bun run typecheck`, `bun run test`, and `git diff --check`.

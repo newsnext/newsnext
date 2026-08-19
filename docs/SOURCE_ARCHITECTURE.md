@@ -705,6 +705,11 @@ never exposed to Liquid. Radar does not scan pages for RSS, Atom, or JSON Feed
 links; users can still add those URLs through the built-in `rss:feed` source.
 Radar renders in the extension action popup.
 
+Radar discovery is complete only when the suggestion captures the active page's
+full Source configuration. Its intended interaction is review followed by one
+`Create` action, without making the user re-enter filters, sorting, identity, or
+other choices already expressed by the page.
+
 Rules and compiled matchers are cached. Optional Radar failures are reported as
 diagnostics and fail closed instead of interrupting the surrounding UI.
 Radar metadata can replace source-owned presentation fields such as title,
