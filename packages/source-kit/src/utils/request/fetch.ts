@@ -1,4 +1,4 @@
-import type { Input } from "ky"
+import type { Input, Options } from "ky"
 import type { SourceFetch } from "../../types"
 import ky from "ky"
 import {
@@ -27,7 +27,7 @@ function queuedFetch(input: Input, init?: RequestInit): Promise<Response> {
     : execute()
 }
 
-export const sessionFetch: SourceFetch = ky.create({
+const baseSourceFetch: SourceFetch = ky.create({
   credentials: "include",
   fetch: queuedFetch,
   timeout: SOURCE_REQUEST_TIMEOUT_MS,
@@ -43,17 +43,17 @@ export const sessionFetch: SourceFetch = ky.create({
 })
 
 export function createSourceFetch(
-  signal: AbortSignal,
+  signal?: AbortSignal,
   validateUrl?: (url: string) => void,
 ): SourceFetch {
-  return sessionFetch.extend({
-    hooks: {
-      init: [(options) => {
-        options.signal = signal
-      }],
-      beforeRequest: [({ request }) => {
-        validateUrl?.(request.url)
-      }],
-    },
-  })
+  if (!signal && !validateUrl) return baseSourceFetch
+
+  const options: Options = {}
+  if (signal) options.signal = signal
+  if (validateUrl) {
+    options.hooks = {
+      beforeRequest: [({ request }) => validateUrl(request.url)],
+    }
+  }
+  return baseSourceFetch.extend(options)
 }

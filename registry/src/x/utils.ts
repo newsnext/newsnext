@@ -91,7 +91,6 @@ export function createXLoggedInHeaders(context: SourceLoaderContext): Record<str
   const csrfToken = context.secrets?.[X_CSRF_TOKEN_SECRET_KEY]
   const headers: Record<string, string> = {
     "authorization": `Bearer ${X_BEARER_TOKEN}`,
-    "content-type": "application/json",
     "referer": X_ORIGIN,
     "x-twitter-active-user": "yes",
     "x-twitter-auth-type": "OAuth2Session",

@@ -70,7 +70,7 @@ async function refreshJikeAccessToken(
 
 async function fetchJikeWithAuth(
   url: string,
-  body: Record<string, unknown>,
+  payload: Record<string, unknown>,
   context: SourceLoaderContext,
 ): Promise<JikeFeedResponse> {
   const refreshToken = context.secrets?.[JIKE_REFRESH_TOKEN_SECRET_KEY]?.trim()
@@ -104,7 +104,7 @@ async function fetchJikeWithAuth(
 
   return jikeFetch.post(url, {
     headers: createJikeHeaders(accessToken),
-    json: body,
+    json: payload,
   }).json<JikeFeedResponse>()
 }
 

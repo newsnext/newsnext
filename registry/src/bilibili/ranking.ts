@@ -35,7 +35,7 @@ const RANKING_REGION_OPTIONS = RANKING_REGIONS.map(({ label, value }) => ({ labe
 
 interface BilibiliRankingRequest {
   kind: "pgc" | "video"
-  query: Record<string, number | string>
+  searchParams: Record<string, number | string>
   url: string
 }
 
@@ -103,7 +103,7 @@ export function getBilibiliRankingRequest(regionValue: string): BilibiliRankingR
     return {
       kind: "video",
       url: BILIBILI_RANKING_URL,
-      query: {
+      searchParams: {
         rid: region.apiRid,
         type: "all",
       },
@@ -113,7 +113,7 @@ export function getBilibiliRankingRequest(regionValue: string): BilibiliRankingR
   return {
     kind: "pgc",
     url: region.pgcUrl,
-    query: {
+    searchParams: {
       day: 3,
       season_type: region.seasonType,
     },
@@ -176,7 +176,7 @@ async function fetchBilibiliRanking(
     headers: {
       referer: "https://www.bilibili.com/",
     },
-    searchParams: request.query,
+    searchParams: request.searchParams,
   }
 
   if (request.kind === "video") {

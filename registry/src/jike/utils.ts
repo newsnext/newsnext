@@ -91,7 +91,6 @@ export function jikePostsToNewsItems(
 
 export function createJikeHeaders(accessToken: string): Record<string, string> {
   return {
-    "accept": "application/json, text/plain, */*",
     "platform": "web",
     "x-jike-access-token": accessToken,
   }

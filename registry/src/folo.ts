@@ -33,10 +33,10 @@ interface FoloResponse {
 type FoloEntriesRequest = { feedId: string } | { listId: string }
 
 async function loadFoloEntries(
-  body: FoloEntriesRequest,
+  payload: FoloEntriesRequest,
   context: SourceLoaderContext,
 ): Promise<SourceLoaderOutput> {
-  const isList = "listId" in body
+  const isList = "listId" in payload
   const response = await context.fetch.post("https://api.folo.is/entries", {
     headers: {
       "x-app-name": "Folo Web",
@@ -45,12 +45,12 @@ async function loadFoloEntries(
     },
     json: {
       view: 0,
-      ...body,
+      ...payload,
     },
   }).json<FoloResponse>()
 
   const badge = !isList
-    ? response.data?.find(({ feeds }) => feeds?.id === body.feedId)?.feeds?.image
+    ? response.data?.find(({ feeds }) => feeds?.id === payload.feedId)?.feeds?.image
     : undefined
 
   return {

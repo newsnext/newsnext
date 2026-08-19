@@ -948,21 +948,21 @@ original `context.fetch` for token-refresh requests so the derived hook does not
 intercept its own refresh. Derived requests retain the execution signal,
 hostname queue, and capability checks.
 
-NewsNext requests use the browser's logged-in session by default:
-`sessionFetch` and the built-in structured loaders set
-`credentials: "include"`.
+NewsNext requests use the browser's logged-in session by default. The shared
+Source HTTP client and the built-in structured loaders set Ky's
+`credentials: "include"` option.
 Use `credentials: "omit"` only when a request must be explicitly anonymous.
 Do not declare cookie secrets merely to authenticate a request; cookie secrets
 are for reading a specific value that the loader must inspect.
 
 The client behind `context.fetch` serializes requests per hostname and spaces
 their start times to avoid bursts when multiple Instances target the same
-service. Custom loaders must not import `sessionFetch` or use the global
-`fetch`; the context client keeps request policy and cancellation attached to
-the current source execution. Requests to different hostnames may run in
-parallel. A structured-loader custom `request` callback receives the resolved
-URL, bound Ky client, and execution signal in one context. It must return a
-`Response`; the structured loader parses the JSON or HTML body:
+service. Custom loaders must use `context.fetch` instead of importing the shared
+client or using global `fetch`; the context client keeps request policy and
+cancellation attached to the current source execution. Requests to different
+hostnames may run in parallel. A structured-loader custom `request` callback
+receives the resolved URL, bound Ky client, and execution signal in one context.
+It must return a `Response`; the structured loader parses the JSON or HTML body:
 
 ```ts
 request: async ({ url, fetch }) => {

@@ -790,13 +790,13 @@ represents the user's logged-in browser session. A loader may explicitly use
 controls which origins the source may contact; the cookies capability is
 reserved for cookie-backed secrets that read specific values.
 
-The shared `sessionFetch` client queues requests by normalized hostname. Each
+The shared Source HTTP client queues requests by normalized hostname. Each
 hostname runs one request at a time and observes the centralized minimum start
 interval, while different hostnames remain independent. A private Ky client
 provides method shortcuts, request serialization, body parsing, timeout
 handling, and retries for transient GET failures. Runtime entry points derive a
-Ky instance for each `SourceLoaderContext`, force the execution signal through
-an init hook, and validate Ky's final normalized request URL in a
+Ky instance for each `SourceLoaderContext`, bind the execution signal as a Ky
+option, and validate Ky's final normalized request URL in a
 `beforeRequest` hook. Custom loaders use `context.fetch` rather than importing
 the shared client or calling global `fetch`; direct calls would detach the
 request from its execution lifecycle and are not an accepted source-loader

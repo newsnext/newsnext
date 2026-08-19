@@ -42,7 +42,7 @@ type SubredditTopPeriod = typeof SUBREDDIT_TOP_PERIOD_OPTIONS[number]["value"]
 async function fetchRedditListing(
   path: string,
   context: SourceLoaderContext,
-  query: Record<string, string | number> = {},
+  searchParams: Record<string, string | number> = {},
 ): Promise<RedditListingResponse> {
   const response = await context.fetch.get(`${REDDIT_ORIGIN}${path}`, {
     headers: {
@@ -52,7 +52,7 @@ async function fetchRedditListing(
       limit: REDDIT_LISTING_LIMIT,
       raw_json: 1,
       sr_detail: 1,
-      ...query,
+      ...searchParams,
     },
   }).json<RedditListingResponse>()
   if (!response.data?.children) {
@@ -106,13 +106,13 @@ async function fetchSubredditListing(
   subreddit: string,
   sort: SubredditSort | "top",
   context: SourceLoaderContext,
-  query: Record<string, string | number> = {},
+  searchParams: Record<string, string | number> = {},
 ): Promise<SourceLoaderOutput> {
   const encodedSubreddit = encodeURIComponent(subreddit)
   const listing = await fetchRedditListing(
     `/r/${encodedSubreddit}/${sort}.json`,
     context,
-    query,
+    searchParams,
   )
   const posts = getRedditPosts(listing)
   const community = posts.find(post => post.sr_detail)?.sr_detail

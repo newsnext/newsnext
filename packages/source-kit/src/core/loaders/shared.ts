@@ -6,7 +6,7 @@ import type {
   SourcePresentationMetadata,
   SourceTemplateVars,
 } from "../../types"
-import { createSourceFetch, sessionFetch } from "../../utils"
+import { createSourceFetch } from "../../utils"
 
 export interface TimestampSortableLoaderOptions {
   sortByTimestamp?: boolean
@@ -42,8 +42,7 @@ function resolveLoaderFetchContext(
   context: LoaderContext,
 ): LoaderFetchContext {
   return {
-    fetch: context.fetch
-      ?? (context.signal ? createSourceFetch(context.signal) : sessionFetch),
+    fetch: context.fetch ?? createSourceFetch(context.signal),
     signal: context.signal,
   }
 }
