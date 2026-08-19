@@ -1191,6 +1191,13 @@ newsnext start
 newsnext status
 ```
 
+Open a board in a connected browser by ID, or omit either selector to choose
+interactively:
+
+```sh
+newsnext open --browser 00b79a48 --board all
+```
+
 The installer presents detected browsers only and selects all of them by
 default. Pass one or more browser names, such as `install-native-host chrome
 firefox`, to skip the interactive selector. In non-interactive environments,
@@ -1237,6 +1244,9 @@ list with:
 ```sh
 newsnext run --help
 ```
+
+When `--browser` is omitted, the CLI prompts you to select a connected browser.
+Pass a browser name, full connection ID, or unique ID prefix to skip the prompt.
 
 The command prints the complete source result as `data`, `metadata`, and
 `itemTemplate`; normalized parameters and timing under `execution`; and every
