@@ -1,5 +1,5 @@
 import type { NewsItem } from "@/typings/source"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
 import { useCallback, useMemo, useState } from "react"
 import { getLoginUrlFromError } from "./source-login-error"
 import {
@@ -31,16 +31,15 @@ export function useSourceQuery({
   const target = useMemo(
     () => source
       ? createSourceQueryTarget(sourceId, source, params)
-      : { sourceId, params: {} },
+      : { sourceId, params: {}, version: 0 },
     [params, source, sourceId],
   )
   const queryHash = useMemo(() => getSourceQueryHash(target), [target])
-  const queryClient = useQueryClient()
   const fetchLatestSources = useFetchLatestSources()
   const isFetchingLatest = useIsSourceFetchingLatest(queryHash)
   const [initialUpdatedAt] = useState(Date.now)
-  const { data, error, isFetching, isError, isLoading } = useQuery({
-    ...getSourceQueryOptions(queryClient, target),
+  const { data, dataUpdatedAt, error, isFetching, isError, isLoading } = useQuery({
+    ...getSourceQueryOptions(target),
     enabled: enabled && source !== undefined,
     placeholderData: prev => prev,
   })
@@ -64,6 +63,6 @@ export function useSourceQuery({
     errorMessage: error instanceof Error ? error.message : undefined,
     loginUrl: getLoginUrlFromError(error),
     metadata: data?.metadata,
-    updatedAt: data?.updatedAt ?? initialUpdatedAt,
+    updatedAt: dataUpdatedAt || initialUpdatedAt,
   }
 }

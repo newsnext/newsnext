@@ -158,14 +158,11 @@ instanceId -> sourceId + normalized params
 ```
 
 Now Layer owns the interactive request lifecycle for current results through
-independent Instance queries. A direct Next Layer Widget declares one Instance,
-several Instances, or the complete Board, then reads cache results, History
-observations, or both through its own data boundary. A materialized Widget reads
-a persisted result produced asynchronously by an Agent-owned refresh and
-processing task. Neither mode subscribes to the Now Layer's per-Instance query
-path or passes result data through React state owned by a LiveCard. Identical resolved
-targets may share Source execution and storage while remaining distinct
-Instances in Collections and Views.
+independent Instance queries. Next Layer does not read that browser Query cache.
+Its future Widgets read persisted results produced through the CLI and daemon by
+Agent-owned refresh and processing tasks. They do not subscribe to the Now
+Layer's per-Instance query path or pass result data through React state owned by
+a LiveCard.
 
 The proposed processing model for recurring Runs, retained Observations,
 incremental changes, time windows, and materialized outputs is defined in

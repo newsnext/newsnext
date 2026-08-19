@@ -3,7 +3,6 @@ import type { RefObject } from "react"
 import type { HeaderNotification } from "./notification"
 import { DynamicIsland } from "@newsnext/ui/components/dynamic-island"
 import { Logo } from "@newsnext/ui/components/logo"
-import { useScrollProgressContext } from "@newsnext/ui/components/scroll-progress-context"
 import { ThemeSelector } from "@newsnext/ui/components/theme-selector"
 import { WordmarkLogo } from "@newsnext/ui/components/wordmark-logo"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
@@ -30,20 +29,9 @@ interface HeaderProgressState {
 }
 
 function useHeaderProgress(scrollContainerRef?: RefObject<HTMLElement | null>): HeaderProgressState {
-  const {
-    nextLayerScrollContainerRef,
-    isNextLayerActive,
-  } = useScrollProgressContext()
-
-  const rootScroll = useScroll({
+  const { scrollYProgress, scrollY } = useScroll({
     container: scrollContainerRef,
   })
-  const nextLayerScroll = useScroll({
-    container: nextLayerScrollContainerRef,
-  })
-
-  const activeScroll = isNextLayerActive ? nextLayerScroll : rootScroll
-  const { scrollYProgress, scrollY } = activeScroll
 
   const [isAtTop, setIsAtTop] = useState(true)
   const isAtTopRef = useRef(true)
@@ -51,15 +39,13 @@ function useHeaderProgress(scrollContainerRef?: RefObject<HTMLElement | null>): 
 
   const handleScrollToTop = useCallback((event: React.MouseEvent) => {
     event.stopPropagation()
-    const container = isNextLayerActive
-      ? nextLayerScrollContainerRef.current
-      : scrollContainerRef?.current
+    const container = scrollContainerRef?.current
     if (container) {
       container.scrollTo({ top: 0, behavior: "smooth" })
     } else {
       window.scrollTo({ top: 0, behavior: "smooth" })
     }
-  }, [nextLayerScrollContainerRef, isNextLayerActive, scrollContainerRef])
+  }, [scrollContainerRef])
 
   useMotionValueEvent(scrollY, "change", (value) => {
     const screenHeight = window.innerHeight

@@ -1,11 +1,11 @@
 import type { SourceConfig } from "../core/resolver"
 import type { ProviderDefinition, RuntimeSource, SourceProvider } from "../types"
 import type { ProviderConfig, SourceRegistry } from "./types"
-import { resolveSourceCacheConfig } from "../core/cache"
 import {
   assignSourceDefaults,
   mergeSourceVars,
   resolveRuntimeSource,
+  resolveSourceVersion,
   validateSourceTemplates,
 } from "../core/resolver"
 import {
@@ -90,6 +90,9 @@ function expandProviderSources(
         provider.defaults ?? {},
       )
       const fullSourceId = `${providerId}:${sourceId}`
+      if (Object.hasOwn(defaultedSource, "cache")) {
+        throw new Error(`${fullSourceId}.cache is not supported`)
+      }
       if (
         !isRecord(defaultedSource.loader)
         || (
@@ -105,10 +108,7 @@ function expandProviderSources(
       ) {
         throw new Error(`Source "${fullSourceId}" is missing a valid loader`)
       }
-      if (!defaultedSource.cache) {
-        throw new Error(`Source "${fullSourceId}" is missing a cache policy`)
-      }
-      resolveSourceCacheConfig(defaultedSource.cache, `${fullSourceId}.cache`)
+      resolveSourceVersion(defaultedSource.version, `${fullSourceId}.version`)
       validateSourceTemplates(fullSourceId, defaultedSource as SourceConfig)
       return [sourceId, {
         ...defaultedSource,

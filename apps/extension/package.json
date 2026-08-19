@@ -26,6 +26,7 @@
     "@newsnext/shared": "workspace:*",
     "@newsnext/source-kit": "workspace:*",
     "@newsnext/ui": "workspace:*",
+    "@tanstack/query-persist-client-core": "catalog:",
     "@tanstack/react-hotkeys": "catalog:",
     "@tanstack/react-query": "catalog:",
     "@tanstack/react-router": "catalog:",

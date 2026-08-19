@@ -160,21 +160,14 @@ export type SourceTemplateVars = Readonly<Record<string, SourceTemplateVarValue>
 
 export type SourceRequestRule = Omit<Browser.declarativeNetRequest.Rule, "id">
 
-export type SourceCacheMaxAge = `${number}${"s" | "m" | "h" | "d"}`
-
-export interface SourceCacheConfig {
-  version: number
-  maxAge: SourceCacheMaxAge
-}
-
 export interface RuntimeSource<TParams extends SourceParamSchemaMap = SourceParamSchemaMap> {
   provider: SourceProvider
+  version: number
   baseUrl?: string
   metadata: SourcePresentationMetadata
   vars?: SourceTemplateVars
   params?: TParams
   capabilities: SourceCapabilities
-  cache: SourceCacheConfig
   secrets?: SourceSecretDefinition[]
   radar?: SourceRadarRule[]
   requestRules?: readonly SourceRequestRule[]

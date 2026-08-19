@@ -30,8 +30,7 @@
             "pictures": "target.image_area.url"
           }
         }
-      },
-      "cache": "5m"
+      }
     }
   }
 }

@@ -29,7 +29,7 @@ export const SHORTCUT_DEFINITIONS: Record<ShortcutId, ShortcutDefinition> = {
     label: "Search",
   },
   toggleNextLayer: {
-    description: "Switch between LiveCards and the mixed timeline.",
+    description: "Switch between LiveCards and Next Layer.",
     label: "Toggle Next Layer",
   },
 }

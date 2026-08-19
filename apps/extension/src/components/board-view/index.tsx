@@ -1,8 +1,7 @@
 import type { BoardViewMode } from "@/lib/board"
-import { useScrollProgressActionsContext } from "@newsnext/ui/components/scroll-progress-context"
 import { useHotkey } from "@tanstack/react-hotkeys"
 import { useAtomValue } from "jotai"
-import { useEffect, useRef, useState } from "react"
+import { useRef, useState } from "react"
 import { NextLayer } from "@/components/nextlayer"
 import { NowLayer } from "@/components/nowlayer"
 import { ALL_BOARD_ID } from "@/lib/board"
@@ -17,10 +16,6 @@ export function BoardView({ boardId, defaultView }: { boardId: string, defaultVi
     supportsNextLayer && defaultView === "next",
   )
   const nowLayerRef = useRef<HTMLDivElement>(null)
-  const {
-    nextLayerScrollContainerRef,
-    setIsNextLayerActive,
-  } = useScrollProgressActionsContext()
 
   useHotkey(
     shortcuts.toggleNextLayer ?? DEFAULT_SHORTCUT_SETTINGS.toggleNextLayer,
@@ -35,30 +30,13 @@ export function BoardView({ boardId, defaultView }: { boardId: string, defaultVi
     },
   )
 
-  useEffect(() => {
-    setIsNextLayerActive(isNextLayerVisible)
-  }, [isNextLayerVisible, setIsNextLayerActive])
-
-  useEffect(() => {
-    return () => {
-      setIsNextLayerActive(false)
-    }
-  }, [setIsNextLayerActive])
-
   return (
     <div className="relative w-full">
-      {supportsNextLayer && (
+      {supportsNextLayer && isNextLayerVisible && (
         <div
-          className={cn(
-            "pointer-events-none fixed inset-x-0 top-0 bottom-0 z-10 px-2 sm:px-6",
-            isNextLayerVisible && "pointer-events-auto",
-          )}
+          className="fixed inset-x-0 top-0 bottom-0 z-10 px-2 sm:px-6"
         >
-          <NextLayer
-            boardId={boardId}
-            isVisible={isNextLayerVisible}
-            scrollContainerRef={nextLayerScrollContainerRef}
-          />
+          <NextLayer />
         </div>
       )}
 

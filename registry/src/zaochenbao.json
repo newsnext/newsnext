@@ -30,8 +30,7 @@
           }
         },
         "sortByTimestamp": true
-      },
-      "cache": "5m"
+      }
     }
   }
 }

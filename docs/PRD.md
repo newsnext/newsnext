@@ -523,11 +523,10 @@ derived results may differ by Board and user:
 | Act | Alert, recurring report, investigation queue, proposed Source change |
 
 Next Layer is the programmable processing layer for these and as-yet-unimagined
-Widgets. Its current mixed timeline is one built-in organization of the news,
-not the definition of the Layer. Now Layer keeps Instance results separate in
-unified LiveCards; Next Layer owns open-ended composition, derived processing, and
-personalized presentation. Both must reuse the same Board Instance results and
-must not create duplicate Source subscriptions solely for presentation.
+Widgets. Now Layer keeps current Instance results separate in unified LiveCards;
+Next Layer owns CLI/daemon-backed composition, derived processing, retained
+inputs, and personalized presentation. Rendering Next Layer must not create
+Source subscriptions solely for presentation.
 
 ## Permissions, Safety, and Control
 
@@ -568,7 +567,7 @@ must not be described to users as available until its acceptance criteria pass.
 | Instance and Collection data | Implemented in extension storage | Canonical Instances, Collections, membership, manual order, and Board view preferences | Move canonical durable state behind App/CLI Actions and Queries for cross-browser use |
 | UI and Agent control | Implemented foundation | UI and CLI use the same typed Actions and Queries and the same background persistence boundary | Database-backed Widget, task, and Source-health operations are not exposed yet |
 | Now Layer | Implemented | Each Instance is independently presented as a LiveCard using the unified LiveCard model | Make view-driven refresh explicit and keep current results cache-only |
-| Next Layer | Partial | One shared mixed Timeline selects every current Board Instance through an independent cache-data path | Add Agent-owned retained inputs and materialized outputs |
+| Next Layer | Not implemented | The Board retains its Next Layer view entry and an explicit placeholder | Add CLI/daemon-backed Widgets, retained inputs, and materialized outputs |
 | History | Implemented foundation in Turso | Explicit `run --retain` results are committed transactionally by the daemon and can be listed, read at an exact time, and compared without a connected browser | Add task-owned retention policies, scheduling, and provenance |
 | Provenance | Partial | Source and Instance identities remain stable; history comparisons preserve supported factual boundaries | Derived Widget inputs, transformations, warnings, and claims need an explicit UI contract |
 | Code Widgets | Not implemented | None | Sandbox, resource limits, versioning, preview, failure isolation, and rollback |
@@ -841,7 +840,7 @@ account or network connection.
 - Define the durable Widget schema and its relationship to a Collection's Board
   and Next Layer.
 - Preserve Now Layer as the unified LiveCard experience for current news.
-- Treat the existing Next Layer mixed timeline as a built-in Widget.
+- Add a CLI/daemon-backed timeline only if it is useful as a persisted built-in Widget.
 - Add built-in organization, comparison, change, and summary Widgets to Next
   Layer.
 - Allow a Widget to consume and derive results from any selected combination of

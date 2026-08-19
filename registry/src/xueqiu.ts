@@ -73,7 +73,6 @@ export default {
       capabilities: {
         network: ["xueqiu.com"],
       },
-      cache: "5m",
     },
   },
 } satisfies ProviderConfig

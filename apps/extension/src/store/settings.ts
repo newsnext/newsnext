@@ -12,7 +12,7 @@ import type { ThemeMode } from "@/lib/utils/swith-theme"
 import { atom } from "jotai"
 import { atomWithStorage } from "jotai/utils"
 import { createDefaultPersistedDeviceState, createDefaultPersistedSettings, normalizePersistedDeviceState, normalizePersistedSettings, PERSISTED_DATA_SLICES } from "@/lib/settings"
-import { createMirroredStorage, readCachedValue } from "./persisted-storage"
+import { createMirroredStorage } from "./persisted-storage"
 
 type SettingsValueUpdate<Value> = Value | ((current: Value) => Value)
 
@@ -162,7 +162,3 @@ export const settingsTabAtom = atom(
     set(persistedDeviceStateAtom, { ...state, settingsTab })
   },
 )
-
-export function readCachedPersistedSettings(): PersistedSettings {
-  return readCachedValue(persistedSettingsStorageOptions)
-}

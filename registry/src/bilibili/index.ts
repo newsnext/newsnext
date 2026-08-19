@@ -12,7 +12,6 @@ export default {
   icon: "https://i0.hdslb.com/bfs/static/jinkela/long/images/512.png",
   defaults: {
     baseUrl: "https://www.bilibili.com/",
-    cache: "5m",
     metadata: {
       home: "/",
     },

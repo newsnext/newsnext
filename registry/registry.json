@@ -15,7 +15,6 @@
       "home": "/hot-list/catalog",
       "title": "人气榜"
     },
-    "cache": "5m",
     "radar": [
       {
         "id": "36kr-hot-list",
@@ -88,7 +87,6 @@
       "home": "/",
       "title": "资讯"
     },
-    "cache": "5m",
     "params": {
       "channel": {
         "type": "select",
@@ -226,7 +224,6 @@
       "home": "/",
       "title": "快讯"
     },
-    "cache": "5m",
     "params": {
       "category": {
         "type": "select",
@@ -343,7 +340,6 @@
         "inline": "{{ scope.item.attributes.source }}{% if scope.item.attributes.category %} · {{ scope.item.attributes.category }}{% endif %}"
       }
     },
-    "cache": "5m",
     "provider": {
       "title": "AIHot",
       "category": "news",
@@ -437,7 +433,6 @@
         }
       }
     },
-    "cache": "15m",
     "provider": {
       "title": "GitHub",
       "category": "developer",
@@ -446,7 +441,6 @@
   },
   "hackernews:ask": {
     "baseUrl": "https://news.ycombinator.com/",
-    "cache": "5m",
     "loader": {
       "type": "html",
       "url": "/ask",
@@ -542,7 +536,6 @@
   },
   "hackernews:newest": {
     "baseUrl": "https://news.ycombinator.com/",
-    "cache": "1m",
     "loader": {
       "type": "html",
       "url": "/newest",
@@ -638,7 +631,6 @@
   },
   "hackernews:show": {
     "baseUrl": "https://news.ycombinator.com/",
-    "cache": "5m",
     "loader": {
       "type": "html",
       "url": "/show",
@@ -734,7 +726,6 @@
   },
   "hackernews:top": {
     "baseUrl": "https://news.ycombinator.com/",
-    "cache": "5m",
     "loader": {
       "type": "html",
       "url": "/",
@@ -830,10 +821,7 @@
   },
   "netease-music:playlist": {
     "baseUrl": "https://music.163.com/",
-    "cache": {
-      "version": 3,
-      "maxAge": "15m"
-    },
+    "version": 3,
     "metadata": {
       "home": "/",
       "title": "歌单"
@@ -920,10 +908,7 @@
   },
   "netease-music:ranking": {
     "baseUrl": "https://music.163.com/",
-    "cache": {
-      "version": 3,
-      "maxAge": "15m"
-    },
+    "version": 3,
     "metadata": {
       "home": "/",
       "title": "排行榜"
@@ -1100,7 +1085,6 @@
         "inline": "{{ scope.item.attributes.publisher }}"
       }
     },
-    "cache": "5m",
     "provider": {
       "title": "NEWS NOW",
       "category": "news",
@@ -1111,7 +1095,6 @@
     "metadata": {
       "title": "RSS Feed"
     },
-    "cache": "1m",
     "params": {
       "url": {
         "type": "url",
@@ -1219,7 +1202,6 @@
       },
       "sortByTimestamp": true
     },
-    "cache": "5m",
     "provider": {
       "title": "Telegram",
       "category": "social",
@@ -1248,7 +1230,6 @@
         }
       }
     },
-    "cache": "5m",
     "provider": {
       "title": "百度贴吧",
       "category": "forum",
@@ -1278,7 +1259,6 @@
       },
       "sortByTimestamp": true
     },
-    "cache": "5m",
     "provider": {
       "title": "早晨报",
       "category": "news",
@@ -1311,7 +1291,6 @@
         }
       }
     },
-    "cache": "5m",
     "provider": {
       "title": "知乎",
       "category": "forum",

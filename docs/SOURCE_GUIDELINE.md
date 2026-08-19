@@ -33,7 +33,6 @@ export default {
   color: "blue",
   defaults: {
     baseUrl: "https://example.com/",
-    cache: "5m",
     metadata: {
       home: "/",
     },
@@ -72,7 +71,7 @@ A provider has `title`, `color`, optional `icon` and `category`, `defaults`, and
 cannot be set or overridden by individual sources, Radar rules, or LiveCard
 instances. Every source descriptor receives the provider's `icon` and `color`.
 
-`defaults` may contain `baseUrl`, `cache`, `capabilities`, `loader`, `metadata`,
+`defaults` may contain `baseUrl`, `version`, `capabilities`, `loader`, `metadata`,
 `vars`, `params`, `radar`, `requestRules`, and `secrets`. Defaults recursively
 fill missing object properties. Source values win, and source arrays replace
 default arrays.
@@ -835,46 +834,38 @@ themselves. This is especially important for authenticated sources because
 unnecessary API traffic can trigger rate limits, anti-abuse systems, or account
 suspension.
 
-## Cache, capabilities, and secrets
+## Version, cache behavior, capabilities, and secrets
 
-Cache duration supports seconds, minutes, hours, and days:
+Sources do not configure cache duration, and there is no user freshness
+setting. Persistent results provide immediate placeholder content and survive
+extension restarts.
 
-```ts
-cache: "5m"
-```
-
-The duration must be a non-negative integer or decimal followed immediately by
-`s`, `m`, `h`, or `d`. Cache configuration objects accept only `version` and
-`maxAge`; `version` must be a positive safe integer.
-
-Use an explicit version to invalidate old results after a behavioral change:
+Every Source has a positive integer `version`, defaulting to `2`. Set or
+increase it only when a behavioral or result-shape change must invalidate
+stored results and mark a new version boundary in retained observations:
 
 ```ts
-cache: {
-  version: 2,
-  maxAge: "15m",
-}
+version: 3
 ```
 
-Automatic loads, remounts, and background revalidation may reuse a fresh stored
-result according to this cache policy. Explicit user refresh actions use Fetch
-Latest, both for one LiveCard and for every enabled LiveCard on the current board.
-Fetch Latest ignores the source-defined cache duration. Independently, a
-one-minute frequency guard protects remote sources from repeated requests; this
-guard is transparent to the user-triggered query flow and is not part of the
-source cache policy. The refresh indicator remains visible briefly when this
-guard reuses the preceding result immediately, so the action still has perceptible
-feedback. The active query records the protected action's completion time, but
-the stored result and guard interval retain the preceding remote-load time.
-Concurrent requests for the same source and normalized parameters also remain
-deduplicated.
+TanStack Query states are persisted per query in IndexedDB and restored with
+their original `dataUpdatedAt`, so memory and disk use the same freshness clock.
+Automatic loads become stale after one minute, so remounting or regaining focus
+can revalidate them, while active Sources also revalidate on a fixed five-minute
+interval. Fetch Latest is a separate user intent that immediately reruns the
+active query regardless of its in-memory freshness. Neither path may issue a
+remote request when the same Source and normalized parameters completed a real
+load less than one minute ago. After that fixed protection interval, NewsNext
+publishes the stored result as a placeholder while the new request runs.
 
-Persistent entries record their last-use time. Cleanup runs at most once per day
-after a successful write and removes entries unused for 30 days, superseded
-versions for identical source parameters, and least-recently-used entries beyond
-500 records or an estimated 50 MiB. Increasing `cache.version` changes cache
-identity immediately; physical removal of the superseded entry happens during
-cleanup.
+The refresh indicator remains visible for at least 500ms when a protected
+Fetch Latest action reuses the preceding result, so the action still has
+perceptible feedback. It does not change the Query's completion time, rewrite
+the stored state, or extend the protection interval. Concurrent
+requests for the same Source and normalized parameters remain deduplicated.
+
+Persisted Query states expire after 30 days. Increasing `version` changes cache
+identity immediately; superseded versions remain isolated and expire normally.
 
 Structured loaders infer the hostname of a static URL. Declare every additional
 or dynamically selected hostname:

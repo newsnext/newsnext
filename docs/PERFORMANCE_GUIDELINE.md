@@ -127,18 +127,10 @@ return stale LiveCards after in-place changes. If Instance updates become a
 measured bottleneck, optimize them at the React or Jotai owner that has the
 complete input lifecycle.
 
-Each direct Next Layer consumer must declare the smallest useful Instance
-selection: one Instance, several Instances, or the complete Board. Use one live
-cache observer for that selection and bulk-read its resolved targets from
-persistent storage. Do not create Source query observers, route results through
-LiveCard effects, reuse the Now Layer's in-memory query cache, or force-mount
-offscreen LiveCards when switching Layers. Results should preserve `instanceId`
-keys while allowing one storage operation to serve all selected inputs. Keep
-live observers disabled while their consumers are hidden.
-
-Materialized Widgets must read their saved output without rerunning Agent-owned
-refresh or processing in React. Layer presentation must not determine whether a
-Source executes.
+Next Layer must read CLI/daemon-backed persisted output without observing the
+Now Layer TanStack cache, force-mounting LiveCards, or rerunning Agent-owned
+refresh and processing in React. Layer presentation must not determine whether
+a Source executes.
 
 Background illustration extraction runs only after the user selects an image or
 changes the edge-detail control. Debounce detail changes, resize the longest
@@ -221,10 +213,10 @@ synchronizes its imperative drag-order ref in a layout effect and keeps scatter
 history in React state.
 
 TanStack Virtual returns functions that React Compiler cannot memoize safely.
-Keep `VirtualList` and Next Layer's `VirtualTimeline` virtualized, and apply the
-`react-hooks/incompatible-library` exception only at their `useVirtualizer`
-calls with an explanatory comment. Do not disable the diagnostic globally or
-pass virtualizer functions through separately memoized boundaries.
+Keep `VirtualList` virtualized, and apply the
+`react-hooks/incompatible-library` exception only at its `useVirtualizer` call
+with an explanatory comment. Do not disable the diagnostic globally or pass
+virtualizer functions through separately memoized boundaries.
 
 The scatter transition measures rendered LiveCard bounds and must publish its Motion
 variants synchronously in a layout effect before paint. Keep the targeted
@@ -247,9 +239,8 @@ registrations.
 
 ### Own source-wide image analysis above item rows
 
-Semantic mark normalization is source-wide work. LiveCard content and Next Layer
-find the first mark for each Instance, scan at most a 128px image once,
-and pass the cached, capped scale into item summaries. Keep pixel
+Semantic mark normalization is source-wide work. LiveCard content finds the
+first mark for each Instance, scans at most a 128px image once, and passes the cached, capped scale into item summaries. Keep pixel
 analysis effects, promises, and profile state out of virtualized item rows.
 Failed image requests must leave the source cache retryable on the next result
 update; a confirmed no-padding result may remain cached.
@@ -292,12 +283,10 @@ virtual lists, and LiveCard editor controls.
 Do not remove renders that are required to update Motion props, measured scatter
 vectors, or drag state. Optimize the content boundary instead.
 
-The Now/Next transition must not animate a transform on the full mixed timeline
-or combine that transform with a large backdrop filter while LiveCards scatter.
-The LiveCard scatter is the transition's primary motion; `WidgetContainer` owns the
-brief, delayed opacity-only reveal. Keep its timeline virtualized against the
-committed Next Layer scroll element so only visible waveform SVGs and rows are
-mounted during the transition and subsequent scrolling.
+The Now/Next transition must not animate a transform or large backdrop filter
+over the full Next Layer while LiveCards scatter. The LiveCard scatter is the
+transition's primary motion; `WidgetContainer` owns the brief, delayed
+opacity-only reveal.
 
 ### Observe against the real scroll container
 
@@ -379,11 +368,6 @@ HTML5 drag event chain. LiveCard reordering received code-path review and existi
 pure reorder coverage, but did not receive React Scan event sampling for a real
 drag. Repeat that scenario manually or with a browser harness that produces
 trusted native drag events before treating drag render behavior as measured.
-
-The 2026-08-04 Next Layer transition optimization received static verification,
-type checking, and production-build coverage, but no React Scan capture. Re-run
-the Now/Next transition scenario with the same populated board before treating
-its frame-time improvement as measured.
 
 React Scan adds development overhead, especially when unnecessary-render
 tracking or per-render callbacks are enabled. Compare relative results under

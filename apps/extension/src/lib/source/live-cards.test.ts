@@ -23,10 +23,7 @@ const testSources: SourceDescriptor[] = [
       network: [],
       cookies: [],
     },
-    cache: {
-      version: 1,
-      maxAge: "5m",
-    },
+    version: 1,
   },
   {
     id: "test:latest",
@@ -42,10 +39,7 @@ const testSources: SourceDescriptor[] = [
       network: [],
       cookies: [],
     },
-    cache: {
-      version: 1,
-      maxAge: "5m",
-    },
+    version: 1,
   },
 ]
 

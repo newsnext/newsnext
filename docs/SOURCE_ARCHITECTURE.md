@@ -24,7 +24,7 @@ Extension library code is grouped behind responsibility-level entry points:
 ```text
 apps/extension/src/lib/
 ├── background/  background services and the frontend service client
-├── board/       board models, sorting, and mixed timelines
+├── board/       board models and sorting
 ├── radar/       page discovery, matching, and suggestion conversion
 ├── settings/    persisted user data, preferences, and settings helpers
 └── source/      LiveCards, loading, caching, permissions, and history
@@ -66,7 +66,7 @@ metadata, expanded source configuration, structured loaders, and resolved
 capabilities.
 
 `sources.ts` contains complete resolved Runtime Sources for TypeScript
-providers, including configuration, cache version, Radar, and loader behavior.
+providers, including configuration, Source version, Radar, and loader behavior.
 TypeScript Sources have no projection in `registry.json`.
 
 The build follows this sequence:
@@ -104,8 +104,9 @@ path. Expansion:
 7. attaches provider-owned presentation metadata to every source;
 8. validates the complete source and rejects source-owned `icon` or `color`.
 
-Required source values, including cache policy and loader, come from defaults or
-individual source configuration. Provider color is required and registry
+Required source values, including the loader, come from defaults or individual
+source configuration. Source version defaults to `2` and may be overridden by
+a positive integer. Provider color is required and registry
 validation accepts only values from the shared `COLORS` palette; provider icon
 and category are optional. The author-facing palette is documented in the
 [Source Guideline](./SOURCE_GUIDELINE.md#provider-and-source-configuration).
@@ -235,56 +236,41 @@ source ID and raw parameters
         │
         ├─ resolve source
         ├─ normalize and validate parameters
-        ├─ build versioned cache key
-        ├─ return a fresh cached result when available
+        ├─ build a TanStack query key from source ID, version, and normalized parameters
+        ├─ restore the persisted Query state when available
+        ├─ skip a user-triggered request during the one-minute protection interval
         ├─ resolve required secrets in the background
         ├─ execute the source loader
         ├─ validate the result, every NewsItem, item template, and response metadata
         ├─ reject an empty or malformed item result
-        ├─ cache items, the item template, and dynamic source presentation metadata
+        ├─ publish and persist the complete successful Query state
         └─ infer the LiveCard presentation from effective item times and order in the UI
 ```
 
 In-flight loads are deduplicated by TanStack Query using a key containing the
-source ID and normalized parameters. Source query keys and complete options are
+source ID, Source version, and normalized parameters. Source query keys and complete options are
 created together so React observers, imperative Fetch Latest calls, and future
 prefetch consumers share the same identity and lifecycle policy. Both
 individual LiveCard and board-wide user refreshes execute enabled TanStack queries
 that fetch the latest source data; disabled and unmounted queries are not
-fetched implicitly. Fetch Latest ignores normal source-cache freshness, but a
-separate one-minute frequency guard prevents repeated remote loads. A protected
-request still follows the normal user-triggered query path and completes
-from the most recent stored result, while fetch-latest tracking keeps UI
-feedback visible for a minimum 500ms. The result returned to the active query
-receives the protected action's completion time without rewriting the stored
-entry or extending the guard interval. Expired cached data is
-otherwise published as a temporary query result while a remote load is pending.
-Automatic query revalidation uses the normal source cache policy. Fetch-latest
-intent is passed directly to the query function rather than stored as state for
-a later query execution. App query timing and the Fetch Latest protection
-interval are centralized in
+fetched implicitly. Automatic revalidation follows TanStack freshness, while
+Fetch Latest is a separate user intent that bypasses freshness for active queries.
+A protected Fetch Latest returns the current Query data without executing its
+query function or changing `dataUpdatedAt`, and keeps UI feedback visible for a
+minimum 500ms. App query timing and the Source request protection interval are centralized in
 `apps/extension/src/lib/source/query-policy.ts`.
 
-The app also reads the last persisted result as presentation-only placeholder
-data when a LiveCard mounts. This survives an app close and reopen
-and may use an expired entry while a fresh request is pending. The loader reads
-each cache entry once and injects stale data into the active query before
-continuing the request. Placeholder data does not satisfy the request, extend
-the entry's freshness, or change fetch-latest behavior.
+TanStack's per-query persister serializes each successful Source Query state under
+its query hash in a Dexie-backed IndexedDB key-value table. Restoring a state
+preserves its original `dataUpdatedAt`, so memory and persistent storage share
+one freshness clock. TanStack remains the owner of cached data,
+freshness, and in-flight deduplication; IndexedDB is only its
+durable storage adapter. Persisted entries expire after 30 days. Increasing the
+Source version changes the query identity immediately, while old versions age
+out independently. Cache failures remain fail-open and never prevent Source
+execution.
 
-The persistent cache uses Dexie over an IndexedDB object store containing the
-result and `usedAt`. The result's `updatedAt` drives freshness and fetch-latest
-protection; successful reads update `usedAt` in the same read-write transaction
-that returns the cached record. Clearing and cleanup group their related table
-changes in Dexie transactions. The cache record primary key is its only index; cleanup
-scans the small cache table around its configured 500-record cap, so indexing
-`usedAt` would add write and storage overhead without serving a query. At most
-once per day after a write, cleanup removes entries unused for 30 days, superseded cache
-versions for the same source and normalized parameters, and least-recently-used
-entries beyond 500 records or an estimated 50 MiB. Cache failures remain
-fail-open: they never prevent a source request from completing.
-
-Source history is stored separately from this freshness cache in the local
+Source history is stored separately from this result cache in the local
 Turso database owned by the desktop daemon. Now Layer cache hits and remote
 refreshes never create observations. The first explicit retention entry point
 is `newsnext run --retain`: the extension executes and normalizes the Source,
@@ -293,7 +279,7 @@ no Source credentials, fetch response bodies, or browser session state.
 
 A dataset is the unique pair of Source ID and canonical normalized parameter
 JSON. Each dataset receives an opaque UUID exposed by `history datasets` and
-used by the other history commands. Source cache version remains observation
+used by the other history commands. Source version remains observation
 metadata rather than part of dataset identity, preserving continuity while
 making version boundaries inspectable.
 
@@ -400,14 +386,17 @@ viewport root margin is applied and effectively disables preloading. After a
 LiveCard leaves that margin, its query remains active for one minute to avoid churn
 during short scrolls, then unmounts. Re-entering during that interval cancels
 the pending unmount. Successful query data remains fresh in memory for one
-minute; this avoids redundant loader and persistent-cache reads without changing
-the source-defined persistent cache duration. Active LiveCard queries also revalidate
-once every five minutes, including while the app is in the background.
+minute; this avoids redundant loader and persistent-cache reads inside the
+fixed request protection interval. Regaining focus or remounting can revalidate
+stale queries. Active LiveCard queries also revalidate once every five minutes,
+including while the app is in the background.
 Inactive query data follows TanStack Query's default garbage-collection policy
-and can still be restored from the persistent cache. Source queries use
-offline-first network mode so their query function can consult IndexedDB before
-an unavailable network request is attempted. The source loader may still
-satisfy an automatic revalidation from a fresh persisted result.
+and remains independently available through the per-query persister. Source
+queries use offline-first network mode. An active Source Query restores lazily
+when first used. Search explicitly restores persisted Source queries when it
+opens because its disabled observers must never start Source execution. Stale
+restored queries follow the same focus, remount, and interval revalidation
+policy as queries produced in the current session.
 
 Each page-side query request receives a TanStack `AbortSignal`. Because signals
 cannot be transported directly through the extension proxy, the page assigns a
@@ -429,26 +418,16 @@ promise.
 
 Instance-facing consumers resolve `instanceId` through the saved Instance and
 active Source descriptor before accessing stored results. The resulting target
-contains `sourceId` and normalized effective parameters. Both persistent Cache
+contains `sourceId`, Source version, and normalized effective parameters. Both persistent Cache
 reads and History reads consume this target, so default parameters cannot make
 the two stores address different data. The Instance remains the Board and
 Widget reference; the resolved Source target remains the execution and storage
 identity.
 
-Direct Next Layer Widgets resolve an explicit Instance selection scoped to the
-current Board. The selection may contain one Instance, several Instances, or
-every Instance on the Board. Their data boundary can observe current cache
-results, read History, or combine both without creating TanStack Query observers
-or depending on the Now Layer's in-memory Source query cache. Cache selections
-use one Dexie live query with a bulk read; matching persistent changes from
-other extension contexts notify the same observer. History selections address
-normalized dataset identities directly and never resolve through a Source
-loader. Results remain keyed by `instanceId` so Widgets retain input identity
-and provenance even when several Instances resolve to the same Source target.
-
-Materialized Widgets instead display a persisted result produced by an
-Agent-owned asynchronous task. That task may refresh selected Sources, consume
-cache and History inputs, process them, and save a provenance-bearing result.
+Next Layer does not read the Now Layer TanStack cache. Its future Widgets display
+persisted results produced through the CLI and daemon by Agent-owned asynchronous
+tasks. A task may refresh selected Sources, consume retained History inputs,
+process them, and save a provenance-bearing result.
 Opening Next Layer must not repeat Agent-owned refresh or processing, mount
 offscreen LiveCards, or start Source execution solely to populate the presentation.
 
@@ -477,11 +456,10 @@ Every presentation surface must use this same merge boundary. LiveCards apply
 loader metadata directly from their active source query. Search subscribes to
 the same normalized source query keys with disabled observers, so an existing
 loader result can update searchable titles and result labels without starting
-loads merely because the Search dialog opened. When an in-memory query has no
-data, Search may hydrate it from the matching persistent source-cache entry.
-That hydration preserves the result's original `updatedAt` as the TanStack query
-update time, so stale presentation data cannot become artificially fresh or
-suppress normal LiveCard revalidation. Until a loader has published and cached its
+loads merely because the Search dialog opened. Search restores persisted Source
+queries when its content mounts with their original TanStack `dataUpdatedAt`, so
+stale presentation data cannot become artificially fresh or suppress normal
+LiveCard revalidation. Until a loader has published and cached its
 first successful result, Search follows the normal static, instance, and
 provider-title fallback behavior.
 
@@ -592,7 +570,7 @@ the original image layout.
 The shared loader-result boundary removes nullish nested item values and empty
 semantic groups after any loader returns. This keeps normalization out of
 individual providers and preserves numeric zero and boolean false.
-The semantic item migration advances the default source cache version to `2`;
+The semantic item migration advances the default Source version to `2`;
 sources with explicit versions advance independently. This prevents legacy
 `timestamp`, `inline`, and `preview` observations from sharing a dataset with
 the new item schema.
@@ -745,7 +723,7 @@ diagnostics and fail closed instead of interrupting the surrounding UI.
 Radar metadata can replace source-owned presentation fields such as title,
 badge, description, and home URL, but cannot modify source identity,
 provider title, icon, color, category, loader behavior, capabilities, secrets,
-request rules, or cache policy.
+request rules, or Source version.
 Accepting a Radar suggestion creates one Instance and, when a custom Board is
 selected, one Collection entry. The Instance owns its Source ID and patch;
 Collection entries own membership. New Instance IDs combine the Source ID and a

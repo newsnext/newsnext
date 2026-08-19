@@ -236,8 +236,5 @@ export const rankingSource = {
     load: fetchBilibiliRanking,
   },
   capabilities: bilibiliApiCapabilities,
-  cache: {
-    version: 3,
-    maxAge: "15m",
-  },
+  version: 3,
 } satisfies ProviderSourceConfig

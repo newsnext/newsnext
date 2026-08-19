@@ -182,7 +182,6 @@ export default {
     capabilities: {
       network: ["www.reddit.com"],
     },
-    cache: "5m",
     loader: {
       type: "custom",
     },

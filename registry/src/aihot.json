@@ -32,8 +32,7 @@
         "itemTemplate": {
           "inline": "{{ scope.item.attributes.source }}{% if scope.item.attributes.category %} · {{ scope.item.attributes.category }}{% endif %}"
         }
-      },
-      "cache": "5m"
+      }
     }
   }
 }

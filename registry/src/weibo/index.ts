@@ -63,7 +63,6 @@ export default {
     baseUrl: "https://weibo.com/",
     capabilities: weiboCapabilities,
     requestRules: weiboRequestRules,
-    cache: "5m",
     loader: {
       type: "custom",
     },
@@ -139,10 +138,7 @@ export default {
           },
         },
       },
-      cache: {
-        version: 5,
-        maxAge: "1m",
-      },
+      version: 5,
     },
     "user": {
       metadata: {
@@ -182,10 +178,7 @@ export default {
       loader: {
         load: fetchWeiboUserPosts,
       },
-      cache: {
-        version: 3,
-        maxAge: "5m",
-      },
+      version: 3,
     },
     "keyword": {
       metadata: {

@@ -1,13 +1,13 @@
-export const FETCH_LATEST_PROTECTION_MS = 60_000
+export const SOURCE_REQUEST_PROTECTION_MS = 60_000
 export const FETCH_LATEST_MINIMUM_FEEDBACK_MS = 500
-export const SOURCE_QUERY_STALE_TIME_MS = 60_000
+export const SOURCE_QUERY_STALE_TIME_MS = SOURCE_REQUEST_PROTECTION_MS
 export const SOURCE_QUERY_REFETCH_INTERVAL_MS = 5 * 60_000
 export const SOURCE_QUERY_OFFSCREEN_RETENTION_MS = 60_000
 export const SOURCE_QUERY_PRELOAD_MARGIN = "200px"
 
-export function isFetchLatestRateLimited(
+export function isSourceRequestProtected(
   updatedAt: number,
-  now: number,
+  now = Date.now(),
 ): boolean {
-  return now - updatedAt < FETCH_LATEST_PROTECTION_MS
+  return now - updatedAt < SOURCE_REQUEST_PROTECTION_MS
 }

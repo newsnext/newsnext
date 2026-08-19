@@ -18,12 +18,10 @@ function NotFoundComponent() {
 
 function RootComponent() {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
-  const nextLayerScrollContainerRef = useRef<HTMLDivElement>(null)
 
   return (
     <ScrollProgressProvider
       rootScrollContainerRef={scrollContainerRef}
-      nextLayerScrollContainerRef={nextLayerScrollContainerRef}
     >
       <div
         ref={scrollContainerRef}

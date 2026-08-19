@@ -57,7 +57,6 @@ function RadarOverlayHeader({ count, isScanning }: RadarOverlayHeaderProps): Rea
 
 export function RadarPopup() {
   const scrollContainerRef = useRef<HTMLElement>(null)
-  const nextLayerScrollContainerRef = useRef<HTMLDivElement>(null)
   const { sources } = useSourceDescriptors()
   const suggestions = useCurrentTabRadarSuggestions()
   const suggestionCount = suggestions?.length ?? 0
@@ -65,7 +64,6 @@ export function RadarPopup() {
   return (
     <ScrollProgressProvider
       rootScrollContainerRef={scrollContainerRef}
-      nextLayerScrollContainerRef={nextLayerScrollContainerRef}
     >
       <main
         ref={scrollContainerRef}

@@ -1,37 +1,15 @@
-import type { RefObject } from "react"
-import { useCallback, useState } from "react"
-import { TimelineWidget } from "./timeline-widget"
 import { WidgetContainer } from "./widget-container"
 
-interface NextLayerProps {
-  boardId: string
-  isVisible: boolean
-  scrollContainerRef?: RefObject<HTMLDivElement | null>
-}
-
-export function NextLayer({
-  boardId,
-  isVisible,
-  scrollContainerRef,
-}: NextLayerProps) {
-  const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(null)
-  const setScrollContainer = useCallback((node: HTMLDivElement | null) => {
-    if (scrollContainerRef) {
-      scrollContainerRef.current = node
-    }
-    setScrollElement(current => current === node ? current : node)
-  }, [scrollContainerRef])
-
+export function NextLayer() {
   return (
-    <div
-      ref={setScrollContainer}
-      className="h-full w-full overflow-y-auto bg-transparent scrollbar-hidden"
-    >
-      {isVisible && (
-        <WidgetContainer>
-          <TimelineWidget boardId={boardId} scrollElement={scrollElement} />
-        </WidgetContainer>
-      )}
+    <div className="h-full w-full bg-transparent">
+      <WidgetContainer>
+        <div className="flex min-h-52 items-center justify-center p-8">
+          <p className="max-w-md text-center text-sm text-muted-foreground">
+            Next Layer results must be created through the NewsNext CLI. CLI-backed rendering is not available yet.
+          </p>
+        </div>
+      </WidgetContainer>
     </div>
   )
 }

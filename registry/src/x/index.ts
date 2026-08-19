@@ -218,7 +218,6 @@ export default {
   defaults: {
     baseUrl: `${X_ORIGIN}/`,
     capabilities,
-    cache: "5m",
     loader: {
       type: "custom",
     },
@@ -382,10 +381,7 @@ export default {
       loader: {
         load: fetchXUserTweets,
       },
-      cache: {
-        version: 3,
-        maxAge: "5m",
-      },
+      version: 3,
     },
   },
 } satisfies ProviderConfig

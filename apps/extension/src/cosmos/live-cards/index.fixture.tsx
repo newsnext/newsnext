@@ -59,10 +59,7 @@ export const SAMPLE_SOURCE: LiveCardViewModel = {
     network: ["reactcosmos.org"],
     cookies: ["reactcosmos.org"],
   },
-  cache: {
-    version: 1,
-    maxAge: "15m",
-  },
+  version: 1,
 }
 
 const RANKING_ITEMS: NewsItem[] = [

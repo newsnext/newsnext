@@ -2,7 +2,7 @@ import type { ReactNode } from "react"
 import type { SourceInstanceMetadata, SourceInstancePatch } from "@/lib/source"
 import type { LiveCardViewModel } from "@/typings/source"
 import { FlipAnimate } from "@newsnext/ui/components/flip-animate"
-import { useScrollProgressActionsContext } from "@newsnext/ui/components/scroll-progress-context"
+import { useScrollProgressContext } from "@newsnext/ui/components/scroll-progress-context"
 import { useSetAtom } from "jotai"
 import { useCallback, useMemo, useRef, useState } from "react"
 import { useSourceParams } from "@/hooks"
@@ -145,7 +145,7 @@ function LiveCardContent({ id, source, dragHandle, isDraft = false, onDraftSourc
 
 export function LiveCard(props: LiveCardProps): React.JSX.Element {
   const { nodeRef } = props
-  const { rootScrollContainerRef } = useScrollProgressActionsContext()
+  const { rootScrollContainerRef } = useScrollProgressContext()
   const ref = useRef<HTMLDivElement>(null)
   const setRef = useCallback((node: HTMLDivElement | null) => {
     ref.current = node

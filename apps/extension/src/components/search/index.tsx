@@ -27,7 +27,6 @@ import { useEffect, useMemo, useState } from "react"
 import {
   createSourceQueryTarget,
   getSourceQueryOptions,
-  hydrateSourceQueryCache,
 } from "@/hooks/source-query"
 import { useSourceDescriptors } from "@/hooks/use-source-descriptors"
 import { useSourceIcon } from "@/hooks/use-source-icon"
@@ -37,6 +36,7 @@ import {
   applySourceLoaderMetadata,
   buildLiveCards,
 } from "@/lib/source"
+import { restorePersistedSourceQueries } from "@/lib/source/query-persister"
 import { boardsAtom, collectionEntriesAtom, instancesAtom } from "@/store/board"
 import { shortcutSettingsAtom } from "@/store/settings"
 import { PhMagnifyingGlass } from "../icons/ph"
@@ -222,10 +222,10 @@ function SearchDialogContent({
   )
   const sourceQueryOptions = useMemo(
     () => sourceQueryTargets.map(target => ({
-      ...getSourceQueryOptions(queryClient, target),
+      ...getSourceQueryOptions(target),
       enabled: false,
     })),
-    [queryClient, sourceQueryTargets],
+    [sourceQueryTargets],
   )
   const loaderMetadata = useQueries({
     queries: sourceQueryOptions,
@@ -233,10 +233,8 @@ function SearchDialogContent({
   })
 
   useEffect(() => {
-    void Promise.all(sourceQueryTargets.map(target => (
-      hydrateSourceQueryCache(queryClient, target)
-    )))
-  }, [queryClient, sourceQueryTargets])
+    void restorePersistedSourceQueries(queryClient)
+  }, [queryClient])
 
   const resolvedLiveCards = useMemo(
     () => liveCards.map((liveCard, index) => (

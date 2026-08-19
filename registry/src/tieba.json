@@ -28,8 +28,7 @@
             "template": "{{ scope.value | times: 1000 }}"
           }
         }
-      },
-      "cache": "5m"
+      }
     }
   }
 }

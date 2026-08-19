@@ -6,8 +6,7 @@
   "defaults": {
     "metadata": {
       "title": "RSS Feed"
-    },
-    "cache": "1m"
+    }
   },
   "sources": {
     "feed": {

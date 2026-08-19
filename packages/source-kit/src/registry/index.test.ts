@@ -28,7 +28,6 @@ function createSourceConfig(radar: NonNullable<SourceConfig["radar"]>): SourceCo
     metadata: {
       title: "Test",
     },
-    cache: "1h",
     radar,
     loader: {
       type: "json",
@@ -58,7 +57,6 @@ describe("source template vars", () => {
       color: "blue",
       defaults: {
         baseUrl: "https://example.com/",
-        cache: "5m",
         capabilities: {
           network: [],
         },
@@ -104,7 +102,6 @@ describe("source template vars", () => {
       color: "blue",
       defaults: {
         baseUrl: "https://example.com/",
-        cache: "5m",
         capabilities: { network: [] },
       },
       sources: {
@@ -129,7 +126,6 @@ describe("source template vars", () => {
       color: "blue",
       defaults: {
         baseUrl: "https://api.example.com/v1/",
-        cache: "5m",
       },
       sources: {
         latest: {
@@ -157,7 +153,6 @@ describe("source template vars", () => {
       color: "blue",
       sources: {
         test: {
-          cache: "1h",
           loader: {
             type: "custom",
             load: async () => ({ items: [] }),
@@ -177,7 +172,6 @@ describe("source template vars", () => {
       icon: "https://icons.folo.is/example.com",
       color: "blue",
       defaults: {
-        cache: "5m",
         capabilities: {
           network: ["api.example.com"],
           cookies: ["account.example.com"],
@@ -211,13 +205,12 @@ describe("source template vars", () => {
           capabilities: {
             network: ["override.example.com"],
           },
-          cache: "1m",
         },
       },
     })
 
     expect(provider.sources.inherited).toMatchObject({
-      cache: { version: 2, maxAge: "5m" },
+      version: 2,
       capabilities: {
         network: ["api.example.com"],
         cookies: ["account.example.com"],
@@ -236,7 +229,7 @@ describe("source template vars", () => {
       ],
     })
     expect(provider.sources.overridden).toMatchObject({
-      cache: { version: 2, maxAge: "1m" },
+      version: 2,
       capabilities: {
         network: ["override.example.com"],
         cookies: ["account.example.com"],
@@ -265,7 +258,6 @@ describe("source template vars", () => {
             title: "Source",
             home: "https://example.com/source",
           },
-          cache: "1h",
           loader: {
             type: "rss",
             url: "https://example.com/feed.xml",
@@ -303,7 +295,6 @@ describe("source template vars", () => {
       },
       sources: {
         test: {
-          cache: "1h",
           loader: {
             type: "custom",
             load: async () => ({ items: [] }),
@@ -346,7 +337,6 @@ describe("source template vars", () => {
       },
       sources: {
         test: {
-          cache: "1h",
           loader: {
             type: "rss",
             url: "https://example.com/feed.xml",
@@ -374,7 +364,6 @@ describe("source template vars", () => {
       },
       sources: {
         inherited: {
-          cache: "1h",
           loader: {
             type: "rss",
             url: "{{ source.vars.endpoint.origin }}/feed.xml",
@@ -387,7 +376,6 @@ describe("source template vars", () => {
               optional: null,
             },
           },
-          cache: "1h",
           loader: {
             type: "rss",
             url: "{{ source.vars.endpoint.origin }}/{{ source.vars.endpoint.version }}/feed.xml",
@@ -770,9 +758,6 @@ describe("source registry", () => {
       title: "Provider",
       category: "social",
       color: "blue",
-      defaults: {
-        cache: "5m",
-      },
       sources: {
         "invalid:id": {
           loader: {
@@ -802,7 +787,6 @@ describe("source registry", () => {
             type: "rss",
             url: "https://example.com/feed.xml",
           },
-          cache: "5m",
         },
       },
     } as unknown as ProviderConfig
@@ -819,7 +803,6 @@ describe("source registry", () => {
       icon: "https://icons.folo.is/example.com",
       color: "blue",
       defaults: {
-        cache: "5m",
         vars: {
           endpoint: {
             origin: "https://example.com",
@@ -870,7 +853,7 @@ describe("source registry", () => {
       color: "blue",
     })
     expect(resolveSourceRegistry(JSON.parse(JSON.stringify(registry)))["test:latest"]).toMatchObject({
-      cache: { version: 2, maxAge: "5m" },
+      version: 2,
       metadata: {
         title: "Latest",
       },
@@ -881,29 +864,13 @@ describe("source registry", () => {
     })
   })
 
-  it("rejects sources missing required properties after defaults are assigned", () => {
-    expect(() => flattenProviderConfig("test", {
-      title: "Test Provider",
-      category: "social",
-      color: "blue",
-      sources: {
-        latest: {
-          loader: {
-            type: "rss",
-            url: "https://example.com/feed.xml",
-          },
-        },
-      },
-    })).toThrow("Source \"test:latest\" is missing a cache policy")
-  })
-
-  it("rejects invalid cache policies during provider expansion", () => {
-    const createProvider = (cache: unknown) => ({
+  it("rejects invalid Source versions and removed cache configuration", () => {
+    const createProvider = (version: unknown) => ({
       title: "Test Provider",
       color: "blue",
       sources: {
         latest: {
-          cache,
+          version,
           loader: {
             type: "rss",
             url: "https://example.com/feed.xml",
@@ -912,19 +879,22 @@ describe("source registry", () => {
       },
     })
 
-    expect(() => flattenProviderConfig("test", createProvider("5minutes") as never))
-      .toThrow("test:latest.cache must be a non-negative duration")
-    expect(() => flattenProviderConfig("test", createProvider(`${"9".repeat(308)}d`) as never))
-      .toThrow("test:latest.cache must be a finite duration")
-    expect(() => flattenProviderConfig("test", createProvider({
-      version: 0,
-      maxAge: "5m",
-    }) as never)).toThrow("test:latest.cache.version must be a positive safe integer")
-    expect(() => flattenProviderConfig("test", createProvider({
-      version: 1,
-      maxAge: "5m",
-      legacy: true,
-    }) as never)).toThrow("test:latest.cache.legacy is not supported")
+    expect(() => flattenProviderConfig("test", createProvider(0) as never))
+      .toThrow("test:latest.version must be a positive safe integer")
+    expect(() => flattenProviderConfig("test", createProvider(1.5) as never))
+      .toThrow("test:latest.version must be a positive safe integer")
+    expect(() => flattenProviderConfig("test", {
+      ...createProvider(undefined),
+      sources: {
+        latest: {
+          cache: "5m",
+          loader: {
+            type: "rss",
+            url: "https://example.com/feed.xml",
+          },
+        },
+      },
+    } as never)).toThrow("test:latest.cache is not supported")
   })
 
   it("resolves a flat registry produced from provider authoring config", () => {
@@ -934,7 +904,6 @@ describe("source registry", () => {
       color: "blue",
       sources: {
         latest: {
-          cache: "5m",
           loader: {
             type: "rss",
             url: "https://example.com/feed.xml",
@@ -967,7 +936,6 @@ describe("source registry", () => {
           category: "social",
           color: "blue",
         },
-        cache: "5m",
         capabilities: {
           network: [],
         },
@@ -997,9 +965,6 @@ describe("source registry", () => {
       title: "Provider",
       category: "social",
       color: "blue",
-      defaults: {
-        cache: "5m",
-      },
       sources: {
         first: {
           loader: {
@@ -1013,9 +978,6 @@ describe("source registry", () => {
       title: "Provider",
       category: "forum",
       color: "blue",
-      defaults: {
-        cache: "5m",
-      },
       sources: {
         second: {
           loader: {
@@ -1039,7 +1001,6 @@ describe("source registry", () => {
           category: "social",
           color: "not-a-color",
         },
-        cache: "5m",
         loader: {
           type: "rss",
           url: "https://example.com/feed.xml",
@@ -1054,7 +1015,6 @@ describe("source registry", () => {
           category: "invalid",
           color: "blue",
         },
-        cache: "5m",
         loader: {
           type: "rss",
           url: "https://example.com/feed.xml",
@@ -1071,7 +1031,6 @@ describe("source registry", () => {
           category: "social",
           color: "blue",
         },
-        cache: "5m",
         loader: {
           type: "rss",
           url: "https://example.com/feed.xml",

@@ -10,11 +10,12 @@ export interface InstanceDataTarget extends SourceQueryTarget {
 export interface InstanceDataSource {
   id: string
   params?: RuntimeSource["params"]
+  version: number
 }
 
 export function createInstanceDataTarget(
   instance: SourceInstance,
-  source: Pick<RuntimeSource, "params">,
+  source: Pick<RuntimeSource, "params" | "version">,
 ): InstanceDataTarget {
   return {
     instanceId: instance.instanceId,

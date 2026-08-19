@@ -213,62 +213,18 @@ LiveCards define the primary NewsNext surface treatment.
 The reference implementation is `LiveCardSurface` in
 `apps/extension/src/components/live-card/card-surface.tsx`.
 
-### Next Layer mixed timeline
+### Next Layer placeholder
 
-Next Layer recomposes the current board's LiveCard items into one continuous feed.
-It is a reading view of the same source data, not another board or a second LiveCard
-design. Do not expose Next Layer on the All board; it is available only for
-configurable boards. Combine all source items into a newest-first timeline. Use
-`publishedAt`, falling back to `updatedAt`, and use the source update time when
-an item has neither, matching the existing LiveCard timeline semantics. Break equal
-times by original rank and then LiveCard order so tied items remain predictably
-mixed. Keep source identity and effective timeline
-placement legible through the grouped time labels, but do not display ranking
-numbers in the mixed timeline.
-
-When a news item row has a hover surface, make the entire surfaced row its link
-target and provide an equivalent visible keyboard-focus state. Do not place a
-smaller link inside a larger hover-only container.
-
-Render the mixed feed as a visible timeline, using the shared waveform rail and
-grouped relative-time labels from LiveCard timelines. Let each rail segment inherit
-its source color so source changes are legible without creating separate LiveCard
-surfaces. The timeline rail and time groups own the sequence; avoid adding a
-second visible order indicator inside the item row.
-
-Use the shared `NewsItemSummary` treatment for mixed timeline content. Its
-three-line clamp bounds long items while preserving semantic icons, marks, and
-the composed item details; let the virtualizer measure the resulting row
-instead of assigning separate fixed mobile and desktop heights. Render item
-icons and marks at the same 16px height with intrinsic width, object-contain,
-and standard-rounded treatment; sources do not control image scale or corner
-radius.
-Render shared item stats after the authored inline details as compact
-icon-and-count pairs. Use one stable icon for each shared stat, compact number
-formatting, tabular numerals, and a text alternative or tooltip with the full
-meaning. Source templates must not repeat stats as prose; keeping author and
-source-specific attributes textual makes the two kinds of metadata easy to
-scan without adding badges or another surface.
-Before rendering marks from a source, scan the first mark for meaningful
-symmetrical vertical padding and derive one scale for the remaining items. Aim
-for a 14px visible-content height inside the 16px image box; this reproduces the
-established `1.5` scale for the Weibo mark without treating `1.5` as a universal
-cap. Apply the result as a centered CSS transform rather than changing layout
-height or clipping the image. Preserve intrinsic horizontal proportions and do
-not redraw each image. Keep icons on their original image path to avoid
-pixel-analysis work across avatar-heavy feeds.
-Time-group labels remain outside the measured content row.
+Next Layer does not currently render a browser-cache-backed timeline. Keep its
+entry available only for configurable boards and show a concise placeholder
+that explains results must be created through the NewsNext CLI. Future Widgets
+must render CLI/daemon-backed persisted output instead of observing Now Layer
+queries.
 
 Reveal Next Layer with one brief, slightly delayed opacity fade so it follows
 the LiveCard scatter without competing with it. Do not scale or blur the full
-timeline during this transition.
+page during this transition.
 
-Treat the entire Next Layer page as the expanded LiveCard. Do not add another LiveCard
-shell, nested content squircle, panel shadow, or per-item LiveCard inside it. Place
-the compact Timeline title and source/item counts directly in the page flow,
-then continue into the timeline without a surface boundary. Provider theme
-colors stay local to the timeline rail, source identity, and hover state while
-the page inherits the active board theme.
 Blank page space is part of the reading surface and must not switch back to Now
 Layer when clicked. Now Layer and Next Layer are peer views, so switch between
 them only through the shared Layer control or its configured keyboard shortcut;

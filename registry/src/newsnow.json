@@ -96,8 +96,7 @@
         "itemTemplate": {
           "inline": "{{ scope.item.attributes.publisher }}"
         }
-      },
-      "cache": "5m"
+      }
     }
   }
 }

@@ -28,7 +28,6 @@ export default {
   color: "red",
   defaults: {
     baseUrl: "https://www.cls.cn/",
-    cache: "5m",
     loader: {
       type: "json",
       fields: {
@@ -69,7 +68,6 @@ export default {
         },
         items: "data.roll_data[?is_ad != `1`]",
       },
-      cache: "1m",
     },
     "depth": {
       metadata: {

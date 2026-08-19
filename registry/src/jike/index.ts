@@ -250,7 +250,6 @@ export default {
   defaults: {
     baseUrl: `${JIKE_WEB_ORIGIN}/`,
     capabilities: jikeCapabilities,
-    cache: "5m",
     loader: {
       type: "custom",
     },
@@ -330,10 +329,7 @@ export default {
       loader: {
         load: fetchJikeUserUpdates,
       },
-      cache: {
-        version: 3,
-        maxAge: "5m",
-      },
+      version: 3,
     },
     "search": {
       metadata: {

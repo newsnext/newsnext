@@ -27,7 +27,7 @@ export {
   mergeSourceInstancePatch,
 } from "./live-cards"
 export type { SourceLoadResult } from "./loader"
-export { loadSource, readPersistedSourceCache } from "./loader"
+export { loadSource } from "./loader"
 export type { SourceParamValues } from "./params"
 export { mergeSourceParamValues, sanitizeSourceParamPatch } from "./params"
 export type { SourcePermissionRequest, SourcePermissionTarget } from "./permissions"
@@ -40,6 +40,7 @@ export {
 export { getTimelineItemTimes, isTimelineItems } from "./presentation"
 export {
   FETCH_LATEST_MINIMUM_FEEDBACK_MS,
+  isSourceRequestProtected,
   SOURCE_QUERY_OFFSCREEN_RETENTION_MS,
   SOURCE_QUERY_PRELOAD_MARGIN,
   SOURCE_QUERY_REFETCH_INTERVAL_MS,

@@ -4,10 +4,7 @@
   "color": "red",
   "defaults": {
     "baseUrl": "https://music.163.com/",
-    "cache": {
-      "version": 3,
-      "maxAge": "15m"
-    },
+    "version": 3,
     "metadata": {
       "home": "/"
     },

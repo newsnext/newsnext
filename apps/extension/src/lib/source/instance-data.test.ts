@@ -5,6 +5,7 @@ import { createInstanceDataTarget, resolveInstanceDataTarget } from "./instance-
 
 const source = {
   id: "github:trending",
+  version: 2,
   params: {
     language: {
       default: "",
@@ -39,6 +40,7 @@ describe("instance data targets", () => {
         range: "daily",
       },
       sourceId: source.id,
+      version: source.version,
     })
   })
 

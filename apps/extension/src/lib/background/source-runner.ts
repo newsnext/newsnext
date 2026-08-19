@@ -147,7 +147,7 @@ export async function runConnectedSource(
     result,
     input.providerId,
     sourceId,
-    source.cache.version,
+    source.version,
     params,
     fetches,
     startedAt,

@@ -97,7 +97,6 @@ export default {
   color: "orange",
   defaults: {
     baseUrl: "https://folo.is/",
-    cache: "5m",
     loader: {
       type: "custom",
     },

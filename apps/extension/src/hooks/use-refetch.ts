@@ -1,5 +1,4 @@
 import type { SourceQueryTarget } from "./source-query"
-import { normalizeSourceParams } from "@newsnext/source-kit/runtime"
 import { useIsFetching, useQueryClient } from "@tanstack/react-query"
 import { useStore } from "jotai"
 import { useCallback, useSyncExternalStore } from "react"
@@ -8,6 +7,7 @@ import { buildLiveCards, FETCH_LATEST_MINIMUM_FEEDBACK_MS, loadSourceDescriptors
 import { collectionEntriesAtom, instancesAtom } from "@/store/board"
 import { currentBoardIdAtom } from "@/store/settings"
 import {
+  createSourceQueryTarget,
   fetchLatestSourceQuery,
   getSourceQueryHash,
   getSourceQueryKey,
@@ -137,12 +137,11 @@ export function useFetchLatest() {
           : collectionEntries
               .filter(entry => entry.collectionId === currentBoardId)
               .map(entry => entry.instanceId),
-      }).map((liveCard) => {
-        return {
-          sourceId: liveCard.sourceId,
-          params: normalizeSourceParams(liveCard, liveCard.paramsValue ?? {}),
-        } satisfies SourceQueryTarget
-      })
+      }).map(liveCard => createSourceQueryTarget(
+        liveCard.sourceId,
+        liveCard,
+        liveCard.paramsValue,
+      ))
       await fetchLatestSources(...targets)
     } catch (e) {
       console.error("Failed to fetch latest LiveCards", e)

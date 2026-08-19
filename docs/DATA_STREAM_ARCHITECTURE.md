@@ -424,9 +424,9 @@ Source -> latest cache -> Now Layer
 ```
 
 This path favors low latency and replaceable current state. TanStack Query owns
-the active request lifecycle, and the extension cache supplies the most recent
-validated result. Viewing or refreshing Now Layer does not implicitly create
-durable History.
+the active request lifecycle and current result; its per-query IndexedDB
+persister restores that same state across app sessions. Viewing or refreshing
+Now Layer does not implicitly create durable History.
 
 ### Durable-analysis path
 

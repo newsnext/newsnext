@@ -4,7 +4,6 @@
   "color": "orange",
   "defaults": {
     "baseUrl": "https://news.ycombinator.com/",
-    "cache": "5m",
     "loader": {
       "type": "html",
       "url": "/",
@@ -103,8 +102,7 @@
       },
       "loader": {
         "url": "/newest"
-      },
-      "cache": "1m"
+      }
     },
     "show": {
       "metadata": {

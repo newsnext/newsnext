@@ -52,7 +52,7 @@ function createSearchSource({
     },
     metadata: { title },
     capabilities: { network: [], cookies: [] },
-    cache: { version: 1, maxAge: "5m" },
+    version: 1,
   }
 }
 

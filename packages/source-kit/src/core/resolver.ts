@@ -1,8 +1,6 @@
 import type {
   InferSourceParams,
   RuntimeSource,
-  SourceCacheConfig,
-  SourceCacheMaxAge,
   SourceCapabilities,
   SourceLoader,
   SourceLoaderDefinition,
@@ -27,7 +25,6 @@ import {
   resolveSourceMetadataUrls,
   resolveSourceUrl,
 } from "./base-url"
-import { resolveSourceCacheConfig } from "./cache"
 import { assertNetworkCapability, validateSourceRequestRules } from "./capabilities"
 import { validateSourceLoaderResult } from "./loader-result"
 import {
@@ -50,6 +47,7 @@ import {
 } from "./template"
 
 interface SourceConfigBase<TParams extends SourceParamSchemaMap> {
+  version?: number
   baseUrl?: string
   metadata?: SourcePresentationMetadata
   vars?: SourceTemplateVars
@@ -57,11 +55,9 @@ interface SourceConfigBase<TParams extends SourceParamSchemaMap> {
   radar?: SourceRadarRule[]
   requestRules?: readonly SourceRequestRule[]
   secrets?: SourceSecretDefinition[]
-  cache: SourceCacheConfig | SourceCacheMaxAge
 }
 
 type SourceCapabilityOverrides = Partial<SourceCapabilities>
-type SourceCacheInput = SourceCacheConfig | SourceCacheMaxAge
 type ProviderLoaderConfig<TParams extends SourceParamSchemaMap> = Partial<
   SourceConfig<TParams>["loader"]
 >
@@ -111,9 +107,8 @@ export type SourceConfigDefaults<TParams extends SourceParamSchemaMap = any> = P
 
 export type ProviderSourceConfig<TParams extends SourceParamSchemaMap = any> = Omit<
   SourceConfig<TParams>,
-  "cache" | "capabilities" | "loader" | "metadata"
+  "capabilities" | "loader" | "metadata"
 > & {
-  cache?: SourceCacheInput
   capabilities?: SourceCapabilityOverrides
   loader?: ProviderLoaderConfig<TParams>
   metadata?: SourcePresentationMetadata
@@ -258,13 +253,13 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
   config: SourceConfig<TParams>,
 ): ResolvedSource<TParams> {
   const {
+    version: versionInput,
     baseUrl: baseUrlInput,
     vars,
     params,
     radar,
     requestRules,
     secrets,
-    cache: cacheInput,
     loader,
     capabilities: capabilityOverrides,
     metadata = {},
@@ -283,7 +278,7 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
     capabilityOverrides,
   )
   validateSourceRequestRules(sourceId, requestRules, capabilities.network)
-  const cache = resolveSourceCacheConfig(cacheInput, `${sourceId}.cache`)
+  const version = resolveSourceVersion(versionInput, `${sourceId}.version`)
 
   let resolvedLoader: SourceLoaderDefinition<TParams>
   switch (loader.type) {
@@ -379,6 +374,7 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
   }
 
   return {
+    version,
     metadata: resolvedMetadata,
     baseUrl,
     vars,
@@ -387,9 +383,18 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
     requestRules,
     secrets,
     capabilities,
-    cache,
     loader: withValidatedLoaderResult(resolvedLoader, baseUrl),
   }
+}
+
+export const DEFAULT_SOURCE_VERSION = 2
+
+export function resolveSourceVersion(value: unknown, location: string): number {
+  if (value === undefined) return DEFAULT_SOURCE_VERSION
+  if (typeof value !== "number" || !Number.isSafeInteger(value) || value < 1) {
+    throw new TypeError(`${location} must be a positive safe integer`)
+  }
+  return value
 }
 
 function withValidatedLoaderResult<TParams extends SourceParamSchemaMap>(
@@ -454,6 +459,9 @@ export function resolveRuntimeSource(
   config: SourceConfig,
   provider: SourceProvider,
 ): RuntimeSource {
+  if (Object.hasOwn(config, "cache")) {
+    throw new Error(`${sourceId}.cache is not supported`)
+  }
   validateSourceTemplates(sourceId, config)
 
   const source = resolveSource(sourceId, config)

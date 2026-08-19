@@ -29,13 +29,9 @@ export interface CancelBackgroundSourceInput {
   requestId: string
 }
 
-export interface LoadBackgroundSourceOutput extends SourceLoaderResult {
-  updatedAt: number
-}
-
 export interface BackgroundSourceService {
   cancel: (input: CancelBackgroundSourceInput) => Promise<void>
-  load: (input: LoadBackgroundSourceInput) => Promise<LoadBackgroundSourceOutput>
+  load: (input: LoadBackgroundSourceInput) => Promise<SourceLoaderResult>
 }
 
 export function createBackgroundSourceService(
@@ -47,7 +43,7 @@ export function createBackgroundSourceService(
     async cancel({ requestId }): Promise<void> {
       activeRequests.get(requestId)?.abort()
     },
-    async load(input): Promise<LoadBackgroundSourceOutput> {
+    async load(input): Promise<SourceLoaderResult> {
       const abortController = new AbortController()
       const { signal } = abortController
       if (input.requestId) {
@@ -58,7 +54,7 @@ export function createBackgroundSourceService(
         const request = await prepareSourceRequest(input.sourceId, input.params ?? {})
         await options.onRequestPrepared?.(
           request.params,
-          request.source.cache.version,
+          request.source.version,
           request.source,
         )
         signal.throwIfAborted()
@@ -80,10 +76,7 @@ export function createBackgroundSourceService(
           },
         })
 
-        return {
-          ...result,
-          updatedAt: Date.now(),
-        }
+        return result
       } finally {
         if (input.requestId && activeRequests.get(input.requestId) === abortController) {
           activeRequests.delete(input.requestId)
