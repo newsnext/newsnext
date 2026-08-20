@@ -213,13 +213,19 @@ LiveCards define the primary NewsNext surface treatment.
 The reference implementation is `LiveCardSurface` in
 `apps/extension/src/components/live-card/card-surface.tsx`.
 
-### Next Layer placeholder
+### Next Layer grid preview
 
-Next Layer does not currently render a browser-cache-backed timeline. Keep its
-entry available only for configurable boards and show a concise placeholder
-that explains results must be created through the NewsNext CLI. Future Widgets
-must render CLI/daemon-backed persisted output instead of observing Now Layer
-queries.
+Next Layer uses a responsive GridStack surface to preview movable and resizable
+Widgets while its durable CLI/daemon-backed model is being built. Keep demo
+content visibly identified as a layout preview, reset it on reload, and never
+read Now Layer queries to populate it. Production Widgets must eventually render
+CLI/daemon-backed persisted output rather than browser-cache-backed results.
+
+Treat GridStack as a presentation adapter rather than the durable layout model.
+Keep the trusted Widget shell and status treatment outside future generated
+content. Use the LiveCard translucent shell language and let the whole demo
+surface act as the drag target. Resize from the lower and right edges without
+adding dedicated visible drag or resize controls.
 
 Reveal Next Layer with one brief, slightly delayed opacity fade so it follows
 the LiveCard scatter without competing with it. Do not scale or blur the full

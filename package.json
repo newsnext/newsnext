@@ -31,6 +31,7 @@
       "date-fns": "^4.4.0",
       "defu": "^6.1.7",
       "es-toolkit": "^1.50.0",
+      "gridstack": "^13.2.0",
       "jotai": "^2.20.2",
       "ky": "^2.0.2",
       "lucide-react": "^1.28.0",

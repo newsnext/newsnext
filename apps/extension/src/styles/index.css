@@ -6,3 +6,12 @@
 @source "../components";
 @source "../entrypoints";
 @source "../pages";
+
+.next-layer-grid .grid-stack-placeholder > .placeholder-content {
+  border-radius: 1.5rem;
+  background: color-mix(in oklab, var(--color-theme-400) 18%, transparent);
+}
+
+.next-layer-grid .grid-stack-item > .ui-resizable-handle {
+  background-image: none;
+}
