@@ -71,7 +71,7 @@ export function ConfirmDestructiveButton({
       className={cn(
         "transition-[opacity,color,background-color,border-color] duration-300 ease-out motion-reduce:transition-none",
         className,
-        isArmed && "border-destructive/40 bg-destructive/10 text-destructive hover:border-destructive/50 hover:bg-destructive/20 hover:text-destructive focus-visible:border-destructive/50 focus-visible:ring-destructive/20 dark:border-destructive/50 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
+        isArmed && "border-destructive/40 bg-destructive/10 text-destructive enabled:hover:border-destructive/50 enabled:hover:bg-destructive/20 enabled:hover:text-destructive focus-visible:border-destructive/50 focus-visible:ring-destructive/20 dark:border-destructive/50 dark:bg-destructive/20 dark:enabled:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
       )}
       data-confirmation={isArmed ? "armed" : "idle"}
       disabled={props.disabled || pending}

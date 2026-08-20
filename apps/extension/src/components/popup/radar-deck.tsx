@@ -25,7 +25,7 @@ const RADAR_DECK_SPRING = { type: "spring", stiffness: 300, damping: 30 } as con
 const RADAR_CARD_ROTATE_OUTPUT = [-7, 0, 7]
 const RADAR_CARD_Y_OUTPUT = [20, 0, 20]
 const RADAR_CELEBRATION_DURATION = 900
-const RADAR_DECK_NAV_BUTTON_CLASS_NAME = "border-0 text-xl opacity-50 hover:opacity-85 active:not-aria-[haspopup]:translate-y-0"
+const RADAR_DECK_NAV_BUTTON_CLASS_NAME = "border-0 text-xl opacity-50 enabled:hover:opacity-85 enabled:active:not-aria-[haspopup]:translate-y-0"
 const RADAR_REDUCED_MOTION_CELEBRATION_DURATION = 180
 const RADAR_CONFETTI_COLORS: Record<LiveCardViewModel["provider"]["color"], string> = {
   red: "#f87171",
@@ -425,7 +425,7 @@ function RadarDeckContent({ initialBoardId, sourceDescriptors, suggestions }: Ra
             disabled={isCreated || isCreating || targetBoardIds.length === 0}
             aria-label="Create LiveCard"
             title="Create LiveCard"
-            className="flex h-8 items-center gap-1 rounded-3xl bg-(--radar-action-card-bg) px-3 py-0.5 text-xs font-semibold transition-colors hover:bg-(--radar-action-card-bg-hover) hover:text-foreground"
+            className="flex h-8 items-center gap-1 rounded-3xl bg-(--radar-action-card-bg) px-3 py-0.5 text-xs font-semibold transition-colors enabled:hover:bg-(--radar-action-card-bg-hover) enabled:hover:text-foreground"
           >
             <PhPlusCircle className="text-sm text-(--radar-action-chip-text)" />
             Create LiveCard

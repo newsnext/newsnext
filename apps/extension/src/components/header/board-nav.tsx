@@ -242,7 +242,7 @@ export function BoardNav({ onNotify }: BoardNavProps) {
                 variant="ghost"
                 size="icon-sm"
                 disabled={isImporting}
-                className="shrink-0 text-muted-foreground hover:bg-foreground/5 hover:text-foreground focus-visible:ring-2 focus-visible:ring-theme-400"
+                className="shrink-0 text-muted-foreground enabled:hover:bg-foreground/5 focus-visible:ring-2 focus-visible:ring-theme-400"
               />
             )}
             aria-label="Create board"

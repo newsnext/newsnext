@@ -590,6 +590,8 @@ treatments are compositions: LiveCard header icons use `LiveCardHeaderActionButt
 and top-level translucent controls apply `island-pill` to a transparent Button.
 Do not add `quiet`, `island`, or other business-context names back to the shared
 variant API.
+Disabled Buttons retain the unmuted colors of their variant, show a not-allowed
+cursor, and suppress hover and active feedback instead of reducing opacity.
 
 ## Segmented Controls
 

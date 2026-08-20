@@ -19,7 +19,11 @@
 }
 
 @utility island-pill {
-  @apply h-10 rounded-full bg-background/60 shadow-sm shadow-theme-400/5 backdrop-blur-xl transition-all pointer-events-auto hover:shadow-theme-400/30 dark:bg-black/10;
+  @apply h-10 rounded-full bg-background/60 shadow-sm shadow-theme-400/5 backdrop-blur-xl transition-all pointer-events-auto dark:bg-black/10;
+
+  &:not(:disabled):hover {
+    @apply shadow-theme-400/30;
+  }
 }
 
 .dynamic-island-shell {
