@@ -207,6 +207,14 @@ LiveCards define the primary NewsNext surface treatment.
   on drop, and restore the normal title state when the drag ends. Dropping anywhere
   else must preserve the existing Board reordering behavior.
 
+Treat each expanded Title Island state as a composable feature. A feature owns its
+content, expanded dimensions, surface treatment, dismissal behavior, interaction
+blocking policy, and priority; the shared shell owns only collapsed title progress,
+shape transitions, and active-feature resolution. Resolve direct-manipulation
+interactions above notifications, and notifications above user-opened panels.
+Add new states through the `TitleIslandFeature` contract instead of adding another
+business-specific branch to the shell.
+
 The reference implementation is `LiveCardSurface` in
 `apps/extension/src/components/live-card/card-surface.tsx`.
 
