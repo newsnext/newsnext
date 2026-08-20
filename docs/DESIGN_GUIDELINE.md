@@ -406,8 +406,9 @@ or destructive background color to the idle action. Destructive color is
 reserved exclusively for the armed second-confirmation state. NewsNext uses red
 as its default theme, so showing destructive red at rest would compete with
 ordinary theme-accented actions and make danger indistinguishable from product
-emphasis. Keep the initial action neutral, then switch to the destructive
-treatment and a concise confirmation label after the first activation. Change
+emphasis. Keep the initial action neutral, then switch to a destructive-colored
+outline with a restrained destructive background and a concise confirmation
+label after the first activation. Change
 its icon to a confirmation icon so the state is not conveyed by text or color
 alone. The second activation performs the operation, while moving focus away
 cancels it.
@@ -487,8 +488,8 @@ Use 32px buttons for ordinary settings
 actions, keep adjacent actions the same height and text size, and use `ghost`
 rather than the icon-oriented LiveCard action composition for text-only tertiary actions.
 Keep removal actions inside the same button group and neutral until the user
-arms their second confirmation; only that armed state uses the `destructive`
-treatment. Do not present removal actions as detached text. Theme-colored
+arms their second confirmation; only that armed state uses the destructive
+outline treatment. Do not present removal actions as detached text. Theme-colored
 buttons use white text in both light and dark modes.
 Group closely related controls in columns when the available width permits it,
 while keeping labels, values, and necessary recovery guidance adjacent to their
