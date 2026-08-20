@@ -11,7 +11,6 @@ import { ArrowRight, Bell, MoreHorizontal, Plus, Trash2 } from "lucide-react"
 import {
   PhArrowCircleLeftDuotone,
   PhArrowCounterClockwiseDuotone,
-  PhDotsSixVerticalDuotone,
   PhInfo,
   PhInfoDuotone,
   PhTrashDuotone,
@@ -268,7 +267,6 @@ export function ButtonsFixture(): React.JSX.Element {
                 <LiveCardHeaderActionButton aria-label="View details"><PhInfoDuotone /></LiveCardHeaderActionButton>
                 <LiveCardHeaderActionButton aria-label="Delete LiveCard"><PhTrashDuotone /></LiveCardHeaderActionButton>
                 <LiveCardHeaderActionButton aria-label="Flip LiveCard"><PhArrowCircleLeftDuotone /></LiveCardHeaderActionButton>
-                <LiveCardHeaderActionButton className="cursor-grab" aria-label="Move LiveCard"><PhDotsSixVerticalDuotone /></LiveCardHeaderActionButton>
               </div>
             </div>
           </FixtureState>

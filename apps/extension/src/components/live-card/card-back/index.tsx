@@ -1,4 +1,4 @@
-import type { ReactNode } from "react"
+import type { LiveCardDragHandleRef } from "../card-header"
 import type { SourceParamValidationState } from "./edit-form"
 import type { SourceInstanceMetadata } from "@/lib/source"
 import type { LiveCardViewModel } from "@/typings/source"
@@ -28,7 +28,7 @@ export interface LiveCardBackProps {
   onSaveSourceMeta: (meta: SourceInstanceMetadata) => Promise<void> | void
   onFlip: () => void
   isDraft?: boolean
-  dragHandle?: ReactNode
+  dragHandleRef?: LiveCardDragHandleRef
 }
 
 export function LiveCardBack({
@@ -46,7 +46,7 @@ export function LiveCardBack({
   onSaveSourceMeta,
   onFlip,
   isDraft = false,
-  dragHandle,
+  dragHandleRef,
 }: LiveCardBackProps) {
   const { provider } = source
   const { badge, desc, home, title } = source.metadata
@@ -73,6 +73,7 @@ export function LiveCardBack({
           provider={provider}
           title={previewTitle}
           subtitle={previewDesc || <RelativeTime date={updatedAt} />}
+          dragHandleRef={dragHandleRef}
           actions={(
             <>
               {!isDraft && <DeleteLiveCardButton id={id} />}
@@ -84,7 +85,6 @@ export function LiveCardBack({
               >
                 <PhArrowCircleLeftDuotone />
               </LiveCardHeaderActionButton>
-              {dragHandle}
             </>
           )}
         />

@@ -8,7 +8,6 @@ import PhCheck from "~icons/ph/check-bold"
 import PhCheckCircle from "~icons/ph/check-circle-bold"
 import PhCircleDashed from "~icons/ph/circle-dashed-bold"
 import PhCircleDashedDuotone from "~icons/ph/circle-dashed-duotone"
-import PhDotsSixVerticalDuotone from "~icons/ph/dots-six-vertical-duotone"
 import PhEye from "~icons/ph/eye-bold"
 import PhFileArrowUp from "~icons/ph/file-arrow-up-bold"
 import PhGear from "~icons/ph/gear-bold"
@@ -39,7 +38,6 @@ export {
   PhCheckCircle,
   PhCircleDashed,
   PhCircleDashedDuotone,
-  PhDotsSixVerticalDuotone,
   PhEye,
   PhFileArrowUp,
   PhGear,

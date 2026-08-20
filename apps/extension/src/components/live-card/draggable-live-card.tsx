@@ -7,14 +7,18 @@ import { memo, useMemo } from "react"
 import { useSortable } from "@/hooks/use-sortable"
 import { createLiveCard } from "@/lib/source"
 import { liveCardHeightAtom } from "@/store/settings"
-import { PhDotsSixVerticalDuotone } from "../icons/ph"
-import { LiveCardHeaderActionButton } from "./card-header"
 import { LiveCard } from "./index"
 
 const LIVE_CARD_SIZE_CLASS_NAMES: Record<LiveCardHeight, string> = {
   compact: "h-120 w-100",
   balanced: "h-125 w-100",
   tall: "h-144 w-100",
+}
+
+const LIVE_CARD_DRAG_EXCLUDED_SELECTOR = "[data-live-card-drag-excluded]"
+
+function canDragFromLiveCardHeader(target: Element | null): boolean {
+  return !target?.closest(LIVE_CARD_DRAG_EXCLUDED_SELECTOR)
 }
 
 interface DraggableLiveCardProps {
@@ -86,30 +90,18 @@ function DraggableLiveCardComponent({ collectionId, descriptor, dragging, instan
   )
   const id = instance.instanceId
   const { setNodeRef, setHandleRef } = useSortable({
+    canDrag: canDragFromLiveCardHeader,
     enabled: sortable,
     id,
     onGenerateDragPreview: generateDragPreview,
   })
-
-  const dragHandle = sortable
-    ? (
-        <div ref={setHandleRef} className="flex items-center justify-center">
-          <LiveCardHeaderActionButton
-            aria-label={`Move ${source.metadata.title}`}
-            className="cursor-grab"
-          >
-            <PhDotsSixVerticalDuotone />
-          </LiveCardHeaderActionButton>
-        </div>
-      )
-    : undefined
 
   return (
     <LiveCard
       id={id}
       source={source}
       nodeRef={setNodeRef}
-      dragHandle={dragHandle}
+      dragHandleRef={sortable ? setHandleRef : undefined}
       sizeClassName={LIVE_CARD_SIZE_CLASS_NAMES[liveCardHeight]}
       className={dragging ? "opacity-50" : undefined}
     />

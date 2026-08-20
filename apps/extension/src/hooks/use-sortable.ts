@@ -14,6 +14,7 @@ export const SortableContext = createContext<SortableContextValue>({
 })
 
 interface SortableProps {
+  canDrag?: (target: Element | null) => boolean
   enabled?: boolean
   id: string
   onGenerateDragPreview?: (args: {
@@ -23,7 +24,7 @@ interface SortableProps {
   }) => void | (() => void)
 }
 
-export function useSortable({ enabled = true, id, onGenerateDragPreview }: SortableProps) {
+export function useSortable({ canDrag, enabled = true, id, onGenerateDragPreview }: SortableProps) {
   const { instanceId, selectedInstanceIds } = use(SortableContext)
   const selectedInstanceIdsRef = useRef(selectedInstanceIds)
   const [handleRef, setHandleRef] = useState<HTMLElement | null>(null)
@@ -43,6 +44,9 @@ export function useSortable({ enabled = true, id, onGenerateDragPreview }: Sorta
       return draggable({
         element: nodeRef,
         dragHandle: handleRef,
+        canDrag: canDrag
+          ? ({ input }) => canDrag(document.elementFromPoint(input.clientX, input.clientY))
+          : undefined,
         getInitialData: () => getSortableData({ id, ids: getDraggedIds(), instanceId }),
         onGenerateDragPreview({ nativeSetDragImage, location }) {
           const draggedIds = getDraggedIds()
@@ -87,7 +91,7 @@ export function useSortable({ enabled = true, id, onGenerateDragPreview }: Sorta
         },
       })
     }
-  }, [enabled, getDraggedIds, handleRef, id, instanceId, nodeRef, onGenerateDragPreview])
+  }, [canDrag, enabled, getDraggedIds, handleRef, id, instanceId, nodeRef, onGenerateDragPreview])
 
   return {
     setHandleRef,

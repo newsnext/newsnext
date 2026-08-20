@@ -1,4 +1,4 @@
-import type { ReactNode } from "react"
+import type { LiveCardDragHandleRef } from "./card-header"
 import type { SourceInstanceMetadata, SourceInstancePatch } from "@/lib/source"
 import type { LiveCardViewModel } from "@/typings/source"
 import { FlipAnimate } from "@newsnext/ui/components/flip-animate"
@@ -24,12 +24,12 @@ export interface LiveCardProps {
   className?: string
   sizeClassName?: string
   nodeRef?: (node: HTMLElement | null) => void
-  dragHandle?: ReactNode
+  dragHandleRef?: LiveCardDragHandleRef
   isDraft?: boolean
   onDraftSourceChange?: (patch: SourceInstancePatch) => void
 }
 
-function LiveCardContent({ id, source, dragHandle, isDraft = false, onDraftSourceChange }: LiveCardProps) {
+function LiveCardContent({ id, source, dragHandleRef, isDraft = false, onDraftSourceChange }: LiveCardProps) {
   const setSourceInstancePatch = useSetAtom(setSourceInstancePatchAtom)
   const resetLocalParams = useSetAtom(resetInstanceParamsAtom)
   const [isFlipped, setIsFlipped] = useState(false)
@@ -120,7 +120,7 @@ function LiveCardContent({ id, source, dragHandle, isDraft = false, onDraftSourc
         onRefresh={fetchLatest}
         onRequestPermission={requestPermission}
         onFlip={handleFlip}
-        dragHandle={isFlipped ? undefined : dragHandle}
+        dragHandleRef={isFlipped ? undefined : dragHandleRef}
       />
       <LiveCardBack
         id={id}
@@ -137,7 +137,7 @@ function LiveCardContent({ id, source, dragHandle, isDraft = false, onDraftSourc
         onSaveSourceMeta={handleSaveSourceMeta}
         onFlip={handleFlip}
         isDraft={isDraft}
-        dragHandle={isFlipped ? dragHandle : undefined}
+        dragHandleRef={isFlipped ? dragHandleRef : undefined}
       />
     </FlipAnimate>
   )

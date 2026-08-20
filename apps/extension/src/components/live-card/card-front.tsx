@@ -1,5 +1,6 @@
 import type { SourceItemTemplate } from "@newsnext/source-kit/types"
 import type { ReactNode } from "react"
+import type { LiveCardDragHandleRef } from "./card-header"
 import type { SourcePermissionRequest } from "@/lib/source"
 import type { LiveCardViewModel, NewsItem } from "@/typings/source"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
@@ -41,7 +42,7 @@ interface LiveCardFrontProps {
   onRequestPermission: () => Promise<boolean>
   onFlip?: () => void
   actions?: ReactNode
-  dragHandle?: ReactNode
+  dragHandleRef?: LiveCardDragHandleRef
 }
 
 function LiveCardRefreshButton({
@@ -156,7 +157,7 @@ export function LiveCardFront({
   onRequestPermission,
   onFlip,
   actions,
-  dragHandle,
+  dragHandleRef,
 }: LiveCardFrontProps) {
   const { provider } = source
   const { badge, desc, home, title } = source.metadata
@@ -194,6 +195,7 @@ export function LiveCardFront({
           provider={provider}
           title={title}
           subtitle={isFetching ? "Updating..." : <RelativeTime date={updatedAt} />}
+          dragHandleRef={dragHandleRef}
           actions={actions ?? (
             <>
               <LiveCardRefreshButton isFetching={isFetching} onRefresh={onRefresh} />
@@ -205,7 +207,6 @@ export function LiveCardFront({
                   <PhInfoDuotone />
                 </LiveCardHeaderActionButton>
               )}
-              {dragHandle}
             </>
           )}
         />

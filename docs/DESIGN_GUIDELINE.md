@@ -308,9 +308,10 @@ it so Now and Next can use separate scroll restoration keys.
 
 ### LiveCard reordering
 
-- Every Board supports the same ordering modes and manual drag handles.
-- Keep the drag handle visible and give it an accessible name that identifies
-  the LiveCard being moved.
+- Every Board supports the same ordering modes and manual dragging from the
+  full LiveCard header. Do not render a separate drag button. Keep nested header
+  controls clickable, and give the draggable header an accessible name that
+  identifies the LiveCard being moved.
 - Start marquee selection only from empty space between LiveCards so card
   controls and content scrolling keep their normal pointer behavior. Extend a
   transparent marquee hit area across the full viewport so visually empty

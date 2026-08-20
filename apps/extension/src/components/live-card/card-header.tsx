@@ -4,6 +4,8 @@ import { Button } from "@newsnext/ui/components/button"
 import { cn } from "@/lib/utils"
 import { SourceIcon } from "./source-icon"
 
+export type LiveCardDragHandleRef = (node: HTMLDivElement | null) => void
+
 interface LiveCardHeaderProps {
   badge?: string
   desc?: string
@@ -14,6 +16,7 @@ interface LiveCardHeaderProps {
   subtitle: ReactNode
   actions: ReactNode
   className?: string
+  dragHandleRef?: LiveCardDragHandleRef
 }
 
 type LiveCardHeaderActionButtonProps = Omit<ComponentProps<typeof Button>, "size" | "variant">
@@ -39,17 +42,30 @@ export function LiveCardHeader({
   subtitle,
   actions,
   className,
+  dragHandleRef,
 }: LiveCardHeaderProps) {
   const displayTitle = title || provider.title
+  const isDraggable = dragHandleRef !== undefined
 
   return (
-    <div data-live-card-header className={cn("flex justify-between mb-3 items-center mx-1 gap-2", className)}>
+    <div
+      ref={dragHandleRef}
+      data-live-card-header
+      aria-label={isDraggable ? `Drag to move ${displayTitle}` : undefined}
+      role={isDraggable ? "group" : undefined}
+      className={cn(
+        "flex justify-between mb-3 items-center mx-1 gap-2",
+        isDraggable && "cursor-grab active:cursor-grabbing",
+        className,
+      )}
+    >
       <div className="flex gap-2.5 items-center ml-1 min-w-0 flex-1">
         <Button
+          data-live-card-drag-excluded
           type="button"
           variant="transparent"
           size="icon-sm"
-          className="shrink-0 rounded-full transition-transform hover:scale-105"
+          className="shrink-0 cursor-auto rounded-full transition-transform hover:scale-105"
           title={desc || provider.title}
           onClick={() => window.open(home || "#", "_blank")}
         >
@@ -72,7 +88,11 @@ export function LiveCardHeader({
           </span>
         </div>
       </div>
-      <div className="flex shrink-0 items-center gap-1 text-theme-400" onClick={e => e.stopPropagation()}>
+      <div
+        data-live-card-drag-excluded
+        className="flex shrink-0 cursor-auto items-center gap-1 text-theme-400"
+        onClick={e => e.stopPropagation()}
+      >
         {actions}
       </div>
     </div>
