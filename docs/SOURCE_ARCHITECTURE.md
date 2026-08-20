@@ -684,6 +684,20 @@ never exposed to Liquid. Radar does not scan pages for RSS, Atom, or JSON Feed
 links; users can still add those URLs through the built-in `rss:feed` source.
 Radar renders in the extension action popup.
 
+Badge updates use a URL-only match to advertise possible suggestions; they do
+not claim that page extraction has completed. The action popup performs the
+authorized page extraction and receives each resolved suggestion together with
+its exact serializable Source descriptor in one response. It never follows a
+completed scan with a separate complete-registry request before rendering the
+LiveCard.
+
+Successful full-scan responses are cached in background memory for 15 seconds
+by tab ID, URL, and title. This reuses both concurrent requests and a result
+when the short-lived action popup is immediately reopened. A changed URL or
+title bypasses the entry, failures remove it, and expiration deliberately
+allows same-URL page state to be extracted again. The cache never persists
+page-derived values or extends beyond the Manifest V3 service worker lifetime.
+
 Radar discovery is complete only when the suggestion captures the active page's
 full Source configuration. Its intended interaction is review followed by one
 `Create` action, without making the user re-enter filters, sorting, identity, or

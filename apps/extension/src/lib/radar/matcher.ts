@@ -44,6 +44,10 @@ export interface RadarSuggestion {
   patch: SourceInstancePatch
 }
 
+export interface ResolvedRadarSuggestion extends RadarSuggestion {
+  source: SourceDescriptor
+}
+
 export type RadarSourceMetadata = Pick<
   SourceDescriptor,
   "id" | "baseUrl" | "vars" | "params" | "radar"

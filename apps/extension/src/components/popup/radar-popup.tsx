@@ -5,7 +5,6 @@ import { ScrollProgressProvider } from "@/components/common/scroll-progress-prov
 import { PhGear, PhHouse } from "@/components/icons/ph"
 import { RadarDeck } from "@/components/popup/radar-deck"
 import { useCurrentTabRadarSuggestions } from "@/hooks/use-current-tab-radar-suggestions"
-import { useSourceDescriptors } from "@/hooks/use-source-descriptors"
 import { openAppTab } from "@/lib/app-tab"
 import { openSettings } from "@/lib/settings"
 import { cn } from "@/lib/utils"
@@ -62,7 +61,6 @@ export function RadarPopup() {
     scrollContainerRef.current = container
     setScrollContainer(container)
   }, [])
-  const { sources } = useSourceDescriptors()
   const suggestions = useCurrentTabRadarSuggestions()
   const suggestionCount = suggestions?.length ?? 0
 
@@ -79,7 +77,7 @@ export function RadarPopup() {
         )}
       >
         <RadarOverlayHeader count={suggestionCount} isScanning={suggestions === null} />
-        <RadarDeck sourceDescriptors={sources} suggestions={suggestions ?? []} />
+        <RadarDeck suggestions={suggestions ?? []} />
       </main>
     </ScrollProgressProvider>
   )

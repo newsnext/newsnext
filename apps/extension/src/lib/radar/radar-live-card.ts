@@ -1,24 +1,19 @@
-import type { RadarSuggestion } from "./matcher"
+import type { ResolvedRadarSuggestion } from "./matcher"
 import type { SourceInstancePatch } from "@/lib/source"
-import type { LiveCardViewModel, SourceDescriptor } from "@/typings/source"
+import type { LiveCardViewModel } from "@/typings/source"
 import { mergeSourceInstancePatch } from "@/lib/source"
 
 export function createRadarLiveCard(
-  suggestion: RadarSuggestion,
-  descriptors: SourceDescriptor[],
+  suggestion: ResolvedRadarSuggestion,
   draftPatch?: SourceInstancePatch,
-): LiveCardViewModel | null {
-  const descriptor = descriptors.find(source => source.id === suggestion.sourceId)
-  if (!descriptor) {
-    return null
-  }
-
+): LiveCardViewModel {
+  const { source } = suggestion
   const patch = mergeSourceInstancePatch(suggestion.patch, draftPatch ?? {})
 
   return {
-    ...descriptor,
+    ...source,
     metadata: {
-      ...descriptor.metadata,
+      ...source.metadata,
       ...patch.metadata,
     },
     id: `tmp:radar:${suggestion.id}`,

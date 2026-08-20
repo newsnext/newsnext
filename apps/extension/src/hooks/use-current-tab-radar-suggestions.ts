@@ -1,10 +1,10 @@
-import type { RadarSuggestion } from "@/lib/radar"
+import type { ResolvedRadarSuggestion } from "@/lib/radar"
 import { useEffect, useState } from "react"
 import { browser } from "#imports"
 import { createBackgroundClient } from "@/lib/background"
 
-export function useCurrentTabRadarSuggestions(): RadarSuggestion[] | null {
-  const [suggestions, setSuggestions] = useState<RadarSuggestion[] | null>(null)
+export function useCurrentTabRadarSuggestions(): ResolvedRadarSuggestion[] | null {
+  const [suggestions, setSuggestions] = useState<ResolvedRadarSuggestion[] | null>(null)
 
   useEffect(() => {
     let isCancelled = false

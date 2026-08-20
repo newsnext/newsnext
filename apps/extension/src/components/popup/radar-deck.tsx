@@ -1,8 +1,8 @@
 import type { MotionValue, PanInfo } from "motion/react"
 import type { CSSProperties, PointerEvent } from "react"
-import type { RadarSuggestion } from "@/lib/radar"
+import type { ResolvedRadarSuggestion } from "@/lib/radar"
 import type { SourceInstancePatch } from "@/lib/source"
-import type { LiveCardViewModel, SourceDescriptor } from "@/typings/source"
+import type { LiveCardViewModel } from "@/typings/source"
 import { Button } from "@newsnext/ui/components/button"
 import confetti from "canvas-confetti"
 import { useAtomValue, useSetAtom } from "jotai"
@@ -159,15 +159,14 @@ function RadarTrackCard({
 }
 
 interface RadarDeckProps {
-  sourceDescriptors: SourceDescriptor[]
-  suggestions: RadarSuggestion[]
+  suggestions: ResolvedRadarSuggestion[]
 }
 
 interface RadarDeckContentProps extends RadarDeckProps {
   initialBoardId?: string
 }
 
-export function RadarDeck({ sourceDescriptors, suggestions }: RadarDeckProps) {
+export function RadarDeck({ suggestions }: RadarDeckProps) {
   const boards = useAtomValue(boardsAtom)
   const currentBoardId = useAtomValue(currentBoardIdAtom)
   const initialBoardId = boards.find(board => board.id === currentBoardId)?.id
@@ -177,13 +176,12 @@ export function RadarDeck({ sourceDescriptors, suggestions }: RadarDeckProps) {
     <RadarDeckContent
       key={deckKey}
       initialBoardId={initialBoardId}
-      sourceDescriptors={sourceDescriptors}
       suggestions={suggestions}
     />
   )
 }
 
-function RadarDeckContent({ initialBoardId, sourceDescriptors, suggestions }: RadarDeckContentProps) {
+function RadarDeckContent({ initialBoardId, suggestions }: RadarDeckContentProps) {
   const addInstance = useSetAtom(addInstanceAtom)
   const [targetBoardIds, setTargetBoardIds] = useState<string[]>(
     initialBoardId ? [initialBoardId] : [],
@@ -252,9 +250,9 @@ function RadarDeckContent({ initialBoardId, sourceDescriptors, suggestions }: Ra
   const radarLiveCards = useMemo(() => {
     return suggestions.map(suggestion => ({
       suggestion,
-      liveCard: createRadarLiveCard(suggestion, sourceDescriptors, draftPatches[suggestion.id]),
+      liveCard: createRadarLiveCard(suggestion, draftPatches[suggestion.id]),
     }))
-  }, [draftPatches, sourceDescriptors, suggestions])
+  }, [draftPatches, suggestions])
   const activeSuggestion = suggestions[activeIndex]
   const activeLiveCard = radarLiveCards[activeIndex]?.liveCard ?? null
   const canGoPrevious = activeIndex > 0
