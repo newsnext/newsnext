@@ -1,5 +1,5 @@
 import type { SquircleFallback, SquircleRendering, SquircleStyle } from "@newsnext/ui/hooks/use-squircle"
-import type { CSSProperties, ReactNode } from "react"
+import type { CSSProperties, ReactNode, Ref } from "react"
 import { useClickAway } from "@newsnext/ui/hooks/use-click-away"
 import { useSquircle } from "@newsnext/ui/hooks/use-squircle"
 import { cn } from "@newsnext/ui/lib/utils"
@@ -28,6 +28,7 @@ export interface DynamicIslandProps {
   cornerRendering?: SquircleRendering
 
   wrapperClassName?: string
+  surfaceRef?: Ref<HTMLDivElement>
   initialAnimation?: boolean
 
   onChange?: (isSmall: boolean) => void
@@ -53,6 +54,7 @@ function DynamicIsland({
   cornerRendering,
 
   wrapperClassName,
+  surfaceRef,
   initialAnimation = false,
 
   onChange,
@@ -175,6 +177,7 @@ function DynamicIsland({
         >
           {outerDecoration?.(isSmall)}
           <div
+            ref={surfaceRef}
             data-state={isSmall ? "small" : "large"}
             style={activeSquircleStyle}
             className={cn(

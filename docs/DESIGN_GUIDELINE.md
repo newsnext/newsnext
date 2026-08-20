@@ -201,6 +201,11 @@ LiveCards define the primary NewsNext surface treatment.
   Theme mode belongs in Appearance settings rather than the title island.
   Changing the active Board color here updates the same persisted Board
   preference used by its editor.
+- While one or more LiveCards are being dragged, temporarily replace the header
+  Dynamic Island with an enlarged red trash target. Strengthen its tint and icon
+  motion when the pointer enters the island, delete the complete dragged selection
+  on drop, and restore the normal title state when the drag ends. Dropping anywhere
+  else must preserve the existing Board reordering behavior.
 
 The reference implementation is `LiveCardSurface` in
 `apps/extension/src/components/live-card/card-surface.tsx`.

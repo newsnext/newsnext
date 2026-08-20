@@ -1,5 +1,8 @@
+import type { ElementEventBasePayload } from "@atlaskit/pragmatic-drag-and-drop/element/adapter"
 import type { HeaderNotification } from "./notification"
 import type { HeaderProgressState } from "./use-header-progress"
+import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine"
+import { dropTargetForElements, monitorForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter"
 import { DynamicIsland } from "@newsnext/ui/components/dynamic-island"
 import { Logo } from "@newsnext/ui/components/logo"
 import { ThemeSelector } from "@newsnext/ui/components/theme-selector"
@@ -9,13 +12,13 @@ import {
   WordmarkLogo,
 } from "@newsnext/ui/components/wordmark-logo"
 import { useAtomValue, useSetAtom } from "jotai"
-import { AnimatePresence, m } from "motion/react"
-import { useEffect, useState } from "react"
-import { getBoardColor } from "@/lib/board"
+import { AnimatePresence, m, useReducedMotion } from "motion/react"
+import { useEffect, useEffectEvent, useRef, useState } from "react"
+import { getBoardColor, isSortableData } from "@/lib/board"
 import { handleThemeSwitch } from "@/lib/utils/swith-theme"
-import { boardsAtom, updateBoardAtom } from "@/store/board"
+import { boardsAtom, deleteInstanceAtom, updateBoardAtom } from "@/store/board"
 import { currentBoardIdAtom } from "@/store/settings"
-import { PhArrowFatUp } from "../icons/ph"
+import { PhArrowFatUp, PhTrash } from "../icons/ph"
 import { IslandNotification } from "./island-notification"
 import {
   HEADER_NOTIFICATION_DURATION,
@@ -159,6 +162,29 @@ function CurrentBoardThemeControls() {
   )
 }
 
+function TrashDropTarget({ active }: { active: boolean }) {
+  const shouldReduceMotion = useReducedMotion()
+
+  return (
+    <div
+      className="flex size-full items-center justify-center gap-2.5 text-red-600 dark:text-red-400"
+      aria-label={active ? "Release to delete LiveCard" : "Delete LiveCard"}
+    >
+      <m.div
+        animate={active && !shouldReduceMotion
+          ? { rotate: [-5, 5, 0], scale: 1.12 }
+          : { rotate: 0, scale: 1 }}
+        transition={{ duration: 0.2, ease: "easeOut" }}
+      >
+        <PhTrash className="size-7" />
+      </m.div>
+      <span className="text-sm font-semibold">
+        {active ? "Release to delete" : "Drop to delete"}
+      </span>
+    </div>
+  )
+}
+
 export function TitleIsland({
   notification,
   onDismissNotification,
@@ -166,6 +192,48 @@ export function TitleIsland({
 }: TitleIslandProps) {
   const headerProgress = useHeaderProgress()
   const [themeExpanded, setThemeExpanded] = useState(false)
+  const [isDraggingLiveCard, setIsDraggingLiveCard] = useState(false)
+  const [isOverTrash, setIsOverTrash] = useState(false)
+  const islandSurfaceRef = useRef<HTMLDivElement>(null)
+  const deleteInstance = useSetAtom(deleteInstanceAtom)
+
+  const deleteDraggedLiveCards = useEffectEvent(async ({ source }: ElementEventBasePayload) => {
+    if (!isSortableData(source.data)) return
+
+    try {
+      for (const instanceId of source.data.ids) {
+        await deleteInstance(instanceId)
+      }
+    } catch (error) {
+      console.error("Failed to delete dropped LiveCards", error)
+    }
+  })
+
+  useEffect(() => {
+    const islandSurface = islandSurfaceRef.current
+    if (!islandSurface) return
+
+    return combine(
+      monitorForElements({
+        canMonitor: ({ source }) => isSortableData(source.data),
+        onDragStart: () => setIsDraggingLiveCard(true),
+        onDrop: () => {
+          setIsDraggingLiveCard(false)
+          setIsOverTrash(false)
+        },
+      }),
+      dropTargetForElements({
+        element: islandSurface,
+        canDrop: ({ source }) => isSortableData(source.data),
+        onDragEnter: () => setIsOverTrash(true),
+        onDragLeave: () => setIsOverTrash(false),
+        onDrop: (args) => {
+          setIsOverTrash(false)
+          void deleteDraggedLiveCards(args)
+        },
+      }),
+    )
+  }, [])
 
   useEffect(() => {
     if (!notification) return
@@ -174,7 +242,7 @@ export function TitleIsland({
     return () => window.clearTimeout(timeout)
   }, [notification, onDismissNotification])
 
-  const expanded = themeExpanded || notification !== null
+  const expanded = isDraggingLiveCard || themeExpanded || notification !== null
 
   return (
     <>
@@ -184,14 +252,21 @@ export function TitleIsland({
       <DynamicIsland
         top={26}
         expanded={expanded}
-        blockOutsideInteraction={notification === null}
+        blockOutsideInteraction={!isDraggingLiveCard && notification === null}
         wrapperClassName="absolute inset-x-0"
+        surfaceRef={islandSurfaceRef}
+        className={isDraggingLiveCard
+          ? isOverTrash
+            ? "bg-red-500/24! text-red-700! shadow-[inset_0_0_0_2px_color-mix(in_oklab,var(--color-red-500)_60%,transparent)] dark:text-red-300!"
+            : "bg-red-500/14! text-red-700! dark:text-red-300!"
+          : undefined}
         smallClassName="flex items-center gap-2 px-4"
         smallHeight={40}
         smallWidth={width}
-        largeWidth={notification ? HEADER_NOTIFICATION_WIDTH : 270}
-        largeHeight={notification ? HEADER_NOTIFICATION_HEIGHT : 110}
+        largeWidth={isDraggingLiveCard ? 190 : notification ? HEADER_NOTIFICATION_WIDTH : 270}
+        largeHeight={isDraggingLiveCard ? 72 : notification ? HEADER_NOTIFICATION_HEIGHT : 110}
         onChange={(isSmall) => {
+          if (isDraggingLiveCard) return
           if (!isSmall) {
             setThemeExpanded(true)
             return
@@ -205,7 +280,7 @@ export function TitleIsland({
           setThemeExpanded(false)
         }}
         outerDecoration={isSmall => isSmall
-          ? (
+          ? !isDraggingLiveCard && (
               <HeaderProgressGlow
                 opacity={headerProgress.opacity}
                 scrollYProgress={headerProgress.scrollYProgress}
@@ -214,6 +289,10 @@ export function TitleIsland({
           : null}
       >
         {(isSmall) => {
+          if (isDraggingLiveCard) {
+            return <TrashDropTarget active={isOverTrash} />
+          }
+
           if (notification) {
             return <IslandNotification notification={notification} />
           }
