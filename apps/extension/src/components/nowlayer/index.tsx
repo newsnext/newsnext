@@ -1,6 +1,7 @@
 import { useSetAtom } from "jotai"
 import { useCallback } from "react"
 import { useBoardLiveCards } from "@/hooks/use-board-live-cards"
+import { restoreUnavailableInstanceSlots } from "@/lib/board/live-card-reorder"
 import { setManualBoardOrderAtom } from "@/store/board"
 import { LiveCardContainer } from "./live-card-container"
 
@@ -18,10 +19,14 @@ export function NowLayer({
   const currentBoardName = currentBoard.name
 
   const handleInstanceIdsChange = useCallback((newInstanceIds: string[]) => {
-    void setManualBoardOrder({ boardId, instanceIds: newInstanceIds }).catch((error) => {
+    const instanceIds = restoreUnavailableInstanceSlots(
+      currentBoard.sort.manualOrder,
+      newInstanceIds,
+    )
+    void setManualBoardOrder({ boardId, instanceIds }).catch((error) => {
       console.error("Failed to save manual LiveCard order", error)
     })
-  }, [boardId, setManualBoardOrder])
+  }, [boardId, currentBoard.sort.manualOrder, setManualBoardOrder])
 
   if (instanceIds.length === 0) {
     return (

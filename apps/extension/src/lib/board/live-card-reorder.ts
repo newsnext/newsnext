@@ -95,6 +95,20 @@ export function reorderLiveCardGroup(instanceIds: string[], sourceIds: string[],
   return remainingInstanceIds
 }
 
+export function restoreUnavailableInstanceSlots(
+  collectionInstanceIds: string[],
+  visibleInstanceIds: string[],
+): string[] {
+  const visibleInstanceIdSet = new Set(visibleInstanceIds)
+  let visibleIndex = 0
+
+  return collectionInstanceIds.map(instanceId => (
+    visibleInstanceIdSet.has(instanceId)
+      ? visibleInstanceIds[visibleIndex++]!
+      : instanceId
+  ))
+}
+
 export function getLiveCardMarqueeSelection({
   initialIds = [],
   items,

@@ -4,6 +4,7 @@ import {
   getLiveCardMarqueeSelection,
   getLiveCardReorderDestinationIndex,
   reorderLiveCardGroup,
+  restoreUnavailableInstanceSlots,
 } from "./live-card-reorder"
 
 const ITEMS: LiveCardLayoutItem[] = [
@@ -71,6 +72,15 @@ describe("reorderLiveCardGroup", () => {
       ["e", "b"],
       3,
     )).toEqual(["a", "c", "d", "b", "e", "f"])
+  })
+})
+
+describe("restoreUnavailableInstanceSlots", () => {
+  it("keeps unavailable Instances in their Collection slots while reordering visible LiveCards", () => {
+    expect(restoreUnavailableInstanceSlots(
+      ["unavailable-a", "a", "unavailable-b", "b", "c"],
+      ["c", "a", "b"],
+    )).toEqual(["unavailable-a", "c", "unavailable-b", "a", "b"])
   })
 })
 

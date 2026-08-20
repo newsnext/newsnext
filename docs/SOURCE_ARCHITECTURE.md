@@ -350,6 +350,11 @@ through read-only storage subscriptions. Bulk import and reset use the same
 queued background repository replacement rather than setting frontend atoms.
 Composite Collection create/update and manual-order Actions apply their Data
 and View changes to one in-memory envelope and perform one storage write.
+The manual-order Action requires every Collection Instance exactly once. The
+frontend may render only Instances whose Sources still exist in the bundled
+registry, so it expands a reordered visible subset across the existing complete
+membership order before executing the Action. Unavailable Instances retain
+their membership slots and are not silently deleted when visible cards move.
 Action transports return only compact receipts; the updated envelope reaches
 each frontend through its own subscription state rather than a duplicate proxy
 payload.
