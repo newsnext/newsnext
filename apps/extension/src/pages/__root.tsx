@@ -1,6 +1,6 @@
 import type { QueryClient } from "@tanstack/react-query"
 import { createRootRouteWithContext, Outlet } from "@tanstack/react-router"
-import { Suspense, useRef } from "react"
+import { Suspense, useCallback, useRef, useState } from "react"
 import { TanStackDevtools } from "@/components/common/devtools"
 import { ScrollProgressProvider } from "@/components/common/scroll-progress-provider"
 import { Header } from "@/components/header"
@@ -19,13 +19,19 @@ function NotFoundComponent() {
 
 function RootComponent() {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const [scrollContainer, setScrollContainer] = useState<HTMLDivElement | null>(null)
+  const handleScrollContainerRef = useCallback((container: HTMLDivElement | null) => {
+    scrollContainerRef.current = container
+    setScrollContainer(container)
+  }, [])
 
   return (
     <ScrollProgressProvider
+      rootScrollContainer={scrollContainer}
       rootScrollContainerRef={scrollContainerRef}
     >
       <div
-        ref={scrollContainerRef}
+        ref={handleScrollContainerRef}
         data-scroll-restoration-id={ROOT_SCROLL_RESTORATION_ID}
         className="relative h-full min-h-0 w-full overflow-y-auto scrollbar-hidden"
       >

@@ -2,12 +2,15 @@ import type { PropsWithChildren } from "react"
 import type { Board, BoardLayer } from "@/lib/board"
 import { useScrollProgressContext } from "@newsnext/ui/components/scroll-progress-context"
 import { useHotkey } from "@tanstack/react-hotkeys"
-import { useNavigate } from "@tanstack/react-router"
+import { useElementScrollRestoration, useNavigate } from "@tanstack/react-router"
 import { useAtomValue, useSetAtom } from "jotai"
-import { useCallback, useState } from "react"
+import { useCallback, useLayoutEffect, useRef, useState } from "react"
 import { NextLayer } from "@/components/nextlayer"
 import { NowLayer } from "@/components/nowlayer"
-import { NEXT_LAYER_SCROLL_RESTORATION_ID } from "@/lib/scroll-restoration"
+import {
+  getBoardScrollRestorationKey,
+  ROOT_SCROLL_RESTORATION_ID,
+} from "@/lib/scroll-restoration"
 import { DEFAULT_SHORTCUT_SETTINGS, SHORTCUT_DEFINITIONS } from "@/lib/settings"
 import { cn } from "@/lib/utils"
 import { updateBoardAtom } from "@/store/board"
@@ -31,15 +34,41 @@ interface RenderedView {
 }
 
 export function BoardView({ board, layer }: { board: Board, layer: BoardLayer }) {
-  const { setNextLayerScrollContainer } = useScrollProgressContext()
+  const { rootScrollContainer } = useScrollProgressContext()
   const shortcuts = useAtomValue(shortcutSettingsAtom)
   const updateBoard = useSetAtom(updateBoardAtom)
   const navigate = useNavigate({ from: "/board/$boardId" })
   const isNextLayer = layer === "next"
   const [renderedView, setRenderedView] = useState<RenderedView>({ boardId: board.id, layer })
+  const restoredViewKeyRef = useRef<string | null>(null)
+  const scrollRestorationEntry = useElementScrollRestoration({
+    id: ROOT_SCROLL_RESTORATION_ID,
+    getKey: getBoardScrollRestorationKey,
+  })
   const isOutgoing = renderedView.layer !== layer || renderedView.boardId !== board.id
   const renderedLayerState = isOutgoing ? "outgoing" : "active"
   const isRenderedNextLayer = renderedView.layer === "next"
+
+  useLayoutEffect(() => {
+    if (isOutgoing || !rootScrollContainer) return
+
+    const renderedViewKey = `${renderedView.boardId}:${renderedView.layer}`
+    if (restoredViewKeyRef.current === renderedViewKey) return
+
+    restoredViewKeyRef.current = renderedViewKey
+    rootScrollContainer.scrollTo({
+      behavior: "instant",
+      left: scrollRestorationEntry?.scrollX ?? 0,
+      top: scrollRestorationEntry?.scrollY ?? 0,
+    })
+  }, [
+    isOutgoing,
+    renderedView.boardId,
+    renderedView.layer,
+    rootScrollContainer,
+    scrollRestorationEntry?.scrollX,
+    scrollRestorationEntry?.scrollY,
+  ])
 
   const handleExitComplete = useCallback(() => {
     setRenderedView({ boardId: board.id, layer })
@@ -79,22 +108,13 @@ export function BoardView({ board, layer }: { board: Board, layer: BoardLayer })
         itemSelector={isRenderedNextLayer
           ? ".grid-stack-item:not(.grid-stack-placeholder)"
           : "[data-live-card-id]"}
-        className={isRenderedNextLayer
-          ? "absolute inset-0 z-10"
-          : "relative z-0"}
+        className="relative z-0"
       >
         {isRenderedNextLayer
           ? (
-              <div
-                ref={setNextLayerScrollContainer}
-                data-board-id={renderedView.boardId}
-                data-scroll-restoration-id={NEXT_LAYER_SCROLL_RESTORATION_ID}
-                className="h-full w-full overflow-y-auto bg-transparent scrollbar-hidden"
-              >
-                <BoardContent className="min-h-full">
-                  <NextLayer boardId={renderedView.boardId} />
-                </BoardContent>
-              </div>
+              <BoardContent>
+                <NextLayer boardId={renderedView.boardId} />
+              </BoardContent>
             )
           : (
               <BoardContent>

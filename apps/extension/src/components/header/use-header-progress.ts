@@ -1,7 +1,7 @@
 import type { MotionValue } from "motion/react"
 import type { MouseEvent } from "react"
 import { useScrollProgressContext } from "@newsnext/ui/components/scroll-progress-context"
-import { useLocation } from "@tanstack/react-router"
+import { useLocation, useRouter } from "@tanstack/react-router"
 import { useMotionValue } from "motion/react"
 import { useCallback, useLayoutEffect, useRef, useState } from "react"
 import { getBoardLayerFromState } from "@/lib/board"
@@ -17,7 +17,8 @@ export interface HeaderProgressState {
 }
 
 export function useHeaderProgress(): HeaderProgressState {
-  const { nextLayerScrollContainer, rootScrollContainerRef } = useScrollProgressContext()
+  const { rootScrollContainer, rootScrollContainerRef } = useScrollProgressContext()
+  const router = useRouter()
   const { isNextLayer, routeHref } = useLocation({
     select: location => ({
       routeHref: location.href,
@@ -50,16 +51,11 @@ export function useHeaderProgress(): HeaderProgressState {
 
   const handleScrollToTop = (event: MouseEvent) => {
     event.stopPropagation()
-    const activeScrollContainer = isNextLayer
-      ? nextLayerScrollContainer
-      : rootScrollContainerRef.current
-    activeScrollContainer?.scrollTo({ top: 0, behavior: "smooth" })
+    rootScrollContainerRef.current?.scrollTo({ top: 0, behavior: "smooth" })
   }
 
   useLayoutEffect(() => {
-    const container = isNextLayer
-      ? nextLayerScrollContainer
-      : rootScrollContainerRef.current
+    const container = rootScrollContainer
     if (!container) return
 
     const handleScroll = () => syncProgress(container)
@@ -71,12 +67,29 @@ export function useHeaderProgress(): HeaderProgressState {
     if (container.firstElementChild) {
       resizeObserver.observe(container.firstElementChild)
     }
+    let animationFrameId = 0
+    const syncOnNextFrame = () => {
+      window.cancelAnimationFrame(animationFrameId)
+      animationFrameId = window.requestAnimationFrame(handleScroll)
+    }
+    syncOnNextFrame()
+    window.addEventListener("pageshow", syncOnNextFrame)
+    let disposed = false
+    const unsubscribeFromRendered = router.subscribe("onRendered", () => {
+      queueMicrotask(() => {
+        if (!disposed) handleScroll()
+      })
+    })
 
     return () => {
+      disposed = true
+      window.cancelAnimationFrame(animationFrameId)
+      window.removeEventListener("pageshow", syncOnNextFrame)
       container.removeEventListener("scroll", handleScroll)
       resizeObserver.disconnect()
+      unsubscribeFromRendered()
     }
-  }, [isNextLayer, nextLayerScrollContainer, rootScrollContainerRef, routeHref, syncProgress])
+  }, [rootScrollContainer, routeHref, router, syncProgress])
 
   return {
     handleScrollToTop,

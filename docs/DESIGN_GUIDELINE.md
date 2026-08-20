@@ -226,15 +226,17 @@ adding dedicated visible drag or resize controls.
 
 Preserve Now Layer's intrinsic centered LiveCard layout inside the same maximum
 content width as Next Layer. Limit both Layers to the equivalent width of a
-four-column LiveCard row, and do not add a second horizontal padding constraint
-inside Next Layer's scroll container. The shared Board container owns both
-Layers' responsive content insets and fills the space naturally allocated below
-the responsive Header. Position Next Layer's scroll region against that Board
-container instead of duplicating the Header height as a fixed offset. Now Layer
-and Next Layer must not define their own page padding or content-width rules.
-Keep Next Layer's overflow boundary at the viewport edges and apply Board
-insets inside that full-width scroll container. Otherwise horizontal exits are
-clipped at the content inset and appear to pass behind an elevated side margin.
+four-column LiveCard row. The shared Board container owns both Layers'
+responsive content insets and fills the space naturally allocated below the
+responsive Header. Now Layer and Next Layer must share the application root
+viewport and must not define their own scrolling, page padding, or content-width
+rules. This keeps their visible region, Header progress, and scroll restoration
+consistent when switching Layers.
+Record scroll positions by Board and Layer, but restore them only after the
+target Board and Layer have replaced the outgoing transition content. Route
+completion alone is too early because the outgoing view remains mounted during
+its card scatter animation. Board-only, Layer-only, and combined Board/Layer
+changes must use the same post-mount restoration path.
 
 Treat Now Layer and Next Layer as peers during transitions. Reveal the incoming
 Layer only after the departing Layer's visible cards exit horizontally and fade.

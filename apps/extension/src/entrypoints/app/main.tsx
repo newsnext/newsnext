@@ -2,10 +2,9 @@ import { QueryClient } from "@tanstack/react-query"
 import { createHashHistory, createRouter, RouterProvider } from "@tanstack/react-router"
 import { AppProvider } from "@/components/app-provider"
 import { BgIllustrationLayer } from "@/components/bg-illustration-layer"
-import { getBoardLayerFromState } from "@/lib/board"
 import { renderPersistentReactRoot } from "@/lib/react-root"
 import {
-  NEXT_LAYER_SCROLL_RESTORATION_SELECTOR,
+  getBoardScrollRestorationKey,
   ROOT_SCROLL_RESTORATION_SELECTOR,
 } from "@/lib/scroll-restoration"
 import { syncThemeFavicon, THEME_COLOR_KEY } from "@/lib/utils/swith-theme"
@@ -19,13 +18,10 @@ const hashHistory = createHashHistory()
 const router = createRouter({
   routeTree,
   history: hashHistory,
-  scrollRestoration: true,
+  scrollRestoration: ({ location }) => !location.pathname.startsWith("/board/"),
   scrollRestorationBehavior: "instant",
-  getScrollRestorationKey: location => `${location.href}:${getBoardLayerFromState(location.state) ?? "now"}`,
-  scrollToTopSelectors: [
-    ROOT_SCROLL_RESTORATION_SELECTOR,
-    NEXT_LAYER_SCROLL_RESTORATION_SELECTOR,
-  ],
+  getScrollRestorationKey: getBoardScrollRestorationKey,
+  scrollToTopSelectors: [ROOT_SCROLL_RESTORATION_SELECTOR],
   context: {
     queryClient,
   },

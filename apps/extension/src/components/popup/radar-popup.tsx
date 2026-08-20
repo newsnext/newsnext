@@ -1,6 +1,6 @@
 import { Button } from "@newsnext/ui/components/button"
 import { Logo } from "@newsnext/ui/components/logo"
-import { useRef } from "react"
+import { useCallback, useRef, useState } from "react"
 import { ScrollProgressProvider } from "@/components/common/scroll-progress-provider"
 import { PhGear, PhHouse } from "@/components/icons/ph"
 import { RadarDeck } from "@/components/popup/radar-deck"
@@ -57,16 +57,22 @@ function RadarOverlayHeader({ count, isScanning }: RadarOverlayHeaderProps): Rea
 
 export function RadarPopup() {
   const scrollContainerRef = useRef<HTMLElement>(null)
+  const [scrollContainer, setScrollContainer] = useState<HTMLElement | null>(null)
+  const handleScrollContainerRef = useCallback((container: HTMLElement | null) => {
+    scrollContainerRef.current = container
+    setScrollContainer(container)
+  }, [])
   const { sources } = useSourceDescriptors()
   const suggestions = useCurrentTabRadarSuggestions()
   const suggestionCount = suggestions?.length ?? 0
 
   return (
     <ScrollProgressProvider
+      rootScrollContainer={scrollContainer}
       rootScrollContainerRef={scrollContainerRef}
     >
       <main
-        ref={scrollContainerRef}
+        ref={handleScrollContainerRef}
         className={cn(
           "grid-texture-background relative flex min-h-0 flex-col gap-2 overflow-y-auto bg-background p-3 text-foreground zenith-theme-400",
           suggestionCount > 0 ? "h-[600px]" : "h-16",
