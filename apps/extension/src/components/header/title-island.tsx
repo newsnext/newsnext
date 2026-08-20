@@ -1,13 +1,16 @@
-import type { MotionValue } from "motion/react"
-import type { RefObject } from "react"
 import type { HeaderNotification } from "./notification"
+import type { HeaderProgressState } from "./use-header-progress"
 import { DynamicIsland } from "@newsnext/ui/components/dynamic-island"
 import { Logo } from "@newsnext/ui/components/logo"
 import { ThemeSelector } from "@newsnext/ui/components/theme-selector"
-import { WordmarkLogo } from "@newsnext/ui/components/wordmark-logo"
+import {
+  GoToTopWordmark,
+  NewsNowWordmarkLogo,
+  WordmarkLogo,
+} from "@newsnext/ui/components/wordmark-logo"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
-import { AnimatePresence, m, useMotionValue, useMotionValueEvent, useScroll } from "motion/react"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { AnimatePresence, m } from "motion/react"
+import { useEffect, useState } from "react"
 import { getBoardColor } from "@/lib/board"
 import { handleThemeModeSwitch, handleThemeSwitch } from "@/lib/utils/swith-theme"
 import { boardsAtom, updateBoardAtom } from "@/store/board"
@@ -20,57 +23,12 @@ import {
   HEADER_NOTIFICATION_HEIGHT,
   HEADER_NOTIFICATION_WIDTH,
 } from "./notification"
-
-interface HeaderProgressState {
-  handleScrollToTop: (event: React.MouseEvent) => void
-  isAtTop: boolean
-  opacity: MotionValue<number>
-  scrollYProgress: MotionValue<number>
-}
-
-function useHeaderProgress(scrollContainerRef?: RefObject<HTMLElement | null>): HeaderProgressState {
-  const { scrollYProgress, scrollY } = useScroll({
-    container: scrollContainerRef,
-  })
-
-  const [isAtTop, setIsAtTop] = useState(true)
-  const isAtTopRef = useRef(true)
-  const opacity = useMotionValue(0)
-
-  const handleScrollToTop = useCallback((event: React.MouseEvent) => {
-    event.stopPropagation()
-    const container = scrollContainerRef?.current
-    if (container) {
-      container.scrollTo({ top: 0, behavior: "smooth" })
-    } else {
-      window.scrollTo({ top: 0, behavior: "smooth" })
-    }
-  }, [scrollContainerRef])
-
-  useMotionValueEvent(scrollY, "change", (value) => {
-    const screenHeight = window.innerHeight
-    const threshold = screenHeight * 0.1
-    const fadeRange = screenHeight * 0.1
-
-    const nextIsAtTop = value < threshold
-    if (nextIsAtTop !== isAtTopRef.current) {
-      isAtTopRef.current = nextIsAtTop
-      setIsAtTop(nextIsAtTop)
-    }
-
-    if (nextIsAtTop) {
-      opacity.set(0)
-    } else {
-      opacity.set(Math.min((value - threshold) / fadeRange, 1))
-    }
-  })
-
-  return { handleScrollToTop, isAtTop, opacity, scrollYProgress }
-}
+import { useHeaderProgress } from "./use-header-progress"
 
 function HeaderProgress({
   handleScrollToTop,
   isAtTop,
+  isNextLayer,
   opacity,
   scrollYProgress,
 }: HeaderProgressState) {
@@ -111,7 +69,9 @@ function HeaderProgress({
                 transition={{ duration: 0.2 }}
               >
                 <Logo className="text-primary size-5" />
-                <WordmarkLogo className="w-[4.6em] h-auto text-xl transition-opacity" />
+                {isNextLayer
+                  ? <WordmarkLogo className="h-auto w-[4.5em] shrink-0 text-xl transition-opacity" />
+                  : <NewsNowWordmarkLogo className="h-auto w-[4.5em] shrink-0 text-xl transition-opacity" />}
               </m.div>
             )
           : (
@@ -124,9 +84,7 @@ function HeaderProgress({
                 transition={{ duration: 0.2 }}
               >
                 <PhArrowFatUp className="text-theme-400 size-5" />
-                <span className="text-xl font-bold whitespace-nowrap transition-opacity">
-                  Go to top
-                </span>
+                <GoToTopWordmark className="h-auto w-[4.5em] shrink-0 translate-y-[0.08em] text-xl transition-opacity" />
               </m.div>
             )}
       </AnimatePresence>
@@ -166,7 +124,6 @@ function HeaderProgressGlow({
 interface TitleIslandProps {
   notification: HeaderNotification | null
   onDismissNotification: () => void
-  scrollContainerRef?: RefObject<HTMLElement | null>
   width?: number
 }
 
@@ -218,10 +175,9 @@ function CurrentBoardAppearanceControls() {
 export function TitleIsland({
   notification,
   onDismissNotification,
-  scrollContainerRef,
   width = 150,
 }: TitleIslandProps) {
-  const headerProgress = useHeaderProgress(scrollContainerRef)
+  const headerProgress = useHeaderProgress()
   const [appearanceExpanded, setAppearanceExpanded] = useState(false)
 
   useEffect(() => {

@@ -8,14 +8,14 @@ import { createBackgroundClient } from "../lib/background"
 import {
   ALL_BOARD_ID,
   createAllBoard,
+  DEFAULT_BOARD_LAYER,
   DEFAULT_BOARD_SORT_PREFERENCE,
-  DEFAULT_BOARD_VIEW_MODE,
   getBoardColor,
 } from "../lib/board"
 import { projectCollectionBoard } from "../lib/collection"
 import { normalizeApplicationData, PERSISTED_DATA_SLICES } from "../lib/settings"
 import { createMirroredStorage } from "./persisted-storage"
-import { allBoardColorAtom } from "./settings"
+import { allBoardColorAtom, allBoardDefaultLayerAtom } from "./settings"
 
 const persistedApplicationDataAtom = atomWithStorage<ApplicationData>(
   PERSISTED_DATA_SLICES.application.key,
@@ -37,7 +37,7 @@ export const collectionViewsAtom = selectAtom(applicationDataAtom, data => data.
 export const instancesAtom = selectAtom(applicationDataAtom, data => data.instances)
 
 export const boardsAtom = atom(get => [
-  createAllBoard(get(allBoardColorAtom)),
+  createAllBoard(get(allBoardColorAtom), get(allBoardDefaultLayerAtom)),
   ...get(collectionsAtom).flatMap((collection) => {
     const view = get(collectionViewsAtom).find(candidate => candidate.collectionId === collection.id)
     return view ? [projectCollectionBoard(collection, view, get(collectionEntriesAtom))] : []
@@ -140,7 +140,7 @@ export const createBoardAtom = atom(null, (_get, set, input: BoardCreateInput) =
       name: input.name,
       view: {
         color: input.color,
-        defaultView: input.defaultView,
+        defaultLayer: input.defaultLayer,
         sortMode: input.sortMode,
       },
     },
@@ -161,7 +161,7 @@ export const createBoardFromOpmlAtom = atom(null, (_get, set, input: OpmlImport)
       name: input.title,
       view: {
         color: "orange",
-        defaultView: DEFAULT_BOARD_VIEW_MODE,
+        defaultLayer: DEFAULT_BOARD_LAYER,
         sortMode: DEFAULT_BOARD_SORT_PREFERENCE.mode,
       },
     },
@@ -171,6 +171,7 @@ export const createBoardFromOpmlAtom = atom(null, (_get, set, input: OpmlImport)
 export const updateBoardAtom = atom(null, async (_get, set, board: Board) => {
   if (board.id === ALL_BOARD_ID) {
     set(allBoardColorAtom, getBoardColor(board))
+    set(allBoardDefaultLayerAtom, board.defaultLayer)
     return
   }
   await set(executeApplicationActionAtom, {
@@ -180,7 +181,7 @@ export const updateBoardAtom = atom(null, async (_get, set, board: Board) => {
       name: board.name,
       view: {
         color: getBoardColor(board),
-        defaultView: board.defaultView,
+        defaultLayer: board.defaultLayer,
         sortMode: board.sort.mode,
       },
     },

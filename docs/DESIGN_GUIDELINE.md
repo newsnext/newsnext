@@ -255,6 +255,13 @@ defaults in feature UI. Hide a hint when its command binding is cleared.
 Previous and next board commands wrap across the ordered board list. Keep their
 default arrow bindings active from the page and focused board tabs, while
 preserving directional-key behavior inside other interactive controls.
+Represent the active Board layer in the route and preserve scroll positions by
+Board and layer. Now and Next use separate scroll containers; restore either
+position without scroll animation, and synchronize the Dynamic Island progress
+outline with the active container immediately afterward.
+Treat a Board's default layer as its persisted active layer. The layer shortcut
+and Board settings update the same preference; Router history state only mirrors
+it so Now and Next can use separate scroll restoration keys.
 
 ### LiveCard reordering
 
@@ -360,9 +367,9 @@ They must have:
   form labels already make the task clear.
 
 The unified Board dialog is the canonical example. Create and edit modes use
-the same name, theme color, LiveCard order, and default view fields;
+the same name, theme color, LiveCard order, and default layer fields;
 only edit mode exposes board deletion, while the title and primary action
-reflect the current mode. Default view uses a compact segmented `Now` / `Next`
+reflect the current mode. Default layer uses a compact segmented `Now` / `Next`
 control and determines which Board view opens by default. In particular, do not
 add the following descriptions back to this dialog:
 

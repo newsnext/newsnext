@@ -1,5 +1,5 @@
 import type { Color } from "@newsnext/shared/types"
-import type { Board, BoardCreateInput, BoardSortMode, BoardViewMode } from "@/lib/board"
+import type { Board, BoardCreateInput, BoardLayer, BoardSortMode } from "@/lib/board"
 import { Button } from "@newsnext/ui/components/button"
 import {
   Dialog,
@@ -16,7 +16,7 @@ import { useState } from "react"
 import { ConfigSection } from "@/components/common/config-section"
 import { ConfirmDestructiveButton } from "@/components/common/confirm-destructive-button"
 import { useAsyncAction } from "@/hooks/use-async-action"
-import { ALL_BOARD_ID, DEFAULT_BOARD_COLOR, DEFAULT_BOARD_SORT_PREFERENCE, DEFAULT_BOARD_VIEW_MODE, getBoardColor, updateBoardSortMode } from "@/lib/board"
+import { ALL_BOARD_ID, DEFAULT_BOARD_COLOR, DEFAULT_BOARD_LAYER, DEFAULT_BOARD_SORT_PREFERENCE, getBoardColor, updateBoardSortMode } from "@/lib/board"
 import { cn } from "@/lib/utils"
 
 const SORT_OPTIONS: { label: string, value: BoardSortMode }[] = [
@@ -25,7 +25,7 @@ const SORT_OPTIONS: { label: string, value: BoardSortMode }[] = [
   { label: "Provider name", value: "provider" },
 ]
 
-const VIEW_OPTIONS: { label: string, value: BoardViewMode }[] = [
+const LAYER_OPTIONS: { label: string, value: BoardLayer }[] = [
   { label: "Now", value: "now" },
   { label: "Next", value: "next" },
 ]
@@ -84,11 +84,11 @@ function ConfigurableBoardDialog({
       ? getBoardColor(currentBoard)
       : DEFAULT_BOARD_COLOR
   const initialSortMode = board?.sort.mode ?? DEFAULT_BOARD_SORT_PREFERENCE.mode
-  const initialDefaultView = board?.defaultView ?? DEFAULT_BOARD_VIEW_MODE
+  const initialDefaultLayer = board?.defaultLayer ?? DEFAULT_BOARD_LAYER
   const [name, setName] = useState(() => board?.name ?? "")
   const [color, setColor] = useState<Color>(initialColor)
   const [sortMode, setSortMode] = useState<BoardSortMode>(initialSortMode)
-  const [defaultView, setDefaultView] = useState<BoardViewMode>(initialDefaultView)
+  const [defaultLayer, setDefaultLayer] = useState<BoardLayer>(initialDefaultLayer)
   const { error: submitError, isPending: isSubmitting, run: runAction } = useAsyncAction(
     "The board could not be saved.",
   )
@@ -108,7 +108,7 @@ function ConfigurableBoardDialog({
           ...board,
           name: normalizedName,
           color,
-          defaultView,
+          defaultLayer,
           sort: updateBoardSortMode(board.sort, sortMode),
         }
         await onUpdate(nextBoard)
@@ -121,7 +121,7 @@ function ConfigurableBoardDialog({
       await onCreate({
         name: normalizedName,
         color,
-        defaultView,
+        defaultLayer,
         sortMode,
       })
     })
@@ -198,16 +198,16 @@ function ConfigurableBoardDialog({
 
             <ConfigSection
               variant="group"
-              title="Default view"
-              description="Choose which view opens with this board."
+              title="Default layer"
+              description="Choose which layer opens with this board. The layer shortcut updates this setting too."
             >
               <RadioGroup
                 variant="segmented"
-                value={defaultView}
-                onValueChange={setDefaultView}
+                value={defaultLayer}
+                onValueChange={setDefaultLayer}
                 className="w-full"
               >
-                {VIEW_OPTIONS.map(option => (
+                {LAYER_OPTIONS.map(option => (
                   <RadioGroupItem key={option.value} value={option.value} className="min-w-0 flex-1 px-2">
                     {option.label}
                   </RadioGroupItem>

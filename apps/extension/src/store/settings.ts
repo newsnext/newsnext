@@ -1,5 +1,6 @@
 import type { Color } from "@newsnext/shared/types"
 import type { BgIllustrationTransform } from "@/lib/bg-illustration"
+import type { BoardLayer } from "@/lib/board"
 import type {
   LiveCardHeight,
   PersistedDeviceState,
@@ -71,6 +72,17 @@ export const allBoardColorAtom = atom(
     set(persistedSettingsAtom, {
       ...settings,
       appearance: { ...settings.appearance, allBoardColor },
+    })
+  },
+)
+
+export const allBoardDefaultLayerAtom = atom(
+  get => get(persistedSettingsAtom).appearance.allBoardDefaultLayer,
+  (get, set, allBoardDefaultLayer: BoardLayer) => {
+    const settings = get(persistedSettingsAtom)
+    set(persistedSettingsAtom, {
+      ...settings,
+      appearance: { ...settings.appearance, allBoardDefaultLayer },
     })
   },
 )

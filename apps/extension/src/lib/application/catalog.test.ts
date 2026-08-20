@@ -91,19 +91,19 @@ describe("application operation catalog", () => {
       input: {
         collectionId: "reading",
         name: "Research",
-        view: { color: "purple", defaultView: "next" },
+        view: { color: "purple", defaultLayer: "next" },
       },
     })).toEqual({
       type: "collection.update",
       input: {
         collectionId: "reading",
         name: "Research",
-        view: { color: "purple", defaultView: "next" },
+        view: { color: "purple", defaultLayer: "next" },
       },
     })
     expect(() => parseApplicationAction({
       type: "view.configureCollection",
-      input: { collectionId: "reading", defaultView: "future" },
+      input: { collectionId: "reading", defaultLayer: "future" },
     })).toThrow("must be now or next")
     expect(() => parseApplicationAction({
       type: "view.configureCollection",

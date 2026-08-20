@@ -8,7 +8,7 @@ function createData(): ApplicationData {
     collections: [{ id: "reading", name: "Reading", createdAt: 1 }],
     collectionViews: [{
       collectionId: "reading",
-      defaultView: "now",
+      defaultLayer: "now",
       sortMode: "createdAt",
       automaticSortMode: "createdAt",
     }],
@@ -95,7 +95,7 @@ describe("application queries", () => {
       input: { collectionId: "reading" },
     })).toEqual({
       collectionId: "reading",
-      defaultView: "now",
+      defaultLayer: "now",
       sortMode: "createdAt",
       automaticSortMode: "createdAt",
     })

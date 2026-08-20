@@ -1,14 +1,15 @@
-import { useParams } from "@tanstack/react-router"
+import { Navigate, useLocation, useParams } from "@tanstack/react-router"
 import { useAtomValue, useSetAtom } from "jotai"
 import { useEffect } from "react"
 import { BoardView } from "@/components/board-view"
-import { getBoardColor } from "@/lib/board"
+import { getBoardColor, getBoardLayerFromState } from "@/lib/board"
 import { handleThemeSwitch } from "@/lib/utils/swith-theme"
 import { boardsAtom } from "@/store/board"
 import { currentBoardIdAtom } from "@/store/settings"
 
 export function BoardIdComponent() {
   const { boardId } = useParams({ strict: false }) as { boardId: string }
+  const layer = useLocation({ select: location => getBoardLayerFromState(location.state) })
   const boards = useAtomValue(boardsAtom)
   const setCurrentBoardId = useSetAtom(currentBoardIdAtom)
   const board = boards.find(board => board.id === boardId)
@@ -39,11 +40,18 @@ export function BoardIdComponent() {
     )
   }
 
+  if (!layer) {
+    return (
+      <Navigate
+        to="/board/$boardId"
+        params={{ boardId }}
+        state={state => ({ ...state, layer: board.defaultLayer })}
+        replace
+      />
+    )
+  }
+
   return (
-    <BoardView
-      key={`${boardId}:${board.defaultView}`}
-      boardId={boardId}
-      defaultView={board.defaultView}
-    />
+    <BoardView board={board} layer={layer} />
   )
 }

@@ -169,7 +169,7 @@ incremental changes, time windows, and materialized outputs is defined in
 [Data Stream Architecture](DATA_STREAM_ARCHITECTURE.md).
 
 Now Layer and Next Layer are two Views of one Board, not separate Data
-containers. A persisted `defaultView` preference selects which View opens with
+containers. A persisted `defaultLayer` preference selects which View opens with
 each custom Board. Switching Views changes presentation only and preserves the
 Board, Collection, Instances, Cache entries, and History observations.
 
@@ -185,7 +185,7 @@ being embedded in the Collection's membership model.
 interface CollectionViewPreferences {
   collectionId: string
   color: Color
-  defaultView: "now" | "next"
+  defaultLayer: "now" | "next"
   sort: BoardSort
 }
 
@@ -193,7 +193,7 @@ interface BoardView {
   liveCards: LiveCardView[]
   collectionId: string
   color: Color
-  defaultView: "now" | "next"
+  defaultLayer: "now" | "next"
   name: string
   sort: BoardSort
 }
@@ -234,7 +234,7 @@ also need `collectionId`.
 
 ### View State
 
-Durable presentation preferences may include Board color, default view, and
+Durable presentation preferences may include Board color, default layer, and
 sorting. Ephemeral View state includes the current route, open dialog, focus,
 selection, hover state, animation state, LiveCard face, and unsubmitted form
 drafts.
@@ -285,7 +285,7 @@ view.configureCollection
 ```
 
 `collection.rename` changes only canonical Data. `view.configureCollection`
-changes only Board color, default view, or sort mode. `collection.create` accepts an
+changes only Board color, default layer, or sort mode. `collection.create` accepts an
 optional nested View configuration and an optional list of configured Instances,
 then persists the Collection, View, Instances, and memberships in one operation.
 This is the atomic boundary used by bulk imports such as creating a Board from

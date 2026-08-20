@@ -1,5 +1,5 @@
 import type { Color } from "@newsnext/shared/types"
-import type { BoardSortMode, BoardViewMode } from "../board"
+import type { BoardLayer, BoardSortMode } from "../board"
 import type { CollectionView } from "../collection"
 import type { SourceInstancePatch } from "../source/live-cards"
 import type { ApplicationData } from "./data"
@@ -8,7 +8,7 @@ import { mergeSourceInstancePatch } from "../source/live-cards"
 
 export interface CollectionViewConfiguration {
   color?: Color
-  defaultView?: BoardViewMode
+  defaultLayer?: BoardLayer
   sortMode?: BoardSortMode
 }
 
@@ -321,7 +321,7 @@ function configureCollectionView(
   return {
     ...view,
     ...(configuration.color !== undefined ? { color: configuration.color } : {}),
-    ...(configuration.defaultView !== undefined ? { defaultView: configuration.defaultView } : {}),
+    ...(configuration.defaultLayer !== undefined ? { defaultLayer: configuration.defaultLayer } : {}),
     sortMode,
     automaticSortMode: sortMode === "manual" ? view.automaticSortMode : sortMode,
   }

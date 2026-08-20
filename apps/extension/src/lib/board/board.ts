@@ -6,12 +6,12 @@ export const ALL_BOARD_ID = "all"
 export const ALL_BOARD_NAME = "All"
 export const DEFAULT_BOARD_COLOR: Color = "red"
 
-export type BoardViewMode = "now" | "next"
+export type BoardLayer = "now" | "next"
 
-export const DEFAULT_BOARD_VIEW_MODE: BoardViewMode = "now"
+export const DEFAULT_BOARD_LAYER: BoardLayer = "now"
 
 export interface Board {
-  defaultView: BoardViewMode
+  defaultLayer: BoardLayer
   sort: BoardSortPreference
   id: string
   name: string
@@ -20,23 +20,31 @@ export interface Board {
 
 export interface BoardCreateInput {
   color: Color
-  defaultView: BoardViewMode
+  defaultLayer: BoardLayer
   name: string
   sortMode: BoardSortMode
 }
 
-export function createAllBoard(color: Color): Board {
+export function createAllBoard(
+  color: Color,
+  defaultLayer: BoardLayer = DEFAULT_BOARD_LAYER,
+): Board {
   return {
     color,
-    defaultView: DEFAULT_BOARD_VIEW_MODE,
+    defaultLayer,
     id: ALL_BOARD_ID,
     name: ALL_BOARD_NAME,
     sort: createBoardSortPreference("createdAt"),
   }
 }
 
-export function normalizeBoardViewMode(value: unknown): BoardViewMode {
-  return value === "next" ? "next" : DEFAULT_BOARD_VIEW_MODE
+export function normalizeBoardLayer(value: unknown): BoardLayer {
+  return value === "next" ? "next" : DEFAULT_BOARD_LAYER
+}
+
+export function getBoardLayerFromState(state: unknown): BoardLayer | undefined {
+  if (!state || typeof state !== "object" || !("layer" in state)) return undefined
+  return state.layer === "next" || state.layer === "now" ? state.layer : undefined
 }
 
 export function getBoardColor(board: Board): Color {

@@ -38,6 +38,15 @@ describe("persisted settings", () => {
     }).appearance.allBoardColor).toBe("red")
   })
 
+  it("normalizes the All board default layer", () => {
+    expect(normalizePersistedSettings({
+      appearance: { allBoardDefaultLayer: "next" },
+    }).appearance.allBoardDefaultLayer).toBe("next")
+    expect(normalizePersistedSettings({
+      appearance: { allBoardDefaultLayer: "future" },
+    }).appearance.allBoardDefaultLayer).toBe("now")
+  })
+
   it("normalizes the LiveCard height", () => {
     expect(normalizePersistedSettings({
       appearance: { liveCardHeight: "compact" },

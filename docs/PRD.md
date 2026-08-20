@@ -631,7 +631,7 @@ The remaining product gaps are:
 | BRD-01 | A Board exposes Now Layer and Next Layer as two views of one Collection context | Switching Layers preserves the Board identity, route context, and selected Collection |
 | BRD-02 | Both Layers consume canonical Instance state | Opening or rendering Next Layer does not create a second Instance or presentation-only Source execution |
 | BRD-03 | Board deletion and other destructive changes remain explicit | The UI or Agent receives confirmation before durable Board data is deleted |
-| BRD-04 | A Board persists its default View | Reopening a custom Board starts in its saved Now or Next View without changing its Collection or Instance data |
+| BRD-04 | A Board persists its default Layer | Reopening a custom Board starts in its saved Now or Next Layer without changing its Collection or Instance data |
 
 ### Now Layer requirements
 

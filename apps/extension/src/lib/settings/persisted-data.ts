@@ -4,7 +4,7 @@ import type { Collection, CollectionEntry, CollectionView } from "../collection"
 import type { SourceInstance, SourceInstancePatch } from "../source"
 import type { PersistedSettings } from "./persisted-settings"
 import { createEmptyApplicationData } from "../application/data"
-import { ALL_BOARD_ID, createBoardSortPreference, DEFAULT_BOARD_VIEW_MODE, normalizeBoardViewMode } from "../board"
+import { ALL_BOARD_ID, createBoardSortPreference, DEFAULT_BOARD_LAYER, normalizeBoardLayer } from "../board"
 import { normalizePersistedSettings } from "./persisted-settings"
 import { isThemeColor } from "./theme-color"
 
@@ -286,7 +286,7 @@ function migrateLegacyPersistedUserData(
           collectionViews: boards.map(board => ({
             collectionId: board.id,
             color: board.color,
-            defaultView: board.defaultView,
+            defaultLayer: board.defaultLayer,
             sortMode: board.sort.mode,
             automaticSortMode: board.sort.automaticMode,
           })),
@@ -315,7 +315,7 @@ function normalizeCollectionViews(value: unknown, collectionIds?: Set<string>): 
     }
     views.set(candidate.collectionId, {
       collectionId: candidate.collectionId,
-      defaultView: normalizeBoardViewMode(candidate.defaultView),
+      defaultLayer: normalizeBoardLayer(candidate.defaultLayer),
       sortMode: candidate.sortMode,
       automaticSortMode: candidate.automaticSortMode,
       ...(isThemeColor(candidate.color) ? { color: candidate.color } : {}),
@@ -324,7 +324,7 @@ function normalizeCollectionViews(value: unknown, collectionIds?: Set<string>): 
   if (!collectionIds) return [...views.values()]
   return [...collectionIds].map(collectionId => views.get(collectionId) ?? {
     collectionId,
-    defaultView: DEFAULT_BOARD_VIEW_MODE,
+    defaultLayer: DEFAULT_BOARD_LAYER,
     sortMode: "createdAt",
     automaticSortMode: "createdAt",
   })
@@ -393,7 +393,7 @@ function normalizeLegacyBoards(value: unknown): Board[] {
     }
     seenIds.add(candidate.id)
     return [{
-      defaultView: normalizeBoardViewMode(candidate.defaultView),
+      defaultLayer: normalizeBoardLayer(candidate.defaultLayer),
       id: candidate.id,
       name: candidate.name,
       sort: normalizeBoardSortPreference(candidate.sort),

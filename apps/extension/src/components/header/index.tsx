@@ -1,4 +1,3 @@
-import type { RefObject } from "react"
 import type { HeaderNotification } from "./notification"
 import { Button } from "@newsnext/ui/components/button"
 import { useCallback, useState } from "react"
@@ -7,12 +6,8 @@ import { PhArrowCounterClockwise, PhCircleDashed } from "../icons/ph"
 import { SearchDialog } from "../search"
 import { BoardNav } from "./board-nav"
 import { DateTime } from "./date-time"
-import { TitleIsland } from "./title"
+import { TitleIsland } from "./title-island"
 import { UserMenu } from "./user-menu"
-
-interface HeaderProps {
-  scrollContainerRef?: RefObject<HTMLElement | null>
-}
 
 function FetchLatestButton() {
   const { fetchLatest, isFetching } = useFetchLatest()
@@ -31,7 +26,7 @@ function FetchLatestButton() {
   )
 }
 
-export function Header({ scrollContainerRef }: HeaderProps) {
+export function Header() {
   const [notification, setNotification] = useState<HeaderNotification | null>(null)
   const dismissNotification = useCallback(() => setNotification(null), [])
 
@@ -48,7 +43,6 @@ export function Header({ scrollContainerRef }: HeaderProps) {
         <div className="col-start-2 row-start-1">
           <TitleIsland
             width={150}
-            scrollContainerRef={scrollContainerRef}
             notification={notification}
             onDismissNotification={dismissNotification}
           />

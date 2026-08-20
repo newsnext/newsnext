@@ -139,7 +139,7 @@ preference is part of the portable Settings slice. Application Data persists
 Collections, Collection entries, Collection Views, and source Instances in one
 normalized envelope. An Instance never stores a Board identifier. Collection
 entries own membership and manual position; Collection Views own Board color,
-default view, and sort mode. Extension pages read synchronous `localStorage`
+default layer, and sort mode. Extension pages read synchronous `localStorage`
 snapshots first, then reconcile them with canonical copies in
 `browser.storage.local`; background storage wins when both copies exist.
 A versioned `newsnext-user-data` envelope validates and combines the portable

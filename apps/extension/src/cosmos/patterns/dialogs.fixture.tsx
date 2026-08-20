@@ -13,14 +13,14 @@ import { SettingsModalShell } from "@/components/settings/modal-shell"
 
 const BOARD_DIALOG_BOARDS: Board[] = [
   {
-    defaultView: "now",
+    defaultLayer: "now",
     id: "all",
     name: "All",
     color: "slate",
     sort: { mode: "createdAt", automaticMode: "createdAt", manualOrder: [] },
   },
   {
-    defaultView: "next",
+    defaultLayer: "next",
     id: "board-design",
     name: "Design signals",
     color: "purple",

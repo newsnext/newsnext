@@ -1,6 +1,6 @@
 import type { Color } from "@newsnext/shared/types"
-import type { Board, BoardSortMode, BoardViewMode } from "../board"
-import { createBoardSortPreference, DEFAULT_BOARD_COLOR, DEFAULT_BOARD_VIEW_MODE } from "../board"
+import type { Board, BoardLayer, BoardSortMode } from "../board"
+import { createBoardSortPreference, DEFAULT_BOARD_COLOR, DEFAULT_BOARD_LAYER } from "../board"
 
 export interface Collection {
   createdAt: number
@@ -19,7 +19,7 @@ export interface CollectionView {
   automaticSortMode: Exclude<BoardSortMode, "manual">
   collectionId: string
   color?: Color
-  defaultView: BoardViewMode
+  defaultLayer: BoardLayer
   sortMode: BoardSortMode
 }
 
@@ -34,7 +34,7 @@ export function projectCollectionBoard(
     .map(entry => entry.instanceId)
 
   return {
-    defaultView: view.defaultView,
+    defaultLayer: view.defaultLayer,
     id: collection.id,
     name: collection.name,
     color: view.color,
@@ -50,13 +50,13 @@ export function createCollectionView(
   collectionId: string,
   color: Color = DEFAULT_BOARD_COLOR,
   sortMode: BoardSortMode = "createdAt",
-  defaultView: BoardViewMode = DEFAULT_BOARD_VIEW_MODE,
+  defaultLayer: BoardLayer = DEFAULT_BOARD_LAYER,
 ): CollectionView {
   const sort = createBoardSortPreference(sortMode)
   return {
     collectionId,
     color,
-    defaultView,
+    defaultLayer,
     sortMode: sort.mode,
     automaticSortMode: sort.automaticMode,
   }
