@@ -8,15 +8,14 @@ import {
   NewsNowWordmarkLogo,
   WordmarkLogo,
 } from "@newsnext/ui/components/wordmark-logo"
-import { useAtom, useAtomValue, useSetAtom } from "jotai"
+import { useAtomValue, useSetAtom } from "jotai"
 import { AnimatePresence, m } from "motion/react"
 import { useEffect, useState } from "react"
 import { getBoardColor } from "@/lib/board"
-import { handleThemeModeSwitch, handleThemeSwitch } from "@/lib/utils/swith-theme"
+import { handleThemeSwitch } from "@/lib/utils/swith-theme"
 import { boardsAtom, updateBoardAtom } from "@/store/board"
-import { currentBoardIdAtom, themeModeAtom } from "@/store/settings"
+import { currentBoardIdAtom } from "@/store/settings"
 import { PhArrowFatUp } from "../icons/ph"
-import { ThemeModeSelector } from "../theme-mode-selector"
 import { IslandNotification } from "./island-notification"
 import {
   HEADER_NOTIFICATION_DURATION,
@@ -127,29 +126,23 @@ interface TitleIslandProps {
   width?: number
 }
 
-function CurrentBoardAppearanceControls() {
+function CurrentBoardThemeControls() {
   const boards = useAtomValue(boardsAtom)
   const currentBoardId = useAtomValue(currentBoardIdAtom)
   const updateBoard = useSetAtom(updateBoardAtom)
-  const [themeMode, setThemeMode] = useAtom(themeModeAtom)
   const board = boards.find(candidate => candidate.id === currentBoardId)
 
   if (!board) {
     return null
   }
 
-  const handleThemeModeChange = (nextMode: typeof themeMode): void => {
-    setThemeMode(nextMode)
-    handleThemeModeSwitch(nextMode)
-  }
-
   return (
     <section
-      aria-label="Appearance controls"
-      className="grid size-full content-center gap-4 text-foreground"
+      aria-label="Board color"
+      className="flex size-full items-center p-3 text-foreground"
       onClick={event => event.stopPropagation()}
     >
-      <div className="h-20 w-full">
+      <div className="size-full">
         <ThemeSelector
           value={getBoardColor(board)}
           onValueChange={(color) => {
@@ -162,12 +155,6 @@ function CurrentBoardAppearanceControls() {
           }}
         />
       </div>
-      <ThemeModeSelector
-        className="mx-auto dark:bg-white/10 dark:shadow-inner dark:shadow-white/5 dark:ring-1 dark:ring-white/10 dark:hover:bg-white/15"
-        size="sm"
-        value={themeMode}
-        onValueChange={handleThemeModeChange}
-      />
     </section>
   )
 }
@@ -178,7 +165,7 @@ export function TitleIsland({
   width = 150,
 }: TitleIslandProps) {
   const headerProgress = useHeaderProgress()
-  const [appearanceExpanded, setAppearanceExpanded] = useState(false)
+  const [themeExpanded, setThemeExpanded] = useState(false)
 
   useEffect(() => {
     if (!notification) return
@@ -187,7 +174,7 @@ export function TitleIsland({
     return () => window.clearTimeout(timeout)
   }, [notification, onDismissNotification])
 
-  const expanded = appearanceExpanded || notification !== null
+  const expanded = themeExpanded || notification !== null
 
   return (
     <>
@@ -200,14 +187,13 @@ export function TitleIsland({
         blockOutsideInteraction={notification === null}
         wrapperClassName="absolute inset-x-0"
         smallClassName="flex items-center gap-2 px-4"
-        largeClassName={notification ? undefined : "p-3"}
         smallHeight={40}
         smallWidth={width}
-        largeWidth={notification ? HEADER_NOTIFICATION_WIDTH : 280}
-        largeHeight={notification ? HEADER_NOTIFICATION_HEIGHT : 160}
+        largeWidth={notification ? HEADER_NOTIFICATION_WIDTH : 270}
+        largeHeight={notification ? HEADER_NOTIFICATION_HEIGHT : 110}
         onChange={(isSmall) => {
           if (!isSmall) {
-            setAppearanceExpanded(true)
+            setThemeExpanded(true)
             return
           }
 
@@ -216,7 +202,7 @@ export function TitleIsland({
             return
           }
 
-          setAppearanceExpanded(false)
+          setThemeExpanded(false)
         }}
         outerDecoration={isSmall => isSmall
           ? (
@@ -234,7 +220,7 @@ export function TitleIsland({
 
           return isSmall
             ? <HeaderProgress {...headerProgress} />
-            : <CurrentBoardAppearanceControls />
+            : <CurrentBoardThemeControls />
         }}
       </DynamicIsland>
     </>

@@ -195,20 +195,12 @@ LiveCards define the primary NewsNext surface treatment.
   color context into new compound variant names. Keep theme outline actions
   transparent at rest and reveal their tinted surface on hover or focus so
   secondary actions do not compete with the filled primary action.
-- The header Dynamic Island expands to a 280px by 160px appearance panel. Keep
-  the shared theme selector's six-column palette as the primary control and place
-  the same segmented theme-mode control used in Appearance settings below it.
-  Present its Dark, Light, and System options as moon, sun, and monitor icons in
-  both locations, with accessible labels and tooltips. Keep the default 40px
-  control height in Settings and use the compact 32px height in the island so it
-  matches the palette icons. Icon-only segmented items must be square with equal
-  padding on every side: 32px items in Settings and 28px items in the island.
-  Let the mode control follow the actual appearance: use the shared translucent
-  background treatment in light mode and a translucent white shell with a fine
-  white inset edge in dark mode. Reserve an 80px fixed region for the palette and
-  16px between the mode control and palette so their internal and outer spacing
-  remain stable. Changing the active Board color here updates the same persisted
-  Board preference used by its editor.
+- The header Dynamic Island expands to a 270px by 110px Board color panel. Keep
+  the shared theme selector's six-column palette as its only control and center
+  its 232px by 72px option grid so the visible clearance is 19px on every side.
+  Theme mode belongs in Appearance settings rather than the title island.
+  Changing the active Board color here updates the same persisted Board
+  preference used by its editor.
 
 The reference implementation is `LiveCardSurface` in
 `apps/extension/src/components/live-card/card-surface.tsx`.
@@ -662,7 +654,7 @@ separate toast surface for the same event. Keep the page interactive, do not
 move focus, and announce failures with alert semantics. Do not add a dedicated
 dismiss control; reuse the Dynamic Island's outside-click and scroll dismissal,
 and dismiss the notification automatically after eight seconds. If the
-appearance panel was already expanded, restore it when the notification ends;
+Board color panel was already expanded, restore it when the notification ends;
 otherwise return the island to its collapsed state.
 
 - Keep the collapsed state short, fully pill-shaped, and visually denser than
