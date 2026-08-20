@@ -1,6 +1,11 @@
-import type { ComponentMap, GridStackOptions, GridStackWidget } from "gridstack/dist/react"
-import type { ComponentType } from "react"
+import type { ComponentMap, GridStackHandle, GridStackOptions, GridStackWidget } from "gridstack/dist/react"
+import type { ComponentType, CSSProperties } from "react"
 import { GridStack } from "gridstack/dist/react"
+import { useLayoutEffect, useMemo, useRef } from "react"
+import {
+  CARD_ENTRANCE_DURATION_SECONDS,
+  CARD_ENTRANCE_STAGGER_SECONDS,
+} from "@/components/board-view/card-entrance-config"
 import "gridstack/dist/gridstack.css"
 
 type DemoWidgetKind
@@ -14,106 +19,116 @@ type DemoWidgetKind
     | "sources"
     | "timeline"
 
-type DemoWidgetPlacement = Pick<GridStackWidget, "h" | "minH" | "minW" | "w" | "x" | "y">
+interface DemoWidgetSpec {
+  kind: DemoWidgetKind
+  minH: number
+  minW: number
+}
 
-function createDemoWidget(kind: DemoWidgetKind, placement: DemoWidgetPlacement): GridStackWidget {
+function createDemoWidget(
+  spec: DemoWidgetSpec,
+  random: () => number,
+): GridStackWidget {
+  const hue = Math.round(random() * 360)
   return {
-    ...placement,
-    id: `demo-${kind}`,
+    autoPosition: true,
+    h: spec.minH + Math.floor(random() * 2),
+    minH: spec.minH,
+    minW: spec.minW,
+    w: spec.minW + Math.floor(random() * (9 - spec.minW)),
+    id: `demo-${spec.kind}`,
     component: "demoWidget",
-    props: { kind },
+    props: { hue, kind: spec.kind },
   }
 }
 
-const DEMO_GRID_OPTIONS: GridStackOptions = {
-  animate: true,
-  cellHeight: 56,
-  column: 12,
-  columnOpts: {
-    breakpoints: [
-      { w: 640, c: 1, layout: "list" },
-      { w: 960, c: 6, layout: "moveScale" },
-    ],
-    layout: "moveScale",
-  },
-  margin: 6,
-  resizable: {
-    handles: "e, se, s",
-  },
-  children: [
-    createDemoWidget("briefing", {
-      x: 0,
-      y: 0,
-      w: 7,
-      h: 5,
-      minW: 4,
-      minH: 4,
-    }),
-    createDemoWidget("sources", {
-      x: 7,
-      y: 0,
-      w: 5,
-      h: 5,
-      minW: 3,
-      minH: 4,
-    }),
-    createDemoWidget("momentum", {
-      x: 0,
-      y: 5,
-      w: 4,
-      h: 4,
-      minW: 3,
-      minH: 3,
-    }),
-    createDemoWidget("timeline", {
-      x: 4,
-      y: 5,
-      w: 8,
-      h: 4,
-      minW: 4,
-      minH: 3,
-    }),
-    createDemoWidget("clusters", {
-      x: 0,
-      y: 9,
-      w: 5,
-      h: 5,
-      minW: 3,
-      minH: 4,
-    }),
-    createDemoWidget("confirmation", {
-      x: 5,
-      y: 9,
-      w: 3,
-      h: 5,
-      minW: 3,
-      minH: 4,
-    }),
-    createDemoWidget("coverage", {
-      x: 8,
-      y: 9,
-      w: 4,
-      h: 5,
-      minW: 3,
-      minH: 4,
-    }),
-    createDemoWidget("rankings", {
-      x: 0,
-      y: 14,
-      w: 7,
-      h: 5,
-      minW: 4,
-      minH: 4,
-    }),
-    createDemoWidget("freshness", {
-      x: 7,
-      y: 14,
-      w: 5,
-      h: 5,
-      minW: 3,
-      minH: 4,
-    }),
-  ],
+const DEMO_WIDGET_SPECS: DemoWidgetSpec[] = [
+  { kind: "briefing", minW: 4, minH: 4 },
+  { kind: "sources", minW: 3, minH: 4 },
+  { kind: "momentum", minW: 3, minH: 3 },
+  { kind: "timeline", minW: 4, minH: 3 },
+  { kind: "clusters", minW: 3, minH: 4 },
+  { kind: "confirmation", minW: 3, minH: 4 },
+  { kind: "coverage", minW: 3, minH: 4 },
+  { kind: "rankings", minW: 4, minH: 4 },
+  { kind: "freshness", minW: 3, minH: 4 },
+]
+
+function hashString(value: string): number {
+  let hash = 2166136261
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index)
+    hash = Math.imul(hash, 16777619)
+  }
+  return hash >>> 0
+}
+
+function createRandom(seed: number): () => number {
+  let state = seed
+  return () => {
+    state += 0x6D2B79F5
+    let value = state
+    value = Math.imul(value ^ (value >>> 15), value | 1)
+    value ^= value + Math.imul(value ^ (value >>> 7), value | 61)
+    return ((value ^ (value >>> 14)) >>> 0) / 4294967296
+  }
+}
+
+function shuffle<T>(values: readonly T[], random: () => number): T[] {
+  const shuffled = [...values]
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const targetIndex = Math.floor(random() * (index + 1))
+    const value = shuffled[index]
+    shuffled[index] = shuffled[targetIndex] as T
+    shuffled[targetIndex] = value as T
+  }
+  return shuffled
+}
+
+function createDemoGridOptions(boardId: string): GridStackOptions {
+  const random = createRandom(hashString(boardId))
+  return {
+    animate: true,
+    cellHeight: 56,
+    column: 12,
+    columnOpts: {
+      breakpoints: [
+        { w: 640, c: 1, layout: "list" },
+        { w: 960, c: 6, layout: "moveScale" },
+      ],
+      layout: "moveScale",
+    },
+    margin: 6,
+    resizable: {
+      handles: "e, se, s",
+    },
+    children: shuffle(DEMO_WIDGET_SPECS, random).map(spec => createDemoWidget(spec, random)),
+  }
+}
+
+const DEMO_GRID_ENTRANCE_STYLE = {
+  "--card-entrance-duration": `${CARD_ENTRANCE_DURATION_SECONDS}s`,
+} as CSSProperties
+
+type NextLayerStyle = CSSProperties & {
+  "--next-widget-accent": string
+}
+
+type DemoWidgetStyle = NextLayerStyle & {
+  "--next-widget-shell": string
+  "--next-widget-tint": string
+}
+
+function getWidgetAccent(hue: number): string {
+  return `oklch(0.62 0.2 ${hue})`
+}
+
+function getDemoWidgetStyle(hue: number): DemoWidgetStyle {
+  return {
+    "--next-widget-accent": getWidgetAccent(hue),
+    "--next-widget-shell": `oklch(0.82 0.1 ${hue} / 0.55)`,
+    "--next-widget-tint": `oklch(0.72 0.13 ${hue} / 0.18)`,
+  }
 }
 
 const SOURCE_ROWS = [
@@ -129,7 +144,7 @@ const TIMELINE_ROWS = [
 ]
 
 const TOPIC_CLUSTERS = [
-  { label: "Local inference", count: 18, emphasis: "bg-primary/18 text-foreground" },
+  { label: "Local inference", count: 18, emphasis: "bg-[var(--next-widget-tint)] text-foreground" },
   { label: "Agent tooling", count: 14, emphasis: "bg-blue-500/12 text-foreground" },
   { label: "Model releases", count: 11, emphasis: "bg-purple-500/12 text-foreground" },
   { label: "Pricing", count: 9, emphasis: "bg-amber-500/12 text-foreground" },
@@ -196,17 +211,21 @@ function isDemoWidgetKind(value: unknown): value is DemoWidgetKind {
 
 function DemoWidget(props: Record<string, unknown>) {
   const kind = isDemoWidgetKind(props.kind) ? props.kind : "briefing"
+  const hue = typeof props.hue === "number" ? props.hue : 220
   const { title, Content } = DEMO_WIDGET_DEFINITIONS[kind]
 
   return (
-    <article className="flex h-full min-h-0 cursor-grab flex-col rounded-3xl bg-theme-400/45 p-2.5 shadow-sm active:cursor-grabbing">
+    <article
+      className="flex h-full min-h-0 cursor-grab flex-col rounded-3xl bg-[var(--next-widget-shell)] p-2.5 shadow-sm active:cursor-grabbing"
+      style={getDemoWidgetStyle(hue)}
+    >
       <header className="flex h-10 shrink-0 items-center gap-3 px-2">
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold text-foreground">{title}</p>
         </div>
       </header>
 
-      <div className="min-h-0 flex-1 overflow-hidden rounded-2xl bg-background/70 p-4 zenith-theme-400">
+      <div className="min-h-0 flex-1 overflow-hidden rounded-2xl bg-background/80 p-4">
         <Content />
       </div>
     </article>
@@ -217,7 +236,7 @@ function BriefingDemo() {
   return (
     <div className="flex h-full flex-col justify-between gap-4">
       <div>
-        <p className="text-xs font-semibold tracking-wide text-primary uppercase">Demo synthesis</p>
+        <p className="text-xs font-semibold tracking-wide text-[var(--next-widget-accent)] uppercase">Demo synthesis</p>
         <p className="mt-3 max-w-2xl text-lg leading-7 font-semibold text-foreground sm:text-xl">
           Open-source inference is drawing attention away from model launches and toward deployment cost.
         </p>
@@ -261,7 +280,7 @@ function MomentumDemo() {
         {MOMENTUM_BARS.map(bar => (
           <span
             key={bar.id}
-            className="min-w-1 flex-1 rounded-full bg-primary/70"
+            className="min-w-1 flex-1 rounded-full bg-[var(--next-widget-accent)]/70"
             style={{ height: `${bar.height}%` }}
           />
         ))}
@@ -276,7 +295,7 @@ function TimelineDemo() {
       {TIMELINE_ROWS.map(item => (
         <li key={item.time} className="grid grid-cols-[3rem_0.5rem_1fr] items-start gap-3">
           <time className="pt-0.5 text-xs font-semibold text-muted-foreground">{item.time}</time>
-          <span className="mt-1.5 size-2 rounded-full bg-primary" />
+          <span className="mt-1.5 size-2 rounded-full bg-[var(--next-widget-accent)]" />
           <p className="text-sm leading-5 text-foreground">{item.label}</p>
         </li>
       ))}
@@ -319,7 +338,7 @@ function ConfirmationDemo() {
         {CONFIRMATION_SLOTS.map(slot => (
           <span
             key={slot.id}
-            className={slot.confirmed ? "h-1.5 rounded-full bg-primary" : "h-1.5 rounded-full bg-neutral-400/20"}
+            className={slot.confirmed ? "h-1.5 rounded-full bg-[var(--next-widget-accent)]" : "h-1.5 rounded-full bg-neutral-400/20"}
           />
         ))}
       </div>
@@ -376,7 +395,7 @@ function FreshnessDemo() {
           <div key={bucket.label} className="grid grid-cols-[4.5rem_1fr_2rem] items-center gap-2">
             <span className="text-xs text-muted-foreground">{bucket.label}</span>
             <span className="h-1.5 overflow-hidden rounded-full bg-neutral-400/15">
-              <span className="block h-full rounded-full bg-primary/75" style={{ width: `${bucket.value}%` }} />
+              <span className="block h-full rounded-full bg-[var(--next-widget-accent)]/75" style={{ width: `${bucket.value}%` }} />
             </span>
             <span className="text-right text-xs font-semibold text-foreground">
               {`${bucket.value}%`}
@@ -392,24 +411,46 @@ const DEMO_COMPONENTS: ComponentMap = {
   demoWidget: DemoWidget,
 }
 
-export function DemoGrid() {
-  return (
-    <section aria-labelledby="next-layer-demo-title">
-      <div className="mb-5 flex flex-wrap items-end justify-between gap-3 px-2 sm:px-3">
-        <div>
-          <p className="text-xs font-semibold tracking-wide text-primary uppercase">Layout preview</p>
-          <h2 id="next-layer-demo-title" className="mt-1 text-xl font-semibold tracking-tight text-foreground">
-            Arrange your Next Layer
-          </h2>
-        </div>
-        <p className="max-w-sm text-xs leading-5 text-muted-foreground">
-          Drag a card to move it or pull its lower and right edges to resize. This demo resets when the page reloads.
-        </p>
-      </div>
+export function DemoGrid({ boardId }: { boardId: string }) {
+  const gridRef = useRef<GridStackHandle>(null)
+  const gridOptions = useMemo(() => createDemoGridOptions(boardId), [boardId])
+  const layerStyle = useMemo<NextLayerStyle>(() => ({
+    "--next-widget-accent": getWidgetAccent(hashString(boardId) % 360),
+  }), [boardId])
 
+  useLayoutEffect(() => {
+    const grid = gridRef.current?.getGrid()
+    if (!grid) return
+
+    const items = grid.getGridItems()
+    items.forEach((item, index) => {
+      item.querySelector<HTMLElement>(".grid-stack-item-content")?.style.setProperty(
+        "--card-entrance-delay",
+        `${index * CARD_ENTRANCE_STAGGER_SECONDS}s`,
+      )
+    })
+    grid.el.classList.add("next-layer-grid-entrance-ready")
+    const entranceDuration = items.length === 0
+      ? 0
+      : (CARD_ENTRANCE_DURATION_SECONDS
+        + (items.length - 1) * CARD_ENTRANCE_STAGGER_SECONDS) * 1000
+    const timeoutId = window.setTimeout(() => {
+      grid.el.classList.remove("next-layer-grid-entrance-ready")
+    }, entranceDuration)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+      grid.el.classList.remove("next-layer-grid-entrance-ready")
+    }
+  }, [])
+
+  return (
+    <section aria-label="Next Layer widgets" style={layerStyle}>
       <GridStack
+        ref={gridRef}
         className="next-layer-grid"
-        options={DEMO_GRID_OPTIONS}
+        style={DEMO_GRID_ENTRANCE_STYLE}
+        options={gridOptions}
         components={DEMO_COMPONENTS}
       />
     </section>

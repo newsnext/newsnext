@@ -1,4 +1,3 @@
-import type { RefObject } from "react"
 import { useSetAtom } from "jotai"
 import { useCallback } from "react"
 import { useBoardLiveCards } from "@/hooks/use-board-live-cards"
@@ -9,15 +8,11 @@ import { LiveCardContainer } from "./live-card-container"
 interface NowLayerProps {
   boardId: string
   className?: string
-  isScattered?: boolean
-  containerRef?: RefObject<HTMLDivElement | null>
 }
 
 export function NowLayer({
   boardId,
   className,
-  isScattered,
-  containerRef,
 }: NowLayerProps) {
   const setManualBoardOrder = useSetAtom(setManualBoardOrderAtom)
   const { currentBoard, liveCardsByInstanceId, instanceIds } = useBoardLiveCards(boardId)
@@ -47,8 +42,6 @@ export function NowLayer({
       liveCardsByInstanceId={liveCardsByInstanceId}
       sortable={boardId !== ALL_BOARD_ID}
       className={className}
-      isScattered={isScattered}
-      containerRef={containerRef}
       onInstanceIdsChange={handleInstanceIdsChange}
     />
   )

@@ -9,9 +9,38 @@
 
 .next-layer-grid .grid-stack-placeholder > .placeholder-content {
   border-radius: 1.5rem;
-  background: color-mix(in oklab, var(--color-theme-400) 18%, transparent);
+  background: color-mix(in oklab, var(--next-widget-accent) 18%, transparent);
 }
 
 .next-layer-grid .grid-stack-item > .ui-resizable-handle {
   background-image: none;
+}
+
+@keyframes layer-card-enter {
+  from {
+    opacity: 0;
+    translate: 0 20px;
+  }
+
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+.next-layer-grid.next-layer-grid-entrance-ready > .grid-stack-item > .grid-stack-item-content {
+  animation: layer-card-enter var(--card-entrance-duration) linear both;
+  animation-delay: var(--card-entrance-delay);
+}
+
+.layer-card-entrance {
+  animation: layer-card-enter var(--card-entrance-duration) linear both;
+  animation-delay: var(--card-entrance-delay);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .layer-card-entrance,
+  .next-layer-grid > .grid-stack-item > .grid-stack-item-content {
+    animation: none;
+  }
 }

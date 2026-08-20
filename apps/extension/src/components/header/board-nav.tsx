@@ -16,7 +16,7 @@ import {
 } from "@newsnext/ui/components/pill-group"
 import { useHotkeys } from "@tanstack/react-hotkeys"
 import { useNavigate } from "@tanstack/react-router"
-import { useAtom, useAtomValue, useSetAtom } from "jotai"
+import { useAtomValue, useSetAtom } from "jotai"
 import { useRef, useState } from "react"
 import { BoardDialog } from "@/components/board-dialog"
 import { PhCircleDashed, PhFileArrowUp, PhPlusCircle } from "@/components/icons/ph"
@@ -55,7 +55,7 @@ interface BoardNavProps {
 export function BoardNav({ onNotify }: BoardNavProps) {
   const boards = useAtomValue(boardsAtom)
   const navigate = useNavigate()
-  const [currentBoardId, setCurrentBoardId] = useAtom(currentBoardIdAtom)
+  const currentBoardId = useAtomValue(currentBoardIdAtom)
   const shortcuts = useAtomValue(shortcutSettingsAtom)
   const addBoard = useSetAtom(createBoardAtom)
   const addBoardFromOpml = useSetAtom(createBoardFromOpmlAtom)
@@ -70,7 +70,6 @@ export function BoardNav({ onNotify }: BoardNavProps) {
       ?? boards.find(board => board.id === boardId)?.defaultLayer
       ?? DEFAULT_BOARD_LAYER
 
-    setCurrentBoardId(boardId)
     void navigate({
       to: "/board/$boardId",
       params: { boardId },

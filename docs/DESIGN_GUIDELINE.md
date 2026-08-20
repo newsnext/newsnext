@@ -217,9 +217,14 @@ The reference implementation is `LiveCardSurface` in
 
 Next Layer uses a responsive GridStack surface to preview movable and resizable
 Widgets while its durable CLI/daemon-backed model is being built. Keep demo
-content visibly identified as a layout preview, reset it on reload, and never
-read Now Layer queries to populate it. Production Widgets must eventually render
-CLI/daemon-backed persisted output rather than browser-cache-backed results.
+content self-explanatory without a visible page heading or drag instructions,
+reset it on reload, and never read Now Layer queries to populate it. Production
+Widgets must eventually render CLI/daemon-backed persisted output rather than
+browser-cache-backed results.
+Until persisted Widget layouts are available, derive each Board's demo colors,
+Widget order, and initial sizes deterministically from its Board ID. Keep that
+preview stable across remounts while making different Boards visibly distinct.
+Do not derive Next Layer Widget colors from the Board theme palette.
 
 Treat GridStack as a presentation adapter rather than the durable layout model.
 Keep the trusted Widget shell and status treatment outside future generated
@@ -227,9 +232,48 @@ content. Use the LiveCard translucent shell language and let the whole demo
 surface act as the drag target. Resize from the lower and right edges without
 adding dedicated visible drag or resize controls.
 
-Reveal Next Layer with one brief, slightly delayed opacity fade so it follows
-the LiveCard scatter without competing with it. Do not scale or blur the full
-page during this transition.
+Preserve Now Layer's intrinsic centered LiveCard layout without adding a width
+constraint to its container. Limit Next Layer to the equivalent width of a
+four-column LiveCard row so its visible content aligns with Now Layer, and do
+not add a second horizontal padding constraint inside its scroll container.
+The shared Board container owns both Layers' responsive content insets and
+places Next Layer's fixed scroll region directly below the responsive Header.
+Now Layer and Next Layer must not define their own page padding.
+Keep Next Layer's overflow boundary at the viewport edges and apply Board
+insets inside that full-width scroll container. Otherwise horizontal exits are
+clipped at the content inset and appear to pass behind an elevated side margin.
+
+Treat Now Layer and Next Layer as peers during transitions. Reveal the incoming
+Layer only after the departing Layer's visible cards exit horizontally and fade.
+Keep exactly one Layer mounted at a time: finish the current Layer's exit,
+unmount it, and only then mount the target Layer. Apply the same exit animation
+to LiveCards and Widgets: send cards on the left toward the left edge and cards
+on the right toward the right edge while preserving their vertical positions.
+Never reverse these paths to make either Layer converge back into place, and
+respect reduced-motion preferences by switching Layers immediately. Do not
+scale or blur the full page during this transition.
+Play Now Layer's staggered LiveCard entrance on its first mount, after changing
+Boards, and whenever returning from Next Layer. Treat it as a fresh reveal from
+below with opacity, not as a reversal of the departing scatter paths.
+Apply the same entrance duration, vertical offset, and stagger to Next Layer
+Widgets whenever Next Layer mounts. Animate each GridStack item content wrapper
+with the independent CSS translate property so the entire Widget moves without
+overwriting GridStack's positioning transform or affecting dragging and resizing.
+Remove Next Layer's entrance-animation selector after the initial stagger
+finishes so later GridStack dragging, resizing, or wrapper replacement cannot
+replay it.
+Use the same CSS animation on a LiveCard content wrapper in Now Layer. Keep
+Motion's `layout` behavior only on the outer sortable item so Motion handles
+FLIP reordering but no fixed entrance, fade, or horizontal exit animation.
+
+Snapshot both the rendered Board and Layer for the duration of an exit. Never
+replace an outgoing Now Layer with the target Board's LiveCards before the exit
+finishes. Keep one exit in flight when the pending Board or Layer changes, and
+mount only the latest target when that exit finishes instead of restarting the
+outgoing animation. Board changes within Now Layer use the same exit-then-enter sequence;
+Board changes within Next Layer use the same sequence and mount a distinct
+Widget grid for the target Board. Never share a Next Layer instance or layout
+between Boards.
 
 Blank page space is part of the reading surface and must not switch back to Now
 Layer when clicked. Now Layer and Next Layer are peer views, so switch between
