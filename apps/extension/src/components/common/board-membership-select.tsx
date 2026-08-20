@@ -6,7 +6,6 @@ import {
   DropdownMenuTrigger,
 } from "@newsnext/ui/components/dropdown-menu"
 import { useAtomValue } from "jotai"
-import { ALL_BOARD_ID } from "@/lib/board"
 import { cn } from "@/lib/utils"
 import { boardsAtom } from "@/store/board"
 
@@ -27,7 +26,7 @@ export function BoardMembershipSelect({
   className,
   isBoardDisabled,
 }: BoardMembershipSelectProps): React.JSX.Element {
-  const boards = useAtomValue(boardsAtom).filter(board => board.id !== ALL_BOARD_ID)
+  const boards = useAtomValue(boardsAtom)
   const selectedBoardIds = new Set(value)
   const selectedBoards = boards.filter(board => selectedBoardIds.has(board.id))
   const label = selectedBoards.length === 0
@@ -56,7 +55,11 @@ export function BoardMembershipSelect({
                 key={board.id}
                 checked={selectedBoardIds.has(board.id)}
                 closeOnClick={false}
-                disabled={isBoardDisabled?.(board.id)}
+                disabled={isBoardDisabled?.(board.id)
+                  || (selectedBoardIds.has(board.id) && selectedBoardIds.size === 1)}
+                title={selectedBoardIds.has(board.id) && selectedBoardIds.size === 1
+                  ? "A LiveCard must belong to at least one board."
+                  : undefined}
                 onCheckedChange={member => onMembershipChange(board.id, member)}
               >
                 {board.name}

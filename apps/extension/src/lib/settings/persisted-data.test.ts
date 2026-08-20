@@ -9,8 +9,10 @@ import {
 import { createDefaultPersistedSettings } from "./persisted-settings"
 
 function createData(): PersistedUserData {
+  const settings = createDefaultPersistedSettings()
+  settings.general.defaultBoardId = "reading"
   return {
-    settings: createDefaultPersistedSettings(),
+    settings,
     collections: [{ id: "reading", name: "Reading", createdAt: 1 }],
     collectionViews: [{
       collectionId: "reading",
@@ -77,64 +79,20 @@ describe("persisted user data", () => {
 
   it("round-trips Collections, memberships, Instances, Views, and settings", () => {
     const data = createData()
-    expect(parsePersistedDataExport(serializePersistedDataExport(data))?.data).toEqual(data)
-  })
-
-  it("imports legacy v1 Board and Instance exports into Collections", () => {
-    const settings = createDefaultPersistedSettings()
-    const imported = parsePersistedDataExport(JSON.stringify({
-      kind: "newsnext-user-data",
-      version: 1,
-      data: {
-        settings,
-        boards: [{
-          id: "reading",
-          name: "Reading",
-          color: "blue",
-          sort: {
-            mode: "manual",
-            automaticMode: "provider",
-            manualOrder: ["rss:feed::legacy"],
-          },
-        }],
-        instances: [{
-          instanceId: "rss:feed::legacy",
-          sourceId: "rss:feed",
-          boardId: "reading",
-          patch: {},
-          createdAt: 10,
-        }],
-      },
-    }))
-
-    expect(imported?.version).toBe(2)
-    expect(imported?.data).toMatchObject({
-      collections: [{ id: "reading", name: "Reading", createdAt: 0 }],
-      collectionViews: [{
-        collectionId: "reading",
-        color: "blue",
-        sortMode: "manual",
-        automaticSortMode: "provider",
-      }],
-      collectionEntries: [{
-        collectionId: "reading",
-        instanceId: "rss:feed::legacy",
-        addedAt: 10,
-        position: 0,
-      }],
-      instances: [{
-        instanceId: "rss:feed::legacy",
-        sourceId: "rss:feed",
-        patch: {},
-        createdAt: 10,
-      }],
-    })
+    const serialized = serializePersistedDataExport(data)
+    expect(JSON.parse(serialized).version).toBe(1)
+    expect(parsePersistedDataExport(serialized)?.data).toEqual(data)
   })
 
   it("rejects another export kind or unsupported version", () => {
-    expect(parsePersistedDataExport(JSON.stringify({ kind: "other-app", version: 2, data: {} })))
+    expect(parsePersistedDataExport(JSON.stringify({ kind: "other-app", version: 1, data: {} })))
       .toBeUndefined()
-    expect(parsePersistedDataExport(JSON.stringify({ kind: "newsnext-user-data", version: 3, data: {} })))
+    expect(parsePersistedDataExport(JSON.stringify({
+      kind: "newsnext-user-data",
+      version: 2,
+      data: { collections: [{ id: "legacy", name: "Legacy", createdAt: 1 }] },
+    }))).toBeUndefined()
+    expect(parsePersistedDataExport(JSON.stringify({ kind: "newsnext-user-data", version: 4, data: {} })))
       .toBeUndefined()
   })
 
@@ -156,8 +114,32 @@ describe("persisted user data", () => {
       collectionEntries: [],
       collectionViews: [],
     })
-    expect(merged.settings.general.defaultBoardId).toBe("all")
-    expect(merged.collectionEntries).toEqual([])
+    const initialBoard = merged.collections[0]
+    const boardId = initialBoard?.id
+    expect(boardId).toHaveLength(12)
+    expect(initialBoard?.createdAt).toEqual(expect.any(Number))
+    expect(merged.settings.general.defaultBoardId).toBe(boardId)
+    expect(initialBoard).toMatchObject({ id: boardId, name: "My Board" })
+    expect(merged.collectionEntries).toEqual([{
+      collectionId: boardId,
+      instanceId: "rss:feed::R5xK2mN8qP4s",
+      addedAt: 1,
+      position: 0,
+    }])
     expect(merged.instances).toEqual(current.instances)
+  })
+
+  it("assigns imported unowned Instances to the first Board", () => {
+    const data = createData()
+    data.collectionEntries = []
+
+    const imported = parsePersistedDataExport(serializePersistedDataExport(data))
+
+    expect(imported?.data.collectionEntries).toEqual([{
+      collectionId: "reading",
+      instanceId: "rss:feed::R5xK2mN8qP4s",
+      addedAt: 1,
+      position: 0,
+    }])
   })
 })

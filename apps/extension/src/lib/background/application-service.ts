@@ -9,12 +9,12 @@ import type {
 import { loadSourceDescriptors } from "@newsnext/source-kit/runtime"
 import { browser } from "#imports"
 import {
+  ensureApplicationDataIntegrity,
   executeApplicationAction,
   executeApplicationQuery,
   parseApplicationAction,
   parseApplicationQuery,
 } from "../application"
-import { ALL_BOARD_ID } from "../board"
 import { createId } from "../id"
 import {
   normalizeApplicationData,
@@ -23,7 +23,10 @@ import {
   PERSISTED_DATA_SLICES,
 } from "../settings"
 
-let mutationQueue: Promise<void> = Promise.resolve()
+let mutationQueue: Promise<void> = readApplicationData().then(
+  () => undefined,
+  () => undefined,
+)
 
 export async function executeBackgroundApplicationAction(
   action: ApplicationAction,
@@ -57,14 +60,17 @@ export async function executeBackgroundApplicationAction(
       const stored = await browser.storage.local.get([settingsKey, deviceStateKey])
       const settings = normalizePersistedSettings(stored[settingsKey])
       const deviceState = normalizePersistedDeviceState(stored[deviceStateKey])
+      const destinationBoardId = parsedAction.input.targetCollectionId
+        ?? result.data.collections[0]?.id
+      if (!destinationBoardId) throw new Error("NewsNext must keep at least one Board")
       if (settings.general.defaultBoardId === parsedAction.input.collectionId) {
         updates[settingsKey] = {
           ...settings,
-          general: { ...settings.general, defaultBoardId: ALL_BOARD_ID },
+          general: { ...settings.general, defaultBoardId: destinationBoardId },
         }
       }
       if (deviceState.currentBoardId === parsedAction.input.collectionId) {
-        updates[deviceStateKey] = { ...deviceState, currentBoardId: ALL_BOARD_ID }
+        updates[deviceStateKey] = { ...deviceState, currentBoardId: destinationBoardId }
       }
     }
     await browser.storage.local.set(updates)
@@ -78,7 +84,9 @@ export async function replaceBackgroundApplicationData(
   value: ApplicationData,
 ): Promise<ApplicationData> {
   const replacement = mutationQueue.then(async () => {
-    const data = normalizeApplicationData(value)
+    const data = ensureApplicationDataIntegrity(normalizeApplicationData(value))
+    const fallbackBoardId = data.collections[0]?.id
+    if (!fallbackBoardId) throw new Error("NewsNext must keep at least one Board")
     const deviceStateKey = PERSISTED_DATA_SLICES.deviceState.key
     const settingsKey = PERSISTED_DATA_SLICES.settings.key
     const stored = await browser.storage.local.get([deviceStateKey, settingsKey])
@@ -88,16 +96,14 @@ export async function replaceBackgroundApplicationData(
     const updates: Record<string, unknown> = {
       [PERSISTED_DATA_SLICES.application.key]: data,
     }
-    if (deviceState.currentBoardId !== ALL_BOARD_ID
-      && !collectionIds.has(deviceState.currentBoardId)) {
-      updates[deviceStateKey] = { ...deviceState, currentBoardId: ALL_BOARD_ID }
+    if (!collectionIds.has(deviceState.currentBoardId)) {
+      updates[deviceStateKey] = { ...deviceState, currentBoardId: fallbackBoardId }
     }
     if (settings.general.defaultBoardId !== null
-      && settings.general.defaultBoardId !== ALL_BOARD_ID
       && !collectionIds.has(settings.general.defaultBoardId)) {
       updates[settingsKey] = {
         ...settings,
-        general: { ...settings.general, defaultBoardId: ALL_BOARD_ID },
+        general: { ...settings.general, defaultBoardId: fallbackBoardId },
       }
     }
     await browser.storage.local.set(updates)
@@ -140,7 +146,11 @@ export async function readConnectedApplicationData(): Promise<ApplicationData> {
 async function readApplicationData(): Promise<ApplicationData> {
   const key = PERSISTED_DATA_SLICES.application.key
   const stored = await browser.storage.local.get(key)
-  return normalizeApplicationData(stored[key])
+  const data = normalizeApplicationData(stored[key])
+  const initialized = ensureApplicationDataIntegrity(data)
+  if (initialized === data) return data
+  await browser.storage.local.set({ [key]: initialized })
+  return initialized
 }
 
 async function readCurrentBoardId(): Promise<string> {

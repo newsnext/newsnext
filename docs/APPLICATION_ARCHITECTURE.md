@@ -1,9 +1,9 @@
 # Application Architecture
 
 Status: active architecture. The Collection/Instance data model, Board/LiveCard
-projections, shared Application Actions and Queries, and v1 import migration
-are implemented. Native Agent read/write adapters and operation discovery are
-implemented. Frontend and Agent writes share the background mutation runtime.
+projections, and shared Application Actions and Queries are implemented. Native
+Agent read/write adapters and operation discovery are implemented. Frontend and
+Agent writes share the background mutation runtime.
 
 ## Purpose
 
@@ -306,10 +306,11 @@ collection.addInstance({
 
 Removing a LiveCard from one Board executes `collection.removeInstance`. Deleting
 the underlying configured Instance executes `instance.delete` and removes all
-of its Collection entries. `collection.delete` preserves Instances by default;
-setting `deleteInstances` deletes each Instance used only by that Collection,
-which also removes it from All. Shared Instances remain in their other
-Collections.
+of its Collection entries. `collection.delete` requires exactly one strategy:
+setting `deleteInstances` deletes each Instance used only by that Collection;
+setting `targetCollectionId` transfers the deleted Collection's Instances to
+that Collection without duplicating existing memberships.
+Shared Instances remain in their other Collections.
 
 Application-level composite actions capture common atomic intent. Creating a
 Collection with `instances` configures every Source Instance and creates its
@@ -419,12 +420,15 @@ button clicks, dialog submissions, and drag events are not canonical Actions.
 
 ## Ownership and Lifecycle Rules
 
-- Removing a Collection entry does not delete its Instance.
+- Removing a Collection entry does not delete its Instance and cannot remove
+  the Instance's final membership.
 - Deleting an Instance removes every Collection entry that references it and
   cleans up Instance-owned runtime data according to the relevant retention
   policy.
-- Deleting a Collection removes its entries but does not implicitly delete its
-  Instances.
+- `Transfer and Delete` merges the deleted Collection's Instances into an
+  explicitly selected Collection before deleting it. Existing target
+  memberships are not duplicated. `Delete with LiveCards` deletes Instances
+  owned only by the deleted Collection.
 - A Board projection cannot be the owner of Collection membership.
 - A LiveCard projection cannot be the owner of Instance configuration or results.
 - View preferences cannot be required to interpret canonical Collection or
@@ -491,10 +495,9 @@ The architecture migration described by this document is complete. Future
 features must extend the Data, Action, Query, and View contracts instead of
 introducing parallel UI-only or Agent-only mutation paths.
 
-The v2 user-data envelope persists Collections, Collection entries, Collection
-Views, and Instances. Import accepts v1 exports and converts their Boards and
-single `Instance.boardId` memberships at the boundary. Runtime storage does not
-carry the legacy representation or compatibility branches. Import normalization
+The v1 user-data envelope persists Collections, Collection entries, Collection
+Views, and Instances. Import accepts only the current envelope version and does
+not carry legacy representations or compatibility branches. Import normalization
 rejects empty identities and duplicate Collection names, discards invalid
 memberships, and rebuilds each Collection's membership positions as a stable
 contiguous sequence.

@@ -12,11 +12,10 @@ import { BoardMembershipSelect } from "@/components/common/board-membership-sele
 import { PhArrowCircleLeft, PhPlusCircle } from "@/components/icons/ph"
 import { LiveCard } from "@/components/live-card"
 import { useAsyncAction } from "@/hooks/use-async-action"
-import { ALL_BOARD_ID } from "@/lib/board"
 import { createRadarLiveCard } from "@/lib/radar"
 import { mergeSourceInstancePatch } from "@/lib/source"
 import { cn } from "@/lib/utils"
-import { addInstanceAtom } from "@/store/board"
+import { addInstanceAtom, boardsAtom } from "@/store/board"
 import { currentBoardIdAtom } from "@/store/settings"
 
 const RADAR_SWIPE_THRESHOLD = 90
@@ -164,22 +163,30 @@ interface RadarDeckProps {
   suggestions: RadarSuggestion[]
 }
 
+interface RadarDeckContentProps extends RadarDeckProps {
+  initialBoardId?: string
+}
+
 export function RadarDeck({ sourceDescriptors, suggestions }: RadarDeckProps) {
-  const deckKey = suggestions.map(suggestion => suggestion.id).join("\0")
+  const boards = useAtomValue(boardsAtom)
+  const currentBoardId = useAtomValue(currentBoardIdAtom)
+  const initialBoardId = boards.find(board => board.id === currentBoardId)?.id
+    ?? boards[0]?.id
+  const deckKey = `${suggestions.map(suggestion => suggestion.id).join("\0")}\0${initialBoardId ?? ""}`
   return (
     <RadarDeckContent
       key={deckKey}
+      initialBoardId={initialBoardId}
       sourceDescriptors={sourceDescriptors}
       suggestions={suggestions}
     />
   )
 }
 
-function RadarDeckContent({ sourceDescriptors, suggestions }: RadarDeckProps) {
+function RadarDeckContent({ initialBoardId, sourceDescriptors, suggestions }: RadarDeckContentProps) {
   const addInstance = useSetAtom(addInstanceAtom)
-  const currentBoardId = useAtomValue(currentBoardIdAtom)
   const [targetBoardIds, setTargetBoardIds] = useState<string[]>(
-    currentBoardId === ALL_BOARD_ID ? [] : [currentBoardId],
+    initialBoardId ? [initialBoardId] : [],
   )
   const [activeIndex, setActiveIndex] = useState(0)
   const [draftPatches, setDraftPatches] = useState<Record<string, SourceInstancePatch>>({})
@@ -415,7 +422,7 @@ function RadarDeckContent({ sourceDescriptors, suggestions }: RadarDeckProps) {
           <Button
             size="sm"
             onClick={handleCreate}
-            disabled={isCreated || isCreating}
+            disabled={isCreated || isCreating || targetBoardIds.length === 0}
             aria-label="Create LiveCard"
             title="Create LiveCard"
             className="flex h-8 items-center gap-1 rounded-3xl bg-(--radar-action-card-bg) px-3 py-0.5 text-xs font-semibold transition-colors hover:bg-(--radar-action-card-bg-hover) hover:text-foreground"

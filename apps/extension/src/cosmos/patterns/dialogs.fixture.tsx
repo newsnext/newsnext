@@ -14,8 +14,8 @@ import { SettingsModalShell } from "@/components/settings/modal-shell"
 const BOARD_DIALOG_BOARDS: Board[] = [
   {
     defaultLayer: "now",
-    id: "all",
-    name: "All",
+    id: "V1StGXR8_Z5j",
+    name: "My Board",
     color: "slate",
     sort: { mode: "createdAt", automaticMode: "createdAt", manualOrder: [] },
   },
@@ -35,7 +35,7 @@ function createSearchSource({
   providerTitle,
   title,
 }: {
-  boardId: string | null
+  boardId: string
   color: LiveCardViewModel["provider"]["color"]
   id: string
   providerTitle: string
@@ -106,20 +106,6 @@ const SEARCH_GROUPS = [
       }),
     ],
   },
-  {
-    id: "no-board",
-    name: "No board",
-    targetBoardId: "all",
-    items: [
-      createSearchSource({
-        id: "rss:feed::cosmos-v2ex",
-        boardId: null,
-        title: "V2EX - Creative",
-        providerTitle: "RSS",
-        color: "orange",
-      }),
-    ],
-  },
 ] satisfies ComponentProps<typeof SearchModalContent>["groups"]
 
 function FixtureStage({ children }: React.PropsWithChildren) {
@@ -153,8 +139,10 @@ function BoardDialogFixture({ target }: { target: BoardDialogTarget }) {
           target={target}
           onClose={() => setOpen(false)}
           onCreate={describeCreateAction}
-          onDelete={(boardId, deleteLiveCards) => setLastAction(
-            `Deleted ${boardId}${deleteLiveCards ? " with cards" : ""}`,
+          onDelete={(boardId, action) => setLastAction(
+            action.mode === "delete"
+              ? `Deleted ${boardId} with cards`
+              : `Deleted ${boardId} and transferred to ${action.targetBoardId}`,
           )}
           onUpdate={board => describeBoardAction("Updated", board)}
         />

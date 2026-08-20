@@ -143,11 +143,9 @@ default layer, and sort mode. Extension pages read synchronous `localStorage`
 snapshots first, then reconcile them with canonical copies in
 `browser.storage.local`; background storage wins when both copies exist.
 A versioned `newsnext-user-data` envelope validates and combines the portable
-slices for import and export. Version 2 exports Application Data; version 1
-files remain accepted only at the import boundary, where Boards and
-`Instance.boardId` values become Collections, Views, and entries. Current board
-selection, CLI connectivity, browser permissions, and caches are device-local
-and are not part of that envelope.
+slices for import and export. Import accepts only the current version 1 envelope.
+Current Board selection, CLI connectivity, browser permissions, and caches are
+device-local and are not part of that envelope.
 The Settings data reset restores every persisted slice to its default, deletes
 the device-local source-secret and IndexedDB source-result caches, clears active
 source queries, and revokes user-granted optional browser and host permissions.
@@ -724,17 +722,17 @@ Radar metadata can replace source-owned presentation fields such as title,
 badge, description, and home URL, but cannot modify source identity,
 provider title, icon, color, category, loader behavior, capabilities, secrets,
 request rules, or Source version.
-Accepting a Radar suggestion creates one Instance and, when a custom Board is
-selected, one Collection entry. The Instance owns its Source ID and patch;
+Accepting a Radar suggestion creates one Instance and one or more Collection
+entries. The Instance owns its Source ID and patch;
 Collection entries own membership. New Instance IDs combine the Source ID and a
 12-character Nano ID with `::`;
-custom Board IDs use the Nano ID directly. Both remain opaque strings so data
-persisted with older ID formats continues to resolve without migration.
+Board IDs, including the initial `My Board`, use the Nano ID directly. Both
+remain opaque strings.
 Moving a LiveCard updates only Collection membership; Source parameters,
-presentation metadata, and cache identity remain unchanged. An Instance without
-a Collection entry appears only in All. All deliberately skips membership
-filtering and aggregates every Instance. Its view ID is `all`, producing the
-`/board/all` route.
+presentation metadata, and cache identity remain unchanged. Every Instance has
+at least one Collection entry. First-run data contains one
+ordinary Collection named `My Board`; it can be renamed or deleted after another
+Board exists, and all Board routes resolve real Collection IDs.
 The LiveCard editor writes the same instance patch shape and exposes every declared
 source parameter plus each editable source-owned presentation metadata field.
 The inferred LiveCard presentation is read-only. Provider

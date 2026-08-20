@@ -16,7 +16,12 @@ function createData(): ApplicationData {
       sortMode: "createdAt",
       automaticSortMode: "createdAt",
     }],
-    collectionEntries: [],
+    collectionEntries: [{
+      collectionId: "reading",
+      instanceId: "rss:feed::one",
+      addedAt: 1,
+      position: 0,
+    }],
     instances: [{
       instanceId: "rss:feed::one",
       sourceId: "rss:feed",
@@ -103,7 +108,7 @@ describe("application actions", () => {
         createdAt: 100,
       },
     ])
-    expect(execution.data.collectionEntries).toEqual([
+    expect(execution.data.collectionEntries.slice(-2)).toEqual([
       { collectionId: "new-1", instanceId: "rss:feed::new-2", addedAt: 100, position: 0 },
       { collectionId: "new-1", instanceId: "rss:feed::new-3", addedAt: 100, position: 1 },
     ])
@@ -138,13 +143,6 @@ describe("application actions", () => {
       automaticSortMode: "createdAt",
     })
     initial.collectionEntries.push({
-      collectionId: "reading",
-      instanceId: "rss:feed::one",
-      addedAt: 1,
-      position: 0,
-    })
-
-    initial.collectionEntries.push({
       collectionId: "ai",
       instanceId: "rss:feed::one",
       addedAt: 2,
@@ -165,14 +163,17 @@ describe("application actions", () => {
     expect(execution.data.instances[0]).not.toHaveProperty("collectionId")
   })
 
+  it("rejects removing an Instance's last Board membership", () => {
+    const initial = createData()
+
+    expect(() => executeApplicationAction(initial, {
+      type: "collection.removeInstance",
+      input: { collectionId: "reading", instanceId: "rss:feed::one" },
+    }, dependencies)).toThrow("must belong to at least one Board")
+  })
+
   it("deletes an Instance and every membership without deleting Collections", () => {
     const initial = createData()
-    initial.collectionEntries.push({
-      collectionId: "reading",
-      instanceId: "rss:feed::one",
-      addedAt: 1,
-      position: 0,
-    })
     const execution = executeApplicationAction(initial, {
       type: "instance.delete",
       input: { instanceId: "rss:feed::one" },
@@ -183,23 +184,12 @@ describe("application actions", () => {
     expect(execution.data.collections).toEqual(initial.collections)
   })
 
-  it("deletes a Collection and its View and entries without deleting Instances", () => {
+  it("rejects deleting the last Board", () => {
     const initial = createData()
-    initial.collectionEntries.push({
-      collectionId: "reading",
-      instanceId: "rss:feed::one",
-      addedAt: 1,
-      position: 0,
-    })
-    const execution = executeApplicationAction(initial, {
+    expect(() => executeApplicationAction(initial, {
       type: "collection.delete",
-      input: { collectionId: "reading" },
-    }, dependencies)
-
-    expect(execution.data.collections).toEqual([])
-    expect(execution.data.collectionViews).toEqual([])
-    expect(execution.data.collectionEntries).toEqual([])
-    expect(execution.data.instances).toEqual(initial.instances)
+      input: { collectionId: "reading", deleteInstances: true },
+    }, dependencies)).toThrow("NewsNext must keep at least one Board")
   })
 
   it("deletes only Collection Instances not used by another Collection", () => {
@@ -224,7 +214,6 @@ describe("application actions", () => {
       createdAt: 3,
     })
     initial.collectionEntries.push(
-      { collectionId: "reading", instanceId: "rss:feed::one", addedAt: 1, position: 0 },
       { collectionId: "ai", instanceId: "rss:feed::one", addedAt: 2, position: 0 },
       { collectionId: "ai", instanceId: "rss:feed::two", addedAt: 3, position: 1 },
       { collectionId: "reading", instanceId: "rss:feed::three", addedAt: 4, position: 1 },
@@ -246,6 +235,52 @@ describe("application actions", () => {
     ])
   })
 
+  it("moves Board Instances to the selected target when deleting and transferring", () => {
+    const initial = createData()
+    initial.collections.push({ id: "ai", name: "AI", createdAt: 2 })
+    initial.collectionViews.push({
+      collectionId: "ai",
+      defaultLayer: "now",
+      sortMode: "createdAt",
+      automaticSortMode: "createdAt",
+    })
+    const execution = executeApplicationAction(initial, {
+      type: "collection.delete",
+      input: { collectionId: "reading", targetCollectionId: "ai" },
+    }, dependencies)
+
+    expect(execution.data.instances).toEqual(initial.instances)
+    expect(execution.data.collectionEntries).toEqual([{
+      collectionId: "ai",
+      instanceId: "rss:feed::one",
+      addedAt: 1,
+      position: 0,
+    }])
+  })
+
+  it("does not duplicate memberships already present on the transfer target", () => {
+    const initial = createData()
+    initial.collections.push({ id: "ai", name: "AI", createdAt: 2 })
+    initial.collectionViews.push({
+      collectionId: "ai",
+      defaultLayer: "now",
+      sortMode: "createdAt",
+      automaticSortMode: "createdAt",
+    })
+    initial.collectionEntries.push(
+      { collectionId: "ai", instanceId: "rss:feed::one", addedAt: 2, position: 0 },
+    )
+
+    const execution = executeApplicationAction(initial, {
+      type: "collection.delete",
+      input: { collectionId: "reading", targetCollectionId: "ai" },
+    }, dependencies)
+
+    expect(execution.data.collectionEntries).toEqual([
+      { collectionId: "ai", instanceId: "rss:feed::one", addedAt: 2, position: 0 },
+    ])
+  })
+
   it("adds the same Instance to another Collection without changing existing membership", () => {
     const initial = createData()
     initial.collections.push({ id: "ai", name: "AI", createdAt: 2 })
@@ -255,13 +290,6 @@ describe("application actions", () => {
       sortMode: "createdAt",
       automaticSortMode: "createdAt",
     })
-    initial.collectionEntries.push({
-      collectionId: "reading",
-      instanceId: "rss:feed::one",
-      addedAt: 1,
-      position: 0,
-    })
-
     const execution = executeApplicationAction(initial, {
       type: "collection.addInstance",
       input: { collectionId: "ai", instanceId: "rss:feed::one" },
@@ -295,7 +323,7 @@ describe("application actions", () => {
         collectionId: "reading",
         instanceId: "github:trending::collection-new",
         addedAt: 100,
-        position: 0,
+        position: 1,
       },
       {
         collectionId: "ai",
@@ -304,6 +332,17 @@ describe("application actions", () => {
         position: 0,
       },
     ])
+  })
+
+  it("rejects creating an Instance without a Board", () => {
+    expect(() => executeApplicationAction(createData(), {
+      type: "instance.create",
+      input: {
+        collectionIds: [],
+        sourceId: "github:trending",
+        patch: {},
+      },
+    }, dependencies)).toThrow("must belong to at least one Board")
   })
 
   it("resets Instance parameters without removing metadata", () => {
@@ -325,12 +364,6 @@ describe("application actions", () => {
 
   it("rejects a manual order that omits Collection members", () => {
     const initial = createData()
-    initial.collectionEntries.push({
-      collectionId: "reading",
-      instanceId: "rss:feed::one",
-      addedAt: 1,
-      position: 0,
-    })
     expect(() => executeApplicationAction(initial, {
       type: "collection.reorderInstances",
       input: { collectionId: "reading", instanceIds: [] },
@@ -339,12 +372,6 @@ describe("application actions", () => {
 
   it("atomically reorders Collection entries and selects manual View sorting", () => {
     const initial = createData()
-    initial.collectionEntries.push({
-      collectionId: "reading",
-      instanceId: "rss:feed::one",
-      addedAt: 1,
-      position: 0,
-    })
     const execution = executeApplicationAction(initial, {
       type: "collection.reorderInstances",
       input: { collectionId: "reading", instanceIds: ["rss:feed::one"] },

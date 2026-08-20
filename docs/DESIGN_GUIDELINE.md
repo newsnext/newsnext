@@ -207,8 +207,8 @@ LiveCards define the primary NewsNext surface treatment.
   background treatment in light mode and a translucent white shell with a fine
   white inset edge in dark mode. Reserve an 80px fixed region for the palette and
   16px between the mode control and palette so their internal and outer spacing
-  remain stable. The All board permits theme color changes here while keeping its
-  other behavior fixed.
+  remain stable. Changing the active Board color here updates the same persisted
+  Board preference used by its editor.
 
 The reference implementation is `LiveCardSurface` in
 `apps/extension/src/components/live-card/card-surface.tsx`.
@@ -316,8 +316,7 @@ it so Now and Next can use separate scroll restoration keys.
 
 ### LiveCard reordering
 
-- Keep the All board in its fixed newest-first order and omit drag handles there;
-  reordering is a configurable-board interaction.
+- Every Board supports the same ordering modes and manual drag handles.
 - Keep the drag handle visible and give it an accessible name that identifies
   the LiveCard being moved.
 - Start marquee selection only from empty space between LiveCards so card
@@ -449,8 +448,12 @@ They must have:
 The unified Board dialog is the canonical example. Create and edit modes use
 the same name, theme color, LiveCard order, and default layer fields;
 only edit mode exposes board deletion, while the title and primary action
-reflect the current mode. Default layer uses a compact segmented `Now` / `Next`
-control and determines which Board view opens by default. In particular, do not
+reflect the current mode. Disable deletion when it would remove the last Board;
+NewsNext must always retain at least one. `Delete with LiveCards` removes
+LiveCards owned only by that Board. `Transfer and Delete` requires a target
+Board and merges the deleted Board's LiveCards into it. Default layer uses a
+compact segmented `Now` / `Next` control and determines which Board view opens
+by default. In particular, do not
 add the following descriptions back to this dialog:
 
 - `Personalize this board and choose how its LiveCards are arranged.`
@@ -459,13 +462,12 @@ add the following descriptions back to this dialog:
 ### LiveCard Collection membership
 
 The LiveCard back edits Collection membership with a checkbox menu, not a
-single-choice Board select. An Instance may belong to zero, one, or several
-Collections. The compact trigger shows `No boards`, the sole Board name, or the
-membership count; the menu lists every custom Board with independent checked
-state. Toggling one row must not remove other memberships. The aggregate All
-Board is a system View and never appears as a membership option.
-Disable only the membership row whose Action is pending so other memberships
-remain readable and independently controllable.
+single-choice Board select. An Instance belongs to one or several Collections.
+The compact trigger shows the sole Board name or the
+membership count; the menu lists every Board with independent checked state.
+Toggling one row must not remove other memberships.
+Disable the final checked membership and any row whose Action is pending so
+every LiveCard remains on at least one Board.
 
 ### Multi-column settings dialog
 
@@ -512,9 +514,9 @@ description for dialog semantics. Keep the saved Search binding plus navigation,
 open, and close keyboard hints in one quiet footer below and outside the nested
 result surface instead of repeating the action inside the selected row. Hide
 the Search hint when its binding is cleared. Render shortcuts as soft filled
-keycaps without borders, shadows, or separators. Group results by board in the
-saved board order, omit empty groups, and place unassigned or orphaned LiveCards in
-a final `No board` group. Within each group, show the LiveCard title and provider;
+keycaps without borders, shadows, or separators. Group results by Board in the
+saved Board order and omit empty groups. Within each group, show the LiveCard
+title and provider;
 the group heading supplies the board context without repeating it on every row.
 Use `12px` horizontal and `10px` vertical padding for search result rows so the
 single-line identity remains compact without feeling cramped. Keep the title
@@ -534,9 +536,8 @@ the provider color token; result rows must not carry provider `zenith-*` theme
 classes. Keep dividers and selection treatments quiet.
 Selected result color must update immediately without a color transition so
 keyboard navigation never feels behind the current selection.
-Activating a result closes the dialog, opens the LiveCard's assigned board, and
-scrolls the real LiveCard into view. LiveCards in the final `No board` group open on the
-All board. Do not embed a LiveCard preview in Search: a full LiveCard turns the
+Activating a result closes the dialog, opens the LiveCard's assigned Board, and
+scrolls the real LiveCard into view. Do not embed a LiveCard preview in Search: a full LiveCard turns the
 locator into a second board, duplicates surface insets, and delays useful
 results while LiveCard content loads. Do not add decorative illustration or generic
 helper copy.

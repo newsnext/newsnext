@@ -15,7 +15,7 @@ import {
   getUserManagedHostPermissionOrigins,
   revokeHostPermissionOrigin,
 } from "@/lib/source"
-import { deleteInstanceAtom, instancesAtom } from "@/store/board"
+import { collectionEntriesAtom, deleteInstanceAtom, instancesAtom } from "@/store/board"
 
 interface PermissionLiveCard {
   id: string
@@ -63,10 +63,11 @@ function getLiveCardsUsingOrigin(
 export function PermissionsSettings({
   onOpenLiveCard,
 }: {
-  onOpenLiveCard: (id: string) => Promise<void> | void
+  onOpenLiveCard: (id: string, boardId: string) => Promise<void> | void
 }) {
   const [origins, setOrigins] = useState<string[]>([])
   const instances = useAtomValue(instancesAtom)
+  const collectionEntries = useAtomValue(collectionEntriesAtom)
   const deleteInstance = useSetAtom(deleteInstanceAtom)
   const { isLoading: areSourcesLoading, sources } = useSourceDescriptors()
   const {
@@ -80,6 +81,9 @@ export function PermissionsSettings({
     origin,
     getLiveCardsUsingOrigin(origin, sources, instances),
   ])), [instances, origins, sources])
+  const boardIdByInstanceId = useMemo(() => new Map(
+    collectionEntries.map(entry => [entry.instanceId, entry.collectionId]),
+  ), [collectionEntries])
 
   const refreshOrigins = useCallback(async (): Promise<void> => {
     const grantedOrigins = await getGrantedHostPermissionOrigins()
@@ -166,19 +170,23 @@ export function PermissionsSettings({
                           <div className="mt-1.5 flex min-w-0 items-center justify-between gap-4">
                             <div className="flex min-w-0 flex-1 items-center text-xs">
                               <ul className="flex min-w-0 flex-wrap gap-x-2 gap-y-0.5">
-                                {cards.map(card => (
-                                  <li key={card.id} className="min-w-0">
-                                    <Button
-                                      variant="link"
-                                      size="icon-fit"
-                                      className="max-w-full justify-start whitespace-normal text-left text-xs font-normal text-foreground"
-                                      title={`Go to ${card.title}`}
-                                      onClick={() => void onOpenLiveCard(card.id)}
-                                    >
-                                      {card.title}
-                                    </Button>
-                                  </li>
-                                ))}
+                                {cards.map((card) => {
+                                  const boardId = boardIdByInstanceId.get(card.id)
+                                  if (!boardId) return null
+                                  return (
+                                    <li key={card.id} className="min-w-0">
+                                      <Button
+                                        variant="link"
+                                        size="icon-fit"
+                                        className="max-w-full justify-start whitespace-normal text-left text-xs font-normal text-foreground"
+                                        title={`Go to ${card.title}`}
+                                        onClick={() => void onOpenLiveCard(card.id, boardId)}
+                                      >
+                                        {card.title}
+                                      </Button>
+                                    </li>
+                                  )
+                                })}
                               </ul>
                             </div>
                             <ConfirmDestructiveButton

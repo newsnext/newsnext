@@ -140,24 +140,35 @@ const actionDefinitions: {
   },
   "collection.delete": {
     name: "collection.delete",
-    description: "Delete a Collection, optionally deleting Instances not used by other Collections.",
+    description: "Delete a Collection and either delete exclusively owned Instances or transfer all of its Instances.",
     inputSchema: objectSchema({
       collectionId: IDENTIFIER_SCHEMA,
-      deleteInstances: { type: "boolean" },
+      deleteInstances: { const: true },
+      targetCollectionId: IDENTIFIER_SCHEMA,
     }, ["collectionId"]),
     outputSchema: EMPTY_OBJECT_SCHEMA,
     parseInput: (value) => {
       const input = requireRecord(value)
-      requireOnlyKeys(input, ["collectionId", "deleteInstances"])
-      if (input.deleteInstances !== undefined && typeof input.deleteInstances !== "boolean") {
-        throw new Error("'deleteInstances' must be a boolean")
+      requireOnlyKeys(input, ["collectionId", "deleteInstances", "targetCollectionId"])
+      if (input.deleteInstances !== undefined && input.deleteInstances !== true) {
+        throw new Error("'deleteInstances' must be true when provided")
       }
-      return {
-        collectionId: requireIdentifier(input.collectionId, "collectionId"),
-        ...(input.deleteInstances !== undefined
-          ? { deleteInstances: input.deleteInstances }
-          : {}),
+      if (input.targetCollectionId !== undefined && typeof input.targetCollectionId !== "string") {
+        throw new Error("'targetCollectionId' must be a string")
       }
+      if (input.deleteInstances === true && input.targetCollectionId !== undefined) {
+        throw new Error("Collection deletion cannot delete and transfer Instances together")
+      }
+      if (input.deleteInstances !== true && input.targetCollectionId === undefined) {
+        throw new Error("Collection deletion requires a transfer target")
+      }
+      const collectionId = requireIdentifier(input.collectionId, "collectionId")
+      return input.deleteInstances === true
+        ? { collectionId, deleteInstances: true }
+        : {
+            collectionId,
+            targetCollectionId: requireIdentifier(input.targetCollectionId, "targetCollectionId"),
+          }
     },
   },
   "collection.reorderInstances": {
@@ -183,13 +194,13 @@ const actionDefinitions: {
   ),
   "collection.removeInstance": collectionMembershipAction(
     "collection.removeInstance",
-    "Remove an Instance from one Collection without deleting it.",
+    "Remove an Instance from one Collection while keeping at least one membership.",
   ),
   "instance.create": {
     name: "instance.create",
-    description: "Create a configured Source Instance and add it to zero or more Collections.",
+    description: "Create a configured Source Instance and add it to one or more Collections.",
     inputSchema: objectSchema({
-      collectionIds: IDENTIFIER_ARRAY_SCHEMA,
+      collectionIds: { ...IDENTIFIER_ARRAY_SCHEMA, minItems: 1 },
       ...INSTANCE_CREATION_PROPERTIES,
     }, ["collectionIds", "patch", "sourceId"]),
     outputSchema: objectSchema({ instanceId: IDENTIFIER_SCHEMA }, ["instanceId"]),

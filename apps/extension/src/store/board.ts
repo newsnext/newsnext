@@ -6,8 +6,6 @@ import { atom } from "jotai"
 import { atomWithStorage, selectAtom, splitAtom } from "jotai/utils"
 import { createBackgroundClient } from "../lib/background"
 import {
-  ALL_BOARD_ID,
-  createAllBoard,
   DEFAULT_BOARD_LAYER,
   DEFAULT_BOARD_SORT_PREFERENCE,
   getBoardColor,
@@ -15,7 +13,6 @@ import {
 import { projectCollectionBoard } from "../lib/collection"
 import { normalizeApplicationData, PERSISTED_DATA_SLICES } from "../lib/settings"
 import { createMirroredStorage } from "./persisted-storage"
-import { allBoardColorAtom, allBoardDefaultLayerAtom } from "./settings"
 
 const persistedApplicationDataAtom = atomWithStorage<ApplicationData>(
   PERSISTED_DATA_SLICES.application.key,
@@ -36,13 +33,12 @@ export const collectionEntriesAtom = selectAtom(applicationDataAtom, data => dat
 export const collectionViewsAtom = selectAtom(applicationDataAtom, data => data.collectionViews)
 export const instancesAtom = selectAtom(applicationDataAtom, data => data.instances)
 
-export const boardsAtom = atom(get => [
-  createAllBoard(get(allBoardColorAtom), get(allBoardDefaultLayerAtom)),
-  ...get(collectionsAtom).flatMap((collection) => {
+export const boardsAtom = atom(get => (
+  get(collectionsAtom).flatMap((collection) => {
     const view = get(collectionViewsAtom).find(candidate => candidate.collectionId === collection.id)
     return view ? [projectCollectionBoard(collection, view, get(collectionEntriesAtom))] : []
-  }),
-])
+  })
+))
 
 export const executeApplicationActionAtom = atom(
   null,
@@ -101,12 +97,10 @@ export const setManualBoardOrderAtom = atom(null, async (_get, set, input: {
   boardId: string
   instanceIds: string[]
 }) => {
-  if (input.boardId !== ALL_BOARD_ID) {
-    await set(executeApplicationActionAtom, {
-      type: "collection.reorderInstances",
-      input: { collectionId: input.boardId, instanceIds: input.instanceIds },
-    })
-  }
+  await set(executeApplicationActionAtom, {
+    type: "collection.reorderInstances",
+    input: { collectionId: input.boardId, instanceIds: input.instanceIds },
+  })
 })
 
 export const addInstanceAtom = atom(null, (_get, set, input: {
@@ -169,11 +163,6 @@ export const createBoardFromOpmlAtom = atom(null, (_get, set, input: OpmlImport)
 ))
 
 export const updateBoardAtom = atom(null, async (_get, set, board: Board) => {
-  if (board.id === ALL_BOARD_ID) {
-    set(allBoardColorAtom, getBoardColor(board))
-    set(allBoardDefaultLayerAtom, board.defaultLayer)
-    return
-  }
   await set(executeApplicationActionAtom, {
     type: "collection.update",
     input: {
@@ -188,19 +177,21 @@ export const updateBoardAtom = atom(null, async (_get, set, board: Board) => {
   })
 })
 
-export const deleteBoardAtom = atom(null, (_get, set, input: {
-  boardId: string
-  deleteLiveCards: boolean
-}) => {
-  if (input.boardId === ALL_BOARD_ID) return
-  return set(executeApplicationActionAtom, {
-    type: "collection.delete",
-    input: {
-      collectionId: input.boardId,
-      ...(input.deleteLiveCards ? { deleteInstances: true } : {}),
-    },
-  })
-})
+type DeleteBoardInput
+  = | { boardId: string, mode: "delete" }
+    | { boardId: string, mode: "transfer", targetBoardId: string }
+
+export const deleteBoardAtom = atom(null, (_get, set, input: DeleteBoardInput) => (
+  set(executeApplicationActionAtom, input.mode === "delete"
+    ? {
+        type: "collection.delete",
+        input: { collectionId: input.boardId, deleteInstances: true },
+      }
+    : {
+        type: "collection.delete",
+        input: { collectionId: input.boardId, targetCollectionId: input.targetBoardId },
+      })
+))
 
 export const setInstanceCollectionMembershipAtom = atom(null, (_get, set, input: {
   collectionId: string

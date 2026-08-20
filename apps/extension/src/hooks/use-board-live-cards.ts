@@ -4,7 +4,7 @@ import type { SourceInstance } from "@/lib/source"
 import type { SourceDescriptor } from "@/typings/source"
 import { useAtomValue } from "jotai"
 import { useMemo } from "react"
-import { ALL_BOARD_ID, orderLiveCardInstanceIds } from "@/lib/board"
+import { orderLiveCardInstanceIds } from "@/lib/board"
 import { boardsAtom, instanceAtomsAtom, instanceLayoutsAtom } from "@/store/board"
 import { useSourceDescriptors } from "./use-source-descriptors"
 
@@ -34,7 +34,7 @@ export function useBoardLiveCards(boardId: string): BoardLiveCardsResult {
     const nextSortableLiveCardsByInstanceId: Record<string, SortableLiveCardView> = {}
 
     instanceLayouts.forEach((layout, index) => {
-      if (boardId !== ALL_BOARD_ID && !layout.collectionIds.includes(boardId)) {
+      if (!layout.collectionIds.includes(boardId)) {
         return
       }
 
@@ -46,7 +46,7 @@ export function useBoardLiveCards(boardId: string): BoardLiveCardsResult {
 
       nextInstanceIds.push(layout.instanceId)
       nextLiveCardsByInstanceId[layout.instanceId] = {
-        collectionId: boardId === ALL_BOARD_ID ? null : boardId,
+        collectionId: boardId,
         descriptor,
         instanceAtom,
       }

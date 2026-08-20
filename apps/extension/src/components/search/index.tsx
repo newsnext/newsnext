@@ -30,7 +30,7 @@ import {
 } from "@/hooks/source-query"
 import { useSourceDescriptors } from "@/hooks/use-source-descriptors"
 import { useSourceIcon } from "@/hooks/use-source-icon"
-import { ALL_BOARD_ID, revealLiveCard } from "@/lib/board"
+import { revealLiveCard } from "@/lib/board"
 import { DEFAULT_SHORTCUT_SETTINGS, SHORTCUT_DEFINITIONS } from "@/lib/settings"
 import {
   applySourceLoaderMetadata,
@@ -55,10 +55,7 @@ function groupSearchItems(
   collectionEntries: CollectionEntry[],
 ): SearchGroup[] {
   const itemsByBoardId = new Map<string, LiveCardViewModel[]>()
-  const knownBoardIds = new Set(
-    boards.filter(board => board.id !== ALL_BOARD_ID).map(board => board.id),
-  )
-  const noBoardItems: LiveCardViewModel[] = []
+  const knownBoardIds = new Set(boards.map(board => board.id))
   const collectionIdsByInstance = new Map<string, string[]>()
   for (const entry of collectionEntries) {
     const collectionIds = collectionIdsByInstance.get(entry.instanceId) ?? []
@@ -69,10 +66,6 @@ function groupSearchItems(
   liveCards.forEach((liveCard) => {
     const collectionIds = (collectionIdsByInstance.get(liveCard.id) ?? [])
       .filter(collectionId => knownBoardIds.has(collectionId))
-    if (collectionIds.length === 0) {
-      noBoardItems.push(liveCard)
-      return
-    }
 
     for (const collectionId of collectionIds) {
       const items = itemsByBoardId.get(collectionId) ?? []
@@ -81,23 +74,12 @@ function groupSearchItems(
     }
   })
 
-  const boardGroups = boards.flatMap((board) => {
+  return boards.flatMap((board) => {
     const items = itemsByBoardId.get(board.id)
     return items?.length
       ? [{ id: board.id, name: board.name, items, targetBoardId: board.id }]
       : []
   })
-
-  if (noBoardItems.length) {
-    boardGroups.push({
-      id: "no-board",
-      name: "No board",
-      items: noBoardItems,
-      targetBoardId: ALL_BOARD_ID,
-    })
-  }
-
-  return boardGroups
 }
 
 function SearchLiveCardIcon({ liveCard }: { liveCard: LiveCardViewModel }): ReactNode {

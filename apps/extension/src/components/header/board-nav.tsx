@@ -1,5 +1,5 @@
 import type { ChangeEvent } from "react"
-import type { BoardDialogTarget } from "@/components/board-dialog"
+import type { BoardDeleteAction, BoardDialogTarget } from "@/components/board-dialog"
 import type { HeaderNotification } from "@/components/header/notification"
 import type { Board, BoardCreateInput, BoardLayer } from "@/lib/board"
 import { Button } from "@newsnext/ui/components/button"
@@ -20,7 +20,7 @@ import { useAtomValue, useSetAtom } from "jotai"
 import { useRef, useState } from "react"
 import { BoardDialog } from "@/components/board-dialog"
 import { PhCircleDashed, PhFileArrowUp, PhPlusCircle } from "@/components/icons/ph"
-import { ALL_BOARD_ID, DEFAULT_BOARD_LAYER, getAdjacentBoardId } from "@/lib/board"
+import { DEFAULT_BOARD_LAYER, getAdjacentBoardId } from "@/lib/board"
 import { OpmlImportError, parseOpml } from "@/lib/opml"
 import { DEFAULT_SHORTCUT_SETTINGS, SHORTCUT_DEFINITIONS } from "@/lib/settings"
 import { cn } from "@/lib/utils"
@@ -133,9 +133,13 @@ export function BoardNav({ onNotify }: BoardNavProps) {
     }
   }
 
-  async function handleDelete(boardId: string, deleteLiveCards: boolean): Promise<void> {
-    await deleteBoard({ boardId, deleteLiveCards })
-    openBoard(ALL_BOARD_ID)
+  async function handleDelete(boardId: string, action: BoardDeleteAction): Promise<void> {
+    const destinationBoardId = action.mode === "transfer"
+      ? action.targetBoardId
+      : boards.find(board => board.id !== boardId)?.id
+    if (!destinationBoardId) return
+    await deleteBoard({ boardId, ...action })
+    openBoard(destinationBoardId)
   }
 
   async function handleUpdate(board: Board): Promise<void> {
@@ -179,7 +183,7 @@ export function BoardNav({ onNotify }: BoardNavProps) {
       <PillGroup className="max-w-[min(70vw,32rem)] overflow-x-auto scrollbar-hidden">
         {boards.map((board) => {
           const isActive = currentBoardId === board.id
-          const isEditable = isActive && board.id !== ALL_BOARD_ID
+          const isEditable = isActive
           return (
             <Button
               key={board.id}

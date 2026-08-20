@@ -2,7 +2,6 @@ import type { SourceDescriptor } from "@newsnext/source-kit/types"
 import type { Collection, CollectionEntry, CollectionView } from "../collection"
 import type { SourceInstance } from "../source/live-cards"
 import type { ApplicationData } from "./data"
-import { ALL_BOARD_ID, ALL_BOARD_NAME } from "../board"
 
 export type ApplicationQuery
   = | { type: "source.list" }
@@ -24,11 +23,11 @@ export interface ApplicationQueryContext {
 export interface ApplicationViewContext {
   boardId: string
   boardName: string
-  collectionId: string | null
+  collectionId: string
 }
 
 export interface ApplicationVisibleLiveCard {
-  collectionId: string | null
+  collectionId: string
   collectionIds: string[]
   instanceId: string
   sourceId: string
@@ -115,9 +114,7 @@ export function executeApplicationQuery<Query extends ApplicationQuery>(
         collectionIds.push(entry.collectionId)
         collectionIdsByInstance.set(entry.instanceId, collectionIds)
       }
-      const instances = view.collectionId === null
-        ? data.instances
-        : resolveEntryInstances(data, getCollectionEntries(data, view.collectionId))
+      const instances = resolveEntryInstances(data, getCollectionEntries(data, view.collectionId))
       return instances.map(instance => ({
         collectionId: view.collectionId,
         collectionIds: collectionIdsByInstance.get(instance.instanceId) ?? [],
@@ -138,9 +135,9 @@ function resolveViewContext(
   context: ApplicationQueryContext | undefined,
 ): ApplicationViewContext {
   const collection = data.collections.find(candidate => candidate.id === context?.currentBoardId)
-  return collection
-    ? { boardId: collection.id, boardName: collection.name, collectionId: collection.id }
-    : { boardId: ALL_BOARD_ID, boardName: ALL_BOARD_NAME, collectionId: null }
+    ?? data.collections[0]
+  if (!collection) throw new Error("NewsNext has no Boards")
+  return { boardId: collection.id, boardName: collection.name, collectionId: collection.id }
 }
 
 function getCollection(data: ApplicationData, collectionId: string): Collection {

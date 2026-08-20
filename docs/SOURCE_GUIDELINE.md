@@ -1001,10 +1001,9 @@ radar: [{
 
 Each Radar suggestion previews one LiveCard. Creating it persists a new Instance
 with the resolved parameter and presentation patches, plus Collection membership
-when the user selects a destination board. Radar does not modify an existing
-LiveCard. Moving a LiveCard later changes only its Collection membership. All is
-an aggregate view, not a destination. Selecting `No board` leaves the Instance
-out of custom Collections while keeping it visible in All.
+for the selected destination Boards. Radar does not modify an existing
+LiveCard. Moving a LiveCard later changes only its Collection membership.
+At least one destination Board is always required.
 
 Match rules:
 
@@ -1186,7 +1185,7 @@ Open a board in a connected browser by ID, or omit either selector to choose
 interactively:
 
 ```sh
-newsnext open --browser 00b79a48 --board all
+newsnext open --browser 00b79a48 --board V1StGXR8_Z5j
 ```
 
 The installer presents detected browsers only and selects all of them by
@@ -1297,7 +1296,7 @@ newsnext action execute collection.update --input \
 newsnext action execute view.configureCollection --input \
   '{"collectionId":"COLLECTION_ID","color":"blue","sortMode":"createdAt"}'
 newsnext action execute instance.create --input \
-  '{"sourceId":"github:trending","collectionId":null,"patch":{"params":{"language":"typescript"}}}'
+  '{"sourceId":"github:trending","collectionIds":["COLLECTION_ID"],"patch":{"params":{"language":"typescript"}}}'
 ```
 
 Catalog listings include descriptions and JSON input/output schemas. Every
@@ -1307,7 +1306,9 @@ Enabling CLI access permits destructive operations such as
 `collection.delete` and `instance.delete`; inspect `action list` before
 automation and use stable Data identities rather than Board labels.
 Passing `deleteInstances: true` to `collection.delete` also deletes Instances
-used only by that Collection. Instances shared with other Collections remain.
+used only by that Collection. Passing `targetCollectionId` instead transfers
+the deleted Collection's Instances to the selected Collection without
+duplicating memberships. Instances shared with other Collections remain.
 
 Use `collection.create` with its nested `view` object when creation includes
 Board preferences. It also accepts an `instances` array of Source IDs and

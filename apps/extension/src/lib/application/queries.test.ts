@@ -101,9 +101,9 @@ describe("application queries", () => {
     })
   })
 
-  it("falls back to the All View when the current Collection is missing", () => {
+  it("falls back to the first Board when the current Collection is missing", () => {
     expect(executeApplicationQuery(createData(), { type: "view.getContext" }, {
       currentBoardId: "missing",
-    })).toEqual({ boardId: "all", boardName: "All", collectionId: null })
+    })).toEqual({ boardId: "reading", boardName: "Reading", collectionId: "reading" })
   })
 })

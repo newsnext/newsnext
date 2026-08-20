@@ -1,7 +1,6 @@
 import { useSetAtom } from "jotai"
 import { useCallback } from "react"
 import { useBoardLiveCards } from "@/hooks/use-board-live-cards"
-import { ALL_BOARD_ID } from "@/lib/board"
 import { setManualBoardOrderAtom } from "@/store/board"
 import { LiveCardContainer } from "./live-card-container"
 
@@ -40,7 +39,7 @@ export function NowLayer({
       key={boardId}
       instanceIds={instanceIds}
       liveCardsByInstanceId={liveCardsByInstanceId}
-      sortable={boardId !== ALL_BOARD_ID}
+      sortable
       className={className}
       onInstanceIdsChange={handleInstanceIdsChange}
     />

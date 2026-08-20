@@ -1,6 +1,4 @@
-import type { Color } from "@newsnext/shared/types"
 import type { BgIllustrationTransform } from "../bg-illustration/config"
-import type { BoardLayer } from "../board"
 import type { SourceIconSettings, SourceIconSource } from "../source/icon"
 import type { ThemeMode } from "../utils/swith-theme"
 import type { ShortcutSettings } from "./shortcuts"
@@ -11,12 +9,10 @@ import {
   normalizeBgIllustrationOpacity,
   normalizeBgIllustrationTransform,
 } from "../bg-illustration/config"
-import { ALL_BOARD_ID, DEFAULT_BOARD_COLOR, DEFAULT_BOARD_LAYER, normalizeBoardLayer } from "../board"
 import { DEFAULT_SOURCE_ICON_SETTINGS } from "../source/icon"
 import { DEFAULT_SHORTCUT_SETTINGS, normalizeShortcutSettings } from "./shortcuts"
-import { isThemeColor } from "./theme-color"
 
-export const PERSISTED_SETTINGS_VERSION = 8
+export const PERSISTED_SETTINGS_VERSION = 1
 
 export const LIVE_CARD_HEIGHTS = ["compact", "balanced", "tall"] as const
 
@@ -31,8 +27,6 @@ export interface PersistedSettings {
     bgIllustration: string | null
     bgIllustrationOpacity: number
     bgIllustrationTransform: BgIllustrationTransform
-    allBoardColor: Color
-    allBoardDefaultLayer: BoardLayer
     liveCardHeight: LiveCardHeight
     themeMode: ThemeMode
   }
@@ -51,19 +45,17 @@ export interface PersistedDeviceState {
   version: typeof PERSISTED_SETTINGS_VERSION
 }
 
-export function createDefaultPersistedSettings(): PersistedSettings {
+export function createDefaultPersistedSettings(defaultBoardId: string | null = null): PersistedSettings {
   return {
     appearance: {
       bgIllustration: null,
       bgIllustrationOpacity: DEFAULT_BG_ILLUSTRATION_OPACITY,
       bgIllustrationTransform: { ...DEFAULT_BG_ILLUSTRATION_TRANSFORM },
-      allBoardColor: DEFAULT_BOARD_COLOR,
-      allBoardDefaultLayer: DEFAULT_BOARD_LAYER,
       liveCardHeight: DEFAULT_LIVE_CARD_HEIGHT,
       themeMode: "system",
     },
     general: {
-      defaultBoardId: ALL_BOARD_ID,
+      defaultBoardId,
       sourceIcon: { ...DEFAULT_SOURCE_ICON_SETTINGS },
     },
     shortcuts: { ...DEFAULT_SHORTCUT_SETTINGS },
@@ -71,9 +63,9 @@ export function createDefaultPersistedSettings(): PersistedSettings {
   }
 }
 
-export function createDefaultPersistedDeviceState(): PersistedDeviceState {
+export function createDefaultPersistedDeviceState(currentBoardId = ""): PersistedDeviceState {
   return {
-    currentBoardId: ALL_BOARD_ID,
+    currentBoardId,
     settingsTab: "appearance",
     sourceConnectionEnabled: false,
     version: PERSISTED_SETTINGS_VERSION,
@@ -88,19 +80,13 @@ export function normalizePersistedSettings(value: unknown): PersistedSettings {
 
   const appearance = isRecord(value.appearance) ? value.appearance : undefined
   const general = isRecord(value.general) ? value.general : undefined
-  const liveCardHeight = appearance?.liveCardHeight ?? appearance?.sourceCardHeight
-
   return {
     appearance: {
       bgIllustration: normalizeBgIllustration(appearance?.bgIllustration),
       bgIllustrationOpacity: normalizeBgIllustrationOpacity(appearance?.bgIllustrationOpacity),
       bgIllustrationTransform: normalizeBgIllustrationTransform(appearance?.bgIllustrationTransform),
-      allBoardColor: isThemeColor(appearance?.allBoardColor)
-        ? appearance.allBoardColor
-        : defaults.appearance.allBoardColor,
-      allBoardDefaultLayer: normalizeBoardLayer(appearance?.allBoardDefaultLayer),
-      liveCardHeight: isLiveCardHeight(liveCardHeight)
-        ? liveCardHeight
+      liveCardHeight: isLiveCardHeight(appearance?.liveCardHeight)
+        ? appearance.liveCardHeight
         : defaults.appearance.liveCardHeight,
       themeMode: isThemeMode(appearance?.themeMode)
         ? appearance.themeMode

@@ -29,24 +29,6 @@ describe("persisted settings", () => {
     }).appearance.bgIllustration).toBe(illustration)
   })
 
-  it("normalizes the All board color", () => {
-    expect(normalizePersistedSettings({
-      appearance: { allBoardColor: "blue" },
-    }).appearance.allBoardColor).toBe("blue")
-    expect(normalizePersistedSettings({
-      appearance: { allBoardColor: "invalid" },
-    }).appearance.allBoardColor).toBe("red")
-  })
-
-  it("normalizes the All board default layer", () => {
-    expect(normalizePersistedSettings({
-      appearance: { allBoardDefaultLayer: "next" },
-    }).appearance.allBoardDefaultLayer).toBe("next")
-    expect(normalizePersistedSettings({
-      appearance: { allBoardDefaultLayer: "future" },
-    }).appearance.allBoardDefaultLayer).toBe("now")
-  })
-
   it("normalizes the LiveCard height", () => {
     expect(normalizePersistedSettings({
       appearance: { liveCardHeight: "compact" },
@@ -57,12 +39,6 @@ describe("persisted settings", () => {
     expect(normalizePersistedSettings({
       appearance: { liveCardHeight: "giant" },
     }).appearance.liveCardHeight).toBe("balanced")
-  })
-
-  it("migrates the previous source card height setting", () => {
-    expect(normalizePersistedSettings({
-      appearance: { sourceCardHeight: "tall" },
-    }).appearance.liveCardHeight).toBe("tall")
   })
 
   it("normalizes the background illustration opacity", () => {

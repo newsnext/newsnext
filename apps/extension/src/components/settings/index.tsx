@@ -6,7 +6,7 @@ import { useNavigate } from "@tanstack/react-router"
 import { useAtom, useAtomValue } from "jotai"
 import { useEffect } from "react"
 import { ConfigSection } from "@/components/common/config-section"
-import { ALL_BOARD_ID, revealLiveCard } from "@/lib/board"
+import { revealLiveCard } from "@/lib/board"
 import { cn } from "@/lib/utils"
 import { handleThemeModeSwitch } from "@/lib/utils/swith-theme"
 import { boardsAtom } from "@/store/board"
@@ -95,9 +95,9 @@ function SettingsModalContent({
     setActiveTab(tabId)
   }
 
-  async function handleOpenLiveCard(id: string): Promise<void> {
+  async function handleOpenLiveCard(id: string, boardId: string): Promise<void> {
     onOpenChange(false)
-    await navigate({ to: "/board/$boardId", params: { boardId: ALL_BOARD_ID } })
+    await navigate({ to: "/board/$boardId", params: { boardId } })
     revealLiveCard(id)
   }
 

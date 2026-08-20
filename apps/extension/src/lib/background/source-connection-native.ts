@@ -19,7 +19,6 @@ import {
   parseApplicationAction,
   parseApplicationQuery,
 } from "../application"
-import { ALL_BOARD_ID, ALL_BOARD_NAME } from "../board"
 import { normalizeApplicationData, PERSISTED_DATA_SLICES } from "../settings/persisted-data"
 import {
   normalizePersistedDeviceState,
@@ -29,6 +28,7 @@ import { getPermissionRequestForSource } from "../source/permissions"
 import {
   executeBackgroundApplicationAction,
   executeBackgroundApplicationQuery,
+  readConnectedApplicationData,
 } from "./application-service"
 import { requestCliPermission } from "./cli-permission"
 import { serializeSourceConnectionError } from "./source-connection-error"
@@ -71,13 +71,10 @@ let boards: NativeExtensionBoard[] = []
 
 function connectionBoards(value: unknown): NativeExtensionBoard[] {
   const application = normalizeApplicationData(value)
-  return [
-    { id: ALL_BOARD_ID, name: ALL_BOARD_NAME },
-    ...application.collections.map(collection => ({
-      id: collection.id,
-      name: collection.name,
-    })),
-  ]
+  return application.collections.map(collection => ({
+    id: collection.id,
+    name: collection.name,
+  }))
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -354,9 +351,9 @@ export async function registerSourceConnectionNative(): Promise<void> {
 
   const stored = await browser.storage.local.get([
     PERSISTED_DATA_SLICES.deviceState.key,
-    PERSISTED_DATA_SLICES.application.key,
     SOURCE_CONNECTION_INSTANCE_ID_KEY,
   ])
+  const application = await readConnectedApplicationData()
   const storedInstanceId = stored[SOURCE_CONNECTION_INSTANCE_ID_KEY]
   instanceId = typeof storedInstanceId === "string" && storedInstanceId
     ? storedInstanceId
@@ -365,7 +362,7 @@ export async function registerSourceConnectionNative(): Promise<void> {
     await browser.storage.local.set({ [SOURCE_CONNECTION_INSTANCE_ID_KEY]: instanceId })
   }
   const persisted = stored[PERSISTED_DATA_SLICES.deviceState.key]
-  boards = connectionBoards(stored[PERSISTED_DATA_SLICES.application.key])
+  boards = connectionBoards(application)
   const state = normalizePersistedDeviceState(persisted)
   enabled = state.sourceConnectionEnabled
   if (enabled) {

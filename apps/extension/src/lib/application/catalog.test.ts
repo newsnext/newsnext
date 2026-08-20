@@ -57,10 +57,21 @@ describe("application operation catalog", () => {
       type: "collection.delete",
       input: { collectionId: "reading", deleteInstances: true },
     })
+    expect(parseApplicationAction({
+      type: "collection.delete",
+      input: { collectionId: "reading", targetCollectionId: "ai" },
+    })).toEqual({
+      type: "collection.delete",
+      input: { collectionId: "reading", targetCollectionId: "ai" },
+    })
+    expect(() => parseApplicationAction({
+      type: "collection.delete",
+      input: { collectionId: "reading" },
+    })).toThrow("requires a transfer target")
     expect(() => parseApplicationAction({
       type: "collection.delete",
       input: { collectionId: "reading", deleteInstances: "yes" },
-    })).toThrow("must be a boolean")
+    })).toThrow("must be true")
     expect(() => parseApplicationAction({
       type: "view.configureCollection",
       input: { collectionId: "reading", color: "invisible" },

@@ -10,13 +10,14 @@ import {
 } from "@newsnext/ui/components/dialog"
 import { Input } from "@newsnext/ui/components/input"
 import { RadioGroup, RadioGroupItem } from "@newsnext/ui/components/radio-group"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@newsnext/ui/components/select"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { ThemeSelector } from "@newsnext/ui/components/theme-selector"
 import { useState } from "react"
 import { ConfigSection } from "@/components/common/config-section"
 import { ConfirmDestructiveButton } from "@/components/common/confirm-destructive-button"
 import { useAsyncAction } from "@/hooks/use-async-action"
-import { ALL_BOARD_ID, DEFAULT_BOARD_COLOR, DEFAULT_BOARD_LAYER, DEFAULT_BOARD_SORT_PREFERENCE, getBoardColor, updateBoardSortMode } from "@/lib/board"
+import { DEFAULT_BOARD_COLOR, DEFAULT_BOARD_LAYER, DEFAULT_BOARD_SORT_PREFERENCE, getBoardColor, updateBoardSortMode } from "@/lib/board"
 import { cn } from "@/lib/utils"
 
 const SORT_OPTIONS: { label: string, value: BoardSortMode }[] = [
@@ -30,22 +31,13 @@ const LAYER_OPTIONS: { label: string, value: BoardLayer }[] = [
   { label: "Next", value: "next" },
 ]
 
-const DELETE_OPTIONS = [
-  {
-    confirmLabel: "Confirm delete",
-    deleteLiveCards: false,
-    label: "Delete board",
-  },
-  {
-    confirmLabel: "Confirm with LiveCards",
-    deleteLiveCards: true,
-    label: "Delete with LiveCards",
-  },
-] as const
-
 export type BoardDialogTarget
   = | { mode: "create" }
     | { mode: "edit", boardId: string }
+
+export type BoardDeleteAction
+  = | { mode: "delete" }
+    | { mode: "transfer", targetBoardId: string }
 
 interface BoardDialogProps {
   boards: Board[]
@@ -53,15 +45,11 @@ interface BoardDialogProps {
   target: BoardDialogTarget
   onClose: () => void
   onCreate: (input: BoardCreateInput) => Promise<void> | void
-  onDelete: (boardId: string, deleteLiveCards: boolean) => Promise<void> | void
+  onDelete: (boardId: string, action: BoardDeleteAction) => Promise<void> | void
   onUpdate: (board: Board) => Promise<void> | void
 }
 
 export function BoardDialog(props: BoardDialogProps) {
-  if (props.target.mode === "edit" && props.target.boardId === ALL_BOARD_ID) {
-    return null
-  }
-
   return <ConfigurableBoardDialog {...props} />
 }
 
@@ -89,12 +77,18 @@ function ConfigurableBoardDialog({
   const [color, setColor] = useState<Color>(initialColor)
   const [sortMode, setSortMode] = useState<BoardSortMode>(initialSortMode)
   const [defaultLayer, setDefaultLayer] = useState<BoardLayer>(initialDefaultLayer)
+  const transferBoards = boards.filter(candidate => candidate.id !== boardId)
+  const [targetBoardId, setTargetBoardId] = useState(
+    () => transferBoards[0]?.id ?? "",
+  )
+  const targetBoard = transferBoards.find(candidate => candidate.id === targetBoardId)
   const { error: submitError, isPending: isSubmitting, run: runAction } = useAsyncAction(
     "The board could not be saved.",
   )
   const normalizedName = name.trim()
   const canSubmit = (!isEditing || board !== undefined)
     && normalizedName.length > 0
+  const canDelete = isEditing && boards.length > 1
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault()
@@ -128,13 +122,13 @@ function ConfigurableBoardDialog({
     if (succeeded) onClose()
   }
 
-  async function handleDelete(deleteLiveCards: boolean): Promise<void> {
-    if (!boardId) {
+  async function handleDelete(action: BoardDeleteAction): Promise<void> {
+    if (!boardId || !canDelete) {
       return
     }
 
     const succeeded = await runAction(async () => {
-      await onDelete(boardId, deleteLiveCards)
+      await onDelete(boardId, action)
     }, "The board could not be deleted.")
     if (succeeded) onClose()
   }
@@ -217,19 +211,39 @@ function ConfigurableBoardDialog({
 
             <DialogFooter className={cn(isEditing && "sm:justify-between")}>
               {isEditing && (
-                <div className="flex flex-wrap gap-2">
-                  {DELETE_OPTIONS.map(option => (
+                <div className="flex flex-col items-start gap-2">
+                  <ConfirmDestructiveButton
+                    type="button"
+                    disabled={isSubmitting || !canDelete}
+                    title={!canDelete ? "NewsNext must keep at least one board." : undefined}
+                    label="Delete with LiveCards"
+                    confirmLabel="Confirm delete"
+                    pending={isSubmitting}
+                    pendingLabel="Deleting…"
+                    onConfirm={() => handleDelete({ mode: "delete" })}
+                  />
+                  <div className="flex items-center gap-2">
                     <ConfirmDestructiveButton
-                      key={option.label}
                       type="button"
-                      disabled={isSubmitting}
-                      label={option.label}
-                      confirmLabel={option.confirmLabel}
+                      disabled={isSubmitting || !canDelete || !targetBoardId}
+                      title={!canDelete ? "NewsNext must keep at least one board." : undefined}
+                      label="Transfer and Delete"
+                      confirmLabel="Confirm transfer"
                       pending={isSubmitting}
-                      pendingLabel="Deleting…"
-                      onConfirm={() => handleDelete(option.deleteLiveCards)}
+                      pendingLabel="Transferring…"
+                      onConfirm={() => handleDelete({ mode: "transfer", targetBoardId })}
                     />
-                  ))}
+                    <Select value={targetBoardId} onValueChange={value => value && setTargetBoardId(value)}>
+                      <SelectTrigger className="w-36" aria-label="Transfer target board">
+                        <SelectValue>{targetBoard?.name}</SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {transferBoards.map(candidate => (
+                          <SelectItem key={candidate.id} value={candidate.id}>{candidate.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               )}
               <Button type="submit" disabled={!canSubmit || isSubmitting}>

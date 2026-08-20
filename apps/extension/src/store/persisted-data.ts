@@ -1,6 +1,6 @@
 import type { PersistedUserData } from "@/lib/settings"
 import { atom } from "jotai"
-import { createEmptyApplicationData } from "@/lib/application"
+import { createInitialApplicationData } from "@/lib/application"
 import { createBackgroundClient } from "@/lib/background"
 import {
   createDefaultPersistedDeviceState,
@@ -26,11 +26,16 @@ export const importPersistedUserDataAtom = atom(
       instances: data.instances,
     })
     set(persistedSettingsAtom, data.settings)
+    return data
   },
 )
 
 export const clearPersistedUserDataAtom = atom(null, async (_get, set) => {
-  await createBackgroundClient().application.replace(createEmptyApplicationData())
-  set(persistedSettingsAtom, createDefaultPersistedSettings())
-  set(persistedDeviceStateAtom, createDefaultPersistedDeviceState())
+  const data = createInitialApplicationData()
+  const boardId = data.collections[0]?.id
+  if (!boardId) throw new Error("NewsNext must keep at least one Board")
+  await createBackgroundClient().application.replace(data)
+  set(persistedSettingsAtom, createDefaultPersistedSettings(boardId))
+  set(persistedDeviceStateAtom, createDefaultPersistedDeviceState(boardId))
+  return data
 })

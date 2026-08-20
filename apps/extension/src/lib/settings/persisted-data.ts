@@ -1,14 +1,13 @@
 import type { ApplicationData } from "../application/data"
-import type { Board, BoardSortPreference } from "../board"
 import type { Collection, CollectionEntry, CollectionView } from "../collection"
 import type { SourceInstance, SourceInstancePatch } from "../source"
 import type { PersistedSettings } from "./persisted-settings"
-import { createEmptyApplicationData } from "../application/data"
-import { ALL_BOARD_ID, createBoardSortPreference, DEFAULT_BOARD_LAYER, normalizeBoardLayer } from "../board"
+import { createEmptyApplicationData, ensureApplicationDataIntegrity } from "../application/data"
+import { DEFAULT_BOARD_LAYER, normalizeBoardLayer } from "../board"
 import { normalizePersistedSettings } from "./persisted-settings"
 import { isThemeColor } from "./theme-color"
 
-export const PERSISTED_DATA_EXPORT_VERSION = 2
+export const PERSISTED_DATA_EXPORT_VERSION = 1
 export const PERSISTED_DATA_EXPORT_KIND = "newsnext-user-data"
 export const PERSISTED_PORTABLE_SLICE_IDS = [
   "settings",
@@ -50,10 +49,6 @@ export interface PersistedDataExport {
   version: typeof PERSISTED_DATA_EXPORT_VERSION
 }
 
-interface LegacySourceInstance extends SourceInstance {
-  boardId: string | null
-}
-
 export function normalizeApplicationData(value: unknown): ApplicationData {
   if (!isRecord(value)) {
     return createEmptyApplicationData()
@@ -81,7 +76,6 @@ export function normalizeCollections(value: unknown): Collection[] {
     if (!isRecord(candidate)
       || typeof candidate.id !== "string"
       || candidate.id.trim().length === 0
-      || candidate.id === ALL_BOARD_ID
       || typeof candidate.name !== "string"
       || candidate.name.trim().length === 0
       || typeof candidate.createdAt !== "number"
@@ -150,9 +144,7 @@ export function parsePersistedDataExport(serialized: string): PersistedDataExpor
 
     const data = value.version === PERSISTED_DATA_EXPORT_VERSION
       ? normalizePartialPersistedUserData(value.data)
-      : value.version === 1
-        ? migrateLegacyPersistedUserData(value.data)
-        : undefined
+      : undefined
     if (!data || Object.keys(data).length === 0) return undefined
 
     return {
@@ -215,13 +207,12 @@ export function mergePersistedUserData(
 }
 
 export function normalizePersistedUserData(data: PersistedUserData): PersistedUserData {
-  const application = normalizeApplicationData(data)
+  const application = ensureApplicationDataIntegrity(normalizeApplicationData(data))
   const collectionIds = new Set(application.collections.map(collection => collection.id))
   const settings = normalizePersistedSettings(data.settings)
   if (settings.general.defaultBoardId !== null
-    && settings.general.defaultBoardId !== ALL_BOARD_ID
     && !collectionIds.has(settings.general.defaultBoardId)) {
-    settings.general.defaultBoardId = ALL_BOARD_ID
+    settings.general.defaultBoardId = application.collections[0]?.id ?? null
   }
   return { ...application, settings }
 }
@@ -251,54 +242,6 @@ function normalizePartialPersistedUserData(
         }
       : {}),
     ...(Object.hasOwn(data, "instances") ? { instances } : {}),
-  }
-}
-
-function migrateLegacyPersistedUserData(
-  data: Record<string, unknown>,
-): Partial<PersistedUserData> {
-  const boards = Object.hasOwn(data, "boards") ? normalizeLegacyBoards(data.boards) : undefined
-  const instances = Object.hasOwn(data, "instances")
-    ? normalizeLegacySourceInstances(data.instances)
-    : undefined
-  const collections = boards?.map((board, index) => ({
-    id: board.id,
-    name: board.name,
-    createdAt: index,
-  }))
-  const collectionIds = new Set(collections?.map(collection => collection.id) ?? [])
-  const collectionEntries = instances?.flatMap((instance, index) => (
-    instance.boardId && collectionIds.has(instance.boardId)
-      ? [{
-          collectionId: instance.boardId,
-          instanceId: instance.instanceId,
-          addedAt: instance.createdAt,
-          position: getLegacyPosition(boards ?? [], instance.boardId, instance.instanceId, index),
-        }]
-      : []
-  ))
-
-  return {
-    ...(Object.hasOwn(data, "settings") ? { settings: normalizePersistedSettings(data.settings) } : {}),
-    ...(boards
-      ? {
-          collections,
-          collectionViews: boards.map(board => ({
-            collectionId: board.id,
-            color: board.color,
-            defaultLayer: board.defaultLayer,
-            sortMode: board.sort.mode,
-            automaticSortMode: board.sort.automaticMode,
-          })),
-          collectionEntries: collectionEntries ?? [],
-        }
-      : {}),
-    ...(instances
-      ? {
-          instances: instances.map(({ boardId: _boardId, ...instance }) => instance),
-          ...(!boards ? { collectionEntries: [] } : {}),
-        }
-      : {}),
   }
 }
 
@@ -378,60 +321,6 @@ function normalizeCollectionEntries(
       ))
       .map(({ inputIndex: _inputIndex, ...entry }, position) => ({ ...entry, position }))
   ))
-}
-
-function normalizeLegacyBoards(value: unknown): Board[] {
-  if (!Array.isArray(value)) return []
-  const seenIds = new Set<string>()
-  return value.flatMap((candidate) => {
-    if (!isRecord(candidate)
-      || typeof candidate.id !== "string"
-      || candidate.id === ALL_BOARD_ID
-      || typeof candidate.name !== "string"
-      || seenIds.has(candidate.id)) {
-      return []
-    }
-    seenIds.add(candidate.id)
-    return [{
-      defaultLayer: normalizeBoardLayer(candidate.defaultLayer),
-      id: candidate.id,
-      name: candidate.name,
-      sort: normalizeBoardSortPreference(candidate.sort),
-      ...(isThemeColor(candidate.color) ? { color: candidate.color } : {}),
-    }]
-  })
-}
-
-function normalizeLegacySourceInstances(value: unknown): LegacySourceInstance[] {
-  if (!Array.isArray(value)) return []
-  return normalizeSourceInstances(value).map((instance) => {
-    const candidate = value.find(value => isRecord(value) && value.instanceId === instance.instanceId)
-    return {
-      ...instance,
-      boardId: isRecord(candidate) && typeof candidate.boardId === "string" ? candidate.boardId : null,
-    }
-  })
-}
-
-function getLegacyPosition(
-  boards: Board[],
-  collectionId: string,
-  instanceId: string,
-  fallback: number,
-): number {
-  const position = boards.find(board => board.id === collectionId)?.sort.manualOrder.indexOf(instanceId)
-  return position === undefined || position < 0 ? fallback : position
-}
-
-function normalizeBoardSortPreference(value: unknown): BoardSortPreference {
-  if (isRecord(value)
-    && isBoardSortMode(value.mode)
-    && isAutomaticBoardSortMode(value.automaticMode)
-    && Array.isArray(value.manualOrder)
-    && value.manualOrder.every(id => typeof id === "string")) {
-    return { mode: value.mode, automaticMode: value.automaticMode, manualOrder: [...value.manualOrder] }
-  }
-  return createBoardSortPreference()
 }
 
 function isSourceInstancePatch(value: unknown): value is SourceInstancePatch {

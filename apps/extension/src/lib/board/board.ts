@@ -1,9 +1,7 @@
 import type { Color } from "@newsnext/shared/types"
 import type { BoardSortMode, BoardSortPreference } from "./sorting"
-import { createBoardSortPreference } from "./sorting"
 
-export const ALL_BOARD_ID = "all"
-export const ALL_BOARD_NAME = "All"
+export const INITIAL_BOARD_NAME = "My Board"
 export const DEFAULT_BOARD_COLOR: Color = "red"
 
 export type BoardLayer = "now" | "next"
@@ -23,19 +21,6 @@ export interface BoardCreateInput {
   defaultLayer: BoardLayer
   name: string
   sortMode: BoardSortMode
-}
-
-export function createAllBoard(
-  color: Color,
-  defaultLayer: BoardLayer = DEFAULT_BOARD_LAYER,
-): Board {
-  return {
-    color,
-    defaultLayer,
-    id: ALL_BOARD_ID,
-    name: ALL_BOARD_NAME,
-    sort: createBoardSortPreference("createdAt"),
-  }
 }
 
 export function normalizeBoardLayer(value: unknown): BoardLayer {

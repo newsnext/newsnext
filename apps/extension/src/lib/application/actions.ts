@@ -17,6 +17,10 @@ interface ApplicationInstanceCreationInput {
   sourceId: string
 }
 
+export type CollectionDeleteInput
+  = | { collectionId: string, deleteInstances: true, targetCollectionId?: never }
+    | { collectionId: string, deleteInstances?: never, targetCollectionId: string }
+
 export interface ApplicationActionInputMap {
   "collection.create": {
     instances?: ApplicationInstanceCreationInput[]
@@ -33,10 +37,7 @@ export interface ApplicationActionInputMap {
     view?: CollectionViewConfiguration
   }
   "view.configureCollection": CollectionViewConfiguration & { collectionId: string }
-  "collection.delete": {
-    collectionId: string
-    deleteInstances?: boolean
-  }
+  "collection.delete": CollectionDeleteInput
   "collection.reorderInstances": { collectionId: string, instanceIds: string[] }
   "collection.addInstance": { collectionId: string, instanceId: string }
   "collection.removeInstance": { collectionId: string, instanceId: string }
@@ -155,20 +156,58 @@ export function executeApplicationAction(
       }
     }
     case "collection.delete": {
-      const { collectionId, deleteInstances = false } = action.input
+      const { collectionId, targetCollectionId } = action.input
+      const deleteInstances = action.input.deleteInstances === true
       assertCollectionExists(data, collectionId)
-      const deletedInstanceIds = deleteInstances
-        ? getExclusiveCollectionInstanceIds(data, collectionId)
-        : undefined
+      if (data.collections.length === 1) {
+        throw new Error("NewsNext must keep at least one Board")
+      }
+      if (deleteInstances && targetCollectionId !== undefined) {
+        throw new Error("Collection deletion cannot delete and transfer Instances together")
+      }
+      if (!deleteInstances) {
+        if (targetCollectionId === undefined) {
+          throw new Error("Collection deletion requires a transfer target")
+        }
+        if (targetCollectionId === collectionId) {
+          throw new Error("Collection transfer target must differ from the deleted Collection")
+        }
+        assertCollectionExists(data, targetCollectionId)
+      }
+      const remainingEntries = data.collectionEntries.filter(entry => entry.collectionId !== collectionId)
+      let collectionEntries = remainingEntries
+      let instances = data.instances
+      if (deleteInstances) {
+        const deletedInstanceIds = getExclusiveCollectionInstanceIds(data, collectionId)
+        instances = data.instances.filter(instance => !deletedInstanceIds.has(instance.instanceId))
+      }
+      if (!deleteInstances && targetCollectionId !== undefined) {
+        const targetInstanceIds = new Set(remainingEntries
+          .filter(entry => entry.collectionId === targetCollectionId)
+          .map(entry => entry.instanceId))
+        const transferredEntries = data.collectionEntries.filter(entry => (
+          entry.collectionId === collectionId && !targetInstanceIds.has(entry.instanceId)
+        ))
+        const targetPosition = remainingEntries.reduce((maximum, entry) => (
+          entry.collectionId === targetCollectionId ? Math.max(maximum, entry.position) : maximum
+        ), -1) + 1
+        collectionEntries = [
+          ...remainingEntries,
+          ...transferredEntries.map((entry, index) => ({
+            addedAt: entry.addedAt,
+            collectionId: targetCollectionId,
+            instanceId: entry.instanceId,
+            position: targetPosition + index,
+          })),
+        ]
+      }
       return {
         data: {
           ...data,
           collections: data.collections.filter(collection => collection.id !== collectionId),
-          collectionEntries: data.collectionEntries.filter(entry => entry.collectionId !== collectionId),
+          collectionEntries,
           collectionViews: data.collectionViews.filter(view => view.collectionId !== collectionId),
-          instances: deletedInstanceIds
-            ? data.instances.filter(instance => !deletedInstanceIds.has(instance.instanceId))
-            : data.instances,
+          instances,
         },
       }
     }
@@ -218,6 +257,11 @@ export function executeApplicationAction(
       const { collectionId, instanceId } = action.input
       assertCollectionExists(data, collectionId)
       assertInstanceExists(data, instanceId)
+      const memberships = data.collectionEntries.filter(entry => entry.instanceId === instanceId)
+      if (memberships.length <= 1
+        && memberships.some(entry => entry.collectionId === collectionId)) {
+        throw new Error("A LiveCard must belong to at least one Board")
+      }
       return {
         data: {
           ...data,
@@ -230,7 +274,11 @@ export function executeApplicationAction(
     case "instance.create": {
       const { collectionIds, patch, sourceId } = action.input
       if (!sourceId.trim()) throw new Error("Source ID is required")
-      for (const collectionId of collectionIds) {
+      const uniqueCollectionIds = [...new Set(collectionIds)]
+      if (uniqueCollectionIds.length === 0) {
+        throw new Error("A LiveCard must belong to at least one Board")
+      }
+      for (const collectionId of uniqueCollectionIds) {
         assertCollectionExists(data, collectionId)
       }
       const instanceId = `${sourceId}::${dependencies.createId()}`
@@ -244,7 +292,7 @@ export function executeApplicationAction(
           instances: [...data.instances, { instanceId, sourceId, patch, createdAt }],
           collectionEntries: [
             ...data.collectionEntries,
-            ...collectionIds.map(collectionId => createCollectionEntry(
+            ...uniqueCollectionIds.map(collectionId => createCollectionEntry(
               data,
               collectionId,
               instanceId,

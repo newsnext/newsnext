@@ -1,13 +1,11 @@
 export type { Board, BoardCreateInput, BoardLayer } from "./board"
 export {
-  ALL_BOARD_ID,
-  ALL_BOARD_NAME,
-  createAllBoard,
   DEFAULT_BOARD_COLOR,
   DEFAULT_BOARD_LAYER,
   getAdjacentBoardId,
   getBoardColor,
   getBoardLayerFromState,
+  INITIAL_BOARD_NAME,
   normalizeBoardLayer,
 } from "./board"
 export { revealLiveCard } from "./reveal-live-card"

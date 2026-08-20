@@ -3,13 +3,13 @@ import type { PersistedPortableSliceId } from "@/lib/settings"
 import { Button } from "@newsnext/ui/components/button"
 import { Checkbox } from "@newsnext/ui/components/checkbox"
 import { useQueryClient } from "@tanstack/react-query"
-import { useNavigate } from "@tanstack/react-router"
+import { useNavigate, useParams } from "@tanstack/react-router"
 import { useAtomValue, useSetAtom } from "jotai"
 import { useRef, useState } from "react"
 import { ConfigSection } from "@/components/common/config-section"
 import { ConfirmDestructiveButton } from "@/components/common/confirm-destructive-button"
 import { useAsyncAction } from "@/hooks/use-async-action"
-import { ALL_BOARD_ID, DEFAULT_BOARD_COLOR } from "@/lib/board"
+import { DEFAULT_BOARD_COLOR } from "@/lib/board"
 import { clearNonPortableUserData, hasPersistedUserDataSlice, parsePersistedDataExport, PERSISTED_PORTABLE_SLICE_IDS, selectPersistedUserData, serializePersistedDataExport } from "@/lib/settings"
 import { handleThemeModeSwitch, handleThemeSwitch } from "@/lib/utils/swith-theme"
 import {
@@ -54,6 +54,7 @@ export function DataTransferSettings({
   const clearPersistedData = useSetAtom(clearPersistedUserDataAtom)
   const importData = useSetAtom(importPersistedUserDataAtom)
   const navigate = useNavigate()
+  const { boardId: routeBoardId } = useParams({ strict: false }) as { boardId?: string }
   const queryClient = useQueryClient()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [selectedSliceIds, setSelectedSliceIds] = useState<PersistedPortableSliceId[]>(
@@ -116,7 +117,17 @@ export function DataTransferSettings({
         return
       }
 
-      await importData(selectedData)
+      const nextData = await importData(selectedData)
+      if (routeBoardId && !nextData.collections.some(board => board.id === routeBoardId)) {
+        const fallbackBoardId = nextData.collections[0]?.id
+        if (fallbackBoardId) {
+          await navigate({
+            to: "/board/$boardId",
+            params: { boardId: fallbackBoardId },
+            replace: true,
+          })
+        }
+      }
       if (selectedData.settings) {
         handleThemeModeSwitch(selectedData.settings.appearance.themeMode)
       }
@@ -134,13 +145,15 @@ export function DataTransferSettings({
   async function handleClear(): Promise<void> {
     await runClear(async () => {
       await clearNonPortableUserData()
-      await clearPersistedData()
+      const clearedData = await clearPersistedData()
       queryClient.clear()
       handleThemeModeSwitch("system")
       handleThemeSwitch(DEFAULT_BOARD_COLOR)
+      const boardId = clearedData.collections[0]?.id
+      if (!boardId) throw new Error("NewsNext must keep at least one Board")
       await navigate({
         to: "/board/$boardId",
-        params: { boardId: ALL_BOARD_ID },
+        params: { boardId },
         replace: true,
       })
       onCleared()

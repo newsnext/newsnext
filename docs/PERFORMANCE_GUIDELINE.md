@@ -316,7 +316,7 @@ attachment or measurement problem rather than missing query data.
 
 ## 2026-08-03 Audit Results
 
-The audit used a 1080 by 1890 viewport and an All board containing 12 LiveCards,
+The audit used a 1080 by 1890 viewport and a Board containing 12 LiveCards,
 with eight LiveCard contents mounted by the viewport and preload margin.
 
 | Scenario | Before | After measured | Result |
