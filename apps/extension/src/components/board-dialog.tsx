@@ -233,16 +233,18 @@ function ConfigurableBoardDialog({
                       pendingLabel="Transferring…"
                       onConfirm={() => handleDelete({ mode: "transfer", targetBoardId })}
                     />
-                    <Select value={targetBoardId} onValueChange={value => value && setTargetBoardId(value)}>
-                      <SelectTrigger className="w-36" aria-label="Transfer target board">
-                        <SelectValue>{targetBoard?.name}</SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        {transferBoards.map(candidate => (
-                          <SelectItem key={candidate.id} value={candidate.id}>{candidate.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    {transferBoards.length > 1 && (
+                      <Select value={targetBoardId} onValueChange={value => value && setTargetBoardId(value)}>
+                        <SelectTrigger className="w-36" aria-label="Transfer target board">
+                          <SelectValue>{targetBoard?.name}</SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          {transferBoards.map(candidate => (
+                            <SelectItem key={candidate.id} value={candidate.id}>{candidate.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
                   </div>
                 </div>
               )}
