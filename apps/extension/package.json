@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@atlaskit/pragmatic-drag-and-drop": "catalog:",
-    "@atlaskit/pragmatic-drag-and-drop-hitbox": "catalog:",
+    "@atlaskit/pragmatic-drag-and-drop-auto-scroll": "catalog:",
     "@newsnext/extension-connection": "workspace:*",
     "@newsnext/registry": "workspace:*",
     "@newsnext/shared": "workspace:*",

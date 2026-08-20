@@ -232,13 +232,14 @@ content. Use the LiveCard translucent shell language and let the whole demo
 surface act as the drag target. Resize from the lower and right edges without
 adding dedicated visible drag or resize controls.
 
-Preserve Now Layer's intrinsic centered LiveCard layout without adding a width
-constraint to its container. Limit Next Layer to the equivalent width of a
-four-column LiveCard row so its visible content aligns with Now Layer, and do
-not add a second horizontal padding constraint inside its scroll container.
-The shared Board container owns both Layers' responsive content insets and
-places Next Layer's fixed scroll region directly below the responsive Header.
-Now Layer and Next Layer must not define their own page padding.
+Preserve Now Layer's intrinsic centered LiveCard layout inside the same maximum
+content width as Next Layer. Limit both Layers to the equivalent width of a
+four-column LiveCard row, and do not add a second horizontal padding constraint
+inside Next Layer's scroll container. The shared Board container owns both
+Layers' responsive content insets and fills the space naturally allocated below
+the responsive Header. Position Next Layer's scroll region against that Board
+container instead of duplicating the Header height as a fixed offset. Now Layer
+and Next Layer must not define their own page padding or content-width rules.
 Keep Next Layer's overflow boundary at the viewport edges and apply Board
 insets inside that full-width scroll container. Otherwise horizontal exits are
 clipped at the content inset and appear to pass behind an elevated side margin.
@@ -319,15 +320,44 @@ it so Now and Next can use separate scroll restoration keys.
   reordering is a configurable-board interaction.
 - Keep the drag handle visible and give it an accessible name that identifies
   the LiveCard being moved.
-- Reorder LiveCards according to the closest edge of the LiveCard under the pointer so
-  the preview distinguishes insertion before and after a LiveCard.
+- Start marquee selection only from empty space between LiveCards so card
+  controls and content scrolling keep their normal pointer behavior. Extend a
+  transparent marquee hit area across the full viewport so visually empty
+  perimeter space can reliably start a selection without changing the layout
+  or drop boundary. Use a translucent
+  theme-colored selection rectangle, then enclose the selected cards in one
+  continuous group outline instead of framing every card separately. Render
+  both selection states with the same `SquircleBox` `3xl` geometry as a
+  LiveCard, plus the same border width, border color, and translucent fill.
+  Dragging any selected card moves the full selection. Preserve the cards'
+  Board order even when the marquee selected them in a different sequence, and
+  clear the selection as soon as the drag ends.
+- Keep the LiveCard layout fixed while dragging and show a theme-colored
+  insertion indicator at the resolved slot. Apply the new order only on drop so
+  cards do not move away while the pointer is still choosing a destination.
+  Register the list itself as the drop target so a valid release dismisses the
+  native preview instead of animating it back to the source position.
+  Snapshot the wrapped LiveCard slots when dragging starts, then resolve the
+  pointer against the nearest row and the horizontal midpoint of its slots.
+- Auto-scroll the root Now Layer scroll container vertically when a dragged
+  LiveCard approaches its viewport edges. Use the fast PDD scroll profile so
+  movement remains perceptible beside full-height LiveCards, and keep horizontal
+  auto-scroll disabled.
 - Preserve the original order when a drag is cancelled or ends outside the
-  board. Gaps inside the board may retain the most recent valid placement.
-- Keep the LiveCard in the layout while dragging and reduce its opacity so
-  the original position remains understandable.
+  board. Require an active list drop target as well as an in-bounds pointer
+  before committing the order so Escape never acts like a drop. Gaps inside the
+  board may retain the most recent valid placement.
+- Keep every dragged LiveCard in the layout and reduce all of their opacity
+  equally so the complete group's original position remains understandable.
 - Keep the drag preview inside the source provider's theme-color scope. Native
   drag previews are mounted outside the LiveCard tree, so inherited theme tokens
-  used by cloned content must be copied to the preview container.
+  used by cloned content must remain available to each preview surface. Render
+  each preview as a compact clone of the LiveCard header, arrange grouped
+  previews vertically without overlap, and add a count badge when the selection
+  contains more than one LiveCard. Keep that list in Board order and offset the
+  native preview so the pointer stays on the preview whose handle started the
+  drag. Pre-compose every translucent theme surface over the opaque app
+  background before the browser applies its native drag-image treatment.
 
 ## Dialog Patterns
 

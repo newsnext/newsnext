@@ -1,18 +1,78 @@
 import type { ElementEventBasePayload } from "@atlaskit/pragmatic-drag-and-drop/element/adapter"
+import type { RefObject } from "react"
 import type { BoardLiveCard } from "@/hooks/use-board-live-cards"
-import { extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge"
-import { getReorderDestinationIndex } from "@atlaskit/pragmatic-drag-and-drop-hitbox/util/get-reorder-destination-index"
+import { useScrollProgressContext } from "@newsnext/ui/components/scroll-progress-context"
+import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { m } from "motion/react"
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { getCardEntranceStyle } from "@/components/board-view/card-entrance-config"
 import { DndContext } from "@/hooks/use-dnd-context"
+import { useMarqueeSelection } from "@/hooks/use-marquee-selection"
+import { useWrappedSortable } from "@/hooks/use-wrapped-sortable"
 import { isSortableData } from "@/lib/board"
-import { reorder } from "@/lib/utils/reorder"
+import { cn } from "@/lib/utils"
 import { DraggableLiveCard } from "../live-card/draggable-live-card"
 
-interface InstanceOrderState {
+function SelectionOutline({
+  containerRef,
+  instanceIds,
+  layoutInstanceIds,
+  listRef,
+}: {
+  containerRef: RefObject<HTMLElement | null>
   instanceIds: string[]
-  orderedInstanceIds: string[]
+  layoutInstanceIds: string[]
+  listRef: RefObject<HTMLOListElement | null>
+}) {
+  const outlineRef = useRef<HTMLDivElement>(null)
+
+  useLayoutEffect(() => {
+    const container = containerRef.current
+    const list = listRef.current
+    const outline = outlineRef.current
+    if (!container || !list || !outline) return
+
+    const selectedIdSet = new Set(instanceIds)
+    const selectedItems = Array.from(
+      list.querySelectorAll<HTMLElement>("[data-live-card-id]"),
+    ).filter(item => item.dataset.liveCardId && selectedIdSet.has(item.dataset.liveCardId))
+    if (selectedItems.length === 0) {
+      outline.hidden = true
+      return
+    }
+
+    const containerRect = container.getBoundingClientRect()
+    let left = Number.POSITIVE_INFINITY
+    let right = Number.NEGATIVE_INFINITY
+    let top = Number.POSITIVE_INFINITY
+    let bottom = Number.NEGATIVE_INFINITY
+    selectedItems.forEach((item) => {
+      const rect = item.getBoundingClientRect()
+      left = Math.min(left, rect.left)
+      right = Math.max(right, rect.right)
+      top = Math.min(top, rect.top)
+      bottom = Math.max(bottom, rect.bottom)
+    })
+    left -= containerRect.left
+    right -= containerRect.left
+    top -= containerRect.top
+    bottom -= containerRect.top
+    outline.hidden = false
+    outline.style.left = `${left - 6}px`
+    outline.style.top = `${top - 6}px`
+    outline.style.width = `${right - left + 12}px`
+    outline.style.height = `${bottom - top + 12}px`
+  }, [containerRef, instanceIds, layoutInstanceIds, listRef])
+
+  return (
+    <SquircleBox
+      ref={outlineRef}
+      aria-hidden="true"
+      hidden
+      radius="3xl"
+      className="pointer-events-none absolute z-10 border border-theme-400 bg-theme-400/10 shadow-sm"
+    />
+  )
 }
 
 interface LiveCardContainerProps {
@@ -30,21 +90,31 @@ export function LiveCardContainer({
   className,
   onInstanceIdsChange,
 }: LiveCardContainerProps) {
-  const [instanceOrderState, setInstanceOrderState] = useState<InstanceOrderState>(() => ({
+  const { rootScrollContainerRef } = useScrollProgressContext()
+  const selectionSurfaceRef = useRef<HTMLDivElement>(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const {
+    marqueeRect,
+    onPointerCancel,
+    onPointerDown,
+    onPointerMove,
+    onPointerUp,
+    selectedInstanceIds,
+    setSelectedInstanceIds,
+  } = useMarqueeSelection({ enabled: sortable, instanceIds })
+  const {
+    insertionIndicator,
+    listRef,
+    onDrag,
+    onDragStart,
+    onDrop,
+    orderedInstanceIds,
+  } = useWrappedSortable({
+    enabled: sortable,
     instanceIds,
-    orderedInstanceIds: instanceIds,
-  }))
-  let orderedInstanceIds = instanceOrderState.orderedInstanceIds
-  if (instanceOrderState.instanceIds !== instanceIds) {
-    orderedInstanceIds = instanceIds
-    setInstanceOrderState({
-      instanceIds,
-      orderedInstanceIds,
-    })
-  }
-  const orderedInstanceIdsRef = useRef(orderedInstanceIds)
-  const initialOrderedInstanceIdsRef = useRef(instanceIds)
-  const listRef = useRef<HTMLOListElement>(null)
+    onInstanceIdsChange,
+    scrollContainerRef: rootScrollContainerRef,
+  })
   const visibleLiveCards = useMemo(
     () => orderedInstanceIds.flatMap((id) => {
       const liveCard = liveCardsByInstanceId[id]
@@ -52,112 +122,91 @@ export function LiveCardContainer({
     }),
     [orderedInstanceIds, liveCardsByInstanceId],
   )
-
-  useLayoutEffect(() => {
-    orderedInstanceIdsRef.current = orderedInstanceIds
-  }, [orderedInstanceIds])
-
-  const onDragStart = useCallback(() => {
-    initialOrderedInstanceIdsRef.current = orderedInstanceIdsRef.current
-  }, [])
-
-  const onDrag = useCallback(({ location, source }: ElementEventBasePayload) => {
-    const target = location.current.dropTargets[0]
-    if (!target || !isSortableData(source.data) || !isSortableData(target.data)) return
-
-    const fromId = source.data.id
-    const toId = target.data.id
-    const currentInstanceIds = orderedInstanceIdsRef.current
-    const fromIndex = currentInstanceIds.indexOf(fromId)
-    const toIndex = currentInstanceIds.indexOf(toId)
-    if (fromIndex === toIndex || fromIndex === -1 || toIndex === -1) return
-
-    const closestEdge = extractClosestEdge(target.data)
-    const normalizedEdge = closestEdge === "top" || closestEdge === "left"
-      ? "left"
-      : "right"
-    const destinationIndex = getReorderDestinationIndex({
-      startIndex: fromIndex,
-      indexOfTarget: toIndex,
-      closestEdgeOfTarget: normalizedEdge,
-      axis: "horizontal",
-    })
-    if (fromIndex === destinationIndex) return
-
-    const nextInstanceIds = reorder(currentInstanceIds, fromIndex, destinationIndex)
-    orderedInstanceIdsRef.current = nextInstanceIds
-    setInstanceOrderState(prev => ({
-      ...prev,
-      orderedInstanceIds: nextInstanceIds,
-    }))
-  }, [])
-
-  const onDrop = useCallback(({ location }: ElementEventBasePayload) => {
-    const list = listRef.current
-    const { clientX, clientY } = location.current.input
-    const listRect = list?.getBoundingClientRect()
-    const hasDropTarget = location.current.dropTargets.length > 0
-    const isInsideList = Boolean(
-      listRect
-      && clientX >= listRect.left
-      && clientX <= listRect.right
-      && clientY >= listRect.top
-      && clientY <= listRect.bottom,
-    )
-
-    if (!hasDropTarget || !isInsideList) {
-      const initialInstanceIds = initialOrderedInstanceIdsRef.current
-      orderedInstanceIdsRef.current = initialInstanceIds
-      setInstanceOrderState(prev => ({
-        ...prev,
-        orderedInstanceIds: initialInstanceIds,
-      }))
-      return
+  const handleDragStart = useCallback((args: ElementEventBasePayload) => {
+    if (isSortableData(args.source.data)) {
+      setSelectedInstanceIds(args.source.data.ids)
+      setIsDragging(true)
     }
-
-    const finalInstanceIds = orderedInstanceIdsRef.current
-    const initialInstanceIds = initialOrderedInstanceIdsRef.current
-    const hasOrderChanged = finalInstanceIds.length !== initialInstanceIds.length || finalInstanceIds.some(
-      (id, index) => initialInstanceIds[index] !== id,
-    )
-    if (!hasOrderChanged) {
-      return
-    }
-
-    onInstanceIdsChange(finalInstanceIds)
-  }, [onInstanceIdsChange])
+    onDragStart()
+  }, [onDragStart, setSelectedInstanceIds])
+  const handleDrop = useCallback((args: ElementEventBasePayload) => {
+    onDrop(args)
+    setSelectedInstanceIds([])
+    setIsDragging(false)
+  }, [onDrop, setSelectedInstanceIds])
 
   return (
     <DndContext
-      onDragStart={onDragStart}
+      dropTargetRef={listRef}
+      selectedInstanceIds={selectedInstanceIds}
+      onDragStart={handleDragStart}
       onDrag={onDrag}
-      onDropTargetChange={onDrag}
-      onDrop={onDrop}
+      onDrop={handleDrop}
     >
-      <ol
-        ref={listRef}
-        className={className || "flex flex-wrap justify-center gap-2 sm:gap-6"}
+      <div
+        ref={selectionSurfaceRef}
+        className="relative"
+        onPointerCancel={onPointerCancel}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
       >
-        {visibleLiveCards.map(({ id, collectionId, descriptor, instanceAtom }, index) => (
-          <m.li
-            key={id}
-            data-live-card-id={id}
-            layout
-          >
-            <div
-              className="layer-card-entrance"
-              style={getCardEntranceStyle(index)}
+        <div aria-hidden="true" className="fixed inset-0" />
+        <ol
+          ref={listRef}
+          data-live-card-list
+          className={cn(
+            "relative flex flex-wrap justify-center gap-2 sm:gap-6",
+            className,
+          )}
+        >
+          {visibleLiveCards.map(({ id, collectionId, descriptor, instanceAtom }, index) => (
+            <m.li
+              key={id}
+              data-live-card-id={id}
+              className="relative"
+              layout
             >
-              <DraggableLiveCard
-                collectionId={collectionId}
-                descriptor={descriptor}
-                instanceAtom={instanceAtom}
-                sortable={sortable}
-              />
-            </div>
-          </m.li>
-        ))}
-      </ol>
+              {insertionIndicator?.id === id && (
+                <div
+                  aria-hidden="true"
+                  className={`pointer-events-none absolute inset-y-3 z-20 w-1 rounded-full bg-theme-400 shadow-[0_0_0_1px_color-mix(in_oklab,var(--color-theme-400),white_35%)] ${
+                    insertionIndicator.edge === "left"
+                      ? "-left-1.5 sm:-left-3.5"
+                      : "-right-1.5 sm:-right-3.5"
+                  }`}
+                />
+              )}
+              <div
+                className="layer-card-entrance"
+                style={getCardEntranceStyle(index)}
+              >
+                <DraggableLiveCard
+                  collectionId={collectionId}
+                  descriptor={descriptor}
+                  dragging={isDragging && selectedInstanceIds.includes(id)}
+                  instanceAtom={instanceAtom}
+                  sortable={sortable}
+                />
+              </div>
+            </m.li>
+          ))}
+        </ol>
+        <SelectionOutline
+          containerRef={selectionSurfaceRef}
+          instanceIds={selectedInstanceIds}
+          layoutInstanceIds={orderedInstanceIds}
+          listRef={listRef}
+        />
+        {marqueeRect && (
+          <SquircleBox
+            aria-hidden="true"
+            radius="3xl"
+            className="pointer-events-none absolute z-30 border border-theme-400 bg-theme-400/10 shadow-sm"
+            style={marqueeRect}
+          />
+        )}
+      </div>
     </DndContext>
   )
 }

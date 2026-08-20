@@ -1,18 +1,24 @@
 import type { ElementDragType, MonitorArgs } from "@atlaskit/pragmatic-drag-and-drop/types"
-import type { PropsWithChildren } from "react"
-import { monitorForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter"
+import type { PropsWithChildren, RefObject } from "react"
+import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine"
+import { dropTargetForElements, monitorForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter"
 import { useEffect, useEffectEvent, useId } from "react"
 import { isSortableData } from "@/lib/board"
-import { InstanceIdContext } from "./use-sortable"
+import { SortableContext } from "./use-sortable"
 
-type ContextProps = Pick<
+type MonitorCallbacks = Pick<
   MonitorArgs<ElementDragType>,
-  "onDragStart" | "onDrag" | "onDropTargetChange" | "onDrop"
+  "onDragStart" | "onDrag" | "onDrop"
 >
 
-type MonitorCallbackArgs<Key extends keyof ContextProps> = Parameters<NonNullable<ContextProps[Key]>>[0]
+type ContextProps = MonitorCallbacks & {
+  dropTargetRef: RefObject<HTMLElement | null>
+  selectedInstanceIds: string[]
+}
 
-export function DndContext({ children, ...callbacks }: PropsWithChildren<ContextProps>) {
+type MonitorCallbackArgs<Key extends keyof MonitorCallbacks> = Parameters<NonNullable<MonitorCallbacks[Key]>>[0]
+
+export function DndContext({ children, dropTargetRef, selectedInstanceIds, ...callbacks }: PropsWithChildren<ContextProps>) {
   const instanceId = useId()
   const handleDragStart = useEffectEvent((args: MonitorCallbackArgs<"onDragStart">) => {
     callbacks.onDragStart?.(args)
@@ -20,27 +26,34 @@ export function DndContext({ children, ...callbacks }: PropsWithChildren<Context
   const handleDrag = useEffectEvent((args: MonitorCallbackArgs<"onDrag">) => {
     callbacks.onDrag?.(args)
   })
-  const handleDropTargetChange = useEffectEvent((args: MonitorCallbackArgs<"onDropTargetChange">) => {
-    callbacks.onDropTargetChange?.(args)
-  })
   const handleDrop = useEffectEvent((args: MonitorCallbackArgs<"onDrop">) => {
     callbacks.onDrop?.(args)
   })
 
   useEffect(() => {
-    return monitorForElements({
+    const dropTarget = dropTargetRef.current
+    const monitorCleanup = monitorForElements({
       canMonitor: ({ source }) => isSortableData(source.data)
         && source.data.instanceId === instanceId,
       onDragStart: handleDragStart,
       onDrag: handleDrag,
-      onDropTargetChange: handleDropTargetChange,
       onDrop: handleDrop,
     })
-  }, [instanceId])
+    if (!dropTarget) return monitorCleanup
+
+    return combine(
+      monitorCleanup,
+      dropTargetForElements({
+        element: dropTarget,
+        canDrop: ({ source }) => isSortableData(source.data)
+          && source.data.instanceId === instanceId,
+      }),
+    )
+  }, [dropTargetRef, instanceId])
 
   return (
-    <InstanceIdContext value={instanceId}>
+    <SortableContext value={{ instanceId, selectedInstanceIds }}>
       {children}
-    </InstanceIdContext>
+    </SortableContext>
   )
 }

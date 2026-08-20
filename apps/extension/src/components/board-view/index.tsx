@@ -1,3 +1,4 @@
+import type { PropsWithChildren } from "react"
 import type { Board, BoardLayer } from "@/lib/board"
 import { useScrollProgressContext } from "@newsnext/ui/components/scroll-progress-context"
 import { useHotkey } from "@tanstack/react-hotkeys"
@@ -14,6 +15,15 @@ import { shortcutSettingsAtom } from "@/store/settings"
 import { ScatterCardLayer } from "./scatter-card-layer"
 
 const BOARD_CONTENT_INSET_CLASS_NAME = "px-2 pb-6 sm:px-6"
+const BOARD_CONTENT_WIDTH_CLASS_NAME = "mx-auto w-full max-w-[104.5rem]"
+
+function BoardContent({ children, className }: PropsWithChildren<{ className?: string }>) {
+  return (
+    <div className={cn(BOARD_CONTENT_INSET_CLASS_NAME, className)}>
+      <div className={BOARD_CONTENT_WIDTH_CLASS_NAME}>{children}</div>
+    </div>
+  )
+}
 
 interface RenderedView {
   boardId: string
@@ -61,7 +71,7 @@ export function BoardView({ board, layer }: { board: Board, layer: BoardLayer })
   )
 
   return (
-    <div className={cn("relative w-full", BOARD_CONTENT_INSET_CLASS_NAME)}>
+    <div className="relative flex min-h-0 w-full grow flex-col">
       <ScatterCardLayer
         key={`${renderedView.boardId}:${renderedView.layer}`}
         state={renderedLayerState}
@@ -70,7 +80,7 @@ export function BoardView({ board, layer }: { board: Board, layer: BoardLayer })
           ? ".grid-stack-item:not(.grid-stack-placeholder)"
           : "[data-live-card-id]"}
         className={isRenderedNextLayer
-          ? "fixed inset-x-0 bottom-0 top-[8.75rem] z-10 md:top-[5.75rem]"
+          ? "absolute inset-0 z-10"
           : "relative z-0"}
       >
         {isRenderedNextLayer
@@ -81,12 +91,16 @@ export function BoardView({ board, layer }: { board: Board, layer: BoardLayer })
                 data-scroll-restoration-id={NEXT_LAYER_SCROLL_RESTORATION_ID}
                 className="h-full w-full overflow-y-auto bg-transparent scrollbar-hidden"
               >
-                <div className={cn("min-h-full", BOARD_CONTENT_INSET_CLASS_NAME)}>
+                <BoardContent className="min-h-full">
                   <NextLayer boardId={renderedView.boardId} />
-                </div>
+                </BoardContent>
               </div>
             )
-          : <NowLayer boardId={renderedView.boardId} />}
+          : (
+              <BoardContent>
+                <NowLayer boardId={renderedView.boardId} />
+              </BoardContent>
+            )}
       </ScatterCardLayer>
     </div>
   )

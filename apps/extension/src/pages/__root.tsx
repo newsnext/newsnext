@@ -31,7 +31,7 @@ function RootComponent() {
       >
         <div className="flex min-h-full w-full flex-col">
           <Header />
-          <main className="flex grow shrink-0 flex-col">
+          <main className="relative flex min-h-0 grow shrink-0 flex-col">
             <Outlet />
           </main>
         </div>
