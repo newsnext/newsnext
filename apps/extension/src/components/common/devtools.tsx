@@ -20,7 +20,7 @@ export const TanStackDevtools
               plugins={[
                 {
                   id: "newsnext-background",
-                  name: "Background",
+                  name: "NewsNext",
                   defaultOpen: true,
                   render: (_element, props) => (
                     <background.BackgroundDevtoolsPanel

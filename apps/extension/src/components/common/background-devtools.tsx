@@ -6,13 +6,16 @@ import { browser } from "#imports"
 import { createBackgroundClient } from "@/lib/background"
 import { isBackgroundDiagnosticsChangedMessage } from "@/lib/background/diagnostics-events"
 
-type PanelId = "overview" | "actions" | "application"
+type ApplicationPanelId = "collections" | "instances" | "state"
+type PanelId = "overview" | "actions" | ApplicationPanelId
 type DevtoolsTheme = "dark" | "light"
 
 const PANEL_LABELS: Record<PanelId, string> = {
   overview: "Overview",
   actions: "Activity",
-  application: "Application",
+  collections: "Collections",
+  instances: "Instances",
+  state: "State",
 }
 
 const colors = {
@@ -117,9 +120,9 @@ export function BackgroundDevtoolsPanel({ devtoolsOpen, theme }: { devtoolsOpen:
   const counts: Record<PanelId, number | undefined> = {
     overview: undefined,
     actions: snapshot?.actions.length,
-    application: snapshot
-      ? snapshot.application.collections.length + snapshot.application.instances.length + 2
-      : undefined,
+    collections: snapshot?.application.collections.length,
+    instances: snapshot?.application.instances.length,
+    state: snapshot ? 2 : undefined,
   }
 
   return (
@@ -127,7 +130,7 @@ export function BackgroundDevtoolsPanel({ devtoolsOpen, theme }: { devtoolsOpen:
       <header style={styles.toolbar}>
         <div style={styles.brand}>
           <StatusDot active={!error && snapshot !== undefined} />
-          <strong>Background</strong>
+          <strong>NewsNext Devtool</strong>
           {!snapshot && <span style={styles.mutedText}>connecting</span>}
         </div>
         <div style={styles.toolbarActions}>
@@ -151,7 +154,7 @@ export function BackgroundDevtoolsPanel({ devtoolsOpen, theme }: { devtoolsOpen:
         </div>
       </header>
 
-      <nav aria-label="Background diagnostics" style={styles.navigation}>
+      <nav aria-label="NewsNext diagnostics" style={styles.navigation}>
         {(Object.entries(PANEL_LABELS) as Array<[PanelId, string]>).map(([id, label]) => (
           <button
             key={id}
@@ -170,11 +173,13 @@ export function BackgroundDevtoolsPanel({ devtoolsOpen, theme }: { devtoolsOpen:
       </nav>
 
       <main style={styles.content}>
-        {error && <ErrorBanner message={`Background snapshot failed: ${error}`} />}
-        {!snapshot && !error && <CenteredMessage>Waiting for the extension background…</CenteredMessage>}
+        {error && <ErrorBanner message={`NewsNext snapshot failed: ${error}`} />}
+        {!snapshot && !error && <CenteredMessage>Waiting for NewsNext…</CenteredMessage>}
         {snapshot && activePanel === "overview" && <Overview snapshot={snapshot} filter={filter} />}
         {snapshot && activePanel === "actions" && <ActionsPanel snapshot={snapshot} filter={filter} />}
-        {snapshot && activePanel === "application" && <ApplicationPanel snapshot={snapshot} filter={filter} />}
+        {snapshot && activePanel !== "overview" && activePanel !== "actions" && (
+          <ApplicationPanel category={activePanel} snapshot={snapshot} filter={filter} />
+        )}
       </main>
     </div>
   )
@@ -257,15 +262,18 @@ function ActionDetail({ action }: { action: BackgroundActionRecord }): React.JSX
   )
 }
 
-function ApplicationPanel({ filter, snapshot }: PanelProps): React.JSX.Element {
+function ApplicationPanel({ category, filter, snapshot }: PanelProps & { category: ApplicationPanelId }): React.JSX.Element {
   const application = snapshot.application
-  const entries = [
-    ...application.collections.map(value => ({ id: `collection:${value.id}`, kind: "Collection", label: value.name || value.id, value })),
-    ...application.instances.map(value => ({ id: `instance:${value.instanceId}`, kind: "Instance", label: value.patch.metadata?.title || value.instanceId, value })),
-    { id: "settings", kind: "State", label: "Settings", value: snapshot.settings },
-    { id: "device", kind: "State", label: "Device state", value: snapshot.deviceState },
-  ].filter(entry => matches(filter, entry.kind, entry.label, entry.id))
   const [selectedId, setSelectedId] = useState<string>()
+  const categoryEntries = category === "collections"
+    ? application.collections.map(value => ({ id: `collection:${value.id}`, kind: "Collection", label: value.name || value.id, value }))
+    : category === "instances"
+      ? application.instances.map(value => ({ id: `instance:${value.instanceId}`, kind: "Instance", label: value.patch.metadata?.title || value.instanceId, value }))
+      : [
+          { id: "settings", kind: "State", label: "Settings", value: snapshot.settings },
+          { id: "device", kind: "State", label: "Device state", value: snapshot.deviceState },
+        ]
+  const entries = categoryEntries.filter(entry => matches(filter, entry.kind, entry.label, entry.id))
   const selected = entries.find(entry => entry.id === selectedId) ?? entries[0]
   return (
     <MasterDetail
