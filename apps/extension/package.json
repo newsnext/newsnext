@@ -52,6 +52,7 @@
     "@iconify-json/ph": "catalog:",
     "@rolldown/plugin-babel": "^0.2.3",
     "@tailwindcss/vite": "catalog:",
+    "@tanstack/react-devtools": "catalog:",
     "@tanstack/react-query-devtools": "catalog:",
     "@tanstack/react-router-devtools": "catalog:",
     "@types/babel__core": "^7.20.5",

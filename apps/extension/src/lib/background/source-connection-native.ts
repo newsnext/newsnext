@@ -25,6 +25,7 @@ import {
   withSourceConnectionEnabled,
 } from "../settings/persisted-settings"
 import { getPermissionRequestForSource } from "../source/permissions"
+import { dispatchBackgroundAction } from "./action-dispatcher"
 import {
   executeBackgroundApplicationAction,
   executeBackgroundApplicationQuery,
@@ -206,7 +207,12 @@ async function executeCommand(
   try {
     result = {
       ok: true,
-      data: await executeRequest(request),
+      data: await dispatchBackgroundAction({
+        commandId: request.id,
+        input: getNativeActionInput(request),
+        name: getNativeActionName(request),
+        origin: "cli",
+      }, () => executeRequest(request), result => getNativeActionResult(request, result)),
     }
   } catch (error) {
     result = {
@@ -224,6 +230,54 @@ async function executeCommand(
     result,
   }
   connection.postMessage(message)
+}
+
+function getNativeActionName(request: ExtensionConnectionCommandRequest): string {
+  if (request.type === "application.action.execute"
+    || request.type === "application.query.execute") {
+    return request.name
+  }
+  return request.type
+}
+
+function getNativeActionInput(request: ExtensionConnectionCommandRequest): unknown {
+  switch (request.type) {
+    case "application.action.execute":
+    case "application.query.execute":
+      return request.input
+    case "fetch":
+      return {
+        body: request.body === undefined ? undefined : "[redacted]",
+        headerNames: request.headers.map(([name]) => name),
+        method: request.method,
+        timeoutMs: request.timeoutMs,
+        url: request.url,
+      }
+    case "source.run":
+      return {
+        params: request.params,
+        providerId: request.providerId,
+        retain: request.retain,
+        sourceId: request.sourceId,
+        useProviderSecrets: request.useProviderSecrets,
+      }
+    default:
+      return request
+  }
+}
+
+function getNativeActionResult(
+  request: ExtensionConnectionCommandRequest,
+  result: unknown,
+): unknown {
+  if (request.type !== "fetch") return result
+  const response = result as ExtensionConnectionFetchResponse
+  return {
+    body: "[redacted]",
+    headerNames: response.headers.map(([name]) => name),
+    status: response.status,
+    statusText: response.statusText,
+  }
 }
 
 function disconnect(): void {
