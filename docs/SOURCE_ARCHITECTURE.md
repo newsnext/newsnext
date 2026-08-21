@@ -407,6 +407,12 @@ when first used. Search explicitly restores persisted Source queries when it
 opens because its disabled observers must never start Source execution. Stale
 restored queries follow the same focus, remount, and interval revalidation
 policy as queries produced in the current session.
+The Now Layer requests one rerender after its bulk persisted-query restoration
+completes so unavailable Sources can resolve their cached presentation snapshot.
+It does not subscribe the Board projection to ongoing Query Cache events; active
+LiveCards own their query updates locally. When a query-key change temporarily
+displays placeholder data, the LiveCard preserves that result's last successful
+`dataUpdatedAt` instead of replacing it with the component mount time.
 
 Each page-side query request receives a TanStack `AbortSignal`. Because signals
 cannot be transported directly through the extension proxy, the page assigns a

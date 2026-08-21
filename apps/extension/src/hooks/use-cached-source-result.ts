@@ -9,11 +9,16 @@ import {
 } from "@/hooks/source-query"
 import { restorePersistedSourceQueries } from "@/lib/source/query-persister"
 
-export function findCachedSourceResult(
+export interface CachedSourceQuery {
+  data: SourceLoadResult
+  dataUpdatedAt: number
+}
+
+export function findCachedSourceQuery(
   queryClient: QueryClient,
   sourceId: string,
   params: Record<string, unknown> | undefined,
-): SourceLoadResult | undefined {
+): CachedSourceQuery | undefined {
   const queries = queryClient.getQueryCache()
     .findAll({ queryKey: SOURCE_QUERY_KEY })
     .filter(query => query.state.data !== undefined)
@@ -24,30 +29,55 @@ export function findCachedSourceResult(
     if (result.source?.id !== sourceId) continue
     const target = createSourceQueryTarget(sourceId, result.source, params)
     if (query.queryHash === getSourceQueryHash(target)) {
-      return result as SourceLoadResult
+      return {
+        data: result as SourceLoadResult,
+        dataUpdatedAt: query.state.dataUpdatedAt,
+      }
     }
   }
 }
 
-function useSourceQueryCacheRevision(): number {
+export function findCachedSourceResult(
+  queryClient: QueryClient,
+  sourceId: string,
+  params: Record<string, unknown> | undefined,
+): SourceLoadResult | undefined {
+  return findCachedSourceQuery(queryClient, sourceId, params)?.data
+}
+
+export function findSourceQueryDataUpdatedAt(
+  queryClient: QueryClient,
+  data: SourceLoadResult,
+): number | undefined {
+  let dataUpdatedAt: number | undefined
+
+  for (const query of queryClient.getQueryCache().findAll({ queryKey: SOURCE_QUERY_KEY })) {
+    if (
+      query.state.data === data
+      && (dataUpdatedAt === undefined || query.state.dataUpdatedAt > dataUpdatedAt)
+    ) {
+      dataUpdatedAt = query.state.dataUpdatedAt
+    }
+  }
+
+  return dataUpdatedAt
+}
+
+function useSourceQueryCacheRestored(): boolean {
   const queryClient = useQueryClient()
-  const [revision, setRevision] = useState(0)
+  const [restored, setRestored] = useState(false)
 
   useEffect(() => {
     let active = true
     void restorePersistedSourceQueries(queryClient).finally(() => {
-      if (active) setRevision(current => current + 1)
-    })
-    const unsubscribe = queryClient.getQueryCache().subscribe(() => {
-      setRevision(current => current + 1)
+      if (active) setRestored(true)
     })
     return () => {
       active = false
-      unsubscribe()
     }
   }, [queryClient])
 
-  return revision
+  return restored
 }
 
 export function useCachedSourceResultFinder(): (
@@ -55,9 +85,9 @@ export function useCachedSourceResultFinder(): (
   params: Record<string, unknown> | undefined,
 ) => SourceLoadResult | undefined {
   const queryClient = useQueryClient()
-  const revision = useSourceQueryCacheRevision()
+  const cacheRestored = useSourceQueryCacheRestored()
   return useCallback((sourceId, params) => {
-    void revision
+    void cacheRestored
     return findCachedSourceResult(queryClient, sourceId, params)
-  }, [queryClient, revision])
+  }, [cacheRestored, queryClient])
 }

@@ -1,7 +1,11 @@
 import { QueryClient } from "@tanstack/react-query"
 import { describe, expect, it, vi } from "vitest"
 import { createSourceQueryTarget, getSourceQueryKey } from "./source-query"
-import { findCachedSourceResult } from "./use-cached-source-result"
+import {
+  findCachedSourceQuery,
+  findCachedSourceResult,
+  findSourceQueryDataUpdatedAt,
+} from "./use-cached-source-result"
 
 vi.mock("@/lib/source", () => ({
   isSourceRequestProtected: () => false,
@@ -26,6 +30,11 @@ describe("findCachedSourceResult", () => {
     queryClient.setQueryData(getSourceQueryKey(target), result, { updatedAt: 100 })
 
     expect(findCachedSourceResult(queryClient, source.id, {})).toBe(result)
+    expect(findCachedSourceQuery(queryClient, source.id, {})).toEqual({
+      data: result,
+      dataUpdatedAt: 100,
+    })
+    expect(findSourceQueryDataUpdatedAt(queryClient, result)).toBe(100)
     expect(findCachedSourceResult(queryClient, "other:feed", {})).toBeUndefined()
   })
 
