@@ -73,8 +73,8 @@ Profile at least the scenarios affected by a change:
 - Single LiveCard refresh from request start through completion.
 - Global refresh with multiple active LiveCards.
 - Minute-boundary relative-time updates.
-- Application Actions that update Instances, Boards, membership, or Layer
-  settings through the background mutation runtime and its read-only
+- Application Actions that update Instances, Collections, entries, or
+  Collection Views through the background mutation runtime and its read-only
   frontend Application Data subscription.
 - LiveCard reorder, cancelled drag, and a drop that changes order.
 
@@ -101,13 +101,13 @@ to `BoardView` without subscribing the board to header progress state.
 
 ### Keep derivation ownership local
 
-`buildLiveCards` is a pure derivation without cross-call caches. Board
+`buildLiveCards` is a pure derivation without cross-call caches. Collection
 membership is selected before projection; the Instance contains no Board
 identifier. Search and
 refresh call it for their own snapshots. The rendered board uses Jotai's
 `splitAtom` with `instanceId` as its stable key so every LiveCard subscribes to its
 own `Instance`. `NowLayer` subscribes separately to a lightweight layout
-projection containing only Board IDs and sorting fields.
+projection containing only Collection IDs and sorting fields.
 
 Resolve board-only appearance settings at the `DraggableLiveCard` boundary and pass
 their result into the shared LiveCard shell. Do not make the base `LiveCard`
@@ -168,7 +168,7 @@ Mirrored storage deduplication must compare against state held by each adapter
 instance, not shared `localStorage`. Several extension documents share the same
 cache but own independent atom trees; one document updating the cache must not
 cause another document to skip its `browser.storage.onChanged` notification.
-Background Action proxies return only compact receipts such as `boardId`
+Background Action proxies return only compact receipts such as `collectionId`
 or `instanceId`; the normalized Application Data envelope propagates once via
 the storage subscription instead of being serialized again as an Action result.
 Board rendering names must reflect identity: arrays and maps keyed by configured

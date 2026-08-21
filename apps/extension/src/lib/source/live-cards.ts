@@ -55,29 +55,29 @@ function applyInstanceOverrides(
 export function createLiveCard(
   source: SourceDescriptor,
   instance: Instance,
-  boardId: string | null = null,
+  collectionId: string | null = null,
 ): LiveCardViewModel {
   return applyInstanceOverrides({
     ...source,
     id: instance.instanceId,
     sourceId: instance.sourceId,
-    boardId,
+    collectionId,
   }, instance)
 }
 
 export function buildLiveCards({
   sources,
   instances,
-  boardId,
-  boardInstanceIds,
+  collectionId,
+  collectionInstanceIds,
 }: {
   sources: SourceDescriptor[]
   instances: Instance[]
-  boardId: string | null
-  boardInstanceIds?: readonly string[]
+  collectionId: string | null
+  collectionInstanceIds?: readonly string[]
 }): LiveCardViewModel[] {
   const instanceGroups = new Map<string, Instance[]>()
-  const visibleIds = boardInstanceIds ? new Set(boardInstanceIds) : undefined
+  const visibleIds = collectionInstanceIds ? new Set(collectionInstanceIds) : undefined
 
   instances.forEach((instance) => {
     if (visibleIds && !visibleIds.has(instance.instanceId)) {
@@ -92,7 +92,7 @@ export function buildLiveCards({
   return sources.flatMap(source =>
     (instanceGroups.get(source.id) ?? [])
       .sort((a, b) => a.createdAt - b.createdAt)
-      .map(instance => createLiveCard(source, instance, boardId)),
+      .map(instance => createLiveCard(source, instance, collectionId)),
   )
 }
 

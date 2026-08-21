@@ -1,8 +1,9 @@
 import type { Color } from "@newsnext/shared/types"
-import type { Board, BoardLayer, NowLayerSortMode } from "../board"
+import type { BoardLayer, NowLayerSortMode } from "../board"
+import type { Collection } from "../collection"
 import type { InstancePatch } from "../source/live-cards"
 import type { ApplicationData } from "./data"
-import { createBoard } from "../board"
+import { createCollection } from "../collection"
 import { mergeInstancePatch } from "../source/live-cards"
 
 export interface BoardConfiguration {
@@ -16,9 +17,9 @@ interface ApplicationInstanceCreationInput {
   sourceId: string
 }
 
-export type BoardDeleteInput
-  = | { boardId: string, deleteInstances: true, targetBoardId?: never }
-    | { boardId: string, deleteInstances?: never, targetBoardId: string }
+export type CollectionDeleteInput
+  = | { collectionId: string, deleteInstances: true, targetCollectionId?: never }
+    | { collectionId: string, deleteInstances?: never, targetCollectionId: string }
 
 export interface ApplicationMutationDependencies {
   createId: () => string
@@ -31,89 +32,119 @@ export interface ApplicationMutationExecution {
 }
 
 export interface ApplicationMutationResult {
-  boardId?: string
+  collectionId?: string
   instanceId?: string
 }
 
-export function createBoardMutation(
+export function createCollectionMutation(
   data: ApplicationData,
-  input: BoardConfiguration & {
+  input: {
+    board?: BoardConfiguration
     instances?: ApplicationInstanceCreationInput[]
     name: string
   },
   dependencies: ApplicationMutationDependencies,
 ): ApplicationMutationExecution {
   const name = input.name.trim()
-  assertBoardName(name)
-  const boardId = dependencies.createId()
-  const board = configureBoard(
-    createBoard(boardId, name, dependencies.now()),
-    input,
+  assertCollectionName(name)
+  const collectionId = dependencies.createId()
+  const collection = configureBoard(
+    createCollection(collectionId, name, dependencies.now()),
+    input.board ?? {},
   )
   let nextData: ApplicationData = {
     ...data,
-    boards: [...data.boards, board],
+    collections: [...data.collections, collection],
   }
   for (const instance of input.instances ?? []) {
     nextData = createInstanceMutation(nextData, {
       ...instance,
-      boardIds: [boardId],
+      collectionIds: [collectionId],
     }, dependencies).data
   }
-  return { data: nextData, result: { boardId } }
+  return { data: nextData, result: { collectionId } }
 }
 
-export function updateBoardMutation(
+export function renameCollectionMutation(
   data: ApplicationData,
-  input: BoardConfiguration & { boardId: string, name?: string },
+  input: { collectionId: string, name: string },
 ): ApplicationMutationExecution {
-  assertBoardExists(data, input.boardId)
-  if (input.name === undefined
-    && input.color === undefined
-    && input.defaultLayer === undefined
-    && input.sortMode === undefined) {
-    throw new Error("Board update requires at least one change")
-  }
-  const name = input.name?.trim()
-  if (name !== undefined) assertBoardName(name)
+  const name = input.name.trim()
+  assertCollectionExists(data, input.collectionId)
+  assertCollectionName(name)
   return {
     data: {
       ...data,
-      boards: data.boards.map(board => board.id === input.boardId
-        ? configureBoard({
-            ...board,
-            ...(name !== undefined ? { name } : {}),
-          }, input)
-        : board),
+      collections: data.collections.map(collection => collection.id === input.collectionId
+        ? { ...collection, name }
+        : collection),
     },
   }
 }
 
-export function deleteBoardMutation(
+export function updateCollectionMutation(
   data: ApplicationData,
-  input: BoardDeleteInput,
+  input: { board?: BoardConfiguration, collectionId: string, name?: string },
 ): ApplicationMutationExecution {
-  const { boardId, targetBoardId } = input
+  assertCollectionExists(data, input.collectionId)
+  if (input.name === undefined && input.board === undefined) {
+    throw new Error("Collection update requires a name or Board configuration")
+  }
+  const name = input.name?.trim()
+  if (name !== undefined) assertCollectionName(name)
+  return {
+    data: {
+      ...data,
+      collections: data.collections.map(collection => collection.id === input.collectionId
+        ? configureBoard({
+            ...collection,
+            ...(name !== undefined ? { name } : {}),
+          }, input.board ?? {})
+        : collection),
+    },
+  }
+}
+
+export function configureBoardMutation(
+  data: ApplicationData,
+  input: BoardConfiguration & { collectionId: string },
+): ApplicationMutationExecution {
+  assertCollectionExists(data, input.collectionId)
+  return {
+    data: {
+      ...data,
+      collections: data.collections.map(collection => collection.id === input.collectionId
+        ? configureBoard(collection, input)
+        : collection),
+    },
+  }
+}
+
+export function deleteCollectionMutation(
+  data: ApplicationData,
+  input: CollectionDeleteInput,
+): ApplicationMutationExecution {
+  const { collectionId, targetCollectionId } = input
   const deleteInstances = input.deleteInstances === true
-  const board = getBoard(data, boardId)
-  if (data.boards.length === 1) throw new Error("NewsNext must keep at least one Board")
+  const collection = getCollection(data, collectionId)
+  if (data.collections.length === 1) throw new Error("NewsNext must keep at least one Board")
   if (!deleteInstances) {
-    if (targetBoardId === undefined) throw new Error("Board deletion requires a transfer target")
-    if (targetBoardId === boardId) {
-      throw new Error("Board transfer target must differ from the deleted Board")
+    if (targetCollectionId === undefined) throw new Error("Collection deletion requires a transfer target")
+    if (targetCollectionId === collectionId) {
+      throw new Error("Collection transfer target must differ from the deleted Collection")
     }
-    assertBoardExists(data, targetBoardId)
+    assertCollectionExists(data, targetCollectionId)
   }
   const instances = deleteInstances
-    ? data.instances.filter(instance => !getExclusiveBoardInstanceIds(data, boardId).has(instance.instanceId))
+    ? data.instances.filter(instance => !getExclusiveCollectionInstanceIds(data, collectionId).has(instance.instanceId))
     : data.instances
   return {
     data: {
       ...data,
-      boards: data.boards.flatMap((candidate) => {
-        if (candidate.id === boardId) return []
-        if (!deleteInstances && candidate.id === targetBoardId) {
-          return [board.instanceIds.toReversed().reduce(addInstanceToBoard, candidate)]
+      collections: data.collections.flatMap((candidate) => {
+        if (candidate.id === collectionId) return []
+        if (!deleteInstances && candidate.id === targetCollectionId) {
+          return [collection.instanceIds.toReversed().reduce(addInstanceToCollection, candidate)]
         }
         return [candidate]
       }),
@@ -124,14 +155,14 @@ export function deleteBoardMutation(
 
 export function setNowLayerManualOrderMutation(
   data: ApplicationData,
-  input: { boardId: string, instanceIds: string[] },
+  input: { collectionId: string, instanceIds: string[] },
 ): ApplicationMutationExecution {
-  const board = getBoard(data, input.boardId)
-  assertCompleteInstanceOrder(board.instanceIds, input.instanceIds)
+  const collection = getCollection(data, input.collectionId)
+  assertCompleteInstanceOrder(collection.instanceIds, input.instanceIds)
   return {
     data: {
       ...data,
-      boards: data.boards.map(candidate => candidate.id === input.boardId
+      collections: data.collections.map(candidate => candidate.id === input.collectionId
         ? {
             ...candidate,
             nowLayer: {
@@ -144,52 +175,52 @@ export function setNowLayerManualOrderMutation(
   }
 }
 
-export function addBoardInstanceMutation(
+export function addCollectionInstanceMutation(
   data: ApplicationData,
-  input: { boardId: string, instanceId: string },
+  input: { collectionId: string, instanceId: string },
 ): ApplicationMutationExecution {
-  assertBoardExists(data, input.boardId)
+  assertCollectionExists(data, input.collectionId)
   assertInstanceExists(data, input.instanceId)
   return {
     data: {
       ...data,
-      boards: data.boards.map(board => board.id === input.boardId
-        ? addInstanceToBoard(board, input.instanceId)
-        : board),
+      collections: data.collections.map(collection => collection.id === input.collectionId
+        ? addInstanceToCollection(collection, input.instanceId)
+        : collection),
     },
   }
 }
 
-export function removeBoardInstanceMutation(
+export function removeCollectionInstanceMutation(
   data: ApplicationData,
-  input: { boardId: string, instanceId: string },
+  input: { collectionId: string, instanceId: string },
 ): ApplicationMutationExecution {
-  assertBoardExists(data, input.boardId)
+  assertCollectionExists(data, input.collectionId)
   assertInstanceExists(data, input.instanceId)
-  const membershipCount = data.boards.filter(board => board.instanceIds.includes(input.instanceId)).length
-  if (membershipCount <= 1 && getBoard(data, input.boardId).instanceIds.includes(input.instanceId)) {
+  const membershipCount = data.collections.filter(collection => collection.instanceIds.includes(input.instanceId)).length
+  if (membershipCount <= 1 && getCollection(data, input.collectionId).instanceIds.includes(input.instanceId)) {
     throw new Error("A LiveCard must belong to at least one Board")
   }
   return {
     data: {
       ...data,
-      boards: data.boards.map(board => board.id === input.boardId
-        ? removeInstanceFromBoard(board, input.instanceId)
-        : board),
+      collections: data.collections.map(collection => collection.id === input.collectionId
+        ? removeInstanceFromCollection(collection, input.instanceId)
+        : collection),
     },
   }
 }
 
 export function createInstanceMutation(
   data: ApplicationData,
-  input: ApplicationInstanceCreationInput & { boardIds: string[] },
+  input: ApplicationInstanceCreationInput & { collectionIds: string[] },
   dependencies: ApplicationMutationDependencies,
 ): ApplicationMutationExecution {
-  const { boardIds, patch, sourceId } = input
+  const { collectionIds, patch, sourceId } = input
   if (!sourceId.trim()) throw new Error("Source ID is required")
-  const uniqueBoardIds = [...new Set(boardIds)]
-  if (uniqueBoardIds.length === 0) throw new Error("A LiveCard must belong to at least one Board")
-  for (const boardId of uniqueBoardIds) assertBoardExists(data, boardId)
+  const uniqueCollectionIds = [...new Set(collectionIds)]
+  if (uniqueCollectionIds.length === 0) throw new Error("A LiveCard must belong to at least one Board")
+  for (const collectionId of uniqueCollectionIds) assertCollectionExists(data, collectionId)
   const instanceId = `${sourceId}::${dependencies.createId()}`
   if (data.instances.some(instance => instance.instanceId === instanceId)) {
     throw new Error(`Instance '${instanceId}' already exists`)
@@ -203,9 +234,9 @@ export function createInstanceMutation(
         patch,
         createdAt: dependencies.now(),
       }],
-      boards: data.boards.map(board => uniqueBoardIds.includes(board.id)
-        ? addInstanceToBoard(board, instanceId)
-        : board),
+      collections: data.collections.map(collection => uniqueCollectionIds.includes(collection.id)
+        ? addInstanceToCollection(collection, instanceId)
+        : collection),
     },
     result: { instanceId },
   }
@@ -250,69 +281,69 @@ export function deleteInstanceMutation(
     data: {
       ...data,
       instances: data.instances.filter(instance => instance.instanceId !== input.instanceId),
-      boards: data.boards.map(board => removeInstanceFromBoard(board, input.instanceId)),
+      collections: data.collections.map(collection => removeInstanceFromCollection(collection, input.instanceId)),
     },
   }
 }
 
-function addInstanceToBoard(board: Board, instanceId: string): Board {
-  if (board.instanceIds.includes(instanceId)) return board
+function addInstanceToCollection(collection: Collection, instanceId: string): Collection {
+  if (collection.instanceIds.includes(instanceId)) return collection
   const manualOrder = [
     instanceId,
-    ...board.nowLayer.sort.manualOrder.filter(candidate => candidate !== instanceId),
+    ...collection.nowLayer.sort.manualOrder.filter(candidate => candidate !== instanceId),
   ]
   return {
-    ...board,
-    instanceIds: [instanceId, ...board.instanceIds],
+    ...collection,
+    instanceIds: [instanceId, ...collection.instanceIds],
     nowLayer: {
-      ...board.nowLayer,
-      sort: { ...board.nowLayer.sort, manualOrder },
+      ...collection.nowLayer,
+      sort: { ...collection.nowLayer.sort, manualOrder },
     },
   }
 }
 
-function removeInstanceFromBoard(board: Board, instanceId: string): Board {
-  if (!board.instanceIds.includes(instanceId)) return board
+function removeInstanceFromCollection(collection: Collection, instanceId: string): Collection {
+  if (!collection.instanceIds.includes(instanceId)) return collection
   return {
-    ...board,
-    instanceIds: board.instanceIds.filter(candidate => candidate !== instanceId),
+    ...collection,
+    instanceIds: collection.instanceIds.filter(candidate => candidate !== instanceId),
     nowLayer: {
-      ...board.nowLayer,
+      ...collection.nowLayer,
       sort: {
-        ...board.nowLayer.sort,
-        manualOrder: board.nowLayer.sort.manualOrder.filter(candidate => candidate !== instanceId),
+        ...collection.nowLayer.sort,
+        manualOrder: collection.nowLayer.sort.manualOrder.filter(candidate => candidate !== instanceId),
       },
     },
   }
 }
 
-function getExclusiveBoardInstanceIds(
+function getExclusiveCollectionInstanceIds(
   data: ApplicationData,
-  boardId: string,
+  collectionId: string,
 ): Set<string> {
-  const board = getBoard(data, boardId)
-  const otherBoardInstanceIds = new Set(data.boards
-    .filter(candidate => candidate.id !== boardId)
+  const collection = getCollection(data, collectionId)
+  const otherCollectionInstanceIds = new Set(data.collections
+    .filter(candidate => candidate.id !== collectionId)
     .flatMap(candidate => candidate.instanceIds))
-  return new Set(board.instanceIds.filter(instanceId => !otherBoardInstanceIds.has(instanceId)))
+  return new Set(collection.instanceIds.filter(instanceId => !otherCollectionInstanceIds.has(instanceId)))
 }
 
 function configureBoard(
-  board: Board,
+  collection: Collection,
   configuration: BoardConfiguration,
-): Board {
-  const sortMode = configuration.sortMode ?? board.nowLayer.sort.mode
+): Collection {
+  const sortMode = configuration.sortMode ?? collection.nowLayer.sort.mode
   return {
-    ...board,
-    ...(configuration.color !== undefined ? { color: configuration.color } : {}),
+    ...collection,
     ...(configuration.defaultLayer !== undefined ? { defaultLayer: configuration.defaultLayer } : {}),
     nowLayer: {
-      ...board.nowLayer,
+      ...collection.nowLayer,
+      ...(configuration.color !== undefined ? { color: configuration.color } : {}),
       sort: {
-        ...board.nowLayer.sort,
+        ...collection.nowLayer.sort,
         mode: sortMode,
         automaticMode: sortMode === "manual"
-          ? board.nowLayer.sort.automaticMode
+          ? collection.nowLayer.sort.automaticMode
           : sortMode,
       },
     },
@@ -325,18 +356,18 @@ function assertCompleteInstanceOrder(existingIds: string[], requestedIds: string
   if (requested.size !== requestedIds.length
     || requested.size !== existing.size
     || requestedIds.some(instanceId => !existing.has(instanceId))) {
-    throw new Error("Manual order must contain every Board Instance exactly once")
+    throw new Error("Manual order must contain every Collection Instance exactly once")
   }
 }
 
-function getBoard(data: ApplicationData, boardId: string): Board {
-  const board = data.boards.find(candidate => candidate.id === boardId)
-  if (!board) throw new Error(`Board '${boardId}' not found`)
-  return board
+function getCollection(data: ApplicationData, collectionId: string): Collection {
+  const collection = data.collections.find(candidate => candidate.id === collectionId)
+  if (!collection) throw new Error(`Collection '${collectionId}' not found`)
+  return collection
 }
 
-function assertBoardExists(data: ApplicationData, boardId: string): void {
-  getBoard(data, boardId)
+function assertCollectionExists(data: ApplicationData, collectionId: string): void {
+  getCollection(data, collectionId)
 }
 
 function assertInstanceExists(data: ApplicationData, instanceId: string): void {
@@ -345,6 +376,6 @@ function assertInstanceExists(data: ApplicationData, instanceId: string): void {
   }
 }
 
-function assertBoardName(name: string): void {
-  if (!name) throw new Error("Board name is required")
+function assertCollectionName(name: string): void {
+  if (!name) throw new Error("Collection name is required")
 }

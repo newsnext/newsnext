@@ -15,7 +15,7 @@ import {
   getUserManagedHostPermissionOrigins,
   revokeHostPermissionOrigin,
 } from "@/lib/source"
-import { boardsAtom, deleteInstanceAtom, instancesAtom } from "@/store/board"
+import { collectionsAtom, deleteInstanceAtom, instancesAtom } from "@/store/board"
 
 interface PermissionLiveCard {
   id: string
@@ -67,7 +67,7 @@ export function PermissionsSettings({
 }) {
   const [origins, setOrigins] = useState<string[]>([])
   const instances = useAtomValue(instancesAtom)
-  const boards = useAtomValue(boardsAtom)
+  const collections = useAtomValue(collectionsAtom)
   const deleteInstance = useSetAtom(deleteInstanceAtom)
   const { isLoading: areSourcesLoading, sources } = useSourceDescriptors()
   const {
@@ -82,8 +82,8 @@ export function PermissionsSettings({
     getLiveCardsUsingOrigin(origin, sources, instances),
   ])), [instances, origins, sources])
   const boardIdByInstanceId = useMemo(() => new Map(
-    boards.flatMap(board => board.instanceIds.map(instanceId => [instanceId, board.id] as const)),
-  ), [boards])
+    collections.flatMap(collection => collection.instanceIds.map(instanceId => [instanceId, collection.id] as const)),
+  ), [collections])
 
   const refreshOrigins = useCallback(async (): Promise<void> => {
     const grantedOrigins = await getGrantedHostPermissionOrigins()

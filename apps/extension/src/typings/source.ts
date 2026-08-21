@@ -10,7 +10,7 @@ export type { NewsItem, SemanticPicture, SourceDescriptor }
 export type LiveCardViewModel = Omit<SourceDescriptor, "id"> & {
   id: string
   sourceId: string
-  boardId: string | null
+  collectionId: string | null
   createdAt?: number
   paramsValue?: Record<string, unknown>
 }

@@ -160,7 +160,7 @@ export function LiveCardContainer({
             className,
           )}
         >
-          {visibleLiveCards.map(({ id, available, boardId, descriptor, instanceAtom }, index) => (
+          {visibleLiveCards.map(({ id, available, collectionId, descriptor, instanceAtom }, index) => (
             <m.li
               key={id}
               data-live-card-id={id}
@@ -182,7 +182,7 @@ export function LiveCardContainer({
                 style={getCardEntranceStyle(index)}
               >
                 <DraggableLiveCard
-                  boardId={boardId}
+                  collectionId={collectionId}
                   descriptor={descriptor}
                   available={available}
                   dragging={isDragging && selectedInstanceIds.includes(id)}

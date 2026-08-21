@@ -57,7 +57,7 @@ describe("buildLiveCards", () => {
   it("projects saved Instances as LiveCards", () => {
     const liveCards = buildLiveCards({
       sources: testSources,
-      boardId: null,
+      collectionId: null,
       instances: [
         createCustomInstance({ patch: { params: { topic: "custom" } } }),
       ],
@@ -73,7 +73,7 @@ describe("buildLiveCards", () => {
   it("applies Instance title overrides", () => {
     const liveCards = buildLiveCards({
       sources: testSources,
-      boardId: null,
+      collectionId: null,
       instances: [
         createCustomInstance({
           patch: { metadata: { title: "Custom Radar Title" } },
@@ -91,7 +91,7 @@ describe("buildLiveCards", () => {
   it("applies source-owned instance metadata overrides", () => {
     const liveCards = buildLiveCards({
       sources: testSources,
-      boardId: null,
+      collectionId: null,
       instances: [
         createCustomInstance({
           patch: {
@@ -123,7 +123,7 @@ describe("buildLiveCards", () => {
   it("does not allow persisted instance metadata to override provider metadata", () => {
     const liveCards = buildLiveCards({
       sources: testSources,
-      boardId: null,
+      collectionId: null,
       instances: [
         createCustomInstance({
           patch: {
@@ -157,7 +157,7 @@ describe("buildLiveCards", () => {
   it("hides base source templates from boards", () => {
     const liveCards = buildLiveCards({
       sources: testSources,
-      boardId: null,
+      collectionId: null,
       instances: [],
     })
 
@@ -167,7 +167,7 @@ describe("buildLiveCards", () => {
   it("shows every LiveCard in All", () => {
     const liveCards = buildLiveCards({
       sources: testSources,
-      boardId: null,
+      collectionId: null,
       instances: [
         createCustomInstance(),
         createCustomInstance({
@@ -186,8 +186,8 @@ describe("buildLiveCards", () => {
   it("filters LiveCards in a custom board", () => {
     const liveCards = buildLiveCards({
       sources: testSources,
-      boardId: "reading",
-      boardInstanceIds: ["test:latest::ZyXwVuTs9876"],
+      collectionId: "reading",
+      collectionInstanceIds: ["test:latest::ZyXwVuTs9876"],
       instances: [
         createCustomInstance(),
         createCustomInstance({
@@ -205,7 +205,7 @@ describe("applySourceLoaderMetadata", () => {
   it("overrides instance presentation fields while preserving missing fields", () => {
     const liveCards = buildLiveCards({
       sources: testSources,
-      boardId: null,
+      collectionId: null,
       instances: [
         createCustomInstance({
           patch: { metadata: { title: "Radar title", desc: "Radar description" } },

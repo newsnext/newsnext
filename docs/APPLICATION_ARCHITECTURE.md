@@ -9,17 +9,17 @@ future automation. These consumers may present the model differently, but they
 share one typed Action registry, validation, and background persistence runtime.
 Each Action declares whether it is a `mutation`, `query`, or `command`.
 
-The central model is:
+The central projection is:
 
 | Application data | Human presentation |
 | --- | --- |
 | Source | Source picker item |
 | Instance | LiveCard |
-| Board | Board navigation and Layers |
+| Collection | Board |
 | Source result item | Item view |
 
-Layers and LiveCards are human-facing projections. They do not own separate
-copies of Board or Instance data.
+Board and LiveCard are names for human-facing projections. They do not own
+separate copies of Collection or Instance data.
 
 ## Persistent Application Data
 
@@ -27,8 +27,8 @@ Application Data uses one versioned envelope:
 
 ```ts
 interface ApplicationData {
-  version: 3
-  boards: Board[]
+  version: 2
+  collections: Collection[]
   instances: Instance[]
 }
 ```
@@ -51,17 +51,15 @@ interface Instance {
 ```
 
 `createdAt` records when the Instance itself was created. It does not record
-when the Instance joined any Board. An Instance may belong to multiple
-Boards and therefore must not store a single Board or Board ID.
+when the Instance joined any Collection. An Instance may belong to multiple
+Collections and therefore must not store a single Board or Collection ID.
 
-### Board
+### Collection and Board
 
-A Board is the persistent identity, membership container, and presentation
-configuration:
+A Collection is also the persistent identity and configuration of its Board:
 
 ```ts
-interface Board {
-  color: Color
+interface Collection {
   createdAt: number
   id: string
   name: string
@@ -71,17 +69,19 @@ interface Board {
 
   defaultLayer: "now" | "next"
   nowLayer: {
+    color?: Color
     sort: NowLayerSort
   }
 }
 ```
 
-There is no separate entry or view table. Membership, membership order, color,
-and durable Layer settings belong directly to the Board.
+There is no global `CollectionEntry` table and no parallel `CollectionView`
+table. Membership, membership order, and durable Board presentation settings
+belong to the Collection that owns them.
 
 `instanceIds` has two responsibilities:
 
-1. It identifies the Instances that belong to the Board.
+1. It identifies the Instances that belong to the Collection.
 2. Its order is the canonical `addedAt` order, from most recently added to least
    recently added.
 
@@ -91,7 +91,7 @@ not move it. Removing a membership removes the ID from both membership order
 and any manual NowLayer order.
 
 `createdAt` and membership order are deliberately different. Moving an old
-Instance into a new Board makes it recently added in that Board but
+Instance into a new Collection makes it recently added in that Collection but
 does not change the Instance's creation time.
 
 ### NowLayer ordering
@@ -110,7 +110,7 @@ interface NowLayerSort {
 }
 ```
 
-`addedAt` is the default and reads `board.instanceIds` directly. Provider
+`addedAt` is the default and reads `collection.instanceIds` directly. Provider
 sorting derives a presentation order without changing membership order.
 Dragging selects `manual` mode and writes the complete membership permutation
 to `manualOrder`; it does not rewrite `instanceIds`.
@@ -119,6 +119,24 @@ New memberships are also inserted at the front of `manualOrder`, so returning
 to manual mode never loses a newly added card. `automaticMode` remembers which
 automatic ordering manual mode should use to reconcile an incomplete legacy
 or normalized manual order.
+
+### Legacy migration
+
+Application Data v1 stored Collections, Collection entries, and Collection View
+preferences separately. The v2 normalizer migrates them as follows:
+
+- legacy Collection identity becomes the base of the v2 Collection;
+- View color, default layer, and sorting move under the Collection;
+- membership becomes `collection.instanceIds`;
+- `manualOrder` follows legacy entry position;
+- canonical added order is reconstructed by member Instance `createdAt`
+  descending;
+- legacy `createdAt` sort mode becomes `addedAt`.
+
+Using Instance creation time during migration is a one-time approximation
+because v1 did not retain reliable membership insertion history. After
+migration, all additions use the front-insertion rule and no timestamp is
+needed.
 
 ## Source Results and Registry Independence
 
@@ -175,7 +193,7 @@ containers.
 - NextLayer reads future persisted outputs produced by daemon- and CLI-owned
   processing. It does not subscribe to NowLayer React query state.
 - `defaultLayer` selects which layer opens; switching layers does not change
-  Board membership, Instances, Query cache, or History.
+  Collection membership, Instances, Query cache, or History.
 
 ## Action Registry
 
@@ -187,15 +205,15 @@ the runtime contract and the JSON Schema returned by `action.list`; there is no
 parallel descriptor or hand-written parser catalog.
 
 ```ts
-const createBoard = defineAction({
-  name: "board.create",
+const createCollection = defineAction({
+  name: "collection.create",
   kind: "mutation",
   audiences: ["ui", "connected"],
   params: Type.Object({ name: Type.String({ minLength: 1 }) }),
-  result: Type.Object({ boardId: Type.String() }),
+  result: Type.Object({ collectionId: Type.String() }),
 }, async (params, context) => {
   return await context.mutate((data, dependencies) => (
-    createBoardMutation(data, params, dependencies)
+    createCollectionMutation(data, params, dependencies)
   ))
 })
 ```
@@ -215,8 +233,8 @@ general browser control when needed.
 The UI uses a type-safe client inferred from the UI-visible definitions:
 
 ```ts
-await actions.board.create({ name: "Research" })
-await actions.board.update({ boardId, color: "blue" })
+await actions.collection.create({ name: "Research" })
+await actions.board.configure({ collectionId, color: "blue" })
 const sources = await actions.source.list()
 ```
 
@@ -239,26 +257,29 @@ instance.configure
 instance.delete
 instance.resetParams
 
-board.create
-board.delete
-board.update
-board.addInstance
-board.removeInstance
+collection.create
+collection.delete
+collection.rename
+collection.update
+collection.addInstance
+collection.removeInstance
 
+board.configure
 nowLayer.setManualOrder
 ```
 
-`board.create` and `board.update` accept Board fields directly, including
-`color`, `defaultLayer`, and `sortMode`. Bulk creation may include configured
-Instances and persists the Board, Instances, and memberships atomically.
+`collection.create` and `collection.update` accept an optional nested `board`
+configuration when one intent spans Collection identity and Board
+presentation. Bulk creation may include configured Instances and persists the
+Collection, Instances, and memberships atomically.
 
-`board.removeInstance` cannot remove an Instance's last membership.
+`collection.removeInstance` cannot remove an Instance's last membership.
 `instance.delete` removes the Instance and every membership. Deleting a
-Board requires exactly one policy: delete Instances exclusive to it, or
-transfer its memberships to another Board without duplicating or moving
+Collection requires exactly one policy: delete Instances exclusive to it, or
+transfer its memberships to another Collection without duplicating or moving
 memberships already present in the target.
 
-`nowLayer.setManualOrder` requires every Board Instance exactly once and
+`nowLayer.setManualOrder` requires every Collection Instance exactly once and
 selects manual mode atomically.
 
 ### Queries
@@ -270,16 +291,16 @@ source.get
 source.list
 instance.get
 instance.list
-board.get
-board.list
-board.listInstances
+collection.get
+collection.list
+collection.listInstances
 board.getContext
 board.getConfiguration
 nowLayer.getLiveCards
 ```
 
 `nowLayer.getLiveCards` returns every logical card in the current Board in
-Board membership order. It does not filter against the current registry
+Collection membership order. It does not filter against the current registry
 or mounted DOM nodes. Registry availability is a presentation and execution
 state, not an Instance-existence condition.
 

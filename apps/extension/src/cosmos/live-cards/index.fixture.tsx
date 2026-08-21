@@ -13,7 +13,7 @@ const UPDATED_AT = Date.now() - 4 * 60 * 1000
 export const SAMPLE_SOURCE: LiveCardViewModel = {
   id: "cosmos-source",
   sourceId: "cosmos.design",
-  boardId: "V1StGXR8_Z5j",
+  collectionId: "V1StGXR8_Z5j",
   provider: {
     title: "Cosmos Design",
     category: "developer",

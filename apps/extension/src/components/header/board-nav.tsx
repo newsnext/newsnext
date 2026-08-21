@@ -128,8 +128,8 @@ export function BoardNav({ onNotify }: BoardNavProps) {
 
   async function handleCreate(input: BoardCreateInput): Promise<void> {
     const result = await addBoard(input)
-    if (result?.boardId) {
-      openBoard(result.boardId, input.defaultLayer)
+    if (result?.collectionId) {
+      openBoard(result.collectionId, input.defaultLayer)
     }
   }
 
@@ -163,7 +163,7 @@ export function BoardNav({ onNotify }: BoardNavProps) {
     try {
       const imported = parseOpml(await file.text())
       const result = await addBoardFromOpml(imported)
-      if (result.boardId) openBoard(result.boardId)
+      if (result.collectionId) openBoard(result.collectionId)
     } catch (error) {
       onNotify({
         title: "Couldn’t import OPML",

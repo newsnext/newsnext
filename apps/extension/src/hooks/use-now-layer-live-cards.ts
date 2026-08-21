@@ -1,5 +1,6 @@
 import type { Atom } from "jotai"
-import type { Board, SortableNowLayerLiveCard } from "@/lib/board"
+import type { SortableNowLayerLiveCard } from "@/lib/board"
+import type { Collection } from "@/lib/collection"
 import type { Instance } from "@/lib/source"
 import type { SourceDescriptor } from "@/typings/source"
 import { useAtomValue } from "jotai"
@@ -11,13 +12,13 @@ import { useSourceDescriptors } from "./use-source-descriptors"
 
 export interface NowLayerLiveCard {
   available: boolean
-  boardId: string
+  collectionId: string
   descriptor: SourceDescriptor
   instanceAtom: Atom<Instance>
 }
 
 interface NowLayerLiveCardsResult {
-  currentBoard: Board
+  currentBoard: Collection
   liveCardsByInstanceId: Record<string, NowLayerLiveCard>
   instanceIds: string[]
 }
@@ -71,7 +72,7 @@ export function useNowLayerLiveCards(boardId: string): NowLayerLiveCardsResult {
 
       nextLiveCards[instanceId] = {
         available: registryDescriptor !== undefined,
-        boardId,
+        collectionId: boardId,
         descriptor,
         instanceAtom,
       }

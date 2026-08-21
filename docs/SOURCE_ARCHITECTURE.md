@@ -136,13 +136,14 @@ preset and template as a local user setting. This keeps third-party favicon
 service URLs out of provider definitions and the generated registry while
 allowing instance-specific home overrides to select the matching icon. The
 preference is part of the portable Settings slice. Application Data persists
-Boards and Instances in one normalized envelope. An Instance never stores a
-Board identifier. Each Board directly owns its color, default layer, sort mode,
-membership, and membership order. Extension pages read synchronous `localStorage`
+Collections, Instances, and Board configuration in one
+normalized envelope. An Instance never stores a Board identifier. Collection
+entries own membership and manual position; Collection Views own Board color,
+default layer, and sort mode. Extension pages read synchronous `localStorage`
 snapshots first, then reconcile them with canonical copies in
 `browser.storage.local`; background storage wins when both copies exist.
 A versioned `newsnext-user-data` envelope validates and combines the portable
-slices for import and export. Import accepts only the current version 3 envelope.
+slices for import and export. Import accepts only the current version 1 envelope.
 Current Board selection, CLI connectivity, browser permissions, and caches are
 device-local and are not part of that envelope.
 The Settings data reset restores every persisted slice to its default, deletes
@@ -349,11 +350,11 @@ queue, are normalized and
 persisted to `browser.storage.local`, and propagate to open extension pages
 through read-only storage subscriptions. Bulk import and reset use the same
 queued background repository replacement rather than setting frontend atoms.
-Composite Board create/update and NowLayer manual-order Actions apply
+Composite Collection create/update and NowLayer manual-order Actions apply
 their changes to one in-memory envelope and perform one storage write. The
-manual-order Action requires every Board Instance exactly once.
+manual-order Action requires every Collection Instance exactly once.
 
-Board `instanceIds` store membership in recently-added-first order. The
+Collection `instanceIds` store membership in recently-added-first order. The
 NowLayer renders every member even when its Source is no longer in the current
 registry. A successful Source load caches the result together with the Source
 provider, static metadata, parameter schema, capabilities, and version. An
@@ -365,7 +366,7 @@ each frontend through its own subscription state rather than a duplicate proxy
 payload.
 The Application Data mirror never initializes or normalizes browser storage
 from a frontend page; the background runtime is the only persistent writer.
-`board.getContext` resolves the current Board identity, while
+`board.getContext` resolves the current Board to its Collection identity, while
 `nowLayer.getLiveCards` returns every LiveCard logically displayed by that
 Board with its Instance and membership identities, independent of registry
 availability.
@@ -373,7 +374,7 @@ availability.
 Requests travel through the same per-user local IPC connection as source authoring
 commands and return JSON. The extension validates every request before
 dispatch. Enabling CLI access authorizes the local NewsNext CLI to mutate
-Boards and Instances, including destructive Actions; it does not grant
+Collections and Instances, including destructive Actions; it does not grant
 web content or arbitrary processes direct extension access. History reads do
 not enter the extension: the companion daemon queries its own Turso database by
 the opaque dataset IDs returned from `history datasets`. Only an explicit
@@ -753,17 +754,17 @@ Radar metadata can replace source-owned presentation fields such as title,
 badge, description, and home URL, but cannot modify source identity,
 provider title, icon, color, category, loader behavior, capabilities, secrets,
 request rules, or Source version.
-Accepting a Radar suggestion creates one Instance and adds it to one or more
-Boards. The Instance owns its Source ID and patch; each Board owns its
-membership. New Instance IDs combine the Source ID and a
+Accepting a Radar suggestion creates one Instance and one or more Collection
+entries. The Instance owns its Source ID and patch;
+Collection entries own membership. New Instance IDs combine the Source ID and a
 12-character Nano ID with `::`;
 Board IDs, including the initial `My Board`, use the Nano ID directly. Both
 remain opaque strings.
-Moving a LiveCard updates only Board membership; Source parameters,
+Moving a LiveCard updates only Collection membership; Source parameters,
 presentation metadata, and cache identity remain unchanged. Every Instance has
-at least one Board membership. First-run data contains one
-ordinary Board named `My Board`; it can be renamed or deleted after another
-Board exists, and all Board routes resolve real Board IDs.
+at least one Collection entry. First-run data contains one
+ordinary Collection named `My Board`; it can be renamed or deleted after another
+Board exists, and all Board routes resolve real Collection IDs.
 The LiveCard editor writes the same instance patch shape and exposes every declared
 source parameter plus each editable source-owned presentation metadata field.
 The inferred LiveCard presentation is read-only. Provider
@@ -911,7 +912,7 @@ disconnect instead of silently accepting a partial control surface. Protocol
 version 4 makes History daemon-owned and adds the explicit `retain` flag to
 `source.run`. Protocol version 5 publishes each
 connected extension's Board summaries to the menu-bar app, keeps them current
-after Board changes, and makes `app.open` target an explicit Board route.
+after collection changes, and makes `app.open` target an explicit Board route.
 Protocol version 6 replaces the parallel Application Action, Application Query,
 open, fetch, and Source-run request variants with one `action.list` and
 `action.execute` transport. The catalog classifies every capability as a

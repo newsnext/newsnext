@@ -2,7 +2,7 @@ import { Navigate, useLocation, useParams } from "@tanstack/react-router"
 import { useAtomValue, useSetAtom } from "jotai"
 import { useEffect } from "react"
 import { BoardView } from "@/components/board-view"
-import { getBoardLayerFromState } from "@/lib/board"
+import { getBoardColor, getBoardLayerFromState } from "@/lib/board"
 import { handleThemeSwitch } from "@/lib/utils/swith-theme"
 import { boardsAtom } from "@/store/board"
 import { currentBoardIdAtom } from "@/store/settings"
@@ -18,7 +18,7 @@ export function BoardIdComponent() {
   useEffect(() => {
     document.title = board ? `NewsNext | ${board.name}` : "NewsNext"
     if (board) {
-      handleThemeSwitch(board.color)
+      handleThemeSwitch(getBoardColor(board))
     }
 
     return () => {

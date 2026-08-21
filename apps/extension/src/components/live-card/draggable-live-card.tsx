@@ -23,7 +23,7 @@ function canDragFromLiveCardHeader(target: Element | null): boolean {
 
 interface DraggableLiveCardProps {
   available?: boolean
-  boardId: string | null
+  collectionId: string | null
   descriptor: SourceDescriptor
   dragging: boolean
   instanceAtom: Atom<Instance>
@@ -82,12 +82,12 @@ function generateDragPreview({
   return () => layers.forEach(layer => layer.remove())
 }
 
-function DraggableLiveCardComponent({ available = true, boardId, descriptor, dragging, instanceAtom, sortable = true }: DraggableLiveCardProps) {
+function DraggableLiveCardComponent({ available = true, collectionId, descriptor, dragging, instanceAtom, sortable = true }: DraggableLiveCardProps) {
   const instance = useAtomValue(instanceAtom)
   const liveCardHeight = useAtomValue(liveCardHeightAtom)
   const source = useMemo(
-    () => createLiveCard(descriptor, instance, boardId),
-    [boardId, descriptor, instance],
+    () => createLiveCard(descriptor, instance, collectionId),
+    [collectionId, descriptor, instance],
   )
   const id = instance.instanceId
   const { setNodeRef, setHandleRef } = useSortable({

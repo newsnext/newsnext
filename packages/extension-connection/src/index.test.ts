@@ -10,13 +10,13 @@ describe("extension connection protocol", () => {
     expect(parseExtensionConnectionCommandRequest({
       id: "action-id",
       type: "action.execute",
-      name: "board.delete",
-      input: { boardId: "reading", deleteInstances: true },
+      name: "collection.delete",
+      input: { collectionId: "reading", deleteInstances: true },
     })).toEqual({
       id: "action-id",
       type: "action.execute",
-      name: "board.delete",
-      input: { boardId: "reading", deleteInstances: true },
+      name: "collection.delete",
+      input: { collectionId: "reading", deleteInstances: true },
     })
   })
 
@@ -24,7 +24,7 @@ describe("extension connection protocol", () => {
     expect(() => parseExtensionConnectionCommandRequest({
       id: "action-id",
       type: "action.execute",
-      name: "board.delete",
+      name: "collection.delete",
       input: null,
     })).toThrow("Invalid extension command")
     expect(() => parseExtensionConnectionCommandRequest({

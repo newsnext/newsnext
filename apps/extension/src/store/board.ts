@@ -8,8 +8,9 @@ import { actions } from "../lib/actions"
 import {
   DEFAULT_BOARD_LAYER,
   DEFAULT_NOW_LAYER_SORT,
-  indexBoardIdsByInstance,
+  getBoardColor,
 } from "../lib/board"
+import { indexCollectionIdsByInstance } from "../lib/collection"
 import { normalizeApplicationData, PERSISTED_DATA_SLICES } from "../lib/settings"
 import { createMirroredStorage } from "./persisted-storage"
 
@@ -26,11 +27,13 @@ const persistedApplicationDataAtom = atomWithStorage<ApplicationData>(
 )
 export const applicationDataAtom = atom(get => get(persistedApplicationDataAtom))
 
-export const boardsAtom = selectAtom(applicationDataAtom, data => data.boards)
+export const collectionsAtom = selectAtom(applicationDataAtom, data => data.collections)
 export const instancesAtom = selectAtom(applicationDataAtom, data => data.instances)
 
+export const boardsAtom = collectionsAtom
+
 export interface InstanceViewLayout {
-  boardIds: string[]
+  collectionIds: string[]
   createdAt: number
   instanceId: string
   sourceId: string
@@ -38,9 +41,9 @@ export interface InstanceViewLayout {
 }
 
 function selectInstanceLayouts(data: ApplicationData): InstanceViewLayout[] {
-  const boardIdsByInstance = indexBoardIdsByInstance(data.boards)
+  const collectionIdsByInstance = indexCollectionIdsByInstance(data.collections)
   return data.instances.map(instance => ({
-    boardIds: boardIdsByInstance.get(instance.instanceId) ?? [],
+    collectionIds: collectionIdsByInstance.get(instance.instanceId) ?? [],
     createdAt: instance.createdAt,
     instanceId: instance.instanceId,
     sourceId: instance.sourceId,
@@ -56,9 +59,9 @@ function areInstanceLayoutsEqual(left: InstanceViewLayout[], right: InstanceView
       && layout.instanceId === candidate.instanceId
       && layout.sourceId === candidate.sourceId
       && layout.title === candidate.title
-      && layout.boardIds.length === candidate.boardIds.length
-      && layout.boardIds.every((boardId, boardIndex) => (
-        boardId === candidate.boardIds[boardIndex]
+      && layout.collectionIds.length === candidate.collectionIds.length
+      && layout.collectionIds.every((collectionId, collectionIndex) => (
+        collectionId === candidate.collectionIds[collectionIndex]
       ))
   })
 }
@@ -75,13 +78,13 @@ export const setNowLayerManualOrderAtom = atom(null, async (_get, _set, input: {
   instanceIds: string[]
 }) => {
   await actions.nowLayer.setManualOrder({
-    boardId: input.boardId,
+    collectionId: input.boardId,
     instanceIds: input.instanceIds,
   })
 })
 
 export const addInstanceAtom = atom(null, (_get, _set, input: {
-  boardIds: string[]
+  collectionIds: string[]
   patch: InstancePatch
   sourceId: string
 }) => actions.instance.create(input))
@@ -96,16 +99,18 @@ export const deleteInstanceAtom = atom(null, (_get, _set, instanceId: string) =>
 ))
 
 export const createBoardAtom = atom(null, (_get, _set, input: BoardCreateInput) => (
-  actions.board.create({
-    color: input.color,
-    defaultLayer: input.defaultLayer,
+  actions.collection.create({
     name: input.name,
-    sortMode: input.sortMode,
+    board: {
+      color: input.color,
+      defaultLayer: input.defaultLayer,
+      sortMode: input.sortMode,
+    },
   })
 ))
 
 export const createBoardFromOpmlAtom = atom(null, (_get, _set, input: OpmlImport) => (
-  actions.board.create({
+  actions.collection.create({
     instances: input.feeds.map(feed => ({
       sourceId: "rss:feed",
       patch: {
@@ -113,20 +118,24 @@ export const createBoardFromOpmlAtom = atom(null, (_get, _set, input: OpmlImport
         ...(feed.title ? { metadata: { title: feed.title } } : {}),
       },
     })),
-    color: "orange",
-    defaultLayer: DEFAULT_BOARD_LAYER,
     name: input.title,
-    sortMode: DEFAULT_NOW_LAYER_SORT.mode,
+    board: {
+      color: "orange",
+      defaultLayer: DEFAULT_BOARD_LAYER,
+      sortMode: DEFAULT_NOW_LAYER_SORT.mode,
+    },
   })
 ))
 
 export const updateBoardAtom = atom(null, async (_get, _set, board: Board) => {
-  await actions.board.update({
-    boardId: board.id,
-    color: board.color,
-    defaultLayer: board.defaultLayer,
+  await actions.collection.update({
+    collectionId: board.id,
     name: board.name,
-    sortMode: board.nowLayer.sort.mode,
+    board: {
+      color: getBoardColor(board),
+      defaultLayer: board.defaultLayer,
+      sortMode: board.nowLayer.sort.mode,
+    },
   })
 })
 
@@ -136,17 +145,17 @@ type DeleteBoardInput
 
 export const deleteBoardAtom = atom(null, (_get, _set, input: DeleteBoardInput) => (
   input.mode === "delete"
-    ? actions.board.delete({ boardId: input.boardId, deleteInstances: true })
-    : actions.board.delete({ boardId: input.boardId, targetBoardId: input.targetBoardId })
+    ? actions.collection.delete({ collectionId: input.boardId, deleteInstances: true })
+    : actions.collection.delete({ collectionId: input.boardId, targetCollectionId: input.targetBoardId })
 ))
 
-export const setInstanceBoardMembershipAtom = atom(null, (_get, _set, input: {
-  boardId: string
+export const setInstanceCollectionMembershipAtom = atom(null, (_get, _set, input: {
+  collectionId: string
   instanceId: string
   member: boolean
 }) => input.member
-  ? actions.board.addInstance({ boardId: input.boardId, instanceId: input.instanceId })
-  : actions.board.removeInstance({ boardId: input.boardId, instanceId: input.instanceId }))
+  ? actions.collection.addInstance({ collectionId: input.collectionId, instanceId: input.instanceId })
+  : actions.collection.removeInstance({ collectionId: input.collectionId, instanceId: input.instanceId }))
 
 export const resetInstanceParamsAtom = atom(null, (get, _set, instanceId: string) => {
   const instance = get(instancesAtom).find(candidate => candidate.instanceId === instanceId)

@@ -12,7 +12,7 @@ export {
   hasPersistedUserDataSlice,
   mergePersistedUserData,
   normalizeApplicationData,
-  normalizeBoards,
+  normalizeCollections,
   normalizeInstances,
   parsePersistedDataExport,
   PERSISTED_DATA_SLICES,

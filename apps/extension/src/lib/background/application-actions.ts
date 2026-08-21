@@ -4,33 +4,36 @@ import type {
   ApplicationMutationDependencies,
   ApplicationMutationExecution,
   ApplicationMutationResult,
-  BoardDeleteInput,
+  BoardConfiguration,
+  CollectionDeleteInput,
 } from "../application"
 import type { InstancePatch } from "../source"
 import { COLORS } from "@newsnext/shared/constants"
 import Type from "typebox"
 import { defineAction } from "../action"
 import {
-  addBoardInstanceMutation,
+  addCollectionInstanceMutation,
+  configureBoardMutation,
   configureInstanceMutation,
-  createBoardMutation,
+  createCollectionMutation,
   createInstanceMutation,
-  deleteBoardMutation,
+  deleteCollectionMutation,
   deleteInstanceMutation,
   getBoardConfigurationQuery,
   getBoardContextQuery,
-  getBoardQuery,
+  getCollectionQuery,
   getInstanceQuery,
   getNowLayerLiveCardsQuery,
   getSourceQuery,
-  listBoardInstancesQuery,
-  listBoardsQuery,
+  listCollectionInstancesQuery,
+  listCollectionsQuery,
   listInstancesQuery,
   listSourcesQuery,
-  removeBoardInstanceMutation,
+  removeCollectionInstanceMutation,
+  renameCollectionMutation,
   resetInstanceParamsMutation,
   setNowLayerManualOrderMutation,
-  updateBoardMutation,
+  updateCollectionMutation,
 } from "../application"
 
 export interface ApplicationActionContext {
@@ -42,8 +45,8 @@ export interface ApplicationActionContext {
       dependencies: ApplicationMutationDependencies,
     ) => ApplicationMutationExecution,
     options?: {
-      deletedBoardId?: string
-      targetBoardId?: string
+      deletedCollectionId?: string
+      targetCollectionId?: string
     },
   ) => Promise<ApplicationMutationResult>
   replace: (data: ApplicationData) => Promise<ApplicationData>
@@ -70,78 +73,105 @@ const InstanceCreationParams = Type.Object({
   patch: InstancePatchParams,
   sourceId: Identifier,
 }, { additionalProperties: false })
-const BoardCreatedResult = Type.Object({
-  boardId: Identifier,
+const CollectionCreatedResult = Type.Object({
+  collectionId: Identifier,
 }, { additionalProperties: false })
 const InstanceCreatedResult = Type.Object({
   instanceId: Identifier,
 }, { additionalProperties: false })
 
-const boardCreateAction = defineAction({
+const collectionCreateAction = defineAction({
   audiences: CONNECTED_AND_UI,
-  name: "board.create",
+  name: "collection.create",
   kind: "mutation",
-  description: "Create a Board and optional configured Instances.",
+  description: "Create a Collection, its Board configuration, and optional configured Instances.",
   params: Type.Object({
-    ...BoardConfigurationParams.properties,
+    board: Type.Optional(BoardConfigurationParams),
     instances: Type.Optional(Type.Array(InstanceCreationParams)),
     name: Identifier,
   }, { additionalProperties: false }),
-  result: BoardCreatedResult,
+  result: CollectionCreatedResult,
 }, async (input, context: ApplicationActionContext) => {
   await context.requireSources((input.instances ?? []).map(instance => instance.sourceId))
-  const result = await context.mutate((data, dependencies) => createBoardMutation(data, input, dependencies))
-  if (!result.boardId) throw new Error("Board creation returned no Board ID")
-  return { boardId: result.boardId }
+  const result = await context.mutate((data, dependencies) => createCollectionMutation(data, input, dependencies))
+  if (!result.collectionId) throw new Error("Collection creation returned no Collection ID")
+  return { collectionId: result.collectionId }
 })
 
-const boardUpdateAction = defineAction({
+const collectionRenameAction = defineAction({
   audiences: CONNECTED_AND_UI,
-  name: "board.update",
+  name: "collection.rename",
   kind: "mutation",
-  description: "Atomically update a Board.",
+  description: "Rename a Collection without changing its Board configuration.",
   params: Type.Object({
-    ...BoardConfigurationParams.properties,
-    boardId: Identifier,
+    collectionId: Identifier,
+    name: Identifier,
+  }, { additionalProperties: false }),
+  result: EmptyResult,
+}, async (input, context: ApplicationActionContext) => (
+  await context.mutate(data => renameCollectionMutation(data, input))
+))
+
+const collectionUpdateAction = defineAction({
+  audiences: CONNECTED_AND_UI,
+  name: "collection.update",
+  kind: "mutation",
+  description: "Atomically update Collection data and its Board configuration.",
+  params: Type.Object({
+    board: Type.Optional(BoardConfigurationParams),
+    collectionId: Identifier,
     name: Type.Optional(Identifier),
   }, { additionalProperties: false }),
   result: EmptyResult,
   validate(input) {
-    if (input.name === undefined
-      && input.color === undefined
-      && input.defaultLayer === undefined
-      && input.sortMode === undefined) {
-      throw new Error("Board update requires at least one change")
+    if (input.name === undefined && input.board === undefined) {
+      throw new Error("Collection update requires a name or Board configuration")
     }
   },
 }, async (input, context: ApplicationActionContext) => (
-  await context.mutate(data => updateBoardMutation(data, input))
+  await context.mutate(data => updateCollectionMutation(data, input))
 ))
 
-const BoardDeleteParams = Type.Unsafe<BoardDeleteInput>(Type.Union([
+const boardConfigureAction = defineAction({
+  audiences: CONNECTED_AND_UI,
+  name: "board.configure",
+  kind: "mutation",
+  description: "Configure the Board projection for a Collection.",
+  params: Type.Unsafe<BoardConfiguration & { collectionId: string }>(Type.Object({
+    collectionId: Identifier,
+    color: Type.Optional(stringEnum(COLORS)),
+    defaultLayer: Type.Optional(stringEnum(["now", "next"] as const)),
+    sortMode: Type.Optional(stringEnum(["addedAt", "provider", "manual"] as const)),
+  }, { additionalProperties: false })),
+  result: EmptyResult,
+}, async (input, context: ApplicationActionContext) => (
+  await context.mutate(data => configureBoardMutation(data, input))
+))
+
+const CollectionDeleteParams = Type.Unsafe<CollectionDeleteInput>(Type.Union([
   Type.Object({
-    boardId: Identifier,
+    collectionId: Identifier,
     deleteInstances: Type.Literal(true),
   }, { additionalProperties: false }),
   Type.Object({
-    boardId: Identifier,
-    targetBoardId: Identifier,
+    collectionId: Identifier,
+    targetCollectionId: Identifier,
   }, { additionalProperties: false }),
 ]))
 
-const boardDeleteAction = defineAction({
+const collectionDeleteAction = defineAction({
   audiences: CONNECTED_AND_UI,
-  name: "board.delete",
+  name: "collection.delete",
   kind: "mutation",
-  description: "Delete a Board and either delete exclusively owned Instances or transfer all of its Instances.",
-  params: BoardDeleteParams,
+  description: "Delete a Collection and either delete exclusively owned Instances or transfer all of its Instances.",
+  params: CollectionDeleteParams,
   result: EmptyResult,
 }, async (input, context: ApplicationActionContext) => (
   await context.mutate(
-    data => deleteBoardMutation(data, input),
+    data => deleteCollectionMutation(data, input),
     {
-      deletedBoardId: input.boardId,
-      targetBoardId: input.targetBoardId,
+      deletedCollectionId: input.collectionId,
+      targetCollectionId: input.targetCollectionId,
     },
   )
 ))
@@ -150,9 +180,9 @@ const nowLayerSetManualOrderAction = defineAction({
   audiences: CONNECTED_AND_UI,
   name: "nowLayer.setManualOrder",
   kind: "mutation",
-  description: "Set the complete manual LiveCard order for a Board's Now Layer.",
+  description: "Set the complete manual LiveCard order for a Collection's Now Layer.",
   params: Type.Object({
-    boardId: Identifier,
+    collectionId: Identifier,
     instanceIds: IdentifierArray,
   }, { additionalProperties: false }),
   result: EmptyResult,
@@ -161,39 +191,39 @@ const nowLayerSetManualOrderAction = defineAction({
 ))
 
 const MembershipParams = Type.Object({
-  boardId: Identifier,
+  collectionId: Identifier,
   instanceId: Identifier,
 }, { additionalProperties: false })
 
-const boardAddInstanceAction = defineAction({
+const collectionAddInstanceAction = defineAction({
   audiences: CONNECTED_AND_UI,
-  name: "board.addInstance",
+  name: "collection.addInstance",
   kind: "mutation",
-  description: "Add an existing Instance to a Board.",
+  description: "Add an existing Instance to a Collection.",
   params: MembershipParams,
   result: EmptyResult,
 }, async (input, context: ApplicationActionContext) => (
-  await context.mutate(data => addBoardInstanceMutation(data, input))
+  await context.mutate(data => addCollectionInstanceMutation(data, input))
 ))
 
-const boardRemoveInstanceAction = defineAction({
+const collectionRemoveInstanceAction = defineAction({
   audiences: CONNECTED_AND_UI,
-  name: "board.removeInstance",
+  name: "collection.removeInstance",
   kind: "mutation",
-  description: "Remove an Instance from one Board while keeping at least one membership.",
+  description: "Remove an Instance from one Collection while keeping at least one membership.",
   params: MembershipParams,
   result: EmptyResult,
 }, async (input, context: ApplicationActionContext) => (
-  await context.mutate(data => removeBoardInstanceMutation(data, input))
+  await context.mutate(data => removeCollectionInstanceMutation(data, input))
 ))
 
 const instanceCreateAction = defineAction({
   audiences: CONNECTED_AND_UI,
   name: "instance.create",
   kind: "mutation",
-  description: "Create a configured Instance and add it to one or more Boards.",
+  description: "Create a configured Instance and add it to one or more Collections.",
   params: Type.Object({
-    boardIds: Type.Array(Identifier, { minItems: 1, uniqueItems: true }),
+    collectionIds: Type.Array(Identifier, { minItems: 1, uniqueItems: true }),
     patch: InstancePatchParams,
     sourceId: Identifier,
   }, { additionalProperties: false }),
@@ -234,7 +264,7 @@ const instanceDeleteAction = defineAction({
   audiences: CONNECTED_AND_UI,
   name: "instance.delete",
   kind: "mutation",
-  description: "Delete an Instance and all of its Board memberships.",
+  description: "Delete an Instance and all of its Collection memberships.",
   params: Type.Object({ instanceId: Identifier }, { additionalProperties: false }),
   result: EmptyResult,
 }, async (input, context: ApplicationActionContext) => (
@@ -261,33 +291,33 @@ const sourceGetAction = defineAction({
   result: typedObjectResult<ReturnType<typeof getSourceQuery>>(),
 }, async (input, context: ApplicationActionContext) => getSourceQuery(await context.sources(), input))
 
-const boardListAction = defineAction({
+const collectionListAction = defineAction({
   audiences: CONNECTED_AND_UI,
-  name: "board.list",
+  name: "collection.list",
   kind: "query",
-  description: "List Boards.",
+  description: "List Collections.",
   params: EmptyParams,
-  result: typedArrayResult<ReturnType<typeof listBoardsQuery>>(),
-}, async (_input, context: ApplicationActionContext) => listBoardsQuery(await context.data()))
+  result: typedArrayResult<ReturnType<typeof listCollectionsQuery>>(),
+}, async (_input, context: ApplicationActionContext) => listCollectionsQuery(await context.data()))
 
-const boardGetAction = defineAction({
+const collectionGetAction = defineAction({
   audiences: CONNECTED_AND_UI,
-  name: "board.get",
+  name: "collection.get",
   kind: "query",
-  description: "Get a Board with ordered entries and resolved Instances.",
-  params: Type.Object({ boardId: Identifier }, { additionalProperties: false }),
-  result: typedObjectResult<ReturnType<typeof getBoardQuery>>(),
-}, async (input, context: ApplicationActionContext) => getBoardQuery(await context.data(), input))
+  description: "Get a Collection with ordered entries and resolved Instances.",
+  params: Type.Object({ collectionId: Identifier }, { additionalProperties: false }),
+  result: typedObjectResult<ReturnType<typeof getCollectionQuery>>(),
+}, async (input, context: ApplicationActionContext) => getCollectionQuery(await context.data(), input))
 
-const boardListInstancesAction = defineAction({
+const collectionListInstancesAction = defineAction({
   audiences: CONNECTED_AND_UI,
-  name: "board.listInstances",
+  name: "collection.listInstances",
   kind: "query",
-  description: "List the Instances in a Board in membership order.",
-  params: Type.Object({ boardId: Identifier }, { additionalProperties: false }),
-  result: typedArrayResult<ReturnType<typeof listBoardInstancesQuery>>(),
+  description: "List the Instances in a Collection in membership order.",
+  params: Type.Object({ collectionId: Identifier }, { additionalProperties: false }),
+  result: typedArrayResult<ReturnType<typeof listCollectionInstancesQuery>>(),
 }, async (input, context: ApplicationActionContext) => (
-  listBoardInstancesQuery(await context.data(), input)
+  listCollectionInstancesQuery(await context.data(), input)
 ))
 
 const instanceListAction = defineAction({
@@ -312,7 +342,7 @@ const boardGetContextAction = defineAction({
   audiences: CONNECTED_AND_UI,
   name: "board.getContext",
   kind: "query",
-  description: "Get the current human Board and its underlying Board identity.",
+  description: "Get the current human Board and its underlying Collection identity.",
   params: EmptyParams,
   result: typedObjectResult<ReturnType<typeof getBoardContextQuery>>(),
 }, async (_input, context: ApplicationActionContext) => (
@@ -323,8 +353,8 @@ const boardGetConfigurationAction = defineAction({
   audiences: CONNECTED_AND_UI,
   name: "board.getConfiguration",
   kind: "query",
-  description: "Get the durable Board configuration for a Board.",
-  params: Type.Object({ boardId: Identifier }, { additionalProperties: false }),
+  description: "Get the durable Board configuration for a Collection.",
+  params: Type.Object({ collectionId: Identifier }, { additionalProperties: false }),
   result: typedObjectResult<ReturnType<typeof getBoardConfigurationQuery>>(),
 }, async (input, context: ApplicationActionContext) => (
   getBoardConfigurationQuery(await context.data(), input)
@@ -342,7 +372,7 @@ const nowLayerGetLiveCardsAction = defineAction({
 ))
 
 const ApplicationDataSchema = Type.Unsafe<ApplicationData>(Type.Object({
-  boards: Type.Array(Type.Unknown()),
+  collections: Type.Array(Type.Unknown()),
   instances: Type.Array(Type.Unknown()),
   version: Type.Number(),
 }, { additionalProperties: false }))
@@ -357,21 +387,23 @@ const applicationReplaceAction = defineAction({
 }, async (input, context: ApplicationActionContext) => await context.replace(input))
 
 export const applicationActionDefinitions = [
-  boardCreateAction,
-  boardUpdateAction,
-  boardDeleteAction,
+  collectionCreateAction,
+  collectionRenameAction,
+  collectionUpdateAction,
+  boardConfigureAction,
+  collectionDeleteAction,
   nowLayerSetManualOrderAction,
-  boardAddInstanceAction,
-  boardRemoveInstanceAction,
+  collectionAddInstanceAction,
+  collectionRemoveInstanceAction,
   instanceCreateAction,
   instanceConfigureAction,
   instanceResetParamsAction,
   instanceDeleteAction,
   sourceListAction,
   sourceGetAction,
-  boardListAction,
-  boardGetAction,
-  boardListInstancesAction,
+  collectionListAction,
+  collectionGetAction,
+  collectionListInstancesAction,
   instanceListAction,
   instanceGetAction,
   boardGetContextAction,

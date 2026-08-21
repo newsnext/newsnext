@@ -13,24 +13,20 @@ import { SettingsModalShell } from "@/components/settings/modal-shell"
 
 const BOARD_DIALOG_BOARDS: Board[] = [
   {
-    color: "slate",
-    createdAt: 1,
     defaultLayer: "now",
     id: "V1StGXR8_Z5j",
-    instanceIds: [],
     name: "My Board",
     nowLayer: {
+      color: "slate",
       sort: { mode: "addedAt", automaticMode: "addedAt", manualOrder: [] },
     },
   },
   {
-    color: "purple",
-    createdAt: 2,
     defaultLayer: "next",
     id: "board-design",
-    instanceIds: [],
     name: "Design signals",
     nowLayer: {
+      color: "purple",
       sort: { mode: "provider", automaticMode: "provider", manualOrder: [] },
     },
   },
@@ -52,7 +48,7 @@ function createSearchSource({
   return {
     id,
     sourceId: id.split("::")[0] ?? id,
-    boardId,
+    collectionId: boardId,
     provider: {
       title: providerTitle,
       category: "developer",
