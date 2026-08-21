@@ -33,7 +33,7 @@ describe("source queries", () => {
     const target = {
       params: {},
       sourceId: "github:trending",
-      version: 2,
+      version: 3,
     }
     const queryKey = getSourceQueryKey(target)
     const data = {

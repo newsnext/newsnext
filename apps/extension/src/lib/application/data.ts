@@ -1,21 +1,20 @@
-import type { Collection } from "../collection"
+import type { Board } from "../board"
 import type { Instance } from "../source"
-import { INITIAL_BOARD_NAME } from "../board"
-import { createCollection } from "../collection"
+import { createBoard, INITIAL_BOARD_NAME } from "../board"
 import { createId } from "../id"
 
-export const APPLICATION_DATA_VERSION = 2 as const
+export const APPLICATION_DATA_VERSION = 3 as const
 
 export interface ApplicationData {
   version: typeof APPLICATION_DATA_VERSION
-  collections: Collection[]
+  boards: Board[]
   instances: Instance[]
 }
 
 export function createEmptyApplicationData(): ApplicationData {
   return {
     version: APPLICATION_DATA_VERSION,
-    collections: [],
+    boards: [],
     instances: [],
   }
 }
@@ -26,7 +25,7 @@ export function createInitialApplicationData(
 ): ApplicationData {
   return {
     version: APPLICATION_DATA_VERSION,
-    collections: [createCollection(boardId, INITIAL_BOARD_NAME, createdAt)],
+    boards: [createBoard(boardId, INITIAL_BOARD_NAME, createdAt)],
     instances: [],
   }
 }
@@ -36,35 +35,35 @@ export function ensureApplicationDataIntegrity(
   boardId?: string,
   createdAt?: number,
 ): ApplicationData {
-  const initialized = data.collections.length > 0
+  const initialized = data.boards.length > 0
     ? data
     : {
         ...createInitialApplicationData(boardId ?? createId(), createdAt ?? Date.now()),
         instances: data.instances,
       }
-  const assignedInstanceIds = new Set(initialized.collections.flatMap(collection => collection.instanceIds))
+  const assignedInstanceIds = new Set(initialized.boards.flatMap(board => board.instanceIds))
   const unassignedInstanceIds = initialized.instances
     .filter(instance => !assignedInstanceIds.has(instance.instanceId))
     .toSorted((left, right) => right.createdAt - left.createdAt || left.instanceId.localeCompare(right.instanceId))
     .map(instance => instance.instanceId)
   if (unassignedInstanceIds.length === 0) return initialized
 
-  const fallbackCollection = initialized.collections[0]!
-  const instanceIds = [...unassignedInstanceIds, ...fallbackCollection.instanceIds]
+  const fallbackBoard = initialized.boards[0]!
+  const instanceIds = [...unassignedInstanceIds, ...fallbackBoard.instanceIds]
   return {
     ...initialized,
-    collections: initialized.collections.map(collection => collection.id === fallbackCollection.id
+    boards: initialized.boards.map(board => board.id === fallbackBoard.id
       ? {
-          ...collection,
+          ...board,
           instanceIds,
           nowLayer: {
-            ...collection.nowLayer,
+            ...board.nowLayer,
             sort: {
-              ...collection.nowLayer.sort,
-              manualOrder: [...unassignedInstanceIds, ...collection.nowLayer.sort.manualOrder],
+              ...board.nowLayer.sort,
+              manualOrder: [...unassignedInstanceIds, ...board.nowLayer.sort.manualOrder],
             },
           },
         }
-      : collection),
+      : board),
   }
 }

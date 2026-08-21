@@ -67,9 +67,9 @@ const connectedActionContext = createBackgroundActionContext({
 
 function connectionBoards(value: unknown): NativeExtensionBoard[] {
   const application = normalizeApplicationData(value)
-  return application.collections.map(collection => ({
-    id: collection.id,
-    name: collection.name,
+  return application.boards.map(board => ({
+    id: board.id,
+    name: board.name,
   }))
 }
 

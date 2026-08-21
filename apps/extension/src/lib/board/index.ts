@@ -1,10 +1,11 @@
 export type { Board, BoardCreateInput, BoardLayer } from "./board"
 export {
+  createBoard,
   DEFAULT_BOARD_COLOR,
   DEFAULT_BOARD_LAYER,
   getAdjacentBoardId,
-  getBoardColor,
   getBoardLayerFromState,
+  indexBoardIdsByInstance,
   INITIAL_BOARD_NAME,
   normalizeBoardLayer,
 } from "./board"

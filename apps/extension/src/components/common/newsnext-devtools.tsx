@@ -6,14 +6,14 @@ import { browser } from "#imports"
 import { createBackgroundClient } from "@/lib/background"
 import { isBackgroundDiagnosticsChangedMessage } from "@/lib/background/diagnostics-events"
 
-type ApplicationPanelId = "collections" | "instances" | "state"
+type ApplicationPanelId = "boards" | "instances" | "state"
 type PanelId = "overview" | "actions" | ApplicationPanelId
 type DevtoolsTheme = "dark" | "light"
 
 const PANEL_LABELS: Record<PanelId, string> = {
   overview: "Overview",
   actions: "Activity",
-  collections: "Collections",
+  boards: "Boards",
   instances: "Instances",
   state: "State",
 }
@@ -120,7 +120,7 @@ export function NewsNextDevtoolsPanel({ devtoolsOpen, theme }: { devtoolsOpen: b
   const counts: Record<PanelId, number | undefined> = {
     overview: undefined,
     actions: snapshot?.actions.length,
-    collections: snapshot?.application.collections.length,
+    boards: snapshot?.application.boards.length,
     instances: snapshot?.application.instances.length,
     state: snapshot ? 2 : undefined,
   }
@@ -193,7 +193,7 @@ interface PanelProps {
 function Overview({ filter, snapshot }: PanelProps): React.JSX.Element {
   const stats = [
     ["Activity", snapshot.actions.length],
-    ["Collections", snapshot.application.collections.length],
+    ["Boards", snapshot.application.boards.length],
     ["Instances", snapshot.application.instances.length],
   ] as const
   return (
@@ -265,8 +265,8 @@ function ActionDetail({ action }: { action: BackgroundActionRecord }): React.JSX
 function ApplicationPanel({ category, filter, snapshot }: PanelProps & { category: ApplicationPanelId }): React.JSX.Element {
   const application = snapshot.application
   const [selectedId, setSelectedId] = useState<string>()
-  const categoryEntries = category === "collections"
-    ? application.collections.map(value => ({ id: `collection:${value.id}`, kind: "Collection", label: value.name || value.id, value }))
+  const categoryEntries = category === "boards"
+    ? application.boards.map(value => ({ id: `board:${value.id}`, kind: "Board", label: value.name || value.id, value }))
     : category === "instances"
       ? application.instances.map(value => ({ id: `instance:${value.instanceId}`, kind: "Instance", label: value.patch.metadata?.title || value.instanceId, value }))
       : [

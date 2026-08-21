@@ -468,10 +468,10 @@ add the following descriptions back to this dialog:
 - `Personalize this board and choose how its LiveCards are arranged.`
 - `Group LiveCards around a topic, project, or reading routine.`
 
-### LiveCard Collection membership
+### LiveCard Board membership
 
-The LiveCard back edits Collection membership with a checkbox menu, not a
-single-choice Board select. An Instance belongs to one or several Collections.
+The LiveCard back edits Board membership with a checkbox menu, not a
+single-choice Board select. An Instance belongs to one or several Boards.
 The compact trigger shows the sole Board name or the
 membership count; the menu lists every Board with independent checked state.
 Toggling one row must not remove other memberships.

@@ -8,7 +8,7 @@ import {
 function createContext(): BackgroundActionContext {
   return {
     currentBoardId: vi.fn(async () => "reading"),
-    data: vi.fn(async () => ({ collections: [], instances: [], version: 2 as const })),
+    data: vi.fn(async () => ({ boards: [], instances: [], version: 3 as const })),
     mutate: vi.fn(async () => ({ instanceId: "new" })),
     replace: vi.fn(async data => data),
     requireSources: vi.fn(async () => undefined),
@@ -39,8 +39,8 @@ describe("action Registry", () => {
   it("publishes the connected Action contract directly from definitions", () => {
     const actions = actionRegistry.list("connected")
 
-    expect(actions).toHaveLength(25)
-    expect(actions.filter(action => action.kind === "mutation")).toHaveLength(12)
+    expect(actions).toHaveLength(23)
+    expect(actions.filter(action => action.kind === "mutation")).toHaveLength(10)
     expect(actions.filter(action => action.kind === "query")).toHaveLength(10)
     expect(actions.filter(action => action.kind === "command")).toHaveLength(3)
     expect(actions.find(action => action.name === "instance.create")).toMatchObject({
@@ -54,7 +54,7 @@ describe("action Registry", () => {
     const ActionContext = createContext()
 
     await expect(executeRegisteredAction("instance.create", {
-      collectionIds: ["reading"],
+      boardIds: ["reading"],
       patch: {},
       sourceId: "github:trending",
     }, "ui", ActionContext)).resolves.toEqual({ instanceId: "new" })
@@ -62,13 +62,13 @@ describe("action Registry", () => {
     expect(ActionContext.mutate).toHaveBeenCalledOnce()
 
     await expect(executeRegisteredAction("instance.create", {
-      collectionId: "reading",
+      boardId: "reading",
       patch: {},
       sourceId: "github:trending",
     }, "ui", ActionContext)).rejects.toThrow("Invalid Action parameters")
-    await expect(executeRegisteredAction("collection.update", {
-      collectionId: "reading",
-    }, "ui", ActionContext)).rejects.toThrow("requires a name or Board configuration")
+    await expect(executeRegisteredAction("board.update", {
+      boardId: "reading",
+    }, "ui", ActionContext)).rejects.toThrow("requires at least one change")
   })
 
   it("enforces audiences and command-specific validation", async () => {

@@ -19,7 +19,7 @@ function createLiveCard({
   return {
     id,
     sourceId: id.split("::")[0] ?? id,
-    collectionId: "reading",
+    boardId: "reading",
     createdAt,
     provider: {
       title: provider,
@@ -41,7 +41,7 @@ function indexLiveCards(sources: LiveCardViewModel[]): Record<string, LiveCardVi
 }
 
 describe("orderNowLayerInstanceIds", () => {
-  it("uses collection membership order for addedAt sorting", () => {
+  it("uses board membership order for addedAt sorting", () => {
     const sources = [
       createLiveCard({ id: "test:old::1", provider: "Test", createdAt: 1 }),
       createLiveCard({ id: "test:new::2", provider: "Test", createdAt: 3 }),

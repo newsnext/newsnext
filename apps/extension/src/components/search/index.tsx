@@ -1,6 +1,6 @@
 import type { Hotkey } from "@tanstack/react-hotkeys"
 import type { ReactNode } from "react"
-import type { Collection } from "@/lib/collection"
+import type { Board } from "@/lib/board"
 import type { LiveCardViewModel } from "@/typings/source"
 import { Button } from "@newsnext/ui/components/button"
 import {
@@ -50,19 +50,19 @@ interface SearchGroup {
 
 function groupSearchItems(
   liveCards: LiveCardViewModel[],
-  boards: Collection[],
+  boards: Board[],
 ): SearchGroup[] {
   const itemsByBoardId = new Map<string, LiveCardViewModel[]>()
   const knownBoardIds = new Set(boards.map(board => board.id))
   liveCards.forEach((liveCard) => {
-    const collectionIds = boards
+    const boardIds = boards
       .filter(board => board.instanceIds.includes(liveCard.id) && knownBoardIds.has(board.id))
       .map(board => board.id)
 
-    for (const collectionId of collectionIds) {
-      const items = itemsByBoardId.get(collectionId) ?? []
-      items.push({ ...liveCard, collectionId })
-      itemsByBoardId.set(collectionId, items)
+    for (const boardId of boardIds) {
+      const items = itemsByBoardId.get(boardId) ?? []
+      items.push({ ...liveCard, boardId })
+      itemsByBoardId.set(boardId, items)
     }
   })
 
@@ -181,7 +181,7 @@ function SearchDialogContent({
     return buildLiveCards({
       sources,
       instances,
-      collectionId: null,
+      boardId: null,
     })
   }, [sources, instances])
 

@@ -28,8 +28,8 @@ export async function mutateApplicationData(
     dependencies: ApplicationMutationDependencies,
   ) => ApplicationMutationExecution,
   options: {
-    deletedCollectionId?: string
-    targetCollectionId?: string
+    deletedBoardId?: string
+    targetBoardId?: string
   } = {},
 ): Promise<ApplicationMutationResult> {
   const execution = mutationQueue.then(async () => {
@@ -41,22 +41,22 @@ export async function mutateApplicationData(
     const updates: Record<string, unknown> = {
       [PERSISTED_DATA_SLICES.application.key]: result.data,
     }
-    if (options.deletedCollectionId) {
+    if (options.deletedBoardId) {
       const settingsKey = PERSISTED_DATA_SLICES.settings.key
       const deviceStateKey = PERSISTED_DATA_SLICES.deviceState.key
       const stored = await browser.storage.local.get([settingsKey, deviceStateKey])
       const settings = normalizePersistedSettings(stored[settingsKey])
       const deviceState = normalizePersistedDeviceState(stored[deviceStateKey])
-      const destinationBoardId = options.targetCollectionId
-        ?? result.data.collections[0]?.id
+      const destinationBoardId = options.targetBoardId
+        ?? result.data.boards[0]?.id
       if (!destinationBoardId) throw new Error("NewsNext must keep at least one Board")
-      if (settings.general.defaultBoardId === options.deletedCollectionId) {
+      if (settings.general.defaultBoardId === options.deletedBoardId) {
         updates[settingsKey] = {
           ...settings,
           general: { ...settings.general, defaultBoardId: destinationBoardId },
         }
       }
-      if (deviceState.currentBoardId === options.deletedCollectionId) {
+      if (deviceState.currentBoardId === options.deletedBoardId) {
         updates[deviceStateKey] = { ...deviceState, currentBoardId: destinationBoardId }
       }
     }
@@ -72,22 +72,22 @@ export async function replaceApplicationData(
 ): Promise<ApplicationData> {
   const replacement = mutationQueue.then(async () => {
     const data = ensureApplicationDataIntegrity(normalizeApplicationData(value))
-    const fallbackBoardId = data.collections[0]?.id
+    const fallbackBoardId = data.boards[0]?.id
     if (!fallbackBoardId) throw new Error("NewsNext must keep at least one Board")
     const deviceStateKey = PERSISTED_DATA_SLICES.deviceState.key
     const settingsKey = PERSISTED_DATA_SLICES.settings.key
     const stored = await browser.storage.local.get([deviceStateKey, settingsKey])
     const deviceState = normalizePersistedDeviceState(stored[deviceStateKey])
     const settings = normalizePersistedSettings(stored[settingsKey])
-    const collectionIds = new Set(data.collections.map(collection => collection.id))
+    const boardIds = new Set(data.boards.map(board => board.id))
     const updates: Record<string, unknown> = {
       [PERSISTED_DATA_SLICES.application.key]: data,
     }
-    if (!collectionIds.has(deviceState.currentBoardId)) {
+    if (!boardIds.has(deviceState.currentBoardId)) {
       updates[deviceStateKey] = { ...deviceState, currentBoardId: fallbackBoardId }
     }
     if (settings.general.defaultBoardId !== null
-      && !collectionIds.has(settings.general.defaultBoardId)) {
+      && !boardIds.has(settings.general.defaultBoardId)) {
       updates[settingsKey] = {
         ...settings,
         general: { ...settings.general, defaultBoardId: fallbackBoardId },

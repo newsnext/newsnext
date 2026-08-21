@@ -1,6 +1,5 @@
 import { ThemeSelector } from "@newsnext/ui/components/theme-selector"
 import { useAtomValue, useSetAtom } from "jotai"
-import { getBoardColor } from "@/lib/board"
 import { handleThemeSwitch } from "@/lib/utils/swith-theme"
 import { boardsAtom, updateBoardAtom } from "@/store/board"
 import { currentBoardIdAtom } from "@/store/settings"
@@ -21,13 +20,13 @@ export function ThemeFeature() {
     >
       <div className="size-full">
         <ThemeSelector
-          value={getBoardColor(board)}
+          value={board.color}
           onValueChange={(color) => {
-            const previousColor = getBoardColor(board)
+            const previousColor = board.color
             handleThemeSwitch(color)
             void updateBoard({
               ...board,
-              nowLayer: { ...board.nowLayer, color },
+              color,
             }).catch((error) => {
               handleThemeSwitch(previousColor)
               console.error("Failed to update Board color", error)

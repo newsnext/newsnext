@@ -31,7 +31,7 @@ const DATA_SLICE_OPTIONS: Array<{
   {
     id: "boards",
     label: "Boards",
-    description: "Collections, board preferences, memberships, and LiveCard order.",
+    description: "Boards, board preferences, memberships, and LiveCard order.",
   },
   {
     id: "instances",
@@ -118,8 +118,8 @@ export function DataTransferSettings({
       }
 
       const nextData = await importData(selectedData)
-      if (routeBoardId && !nextData.collections.some(board => board.id === routeBoardId)) {
-        const fallbackBoardId = nextData.collections[0]?.id
+      if (routeBoardId && !nextData.boards.some(board => board.id === routeBoardId)) {
+        const fallbackBoardId = nextData.boards[0]?.id
         if (fallbackBoardId) {
           await navigate({
             to: "/board/$boardId",
@@ -149,7 +149,7 @@ export function DataTransferSettings({
       queryClient.clear()
       handleThemeModeSwitch("system")
       handleThemeSwitch(DEFAULT_BOARD_COLOR)
-      const boardId = clearedData.collections[0]?.id
+      const boardId = clearedData.boards[0]?.id
       if (!boardId) throw new Error("NewsNext must keep at least one Board")
       await navigate({
         to: "/board/$boardId",
