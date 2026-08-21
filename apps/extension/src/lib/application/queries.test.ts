@@ -4,14 +4,15 @@ import { describe, expect, it } from "vitest"
 import {
   getBoardConfigurationQuery,
   getNowLayerLiveCardsQuery,
-  listCollectionInstancesQuery,
+  listBoardInstancesQuery,
   listSourcesQuery,
 } from "./queries"
 
 function createData(): ApplicationData {
   return {
-    version: 2,
-    collections: [{
+    version: 3,
+    boards: [{
+      color: "blue",
       id: "reading",
       name: "Reading",
       createdAt: 1,
@@ -33,8 +34,8 @@ describe("application queries", () => {
       .toEqual([source])
   })
 
-  it("lists Collection Instances in instanceIds order", () => {
-    const instances = listCollectionInstancesQuery(createData(), { collectionId: "reading" })
+  it("lists Board Instances in instanceIds order", () => {
+    const instances = listBoardInstancesQuery(createData(), { boardId: "reading" })
     expect(instances.map(instance => instance.instanceId)).toEqual(["second", "first"])
   })
 
@@ -44,7 +45,8 @@ describe("application queries", () => {
   })
 
   it("returns nested Board configuration", () => {
-    expect(getBoardConfigurationQuery(createData(), { collectionId: "reading" })).toEqual({
+    expect(getBoardConfigurationQuery(createData(), { boardId: "reading" })).toEqual({
+      color: "blue",
       defaultLayer: "now",
       nowLayer: { sort: { mode: "addedAt", automaticMode: "addedAt", manualOrder: [] } },
     })

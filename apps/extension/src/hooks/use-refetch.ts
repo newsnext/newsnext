@@ -3,7 +3,7 @@ import { useIsFetching, useQueryClient } from "@tanstack/react-query"
 import { useStore } from "jotai"
 import { useCallback, useSyncExternalStore } from "react"
 import { buildLiveCards, FETCH_LATEST_MINIMUM_FEEDBACK_MS, loadSourceDescriptors } from "@/lib/source"
-import { collectionsAtom, instancesAtom } from "@/store/board"
+import { boardsAtom, instancesAtom } from "@/store/board"
 import { currentBoardIdAtom } from "@/store/settings"
 import {
   createSourceQueryTarget,
@@ -124,15 +124,15 @@ export function useFetchLatest() {
   const fetchLatest = useCallback(async () => {
     try {
       const instances = store.get(instancesAtom)
-      const collections = store.get(collectionsAtom)
+      const boards = store.get(boardsAtom)
       const currentBoardId = store.get(currentBoardIdAtom)
       const sources = await loadSourceDescriptors()
       const targets = buildLiveCards({
         sources,
         instances,
-        collectionId: currentBoardId,
-        collectionInstanceIds: collections
-          .find(collection => collection.id === currentBoardId)
+        boardId: currentBoardId,
+        boardInstanceIds: boards
+          .find(board => board.id === currentBoardId)
           ?.instanceIds,
       }).map(liveCard => createSourceQueryTarget(
         liveCard.sourceId,

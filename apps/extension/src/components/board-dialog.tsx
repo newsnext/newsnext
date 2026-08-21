@@ -17,7 +17,7 @@ import { useState } from "react"
 import { ConfigSection } from "@/components/common/config-section"
 import { ConfirmDestructiveButton } from "@/components/common/confirm-destructive-button"
 import { useAsyncAction } from "@/hooks/use-async-action"
-import { DEFAULT_BOARD_COLOR, DEFAULT_BOARD_LAYER, DEFAULT_NOW_LAYER_SORT, getBoardColor, updateNowLayerSortMode } from "@/lib/board"
+import { DEFAULT_BOARD_COLOR, DEFAULT_BOARD_LAYER, DEFAULT_NOW_LAYER_SORT, updateNowLayerSortMode } from "@/lib/board"
 import { cn } from "@/lib/utils"
 
 const SORT_OPTIONS: { label: string, value: NowLayerSortMode }[] = [
@@ -67,9 +67,9 @@ function ConfigurableBoardDialog({
   const board = boardId ? boards.find(candidate => candidate.id === boardId) : undefined
   const currentBoard = boards.find(candidate => candidate.id === currentBoardId)
   const initialColor = board
-    ? getBoardColor(board)
+    ? board.color
     : currentBoard
-      ? getBoardColor(currentBoard)
+      ? currentBoard.color
       : DEFAULT_BOARD_COLOR
   const initialSortMode = board?.nowLayer.sort.mode ?? DEFAULT_NOW_LAYER_SORT.mode
   const initialDefaultLayer = board?.defaultLayer ?? DEFAULT_BOARD_LAYER
@@ -100,11 +100,11 @@ function ConfigurableBoardDialog({
       const succeeded = await runAction(async () => {
         const nextBoard: Board = {
           ...board,
+          color,
           name: normalizedName,
           defaultLayer,
           nowLayer: {
             ...board.nowLayer,
-            color,
             sort: updateNowLayerSortMode(board.nowLayer.sort, sortMode),
           },
         }

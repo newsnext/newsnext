@@ -307,7 +307,7 @@ function RadarDeckContent({ initialBoardId, suggestions }: RadarDeckContentProps
 
     await runCreate(async () => {
       await addInstance({
-        collectionIds: targetBoardIds,
+        boardIds: targetBoardIds,
         sourceId: activeSuggestion.sourceId,
         patch: mergeInstancePatch(
           activeSuggestion.patch,

@@ -18,7 +18,7 @@ export function createRadarLiveCard(
     },
     id: `tmp:radar:${suggestion.id}`,
     sourceId: suggestion.sourceId,
-    collectionId: null,
+    boardId: null,
     paramsValue: patch.params,
   }
 }

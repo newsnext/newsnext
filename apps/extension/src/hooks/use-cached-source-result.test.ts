@@ -16,7 +16,7 @@ vi.mock("@/lib/source", () => ({
 
 const source = {
   id: "test:feed",
-  version: 2,
+  version: 3,
   capabilities: { cookies: [], network: [] },
   metadata: { title: "Test feed" },
   provider: { color: "blue", title: "Test" },

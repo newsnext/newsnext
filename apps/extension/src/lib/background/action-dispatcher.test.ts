@@ -12,18 +12,18 @@ describe("background action dispatcher", () => {
   it("records successful actions", async () => {
     const result = await dispatchBackgroundAction({
       commandId: "command-1",
-      input: { collectionId: "board-1" },
-      name: "collection.rename",
+      input: { boardId: "board-1" },
+      name: "board.update",
       origin: "ui",
-    }, () => ({ collectionId: "board-1" }))
+    }, () => ({ boardId: "board-1" }))
 
-    expect(result).toEqual({ collectionId: "board-1" })
+    expect(result).toEqual({ boardId: "board-1" })
     expect(listBackgroundActions()).toMatchObject([{
       commandId: "command-1",
-      input: { collectionId: "board-1" },
-      name: "collection.rename",
+      input: { boardId: "board-1" },
+      name: "board.update",
       origin: "ui",
-      result: { collectionId: "board-1" },
+      result: { boardId: "board-1" },
       status: "success",
     }])
   })

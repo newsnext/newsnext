@@ -4,25 +4,25 @@ import { ConfirmDestructiveButton } from "@/components/common/confirm-destructiv
 import { PhTrashDuotone } from "@/components/icons/ph"
 import { useAsyncAction, useKeyedAsyncAction } from "@/hooks/use-async-action"
 import {
-  collectionsAtom,
+  boardsAtom,
   deleteInstanceAtom,
-  setInstanceCollectionMembershipAtom,
+  setInstanceBoardMembershipAtom,
 } from "@/store/board"
 
 export function LiveCardBoardSelect({ id }: { id: string }) {
-  const collections = useAtomValue(collectionsAtom)
-  const setMembership = useSetAtom(setInstanceCollectionMembershipAtom)
+  const boards = useAtomValue(boardsAtom)
+  const setMembership = useSetAtom(setInstanceBoardMembershipAtom)
   const {
     error: membershipError,
     isPending: isMembershipPending,
     run: runMembershipUpdate,
   } = useKeyedAsyncAction<string>("Board membership could not be updated.")
-  const collectionIds = collections
-    .filter(collection => collection.instanceIds.includes(id))
-    .map(collection => collection.id)
-  async function updateMembership(collectionId: string, member: boolean): Promise<void> {
-    await runMembershipUpdate(collectionId, async () => {
-      await setMembership({ collectionId, instanceId: id, member })
+  const boardIds = boards
+    .filter(board => board.instanceIds.includes(id))
+    .map(board => board.id)
+  async function updateMembership(boardId: string, member: boolean): Promise<void> {
+    await runMembershipUpdate(boardId, async () => {
+      await setMembership({ boardId, instanceId: id, member })
     })
   }
 
@@ -30,7 +30,7 @@ export function LiveCardBoardSelect({ id }: { id: string }) {
     <div className="flex items-center justify-between gap-3">
       <span className="text-sm font-semibold opacity-80">Boards</span>
       <BoardMembershipSelect
-        value={collectionIds}
+        value={boardIds}
         onMembershipChange={(boardId, member) => void updateMembership(boardId, member)}
         ariaLabel="Edit board memberships"
         isBoardDisabled={isMembershipPending}

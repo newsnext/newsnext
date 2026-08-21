@@ -1,5 +1,6 @@
 import type { Color } from "@newsnext/shared/types"
 import type { NowLayerSort, NowLayerSortMode } from "./sorting"
+import { createNowLayerSort } from "./sorting"
 
 export const INITIAL_BOARD_NAME = "My Board"
 export const DEFAULT_BOARD_COLOR: Color = "red"
@@ -9,11 +10,13 @@ export type BoardLayer = "now" | "next"
 export const DEFAULT_BOARD_LAYER: BoardLayer = "now"
 
 export interface Board {
+  color: Color
+  createdAt: number
   defaultLayer: BoardLayer
   id: string
+  instanceIds: string[]
   name: string
   nowLayer: {
-    color?: Color
     sort: NowLayerSort
   }
 }
@@ -25,6 +28,39 @@ export interface BoardCreateInput {
   sortMode: NowLayerSortMode
 }
 
+export function createBoard(
+  id: string,
+  name: string,
+  createdAt: number,
+  color: Color = DEFAULT_BOARD_COLOR,
+  sortMode: NowLayerSortMode = "addedAt",
+  defaultLayer: BoardLayer = DEFAULT_BOARD_LAYER,
+): Board {
+  return {
+    color,
+    createdAt,
+    defaultLayer,
+    id,
+    instanceIds: [],
+    name,
+    nowLayer: { sort: createNowLayerSort(sortMode) },
+  }
+}
+
+export function indexBoardIdsByInstance(
+  boards: readonly Board[],
+): Map<string, string[]> {
+  const boardIdsByInstance = new Map<string, string[]>()
+  for (const board of boards) {
+    for (const instanceId of board.instanceIds) {
+      const boardIds = boardIdsByInstance.get(instanceId) ?? []
+      boardIds.push(board.id)
+      boardIdsByInstance.set(instanceId, boardIds)
+    }
+  }
+  return boardIdsByInstance
+}
+
 export function normalizeBoardLayer(value: unknown): BoardLayer {
   return value === "next" ? "next" : DEFAULT_BOARD_LAYER
 }
@@ -32,10 +68,6 @@ export function normalizeBoardLayer(value: unknown): BoardLayer {
 export function getBoardLayerFromState(state: unknown): BoardLayer | undefined {
   if (!state || typeof state !== "object" || !("layer" in state)) return undefined
   return state.layer === "next" || state.layer === "now" ? state.layer : undefined
-}
-
-export function getBoardColor(board: Board): Color {
-  return board.nowLayer.color ?? DEFAULT_BOARD_COLOR
 }
 
 export function getAdjacentBoardId(

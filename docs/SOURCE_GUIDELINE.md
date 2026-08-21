@@ -1000,9 +1000,9 @@ radar: [{
 ```
 
 Each Radar suggestion previews one LiveCard. Creating it persists a new Instance
-with the resolved parameter and presentation patches, plus Collection membership
+with the resolved parameter and presentation patches, plus Board membership
 for the selected destination Boards. Radar does not modify an existing
-LiveCard. Moving a LiveCard later changes only its Collection membership.
+LiveCard. Moving a LiveCard later changes only its Board membership.
 At least one destination Board is always required.
 
 Match rules:
@@ -1283,19 +1283,17 @@ newsnext action list
 newsnext action execute source.list
 newsnext action execute source.get --input \
   '{"sourceId":"github:trending"}'
-newsnext action execute collection.list
+newsnext action execute board.list
 newsnext action execute board.getContext
 newsnext action execute board.getConfiguration --input \
-  '{"collectionId":"COLLECTION_ID"}'
+  '{"boardId":"BOARD_ID"}'
 newsnext action execute nowLayer.getLiveCards
-newsnext action execute collection.create --input \
-  '{"name":"Research","board":{"color":"blue","sortMode":"addedAt"}}'
-newsnext action execute collection.update --input \
-  '{"collectionId":"COLLECTION_ID","name":"Research queue","board":{"color":"purple"}}'
-newsnext action execute board.configure --input \
-  '{"collectionId":"COLLECTION_ID","color":"blue","sortMode":"addedAt"}'
+newsnext action execute board.create --input \
+  '{"name":"Research","color":"blue","sortMode":"addedAt"}'
+newsnext action execute board.update --input \
+  '{"boardId":"BOARD_ID","name":"Research queue","color":"purple"}'
 newsnext action execute instance.create --input \
-  '{"sourceId":"github:trending","collectionIds":["COLLECTION_ID"],"patch":{"params":{"language":"typescript"}}}'
+  '{"sourceId":"github:trending","boardIds":["BOARD_ID"],"patch":{"params":{"language":"typescript"}}}'
 ```
 
 Catalog listings include each Action's `mutation`, `query`, or `command` kind,
@@ -1305,32 +1303,31 @@ handler; the extension performs runtime shape and domain validation from that
 single definition, then invokes the same registered Action used by the typed
 UI client.
 Enabling CLI access permits destructive operations such as
-`collection.delete` and `instance.delete`; inspect `action list` before
+`board.delete` and `instance.delete`; inspect `action list` before
 automation and use stable Data identities rather than Board labels.
-Passing `deleteInstances: true` to `collection.delete` also deletes Instances
-used only by that Collection. Passing `targetCollectionId` instead transfers
-the deleted Collection's Instances to the selected Collection without
-duplicating memberships. Instances shared with other Collections remain.
+Passing `deleteInstances: true` to `board.delete` also deletes Instances
+used only by that Board. Passing `targetBoardId` instead transfers
+the deleted Board's Instances to the selected Board without
+duplicating memberships. Instances shared with other Boards remain.
 
-Use `collection.create` with its nested `board` object when creation includes
-Board preferences. It also accepts an `instances` array of Source IDs and
-patches when a Collection and its configured Instances must be created in one
-atomic import. Use `collection.update` when one intent changes Collection data
+Use the direct `color`, `defaultLayer`, and `sortMode` fields when creation
+includes Board preferences. `board.create` also accepts an `instances` array of Source IDs and
+patches when a Board and its configured Instances must be created in one
+atomic import. Use `board.update` when one intent changes Board data
 and Board preferences together. These composite Actions persist once and
-cannot be interleaved with another UI or Agent mutation. Use
-`board.configure` only for a Board-configuration change.
+cannot be interleaved with another UI or Agent mutation.
 
 Use `action execute board.getContext` when starting from the currently visible
-Board, then `action execute collection.listInstances --input
-'{"collectionId":"COLLECTION_ID"}'` for a custom Board. Use `action execute
+Board, then `action execute board.listInstances --input
+'{"boardId":"BOARD_ID"}'` for a custom Board. Use `action execute
 instance.list` when the Board is irrelevant. History commands intentionally use
 the opaque ID returned by `history datasets`; they do not resolve extension
 Instance state. Filter dataset discovery by Source or provider when selecting a
 retained parameter configuration.
 
-Query Actions return canonical Collections and Instances without a
+Query Actions return canonical Boards and Instances without a
 parallel CLI-only Board representation. An Instance may be returned by several
-Collection queries when it has several memberships. Ordinary Now Layer loads
+Board queries when it has several memberships. Ordinary Now Layer loads
 remain cache-only and do not create History. Observation times may be Unix
 milliseconds or ISO 8601 values. List `observations` before using exact
 timestamps with `get` or `compare`. Add `--compact` when consuming JSON

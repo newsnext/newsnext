@@ -21,7 +21,7 @@ export const importPersistedUserDataAtom = atom(
     const data = mergePersistedUserData(get(persistedUserDataAtom), imported)
     await actions.application.replace({
       version: data.version,
-      collections: data.collections,
+      boards: data.boards,
       instances: data.instances,
     })
     set(persistedSettingsAtom, data.settings)
@@ -31,7 +31,7 @@ export const importPersistedUserDataAtom = atom(
 
 export const clearPersistedUserDataAtom = atom(null, async (_get, set) => {
   const data = createInitialApplicationData()
-  const boardId = data.collections[0]?.id
+  const boardId = data.boards[0]?.id
   if (!boardId) throw new Error("NewsNext must keep at least one Board")
   await actions.application.replace(data)
   set(persistedSettingsAtom, createDefaultPersistedSettings(boardId))

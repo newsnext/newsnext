@@ -203,13 +203,13 @@ answer:
 
 ### Agent and human actions share one model
 
-The Agent must use the same Sources, Instances, Collections, observations, and
+The Agent must use the same Sources, Instances, Boards, observations, and
 applicable Mutation, Query, and Command Actions as the human interface. Agent
 automation must not create a parallel Board model or bypass application
 validation, permissions, or persistence rules. Browser extensions, the CLI,
 and the packaged App must not maintain competing durable copies of that model.
 
-### Collection and processing remain separate
+### Board and processing remain separate
 
 Sources collect and normalize data. Widgets process, query, and present that
 data in Next Layer. A Widget must not hide an independent web crawler inside
@@ -254,7 +254,7 @@ is resolved.
 
 | Data | Storage owner | Retention contract |
 | --- | --- | --- |
-| Boards, Collections, Instances, membership, and preferences | Shared local database | Durable until changed or deleted |
+| Boards, Boards, Instances, membership, and preferences | Shared local database | Durable until changed or deleted |
 | Next Layer Widgets, layouts, task definitions, and materialized outputs | Shared local database | Durable and schema-versioned |
 | Agent-owned observations, transformations, provenance, and task health | Shared local database | Durable according to explicit task policy |
 | Now Layer current results | Cache | Replaceable latest data; no implicit History |
@@ -320,7 +320,7 @@ production mutation stream.
 The first schema increment covers:
 
 - schema version and migration journal;
-- Boards, Collections, Instances, membership, order, and preferences;
+- Boards, Boards, Instances, membership, order, and preferences;
 - Next Layer Widget definitions, layout, and dependency declarations;
 - Agent task definitions, schedules, leases, attempts, and health;
 - retained observations and normalized items required by those tasks;
@@ -368,8 +368,7 @@ The canonical concepts remain:
 | Source | Reusable definition of how to acquire and normalize data |
 | Instance | Configured Source with a durable dataset identity |
 | Observation | An explicitly retained Instance result at a known observation time |
-| Collection | Durable organization of Instances |
-| Board | Human presentation of a Collection through Now Layer and Next Layer |
+| Board | Durable organization of Instances and their presentation through Now Layer and Next Layer |
 | Now Layer | Separate Instance results presented through a unified LiveCard model |
 | Next Layer | Open composition of Board data through personalized Widgets |
 | LiveCard | Shared Now Layer model for reading and operating one Instance |
@@ -458,7 +457,7 @@ installation are not required Agent product capabilities.
 
 ### Board operation
 
-The Agent must be able to create, inspect, update, and organize Collections and
+The Agent must be able to create, inspect, update, and organize Boards and
 their Board presentation through canonical Mutation and Query Actions. It
 must preserve the relationship between each Board's Now Layer and Next Layer.
 It must also preserve the unified LiveCard contract in Now Layer while personalizing
@@ -565,7 +564,7 @@ must not be described to users as available until its acceptance criteria pass.
 | Source definitions | Implemented foundation | Registry providers, parameters, metadata, loaders, transforms, templates, Radar rules, capabilities, secrets, and security limits | Registry health, version lifecycle, and dependency diagnostics |
 | Source execution | Implemented foundation | Registered and local Sources run through the extension runtime and CLI; `run --retain` provides an explicit durable handoff to the daemon | Add Agent-owned scheduling without duplicating the extension runtime |
 | Shared local database | Partial | The daemon owns an embedded Turso database with dev/prod file isolation, ordered migrations, structured errors, and a serialized writer for retained History | Move remaining Board, Widget, and task state out of extension storage |
-| Instance and Collection data | Implemented in extension storage | Canonical Instances, Collections, membership, manual order, and Board view preferences | Move canonical durable state behind App/CLI Actions for cross-browser use |
+| Instance and Board data | Implemented in extension storage | Canonical Instances, Boards, membership, manual order, and Layer preferences | Move canonical durable state behind App/CLI Actions for cross-browser use |
 | UI and Agent control | Implemented foundation | UI and CLI use the same typed Mutation and Query Actions and the same background persistence boundary | Database-backed Widget, task, and Source-health operations are not exposed yet |
 | Now Layer | Implemented | Each Instance is independently presented as a LiveCard using the unified LiveCard model | Make view-driven refresh explicit and keep current results cache-only |
 | Next Layer | Not implemented | The Board retains its Next Layer view entry and an explicit placeholder | Add CLI/daemon-backed Widgets, retained inputs, and materialized outputs |
@@ -627,10 +626,10 @@ The remaining product gaps are:
 
 | ID | Requirement | Acceptance criteria |
 | --- | --- | --- |
-| BRD-01 | A Board exposes Now Layer and Next Layer as two views of one Collection context | Switching Layers preserves the Board identity, route context, and selected Collection |
+| BRD-01 | A Board exposes Now Layer and Next Layer as two views of one context | Switching Layers preserves the Board identity, route context, and selection |
 | BRD-02 | Both Layers consume canonical Instance state | Opening or rendering Next Layer does not create a second Instance or presentation-only Source execution |
 | BRD-03 | Board deletion and other destructive changes remain explicit | The UI or Agent receives confirmation before durable Board data is deleted |
-| BRD-04 | A Board persists its default Layer | Reopening a custom Board starts in its saved Now or Next Layer without changing its Collection or Instance data |
+| BRD-04 | A Board persists its default Layer | Reopening a custom Board starts in its saved Now or Next Layer without changing its Board or Instance data |
 
 ### Now Layer requirements
 
@@ -654,7 +653,7 @@ The remaining product gaps are:
 | NXT-06 | A Widget isolates failures | One failed transformation or renderer exposes a local error state and does not prevent other LiveCards or Widgets from working |
 | NXT-07 | Corrected or reconciled values remain derived | Widget processing never silently changes stored Source results or historical observations |
 | NXT-08 | Widgets expose useful runtime states | Empty, loading, stale, partial, failed, and ready states are distinguishable and accessible |
-| NXT-09 | Widget layout is personalized without becoming a separate Board | The layout belongs to the current Board's Next Layer and retains its underlying Collection identity |
+| NXT-09 | Widget layout is personalized without becoming a separate Board | The layout belongs to the current Board's Next Layer and retains that Board identity |
 | NXT-10 | A Widget declares direct or materialized execution | Direct Widgets read selected stored inputs in the UI; materialized Widgets display an Agent-produced persisted result without rerunning its refresh or transformation on open |
 | NXT-11 | Background refresh belongs to an Agent task | A task records its schedule, last attempt, last success, failure, retained inputs, and next eligible run independently of whether Next Layer is open |
 
@@ -816,7 +815,7 @@ without changing the two-Layer Board contract.
   `newsnext.dev.db` or `newsnext.prod.db` from the existing runtime environment.
 - Add schema versioning, migrations, WAL configuration, transactional helpers,
   and structured database errors.
-- Persist Boards, Collections, Instances, membership, order, and Board
+- Persist Boards, Boards, Instances, membership, order, and Board
   preferences behind canonical Mutation and Query Actions.
 - Add Agent task, retained observation, materialized output, and provenance
   tables required by the next phase without yet implementing every Widget.
@@ -836,7 +835,7 @@ account or network connection.
 
 ### Phase 1: Agent-composable built-in Widgets
 
-- Define the durable Widget schema and its relationship to a Collection's Board
+- Define the durable Widget schema and its relationship to a Board's Board
   and Next Layer.
 - Preserve Now Layer as the unified LiveCard experience for current news.
 - Add a CLI/daemon-backed timeline only if it is useful as a persisted built-in Widget.
@@ -969,7 +968,7 @@ Qualitative research should additionally test whether users understand:
 
 The major implementation dependencies are the canonical Action registry,
 runtime environment detection, the desktop daemon and Native
-Messaging connection, stable Instance and Collection identities, the existing
+Messaging connection, stable Instance and Board identities, the existing
 source-history repository migration, the Source runtime and permission model,
 and a versioned Widget input and transformation contract.
 

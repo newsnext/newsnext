@@ -1,29 +1,29 @@
 import type { SourceDescriptor } from "@newsnext/source-kit/types"
-import type { Collection } from "../collection"
+import type { Board } from "../board"
 import type { Instance } from "../source/live-cards"
 import type { ApplicationData } from "./data"
-import { indexCollectionIdsByInstance } from "../collection"
+import { indexBoardIdsByInstance } from "../board"
 
 export interface ApplicationBoardContext {
   boardId: string
   boardName: string
-  collectionId: string
 }
 
 export interface ApplicationNowLayerLiveCard {
-  collectionId: string
-  collectionIds: string[]
+  boardId: string
+  boardIds: string[]
   instanceId: string
   sourceId: string
 }
 
 export interface BoardConfigurationResult {
-  defaultLayer: Collection["defaultLayer"]
-  nowLayer: Collection["nowLayer"]
+  color: Board["color"]
+  defaultLayer: Board["defaultLayer"]
+  nowLayer: Board["nowLayer"]
 }
 
-export interface CollectionDetail {
-  collection: Collection
+export interface BoardDetail {
+  board: Board
   instances: Instance[]
 }
 
@@ -40,23 +40,23 @@ export function getSourceQuery(
   return source
 }
 
-export function listCollectionsQuery(data: ApplicationData): Collection[] {
-  return data.collections
+export function listBoardsQuery(data: ApplicationData): Board[] {
+  return data.boards
 }
 
-export function getCollectionQuery(
+export function getBoardQuery(
   data: ApplicationData,
-  input: { collectionId: string },
-): CollectionDetail {
-  const collection = getCollection(data, input.collectionId)
-  return { collection, instances: resolveCollectionInstances(data, collection) }
+  input: { boardId: string },
+): BoardDetail {
+  const board = getBoard(data, input.boardId)
+  return { board, instances: resolveBoardInstances(data, board) }
 }
 
-export function listCollectionInstancesQuery(
+export function listBoardInstancesQuery(
   data: ApplicationData,
-  input: { collectionId: string },
+  input: { boardId: string },
 ): Instance[] {
-  return resolveCollectionInstances(data, getCollection(data, input.collectionId))
+  return resolveBoardInstances(data, getBoard(data, input.boardId))
 }
 
 export function listInstancesQuery(data: ApplicationData): Instance[] {
@@ -81,22 +81,22 @@ export function getBoardContextQuery(
 
 export function getBoardConfigurationQuery(
   data: ApplicationData,
-  input: { collectionId: string },
+  input: { boardId: string },
 ): BoardConfigurationResult {
-  const { defaultLayer, nowLayer } = getCollection(data, input.collectionId)
-  return { defaultLayer, nowLayer }
+  const { color, defaultLayer, nowLayer } = getBoard(data, input.boardId)
+  return { color, defaultLayer, nowLayer }
 }
 
 export function getNowLayerLiveCardsQuery(
   data: ApplicationData,
   currentBoardId?: string,
 ): ApplicationNowLayerLiveCard[] {
-  const board = resolveBoardContext(data, currentBoardId)
-  const collection = getCollection(data, board.collectionId)
-  const collectionIdsByInstance = indexCollectionIdsByInstance(data.collections)
-  return resolveCollectionInstances(data, collection).map(instance => ({
-    collectionId: collection.id,
-    collectionIds: collectionIdsByInstance.get(instance.instanceId) ?? [],
+  const context = resolveBoardContext(data, currentBoardId)
+  const board = getBoard(data, context.boardId)
+  const boardIdsByInstance = indexBoardIdsByInstance(data.boards)
+  return resolveBoardInstances(data, board).map(instance => ({
+    boardId: board.id,
+    boardIds: boardIdsByInstance.get(instance.instanceId) ?? [],
     instanceId: instance.instanceId,
     sourceId: instance.sourceId,
   }))
@@ -106,24 +106,24 @@ function resolveBoardContext(
   data: ApplicationData,
   currentBoardId?: string,
 ): ApplicationBoardContext {
-  const collection = data.collections.find(candidate => candidate.id === currentBoardId)
-    ?? data.collections[0]
-  if (!collection) throw new Error("NewsNext has no Boards")
-  return { boardId: collection.id, boardName: collection.name, collectionId: collection.id }
+  const board = data.boards.find(candidate => candidate.id === currentBoardId)
+    ?? data.boards[0]
+  if (!board) throw new Error("NewsNext has no Boards")
+  return { boardId: board.id, boardName: board.name }
 }
 
-function getCollection(data: ApplicationData, collectionId: string): Collection {
-  const collection = data.collections.find(candidate => candidate.id === collectionId)
-  if (!collection) throw new Error(`Collection '${collectionId}' not found`)
-  return collection
+function getBoard(data: ApplicationData, boardId: string): Board {
+  const board = data.boards.find(candidate => candidate.id === boardId)
+  if (!board) throw new Error(`Board '${boardId}' not found`)
+  return board
 }
 
-function resolveCollectionInstances(
+function resolveBoardInstances(
   data: ApplicationData,
-  collection: Collection,
+  board: Board,
 ): Instance[] {
   const instances = new Map(data.instances.map(instance => [instance.instanceId, instance]))
-  return collection.instanceIds.flatMap((instanceId) => {
+  return board.instanceIds.flatMap((instanceId) => {
     const instance = instances.get(instanceId)
     return instance ? [instance] : []
   })
