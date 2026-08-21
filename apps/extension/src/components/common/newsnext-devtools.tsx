@@ -78,7 +78,7 @@ const themeStyles: Record<DevtoolsTheme, CSSProperties> = {
 const styles = createStyles()
 const diagnostics = createBackgroundClient().diagnostics
 
-export function BackgroundDevtoolsPanel({ devtoolsOpen, theme }: { devtoolsOpen: boolean, theme: DevtoolsTheme }): React.JSX.Element {
+export function NewsNextDevtoolsPanel({ devtoolsOpen, theme }: { devtoolsOpen: boolean, theme: DevtoolsTheme }): React.JSX.Element {
   const [activePanel, setActivePanel] = useState<PanelId>("overview")
   const [error, setError] = useState<string>()
   const [filter, setFilter] = useState("")

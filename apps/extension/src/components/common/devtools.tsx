@@ -7,8 +7,8 @@ export const TanStackDevtools
           import("@tanstack/react-devtools"),
           import("@tanstack/react-router-devtools"),
           import("@tanstack/react-query-devtools"),
-          import("./background-devtools"),
-        ]).then(([devtools, router, query, background]) => ({
+          import("./newsnext-devtools"),
+        ]).then(([devtools, router, query, newsnext]) => ({
           default: () => (
             <devtools.TanStackDevtools
               config={{
@@ -23,7 +23,7 @@ export const TanStackDevtools
                   name: "NewsNext",
                   defaultOpen: true,
                   render: (_element, props) => (
-                    <background.BackgroundDevtoolsPanel
+                    <newsnext.NewsNextDevtoolsPanel
                       devtoolsOpen={props.devtoolsOpen}
                       theme={props.theme}
                     />
