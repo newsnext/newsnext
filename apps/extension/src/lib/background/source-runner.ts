@@ -1,7 +1,3 @@
-import type {
-  ExtensionConnectionProviderRunRequest,
-  ExtensionConnectionRegisteredRunRequest,
-} from "@newsnext/extension-connection"
 import type { ProviderConfig } from "@newsnext/source-kit/registry"
 import type { SourceLoaderResult } from "@newsnext/source-kit/types"
 import type { SourcePermissionTarget } from "../source/permissions"
@@ -16,8 +12,22 @@ import { resolveSourceSecrets, updateSourceSecrets } from "./source-secrets"
 import { createBackgroundSourceService } from "./source-service"
 
 export type RunConnectedSourceInput
-  = | Omit<ExtensionConnectionRegisteredRunRequest, "id" | "type">
-    | Omit<ExtensionConnectionProviderRunRequest, "id" | "type">
+  = | {
+    params?: Record<string, unknown>
+    provider?: never
+    providerId?: never
+    retain: boolean
+    sourceId: string
+    useProviderSecrets?: never
+  }
+  | {
+    params?: Record<string, unknown>
+    provider: unknown
+    providerId: string
+    retain: boolean
+    sourceId: string
+    useProviderSecrets?: boolean
+  }
 
 export interface RunConnectedSourceOutput extends Omit<SourceLoaderResult, "items"> {
   data: SourceLoaderResult["items"]

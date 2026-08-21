@@ -335,12 +335,14 @@ not require a connected extension. Source execution and new retention still
 require the extension because the daemon never receives browser authority or
 credentials.
 
-The same transport exposes canonical application control through
-`newsnext action list`, `newsnext action execute`, `newsnext query list`, and
-`newsnext query execute`. Catalog listing returns stable names, descriptions,
-and JSON input/output schemas. Execute requests carry a name and JSON object;
-the extension parses that object through the canonical catalog before calling
-the same Action executor or Query implementation used by the frontend. Agent
+The same transport exposes canonical application and runtime control through
+`newsnext action list` and `newsnext action execute`. Catalog listing returns
+stable names, `mutation`, `query`, or `command` kinds, descriptions, and JSON
+input/output schemas. Execute requests carry a name and JSON object; the
+extension resolves one `defineAction` registration, validates that object with
+its TypeBox parameter schema, and invokes the same handler used by the typed UI
+Action Client. The published JSON schemas are the TypeBox schemas themselves,
+not separately maintained projections. Agent
 Source discovery and frontend Source picker discovery both execute
 `source.list` through this boundary; there is no parallel Registry or Native
 listing service. Native and frontend Action writes enter the same background
@@ -894,7 +896,7 @@ commands and completions by request ID, rejects
 ambiguous browser selection, expires pending executions, and never replays a
 command after reconnection because source execution is not guaranteed to be
 idempotent. Settings exposes the daemon version as connection metadata only.
-Protocol version 2 adds canonical Application Action and Query discovery and
+Protocol version 2 added canonical Application Action and Query discovery and
 execution. Protocol version 3 adds the `app.open` command used by the desktop
 tray. The command is routed to an exact connected extension instance, which
 opens its own packaged `app.html` URL through the browser tabs API. An existing
@@ -905,6 +907,11 @@ version 4 makes History daemon-owned and adds the explicit `retain` flag to
 `source.run`. Protocol version 5 publishes each
 connected extension's Board summaries to the menu-bar app, keeps them current
 after collection changes, and makes `app.open` target an explicit Board route.
+Protocol version 6 replaces the parallel Application Action, Application Query,
+open, fetch, and Source-run request variants with one `action.list` and
+`action.execute` transport. The catalog classifies every capability as a
+Mutation, Query, or Command; existing `run`, `fetch`, and `open` CLI commands are
+convenience frontends over their canonical Actions.
 
 Native Messaging registration is the browser-facing security boundary.
 Development and production use distinct host identities so their executables
@@ -956,7 +963,7 @@ are removed during normal shutdown and reclaimed on the next startup after an
 ungraceful exit.
 
 The Rust CLI implements daemon lifecycle and tray status plus the `run`,
-`fetch`, `action`, `query`, and `history` commands and command families. All
+`fetch`, `action`, and `history` commands and command families. All
 extension-backed commands use the same typed execute/result IPC path. `run`
 supports registered sources, provider files, standard input, parameter
 overrides, provider-secret selection, compact output, verbose remote errors,

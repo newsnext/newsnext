@@ -1,7 +1,7 @@
 import type { ResolvedRadarSuggestion } from "@/lib/radar"
 import { useEffect, useState } from "react"
 import { browser } from "#imports"
-import { createBackgroundClient } from "@/lib/background"
+import { actions } from "@/lib/actions"
 
 export function useCurrentTabRadarSuggestions(): ResolvedRadarSuggestion[] | null {
   const [suggestions, setSuggestions] = useState<ResolvedRadarSuggestion[] | null>(null)
@@ -15,7 +15,7 @@ export function useCurrentTabRadarSuggestions(): ResolvedRadarSuggestion[] | nul
         if (!isCancelled) setSuggestions(null)
         return
       }
-      const nextSuggestions = await createBackgroundClient().radar.resolveSuggestions({
+      const nextSuggestions = await actions.radar.resolveSuggestions({
         tabId: tab.id,
         url: tab.url,
         title: tab.title,

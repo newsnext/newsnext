@@ -15,7 +15,7 @@ import {
   listBackgroundActions,
   subscribeBackgroundActions,
 } from "./action-dispatcher"
-import { readConnectedApplicationData } from "./application-service"
+import { readApplicationData } from "./application-service"
 import { BACKGROUND_DIAGNOSTICS_CHANGED } from "./diagnostics-events"
 
 export interface BackgroundDiagnosticsSnapshot {
@@ -45,7 +45,7 @@ export function createBackgroundDiagnosticsService(): BackgroundDiagnosticsServi
     },
     async getSnapshot(): Promise<BackgroundDiagnosticsSnapshot> {
       const [application, stored] = await Promise.all([
-        readConnectedApplicationData(),
+        readApplicationData(),
         browser.storage.local.get([
           PERSISTED_DATA_SLICES.deviceState.key,
           PERSISTED_DATA_SLICES.settings.key,

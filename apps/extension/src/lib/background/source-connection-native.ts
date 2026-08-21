@@ -1,6 +1,5 @@
 import type {
   ExtensionConnectionCommandRequest,
-  ExtensionConnectionFetchResponse,
   ExtensionToHost,
   HostToExtension,
   NativeCommandResult,
@@ -10,35 +9,24 @@ import type { PersistedDeviceState } from "../settings/persisted-settings"
 import {
   parseExtensionConnectionCommandRequest,
 } from "@newsnext/extension-connection"
-import { createSourceFetch } from "@newsnext/source-kit/utils"
 import { browser } from "#imports"
-import { openAppTab } from "../app-tab"
-import {
-  listApplicationActions,
-  listApplicationQueries,
-  parseApplicationAction,
-  parseApplicationQuery,
-} from "../application"
 import { normalizeApplicationData, PERSISTED_DATA_SLICES } from "../settings/persisted-data"
 import {
   normalizePersistedDeviceState,
   withSourceConnectionEnabled,
 } from "../settings/persisted-settings"
-import { getPermissionRequestForSource } from "../source/permissions"
-import { dispatchBackgroundAction } from "./action-dispatcher"
+import { createBackgroundActionContext } from "./action-context"
 import {
-  executeBackgroundApplicationAction,
-  executeBackgroundApplicationQuery,
-  readConnectedApplicationData,
-} from "./application-service"
-import { requestCliPermission } from "./cli-permission"
+  actionRegistry,
+  executeRegisteredAction,
+} from "./action-registry"
+import { readApplicationData } from "./application-service"
 import { serializeSourceConnectionError } from "./source-connection-error"
-import { runConnectedSource } from "./source-runner"
 
 const NATIVE_HOST_NAME = import.meta.env.DEV
   ? "app.newsnext.host.dev"
   : "app.newsnext.host"
-const PROTOCOL_VERSION = 5
+const PROTOCOL_VERSION = 6
 const SOURCE_CONNECTION_INSTANCE_ID_KEY = "newsnext.sourceConnectionInstanceId"
 const SOURCE_CONNECTION_RECONNECT_ALARM = "source-connection-native-reconnect"
 const RECONNECT_ALARM_PERIOD_MINUTES = 0.5
@@ -69,6 +57,13 @@ let connectionState: SourceConnectionState = "disconnected"
 let enabled = false
 let instanceId = ""
 let boards: NativeExtensionBoard[] = []
+
+const connectedActionContext = createBackgroundActionContext({
+  getStatus: async () => getSourceConnectionStatus(),
+  setEnabled: async ({ enabled: nextEnabled, frontendState }) => (
+    await setSourceConnectionEnabled(nextEnabled, frontendState)
+  ),
+})
 
 function connectionBoards(value: unknown): NativeExtensionBoard[] {
   const application = normalizeApplicationData(value)
@@ -117,85 +112,10 @@ function parseHostMessage(value: unknown): ParsedHostMessage {
   throw new Error("The native host returned an unsupported message")
 }
 
-async function executeFetchRequest(
-  request: Extract<ExtensionConnectionCommandRequest, { type: "fetch" }>,
-): Promise<ExtensionConnectionFetchResponse> {
-  const url = new URL(request.url)
-  const permissionRequest = { origins: [`${url.protocol}//${url.hostname}/*`] }
-  if (!await requestCliPermission(
-    permissionRequest,
-    "Required to complete this fetch.",
-  )) {
-    throw new Error(`Site access was not granted for ${url.origin}`)
-  }
-  const signal = AbortSignal.timeout(request.timeoutMs)
-  const response = await createSourceFetch(signal)(request.url, {
-    method: request.method,
-    headers: request.headers,
-    body: request.body,
-    retry: 0,
-    throwHttpErrors: false,
-    timeout: false,
-  })
-  return {
-    status: response.status,
-    statusText: response.statusText,
-    headers: [...response.headers.entries()],
-    body: await response.text(),
-  }
-}
-
-async function authorizeConnectedSource(
-  source: Parameters<typeof getPermissionRequestForSource>[0],
-  params: Record<string, unknown>,
-): Promise<void> {
-  const permissionRequest = getPermissionRequestForSource(source, params)
-  if (!permissionRequest) return
-  const granted = await requestCliPermission(
-    permissionRequest,
-    "Required to load this source.",
-  )
-  if (!granted) {
-    throw new Error("Site access was not granted for this source")
-  }
-}
-
 export function getSourceConnectionStatus(): SourceConnectionStatus {
   return {
     cliVersion,
     state: enabled ? connectionState : "disabled",
-  }
-}
-
-async function openBoard(boardId: string): Promise<void> {
-  const appUrl = browser.runtime.getURL("/app.html")
-  const boardUrl = `${appUrl}#/board/${encodeURIComponent(boardId)}`
-  await openAppTab(boardUrl)
-}
-
-async function executeRequest(request: ExtensionConnectionCommandRequest): Promise<unknown> {
-  switch (request.type) {
-    case "app.open":
-      await openBoard(request.boardId)
-      return null
-    case "application.action.list":
-      return listApplicationActions()
-    case "application.action.execute":
-      return await executeBackgroundApplicationAction(parseApplicationAction({
-        type: request.name,
-        input: request.input,
-      }))
-    case "application.query.list":
-      return listApplicationQueries()
-    case "application.query.execute":
-      return await executeBackgroundApplicationQuery(parseApplicationQuery({
-        type: request.name,
-        input: request.input,
-      }))
-    case "fetch":
-      return await executeFetchRequest(request)
-    case "source.run":
-      return await runConnectedSource(request, authorizeConnectedSource)
   }
 }
 
@@ -207,12 +127,15 @@ async function executeCommand(
   try {
     result = {
       ok: true,
-      data: await dispatchBackgroundAction({
-        commandId: request.id,
-        input: getNativeActionInput(request),
-        name: getNativeActionName(request),
-        origin: "cli",
-      }, () => executeRequest(request), result => getNativeActionResult(request, result)),
+      data: request.type === "action.list"
+        ? actionRegistry.list("connected")
+        : await executeRegisteredAction(
+            request.name,
+            request.input,
+            "connected",
+            connectedActionContext,
+            request.id,
+          ),
     }
   } catch (error) {
     result = {
@@ -230,54 +153,6 @@ async function executeCommand(
     result,
   }
   connection.postMessage(message)
-}
-
-function getNativeActionName(request: ExtensionConnectionCommandRequest): string {
-  if (request.type === "application.action.execute"
-    || request.type === "application.query.execute") {
-    return request.name
-  }
-  return request.type
-}
-
-function getNativeActionInput(request: ExtensionConnectionCommandRequest): unknown {
-  switch (request.type) {
-    case "application.action.execute":
-    case "application.query.execute":
-      return request.input
-    case "fetch":
-      return {
-        body: request.body === undefined ? undefined : "[redacted]",
-        headerNames: request.headers.map(([name]) => name),
-        method: request.method,
-        timeoutMs: request.timeoutMs,
-        url: request.url,
-      }
-    case "source.run":
-      return {
-        params: request.params,
-        providerId: request.providerId,
-        retain: request.retain,
-        sourceId: request.sourceId,
-        useProviderSecrets: request.useProviderSecrets,
-      }
-    default:
-      return request
-  }
-}
-
-function getNativeActionResult(
-  request: ExtensionConnectionCommandRequest,
-  result: unknown,
-): unknown {
-  if (request.type !== "fetch") return result
-  const response = result as ExtensionConnectionFetchResponse
-  return {
-    body: "[redacted]",
-    headerNames: response.headers.map(([name]) => name),
-    status: response.status,
-    statusText: response.statusText,
-  }
 }
 
 function disconnect(): void {
@@ -407,7 +282,7 @@ export async function registerSourceConnectionNative(): Promise<void> {
     PERSISTED_DATA_SLICES.deviceState.key,
     SOURCE_CONNECTION_INSTANCE_ID_KEY,
   ])
-  const application = await readConnectedApplicationData()
+  const application = await readApplicationData()
   const storedInstanceId = stored[SOURCE_CONNECTION_INSTANCE_ID_KEY]
   instanceId = typeof storedInstanceId === "string" && storedInstanceId
     ? storedInstanceId

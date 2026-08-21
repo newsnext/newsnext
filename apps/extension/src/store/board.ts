@@ -1,10 +1,10 @@
-import type { ApplicationAction, ApplicationData } from "../lib/application"
+import type { ApplicationData } from "../lib/application"
 import type { Board, BoardCreateInput } from "../lib/board"
 import type { OpmlImport } from "../lib/opml"
 import type { InstancePatch } from "../lib/source"
 import { atom } from "jotai"
 import { atomWithStorage, selectAtom, splitAtom } from "jotai/utils"
-import { createBackgroundClient } from "../lib/background"
+import { actions } from "../lib/actions"
 import {
   DEFAULT_BOARD_LAYER,
   DEFAULT_NOW_LAYER_SORT,
@@ -25,20 +25,12 @@ const persistedApplicationDataAtom = atomWithStorage<ApplicationData>(
   }),
   { getOnInit: true },
 )
-
 export const applicationDataAtom = atom(get => get(persistedApplicationDataAtom))
 
 export const collectionsAtom = selectAtom(applicationDataAtom, data => data.collections)
 export const instancesAtom = selectAtom(applicationDataAtom, data => data.instances)
 
 export const boardsAtom = collectionsAtom
-
-export const executeApplicationActionAtom = atom(
-  null,
-  async (_get, _set, action: ApplicationAction) => (
-    await createBackgroundClient().application.execute(action)
-  ),
-)
 
 export interface InstanceViewLayout {
   collectionIds: string[]
@@ -81,86 +73,68 @@ export const instanceLayoutsAtom = selectAtom(
   areInstanceLayoutsEqual,
 )
 
-export const setNowLayerManualOrderAtom = atom(null, async (_get, set, input: {
+export const setNowLayerManualOrderAtom = atom(null, async (_get, _set, input: {
   boardId: string
   instanceIds: string[]
 }) => {
-  await set(executeApplicationActionAtom, {
-    type: "nowLayer.setManualOrder",
-    input: { collectionId: input.boardId, instanceIds: input.instanceIds },
+  await actions.nowLayer.setManualOrder({
+    collectionId: input.boardId,
+    instanceIds: input.instanceIds,
   })
 })
 
-export const addInstanceAtom = atom(null, (_get, set, input: {
+export const addInstanceAtom = atom(null, (_get, _set, input: {
   collectionIds: string[]
   patch: InstancePatch
   sourceId: string
-}) => set(executeApplicationActionAtom, {
-  type: "instance.create",
-  input,
-}))
+}) => actions.instance.create(input))
 
-export const setInstancePatchAtom = atom(null, (_get, set, input: {
+export const setInstancePatchAtom = atom(null, (_get, _set, input: {
   instanceId: string
   patch: InstancePatch
-}) => set(executeApplicationActionAtom, {
-  type: "instance.configure",
-  input,
-}))
+}) => actions.instance.configure(input))
 
-export const deleteInstanceAtom = atom(null, (_get, set, instanceId: string) => (
-  set(executeApplicationActionAtom, {
-    type: "instance.delete",
-    input: { instanceId },
-  })
+export const deleteInstanceAtom = atom(null, (_get, _set, instanceId: string) => (
+  actions.instance.delete({ instanceId })
 ))
 
-export const createBoardAtom = atom(null, (_get, set, input: BoardCreateInput) => (
-  set(executeApplicationActionAtom, {
-    type: "collection.create",
-    input: {
-      name: input.name,
-      board: {
-        color: input.color,
-        defaultLayer: input.defaultLayer,
-        sortMode: input.sortMode,
-      },
+export const createBoardAtom = atom(null, (_get, _set, input: BoardCreateInput) => (
+  actions.collection.create({
+    name: input.name,
+    board: {
+      color: input.color,
+      defaultLayer: input.defaultLayer,
+      sortMode: input.sortMode,
     },
   })
 ))
 
-export const createBoardFromOpmlAtom = atom(null, (_get, set, input: OpmlImport) => (
-  set(executeApplicationActionAtom, {
-    type: "collection.create",
-    input: {
-      instances: input.feeds.map(feed => ({
-        sourceId: "rss:feed",
-        patch: {
-          params: { url: feed.url },
-          ...(feed.title ? { metadata: { title: feed.title } } : {}),
-        },
-      })),
-      name: input.title,
-      board: {
-        color: "orange",
-        defaultLayer: DEFAULT_BOARD_LAYER,
-        sortMode: DEFAULT_NOW_LAYER_SORT.mode,
+export const createBoardFromOpmlAtom = atom(null, (_get, _set, input: OpmlImport) => (
+  actions.collection.create({
+    instances: input.feeds.map(feed => ({
+      sourceId: "rss:feed",
+      patch: {
+        params: { url: feed.url },
+        ...(feed.title ? { metadata: { title: feed.title } } : {}),
       },
+    })),
+    name: input.title,
+    board: {
+      color: "orange",
+      defaultLayer: DEFAULT_BOARD_LAYER,
+      sortMode: DEFAULT_NOW_LAYER_SORT.mode,
     },
   })
 ))
 
-export const updateBoardAtom = atom(null, async (_get, set, board: Board) => {
-  await set(executeApplicationActionAtom, {
-    type: "collection.update",
-    input: {
-      collectionId: board.id,
-      name: board.name,
-      board: {
-        color: getBoardColor(board),
-        defaultLayer: board.defaultLayer,
-        sortMode: board.nowLayer.sort.mode,
-      },
+export const updateBoardAtom = atom(null, async (_get, _set, board: Board) => {
+  await actions.collection.update({
+    collectionId: board.id,
+    name: board.name,
+    board: {
+      color: getBoardColor(board),
+      defaultLayer: board.defaultLayer,
+      sortMode: board.nowLayer.sort.mode,
     },
   })
 })
@@ -169,32 +143,22 @@ type DeleteBoardInput
   = | { boardId: string, mode: "delete" }
     | { boardId: string, mode: "transfer", targetBoardId: string }
 
-export const deleteBoardAtom = atom(null, (_get, set, input: DeleteBoardInput) => (
-  set(executeApplicationActionAtom, input.mode === "delete"
-    ? {
-        type: "collection.delete",
-        input: { collectionId: input.boardId, deleteInstances: true },
-      }
-    : {
-        type: "collection.delete",
-        input: { collectionId: input.boardId, targetCollectionId: input.targetBoardId },
-      })
+export const deleteBoardAtom = atom(null, (_get, _set, input: DeleteBoardInput) => (
+  input.mode === "delete"
+    ? actions.collection.delete({ collectionId: input.boardId, deleteInstances: true })
+    : actions.collection.delete({ collectionId: input.boardId, targetCollectionId: input.targetBoardId })
 ))
 
-export const setInstanceCollectionMembershipAtom = atom(null, (_get, set, input: {
+export const setInstanceCollectionMembershipAtom = atom(null, (_get, _set, input: {
   collectionId: string
   instanceId: string
   member: boolean
-}) => set(executeApplicationActionAtom, {
-  type: input.member ? "collection.addInstance" : "collection.removeInstance",
-  input: { collectionId: input.collectionId, instanceId: input.instanceId },
-}))
+}) => input.member
+  ? actions.collection.addInstance({ collectionId: input.collectionId, instanceId: input.instanceId })
+  : actions.collection.removeInstance({ collectionId: input.collectionId, instanceId: input.instanceId }))
 
-export const resetInstanceParamsAtom = atom(null, (get, set, instanceId: string) => {
+export const resetInstanceParamsAtom = atom(null, (get, _set, instanceId: string) => {
   const instance = get(instancesAtom).find(candidate => candidate.instanceId === instanceId)
   if (!instance || Object.keys(instance.patch.params ?? {}).length === 0) return
-  return set(executeApplicationActionAtom, {
-    type: "instance.resetParams",
-    input: { instanceId },
-  })
+  return actions.instance.resetParams({ instanceId })
 })

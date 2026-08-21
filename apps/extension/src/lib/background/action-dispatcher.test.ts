@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, it } from "vitest"
 import {
   clearBackgroundActions,
   dispatchBackgroundAction,
-  instrumentBackgroundService,
   listBackgroundActions,
   subscribeBackgroundActions,
 } from "./action-dispatcher"
@@ -34,10 +33,12 @@ describe("background action dispatcher", () => {
       input: undefined,
       name: "fetch",
       origin: "cli",
-    }, () => ({ body: "secret", status: 200 }), response => ({
-      body: "[redacted]",
-      status: response.status,
-    }))
+    }, () => ({ body: "secret", status: 200 }), {
+      result: response => ({
+        body: "[redacted]",
+        status: response.status,
+      }),
+    })
 
     expect(result.body).toBe("secret")
     expect(listBackgroundActions()[0]?.result).toEqual({
@@ -60,23 +61,6 @@ describe("background action dispatcher", () => {
       error: "Instance not found",
       name: "instance.load",
       status: "error",
-    })
-  })
-
-  it("turns every service method into an action", async () => {
-    const service = instrumentBackgroundService("instance", {
-      async load(input: { instanceId: string }) {
-        return { available: true, input }
-      },
-    }, "ui")
-
-    await service.load({ instanceId: "instance-1" })
-
-    expect(listBackgroundActions()[0]).toMatchObject({
-      input: { instanceId: "instance-1" },
-      name: "instance.load",
-      origin: "ui",
-      status: "success",
     })
   })
 

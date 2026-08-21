@@ -1280,15 +1280,14 @@ Discover and use the canonical application control surface:
 
 ```sh
 newsnext action list
-newsnext query list
-newsnext query execute source.list
-newsnext query execute source.get --input \
+newsnext action execute source.list
+newsnext action execute source.get --input \
   '{"sourceId":"github:trending"}'
-newsnext query execute collection.list
-newsnext query execute board.getContext
-newsnext query execute board.getConfiguration --input \
+newsnext action execute collection.list
+newsnext action execute board.getContext
+newsnext action execute board.getConfiguration --input \
   '{"collectionId":"COLLECTION_ID"}'
-newsnext query execute nowLayer.getLiveCards
+newsnext action execute nowLayer.getLiveCards
 newsnext action execute collection.create --input \
   '{"name":"Research","board":{"color":"blue","sortMode":"addedAt"}}'
 newsnext action execute collection.update --input \
@@ -1299,9 +1298,12 @@ newsnext action execute instance.create --input \
   '{"sourceId":"github:trending","collectionIds":["COLLECTION_ID"],"patch":{"params":{"language":"typescript"}}}'
 ```
 
-Catalog listings include descriptions and JSON input/output schemas. Every
-execute input must be a JSON object. The extension performs runtime shape and
-domain validation, then uses the same Application Action or Query as the UI.
+Catalog listings include each Action's `mutation`, `query`, or `command` kind,
+description, and JSON input/output schemas. Every execute input must be a JSON
+object. Each Action owns TypeBox parameter and result schemas next to its
+handler; the extension performs runtime shape and domain validation from that
+single definition, then invokes the same registered Action used by the typed
+UI client.
 Enabling CLI access permits destructive operations such as
 `collection.delete` and `instance.delete`; inspect `action list` before
 automation and use stable Data identities rather than Board labels.
@@ -1318,15 +1320,15 @@ and Board preferences together. These composite Actions persist once and
 cannot be interleaved with another UI or Agent mutation. Use
 `board.configure` only for a Board-configuration change.
 
-Use `query execute board.getContext` when starting from the currently visible
-Board, then `query execute collection.listInstances --input
-'{"collectionId":"COLLECTION_ID"}'` for a custom Board. Use `query execute
+Use `action execute board.getContext` when starting from the currently visible
+Board, then `action execute collection.listInstances --input
+'{"collectionId":"COLLECTION_ID"}'` for a custom Board. Use `action execute
 instance.list` when the Board is irrelevant. History commands intentionally use
 the opaque ID returned by `history datasets`; they do not resolve extension
 Instance state. Filter dataset discovery by Source or provider when selecting a
 retained parameter configuration.
 
-Application Queries return canonical Collections and Instances without a
+Query Actions return canonical Collections and Instances without a
 parallel CLI-only Board representation. An Instance may be returned by several
 Collection queries when it has several memberships. Ordinary Now Layer loads
 remain cache-only and do not create History. Observation times may be Unix

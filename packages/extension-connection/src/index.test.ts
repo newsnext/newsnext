@@ -1,96 +1,41 @@
 import { describe, expect, it } from "vitest"
-import {
-  parseExtensionConnectionCommandRequest,
-} from "."
+import { parseExtensionConnectionCommandRequest } from "."
 
 describe("extension connection protocol", () => {
-  it("parses the native open-app request", () => {
+  it("parses Action discovery and execution requests", () => {
     expect(parseExtensionConnectionCommandRequest({
-      id: "open-id",
-      type: "app.open",
-      boardId: "reading",
-    })).toEqual({ id: "open-id", type: "app.open", boardId: "reading" })
-    expect(() => parseExtensionConnectionCommandRequest({
-      id: "open-id",
-      type: "app.open",
-    })).toThrow("Invalid extension command")
-  })
-
-  it("parses application operation requests", () => {
+      id: "list-id",
+      type: "action.list",
+    })).toEqual({ id: "list-id", type: "action.list" })
     expect(parseExtensionConnectionCommandRequest({
       id: "action-id",
-      type: "application.action.execute",
+      type: "action.execute",
       name: "collection.delete",
-      input: { collectionId: "reading" },
+      input: { collectionId: "reading", deleteInstances: true },
     })).toEqual({
       id: "action-id",
-      type: "application.action.execute",
+      type: "action.execute",
       name: "collection.delete",
-      input: { collectionId: "reading" },
+      input: { collectionId: "reading", deleteInstances: true },
     })
-    expect(parseExtensionConnectionCommandRequest({
-      id: "query-id",
-      type: "application.query.list",
-    })).toEqual({ id: "query-id", type: "application.query.list" })
+  })
+
+  it("rejects malformed Action requests", () => {
     expect(() => parseExtensionConnectionCommandRequest({
       id: "action-id",
-      type: "application.action.execute",
+      type: "action.execute",
       name: "collection.delete",
       input: null,
     })).toThrow("Invalid extension command")
-  })
-
-  it("validates command-specific fields", () => {
-    expect(parseExtensionConnectionCommandRequest({
-      id: "request-id",
-      type: "fetch",
-      url: "https://example.com/api",
-      method: "POST",
-      headers: [["content-type", "application/json"]],
-      body: "{}",
-      timeoutMs: 10_000,
-    })).toEqual({
-      id: "request-id",
-      type: "fetch",
-      url: "https://example.com/api",
-      method: "POST",
-      headers: [["content-type", "application/json"]],
-      body: "{}",
-      timeoutMs: 10_000,
-    })
     expect(() => parseExtensionConnectionCommandRequest({
-      id: "request-id",
-      type: "fetch",
-      url: "https://example.com/api",
-      method: "GET",
-      headers: { accept: "application/json" },
-      timeoutMs: 10_000,
+      id: "action-id",
+      type: "action.execute",
+      name: "",
+      input: {},
     })).toThrow("Invalid extension command")
     expect(() => parseExtensionConnectionCommandRequest({
-      id: "request-id",
-      type: "fetch",
-      url: "file:///tmp/example",
-      method: "GET",
-      headers: [],
-      timeoutMs: 10_000,
-    })).toThrow("Invalid extension command")
-    expect(parseExtensionConnectionCommandRequest({
-      id: "request-id",
-      type: "source.run",
-      retain: true,
-      sourceId: "github:trending",
-      params: { language: "typescript" },
-    })).toMatchObject({
-      id: "request-id",
-      type: "source.run",
-      sourceId: "github:trending",
-    })
-    expect(() => parseExtensionConnectionCommandRequest({
-      id: "request-id",
-      type: "source.run",
-      retain: true,
-      providerId: "github",
-      sourceId: "github:trending",
+      id: "legacy-id",
+      type: "application.query.list",
     })).toThrow("Invalid extension command")
   })
 })

@@ -4,7 +4,7 @@ import { useAtomValue } from "jotai"
 import { useCallback, useEffect, useState } from "react"
 import { ConfigSection } from "@/components/common/config-section"
 import { useAsyncAction } from "@/hooks/use-async-action"
-import { createBackgroundClient } from "@/lib/background"
+import { actions } from "@/lib/actions"
 import { withSourceConnectionEnabled } from "@/lib/settings"
 import { persistedDeviceStateAtom } from "@/store/settings"
 
@@ -37,8 +37,7 @@ export function SourceConnectionSettings(): React.JSX.Element {
 
   const refreshStatus = useCallback(async (): Promise<void> => {
     try {
-      const client = createBackgroundClient()
-      setStatus(await client.sourceConnection.getStatus())
+      setStatus(await actions.sourceConnection.getStatus())
     } catch {
       setStatus(undefined)
     }
@@ -60,11 +59,10 @@ export function SourceConnectionSettings(): React.JSX.Element {
 
   const handleEnabledChange = useCallback(async (enabled: boolean): Promise<void> => {
     const succeeded = await runUpdate(async () => {
-      const client = createBackgroundClient()
-      setStatus(await client.sourceConnection.setEnabled(
+      setStatus(await actions.sourceConnection.setEnabled({
         enabled,
-        withSourceConnectionEnabled(persistedDeviceState, enabled),
-      ))
+        frontendState: withSourceConnectionEnabled(persistedDeviceState, enabled),
+      }))
     })
     if (!succeeded) {
       await refreshStatus()

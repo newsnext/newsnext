@@ -6,8 +6,8 @@ Status: active architecture.
 
 NewsNext exposes one application model to the human UI, agents, the CLI, and
 future automation. These consumers may present the model differently, but they
-share the same typed Actions, Queries, validation, and background persistence
-runtime.
+share one typed Action registry, validation, and background persistence runtime.
+Each Action declares whether it is a `mutation`, `query`, or `command`.
 
 The central projection is:
 
@@ -34,8 +34,8 @@ interface ApplicationData {
 ```
 
 The background application repository is the only writer of this envelope in
-`browser.storage.local`. Frontend atoms are read-only mirrors plus thin Action
-dispatchers.
+`browser.storage.local`. Frontend atoms are read-only mirrors plus thin Mutation
+Action dispatchers.
 
 ### Instance
 
@@ -195,7 +195,58 @@ containers.
 - `defaultLayer` selects which layer opens; switching layers does not change
   Collection membership, Instances, Query cache, or History.
 
-## Actions
+## Action Registry
+
+Every stable capability exposed to the UI, agents, or CLI is an Action. An
+Action is defined once with `defineAction`: its name, kind, audiences,
+description, TypeBox parameter and result schemas, optional validation and
+diagnostic projections, and handler live together. TypeBox schemas are both
+the runtime contract and the JSON Schema returned by `action.list`; there is no
+parallel descriptor or hand-written parser catalog.
+
+```ts
+const createCollection = defineAction({
+  name: "collection.create",
+  kind: "mutation",
+  audiences: ["ui", "connected"],
+  params: Type.Object({ name: Type.String({ minLength: 1 }) }),
+  result: Type.Object({ collectionId: Type.String() }),
+}, async (params, context) => {
+  return await context.mutate((data, dependencies) => (
+    createCollectionMutation(data, params, dependencies)
+  ))
+})
+```
+
+The three kinds have distinct contracts:
+
+- `mutation` atomically changes canonical Application Data;
+- `query` reads canonical data or discoverable Source descriptors without a
+  persistent side effect;
+- `command` asks the browser runtime to perform an environment-dependent
+  operation.
+
+UI mechanics such as opening dialogs, flipping cards, focus, scrolling, and
+form drafts are not registered Actions. Agents operate those surfaces through
+general browser control when needed.
+
+The UI uses a type-safe client inferred from the UI-visible definitions:
+
+```ts
+await actions.collection.create({ name: "Research" })
+await actions.board.configure({ collectionId, color: "blue" })
+const sources = await actions.source.list()
+```
+
+The client sends only the canonical Action name and parameters to the
+background. It never imports a handler or browser-owned dependency. The
+background Registry validates parameters, invokes the registered handler, and
+validates its result. `connected` audience filtering publishes only Actions
+available to the local CLI; UI-only operations such as `source.load`,
+`source.cancel`, `radar.resolveSuggestions`, `application.replace`, and CLI
+connection settings remain absent from that catalog.
+
+### Mutations
 
 Persistent writes enter one typed execution boundary. Current canonical names
 are:
@@ -231,7 +282,7 @@ memberships already present in the target.
 `nowLayer.setManualOrder` requires every Collection Instance exactly once and
 selects manual mode atomically.
 
-## Queries
+### Queries
 
 Canonical data and presentation-context queries are:
 
@@ -253,15 +304,34 @@ Collection membership order. It does not filter against the current registry
 or mounted DOM nodes. Registry availability is a presentation and execution
 state, not an Instance-existence condition.
 
+### Commands
+
+The connected-browser catalog currently exposes:
+
+```text
+app.open
+developer.fetch
+source.run
+```
+
+`app.open` navigates the exact connected extension instance to a Board.
+`developer.fetch` performs a one-shot browser-owned HTTP request for Source
+authoring. `source.run` executes a registered or supplied Source and may
+explicitly hand its normalized result to the daemon for retention. Commands may
+depend on browser permissions, credentials, network state, timeouts, or
+cancellation and are not presented as deterministic Application Data changes.
+
 ## Adapter Rules
 
-- React, agents, and the CLI dispatch the same canonical Actions.
-- Untrusted CLI or Native Messaging input is parsed by the Action and Query
-  catalogs before execution.
+- React, agents, and the CLI dispatch the same registered Actions for
+  capabilities they share.
+- Untrusted UI proxy and Native Messaging input is parsed by the Action's
+  TypeBox parameter schema before its handler runs.
 - Jotai may own ephemeral route, dialog, focus, selection, drag, animation, and
   form-draft state; it does not own persistent domain mutations.
-- Action transports return compact receipts. Updated Application Data reaches
-  each frontend through its background storage subscription.
+- Mutation transports return compact receipts. Updated Application Data reaches
+  each frontend through its background storage subscription. Queries and
+  Commands return their declared outputs directly.
 - Browser credentials, permissions, Source execution, and the current-result
   cache remain browser-owned. Durable History and daemon lifecycle remain
   App-owned.

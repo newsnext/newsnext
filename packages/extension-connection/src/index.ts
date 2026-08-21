@@ -1,6 +1,4 @@
 export {
-  isExtensionFetchMethod,
-  isExtensionFetchUrl,
   parseExtensionConnectionCommandRequest,
 } from "./command"
 export type { CommandResult as NativeCommandResult } from "./generated/CommandResult"
@@ -10,14 +8,8 @@ export type { ExtensionInstance as NativeExtensionInstance } from "./generated/E
 export type { ExtensionToHost } from "./generated/ExtensionToHost"
 export type { HostToExtension } from "./generated/HostToExtension"
 export type {
-  ExtensionConnectionApplicationActionRequest,
-  ExtensionConnectionApplicationQueryRequest,
   ExtensionConnectionCommandRequest,
-  ExtensionConnectionFetchRequest,
   ExtensionConnectionFetchResponse,
   ExtensionConnectionInstance,
-  ExtensionConnectionProviderRunRequest,
-  ExtensionConnectionRegisteredRunRequest,
-  ExtensionConnectionRunRequest,
   ExtensionConnectionSerializedError,
 } from "./types"

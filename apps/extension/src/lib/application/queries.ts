@@ -4,23 +4,6 @@ import type { Instance } from "../source/live-cards"
 import type { ApplicationData } from "./data"
 import { indexCollectionIdsByInstance } from "../collection"
 
-export type ApplicationQuery
-  = | { type: "source.list" }
-    | { type: "source.get", input: { sourceId: string } }
-    | { type: "collection.list" }
-    | { type: "collection.get", input: { collectionId: string } }
-    | { type: "collection.listInstances", input: { collectionId: string } }
-    | { type: "instance.list" }
-    | { type: "instance.get", input: { instanceId: string } }
-    | { type: "board.getContext" }
-    | { type: "board.getConfiguration", input: { collectionId: string } }
-    | { type: "nowLayer.getLiveCards" }
-
-export interface ApplicationQueryContext {
-  currentBoardId?: string
-  sources?: readonly SourceDescriptor[]
-}
-
 export interface ApplicationBoardContext {
   boardId: string
   boardName: string
@@ -44,93 +27,86 @@ export interface CollectionDetail {
   instances: Instance[]
 }
 
-export type ApplicationQueryResult<Query extends ApplicationQuery>
-  = Query extends { type: "source.list" }
-    ? SourceDescriptor[]
-    : Query extends { type: "source.get" }
-      ? SourceDescriptor
-      : Query extends { type: "collection.list" }
-        ? Collection[]
-        : Query extends { type: "collection.get" }
-          ? CollectionDetail
-          : Query extends { type: "collection.listInstances" }
-            ? Instance[]
-            : Query extends { type: "instance.list" }
-              ? Instance[]
-              : Query extends { type: "instance.get" }
-                ? Instance
-                : Query extends { type: "board.getContext" }
-                  ? ApplicationBoardContext
-                  : Query extends { type: "board.getConfiguration" }
-                    ? BoardConfigurationResult
-                    : Query extends { type: "nowLayer.getLiveCards" }
-                      ? ApplicationNowLayerLiveCard[]
-                      : never
-
-export function executeApplicationQuery<Query extends ApplicationQuery>(
-  data: ApplicationData,
-  query: Query,
-  context?: ApplicationQueryContext,
-): ApplicationQueryResult<Query> {
-  switch (query.type) {
-    case "source.list":
-      return [...requireSources(context)] as ApplicationQueryResult<Query>
-    case "source.get": {
-      const source = requireSources(context).find(candidate => candidate.id === query.input.sourceId)
-      if (!source) throw new Error(`Source '${query.input.sourceId}' not found`)
-      return source as ApplicationQueryResult<Query>
-    }
-    case "collection.list":
-      return data.collections as ApplicationQueryResult<Query>
-    case "collection.get": {
-      const collection = getCollection(data, query.input.collectionId)
-      return {
-        collection,
-        instances: resolveCollectionInstances(data, collection),
-      } as ApplicationQueryResult<Query>
-    }
-    case "collection.listInstances":
-      return resolveCollectionInstances(
-        data,
-        getCollection(data, query.input.collectionId),
-      ) as ApplicationQueryResult<Query>
-    case "instance.list":
-      return data.instances as ApplicationQueryResult<Query>
-    case "instance.get": {
-      const instance = data.instances.find(candidate => candidate.instanceId === query.input.instanceId)
-      if (!instance) throw new Error(`Instance '${query.input.instanceId}' not found`)
-      return instance as ApplicationQueryResult<Query>
-    }
-    case "board.getContext":
-      return resolveBoardContext(data, context) as ApplicationQueryResult<Query>
-    case "board.getConfiguration": {
-      const { defaultLayer, nowLayer } = getCollection(data, query.input.collectionId)
-      return { defaultLayer, nowLayer } as ApplicationQueryResult<Query>
-    }
-    case "nowLayer.getLiveCards": {
-      const board = resolveBoardContext(data, context)
-      const collection = getCollection(data, board.collectionId)
-      const collectionIdsByInstance = indexCollectionIdsByInstance(data.collections)
-      return resolveCollectionInstances(data, collection).map(instance => ({
-        collectionId: collection.id,
-        collectionIds: collectionIdsByInstance.get(instance.instanceId) ?? [],
-        instanceId: instance.instanceId,
-        sourceId: instance.sourceId,
-      })) as ApplicationQueryResult<Query>
-    }
-  }
+export function listSourcesQuery(sources: readonly SourceDescriptor[]): SourceDescriptor[] {
+  return [...sources]
 }
 
-function requireSources(context: ApplicationQueryContext | undefined): readonly SourceDescriptor[] {
-  if (!context?.sources) throw new Error("Source registry is unavailable")
-  return context.sources
+export function getSourceQuery(
+  sources: readonly SourceDescriptor[],
+  input: { sourceId: string },
+): SourceDescriptor {
+  const source = sources.find(candidate => candidate.id === input.sourceId)
+  if (!source) throw new Error(`Source '${input.sourceId}' not found`)
+  return source
+}
+
+export function listCollectionsQuery(data: ApplicationData): Collection[] {
+  return data.collections
+}
+
+export function getCollectionQuery(
+  data: ApplicationData,
+  input: { collectionId: string },
+): CollectionDetail {
+  const collection = getCollection(data, input.collectionId)
+  return { collection, instances: resolveCollectionInstances(data, collection) }
+}
+
+export function listCollectionInstancesQuery(
+  data: ApplicationData,
+  input: { collectionId: string },
+): Instance[] {
+  return resolveCollectionInstances(data, getCollection(data, input.collectionId))
+}
+
+export function listInstancesQuery(data: ApplicationData): Instance[] {
+  return data.instances
+}
+
+export function getInstanceQuery(
+  data: ApplicationData,
+  input: { instanceId: string },
+): Instance {
+  const instance = data.instances.find(candidate => candidate.instanceId === input.instanceId)
+  if (!instance) throw new Error(`Instance '${input.instanceId}' not found`)
+  return instance
+}
+
+export function getBoardContextQuery(
+  data: ApplicationData,
+  currentBoardId?: string,
+): ApplicationBoardContext {
+  return resolveBoardContext(data, currentBoardId)
+}
+
+export function getBoardConfigurationQuery(
+  data: ApplicationData,
+  input: { collectionId: string },
+): BoardConfigurationResult {
+  const { defaultLayer, nowLayer } = getCollection(data, input.collectionId)
+  return { defaultLayer, nowLayer }
+}
+
+export function getNowLayerLiveCardsQuery(
+  data: ApplicationData,
+  currentBoardId?: string,
+): ApplicationNowLayerLiveCard[] {
+  const board = resolveBoardContext(data, currentBoardId)
+  const collection = getCollection(data, board.collectionId)
+  const collectionIdsByInstance = indexCollectionIdsByInstance(data.collections)
+  return resolveCollectionInstances(data, collection).map(instance => ({
+    collectionId: collection.id,
+    collectionIds: collectionIdsByInstance.get(instance.instanceId) ?? [],
+    instanceId: instance.instanceId,
+    sourceId: instance.sourceId,
+  }))
 }
 
 function resolveBoardContext(
   data: ApplicationData,
-  context: ApplicationQueryContext | undefined,
+  currentBoardId?: string,
 ): ApplicationBoardContext {
-  const collection = data.collections.find(candidate => candidate.id === context?.currentBoardId)
+  const collection = data.collections.find(candidate => candidate.id === currentBoardId)
     ?? data.collections[0]
   if (!collection) throw new Error("NewsNext has no Boards")
   return { boardId: collection.id, boardName: collection.name, collectionId: collection.id }

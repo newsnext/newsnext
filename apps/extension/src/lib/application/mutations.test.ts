@@ -1,6 +1,12 @@
 import type { ApplicationData } from "./data"
 import { describe, expect, it } from "vitest"
-import { executeApplicationAction } from "./actions"
+import {
+  addCollectionInstanceMutation,
+  createCollectionMutation,
+  createInstanceMutation,
+  deleteInstanceMutation,
+  setNowLayerManualOrderMutation,
+} from "./mutations"
 
 const dependencies = { createId: () => "new", now: () => 100 }
 
@@ -27,14 +33,11 @@ function createData(): ApplicationData {
   }
 }
 
-describe("application actions", () => {
+describe("application mutations", () => {
   it("creates a Board with its NowLayer configuration", () => {
-    const execution = executeApplicationAction(createData(), {
-      type: "collection.create",
-      input: {
-        name: "  AI  ",
-        board: { color: "purple", defaultLayer: "next", sortMode: "provider" },
-      },
+    const execution = createCollectionMutation(createData(), {
+      name: "  AI  ",
+      board: { color: "purple", defaultLayer: "next", sortMode: "provider" },
     }, dependencies)
 
     expect(execution.data.collections.at(-1)).toEqual({
@@ -51,9 +54,10 @@ describe("application actions", () => {
   })
 
   it("adds new Instances to the front of membership order", () => {
-    const execution = executeApplicationAction(createData(), {
-      type: "instance.create",
-      input: { collectionIds: ["reading"], sourceId: "github:trending", patch: {} },
+    const execution = createInstanceMutation(createData(), {
+      collectionIds: ["reading"],
+      sourceId: "github:trending",
+      patch: {},
     }, dependencies)
 
     expect(execution.data.collections[0]?.instanceIds).toEqual([
@@ -72,10 +76,10 @@ describe("application actions", () => {
     initial.collections[0]!.nowLayer.sort.manualOrder.unshift("rss:feed::two")
     initial.instances.push({ instanceId: "rss:feed::two", sourceId: "rss:feed", patch: {}, createdAt: 2 })
 
-    const execution = executeApplicationAction(initial, {
-      type: "collection.addInstance",
-      input: { collectionId: "reading", instanceId: "rss:feed::one" },
-    }, dependencies)
+    const execution = addCollectionInstanceMutation(initial, {
+      collectionId: "reading",
+      instanceId: "rss:feed::one",
+    })
 
     expect(execution.data.collections[0]).toBe(initial.collections[0])
   })
@@ -86,10 +90,10 @@ describe("application actions", () => {
     initial.collections[0]!.nowLayer.sort.manualOrder.unshift("rss:feed::two")
     initial.instances.push({ instanceId: "rss:feed::two", sourceId: "rss:feed", patch: {}, createdAt: 2 })
 
-    const execution = executeApplicationAction(initial, {
-      type: "nowLayer.setManualOrder",
-      input: { collectionId: "reading", instanceIds: ["rss:feed::one", "rss:feed::two"] },
-    }, dependencies)
+    const execution = setNowLayerManualOrderMutation(initial, {
+      collectionId: "reading",
+      instanceIds: ["rss:feed::one", "rss:feed::two"],
+    })
 
     expect(execution.data.collections[0]?.instanceIds).toEqual(["rss:feed::two", "rss:feed::one"])
     expect(execution.data.collections[0]?.nowLayer.sort).toMatchObject({
@@ -99,17 +103,14 @@ describe("application actions", () => {
   })
 
   it("rejects a manual order that omits members", () => {
-    expect(() => executeApplicationAction(createData(), {
-      type: "nowLayer.setManualOrder",
-      input: { collectionId: "reading", instanceIds: [] },
-    }, dependencies)).toThrow("every Collection Instance")
+    expect(() => setNowLayerManualOrderMutation(createData(), {
+      collectionId: "reading",
+      instanceIds: [],
+    })).toThrow("every Collection Instance")
   })
 
   it("removes an Instance and every membership", () => {
-    const execution = executeApplicationAction(createData(), {
-      type: "instance.delete",
-      input: { instanceId: "rss:feed::one" },
-    }, dependencies)
+    const execution = deleteInstanceMutation(createData(), { instanceId: "rss:feed::one" })
 
     expect(execution.data.instances).toEqual([])
     expect(execution.data.collections[0]?.instanceIds).toEqual([])

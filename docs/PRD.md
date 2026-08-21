@@ -89,7 +89,7 @@ into reusable templates.
 A first-class application actor operating through the CLI. The Agent translates
 user intent into inspectable application changes, but it does not receive
 broader permissions than the user has granted and does not bypass canonical
-Actions, Queries, validation, or persistence.
+Actions, validation, or persistence.
 
 ## Scope and Priority
 
@@ -203,11 +203,11 @@ answer:
 
 ### Agent and human actions share one model
 
-The Agent must use the same Sources, Instances, Collections, observations,
-Actions, and Queries as the human interface. Agent automation must not create a
-parallel Board model or bypass application validation, permissions, or
-persistence rules. Browser extensions, the CLI, and the packaged App must not
-maintain competing durable copies of that model.
+The Agent must use the same Sources, Instances, Collections, observations, and
+applicable Mutation, Query, and Command Actions as the human interface. Agent
+automation must not create a parallel Board model or bypass application
+validation, permissions, or persistence rules. Browser extensions, the CLI,
+and the packaged App must not maintain competing durable copies of that model.
 
 ### Collection and processing remain separate
 
@@ -310,7 +310,7 @@ evaluation.
 ### Ownership and access
 
 The App/CLI daemon is the single database owner and writer. Extensions and
-Agents use canonical Actions and Queries over Native Messaging and local IPC;
+Agents use canonical Actions over Native Messaging and local IPC;
 they never open the SQLite file directly. The daemon enables WAL mode, wraps
 each logical mutation in a transaction, serializes migrations before serving
 requests, and exposes structured busy, migration, corruption, and disk errors.
@@ -428,9 +428,10 @@ Source -> observations -> Widget -> insight -> data gap -> Source
 
 ### Capability discovery
 
-The CLI must expose machine-readable catalogs and schemas for available
-Sources, Actions, Queries, Widget types, and data transformations. The Agent
-must be able to inspect existing Board context before making changes.
+The CLI must expose machine-readable catalogs and TypeBox-authored JSON schemas
+for available Sources, Actions grouped by kind, Widget types, and data
+transformations. UI and CLI calls resolve the same `defineAction` registration;
+the Agent must be able to inspect existing Board context before making changes.
 
 ### Source selection and maintenance
 
@@ -458,7 +459,7 @@ installation are not required Agent product capabilities.
 ### Board operation
 
 The Agent must be able to create, inspect, update, and organize Collections and
-their Board presentation through canonical application Actions and Queries. It
+their Board presentation through canonical Mutation and Query Actions. It
 must preserve the relationship between each Board's Now Layer and Next Layer.
 It must also preserve the unified LiveCard contract in Now Layer while personalizing
 Widgets in Next Layer. All operations must use stable Data identities rather
@@ -564,8 +565,8 @@ must not be described to users as available until its acceptance criteria pass.
 | Source definitions | Implemented foundation | Registry providers, parameters, metadata, loaders, transforms, templates, Radar rules, capabilities, secrets, and security limits | Registry health, version lifecycle, and dependency diagnostics |
 | Source execution | Implemented foundation | Registered and local Sources run through the extension runtime and CLI; `run --retain` provides an explicit durable handoff to the daemon | Add Agent-owned scheduling without duplicating the extension runtime |
 | Shared local database | Partial | The daemon owns an embedded Turso database with dev/prod file isolation, ordered migrations, structured errors, and a serialized writer for retained History | Move remaining Board, Widget, and task state out of extension storage |
-| Instance and Collection data | Implemented in extension storage | Canonical Instances, Collections, membership, manual order, and Board view preferences | Move canonical durable state behind App/CLI Actions and Queries for cross-browser use |
-| UI and Agent control | Implemented foundation | UI and CLI use the same typed Actions and Queries and the same background persistence boundary | Database-backed Widget, task, and Source-health operations are not exposed yet |
+| Instance and Collection data | Implemented in extension storage | Canonical Instances, Collections, membership, manual order, and Board view preferences | Move canonical durable state behind App/CLI Actions for cross-browser use |
+| UI and Agent control | Implemented foundation | UI and CLI use the same typed Mutation and Query Actions and the same background persistence boundary | Database-backed Widget, task, and Source-health operations are not exposed yet |
 | Now Layer | Implemented | Each Instance is independently presented as a LiveCard using the unified LiveCard model | Make view-driven refresh explicit and keep current results cache-only |
 | Next Layer | Not implemented | The Board retains its Next Layer view entry and an explicit placeholder | Add CLI/daemon-backed Widgets, retained inputs, and materialized outputs |
 | History | Implemented foundation in Turso | Explicit `run --retain` results are committed transactionally by the daemon and can be listed, read at an exact time, and compared without a connected browser | Add task-owned retention policies, scheduling, and provenance |
@@ -579,8 +580,6 @@ newsnext run <source-or-provider> --retain
 newsnext fetch <url>
 newsnext action list
 newsnext action execute <action> --input '<json>'
-newsnext query list
-newsnext query execute <query> --input '<json>'
 newsnext history datasets
 newsnext history observations <dataset-id>
 newsnext history get <dataset-id> <time>
@@ -610,7 +609,7 @@ The remaining product gaps are:
 
 | ID | Requirement | Acceptance criteria |
 | --- | --- | --- |
-| DAT-01 | The desktop daemon is the only process that opens the product database | Browser extensions and CLI clients can read and mutate durable state only through canonical Actions and Queries |
+| DAT-01 | The desktop daemon is the only process that opens the product database | Browser extensions and CLI clients can read and mutate durable state only through canonical Mutation and Query Actions |
 | DAT-02 | Development and production use separate files | CLI/dev operations open `newsnext.dev.db`; packaged App/production operations open `newsnext.prod.db`; an automated test proves neither environment writes the other file |
 | DAT-03 | Production data is shared across supported browsers | A mutation submitted from one authorized production extension is visible from another through the same daemon without copying browser storage |
 | DAT-04 | Database setup is local-first | First launch creates and migrates the local database without a Turso account, remote connection, or network access |
@@ -818,7 +817,7 @@ without changing the two-Layer Board contract.
 - Add schema versioning, migrations, WAL configuration, transactional helpers,
   and structured database errors.
 - Persist Boards, Collections, Instances, membership, order, and Board
-  preferences behind canonical Actions and Queries.
+  preferences behind canonical Mutation and Query Actions.
 - Add Agent task, retained observation, materialized output, and provenance
   tables required by the next phase without yet implementing every Widget.
 - Keep Now Layer results in replaceable cache storage and prove that normal
@@ -958,7 +957,7 @@ Qualitative research should additionally test whether users understand:
 | --- | --- | --- |
 | Open-ended Widgets become an unsafe arbitrary application runtime | Security, reliability, and maintainability regress | Start with typed declarative contracts; gate code execution behind a restricted sandbox and explicit capability review |
 | Agent requests personalized Sources instead of reusing the registry | Noisy Boards, unnecessary permissions, and fragile maintenance | Make registry discovery the default, report coverage gaps explicitly, and keep Source authoring outside the normal product workflow |
-| Two browsers or runtimes write competing durable state | Lost updates and inconsistent Boards | Make the environment-specific daemon the single database owner and require all clients to use canonical Actions and Queries |
+| Two browsers or runtimes write competing durable state | Lost updates and inconsistent Boards | Make the environment-specific daemon the single database owner and require all clients to use canonical Actions |
 | Now Layer refresh silently grows History | Storage growth and a misleading retention contract | Keep current results cache-only and require an explicit Agent task or retention action for observations |
 | Local database adoption creates a cloud dependency | Offline use and first-run reliability regress | Use an embedded local file as the initial source of truth; defer optional Turso sync |
 | Cross-source fusion hides disagreement or provenance | Users trust an unsupported corrected result | Preserve every input identity, distinguish observed and derived values, and make reconciliation logic inspectable |
@@ -968,8 +967,8 @@ Qualitative research should additionally test whether users understand:
 | Automatic repair expands authority unintentionally | Privacy or security boundary is crossed | Define maintenance grants narrowly and require approval for new domains, secrets, private data, executable logic, or destructive changes |
 | Schema evolution breaks saved Widgets | Durable Boards stop rendering after upgrades | Version all durable schemas, provide migrations, retain failure-safe editing, and support rollback for executable logic |
 
-The major implementation dependencies are the canonical application Action and
-Query boundary, runtime environment detection, the desktop daemon and Native
+The major implementation dependencies are the canonical Action registry,
+runtime environment detection, the desktop daemon and Native
 Messaging connection, stable Instance and Collection identities, the existing
 source-history repository migration, the Source runtime and permission model,
 and a versioned Widget input and transformation contract.

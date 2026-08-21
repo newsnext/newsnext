@@ -21,6 +21,11 @@ export interface DispatchBackgroundActionInput {
   origin: BackgroundActionOrigin
 }
 
+export interface BackgroundActionDiagnostics<Input, Result> {
+  input?: (input: Input) => unknown
+  result?: (result: Result) => unknown
+}
+
 const MAX_ACTION_RECORDS = 100
 const actionRecords: BackgroundActionRecord[] = []
 const actionListeners = new Set<() => void>()
@@ -28,15 +33,18 @@ const actionListeners = new Set<() => void>()
 export async function dispatchBackgroundAction<Result>(
   action: DispatchBackgroundActionInput,
   execute: () => Promise<Result> | Result,
-  selectDiagnosticResult?: (result: Result) => unknown,
+  diagnostics?: BackgroundActionDiagnostics<unknown, Result>,
 ): Promise<Result> {
   if (!import.meta.env.DEV) return await execute()
-  const record = beginBackgroundAction(action)
+  const record = beginBackgroundAction({
+    ...action,
+    input: diagnostics?.input ? diagnostics.input(action.input) : action.input,
+  })
   try {
     const result = await execute()
     updateBackgroundAction(record, {
       result: cloneDiagnosticValue(
-        selectDiagnosticResult ? selectDiagnosticResult(result) : result,
+        diagnostics?.result ? diagnostics.result(result) : result,
       ),
       status: "success",
     })
@@ -48,28 +56,6 @@ export async function dispatchBackgroundAction<Result>(
     })
     throw error
   }
-}
-
-export function instrumentBackgroundService<Service extends object>(
-  namespace: string,
-  service: Service,
-  origin: BackgroundActionOrigin,
-): Service {
-  if (!import.meta.env.DEV) return service
-  const instrumented = {} as Service
-  for (const key of Object.keys(service) as Array<keyof Service>) {
-    const method = service[key]
-    if (typeof method !== "function") continue
-    instrumented[key] = ((...args: unknown[]) => {
-      const name = getServiceActionName(namespace, String(key), args)
-      return dispatchBackgroundAction({
-        input: getServiceActionInput(namespace, String(key), args),
-        name,
-        origin,
-      }, () => Reflect.apply(method, service, args))
-    }) as Service[typeof key]
-  }
-  return instrumented
 }
 
 export function listBackgroundActions(): BackgroundActionRecord[] {
@@ -121,34 +107,10 @@ function notifyBackgroundActions(): void {
   for (const listener of actionListeners) listener()
 }
 
-function getServiceActionName(namespace: string, method: string, args: unknown[]): string {
-  if (namespace === "application" && (method === "execute" || method === "query")) {
-    const operation = readStringProperty(args[0], "type")
-    if (operation) return operation
-  }
-  return `${namespace}.${method}`
-}
-
-function getServiceActionInput(namespace: string, method: string, args: unknown[]): unknown {
-  if (namespace === "application" && (method === "execute" || method === "query")) {
-    return readProperty(args[0], "input")
-  }
-  return args.length === 1 ? args[0] : args
-}
-
 function cloneDiagnosticValue(value: unknown): unknown {
   try {
     return structuredClone(value)
   } catch {
     return String(value)
   }
-}
-
-function readProperty(value: unknown, key: string): unknown {
-  return value && typeof value === "object" ? (value as Record<string, unknown>)[key] : undefined
-}
-
-function readStringProperty(value: unknown, key: string): string | undefined {
-  const property = readProperty(value, key)
-  return typeof property === "string" ? property : undefined
 }

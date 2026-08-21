@@ -11,7 +11,7 @@ type DevtoolsTheme = "dark" | "light"
 
 const PANEL_LABELS: Record<PanelId, string> = {
   overview: "Overview",
-  actions: "Actions",
+  actions: "Activity",
   application: "Application",
 }
 
@@ -145,7 +145,7 @@ export function BackgroundDevtoolsPanel({ devtoolsOpen, theme }: { devtoolsOpen:
               style={styles.dangerButton}
               onClick={() => void diagnostics.clearActions()}
             >
-              Clear actions
+              Clear activity
             </button>
           )}
         </div>
@@ -187,7 +187,7 @@ interface PanelProps {
 
 function Overview({ filter, snapshot }: PanelProps): React.JSX.Element {
   const stats = [
-    ["Actions", snapshot.actions.length],
+    ["Activity", snapshot.actions.length],
     ["Collections", snapshot.application.collections.length],
     ["Instances", snapshot.application.instances.length],
   ] as const
@@ -202,7 +202,7 @@ function Overview({ filter, snapshot }: PanelProps): React.JSX.Element {
         ))}
       </div>
       <div style={styles.overviewGrid}>
-        <InspectorSection title="Recent actions" count={snapshot.actions.length}>
+        <InspectorSection title="Recent activity" count={snapshot.actions.length}>
           <ActionTable actions={filterActions(snapshot.actions.slice(0, 10), filter)} />
         </InspectorSection>
       </div>
@@ -332,7 +332,7 @@ function InspectorSection({ children, count, title }: { children: ReactNode, cou
 }
 
 function ActionTable({ actions }: { actions: BackgroundActionRecord[] }): React.JSX.Element {
-  if (actions.length === 0) return <CenteredMessage>No matching actions.</CenteredMessage>
+  if (actions.length === 0) return <CenteredMessage>No matching activity.</CenteredMessage>
   return (
     <div style={styles.actionTable}>
       {actions.map(action => (

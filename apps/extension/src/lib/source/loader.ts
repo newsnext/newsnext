@@ -2,7 +2,7 @@ import type { SourceLoadResult } from "./load-result"
 import {
   normalizeSourceParams,
 } from "@newsnext/source-kit/runtime"
-import { createBackgroundClient } from "../background/client"
+import { actions } from "../actions"
 import { loadSourceDescriptor } from "./registry"
 
 export type { SourceLoadResult } from "./load-result"
@@ -24,16 +24,15 @@ async function loadFreshSource(
   queryParams: Record<string, unknown>,
   signal?: AbortSignal,
 ): Promise<SourceLoadResult> {
-  const client = createBackgroundClient()
   const requestId = crypto.randomUUID()
   const cancelRequest = () => {
-    void client.source.cancel({ requestId }).catch(() => undefined)
+    void actions.source.cancel({ requestId }).catch(() => undefined)
   }
   signal?.addEventListener("abort", cancelRequest, { once: true })
 
   try {
     signal?.throwIfAborted()
-    const result = await client.source.load({
+    const result = await actions.source.load({
       requestId,
       sourceId,
       params: queryParams,

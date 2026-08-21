@@ -1,5 +1,5 @@
 import type { SourceDescriptor } from "@/typings/source"
-import { createBackgroundClient } from "../background/client"
+import { actions } from "../actions"
 
 let sourceDescriptorsPromise: Promise<SourceDescriptor[]> | undefined
 
@@ -15,9 +15,7 @@ function sortSourceDescriptors(sources: SourceDescriptor[]): SourceDescriptor[] 
 }
 
 export async function loadSourceDescriptors(): Promise<SourceDescriptor[]> {
-  sourceDescriptorsPromise ??= createBackgroundClient().application.query({
-    type: "source.list",
-  }).then(sortSourceDescriptors).catch((error) => {
+  sourceDescriptorsPromise ??= actions.source.list().then(sortSourceDescriptors).catch((error) => {
     sourceDescriptorsPromise = undefined
     throw error
   })
