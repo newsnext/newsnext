@@ -1,5 +1,5 @@
 import type { RuntimeSource } from "@newsnext/source-kit/types"
-import type { SourceInstance } from "./live-cards"
+import type { Instance } from "./live-cards"
 import type { SourceQueryTarget } from "./query-target"
 import { createSourceQueryTarget } from "./query-target"
 
@@ -14,7 +14,7 @@ export interface InstanceDataSource {
 }
 
 export function createInstanceDataTarget(
-  instance: SourceInstance,
+  instance: Instance,
   source: Pick<RuntimeSource, "params" | "version">,
 ): InstanceDataTarget {
   return {
@@ -24,7 +24,7 @@ export function createInstanceDataTarget(
 }
 
 export function resolveInstanceDataTarget(
-  instances: readonly SourceInstance[],
+  instances: readonly Instance[],
   sources: readonly InstanceDataSource[],
   instanceId: string,
 ): InstanceDataTarget {

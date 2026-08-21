@@ -1,16 +1,16 @@
 import type { ApplicationAction, ApplicationData } from "../lib/application"
 import type { Board, BoardCreateInput } from "../lib/board"
 import type { OpmlImport } from "../lib/opml"
-import type { SourceInstancePatch } from "../lib/source"
+import type { InstancePatch } from "../lib/source"
 import { atom } from "jotai"
 import { atomWithStorage, selectAtom, splitAtom } from "jotai/utils"
 import { createBackgroundClient } from "../lib/background"
 import {
   DEFAULT_BOARD_LAYER,
-  DEFAULT_BOARD_SORT_PREFERENCE,
+  DEFAULT_NOW_LAYER_SORT,
   getBoardColor,
 } from "../lib/board"
-import { projectCollectionBoard } from "../lib/collection"
+import { indexCollectionIdsByInstance } from "../lib/collection"
 import { normalizeApplicationData, PERSISTED_DATA_SLICES } from "../lib/settings"
 import { createMirroredStorage } from "./persisted-storage"
 
@@ -29,16 +29,9 @@ const persistedApplicationDataAtom = atomWithStorage<ApplicationData>(
 export const applicationDataAtom = atom(get => get(persistedApplicationDataAtom))
 
 export const collectionsAtom = selectAtom(applicationDataAtom, data => data.collections)
-export const collectionEntriesAtom = selectAtom(applicationDataAtom, data => data.collectionEntries)
-export const collectionViewsAtom = selectAtom(applicationDataAtom, data => data.collectionViews)
 export const instancesAtom = selectAtom(applicationDataAtom, data => data.instances)
 
-export const boardsAtom = atom(get => (
-  get(collectionsAtom).flatMap((collection) => {
-    const view = get(collectionViewsAtom).find(candidate => candidate.collectionId === collection.id)
-    return view ? [projectCollectionBoard(collection, view, get(collectionEntriesAtom))] : []
-  })
-))
+export const boardsAtom = collectionsAtom
 
 export const executeApplicationActionAtom = atom(
   null,
@@ -56,12 +49,7 @@ export interface InstanceViewLayout {
 }
 
 function selectInstanceLayouts(data: ApplicationData): InstanceViewLayout[] {
-  const collectionIdsByInstance = new Map<string, string[]>()
-  for (const entry of data.collectionEntries) {
-    const collectionIds = collectionIdsByInstance.get(entry.instanceId) ?? []
-    collectionIds.push(entry.collectionId)
-    collectionIdsByInstance.set(entry.instanceId, collectionIds)
-  }
+  const collectionIdsByInstance = indexCollectionIdsByInstance(data.collections)
   return data.instances.map(instance => ({
     collectionIds: collectionIdsByInstance.get(instance.instanceId) ?? [],
     createdAt: instance.createdAt,
@@ -93,28 +81,28 @@ export const instanceLayoutsAtom = selectAtom(
   areInstanceLayoutsEqual,
 )
 
-export const setManualBoardOrderAtom = atom(null, async (_get, set, input: {
+export const setNowLayerManualOrderAtom = atom(null, async (_get, set, input: {
   boardId: string
   instanceIds: string[]
 }) => {
   await set(executeApplicationActionAtom, {
-    type: "collection.reorderInstances",
+    type: "nowLayer.setManualOrder",
     input: { collectionId: input.boardId, instanceIds: input.instanceIds },
   })
 })
 
 export const addInstanceAtom = atom(null, (_get, set, input: {
   collectionIds: string[]
-  patch: SourceInstancePatch
+  patch: InstancePatch
   sourceId: string
 }) => set(executeApplicationActionAtom, {
   type: "instance.create",
   input,
 }))
 
-export const setSourceInstancePatchAtom = atom(null, (_get, set, input: {
+export const setInstancePatchAtom = atom(null, (_get, set, input: {
   instanceId: string
-  patch: SourceInstancePatch
+  patch: InstancePatch
 }) => set(executeApplicationActionAtom, {
   type: "instance.configure",
   input,
@@ -132,7 +120,7 @@ export const createBoardAtom = atom(null, (_get, set, input: BoardCreateInput) =
     type: "collection.create",
     input: {
       name: input.name,
-      view: {
+      board: {
         color: input.color,
         defaultLayer: input.defaultLayer,
         sortMode: input.sortMode,
@@ -153,10 +141,10 @@ export const createBoardFromOpmlAtom = atom(null, (_get, set, input: OpmlImport)
         },
       })),
       name: input.title,
-      view: {
+      board: {
         color: "orange",
         defaultLayer: DEFAULT_BOARD_LAYER,
-        sortMode: DEFAULT_BOARD_SORT_PREFERENCE.mode,
+        sortMode: DEFAULT_NOW_LAYER_SORT.mode,
       },
     },
   })
@@ -168,10 +156,10 @@ export const updateBoardAtom = atom(null, async (_get, set, board: Board) => {
     input: {
       collectionId: board.id,
       name: board.name,
-      view: {
+      board: {
         color: getBoardColor(board),
         defaultLayer: board.defaultLayer,
-        sortMode: board.sort.mode,
+        sortMode: board.nowLayer.sort.mode,
       },
     },
   })

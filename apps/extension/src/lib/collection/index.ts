@@ -1,2 +1,2 @@
-export type { Collection, CollectionEntry, CollectionView } from "./collection"
-export { createCollectionView, projectCollectionBoard } from "./collection"
+export type { Collection } from "./collection"
+export { createCollection, indexCollectionIdsByInstance } from "./collection"

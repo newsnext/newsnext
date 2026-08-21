@@ -16,15 +16,15 @@ export {
   resolveInstanceDataTarget,
 } from "./instance-data-target"
 export type {
-  SourceInstance,
-  SourceInstanceMetadata,
-  SourceInstancePatch,
+  Instance,
+  InstanceMetadata,
+  InstancePatch,
 } from "./live-cards"
 export {
   applySourceLoaderMetadata,
   buildLiveCards,
   createLiveCard,
-  mergeSourceInstancePatch,
+  mergeInstancePatch,
 } from "./live-cards"
 export type { SourceLoadResult } from "./loader"
 export { loadSource } from "./loader"

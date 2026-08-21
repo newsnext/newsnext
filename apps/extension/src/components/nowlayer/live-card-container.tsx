@@ -1,6 +1,6 @@
 import type { ElementEventBasePayload } from "@atlaskit/pragmatic-drag-and-drop/element/adapter"
 import type { RefObject } from "react"
-import type { BoardLiveCard } from "@/hooks/use-board-live-cards"
+import type { NowLayerLiveCard } from "@/hooks/use-now-layer-live-cards"
 import { useScrollProgressContext } from "@newsnext/ui/components/scroll-progress-context"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { m } from "motion/react"
@@ -77,7 +77,7 @@ function SelectionOutline({
 
 interface LiveCardContainerProps {
   instanceIds: string[]
-  liveCardsByInstanceId: Record<string, BoardLiveCard>
+  liveCardsByInstanceId: Record<string, NowLayerLiveCard>
   sortable?: boolean
   className?: string
   onInstanceIdsChange: (instanceIds: string[]) => void
@@ -160,7 +160,7 @@ export function LiveCardContainer({
             className,
           )}
         >
-          {visibleLiveCards.map(({ id, collectionId, descriptor, instanceAtom }, index) => (
+          {visibleLiveCards.map(({ id, available, collectionId, descriptor, instanceAtom }, index) => (
             <m.li
               key={id}
               data-live-card-id={id}
@@ -184,6 +184,7 @@ export function LiveCardContainer({
                 <DraggableLiveCard
                   collectionId={collectionId}
                   descriptor={descriptor}
+                  available={available}
                   dragging={isDragging && selectedInstanceIds.includes(id)}
                   instanceAtom={instanceAtom}
                   sortable={sortable}

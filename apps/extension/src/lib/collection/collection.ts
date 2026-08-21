@@ -1,63 +1,43 @@
 import type { Color } from "@newsnext/shared/types"
-import type { Board, BoardLayer, BoardSortMode } from "../board"
-import { createBoardSortPreference, DEFAULT_BOARD_COLOR, DEFAULT_BOARD_LAYER } from "../board"
+import type { Board, BoardLayer, NowLayerSortMode } from "../board"
+import { createNowLayerSort, DEFAULT_BOARD_COLOR, DEFAULT_BOARD_LAYER } from "../board"
 
-export interface Collection {
+export interface Collection extends Board {
   createdAt: number
-  id: string
-  name: string
+  instanceIds: string[]
 }
 
-export interface CollectionEntry {
-  addedAt: number
-  collectionId: string
-  instanceId: string
-  position: number
-}
-
-export interface CollectionView {
-  automaticSortMode: Exclude<BoardSortMode, "manual">
-  collectionId: string
-  color?: Color
-  defaultLayer: BoardLayer
-  sortMode: BoardSortMode
-}
-
-export function projectCollectionBoard(
-  collection: Collection,
-  view: CollectionView,
-  entries: readonly CollectionEntry[],
-): Board {
-  const manualOrder = entries
-    .filter(entry => entry.collectionId === collection.id)
-    .toSorted((left, right) => left.position - right.position || left.addedAt - right.addedAt)
-    .map(entry => entry.instanceId)
-
+export function createCollection(
+  id: string,
+  name: string,
+  createdAt: number,
+  color: Color = DEFAULT_BOARD_COLOR,
+  sortMode: NowLayerSortMode = "addedAt",
+  defaultLayer: BoardLayer = DEFAULT_BOARD_LAYER,
+): Collection {
   return {
-    defaultLayer: view.defaultLayer,
-    id: collection.id,
-    name: collection.name,
-    color: view.color,
-    sort: {
-      mode: view.sortMode,
-      automaticMode: view.automaticSortMode,
-      manualOrder,
+    createdAt,
+    defaultLayer,
+    id,
+    instanceIds: [],
+    name,
+    nowLayer: {
+      color,
+      sort: createNowLayerSort(sortMode),
     },
   }
 }
 
-export function createCollectionView(
-  collectionId: string,
-  color: Color = DEFAULT_BOARD_COLOR,
-  sortMode: BoardSortMode = "createdAt",
-  defaultLayer: BoardLayer = DEFAULT_BOARD_LAYER,
-): CollectionView {
-  const sort = createBoardSortPreference(sortMode)
-  return {
-    collectionId,
-    color,
-    defaultLayer,
-    sortMode: sort.mode,
-    automaticSortMode: sort.automaticMode,
+export function indexCollectionIdsByInstance(
+  collections: readonly Collection[],
+): Map<string, string[]> {
+  const collectionIdsByInstance = new Map<string, string[]>()
+  for (const collection of collections) {
+    for (const instanceId of collection.instanceIds) {
+      const collectionIds = collectionIdsByInstance.get(instanceId) ?? []
+      collectionIds.push(collection.id)
+      collectionIdsByInstance.set(instanceId, collectionIds)
+    }
   }
+  return collectionIdsByInstance
 }

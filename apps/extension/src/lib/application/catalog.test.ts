@@ -73,7 +73,7 @@ describe("application operation catalog", () => {
       input: { collectionId: "reading", deleteInstances: "yes" },
     })).toThrow("must be true")
     expect(() => parseApplicationAction({
-      type: "view.configureCollection",
+      type: "board.configure",
       input: { collectionId: "reading", color: "invisible" },
     })).toThrow("supported theme color")
     expect(() => parseApplicationAction({ type: "unknown", input: {} }))
@@ -102,22 +102,22 @@ describe("application operation catalog", () => {
       input: {
         collectionId: "reading",
         name: "Research",
-        view: { color: "purple", defaultLayer: "next" },
+        board: { color: "purple", defaultLayer: "next" },
       },
     })).toEqual({
       type: "collection.update",
       input: {
         collectionId: "reading",
         name: "Research",
-        view: { color: "purple", defaultLayer: "next" },
+        board: { color: "purple", defaultLayer: "next" },
       },
     })
     expect(() => parseApplicationAction({
-      type: "view.configureCollection",
+      type: "board.configure",
       input: { collectionId: "reading", defaultLayer: "future" },
     })).toThrow("must be now or next")
     expect(() => parseApplicationAction({
-      type: "view.configureCollection",
+      type: "board.configure",
       input: { collectionId: "reading", filter: null },
     })).toThrow("Unsupported input field")
   })
@@ -131,9 +131,9 @@ describe("application operation catalog", () => {
       "collection.listInstances",
       "instance.list",
       "instance.get",
-      "view.getContext",
-      "view.getCollection",
-      "view.getVisibleLiveCards",
+      "board.getContext",
+      "board.getConfiguration",
+      "nowLayer.getLiveCards",
     ])
     expect(parseApplicationQuery({
       type: "collection.get",

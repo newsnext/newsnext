@@ -4,22 +4,22 @@ import { ConfirmDestructiveButton } from "@/components/common/confirm-destructiv
 import { PhTrashDuotone } from "@/components/icons/ph"
 import { useAsyncAction, useKeyedAsyncAction } from "@/hooks/use-async-action"
 import {
-  collectionEntriesAtom,
+  collectionsAtom,
   deleteInstanceAtom,
   setInstanceCollectionMembershipAtom,
 } from "@/store/board"
 
 export function LiveCardBoardSelect({ id }: { id: string }) {
-  const entries = useAtomValue(collectionEntriesAtom)
+  const collections = useAtomValue(collectionsAtom)
   const setMembership = useSetAtom(setInstanceCollectionMembershipAtom)
   const {
     error: membershipError,
     isPending: isMembershipPending,
     run: runMembershipUpdate,
   } = useKeyedAsyncAction<string>("Board membership could not be updated.")
-  const collectionIds = entries
-    .filter(entry => entry.instanceId === id)
-    .map(entry => entry.collectionId)
+  const collectionIds = collections
+    .filter(collection => collection.instanceIds.includes(id))
+    .map(collection => collection.id)
   async function updateMembership(collectionId: string, member: boolean): Promise<void> {
     await runMembershipUpdate(collectionId, async () => {
       await setMembership({ collectionId, instanceId: id, member })

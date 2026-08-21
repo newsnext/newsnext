@@ -11,13 +11,14 @@ export {
 export { revealLiveCard } from "./reveal-live-card"
 export { getSortableData, isSortableData } from "./sortable-data"
 export type {
-  BoardSortMode,
-  BoardSortPreference,
-  SortableLiveCardView,
+  NowLayerAutomaticSortMode,
+  NowLayerSort,
+  NowLayerSortMode,
+  SortableNowLayerLiveCard,
 } from "./sorting"
 export {
-  createBoardSortPreference,
-  DEFAULT_BOARD_SORT_PREFERENCE,
-  orderLiveCardInstanceIds,
-  updateBoardSortMode,
+  createNowLayerSort,
+  DEFAULT_NOW_LAYER_SORT,
+  orderNowLayerInstanceIds,
+  updateNowLayerSortMode,
 } from "./sorting"

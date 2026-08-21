@@ -1,20 +1,20 @@
-import type { Collection, CollectionEntry, CollectionView } from "../collection"
-import type { SourceInstance } from "../source"
+import type { Collection } from "../collection"
+import type { Instance } from "../source"
 import { INITIAL_BOARD_NAME } from "../board"
-import { createCollectionView } from "../collection"
+import { createCollection } from "../collection"
 import { createId } from "../id"
 
+export const APPLICATION_DATA_VERSION = 2 as const
+
 export interface ApplicationData {
-  collectionEntries: CollectionEntry[]
-  collectionViews: CollectionView[]
+  version: typeof APPLICATION_DATA_VERSION
   collections: Collection[]
-  instances: SourceInstance[]
+  instances: Instance[]
 }
 
 export function createEmptyApplicationData(): ApplicationData {
   return {
-    collectionEntries: [],
-    collectionViews: [],
+    version: APPLICATION_DATA_VERSION,
     collections: [],
     instances: [],
   }
@@ -25,13 +25,8 @@ export function createInitialApplicationData(
   createdAt: number = Date.now(),
 ): ApplicationData {
   return {
-    collectionEntries: [],
-    collectionViews: [createCollectionView(boardId)],
-    collections: [{
-      createdAt,
-      id: boardId,
-      name: INITIAL_BOARD_NAME,
-    }],
+    version: APPLICATION_DATA_VERSION,
+    collections: [createCollection(boardId, INITIAL_BOARD_NAME, createdAt)],
     instances: [],
   }
 }
@@ -47,21 +42,29 @@ export function ensureApplicationDataIntegrity(
         ...createInitialApplicationData(boardId ?? createId(), createdAt ?? Date.now()),
         instances: data.instances,
       }
-  const assignedInstanceIds = new Set(initialized.collectionEntries.map(entry => entry.instanceId))
-  const unassignedInstances = initialized.instances.filter(instance => !assignedInstanceIds.has(instance.instanceId))
-  if (unassignedInstances.length === 0) return initialized
+  const assignedInstanceIds = new Set(initialized.collections.flatMap(collection => collection.instanceIds))
+  const unassignedInstanceIds = initialized.instances
+    .filter(instance => !assignedInstanceIds.has(instance.instanceId))
+    .toSorted((left, right) => right.createdAt - left.createdAt || left.instanceId.localeCompare(right.instanceId))
+    .map(instance => instance.instanceId)
+  if (unassignedInstanceIds.length === 0) return initialized
 
-  const fallbackBoardId = initialized.collections[0]!.id
-  const initialPosition = initialized.collectionEntries.reduce((maximum, entry) => (
-    entry.collectionId === fallbackBoardId ? Math.max(maximum, entry.position) : maximum
-  ), -1) + 1
+  const fallbackCollection = initialized.collections[0]!
+  const instanceIds = [...unassignedInstanceIds, ...fallbackCollection.instanceIds]
   return {
     ...initialized,
-    collectionEntries: [...initialized.collectionEntries, ...unassignedInstances.map((instance, index) => ({
-      addedAt: instance.createdAt,
-      collectionId: fallbackBoardId,
-      instanceId: instance.instanceId,
-      position: initialPosition + index,
-    }))],
+    collections: initialized.collections.map(collection => collection.id === fallbackCollection.id
+      ? {
+          ...collection,
+          instanceIds,
+          nowLayer: {
+            ...collection.nowLayer,
+            sort: {
+              ...collection.nowLayer.sort,
+              manualOrder: [...unassignedInstanceIds, ...collection.nowLayer.sort.manualOrder],
+            },
+          },
+        }
+      : collection),
   }
 }

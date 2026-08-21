@@ -16,15 +16,19 @@ const BOARD_DIALOG_BOARDS: Board[] = [
     defaultLayer: "now",
     id: "V1StGXR8_Z5j",
     name: "My Board",
-    color: "slate",
-    sort: { mode: "createdAt", automaticMode: "createdAt", manualOrder: [] },
+    nowLayer: {
+      color: "slate",
+      sort: { mode: "addedAt", automaticMode: "addedAt", manualOrder: [] },
+    },
   },
   {
     defaultLayer: "next",
     id: "board-design",
     name: "Design signals",
-    color: "purple",
-    sort: { mode: "provider", automaticMode: "provider", manualOrder: [] },
+    nowLayer: {
+      color: "purple",
+      sort: { mode: "provider", automaticMode: "provider", manualOrder: [] },
+    },
   },
 ]
 
@@ -117,7 +121,7 @@ function BoardDialogFixture({ target }: { target: BoardDialogTarget }) {
   const [lastAction, setLastAction] = useState<string>()
 
   function describeBoardAction(action: string, board: Board): void {
-    setLastAction(`${action} “${board.name}” · ${board.sort.mode}`)
+    setLastAction(`${action} “${board.name}” · ${board.nowLayer.sort.mode}`)
   }
 
   function describeCreateAction(input: BoardCreateInput): void {

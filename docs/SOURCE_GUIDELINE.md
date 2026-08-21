@@ -1285,16 +1285,16 @@ newsnext query execute source.list
 newsnext query execute source.get --input \
   '{"sourceId":"github:trending"}'
 newsnext query execute collection.list
-newsnext query execute view.getContext
-newsnext query execute view.getCollection --input \
+newsnext query execute board.getContext
+newsnext query execute board.getConfiguration --input \
   '{"collectionId":"COLLECTION_ID"}'
-newsnext query execute view.getVisibleLiveCards
+newsnext query execute nowLayer.getLiveCards
 newsnext action execute collection.create --input \
-  '{"name":"Research","view":{"color":"blue","sortMode":"createdAt"}}'
+  '{"name":"Research","board":{"color":"blue","sortMode":"addedAt"}}'
 newsnext action execute collection.update --input \
-  '{"collectionId":"COLLECTION_ID","name":"Research queue","view":{"color":"purple"}}'
-newsnext action execute view.configureCollection --input \
-  '{"collectionId":"COLLECTION_ID","color":"blue","sortMode":"createdAt"}'
+  '{"collectionId":"COLLECTION_ID","name":"Research queue","board":{"color":"purple"}}'
+newsnext action execute board.configure --input \
+  '{"collectionId":"COLLECTION_ID","color":"blue","sortMode":"addedAt"}'
 newsnext action execute instance.create --input \
   '{"sourceId":"github:trending","collectionIds":["COLLECTION_ID"],"patch":{"params":{"language":"typescript"}}}'
 ```
@@ -1310,15 +1310,15 @@ used only by that Collection. Passing `targetCollectionId` instead transfers
 the deleted Collection's Instances to the selected Collection without
 duplicating memberships. Instances shared with other Collections remain.
 
-Use `collection.create` with its nested `view` object when creation includes
+Use `collection.create` with its nested `board` object when creation includes
 Board preferences. It also accepts an `instances` array of Source IDs and
 patches when a Collection and its configured Instances must be created in one
 atomic import. Use `collection.update` when one intent changes Collection data
 and Board preferences together. These composite Actions persist once and
 cannot be interleaved with another UI or Agent mutation. Use
-`view.configureCollection` only for a View-only change.
+`board.configure` only for a Board-configuration change.
 
-Use `query execute view.getContext` when starting from the currently visible
+Use `query execute board.getContext` when starting from the currently visible
 Board, then `query execute collection.listInstances --input
 '{"collectionId":"COLLECTION_ID"}'` for a custom Board. Use `query execute
 instance.list` when the Board is irrelevant. History commands intentionally use

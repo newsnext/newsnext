@@ -2,9 +2,9 @@ import type {
   ApplicationAction,
   ApplicationActionResult,
   ApplicationData,
+  ApplicationNowLayerLiveCard,
   ApplicationQuery,
   ApplicationQueryResult,
-  ApplicationVisibleLiveCard,
 } from "../application"
 import { loadSourceDescriptors } from "@newsnext/source-kit/runtime"
 import { browser } from "#imports"
@@ -123,14 +123,13 @@ export async function executeBackgroundApplicationQuery<Query extends Applicatio
     })
   }
   const data = await readConnectedApplicationData()
-  if (parsedQuery.type === "view.getVisibleLiveCards") {
+  if (parsedQuery.type === "nowLayer.getLiveCards") {
     const result = executeApplicationQuery(data, parsedQuery, {
       currentBoardId: await readCurrentBoardId(),
-    }) as ApplicationVisibleLiveCard[]
-    const sourceIds = new Set((await loadSourceDescriptors()).map(source => source.id))
-    return result.filter(liveCard => sourceIds.has(liveCard.sourceId)) as ApplicationQueryResult<Query>
+    }) as ApplicationNowLayerLiveCard[]
+    return result as ApplicationQueryResult<Query>
   }
-  if (parsedQuery.type === "view.getContext") {
+  if (parsedQuery.type === "board.getContext") {
     return executeApplicationQuery(data, parsedQuery, {
       currentBoardId: await readCurrentBoardId(),
     })

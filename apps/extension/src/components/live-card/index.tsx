@@ -1,5 +1,5 @@
 import type { LiveCardDragHandleRef } from "./card-header"
-import type { SourceInstanceMetadata, SourceInstancePatch } from "@/lib/source"
+import type { InstanceMetadata, InstancePatch } from "@/lib/source"
 import type { LiveCardViewModel } from "@/typings/source"
 import { FlipAnimate } from "@newsnext/ui/components/flip-animate"
 import { useScrollProgressContext } from "@newsnext/ui/components/scroll-progress-context"
@@ -13,12 +13,13 @@ import { applySourceLoaderMetadata, SOURCE_QUERY_OFFSCREEN_RETENTION_MS, SOURCE_
 import { cn } from "@/lib/utils"
 import {
   resetInstanceParamsAtom,
-  setSourceInstancePatchAtom,
+  setInstancePatchAtom,
 } from "@/store/board"
 import { LiveCardBack } from "./card-back"
 import { LiveCardFront } from "./card-front"
 
 export interface LiveCardProps {
+  available?: boolean
   id: string
   source: LiveCardViewModel
   className?: string
@@ -26,11 +27,11 @@ export interface LiveCardProps {
   nodeRef?: (node: HTMLElement | null) => void
   dragHandleRef?: LiveCardDragHandleRef
   isDraft?: boolean
-  onDraftSourceChange?: (patch: SourceInstancePatch) => void
+  onDraftSourceChange?: (patch: InstancePatch) => void
 }
 
-function LiveCardContent({ id, source, dragHandleRef, isDraft = false, onDraftSourceChange }: LiveCardProps) {
-  const setSourceInstancePatch = useSetAtom(setSourceInstancePatchAtom)
+function LiveCardContent({ available = true, id, source, dragHandleRef, isDraft = false, onDraftSourceChange }: LiveCardProps) {
+  const setInstancePatch = useSetAtom(setInstancePatchAtom)
   const resetLocalParams = useSetAtom(resetInstanceParamsAtom)
   const [isFlipped, setIsFlipped] = useState(false)
   const {
@@ -58,9 +59,11 @@ function LiveCardContent({ id, source, dragHandleRef, isDraft = false, onDraftSo
     params: savedParams,
     enabled: canLoad,
   })
-  const sourceErrorMessage = canLoad && isError
-    ? `Failed to load source${errorMessage ? `: ${errorMessage}` : "."}`
-    : undefined
+  const sourceErrorMessage = !available
+    ? "This Source is no longer available in the registry."
+    : canLoad && isError
+      ? `Failed to load source${errorMessage ? `: ${errorMessage}` : "."}`
+      : undefined
   const displaySource = useMemo(
     () => applySourceLoaderMetadata(source, metadata),
     [metadata, source],
@@ -77,9 +80,9 @@ function LiveCardContent({ id, source, dragHandleRef, isDraft = false, onDraftSo
       return
     }
 
-    await setSourceInstancePatch({ instanceId: id, patch: { params: nextParams } })
+    await setInstancePatch({ instanceId: id, patch: { params: nextParams } })
     commitParams(nextParams)
-  }, [commitParams, getDraftParams, id, onDraftSourceChange, setSourceInstancePatch])
+  }, [commitParams, getDraftParams, id, onDraftSourceChange, setInstancePatch])
 
   const handleResetSourceParams = useCallback(async () => {
     if (onDraftSourceChange) {
@@ -92,14 +95,14 @@ function LiveCardContent({ id, source, dragHandleRef, isDraft = false, onDraftSo
     commitParams({})
   }, [commitParams, id, onDraftSourceChange, resetLocalParams])
 
-  const handleSaveSourceMeta = useCallback(async (metadata: SourceInstanceMetadata) => {
+  const handleSaveSourceMeta = useCallback(async (metadata: InstanceMetadata) => {
     if (onDraftSourceChange) {
       onDraftSourceChange({ metadata })
       return
     }
 
-    await setSourceInstancePatch({ instanceId: id, patch: { metadata } })
-  }, [id, onDraftSourceChange, setSourceInstancePatch])
+    await setInstancePatch({ instanceId: id, patch: { metadata } })
+  }, [id, onDraftSourceChange, setInstancePatch])
 
   return (
     <FlipAnimate

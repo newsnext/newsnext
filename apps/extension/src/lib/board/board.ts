@@ -1,5 +1,5 @@
 import type { Color } from "@newsnext/shared/types"
-import type { BoardSortMode, BoardSortPreference } from "./sorting"
+import type { NowLayerSort, NowLayerSortMode } from "./sorting"
 
 export const INITIAL_BOARD_NAME = "My Board"
 export const DEFAULT_BOARD_COLOR: Color = "red"
@@ -10,17 +10,19 @@ export const DEFAULT_BOARD_LAYER: BoardLayer = "now"
 
 export interface Board {
   defaultLayer: BoardLayer
-  sort: BoardSortPreference
   id: string
   name: string
-  color?: Color
+  nowLayer: {
+    color?: Color
+    sort: NowLayerSort
+  }
 }
 
 export interface BoardCreateInput {
   color: Color
   defaultLayer: BoardLayer
   name: string
-  sortMode: BoardSortMode
+  sortMode: NowLayerSortMode
 }
 
 export function normalizeBoardLayer(value: unknown): BoardLayer {
@@ -33,7 +35,7 @@ export function getBoardLayerFromState(state: unknown): BoardLayer | undefined {
 }
 
 export function getBoardColor(board: Board): Color {
-  return board.color ?? DEFAULT_BOARD_COLOR
+  return board.nowLayer.color ?? DEFAULT_BOARD_COLOR
 }
 
 export function getAdjacentBoardId(

@@ -1,5 +1,5 @@
 import type { NewsItem } from "@/typings/source"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useCallback, useMemo, useState } from "react"
 import { getLoginUrlFromError } from "./source-login-error"
 import {
@@ -7,6 +7,7 @@ import {
   getSourceQueryHash,
   getSourceQueryOptions,
 } from "./source-query"
+import { findCachedSourceResult } from "./use-cached-source-result"
 import { useFetchLatestSources, useIsSourceFetchingLatest } from "./use-refetch"
 import { useSourceDescriptors } from "./use-source-descriptors"
 
@@ -24,45 +25,48 @@ export function useSourceQuery({
   enabled = true,
 }: UseSourceQueryOptions) {
   const { sources } = useSourceDescriptors()
+  const queryClient = useQueryClient()
   const source = useMemo(
     () => sources.find(candidate => candidate.id === sourceId),
     [sourceId, sources],
   )
+  const cachedResult = findCachedSourceResult(queryClient, sourceId, params)
   const target = useMemo(
-    () => source
-      ? createSourceQueryTarget(sourceId, source, params)
+    () => source || cachedResult?.source
+      ? createSourceQueryTarget(sourceId, source ?? cachedResult!.source, params)
       : { sourceId, params: {}, version: 0 },
-    [params, source, sourceId],
+    [cachedResult, params, source, sourceId],
   )
   const queryHash = useMemo(() => getSourceQueryHash(target), [target])
   const fetchLatestSources = useFetchLatestSources()
   const isFetchingLatest = useIsSourceFetchingLatest(queryHash)
   const [initialUpdatedAt] = useState(Date.now)
-  const { data, dataUpdatedAt, error, isFetching, isError, isLoading } = useQuery({
+  const query = useQuery({
     ...getSourceQueryOptions(target),
     enabled: enabled && source !== undefined,
     placeholderData: prev => prev,
   })
+  const data = query.data ?? cachedResult
 
   const handleFetchLatest = useCallback(async () => {
-    if (!enabled) {
+    if (!enabled || !source) {
       return
     }
 
     await fetchLatestSources(target)
-  }, [enabled, fetchLatestSources, target])
+  }, [enabled, fetchLatestSources, source, target])
 
   return {
     items: data?.items ?? EMPTY_ITEMS,
     itemTemplate: data?.itemTemplate,
     fetchLatest: handleFetchLatest,
-    isFetching,
+    isFetching: query.isFetching,
     isFetchingLatest,
-    isLoading,
-    isError,
-    errorMessage: error instanceof Error ? error.message : undefined,
-    loginUrl: getLoginUrlFromError(error),
+    isLoading: query.isLoading && cachedResult === undefined,
+    isError: query.isError,
+    errorMessage: query.error instanceof Error ? query.error.message : undefined,
+    loginUrl: getLoginUrlFromError(query.error),
     metadata: data?.metadata,
-    updatedAt: dataUpdatedAt || initialUpdatedAt,
+    updatedAt: query.dataUpdatedAt || initialUpdatedAt,
   }
 }

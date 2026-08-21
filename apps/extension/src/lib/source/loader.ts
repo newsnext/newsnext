@@ -1,11 +1,11 @@
-import type { SourceLoaderResult } from "@newsnext/source-kit/types"
+import type { SourceLoadResult } from "./load-result"
 import {
   normalizeSourceParams,
 } from "@newsnext/source-kit/runtime"
 import { createBackgroundClient } from "../background/client"
 import { loadSourceDescriptor } from "./registry"
 
-export type SourceLoadResult = SourceLoaderResult
+export type { SourceLoadResult } from "./load-result"
 
 export async function loadSource(
   sourceId: string,

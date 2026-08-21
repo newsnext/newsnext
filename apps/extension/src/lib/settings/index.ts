@@ -13,7 +13,7 @@ export {
   mergePersistedUserData,
   normalizeApplicationData,
   normalizeCollections,
-  normalizeSourceInstances,
+  normalizeInstances,
   parsePersistedDataExport,
   PERSISTED_DATA_SLICES,
   PERSISTED_PORTABLE_SLICE_IDS,

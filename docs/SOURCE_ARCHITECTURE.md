@@ -136,7 +136,7 @@ preset and template as a local user setting. This keeps third-party favicon
 service URLs out of provider definitions and the generated registry while
 allowing instance-specific home overrides to select the matching icon. The
 preference is part of the portable Settings slice. Application Data persists
-Collections, Collection entries, Collection Views, and source Instances in one
+Collections, Instances, and Board configuration in one
 normalized envelope. An Instance never stores a Board identifier. Collection
 entries own membership and manual position; Collection Views own Board color,
 default layer, and sort mode. Extension pages read synchronous `localStorage`
@@ -348,21 +348,26 @@ queue, are normalized and
 persisted to `browser.storage.local`, and propagate to open extension pages
 through read-only storage subscriptions. Bulk import and reset use the same
 queued background repository replacement rather than setting frontend atoms.
-Composite Collection create/update and manual-order Actions apply their Data
-and View changes to one in-memory envelope and perform one storage write.
-The manual-order Action requires every Collection Instance exactly once. The
-frontend may render only Instances whose Sources still exist in the bundled
-registry, so it expands a reordered visible subset across the existing complete
-membership order before executing the Action. Unavailable Instances retain
-their membership slots and are not silently deleted when visible cards move.
+Composite Collection create/update and NowLayer manual-order Actions apply
+their changes to one in-memory envelope and perform one storage write. The
+manual-order Action requires every Collection Instance exactly once.
+
+Collection `instanceIds` store membership in recently-added-first order. The
+NowLayer renders every member even when its Source is no longer in the current
+registry. A successful Source load caches the result together with the Source
+provider, static metadata, parameter schema, capabilities, and version. An
+unavailable Instance therefore renders from its cached presentation snapshot,
+or from a generic `sourceId` fallback when no cache remains. It stays in drag
+ordering and cannot be silently removed by saving a visible subset.
 Action transports return only compact receipts; the updated envelope reaches
 each frontend through its own subscription state rather than a duplicate proxy
 payload.
 The Application Data mirror never initializes or normalizes browser storage
 from a frontend page; the background runtime is the only persistent writer.
-`view.getContext` resolves the current Board to its Collection identity, while
-`view.getVisibleLiveCards` returns the LiveCards logically displayed by that Board with
-their Instance and membership identities.
+`board.getContext` resolves the current Board to its Collection identity, while
+`nowLayer.getLiveCards` returns every LiveCard logically displayed by that
+Board with its Instance and membership identities, independent of registry
+availability.
 
 Requests travel through the same per-user local IPC connection as source authoring
 commands and return JSON. The extension validates every request before

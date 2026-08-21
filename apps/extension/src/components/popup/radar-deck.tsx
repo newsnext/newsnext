@@ -1,7 +1,7 @@
 import type { MotionValue, PanInfo } from "motion/react"
 import type { CSSProperties, PointerEvent } from "react"
 import type { ResolvedRadarSuggestion } from "@/lib/radar"
-import type { SourceInstancePatch } from "@/lib/source"
+import type { InstancePatch } from "@/lib/source"
 import type { LiveCardViewModel } from "@/typings/source"
 import { Button } from "@newsnext/ui/components/button"
 import confetti from "canvas-confetti"
@@ -13,7 +13,7 @@ import { PhArrowCircleLeft, PhPlusCircle } from "@/components/icons/ph"
 import { LiveCard } from "@/components/live-card"
 import { useAsyncAction } from "@/hooks/use-async-action"
 import { createRadarLiveCard } from "@/lib/radar"
-import { mergeSourceInstancePatch } from "@/lib/source"
+import { mergeInstancePatch } from "@/lib/source"
 import { cn } from "@/lib/utils"
 import { addInstanceAtom, boardsAtom } from "@/store/board"
 import { currentBoardIdAtom } from "@/store/settings"
@@ -95,7 +95,7 @@ function launchRadarConfetti({ color, originElement }: RadarConfettiOptions): vo
 interface RadarLiveCardProps {
   liveCard: LiveCardViewModel
   className?: string
-  onDraftSourceChange?: (patch: SourceInstancePatch) => void
+  onDraftSourceChange?: (patch: InstancePatch) => void
 }
 
 function RadarLiveCard({ liveCard, className, onDraftSourceChange }: RadarLiveCardProps) {
@@ -120,7 +120,7 @@ interface RadarTrackCardProps {
   trackItemOffset: number
   x: MotionValue<number>
   onDragHandlePointerDown: (event: PointerEvent<HTMLDivElement>) => void
-  onDraftSourceChange?: (patch: SourceInstancePatch) => void
+  onDraftSourceChange?: (patch: InstancePatch) => void
 }
 
 function RadarTrackCard({
@@ -187,7 +187,7 @@ function RadarDeckContent({ initialBoardId, suggestions }: RadarDeckContentProps
     initialBoardId ? [initialBoardId] : [],
   )
   const [activeIndex, setActiveIndex] = useState(0)
-  const [draftPatches, setDraftPatches] = useState<Record<string, SourceInstancePatch>>({})
+  const [draftPatches, setDraftPatches] = useState<Record<string, InstancePatch>>({})
   const [trackItemOffset, setTrackItemOffset] = useState(1)
   const [hasMeasuredDeck, setHasMeasuredDeck] = useState(false)
   const [isCreated, setIsCreated] = useState(false)
@@ -309,7 +309,7 @@ function RadarDeckContent({ initialBoardId, suggestions }: RadarDeckContentProps
       await addInstance({
         collectionIds: targetBoardIds,
         sourceId: activeSuggestion.sourceId,
-        patch: mergeSourceInstancePatch(
+        patch: mergeInstancePatch(
           activeSuggestion.patch,
           draftPatches[activeSuggestion.id] ?? {},
         ),
@@ -319,13 +319,13 @@ function RadarDeckContent({ initialBoardId, suggestions }: RadarDeckContentProps
     })
   }, [activeLiveCard, activeSuggestion, addInstance, draftPatches, isCreated, runCreate, targetBoardIds])
 
-  const handleActiveDraftSourceChange = useCallback((patch: SourceInstancePatch) => {
+  const handleActiveDraftSourceChange = useCallback((patch: InstancePatch) => {
     if (!activeSuggestion) {
       return
     }
 
     setDraftPatches((prev) => {
-      const nextPatch = mergeSourceInstancePatch(prev[activeSuggestion.id], patch)
+      const nextPatch = mergeInstancePatch(prev[activeSuggestion.id], patch)
       const resolvedPatch = patch.params && Object.keys(patch.params).length === 0
         ? { ...nextPatch, params: {} }
         : nextPatch

@@ -1,6 +1,6 @@
 import type { LiveCardDragHandleRef } from "../card-header"
 import type { SourceParamValidationState } from "./edit-form"
-import type { SourceInstanceMetadata } from "@/lib/source"
+import type { InstanceMetadata } from "@/lib/source"
 import type { LiveCardViewModel } from "@/typings/source"
 import { ScrollArea } from "@newsnext/ui/components/scroll-area"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
@@ -25,7 +25,7 @@ export interface LiveCardBackProps {
   onSaveSourceParams: () => Promise<void> | void
   onResetSourceParams: () => Promise<void> | void
   onDiscardSourceParams: () => void
-  onSaveSourceMeta: (meta: SourceInstanceMetadata) => Promise<void> | void
+  onSaveSourceMeta: (meta: InstanceMetadata) => Promise<void> | void
   onFlip: () => void
   isDraft?: boolean
   dragHandleRef?: LiveCardDragHandleRef
@@ -50,7 +50,7 @@ export function LiveCardBack({
 }: LiveCardBackProps) {
   const { provider } = source
   const { badge, desc, home, title } = source.metadata
-  const [previewMetadata, setPreviewMetadata] = useState<SourceInstanceMetadata | null>(null)
+  const [previewMetadata, setPreviewMetadata] = useState<InstanceMetadata | null>(null)
   const previewTitle = previewMetadata?.title ?? title
   const previewBadge = previewMetadata?.badge ?? badge
   const previewDesc = previewMetadata?.desc ?? desc

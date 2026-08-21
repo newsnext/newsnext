@@ -106,7 +106,7 @@ membership is selected before projection; the Instance contains no Board
 identifier. Search and
 refresh call it for their own snapshots. The rendered board uses Jotai's
 `splitAtom` with `instanceId` as its stable key so every LiveCard subscribes to its
-own `SourceInstance`. `NowLayer` subscribes separately to a lightweight layout
+own `Instance`. `NowLayer` subscribes separately to a lightweight layout
 projection containing only Collection IDs and sorting fields.
 
 Resolve board-only appearance settings at the `DraggableLiveCard` boundary and pass
@@ -153,7 +153,7 @@ they must not rerun image decoding or edge extraction.
 Mirrored persistence must ignore its own `browser.storage.local` echo when the
 normalized value already matches the synchronous `localStorage` snapshot. An
 echo must not replace arrays or objects with equal copies and trigger a second
-render after every Board (including sorting), SourceInstance, or Settings update. A real
+render after every Board (including sorting), Instance, or Settings update. A real
 background change still replaces the affected slice and notifies its atom.
 Application Data differs from ordinary frontend-owned settings: React dispatch
 atoms await the background Application service and never write the persisted

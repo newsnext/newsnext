@@ -1,7 +1,7 @@
 import type {
   RuntimeSource,
-  SourceLoaderResult,
 } from "@newsnext/source-kit/types"
+import type { SourceLoadResult } from "../source/load-result"
 import type { BackgroundSourceFetchResult } from "./source-fetch"
 import {
   parseSourceId,
@@ -31,7 +31,7 @@ export interface CancelBackgroundSourceInput {
 
 export interface BackgroundSourceService {
   cancel: (input: CancelBackgroundSourceInput) => Promise<void>
-  load: (input: LoadBackgroundSourceInput) => Promise<SourceLoaderResult>
+  load: (input: LoadBackgroundSourceInput) => Promise<SourceLoadResult>
 }
 
 export function createBackgroundSourceService(
@@ -43,7 +43,7 @@ export function createBackgroundSourceService(
     async cancel({ requestId }): Promise<void> {
       activeRequests.get(requestId)?.abort()
     },
-    async load(input): Promise<SourceLoaderResult> {
+    async load(input): Promise<SourceLoadResult> {
       const abortController = new AbortController()
       const { signal } = abortController
       if (input.requestId) {
@@ -76,7 +76,17 @@ export function createBackgroundSourceService(
           },
         })
 
-        return result
+        return {
+          ...result,
+          source: {
+            capabilities: request.source.capabilities,
+            id: input.sourceId,
+            metadata: request.source.metadata,
+            params: request.source.params,
+            provider: request.source.provider,
+            version: request.source.version,
+          },
+        }
       } finally {
         if (input.requestId && activeRequests.get(input.requestId) === abortController) {
           activeRequests.delete(input.requestId)

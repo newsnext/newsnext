@@ -1,13 +1,21 @@
 import type { ApplicationData } from "../application/data"
-import type { Collection, CollectionEntry, CollectionView } from "../collection"
-import type { SourceInstance, SourceInstancePatch } from "../source"
+import type { NowLayerAutomaticSortMode, NowLayerSortMode } from "../board"
+import type { Collection } from "../collection"
+import type { Instance, InstancePatch } from "../source"
 import type { PersistedSettings } from "./persisted-settings"
-import { createEmptyApplicationData, ensureApplicationDataIntegrity } from "../application/data"
-import { DEFAULT_BOARD_LAYER, normalizeBoardLayer } from "../board"
+import {
+  APPLICATION_DATA_VERSION,
+  createEmptyApplicationData,
+  ensureApplicationDataIntegrity,
+} from "../application/data"
+import {
+  DEFAULT_NOW_LAYER_SORT,
+  normalizeBoardLayer,
+} from "../board"
 import { normalizePersistedSettings } from "./persisted-settings"
 import { isThemeColor } from "./theme-color"
 
-export const PERSISTED_DATA_EXPORT_VERSION = 1
+export const PERSISTED_DATA_EXPORT_VERSION = 2
 export const PERSISTED_DATA_EXPORT_KIND = "newsnext-user-data"
 export const PERSISTED_PORTABLE_SLICE_IDS = [
   "settings",
@@ -50,54 +58,57 @@ export interface PersistedDataExport {
 }
 
 export function normalizeApplicationData(value: unknown): ApplicationData {
-  if (!isRecord(value)) {
-    return createEmptyApplicationData()
-  }
+  if (!isRecord(value)) return createEmptyApplicationData()
 
-  const collections = normalizeCollections(value.collections)
-  const collectionIds = new Set(collections.map(collection => collection.id))
-  const instances = normalizeSourceInstances(value.instances)
+  const instances = normalizeInstances(value.instances)
   const instanceIds = new Set(instances.map(instance => instance.instanceId))
-  const collectionViews = normalizeCollectionViews(value.collectionViews, collectionIds)
-  const collectionEntries = normalizeCollectionEntries(
-    value.collectionEntries,
-    collectionIds,
-    instanceIds,
-  )
+  const collections = value.version === APPLICATION_DATA_VERSION
+    ? normalizeCollections(value.collections, instanceIds)
+    : migrateLegacyCollections(value, instances, instanceIds)
 
-  return { collections, collectionEntries, collectionViews, instances }
+  return {
+    version: APPLICATION_DATA_VERSION,
+    collections,
+    instances,
+  }
 }
 
-export function normalizeCollections(value: unknown): Collection[] {
+export function normalizeCollections(
+  value: unknown,
+  instanceIds?: ReadonlySet<string>,
+): Collection[] {
   if (!Array.isArray(value)) return []
   const seenIds = new Set<string>()
   const seenNames: string[] = []
   return value.flatMap((candidate) => {
-    if (!isRecord(candidate)
-      || typeof candidate.id !== "string"
-      || candidate.id.trim().length === 0
-      || typeof candidate.name !== "string"
-      || candidate.name.trim().length === 0
-      || typeof candidate.createdAt !== "number"
-      || !Number.isFinite(candidate.createdAt)
-      || seenIds.has(candidate.id)) {
-      return []
-    }
-    const name = candidate.name.trim()
-    if (seenNames.some(existingName => existingName.localeCompare(
-      name,
-      undefined,
-      { sensitivity: "accent" },
-    ) === 0)) {
-      return []
-    }
-    seenIds.add(candidate.id)
-    seenNames.push(name)
-    return [{ id: candidate.id, name, createdAt: candidate.createdAt }]
+    const identity = normalizeCollectionIdentity(candidate, seenIds, seenNames)
+    if (!identity || !isRecord(candidate)) return []
+
+    const ids = normalizeIdentifierArray(candidate.instanceIds, instanceIds)
+    const nowLayer = isRecord(candidate.nowLayer) ? candidate.nowLayer : {}
+    const sortValue = isRecord(nowLayer.sort) ? nowLayer.sort : {}
+    const mode = normalizeNowLayerSortMode(sortValue.mode)
+    const automaticMode = normalizeNowLayerAutomaticSortMode(sortValue.automaticMode)
+    return [{
+      ...identity,
+      defaultLayer: normalizeBoardLayer(candidate.defaultLayer),
+      instanceIds: ids,
+      nowLayer: {
+        ...(isThemeColor(nowLayer.color) ? { color: nowLayer.color } : {}),
+        sort: {
+          mode,
+          automaticMode: mode === "manual" ? automaticMode : mode,
+          manualOrder: reconcileOrder(
+            normalizeIdentifierArray(sortValue.manualOrder, instanceIds),
+            ids,
+          ),
+        },
+      },
+    }]
   })
 }
 
-export function normalizeSourceInstances(value: unknown): SourceInstance[] {
+export function normalizeInstances(value: unknown): Instance[] {
   if (!Array.isArray(value)) return []
   const seenIds = new Set<string>()
   return value.flatMap((candidate) => {
@@ -108,7 +119,7 @@ export function normalizeSourceInstances(value: unknown): SourceInstance[] {
       || candidate.sourceId.trim().length === 0
       || typeof candidate.createdAt !== "number"
       || !Number.isFinite(candidate.createdAt)
-      || !isSourceInstancePatch(candidate.patch)
+      || !isInstancePatch(candidate.patch)
       || seenIds.has(candidate.instanceId)) {
       return []
     }
@@ -138,14 +149,13 @@ export function parsePersistedDataExport(serialized: string): PersistedDataExpor
     const value: unknown = JSON.parse(serialized)
     if (!isRecord(value)
       || value.kind !== PERSISTED_DATA_EXPORT_KIND
-      || !isRecord(value.data)) {
+      || !isRecord(value.data)
+      || (value.version !== 1 && value.version !== PERSISTED_DATA_EXPORT_VERSION)) {
       return undefined
     }
 
-    const data = value.version === PERSISTED_DATA_EXPORT_VERSION
-      ? normalizePartialPersistedUserData(value.data)
-      : undefined
-    if (!data || Object.keys(data).length === 0) return undefined
+    const data = normalizePartialPersistedUserData(value.data)
+    if (Object.keys(data).length === 0) return undefined
 
     return {
       data,
@@ -169,15 +179,11 @@ export function selectPersistedUserData(
   sliceIds: readonly PersistedPortableSliceId[],
 ): Partial<PersistedUserData> {
   const selected = new Set(sliceIds)
+  const includesApplicationData = selected.has("boards") || selected.has("instances")
   return {
+    ...(includesApplicationData ? { version: APPLICATION_DATA_VERSION } : {}),
     ...(selected.has("settings") && data.settings !== undefined ? { settings: data.settings } : {}),
-    ...(selected.has("boards")
-      ? {
-          ...(data.collections !== undefined ? { collections: data.collections } : {}),
-          ...(data.collectionEntries !== undefined ? { collectionEntries: data.collectionEntries } : {}),
-          ...(data.collectionViews !== undefined ? { collectionViews: data.collectionViews } : {}),
-        }
-      : {}),
+    ...(selected.has("boards") && data.collections !== undefined ? { collections: data.collections } : {}),
     ...(selected.has("instances") && data.instances !== undefined ? { instances: data.instances } : {}),
   }
 }
@@ -189,8 +195,6 @@ export function hasPersistedUserDataSlice(
   if (sliceId === "settings") return data.settings !== undefined
   if (sliceId === "instances") return data.instances !== undefined
   return data.collections !== undefined
-    || data.collectionEntries !== undefined
-    || data.collectionViews !== undefined
 }
 
 export function mergePersistedUserData(
@@ -198,10 +202,9 @@ export function mergePersistedUserData(
   imported: Partial<PersistedUserData>,
 ): PersistedUserData {
   return normalizePersistedUserData({
+    version: APPLICATION_DATA_VERSION,
     settings: imported.settings ?? current.settings,
     collections: imported.collections ?? current.collections,
-    collectionEntries: imported.collectionEntries ?? current.collectionEntries,
-    collectionViews: imported.collectionViews ?? current.collectionViews,
     instances: imported.instances ?? current.instances,
   })
 }
@@ -220,121 +223,200 @@ export function normalizePersistedUserData(data: PersistedUserData): PersistedUs
 function normalizePartialPersistedUserData(
   data: Record<string, unknown>,
 ): Partial<PersistedUserData> {
-  const collections = normalizeCollections(data.collections)
-  const instances = normalizeSourceInstances(data.instances)
-  const collectionIds = Object.hasOwn(data, "collections")
-    ? new Set(collections.map(collection => collection.id))
-    : undefined
-  const instanceIds = Object.hasOwn(data, "instances")
+  const hasInstances = Object.hasOwn(data, "instances")
+  const instances = normalizeInstances(data.instances)
+  const instanceIds = hasInstances
     ? new Set(instances.map(instance => instance.instanceId))
     : undefined
+  const collections = Object.hasOwn(data, "collections")
+    ? data.version === APPLICATION_DATA_VERSION
+      ? normalizeCollections(data.collections, instanceIds)
+      : migrateLegacyCollections(data, instances, instanceIds)
+    : undefined
   return {
+    ...((collections || hasInstances) ? { version: APPLICATION_DATA_VERSION } : {}),
     ...(Object.hasOwn(data, "settings") ? { settings: normalizePersistedSettings(data.settings) } : {}),
-    ...(Object.hasOwn(data, "collections") ? { collections } : {}),
-    ...(Object.hasOwn(data, "collectionEntries")
-      ? {
-          collectionEntries: normalizeCollectionEntries(data.collectionEntries, collectionIds, instanceIds),
-        }
-      : {}),
-    ...(Object.hasOwn(data, "collectionViews")
-      ? {
-          collectionViews: normalizeCollectionViews(data.collectionViews, collectionIds),
-        }
-      : {}),
-    ...(Object.hasOwn(data, "instances") ? { instances } : {}),
+    ...(collections ? { collections } : {}),
+    ...(hasInstances ? { instances } : {}),
   }
 }
 
-function normalizeCollectionViews(value: unknown, collectionIds?: Set<string>): CollectionView[] {
-  if (!Array.isArray(value)) return []
-  const views = new Map<string, CollectionView>()
-  for (const candidate of value) {
-    if (!isRecord(candidate)
-      || typeof candidate.collectionId !== "string"
-      || (collectionIds && !collectionIds.has(candidate.collectionId))
-      || !isBoardSortMode(candidate.sortMode)
-      || !isAutomaticBoardSortMode(candidate.automaticSortMode)) {
-      continue
+interface LegacyCollectionEntry {
+  addedAt: number
+  collectionId: string
+  instanceId: string
+  position: number
+}
+
+function migrateLegacyCollections(
+  value: Record<string, unknown>,
+  instances: readonly Instance[],
+  instanceIds?: ReadonlySet<string>,
+): Collection[] {
+  const identities = normalizeLegacyCollectionIdentities(value.collections)
+  const collectionIds = new Set(identities.map(collection => collection.id))
+  const entries = normalizeLegacyCollectionEntries(value.collectionEntries, collectionIds, instanceIds)
+  const views = normalizeLegacyCollectionViews(value.collectionViews, collectionIds)
+  const instancesById = new Map(instances.map(instance => [instance.instanceId, instance]))
+
+  return identities.map((identity) => {
+    const collectionEntries = entries.filter(entry => entry.collectionId === identity.id)
+    const instanceIdsByCreatedAt = collectionEntries
+      .toSorted((left, right) => {
+        const leftCreatedAt = instancesById.get(left.instanceId)?.createdAt ?? left.addedAt
+        const rightCreatedAt = instancesById.get(right.instanceId)?.createdAt ?? right.addedAt
+        return rightCreatedAt - leftCreatedAt
+          || right.position - left.position
+          || left.instanceId.localeCompare(right.instanceId)
+      })
+      .map(entry => entry.instanceId)
+    const manualOrder = collectionEntries
+      .toSorted((left, right) => left.position - right.position || left.instanceId.localeCompare(right.instanceId))
+      .map(entry => entry.instanceId)
+    const view = views.get(identity.id)
+    const mode = normalizeNowLayerSortMode(view?.sortMode)
+    const automaticMode = normalizeNowLayerAutomaticSortMode(view?.automaticSortMode)
+    return {
+      ...identity,
+      defaultLayer: normalizeBoardLayer(view?.defaultLayer),
+      instanceIds: instanceIdsByCreatedAt,
+      nowLayer: {
+        ...(isThemeColor(view?.color) ? { color: view.color } : {}),
+        sort: {
+          mode,
+          automaticMode: mode === "manual" ? automaticMode : mode,
+          manualOrder,
+        },
+      },
     }
-    views.set(candidate.collectionId, {
-      collectionId: candidate.collectionId,
-      defaultLayer: normalizeBoardLayer(candidate.defaultLayer),
-      sortMode: candidate.sortMode,
-      automaticSortMode: candidate.automaticSortMode,
-      ...(isThemeColor(candidate.color) ? { color: candidate.color } : {}),
-    })
-  }
-  if (!collectionIds) return [...views.values()]
-  return [...collectionIds].map(collectionId => views.get(collectionId) ?? {
-    collectionId,
-    defaultLayer: DEFAULT_BOARD_LAYER,
-    sortMode: "createdAt",
-    automaticSortMode: "createdAt",
   })
 }
 
-function normalizeCollectionEntries(
+function normalizeCollectionIdentity(
+  candidate: unknown,
+  seenIds: Set<string>,
+  seenNames: string[],
+): Pick<Collection, "createdAt" | "id" | "name"> | undefined {
+  if (!isRecord(candidate)
+    || typeof candidate.id !== "string"
+    || candidate.id.trim().length === 0
+    || typeof candidate.name !== "string"
+    || candidate.name.trim().length === 0
+    || typeof candidate.createdAt !== "number"
+    || !Number.isFinite(candidate.createdAt)
+    || seenIds.has(candidate.id)) {
+    return undefined
+  }
+  const name = candidate.name.trim()
+  if (seenNames.some(existingName => existingName.localeCompare(
+    name,
+    undefined,
+    { sensitivity: "accent" },
+  ) === 0)) {
+    return undefined
+  }
+  seenIds.add(candidate.id)
+  seenNames.push(name)
+  return { id: candidate.id, name, createdAt: candidate.createdAt }
+}
+
+function normalizeLegacyCollectionIdentities(value: unknown): Array<Pick<Collection, "createdAt" | "id" | "name">> {
+  if (!Array.isArray(value)) return []
+  const seenIds = new Set<string>()
+  const seenNames: string[] = []
+  return value.flatMap((candidate) => {
+    const identity = normalizeCollectionIdentity(candidate, seenIds, seenNames)
+    return identity ? [identity] : []
+  })
+}
+
+function normalizeLegacyCollectionEntries(
   value: unknown,
-  collectionIds?: Set<string>,
-  instanceIds?: Set<string>,
-): CollectionEntry[] {
+  collectionIds: ReadonlySet<string>,
+  instanceIds?: ReadonlySet<string>,
+): LegacyCollectionEntry[] {
   if (!Array.isArray(value)) return []
   const seen = new Set<string>()
-  const entries = value.flatMap((candidate, inputIndex) => {
+  return value.flatMap((candidate) => {
     if (!isRecord(candidate)
       || typeof candidate.collectionId !== "string"
-      || candidate.collectionId.trim().length === 0
+      || !collectionIds.has(candidate.collectionId)
       || typeof candidate.instanceId !== "string"
-      || candidate.instanceId.trim().length === 0
+      || (instanceIds && !instanceIds.has(candidate.instanceId))
       || typeof candidate.addedAt !== "number"
       || !Number.isFinite(candidate.addedAt)
       || typeof candidate.position !== "number"
       || !Number.isInteger(candidate.position)
-      || candidate.position < 0
-      || (collectionIds && !collectionIds.has(candidate.collectionId))
-      || (instanceIds && !instanceIds.has(candidate.instanceId))) {
+      || candidate.position < 0) {
       return []
     }
     const key = `${candidate.collectionId}\0${candidate.instanceId}`
     if (seen.has(key)) return []
     seen.add(key)
     return [{
+      addedAt: candidate.addedAt,
       collectionId: candidate.collectionId,
       instanceId: candidate.instanceId,
-      addedAt: candidate.addedAt,
       position: candidate.position,
-      inputIndex,
     }]
   })
-  const entriesByCollection = new Map<string, typeof entries>()
-  for (const entry of entries) {
-    const collectionEntries = entriesByCollection.get(entry.collectionId) ?? []
-    collectionEntries.push(entry)
-    entriesByCollection.set(entry.collectionId, collectionEntries)
-  }
-  return [...entriesByCollection.values()].flatMap(collectionEntries => (
-    collectionEntries
-      .toSorted((left, right) => (
-        left.position - right.position
-        || left.addedAt - right.addedAt
-        || left.inputIndex - right.inputIndex
-      ))
-      .map(({ inputIndex: _inputIndex, ...entry }, position) => ({ ...entry, position }))
-  ))
 }
 
-function isSourceInstancePatch(value: unknown): value is SourceInstancePatch {
+function normalizeLegacyCollectionViews(
+  value: unknown,
+  collectionIds: ReadonlySet<string>,
+): Map<string, Record<string, unknown>> {
+  const views = new Map<string, Record<string, unknown>>()
+  if (!Array.isArray(value)) return views
+  for (const candidate of value) {
+    if (isRecord(candidate)
+      && typeof candidate.collectionId === "string"
+      && collectionIds.has(candidate.collectionId)) {
+      views.set(candidate.collectionId, candidate)
+    }
+  }
+  return views
+}
+
+function normalizeIdentifierArray(
+  value: unknown,
+  allowedIds?: ReadonlySet<string>,
+): string[] {
+  if (!Array.isArray(value)) return []
+  const seen = new Set<string>()
+  return value.flatMap((candidate) => {
+    if (typeof candidate !== "string"
+      || candidate.trim().length === 0
+      || seen.has(candidate)
+      || (allowedIds && !allowedIds.has(candidate))) {
+      return []
+    }
+    seen.add(candidate)
+    return [candidate]
+  })
+}
+
+function reconcileOrder(order: string[], instanceIds: string[]): string[] {
+  const instanceIdSet = new Set(instanceIds)
+  const ordered = order.filter(instanceId => instanceIdSet.has(instanceId))
+  const orderedSet = new Set(ordered)
+  return [...ordered, ...instanceIds.filter(instanceId => !orderedSet.has(instanceId))]
+}
+
+function normalizeNowLayerSortMode(value: unknown): NowLayerSortMode {
+  return value === "provider" || value === "manual"
+    ? value
+    : DEFAULT_NOW_LAYER_SORT.mode
+}
+
+function normalizeNowLayerAutomaticSortMode(value: unknown): NowLayerAutomaticSortMode {
+  return value === "provider" ? value : DEFAULT_NOW_LAYER_SORT.automaticMode
+}
+
+function isInstancePatch(value: unknown): value is InstancePatch {
   return isRecord(value)
     && (value.params === undefined || isRecord(value.params))
     && (value.metadata === undefined || isRecord(value.metadata))
-}
-
-function isBoardSortMode(value: unknown): value is CollectionView["sortMode"] {
-  return value === "createdAt" || value === "provider" || value === "manual"
-}
-
-function isAutomaticBoardSortMode(value: unknown): value is CollectionView["automaticSortMode"] {
-  return value === "createdAt" || value === "provider"
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

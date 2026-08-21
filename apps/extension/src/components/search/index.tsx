@@ -1,7 +1,6 @@
 import type { Hotkey } from "@tanstack/react-hotkeys"
 import type { ReactNode } from "react"
-import type { Board } from "@/lib/board"
-import type { CollectionEntry } from "@/lib/collection"
+import type { Collection } from "@/lib/collection"
 import type { LiveCardViewModel } from "@/typings/source"
 import { Button } from "@newsnext/ui/components/button"
 import {
@@ -37,7 +36,7 @@ import {
   buildLiveCards,
 } from "@/lib/source"
 import { restorePersistedSourceQueries } from "@/lib/source/query-persister"
-import { boardsAtom, collectionEntriesAtom, instancesAtom } from "@/store/board"
+import { boardsAtom, instancesAtom } from "@/store/board"
 import { shortcutSettingsAtom } from "@/store/settings"
 import { PhMagnifyingGlass } from "../icons/ph"
 import { SourceIcon } from "../live-card/source-icon"
@@ -51,21 +50,14 @@ interface SearchGroup {
 
 function groupSearchItems(
   liveCards: LiveCardViewModel[],
-  boards: Board[],
-  collectionEntries: CollectionEntry[],
+  boards: Collection[],
 ): SearchGroup[] {
   const itemsByBoardId = new Map<string, LiveCardViewModel[]>()
   const knownBoardIds = new Set(boards.map(board => board.id))
-  const collectionIdsByInstance = new Map<string, string[]>()
-  for (const entry of collectionEntries) {
-    const collectionIds = collectionIdsByInstance.get(entry.instanceId) ?? []
-    collectionIds.push(entry.collectionId)
-    collectionIdsByInstance.set(entry.instanceId, collectionIds)
-  }
-
   liveCards.forEach((liveCard) => {
-    const collectionIds = (collectionIdsByInstance.get(liveCard.id) ?? [])
-      .filter(collectionId => knownBoardIds.has(collectionId))
+    const collectionIds = boards
+      .filter(board => board.instanceIds.includes(liveCard.id) && knownBoardIds.has(board.id))
+      .map(board => board.id)
 
     for (const collectionId of collectionIds) {
       const items = itemsByBoardId.get(collectionId) ?? []
@@ -177,7 +169,6 @@ function SearchDialogContent({
   searchShortcut: Hotkey | null
 }): ReactNode {
   const boards = useAtomValue(boardsAtom)
-  const collectionEntries = useAtomValue(collectionEntriesAtom)
   const instances = useAtomValue(instancesAtom)
   const queryClient = useQueryClient()
   const { sources } = useSourceDescriptors()
@@ -189,7 +180,7 @@ function SearchDialogContent({
 
     return buildLiveCards({
       sources,
-      sourceInstances: instances,
+      instances,
       collectionId: null,
     })
   }, [sources, instances])
@@ -226,8 +217,8 @@ function SearchDialogContent({
   )
 
   const searchGroups = useMemo(
-    () => groupSearchItems(resolvedLiveCards, boards, collectionEntries),
-    [boards, collectionEntries, resolvedLiveCards],
+    () => groupSearchItems(resolvedLiveCards, boards),
+    [boards, resolvedLiveCards],
   )
 
   return (

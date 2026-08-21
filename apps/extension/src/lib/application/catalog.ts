@@ -1,11 +1,11 @@
 import type { Color } from "@newsnext/shared/types"
-import type { BoardLayer, BoardSortMode } from "../board"
-import type { SourceInstancePatch } from "../source"
+import type { BoardLayer, NowLayerSortMode } from "../board"
+import type { InstancePatch } from "../source"
 import type {
   ApplicationAction,
   ApplicationActionInputMap,
   ApplicationActionName,
-  CollectionViewConfiguration,
+  BoardConfiguration,
 } from "./actions"
 import type { ApplicationQuery } from "./queries"
 import { COLORS } from "@newsnext/shared/constants"
@@ -52,38 +52,38 @@ const INSTANCE_CREATION_SCHEMA = objectSchema(
   INSTANCE_CREATION_PROPERTIES,
   ["patch", "sourceId"],
 )
-const COLLECTION_VIEW_PROPERTIES = {
+const BOARD_CONFIGURATION_PROPERTIES = {
   color: { enum: COLORS },
   defaultLayer: { enum: ["now", "next"] },
-  sortMode: { enum: ["createdAt", "provider", "manual"] },
+  sortMode: { enum: ["addedAt", "provider", "manual"] },
 } as const
-const COLLECTION_VIEW_CONFIGURATION_SCHEMA = objectSchema(COLLECTION_VIEW_PROPERTIES, [])
+const BOARD_CONFIGURATION_SCHEMA = objectSchema(BOARD_CONFIGURATION_PROPERTIES, [])
 
 const actionDefinitions: {
   [Name in ApplicationActionName]: ApplicationActionDefinition<Name>
 } = {
   "collection.create": {
     name: "collection.create",
-    description: "Create a Collection, its Board preferences, and optional configured Instances.",
+    description: "Create a Collection, its Board configuration, and optional configured Instances.",
     inputSchema: objectSchema({
       instances: { type: "array", items: INSTANCE_CREATION_SCHEMA },
       name: IDENTIFIER_SCHEMA,
-      view: COLLECTION_VIEW_CONFIGURATION_SCHEMA,
+      board: BOARD_CONFIGURATION_SCHEMA,
     }, ["name"]),
     outputSchema: objectSchema({ collectionId: IDENTIFIER_SCHEMA }, ["collectionId"]),
     parseInput: (value) => {
       const input = requireRecord(value)
-      requireOnlyKeys(input, ["instances", "name", "view"])
+      requireOnlyKeys(input, ["board", "instances", "name"])
       return {
+        ...(input.board !== undefined ? { board: parseBoardConfiguration(input.board) } : {}),
         ...(input.instances !== undefined ? { instances: parseInstanceCreations(input.instances) } : {}),
         name: requireIdentifier(input.name, "name"),
-        ...(input.view !== undefined ? { view: parseCollectionViewConfiguration(input.view) } : {}),
       }
     },
   },
   "collection.rename": {
     name: "collection.rename",
-    description: "Rename a Collection without changing its View preferences.",
+    description: "Rename a Collection without changing its Board configuration.",
     inputSchema: objectSchema({
       collectionId: IDENTIFIER_SCHEMA,
       name: IDENTIFIER_SCHEMA,
@@ -100,32 +100,32 @@ const actionDefinitions: {
   },
   "collection.update": {
     name: "collection.update",
-    description: "Atomically update Collection data and its human Board preferences.",
+    description: "Atomically update Collection data and its Board configuration.",
     inputSchema: objectSchema({
       collectionId: IDENTIFIER_SCHEMA,
       name: IDENTIFIER_SCHEMA,
-      view: COLLECTION_VIEW_CONFIGURATION_SCHEMA,
+      board: BOARD_CONFIGURATION_SCHEMA,
     }, ["collectionId"]),
     outputSchema: EMPTY_OBJECT_SCHEMA,
     parseInput: (value) => {
       const input = requireRecord(value)
-      requireOnlyKeys(input, ["collectionId", "name", "view"])
-      if (input.name === undefined && input.view === undefined) {
-        throw new Error("Collection update requires a name or View configuration")
+      requireOnlyKeys(input, ["board", "collectionId", "name"])
+      if (input.name === undefined && input.board === undefined) {
+        throw new Error("Collection update requires a name or Board configuration")
       }
       return {
         collectionId: requireIdentifier(input.collectionId, "collectionId"),
         ...(input.name !== undefined ? { name: requireIdentifier(input.name, "name") } : {}),
-        ...(input.view !== undefined ? { view: parseCollectionViewConfiguration(input.view) } : {}),
+        ...(input.board !== undefined ? { board: parseBoardConfiguration(input.board) } : {}),
       }
     },
   },
-  "view.configureCollection": {
-    name: "view.configureCollection",
-    description: "Configure the human Board projection for a Collection.",
+  "board.configure": {
+    name: "board.configure",
+    description: "Configure the Board projection for a Collection.",
     inputSchema: objectSchema({
       collectionId: IDENTIFIER_SCHEMA,
-      ...COLLECTION_VIEW_PROPERTIES,
+      ...BOARD_CONFIGURATION_PROPERTIES,
     }, ["collectionId"]),
     outputSchema: EMPTY_OBJECT_SCHEMA,
     parseInput: (value) => {
@@ -134,7 +134,7 @@ const actionDefinitions: {
       const { collectionId, ...configuration } = input
       return {
         collectionId: requireIdentifier(collectionId, "collectionId"),
-        ...parseCollectionViewConfiguration(configuration),
+        ...parseBoardConfiguration(configuration),
       }
     },
   },
@@ -171,9 +171,9 @@ const actionDefinitions: {
           }
     },
   },
-  "collection.reorderInstances": {
-    name: "collection.reorderInstances",
-    description: "Set the complete manual Instance order for a Collection.",
+  "nowLayer.setManualOrder": {
+    name: "nowLayer.setManualOrder",
+    description: "Set the complete manual LiveCard order for a Collection's Now Layer.",
     inputSchema: objectSchema({
       collectionId: IDENTIFIER_SCHEMA,
       instanceIds: IDENTIFIER_ARRAY_SCHEMA,
@@ -198,7 +198,7 @@ const actionDefinitions: {
   ),
   "instance.create": {
     name: "instance.create",
-    description: "Create a configured Source Instance and add it to one or more Collections.",
+    description: "Create a configured Instance and add it to one or more Collections.",
     inputSchema: objectSchema({
       collectionIds: { ...IDENTIFIER_ARRAY_SCHEMA, minItems: 1 },
       ...INSTANCE_CREATION_PROPERTIES,
@@ -226,7 +226,7 @@ const actionDefinitions: {
       requireOnlyKeys(input, ["instanceId", "patch"])
       return {
         instanceId: requireIdentifier(input.instanceId, "instanceId"),
-        patch: requireSourceInstancePatch(input.patch),
+        patch: requireInstancePatch(input.patch),
       }
     },
   },
@@ -275,31 +275,31 @@ const queryDescriptors: Record<ApplicationQueryName, ApplicationOperationDescrip
   },
   "instance.list": {
     name: "instance.list",
-    description: "List configured Source Instances.",
+    description: "List configured Instances.",
     inputSchema: EMPTY_OBJECT_SCHEMA,
     outputSchema: { type: "array", items: { type: "object" } },
   },
   "instance.get": {
     name: "instance.get",
-    description: "Get one configured Source Instance.",
+    description: "Get one configured Instance.",
     inputSchema: objectSchema({ instanceId: IDENTIFIER_SCHEMA }, ["instanceId"]),
     outputSchema: { type: "object" },
   },
-  "view.getContext": {
-    name: "view.getContext",
+  "board.getContext": {
+    name: "board.getContext",
     description: "Get the current human Board and its underlying Collection identity.",
     inputSchema: EMPTY_OBJECT_SCHEMA,
     outputSchema: { type: "object" },
   },
-  "view.getCollection": {
-    name: "view.getCollection",
-    description: "Get the durable Board preferences for a Collection.",
+  "board.getConfiguration": {
+    name: "board.getConfiguration",
+    description: "Get the durable Board configuration for a Collection.",
     inputSchema: objectSchema({ collectionId: IDENTIFIER_SCHEMA }, ["collectionId"]),
     outputSchema: { type: "object" },
   },
-  "view.getVisibleLiveCards": {
-    name: "view.getVisibleLiveCards",
-    description: "List the LiveCards logically displayed by the current Board.",
+  "nowLayer.getLiveCards": {
+    name: "nowLayer.getLiveCards",
+    description: "List the LiveCards in the current Board's Now Layer.",
     inputSchema: EMPTY_OBJECT_SCHEMA,
     outputSchema: { type: "array", items: { type: "object" } },
   },
@@ -373,20 +373,20 @@ export function parseApplicationQuery(value: unknown): ApplicationQuery {
         input: { instanceId: requireIdentifier(input.instanceId, "instanceId") },
       }
     }
-    case "view.getContext":
+    case "board.getContext":
       requireEmptyInput(query.input)
-      return { type: "view.getContext" }
-    case "view.getCollection": {
+      return { type: "board.getContext" }
+    case "board.getConfiguration": {
       const input = requireRecord(query.input)
       requireOnlyKeys(input, ["collectionId"])
       return {
-        type: "view.getCollection",
+        type: "board.getConfiguration",
         input: { collectionId: requireIdentifier(input.collectionId, "collectionId") },
       }
     }
-    case "view.getVisibleLiveCards":
+    case "nowLayer.getLiveCards":
       requireEmptyInput(query.input)
-      return { type: "view.getVisibleLiveCards" }
+      return { type: "nowLayer.getLiveCards" }
   }
 }
 
@@ -497,9 +497,9 @@ function requireColor(value: unknown): Color {
   return value as Color
 }
 
-function requireSortMode(value: unknown): BoardSortMode {
-  if (value !== "createdAt" && value !== "provider" && value !== "manual") {
-    throw new Error("'sortMode' must be createdAt, provider, or manual")
+function requireSortMode(value: unknown): NowLayerSortMode {
+  if (value !== "addedAt" && value !== "provider" && value !== "manual") {
+    throw new Error("'sortMode' must be addedAt, provider, or manual")
   }
   return value
 }
@@ -511,7 +511,7 @@ function requireBoardLayer(value: unknown): BoardLayer {
   return value
 }
 
-function parseCollectionViewConfiguration(value: unknown): CollectionViewConfiguration {
+function parseBoardConfiguration(value: unknown): BoardConfiguration {
   const configuration = requireRecord(value)
   requireOnlyKeys(configuration, ["color", "defaultLayer", "sortMode"])
   return {
@@ -525,7 +525,7 @@ function parseCollectionViewConfiguration(value: unknown): CollectionViewConfigu
   }
 }
 
-function requireSourceInstancePatch(value: unknown): SourceInstancePatch {
+function requireInstancePatch(value: unknown): InstancePatch {
   const patch = requireRecord(value)
   requireOnlyKeys(patch, ["metadata", "params"])
   if ((patch.params !== undefined && !isRecord(patch.params))
@@ -551,7 +551,7 @@ function parseInstanceCreations(
 
 function parseInstanceCreationFields(input: Record<string, unknown>) {
   return {
-    patch: requireSourceInstancePatch(input.patch),
+    patch: requireInstancePatch(input.patch),
     sourceId: requireIdentifier(input.sourceId, "sourceId"),
   }
 }

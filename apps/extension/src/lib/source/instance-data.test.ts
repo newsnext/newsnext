@@ -1,5 +1,5 @@
 import type { InstanceDataSource } from "./instance-data-target"
-import type { SourceInstance } from "./live-cards"
+import type { Instance } from "./live-cards"
 import { describe, expect, it } from "vitest"
 import { createInstanceDataTarget, resolveInstanceDataTarget } from "./instance-data-target"
 
@@ -24,7 +24,7 @@ const source = {
   },
 } satisfies InstanceDataSource
 
-const instance: SourceInstance = {
+const instance: Instance = {
   createdAt: 1,
   instanceId: "github:trending::one",
   patch: { params: { language: "typescript" } },

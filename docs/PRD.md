@@ -126,7 +126,7 @@ agent-generated applications.
 
 Now Layer and Next Layer are two complementary views of the same Board:
 
-- Now Layer shows the news currently returned by the Board's Source Instances.
+- Now Layer shows the news currently returned by the Board's Instances.
   Each Instance keeps its data separate and is projected through its own LiveCard
   using the shared LiveCard model.
 - Next Layer processes those news items and, when relevant, their saved
@@ -180,7 +180,7 @@ the need for durable or derived processing does.
 
 ### Stable data streams are the foundation
 
-A configured Source Instance has a durable identity and repeatable
+A configured Instance has a durable identity and repeatable
 configuration. Now Layer keeps only the latest cached result needed for current
 reading; it does not create History merely because a person opened the Board.
 Saved observations exist only when an Agent-owned Next Layer task or an
@@ -339,7 +339,7 @@ User goal
 Board
     |
     +-- Data foundation
-    |      +-- Source Instances
+    |      +-- Instances
     |             +-- Stable data streams
     |                    +-- current cache for Now Layer
     |                    +-- Agent-retained observations for Next Layer
@@ -372,7 +372,7 @@ The canonical concepts remain:
 | Board | Human presentation of a Collection through Now Layer and Next Layer |
 | Now Layer | Separate Instance results presented through a unified LiveCard model |
 | Next Layer | Open composition of Board data through personalized Widgets |
-| LiveCard | Shared Now Layer model for reading and operating one Source Instance |
+| LiveCard | Shared Now Layer model for reading and operating one Instance |
 | Widget | Personalized result computed from one or more Board data streams |
 | Agent | CLI user that operates the same application capabilities as the UI |
 

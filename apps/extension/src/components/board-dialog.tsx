@@ -1,5 +1,5 @@
 import type { Color } from "@newsnext/shared/types"
-import type { Board, BoardCreateInput, BoardLayer, BoardSortMode } from "@/lib/board"
+import type { Board, BoardCreateInput, BoardLayer, NowLayerSortMode } from "@/lib/board"
 import { Button } from "@newsnext/ui/components/button"
 import {
   Dialog,
@@ -17,12 +17,12 @@ import { useState } from "react"
 import { ConfigSection } from "@/components/common/config-section"
 import { ConfirmDestructiveButton } from "@/components/common/confirm-destructive-button"
 import { useAsyncAction } from "@/hooks/use-async-action"
-import { DEFAULT_BOARD_COLOR, DEFAULT_BOARD_LAYER, DEFAULT_BOARD_SORT_PREFERENCE, getBoardColor, updateBoardSortMode } from "@/lib/board"
+import { DEFAULT_BOARD_COLOR, DEFAULT_BOARD_LAYER, DEFAULT_NOW_LAYER_SORT, getBoardColor, updateNowLayerSortMode } from "@/lib/board"
 import { cn } from "@/lib/utils"
 
-const SORT_OPTIONS: { label: string, value: BoardSortMode }[] = [
+const SORT_OPTIONS: { label: string, value: NowLayerSortMode }[] = [
   { label: "Manual", value: "manual" },
-  { label: "Date added", value: "createdAt" },
+  { label: "Date added", value: "addedAt" },
   { label: "Provider name", value: "provider" },
 ]
 
@@ -71,11 +71,11 @@ function ConfigurableBoardDialog({
     : currentBoard
       ? getBoardColor(currentBoard)
       : DEFAULT_BOARD_COLOR
-  const initialSortMode = board?.sort.mode ?? DEFAULT_BOARD_SORT_PREFERENCE.mode
+  const initialSortMode = board?.nowLayer.sort.mode ?? DEFAULT_NOW_LAYER_SORT.mode
   const initialDefaultLayer = board?.defaultLayer ?? DEFAULT_BOARD_LAYER
   const [name, setName] = useState(() => board?.name ?? "")
   const [color, setColor] = useState<Color>(initialColor)
-  const [sortMode, setSortMode] = useState<BoardSortMode>(initialSortMode)
+  const [sortMode, setSortMode] = useState<NowLayerSortMode>(initialSortMode)
   const [defaultLayer, setDefaultLayer] = useState<BoardLayer>(initialDefaultLayer)
   const transferBoards = boards.filter(candidate => candidate.id !== boardId)
   const [targetBoardId, setTargetBoardId] = useState(
@@ -101,9 +101,12 @@ function ConfigurableBoardDialog({
         const nextBoard: Board = {
           ...board,
           name: normalizedName,
-          color,
           defaultLayer,
-          sort: updateBoardSortMode(board.sort, sortMode),
+          nowLayer: {
+            ...board.nowLayer,
+            color,
+            sort: updateNowLayerSortMode(board.nowLayer.sort, sortMode),
+          },
         }
         await onUpdate(nextBoard)
       })

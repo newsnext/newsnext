@@ -9,7 +9,7 @@ import type {
   SourceRadarRule,
 } from "@newsnext/source-kit/types"
 import type { RadarPageQuery } from "./page-query"
-import type { SourceInstanceMetadata, SourceInstancePatch } from "@/lib/source"
+import type { InstanceMetadata, InstancePatch } from "@/lib/source"
 import {
   compileSourceTemplate,
   createSourceTemplateScope,
@@ -41,7 +41,7 @@ export interface RadarSuggestion {
   id: string
   ruleId: string
   sourceId: string
-  patch: SourceInstancePatch
+  patch: InstancePatch
 }
 
 export interface ResolvedRadarSuggestion extends RadarSuggestion {
@@ -560,8 +560,8 @@ function resolveMetaPatch(
   rule: CompiledRadarRule,
   context: RadarMatchContext,
   input: RadarContext,
-): SourceInstanceMetadata {
-  const metadata: SourceInstanceMetadata = {
+): InstanceMetadata {
+  const metadata: InstanceMetadata = {
     home: context.url.toString(),
   }
   const extractedItem = Object.fromEntries(

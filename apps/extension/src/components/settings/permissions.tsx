@@ -1,4 +1,4 @@
-import type { SourceInstance } from "@/lib/source"
+import type { Instance } from "@/lib/source"
 import type { SourceDescriptor } from "@/typings/source"
 import { Button } from "@newsnext/ui/components/button"
 import { useAtomValue, useSetAtom } from "jotai"
@@ -15,7 +15,7 @@ import {
   getUserManagedHostPermissionOrigins,
   revokeHostPermissionOrigin,
 } from "@/lib/source"
-import { collectionEntriesAtom, deleteInstanceAtom, instancesAtom } from "@/store/board"
+import { collectionsAtom, deleteInstanceAtom, instancesAtom } from "@/store/board"
 
 interface PermissionLiveCard {
   id: string
@@ -32,7 +32,7 @@ function grantedOriginIncludes(grantedOrigin: string, requestedOrigin: string): 
 function getLiveCardsUsingOrigin(
   origin: string,
   sources: SourceDescriptor[],
-  instances: SourceInstance[],
+  instances: Instance[],
 ): PermissionLiveCard[] {
   const sourcesById = new Map(sources.map(source => [source.id, source]))
 
@@ -67,7 +67,7 @@ export function PermissionsSettings({
 }) {
   const [origins, setOrigins] = useState<string[]>([])
   const instances = useAtomValue(instancesAtom)
-  const collectionEntries = useAtomValue(collectionEntriesAtom)
+  const collections = useAtomValue(collectionsAtom)
   const deleteInstance = useSetAtom(deleteInstanceAtom)
   const { isLoading: areSourcesLoading, sources } = useSourceDescriptors()
   const {
@@ -82,8 +82,8 @@ export function PermissionsSettings({
     getLiveCardsUsingOrigin(origin, sources, instances),
   ])), [instances, origins, sources])
   const boardIdByInstanceId = useMemo(() => new Map(
-    collectionEntries.map(entry => [entry.instanceId, entry.collectionId]),
-  ), [collectionEntries])
+    collections.flatMap(collection => collection.instanceIds.map(instanceId => [instanceId, collection.id] as const)),
+  ), [collections])
 
   const refreshOrigins = useCallback(async (): Promise<void> => {
     const grantedOrigins = await getGrantedHostPermissionOrigins()

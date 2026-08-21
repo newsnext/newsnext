@@ -1,4 +1,4 @@
-import type { SourceInstanceMetadata } from "@/lib/source"
+import type { InstanceMetadata } from "@/lib/source"
 import type { LiveCardViewModel } from "@/typings/source"
 import { Button } from "@newsnext/ui/components/button"
 import { useEffect, useState } from "react"
@@ -18,8 +18,8 @@ export interface LiveCardEditFormProps {
   onSaveSourceParams: () => Promise<void> | void
   onResetSourceParams: () => Promise<void> | void
   onDiscardSourceParams: () => void
-  onSaveSourceMeta: (meta: SourceInstanceMetadata) => Promise<void> | void
-  onPreviewMetadataChange?: (meta: SourceInstanceMetadata | null) => void
+  onSaveSourceMeta: (meta: InstanceMetadata) => Promise<void> | void
+  onPreviewMetadataChange?: (meta: InstanceMetadata | null) => void
 }
 
 export interface SourceParamValidationState {
@@ -42,7 +42,7 @@ export function LiveCardEditForm({
 }: LiveCardEditFormProps): React.JSX.Element {
   const { params, provider } = source
   const { badge, desc, home, title } = source.metadata
-  const [editDraft, setEditDraft] = useState<SourceInstanceMetadata | null>(null)
+  const [editDraft, setEditDraft] = useState<InstanceMetadata | null>(null)
   const [isEditingParams, setIsEditingParams] = useState(false)
   const { error: saveError, isPending: isSaving, run: runSave } = useAsyncAction(
     "The LiveCard could not be saved.",
@@ -63,7 +63,7 @@ export function LiveCardEditForm({
     onPreviewMetadataChange?.(editDraft)
   }, [editDraft, onPreviewMetadataChange])
 
-  function updateEditDraft(patch: Partial<SourceInstanceMetadata>): void {
+  function updateEditDraft(patch: Partial<InstanceMetadata>): void {
     setEditDraft(prev => prev ? { ...prev, ...patch } : prev)
   }
 

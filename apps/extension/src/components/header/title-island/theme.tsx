@@ -25,7 +25,10 @@ export function ThemeFeature() {
           onValueChange={(color) => {
             const previousColor = getBoardColor(board)
             handleThemeSwitch(color)
-            void updateBoard({ ...board, color }).catch((error) => {
+            void updateBoard({
+              ...board,
+              nowLayer: { ...board.nowLayer, color },
+            }).catch((error) => {
               handleThemeSwitch(previousColor)
               console.error("Failed to update Board color", error)
             })

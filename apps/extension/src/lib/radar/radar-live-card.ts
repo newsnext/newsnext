@@ -1,14 +1,14 @@
 import type { ResolvedRadarSuggestion } from "./matcher"
-import type { SourceInstancePatch } from "@/lib/source"
+import type { InstancePatch } from "@/lib/source"
 import type { LiveCardViewModel } from "@/typings/source"
-import { mergeSourceInstancePatch } from "@/lib/source"
+import { mergeInstancePatch } from "@/lib/source"
 
 export function createRadarLiveCard(
   suggestion: ResolvedRadarSuggestion,
-  draftPatch?: SourceInstancePatch,
+  draftPatch?: InstancePatch,
 ): LiveCardViewModel {
   const { source } = suggestion
-  const patch = mergeSourceInstancePatch(suggestion.patch, draftPatch ?? {})
+  const patch = mergeInstancePatch(suggestion.patch, draftPatch ?? {})
 
   return {
     ...source,

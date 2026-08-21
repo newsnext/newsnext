@@ -1,10 +1,10 @@
-import type { SourceInstance } from "./live-cards"
+import type { Instance } from "./live-cards"
 import type { SourceDescriptor } from "@/typings/source"
 import { describe, expect, it } from "vitest"
 import {
   applySourceLoaderMetadata,
   buildLiveCards,
-  mergeSourceInstancePatch,
+  mergeInstancePatch,
 } from "./live-cards"
 
 const testSources: SourceDescriptor[] = [
@@ -43,7 +43,7 @@ const testSources: SourceDescriptor[] = [
   },
 ]
 
-function createCustomInstance(patch: Partial<SourceInstance> = {}): SourceInstance {
+function createCustomInstance(patch: Partial<Instance> = {}): Instance {
   return {
     instanceId: "test:feed::AbCdEfGh1234",
     sourceId: "test:feed",
@@ -58,7 +58,7 @@ describe("buildLiveCards", () => {
     const liveCards = buildLiveCards({
       sources: testSources,
       collectionId: null,
-      sourceInstances: [
+      instances: [
         createCustomInstance({ patch: { params: { topic: "custom" } } }),
       ],
     })
@@ -70,11 +70,11 @@ describe("buildLiveCards", () => {
     })
   })
 
-  it("applies source instance title overrides", () => {
+  it("applies Instance title overrides", () => {
     const liveCards = buildLiveCards({
       sources: testSources,
       collectionId: null,
-      sourceInstances: [
+      instances: [
         createCustomInstance({
           patch: { metadata: { title: "Custom Radar Title" } },
         }),
@@ -92,7 +92,7 @@ describe("buildLiveCards", () => {
     const liveCards = buildLiveCards({
       sources: testSources,
       collectionId: null,
-      sourceInstances: [
+      instances: [
         createCustomInstance({
           patch: {
             metadata: {
@@ -124,7 +124,7 @@ describe("buildLiveCards", () => {
     const liveCards = buildLiveCards({
       sources: testSources,
       collectionId: null,
-      sourceInstances: [
+      instances: [
         createCustomInstance({
           patch: {
             metadata: {
@@ -136,7 +136,7 @@ describe("buildLiveCards", () => {
                 category: "forum",
               },
             },
-          } as unknown as SourceInstance["patch"],
+          } as unknown as Instance["patch"],
         }),
       ],
     })
@@ -158,7 +158,7 @@ describe("buildLiveCards", () => {
     const liveCards = buildLiveCards({
       sources: testSources,
       collectionId: null,
-      sourceInstances: [],
+      instances: [],
     })
 
     expect(liveCards).toEqual([])
@@ -168,7 +168,7 @@ describe("buildLiveCards", () => {
     const liveCards = buildLiveCards({
       sources: testSources,
       collectionId: null,
-      sourceInstances: [
+      instances: [
         createCustomInstance(),
         createCustomInstance({
           instanceId: "test:latest::ZyXwVuTs9876",
@@ -188,7 +188,7 @@ describe("buildLiveCards", () => {
       sources: testSources,
       collectionId: "reading",
       collectionInstanceIds: ["test:latest::ZyXwVuTs9876"],
-      sourceInstances: [
+      instances: [
         createCustomInstance(),
         createCustomInstance({
           instanceId: "test:latest::ZyXwVuTs9876",
@@ -206,7 +206,7 @@ describe("applySourceLoaderMetadata", () => {
     const liveCards = buildLiveCards({
       sources: testSources,
       collectionId: null,
-      sourceInstances: [
+      instances: [
         createCustomInstance({
           patch: { metadata: { title: "Radar title", desc: "Radar description" } },
         }),
@@ -227,9 +227,9 @@ describe("applySourceLoaderMetadata", () => {
   })
 })
 
-describe("mergeSourceInstancePatch", () => {
+describe("mergeInstancePatch", () => {
   it("merges params and metadata independently", () => {
-    expect(mergeSourceInstancePatch(
+    expect(mergeInstancePatch(
       {
         params: { username: "newsnext_dev" },
         metadata: { title: "NewsNext" },

@@ -12,23 +12,21 @@ function createData(): PersistedUserData {
   const settings = createDefaultPersistedSettings()
   settings.general.defaultBoardId = "reading"
   return {
+    version: 2,
     settings,
-    collections: [{ id: "reading", name: "Reading", createdAt: 1 }],
-    collectionViews: [{
-      collectionId: "reading",
-      color: "blue",
+    collections: [{
+      id: "reading",
+      name: "Reading",
+      createdAt: 1,
+      instanceIds: ["rss:feed::one"],
       defaultLayer: "next",
-      sortMode: "manual",
-      automaticSortMode: "createdAt",
-    }],
-    collectionEntries: [{
-      collectionId: "reading",
-      instanceId: "rss:feed::R5xK2mN8qP4s",
-      addedAt: 1,
-      position: 0,
+      nowLayer: {
+        color: "blue",
+        sort: { mode: "manual", automaticMode: "addedAt", manualOrder: ["rss:feed::one"] },
+      },
     }],
     instances: [{
-      instanceId: "rss:feed::R5xK2mN8qP4s",
+      instanceId: "rss:feed::one",
       sourceId: "rss:feed",
       patch: { params: { url: "https://example.com/feed.xml" } },
       createdAt: 1,
@@ -37,109 +35,109 @@ function createData(): PersistedUserData {
 }
 
 describe("persisted user data", () => {
-  it("enforces canonical IDs, names, and contiguous membership positions", () => {
+  it("normalizes v2 Collection membership and NowLayer order", () => {
     const data = normalizeApplicationData({
-      collections: [
-        { id: "reading", name: "Reading", createdAt: 1 },
-        { id: "duplicate", name: "reading", createdAt: 2 },
-        { id: "", name: "Invalid", createdAt: 3 },
-      ],
-      collectionViews: [{
-        collectionId: "reading",
+      version: 2,
+      collections: [{
+        id: "reading",
+        name: " Reading ",
+        createdAt: 1,
+        instanceIds: ["second", "first", "first", "missing"],
         defaultLayer: "now",
-        filter: { mode: "exclude", keywords: ["spoiler"] },
-        sortMode: "createdAt",
-        automaticSortMode: "createdAt",
+        nowLayer: {
+          color: "blue",
+          sort: { mode: "manual", automaticMode: "provider", manualOrder: ["first"] },
+        },
       }],
       instances: [
-        { instanceId: "second", sourceId: "rss:feed", patch: {}, createdAt: 2 },
         { instanceId: "first", sourceId: "rss:feed", patch: {}, createdAt: 1 },
-        { instanceId: "", sourceId: "rss:feed", patch: {}, createdAt: 3 },
-      ],
-      collectionEntries: [
-        { collectionId: "reading", instanceId: "second", addedAt: 2, position: 9 },
-        { collectionId: "reading", instanceId: "first", addedAt: 1, position: 4 },
-        { collectionId: "reading", instanceId: "first", addedAt: 1, position: -1 },
+        { instanceId: "second", sourceId: "rss:feed", patch: {}, createdAt: 2 },
       ],
     })
 
-    expect(data.collections.map(collection => collection.id)).toEqual(["reading"])
-    expect(data.instances.map(instance => instance.instanceId)).toEqual(["second", "first"])
-    expect(data.collectionViews).toEqual([{
-      automaticSortMode: "createdAt",
-      collectionId: "reading",
-      defaultLayer: "now",
-      sortMode: "createdAt",
-    }])
-    expect(data.collectionEntries).toEqual([
-      { collectionId: "reading", instanceId: "first", addedAt: 1, position: 0 },
-      { collectionId: "reading", instanceId: "second", addedAt: 2, position: 1 },
-    ])
+    expect(data.collections[0]).toMatchObject({
+      name: "Reading",
+      instanceIds: ["second", "first"],
+      nowLayer: {
+        sort: {
+          mode: "manual",
+          automaticMode: "provider",
+          manualOrder: ["first", "second"],
+        },
+      },
+    })
   })
 
-  it("round-trips Collections, memberships, Instances, Views, and settings", () => {
+  it("migrates legacy memberships by Instance createdAt descending", () => {
+    const data = normalizeApplicationData({
+      collections: [{ id: "reading", name: "Reading", createdAt: 1 }],
+      collectionViews: [{
+        collectionId: "reading",
+        color: "purple",
+        defaultLayer: "next",
+        sortMode: "manual",
+        automaticSortMode: "createdAt",
+      }],
+      collectionEntries: [
+        { collectionId: "reading", instanceId: "older", addedAt: 99, position: 0 },
+        { collectionId: "reading", instanceId: "newer", addedAt: 1, position: 1 },
+      ],
+      instances: [
+        { instanceId: "older", sourceId: "rss:feed", patch: {}, createdAt: 1 },
+        { instanceId: "newer", sourceId: "rss:feed", patch: {}, createdAt: 2 },
+      ],
+    })
+
+    expect(data.version).toBe(2)
+    expect(data.collections[0]).toEqual({
+      id: "reading",
+      name: "Reading",
+      createdAt: 1,
+      instanceIds: ["newer", "older"],
+      defaultLayer: "next",
+      nowLayer: {
+        color: "purple",
+        sort: {
+          mode: "manual",
+          automaticMode: "addedAt",
+          manualOrder: ["older", "newer"],
+        },
+      },
+    })
+  })
+
+  it("round-trips the v2 application shape and settings", () => {
     const data = createData()
     const serialized = serializePersistedDataExport(data)
-    expect(JSON.parse(serialized).version).toBe(1)
+    expect(JSON.parse(serialized).version).toBe(2)
     expect(parsePersistedDataExport(serialized)?.data).toEqual(data)
   })
 
-  it("rejects another export kind or unsupported version", () => {
-    expect(parsePersistedDataExport(JSON.stringify({ kind: "other-app", version: 1, data: {} })))
-      .toBeUndefined()
-    expect(parsePersistedDataExport(JSON.stringify({
+  it("accepts v1 exports and rejects unsupported formats", () => {
+    const legacy = JSON.stringify({
       kind: "newsnext-user-data",
-      version: 2,
-      data: { collections: [{ id: "legacy", name: "Legacy", createdAt: 1 }] },
-    }))).toBeUndefined()
-    expect(parsePersistedDataExport(JSON.stringify({ kind: "newsnext-user-data", version: 4, data: {} })))
+      version: 1,
+      data: {
+        collections: [{ id: "legacy", name: "Legacy", createdAt: 1 }],
+        collectionEntries: [],
+        collectionViews: [],
+        instances: [],
+      },
+    })
+    expect(parsePersistedDataExport(legacy)?.version).toBe(2)
+    expect(parsePersistedDataExport(JSON.stringify({ kind: "other-app", version: 2, data: {} })))
+      .toBeUndefined()
+    expect(parsePersistedDataExport(JSON.stringify({ kind: "newsnext-user-data", version: 3, data: {} })))
       .toBeUndefined()
   })
 
-  it("exports Board and Instance slices independently", () => {
-    const data = createData()
-    expect(parsePersistedDataExport(serializePersistedDataExport(data, ["boards"]))?.data)
-      .toEqual({
-        collections: data.collections,
-        collectionEntries: data.collectionEntries,
-        collectionViews: data.collectionViews,
-      })
-  })
-
-  it("repairs memberships after a partial import", () => {
-    const current = createData()
-    current.settings.general.defaultBoardId = "reading"
-    const merged = mergePersistedUserData(current, {
+  it("repairs ownership after a partial Board import", () => {
+    const merged = mergePersistedUserData(createData(), {
+      version: 2,
       collections: [],
-      collectionEntries: [],
-      collectionViews: [],
     })
-    const initialBoard = merged.collections[0]
-    const boardId = initialBoard?.id
-    expect(boardId).toHaveLength(12)
-    expect(initialBoard?.createdAt).toEqual(expect.any(Number))
-    expect(merged.settings.general.defaultBoardId).toBe(boardId)
-    expect(initialBoard).toMatchObject({ id: boardId, name: "My Board" })
-    expect(merged.collectionEntries).toEqual([{
-      collectionId: boardId,
-      instanceId: "rss:feed::R5xK2mN8qP4s",
-      addedAt: 1,
-      position: 0,
-    }])
-    expect(merged.instances).toEqual(current.instances)
-  })
-
-  it("assigns imported unowned Instances to the first Board", () => {
-    const data = createData()
-    data.collectionEntries = []
-
-    const imported = parsePersistedDataExport(serializePersistedDataExport(data))
-
-    expect(imported?.data.collectionEntries).toEqual([{
-      collectionId: "reading",
-      instanceId: "rss:feed::R5xK2mN8qP4s",
-      addedAt: 1,
-      position: 0,
-    }])
+    expect(merged.collections).toHaveLength(1)
+    expect(merged.collections[0]?.instanceIds).toEqual(["rss:feed::one"])
+    expect(merged.settings.general.defaultBoardId).toBe(merged.collections[0]?.id)
   })
 })

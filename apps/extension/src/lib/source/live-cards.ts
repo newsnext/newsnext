@@ -7,24 +7,24 @@ import { SOURCE_PRESENTATION_METADATA_KEYS } from "@newsnext/source-kit"
 import { pick } from "es-toolkit"
 import { mergeSourceParamValues } from "./params"
 
-export interface SourceInstance {
+export interface Instance {
   instanceId: string
   sourceId: string
-  patch: SourceInstancePatch
+  patch: InstancePatch
   createdAt: number
 }
 
-export type SourceInstanceMetadata = SourcePresentationMetadata
+export type InstanceMetadata = SourcePresentationMetadata
 
-export type SourceInstancePatch = SourcePatch<
+export type InstancePatch = SourcePatch<
   Record<string, unknown>,
-  SourceInstanceMetadata
+  InstanceMetadata
 >
 
-export function mergeSourceInstancePatch(
-  current: SourceInstancePatch | undefined,
-  patch: SourceInstancePatch,
-): SourceInstancePatch {
+export function mergeInstancePatch(
+  current: InstancePatch | undefined,
+  patch: InstancePatch,
+): InstancePatch {
   return {
     params: current?.params || patch.params
       ? mergeSourceParamValues(current?.params, patch.params)
@@ -37,7 +37,7 @@ export function mergeSourceInstancePatch(
 
 function applyInstanceOverrides(
   liveCard: LiveCardViewModel,
-  instance: SourceInstance,
+  instance: Instance,
 ): LiveCardViewModel {
   const metadata = pick(instance.patch.metadata ?? {}, SOURCE_PRESENTATION_METADATA_KEYS)
 
@@ -54,7 +54,7 @@ function applyInstanceOverrides(
 
 export function createLiveCard(
   source: SourceDescriptor,
-  instance: SourceInstance,
+  instance: Instance,
   collectionId: string | null = null,
 ): LiveCardViewModel {
   return applyInstanceOverrides({
@@ -67,19 +67,19 @@ export function createLiveCard(
 
 export function buildLiveCards({
   sources,
-  sourceInstances,
+  instances,
   collectionId,
   collectionInstanceIds,
 }: {
   sources: SourceDescriptor[]
-  sourceInstances: SourceInstance[]
+  instances: Instance[]
   collectionId: string | null
   collectionInstanceIds?: readonly string[]
 }): LiveCardViewModel[] {
-  const instanceGroups = new Map<string, SourceInstance[]>()
+  const instanceGroups = new Map<string, Instance[]>()
   const visibleIds = collectionInstanceIds ? new Set(collectionInstanceIds) : undefined
 
-  sourceInstances.forEach((instance) => {
+  instances.forEach((instance) => {
     if (visibleIds && !visibleIds.has(instance.instanceId)) {
       return
     }

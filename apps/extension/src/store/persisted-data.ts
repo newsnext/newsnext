@@ -20,9 +20,8 @@ export const importPersistedUserDataAtom = atom(
   async (get, set, imported: Partial<PersistedUserData>) => {
     const data = mergePersistedUserData(get(persistedUserDataAtom), imported)
     await createBackgroundClient().application.replace({
+      version: data.version,
       collections: data.collections,
-      collectionEntries: data.collectionEntries,
-      collectionViews: data.collectionViews,
       instances: data.instances,
     })
     set(persistedSettingsAtom, data.settings)

@@ -1,6 +1,6 @@
 import type { Atom } from "jotai"
 import type { LiveCardHeight } from "@/lib/settings"
-import type { SourceInstance } from "@/lib/source"
+import type { Instance } from "@/lib/source"
 import type { SourceDescriptor } from "@/typings/source"
 import { useAtomValue } from "jotai"
 import { memo, useMemo } from "react"
@@ -22,10 +22,11 @@ function canDragFromLiveCardHeader(target: Element | null): boolean {
 }
 
 interface DraggableLiveCardProps {
+  available?: boolean
   collectionId: string | null
   descriptor: SourceDescriptor
   dragging: boolean
-  instanceAtom: Atom<SourceInstance>
+  instanceAtom: Atom<Instance>
   sortable?: boolean
 }
 
@@ -81,7 +82,7 @@ function generateDragPreview({
   return () => layers.forEach(layer => layer.remove())
 }
 
-function DraggableLiveCardComponent({ collectionId, descriptor, dragging, instanceAtom, sortable = true }: DraggableLiveCardProps) {
+function DraggableLiveCardComponent({ available = true, collectionId, descriptor, dragging, instanceAtom, sortable = true }: DraggableLiveCardProps) {
   const instance = useAtomValue(instanceAtom)
   const liveCardHeight = useAtomValue(liveCardHeightAtom)
   const source = useMemo(
@@ -100,6 +101,7 @@ function DraggableLiveCardComponent({ collectionId, descriptor, dragging, instan
     <LiveCard
       id={id}
       source={source}
+      available={available}
       nodeRef={setNodeRef}
       dragHandleRef={sortable ? setHandleRef : undefined}
       sizeClassName={LIVE_CARD_SIZE_CLASS_NAMES[liveCardHeight]}
