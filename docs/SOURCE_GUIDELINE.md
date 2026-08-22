@@ -1235,7 +1235,7 @@ newsnext run registry/src/telegram.json \
 ```
 
 Useful options include `--params`, `--watch`, `--browser`, `--timeout`,
-`--provider-id`, `--use-provider-secrets`, and `--verbose`. See the complete
+`--provider-id`, `--use-provider-secrets`, `--debug`, and `--verbose`. See the complete
 list with:
 
 ```sh
@@ -1245,12 +1245,11 @@ newsnext run --help
 When `--browser` is omitted, the CLI prompts you to select a connected browser.
 Pass a browser name, full connection ID, or unique ID prefix to skip the prompt.
 
-The command prints the complete source result as `data`, `metadata`, and
-`itemTemplate`; normalized parameters and timing under `execution`; and every
-underlying request and response under `fetches`. Each fetch entry includes its
-duration, the request URL and method, and the response URL, status, headers, and
-text body. This output is intended for source testing and debugging and may
-contain sensitive response data.
+The command prints the source result as `data`, `metadata`, and `itemTemplate`,
+with normalized parameters and timing under `execution`. Pass `--debug` to also
+include every underlying request and response under `fetches`. Each fetch entry
+includes its duration, the request URL and method, and the response URL, status,
+headers, and text body. Debug output may contain sensitive response data.
 
 Fetch an endpoint directly from the connected extension when investigating
 authentication, headers, or raw responses:

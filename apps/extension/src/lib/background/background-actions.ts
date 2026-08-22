@@ -115,11 +115,13 @@ const developerFetchAction = defineAction({
 
 const SourceRunParams = Type.Unsafe<RunConnectedSourceInput>(Type.Union([
   Type.Object({
+    debug: Type.Boolean(),
     params: Type.Optional(RecordValue),
     retain: Type.Boolean(),
     sourceId: Identifier,
   }, { additionalProperties: false }),
   Type.Object({
+    debug: Type.Boolean(),
     params: Type.Optional(RecordValue),
     provider: RecordValue,
     providerId: Identifier,
@@ -145,10 +147,11 @@ const sourceRunAction = defineAction({
       sourceId: Type.String(),
       sourceVersion: Type.Number(),
     }),
-    fetches: Type.Array(Type.Unknown()),
+    fetches: Type.Optional(Type.Array(Type.Unknown())),
   }, { additionalProperties: true })),
   diagnostics: {
     input: input => ({
+      debug: input.debug,
       params: input.params,
       providerId: input.providerId,
       retain: input.retain,

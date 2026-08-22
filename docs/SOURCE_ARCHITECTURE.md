@@ -381,6 +381,9 @@ the opaque dataset IDs returned from `history datasets`. Only an explicit
 the daemon commits the normalized result. Board and Instance queries still
 execute in the extension background and read the Application Data envelope from
 `browser.storage.local` because frontend Jotai atoms are unavailable there.
+Source runs collect and return raw fetch diagnostics only when the caller
+explicitly enables debug output. Normal runs and retained background Jobs omit
+response bodies from the Native Messaging result.
 
 The Rust CLI daemon owns the local-socket framed-JSON control listener. Shutdown
 closes connected Native Messaging bridges, fails pending commands, removes any

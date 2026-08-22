@@ -11,23 +11,25 @@ import { createBackgroundSourceFetch } from "./source-fetch"
 import { resolveSourceSecrets, updateSourceSecrets } from "./source-secrets"
 import { createBackgroundSourceService } from "./source-service"
 
-export type RunConnectedSourceInput
-  = | {
-    params?: Record<string, unknown>
+interface RunConnectedSourceOptions {
+  debug: boolean
+  params?: Record<string, unknown>
+  retain: boolean
+  sourceId: string
+}
+
+export type RunConnectedSourceInput = RunConnectedSourceOptions & (
+  | {
     provider?: never
     providerId?: never
-    retain: boolean
-    sourceId: string
     useProviderSecrets?: never
   }
   | {
-    params?: Record<string, unknown>
     provider: unknown
     providerId: string
-    retain: boolean
-    sourceId: string
     useProviderSecrets?: boolean
   }
+)
 
 export interface RunConnectedSourceOutput extends Omit<SourceLoaderResult, "items"> {
   data: SourceLoaderResult["items"]
@@ -39,7 +41,7 @@ export interface RunConnectedSourceOutput extends Omit<SourceLoaderResult, "item
     sourceId: string
     sourceVersion: number
   }
-  fetches: BackgroundSourceFetchResult[]
+  fetches?: BackgroundSourceFetchResult[]
 }
 
 export type AuthorizeConnectedSource = (
@@ -66,7 +68,7 @@ function createRunOutput(
   sourceId: string,
   sourceVersion: number,
   params: Record<string, unknown>,
-  fetches: BackgroundSourceFetchResult[],
+  fetches: BackgroundSourceFetchResult[] | undefined,
   startedAt: number,
 ): RunConnectedSourceOutput {
   return {
@@ -79,7 +81,7 @@ function createRunOutput(
       sourceId,
       sourceVersion,
     },
-    fetches,
+    ...(fetches ? { fetches } : {}),
     itemTemplate: result.itemTemplate,
     metadata: result.metadata,
   }
@@ -90,7 +92,7 @@ export async function runConnectedSource(
   authorize: AuthorizeConnectedSource,
 ): Promise<RunConnectedSourceOutput> {
   const startedAt = performance.now()
-  const fetches: BackgroundSourceFetchResult[] = []
+  const fetches: BackgroundSourceFetchResult[] | undefined = input.debug ? [] : undefined
 
   if (input.providerId === undefined) {
     let params: Record<string, unknown> = {}

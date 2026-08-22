@@ -299,9 +299,15 @@ internal Settings intent and are focused without navigation or reload; the URL
 intent is used only while creating a new App tab.
 `developer.fetch` performs a one-shot browser-owned HTTP request for Source
 authoring. `source.run` executes a registered or supplied Source and may
-explicitly hand its normalized result to the daemon for retention. Commands may
+explicitly hand its normalized result to the daemon for retention. It returns
+raw request and response diagnostics only when debug output is explicitly
+enabled. Commands may
 depend on browser permissions, credentials, network state, timeouts, or
 cancellation and are not presented as deterministic Application Data changes.
+
+Native Messaging framing follows Chromium's directional limits: messages from
+the extension to the Native Host may be up to 64 MiB, while messages from the
+Native Host to the extension remain limited to 1 MiB.
 
 ## Adapter Rules
 
