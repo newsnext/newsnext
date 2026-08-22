@@ -45,7 +45,7 @@ export interface PersistedDeviceState {
   version: typeof PERSISTED_SETTINGS_VERSION
 }
 
-export function createDefaultPersistedSettings(defaultBoardId: string | null = null): PersistedSettings {
+export function createDefaultPersistedSettings(): PersistedSettings {
   return {
     appearance: {
       bgIllustration: null,
@@ -55,7 +55,7 @@ export function createDefaultPersistedSettings(defaultBoardId: string | null = n
       themeMode: "system",
     },
     general: {
-      defaultBoardId,
+      defaultBoardId: null,
       sourceIcon: { ...DEFAULT_SOURCE_ICON_SETTINGS },
     },
     shortcuts: { ...DEFAULT_SHORTCUT_SETTINGS },

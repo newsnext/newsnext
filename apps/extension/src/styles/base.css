@@ -4,6 +4,10 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@theme {
+  --breakpoint-xs: 30rem;
+}
+
 :root {
   --background: var(--color-neutral-200);
   --background-grid-line: color-mix(in oklab, var(--foreground) 1%, transparent);

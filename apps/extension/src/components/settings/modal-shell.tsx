@@ -58,7 +58,7 @@ export function SettingsModalShell({
               onTabChange(tab.id)
             }
           }}
-          className="flex min-h-0 gap-0"
+          className="flex min-h-0 w-full min-w-0 gap-0"
         >
           <div className="w-32 shrink-0 sm:w-44">
             <DialogHeader className="h-10 flex-row items-center px-3">

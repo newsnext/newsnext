@@ -206,20 +206,26 @@ function GeneralSettings() {
       <ConfigSection
         title="Default board"
         description="Choose which board opens when NewsNext starts."
-        surfaceClassName="overflow-x-auto scrollbar-hidden"
       >
         <RadioGroup
           aria-label="Default board"
           variant="segmented"
+          className="max-w-full min-w-0 overflow-hidden"
           value={selectedValue}
           onValueChange={(value: string) => {
             setDefaultBoardId(value === LAST_USED_BOARD_VALUE ? null : value)
           }}
         >
-          {boards.map(board => (
-            <RadioGroupItem key={board.id} value={board.id}>{board.name}</RadioGroupItem>
-          ))}
-          <RadioGroupItem value={LAST_USED_BOARD_VALUE}>Last used</RadioGroupItem>
+          <div className="flex min-w-0 items-center gap-1 overflow-x-auto scrollbar-hidden">
+            {boards.map(board => (
+              <RadioGroupItem key={board.id} value={board.id} className="shrink-0">
+                {board.name}
+              </RadioGroupItem>
+            ))}
+          </div>
+          <RadioGroupItem value={LAST_USED_BOARD_VALUE} className="shrink-0">
+            Last opened
+          </RadioGroupItem>
         </RadioGroup>
       </ConfigSection>
       <SourceIconSettings />

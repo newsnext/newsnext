@@ -171,7 +171,7 @@ export function LiveCardContainer({
           ref={listRef}
           data-live-card-list
           className={cn(
-            "relative flex flex-wrap justify-center gap-2 sm:gap-6",
+            "relative flex flex-wrap justify-center gap-2 xs:gap-6",
             className,
           )}
         >
@@ -190,8 +190,8 @@ export function LiveCardContainer({
                   aria-hidden="true"
                   className={`pointer-events-none absolute inset-y-3 z-20 w-1 rounded-full bg-theme-400 shadow-[0_0_0_1px_color-mix(in_oklab,var(--color-theme-400),white_35%)] ${
                     insertionIndicator.edge === "left"
-                      ? "-left-1.5 sm:-left-3.5"
-                      : "-right-1.5 sm:-right-3.5"
+                      ? "-left-1.5 xs:-left-3.5"
+                      : "-right-1.5 xs:-right-3.5"
                   }`}
                 />
               )}

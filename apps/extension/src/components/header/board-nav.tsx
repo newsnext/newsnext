@@ -17,7 +17,7 @@ import {
 import { useHotkeys } from "@tanstack/react-hotkeys"
 import { useNavigate } from "@tanstack/react-router"
 import { useAtomValue, useSetAtom } from "jotai"
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { BoardDialog } from "@/components/board-dialog"
 import { PhCircleDashed, PhFileArrowUp, PhPlusCircle } from "@/components/icons/ph"
 import { DEFAULT_BOARD_LAYER, getAdjacentBoardId } from "@/lib/board"
@@ -63,7 +63,16 @@ export function BoardNav({ onNotify }: BoardNavProps) {
   const deleteBoard = useSetAtom(deleteBoardAtom)
   const [dialogTarget, setDialogTarget] = useState<BoardDialogTarget | null>(null)
   const [isImporting, setIsImporting] = useState(false)
+  const activeBoardTabRef = useRef<HTMLButtonElement>(null)
   const opmlInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    activeBoardTabRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+      inline: "center",
+    })
+  }, [currentBoardId])
 
   function openBoard(boardId: string, layer?: BoardLayer): void {
     const targetLayer = layer
@@ -180,60 +189,63 @@ export function BoardNav({ onNotify }: BoardNavProps) {
 
   return (
     <>
-      <PillGroup className="max-w-[min(70vw,32rem)] overflow-x-auto scrollbar-hidden">
-        {boards.map((board) => {
-          const isActive = currentBoardId === board.id
-          const isEditable = isActive
-          return (
-            <Button
-              key={board.id}
-              data-board-tab=""
-              type="button"
-              variant="transparent"
-              size="sm"
-              onPointerEnter={event => event.currentTarget.toggleAttribute("data-editable", isEditable)}
-              onPointerLeave={event => event.currentTarget.removeAttribute("data-editable")}
-              onClick={() => {
-                if (isEditable) {
-                  setDialogTarget({ mode: "edit", boardId: board.id })
-                  return
-                }
+      <PillGroup className="max-w-[min(70vw,28rem)] min-w-0 overflow-hidden">
+        <div className="flex min-w-0 items-center gap-1 overflow-x-auto scrollbar-hidden">
+          {boards.map((board) => {
+            const isActive = currentBoardId === board.id
+            const isEditable = isActive
+            return (
+              <Button
+                key={board.id}
+                ref={isActive ? activeBoardTabRef : undefined}
+                data-board-tab=""
+                type="button"
+                variant="transparent"
+                size="sm"
+                onPointerEnter={event => event.currentTarget.toggleAttribute("data-editable", isEditable)}
+                onPointerLeave={event => event.currentTarget.removeAttribute("data-editable")}
+                onClick={() => {
+                  if (isEditable) {
+                    setDialogTarget({ mode: "edit", boardId: board.id })
+                    return
+                  }
 
-                if (isActive) {
-                  return
-                }
+                  if (isActive) {
+                    return
+                  }
 
-                openBoard(board.id)
-              }}
-              className={cn(
-                pillGroupItemClassName({ active: isActive }),
-                "group/board-tab h-auto shrink-0",
-              )}
-              aria-current={isActive ? "page" : undefined}
-              title={isEditable ? "Edit board" : undefined}
-            >
-              {isActive && (
-                <PillGroupIndicator layoutId="active-board" />
-              )}
-              <span
-                className="relative z-10 block max-w-8 truncate sm:max-w-16"
-                title={board.name}
+                  openBoard(board.id)
+                }}
+                className={cn(
+                  pillGroupItemClassName({ active: isActive }),
+                  "group/board-tab h-auto shrink-0",
+                )}
+                aria-current={isActive ? "page" : undefined}
+                title={isEditable ? "Edit board" : undefined}
               >
-                {board.name}
-              </span>
-              {isEditable && (
+                {isActive && (
+                  <PillGroupIndicator layoutId="active-board" />
+                )}
                 <span
-                  aria-hidden="true"
-                  className="absolute bottom-1 left-1/2 z-10 flex -translate-x-1/2 gap-[2px] opacity-0 group-data-[editable]/board-tab:opacity-80"
+                  className="relative z-10 block max-w-8 truncate sm:max-w-16"
+                  title={board.name}
                 >
-                  <span className="size-[3px] rounded-full bg-current" />
-                  <span className="size-[3px] rounded-full bg-current" />
-                  <span className="size-[3px] rounded-full bg-current" />
+                  {board.name}
                 </span>
-              )}
-            </Button>
-          )
-        })}
+                {isEditable && (
+                  <span
+                    aria-hidden="true"
+                    className="absolute bottom-1 left-1/2 z-10 flex -translate-x-1/2 gap-[2px] opacity-0 group-data-[editable]/board-tab:opacity-80"
+                  >
+                    <span className="size-[3px] rounded-full bg-current" />
+                    <span className="size-[3px] rounded-full bg-current" />
+                    <span className="size-[3px] rounded-full bg-current" />
+                  </span>
+                )}
+              </Button>
+            )
+          })}
+        </div>
         <DropdownMenu>
           <DropdownMenuTrigger
             render={(

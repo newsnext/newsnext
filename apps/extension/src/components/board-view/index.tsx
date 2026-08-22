@@ -17,7 +17,7 @@ import { updateBoardAtom } from "@/store/board"
 import { shortcutSettingsAtom } from "@/store/settings"
 import { ScatterCardLayer } from "./scatter-card-layer"
 
-const BOARD_CONTENT_INSET_CLASS_NAME = "px-2 pb-6 sm:px-6"
+const BOARD_CONTENT_INSET_CLASS_NAME = "px-2 pb-6 xs:px-6"
 const BOARD_CONTENT_WIDTH_CLASS_NAME = "mx-auto w-full max-w-[104.5rem]"
 
 function BoardContent({ children, className }: PropsWithChildren<{ className?: string }>) {

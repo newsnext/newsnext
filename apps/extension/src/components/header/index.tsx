@@ -31,11 +31,14 @@ export function Header() {
   const dismissNotification = useCallback(() => setNotification(null), [])
 
   return (
-    <header className="sticky top-0 inset-x-0 z-50 shrink-0 py-6 pointer-events-none">
+    <header className="sticky top-0 inset-x-0 z-50 shrink-0 px-4 py-6 pointer-events-none sm:px-8">
       <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] grid-rows-[2.75rem_auto] items-center gap-2 md:h-11 md:grid-rows-1">
         {/* Left Section */}
-        <div className="col-span-3 row-start-2 flex min-w-0 items-center justify-center gap-2 md:col-span-1 md:col-start-1 md:row-start-1 md:justify-end">
+        <div className="col-span-3 row-start-2 flex min-w-0 items-center justify-center md:col-span-1 md:col-start-1 md:row-start-1 md:justify-end md:pr-12">
           <BoardNav onNotify={setNotification} />
+        </div>
+
+        <div className="col-start-1 row-start-1 justify-self-end">
           <SearchDialog />
         </div>
 

@@ -60,6 +60,8 @@ motion as one restrained entry sequence and respect reduced-motion preferences.
 - Reuse existing component treatments and tokens before introducing another
   surface style.
 - Keep 24px of breathing room at both the top and bottom of the main app page.
+- Treat `xs` as a 30rem viewport breakpoint. Keep 24px between LiveCards and
+  around the Board at `xs` and above; below `xs`, reduce both to 8px.
 - Name transition properties explicitly when a component animates one or two
   properties. Use `transition-all` when more than two properties animate to
   keep utility declarations concise.

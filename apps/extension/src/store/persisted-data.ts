@@ -34,7 +34,7 @@ export const clearPersistedUserDataAtom = atom(null, async (_get, set) => {
   const boardId = data.boards[0]?.id
   if (!boardId) throw new Error("NewsNext must keep at least one Board")
   await actions.application.replace(data)
-  set(persistedSettingsAtom, createDefaultPersistedSettings(boardId))
+  set(persistedSettingsAtom, createDefaultPersistedSettings())
   set(persistedDeviceStateAtom, createDefaultPersistedDeviceState(boardId))
   return data
 })
