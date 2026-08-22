@@ -190,7 +190,7 @@ export function BoardNav({ onNotify }: BoardNavProps) {
   return (
     <>
       <PillGroup className="max-w-[min(70vw,28rem)] min-w-0 overflow-hidden">
-        <div className="flex min-w-0 items-center gap-1 overflow-x-auto scrollbar-hidden">
+        <div className="-m-1 flex min-w-0 items-center gap-1 overflow-x-auto p-1 scrollbar-hidden">
           {boards.map((board) => {
             const isActive = currentBoardId === board.id
             const isEditable = isActive
@@ -218,7 +218,7 @@ export function BoardNav({ onNotify }: BoardNavProps) {
                 }}
                 className={cn(
                   pillGroupItemClassName({ active: isActive }),
-                  "group/board-tab h-auto shrink-0",
+                  "group/board-tab h-auto shrink-0 focus-visible:ring-[3px] focus-visible:ring-ring/50",
                 )}
                 aria-current={isActive ? "page" : undefined}
                 title={isEditable ? "Edit board" : undefined}
@@ -254,7 +254,7 @@ export function BoardNav({ onNotify }: BoardNavProps) {
                 variant="ghost"
                 size="icon-sm"
                 disabled={isImporting}
-                className="shrink-0 text-muted-foreground enabled:hover:bg-foreground/5 focus-visible:ring-2 focus-visible:ring-theme-400"
+                className="shrink-0 text-muted-foreground enabled:hover:bg-foreground/5"
               />
             )}
             aria-label="Create board"
