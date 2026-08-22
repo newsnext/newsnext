@@ -264,15 +264,19 @@ Play Now Layer's staggered LiveCard entrance on its first mount, after changing
 Boards, and whenever returning from Next Layer. Treat it as a fresh reveal from
 below with opacity, not as a reversal of the departing scatter paths.
 Apply the same entrance duration, vertical offset, and stagger to Next Layer
-Widgets whenever Next Layer mounts. Animate each GridStack item content wrapper
-with the independent CSS translate property so the entire Widget moves without
-overwriting GridStack's positioning transform or affecting dragging and resizing.
-Remove Next Layer's entrance-animation selector after the initial stagger
-finishes so later GridStack dragging, resizing, or wrapper replacement cannot
-replay it.
-Use the same CSS animation on a LiveCard content wrapper in Now Layer. Keep
-Motion's `layout` behavior only on the outer sortable item so Motion handles
-FLIP reordering but no fixed entrance, fade, or horizontal exit animation.
+Widgets whenever Next Layer mounts. Board View owns one entrance lifecycle for
+both Layers: mount the incoming Layer hidden, restore its root scroll position,
+allow visible content and layout work to settle, and then start the entrance.
+Run the same Web Animations keyframes on the Now Layer LiveCard wrapper and Next
+Layer GridStack content wrapper so the entrance does not interfere with
+GridStack positioning. Animate only visible items, derive stagger from visible
+order rather than full-list indexes, and release the animations after the
+sequence finishes so offscreen items do not replay it when scrolled into view.
+Keep Motion layout projection mounted on sortable Now Layer items, but suspend
+its measurements with a stable `layoutDependency` until their entrance finishes.
+Then use the ordered ID array as the dependency for drag reordering. The entrance
+must begin from the restored scroll position without a competing layout
+transition.
 
 Snapshot both the rendered Board and Layer for the duration of an exit. Never
 replace an outgoing Now Layer with the target Board's LiveCards before the exit

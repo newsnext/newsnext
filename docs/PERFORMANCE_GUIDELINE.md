@@ -280,6 +280,24 @@ vectors or layout transitions. Keep that animation work in the board item and
 Motion layers. Stable `DraggableLiveCard` props prevent it from entering queries,
 virtual lists, and LiveCard editor controls.
 
+Start Layer entrance animation only after the shared root scroll position is
+restored and the browser has had an idle period to finish visible content and
+layout work. Now Layer and Next Layer must use the same Web Animations path on
+their inner content wrappers. Animate and stagger visible wrappers only, then
+cancel the finished animation objects to release their fill state. Full-list
+stagger indexes delay restored deep views and make offscreen animation compete
+with visible LiveCard mount work.
+
+Keep Motion layout projection mounted on sortable Now Layer items, but use a
+named stable `layoutDependency` token to suspend its measurements until the
+entrance finishes. Dynamically mounting projection after the entrance leaves it
+without the continuous layout lifecycle needed for reliable reordering. Its
+geometry measurements and compensating transforms can overlap root scroll
+restoration and the entrance sequence, making restored positions visibly jump
+before settling. After the entrance, set `layoutDependency` to the ordered ID
+array so drag reordering retains FLIP animation without measuring unrelated
+renders.
+
 Do not remove renders that are required to update Motion props, measured scatter
 vectors, or drag state. Optimize the content boundary instead.
 

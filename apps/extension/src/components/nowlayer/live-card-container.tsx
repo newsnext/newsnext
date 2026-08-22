@@ -5,13 +5,15 @@ import { useScrollProgressContext } from "@newsnext/ui/components/scroll-progres
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { m } from "motion/react"
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react"
-import { getCardEntranceStyle } from "@/components/board-view/card-entrance-config"
+import { useCardEntrance } from "@/components/board-view/use-card-entrance"
 import { DndContext } from "@/hooks/use-dnd-context"
 import { useMarqueeSelection } from "@/hooks/use-marquee-selection"
 import { useWrappedSortable } from "@/hooks/use-wrapped-sortable"
 import { isSortableData } from "@/lib/board"
 import { cn } from "@/lib/utils"
 import { DraggableLiveCard } from "../live-card/draggable-live-card"
+
+const LAYOUT_MEASUREMENT_SUSPENDED = Symbol("layout-measurement-suspended")
 
 function SelectionOutline({
   containerRef,
@@ -76,6 +78,7 @@ function SelectionOutline({
 }
 
 interface LiveCardContainerProps {
+  entranceReady: boolean
   instanceIds: string[]
   liveCardsByInstanceId: Record<string, NowLayerLiveCard>
   sortable?: boolean
@@ -84,6 +87,7 @@ interface LiveCardContainerProps {
 }
 
 export function LiveCardContainer({
+  entranceReady,
   instanceIds,
   liveCardsByInstanceId,
   sortable = true,
@@ -93,6 +97,7 @@ export function LiveCardContainer({
   const { rootScrollContainerRef } = useScrollProgressContext()
   const selectionSurfaceRef = useRef<HTMLDivElement>(null)
   const [isDragging, setIsDragging] = useState(false)
+  const [entranceComplete, setEntranceComplete] = useState(false)
   const {
     marqueeRect,
     onPointerCancel,
@@ -134,6 +139,16 @@ export function LiveCardContainer({
     setSelectedInstanceIds([])
     setIsDragging(false)
   }, [onDrop, setSelectedInstanceIds])
+  const handleEntranceComplete = useCallback(() => {
+    setEntranceComplete(true)
+  }, [])
+  useCardEntrance({
+    active: entranceReady,
+    containerRef: listRef,
+    itemSelector: "[data-live-card-entrance]",
+    onComplete: handleEntranceComplete,
+    scrollContainerRef: rootScrollContainerRef,
+  })
 
   return (
     <DndContext
@@ -160,12 +175,15 @@ export function LiveCardContainer({
             className,
           )}
         >
-          {visibleLiveCards.map(({ id, available, boardId, descriptor, instanceAtom }, index) => (
+          {visibleLiveCards.map(({ id, available, boardId, descriptor, instanceAtom }) => (
             <m.li
               key={id}
               data-live-card-id={id}
               className="relative"
               layout
+              layoutDependency={entranceComplete
+                ? orderedInstanceIds
+                : LAYOUT_MEASUREMENT_SUSPENDED}
             >
               {insertionIndicator?.id === id && (
                 <div
@@ -178,8 +196,8 @@ export function LiveCardContainer({
                 />
               )}
               <div
-                className="layer-card-entrance"
-                style={getCardEntranceStyle(index)}
+                data-live-card-entrance
+                className="layer-card-entrance-pending"
               >
                 <DraggableLiveCard
                   boardId={boardId}

@@ -7,11 +7,13 @@ import { LiveCardContainer } from "./live-card-container"
 interface NowLayerProps {
   boardId: string
   className?: string
+  entranceReady: boolean
 }
 
 export function NowLayer({
   boardId,
   className,
+  entranceReady,
 }: NowLayerProps) {
   const setManualOrder = useSetAtom(setNowLayerManualOrderAtom)
   const { currentBoard, liveCardsByInstanceId, instanceIds } = useNowLayerLiveCards(boardId)
@@ -38,6 +40,7 @@ export function NowLayer({
       key={boardId}
       instanceIds={instanceIds}
       liveCardsByInstanceId={liveCardsByInstanceId}
+      entranceReady={entranceReady}
       sortable
       className={className}
       onInstanceIdsChange={handleInstanceIdsChange}

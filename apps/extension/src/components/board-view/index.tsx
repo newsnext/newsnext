@@ -40,6 +40,7 @@ export function BoardView({ board, layer }: { board: Board, layer: BoardLayer })
   const navigate = useNavigate({ from: "/board/$boardId" })
   const isNextLayer = layer === "next"
   const [renderedView, setRenderedView] = useState<RenderedView>({ boardId: board.id, layer })
+  const [entranceReadyViewKey, setEntranceReadyViewKey] = useState<string | null>(null)
   const restoredViewKeyRef = useRef<string | null>(null)
   const scrollRestorationEntry = useElementScrollRestoration({
     id: ROOT_SCROLL_RESTORATION_ID,
@@ -48,23 +49,41 @@ export function BoardView({ board, layer }: { board: Board, layer: BoardLayer })
   const isOutgoing = renderedView.layer !== layer || renderedView.boardId !== board.id
   const renderedLayerState = isOutgoing ? "outgoing" : "active"
   const isRenderedNextLayer = renderedView.layer === "next"
+  const renderedViewKey = `${renderedView.boardId}:${renderedView.layer}`
+  const entranceReady = entranceReadyViewKey === renderedViewKey
 
   useLayoutEffect(() => {
     if (isOutgoing || !rootScrollContainer) return
 
-    const renderedViewKey = `${renderedView.boardId}:${renderedView.layer}`
-    if (restoredViewKeyRef.current === renderedViewKey) return
+    if (restoredViewKeyRef.current !== renderedViewKey) {
+      restoredViewKeyRef.current = renderedViewKey
+      rootScrollContainer.scrollTo({
+        behavior: "instant",
+        left: scrollRestorationEntry?.scrollX ?? 0,
+        top: scrollRestorationEntry?.scrollY ?? 0,
+      })
+    }
+    if (entranceReadyViewKey === renderedViewKey) return
 
-    restoredViewKeyRef.current = renderedViewKey
-    rootScrollContainer.scrollTo({
-      behavior: "instant",
-      left: scrollRestorationEntry?.scrollX ?? 0,
-      top: scrollRestorationEntry?.scrollY ?? 0,
+    let idleCallbackId: number | undefined
+    let entranceFrameId: number | undefined
+    const settleFrameId = window.requestAnimationFrame(() => {
+      idleCallbackId = window.requestIdleCallback(() => {
+        entranceFrameId = window.requestAnimationFrame(() => {
+          setEntranceReadyViewKey(renderedViewKey)
+        })
+      }, { timeout: 300 })
     })
+
+    return () => {
+      window.cancelAnimationFrame(settleFrameId)
+      if (idleCallbackId !== undefined) window.cancelIdleCallback(idleCallbackId)
+      if (entranceFrameId !== undefined) window.cancelAnimationFrame(entranceFrameId)
+    }
   }, [
+    entranceReadyViewKey,
     isOutgoing,
-    renderedView.boardId,
-    renderedView.layer,
+    renderedViewKey,
     rootScrollContainer,
     scrollRestorationEntry?.scrollX,
     scrollRestorationEntry?.scrollY,
@@ -102,7 +121,7 @@ export function BoardView({ board, layer }: { board: Board, layer: BoardLayer })
   return (
     <div className="relative flex min-h-0 w-full grow flex-col">
       <ScatterCardLayer
-        key={`${renderedView.boardId}:${renderedView.layer}`}
+        key={renderedViewKey}
         state={renderedLayerState}
         onExitComplete={handleExitComplete}
         itemSelector={isRenderedNextLayer
@@ -113,12 +132,18 @@ export function BoardView({ board, layer }: { board: Board, layer: BoardLayer })
         {isRenderedNextLayer
           ? (
               <BoardContent>
-                <NextLayer boardId={renderedView.boardId} />
+                <NextLayer
+                  boardId={renderedView.boardId}
+                  entranceReady={entranceReady}
+                />
               </BoardContent>
             )
           : (
               <BoardContent>
-                <NowLayer boardId={renderedView.boardId} />
+                <NowLayer
+                  boardId={renderedView.boardId}
+                  entranceReady={entranceReady}
+                />
               </BoardContent>
             )}
       </ScatterCardLayer>

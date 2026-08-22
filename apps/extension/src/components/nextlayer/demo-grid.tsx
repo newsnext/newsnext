@@ -1,11 +1,9 @@
 import type { ComponentMap, GridStackHandle, GridStackOptions, GridStackWidget } from "gridstack/dist/react"
 import type { ComponentType, CSSProperties } from "react"
+import { useScrollProgressContext } from "@newsnext/ui/components/scroll-progress-context"
 import { GridStack } from "gridstack/dist/react"
 import { useLayoutEffect, useMemo, useRef } from "react"
-import {
-  CARD_ENTRANCE_DURATION_SECONDS,
-  CARD_ENTRANCE_STAGGER_SECONDS,
-} from "@/components/board-view/card-entrance-config"
+import { useCardEntrance } from "@/components/board-view/use-card-entrance"
 import "gridstack/dist/gridstack.css"
 
 type DemoWidgetKind
@@ -105,10 +103,6 @@ function createDemoGridOptions(boardId: string): GridStackOptions {
     children: shuffle(DEMO_WIDGET_SPECS, random).map(spec => createDemoWidget(spec, random)),
   }
 }
-
-const DEMO_GRID_ENTRANCE_STYLE = {
-  "--card-entrance-duration": `${CARD_ENTRANCE_DURATION_SECONDS}s`,
-} as CSSProperties
 
 type NextLayerStyle = CSSProperties & {
   "--next-widget-accent": string
@@ -411,8 +405,16 @@ const DEMO_COMPONENTS: ComponentMap = {
   demoWidget: DemoWidget,
 }
 
-export function DemoGrid({ boardId }: { boardId: string }) {
+export function DemoGrid({
+  boardId,
+  entranceReady,
+}: {
+  boardId: string
+  entranceReady: boolean
+}) {
+  const { rootScrollContainerRef } = useScrollProgressContext()
   const gridRef = useRef<GridStackHandle>(null)
+  const sectionRef = useRef<HTMLElement>(null)
   const gridOptions = useMemo(() => createDemoGridOptions(boardId), [boardId])
   const layerStyle = useMemo<NextLayerStyle>(() => ({
     "--next-widget-accent": getWidgetAccent(hashString(boardId) % 360),
@@ -423,33 +425,32 @@ export function DemoGrid({ boardId }: { boardId: string }) {
     if (!grid) return
 
     const items = grid.getGridItems()
-    items.forEach((item, index) => {
-      item.querySelector<HTMLElement>(".grid-stack-item-content")?.style.setProperty(
-        "--card-entrance-delay",
-        `${index * CARD_ENTRANCE_STAGGER_SECONDS}s`,
+    items.forEach((item) => {
+      item.querySelector<HTMLElement>(".grid-stack-item-content")?.classList.add(
+        "layer-card-entrance-pending",
       )
     })
-    grid.el.classList.add("next-layer-grid-entrance-ready")
-    const entranceDuration = items.length === 0
-      ? 0
-      : (CARD_ENTRANCE_DURATION_SECONDS
-        + (items.length - 1) * CARD_ENTRANCE_STAGGER_SECONDS) * 1000
-    const timeoutId = window.setTimeout(() => {
-      grid.el.classList.remove("next-layer-grid-entrance-ready")
-    }, entranceDuration)
 
     return () => {
-      window.clearTimeout(timeoutId)
-      grid.el.classList.remove("next-layer-grid-entrance-ready")
+      items.forEach((item) => {
+        item.querySelector<HTMLElement>(".grid-stack-item-content")?.classList.remove(
+          "layer-card-entrance-pending",
+        )
+      })
     }
   }, [])
+  useCardEntrance({
+    active: entranceReady,
+    containerRef: sectionRef,
+    itemSelector: ".grid-stack-item:not(.grid-stack-placeholder) > .grid-stack-item-content",
+    scrollContainerRef: rootScrollContainerRef,
+  })
 
   return (
-    <section aria-label="Next Layer widgets" style={layerStyle}>
+    <section ref={sectionRef} aria-label="Next Layer widgets" style={layerStyle}>
       <GridStack
         ref={gridRef}
         className="next-layer-grid"
-        style={DEMO_GRID_ENTRANCE_STYLE}
         options={gridOptions}
         components={DEMO_COMPONENTS}
       />
