@@ -2,14 +2,14 @@ import type { PersistedDeviceState } from "../settings"
 import type { BackgroundActionContext } from "./background-actions"
 import type { SourceConnectionStatus } from "./source-connection-native"
 import { loadSourceDescriptors } from "@newsnext/source-kit/runtime"
-import { browser } from "#imports"
-import { openAppTab } from "../app-tab"
+import { openAppBoard } from "../app-tab"
 import {
   mutateApplicationData,
   readApplicationData,
   readCurrentBoardId,
   replaceApplicationData,
   requireRegisteredSources,
+  selectCurrentBoard,
 } from "./application-service"
 import {
   authorizeConnectedSource,
@@ -42,8 +42,8 @@ export function createBackgroundActionContext(
     sources: loadSourceDescriptors,
     app: {
       async open({ boardId }) {
-        const appUrl = browser.runtime.getURL("/app.html")
-        await openAppTab(`${appUrl}#/board/${encodeURIComponent(boardId)}`)
+        await selectCurrentBoard(boardId)
+        await openAppBoard(boardId)
         return {}
       },
     },

@@ -128,3 +128,18 @@ export async function readCurrentBoardId(): Promise<string> {
   const stored = await browser.storage.local.get(key)
   return normalizePersistedDeviceState(stored[key]).currentBoardId
 }
+
+export async function selectCurrentBoard(boardId: string): Promise<void> {
+  const application = await readApplicationData()
+  if (!application.boards.some(board => board.id === boardId)) {
+    throw new Error(`Board '${boardId}' not found`)
+  }
+
+  const key = PERSISTED_DATA_SLICES.deviceState.key
+  const stored = await browser.storage.local.get(key)
+  const state = normalizePersistedDeviceState(stored[key])
+  if (state.currentBoardId === boardId) return
+  await browser.storage.local.set({
+    [key]: { ...state, currentBoardId: boardId },
+  })
+}

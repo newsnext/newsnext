@@ -1,10 +1,13 @@
 import type { QueryClient } from "@tanstack/react-query"
-import { createRootRouteWithContext, Outlet } from "@tanstack/react-router"
-import { Suspense, useCallback, useRef, useState } from "react"
+import { createRootRouteWithContext, Outlet, useNavigate, useParams } from "@tanstack/react-router"
+import { useAtomValue } from "jotai"
+import { Suspense, useCallback, useEffect, useRef, useState } from "react"
 import { TanStackDevtools } from "@/components/common/devtools"
 import { ScrollProgressProvider } from "@/components/common/scroll-progress-provider"
 import { Header } from "@/components/header"
 import { ROOT_SCROLL_RESTORATION_ID } from "@/lib/scroll-restoration"
+import { boardsAtom } from "@/store/board"
+import { currentBoardIdAtom } from "@/store/settings"
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient
@@ -18,12 +21,35 @@ function NotFoundComponent() {
 }
 
 function RootComponent() {
+  const boards = useAtomValue(boardsAtom)
+  const currentBoardId = useAtomValue(currentBoardIdAtom)
+  const navigate = useNavigate()
+  const { boardId: routeBoardId } = useParams({ strict: false }) as { boardId?: string }
+  const previousBoardIdRef = useRef(currentBoardId)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const [scrollContainer, setScrollContainer] = useState<HTMLDivElement | null>(null)
   const handleScrollContainerRef = useCallback((container: HTMLDivElement | null) => {
     scrollContainerRef.current = container
     setScrollContainer(container)
   }, [])
+
+  useEffect(() => {
+    const previousBoardId = previousBoardIdRef.current
+    previousBoardIdRef.current = currentBoardId
+    const targetBoard = boards.find(board => board.id === currentBoardId)
+    if (
+      previousBoardId === currentBoardId
+      || routeBoardId === currentBoardId
+      || !targetBoard
+    ) {
+      return
+    }
+    void navigate({
+      to: "/board/$boardId",
+      params: { boardId: currentBoardId },
+      state: state => ({ ...state, layer: targetBoard.defaultLayer }),
+    })
+  }, [boards, currentBoardId, navigate, routeBoardId])
 
   return (
     <ScrollProgressProvider
