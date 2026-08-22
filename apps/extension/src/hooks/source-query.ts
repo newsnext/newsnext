@@ -28,7 +28,7 @@ export function getSourceQueryOptions(
     networkMode: "offlineFirst",
     persister: sourceQueryPersister.persisterFn,
     refetchInterval: SOURCE_QUERY_REFETCH_INTERVAL_MS,
-    refetchIntervalInBackground: true,
+    refetchIntervalInBackground: false,
     retry: false,
     staleTime: SOURCE_QUERY_STALE_TIME_MS,
   })

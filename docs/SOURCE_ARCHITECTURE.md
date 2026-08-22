@@ -394,11 +394,11 @@ using the browser viewport lets the overflow container clip LiveCards before the
 viewport root margin is applied and effectively disables preloading. After a
 LiveCard leaves that margin, its query remains active for one minute to avoid churn
 during short scrolls, then unmounts. Re-entering during that interval cancels
-the pending unmount. Successful query data remains fresh in memory for one
-minute; this avoids redundant loader and persistent-cache reads inside the
-fixed request protection interval. Regaining focus or remounting can revalidate
+the pending unmount. Successful query data remains fresh in memory for two
+minutes; this avoids redundant loader and persistent-cache reads during that
+window. Regaining focus or remounting can revalidate
 stale queries. Active LiveCard queries also revalidate once every five minutes,
-including while the app is in the background.
+but interval revalidation is skipped while the app is in the background.
 Inactive query data follows TanStack Query's default garbage-collection policy
 and remains independently available through the per-query persister. Source
 queries use offline-first network mode. An active Source Query restores lazily

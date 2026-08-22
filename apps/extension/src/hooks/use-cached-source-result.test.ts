@@ -11,7 +11,7 @@ vi.mock("@/lib/source", () => ({
   isSourceRequestProtected: () => false,
   loadSource: vi.fn(),
   SOURCE_QUERY_REFETCH_INTERVAL_MS: 300_000,
-  SOURCE_QUERY_STALE_TIME_MS: 60_000,
+  SOURCE_QUERY_STALE_TIME_MS: 120_000,
 }))
 
 const source = {
