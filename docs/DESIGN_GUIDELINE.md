@@ -699,10 +699,12 @@ otherwise return the island to its collapsed state.
 Keep the desktop tray menu task-first and compact. Open NewsNext is the first
 action, connection status is non-interactive supporting information, and Quit
 NewsNext remains the final action separated from status. Disable Open NewsNext
-when no extension is connected. With one connection, keep it as a direct menu
-item; with multiple connections, turn it into a submenu whose children name
-the detected browser and a short stable instance identifier. Sort those children
-so the menu does not reorder as connections report status.
+when no extension is connected. Each connected instance gets a submenu that
+lists its Boards followed by a separator and Settings. With multiple
+connections, group those instance submenus under Open NewsNext, name them with
+the detected browser and a short stable instance identifier, and sort them so
+the menu does not reorder as connections report status. The tray Settings action
+opens the CLI connection tab because it belongs to the desktop integration flow.
 
 ## Implementation Checklist
 

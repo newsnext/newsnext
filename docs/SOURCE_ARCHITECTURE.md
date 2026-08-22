@@ -911,7 +911,10 @@ disconnect instead of silently accepting a partial control surface. Protocol
 version 4 makes History daemon-owned and adds the explicit `retain` flag to
 `source.run`. Protocol version 5 publishes each
 connected extension's Board summaries to the menu-bar app, keeps them current
-after Board changes, and makes `app.open` target an explicit Board route.
+after Board changes, and makes `app.open` target an explicit Board route. The
+same Action can open the extension Settings dialog without changing the Native
+Messaging transport; CLI and menu-bar entry points target its CLI connection
+tab.
 Protocol version 6 replaces the parallel Application Action, Application Query,
 open, fetch, and Source-run request variants with one `action.list` and
 `action.execute` transport. The catalog classifies every capability as a
@@ -1001,11 +1004,12 @@ identity remains stable across Manifest V3 service-worker restarts. Chrome does
 not expose its local profile display name to extensions, so the connection does
 not claim to identify it or request account identity permissions as a substitute.
 
-The tray exposes Open NewsNext only while an extension is connected. With one
-connection the item targets that instance directly. With multiple connections
-it becomes a submenu sorted by browser and instance ID. Each child displays the
-detected browser and a short unique instance ID, and targets the exact instance
-rather than using the CLI's potentially ambiguous browser-name selector.
+The tray exposes Open NewsNext only while an extension is connected. Every
+connected instance has one menu containing its Boards and a separated Settings
+action. With multiple connections, those instance menus are grouped and sorted
+by browser and instance ID. Each instance displays the detected browser and a
+short unique instance ID, and targets the exact instance rather than using the
+CLI's potentially ambiguous browser-name selector.
 
 Local provider runs use an isolated `cli:<provider-id>` secret namespace unless
 `--use-provider-secrets` is supplied. CLI execution does not install the

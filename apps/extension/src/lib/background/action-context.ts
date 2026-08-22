@@ -2,7 +2,7 @@ import type { PersistedDeviceState } from "../settings"
 import type { BackgroundActionContext } from "./background-actions"
 import type { SourceConnectionStatus } from "./source-connection-native"
 import { loadSourceDescriptors } from "@newsnext/source-kit/runtime"
-import { openAppBoard } from "../app-tab"
+import { openAppBoard, openAppSettings } from "../app-tab"
 import {
   mutateApplicationData,
   readApplicationData,
@@ -41,9 +41,13 @@ export function createBackgroundActionContext(
     requireSources: requireRegisteredSources,
     sources: loadSourceDescriptors,
     app: {
-      async open({ boardId }) {
-        await selectCurrentBoard(boardId)
-        await openAppBoard(boardId)
+      async open(input) {
+        if ("settings" in input) {
+          await openAppSettings()
+        } else {
+          await selectCurrentBoard(input.boardId)
+          await openAppBoard(input.boardId)
+        }
         return {}
       },
     },

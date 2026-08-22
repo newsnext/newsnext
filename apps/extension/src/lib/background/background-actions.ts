@@ -21,7 +21,7 @@ export interface ConnectedFetchInput {
 
 export interface BackgroundActionContext extends ApplicationActionContext {
   app: {
-    open: (input: { boardId: string }) => Promise<Record<string, never>>
+    open: (input: { boardId: string } | { settings: true }) => Promise<Record<string, never>>
   }
   developer: {
     fetch: (input: ConnectedFetchInput) => Promise<ExtensionConnectionFetchResponse>
@@ -62,8 +62,11 @@ const appOpenAction = defineAction({
   audiences: CONNECTED_ONLY,
   name: "app.open",
   kind: "command",
-  description: "Open a Board in the connected NewsNext extension.",
-  params: Type.Object({ boardId: Identifier }, { additionalProperties: false }),
+  description: "Open a Board or Settings in the connected NewsNext extension.",
+  params: Type.Union([
+    Type.Object({ boardId: Identifier }, { additionalProperties: false }),
+    Type.Object({ settings: Type.Literal(true) }, { additionalProperties: false }),
+  ]),
   result: EmptyResult,
 }, async (input, context: BackgroundActionContext) => await context.app.open(input))
 

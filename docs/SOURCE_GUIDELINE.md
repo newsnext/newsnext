@@ -1188,6 +1188,13 @@ interactively:
 newsnext open --browser 00b79a48 --board V1StGXR8_Z5j
 ```
 
+Open the extension's **Settings → CLI connection** tab directly with the same
+browser selector:
+
+```sh
+newsnext open --browser 00b79a48 --settings
+```
+
 The installer presents detected browsers only and selects all of them by
 default. Pass one or more browser names, such as `install-native-host chrome
 firefox`, to skip the interactive selector. In non-interactive environments,

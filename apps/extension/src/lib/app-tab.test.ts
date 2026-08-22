@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 const browserMock = vi.hoisted(() => ({
   runtime: {
     getURL: vi.fn((path: string) => `chrome-extension://newsnext${path}`),
+    sendMessage: vi.fn(),
   },
   tabs: {
     create: vi.fn(),
@@ -21,55 +22,7 @@ beforeEach(() => {
   browserMock.tabs.create.mockResolvedValue({})
   browserMock.tabs.update.mockResolvedValue({})
   browserMock.windows.update.mockResolvedValue({})
-})
-
-describe("openAppTab", () => {
-  it("creates the requested app URL when no app tab exists", async () => {
-    browserMock.tabs.query.mockResolvedValue([])
-    const { openAppTab } = await import("./app-tab")
-    const targetUrl = "chrome-extension://newsnext/app.html#/board/target"
-
-    await openAppTab(targetUrl)
-
-    expect(browserMock.tabs.create).toHaveBeenCalledWith({ url: targetUrl })
-  })
-
-  it("updates an existing app tab before focusing its window", async () => {
-    browserMock.tabs.query.mockResolvedValue([{
-      active: true,
-      id: 42,
-      url: "chrome-extension://newsnext/app.html#/board/current",
-      windowId: 7,
-    }])
-    const { openAppTab } = await import("./app-tab")
-    const targetUrl = "chrome-extension://newsnext/app.html#/board/target"
-
-    await openAppTab(targetUrl)
-
-    expect(browserMock.tabs.update).toHaveBeenCalledWith(42, {
-      active: true,
-      url: targetUrl,
-    })
-    expect(browserMock.windows.update).toHaveBeenCalledWith(7, { focused: true })
-    expect(browserMock.tabs.update.mock.invocationCallOrder[0])
-      .toBeLessThan(browserMock.windows.update.mock.invocationCallOrder[0]!)
-  })
-
-  it("only focuses an app tab that is already at the requested URL", async () => {
-    const targetUrl = "chrome-extension://newsnext/app.html#/board/target"
-    browserMock.tabs.query.mockResolvedValue([{
-      active: false,
-      id: 42,
-      url: targetUrl,
-      windowId: 7,
-    }])
-    const { openAppTab } = await import("./app-tab")
-
-    await openAppTab(targetUrl)
-
-    expect(browserMock.tabs.update).toHaveBeenCalledWith(42, { active: true })
-    expect(browserMock.windows.update).toHaveBeenCalledWith(7, { focused: true })
-  })
+  browserMock.runtime.sendMessage.mockResolvedValue(undefined)
 })
 
 describe("openAppBoard", () => {
@@ -97,5 +50,38 @@ describe("openAppBoard", () => {
 
     expect(browserMock.tabs.update).toHaveBeenCalledWith(42, { active: true })
     expect(browserMock.windows.update).toHaveBeenCalledWith(7, { focused: true })
+  })
+})
+
+describe("openAppSettings", () => {
+  it("creates the app with a Settings intent when no app tab exists", async () => {
+    browserMock.tabs.query.mockResolvedValue([])
+    const { openAppSettings } = await import("./app-tab")
+
+    await openAppSettings()
+
+    expect(browserMock.tabs.create).toHaveBeenCalledWith({
+      url: "chrome-extension://newsnext/app.html?settings=cli",
+    })
+  })
+
+  it("focuses an existing app tab and requests Settings without navigating", async () => {
+    browserMock.tabs.query.mockResolvedValue([{
+      active: true,
+      id: 42,
+      url: "chrome-extension://newsnext/app.html#/board/current",
+      windowId: 7,
+    }])
+    const { openAppSettings } = await import("./app-tab")
+
+    await openAppSettings()
+
+    expect(browserMock.tabs.update).toHaveBeenCalledWith(42, { active: true })
+    expect(browserMock.windows.update).toHaveBeenCalledWith(7, { focused: true })
+    expect(browserMock.runtime.sendMessage).toHaveBeenCalledWith({
+      tab: "cli",
+      type: "settings.open",
+    })
+    expect(browserMock.tabs.create).not.toHaveBeenCalled()
   })
 })
