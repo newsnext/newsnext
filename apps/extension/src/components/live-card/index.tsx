@@ -54,7 +54,7 @@ function LiveCardContent({ available = true, id, source, dragHandleRef, isDraft 
     requestPermission,
   } = useSourcePermission(source, savedParams)
 
-  const { items, itemTemplate, metadata, fetchLatest, isFetching, isFetchingLatest, isLoading, isError, errorMessage, loginUrl, updatedAt } = useSourceQuery({
+  const { items, itemTemplate, metadata, fetchLatest, isFetching, isFetchingLatest, isLoading, isError, errorMessage, loginUrl, loadedAt } = useSourceQuery({
     sourceId: source.sourceId,
     params: savedParams,
     enabled: canLoad,
@@ -119,7 +119,7 @@ function LiveCardContent({ available = true, id, source, dragHandleRef, isDraft 
         sourceErrorMessage={sourceErrorMessage}
         sourceLoginUrl={canLoad ? loginUrl : undefined}
         sourcePermissionRequest={missingPermission}
-        updatedAt={updatedAt}
+        loadedAt={loadedAt}
         onRefresh={fetchLatest}
         onRequestPermission={requestPermission}
         onFlip={handleFlip}
@@ -132,7 +132,7 @@ function LiveCardContent({ available = true, id, source, dragHandleRef, isDraft 
         hasSourceParams={hasParams}
         hasSourceParamChanges={isDirty}
         sourceParamValidation={validation}
-        updatedAt={updatedAt}
+        loadedAt={loadedAt}
         onSourceParamChange={updateDraftParam}
         onSaveSourceParams={handleSaveSourceParams}
         onResetSourceParams={handleResetSourceParams}

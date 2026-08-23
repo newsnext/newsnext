@@ -15,9 +15,10 @@ import {
   authorizeConnectedSource,
   executeConnectedFetch,
 } from "./connected-actions"
+import { runDeveloperSource } from "./developer-source-runner"
+import { createProtectedSourceLoader } from "./protected-source-loader"
 import { createBackgroundRadarService } from "./radar-service"
-import { runConnectedSource } from "./source-runner"
-import { createBackgroundSourceService } from "./source-service"
+import { createSourceLoaderInvoker } from "./source-loader-invoker"
 
 export interface SourceConnectionActions {
   getStatus: () => Promise<SourceConnectionStatus>
@@ -27,7 +28,8 @@ export interface SourceConnectionActions {
   }) => Promise<SourceConnectionStatus>
 }
 
-const sourceService = createBackgroundSourceService()
+const sourceLoaderInvoker = createSourceLoaderInvoker()
+const sourceLoader = createProtectedSourceLoader(sourceLoaderInvoker)
 const radarService = createBackgroundRadarService()
 
 export function createBackgroundActionContext(
@@ -53,14 +55,14 @@ export function createBackgroundActionContext(
     },
     developer: {
       fetch: executeConnectedFetch,
+      runSource: input => runDeveloperSource(input, authorizeConnectedSource),
     },
     radar: {
       resolveSuggestions: radarService.resolveSuggestions,
     },
     source: {
-      cancel: sourceService.cancel,
-      load: sourceService.load,
-      run: input => runConnectedSource(input, authorizeConnectedSource),
+      cancel: sourceLoaderInvoker.cancel,
+      load: sourceLoader.load,
     },
     sourceConnection,
   }

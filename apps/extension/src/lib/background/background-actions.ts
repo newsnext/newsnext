@@ -1,13 +1,13 @@
 import type { ExtensionConnectionFetchResponse } from "@newsnext/extension-connection"
 import type { ResolvedRadarSuggestion } from "../radar"
 import type { PersistedDeviceState } from "../settings"
-import type { SourceLoadResult } from "../source"
+import type { SourceLoadResponse } from "../source/load-result"
 import type { ApplicationActionContext } from "./application-actions"
-import type { SourceConnectionStatus } from "./source-connection-native"
 import type {
-  RunConnectedSourceInput,
-  RunConnectedSourceOutput,
-} from "./source-runner"
+  RunDeveloperSourceInput,
+  RunDeveloperSourceOutput,
+} from "./developer-source-runner"
+import type { SourceConnectionStatus } from "./source-connection-native"
 import Type from "typebox"
 import { defineAction } from "../action"
 
@@ -25,6 +25,7 @@ export interface BackgroundActionContext extends ApplicationActionContext {
   }
   developer: {
     fetch: (input: ConnectedFetchInput) => Promise<ExtensionConnectionFetchResponse>
+    runSource: (input: RunDeveloperSourceInput) => Promise<RunDeveloperSourceOutput>
   }
   radar: {
     resolveSuggestions: (input: {
@@ -39,8 +40,7 @@ export interface BackgroundActionContext extends ApplicationActionContext {
       params?: Record<string, unknown>
       requestId?: string
       sourceId: string
-    }) => Promise<SourceLoadResult>
-    run: (input: RunConnectedSourceInput) => Promise<RunConnectedSourceOutput>
+    }) => Promise<SourceLoadResponse>
   }
   sourceConnection: {
     getStatus: () => Promise<SourceConnectionStatus>
@@ -53,6 +53,7 @@ export interface BackgroundActionContext extends ApplicationActionContext {
 
 const UI_ONLY = ["ui"] as const
 const CONNECTED_ONLY = ["connected"] as const
+const UI_AND_CONNECTED = ["ui", "connected"] as const
 const EmptyParams = Type.Object({}, { additionalProperties: false })
 const EmptyResult = Type.Object({}, { additionalProperties: false })
 const Identifier = Type.String({ minLength: 1 })
@@ -113,11 +114,10 @@ const developerFetchAction = defineAction({
   method: input.method.toUpperCase(),
 }))
 
-const SourceRunParams = Type.Unsafe<RunConnectedSourceInput>(Type.Union([
+const DeveloperRunSourceParams = Type.Unsafe<RunDeveloperSourceInput>(Type.Union([
   Type.Object({
     debug: Type.Boolean(),
     params: Type.Optional(RecordValue),
-    retain: Type.Boolean(),
     sourceId: Identifier,
   }, { additionalProperties: false }),
   Type.Object({
@@ -125,41 +125,41 @@ const SourceRunParams = Type.Unsafe<RunConnectedSourceInput>(Type.Union([
     params: Type.Optional(RecordValue),
     provider: RecordValue,
     providerId: Identifier,
-    retain: Type.Boolean(),
     sourceId: Identifier,
     useProviderSecrets: Type.Optional(Type.Boolean()),
   }, { additionalProperties: false }),
 ]))
 
-const sourceRunAction = defineAction({
+const DeveloperRunSourceResult = Type.Unsafe<RunDeveloperSourceOutput>(Type.Object({
+  data: Type.Array(Type.Unknown()),
+  execution: Type.Object({
+    durationMs: Type.Number(),
+    loadedAt: Type.Number(),
+    params: RecordValue,
+    providerId: Type.String(),
+    sourceId: Type.String(),
+    sourceVersion: Type.Number(),
+  }),
+  fetches: Type.Optional(Type.Array(Type.Unknown())),
+}, { additionalProperties: true }))
+
+const developerRunSourceAction = defineAction({
   audiences: CONNECTED_ONLY,
-  name: "source.run",
+  name: "developer.runSource",
   kind: "command",
-  description: "Run a registered or supplied Source in the connected browser.",
-  params: SourceRunParams,
-  result: Type.Unsafe<RunConnectedSourceOutput>(Type.Object({
-    data: Type.Array(Type.Unknown()),
-    execution: Type.Object({
-      durationMs: Type.Number(),
-      observedAt: Type.Number(),
-      params: RecordValue,
-      providerId: Type.String(),
-      sourceId: Type.String(),
-      sourceVersion: Type.Number(),
-    }),
-    fetches: Type.Optional(Type.Array(Type.Unknown())),
-  }, { additionalProperties: true })),
+  description: "Run a registered or supplied Source for development and debugging.",
+  params: DeveloperRunSourceParams,
+  result: DeveloperRunSourceResult,
   diagnostics: {
     input: input => ({
       debug: input.debug,
       params: input.params,
       providerId: input.providerId,
-      retain: input.retain,
       sourceId: input.sourceId,
       useProviderSecrets: input.useProviderSecrets,
     }),
   },
-}, async (input, context: BackgroundActionContext) => await context.source.run(input))
+}, async (input, context: BackgroundActionContext) => await context.developer.runSource(input))
 
 const radarResolveSuggestionsAction = defineAction({
   audiences: UI_ONLY,
@@ -175,7 +175,7 @@ const radarResolveSuggestionsAction = defineAction({
 }, async (input, context: BackgroundActionContext) => await context.radar.resolveSuggestions(input))
 
 const sourceLoadAction = defineAction({
-  audiences: UI_ONLY,
+  audiences: UI_AND_CONNECTED,
   name: "source.load",
   kind: "command",
   description: "Load one configured Source through the background runtime.",
@@ -184,7 +184,13 @@ const sourceLoadAction = defineAction({
     requestId: Type.Optional(Identifier),
     sourceId: Identifier,
   }, { additionalProperties: false }),
-  result: Type.Unsafe<SourceLoadResult>(Type.Object({}, { additionalProperties: true })),
+  result: Type.Unsafe<SourceLoadResponse>(Type.Object({
+    fetchProtected: Type.Boolean(),
+    fetchedAt: Type.Number(),
+    loadedAt: Type.Number(),
+    params: RecordValue,
+    result: Type.Object({}, { additionalProperties: true }),
+  }, { additionalProperties: false })),
 }, async (input, context: BackgroundActionContext) => await context.source.load(input))
 
 const sourceCancelAction = defineAction({
@@ -233,12 +239,6 @@ const sourceConnectionSetEnabledAction = defineAction({
   }, { additionalProperties: false })),
 }, async (input, context: BackgroundActionContext) => await context.sourceConnection.setEnabled(input))
 
-export const connectedBackgroundActionDefinitions = [
-  appOpenAction,
-  developerFetchAction,
-  sourceRunAction,
-] as const
-
 export const uiBackgroundActionDefinitions = [
   radarResolveSuggestionsAction,
   sourceLoadAction,
@@ -248,8 +248,14 @@ export const uiBackgroundActionDefinitions = [
 ] as const
 
 export const backgroundActionDefinitions = [
-  ...connectedBackgroundActionDefinitions,
-  ...uiBackgroundActionDefinitions,
+  appOpenAction,
+  developerFetchAction,
+  developerRunSourceAction,
+  radarResolveSuggestionsAction,
+  sourceLoadAction,
+  sourceCancelAction,
+  sourceConnectionGetStatusAction,
+  sourceConnectionSetEnabledAction,
 ] as const
 
 function stringEnum<const Values extends readonly string[]>(values: Values) {

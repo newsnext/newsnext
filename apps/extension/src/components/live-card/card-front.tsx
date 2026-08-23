@@ -37,7 +37,7 @@ interface LiveCardFrontProps {
   sourceErrorMessage?: string
   sourceLoginUrl?: string
   sourcePermissionRequest?: SourcePermissionRequest
-  updatedAt: number
+  loadedAt: number
   onRefresh: () => void
   onRequestPermission: () => Promise<boolean>
   onFlip?: () => void
@@ -152,7 +152,7 @@ export function LiveCardFront({
   sourceErrorMessage,
   sourceLoginUrl,
   sourcePermissionRequest,
-  updatedAt,
+  loadedAt,
   onRefresh,
   onRequestPermission,
   onFlip,
@@ -194,7 +194,7 @@ export function LiveCardFront({
           icon={icon}
           provider={provider}
           title={title}
-          subtitle={isFetching ? "Updating..." : <RelativeTime date={updatedAt} />}
+          subtitle={isFetching ? "Updating..." : <RelativeTime date={loadedAt} />}
           dragHandleRef={dragHandleRef}
           actions={actions ?? (
             <>

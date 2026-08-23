@@ -729,7 +729,8 @@ A loader always returns a `SourceLoaderResult` object:
 ```
 
 Dynamic loader metadata always supports the complete source metadata shape:
-`title`, `badge`, `desc`, and `home`. It is cached with the items and has the
+`title`, `badge`, `desc`, and `home`. It travels with the items through
+persistence and the in-memory Query cache and has the
 highest display priority, overriding static metadata and persisted Radar or
 Instance metadata patches field by field. It is unavailable until the first
 successful request and is never persisted into the Instance. A loader
@@ -834,10 +835,11 @@ themselves. This is especially important for authenticated sources because
 unnecessary API traffic can trigger rate limits, anti-abuse systems, or account
 suspension.
 
-## Version, cache behavior, capabilities, and secrets
+## Version, request protection, capabilities, and secrets
 
-Sources do not configure cache duration, and there is no user freshness
-setting. Persistent results provide immediate placeholder content and survive
+Sources do not configure TanStack Query freshness or the request-protection
+interval, and there is no user freshness setting. Persisted results provide
+immediate placeholder content and survive
 extension restarts.
 
 Every Source has a positive integer `version`, defaulting to `2`. Set or
@@ -848,24 +850,26 @@ stored results and mark a new version boundary in retained observations:
 version: 3
 ```
 
-TanStack Query states are persisted per query in IndexedDB and restored with
-their original `dataUpdatedAt`, so memory and disk use the same freshness clock.
-Automatic loads become stale after one minute, so remounting or regaining focus
-can revalidate them, while active Sources also revalidate on a fixed five-minute
-interval. Fetch Latest is a separate user intent that immediately reruns the
-active query regardless of its in-memory freshness. Neither path may issue a
-remote request when the same Source and normalized parameters completed a real
-load less than one minute ago. After that fixed protection interval, NewsNext
-publishes the stored result as a placeholder while the new request runs.
+Validated Source results are persisted by the extension background in IndexedDB
+with their real fetch time. The App restores them into its in-memory query
+cache before rendering. Page queries become stale after two minutes, so
+remounting or regaining focus can revalidate them, while active Sources also
+revalidate on a fixed five-minute interval. Fetch Latest is a separate user
+intent that immediately asks the background for the latest result regardless of
+page freshness. Neither path may issue a remote request when the same Source and
+normalized parameters completed a real load less than one minute ago. After
+that fixed protection interval, NewsNext publishes the stored result as a
+placeholder while the new request runs.
 
 The refresh indicator remains visible for at least 500ms when a protected
 Fetch Latest action reuses the preceding result, so the action still has
-perceptible feedback. It does not change the Query's completion time, rewrite
-the stored state, or extend the protection interval. Concurrent
+perceptible feedback. It returns `fetchProtected: true` and updates caller-visible
+`loadedAt` without changing stored `fetchedAt`, rewriting the stored state, or extending the protection interval. Concurrent
 requests for the same Source and normalized parameters remain deduplicated.
 
-Persisted Query states expire after 30 days. Increasing `version` changes cache
-identity immediately; superseded versions remain isolated and expire normally.
+Persisted Source results expire after 30 days. Increasing `version` changes
+persisted-result identity immediately; superseded versions remain isolated and
+expire normally.
 
 Structured loaders infer the hostname of a static URL. Declare every additional
 or dynamically selected hostname:
@@ -1270,11 +1274,10 @@ and `-i` includes response status and headers. Browser-managed cookies cannot be
 overridden with a `Cookie` header. Use this command for raw endpoint debugging,
 then run `run` to verify the complete source behavior.
 
-Explicitly retain a successful Source result, then inspect it through the
-daemon-owned local database:
+Background Jobs retain newly executed Source results in the daemon-owned local
+database. Reusing a protected result does not create a duplicate observation:
 
 ```sh
-newsnext run github:trending --retain
 newsnext history datasets --source-id github:trending
 newsnext history observations DATASET_ID
 newsnext history get DATASET_ID 1786212000000
@@ -1333,12 +1336,13 @@ retained parameter configuration.
 
 Query Actions return canonical Boards and Instances without a
 parallel CLI-only Board representation. An Instance may be returned by several
-Board queries when it has several memberships. Ordinary Now Layer loads
-remain cache-only and do not create History. Observation times may be Unix
+Board queries when it has several memberships. Ordinary Now Layer loads remain
+browser-local and do not create History. Observation times may be Unix
 milliseconds or ISO 8601 values. List `observations` before using exact
 timestamps with `get` or `compare`. Add `--compact` when consuming JSON
-programmatically. History reads require the daemon but not a connected browser;
-`run --retain` requires both because Source execution remains browser-owned.
+programmatically. History reads require the daemon but not a connected browser.
+Creating new observations requires an active Job and its connected browser
+because Source execution remains browser-owned.
 
 Direct `fetch` requests are useful for endpoint investigation, but they do not verify
 parameter parsing, extension permissions, capability enforcement, secrets, or

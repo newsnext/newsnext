@@ -20,7 +20,7 @@ export interface LiveCardBackProps {
   hasSourceParams: boolean
   hasSourceParamChanges: boolean
   sourceParamValidation: SourceParamValidationState
-  updatedAt: number
+  loadedAt: number
   onSourceParamChange: (key: string, value: unknown) => void
   onSaveSourceParams: () => Promise<void> | void
   onResetSourceParams: () => Promise<void> | void
@@ -38,7 +38,7 @@ export function LiveCardBack({
   hasSourceParams,
   hasSourceParamChanges,
   sourceParamValidation,
-  updatedAt,
+  loadedAt,
   onSourceParamChange,
   onSaveSourceParams,
   onResetSourceParams,
@@ -72,7 +72,7 @@ export function LiveCardBack({
           icon={icon}
           provider={provider}
           title={previewTitle}
-          subtitle={previewDesc || <RelativeTime date={updatedAt} />}
+          subtitle={previewDesc || <RelativeTime date={loadedAt} />}
           dragHandleRef={dragHandleRef}
           actions={(
             <>

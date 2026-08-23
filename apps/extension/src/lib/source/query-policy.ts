@@ -6,8 +6,8 @@ export const SOURCE_QUERY_OFFSCREEN_RETENTION_MS = 60_000
 export const SOURCE_QUERY_PRELOAD_MARGIN = "200px"
 
 export function isSourceRequestProtected(
-  updatedAt: number,
+  fetchedAt: number,
   now = Date.now(),
 ): boolean {
-  return now - updatedAt < SOURCE_REQUEST_PROTECTION_MS
+  return now - fetchedAt < SOURCE_REQUEST_PROTECTION_MS
 }

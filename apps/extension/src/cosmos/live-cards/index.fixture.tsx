@@ -8,7 +8,7 @@ import { LiveCardBack } from "@/components/live-card/card-back"
 import { LiveCardFront } from "@/components/live-card/card-front"
 import { cn } from "@/lib/utils"
 
-const UPDATED_AT = Date.now() - 4 * 60 * 1000
+const LOADED_AT = Date.now() - 4 * 60 * 1000
 
 export const SAMPLE_SOURCE: LiveCardViewModel = {
   id: "cosmos-source",
@@ -148,7 +148,7 @@ function FrontFixture({
   sourceErrorMessage,
   sourcePermissionRequest,
 }: FrontFixtureProps) {
-  const [updatedAt, setUpdatedAt] = useState(UPDATED_AT)
+  const [loadedAt, setLoadedAt] = useState(LOADED_AT)
 
   return (
     <LiveCardStage>
@@ -159,8 +159,8 @@ function FrontFixture({
         isContentFetching={isContentFetching}
         sourceErrorMessage={sourceErrorMessage}
         sourcePermissionRequest={sourcePermissionRequest}
-        updatedAt={updatedAt}
-        onRefresh={() => setUpdatedAt(Date.now())}
+        loadedAt={loadedAt}
+        onRefresh={() => setLoadedAt(Date.now())}
         onRequestPermission={async () => true}
         onFlip={() => undefined}
       />
@@ -185,7 +185,7 @@ function LiveCardBackFixture() {
         hasSourceParams
         hasSourceParamChanges={hasChanges}
         sourceParamValidation={{ errors: {}, valid: true }}
-        updatedAt={UPDATED_AT}
+        loadedAt={LOADED_AT}
         isDraft
         onSourceParamChange={(key, value) => {
           setDraftParams(current => ({ ...current, [key]: value }))
@@ -222,7 +222,7 @@ function AllCardColorsFixture() {
               items={RANKING_ITEMS.slice(0, 4)}
               isFetching={false}
               isContentFetching={false}
-              updatedAt={UPDATED_AT}
+              loadedAt={LOADED_AT}
               onRefresh={() => undefined}
               onRequestPermission={async () => true}
               onFlip={() => undefined}

@@ -26,7 +26,7 @@ export {
   createLiveCard,
   mergeInstancePatch,
 } from "./live-cards"
-export type { SourceLoadResult } from "./loader"
+export type { SourceLoadResponse, SourceLoadResult } from "./loader"
 export { loadSource } from "./loader"
 export type { SourceParamValues } from "./params"
 export { mergeSourceParamValues, sanitizeSourceParamPatch } from "./params"

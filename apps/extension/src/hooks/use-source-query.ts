@@ -7,10 +7,7 @@ import {
   getSourceQueryHash,
   getSourceQueryOptions,
 } from "./source-query"
-import {
-  findCachedSourceQuery,
-  findSourceQueryDataUpdatedAt,
-} from "./use-cached-source-result"
+import { findCachedSourceQuery } from "./use-cached-source-result"
 import { useFetchLatestSources, useIsSourceFetchingLatest } from "./use-refetch"
 import { useSourceDescriptors } from "./use-source-descriptors"
 
@@ -44,16 +41,13 @@ export function useSourceQuery({
   const queryHash = useMemo(() => getSourceQueryHash(target), [target])
   const fetchLatestSources = useFetchLatestSources()
   const isFetchingLatest = useIsSourceFetchingLatest(queryHash)
-  const [initialUpdatedAt] = useState(Date.now)
+  const [initialLoadedAt] = useState(Date.now)
   const query = useQuery({
     ...getSourceQueryOptions(target),
     enabled: enabled && source !== undefined,
     placeholderData: prev => prev,
   })
-  const data = query.data ?? cachedResult
-  const placeholderDataUpdatedAt = query.isPlaceholderData && query.data
-    ? findSourceQueryDataUpdatedAt(queryClient, query.data)
-    : undefined
+  const data = query.data?.result ?? cachedResult
 
   const handleFetchLatest = useCallback(async () => {
     if (!enabled || !source) {
@@ -74,9 +68,8 @@ export function useSourceQuery({
     errorMessage: query.error instanceof Error ? query.error.message : undefined,
     loginUrl: getLoginUrlFromError(query.error),
     metadata: data?.metadata,
-    updatedAt: query.dataUpdatedAt
-      || cachedQuery?.dataUpdatedAt
-      || placeholderDataUpdatedAt
-      || initialUpdatedAt,
+    loadedAt: query.data?.loadedAt
+      ?? cachedQuery?.loadedAt
+      ?? initialLoadedAt,
   }
 }

@@ -21,12 +21,12 @@ function createContext(): BackgroundActionContext {
         status: 200,
         statusText: input.method,
       })),
+      runSource: vi.fn(async () => ({}) as never),
     },
     radar: { resolveSuggestions: vi.fn(async () => []) },
     source: {
       cancel: vi.fn(async () => undefined),
       load: vi.fn(async () => ({}) as never),
-      run: vi.fn(async () => ({}) as never),
     },
     sourceConnection: {
       getStatus: vi.fn(async () => ({ state: "disabled" as const })),
@@ -39,10 +39,10 @@ describe("action Registry", () => {
   it("publishes the connected Action contract directly from definitions", () => {
     const actions = actionRegistry.list("connected")
 
-    expect(actions).toHaveLength(23)
+    expect(actions).toHaveLength(24)
     expect(actions.filter(action => action.kind === "mutation")).toHaveLength(10)
     expect(actions.filter(action => action.kind === "query")).toHaveLength(10)
-    expect(actions.filter(action => action.kind === "command")).toHaveLength(3)
+    expect(actions.filter(action => action.kind === "command")).toHaveLength(4)
     expect(actions.find(action => action.name === "instance.create")).toMatchObject({
       inputSchema: { type: "object", additionalProperties: false },
       outputSchema: { type: "object" },

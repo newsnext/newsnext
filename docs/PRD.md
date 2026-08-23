@@ -181,10 +181,10 @@ the need for durable or derived processing does.
 ### Stable data streams are the foundation
 
 A configured Instance has a durable identity and repeatable
-configuration. Now Layer keeps only the latest cached result needed for current
-reading; it does not create History merely because a person opened the Board.
-Saved observations exist only when an Agent-owned Next Layer task or an
-explicit retention action requires them. Stability therefore does not imply
+configuration. Now Layer keeps only the latest browser-local result needed for
+current reading; it does not create History merely because a person opened the
+Board. Saved observations exist only when a recurring background Job or an
+Agent-owned Next Layer task requires them. Stability therefore does not imply
 that every current refresh becomes durable history, that every remote source is
 continuously available, or that every returned list is complete.
 
@@ -562,21 +562,22 @@ must not be described to users as available until its acceptance criteria pass.
 | Area | Status | Implemented baseline | Primary gap |
 | --- | --- | --- | --- |
 | Source definitions | Implemented foundation | Registry providers, parameters, metadata, loaders, transforms, templates, Radar rules, capabilities, secrets, and security limits | Registry health, version lifecycle, and dependency diagnostics |
-| Source execution | Implemented foundation | Registered and local Sources run through the extension runtime and CLI; `run --retain` provides an explicit durable handoff to the daemon | Add Agent-owned scheduling without duplicating the extension runtime |
+| Source execution | Implemented foundation | Registered and local Sources run through the extension runtime and CLI; recurring Jobs request protected registered-Source loads | Add Agent-owned scheduling without duplicating the extension runtime |
 | Shared local database | Partial | The daemon owns an embedded Turso database with dev/prod file isolation, ordered migrations, structured errors, and a serialized writer for retained History | Move remaining Board, Widget, and task state out of extension storage |
 | Instance and Board data | Implemented in extension storage | Canonical Instances, Boards, membership, manual order, and Layer preferences | Move canonical durable state behind App/CLI Actions for cross-browser use |
 | UI and Agent control | Implemented foundation | UI and CLI use the same typed Mutation and Query Actions and the same background persistence boundary | Database-backed Widget, task, and Source-health operations are not exposed yet |
-| Now Layer | Implemented | Each Instance is independently presented as a LiveCard using the unified LiveCard model | Make view-driven refresh explicit and keep current results cache-only |
+| Now Layer | Implemented | Each Instance is independently presented as a LiveCard using the unified LiveCard model | Make view-driven refresh explicit and keep current results browser-local |
 | Next Layer | Not implemented | The Board retains its Next Layer view entry and an explicit placeholder | Add CLI/daemon-backed Widgets, retained inputs, and materialized outputs |
-| History | Implemented foundation in Turso | Explicit `run --retain` results are committed transactionally by the daemon and can be listed, read at an exact time, and compared without a connected browser | Add task-owned retention policies, scheduling, and provenance |
+| History | Implemented foundation in Turso | Newly executed Job results are committed transactionally by the daemon and can be listed, read at an exact time, and compared without a connected browser | Add task-owned retention policies and provenance |
 | Provenance | Partial | Source and Instance identities remain stable; history comparisons preserve supported factual boundaries | Derived Widget inputs, transformations, warnings, and claims need an explicit UI contract |
 | Code Widgets | Not implemented | None | Sandbox, resource limits, versioning, preview, failure isolation, and rollback |
 
 The current CLI includes these relevant control surfaces:
 
 ```sh
-newsnext run <source-or-provider> --retain
+newsnext run <source-or-provider>
 newsnext fetch <url>
+newsnext job add --all
 newsnext action list
 newsnext action execute <action> --input '<json>'
 newsnext history datasets
@@ -615,7 +616,7 @@ The remaining product gaps are:
 | DAT-05 | Schema changes are ordered and atomic | The daemon applies versioned migrations before accepting requests and leaves either the previous or next valid schema after interruption |
 | DAT-06 | Logical mutations are transactional | A failed Board, Widget, observation, or task mutation leaves no partially updated durable state |
 | DAT-07 | Concurrent clients use one ordered writer | Independent bounded-wait reads remain available while the daemon serializes immediate write transactions and returns structured busy errors instead of hanging |
-| DAT-08 | Now Layer does not create implicit History | Repeated view-driven refresh replaces current cache data and does not insert observation rows unless an explicit Agent task or retention action requests it |
+| DAT-08 | Now Layer does not create implicit History | Repeated view-driven refresh replaces the current browser-local result and does not insert observation rows; only a configured Job or Agent task retains observations |
 | DAT-09 | Next Layer background work is Agent-owned | Agent task state, retained inputs, provenance, and materialized output commit together; opening Next Layer performs no implicit refresh or transformation |
 | DAT-10 | Source execution remains browser-owned | Agent tasks request registered Source execution from a connected extension and receive normalized output without receiving browser credentials or duplicating the Source runtime |
 | DAT-11 | Credentials remain browser-owned | Source credentials and browser session secrets never enter Native Messaging, IPC, logs, task inputs, materialized outputs, or database fields |
@@ -957,7 +958,7 @@ Qualitative research should additionally test whether users understand:
 | Open-ended Widgets become an unsafe arbitrary application runtime | Security, reliability, and maintainability regress | Start with typed declarative contracts; gate code execution behind a restricted sandbox and explicit capability review |
 | Agent requests personalized Sources instead of reusing the registry | Noisy Boards, unnecessary permissions, and fragile maintenance | Make registry discovery the default, report coverage gaps explicitly, and keep Source authoring outside the normal product workflow |
 | Two browsers or runtimes write competing durable state | Lost updates and inconsistent Boards | Make the environment-specific daemon the single database owner and require all clients to use canonical Actions |
-| Now Layer refresh silently grows History | Storage growth and a misleading retention contract | Keep current results cache-only and require an explicit Agent task or retention action for observations |
+| Now Layer refresh silently grows History | Storage growth and a misleading retention contract | Keep current results browser-local and require a configured Job or Agent task for observations |
 | Local database adoption creates a cloud dependency | Offline use and first-run reliability regress | Use an embedded local file as the initial source of truth; defer optional Turso sync |
 | Cross-source fusion hides disagreement or provenance | Users trust an unsupported corrected result | Preserve every input identity, distinguish observed and derived values, and make reconciliation logic inspectable |
 | Sparse observations are mistaken for continuous monitoring | Trend and forecast claims become misleading | Carry observation coverage and completeness warnings into every transformation and Widget |

@@ -19,10 +19,10 @@ import {
 } from "@newsnext/ui/components/dialog"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { formatForDisplay, useHotkey } from "@tanstack/react-hotkeys"
-import { useQueries, useQueryClient } from "@tanstack/react-query"
+import { useQueries } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
 import { useAtomValue } from "jotai"
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import {
   createSourceQueryTarget,
   getSourceQueryOptions,
@@ -35,7 +35,6 @@ import {
   applySourceLoaderMetadata,
   buildLiveCards,
 } from "@/lib/source"
-import { restorePersistedSourceQueries } from "@/lib/source/query-persister"
 import { boardsAtom, instancesAtom } from "@/store/board"
 import { shortcutSettingsAtom } from "@/store/settings"
 import { PhMagnifyingGlass } from "../icons/ph"
@@ -170,7 +169,6 @@ function SearchDialogContent({
 }): ReactNode {
   const boards = useAtomValue(boardsAtom)
   const instances = useAtomValue(instancesAtom)
-  const queryClient = useQueryClient()
   const { sources } = useSourceDescriptors()
 
   const liveCards = useMemo<LiveCardViewModel[]>(() => {
@@ -202,12 +200,8 @@ function SearchDialogContent({
   )
   const loaderMetadata = useQueries({
     queries: sourceQueryOptions,
-    combine: results => results.map(result => result.data?.metadata),
+    combine: results => results.map(result => result.data?.result.metadata),
   })
-
-  useEffect(() => {
-    void restorePersistedSourceQueries(queryClient)
-  }, [queryClient])
 
   const resolvedLiveCards = useMemo(
     () => liveCards.map((liveCard, index) => (

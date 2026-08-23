@@ -4,11 +4,9 @@ import { createSourceQueryTarget, getSourceQueryKey } from "./source-query"
 import {
   findCachedSourceQuery,
   findCachedSourceResult,
-  findSourceQueryDataUpdatedAt,
 } from "./use-cached-source-result"
 
 vi.mock("@/lib/source", () => ({
-  isSourceRequestProtected: () => false,
   loadSource: vi.fn(),
   SOURCE_QUERY_REFETCH_INTERVAL_MS: 300_000,
   SOURCE_QUERY_STALE_TIME_MS: 120_000,
@@ -27,21 +25,38 @@ describe("findCachedSourceResult", () => {
     const queryClient = new QueryClient()
     const target = createSourceQueryTarget(source.id, source, {})
     const result = { items: [], source }
-    queryClient.setQueryData(getSourceQueryKey(target), result, { updatedAt: 100 })
+    queryClient.setQueryData(getSourceQueryKey(target), {
+      fetchProtected: true,
+      fetchedAt: 100,
+      loadedAt: 100,
+      params: {},
+      result,
+    }, { updatedAt: 100 })
+    queryClient.getQueryCache().build(
+      queryClient,
+      queryClient.defaultQueryOptions({
+        queryKey: ["source", "pending:feed", 3, {}],
+      }),
+    )
 
     expect(findCachedSourceResult(queryClient, source.id, {})).toBe(result)
     expect(findCachedSourceQuery(queryClient, source.id, {})).toEqual({
       data: result,
-      dataUpdatedAt: 100,
+      loadedAt: 100,
     })
-    expect(findSourceQueryDataUpdatedAt(queryClient, result)).toBe(100)
     expect(findCachedSourceResult(queryClient, "other:feed", {})).toBeUndefined()
   })
 
   it("ignores legacy cached results that have no Source snapshot", () => {
     const queryClient = new QueryClient()
     const target = createSourceQueryTarget(source.id, source, {})
-    queryClient.setQueryData(getSourceQueryKey(target), { items: [] }, { updatedAt: 100 })
+    queryClient.setQueryData(getSourceQueryKey(target), {
+      fetchProtected: true,
+      fetchedAt: 100,
+      loadedAt: 100,
+      params: {},
+      result: { items: [] },
+    }, { updatedAt: 100 })
 
     expect(findCachedSourceResult(queryClient, source.id, {})).toBeUndefined()
   })

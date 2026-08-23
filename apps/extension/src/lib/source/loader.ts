@@ -1,17 +1,17 @@
-import type { SourceLoadResult } from "./load-result"
+import type { SourceLoadResponse } from "./load-result"
 import {
   normalizeSourceParams,
 } from "@newsnext/source-kit/runtime"
 import { actions } from "../actions"
 import { loadSourceDescriptor } from "./registry"
 
-export type { SourceLoadResult } from "./load-result"
+export type { SourceLoadResponse, SourceLoadResult } from "./load-result"
 
 export async function loadSource(
   sourceId: string,
   queryParams: Record<string, unknown> = {},
   { signal }: { signal?: AbortSignal } = {},
-): Promise<SourceLoadResult> {
+): Promise<SourceLoadResponse> {
   signal?.throwIfAborted()
   const source = await loadSourceDescriptor(sourceId)
   const params = normalizeSourceParams(source, queryParams)
@@ -23,7 +23,7 @@ async function loadFreshSource(
   sourceId: string,
   queryParams: Record<string, unknown>,
   signal?: AbortSignal,
-): Promise<SourceLoadResult> {
+): Promise<SourceLoadResponse> {
   const requestId = crypto.randomUUID()
   const cancelRequest = () => {
     void actions.source.cancel({ requestId }).catch(() => undefined)

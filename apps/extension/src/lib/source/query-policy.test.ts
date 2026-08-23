@@ -3,9 +3,9 @@ import { isSourceRequestProtected } from "./query-policy"
 
 describe("source query policy", () => {
   it("protects all Source requests for one minute", () => {
-    const updatedAt = 1_000_000
+    const fetchedAt = 1_000_000
 
-    expect(isSourceRequestProtected(updatedAt, updatedAt + 59_999)).toBe(true)
-    expect(isSourceRequestProtected(updatedAt, updatedAt + 60_000)).toBe(false)
+    expect(isSourceRequestProtected(fetchedAt, fetchedAt + 59_999)).toBe(true)
+    expect(isSourceRequestProtected(fetchedAt, fetchedAt + 60_000)).toBe(false)
   })
 })

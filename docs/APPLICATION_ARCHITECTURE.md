@@ -126,8 +126,8 @@ An Instance is durable application data. A registry descriptor is only the
 currently available executable definition of its Source. Removing a Source
 from a new registry must not remove, hide, or reorder its Instances.
 
-Every successful Source load returns and caches both content and a serializable
-Source presentation snapshot:
+Every successful Source load returns both content and a serializable Source
+presentation snapshot:
 
 ```ts
 interface SourceLoadResult {
@@ -145,25 +145,28 @@ interface SourceLoadResult {
 }
 ```
 
-The existing IndexedDB-backed Query cache persists this complete result by
-Source ID, version, and normalized effective parameters. Dynamic Loader
-metadata remains part of each refreshed result and may change normally.
+The background persists this complete result in IndexedDB by Source ID, version,
+and normalized effective parameters. The App restores it into the page's
+in-memory TanStack Query cache before rendering. Dynamic Loader metadata remains
+part of each refreshed result and may change normally.
 
 NowLayer resolves a card in this order:
 
 1. use the current registry Source when available;
-2. otherwise use the cached Source snapshot for that Instance's parameters;
+2. otherwise use the Source snapshot restored into TanStack Query for that
+   Instance's parameters;
 3. otherwise construct a minimal generic presentation from `sourceId`.
 
-All three paths retain the Instance and render a card. A cached or generic card
+All three paths retain the Instance and render a card. A restored or generic card
 whose Source is missing is explicitly unavailable and cannot refresh, but it
 can still be selected, reordered, moved between Boards, or deleted. There is no
 visible-subset reorder repair because unavailable cards participate directly in
 the complete NowLayer order.
 
-The cache is disposable acceleration and presentation continuity, not the owner
-of membership. Clearing it may reduce an unavailable card to the generic
-presentation, but cannot remove the Instance from Application Data.
+The persisted result and in-memory Query cache provide disposable acceleration
+and presentation continuity; neither owns membership. Clearing them may reduce
+an unavailable card to the generic presentation, but cannot remove the Instance
+from Application Data.
 
 ## Layers
 
@@ -224,8 +227,8 @@ The client sends only the canonical Action name and parameters to the
 background. It never imports a handler or browser-owned dependency. The
 background Registry validates parameters, invokes the registered handler, and
 validates its result. `connected` audience filtering publishes only Actions
-available to the local CLI; UI-only operations such as `source.load`,
-`source.cancel`, `radar.resolveSuggestions`, `application.replace`, and CLI
+available to the local CLI; UI-only operations such as `source.cancel`,
+`radar.resolveSuggestions`, `application.replace`, and CLI
 connection settings remain absent from that catalog.
 
 ### Mutations
@@ -290,7 +293,8 @@ The connected-browser catalog currently exposes:
 ```text
 app.open
 developer.fetch
-source.run
+developer.runSource
+source.load
 ```
 
 `app.open` navigates the exact connected extension instance to a Board or opens
@@ -298,8 +302,11 @@ its Settings dialog on the CLI connection tab. Existing App tabs receive an
 internal Settings intent and are focused without navigation or reload; the URL
 intent is used only while creating a new App tab.
 `developer.fetch` performs a one-shot browser-owned HTTP request for Source
-authoring. `source.run` executes a registered or supplied Source and may
-explicitly hand its normalized result to the daemon for retention. It returns
+authoring. `source.load` loads a registered Source through the shared
+one-minute third-party API protection for background Jobs. The latest successful
+result is persisted so protected requests can reuse it without calling the
+third-party API again. `developer.runSource` executes a registered or supplied Source
+outside that protected path for authoring and debugging. It returns
 raw request and response diagnostics only when debug output is explicitly
 enabled. Commands may
 depend on browser permissions, credentials, network state, timeouts, or
@@ -320,8 +327,8 @@ Native Host to the extension remain limited to 1 MiB.
 - Mutation transports return compact receipts. Updated Application Data reaches
   each frontend through its background storage subscription. Queries and
   Commands return their declared outputs directly.
-- Browser credentials, permissions, Source execution, and the current-result
-  cache remain browser-owned. Durable History and daemon lifecycle remain
+- Browser credentials, permissions, Source execution, and persisted current
+  results remain browser-owned. Durable History and daemon lifecycle remain
   App-owned.
 
 These boundaries keep card existence stable even when executable Source

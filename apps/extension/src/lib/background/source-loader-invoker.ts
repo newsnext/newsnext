@@ -10,13 +10,13 @@ import {
 import { createBackgroundSourceFetch } from "./source-fetch"
 import { resolveSourceSecrets, updateSourceSecrets } from "./source-secrets"
 
-export interface LoadBackgroundSourceInput {
+export interface InvokeSourceLoaderInput {
   requestId?: string
-  sourceId: string
   params?: Record<string, unknown>
+  sourceId: string
 }
 
-interface BackgroundSourceServiceOptions {
+interface SourceLoaderInvokerOptions {
   fetchResults?: BackgroundSourceFetchResult[]
   onRequestPrepared?: (
     params: Record<string, unknown>,
@@ -29,21 +29,21 @@ export interface CancelBackgroundSourceInput {
   requestId: string
 }
 
-export interface BackgroundSourceService {
+export interface SourceLoaderInvoker {
   cancel: (input: CancelBackgroundSourceInput) => Promise<void>
-  load: (input: LoadBackgroundSourceInput) => Promise<SourceLoadResult>
+  invoke: (input: InvokeSourceLoaderInput) => Promise<SourceLoadResult>
 }
 
-export function createBackgroundSourceService(
-  options: BackgroundSourceServiceOptions = {},
-): BackgroundSourceService {
+export function createSourceLoaderInvoker(
+  options: SourceLoaderInvokerOptions = {},
+): SourceLoaderInvoker {
   const activeRequests = new Map<string, AbortController>()
 
   return {
     async cancel({ requestId }): Promise<void> {
       activeRequests.get(requestId)?.abort()
     },
-    async load(input): Promise<SourceLoadResult> {
+    async invoke(input): Promise<SourceLoadResult> {
       const abortController = new AbortController()
       const { signal } = abortController
       if (input.requestId) {

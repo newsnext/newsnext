@@ -423,10 +423,12 @@ Widget must not mutate unrelated Instance streams or erase shared observations.
 Source -> latest cache -> Now Layer
 ```
 
-This path favors low latency and replaceable current state. TanStack Query owns
-the active request lifecycle and current result; its per-query IndexedDB
-persister restores that same state across app sessions. Viewing or refreshing
-Now Layer does not implicitly create durable History.
+This path favors low latency and replaceable current state. The extension
+background owns the persistent Source result, request protection, and in-flight
+deduplication. The UI uses TanStack Query only for its page-local active request
+and presentation lifecycle, hydrating background-owned IndexedDB results at App
+startup. Viewing or refreshing Now Layer does not implicitly create durable
+History.
 
 ### Durable-analysis path
 

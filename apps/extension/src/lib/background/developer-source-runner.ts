@@ -8,17 +8,16 @@ import {
 } from "@newsnext/source-kit/registry"
 import { normalizeSourceParams, parseSourceId } from "@newsnext/source-kit/runtime"
 import { createBackgroundSourceFetch } from "./source-fetch"
+import { createSourceLoaderInvoker } from "./source-loader-invoker"
 import { resolveSourceSecrets, updateSourceSecrets } from "./source-secrets"
-import { createBackgroundSourceService } from "./source-service"
 
-interface RunConnectedSourceOptions {
+interface RunDeveloperSourceOptions {
   debug: boolean
   params?: Record<string, unknown>
-  retain: boolean
   sourceId: string
 }
 
-export type RunConnectedSourceInput = RunConnectedSourceOptions & (
+export type RunDeveloperSourceInput = RunDeveloperSourceOptions & (
   | {
     provider?: never
     providerId?: never
@@ -31,11 +30,11 @@ export type RunConnectedSourceInput = RunConnectedSourceOptions & (
   }
 )
 
-export interface RunConnectedSourceOutput extends Omit<SourceLoaderResult, "items"> {
+export interface RunDeveloperSourceOutput extends Omit<SourceLoaderResult, "items"> {
   data: SourceLoaderResult["items"]
   execution: {
     durationMs: number
-    observedAt: number
+    loadedAt: number
     params: Record<string, unknown>
     providerId: string
     sourceId: string
@@ -70,12 +69,12 @@ function createRunOutput(
   params: Record<string, unknown>,
   fetches: BackgroundSourceFetchResult[] | undefined,
   startedAt: number,
-): RunConnectedSourceOutput {
+): RunDeveloperSourceOutput {
   return {
     data: result.items,
     execution: {
       durationMs: Math.round(performance.now() - startedAt),
-      observedAt: Date.now(),
+      loadedAt: Date.now(),
       params,
       providerId,
       sourceId,
@@ -87,24 +86,24 @@ function createRunOutput(
   }
 }
 
-export async function runConnectedSource(
-  input: RunConnectedSourceInput,
+export async function runDeveloperSource(
+  input: RunDeveloperSourceInput,
   authorize: AuthorizeConnectedSource,
-): Promise<RunConnectedSourceOutput> {
+): Promise<RunDeveloperSourceOutput> {
   const startedAt = performance.now()
   const fetches: BackgroundSourceFetchResult[] | undefined = input.debug ? [] : undefined
 
   if (input.providerId === undefined) {
     let params: Record<string, unknown> = {}
     let sourceVersion = 0
-    const result = await createBackgroundSourceService({
+    const result = await createSourceLoaderInvoker({
       fetchResults: fetches,
       async onRequestPrepared(preparedParams, preparedSourceVersion, source) {
         params = preparedParams
         sourceVersion = preparedSourceVersion
         await authorize({ ...source, sourceId: input.sourceId }, preparedParams)
       },
-    }).load({
+    }).invoke({
       sourceId: input.sourceId,
       params: input.params,
     })

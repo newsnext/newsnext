@@ -146,7 +146,7 @@ slices for import and export. Import accepts only the current version 3 envelope
 Current Board selection, CLI connectivity, browser permissions, and caches are
 device-local and are not part of that envelope.
 The Settings data reset restores every persisted slice to its default, deletes
-the device-local source-secret and IndexedDB source-result caches, clears active
+the device-local source-secret state and IndexedDB source results, clears active
 source queries, and revokes user-granted optional browser and host permissions.
 Required development permissions remain controlled by the extension manifest
 and cannot be removed at runtime.
@@ -233,45 +233,55 @@ source ID and raw parameters
         │
         ├─ resolve source
         ├─ normalize and validate parameters
-        ├─ build a TanStack query key from source ID, version, and normalized parameters
-        ├─ restore the persisted Query state when available
+        ├─ build a result identity from source ID, version, and normalized parameters
+        ├─ read the persisted Source result when available
         ├─ skip a user-triggered request during the one-minute protection interval
         ├─ resolve required secrets in the background
         ├─ execute the source loader
         ├─ validate the result, every NewsItem, item template, and response metadata
         ├─ reject an empty or malformed item result
-        ├─ publish and persist the complete successful Query state
+        ├─ persist the successful Source result and fetch time
+        ├─ publish the result into the page's in-memory QueryClient
         └─ infer the LiveCard presentation from effective item times and order in the UI
 ```
 
-In-flight loads are deduplicated by TanStack Query using a key containing the
-source ID, Source version, and normalized parameters. Source query keys and complete options are
-created together so React observers, imperative Fetch Latest calls, and future
-prefetch consumers share the same identity and lifecycle policy. Both
+The background protected loader enforces a one-minute minimum execution interval
+for each Source ID, Source version, and normalized parameter set. This protects
+third-party APIs from accidental bursts that can trigger rate limits or account
+suspension. It also deduplicates in-flight loads across UI and connected CLI
+consumers. The background does not own a Query cache. Page-side TanStack Query is
+the only cache and owns component subscriptions, loading and error state,
+page-local freshness, and in-memory result reuse. Source query keys and complete page
+options are created together so React observers, imperative Fetch Latest calls,
+and future prefetch consumers share that identity. Both
 individual LiveCard and board-wide user refreshes execute enabled TanStack queries
 that fetch the latest source data; disabled and unmounted queries are not
 fetched implicitly. Automatic revalidation follows TanStack freshness, while
-Fetch Latest is a separate user intent that bypasses freshness for active queries.
-A protected Fetch Latest returns the current Query data without executing its
-query function or changing `dataUpdatedAt`, and keeps UI feedback visible for a
-minimum 500ms. App query timing and the Source request protection interval are centralized in
+Fetch Latest is a separate user intent that bypasses page freshness and asks the
+background protected loader for the latest result. A protected request returns
+the persisted result with `fetchProtected: true` and a new caller-visible
+`loadedAt` without executing the Source or changing its internal `fetchedAt`, and
+Fetch Latest keeps UI feedback visible for a minimum 500ms. App query timing
+and the Source request protection interval are centralized in
 `apps/extension/src/lib/source/query-policy.ts`.
 
-TanStack's per-query persister serializes each successful Source Query state under
-its query hash in a Dexie-backed IndexedDB key-value table. Restoring a state
-preserves its original `dataUpdatedAt`, so memory and persistent storage share
-one freshness clock. TanStack remains the owner of cached data,
-freshness, and in-flight deduplication; IndexedDB is only its
-durable storage adapter. Persisted entries expire after 30 days. Increasing the
-Source version changes the query identity immediately, while old versions age
-out independently. Cache failures remain fail-open and never prevent Source
-execution.
+The background writes the latest successful Source results to a Dexie-backed
+IndexedDB table. Each record contains its normalized target, validated result,
+and real `fetchedAt` completion time; it is persistent domain state rather than
+a serialized TanStack Query cache. Before the App renders, it restores valid
+results into its in-memory QueryClient with a new caller-visible `loadedAt` and
+maps `fetchedAt` to TanStack's internal `dataUpdatedAt` for stale calculation.
+The UI never writes Query state back to IndexedDB, so persistence has one writer
+and does not attempt to synchronize independent QueryClient instances.
+Persisted results are discarded after 30 days. Increasing the Source version
+changes result identity immediately, while old versions age out independently.
+Persistence failures remain fail-open and never prevent Source execution.
 
-Source history is stored separately from this result cache in the local
-Turso database owned by the desktop daemon. Now Layer cache hits and remote
-refreshes never create observations. The first explicit retention entry point
-is `newsnext run --retain`: the extension executes and normalizes the Source,
-then the daemon commits the returned items and metadata. The database receives
+Source history is stored separately in the local Turso database owned by the
+desktop daemon. Reused protected results never create observations. Newly
+executed background Job loads return normalized results for the daemon to
+commit; a Job that reuses a result is
+reported as successful without duplicate retention. The database receives
 no Source credentials, fetch response bodies, or browser session state.
 
 A dataset is the unique pair of Source ID and canonical normalized parameter
@@ -355,10 +365,10 @@ manual-order Action requires every Board Instance exactly once.
 
 Board `instanceIds` store membership in recently-added-first order. The
 NowLayer renders every member even when its Source is no longer in the current
-registry. A successful Source load caches the result together with the Source
-provider, static metadata, parameter schema, capabilities, and version. An
-unavailable Instance therefore renders from its cached presentation snapshot,
-or from a generic `sourceId` fallback when no cache remains. It stays in drag
+registry. A successful Source load publishes the result and Source presentation
+snapshot into TanStack Query and persists the same result for restoration. An
+unavailable Instance therefore renders from its restored presentation snapshot,
+or from a generic `sourceId` fallback when no result remains. It stays in drag
 ordering and cannot be silently removed by saving a visible subset.
 Action transports return only compact receipts; the updated envelope reaches
 each frontend through its own subscription state rather than a duplicate proxy
@@ -376,14 +386,14 @@ dispatch. Enabling CLI access authorizes the local NewsNext CLI to mutate
 Boards and Instances, including destructive Actions; it does not grant
 web content or arbitrary processes direct extension access. History reads do
 not enter the extension: the companion daemon queries its own Turso database by
-the opaque dataset IDs returned from `history datasets`. Only an explicit
-`source.run` request with `retain: true` crosses the extension boundary before
-the daemon commits the normalized result. Board and Instance queries still
+the opaque dataset IDs returned from `history datasets`. Fresh `source.load`
+Job results cross the
+extension boundary before the daemon commits the normalized result. Board and Instance queries still
 execute in the extension background and read the Application Data envelope from
 `browser.storage.local` because frontend Jotai atoms are unavailable there.
 Source runs collect and return raw fetch diagnostics only when the caller
-explicitly enables debug output. Normal runs and retained background Jobs omit
-response bodies from the Native Messaging result.
+explicitly enables debug output. Normal runs and background Jobs omit response
+bodies from the Native Messaging result.
 
 The Rust CLI daemon owns the local-socket framed-JSON control listener. Shutdown
 closes connected Native Messaging bridges, fails pending commands, removes any
@@ -398,23 +408,21 @@ viewport root margin is applied and effectively disables preloading. After a
 LiveCard leaves that margin, its query remains active for one minute to avoid churn
 during short scrolls, then unmounts. Re-entering during that interval cancels
 the pending unmount. Successful query data remains fresh in memory for two
-minutes; this avoids redundant loader and persistent-cache reads during that
+minutes; this avoids redundant background loads and persisted-result reads during that
 window. Regaining focus or remounting can revalidate
 stale queries. Active LiveCard queries also revalidate once every five minutes,
 but interval revalidation is skipped while the app is in the background.
-Inactive query data follows TanStack Query's default garbage-collection policy
-and remains independently available through the per-query persister. Source
-queries use offline-first network mode. An active Source Query restores lazily
-when first used. Search explicitly restores persisted Source queries when it
-opens because its disabled observers must never start Source execution. Stale
-restored queries follow the same focus, remount, and interval revalidation
-policy as queries produced in the current session.
-The Now Layer requests one rerender after its bulk persisted-query restoration
-completes so unavailable Sources can resolve their cached presentation snapshot.
-It does not subscribe the Board projection to ongoing Query Cache events; active
-LiveCards own their query updates locally. When a query-key change temporarily
-displays placeholder data, the LiveCard preserves that result's last successful
-`dataUpdatedAt` instead of replacing it with the component mount time.
+Inactive query data follows TanStack Query's default garbage-collection policy;
+the durable Source result remains independently available in IndexedDB. Source
+queries use offline-first network mode. The App restores valid persisted Source
+results into its QueryClient before rendering, so disabled Search observers and
+unavailable Sources can reuse cached metadata without starting Source execution.
+Stale restored queries follow the same focus, remount, and interval revalidation
+policy as queries produced in the current session. The Board projection does
+not subscribe to ongoing Query Cache events; active LiveCards own their query
+updates locally. When a query-key change temporarily displays placeholder data,
+the LiveCard preserves that response's caller-visible `loadedAt` instead of replacing it
+with the component mount time.
 
 Each page-side query request receives a TanStack `AbortSignal`. Because signals
 cannot be transported directly through the extension proxy, the page assigns a
@@ -430,14 +438,14 @@ bound request capability. The request callback context also contains the resolve
 URL and returns a `Response`, leaving body parsing and HTML decoding at the
 structured-loader boundary. Cancellation therefore removes queued host requests
 and aborts active fetches without relying on each provider to forward a signal.
-TanStack Query remains the single in-flight deduplication layer, which also
-prevents a replacement Fetch Latest request from reusing a cancelled loader
-promise.
+TanStack Query deduplicates page observers for one query. The background
+protected loader separately deduplicates actual Source execution across page and
+connected CLI consumers, so concurrent callers cannot burst a third-party API.
 
 Instance-facing consumers resolve `instanceId` through the saved Instance and
 active Source descriptor before accessing stored results. The resulting target
-contains `sourceId`, Source version, and normalized effective parameters. Both persistent Cache
-reads and History reads consume this target, so default parameters cannot make
+contains `sourceId`, Source version, and normalized effective parameters. Both
+persisted Source-result reads and History reads consume this target, so default parameters cannot make
 the two stores address different data. The Instance remains the Board and
 Widget reference; the resolved Source target remains the execution and storage
 identity.
@@ -449,7 +457,8 @@ process them, and save a provenance-bearing result.
 Opening Next Layer must not repeat Agent-owned refresh or processing, mount
 offscreen LiveCards, or start Source execution solely to populate the presentation.
 
-Loader metadata is response-scoped and remains part of the cached load result.
+Loader metadata is response-scoped and remains part of the load result stored in
+TanStack Query and persisted for later restoration.
 It uses the complete source presentation metadata shape: title, badge,
 description, and home URL. While displayed, it has the highest field-level
 priority over static metadata and persisted Radar or Instance patches, without
@@ -474,12 +483,11 @@ Every presentation surface must use this same merge boundary. LiveCards apply
 loader metadata directly from their active source query. Search subscribes to
 the same normalized source query keys with disabled observers, so an existing
 loader result can update searchable titles and result labels without starting
-loads merely because the Search dialog opened. Search restores persisted Source
-queries when its content mounts with their original TanStack `dataUpdatedAt`, so
-stale presentation data cannot become artificially fresh or suppress normal
-LiveCard revalidation. Until a loader has published and cached its
-first successful result, Search follows the normal static, instance, and
-provider-title fallback behavior.
+loads merely because the Search dialog opened. Before rendering, the App restores
+persisted Source results and maps `fetchedAt` to TanStack's internal
+`dataUpdatedAt`, so stale presentation data cannot become artificially fresh or
+suppress normal LiveCard revalidation. Until a loader result is available,
+Search follows the normal static, Instance, and provider-title fallback behavior.
 
 Loader metadata reuses responses already required to produce the items. Source
 loaders must not issue profile, community, channel, batch, or other companion
@@ -487,7 +495,7 @@ requests only to enrich metadata. If the required item requests do not expose a
 field, authoring falls back to static or page-derived Radar metadata instead.
 
 The background and source runtime do not send a declared LiveCard type. They
-preserve loader output order, including through caching and transport. JSON and
+preserve loader output order through persistence, Query caching, and transport. JSON and
 HTML loaders may first apply their shared optional `sortByTimestamp` step after
 field normalization; it orders items by `publishedAt`, falling back to
 `updatedAt`, and keeps items without either time last. The frontend renders a
@@ -496,7 +504,7 @@ non-increasing `publishedAt` values on every item. If that check fails, it
 applies the same test to `updatedAt`. A result is a timeline when either
 complete field passes.
 All other non-empty results render as a ranking. Empty results fail before
-caching or presentation. A provider may deliberately sort inside a request,
+persistence, Query caching, or presentation. A provider may deliberately sort inside a request,
 JMESPath selection, structured loader configuration, or custom loader when
 chronological order is the correct source behavior.
 
@@ -558,14 +566,14 @@ object-shaped result contract; bare item arrays are not accepted. Every
 execution path, including the extension-backed CLI, rejects empty item arrays,
 malformed or unsupported semantic item fields, non-finite times and stats,
 invalid item templates, and unsupported or invalid response metadata before
-the result reaches a client or cache.
+the result reaches a client, persistence, or the Query cache.
 
 `NewsItem` stores semantic facts: publication and update times, author,
 well-known stats, source-specific scalar attributes, semantic pictures, and
 content. The result-level `itemTemplate.inline` composes those facts for the
 compact LiveCard row and may access only `scope.item`, but shared stats are excluded
 because the frontend renders them consistently as icon-and-count pairs. It
-travels with cached and transported loader results, while history snapshots continue to store only the
+travels with persisted, Query-cached, and transported loader results, while history snapshots continue to store only the
 items so presentation changes do not become historical fact changes. The UI
 uses a deterministic author/attribute fallback when no template exists.
 Source-specific templates omit facts already conveyed by the Instance,
@@ -651,7 +659,7 @@ A missing JSON Feed item title is derived from its summary, text content, or
 stripped HTML and bounded to 200 characters. Entries without a usable title or
 URL are discarded. After filtering, the loader independently retains parseable publication and
 update times on each entry without using feed order to discard either fact.
-RSS metadata uses the same normalization, URL resolution, caching, and
+RSS metadata uses the same normalization, URL resolution, persistence, Query caching, and
 presentation override pipeline as JSON, HTML, and custom loader metadata.
 
 ## Template compilation
@@ -763,7 +771,7 @@ membership. New Instance IDs combine the Source ID and a
 Board IDs, including the initial `My Board`, use the Nano ID directly. Both
 remain opaque strings.
 Moving a LiveCard updates only Board membership; Source parameters,
-presentation metadata, and cache identity remain unchanged. Every Instance has
+presentation metadata, and result identity remain unchanged. Every Instance has
 at least one Board membership. First-run data contains one
 ordinary Board named `My Board`; it can be renamed or deleted after another
 Board exists, and all Board routes resolve real Board IDs.
@@ -880,7 +888,7 @@ HTTP(S) URLs without embedded credentials and never serializes browser cookies
 into the command or response. Browser host permissions still govern access. If
 the exact target has not been granted, the extension opens a dedicated approval
 window and waits for the user to authorize that origin before continuing. The
-same approval flow runs before `source.run` when the resolved Source and params
+same approval flow runs before `developer.runSource` when the resolved Source and params
 require permissions that are not already granted. Request headers remain subject
 to the browser Fetch API's forbidden-header rules. The CLI execution timeout
 also aborts the browser-side network request.
@@ -911,8 +919,7 @@ opens its own packaged `app.html` URL through the browser tabs API. An existing
 NewsNext app tab is navigated to the requested Board and focused; a new tab is
 created only when none exists. Incompatible daemon and extension versions
 disconnect instead of silently accepting a partial control surface. Protocol
-version 4 makes History daemon-owned and adds the explicit `retain` flag to
-`source.run`. Protocol version 5 publishes each
+version 4 makes History daemon-owned. Protocol version 5 publishes each
 connected extension's Board summaries to the menu-bar app, keeps them current
 after Board changes, and makes `app.open` target an explicit Board route. The
 same Action can open the extension Settings dialog without changing the Native
@@ -923,6 +930,15 @@ open, fetch, and Source-run request variants with one `action.list` and
 `action.execute` transport. The catalog classifies every capability as a
 Mutation, Query, or Command; existing `run`, `fetch`, and `open` CLI commands are
 convenience frontends over their canonical Actions.
+Protocol version 7 makes raw Source fetch diagnostics opt-in. Protocol version
+8 moves the authoring command to `developer.runSource`, removes explicit
+retention from it, and exposes `source.load` to daemon-owned Jobs so they use
+the extension's shared third-party API protection and
+persisted latest result instead of the unprotected authoring path. `source.load`
+responses distinguish the actual Source `fetchedAt` from the caller-visible
+`loadedAt`. `fetchProtected` reports whether third-party API protection reused
+an existing or in-flight result. History retains only unprotected responses and
+maps their `fetchedAt` values to `observedAt`.
 
 Native Messaging registration is the browser-facing security boundary.
 Development and production use distinct host identities so their executables
@@ -978,7 +994,7 @@ The Rust CLI implements daemon lifecycle and tray status plus the `run`,
 extension-backed commands use the same typed execute/result IPC path. `run`
 supports registered sources, provider files, standard input, parameter
 overrides, provider-secret selection, compact output, verbose remote errors,
-watch mode, and explicit retention through `--retain`.
+and watch mode.
 
 The same Rust executable is packaged as the NewsNext desktop companion. A
 normal CLI invocation continues through Clap, while launching the executable
@@ -1016,7 +1032,7 @@ CLI's potentially ambiguous browser-name selector.
 
 Local provider runs use an isolated `cli:<provider-id>` secret namespace unless
 `--use-provider-secrets` is supplied. CLI execution does not install the
-provider, change the bundled registry, populate the normal source cache, or
+provider, change the bundled registry, persist the result used by normal loads, or
 grant additional browser permissions. It does use the same loader-result
 validation as registered extension app loads.
 
