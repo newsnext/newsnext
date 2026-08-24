@@ -4,4 +4,4 @@ import type { Node } from "./Node";
 import type { NodeInstance } from "./NodeInstance";
 import type { Workspace } from "./Workspace";
 
-export type ExtensionToHost = { "type": "hello", protocolVersion: number, node: Node, workspace: Workspace, } | { "type": "complete", requestId: string, result: CommandResult, } | { "type": "workspaceChanged", workspace: Workspace, } | { "type": "nodeChanged", instances: Array<NodeInstance>, } | { "type": "widgetSnapshotGet", requestId: string, boardId: string, widgetId: string, } | { "type": "instanceLoadGet", requestId: string, instanceId: string, };
+export type ExtensionToHost = { "type": "hello", protocolVersion: number, node: Node, workspace: Workspace, } | { "type": "complete", requestId: string, result: CommandResult, } | { "type": "workspaceChanged", workspace: Workspace, } | { "type": "nodeChanged", instances: Array<NodeInstance>, } | { "type": "widgetSnapshotGet", requestId: string, boardId: string, widgetId: string, } | { "type": "instanceGet", requestId: string, instanceId: string, cacheOnly: boolean, };

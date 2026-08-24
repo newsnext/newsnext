@@ -1,7 +1,7 @@
 import type { BackgroundActionContext } from "./background-actions"
-import { loadSourceDescriptors } from "@newsnext/source-kit/runtime"
+import { loadSourceDescriptors, prepareSourceRequest } from "@newsnext/source-kit/runtime"
 import { openAppBoard, openAppSettings } from "../app-tab"
-import { writePersistedSourceResult } from "../source/persisted-results"
+import { readPersistedSourceResult, writePersistedSourceResult } from "../source/persisted-results"
 import {
   mutateApplicationData,
   readApplicationData,
@@ -25,10 +25,15 @@ const sourceLoaderInvoker = createSourceLoaderInvoker()
 const sourceLoader = createProtectedSourceLoader(sourceLoaderInvoker)
 const radarService = createBackgroundRadarService()
 
-async function executeOwnedInstance({ instanceId }: { instanceId: string }) {
+async function requireOwnedInstance(instanceId: string) {
   const application = await readApplicationData()
   const instance = application.instances.find(candidate => candidate.instanceId === instanceId)
   if (!instance) throw new Error(`Instance '${instanceId}' not found`)
+  return instance
+}
+
+async function executeOwnedInstance({ instanceId }: { instanceId: string }) {
+  const instance = await requireOwnedInstance(instanceId)
   const response = await sourceLoader.load({
     params: instance.patch.params,
     sourceId: instance.sourceId,
@@ -45,6 +50,26 @@ async function loadNodeInstance(input: { instanceId: string }) {
     version: response.result.source.version,
   }, response.result, response.fetchedAt)
   return response
+}
+
+async function readNodeInstanceCache({ instanceId }: { instanceId: string }) {
+  const instance = await requireOwnedInstance(instanceId)
+  const request = await prepareSourceRequest(instance.sourceId, instance.patch.params ?? {})
+  const persisted = await readPersistedSourceResult({
+    instanceId,
+    params: request.params,
+    sourceId: instance.sourceId,
+    version: request.source.version,
+  })
+  if (!persisted) return null
+
+  return {
+    fetchProtected: true,
+    fetchedAt: persisted.fetchedAt,
+    loadedAt: Date.now(),
+    params: request.params,
+    result: persisted.result,
+  }
 }
 
 export function createBackgroundActionContext(
@@ -82,6 +107,7 @@ export function createBackgroundActionContext(
     },
     node: {
       loadInstance: loadNodeInstance,
+      readInstanceCache: readNodeInstanceCache,
     },
     source: {
       cancel: sourceLoaderInvoker.cancel,

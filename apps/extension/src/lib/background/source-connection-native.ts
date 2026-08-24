@@ -29,7 +29,7 @@ import { serializeSourceConnectionError } from "./source-connection-error"
 const NATIVE_HOST_NAME = import.meta.env.DEV
   ? "app.newsnext.host.dev"
   : "app.newsnext.host"
-const PROTOCOL_VERSION = 11
+const PROTOCOL_VERSION = 12
 const SOURCE_CONNECTION_NODE_ID_KEY = "newsnext.sourceConnectionNodeId"
 const SOURCE_CONNECTION_RECONNECT_ALARM = "source-connection-native-reconnect"
 const RECONNECT_ALARM_PERIOD_MINUTES = 0.5
@@ -69,7 +69,7 @@ type ParsedHostMessage
       nodes: NativeNode[]
     }
     | {
-      type: "instanceLoadResult"
+      type: "instanceResult"
       requestId: string
       result: NativeCommandResult
     }
@@ -80,9 +80,10 @@ interface PendingWidgetSnapshotRequest {
   timeoutId: ReturnType<typeof setTimeout>
 }
 
-interface PendingInstanceLoadRequest {
+interface PendingInstanceRequest {
+  cacheOnly: boolean
   reject: (error: Error) => void
-  resolve: (value: SourceLoadResponse) => void
+  resolve: (value: SourceLoadResponse | null) => void
   timeoutId: ReturnType<typeof setTimeout>
 }
 
@@ -98,12 +99,13 @@ let workspace: NativeWorkspace = { revision: 0, boards: [] }
 let synchronizedBoards = ""
 let cachedNodes: NativeNode[] = []
 const pendingWidgetSnapshotRequests = new Map<string, PendingWidgetSnapshotRequest>()
-const pendingInstanceLoadRequests = new Map<string, PendingInstanceLoadRequest>()
+const pendingInstanceRequests = new Map<string, PendingInstanceRequest>()
 
 const connectedActionContext = createBackgroundActionContext({
   getStatus: async () => getSourceConnectionStatus(),
   getWidgetSnapshot: requestWidgetSnapshot,
   loadInstance: requestInstanceLoad,
+  readInstanceCache: requestInstanceCache,
   setEnabled: async ({ enabled: nextEnabled, frontendState }) => (
     await setSourceConnectionEnabled(nextEnabled, frontendState)
   ),
@@ -178,12 +180,12 @@ function parseHostMessage(value: unknown): ParsedHostMessage {
     return { type: "nodesChanged", nodes: normalizeNodes(value.nodes) }
   }
   if (
-    value.type === "instanceLoadResult"
+    value.type === "instanceResult"
     && typeof value.requestId === "string"
     && isNativeCommandResult(value.result)
   ) {
     return {
-      type: "instanceLoadResult",
+      type: "instanceResult",
       requestId: value.requestId,
       result: value.result,
     }
@@ -269,7 +271,7 @@ function disconnect(): void {
   widgetServerUrl = undefined
   connectionState = "disconnected"
   rejectPendingWidgetSnapshotRequests(new Error("NewsNext CLI disconnected"))
-  rejectPendingInstanceLoadRequests(new Error("NewsNext CLI disconnected"))
+  rejectPendingInstanceRequests(new Error("NewsNext CLI disconnected"))
 }
 
 function cacheNodes(nodes: NativeNode[]): void {
@@ -305,7 +307,7 @@ function connect(): void {
       widgetServerUrl = undefined
       connectionState = "disconnected"
       rejectPendingWidgetSnapshotRequests(new Error("NewsNext CLI disconnected"))
-      rejectPendingInstanceLoadRequests(new Error("NewsNext CLI disconnected"))
+      rejectPendingInstanceRequests(new Error("NewsNext CLI disconnected"))
     }
   })
   nextPort.onMessage.addListener((value: unknown) => {
@@ -337,8 +339,8 @@ function connect(): void {
         })
       } else if (message.type === "nodesChanged") {
         cacheNodes(message.nodes)
-      } else if (message.type === "instanceLoadResult") {
-        settleInstanceLoadRequest(message.requestId, message.result)
+      } else if (message.type === "instanceResult") {
+        settleInstanceRequest(message.requestId, message.result)
       } else {
         if (message.requestId) {
           const pending = pendingWidgetSnapshotRequests.get(message.requestId)
@@ -348,11 +350,11 @@ function connect(): void {
             pending.reject(new Error(message.message))
             return
           }
-          const instanceLoad = pendingInstanceLoadRequests.get(message.requestId)
-          if (instanceLoad) {
-            clearTimeout(instanceLoad.timeoutId)
-            pendingInstanceLoadRequests.delete(message.requestId)
-            instanceLoad.reject(new Error(message.message))
+          const instanceRequest = pendingInstanceRequests.get(message.requestId)
+          if (instanceRequest) {
+            clearTimeout(instanceRequest.timeoutId)
+            pendingInstanceRequests.delete(message.requestId)
+            instanceRequest.reject(new Error(message.message))
             return
           }
         }
@@ -402,21 +404,40 @@ export async function requestWidgetSnapshot(input: {
 }
 
 export async function requestInstanceLoad(input: { instanceId: string }): Promise<SourceLoadResponse> {
+  const result = await requestInstance(input, false)
+  if (!result) throw new Error("The NewsNext Node returned an empty Source result")
+  return result
+}
+
+export async function requestInstanceCache(input: { instanceId: string }): Promise<SourceLoadResponse | null> {
+  return await requestInstance(input, true)
+}
+
+async function requestInstance(
+  input: { instanceId: string },
+  cacheOnly: boolean,
+): Promise<SourceLoadResponse | null> {
   const connection = port
   if (!enabled || connectionState !== "connected" || !connection) {
     throw new Error("NewsNext CLI is not connected")
   }
   const message: ExtensionToHost = {
-    type: "instanceLoadGet",
+    type: "instanceGet",
     requestId: crypto.randomUUID(),
     instanceId: input.instanceId,
+    cacheOnly,
   }
   return await new Promise((resolve, reject) => {
     const timeoutId = setTimeout(() => {
-      pendingInstanceLoadRequests.delete(message.requestId)
+      pendingInstanceRequests.delete(message.requestId)
       reject(new Error("Timed out waiting for the Instance's NewsNext Node"))
     }, WIDGET_REQUEST_TIMEOUT_MS)
-    pendingInstanceLoadRequests.set(message.requestId, { reject, resolve, timeoutId })
+    pendingInstanceRequests.set(message.requestId, {
+      cacheOnly,
+      reject,
+      resolve,
+      timeoutId,
+    })
     connection.postMessage(message)
   })
 }
@@ -433,12 +454,16 @@ function settleWidgetRequest(requestId: string, result: NativeCommandResult): vo
   }
 }
 
-function settleInstanceLoadRequest(requestId: string, result: NativeCommandResult): void {
-  const pending = pendingInstanceLoadRequests.get(requestId)
+function settleInstanceRequest(requestId: string, result: NativeCommandResult): void {
+  const pending = pendingInstanceRequests.get(requestId)
   if (!pending) return
   clearTimeout(pending.timeoutId)
-  pendingInstanceLoadRequests.delete(requestId)
+  pendingInstanceRequests.delete(requestId)
   if (result.ok) {
+    if (result.data === null && pending.cacheOnly) {
+      pending.resolve(null)
+      return
+    }
     if (!isSourceLoadResponse(result.data)) {
       pending.reject(new Error("The NewsNext Node returned an invalid Source result"))
       return
@@ -466,12 +491,12 @@ function rejectPendingWidgetSnapshotRequests(error: Error): void {
   pendingWidgetSnapshotRequests.clear()
 }
 
-function rejectPendingInstanceLoadRequests(error: Error): void {
-  for (const pending of pendingInstanceLoadRequests.values()) {
+function rejectPendingInstanceRequests(error: Error): void {
+  for (const pending of pendingInstanceRequests.values()) {
     clearTimeout(pending.timeoutId)
     pending.reject(error)
   }
-  pendingInstanceLoadRequests.clear()
+  pendingInstanceRequests.clear()
 }
 
 function parseWidgetServerUrl(value: unknown): string {

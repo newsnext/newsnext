@@ -275,6 +275,11 @@ completion time; it is persistent result data rather than a serialized TanStack
 Query cache. Before the App renders, it restores valid local Instance results
 into its in-memory QueryClient with a new caller-visible `loadedAt` and maps
 `fetchedAt` to TanStack's internal `dataUpdatedAt` for stale calculation.
+It then asks connected owner Nodes for their persisted remote Instance results
+in parallel and seeds cache hits into the same QueryClient before the first
+render. This cache-only hydration never executes a Source. Remote misses and
+failures do not discard successful responses, and the viewing browser still
+does not persist another copy of remote result data.
 Persisted results are discarded after 30 days. Increasing the Source version
 changes result identity immediately, while old versions age out independently.
 Persistence failures remain fail-open and never prevent Source execution.
@@ -950,12 +955,13 @@ commands and completions by request ID, rejects
 ambiguous browser selection, expires pending executions, and never replays a
 command after reconnection because source execution is not guaranteed to be
 idempotent. Settings exposes the daemon version as connection metadata only.
-The current protocol version is 11. It carries the shared Workspace, connected
-Node catalog, canonical Action requests, Widget snapshots, and Instance load
-requests. The Workspace owns Boards and Layers, while each Node advertises only
-the Loader Instances it can execute. The daemon resolves an Instance request to
-exactly one connected Node and never transfers browser credentials or session
-state. `app.open` targets an exact Node and opens its packaged `app.html` route.
+The current protocol version is 12. It carries the shared Workspace, connected
+Node catalog, canonical Action requests, Widget snapshots, Instance cache
+reads, and Instance load requests. The Workspace owns Boards and Layers, while
+each Node advertises only the Loader Instances it can execute. The daemon
+resolves an Instance request to exactly one connected Node and never transfers
+browser credentials or session state. `app.open` targets an exact Node and
+opens its packaged `app.html` route.
 Incompatible daemon and extension versions disconnect instead of accepting a
 partial control surface.
 

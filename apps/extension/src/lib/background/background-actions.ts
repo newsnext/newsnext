@@ -39,6 +39,7 @@ export interface BackgroundActionContext extends ApplicationActionContext {
   }
   node: {
     loadInstance: (input: { instanceId: string }) => Promise<SourceLoadResponse>
+    readInstanceCache: (input: { instanceId: string }) => Promise<SourceLoadResponse | null>
   }
   source: {
     cancel: (input: { requestId: string }) => Promise<void>
@@ -55,6 +56,7 @@ export interface BackgroundActionContext extends ApplicationActionContext {
       widgetId: string
     }) => Promise<unknown>
     loadInstance: (input: { instanceId: string }) => Promise<SourceLoadResponse>
+    readInstanceCache: (input: { instanceId: string }) => Promise<SourceLoadResponse | null>
     setEnabled: (input: {
       enabled: boolean
       frontendState?: PersistedDeviceState
@@ -76,6 +78,10 @@ const SourceLoadResponseResult = Type.Unsafe<SourceLoadResponse>(Type.Object({
   params: RecordValue,
   result: Type.Object({}, { additionalProperties: true }),
 }, { additionalProperties: false }))
+const SourceCacheResult = Type.Unsafe<SourceLoadResponse | null>(Type.Union([
+  SourceLoadResponseResult,
+  Type.Null(),
+]))
 
 const appOpenAction = defineAction({
   audiences: CONNECTED_ONLY,
@@ -239,6 +245,17 @@ const nodeLoadInstanceAction = defineAction({
   await context.node.loadInstance(input)
 ))
 
+const nodeReadInstanceCacheAction = defineAction({
+  audiences: CONNECTED_ONLY,
+  name: "node.readInstanceCache",
+  kind: "query",
+  description: "Read one configured Instance's persisted result without executing its Source.",
+  params: Type.Object({ instanceId: Identifier }, { additionalProperties: false }),
+  result: SourceCacheResult,
+}, async (input, context: BackgroundActionContext) => (
+  await context.node.readInstanceCache(input)
+))
+
 const sourceConnectionGetStatusAction = defineAction({
   audiences: UI_ONLY,
   name: "sourceConnection.getStatus",
@@ -261,6 +278,17 @@ const sourceConnectionLoadInstanceAction = defineAction({
   result: SourceLoadResponseResult,
 }, async (input, context: BackgroundActionContext) => (
   await context.sourceConnection.loadInstance(input)
+))
+
+const sourceConnectionReadInstanceCacheAction = defineAction({
+  audiences: UI_ONLY,
+  name: "sourceConnection.readInstanceCache",
+  kind: "query",
+  description: "Read an Instance's persisted result from its connected NewsNext Node.",
+  params: Type.Object({ instanceId: Identifier }, { additionalProperties: false }),
+  result: SourceCacheResult,
+}, async (input, context: BackgroundActionContext) => (
+  await context.sourceConnection.readInstanceCache(input)
 ))
 
 const PersistedDeviceStateParams = Type.Unsafe<PersistedDeviceState>(Type.Object({
@@ -306,6 +334,7 @@ export const uiBackgroundActionDefinitions = [
   sourceCancelAction,
   sourceConnectionGetStatusAction,
   sourceConnectionLoadInstanceAction,
+  sourceConnectionReadInstanceCacheAction,
   sourceConnectionSetEnabledAction,
   nextLayerGetWidgetSnapshotAction,
 ] as const
@@ -316,6 +345,7 @@ export const backgroundActionDefinitions = [
   developerRunSourceAction,
   jobExecuteInstanceAction,
   nodeLoadInstanceAction,
+  nodeReadInstanceCacheAction,
   ...uiBackgroundActionDefinitions,
 ] as const
 
