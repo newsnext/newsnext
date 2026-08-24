@@ -25,7 +25,7 @@ function createContext(): BackgroundActionContext {
     },
     radar: { resolveSuggestions: vi.fn(async () => []) },
     job: { executeInstance: vi.fn(async () => ({}) as never) },
-    node: {
+    loader: {
       loadInstance: vi.fn(async () => ({}) as never),
       readInstanceCache: vi.fn(async () => null),
     },

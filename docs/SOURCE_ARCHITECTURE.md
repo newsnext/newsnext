@@ -189,15 +189,11 @@ The record key is the canonical source ID, such as `github:trending`.
 segment. Public descriptors receive an `id` only when the keyed runtime record
 is converted for clients.
 
-The extension page memoizes its descriptor-list request for the lifetime of the
-page. LiveCard loads therefore reuse the same descriptors instead of listing,
-serializing, and sorting the complete registry for every request. A failed
-descriptor request clears the memoized promise so a later request can retry.
-The app's board route also primes the descriptor query with
-`ensureQueryData` before rendering LiveCards. Descriptor query options are shared
-between the route and React consumers and run independently of network status.
-The underlying descriptor-list request remains memoized for the page lifetime
-because the bundled registry cannot change without an extension reload.
+The extension page memoizes descriptor-list requests for consumers that need
+Source discovery or configuration, such as Search, Settings, and Drafts. A
+failed request clears the memoized promise so a later request can retry. Board
+routes and persisted Instance queries neither list nor wait for descriptors;
+they render from Loader result snapshots.
 
 Static source presentation remains nested as
 `RuntimeSource.metadata: SourcePresentationMetadata`. Runtime resolution
@@ -251,9 +247,11 @@ third-party APIs from accidental bursts that can trigger rate limits or account
 suspension. It also deduplicates in-flight loads across UI and connected CLI
 consumers. The background does not own a Query cache. Page-side TanStack Query
 owns component subscriptions, loading and error state, page-local freshness,
-and in-memory result reuse. Source query keys and complete page
-options are created together so React observers, imperative manual requests,
-and future prefetch consumers share that identity. Both
+and in-memory result reuse. A persisted Instance query is keyed only by
+`["instance", instanceId]`; a Draft without an Instance uses Source ID, Source
+version, and normalized parameters. Query options are created with those keys
+so React observers, imperative manual requests, and future prefetch consumers
+share the correct identity. Both
 individual LiveCard and board-wide manual requests execute enabled TanStack queries
 through `refetchQueries` with `type: "active"`; individual requests add a query-hash
 predicate, while board-wide requests match every active Source query. TanStack
@@ -269,51 +267,40 @@ Manual Request keeps UI feedback visible for a minimum 500ms. App query timing
 and the Source request protection interval are centralized in
 `apps/extension/src/lib/source/query-policy.ts`.
 
-The background writes every successful local execution once to a Dexie-backed
+The bound browser Loader writes every successful execution once to a Dexie-backed
 Source result cache keyed by Source ID, Source version, and normalized
 parameters. The same record supplies both API protection and startup
-placeholder data. Local Instance IDs are deliberately absent because they do
-not affect Source execution; LiveCards with the same request identity share one
-page-side TanStack query.
+placeholder data. Instance IDs are deliberately absent from this Loader cache
+because they do not affect Source execution. Page-side TanStack queries for
+saved Instances use only the Instance ID, while configuration changes explicitly
+invalidate that stable query.
 
-Each cache record contains its normalized target, validated result, and real
-`fetchedAt` completion time. When a Board route renders, the App restores only
-the valid records referenced by that Board's local Instances into its in-memory
-QueryClient. It assigns a new caller-visible `loadedAt` and maps `fetchedAt` to
-TanStack's internal `dataUpdatedAt` for stale calculation. The lookup uses the
-persisted Source ID index and then verifies the complete normalized request
-identity, so unrelated Boards and historical parameter combinations do not
-enter the page cache. Available Sources restore only the current Source version;
-an unavailable Source may restore its newest matching cached descriptor as a
-failure-safe presentation fallback. This hydration never executes a Source.
-
-A cross-Node request is routed by Instance ID so the owning browser can resolve
-the configured Source and parameters. In the viewing browser, however, TanStack
-Query identity is Node-scoped because a Node represents one remote execution
-environment and credential boundary. Remote Instances on the same Node share a
-query when their Source version and normalized parameters match; identical
-requests on different Nodes remain isolated. The viewing browser asks connected
-owners only for remote Instances referenced by the Board being rendered and
-seeds successful responses into Node-scoped TanStack queries before that Board
-content renders without persisting another copy. Remote misses and failures do
-not discard successful responses.
+Each cache record contains only its derived key, validated result, and real
+`fetchedAt` completion time; it does not duplicate the normalized target. When
+a Board route renders, the App asks the opaque
+Instance router for each referenced Instance's cached result. The router reads
+directly in the current browser when it is the binding and otherwise relays to
+the bound browser through the daemon. Successful responses seed Instance-scoped
+TanStack queries before Board content renders without copying another durable
+cache. Misses and failures do not discard successful responses. This hydration
+never executes a Source.
 Persisted results are discarded after 30 days. Increasing the Source version
 changes result identity immediately, while old versions age out independently.
 Persistence failures remain fail-open and never prevent Source execution.
 
-Cross-Node UI reads use `node.loadInstance`; the daemon returns their results
-without retaining History, while the owning Node uses its Source result cache.
+UI reads use an Instance ID. The background takes a local fast path for Instances
+bound to the current browser and otherwise uses `loader.loadInstance` through the
+daemon's private binding router. The daemon returns results without retaining
+History, while the bound Loader uses its Source result cache.
 Scheduled work uses `job.executeInstance`, and only the daemon's explicit Job
 runner retains a newly fetched, unprotected response as an observation. Both
 Actions reuse the same protected Loader implementation without sharing History
 policy.
 
-The browser retains the last known Node catalog when a Node disconnects. This
-keeps Workspace cards stable while their owning Node is restarting or offline.
-Only the owning Node retains that Instance's result, so a remote card requires
-the owner to be connected after the viewing browser reloads. Reconnection
-replaces that Node's cached Instance configuration; disconnection only suspends
-remote reads and fresh execution.
+The daemon owns complete Workspace Instance configuration independently of Node
+connections. A disconnected binding therefore never makes a card read-only or
+removes it from a Board; it only suspends routed cache reads and fresh execution
+until that browser reconnects.
 
 Source history is stored separately in the local Turso database owned by the
 desktop daemon. Reused protected results never create observations. Newly
@@ -322,11 +309,11 @@ commit; a Job that reuses a result is
 reported as successful without duplicate retention. The database receives
 no Source credentials, fetch response bodies, or browser session state.
 
-A dataset is the unique pair of Source ID and canonical normalized parameter
-JSON. Each dataset receives an opaque UUID exposed by `history datasets` and
-used by the other history commands. Source version remains observation
-metadata rather than part of dataset identity, preserving continuity while
-making version boundaries inspectable.
+A dataset is the unique tuple of execution Node ID, Source ID, Source version,
+and canonical normalized parameter JSON. Node ID is explicit because the
+daemon combines observations from browser Loaders with different credentials,
+permissions, and network environments. Each dataset receives an opaque UUID
+exposed by `history datasets` and used by the other history commands.
 
 Account-scoped Sources include an explicit, non-secret `identity` parameter in
 that normalized JSON. Radar obtains it from the active browser tab using a
@@ -349,7 +336,7 @@ semantics are inferred from the normalized item order using the same timestamp
 rule as presentation code.
 
 The daemon owns one Turso engine and one mutex-protected write connection.
-Migrations run before IPC begins accepting clients. Retention uses an immediate
+Schema initialization runs before IPC begins accepting clients. Retention uses an immediate
 transaction that creates or reuses the dataset and revisions, inserts the
 observation and ordered item links, and updates dataset counters atomically.
 Read operations open independent bounded-wait connections and use keyset
@@ -400,12 +387,13 @@ their changes to one in-memory envelope and perform one storage write. The
 manual-order Action requires every Board Instance exactly once.
 
 Board `instanceIds` store membership in recently-added-first order. The
-NowLayer renders every member even when its Source is no longer in the current
-registry. A successful Source load publishes the result and Source presentation
-snapshot into TanStack Query and persists the same result for restoration. An
-unavailable Instance therefore renders from its restored presentation snapshot,
-or from a generic `sourceId` fallback when no result remains. It stays in drag
-ordering and cannot be silently removed by saving a visible subset.
+NowLayer renders every member without consulting the current registry. A
+successful Source load publishes the result and Source presentation snapshot
+into TanStack Query and persists the same result for restoration. An Instance
+therefore renders from its restored presentation snapshot, or from a generic
+`sourceId` fallback when no result remains. A later load replaces that
+presentation in place. It stays in drag ordering and cannot be silently removed
+by saving a visible subset.
 Action transports return only compact receipts; the updated envelope reaches
 each frontend through its own subscription state rather than a duplicate proxy
 payload.
@@ -449,14 +437,12 @@ window. Regaining focus or remounting can revalidate
 stale queries. Active LiveCard queries also revalidate once every five minutes,
 but interval revalidation is skipped while the app is in the background.
 Inactive query data follows TanStack Query's default garbage-collection policy;
-the durable Source result remains independently available in IndexedDB. Local
-LiveCards with the same Source version and normalized parameters share one
-query; remote LiveCards share matching requests within one Node and remain
-isolated across Nodes. Source queries use offline-first
+the durable Source result remains independently available in IndexedDB. Each
+saved Instance owns one page query, while Instances in the same browser may
+still share the Loader's Source-request cache. Source queries use offline-first
 network mode. Before rendering Board content, the App restores valid persisted
-Source results for that Board into its QueryClient. This lets its unavailable
-Sources reuse cached descriptors and metadata without loading unrelated Source
-identities. Disabled Search observers reuse data already present in the page
+Source results for that Board into its QueryClient. This lets Instances render
+cached Source snapshots without loading the registry. Disabled Search observers reuse data already present in the page
 cache but do not cause other Boards' persisted results to be restored or execute
 a Source.
 Stale restored queries follow the same focus, remount, and interval revalidation
@@ -484,13 +470,13 @@ TanStack Query deduplicates page observers for one query. The background
 protected loader separately deduplicates actual Source execution across page and
 connected CLI consumers, so concurrent callers cannot burst a third-party API.
 
-Instance-facing consumers resolve `instanceId` through the saved Instance and
-active Source descriptor before accessing stored results. The resulting target
-contains `sourceId`, Source version, and normalized effective parameters. Both
-persisted Source-result reads and History reads consume this target, so default parameters cannot make
-the two stores address different data. The Instance remains the Board and
-Widget reference; the resolved Source target remains the execution and storage
-identity.
+Instance-facing consumers route `instanceId` to its bound Loader. The Loader
+resolves Source ID, Source version, and normalized effective parameters for its
+browser-local IndexedDB cache. When an explicit Job retains the result, the
+daemon adds the actual execution Node ID to that same Source request identity.
+Thus Instance ID is the page query and routing identity, the resolved Source
+target is the Loader cache identity, and Node plus Source target is the History
+dataset identity.
 
 Next Layer does not read or invalidate the Now Layer TanStack cache. A local
 Widget declares named data queries in `widget.json`, but those
@@ -978,13 +964,12 @@ commands and completions by request ID, rejects
 ambiguous browser selection, expires pending executions, and never replays a
 command after reconnection because source execution is not guaranteed to be
 idempotent. Settings exposes the daemon version as connection metadata only.
-The current protocol version is 12. It carries the shared Workspace, connected
-Node catalog, canonical Action requests, Widget snapshots, Source-result cache
-reads routed by Instance ID, and Instance load requests. The Workspace owns
-Boards and Layers, while
-each Node advertises only the Loader Instances it can execute. The daemon
-resolves an Instance request to exactly one connected Node and never transfers
-browser credentials or session state. `app.open` targets an exact Node and
+The current protocol version is 13. It carries the complete shared Workspace,
+canonical Action requests, Widget snapshots, Source-result cache reads routed
+by Instance ID, and Instance load requests. The Workspace owns Boards, Layers,
+and Instances. The daemon privately binds each Instance to its creation browser
+and resolves execution to exactly one connected Node without exposing that
+identity or transferring browser credentials or session state. `app.open` targets an exact Node and
 opens its packaged `app.html` route.
 Incompatible daemon and extension versions disconnect instead of accepting a
 partial control surface.

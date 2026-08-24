@@ -3,12 +3,10 @@ import { Navigate, useLocation, useParams } from "@tanstack/react-router"
 import { useAtomValue, useSetAtom } from "jotai"
 import { useEffect, useMemo, useState } from "react"
 import { BoardView } from "@/components/board-view"
-import { useSourceDescriptors } from "@/hooks/use-source-descriptors"
 import { getBoardLayerFromState } from "@/lib/board"
-import { restorePersistedSourceResults } from "@/lib/source/persisted-results"
-import { restoreRemoteSourceResults, selectRemoteInstances } from "@/lib/source/remote-results"
+import { restoreInstanceResults } from "@/lib/source/restore-instance-results"
 import { handleThemeSwitch } from "@/lib/utils/swith-theme"
-import { boardsAtom, instancesAtom, nodesAtom } from "@/store/board"
+import { boardsAtom, instancesAtom } from "@/store/board"
 import { currentBoardIdAtom } from "@/store/settings"
 
 export function BoardIdComponent() {
@@ -16,11 +14,9 @@ export function BoardIdComponent() {
   const layer = useLocation({ select: location => getBoardLayerFromState(location.state) })
   const boards = useAtomValue(boardsAtom)
   const instances = useAtomValue(instancesAtom)
-  const nodes = useAtomValue(nodesAtom)
-  const { sources } = useSourceDescriptors()
   const queryClient = useQueryClient()
   const setCurrentBoardId = useSetAtom(currentBoardIdAtom)
-  const [restoredSourceKey, setRestoredSourceKey] = useState<string>()
+  const [restoredInstanceKey, setRestoredInstanceKey] = useState<string>()
   const board = boards.find(board => board.id === boardId)
   const boardInstanceIds = board?.instanceIds
   const boardInstances = useMemo(() => {
@@ -28,27 +24,13 @@ export function BoardIdComponent() {
     const instanceIdSet = new Set(boardInstanceIds)
     return instances.filter(instance => instanceIdSet.has(instance.instanceId))
   }, [boardInstanceIds, instances])
-  const remoteInstances = useMemo(
-    () => selectRemoteInstances(boardInstanceIds ?? [], instances, nodes),
-    [boardInstanceIds, instances, nodes],
-  )
-  const boardSources = useMemo(() => {
-    const sourceIds = new Set(boardInstances.map(instance => instance.sourceId))
-    return sources.filter(source => sourceIds.has(source.id))
-  }, [boardInstances, sources])
-  const sourceRestorationKey = useMemo(() => JSON.stringify({
-    local: boardInstances.map(instance => ({
-      params: instance.patch.params,
-      sourceId: instance.sourceId,
-      version: boardSources.find(source => source.id === instance.sourceId)?.version,
-    })),
-    remote: remoteInstances.map(({ instance, nodeId }) => ({
+  const instanceRestorationKey = useMemo(() => JSON.stringify({
+    instances: boardInstances.map(instance => ({
       instanceId: instance.instanceId,
-      nodeId,
-      params: instance.patch.params,
+      patch: instance.patch,
       sourceId: instance.sourceId,
     })),
-  }), [boardInstances, boardSources, remoteInstances])
+  }), [boardInstances])
 
   useEffect(() => {
     document.title = board ? `NewsNext | ${board.name}` : "NewsNext"
@@ -70,16 +52,13 @@ export function BoardIdComponent() {
   useEffect(() => {
     if (!boardInstanceIds) return
     let active = true
-    void Promise.all([
-      restorePersistedSourceResults(queryClient, boardInstances, boardSources),
-      restoreRemoteSourceResults(queryClient, remoteInstances),
-    ]).finally(() => {
-      if (active) setRestoredSourceKey(sourceRestorationKey)
+    void restoreInstanceResults(queryClient, boardInstances).finally(() => {
+      if (active) setRestoredInstanceKey(instanceRestorationKey)
     })
     return () => {
       active = false
     }
-  }, [boardInstanceIds, boardInstances, boardSources, queryClient, remoteInstances, sourceRestorationKey])
+  }, [boardInstanceIds, boardInstances, instanceRestorationKey, queryClient])
 
   if (!board) {
     return (
@@ -89,7 +68,7 @@ export function BoardIdComponent() {
     )
   }
 
-  if (restoredSourceKey !== sourceRestorationKey) return null
+  if (restoredInstanceKey !== instanceRestorationKey) return null
 
   if (!layer) {
     return (

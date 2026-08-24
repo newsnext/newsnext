@@ -3,6 +3,7 @@ import type { SourceDescriptor } from "@/typings/source"
 import { describe, expect, it } from "vitest"
 import {
   applySourceLoaderMetadata,
+  applySourceSnapshot,
   buildLiveCards,
   mergeInstancePatch,
 } from "./live-cards"
@@ -223,6 +224,38 @@ describe("applySourceLoaderMetadata", () => {
         desc: "Radar description",
         home: "https://loader.example.com",
       },
+    })
+  })
+})
+
+describe("applySourceSnapshot", () => {
+  it("renders from the Loader snapshot while preserving Instance overrides", () => {
+    const instance = createCustomInstance({
+      patch: {
+        metadata: { title: "Saved title" },
+        params: { topic: "rust" },
+      },
+    })
+    const placeholder: SourceDescriptor = {
+      ...testSources[0]!,
+      metadata: { title: "Placeholder" },
+      provider: { color: "slate", title: "Placeholder" },
+      version: 0,
+    }
+    const liveCard = buildLiveCards({
+      sources: [placeholder],
+      boardId: "reading",
+      instances: [instance],
+    })[0]!
+
+    expect(applySourceSnapshot(liveCard, testSources[0]!)).toMatchObject({
+      boardId: "reading",
+      id: instance.instanceId,
+      sourceId: instance.sourceId,
+      version: 1,
+      paramsValue: { topic: "rust" },
+      metadata: { title: "Saved title" },
+      provider: { color: "blue", title: "Test" },
     })
   })
 })

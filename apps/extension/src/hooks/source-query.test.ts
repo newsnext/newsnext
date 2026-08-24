@@ -1,5 +1,8 @@
 import { describe, expect, it, vi } from "vitest"
-import { createSourceQueryTarget, getSourceQueryKey } from "./source-query"
+import {
+  createInstanceQueryTarget,
+  getSourceQueryKey,
+} from "./source-query"
 
 vi.mock("@/lib/source", () => ({
   loadSource: vi.fn(() => Promise.reject(new Error("Unexpected Source load"))),
@@ -20,40 +23,15 @@ describe("source queries", () => {
       "github:trending",
       3,
       { range: "daily" },
-      null,
     ])
   })
 
-  it("shares results within a Node while isolating remote Nodes", () => {
-    const sourceId = "github:notifications"
-    const source = { version: 1 }
-
+  it("identifies configured queries only by Instance", () => {
     expect(
-      getSourceQueryKey(createSourceQueryTarget(sourceId, source)),
-    ).toEqual(
-      getSourceQueryKey(createSourceQueryTarget(sourceId, source)),
-    )
+      getSourceQueryKey(createInstanceQueryTarget("personal")),
+    ).toEqual(["instance", "personal"])
     expect(
-      getSourceQueryKey(createSourceQueryTarget(sourceId, source, {}, {
-        instanceId: "personal",
-        nodeId: "home",
-      })),
-    ).not.toEqual(
-      getSourceQueryKey(createSourceQueryTarget(sourceId, source, {}, {
-        instanceId: "work",
-        nodeId: "office",
-      })),
-    )
-    expect(
-      getSourceQueryKey(createSourceQueryTarget(sourceId, source, {}, {
-        instanceId: "personal",
-        nodeId: "home",
-      })),
-    ).toEqual(
-      getSourceQueryKey(createSourceQueryTarget(sourceId, source, {}, {
-        instanceId: "work",
-        nodeId: "home",
-      })),
-    )
+      getSourceQueryKey(createInstanceQueryTarget("work")),
+    ).toEqual(["instance", "work"])
   })
 })

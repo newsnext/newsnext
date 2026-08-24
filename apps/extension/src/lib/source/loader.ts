@@ -7,23 +7,22 @@ import { loadSourceDescriptor } from "./registry"
 
 export type { SourceLoadResponse, SourceLoadResult } from "./load-result"
 
+export async function loadInstance(
+  instanceId: string,
+  signal?: AbortSignal,
+): Promise<SourceLoadResponse> {
+  signal?.throwIfAborted()
+  const response = await actions.sourceConnection.loadInstance({ instanceId })
+  signal?.throwIfAborted()
+  return response
+}
+
 export async function loadSource(
   sourceId: string,
   queryParams: Record<string, unknown> = {},
-  {
-    signal,
-    instanceId,
-    remote = false,
-  }: { signal?: AbortSignal, instanceId?: string, remote?: boolean } = {},
+  signal?: AbortSignal,
 ): Promise<SourceLoadResponse> {
   signal?.throwIfAborted()
-  if (remote) {
-    if (!instanceId) throw new Error("A remote Source load requires an Instance ID")
-    const response = await actions.sourceConnection.loadInstance({ instanceId })
-    signal?.throwIfAborted()
-    return response
-  }
-
   const source = await loadSourceDescriptor(sourceId)
   const params = normalizeSourceParams(source, queryParams)
   signal?.throwIfAborted()

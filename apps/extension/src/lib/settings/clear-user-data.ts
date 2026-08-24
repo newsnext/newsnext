@@ -1,5 +1,4 @@
 import { browser } from "#imports"
-import { NODES_STORAGE_KEY } from "../node"
 import { getUserManagedHostPermissionOrigins } from "../source/host-permissions"
 import { OPTIONAL_SOURCE_PERMISSIONS } from "../source/permission-constants"
 import { clearPersistedSourceResults } from "../source/persisted-results"
@@ -19,7 +18,6 @@ export async function clearNonPortableUserData(): Promise<void> {
 
   await Promise.all([
     browser.storage.local.remove(PERSISTED_DATA_SLICES.secrets.key),
-    browser.storage.local.remove(NODES_STORAGE_KEY),
     clearPersistedSourceResults(),
     ...(hasPermissionsToRevoke
       ? [browser.permissions.remove({

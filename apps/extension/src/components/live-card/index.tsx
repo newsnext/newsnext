@@ -1,6 +1,5 @@
 import type { LiveCardDragHandleRef } from "./card-header"
 import type { InstanceMetadata, InstancePatch } from "@/lib/source"
-import type { RemoteSourceQueryTarget } from "@/lib/source/query-target"
 import type { LiveCardViewModel } from "@/typings/source"
 import { FlipAnimate } from "@newsnext/ui/components/flip-animate"
 import { useScrollProgressContext } from "@newsnext/ui/components/scroll-progress-context"
@@ -10,7 +9,7 @@ import { useSourceParams } from "@/hooks"
 import { useInView } from "@/hooks/use-in-view"
 import { useSourcePermission } from "@/hooks/use-source-permission"
 import { useSourceQuery } from "@/hooks/use-source-query"
-import { applySourceLoaderMetadata, SOURCE_QUERY_OFFSCREEN_RETENTION_MS, SOURCE_QUERY_PRELOAD_MARGIN } from "@/lib/source"
+import { applySourceLoaderMetadata, applySourceSnapshot, SOURCE_QUERY_OFFSCREEN_RETENTION_MS, SOURCE_QUERY_PRELOAD_MARGIN } from "@/lib/source"
 import { cn } from "@/lib/utils"
 import {
   resetInstanceParamsAtom,
@@ -20,34 +19,31 @@ import { LiveCardBack } from "./card-back"
 import { LiveCardFront } from "./card-front"
 
 export interface LiveCardProps {
-  available?: boolean
   id: string
   source: LiveCardViewModel
   className?: string
   sizeClassName?: string
-  nodeId?: string
   nodeRef?: (node: HTMLElement | null) => void
   dragHandleRef?: LiveCardDragHandleRef
   isDraft?: boolean
   onDraftSourceChange?: (patch: InstancePatch) => void
-  readOnly?: boolean
 }
 
-function getRemoteQueryTarget(
-  readOnly: boolean,
-  instanceId: string,
-  nodeId?: string,
-): RemoteSourceQueryTarget | undefined {
-  if (!readOnly) return undefined
-  if (!nodeId) throw new Error("A remote LiveCard requires a Node ID")
-  return { instanceId, nodeId }
-}
-
-function LiveCardContent({ available = true, id, source, dragHandleRef, isDraft = false, nodeId, onDraftSourceChange, readOnly = false }: LiveCardProps) {
-  const remote = getRemoteQueryTarget(readOnly, id, nodeId)
+function LiveCardContent({ id, source, dragHandleRef, isDraft = false, onDraftSourceChange }: LiveCardProps) {
   const setInstancePatch = useSetAtom(setInstancePatchAtom)
   const resetLocalParams = useSetAtom(resetInstanceParamsAtom)
   const [isFlipped, setIsFlipped] = useState(false)
+  const { items, itemTemplate, metadata, sourceSnapshot, manualRequest, isFetching, isManualRequesting, isLoading, isError, errorMessage, loginUrl, loadedAt } = useSourceQuery({
+    source,
+    sourceId: source.sourceId,
+    instanceId: isDraft ? undefined : id,
+    params: source.paramsValue,
+    enabled: true,
+  })
+  const resolvedSource = useMemo(
+    () => sourceSnapshot ? applySourceSnapshot(source, sourceSnapshot) : source,
+    [source, sourceSnapshot],
+  )
   const {
     hasParams,
     savedParams,
@@ -59,29 +55,19 @@ function LiveCardContent({ available = true, id, source, dragHandleRef, isDraft 
     commitParams,
     discardDraftParams,
   } = useSourceParams({
-    params: source.params,
-    initialValues: source.paramsValue,
+    params: resolvedSource.params,
+    initialValues: resolvedSource.paramsValue,
   })
   const {
-    canLoad,
     missingPermission,
     requestPermission,
-  } = useSourcePermission(source, savedParams)
-
-  const { items, itemTemplate, metadata, manualRequest, isFetching, isManualRequesting, isLoading, isError, errorMessage, loginUrl, loadedAt } = useSourceQuery({
-    sourceId: source.sourceId,
-    params: savedParams,
-    remote,
-    enabled: readOnly || canLoad,
-  })
-  const sourceErrorMessage = !available
-    ? "This Source is no longer available in the registry."
-    : (readOnly || canLoad) && isError
-        ? `Failed to load source${errorMessage ? `: ${errorMessage}` : "."}`
-        : undefined
+  } = useSourcePermission(resolvedSource, savedParams)
+  const sourceErrorMessage = isError
+    ? `Failed to load source${errorMessage ? `: ${errorMessage}` : "."}`
+    : undefined
   const displaySource = useMemo(
-    () => applySourceLoaderMetadata(source, metadata),
-    [metadata, source],
+    () => applySourceLoaderMetadata(resolvedSource, metadata),
+    [metadata, resolvedSource],
   )
   const handleFlip = useCallback(() => {
     setIsFlipped(prev => !prev)
@@ -132,12 +118,12 @@ function LiveCardContent({ available = true, id, source, dragHandleRef, isDraft 
         isFetching={isFetching || isManualRequesting}
         isContentFetching={isManualRequesting || isLoading}
         sourceErrorMessage={sourceErrorMessage}
-        sourceLoginUrl={readOnly || canLoad ? loginUrl : undefined}
-        sourcePermissionRequest={readOnly ? undefined : missingPermission}
+        sourceLoginUrl={loginUrl}
+        sourcePermissionRequest={missingPermission}
         loadedAt={loadedAt}
         onRefresh={manualRequest}
         onRequestPermission={requestPermission}
-        onFlip={readOnly ? undefined : handleFlip}
+        onFlip={handleFlip}
         dragHandleRef={isFlipped ? undefined : dragHandleRef}
       />
       <LiveCardBack

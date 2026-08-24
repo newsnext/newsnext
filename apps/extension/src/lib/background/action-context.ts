@@ -1,3 +1,4 @@
+import type { Instance } from "../source"
 import type { BackgroundActionContext } from "./background-actions"
 import { loadSourceDescriptors, prepareSourceRequest } from "@newsnext/source-kit/runtime"
 import { openAppBoard, openAppSettings } from "../app-tab"
@@ -25,15 +26,7 @@ const sourceLoaderInvoker = createSourceLoaderInvoker()
 const sourceLoader = createProtectedSourceLoader(sourceLoaderInvoker)
 const radarService = createBackgroundRadarService()
 
-async function requireOwnedInstance(instanceId: string) {
-  const application = await readApplicationData()
-  const instance = application.instances.find(candidate => candidate.instanceId === instanceId)
-  if (!instance) throw new Error(`Instance '${instanceId}' not found`)
-  return instance
-}
-
-async function executeOwnedInstance({ instanceId }: { instanceId: string }) {
-  const instance = await requireOwnedInstance(instanceId)
+async function executeInstance({ instance }: { instance: Instance }) {
   const response = await sourceLoader.load({
     params: instance.patch.params,
     sourceId: instance.sourceId,
@@ -41,12 +34,11 @@ async function executeOwnedInstance({ instanceId }: { instanceId: string }) {
   return { instance, response }
 }
 
-async function loadNodeInstance(input: { instanceId: string }) {
-  return (await executeOwnedInstance(input)).response
+async function loadBoundInstance(input: { instance: Instance }) {
+  return (await executeInstance(input)).response
 }
 
-async function readNodeInstanceCache({ instanceId }: { instanceId: string }) {
-  const instance = await requireOwnedInstance(instanceId)
+async function readBoundInstanceCache({ instance }: { instance: Instance }) {
   const request = await prepareSourceRequest(instance.sourceId, instance.patch.params ?? {})
   const persisted = await readPersistedSourceResult({
     params: request.params,
@@ -94,12 +86,12 @@ export function createBackgroundActionContext(
     },
     job: {
       async executeInstance(input) {
-        return (await executeOwnedInstance(input)).response
+        return (await executeInstance(input)).response
       },
     },
-    node: {
-      loadInstance: loadNodeInstance,
-      readInstanceCache: readNodeInstanceCache,
+    loader: {
+      loadInstance: loadBoundInstance,
+      readInstanceCache: readBoundInstanceCache,
     },
     source: {
       cancel: sourceLoaderInvoker.cancel,

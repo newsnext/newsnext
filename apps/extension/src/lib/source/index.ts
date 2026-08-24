@@ -17,12 +17,13 @@ export type {
 } from "./live-cards"
 export {
   applySourceLoaderMetadata,
+  applySourceSnapshot,
   buildLiveCards,
   createLiveCard,
   mergeInstancePatch,
 } from "./live-cards"
 export type { SourceLoadResponse, SourceLoadResult } from "./loader"
-export { loadSource } from "./loader"
+export { loadInstance, loadSource } from "./loader"
 export type { SourceParamValues } from "./params"
 export { mergeSourceParamValues, sanitizeSourceParamPatch } from "./params"
 export type { SourcePermissionRequest, SourcePermissionTarget } from "./permissions"

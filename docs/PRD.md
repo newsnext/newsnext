@@ -254,12 +254,12 @@ is resolved.
 
 | Data | Storage owner | Retention contract |
 | --- | --- | --- |
-| Workspace Boards, Layers, and membership | Shared local database plus browser cache | Durable in the companion; locally cached for standalone extension use |
-| Node Loader Instances | Owning browser storage | Durable in that Node and advertised while connected |
+| Workspace Boards, Layers, membership, and Instances | Shared local database plus browser mirror | Durable in the companion; mirrored into each connected extension |
+| Instance Loader bindings | Shared local database | Private routing metadata from each Instance to its creation browser Node |
 | Browser preferences | Owning browser storage | Durable per browser profile |
 | Next Layer Widgets, layouts, task definitions, and materialized outputs | Shared local database | Durable and schema-versioned |
 | Agent-owned observations, transformations, provenance, and task health | Shared local database | Durable according to explicit task policy |
-| Now Layer current results | Owning Node browser cache | Replaceable latest data routed to other browsers without copying; no implicit History |
+| Now Layer current results | Bound Loader browser cache | Replaceable latest data routed by Instance ID without exposing Node identity; no implicit History |
 | Source registry definitions | Packaged or managed registry | Product-managed; not personalized per user by default |
 | Source credentials | Browser extension secret storage | Resolved only inside extension Source execution; never sent to the App, CLI, or database |
 | Native Messaging manifests and IPC endpoints | Platform integration directories | Configuration only; never product data |
@@ -314,16 +314,16 @@ evaluation.
 The App/CLI daemon is the single database owner and writer. Extensions and
 Agents use canonical Actions over Native Messaging and local IPC;
 they never open the SQLite file directly. The daemon enables WAL mode, wraps
-each logical mutation in a transaction, serializes migrations before serving
-requests, and exposes structured busy, migration, corruption, and disk errors.
+each logical mutation in a transaction, validates its current schema before
+serving requests, and exposes structured busy, schema, corruption, and disk errors.
 Multiple browsers may connect concurrently, but they observe one ordered
 production mutation stream.
 
 The first schema increment covers:
 
-- schema version and migration journal;
+- current schema version metadata;
 - Workspace Boards, Layers, membership, and order;
-- connected Node identity and ephemeral Loader Instance routing;
+- connected Node identity and durable private Instance-to-Loader bindings;
 - Next Layer Widget definitions, layout, and dependency declarations;
 - Agent task definitions, schedules, leases, attempts, and health;
 - retained observations and normalized items required by those tasks;
@@ -566,13 +566,13 @@ must not be described to users as available until its acceptance criteria pass.
 | --- | --- | --- | --- |
 | Source definitions | Implemented foundation | Registry providers, parameters, metadata, loaders, transforms, templates, Radar rules, capabilities, secrets, and security limits | Registry health, version lifecycle, and dependency diagnostics |
 | Source execution | Implemented foundation | Registered and local Sources run through the extension runtime and CLI; recurring Jobs request protected registered-Source loads | Add Agent-owned scheduling without duplicating the extension runtime |
-| Shared local database | Partial | The daemon owns an embedded Turso database with dev/prod file isolation, ordered migrations, structured errors, and a serialized writer for retained History | Move remaining Board, Widget, and task state out of extension storage |
-| Instance and Board data | Implemented in extension storage | Canonical Instances, Boards, membership, manual order, and Layer preferences | Move canonical durable state behind App/CLI Actions for cross-browser use |
+| Shared local database | Partial | The daemon owns an embedded Turso database with dev/prod file isolation, strict current-schema validation, structured errors, and a serialized writer for retained History | Move remaining Board, Widget, and task state out of extension storage |
+| Instance and Board data | Implemented foundation | Canonical Instances, Boards, membership, manual order, and Layer preferences are persisted in the daemon Workspace and mirrored to connected browsers | Complete UI diagnostics for revision conflicts and unavailable bound Loaders |
 | UI and Agent control | Implemented foundation | UI and CLI use the same typed Mutation and Query Actions and the same background persistence boundary | Database-backed Widget, task, and Source-health operations are not exposed yet |
-| Now Layer | Implemented | Each Instance is independently presented as a LiveCard using the unified LiveCard model | Make view-driven refresh explicit while keeping each result in its owning Node |
+| Now Layer | Implemented | Each Instance is independently presented as a LiveCard using the unified LiveCard model | Make view-driven refresh explicit while keeping each result in its bound Loader |
 | Next Layer | Not implemented | The Board retains its Next Layer view entry and an explicit placeholder | Add CLI/daemon-backed Widgets, retained inputs, and materialized outputs |
-| History | Implemented foundation in Turso | Newly executed Job results are committed transactionally by the daemon and can be listed, read at an exact time, and compared without a connected browser | Add task-owned retention policies and provenance |
-| Provenance | Partial | Source and Instance identities remain stable; history comparisons preserve supported factual boundaries | Derived Widget inputs, transformations, warnings, and claims need an explicit UI contract |
+| History | Implemented foundation in Turso | Newly executed Job results are committed transactionally into datasets partitioned by Node, Source, Source version, and parameters; they can be listed, read at an exact time, and compared without a connected browser | Add task-owned retention policies |
+| Provenance | Partial | Source and Instance identities remain stable, History records the actual execution Node, and comparisons preserve supported factual boundaries | Derived Widget inputs, transformations, warnings, and claims need an explicit UI contract |
 | Code Widgets | Not implemented | None | Sandbox, resource limits, versioning, preview, failure isolation, and rollback |
 
 The current CLI includes these relevant control surfaces:
@@ -595,8 +595,7 @@ publication time, and position alone does not establish popularity or cause.
 
 The remaining product gaps are:
 
-- Migration of canonical Board and Instance data out of per-browser extension
-  storage and into the existing daemon-owned database boundary.
+- User-facing diagnostics for unavailable bound browser Loaders.
 - Agent-owned scheduling and durable handoff from the extension Source runtime.
 - A durable Widget model and Next Layer layout model.
 - Multi-Instance Widget inputs with explicit provenance and dependency state.
@@ -616,14 +615,14 @@ The remaining product gaps are:
 | DAT-02 | Development and production use separate files | CLI/dev operations open `newsnext.dev.db`; packaged App/production operations open `newsnext.prod.db`; an automated test proves neither environment writes the other file |
 | DAT-03 | Production data is shared across supported browsers | A mutation submitted from one authorized production extension is visible from another through the same daemon without copying browser storage |
 | DAT-04 | Database setup is local-first | First launch creates and migrates the local database without a Turso account, remote connection, or network access |
-| DAT-05 | Schema changes are ordered and atomic | The daemon applies versioned migrations before accepting requests and leaves either the previous or next valid schema after interruption |
+| DAT-05 | Schema initialization is atomic | The daemon creates the complete current schema transactionally before accepting requests and refuses incompatible versions |
 | DAT-06 | Logical mutations are transactional | A failed Board, Widget, observation, or task mutation leaves no partially updated durable state |
 | DAT-07 | Concurrent clients use one ordered writer | Independent bounded-wait reads remain available while the daemon serializes immediate write transactions and returns structured busy errors instead of hanging |
 | DAT-08 | Now Layer does not create implicit History | Repeated view-driven refresh replaces the current browser-local result and does not insert observation rows; only a configured Job or Agent task retains observations |
 | DAT-09 | Next Layer background work is Agent-owned | Agent task state, retained inputs, provenance, and materialized output commit together; opening Next Layer performs no implicit refresh or transformation |
 | DAT-10 | Source execution remains browser-owned | Agent tasks request registered Source execution from a connected extension and receive normalized output without receiving browser credentials or duplicating the Source runtime |
 | DAT-11 | Credentials remain browser-owned | Source credentials and browser session secrets never enter Native Messaging, IPC, logs, task inputs, materialized outputs, or database fields |
-| DAT-12 | Database failures are diagnosable | CLI status and errors distinguish missing files, migration failure, incompatible schema, lock contention, corruption, disk exhaustion, and unavailable browser Fetch authority |
+| DAT-12 | Database failures are diagnosable | CLI status and errors distinguish missing files, schema initialization failure, incompatible schema, lock contention, corruption, disk exhaustion, and unavailable browser Fetch authority |
 | DAT-13 | Turso usage follows the official specification | Every Turso API and behavior used by production code is traceable through `https://docs.turso.tech/llms.txt`; undocumented assumptions are rejected during review |
 
 ### Board and Layer requirements
@@ -760,7 +759,7 @@ The remaining product gaps are:
 - Stable identities must survive display-name, layout, and presentation
   changes.
 - Widget persistence must be atomic at the application Action boundary.
-- Database startup must complete migrations before serving reads or writes and
+- Database startup must complete schema initialization and validation before serving reads or writes and
   must refuse an unknown newer schema without modifying it.
 - A daemon crash must not leave a successfully acknowledged mutation partially
   committed.
@@ -795,8 +794,7 @@ The remaining product gaps are:
 
 ### Compatibility and maintainability
 
-- Widget, transformation, and Source schemas require explicit versions and
-  migration paths.
+- Widget, transformation, and Source schemas require explicit versions.
 - Database paths, schema versions, and environment selection must be derived by
   shared runtime code rather than duplicated in browser-specific adapters.
 - The CLI and frontend must consume the same canonical schemas and operations.
@@ -819,8 +817,8 @@ without changing the two-Layer Board contract.
   `newsnext.dev.db` or `newsnext.prod.db` from the existing runtime environment.
 - Add schema versioning, WAL configuration, transactional helpers, and
   structured database errors.
-- Persist Workspace Boards, Layers, membership, and order behind canonical
-  Mutation and Query Actions. Loader Instances remain Node-owned.
+- Persist Workspace Boards, Instances, Layers, membership, and order behind
+  canonical Mutation and Query Actions. Keep only Loader bindings Node-specific.
 - Add Agent task, retained observation, materialized output, and provenance
   tables required by the next phase without yet implementing every Widget.
 - Keep Now Layer results in replaceable cache storage and prove that normal
@@ -959,7 +957,7 @@ Qualitative research should additionally test whether users understand:
 | Open-ended Widgets become an unsafe arbitrary application runtime | Security, reliability, and maintainability regress | Start with typed declarative contracts; gate code execution behind a restricted sandbox and explicit capability review |
 | Agent requests personalized Sources instead of reusing the registry | Noisy Boards, unnecessary permissions, and fragile maintenance | Make registry discovery the default, report coverage gaps explicitly, and keep Source authoring outside the normal product workflow |
 | Two browsers or runtimes write competing durable state | Lost updates and inconsistent Boards | Make the environment-specific daemon the single database owner and require all clients to use canonical Actions |
-| Now Layer refresh silently grows History | Storage growth and a misleading retention contract | Keep each current result in its owning Node and require a configured Job or Agent task for observations |
+| Now Layer refresh silently grows History | Storage growth and a misleading retention contract | Keep each current result in its bound Loader and require a configured Job or Agent task for observations |
 | Local database adoption creates a cloud dependency | Offline use and first-run reliability regress | Use an embedded local file as the initial source of truth; defer optional Turso sync |
 | Cross-source fusion hides disagreement or provenance | Users trust an unsupported corrected result | Preserve every input identity, distinguish observed and derived values, and make reconciliation logic inspectable |
 | Sparse observations are mistaken for continuous monitoring | Trend and forecast claims become misleading | Carry observation coverage and completeness warnings into every transformation and Widget |

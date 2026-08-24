@@ -10,7 +10,6 @@ import {
   DEFAULT_NOW_LAYER_SORT,
   indexBoardIdsByInstance,
 } from "../lib/board"
-import { NODES_STORAGE_KEY, normalizeNodes } from "../lib/node"
 import { normalizeApplicationData, PERSISTED_DATA_SLICES } from "../lib/settings"
 import { createMirroredStorage } from "./persisted-storage"
 
@@ -29,18 +28,6 @@ export const applicationDataAtom = atom(get => get(persistedApplicationDataAtom)
 
 export const boardsAtom = selectAtom(applicationDataAtom, data => data.boards)
 export const instancesAtom = selectAtom(applicationDataAtom, data => data.instances)
-export const nodesAtom = atomWithStorage(
-  NODES_STORAGE_KEY,
-  normalizeNodes(undefined),
-  createMirroredStorage({
-    defaultValue: () => normalizeNodes(undefined),
-    key: NODES_STORAGE_KEY,
-    normalize: normalizeNodes,
-    readOnly: true,
-  }),
-  { getOnInit: true },
-)
-
 export interface InstanceViewLayout {
   boardIds: string[]
   createdAt: number

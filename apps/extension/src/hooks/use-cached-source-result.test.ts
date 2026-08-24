@@ -1,7 +1,12 @@
 import { QueryClient } from "@tanstack/react-query"
 import { describe, expect, it, vi } from "vitest"
-import { createSourceQueryTarget, getSourceQueryKey } from "./source-query"
 import {
+  createInstanceQueryTarget,
+  createSourceQueryTarget,
+  getSourceQueryKey,
+} from "./source-query"
+import {
+  findCachedInstanceQuery,
   findCachedSourceQuery,
   findCachedSourceResult,
 } from "./use-cached-source-result"
@@ -59,5 +64,25 @@ describe("findCachedSourceResult", () => {
     }, { updatedAt: 100 })
 
     expect(findCachedSourceResult(queryClient, source.id, {})).toBeUndefined()
+  })
+
+  it("finds a persisted Instance by identity after its request configuration changes", () => {
+    const queryClient = new QueryClient()
+    const target = createInstanceQueryTarget("instance-a")
+    const result = { items: [], source }
+    queryClient.setQueryData(getSourceQueryKey(target), {
+      fetchProtected: true,
+      fetchedAt: 100,
+      loadedAt: 100,
+      params: { topic: "old" },
+      result,
+    })
+
+    expect(
+      findCachedInstanceQuery(queryClient, "instance-a", source.id)?.data,
+    ).toBe(result)
+    expect(
+      findCachedInstanceQuery(queryClient, "instance-b", source.id),
+    ).toBeUndefined()
   })
 })

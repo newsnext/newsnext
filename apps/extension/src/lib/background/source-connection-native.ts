@@ -3,7 +3,6 @@ import type {
   ExtensionToHost,
   HostToExtension,
   NativeCommandResult,
-  NativeNode,
   NativeWorkspace,
 } from "@newsnext/extension-connection"
 import type { PersistedDeviceState } from "../settings/persisted-settings"
@@ -12,8 +11,8 @@ import {
   parseExtensionConnectionCommandRequest,
 } from "@newsnext/extension-connection"
 import { browser } from "#imports"
-import { NODES_STORAGE_KEY, normalizeNodes } from "../node"
-import { normalizeApplicationData, normalizeBoards, PERSISTED_DATA_SLICES } from "../settings/persisted-data"
+import { APPLICATION_DATA_VERSION } from "../application"
+import { normalizeApplicationData, PERSISTED_DATA_SLICES } from "../settings/persisted-data"
 import {
   normalizePersistedDeviceState,
   withSourceConnectionEnabled,
@@ -23,14 +22,19 @@ import {
   actionRegistry,
   executeRegisteredAction,
 } from "./action-registry"
-import { readApplicationData, replaceApplicationData } from "./application-service"
+import {
+  mirrorApplicationData,
+  readApplicationData,
+  setApplicationDataCommitter,
+} from "./application-service"
 import { serializeSourceConnectionError } from "./source-connection-error"
 
 const NATIVE_HOST_NAME = import.meta.env.DEV
   ? "app.newsnext.host.dev"
   : "app.newsnext.host"
-const PROTOCOL_VERSION = 12
+const PROTOCOL_VERSION = 13
 const SOURCE_CONNECTION_NODE_ID_KEY = "newsnext.sourceConnectionNodeId"
+const SOURCE_CONNECTION_LOCAL_INSTANCE_IDS_KEY = "newsnext.sourceConnectionLocalInstanceIds"
 const SOURCE_CONNECTION_RECONNECT_ALARM = "source-connection-native-reconnect"
 const RECONNECT_ALARM_PERIOD_MINUTES = 0.5
 const WIDGET_REQUEST_TIMEOUT_MS = 65_000
@@ -63,10 +67,13 @@ type ParsedHostMessage
     | {
       type: "workspaceChanged"
       workspace: NativeWorkspace
+      localInstanceIds: string[]
     }
     | {
-      type: "nodesChanged"
-      nodes: NativeNode[]
+      type: "workspaceResult"
+      requestId: string
+      workspace: NativeWorkspace
+      localInstanceIds: string[]
     }
     | {
       type: "instanceResult"
@@ -87,19 +94,24 @@ interface PendingInstanceRequest {
   timeoutId: ReturnType<typeof setTimeout>
 }
 
+interface PendingWorkspaceRequest {
+  reject: (error: Error) => void
+  resolve: (value: NativeWorkspace) => void
+  timeoutId: ReturnType<typeof setTimeout>
+}
+
 let port: NativePort | undefined
 let cliVersion: string | undefined
 let widgetServerUrl: string | undefined
 let connectionState: SourceConnectionState = "disconnected"
 let enabled = false
 let nodeId = ""
-let nodeState: Pick<NativeNode, "instances"> = { instances: [] }
-let synchronizedInstances = ""
-let workspace: NativeWorkspace = { revision: 0, boards: [] }
-let synchronizedBoards = ""
-let cachedNodes: NativeNode[] = []
+let workspace: NativeWorkspace = { revision: 0, boards: [], instances: [] }
+let localInstanceIds = new Set<string>()
+let bootstrapBindings: Array<{ instanceId: string, nodeId: string }> = []
 const pendingWidgetSnapshotRequests = new Map<string, PendingWidgetSnapshotRequest>()
 const pendingInstanceRequests = new Map<string, PendingInstanceRequest>()
+const pendingWorkspaceRequests = new Map<string, PendingWorkspaceRequest>()
 
 const connectedActionContext = createBackgroundActionContext({
   getStatus: async () => getSourceConnectionStatus(),
@@ -111,22 +123,28 @@ const connectedActionContext = createBackgroundActionContext({
   ),
 })
 
-function connectionNode(value: unknown): Pick<NativeNode, "instances"> {
+function connectionWorkspace(value: unknown, revision: number): NativeWorkspace {
   const application = normalizeApplicationData(value)
   return {
-    instances: application.instances.map(instance => ({
-      createdAt: instance.createdAt,
-      instanceId: instance.instanceId,
-      patch: instance.patch,
-      sourceId: instance.sourceId,
-    })),
+    revision,
+    boards: application.boards,
+    instances: application.instances,
   }
 }
 
-function connectionWorkspace(value: unknown, revision: number): NativeWorkspace {
+function createBootstrapWorkspace(
+  applicationValue: unknown,
+  currentNodeId: string,
+): NativeWorkspace {
+  const application = normalizeApplicationData(applicationValue)
+  bootstrapBindings = application.instances.map(instance => ({
+    instanceId: instance.instanceId,
+    nodeId: currentNodeId,
+  }))
   return {
-    revision,
-    boards: normalizeApplicationData(value).boards,
+    revision: 0,
+    boards: application.boards,
+    instances: application.instances,
   }
 }
 
@@ -140,10 +158,23 @@ function parseWorkspace(value: unknown): NativeWorkspace {
     || Number(value.revision) < 0) {
     throw new Error("The native host returned an invalid Workspace")
   }
+  const application = normalizeApplicationData({
+    version: APPLICATION_DATA_VERSION,
+    boards: value.boards,
+    instances: value.instances,
+  })
   return {
     revision: Number(value.revision),
-    boards: normalizeBoards(value.boards),
+    boards: application.boards,
+    instances: application.instances,
   }
+}
+
+function parseLocalInstanceIds(value: unknown): string[] {
+  if (!Array.isArray(value) || value.some(id => typeof id !== "string" || !id)) {
+    throw new Error("The native host returned invalid local Instance bindings")
+  }
+  return [...new Set(value)]
 }
 
 function parseHostMessage(value: unknown): ParsedHostMessage {
@@ -161,7 +192,7 @@ function parseHostMessage(value: unknown): ParsedHostMessage {
       daemonVersion: value.daemonVersion,
       widgetServerUrl: parseWidgetServerUrl(value.widgetServerUrl),
       workspace: parseWorkspace(value.workspace),
-      nodes: normalizeNodes(value.nodes),
+      localInstanceIds: parseLocalInstanceIds(value.localInstanceIds),
     }
   }
   if (value.type === "execute") {
@@ -174,10 +205,16 @@ function parseHostMessage(value: unknown): ParsedHostMessage {
     return {
       type: "workspaceChanged",
       workspace: parseWorkspace(value.workspace),
+      localInstanceIds: parseLocalInstanceIds(value.localInstanceIds),
     }
   }
-  if (value.type === "nodesChanged") {
-    return { type: "nodesChanged", nodes: normalizeNodes(value.nodes) }
+  if (value.type === "workspaceResult" && typeof value.requestId === "string") {
+    return {
+      type: "workspaceResult",
+      requestId: value.requestId,
+      workspace: parseWorkspace(value.workspace),
+      localInstanceIds: parseLocalInstanceIds(value.localInstanceIds),
+    }
   }
   if (
     value.type === "instanceResult"
@@ -272,22 +309,33 @@ function disconnect(): void {
   connectionState = "disconnected"
   rejectPendingWidgetSnapshotRequests(new Error("NewsNext CLI disconnected"))
   rejectPendingInstanceRequests(new Error("NewsNext CLI disconnected"))
+  rejectPendingWorkspaceRequests(new Error("NewsNext CLI disconnected"))
 }
 
-function cacheNodes(nodes: NativeNode[]): void {
-  const nodesById = new Map(cachedNodes.map(node => [node.id, node]))
-  nodes.forEach(node => nodesById.set(node.id, node))
-  cachedNodes = [...nodesById.values()]
-  void browser.storage.local.set({ [NODES_STORAGE_KEY]: cachedNodes })
+async function applyWorkspace(
+  nextWorkspace: NativeWorkspace,
+  nextLocalInstanceIds: string[],
+): Promise<void> {
+  const application = acceptWorkspace(nextWorkspace, nextLocalInstanceIds)
+  const current = await readApplicationData()
+  if (JSON.stringify(current) === JSON.stringify(application)) return
+  await mirrorApplicationData(application)
 }
 
-async function applyWorkspace(nextWorkspace: NativeWorkspace): Promise<void> {
+function acceptWorkspace(
+  nextWorkspace: NativeWorkspace,
+  nextLocalInstanceIds: string[],
+) {
   workspace = nextWorkspace
-  const boards = normalizeBoards(nextWorkspace.boards)
-  synchronizedBoards = JSON.stringify(boards)
-  const application = await readApplicationData()
-  if (JSON.stringify(application.boards) === synchronizedBoards) return
-  await replaceApplicationData({ ...application, boards })
+  localInstanceIds = new Set(nextLocalInstanceIds)
+  void browser.storage.local.set({
+    [SOURCE_CONNECTION_LOCAL_INSTANCE_IDS_KEY]: nextLocalInstanceIds,
+  })
+  return normalizeApplicationData({
+    version: APPLICATION_DATA_VERSION,
+    boards: nextWorkspace.boards,
+    instances: nextWorkspace.instances,
+  })
 }
 
 function connect(): void {
@@ -308,6 +356,7 @@ function connect(): void {
       connectionState = "disconnected"
       rejectPendingWidgetSnapshotRequests(new Error("NewsNext CLI disconnected"))
       rejectPendingInstanceRequests(new Error("NewsNext CLI disconnected"))
+      rejectPendingWorkspaceRequests(new Error("NewsNext CLI disconnected"))
     }
   })
   nextPort.onMessage.addListener((value: unknown) => {
@@ -323,8 +372,7 @@ function connect(): void {
         cliVersion = message.daemonVersion
         widgetServerUrl = message.widgetServerUrl
         connectionState = "connected"
-        cacheNodes(message.nodes)
-        void applyWorkspace(message.workspace).catch((error) => {
+        void applyWorkspace(message.workspace, message.localInstanceIds).catch((error) => {
           console.error("Failed to apply the NewsNext Workspace", error)
         })
       } else if (message.type === "execute") {
@@ -334,11 +382,12 @@ function connect(): void {
       } else if (message.type === "widgetSnapshotResult") {
         settleWidgetRequest(message.requestId, message.result)
       } else if (message.type === "workspaceChanged") {
-        void applyWorkspace(message.workspace).catch((error) => {
+        void applyWorkspace(message.workspace, message.localInstanceIds).catch((error) => {
           console.error("Failed to apply the NewsNext Workspace update", error)
         })
-      } else if (message.type === "nodesChanged") {
-        cacheNodes(message.nodes)
+      } else if (message.type === "workspaceResult") {
+        acceptWorkspace(message.workspace, message.localInstanceIds)
+        settleWorkspaceRequest(message.requestId, message.workspace)
       } else if (message.type === "instanceResult") {
         settleInstanceRequest(message.requestId, message.result)
       } else {
@@ -357,6 +406,13 @@ function connect(): void {
             instanceRequest.reject(new Error(message.message))
             return
           }
+          const workspaceRequest = pendingWorkspaceRequests.get(message.requestId)
+          if (workspaceRequest) {
+            clearTimeout(workspaceRequest.timeoutId)
+            pendingWorkspaceRequests.delete(message.requestId)
+            workspaceRequest.reject(new Error(message.message))
+            return
+          }
         }
         console.error("NewsNext native host error", message.message)
       }
@@ -373,9 +429,9 @@ function connect(): void {
       id: nodeId,
       browser: import.meta.env.BROWSER,
       extensionVersion: browser.runtime.getManifest().version,
-      ...nodeState,
     },
     workspace,
+    bindings: bootstrapBindings,
   }
   nextPort.postMessage(hello)
 }
@@ -417,6 +473,22 @@ async function requestInstance(
   input: { instanceId: string },
   cacheOnly: boolean,
 ): Promise<SourceLoadResponse | null> {
+  if (localInstanceIds.has(input.instanceId)) {
+    const instance = workspace.instances.find(candidate => candidate.instanceId === input.instanceId)
+    if (!instance) throw new Error(`Instance '${input.instanceId}' not found`)
+    const result = await executeRegisteredAction(
+      cacheOnly ? "loader.readInstanceCache" : "loader.loadInstance",
+      { instance },
+      "connected",
+      connectedActionContext,
+      crypto.randomUUID(),
+    )
+    if (result === null && cacheOnly) return null
+    if (!isSourceLoadResponse(result)) {
+      throw new Error("The current browser returned an invalid Source result")
+    }
+    return result
+  }
   const connection = port
   if (!enabled || connectionState !== "connected" || !connection) {
     throw new Error("NewsNext CLI is not connected")
@@ -438,6 +510,26 @@ async function requestInstance(
       resolve,
       timeoutId,
     })
+    connection.postMessage(message)
+  })
+}
+
+async function requestWorkspaceReplacement(candidate: NativeWorkspace): Promise<NativeWorkspace> {
+  const connection = port
+  if (!enabled || connectionState !== "connected" || !connection) {
+    throw new Error("NewsNext CLI is not connected")
+  }
+  const message: ExtensionToHost = {
+    type: "workspaceChanged",
+    requestId: crypto.randomUUID(),
+    workspace: candidate,
+  }
+  return await new Promise((resolve, reject) => {
+    const timeoutId = setTimeout(() => {
+      pendingWorkspaceRequests.delete(message.requestId)
+      reject(new Error("Timed out waiting for the NewsNext Workspace commit"))
+    }, WIDGET_REQUEST_TIMEOUT_MS)
+    pendingWorkspaceRequests.set(message.requestId, { reject, resolve, timeoutId })
     connection.postMessage(message)
   })
 }
@@ -474,6 +566,14 @@ function settleInstanceRequest(requestId: string, result: NativeCommandResult): 
   }
 }
 
+function settleWorkspaceRequest(requestId: string, committed: NativeWorkspace): void {
+  const pending = pendingWorkspaceRequests.get(requestId)
+  if (!pending) return
+  clearTimeout(pending.timeoutId)
+  pendingWorkspaceRequests.delete(requestId)
+  pending.resolve(committed)
+}
+
 function isSourceLoadResponse(value: unknown): value is SourceLoadResponse {
   return isRecord(value)
     && typeof value.fetchProtected === "boolean"
@@ -497,6 +597,14 @@ function rejectPendingInstanceRequests(error: Error): void {
     pending.reject(error)
   }
   pendingInstanceRequests.clear()
+}
+
+function rejectPendingWorkspaceRequests(error: Error): void {
+  for (const pending of pendingWorkspaceRequests.values()) {
+    clearTimeout(pending.timeoutId)
+    pending.reject(error)
+  }
+  pendingWorkspaceRequests.clear()
 }
 
 function parseWidgetServerUrl(value: unknown): string {
@@ -556,6 +664,16 @@ export async function setSourceConnectionEnabled(
 }
 
 export async function registerSourceConnectionNative(): Promise<void> {
+  setApplicationDataCommitter(async (application) => {
+    const committed = await requestWorkspaceReplacement(
+      connectionWorkspace(application, workspace.revision),
+    )
+    return normalizeApplicationData({
+      version: APPLICATION_DATA_VERSION,
+      boards: committed.boards,
+      instances: committed.instances,
+    })
+  })
   browser.alarms.onAlarm.addListener((alarm) => {
     if (
       enabled
@@ -566,27 +684,6 @@ export async function registerSourceConnectionNative(): Promise<void> {
     }
   })
   browser.storage.onChanged.addListener((changes, areaName) => {
-    const nodesChange = changes[NODES_STORAGE_KEY]
-    if (areaName === "local" && nodesChange?.newValue === undefined) {
-      cachedNodes = []
-    }
-    const applicationChange = changes[PERSISTED_DATA_SLICES.application.key]
-    if (areaName === "local" && applicationChange) {
-      nodeState = connectionNode(applicationChange.newValue)
-      const nextInstances = JSON.stringify(nodeState.instances)
-      if (port && nextInstances !== synchronizedInstances) {
-        synchronizedInstances = nextInstances
-        const message: ExtensionToHost = { type: "nodeChanged", instances: nodeState.instances }
-        port.postMessage(message)
-      }
-      const nextWorkspace = connectionWorkspace(applicationChange.newValue, workspace.revision)
-      const nextBoards = JSON.stringify(nextWorkspace.boards)
-      if (port && nextBoards !== synchronizedBoards) {
-        workspace = nextWorkspace
-        const message: ExtensionToHost = { type: "workspaceChanged", workspace }
-        port.postMessage(message)
-      }
-    }
     const change = changes[PERSISTED_DATA_SLICES.deviceState.key]
     if (areaName === "local" && change) {
       const state = normalizePersistedDeviceState(change.newValue)
@@ -596,8 +693,8 @@ export async function registerSourceConnectionNative(): Promise<void> {
 
   const stored = await browser.storage.local.get([
     PERSISTED_DATA_SLICES.deviceState.key,
-    NODES_STORAGE_KEY,
     SOURCE_CONNECTION_NODE_ID_KEY,
+    SOURCE_CONNECTION_LOCAL_INSTANCE_IDS_KEY,
   ])
   const application = await readApplicationData()
   const storedNodeId = stored[SOURCE_CONNECTION_NODE_ID_KEY]
@@ -607,12 +704,11 @@ export async function registerSourceConnectionNative(): Promise<void> {
   if (nodeId !== storedNodeId) {
     await browser.storage.local.set({ [SOURCE_CONNECTION_NODE_ID_KEY]: nodeId })
   }
+  localInstanceIds = new Set(parseLocalInstanceIds(
+    stored[SOURCE_CONNECTION_LOCAL_INSTANCE_IDS_KEY] ?? [],
+  ))
   const persisted = stored[PERSISTED_DATA_SLICES.deviceState.key]
-  cachedNodes = normalizeNodes(stored[NODES_STORAGE_KEY])
-  nodeState = connectionNode(application)
-  synchronizedInstances = JSON.stringify(nodeState.instances)
-  workspace = connectionWorkspace(application, 0)
-  synchronizedBoards = JSON.stringify(workspace.boards)
+  workspace = createBootstrapWorkspace(application, nodeId)
   const state = normalizePersistedDeviceState(persisted)
   enabled = state.sourceConnectionEnabled
   if (enabled) {

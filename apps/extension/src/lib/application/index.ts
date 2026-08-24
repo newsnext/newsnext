@@ -1,5 +1,5 @@
 export type { ApplicationData } from "./data"
-export { createEmptyApplicationData, createInitialApplicationData, ensureApplicationDataIntegrity } from "./data"
+export { APPLICATION_DATA_VERSION, createEmptyApplicationData, createInitialApplicationData, ensureApplicationDataIntegrity } from "./data"
 export type { ApplicationMutationDependencies, ApplicationMutationExecution, ApplicationMutationResult, BoardConfiguration, BoardDeleteInput } from "./mutations"
 export { addBoardInstanceMutation, configureInstanceMutation, createBoardMutation, createInstanceMutation, deleteBoardMutation, deleteInstanceMutation, installNextLayerWidgetMutation, removeBoardInstanceMutation, removeNextLayerWidgetMutation, resetInstanceParamsMutation, setNextLayerWidgetDataScopeMutation, setNextLayerWidgetLayoutsMutation, setNowLayerManualOrderMutation, updateBoardMutation } from "./mutations"
 export type { ApplicationBoardContext, ApplicationNowLayerLiveCard, BoardConfigurationResult, BoardDetail } from "./queries"

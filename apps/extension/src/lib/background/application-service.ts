@@ -21,6 +21,15 @@ let mutationQueue: Promise<void> = loadApplicationData().then(
   () => undefined,
   () => undefined,
 )
+let applicationDataCommitter:
+  | ((value: ApplicationData) => Promise<ApplicationData>)
+  | undefined
+
+export function setApplicationDataCommitter(
+  committer: (value: ApplicationData) => Promise<ApplicationData>,
+): void {
+  applicationDataCommitter = committer
+}
 
 export async function mutateApplicationData(
   operation: (
@@ -38,8 +47,11 @@ export async function mutateApplicationData(
       createId,
       now: Date.now,
     })
+    const committedData = applicationDataCommitter
+      ? await applicationDataCommitter(result.data)
+      : result.data
     const updates: Record<string, unknown> = {
-      [PERSISTED_DATA_SLICES.application.key]: result.data,
+      [PERSISTED_DATA_SLICES.application.key]: committedData,
     }
     if (options.deletedBoardId) {
       const settingsKey = PERSISTED_DATA_SLICES.settings.key
@@ -48,7 +60,7 @@ export async function mutateApplicationData(
       const settings = normalizePersistedSettings(stored[settingsKey])
       const deviceState = normalizePersistedDeviceState(stored[deviceStateKey])
       const destinationBoardId = options.targetBoardId
-        ?? result.data.boards[0]?.id
+        ?? committedData.boards[0]?.id
       if (!destinationBoardId) throw new Error("NewsNext must keep at least one Board")
       if (settings.general.defaultBoardId === options.deletedBoardId) {
         updates[settingsKey] = {
@@ -70,8 +82,24 @@ export async function mutateApplicationData(
 export async function replaceApplicationData(
   value: ApplicationData,
 ): Promise<ApplicationData> {
+  return await enqueueApplicationDataReplacement(value, true)
+}
+
+export async function mirrorApplicationData(
+  value: ApplicationData,
+): Promise<ApplicationData> {
+  return await enqueueApplicationDataReplacement(value, false)
+}
+
+async function enqueueApplicationDataReplacement(
+  value: ApplicationData,
+  commit: boolean,
+): Promise<ApplicationData> {
   const replacement = mutationQueue.then(async () => {
-    const data = ensureApplicationDataIntegrity(normalizeApplicationData(value))
+    const candidate = ensureApplicationDataIntegrity(normalizeApplicationData(value))
+    const data = commit && applicationDataCommitter
+      ? await applicationDataCommitter(candidate)
+      : candidate
     const fallbackBoardId = data.boards[0]?.id
     if (!fallbackBoardId) throw new Error("NewsNext must keep at least one Board")
     const deviceStateKey = PERSISTED_DATA_SLICES.deviceState.key

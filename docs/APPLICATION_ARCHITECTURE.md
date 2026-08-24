@@ -13,25 +13,24 @@ The central model has four product-level concepts:
 
 | Concept | Responsibility |
 | --- | --- |
-| Workspace | Owns the shared Board collection |
+| Workspace | Owns the shared Board and Instance collections |
 | Board | Owns membership and its Now and Next Layers |
 | Layer | Presents or materializes a Board's data |
 | Node | Provides a browser UI and runs browser-owned Loaders |
 
-A browser extension is one Node. Its configured Source Instances are Loader
-inputs owned by that Node because they depend on that browser's account,
-permissions, credentials, and session. They are not a fifth global navigation
-concept.
+A browser extension is one Node. Instances are canonical Workspace data, while
+each Instance has a private binding to the browser Node that created it. The
+binding selects the account, permissions, credentials, and session used by its
+Loader; it is not a fifth global navigation concept.
 
 The CLI daemon is optional. When present, it persists and broadcasts the
-Workspace, advertises connected Nodes, and routes an Instance load to its
-owning Node. Without the CLI, the extension continues to use its browser-local
-Workspace cache and runs its own Loaders directly.
+Workspace and routes an Instance load to its bound Node without exposing Node
+identity to application code. Without the CLI, the extension can read its last
+Workspace mirror and run locally bound Loaders directly.
 
 ## Persistent Application Data
 
-Each browser caches the Workspace Boards together with that Node's local Loader
-Instances in one versioned envelope:
+Each browser mirrors the complete Workspace in one versioned envelope:
 
 ```ts
 interface ApplicationData {
@@ -41,11 +40,10 @@ interface ApplicationData {
 }
 ```
 
-The background application repository is the only writer of this envelope in
+The background application repository applies acknowledged daemon commits to
 `browser.storage.local`. Frontend atoms are read-only mirrors plus thin Mutation
-Action dispatchers. A Board may reference an Instance owned by another Node, so
-normalization must preserve an unfamiliar Instance ID instead of treating it as
-dangling local data.
+Action dispatchers. Every Board reference resolves against the mirrored
+Workspace Instance collection.
 
 ### Instance
 
@@ -155,26 +153,27 @@ interface SourceLoadResult {
 }
 ```
 
-The background persists a protection cache by Source ID, version, and normalized
-effective parameters. A Node also persists complete responses only for the
-Instances it owns. The App restores those local Instance results into its
-in-memory TanStack Query cache before rendering. A remote browser reads an
-Instance by asking the CLI to route the request to its owning Node; it neither
-copies that Instance nor persists its result locally. Dynamic Loader metadata
+The daemon persists the canonical Workspace, including complete Instance
+configuration, and each browser maintains a read-only local mirror. A private
+binding maps each Instance to the browser Node that created it. The bound Loader
+persists protection-cache responses by Source request identity. Before rendering,
+the App restores results through the opaque Instance router: local bindings use
+the current background directly and other bindings relay through the daemon.
+The viewing browser never persists the relayed result. Dynamic Loader metadata
 remains part of each refreshed result and may change normally.
 
 NowLayer resolves a card in this order:
 
-1. use the current registry Source when available;
-2. otherwise use the Source snapshot restored into TanStack Query for that
-   Instance's parameters;
-3. otherwise construct a minimal generic presentation from `sourceId`.
+1. use the Source snapshot restored into the Instance's TanStack query;
+2. otherwise construct a minimal generic presentation from `sourceId`;
+3. replace either presentation in place when a routed load returns a newer
+   Source snapshot.
 
-All three paths retain the Instance and render a card. A restored or generic card
-whose Source is missing is explicitly unavailable and cannot refresh, but it
-can still be selected, reordered, moved between Boards, or deleted. There is no
-visible-subset reorder repair because unavailable cards participate directly in
-the complete NowLayer order.
+Neither path lists or waits for registry descriptors. Every Instance renders a
+card and may request refresh through its router; a Loader that can no longer
+resolve the Source returns an ordinary execution error while the last snapshot
+remains readable. Cards can always be selected, reordered, moved between
+Boards, or deleted.
 
 The persisted result and in-memory Query cache provide disposable acceleration
 and presentation continuity; neither owns membership. Clearing them may reduce

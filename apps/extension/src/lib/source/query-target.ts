@@ -3,49 +3,50 @@ import { normalizeSourceParams } from "@newsnext/source-kit/runtime"
 import { hashKey } from "@tanstack/react-query"
 
 export const SOURCE_QUERY_KEY = ["source"] as const
+export const INSTANCE_QUERY_KEY = ["instance"] as const
 
-export interface RemoteSourceQueryTarget {
+export interface InstanceQueryTarget {
   instanceId: string
-  nodeId: string
 }
 
-interface SourceQueryTargetBase {
+export interface DraftSourceQueryTarget {
   params: Record<string, unknown>
   sourceId: string
   version: number
 }
 
-export type SourceQueryTarget = SourceQueryTargetBase & (
-  | { instanceId: string, nodeId: string, remote: true }
-  | { instanceId?: never, nodeId?: never, remote?: false }
-)
+export type SourceQueryTarget = InstanceQueryTarget | DraftSourceQueryTarget
+
+export function createInstanceQueryTarget(
+  instanceId: string,
+): InstanceQueryTarget {
+  return { instanceId }
+}
 
 export function createSourceQueryTarget(
   sourceId: string,
   source: Pick<RuntimeSource, "params" | "version">,
   params: Record<string, unknown> = {},
-  remote?: RemoteSourceQueryTarget,
-): SourceQueryTarget {
-  const target: SourceQueryTarget = {
+): DraftSourceQueryTarget {
+  return {
     params: normalizeSourceParams(source, params),
     sourceId,
     version: source.version,
   }
-  if (remote === undefined) {
-    return target
-  }
-  return { ...target, ...remote, remote: true }
 }
 
 export function getSourceQueryKey(
   target: SourceQueryTarget,
-): readonly ["source", string, number, Record<string, unknown>, string | null] {
+): readonly ["instance", string]
+  | readonly ["source", string, number, Record<string, unknown>] {
+  if ("instanceId" in target) {
+    return [...INSTANCE_QUERY_KEY, target.instanceId]
+  }
   return [
     ...SOURCE_QUERY_KEY,
     target.sourceId,
     target.version,
     target.params,
-    target.remote ? target.nodeId : null,
   ]
 }
 

@@ -5,6 +5,7 @@ import { useCallback, useSyncExternalStore } from "react"
 import { MANUAL_REQUEST_MINIMUM_FEEDBACK_MS } from "@/lib/source"
 import {
   getSourceQueryHash,
+  INSTANCE_QUERY_KEY,
   SOURCE_QUERY_KEY,
 } from "./source-query"
 
@@ -74,11 +75,9 @@ export function useManualRequestSources() {
     async (...targets: SourceQueryTarget[]) => {
       const targetHashes = new Set(targets.map(getSourceQueryHash))
       const filters: QueryFilters = {
-        queryKey: SOURCE_QUERY_KEY,
         type: "active",
-        ...(targetHashes.size > 0
-          ? { predicate: query => targetHashes.has(query.queryHash) }
-          : {}),
+        predicate: query => isLoadQuery(query.queryKey)
+          && (targetHashes.size === 0 || targetHashes.has(query.queryHash)),
       }
       const activeQueries = queryClient.getQueryCache().findAll(filters)
       if (activeQueries.length === 0) {
@@ -96,7 +95,7 @@ export function useManualRequestSources() {
 
 export function useManualRequest() {
   const manualRequestSources = useManualRequestSources()
-  const fetchingCount = useIsFetching({ queryKey: SOURCE_QUERY_KEY })
+  const fetchingCount = useIsFetching({ predicate: query => isLoadQuery(query.queryKey) })
   const isManualRequesting = useIsManualRequesting()
 
   const isFetching = fetchingCount > 0 || isManualRequesting
@@ -109,4 +108,8 @@ export function useManualRequest() {
     manualRequest,
     isFetching,
   }
+}
+
+function isLoadQuery(queryKey: readonly unknown[]): boolean {
+  return queryKey[0] === SOURCE_QUERY_KEY[0] || queryKey[0] === INSTANCE_QUERY_KEY[0]
 }

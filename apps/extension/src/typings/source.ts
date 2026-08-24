@@ -12,5 +12,6 @@ export type LiveCardViewModel = Omit<SourceDescriptor, "id"> & {
   sourceId: string
   boardId: string | null
   createdAt?: number
+  metadataValue?: SourceDescriptor["metadata"]
   paramsValue?: Record<string, unknown>
 }

@@ -1,11 +1,12 @@
 import type { QueryClient } from "@tanstack/react-query"
 import type { SourceLoadResponse, SourceLoadResult } from "@/lib/source/load-result"
-import type { RemoteSourceQueryTarget } from "@/lib/source/query-target"
 import { useQueryClient } from "@tanstack/react-query"
 import { useCallback } from "react"
 import {
+  createInstanceQueryTarget,
   createSourceQueryTarget,
   getSourceQueryHash,
+  getSourceQueryKey,
   SOURCE_QUERY_KEY,
 } from "@/hooks/source-query"
 
@@ -21,32 +22,50 @@ function getSourceLoadResponse(
   return value
 }
 
+function readCachedSourceQuery(
+  value: unknown,
+  sourceId: string,
+): CachedSourceQuery | undefined {
+  const response = getSourceLoadResponse(value)
+  const result = response?.result
+  if (
+    !result
+    || result.source?.id !== sourceId
+    || typeof response.loadedAt !== "number"
+  ) {
+    return undefined
+  }
+  return { data: result, loadedAt: response.loadedAt }
+}
+
+export function findCachedInstanceQuery(
+  queryClient: QueryClient,
+  instanceId: string,
+  sourceId: string,
+): CachedSourceQuery | undefined {
+  return readCachedSourceQuery(
+    queryClient.getQueryData(
+      getSourceQueryKey(createInstanceQueryTarget(instanceId)),
+    ),
+    sourceId,
+  )
+}
+
 export function findCachedSourceQuery(
   queryClient: QueryClient,
   sourceId: string,
   params: Record<string, unknown> | undefined,
-  remote?: RemoteSourceQueryTarget,
 ): CachedSourceQuery | undefined {
   const queries = queryClient.getQueryCache()
     .findAll({ queryKey: SOURCE_QUERY_KEY })
     .filter(query => query.state.data !== undefined)
 
   for (const query of queries) {
-    const response = getSourceLoadResponse(query.state.data)
-    const result = response?.result
-    if (
-      !result
-      || result.source?.id !== sourceId
-      || typeof response.loadedAt !== "number"
-    ) {
-      continue
-    }
-    const target = createSourceQueryTarget(sourceId, result.source, params, remote)
+    const cached = readCachedSourceQuery(query.state.data, sourceId)
+    if (!cached) continue
+    const target = createSourceQueryTarget(sourceId, cached.data.source, params)
     if (query.queryHash === getSourceQueryHash(target)) {
-      return {
-        data: result,
-        loadedAt: response.loadedAt,
-      }
+      return cached
     }
   }
 }
@@ -55,18 +74,16 @@ export function findCachedSourceResult(
   queryClient: QueryClient,
   sourceId: string,
   params: Record<string, unknown> | undefined,
-  remote?: RemoteSourceQueryTarget,
 ): SourceLoadResult | undefined {
-  return findCachedSourceQuery(queryClient, sourceId, params, remote)?.data
+  return findCachedSourceQuery(queryClient, sourceId, params)?.data
 }
 
-export function useCachedSourceResultFinder(): (
+export function useCachedInstanceResultFinder(): (
+  instanceId: string,
   sourceId: string,
-  params: Record<string, unknown> | undefined,
-  remote?: RemoteSourceQueryTarget,
 ) => SourceLoadResult | undefined {
   const queryClient = useQueryClient()
-  return useCallback((sourceId, params, remote) => {
-    return findCachedSourceResult(queryClient, sourceId, params, remote)
+  return useCallback((instanceId, sourceId) => {
+    return findCachedInstanceQuery(queryClient, instanceId, sourceId)?.data
   }, [queryClient])
 }

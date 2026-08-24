@@ -1,6 +1,7 @@
 import type { SourceQueryTarget } from "@/lib/source/query-target"
 import { queryOptions } from "@tanstack/react-query"
 import {
+  loadInstance,
   loadSource,
   SOURCE_QUERY_REFETCH_INTERVAL_MS,
   SOURCE_QUERY_STALE_TIME_MS,
@@ -9,9 +10,11 @@ import { getSourceQueryKey } from "@/lib/source/query-target"
 
 export type { SourceQueryTarget } from "@/lib/source/query-target"
 export {
+  createInstanceQueryTarget,
   createSourceQueryTarget,
   getSourceQueryHash,
   getSourceQueryKey,
+  INSTANCE_QUERY_KEY,
   SOURCE_QUERY_KEY,
 } from "@/lib/source/query-target"
 
@@ -20,11 +23,9 @@ export function getSourceQueryOptions(
 ) {
   return queryOptions({
     queryKey: getSourceQueryKey(target),
-    queryFn: ({ signal }) => loadSource(target.sourceId, target.params, {
-      signal,
-      instanceId: target.instanceId,
-      remote: target.remote,
-    }),
+    queryFn: ({ signal }) => "instanceId" in target
+      ? loadInstance(target.instanceId, signal)
+      : loadSource(target.sourceId, target.params, signal),
     networkMode: "offlineFirst",
     refetchInterval: SOURCE_QUERY_REFETCH_INTERVAL_MS,
     refetchIntervalInBackground: false,

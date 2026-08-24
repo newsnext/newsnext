@@ -48,7 +48,27 @@ function applyInstanceOverrides(
       ...metadata,
     },
     createdAt: instance.createdAt,
+    metadataValue: metadata,
     paramsValue: instance.patch.params,
+  }
+}
+
+export function applySourceSnapshot(
+  liveCard: LiveCardViewModel,
+  snapshot: SourceDescriptor,
+): LiveCardViewModel {
+  return {
+    ...snapshot,
+    id: liveCard.id,
+    sourceId: liveCard.sourceId,
+    boardId: liveCard.boardId,
+    createdAt: liveCard.createdAt,
+    metadataValue: liveCard.metadataValue,
+    paramsValue: liveCard.paramsValue,
+    metadata: {
+      ...snapshot.metadata,
+      ...liveCard.metadataValue,
+    },
   }
 }
 

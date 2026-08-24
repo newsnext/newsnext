@@ -850,17 +850,19 @@ version: 3
 ```
 
 Validated Source results are cached once by the extension background in
-IndexedDB under their Source ID, Source version, normalized parameters, and
-real fetch time. The same record supports request protection and startup
-placeholders. Local Instances with the same request identity share it. Remote
-Instances share matching requests within one owning Node but remain isolated
-across Nodes. The App restores local cache
-records into page-side query state before rendering. Page queries become stale after two minutes, so
+IndexedDB as a derived key, real fetch time, and result snapshot. The key is
+computed from Source ID, Source version, and normalized parameters without
+duplicating that target in the record. The same record supports request
+protection and startup placeholders. Instances bound to the same browser may
+reuse the same protected Loader record, while page-side results remain isolated
+by Instance ID. The App restores cache records through Instance routing and
+renders directly from their Source snapshots without listing registry
+descriptors. Page queries become stale after two minutes, so
 remounting or regaining focus can revalidate them, while active Sources also
 revalidate on a fixed five-minute interval. Manual Request is a page-side user
 intent that bypasses page freshness. It sends the same load action as automatic
 revalidation, without a manual-request flag, so the background does not
-distinguish the two paths. Neither path may issue a remote request when the same
+distinguish the two paths. Neither path may issue a new Loader request when the same
 Source and normalized parameters completed a real load less than one minute
 ago. After that fixed protection interval, NewsNext publishes the stored result
 as a placeholder while the new request runs.
@@ -1283,6 +1285,7 @@ database. Reusing a protected result does not create a duplicate observation:
 
 ```sh
 newsnext history datasets --source-id github:trending
+newsnext history datasets --node-id NODE_ID --source-version 3
 newsnext history observations DATASET_ID
 newsnext history get DATASET_ID 1786212000000
 newsnext history compare DATASET_ID \
@@ -1335,8 +1338,9 @@ Board, then `action execute board.listInstances --input
 '{"boardId":"BOARD_ID"}'` for a custom Board. Use `action execute
 instance.list` when the Board is irrelevant. History commands intentionally use
 the opaque ID returned by `history datasets`; they do not resolve extension
-Instance state. Filter dataset discovery by Source or provider when selecting a
-retained parameter configuration.
+Instance state. Filter dataset discovery by Node, Source version, Source, or
+provider when selecting a retained execution environment and parameter
+configuration.
 
 Query Actions return canonical Boards and Instances without a
 parallel CLI-only Board representation. An Instance may be returned by several

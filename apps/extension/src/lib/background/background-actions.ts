@@ -1,6 +1,7 @@
 import type { ExtensionConnectionFetchResponse } from "@newsnext/extension-connection"
 import type { ResolvedRadarSuggestion } from "../radar"
 import type { PersistedDeviceState } from "../settings"
+import type { Instance } from "../source"
 import type { SourceLoadResponse } from "../source/load-result"
 import type { ApplicationActionContext } from "./application-actions"
 import type {
@@ -35,11 +36,11 @@ export interface BackgroundActionContext extends ApplicationActionContext {
     }) => Promise<ResolvedRadarSuggestion[]>
   }
   job: {
-    executeInstance: (input: { instanceId: string }) => Promise<SourceLoadResponse>
+    executeInstance: (input: { instance: Instance }) => Promise<SourceLoadResponse>
   }
-  node: {
-    loadInstance: (input: { instanceId: string }) => Promise<SourceLoadResponse>
-    readInstanceCache: (input: { instanceId: string }) => Promise<SourceLoadResponse | null>
+  loader: {
+    loadInstance: (input: { instance: Instance }) => Promise<SourceLoadResponse>
+    readInstanceCache: (input: { instance: Instance }) => Promise<SourceLoadResponse | null>
   }
   source: {
     cancel: (input: { requestId: string }) => Promise<void>
@@ -82,6 +83,13 @@ const SourceCacheResult = Type.Unsafe<SourceLoadResponse | null>(Type.Union([
   SourceLoadResponseResult,
   Type.Null(),
 ]))
+const InstanceParams = Type.Unsafe<Instance>(Type.Object({
+  createdAt: Type.Number(),
+  instanceId: Identifier,
+  patch: Type.Object({}, { additionalProperties: true }),
+  sourceId: Identifier,
+}, { additionalProperties: false }))
+const RoutedInstanceParams = Type.Object({ instance: InstanceParams }, { additionalProperties: false })
 
 const appOpenAction = defineAction({
   audiences: CONNECTED_ONLY,
@@ -228,32 +236,32 @@ const jobExecuteInstanceAction = defineAction({
   name: "job.executeInstance",
   kind: "command",
   description: "Execute one configured Instance for a CLI-owned background Job.",
-  params: Type.Object({ instanceId: Identifier }, { additionalProperties: false }),
+  params: RoutedInstanceParams,
   result: SourceLoadResponseResult,
 }, async (input, context: BackgroundActionContext) => (
   await context.job.executeInstance(input)
 ))
 
-const nodeLoadInstanceAction = defineAction({
+const loaderLoadInstanceAction = defineAction({
   audiences: CONNECTED_ONLY,
-  name: "node.loadInstance",
+  name: "loader.loadInstance",
   kind: "query",
-  description: "Read one configured Instance for a cross-Node UI request.",
-  params: Type.Object({ instanceId: Identifier }, { additionalProperties: false }),
+  description: "Load one routed Workspace Instance in its bound browser Loader.",
+  params: RoutedInstanceParams,
   result: SourceLoadResponseResult,
 }, async (input, context: BackgroundActionContext) => (
-  await context.node.loadInstance(input)
+  await context.loader.loadInstance(input)
 ))
 
-const nodeReadInstanceCacheAction = defineAction({
+const loaderReadInstanceCacheAction = defineAction({
   audiences: CONNECTED_ONLY,
-  name: "node.readInstanceCache",
+  name: "loader.readInstanceCache",
   kind: "query",
-  description: "Read one configured Instance's persisted result without executing its Source.",
-  params: Type.Object({ instanceId: Identifier }, { additionalProperties: false }),
+  description: "Read one routed Workspace Instance's persisted result without executing its Source.",
+  params: RoutedInstanceParams,
   result: SourceCacheResult,
 }, async (input, context: BackgroundActionContext) => (
-  await context.node.readInstanceCache(input)
+  await context.loader.readInstanceCache(input)
 ))
 
 const sourceConnectionGetStatusAction = defineAction({
@@ -273,7 +281,7 @@ const sourceConnectionLoadInstanceAction = defineAction({
   audiences: UI_ONLY,
   name: "sourceConnection.loadInstance",
   kind: "query",
-  description: "Load an Instance through its connected NewsNext Node.",
+  description: "Load an Instance through the Workspace router.",
   params: Type.Object({ instanceId: Identifier }, { additionalProperties: false }),
   result: SourceLoadResponseResult,
 }, async (input, context: BackgroundActionContext) => (
@@ -284,7 +292,7 @@ const sourceConnectionReadInstanceCacheAction = defineAction({
   audiences: UI_ONLY,
   name: "sourceConnection.readInstanceCache",
   kind: "query",
-  description: "Read an Instance's persisted result from its connected NewsNext Node.",
+  description: "Read an Instance's persisted result through the Workspace router.",
   params: Type.Object({ instanceId: Identifier }, { additionalProperties: false }),
   result: SourceCacheResult,
 }, async (input, context: BackgroundActionContext) => (
@@ -344,8 +352,8 @@ export const backgroundActionDefinitions = [
   developerFetchAction,
   developerRunSourceAction,
   jobExecuteInstanceAction,
-  nodeLoadInstanceAction,
-  nodeReadInstanceCacheAction,
+  loaderLoadInstanceAction,
+  loaderReadInstanceCacheAction,
   ...uiBackgroundActionDefinitions,
 ] as const
 
