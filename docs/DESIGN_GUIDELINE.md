@@ -705,15 +705,24 @@ otherwise return the island to its collapsed state.
 
 ## Desktop Tray Menu
 
-Keep the desktop tray menu task-first and compact. Open NewsNext is the first
-action, connection status is non-interactive supporting information, and Quit
-NewsNext remains the final action separated from status. Disable Open NewsNext
-when no extension is connected. Each connected instance gets a submenu that
-lists its Boards followed by a separator and Settings. With multiple
-connections, group those instance submenus under Open NewsNext, name them with
-the detected browser and a short stable instance identifier, and sort them so
-the menu does not reorder as connections report status. The tray Settings action
-opens the CLI connection tab because it belongs to the desktop integration flow.
+Keep the desktop tray menu task-first and compact. Settings is the first action
+and opens the NewsNext App settings window. When Boards are available, follow it
+with an Open Board submenu. With one connection, selecting a Board opens it
+directly. With multiple connections, list Boards first and then the connected
+browsers available for the selected Board. Name those connections with the
+detected browser and a short stable instance identifier, and sort them so the
+menu does not reorder as connections report status. Connection status is
+non-interactive supporting information, and Quit NewsNext remains the final
+action separated from status. Browser integration is managed from the App
+settings window rather than the tray menu.
+
+Expose Open at Login as the same checked setting in the App settings window
+and tray menu. Either control updates the system login item and immediately
+synchronizes the other control. When enabled, launch the App at login as a
+silent menu bar service without showing the settings window or Dock icon.
+Showing Settings adds the App to the Dock while the window is open; closing the
+window hides it and removes the Dock icon without stopping the menu bar service
+or daemon.
 
 ## Implementation Checklist
 
