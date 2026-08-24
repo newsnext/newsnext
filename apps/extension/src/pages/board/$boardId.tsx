@@ -16,7 +16,7 @@ export function BoardIdComponent() {
   const instances = useAtomValue(instancesAtom)
   const queryClient = useQueryClient()
   const setCurrentBoardId = useSetAtom(currentBoardIdAtom)
-  const [restoredInstanceKey, setRestoredInstanceKey] = useState<string>()
+  const [restoredBoardId, setRestoredBoardId] = useState<string>()
   const board = boards.find(board => board.id === boardId)
   const boardInstanceIds = board?.instanceIds
   const boardInstances = useMemo(() => {
@@ -24,14 +24,6 @@ export function BoardIdComponent() {
     const instanceIdSet = new Set(boardInstanceIds)
     return instances.filter(instance => instanceIdSet.has(instance.instanceId))
   }, [boardInstanceIds, instances])
-  const instanceRestorationKey = useMemo(() => JSON.stringify({
-    instances: boardInstances.map(instance => ({
-      instanceId: instance.instanceId,
-      patch: instance.patch,
-      sourceId: instance.sourceId,
-    })),
-  }), [boardInstances])
-
   useEffect(() => {
     document.title = board ? `NewsNext | ${board.name}` : "NewsNext"
     if (board) {
@@ -53,12 +45,12 @@ export function BoardIdComponent() {
     if (!boardInstanceIds) return
     let active = true
     void restoreInstanceResults(queryClient, boardInstances).finally(() => {
-      if (active) setRestoredInstanceKey(instanceRestorationKey)
+      if (active) setRestoredBoardId(boardId)
     })
     return () => {
       active = false
     }
-  }, [boardInstanceIds, boardInstances, instanceRestorationKey, queryClient])
+  }, [boardId, boardInstanceIds, boardInstances, queryClient])
 
   if (!board) {
     return (
@@ -68,7 +60,7 @@ export function BoardIdComponent() {
     )
   }
 
-  if (restoredInstanceKey !== instanceRestorationKey) return null
+  if (restoredBoardId !== boardId) return null
 
   if (!layer) {
     return (

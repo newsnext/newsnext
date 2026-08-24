@@ -121,6 +121,11 @@ ordering. Keep dynamically created atom configs referentially stable, and use
 `selectAtom` only where an equality function is required to stabilize a
 structural projection.
 
+Gate Board rendering on Instance cache restoration only when entering a Board.
+Later Instance creation or configuration may restore or invalidate the affected
+query, but must keep the mounted Board visible so unrelated LiveCards, scroll
+position, and interaction state are preserved.
+
 Do not add module-global identity caches to make `memo` boundaries pass. Such
 caches make correctness depend on an implicit immutability contract and can
 return stale LiveCards after in-place changes. If Instance updates become a
