@@ -249,47 +249,64 @@ The background protected loader enforces a one-minute minimum execution interval
 for each Source ID, Source version, and normalized parameter set. This protects
 third-party APIs from accidental bursts that can trigger rate limits or account
 suspension. It also deduplicates in-flight loads across UI and connected CLI
-consumers. The background does not own a Query cache. Page-side TanStack Query is
-the only cache and owns component subscriptions, loading and error state,
-page-local freshness, and in-memory result reuse. Source query keys and complete page
-options are created together so React observers, imperative Fetch Latest calls,
+consumers. The background does not own a Query cache. Page-side TanStack Query
+owns component subscriptions, loading and error state, page-local freshness,
+and in-memory result reuse. Source query keys and complete page
+options are created together so React observers, imperative manual requests,
 and future prefetch consumers share that identity. Both
-individual LiveCard and board-wide user refreshes execute enabled TanStack queries
-that fetch the latest source data; disabled and unmounted queries are not
-fetched implicitly. Automatic revalidation follows TanStack freshness, while
-Fetch Latest is a separate user intent that bypasses page freshness and asks the
-background protected loader for the latest result. A protected request returns
-the persisted result with `fetchProtected: true` and a new caller-visible
-`loadedAt` without executing the Source or changing its internal `fetchedAt`, and
-Fetch Latest keeps UI feedback visible for a minimum 500ms. App query timing
+individual LiveCard and board-wide manual requests execute enabled TanStack queries
+through `refetchQueries` with `type: "active"`; individual requests add a query-hash
+predicate, while board-wide requests match every active Source query. TanStack
+Query owns request cancellation and concurrent refetching, and disabled or
+unmounted queries are not fetched implicitly. Automatic revalidation follows
+TanStack freshness. Manual Request is a page-side user intent that tracks
+distinct UI feedback around that refetch. Both paths send the
+same load action without a manual-request flag, so the background cannot
+distinguish them and applies the same protection behavior. A protected request
+returns the persisted result with `fetchProtected: true` and a new caller-visible
+`loadedAt` without executing the Source or changing its internal `fetchedAt`.
+Manual Request keeps UI feedback visible for a minimum 500ms. App query timing
 and the Source request protection interval are centralized in
 `apps/extension/src/lib/source/query-policy.ts`.
 
-The background writes its API-protection results to a Dexie-backed IndexedDB
-table. Each Node also stores complete responses under the stable query identity
-only for Instances it owns. A cross-Node request is routed by the CLI to the
-owner, which reads or refreshes that browser-local cache and returns the result
-without creating another persisted copy in the viewing browser. Each local
-record contains its normalized target, validated result, and real `fetchedAt`
-completion time; it is persistent result data rather than a serialized TanStack
-Query cache. Before the App renders, it restores valid local Instance results
-into its in-memory QueryClient with a new caller-visible `loadedAt` and maps
-`fetchedAt` to TanStack's internal `dataUpdatedAt` for stale calculation.
-It then asks connected owner Nodes for their persisted remote Instance results
-in parallel and seeds cache hits into the same QueryClient before the first
-render. This cache-only hydration never executes a Source. Remote misses and
-failures do not discard successful responses, and the viewing browser still
-does not persist another copy of remote result data.
+The background writes every successful local execution once to a Dexie-backed
+Source result cache keyed by Source ID, Source version, and normalized
+parameters. The same record supplies both API protection and startup
+placeholder data. Local Instance IDs are deliberately absent because they do
+not affect Source execution; LiveCards with the same request identity share one
+page-side TanStack query.
+
+Each cache record contains its normalized target, validated result, and real
+`fetchedAt` completion time. When a Board route renders, the App restores only
+the valid records referenced by that Board's local Instances into its in-memory
+QueryClient. It assigns a new caller-visible `loadedAt` and maps `fetchedAt` to
+TanStack's internal `dataUpdatedAt` for stale calculation. The lookup uses the
+persisted Source ID index and then verifies the complete normalized request
+identity, so unrelated Boards and historical parameter combinations do not
+enter the page cache. Available Sources restore only the current Source version;
+an unavailable Source may restore its newest matching cached descriptor as a
+failure-safe presentation fallback. This hydration never executes a Source.
+
+A cross-Node request is routed by Instance ID so the owning browser can resolve
+the configured Source and parameters. In the viewing browser, however, TanStack
+Query identity is Node-scoped because a Node represents one remote execution
+environment and credential boundary. Remote Instances on the same Node share a
+query when their Source version and normalized parameters match; identical
+requests on different Nodes remain isolated. The viewing browser asks connected
+owners only for remote Instances referenced by the Board being rendered and
+seeds successful responses into Node-scoped TanStack queries before that Board
+content renders without persisting another copy. Remote misses and failures do
+not discard successful responses.
 Persisted results are discarded after 30 days. Increasing the Source version
 changes result identity immediately, while old versions age out independently.
 Persistence failures remain fail-open and never prevent Source execution.
 
 Cross-Node UI reads use `node.loadInstance`; the daemon returns their results
-without retaining History, while the owning Node updates its current Instance
-cache. Scheduled work uses `job.executeInstance`; that path does not write the
-Now Layer Instance cache, and only the daemon's explicit Job runner retains a
-newly fetched, unprotected response as an observation. Both Actions reuse the
-same protected Loader implementation without sharing persistence policy.
+without retaining History, while the owning Node uses its Source result cache.
+Scheduled work uses `job.executeInstance`, and only the daemon's explicit Job
+runner retains a newly fetched, unprotected response as an observation. Both
+Actions reuse the same protected Loader implementation without sharing History
+policy.
 
 The browser retains the last known Node catalog when a Node disconnects. This
 keeps Workspace cards stable while their owning Node is restarting or offline.
@@ -432,10 +449,16 @@ window. Regaining focus or remounting can revalidate
 stale queries. Active LiveCard queries also revalidate once every five minutes,
 but interval revalidation is skipped while the app is in the background.
 Inactive query data follows TanStack Query's default garbage-collection policy;
-the durable Source result remains independently available in IndexedDB. Source
-queries use offline-first network mode. The App restores valid persisted Source
-results into its QueryClient before rendering, so disabled Search observers and
-unavailable Sources can reuse cached metadata without starting Source execution.
+the durable Source result remains independently available in IndexedDB. Local
+LiveCards with the same Source version and normalized parameters share one
+query; remote LiveCards share matching requests within one Node and remain
+isolated across Nodes. Source queries use offline-first
+network mode. Before rendering Board content, the App restores valid persisted
+Source results for that Board into its QueryClient. This lets its unavailable
+Sources reuse cached descriptors and metadata without loading unrelated Source
+identities. Disabled Search observers reuse data already present in the page
+cache but do not cause other Boards' persisted results to be restored or execute
+a Source.
 Stale restored queries follow the same focus, remount, and interval revalidation
 policy as queries produced in the current session. The Board projection does
 not subscribe to ongoing Query Cache events; active LiveCards own their query
@@ -521,12 +544,12 @@ Each step performs a field-level merge, with later values taking precedence.
 Every presentation surface must use this same merge boundary. LiveCards apply
 loader metadata directly from their active source query. Search subscribes to
 the same normalized source query keys with disabled observers, so an existing
-loader result can update searchable titles and result labels without starting
-loads merely because the Search dialog opened. Before rendering, the App restores
-persisted Source results and maps `fetchedAt` to TanStack's internal
-`dataUpdatedAt`, so stale presentation data cannot become artificially fresh or
-suppress normal LiveCard revalidation. Until a loader result is available,
-Search follows the normal static, Instance, and provider-title fallback behavior.
+in-memory loader result can update searchable titles and result labels without
+starting loads merely because the Search dialog opened. Board-scoped restoration
+maps `fetchedAt` to TanStack's internal `dataUpdatedAt`, so stale presentation
+data cannot become artificially fresh or suppress normal LiveCard revalidation.
+For other Boards whose results are not in the page cache, Search follows the
+normal static, Instance, and provider-title fallback behavior.
 
 Loader metadata reuses responses already required to produce the items. Source
 loaders must not issue profile, community, channel, batch, or other companion
@@ -956,8 +979,9 @@ ambiguous browser selection, expires pending executions, and never replays a
 command after reconnection because source execution is not guaranteed to be
 idempotent. Settings exposes the daemon version as connection metadata only.
 The current protocol version is 12. It carries the shared Workspace, connected
-Node catalog, canonical Action requests, Widget snapshots, Instance cache
-reads, and Instance load requests. The Workspace owns Boards and Layers, while
+Node catalog, canonical Action requests, Widget snapshots, Source-result cache
+reads routed by Instance ID, and Instance load requests. The Workspace owns
+Boards and Layers, while
 each Node advertises only the Loader Instances it can execute. The daemon
 resolves an Instance request to exactly one connected Node and never transfers
 browser credentials or session state. `app.open` targets an exact Node and

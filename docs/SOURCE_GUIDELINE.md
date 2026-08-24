@@ -849,19 +849,24 @@ stored results and mark a new version boundary in retained observations:
 version: 3
 ```
 
-Validated Source results are persisted by the extension background in IndexedDB
-with their real fetch time. The App restores them into its in-memory query
-cache before rendering. Page queries become stale after two minutes, so
+Validated Source results are cached once by the extension background in
+IndexedDB under their Source ID, Source version, normalized parameters, and
+real fetch time. The same record supports request protection and startup
+placeholders. Local Instances with the same request identity share it. Remote
+Instances share matching requests within one owning Node but remain isolated
+across Nodes. The App restores local cache
+records into page-side query state before rendering. Page queries become stale after two minutes, so
 remounting or regaining focus can revalidate them, while active Sources also
-revalidate on a fixed five-minute interval. Fetch Latest is a separate user
-intent that immediately asks the background for the latest result regardless of
-page freshness. Neither path may issue a remote request when the same Source and
-normalized parameters completed a real load less than one minute ago. After
-that fixed protection interval, NewsNext publishes the stored result as a
-placeholder while the new request runs.
+revalidate on a fixed five-minute interval. Manual Request is a page-side user
+intent that bypasses page freshness. It sends the same load action as automatic
+revalidation, without a manual-request flag, so the background does not
+distinguish the two paths. Neither path may issue a remote request when the same
+Source and normalized parameters completed a real load less than one minute
+ago. After that fixed protection interval, NewsNext publishes the stored result
+as a placeholder while the new request runs.
 
-The refresh indicator remains visible for at least 500ms when a protected
-Fetch Latest action reuses the preceding result, so the action still has
+The manual-request indicator remains visible for at least 500ms when a protected
+Manual Request action reuses the preceding result, so the action still has
 perceptible feedback. It returns `fetchProtected: true` and updates caller-visible
 `loadedAt` without changing stored `fetchedAt`, rewriting the stored state, or extending the protection interval. Concurrent
 requests for the same Source and normalized parameters remain deduplicated.

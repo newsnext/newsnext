@@ -175,7 +175,7 @@ export function LiveCardContainer({
             className,
           )}
         >
-          {visibleLiveCards.map(({ id, available, boardId, descriptor, instanceAtom, readOnly }) => (
+          {visibleLiveCards.map(({ id, available, boardId, descriptor, instanceAtom, nodeId, readOnly }) => (
             <m.li
               key={id}
               data-live-card-id={id}
@@ -205,6 +205,7 @@ export function LiveCardContainer({
                   available={available}
                   dragging={isDragging && selectedInstanceIds.includes(id)}
                   instanceAtom={instanceAtom}
+                  nodeId={nodeId}
                   sortable={sortable && !readOnly}
                   readOnly={readOnly}
                 />

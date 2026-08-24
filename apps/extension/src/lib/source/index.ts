@@ -10,11 +10,6 @@ export {
   resolveSourceIcon,
   SOURCE_ICON_PRESETS,
 } from "./icon"
-export type { InstanceDataTarget } from "./instance-data-target"
-export {
-  createInstanceDataTarget,
-  resolveInstanceDataTarget,
-} from "./instance-data-target"
 export type {
   Instance,
   InstanceMetadata,
@@ -39,8 +34,8 @@ export {
 } from "./permissions"
 export { getTimelineItemTimes, isTimelineItems } from "./presentation"
 export {
-  FETCH_LATEST_MINIMUM_FEEDBACK_MS,
   isSourceRequestProtected,
+  MANUAL_REQUEST_MINIMUM_FEEDBACK_MS,
   SOURCE_QUERY_OFFSCREEN_RETENTION_MS,
   SOURCE_QUERY_PRELOAD_MARGIN,
   SOURCE_QUERY_REFETCH_INTERVAL_MS,

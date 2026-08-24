@@ -1,7 +1,7 @@
 import type { HeaderNotification } from "./notification"
 import { Button } from "@newsnext/ui/components/button"
 import { useCallback, useState } from "react"
-import { useFetchLatest } from "@/hooks"
+import { useManualRequest } from "@/hooks"
 import { PhArrowCounterClockwise, PhCircleDashed } from "../icons/ph"
 import { SearchDialog } from "../search"
 import { BoardNav } from "./board-nav"
@@ -9,17 +9,17 @@ import { DateTime } from "./date-time"
 import { TitleIsland } from "./title-island"
 import { UserMenu } from "./user-menu"
 
-function FetchLatestButton() {
-  const { fetchLatest, isFetching } = useFetchLatest()
+function ManualRequestButton() {
+  const { manualRequest, isFetching } = useManualRequest()
   return (
     <Button
       type="button"
       variant="ghost"
       size="icon-lg"
       className="island-pill"
-      aria-label="Fetch latest for active LiveCards"
-      title="Fetch latest for active LiveCards"
-      onClick={fetchLatest}
+      aria-label="Manual request for active LiveCards"
+      title="Manual request for active LiveCards"
+      onClick={manualRequest}
     >
       {isFetching ? <PhCircleDashed className="size-5 animate-spin" /> : <PhArrowCounterClockwise className="size-5" />}
     </Button>
@@ -51,9 +51,9 @@ export function Header() {
           />
         </div>
 
-        {/* Right Section - DateTime, Fetch Latest, User */}
+        {/* Right Section - DateTime, Manual Request, User */}
         <div className="col-start-3 row-start-1 flex min-w-0 items-center justify-start gap-2">
-          <FetchLatestButton />
+          <ManualRequestButton />
           <DateTime className="max-md:hidden" />
           <UserMenu />
         </div>

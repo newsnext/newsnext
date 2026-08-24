@@ -3,7 +3,6 @@ import {
   normalizeSourceParams,
 } from "@newsnext/source-kit/runtime"
 import { actions } from "../actions"
-import { writePersistedSourceResult } from "./persisted-results"
 import { loadSourceDescriptor } from "./registry"
 
 export type { SourceLoadResponse, SourceLoadResult } from "./load-result"
@@ -30,14 +29,6 @@ export async function loadSource(
   signal?.throwIfAborted()
   const response = await loadFreshSource(sourceId, params, signal)
   signal?.throwIfAborted()
-  if (instanceId) {
-    await writePersistedSourceResult({
-      instanceId,
-      params,
-      sourceId,
-      version: source.version,
-    }, response.result, response.fetchedAt)
-  }
   return response
 }
 

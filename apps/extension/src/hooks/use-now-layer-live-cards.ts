@@ -14,6 +14,7 @@ export interface NowLayerLiveCard {
   boardId: string
   descriptor: SourceDescriptor
   instanceAtom: Atom<Instance>
+  nodeId?: string
   readOnly: boolean
 }
 
@@ -51,6 +52,7 @@ export function useNowLayerLiveCards(boardId: string): NowLayerLiveCardsResult {
     const instancesById = new Map<string, {
       instance: Instance
       instanceAtom: Atom<Instance>
+      nodeId?: string
       readOnly?: true
     }>(instances.flatMap((instance, index) => {
       const instanceAtom = instanceAtoms[index]
@@ -58,13 +60,16 @@ export function useNowLayerLiveCards(boardId: string): NowLayerLiveCardsResult {
         ? [[instance.instanceId, { instance, instanceAtom }] as const]
         : []
     }))
-    for (const instance of nodes.flatMap(node => node.instances)) {
-      if (!instancesById.has(instance.instanceId)) {
-        instancesById.set(instance.instanceId, {
-          instance,
-          instanceAtom: atom(instance),
-          readOnly: true,
-        })
+    for (const node of nodes) {
+      for (const instance of node.instances) {
+        if (!instancesById.has(instance.instanceId)) {
+          instancesById.set(instance.instanceId, {
+            instance,
+            instanceAtom: atom(instance),
+            nodeId: node.id,
+            readOnly: true,
+          })
+        }
       }
     }
     const nextLiveCards: Record<string, NowLayerLiveCard> = {}
@@ -73,13 +78,15 @@ export function useNowLayerLiveCards(boardId: string): NowLayerLiveCardsResult {
     for (const instanceId of currentBoard.instanceIds) {
       const entry = instancesById.get(instanceId)
       if (!entry) continue
-      const { instance, instanceAtom } = entry
+      const { instance, instanceAtom, nodeId, readOnly } = entry
 
       const registryDescriptor = descriptorsById.get(instance.sourceId)
       const cachedDescriptor = findCachedResult(
         instance.sourceId,
         instance.patch.params,
-        instance.instanceId,
+        readOnly && nodeId
+          ? { instanceId: instance.instanceId, nodeId }
+          : undefined,
       )?.source
       const descriptor = registryDescriptor
         ?? cachedDescriptor
@@ -90,7 +97,8 @@ export function useNowLayerLiveCards(boardId: string): NowLayerLiveCardsResult {
         boardId,
         descriptor,
         instanceAtom,
-        readOnly: "readOnly" in entry,
+        nodeId,
+        readOnly: readOnly === true,
       }
       nextSortableLiveCards[instanceId] = {
         id: instanceId,

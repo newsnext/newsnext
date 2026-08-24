@@ -1,5 +1,3 @@
-import type { QueryClient } from "@tanstack/react-query"
-import type { SourceLoadResponse, SourceLoadResult } from "@/lib/source"
 import type { SourceQueryTarget } from "@/lib/source/query-target"
 import { queryOptions } from "@tanstack/react-query"
 import {
@@ -33,17 +31,4 @@ export function getSourceQueryOptions(
     retry: false,
     staleTime: SOURCE_QUERY_STALE_TIME_MS,
   })
-}
-
-export async function fetchLatestSourceQuery(
-  queryClient: QueryClient,
-  target: SourceQueryTarget,
-): Promise<SourceLoadResult> {
-  const queryKey = getSourceQueryKey(target)
-  await queryClient.cancelQueries({ queryKey, exact: true })
-  const response: SourceLoadResponse = await queryClient.fetchQuery({
-    ...getSourceQueryOptions(target),
-    staleTime: 0,
-  })
-  return response.result
 }

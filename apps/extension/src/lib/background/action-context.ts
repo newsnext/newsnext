@@ -1,7 +1,7 @@
 import type { BackgroundActionContext } from "./background-actions"
 import { loadSourceDescriptors, prepareSourceRequest } from "@newsnext/source-kit/runtime"
 import { openAppBoard, openAppSettings } from "../app-tab"
-import { readPersistedSourceResult, writePersistedSourceResult } from "../source/persisted-results"
+import { readPersistedSourceResult } from "../source/persisted-results"
 import {
   mutateApplicationData,
   readApplicationData,
@@ -42,21 +42,13 @@ async function executeOwnedInstance({ instanceId }: { instanceId: string }) {
 }
 
 async function loadNodeInstance(input: { instanceId: string }) {
-  const { instance, response } = await executeOwnedInstance(input)
-  await writePersistedSourceResult({
-    instanceId: instance.instanceId,
-    params: response.params,
-    sourceId: instance.sourceId,
-    version: response.result.source.version,
-  }, response.result, response.fetchedAt)
-  return response
+  return (await executeOwnedInstance(input)).response
 }
 
 async function readNodeInstanceCache({ instanceId }: { instanceId: string }) {
   const instance = await requireOwnedInstance(instanceId)
   const request = await prepareSourceRequest(instance.sourceId, instance.patch.params ?? {})
   const persisted = await readPersistedSourceResult({
-    instanceId,
     params: request.params,
     sourceId: instance.sourceId,
     version: request.source.version,

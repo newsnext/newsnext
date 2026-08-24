@@ -1,5 +1,6 @@
 import type { LiveCardDragHandleRef } from "./card-header"
 import type { InstanceMetadata, InstancePatch } from "@/lib/source"
+import type { RemoteSourceQueryTarget } from "@/lib/source/query-target"
 import type { LiveCardViewModel } from "@/typings/source"
 import { FlipAnimate } from "@newsnext/ui/components/flip-animate"
 import { useScrollProgressContext } from "@newsnext/ui/components/scroll-progress-context"
@@ -24,6 +25,7 @@ export interface LiveCardProps {
   source: LiveCardViewModel
   className?: string
   sizeClassName?: string
+  nodeId?: string
   nodeRef?: (node: HTMLElement | null) => void
   dragHandleRef?: LiveCardDragHandleRef
   isDraft?: boolean
@@ -31,7 +33,18 @@ export interface LiveCardProps {
   readOnly?: boolean
 }
 
-function LiveCardContent({ available = true, id, source, dragHandleRef, isDraft = false, onDraftSourceChange, readOnly = false }: LiveCardProps) {
+function getRemoteQueryTarget(
+  readOnly: boolean,
+  instanceId: string,
+  nodeId?: string,
+): RemoteSourceQueryTarget | undefined {
+  if (!readOnly) return undefined
+  if (!nodeId) throw new Error("A remote LiveCard requires a Node ID")
+  return { instanceId, nodeId }
+}
+
+function LiveCardContent({ available = true, id, source, dragHandleRef, isDraft = false, nodeId, onDraftSourceChange, readOnly = false }: LiveCardProps) {
+  const remote = getRemoteQueryTarget(readOnly, id, nodeId)
   const setInstancePatch = useSetAtom(setInstancePatchAtom)
   const resetLocalParams = useSetAtom(resetInstanceParamsAtom)
   const [isFlipped, setIsFlipped] = useState(false)
@@ -55,11 +68,10 @@ function LiveCardContent({ available = true, id, source, dragHandleRef, isDraft 
     requestPermission,
   } = useSourcePermission(source, savedParams)
 
-  const { items, itemTemplate, metadata, fetchLatest, isFetching, isFetchingLatest, isLoading, isError, errorMessage, loginUrl, loadedAt } = useSourceQuery({
-    instanceId: id,
+  const { items, itemTemplate, metadata, manualRequest, isFetching, isManualRequesting, isLoading, isError, errorMessage, loginUrl, loadedAt } = useSourceQuery({
     sourceId: source.sourceId,
     params: savedParams,
-    remote: readOnly,
+    remote,
     enabled: readOnly || canLoad,
   })
   const sourceErrorMessage = !available
@@ -117,13 +129,13 @@ function LiveCardContent({ available = true, id, source, dragHandleRef, isDraft 
         source={displaySource}
         items={items}
         itemTemplate={itemTemplate}
-        isFetching={isFetching || isFetchingLatest}
-        isContentFetching={isFetchingLatest || isLoading}
+        isFetching={isFetching || isManualRequesting}
+        isContentFetching={isManualRequesting || isLoading}
         sourceErrorMessage={sourceErrorMessage}
         sourceLoginUrl={readOnly || canLoad ? loginUrl : undefined}
         sourcePermissionRequest={readOnly ? undefined : missingPermission}
         loadedAt={loadedAt}
-        onRefresh={fetchLatest}
+        onRefresh={manualRequest}
         onRequestPermission={requestPermission}
         onFlip={readOnly ? undefined : handleFlip}
         dragHandleRef={isFlipped ? undefined : dragHandleRef}

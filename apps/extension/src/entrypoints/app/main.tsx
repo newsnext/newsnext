@@ -7,8 +7,6 @@ import {
   getBoardScrollRestorationKey,
   ROOT_SCROLL_RESTORATION_SELECTOR,
 } from "@/lib/scroll-restoration"
-import { restorePersistedSourceResults } from "@/lib/source/persisted-results"
-import { restoreRemoteSourceResults } from "@/lib/source/remote-results"
 import { syncThemeFavicon, THEME_COLOR_KEY } from "@/lib/utils/swith-theme"
 import { routeTree } from "./routeTree"
 import "@/styles/index.css"
@@ -39,9 +37,6 @@ function App() {
 }
 
 async function renderApp(): Promise<void> {
-  await restorePersistedSourceResults(queryClient)
-  await restoreRemoteSourceResults(queryClient)
-
   if (
     import.meta.env.DEV
       && import.meta.env.WXT_ENABLE_REACT_SCAN === "true"

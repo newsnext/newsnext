@@ -1,5 +1,6 @@
 import type { QueryClient } from "@tanstack/react-query"
 import type { SourceLoadResponse, SourceLoadResult } from "@/lib/source/load-result"
+import type { RemoteSourceQueryTarget } from "@/lib/source/query-target"
 import { useQueryClient } from "@tanstack/react-query"
 import { useCallback } from "react"
 import {
@@ -24,7 +25,7 @@ export function findCachedSourceQuery(
   queryClient: QueryClient,
   sourceId: string,
   params: Record<string, unknown> | undefined,
-  instanceId?: string,
+  remote?: RemoteSourceQueryTarget,
 ): CachedSourceQuery | undefined {
   const queries = queryClient.getQueryCache()
     .findAll({ queryKey: SOURCE_QUERY_KEY })
@@ -40,7 +41,7 @@ export function findCachedSourceQuery(
     ) {
       continue
     }
-    const target = createSourceQueryTarget(sourceId, result.source, params, instanceId)
+    const target = createSourceQueryTarget(sourceId, result.source, params, remote)
     if (query.queryHash === getSourceQueryHash(target)) {
       return {
         data: result,
@@ -54,18 +55,18 @@ export function findCachedSourceResult(
   queryClient: QueryClient,
   sourceId: string,
   params: Record<string, unknown> | undefined,
-  instanceId?: string,
+  remote?: RemoteSourceQueryTarget,
 ): SourceLoadResult | undefined {
-  return findCachedSourceQuery(queryClient, sourceId, params, instanceId)?.data
+  return findCachedSourceQuery(queryClient, sourceId, params, remote)?.data
 }
 
 export function useCachedSourceResultFinder(): (
   sourceId: string,
   params: Record<string, unknown> | undefined,
-  instanceId?: string,
+  remote?: RemoteSourceQueryTarget,
 ) => SourceLoadResult | undefined {
   const queryClient = useQueryClient()
-  return useCallback((sourceId, params, instanceId) => {
-    return findCachedSourceResult(queryClient, sourceId, params, instanceId)
+  return useCallback((sourceId, params, remote) => {
+    return findCachedSourceResult(queryClient, sourceId, params, remote)
   }, [queryClient])
 }

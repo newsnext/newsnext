@@ -1,3 +1,4 @@
+import type { RemoteSourceQueryTarget } from "@/lib/source/query-target"
 import type { NewsItem } from "@/typings/source"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useCallback, useMemo, useState } from "react"
@@ -8,24 +9,22 @@ import {
   getSourceQueryOptions,
 } from "./source-query"
 import { findCachedSourceQuery } from "./use-cached-source-result"
-import { useFetchLatestSources, useIsSourceFetchingLatest } from "./use-refetch"
+import { useIsSourceManualRequesting, useManualRequestSources } from "./use-manual-request"
 import { useSourceDescriptors } from "./use-source-descriptors"
 
 const EMPTY_ITEMS: NewsItem[] = []
 
 export interface UseSourceQueryOptions {
-  instanceId?: string
   sourceId: string
   params?: Record<string, unknown>
-  remote?: boolean
+  remote?: RemoteSourceQueryTarget
   enabled?: boolean
 }
 
 export function useSourceQuery({
-  instanceId,
   sourceId,
   params,
-  remote = false,
+  remote,
   enabled = true,
 }: UseSourceQueryOptions) {
   const { sources } = useSourceDescriptors()
@@ -34,17 +33,21 @@ export function useSourceQuery({
     () => sources.find(candidate => candidate.id === sourceId),
     [sourceId, sources],
   )
-  const cachedQuery = findCachedSourceQuery(queryClient, sourceId, params, instanceId)
+  const cachedQuery = findCachedSourceQuery(queryClient, sourceId, params, remote)
   const cachedResult = cachedQuery?.data
-  const target = useMemo(
-    () => source || cachedResult?.source
-      ? createSourceQueryTarget(sourceId, source ?? cachedResult!.source, params, instanceId, remote)
-      : { sourceId, params: {}, version: 0, ...(instanceId ? { instanceId } : {}), ...(remote ? { remote: true } : {}) },
-    [cachedResult, instanceId, params, remote, source, sourceId],
-  )
+  const target = useMemo(() => {
+    if (source || cachedResult?.source) {
+      return createSourceQueryTarget(sourceId, source ?? cachedResult!.source, params, remote)
+    }
+
+    const unresolvedTarget = { sourceId, params: {}, version: 0 }
+    return remote
+      ? { ...unresolvedTarget, ...remote, remote: true as const }
+      : unresolvedTarget
+  }, [cachedResult, params, remote, source, sourceId])
   const queryHash = useMemo(() => getSourceQueryHash(target), [target])
-  const fetchLatestSources = useFetchLatestSources()
-  const isFetchingLatest = useIsSourceFetchingLatest(queryHash)
+  const manualRequestSources = useManualRequestSources()
+  const isManualRequesting = useIsSourceManualRequesting(queryHash)
   const [initialLoadedAt] = useState(Date.now)
   const query = useQuery({
     ...getSourceQueryOptions(target),
@@ -54,20 +57,20 @@ export function useSourceQuery({
   const data = query.data?.result ?? cachedResult
   const hasData = data !== undefined
 
-  const handleFetchLatest = useCallback(async () => {
+  const handleManualRequest = useCallback(async () => {
     if (!enabled || !source) {
       return
     }
 
-    await fetchLatestSources(target)
-  }, [enabled, fetchLatestSources, source, target])
+    await manualRequestSources(target)
+  }, [enabled, manualRequestSources, source, target])
 
   return {
     items: data?.items ?? EMPTY_ITEMS,
     itemTemplate: data?.itemTemplate,
-    fetchLatest: handleFetchLatest,
+    manualRequest: handleManualRequest,
     isFetching: query.isFetching,
-    isFetchingLatest,
+    isManualRequesting,
     isLoading: query.isLoading && cachedResult === undefined,
     isError: query.isError && !hasData,
     errorMessage: !hasData && query.error instanceof Error ? query.error.message : undefined,

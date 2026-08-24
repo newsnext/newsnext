@@ -4,34 +4,49 @@ import { hashKey } from "@tanstack/react-query"
 
 export const SOURCE_QUERY_KEY = ["source"] as const
 
-export interface SourceQueryTarget {
-  instanceId?: string
+export interface RemoteSourceQueryTarget {
+  instanceId: string
+  nodeId: string
+}
+
+interface SourceQueryTargetBase {
   params: Record<string, unknown>
-  remote?: boolean
   sourceId: string
   version: number
 }
+
+export type SourceQueryTarget = SourceQueryTargetBase & (
+  | { instanceId: string, nodeId: string, remote: true }
+  | { instanceId?: never, nodeId?: never, remote?: false }
+)
 
 export function createSourceQueryTarget(
   sourceId: string,
   source: Pick<RuntimeSource, "params" | "version">,
   params: Record<string, unknown> = {},
-  instanceId?: string,
-  remote = false,
+  remote?: RemoteSourceQueryTarget,
 ): SourceQueryTarget {
-  return {
-    ...(instanceId === undefined ? {} : { instanceId }),
+  const target: SourceQueryTarget = {
     params: normalizeSourceParams(source, params),
-    ...(remote ? { remote: true } : {}),
     sourceId,
     version: source.version,
   }
+  if (remote === undefined) {
+    return target
+  }
+  return { ...target, ...remote, remote: true }
 }
 
 export function getSourceQueryKey(
   target: SourceQueryTarget,
 ): readonly ["source", string, number, Record<string, unknown>, string | null] {
-  return [...SOURCE_QUERY_KEY, target.sourceId, target.version, target.params, target.instanceId ?? null]
+  return [
+    ...SOURCE_QUERY_KEY,
+    target.sourceId,
+    target.version,
+    target.params,
+    target.remote ? target.nodeId : null,
+  ]
 }
 
 export function getSourceQueryHash(target: SourceQueryTarget): string {

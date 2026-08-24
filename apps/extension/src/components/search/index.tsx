@@ -188,7 +188,6 @@ function SearchDialogContent({
       liveCard.sourceId,
       liveCard,
       liveCard.paramsValue,
-      liveCard.id,
     )),
     [liveCards],
   )
