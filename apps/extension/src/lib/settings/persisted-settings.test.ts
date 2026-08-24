@@ -100,7 +100,7 @@ describe("persisted settings", () => {
     }).shortcuts).toEqual(DEFAULT_SHORTCUT_SETTINGS)
   })
 
-  it("updates the CLI preference without changing other settings", () => {
+  it("updates the App connection preference without changing other settings", () => {
     const state = createDefaultPersistedDeviceState()
     state.currentBoardId = "reading"
 
@@ -119,7 +119,7 @@ describe("persisted settings", () => {
     })).toEqual(createDefaultPersistedDeviceState())
   })
 
-  it("keeps the CLI connection settings tab", () => {
+  it("keeps the Connection settings tab", () => {
     expect(normalizePersistedDeviceState({ settingsTab: "cli", version: 1 }).settingsTab).toBe("cli")
   })
 })

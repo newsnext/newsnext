@@ -310,7 +310,7 @@ source.load
 ```
 
 `app.open` navigates the exact connected Node to a Board or opens
-its Settings dialog on the CLI connection tab. Existing App tabs receive an
+its Settings dialog on the Connection tab. Existing App tabs receive an
 internal Settings intent and are focused without navigation or reload; the URL
 intent is used only while creating a new App tab.
 `developer.fetch` performs a one-shot browser-owned HTTP request for Source

@@ -46,7 +46,7 @@ export type SourceConnectionState
     | "disconnected"
 
 export interface SourceConnectionStatus {
-  cliVersion?: string
+  appVersion?: string
   state: SourceConnectionState
   widgetServerUrl?: string
 }
@@ -101,7 +101,7 @@ interface PendingWorkspaceRequest {
 }
 
 let port: NativePort | undefined
-let cliVersion: string | undefined
+let appVersion: string | undefined
 let widgetServerUrl: string | undefined
 let connectionState: SourceConnectionState = "disconnected"
 let enabled = false
@@ -259,7 +259,7 @@ function isNativeCommandResult(value: unknown): value is NativeCommandResult {
 
 export function getSourceConnectionStatus(): SourceConnectionStatus {
   return {
-    cliVersion,
+    appVersion,
     state: enabled ? connectionState : "disabled",
     widgetServerUrl,
   }
@@ -304,12 +304,12 @@ async function executeCommand(
 function disconnect(): void {
   port?.disconnect()
   port = undefined
-  cliVersion = undefined
+  appVersion = undefined
   widgetServerUrl = undefined
   connectionState = "disconnected"
-  rejectPendingWidgetSnapshotRequests(new Error("NewsNext CLI disconnected"))
-  rejectPendingInstanceRequests(new Error("NewsNext CLI disconnected"))
-  rejectPendingWorkspaceRequests(new Error("NewsNext CLI disconnected"))
+  rejectPendingWidgetSnapshotRequests(new Error("NewsNext App disconnected"))
+  rejectPendingInstanceRequests(new Error("NewsNext App disconnected"))
+  rejectPendingWorkspaceRequests(new Error("NewsNext App disconnected"))
 }
 
 async function applyWorkspace(
@@ -344,19 +344,19 @@ function connect(): void {
   }
 
   connectionState = "connecting"
-  cliVersion = undefined
+  appVersion = undefined
   widgetServerUrl = undefined
   const nextPort = browser.runtime.connectNative(NATIVE_HOST_NAME)
   port = nextPort
   nextPort.onDisconnect.addListener(() => {
     if (port === nextPort) {
       port = undefined
-      cliVersion = undefined
+      appVersion = undefined
       widgetServerUrl = undefined
       connectionState = "disconnected"
-      rejectPendingWidgetSnapshotRequests(new Error("NewsNext CLI disconnected"))
-      rejectPendingInstanceRequests(new Error("NewsNext CLI disconnected"))
-      rejectPendingWorkspaceRequests(new Error("NewsNext CLI disconnected"))
+      rejectPendingWidgetSnapshotRequests(new Error("NewsNext App disconnected"))
+      rejectPendingInstanceRequests(new Error("NewsNext App disconnected"))
+      rejectPendingWorkspaceRequests(new Error("NewsNext App disconnected"))
     }
   })
   nextPort.onMessage.addListener((value: unknown) => {
@@ -369,7 +369,7 @@ function connect(): void {
         if (message.protocolVersion !== PROTOCOL_VERSION) {
           throw new Error(`Unsupported native protocol version ${message.protocolVersion}`)
         }
-        cliVersion = message.daemonVersion
+        appVersion = message.daemonVersion
         widgetServerUrl = message.widgetServerUrl
         connectionState = "connected"
         void applyWorkspace(message.workspace, message.localInstanceIds).catch((error) => {
@@ -442,7 +442,7 @@ export async function requestWidgetSnapshot(input: {
 }): Promise<unknown> {
   const connection = port
   if (!enabled || connectionState !== "connected" || !connection) {
-    throw new Error("NewsNext CLI is not connected")
+    throw new Error("NewsNext App is not connected")
   }
   const message: ExtensionToHost = {
     type: "widgetSnapshotGet",
@@ -452,7 +452,7 @@ export async function requestWidgetSnapshot(input: {
   return await new Promise((resolve, reject) => {
     const timeoutId = setTimeout(() => {
       pendingWidgetSnapshotRequests.delete(message.requestId)
-      reject(new Error("Timed out waiting for the NewsNext CLI"))
+      reject(new Error("Timed out waiting for the NewsNext App"))
     }, WIDGET_REQUEST_TIMEOUT_MS)
     pendingWidgetSnapshotRequests.set(message.requestId, { reject, resolve, timeoutId })
     connection.postMessage(message)
@@ -491,7 +491,7 @@ async function requestInstance(
   }
   const connection = port
   if (!enabled || connectionState !== "connected" || !connection) {
-    throw new Error("NewsNext CLI is not connected")
+    throw new Error("NewsNext App is not connected")
   }
   const message: ExtensionToHost = {
     type: "instanceGet",
@@ -517,7 +517,7 @@ async function requestInstance(
 async function requestWorkspaceReplacement(candidate: NativeWorkspace): Promise<NativeWorkspace> {
   const connection = port
   if (!enabled || connectionState !== "connected" || !connection) {
-    throw new Error("NewsNext CLI is not connected")
+    throw new Error("NewsNext App is not connected")
   }
   const message: ExtensionToHost = {
     type: "workspaceChanged",

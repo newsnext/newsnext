@@ -143,8 +143,8 @@ snapshots first, then reconcile them with canonical copies in
 `browser.storage.local`; background storage wins when both copies exist.
 A versioned `newsnext-user-data` envelope validates and combines the portable
 slices for import and export. Import accepts only the current version 4 envelope.
-Current Board selection, CLI connectivity, browser permissions, and caches are
-device-local and are not part of that envelope.
+Current Board selection, NewsNext App connectivity, browser permissions, and
+caches are device-local and are not part of that envelope.
 The Settings data reset restores every persisted slice to its default, deletes
 the device-local source-secret state and IndexedDB source results, clears active
 source queries, and revokes user-granted optional browser and host permissions.
@@ -406,8 +406,8 @@ availability.
 
 Requests travel through the same per-user local IPC connection as source authoring
 commands and return JSON. The extension validates every request before
-dispatch. Enabling CLI access authorizes the local NewsNext CLI to mutate
-Boards and Instances, including destructive Actions; it does not grant
+dispatch. Enabling the NewsNext App connection authorizes its local CLI to
+mutate Boards and Instances, including destructive Actions; it does not grant
 web content or arbitrary processes direct extension access. History reads do
 not enter the extension: the companion daemon queries its own Turso database by
 the opaque dataset IDs returned from `history datasets`. Fresh `source.load`

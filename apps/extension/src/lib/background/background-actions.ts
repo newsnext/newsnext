@@ -268,10 +268,10 @@ const sourceConnectionGetStatusAction = defineAction({
   audiences: UI_ONLY,
   name: "sourceConnection.getStatus",
   kind: "query",
-  description: "Get the local CLI connection status.",
+  description: "Get the local NewsNext App connection status.",
   params: EmptyParams,
   result: Type.Unsafe<SourceConnectionStatus>(Type.Object({
-    cliVersion: Type.Optional(Type.String()),
+    appVersion: Type.Optional(Type.String()),
     state: stringEnum(["disabled", "connected", "connecting", "disconnected"] as const),
     widgetServerUrl: Type.Optional(Type.String()),
   }, { additionalProperties: false })),
@@ -310,13 +310,13 @@ const sourceConnectionSetEnabledAction = defineAction({
   audiences: UI_ONLY,
   name: "sourceConnection.setEnabled",
   kind: "mutation",
-  description: "Enable or disable local CLI access on this device.",
+  description: "Enable or disable the local NewsNext App connection on this device.",
   params: Type.Object({
     enabled: Type.Boolean(),
     frontendState: Type.Optional(PersistedDeviceStateParams),
   }, { additionalProperties: false }),
   result: Type.Unsafe<SourceConnectionStatus>(Type.Object({
-    cliVersion: Type.Optional(Type.String()),
+    appVersion: Type.Optional(Type.String()),
     state: stringEnum(["disabled", "connected", "connecting", "disconnected"] as const),
     widgetServerUrl: Type.Optional(Type.String()),
   }, { additionalProperties: false })),

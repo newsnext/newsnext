@@ -194,7 +194,7 @@ function parseWidgetSnapshot(value: unknown): WidgetSnapshot {
       || !Number.isInteger(value.revision)
       || Number(value.revision) <= 0
     ))) {
-    throw new TypeError("The NewsNext CLI returned an invalid Widget Snapshot")
+    throw new TypeError("The NewsNext App returned an invalid Widget Snapshot")
   }
   return {
     queries: value.queries,
@@ -316,7 +316,7 @@ export function LocalWidgetGrid({ boardId, entranceReady }: { boardId: string, e
 
   if (connection.isLoading || manifestQuery.isLoading) return null
   if (connection.state !== "connected" || !connection.serverUrl) {
-    return <NextLayerMessage>Connect the NewsNext CLI to use local widgets.</NextLayerMessage>
+    return <NextLayerMessage>Connect the NewsNext App to use local widgets.</NextLayerMessage>
   }
   if (manifestQuery.error) {
     return (

@@ -29,7 +29,7 @@ export function SourceConnectionSettings(): React.JSX.Element {
   const persistedDeviceState = useAtomValue(persistedDeviceStateAtom)
   const [status, setStatus] = useState<SourceConnectionStatus>()
   const { error: updateError, isPending: updating, run: runUpdate } = useAsyncAction(
-    "NewsNext could not update CLI access.",
+    "NewsNext could not update the App connection.",
   )
   const state = status?.state
   const isEnabled = state !== undefined && state !== "disabled"
@@ -71,8 +71,8 @@ export function SourceConnectionSettings(): React.JSX.Element {
 
   return (
     <ConfigSection
-      title="CLI access"
-      description="Allow the NewsNext CLI on this device to read and modify Collections and Instances, and run sources in this browser."
+      title="Connection"
+      description="Connect this browser to the NewsNext App for local data, widgets, and CLI access."
       surfaceClassName="gap-3 p-4"
     >
       <div className="flex items-center justify-between gap-4">
@@ -86,16 +86,16 @@ export function SourceConnectionSettings(): React.JSX.Element {
             className={`size-2 shrink-0 rounded-full ${presentation.dotClassName}`}
           />
           <span>{presentation.label}</span>
-          {state === "connected" && status?.cliVersion && (
+          {state === "connected" && status?.appVersion && (
             <span className="font-mono text-xs font-normal text-muted-foreground">
-              {`v${status.cliVersion}`}
+              {`v${status.appVersion}`}
             </span>
           )}
         </div>
         <Switch
           checked={isEnabled}
           disabled={!status || updating}
-          aria-label="Enable CLI connection"
+          aria-label="Enable NewsNext App connection"
           onCheckedChange={enabled => void handleEnabledChange(enabled)}
         />
       </div>

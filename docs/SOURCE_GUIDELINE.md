@@ -1181,7 +1181,7 @@ Runtime registries accept declarative JSON, HTML, and RSS loaders only.
 Prototype-related source ID segments and JMESPath properties are rejected.
 
 Use the separately distributed NewsNext App CLI to validate live behavior.
-Enable **Settings → CLI connection**. Development builds connect only to the
+Enable **Settings → Connection**. Development builds connect only to the
 development Native Messaging host. Register the installed executable, then
 start the daemon:
 
@@ -1198,7 +1198,7 @@ interactively:
 newsnext open --browser 00b79a48 --board V1StGXR8_Z5j
 ```
 
-Open the extension's **Settings → CLI connection** tab directly with the same
+Open the extension's **Settings → Connection** tab directly with the same
 browser selector:
 
 ```sh
@@ -1318,9 +1318,10 @@ object. Each Action owns TypeBox parameter and result schemas next to its
 handler; the extension performs runtime shape and domain validation from that
 single definition, then invokes the same registered Action used by the typed
 UI client.
-Enabling CLI access permits destructive operations such as
-`board.delete` and `instance.delete`; inspect `action list` before
-automation and use stable Data identities rather than Board labels.
+Enabling the NewsNext App connection permits CLI operations, including
+destructive ones such as `board.delete` and `instance.delete`; inspect
+`action list` before automation and use stable Data identities rather than
+Board labels.
 Passing `deleteInstances: true` to `board.delete` also deletes Instances
 used only by that Board. Passing `targetBoardId` instead transfers
 the deleted Board's Instances to the selected Board without
