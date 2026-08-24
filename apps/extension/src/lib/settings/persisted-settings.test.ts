@@ -26,27 +26,33 @@ describe("persisted settings", () => {
     const illustration = `data:image/svg+xml,${encodeURIComponent("<svg></svg>")}`
     expect(normalizePersistedSettings({
       appearance: { bgIllustration: illustration },
+      version: 1,
     }).appearance.bgIllustration).toBe(illustration)
   })
 
   it("normalizes the LiveCard height", () => {
     expect(normalizePersistedSettings({
       appearance: { liveCardHeight: "compact" },
+      version: 1,
     }).appearance.liveCardHeight).toBe("compact")
     expect(normalizePersistedSettings({
       appearance: { liveCardHeight: "tall" },
+      version: 1,
     }).appearance.liveCardHeight).toBe("tall")
     expect(normalizePersistedSettings({
       appearance: { liveCardHeight: "giant" },
+      version: 1,
     }).appearance.liveCardHeight).toBe("balanced")
   })
 
   it("normalizes the background illustration opacity", () => {
     expect(normalizePersistedSettings({
       appearance: { bgIllustrationOpacity: 12.4 },
+      version: 1,
     }).appearance.bgIllustrationOpacity).toBe(12)
     expect(normalizePersistedSettings({
       appearance: { bgIllustrationOpacity: 100 },
+      version: 1,
     }).appearance.bgIllustrationOpacity).toBe(20)
   })
 
@@ -61,6 +67,7 @@ describe("persisted settings", () => {
           rotation: "sideways",
         },
       },
+      version: 1,
     }).appearance.bgIllustrationTransform).toEqual({
       positionMode: "viewport-center",
       x: 12.35,
@@ -73,6 +80,7 @@ describe("persisted settings", () => {
   it("normalizes keyboard shortcuts", () => {
     expect(normalizePersistedSettings({
       shortcuts: { search: "Mod+F", toggleNextLayer: "Mod+Shift+L" },
+      version: 1,
     }).shortcuts).toEqual({
       ...DEFAULT_SHORTCUT_SETTINGS,
       search: "Mod+F",
@@ -80,12 +88,15 @@ describe("persisted settings", () => {
     })
     expect(normalizePersistedSettings({
       shortcuts: { toggleNextLayer: null },
+      version: 1,
     }).shortcuts.toggleNextLayer).toBeNull()
     expect(normalizePersistedSettings({
       shortcuts: { search: "esc" },
+      version: 1,
     }).shortcuts.search).toBe("Escape")
     expect(normalizePersistedSettings({
       shortcuts: { search: "Not+A+Hotkey", toggleNextLayer: "Not+A+Hotkey" },
+      version: 1,
     }).shortcuts).toEqual(DEFAULT_SHORTCUT_SETTINGS)
   })
 
@@ -104,10 +115,11 @@ describe("persisted settings", () => {
       currentBoardId: 42,
       settingsTab: "advanced",
       sourceConnectionEnabled: "yes",
+      version: 1,
     })).toEqual(createDefaultPersistedDeviceState())
   })
 
   it("keeps the CLI connection settings tab", () => {
-    expect(normalizePersistedDeviceState({ settingsTab: "cli" }).settingsTab).toBe("cli")
+    expect(normalizePersistedDeviceState({ settingsTab: "cli", version: 1 }).settingsTab).toBe("cli")
   })
 })

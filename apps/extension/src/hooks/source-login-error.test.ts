@@ -11,11 +11,6 @@ describe("getLoginUrlFromError", () => {
     expect(getLoginUrlFromError(error)).toBe("https://x.com")
   })
 
-  it("reads login URLs from compatible error messages", () => {
-    expect(getLoginUrlFromError(new Error("Please log in to https://x.com first.")))
-      .toBe("https://x.com")
-  })
-
   it("ignores ordinary source errors", () => {
     expect(getLoginUrlFromError(new Error("Network request failed."))).toBeUndefined()
   })

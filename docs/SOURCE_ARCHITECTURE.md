@@ -142,7 +142,7 @@ membership, and membership order. Extension pages read synchronous `localStorage
 snapshots first, then reconcile them with canonical copies in
 `browser.storage.local`; background storage wins when both copies exist.
 A versioned `newsnext-user-data` envelope validates and combines the portable
-slices for import and export. Import accepts only the current version 3 envelope.
+slices for import and export. Import accepts only the current version 4 envelope.
 Current Board selection, CLI connectivity, browser permissions, and caches are
 device-local and are not part of that envelope.
 The Settings data reset restores every persisted slice to its default, deletes
@@ -265,17 +265,33 @@ Fetch Latest keeps UI feedback visible for a minimum 500ms. App query timing
 and the Source request protection interval are centralized in
 `apps/extension/src/lib/source/query-policy.ts`.
 
-The background writes the latest successful Source results to a Dexie-backed
-IndexedDB table. Each record contains its normalized target, validated result,
-and real `fetchedAt` completion time; it is persistent domain state rather than
-a serialized TanStack Query cache. Before the App renders, it restores valid
-results into its in-memory QueryClient with a new caller-visible `loadedAt` and
-maps `fetchedAt` to TanStack's internal `dataUpdatedAt` for stale calculation.
-The UI never writes Query state back to IndexedDB, so persistence has one writer
-and does not attempt to synchronize independent QueryClient instances.
+The background writes its API-protection results to a Dexie-backed IndexedDB
+table. Each Node also stores complete responses under the stable query identity
+only for Instances it owns. A cross-Node request is routed by the CLI to the
+owner, which reads or refreshes that browser-local cache and returns the result
+without creating another persisted copy in the viewing browser. Each local
+record contains its normalized target, validated result, and real `fetchedAt`
+completion time; it is persistent result data rather than a serialized TanStack
+Query cache. Before the App renders, it restores valid local Instance results
+into its in-memory QueryClient with a new caller-visible `loadedAt` and maps
+`fetchedAt` to TanStack's internal `dataUpdatedAt` for stale calculation.
 Persisted results are discarded after 30 days. Increasing the Source version
 changes result identity immediately, while old versions age out independently.
 Persistence failures remain fail-open and never prevent Source execution.
+
+Cross-Node UI reads use `node.loadInstance`; the daemon returns their results
+without retaining History, while the owning Node updates its current Instance
+cache. Scheduled work uses `job.executeInstance`; that path does not write the
+Now Layer Instance cache, and only the daemon's explicit Job runner retains a
+newly fetched, unprotected response as an observation. Both Actions reuse the
+same protected Loader implementation without sharing persistence policy.
+
+The browser retains the last known Node catalog when a Node disconnects. This
+keeps Workspace cards stable while their owning Node is restarting or offline.
+Only the owning Node retains that Instance's result, so a remote card requires
+the owner to be connected after the viewing browser reloads. Reconnection
+replaces that Node's cached Instance configuration; disconnection only suspends
+remote reads and fresh execution.
 
 Source history is stored separately in the local Turso database owned by the
 desktop daemon. Reused protected results never create observations. Newly
@@ -295,13 +311,11 @@ that normalized JSON. Radar obtains it from the active browser tab using a
 JavaScript parameter function before creation persists the ordinary parameter.
 After fetching personalized content, the loader independently resolves the
 user actually represented by the request in the same canonical representation
-as Radar and rejects a mismatch. Resolution reuses the content response or a
+as Radar and rejects a missing identity or mismatch. Resolution reuses the content response or a
 stable, non-secret identifier already available to that request rather than
-issuing an identity-only request. Raw credentials never enter params. A Source
-without such an identifier remains unbound. The loader result does not expose
-the identifier; its persisted role remains dataset separation. An empty
-identifier represents an unbound legacy Instance and bypasses identity
-resolution and comparison.
+issuing an identity-only request. Raw credentials never enter params. The loader
+result does not expose the identifier; its persisted role remains dataset
+separation.
 
 The schema normalizes retained values into `history_datasets`,
 `history_observations`, provider-scoped `history_items`, content-addressed
@@ -622,10 +636,8 @@ the original image layout.
 The shared loader-result boundary removes nullish nested item values and empty
 semantic groups after any loader returns. This keeps normalization out of
 individual providers and preserves numeric zero and boolean false.
-The semantic item migration advances the default Source version to `2`;
-sources with explicit versions advance independently. This prevents legacy
-`timestamp`, `inline`, and `preview` observations from sharing a dataset with
-the new item schema.
+Source versions partition caches and History datasets whenever an item schema
+changes.
 
 ## Structured loader pipelines
 
@@ -938,33 +950,14 @@ commands and completions by request ID, rejects
 ambiguous browser selection, expires pending executions, and never replays a
 command after reconnection because source execution is not guaranteed to be
 idempotent. Settings exposes the daemon version as connection metadata only.
-Protocol version 2 added canonical Application Action and Query discovery and
-execution. Protocol version 3 adds the `app.open` command used by the desktop
-tray. The command is routed to an exact connected extension instance, which
-opens its own packaged `app.html` URL through the browser tabs API. An existing
-NewsNext app tab is navigated to the requested Board and focused; a new tab is
-created only when none exists. Incompatible daemon and extension versions
-disconnect instead of silently accepting a partial control surface. Protocol
-version 4 makes History daemon-owned. Protocol version 5 publishes each
-connected extension's Board summaries to the menu-bar app, keeps them current
-after Board changes, and makes `app.open` target an explicit Board route. The
-same Action can open the extension Settings dialog without changing the Native
-Messaging transport; CLI and menu-bar entry points target its CLI connection
-tab.
-Protocol version 6 replaces the parallel Application Action, Application Query,
-open, fetch, and Source-run request variants with one `action.list` and
-`action.execute` transport. The catalog classifies every capability as a
-Mutation, Query, or Command; existing `run`, `fetch`, and `open` CLI commands are
-convenience frontends over their canonical Actions.
-Protocol version 7 makes raw Source fetch diagnostics opt-in. Protocol version
-8 moves the authoring command to `developer.runSource`, removes explicit
-retention from it, and exposes `source.load` to daemon-owned Jobs so they use
-the extension's shared third-party API protection and
-persisted latest result instead of the unprotected authoring path. `source.load`
-responses distinguish the actual Source `fetchedAt` from the caller-visible
-`loadedAt`. `fetchProtected` reports whether third-party API protection reused
-an existing or in-flight result. History retains only unprotected responses and
-maps their `fetchedAt` values to `observedAt`.
+The current protocol version is 11. It carries the shared Workspace, connected
+Node catalog, canonical Action requests, Widget snapshots, and Instance load
+requests. The Workspace owns Boards and Layers, while each Node advertises only
+the Loader Instances it can execute. The daemon resolves an Instance request to
+exactly one connected Node and never transfers browser credentials or session
+state. `app.open` targets an exact Node and opens its packaged `app.html` route.
+Incompatible daemon and extension versions disconnect instead of accepting a
+partial control surface.
 
 Native Messaging registration is the browser-facing security boundary.
 Development and production use distinct host identities so their executables

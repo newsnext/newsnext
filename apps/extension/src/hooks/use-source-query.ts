@@ -14,14 +14,18 @@ import { useSourceDescriptors } from "./use-source-descriptors"
 const EMPTY_ITEMS: NewsItem[] = []
 
 export interface UseSourceQueryOptions {
+  instanceId?: string
   sourceId: string
   params?: Record<string, unknown>
+  remote?: boolean
   enabled?: boolean
 }
 
 export function useSourceQuery({
+  instanceId,
   sourceId,
   params,
+  remote = false,
   enabled = true,
 }: UseSourceQueryOptions) {
   const { sources } = useSourceDescriptors()
@@ -30,13 +34,13 @@ export function useSourceQuery({
     () => sources.find(candidate => candidate.id === sourceId),
     [sourceId, sources],
   )
-  const cachedQuery = findCachedSourceQuery(queryClient, sourceId, params)
+  const cachedQuery = findCachedSourceQuery(queryClient, sourceId, params, instanceId)
   const cachedResult = cachedQuery?.data
   const target = useMemo(
     () => source || cachedResult?.source
-      ? createSourceQueryTarget(sourceId, source ?? cachedResult!.source, params)
-      : { sourceId, params: {}, version: 0 },
-    [cachedResult, params, source, sourceId],
+      ? createSourceQueryTarget(sourceId, source ?? cachedResult!.source, params, instanceId, remote)
+      : { sourceId, params: {}, version: 0, ...(instanceId ? { instanceId } : {}), ...(remote ? { remote: true } : {}) },
+    [cachedResult, instanceId, params, remote, source, sourceId],
   )
   const queryHash = useMemo(() => getSourceQueryHash(target), [target])
   const fetchLatestSources = useFetchLatestSources()
@@ -48,6 +52,7 @@ export function useSourceQuery({
     placeholderData: prev => prev,
   })
   const data = query.data?.result ?? cachedResult
+  const hasData = data !== undefined
 
   const handleFetchLatest = useCallback(async () => {
     if (!enabled || !source) {
@@ -64,9 +69,9 @@ export function useSourceQuery({
     isFetching: query.isFetching,
     isFetchingLatest,
     isLoading: query.isLoading && cachedResult === undefined,
-    isError: query.isError,
-    errorMessage: query.error instanceof Error ? query.error.message : undefined,
-    loginUrl: getLoginUrlFromError(query.error),
+    isError: query.isError && !hasData,
+    errorMessage: !hasData && query.error instanceof Error ? query.error.message : undefined,
+    loginUrl: hasData ? undefined : getLoginUrlFromError(query.error),
     metadata: data?.metadata,
     loadedAt: query.data?.loadedAt
       ?? cachedQuery?.loadedAt

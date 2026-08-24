@@ -175,7 +175,7 @@ export function LiveCardContainer({
             className,
           )}
         >
-          {visibleLiveCards.map(({ id, available, boardId, descriptor, instanceAtom }) => (
+          {visibleLiveCards.map(({ id, available, boardId, descriptor, instanceAtom, readOnly }) => (
             <m.li
               key={id}
               data-live-card-id={id}
@@ -197,7 +197,7 @@ export function LiveCardContainer({
               )}
               <div
                 data-live-card-entrance
-                className="layer-card-entrance-pending"
+                className={entranceComplete ? undefined : "layer-card-entrance-pending"}
               >
                 <DraggableLiveCard
                   boardId={boardId}
@@ -205,7 +205,8 @@ export function LiveCardContainer({
                   available={available}
                   dragging={isDragging && selectedInstanceIds.includes(id)}
                   instanceAtom={instanceAtom}
-                  sortable={sortable}
+                  sortable={sortable && !readOnly}
+                  readOnly={readOnly}
                 />
               </div>
             </m.li>

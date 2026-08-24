@@ -24,6 +24,7 @@ export {
   compileSourceRegex,
   validateSourceRegexInput,
 } from "./regex"
+export { SourceLoginRequiredError } from "./source-error"
 export {
   compileSourceTemplate,
   compileSourceTemplateValue,

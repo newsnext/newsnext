@@ -20,6 +20,21 @@ describe("source queries", () => {
       "github:trending",
       3,
       { range: "daily" },
+      null,
     ])
+  })
+
+  it("isolates cached results by Instance account", () => {
+    const base = {
+      params: {},
+      sourceId: "github:notifications",
+      version: 1,
+    }
+
+    expect(
+      getSourceQueryKey({ ...base, instanceId: "personal" }),
+    ).not.toEqual(
+      getSourceQueryKey({ ...base, instanceId: "work" }),
+    )
   })
 })

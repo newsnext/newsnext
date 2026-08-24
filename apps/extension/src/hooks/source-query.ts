@@ -22,7 +22,11 @@ export function getSourceQueryOptions(
 ) {
   return queryOptions({
     queryKey: getSourceQueryKey(target),
-    queryFn: ({ signal }) => loadSource(target.sourceId, target.params, { signal }),
+    queryFn: ({ signal }) => loadSource(target.sourceId, target.params, {
+      signal,
+      instanceId: target.instanceId,
+      remote: target.remote,
+    }),
     networkMode: "offlineFirst",
     refetchInterval: SOURCE_QUERY_REFETCH_INTERVAL_MS,
     refetchIntervalInBackground: false,

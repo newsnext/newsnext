@@ -341,14 +341,13 @@ stable, non-secret value that uniquely separates users. Instance
 creation stores the Radar result as an ordinary parameter, so instances,
 caches, and retained History from different accounts do not share the same
 normalized parameters. The loader must accept the parameter, determine the
-actual account used by its content request, and throw when non-empty values
-differ. Prefer an identity already present in the content response or the
+actual account used by its content request, and throw when the configured
+identity is empty or differs. Prefer an identity already present in the content response or the
 credential used by that request; do not add a separate identity request. Radar
 and the loader must return the same canonical identity. Never persist a raw
 credential as the ordinary parameter. Do not return the identity in loader
-metadata or items. Treat an empty `identity` as an unbound legacy instance and
-skip comparison. If no stable, non-secret identity is available without an
-extra request, leave the Source unbound.
+metadata or items. If no stable, non-secret identity is available without an
+extra request, do not use an account-scoped identity parameter.
 
 Prefer one source with a `select` parameter when feed variants share their
 loader and presentation and differ only by a request value. Separate sources

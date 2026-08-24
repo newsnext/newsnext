@@ -37,6 +37,9 @@ export interface BackgroundActionContext extends ApplicationActionContext {
   job: {
     executeInstance: (input: { instanceId: string }) => Promise<SourceLoadResponse>
   }
+  node: {
+    loadInstance: (input: { instanceId: string }) => Promise<SourceLoadResponse>
+  }
   source: {
     cancel: (input: { requestId: string }) => Promise<void>
     load: (input: {
@@ -51,6 +54,7 @@ export interface BackgroundActionContext extends ApplicationActionContext {
       boardId: string
       widgetId: string
     }) => Promise<unknown>
+    loadInstance: (input: { instanceId: string }) => Promise<SourceLoadResponse>
     setEnabled: (input: {
       enabled: boolean
       frontendState?: PersistedDeviceState
@@ -65,6 +69,13 @@ const EmptyParams = Type.Object({}, { additionalProperties: false })
 const EmptyResult = Type.Object({}, { additionalProperties: false })
 const Identifier = Type.String({ minLength: 1 })
 const RecordValue = Type.Record(Type.String(), Type.Unknown())
+const SourceLoadResponseResult = Type.Unsafe<SourceLoadResponse>(Type.Object({
+  fetchProtected: Type.Boolean(),
+  fetchedAt: Type.Number(),
+  loadedAt: Type.Number(),
+  params: RecordValue,
+  result: Type.Object({}, { additionalProperties: true }),
+}, { additionalProperties: false }))
 
 const appOpenAction = defineAction({
   audiences: CONNECTED_ONLY,
@@ -191,13 +202,7 @@ const sourceLoadAction = defineAction({
     requestId: Type.Optional(Identifier),
     sourceId: Identifier,
   }, { additionalProperties: false }),
-  result: Type.Unsafe<SourceLoadResponse>(Type.Object({
-    fetchProtected: Type.Boolean(),
-    fetchedAt: Type.Number(),
-    loadedAt: Type.Number(),
-    params: RecordValue,
-    result: Type.Object({}, { additionalProperties: true }),
-  }, { additionalProperties: false })),
+  result: SourceLoadResponseResult,
 }, async (input, context: BackgroundActionContext) => await context.source.load(input))
 
 const sourceCancelAction = defineAction({
@@ -218,9 +223,20 @@ const jobExecuteInstanceAction = defineAction({
   kind: "command",
   description: "Execute one configured Instance for a CLI-owned background Job.",
   params: Type.Object({ instanceId: Identifier }, { additionalProperties: false }),
-  result: Type.Unsafe<SourceLoadResponse>(Type.Object({}, { additionalProperties: true })),
+  result: SourceLoadResponseResult,
 }, async (input, context: BackgroundActionContext) => (
   await context.job.executeInstance(input)
+))
+
+const nodeLoadInstanceAction = defineAction({
+  audiences: CONNECTED_ONLY,
+  name: "node.loadInstance",
+  kind: "query",
+  description: "Read one configured Instance for a cross-Node UI request.",
+  params: Type.Object({ instanceId: Identifier }, { additionalProperties: false }),
+  result: SourceLoadResponseResult,
+}, async (input, context: BackgroundActionContext) => (
+  await context.node.loadInstance(input)
 ))
 
 const sourceConnectionGetStatusAction = defineAction({
@@ -235,6 +251,17 @@ const sourceConnectionGetStatusAction = defineAction({
     widgetServerUrl: Type.Optional(Type.String()),
   }, { additionalProperties: false })),
 }, async (_input, context: BackgroundActionContext) => await context.sourceConnection.getStatus())
+
+const sourceConnectionLoadInstanceAction = defineAction({
+  audiences: UI_ONLY,
+  name: "sourceConnection.loadInstance",
+  kind: "query",
+  description: "Load an Instance through its connected NewsNext Node.",
+  params: Type.Object({ instanceId: Identifier }, { additionalProperties: false }),
+  result: SourceLoadResponseResult,
+}, async (input, context: BackgroundActionContext) => (
+  await context.sourceConnection.loadInstance(input)
+))
 
 const PersistedDeviceStateParams = Type.Unsafe<PersistedDeviceState>(Type.Object({
   currentBoardId: Type.String(),
@@ -278,6 +305,7 @@ export const uiBackgroundActionDefinitions = [
   sourceLoadAction,
   sourceCancelAction,
   sourceConnectionGetStatusAction,
+  sourceConnectionLoadInstanceAction,
   sourceConnectionSetEnabledAction,
   nextLayerGetWidgetSnapshotAction,
 ] as const
@@ -287,6 +315,7 @@ export const backgroundActionDefinitions = [
   developerFetchAction,
   developerRunSourceAction,
   jobExecuteInstanceAction,
+  nodeLoadInstanceAction,
   ...uiBackgroundActionDefinitions,
 ] as const
 

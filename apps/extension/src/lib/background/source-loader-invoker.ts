@@ -5,24 +5,19 @@ import type { SourceLoadResult } from "../source/load-result"
 import type { BackgroundSourceFetchResult } from "./source-fetch"
 import {
   parseSourceId,
-  prepareSourceRequest,
 } from "@newsnext/source-kit/runtime"
 import { createBackgroundSourceFetch } from "./source-fetch"
 import { resolveSourceSecrets, updateSourceSecrets } from "./source-secrets"
 
 export interface InvokeSourceLoaderInput {
   requestId?: string
-  params?: Record<string, unknown>
+  params: Record<string, unknown>
+  source: RuntimeSource
   sourceId: string
 }
 
 interface SourceLoaderInvokerOptions {
   fetchResults?: BackgroundSourceFetchResult[]
-  onRequestPrepared?: (
-    params: Record<string, unknown>,
-    sourceVersion: number,
-    source: RuntimeSource,
-  ) => Promise<void> | void
 }
 
 export interface CancelBackgroundSourceInput {
@@ -51,20 +46,14 @@ export function createSourceLoaderInvoker(
       }
 
       try {
-        const request = await prepareSourceRequest(input.sourceId, input.params ?? {})
-        await options.onRequestPrepared?.(
-          request.params,
-          request.source.version,
-          request.source,
-        )
         signal.throwIfAborted()
         const { provider } = parseSourceId(input.sourceId)
-        const secrets = await resolveSourceSecrets(request.source, provider)
+        const secrets = await resolveSourceSecrets(input.source, provider)
         signal.throwIfAborted()
-        const result = await request.source.loader(request.params, {
+        const result = await input.source.loader(input.params, {
           fetch: createBackgroundSourceFetch(
             input.sourceId,
-            request.source.capabilities.network,
+            input.source.capabilities.network,
             signal,
             options.fetchResults,
           ),
@@ -72,19 +61,19 @@ export function createSourceLoaderInvoker(
           signal,
           updateSecrets: async (updates) => {
             Object.assign(secrets, updates)
-            await updateSourceSecrets(request.source, provider, updates)
+            await updateSourceSecrets(input.source, provider, updates)
           },
         })
 
         return {
           ...result,
           source: {
-            capabilities: request.source.capabilities,
+            capabilities: input.source.capabilities,
             id: input.sourceId,
-            metadata: request.source.metadata,
-            params: request.source.params,
-            provider: request.source.provider,
-            version: request.source.version,
+            metadata: input.source.metadata,
+            params: input.source.params,
+            provider: input.source.provider,
+            version: input.source.version,
           },
         }
       } finally {

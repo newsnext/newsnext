@@ -1,5 +1,6 @@
 import type { NewsItemInput, SourceLoaderContext, SourceLoaderOutput } from "@newsnext/source-kit/types"
 import type { IdentityParams } from "../shared/identity"
+import { SourceLoginRequiredError } from "@newsnext/source-kit/core"
 import { load } from "cheerio/slim"
 import { assertIdentity } from "../shared/identity"
 
@@ -220,7 +221,7 @@ export async function fetchWeiboFollowingTimeline(
   )
   const response = await request.json<WeiboApiResponse<never> & { statuses?: WeiboStatus[] }>()
   if (response.ok === -100) {
-    throw new Error("Please log in to https://weibo.com first.")
+    throw new SourceLoginRequiredError(WEIBO_ORIGIN)
   }
   await assertIdentity(
     identity,

@@ -15,8 +15,10 @@ export async function assertIdentity(
   resolveActualIdentity: () => string | undefined | Promise<string | undefined>,
   provider: string,
 ): Promise<void> {
-  const expected = expectedIdentity
-  if (!expected) return
+  const expected = expectedIdentity.trim()
+  if (!expected) {
+    throw new Error(`Cannot determine the configured ${provider} user. Recreate this source.`)
+  }
   const actual = (await resolveActualIdentity())?.trim()
   if (!actual) {
     throw new Error(`Cannot determine the signed-in ${provider} user.`)

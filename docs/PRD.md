@@ -254,10 +254,12 @@ is resolved.
 
 | Data | Storage owner | Retention contract |
 | --- | --- | --- |
-| Boards, Boards, Instances, membership, and preferences | Shared local database | Durable until changed or deleted |
+| Workspace Boards, Layers, and membership | Shared local database plus browser cache | Durable in the companion; locally cached for standalone extension use |
+| Node Loader Instances | Owning browser storage | Durable in that Node and advertised while connected |
+| Browser preferences | Owning browser storage | Durable per browser profile |
 | Next Layer Widgets, layouts, task definitions, and materialized outputs | Shared local database | Durable and schema-versioned |
 | Agent-owned observations, transformations, provenance, and task health | Shared local database | Durable according to explicit task policy |
-| Now Layer current results | Cache | Replaceable latest data; no implicit History |
+| Now Layer current results | Owning Node browser cache | Replaceable latest data routed to other browsers without copying; no implicit History |
 | Source registry definitions | Packaged or managed registry | Product-managed; not personalized per user by default |
 | Source credentials | Browser extension secret storage | Resolved only inside extension Source execution; never sent to the App, CLI, or database |
 | Native Messaging manifests and IPC endpoints | Platform integration directories | Configuration only; never product data |
@@ -320,7 +322,8 @@ production mutation stream.
 The first schema increment covers:
 
 - schema version and migration journal;
-- Boards, Boards, Instances, membership, order, and preferences;
+- Workspace Boards, Layers, membership, and order;
+- connected Node identity and ephemeral Loader Instance routing;
 - Next Layer Widget definitions, layout, and dependency declarations;
 - Agent task definitions, schedules, leases, attempts, and health;
 - retained observations and normalized items required by those tasks;
@@ -566,7 +569,7 @@ must not be described to users as available until its acceptance criteria pass.
 | Shared local database | Partial | The daemon owns an embedded Turso database with dev/prod file isolation, ordered migrations, structured errors, and a serialized writer for retained History | Move remaining Board, Widget, and task state out of extension storage |
 | Instance and Board data | Implemented in extension storage | Canonical Instances, Boards, membership, manual order, and Layer preferences | Move canonical durable state behind App/CLI Actions for cross-browser use |
 | UI and Agent control | Implemented foundation | UI and CLI use the same typed Mutation and Query Actions and the same background persistence boundary | Database-backed Widget, task, and Source-health operations are not exposed yet |
-| Now Layer | Implemented | Each Instance is independently presented as a LiveCard using the unified LiveCard model | Make view-driven refresh explicit and keep current results browser-local |
+| Now Layer | Implemented | Each Instance is independently presented as a LiveCard using the unified LiveCard model | Make view-driven refresh explicit while keeping each result in its owning Node |
 | Next Layer | Not implemented | The Board retains its Next Layer view entry and an explicit placeholder | Add CLI/daemon-backed Widgets, retained inputs, and materialized outputs |
 | History | Implemented foundation in Turso | Newly executed Job results are committed transactionally by the daemon and can be listed, read at an exact time, and compared without a connected browser | Add task-owned retention policies and provenance |
 | Provenance | Partial | Source and Instance identities remain stable; history comparisons preserve supported factual boundaries | Derived Widget inputs, transformations, warnings, and claims need an explicit UI contract |
@@ -814,10 +817,10 @@ without changing the two-Layer Board contract.
 - Extend the embedded Turso database already used by retained History.
 - Resolve the platform application data directory and select
   `newsnext.dev.db` or `newsnext.prod.db` from the existing runtime environment.
-- Add schema versioning, migrations, WAL configuration, transactional helpers,
-  and structured database errors.
-- Persist Boards, Boards, Instances, membership, order, and Board
-  preferences behind canonical Mutation and Query Actions.
+- Add schema versioning, WAL configuration, transactional helpers, and
+  structured database errors.
+- Persist Workspace Boards, Layers, membership, and order behind canonical
+  Mutation and Query Actions. Loader Instances remain Node-owned.
 - Add Agent task, retained observation, materialized output, and provenance
   tables required by the next phase without yet implementing every Widget.
 - Keep Now Layer results in replaceable cache storage and prove that normal
@@ -826,8 +829,6 @@ without changing the two-Layer Board contract.
   never receive a database path or connection.
 - Reuse the connected extension Source runtime and add a durable handoff from
   normalized output to Agent-owned database transactions.
-- Replace current extension-owned durable state directly; legacy IndexedDB data
-  is not imported.
 
 Phase 0 exits when `DAT-*`, `BRD-01` through `BRD-04`, `NOW-04`, and `NOW-05`
 pass for both dev and production environments; two supported production
@@ -958,7 +959,7 @@ Qualitative research should additionally test whether users understand:
 | Open-ended Widgets become an unsafe arbitrary application runtime | Security, reliability, and maintainability regress | Start with typed declarative contracts; gate code execution behind a restricted sandbox and explicit capability review |
 | Agent requests personalized Sources instead of reusing the registry | Noisy Boards, unnecessary permissions, and fragile maintenance | Make registry discovery the default, report coverage gaps explicitly, and keep Source authoring outside the normal product workflow |
 | Two browsers or runtimes write competing durable state | Lost updates and inconsistent Boards | Make the environment-specific daemon the single database owner and require all clients to use canonical Actions |
-| Now Layer refresh silently grows History | Storage growth and a misleading retention contract | Keep current results browser-local and require a configured Job or Agent task for observations |
+| Now Layer refresh silently grows History | Storage growth and a misleading retention contract | Keep each current result in its owning Node and require a configured Job or Agent task for observations |
 | Local database adoption creates a cloud dependency | Offline use and first-run reliability regress | Use an embedded local file as the initial source of truth; defer optional Turso sync |
 | Cross-source fusion hides disagreement or provenance | Users trust an unsupported corrected result | Preserve every input identity, distinguish observed and derived values, and make reconciliation logic inspectable |
 | Sparse observations are mistaken for continuous monitoring | Trend and forecast claims become misleading | Carry observation coverage and completeness warnings into every transformation and Widget |

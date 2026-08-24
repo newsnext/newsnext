@@ -47,7 +47,7 @@ describe("findCachedSourceResult", () => {
     expect(findCachedSourceResult(queryClient, "other:feed", {})).toBeUndefined()
   })
 
-  it("ignores legacy cached results that have no Source snapshot", () => {
+  it("ignores invalid cached results that have no Source snapshot", () => {
     const queryClient = new QueryClient()
     const target = createSourceQueryTarget(source.id, source, {})
     queryClient.setQueryData(getSourceQueryKey(target), {

@@ -28,6 +28,7 @@ interface DraggableLiveCardProps {
   dragging: boolean
   instanceAtom: Atom<Instance>
   sortable?: boolean
+  readOnly?: boolean
 }
 
 function generateDragPreview({
@@ -82,7 +83,7 @@ function generateDragPreview({
   return () => layers.forEach(layer => layer.remove())
 }
 
-function DraggableLiveCardComponent({ available = true, boardId, descriptor, dragging, instanceAtom, sortable = true }: DraggableLiveCardProps) {
+function DraggableLiveCardComponent({ available = true, boardId, descriptor, dragging, instanceAtom, sortable = true, readOnly = false }: DraggableLiveCardProps) {
   const instance = useAtomValue(instanceAtom)
   const liveCardHeight = useAtomValue(liveCardHeightAtom)
   const source = useMemo(
@@ -106,6 +107,7 @@ function DraggableLiveCardComponent({ available = true, boardId, descriptor, dra
       dragHandleRef={sortable ? setHandleRef : undefined}
       sizeClassName={LIVE_CARD_SIZE_CLASS_NAMES[liveCardHeight]}
       className={dragging ? "opacity-50" : undefined}
+      readOnly={readOnly}
     />
   )
 }

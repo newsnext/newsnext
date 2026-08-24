@@ -9,25 +9,33 @@ future automation. These consumers may present the model differently, but they
 share one typed Action registry, validation, and background persistence runtime.
 Each Action declares whether it is a `mutation`, `query`, or `command`.
 
-The central model is:
+The central model has four product-level concepts:
 
-| Application data | Human presentation |
+| Concept | Responsibility |
 | --- | --- |
-| Source | Source picker item |
-| Instance | LiveCard |
-| Board | Board navigation and Layers |
-| Source result item | Item view |
+| Workspace | Owns the shared Board collection |
+| Board | Owns membership and its Now and Next Layers |
+| Layer | Presents or materializes a Board's data |
+| Node | Provides a browser UI and runs browser-owned Loaders |
 
-Layers and LiveCards are human-facing projections. They do not own separate
-copies of Board or Instance data.
+A browser extension is one Node. Its configured Source Instances are Loader
+inputs owned by that Node because they depend on that browser's account,
+permissions, credentials, and session. They are not a fifth global navigation
+concept.
+
+The CLI daemon is optional. When present, it persists and broadcasts the
+Workspace, advertises connected Nodes, and routes an Instance load to its
+owning Node. Without the CLI, the extension continues to use its browser-local
+Workspace cache and runs its own Loaders directly.
 
 ## Persistent Application Data
 
-Application Data uses one versioned envelope:
+Each browser caches the Workspace Boards together with that Node's local Loader
+Instances in one versioned envelope:
 
 ```ts
 interface ApplicationData {
-  version: 3
+  version: 4
   boards: Board[]
   instances: Instance[]
 }
@@ -35,7 +43,9 @@ interface ApplicationData {
 
 The background application repository is the only writer of this envelope in
 `browser.storage.local`. Frontend atoms are read-only mirrors plus thin Mutation
-Action dispatchers.
+Action dispatchers. A Board may reference an Instance owned by another Node, so
+normalization must preserve an unfamiliar Instance ID instead of treating it as
+dangling local data.
 
 ### Instance
 
@@ -117,8 +127,8 @@ to `manualOrder`; it does not rewrite `instanceIds`.
 
 New memberships are also inserted at the front of `manualOrder`, so returning
 to manual mode never loses a newly added card. `automaticMode` remembers which
-automatic ordering manual mode should use to reconcile an incomplete legacy
-or normalized manual order.
+automatic ordering manual mode should use to reconcile an incomplete manual
+order.
 
 ## Source Results and Registry Independence
 
@@ -145,10 +155,13 @@ interface SourceLoadResult {
 }
 ```
 
-The background persists this complete result in IndexedDB by Source ID, version,
-and normalized effective parameters. The App restores it into the page's
-in-memory TanStack Query cache before rendering. Dynamic Loader metadata remains
-part of each refreshed result and may change normally.
+The background persists a protection cache by Source ID, version, and normalized
+effective parameters. A Node also persists complete responses only for the
+Instances it owns. The App restores those local Instance results into its
+in-memory TanStack Query cache before rendering. A remote browser reads an
+Instance by asking the CLI to route the request to its owning Node; it neither
+copies that Instance nor persists its result locally. Dynamic Loader metadata
+remains part of each refreshed result and may change normally.
 
 NowLayer resolves a card in this order:
 
@@ -297,7 +310,7 @@ developer.runSource
 source.load
 ```
 
-`app.open` navigates the exact connected extension instance to a Board or opens
+`app.open` navigates the exact connected Node to a Board or opens
 its Settings dialog on the CLI connection tab. Existing App tabs receive an
 internal Settings intent and are focused without navigation or reload; the URL
 intent is used only while creating a new App tab.

@@ -64,11 +64,12 @@ export interface PersistedDataExport {
 }
 
 export function normalizeApplicationData(value: unknown): ApplicationData {
-  if (!isRecord(value)) return createEmptyApplicationData()
+  if (!isRecord(value) || value.version !== APPLICATION_DATA_VERSION) {
+    return createEmptyApplicationData()
+  }
 
   const instances = normalizeInstances(value.instances)
-  const instanceIds = new Set(instances.map(instance => instance.instanceId))
-  const boards = normalizeBoards(value.boards, instanceIds)
+  const boards = normalizeBoards(value.boards)
 
   return {
     version: APPLICATION_DATA_VERSION,
@@ -288,11 +289,15 @@ function normalizePartialPersistedUserData(
   data: Record<string, unknown>,
 ): Partial<PersistedUserData> {
   const hasInstances = Object.hasOwn(data, "instances")
+  const hasBoards = Object.hasOwn(data, "boards")
+  if ((hasBoards || hasInstances) && data.version !== APPLICATION_DATA_VERSION) {
+    return {}
+  }
   const instances = normalizeInstances(data.instances)
   const instanceIds = hasInstances
     ? new Set(instances.map(instance => instance.instanceId))
     : undefined
-  const boards = Object.hasOwn(data, "boards")
+  const boards = hasBoards
     ? normalizeBoards(data.boards, instanceIds)
     : undefined
   return {

@@ -19,33 +19,8 @@ class SourceResultDatabase extends Dexie {
 
   constructor() {
     super(PERSISTED_SOURCE_RESULTS_DATABASE_NAME)
-    this.version(1).stores({
-      metadata: "key",
-      sourceResults: "cacheKey",
-    })
-    this.version(2).stores({
-      metadata: null,
-      queryCache: "key",
-      sourceResults: null,
-    })
-    this.version(3).stores({
-      queryCache: null,
-      sourceResults: "key, observedAt",
-    })
-    this.version(4).stores({
-      sourceResults: "key, executedAt",
-    }).upgrade(async (transaction) => {
-      await transaction.table("sourceResults").clear()
-    })
-    this.version(5).stores({
-      sourceResults: "key, loadedAt",
-    }).upgrade(async (transaction) => {
-      await transaction.table("sourceResults").clear()
-    })
     this.version(6).stores({
       sourceResults: "key, fetchedAt",
-    }).upgrade(async (transaction) => {
-      await transaction.table("sourceResults").clear()
     })
   }
 }
@@ -72,6 +47,9 @@ function isValidPersistedSourceResult(value: unknown): value is PersistedSourceR
     || !Number.isInteger(target.version)
     || target.version <= 0
     || !isRecord(target.params)
+    || (target.instanceId !== undefined
+      && (typeof target.instanceId !== "string" || target.instanceId.length === 0))
+    || target.remote !== undefined
     || !Array.isArray(result.items)
     || !isRecord(source)
     || source.id !== target.sourceId
@@ -80,6 +58,7 @@ function isValidPersistedSourceResult(value: unknown): value is PersistedSourceR
     return false
   }
   return key === getSourceQueryHash({
+    ...(typeof target.instanceId === "string" ? { instanceId: target.instanceId } : {}),
     params: target.params,
     sourceId: target.sourceId,
     version: target.version,

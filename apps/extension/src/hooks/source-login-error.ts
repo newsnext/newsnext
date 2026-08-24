@@ -3,11 +3,6 @@ interface LoginRequiredError extends Error {
   loginUrl?: unknown
 }
 
-function getLoginUrlFromMessage(message: string): string | undefined {
-  const loginUrl = /^Please log in to (https?:\/\/\S+) first\.$/.exec(message.trim())?.[1]
-  return loginUrl?.trim()
-}
-
 export function getLoginUrlFromError(error: unknown): string | undefined {
   if (!(error instanceof Error)) {
     return undefined
@@ -19,5 +14,5 @@ export function getLoginUrlFromError(error: unknown): string | undefined {
     return loginUrl.trim()
   }
 
-  return getLoginUrlFromMessage(error.message)
+  return undefined
 }

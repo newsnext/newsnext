@@ -34,7 +34,7 @@ describe("extension connection protocol", () => {
       input: {},
     })).toThrow("Invalid extension command")
     expect(() => parseExtensionConnectionCommandRequest({
-      id: "legacy-id",
+      id: "obsolete-id",
       type: "application.query.list",
     })).toThrow("Invalid extension command")
   })

@@ -6,7 +6,7 @@ import {
   flattenProviderConfig,
   resolveSourceRegistry,
 } from "@newsnext/source-kit/registry"
-import { normalizeSourceParams, parseSourceId } from "@newsnext/source-kit/runtime"
+import { normalizeSourceParams, parseSourceId, prepareSourceRequest } from "@newsnext/source-kit/runtime"
 import { createBackgroundSourceFetch } from "./source-fetch"
 import { createSourceLoaderInvoker } from "./source-loader-invoker"
 import { resolveSourceSecrets, updateSourceSecrets } from "./source-secrets"
@@ -94,25 +94,19 @@ export async function runDeveloperSource(
   const fetches: BackgroundSourceFetchResult[] | undefined = input.debug ? [] : undefined
 
   if (input.providerId === undefined) {
-    let params: Record<string, unknown> = {}
-    let sourceVersion = 0
-    const result = await createSourceLoaderInvoker({
-      fetchResults: fetches,
-      async onRequestPrepared(preparedParams, preparedSourceVersion, source) {
-        params = preparedParams
-        sourceVersion = preparedSourceVersion
-        await authorize({ ...source, sourceId: input.sourceId }, preparedParams)
-      },
-    }).invoke({
+    const request = await prepareSourceRequest(input.sourceId, input.params ?? {})
+    await authorize({ ...request.source, sourceId: input.sourceId }, request.params)
+    const result = await createSourceLoaderInvoker({ fetchResults: fetches }).invoke({
+      params: request.params,
+      source: request.source,
       sourceId: input.sourceId,
-      params: input.params,
     })
     return createRunOutput(
       result,
       parseSourceId(input.sourceId).provider,
       input.sourceId,
-      sourceVersion,
-      params,
+      request.source.version,
+      request.params,
       fetches,
       startedAt,
     )

@@ -28,9 +28,10 @@ export interface LiveCardProps {
   dragHandleRef?: LiveCardDragHandleRef
   isDraft?: boolean
   onDraftSourceChange?: (patch: InstancePatch) => void
+  readOnly?: boolean
 }
 
-function LiveCardContent({ available = true, id, source, dragHandleRef, isDraft = false, onDraftSourceChange }: LiveCardProps) {
+function LiveCardContent({ available = true, id, source, dragHandleRef, isDraft = false, onDraftSourceChange, readOnly = false }: LiveCardProps) {
   const setInstancePatch = useSetAtom(setInstancePatchAtom)
   const resetLocalParams = useSetAtom(resetInstanceParamsAtom)
   const [isFlipped, setIsFlipped] = useState(false)
@@ -55,15 +56,17 @@ function LiveCardContent({ available = true, id, source, dragHandleRef, isDraft 
   } = useSourcePermission(source, savedParams)
 
   const { items, itemTemplate, metadata, fetchLatest, isFetching, isFetchingLatest, isLoading, isError, errorMessage, loginUrl, loadedAt } = useSourceQuery({
+    instanceId: id,
     sourceId: source.sourceId,
     params: savedParams,
-    enabled: canLoad,
+    remote: readOnly,
+    enabled: readOnly || canLoad,
   })
   const sourceErrorMessage = !available
     ? "This Source is no longer available in the registry."
-    : canLoad && isError
-      ? `Failed to load source${errorMessage ? `: ${errorMessage}` : "."}`
-      : undefined
+    : (readOnly || canLoad) && isError
+        ? `Failed to load source${errorMessage ? `: ${errorMessage}` : "."}`
+        : undefined
   const displaySource = useMemo(
     () => applySourceLoaderMetadata(source, metadata),
     [metadata, source],
@@ -117,12 +120,12 @@ function LiveCardContent({ available = true, id, source, dragHandleRef, isDraft 
         isFetching={isFetching || isFetchingLatest}
         isContentFetching={isFetchingLatest || isLoading}
         sourceErrorMessage={sourceErrorMessage}
-        sourceLoginUrl={canLoad ? loginUrl : undefined}
-        sourcePermissionRequest={missingPermission}
+        sourceLoginUrl={readOnly || canLoad ? loginUrl : undefined}
+        sourcePermissionRequest={readOnly ? undefined : missingPermission}
         loadedAt={loadedAt}
         onRefresh={fetchLatest}
         onRequestPermission={requestPermission}
-        onFlip={handleFlip}
+        onFlip={readOnly ? undefined : handleFlip}
         dragHandleRef={isFlipped ? undefined : dragHandleRef}
       />
       <LiveCardBack

@@ -1,12 +1,16 @@
 import type { SourceLoadResponse } from "../source/load-result"
-import type { InvokeSourceLoaderInput, SourceLoaderInvoker } from "./source-loader-invoker"
+import type { SourceLoaderInvoker } from "./source-loader-invoker"
 import { prepareSourceRequest } from "@newsnext/source-kit/runtime"
 import { readPersistedSourceResult, writePersistedSourceResult } from "../source/persisted-results"
 import { isSourceRequestProtected } from "../source/query-policy"
 import { getSourceQueryHash } from "../source/query-target"
 
 export interface ProtectedSourceLoader {
-  load: (input: InvokeSourceLoaderInput) => Promise<SourceLoadResponse>
+  load: (input: {
+    params?: Record<string, unknown>
+    requestId?: string
+    sourceId: string
+  }) => Promise<SourceLoadResponse>
 }
 
 export function createProtectedSourceLoader(
@@ -26,10 +30,11 @@ export function createProtectedSourceLoader(
       const persisted = await readPersistedSourceResult(target)
       if (persisted && isSourceRequestProtected(persisted.fetchedAt)) {
         return {
-          ...persisted,
           fetchProtected: true,
+          fetchedAt: persisted.fetchedAt,
           loadedAt: Date.now(),
           params: target.params,
+          result: persisted.result,
         }
       }
 
@@ -43,6 +48,7 @@ export function createProtectedSourceLoader(
         const result = await source.invoke({
           params: target.params,
           requestId: input.requestId,
+          source: request.source,
           sourceId: target.sourceId,
         })
         const fetchedAt = Date.now()

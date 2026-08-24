@@ -1,41 +1,20 @@
 import type { RuntimeSource, SourceSecretDefinition, SourceSecrets } from "@newsnext/source-kit/types"
+import { SourceLoginRequiredError } from "@newsnext/source-kit/core"
 import { storage } from "wxt/utils/storage"
 import { browser } from "#imports"
 import { PERSISTED_DATA_SLICES } from "../settings/persisted-data"
 
 type SourceSecretCache = Record<string, Record<string, string>>
-const SOURCE_LOGIN_REQUIRED_ERROR_CODE = "SOURCE_LOGIN_REQUIRED"
 const SOURCE_SECRET_CACHE_STORAGE_KEY = `local:${PERSISTED_DATA_SLICES.secrets.key}` as const
 
-export class SourceLoginRequiredError extends Error {
-  readonly code = SOURCE_LOGIN_REQUIRED_ERROR_CODE
-  readonly loginUrl: string
-
-  constructor(loginUrl: string) {
-    super("Source login required.")
-    this.name = "SourceLoginRequiredError"
-    this.loginUrl = loginUrl
-  }
-}
-
 function parseSourceSecretCache(storedValue: unknown): SourceSecretCache | undefined {
-  let cache: unknown = storedValue
-
-  if (typeof storedValue === "string") {
-    try {
-      cache = JSON.parse(storedValue) as unknown
-    } catch {
-      cache = undefined
-    }
-  }
-
-  return cache && typeof cache === "object"
-    ? cache as SourceSecretCache
+  return storedValue && typeof storedValue === "object"
+    ? storedValue as SourceSecretCache
     : undefined
 }
 
 async function readSourceSecretCache(): Promise<SourceSecretCache | undefined> {
-  const cache = await storage.getItem<SourceSecretCache | string>(SOURCE_SECRET_CACHE_STORAGE_KEY).catch(() => undefined)
+  const cache = await storage.getItem<SourceSecretCache>(SOURCE_SECRET_CACHE_STORAGE_KEY).catch(() => undefined)
   return parseSourceSecretCache(cache)
 }
 

@@ -24,6 +24,7 @@ export function findCachedSourceQuery(
   queryClient: QueryClient,
   sourceId: string,
   params: Record<string, unknown> | undefined,
+  instanceId?: string,
 ): CachedSourceQuery | undefined {
   const queries = queryClient.getQueryCache()
     .findAll({ queryKey: SOURCE_QUERY_KEY })
@@ -39,7 +40,7 @@ export function findCachedSourceQuery(
     ) {
       continue
     }
-    const target = createSourceQueryTarget(sourceId, result.source, params)
+    const target = createSourceQueryTarget(sourceId, result.source, params, instanceId)
     if (query.queryHash === getSourceQueryHash(target)) {
       return {
         data: result,
@@ -53,16 +54,18 @@ export function findCachedSourceResult(
   queryClient: QueryClient,
   sourceId: string,
   params: Record<string, unknown> | undefined,
+  instanceId?: string,
 ): SourceLoadResult | undefined {
-  return findCachedSourceQuery(queryClient, sourceId, params)?.data
+  return findCachedSourceQuery(queryClient, sourceId, params, instanceId)?.data
 }
 
 export function useCachedSourceResultFinder(): (
   sourceId: string,
   params: Record<string, unknown> | undefined,
+  instanceId?: string,
 ) => SourceLoadResult | undefined {
   const queryClient = useQueryClient()
-  return useCallback((sourceId, params) => {
-    return findCachedSourceResult(queryClient, sourceId, params)
+  return useCallback((sourceId, params, instanceId) => {
+    return findCachedSourceResult(queryClient, sourceId, params, instanceId)
   }, [queryClient])
 }

@@ -6,8 +6,8 @@ describe("source identity", () => {
     await expect(assertIdentity("42", () => " 42 ", "Test")).resolves.toBeUndefined()
   })
 
-  it("allows an unbound identity and rejects a changed one", async () => {
-    await expect(assertIdentity("", () => undefined, "Test")).resolves.toBeUndefined()
+  it("rejects missing and changed identities", async () => {
+    await expect(assertIdentity("", () => undefined, "Test")).rejects.toThrow("configured Test user")
     await expect(assertIdentity("42", () => "43", "Test")).rejects.toThrow("signed-in Test user changed")
   })
 })

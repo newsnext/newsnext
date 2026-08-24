@@ -74,7 +74,7 @@ export function createDefaultPersistedDeviceState(currentBoardId = ""): Persiste
 
 export function normalizePersistedSettings(value: unknown): PersistedSettings {
   const defaults = createDefaultPersistedSettings()
-  if (!isRecord(value)) {
+  if (!isRecord(value) || value.version !== PERSISTED_SETTINGS_VERSION) {
     return defaults
   }
 
@@ -110,7 +110,7 @@ export function normalizePersistedSettings(value: unknown): PersistedSettings {
 
 export function normalizePersistedDeviceState(value: unknown): PersistedDeviceState {
   const defaults = createDefaultPersistedDeviceState()
-  if (!isRecord(value)) {
+  if (!isRecord(value) || value.version !== PERSISTED_SETTINGS_VERSION) {
     return defaults
   }
 

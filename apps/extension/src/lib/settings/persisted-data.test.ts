@@ -36,7 +36,7 @@ function createData(): PersistedUserData {
 }
 
 describe("persisted user data", () => {
-  it("normalizes v4 Board membership, color, and layer state", () => {
+  it("normalizes current Board membership, color, and layer state", () => {
     const data = normalizeApplicationData({
       version: 4,
       boards: [{
@@ -66,35 +66,35 @@ describe("persisted user data", () => {
     expect(data.boards[0]).toMatchObject({
       color: "blue",
       name: "Reading",
-      instanceIds: ["second", "first"],
+      instanceIds: ["second", "first", "missing"],
       nowLayer: {
         sort: {
           mode: "manual",
           automaticMode: "provider",
-          manualOrder: ["first", "second"],
+          manualOrder: ["first", "second", "missing"],
         },
       },
       nextLayer: {
         widgets: [{
           widgetId: "latest",
-          dataScope: { type: "instances", instanceIds: ["first"] },
+          dataScope: { type: "instances", instanceIds: ["first", "missing"] },
           layout: { x: 1, y: 2, width: 6, height: 4 },
         }],
       },
     })
   })
 
-  it("does not retain removed Board storage shapes", () => {
+  it("rejects noncurrent Application Data", () => {
     const data = normalizeApplicationData({
-      version: 2,
-      groups: [{ id: "reading", name: "Reading", createdAt: 1 }],
+      version: 3,
+      boards: [],
       instances: [],
     })
 
     expect(data).toEqual({ version: 4, boards: [], instances: [] })
   })
 
-  it("round-trips the v4 application shape and settings", () => {
+  it("round-trips the current application shape and settings", () => {
     const data = createData()
     const serialized = serializePersistedDataExport(data)
     expect(JSON.parse(serialized).version).toBe(4)
@@ -102,17 +102,15 @@ describe("persisted user data", () => {
   })
 
   it("rejects removed and unsupported export formats", () => {
-    const legacy = JSON.stringify({
+    const outdated = JSON.stringify({
       kind: "newsnext-user-data",
       version: 1,
       data: {
-        boards: [{ id: "legacy", name: "Legacy", createdAt: 1 }],
-        boardEntries: [],
-        boardViews: [],
+        boards: [],
         instances: [],
       },
     })
-    expect(parsePersistedDataExport(legacy)).toBeUndefined()
+    expect(parsePersistedDataExport(outdated)).toBeUndefined()
     expect(parsePersistedDataExport(JSON.stringify({ kind: "other-app", version: 4, data: {} })))
       .toBeUndefined()
     expect(parsePersistedDataExport(JSON.stringify({ kind: "newsnext-user-data", version: 5, data: {} })))

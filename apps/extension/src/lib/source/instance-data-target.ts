@@ -19,7 +19,7 @@ export function createInstanceDataTarget(
 ): InstanceDataTarget {
   return {
     instanceId: instance.instanceId,
-    ...createSourceQueryTarget(instance.sourceId, source, instance.patch.params),
+    ...createSourceQueryTarget(instance.sourceId, source, instance.patch.params, instance.instanceId),
   }
 }
 
