@@ -7,11 +7,13 @@ import { createBackgroundActionContext } from "./action-context"
 import { executeRegisteredAction } from "./action-registry"
 import {
   getSourceConnectionStatus,
+  requestWidgetSnapshot,
   setSourceConnectionEnabled,
 } from "./source-connection-native"
 
 const actionContext = createBackgroundActionContext({
   getStatus: async () => getSourceConnectionStatus(),
+  getWidgetSnapshot: requestWidgetSnapshot,
   setEnabled: async ({ enabled, frontendState }) => (
     await setSourceConnectionEnabled(enabled, frontendState)
   ),

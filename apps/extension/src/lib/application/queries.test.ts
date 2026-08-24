@@ -10,7 +10,7 @@ import {
 
 function createData(): ApplicationData {
   return {
-    version: 3,
+    version: 4,
     boards: [{
       color: "blue",
       id: "reading",
@@ -19,6 +19,7 @@ function createData(): ApplicationData {
       instanceIds: ["second", "first"],
       defaultLayer: "now",
       nowLayer: { sort: { mode: "addedAt", automaticMode: "addedAt", manualOrder: [] } },
+      nextLayer: { widgets: [] },
     }],
     instances: [
       { instanceId: "first", sourceId: "rss:first", patch: {}, createdAt: 1 },

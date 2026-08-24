@@ -1,5 +1,11 @@
 import type { Color } from "@newsnext/shared/types"
-import type { Board, BoardLayer, NowLayerSortMode } from "../board"
+import type {
+  Board,
+  BoardLayer,
+  NextLayerWidgetDataScope,
+  NextLayerWidgetLayout,
+  NowLayerSortMode,
+} from "../board"
 import type { InstancePatch } from "../source/live-cards"
 import type { ApplicationData } from "./data"
 import { createBoard } from "../board"
@@ -144,6 +150,92 @@ export function setNowLayerManualOrderMutation(
   }
 }
 
+export function installNextLayerWidgetMutation(
+  data: ApplicationData,
+  input: {
+    boardId: string
+    dataScope: NextLayerWidgetDataScope
+    layout: NextLayerWidgetLayout
+    widgetId: string
+  },
+): ApplicationMutationExecution {
+  const board = getBoard(data, input.boardId)
+  assertWidgetId(input.widgetId)
+  assertWidgetDataScope(board, input.dataScope)
+  assertWidgetLayout(input.layout)
+  if (board.nextLayer.widgets.some(widget => widget.widgetId === input.widgetId)) {
+    throw new Error(`Widget '${input.widgetId}' is already installed in Board '${input.boardId}'`)
+  }
+  return replaceBoard(data, {
+    ...board,
+    nextLayer: {
+      widgets: [...board.nextLayer.widgets, {
+        dataScope: input.dataScope,
+        layout: input.layout,
+        widgetId: input.widgetId,
+      }],
+    },
+  })
+}
+
+export function removeNextLayerWidgetMutation(
+  data: ApplicationData,
+  input: { boardId: string, widgetId: string },
+): ApplicationMutationExecution {
+  const board = getBoard(data, input.boardId)
+  assertWidgetInstalled(board, input.widgetId)
+  return replaceBoard(data, {
+    ...board,
+    nextLayer: {
+      widgets: board.nextLayer.widgets.filter(widget => widget.widgetId !== input.widgetId),
+    },
+  })
+}
+
+export function setNextLayerWidgetDataScopeMutation(
+  data: ApplicationData,
+  input: { boardId: string, dataScope: NextLayerWidgetDataScope, widgetId: string },
+): ApplicationMutationExecution {
+  const board = getBoard(data, input.boardId)
+  assertWidgetInstalled(board, input.widgetId)
+  assertWidgetDataScope(board, input.dataScope)
+  return replaceBoard(data, {
+    ...board,
+    nextLayer: {
+      widgets: board.nextLayer.widgets.map(widget => widget.widgetId === input.widgetId
+        ? { ...widget, dataScope: input.dataScope }
+        : widget),
+    },
+  })
+}
+
+export function setNextLayerWidgetLayoutsMutation(
+  data: ApplicationData,
+  input: {
+    boardId: string
+    widgets: Array<{ layout: NextLayerWidgetLayout, widgetId: string }>
+  },
+): ApplicationMutationExecution {
+  const board = getBoard(data, input.boardId)
+  const updates = new Map<string, NextLayerWidgetLayout>()
+  for (const widget of input.widgets) {
+    assertWidgetInstalled(board, widget.widgetId)
+    assertWidgetLayout(widget.layout)
+    if (updates.has(widget.widgetId)) throw new Error("Widget layout update IDs must be unique")
+    updates.set(widget.widgetId, widget.layout)
+  }
+  if (updates.size === 0) throw new Error("At least one Widget layout is required")
+  return replaceBoard(data, {
+    ...board,
+    nextLayer: {
+      widgets: board.nextLayer.widgets.map(widget => ({
+        ...widget,
+        layout: updates.get(widget.widgetId) ?? widget.layout,
+      })),
+    },
+  })
+}
+
 export function addBoardInstanceMutation(
   data: ApplicationData,
   input: { boardId: string, instanceId: string },
@@ -283,6 +375,17 @@ function removeInstanceFromBoard(board: Board, instanceId: string): Board {
         manualOrder: board.nowLayer.sort.manualOrder.filter(candidate => candidate !== instanceId),
       },
     },
+    nextLayer: {
+      widgets: board.nextLayer.widgets.map(widget => widget.dataScope.type === "instances"
+        ? {
+            ...widget,
+            dataScope: {
+              ...widget.dataScope,
+              instanceIds: widget.dataScope.instanceIds.filter(candidate => candidate !== instanceId),
+            },
+          }
+        : widget),
+    },
   }
 }
 
@@ -347,4 +450,50 @@ function assertInstanceExists(data: ApplicationData, instanceId: string): void {
 
 function assertBoardName(name: string): void {
   if (!name) throw new Error("Board name is required")
+}
+
+function replaceBoard(data: ApplicationData, board: Board): ApplicationMutationExecution {
+  return {
+    data: {
+      ...data,
+      boards: data.boards.map(candidate => candidate.id === board.id ? board : candidate),
+    },
+  }
+}
+
+function assertWidgetId(widgetId: string): void {
+  if (!widgetId || !/^[\w-]+$/.test(widgetId)) {
+    throw new Error("Widget ID must contain only letters, numbers, '-' or '_'")
+  }
+}
+
+function assertWidgetInstalled(board: Board, widgetId: string): void {
+  if (!board.nextLayer.widgets.some(widget => widget.widgetId === widgetId)) {
+    throw new Error(`Widget '${widgetId}' is not installed in Board '${board.id}'`)
+  }
+}
+
+function assertWidgetDataScope(board: Board, dataScope: NextLayerWidgetDataScope): void {
+  if (dataScope.type === "board") return
+  const instanceIds = new Set(dataScope.instanceIds)
+  if (instanceIds.size !== dataScope.instanceIds.length
+    || dataScope.instanceIds.some(instanceId => !board.instanceIds.includes(instanceId))) {
+    throw new Error("Widget data scope must contain unique Instances from its Board")
+  }
+}
+
+function assertWidgetLayout(layout: NextLayerWidgetLayout): void {
+  if (!Number.isInteger(layout.x)
+    || layout.x < 0
+    || !Number.isInteger(layout.y)
+    || layout.y < 0
+    || !Number.isInteger(layout.width)
+    || layout.width < 1
+    || layout.width > 12
+    || layout.x + layout.width > 12
+    || !Number.isInteger(layout.height)
+    || layout.height < 1
+    || layout.height > 100) {
+    throw new Error("Widget layout is invalid")
+  }
 }

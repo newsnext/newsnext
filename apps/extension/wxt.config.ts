@@ -19,6 +19,7 @@ const REQUIRED_PERMISSIONS = [
   "scripting",
   "storage",
 ] as const
+const WIDGET_SERVER_ORIGIN = "http://127.0.0.1/*"
 const manifestVersion = packageJson.version.split("-", 1)[0]
 
 // See https://wxt.dev/api/config.html
@@ -101,7 +102,12 @@ export default defineConfig({
       permissions: yoloMode
         ? [...REQUIRED_PERMISSIONS, ...OPTIONAL_SOURCE_PERMISSIONS]
         : [...REQUIRED_PERMISSIONS],
-      host_permissions: yoloMode ? [...OPTIONAL_SOURCE_ORIGINS] : undefined,
+      content_security_policy: {
+        extension_pages: "script-src 'self'; object-src 'self'; frame-src http://127.0.0.1:*",
+      },
+      host_permissions: yoloMode
+        ? [...OPTIONAL_SOURCE_ORIGINS]
+        : [WIDGET_SERVER_ORIGIN],
       optional_permissions: yoloMode
         ? undefined
         : browser === "firefox"

@@ -1,5 +1,11 @@
 import type { ApplicationData } from "../application/data"
-import type { Board, NowLayerAutomaticSortMode, NowLayerSortMode } from "../board"
+import type {
+  Board,
+  NextLayerWidget,
+  NextLayerWidgetDataScope,
+  NowLayerAutomaticSortMode,
+  NowLayerSortMode,
+} from "../board"
 import type { Instance, InstancePatch } from "../source"
 import type { PersistedSettings } from "./persisted-settings"
 import {
@@ -15,7 +21,7 @@ import {
 import { normalizePersistedSettings } from "./persisted-settings"
 import { isThemeColor } from "./theme-color"
 
-export const PERSISTED_DATA_EXPORT_VERSION = 3
+export const PERSISTED_DATA_EXPORT_VERSION = 4
 export const PERSISTED_DATA_EXPORT_KIND = "newsnext-user-data"
 export const PERSISTED_PORTABLE_SLICE_IDS = [
   "settings",
@@ -84,6 +90,7 @@ export function normalizeBoards(
 
     const ids = normalizeIdentifierArray(candidate.instanceIds, instanceIds)
     const nowLayer = isRecord(candidate.nowLayer) ? candidate.nowLayer : {}
+    const nextLayer = isRecord(candidate.nextLayer) ? candidate.nextLayer : {}
     const sortValue = isRecord(nowLayer.sort) ? nowLayer.sort : {}
     const mode = normalizeNowLayerSortMode(sortValue.mode)
     const automaticMode = normalizeNowLayerAutomaticSortMode(sortValue.automaticMode)
@@ -102,8 +109,67 @@ export function normalizeBoards(
           ),
         },
       },
+      nextLayer: {
+        widgets: normalizeNextLayerWidgets(nextLayer.widgets, new Set(ids)),
+      },
     }]
   })
+}
+
+function normalizeNextLayerWidgets(
+  value: unknown,
+  boardInstanceIds: ReadonlySet<string>,
+): NextLayerWidget[] {
+  if (!Array.isArray(value)) return []
+  const seen = new Set<string>()
+  return value.flatMap((candidate) => {
+    if (!isRecord(candidate)
+      || typeof candidate.widgetId !== "string"
+      || candidate.widgetId.trim().length === 0
+      || !/^[\w-]+$/.test(candidate.widgetId)
+      || seen.has(candidate.widgetId)
+      || !isRecord(candidate.layout)) {
+      return []
+    }
+    const layout = candidate.layout
+    if (!isIntegerBetween(layout.x, 0, 11)
+      || !isIntegerBetween(layout.y, 0, Number.MAX_SAFE_INTEGER)
+      || !isIntegerBetween(layout.width, 1, 12)
+      || layout.x + layout.width > 12
+      || !isIntegerBetween(layout.height, 1, 100)) {
+      return []
+    }
+    const dataScope = normalizeWidgetDataScope(candidate.dataScope, boardInstanceIds)
+    if (!dataScope) return []
+    seen.add(candidate.widgetId)
+    return [{
+      dataScope,
+      layout: {
+        height: layout.height,
+        width: layout.width,
+        x: layout.x,
+        y: layout.y,
+      },
+      widgetId: candidate.widgetId,
+    }]
+  })
+}
+
+function normalizeWidgetDataScope(
+  value: unknown,
+  boardInstanceIds: ReadonlySet<string>,
+): NextLayerWidgetDataScope | undefined {
+  if (!isRecord(value) || typeof value.type !== "string") return undefined
+  if (value.type === "board") return { type: "board" }
+  if (value.type !== "instances") return undefined
+  return {
+    type: "instances",
+    instanceIds: normalizeIdentifierArray(value.instanceIds, boardInstanceIds),
+  }
+}
+
+function isIntegerBetween(value: unknown, minimum: number, maximum: number): value is number {
+  return Number.isInteger(value) && Number(value) >= minimum && Number(value) <= maximum
 }
 
 export function normalizeInstances(value: unknown): Instance[] {

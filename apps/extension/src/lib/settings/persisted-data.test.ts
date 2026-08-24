@@ -12,7 +12,7 @@ function createData(): PersistedUserData {
   const settings = createDefaultPersistedSettings()
   settings.general.defaultBoardId = "reading"
   return {
-    version: 3,
+    version: 4,
     settings,
     boards: [{
       color: "blue",
@@ -24,6 +24,7 @@ function createData(): PersistedUserData {
       nowLayer: {
         sort: { mode: "manual", automaticMode: "addedAt", manualOrder: ["rss:feed::one"] },
       },
+      nextLayer: { widgets: [] },
     }],
     instances: [{
       instanceId: "rss:feed::one",
@@ -35,9 +36,9 @@ function createData(): PersistedUserData {
 }
 
 describe("persisted user data", () => {
-  it("normalizes v3 Board membership, color, and NowLayer order", () => {
+  it("normalizes v4 Board membership, color, and layer state", () => {
     const data = normalizeApplicationData({
-      version: 3,
+      version: 4,
       boards: [{
         color: "blue",
         id: "reading",
@@ -47,6 +48,13 @@ describe("persisted user data", () => {
         defaultLayer: "now",
         nowLayer: {
           sort: { mode: "manual", automaticMode: "provider", manualOrder: ["first"] },
+        },
+        nextLayer: {
+          widgets: [{
+            widgetId: "latest",
+            dataScope: { type: "instances", instanceIds: ["first", "missing", "first"] },
+            layout: { x: 1, y: 2, width: 6, height: 4 },
+          }],
         },
       }],
       instances: [
@@ -66,6 +74,13 @@ describe("persisted user data", () => {
           manualOrder: ["first", "second"],
         },
       },
+      nextLayer: {
+        widgets: [{
+          widgetId: "latest",
+          dataScope: { type: "instances", instanceIds: ["first"] },
+          layout: { x: 1, y: 2, width: 6, height: 4 },
+        }],
+      },
     })
   })
 
@@ -76,13 +91,13 @@ describe("persisted user data", () => {
       instances: [],
     })
 
-    expect(data).toEqual({ version: 3, boards: [], instances: [] })
+    expect(data).toEqual({ version: 4, boards: [], instances: [] })
   })
 
-  it("round-trips the v3 application shape and settings", () => {
+  it("round-trips the v4 application shape and settings", () => {
     const data = createData()
     const serialized = serializePersistedDataExport(data)
-    expect(JSON.parse(serialized).version).toBe(3)
+    expect(JSON.parse(serialized).version).toBe(4)
     expect(parsePersistedDataExport(serialized)?.data).toEqual(data)
   })
 
@@ -98,15 +113,15 @@ describe("persisted user data", () => {
       },
     })
     expect(parsePersistedDataExport(legacy)).toBeUndefined()
-    expect(parsePersistedDataExport(JSON.stringify({ kind: "other-app", version: 3, data: {} })))
+    expect(parsePersistedDataExport(JSON.stringify({ kind: "other-app", version: 4, data: {} })))
       .toBeUndefined()
-    expect(parsePersistedDataExport(JSON.stringify({ kind: "newsnext-user-data", version: 4, data: {} })))
+    expect(parsePersistedDataExport(JSON.stringify({ kind: "newsnext-user-data", version: 5, data: {} })))
       .toBeUndefined()
   })
 
   it("repairs ownership after a partial Board import", () => {
     const merged = mergePersistedUserData(createData(), {
-      version: 3,
+      version: 4,
       boards: [],
     })
     expect(merged.boards).toHaveLength(1)

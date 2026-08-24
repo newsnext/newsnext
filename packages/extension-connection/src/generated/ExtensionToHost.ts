@@ -3,4 +3,4 @@ import type { CommandResult } from "./CommandResult";
 import type { ExtensionBoard } from "./ExtensionBoard";
 import type { ExtensionInstance } from "./ExtensionInstance";
 
-export type ExtensionToHost = { "type": "hello", protocolVersion: number, instance: ExtensionInstance, } | { "type": "complete", requestId: string, result: CommandResult, } | { "type": "boardsChanged", boards: Array<ExtensionBoard>, };
+export type ExtensionToHost = { "type": "hello", protocolVersion: number, instance: ExtensionInstance, } | { "type": "complete", requestId: string, result: CommandResult, } | { "type": "boardsChanged", boards: Array<ExtensionBoard>, } | { "type": "widgetSnapshotGet", requestId: string, boardId: string, widgetId: string, };

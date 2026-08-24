@@ -6,6 +6,7 @@ import type {
   ApplicationMutationResult,
   BoardDeleteInput,
 } from "../application"
+import type { NextLayerWidgetDataScope, NextLayerWidgetLayout } from "../board"
 import type { InstancePatch } from "../source"
 import { COLORS } from "@newsnext/shared/constants"
 import Type from "typebox"
@@ -23,12 +24,16 @@ import {
   getInstanceQuery,
   getNowLayerLiveCardsQuery,
   getSourceQuery,
+  installNextLayerWidgetMutation,
   listBoardInstancesQuery,
   listBoardsQuery,
   listInstancesQuery,
   listSourcesQuery,
   removeBoardInstanceMutation,
+  removeNextLayerWidgetMutation,
   resetInstanceParamsMutation,
+  setNextLayerWidgetDataScopeMutation,
+  setNextLayerWidgetLayoutsMutation,
   setNowLayerManualOrderMutation,
   updateBoardMutation,
 } from "../application"
@@ -76,6 +81,19 @@ const BoardCreatedResult = Type.Object({
 const InstanceCreatedResult = Type.Object({
   instanceId: Identifier,
 }, { additionalProperties: false })
+const WidgetLayoutParams = Type.Unsafe<NextLayerWidgetLayout>(Type.Object({
+  height: Type.Integer({ minimum: 1, maximum: 100 }),
+  width: Type.Integer({ minimum: 1, maximum: 12 }),
+  x: Type.Integer({ minimum: 0, maximum: 11 }),
+  y: Type.Integer({ minimum: 0 }),
+}, { additionalProperties: false }))
+const WidgetDataScopeParams = Type.Unsafe<NextLayerWidgetDataScope>(Type.Union([
+  Type.Object({ type: Type.Literal("board") }, { additionalProperties: false }),
+  Type.Object({
+    instanceIds: IdentifierArray,
+    type: Type.Literal("instances"),
+  }, { additionalProperties: false }),
+]))
 
 const boardCreateAction = defineAction({
   audiences: CONNECTED_AND_UI,
@@ -94,7 +112,6 @@ const boardCreateAction = defineAction({
   if (!result.boardId) throw new Error("Board creation returned no Board ID")
   return { boardId: result.boardId }
 })
-
 const boardUpdateAction = defineAction({
   audiences: CONNECTED_AND_UI,
   name: "board.update",
@@ -158,6 +175,68 @@ const nowLayerSetManualOrderAction = defineAction({
   result: EmptyResult,
 }, async (input, context: ApplicationActionContext) => (
   await context.mutate(data => setNowLayerManualOrderMutation(data, input))
+))
+
+const nextLayerInstallWidgetAction = defineAction({
+  audiences: CONNECTED_AND_UI,
+  name: "nextLayer.installWidget",
+  kind: "mutation",
+  description: "Install a local Widget in a Board's Next Layer.",
+  params: Type.Object({
+    boardId: Identifier,
+    dataScope: WidgetDataScopeParams,
+    layout: WidgetLayoutParams,
+    widgetId: Identifier,
+  }, { additionalProperties: false }),
+  result: EmptyResult,
+}, async (input, context: ApplicationActionContext) => (
+  await context.mutate(data => installNextLayerWidgetMutation(data, input))
+))
+
+const nextLayerRemoveWidgetAction = defineAction({
+  audiences: CONNECTED_AND_UI,
+  name: "nextLayer.removeWidget",
+  kind: "mutation",
+  description: "Remove a local Widget from a Board's Next Layer.",
+  params: Type.Object({
+    boardId: Identifier,
+    widgetId: Identifier,
+  }, { additionalProperties: false }),
+  result: EmptyResult,
+}, async (input, context: ApplicationActionContext) => (
+  await context.mutate(data => removeNextLayerWidgetMutation(data, input))
+))
+
+const nextLayerSetWidgetDataScopeAction = defineAction({
+  audiences: CONNECTED_AND_UI,
+  name: "nextLayer.setWidgetDataScope",
+  kind: "mutation",
+  description: "Set the Board-scoped Instance access granted to a Next Layer Widget.",
+  params: Type.Object({
+    boardId: Identifier,
+    dataScope: WidgetDataScopeParams,
+    widgetId: Identifier,
+  }, { additionalProperties: false }),
+  result: EmptyResult,
+}, async (input, context: ApplicationActionContext) => (
+  await context.mutate(data => setNextLayerWidgetDataScopeMutation(data, input))
+))
+
+const nextLayerSetWidgetLayoutsAction = defineAction({
+  audiences: CONNECTED_AND_UI,
+  name: "nextLayer.setWidgetLayouts",
+  kind: "mutation",
+  description: "Persist one or more Next Layer Widget positions and sizes.",
+  params: Type.Object({
+    boardId: Identifier,
+    widgets: Type.Array(Type.Object({
+      layout: WidgetLayoutParams,
+      widgetId: Identifier,
+    }, { additionalProperties: false }), { minItems: 1 }),
+  }, { additionalProperties: false }),
+  result: EmptyResult,
+}, async (input, context: ApplicationActionContext) => (
+  await context.mutate(data => setNextLayerWidgetLayoutsMutation(data, input))
 ))
 
 const MembershipParams = Type.Object({
@@ -361,6 +440,10 @@ export const applicationActionDefinitions = [
   boardUpdateAction,
   boardDeleteAction,
   nowLayerSetManualOrderAction,
+  nextLayerInstallWidgetAction,
+  nextLayerRemoveWidgetAction,
+  nextLayerSetWidgetDataScopeAction,
+  nextLayerSetWidgetLayoutsAction,
   boardAddInstanceAction,
   boardRemoveInstanceAction,
   instanceCreateAction,

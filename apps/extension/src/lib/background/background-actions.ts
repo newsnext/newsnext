@@ -34,6 +34,9 @@ export interface BackgroundActionContext extends ApplicationActionContext {
       url: string
     }) => Promise<ResolvedRadarSuggestion[]>
   }
+  job: {
+    executeInstance: (input: { instanceId: string }) => Promise<SourceLoadResponse>
+  }
   source: {
     cancel: (input: { requestId: string }) => Promise<void>
     load: (input: {
@@ -44,6 +47,10 @@ export interface BackgroundActionContext extends ApplicationActionContext {
   }
   sourceConnection: {
     getStatus: () => Promise<SourceConnectionStatus>
+    getWidgetSnapshot: (input: {
+      boardId: string
+      widgetId: string
+    }) => Promise<unknown>
     setEnabled: (input: {
       enabled: boolean
       frontendState?: PersistedDeviceState
@@ -205,6 +212,17 @@ const sourceCancelAction = defineAction({
   return {}
 })
 
+const jobExecuteInstanceAction = defineAction({
+  audiences: CONNECTED_ONLY,
+  name: "job.executeInstance",
+  kind: "command",
+  description: "Execute one configured Instance for a CLI-owned background Job.",
+  params: Type.Object({ instanceId: Identifier }, { additionalProperties: false }),
+  result: Type.Unsafe<SourceLoadResponse>(Type.Object({}, { additionalProperties: true })),
+}, async (input, context: BackgroundActionContext) => (
+  await context.job.executeInstance(input)
+))
+
 const sourceConnectionGetStatusAction = defineAction({
   audiences: UI_ONLY,
   name: "sourceConnection.getStatus",
@@ -214,6 +232,7 @@ const sourceConnectionGetStatusAction = defineAction({
   result: Type.Unsafe<SourceConnectionStatus>(Type.Object({
     cliVersion: Type.Optional(Type.String()),
     state: stringEnum(["disabled", "connected", "connecting", "disconnected"] as const),
+    widgetServerUrl: Type.Optional(Type.String()),
   }, { additionalProperties: false })),
 }, async (_input, context: BackgroundActionContext) => await context.sourceConnection.getStatus())
 
@@ -236,8 +255,23 @@ const sourceConnectionSetEnabledAction = defineAction({
   result: Type.Unsafe<SourceConnectionStatus>(Type.Object({
     cliVersion: Type.Optional(Type.String()),
     state: stringEnum(["disabled", "connected", "connecting", "disconnected"] as const),
+    widgetServerUrl: Type.Optional(Type.String()),
   }, { additionalProperties: false })),
 }, async (input, context: BackgroundActionContext) => await context.sourceConnection.setEnabled(input))
+
+const nextLayerGetWidgetSnapshotAction = defineAction({
+  audiences: UI_ONLY,
+  name: "nextLayer.getWidgetSnapshot",
+  kind: "query",
+  description: "Read one CLI-owned materialized Widget Snapshot.",
+  params: Type.Object({
+    boardId: Identifier,
+    widgetId: Identifier,
+  }, { additionalProperties: false }),
+  result: Type.Unknown(),
+}, async (input, context: BackgroundActionContext) => (
+  await context.sourceConnection.getWidgetSnapshot(input)
+))
 
 export const uiBackgroundActionDefinitions = [
   radarResolveSuggestionsAction,
@@ -245,17 +279,15 @@ export const uiBackgroundActionDefinitions = [
   sourceCancelAction,
   sourceConnectionGetStatusAction,
   sourceConnectionSetEnabledAction,
+  nextLayerGetWidgetSnapshotAction,
 ] as const
 
 export const backgroundActionDefinitions = [
   appOpenAction,
   developerFetchAction,
   developerRunSourceAction,
-  radarResolveSuggestionsAction,
-  sourceLoadAction,
-  sourceCancelAction,
-  sourceConnectionGetStatusAction,
-  sourceConnectionSetEnabledAction,
+  jobExecuteInstanceAction,
+  ...uiBackgroundActionDefinitions,
 ] as const
 
 function stringEnum<const Values extends readonly string[]>(values: Values) {

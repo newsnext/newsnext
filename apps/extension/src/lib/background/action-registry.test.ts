@@ -8,7 +8,7 @@ import {
 function createContext(): BackgroundActionContext {
   return {
     currentBoardId: vi.fn(async () => "reading"),
-    data: vi.fn(async () => ({ boards: [], instances: [], version: 3 as const })),
+    data: vi.fn(async () => ({ boards: [], instances: [], version: 4 as const })),
     mutate: vi.fn(async () => ({ instanceId: "new" })),
     replace: vi.fn(async data => data),
     requireSources: vi.fn(async () => undefined),
@@ -24,12 +24,14 @@ function createContext(): BackgroundActionContext {
       runSource: vi.fn(async () => ({}) as never),
     },
     radar: { resolveSuggestions: vi.fn(async () => []) },
+    job: { executeInstance: vi.fn(async () => ({}) as never) },
     source: {
       cancel: vi.fn(async () => undefined),
       load: vi.fn(async () => ({}) as never),
     },
     sourceConnection: {
       getStatus: vi.fn(async () => ({ state: "disabled" as const })),
+      getWidgetSnapshot: vi.fn(async () => ({})),
       setEnabled: vi.fn(async () => ({ state: "disabled" as const })),
     },
   }
@@ -39,10 +41,10 @@ describe("action Registry", () => {
   it("publishes the connected Action contract directly from definitions", () => {
     const actions = actionRegistry.list("connected")
 
-    expect(actions).toHaveLength(24)
-    expect(actions.filter(action => action.kind === "mutation")).toHaveLength(10)
+    expect(actions).toHaveLength(29)
+    expect(actions.filter(action => action.kind === "mutation")).toHaveLength(14)
     expect(actions.filter(action => action.kind === "query")).toHaveLength(10)
-    expect(actions.filter(action => action.kind === "command")).toHaveLength(4)
+    expect(actions.filter(action => action.kind === "command")).toHaveLength(5)
     expect(actions.find(action => action.name === "instance.create")).toMatchObject({
       inputSchema: { type: "object", additionalProperties: false },
       outputSchema: { type: "object" },

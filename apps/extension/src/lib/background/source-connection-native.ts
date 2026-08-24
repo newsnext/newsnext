@@ -26,10 +26,11 @@ import { serializeSourceConnectionError } from "./source-connection-error"
 const NATIVE_HOST_NAME = import.meta.env.DEV
   ? "app.newsnext.host.dev"
   : "app.newsnext.host"
-const PROTOCOL_VERSION = 8
+const PROTOCOL_VERSION = 9
 const SOURCE_CONNECTION_INSTANCE_ID_KEY = "newsnext.sourceConnectionInstanceId"
 const SOURCE_CONNECTION_RECONNECT_ALARM = "source-connection-native-reconnect"
 const RECONNECT_ALARM_PERIOD_MINUTES = 0.5
+const WIDGET_REQUEST_TIMEOUT_MS = 65_000
 
 export type SourceConnectionState
   = | "disabled"
@@ -40,6 +41,7 @@ export type SourceConnectionState
 export interface SourceConnectionStatus {
   cliVersion?: string
   state: SourceConnectionState
+  widgetServerUrl?: string
 }
 
 type NativePort = ReturnType<typeof browser.runtime.connectNative>
@@ -50,16 +52,30 @@ type ParsedHostMessage
       type: "execute"
       request: ExtensionConnectionCommandRequest
     }
+    | {
+      type: "widgetSnapshotResult"
+      requestId: string
+      result: NativeCommandResult
+    }
+
+interface PendingWidgetSnapshotRequest {
+  reject: (error: Error) => void
+  resolve: (value: unknown) => void
+  timeoutId: ReturnType<typeof setTimeout>
+}
 
 let port: NativePort | undefined
 let cliVersion: string | undefined
+let widgetServerUrl: string | undefined
 let connectionState: SourceConnectionState = "disconnected"
 let enabled = false
 let instanceId = ""
 let boards: NativeExtensionBoard[] = []
+const pendingWidgetSnapshotRequests = new Map<string, PendingWidgetSnapshotRequest>()
 
 const connectedActionContext = createBackgroundActionContext({
   getStatus: async () => getSourceConnectionStatus(),
+  getWidgetSnapshot: requestWidgetSnapshot,
   setEnabled: async ({ enabled: nextEnabled, frontendState }) => (
     await setSourceConnectionEnabled(nextEnabled, frontendState)
   ),
@@ -67,9 +83,26 @@ const connectedActionContext = createBackgroundActionContext({
 
 function connectionBoards(value: unknown): NativeExtensionBoard[] {
   const application = normalizeApplicationData(value)
+  const instances = new Map(application.instances.map(instance => [instance.instanceId, instance]))
   return application.boards.map(board => ({
     id: board.id,
+    instances: board.instanceIds.flatMap((instanceId) => {
+      const instance = instances.get(instanceId)
+      return instance
+        ? [{
+            instanceId,
+            ...(instance.patch.metadata === undefined ? {} : { metadata: instance.patch.metadata }),
+            sourceId: instance.sourceId,
+          }]
+        : []
+    }),
     name: board.name,
+    widgets: board.nextLayer.widgets.map(widget => ({
+      instanceIds: widget.dataScope.type === "board"
+        ? [...board.instanceIds]
+        : widget.dataScope.instanceIds.filter(instanceId => board.instanceIds.includes(instanceId)),
+      widgetId: widget.widgetId,
+    })),
   }))
 }
 
@@ -90,12 +123,24 @@ function parseHostMessage(value: unknown): ParsedHostMessage {
       type: "ready",
       protocolVersion: value.protocolVersion,
       daemonVersion: value.daemonVersion,
+      widgetServerUrl: parseWidgetServerUrl(value.widgetServerUrl),
     }
   }
   if (value.type === "execute") {
     return {
       type: "execute",
       request: parseExtensionConnectionCommandRequest(value.request),
+    }
+  }
+  if (
+    value.type === "widgetSnapshotResult"
+    && typeof value.requestId === "string"
+    && isNativeCommandResult(value.result)
+  ) {
+    return {
+      type: "widgetSnapshotResult",
+      requestId: value.requestId,
+      result: value.result,
     }
   }
   if (
@@ -112,10 +157,16 @@ function parseHostMessage(value: unknown): ParsedHostMessage {
   throw new Error("The native host returned an unsupported message")
 }
 
+function isNativeCommandResult(value: unknown): value is NativeCommandResult {
+  if (!isRecord(value) || typeof value.ok !== "boolean") return false
+  return value.ok ? true : isRecord(value.error) && typeof value.error.message === "string"
+}
+
 export function getSourceConnectionStatus(): SourceConnectionStatus {
   return {
     cliVersion,
     state: enabled ? connectionState : "disabled",
+    widgetServerUrl,
   }
 }
 
@@ -159,7 +210,9 @@ function disconnect(): void {
   port?.disconnect()
   port = undefined
   cliVersion = undefined
+  widgetServerUrl = undefined
   connectionState = "disconnected"
+  rejectPendingWidgetSnapshotRequests(new Error("NewsNext CLI disconnected"))
 }
 
 function connect(): void {
@@ -169,13 +222,16 @@ function connect(): void {
 
   connectionState = "connecting"
   cliVersion = undefined
+  widgetServerUrl = undefined
   const nextPort = browser.runtime.connectNative(NATIVE_HOST_NAME)
   port = nextPort
   nextPort.onDisconnect.addListener(() => {
     if (port === nextPort) {
       port = undefined
       cliVersion = undefined
+      widgetServerUrl = undefined
       connectionState = "disconnected"
+      rejectPendingWidgetSnapshotRequests(new Error("NewsNext CLI disconnected"))
     }
   })
   nextPort.onMessage.addListener((value: unknown) => {
@@ -189,12 +245,24 @@ function connect(): void {
           throw new Error(`Unsupported native protocol version ${message.protocolVersion}`)
         }
         cliVersion = message.daemonVersion
+        widgetServerUrl = message.widgetServerUrl
         connectionState = "connected"
       } else if (message.type === "execute") {
         void executeCommand(nextPort, message.request).catch((error) => {
           console.error("Failed to return native source connection result", error)
         })
+      } else if (message.type === "widgetSnapshotResult") {
+        settleWidgetRequest(message.requestId, message.result)
       } else {
+        if (message.requestId) {
+          const pending = pendingWidgetSnapshotRequests.get(message.requestId)
+          if (pending) {
+            clearTimeout(pending.timeoutId)
+            pendingWidgetSnapshotRequests.delete(message.requestId)
+            pending.reject(new Error(message.message))
+            return
+          }
+        }
         console.error("NewsNext native host error", message.message)
       }
     } catch (error) {
@@ -214,6 +282,69 @@ function connect(): void {
     },
   }
   nextPort.postMessage(hello)
+}
+
+export async function requestWidgetSnapshot(input: {
+  boardId: string
+  widgetId: string
+}): Promise<unknown> {
+  const connection = port
+  if (!enabled || connectionState !== "connected" || !connection) {
+    throw new Error("NewsNext CLI is not connected")
+  }
+  const message: ExtensionToHost = {
+    type: "widgetSnapshotGet",
+    requestId: crypto.randomUUID(),
+    ...input,
+  }
+  return await new Promise((resolve, reject) => {
+    const timeoutId = setTimeout(() => {
+      pendingWidgetSnapshotRequests.delete(message.requestId)
+      reject(new Error("Timed out waiting for the NewsNext CLI"))
+    }, WIDGET_REQUEST_TIMEOUT_MS)
+    pendingWidgetSnapshotRequests.set(message.requestId, { reject, resolve, timeoutId })
+    connection.postMessage(message)
+  })
+}
+
+function settleWidgetRequest(requestId: string, result: NativeCommandResult): void {
+  const pending = pendingWidgetSnapshotRequests.get(requestId)
+  if (!pending) return
+  clearTimeout(pending.timeoutId)
+  pendingWidgetSnapshotRequests.delete(requestId)
+  if (result.ok) {
+    pending.resolve(result.data)
+  } else {
+    pending.reject(new Error(result.error.message))
+  }
+}
+
+function rejectPendingWidgetSnapshotRequests(error: Error): void {
+  for (const pending of pendingWidgetSnapshotRequests.values()) {
+    clearTimeout(pending.timeoutId)
+    pending.reject(error)
+  }
+  pendingWidgetSnapshotRequests.clear()
+}
+
+function parseWidgetServerUrl(value: unknown): string {
+  if (typeof value !== "string") {
+    throw new TypeError("The native host returned an invalid widget server URL")
+  }
+  const url = new URL(value)
+  if (
+    url.protocol !== "http:"
+    || url.hostname !== "127.0.0.1"
+    || !url.port
+    || url.username
+    || url.password
+    || url.pathname !== "/"
+    || url.search
+    || url.hash
+  ) {
+    throw new Error("The native host widget server must use a loopback HTTP origin")
+  }
+  return url.origin
 }
 
 async function applySourceConnectionEnabled(nextEnabled: boolean): Promise<void> {

@@ -220,24 +220,28 @@ business-specific branch to the shell.
 The reference implementation is `LiveCardSurface` in
 `apps/extension/src/components/live-card/card-surface.tsx`.
 
-### Next Layer grid preview
+### Next Layer Widget surfaces
 
-Next Layer uses a responsive GridStack surface to preview movable and resizable
-Widgets while its durable CLI/daemon-backed model is being built. Keep demo
-content self-explanatory without a visible page heading or drag instructions,
-reset it on reload, and never read Now Layer queries to populate it. Production
-Widgets must eventually render CLI/daemon-backed persisted output rather than
-browser-cache-backed results.
-Until persisted Widget layouts are available, derive each Board's demo colors,
-Widget order, and initial sizes deterministically from its Board ID. Keep that
-preview stable across remounts while making different Boards visibly distinct.
-Do not derive Next Layer Widget colors from the Board theme palette.
+Next Layer uses a responsive GridStack presentation adapter for movable and
+resizable local Widgets. Persist each Widget's position and dimensions in its
+Board rather than treating GridStack as the durable layout model. Resize from
+the lower and right edges without adding dedicated visible drag or resize
+controls.
 
-Treat GridStack as a presentation adapter rather than the durable layout model.
-Keep the trusted Widget shell and status treatment outside future generated
-content. Use the LiveCard translucent shell language and let the whole demo
-surface act as the drag target. Resize from the lower and right edges without
-adding dedicated visible drag or resize controls.
+Keep the trusted Widget shell outside the iframe and reuse the LiveCard surface
+language directly: `LiveCardSurface`, `p-2.5`, a `text-base font-bold` title, and
+`LiveCardHeaderActionButton`. The shell follows the Board theme because an
+aggregating Widget has no single Source provider palette. The host owns the
+title, refresh state and button, drag behavior, nested `2xl` content surface,
+and error or connection treatment.
+
+Keep the iframe and its document background transparent so the host's nested
+surface remains visible. iframe content must not repeat the title, refresh
+control, outer padding, rounded shell, or background. It may render links as
+normal new-tab links; the host sandbox permits popups while retaining script,
+DOM, storage, and same-origin isolation. Widget content should use NewsNext
+semantic typography, foreground, muted, divider, hover, spacing, and motion
+tokens instead of copying raw colors or defining an unrelated visual system.
 
 Preserve Now Layer's intrinsic centered LiveCard layout inside the same maximum
 content width as Next Layer. Limit both Layers to the equivalent width of a

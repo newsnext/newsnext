@@ -1,7 +1,5 @@
-import type { PersistedDeviceState } from "../settings"
 import type { BackgroundActionContext } from "./background-actions"
-import type { SourceConnectionStatus } from "./source-connection-native"
-import { loadSourceDescriptors } from "@newsnext/source-kit/runtime"
+import { loadSourceDescriptors, prepareSourceRequest } from "@newsnext/source-kit/runtime"
 import { openAppBoard, openAppSettings } from "../app-tab"
 import {
   mutateApplicationData,
@@ -20,13 +18,7 @@ import { createProtectedSourceLoader } from "./protected-source-loader"
 import { createBackgroundRadarService } from "./radar-service"
 import { createSourceLoaderInvoker } from "./source-loader-invoker"
 
-export interface SourceConnectionActions {
-  getStatus: () => Promise<SourceConnectionStatus>
-  setEnabled: (input: {
-    enabled: boolean
-    frontendState?: PersistedDeviceState
-  }) => Promise<SourceConnectionStatus>
-}
+export type SourceConnectionActions = BackgroundActionContext["sourceConnection"]
 
 const sourceLoaderInvoker = createSourceLoaderInvoker()
 const sourceLoader = createProtectedSourceLoader(sourceLoaderInvoker)
@@ -59,6 +51,26 @@ export function createBackgroundActionContext(
     },
     radar: {
       resolveSuggestions: radarService.resolveSuggestions,
+    },
+    job: {
+      async executeInstance({ instanceId }) {
+        const application = await readApplicationData()
+        const instance = application.instances.find(candidate => candidate.instanceId === instanceId)
+        if (!instance) throw new Error(`Instance '${instanceId}' not found`)
+        const request = await prepareSourceRequest(instance.sourceId, instance.patch.params ?? {})
+        const result = await sourceLoaderInvoker.invoke({
+          params: request.params,
+          sourceId: instance.sourceId,
+        })
+        const fetchedAt = Date.now()
+        return {
+          fetchProtected: false,
+          fetchedAt,
+          loadedAt: Date.now(),
+          params: request.params,
+          result,
+        }
+      },
     },
     source: {
       cancel: sourceLoaderInvoker.cancel,

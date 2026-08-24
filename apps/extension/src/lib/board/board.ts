@@ -9,6 +9,23 @@ export type BoardLayer = "now" | "next"
 
 export const DEFAULT_BOARD_LAYER: BoardLayer = "now"
 
+export type NextLayerWidgetDataScope
+  = | { type: "board" }
+    | { type: "instances", instanceIds: string[] }
+
+export interface NextLayerWidgetLayout {
+  height: number
+  width: number
+  x: number
+  y: number
+}
+
+export interface NextLayerWidget {
+  dataScope: NextLayerWidgetDataScope
+  layout: NextLayerWidgetLayout
+  widgetId: string
+}
+
 export interface Board {
   color: Color
   createdAt: number
@@ -18,6 +35,9 @@ export interface Board {
   name: string
   nowLayer: {
     sort: NowLayerSort
+  }
+  nextLayer: {
+    widgets: NextLayerWidget[]
   }
 }
 
@@ -44,6 +64,7 @@ export function createBoard(
     instanceIds: [],
     name,
     nowLayer: { sort: createNowLayerSort(sortMode) },
+    nextLayer: { widgets: [] },
   }
 }
 

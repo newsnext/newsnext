@@ -450,12 +450,32 @@ the two stores address different data. The Instance remains the Board and
 Widget reference; the resolved Source target remains the execution and storage
 identity.
 
-Next Layer does not read the Now Layer TanStack cache. Its future Widgets display
-persisted results produced through the CLI and daemon by Agent-owned asynchronous
-tasks. A task may refresh selected Sources, consume retained History inputs,
-process them, and save a provenance-bearing result.
-Opening Next Layer must not repeat Agent-owned refresh or processing, mount
-offscreen LiveCards, or start Source execution solely to populate the presentation.
+Next Layer does not read or invalidate the Now Layer TanStack cache. A local
+Widget declares named data queries in `widget.json`, but those
+declarations remain entirely inside the CLI. The static manifest response only
+exposes presentation metadata needed by the host. Each Widget host owns one
+TanStack query keyed by Board, Widget, and Board-resolved Instance scope; that
+query crosses Native Messaging once to read one daemon-owned Snapshot containing
+all declared query results.
+The host owns the title, layout, resize persistence, and refresh button. The
+sandboxed iframe only announces readiness and renders the Snapshot delivered by the
+host; it cannot select Instances, execute Sources, or initiate refreshes.
+
+The daemon validates each query against its local manifest and the Board/Widget
+projection supplied by the authenticated extension connection. Every installed
+Widget has a daemon-owned Job whose schedule comes from the manifest. Board
+projection changes reconcile these managed Jobs, and each run executes the
+granted Instances through the same connected background Job action used by
+ordinary Jobs. That action uses the browser Source runtime without reading or
+writing the Now Layer cache. The
+daemon retains fresh observations in History and stores independently revisioned
+Widget Snapshots in Turso. A Snapshot stores the manifest and scope fingerprints,
+one revision, one refresh timestamp, and every named query result in a single
+atomic row. The localhost Widget server remains a static asset and
+manifest service; Widget data does not use an HTTP API. Opening an inactive or
+offscreen Widget does not execute Sources. The outer refresh button immediately
+rereads the materialized Snapshot; it never executes a Source or bypasses the
+Widget Job.
 
 Loader metadata is response-scoped and remains part of the load result stored in
 TanStack Query and persisted for later restoration.
@@ -511,6 +531,12 @@ chronological order is the correct source behavior.
 The extension executes registry access and source loaders through its background
 service so loaders can use extension host permissions, cookie and local-storage
 secrets, and request rules.
+
+The extension-page Content Security Policy intentionally leaves `connect-src`
+unspecified because Source destinations are dynamic. Browser host permissions
+and the runtime network capability check are the two request gates. Adding a
+static `connect-src` allowlist would reject otherwise authorized Sources before
+either permission boundary can evaluate the request.
 
 Sources expose only `network` and `cookies` capabilities. The `rss:feed` source
 has a parameter-aware host-permission resolver that converts its effective

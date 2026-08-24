@@ -1,4 +1,4 @@
-import { DemoGrid } from "./demo-grid"
+import { LocalWidgetGrid } from "./local-widget-grid"
 
 interface NextLayerProps {
   boardId: string
@@ -9,7 +9,7 @@ export function NextLayer({ boardId, entranceReady }: NextLayerProps) {
   return (
     <>
       <h1 className="sr-only">Next Layer</h1>
-      <DemoGrid
+      <LocalWidgetGrid
         boardId={boardId}
         entranceReady={entranceReady}
       />

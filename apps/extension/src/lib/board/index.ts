@@ -1,4 +1,11 @@
-export type { Board, BoardCreateInput, BoardLayer } from "./board"
+export type {
+  Board,
+  BoardCreateInput,
+  BoardLayer,
+  NextLayerWidget,
+  NextLayerWidgetDataScope,
+  NextLayerWidgetLayout,
+} from "./board"
 export {
   createBoard,
   DEFAULT_BOARD_COLOR,

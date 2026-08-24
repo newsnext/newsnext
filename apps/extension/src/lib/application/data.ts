@@ -3,7 +3,7 @@ import type { Instance } from "../source"
 import { createBoard, INITIAL_BOARD_NAME } from "../board"
 import { createId } from "../id"
 
-export const APPLICATION_DATA_VERSION = 3 as const
+export const APPLICATION_DATA_VERSION = 4 as const
 
 export interface ApplicationData {
   version: typeof APPLICATION_DATA_VERSION

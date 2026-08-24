@@ -22,6 +22,7 @@ const BOARD_DIALOG_BOARDS: Board[] = [
     nowLayer: {
       sort: { mode: "addedAt", automaticMode: "addedAt", manualOrder: [] },
     },
+    nextLayer: { widgets: [] },
   },
   {
     color: "purple",
@@ -33,6 +34,7 @@ const BOARD_DIALOG_BOARDS: Board[] = [
     nowLayer: {
       sort: { mode: "provider", automaticMode: "provider", manualOrder: [] },
     },
+    nextLayer: { widgets: [] },
   },
 ]
 

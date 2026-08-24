@@ -5,6 +5,9 @@ import {
   createBoardMutation,
   createInstanceMutation,
   deleteInstanceMutation,
+  installNextLayerWidgetMutation,
+  setNextLayerWidgetDataScopeMutation,
+  setNextLayerWidgetLayoutsMutation,
   setNowLayerManualOrderMutation,
 } from "./mutations"
 
@@ -12,7 +15,7 @@ const dependencies = { createId: () => "new", now: () => 100 }
 
 function createData(): ApplicationData {
   return {
-    version: 3,
+    version: 4,
     boards: [{
       color: "blue",
       id: "reading",
@@ -23,6 +26,7 @@ function createData(): ApplicationData {
       nowLayer: {
         sort: { mode: "addedAt", automaticMode: "addedAt", manualOrder: ["rss:feed::one"] },
       },
+      nextLayer: { widgets: [] },
     }],
     instances: [{
       instanceId: "rss:feed::one",
@@ -52,6 +56,7 @@ describe("application mutations", () => {
       nowLayer: {
         sort: { mode: "provider", automaticMode: "provider", manualOrder: [] },
       },
+      nextLayer: { widgets: [] },
     })
   })
 
@@ -117,5 +122,49 @@ describe("application mutations", () => {
     expect(execution.data.instances).toEqual([])
     expect(execution.data.boards[0]?.instanceIds).toEqual([])
     expect(execution.data.boards[0]?.nowLayer.sort.manualOrder).toEqual([])
+  })
+
+  it("installs a Board-scoped Widget and persists layout changes", () => {
+    const installed = installNextLayerWidgetMutation(createData(), {
+      boardId: "reading",
+      dataScope: { type: "board" },
+      layout: { x: 0, y: 0, width: 6, height: 4 },
+      widgetId: "latest",
+    }).data
+
+    const execution = setNextLayerWidgetLayoutsMutation(installed, {
+      boardId: "reading",
+      widgets: [{
+        widgetId: "latest",
+        layout: { x: 2, y: 3, width: 8, height: 5 },
+      }],
+    })
+
+    expect(execution.data.boards[0]?.nextLayer.widgets).toEqual([{
+      widgetId: "latest",
+      dataScope: { type: "board" },
+      layout: { x: 2, y: 3, width: 8, height: 5 },
+    }])
+  })
+
+  it("limits explicit Widget data scopes to Board Instances", () => {
+    const installed = installNextLayerWidgetMutation(createData(), {
+      boardId: "reading",
+      dataScope: { type: "instances", instanceIds: ["rss:feed::one"] },
+      layout: { x: 0, y: 0, width: 6, height: 4 },
+      widgetId: "latest",
+    }).data
+
+    expect(() => setNextLayerWidgetDataScopeMutation(installed, {
+      boardId: "reading",
+      dataScope: { type: "instances", instanceIds: ["outside"] },
+      widgetId: "latest",
+    })).toThrow("from its Board")
+
+    const execution = deleteInstanceMutation(installed, { instanceId: "rss:feed::one" })
+    expect(execution.data.boards[0]?.nextLayer.widgets[0]?.dataScope).toEqual({
+      type: "instances",
+      instanceIds: [],
+    })
   })
 })
