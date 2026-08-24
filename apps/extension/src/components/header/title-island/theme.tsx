@@ -1,14 +1,11 @@
 import { ThemeSelector } from "@newsnext/ui/components/theme-selector"
 import { useAtomValue, useSetAtom } from "jotai"
 import { handleThemeSwitch } from "@/lib/utils/swith-theme"
-import { boardsAtom, updateBoardAtom } from "@/store/board"
-import { currentBoardIdAtom } from "@/store/settings"
+import { currentBoardAtom, updateBoardAtom } from "@/store/board"
 
 export function ThemeFeature() {
-  const boards = useAtomValue(boardsAtom)
-  const currentBoardId = useAtomValue(currentBoardIdAtom)
+  const board = useAtomValue(currentBoardAtom)
   const updateBoard = useSetAtom(updateBoardAtom)
-  const board = boards.find(candidate => candidate.id === currentBoardId)
 
   if (!board) return null
 

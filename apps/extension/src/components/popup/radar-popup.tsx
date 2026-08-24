@@ -1,5 +1,6 @@
 import { Button } from "@newsnext/ui/components/button"
-import { Logo } from "@newsnext/ui/components/logo"
+import { ThemeIcon } from "@newsnext/ui/components/theme-icon"
+import { useAtomValue } from "jotai"
 import { useCallback, useRef, useState } from "react"
 import { ScrollProgressProvider } from "@/components/common/scroll-progress-provider"
 import { PhGear, PhHouse } from "@/components/icons/ph"
@@ -8,6 +9,7 @@ import { useCurrentTabRadarSuggestions } from "@/hooks/use-current-tab-radar-sug
 import { openAppTab } from "@/lib/app-tab"
 import { openSettings } from "@/lib/settings"
 import { cn } from "@/lib/utils"
+import { currentBoardAtom } from "@/store/board"
 
 interface RadarOverlayHeaderProps {
   count: number
@@ -15,6 +17,7 @@ interface RadarOverlayHeaderProps {
 }
 
 function RadarOverlayHeader({ count, isScanning }: RadarOverlayHeaderProps): React.JSX.Element {
+  const themeColor = useAtomValue(currentBoardAtom)?.color ?? "red"
   const statusLabel = isScanning
     ? "Radar · Scanning…"
     : `Radar · ${count} ${count === 1 ? "LiveCard" : "LiveCards"}`
@@ -25,7 +28,7 @@ function RadarOverlayHeader({ count, isScanning }: RadarOverlayHeaderProps): Rea
         className="flex h-10 items-center gap-2 px-1 text-lg font-bold text-muted-foreground"
         role="status"
       >
-        <Logo className="size-5 shrink-0 text-primary" />
+        <ThemeIcon className="size-5 shrink-0" color={themeColor} />
         <span>{statusLabel}</span>
       </div>
       <div className="flex items-center gap-2">

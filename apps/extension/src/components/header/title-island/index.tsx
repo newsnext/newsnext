@@ -1,7 +1,9 @@
 import type { HeaderNotification } from "../notification"
 import type { TitleIslandFeature } from "./feature"
 import { DynamicIsland } from "@newsnext/ui/components/dynamic-island"
+import { useAtomValue } from "jotai"
 import { useRef } from "react"
+import { currentBoardAtom } from "@/store/board"
 import { useHeaderProgress } from "../use-header-progress"
 import { resolveTitleIslandFeature } from "./feature"
 import { useNotificationFeature, useThemeFeature, useTrashFeature } from "./features"
@@ -22,6 +24,7 @@ export function TitleIsland({
 }: TitleIslandProps) {
   const surfaceRef = useRef<HTMLDivElement>(null)
   const progress = useHeaderProgress()
+  const themeColor = useAtomValue(currentBoardAtom)?.color ?? "red"
   const themeFeature = useThemeFeature()
   const notificationFeature = useNotificationFeature(
     notification,
@@ -68,7 +71,7 @@ export function TitleIsland({
           : null}
       >
         {isSmall => isSmall
-          ? <TitleIslandProgress {...progress} />
+          ? <TitleIslandProgress {...progress} themeColor={themeColor} />
           : activeFeature?.content}
       </DynamicIsland>
     </>

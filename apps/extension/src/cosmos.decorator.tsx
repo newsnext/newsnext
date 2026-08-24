@@ -1,9 +1,9 @@
 import type { Color } from "@newsnext/shared/types"
 import type { PropsWithChildren, ReactNode } from "react"
 import { DynamicIsland } from "@newsnext/ui/components/dynamic-island"
-import { Logo } from "@newsnext/ui/components/logo"
 import { RadioGroup, RadioGroupItem } from "@newsnext/ui/components/radio-group"
 import { Switch } from "@newsnext/ui/components/switch"
+import { ThemeIcon } from "@newsnext/ui/components/theme-icon"
 import { ThemeSelector } from "@newsnext/ui/components/theme-selector"
 import { WordmarkLogo } from "@newsnext/ui/components/wordmark-logo"
 import { QueryClient } from "@tanstack/react-query"
@@ -54,7 +54,7 @@ function CosmosAppearanceControls(): React.JSX.Element {
         {isSmall => isSmall
           ? (
               <div className="flex size-full items-center justify-center gap-2">
-                <Logo className="size-5 text-primary" />
+                <ThemeIcon className="size-5" color={color} />
                 <WordmarkLogo className="h-auto w-[4.6em] text-xl" />
               </div>
             )

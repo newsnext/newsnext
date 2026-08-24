@@ -2,7 +2,7 @@ import type { Color } from "@newsnext/shared/types"
 import { Radio } from "@base-ui/react/radio"
 import { RadioGroup } from "@base-ui/react/radio-group"
 import { COLORS } from "@newsnext/shared/constants"
-import { Logo } from "@newsnext/ui/components/logo"
+import { ThemeIcon } from "@newsnext/ui/components/theme-icon"
 import { cn } from "@newsnext/ui/lib/utils"
 import { m } from "motion/react"
 
@@ -44,7 +44,10 @@ export function ThemeSelector({ value, onValueChange, layoutId = "theme-indicato
               }}
             />
           )}
-          <Logo className="size-full p-0.5" />
+          <ThemeIcon
+            className="size-full p-0.5"
+            color={color}
+          />
         </Radio.Root>
       ))}
     </RadioGroup>

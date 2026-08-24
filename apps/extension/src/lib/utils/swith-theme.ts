@@ -1,6 +1,5 @@
 import type { Color } from "@newsnext/shared/types"
 import { isThemeColor } from "../settings/theme-color"
-import FAVICON_SVG from "/icon.svg?url&raw"
 
 export const THEME_COLOR_KEY = "newsnext-theme-color"
 export type ThemeMode = "light" | "dark" | "system"
@@ -26,21 +25,7 @@ export function syncThemeFavicon(color: string): void {
   const link = document.querySelector<HTMLLinkElement>("link[rel~='icon']")
   if (!link) return
 
-  const root = document.documentElement
-  const colorValue = getComputedStyle(root)
-    .getPropertyValue(`--color-${color}-500`)
-    .trim()
-  if (!colorValue) return
-
-  const svgDocument = new DOMParser().parseFromString(FAVICON_SVG, "image/svg+xml")
-  const themeColorElement = svgDocument.querySelector("[data-theme-color]")
-  if (!themeColorElement) return
-
-  themeColorElement.setAttribute("fill", colorValue)
-  const svg = new XMLSerializer().serializeToString(svgDocument.documentElement)
-  const url = `data:image/svg+xml,${encodeURIComponent(svg)}`
-
-  link.href = url
+  link.href = `/theme-icons/${color}.png`
   syncedFaviconColor = color
 }
 

@@ -12,6 +12,7 @@ import {
 } from "../lib/board"
 import { normalizeApplicationData, PERSISTED_DATA_SLICES } from "../lib/settings"
 import { createMirroredStorage } from "./persisted-storage"
+import { currentBoardIdAtom } from "./settings"
 
 const persistedApplicationDataAtom = atomWithStorage<ApplicationData>(
   PERSISTED_DATA_SLICES.application.key,
@@ -27,6 +28,10 @@ const persistedApplicationDataAtom = atomWithStorage<ApplicationData>(
 export const applicationDataAtom = atom(get => get(persistedApplicationDataAtom))
 
 export const boardsAtom = selectAtom(applicationDataAtom, data => data.boards)
+export const currentBoardAtom = atom((get) => {
+  const currentBoardId = get(currentBoardIdAtom)
+  return get(boardsAtom).find(board => board.id === currentBoardId)
+})
 export const instancesAtom = selectAtom(applicationDataAtom, data => data.instances)
 export interface InstanceViewLayout {
   boardIds: string[]

@@ -29,8 +29,10 @@ families. Treat those secondary colors as distinct live signals that converge
 into the red NewsNext horizon, rather than as a generic grid of decorative
 blocks. Let the composition explain that live browser signals flow into a local
 desktop foundation without pretending the abstract marks are controls.
-Use the extension's checked-in `public/icon.svg` directly for public web icon
-metadata; do not redraw or approximate the brand icon in another app.
+Use the checked-in Light Icon Composer renders as the shared product icon. Keep
+the browser manifest sizes in `apps/extension/public/icon/` and the themed UI
+variants in `apps/extension/public/theme-icons/`; do not redraw or approximate
+the brand icon in another app. The extension does not use a separate dark icon.
 Keep copy factual about public and separately distributed components. Treat
 motion as one restrained entry sequence and respect reduced-motion preferences.
 
@@ -77,9 +79,10 @@ a blocking head script before loading the application entry. Apply the resolved
 mode and color class to the document element, and keep both `html` and `body` on
 `var(--background)` so the browser's initial frame matches the user's preference
 instead of exposing its default canvas color or default theme wash.
-Synchronize the themed favicon in the app entry before mounting React. Keep this
-separate from the head bootstrap and provider composition so favicon work does
-not delay the initial background or depend on board effects.
+Synchronize the themed favicon in the app entry before mounting React by selecting
+the matching checked-in theme icon. Reuse those same assets in the shared theme
+selector. Keep this separate from the head bootstrap and provider composition so
+favicon work does not delay the initial background or depend on board effects.
 
 The Appearance settings may let the user choose a local raster image and extract
 its edges into background illustration, or use a local SVG directly. Keep processing
@@ -200,6 +203,8 @@ LiveCards define the primary NewsNext surface treatment.
 - The header Dynamic Island expands to a 270px by 110px Board color panel. Keep
   the shared theme selector's six-column palette as its only control and center
   its 232px by 72px option grid so the visible clearance is 19px on every side.
+  In its collapsed title state, show the active Board's checked-in theme icon;
+  do not substitute the legacy vector logo.
   Theme mode belongs in Appearance settings rather than the title island.
   Changing the active Board color here updates the same persisted Board
   preference used by its editor.

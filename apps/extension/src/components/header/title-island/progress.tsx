@@ -1,5 +1,6 @@
+import type { Color } from "@newsnext/shared/types"
 import type { HeaderProgressState } from "../use-header-progress"
-import { Logo } from "@newsnext/ui/components/logo"
+import { ThemeIcon } from "@newsnext/ui/components/theme-icon"
 import {
   GoToTopWordmark,
   NewsNowWordmarkLogo,
@@ -14,7 +15,8 @@ export function TitleIslandProgress({
   isNextLayer,
   opacity,
   scrollYProgress,
-}: HeaderProgressState) {
+  themeColor,
+}: HeaderProgressState & { themeColor: Color }) {
   return (
     <div
       className="flex size-full items-center justify-center gap-2"
@@ -51,7 +53,7 @@ export function TitleIslandProgress({
                 exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.2 }}
               >
-                <Logo className="size-5 text-primary" />
+                <ThemeIcon className="size-5" color={themeColor} />
                 {isNextLayer
                   ? <WordmarkLogo className="h-auto w-[4.5em] shrink-0 text-xl transition-opacity" />
                   : <NewsNowWordmarkLogo className="h-auto w-[4.5em] shrink-0 text-xl transition-opacity" />}

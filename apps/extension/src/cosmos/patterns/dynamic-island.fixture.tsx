@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { DynamicIsland } from "@newsnext/ui/components/dynamic-island"
-import { Logo } from "@newsnext/ui/components/logo"
+import { ThemeIcon } from "@newsnext/ui/components/theme-icon"
 
 function DynamicIslandFixture(): React.JSX.Element {
   return (
@@ -10,7 +10,7 @@ function DynamicIslandFixture(): React.JSX.Element {
           ? <div className="grid h-full place-items-center text-xs">Open controls</div>
           : (
               <div className="grid h-full place-content-center gap-3 p-6">
-                <Logo className="mx-auto size-12 text-primary" />
+                <ThemeIcon className="mx-auto size-12" color="red" />
                 <strong>Dynamic island</strong>
                 <span className="text-xs text-muted-foreground">Click outside or scroll to close.</span>
               </div>

@@ -4,7 +4,7 @@ import type { ReactNode } from "react"
 
 import { createRootRoute, HeadContent, Link, Scripts } from "@tanstack/react-router"
 
-import faviconUrl from "../../../extension/public/icon.svg?url"
+import faviconUrl from "../../../extension/public/theme-icons/red.png?url"
 import appCss from "../styles.css?url"
 
 export const Route = createRootRoute({
@@ -35,7 +35,7 @@ export const Route = createRootRoute({
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "icon", type: "image/svg+xml", href: faviconUrl },
+      { rel: "icon", type: "image/png", href: faviconUrl },
       { rel: "canonical", href: "https://newsnext.app/" },
     ],
   }),

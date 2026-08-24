@@ -1,6 +1,6 @@
 import type { CliPermissionPrompt } from "@/lib/background/cli-permission"
 import { Button } from "@newsnext/ui/components/button"
-import { Logo } from "@newsnext/ui/components/logo"
+import { ThemeIcon } from "@newsnext/ui/components/theme-icon"
 import { useEffect, useState } from "react"
 import { browser } from "#imports"
 import { renderPersistentReactRoot } from "@/lib/react-root"
@@ -70,7 +70,7 @@ function CliPermissionApp(): React.JSX.Element {
     <main className="flex min-h-full items-center">
       <section className="w-full px-7 py-5">
         <header className="flex items-start gap-3">
-          <Logo className="size-12 shrink-0 text-primary" aria-hidden="true" />
+          <ThemeIcon className="size-12 shrink-0" color="red" aria-hidden="true" />
           <div className="min-w-0">
             <h1 className="text-lg font-semibold leading-6 tracking-tight">Allow site access</h1>
             <p className="mt-1 text-sm leading-5 text-muted-foreground">
