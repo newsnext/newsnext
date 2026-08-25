@@ -1,3 +1,4 @@
+import type { BoardLayer } from "@/lib/board"
 import { useQueryClient } from "@tanstack/react-query"
 import { Navigate, useLocation, useParams } from "@tanstack/react-router"
 import { useAtomValue, useSetAtom } from "jotai"
@@ -9,6 +10,11 @@ import { handleThemeSwitch } from "@/lib/utils/swith-theme"
 import { boardsAtom, instancesAtom } from "@/store/board"
 import { currentBoardIdAtom } from "@/store/settings"
 
+interface ReadyBoardView {
+  boardId: string
+  layer: BoardLayer
+}
+
 export function BoardIdComponent() {
   const { boardId } = useParams({ strict: false }) as { boardId: string }
   const layer = useLocation({ select: location => getBoardLayerFromState(location.state) })
@@ -17,6 +23,7 @@ export function BoardIdComponent() {
   const queryClient = useQueryClient()
   const setCurrentBoardId = useSetAtom(currentBoardIdAtom)
   const [restoredBoardId, setRestoredBoardId] = useState<string>()
+  const [readyView, setReadyView] = useState<ReadyBoardView>()
   const board = boards.find(board => board.id === boardId)
   const boardInstanceIds = board?.instanceIds
   const boardInstances = useMemo(() => {
@@ -52,6 +59,14 @@ export function BoardIdComponent() {
     }
   }, [boardId, boardInstanceIds, boardInstances, queryClient])
 
+  if (
+    layer
+    && restoredBoardId === boardId
+    && (readyView?.boardId !== boardId || readyView.layer !== layer)
+  ) {
+    setReadyView({ boardId, layer })
+  }
+
   if (!board) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center text-sm text-muted-foreground">
@@ -59,8 +74,6 @@ export function BoardIdComponent() {
       </div>
     )
   }
-
-  if (restoredBoardId !== boardId) return null
 
   if (!layer) {
     return (
@@ -73,7 +86,13 @@ export function BoardIdComponent() {
     )
   }
 
+  const readyBoard = readyView
+    ? boards.find(candidate => candidate.id === readyView.boardId)
+    : undefined
+
+  if (!readyView || !readyBoard) return null
+
   return (
-    <BoardView board={board} layer={layer} />
+    <BoardView board={readyBoard} layer={readyView.layer} />
   )
 }
