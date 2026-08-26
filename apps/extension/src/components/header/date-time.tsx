@@ -1,11 +1,10 @@
 import { format } from "date-fns"
 import { enUS } from "date-fns/locale"
-import { useAtomValue } from "jotai"
-import { minuteDateAtom } from "@/hooks/useRelativeTime"
+import { useMinuteDate } from "@/hooks/useRelativeTime"
 import { cn } from "@/lib/utils"
 
 export function DateTime({ className }: { className?: string }) {
-  const date = useAtomValue(minuteDateAtom)
+  const date = useMinuteDate()
 
   return (
     <div className={cn("island-pill px-4 flex items-center gap-3 select-none", className)}>

@@ -1,45 +1,77 @@
 import { formatDistance } from "date-fns"
 import { enUS } from "date-fns/locale"
 import { atom, useAtomValue } from "jotai"
+import { useMemo } from "react"
 
-/**
- * changed only every minute
- */
-export const minuteDateAtom = atom(new Date())
+const minuteClockAtom = atom(Date.now())
 
-minuteDateAtom.onMount = (setAtom) => {
-  // Update immediately to ensure we don't have a stale date from module load time
-  setAtom(new Date())
+function sampleClock(lastTickAt: number): Date {
+  return new Date(Math.max(lastTickAt, Date.now()))
+}
 
-  let timer: ReturnType<typeof setTimeout>
+minuteClockAtom.onMount = (setAtom) => {
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const updateClock = () => setAtom(Date.now())
 
-  const loop = () => {
+  const scheduleNextMinute = () => {
+    if (timer !== undefined) clearTimeout(timer)
     const now = new Date()
-    // Align with the next minute, add 100ms buffer to ensure we are in the next minute
     const msToNextMinute
       = (60 - now.getSeconds()) * 1000 - now.getMilliseconds() + 100
 
     timer = setTimeout(() => {
-      setAtom(new Date())
-      loop()
+      updateClock()
+      scheduleNextMinute()
     }, msToNextMinute)
   }
 
-  loop()
+  const syncClock = () => {
+    updateClock()
+    scheduleNextMinute()
+  }
+  const syncVisibleClock = () => {
+    if (document.visibilityState === "visible") syncClock()
+  }
 
-  return () => clearTimeout(timer)
+  syncClock()
+  document.addEventListener("visibilitychange", syncVisibleClock)
+  window.addEventListener("focus", syncClock)
+  window.addEventListener("pageshow", syncClock)
+
+  return () => {
+    if (timer !== undefined) clearTimeout(timer)
+    document.removeEventListener("visibilitychange", syncVisibleClock)
+    window.removeEventListener("focus", syncClock)
+    window.removeEventListener("pageshow", syncClock)
+  }
 }
 
-export function formatRelativeTime(date: number, now: Date): string {
+function formatRelativeTime(date: number, now: Date): string {
   return formatDistance(new Date(date), now, {
     addSuffix: true,
     locale: enUS,
   })
 }
 
+export function useMinuteDate(): Date {
+  const lastTickAt = useAtomValue(minuteClockAtom)
+  return useMemo(() => sampleClock(lastTickAt), [lastTickAt])
+}
+
 export function useRelativeTime({ date }: { date: number }): string {
-  const now = useAtomValue(minuteDateAtom)
-  return formatRelativeTime(date, now)
+  const lastTickAt = useAtomValue(minuteClockAtom)
+  return useMemo(
+    () => formatRelativeTime(date, sampleClock(lastTickAt)),
+    [date, lastTickAt],
+  )
+}
+
+export function useRelativeTimes(dates: readonly number[]): string[] {
+  const lastTickAt = useAtomValue(minuteClockAtom)
+  return useMemo(() => {
+    const now = sampleClock(lastTickAt)
+    return dates.map(date => formatRelativeTime(date, now))
+  }, [dates, lastTickAt])
 }
 
 export function RelativeTime({ date }: { date: number }): string {

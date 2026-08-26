@@ -1,9 +1,8 @@
 import type { SourceItemTemplate } from "@newsnext/source-kit/types"
 import type { NewsItem } from "@/typings/source"
 import { VirtualList } from "@newsnext/ui/components/virtual-list"
-import { useAtomValue } from "jotai"
-import { useCallback, useId, useMemo } from "react"
-import { formatRelativeTime, minuteDateAtom } from "@/hooks/useRelativeTime"
+import { useCallback, useId } from "react"
+import { useRelativeTimes } from "@/hooks/useRelativeTime"
 import { cn } from "@/lib/utils"
 import { NewsItemLink, NewsItemSummary } from "./news-item-common"
 import { TimelineRail } from "./timeline-rail"
@@ -18,11 +17,7 @@ interface Props {
 
 export function Timeline({ items, itemTemplate, markScale, scrollElement, times }: Props) {
   const gradientId = useId().replace(/:/g, "")
-  const now = useAtomValue(minuteDateAtom)
-  const timeLabels = useMemo(
-    () => times.map(timestamp => formatRelativeTime(timestamp, now)),
-    [now, times],
-  )
+  const timeLabels = useRelativeTimes(times)
   const renderItem = useCallback((item: NewsItem, index: number) => {
     const timeLabel = timeLabels[index]
     const showTimeLabel = index === 0 || timeLabel !== timeLabels[index - 1]
