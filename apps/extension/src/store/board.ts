@@ -11,21 +11,27 @@ import {
   indexBoardIdsByInstance,
 } from "../lib/board"
 import { normalizeApplicationData, PERSISTED_DATA_SLICES } from "../lib/settings"
-import { createMirroredStorage } from "./persisted-storage"
+import { createExtensionStorage } from "./persisted-storage"
 import { currentBoardIdAtom } from "./settings"
+
+const applicationDataStorage = createExtensionStorage({
+  defaultValue: () => normalizeApplicationData(undefined),
+  key: PERSISTED_DATA_SLICES.application.key,
+  normalize: normalizeApplicationData,
+  readOnly: true,
+})
 
 const persistedApplicationDataAtom = atomWithStorage<ApplicationData>(
   PERSISTED_DATA_SLICES.application.key,
   normalizeApplicationData(undefined),
-  createMirroredStorage({
-    defaultValue: () => normalizeApplicationData(undefined),
-    key: PERSISTED_DATA_SLICES.application.key,
-    normalize: normalizeApplicationData,
-    readOnly: true,
-  }),
+  applicationDataStorage,
   { getOnInit: true },
 )
 export const applicationDataAtom = atom(get => get(persistedApplicationDataAtom))
+
+export async function initializeApplicationDataStorage(): Promise<void> {
+  await applicationDataStorage.initialize()
+}
 
 export const boardsAtom = selectAtom(applicationDataAtom, data => data.boards)
 export const currentBoardAtom = atom((get) => {

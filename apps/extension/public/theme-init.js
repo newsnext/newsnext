@@ -1,22 +1,11 @@
 (() => {
-  const settingsKey = "newsnext-settings"
   const themeColorKey = "newsnext-theme-color"
+  const themeModeKey = "newsnext-theme-mode"
   const systemTheme = "system"
-  let themeMode = systemTheme
+  let themeMode = localStorage.getItem(themeModeKey) ?? systemTheme
 
-  try {
-    const settings = JSON.parse(localStorage.getItem(settingsKey) ?? "null")
-    const persistedThemeMode = settings?.appearance?.themeMode
-
-    if (
-      persistedThemeMode === "light"
-      || persistedThemeMode === "dark"
-      || persistedThemeMode === systemTheme
-    ) {
-      themeMode = persistedThemeMode
-    }
-  } catch {
-    // Fall back to the system preference when persisted settings are invalid.
+  if (themeMode !== "light" && themeMode !== "dark" && themeMode !== systemTheme) {
+    themeMode = systemTheme
   }
 
   const isDark = themeMode === "dark"

@@ -11,7 +11,8 @@ import type { ThemeMode } from "@/lib/utils/swith-theme"
 import { atom } from "jotai"
 import { atomWithStorage } from "jotai/utils"
 import { createDefaultPersistedDeviceState, createDefaultPersistedSettings, normalizePersistedDeviceState, normalizePersistedSettings, PERSISTED_DATA_SLICES } from "@/lib/settings"
-import { createMirroredStorage } from "./persisted-storage"
+import { THEME_MODE_KEY } from "@/lib/utils/swith-theme"
+import { createExtensionStorage, createLocalStorage } from "./persisted-storage"
 
 type SettingsValueUpdate<Value> = Value | ((current: Value) => Value)
 
@@ -19,6 +20,12 @@ const persistedSettingsStorageOptions = {
   defaultValue: createDefaultPersistedSettings,
   key: PERSISTED_DATA_SLICES.settings.key,
   normalize: normalizePersistedSettings,
+  onValue: (settings: PersistedSettings) => {
+    const themeMode = settings.appearance.themeMode
+    if (localStorage.getItem(THEME_MODE_KEY) !== themeMode) {
+      localStorage.setItem(THEME_MODE_KEY, themeMode)
+    }
+  },
 }
 
 const persistedDeviceStateStorageOptions = {
@@ -27,19 +34,26 @@ const persistedDeviceStateStorageOptions = {
   normalize: normalizePersistedDeviceState,
 }
 
+const deviceStateStorage = createLocalStorage(persistedDeviceStateStorageOptions)
+const settingsStorage = createExtensionStorage(persistedSettingsStorageOptions)
+
 export const persistedSettingsAtom = atomWithStorage<PersistedSettings>(
   PERSISTED_DATA_SLICES.settings.key,
   createDefaultPersistedSettings(),
-  createMirroredStorage(persistedSettingsStorageOptions),
+  settingsStorage,
   { getOnInit: true },
 )
 
 export const persistedDeviceStateAtom = atomWithStorage<PersistedDeviceState>(
   PERSISTED_DATA_SLICES.deviceState.key,
   createDefaultPersistedDeviceState(),
-  createMirroredStorage(persistedDeviceStateStorageOptions),
+  deviceStateStorage,
   { getOnInit: true },
 )
+
+export async function initializeSettingsStorage(): Promise<void> {
+  await settingsStorage.initialize()
+}
 
 export const themeModeAtom = atom(
   get => get(persistedSettingsAtom).appearance.themeMode,

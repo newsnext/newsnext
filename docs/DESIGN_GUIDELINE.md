@@ -706,15 +706,10 @@ otherwise return the island to its collapsed state.
 ## Desktop Tray Menu
 
 Keep the desktop tray menu task-first and compact. Settings is the first action
-and opens the NewsNext App settings window. When Boards are available, follow it
-with an Open Board submenu. With one connection, selecting a Board opens it
-directly. With multiple connections, list Boards first and then the connected
-browsers available for the selected Board. Name those connections with the
-detected browser and a short stable instance identifier, and sort them so the
-menu does not reorder as connections report status. Connection status is
-non-interactive supporting information, and Quit NewsNext remains the final
-action separated from status. Browser integration is managed from the App
-settings window rather than the tray menu.
+and opens the NewsNext App settings window. Connection status is non-interactive
+supporting information, and Quit NewsNext remains the final action separated
+from status. Browser integration is managed from the App settings window rather
+than the tray menu.
 
 Expose Open at Login as the same checked setting in the App settings window
 and tray menu. Either control updates the system login item and immediately

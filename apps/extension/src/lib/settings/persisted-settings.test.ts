@@ -4,7 +4,7 @@ import {
   createDefaultPersistedSettings,
   normalizePersistedDeviceState,
   normalizePersistedSettings,
-  withSourceConnectionEnabled,
+  withDesktopConnectionEnabled,
 } from "./persisted-settings"
 import { DEFAULT_SHORTCUT_SETTINGS } from "./shortcuts"
 
@@ -101,12 +101,15 @@ describe("persisted settings", () => {
   })
 
   it("updates the App connection preference without changing other settings", () => {
-    const state = createDefaultPersistedDeviceState()
-    state.currentBoardId = "reading"
+    const settings = createDefaultPersistedSettings()
+    settings.general.defaultBoardId = "reading"
 
-    expect(withSourceConnectionEnabled(state, true)).toEqual({
-      ...state,
-      sourceConnectionEnabled: true,
+    expect(withDesktopConnectionEnabled(settings, true)).toEqual({
+      ...settings,
+      general: {
+        ...settings.general,
+        desktopConnectionEnabled: true,
+      },
     })
   })
 
@@ -114,7 +117,6 @@ describe("persisted settings", () => {
     expect(normalizePersistedDeviceState({
       currentBoardId: 42,
       settingsTab: "advanced",
-      sourceConnectionEnabled: "yes",
       version: 1,
     })).toEqual(createDefaultPersistedDeviceState())
   })

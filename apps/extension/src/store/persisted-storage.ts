@@ -1,132 +1,100 @@
 import type { SyncStorage } from "jotai/vanilla/utils/atomWithStorage"
 import { browser } from "#imports"
 
-interface MirroredStorageOptions<Value> {
+interface ExtensionStorageOptions<Value> {
   defaultValue: () => Value
   key: string
   normalize: (value: unknown) => Value
+  onValue?: (value: Value) => void
   readOnly?: boolean
 }
 
-export function createMirroredStorage<Value>(
-  options: MirroredStorageOptions<Value>,
-): SyncStorage<Value> {
-  let lastKnownSerialized: string | undefined
+interface InitializableStorage<Value> extends SyncStorage<Value> {
+  initialize: () => Promise<void>
+}
 
-  function cacheValue(value: Value): void {
-    lastKnownSerialized = serializeValue(value)
-    writeCachedValue(options, value)
-  }
+export function createExtensionStorage<Value>(
+  options: ExtensionStorageOptions<Value>,
+): InitializableStorage<Value> {
+  let value = options.normalize(options.defaultValue())
 
-  function readValue(): Value {
-    const value = readCachedValue(options)
-    lastKnownSerialized = serializeValue(value)
+  function update(nextValue: unknown): Value {
+    value = options.normalize(nextValue)
+    options.onValue?.(value)
     return value
   }
 
   return {
-    getItem: readValue,
-    setItem: (_key, value) => {
-      const normalized = options.normalize(value)
-      cacheValue(normalized)
+    getItem: () => value,
+    setItem: (_key, nextValue) => {
+      const normalized = update(nextValue)
       if (!options.readOnly) {
         void browser.storage.local.set({ [options.key]: normalized }).catch(() => undefined)
       }
     },
     removeItem: () => {
-      lastKnownSerialized = undefined
-      localStorage.removeItem(options.key)
+      update(undefined)
       if (!options.readOnly) {
         void browser.storage.local.remove(options.key).catch(() => undefined)
       }
     },
     subscribe: (_key, callback) => {
-      let active = true
-      readValue()
       const handleStorageChange: Parameters<
         typeof browser.storage.onChanged.addListener
       >[0] = (changes, areaName): void => {
         const change = changes[options.key]
-        if (areaName !== "local" || !change) {
-          return
+        if (areaName === "local" && change) {
+          callback(update(change.newValue))
         }
-
-        const value = options.normalize(change.newValue)
-        const serialized = serializeValue(value)
-        if (lastKnownSerialized === serialized) {
-          return
-        }
-        cacheValue(value)
-        callback(value)
       }
 
       browser.storage.onChanged.addListener(handleStorageChange)
-      void reconcileValue(options).then((value) => {
-        const serialized = serializeValue(value)
-        if (active && serialized !== lastKnownSerialized) {
-          cacheValue(value)
-          callback(value)
+      return () => browser.storage.onChanged.removeListener(handleStorageChange)
+    },
+    initialize: async () => {
+      const stored = await browser.storage.local.get(options.key)
+      const canonical = stored[options.key]
+      if (canonical !== undefined) {
+        const normalized = update(canonical)
+        if (!options.readOnly && JSON.stringify(normalized) !== JSON.stringify(canonical)) {
+          await browser.storage.local.set({ [options.key]: normalized })
         }
-      }).catch(() => undefined)
-
-      return () => {
-        active = false
-        browser.storage.onChanged.removeListener(handleStorageChange)
       }
     },
   }
 }
 
-export function readCachedValue<Value>(
-  options: MirroredStorageOptions<Value>,
-): Value {
-  const stored = parseJson(localStorage.getItem(options.key))
-  const cached = stored === undefined
-    ? options.normalize(options.defaultValue())
-    : options.normalize(stored)
-  writeCachedValue(options, cached)
-  return cached
-}
-
-function writeCachedValue<Value>(
-  options: MirroredStorageOptions<Value>,
-  value: Value,
-): void {
-  const serialized = serializeValue(value)
-  if (localStorage.getItem(options.key) !== serialized) {
-    localStorage.setItem(options.key, serialized)
-  }
-}
-
-function serializeValue<Value>(value: Value): string {
-  return JSON.stringify(value)
-}
-
-async function reconcileValue<Value>(
-  options: MirroredStorageOptions<Value>,
-): Promise<Value> {
-  const stored = await browser.storage.local.get(options.key)
-  const canonical = stored[options.key]
-  if (canonical !== undefined) {
-    const value = options.normalize(canonical)
-    writeCachedValue(options, value)
-    if (!options.readOnly && JSON.stringify(value) !== JSON.stringify(canonical)) {
-      await browser.storage.local.set({ [options.key]: value })
-    }
+export function createLocalStorage<Value>(
+  options: ExtensionStorageOptions<Value>,
+): SyncStorage<Value> {
+  function read(serialized = localStorage.getItem(options.key)): Value {
+    const value = options.normalize(parseJson(serialized))
+    options.onValue?.(value)
     return value
   }
 
-  const value = readCachedValue(options)
-  if (!options.readOnly) {
-    await browser.storage.local.set({ [options.key]: value })
+  return {
+    getItem: () => read(),
+    setItem: (_key, value) => {
+      const normalized = options.normalize(value)
+      localStorage.setItem(options.key, JSON.stringify(normalized))
+      options.onValue?.(normalized)
+    },
+    removeItem: () => localStorage.removeItem(options.key),
+    subscribe: (_key, callback) => {
+      const handleStorage = (event: StorageEvent): void => {
+        if (event.storageArea === localStorage && event.key === options.key) {
+          callback(read(event.newValue))
+        }
+      }
+      window.addEventListener("storage", handleStorage)
+      return () => window.removeEventListener("storage", handleStorage)
+    },
   }
-  return value
 }
 
 function parseJson(value: string | null): unknown {
-  if (value === null) {
-    return undefined
-  }
+  if (value === null) return undefined
   try {
     return JSON.parse(value)
   } catch {

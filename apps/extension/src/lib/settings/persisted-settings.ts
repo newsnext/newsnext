@@ -32,6 +32,7 @@ export interface PersistedSettings {
   }
   general: {
     defaultBoardId: string | null
+    desktopConnectionEnabled: boolean
     sourceIcon: SourceIconSettings
   }
   shortcuts: ShortcutSettings
@@ -41,7 +42,6 @@ export interface PersistedSettings {
 export interface PersistedDeviceState {
   currentBoardId: string
   settingsTab: SettingsTabId
-  sourceConnectionEnabled: boolean
   version: typeof PERSISTED_SETTINGS_VERSION
 }
 
@@ -56,6 +56,7 @@ export function createDefaultPersistedSettings(): PersistedSettings {
     },
     general: {
       defaultBoardId: null,
+      desktopConnectionEnabled: false,
       sourceIcon: { ...DEFAULT_SOURCE_ICON_SETTINGS },
     },
     shortcuts: { ...DEFAULT_SHORTCUT_SETTINGS },
@@ -67,7 +68,6 @@ export function createDefaultPersistedDeviceState(currentBoardId = ""): Persiste
   return {
     currentBoardId,
     settingsTab: "appearance",
-    sourceConnectionEnabled: false,
     version: PERSISTED_SETTINGS_VERSION,
   }
 }
@@ -98,6 +98,9 @@ export function normalizePersistedSettings(value: unknown): PersistedSettings {
         : general?.defaultBoardId === null
           ? null
           : defaults.general.defaultBoardId,
+      desktopConnectionEnabled: typeof general?.desktopConnectionEnabled === "boolean"
+        ? general.desktopConnectionEnabled
+        : defaults.general.desktopConnectionEnabled,
       sourceIcon: normalizeSourceIconSettings(
         general?.sourceIcon,
         defaults.general.sourceIcon,
@@ -121,20 +124,20 @@ export function normalizePersistedDeviceState(value: unknown): PersistedDeviceSt
     settingsTab: isSettingsTabId(value.settingsTab)
       ? value.settingsTab
       : defaults.settingsTab,
-    sourceConnectionEnabled: typeof value.sourceConnectionEnabled === "boolean"
-      ? value.sourceConnectionEnabled
-      : defaults.sourceConnectionEnabled,
     version: PERSISTED_SETTINGS_VERSION,
   }
 }
 
-export function withSourceConnectionEnabled(
-  state: PersistedDeviceState,
+export function withDesktopConnectionEnabled(
+  settings: PersistedSettings,
   enabled: boolean,
-): PersistedDeviceState {
+): PersistedSettings {
   return {
-    ...state,
-    sourceConnectionEnabled: enabled,
+    ...settings,
+    general: {
+      ...settings.general,
+      desktopConnectionEnabled: enabled,
+    },
   }
 }
 

@@ -12,7 +12,6 @@ import {
 import { createId } from "../id"
 import {
   normalizeApplicationData,
-  normalizePersistedDeviceState,
   normalizePersistedSettings,
   PERSISTED_DATA_SLICES,
 } from "../settings"
@@ -55,10 +54,8 @@ export async function mutateApplicationData(
     }
     if (options.deletedBoardId) {
       const settingsKey = PERSISTED_DATA_SLICES.settings.key
-      const deviceStateKey = PERSISTED_DATA_SLICES.deviceState.key
-      const stored = await browser.storage.local.get([settingsKey, deviceStateKey])
+      const stored = await browser.storage.local.get(settingsKey)
       const settings = normalizePersistedSettings(stored[settingsKey])
-      const deviceState = normalizePersistedDeviceState(stored[deviceStateKey])
       const destinationBoardId = options.targetBoardId
         ?? committedData.boards[0]?.id
       if (!destinationBoardId) throw new Error("NewsNext must keep at least one Board")
@@ -67,9 +64,6 @@ export async function mutateApplicationData(
           ...settings,
           general: { ...settings.general, defaultBoardId: destinationBoardId },
         }
-      }
-      if (deviceState.currentBoardId === options.deletedBoardId) {
-        updates[deviceStateKey] = { ...deviceState, currentBoardId: destinationBoardId }
       }
     }
     await browser.storage.local.set(updates)
@@ -102,17 +96,12 @@ async function enqueueApplicationDataReplacement(
       : candidate
     const fallbackBoardId = data.boards[0]?.id
     if (!fallbackBoardId) throw new Error("NewsNext must keep at least one Board")
-    const deviceStateKey = PERSISTED_DATA_SLICES.deviceState.key
     const settingsKey = PERSISTED_DATA_SLICES.settings.key
-    const stored = await browser.storage.local.get([deviceStateKey, settingsKey])
-    const deviceState = normalizePersistedDeviceState(stored[deviceStateKey])
+    const stored = await browser.storage.local.get(settingsKey)
     const settings = normalizePersistedSettings(stored[settingsKey])
     const boardIds = new Set(data.boards.map(board => board.id))
     const updates: Record<string, unknown> = {
       [PERSISTED_DATA_SLICES.application.key]: data,
-    }
-    if (!boardIds.has(deviceState.currentBoardId)) {
-      updates[deviceStateKey] = { ...deviceState, currentBoardId: fallbackBoardId }
     }
     if (settings.general.defaultBoardId !== null
       && !boardIds.has(settings.general.defaultBoardId)) {
@@ -149,25 +138,4 @@ async function loadApplicationData(): Promise<ApplicationData> {
   if (initialized === data) return data
   await browser.storage.local.set({ [key]: initialized })
   return initialized
-}
-
-export async function readCurrentBoardId(): Promise<string> {
-  const key = PERSISTED_DATA_SLICES.deviceState.key
-  const stored = await browser.storage.local.get(key)
-  return normalizePersistedDeviceState(stored[key]).currentBoardId
-}
-
-export async function selectCurrentBoard(boardId: string): Promise<void> {
-  const application = await readApplicationData()
-  if (!application.boards.some(board => board.id === boardId)) {
-    throw new Error(`Board '${boardId}' not found`)
-  }
-
-  const key = PERSISTED_DATA_SLICES.deviceState.key
-  const stored = await browser.storage.local.get(key)
-  const state = normalizePersistedDeviceState(stored[key])
-  if (state.currentBoardId === boardId) return
-  await browser.storage.local.set({
-    [key]: { ...state, currentBoardId: boardId },
-  })
 }

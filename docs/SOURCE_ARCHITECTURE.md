@@ -399,9 +399,9 @@ each frontend through its own subscription state rather than a duplicate proxy
 payload.
 The Application Data mirror never initializes or normalizes browser storage
 from a frontend page; the background runtime is the only persistent writer.
-`board.getContext` resolves the current Board identity, while
-`nowLayer.getLiveCards` returns every LiveCard logically displayed by that
-Board with its Instance and membership identities, independent of registry
+`board.getContext` resolves a requested Board identity, while
+`nowLayer.getLiveCards` returns every LiveCard logically displayed by the
+requested Board with its Instance and membership identities, independent of registry
 availability.
 
 Requests travel through the same per-user local IPC connection as source authoring
@@ -969,8 +969,7 @@ canonical Action requests, Widget snapshots, Source-result cache reads routed
 by Instance ID, and Instance load requests. The Workspace owns Boards, Layers,
 and Instances. The daemon privately binds each Instance to its creation browser
 and resolves execution to exactly one connected Node without exposing that
-identity or transferring browser credentials or session state. `app.open` targets an exact Node and
-opens its packaged `app.html` route.
+identity or transferring browser credentials or session state.
 Incompatible daemon and extension versions disconnect instead of accepting a
 partial control surface.
 

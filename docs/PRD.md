@@ -665,7 +665,7 @@ The remaining product gaps are:
 | ID | Requirement | Acceptance criteria |
 | --- | --- | --- |
 | AGT-01 | The Agent can discover Widget capabilities | The CLI returns stable operation names, descriptions, and machine-readable input and output schemas |
-| AGT-02 | The Agent can inspect Board data before authoring a Widget | Queries expose the current Board, available Instances, fields, observations, existing Widgets, and dependency health |
+| AGT-02 | The Agent can inspect Board data before authoring a Widget | Queries expose a requested Board, available Instances, fields, observations, existing Widgets, and dependency health |
 | AGT-03 | The Agent can preview before persistence | A preview returns the proposed result, provenance, warnings, and resource failures without modifying the Board |
 | AGT-04 | The Agent can create, update, order, and delete Widgets | CLI changes use canonical Actions, validate at runtime, persist once, and propagate to open UI pages |
 | AGT-05 | Agent changes are inspectable | Each durable Agent-created Widget, task, or derived dataset records its origin, version, configuration, and update time |

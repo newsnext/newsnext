@@ -7,13 +7,11 @@ import {
 
 function createContext(): BackgroundActionContext {
   return {
-    currentBoardId: vi.fn(async () => "reading"),
     data: vi.fn(async () => ({ boards: [], instances: [], version: 4 as const })),
     mutate: vi.fn(async () => ({ instanceId: "new" })),
     replace: vi.fn(async data => data),
     requireSources: vi.fn(async () => undefined),
     sources: vi.fn(async () => []),
-    app: { open: vi.fn(async () => ({})) },
     developer: {
       fetch: vi.fn(async input => ({
         body: "ok",
@@ -47,10 +45,10 @@ describe("action Registry", () => {
   it("publishes the connected Action contract directly from definitions", () => {
     const actions = actionRegistry.list("connected")
 
-    expect(actions).toHaveLength(31)
+    expect(actions).toHaveLength(30)
     expect(actions.filter(action => action.kind === "mutation")).toHaveLength(14)
     expect(actions.filter(action => action.kind === "query")).toHaveLength(12)
-    expect(actions.filter(action => action.kind === "command")).toHaveLength(5)
+    expect(actions.filter(action => action.kind === "command")).toHaveLength(4)
     expect(actions.find(action => action.name === "instance.create")).toMatchObject({
       inputSchema: { type: "object", additionalProperties: false },
       outputSchema: { type: "object" },

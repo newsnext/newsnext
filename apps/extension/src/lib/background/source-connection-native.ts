@@ -5,7 +5,6 @@ import type {
   NativeCommandResult,
   NativeWorkspace,
 } from "@newsnext/extension-connection"
-import type { PersistedDeviceState } from "../settings/persisted-settings"
 import type { SourceLoadResponse } from "../source/load-result"
 import {
   parseExtensionConnectionCommandRequest,
@@ -14,8 +13,8 @@ import { browser } from "#imports"
 import { APPLICATION_DATA_VERSION } from "../application"
 import { normalizeApplicationData, PERSISTED_DATA_SLICES } from "../settings/persisted-data"
 import {
-  normalizePersistedDeviceState,
-  withSourceConnectionEnabled,
+  normalizePersistedSettings,
+  withDesktopConnectionEnabled,
 } from "../settings/persisted-settings"
 import { createBackgroundActionContext } from "./action-context"
 import {
@@ -118,8 +117,8 @@ const connectedActionContext = createBackgroundActionContext({
   getWidgetSnapshot: requestWidgetSnapshot,
   loadInstance: requestInstanceLoad,
   readInstanceCache: requestInstanceCache,
-  setEnabled: async ({ enabled: nextEnabled, frontendState }) => (
-    await setSourceConnectionEnabled(nextEnabled, frontendState)
+  setEnabled: async ({ enabled: nextEnabled }) => (
+    await setDesktopConnectionEnabled(nextEnabled)
   ),
 })
 
@@ -645,17 +644,15 @@ async function applySourceConnectionEnabled(nextEnabled: boolean): Promise<void>
   await browser.alarms.clear(SOURCE_CONNECTION_RECONNECT_ALARM)
 }
 
-export async function setSourceConnectionEnabled(
+export async function setDesktopConnectionEnabled(
   nextEnabled: boolean,
-  frontendState?: PersistedDeviceState,
 ): Promise<SourceConnectionStatus> {
-  const stored = await browser.storage.local.get(PERSISTED_DATA_SLICES.deviceState.key)
-  const state = normalizePersistedDeviceState(
-    stored[PERSISTED_DATA_SLICES.deviceState.key] ?? frontendState,
-  )
+  const key = PERSISTED_DATA_SLICES.settings.key
+  const stored = await browser.storage.local.get(key)
+  const settings = normalizePersistedSettings(stored[key])
   await browser.storage.local.set({
-    [PERSISTED_DATA_SLICES.deviceState.key]: withSourceConnectionEnabled(
-      state,
+    [key]: withDesktopConnectionEnabled(
+      settings,
       nextEnabled,
     ),
   })
@@ -684,15 +681,15 @@ export async function registerSourceConnectionNative(): Promise<void> {
     }
   })
   browser.storage.onChanged.addListener((changes, areaName) => {
-    const change = changes[PERSISTED_DATA_SLICES.deviceState.key]
+    const change = changes[PERSISTED_DATA_SLICES.settings.key]
     if (areaName === "local" && change) {
-      const state = normalizePersistedDeviceState(change.newValue)
-      void applySourceConnectionEnabled(state.sourceConnectionEnabled)
+      const settings = normalizePersistedSettings(change.newValue)
+      void applySourceConnectionEnabled(settings.general.desktopConnectionEnabled)
     }
   })
 
   const stored = await browser.storage.local.get([
-    PERSISTED_DATA_SLICES.deviceState.key,
+    PERSISTED_DATA_SLICES.settings.key,
     SOURCE_CONNECTION_NODE_ID_KEY,
     SOURCE_CONNECTION_LOCAL_INSTANCE_IDS_KEY,
   ])
@@ -707,10 +704,9 @@ export async function registerSourceConnectionNative(): Promise<void> {
   localInstanceIds = new Set(parseLocalInstanceIds(
     stored[SOURCE_CONNECTION_LOCAL_INSTANCE_IDS_KEY] ?? [],
   ))
-  const persisted = stored[PERSISTED_DATA_SLICES.deviceState.key]
   workspace = createBootstrapWorkspace(application, nodeId)
-  const state = normalizePersistedDeviceState(persisted)
-  enabled = state.sourceConnectionEnabled
+  const settings = normalizePersistedSettings(stored[PERSISTED_DATA_SLICES.settings.key])
+  enabled = settings.general.desktopConnectionEnabled
   if (enabled) {
     browser.alarms.create(SOURCE_CONNECTION_RECONNECT_ALARM, {
       periodInMinutes: RECONNECT_ALARM_PERIOD_MINUTES,

@@ -293,7 +293,7 @@ board.getConfiguration
 nowLayer.getLiveCards
 ```
 
-`nowLayer.getLiveCards` returns every logical card in the current Board in
+`nowLayer.getLiveCards` returns every logical card in the requested Board in
 Board membership order. It does not filter against the current registry
 or mounted DOM nodes. Registry availability is a presentation and execution
 state, not an Instance-existence condition.
@@ -303,16 +303,11 @@ state, not an Instance-existence condition.
 The connected-browser catalog currently exposes:
 
 ```text
-app.open
 developer.fetch
 developer.runSource
 source.load
 ```
 
-`app.open` navigates the exact connected Node to a Board or opens
-its Settings dialog on the Connection tab. Existing App tabs receive an
-internal Settings intent and are focused without navigation or reload; the URL
-intent is used only while creating a new App tab.
 `developer.fetch` performs a one-shot browser-owned HTTP request for Source
 authoring. `source.load` loads a registered Source through the shared
 one-minute third-party API protection for background Jobs. The latest successful

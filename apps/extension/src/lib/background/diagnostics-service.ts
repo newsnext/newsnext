@@ -1,12 +1,10 @@
 import type { ApplicationData } from "../application"
 import type {
-  PersistedDeviceState,
   PersistedSettings,
 } from "../settings"
 import type { BackgroundActionRecord } from "./action-dispatcher"
 import { browser } from "#imports"
 import {
-  normalizePersistedDeviceState,
   normalizePersistedSettings,
   PERSISTED_DATA_SLICES,
 } from "../settings"
@@ -21,7 +19,6 @@ import { BACKGROUND_DIAGNOSTICS_CHANGED } from "./diagnostics-events"
 export interface BackgroundDiagnosticsSnapshot {
   actions: BackgroundActionRecord[]
   application: ApplicationData
-  deviceState: PersistedDeviceState
   settings: PersistedSettings
 }
 
@@ -33,7 +30,6 @@ export interface BackgroundDiagnosticsService {
 let diagnosticsEventsStarted = false
 const diagnosticsStorageKeys = [
   PERSISTED_DATA_SLICES.application.key,
-  PERSISTED_DATA_SLICES.deviceState.key,
   PERSISTED_DATA_SLICES.settings.key,
 ]
 
@@ -47,16 +43,12 @@ export function createBackgroundDiagnosticsService(): BackgroundDiagnosticsServi
       const [application, stored] = await Promise.all([
         readApplicationData(),
         browser.storage.local.get([
-          PERSISTED_DATA_SLICES.deviceState.key,
           PERSISTED_DATA_SLICES.settings.key,
         ]),
       ])
       return {
         actions: listBackgroundActions(),
         application,
-        deviceState: normalizePersistedDeviceState(
-          stored[PERSISTED_DATA_SLICES.deviceState.key],
-        ),
         settings: normalizePersistedSettings(
           stored[PERSISTED_DATA_SLICES.settings.key],
         ),

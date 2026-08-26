@@ -39,7 +39,6 @@ import {
 } from "../application"
 
 export interface ApplicationActionContext {
-  currentBoardId: () => Promise<string>
   data: () => Promise<ApplicationData>
   mutate: (
     operation: (
@@ -391,11 +390,11 @@ const boardGetContextAction = defineAction({
   audiences: CONNECTED_AND_UI,
   name: "board.getContext",
   kind: "query",
-  description: "Get the current human Board and its underlying Board identity.",
-  params: EmptyParams,
+  description: "Get one Board's presentation context and underlying identity.",
+  params: Type.Object({ boardId: Identifier }, { additionalProperties: false }),
   result: typedObjectResult<ReturnType<typeof getBoardContextQuery>>(),
-}, async (_input, context: ApplicationActionContext) => (
-  getBoardContextQuery(await context.data(), await context.currentBoardId())
+}, async (input, context: ApplicationActionContext) => (
+  getBoardContextQuery(await context.data(), input.boardId)
 ))
 
 const boardGetConfigurationAction = defineAction({
@@ -413,11 +412,11 @@ const nowLayerGetLiveCardsAction = defineAction({
   audiences: CONNECTED_AND_UI,
   name: "nowLayer.getLiveCards",
   kind: "query",
-  description: "List the LiveCards in the current Board's Now Layer.",
-  params: EmptyParams,
+  description: "List the LiveCards in one Board's Now Layer.",
+  params: Type.Object({ boardId: Identifier }, { additionalProperties: false }),
   result: typedArrayResult<ReturnType<typeof getNowLayerLiveCardsQuery>>(),
-}, async (_input, context: ApplicationActionContext) => (
-  getNowLayerLiveCardsQuery(await context.data(), await context.currentBoardId())
+}, async (input, context: ApplicationActionContext) => (
+  getNowLayerLiveCardsQuery(await context.data(), input.boardId)
 ))
 
 const ApplicationDataSchema = Type.Unsafe<ApplicationData>(Type.Object({

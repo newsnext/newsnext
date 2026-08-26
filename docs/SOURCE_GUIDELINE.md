@@ -1191,20 +1191,6 @@ newsnext start
 newsnext status
 ```
 
-Open a board in a connected browser by ID, or omit either selector to choose
-interactively:
-
-```sh
-newsnext open --browser 00b79a48 --board V1StGXR8_Z5j
-```
-
-Open the extension's **Settings → Connection** tab directly with the same
-browser selector:
-
-```sh
-newsnext open --browser 00b79a48 --settings
-```
-
 The installer presents detected browsers only and selects all of them by
 default. Pass one or more browser names, such as `install-native-host chrome
 firefox`, to skip the interactive selector. In non-interactive environments,
@@ -1300,10 +1286,12 @@ newsnext action execute source.list
 newsnext action execute source.get --input \
   '{"sourceId":"github:trending"}'
 newsnext action execute board.list
-newsnext action execute board.getContext
+newsnext action execute board.getContext --input \
+  '{"boardId":"BOARD_ID"}'
 newsnext action execute board.getConfiguration --input \
   '{"boardId":"BOARD_ID"}'
-newsnext action execute nowLayer.getLiveCards
+newsnext action execute nowLayer.getLiveCards --input \
+  '{"boardId":"BOARD_ID"}'
 newsnext action execute board.create --input \
   '{"name":"Research","color":"blue","sortMode":"addedAt"}'
 newsnext action execute board.update --input \
@@ -1334,8 +1322,8 @@ atomic import. Use `board.update` when one intent changes Board data
 and Board preferences together. These composite Actions persist once and
 cannot be interleaved with another UI or Agent mutation.
 
-Use `action execute board.getContext` when starting from the currently visible
-Board, then `action execute board.listInstances --input
+Use `action execute board.getContext --input '{"boardId":"BOARD_ID"}'` when
+starting from a known Board, then `action execute board.listInstances --input
 '{"boardId":"BOARD_ID"}'` for a custom Board. Use `action execute
 instance.list` when the Board is irrelevant. History commands intentionally use
 the opaque ID returned by `history datasets`; they do not resolve extension

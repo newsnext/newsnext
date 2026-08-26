@@ -271,7 +271,6 @@ function ApplicationPanel({ category, filter, snapshot }: PanelProps & { categor
       ? application.instances.map(value => ({ id: `instance:${value.instanceId}`, kind: "Instance", label: value.patch.metadata?.title || value.instanceId, value }))
       : [
           { id: "settings", kind: "State", label: "Settings", value: snapshot.settings },
-          { id: "device", kind: "State", label: "Device state", value: snapshot.deviceState },
         ]
   const entries = categoryEntries.filter(entry => matches(filter, entry.kind, entry.label, entry.id))
   const selected = entries.find(entry => entry.id === selectedId) ?? entries[0]

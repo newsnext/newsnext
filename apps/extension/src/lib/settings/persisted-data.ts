@@ -266,12 +266,30 @@ export function mergePersistedUserData(
   current: PersistedUserData,
   imported: Partial<PersistedUserData>,
 ): PersistedUserData {
+  const settings = imported.settings
+    ? preserveLocalSettings(current.settings, imported.settings)
+    : current.settings
   return normalizePersistedUserData({
     version: APPLICATION_DATA_VERSION,
-    settings: imported.settings ?? current.settings,
+    settings,
     boards: imported.boards ?? current.boards,
     instances: imported.instances ?? current.instances,
   })
+}
+
+function preserveLocalSettings(
+  current: PersistedSettings,
+  imported: PersistedSettings,
+): PersistedSettings {
+  const normalizedCurrent = normalizePersistedSettings(current)
+  const normalizedImported = normalizePersistedSettings(imported)
+  return {
+    ...normalizedImported,
+    general: {
+      ...normalizedImported.general,
+      desktopConnectionEnabled: normalizedCurrent.general.desktopConnectionEnabled,
+    },
+  }
 }
 
 export function normalizePersistedUserData(data: PersistedUserData): PersistedUserData {

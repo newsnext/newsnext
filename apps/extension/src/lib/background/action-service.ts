@@ -10,7 +10,7 @@ import {
   requestInstanceCache,
   requestInstanceLoad,
   requestWidgetSnapshot,
-  setSourceConnectionEnabled,
+  setDesktopConnectionEnabled,
 } from "./source-connection-native"
 
 const actionContext = createBackgroundActionContext({
@@ -18,8 +18,8 @@ const actionContext = createBackgroundActionContext({
   getWidgetSnapshot: requestWidgetSnapshot,
   loadInstance: requestInstanceLoad,
   readInstanceCache: requestInstanceCache,
-  setEnabled: async ({ enabled, frontendState }) => (
-    await setSourceConnectionEnabled(enabled, frontendState)
+  setEnabled: async ({ enabled }) => (
+    await setDesktopConnectionEnabled(enabled)
   ),
 })
 

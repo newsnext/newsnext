@@ -8,6 +8,8 @@ import {
   ROOT_SCROLL_RESTORATION_SELECTOR,
 } from "@/lib/scroll-restoration"
 import { syncThemeFavicon, THEME_COLOR_KEY } from "@/lib/utils/swith-theme"
+import { initializeApplicationDataStorage } from "@/store/board"
+import { initializeSettingsStorage } from "@/store/settings"
 import { routeTree } from "./routeTree"
 import "@/styles/index.css"
 
@@ -37,6 +39,11 @@ function App() {
 }
 
 async function renderApp(): Promise<void> {
+  await Promise.all([
+    initializeApplicationDataStorage(),
+    initializeSettingsStorage(),
+  ])
+
   if (
     import.meta.env.DEV
       && import.meta.env.WXT_ENABLE_REACT_SCAN === "true"

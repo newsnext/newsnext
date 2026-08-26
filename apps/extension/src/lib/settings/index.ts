@@ -31,7 +31,6 @@ export {
   createDefaultPersistedSettings,
   normalizePersistedDeviceState,
   normalizePersistedSettings,
-  withSourceConnectionEnabled,
 } from "./persisted-settings"
 export type { ShortcutId, ShortcutSettings } from "./shortcuts"
 export {

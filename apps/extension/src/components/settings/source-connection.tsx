@@ -1,12 +1,9 @@
 import type { SourceConnectionStatus } from "@/lib/background/source-connection-native"
 import { Switch } from "@newsnext/ui/components/switch"
-import { useAtomValue } from "jotai"
 import { useCallback, useEffect, useState } from "react"
 import { ConfigSection } from "@/components/common/config-section"
 import { useAsyncAction } from "@/hooks/use-async-action"
 import { actions } from "@/lib/actions"
-import { withSourceConnectionEnabled } from "@/lib/settings"
-import { persistedDeviceStateAtom } from "@/store/settings"
 
 interface StatusPresentation {
   dotClassName: string
@@ -26,7 +23,6 @@ const CHECKING_PRESENTATION: StatusPresentation = {
 }
 
 export function SourceConnectionSettings(): React.JSX.Element {
-  const persistedDeviceState = useAtomValue(persistedDeviceStateAtom)
   const [status, setStatus] = useState<SourceConnectionStatus>()
   const { error: updateError, isPending: updating, run: runUpdate } = useAsyncAction(
     "NewsNext could not update the App connection.",
@@ -61,13 +57,12 @@ export function SourceConnectionSettings(): React.JSX.Element {
     const succeeded = await runUpdate(async () => {
       setStatus(await actions.sourceConnection.setEnabled({
         enabled,
-        frontendState: withSourceConnectionEnabled(persistedDeviceState, enabled),
       }))
     })
     if (!succeeded) {
       await refreshStatus()
     }
-  }, [persistedDeviceState, refreshStatus, runUpdate])
+  }, [refreshStatus, runUpdate])
 
   return (
     <ConfigSection

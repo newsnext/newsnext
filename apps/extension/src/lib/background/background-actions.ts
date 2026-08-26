@@ -1,6 +1,5 @@
 import type { ExtensionConnectionFetchResponse } from "@newsnext/extension-connection"
 import type { ResolvedRadarSuggestion } from "../radar"
-import type { PersistedDeviceState } from "../settings"
 import type { Instance } from "../source"
 import type { SourceLoadResponse } from "../source/load-result"
 import type { ApplicationActionContext } from "./application-actions"
@@ -21,9 +20,6 @@ export interface ConnectedFetchInput {
 }
 
 export interface BackgroundActionContext extends ApplicationActionContext {
-  app: {
-    open: (input: { boardId: string } | { settings: true }) => Promise<Record<string, never>>
-  }
   developer: {
     fetch: (input: ConnectedFetchInput) => Promise<ExtensionConnectionFetchResponse>
     runSource: (input: RunDeveloperSourceInput) => Promise<RunDeveloperSourceOutput>
@@ -58,10 +54,7 @@ export interface BackgroundActionContext extends ApplicationActionContext {
     }) => Promise<unknown>
     loadInstance: (input: { instanceId: string }) => Promise<SourceLoadResponse>
     readInstanceCache: (input: { instanceId: string }) => Promise<SourceLoadResponse | null>
-    setEnabled: (input: {
-      enabled: boolean
-      frontendState?: PersistedDeviceState
-    }) => Promise<SourceConnectionStatus>
+    setEnabled: (input: { enabled: boolean }) => Promise<SourceConnectionStatus>
   }
 }
 
@@ -90,18 +83,6 @@ const InstanceParams = Type.Unsafe<Instance>(Type.Object({
   sourceId: Identifier,
 }, { additionalProperties: false }))
 const RoutedInstanceParams = Type.Object({ instance: InstanceParams }, { additionalProperties: false })
-
-const appOpenAction = defineAction({
-  audiences: CONNECTED_ONLY,
-  name: "app.open",
-  kind: "command",
-  description: "Open a Board or Settings in the connected NewsNext extension.",
-  params: Type.Union([
-    Type.Object({ boardId: Identifier }, { additionalProperties: false }),
-    Type.Object({ settings: Type.Literal(true) }, { additionalProperties: false }),
-  ]),
-  result: EmptyResult,
-}, async (input, context: BackgroundActionContext) => await context.app.open(input))
 
 const FetchParams = Type.Unsafe<ConnectedFetchInput>(Type.Object({
   body: Type.Optional(Type.String()),
@@ -299,13 +280,6 @@ const sourceConnectionReadInstanceCacheAction = defineAction({
   await context.sourceConnection.readInstanceCache(input)
 ))
 
-const PersistedDeviceStateParams = Type.Unsafe<PersistedDeviceState>(Type.Object({
-  currentBoardId: Type.String(),
-  settingsTab: stringEnum(["appearance", "general", "cli", "shortcuts", "permissions", "data"] as const),
-  sourceConnectionEnabled: Type.Boolean(),
-  version: Type.Number(),
-}, { additionalProperties: false }))
-
 const sourceConnectionSetEnabledAction = defineAction({
   audiences: UI_ONLY,
   name: "sourceConnection.setEnabled",
@@ -313,7 +287,6 @@ const sourceConnectionSetEnabledAction = defineAction({
   description: "Enable or disable the local NewsNext App connection on this device.",
   params: Type.Object({
     enabled: Type.Boolean(),
-    frontendState: Type.Optional(PersistedDeviceStateParams),
   }, { additionalProperties: false }),
   result: Type.Unsafe<SourceConnectionStatus>(Type.Object({
     appVersion: Type.Optional(Type.String()),
@@ -348,7 +321,6 @@ export const uiBackgroundActionDefinitions = [
 ] as const
 
 export const backgroundActionDefinitions = [
-  appOpenAction,
   developerFetchAction,
   developerRunSourceAction,
   jobExecuteInstanceAction,

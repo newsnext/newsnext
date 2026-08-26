@@ -2,6 +2,7 @@ import type { Color } from "@newsnext/shared/types"
 import { isThemeColor } from "../settings/theme-color"
 
 export const THEME_COLOR_KEY = "newsnext-theme-color"
+export const THEME_MODE_KEY = "newsnext-theme-mode"
 export type ThemeMode = "light" | "dark" | "system"
 
 let syncedFaviconColor: Color | null = null
