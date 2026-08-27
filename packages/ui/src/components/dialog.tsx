@@ -84,14 +84,13 @@ function DialogContent({
   )
 }
 
-function ContentDialogContent({
-  className,
-  ...props
-}: React.ComponentProps<typeof DialogContent>) {
+function ContentDialogContent(
+  props: Omit<React.ComponentProps<typeof DialogContent>, "className">,
+) {
   return (
     <DialogContent
-      className={cn("h-[min(70dvh,640px)] overflow-hidden", className)}
       {...props}
+      className="h-[min(70dvh,640px)] overflow-hidden sm:max-w-2xl"
     />
   )
 }

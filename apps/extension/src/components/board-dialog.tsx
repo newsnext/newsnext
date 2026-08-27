@@ -148,7 +148,6 @@ function ConfigurableBoardDialog({
     >
       <ContentDialogContent
         variant="themed"
-        className={isEditing ? "sm:max-w-2xl" : "sm:max-w-lg"}
         surfaceClassName={cn(initialColor, "min-h-0 gap-0")}
       >
         <form

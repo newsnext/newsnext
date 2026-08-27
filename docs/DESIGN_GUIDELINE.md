@@ -86,12 +86,12 @@ favicon work does not delay the initial background or depend on board effects.
 
 Place background illustration controls in the Board configuration modal when editing
 an existing Board. Do not expose them in global Appearance settings or during Board
-creation, before a Board identity exists. Let the edit modal expand to fit the visual
-editor. Give both Create Board and Edit Board the shared content-modal height: the
-smaller of 70% of the viewport and 640px. Scroll their inner configuration area
-vertically without scrolling the outer dialog or its header.
-Use the same shared height for other content-heavy modals, including Settings and
-Search, while keeping compact confirmation dialogs sized naturally to their content.
+creation, before a Board identity exists. Give all content-heavy modals, including
+Create Board, Edit Board, Settings, and Search, the shared `2xl` maximum width and
+the shared height of the smaller of 70% of the viewport and 640px. Preserve 16px
+of horizontal viewport space on each side below the `sm` breakpoint. Scroll their
+inner content vertically without scrolling the outer dialog or its header. Keep
+compact confirmation dialogs sized naturally to their content.
 The user may choose a local raster image and extract its edges into background
 illustration, or use a local SVG directly.
 Keep processing in the browser, sanitize direct SVG illustration, resize large raster

@@ -45,7 +45,6 @@ export function SettingsModalShell({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <ContentDialogContent
         variant="themed"
-        className="w-full max-w-3xl sm:max-w-3xl"
         surfaceClassName="grid min-h-0"
       >
         <DialogTitle className="sr-only">Preferences</DialogTitle>

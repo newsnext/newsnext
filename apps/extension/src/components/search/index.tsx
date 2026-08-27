@@ -236,7 +236,6 @@ export function SearchModalContent({
   return (
     <ContentDialogContent
       variant="themed"
-      className="w-full sm:max-w-xl"
       surfaceClassName="grid-rows-[minmax(0,1fr)_auto]"
     >
       <DialogTitle className="sr-only">Search LiveCards</DialogTitle>
