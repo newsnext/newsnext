@@ -127,16 +127,16 @@ describe("persisted user data", () => {
     expect(merged.settings.general.defaultBoardId).toBe(merged.boards[0]?.id)
   })
 
-  it("preserves the local Desktop connection preference when importing Settings", () => {
+  it("preserves the local App integration preference when importing Settings", () => {
     const current = createData()
-    current.settings.general.desktopConnectionEnabled = true
+    current.settings.general.appIntegrationEnabled = true
     const importedSettings = createDefaultPersistedSettings()
     importedSettings.appearance.themeMode = "dark"
-    importedSettings.general.desktopConnectionEnabled = false
+    importedSettings.general.appIntegrationEnabled = false
 
     const merged = mergePersistedUserData(current, { settings: importedSettings })
 
     expect(merged.settings.appearance.themeMode).toBe("dark")
-    expect(merged.settings.general.desktopConnectionEnabled).toBe(true)
+    expect(merged.settings.general.appIntegrationEnabled).toBe(true)
   })
 })

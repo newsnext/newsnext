@@ -31,12 +31,25 @@ function createContext(): BackgroundActionContext {
       cancel: vi.fn(async () => undefined),
       load: vi.fn(async () => ({}) as never),
     },
-    sourceConnection: {
-      getStatus: vi.fn(async () => ({ state: "disabled" as const })),
+    appIntegration: {
+      getStatus: vi.fn(async () => ({
+        claimableWorkerIds: [],
+        state: "disabled" as const,
+        workerId: "worker",
+      })),
       getWidgetSnapshot: vi.fn(async () => ({})),
       loadInstance: vi.fn(async () => ({}) as never),
       readInstanceCache: vi.fn(async () => null),
-      setEnabled: vi.fn(async () => ({ state: "disabled" as const })),
+      setEnabled: vi.fn(async () => ({
+        claimableWorkerIds: [],
+        state: "disabled" as const,
+        workerId: "worker",
+      })),
+      setWorker: vi.fn(async () => ({
+        claimableWorkerIds: [],
+        state: "disabled" as const,
+        workerId: "worker",
+      })),
     },
   }
 }

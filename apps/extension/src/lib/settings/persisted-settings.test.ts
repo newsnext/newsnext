@@ -4,7 +4,7 @@ import {
   createDefaultPersistedSettings,
   normalizePersistedDeviceState,
   normalizePersistedSettings,
-  withDesktopConnectionEnabled,
+  withAppIntegrationEnabled,
 } from "./persisted-settings"
 import { DEFAULT_SHORTCUT_SETTINGS } from "./shortcuts"
 
@@ -100,15 +100,15 @@ describe("persisted settings", () => {
     }).shortcuts).toEqual(DEFAULT_SHORTCUT_SETTINGS)
   })
 
-  it("updates the App connection preference without changing other settings", () => {
+  it("updates the App integration preference without changing other settings", () => {
     const settings = createDefaultPersistedSettings()
     settings.general.defaultBoardId = "reading"
 
-    expect(withDesktopConnectionEnabled(settings, true)).toEqual({
+    expect(withAppIntegrationEnabled(settings, true)).toEqual({
       ...settings,
       general: {
         ...settings.general,
-        desktopConnectionEnabled: true,
+        appIntegrationEnabled: true,
       },
     })
   })
@@ -121,7 +121,7 @@ describe("persisted settings", () => {
     })).toEqual(createDefaultPersistedDeviceState())
   })
 
-  it("keeps the Connection settings tab", () => {
+  it("keeps the Integration settings tab", () => {
     expect(normalizePersistedDeviceState({ settingsTab: "cli", version: 1 }).settingsTab).toBe("cli")
   })
 })

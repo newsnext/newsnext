@@ -5,7 +5,6 @@
 interface ImportMetaEnv {
   readonly WXT_ENABLE_REACT_SCAN?: string
   readonly WXT_YOLO_MODE?: string
-  readonly WXT_SOURCE_CONNECTION_WS_URL?: string
 }
 
 declare module "*.svg?url&raw" {

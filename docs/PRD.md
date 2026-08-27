@@ -255,11 +255,11 @@ is resolved.
 | Data | Storage owner | Retention contract |
 | --- | --- | --- |
 | Workspace Boards, Layers, membership, and Instances | Shared local database plus browser mirror | Durable in the companion; mirrored into each connected extension |
-| Instance Loader bindings | Shared local database | Private routing metadata from each Instance to its creation browser Node |
+| Instance Loader bindings | Shared local database | Private routing metadata from each Instance to its creation browser Worker |
 | Browser preferences | Owning browser storage | Durable per browser profile |
 | Next Layer Widgets, layouts, task definitions, and materialized outputs | Shared local database | Durable and schema-versioned |
 | Agent-owned observations, transformations, provenance, and task health | Shared local database | Durable according to explicit task policy |
-| Now Layer current results | Bound Loader browser cache | Replaceable latest data routed by Instance ID without exposing Node identity; no implicit History |
+| Now Layer current results | Bound Loader browser cache | Replaceable latest data routed by Instance ID without exposing Worker identity; no implicit History |
 | Source registry definitions | Packaged or managed registry | Product-managed; not personalized per user by default |
 | Source credentials | Browser extension secret storage | Resolved only inside extension Source execution; never sent to the App, CLI, or database |
 | Native Messaging manifests and IPC endpoints | Platform integration directories | Configuration only; never product data |
@@ -269,12 +269,13 @@ is resolved.
 On macOS, both database files live in the standard application data directory:
 
 ```text
-~/Library/Application Support/NewsNext/newsnext.dev.db
-~/Library/Application Support/NewsNext/newsnext.prod.db
+~/Library/Application Support/NewsNext Dev/newsnext.db
+~/Library/Application Support/NewsNext/newsnext.db
 ```
 
-The regular CLI and development extension use `newsnext.dev.db`. The packaged
-App and production extension use `newsnext.prod.db`. SQLite sidecar files such
+The regular CLI and development extension use the `NewsNext Dev` application
+data directory. The packaged App and production extension use `NewsNext`.
+Each directory contains `newsnext.db` and `widgets/`. SQLite sidecar files such
 as `-wal` and `-shm` remain adjacent to their corresponding database. Linux and
 Windows use the equivalent user data root while preserving the same filenames.
 An explicit test-only override may select another path, but product code must
@@ -323,7 +324,7 @@ The first schema increment covers:
 
 - current schema version metadata;
 - Workspace Boards, Layers, membership, and order;
-- connected Node identity and durable private Instance-to-Loader bindings;
+- connected Worker identity and durable private Instance-to-Loader bindings;
 - Next Layer Widget definitions, layout, and dependency declarations;
 - Agent task definitions, schedules, leases, attempts, and health;
 - retained observations and normalized items required by those tasks;
@@ -571,8 +572,8 @@ must not be described to users as available until its acceptance criteria pass.
 | UI and Agent control | Implemented foundation | UI and CLI use the same typed Mutation and Query Actions and the same background persistence boundary | Database-backed Widget, task, and Source-health operations are not exposed yet |
 | Now Layer | Implemented | Each Instance is independently presented as a LiveCard using the unified LiveCard model | Make view-driven refresh explicit while keeping each result in its bound Loader |
 | Next Layer | Not implemented | The Board retains its Next Layer view entry and an explicit placeholder | Add CLI/daemon-backed Widgets, retained inputs, and materialized outputs |
-| History | Implemented foundation in Turso | Newly executed Job results are committed transactionally into datasets partitioned by Node, Source, Source version, and parameters; they can be listed, read at an exact time, and compared without a connected browser | Add task-owned retention policies |
-| Provenance | Partial | Source and Instance identities remain stable, History records the actual execution Node, and comparisons preserve supported factual boundaries | Derived Widget inputs, transformations, warnings, and claims need an explicit UI contract |
+| History | Implemented foundation in Turso | Newly executed Job results are committed transactionally into datasets partitioned by Worker, Source, Source version, and parameters; they can be listed, read at an exact time, and compared without a connected browser | Add task-owned retention policies |
+| Provenance | Partial | Source and Instance identities remain stable, History records the actual execution Worker, and comparisons preserve supported factual boundaries | Derived Widget inputs, transformations, warnings, and claims need an explicit UI contract |
 | Code Widgets | Not implemented | None | Sandbox, resource limits, versioning, preview, failure isolation, and rollback |
 
 The current CLI includes these relevant control surfaces:
@@ -612,7 +613,7 @@ The remaining product gaps are:
 | ID | Requirement | Acceptance criteria |
 | --- | --- | --- |
 | DAT-01 | The desktop daemon is the only process that opens the product database | Browser extensions and CLI clients can read and mutate durable state only through canonical Mutation and Query Actions |
-| DAT-02 | Development and production use separate files | CLI/dev operations open `newsnext.dev.db`; packaged App/production operations open `newsnext.prod.db`; an automated test proves neither environment writes the other file |
+| DAT-02 | Development and production use separate directories | CLI/dev operations use `NewsNext Dev`; packaged App/production operations use `NewsNext`; an automated test proves the paths remain isolated |
 | DAT-03 | Production data is shared across supported browsers | A mutation submitted from one authorized production extension is visible from another through the same daemon without copying browser storage |
 | DAT-04 | Database setup is local-first | First launch creates and migrates the local database without a Turso account, remote connection, or network access |
 | DAT-05 | Schema initialization is atomic | The daemon creates the complete current schema transactionally before accepting requests and refuses incompatible versions |
@@ -814,11 +815,11 @@ without changing the two-Layer Board contract.
   database code.
 - Extend the embedded Turso database already used by retained History.
 - Resolve the platform application data directory and select
-  `newsnext.dev.db` or `newsnext.prod.db` from the existing runtime environment.
+  `NewsNext Dev/newsnext.db` or `NewsNext/newsnext.db` from the existing runtime environment.
 - Add schema versioning, WAL configuration, transactional helpers, and
   structured database errors.
 - Persist Workspace Boards, Instances, Layers, membership, and order behind
-  canonical Mutation and Query Actions. Keep only Loader bindings Node-specific.
+  canonical Mutation and Query Actions. Keep only Loader bindings Worker-specific.
 - Add Agent task, retained observation, materialized output, and provenance
   tables required by the next phase without yet implementing every Widget.
 - Keep Now Layer results in replaceable cache storage and prove that normal

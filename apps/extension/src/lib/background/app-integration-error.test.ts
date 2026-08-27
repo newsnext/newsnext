@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
-import { serializeSourceConnectionError } from "./source-connection-error"
+import { serializeAppIntegrationError } from "./app-integration-error"
 
-describe("serializeSourceConnectionError", () => {
+describe("serializeAppIntegrationError", () => {
   it("preserves actionable login error metadata", () => {
     const error = Object.assign(new Error("Source login required."), {
       name: "SourceLoginRequiredError",
@@ -9,7 +9,7 @@ describe("serializeSourceConnectionError", () => {
       loginUrl: "https://example.com/login",
     })
 
-    expect(serializeSourceConnectionError(error)).toMatchObject({
+    expect(serializeAppIntegrationError(error)).toMatchObject({
       name: "SourceLoginRequiredError",
       message: "Source login required.",
       code: "SOURCE_LOGIN_REQUIRED",

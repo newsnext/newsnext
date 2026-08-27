@@ -297,7 +297,7 @@ runner retains a newly fetched, unprotected response as an observation. Both
 Actions reuse the same protected Loader implementation without sharing History
 policy.
 
-The daemon owns complete Workspace Instance configuration independently of Node
+The daemon owns complete Workspace Instance configuration independently of Worker
 connections. A disconnected binding therefore never makes a card read-only or
 removes it from a Board; it only suspends routed cache reads and fresh execution
 until that browser reconnects.
@@ -309,8 +309,8 @@ commit; a Job that reuses a result is
 reported as successful without duplicate retention. The database receives
 no Source credentials, fetch response bodies, or browser session state.
 
-A dataset is the unique tuple of execution Node ID, Source ID, Source version,
-and canonical normalized parameter JSON. Node ID is explicit because the
+A dataset is the unique tuple of execution Worker ID, Source ID, Source version,
+and canonical normalized parameter JSON. Worker ID is explicit because the
 daemon combines observations from browser Loaders with different credentials,
 permissions, and network environments. Each dataset receives an opaque UUID
 exposed by `history datasets` and used by the other history commands.
@@ -473,9 +473,9 @@ connected CLI consumers, so concurrent callers cannot burst a third-party API.
 Instance-facing consumers route `instanceId` to its bound Loader. The Loader
 resolves Source ID, Source version, and normalized effective parameters for its
 browser-local IndexedDB cache. When an explicit Job retains the result, the
-daemon adds the actual execution Node ID to that same Source request identity.
+daemon adds the actual execution Worker ID to that same Source request identity.
 Thus Instance ID is the page query and routing identity, the resolved Source
-target is the Loader cache identity, and Node plus Source target is the History
+target is the Loader cache identity, and Worker plus Source target is the History
 dataset identity.
 
 Next Layer does not read or invalidate the Now Layer TanStack cache. A local
@@ -964,18 +964,33 @@ commands and completions by request ID, rejects
 ambiguous browser selection, expires pending executions, and never replays a
 command after reconnection because source execution is not guaranteed to be
 idempotent. Settings exposes the daemon version as connection metadata only.
-The current protocol version is 13. It carries the complete shared Workspace,
-canonical Action requests, Widget snapshots, Source-result cache reads routed
-by Instance ID, and Instance load requests. The Workspace owns Boards, Layers,
-and Instances. The daemon privately binds each Instance to its creation browser
-and resolves execution to exactly one connected Node without exposing that
-identity or transferring browser credentials or session state.
+The current protocol version is 15. It carries an initial shared Workspace,
+incremental Workspace patches produced by canonical Action commits, canonical
+Action requests, Widget snapshots, Source-result cache reads routed by Instance
+ID, and Instance load requests. A patch contains the complete entity order but
+only changed Board and Instance values. The daemon validates and commits it
+against an expected revision, returns a compact receipt to the origin, and
+broadcasts the same deterministic patch to peer Workers. The Workspace owns
+Boards, Layers, and Instances. The daemon privately binds each Instance to its creation browser
+Worker and resolves execution to exactly one connected Worker without exposing
+that identity or transferring browser credentials or session state. A browser
+keeps only its Worker ID in extension-local storage because Native Messaging
+does not expose a stable browser-profile identity. Instance ownership remains
+authoritative in the daemon and is cached only in extension memory while
+connected; the extension does not persist a duplicate binding list. If
+reinstalling the extension clears its Worker ID, the daemon reports disconnected
+Worker IDs retained by Instance bindings or History so the user can explicitly
+restore the browser's prior identity from Settings. Connected Worker IDs cannot
+be claimed.
 Incompatible daemon and extension versions disconnect instead of accepting a
 partial control surface.
 
 Native Messaging registration is the browser-facing security boundary.
 Development and production use distinct host identities so their executables
-and extension permissions cannot overwrite or authorize each other. A regular
+and extension permissions cannot overwrite or authorize each other. Installing,
+repairing, checking, or uninstalling a host affects only the executable's own
+environment; the production App never manages the development host, and the
+development CLI never manages the production host. A regular
 CLI executable registers `app.newsnext.host.dev` for the development Chromium
 ID or `dev@newsnext.app` Firefox ID. An executable inside the packaged app
 registers `app.newsnext.host` for the Chrome Web Store ID or the stable
@@ -1007,14 +1022,19 @@ invocation detection and its tests live with the bridge runtime in
 `native_messaging::host`. The extension cannot choose an arbitrary executable or
 network endpoint.
 Native messages are UTF-8 JSON framed by a native-endian 32-bit byte length. The
-host caps every incoming and outgoing
-browser message at 1 MiB, writes protocol data only to stdout, and reserves
-stderr for diagnostics. The internal daemon listener uses a Unix domain socket
+host accepts extension messages up to 64 MiB and keeps every host-to-extension
+frame below Chromium's 1 MiB limit. Larger protocol messages, including an
+initial Workspace snapshot, are split into 256 KiB UTF-8 chunks and reassembled
+by the extension under a 64 MiB aggregate limit. The host writes protocol data
+only to stdout and reserves stderr for diagnostics. The internal daemon listener uses a Unix domain socket
 on Unix platforms and a named pipe on Windows instead of opening a TCP port.
 Default endpoint names are scoped to the effective Unix user or the Windows
-local application-data location. Development CLI processes use
-`com.newsnext.daemon.dev`, while packaged app processes use
-`com.newsnext.daemon`, preventing a correctly bound Native Messaging host from
+local application-data location. Development data lives under the `NewsNext Dev`
+application-data directory, while production data lives under `NewsNext`; both
+use ordinary `newsnext.db` and `widgets/` names inside their isolated root.
+Development CLI processes use
+`app.newsnext.daemon.dev`, while packaged app processes use
+`app.newsnext.daemon`, preventing a correctly bound Native Messaging host from
 crossing into the other environment's daemon. `NEWSNEXT_IPC_NAME` can override
 the name for isolated test runs. Both sides verify Unix peer credentials before
 exchanging protocol messages. Windows named pipes retain the access control
@@ -1030,9 +1050,16 @@ overrides, provider-secret selection, compact output, verbose remote errors,
 and watch mode.
 
 The same Rust executable is packaged as the NewsNext desktop companion. A
-normal CLI invocation continues through Clap, while launching the executable
-without arguments from a macOS application bundle starts the tray daemon
-directly. The bundle is a background application, so macOS exposes it through
+normal CLI invocation continues through Clap, while the hidden `__app` command
+starts the desktop UI for `tauri dev`; launching the executable inside a macOS
+application bundle without arguments starts the same UI directly. This lets
+`tauri dev` exercise the complete App against the isolated development Native
+Messaging host, IPC endpoint, database, and Widget directory without producing
+an application bundle. The explicit development App launch first stops any
+daemon that the browser may have started from the same debug executable, then
+takes over the daemon and tray lifecycle so Tauri's single-instance plugin does
+not terminate the development runner. The bundle is a background application,
+so macOS exposes it through
 the menu bar without adding a Dock icon. The tray keeps an icon-only menu bar
 presence; its tooltip and menu actions use `NewsNext Dev` for a CLI daemon and
 `NewsNext` for the packaged app so both can run without becoming ambiguous.

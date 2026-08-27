@@ -1,4 +1,11 @@
-import type { SourceConnectionStatus } from "@/lib/background/source-connection-native"
+import type { AppIntegrationStatus } from "@/lib/background/app-integration-native"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@newsnext/ui/components/select"
 import { Switch } from "@newsnext/ui/components/switch"
 import { useCallback, useEffect, useState } from "react"
 import { ConfigSection } from "@/components/common/config-section"
@@ -10,7 +17,7 @@ interface StatusPresentation {
   label: string
 }
 
-const STATUS_PRESENTATION: Record<SourceConnectionStatus["state"], StatusPresentation> = {
+const STATUS_PRESENTATION: Record<AppIntegrationStatus["state"], StatusPresentation> = {
   disabled: { dotClassName: "bg-muted-foreground/50", label: "Disabled" },
   connected: { dotClassName: "bg-emerald-500", label: "Connected" },
   connecting: { dotClassName: "bg-amber-500", label: "Connecting" },
@@ -22,10 +29,10 @@ const CHECKING_PRESENTATION: StatusPresentation = {
   label: "Checking",
 }
 
-export function SourceConnectionSettings(): React.JSX.Element {
-  const [status, setStatus] = useState<SourceConnectionStatus>()
+export function AppIntegrationSettings(): React.JSX.Element {
+  const [status, setStatus] = useState<AppIntegrationStatus>()
   const { error: updateError, isPending: updating, run: runUpdate } = useAsyncAction(
-    "NewsNext could not update the App connection.",
+    "NewsNext could not update the App integration.",
   )
   const state = status?.state
   const isEnabled = state !== undefined && state !== "disabled"
@@ -33,7 +40,7 @@ export function SourceConnectionSettings(): React.JSX.Element {
 
   const refreshStatus = useCallback(async (): Promise<void> => {
     try {
-      setStatus(await actions.sourceConnection.getStatus())
+      setStatus(await actions.appIntegration.getStatus())
     } catch {
       setStatus(undefined)
     }
@@ -55,7 +62,7 @@ export function SourceConnectionSettings(): React.JSX.Element {
 
   const handleEnabledChange = useCallback(async (enabled: boolean): Promise<void> => {
     const succeeded = await runUpdate(async () => {
-      setStatus(await actions.sourceConnection.setEnabled({
+      setStatus(await actions.appIntegration.setEnabled({
         enabled,
       }))
     })
@@ -64,9 +71,21 @@ export function SourceConnectionSettings(): React.JSX.Element {
     }
   }, [refreshStatus, runUpdate])
 
+  const handleWorkerChange = useCallback(async (workerId: string | null): Promise<void> => {
+    if (!workerId || workerId === status?.workerId) {
+      return
+    }
+    const succeeded = await runUpdate(async () => {
+      setStatus(await actions.appIntegration.setWorker({ workerId }))
+    })
+    if (!succeeded) {
+      await refreshStatus()
+    }
+  }, [refreshStatus, runUpdate, status?.workerId])
+
   return (
     <ConfigSection
-      title="Connection"
+      title="Integration"
       description="Connect this browser to the NewsNext App for local data, widgets, and CLI access."
       surfaceClassName="gap-3 p-4"
     >
@@ -90,10 +109,49 @@ export function SourceConnectionSettings(): React.JSX.Element {
         <Switch
           checked={isEnabled}
           disabled={!status || updating}
-          aria-label="Enable NewsNext App connection"
+          aria-label="Enable NewsNext App integration"
           onCheckedChange={enabled => void handleEnabledChange(enabled)}
         />
       </div>
+
+      {status && isEnabled && (
+        <div className="flex items-center justify-between gap-4 border-t pt-3">
+          <div className="min-w-0">
+            <p className="text-xs font-medium">Worker</p>
+            <p className="truncate font-mono text-xs text-muted-foreground">
+              {status.workerId}
+            </p>
+          </div>
+          {status.claimableWorkerIds.length > 0 && (
+            <Select value={status.workerId} onValueChange={handleWorkerChange}>
+              <SelectTrigger
+                size="sm"
+                className="max-w-52"
+                disabled={updating}
+                aria-label="Select NewsNext Worker"
+              >
+                <SelectValue>{status.workerId.slice(0, 8)}</SelectValue>
+              </SelectTrigger>
+              <SelectContent align="end">
+                <SelectItem value={status.workerId}>
+                  {`Current · ${status.workerId.slice(0, 8)}`}
+                </SelectItem>
+                {status.claimableWorkerIds.map(workerId => (
+                  <SelectItem key={workerId} value={workerId}>
+                    {`Restore · ${workerId.slice(0, 8)}`}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
+      )}
+
+      {status && status.claimableWorkerIds.length > 0 && (
+        <p className="text-xs leading-5 text-muted-foreground">
+          Restore a previous Worker if this extension was reinstalled and lost its local identity.
+        </p>
+      )}
 
       {state === "disconnected" && (
         <p className="border-t pt-3 text-xs leading-5 text-muted-foreground">

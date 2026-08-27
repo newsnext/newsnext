@@ -45,7 +45,7 @@ export const PERSISTED_DATA_SLICES = {
     scope: "device",
   },
   secrets: {
-    key: "newsnext_source_secrets",
+    key: "newsnext-source-secrets",
     scope: "device",
   },
 } as const satisfies Record<string, {
@@ -287,7 +287,7 @@ function preserveLocalSettings(
     ...normalizedImported,
     general: {
       ...normalizedImported.general,
-      desktopConnectionEnabled: normalizedCurrent.general.desktopConnectionEnabled,
+      appIntegrationEnabled: normalizedCurrent.general.appIntegrationEnabled,
     },
   }
 }

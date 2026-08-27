@@ -1181,7 +1181,7 @@ Runtime registries accept declarative JSON, HTML, and RSS loaders only.
 Prototype-related source ID segments and JMESPath properties are rejected.
 
 Use the separately distributed NewsNext App CLI to validate live behavior.
-Enable **Settings → Connection**. Development builds connect only to the
+Enable **Settings → Integration**. Development builds connect only to the
 development Native Messaging host. Register the installed executable, then
 start the daemon:
 
@@ -1190,6 +1190,19 @@ newsnext install-native-host
 newsnext start
 newsnext status
 ```
+
+When developing the App itself, register its debug executable once and run the
+full desktop UI without packaging:
+
+```sh
+bun run install-native-host
+bun run dev
+```
+
+`bun run dev` uses `tauri dev` and the isolated development Native Messaging
+host, IPC endpoint, database, and Widget directory. Restart registered browsers
+after the first host registration; later debug rebuilds keep the same executable
+path and do not require a new application bundle.
 
 The installer presents detected browsers only and selects all of them by
 default. Pass one or more browser names, such as `install-native-host chrome
@@ -1327,7 +1340,7 @@ starting from a known Board, then `action execute board.listInstances --input
 '{"boardId":"BOARD_ID"}'` for a custom Board. Use `action execute
 instance.list` when the Board is irrelevant. History commands intentionally use
 the opaque ID returned by `history datasets`; they do not resolve extension
-Instance state. Filter dataset discovery by Node, Source version, Source, or
+Instance state. Filter dataset discovery by Worker, Source version, Source, or
 provider when selecting a retained execution environment and parameter
 configuration.
 

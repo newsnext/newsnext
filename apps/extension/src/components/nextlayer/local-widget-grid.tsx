@@ -252,8 +252,8 @@ const LOCAL_WIDGET_COMPONENTS: ComponentMap = { localWidget: LocalWidgetFrame }
 
 function useWidgetServerUrl() {
   const query = useQuery({
-    queryKey: ["source-connection-status"],
-    queryFn: () => actions.sourceConnection.getStatus(),
+    queryKey: ["app-integration-status"],
+    queryFn: () => actions.appIntegration.getStatus(),
     refetchInterval: 2_000,
   })
   return { isLoading: query.isLoading, serverUrl: query.data?.widgetServerUrl, state: query.data?.state }

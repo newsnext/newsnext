@@ -1,9 +1,9 @@
 import type { ExtensionCommand } from "./generated/ExtensionCommand"
-import type { Node } from "./generated/Node"
 import type { SerializedError } from "./generated/SerializedError"
+import type { Worker } from "./generated/Worker"
 
 export type ExtensionConnectionCommandRequest = ExtensionCommand
-export type ExtensionConnectionNode = Node
+export type ExtensionConnectionWorker = Worker
 export type ExtensionConnectionSerializedError = SerializedError
 
 export interface ExtensionConnectionFetchResponse {

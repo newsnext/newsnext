@@ -16,15 +16,15 @@ The central model has four product-level concepts:
 | Workspace | Owns the shared Board and Instance collections |
 | Board | Owns membership and its Now and Next Layers |
 | Layer | Presents or materializes a Board's data |
-| Node | Provides a browser UI and runs browser-owned Loaders |
+| Worker | Provides a browser UI and runs browser-owned Loaders |
 
-A browser extension is one Node. Instances are canonical Workspace data, while
-each Instance has a private binding to the browser Node that created it. The
+A browser extension is one Worker. Instances are canonical Workspace data, while
+each Instance has a private binding to the browser Worker that created it. The
 binding selects the account, permissions, credentials, and session used by its
 Loader; it is not a fifth global navigation concept.
 
 The CLI daemon is optional. When present, it persists and broadcasts the
-Workspace and routes an Instance load to its bound Node without exposing Node
+Workspace and routes an Instance load to its bound Worker without exposing Worker
 identity to application code. Without the CLI, the extension can read its last
 Workspace mirror and run locally bound Loaders directly.
 
@@ -155,7 +155,7 @@ interface SourceLoadResult {
 
 The daemon persists the canonical Workspace, including complete Instance
 configuration, and each browser maintains a read-only local mirror. A private
-binding maps each Instance to the browser Node that created it. The bound Loader
+binding maps each Instance to the browser Worker that created it. The bound Loader
 persists protection-cache responses by Source request identity. Before rendering,
 the App restores results through the opaque Instance router: local bindings use
 the current background directly and other bindings relay through the daemon.
@@ -321,7 +321,9 @@ cancellation and are not presented as deterministic Application Data changes.
 
 Native Messaging framing follows Chromium's directional limits: messages from
 the extension to the Native Host may be up to 64 MiB, while messages from the
-Native Host to the extension remain limited to 1 MiB.
+Native Host to the extension remain limited to 1 MiB. The Native Host
+transparently splits larger protocol messages into bounded UTF-8 chunks, and the
+extension validates and reassembles them with a 64 MiB aggregate limit.
 
 ## Adapter Rules
 
@@ -332,8 +334,11 @@ Native Host to the extension remain limited to 1 MiB.
 - Jotai may own ephemeral route, dialog, focus, selection, drag, animation, and
   form-draft state; it does not own persistent domain mutations.
 - Mutation transports return compact receipts. Updated Application Data reaches
-  each frontend through its background storage subscription. Queries and
-  Commands return their declared outputs directly.
+  each frontend through its background storage subscription. When App
+  integration is enabled, the originating Action produces a candidate
+  Workspace, the connection layer commits only changed Board and Instance
+  entities plus their ID order, and peer Workers apply the same versioned patch.
+  Queries and Commands return their declared outputs directly.
 - Browser credentials, permissions, Source execution, and persisted current
   results remain browser-owned. Durable History and daemon lifecycle remain
   App-owned.

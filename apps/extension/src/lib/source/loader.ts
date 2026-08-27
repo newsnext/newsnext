@@ -12,7 +12,7 @@ export async function loadInstance(
   signal?: AbortSignal,
 ): Promise<SourceLoadResponse> {
   signal?.throwIfAborted()
-  const response = await actions.sourceConnection.loadInstance({ instanceId })
+  const response = await actions.appIntegration.loadInstance({ instanceId })
   signal?.throwIfAborted()
   return response
 }

@@ -6,20 +6,24 @@ import type {
 import { createBackgroundActionContext } from "./action-context"
 import { executeRegisteredAction } from "./action-registry"
 import {
-  getSourceConnectionStatus,
+  getAppIntegrationStatus,
   requestInstanceCache,
   requestInstanceLoad,
   requestWidgetSnapshot,
-  setDesktopConnectionEnabled,
-} from "./source-connection-native"
+  setAppIntegrationEnabled,
+  setAppIntegrationWorker,
+} from "./app-integration-native"
 
 const actionContext = createBackgroundActionContext({
-  getStatus: async () => getSourceConnectionStatus(),
+  getStatus: async () => getAppIntegrationStatus(),
   getWidgetSnapshot: requestWidgetSnapshot,
   loadInstance: requestInstanceLoad,
   readInstanceCache: requestInstanceCache,
   setEnabled: async ({ enabled }) => (
-    await setDesktopConnectionEnabled(enabled)
+    await setAppIntegrationEnabled(enabled)
+  ),
+  setWorker: async ({ workerId }) => (
+    await setAppIntegrationWorker(workerId)
   ),
 })
 

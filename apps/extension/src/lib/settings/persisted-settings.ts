@@ -32,7 +32,7 @@ export interface PersistedSettings {
   }
   general: {
     defaultBoardId: string | null
-    desktopConnectionEnabled: boolean
+    appIntegrationEnabled: boolean
     sourceIcon: SourceIconSettings
   }
   shortcuts: ShortcutSettings
@@ -56,7 +56,7 @@ export function createDefaultPersistedSettings(): PersistedSettings {
     },
     general: {
       defaultBoardId: null,
-      desktopConnectionEnabled: false,
+      appIntegrationEnabled: false,
       sourceIcon: { ...DEFAULT_SOURCE_ICON_SETTINGS },
     },
     shortcuts: { ...DEFAULT_SHORTCUT_SETTINGS },
@@ -98,9 +98,9 @@ export function normalizePersistedSettings(value: unknown): PersistedSettings {
         : general?.defaultBoardId === null
           ? null
           : defaults.general.defaultBoardId,
-      desktopConnectionEnabled: typeof general?.desktopConnectionEnabled === "boolean"
-        ? general.desktopConnectionEnabled
-        : defaults.general.desktopConnectionEnabled,
+      appIntegrationEnabled: typeof general?.appIntegrationEnabled === "boolean"
+        ? general.appIntegrationEnabled
+        : defaults.general.appIntegrationEnabled,
       sourceIcon: normalizeSourceIconSettings(
         general?.sourceIcon,
         defaults.general.sourceIcon,
@@ -128,7 +128,7 @@ export function normalizePersistedDeviceState(value: unknown): PersistedDeviceSt
   }
 }
 
-export function withDesktopConnectionEnabled(
+export function withAppIntegrationEnabled(
   settings: PersistedSettings,
   enabled: boolean,
 ): PersistedSettings {
@@ -136,7 +136,7 @@ export function withDesktopConnectionEnabled(
     ...settings,
     general: {
       ...settings.general,
-      desktopConnectionEnabled: enabled,
+      appIntegrationEnabled: enabled,
     },
   }
 }

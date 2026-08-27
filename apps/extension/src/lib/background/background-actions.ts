@@ -2,12 +2,12 @@ import type { ExtensionConnectionFetchResponse } from "@newsnext/extension-conne
 import type { ResolvedRadarSuggestion } from "../radar"
 import type { Instance } from "../source"
 import type { SourceLoadResponse } from "../source/load-result"
+import type { AppIntegrationStatus } from "./app-integration-native"
 import type { ApplicationActionContext } from "./application-actions"
 import type {
   RunDeveloperSourceInput,
   RunDeveloperSourceOutput,
 } from "./developer-source-runner"
-import type { SourceConnectionStatus } from "./source-connection-native"
 import Type from "typebox"
 import { defineAction } from "../action"
 
@@ -46,15 +46,16 @@ export interface BackgroundActionContext extends ApplicationActionContext {
       sourceId: string
     }) => Promise<SourceLoadResponse>
   }
-  sourceConnection: {
-    getStatus: () => Promise<SourceConnectionStatus>
+  appIntegration: {
+    getStatus: () => Promise<AppIntegrationStatus>
     getWidgetSnapshot: (input: {
       boardId: string
       widgetId: string
     }) => Promise<unknown>
     loadInstance: (input: { instanceId: string }) => Promise<SourceLoadResponse>
     readInstanceCache: (input: { instanceId: string }) => Promise<SourceLoadResponse | null>
-    setEnabled: (input: { enabled: boolean }) => Promise<SourceConnectionStatus>
+    setEnabled: (input: { enabled: boolean }) => Promise<AppIntegrationStatus>
+    setWorker: (input: { workerId: string }) => Promise<AppIntegrationStatus>
   }
 }
 
@@ -76,6 +77,13 @@ const SourceCacheResult = Type.Unsafe<SourceLoadResponse | null>(Type.Union([
   SourceLoadResponseResult,
   Type.Null(),
 ]))
+const AppIntegrationStatusResult = Type.Unsafe<AppIntegrationStatus>(Type.Object({
+  appVersion: Type.Optional(Type.String()),
+  claimableWorkerIds: Type.Array(Identifier),
+  state: stringEnum(["disabled", "connected", "connecting", "disconnected"] as const),
+  workerId: Identifier,
+  widgetServerUrl: Type.Optional(Type.String()),
+}, { additionalProperties: false }))
 const InstanceParams = Type.Unsafe<Instance>(Type.Object({
   createdAt: Type.Number(),
   instanceId: Identifier,
@@ -245,55 +253,58 @@ const loaderReadInstanceCacheAction = defineAction({
   await context.loader.readInstanceCache(input)
 ))
 
-const sourceConnectionGetStatusAction = defineAction({
+const appIntegrationGetStatusAction = defineAction({
   audiences: UI_ONLY,
-  name: "sourceConnection.getStatus",
+  name: "appIntegration.getStatus",
   kind: "query",
   description: "Get the local NewsNext App connection status.",
   params: EmptyParams,
-  result: Type.Unsafe<SourceConnectionStatus>(Type.Object({
-    appVersion: Type.Optional(Type.String()),
-    state: stringEnum(["disabled", "connected", "connecting", "disconnected"] as const),
-    widgetServerUrl: Type.Optional(Type.String()),
-  }, { additionalProperties: false })),
-}, async (_input, context: BackgroundActionContext) => await context.sourceConnection.getStatus())
+  result: AppIntegrationStatusResult,
+}, async (_input, context: BackgroundActionContext) => await context.appIntegration.getStatus())
 
-const sourceConnectionLoadInstanceAction = defineAction({
+const appIntegrationLoadInstanceAction = defineAction({
   audiences: UI_ONLY,
-  name: "sourceConnection.loadInstance",
+  name: "appIntegration.loadInstance",
   kind: "query",
   description: "Load an Instance through the Workspace router.",
   params: Type.Object({ instanceId: Identifier }, { additionalProperties: false }),
   result: SourceLoadResponseResult,
 }, async (input, context: BackgroundActionContext) => (
-  await context.sourceConnection.loadInstance(input)
+  await context.appIntegration.loadInstance(input)
 ))
 
-const sourceConnectionReadInstanceCacheAction = defineAction({
+const appIntegrationReadInstanceCacheAction = defineAction({
   audiences: UI_ONLY,
-  name: "sourceConnection.readInstanceCache",
+  name: "appIntegration.readInstanceCache",
   kind: "query",
   description: "Read an Instance's persisted result through the Workspace router.",
   params: Type.Object({ instanceId: Identifier }, { additionalProperties: false }),
   result: SourceCacheResult,
 }, async (input, context: BackgroundActionContext) => (
-  await context.sourceConnection.readInstanceCache(input)
+  await context.appIntegration.readInstanceCache(input)
 ))
 
-const sourceConnectionSetEnabledAction = defineAction({
+const appIntegrationSetEnabledAction = defineAction({
   audiences: UI_ONLY,
-  name: "sourceConnection.setEnabled",
+  name: "appIntegration.setEnabled",
   kind: "mutation",
   description: "Enable or disable the local NewsNext App connection on this device.",
   params: Type.Object({
     enabled: Type.Boolean(),
   }, { additionalProperties: false }),
-  result: Type.Unsafe<SourceConnectionStatus>(Type.Object({
-    appVersion: Type.Optional(Type.String()),
-    state: stringEnum(["disabled", "connected", "connecting", "disconnected"] as const),
-    widgetServerUrl: Type.Optional(Type.String()),
-  }, { additionalProperties: false })),
-}, async (input, context: BackgroundActionContext) => await context.sourceConnection.setEnabled(input))
+  result: AppIntegrationStatusResult,
+}, async (input, context: BackgroundActionContext) => await context.appIntegration.setEnabled(input))
+
+const appIntegrationSetWorkerAction = defineAction({
+  audiences: UI_ONLY,
+  name: "appIntegration.setWorker",
+  kind: "mutation",
+  description: "Reconnect this browser as a persisted NewsNext Worker.",
+  params: Type.Object({
+    workerId: Identifier,
+  }, { additionalProperties: false }),
+  result: AppIntegrationStatusResult,
+}, async (input, context: BackgroundActionContext) => await context.appIntegration.setWorker(input))
 
 const nextLayerGetWidgetSnapshotAction = defineAction({
   audiences: UI_ONLY,
@@ -306,17 +317,18 @@ const nextLayerGetWidgetSnapshotAction = defineAction({
   }, { additionalProperties: false }),
   result: Type.Unknown(),
 }, async (input, context: BackgroundActionContext) => (
-  await context.sourceConnection.getWidgetSnapshot(input)
+  await context.appIntegration.getWidgetSnapshot(input)
 ))
 
 export const uiBackgroundActionDefinitions = [
   radarResolveSuggestionsAction,
   sourceLoadAction,
   sourceCancelAction,
-  sourceConnectionGetStatusAction,
-  sourceConnectionLoadInstanceAction,
-  sourceConnectionReadInstanceCacheAction,
-  sourceConnectionSetEnabledAction,
+  appIntegrationGetStatusAction,
+  appIntegrationLoadInstanceAction,
+  appIntegrationReadInstanceCacheAction,
+  appIntegrationSetEnabledAction,
+  appIntegrationSetWorkerAction,
   nextLayerGetWidgetSnapshotAction,
 ] as const
 

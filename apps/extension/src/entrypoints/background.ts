@@ -1,10 +1,10 @@
 import { registerService } from "@webext-core/proxy-service"
 import { browser, defineBackground } from "#imports"
 import { openAppTab } from "@/lib/app-tab"
+import { registerAppIntegrationNative } from "@/lib/background/app-integration-native"
 import { registerRadarBadge } from "@/lib/background/radar-badge"
 import { registerSourceRegistryLoader } from "@/lib/background/registry"
 import { BACKGROUND_SERVICE_KEY, createBackgroundService } from "@/lib/background/service"
-import { registerSourceConnectionNative } from "@/lib/background/source-connection-native"
 import { syncConfiguredSourceRequestRules } from "@/lib/background/source-request-rules"
 
 registerSourceRegistryLoader()
@@ -32,8 +32,8 @@ function registerActionMenus(): void {
 export default defineBackground(() => {
   registerService(BACKGROUND_SERVICE_KEY, backgroundService)
   registerRadarBadge()
-  void registerSourceConnectionNative().catch((error) => {
-    console.error("Failed to initialize the source connection", error)
+  void registerAppIntegrationNative().catch((error) => {
+    console.error("Failed to initialize the App integration", error)
   })
   void syncConfiguredSourceRequestRules().catch((error) => {
     console.error("Failed to synchronize source request rules", error)

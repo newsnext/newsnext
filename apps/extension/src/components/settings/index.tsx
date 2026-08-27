@@ -17,12 +17,12 @@ import {
   themeModeAtom,
 } from "@/store/settings"
 import { ThemeModeSelector } from "../theme-mode-selector"
+import { AppIntegrationSettings } from "./app-integration"
 import { BgIllustrationSettings } from "./bg-illustration"
 import { DataTransferSettings } from "./data-transfer"
 import { SettingsModalShell } from "./modal-shell"
 import { PermissionsSettings } from "./permissions"
 import { ShortcutsSettings } from "./shortcuts"
-import { SourceConnectionSettings } from "./source-connection"
 import { SourceIconSettings } from "./source-icon"
 
 const LAST_USED_BOARD_VALUE = "__last_used__"
@@ -110,7 +110,7 @@ function SettingsModalContent({
     >
       <TabsContent value="appearance"><AppearanceSettings /></TabsContent>
       <TabsContent value="general"><GeneralSettings /></TabsContent>
-      <TabsContent value="cli"><SourceConnectionSettings /></TabsContent>
+      <TabsContent value="cli"><AppIntegrationSettings /></TabsContent>
       <TabsContent value="shortcuts"><ShortcutsSettings /></TabsContent>
       <TabsContent value="permissions">
         <PermissionsSettings onOpenLiveCard={handleOpenLiveCard} />

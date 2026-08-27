@@ -17,7 +17,7 @@ import { createProtectedSourceLoader } from "./protected-source-loader"
 import { createBackgroundRadarService } from "./radar-service"
 import { createSourceLoaderInvoker } from "./source-loader-invoker"
 
-export type SourceConnectionActions = BackgroundActionContext["sourceConnection"]
+export type AppIntegrationActions = BackgroundActionContext["appIntegration"]
 
 const sourceLoaderInvoker = createSourceLoaderInvoker()
 const sourceLoader = createProtectedSourceLoader(sourceLoaderInvoker)
@@ -54,7 +54,7 @@ async function readBoundInstanceCache({ instance }: { instance: Instance }) {
 }
 
 export function createBackgroundActionContext(
-  sourceConnection: SourceConnectionActions,
+  appIntegration: AppIntegrationActions,
 ): BackgroundActionContext {
   return {
     data: readApplicationData,
@@ -82,6 +82,6 @@ export function createBackgroundActionContext(
       cancel: sourceLoaderInvoker.cancel,
       load: sourceLoader.load,
     },
-    sourceConnection,
+    appIntegration,
   }
 }
