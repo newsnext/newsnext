@@ -2,8 +2,8 @@ import type { Color } from "@newsnext/shared/types"
 import type { Board, BoardCreateInput, BoardLayer, NowLayerSortMode } from "@/lib/board"
 import { Button } from "@newsnext/ui/components/button"
 import {
+  ContentDialogContent,
   Dialog,
-  DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -16,6 +16,7 @@ import { ThemeSelector } from "@newsnext/ui/components/theme-selector"
 import { useState } from "react"
 import { ConfigSection } from "@/components/common/config-section"
 import { ConfirmDestructiveButton } from "@/components/common/confirm-destructive-button"
+import { BgIllustrationSettings } from "@/components/settings/bg-illustration"
 import { useAsyncAction } from "@/hooks/use-async-action"
 import { DEFAULT_BOARD_COLOR, DEFAULT_BOARD_LAYER, DEFAULT_NOW_LAYER_SORT, updateNowLayerSortMode } from "@/lib/board"
 import { cn } from "@/lib/utils"
@@ -145,19 +146,26 @@ function ConfigurableBoardDialog({
         }
       }}
     >
-      <DialogContent
+      <ContentDialogContent
         variant="themed"
-        className="sm:max-w-lg"
-        surfaceClassName={cn(initialColor, "gap-0")}
+        className={isEditing ? "sm:max-w-2xl" : "sm:max-w-lg"}
+        surfaceClassName={cn(initialColor, "min-h-0 gap-0")}
       >
-        <form className="grid" onSubmit={handleSubmit}>
+        <form
+          className="grid size-full min-h-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden"
+          onSubmit={handleSubmit}
+        >
           <DialogHeader className="h-10 justify-center px-2">
             <DialogTitle className="font-bold">
               {isEditing ? "Edit board" : "Create board"}
             </DialogTitle>
           </DialogHeader>
 
-          <SquircleBox radius="2xl" variant="modal-inner" className="grid gap-6 p-6">
+          <SquircleBox
+            radius="2xl"
+            variant="modal-inner"
+            className="grid min-h-0 gap-6 overflow-y-auto p-6"
+          >
             <ConfigSection variant="field" title="Name" htmlFor="board-name">
               <Input
                 id="board-name"
@@ -212,6 +220,8 @@ function ConfigurableBoardDialog({
               </RadioGroup>
             </ConfigSection>
 
+            {board && <BgIllustrationSettings board={board} />}
+
             <DialogFooter className={cn(isEditing && "sm:justify-between")}>
               {isEditing && (
                 <div className="flex flex-col items-start gap-2">
@@ -260,7 +270,7 @@ function ConfigurableBoardDialog({
             )}
           </SquircleBox>
         </form>
-      </DialogContent>
+      </ContentDialogContent>
     </Dialog>
   )
 }

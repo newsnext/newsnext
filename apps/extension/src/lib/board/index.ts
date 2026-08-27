@@ -1,6 +1,7 @@
 export type {
   Board,
   BoardCreateInput,
+  BoardIllustration,
   BoardLayer,
   NextLayerWidget,
   NextLayerWidgetDataScope,

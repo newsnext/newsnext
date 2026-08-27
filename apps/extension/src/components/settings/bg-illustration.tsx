@@ -1,18 +1,21 @@
 import type { ChangeEvent, CSSProperties, DragEvent, ReactNode } from "react"
 import type { BgIllustrationTransform } from "@/lib/bg-illustration"
+import type { Board } from "@/lib/board"
 import { Button } from "@newsnext/ui/components/button"
 import { Card, CardContent } from "@newsnext/ui/components/card"
 import { Slider } from "@newsnext/ui/components/slider"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
-import { useAtom } from "jotai"
 import { useEffect, useRef, useState } from "react"
 import { ConfigSection } from "@/components/common/config-section"
 import { ConfirmDestructiveButton } from "@/components/common/confirm-destructive-button"
 import { PhArrowCounterClockwise } from "@/components/icons/ph"
+import { useBgIllustration } from "@/hooks/use-bg-illustration"
+import { actions } from "@/lib/actions"
 import {
   areBgIllustrationTransformsEqual,
   createBgIllustrationFromImage,
   createBgIllustrationFromSvg,
+  DEFAULT_BG_ILLUSTRATION_OPACITY,
   DEFAULT_BG_ILLUSTRATION_TRANSFORM,
   DEFAULT_LINE_ART_THRESHOLD,
   isSvgIllustrationFile,
@@ -27,11 +30,6 @@ import {
   resolveBgIllustrationTranslation,
 } from "@/lib/bg-illustration"
 import { cn } from "@/lib/utils"
-import {
-  bgIllustrationAtom,
-  bgIllustrationOpacityAtom,
-  bgIllustrationTransformAtom,
-} from "@/store/settings"
 import BgIllustrationControls from "./bg-illustration-controls"
 
 interface ProcessingStatus {
@@ -58,10 +56,26 @@ interface ViewportSize {
   width: number
 }
 
-export function BgIllustrationSettings(): React.JSX.Element {
-  const [savedIllustration, setSavedIllustration] = useAtom(bgIllustrationAtom)
-  const [illustrationOpacity, setIllustrationOpacity] = useAtom(bgIllustrationOpacityAtom)
-  const [savedTransform, setSavedTransform] = useAtom(bgIllustrationTransformAtom)
+export function BgIllustrationSettings({
+  board,
+}: {
+  board: Board
+}): React.JSX.Element {
+  const resetKey = `${board.id}:${JSON.stringify(board.illustration)}`
+  return <BgIllustrationSettingsContent key={resetKey} board={board} />
+}
+
+function BgIllustrationSettingsContent({
+  board,
+}: {
+  board: Board
+}): React.JSX.Element {
+  const savedConfiguration = board.illustration
+  const savedIllustration = useBgIllustration(savedConfiguration?.id)
+  const savedTransform = savedConfiguration?.transform ?? DEFAULT_BG_ILLUSTRATION_TRANSFORM
+  const [illustrationOpacity, setIllustrationOpacity] = useState(
+    () => savedConfiguration?.opacity ?? DEFAULT_BG_ILLUSTRATION_OPACITY,
+  )
   const [draftIllustration, setDraftIllustration] = useState<string | null>(null)
   const [transformDraft, setTransformDraft] = useState<TransformDraft>(() => ({
     baseline: savedTransform,
@@ -235,14 +249,41 @@ export function BgIllustrationSettings(): React.JSX.Element {
     })
   }
 
-  function handleRemove(): void {
+  async function handleRemove(): Promise<void> {
     processingIdRef.current += 1
-    setSourceFile(null)
-    setDraftIllustration(null)
-    replaceDraftTransform(DEFAULT_BG_ILLUSTRATION_TRANSFORM)
-    setSavedIllustration(null)
-    setSavedTransform({ ...DEFAULT_BG_ILLUSTRATION_TRANSFORM })
-    setStatus(null)
+    setStatus({ kind: "progress", message: "Removing background…" })
+    try {
+      await actions.illustration.remove({ boardId: board.id })
+      setSourceFile(null)
+      setDraftIllustration(null)
+      replaceDraftTransform(DEFAULT_BG_ILLUSTRATION_TRANSFORM)
+      setIllustrationOpacity(DEFAULT_BG_ILLUSTRATION_OPACITY)
+      setStatus(null)
+    } catch (error) {
+      setStatus({
+        kind: "error",
+        message: error instanceof Error ? error.message : "The background could not be removed.",
+      })
+    }
+  }
+
+  async function handleApply(): Promise<void> {
+    if (!previewIllustration) return
+    setStatus({ kind: "progress", message: "Saving background…" })
+    try {
+      await actions.illustration.apply({
+        boardId: board.id,
+        illustration: previewIllustration,
+        opacity: illustrationOpacity,
+        transform: draftTransform,
+      })
+      setStatus(null)
+    } catch (error) {
+      setStatus({
+        kind: "error",
+        message: error instanceof Error ? error.message : "The background could not be saved.",
+      })
+    }
   }
 
   const viewportWidth = Math.max(viewportSize.width, 1)
@@ -320,6 +361,7 @@ export function BgIllustrationSettings(): React.JSX.Element {
   }
   const hasTransformChanges = !areBgIllustrationTransformsEqual(draftTransform, savedTransform)
   const hasDraftChanges = draftIllustration !== null && draftIllustration !== savedIllustration
+  const hasOpacityChanges = illustrationOpacity !== (savedConfiguration?.opacity ?? DEFAULT_BG_ILLUSTRATION_OPACITY)
   const isDefaultTransform = areBgIllustrationTransformsEqual(
     draftTransform,
     DEFAULT_BG_ILLUSTRATION_TRANSFORM,
@@ -328,7 +370,7 @@ export function BgIllustrationSettings(): React.JSX.Element {
   return (
     <ConfigSection
       title="Background illustration"
-      description="Extract a photo's edges locally, or use an SVG directly as a quiet background illustration."
+      description="Choose a separate background illustration for the current Board."
       surface={false}
     >
       <SquircleBox
@@ -466,15 +508,12 @@ export function BgIllustrationSettings(): React.JSX.Element {
             <Button
               type="button"
               size="sm"
-              disabled={!previewIllustration || (!hasDraftChanges && !hasTransformChanges) || isProcessing}
-              onClick={() => {
-                setSavedIllustration(previewIllustration)
-                setSavedTransform(draftTransform)
-              }}
+              disabled={!previewIllustration || (!hasDraftChanges && !hasTransformChanges && !hasOpacityChanges) || isProcessing}
+              onClick={() => void handleApply()}
             >
               Apply background
             </Button>
-            {savedIllustration && (
+            {savedConfiguration && (
               <ConfirmDestructiveButton
                 type="button"
                 size="sm"

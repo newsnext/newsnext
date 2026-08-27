@@ -1,15 +1,9 @@
-import type { BgIllustrationTransform } from "../bg-illustration/config"
 import type { SourceIconSettings, SourceIconSource } from "../source/icon"
 import type { ThemeMode } from "../utils/swith-theme"
 import type { ShortcutSettings } from "./shortcuts"
 import {
-  DEFAULT_BG_ILLUSTRATION_OPACITY,
-  DEFAULT_BG_ILLUSTRATION_TRANSFORM,
-  normalizeBgIllustration,
-  normalizeBgIllustrationOpacity,
-  normalizeBgIllustrationTransform,
-} from "../bg-illustration/config"
-import { DEFAULT_SOURCE_ICON_SETTINGS } from "../source/icon"
+  DEFAULT_SOURCE_ICON_SETTINGS,
+} from "../source/icon"
 import { DEFAULT_SHORTCUT_SETTINGS, normalizeShortcutSettings } from "./shortcuts"
 
 export const PERSISTED_SETTINGS_VERSION = 1
@@ -24,9 +18,6 @@ export type SettingsTabId = "appearance" | "general" | "cli" | "shortcuts" | "pe
 
 export interface PersistedSettings {
   appearance: {
-    bgIllustration: string | null
-    bgIllustrationOpacity: number
-    bgIllustrationTransform: BgIllustrationTransform
     liveCardHeight: LiveCardHeight
     themeMode: ThemeMode
   }
@@ -48,9 +39,6 @@ export interface PersistedDeviceState {
 export function createDefaultPersistedSettings(): PersistedSettings {
   return {
     appearance: {
-      bgIllustration: null,
-      bgIllustrationOpacity: DEFAULT_BG_ILLUSTRATION_OPACITY,
-      bgIllustrationTransform: { ...DEFAULT_BG_ILLUSTRATION_TRANSFORM },
       liveCardHeight: DEFAULT_LIVE_CARD_HEIGHT,
       themeMode: "system",
     },
@@ -82,9 +70,6 @@ export function normalizePersistedSettings(value: unknown): PersistedSettings {
   const general = isRecord(value.general) ? value.general : undefined
   return {
     appearance: {
-      bgIllustration: normalizeBgIllustration(appearance?.bgIllustration),
-      bgIllustrationOpacity: normalizeBgIllustrationOpacity(appearance?.bgIllustrationOpacity),
-      bgIllustrationTransform: normalizeBgIllustrationTransform(appearance?.bgIllustrationTransform),
       liveCardHeight: isLiveCardHeight(appearance?.liveCardHeight)
         ? appearance.liveCardHeight
         : defaults.appearance.liveCardHeight,

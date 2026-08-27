@@ -23,10 +23,6 @@ export interface BgIllustrationTransform {
 
 const SVG_DATA_URL_PREFIX = "data:image/svg+xml,"
 
-export function normalizeBgIllustration(value: unknown): string | null {
-  return typeof value === "string" && decodeSvgIllustrationDataUrl(value) !== null ? value : null
-}
-
 export function createSvgIllustrationDataUrl(svg: string): string | null {
   if (!isSvgMarkup(svg)) return null
 

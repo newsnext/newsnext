@@ -14,6 +14,7 @@ function createData(): ApplicationData {
     boards: [{
       color: "blue",
       id: "reading",
+      illustration: null,
       name: "Reading",
       createdAt: 1,
       instanceIds: ["second", "first"],

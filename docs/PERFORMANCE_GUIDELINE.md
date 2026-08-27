@@ -150,10 +150,14 @@ and ordinary renders must only restore the saved result as a CSS mask; they must
 not decode the original upload or repeat edge extraction.
 Direct SVG uploads bypass raster decoding and edge extraction. Sanitize and
 percent-encode them once on selection, then use the resulting SVG data URL as
-the draft. Generated SVG uses the same non-base64 data URL representation.
+the draft. Generated SVG uses the same non-base64 data URL representation. On apply,
+encode the SVG as UTF-8 binary data in device-local IndexedDB. Resolve it when the
+current Board reference changes and keep it outside portable Settings persistence. Use a SHA-256
+content ID as the Board's lightweight reference. Upload or fetch the binary through
+the dedicated App integration messages only when reconciling a referenced asset.
 The fixed React illustration layer owns its viewport subscription and derives
-its typed inline mask style directly from the three illustration setting atoms.
-Opacity changes must persist only the numeric setting and rerender that layer;
+its typed inline mask style from the current Board's illustration metadata.
+Opacity changes must persist only the Board metadata and rerender that layer;
 they must not rerun image decoding or edge extraction.
 Mirrored persistence must ignore its own `browser.storage.local` echo when the
 normalized value already matches the synchronous `localStorage` snapshot. An

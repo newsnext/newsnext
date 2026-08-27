@@ -1,4 +1,5 @@
 import { browser } from "#imports"
+import { clearPersistedBgIllustrations } from "../bg-illustration/persisted-illustration"
 import { getUserManagedHostPermissionOrigins } from "../source/host-permissions"
 import { OPTIONAL_SOURCE_PERMISSIONS } from "../source/permission-constants"
 import { clearPersistedSourceResults } from "../source/persisted-results"
@@ -18,6 +19,7 @@ export async function clearNonPortableUserData(): Promise<void> {
 
   await Promise.all([
     browser.storage.local.remove(PERSISTED_DATA_SLICES.secrets.key),
+    clearPersistedBgIllustrations(),
     clearPersistedSourceResults(),
     ...(hasPermissionsToRevoke
       ? [browser.permissions.remove({

@@ -18,7 +18,6 @@ import {
 } from "@/store/settings"
 import { ThemeModeSelector } from "../theme-mode-selector"
 import { AppIntegrationSettings } from "./app-integration"
-import { BgIllustrationSettings } from "./bg-illustration"
 import { DataTransferSettings } from "./data-transfer"
 import { SettingsModalShell } from "./modal-shell"
 import { PermissionsSettings } from "./permissions"
@@ -139,7 +138,6 @@ function AppearanceSettings() {
         />
       </ConfigSection>
       <LiveCardHeightSettings />
-      <BgIllustrationSettings />
     </div>
   )
 }

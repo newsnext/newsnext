@@ -14,6 +14,10 @@ import {
   ensureApplicationDataIntegrity,
 } from "../application/data"
 import {
+  normalizeBgIllustrationOpacity,
+  normalizeBgIllustrationTransform,
+} from "../bg-illustration/config"
+import {
   DEFAULT_BOARD_COLOR,
   DEFAULT_NOW_LAYER_SORT,
   normalizeBoardLayer,
@@ -100,6 +104,7 @@ export function normalizeBoards(
       color: isThemeColor(candidate.color) ? candidate.color : DEFAULT_BOARD_COLOR,
       defaultLayer: normalizeBoardLayer(candidate.defaultLayer),
       instanceIds: ids,
+      illustration: normalizeBoardIllustration(candidate.illustration),
       nowLayer: {
         sort: {
           mode,
@@ -115,6 +120,19 @@ export function normalizeBoards(
       },
     }]
   })
+}
+
+function normalizeBoardIllustration(value: unknown): Board["illustration"] {
+  if (!isRecord(value)
+    || typeof value.id !== "string"
+    || !/^[a-f\d]{64}$/u.test(value.id)) {
+    return null
+  }
+  return {
+    id: value.id,
+    opacity: normalizeBgIllustrationOpacity(value.opacity),
+    transform: normalizeBgIllustrationTransform(value.transform),
+  }
 }
 
 function normalizeNextLayerWidgets(

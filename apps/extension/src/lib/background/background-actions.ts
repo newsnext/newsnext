@@ -10,6 +10,13 @@ import type {
 } from "./developer-source-runner"
 import Type from "typebox"
 import { defineAction } from "../action"
+import { updateBoardMutation } from "../application"
+import { MAX_BG_ILLUSTRATION_DATA_URL_LENGTH } from "../bg-illustration/config"
+import {
+  createBgIllustrationId,
+  decodeBgIllustration,
+  encodeBgIllustration,
+} from "../bg-illustration/persisted-illustration"
 
 export interface ConnectedFetchInput {
   body?: string
@@ -47,6 +54,7 @@ export interface BackgroundActionContext extends ApplicationActionContext {
     }) => Promise<SourceLoadResponse>
   }
   appIntegration: {
+    getIllustration: (input: { id: string }) => Promise<Uint8Array<ArrayBuffer> | null>
     getStatus: () => Promise<AppIntegrationStatus>
     getWidgetSnapshot: (input: {
       boardId: string
@@ -54,6 +62,10 @@ export interface BackgroundActionContext extends ApplicationActionContext {
     }) => Promise<unknown>
     loadInstance: (input: { instanceId: string }) => Promise<SourceLoadResponse>
     readInstanceCache: (input: { instanceId: string }) => Promise<SourceLoadResponse | null>
+    putIllustration: (input: {
+      bytes: Uint8Array<ArrayBuffer>
+      id: string
+    }) => Promise<void>
     setEnabled: (input: { enabled: boolean }) => Promise<AppIntegrationStatus>
     setWorker: (input: { workerId: string }) => Promise<AppIntegrationStatus>
   }
@@ -91,6 +103,13 @@ const InstanceParams = Type.Unsafe<Instance>(Type.Object({
   sourceId: Identifier,
 }, { additionalProperties: false }))
 const RoutedInstanceParams = Type.Object({ instance: InstanceParams }, { additionalProperties: false })
+const IllustrationTransformParams = Type.Object({
+  positionMode: stringEnum(["bottom-center", "viewport-center"] as const),
+  rotation: Type.Number({ minimum: -180, maximum: 180 }),
+  scale: Type.Number({ minimum: 0.25, maximum: 4 }),
+  x: Type.Number({ minimum: -100, maximum: 200 }),
+  y: Type.Number({ minimum: -100, maximum: 200 }),
+}, { additionalProperties: false })
 
 const FetchParams = Type.Unsafe<ConnectedFetchInput>(Type.Object({
   body: Type.Optional(Type.String()),
@@ -306,6 +325,63 @@ const appIntegrationSetWorkerAction = defineAction({
   result: AppIntegrationStatusResult,
 }, async (input, context: BackgroundActionContext) => await context.appIntegration.setWorker(input))
 
+const illustrationApplyAction = defineAction({
+  audiences: UI_ONLY,
+  name: "illustration.apply",
+  kind: "mutation",
+  description: "Store and apply a Board background illustration.",
+  params: Type.Object({
+    boardId: Identifier,
+    illustration: Type.String({ maxLength: MAX_BG_ILLUSTRATION_DATA_URL_LENGTH }),
+    opacity: Type.Integer({ minimum: 1, maximum: 20 }),
+    transform: IllustrationTransformParams,
+  }, { additionalProperties: false }),
+  result: Type.Object({ id: Identifier }, { additionalProperties: false }),
+}, async (input, context: BackgroundActionContext) => {
+  const bytes = encodeBgIllustration(input.illustration)
+  if (bytes === null) throw new Error("The background illustration is invalid")
+  const id = await createBgIllustrationId(bytes)
+  await context.appIntegration.putIllustration({ bytes, id })
+  await context.mutate(data => updateBoardMutation(data, {
+    boardId: input.boardId,
+    illustration: {
+      id,
+      opacity: input.opacity,
+      transform: input.transform,
+    },
+  }))
+  return { id }
+})
+
+const illustrationGetAction = defineAction({
+  audiences: UI_ONLY,
+  name: "illustration.get",
+  kind: "query",
+  description: "Read a Board background illustration from local or App storage.",
+  params: Type.Object({ id: Identifier }, { additionalProperties: false }),
+  result: Type.Union([
+    Type.String({ maxLength: MAX_BG_ILLUSTRATION_DATA_URL_LENGTH }),
+    Type.Null(),
+  ]),
+}, async (input, context: BackgroundActionContext) => {
+  const bytes = await context.appIntegration.getIllustration(input)
+  return bytes === null ? null : decodeBgIllustration(bytes)
+})
+
+const illustrationRemoveAction = defineAction({
+  audiences: UI_ONLY,
+  name: "illustration.remove",
+  kind: "mutation",
+  description: "Remove a Board background illustration reference.",
+  params: Type.Object({ boardId: Identifier }, { additionalProperties: false }),
+  result: EmptyResult,
+}, async (input, context: BackgroundActionContext) => (
+  await context.mutate(data => updateBoardMutation(data, {
+    boardId: input.boardId,
+    illustration: null,
+  }))
+))
+
 const nextLayerGetWidgetSnapshotAction = defineAction({
   audiences: UI_ONLY,
   name: "nextLayer.getWidgetSnapshot",
@@ -329,6 +405,9 @@ export const uiBackgroundActionDefinitions = [
   appIntegrationReadInstanceCacheAction,
   appIntegrationSetEnabledAction,
   appIntegrationSetWorkerAction,
+  illustrationApplyAction,
+  illustrationGetAction,
+  illustrationRemoveAction,
   nextLayerGetWidgetSnapshotAction,
 ] as const
 

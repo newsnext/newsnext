@@ -22,14 +22,6 @@ describe("persisted settings", () => {
     expect(settings).toEqual(createDefaultPersistedSettings())
   })
 
-  it("keeps valid locally generated SVG background illustration", () => {
-    const illustration = `data:image/svg+xml,${encodeURIComponent("<svg></svg>")}`
-    expect(normalizePersistedSettings({
-      appearance: { bgIllustration: illustration },
-      version: 1,
-    }).appearance.bgIllustration).toBe(illustration)
-  })
-
   it("normalizes the LiveCard height", () => {
     expect(normalizePersistedSettings({
       appearance: { liveCardHeight: "compact" },
@@ -43,38 +35,6 @@ describe("persisted settings", () => {
       appearance: { liveCardHeight: "giant" },
       version: 1,
     }).appearance.liveCardHeight).toBe("balanced")
-  })
-
-  it("normalizes the background illustration opacity", () => {
-    expect(normalizePersistedSettings({
-      appearance: { bgIllustrationOpacity: 12.4 },
-      version: 1,
-    }).appearance.bgIllustrationOpacity).toBe(12)
-    expect(normalizePersistedSettings({
-      appearance: { bgIllustrationOpacity: 100 },
-      version: 1,
-    }).appearance.bgIllustrationOpacity).toBe(20)
-  })
-
-  it("normalizes the background illustration transform", () => {
-    expect(normalizePersistedSettings({
-      appearance: {
-        bgIllustrationTransform: {
-          positionMode: "viewport-center",
-          x: 12.345,
-          y: -500,
-          scale: 10,
-          rotation: "sideways",
-        },
-      },
-      version: 1,
-    }).appearance.bgIllustrationTransform).toEqual({
-      positionMode: "viewport-center",
-      x: 12.35,
-      y: -100,
-      scale: 4,
-      rotation: 0,
-    })
   })
 
   it("normalizes keyboard shortcuts", () => {

@@ -84,10 +84,18 @@ the matching checked-in theme icon. Reuse those same assets in the shared theme
 selector. Keep this separate from the head bootstrap and provider composition so
 favicon work does not delay the initial background or depend on board effects.
 
-The Appearance settings may let the user choose a local raster image and extract
-its edges into background illustration, or use a local SVG directly. Keep processing
-in the browser, sanitize direct SVG illustration, resize large raster inputs before
-pixel work, and show the result before it is applied.
+Place background illustration controls in the Board configuration modal when editing
+an existing Board. Do not expose them in global Appearance settings or during Board
+creation, before a Board identity exists. Let the edit modal expand to fit the visual
+editor. Give both Create Board and Edit Board the shared content-modal height: the
+smaller of 70% of the viewport and 640px. Scroll their inner configuration area
+vertically without scrolling the outer dialog or its header.
+Use the same shared height for other content-heavy modals, including Settings and
+Search, while keeping compact confirmation dialogs sized naturally to their content.
+The user may choose a local raster image and extract its edges into background
+illustration, or use a local SVG directly.
+Keep processing in the browser, sanitize direct SVG illustration, resize large raster
+inputs before pixel work, and show the result before it is applied.
 The preview is also the primary drop target and pointer-based file picker trigger;
 give it a visible drag-over state. Keep the preview canvas on its
 own background and outside the padded settings card that contains its controls.
@@ -120,9 +128,12 @@ Provide one edge-detail control whose explanation makes the threshold direction
 clear. Applying and removing illustration are explicit actions; selecting or
 dropping a file, or changing the detail preview, must not overwrite the saved
 background. Raster sources always produce SVG line art. Direct SVG uploads
-bypass edge extraction and use the sanitized vector as the draft. Store both
-generated and uploaded illustration as percent-encoded `data:image/svg+xml` URLs,
-without base64 encoding.
+bypass edge extraction and use the sanitized vector as the draft. Keep drafts as
+percent-encoded `data:image/svg+xml` URLs without base64 encoding. Persist the applied
+SVG as UTF-8 binary data in IndexedDB. Each Board owns an illustration reference plus
+its opacity and transform, so Boards can use different backgrounds. Synchronize the
+referenced binary separately through App integration rather than embedding it in
+Settings, Application Data, Workspace patches, imports, or exports.
 
 Render saved SVG illustration as a transparent mask mixed from the foreground
 and active theme colors so it adapts to light, dark, and board themes. Keep it

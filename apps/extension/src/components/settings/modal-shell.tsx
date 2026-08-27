@@ -1,8 +1,8 @@
 import type { ReactNode } from "react"
 import type { SettingsTabId } from "@/lib/settings"
 import {
+  ContentDialogContent,
   Dialog,
-  DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@newsnext/ui/components/dialog"
@@ -44,9 +44,9 @@ export function SettingsModalShell({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
+      <ContentDialogContent
         variant="themed"
-        className="h-[min(37.5rem,calc(100vh-2rem))] w-full max-w-3xl sm:max-w-3xl"
+        className="w-full max-w-3xl sm:max-w-3xl"
         surfaceClassName="grid min-h-0"
       >
         <Tabs
@@ -84,7 +84,7 @@ export function SettingsModalShell({
             )}
           </div>
         </Tabs>
-      </DialogContent>
+      </ContentDialogContent>
     </Dialog>
   )
 }

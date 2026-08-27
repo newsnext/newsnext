@@ -17,6 +17,7 @@ const BOARD_DIALOG_BOARDS: Board[] = [
     createdAt: 1,
     defaultLayer: "now",
     id: "V1StGXR8_Z5j",
+    illustration: null,
     instanceIds: [],
     name: "My Board",
     nowLayer: {
@@ -29,6 +30,7 @@ const BOARD_DIALOG_BOARDS: Board[] = [
     createdAt: 2,
     defaultLayer: "next",
     id: "board-design",
+    illustration: null,
     instanceIds: [],
     name: "Design signals",
     nowLayer: {

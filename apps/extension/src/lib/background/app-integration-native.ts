@@ -3,6 +3,7 @@ import type {
   ExtensionToHost,
   HostToExtension,
   NativeCommandResult,
+  NativeIllustration,
   NativeWorkspace,
   NativeWorkspacePatch,
 } from "@newsnext/extension-connection"
@@ -13,6 +14,10 @@ import {
 } from "@newsnext/extension-connection"
 import { browser } from "#imports"
 import { APPLICATION_DATA_VERSION } from "../application"
+import {
+  readPersistedBgIllustrationBytes,
+  writePersistedBgIllustration,
+} from "../bg-illustration"
 import { normalizeApplicationData, PERSISTED_DATA_SLICES } from "../settings/persisted-data"
 import {
   normalizePersistedSettings,
@@ -35,11 +40,11 @@ import { applyWorkspacePatch, createWorkspacePatch } from "./workspace-patch"
 const NATIVE_HOST_NAME = import.meta.env.DEV
   ? "app.newsnext.host.dev"
   : "app.newsnext.host"
-const PROTOCOL_VERSION = 15
+const PROTOCOL_VERSION = 16
 const APP_INTEGRATION_WORKER_ID_KEY = "newsnext-app-integration-worker-id"
 const APP_INTEGRATION_RECONNECT_ALARM = "app-integration-native-reconnect"
 const RECONNECT_ALARM_PERIOD_MINUTES = 0.5
-const WIDGET_REQUEST_TIMEOUT_MS = 65_000
+const NATIVE_REQUEST_TIMEOUT_MS = 65_000
 
 export type AppIntegrationState
   = | "disabled"
@@ -77,6 +82,16 @@ interface PendingWorkspaceRequest extends PendingRequest {
   resolve: (value: NativeWorkspace) => void
 }
 
+interface PendingIllustrationGetRequest extends PendingRequest {
+  id: string
+  resolve: (value: Uint8Array<ArrayBuffer> | null) => void
+}
+
+interface PendingIllustrationPutRequest extends PendingRequest {
+  id: string
+  resolve: () => void
+}
+
 let port: NativePort | undefined
 let appVersion: string | undefined
 let widgetServerUrl: string | undefined
@@ -90,13 +105,18 @@ let bootstrapBindings: Array<{ instanceId: string, workerId: string }> = []
 const pendingWidgetSnapshotRequests = new Map<string, PendingWidgetSnapshotRequest>()
 const pendingInstanceRequests = new Map<string, PendingInstanceRequest>()
 const pendingWorkspaceRequests = new Map<string, PendingWorkspaceRequest>()
-const nativeMessageChunks = new NativeMessageChunkAssembler(WIDGET_REQUEST_TIMEOUT_MS)
+const pendingIllustrationGetRequests = new Map<string, PendingIllustrationGetRequest>()
+const pendingIllustrationPutRequests = new Map<string, PendingIllustrationPutRequest>()
+const activeIllustrationRequests = new Map<string, Promise<Uint8Array<ArrayBuffer> | null>>()
+const nativeMessageChunks = new NativeMessageChunkAssembler(NATIVE_REQUEST_TIMEOUT_MS)
 
 export const appIntegrationActions: AppIntegrationActions = {
+  getIllustration: requestIllustration,
   getStatus: async () => getAppIntegrationStatus(),
   getWidgetSnapshot: requestWidgetSnapshot,
   loadInstance: requestInstanceLoad,
   readInstanceCache: requestInstanceCache,
+  putIllustration: storeIllustration,
   setEnabled: async ({ enabled: nextEnabled }) => (
     await setAppIntegrationEnabled(nextEnabled)
   ),
@@ -196,6 +216,18 @@ function parseClaimableWorkerIds(value: unknown): string[] {
   return [...new Set(value)]
 }
 
+function parseIllustration(value: unknown): NativeIllustration {
+  if (!isRecord(value)
+    || typeof value.id !== "string"
+    || !/^[a-f\d]{64}$/u.test(value.id)
+    || value.mimeType !== "image/svg+xml"
+    || typeof value.data !== "string"
+    || value.data.length > 1_333_336) {
+    throw new Error("The native host returned an invalid Illustration")
+  }
+  return { id: value.id, mimeType: value.mimeType, data: value.data }
+}
+
 function parseHostMessage(value: unknown): ParsedHostMessage {
   if (!isRecord(value) || typeof value.type !== "string") {
     throw new Error("The native host returned an invalid message")
@@ -259,6 +291,24 @@ function parseHostMessage(value: unknown): ParsedHostMessage {
       type: "widgetSnapshotResult",
       requestId: value.requestId,
       result: value.result,
+    }
+  }
+  if (value.type === "illustrationStored"
+    && typeof value.requestId === "string"
+    && typeof value.id === "string") {
+    return {
+      type: "illustrationStored",
+      requestId: value.requestId,
+      id: value.id,
+    }
+  }
+  if (value.type === "illustrationResult"
+    && typeof value.requestId === "string"
+    && (value.illustration === null || isRecord(value.illustration))) {
+    return {
+      type: "illustrationResult",
+      requestId: value.requestId,
+      illustration: value.illustration === null ? null : parseIllustration(value.illustration),
     }
   }
   if (
@@ -346,6 +396,8 @@ function resetConnectionState(): void {
   rejectPendingRequests(pendingWidgetSnapshotRequests, error)
   rejectPendingRequests(pendingInstanceRequests, error)
   rejectPendingRequests(pendingWorkspaceRequests, error)
+  rejectPendingRequests(pendingIllustrationGetRequests, error)
+  rejectPendingRequests(pendingIllustrationPutRequests, error)
   nativeMessageChunks.clear()
 }
 
@@ -355,8 +407,26 @@ async function applyWorkspace(
 ): Promise<void> {
   const application = acceptWorkspace(nextWorkspace, nextLocalInstanceIds)
   const current = await readApplicationData()
-  if (JSON.stringify(current) === JSON.stringify(application)) return
-  await mirrorApplicationData(application)
+  if (JSON.stringify(current) !== JSON.stringify(application)) {
+    await mirrorApplicationData(application)
+  }
+  void reconcileIllustrations(application.boards).catch((error) => {
+    console.error("Failed to reconcile background illustrations", error)
+  })
+}
+
+async function reconcileIllustrations(
+  boards: NativeWorkspace["boards"],
+): Promise<void> {
+  const ids = new Set(boards.flatMap(board => board.illustration?.id ?? []))
+  await Promise.all(Array.from(ids, async (id) => {
+    const bytes = await readPersistedBgIllustrationBytes(id)
+    if (bytes !== null) {
+      await sendIllustrationToApp({ bytes, id })
+    } else {
+      await requestIllustration({ id })
+    }
+  }))
 }
 
 function acceptWorkspace(
@@ -424,12 +494,20 @@ function connect(): void {
         )
       } else if (message.type === "instanceResult") {
         settleInstanceRequest(message.requestId, message.result)
+      } else if (message.type === "illustrationStored") {
+        settleIllustrationPutRequest(message.requestId, message.id)
+      } else if (message.type === "illustrationResult") {
+        void settleIllustrationGetRequest(message.requestId, message.illustration).catch((error) => {
+          console.error("Failed to store the synced background illustration", error)
+        })
       } else {
         if (message.requestId) {
           const error = new Error(message.message)
           if (rejectPendingRequest(pendingWidgetSnapshotRequests, message.requestId, error)
             || rejectPendingRequest(pendingInstanceRequests, message.requestId, error)
-            || rejectPendingRequest(pendingWorkspaceRequests, message.requestId, error)) {
+            || rejectPendingRequest(pendingWorkspaceRequests, message.requestId, error)
+            || rejectPendingRequest(pendingIllustrationGetRequests, message.requestId, error)
+            || rejectPendingRequest(pendingIllustrationPutRequests, message.requestId, error)) {
             return
           }
         }
@@ -472,7 +550,7 @@ export async function requestWidgetSnapshot(input: {
     const timeoutId = setTimeout(() => {
       pendingWidgetSnapshotRequests.delete(message.requestId)
       reject(new Error("Timed out waiting for the NewsNext App"))
-    }, WIDGET_REQUEST_TIMEOUT_MS)
+    }, NATIVE_REQUEST_TIMEOUT_MS)
     pendingWidgetSnapshotRequests.set(message.requestId, { reject, resolve, timeoutId })
     connection.postMessage(message)
   })
@@ -486,6 +564,90 @@ export async function requestInstanceLoad(input: { instanceId: string }): Promis
 
 export async function requestInstanceCache(input: { instanceId: string }): Promise<SourceLoadResponse | null> {
   return await requestInstance(input, true)
+}
+
+export async function storeIllustration(input: {
+  bytes: Uint8Array<ArrayBuffer>
+  id: string
+}): Promise<void> {
+  await writePersistedBgIllustration(input.id, input.bytes)
+  if (!enabled) return
+  await sendIllustrationToApp(input)
+}
+
+async function sendIllustrationToApp(input: {
+  bytes: Uint8Array<ArrayBuffer>
+  id: string
+}): Promise<void> {
+  const connection = port
+  if (connectionState !== "connected" || !connection) {
+    throw new Error("NewsNext App is not connected")
+  }
+  const message: ExtensionToHost = {
+    type: "illustrationPut",
+    requestId: crypto.randomUUID(),
+    illustration: {
+      id: input.id,
+      mimeType: "image/svg+xml",
+      data: bytesToBase64(input.bytes),
+    },
+  }
+  await new Promise<void>((resolve, reject) => {
+    const timeoutId = setTimeout(() => {
+      pendingIllustrationPutRequests.delete(message.requestId)
+      reject(new Error("Timed out storing the background illustration"))
+    }, NATIVE_REQUEST_TIMEOUT_MS)
+    pendingIllustrationPutRequests.set(message.requestId, {
+      id: input.id,
+      reject,
+      resolve,
+      timeoutId,
+    })
+    connection.postMessage(message)
+  })
+}
+
+export async function requestIllustration(input: {
+  id: string
+}): Promise<Uint8Array<ArrayBuffer> | null> {
+  const persisted = await readPersistedBgIllustrationBytes(input.id)
+  if (persisted !== null || !enabled) return persisted
+  const activeRequest = activeIllustrationRequests.get(input.id)
+  if (activeRequest) return await activeRequest
+  const request = requestIllustrationFromApp(input.id)
+  activeIllustrationRequests.set(input.id, request)
+  try {
+    return await request
+  } finally {
+    if (activeIllustrationRequests.get(input.id) === request) {
+      activeIllustrationRequests.delete(input.id)
+    }
+  }
+}
+
+async function requestIllustrationFromApp(
+  id: string,
+): Promise<Uint8Array<ArrayBuffer> | null> {
+  const connection = port
+  if (connectionState !== "connected" || !connection) return null
+  const message: ExtensionToHost = {
+    type: "illustrationGet",
+    requestId: crypto.randomUUID(),
+    id,
+  }
+  return await new Promise((resolve, reject) => {
+    const timeoutId = setTimeout(() => {
+      pendingIllustrationGetRequests.delete(message.requestId)
+      reject(new Error("Timed out loading the background illustration"))
+    }, NATIVE_REQUEST_TIMEOUT_MS)
+    pendingIllustrationGetRequests.set(message.requestId, {
+      id,
+      reject,
+      resolve,
+      timeoutId,
+    })
+    connection.postMessage(message)
+  })
 }
 
 async function requestInstance(
@@ -523,7 +685,7 @@ async function requestInstance(
     const timeoutId = setTimeout(() => {
       pendingInstanceRequests.delete(message.requestId)
       reject(new Error("Timed out waiting for the Instance's NewsNext Worker"))
-    }, WIDGET_REQUEST_TIMEOUT_MS)
+    }, NATIVE_REQUEST_TIMEOUT_MS)
     pendingInstanceRequests.set(message.requestId, {
       cacheOnly,
       reject,
@@ -548,7 +710,7 @@ async function requestWorkspaceReplacement(candidate: NativeWorkspace): Promise<
     const timeoutId = setTimeout(() => {
       pendingWorkspaceRequests.delete(message.requestId)
       reject(new Error("Timed out waiting for the NewsNext Workspace commit"))
-    }, WIDGET_REQUEST_TIMEOUT_MS)
+    }, NATIVE_REQUEST_TIMEOUT_MS)
     pendingWorkspaceRequests.set(message.requestId, {
       candidate,
       reject,
@@ -560,10 +722,8 @@ async function requestWorkspaceReplacement(candidate: NativeWorkspace): Promise<
 }
 
 function settleWidgetRequest(requestId: string, result: NativeCommandResult): void {
-  const pending = pendingWidgetSnapshotRequests.get(requestId)
+  const pending = takePendingRequest(pendingWidgetSnapshotRequests, requestId)
   if (!pending) return
-  clearTimeout(pending.timeoutId)
-  pendingWidgetSnapshotRequests.delete(requestId)
   if (result.ok) {
     pending.resolve(result.data)
   } else {
@@ -572,10 +732,8 @@ function settleWidgetRequest(requestId: string, result: NativeCommandResult): vo
 }
 
 function settleInstanceRequest(requestId: string, result: NativeCommandResult): void {
-  const pending = pendingInstanceRequests.get(requestId)
+  const pending = takePendingRequest(pendingInstanceRequests, requestId)
   if (!pending) return
-  clearTimeout(pending.timeoutId)
-  pendingInstanceRequests.delete(requestId)
   if (result.ok) {
     if (result.data === null && pending.cacheOnly) {
       pending.resolve(null)
@@ -596,16 +754,64 @@ function settleWorkspaceRequest(
   revision: number,
   nextLocalInstanceIds: string[],
 ): void {
-  const pending = pendingWorkspaceRequests.get(requestId)
+  const pending = takePendingRequest(pendingWorkspaceRequests, requestId)
   if (!pending) return
-  clearTimeout(pending.timeoutId)
-  pendingWorkspaceRequests.delete(requestId)
   const committed = {
     ...pending.candidate,
     revision,
   }
   acceptWorkspace(committed, nextLocalInstanceIds)
   pending.resolve(committed)
+}
+
+function settleIllustrationPutRequest(requestId: string, id: string): void {
+  const pending = takePendingRequest(pendingIllustrationPutRequests, requestId)
+  if (!pending) return
+  if (id !== pending.id) {
+    pending.reject(new Error("The NewsNext App stored an unexpected Illustration"))
+    return
+  }
+  pending.resolve()
+}
+
+async function settleIllustrationGetRequest(
+  requestId: string,
+  illustration: NativeIllustration | null,
+): Promise<void> {
+  const pending = takePendingRequest(pendingIllustrationGetRequests, requestId)
+  if (!pending) return
+  if (illustration === null) {
+    pending.resolve(null)
+    return
+  }
+  try {
+    if (illustration.id !== pending.id) {
+      throw new Error("The NewsNext App returned an unexpected Illustration")
+    }
+    const bytes = base64ToBytes(illustration.data)
+    await writePersistedBgIllustration(illustration.id, bytes)
+    pending.resolve(bytes)
+  } catch (error) {
+    pending.reject(error instanceof Error ? error : new Error("Invalid Illustration data"))
+  }
+}
+
+function bytesToBase64(bytes: Uint8Array<ArrayBuffer>): string {
+  let binary = ""
+  const chunkSize = 32_768
+  for (let offset = 0; offset < bytes.length; offset += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(offset, offset + chunkSize))
+  }
+  return btoa(binary)
+}
+
+function base64ToBytes(value: string): Uint8Array<ArrayBuffer> {
+  const binary = atob(value)
+  const bytes = new Uint8Array(new ArrayBuffer(binary.length))
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index)
+  }
+  return bytes
 }
 
 function isSourceLoadResponse(value: unknown): value is SourceLoadResponse {
@@ -633,12 +839,21 @@ function rejectPendingRequest<T extends PendingRequest>(
   requestId: string,
   error: Error,
 ): boolean {
-  const pending = requests.get(requestId)
+  const pending = takePendingRequest(requests, requestId)
   if (!pending) return false
-  clearTimeout(pending.timeoutId)
-  requests.delete(requestId)
   pending.reject(error)
   return true
+}
+
+function takePendingRequest<T extends PendingRequest>(
+  requests: Map<string, T>,
+  requestId: string,
+): T | undefined {
+  const pending = requests.get(requestId)
+  if (!pending) return undefined
+  clearTimeout(pending.timeoutId)
+  requests.delete(requestId)
+  return pending
 }
 
 function parseWidgetServerUrl(value: unknown): string {

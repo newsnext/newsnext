@@ -12,8 +12,8 @@ import {
   CommandList,
 } from "@newsnext/ui/components/command"
 import {
+  ContentDialogContent,
   Dialog,
-  DialogContent,
   DialogDescription,
   DialogTitle,
 } from "@newsnext/ui/components/dialog"
@@ -234,9 +234,9 @@ export function SearchModalContent({
   searchShortcut: Hotkey | null
 }): ReactNode {
   return (
-    <DialogContent
+    <ContentDialogContent
       variant="themed"
-      className="h-[min(32rem,calc(100vh-2rem))] w-full sm:max-w-xl"
+      className="w-full sm:max-w-xl"
       surfaceClassName="grid-rows-[minmax(0,1fr)_auto]"
     >
       <DialogTitle className="sr-only">Search LiveCards</DialogTitle>
@@ -321,6 +321,6 @@ export function SearchModalContent({
         </span>
         <SearchShortcutHint keys={["Esc"]} label="Close" />
       </footer>
-    </DialogContent>
+    </ContentDialogContent>
   )
 }

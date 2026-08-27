@@ -8,6 +8,7 @@ export {
   areBgIllustrationTransformsEqual,
   DEFAULT_BG_ILLUSTRATION_OPACITY,
   DEFAULT_BG_ILLUSTRATION_TRANSFORM,
+  MAX_BG_ILLUSTRATION_DATA_URL_LENGTH,
   MAX_BG_ILLUSTRATION_FILE_SIZE,
   MAX_BG_ILLUSTRATION_OPACITY,
   MAX_BG_ILLUSTRATION_SCALE,
@@ -27,6 +28,15 @@ export {
   resolveBgIllustrationLayout,
   resolveBgIllustrationTranslation,
 } from "./layout"
+export {
+  clearPersistedBgIllustrations,
+  createBgIllustrationId,
+  decodeBgIllustration,
+  encodeBgIllustration,
+  readPersistedBgIllustrationBytes,
+  subscribePersistedBgIllustration,
+  writePersistedBgIllustration,
+} from "./persisted-illustration"
 export {
   DEFAULT_LINE_ART_THRESHOLD,
 } from "./processing"

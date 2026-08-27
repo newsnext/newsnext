@@ -1,4 +1,3 @@
-import type { BgIllustrationTransform } from "@/lib/bg-illustration"
 import type {
   LiveCardHeight,
   PersistedDeviceState,
@@ -73,39 +72,6 @@ export const liveCardHeightAtom = atom(
     set(persistedSettingsAtom, {
       ...settings,
       appearance: { ...settings.appearance, liveCardHeight },
-    })
-  },
-)
-
-export const bgIllustrationAtom = atom(
-  get => get(persistedSettingsAtom).appearance.bgIllustration,
-  (get, set, bgIllustration: string | null) => {
-    const settings = get(persistedSettingsAtom)
-    set(persistedSettingsAtom, {
-      ...settings,
-      appearance: { ...settings.appearance, bgIllustration },
-    })
-  },
-)
-
-export const bgIllustrationOpacityAtom = atom(
-  get => get(persistedSettingsAtom).appearance.bgIllustrationOpacity,
-  (get, set, bgIllustrationOpacity: number) => {
-    const settings = get(persistedSettingsAtom)
-    set(persistedSettingsAtom, {
-      ...settings,
-      appearance: { ...settings.appearance, bgIllustrationOpacity },
-    })
-  },
-)
-
-export const bgIllustrationTransformAtom = atom(
-  get => get(persistedSettingsAtom).appearance.bgIllustrationTransform,
-  (get, set, bgIllustrationTransform: BgIllustrationTransform) => {
-    const settings = get(persistedSettingsAtom)
-    set(persistedSettingsAtom, {
-      ...settings,
-      appearance: { ...settings.appearance, bgIllustrationTransform },
     })
   },
 )

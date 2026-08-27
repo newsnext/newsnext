@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest"
 import {
   createSvgIllustrationDataUrl,
   MAX_BG_ILLUSTRATION_DATA_URL_LENGTH,
-  normalizeBgIllustration,
 } from "./config"
 import {
   readSvgIllustrationAspectRatio,
@@ -10,6 +9,7 @@ import {
   resolveBgIllustrationLayout,
   resolveBgIllustrationTranslation,
 } from "./layout"
+import { createBgIllustrationId, decodeBgIllustration, encodeBgIllustration } from "./persisted-illustration"
 import {
   bridgeEdgeGaps,
   createLineArtSvg,
@@ -23,12 +23,21 @@ describe("background illustration", () => {
     const svg = "<svg viewBox=\"0 0 8 4\"></svg>"
     const illustration = createSvgIllustrationDataUrl(svg)
     expect(illustration).toBe(`data:image/svg+xml,${encodeURIComponent(svg)}`)
-    expect(normalizeBgIllustration(illustration)).toBe(illustration)
-    expect(normalizeBgIllustration("data:image/webp;base64,AAAA")).toBeNull()
-    expect(normalizeBgIllustration("data:image/svg+xml;base64,AAAA")).toBeNull()
-    expect(normalizeBgIllustration("data:image/png;base64,AAAA")).toBeNull()
-    expect(normalizeBgIllustration("data:image/svg+xml,<svg></svg>")).toBeNull()
-    expect(normalizeBgIllustration(`data:image/svg+xml,${"A".repeat(MAX_BG_ILLUSTRATION_DATA_URL_LENGTH)}`)).toBeNull()
+    expect(createSvgIllustrationDataUrl("not SVG")).toBeNull()
+    expect(createSvgIllustrationDataUrl(`<svg>${" ".repeat(MAX_BG_ILLUSTRATION_DATA_URL_LENGTH)}</svg>`)).toBeNull()
+  })
+
+  it("round trips content-addressed illustrations as UTF-8 binary data", async () => {
+    const illustration = createSvgIllustrationDataUrl("<svg><text>新闻</text></svg>")
+    expect(illustration).not.toBeNull()
+    const bytes = illustration && encodeBgIllustration(illustration)
+    expect(bytes).toBeInstanceOf(Uint8Array)
+    expect(bytes && new TextDecoder().decode(bytes)).toBe("<svg><text>新闻</text></svg>")
+    expect(decodeBgIllustration(bytes)).toBe(illustration)
+    expect(decodeBgIllustration("<svg></svg>")).toBeNull()
+    if (bytes) {
+      expect(await createBgIllustrationId(bytes)).toMatch(/^[a-f\d]{64}$/u)
+    }
   })
 
   it("resolves SVG illustration's visible bounds", () => {

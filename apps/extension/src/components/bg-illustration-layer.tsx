@@ -2,6 +2,7 @@ import type { CSSProperties } from "react"
 import { useAtomValue } from "jotai"
 import { useEffect, useState } from "react"
 import { createPortal } from "react-dom"
+import { useBgIllustration } from "@/hooks/use-bg-illustration"
 import {
   loadBgIllustrationAspectRatio,
   normalizeBgIllustrationOpacity,
@@ -11,11 +12,7 @@ import {
   resolveBgIllustrationTranslation,
 } from "@/lib/bg-illustration"
 import { readSvgIllustrationAspectRatio } from "@/lib/bg-illustration/layout"
-import {
-  bgIllustrationAtom,
-  bgIllustrationOpacityAtom,
-  bgIllustrationTransformAtom,
-} from "@/store/settings"
+import { currentBoardAtom } from "@/store/board"
 
 interface IllustrationAspectRatioState {
   illustration: string
@@ -28,9 +25,9 @@ interface ViewportSize {
 }
 
 export function BgIllustrationLayer(): React.ReactPortal | null {
-  const illustration = useAtomValue(bgIllustrationAtom)
-  const opacity = useAtomValue(bgIllustrationOpacityAtom)
-  const transform = useAtomValue(bgIllustrationTransformAtom)
+  const board = useAtomValue(currentBoardAtom)
+  const configuration = board?.illustration
+  const illustration = useBgIllustration(configuration?.id)
   const [viewport, setViewport] = useState<ViewportSize>(() => ({
     height: window.innerHeight,
     width: window.innerWidth,
@@ -59,13 +56,13 @@ export function BgIllustrationLayer(): React.ReactPortal | null {
     }
   }, [illustration, svgAspectRatio])
 
-  if (!illustration) return null
+  if (!illustration || !configuration) return null
 
   const aspectRatio = svgAspectRatio
     ?? (aspectRatioState?.illustration === illustration ? aspectRatioState.value : null)
   if (aspectRatio === null) return null
 
-  const normalizedTransform = normalizeBgIllustrationTransform(transform)
+  const normalizedTransform = normalizeBgIllustrationTransform(configuration.transform)
   const layout = resolveBgIllustrationLayout(viewport.width, viewport.height, aspectRatio)
   const center = resolveBgIllustrationCenter(layout, viewport.height, normalizedTransform)
   const translation = resolveBgIllustrationTranslation(
@@ -76,7 +73,7 @@ export function BgIllustrationLayer(): React.ReactPortal | null {
     center.y,
   )
   const style: CSSProperties = {
-    backgroundColor: `color-mix(in oklab, color-mix(in oklab, var(--foreground), var(--primary) 45%) ${normalizeBgIllustrationOpacity(opacity)}%, transparent)`,
+    backgroundColor: `color-mix(in oklab, color-mix(in oklab, var(--foreground), var(--primary) 45%) ${normalizeBgIllustrationOpacity(configuration.opacity)}%, transparent)`,
     height: layout.height,
     left: layout.left,
     mask: `url("${illustration}") right bottom / 100% 100% no-repeat`,

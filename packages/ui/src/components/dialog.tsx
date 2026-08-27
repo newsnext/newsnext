@@ -84,6 +84,18 @@ function DialogContent({
   )
 }
 
+function ContentDialogContent({
+  className,
+  ...props
+}: React.ComponentProps<typeof DialogContent>) {
+  return (
+    <DialogContent
+      className={cn("h-[min(70dvh,640px)] overflow-hidden", className)}
+      {...props}
+    />
+  )
+}
+
 function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -144,6 +156,7 @@ function DialogDescription({
 }
 
 export {
+  ContentDialogContent,
   Dialog,
   DialogClose,
   DialogContent,
