@@ -3,12 +3,17 @@ import type { SettingsTabId } from "@/lib/settings"
 import {
   ContentDialogContent,
   Dialog,
-  DialogHeader,
   DialogTitle,
 } from "@newsnext/ui/components/dialog"
+import {
+  pillGroupClassName,
+  PillGroupIndicator,
+  pillGroupItemClassName,
+} from "@newsnext/ui/components/pill-group"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { Tabs, TabsList, TabsTrigger } from "@newsnext/ui/components/tabs"
 import { useEffect, useRef } from "react"
+import { cn } from "@/lib/utils"
 
 export type { SettingsTabId } from "@/lib/settings"
 
@@ -49,8 +54,8 @@ export function SettingsModalShell({
         className="w-full max-w-3xl sm:max-w-3xl"
         surfaceClassName="grid min-h-0"
       >
+        <DialogTitle className="sr-only">Preferences</DialogTitle>
         <Tabs
-          orientation="vertical"
           value={activeTab}
           onValueChange={(value) => {
             const tab = SETTINGS_TABS.find(item => item.id === value)
@@ -58,19 +63,33 @@ export function SettingsModalShell({
               onTabChange(tab.id)
             }
           }}
-          className="flex min-h-0 w-full min-w-0 gap-0"
+          className="min-h-0 w-full min-w-0 flex-col gap-0"
         >
-          <div className="w-32 shrink-0 sm:w-44">
-            <DialogHeader className="h-10 flex-row items-center px-3">
-              <DialogTitle className="font-bold">Settings</DialogTitle>
-            </DialogHeader>
-            <TabsList variant="sidebar" className="w-full sm:w-full">
-              {SETTINGS_TABS.map(tab => (
-                <TabsTrigger key={tab.id} value={tab.id}>{tab.label}</TabsTrigger>
-              ))}
+          <div className="shrink-0 pb-2">
+            <TabsList
+              className={cn(pillGroupClassName, "mx-auto max-w-full overflow-hidden")}
+            >
+              {SETTINGS_TABS.map((tab) => {
+                const isActive = tab.id === activeTab
+                return (
+                  <TabsTrigger
+                    key={tab.id}
+                    value={tab.id}
+                    className={cn(
+                      pillGroupItemClassName({ active: isActive }),
+                      "h-auto flex-[0_1_auto] gap-1 focus-visible:ring-[3px] focus-visible:ring-ring/50 after:hidden data-active:bg-transparent data-active:text-primary-foreground dark:data-active:border-transparent dark:data-active:bg-transparent dark:data-active:text-primary-foreground",
+                    )}
+                  >
+                    {isActive && <PillGroupIndicator layoutId="active-settings-tab" />}
+                    <span className="relative z-10 min-w-0 truncate" title={tab.label}>
+                      {tab.label}
+                    </span>
+                  </TabsTrigger>
+                )
+              })}
             </TabsList>
           </div>
-          <div className="relative min-w-0 flex-1">
+          <div className="relative min-h-0 min-w-0 flex-1">
             <SquircleBox
               aria-hidden
               radius="2xl"

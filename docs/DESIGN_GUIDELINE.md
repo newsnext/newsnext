@@ -504,16 +504,18 @@ Toggling one row must not remove other memberships.
 Disable the final checked membership and any row whose Action is pending so
 every LiveCard remains on at least one Board.
 
-### Multi-column settings dialog
+### Settings dialog
 
-The Settings dialog may use a perimeter frame because its navigation rail and
-content panel create a clear multi-column relationship. Place the `Settings`
-title above the navigation rail instead of reserving a shared header row, so
-the active content panel reaches the top of the dialog without an outer gap.
-Do not show the active tab as a subtitle above the panel. Keep the navigation
-in the outer tinted surface and retain the active settings content's internal
-padding inside its nested neutral squircle. Do not copy this multi-column frame
-directly into a single-column dialog.
+Use a stacked layout for Settings: omit a visible dialog title, place the
+horizontal tab list in the exposed top shell, then place the active panel in the
+nested neutral squircle below. Keep an accessible hidden dialog title. Keep the
+tabs on one row at narrow widths. Constrain the pill itself to the available
+width and let its items shrink and truncate instead of placing it inside a
+horizontal scroller, so both end caps remain visible. Follow the Board
+navigation's content-width island pill, themed active pill, and shared sliding
+indicator treatment rather than using a full-width tab underline. Center the
+pill when it fits. Do not show the active tab as a subtitle above the panel.
+Retain the active settings content's internal padding inside its nested surface.
 
 Keep settings controls compact and visually consistent. Use a 6px slider track
 with a clearly visible themed range and a 14px thumb filled with a light theme
