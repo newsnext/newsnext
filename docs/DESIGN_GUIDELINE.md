@@ -509,12 +509,16 @@ every LiveCard remains on at least one Board.
 Use a stacked layout for Settings: omit a visible dialog title, place the
 horizontal tab list in the exposed top shell, then place the active panel in the
 nested neutral squircle below. Keep an accessible hidden dialog title. Keep the
-tabs on one row at narrow widths. Constrain the pill itself to the available
-width and let its items shrink and truncate instead of placing it inside a
-horizontal scroller, so both end caps remain visible. Follow the Board
-navigation's content-width island pill, themed active pill, and shared sliding
-indicator treatment rather than using a full-width tab underline. Center the
-pill when it fits. Do not show the active tab as a subtitle above the panel.
+tabs on one row at narrow widths. Constrain the tab list to the available width
+and let its items shrink and truncate instead of placing it inside a
+horizontal scroller. Render Settings navigation as a transparent text tab list
+with no pill background, shadow, blur, rounded active surface, or sliding pill.
+Align it with the nested content surface and distribute the tabs evenly. Do not
+add a baseline, active underline, dot, or other selection ornament. Distinguish
+the active tab through neutral foreground contrast and semibold weight alone.
+Reduce tab text to `text-xs` below the `sm` breakpoint so all labels retain
+useful width without a scroller. Do not show the active tab as a subtitle above
+the panel.
 Retain the active settings content's internal padding inside its nested surface.
 
 Keep settings controls compact and visually consistent. Use a 6px slider track

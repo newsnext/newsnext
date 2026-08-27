@@ -5,15 +5,9 @@ import {
   Dialog,
   DialogTitle,
 } from "@newsnext/ui/components/dialog"
-import {
-  pillGroupClassName,
-  PillGroupIndicator,
-  pillGroupItemClassName,
-} from "@newsnext/ui/components/pill-group"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { Tabs, TabsList, TabsTrigger } from "@newsnext/ui/components/tabs"
 import { useEffect, useRef } from "react"
-import { cn } from "@/lib/utils"
 
 export type { SettingsTabId } from "@/lib/settings"
 
@@ -67,26 +61,20 @@ export function SettingsModalShell({
         >
           <div className="shrink-0 pb-2">
             <TabsList
-              className={cn(pillGroupClassName, "mx-auto max-w-full overflow-hidden")}
+              variant="line"
+              className="grid h-10 w-full grid-cols-6 gap-0 p-0"
             >
-              {SETTINGS_TABS.map((tab) => {
-                const isActive = tab.id === activeTab
-                return (
-                  <TabsTrigger
-                    key={tab.id}
-                    value={tab.id}
-                    className={cn(
-                      pillGroupItemClassName({ active: isActive }),
-                      "h-auto flex-[0_1_auto] gap-1 focus-visible:ring-[3px] focus-visible:ring-ring/50 after:hidden data-active:bg-transparent data-active:text-primary-foreground dark:data-active:border-transparent dark:data-active:bg-transparent dark:data-active:text-primary-foreground",
-                    )}
-                  >
-                    {isActive && <PillGroupIndicator layoutId="active-settings-tab" />}
-                    <span className="relative z-10 min-w-0 truncate" title={tab.label}>
-                      {tab.label}
-                    </span>
-                  </TabsTrigger>
-                )
-              })}
+              {SETTINGS_TABS.map(tab => (
+                <TabsTrigger
+                  key={tab.id}
+                  value={tab.id}
+                  className="h-10 min-w-0 w-full flex-none rounded-none border-0 px-0 py-2 text-xs text-foreground/50 after:hidden hover:text-foreground/75 data-active:text-foreground data-active:font-semibold sm:px-2 sm:text-sm"
+                >
+                  <span className="min-w-0 truncate" title={tab.label}>
+                    {tab.label}
+                  </span>
+                </TabsTrigger>
+              ))}
             </TabsList>
           </div>
           <div className="relative min-h-0 min-w-0 flex-1">
