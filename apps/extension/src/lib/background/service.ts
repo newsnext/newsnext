@@ -1,4 +1,5 @@
 import type { ProxyServiceKey } from "@webext-core/proxy-service"
+import type { AppIntegrationActions } from "./action-context"
 import type { BackgroundActionService } from "./action-service"
 import type { BackgroundDiagnosticsService } from "./diagnostics-service"
 import { createBackgroundActionService } from "./action-service"
@@ -16,9 +17,11 @@ const unavailableDiagnosticsService: BackgroundDiagnosticsService = {
   getSnapshot: rejectBackgroundDiagnostics,
 }
 
-export function createBackgroundService(): BackgroundService {
+export function createBackgroundService(
+  appIntegration: AppIntegrationActions,
+): BackgroundService {
   return {
-    action: createBackgroundActionService(),
+    action: createBackgroundActionService(appIntegration),
     diagnostics: import.meta.env.DEV
       ? createBackgroundDiagnosticsService()
       : unavailableDiagnosticsService,

@@ -7,6 +7,7 @@ import type {
   NativeWorkspacePatch,
 } from "@newsnext/extension-connection"
 import type { SourceLoadResponse } from "../source/load-result"
+import type { AppIntegrationActions } from "./action-context"
 import {
   parseExtensionConnectionCommandRequest,
 } from "@newsnext/extension-connection"
@@ -91,7 +92,7 @@ const pendingInstanceRequests = new Map<string, PendingInstanceRequest>()
 const pendingWorkspaceRequests = new Map<string, PendingWorkspaceRequest>()
 const nativeMessageChunks = new NativeMessageChunkAssembler(WIDGET_REQUEST_TIMEOUT_MS)
 
-const connectedActionContext = createBackgroundActionContext({
+export const appIntegrationActions: AppIntegrationActions = {
   getStatus: async () => getAppIntegrationStatus(),
   getWidgetSnapshot: requestWidgetSnapshot,
   loadInstance: requestInstanceLoad,
@@ -102,7 +103,9 @@ const connectedActionContext = createBackgroundActionContext({
   setWorker: async ({ workerId: nextWorkerId }) => (
     await setAppIntegrationWorker(nextWorkerId)
   ),
-})
+}
+
+const connectedActionContext = createBackgroundActionContext(appIntegrationActions)
 
 function createWorkspace(value: unknown, revision: number): NativeWorkspace {
   const application = normalizeApplicationData(value)

@@ -1,14 +1,17 @@
 import { registerService } from "@webext-core/proxy-service"
 import { browser, defineBackground } from "#imports"
 import { openAppTab } from "@/lib/app-tab"
-import { registerAppIntegrationNative } from "@/lib/background/app-integration-native"
+import {
+  appIntegrationActions,
+  registerAppIntegrationNative,
+} from "@/lib/background/app-integration-native"
 import { registerRadarBadge } from "@/lib/background/radar-badge"
 import { registerSourceRegistryLoader } from "@/lib/background/registry"
 import { BACKGROUND_SERVICE_KEY, createBackgroundService } from "@/lib/background/service"
 import { syncConfiguredSourceRequestRules } from "@/lib/background/source-request-rules"
 
 registerSourceRegistryLoader()
-const backgroundService = createBackgroundService()
+const backgroundService = createBackgroundService(appIntegrationActions)
 const APP_MENU_ID = "app"
 const COSMOS_MENU_ID = "cosmos"
 const ACTION_CONTEXT = import.meta.env.MANIFEST_VERSION === 3 ? "action" : "browser_action"

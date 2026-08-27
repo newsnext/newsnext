@@ -54,6 +54,21 @@ export default antfu(
     },
   },
   {
+    name: "newsnext/background-service-boundaries",
+    files: [
+      "apps/extension/src/lib/background/action-service.ts",
+      "apps/extension/src/lib/background/service.ts",
+    ],
+    rules: {
+      "no-restricted-imports": ["error", {
+        paths: [{
+          name: "./app-integration-native",
+          message: "Inject App integration from the background entrypoint to avoid a runtime import cycle.",
+        }],
+      }],
+    },
+  },
+  {
     name: "newsnext/react-refresh-boundaries",
     files: [
       "apps/extension/src/components/card/card-back/fields.tsx",

@@ -243,6 +243,13 @@ available to the local CLI; UI-only operations such as `source.cancel`,
 `radar.resolveSuggestions`, `application.replace`, and CLI
 connection settings remain absent from that catalog.
 
+Background services receive environment integrations through factory
+arguments. In particular, the Action service must not import the Native
+Messaging integration: that integration also consumes the shared Action
+context, so a reverse runtime import would create a cycle whose initialization
+order depends on the bundler. Action contexts and services must be constructed
+from the background entrypoint after their modules have initialized.
+
 ### Mutations
 
 Persistent writes enter one typed execution boundary. Current canonical names

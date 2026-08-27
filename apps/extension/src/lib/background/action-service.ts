@@ -1,3 +1,4 @@
+import type { AppIntegrationActions } from "./action-context"
 import type {
   UiActionName,
   UiActionParams,
@@ -5,27 +6,6 @@ import type {
 } from "./action-registry"
 import { createBackgroundActionContext } from "./action-context"
 import { executeRegisteredAction } from "./action-registry"
-import {
-  getAppIntegrationStatus,
-  requestInstanceCache,
-  requestInstanceLoad,
-  requestWidgetSnapshot,
-  setAppIntegrationEnabled,
-  setAppIntegrationWorker,
-} from "./app-integration-native"
-
-const actionContext = createBackgroundActionContext({
-  getStatus: async () => getAppIntegrationStatus(),
-  getWidgetSnapshot: requestWidgetSnapshot,
-  loadInstance: requestInstanceLoad,
-  readInstanceCache: requestInstanceCache,
-  setEnabled: async ({ enabled }) => (
-    await setAppIntegrationEnabled(enabled)
-  ),
-  setWorker: async ({ workerId }) => (
-    await setAppIntegrationWorker(workerId)
-  ),
-})
 
 export interface BackgroundActionService {
   execute: <Name extends UiActionName>(
@@ -34,7 +14,11 @@ export interface BackgroundActionService {
   ) => Promise<UiActionResult<Name>>
 }
 
-export function createBackgroundActionService(): BackgroundActionService {
+export function createBackgroundActionService(
+  appIntegration: AppIntegrationActions,
+): BackgroundActionService {
+  const actionContext = createBackgroundActionContext(appIntegration)
+
   return {
     async execute<Name extends UiActionName>(
       name: Name,
