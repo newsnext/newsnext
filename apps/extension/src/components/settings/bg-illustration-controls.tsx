@@ -1,6 +1,6 @@
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react"
 import type { BgIllustrationTransform } from "@/lib/bg-illustration"
-import { useRef, useState } from "react"
+import { useLayoutEffect, useRef, useState } from "react"
 import { PhArrowCounterClockwise } from "@/components/icons/ph"
 import {
   MAX_BG_ILLUSTRATION_SCALE,
@@ -8,6 +8,7 @@ import {
 } from "@/lib/bg-illustration"
 
 const POSITION_SNAP_THRESHOLD = 6
+const SELECTION_BOUNDARY_INSET = 0.5
 const ROTATION_SNAP_THRESHOLD = 5
 const ROTATION_SNAP_POINTS = [-180, -90, 0, 90, 180] as const
 const SCALE_HANDLES = [
@@ -65,16 +66,69 @@ export default function BgIllustrationControls({
   const interactionRef = useRef<ActiveInteraction | null>(null)
   const [activeInteraction, setActiveInteraction] = useState<ActiveInteraction["kind"] | null>(null)
   const [snapGuides, setSnapGuides] = useState<SnapGuides>({ x: null, y: null })
+  const targetWidth = target.offsetWidth
+  const targetHeight = target.offsetHeight
   const translationX = transform.x / 100 * referenceWidth - baseCenterX
   const translationY = transform.y / 100 * referenceHeight - baseCenterY
+  const constrainedTransform = constrainSelectionTransform(
+    transform.x / 100 * referenceWidth,
+    transform.y / 100 * referenceHeight,
+    targetWidth,
+    targetHeight,
+    transform.scale,
+    transform.rotation,
+    referenceWidth,
+    referenceHeight,
+  )
   const controlsStyle: ControlsStyle = {
-    height: target.offsetHeight * transform.scale,
-    left: target.offsetLeft + translationX + target.offsetWidth * (1 - transform.scale) / 2,
-    top: target.offsetTop + translationY + target.offsetHeight * (1 - transform.scale) / 2,
+    height: targetHeight * transform.scale,
+    left: target.offsetLeft + translationX + targetWidth * (1 - transform.scale) / 2,
+    top: target.offsetTop + translationY + targetHeight * (1 - transform.scale) / 2,
     touchAction: "none",
     transform: `rotate(${transform.rotation}deg)`,
     transformOrigin: "center",
-    width: target.offsetWidth * transform.scale,
+    width: targetWidth * transform.scale,
+  }
+
+  useLayoutEffect(() => {
+    const x = toPercentage(constrainedTransform.x, referenceWidth)
+    const y = toPercentage(constrainedTransform.y, referenceHeight)
+    if (Math.abs(x - transform.x) > 0.01
+      || Math.abs(y - transform.y) > 0.01
+      || Math.abs(constrainedTransform.scale - transform.scale) > 0.001) {
+      onTransformChange({ scale: constrainedTransform.scale, x, y })
+    }
+  }, [
+    constrainedTransform.scale,
+    constrainedTransform.x,
+    constrainedTransform.y,
+    onTransformChange,
+    referenceHeight,
+    referenceWidth,
+    transform.scale,
+    transform.x,
+    transform.y,
+  ])
+
+  function commitTransform(update: Partial<BgIllustrationTransform>): void {
+    const nextScale = update.scale ?? transform.scale
+    const nextRotation = update.rotation ?? transform.rotation
+    const nextTransform = constrainSelectionTransform(
+      (update.x ?? transform.x) / 100 * referenceWidth,
+      (update.y ?? transform.y) / 100 * referenceHeight,
+      targetWidth,
+      targetHeight,
+      nextScale,
+      nextRotation,
+      referenceWidth,
+      referenceHeight,
+    )
+    onTransformChange({
+      ...update,
+      scale: nextTransform.scale,
+      x: toPercentage(nextTransform.x, referenceWidth),
+      y: toPercentage(nextTransform.y, referenceHeight),
+    })
   }
 
   function startInteraction(
@@ -112,25 +166,26 @@ export default function BgIllustrationControls({
     if (interaction.kind === "drag") {
       const centerX = interaction.startX / 100 * referenceWidth + event.clientX - interaction.startClientX
       const centerY = interaction.startY / 100 * referenceHeight + event.clientY - interaction.startClientY
-      const radians = transform.rotation * Math.PI / 180
-      const cosine = Math.abs(Math.cos(radians))
-      const sine = Math.abs(Math.sin(radians))
-      const scaledWidth = target.offsetWidth * transform.scale
-      const scaledHeight = target.offsetHeight * transform.scale
+      const bounds = resolveSelectionBounds(
+        targetWidth,
+        targetHeight,
+        transform.scale,
+        transform.rotation,
+      )
       const snappedX = snapPosition(
         centerX,
         referenceWidth,
-        (scaledWidth * cosine + scaledHeight * sine) / 2,
+        bounds.width / 2,
       )
       const snappedY = snapPosition(
         centerY,
         referenceHeight,
-        (scaledWidth * sine + scaledHeight * cosine) / 2,
+        bounds.height / 2,
       )
       setSnapGuides({ x: snappedX.guide, y: snappedY.guide })
-      onTransformChange({
-        x: referenceWidth > 0 ? snappedX.value / referenceWidth * 100 : transform.x,
-        y: referenceHeight > 0 ? snappedY.value / referenceHeight * 100 : transform.y,
+      commitTransform({
+        x: toPercentage(snappedX.value, referenceWidth),
+        y: toPercentage(snappedY.value, referenceHeight),
       })
       return
     }
@@ -141,12 +196,8 @@ export default function BgIllustrationControls({
         event.clientY - interaction.centerClientY,
       )
       const ratio = interaction.startDistance > 0 ? distance / interaction.startDistance : 1
-      onTransformChange({
-        scale: clamp(
-          interaction.startScale * ratio,
-          MIN_BG_ILLUSTRATION_SCALE,
-          MAX_BG_ILLUSTRATION_SCALE,
-        ),
+      commitTransform({
+        scale: interaction.startScale * ratio,
         x: interaction.startX,
         y: interaction.startY,
       })
@@ -157,7 +208,7 @@ export default function BgIllustrationControls({
       event.clientY - interaction.centerClientY,
       event.clientX - interaction.centerClientX,
     ) * 180 / Math.PI
-    onTransformChange({
+    commitTransform({
       rotation: snapRotation(normalizeRotation(interaction.startRotation + angle - interaction.startAngle)),
       x: interaction.startX,
       y: interaction.startY,
@@ -196,7 +247,7 @@ export default function BgIllustrationControls({
         />
       )}
       <div
-        className="absolute z-10 cursor-move border border-primary"
+        className="pointer-events-auto absolute z-10 cursor-move border border-primary"
         style={controlsStyle}
         onPointerDown={event => startInteraction(event, "drag")}
         {...interactionHandlers}
@@ -241,9 +292,67 @@ function snapPosition(
       if (distance < closest.distance) closest = { distance, guide, value: candidate }
     }
   }
-  return closest.distance <= POSITION_SNAP_THRESHOLD
+  const snapped = closest.distance <= POSITION_SNAP_THRESHOLD
     ? { guide: closest.guide, value: closest.value }
     : { guide: null, value: center }
+  const value = constrainPosition(snapped.value, halfExtent, referenceSize)
+  return {
+    guide: value === snapped.value ? snapped.guide : null,
+    value,
+  }
+}
+
+function constrainSelectionTransform(
+  centerX: number,
+  centerY: number,
+  width: number,
+  height: number,
+  scale: number,
+  rotation: number,
+  referenceWidth: number,
+  referenceHeight: number,
+): { scale: number, x: number, y: number } {
+  const unitBounds = resolveSelectionBounds(width, height, 1, rotation)
+  const availableWidth = Math.max(referenceWidth - SELECTION_BOUNDARY_INSET * 2, 0)
+  const availableHeight = Math.max(referenceHeight - SELECTION_BOUNDARY_INSET * 2, 0)
+  const maximumScale = Math.min(
+    MAX_BG_ILLUSTRATION_SCALE,
+    unitBounds.width > 0 ? availableWidth / unitBounds.width : MAX_BG_ILLUSTRATION_SCALE,
+    unitBounds.height > 0 ? availableHeight / unitBounds.height : MAX_BG_ILLUSTRATION_SCALE,
+  )
+  const quantizedMaximumScale = Math.floor(maximumScale * 100) / 100
+  const constrainedScale = clamp(
+    Math.round(scale * 100) / 100,
+    MIN_BG_ILLUSTRATION_SCALE,
+    Math.max(MIN_BG_ILLUSTRATION_SCALE, quantizedMaximumScale),
+  )
+  const bounds = resolveSelectionBounds(width, height, constrainedScale, rotation)
+  return {
+    scale: constrainedScale,
+    x: constrainPosition(centerX, bounds.width / 2, referenceWidth),
+    y: constrainPosition(centerY, bounds.height / 2, referenceHeight),
+  }
+}
+
+function resolveSelectionBounds(
+  width: number,
+  height: number,
+  scale: number,
+  rotation: number,
+): { height: number, width: number } {
+  const radians = rotation * Math.PI / 180
+  const cosine = Math.abs(Math.cos(radians))
+  const sine = Math.abs(Math.sin(radians))
+  return {
+    height: scale * (width * sine + height * cosine),
+    width: scale * (width * cosine + height * sine),
+  }
+}
+
+function constrainPosition(center: number, halfExtent: number, referenceSize: number): number {
+  const minimum = halfExtent + SELECTION_BOUNDARY_INSET
+  const maximum = referenceSize - halfExtent - SELECTION_BOUNDARY_INSET
+  return minimum <= maximum ? clamp(center, minimum, maximum) : referenceSize / 2
 }
 
 function snapRotation(rotation: number): number {
@@ -255,6 +364,10 @@ function snapRotation(rotation: number): number {
 
 function normalizeRotation(rotation: number): number {
   return ((rotation + 180) % 360 + 360) % 360 - 180
+}
+
+function toPercentage(value: number, referenceSize: number): number {
+  return value / referenceSize * 100
 }
 
 function clamp(value: number, min: number, max: number): number {

@@ -99,6 +99,14 @@ inputs before pixel work, and show the result before it is applied.
 The preview is also the primary drop target and pointer-based file picker trigger;
 give it a visible drag-over state. Keep the preview canvas on its
 own background and outside the padded settings card that contains its controls.
+Place the clipped canvas inside a transparent editor gutter, and render direct-
+manipulation controls in an aligned overlay outside the canvas clipping boundary.
+Use the same compact gutter on every side. Keep the full selection inside the
+canvas by limiting its scale from the
+transformed bounds and constraining its center after every transform update; only
+the manipulation handles may extend into the gutter. Treat the gutter as the outer
+clipping boundary, and correct an existing out-of-bounds transform when the editor
+opens so the controls remain recoverable.
 Show file validation errors and processing progress inside the bottom-left of
 the preview so feedback stays attached to the affected content.
 Make the preview a scaled representation of the app background by reusing its
@@ -116,7 +124,8 @@ manipulation handles with alignment buttons or scale and rotation sliders.
 Offer the reset action as a single icon button in the preview's upper-right
 corner. Keep the transform control box synchronized when reset or another
 programmatic adjustment changes the target. Keep transform edits in the draft until
-`Apply background` saves the illustration and its transform together. Persist the
+the Board dialog's `Save changes` action saves the illustration and its transform
+together with the other Board fields. Persist the
 illustration center as horizontal and vertical percentages of the viewport rather
 than persisting an offset from the responsive default layout. Resolve the
 required translation from that center after recalculating the contained illustration
@@ -125,9 +134,10 @@ Use bottom alignment with horizontal centering as the default placement and
 preserve that responsive anchor until the user directly transforms the illustration.
 Reset must restore this bottom-center anchor, 100% scale, and 0° rotation.
 Provide one edge-detail control whose explanation makes the threshold direction
-clear. Applying and removing illustration are explicit actions; selecting or
-dropping a file, or changing the detail preview, must not overwrite the saved
-background. Raster sources always produce SVG line art. Direct SVG uploads
+clear. Selecting, transforming, or removing an illustration only updates the Board
+form draft; none of these controls may overwrite the saved background before
+`Save changes`. Closing the dialog discards the draft. Raster sources always produce
+SVG line art. Direct SVG uploads
 bypass edge extraction and use the sanitized vector as the draft. Keep drafts as
 percent-encoded `data:image/svg+xml` URLs without base64 encoding. Persist the applied
 SVG as UTF-8 binary data in IndexedDB. Each Board owns an illustration reference plus
@@ -422,9 +432,11 @@ Primitive-specific components compose `ModalOverlay`, `ModalPopup`,
 in these components instead of introducing parallel CSS utilities.
 
 For centered task modals with a visible title, keep a compact header in the
-exposed top shell, then place all descriptions, fields, primary content, and
-actions in a nested neutral surface below it. The title must never move into
-the nested surface. `DialogContent` provides the shell; callers compose
+exposed top shell, then place descriptions, fields, and primary content in a
+nested neutral surface below it. The title must never move into the nested
+surface. Board create and edit place their primary submit action in the header's
+upper-right while keeping the title centered; destructive edit actions remain
+in the nested surface. `DialogContent` provides the shell; callers compose
 `DialogHeader` followed by a `modal-inner` `SquircleBox`. Compact command
 dialogs such as Search may omit the visible header and begin directly with the
 nested interactive surface, while retaining an accessible hidden title and
@@ -483,7 +495,8 @@ They must have:
 The unified Board dialog is the canonical example. Create and edit modes use
 the same name, theme color, LiveCard order, and default layer fields;
 only edit mode exposes board deletion, while the title and primary action
-reflect the current mode. Disable deletion when it would remove the last Board;
+reflect the current mode. Keep `Create board` and `Save changes` in the
+upper-right of the shared header. Disable deletion when it would remove the last Board;
 NewsNext must always retain at least one. `Delete with LiveCards` removes
 LiveCards owned only by that Board. `Transfer and Delete` requires a target
 Board and merges the deleted Board's LiveCards into it. Default layer uses a

@@ -1,4 +1,5 @@
 import type { Color } from "@newsnext/shared/types"
+import type { BgIllustrationEditorState } from "@/components/settings/bg-illustration"
 import type { Board, BoardCreateInput, BoardLayer, NowLayerSortMode } from "@/lib/board"
 import { Button } from "@newsnext/ui/components/button"
 import {
@@ -18,6 +19,7 @@ import { ConfigSection } from "@/components/common/config-section"
 import { ConfirmDestructiveButton } from "@/components/common/confirm-destructive-button"
 import { BgIllustrationSettings } from "@/components/settings/bg-illustration"
 import { useAsyncAction } from "@/hooks/use-async-action"
+import { actions } from "@/lib/actions"
 import { DEFAULT_BOARD_COLOR, DEFAULT_BOARD_LAYER, DEFAULT_NOW_LAYER_SORT, updateNowLayerSortMode } from "@/lib/board"
 import { cn } from "@/lib/utils"
 
@@ -78,6 +80,10 @@ function ConfigurableBoardDialog({
   const [color, setColor] = useState<Color>(initialColor)
   const [sortMode, setSortMode] = useState<NowLayerSortMode>(initialSortMode)
   const [defaultLayer, setDefaultLayer] = useState<BoardLayer>(initialDefaultLayer)
+  const [illustrationEditor, setIllustrationEditor] = useState<BgIllustrationEditorState>({
+    draft: null,
+    isProcessing: false,
+  })
   const transferBoards = boards.filter(candidate => candidate.id !== boardId)
   const [targetBoardId, setTargetBoardId] = useState(
     () => transferBoards[0]?.id ?? "",
@@ -89,6 +95,7 @@ function ConfigurableBoardDialog({
   const normalizedName = name.trim()
   const canSubmit = (!isEditing || board !== undefined)
     && normalizedName.length > 0
+    && !illustrationEditor.isProcessing
   const canDelete = isEditing && boards.length > 1
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>): Promise<void> {
@@ -99,9 +106,31 @@ function ConfigurableBoardDialog({
     if (isEditing) {
       if (!board) return
       const succeeded = await runAction(async () => {
+        const illustrationDraft = illustrationEditor.draft
+        let illustration = board.illustration
+        if (illustrationDraft?.kind === "remove") {
+          illustration = null
+        } else if (illustrationDraft?.kind === "update") {
+          let illustrationId = board.illustration?.id
+          if (illustrationDraft.illustration !== null) {
+            const storedIllustration = await actions.illustration.store({
+              illustration: illustrationDraft.illustration,
+            })
+            illustrationId = storedIllustration.id
+          }
+          if (!illustrationId) {
+            throw new Error("The background illustration could not be saved.")
+          }
+          illustration = {
+            id: illustrationId,
+            opacity: illustrationDraft.opacity,
+            transform: illustrationDraft.transform,
+          }
+        }
         const nextBoard: Board = {
           ...board,
           color,
+          illustration,
           name: normalizedName,
           defaultLayer,
           nowLayer: {
@@ -154,10 +183,19 @@ function ConfigurableBoardDialog({
           className="grid size-full min-h-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden"
           onSubmit={handleSubmit}
         >
-          <DialogHeader className="h-10 justify-center px-2">
+          <DialogHeader className="relative -mt-2.5 h-12.5 justify-center px-2">
             <DialogTitle className="font-bold">
               {isEditing ? "Edit board" : "Create board"}
             </DialogTitle>
+            <div className="absolute inset-y-0 right-1 flex items-center">
+              <Button
+                type="submit"
+                size="sm"
+                disabled={!canSubmit || isSubmitting}
+              >
+                {isSubmitting ? "Saving…" : isEditing ? "Save changes" : "Create board"}
+              </Button>
+            </div>
           </DialogHeader>
 
           <SquircleBox
@@ -219,10 +257,15 @@ function ConfigurableBoardDialog({
               </RadioGroup>
             </ConfigSection>
 
-            {board && <BgIllustrationSettings board={board} />}
+            {board && (
+              <BgIllustrationSettings
+                board={board}
+                onChange={setIllustrationEditor}
+              />
+            )}
 
-            <DialogFooter className={cn(isEditing && "sm:justify-between")}>
-              {isEditing && (
+            {isEditing && (
+              <DialogFooter className="sm:justify-start">
                 <div className="flex flex-col items-start gap-2">
                   <ConfirmDestructiveButton
                     type="button"
@@ -259,11 +302,8 @@ function ConfigurableBoardDialog({
                     )}
                   </div>
                 </div>
-              )}
-              <Button type="submit" disabled={!canSubmit || isSubmitting}>
-                {isSubmitting ? "Saving…" : isEditing ? "Save changes" : "Create board"}
-              </Button>
-            </DialogFooter>
+              </DialogFooter>
+            )}
             {submitError && (
               <p role="alert" className="text-sm text-destructive">{submitError}</p>
             )}

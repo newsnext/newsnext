@@ -7,10 +7,8 @@ import { Slider } from "@newsnext/ui/components/slider"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { useEffect, useRef, useState } from "react"
 import { ConfigSection } from "@/components/common/config-section"
-import { ConfirmDestructiveButton } from "@/components/common/confirm-destructive-button"
 import { PhArrowCounterClockwise } from "@/components/icons/ph"
 import { useBgIllustration } from "@/hooks/use-bg-illustration"
-import { actions } from "@/lib/actions"
 import {
   areBgIllustrationTransformsEqual,
   createBgIllustrationFromImage,
@@ -41,6 +39,8 @@ interface PreviewCanvasStyle extends CSSProperties {
   "--background-grid-size": string
 }
 
+const PREVIEW_EDITOR_HORIZONTAL_PADDING_REM = 0.5
+
 interface TransformDraft {
   baseline: BgIllustrationTransform
   value: BgIllustrationTransform
@@ -56,20 +56,43 @@ interface ViewportSize {
   width: number
 }
 
+export type BgIllustrationDraft
+  = | { kind: "remove" }
+    | {
+      illustration: string | null
+      kind: "update"
+      opacity: number
+      transform: BgIllustrationTransform
+    }
+
+export interface BgIllustrationEditorState {
+  draft: BgIllustrationDraft | null
+  isProcessing: boolean
+}
+
+interface BgIllustrationSettingsProps {
+  board: Board
+  onChange: (state: BgIllustrationEditorState) => void
+}
+
 export function BgIllustrationSettings({
   board,
-}: {
-  board: Board
-}): React.JSX.Element {
+  onChange,
+}: BgIllustrationSettingsProps): React.JSX.Element {
   const resetKey = `${board.id}:${JSON.stringify(board.illustration)}`
-  return <BgIllustrationSettingsContent key={resetKey} board={board} />
+  return (
+    <BgIllustrationSettingsContent
+      key={resetKey}
+      board={board}
+      onChange={onChange}
+    />
+  )
 }
 
 function BgIllustrationSettingsContent({
   board,
-}: {
-  board: Board
-}): React.JSX.Element {
+  onChange,
+}: BgIllustrationSettingsProps): React.JSX.Element {
   const savedConfiguration = board.illustration
   const savedIllustration = useBgIllustration(savedConfiguration?.id)
   const savedTransform = savedConfiguration?.transform ?? DEFAULT_BG_ILLUSTRATION_TRANSFORM
@@ -84,6 +107,8 @@ function BgIllustrationSettingsContent({
   const [sourceFile, setSourceFile] = useState<File | null>(null)
   const [threshold, setThreshold] = useState(DEFAULT_LINE_ART_THRESHOLD)
   const [status, setStatus] = useState<ProcessingStatus | null>(null)
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [isRemoved, setIsRemoved] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
   const [illustrationElement, setIllustrationElement] = useState<HTMLDivElement | null>(null)
   const [previewCanvasElement, setPreviewCanvasElement] = useState<HTMLDivElement | null>(null)
@@ -95,6 +120,7 @@ function BgIllustrationSettingsContent({
   }))
   const fileInputRef = useRef<HTMLInputElement>(null)
   const processingIdRef = useRef(0)
+  const resetTransformOnProcessRef = useRef(false)
   const draftTransform = areBgIllustrationTransformsEqual(transformDraft.baseline, savedTransform)
     ? transformDraft.value
     : savedTransform
@@ -132,14 +158,24 @@ function BgIllustrationSettingsContent({
       setStatus({ kind: "progress", message: "Extracting line art…" })
       void createBgIllustrationFromImage(sourceFile, threshold).then((illustration) => {
         if (processingIdRef.current !== processingId) return
+        if (resetTransformOnProcessRef.current) {
+          setTransformDraft({
+            baseline: savedTransform,
+            value: { ...DEFAULT_BG_ILLUSTRATION_TRANSFORM },
+          })
+          resetTransformOnProcessRef.current = false
+        }
         setDraftIllustration(illustration)
         setStatus(null)
+        setIsProcessing(false)
       }).catch((error: unknown) => {
         if (processingIdRef.current !== processingId) return
+        resetTransformOnProcessRef.current = false
         setStatus({
           kind: "error",
           message: error instanceof Error ? error.message : "The image could not be processed.",
         })
+        setIsProcessing(false)
       })
     }, 180)
 
@@ -149,14 +185,14 @@ function BgIllustrationSettingsContent({
         processingIdRef.current += 1
       }
     }
-  }, [sourceFile, threshold])
+  }, [savedTransform, sourceFile, threshold])
 
   useEffect(() => {
     if (!sourceFile) return
     return () => releaseBgIllustrationSource(sourceFile)
   }, [sourceFile])
 
-  const previewIllustration = draftIllustration ?? savedIllustration
+  const previewIllustration = isRemoved ? null : draftIllustration ?? savedIllustration
 
   useEffect(() => {
     if (!previewIllustration) return
@@ -183,21 +219,30 @@ function BgIllustrationSettingsContent({
 
     const selectionId = processingIdRef.current + 1
     processingIdRef.current = selectionId
+    resetTransformOnProcessRef.current = true
+    setIsProcessing(true)
+    setIsRemoved(false)
     setDraftIllustration(null)
-    replaceDraftTransform(DEFAULT_BG_ILLUSTRATION_TRANSFORM)
     if (isSvg) {
       setSourceFile(null)
       setStatus({ kind: "progress", message: "Preparing SVG…" })
       void createBgIllustrationFromSvg(file).then((illustration) => {
         if (processingIdRef.current !== selectionId) return
+        if (resetTransformOnProcessRef.current) {
+          replaceDraftTransform(DEFAULT_BG_ILLUSTRATION_TRANSFORM)
+          resetTransformOnProcessRef.current = false
+        }
         setDraftIllustration(illustration)
         setStatus(null)
+        setIsProcessing(false)
       }).catch((error: unknown) => {
         if (processingIdRef.current !== selectionId) return
+        resetTransformOnProcessRef.current = false
         setStatus({
           kind: "error",
           message: error instanceof Error ? error.message : "The SVG could not be processed.",
         })
+        setIsProcessing(false)
       })
       return
     }
@@ -249,41 +294,16 @@ function BgIllustrationSettingsContent({
     })
   }
 
-  async function handleRemove(): Promise<void> {
+  function handleRemove(): void {
     processingIdRef.current += 1
-    setStatus({ kind: "progress", message: "Removing background…" })
-    try {
-      await actions.illustration.remove({ boardId: board.id })
-      setSourceFile(null)
-      setDraftIllustration(null)
-      replaceDraftTransform(DEFAULT_BG_ILLUSTRATION_TRANSFORM)
-      setIllustrationOpacity(DEFAULT_BG_ILLUSTRATION_OPACITY)
-      setStatus(null)
-    } catch (error) {
-      setStatus({
-        kind: "error",
-        message: error instanceof Error ? error.message : "The background could not be removed.",
-      })
-    }
-  }
-
-  async function handleApply(): Promise<void> {
-    if (!previewIllustration) return
-    setStatus({ kind: "progress", message: "Saving background…" })
-    try {
-      await actions.illustration.apply({
-        boardId: board.id,
-        illustration: previewIllustration,
-        opacity: illustrationOpacity,
-        transform: draftTransform,
-      })
-      setStatus(null)
-    } catch (error) {
-      setStatus({
-        kind: "error",
-        message: error instanceof Error ? error.message : "The background could not be saved.",
-      })
-    }
+    resetTransformOnProcessRef.current = false
+    setIsProcessing(false)
+    setIsRemoved(true)
+    setSourceFile(null)
+    setDraftIllustration(null)
+    replaceDraftTransform(DEFAULT_BG_ILLUSTRATION_TRANSFORM)
+    setIllustrationOpacity(DEFAULT_BG_ILLUSTRATION_OPACITY)
+    setStatus(null)
   }
 
   const viewportWidth = Math.max(viewportSize.width, 1)
@@ -292,8 +312,11 @@ function BgIllustrationSettingsContent({
     "--background-grid-size": `${24 / viewportWidth * 100}% ${32 / viewportHeight * 100}%`,
     "aspectRatio": `${viewportWidth} / ${viewportHeight}`,
     "maxHeight": "16rem",
-    "maxWidth": `${viewportWidth / viewportHeight * 16}rem`,
     "width": "100%",
+  }
+  const previewEditorStyle: CSSProperties = {
+    maxWidth: `calc(${viewportWidth / viewportHeight * 16}rem + ${PREVIEW_EDITOR_HORIZONTAL_PADDING_REM * 2}rem)`,
+    width: "100%",
   }
   const illustrationAspectRatio = illustrationAspectRatioState?.illustration === previewIllustration
     ? illustrationAspectRatioState.value
@@ -340,7 +363,6 @@ function BgIllustrationSettingsContent({
         mask: `url("${previewIllustration}") right bottom / 100% 100% no-repeat`,
       }
     : undefined
-  const isProcessing = status?.kind === "progress"
   let previewContent: ReactNode
   if (isDragging) {
     previewContent = (
@@ -367,164 +389,199 @@ function BgIllustrationSettingsContent({
     DEFAULT_BG_ILLUSTRATION_TRANSFORM,
   )
 
+  useEffect(() => {
+    let draft: BgIllustrationDraft | null = null
+    if (isRemoved) {
+      draft = { kind: "remove" }
+    } else if ((savedConfiguration || draftIllustration !== null)
+      && (hasDraftChanges || hasTransformChanges || hasOpacityChanges)) {
+      draft = {
+        illustration: draftIllustration,
+        kind: "update",
+        opacity: illustrationOpacity,
+        transform: draftTransform,
+      }
+    }
+    onChange({ draft, isProcessing })
+  }, [
+    draftIllustration,
+    draftTransform,
+    hasDraftChanges,
+    hasOpacityChanges,
+    hasTransformChanges,
+    illustrationOpacity,
+    isProcessing,
+    isRemoved,
+    onChange,
+    savedConfiguration,
+  ])
+
   return (
     <ConfigSection
       title="Background illustration"
-      description="Choose a separate background illustration for the current Board."
+      description="Choose an illustration. It is saved with the other Board changes."
       surface={false}
     >
-      <SquircleBox
-        radius="2xl"
-        ref={setPreviewCanvasElement}
-        role="group"
-        aria-label={previewIllustration
-          ? "Background illustration preview. Drag to reposition."
-          : "Choose or drop an image or SVG for background illustration"}
-        style={previewCanvasStyle}
-        className={cn(
-          "grid-texture-background relative mx-auto bg-background transition-[box-shadow] zenith-theme-400",
-          isDragging && "ring-2 ring-primary ring-offset-2 ring-offset-background",
-        )}
-        onClick={() => {
-          if (!previewIllustration) fileInputRef.current?.click()
-        }}
-        onDragEnter={(event) => {
-          event.preventDefault()
-          setIsDragging(true)
-        }}
-        onDragOver={(event) => {
-          event.preventDefault()
-          event.dataTransfer.dropEffect = "copy"
-        }}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-      >
-        {previewContent}
-        {previewIllustration && illustrationElement && previewIllustrationLayout && previewIllustrationCenter && previewCanvasElement && !isDragging && (
-          <BgIllustrationControls
-            target={illustrationElement}
-            transform={{ ...draftTransform, ...previewIllustrationCenter }}
-            baseCenterX={previewIllustrationLayout.left + previewIllustrationLayout.width / 2}
-            baseCenterY={previewIllustrationLayout.top + previewIllustrationLayout.height / 2}
-            referenceWidth={previewCanvasSize.width}
-            referenceHeight={previewCanvasSize.height}
-            referenceElement={previewCanvasElement}
-            onTransformChange={updateDraftTransform}
-          />
-        )}
-        {previewIllustration && !isDefaultTransform && (
-          <Button
-            type="button"
-            variant="outline"
-            size="icon-sm"
-            className="absolute top-3 right-3 z-10 bg-background/70 backdrop-blur"
-            aria-label="Reset illustration placement"
-            title="Reset illustration placement"
-            onClick={(event) => {
-              event.stopPropagation()
-              replaceDraftTransform(DEFAULT_BG_ILLUSTRATION_TRANSFORM)
-            }}
-          >
-            <PhArrowCounterClockwise />
-          </Button>
-        )}
-        {status && (
-          <p
-            role={status.kind === "error" ? "alert" : "status"}
+      <div className="grid gap-2">
+        <div
+          role="group"
+          aria-label={previewIllustration
+            ? "Background illustration preview. Drag to reposition."
+            : "Choose or drop an image or SVG for background illustration"}
+          className="relative mx-auto overflow-hidden p-2"
+          style={previewEditorStyle}
+          onClick={() => {
+            if (!previewIllustration) fileInputRef.current?.click()
+          }}
+          onDragEnter={(event) => {
+            event.preventDefault()
+            setIsDragging(true)
+          }}
+          onDragOver={(event) => {
+            event.preventDefault()
+            event.dataTransfer.dropEffect = "copy"
+          }}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+        >
+          <SquircleBox
+            radius="2xl"
+            ref={setPreviewCanvasElement}
+            style={previewCanvasStyle}
             className={cn(
-              "absolute bottom-3 left-3 z-10 max-w-[calc(100%_-_1.5rem)] rounded-lg bg-background/85 px-3 py-2 text-left text-sm shadow-sm backdrop-blur",
-              status.kind === "error" ? "text-destructive" : "text-muted-foreground",
+              "grid-texture-background relative bg-background transition-[box-shadow] zenith-theme-400",
+              isDragging && "ring-2 ring-primary ring-offset-2 ring-offset-background",
             )}
           >
-            {status.message}
-          </p>
-        )}
-      </SquircleBox>
-
-      <Card variant="subtle">
-        <CardContent>
-          <div className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
-            <ConfigSection
-              variant="field"
-              title="Edge detail"
-              htmlFor="bg-illustration-detail"
-              surface={false}
-              titleAccessory={<span className="tabular-nums text-muted-foreground">{threshold}</span>}
-            >
-              <Slider
-                id="bg-illustration-detail"
-                aria-label="Edge detail"
-                min={12}
-                max={96}
-                step={2}
-                value={[threshold]}
-                disabled={!sourceFile}
-                onValueChange={(value) => {
-                  const nextValue = Array.isArray(value) ? value[0] : value
-                  if (nextValue !== undefined) setThreshold(nextValue)
-                }}
-              />
-            </ConfigSection>
-
-            <ConfigSection
-              variant="field"
-              title="Opacity"
-              htmlFor="bg-illustration-opacity"
-              surface={false}
-              titleAccessory={(
-                <span className="tabular-nums text-muted-foreground">
-                  {illustrationOpacity}
-                  %
-                </span>
-              )}
-            >
-              <Slider
-                id="bg-illustration-opacity"
-                aria-label="Illustration opacity"
-                min={MIN_BG_ILLUSTRATION_OPACITY}
-                max={MAX_BG_ILLUSTRATION_OPACITY}
-                step={1}
-                value={[illustrationOpacity]}
-                onValueChange={(value) => {
-                  const nextValue = Array.isArray(value) ? value[0] : value
-                  if (nextValue !== undefined) setIllustrationOpacity(nextValue)
-                }}
-              />
-            </ConfigSection>
-
-          </div>
-
-          <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border/60 pt-3">
-            <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
-              Choose image or SVG
-            </Button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*,.svg,image/svg+xml"
-              className="sr-only"
-              onChange={handleFileChange}
-            />
-            <Button
-              type="button"
-              size="sm"
-              disabled={!previewIllustration || (!hasDraftChanges && !hasTransformChanges && !hasOpacityChanges) || isProcessing}
-              onClick={() => void handleApply()}
-            >
-              Apply background
-            </Button>
-            {savedConfiguration && (
-              <ConfirmDestructiveButton
+            {previewContent}
+            {previewIllustration && !isDefaultTransform && (
+              <Button
                 type="button"
-                size="sm"
-                label="Remove"
-                confirmLabel="Confirm remove"
-                onConfirm={handleRemove}
-              />
+                variant="outline"
+                size="icon-sm"
+                className="absolute top-3 right-3 z-10 bg-background/70 backdrop-blur"
+                aria-label="Reset illustration placement"
+                title="Reset illustration placement"
+                onClick={(event) => {
+                  event.stopPropagation()
+                  replaceDraftTransform(DEFAULT_BG_ILLUSTRATION_TRANSFORM)
+                }}
+              >
+                <PhArrowCounterClockwise />
+              </Button>
             )}
-          </div>
-        </CardContent>
-      </Card>
+            {status && (
+              <p
+                role={status.kind === "error" ? "alert" : "status"}
+                className={cn(
+                  "absolute bottom-3 left-3 z-10 max-w-[calc(100%_-_1.5rem)] rounded-lg bg-background/85 px-3 py-2 text-left text-sm shadow-sm backdrop-blur",
+                  status.kind === "error" ? "text-destructive" : "text-muted-foreground",
+                )}
+              >
+                {status.message}
+              </p>
+            )}
+          </SquircleBox>
+
+          {previewIllustration && illustrationElement && previewIllustrationLayout && previewIllustrationCenter && previewCanvasElement && !isDragging && (
+            <div className="pointer-events-none absolute inset-2">
+              <BgIllustrationControls
+                target={illustrationElement}
+                transform={{ ...draftTransform, ...previewIllustrationCenter }}
+                baseCenterX={previewIllustrationLayout.left + previewIllustrationLayout.width / 2}
+                baseCenterY={previewIllustrationLayout.top + previewIllustrationLayout.height / 2}
+                referenceWidth={previewCanvasSize.width}
+                referenceHeight={previewCanvasSize.height}
+                referenceElement={previewCanvasElement}
+                onTransformChange={updateDraftTransform}
+              />
+            </div>
+          )}
+        </div>
+
+        <Card variant="subtle">
+          <CardContent>
+            <div className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
+              <ConfigSection
+                variant="field"
+                title="Edge detail"
+                htmlFor="bg-illustration-detail"
+                surface={false}
+                titleAccessory={<span className="tabular-nums text-muted-foreground">{threshold}</span>}
+              >
+                <Slider
+                  id="bg-illustration-detail"
+                  aria-label="Edge detail"
+                  min={12}
+                  max={96}
+                  step={2}
+                  value={[threshold]}
+                  disabled={!sourceFile}
+                  onValueChange={(value) => {
+                    const nextValue = Array.isArray(value) ? value[0] : value
+                    if (nextValue !== undefined && nextValue !== threshold) {
+                      setIsProcessing(true)
+                      setThreshold(nextValue)
+                    }
+                  }}
+                />
+              </ConfigSection>
+
+              <ConfigSection
+                variant="field"
+                title="Opacity"
+                htmlFor="bg-illustration-opacity"
+                surface={false}
+                titleAccessory={(
+                  <span className="tabular-nums text-muted-foreground">
+                    {illustrationOpacity}
+                    %
+                  </span>
+                )}
+              >
+                <Slider
+                  id="bg-illustration-opacity"
+                  aria-label="Illustration opacity"
+                  min={MIN_BG_ILLUSTRATION_OPACITY}
+                  max={MAX_BG_ILLUSTRATION_OPACITY}
+                  step={1}
+                  value={[illustrationOpacity]}
+                  disabled={!savedConfiguration && !draftIllustration}
+                  onValueChange={(value) => {
+                    const nextValue = Array.isArray(value) ? value[0] : value
+                    if (nextValue !== undefined) setIllustrationOpacity(nextValue)
+                  }}
+                />
+              </ConfigSection>
+
+            </div>
+
+            <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border/60 pt-3">
+              <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
+                Choose image or SVG
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*,.svg,image/svg+xml"
+                className="sr-only"
+                onChange={handleFileChange}
+              />
+              {!isRemoved && (savedConfiguration || draftIllustration) && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  disabled={isProcessing}
+                  onClick={handleRemove}
+                >
+                  Remove
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </ConfigSection>
   )
 }
