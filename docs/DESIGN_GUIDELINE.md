@@ -583,11 +583,10 @@ use a quiet bottom divider that strengthens on focus without an outer focus
 ring. The input remains auto-focused and keeps a visible search icon.
 
 The modal shell inherits the current board theme and must remain stable while
-selection changes. Use the selected result's provider color only for its active
-row treatment. This keeps LiveCard identity local to the result instead of allowing
-it to recolor the whole dialog. Apply that selected background directly from
-the provider color token; result rows must not carry provider `zenith-*` theme
-classes. Keep dividers and selection treatments quiet.
+selection changes. Use the active `theme-400` color at 18% opacity for every
+active result row so selection consistently follows the current board theme.
+Result rows must not carry provider `zenith-*` theme classes. Keep dividers and
+selection treatments quiet.
 Selected result color must update immediately without a color transition so
 keyboard navigation never feels behind the current selection.
 Activating a result closes the dialog, opens the LiveCard's assigned Board, and

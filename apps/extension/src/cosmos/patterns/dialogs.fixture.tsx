@@ -72,7 +72,6 @@ const SEARCH_GROUPS = [
   {
     id: "board-ai",
     name: "AI",
-    targetBoardId: "board-ai",
     items: [
       createSearchSource({
         id: "reddit:subreddit::cosmos-codex",
@@ -100,7 +99,6 @@ const SEARCH_GROUPS = [
   {
     id: "board-reading",
     name: "Reading",
-    targetBoardId: "board-reading",
     items: [
       createSearchSource({
         id: "hackernews:top::cosmos-hn",

@@ -44,7 +44,6 @@ interface SearchGroup {
   id: string
   name: string
   items: LiveCardViewModel[]
-  targetBoardId: string
 }
 
 function groupSearchItems(
@@ -52,23 +51,20 @@ function groupSearchItems(
   boards: Board[],
 ): SearchGroup[] {
   const itemsByBoardId = new Map<string, LiveCardViewModel[]>()
-  const knownBoardIds = new Set(boards.map(board => board.id))
   liveCards.forEach((liveCard) => {
-    const boardIds = boards
-      .filter(board => board.instanceIds.includes(liveCard.id) && knownBoardIds.has(board.id))
-      .map(board => board.id)
-
-    for (const boardId of boardIds) {
-      const items = itemsByBoardId.get(boardId) ?? []
-      items.push({ ...liveCard, boardId })
-      itemsByBoardId.set(boardId, items)
+    for (const board of boards) {
+      if (board.instanceIds.includes(liveCard.id)) {
+        const items = itemsByBoardId.get(board.id) ?? []
+        items.push({ ...liveCard, boardId: board.id })
+        itemsByBoardId.set(board.id, items)
+      }
     }
   })
 
   return boards.flatMap((board) => {
     const items = itemsByBoardId.get(board.id)
     return items?.length
-      ? [{ id: board.id, name: board.name, items, targetBoardId: board.id }]
+      ? [{ id: board.id, name: board.name, items }]
       : []
   })
 }
@@ -274,10 +270,7 @@ export function SearchModalContent({
                   return (
                     <CommandItem
                       key={liveCard.id}
-                      className="gap-3 rounded-xl px-3 py-2.5 data-[selected=true]:bg-(--search-item-active)"
-                      style={{
-                        "--search-item-active": `color-mix(in oklab, var(--color-${liveCard.provider.color}-400) 18%, transparent)`,
-                      } as React.CSSProperties}
+                      className="gap-3 rounded-xl px-3 py-2.5 data-[selected=true]:bg-theme-400/18"
                       value={`${group.id}:${liveCard.id}`}
                       keywords={[
                         liveCard.id,
@@ -285,7 +278,7 @@ export function SearchModalContent({
                         liveCard.metadata.title ?? "",
                         group.name,
                       ]}
-                      onSelect={() => onSelectItem(liveCard, group.targetBoardId)}
+                      onSelect={() => onSelectItem(liveCard, group.id)}
                     >
                       <SearchLiveCardIcon liveCard={liveCard} />
                       <span className="min-w-0 flex-1 truncate font-medium">
