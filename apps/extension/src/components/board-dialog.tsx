@@ -241,7 +241,6 @@ function ConfigurableBoardDialog({
             <ConfigSection
               variant="group"
               title="Default layer"
-              description="Choose which layer opens with this board. The layer shortcut updates this setting too."
             >
               <RadioGroup
                 variant="segmented"

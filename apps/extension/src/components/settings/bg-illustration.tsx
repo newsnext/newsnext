@@ -7,7 +7,7 @@ import { Slider } from "@newsnext/ui/components/slider"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { useEffect, useRef, useState } from "react"
 import { ConfigSection } from "@/components/common/config-section"
-import { PhArrowCounterClockwise } from "@/components/icons/ph"
+import { PhArrowCounterClockwise, PhTrash } from "@/components/icons/ph"
 import { useBgIllustration } from "@/hooks/use-bg-illustration"
 import {
   areBgIllustrationTransformsEqual,
@@ -375,7 +375,7 @@ function BgIllustrationSettingsContent({
   } else if (!previewIllustration) {
     previewContent = (
       <p className="absolute inset-0 flex items-center justify-center px-6 text-center text-sm text-muted-foreground">
-        Drop an image or SVG here, or choose one below.
+        Drop an image or SVG here, or click to choose one.
       </p>
     )
   } else {
@@ -419,7 +419,6 @@ function BgIllustrationSettingsContent({
   return (
     <ConfigSection
       title="Background illustration"
-      description="Choose an illustration. It is saved with the other Board changes."
       surface={false}
     >
       <div className="grid gap-2">
@@ -454,22 +453,6 @@ function BgIllustrationSettingsContent({
             )}
           >
             {previewContent}
-            {previewIllustration && !isDefaultTransform && (
-              <Button
-                type="button"
-                variant="outline"
-                size="icon-sm"
-                className="absolute top-3 right-3 z-10 bg-background/70 backdrop-blur"
-                aria-label="Reset illustration placement"
-                title="Reset illustration placement"
-                onClick={(event) => {
-                  event.stopPropagation()
-                  replaceDraftTransform(DEFAULT_BG_ILLUSTRATION_TRANSFORM)
-                }}
-              >
-                <PhArrowCounterClockwise />
-              </Button>
-            )}
             {status && (
               <p
                 role={status.kind === "error" ? "alert" : "status"}
@@ -497,7 +480,51 @@ function BgIllustrationSettingsContent({
               />
             </div>
           )}
+
+          {previewIllustration && (
+            <div className="absolute top-5 right-5 z-30 flex items-center gap-2">
+              {!isDefaultTransform && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon-sm"
+                  className="bg-background/70 backdrop-blur"
+                  aria-label="Reset illustration placement"
+                  title="Reset illustration placement"
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    replaceDraftTransform(DEFAULT_BG_ILLUSTRATION_TRANSFORM)
+                  }}
+                >
+                  <PhArrowCounterClockwise />
+                </Button>
+              )}
+              <Button
+                type="button"
+                size="icon-sm"
+                variant="destructive"
+                className="backdrop-blur"
+                aria-label="Remove background illustration"
+                title="Remove background illustration"
+                disabled={isProcessing}
+                onClick={(event) => {
+                  event.stopPropagation()
+                  handleRemove()
+                }}
+              >
+                <PhTrash />
+              </Button>
+            </div>
+          )}
         </div>
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*,.svg,image/svg+xml"
+          className="sr-only"
+          onChange={handleFileChange}
+        />
 
         <Card variant="subtle">
           <CardContent>
@@ -553,31 +580,6 @@ function BgIllustrationSettingsContent({
                   }}
                 />
               </ConfigSection>
-
-            </div>
-
-            <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border/60 pt-3">
-              <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
-                Choose image or SVG
-              </Button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*,.svg,image/svg+xml"
-                className="sr-only"
-                onChange={handleFileChange}
-              />
-              {!isRemoved && (savedConfiguration || draftIllustration) && (
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="ghost"
-                  disabled={isProcessing}
-                  onClick={handleRemove}
-                >
-                  Remove
-                </Button>
-              )}
             </div>
           </CardContent>
         </Card>
