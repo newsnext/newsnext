@@ -5,16 +5,10 @@ import type {
   SourceLoaderOutput,
   SourceRadarRule,
 } from "@newsnext/source-kit/types"
-import type { IdentityParams } from "../shared/identity"
-import { assertIdentity, identityParam } from "../shared/identity"
 import {
   BILIBILI_WEB_LOCATION,
   bilibiliApiCapabilities,
-  bilibiliAuthenticatedCapabilities,
-  bilibiliIdentitySecret,
-  getBilibiliIdentity,
   normalizeBilibiliUrl,
-  readBilibiliUserId,
 } from "./shared"
 
 const FAVORITE_FOLDERS_URL = "https://api.bilibili.com/x/v3/fav/folder/created/list-all"
@@ -22,6 +16,15 @@ const FAVORITE_RESOURCES_URL = "https://api.bilibili.com/x/v3/fav/resource/list"
 const SERIES_RESOURCES_URL = "https://api.bilibili.com/x/space/fav/season/list"
 const FAVORITE_MAX_PAGES = 3
 const FAVORITE_RESULT_LIMIT = 30
+
+const BILIBILI_USER_ID_SECRET = {
+  key: "userId",
+  type: "cookie",
+  origin: "https://www.bilibili.com",
+  itemKey: "DedeUserID",
+  cache: false,
+  required: false,
+} as const
 
 type BilibiliFavoriteOrder = "mtime" | "pubtime" | "view"
 
@@ -122,18 +125,18 @@ export function favoriteMediaToNewsItem(
 }
 
 async function fetchBilibiliFavorites(
-  { folder, identity, mid, order }: IdentityParams & {
+  { folder, mid, order }: {
     folder: string
     mid: string
     order: BilibiliFavoriteOrder
   },
   context: SourceLoaderContext,
 ): Promise<SourceLoaderOutput> {
-  const actualIdentity = getBilibiliIdentity(context)
-  await assertIdentity(identity, () => actualIdentity, "Bilibili")
-
   let mediaId = folder
-  const targetMid = mid || actualIdentity
+  const signedInUserId = context.secrets?.[BILIBILI_USER_ID_SECRET.key]?.trim()
+  const targetMid = mid || (
+    signedInUserId && /^\d+$/.test(signedInUserId) ? signedInUserId : undefined
+  )
   if (!mediaId) {
     if (!targetMid) throw new Error("Provide a Bilibili user ID or sign in to load a default favorite folder.")
     const response = await context.fetch.get(FAVORITE_FOLDERS_URL, {
@@ -229,7 +232,6 @@ export const favoriteSources = {
       desc: "收藏夹中的视频",
     },
     params: {
-      identity: identityParam,
       mid: {
         type: "text",
         title: "用户 ID",
@@ -264,7 +266,6 @@ export const favoriteSources = {
         },
         patch: {
           params: {
-            identity: readBilibiliUserId,
             folder: "{{ scope.query.fid }}",
             mid: "{{ scope.path.mid }}",
             order: () => {
@@ -287,8 +288,11 @@ export const favoriteSources = {
       type: "custom",
       load: fetchBilibiliFavorites,
     },
-    secrets: [bilibiliIdentitySecret],
-    capabilities: bilibiliAuthenticatedCapabilities,
+    secrets: [BILIBILI_USER_ID_SECRET],
+    capabilities: {
+      ...bilibiliApiCapabilities,
+      cookies: ["www.bilibili.com"],
+    },
   },
   series: {
     metadata: {

@@ -1,6 +1,5 @@
 import type { ProviderConfig } from "@newsnext/source-kit/registry"
 import type { SourceRequestRule } from "@newsnext/source-kit/types"
-import { identityParam } from "../shared/identity"
 import {
   fetchWeiboFollowingTimeline,
   fetchWeiboKeywordPosts,
@@ -261,28 +260,12 @@ export default {
         desc: "所有已关注微博账号发布的最新微博",
         home: "/",
       },
-      params: {
-        identity: identityParam,
-      },
       radar: [
         {
           id: "weibo-following",
           match: {
             hosts: ["weibo.com"],
             paths: ["/"],
-          },
-          patch: {
-            params: {
-              identity: () => {
-                const page = globalThis as unknown as {
-                  document: { documentElement: { innerHTML: string } }
-                }
-                const match = page.document.documentElement.innerHTML.match(
-                  /"uid":\s*(?:"([^"]+)"|([^,\s]+))\s*,\s*"apmSampleRate"/,
-                )
-                return match?.[1] ?? match?.[2]
-              },
-            },
           },
         },
       ],

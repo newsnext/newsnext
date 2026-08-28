@@ -1,20 +1,14 @@
 import type { ProviderSourceConfig } from "@newsnext/source-kit/registry"
 import type { NewsItemInput, SourceLoaderContext, SourceLoaderOutput } from "@newsnext/source-kit/types"
-import type { IdentityParams } from "../shared/identity"
-import { assertIdentity, identityParam } from "../shared/identity"
 import {
   BILIBILI_WEB_LOCATION,
   bilibiliApiCapabilities,
-  bilibiliAuthenticatedCapabilities,
-  bilibiliIdentitySecret,
   bilibiliUserIdParam,
   compactBilibiliTitle,
-  getBilibiliIdentity,
   normalizeBilibiliUrl,
   parseBilibiliCount,
   parseBilibiliDisplayDate,
   parseBilibiliTimestamp,
-  readBilibiliUserId,
 } from "./shared"
 
 const FOLLOWING_DYNAMIC_FEED_URL = "https://api.bilibili.com/x/polymer/web-dynamic/v1/feed/all"
@@ -294,7 +288,7 @@ async function fetchBilibiliDynamicItems(
 }
 
 async function fetchBilibiliFollowing(
-  { content, identity }: IdentityParams & { content: BilibiliFollowingContent },
+  { content }: { content: BilibiliFollowingContent },
   context: SourceLoaderContext,
 ): Promise<SourceLoaderOutput> {
   const dynamicItems = await fetchBilibiliDynamicItems(
@@ -315,8 +309,6 @@ async function fetchBilibiliFollowing(
     context,
     "Failed to load Bilibili following dynamics.",
   )
-
-  await assertIdentity(identity, () => getBilibiliIdentity(context), "Bilibili")
 
   return {
     items: followingDynamicItemsToNewsItems(dynamicItems, content).slice(0, DYNAMIC_RESULT_LIMIT),
@@ -362,7 +354,6 @@ export const followingSource = {
     desc: "已关注 UP 主发布的最新动态",
   },
   params: {
-    identity: identityParam,
     content: {
       type: "select",
       title: "内容",
@@ -384,7 +375,6 @@ export const followingSource = {
       },
       patch: {
         params: {
-          identity: readBilibiliUserId,
           content: "{{ scope.query.tab }}",
         },
       },
@@ -394,8 +384,7 @@ export const followingSource = {
     type: "custom",
     load: fetchBilibiliFollowing,
   },
-  secrets: [bilibiliIdentitySecret],
-  capabilities: bilibiliAuthenticatedCapabilities,
+  capabilities: bilibiliApiCapabilities,
 } satisfies ProviderSourceConfig
 
 export const userDynamicsSource = {

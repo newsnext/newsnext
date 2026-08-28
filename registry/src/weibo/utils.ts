@@ -1,8 +1,6 @@
 import type { NewsItemInput, SourceLoaderContext, SourceLoaderOutput } from "@newsnext/source-kit/types"
-import type { IdentityParams } from "../shared/identity"
 import { SourceLoginRequiredError } from "@newsnext/source-kit/core"
 import { load } from "cheerio/slim"
-import { assertIdentity } from "../shared/identity"
 
 const WEIBO_ORIGIN = "https://weibo.com"
 const WEIBO_MOBILE_ORIGIN = "https://m.weibo.cn"
@@ -146,10 +144,6 @@ function cardsToNewsItems(cards: WeiboCard[]): NewsItemInput[] {
   return statusesToNewsItems(statuses)
 }
 
-export function getWeiboResponseIdentity(headers: Headers): string | undefined {
-  return headers.get("x-log-uid")?.trim() || undefined
-}
-
 export async function fetchWeiboUserPosts(
   { uid }: { uid: string },
   context: SourceLoaderContext,
@@ -205,7 +199,7 @@ export async function fetchWeiboSuperTopicPosts(
 }
 
 export async function fetchWeiboFollowingTimeline(
-  { identity }: IdentityParams,
+  _params: unknown,
   context: SourceLoaderContext,
 ): Promise<SourceLoaderOutput> {
   const listId = "my_follow_all"
@@ -215,18 +209,12 @@ export async function fetchWeiboFollowingTimeline(
     since_id: "0",
     count: "25",
   })
-  const request = await context.fetch.get(
+  const response = await fetchWeiboDesktop<WeiboApiResponse<never> & { statuses?: WeiboStatus[] }>(
     `${WEIBO_ORIGIN}/ajax/feed/friendstimeline?${searchParams}`,
-    { headers: { "X-Requested-With": "XMLHttpRequest" } },
+    context,
   )
-  const response = await request.json<WeiboApiResponse<never> & { statuses?: WeiboStatus[] }>()
   if (response.ok === -100) {
     throw new SourceLoginRequiredError(WEIBO_ORIGIN)
   }
-  await assertIdentity(
-    identity,
-    () => getWeiboResponseIdentity(request.headers),
-    "Weibo",
-  )
   return { items: statusesToNewsItems(response.statuses ?? []) }
 }

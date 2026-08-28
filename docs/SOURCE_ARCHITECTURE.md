@@ -229,7 +229,7 @@ source ID and raw parameters
         │
         ├─ resolve source
         ├─ normalize and validate parameters
-        ├─ build a result identity from source ID, version, and normalized parameters
+        ├─ build a Worker-local result identity from source ID, version, and normalized parameters
         ├─ read the persisted Source result when available
         ├─ skip a user-triggered request during the one-minute protection interval
         ├─ resolve required secrets in the background
@@ -242,7 +242,8 @@ source ID and raw parameters
 ```
 
 The background protected loader enforces a one-minute minimum execution interval
-for each Source ID, Source version, and normalized parameter set. This protects
+for each Source ID, Source version, and normalized parameter set within one
+Worker. This protects
 third-party APIs from accidental bursts that can trigger rate limits or account
 suspension. It also deduplicates in-flight loads across UI and connected CLI
 consumers. The background does not own a Query cache. Page-side TanStack Query
@@ -267,12 +268,13 @@ Manual Request keeps UI feedback visible for a minimum 500ms. App query timing
 and the Source request protection interval are centralized in
 `apps/extension/src/lib/source/query-policy.ts`.
 
-The bound browser Loader writes every successful execution once to a Dexie-backed
-Source result cache keyed by Source ID, Source version, and normalized
-parameters. The same record supplies both API protection and startup
+The bound browser Loader writes every successful execution once to its
+Worker-local Dexie-backed Source result cache, keyed by Source ID, Source version,
+and normalized parameters. No record is shared across Workers, even when that
+complete key matches. The same record supplies both API protection and startup
 placeholder data. Instance IDs are deliberately absent from this Loader cache
-because they do not affect Source execution. Page-side TanStack queries for
-saved Instances use only the Instance ID, while configuration changes explicitly
+because they do not affect Source execution. Page-side TanStack queries for saved
+Instances use only the Instance ID, while configuration changes explicitly
 invalidate that stable query.
 
 Each cache record contains only its derived key, validated result, and real
@@ -315,16 +317,14 @@ daemon combines observations from browser Loaders with different credentials,
 permissions, and network environments. Each dataset receives an opaque UUID
 exposed by `history datasets` and used by the other history commands.
 
-Account-scoped Sources include an explicit, non-secret `identity` parameter in
-that normalized JSON. Radar obtains it from the active browser tab using a
-JavaScript parameter function before creation persists the ordinary parameter.
-After fetching personalized content, the loader independently resolves the
-user actually represented by the request in the same canonical representation
-as Radar and rejects a missing identity or mismatch. Resolution reuses the content response or a
-stable, non-secret identifier already available to that request rather than
-issuing an identity-only request. Raw credentials never enter params. The loader
-result does not expose the identifier; its persisted role remains dataset
-separation.
+Worker ID is the isolation boundary for all Source results, not only
+account-scoped Sources. Each Worker owns its browser credentials, Loader cache,
+and execution environment. History includes Worker ID in its dataset identity,
+so neither cached results nor retained observations are shared when two Workers
+produce the same Source ID, version, and normalized parameters. Personalized
+Sources therefore do not add the current signed-in account ID as a Source
+parameter. Account or user parameters remain part of the normalized target only
+when they select a feed or resource independently within the same Worker.
 
 The schema normalizes retained values into `history_datasets`,
 `history_observations`, provider-scoped `history_items`, content-addressed
@@ -438,7 +438,7 @@ stale queries. Active LiveCard queries also revalidate once every five minutes,
 but interval revalidation is skipped while the app is in the background.
 Inactive query data follows TanStack Query's default garbage-collection policy;
 the durable Source result remains independently available in IndexedDB. Each
-saved Instance owns one page query, while Instances in the same browser may
+saved Instance owns one page query, while Instances bound to the same Worker may
 still share the Loader's Source-request cache. Source queries use offline-first
 network mode. Before rendering Board content, the App restores valid persisted
 Source results for that Board into its QueryClient. This lets Instances render
@@ -471,12 +471,12 @@ protected loader separately deduplicates actual Source execution across page and
 connected CLI consumers, so concurrent callers cannot burst a third-party API.
 
 Instance-facing consumers route `instanceId` to its bound Loader. The Loader
-resolves Source ID, Source version, and normalized effective parameters for its
-browser-local IndexedDB cache. When an explicit Job retains the result, the
-daemon adds the actual execution Worker ID to that same Source request identity.
-Thus Instance ID is the page query and routing identity, the resolved Source
-target is the Loader cache identity, and Worker plus Source target is the History
-dataset identity.
+resolves Source ID, Source version, and normalized effective parameters inside
+that Worker's IndexedDB cache namespace. When an explicit Job retains the
+result, the daemon combines the actual execution Worker ID with the same Source
+target. Thus Instance ID is the page query and routing identity, Worker plus the
+resolved Source target is the effective Loader-cache identity, and the same
+Worker-scoped target is the History dataset identity.
 
 Next Layer does not read or invalidate the Now Layer TanStack cache. A local
 Widget declares named data queries in `widget.json`, but those

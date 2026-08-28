@@ -1,28 +1,12 @@
-import type { SourceLoaderContext } from "@newsnext/source-kit/types"
 import { transformToUTC } from "@newsnext/date-parser"
 
 export const BILIBILI_WEB_LOCATION = "333.1365"
-export const BILIBILI_USER_ID_SECRET_KEY = "userId"
 
 const BILIBILI_TIMEZONE = "Asia/Shanghai"
 const BILIBILI_DYNAMIC_EPOCH_SECONDS = 1_498_838_400n
 
-export const bilibiliIdentitySecret = {
-  key: BILIBILI_USER_ID_SECRET_KEY,
-  type: "cookie",
-  origin: "https://www.bilibili.com",
-  itemKey: "DedeUserID",
-  cache: false,
-  required: false,
-} as const
-
 export const bilibiliApiCapabilities = {
   network: ["api.bilibili.com"],
-} as const
-
-export const bilibiliAuthenticatedCapabilities = {
-  ...bilibiliApiCapabilities,
-  cookies: ["api.bilibili.com", "www.bilibili.com"],
 } as const
 
 export const bilibiliUserIdParam = {
@@ -33,20 +17,6 @@ export const bilibiliUserIdParam = {
   required: true,
   validate: { format: "digits" },
 } as const
-
-export function readBilibiliUserId(): string | undefined {
-  const page = globalThis as unknown as { document: { cookie: string } }
-  const cookie = page.document.cookie
-    .split(";")
-    .map(value => value.trim())
-    .find(value => value.startsWith("DedeUserID="))
-  return cookie?.slice("DedeUserID=".length)
-}
-
-export function getBilibiliIdentity(context: SourceLoaderContext): string | undefined {
-  const identity = context.secrets?.[BILIBILI_USER_ID_SECRET_KEY]?.trim()
-  return identity && /^\d+$/.test(identity) ? identity : undefined
-}
 
 export function normalizeBilibiliUrl(url: string): string {
   if (url.startsWith("//")) return `https:${url}`

@@ -22,15 +22,6 @@ export const X_TIMELINE_COUNT = 50
 const X_BEARER_TOKEN = "AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
 const USER_TWEET_ENTRY_PREFIXES = ["tweet-", "profile-conversation-"]
 
-export function parseXUserIdCookie(value: string | undefined): string | undefined {
-  if (!value) return undefined
-  try {
-    return decodeURIComponent(value).match(/^u=(\d+)$/)?.[1]
-  } catch {
-    return undefined
-  }
-}
-
 export const X_TIMELINE_FEATURES = {
   rweb_video_screen_enabled: false,
   rweb_cashtags_enabled: true,

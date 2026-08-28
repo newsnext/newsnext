@@ -327,27 +327,18 @@ serializes the function for page execution:
 ```ts
 patch: {
   params: {
-    identity: () => globalThis.localStorage.getItem("userId"),
+    sort: () => globalThis.localStorage.getItem("preferredSort"),
   },
 },
 ```
 
 The returned value follows normal defaults and parameter validation.
 
-For a source whose results depend on the current signed-in user, expose an
-`identity` text parameter and obtain it through the matching Radar rule's
-parameter function. The value need not be a public account ID; it may be any
-stable, non-secret value that uniquely separates users. Instance
-creation stores the Radar result as an ordinary parameter, so instances,
-caches, and retained History from different accounts do not share the same
-normalized parameters. The loader must accept the parameter, determine the
-actual account used by its content request, and throw when the configured
-identity is empty or differs. Prefer an identity already present in the content response or the
-credential used by that request; do not add a separate identity request. Radar
-and the loader must return the same canonical identity. Never persist a raw
-credential as the ordinary parameter. Do not return the identity in loader
-metadata or items. If no stable, non-secret identity is available without an
-extra request, do not use an account-scoped identity parameter.
+Do not expose the current signed-in account ID or another account identity only
+to separate personalized results. Each Worker isolates its Source execution,
+cache, credentials, and retained History. Account or user parameters remain
+appropriate when they select the requested public feed or resource within one
+Worker, such as a creator timeline or another user's favorites.
 
 Prefer one source with a `select` parameter when feed variants share their
 loader and presentation and differ only by a request value. Separate sources
@@ -852,12 +843,13 @@ version: 3
 Validated Source results are cached once by the extension background in
 IndexedDB as a derived key, real fetch time, and result snapshot. The key is
 computed from Source ID, Source version, and normalized parameters without
-duplicating that target in the record. The same record supports request
-protection and startup placeholders. Instances bound to the same browser may
-reuse the same protected Loader record, while page-side results remain isolated
-by Instance ID. The App restores cache records through Instance routing and
-renders directly from their Source snapshots without listing registry
-descriptors. Page queries become stale after two minutes, so
+duplicating that target in the record. This key exists only within its Worker;
+another Worker never reads or reuses the record even when the complete Source
+target is identical. The same record supports request protection and startup
+placeholders. Instances bound to the same Worker may reuse the protected Loader
+record, while page-side results remain isolated by Instance ID. The App restores
+cache records through Instance routing and renders directly from their Source
+snapshots without listing registry descriptors. Page queries become stale after two minutes, so
 remounting or regaining focus can revalidate them, while active Sources also
 revalidate on a fixed five-minute interval. Manual Request is a page-side user
 intent that bypasses page freshness. It sends the same load action as automatic
@@ -1342,7 +1334,8 @@ instance.list` when the Board is irrelevant. History commands intentionally use
 the opaque ID returned by `history datasets`; they do not resolve extension
 Instance state. Filter dataset discovery by Worker, Source version, Source, or
 provider when selecting a retained execution environment and parameter
-configuration.
+configuration. Even when every Source target field matches, observations from
+different Workers belong to different datasets and are never mixed.
 
 Query Actions return canonical Boards and Instances without a
 parallel CLI-only Board representation. An Instance may be returned by several
