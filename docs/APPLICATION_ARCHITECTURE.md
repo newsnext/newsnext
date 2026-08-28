@@ -250,6 +250,13 @@ context, so a reverse runtime import would create a cycle whose initialization
 order depends on the bundler. Action contexts and services must be constructed
 from the background entrypoint after their modules have initialized.
 
+The UI proxy service remains available while the optional App integration
+initializes. Operations that require Native Messaging wait for an active
+connection attempt to receive the host's validated `ready` message before they
+send. This readiness boundary applies equally to queries and Workspace commits;
+unrelated UI Actions remain available during the handshake. A disconnect or
+bounded connection timeout rejects all pending connection waiters.
+
 ### Mutations
 
 Persistent writes enter one typed execution boundary. Current canonical names

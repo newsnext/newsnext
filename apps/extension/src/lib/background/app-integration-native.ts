@@ -92,6 +92,10 @@ interface PendingIllustrationPutRequest extends PendingRequest {
   resolve: () => void
 }
 
+interface PendingConnectionRequest extends PendingRequest {
+  resolve: (connection: NativePort) => void
+}
+
 let port: NativePort | undefined
 let appVersion: string | undefined
 let widgetServerUrl: string | undefined
@@ -107,6 +111,7 @@ const pendingInstanceRequests = new Map<string, PendingInstanceRequest>()
 const pendingWorkspaceRequests = new Map<string, PendingWorkspaceRequest>()
 const pendingIllustrationGetRequests = new Map<string, PendingIllustrationGetRequest>()
 const pendingIllustrationPutRequests = new Map<string, PendingIllustrationPutRequest>()
+const pendingConnectionRequests = new Set<PendingConnectionRequest>()
 const activeIllustrationRequests = new Map<string, Promise<Uint8Array<ArrayBuffer> | null>>()
 const nativeMessageChunks = new NativeMessageChunkAssembler(NATIVE_REQUEST_TIMEOUT_MS)
 
@@ -398,7 +403,34 @@ function resetConnectionState(): void {
   rejectPendingRequests(pendingWorkspaceRequests, error)
   rejectPendingRequests(pendingIllustrationGetRequests, error)
   rejectPendingRequests(pendingIllustrationPutRequests, error)
+  rejectPendingConnectionRequests(error)
   nativeMessageChunks.clear()
+}
+
+async function requireAppConnection(): Promise<NativePort> {
+  if (!enabled) {
+    throw new Error("NewsNext App integration is disabled")
+  }
+  if (connectionState === "connected" && port) {
+    return port
+  }
+  if (connectionState === "disconnected") {
+    connect()
+  }
+  if (connectionState !== "connecting" || !port) {
+    throw new Error("NewsNext App is not connected")
+  }
+  return await new Promise((resolve, reject) => {
+    const pending: PendingConnectionRequest = {
+      reject,
+      resolve,
+      timeoutId: setTimeout(() => {
+        pendingConnectionRequests.delete(pending)
+        reject(new Error("Timed out connecting to the NewsNext App"))
+      }, NATIVE_REQUEST_TIMEOUT_MS),
+    }
+    pendingConnectionRequests.add(pending)
+  })
 }
 
 async function applyWorkspace(
@@ -472,6 +504,7 @@ function connect(): void {
         claimableWorkerIds = message.claimableWorkerIds
         widgetServerUrl = message.widgetServerUrl
         connectionState = "connected"
+        resolvePendingConnectionRequests(nextPort)
         void applyWorkspace(message.workspace, message.localInstanceIds).catch((error) => {
           console.error("Failed to apply the NewsNext Workspace", error)
         })
@@ -537,10 +570,7 @@ export async function requestWidgetSnapshot(input: {
   boardId: string
   widgetId: string
 }): Promise<unknown> {
-  const connection = port
-  if (connectionState !== "connected" || !connection) {
-    throw new Error("NewsNext App is not connected")
-  }
+  const connection = await requireAppConnection()
   const message: ExtensionToHost = {
     type: "widgetSnapshotGet",
     requestId: crypto.randomUUID(),
@@ -579,10 +609,7 @@ async function sendIllustrationToApp(input: {
   bytes: Uint8Array<ArrayBuffer>
   id: string
 }): Promise<void> {
-  const connection = port
-  if (connectionState !== "connected" || !connection) {
-    throw new Error("NewsNext App is not connected")
-  }
+  const connection = await requireAppConnection()
   const message: ExtensionToHost = {
     type: "illustrationPut",
     requestId: crypto.randomUUID(),
@@ -671,10 +698,7 @@ async function requestInstance(
     }
     return result
   }
-  const connection = port
-  if (connectionState !== "connected" || !connection) {
-    throw new Error("NewsNext App is not connected")
-  }
+  const connection = await requireAppConnection()
   const message: ExtensionToHost = {
     type: "instanceGet",
     requestId: crypto.randomUUID(),
@@ -697,10 +721,7 @@ async function requestInstance(
 }
 
 async function requestWorkspaceReplacement(candidate: NativeWorkspace): Promise<NativeWorkspace> {
-  const connection = port
-  if (!enabled || connectionState !== "connected" || !connection) {
-    throw new Error("NewsNext App is not connected")
-  }
+  const connection = await requireAppConnection()
   const message: ExtensionToHost = {
     type: "workspaceChanged",
     requestId: crypto.randomUUID(),
@@ -832,6 +853,22 @@ function rejectPendingRequests<T extends PendingRequest>(
     pending.reject(error)
   }
   requests.clear()
+}
+
+function rejectPendingConnectionRequests(error: Error): void {
+  for (const pending of pendingConnectionRequests) {
+    clearTimeout(pending.timeoutId)
+    pending.reject(error)
+  }
+  pendingConnectionRequests.clear()
+}
+
+function resolvePendingConnectionRequests(connection: NativePort): void {
+  for (const pending of pendingConnectionRequests) {
+    clearTimeout(pending.timeoutId)
+    pending.resolve(connection)
+  }
+  pendingConnectionRequests.clear()
 }
 
 function rejectPendingRequest<T extends PendingRequest>(
