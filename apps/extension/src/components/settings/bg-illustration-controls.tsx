@@ -8,7 +8,6 @@ import {
 } from "@/lib/bg-illustration"
 
 const POSITION_SNAP_THRESHOLD = 6
-const SELECTION_BOUNDARY_INSET = 0.5
 const ROTATION_SNAP_THRESHOLD = 5
 const ROTATION_SNAP_POINTS = [-180, -90, 0, 90, 180] as const
 const SCALE_HANDLES = [
@@ -91,6 +90,8 @@ export default function BgIllustrationControls({
   }
 
   useLayoutEffect(() => {
+    if (transform.positionMode === "bottom-center") return
+
     const x = toPercentage(constrainedTransform.x, referenceWidth)
     const y = toPercentage(constrainedTransform.y, referenceHeight)
     if (Math.abs(x - transform.x) > 0.01
@@ -105,6 +106,7 @@ export default function BgIllustrationControls({
     onTransformChange,
     referenceHeight,
     referenceWidth,
+    transform.positionMode,
     transform.scale,
     transform.x,
     transform.y,
@@ -313,12 +315,10 @@ function constrainSelectionTransform(
   referenceHeight: number,
 ): { scale: number, x: number, y: number } {
   const unitBounds = resolveSelectionBounds(width, height, 1, rotation)
-  const availableWidth = Math.max(referenceWidth - SELECTION_BOUNDARY_INSET * 2, 0)
-  const availableHeight = Math.max(referenceHeight - SELECTION_BOUNDARY_INSET * 2, 0)
   const maximumScale = Math.min(
     MAX_BG_ILLUSTRATION_SCALE,
-    unitBounds.width > 0 ? availableWidth / unitBounds.width : MAX_BG_ILLUSTRATION_SCALE,
-    unitBounds.height > 0 ? availableHeight / unitBounds.height : MAX_BG_ILLUSTRATION_SCALE,
+    unitBounds.width > 0 ? referenceWidth / unitBounds.width : MAX_BG_ILLUSTRATION_SCALE,
+    unitBounds.height > 0 ? referenceHeight / unitBounds.height : MAX_BG_ILLUSTRATION_SCALE,
   )
   const quantizedMaximumScale = Math.floor(maximumScale * 100) / 100
   const constrainedScale = clamp(
@@ -350,8 +350,8 @@ function resolveSelectionBounds(
 }
 
 function constrainPosition(center: number, halfExtent: number, referenceSize: number): number {
-  const minimum = halfExtent + SELECTION_BOUNDARY_INSET
-  const maximum = referenceSize - halfExtent - SELECTION_BOUNDARY_INSET
+  const minimum = halfExtent
+  const maximum = referenceSize - halfExtent
   return minimum <= maximum ? clamp(center, minimum, maximum) : referenceSize / 2
 }
 

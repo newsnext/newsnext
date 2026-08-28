@@ -61,7 +61,7 @@ export function resolveBgIllustrationLayout(
   const leftInset = clamp(safeWidth * 0.08, 16, 128)
   const availableWidth = safeWidth - leftInset - rightInset
   const availableHeight = safeHeight - topInset - bottomInset
-  const width = Math.min(availableWidth, availableHeight * safeAspectRatio)
+  const width = Math.min(safeWidth, availableWidth, availableHeight * safeAspectRatio)
   const height = width / safeAspectRatio
 
   return {

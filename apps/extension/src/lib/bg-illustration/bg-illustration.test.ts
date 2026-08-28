@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import {
   createSvgIllustrationDataUrl,
+  DEFAULT_BG_ILLUSTRATION_TRANSFORM,
   MAX_BG_ILLUSTRATION_DATA_URL_LENGTH,
 } from "./config"
 import {
@@ -54,16 +55,27 @@ describe("background illustration", () => {
       x: -66,
       y: -72,
     })
-    expect(resolveBgIllustrationCenter(layout, 500, {
-      positionMode: "bottom-center",
-      x: 50,
-      y: 100,
-      scale: 1,
-      rotation: 0,
-    })).toEqual({
+    expect(resolveBgIllustrationCenter(layout, 500, DEFAULT_BG_ILLUSTRATION_TRANSFORM)).toEqual({
       x: 50,
       y: 51.6,
     })
+  })
+
+  it("keeps default placement stable in narrow viewports", () => {
+    const narrowLayout = resolveBgIllustrationLayout(320, 568, 2)
+    const narrowCenter = resolveBgIllustrationCenter(
+      narrowLayout,
+      568,
+      DEFAULT_BG_ILLUSTRATION_TRANSFORM,
+    )
+    expect(narrowLayout.width).toBe(320)
+    expect(resolveBgIllustrationTranslation(
+      narrowLayout,
+      320,
+      568,
+      narrowCenter.x,
+      narrowCenter.y,
+    )).toEqual({ x: -48, y: -64 })
   })
 
   it("keeps weak edges only when they connect to a strong edge", () => {
