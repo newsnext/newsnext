@@ -11,6 +11,26 @@ describe("source loader result", () => {
     expect(validateSourceLoaderResult(result)).toEqual(result)
   })
 
+  it("limits loader results to the first 50 items", () => {
+    const items = Array.from({ length: 51 }, (_, index) => ({
+      title: `Item ${index + 1}`,
+      url: `https://example.com/${index + 1}`,
+    }))
+
+    expect(validateSourceLoaderResult({ items }).items).toEqual(items.slice(0, 50))
+  })
+
+  it("validates every item before limiting the result", () => {
+    const items = Array.from({ length: 51 }, (_, index) => ({
+      title: index === 50 ? "" : `Item ${index + 1}`,
+      url: `https://example.com/${index + 1}`,
+    }))
+
+    expect(() => validateSourceLoaderResult({ items })).toThrowError(
+      "items[50].title must be a non-empty string",
+    )
+  })
+
   it("rejects empty loader results", () => {
     expect(() => validateSourceLoaderResult({ items: [] })).toThrowError(
       "Invalid source loader result: No source items. Refresh to try again.",

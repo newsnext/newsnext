@@ -3,10 +3,16 @@ import { NEWS_ITEM_STAT_KEYS } from "@newsnext/shared/types"
 import { isSourcePresentationMetadataKey } from "../types"
 import { compileSourceTemplate } from "./template"
 
+const SOURCE_LOADER_RESULT_MAX_ITEMS = 50
+
 export function validateSourceLoaderResult(value: unknown): SourceLoaderResult {
   const normalized = normalizeSourceLoaderResult(value)
   assertSourceLoaderResult(normalized)
-  return normalized
+  if (normalized.items.length <= SOURCE_LOADER_RESULT_MAX_ITEMS) return normalized
+  return {
+    ...normalized,
+    items: normalized.items.slice(0, SOURCE_LOADER_RESULT_MAX_ITEMS),
+  }
 }
 
 function normalizeSourceLoaderResult(value: unknown): unknown {

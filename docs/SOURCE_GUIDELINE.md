@@ -718,6 +718,11 @@ A loader always returns a `SourceLoaderResult` object:
 }
 ```
 
+NewsNext validates the complete loader output, then keeps only its first 50
+items. This limit applies uniformly to structured, RSS, and custom loaders.
+Preserve the intended display order before returning so the most relevant 50
+items remain in the Instance result.
+
 Dynamic loader metadata always supports the complete source metadata shape:
 `title`, `badge`, `desc`, and `home`. It travels with the items through
 persistence and the in-memory Query cache and has the
@@ -1164,6 +1169,7 @@ Author-facing limits:
 | Header modifications | 5 per rule |
 | JMESPath expression | 2,000 characters |
 | HTML selected items | 2,000 per request |
+| Loader result | First 50 items |
 | Radar metadata selector | 500 characters |
 | Radar metadata attribute | 100 characters |
 | Radar page extraction | 20,000 characters |

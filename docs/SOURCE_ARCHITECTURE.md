@@ -620,7 +620,8 @@ object-shaped result contract; bare item arrays are not accepted. Every
 execution path, including the extension-backed CLI, rejects empty item arrays,
 malformed or unsupported semantic item fields, non-finite times and stats,
 invalid item templates, and unsupported or invalid response metadata before
-the result reaches a client, persistence, or the Query cache.
+keeping the first 50 items. Only that bounded result reaches URL normalization,
+clients, persistence, the Query cache, or History.
 
 `NewsItem` stores semantic facts: publication and update times, author,
 well-known stats, source-specific scalar attributes, semantic pictures, and
