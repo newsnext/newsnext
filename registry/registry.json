@@ -1092,6 +1092,7 @@
     }
   },
   "rss:feed": {
+    "version": 3,
     "metadata": {
       "title": "RSS Feed"
     },

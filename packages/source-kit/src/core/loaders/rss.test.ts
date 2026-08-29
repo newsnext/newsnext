@@ -201,6 +201,33 @@ describe("parseRss", () => {
     }])
   })
 
+  it("uses the feed home and guid when an RSS item has no link", () => {
+    expect(parseRss(`
+      <rss version="2.0">
+        <channel>
+          <link>https://example.com/news</link>
+          <item>
+            <title>Linkless flash</title>
+            <link />
+            <guid isPermaLink="false">flash:index:123</guid>
+          </item>
+          <item>
+            <title>Linkless item without a guid</title>
+          </item>
+        </channel>
+      </rss>
+    `)?.items).toEqual([
+      {
+        title: "Linkless flash",
+        url: "https://example.com/news#guid=flash%3Aindex%3A123",
+      },
+      {
+        title: "Linkless item without a guid",
+        url: "https://example.com/news",
+      },
+    ])
+  })
+
   it("extracts JSON Feed metadata, authors, and publication timestamps", () => {
     expect(parseRss(JSON.stringify({
       version: "https://jsonfeed.org/version/1.1",
@@ -264,7 +291,7 @@ describe("parseRss", () => {
     }])
   })
 
-  it("rejects unsupported JSON versions and filters invalid JSON Feed items", () => {
+  it("rejects unsupported JSON versions and uses the JSON Feed home as a fallback URL", () => {
     expect(parseRss(JSON.stringify({
       version: "https://jsonfeed.org/version/2",
       title: "Future feed",
@@ -274,14 +301,21 @@ describe("parseRss", () => {
     expect(parseRss(JSON.stringify({
       version: "https://jsonfeed.org/version/1.1",
       title: "Example feed",
+      home_page_url: "https://example.com/",
       items: [
-        { id: "urn:uuid:1", title: "No usable URL" },
+        { id: "urn:uuid:1", title: "No item URL" },
         { id: "2", url: "https://example.com/valid", summary: "Valid item" },
       ],
-    }))?.items).toEqual([{
-      title: "Valid item",
-      url: "https://example.com/valid",
-      content: { text: "Valid item" },
-    }])
+    }))?.items).toEqual([
+      {
+        title: "No item URL",
+        url: "https://example.com/#guid=urn%3Auuid%3A1",
+      },
+      {
+        title: "Valid item",
+        url: "https://example.com/valid",
+        content: { text: "Valid item" },
+      },
+    ])
   })
 })

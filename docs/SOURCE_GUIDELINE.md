@@ -665,8 +665,13 @@ semantic fields. Because JSON Feed item titles are optional, the loader derives
 a bounded title from `summary`, `content_text`, or `content_html` when needed.
 RSS and Atom text fields decode HTML character references once after XML
 parsing, including references preserved literally inside CDATA sections.
-Entries without a usable title or URL are ignored; an invalid date leaves the
-corresponding item time unset instead of failing the complete feed.
+When an RSS or Atom entry has no link, the loader uses the channel or feed home
+as its item URL and appends an available `guid` or `id` as `#guid=...` so the
+URL remains a stable item key. JSON Feed items similarly combine
+`home_page_url` with their required `id`. Without an identifier, the feed home
+is used unchanged. Entries without a usable title or either an item or feed
+home URL are ignored; an invalid date leaves the corresponding item time unset
+instead of failing the complete feed.
 
 Use a custom loader only when declarative loaders cannot express the source:
 

@@ -50,23 +50,28 @@ function parseXmlFeed(data: string): SourceLoaderOutput | undefined {
   if (Array.isArray(channel)) channel = channel[0]
   if (!isRecord(channel)) return
 
+  const home = readXmlFeedHome(channel.link)
   const itemInput = channel.item ?? channel.entry
   const parsedItems = (Array.isArray(itemInput) ? itemInput : itemInput ? [itemInput] : [])
     .filter(isRecord)
-    .map(parseXmlFeedItem)
+    .map(item => parseXmlFeedItem(item, home))
     .filter((item): item is NewsItemInput => item !== undefined)
 
   return createParsedFeed(parsedItems, {
     badge: readXmlImageUrl(channel.image),
     desc: readXmlOptionalText(channel.description ?? channel.subtitle),
-    home: readXmlFeedHome(channel.link),
+    home,
     title: readXmlOptionalText(channel.title),
   })
 }
 
-function parseXmlFeedItem(item: Record<string, unknown>): NewsItemInput | undefined {
+function parseXmlFeedItem(
+  item: Record<string, unknown>,
+  feedHome: string | undefined,
+): NewsItemInput | undefined {
   const title = readXmlText(item.title)
   const url = readXmlLink(item.link)
+    || createFeedHomeItemUrl(feedHome, readXmlText(item.guid ?? item.id))
   if (!title || !url) return
 
   return {
@@ -92,22 +97,27 @@ function parseJsonFeed(data: string): SourceLoaderOutput | undefined {
     return
   }
 
+  const home = readString(feed.home_page_url)
   const parsedItems = feed.items
     .filter(isRecord)
-    .map(parseJsonFeedItem)
+    .map(item => parseJsonFeedItem(item, home))
     .filter((item): item is NewsItemInput => item !== undefined)
 
   return createParsedFeed(parsedItems, {
     badge: readString(feed.icon) || readString(feed.favicon),
     desc: readString(feed.description),
-    home: readString(feed.home_page_url),
+    home,
     title,
   })
 }
 
-function parseJsonFeedItem(item: Record<string, unknown>): NewsItemInput | undefined {
+function parseJsonFeedItem(
+  item: Record<string, unknown>,
+  feedHome: string,
+): NewsItemInput | undefined {
   const title = readJsonFeedItemTitle(item)
   const url = readJsonFeedItemUrl(item)
+    || createFeedHomeItemUrl(feedHome, readString(item.id))
   if (!title || !url) return
 
   const authorInput = Array.isArray(item.authors)
@@ -154,6 +164,12 @@ function readJsonFeedItemUrl(item: Record<string, unknown>): string {
   } catch {
     return ""
   }
+}
+
+function createFeedHomeItemUrl(feedHome: string | undefined, identifier: string): string {
+  if (!feedHome || !identifier) return feedHome ?? ""
+  const baseUrl = feedHome.split("#", 1)[0]
+  return `${baseUrl}#guid=${encodeURIComponent(identifier)}`
 }
 
 function deriveTitle(value: string): string {
