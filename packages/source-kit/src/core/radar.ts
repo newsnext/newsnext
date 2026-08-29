@@ -2,9 +2,9 @@ import type {
   HtmlFieldConfig,
   SourceRadarRule,
 } from "../types"
-import { isSourcePresentationMetadataKey } from "../types"
+import { isSourcePresentationMetadataKey, isSourcePresentationType } from "../types"
 import { SOURCE_REGISTRY_LIMITS } from "./limits"
-import { compileSourceTemplate } from "./template"
+import { compileSourceTemplate, isTemplate } from "./template"
 
 export function validateRadarRules(
   rules: SourceRadarRule[] | undefined,
@@ -30,6 +30,9 @@ export function validateRadarRules(
       if (field === undefined) continue
       const fieldLocation = `${patchLocation}.metadata.${key}`
       if (typeof field === "string") {
+        if (key === "type" && !isTemplate(field) && !isSourcePresentationType(field)) {
+          throw new TypeError(`${fieldLocation} must be "list" or "ranking"`)
+        }
         compileSourceTemplate(field, {
           location: fieldLocation,
           slot: "radarMetadata",

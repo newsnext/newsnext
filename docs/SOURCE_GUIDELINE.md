@@ -196,12 +196,22 @@ the ID to `CATEGORY_IDS` in `packages/source-kit/src/types/source.ts`, document 
 matching rule and examples here, update affected providers, rebuild the
 registry, and run type-checking and tests.
 
-Do not declare a source presentation type. Loaders return items in their
-meaningful display order. The extension presents the result as a timeline only
-when every item has a finite `publishedAt` and those values are ordered from
-newest to oldest, or, when that check fails, every item has an equivalently
-ordered finite `updatedAt`. Otherwise it presents the result as a ranking. An
-empty loader result is rejected as a load error.
+Loaders return items in their meaningful display order. Leave `metadata.type`
+unset for ordinary chronological or unordered results. The extension presents
+the result as a timeline only when every item has a finite `publishedAt` and
+those values are ordered from newest to oldest, or, when that check fails,
+every item has an equivalently ordered finite `updatedAt`. Otherwise it
+presents the result as an unordered list. An empty loader result is rejected as
+a load error.
+
+Set `metadata.type: "ranking"` when positions express rank and should display
+ordinal numbers and movement between loads. Ranking explicitly preserves that
+presentation even when item timestamps happen to be newest-first. Set
+`metadata.type: "list"` only when a timestamped result must remain an unordered
+list, such as a playlist whose order is editorial rather than chronological.
+Structured loader metadata can resolve `type` dynamically when a parameter
+changes the ordering semantics. Valid values are `list` and `ranking`;
+timelines remain inferred from item times and order.
 
 JSON and HTML loaders preserve the selected item order by default. When a page
 groups chronological items instead of ordering them globally, opt into sorting
@@ -212,8 +222,9 @@ an item has no publication time:
 sortByTimestamp: true
 ```
 
-Items without either time remain last. Prefer upstream order for ranked or
-popularity-based results even when every item includes a time. Other
+Items without either time remain last. Preserve upstream order and declare
+`type: "ranking"` for ranked or popularity-based results even when every item
+includes a time. Other
 intentional ordering belongs in the upstream request, the JSON `items` JMESPath
 expression, or custom loader code.
 
@@ -221,7 +232,7 @@ The RSS loader preserves feed order and independently retains every parseable
 publication and update time. RSS and Atom map `published`, `pubDate`, or
 `created` to `publishedAt` and `updated` to `updatedAt`; JSON Feed maps
 `date_published` and `date_modified`. Feed order still determines whether the
-frontend treats the result as a ranking or timeline.
+frontend treats the result as a list or timeline.
 
 Write human-facing strings in the website's primary interface language. Keep
 brand names, IDs, parameter keys and values, and selectors unchanged.
@@ -1133,7 +1144,8 @@ Parse `scope.page.title` only when the value is unavailable from the top-level
 DOM, such as content rendered inside an iframe.
 
 Radar metadata can override source-owned presentation fields: `title`, `badge`,
-`desc`, and `home`. Radar metadata uses the same selector, traversal,
+`desc`, `home`, and `type`. A resolved `type` must be `list` or `ranking`.
+Radar metadata uses the same selector, traversal,
 extraction, and template behavior as HTML loader fields. Provider-owned `icon`
 and `color` are not valid Radar metadata fields.
 

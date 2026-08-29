@@ -224,8 +224,10 @@ export default {
   },
   sources: {
     "place-trends": {
+      version: 3,
       metadata: {
         title: "Trending",
+        type: "ranking",
       },
       params: {
         location: {

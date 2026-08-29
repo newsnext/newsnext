@@ -111,10 +111,11 @@ interface NewsItemSummaryProps {
   item: NewsItem
   itemTemplate?: SourceItemTemplate
   className?: string
+  inlineSuffix?: ReactNode
   markScale?: number
 }
 
-export function NewsItemSummary({ item, itemTemplate, className, markScale }: NewsItemSummaryProps) {
+export function NewsItemSummary({ item, itemTemplate, className, inlineSuffix, markScale }: NewsItemSummaryProps) {
   const inlineText = renderInlineTemplate(item, itemTemplate)
   return (
     <span className={cn("leading-none line-clamp-3", className)}>
@@ -128,7 +129,7 @@ export function NewsItemSummary({ item, itemTemplate, className, markScale }: Ne
       <span className="mr-1 text-base align-middle">
         {item.title}
       </span>
-      {(item.mark || inlineText || item.stats) && (
+      {(item.mark || inlineText || inlineSuffix || item.stats) && (
         <span className="inline-flex max-w-full items-center gap-1 align-middle leading-none">
           {item.mark && (
             <SemanticImage
@@ -136,9 +137,11 @@ export function NewsItemSummary({ item, itemTemplate, className, markScale }: Ne
               scale={markScale}
             />
           )}
-          {inlineText && (
+          {(inlineText || inlineSuffix) && (
             <span className="self-end inline-flex min-w-0 max-w-80 items-center truncate text-xs leading-none text-neutral-400/80">
               {inlineText}
+              {inlineText && inlineSuffix && <span className="mx-1">·</span>}
+              {inlineSuffix}
             </span>
           )}
           <NewsItemStats item={item} />

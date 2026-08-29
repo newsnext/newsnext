@@ -156,7 +156,11 @@ async function fetchJikeTopicFeed(
     context,
   )
   assertSuccessfulFeed(response, "Failed to load Jike topic feed.")
-  return { items: jikePostsToNewsItems(response.data ?? []), itemTemplate: JIKE_TOPIC_ITEM_TEMPLATE }
+  return {
+    items: jikePostsToNewsItems(response.data ?? []),
+    itemTemplate: JIKE_TOPIC_ITEM_TEMPLATE,
+    metadata: order === "hottest" ? { type: "ranking" } : undefined,
+  }
 }
 
 export async function fetchJikeSearch(
@@ -188,6 +192,7 @@ export async function fetchJikeSearch(
     metadata: {
       title: `${keyword} | ${JIKE_SEARCH_SORT_LABELS[sortBy]}`,
       home: `${JIKE_WEB_ORIGIN}/search?q=${encodeURIComponent(keyword)}`,
+      type: sortBy === "hot" ? "ranking" : undefined,
     },
   }
 }
@@ -332,6 +337,7 @@ export default {
       version: 3,
     },
     "search": {
+      version: 3,
       metadata: {
         title: "动态搜索",
         desc: "按最新或最热排序显示匹配关键词的即刻动态",
@@ -362,6 +368,7 @@ export default {
       },
     },
     "topic": {
+      version: 3,
       metadata: {
         title: "主题动态",
         desc: "指定即刻主题的动态",

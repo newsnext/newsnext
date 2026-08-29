@@ -10,8 +10,10 @@
   },
   "sources": {
     "trending": {
+      "version": 3,
       "metadata": {
-        "title": "Trending"
+        "title": "Trending",
+        "type": "ranking"
       },
       "params": {
         "language": {

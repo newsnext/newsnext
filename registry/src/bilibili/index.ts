@@ -19,8 +19,10 @@ export default {
   sources: {
     ...upSources,
     "hotword": {
+      version: 3,
       metadata: {
         title: "热搜",
+        type: "ranking",
       },
       loader: {
         type: "json",

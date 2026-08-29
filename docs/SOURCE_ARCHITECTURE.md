@@ -331,9 +331,11 @@ The schema normalizes retained values into `history_datasets`,
 `history_revisions`, and ordered `history_observation_items`. A revision UUID is
 derived from provider ID, exact URL, and canonical item JSON, so Sources and
 parameter sets under the same provider reuse unchanged item values. Observation
-position remains dataset-specific and one-based. Timeline versus ranking
-semantics are inferred from the normalized item order using the same timestamp
-rule as presentation code.
+position remains dataset-specific and one-based. Observation kinds use the
+same presentation semantics as the extension: an effective declared `ranking`
+or `list` wins, otherwise descending timestamps infer `timeline` and remaining
+results become `list`. Loader metadata overrides static Source metadata. History
+reports position movement only when both compared observations are rankings.
 
 The daemon owns one Turso engine and one mutex-protected write connection.
 Schema initialization runs before IPC begins accepting clients. Retention uses an immediate
@@ -542,16 +544,20 @@ loaders must not issue profile, community, channel, batch, or other companion
 requests only to enrich metadata. If the required item requests do not expose a
 field, authoring falls back to static or page-derived Radar metadata instead.
 
-The background and source runtime do not send a declared LiveCard type. They
-preserve loader output order through persistence, Query caching, and transport. JSON and
+The background and source runtime preserve the optional Source presentation
+type together with effective metadata and preserve loader output order through
+persistence, Query caching, and transport. JSON and
 HTML loaders may first apply their shared optional `sortByTimestamp` step after
 field normalization; it orders items by `publishedAt`, falling back to
 `updatedAt`, and keeps items without either time last. The frontend renders a
-timeline when the non-empty result has finite, monotonically
+declared `ranking` with ordinal positions and rank movement, and a declared
+`list` as an unordered list with available item times in inline metadata. With
+no declared type, it renders a timeline when
+the non-empty result has finite, monotonically
 non-increasing `publishedAt` values on every item. If that check fails, it
 applies the same test to `updatedAt`. A result is a timeline when either
 complete field passes.
-All other non-empty results render as a ranking. Empty results fail before
+All other non-empty results render as an unordered list. Empty results fail before
 persistence, Query caching, or presentation. A provider may deliberately sort inside a request,
 JMESPath selection, structured loader configuration, or custom loader when
 chronological order is the correct source behavior.

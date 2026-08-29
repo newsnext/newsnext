@@ -91,8 +91,10 @@
   },
   "sources": {
     "top": {
+      "version": 3,
       "metadata": {
-        "title": "Hottest"
+        "title": "Hottest",
+        "type": "ranking"
       }
     },
     "newest": {
@@ -105,18 +107,22 @@
       }
     },
     "show": {
+      "version": 3,
       "metadata": {
         "title": "Show",
-        "home": "/show"
+        "home": "/show",
+        "type": "ranking"
       },
       "loader": {
         "url": "/show"
       }
     },
     "ask": {
+      "version": 3,
       "metadata": {
         "title": "Ask",
-        "home": "/ask"
+        "home": "/ask",
+        "type": "ranking"
       },
       "loader": {
         "url": "/ask"

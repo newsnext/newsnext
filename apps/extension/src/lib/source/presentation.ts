@@ -1,4 +1,10 @@
+import type { SourcePresentationType } from "@newsnext/source-kit/types"
 import type { NewsItem } from "@/typings/source"
+
+export type NewsItemsPresentation
+  = | { type: "list" }
+    | { type: "ranking" }
+    | { type: "timeline", times: number[] }
 
 export function getNewsItemTime(item: NewsItem): number | undefined {
   return item.publishedAt ?? item.updatedAt
@@ -31,6 +37,12 @@ export function getTimelineItemTimes(items: readonly NewsItem[]): number[] | und
     ?? getDescendingItemTimes(items, "updatedAt")
 }
 
-export function isTimelineItems(items: readonly NewsItem[]): boolean {
-  return getTimelineItemTimes(items) !== undefined
+export function getNewsItemsPresentation(
+  items: readonly NewsItem[],
+  declaredType?: SourcePresentationType,
+): NewsItemsPresentation {
+  if (declaredType) return { type: declaredType }
+
+  const times = getTimelineItemTimes(items)
+  return times ? { type: "timeline", times } : { type: "list" }
 }

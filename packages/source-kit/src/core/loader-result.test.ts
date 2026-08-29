@@ -1,3 +1,4 @@
+import type { SourceLoaderResult } from "../types"
 import { describe, expect, it } from "vitest"
 import { validateSourceLoaderResult } from "./loader-result"
 
@@ -116,5 +117,12 @@ describe("source loader result", () => {
       items: [{ title: "Example", url: "https://example.com" }],
       metadata: { title: "" },
     })).toThrowError("metadata.title must be a non-empty string")
+
+    expect(() => validateSourceLoaderResult({
+      items: [{ title: "Example", url: "https://example.com" }],
+      metadata: { type: "timeline" },
+    } as unknown as SourceLoaderResult)).toThrowError(
+      "metadata.type must be \"list\" or \"ranking\"",
+    )
   })
 })

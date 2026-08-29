@@ -184,6 +184,7 @@ async function fetchBilibiliFavorites(
     metadata: {
       title: `${folderInfo?.title ?? "收藏夹"} | ${BILIBILI_FAVORITE_ORDER_LABELS[order]}`,
       badge: folderInfo?.cover ? normalizeBilibiliUrl(folderInfo.cover) : undefined,
+      type: order === "view" ? "ranking" : undefined,
       home: ownerId
         ? `https://space.bilibili.com/${ownerId}/favlist?fid=${mediaId}&ftype=create`
         : undefined,
@@ -227,6 +228,7 @@ async function fetchBilibiliSeries(
 
 export const favoriteSources = {
   favorites: {
+    version: 3,
     metadata: {
       title: "收藏 | 最近收藏",
       desc: "收藏夹中的视频",

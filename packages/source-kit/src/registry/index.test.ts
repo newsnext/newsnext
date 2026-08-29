@@ -625,28 +625,37 @@ describe("source template vars", () => {
     expect(() => resolveTestSource(createSourceConfig(radar))).not.toThrow()
   })
 
-  it("rejects declared source presentation types", () => {
+  it.each(["list", "ranking"] as const)("allows the %s presentation type", (type) => {
     expect(() => resolveTestSource({
       ...createSourceConfig([]),
-      metadata: {
-        type: "timeline",
-      },
-    } as unknown as SourceConfig)).toThrow(
-      "test:test.metadata.type is not supported",
-    )
+      metadata: { type },
+    })).not.toThrow()
 
     expect(() => resolveTestSource(createSourceConfig([
       {
         id: "test",
         match: { hosts: ["example.com"] },
         patch: {
-          metadata: {
-            type: "ranking",
-          },
+          metadata: { type },
         },
       },
-    ] as unknown as SourceRadarRule[]))).toThrow(
-      "test:test.radar.0.patch.metadata.type is not supported",
+    ] satisfies SourceRadarRule[]))).not.toThrow()
+  })
+
+  it("rejects an unsupported source presentation type", () => {
+    expect(() => resolveTestSource({
+      ...createSourceConfig([]),
+      metadata: { type: "timeline" },
+    } as unknown as SourceConfig)).toThrow(
+      "test:test.metadata.type must be \"list\" or \"ranking\"",
+    )
+
+    expect(() => resolveTestSource(createSourceConfig([{
+      id: "test",
+      match: { hosts: ["example.com"] },
+      patch: { metadata: { type: "timeline" } },
+    }] as unknown as SourceRadarRule[]))).toThrow(
+      "test:test.radar.0.patch.metadata.type must be \"list\" or \"ranking\"",
     )
   })
 

@@ -10,8 +10,10 @@
   },
   "sources": {
     "hot-topic": {
+      "version": 3,
       "metadata": {
-        "title": "热议"
+        "title": "热议",
+        "type": "ranking"
       },
       "loader": {
         "type": "json",

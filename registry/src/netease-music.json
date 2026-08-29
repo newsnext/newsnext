@@ -88,8 +88,10 @@
       }
     },
     "ranking": {
+      "version": 4,
       "metadata": {
-        "title": "排行榜"
+        "title": "排行榜",
+        "type": "ranking"
       },
       "params": {
         "id": {

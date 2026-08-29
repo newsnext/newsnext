@@ -8,7 +8,7 @@ import { useMemo, useState } from "react"
 import { useSourceIcon } from "@/hooks/use-source-icon"
 import { useSourceMarkScales } from "@/hooks/use-source-mark-scales"
 import { RelativeTime } from "@/hooks/useRelativeTime"
-import { getHostPermissionOrigins, getTimelineItemTimes } from "@/lib/source"
+import { getHostPermissionOrigins, getNewsItemsPresentation } from "@/lib/source"
 import { cn } from "@/lib/utils"
 import {
   PhArrowCounterClockwiseDuotone,
@@ -27,6 +27,7 @@ import { LiveCardSurface } from "./card-surface"
 import { Ranking } from "./ranking"
 import { SourcePermissionDetails } from "./source-permission-details"
 import { Timeline } from "./timeline"
+import { UnorderedList } from "./unordered-list"
 
 interface LiveCardFrontProps {
   source: LiveCardViewModel
@@ -69,6 +70,7 @@ interface LiveCardFrontContentProps {
   itemTemplate?: SourceItemTemplate
   markScale?: number
   provider: LiveCardViewModel["provider"]
+  presentationType?: LiveCardViewModel["metadata"]["type"]
   scrollElement: HTMLDivElement | null
   sourceErrorMessage?: string
   sourceLoginUrl?: string
@@ -83,6 +85,7 @@ function LiveCardFrontContent({
   itemTemplate,
   markScale,
   provider,
+  presentationType,
   scrollElement,
   sourceErrorMessage,
   sourceLoginUrl,
@@ -120,10 +123,21 @@ function LiveCardFrontContent({
     )
   }
 
-  const timelineTimes = getTimelineItemTimes(items)
-  if (!timelineTimes) {
+  const presentation = getNewsItemsPresentation(items, presentationType)
+  if (presentation.type === "ranking") {
     return (
       <Ranking
+        items={items}
+        itemTemplate={itemTemplate}
+        markScale={markScale}
+        scrollElement={scrollElement}
+      />
+    )
+  }
+
+  if (presentation.type === "list") {
+    return (
+      <UnorderedList
         items={items}
         itemTemplate={itemTemplate}
         markScale={markScale}
@@ -138,7 +152,7 @@ function LiveCardFrontContent({
       itemTemplate={itemTemplate}
       markScale={markScale}
       scrollElement={scrollElement}
-      times={timelineTimes}
+      times={presentation.times}
     />
   )
 }
@@ -236,6 +250,7 @@ export function LiveCardFront({
                 itemTemplate={itemTemplate}
                 markScale={markScale}
                 provider={provider}
+                presentationType={source.metadata.type}
                 scrollElement={scrollElement}
                 sourceErrorMessage={visibleSourceErrorMessage}
                 sourceLoginUrl={sourceLoginUrl}

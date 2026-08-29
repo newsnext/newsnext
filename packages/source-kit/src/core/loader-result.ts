@@ -1,6 +1,6 @@
 import type { SourceLoaderResult } from "../types"
 import { NEWS_ITEM_STAT_KEYS } from "@newsnext/shared/types"
-import { isSourcePresentationMetadataKey } from "../types"
+import { isSourcePresentationMetadataKey, isSourcePresentationType } from "../types"
 import { compileSourceTemplate } from "./template"
 
 const SOURCE_LOADER_RESULT_MAX_ITEMS = 50
@@ -163,6 +163,12 @@ function assertSourceLoaderMetadata(value: unknown): void {
   for (const [key, metadataValue] of Object.entries(value)) {
     if (!isSourcePresentationMetadataKey(key)) {
       throwInvalidLoaderResult(`metadata.${key} is not supported`)
+    }
+    if (key === "type") {
+      if (!isSourcePresentationType(metadataValue)) {
+        throwInvalidLoaderResult("metadata.type must be \"list\" or \"ranking\"")
+      }
+      continue
     }
     assertNonEmptyString(metadataValue, `metadata.${key}`)
   }

@@ -206,6 +206,7 @@ async function fetchBilibiliRanking(
 export const rankingSource = {
   metadata: {
     title: "排行榜",
+    type: "ranking",
   },
   params: {
     region: {
@@ -236,5 +237,5 @@ export const rankingSource = {
     load: fetchBilibiliRanking,
   },
   capabilities: bilibiliApiCapabilities,
-  version: 3,
+  version: 4,
 } satisfies ProviderSourceConfig

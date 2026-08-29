@@ -187,6 +187,7 @@ async function fetchBilibiliSearch(
     metadata: {
       title: `${keyword} | ${BILIBILI_SEARCH_ORDER_LABELS[order]}`,
       home: `https://search.bilibili.com/video?${homeParams}`,
+      type: order === "pubdate" ? undefined : "ranking",
     },
   }
 }
@@ -205,6 +206,7 @@ function readSearchDateRange(): BilibiliSearchDate | undefined {
 }
 
 export const searchSource = {
+  version: 3,
   metadata: {
     title: "视频搜索 | 最新发布",
     desc: "按关键词搜索哔哩哔哩视频",

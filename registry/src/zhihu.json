@@ -10,8 +10,10 @@
   },
   "sources": {
     "hot-list": {
+      "version": 3,
       "metadata": {
-        "title": "热榜"
+        "title": "热榜",
+        "type": "ranking"
       },
       "loader": {
         "type": "json",

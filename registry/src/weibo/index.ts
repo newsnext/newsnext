@@ -70,6 +70,7 @@ export default {
     "hot-search": {
       metadata: {
         title: "热搜",
+        type: "ranking",
       },
       vars: {
         endpoint: {
@@ -137,7 +138,7 @@ export default {
           },
         },
       },
-      version: 5,
+      version: 6,
     },
     "user": {
       metadata: {

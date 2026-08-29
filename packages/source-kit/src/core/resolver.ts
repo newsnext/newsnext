@@ -18,7 +18,7 @@ import type { HtmlLoaderOptions } from "./loaders/html"
 import type { JsonLoaderOptions } from "./loaders/json"
 
 import { createDefu } from "defu"
-import { isSourcePresentationMetadataKey } from "../types"
+import { isSourcePresentationMetadataKey, isSourcePresentationType } from "../types"
 import {
   parseSourceBaseUrl,
   resolveSourceLoaderResultUrls,
@@ -167,6 +167,9 @@ function validateSourceMetadata(
   for (const [key, value] of Object.entries(metadata ?? {})) {
     if (!isSourcePresentationMetadataKey(key)) {
       throw new TypeError(`${location}.${key} is not supported`)
+    }
+    if (key === "type" && !isSourcePresentationType(value)) {
+      throw new TypeError(`${location}.type must be "list" or "ranking"`)
     }
     if (typeof value === "string" && isTemplate(value)) {
       throw new TypeError(

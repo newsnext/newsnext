@@ -226,9 +226,11 @@
       }
     },
     "hot-list": {
+      "version": 3,
       "metadata": {
         "title": "人气榜",
-        "home": "/hot-list/catalog"
+        "home": "/hot-list/catalog",
+        "type": "ranking"
       },
       "radar": [
         {

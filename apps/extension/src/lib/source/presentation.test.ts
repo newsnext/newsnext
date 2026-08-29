@@ -1,6 +1,6 @@
 import type { NewsItem } from "@/typings/source"
 import { describe, expect, it } from "vitest"
-import { getTimelineItemTimes, isTimelineItems } from "./presentation"
+import { getNewsItemsPresentation, getTimelineItemTimes } from "./presentation"
 
 function createItem({ publishedAt, updatedAt }: {
   publishedAt?: number
@@ -14,18 +14,18 @@ function createItem({ publishedAt, updatedAt }: {
   }
 }
 
-describe("isTimelineItems", () => {
+describe("getTimelineItemTimes", () => {
   it("identifies items ordered from newest to oldest as a timeline", () => {
-    expect(isTimelineItems([
+    expect(getTimelineItemTimes([
       createItem({ publishedAt: 3 }),
       createItem({ publishedAt: 2 }),
       createItem({ publishedAt: 2 }),
       createItem({ publishedAt: 1 }),
-    ])).toBe(true)
+    ])).toEqual([3, 2, 2, 1])
   })
 
   it("identifies a single timestamped item as a timeline", () => {
-    expect(isTimelineItems([createItem({ updatedAt: 1 })])).toBe(true)
+    expect(getTimelineItemTimes([createItem({ updatedAt: 1 })])).toEqual([1])
   })
 
   it("uses publication order even when update times are not newest first", () => {
@@ -58,7 +58,21 @@ describe("isTimelineItems", () => {
       createItem({ publishedAt: 2, updatedAt: 3 }),
     ]],
     ["items with a non-finite timestamp", [createItem({ publishedAt: Number.NaN })]],
-  ])("identifies %s as a ranking", (_description, items) => {
-    expect(isTimelineItems(items)).toBe(false)
+  ])("does not return timeline times for %s", (_description, items) => {
+    expect(getTimelineItemTimes(items)).toBeUndefined()
+  })
+})
+
+describe("getNewsItemsPresentation", () => {
+  it("uses an inferred timeline only when no type is declared", () => {
+    const items = [createItem({ publishedAt: 2 }), createItem({ publishedAt: 1 })]
+
+    expect(getNewsItemsPresentation(items)).toEqual({ type: "timeline", times: [2, 1] })
+    expect(getNewsItemsPresentation(items, "ranking")).toEqual({ type: "ranking" })
+    expect(getNewsItemsPresentation(items, "list")).toEqual({ type: "list" })
+  })
+
+  it("uses an unordered list for non-chronological items by default", () => {
+    expect(getNewsItemsPresentation([createItem()])).toEqual({ type: "list" })
   })
 })

@@ -13,8 +13,10 @@
     },
     "metadata": {
       "home": "/hot-list/catalog",
-      "title": "人气榜"
+      "title": "人气榜",
+      "type": "ranking"
     },
+    "version": 3,
     "radar": [
       {
         "id": "36kr-hot-list",
@@ -350,8 +352,10 @@
     "baseUrl": "https://github.com/",
     "metadata": {
       "home": "/trending",
-      "title": "Trending"
+      "title": "Trending",
+      "type": "ranking"
     },
+    "version": 3,
     "params": {
       "language": {
         "type": "text",
@@ -526,8 +530,10 @@
     },
     "metadata": {
       "home": "/ask",
-      "title": "Ask"
+      "title": "Ask",
+      "type": "ranking"
     },
+    "version": 3,
     "provider": {
       "title": "Hacker News",
       "category": "forum",
@@ -716,8 +722,10 @@
     },
     "metadata": {
       "home": "/show",
-      "title": "Show"
+      "title": "Show",
+      "type": "ranking"
     },
+    "version": 3,
     "provider": {
       "title": "Hacker News",
       "category": "forum",
@@ -811,8 +819,10 @@
     },
     "metadata": {
       "home": "/",
-      "title": "Hottest"
+      "title": "Hottest",
+      "type": "ranking"
     },
+    "version": 3,
     "provider": {
       "title": "Hacker News",
       "category": "forum",
@@ -908,10 +918,11 @@
   },
   "netease-music:ranking": {
     "baseUrl": "https://music.163.com/",
-    "version": 3,
+    "version": 4,
     "metadata": {
       "home": "/",
-      "title": "排行榜"
+      "title": "排行榜",
+      "type": "ranking"
     },
     "loader": {
       "type": "json",
@@ -1213,8 +1224,10 @@
     "baseUrl": "https://tieba.baidu.com/",
     "metadata": {
       "home": "/",
-      "title": "热议"
+      "title": "热议",
+      "type": "ranking"
     },
+    "version": 3,
     "loader": {
       "type": "json",
       "url": "/hottopic/browse/topicList",
@@ -1270,8 +1283,10 @@
     "baseUrl": "https://www.zhihu.com/",
     "metadata": {
       "home": "/",
-      "title": "热榜"
+      "title": "热榜",
+      "type": "ranking"
     },
+    "version": 3,
     "loader": {
       "type": "json",
       "url": "/api/v3/feed/topstory/hot-list-web?limit=50&desktop=true",

@@ -91,6 +91,16 @@ export interface SourcePresentationMetadata {
   badge?: string
   desc?: string
   home?: string
+  type?: SourcePresentationType
+}
+
+export const SOURCE_PRESENTATION_TYPES = ["list", "ranking"] as const
+export type SourcePresentationType = typeof SOURCE_PRESENTATION_TYPES[number]
+
+const SOURCE_PRESENTATION_TYPE_SET: ReadonlySet<string> = new Set(SOURCE_PRESENTATION_TYPES)
+
+export function isSourcePresentationType(value: unknown): value is SourcePresentationType {
+  return typeof value === "string" && SOURCE_PRESENTATION_TYPE_SET.has(value)
 }
 
 export interface SourceItemTemplate {
@@ -124,6 +134,7 @@ export const SOURCE_PRESENTATION_METADATA_KEYS = [
   "badge",
   "desc",
   "home",
+  "type",
 ] as const satisfies readonly (keyof SourcePresentationMetadata)[]
 
 const SOURCE_PRESENTATION_METADATA_KEY_SET: ReadonlySet<string> = new Set(

@@ -246,6 +246,14 @@ business-specific branch to the shell.
 The reference implementation is `LiveCardSurface` in
 `apps/extension/src/components/live-card/card-surface.tsx`.
 
+LiveCard item markers communicate ordering semantics. Timelines use the shared
+rail and grouped relative-time labels. Rankings use numbered circular markers
+and may briefly show movement after a refresh. Unordered lists use a quiet dot
+in the same marker column, show available item times as muted inline metadata,
+and never show rank movement. Keep the marker column width stable across these
+presentations so item summaries do not shift when a Source changes its
+effective presentation.
+
 ### Next Layer Widget surfaces
 
 Next Layer uses a responsive GridStack presentation adapter for movable and

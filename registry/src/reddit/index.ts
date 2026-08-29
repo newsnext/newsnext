@@ -119,6 +119,7 @@ async function fetchSubredditListing(
   const displayName = community?.display_name ?? subreddit
   const badge = community?.community_icon || community?.icon_img
   const metadata: SourcePresentationMetadata = { title: `r/${displayName}` }
+  if (sort !== "new") metadata.type = "ranking"
   if (community?.public_description) metadata.desc = community.public_description
   if (badge) metadata.badge = badge
   return {
@@ -232,6 +233,7 @@ export default {
       },
     },
     "subreddit": {
+      version: 3,
       metadata: {
         title: "Subreddit",
         desc: "Posts in a Subreddit",
@@ -251,6 +253,7 @@ export default {
       },
     },
     "subreddit-top": {
+      version: 3,
       metadata: {
         title: "Subreddit Top",
         desc: "Top posts in a Subreddit",

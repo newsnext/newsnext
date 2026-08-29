@@ -33,7 +33,7 @@ export {
   hasSourcePermission,
   requestSourcePermission,
 } from "./permissions"
-export { getTimelineItemTimes, isTimelineItems } from "./presentation"
+export { getNewsItemsPresentation, getNewsItemTime, getTimelineItemTimes } from "./presentation"
 export {
   isSourceRequestProtected,
   MANUAL_REQUEST_MINIMUM_FEEDBACK_MS,
