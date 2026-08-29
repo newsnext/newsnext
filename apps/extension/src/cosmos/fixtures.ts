@@ -99,7 +99,7 @@ export const COSMOS_FIXTURES = [
     path: "src/cosmos/LiveCards.fixture.tsx",
     rendererFixture: {
       type: "multi" as const,
-      fixtureNames: ["Overview", "Ranking", "Timeline", "Loading", "Permission", "Error", "Editable"] as string[],
+      fixtureNames: ["Overview", "List", "Ranking", "Timeline", "Loading", "Permission", "Error", "Editable"] as string[],
     },
     load: () => import("@/cosmos/live-cards/index.fixture"),
   },

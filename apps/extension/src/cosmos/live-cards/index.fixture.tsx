@@ -93,6 +93,14 @@ const TIMELINE_ITEMS: NewsItem[] = RANKING_ITEMS.map((item, index) => ({
   publishedAt: Date.now() - index * 48 * 60 * 1000,
 }))
 
+const RANKING_SOURCE: LiveCardViewModel = {
+  ...SAMPLE_SOURCE,
+  metadata: {
+    ...SAMPLE_SOURCE.metadata,
+    type: "ranking",
+  },
+}
+
 function createColorSource(color: Color): LiveCardViewModel {
   const label = `${color.charAt(0).toUpperCase()}${color.slice(1)}`
   return {
@@ -135,6 +143,7 @@ function LiveCardStage({ children }: React.PropsWithChildren) {
 
 interface FrontFixtureProps {
   items?: NewsItem[]
+  source?: LiveCardViewModel
   isFetching?: boolean
   isContentFetching?: boolean
   sourceErrorMessage?: string
@@ -143,6 +152,7 @@ interface FrontFixtureProps {
 
 function FrontFixture({
   items = RANKING_ITEMS,
+  source = SAMPLE_SOURCE,
   isFetching = false,
   isContentFetching = false,
   sourceErrorMessage,
@@ -153,7 +163,7 @@ function FrontFixture({
   return (
     <LiveCardStage>
       <LiveCardFront
-        source={SAMPLE_SOURCE}
+        source={source}
         items={items}
         isFetching={isFetching}
         isContentFetching={isContentFetching}
@@ -208,6 +218,10 @@ function LiveCardBackFixture() {
 }
 
 function RankingCardFixture() {
+  return <FrontFixture source={RANKING_SOURCE} />
+}
+
+function ListCardFixture() {
   return <FrontFixture />
 }
 
@@ -260,6 +274,7 @@ function ErrorCardFixture() {
 
 export default {
   Overview: AllCardColorsFixture,
+  List: ListCardFixture,
   Ranking: RankingCardFixture,
   Timeline: TimelineCardFixture,
   Loading: LoadingCardFixture,
