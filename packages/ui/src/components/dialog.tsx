@@ -44,18 +44,20 @@ function DialogOverlay({
 function DialogContent({
   className,
   children,
+  overlayClassName,
   radius = "3xl",
   surfaceClassName,
   variant = "default",
   ...props
 }: DialogPrimitive.Popup.Props & {
   radius?: SquircleRadius | number
+  overlayClassName?: string
   surfaceClassName?: string
-  variant?: "default" | "themed"
+  variant?: "bare" | "default" | "themed"
 }) {
   return (
     <DialogPortal>
-      <DialogOverlay />
+      <DialogOverlay className={overlayClassName} />
       <DialogPrimitive.Popup
         data-slot="dialog-content"
         render={(
@@ -70,7 +72,7 @@ function DialogContent({
       >
         <SquircleBox
           radius={radius}
-          variant="modal-shell"
+          variant={variant === "bare" ? "default" : "modal-shell"}
           data-dialog-variant={variant}
           className={cn(
             "relative grid size-full",

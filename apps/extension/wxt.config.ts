@@ -20,6 +20,7 @@ const REQUIRED_PERMISSIONS = [
   "storage",
 ] as const
 const WIDGET_SERVER_ORIGIN = "http://127.0.0.1/*"
+const RSSHUB_RADAR_CHROMIUM_ID = "kefjpfngnndepjbopdmoebkipbgkggaa"
 const manifestVersion = packageJson.version.split("-", 1)[0]
 
 // See https://wxt.dev/api/config.html
@@ -120,6 +121,12 @@ export default defineConfig({
         default_popup: "radar-popup.html",
         default_title: "NewsNext",
       },
+      web_accessible_resources: browser === "firefox"
+        ? undefined
+        : [{
+            resources: ["app.html"],
+            extension_ids: [RSSHUB_RADAR_CHROMIUM_ID],
+          }],
       browser_specific_settings: browser === "firefox"
         ? {
             gecko: {

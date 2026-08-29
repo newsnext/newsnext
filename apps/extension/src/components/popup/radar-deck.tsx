@@ -9,7 +9,7 @@ import { useAtomValue, useSetAtom } from "jotai"
 import { animate, motion, useDragControls, useMotionValue, useReducedMotion, useTransform } from "motion/react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { BoardMembershipSelect } from "@/components/common/board-membership-select"
-import { PhArrowCircleLeft, PhPlusCircle } from "@/components/icons/ph"
+import { PhArrowCircleLeft, PhCircleDashed, PhPlusCircle } from "@/components/icons/ph"
 import { LiveCard } from "@/components/live-card"
 import { useAsyncAction } from "@/hooks/use-async-action"
 import { createRadarLiveCard } from "@/lib/radar"
@@ -26,7 +26,6 @@ const RADAR_CARD_ROTATE_OUTPUT = [-7, 0, 7]
 const RADAR_CARD_Y_OUTPUT = [20, 0, 20]
 const RADAR_CELEBRATION_DURATION = 900
 const RADAR_DECK_NAV_BUTTON_CLASS_NAME = "border-0 text-xl opacity-50 enabled:hover:opacity-85 enabled:active:not-aria-[haspopup]:translate-y-0"
-const RADAR_REDUCED_MOTION_CELEBRATION_DURATION = 180
 const RADAR_CONFETTI_COLORS: Record<LiveCardViewModel["provider"]["color"], string> = {
   red: "#f87171",
   pink: "#f472b6",
@@ -159,14 +158,23 @@ function RadarTrackCard({
 }
 
 interface RadarDeckProps {
+  layout?: "dialog" | "popup"
+  onCreationStart?: () => void
+  onCreated?: () => void
   suggestions: ResolvedRadarSuggestion[]
 }
 
 interface RadarDeckContentProps extends RadarDeckProps {
   initialBoardId?: string
+  layout: "dialog" | "popup"
 }
 
-export function RadarDeck({ suggestions }: RadarDeckProps) {
+export function RadarDeck({
+  layout = "popup",
+  onCreated,
+  onCreationStart,
+  suggestions,
+}: RadarDeckProps) {
   const boards = useAtomValue(boardsAtom)
   const currentBoardId = useAtomValue(currentBoardIdAtom)
   const initialBoardId = boards.find(board => board.id === currentBoardId)?.id
@@ -175,13 +183,23 @@ export function RadarDeck({ suggestions }: RadarDeckProps) {
   return (
     <RadarDeckContent
       key={deckKey}
+      layout={layout}
       initialBoardId={initialBoardId}
+      onCreated={onCreated}
+      onCreationStart={onCreationStart}
       suggestions={suggestions}
     />
   )
 }
 
-function RadarDeckContent({ initialBoardId, suggestions }: RadarDeckContentProps) {
+function RadarDeckContent({
+  initialBoardId,
+  layout,
+  onCreated,
+  onCreationStart,
+  suggestions,
+}: RadarDeckContentProps) {
+  const isDialog = layout === "dialog"
   const addInstance = useSetAtom(addInstanceAtom)
   const [targetBoardIds, setTargetBoardIds] = useState<string[]>(
     initialBoardId ? [initialBoardId] : [],
@@ -201,18 +219,24 @@ function RadarDeckContent({ initialBoardId, suggestions }: RadarDeckContentProps
   const x = useMotionValue(0)
   const prefersReducedMotion = useReducedMotion() ?? false
 
+  const finishCreation = useCallback(() => {
+    if (onCreated) {
+      onCreated()
+    } else {
+      window.close()
+    }
+  }, [onCreated])
+
   useEffect(() => {
-    if (!isCreated) {
+    if (!isCreated) return
+    if (prefersReducedMotion) {
+      finishCreation()
       return
     }
 
-    const duration = prefersReducedMotion
-      ? RADAR_REDUCED_MOTION_CELEBRATION_DURATION
-      : RADAR_CELEBRATION_DURATION
-    const timeout = window.setTimeout(() => window.close(), duration)
-
+    const timeout = window.setTimeout(finishCreation, RADAR_CELEBRATION_DURATION)
     return () => window.clearTimeout(timeout)
-  }, [isCreated, prefersReducedMotion])
+  }, [finishCreation, isCreated, prefersReducedMotion])
 
   useEffect(() => {
     const targetX = getRadarTrackX(activeIndex, trackItemOffset)
@@ -257,7 +281,7 @@ function RadarDeckContent({ initialBoardId, suggestions }: RadarDeckContentProps
   const activeLiveCard = radarLiveCards[activeIndex]?.liveCard ?? null
   const canGoPrevious = activeIndex > 0
   const canGoNext = activeIndex < suggestions.length - 1
-  const canDragDeck = hasMeasuredDeck && suggestions.length > 0
+  const canDragDeck = hasMeasuredDeck && suggestions.length > 1
 
   const moveDeck = useCallback((direction: number) => {
     setActiveIndex(prev => Math.min(Math.max(prev + direction, 0), suggestions.length - 1))
@@ -314,10 +338,14 @@ function RadarDeckContent({ initialBoardId, suggestions }: RadarDeckContentProps
           draftPatches[activeSuggestion.id] ?? {},
         ),
       })
-      launchRadarConfetti({ color: activeLiveCard.provider.color, originElement: actionRef.current })
+      onCreationStart?.()
       setIsCreated(true)
+      launchRadarConfetti({
+        color: activeLiveCard.provider.color,
+        originElement: actionRef.current,
+      })
     })
-  }, [activeLiveCard, activeSuggestion, addInstance, draftPatches, isCreated, runCreate, targetBoardIds])
+  }, [activeLiveCard, activeSuggestion, addInstance, draftPatches, isCreated, onCreationStart, runCreate, targetBoardIds])
 
   const handleActiveDraftSourceChange = useCallback((patch: InstancePatch) => {
     if (!activeSuggestion) {
@@ -344,18 +372,18 @@ function RadarDeckContent({ initialBoardId, suggestions }: RadarDeckContentProps
   const radarActionStyle = getRadarActionStyle(activeLiveCard.provider.color)
 
   return (
-    <motion.section
-      className="relative space-y-3"
+    <section
+      className={cn("relative", isDialog ? "space-y-2" : "space-y-3")}
       aria-label="Radar suggestions"
-      animate={isCreated && !prefersReducedMotion
-        ? { scale: [1, 1.008, 0.985], opacity: [1, 1, 0] }
-        : undefined}
-      transition={isCreated && !prefersReducedMotion
-        ? { duration: RADAR_CELEBRATION_DURATION / 1000, times: [0, 0.7, 1], ease: "easeInOut" }
-        : undefined}
     >
-      <div className="flex justify-center overflow-hidden">
-        <div ref={setDeckNode} className="w-full max-w-100 overflow-hidden">
+      <div className={cn("flex justify-center", isDialog ? "overflow-visible" : "overflow-hidden")}>
+        <div
+          ref={setDeckNode}
+          className={cn(
+            "w-full max-w-100 overflow-hidden",
+            isDialog && "relative isolate overflow-visible before:absolute before:inset-0 before:-z-10 before:rounded-3xl before:bg-background before:content-['']",
+          )}
+        >
           <motion.div
             className={cn("flex", canDragDeck && "cursor-grab active:cursor-grabbing")}
             drag="x"
@@ -380,32 +408,47 @@ function RadarDeckContent({ initialBoardId, suggestions }: RadarDeckContentProps
           </motion.div>
         </div>
       </div>
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex shrink-0 items-center gap-1">
-          <Button
-            variant="transparent"
-            size="icon-fit"
-            onClick={() => moveDeck(-1)}
-            disabled={!canGoPrevious}
-            aria-label="Previous Radar suggestion"
-            title="Previous Radar suggestion"
-            className={cn(RADAR_DECK_NAV_BUTTON_CLASS_NAME, !canGoPrevious && "opacity-20")}
-          >
-            <PhArrowCircleLeft />
-          </Button>
-          <Button
-            variant="transparent"
-            size="icon-fit"
-            onClick={() => moveDeck(1)}
-            disabled={!canGoNext}
-            aria-label="Next Radar suggestion"
-            title="Next Radar suggestion"
-            className={cn(RADAR_DECK_NAV_BUTTON_CLASS_NAME, "rotate-180", !canGoNext && "opacity-20")}
-          >
-            <PhArrowCircleLeft />
-          </Button>
-        </div>
-        <div ref={actionRef} className="flex min-w-0 items-center gap-1.5" style={radarActionStyle}>
+      <div
+        className={cn(
+          "flex items-center gap-3",
+          suggestions.length > 1 ? "justify-between" : "justify-end",
+          isDialog && "px-1",
+        )}
+      >
+        {suggestions.length > 1 && (
+          <div className="flex shrink-0 items-center gap-1">
+            <Button
+              variant="transparent"
+              size="icon-fit"
+              onClick={() => moveDeck(-1)}
+              disabled={!canGoPrevious}
+              aria-label="Previous Radar suggestion"
+              title="Previous Radar suggestion"
+              className={cn(RADAR_DECK_NAV_BUTTON_CLASS_NAME, !canGoPrevious && "opacity-20")}
+            >
+              <PhArrowCircleLeft />
+            </Button>
+            <Button
+              variant="transparent"
+              size="icon-fit"
+              onClick={() => moveDeck(1)}
+              disabled={!canGoNext}
+              aria-label="Next Radar suggestion"
+              title="Next Radar suggestion"
+              className={cn(RADAR_DECK_NAV_BUTTON_CLASS_NAME, "rotate-180", !canGoNext && "opacity-20")}
+            >
+              <PhArrowCircleLeft />
+            </Button>
+          </div>
+        )}
+        <div
+          ref={actionRef}
+          className={cn(
+            "flex min-w-0 items-center gap-1.5",
+            isDialog && "rounded-full bg-background p-1 ring-1 ring-foreground/10",
+          )}
+          style={radarActionStyle}
+        >
           <BoardMembershipSelect
             value={targetBoardIds}
             onMembershipChange={(boardId, member) => {
@@ -415,7 +458,10 @@ function RadarDeckContent({ initialBoardId, suggestions }: RadarDeckContentProps
             }}
             ariaLabel="Destination board"
             align="end"
-            className="max-w-36 border-0 bg-background/50 text-xs shadow-none"
+            className={cn(
+              "max-w-36 border-0 text-xs shadow-none",
+              isDialog ? "bg-transparent hover:bg-foreground/5" : "bg-background/50",
+            )}
           />
           <Button
             size="sm"
@@ -423,14 +469,19 @@ function RadarDeckContent({ initialBoardId, suggestions }: RadarDeckContentProps
             disabled={isCreated || isCreating || targetBoardIds.length === 0}
             aria-label="Create LiveCard"
             title="Create LiveCard"
-            className="flex h-8 items-center gap-1 rounded-3xl bg-(--radar-action-card-bg) px-3 py-0.5 text-xs font-semibold transition-colors enabled:hover:bg-(--radar-action-card-bg-hover) enabled:hover:text-foreground"
+            className={cn(
+              "flex h-8 items-center gap-1 rounded-3xl bg-(--radar-action-card-bg) px-3 py-0.5 text-xs font-semibold transition-colors enabled:hover:bg-(--radar-action-card-bg-hover) enabled:hover:text-foreground",
+              isDialog && "px-3.5",
+            )}
           >
-            <PhPlusCircle className="text-sm text-(--radar-action-chip-text)" />
+            {isCreating
+              ? <PhCircleDashed className="animate-spin text-sm text-(--radar-action-chip-text)" />
+              : <PhPlusCircle className="text-sm text-(--radar-action-chip-text)" />}
             Create LiveCard
           </Button>
           {createError && <span role="alert" className="text-xs text-destructive">{createError}</span>}
         </div>
       </div>
-    </motion.section>
+    </section>
   )
 }

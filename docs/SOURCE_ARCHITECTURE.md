@@ -763,7 +763,15 @@ code, must be closure-free, and never cross extension messaging. Field and
 function results are isolated from Liquid rendering, and the document object is
 never exposed to Liquid. Radar does not scan pages for RSS, Atom, or JSON Feed
 links; users can still add those URLs through the built-in `rss:feed` source.
-Radar renders in the extension action popup.
+The Chromium extension exposes `app.html` exclusively to the published RSSHub
+Radar extension ID. At that boundary, the App accepts the `feed`, `add_feed`,
+`url_rss`, and `feed_url` subscription parameters, including parameters after a
+compatibility path prefix. Before Hash Router startup, the App validates the
+external HTTP(S) feed URL, stores a one-shot in-document intent, removes the
+query, and opens an `rss:feed` Radar modal. The caller cannot mutate the
+workspace or use extension messaging directly; creating the LiveCard still
+requires the ordinary Radar review and Board selection. Page discovery Radar
+otherwise renders in the extension action popup.
 
 Badge updates use a URL-only match to advertise possible suggestions; they do
 not claim that page extraction has completed. The action popup performs the

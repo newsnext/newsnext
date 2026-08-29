@@ -1,3 +1,7 @@
+export {
+  consumeExternalRssRadarOpenRequest,
+  stageExternalRssRadarIntent,
+} from "./external-rss"
 export type {
   RadarContext,
   RadarMatcher,

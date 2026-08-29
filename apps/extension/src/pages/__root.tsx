@@ -5,6 +5,7 @@ import { Suspense, useCallback, useEffect, useRef, useState } from "react"
 import { TanStackDevtools } from "@/components/common/devtools"
 import { ScrollProgressProvider } from "@/components/common/scroll-progress-provider"
 import { Header } from "@/components/header"
+import { ExternalRssRadarDialog } from "@/components/radar/external-rss-radar-dialog"
 import { ROOT_SCROLL_RESTORATION_ID } from "@/lib/scroll-restoration"
 import { boardsAtom } from "@/store/board"
 import { currentBoardIdAtom } from "@/store/settings"
@@ -68,6 +69,7 @@ function RootComponent() {
           </main>
         </div>
       </div>
+      <ExternalRssRadarDialog />
       <Suspense>
         <TanStackDevtools />
       </Suspense>

@@ -2,6 +2,7 @@ import { QueryClient } from "@tanstack/react-query"
 import { createHashHistory, createRouter, RouterProvider } from "@tanstack/react-router"
 import { AppProvider } from "@/components/app-provider"
 import { BgIllustrationLayer } from "@/components/bg-illustration-layer"
+import { stageExternalRssRadarIntent } from "@/lib/radar"
 import { renderPersistentReactRoot } from "@/lib/react-root"
 import {
   getBoardScrollRestorationKey,
@@ -14,6 +15,15 @@ import { routeTree } from "./routeTree"
 import "@/styles/index.css"
 
 syncThemeFavicon(localStorage.getItem(THEME_COLOR_KEY) ?? "red")
+
+const externalRssLocation = stageExternalRssRadarIntent(
+  window.location.pathname,
+  window.location.search,
+  window.location.hash,
+)
+if (externalRssLocation) {
+  window.history.replaceState(window.history.state, "", externalRssLocation)
+}
 
 const queryClient = new QueryClient()
 const hashHistory = createHashHistory()

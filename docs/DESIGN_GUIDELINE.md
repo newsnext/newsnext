@@ -595,6 +595,22 @@ locator into a second board, duplicates surface insets, and delays useful
 results while LiveCard content loads. Do not add decorative illustration or generic
 helper copy.
 
+### Radar dialog
+
+The App-level Radar dialog is a focused LiveCard review, not a form wrapped
+around a preview. Omit its visible title, outer themed shell, and nested content
+surface so the LiveCard stands alone. Place the destination and create controls
+in a separate neutral floating action capsule below it. Provider color belongs
+to the LiveCard and its primary action; never wrap the card in another large
+block of the same color. Align a solid `background` surface behind the LiveCard
+for separation; do not use a gradient, offset, or diffuse shadow.
+Fade the modal overlay as soon as the creation celebration begins so confetti
+lands directly over the Board. Close the Radar after the celebration without
+moving or scaling the LiveCard.
+Hide previous and next controls when only one
+suggestion is available; navigation appears only when it can change the active
+suggestion. Keep the accessible dialog title and description screen-reader-only.
+
 ## Copy
 
 - Use English sentence case for user-facing text.
