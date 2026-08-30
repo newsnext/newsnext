@@ -1,0 +1,53 @@
+{
+  "title": "靠谱新闻",
+  "category": "news",
+  "icon": "https://kaopu.news/favicon.png",
+  "color": "slate",
+  "defaults": {
+    "baseUrl": "https://kaopu.news/"
+  },
+  "sources": {
+    "latest": {
+      "metadata": {
+        "title": "最新",
+        "home": "/"
+      },
+      "loader": {
+        "type": "html",
+        "url": "/",
+        "items": ".story-card > a, a.brief-row",
+        "fields": {
+          "title": {
+            "select": [
+              ".story-title",
+              ".brief-headline"
+            ]
+          },
+          "url": {
+            "attr": "href"
+          },
+          "publishedAt": {
+            "select": [
+              ".story-meta > span:first-child",
+              ".brief-meta"
+            ],
+            "template": "{{ scope.value | regex_extract: '^[^·]+', 0 | relative_date_to_ms: 'Asia/Shanghai' | divided_by: 60000 | floor | times: 60000 }}"
+          },
+          "attributes": {
+            "publisher": {
+              "select": [
+                ".story-provenance",
+                ".brief-meta"
+              ],
+              "template": "{{ scope.value | regex_replace: '^(?:刚刚|半小时前|几分钟前|[0-9]+(?:秒|分钟|小时|天|周|个月|月|年)前) · ', '' }}"
+            }
+          },
+          "content": {
+            "text": ".story-summary"
+          }
+        },
+        "sortByTimestamp": true
+      }
+    }
+  }
+}
