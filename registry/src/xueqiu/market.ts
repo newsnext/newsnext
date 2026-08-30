@@ -1,6 +1,9 @@
 import type { ProviderSourceConfig } from "@newsnext/source-kit/registry"
 import { requestXueqiuJson } from "./shared"
 
+const hotStockTitleTemplate = "热股榜 | {{ source.vars.marketTitle[scope.params.market] }}"
+const marketMoversTitleTemplate = "{{ source.vars.directionTitle[scope.params.direction] }} | {{ source.vars.marketTitle[scope.params.market] }}"
+
 const marketParams = {
   market: {
     type: "select",
@@ -16,7 +19,7 @@ const marketParams = {
 
 export const marketSources = {
   "hot-stock": {
-    version: 4,
+    version: 5,
     metadata: {
       title: "热股榜",
       home: "/hq#hot",
@@ -114,7 +117,7 @@ export const marketSources = {
           },
         },
         metadata: {
-          title: "热股榜 | {{ source.vars.marketTitle[scope.params.market] }}",
+          title: hotStockTitleTemplate,
         },
       },
     }],
@@ -136,6 +139,11 @@ export const marketSources = {
           changePercent: "percent",
         },
       },
+      metadata: {
+        title: {
+          template: hotStockTitleTemplate,
+        },
+      },
       inlineTemplate: "{% if scope.item.attributes.changePercent == nil %}--{% else %}{{ scope.item.attributes.changePercent }}%{% endif %} · {{ scope.item.attributes.current | default: \"--\" }} · {{ scope.item.attributes.exchange }}",
     },
     capabilities: {
@@ -143,6 +151,7 @@ export const marketSources = {
     },
   },
   "market-movers": {
+    version: 2,
     metadata: {
       title: "涨跌幅榜",
       home: "/hq",
@@ -222,7 +231,7 @@ export const marketSources = {
           },
         },
         metadata: {
-          title: "{{ source.vars.directionTitle[scope.params.direction] }} | {{ source.vars.marketTitle[scope.params.market] }}",
+          title: marketMoversTitleTemplate,
         },
       },
     }],
@@ -243,6 +252,11 @@ export const marketSources = {
           changePercent: "percent",
           turnoverRate: "turnover_rate",
           marketCapital: "market_capital",
+        },
+      },
+      metadata: {
+        title: {
+          template: marketMoversTitleTemplate,
         },
       },
       inlineTemplate: "{% if scope.item.attributes.changePercent == nil %}--{% else %}{{ scope.item.attributes.changePercent }}%{% endif %} · {{ scope.item.attributes.current | default: \"--\" }}",
