@@ -6,7 +6,7 @@ import { useAtomValue } from "jotai"
 import { useMemo } from "react"
 import { orderNowLayerInstanceIds } from "@/lib/board"
 import { boardsAtom, instanceAtomsAtom, instancesAtom } from "@/store/board"
-import { useCachedInstanceResultFinder } from "./use-cached-source-result"
+import { useSourceDescriptors } from "./use-source-descriptors"
 
 export interface NowLayerLiveCard {
   boardId: string
@@ -38,10 +38,11 @@ export function useNowLayerLiveCards(boardId: string): NowLayerLiveCardsResult {
   const boards = useAtomValue(boardsAtom)
   const instances = useAtomValue(instancesAtom)
   const instanceAtoms = useAtomValue(instanceAtomsAtom)
-  const findCachedResult = useCachedInstanceResultFinder()
   const currentBoard = boards.find(board => board.id === boardId)!
+  const { sources } = useSourceDescriptors()
 
   const { liveCardsByInstanceId, sortableLiveCardsByInstanceId } = useMemo(() => {
+    const descriptorsById = new Map(sources.map(source => [source.id, source]))
     const instancesById = new Map<string, {
       instance: Instance
       instanceAtom: Atom<Instance>
@@ -59,11 +60,7 @@ export function useNowLayerLiveCards(boardId: string): NowLayerLiveCardsResult {
       if (!entry) continue
       const { instance, instanceAtom } = entry
 
-      const cachedDescriptor = findCachedResult(
-        instance.instanceId,
-        instance.sourceId,
-      )?.source
-      const descriptor = cachedDescriptor
+      const descriptor = descriptorsById.get(instance.sourceId)
         ?? createSourcePlaceholder(instance.sourceId)
 
       nextLiveCards[instanceId] = {
@@ -84,7 +81,7 @@ export function useNowLayerLiveCards(boardId: string): NowLayerLiveCardsResult {
       liveCardsByInstanceId: nextLiveCards,
       sortableLiveCardsByInstanceId: nextSortableLiveCards,
     }
-  }, [boardId, currentBoard.instanceIds, findCachedResult, instanceAtoms, instances])
+  }, [boardId, currentBoard.instanceIds, instanceAtoms, instances, sources])
 
   const instanceIds = useMemo(() => orderNowLayerInstanceIds({
     instanceIds: currentBoard.instanceIds,
