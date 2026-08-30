@@ -62,9 +62,7 @@
           "pictures": "widgetImage"
         }
       },
-      "itemTemplate": {
-        "inline": "{{ scope.item.attributes.heat }}w heat · {{ scope.item.author.name }}"
-      }
+      "inlineTemplate": "{{ scope.item.attributes.heat }}w heat · {{ scope.item.author.name }}"
     },
     "provider": {
       "title": "36氪",
@@ -338,9 +336,7 @@
           "text": "summary"
         }
       },
-      "itemTemplate": {
-        "inline": "{{ scope.item.attributes.source }}{% if scope.item.attributes.category %} · {{ scope.item.attributes.category }}{% endif %}"
-      }
+      "inlineTemplate": "{{ scope.item.attributes.source }}{% if scope.item.attributes.category %} · {{ scope.item.attributes.category }}{% endif %}"
     },
     "provider": {
       "title": "AIHot",
@@ -524,9 +520,7 @@
           "label": ".sitestr"
         }
       },
-      "itemTemplate": {
-        "inline": "{{ scope.item.author.name }}"
-      }
+      "inlineTemplate": "{{ scope.item.author.name }}"
     },
     "metadata": {
       "home": "/ask",
@@ -621,9 +615,7 @@
           "label": ".sitestr"
         }
       },
-      "itemTemplate": {
-        "inline": "{{ scope.item.author.name }}"
-      }
+      "inlineTemplate": "{{ scope.item.author.name }}"
     },
     "metadata": {
       "home": "/newest",
@@ -716,9 +708,7 @@
           "label": ".sitestr"
         }
       },
-      "itemTemplate": {
-        "inline": "{{ scope.item.author.name }}"
-      }
+      "inlineTemplate": "{{ scope.item.author.name }}"
     },
     "metadata": {
       "home": "/show",
@@ -813,9 +803,7 @@
           "label": ".sitestr"
         }
       },
-      "itemTemplate": {
-        "inline": "{{ scope.item.author.name }}"
-      }
+      "inlineTemplate": "{{ scope.item.author.name }}"
     },
     "metadata": {
       "home": "/",
@@ -919,9 +907,7 @@
           "pictures": "al.picUrl || album.picUrl"
         }
       },
-      "itemTemplate": {
-        "inline": "{{ scope.item.attributes.artists }}"
-      }
+      "inlineTemplate": "{{ scope.item.attributes.artists }}"
     },
     "params": {
       "id": {
@@ -1007,9 +993,7 @@
           "pictures": "al.picUrl || album.picUrl"
         }
       },
-      "itemTemplate": {
-        "inline": "{{ scope.item.attributes.artists }}"
-      }
+      "inlineTemplate": "{{ scope.item.attributes.artists }}"
     },
     "params": {
       "id": {
@@ -1141,9 +1125,7 @@
           "publisher": ".article-publisher__name"
         }
       },
-      "itemTemplate": {
-        "inline": "{{ scope.item.attributes.publisher }}"
-      }
+      "inlineTemplate": "{{ scope.item.attributes.publisher }}"
     },
     "provider": {
       "title": "NEWS NOW",

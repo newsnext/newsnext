@@ -26,7 +26,7 @@ import {
   USER_BY_SCREEN_NAME_URL,
   USER_TWEETS_URL,
   X_CSRF_TOKEN_SECRET_KEY,
-  X_ITEM_TEMPLATE,
+  X_INLINE_TEMPLATE,
   X_ORIGIN,
   X_TIMELINE_COUNT,
   X_TIMELINE_FEATURES,
@@ -94,7 +94,6 @@ function xHomeTimelineToResult(
     items: sortNewsItemsByNewest(
       entriesToNewsItems(getTimelineEntries(instructions), { textMode }),
     ),
-    itemTemplate: X_ITEM_TEMPLATE,
   }
 }
 
@@ -138,7 +137,6 @@ async function fetchXListTweets(
     items: sortNewsItemsByNewest(
       entriesToNewsItems(getTimelineEntries(instructions), { textMode: text }),
     ),
-    itemTemplate: X_ITEM_TEMPLATE,
   }
 }
 
@@ -259,6 +257,7 @@ export default {
       },
       loader: {
         load: fetchXFollowing,
+        inlineTemplate: X_INLINE_TEMPLATE,
       },
     },
     "list": {
@@ -299,6 +298,7 @@ export default {
       },
       loader: {
         load: fetchXListTweets,
+        inlineTemplate: X_INLINE_TEMPLATE,
       },
     },
     "user": {

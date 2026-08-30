@@ -87,7 +87,7 @@ export function useSourceQuery({
 
   return {
     items: data?.items ?? EMPTY_ITEMS,
-    itemPresentation: data?.itemPresentation,
+    inlinePresentation: data?.inlinePresentation,
     manualRequest: handleManualRequest,
     isFetching: query.isFetching,
     isManualRequesting,

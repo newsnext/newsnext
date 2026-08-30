@@ -1,4 +1,3 @@
-import type { SourceItemPresentation } from "@newsnext/source-kit/types"
 import type { NewsItem } from "@/typings/source"
 import { VirtualList } from "@newsnext/ui/components/virtual-list"
 import { useCallback, useId } from "react"
@@ -9,13 +8,13 @@ import { TimelineRail } from "./timeline-rail"
 
 interface Props {
   items: NewsItem[]
-  itemPresentation?: SourceItemPresentation[]
+  inlinePresentation?: string[]
   markScale?: number
   scrollElement: HTMLDivElement | null
   times: readonly number[]
 }
 
-export function Timeline({ items, itemPresentation, markScale, scrollElement, times }: Props) {
+export function Timeline({ items, inlinePresentation, markScale, scrollElement, times }: Props) {
   const gradientId = useId().replace(/:/g, "")
   const timeLabels = useRelativeTimes(times)
   const renderItem = useCallback((item: NewsItem, index: number) => {
@@ -44,14 +43,14 @@ export function Timeline({ items, itemPresentation, markScale, scrollElement, ti
             )}
             <NewsItemSummary
               item={item}
-              inlineText={itemPresentation?.[index]?.inline}
+              inlineText={inlinePresentation?.[index]}
               markScale={markScale}
             />
           </div>
         </NewsItemLink>
       </div>
     )
-  }, [gradientId, itemPresentation, items.length, markScale, timeLabels])
+  }, [gradientId, inlinePresentation, items.length, markScale, timeLabels])
 
   return (
     <VirtualList

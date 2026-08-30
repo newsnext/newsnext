@@ -234,10 +234,10 @@ source ID and raw parameters
         ├─ skip a user-triggered request during the one-minute protection interval
         ├─ resolve required secrets in the background
         ├─ execute the source loader
-        ├─ validate the result, every NewsItem, item template, and response metadata
+        ├─ validate the loader output, every NewsItem, and response metadata
         ├─ reject an empty or malformed item result
         ├─ keep the first 50 items and normalize their explicit URLs
-        ├─ render item presentation templates to plain text
+        ├─ render the compiled inline template to index-aligned plain text
         ├─ persist the successful Source result and fetch time
         ├─ publish the result into the page's in-memory QueryClient
         └─ infer the LiveCard presentation from effective item times and order in the UI
@@ -624,28 +624,31 @@ metadata without interpreting arbitrary text or rewriting HTML strings. Static
 source home and badge metadata are normalized during
 registration. Radar home and badge patches use the same base during discovery.
 
-The resolved-loader boundary validates the `SourceLoaderResult` before applying
-`baseUrl` URL normalization. Structured and custom loaders share this single
-object-shaped result contract; bare item arrays are not accepted. Every
+The resolved-loader boundary validates the `SourceLoaderOutput` before applying
+`baseUrl` URL normalization and rendering the optional static inline template into
+a `SourceLoaderResult`. Structured and custom loaders share the same
+object-shaped output contract; bare item arrays are not accepted. Every
 execution path, including the extension-backed CLI, rejects empty item arrays,
 malformed or unsupported semantic item fields, non-finite times and stats,
-invalid item templates, and unsupported or invalid response metadata before
+and unsupported or invalid response metadata before
 keeping the first 50 items. Only that bounded result reaches URL normalization
-and item presentation rendering, followed by clients, persistence, the Query
+and inline presentation rendering, followed by clients, persistence, the Query
 cache, or History.
 
 `NewsItem` stores semantic facts: publication and update times, author,
 well-known stats, source-specific scalar attributes, semantic pictures, and
-content. The loader output's `itemTemplate.inline` composes those facts for the
-compact LiveCard row and may access only `scope.item`, but shared stats are excluded
-because the frontend renders them consistently as icon-and-count pairs. After
-validation, bounding, and URL normalization, the background Source runtime
-renders the template once for each item. Only the resulting plain-text
-`itemPresentation` values travel with persisted, Query-cached, and transported
-loader results; executable templates never reach the UI. History snapshots
-continue to store only the items so presentation changes do not become historical
-fact changes. The UI uses a deterministic author/attribute fallback when no
-template exists or one item cannot be rendered.
+content. The static loader definition's `inlineTemplate` composes those
+facts for the compact LiveCard row and may access only `scope.item`, but shared
+stats are excluded because the frontend renders them consistently as
+icon-and-count pairs. Source validation compiles the loader template once while
+resolving the Runtime Source. After loader-result validation, bounding, and URL
+normalization, the background runtime renders that compiled template once for
+each item. The index-aligned plain-text `inlinePresentation` array travels with
+persisted, Query-cached, and transported loader results; an empty string selects
+the UI fallback, and executable templates never reach the UI. History snapshots
+continue to store only the items so presentation changes do not become
+historical fact changes. The UI uses a deterministic author/attribute fallback
+when no template exists or one item renders an empty value or fails.
 Source-specific templates omit facts already conveyed by the Instance,
 while those facts remain on the item for history and analysis.
 The shared template module initializes its Liquid engines lazily. Keep template

@@ -140,7 +140,7 @@ Now Layer: unified LiveCards
 Next Layer: personalized Widgets
 ```
 
-Source-specific metadata and item templates may vary the content shown inside a
+Source-specific metadata and inline templates may vary the content shown inside a
 LiveCard, but they must not replace the shared Now Layer LiveCard model. Next Layer is
 where presentation and processing can diverge for a particular purpose.
 Each custom Board persists whether Now or Next opens by default. Switching the
@@ -640,7 +640,7 @@ The remaining product gaps are:
 | ID | Requirement | Acceptance criteria |
 | --- | --- | --- |
 | NOW-01 | One Instance is shown through one independent LiveCard placement in a Board | Items from another Instance are never merged into that LiveCard's result |
-| NOW-02 | All Sources use the shared LiveCard model | Source metadata and item templates can vary content, but shared LiveCard identity, status, configuration, and interactions remain available |
+| NOW-02 | All Sources use the shared LiveCard model | Source metadata and inline templates can vary content, but shared LiveCard identity, status, configuration, and interactions remain available |
 | NOW-03 | Next Layer personalization does not mutate Now Layer structure | Adding, editing, moving, or deleting a Widget leaves Now Layer LiveCard composition unchanged |
 | NOW-04 | Visible Now Layer content refreshes as current data | Viewing an active Board may refresh stale Instances and replace their cache without creating observations |
 | NOW-05 | Now Layer remains cache-only | Clearing the cache removes current results but never deletes durable Board, Widget, Agent task, or retained Next Layer data |

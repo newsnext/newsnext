@@ -69,24 +69,17 @@ interface HtmlLoaderBaseOptions extends TimestampSortableLoaderOptions {
   items?: string
   decoding?: string
   metadata?: LoaderMetadataFields<HtmlField>
-  itemTemplate?: SourceLoaderOutput["itemTemplate"]
   fields: LoaderFields<HtmlField>
 }
 
 export type HtmlLoaderOptions = HtmlLoaderBaseOptions & LoaderRequestOptions
 
 export function compileHtmlLoaderTemplates(
-  options: Pick<HtmlLoaderOptions, "fields" | "itemTemplate" | "metadata">,
+  options: Pick<HtmlLoaderOptions, "fields" | "metadata">,
   location: string,
 ): void {
   compileHtmlTemplates(collectFieldEntries(options.fields), `${location}.fields`)
   compileHtmlTemplates(collectMetadataEntries(options.metadata), `${location}.metadata`)
-  if (options.itemTemplate) {
-    compileSourceTemplate(options.itemTemplate.inline, {
-      location: `${location}.itemTemplate.inline`,
-      slot: "item",
-    })
-  }
 }
 
 function compileHtmlTemplates(
@@ -361,7 +354,6 @@ export async function loadHtml(
   const sortedNews = sortLoaderItemsByTimestamp(news, options.sortByTimestamp)
   return {
     items: sortedNews,
-    itemTemplate: options.itemTemplate,
     metadata: metadata
       ? resolveHtmlMetadata($, metadata, {
           vars: loaderContext.vars ?? {},

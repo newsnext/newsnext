@@ -85,11 +85,10 @@ async function loadFoloEntries(
         }]
       })
       .sort((a, b) => (b.publishedAt ?? 0) - (a.publishedAt ?? 0)),
-    itemTemplate: {
-      inline: "{% if scope.item.author %}{{ scope.item.author.name }}{% else %}{{ scope.item.attributes.source }}{% endif %}",
-    },
   }
 }
+
+const FOLO_INLINE_TEMPLATE = "{% if scope.item.author %}{{ scope.item.author.name }}{% else %}{{ scope.item.attributes.source }}{% endif %}"
 
 export default {
   title: "Folo",
@@ -141,6 +140,7 @@ export default {
       ],
       loader: {
         load: loadFoloEntries,
+        inlineTemplate: FOLO_INLINE_TEMPLATE,
       },
     },
     list: {
@@ -176,6 +176,7 @@ export default {
       ],
       loader: {
         load: loadFoloEntries,
+        inlineTemplate: FOLO_INLINE_TEMPLATE,
       },
     },
   },

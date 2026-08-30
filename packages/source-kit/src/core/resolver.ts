@@ -16,6 +16,7 @@ import type {
 } from "../types"
 import type { HtmlLoaderOptions } from "./loaders/html"
 import type { JsonLoaderOptions } from "./loaders/json"
+import type { CompiledSourceTemplate } from "./template"
 
 import { createDefu } from "defu"
 import { isSourcePresentationMetadataKey, isSourcePresentationType } from "../types"
@@ -44,6 +45,7 @@ import { validateSortByTimestamp } from "./loaders/shared"
 import { parseSourceParamValue, validateSourceParamDefinitions } from "./params"
 import { validateRadarRules } from "./radar"
 import {
+  compileSourceTemplate,
   compileSourceTemplateValue,
   createSourceTemplateScope,
   isTemplate,
@@ -84,7 +86,9 @@ type StructuredLoaderConfig
       type: "rss"
       url: string
     }
-  )
+  ) & {
+    inlineTemplate?: string
+  }
 
 export type SourceConfig<TParams extends SourceParamSchemaMap = any>
   = SourceConfigBase<TParams> & (
@@ -96,6 +100,7 @@ export type SourceConfig<TParams extends SourceParamSchemaMap = any>
       loader: {
         type: "custom"
         load: CustomLoaderFunction<TParams>
+        inlineTemplate?: string
       }
       capabilities?: SourceCapabilityOverrides
     }
@@ -117,12 +122,16 @@ export type ProviderSourceConfig<TParams extends SourceParamSchemaMap = any> = O
   metadata?: SourcePresentationMetadata
 }
 
-export function validateSourceTemplates(sourceId: string, config: SourceConfig): void {
+export function validateSourceTemplates(
+  sourceId: string,
+  config: SourceConfig,
+): CompiledSourceTemplate | undefined {
   if (config.baseUrl !== undefined) {
     parseSourceBaseUrl(config.baseUrl, `${sourceId}.baseUrl`)
   }
   validateSourceVars(config.vars, `${sourceId}.vars`)
   validateSourceMetadata(config.metadata, `${sourceId}.metadata`)
+  const inlineTemplate = compileInlineTemplate(sourceId, config.loader.inlineTemplate)
 
   const { loader } = config
   if (loader.type !== "custom" && typeof loader.url === "string") {
@@ -161,6 +170,21 @@ export function validateSourceTemplates(sourceId: string, config: SourceConfig):
   }
 
   validateRadarRules(config.radar, `${sourceId}.radar`)
+  return inlineTemplate
+}
+
+function compileInlineTemplate(
+  sourceId: string,
+  value: unknown,
+): CompiledSourceTemplate | undefined {
+  if (value === undefined) return undefined
+  if (typeof value !== "string" || value.trim().length === 0) {
+    throw new TypeError(`${sourceId}.loader.inlineTemplate must be a non-empty string`)
+  }
+  return compileSourceTemplate(value, {
+    location: `${sourceId}.loader.inlineTemplate`,
+    slot: "inline",
+  })
 }
 
 function validateSourceMetadata(
@@ -257,6 +281,7 @@ type ResolvedSource<TParams extends SourceParamSchemaMap> = Omit<
 function resolveSource<const TParams extends SourceParamSchemaMap = Record<string, never>>(
   sourceId: string,
   config: SourceConfig<TParams>,
+  inlineTemplate: CompiledSourceTemplate | undefined,
 ): ResolvedSource<TParams> {
   const {
     version: versionInput,
@@ -285,11 +310,10 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
   )
   validateSourceRequestRules(sourceId, requestRules, capabilities.network)
   const version = resolveSourceVersion(versionInput, `${sourceId}.version`)
-
   let resolvedLoader: SourceLoaderDefinition<TParams>
   switch (loader.type) {
     case "json": {
-      const { type: _type, url, fetchOptions, request, ...options } = loader
+      const { type: _type, url, fetchOptions, request, inlineTemplate: _inlineTemplate, ...options } = loader
       const urlTemplate = compileSourceTemplateValue(url, {
         location: `${sourceId}.loader.url`,
         slot: "request",
@@ -321,7 +345,7 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
       break
     }
     case "html": {
-      const { type: _type, url, fetchOptions, request, ...options } = loader
+      const { type: _type, url, fetchOptions, request, inlineTemplate: _inlineTemplate, ...options } = loader
       const urlTemplate = compileSourceTemplateValue(url, {
         location: `${sourceId}.loader.url`,
         slot: "request",
@@ -389,7 +413,7 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
     requestRules,
     secrets,
     capabilities,
-    loader: withValidatedLoaderResult(resolvedLoader, baseUrl),
+    loader: withValidatedLoaderResult(resolvedLoader, baseUrl, inlineTemplate),
   }
 }
 
@@ -406,13 +430,14 @@ export function resolveSourceVersion(value: unknown, location: string): number {
 function withValidatedLoaderResult<TParams extends SourceParamSchemaMap>(
   loader: SourceLoaderDefinition<TParams>,
   baseUrl: string | undefined,
+  inlineTemplate: CompiledSourceTemplate | undefined,
 ): SourceLoader<TParams> {
   return async (params, context) => {
-    const output = validateSourceLoaderOutput(await loader(params, context))
-    const resolvedOutput = baseUrl === undefined
-      ? output
-      : resolveSourceLoaderResultUrls(output, baseUrl)
-    return renderSourceLoaderResult(resolvedOutput)
+    const result = validateSourceLoaderOutput(await loader(params, context))
+    const resolvedResult = baseUrl === undefined
+      ? result
+      : resolveSourceLoaderResultUrls(result, baseUrl)
+    return renderSourceLoaderResult(resolvedResult, inlineTemplate)
   }
 }
 
@@ -469,9 +494,8 @@ export function resolveRuntimeSource(
   if (Object.hasOwn(config, "cache")) {
     throw new Error(`${sourceId}.cache is not supported`)
   }
-  validateSourceTemplates(sourceId, config)
-
-  const source = resolveSource(sourceId, config)
+  const inlineTemplate = validateSourceTemplates(sourceId, config)
+  const source = resolveSource(sourceId, config, inlineTemplate)
 
   const secrets = source.secrets
   const cookieHosts = (secrets ?? [])

@@ -1,10 +1,10 @@
 import type { RedditPost } from "./types"
-import { validateSourceLoaderResult } from "@newsnext/source-kit/core"
+import { validateSourceLoaderOutput } from "@newsnext/source-kit/core"
 import { describe, expect, it } from "vitest"
 import { redditPostsToNewsItems } from "./utils"
 
 function normalize(posts: RedditPost[], options?: Parameters<typeof redditPostsToNewsItems>[1]) {
-  return validateSourceLoaderResult({ items: redditPostsToNewsItems(posts, options) }).items
+  return validateSourceLoaderOutput({ items: redditPostsToNewsItems(posts, options) }).items
 }
 
 describe("redditPostsToNewsItems", () => {

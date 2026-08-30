@@ -1,10 +1,10 @@
 import type { JikePost } from "./types"
-import { validateSourceLoaderResult } from "@newsnext/source-kit/core"
+import { validateSourceLoaderOutput } from "@newsnext/source-kit/core"
 import { describe, expect, it } from "vitest"
 import { jikePostsToNewsItems } from "./utils"
 
 function normalize(posts: JikePost[]) {
-  return validateSourceLoaderResult({ items: jikePostsToNewsItems(posts) }).items
+  return validateSourceLoaderOutput({ items: jikePostsToNewsItems(posts) }).items
 }
 
 describe("jikePostsToNewsItems", () => {

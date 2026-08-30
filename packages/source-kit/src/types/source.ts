@@ -103,23 +103,14 @@ export function isSourcePresentationType(value: unknown): value is SourcePresent
   return typeof value === "string" && SOURCE_PRESENTATION_TYPE_SET.has(value)
 }
 
-export interface SourceItemTemplate {
-  inline: string
-}
-
-export interface SourceItemPresentation {
-  inline?: string
-}
-
 export interface SourceLoaderResult {
   items: NewsItem[]
-  itemPresentation?: SourceItemPresentation[]
+  inlinePresentation?: string[]
   metadata?: SourcePresentationMetadata
 }
 
 export interface SourceLoaderOutput {
   items: NewsItemInput[]
-  itemTemplate?: SourceItemTemplate
   metadata?: SourcePresentationMetadata
 }
 

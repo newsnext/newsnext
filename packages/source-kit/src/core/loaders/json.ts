@@ -61,24 +61,17 @@ interface JsonLoaderBaseOptions extends TimestampSortableLoaderOptions {
    */
   items?: string
   metadata?: LoaderMetadataFields<JsonField>
-  itemTemplate?: SourceLoaderOutput["itemTemplate"]
   fields: LoaderFields<JsonField>
 }
 
 export type JsonLoaderOptions = JsonLoaderBaseOptions & LoaderRequestOptions
 
 export function compileJsonLoaderTemplates(
-  options: Pick<JsonLoaderOptions, "fields" | "itemTemplate" | "metadata">,
+  options: Pick<JsonLoaderOptions, "fields" | "metadata">,
   location: string,
 ): void {
   compileJsonTemplates(collectJsonFields(options.fields), `${location}.fields`)
   compileJsonTemplates(collectJsonMetadata(options.metadata), `${location}.metadata`)
-  if (options.itemTemplate) {
-    compileSourceTemplate(options.itemTemplate.inline, {
-      location: `${location}.itemTemplate.inline`,
-      slot: "item",
-    })
-  }
 }
 
 function compileJsonTemplates(entries: readonly JsonFieldEntry[], location: string): void {
@@ -285,7 +278,6 @@ export async function loadJson(
   const sortedNews = sortLoaderItemsByTimestamp(news, options.sortByTimestamp)
   return {
     items: sortedNews,
-    itemTemplate: options.itemTemplate,
     metadata: metadata ? resolveJsonMetadata(json, metadata, metadataContext) : undefined,
   }
 }

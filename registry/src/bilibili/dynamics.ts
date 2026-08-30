@@ -35,9 +35,7 @@ const DYNAMIC_FEED_FEATURES = [
   "eva3CardVote",
   "eva3CardUser",
 ]
-const BILIBILI_FOLLOWING_ITEM_TEMPLATE = {
-  inline: "{% unless scope.item.icon.kind == 'author' %}{% if scope.item.author %}{{ scope.item.author.name }}{% if scope.item.attributes.type %} · {% endif %}{% endif %}{% endunless %}{% if scope.item.attributes.type %}{{ scope.item.attributes.type }}{% endif %}",
-} as const
+const BILIBILI_FOLLOWING_INLINE_TEMPLATE = "{% unless scope.item.icon.kind == 'author' %}{% if scope.item.author %}{{ scope.item.author.name }}{% if scope.item.attributes.type %} · {% endif %}{% endif %}{% endunless %}{% if scope.item.attributes.type %}{{ scope.item.attributes.type }}{% endif %}"
 
 interface DynamicFeedItem {
   id_str?: string
@@ -312,7 +310,6 @@ async function fetchBilibiliFollowing(
 
   return {
     items: followingDynamicItemsToNewsItems(dynamicItems, content).slice(0, DYNAMIC_RESULT_LIMIT),
-    itemTemplate: BILIBILI_FOLLOWING_ITEM_TEMPLATE,
     metadata: {
       title: `动态 | ${BILIBILI_FOLLOWING_CONTENT_LABELS[content]}`,
     },
@@ -337,9 +334,6 @@ async function fetchBilibiliUserDynamics(
     items: dynamicItemsToNewsItems(dynamicItems)
       .slice(0, DYNAMIC_RESULT_LIMIT)
       .map(item => ({ ...item, icon: undefined })),
-    itemTemplate: {
-      inline: "{{ scope.item.attributes.type }}",
-    },
     metadata: {
       title: author?.name ? `${author.name} | 动态` : "用户动态",
       badge: author?.face ? normalizeBilibiliUrl(author.face) : undefined,
@@ -383,6 +377,7 @@ export const followingSource = {
   loader: {
     type: "custom",
     load: fetchBilibiliFollowing,
+    inlineTemplate: BILIBILI_FOLLOWING_INLINE_TEMPLATE,
   },
   capabilities: bilibiliApiCapabilities,
 } satisfies ProviderSourceConfig
@@ -419,6 +414,7 @@ export const userDynamicsSource = {
   loader: {
     type: "custom",
     load: fetchBilibiliUserDynamics,
+    inlineTemplate: "{{ scope.item.attributes.type }}",
   },
   capabilities: bilibiliApiCapabilities,
 } satisfies ProviderSourceConfig

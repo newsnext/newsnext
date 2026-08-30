@@ -1,4 +1,3 @@
-import type { SourceItemPresentation } from "@newsnext/source-kit/types"
 import type { NewsItem } from "@/typings/source"
 import { VirtualList } from "@newsnext/ui/components/virtual-list"
 import { AnimatePresence, m } from "motion/react"
@@ -8,7 +7,7 @@ import { NewsItemLink, NewsItemSummary } from "./news-item-common"
 
 interface Props {
   items: NewsItem[]
-  itemPresentation?: SourceItemPresentation[]
+  inlinePresentation?: string[]
   markScale?: number
   scrollElement: HTMLDivElement | null
 }
@@ -99,7 +98,7 @@ function RankChangeBadge({ diff }: { diff?: number }) {
   )
 }
 
-export function Ranking({ items, itemPresentation, markScale, scrollElement }: Props) {
+export function Ranking({ items, inlinePresentation, markScale, scrollElement }: Props) {
   const rankChanges = useRankChanges(items)
 
   return (
@@ -119,7 +118,7 @@ export function Ranking({ items, itemPresentation, markScale, scrollElement }: P
           <RankChangeBadge diff={rankChanges[item.url]} />
           <NewsItemSummary
             item={item}
-            inlineText={itemPresentation?.[index]?.inline}
+            inlineText={inlinePresentation?.[index]}
             markScale={markScale}
           />
         </NewsItemLink>

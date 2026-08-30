@@ -81,9 +81,7 @@
           "label": ".sitestr"
         }
       },
-      "itemTemplate": {
-        "inline": "{{ scope.item.author.name }}"
-      }
+      "inlineTemplate": "{{ scope.item.author.name }}"
     },
     "metadata": {
       "home": "/"

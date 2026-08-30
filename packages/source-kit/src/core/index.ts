@@ -7,7 +7,7 @@ export {
   validateSourceRequestRules,
 } from "./capabilities"
 export {
-  validateSourceLoaderResult,
+  validateSourceLoaderOutput,
 } from "./loader-result"
 export {
   parseSourceParams,

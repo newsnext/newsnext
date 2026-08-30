@@ -93,9 +93,7 @@
             "publisher": ".article-publisher__name"
           }
         },
-        "itemTemplate": {
-          "inline": "{{ scope.item.attributes.publisher }}"
-        }
+        "inlineTemplate": "{{ scope.item.attributes.publisher }}"
       }
     }
   }

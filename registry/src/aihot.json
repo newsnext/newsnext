@@ -29,9 +29,7 @@
             "text": "summary"
           }
         },
-        "itemTemplate": {
-          "inline": "{{ scope.item.attributes.source }}{% if scope.item.attributes.category %} · {{ scope.item.attributes.category }}{% endif %}"
-        }
+        "inlineTemplate": "{{ scope.item.attributes.source }}{% if scope.item.attributes.category %} · {{ scope.item.attributes.category }}{% endif %}"
       }
     }
   }

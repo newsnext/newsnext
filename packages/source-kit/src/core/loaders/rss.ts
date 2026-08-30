@@ -8,7 +8,7 @@ import { load } from "cheerio/slim"
 import { decodeHTMLStrict } from "entities"
 import { XMLParser } from "fast-xml-parser"
 import { resolveSourceLoaderResultUrls } from "../base-url"
-import { validateSourceLoaderResult } from "../loader-result"
+import { validateSourceLoaderOutput } from "../loader-result"
 import { normalizeLoaderMetadata, requestLoaderResponse } from "./shared"
 
 const JSON_FEED_VERSIONS = new Set([
@@ -33,7 +33,7 @@ export function parseRss(data: string): SourceLoaderResult | undefined {
     const result = data.trimStart().startsWith("{")
       ? parseJsonFeed(data)
       : parseXmlFeed(data)
-    return result ? validateSourceLoaderResult(result) : undefined
+    return result ? validateSourceLoaderOutput(result) : undefined
   } catch {
     return undefined
   }

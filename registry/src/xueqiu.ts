@@ -70,9 +70,7 @@ export default {
             changePercent: "percent",
           },
         },
-        itemTemplate: {
-          inline: "{% if scope.item.attributes.changePercent == nil %}--{% else %}{{ scope.item.attributes.changePercent }}%{% endif %} · {{ scope.item.attributes.exchange }}",
-        },
+        inlineTemplate: "{% if scope.item.attributes.changePercent == nil %}--{% else %}{{ scope.item.attributes.changePercent }}%{% endif %} · {{ scope.item.attributes.exchange }}",
       },
       capabilities: {
         network: ["xueqiu.com"],

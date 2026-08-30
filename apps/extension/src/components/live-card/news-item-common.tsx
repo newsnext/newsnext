@@ -101,7 +101,7 @@ interface NewsItemSummaryProps {
 }
 
 export function NewsItemSummary({ item, inlineText: renderedInlineText, className, inlineSuffix, markScale }: NewsItemSummaryProps) {
-  const inlineText = renderedInlineText ?? getDefaultInlineText(item)
+  const inlineText = renderedInlineText || getDefaultInlineText(item)
   return (
     <span className={cn("leading-none line-clamp-3", className)}>
       {item.icon && (

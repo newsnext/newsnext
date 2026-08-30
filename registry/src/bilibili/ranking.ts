@@ -5,9 +5,7 @@ import { bilibiliApiCapabilities, normalizeBilibiliUrl, parseBilibiliCount } fro
 const BILIBILI_RANKING_URL = "https://api.bilibili.com/x/web-interface/ranking/v2"
 const BILIBILI_ANIME_RANKING_URL = "https://api.bilibili.com/pgc/web/rank/list"
 const BILIBILI_PGC_RANKING_URL = "https://api.bilibili.com/pgc/season/rank/web/list"
-const BILIBILI_PGC_ITEM_TEMPLATE = {
-  inline: "{% if scope.item.attributes.episode %}{{ scope.item.attributes.episode }}{% endif %}{% if scope.item.attributes.rating %} · {{ scope.item.attributes.rating }} rating{% endif %}",
-} as const
+const BILIBILI_PGC_INLINE_TEMPLATE = "{% if scope.item.attributes.episode %}{{ scope.item.attributes.episode }}{% endif %}{% if scope.item.attributes.rating %} · {{ scope.item.attributes.rating }} rating{% endif %}"
 const RANKING_REGIONS = [
   { apiRid: 0, label: "全部", slug: "all", value: "0" },
   { label: "番剧", pgcUrl: BILIBILI_ANIME_RANKING_URL, seasonType: 1, slug: "anime", value: "13" },
@@ -199,7 +197,6 @@ async function fetchBilibiliRanking(
     items: (response.result?.list ?? response.data?.list ?? [])
       .map(pgcRankingItemToNewsItem)
       .filter((item): item is NewsItemInput => item !== null),
-    itemTemplate: BILIBILI_PGC_ITEM_TEMPLATE,
   }
 }
 
@@ -235,6 +232,7 @@ export const rankingSource = {
   loader: {
     type: "custom",
     load: fetchBilibiliRanking,
+    inlineTemplate: BILIBILI_PGC_INLINE_TEMPLATE,
   },
   capabilities: bilibiliApiCapabilities,
   version: 4,

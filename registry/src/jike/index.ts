@@ -30,15 +30,9 @@ const JIKE_SEARCH_SORT_LABELS: Record<JikeSearchSort, string> = {
 }
 const JIKE_ACCESS_TOKEN_SECRET_KEY = "accessToken"
 const JIKE_REFRESH_TOKEN_SECRET_KEY = "refreshToken"
-const JIKE_ITEM_TEMPLATE = {
-  inline: "{% unless scope.item.icon.kind == 'author' %}{{ scope.item.author.name }}{% if scope.item.attributes.topic %} · {% endif %}{% endunless %}{% if scope.item.attributes.topic %}#{{ scope.item.attributes.topic }}{% endif %}",
-} as const
-const JIKE_USER_ITEM_TEMPLATE = {
-  inline: "#{{ scope.item.attributes.topic }}",
-} as const
-const JIKE_TOPIC_ITEM_TEMPLATE = {
-  inline: "{% unless scope.item.icon.kind == 'author' %}{{ scope.item.author.name }}{% endunless %}",
-} as const
+const JIKE_INLINE_TEMPLATE = "{% unless scope.item.icon.kind == 'author' %}{{ scope.item.author.name }}{% if scope.item.attributes.topic %} · {% endif %}{% endunless %}{% if scope.item.attributes.topic %}#{{ scope.item.attributes.topic }}{% endif %}"
+const JIKE_USER_INLINE_TEMPLATE = "#{{ scope.item.attributes.topic }}"
+const JIKE_TOPIC_INLINE_TEMPLATE = "{% unless scope.item.icon.kind == 'author' %}{{ scope.item.author.name }}{% endunless %}"
 const JIKE_ACCESS_TOKEN_EXPIRY_BUFFER_SECONDS = 30
 
 async function refreshJikeAccessToken(
@@ -124,7 +118,7 @@ export async function fetchJikeFollowingUpdates(
     context,
   )
   assertSuccessfulFeed(response, "Failed to load Jike following updates.")
-  return { items: jikePostsToNewsItems(response.data ?? []), itemTemplate: JIKE_ITEM_TEMPLATE }
+  return { items: jikePostsToNewsItems(response.data ?? []) }
 }
 
 export async function fetchJikeUserUpdates(
@@ -141,7 +135,6 @@ export async function fetchJikeUserUpdates(
   const badge = getJikeUserAvatar(posts.find(post => post.user)?.user)
   return {
     items: jikePostsToNewsItems(posts, { includeIcon: false }),
-    itemTemplate: JIKE_USER_ITEM_TEMPLATE,
     metadata: badge ? { badge } : undefined,
   }
 }
@@ -158,7 +151,6 @@ async function fetchJikeTopicFeed(
   assertSuccessfulFeed(response, "Failed to load Jike topic feed.")
   return {
     items: jikePostsToNewsItems(response.data ?? []),
-    itemTemplate: JIKE_TOPIC_ITEM_TEMPLATE,
     metadata: order === "hottest" ? { type: "ranking" } : undefined,
   }
 }
@@ -188,7 +180,6 @@ export async function fetchJikeSearch(
   }
   return {
     items: jikePostsToNewsItems(posts.slice(0, SEARCH_RESULT_LIMIT)),
-    itemTemplate: JIKE_ITEM_TEMPLATE,
     metadata: {
       title: `${keyword} | ${JIKE_SEARCH_SORT_LABELS[sortBy]}`,
       home: `${JIKE_WEB_ORIGIN}/search?q=${encodeURIComponent(keyword)}`,
@@ -293,6 +284,7 @@ export default {
       ],
       loader: {
         load: fetchJikeFollowingUpdates,
+        inlineTemplate: JIKE_INLINE_TEMPLATE,
       },
     },
     "user-updates": {
@@ -333,6 +325,7 @@ export default {
       },
       loader: {
         load: fetchJikeUserUpdates,
+        inlineTemplate: JIKE_USER_INLINE_TEMPLATE,
       },
       version: 3,
     },
@@ -365,6 +358,7 @@ export default {
       },
       loader: {
         load: fetchJikeSearch,
+        inlineTemplate: JIKE_INLINE_TEMPLATE,
       },
     },
     "topic": {
@@ -412,6 +406,7 @@ export default {
       },
       loader: {
         load: fetchJikeTopicFeed,
+        inlineTemplate: JIKE_TOPIC_INLINE_TEMPLATE,
       },
     },
   },

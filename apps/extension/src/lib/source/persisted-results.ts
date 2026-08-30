@@ -3,7 +3,7 @@ import Dexie from "dexie"
 import { getSourceQueryHash } from "./query-target"
 
 const PERSISTED_SOURCE_RESULTS_DATABASE_NAME = "newsnext-extension-source-cache"
-const PERSISTED_SOURCE_RESULT_SCHEMA_VERSION = 1
+const PERSISTED_SOURCE_RESULT_SCHEMA_VERSION = 2
 const SOURCE_RESULT_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000
 
 interface PersistedSourceTarget {
@@ -53,7 +53,7 @@ function isValidPersistedSourceResult(
     || value.key !== key
     || value.schemaVersion !== PERSISTED_SOURCE_RESULT_SCHEMA_VERSION
     || !Array.isArray(result.items)
-    || !isValidItemPresentation(result.itemPresentation, result.items.length)
+    || !isValidInlinePresentation(result.inlinePresentation, result.items.length)
     || !isRecord(source)
     || source.id !== target.sourceId
     || source.version !== target.version
@@ -63,13 +63,11 @@ function isValidPersistedSourceResult(
   return true
 }
 
-function isValidItemPresentation(value: unknown, itemCount: number): boolean {
+function isValidInlinePresentation(value: unknown, itemCount: number): boolean {
   if (value === undefined) return true
   return Array.isArray(value)
     && value.length === itemCount
-    && value.every(entry => isRecord(entry)
-      && Object.keys(entry).every(key => key === "inline")
-      && (entry.inline === undefined || typeof entry.inline === "string"))
+    && value.every(entry => typeof entry === "string")
 }
 
 function isExpired(result: PersistedSourceResult, now = Date.now()): boolean {

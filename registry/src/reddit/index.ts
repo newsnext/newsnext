@@ -7,12 +7,8 @@ import type {
 import { REDDIT_ORIGIN, redditPostsToNewsItems } from "./utils"
 
 const REDDIT_LISTING_LIMIT = 50
-const REDDIT_USER_ITEM_TEMPLATE = {
-  inline: "{{ scope.item.attributes.community }}",
-} as const
-const REDDIT_SUBREDDIT_ITEM_TEMPLATE = {
-  inline: "{{ scope.item.author.name }}",
-} as const
+const REDDIT_USER_INLINE_TEMPLATE = "{{ scope.item.attributes.community }}"
+const REDDIT_SUBREDDIT_INLINE_TEMPLATE = "{{ scope.item.author.name }}"
 const REDDIT_RADAR_HOSTS = ["reddit.com", "old.reddit.com", "new.reddit.com"]
 const SUBREDDIT_SORT_OPTIONS = [
   { label: "Best", value: "best" },
@@ -81,7 +77,6 @@ async function fetchRedditUserPosts(
     items: redditPostsToNewsItems(posts, {
       includeSubredditIcon: true,
     }),
-    itemTemplate: REDDIT_USER_ITEM_TEMPLATE,
     metadata: {
       title: `u/${username}`,
     },
@@ -124,7 +119,6 @@ async function fetchSubredditListing(
   if (badge) metadata.badge = badge
   return {
     items: redditPostsToNewsItems(posts),
-    itemTemplate: REDDIT_SUBREDDIT_ITEM_TEMPLATE,
     metadata,
   }
 }
@@ -230,6 +224,7 @@ export default {
       ],
       loader: {
         load: fetchRedditUserPosts,
+        inlineTemplate: REDDIT_USER_INLINE_TEMPLATE,
       },
     },
     "subreddit": {
@@ -250,6 +245,7 @@ export default {
       radar: subredditRadarRules,
       loader: {
         load: fetchSubredditPosts,
+        inlineTemplate: REDDIT_SUBREDDIT_INLINE_TEMPLATE,
       },
     },
     "subreddit-top": {
@@ -291,6 +287,7 @@ export default {
       ],
       loader: {
         load: fetchSubredditTopPosts,
+        inlineTemplate: REDDIT_SUBREDDIT_INLINE_TEMPLATE,
       },
     },
   },

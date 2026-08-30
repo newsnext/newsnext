@@ -1,4 +1,3 @@
-import type { SourceItemPresentation } from "@newsnext/source-kit/types"
 import type { ReactNode } from "react"
 import type { LiveCardDragHandleRef } from "./card-header"
 import type { SourcePermissionRequest } from "@/lib/source"
@@ -32,7 +31,7 @@ import { UnorderedList } from "./unordered-list"
 interface LiveCardFrontProps {
   source: LiveCardViewModel
   items: NewsItem[]
-  itemPresentation?: SourceItemPresentation[]
+  inlinePresentation?: string[]
   isFetching: boolean
   isContentFetching: boolean
   sourceErrorMessage?: string
@@ -67,7 +66,7 @@ function LiveCardRefreshButton({
 interface LiveCardFrontContentProps {
   icon?: string
   items: NewsItem[]
-  itemPresentation?: SourceItemPresentation[]
+  inlinePresentation?: string[]
   markScale?: number
   provider: LiveCardViewModel["provider"]
   presentationType?: LiveCardViewModel["metadata"]["type"]
@@ -82,7 +81,7 @@ interface LiveCardFrontContentProps {
 function LiveCardFrontContent({
   icon,
   items,
-  itemPresentation,
+  inlinePresentation,
   markScale,
   provider,
   presentationType,
@@ -128,7 +127,7 @@ function LiveCardFrontContent({
     return (
       <Ranking
         items={items}
-        itemPresentation={itemPresentation}
+        inlinePresentation={inlinePresentation}
         markScale={markScale}
         scrollElement={scrollElement}
       />
@@ -139,7 +138,7 @@ function LiveCardFrontContent({
     return (
       <UnorderedList
         items={items}
-        itemPresentation={itemPresentation}
+        inlinePresentation={inlinePresentation}
         markScale={markScale}
         scrollElement={scrollElement}
       />
@@ -149,7 +148,7 @@ function LiveCardFrontContent({
   return (
     <Timeline
       items={items}
-      itemPresentation={itemPresentation}
+      inlinePresentation={inlinePresentation}
       markScale={markScale}
       scrollElement={scrollElement}
       times={presentation.times}
@@ -160,7 +159,7 @@ function LiveCardFrontContent({
 export function LiveCardFront({
   source,
   items,
-  itemPresentation,
+  inlinePresentation,
   isFetching,
   isContentFetching,
   sourceErrorMessage,
@@ -247,7 +246,7 @@ export function LiveCardFront({
               <LiveCardFrontContent
                 icon={icon}
                 items={items}
-                itemPresentation={itemPresentation}
+                inlinePresentation={inlinePresentation}
                 markScale={markScale}
                 provider={provider}
                 presentationType={source.metadata.type}

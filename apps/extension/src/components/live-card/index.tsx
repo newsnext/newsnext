@@ -33,7 +33,7 @@ function LiveCardContent({ id, source, dragHandleRef, isDraft = false, onDraftSo
   const setInstancePatch = useSetAtom(setInstancePatchAtom)
   const resetLocalParams = useSetAtom(resetInstanceParamsAtom)
   const [isFlipped, setIsFlipped] = useState(false)
-  const { items, itemPresentation, metadata, sourceSnapshot, manualRequest, isFetching, isManualRequesting, isLoading, isError, errorMessage, loginUrl, loadedAt } = useSourceQuery({
+  const { items, inlinePresentation, metadata, sourceSnapshot, manualRequest, isFetching, isManualRequesting, isLoading, isError, errorMessage, loginUrl, loadedAt } = useSourceQuery({
     source,
     sourceId: source.sourceId,
     instanceId: isDraft ? undefined : id,
@@ -114,7 +114,7 @@ function LiveCardContent({ id, source, dragHandleRef, isDraft = false, onDraftSo
       <LiveCardFront
         source={displaySource}
         items={items}
-        itemPresentation={itemPresentation}
+        inlinePresentation={inlinePresentation}
         isFetching={isFetching || isManualRequesting}
         isContentFetching={isManualRequesting || isLoading}
         sourceErrorMessage={sourceErrorMessage}

@@ -1,6 +1,7 @@
 import type { SourceLoaderResult } from "../types"
 import { describe, expect, it, vi } from "vitest"
-import { validateSourceLoaderResult } from "./loader-result"
+import { renderSourceLoaderResult, validateSourceLoaderOutput } from "./loader-result"
+import { compileSourceTemplate } from "./template"
 
 describe("source loader result", () => {
   it("preserves valid loader results", () => {
@@ -9,7 +10,7 @@ describe("source loader result", () => {
       metadata: { badge: "https://example.com/avatar.png" },
     }
 
-    expect(validateSourceLoaderResult(result)).toEqual(result)
+    expect(validateSourceLoaderOutput(result)).toEqual(result)
   })
 
   it("limits loader results to the first 50 items", () => {
@@ -18,7 +19,7 @@ describe("source loader result", () => {
       url: `https://example.com/${index + 1}`,
     }))
 
-    expect(validateSourceLoaderResult({ items }).items).toEqual(items.slice(0, 50))
+    expect(validateSourceLoaderOutput({ items }).items).toEqual(items.slice(0, 50))
   })
 
   it("validates every item before limiting the result", () => {
@@ -27,29 +28,36 @@ describe("source loader result", () => {
       url: `https://example.com/${index + 1}`,
     }))
 
-    expect(() => validateSourceLoaderResult({ items })).toThrowError(
+    expect(() => validateSourceLoaderOutput({ items })).toThrowError(
       "items[50].title must be a non-empty string",
     )
   })
 
   it("rejects empty loader results", () => {
-    expect(() => validateSourceLoaderResult({ items: [] })).toThrowError(
+    expect(() => validateSourceLoaderOutput({ items: [] })).toThrowError(
       "Invalid source loader result: No source items. Refresh to try again.",
     )
   })
 
+  it("rejects loader configuration in execution output", () => {
+    expect(() => validateSourceLoaderOutput({
+      items: [{ title: "Example", url: "https://example.com" }],
+      inlineTemplate: "{{ scope.item.author.name }}",
+    })).toThrowError("source loader output.inlineTemplate is not supported")
+  })
+
   it("rejects invalid news items", () => {
-    expect(() => validateSourceLoaderResult({
+    expect(() => validateSourceLoaderOutput({
       items: [{ title: "", url: "https://example.com" }],
     })).toThrowError("items[0].title must be a non-empty string")
 
-    expect(() => validateSourceLoaderResult({
+    expect(() => validateSourceLoaderOutput({
       items: [{ title: "Example", url: "https://example.com", publishedAt: Number.NaN }],
     })).toThrowError("items[0].publishedAt must be a finite number")
   })
 
   it("rejects invalid semantic content", () => {
-    expect(() => validateSourceLoaderResult({
+    expect(() => validateSourceLoaderOutput({
       items: [{
         title: "Example",
         url: "https://example.com",
@@ -59,7 +67,7 @@ describe("source loader result", () => {
   })
 
   it("rejects source-controlled picture presentation", () => {
-    expect(() => validateSourceLoaderResult({
+    expect(() => validateSourceLoaderOutput({
       items: [{
         title: "Example",
         url: "https://example.com",
@@ -67,7 +75,7 @@ describe("source loader result", () => {
       }],
     })).toThrowError("items[0].icon.radius is not supported")
 
-    expect(() => validateSourceLoaderResult({
+    expect(() => validateSourceLoaderOutput({
       items: [{
         title: "Example",
         url: "https://example.com",
@@ -78,37 +86,59 @@ describe("source loader result", () => {
     })).toThrowError("items[0].content.pictures[0] must be a non-empty string")
   })
 
-  it("validates and renders source-level item templates", () => {
+  it("renders a compiled loader inline template", () => {
     const result = {
       items: [{ title: "Example", url: "https://example.com", stats: { likes: 0 } }],
-      itemTemplate: { inline: "  {{ scope.item.stats.likes }} likes  " },
     }
-    expect(validateSourceLoaderResult(result)).toEqual({
+    const template = compileSourceTemplate("  {{ scope.item.stats.likes }} likes  ", {
+      location: "example.inlineTemplate",
+      slot: "inline",
+    })
+    expect(renderSourceLoaderResult(validateSourceLoaderOutput(result), template)).toEqual({
       items: result.items,
-      itemPresentation: [{ inline: "0 likes" }],
+      inlinePresentation: ["0 likes"],
     })
 
-    expect(() => validateSourceLoaderResult({
-      ...result,
-      itemTemplate: { inline: "{{ scope.params.secret }}" },
+    expect(() => compileSourceTemplate("{{ scope.params.secret }}", {
+      location: "example.inlineTemplate",
+      slot: "inline",
     })).toThrowError("expected one of: scope.item")
   })
 
   it("lets one item fall back when its presentation template cannot render", () => {
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => {})
-    expect(validateSourceLoaderResult({
+    const result = validateSourceLoaderOutput({
       items: [{ title: "Example", url: "https://example.com" }],
-      itemTemplate: { inline: "{{ scope.item.author.name }}" },
-    })).toEqual({
+    })
+    const template = compileSourceTemplate("{{ scope.item.author.name }}", {
+      location: "example.inlineTemplate",
+      slot: "inline",
+    })
+    expect(renderSourceLoaderResult(result, template)).toEqual({
       items: [{ title: "Example", url: "https://example.com" }],
-      itemPresentation: [{}],
+      inlinePresentation: [""],
     })
     expect(consoleError).toHaveBeenCalledOnce()
     consoleError.mockRestore()
   })
 
+  it("uses fallback presentation when a template renders empty text", () => {
+    const result = validateSourceLoaderOutput({
+      items: [{ title: "Example", url: "https://example.com" }],
+    })
+    const template = compileSourceTemplate("{% if scope.item.attributes %}label{% endif %}", {
+      location: "example.inlineTemplate",
+      slot: "inline",
+    })
+
+    expect(renderSourceLoaderResult(result, template)).toEqual({
+      items: result.items,
+      inlinePresentation: [""],
+    })
+  })
+
   it("normalizes absent optional item fields after loading", () => {
-    expect(validateSourceLoaderResult({
+    expect(validateSourceLoaderOutput({
       items: [{
         title: "Example",
         url: "https://example.com",
@@ -129,12 +159,12 @@ describe("source loader result", () => {
   })
 
   it("rejects invalid metadata", () => {
-    expect(() => validateSourceLoaderResult({
+    expect(() => validateSourceLoaderOutput({
       items: [{ title: "Example", url: "https://example.com" }],
       metadata: { title: "" },
     })).toThrowError("metadata.title must be a non-empty string")
 
-    expect(() => validateSourceLoaderResult({
+    expect(() => validateSourceLoaderOutput({
       items: [{ title: "Example", url: "https://example.com" }],
       metadata: { type: "timeline" },
     } as unknown as SourceLoaderResult)).toThrowError(

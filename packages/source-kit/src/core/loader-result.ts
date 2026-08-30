@@ -1,24 +1,16 @@
-import type { NewsItem, SourceLoaderOutput, SourceLoaderResult } from "../types"
+import type { SourceLoaderResult } from "../types"
+import type { CompiledSourceTemplate } from "./template"
 import { NEWS_ITEM_STAT_KEYS } from "@newsnext/shared/types"
 import { isSourcePresentationMetadataKey, isSourcePresentationType } from "../types"
 import {
-  compileSourceTemplate,
   createSourceTemplateScope,
   reportTemplateError,
 } from "./template"
 
 const SOURCE_LOADER_RESULT_MAX_ITEMS = 50
 
-export function validateSourceLoaderResult(value: unknown): SourceLoaderResult {
-  return renderSourceLoaderResult(validateSourceLoaderOutput(value))
-}
-
-export interface ValidatedSourceLoaderOutput extends Omit<SourceLoaderOutput, "items"> {
-  items: NewsItem[]
-}
-
-export function validateSourceLoaderOutput(value: unknown): ValidatedSourceLoaderOutput {
-  const normalized = normalizeSourceLoaderResult(value)
+export function validateSourceLoaderOutput(value: unknown): SourceLoaderResult {
+  const normalized = normalizeSourceLoaderOutput(value)
   assertSourceLoaderOutput(normalized)
   if (normalized.items.length <= SOURCE_LOADER_RESULT_MAX_ITEMS) return normalized
   return {
@@ -27,29 +19,26 @@ export function validateSourceLoaderOutput(value: unknown): ValidatedSourceLoade
   }
 }
 
-export function renderSourceLoaderResult(output: ValidatedSourceLoaderOutput): SourceLoaderResult {
-  const result: SourceLoaderResult = { items: output.items }
-  if (output.metadata !== undefined) result.metadata = output.metadata
-  if (output.itemTemplate === undefined) return result
+export function renderSourceLoaderResult(
+  result: SourceLoaderResult,
+  inlineTemplate: CompiledSourceTemplate | undefined,
+): SourceLoaderResult {
+  if (inlineTemplate === undefined) return result
 
-  const template = compileSourceTemplate(output.itemTemplate.inline, {
-    location: "source result.itemTemplate.inline",
-    slot: "item",
-  })
-  result.itemPresentation = output.items.map((item) => {
-    try {
-      return {
-        inline: template.render(createSourceTemplateScope(undefined, { item })).trim(),
+  return {
+    ...result,
+    inlinePresentation: result.items.map((item) => {
+      try {
+        return inlineTemplate.render(createSourceTemplateScope(undefined, { item })).trim()
+      } catch (error) {
+        reportTemplateError(error)
+        return ""
       }
-    } catch (error) {
-      reportTemplateError(error)
-      return {}
-    }
-  })
-  return result
+    }),
+  }
 }
 
-function normalizeSourceLoaderResult(value: unknown): unknown {
+function normalizeSourceLoaderOutput(value: unknown): unknown {
   if (!isRecord(value) || !Array.isArray(value.items)) return value
   return {
     ...value,
@@ -88,15 +77,15 @@ function withoutEmptyValues(value: Record<string, unknown>): Record<string, unkn
   )
 }
 
-function assertSourceLoaderOutput(value: unknown): asserts value is ValidatedSourceLoaderOutput {
+function assertSourceLoaderOutput(value: unknown): asserts value is SourceLoaderResult {
   if (!isRecord(value) || !Array.isArray(value.items)) {
     throwInvalidLoaderResult("expected an object containing an items array")
   }
   if (value.items.length === 0) {
     throwInvalidLoaderResult("No source items. Refresh to try again.")
   }
+  assertOnlyKeys(value, ["items", "metadata"], "source loader output")
   value.items.forEach((item, index) => assertNewsItem(item, index))
-  if (value.itemTemplate !== undefined) assertItemTemplate(value.itemTemplate)
   if (value.metadata !== undefined) assertSourceLoaderMetadata(value.metadata)
 }
 
@@ -180,16 +169,6 @@ function assertSemanticPicture(value: unknown, location: string): void {
   assertNonEmptyString(value.src, `${location}.src`)
   assertOptionalString(value.kind, `${location}.kind`)
   assertOptionalString(value.label, `${location}.label`)
-}
-
-function assertItemTemplate(value: unknown): void {
-  if (!isRecord(value)) throwInvalidLoaderResult("itemTemplate must be an object")
-  assertOnlyKeys(value, ["inline"], "itemTemplate")
-  assertNonEmptyString(value.inline, "itemTemplate.inline")
-  compileSourceTemplate(value.inline as string, {
-    location: "source result.itemTemplate.inline",
-    slot: "item",
-  })
 }
 
 function assertSourceLoaderMetadata(value: unknown): void {

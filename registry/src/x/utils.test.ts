@@ -1,5 +1,5 @@
 import type { XTweetResult } from "./types"
-import { validateSourceLoaderResult } from "@newsnext/source-kit/core"
+import { validateSourceLoaderOutput } from "@newsnext/source-kit/core"
 import { describe, expect, it } from "vitest"
 import {
   entriesToNewsItems,
@@ -37,7 +37,7 @@ function createTweet(id: string, screenName: string): XTweetResult {
 }
 
 function normalize(items: ReturnType<typeof entriesToNewsItems>) {
-  return validateSourceLoaderResult({ items }).items
+  return validateSourceLoaderOutput({ items }).items
 }
 
 describe("getTimelineEntries", () => {

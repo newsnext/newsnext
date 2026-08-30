@@ -367,6 +367,7 @@ Liquid is available only in schema fields documented as template slots:
 | Slot | Available values |
 | --- | --- |
 | Loader URL and `fetchOptions` | `source.vars`, `scope.params` |
+| Loader `inlineTemplate` | `scope.item` |
 | JSON field | `source.vars`, `scope.value`, `scope.item`, `scope.params`, `scope.index`, `scope.request.url`, `scope.response.json` |
 | HTML field | `source.vars`, `scope.value`, `scope.item`, `scope.params`, `scope.index`, `scope.request.url` |
 | Radar parameters | `source.vars`, `scope.path`, `scope.query` |
@@ -507,10 +508,8 @@ loader: {
       pictures: "images[].url",
     },
   },
-  itemTemplate: {
-    inline: "{{ scope.item.author.name }}",
-  },
-}
+  inlineTemplate: "{{ scope.item.author.name }}",
+},
 ```
 
 `items` runs against the full response. If omitted, the response itself must be
@@ -717,14 +716,11 @@ parameter. Use the selected variant as the item title and place the other
 available variant in `content.text`. Fall back to the original when a
 translation is unavailable.
 
-A loader always returns a `SourceLoaderResult` object:
+A loader always returns a `SourceLoaderOutput` object:
 
 ```ts
 {
   items,
-  itemTemplate: {
-    inline: "{{ scope.item.author.name }}",
-  },
   metadata: {
     badge: response.user.avatarUrl,
     desc: response.description,
@@ -816,15 +812,19 @@ feed's own image as the item `icon` with `kind: "source"` and a feed-title
 label. Omit that repeated item icon from a single-feed source when the LiveCard
 badge already establishes the same identity.
 
-Presentation belongs to the loader output, not each item. `itemTemplate.inline`
-is a plain-text Liquid template scoped only to `scope.item`; use it to compose
+Presentation belongs to the loader definition, not the loader result or each
+item. Define `inlineTemplate` inside `loader`; it inherits through provider
+defaults with the rest of the loader configuration. It is a plain-text Liquid
+template scoped only to `scope.item`; use it to compose
 author and source-specific attributes for a compact row. The frontend always
 renders shared `stats` separately as icon-and-count pairs, so do not include
 stats in this template. When the template is absent, the frontend composes a
 readable fallback from author and attributes. The background Source runtime
-renders the template for each bounded, normalized item and caches only those
-plain-text presentation values with the source result. Neither the template nor
-its rendered presentation is an item fact, so neither is stored in item history.
+renders the precompiled template for each bounded, normalized item into an
+index-aligned `inlinePresentation` string array. An empty string represents the
+default frontend fallback after an empty or failed per-item rendering. Neither
+the template nor its rendered presentation is an item fact, so neither is stored
+in item history.
 Do not repeat context already established by the Instance:
 for example, a topic-specific source should retain the topic in each item's
 semantic `attributes`, but omit it from that source's inline template. Likewise,
@@ -834,10 +834,11 @@ semantic data.
 
 NewsNext validates loader results at the shared runtime boundary for extension
 app and CLI execution. Empty item arrays, malformed item objects, non-finite
-times or stats, invalid semantic fields or item templates, empty dynamic
-metadata strings, and unsupported dynamic metadata keys fail the load. Custom
-loaders receive the same validation as structured loaders. Returning a bare `NewsItem[]` is not
-supported; use `{ items }` even when metadata is absent.
+times or stats, invalid semantic fields, empty dynamic metadata strings, and
+unsupported dynamic metadata keys fail the load. Invalid inline templates fail
+Source resolution before loading. Custom loaders receive the same validation as
+structured loaders. Returning a bare `NewsItem[]` is not supported; use
+`{ items }` even when metadata is absent.
 
 Minimize request count as part of the source contract. When one listing request
 can return both items and metadata, directly or through expansion, include, or
@@ -1271,7 +1272,7 @@ newsnext run --help
 When `--browser` is omitted, the CLI prompts you to select a connected browser.
 Pass a browser name, full connection ID, or unique ID prefix to skip the prompt.
 
-The command prints the source result as `data`, `metadata`, and `itemPresentation`,
+The command prints the source result as `data`, `metadata`, and `inlinePresentation`,
 with normalized parameters and timing under `execution`. Pass `--debug` to also
 include every underlying request and response under `fetches`. Each fetch entry
 includes its duration, the request URL and method, and the response URL, status,

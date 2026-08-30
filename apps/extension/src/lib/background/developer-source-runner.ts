@@ -81,7 +81,7 @@ function createRunOutput(
       sourceVersion,
     },
     ...(fetches ? { fetches } : {}),
-    itemPresentation: result.itemPresentation,
+    inlinePresentation: result.inlinePresentation,
     metadata: result.metadata,
   }
 }

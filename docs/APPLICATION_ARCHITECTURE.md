@@ -140,7 +140,7 @@ presentation snapshot:
 ```ts
 interface SourceLoadResult {
   items: NewsItem[]
-  itemTemplate?: SourceItemTemplate
+  inlinePresentation?: string[]
   metadata?: SourcePresentationMetadata // dynamic Loader metadata
   source: {
     id: string
