@@ -1,5 +1,5 @@
 import type { SourceDescriptor } from "@newsnext/source-kit/types"
-import type { RadarMatcher, RadarPageScript, ResolvedRadarSuggestion } from "@/lib/radar"
+import type { RadarMatcher, ResolvedRadarSuggestion } from "@/lib/radar"
 import { loadSourceDescriptors, loadSources } from "@newsnext/source-kit/runtime"
 import {
   createRadarMatcher,
@@ -17,23 +17,14 @@ export interface BackgroundRadarService {
   resolveSuggestions: (input: ResolveRadarSuggestionsInput) => Promise<ResolvedRadarSuggestion[]>
 }
 
-interface RadarResultCacheEntry {
-  expiresAt: number
-  promise: Promise<ResolvedRadarSuggestion[]>
-  title?: string
-  url: string
-}
-
 interface RadarRuntime {
   matcher: RadarMatcher
   sourceDescriptorsById: ReadonlyMap<string, SourceDescriptor>
 }
 
-const RADAR_RESULT_CACHE_DURATION_MS = 15_000
-const radarResultCache = new Map<number, RadarResultCacheEntry>()
 let radarRuntimePromise: Promise<RadarRuntime> | undefined
 
-async function loadRadarRuntime(): Promise<RadarRuntime> {
+function loadRadarRuntime(): Promise<RadarRuntime> {
   radarRuntimePromise ??= Promise.all([
     loadSources(),
     loadSourceDescriptors(),
@@ -50,21 +41,19 @@ async function loadRadarRuntime(): Promise<RadarRuntime> {
     throw error
   })
 
-  return await radarRuntimePromise
+  return radarRuntimePromise
 }
 
 async function scanRadarSuggestions({
   tabId,
   title,
   url,
-}: ResolveRadarSuggestionsInput, {
-  matcher,
-  sourceDescriptorsById,
-}: RadarRuntime, pageScripts: readonly RadarPageScript[]): Promise<ResolvedRadarSuggestion[]> {
+}: ResolveRadarSuggestionsInput): Promise<ResolvedRadarSuggestion[]> {
+  const { matcher, sourceDescriptorsById } = await loadRadarRuntime()
   const baseContext = { title, url }
   const [pageSelections, pageScriptValues] = await Promise.all([
     readRadarPageSelections(tabId, matcher.getPageQueries(baseContext)),
-    readRadarPageScriptValues(tabId, pageScripts),
+    readRadarPageScriptValues(tabId, matcher.getPageScripts(baseContext)),
   ])
   return matcher.getSuggestions({
     ...baseContext,
@@ -76,44 +65,6 @@ async function scanRadarSuggestions({
   })
 }
 
-async function resolveRadarSuggestions(
-  input: ResolveRadarSuggestionsInput,
-): Promise<ResolvedRadarSuggestion[]> {
-  const runtime = await loadRadarRuntime()
-  const pageScripts = runtime.matcher.getPageScripts({ title: input.title, url: input.url })
-  if (pageScripts.length > 0) {
-    return await scanRadarSuggestions(input, runtime, pageScripts)
-  }
-
-  const cached = radarResultCache.get(input.tabId)
-  if (
-    cached
-    && cached.expiresAt > Date.now()
-    && cached.url === input.url
-    && cached.title === input.title
-  ) {
-    return cached.promise
-  }
-
-  const promise = scanRadarSuggestions(input, runtime, pageScripts).catch((error) => {
-    if (radarResultCache.get(input.tabId)?.promise === promise) {
-      radarResultCache.delete(input.tabId)
-    }
-    throw error
-  })
-  radarResultCache.set(input.tabId, {
-    expiresAt: Date.now() + RADAR_RESULT_CACHE_DURATION_MS,
-    promise,
-    title: input.title,
-    url: input.url,
-  })
-  return promise
-}
-
 export function createBackgroundRadarService(): BackgroundRadarService {
-  return {
-    async resolveSuggestions(input): Promise<ResolvedRadarSuggestion[]> {
-      return await resolveRadarSuggestions(input)
-    },
-  }
+  return { resolveSuggestions: scanRadarSuggestions }
 }
