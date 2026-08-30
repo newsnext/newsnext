@@ -43,7 +43,6 @@
         "@webext-core/messaging": "^4.0.0",
         "@webext-core/proxy-service": "^3.0.2",
         "canvas-confetti": "^1.9.4",
-        "date-fns": "catalog:",
         "defu": "catalog:",
         "dexie": "^4.4.3",
         "es-toolkit": "catalog:",

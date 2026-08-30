@@ -1,9 +1,24 @@
-import { formatDistance } from "date-fns"
-import { enUS } from "date-fns/locale"
 import { atom, useAtomValue } from "jotai"
 import { useMemo } from "react"
 
 const minuteClockAtom = atom(Date.now())
+const relativeTimeFormatter = new Intl.RelativeTimeFormat("en-US", {
+  numeric: "always",
+  style: "narrow",
+})
+const currentTimeFormatter = new Intl.RelativeTimeFormat("en-US", {
+  numeric: "auto",
+  style: "narrow",
+})
+
+const relativeTimeUnits = [
+  [365 * 24 * 60 * 60 * 1000, "year"],
+  [30 * 24 * 60 * 60 * 1000, "month"],
+  [7 * 24 * 60 * 60 * 1000, "week"],
+  [24 * 60 * 60 * 1000, "day"],
+  [60 * 60 * 1000, "hour"],
+  [60 * 1000, "minute"],
+] as const
 
 function sampleClock(lastTickAt: number): Date {
   return new Date(Math.max(lastTickAt, Date.now()))
@@ -46,11 +61,16 @@ minuteClockAtom.onMount = (setAtom) => {
   }
 }
 
-function formatRelativeTime(date: number, now: Date): string {
-  return formatDistance(new Date(date), now, {
-    addSuffix: true,
-    locale: enUS,
-  })
+export function formatRelativeTime(date: number, now: Date): string {
+  const difference = date - now.getTime()
+  const magnitude = Math.abs(difference)
+  const unit = relativeTimeUnits.find(([milliseconds]) => magnitude >= milliseconds)
+
+  if (!unit) return currentTimeFormatter.format(0, "second")
+
+  const [milliseconds, name] = unit
+  const value = Math.round(magnitude / milliseconds) * Math.sign(difference)
+  return relativeTimeFormatter.format(value, name)
 }
 
 export function useMinuteDate(): Date {
