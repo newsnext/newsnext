@@ -118,6 +118,48 @@ describe("getRadarSuggestions", () => {
     ])
   })
 
+  it.each([
+    [
+      "xueqiu:hot-stock",
+      { market: "hk", period: "day" },
+      {
+        "xueqiu:hot-stock:xueqiu-hot-stock:market": "hk",
+        "xueqiu:hot-stock:xueqiu-hot-stock:period": "day",
+      },
+    ],
+    [
+      "xueqiu:market-movers",
+      { direction: "losers", market: "us" },
+      {
+        "xueqiu:market-movers:xueqiu-market-movers:direction": "losers",
+        "xueqiu:market-movers:xueqiu-market-movers:market": "us",
+      },
+    ],
+  ] as const)("detects the active %s controls", (sourceId, params, pageScriptValues) => {
+    const source = sourceDescriptors.find(source => source.id === sourceId)
+    expect(source).toBeDefined()
+    const matcher = createRadarMatcher(source ? [source] : [])
+    const context = {
+      url: "https://xueqiu.com/",
+      title: "我的首页 - 雪球",
+    }
+    const pageScripts = matcher.getPageScripts(context)
+
+    expect(pageScripts).toHaveLength(2)
+    expect(matcher.getSuggestions({
+      ...context,
+      pageScriptValues,
+    })).toMatchObject([{
+      sourceId,
+      patch: {
+        params,
+        metadata: {
+          title: sourceId === "xueqiu:hot-stock" ? "热股榜 | 港股" : "跌幅榜 | 美股",
+        },
+      },
+    }])
+  })
+
   it("omits mapped parameters missing from a sparse Radar patch", () => {
     expect(getSuggestions({
       url: "https://github.com/trending",

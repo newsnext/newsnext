@@ -35,11 +35,11 @@ export function mergeInstancePatch(
   }
 }
 
-function applyInstanceOverrides(
+export function applyInstancePatch(
   liveCard: LiveCardViewModel,
-  instance: Instance,
+  patch: InstancePatch,
 ): LiveCardViewModel {
-  const metadata = pick(instance.patch.metadata ?? {}, SOURCE_PRESENTATION_METADATA_KEYS)
+  const metadata = pick(patch.metadata ?? {}, SOURCE_PRESENTATION_METADATA_KEYS)
 
   return {
     ...liveCard,
@@ -47,9 +47,18 @@ function applyInstanceOverrides(
       ...liveCard.metadata,
       ...metadata,
     },
-    createdAt: instance.createdAt,
     metadataValue: metadata,
-    paramsValue: instance.patch.params,
+    paramsValue: patch.params,
+  }
+}
+
+function applyInstanceOverrides(
+  liveCard: LiveCardViewModel,
+  instance: Instance,
+): LiveCardViewModel {
+  return {
+    ...applyInstancePatch(liveCard, instance.patch),
+    createdAt: instance.createdAt,
   }
 }
 

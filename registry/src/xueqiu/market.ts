@@ -23,6 +23,12 @@ export const marketSources = {
       type: "ranking",
     },
     vars: {
+      marketTitle: {
+        global: "全球",
+        cn: "沪深",
+        hk: "港股",
+        us: "美股",
+      },
       marketType: {
         global: 10,
         cn: 12,
@@ -66,7 +72,52 @@ export const marketSources = {
         default: "hour",
       },
     },
-    radar: [],
+    radar: [{
+      id: "xueqiu-hot-stock",
+      match: {
+        hosts: ["xueqiu.com"],
+        paths: ["/"],
+      },
+      patch: {
+        params: {
+          market: () => {
+            const page = globalThis as unknown as {
+              document: {
+                querySelectorAll: (selector: string) => ArrayLike<{
+                  classList: { contains: (className: string) => boolean }
+                }>
+              }
+            }
+            const controls = Array.from(page.document.querySelectorAll(
+              ".stock-hot__container:has(> h3 a[href=\"/hq#hot\"]) > .tabs__panel a",
+            ))
+            const activeIndex = controls.findIndex(
+              control => control.classList.contains("active"),
+            )
+            return (["global", "cn", "hk", "us"] as const)[activeIndex] ?? "global"
+          },
+          period: () => {
+            const page = globalThis as unknown as {
+              document: {
+                querySelectorAll: (selector: string) => ArrayLike<{
+                  classList: { contains: (className: string) => boolean }
+                }>
+              }
+            }
+            const controls = Array.from(page.document.querySelectorAll(
+              ".stock-hot__container:has(> h3 a[href=\"/hq#hot\"]) > .stock-hot__time a",
+            ))
+            const activeIndex = controls.findIndex(
+              control => control.classList.contains("active"),
+            )
+            return (["hour", "day"] as const)[activeIndex] ?? "hour"
+          },
+        },
+        metadata: {
+          title: "热股榜 | {{ source.vars.marketTitle[scope.params.market] }}",
+        },
+      },
+    }],
     loader: {
       type: "json",
       url: "https://stock.xueqiu.com/v5/stock/hot_stock/list.json?size=30&_type={{ source.vars.marketType[scope.params.market] }}&type={{ source.vars.rankingType[scope.params.period][scope.params.market] }}",
@@ -98,6 +149,15 @@ export const marketSources = {
       type: "ranking",
     },
     vars: {
+      directionTitle: {
+        gainers: "涨幅榜",
+        losers: "跌幅榜",
+      },
+      marketTitle: {
+        cn: "沪深",
+        hk: "港股",
+        us: "美股",
+      },
       marketType: {
         cn: "sh_sz_bj",
         hk: "hk",
@@ -120,7 +180,52 @@ export const marketSources = {
         default: "gainers",
       },
     },
-    radar: [],
+    radar: [{
+      id: "xueqiu-market-movers",
+      match: {
+        hosts: ["xueqiu.com"],
+        paths: ["/"],
+      },
+      patch: {
+        params: {
+          market: () => {
+            const page = globalThis as unknown as {
+              document: {
+                querySelectorAll: (selector: string) => ArrayLike<{
+                  classList: { contains: (className: string) => boolean }
+                }>
+              }
+            }
+            const controls = Array.from(page.document.querySelectorAll(
+              ".stock-hot__container:has(> h3 a[href=\"/hq#rank\"]) > .tabs__panel a",
+            ))
+            const activeIndex = controls.findIndex(
+              control => control.classList.contains("active"),
+            )
+            return (["cn", "hk", "us"] as const)[activeIndex] ?? "cn"
+          },
+          direction: () => {
+            const page = globalThis as unknown as {
+              document: {
+                querySelectorAll: (selector: string) => ArrayLike<{
+                  classList: { contains: (className: string) => boolean }
+                }>
+              }
+            }
+            const controls = Array.from(page.document.querySelectorAll(
+              ".stock-hot__container:has(> h3 a[href=\"/hq#rank\"]) > .stock-hot__time a",
+            ))
+            const activeIndex = controls.findIndex(
+              control => control.classList.contains("active"),
+            )
+            return (["gainers", "losers"] as const)[activeIndex] ?? "gainers"
+          },
+        },
+        metadata: {
+          title: "{{ source.vars.directionTitle[scope.params.direction] }} | {{ source.vars.marketTitle[scope.params.market] }}",
+        },
+      },
+    }],
     loader: {
       type: "json",
       url: "https://stock.xueqiu.com/v5/stock/screener/quote/list.json?page=1&size=30&type={{ source.vars.marketType[scope.params.market] }}&order_by=percent&order={{ source.vars.directionOrder[scope.params.direction] }}",

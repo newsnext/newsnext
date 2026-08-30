@@ -184,7 +184,6 @@ export const feedSources = {
         },
         metadata: {
           title: "自选 | {{ source.vars.title[scope.params.filter] }}",
-          home: "/",
         },
       },
     }],

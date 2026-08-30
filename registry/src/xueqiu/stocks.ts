@@ -1,9 +1,26 @@
 import type { ProviderSourceConfig } from "@newsnext/source-kit/registry"
-import {
-  fetchStockAnnouncements,
-  fetchStockDiscussions,
-  fetchStockNews,
-} from "./stock-loader"
+import { requestXueqiuJson } from "./shared"
+
+const stockStatusTitle = {
+  select: "title || description || text",
+  template: "{{ scope.value | strip_html | remove: \"网页链接\" | normalize_whitespace | truncate: 120, \"…\" }}",
+} as const
+
+const stockTimelineFields = {
+  url: "target",
+  title: stockStatusTitle,
+  publishedAt: "created_at",
+  content: {
+    html: "description",
+    pictures: "firstImg",
+  },
+} as const
+
+const stockHomeMetadata = {
+  home: {
+    template: "/S/{{ scope.params.symbol | url_path }}",
+  },
+} as const
 
 const stockParam = {
   type: "text",
@@ -88,8 +105,36 @@ export const stockSources = {
       },
     }],
     loader: {
-      type: "custom",
-      load: fetchStockDiscussions,
+      type: "json",
+      url: "https://api.xueqiu.com/query/v1/symbol/search/status.json?count=20&comment=0&symbol={{ scope.params.symbol | url_query }}&hl=0&source=user&sort={% if scope.params.sort == \"hot\" %}alpha{% else %}time{% endif %}&page=1&q=",
+      request: requestXueqiuJson,
+      items: "list",
+      fields: {
+        ...stockTimelineFields,
+        author: {
+          name: "user.screen_name",
+          home: "user.profile",
+        },
+        stats: {
+          likes: "like_count",
+          comments: "reply_count",
+          reposts: "retweet_count",
+          views: "view_count",
+        },
+        content: {
+          text: {
+            select: "description || text",
+            template: "{{ scope.value | strip_html | normalize_whitespace }}",
+          },
+          pictures: "firstImg",
+        },
+      },
+      metadata: {
+        ...stockHomeMetadata,
+        type: {
+          template: "{% if scope.params.sort == \"hot\" %}ranking{% endif %}",
+        },
+      },
     },
     capabilities: {
       network: ["api.xueqiu.com"],
@@ -104,8 +149,12 @@ export const stockSources = {
     },
     radar: stockRadar("xueqiu-stock-news", "资讯"),
     loader: {
-      type: "custom",
-      load: fetchStockNews,
+      type: "json",
+      url: "https://api.xueqiu.com/statuses/stock_timeline.json?symbol_id={{ scope.params.symbol | url_query }}&count=20&source={{ \"自选股新闻\" | url_query }}&page=1",
+      request: requestXueqiuJson,
+      items: "list",
+      fields: stockTimelineFields,
+      metadata: stockHomeMetadata,
     },
     capabilities: {
       network: ["api.xueqiu.com"],
@@ -120,8 +169,12 @@ export const stockSources = {
     },
     radar: stockRadar("xueqiu-stock-announcements", "公告"),
     loader: {
-      type: "custom",
-      load: fetchStockAnnouncements,
+      type: "json",
+      url: "https://api.xueqiu.com/statuses/stock_timeline.json?symbol_id={{ scope.params.symbol | url_query }}&count=20&source={{ \"公告\" | url_query }}&page=1",
+      request: requestXueqiuJson,
+      items: "list",
+      fields: stockTimelineFields,
+      metadata: stockHomeMetadata,
     },
     capabilities: {
       network: ["api.xueqiu.com"],

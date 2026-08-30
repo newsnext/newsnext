@@ -1,7 +1,7 @@
 import type { ResolvedRadarSuggestion } from "./matcher"
-import type { InstancePatch } from "@/lib/source"
+import type { InstancePatch } from "@/lib/source/live-cards"
 import type { LiveCardViewModel } from "@/typings/source"
-import { mergeInstancePatch } from "@/lib/source"
+import { applyInstancePatch, mergeInstancePatch } from "@/lib/source/live-cards"
 
 export function createRadarLiveCard(
   suggestion: ResolvedRadarSuggestion,
@@ -10,15 +10,10 @@ export function createRadarLiveCard(
   const { source } = suggestion
   const patch = mergeInstancePatch(suggestion.patch, draftPatch ?? {})
 
-  return {
+  return applyInstancePatch({
     ...source,
-    metadata: {
-      ...source.metadata,
-      ...patch.metadata,
-    },
     id: `tmp:radar:${suggestion.id}`,
     sourceId: suggestion.sourceId,
     boardId: null,
-    paramsValue: patch.params,
-  }
+  }, patch)
 }
