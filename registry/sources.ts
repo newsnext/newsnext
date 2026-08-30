@@ -14,7 +14,8 @@ import provider_3 from "./src/jike/index"
 import provider_4 from "./src/reddit/index"
 import provider_5 from "./src/weibo/index"
 import provider_6 from "./src/x/index"
-import provider_7 from "./src/xueqiu"
+import provider_7 from "./src/xiaohongshu/index"
+import provider_8 from "./src/xueqiu"
 
 const providerConfigs: Record<string, ProviderConfig> = {
   "bilibili": provider_0,
@@ -24,7 +25,8 @@ const providerConfigs: Record<string, ProviderConfig> = {
   "reddit": provider_4,
   "weibo": provider_5,
   "x": provider_6,
-  "xueqiu": provider_7
+  "xiaohongshu": provider_7,
+  "xueqiu": provider_8
 }
 
 export const typescriptSources: Record<string, RuntimeSource> = Object.fromEntries(
