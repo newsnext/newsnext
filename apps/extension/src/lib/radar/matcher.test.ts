@@ -36,6 +36,88 @@ describe("getRadarSuggestions", () => {
     ])
   })
 
+  it("suggests Xueqiu stock Sources from a stock page", () => {
+    const sourceIds = [
+      "xueqiu:stock-discussions",
+      "xueqiu:stock-news",
+      "xueqiu:stock-announcements",
+    ]
+    const sources = sourceDescriptors.filter(source => sourceIds.includes(source.id))
+    const matcher = createRadarMatcher(sources)
+    const context = {
+      url: "https://xueqiu.com/S/09868",
+      title: "小鹏集团-W(09868)股票股价_股价行情_财报_数据报告 - 雪球",
+    }
+    const pageSelections = Object.fromEntries(
+      matcher.getPageQueries(context).map(query => [
+        getRadarPageQueryKey(query),
+        context.title,
+      ]),
+    )
+    const pageScriptValues = Object.fromEntries(
+      matcher.getPageScripts(context).map(script => [script.key, "latest"]),
+    )
+
+    expect(matcher.getSuggestions({
+      ...context,
+      pageSelections,
+      pageScriptValues,
+    })).toMatchObject([
+      {
+        sourceId: "xueqiu:stock-discussions",
+        patch: {
+          params: { sort: "latest", symbol: "09868" },
+          metadata: { title: "小鹏集团-W | 最新讨论" },
+        },
+      },
+      {
+        sourceId: "xueqiu:stock-news",
+        patch: {
+          params: { symbol: "09868" },
+          metadata: { title: "小鹏集团-W | 资讯" },
+        },
+      },
+      {
+        sourceId: "xueqiu:stock-announcements",
+        patch: {
+          params: { symbol: "09868" },
+          metadata: { title: "小鹏集团-W | 公告" },
+        },
+      },
+    ])
+  })
+
+  it.each([
+    ["all", "全部"],
+    ["announcements", "公告"],
+    ["news", "新闻"],
+  ] as const)("detects the active Xueqiu watchlist %s filter", (filter, title) => {
+    const source = sourceDescriptors.find(source => source.id === "xueqiu:watchlist")
+    expect(source).toBeDefined()
+    const matcher = createRadarMatcher(source ? [source] : [])
+    const context = {
+      url: "https://xueqiu.com/",
+      title: "我的首页 - 雪球",
+    }
+
+    const pageScripts = matcher.getPageScripts(context)
+    expect(pageScripts).toHaveLength(1)
+    expect(matcher.getSuggestions({
+      ...context,
+      pageScriptValues: {
+        [pageScripts[0]!.key]: filter,
+      },
+    })).toMatchObject([
+      {
+        sourceId: "xueqiu:watchlist",
+        patch: {
+          params: { filter },
+          metadata: { title: `自选 | ${title}` },
+        },
+      },
+    ])
+  })
+
   it("omits mapped parameters missing from a sparse Radar patch", () => {
     expect(getSuggestions({
       url: "https://github.com/trending",

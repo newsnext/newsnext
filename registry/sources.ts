@@ -15,7 +15,7 @@ import provider_4 from "./src/reddit/index"
 import provider_5 from "./src/weibo/index"
 import provider_6 from "./src/x/index"
 import provider_7 from "./src/xiaohongshu/index"
-import provider_8 from "./src/xueqiu"
+import provider_8 from "./src/xueqiu/index"
 
 const providerConfigs: Record<string, ProviderConfig> = {
   "bilibili": provider_0,

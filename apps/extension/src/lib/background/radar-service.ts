@@ -1,5 +1,5 @@
 import type { SourceDescriptor } from "@newsnext/source-kit/types"
-import type { RadarMatcher, ResolvedRadarSuggestion } from "@/lib/radar"
+import type { RadarMatcher, RadarPageScript, ResolvedRadarSuggestion } from "@/lib/radar"
 import { loadSourceDescriptors, loadSources } from "@newsnext/source-kit/runtime"
 import {
   createRadarMatcher,
@@ -57,12 +57,14 @@ async function scanRadarSuggestions({
   tabId,
   title,
   url,
-}: ResolveRadarSuggestionsInput): Promise<ResolvedRadarSuggestion[]> {
-  const { matcher, sourceDescriptorsById } = await loadRadarRuntime()
+}: ResolveRadarSuggestionsInput, {
+  matcher,
+  sourceDescriptorsById,
+}: RadarRuntime, pageScripts: readonly RadarPageScript[]): Promise<ResolvedRadarSuggestion[]> {
   const baseContext = { title, url }
   const [pageSelections, pageScriptValues] = await Promise.all([
     readRadarPageSelections(tabId, matcher.getPageQueries(baseContext)),
-    readRadarPageScriptValues(tabId, matcher.getPageScripts(baseContext)),
+    readRadarPageScriptValues(tabId, pageScripts),
   ])
   return matcher.getSuggestions({
     ...baseContext,
@@ -74,9 +76,15 @@ async function scanRadarSuggestions({
   })
 }
 
-function resolveRadarSuggestions(
+async function resolveRadarSuggestions(
   input: ResolveRadarSuggestionsInput,
 ): Promise<ResolvedRadarSuggestion[]> {
+  const runtime = await loadRadarRuntime()
+  const pageScripts = runtime.matcher.getPageScripts({ title: input.title, url: input.url })
+  if (pageScripts.length > 0) {
+    return await scanRadarSuggestions(input, runtime, pageScripts)
+  }
+
   const cached = radarResultCache.get(input.tabId)
   if (
     cached
@@ -87,7 +95,7 @@ function resolveRadarSuggestions(
     return cached.promise
   }
 
-  const promise = scanRadarSuggestions(input).catch((error) => {
+  const promise = scanRadarSuggestions(input, runtime, pageScripts).catch((error) => {
     if (radarResultCache.get(input.tabId)?.promise === promise) {
       radarResultCache.delete(input.tabId)
     }

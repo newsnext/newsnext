@@ -803,12 +803,14 @@ its exact serializable Source descriptor in one response. It never follows a
 completed scan with a separate complete-registry request before rendering the
 LiveCard.
 
-Successful full-scan responses are cached in background memory for 15 seconds
-by tab ID, URL, and title. This reuses both concurrent requests and a result
-when the short-lived action popup is immediately reopened. A changed URL or
-title bypasses the entry, failures remove it, and expiration deliberately
-allows same-URL page state to be extracted again. The cache never persists
-page-derived values or extends beyond the Manifest V3 service worker lifetime.
+Successful full-scan responses without matching JavaScript parameter functions
+are cached in background memory for 15 seconds by tab ID, URL, and title. This
+reuses both concurrent requests and a result when the short-lived action popup
+is immediately reopened. Rules with matching JavaScript parameter functions
+bypass the result cache so same-URL DOM state is evaluated on every resolve. A
+changed URL or title bypasses other entries, failures remove them, and the cache
+never persists page-derived values or extends beyond the Manifest V3 service
+worker lifetime.
 
 Radar discovery is complete only when the suggestion captures the active page's
 full Source configuration. Its intended interaction is review followed by one

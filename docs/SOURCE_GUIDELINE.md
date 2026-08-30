@@ -344,6 +344,9 @@ patch: {
 ```
 
 The returned value follows normal defaults and parameter validation.
+Matching JavaScript Radar parameters are evaluated on every full resolve so
+same-URL page state stays current. Keep these functions cheap and free of side
+effects.
 
 Do not expose the current signed-in account ID or another account identity only
 to separate personalized results. Each Worker isolates its Source execution,
