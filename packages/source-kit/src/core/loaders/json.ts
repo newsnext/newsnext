@@ -1,6 +1,6 @@
 import type {
   NewsItem,
-  SourceLoaderResult,
+  SourceLoaderOutput,
   SourcePresentationMetadata,
   SourceTemplateVars,
 } from "../../types"
@@ -61,7 +61,7 @@ interface JsonLoaderBaseOptions extends TimestampSortableLoaderOptions {
    */
   items?: string
   metadata?: LoaderMetadataFields<JsonField>
-  itemTemplate?: SourceLoaderResult["itemTemplate"]
+  itemTemplate?: SourceLoaderOutput["itemTemplate"]
   fields: LoaderFields<JsonField>
 }
 
@@ -231,7 +231,7 @@ export function resolveJsonMetadata(
 export async function loadJson(
   options: JsonLoaderOptions,
   loaderContext: LoaderContext = {},
-): Promise<SourceLoaderResult> {
+): Promise<SourceLoaderOutput> {
   const { url, items: itemsSelect, fields, metadata } = options
   const response = await requestLoaderResponse(options, loaderContext)
   const json: unknown = await response.json()

@@ -816,14 +816,16 @@ feed's own image as the item `icon` with `kind: "source"` and a feed-title
 label. Omit that repeated item icon from a single-feed source when the LiveCard
 badge already establishes the same identity.
 
-Presentation belongs to the loader result, not each item. `itemTemplate.inline`
+Presentation belongs to the loader output, not each item. `itemTemplate.inline`
 is a plain-text Liquid template scoped only to `scope.item`; use it to compose
 author and source-specific attributes for a compact row. The frontend always
 renders shared `stats` separately as icon-and-count pairs, so do not include
 stats in this template. When the template is absent, the frontend composes a
-readable fallback from author and attributes. Templates are cached
-with the source result but are not item facts and therefore are not stored in
-item history. Do not repeat context already established by the Instance:
+readable fallback from author and attributes. The background Source runtime
+renders the template for each bounded, normalized item and caches only those
+plain-text presentation values with the source result. Neither the template nor
+its rendered presentation is an item fact, so neither is stored in item history.
+Do not repeat context already established by the Instance:
 for example, a topic-specific source should retain the topic in each item's
 semantic `attributes`, but omit it from that source's inline template. Likewise,
 when `icon.kind` is `author`, omit the author's name from inline presentation;
@@ -1269,7 +1271,7 @@ newsnext run --help
 When `--browser` is omitted, the CLI prompts you to select a connected browser.
 Pass a browser name, full connection ID, or unique ID prefix to skip the prompt.
 
-The command prints the source result as `data`, `metadata`, and `itemTemplate`,
+The command prints the source result as `data`, `metadata`, and `itemPresentation`,
 with normalized parameters and timing under `execution`. Pass `--debug` to also
 include every underlying request and response under `fetches`. Each fetch entry
 includes its duration, the request URL and method, and the response URL, status,

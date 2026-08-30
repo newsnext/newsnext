@@ -236,6 +236,8 @@ source ID and raw parameters
         ├─ execute the source loader
         ├─ validate the result, every NewsItem, item template, and response metadata
         ├─ reject an empty or malformed item result
+        ├─ keep the first 50 items and normalize their explicit URLs
+        ├─ render item presentation templates to plain text
         ├─ persist the successful Source result and fetch time
         ├─ publish the result into the page's in-memory QueryClient
         └─ infer the LiveCard presentation from effective item times and order in the UI
@@ -277,8 +279,10 @@ because they do not affect Source execution. Page-side TanStack queries for save
 Instances use only the Instance ID, while configuration changes explicitly
 invalidate that stable query.
 
-Each cache record contains only its derived key, validated result, and real
-`fetchedAt` completion time; it does not duplicate the normalized target. When
+Each cache record contains only its schema version, derived key, validated
+result, and real `fetchedAt` completion time; it does not duplicate the
+normalized target. The schema version invalidates results whose runtime result
+contract predates the active extension. When
 a Board route renders, the App asks the opaque
 Instance router for each referenced Instance's cached result. The router reads
 directly in the current browser when it is the binding and otherwise relays to
@@ -626,19 +630,29 @@ object-shaped result contract; bare item arrays are not accepted. Every
 execution path, including the extension-backed CLI, rejects empty item arrays,
 malformed or unsupported semantic item fields, non-finite times and stats,
 invalid item templates, and unsupported or invalid response metadata before
-keeping the first 50 items. Only that bounded result reaches URL normalization,
-clients, persistence, the Query cache, or History.
+keeping the first 50 items. Only that bounded result reaches URL normalization
+and item presentation rendering, followed by clients, persistence, the Query
+cache, or History.
 
 `NewsItem` stores semantic facts: publication and update times, author,
 well-known stats, source-specific scalar attributes, semantic pictures, and
-content. The result-level `itemTemplate.inline` composes those facts for the
+content. The loader output's `itemTemplate.inline` composes those facts for the
 compact LiveCard row and may access only `scope.item`, but shared stats are excluded
-because the frontend renders them consistently as icon-and-count pairs. It
-travels with persisted, Query-cached, and transported loader results, while history snapshots continue to store only the
-items so presentation changes do not become historical fact changes. The UI
-uses a deterministic author/attribute fallback when no template exists.
+because the frontend renders them consistently as icon-and-count pairs. After
+validation, bounding, and URL normalization, the background Source runtime
+renders the template once for each item. Only the resulting plain-text
+`itemPresentation` values travel with persisted, Query-cached, and transported
+loader results; executable templates never reach the UI. History snapshots
+continue to store only the items so presentation changes do not become historical
+fact changes. The UI uses a deterministic author/attribute fallback when no
+template exists or one item cannot be rendered.
 Source-specific templates omit facts already conveyed by the Instance,
 while those facts remain on the item for history and analysis.
+The shared template module initializes its Liquid engines lazily. Keep template
+engine construction out of module evaluation: extension UI entry points import
+responsibility barrels that expose background-only Radar APIs, and eager
+construction would retain Liquid and date parsing dependencies in UI chunks
+even though executable templates never run there.
 The default inline composer also omits the author name when an
 `icon.kind: "author"` picture is present. Explicit source templates follow the
 same rule and fall back to the name when that semantic icon is absent.

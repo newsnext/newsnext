@@ -1,5 +1,5 @@
 import type { SourceLoaderResult } from "../types"
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import { validateSourceLoaderResult } from "./loader-result"
 
 describe("source loader result", () => {
@@ -78,17 +78,33 @@ describe("source loader result", () => {
     })).toThrowError("items[0].content.pictures[0] must be a non-empty string")
   })
 
-  it("validates source-level item templates", () => {
+  it("validates and renders source-level item templates", () => {
     const result = {
       items: [{ title: "Example", url: "https://example.com", stats: { likes: 0 } }],
-      itemTemplate: { inline: "{{ scope.item.stats.likes }} likes" },
+      itemTemplate: { inline: "  {{ scope.item.stats.likes }} likes  " },
     }
-    expect(validateSourceLoaderResult(result)).toEqual(result)
+    expect(validateSourceLoaderResult(result)).toEqual({
+      items: result.items,
+      itemPresentation: [{ inline: "0 likes" }],
+    })
 
     expect(() => validateSourceLoaderResult({
       ...result,
       itemTemplate: { inline: "{{ scope.params.secret }}" },
     })).toThrowError("expected one of: scope.item")
+  })
+
+  it("lets one item fall back when its presentation template cannot render", () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {})
+    expect(validateSourceLoaderResult({
+      items: [{ title: "Example", url: "https://example.com" }],
+      itemTemplate: { inline: "{{ scope.item.author.name }}" },
+    })).toEqual({
+      items: [{ title: "Example", url: "https://example.com" }],
+      itemPresentation: [{}],
+    })
+    expect(consoleError).toHaveBeenCalledOnce()
+    consoleError.mockRestore()
   })
 
   it("normalizes absent optional item fields after loading", () => {

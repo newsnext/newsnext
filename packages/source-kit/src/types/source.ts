@@ -107,9 +107,13 @@ export interface SourceItemTemplate {
   inline: string
 }
 
+export interface SourceItemPresentation {
+  inline?: string
+}
+
 export interface SourceLoaderResult {
   items: NewsItem[]
-  itemTemplate?: SourceItemTemplate
+  itemPresentation?: SourceItemPresentation[]
   metadata?: SourcePresentationMetadata
 }
 

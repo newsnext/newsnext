@@ -26,7 +26,10 @@ import {
   resolveSourceUrl,
 } from "./base-url"
 import { assertNetworkCapability, validateSourceRequestRules } from "./capabilities"
-import { validateSourceLoaderResult } from "./loader-result"
+import {
+  renderSourceLoaderResult,
+  validateSourceLoaderOutput,
+} from "./loader-result"
 import {
   compileHtmlLoaderTemplates,
   loadHtml,
@@ -405,10 +408,11 @@ function withValidatedLoaderResult<TParams extends SourceParamSchemaMap>(
   baseUrl: string | undefined,
 ): SourceLoader<TParams> {
   return async (params, context) => {
-    const result = validateSourceLoaderResult(await loader(params, context))
-    return baseUrl === undefined
-      ? result
-      : resolveSourceLoaderResultUrls(result, baseUrl)
+    const output = validateSourceLoaderOutput(await loader(params, context))
+    const resolvedOutput = baseUrl === undefined
+      ? output
+      : resolveSourceLoaderResultUrls(output, baseUrl)
+    return renderSourceLoaderResult(resolvedOutput)
   }
 }
 

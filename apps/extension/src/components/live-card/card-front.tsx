@@ -1,4 +1,4 @@
-import type { SourceItemTemplate } from "@newsnext/source-kit/types"
+import type { SourceItemPresentation } from "@newsnext/source-kit/types"
 import type { ReactNode } from "react"
 import type { LiveCardDragHandleRef } from "./card-header"
 import type { SourcePermissionRequest } from "@/lib/source"
@@ -32,7 +32,7 @@ import { UnorderedList } from "./unordered-list"
 interface LiveCardFrontProps {
   source: LiveCardViewModel
   items: NewsItem[]
-  itemTemplate?: SourceItemTemplate
+  itemPresentation?: SourceItemPresentation[]
   isFetching: boolean
   isContentFetching: boolean
   sourceErrorMessage?: string
@@ -67,7 +67,7 @@ function LiveCardRefreshButton({
 interface LiveCardFrontContentProps {
   icon?: string
   items: NewsItem[]
-  itemTemplate?: SourceItemTemplate
+  itemPresentation?: SourceItemPresentation[]
   markScale?: number
   provider: LiveCardViewModel["provider"]
   presentationType?: LiveCardViewModel["metadata"]["type"]
@@ -82,7 +82,7 @@ interface LiveCardFrontContentProps {
 function LiveCardFrontContent({
   icon,
   items,
-  itemTemplate,
+  itemPresentation,
   markScale,
   provider,
   presentationType,
@@ -128,7 +128,7 @@ function LiveCardFrontContent({
     return (
       <Ranking
         items={items}
-        itemTemplate={itemTemplate}
+        itemPresentation={itemPresentation}
         markScale={markScale}
         scrollElement={scrollElement}
       />
@@ -139,7 +139,7 @@ function LiveCardFrontContent({
     return (
       <UnorderedList
         items={items}
-        itemTemplate={itemTemplate}
+        itemPresentation={itemPresentation}
         markScale={markScale}
         scrollElement={scrollElement}
       />
@@ -149,7 +149,7 @@ function LiveCardFrontContent({
   return (
     <Timeline
       items={items}
-      itemTemplate={itemTemplate}
+      itemPresentation={itemPresentation}
       markScale={markScale}
       scrollElement={scrollElement}
       times={presentation.times}
@@ -160,7 +160,7 @@ function LiveCardFrontContent({
 export function LiveCardFront({
   source,
   items,
-  itemTemplate,
+  itemPresentation,
   isFetching,
   isContentFetching,
   sourceErrorMessage,
@@ -247,7 +247,7 @@ export function LiveCardFront({
               <LiveCardFrontContent
                 icon={icon}
                 items={items}
-                itemTemplate={itemTemplate}
+                itemPresentation={itemPresentation}
                 markScale={markScale}
                 provider={provider}
                 presentationType={source.metadata.type}

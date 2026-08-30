@@ -1,4 +1,4 @@
-import type { SourceItemTemplate } from "@newsnext/source-kit/types"
+import type { SourceItemPresentation } from "@newsnext/source-kit/types"
 import type { NewsItem } from "@/typings/source"
 import { VirtualList } from "@newsnext/ui/components/virtual-list"
 import { RelativeTime } from "@/hooks/useRelativeTime"
@@ -7,19 +7,19 @@ import { NewsItemLink, NewsItemSummary } from "./news-item-common"
 
 interface Props {
   items: NewsItem[]
-  itemTemplate?: SourceItemTemplate
+  itemPresentation?: SourceItemPresentation[]
   markScale?: number
   scrollElement: HTMLDivElement | null
 }
 
-export function UnorderedList({ items, itemTemplate, markScale, scrollElement }: Props) {
+export function UnorderedList({ items, itemPresentation, markScale, scrollElement }: Props) {
   return (
     <VirtualList
       items={items}
       scrollElement={scrollElement}
       estimateSize={60}
       itemClassName="pb-2 last:pb-0"
-      renderItem={(item) => {
+      renderItem={(item, index) => {
         const time = getNewsItemTime(item)
         return (
           <NewsItemLink
@@ -31,7 +31,7 @@ export function UnorderedList({ items, itemTemplate, markScale, scrollElement }:
             </span>
             <NewsItemSummary
               item={item}
-              itemTemplate={itemTemplate}
+              inlineText={itemPresentation?.[index]?.inline}
               inlineSuffix={time === undefined ? undefined : <RelativeTime date={time} />}
               markScale={markScale}
             />

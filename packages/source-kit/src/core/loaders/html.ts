@@ -5,7 +5,7 @@ import type {
   HtmlFieldConfig,
   HtmlTraversal,
   NewsItem,
-  SourceLoaderResult,
+  SourceLoaderOutput,
   SourcePresentationMetadata,
   SourceTemplateVars,
 } from "../../types"
@@ -69,7 +69,7 @@ interface HtmlLoaderBaseOptions extends TimestampSortableLoaderOptions {
   items?: string
   decoding?: string
   metadata?: LoaderMetadataFields<HtmlField>
-  itemTemplate?: SourceLoaderResult["itemTemplate"]
+  itemTemplate?: SourceLoaderOutput["itemTemplate"]
   fields: LoaderFields<HtmlField>
 }
 
@@ -285,7 +285,7 @@ function getHtmlFieldTemplate(
 export async function loadHtml(
   options: HtmlLoaderOptions,
   loaderContext: LoaderContext = {},
-): Promise<SourceLoaderResult> {
+): Promise<SourceLoaderOutput> {
   const {
     url,
     items: itemsSelect,

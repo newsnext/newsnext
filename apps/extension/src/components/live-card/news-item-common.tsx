@@ -1,7 +1,5 @@
-import type { SourceItemTemplate } from "@newsnext/source-kit/types"
 import type { ReactNode } from "react"
 import type { NewsItem, SemanticPicture } from "@/typings/source"
-import { compileSourceTemplate, createSourceTemplateScope, reportTemplateError } from "@newsnext/source-kit/core"
 import { ProxiedImage } from "@newsnext/ui/components/proxied-image"
 import { cn } from "@/lib/utils"
 import { PhArrowFatUp, PhChatCircle, PhEye, PhHeart, PhRepeat, PhStar } from "../icons/ph"
@@ -94,29 +92,16 @@ function getDefaultInlineText(item: NewsItem): string {
   return values.join(" · ")
 }
 
-function renderInlineTemplate(item: NewsItem, itemTemplate: SourceItemTemplate | undefined): string {
-  if (!itemTemplate) return getDefaultInlineText(item)
-  try {
-    return compileSourceTemplate(itemTemplate.inline, {
-      location: "source result.itemTemplate.inline",
-      slot: "item",
-    }).render(createSourceTemplateScope(undefined, { item })).trim()
-  } catch (error) {
-    reportTemplateError(error)
-    return getDefaultInlineText(item)
-  }
-}
-
 interface NewsItemSummaryProps {
   item: NewsItem
-  itemTemplate?: SourceItemTemplate
+  inlineText?: string
   className?: string
   inlineSuffix?: ReactNode
   markScale?: number
 }
 
-export function NewsItemSummary({ item, itemTemplate, className, inlineSuffix, markScale }: NewsItemSummaryProps) {
-  const inlineText = renderInlineTemplate(item, itemTemplate)
+export function NewsItemSummary({ item, inlineText: renderedInlineText, className, inlineSuffix, markScale }: NewsItemSummaryProps) {
+  const inlineText = renderedInlineText ?? getDefaultInlineText(item)
   return (
     <span className={cn("leading-none line-clamp-3", className)}>
       {item.icon && (

@@ -1,18 +1,52 @@
-import type { SourceLoaderResult } from "../types"
+import type { NewsItem, SourceLoaderOutput, SourceLoaderResult } from "../types"
 import { NEWS_ITEM_STAT_KEYS } from "@newsnext/shared/types"
 import { isSourcePresentationMetadataKey, isSourcePresentationType } from "../types"
-import { compileSourceTemplate } from "./template"
+import {
+  compileSourceTemplate,
+  createSourceTemplateScope,
+  reportTemplateError,
+} from "./template"
 
 const SOURCE_LOADER_RESULT_MAX_ITEMS = 50
 
 export function validateSourceLoaderResult(value: unknown): SourceLoaderResult {
+  return renderSourceLoaderResult(validateSourceLoaderOutput(value))
+}
+
+export interface ValidatedSourceLoaderOutput extends Omit<SourceLoaderOutput, "items"> {
+  items: NewsItem[]
+}
+
+export function validateSourceLoaderOutput(value: unknown): ValidatedSourceLoaderOutput {
   const normalized = normalizeSourceLoaderResult(value)
-  assertSourceLoaderResult(normalized)
+  assertSourceLoaderOutput(normalized)
   if (normalized.items.length <= SOURCE_LOADER_RESULT_MAX_ITEMS) return normalized
   return {
     ...normalized,
     items: normalized.items.slice(0, SOURCE_LOADER_RESULT_MAX_ITEMS),
   }
+}
+
+export function renderSourceLoaderResult(output: ValidatedSourceLoaderOutput): SourceLoaderResult {
+  const result: SourceLoaderResult = { items: output.items }
+  if (output.metadata !== undefined) result.metadata = output.metadata
+  if (output.itemTemplate === undefined) return result
+
+  const template = compileSourceTemplate(output.itemTemplate.inline, {
+    location: "source result.itemTemplate.inline",
+    slot: "item",
+  })
+  result.itemPresentation = output.items.map((item) => {
+    try {
+      return {
+        inline: template.render(createSourceTemplateScope(undefined, { item })).trim(),
+      }
+    } catch (error) {
+      reportTemplateError(error)
+      return {}
+    }
+  })
+  return result
 }
 
 function normalizeSourceLoaderResult(value: unknown): unknown {
@@ -54,7 +88,7 @@ function withoutEmptyValues(value: Record<string, unknown>): Record<string, unkn
   )
 }
 
-function assertSourceLoaderResult(value: unknown): asserts value is SourceLoaderResult {
+function assertSourceLoaderOutput(value: unknown): asserts value is ValidatedSourceLoaderOutput {
   if (!isRecord(value) || !Array.isArray(value.items)) {
     throwInvalidLoaderResult("expected an object containing an items array")
   }

@@ -77,7 +77,7 @@ export function reportTemplateError(error: unknown): void {
   console.error("Source Liquid template failed", error)
 }
 
-function createEngine(output: "html" | "plain"): Liquid {
+function createEngine(output: TemplateOutput): Liquid {
   const engine = new Liquid({
     cache: 256,
     lenientIf: true,
@@ -178,9 +178,10 @@ function parseCompactNumber(value: unknown): number | undefined {
   return Number.isFinite(result) ? result : undefined
 }
 
-const engines = {
-  html: createEngine("html"),
-  plain: createEngine("plain"),
+const engines: Partial<Record<TemplateOutput, Liquid>> = {}
+
+function getEngine(output: TemplateOutput): Liquid {
+  return engines[output] ??= createEngine(output)
 }
 const parsedTemplates = {
   html: new Map<string, Template[]>(),
@@ -344,22 +345,22 @@ function constantTemplateValue<T>(value: T): CompiledSourceTemplateValue<T> {
   return Object.freeze({ render: () => value })
 }
 
-function getParsedTemplate(template: string, output: "html" | "plain"): Template[] {
+function getParsedTemplate(template: string, output: TemplateOutput): Template[] {
   assertSafeTemplate(template)
   const cached = parsedTemplates[output].get(template)
   if (cached) return cached
 
-  const parsed = engines[output].parse(template)
+  const parsed = getEngine(output).parse(template)
   setCached(parsedTemplates[output], template, parsed)
   return parsed
 }
 
-function getRenderer(template: string, output: "html" | "plain"): TemplateRenderer {
+function getRenderer(template: string, output: TemplateOutput): TemplateRenderer {
   const cached = renderers[output].get(template)
   if (cached) return cached
 
   const parsed = getParsedTemplate(template, output)
-  const renderer: TemplateRenderer = context => String(engines[output].renderSync(
+  const renderer: TemplateRenderer = context => String(getEngine(output).renderSync(
     parsed,
     context,
     {
@@ -376,9 +377,9 @@ function getRenderer(template: string, output: "html" | "plain"): TemplateRender
 function validateTemplatePaths(
   template: Template[],
   allowedPaths: readonly string[],
-  output: "html" | "plain",
+  output: TemplateOutput,
 ): void {
-  const variables = engines[output].globalFullVariablesSync(template, { partials: false })
+  const variables = getEngine(output).globalFullVariablesSync(template, { partials: false })
 
   for (const path of variables) {
     if (!allowedPaths.some(allowedPath => isAllowedTemplatePath(path, allowedPath))) {

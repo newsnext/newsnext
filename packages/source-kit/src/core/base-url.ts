@@ -1,8 +1,12 @@
 import type {
   NewsItem,
-  SourceLoaderResult,
   SourcePresentationMetadata,
 } from "../types"
+
+interface SourceLoaderUrlResult {
+  items: NewsItem[]
+  metadata?: SourcePresentationMetadata
+}
 
 export function parseSourceBaseUrl(value: string, location: string): string {
   let url: URL
@@ -44,11 +48,11 @@ export function resolveSourceMetadataUrls(
   return resolved
 }
 
-export function resolveSourceLoaderResultUrls(
-  result: SourceLoaderResult,
+export function resolveSourceLoaderResultUrls<T extends SourceLoaderUrlResult>(
+  result: T,
   baseUrl: string,
-): SourceLoaderResult {
-  const resolved: SourceLoaderResult = {
+): T {
+  const resolved = {
     ...result,
     items: result.items.map(item => resolveNewsItemUrls(item, baseUrl)),
   }
