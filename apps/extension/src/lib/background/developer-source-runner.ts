@@ -119,8 +119,9 @@ export async function runDeveloperSource(
     input.providerId,
     input.provider as ProviderConfig,
   )
+  const serializedRegistry: unknown = JSON.parse(JSON.stringify(registry))
   const sourceId = `${input.providerId}:${input.sourceId}`
-  const source = resolveSourceRegistry(registry)[sourceId]
+  const source = resolveSourceRegistry(serializedRegistry)[sourceId]
   if (!source) {
     throw new Error(`Source "${sourceId}" not found`)
   }
