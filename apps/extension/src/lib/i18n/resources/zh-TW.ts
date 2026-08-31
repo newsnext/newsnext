@@ -130,6 +130,7 @@ export const zhTW = {
   defaultLayer: "預設層",
   now: "現在",
   next: "接下來",
+  justNow: "剛剛",
   deleteWithLiveCards: "連同 LiveCard 一起刪除",
   confirmDelete: "確認刪除",
   deleting: "正在刪除…",

@@ -126,6 +126,7 @@ export const en = {
   defaultLayer: "Default layer",
   now: "Now",
   next: "Next",
+  justNow: "Just now",
   deleteWithLiveCards: "Delete with LiveCards",
   confirmDelete: "Confirm delete",
   deleting: "Deleting…",

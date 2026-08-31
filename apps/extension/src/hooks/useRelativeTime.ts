@@ -53,20 +53,21 @@ minuteClockAtom.onMount = (setAtom) => {
   }
 }
 
-export function formatRelativeTime(date: number, now: Date, locale = "en-US"): string {
+export function formatRelativeTime(
+  date: number,
+  now: Date,
+  locale = "en-US",
+  justNow = "Just now",
+): string {
   const relativeTimeFormatter = new Intl.RelativeTimeFormat(locale, {
     numeric: "always",
-    style: "narrow",
-  })
-  const currentTimeFormatter = new Intl.RelativeTimeFormat(locale, {
-    numeric: "auto",
     style: "narrow",
   })
   const difference = date - now.getTime()
   const magnitude = Math.abs(difference)
   const unit = relativeTimeUnits.find(([milliseconds]) => magnitude >= milliseconds)
 
-  if (!unit) return currentTimeFormatter.format(0, "second")
+  if (!unit) return justNow
 
   const [milliseconds, name] = unit
   const value = Math.round(magnitude / milliseconds) * Math.sign(difference)
@@ -79,21 +80,22 @@ export function useMinuteDate(): Date {
 }
 
 export function useRelativeTime({ date }: { date: number }): string {
-  const { locale } = useI18n()
+  const { locale, t } = useI18n()
   const lastTickAt = useAtomValue(minuteClockAtom)
   return useMemo(
-    () => formatRelativeTime(date, sampleClock(lastTickAt), locale),
-    [date, lastTickAt, locale],
+    () => formatRelativeTime(date, sampleClock(lastTickAt), locale, t("justNow")),
+    [date, lastTickAt, locale, t],
   )
 }
 
 export function useRelativeTimes(dates: readonly number[]): string[] {
-  const { locale } = useI18n()
+  const { locale, t } = useI18n()
   const lastTickAt = useAtomValue(minuteClockAtom)
   return useMemo(() => {
     const now = sampleClock(lastTickAt)
-    return dates.map(date => formatRelativeTime(date, now, locale))
-  }, [dates, lastTickAt, locale])
+    const justNow = t("justNow")
+    return dates.map(date => formatRelativeTime(date, now, locale, justNow))
+  }, [dates, lastTickAt, locale, t])
 }
 
 export function RelativeTime({ date }: { date: number }): string {

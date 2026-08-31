@@ -130,6 +130,7 @@ export const zhCN = {
   defaultLayer: "默认层",
   now: "现在",
   next: "接下来",
+  justNow: "刚刚",
   deleteWithLiveCards: "连同 LiveCard 一起删除",
   confirmDelete: "确认删除",
   deleting: "正在删除…",

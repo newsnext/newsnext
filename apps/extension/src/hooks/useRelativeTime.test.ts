@@ -5,7 +5,7 @@ const now = new Date("2026-08-30T12:00:00Z")
 
 describe("formatRelativeTime", () => {
   it.each([
-    [now.getTime() - 30_000, "now"],
+    [now.getTime() - 30_000, "Just now"],
     [now.getTime() - 5 * 60_000, "5m ago"],
     [now.getTime() - 2 * 60 * 60_000, "2h ago"],
     [now.getTime() - 24 * 60 * 60_000, "1d ago"],
@@ -23,5 +23,12 @@ describe("formatRelativeTime", () => {
     ["zh-TW", "5 分鐘前"],
   ])("formats relative time in %s", (locale, expected) => {
     expect(formatRelativeTime(now.getTime() - 5 * 60_000, now, locale)).toBe(expected)
+  })
+
+  it.each([
+    ["zh-CN", "刚刚"],
+    ["zh-TW", "剛剛"],
+  ])("uses the localized just-now label in %s", (locale, expected) => {
+    expect(formatRelativeTime(now.getTime() - 30_000, now, locale, expected)).toBe(expected)
   })
 })
