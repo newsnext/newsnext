@@ -98,8 +98,8 @@ function DraggableLiveCardComponent({ boardId, descriptor, dragging, instanceAto
 
   return (
     <LiveCard
-      id={id}
       source={source}
+      target={{ kind: "instance", instanceId: id }}
       nodeRef={setNodeRef}
       dragHandleRef={sortable ? setHandleRef : undefined}
       sizeClassName={LIVE_CARD_SIZE_CLASS_NAMES[liveCardHeight]}

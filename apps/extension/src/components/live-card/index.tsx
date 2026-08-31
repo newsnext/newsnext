@@ -18,25 +18,34 @@ import {
 import { LiveCardBack } from "./card-back"
 import { LiveCardFront } from "./card-front"
 
+export type LiveCardTarget
+  = | {
+    kind: "instance"
+    instanceId: string
+  }
+  | {
+    kind: "draft"
+    onPatchChange: (patch: InstancePatch) => void
+  }
+
 export interface LiveCardProps {
-  id: string
   source: LiveCardViewModel
+  target: LiveCardTarget
   className?: string
   sizeClassName?: string
   nodeRef?: (node: HTMLElement | null) => void
   dragHandleRef?: LiveCardDragHandleRef
-  isDraft?: boolean
-  onDraftSourceChange?: (patch: InstancePatch) => void
 }
 
-function LiveCardContent({ id, source, dragHandleRef, isDraft = false, onDraftSourceChange }: LiveCardProps) {
+function LiveCardContent({ source, target, dragHandleRef }: LiveCardProps) {
   const setInstancePatch = useSetAtom(setInstancePatchAtom)
   const resetLocalParams = useSetAtom(resetInstanceParamsAtom)
   const [isFlipped, setIsFlipped] = useState(false)
+  const instanceId = target.kind === "instance" ? target.instanceId : undefined
   const { items, inlinePresentation, metadata, sourceSnapshot, manualRequest, isFetching, isManualRequesting, isLoading, isError, errorMessage, loginUrl, loadedAt } = useSourceQuery({
     source,
     sourceId: source.sourceId,
-    instanceId: isDraft ? undefined : id,
+    instanceId,
     params: source.paramsValue,
     enabled: true,
   })
@@ -75,35 +84,35 @@ function LiveCardContent({ id, source, dragHandleRef, isDraft = false, onDraftSo
 
   const handleSaveSourceParams = useCallback(async () => {
     const nextParams = getDraftParams()
-    if (onDraftSourceChange) {
-      onDraftSourceChange({ params: nextParams })
+    if (target.kind === "draft") {
+      target.onPatchChange({ params: nextParams })
       commitParams(nextParams)
       return
     }
 
-    await setInstancePatch({ instanceId: id, patch: { params: nextParams } })
+    await setInstancePatch({ instanceId: target.instanceId, patch: { params: nextParams } })
     commitParams(nextParams)
-  }, [commitParams, getDraftParams, id, onDraftSourceChange, setInstancePatch])
+  }, [commitParams, getDraftParams, setInstancePatch, target])
 
   const handleResetSourceParams = useCallback(async () => {
-    if (onDraftSourceChange) {
-      onDraftSourceChange({ params: {} })
+    if (target.kind === "draft") {
+      target.onPatchChange({ params: {} })
       commitParams({})
       return
     }
 
-    await resetLocalParams(id)
+    await resetLocalParams(target.instanceId)
     commitParams({})
-  }, [commitParams, id, onDraftSourceChange, resetLocalParams])
+  }, [commitParams, resetLocalParams, target])
 
   const handleSaveSourceMeta = useCallback(async (metadata: InstanceMetadata) => {
-    if (onDraftSourceChange) {
-      onDraftSourceChange({ metadata })
+    if (target.kind === "draft") {
+      target.onPatchChange({ metadata })
       return
     }
 
-    await setInstancePatch({ instanceId: id, patch: { metadata } })
-  }, [id, onDraftSourceChange, setInstancePatch])
+    await setInstancePatch({ instanceId: target.instanceId, patch: { metadata } })
+  }, [setInstancePatch, target])
 
   return (
     <FlipAnimate
@@ -127,8 +136,8 @@ function LiveCardContent({ id, source, dragHandleRef, isDraft = false, onDraftSo
         dragHandleRef={isFlipped ? undefined : dragHandleRef}
       />
       <LiveCardBack
-        id={id}
         source={displaySource}
+        target={target}
         draftSourceParams={draftParams}
         hasSourceParams={hasParams}
         hasSourceParamChanges={isDirty}
@@ -140,7 +149,6 @@ function LiveCardContent({ id, source, dragHandleRef, isDraft = false, onDraftSo
         onDiscardSourceParams={discardDraftParams}
         onSaveSourceMeta={handleSaveSourceMeta}
         onFlip={handleFlip}
-        isDraft={isDraft}
         dragHandleRef={isFlipped ? dragHandleRef : undefined}
       />
     </FlipAnimate>

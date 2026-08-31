@@ -94,21 +94,19 @@ function launchRadarConfetti({ color, originElement }: RadarConfettiOptions): vo
 interface RadarLiveCardProps {
   liveCard: LiveCardViewModel
   className?: string
-  onDraftSourceChange?: (patch: InstancePatch) => void
+  onPatchChange: (patch: InstancePatch) => void
 }
 
-function RadarLiveCard({ liveCard, className, onDraftSourceChange }: RadarLiveCardProps) {
+function RadarLiveCard({ liveCard, className, onPatchChange }: RadarLiveCardProps) {
   return (
     <LiveCard
-      id={liveCard.id}
       source={liveCard}
+      target={{ kind: "draft", onPatchChange }}
       className={cn(
         "overflow-hidden rounded-3xl",
         className,
       )}
       sizeClassName="h-[30rem] w-full"
-      isDraft
-      onDraftSourceChange={onDraftSourceChange}
     />
   )
 }
@@ -119,7 +117,7 @@ interface RadarTrackCardProps {
   trackItemOffset: number
   x: MotionValue<number>
   onDragHandlePointerDown: (event: PointerEvent<HTMLDivElement>) => void
-  onDraftSourceChange?: (patch: InstancePatch) => void
+  onPatchChange: (patch: InstancePatch) => void
 }
 
 function RadarTrackCard({
@@ -128,7 +126,7 @@ function RadarTrackCard({
   trackItemOffset,
   x,
   onDragHandlePointerDown,
-  onDraftSourceChange,
+  onPatchChange,
 }: RadarTrackCardProps) {
   const range = [
     -(index + 1) * trackItemOffset,
@@ -150,7 +148,7 @@ function RadarTrackCard({
       >
         <RadarLiveCard
           liveCard={liveCard}
-          onDraftSourceChange={onDraftSourceChange}
+          onPatchChange={onPatchChange}
         />
       </div>
     </motion.div>
@@ -347,23 +345,19 @@ function RadarDeckContent({
     })
   }, [activeLiveCard, activeSuggestion, addInstance, draftPatches, isCreated, onCreationStart, runCreate, targetBoardIds])
 
-  const handleActiveDraftSourceChange = useCallback((patch: InstancePatch) => {
-    if (!activeSuggestion) {
-      return
-    }
-
+  const handleDraftSourceChange = useCallback((suggestionId: string, patch: InstancePatch) => {
     setDraftPatches((prev) => {
-      const nextPatch = mergeInstancePatch(prev[activeSuggestion.id], patch)
+      const nextPatch = mergeInstancePatch(prev[suggestionId], patch)
       const resolvedPatch = patch.params && Object.keys(patch.params).length === 0
         ? { ...nextPatch, params: {} }
         : nextPatch
 
       return {
         ...prev,
-        [activeSuggestion.id]: resolvedPatch,
+        [suggestionId]: resolvedPatch,
       }
     })
-  }, [activeSuggestion])
+  }, [])
 
   if (!activeSuggestion || !activeLiveCard) {
     return null
@@ -402,7 +396,7 @@ function RadarDeckContent({
                 trackItemOffset={trackItemOffset}
                 x={x}
                 onDragHandlePointerDown={handleDragHandlePointerDown}
-                onDraftSourceChange={index === activeIndex ? handleActiveDraftSourceChange : undefined}
+                onPatchChange={patch => handleDraftSourceChange(suggestion.id, patch)}
               />
             ))}
           </motion.div>

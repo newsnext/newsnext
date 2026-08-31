@@ -14,8 +14,10 @@ import { DeleteLiveCardButton, LiveCardBoardSelect } from "./actions"
 import { LiveCardEditForm } from "./edit-form"
 
 export interface LiveCardBackProps {
-  id: string
   source: LiveCardViewModel
+  target:
+    | { kind: "instance", instanceId: string }
+    | { kind: "draft" }
   draftSourceParams: Record<string, unknown>
   hasSourceParams: boolean
   hasSourceParamChanges: boolean
@@ -27,13 +29,12 @@ export interface LiveCardBackProps {
   onDiscardSourceParams: () => void
   onSaveSourceMeta: (meta: InstanceMetadata) => Promise<void> | void
   onFlip: () => void
-  isDraft?: boolean
   dragHandleRef?: LiveCardDragHandleRef
 }
 
 export function LiveCardBack({
-  id,
   source,
+  target,
   draftSourceParams,
   hasSourceParams,
   hasSourceParamChanges,
@@ -45,7 +46,6 @@ export function LiveCardBack({
   onDiscardSourceParams,
   onSaveSourceMeta,
   onFlip,
-  isDraft = false,
   dragHandleRef,
 }: LiveCardBackProps) {
   const { provider } = source
@@ -76,7 +76,7 @@ export function LiveCardBack({
           dragHandleRef={dragHandleRef}
           actions={(
             <>
-              {!isDraft && <DeleteLiveCardButton id={id} />}
+              {target.kind === "instance" && <DeleteLiveCardButton id={target.instanceId} />}
               <LiveCardHeaderActionButton
                 onClick={(e) => {
                   e.stopPropagation()
@@ -100,7 +100,7 @@ export function LiveCardBack({
             className="relative size-full rounded-2xl overflow-hidden"
           >
             <div className="p-3 space-y-4">
-              {!isDraft && <LiveCardBoardSelect id={id} />}
+              {target.kind === "instance" && <LiveCardBoardSelect id={target.instanceId} />}
               <LiveCardEditForm
                 source={source}
                 draftSourceParams={draftSourceParams}

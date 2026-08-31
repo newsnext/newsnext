@@ -189,14 +189,13 @@ function LiveCardBackFixture() {
   return (
     <LiveCardStage>
       <LiveCardBack
-        id={source.id}
         source={source}
+        target={{ kind: "draft" }}
         draftSourceParams={draftParams}
         hasSourceParams
         hasSourceParamChanges={hasChanges}
         sourceParamValidation={{ errors: {}, valid: true }}
         loadedAt={LOADED_AT}
-        isDraft
         onSourceParamChange={(key, value) => {
           setDraftParams(current => ({ ...current, [key]: value }))
         }}
