@@ -8,6 +8,7 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react"
 import { ScrollProgressProvider } from "@/components/common/scroll-progress-provider"
 import { RadarDeck } from "@/components/popup/radar-deck"
+import { useI18n } from "@/hooks/use-i18n"
 import { consumeExternalRssRadarOpenRequest } from "@/lib/radar"
 import { loadSourceDescriptor } from "@/lib/source/registry"
 
@@ -27,6 +28,7 @@ function readInitialState(): ExternalRssRadarState | null {
 }
 
 export function ExternalRssRadarDialog(): React.JSX.Element | null {
+  const { t } = useI18n()
   const [state, setState] = useState<ExternalRssRadarState | null>(readInitialState)
   const [isCelebrating, setIsCelebrating] = useState(false)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
@@ -71,7 +73,7 @@ export function ExternalRssRadarDialog(): React.JSX.Element | null {
             status: "error",
             message: error instanceof Error
               ? error.message
-              : "NewsNext could not prepare this RSS feed.",
+              : t("prepareRssFeedFailed"),
           })
         }
       })
@@ -79,7 +81,7 @@ export function ExternalRssRadarDialog(): React.JSX.Element | null {
     return () => {
       isCancelled = true
     }
-  }, [loadingFeedUrl])
+  }, [loadingFeedUrl, t])
 
   if (!state) return null
 
@@ -104,16 +106,16 @@ export function ExternalRssRadarDialog(): React.JSX.Element | null {
         >
           <DialogTitle className="sr-only">Radar</DialogTitle>
           <DialogDescription className="sr-only">
-            Review the RSS feed and create a LiveCard.
+            {t("radarRssDescription")}
           </DialogDescription>
           {state.status === "loading" && (
             <div className="flex min-h-40 items-center justify-center text-sm text-muted-foreground">
-              Preparing RSS feed…
+              {t("preparingRssFeed")}
             </div>
           )}
           {state.status === "error" && (
             <div className="flex min-h-40 flex-col items-center justify-center gap-1 px-6 text-center">
-              <span className="font-medium text-foreground">RSS feed unavailable</span>
+              <span className="font-medium text-foreground">{t("rssFeedUnavailable")}</span>
               <span className="text-xs text-muted-foreground">{state.message}</span>
             </div>
           )}

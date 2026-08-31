@@ -7,6 +7,7 @@ import {
   SelectTrigger,
 } from "@newsnext/ui/components/select"
 import { Switch } from "@newsnext/ui/components/switch"
+import { useI18n } from "@/hooks/use-i18n"
 import { cn } from "@/lib/utils"
 import {
   EditableInput,
@@ -27,6 +28,7 @@ export function ParamField({
   editable: boolean
   onChange: (value: unknown) => void
 }) {
+  const { t } = useI18n()
   const currentValue = value ?? param.default
 
   if (param.type === "switch") {
@@ -34,7 +36,7 @@ export function ParamField({
       <Info label={param.title}>
         <div className={cn("flex w-full items-center gap-3 pl-2", editable ? "justify-start pr-2" : "justify-end")}>
           <span className="text-xs text-muted-foreground">
-            {currentValue ? "On" : "Off"}
+            {t(currentValue ? "on" : "off")}
           </span>
           <Switch
             checked={Boolean(currentValue)}
@@ -99,7 +101,7 @@ export function ParamField({
     if (!editable) {
       return (
         <Info label={param.title}>
-          <Text text={selectedLabels.length > 0 ? selectedLabels.join(", ") : "None"} />
+          <Text text={selectedLabels.length > 0 ? selectedLabels.join(", ") : t("none")} />
         </Info>
       )
     }

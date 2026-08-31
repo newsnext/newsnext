@@ -4,6 +4,7 @@ import type { SourcePermissionRequest } from "@/lib/source"
 import type { LiveCardViewModel, NewsItem } from "@/typings/source"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { useMemo, useState } from "react"
+import { useI18n } from "@/hooks/use-i18n"
 import { useSourceIcon } from "@/hooks/use-source-icon"
 import { useSourceMarkScales } from "@/hooks/use-source-mark-scales"
 import { RelativeTime } from "@/hooks/useRelativeTime"
@@ -52,11 +53,12 @@ function LiveCardRefreshButton({
   isFetching: boolean
   onRefresh: () => void
 }) {
+  const { t } = useI18n()
   return (
     <LiveCardHeaderActionButton
       className={isFetching ? "animate-spin" : undefined}
       onClick={onRefresh}
-      aria-label="Refresh"
+      aria-label={t("refresh")}
     >
       {isFetching ? <PhCircleDashedDuotone /> : <PhArrowCounterClockwiseDuotone />}
     </LiveCardHeaderActionButton>
@@ -172,6 +174,7 @@ export function LiveCardFront({
   actions,
   dragHandleRef,
 }: LiveCardFrontProps) {
+  const { t } = useI18n()
   const { provider } = source
   const { badge, desc, home, title } = source.metadata
   const icon = useSourceIcon(source)
@@ -193,7 +196,7 @@ export function LiveCardFront({
         />
       )
     : sourceLoginUrl
-      ? `Log in to ${provider.title} to continue.`
+      ? t("logInToContinue", { provider: provider.title })
       : visibleSourceErrorMessage
 
   return (
@@ -207,7 +210,7 @@ export function LiveCardFront({
           icon={icon}
           provider={provider}
           title={title}
-          subtitle={isFetching ? "Updating..." : <RelativeTime date={loadedAt} />}
+          subtitle={isFetching ? t("updating") : <RelativeTime date={loadedAt} />}
           dragHandleRef={dragHandleRef}
           actions={actions ?? (
             <>
@@ -215,7 +218,7 @@ export function LiveCardFront({
               {onFlip && (
                 <LiveCardHeaderActionButton
                   onClick={onFlip}
-                  aria-label="Show LiveCard details"
+                  aria-label={t("showLiveCardDetails")}
                 >
                   <PhInfoDuotone />
                 </LiveCardHeaderActionButton>

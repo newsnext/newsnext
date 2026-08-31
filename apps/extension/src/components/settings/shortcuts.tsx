@@ -1,4 +1,5 @@
 import type { Hotkey } from "@tanstack/react-hotkeys"
+import type { StaticMessageKey } from "@/lib/i18n"
 import type { ShortcutId } from "@/lib/settings"
 import { Button } from "@newsnext/ui/components/button"
 import { Card, CardContent } from "@newsnext/ui/components/card"
@@ -10,13 +11,20 @@ import { useAtom } from "jotai"
 import { useState } from "react"
 import { ConfigSection } from "@/components/common/config-section"
 import { PhArrowCounterClockwise } from "@/components/icons/ph"
+import { useI18n } from "@/hooks/use-i18n"
 import {
   DEFAULT_SHORTCUT_SETTINGS,
-  SHORTCUT_DEFINITIONS,
   SHORTCUT_ORDER,
 } from "@/lib/settings"
 import { cn } from "@/lib/utils"
 import { shortcutSettingsAtom } from "@/store/settings"
+
+const SHORTCUT_MESSAGES: Record<ShortcutId, { descriptionKey: StaticMessageKey, labelKey: StaticMessageKey }> = {
+  nextBoard: { descriptionKey: "nextBoardDescription", labelKey: "nextBoard" },
+  previousBoard: { descriptionKey: "previousBoardDescription", labelKey: "previousBoard" },
+  search: { descriptionKey: "searchShortcutDescription", labelKey: "search" },
+  toggleNextLayer: { descriptionKey: "toggleNextLayerDescription", labelKey: "toggleNextLayer" },
+}
 
 interface ShortcutRowProps {
   description: string
@@ -29,6 +37,7 @@ interface ShortcutRowProps {
 }
 
 export function ShortcutsSettings(): React.JSX.Element {
+  const { t } = useI18n()
   const [shortcuts, setShortcuts] = useAtom(shortcutSettingsAtom)
   const [editingShortcut, setEditingShortcut] = useState<ShortcutId | null>(null)
   const [status, setStatus] = useState("")
@@ -41,7 +50,10 @@ export function ShortcutsSettings(): React.JSX.Element {
           ))
         : undefined
       if (conflict) {
-        setStatus(`${formatForDisplay(hotkey)} is already assigned to ${SHORTCUT_DEFINITIONS[conflict].label}.`)
+        setStatus(t("shortcutConflict", {
+          hotkey: formatForDisplay(hotkey),
+          label: t(SHORTCUT_MESSAGES[conflict].labelKey),
+        }))
         setEditingShortcut(null)
         return
       }
@@ -77,22 +89,22 @@ export function ShortcutsSettings(): React.JSX.Element {
 
   return (
     <ConfigSection
-      title="Keyboard shortcuts"
-      description="Select a shortcut to record a new key combination. Press Escape to cancel, or Backspace or Delete to clear it."
+      title={t("keyboardShortcuts")}
+      description={t("keyboardShortcutsDescription")}
       surface={false}
     >
       <Card variant="subtle">
         <CardContent className="@container divide-y divide-border/50 p-0">
           {SHORTCUT_ORDER.map((shortcutId) => {
-            const definition = SHORTCUT_DEFINITIONS[shortcutId]
+            const messages = SHORTCUT_MESSAGES[shortcutId]
             return (
               <ShortcutRow
                 key={shortcutId}
-                description={definition.description}
+                description={t(messages.descriptionKey)}
                 hotkey={shortcuts[shortcutId]}
                 isDefault={shortcuts[shortcutId] === DEFAULT_SHORTCUT_SETTINGS[shortcutId]}
                 isRecording={editingShortcut === shortcutId && recorder.isRecording}
-                label={definition.label}
+                label={t(messages.labelKey)}
                 onRecord={() => startRecording(shortcutId)}
                 onReset={() => resetShortcut(shortcutId)}
               />
@@ -101,7 +113,7 @@ export function ShortcutsSettings(): React.JSX.Element {
         </CardContent>
       </Card>
       <p role="status" className={status ? "px-0.5 text-xs text-destructive" : "sr-only"}>
-        {status || (recorder.isRecording ? "Recording shortcut" : "")}
+        {status || (recorder.isRecording ? t("recordingShortcut") : "")}
       </p>
     </ConfigSection>
   )
@@ -116,7 +128,8 @@ function ShortcutRow({
   onRecord,
   onReset,
 }: ShortcutRowProps): React.JSX.Element {
-  const displayHotkey = formatShortcut(hotkey)
+  const { t } = useI18n()
+  const displayHotkey = hotkey ? formatForDisplay(hotkey) : t("notSet")
 
   return (
     <div className="grid gap-3 p-3 @min-[26rem]:grid-cols-[minmax(0,1fr)_auto] @min-[26rem]:items-center">
@@ -136,8 +149,8 @@ function ShortcutRow({
             isRecording && "border-theme-400 ring-2 ring-theme-400/40",
           )}
           aria-label={isRecording
-            ? `Recording ${label} shortcut`
-            : `Change ${label} shortcut, currently ${displayHotkey}`}
+            ? t("recordShortcut", { label })
+            : t("changeShortcut", { hotkey: displayHotkey, label })}
           aria-pressed={isRecording}
           onClick={onRecord}
         >
@@ -156,8 +169,8 @@ function ShortcutRow({
           size="icon-lg"
           className="island-pill"
           disabled={isDefault}
-          aria-label={`Reset ${label} shortcut`}
-          title={`Reset ${label} shortcut`}
+          aria-label={t("resetShortcut", { label })}
+          title={t("resetShortcut", { label })}
           onClick={onReset}
         >
           <PhArrowCounterClockwise />
@@ -165,8 +178,4 @@ function ShortcutRow({
       </div>
     </div>
   )
-}
-
-function formatShortcut(hotkey: Hotkey | null): string {
-  return hotkey ? formatForDisplay(hotkey) : "Not set"
 }

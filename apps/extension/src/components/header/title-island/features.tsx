@@ -7,6 +7,7 @@ import { dropTargetForElements, monitorForElements } from "@atlaskit/pragmatic-d
 import { useSetAtom } from "jotai"
 import { m, useReducedMotion } from "motion/react"
 import { useEffect, useEffectEvent, useState } from "react"
+import { useI18n } from "@/hooks/use-i18n"
 import { isSortableData } from "@/lib/board"
 import { deleteInstanceAtom } from "@/store/board"
 import { PhTrash } from "../../icons/ph"
@@ -67,6 +68,7 @@ export function useNotificationFeature(
 export function useTrashFeature(
   surfaceRef: RefObject<HTMLDivElement | null>,
 ): TitleIslandFeature | null {
+  const { t } = useI18n()
   const [isDragging, setIsDragging] = useState(false)
   const [isOverTrash, setIsOverTrash] = useState(false)
   const deleteInstance = useSetAtom(deleteInstanceAtom)
@@ -116,7 +118,7 @@ export function useTrashFeature(
     content: (
       <div
         className="flex size-full items-center justify-center gap-2.5 text-red-600 dark:text-red-400"
-        aria-label={isOverTrash ? "Release to delete LiveCard" : "Delete LiveCard"}
+        aria-label={isOverTrash ? t("releaseToDeleteLiveCard") : t("deleteLiveCard")}
       >
         <m.div
           animate={isOverTrash && !shouldReduceMotion
@@ -127,7 +129,7 @@ export function useTrashFeature(
           <PhTrash className="size-7" />
         </m.div>
         <span className="text-sm font-semibold">
-          {isOverTrash ? "Release to delete" : "Drop to delete"}
+          {isOverTrash ? t("releaseToDelete") : t("dropToDelete")}
         </span>
       </div>
     ),

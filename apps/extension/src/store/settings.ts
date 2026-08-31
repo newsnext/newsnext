@@ -1,3 +1,4 @@
+import type { LocalePreference } from "@/lib/i18n/locale"
 import type {
   LiveCardHeight,
   PersistedDeviceState,
@@ -120,6 +121,14 @@ export const currentBoardIdAtom = atom(
       ? update(state.currentBoardId)
       : update
     set(persistedDeviceStateAtom, { ...state, currentBoardId })
+  },
+)
+
+export const localePreferenceAtom = atom(
+  get => get(persistedDeviceStateAtom).localePreference,
+  (get, set, localePreference: LocalePreference) => {
+    const state = get(persistedDeviceStateAtom)
+    set(persistedDeviceStateAtom, { ...state, localePreference })
   },
 )
 

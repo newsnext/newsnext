@@ -1,6 +1,8 @@
+import type { LocalePreference } from "../i18n/locale"
 import type { SourceIconSettings, SourceIconSource } from "../source/icon"
 import type { ThemeMode } from "../utils/swith-theme"
 import type { ShortcutSettings } from "./shortcuts"
+import { isLocalePreference } from "../i18n/locale"
 import {
   DEFAULT_SOURCE_ICON_SETTINGS,
 } from "../source/icon"
@@ -32,6 +34,7 @@ export interface PersistedSettings {
 
 export interface PersistedDeviceState {
   currentBoardId: string
+  localePreference: LocalePreference
   settingsTab: SettingsTabId
   version: typeof PERSISTED_SETTINGS_VERSION
 }
@@ -55,6 +58,7 @@ export function createDefaultPersistedSettings(): PersistedSettings {
 export function createDefaultPersistedDeviceState(currentBoardId = ""): PersistedDeviceState {
   return {
     currentBoardId,
+    localePreference: "system",
     settingsTab: "appearance",
     version: PERSISTED_SETTINGS_VERSION,
   }
@@ -106,6 +110,9 @@ export function normalizePersistedDeviceState(value: unknown): PersistedDeviceSt
     currentBoardId: typeof value.currentBoardId === "string"
       ? value.currentBoardId
       : defaults.currentBoardId,
+    localePreference: isLocalePreference(value.localePreference)
+      ? value.localePreference
+      : defaults.localePreference,
     settingsTab: isSettingsTabId(value.settingsTab)
       ? value.settingsTab
       : defaults.settingsTab,

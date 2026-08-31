@@ -1,9 +1,11 @@
 import { ThemeSelector } from "@newsnext/ui/components/theme-selector"
 import { useAtomValue, useSetAtom } from "jotai"
+import { useI18n } from "@/hooks/use-i18n"
 import { handleThemeSwitch } from "@/lib/utils/swith-theme"
 import { currentBoardAtom, updateBoardAtom } from "@/store/board"
 
 export function ThemeFeature() {
+  const { t } = useI18n()
   const board = useAtomValue(currentBoardAtom)
   const updateBoard = useSetAtom(updateBoardAtom)
 
@@ -11,7 +13,7 @@ export function ThemeFeature() {
 
   return (
     <section
-      aria-label="Board color"
+      aria-label={t("boardColor")}
       className="flex size-full items-center p-3 text-foreground"
       onClick={event => event.stopPropagation()}
     >

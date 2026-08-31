@@ -3,6 +3,7 @@ import { BoardMembershipSelect } from "@/components/common/board-membership-sele
 import { ConfirmDestructiveButton } from "@/components/common/confirm-destructive-button"
 import { PhTrashDuotone } from "@/components/icons/ph"
 import { useAsyncAction, useKeyedAsyncAction } from "@/hooks/use-async-action"
+import { useI18n } from "@/hooks/use-i18n"
 import {
   boardsAtom,
   deleteInstanceAtom,
@@ -10,13 +11,14 @@ import {
 } from "@/store/board"
 
 export function LiveCardBoardSelect({ id }: { id: string }) {
+  const { t } = useI18n()
   const boards = useAtomValue(boardsAtom)
   const setMembership = useSetAtom(setInstanceBoardMembershipAtom)
   const {
     error: membershipError,
     isPending: isMembershipPending,
     run: runMembershipUpdate,
-  } = useKeyedAsyncAction<string>("Board membership could not be updated.")
+  } = useKeyedAsyncAction<string>(t("updateBoardMembershipFailed"))
   const boardIds = boards
     .filter(board => board.instanceIds.includes(id))
     .map(board => board.id)
@@ -28,11 +30,11 @@ export function LiveCardBoardSelect({ id }: { id: string }) {
 
   return (
     <div className="flex items-center justify-between gap-3">
-      <span className="text-sm font-semibold opacity-80">Boards</span>
+      <span className="text-sm font-semibold opacity-80">{t("boards")}</span>
       <BoardMembershipSelect
         value={boardIds}
         onMembershipChange={(boardId, member) => void updateMembership(boardId, member)}
-        ariaLabel="Edit board memberships"
+        ariaLabel={t("editBoardMemberships")}
         isBoardDisabled={isMembershipPending}
       />
       {membershipError && <span role="alert" className="sr-only">{membershipError}</span>}
@@ -41,13 +43,14 @@ export function LiveCardBoardSelect({ id }: { id: string }) {
 }
 
 export function DeleteLiveCardButton({ id }: { id: string }) {
+  const { t } = useI18n()
   const deleteLocal = useSetAtom(deleteInstanceAtom)
   const {
     error: deleteError,
     isPending: isDeleting,
     resetError: resetDeleteError,
     run: runDelete,
-  } = useAsyncAction("The LiveCard could not be deleted.")
+  } = useAsyncAction(t("deleteLiveCardFailed"))
 
   async function handleDelete(): Promise<void> {
     await runDelete(async () => {
@@ -61,11 +64,11 @@ export function DeleteLiveCardButton({ id }: { id: string }) {
         appearance="icon-expand"
         size="icon-fit"
         icon={<PhTrashDuotone />}
-        label="Delete LiveCard"
-        confirmLabel="Delete"
+        label={t("deleteLiveCard")}
+        confirmLabel={t("delete")}
         resetAfterMs={3000}
         pending={isDeleting}
-        pendingLabel="Deleting LiveCard…"
+        pendingLabel={t("deletingLiveCard")}
         className="border-0 text-lg opacity-50 hover:opacity-85 data-[confirmation=armed]:h-6 data-[confirmation=armed]:gap-0.5 data-[confirmation=armed]:px-2 data-[confirmation=armed]:text-xs data-[confirmation=armed]:opacity-100 active:not-aria-[haspopup]:translate-y-0"
         title={deleteError ?? undefined}
         onArm={resetDeleteError}

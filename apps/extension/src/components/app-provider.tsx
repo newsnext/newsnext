@@ -3,6 +3,7 @@ import type { PropsWithChildren } from "react"
 import { QueryClientProvider } from "@tanstack/react-query"
 import { domMax, LazyMotion, MotionConfig } from "motion/react"
 import { useEffect } from "react"
+import { I18nProvider } from "@/components/i18n-provider"
 
 interface AppProviderProps {
   queryClient: QueryClient
@@ -29,9 +30,11 @@ export function AppProvider({
   return (
     <MotionConfig reducedMotion="user">
       <LazyMotion features={domMax}>
-        <QueryClientProvider client={queryClient}>
-          {children}
-        </QueryClientProvider>
+        <I18nProvider>
+          <QueryClientProvider client={queryClient}>
+            {children}
+          </QueryClientProvider>
+        </I18nProvider>
       </LazyMotion>
     </MotionConfig>
   )

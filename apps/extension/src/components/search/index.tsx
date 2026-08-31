@@ -27,6 +27,7 @@ import {
   createSourceQueryTarget,
   getSourceQueryOptions,
 } from "@/hooks/source-query"
+import { useI18n } from "@/hooks/use-i18n"
 import { useSourceDescriptors } from "@/hooks/use-source-descriptors"
 import { useSourceIcon } from "@/hooks/use-source-icon"
 import { revealLiveCard } from "@/lib/board"
@@ -108,6 +109,7 @@ function SearchShortcutHint({
 }
 
 export function SearchDialog(): ReactNode {
+  const { t } = useI18n()
   const [open, setOpen] = useState(false)
   const shortcuts = useAtomValue(shortcutSettingsAtom)
   const navigate = useNavigate()
@@ -138,7 +140,7 @@ export function SearchDialog(): ReactNode {
         variant="ghost"
         size="icon"
         className="island-pill size-10"
-        title={shortcuts.search ? `Search (${formatForDisplay(shortcuts.search)})` : "Search"}
+        title={shortcuts.search ? `${t("search")} (${formatForDisplay(shortcuts.search)})` : t("search")}
         onClick={() => setOpen(true)}
       >
         <PhMagnifyingGlass className="size-5" />
@@ -229,14 +231,15 @@ export function SearchModalContent({
   onSelectItem: (liveCard: LiveCardViewModel, targetBoardId: string) => void
   searchShortcut: Hotkey | null
 }): ReactNode {
+  const { t } = useI18n()
   return (
     <ContentDialogContent
       variant="themed"
       surfaceClassName="grid-rows-[minmax(0,1fr)_auto]"
     >
-      <DialogTitle className="sr-only">Search LiveCards</DialogTitle>
+      <DialogTitle className="sr-only">{t("searchLiveCards")}</DialogTitle>
       <DialogDescription className="sr-only">
-        Find and open LiveCards from all boards.
+        {t("searchDescription")}
       </DialogDescription>
 
       <SquircleBox
@@ -247,16 +250,16 @@ export function SearchModalContent({
         <Command className="size-full rounded-none bg-transparent p-0">
           <CommandInput
             autoFocus
-            aria-label="Search LiveCards"
-            placeholder="Search by LiveCard, source, or board"
+            aria-label={t("searchLiveCards")}
+            placeholder={t("searchPlaceholder")}
             wrapperClassName="p-0"
             inputGroupClassName="h-12 rounded-none border-0 border-b border-foreground/5 bg-transparent px-1 shadow-none transition-none has-[[data-slot=input-group-control]:focus-visible]:border-foreground/15 has-[[data-slot=input-group-control]:focus-visible]:ring-0"
             className="text-sm placeholder:text-foreground/40"
           />
           <CommandList className="min-h-0 max-h-none flex-1 p-2">
             <CommandEmpty className="flex h-full min-h-32 flex-col items-center justify-center gap-1 px-6 text-center">
-              <span className="font-medium text-foreground">No LiveCards found</span>
-              <span className="text-xs text-muted-foreground">Try a LiveCard, source, or board name.</span>
+              <span className="font-medium text-foreground">{t("noLiveCardsFound")}</span>
+              <span className="text-xs text-muted-foreground">{t("trySearch")}</span>
             </CommandEmpty>
             {groups.map(group => (
               <CommandGroup
@@ -298,20 +301,20 @@ export function SearchModalContent({
         </Command>
       </SquircleBox>
       <footer
-        aria-label="Search keyboard shortcuts"
+        aria-label={t("searchKeyboardShortcuts")}
         className="flex min-h-8 items-center justify-between px-2 pt-2 text-[11px]"
       >
         <span className="flex items-center gap-3">
           {searchShortcut && (
             <SearchShortcutHint
               keys={[formatForDisplay(searchShortcut)]}
-              label="Search"
+              label={t("search")}
             />
           )}
-          <SearchShortcutHint keys={["↑", "↓"]} label="Navigate" />
-          <SearchShortcutHint keys={["↵"]} label="Open" />
+          <SearchShortcutHint keys={["↑", "↓"]} label={t("navigate")} />
+          <SearchShortcutHint keys={["↵"]} label={t("open")} />
         </span>
-        <SearchShortcutHint keys={["Esc"]} label="Close" />
+        <SearchShortcutHint keys={["Esc"]} label={t("close")} />
       </footer>
     </ContentDialogContent>
   )

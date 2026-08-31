@@ -8,6 +8,7 @@ import {
 } from "@newsnext/ui/components/dropdown-menu"
 import { cn } from "@newsnext/ui/lib/utils"
 import { useEffect, useState } from "react"
+import { useI18n } from "@/hooks/use-i18n"
 import { consumeSettingsOpenRequest, subscribeToSettingsOpenRequests } from "@/lib/settings"
 import { PhGear, PhUser } from "../icons/ph"
 import { SettingsModal } from "../settings"
@@ -15,6 +16,7 @@ import { SettingsModal } from "../settings"
 const initialSettingsTab = consumeSettingsOpenRequest()
 
 export function UserMenu() {
+  const { t } = useI18n()
   const [isSettingsOpen, setIsSettingsOpen] = useState(Boolean(initialSettingsTab))
   const [settingsTab, setSettingsTab] = useState<SettingsTabId>(initialSettingsTab ?? "appearance")
 
@@ -33,7 +35,7 @@ export function UserMenu() {
             "flex size-10 items-center justify-center rounded-full text-primary-foreground font-semibold text-base pointer-events-auto outline-none",
             "island-pill bg-linear-to-br from-theme-400 to-theme-600 hover:from-theme-500 hover:to-theme-700",
           )}
-          title="Settings"
+          title={t("settings")}
         >
           <PhUser className="size-5" />
         </DropdownMenuTrigger>
@@ -41,7 +43,7 @@ export function UserMenu() {
           <DropdownMenuGroup>
             <DropdownMenuItem onClick={() => openSettings()}>
               <PhGear className="size-4" />
-              Settings
+              {t("settings")}
             </DropdownMenuItem>
           </DropdownMenuGroup>
         </DropdownMenuContent>

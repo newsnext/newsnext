@@ -37,13 +37,15 @@
     "es-toolkit": "catalog:",
     "fast-xml-parser": "^5.10.1",
     "gridstack": "catalog:",
+    "i18next": "^26.4.0",
     "jotai": "catalog:",
     "lucide-react": "catalog:",
     "motion": "catalog:",
     "nanoid": "^6.0.1",
     "path-to-regexp": "^8.4.2",
     "react": "catalog:",
-    "react-dom": "catalog:"
+    "react-dom": "catalog:",
+    "react-i18next": "^17.0.12"
   },
   "devDependencies": {
     "@babel/core": "^8.0.1",
@@ -56,6 +58,7 @@
     "@types/babel__core": "^7.20.5",
     "@types/canvas-confetti": "^1.9.0",
     "@vitejs/plugin-react": "catalog:",
+    "@wxt-dev/i18n": "^0.2.7",
     "babel-plugin-react-compiler": "^1.0.0",
     "react-cosmos": "^7.3.0",
     "react-cosmos-plugin-vite": "^7.3.0",

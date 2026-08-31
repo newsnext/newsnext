@@ -621,7 +621,17 @@ suggestion. Keep the accessible dialog title and description screen-reader-only.
 
 ## Copy
 
-- Use English sentence case for user-facing text.
+- Use English sentence case for the canonical message catalog. Render
+  user-facing product copy through the typed i18n catalog so English,
+  Simplified Chinese, and Traditional Chinese stay aligned. Brand names,
+  provider content, user data, and technical identifiers remain untranslated.
+- Language selection follows the system by default. An explicit selection is
+  device-local, applies immediately, and must update the document language so
+  assistive technology receives the correct locale.
+- Keep manifest and browser-owned copy in `src/locales/` through the WXT i18n
+  module. Keep manually switchable React copy in the typed i18next resources
+  and render it through react-i18next; browser-owned copy always follows the
+  browser locale and cannot follow an in-app override.
 - Prefer labels and action names that state exactly what users control.
 - Remove helper text that repeats information already conveyed by the title,
   field labels, or visible controls.

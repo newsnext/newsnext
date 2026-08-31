@@ -1,4 +1,5 @@
 import type { ReactNode } from "react"
+import type { StaticMessageKey } from "@/lib/i18n"
 import type { SettingsTabId } from "@/lib/settings"
 import {
   ContentDialogContent,
@@ -8,6 +9,7 @@ import {
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { Tabs, TabsList, TabsTrigger } from "@newsnext/ui/components/tabs"
 import { useEffect, useRef } from "react"
+import { useI18n } from "@/hooks/use-i18n"
 
 export type { SettingsTabId } from "@/lib/settings"
 
@@ -19,13 +21,13 @@ interface SettingsModalShellProps {
   onTabChange: (tabId: SettingsTabId) => void
 }
 
-const SETTINGS_TABS: Array<{ id: SettingsTabId, label: string }> = [
-  { id: "appearance", label: "Appearance" },
-  { id: "general", label: "General" },
-  { id: "cli", label: "Integration" },
-  { id: "shortcuts", label: "Shortcuts" },
-  { id: "permissions", label: "Permissions" },
-  { id: "data", label: "Data" },
+const SETTINGS_TABS: Array<{ id: SettingsTabId, labelKey: StaticMessageKey }> = [
+  { id: "appearance", labelKey: "appearance" },
+  { id: "general", labelKey: "general" },
+  { id: "cli", labelKey: "integration" },
+  { id: "shortcuts", labelKey: "shortcuts" },
+  { id: "permissions", labelKey: "permissions" },
+  { id: "data", labelKey: "data" },
 ]
 
 export function SettingsModalShell({
@@ -35,6 +37,7 @@ export function SettingsModalShell({
   onOpenChange,
   onTabChange,
 }: SettingsModalShellProps): React.JSX.Element {
+  const { t } = useI18n()
   const contentRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -47,7 +50,7 @@ export function SettingsModalShell({
         variant="themed"
         surfaceClassName="grid min-h-0"
       >
-        <DialogTitle className="sr-only">Preferences</DialogTitle>
+        <DialogTitle className="sr-only">{t("preferences")}</DialogTitle>
         <Tabs
           value={activeTab}
           onValueChange={(value) => {
@@ -69,8 +72,8 @@ export function SettingsModalShell({
                   value={tab.id}
                   className="h-10 min-w-0 w-full flex-none rounded-none border-0 px-0 py-2 text-xs text-foreground/50 after:hidden hover:text-foreground/75 data-active:text-foreground data-active:font-semibold sm:px-2 sm:text-sm"
                 >
-                  <span className="min-w-0 truncate" title={tab.label}>
-                    {tab.label}
+                  <span className="min-w-0 truncate" title={t(tab.labelKey)}>
+                    {t(tab.labelKey)}
                   </span>
                 </TabsTrigger>
               ))}

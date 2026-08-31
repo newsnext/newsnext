@@ -2,6 +2,7 @@ import type { ComponentProps, ReactNode } from "react"
 import { Button } from "@newsnext/ui/components/button"
 import { useEffect, useState } from "react"
 import { PhCheckCircle } from "@/components/icons/ph"
+import { useI18n } from "@/hooks/use-i18n"
 import { cn } from "@/lib/utils"
 
 interface BaseConfirmDestructiveButtonProps extends Omit<
@@ -46,6 +47,7 @@ export function ConfirmDestructiveButton({
   resetAfterMs,
   ...props
 }: ConfirmDestructiveButtonProps): React.JSX.Element {
+  const { t } = useI18n()
   const [isArmed, setIsArmed] = useState(false)
   const isExpandingIcon = appearance === "icon-expand"
   const currentLabel = pending && isArmed
@@ -54,7 +56,9 @@ export function ConfirmDestructiveButton({
   const accessibleLabel: string | undefined = isExpandingIcon
     ? pending && isArmed
       ? typeof currentLabel === "string" ? currentLabel : undefined
-      : isArmed ? `Confirm ${label}` : typeof label === "string" ? label : undefined
+      : isArmed
+        ? typeof label === "string" ? t("confirmAction", { label }) : undefined
+        : typeof label === "string" ? label : undefined
     : undefined
 
   useEffect(() => {

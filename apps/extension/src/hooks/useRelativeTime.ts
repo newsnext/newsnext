@@ -1,16 +1,8 @@
 import { atom, useAtomValue } from "jotai"
 import { useMemo } from "react"
+import { useI18n } from "@/hooks/use-i18n"
 
 const minuteClockAtom = atom(Date.now())
-const relativeTimeFormatter = new Intl.RelativeTimeFormat("en-US", {
-  numeric: "always",
-  style: "narrow",
-})
-const currentTimeFormatter = new Intl.RelativeTimeFormat("en-US", {
-  numeric: "auto",
-  style: "narrow",
-})
-
 const relativeTimeUnits = [
   [365 * 24 * 60 * 60 * 1000, "year"],
   [30 * 24 * 60 * 60 * 1000, "month"],
@@ -61,7 +53,15 @@ minuteClockAtom.onMount = (setAtom) => {
   }
 }
 
-export function formatRelativeTime(date: number, now: Date): string {
+export function formatRelativeTime(date: number, now: Date, locale = "en-US"): string {
+  const relativeTimeFormatter = new Intl.RelativeTimeFormat(locale, {
+    numeric: "always",
+    style: "narrow",
+  })
+  const currentTimeFormatter = new Intl.RelativeTimeFormat(locale, {
+    numeric: "auto",
+    style: "narrow",
+  })
   const difference = date - now.getTime()
   const magnitude = Math.abs(difference)
   const unit = relativeTimeUnits.find(([milliseconds]) => magnitude >= milliseconds)
@@ -79,19 +79,21 @@ export function useMinuteDate(): Date {
 }
 
 export function useRelativeTime({ date }: { date: number }): string {
+  const { locale } = useI18n()
   const lastTickAt = useAtomValue(minuteClockAtom)
   return useMemo(
-    () => formatRelativeTime(date, sampleClock(lastTickAt)),
-    [date, lastTickAt],
+    () => formatRelativeTime(date, sampleClock(lastTickAt), locale),
+    [date, lastTickAt, locale],
   )
 }
 
 export function useRelativeTimes(dates: readonly number[]): string[] {
+  const { locale } = useI18n()
   const lastTickAt = useAtomValue(minuteClockAtom)
   return useMemo(() => {
     const now = sampleClock(lastTickAt)
-    return dates.map(date => formatRelativeTime(date, now))
-  }, [dates, lastTickAt])
+    return dates.map(date => formatRelativeTime(date, now, locale))
+  }, [dates, lastTickAt, locale])
 }
 
 export function RelativeTime({ date }: { date: number }): string {

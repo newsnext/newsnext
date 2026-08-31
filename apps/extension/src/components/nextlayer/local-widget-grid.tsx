@@ -12,6 +12,7 @@ import { useCardEntrance } from "@/components/board-view/use-card-entrance"
 import { PhArrowCounterClockwiseDuotone, PhCircleDashedDuotone } from "@/components/icons/ph"
 import { LiveCardHeaderActionButton } from "@/components/live-card/card-header"
 import { LiveCardSurface } from "@/components/live-card/card-surface"
+import { useI18n } from "@/hooks/use-i18n"
 import { actions } from "@/lib/actions"
 import { boardsAtom } from "@/store/board"
 import { getChangedWidgetLayouts, getGridWidgetId } from "./widget-layout"
@@ -85,6 +86,7 @@ function createGridOptions(
 }
 
 function LocalWidgetFrame(props: Record<string, unknown>) {
+  const { t } = useI18n()
   const frame = parseFrameProps(props)
   const articleRef = useRef<HTMLElement>(null)
   const iframeRef = useRef<HTMLIFrameElement>(null)
@@ -150,7 +152,7 @@ function LocalWidgetFrame(props: Record<string, unknown>) {
             <LiveCardHeaderActionButton
               className={refreshing ? "animate-spin" : undefined}
               type="button"
-              aria-label={`Refresh ${frame.title}`}
+              aria-label={t("refreshWidget", { title: frame.title })}
               disabled={refreshing}
               onClick={() => void snapshot.refetch()}
               onPointerDown={event => event.stopPropagation()}
@@ -279,6 +281,7 @@ function useLocalWidgets(serverUrl: string | undefined) {
 }
 
 export function LocalWidgetGrid({ boardId, entranceReady }: { boardId: string, entranceReady: boolean }) {
+  const { t } = useI18n()
   const { rootScrollContainerRef } = useScrollProgressContext()
   const gridRef = useRef<GridStackHandle>(null)
   const sectionRef = useRef<HTMLElement>(null)
@@ -316,20 +319,20 @@ export function LocalWidgetGrid({ boardId, entranceReady }: { boardId: string, e
 
   if (connection.isLoading || manifestQuery.isLoading) return null
   if (connection.state !== "connected" || !connection.serverUrl) {
-    return <NextLayerMessage>Connect the NewsNext App to use local widgets.</NextLayerMessage>
+    return <NextLayerMessage>{t("connectAppForWidgets")}</NextLayerMessage>
   }
   if (manifestQuery.error) {
     return (
       <NextLayerMessage>
-        {`Could not load local widgets: ${manifestQuery.error}`}
+        {t("loadWidgetsFailed", { error: String(manifestQuery.error) })}
       </NextLayerMessage>
     )
   }
-  if (board?.nextLayer.widgets.length === 0) return <NextLayerMessage>No local widgets are installed in this Board.</NextLayerMessage>
-  if (widgets.length === 0) return <NextLayerMessage>The installed Widget files are unavailable.</NextLayerMessage>
+  if (board?.nextLayer.widgets.length === 0) return <NextLayerMessage>{t("noLocalWidgets")}</NextLayerMessage>
+  if (widgets.length === 0) return <NextLayerMessage>{t("widgetFilesUnavailable")}</NextLayerMessage>
 
   return (
-    <section ref={sectionRef} aria-label="Next Layer widgets">
+    <section ref={sectionRef} aria-label={t("nextLayerWidgets")}>
       <GridStack
         key={`${boardId}:${gridKey}`}
         ref={gridRef}

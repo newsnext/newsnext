@@ -3,6 +3,7 @@ import type { LiveCardViewModel } from "@/typings/source"
 import { Button } from "@newsnext/ui/components/button"
 import { useEffect, useState } from "react"
 import { useAsyncAction } from "@/hooks/use-async-action"
+import { useI18n } from "@/hooks/use-i18n"
 import { getHostPermissionOrigins, getPermissionRequestForSource } from "@/lib/source"
 import { SourcePermissionDetails } from "../source-permission-details"
 import { EditableImage, EditableInput, Info } from "./fields"
@@ -40,12 +41,13 @@ export function LiveCardEditForm({
   onSaveSourceMeta,
   onPreviewMetadataChange,
 }: LiveCardEditFormProps): React.JSX.Element {
+  const { t } = useI18n()
   const { params, provider } = source
   const { badge, desc, home, title } = source.metadata
   const [editDraft, setEditDraft] = useState<InstanceMetadata | null>(null)
   const [isEditingParams, setIsEditingParams] = useState(false)
   const { error: saveError, isPending: isSaving, run: runSave } = useAsyncAction(
-    "The LiveCard could not be saved.",
+    t("saveLiveCardFailed"),
   )
   const isEditingMetadata = editDraft !== null
   const previewTitle = editDraft?.title ?? title
@@ -103,34 +105,34 @@ export function LiveCardEditForm({
     <div className="space-y-4">
       <section className="flex flex-col text-sm">
         <div className="mb-2 flex items-start justify-between">
-          <span className="inline-block border-b border-border/60 pb-1 font-semibold opacity-80">Metadata</span>
+          <span className="inline-block border-b border-border/60 pb-1 font-semibold opacity-80">{t("metadata")}</span>
           {isEditingMetadata
             ? (
                 <div className="flex gap-1.5">
                   <Button type="button" variant="outline" tone="theme" size="sm" disabled={isSaving} className="h-6 px-2" onClick={() => setEditDraft(null)}>
-                    Cancel
+                    {t("cancel")}
                   </Button>
                   <Button type="button" size="sm" tone="theme" disabled={!hasSourceMetaChanges || isSaving} className="h-6 px-2" onClick={() => void saveEditDraft()}>
-                    Save
+                    {t("save")}
                   </Button>
                 </div>
               )
             : (
-                <Button type="button" size="sm" tone="theme" title="Edit metadata" className="h-6 px-2" onClick={() => setEditDraft({})}>
-                  Edit
+                <Button type="button" size="sm" tone="theme" title={t("editMetadata")} className="h-6 px-2" onClick={() => setEditDraft({})}>
+                  {t("edit")}
                 </Button>
               )}
         </div>
-        <Info label="Title">
+        <Info label={t("title")}>
           <EditableInput text={previewTitle || ""} editable={isEditingMetadata} onChange={value => updateEditDraft({ title: value })} />
         </Info>
-        <Info label="Description">
+        <Info label={t("description")}>
           <EditableInput text={previewDesc || ""} editable={isEditingMetadata} onChange={value => updateEditDraft({ desc: value })} />
         </Info>
-        <Info label="Home">
+        <Info label={t("home")}>
           <EditableInput text={previewHome || ""} editable={isEditingMetadata} onChange={value => updateEditDraft({ home: value })} />
         </Info>
-        <Info label="Badge">
+        <Info label={t("badge")}>
           <EditableImage
             src={previewBadge ?? ""}
             alt={`${previewTitle || provider.title} badge`}
@@ -144,24 +146,24 @@ export function LiveCardEditForm({
       {hasSourceParams && (
         <section className="flex flex-col pt-0.5 text-sm">
           <div className="mb-2 flex items-start justify-between">
-            <span className="inline-block border-b border-border/60 pb-1 font-semibold opacity-80">Parameters</span>
+            <span className="inline-block border-b border-border/60 pb-1 font-semibold opacity-80">{t("parameters")}</span>
             {isEditingParams
               ? (
                   <div className="flex gap-1.5">
                     <Button type="button" variant="outline" tone="theme" size="sm" disabled={isSaving} className="h-6 px-2" onClick={cancelEditingParams}>
-                      Cancel
+                      {t("cancel")}
                     </Button>
                     <Button type="button" variant="outline" tone="theme" size="sm" disabled={!hasSourceParams || isSaving} className="h-6 px-2" onClick={() => void resetParams()}>
-                      Reset
+                      {t("reset")}
                     </Button>
                     <Button type="button" size="sm" tone="theme" disabled={!hasSourceParamChanges || !sourceParamValidation.valid || isSaving} className="h-6 px-2" onClick={() => void saveParams()}>
-                      Save
+                      {t("save")}
                     </Button>
                   </div>
                 )
               : (
-                  <Button type="button" size="sm" tone="theme" title="Edit parameters" className="h-6 px-2" onClick={startEditingParams}>
-                    Edit
+                  <Button type="button" size="sm" tone="theme" title={t("editParameters")} className="h-6 px-2" onClick={startEditingParams}>
+                    {t("edit")}
                   </Button>
                 )}
           </div>
@@ -187,11 +189,11 @@ export function LiveCardEditForm({
       )}
       <section className="flex flex-col pt-0.5 text-sm">
         <div className="mb-2 flex items-start justify-between">
-          <span className="inline-block border-b border-border/60 pb-1 font-semibold opacity-80">Permissions</span>
+          <span className="inline-block border-b border-border/60 pb-1 font-semibold opacity-80">{t("permissions")}</span>
         </div>
         {permissionRequest
           ? <SourcePermissionDetails cookieOrigins={cookieOrigins} request={permissionRequest} />
-          : <p className="text-muted-foreground">No additional permissions</p>}
+          : <p className="text-muted-foreground">{t("noAdditionalPermissions")}</p>}
       </section>
       {saveError && <p role="alert" className="text-sm text-destructive">{saveError}</p>}
     </div>

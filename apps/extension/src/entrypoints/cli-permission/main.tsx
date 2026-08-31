@@ -3,6 +3,8 @@ import { Button } from "@newsnext/ui/components/button"
 import { ThemeIcon } from "@newsnext/ui/components/theme-icon"
 import { useEffect, useState } from "react"
 import { browser } from "#imports"
+import { I18nProvider } from "@/components/i18n-provider"
+import { useI18n } from "@/hooks/use-i18n"
 import { renderPersistentReactRoot } from "@/lib/react-root"
 import { getPermissionOriginLabel } from "@/lib/source"
 import "@/styles/index.css"
@@ -14,17 +16,16 @@ type PromptState
     | { prompt: CliPermissionPrompt, status: "ready" }
     | { status: "requesting" }
 
-const REQUEST_UNAVAILABLE_MESSAGE = "This request is no longer available. Rerun the CLI command to try again."
-
 function getRequestId(): string {
   return decodeURIComponent(window.location.hash.slice(1))
 }
 
 function CliPermissionApp(): React.JSX.Element {
+  const { t } = useI18n()
   const requestId = getRequestId()
   const [state, setState] = useState<PromptState>(() => requestId
     ? { status: "loading" }
-    : { message: REQUEST_UNAVAILABLE_MESSAGE, status: "error" })
+    : { message: t("requestUnavailable"), status: "error" })
 
   useEffect(() => {
     if (!requestId) return
@@ -34,14 +35,14 @@ function CliPermissionApp(): React.JSX.Element {
     }).then((prompt: CliPermissionPrompt | undefined) => {
       setState(prompt
         ? { prompt, status: "ready" }
-        : { message: REQUEST_UNAVAILABLE_MESSAGE, status: "error" })
+        : { message: t("requestUnavailable"), status: "error" })
     }).catch(() => {
       setState({
-        message: "NewsNext could not load this request. Rerun the CLI command to try again.",
+        message: t("requestLoadFailed"),
         status: "error",
       })
     })
-  }, [requestId])
+  }, [requestId, t])
 
   const handleAllow = (): void => {
     if (state.status !== "ready") return
@@ -56,7 +57,7 @@ function CliPermissionApp(): React.JSX.Element {
       window.close()
     }).catch(() => {
       setState({
-        message: "NewsNext could not request access. Close this window and rerun the CLI command.",
+        message: t("requestAccessFailed"),
         status: "error",
       })
     })
@@ -72,24 +73,24 @@ function CliPermissionApp(): React.JSX.Element {
         <header className="flex items-start gap-3">
           <ThemeIcon className="size-12 shrink-0" color="red" aria-hidden="true" />
           <div className="min-w-0">
-            <h1 className="text-lg font-semibold leading-6 tracking-tight">Allow site access</h1>
+            <h1 className="text-lg font-semibold leading-6 tracking-tight">{t("allowSiteAccess")}</h1>
             <p className="mt-1 text-sm leading-5 text-muted-foreground">
               {state.status === "ready"
                 ? state.prompt.description
-                : "Review the site access requested by the CLI."}
+                : t("reviewCliAccess")}
             </p>
           </div>
         </header>
 
         <div className="mt-5">
           {state.status === "loading" && (
-            <p className="text-sm text-muted-foreground" role="status">Loading request…</p>
+            <p className="text-sm text-muted-foreground" role="status">{t("loadingRequest")}</p>
           )}
           {state.status === "error" && (
             <p className="text-sm leading-6 text-destructive" role="alert">{state.message}</p>
           )}
           {state.status === "requesting" && (
-            <p className="text-sm text-muted-foreground" role="status">Waiting for your approval…</p>
+            <p className="text-sm text-muted-foreground" role="status">{t("waitingForApproval")}</p>
           )}
           {state.status === "ready" && (
             <>
@@ -107,16 +108,16 @@ function CliPermissionApp(): React.JSX.Element {
                 </ul>
                 {requiresCookies && (
                   <span className="shrink-0 rounded-full bg-theme-500/10 px-2.5 py-1.5 text-xs font-medium text-theme-700 dark:text-theme-300">
-                    Cookies
+                    {t("cookies")}
                   </span>
                 )}
               </div>
               <footer className="mt-5 flex items-center justify-between gap-5">
                 <p className="text-xs leading-5 text-muted-foreground">
-                  You can revoke this later in Settings.
+                  {t("revokeLater")}
                 </p>
                 <Button className="min-w-36" size="lg" tone="theme" onClick={handleAllow}>
-                  Allow access
+                  {t("allowAccess")}
                 </Button>
               </footer>
             </>
@@ -127,4 +128,7 @@ function CliPermissionApp(): React.JSX.Element {
   )
 }
 
-renderPersistentReactRoot(document.getElementById("root")!, <CliPermissionApp />)
+renderPersistentReactRoot(
+  document.getElementById("root")!,
+  <I18nProvider><CliPermissionApp /></I18nProvider>,
+)

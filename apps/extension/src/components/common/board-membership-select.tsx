@@ -6,6 +6,7 @@ import {
   DropdownMenuTrigger,
 } from "@newsnext/ui/components/dropdown-menu"
 import { useAtomValue } from "jotai"
+import { useI18n } from "@/hooks/use-i18n"
 import { cn } from "@/lib/utils"
 import { boardsAtom } from "@/store/board"
 
@@ -26,14 +27,15 @@ export function BoardMembershipSelect({
   className,
   isBoardDisabled,
 }: BoardMembershipSelectProps): React.JSX.Element {
+  const { t } = useI18n()
   const boards = useAtomValue(boardsAtom)
   const selectedBoardIds = new Set(value)
   const selectedBoards = boards.filter(board => selectedBoardIds.has(board.id))
   const label = selectedBoards.length === 0
-    ? "No boards"
+    ? t("noBoards")
     : selectedBoards.length === 1
       ? selectedBoards[0]!.name
-      : `${selectedBoards.length} boards`
+      : t("boardCount", { count: selectedBoards.length })
 
   return (
     <DropdownMenu>
@@ -49,7 +51,7 @@ export function BoardMembershipSelect({
       </DropdownMenuTrigger>
       <DropdownMenuContent align={align} onClick={event => event.stopPropagation()}>
         {boards.length === 0
-          ? <DropdownMenuItem disabled>No boards available</DropdownMenuItem>
+          ? <DropdownMenuItem disabled>{t("noBoardsAvailable")}</DropdownMenuItem>
           : boards.map(board => (
               <DropdownMenuCheckboxItem
                 key={board.id}
@@ -58,7 +60,7 @@ export function BoardMembershipSelect({
                 disabled={isBoardDisabled?.(board.id)
                   || (selectedBoardIds.has(board.id) && selectedBoardIds.size === 1)}
                 title={selectedBoardIds.has(board.id) && selectedBoardIds.size === 1
-                  ? "A LiveCard must belong to at least one board."
+                  ? t("liveCardNeedsBoard")
                   : undefined}
                 onCheckedChange={member => onMembershipChange(board.id, member)}
               >

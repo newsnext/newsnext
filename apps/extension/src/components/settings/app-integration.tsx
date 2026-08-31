@@ -1,4 +1,5 @@
 import type { AppIntegrationStatus } from "@/lib/background/app-integration-native"
+import type { StaticMessageKey } from "@/lib/i18n"
 import {
   Select,
   SelectContent,
@@ -10,29 +11,31 @@ import { Switch } from "@newsnext/ui/components/switch"
 import { useCallback, useEffect, useState } from "react"
 import { ConfigSection } from "@/components/common/config-section"
 import { useAsyncAction } from "@/hooks/use-async-action"
+import { useI18n } from "@/hooks/use-i18n"
 import { actions } from "@/lib/actions"
 
 interface StatusPresentation {
   dotClassName: string
-  label: string
+  labelKey: StaticMessageKey
 }
 
 const STATUS_PRESENTATION: Record<AppIntegrationStatus["state"], StatusPresentation> = {
-  disabled: { dotClassName: "bg-muted-foreground/50", label: "Disabled" },
-  connected: { dotClassName: "bg-emerald-500", label: "Connected" },
-  connecting: { dotClassName: "bg-amber-500", label: "Connecting" },
-  disconnected: { dotClassName: "bg-destructive", label: "Disconnected" },
+  disabled: { dotClassName: "bg-muted-foreground/50", labelKey: "disabled" },
+  connected: { dotClassName: "bg-emerald-500", labelKey: "connected" },
+  connecting: { dotClassName: "bg-amber-500", labelKey: "connecting" },
+  disconnected: { dotClassName: "bg-destructive", labelKey: "disconnected" },
 }
 
 const CHECKING_PRESENTATION: StatusPresentation = {
   dotClassName: "bg-muted-foreground/50",
-  label: "Checking",
+  labelKey: "checking",
 }
 
 export function AppIntegrationSettings(): React.JSX.Element {
+  const { t } = useI18n()
   const [status, setStatus] = useState<AppIntegrationStatus>()
   const { error: updateError, isPending: updating, run: runUpdate } = useAsyncAction(
-    "NewsNext could not update the App integration.",
+    t("updateAppIntegrationFailed"),
   )
   const state = status?.state
   const isEnabled = state !== undefined && state !== "disabled"
@@ -85,8 +88,8 @@ export function AppIntegrationSettings(): React.JSX.Element {
 
   return (
     <ConfigSection
-      title="Integration"
-      description="Connect this browser to the NewsNext App for local data, widgets, and CLI access."
+      title={t("integration")}
+      description={t("appIntegrationDescription")}
       surfaceClassName="gap-3 p-4"
     >
       <div className="flex items-center justify-between gap-4">
@@ -99,7 +102,7 @@ export function AppIntegrationSettings(): React.JSX.Element {
             aria-hidden="true"
             className={`size-2 shrink-0 rounded-full ${presentation.dotClassName}`}
           />
-          <span>{presentation.label}</span>
+          <span>{t(presentation.labelKey)}</span>
           {state === "connected" && status?.appVersion && (
             <span className="font-mono text-xs font-normal text-muted-foreground">
               {`v${status.appVersion}`}
@@ -109,7 +112,7 @@ export function AppIntegrationSettings(): React.JSX.Element {
         <Switch
           checked={isEnabled}
           disabled={!status || updating}
-          aria-label="Enable NewsNext App integration"
+          aria-label={t("enableAppIntegration")}
           onCheckedChange={enabled => void handleEnabledChange(enabled)}
         />
       </div>
@@ -117,7 +120,7 @@ export function AppIntegrationSettings(): React.JSX.Element {
       {status && isEnabled && (
         <div className="flex items-center justify-between gap-4 border-t pt-3">
           <div className="min-w-0">
-            <p className="text-xs font-medium">Worker</p>
+            <p className="text-xs font-medium">{t("worker")}</p>
             <p className="truncate font-mono text-xs text-muted-foreground">
               {status.workerId}
             </p>
@@ -128,17 +131,17 @@ export function AppIntegrationSettings(): React.JSX.Element {
                 size="sm"
                 className="max-w-52"
                 disabled={updating}
-                aria-label="Select NewsNext Worker"
+                aria-label={t("selectWorker")}
               >
                 <SelectValue>{status.workerId.slice(0, 8)}</SelectValue>
               </SelectTrigger>
               <SelectContent align="end">
                 <SelectItem value={status.workerId}>
-                  {`Current · ${status.workerId.slice(0, 8)}`}
+                  {`${t("current")} · ${status.workerId.slice(0, 8)}`}
                 </SelectItem>
                 {status.claimableWorkerIds.map(workerId => (
                   <SelectItem key={workerId} value={workerId}>
-                    {`Restore · ${workerId.slice(0, 8)}`}
+                    {`${t("restore")} · ${workerId.slice(0, 8)}`}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -149,13 +152,13 @@ export function AppIntegrationSettings(): React.JSX.Element {
 
       {status && status.claimableWorkerIds.length > 0 && (
         <p className="text-xs leading-5 text-muted-foreground">
-          Restore a previous Worker if this extension was reinstalled and lost its local identity.
+          {t("restoreWorkerDescription")}
         </p>
       )}
 
       {state === "disconnected" && (
         <p className="border-t pt-3 text-xs leading-5 text-muted-foreground">
-          Start the local server with
+          {t("startLocalServer")}
           {" "}
           <code>newsnext start</code>
           .

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react"
 import type { LiveCardViewModel } from "@/typings/source"
 import { Button } from "@newsnext/ui/components/button"
+import { useI18n } from "@/hooks/use-i18n"
 import { PhInfo } from "../icons/ph"
 import { SourceIcon } from "./source-icon"
 
@@ -46,13 +47,14 @@ export function SourceLoginState({
   provider: LiveCardViewModel["provider"]
   loginUrl: string
 }) {
+  const { t } = useI18n()
   return (
     <SourceActionState
       icon={icon}
-      label="Log in"
+      label={t("logIn")}
       onClick={() => window.open(loginUrl, "_blank")}
       provider={provider}
-      title={`Log in to ${provider.title}`}
+      title={t("logInTo", { provider: provider.title })}
     />
   )
 }
@@ -66,13 +68,14 @@ export function SourceErrorState({
   onRefresh: () => void
   provider: LiveCardViewModel["provider"]
 }) {
+  const { t } = useI18n()
   return (
     <SourceActionState
       icon={icon}
-      label="Refresh"
+      label={t("refresh")}
       onClick={onRefresh}
       provider={provider}
-      title="Refresh source"
+      title={t("refreshSource")}
     />
   )
 }
@@ -86,13 +89,14 @@ export function SourcePermissionState({
   onRequestPermission: () => Promise<boolean>
   provider: LiveCardViewModel["provider"]
 }) {
+  const { t } = useI18n()
   return (
     <SourceActionState
       icon={icon}
-      label="Authorize"
+      label={t("authorize")}
       onClick={() => void onRequestPermission()}
       provider={provider}
-      title="Authorize access to this source"
+      title={t("authorizeSource")}
     />
   )
 }

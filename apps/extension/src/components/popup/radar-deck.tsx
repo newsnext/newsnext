@@ -12,6 +12,7 @@ import { BoardMembershipSelect } from "@/components/common/board-membership-sele
 import { PhArrowCircleLeft, PhCircleDashed, PhPlusCircle } from "@/components/icons/ph"
 import { LiveCard } from "@/components/live-card"
 import { useAsyncAction } from "@/hooks/use-async-action"
+import { useI18n } from "@/hooks/use-i18n"
 import { createRadarLiveCard } from "@/lib/radar"
 import { mergeInstancePatch } from "@/lib/source"
 import { cn } from "@/lib/utils"
@@ -197,6 +198,7 @@ function RadarDeckContent({
   onCreationStart,
   suggestions,
 }: RadarDeckContentProps) {
+  const { t } = useI18n()
   const isDialog = layout === "dialog"
   const addInstance = useSetAtom(addInstanceAtom)
   const [targetBoardIds, setTargetBoardIds] = useState<string[]>(
@@ -208,7 +210,7 @@ function RadarDeckContent({
   const [hasMeasuredDeck, setHasMeasuredDeck] = useState(false)
   const [isCreated, setIsCreated] = useState(false)
   const { error: createError, isPending: isCreating, run: runCreate } = useAsyncAction(
-    "The LiveCard could not be created.",
+    t("createLiveCardFailed"),
   )
   const actionRef = useRef<HTMLDivElement>(null)
   const deckRef = useRef<HTMLDivElement>(null)
@@ -368,7 +370,7 @@ function RadarDeckContent({
   return (
     <section
       className={cn("relative", isDialog ? "space-y-2" : "space-y-3")}
-      aria-label="Radar suggestions"
+      aria-label={t("radarSuggestions")}
     >
       <div className={cn("flex justify-center", isDialog ? "overflow-visible" : "overflow-hidden")}>
         <div
@@ -416,8 +418,8 @@ function RadarDeckContent({
               size="icon-fit"
               onClick={() => moveDeck(-1)}
               disabled={!canGoPrevious}
-              aria-label="Previous Radar suggestion"
-              title="Previous Radar suggestion"
+              aria-label={t("previousRadarSuggestion")}
+              title={t("previousRadarSuggestion")}
               className={cn(RADAR_DECK_NAV_BUTTON_CLASS_NAME, !canGoPrevious && "opacity-20")}
             >
               <PhArrowCircleLeft />
@@ -427,8 +429,8 @@ function RadarDeckContent({
               size="icon-fit"
               onClick={() => moveDeck(1)}
               disabled={!canGoNext}
-              aria-label="Next Radar suggestion"
-              title="Next Radar suggestion"
+              aria-label={t("nextRadarSuggestion")}
+              title={t("nextRadarSuggestion")}
               className={cn(RADAR_DECK_NAV_BUTTON_CLASS_NAME, "rotate-180", !canGoNext && "opacity-20")}
             >
               <PhArrowCircleLeft />
@@ -450,7 +452,7 @@ function RadarDeckContent({
                 ? current.includes(boardId) ? current : [...current, boardId]
                 : current.filter(candidate => candidate !== boardId))
             }}
-            ariaLabel="Destination board"
+            ariaLabel={t("destinationBoard")}
             align="end"
             className={cn(
               "max-w-36 border-0 text-xs shadow-none",
@@ -461,8 +463,8 @@ function RadarDeckContent({
             size="sm"
             onClick={handleCreate}
             disabled={isCreated || isCreating || targetBoardIds.length === 0}
-            aria-label="Create LiveCard"
-            title="Create LiveCard"
+            aria-label={t("createLiveCard")}
+            title={t("createLiveCard")}
             className={cn(
               "flex h-8 items-center gap-1 rounded-3xl bg-(--radar-action-card-bg) px-3 py-0.5 text-xs font-semibold transition-colors enabled:hover:bg-(--radar-action-card-bg-hover) enabled:hover:text-foreground",
               isDialog && "px-3.5",
@@ -471,7 +473,7 @@ function RadarDeckContent({
             {isCreating
               ? <PhCircleDashed className="animate-spin text-sm text-(--radar-action-chip-text)" />
               : <PhPlusCircle className="text-sm text-(--radar-action-chip-text)" />}
-            Create LiveCard
+            {t("createLiveCard")}
           </Button>
           {createError && <span role="alert" className="text-xs text-destructive">{createError}</span>}
         </div>

@@ -2,6 +2,7 @@ import type { HeaderNotification } from "./notification"
 import { Button } from "@newsnext/ui/components/button"
 import { useCallback, useState } from "react"
 import { useManualRequest } from "@/hooks"
+import { useI18n } from "@/hooks/use-i18n"
 import { PhArrowCounterClockwise, PhCircleDashed } from "../icons/ph"
 import { SearchDialog } from "../search"
 import { BoardNav } from "./board-nav"
@@ -10,6 +11,7 @@ import { TitleIsland } from "./title-island"
 import { UserMenu } from "./user-menu"
 
 function ManualRequestButton() {
+  const { t } = useI18n()
   const { manualRequest, isFetching } = useManualRequest()
   return (
     <Button
@@ -17,8 +19,8 @@ function ManualRequestButton() {
       variant="ghost"
       size="icon-lg"
       className="island-pill"
-      aria-label="Manual request for active LiveCards"
-      title="Manual request for active LiveCards"
+      aria-label={t("manualRequest")}
+      title={t("manualRequest")}
       onClick={manualRequest}
     >
       {isFetching ? <PhCircleDashed className="size-5 animate-spin" /> : <PhArrowCounterClockwise className="size-5" />}

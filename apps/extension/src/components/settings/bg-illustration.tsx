@@ -9,6 +9,7 @@ import { useEffect, useRef, useState } from "react"
 import { ConfigSection } from "@/components/common/config-section"
 import { PhArrowCounterClockwise, PhTrash } from "@/components/icons/ph"
 import { useBgIllustration } from "@/hooks/use-bg-illustration"
+import { useI18n } from "@/hooks/use-i18n"
 import {
   areBgIllustrationTransformsEqual,
   createBgIllustrationFromImage,
@@ -93,6 +94,7 @@ function BgIllustrationSettingsContent({
   board,
   onChange,
 }: BgIllustrationSettingsProps): React.JSX.Element {
+  const { t } = useI18n()
   const savedConfiguration = board.illustration
   const savedIllustration = useBgIllustration(savedConfiguration?.id)
   const savedTransform = savedConfiguration?.transform ?? DEFAULT_BG_ILLUSTRATION_TRANSFORM
@@ -155,7 +157,7 @@ function BgIllustrationSettingsContent({
     const processingId = processingIdRef.current + 1
     processingIdRef.current = processingId
     const timeoutId = window.setTimeout(() => {
-      setStatus({ kind: "progress", message: "Extracting line art…" })
+      setStatus({ kind: "progress", message: t("extractingLineArt") })
       void createBgIllustrationFromImage(sourceFile, threshold).then((illustration) => {
         if (processingIdRef.current !== processingId) return
         if (resetTransformOnProcessRef.current) {
@@ -173,7 +175,7 @@ function BgIllustrationSettingsContent({
         resetTransformOnProcessRef.current = false
         setStatus({
           kind: "error",
-          message: error instanceof Error ? error.message : "The image could not be processed.",
+          message: error instanceof Error ? error.message : t("imageProcessingFailed"),
         })
         setIsProcessing(false)
       })
@@ -185,7 +187,7 @@ function BgIllustrationSettingsContent({
         processingIdRef.current += 1
       }
     }
-  }, [savedTransform, sourceFile, threshold])
+  }, [savedTransform, sourceFile, t, threshold])
 
   useEffect(() => {
     if (!sourceFile) return
@@ -209,11 +211,11 @@ function BgIllustrationSettingsContent({
   function selectFile(file: File): void {
     const isSvg = isSvgIllustrationFile(file)
     if (!file.type.startsWith("image/") && !isSvg) {
-      setStatus({ kind: "error", message: "Choose an image or SVG file." })
+      setStatus({ kind: "error", message: t("chooseImageFile") })
       return
     }
     if (file.size > MAX_BG_ILLUSTRATION_FILE_SIZE) {
-      setStatus({ kind: "error", message: "Choose a file smaller than 12 MB." })
+      setStatus({ kind: "error", message: t("imageFileTooLarge") })
       return
     }
 
@@ -225,7 +227,7 @@ function BgIllustrationSettingsContent({
     setDraftIllustration(null)
     if (isSvg) {
       setSourceFile(null)
-      setStatus({ kind: "progress", message: "Preparing SVG…" })
+      setStatus({ kind: "progress", message: t("preparingSvg") })
       void createBgIllustrationFromSvg(file).then((illustration) => {
         if (processingIdRef.current !== selectionId) return
         if (resetTransformOnProcessRef.current) {
@@ -240,7 +242,7 @@ function BgIllustrationSettingsContent({
         resetTransformOnProcessRef.current = false
         setStatus({
           kind: "error",
-          message: error instanceof Error ? error.message : "The SVG could not be processed.",
+          message: error instanceof Error ? error.message : t("svgProcessingFailed"),
         })
         setIsProcessing(false)
       })
@@ -418,15 +420,15 @@ function BgIllustrationSettingsContent({
 
   return (
     <ConfigSection
-      title="Background illustration"
+      title={t("backgroundIllustration")}
       surface={false}
     >
       <div className="grid gap-2">
         <div
           role="group"
           aria-label={previewIllustration
-            ? "Background illustration preview. Drag to reposition."
-            : "Choose or drop an image or SVG for background illustration"}
+            ? t("backgroundIllustrationPreview")
+            : t("chooseBackgroundIllustration")}
           className="relative mx-auto overflow-hidden p-2"
           style={previewEditorStyle}
           onClick={() => {
@@ -489,8 +491,8 @@ function BgIllustrationSettingsContent({
                   variant="outline"
                   size="icon-sm"
                   className="bg-background/70 backdrop-blur"
-                  aria-label="Reset illustration placement"
-                  title="Reset illustration placement"
+                  aria-label={t("resetIllustrationPlacement")}
+                  title={t("resetIllustrationPlacement")}
                   onClick={(event) => {
                     event.stopPropagation()
                     replaceDraftTransform(DEFAULT_BG_ILLUSTRATION_TRANSFORM)
@@ -504,8 +506,8 @@ function BgIllustrationSettingsContent({
                 size="icon-sm"
                 variant="destructive"
                 className="backdrop-blur"
-                aria-label="Remove background illustration"
-                title="Remove background illustration"
+                aria-label={t("removeBackgroundIllustration")}
+                title={t("removeBackgroundIllustration")}
                 disabled={isProcessing}
                 onClick={(event) => {
                   event.stopPropagation()
@@ -531,14 +533,14 @@ function BgIllustrationSettingsContent({
             <div className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
               <ConfigSection
                 variant="field"
-                title="Edge detail"
+                title={t("edgeDetail")}
                 htmlFor="bg-illustration-detail"
                 surface={false}
                 titleAccessory={<span className="tabular-nums text-muted-foreground">{threshold}</span>}
               >
                 <Slider
                   id="bg-illustration-detail"
-                  aria-label="Edge detail"
+                  aria-label={t("edgeDetail")}
                   min={12}
                   max={96}
                   step={2}
@@ -556,7 +558,7 @@ function BgIllustrationSettingsContent({
 
               <ConfigSection
                 variant="field"
-                title="Opacity"
+                title={t("opacity")}
                 htmlFor="bg-illustration-opacity"
                 surface={false}
                 titleAccessory={(
@@ -568,7 +570,7 @@ function BgIllustrationSettingsContent({
               >
                 <Slider
                   id="bg-illustration-opacity"
-                  aria-label="Illustration opacity"
+                  aria-label={t("illustrationOpacity")}
                   min={MIN_BG_ILLUSTRATION_OPACITY}
                   max={MAX_BG_ILLUSTRATION_OPACITY}
                   step={1}

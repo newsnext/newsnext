@@ -8,6 +8,7 @@ import {
 } from "@newsnext/ui/components/select"
 import { useAtom } from "jotai"
 import { ConfigSection } from "@/components/common/config-section"
+import { useI18n } from "@/hooks/use-i18n"
 import {
   DEFAULT_SOURCE_ICON_SETTINGS,
   resolveSourceIcon,
@@ -24,9 +25,10 @@ const SOURCE_OPTIONS = [
 ] as const satisfies ReadonlyArray<{ label: string, value: SourceIconSource }>
 
 export function SourceIconSettings(): React.JSX.Element {
+  const { t } = useI18n()
   const [settings, setSettings] = useAtom(sourceIconSettingsAtom)
   const sourceLabel = SOURCE_OPTIONS.find(option => option.value === settings.source)?.label
-    ?? "Custom"
+    ?? t("custom")
   const preview = resolveSourceIcon(
     undefined,
     "https://google.com/search",
@@ -47,13 +49,13 @@ export function SourceIconSettings(): React.JSX.Element {
 
   return (
     <ConfigSection
-      title="LiveCard icons"
-      description="Choose how icons are generated when a LiveCard does not include one."
+      title={t("liveCardIcons")}
+      description={t("liveCardIconsDescription")}
       surfaceClassName="gap-4 p-4"
     >
       <ConfigSection
         variant="field"
-        title="Icon source"
+        title={t("iconSource")}
         htmlFor="source-icon-service"
         surface={false}
       >
@@ -64,7 +66,7 @@ export function SourceIconSettings(): React.JSX.Element {
           <SelectContent align="start">
             {SOURCE_OPTIONS.map(option => (
               <SelectItem key={option.value} value={option.value}>
-                {option.label}
+                {option.value === "custom" ? t("custom") : option.label}
               </SelectItem>
             ))}
           </SelectContent>
@@ -73,23 +75,14 @@ export function SourceIconSettings(): React.JSX.Element {
 
       <ConfigSection
         variant="field"
-        title="URL template"
+        title={t("urlTemplate")}
         htmlFor="source-icon-template"
         surface={false}
-        description={(
-          <>
-            Supports
-            {" "}
-            <code>{"{hostname}"}</code>
-            ,
-            {" "}
-            <code>{"{origin}"}</code>
-            , and
-            {" "}
-            <code>{"{url}"}</code>
-            . Leave empty to disable generated icons.
-          </>
-        )}
+        description={t("urlTemplateDescription", {
+          hostname: "{hostname}",
+          origin: "{origin}",
+          url: "{url}",
+        })}
       >
         <div className="flex gap-1 items-center">
           {preview && (

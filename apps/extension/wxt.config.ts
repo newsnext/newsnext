@@ -26,6 +26,7 @@ const manifestVersion = packageJson.version.split("-", 1)[0]
 // See https://wxt.dev/api/config.html
 export default defineConfig({
   imports: false,
+  modules: ["@wxt-dev/i18n/module"],
   srcDir: "./src",
   outDir: "dist",
   alias: {
@@ -89,15 +90,16 @@ export default defineConfig({
     },
   },
   manifest: ({ browser, mode }) => {
-    const extensionName = mode === "development" ? "NewsNext Dev" : "NewsNext"
+    const extensionName = mode === "development" ? "NewsNext Dev" : "__MSG_extensionName__"
     const yoloMode = mode === "development" && import.meta.env.WXT_YOLO_MODE === "true"
 
     return {
       name: extensionName,
+      default_locale: "en",
       key: mode === "development" && browser !== "firefox"
         ? DEVELOPMENT_CHROMIUM_KEY
         : undefined,
-      description: "Elegant reading experience, Fastest information reception",
+      description: "__MSG_extensionDescription__",
       version: manifestVersion,
       version_name: packageJson.version,
       permissions: yoloMode

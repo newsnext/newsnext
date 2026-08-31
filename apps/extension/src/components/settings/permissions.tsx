@@ -7,6 +7,7 @@ import { browser } from "#imports"
 import { ConfigSection } from "@/components/common/config-section"
 import { ConfirmDestructiveButton } from "@/components/common/confirm-destructive-button"
 import { useKeyedAsyncAction } from "@/hooks/use-async-action"
+import { useI18n } from "@/hooks/use-i18n"
 import { useSourceDescriptors } from "@/hooks/use-source-descriptors"
 import {
   getGrantedHostPermissionOrigins,
@@ -23,8 +24,6 @@ interface PermissionLiveCard {
 }
 
 const PERMISSION_ACTION_CLASS = "pointer-events-none shrink-0 opacity-0 group-hover/permission:pointer-events-auto group-hover/permission:opacity-100 group-focus-within/permission:pointer-events-auto group-focus-within/permission:opacity-100"
-const REVOKE_SITE_ACCESS_ERROR = "NewsNext could not revoke this site access."
-
 function grantedOriginIncludes(grantedOrigin: string, requestedOrigin: string): boolean {
   return grantedOrigin === requestedOrigin || grantedOrigin === "*://*/*"
 }
@@ -65,6 +64,7 @@ export function PermissionsSettings({
 }: {
   onOpenLiveCard: (id: string, boardId: string) => Promise<void> | void
 }) {
+  const { t } = useI18n()
   const [origins, setOrigins] = useState<string[]>([])
   const instances = useAtomValue(instancesAtom)
   const boards = useAtomValue(boardsAtom)
@@ -75,7 +75,7 @@ export function PermissionsSettings({
     isPending: isRevoking,
     resetError: resetRevokeError,
     run: runRevoke,
-  } = useKeyedAsyncAction<string>(REVOKE_SITE_ACCESS_ERROR)
+  } = useKeyedAsyncAction<string>(t("revokeSiteAccessFailed"))
 
   const cardsByOrigin = useMemo(() => new Map(origins.map(origin => [
     origin,
@@ -113,7 +113,7 @@ export function PermissionsSettings({
     await runRevoke(origin, async () => {
       const revoked = await revokeHostPermissionOrigin(origin)
       if (!revoked) {
-        throw new Error(REVOKE_SITE_ACCESS_ERROR)
+        throw new Error(t("revokeSiteAccessFailed"))
       }
       if (removeCards) {
         for (const card of cards) {
@@ -122,19 +122,19 @@ export function PermissionsSettings({
       }
       await refreshOrigins()
     })
-  }, [cardsByOrigin, deleteInstance, refreshOrigins, runRevoke])
+  }, [cardsByOrigin, deleteInstance, refreshOrigins, runRevoke, t])
 
   return (
     <>
       <ConfigSection
-        title="Site access"
-        description="See which sites NewsNext can access and the LiveCards that depend on them."
+        title={t("siteAccess")}
+        description={t("siteAccessDescription")}
         surfaceClassName="p-0"
       >
         {origins.length === 0
           ? (
               <p className="p-4 text-sm text-muted-foreground">
-                No site access has been granted.
+                {t("noSiteAccess")}
               </p>
             )
           : (
@@ -151,10 +151,10 @@ export function PermissionsSettings({
                             type="button"
                             size="xs"
                             className={PERMISSION_ACTION_CLASS}
-                            label="Revoke"
-                            confirmLabel="Confirm revoke"
+                            label={t("revoke")}
+                            confirmLabel={t("revokeConfirm")}
                             pending={isOriginRevoking}
-                            pendingLabel="Revoking…"
+                            pendingLabel={t("revoking")}
                             onArm={resetRevokeError}
                             onConfirm={() => handleRevokeOrigin(origin, false)}
                           />
@@ -163,7 +163,7 @@ export function PermissionsSettings({
                       {areSourcesLoading
                         ? (
                             <div className="mt-2 text-xs text-muted-foreground">
-                              Checking LiveCards…
+                              {t("checkingLiveCards")}
                             </div>
                           )
                         : cards.length > 0 && (
@@ -179,7 +179,7 @@ export function PermissionsSettings({
                                         variant="link"
                                         size="icon-fit"
                                         className="max-w-full justify-start whitespace-normal text-left text-xs font-normal text-foreground"
-                                        title={`Go to ${card.title}`}
+                                        title={t("goToLiveCard", { title: card.title })}
                                         onClick={() => void onOpenLiveCard(card.id, boardId)}
                                       >
                                         {card.title}
@@ -193,10 +193,10 @@ export function PermissionsSettings({
                               type="button"
                               size="xs"
                               className={PERMISSION_ACTION_CLASS}
-                              label="Revoke and remove LiveCards"
-                              confirmLabel="Confirm revoke and remove"
+                              label={t("revokeAndRemove")}
+                              confirmLabel={t("revokeRemoveConfirm")}
                               pending={isOriginRevoking}
-                              pendingLabel="Removing…"
+                              pendingLabel={t("removing")}
                               onArm={resetRevokeError}
                               onConfirm={() => handleRevokeOrigin(origin, true)}
                             />

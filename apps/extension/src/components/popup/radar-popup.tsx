@@ -6,6 +6,7 @@ import { ScrollProgressProvider } from "@/components/common/scroll-progress-prov
 import { PhGear, PhHouse } from "@/components/icons/ph"
 import { RadarDeck } from "@/components/popup/radar-deck"
 import { useCurrentTabRadarSuggestions } from "@/hooks/use-current-tab-radar-suggestions"
+import { useI18n } from "@/hooks/use-i18n"
 import { openAppTab } from "@/lib/app-tab"
 import { openSettings } from "@/lib/settings"
 import { cn } from "@/lib/utils"
@@ -17,10 +18,11 @@ interface RadarOverlayHeaderProps {
 }
 
 function RadarOverlayHeader({ count, isScanning }: RadarOverlayHeaderProps): React.JSX.Element {
+  const { t } = useI18n()
   const themeColor = useAtomValue(currentBoardAtom)?.color ?? "red"
   const statusLabel = isScanning
-    ? "Radar · Scanning…"
-    : `Radar · ${count} ${count === 1 ? "LiveCard" : "LiveCards"}`
+    ? t("radarScanning")
+    : t("radarLiveCards", { count, unit: t(count === 1 ? "liveCard" : "liveCards") })
 
   return (
     <div className="relative z-20 flex h-10 shrink-0 items-center justify-between gap-3">
@@ -36,8 +38,8 @@ function RadarOverlayHeader({ count, isScanning }: RadarOverlayHeaderProps): Rea
           variant="transparent"
           size="icon-lg"
           onClick={() => void openAppTab()}
-          aria-label="Open NewsNext"
-          title="Open NewsNext"
+          aria-label={t("openNewsNext")}
+          title={t("openNewsNext")}
           className="island-pill text-primary"
         >
           <PhHouse className="size-5" />
@@ -46,8 +48,8 @@ function RadarOverlayHeader({ count, isScanning }: RadarOverlayHeaderProps): Rea
           variant="transparent"
           size="icon-lg"
           onClick={() => void openSettings()}
-          aria-label="Open options"
-          title="Open options"
+          aria-label={t("openOptions")}
+          title={t("openOptions")}
           className="island-pill text-muted-foreground hover:text-foreground"
         >
           <PhGear className="size-5" />

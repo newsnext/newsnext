@@ -84,4 +84,9 @@ describe("persisted settings", () => {
   it("keeps the Integration settings tab", () => {
     expect(normalizePersistedDeviceState({ settingsTab: "cli", version: 1 }).settingsTab).toBe("cli")
   })
+
+  it("normalizes the device locale preference", () => {
+    expect(normalizePersistedDeviceState({ localePreference: "zh-TW", version: 1 }).localePreference).toBe("zh-TW")
+    expect(normalizePersistedDeviceState({ localePreference: "fr", version: 1 }).localePreference).toBe("system")
+  })
 })

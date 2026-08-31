@@ -1,3 +1,4 @@
+import type { LocalePreference, StaticMessageKey } from "@/lib/i18n"
 import type { LiveCardHeight, SettingsTabId } from "@/lib/settings"
 import { Label } from "@newsnext/ui/components/label"
 import { RadioGroup, RadioGroupItem } from "@newsnext/ui/components/radio-group"
@@ -6,6 +7,7 @@ import { useNavigate } from "@tanstack/react-router"
 import { useAtom, useAtomValue } from "jotai"
 import { useEffect } from "react"
 import { ConfigSection } from "@/components/common/config-section"
+import { useI18n } from "@/hooks/use-i18n"
 import { revealLiveCard } from "@/lib/board"
 import { cn } from "@/lib/utils"
 import { handleThemeModeSwitch } from "@/lib/utils/swith-theme"
@@ -27,24 +29,24 @@ import { SourceIconSettings } from "./source-icon"
 const LAST_USED_BOARD_VALUE = "__last_used__"
 
 interface LiveCardHeightOption {
-  label: string
+  labelKey: StaticMessageKey
   previewClassName: string
   value: LiveCardHeight
 }
 
 const LIVE_CARD_HEIGHT_OPTIONS: LiveCardHeightOption[] = [
   {
-    label: "Compact",
+    labelKey: "compact",
     previewClassName: "h-12",
     value: "compact",
   },
   {
-    label: "Balanced",
+    labelKey: "balanced",
     previewClassName: "h-12.5",
     value: "balanced",
   },
   {
-    label: "Tall",
+    labelKey: "tall",
     previewClassName: "h-14.5",
     value: "tall",
   },
@@ -122,6 +124,7 @@ function SettingsModalContent({
 }
 
 function AppearanceSettings() {
+  const { t } = useI18n()
   const [themeMode, setThemeMode] = useAtom(themeModeAtom)
   useEffect(() => {
     handleThemeModeSwitch(themeMode)
@@ -130,7 +133,7 @@ function AppearanceSettings() {
   return (
     <div className="space-y-6">
       <ConfigSection
-        title="Theme mode"
+        title={t("themeMode")}
       >
         <ThemeModeSelector
           value={themeMode}
@@ -143,12 +146,13 @@ function AppearanceSettings() {
 }
 
 function LiveCardHeightSettings() {
+  const { t } = useI18n()
   const [liveCardHeight, setLiveCardHeight] = useAtom(liveCardHeightAtom)
 
   return (
     <ConfigSection
-      title="LiveCard height"
-      description="Choose how tall LiveCards appear on the board."
+      title={t("liveCardHeight")}
+      description={t("liveCardHeightDescription")}
     >
       <RadioGroup
         className="grid w-full grid-cols-3 gap-2"
@@ -157,10 +161,11 @@ function LiveCardHeightSettings() {
       >
         {LIVE_CARD_HEIGHT_OPTIONS.map((option) => {
           const isSelected = option.value === liveCardHeight
+          const label = t(option.labelKey)
           return (
             <Label key={option.value} className="cursor-pointer">
               <RadioGroupItem
-                aria-label={option.label}
+                aria-label={label}
                 value={option.value}
                 className="peer sr-only"
               />
@@ -183,7 +188,7 @@ function LiveCardHeightSettings() {
                   </span>
                 </span>
                 <span className={cn("font-semibold leading-tight", isSelected && "text-primary")}>
-                  {option.label}
+                  {label}
                 </span>
               </span>
             </Label>
@@ -195,6 +200,7 @@ function LiveCardHeightSettings() {
 }
 
 function GeneralSettings() {
+  const { preference, setPreference, t } = useI18n()
   const boards = useAtomValue(boardsAtom)
   const [defaultBoardId, setDefaultBoardId] = useAtom(defaultBoardIdAtom)
   const selectedValue = defaultBoardId ?? LAST_USED_BOARD_VALUE
@@ -202,11 +208,17 @@ function GeneralSettings() {
   return (
     <div className="space-y-6">
       <ConfigSection
-        title="Default board"
-        description="Choose which board opens when NewsNext starts."
+        title={t("language")}
+        description={t("chooseLanguage")}
+      >
+        <LanguageSelector value={preference} onValueChange={setPreference} />
+      </ConfigSection>
+      <ConfigSection
+        title={t("boardDefault")}
+        description={t("boardDefaultDescription")}
       >
         <RadioGroup
-          aria-label="Default board"
+          aria-label={t("boardDefault")}
           variant="segmented"
           className="max-w-full min-w-0 overflow-hidden"
           value={selectedValue}
@@ -222,11 +234,32 @@ function GeneralSettings() {
             ))}
           </div>
           <RadioGroupItem value={LAST_USED_BOARD_VALUE} className="shrink-0">
-            Last opened
+            {t("boardLastOpened")}
           </RadioGroupItem>
         </RadioGroup>
       </ConfigSection>
       <SourceIconSettings />
     </div>
+  )
+}
+
+function LanguageSelector({ value, onValueChange }: {
+  value: LocalePreference
+  onValueChange: (value: LocalePreference) => void
+}): React.JSX.Element {
+  const { t } = useI18n()
+  return (
+    <RadioGroup
+      aria-label={t("language")}
+      variant="segmented"
+      className="max-w-full overflow-x-auto scrollbar-hidden"
+      value={value}
+      onValueChange={onValueChange}
+    >
+      <RadioGroupItem value="system" className="shrink-0">{t("systemLanguage")}</RadioGroupItem>
+      <RadioGroupItem value="zh-CN" className="shrink-0">简体中文</RadioGroupItem>
+      <RadioGroupItem value="zh-TW" className="shrink-0">繁體中文</RadioGroupItem>
+      <RadioGroupItem value="en" className="shrink-0">English</RadioGroupItem>
+    </RadioGroup>
   )
 }

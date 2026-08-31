@@ -1,4 +1,5 @@
 import type { ChangeEvent } from "react"
+import type { StaticMessageKey } from "@/lib/i18n"
 import type { PersistedPortableSliceId } from "@/lib/settings"
 import { Button } from "@newsnext/ui/components/button"
 import { Checkbox } from "@newsnext/ui/components/checkbox"
@@ -9,6 +10,7 @@ import { useRef, useState } from "react"
 import { ConfigSection } from "@/components/common/config-section"
 import { ConfirmDestructiveButton } from "@/components/common/confirm-destructive-button"
 import { useAsyncAction } from "@/hooks/use-async-action"
+import { useI18n } from "@/hooks/use-i18n"
 import { DEFAULT_BOARD_COLOR } from "@/lib/board"
 import { clearNonPortableUserData, hasPersistedUserDataSlice, parsePersistedDataExport, PERSISTED_PORTABLE_SLICE_IDS, selectPersistedUserData, serializePersistedDataExport } from "@/lib/settings"
 import { handleThemeModeSwitch, handleThemeSwitch } from "@/lib/utils/swith-theme"
@@ -19,24 +21,24 @@ import {
 } from "@/store/persisted-data"
 
 const DATA_SLICE_OPTIONS: Array<{
-  description: string
+  descriptionKey: StaticMessageKey
   id: PersistedPortableSliceId
-  label: string
+  labelKey: StaticMessageKey
 }> = [
   {
     id: "settings",
-    label: "Settings",
-    description: "Appearance, default board, and source icon preferences.",
+    labelKey: "settings",
+    descriptionKey: "settingsDataDescription",
   },
   {
     id: "boards",
-    label: "Boards",
-    description: "Boards, board preferences, memberships, and LiveCard order.",
+    labelKey: "boards",
+    descriptionKey: "boardsDataDescription",
   },
   {
     id: "instances",
-    label: "LiveCards",
-    description: "Configured LiveCards and their source settings.",
+    labelKey: "liveCards",
+    descriptionKey: "liveCardsDataDescription",
   },
 ]
 
@@ -50,6 +52,7 @@ export function DataTransferSettings({
 }: {
   onCleared: () => void
 }): React.JSX.Element {
+  const { t } = useI18n()
   const data = useAtomValue(persistedUserDataAtom)
   const clearPersistedData = useSetAtom(clearPersistedUserDataAtom)
   const importData = useSetAtom(importPersistedUserDataAtom)
@@ -66,7 +69,7 @@ export function DataTransferSettings({
     isPending: clearing,
     resetError: resetClearError,
     run: runClear,
-  } = useAsyncAction("NewsNext could not clear all user data.")
+  } = useAsyncAction(t("clearUserDataFailed"))
   const hasSelection = selectedSliceIds.length > 0
 
   function setSliceSelected(
@@ -89,7 +92,7 @@ export function DataTransferSettings({
     URL.revokeObjectURL(url)
     setStatus({
       kind: "success",
-      message: `Exported ${formatSliceList(selectedSliceIds)}.`,
+      message: t("exportedData", { items: formatSliceList(selectedSliceIds, t) }),
     })
   }
 
@@ -103,7 +106,7 @@ export function DataTransferSettings({
     try {
       const imported = parsePersistedDataExport(await file.text())
       if (!imported) {
-        setStatus({ kind: "error", message: "This is not a valid NewsNext data file." })
+        setStatus({ kind: "error", message: t("invalidDataFile") })
         return
       }
 
@@ -112,7 +115,7 @@ export function DataTransferSettings({
       if (importedSliceIds.length === 0) {
         setStatus({
           kind: "error",
-          message: "The file does not contain any of the selected data.",
+          message: t("selectedDataMissing"),
         })
         return
       }
@@ -133,10 +136,10 @@ export function DataTransferSettings({
       }
       setStatus({
         kind: "success",
-        message: `Imported ${formatSliceList(importedSliceIds)}.`,
+        message: t("importedData", { items: formatSliceList(importedSliceIds, t) }),
       })
     } catch {
-      setStatus({ kind: "error", message: "NewsNext could not read this file." })
+      setStatus({ kind: "error", message: t("readDataFailed") })
     } finally {
       input.value = ""
     }
@@ -163,8 +166,8 @@ export function DataTransferSettings({
   return (
     <div className="space-y-6">
       <ConfigSection
-        title="Import and export"
-        description="Choose which data to include. Importing replaces only selected data found in the file. Browser permissions and device-only state are excluded."
+        title={t("importExport")}
+        description={t("importExportDescription")}
         surfaceClassName="gap-5 p-4"
       >
         <div className="space-y-4">
@@ -176,9 +179,9 @@ export function DataTransferSettings({
                 className="mt-0.5"
               />
               <span className="space-y-0.5">
-                <span className="block text-sm font-medium">{option.label}</span>
+                <span className="block text-sm font-medium">{t(option.labelKey)}</span>
                 <span className="block text-sm leading-5 text-muted-foreground">
-                  {option.description}
+                  {t(option.descriptionKey)}
                 </span>
               </span>
             </label>
@@ -187,7 +190,7 @@ export function DataTransferSettings({
 
         <div className="flex flex-wrap gap-2 border-t border-border/60 pt-4">
           <Button type="button" size="sm" disabled={!hasSelection} onClick={handleExport}>
-            Export selected
+            {t("exportSelected")}
           </Button>
           <Button
             type="button"
@@ -196,7 +199,7 @@ export function DataTransferSettings({
             disabled={!hasSelection}
             onClick={() => fileInputRef.current?.click()}
           >
-            Import selected
+            {t("importSelected")}
           </Button>
           <input
             ref={fileInputRef}
@@ -220,17 +223,17 @@ export function DataTransferSettings({
       </ConfigSection>
 
       <ConfigSection
-        title="Clear user data"
-        description="Delete all boards, LiveCards, settings, saved source secrets, cached source data, and site permissions. This cannot be undone."
+        title={t("clearData")}
+        description={t("clearDataDescription")}
         surfaceClassName="p-4"
       >
         <ConfirmDestructiveButton
           type="button"
           size="sm"
-          label="Clear all user data"
-          confirmLabel="Confirm clear"
+          label={t("clearAllData")}
+          confirmLabel={t("confirmClear")}
           pending={clearing}
-          pendingLabel="Clearing…"
+          pendingLabel={t("clearing")}
           onArm={resetClearError}
           onConfirm={handleClear}
         />
@@ -244,8 +247,14 @@ export function DataTransferSettings({
   )
 }
 
-function formatSliceList(sliceIds: readonly PersistedPortableSliceId[]): string {
+function formatSliceList(
+  sliceIds: readonly PersistedPortableSliceId[],
+  t: (key: StaticMessageKey) => string,
+): string {
   return sliceIds
-    .map(id => DATA_SLICE_OPTIONS.find(option => option.id === id)?.label ?? id)
+    .map((id) => {
+      const labelKey = DATA_SLICE_OPTIONS.find(option => option.id === id)?.labelKey
+      return labelKey ? t(labelKey) : id
+    })
     .join(", ")
 }

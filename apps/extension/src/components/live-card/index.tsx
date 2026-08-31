@@ -6,6 +6,7 @@ import { useScrollProgressContext } from "@newsnext/ui/components/scroll-progres
 import { useSetAtom } from "jotai"
 import { useCallback, useMemo, useRef, useState } from "react"
 import { useSourceParams } from "@/hooks"
+import { useI18n } from "@/hooks/use-i18n"
 import { useInView } from "@/hooks/use-in-view"
 import { useSourcePermission } from "@/hooks/use-source-permission"
 import { useSourceQuery } from "@/hooks/use-source-query"
@@ -38,6 +39,7 @@ export interface LiveCardProps {
 }
 
 function LiveCardContent({ source, target, dragHandleRef }: LiveCardProps) {
+  const { t } = useI18n()
   const setInstancePatch = useSetAtom(setInstancePatchAtom)
   const resetLocalParams = useSetAtom(resetInstanceParamsAtom)
   const [isFlipped, setIsFlipped] = useState(false)
@@ -72,7 +74,9 @@ function LiveCardContent({ source, target, dragHandleRef }: LiveCardProps) {
     requestPermission,
   } = useSourcePermission(resolvedSource, savedParams)
   const sourceErrorMessage = isError
-    ? `Failed to load source${errorMessage ? `: ${errorMessage}` : "."}`
+    ? errorMessage
+      ? t("loadSourceFailedWithError", { error: errorMessage })
+      : t("loadSourceFailed")
     : undefined
   const displaySource = useMemo(
     () => applySourceLoaderMetadata(resolvedSource, metadata),

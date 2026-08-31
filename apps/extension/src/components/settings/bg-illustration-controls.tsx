@@ -2,6 +2,7 @@ import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react"
 import type { BgIllustrationTransform } from "@/lib/bg-illustration"
 import { useLayoutEffect, useRef, useState } from "react"
 import { PhArrowCounterClockwise } from "@/components/icons/ph"
+import { useI18n } from "@/hooks/use-i18n"
 import {
   MAX_BG_ILLUSTRATION_SCALE,
   MIN_BG_ILLUSTRATION_SCALE,
@@ -62,6 +63,7 @@ export default function BgIllustrationControls({
   target,
   transform,
 }: BgIllustrationControlsProps): React.JSX.Element {
+  const { t } = useI18n()
   const interactionRef = useRef<ActiveInteraction | null>(null)
   const [activeInteraction, setActiveInteraction] = useState<ActiveInteraction["kind"] | null>(null)
   const [snapGuides, setSnapGuides] = useState<SnapGuides>({ x: null, y: null })
@@ -259,7 +261,7 @@ export default function BgIllustrationControls({
             key={handle.position}
             type="button"
             tabIndex={-1}
-            aria-label="Scale illustration"
+            aria-label={t("scaleIllustration")}
             className={`absolute size-3 rounded-full border border-primary bg-background ${handle.cursor} ${handle.position}`}
             onPointerDown={event => startInteraction(event, "scale")}
             {...interactionHandlers}
@@ -269,7 +271,7 @@ export default function BgIllustrationControls({
         <button
           type="button"
           tabIndex={-1}
-          aria-label="Rotate illustration"
+          aria-label={t("rotateIllustration")}
           className={`absolute -top-9 left-1/2 flex size-5 -translate-x-1/2 items-center justify-center rounded-full border border-primary bg-background text-primary ${activeInteraction === "rotate" ? "cursor-grabbing" : "cursor-grab"}`}
           onPointerDown={event => startInteraction(event, "rotate")}
           {...interactionHandlers}

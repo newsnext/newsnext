@@ -5,6 +5,7 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@newsnext/ui/components/avatar"
+import { useI18n } from "@/hooks/use-i18n"
 import { cn } from "@/lib/utils"
 
 interface SourceIconProps {
@@ -24,6 +25,7 @@ export function SourceIcon({
   size = "xs",
   title,
 }: SourceIconProps) {
+  const { t } = useI18n()
   return (
     <Avatar
       className={cn("rounded-sm after:rounded-sm after:border-0", color, className)}
@@ -32,7 +34,7 @@ export function SourceIcon({
       <AvatarImage
         className="rounded-[inherit]"
         src={icon}
-        alt={`${title} icon`}
+        alt={t("sourceIconAlt", { title })}
         referrerPolicy="no-referrer"
       />
       <AvatarFallback className="rounded-[inherit] bg-theme-400" />
@@ -41,7 +43,7 @@ export function SourceIcon({
           <img
             className="size-full rounded-full object-cover"
             src={badge}
-            alt={`${title} badge`}
+            alt={t("sourceBadgeAlt", { title })}
             referrerPolicy="no-referrer"
           />
         </AvatarBadge>

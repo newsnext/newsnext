@@ -20,6 +20,7 @@ import { useAtomValue, useSetAtom } from "jotai"
 import { useEffect, useRef, useState } from "react"
 import { BoardDialog } from "@/components/board-dialog"
 import { PhCircleDashed, PhFileArrowUp, PhPlusCircle } from "@/components/icons/ph"
+import { useI18n } from "@/hooks/use-i18n"
 import { DEFAULT_BOARD_LAYER, getAdjacentBoardId } from "@/lib/board"
 import { OpmlImportError, parseOpml } from "@/lib/opml"
 import { DEFAULT_SHORTCUT_SETTINGS, SHORTCUT_DEFINITIONS } from "@/lib/settings"
@@ -53,6 +54,7 @@ interface BoardNavProps {
 }
 
 export function BoardNav({ onNotify }: BoardNavProps) {
+  const { t } = useI18n()
   const boards = useAtomValue(boardsAtom)
   const navigate = useNavigate()
   const currentBoardId = useAtomValue(currentBoardIdAtom)
@@ -175,10 +177,10 @@ export function BoardNav({ onNotify }: BoardNavProps) {
       if (result.boardId) openBoard(result.boardId)
     } catch (error) {
       onNotify({
-        title: "Couldn’t import OPML",
+        title: t("importOpmlFailed"),
         description: error instanceof OpmlImportError
           ? error.message
-          : "NewsNext could not create the Board or import its RSS feeds.",
+          : t("importOpmlFallback"),
         tone: "error",
       })
     } finally {
@@ -221,7 +223,7 @@ export function BoardNav({ onNotify }: BoardNavProps) {
                   "group/board-tab h-auto shrink-0 focus-visible:ring-[3px] focus-visible:ring-ring/50",
                 )}
                 aria-current={isActive ? "page" : undefined}
-                title={isEditable ? "Edit board" : undefined}
+                title={isEditable ? t("editBoard") : undefined}
               >
                 {isActive && (
                   <PillGroupIndicator layoutId="active-board" />
@@ -257,19 +259,19 @@ export function BoardNav({ onNotify }: BoardNavProps) {
                 className="shrink-0 text-muted-foreground enabled:hover:bg-foreground/5"
               />
             )}
-            aria-label="Create board"
-            title="Create board"
+            aria-label={t("createBoard")}
+            title={t("createBoard")}
           >
             {isImporting ? <PhCircleDashed className="animate-spin" /> : <PhPlusCircle />}
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-60">
             <DropdownMenuItem onClick={() => setDialogTarget({ mode: "create" })}>
               <PhPlusCircle />
-              Create board
+              {t("createBoard")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => opmlInputRef.current?.click()}>
               <PhFileArrowUp />
-              Create board from OPML
+              {t("createBoardFromOpml")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

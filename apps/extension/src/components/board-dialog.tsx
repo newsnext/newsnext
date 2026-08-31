@@ -1,6 +1,7 @@
 import type { Color } from "@newsnext/shared/types"
 import type { BgIllustrationEditorState } from "@/components/settings/bg-illustration"
 import type { Board, BoardCreateInput, BoardLayer, NowLayerSortMode } from "@/lib/board"
+import type { StaticMessageKey } from "@/lib/i18n"
 import { Button } from "@newsnext/ui/components/button"
 import {
   ContentDialogContent,
@@ -19,19 +20,20 @@ import { ConfigSection } from "@/components/common/config-section"
 import { ConfirmDestructiveButton } from "@/components/common/confirm-destructive-button"
 import { BgIllustrationSettings } from "@/components/settings/bg-illustration"
 import { useAsyncAction } from "@/hooks/use-async-action"
+import { useI18n } from "@/hooks/use-i18n"
 import { actions } from "@/lib/actions"
 import { DEFAULT_BOARD_COLOR, DEFAULT_BOARD_LAYER, DEFAULT_NOW_LAYER_SORT, updateNowLayerSortMode } from "@/lib/board"
 import { cn } from "@/lib/utils"
 
-const SORT_OPTIONS: { label: string, value: NowLayerSortMode }[] = [
-  { label: "Manual", value: "manual" },
-  { label: "Date added", value: "addedAt" },
-  { label: "Provider name", value: "provider" },
+const SORT_OPTIONS: { labelKey: StaticMessageKey, value: NowLayerSortMode }[] = [
+  { labelKey: "manual", value: "manual" },
+  { labelKey: "dateAdded", value: "addedAt" },
+  { labelKey: "providerName", value: "provider" },
 ]
 
-const LAYER_OPTIONS: { label: string, value: BoardLayer }[] = [
-  { label: "Now", value: "now" },
-  { label: "Next", value: "next" },
+const LAYER_OPTIONS: { labelKey: StaticMessageKey, value: BoardLayer }[] = [
+  { labelKey: "now", value: "now" },
+  { labelKey: "next", value: "next" },
 ]
 
 export type BoardDialogTarget
@@ -65,6 +67,7 @@ function ConfigurableBoardDialog({
   onDelete,
   onUpdate,
 }: BoardDialogProps) {
+  const { t } = useI18n()
   const isEditing = target.mode === "edit"
   const boardId = isEditing ? target.boardId : undefined
   const board = boardId ? boards.find(candidate => candidate.id === boardId) : undefined
@@ -90,7 +93,7 @@ function ConfigurableBoardDialog({
   )
   const targetBoard = transferBoards.find(candidate => candidate.id === targetBoardId)
   const { error: submitError, isPending: isSubmitting, run: runAction } = useAsyncAction(
-    "The board could not be saved.",
+    t("saveBoardFailed"),
   )
   const normalizedName = name.trim()
   const canSubmit = (!isEditing || board !== undefined)
@@ -119,7 +122,7 @@ function ConfigurableBoardDialog({
             illustrationId = storedIllustration.id
           }
           if (!illustrationId) {
-            throw new Error("The background illustration could not be saved.")
+            throw new Error(t("saveIllustrationFailed"))
           }
           illustration = {
             id: illustrationId,
@@ -162,7 +165,7 @@ function ConfigurableBoardDialog({
 
     const succeeded = await runAction(async () => {
       await onDelete(boardId, action)
-    }, "The board could not be deleted.")
+    }, t("deleteBoardFailed"))
     if (succeeded) onClose()
   }
 
@@ -185,7 +188,7 @@ function ConfigurableBoardDialog({
         >
           <DialogHeader className="relative -mt-2.5 h-12.5 justify-center px-2">
             <DialogTitle className="font-bold">
-              {isEditing ? "Edit board" : "Create board"}
+              {t(isEditing ? "editBoard" : "createBoard")}
             </DialogTitle>
             <div className="absolute inset-y-0 right-1 flex items-center">
               <Button
@@ -193,7 +196,7 @@ function ConfigurableBoardDialog({
                 size="sm"
                 disabled={!canSubmit || isSubmitting}
               >
-                {isSubmitting ? "Saving…" : isEditing ? "Save changes" : "Create board"}
+                {isSubmitting ? t("saving") : t(isEditing ? "saveChanges" : "createBoard")}
               </Button>
             </div>
           </DialogHeader>
@@ -203,17 +206,17 @@ function ConfigurableBoardDialog({
             variant="modal-inner"
             className="grid min-h-0 gap-6 overflow-y-auto p-6"
           >
-            <ConfigSection variant="field" title="Name" htmlFor="board-name">
+            <ConfigSection variant="field" title={t("name")} htmlFor="board-name">
               <Input
                 id="board-name"
                 autoFocus
-                placeholder={isEditing ? undefined : "Product signals"}
+                placeholder={isEditing ? undefined : t("boardNamePlaceholder")}
                 value={name}
                 onChange={event => setName(event.target.value)}
               />
             </ConfigSection>
 
-            <ConfigSection variant="group" title="Theme color">
+            <ConfigSection variant="group" title={t("themeColor")}>
               <div className="h-28">
                 <ThemeSelector
                   value={color}
@@ -223,7 +226,7 @@ function ConfigurableBoardDialog({
               </div>
             </ConfigSection>
 
-            <ConfigSection variant="group" title="LiveCard order">
+            <ConfigSection variant="group" title={t("liveCardOrder")}>
               <RadioGroup
                 variant="segmented"
                 value={sortMode}
@@ -232,7 +235,7 @@ function ConfigurableBoardDialog({
               >
                 {SORT_OPTIONS.map(option => (
                   <RadioGroupItem key={option.value} value={option.value} className="min-w-0 flex-1 px-2">
-                    {option.label}
+                    {t(option.labelKey)}
                   </RadioGroupItem>
                 ))}
               </RadioGroup>
@@ -240,7 +243,7 @@ function ConfigurableBoardDialog({
 
             <ConfigSection
               variant="group"
-              title="Default layer"
+              title={t("defaultLayer")}
             >
               <RadioGroup
                 variant="segmented"
@@ -250,7 +253,7 @@ function ConfigurableBoardDialog({
               >
                 {LAYER_OPTIONS.map(option => (
                   <RadioGroupItem key={option.value} value={option.value} className="min-w-0 flex-1 px-2">
-                    {option.label}
+                    {t(option.labelKey)}
                   </RadioGroupItem>
                 ))}
               </RadioGroup>
@@ -269,27 +272,27 @@ function ConfigurableBoardDialog({
                   <ConfirmDestructiveButton
                     type="button"
                     disabled={isSubmitting || !canDelete}
-                    title={!canDelete ? "NewsNext must keep at least one board." : undefined}
-                    label="Delete with LiveCards"
-                    confirmLabel="Confirm delete"
+                    title={!canDelete ? t("keepOneBoard") : undefined}
+                    label={t("deleteWithLiveCards")}
+                    confirmLabel={t("confirmDelete")}
                     pending={isSubmitting}
-                    pendingLabel="Deleting…"
+                    pendingLabel={t("deleting")}
                     onConfirm={() => handleDelete({ mode: "delete" })}
                   />
                   <div className="flex items-center gap-2">
                     <ConfirmDestructiveButton
                       type="button"
                       disabled={isSubmitting || !canDelete || !targetBoardId}
-                      title={!canDelete ? "NewsNext must keep at least one board." : undefined}
-                      label="Transfer and Delete"
-                      confirmLabel="Confirm transfer"
+                      title={!canDelete ? t("keepOneBoard") : undefined}
+                      label={t("transferAndDelete")}
+                      confirmLabel={t("confirmTransfer")}
                       pending={isSubmitting}
-                      pendingLabel="Transferring…"
+                      pendingLabel={t("transferring")}
                       onConfirm={() => handleDelete({ mode: "transfer", targetBoardId })}
                     />
                     {transferBoards.length > 1 && (
                       <Select value={targetBoardId} onValueChange={value => value && setTargetBoardId(value)}>
-                        <SelectTrigger className="w-36" aria-label="Transfer target board">
+                        <SelectTrigger className="w-36" aria-label={t("transferTargetBoard")}>
                           <SelectValue>{targetBoard?.name}</SelectValue>
                         </SelectTrigger>
                         <SelectContent>
