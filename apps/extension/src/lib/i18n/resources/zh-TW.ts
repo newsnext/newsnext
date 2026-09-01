@@ -101,6 +101,8 @@ export const zhTW = {
   current: "目前",
   restore: "還原",
   restoreWorkerDescription: "如果擴充功能重新安裝後遺失本機身分，可還原先前的 Worker。",
+  myBoard: "我的看板",
+  emptyBoardDescription: "在頁面上使用 Radar，將 LiveCard 新增至「{{board}}」。",
   workerAlreadyConnected: "此 Worker ID 已被其他瀏覽器使用。",
   regenerateWorker: "產生新的 Worker ID",
   startLocalServer: "使用以下命令啟動本機服務：",

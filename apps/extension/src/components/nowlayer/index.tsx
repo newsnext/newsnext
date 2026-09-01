@@ -1,5 +1,6 @@
 import { useSetAtom } from "jotai"
 import { useCallback } from "react"
+import { useI18n } from "@/hooks/use-i18n"
 import { useNowLayerLiveCards } from "@/hooks/use-now-layer-live-cards"
 import { setNowLayerManualOrderAtom } from "@/store/board"
 import { LiveCardContainer } from "./live-card-container"
@@ -15,6 +16,7 @@ export function NowLayer({
   className,
   entranceReady,
 }: NowLayerProps) {
+  const { t } = useI18n()
   const setManualOrder = useSetAtom(setNowLayerManualOrderAtom)
   const { currentBoard, liveCardsByInstanceId, instanceIds } = useNowLayerLiveCards(boardId)
 
@@ -27,10 +29,7 @@ export function NowLayer({
   if (instanceIds.length === 0) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center px-6 text-center text-sm text-muted-foreground">
-        Use Radar on a page to add a LiveCard to
-        {" "}
-        {currentBoard.name}
-        .
+        {t("emptyBoardDescription", { board: currentBoard.name })}
       </div>
     )
   }

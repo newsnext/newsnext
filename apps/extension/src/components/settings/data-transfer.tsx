@@ -148,7 +148,7 @@ export function DataTransferSettings({
   async function handleClear(): Promise<void> {
     await runClear(async () => {
       await clearNonPortableUserData()
-      const clearedData = await clearPersistedData()
+      const clearedData = await clearPersistedData(t("myBoard"))
       queryClient.clear()
       handleThemeModeSwitch("system")
       handleThemeSwitch(DEFAULT_BOARD_COLOR)

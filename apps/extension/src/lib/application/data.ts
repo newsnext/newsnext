@@ -11,6 +11,12 @@ export interface ApplicationData {
   instances: Instance[]
 }
 
+export interface InitialApplicationDataOptions {
+  boardId?: string
+  boardName?: string
+  createdAt?: number
+}
+
 export function createEmptyApplicationData(): ApplicationData {
   return {
     version: APPLICATION_DATA_VERSION,
@@ -20,25 +26,28 @@ export function createEmptyApplicationData(): ApplicationData {
 }
 
 export function createInitialApplicationData(
-  boardId: string = createId(),
-  createdAt: number = Date.now(),
+  options: InitialApplicationDataOptions = {},
 ): ApplicationData {
+  const {
+    boardId = createId(),
+    boardName = INITIAL_BOARD_NAME,
+    createdAt = Date.now(),
+  } = options
   return {
     version: APPLICATION_DATA_VERSION,
-    boards: [createBoard(boardId, INITIAL_BOARD_NAME, createdAt)],
+    boards: [createBoard(boardId, boardName, createdAt)],
     instances: [],
   }
 }
 
 export function ensureApplicationDataIntegrity(
   data: ApplicationData,
-  boardId?: string,
-  createdAt?: number,
+  options: InitialApplicationDataOptions = {},
 ): ApplicationData {
   const initialized = data.boards.length > 0
     ? data
     : {
-        ...createInitialApplicationData(boardId ?? createId(), createdAt ?? Date.now()),
+        ...createInitialApplicationData(options),
         instances: data.instances,
       }
   const assignedInstanceIds = new Set(initialized.boards.flatMap(board => board.instanceIds))

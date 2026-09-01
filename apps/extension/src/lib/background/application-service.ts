@@ -9,6 +9,8 @@ import { browser } from "#imports"
 import {
   ensureApplicationDataIntegrity,
 } from "../application"
+import { i18next } from "../i18n"
+import { resolveLocale } from "../i18n/locale"
 import { createId } from "../id"
 import {
   normalizeApplicationData,
@@ -90,7 +92,9 @@ async function enqueueApplicationDataReplacement(
   commit: boolean,
 ): Promise<ApplicationData> {
   const replacement = mutationQueue.then(async () => {
-    const candidate = ensureApplicationDataIntegrity(normalizeApplicationData(value))
+    const candidate = ensureApplicationDataIntegrity(normalizeApplicationData(value), {
+      boardName: getInitialBoardName(),
+    })
     const data = commit && applicationDataCommitter
       ? await applicationDataCommitter(candidate)
       : candidate
@@ -134,8 +138,15 @@ async function loadApplicationData(): Promise<ApplicationData> {
   const key = PERSISTED_DATA_SLICES.application.key
   const stored = await browser.storage.local.get(key)
   const data = normalizeApplicationData(stored[key])
-  const initialized = ensureApplicationDataIntegrity(data)
+  const initialized = ensureApplicationDataIntegrity(data, {
+    boardName: getInitialBoardName(),
+  })
   if (initialized === data) return data
   await browser.storage.local.set({ [key]: initialized })
   return initialized
+}
+
+function getInitialBoardName(): string {
+  const locale = resolveLocale(browser.i18n.getUILanguage())
+  return i18next.getFixedT(locale)("myBoard")
 }

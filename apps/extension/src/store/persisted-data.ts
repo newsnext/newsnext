@@ -29,8 +29,8 @@ export const importPersistedUserDataAtom = atom(
   },
 )
 
-export const clearPersistedUserDataAtom = atom(null, async (_get, set) => {
-  const data = createInitialApplicationData()
+export const clearPersistedUserDataAtom = atom(null, async (_get, set, boardName: string) => {
+  const data = createInitialApplicationData({ boardName })
   const boardId = data.boards[0]?.id
   if (!boardId) throw new Error("NewsNext must keep at least one Board")
   await actions.application.replace(data)
