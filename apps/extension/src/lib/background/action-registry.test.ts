@@ -33,6 +33,7 @@ function createContext(): BackgroundActionContext {
     },
     appIntegration: {
       getIllustration: vi.fn(async () => null),
+      getLogs: vi.fn(async () => []),
       getStatus: vi.fn(async () => ({
         claimableWorkerIds: [],
         state: "disabled" as const,

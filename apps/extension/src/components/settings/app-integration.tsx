@@ -1,3 +1,4 @@
+import type { NativeLogEntry } from "@newsnext/extension-connection"
 import type { AppIntegrationStatus } from "@/lib/background/app-integration-native"
 import type { StaticMessageKey } from "@/lib/i18n"
 import {
@@ -8,7 +9,7 @@ import {
   SelectValue,
 } from "@newsnext/ui/components/select"
 import { Switch } from "@newsnext/ui/components/switch"
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { ConfigSection } from "@/components/common/config-section"
 import { useAsyncAction } from "@/hooks/use-async-action"
 import { useI18n } from "@/hooks/use-i18n"
@@ -34,6 +35,8 @@ const CHECKING_PRESENTATION: StatusPresentation = {
 export function AppIntegrationSettings(): React.JSX.Element {
   const { t } = useI18n()
   const [status, setStatus] = useState<AppIntegrationStatus>()
+  const [logs, setLogs] = useState<NativeLogEntry[]>([])
+  const [logLevel, setLogLevel] = useState<"all" | NativeLogEntry["level"]>("all")
   const { error: updateError, isPending: updating, run: runUpdate } = useAsyncAction(
     t("updateAppIntegrationFailed"),
   )
@@ -49,9 +52,18 @@ export function AppIntegrationSettings(): React.JSX.Element {
     }
   }, [])
 
+  const refreshLogs = useCallback(async (): Promise<void> => {
+    try {
+      setLogs(await actions.appIntegration.getLogs())
+    } catch {
+      setLogs([])
+    }
+  }, [])
+
   useEffect(() => {
     void refreshStatus()
-  }, [refreshStatus])
+    void refreshLogs()
+  }, [refreshLogs, refreshStatus])
 
   useEffect(() => {
     if (!isEnabled) {
@@ -59,9 +71,14 @@ export function AppIntegrationSettings(): React.JSX.Element {
     }
     const timer = setInterval(() => {
       void refreshStatus()
+      void refreshLogs()
     }, 1_000)
     return () => clearInterval(timer)
-  }, [isEnabled, refreshStatus])
+  }, [isEnabled, refreshLogs, refreshStatus])
+
+  const filteredLogs = useMemo(() => (
+    logs.filter(entry => logLevel === "all" || entry.level === logLevel).toReversed()
+  ), [logLevel, logs])
 
   const handleEnabledChange = useCallback(async (enabled: boolean): Promise<void> => {
     const succeeded = await runUpdate(async () => {
@@ -87,88 +104,131 @@ export function AppIntegrationSettings(): React.JSX.Element {
   }, [refreshStatus, runUpdate, status?.workerId])
 
   return (
-    <ConfigSection
-      title={t("integration")}
-      description={t("appIntegrationDescription")}
-      surfaceClassName="gap-3 p-4"
-    >
-      <div className="flex items-center justify-between gap-4">
-        <div
-          className="flex min-w-0 items-center gap-2 text-sm font-medium"
-          role="status"
-          aria-live="polite"
-        >
-          <span
-            aria-hidden="true"
-            className={`size-2 shrink-0 rounded-full ${presentation.dotClassName}`}
-          />
-          <span>{t(presentation.labelKey)}</span>
-          {state === "connected" && status?.appVersion && (
-            <span className="font-mono text-xs font-normal text-muted-foreground">
-              {`v${status.appVersion}`}
-            </span>
-          )}
-        </div>
-        <Switch
-          checked={isEnabled}
-          disabled={!status || updating}
-          aria-label={t("enableAppIntegration")}
-          onCheckedChange={enabled => void handleEnabledChange(enabled)}
-        />
-      </div>
-
-      {status && isEnabled && (
-        <div className="flex items-center justify-between gap-4 border-t pt-3">
-          <div className="min-w-0">
-            <p className="text-xs font-medium">{t("worker")}</p>
-            <p className="truncate font-mono text-xs text-muted-foreground">
-              {status.workerId}
-            </p>
+    <div className="space-y-6">
+      <ConfigSection
+        title={t("integration")}
+        description={t("appIntegrationDescription")}
+        surfaceClassName="gap-3 p-4"
+      >
+        <div className="flex items-center justify-between gap-4">
+          <div
+            className="flex min-w-0 items-center gap-2 text-sm font-medium"
+            role="status"
+            aria-live="polite"
+          >
+            <span
+              aria-hidden="true"
+              className={`size-2 shrink-0 rounded-full ${presentation.dotClassName}`}
+            />
+            <span>{t(presentation.labelKey)}</span>
+            {state === "connected" && status?.appVersion && (
+              <span className="font-mono text-xs font-normal text-muted-foreground">
+                {`v${status.appVersion}`}
+              </span>
+            )}
           </div>
-          {status.claimableWorkerIds.length > 0 && (
-            <Select value={status.workerId} onValueChange={handleWorkerChange}>
-              <SelectTrigger
-                size="sm"
-                className="max-w-52"
-                disabled={updating}
-                aria-label={t("selectWorker")}
-              >
-                <SelectValue>{status.workerId.slice(0, 8)}</SelectValue>
-              </SelectTrigger>
-              <SelectContent align="end">
-                <SelectItem value={status.workerId}>
-                  {`${t("current")} · ${status.workerId.slice(0, 8)}`}
-                </SelectItem>
-                {status.claimableWorkerIds.map(workerId => (
-                  <SelectItem key={workerId} value={workerId}>
-                    {`${t("restore")} · ${workerId.slice(0, 8)}`}
+          <Switch
+            checked={isEnabled}
+            disabled={!status || updating}
+            aria-label={t("enableAppIntegration")}
+            onCheckedChange={enabled => void handleEnabledChange(enabled)}
+          />
+        </div>
+
+        {status && isEnabled && (
+          <div className="flex items-center justify-between gap-4 border-t pt-3">
+            <div className="min-w-0">
+              <p className="text-xs font-medium">{t("worker")}</p>
+              <p className="truncate font-mono text-xs text-muted-foreground">
+                {status.workerId}
+              </p>
+            </div>
+            {status.claimableWorkerIds.length > 0 && (
+              <Select value={status.workerId} onValueChange={handleWorkerChange}>
+                <SelectTrigger
+                  size="sm"
+                  className="max-w-52"
+                  disabled={updating}
+                  aria-label={t("selectWorker")}
+                >
+                  <SelectValue>{status.workerId.slice(0, 8)}</SelectValue>
+                </SelectTrigger>
+                <SelectContent align="end">
+                  <SelectItem value={status.workerId}>
+                    {`${t("current")} · ${status.workerId.slice(0, 8)}`}
                   </SelectItem>
+                  {status.claimableWorkerIds.map(workerId => (
+                    <SelectItem key={workerId} value={workerId}>
+                      {`${t("restore")} · ${workerId.slice(0, 8)}`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+        )}
+
+        {status && status.claimableWorkerIds.length > 0 && (
+          <p className="text-xs leading-5 text-muted-foreground">
+            {t("restoreWorkerDescription")}
+          </p>
+        )}
+
+        {state === "disconnected" && (
+          <p className="border-t pt-3 text-xs leading-5 text-muted-foreground">
+            {t("startLocalServer")}
+            {" "}
+            <code>newsnext start</code>
+            .
+          </p>
+        )}
+        {updateError && (
+          <p role="alert" className="text-xs text-destructive">
+            {updateError}
+          </p>
+        )}
+      </ConfigSection>
+      {state === "connected" && (
+        <ConfigSection
+          title={t("appLogs")}
+          description={t("appLogsDescription")}
+          surfaceClassName="gap-3 p-4"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <Select value={logLevel} onValueChange={value => value && setLogLevel(value)}>
+              <SelectTrigger size="sm" className="w-32" aria-label={t("filterLogs")}>
+                <SelectValue>{t(logLevel === "all" ? "all" : logLevel)}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {(["all", "info", "warn", "error"] as const).map(level => (
+                  <SelectItem key={level} value={level}>{t(level)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
-          )}
-        </div>
+            <span className="text-xs text-muted-foreground">
+              {t("appLogCount", { count: filteredLogs.length })}
+            </span>
+          </div>
+          <div className="max-h-72 overflow-y-auto rounded-xl border bg-background/25">
+            {filteredLogs.length === 0
+              ? <p className="p-6 text-center text-xs text-muted-foreground">{t("noAppLogs")}</p>
+              : filteredLogs.map(entry => (
+                  <div key={entry.id} className="grid grid-cols-[4.5rem_3.5rem_minmax(0,1fr)] gap-2 border-b px-3 py-2 text-xs last:border-b-0">
+                    <time className="text-muted-foreground" dateTime={entry.timestamp}>
+                      {new Date(entry.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                    </time>
+                    <span className={entry.level === "error" ? "text-destructive" : "text-muted-foreground"}>
+                      {entry.level}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="mr-2 font-mono text-muted-foreground">{entry.target}</span>
+                      <span className="break-words">{entry.message}</span>
+                    </span>
+                  </div>
+                ))}
+          </div>
+        </ConfigSection>
       )}
-
-      {status && status.claimableWorkerIds.length > 0 && (
-        <p className="text-xs leading-5 text-muted-foreground">
-          {t("restoreWorkerDescription")}
-        </p>
-      )}
-
-      {state === "disconnected" && (
-        <p className="border-t pt-3 text-xs leading-5 text-muted-foreground">
-          {t("startLocalServer")}
-          {" "}
-          <code>newsnext start</code>
-          .
-        </p>
-      )}
-      {updateError && (
-        <p role="alert" className="text-xs text-destructive">
-          {updateError}
-        </p>
-      )}
-    </ConfigSection>
+    </div>
   )
 }

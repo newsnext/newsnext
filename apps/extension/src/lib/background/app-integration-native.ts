@@ -4,6 +4,7 @@ import type {
   HostToExtension,
   NativeCommandResult,
   NativeIllustration,
+  NativeLogEntry,
   NativeWorkspace,
   NativeWorkspacePatch,
 } from "@newsnext/extension-connection"
@@ -40,7 +41,7 @@ import { applyWorkspacePatch, createWorkspacePatch } from "./workspace-patch"
 const NATIVE_HOST_NAME = import.meta.env.DEV
   ? "app.newsnext.host.dev"
   : "app.newsnext.host"
-const PROTOCOL_VERSION = 16
+const PROTOCOL_VERSION = 17
 const APP_INTEGRATION_WORKER_ID_KEY = "newsnext-app-integration-worker-id"
 const APP_INTEGRATION_RECONNECT_ALARM = "app-integration-native-reconnect"
 const RECONNECT_ALARM_PERIOD_MINUTES = 0.5
@@ -87,6 +88,10 @@ interface PendingIllustrationGetRequest extends PendingRequest {
   resolve: (value: Uint8Array<ArrayBuffer> | null) => void
 }
 
+interface PendingLogsRequest extends PendingRequest {
+  resolve: (logs: NativeLogEntry[]) => void
+}
+
 interface PendingIllustrationPutRequest extends PendingRequest {
   id: string
   resolve: () => void
@@ -111,12 +116,14 @@ const pendingInstanceRequests = new Map<string, PendingInstanceRequest>()
 const pendingWorkspaceRequests = new Map<string, PendingWorkspaceRequest>()
 const pendingIllustrationGetRequests = new Map<string, PendingIllustrationGetRequest>()
 const pendingIllustrationPutRequests = new Map<string, PendingIllustrationPutRequest>()
+const pendingLogsRequests = new Map<string, PendingLogsRequest>()
 const pendingConnectionRequests = new Set<PendingConnectionRequest>()
 const activeIllustrationRequests = new Map<string, Promise<Uint8Array<ArrayBuffer> | null>>()
 const nativeMessageChunks = new NativeMessageChunkAssembler(NATIVE_REQUEST_TIMEOUT_MS)
 
 export const appIntegrationActions: AppIntegrationActions = {
   getIllustration: requestIllustration,
+  getLogs: requestLogs,
   getStatus: async () => getAppIntegrationStatus(),
   getWidgetSnapshot: requestWidgetSnapshot,
   loadInstance: requestInstanceLoad,
@@ -233,6 +240,20 @@ function parseIllustration(value: unknown): NativeIllustration {
   return { id: value.id, mimeType: value.mimeType, data: value.data }
 }
 
+function parseLogs(value: unknown): NativeLogEntry[] {
+  if (!Array.isArray(value) || value.some(entry => (
+    !isRecord(entry)
+    || !Number.isSafeInteger(entry.id)
+    || typeof entry.timestamp !== "string"
+    || !["error", "warn", "info"].includes(String(entry.level))
+    || typeof entry.target !== "string"
+    || typeof entry.message !== "string"
+  ))) {
+    throw new Error("The native host returned invalid logs")
+  }
+  return value as NativeLogEntry[]
+}
+
 function parseHostMessage(value: unknown): ParsedHostMessage {
   if (!isRecord(value) || typeof value.type !== "string") {
     throw new Error("The native host returned an invalid message")
@@ -250,6 +271,13 @@ function parseHostMessage(value: unknown): ParsedHostMessage {
       workspace: parseWorkspace(value.workspace),
       localInstanceIds: parseLocalInstanceIds(value.localInstanceIds),
       claimableWorkerIds: parseClaimableWorkerIds(value.claimableWorkerIds),
+    }
+  }
+  if (value.type === "logsResult" && typeof value.requestId === "string") {
+    return {
+      type: "logsResult",
+      requestId: value.requestId,
+      logs: parseLogs(value.logs),
     }
   }
   if (value.type === "execute") {
@@ -403,6 +431,7 @@ function resetConnectionState(): void {
   rejectPendingRequests(pendingWorkspaceRequests, error)
   rejectPendingRequests(pendingIllustrationGetRequests, error)
   rejectPendingRequests(pendingIllustrationPutRequests, error)
+  rejectPendingRequests(pendingLogsRequests, error)
   rejectPendingConnectionRequests(error)
   nativeMessageChunks.clear()
 }
@@ -533,6 +562,9 @@ function connect(): void {
         void settleIllustrationGetRequest(message.requestId, message.illustration).catch((error) => {
           console.error("Failed to store the synced background illustration", error)
         })
+      } else if (message.type === "logsResult") {
+        const pending = takePendingRequest(pendingLogsRequests, message.requestId)
+        pending?.resolve(message.logs)
       } else {
         if (message.requestId) {
           const error = new Error(message.message)
@@ -540,7 +572,8 @@ function connect(): void {
             || rejectPendingRequest(pendingInstanceRequests, message.requestId, error)
             || rejectPendingRequest(pendingWorkspaceRequests, message.requestId, error)
             || rejectPendingRequest(pendingIllustrationGetRequests, message.requestId, error)
-            || rejectPendingRequest(pendingIllustrationPutRequests, message.requestId, error)) {
+            || rejectPendingRequest(pendingIllustrationPutRequests, message.requestId, error)
+            || rejectPendingRequest(pendingLogsRequests, message.requestId, error)) {
             return
           }
         }
@@ -582,6 +615,22 @@ export async function requestWidgetSnapshot(input: {
       reject(new Error("Timed out waiting for the NewsNext App"))
     }, NATIVE_REQUEST_TIMEOUT_MS)
     pendingWidgetSnapshotRequests.set(message.requestId, { reject, resolve, timeoutId })
+    connection.postMessage(message)
+  })
+}
+
+export async function requestLogs(): Promise<NativeLogEntry[]> {
+  const connection = await requireAppConnection()
+  const message: ExtensionToHost = {
+    type: "logsGet",
+    requestId: crypto.randomUUID(),
+  }
+  return await new Promise((resolve, reject) => {
+    const timeoutId = setTimeout(() => {
+      pendingLogsRequests.delete(message.requestId)
+      reject(new Error("Timed out loading NewsNext App logs"))
+    }, NATIVE_REQUEST_TIMEOUT_MS)
+    pendingLogsRequests.set(message.requestId, { reject, resolve, timeoutId })
     connection.postMessage(message)
   })
 }

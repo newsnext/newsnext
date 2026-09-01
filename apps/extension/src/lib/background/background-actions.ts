@@ -1,4 +1,4 @@
-import type { ExtensionConnectionFetchResponse } from "@newsnext/extension-connection"
+import type { ExtensionConnectionFetchResponse, NativeLogEntry } from "@newsnext/extension-connection"
 import type { ResolvedRadarSuggestion } from "../radar"
 import type { Instance } from "../source"
 import type { SourceLoadResponse } from "../source/load-result"
@@ -54,6 +54,7 @@ export interface BackgroundActionContext extends ApplicationActionContext {
   }
   appIntegration: {
     getIllustration: (input: { id: string }) => Promise<Uint8Array<ArrayBuffer> | null>
+    getLogs: () => Promise<NativeLogEntry[]>
     getStatus: () => Promise<AppIntegrationStatus>
     getWidgetSnapshot: (input: {
       boardId: string
@@ -144,6 +145,13 @@ const developerFetchAction = defineAction({
   ...input,
   method: input.method.toUpperCase(),
 }))
+const AppLogEntryResult = Type.Object({
+  id: Type.Number(),
+  timestamp: Type.String(),
+  level: stringEnum(["error", "warn", "info"] as const),
+  target: Type.String(),
+  message: Type.String(),
+}, { additionalProperties: false })
 
 const DeveloperRunSourceParams = Type.Unsafe<RunDeveloperSourceInput>(Type.Union([
   Type.Object({
@@ -272,6 +280,15 @@ const appIntegrationGetStatusAction = defineAction({
   result: AppIntegrationStatusResult,
 }, async (_input, context: BackgroundActionContext) => await context.appIntegration.getStatus())
 
+const appIntegrationGetLogsAction = defineAction({
+  audiences: UI_ONLY,
+  name: "appIntegration.getLogs",
+  kind: "query",
+  description: "Get recent NewsNext App service logs.",
+  params: EmptyParams,
+  result: Type.Array(AppLogEntryResult),
+}, async (_input, context: BackgroundActionContext) => await context.appIntegration.getLogs())
+
 const appIntegrationLoadInstanceAction = defineAction({
   audiences: UI_ONLY,
   name: "appIntegration.loadInstance",
@@ -367,6 +384,7 @@ export const uiBackgroundActionDefinitions = [
   sourceLoadAction,
   sourceCancelAction,
   appIntegrationGetStatusAction,
+  appIntegrationGetLogsAction,
   appIntegrationLoadInstanceAction,
   appIntegrationReadInstanceCacheAction,
   appIntegrationSetEnabledAction,

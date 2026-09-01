@@ -51,6 +51,8 @@
     "@babel/core": "^8.0.1",
     "@iconify-json/ph": "catalog:",
     "@rolldown/plugin-babel": "^0.2.3",
+    "@svgr/core": "^8.1.0",
+    "@svgr/plugin-jsx": "^8.1.0",
     "@tailwindcss/vite": "catalog:",
     "@tanstack/react-devtools": "catalog:",
     "@tanstack/react-query-devtools": "catalog:",
