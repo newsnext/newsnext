@@ -14,7 +14,7 @@ import { initializeSettingsStorage } from "@/store/settings"
 import { routeTree } from "./routeTree"
 import "@/styles/index.css"
 
-syncThemeFavicon(localStorage.getItem(THEME_COLOR_KEY) ?? "red")
+void syncThemeFavicon(localStorage.getItem(THEME_COLOR_KEY) ?? "red")
 
 const externalRssLocation = stageExternalRssRadarIntent(
   window.location.pathname,

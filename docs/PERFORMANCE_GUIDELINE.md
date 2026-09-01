@@ -27,9 +27,10 @@ before mounting React. Every HTML entry that mounts `AppProvider` must run this
 bootstrap so the provider stays theme-agnostic and has no module-level DOM or
 storage side effects. Keep later theme synchronization idempotent so an unchanged
 theme does not rewrite local storage or remove and re-add its document class.
-Synchronize the favicon once in the app entry before mounting React, and remember
-the applied color in memory so board resolution with the same color does not
-repeat SVG parsing and serialization.
+Synchronize the favicon once in the app entry before mounting React. Cache the
+canonical SVG source and each generated theme-color data URL, and remember the
+applied color so board resolution with the same color does not repeat network
+loading, SVG parsing, or serialization.
 
 ## Measurement Workflow
 

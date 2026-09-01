@@ -4,7 +4,7 @@ import type { ReactNode } from "react"
 
 import { createRootRoute, HeadContent, Link, Scripts } from "@tanstack/react-router"
 
-import faviconUrl from "../../../extension/public/theme-icons/red.png?url"
+import iconUrl from "../../../extension/public/icon/icon.svg?url"
 import appCss from "../styles.css?url"
 
 export const Route = createRootRoute({
@@ -35,7 +35,7 @@ export const Route = createRootRoute({
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "icon", type: "image/png", href: faviconUrl },
+      { rel: "icon", type: "image/svg+xml", href: iconUrl },
       { rel: "canonical", href: "https://newsnext.app/" },
     ],
   }),
@@ -46,7 +46,7 @@ export const Route = createRootRoute({
 function NotFound() {
   return (
     <main className="not-found">
-      <img src={faviconUrl} alt="" width="52" height="52" />
+      <img src={iconUrl} alt="" width="52" height="52" />
       <p className="eyebrow">404 · Signal lost</p>
       <h1>This page moved beyond the board.</h1>
       <Link to="/" className="button button-primary">Return home</Link>

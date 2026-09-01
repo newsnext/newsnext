@@ -6,6 +6,9 @@ export const THEME_MODE_KEY = "newsnext-theme-mode"
 export type ThemeMode = "light" | "dark" | "system"
 
 let syncedFaviconColor: Color | null = null
+let requestedFaviconColor: Color | null = null
+let faviconSvgSourcePromise: Promise<string> | null = null
+const themedFaviconUrls = new Map<Color, string>()
 
 export function handleThemeSwitch(color: string): void {
   const root = document.documentElement
@@ -17,16 +20,54 @@ export function handleThemeSwitch(color: string): void {
   if (localStorage.getItem(THEME_COLOR_KEY) !== color) {
     localStorage.setItem(THEME_COLOR_KEY, color)
   }
-  syncThemeFavicon(color)
+  void syncThemeFavicon(color)
 }
 
-export function syncThemeFavicon(color: string): void {
-  if (!isThemeColor(color) || syncedFaviconColor === color) return
+function loadFaviconSvgSource(): Promise<string> {
+  faviconSvgSourcePromise ??= fetch("/icon/icon.svg").then(async (response) => {
+    if (!response.ok) throw new Error(`Failed to load theme icon: ${response.status}`)
+    return response.text()
+  }).catch((error: unknown) => {
+    faviconSvgSourcePromise = null
+    throw error
+  })
+  return faviconSvgSourcePromise
+}
+
+function createThemedFaviconUrl(source: string, color: string): string {
+  const document = new DOMParser().parseFromString(source, "image/svg+xml")
+  const svg = document.documentElement
+  svg.setAttribute("color", color)
+  return `data:image/svg+xml,${encodeURIComponent(new XMLSerializer().serializeToString(svg))}`
+}
+
+export async function syncThemeFavicon(color: string): Promise<void> {
+  if (!isThemeColor(color) || syncedFaviconColor === color || requestedFaviconColor === color) return
 
   const link = document.querySelector<HTMLLinkElement>("link[rel~='icon']")
   if (!link) return
 
-  link.href = `/theme-icons/${color}.png`
+  requestedFaviconColor = color
+  const themeColor = getComputedStyle(document.documentElement)
+    .getPropertyValue("--color-theme-500")
+    .trim()
+
+  try {
+    let faviconUrl = themedFaviconUrls.get(color)
+    if (!faviconUrl) {
+      const source = await loadFaviconSvgSource()
+      faviconUrl = createThemedFaviconUrl(source, themeColor || "oklch(63.7% 0.237 25.331)")
+      themedFaviconUrls.set(color, faviconUrl)
+    }
+    if (requestedFaviconColor !== color) return
+
+    link.type = "image/svg+xml"
+    link.href = faviconUrl
+  } catch {
+    if (requestedFaviconColor === color) requestedFaviconColor = null
+    return
+  }
+
   syncedFaviconColor = color
 }
 
