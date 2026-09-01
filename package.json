@@ -86,7 +86,7 @@
     "vitest": "catalog:"
   },
   "simple-git-hooks": {
-    "pre-commit": "npx lint-staged"
+    "pre-commit": "bun run lint-staged"
   },
   "lint-staged": {
     "*": "eslint --fix"
