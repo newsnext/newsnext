@@ -1,6 +1,7 @@
 import type { NativeLogEntry } from "@newsnext/extension-connection"
 import type { AppIntegrationStatus } from "@/lib/background/app-integration-native"
 import type { StaticMessageKey } from "@/lib/i18n"
+import { Button } from "@newsnext/ui/components/button"
 import {
   Select,
   SelectContent,
@@ -103,6 +104,15 @@ export function AppIntegrationSettings(): React.JSX.Element {
     }
   }, [refreshStatus, runUpdate, status?.workerId])
 
+  const handleRegenerateWorker = useCallback(async (): Promise<void> => {
+    const succeeded = await runUpdate(async () => {
+      setStatus(await actions.appIntegration.regenerateWorker())
+    })
+    if (!succeeded) {
+      await refreshStatus()
+    }
+  }, [refreshStatus, runUpdate])
+
   return (
     <div className="space-y-6">
       <ConfigSection
@@ -175,12 +185,35 @@ export function AppIntegrationSettings(): React.JSX.Element {
         )}
 
         {state === "disconnected" && (
-          <p className="border-t pt-3 text-xs leading-5 text-muted-foreground">
-            {t("startLocalServer")}
-            {" "}
-            <code>newsnext start</code>
-            .
-          </p>
+          <div className="space-y-3 border-t pt-3">
+            <p
+              role={status?.connectionError ? "alert" : undefined}
+              className={`text-xs leading-5 ${
+                status?.connectionError ? "text-destructive" : "text-muted-foreground"
+              }`}
+            >
+              {status?.connectionError?.type === "workerAlreadyConnected"
+                ? t("workerAlreadyConnected")
+                : status?.connectionError?.message ?? (
+                  <>
+                    {t("startLocalServer")}
+                    {" "}
+                    <code>newsnext start</code>
+                    .
+                  </>
+                )}
+            </p>
+            {status?.connectionError?.type === "workerAlreadyConnected" && (
+              <Button
+                type="button"
+                size="sm"
+                disabled={updating}
+                onClick={() => void handleRegenerateWorker()}
+              >
+                {t("regenerateWorker")}
+              </Button>
+            )}
+          </div>
         )}
         {updateError && (
           <p role="alert" className="text-xs text-destructive">

@@ -46,6 +46,7 @@ const APP_INTEGRATION_WORKER_ID_KEY = "newsnext-app-integration-worker-id"
 const APP_INTEGRATION_RECONNECT_ALARM = "app-integration-native-reconnect"
 const RECONNECT_ALARM_PERIOD_MINUTES = 0.5
 const NATIVE_REQUEST_TIMEOUT_MS = 65_000
+const WORKER_ALREADY_CONNECTED_ERROR = "The NewsNext Worker is already connected"
 
 export type AppIntegrationState
   = | "disabled"
@@ -56,6 +57,10 @@ export type AppIntegrationState
 export interface AppIntegrationStatus {
   appVersion?: string
   claimableWorkerIds: string[]
+  connectionError?: {
+    message: string
+    type: "unknown" | "workerAlreadyConnected"
+  }
   state: AppIntegrationState
   workerId: string
   widgetServerUrl?: string
@@ -105,6 +110,7 @@ let port: NativePort | undefined
 let appVersion: string | undefined
 let widgetServerUrl: string | undefined
 let connectionState: AppIntegrationState = "disconnected"
+let connectionError: AppIntegrationStatus["connectionError"]
 let enabled = false
 let workerId: string = crypto.randomUUID()
 let claimableWorkerIds: string[] = []
@@ -129,6 +135,7 @@ export const appIntegrationActions: AppIntegrationActions = {
   loadInstance: requestInstanceLoad,
   readInstanceCache: requestInstanceCache,
   putIllustration: storeIllustration,
+  regenerateWorker: regenerateAppIntegrationWorker,
   setEnabled: async ({ enabled: nextEnabled }) => (
     await setAppIntegrationEnabled(nextEnabled)
   ),
@@ -372,6 +379,7 @@ export function getAppIntegrationStatus(): AppIntegrationStatus {
   return {
     appVersion,
     claimableWorkerIds: [...claimableWorkerIds],
+    connectionError,
     state: enabled ? connectionState : "disabled",
     workerId,
     widgetServerUrl,
@@ -509,6 +517,7 @@ function connect(): void {
   }
 
   connectionState = "connecting"
+  connectionError = undefined
   appVersion = undefined
   widgetServerUrl = undefined
   const nextPort = browser.runtime.connectNative(NATIVE_HOST_NAME)
@@ -576,6 +585,12 @@ function connect(): void {
             || rejectPendingRequest(pendingLogsRequests, message.requestId, error)) {
             return
           }
+        }
+        connectionError = {
+          message: message.message,
+          type: message.message === WORKER_ALREADY_CONNECTED_ERROR
+            ? "workerAlreadyConnected"
+            : "unknown",
         }
         console.error("NewsNext native host error", message.message)
       }
@@ -1006,6 +1021,16 @@ export async function setAppIntegrationWorker(
     throw new Error("The selected NewsNext Worker is no longer available")
   }
 
+  await reconnectAsWorker(nextWorkerId)
+  return getAppIntegrationStatus()
+}
+
+export async function regenerateAppIntegrationWorker(): Promise<AppIntegrationStatus> {
+  await reconnectAsWorker(crypto.randomUUID())
+  return getAppIntegrationStatus()
+}
+
+async function reconnectAsWorker(nextWorkerId: string): Promise<void> {
   await browser.storage.local.set({
     [APP_INTEGRATION_WORKER_ID_KEY]: nextWorkerId,
   })
@@ -1017,7 +1042,6 @@ export async function setAppIntegrationWorker(
   if (enabled) {
     connect()
   }
-  return getAppIntegrationStatus()
 }
 
 export async function registerAppIntegrationNative(): Promise<void> {

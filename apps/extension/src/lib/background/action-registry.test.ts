@@ -43,6 +43,11 @@ function createContext(): BackgroundActionContext {
       loadInstance: vi.fn(async () => ({}) as never),
       readInstanceCache: vi.fn(async () => null),
       putIllustration: vi.fn(async () => undefined),
+      regenerateWorker: vi.fn(async () => ({
+        claimableWorkerIds: [],
+        state: "connecting" as const,
+        workerId: "new-worker",
+      })),
       setEnabled: vi.fn(async () => ({
         claimableWorkerIds: [],
         state: "disabled" as const,

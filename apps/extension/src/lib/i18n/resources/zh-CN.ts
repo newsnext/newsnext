@@ -101,6 +101,8 @@ export const zhCN = {
   current: "当前",
   restore: "恢复",
   restoreWorkerDescription: "如果扩展重装后丢失了本地身份，可恢复之前的 Worker。",
+  workerAlreadyConnected: "此 Worker ID 已被其他浏览器使用。",
+  regenerateWorker: "生成新的 Worker ID",
   startLocalServer: "使用以下命令启动本地服务：",
   settingsDataDescription: "外观、默认看板和来源图标偏好。",
   boardsDataDescription: "看板、看板偏好、成员关系和 LiveCard 顺序。",

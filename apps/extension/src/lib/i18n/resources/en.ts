@@ -97,6 +97,8 @@ export const en = {
   current: "Current",
   restore: "Restore",
   restoreWorkerDescription: "Restore a previous Worker if this extension was reinstalled and lost its local identity.",
+  workerAlreadyConnected: "This Worker ID is already in use by another browser.",
+  regenerateWorker: "Generate new Worker ID",
   startLocalServer: "Start the local server with",
   settingsDataDescription: "Appearance, default board, and source icon preferences.",
   boardsDataDescription: "Boards, board preferences, memberships, and LiveCard order.",

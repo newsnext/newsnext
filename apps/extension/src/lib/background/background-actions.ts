@@ -66,6 +66,7 @@ export interface BackgroundActionContext extends ApplicationActionContext {
       bytes: Uint8Array<ArrayBuffer>
       id: string
     }) => Promise<void>
+    regenerateWorker: () => Promise<AppIntegrationStatus>
     setEnabled: (input: { enabled: boolean }) => Promise<AppIntegrationStatus>
     setWorker: (input: { workerId: string }) => Promise<AppIntegrationStatus>
   }
@@ -92,6 +93,10 @@ const SourceCacheResult = Type.Unsafe<SourceLoadResponse | null>(Type.Union([
 const AppIntegrationStatusResult = Type.Unsafe<AppIntegrationStatus>(Type.Object({
   appVersion: Type.Optional(Type.String()),
   claimableWorkerIds: Type.Array(Identifier),
+  connectionError: Type.Optional(Type.Object({
+    message: Type.String(),
+    type: stringEnum(["unknown", "workerAlreadyConnected"] as const),
+  }, { additionalProperties: false })),
   state: stringEnum(["disabled", "connected", "connecting", "disconnected"] as const),
   workerId: Identifier,
   widgetServerUrl: Type.Optional(Type.String()),
@@ -322,6 +327,17 @@ const appIntegrationSetEnabledAction = defineAction({
   result: AppIntegrationStatusResult,
 }, async (input, context: BackgroundActionContext) => await context.appIntegration.setEnabled(input))
 
+const appIntegrationRegenerateWorkerAction = defineAction({
+  audiences: UI_ONLY,
+  name: "appIntegration.regenerateWorker",
+  kind: "mutation",
+  description: "Generate a new Worker identity and reconnect this browser.",
+  params: EmptyParams,
+  result: AppIntegrationStatusResult,
+}, async (_input, context: BackgroundActionContext) => (
+  await context.appIntegration.regenerateWorker()
+))
+
 const appIntegrationSetWorkerAction = defineAction({
   audiences: UI_ONLY,
   name: "appIntegration.setWorker",
@@ -387,6 +403,7 @@ export const uiBackgroundActionDefinitions = [
   appIntegrationGetLogsAction,
   appIntegrationLoadInstanceAction,
   appIntegrationReadInstanceCacheAction,
+  appIntegrationRegenerateWorkerAction,
   appIntegrationSetEnabledAction,
   appIntegrationSetWorkerAction,
   illustrationStoreAction,
