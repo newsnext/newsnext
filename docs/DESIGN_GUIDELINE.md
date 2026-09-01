@@ -33,7 +33,9 @@ Use `apps/extension/public/icon/icon.svg` as the shared product icon. Keep the
 browser manifest raster sizes in `apps/extension/public/icon/`, but render
 themed interface icons as inline SVG and derive every colored layer from
 `currentColor`; do not maintain separate theme-specific raster variants. The
-extension does not use a separate dark icon.
+extension does not use a separate dark icon. Keep the shared SVG compatible with
+standalone image renderers: use an sRGB fallback color and basic opacity layers
+instead of CSS custom properties, `oklch()`, or `color-mix()` inside the asset.
 Keep copy factual about public and separately distributed components. Treat
 motion as one restrained entry sequence and respect reduced-motion preferences.
 

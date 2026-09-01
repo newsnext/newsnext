@@ -9,9 +9,11 @@ export interface ThemeIconProps extends Omit<SVGProps<SVGSVGElement>, "color"> {
 export function ThemeIcon({ color, style, ...props }: ThemeIconProps): React.JSX.Element {
   const id = useId().replaceAll(":", "")
   const maskId = `${id}-mask`
-  const backgroundId = `${id}-background`
-  const depthId = `${id}-depth`
-  const faceId = `${id}-face`
+  const backgroundLightId = `${id}-background-light`
+  const backgroundShadeId = `${id}-background-shade`
+  const footerColorId = `${id}-footer-color`
+  const footerShadeId = `${id}-footer-shade`
+  const faceLightId = `${id}-face-light`
   const faceDepthId = `${id}-face-depth`
   const highlightId = `${id}-highlight`
 
@@ -28,7 +30,6 @@ export function ThemeIcon({ color, style, ...props }: ThemeIconProps): React.JSX
     >
       <mask
         id={maskId}
-        style={{ maskType: "luminance" }}
         maskUnits="userSpaceOnUse"
         x="0"
         y="0"
@@ -41,15 +42,25 @@ export function ThemeIcon({ color, style, ...props }: ThemeIconProps): React.JSX
         />
       </mask>
       <g mask={`url(#${maskId})`}>
-        <rect width="128" height="128" fill={`url(#${backgroundId})`} />
+        <rect width="128" height="128" fill="currentColor" />
+        <rect width="128" height="128" fill={`url(#${backgroundLightId})`} />
+        <rect width="128" height="128" fill={`url(#${backgroundShadeId})`} />
         <path
           d="M0 86C15 104 36 113 64 113C92 113 113 104 128 86V128H0V86Z"
-          fill={`url(#${depthId})`}
+          fill={`url(#${footerColorId})`}
+        />
+        <path
+          d="M0 86C15 104 36 113 64 113C92 113 113 104 128 86V128H0V86Z"
+          fill={`url(#${footerShadeId})`}
         />
         <path
           d="M64 94C99.3462 94 128 65.3462 128 30C128 -5.34623 99.3462 -34 64 -34C28.6538 -34 0 -5.34623 0 30C0 65.3462 28.6538 94 64 94Z"
-          fill={`url(#${faceId})`}
+          fill="currentColor"
           filter={`url(#${faceDepthId})`}
+        />
+        <path
+          d="M64 94C99.3462 94 128 65.3462 128 30C128 -5.34623 99.3462 -34 64 -34C28.6538 -34 0 -5.34623 0 30C0 65.3462 28.6538 94 64 94Z"
+          fill={`url(#${faceLightId})`}
         />
         <path
           d="M0 30C0 65.346 28.654 94 64 94C99.346 94 128 65.346 128 30C128 64.8 99.346 93 64 93C28.654 93 0 64.8 0 30Z"
@@ -64,25 +75,33 @@ export function ThemeIcon({ color, style, ...props }: ThemeIconProps): React.JSX
         />
       </g>
       <defs>
-        <linearGradient id={backgroundId} x1="64" y1="0" x2="64" y2="128" gradientUnits="userSpaceOnUse">
-          <stop stopColor="color-mix(in oklab, currentColor 6%, white)" />
-          <stop offset="0.32" stopColor="color-mix(in oklab, currentColor 20%, white)" />
-          <stop offset="0.56" stopColor="color-mix(in oklab, currentColor 52%, white)" />
-          <stop offset="0.76" stopColor="color-mix(in oklab, currentColor 88%, white)" />
-          <stop offset="0.9" stopColor="currentColor" />
-          <stop offset="1" stopColor="color-mix(in oklab, currentColor 96%, black)" />
+        <linearGradient id={backgroundLightId} x1="64" y1="0" x2="64" y2="128" gradientUnits="userSpaceOnUse">
+          <stop stopColor="white" stopOpacity="0.94" />
+          <stop offset="0.32" stopColor="white" stopOpacity="0.8" />
+          <stop offset="0.56" stopColor="white" stopOpacity="0.48" />
+          <stop offset="0.76" stopColor="white" stopOpacity="0.12" />
+          <stop offset="0.9" stopColor="white" stopOpacity="0" />
+          <stop offset="1" stopColor="white" stopOpacity="0" />
         </linearGradient>
-        <linearGradient id={depthId} x1="64" y1="90" x2="64" y2="128" gradientUnits="userSpaceOnUse">
+        <linearGradient id={backgroundShadeId} x1="64" y1="0" x2="64" y2="128" gradientUnits="userSpaceOnUse">
+          <stop offset="0.9" stopColor="black" stopOpacity="0" />
+          <stop offset="1" stopColor="black" stopOpacity="0.04" />
+        </linearGradient>
+        <linearGradient id={footerColorId} x1="64" y1="90" x2="64" y2="128" gradientUnits="userSpaceOnUse">
           <stop stopColor="currentColor" stopOpacity="0" />
           <stop offset="0.55" stopColor="currentColor" stopOpacity="0.06" />
-          <stop offset="1" stopColor="color-mix(in oklab, currentColor 82%, black)" stopOpacity="0.26" />
+          <stop offset="1" stopColor="currentColor" stopOpacity="0.21" />
         </linearGradient>
-        <linearGradient id={faceId} x1="64" y1="-34" x2="64" y2="94" gradientUnits="userSpaceOnUse">
-          <stop stopColor="color-mix(in oklab, currentColor 1%, white)" />
-          <stop offset="0.34" stopColor="color-mix(in oklab, currentColor 4%, white)" />
-          <stop offset="0.6" stopColor="color-mix(in oklab, currentColor 12%, white)" />
-          <stop offset="0.8" stopColor="color-mix(in oklab, currentColor 26%, white)" />
-          <stop offset="1" stopColor="color-mix(in oklab, currentColor 52%, white)" />
+        <linearGradient id={footerShadeId} x1="64" y1="90" x2="64" y2="128" gradientUnits="userSpaceOnUse">
+          <stop offset="0.55" stopColor="black" stopOpacity="0" />
+          <stop offset="1" stopColor="black" stopOpacity="0.05" />
+        </linearGradient>
+        <linearGradient id={faceLightId} x1="64" y1="-34" x2="64" y2="94" gradientUnits="userSpaceOnUse">
+          <stop stopColor="white" stopOpacity="0.99" />
+          <stop offset="0.34" stopColor="white" stopOpacity="0.96" />
+          <stop offset="0.6" stopColor="white" stopOpacity="0.88" />
+          <stop offset="0.8" stopColor="white" stopOpacity="0.74" />
+          <stop offset="1" stopColor="white" stopOpacity="0.48" />
         </linearGradient>
         <filter
           id={faceDepthId}
@@ -97,8 +116,8 @@ export function ThemeIcon({ color, style, ...props }: ThemeIconProps): React.JSX
             dx="0"
             dy="2"
             stdDeviation="1.7"
-            floodColor="color-mix(in oklab, currentColor 78%, black)"
-            floodOpacity="0.17"
+            floodColor="black"
+            floodOpacity="0.08"
           />
         </filter>
         <filter
