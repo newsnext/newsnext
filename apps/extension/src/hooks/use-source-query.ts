@@ -74,7 +74,7 @@ export function useSourceQuery({
     enabled: enabled && (instanceId !== undefined || source.version > 0),
     placeholderData: prev => prev,
   })
-  const data = query.data?.result ?? cachedResult
+  const data = enabled ? query.data?.result ?? cachedResult : undefined
   const hasData = data !== undefined
 
   const handleManualRequest = useCallback(async () => {
@@ -97,8 +97,8 @@ export function useSourceQuery({
     loginUrl: hasData ? undefined : getLoginUrlFromError(query.error),
     metadata: data?.metadata,
     sourceSnapshot: data?.source,
-    loadedAt: query.data?.loadedAt
-      ?? cachedQuery?.loadedAt
-      ?? initialLoadedAt,
+    loadedAt: enabled
+      ? query.data?.loadedAt ?? cachedQuery?.loadedAt ?? initialLoadedAt
+      : initialLoadedAt,
   }
 }

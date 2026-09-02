@@ -993,8 +993,9 @@ commands and completions by request ID, rejects
 ambiguous browser selection, expires pending executions, and never replays a
 command after reconnection because source execution is not guaranteed to be
 idempotent. Settings exposes the daemon version as connection metadata only.
-The current protocol version is 16. It carries an initial shared Workspace,
-incremental Workspace patches produced by canonical Action commits, canonical
+The current protocol version is 18. It carries an initial shared Workspace,
+revisioned Worker routing snapshots, atomic takeover of Instances from offline
+Workers, incremental Workspace patches produced by canonical Action commits, canonical
 Action requests, Widget snapshots, Source-result cache reads routed by Instance
 ID, Instance load requests, and dedicated content-addressed background illustration
 put/get messages. Board values carry only illustration IDs and presentation metadata;

@@ -68,7 +68,7 @@ export interface BackgroundActionContext extends ApplicationActionContext {
     }) => Promise<void>
     regenerateWorker: () => Promise<AppIntegrationStatus>
     setEnabled: (input: { enabled: boolean }) => Promise<AppIntegrationStatus>
-    setWorker: (input: { workerId: string }) => Promise<AppIntegrationStatus>
+    takeOverWorker: (input: { instanceIds: string[], workerId: string }) => Promise<AppIntegrationStatus>
   }
 }
 
@@ -93,7 +93,10 @@ const SourceCacheResult = Type.Unsafe<SourceLoadResponse | null>(Type.Union([
 const AppIntegrationStatusResult = Type.Unsafe<AppIntegrationStatus>(Type.Object({
   appVersion: Type.Optional(Type.String()),
   capabilities: Type.Array(Type.String()),
-  claimableWorkerIds: Type.Array(Identifier),
+  offlineWorkers: Type.Array(Type.Object({
+    id: Identifier,
+    instanceIds: Type.Array(Identifier, { minItems: 1, uniqueItems: true }),
+  }, { additionalProperties: false })),
   connectionError: Type.Optional(Type.Object({
     code: Type.Optional(Type.String()),
     message: Type.String(),
@@ -348,16 +351,17 @@ const appIntegrationRegenerateWorkerAction = defineAction({
   await context.appIntegration.regenerateWorker()
 ))
 
-const appIntegrationSetWorkerAction = defineAction({
+const appIntegrationTakeOverWorkerAction = defineAction({
   audiences: UI_ONLY,
-  name: "appIntegration.setWorker",
+  name: "appIntegration.takeOverWorker",
   kind: "mutation",
-  description: "Reconnect this browser as a persisted NewsNext Worker.",
+  description: "Reassign selected Instances from an offline Worker to this Worker.",
   params: Type.Object({
+    instanceIds: Type.Array(Identifier, { minItems: 1, uniqueItems: true }),
     workerId: Identifier,
   }, { additionalProperties: false }),
   result: AppIntegrationStatusResult,
-}, async (input, context: BackgroundActionContext) => await context.appIntegration.setWorker(input))
+}, async (input, context: BackgroundActionContext) => await context.appIntegration.takeOverWorker(input))
 
 const illustrationStoreAction = defineAction({
   audiences: UI_ONLY,
@@ -415,7 +419,7 @@ export const uiBackgroundActionDefinitions = [
   appIntegrationReadInstanceCacheAction,
   appIntegrationRegenerateWorkerAction,
   appIntegrationSetEnabledAction,
-  appIntegrationSetWorkerAction,
+  appIntegrationTakeOverWorkerAction,
   illustrationStoreAction,
   illustrationGetAction,
   nextLayerGetWidgetSnapshotAction,

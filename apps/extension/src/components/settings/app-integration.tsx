@@ -113,17 +113,19 @@ export function AppIntegrationSettings(): React.JSX.Element {
     }
   }, [refreshStatus, runUpdate])
 
-  const handleWorkerChange = useCallback(async (workerId: string | null): Promise<void> => {
-    if (!workerId || workerId === status?.workerId) {
-      return
-    }
+  const handleWorkerTakeover = useCallback(async (workerId: string): Promise<void> => {
     const succeeded = await runUpdate(async () => {
-      setStatus(await actions.appIntegration.setWorker({ workerId }))
+      const offlineWorker = status?.offlineWorkers.find(worker => worker.id === workerId)
+      if (!offlineWorker) return
+      setStatus(await actions.appIntegration.takeOverWorker({
+        instanceIds: offlineWorker.instanceIds,
+        workerId,
+      }))
     })
     if (!succeeded) {
       await refreshStatus()
     }
-  }, [refreshStatus, runUpdate, status?.workerId])
+  }, [refreshStatus, runUpdate, status?.offlineWorkers])
 
   const handleRegenerateWorker = useCallback(async (): Promise<void> => {
     const succeeded = await runUpdate(async () => {
@@ -174,35 +176,33 @@ export function AppIntegrationSettings(): React.JSX.Element {
                 {status.workerId}
               </p>
             </div>
-            {status.claimableWorkerIds.length > 0 && (
-              <Select value={status.workerId} onValueChange={handleWorkerChange}>
-                <SelectTrigger
-                  size="sm"
-                  className="max-w-52"
-                  disabled={updating}
-                  aria-label={t("selectWorker")}
-                >
-                  <SelectValue>{status.workerId.slice(0, 8)}</SelectValue>
-                </SelectTrigger>
-                <SelectContent align="end">
-                  <SelectItem value={status.workerId}>
-                    {`${t("current")} · ${status.workerId.slice(0, 8)}`}
-                  </SelectItem>
-                  {status.claimableWorkerIds.map(workerId => (
-                    <SelectItem key={workerId} value={workerId}>
-                      {`${t("restore")} · ${workerId.slice(0, 8)}`}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
           </div>
         )}
 
-        {status && status.claimableWorkerIds.length > 0 && (
-          <p className="text-xs leading-5 text-muted-foreground">
-            {t("restoreWorkerDescription")}
-          </p>
+        {status && state === "connected" && status.offlineWorkers.length > 0 && (
+          <div className="space-y-3 border-t pt-3">
+            <p className="text-xs leading-5 text-muted-foreground">
+              {t("offlineWorkerDescription")}
+            </p>
+            {status.offlineWorkers.map(offlineWorker => (
+              <div key={offlineWorker.id} className="flex items-center justify-between gap-4">
+                <div className="min-w-0">
+                  <p className="truncate font-mono text-xs">{offlineWorker.id}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {t("offlineInstanceCount", { count: offlineWorker.instanceIds.length })}
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={updating}
+                  onClick={() => void handleWorkerTakeover(offlineWorker.id)}
+                >
+                  {t("takeOver")}
+                </Button>
+              </div>
+            ))}
+          </div>
         )}
 
         {hasConnectionFailure && (

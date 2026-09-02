@@ -22,6 +22,7 @@ import {
   SourcePermissionState,
   SourceStatusMessage,
   SourceStatusPattern,
+  SourceWorkerTakeoverState,
 } from "./card-source-state"
 import { LiveCardSurface } from "./card-surface"
 import { Ranking } from "./ranking"
@@ -38,6 +39,11 @@ interface LiveCardFrontProps {
   sourceErrorMessage?: string
   sourceLoginUrl?: string
   sourcePermissionRequest?: SourcePermissionRequest
+  sourceWorkerTakeover?: {
+    isPending: boolean
+    message: string
+    onTakeOver: () => void
+  }
   loadedAt: number
   onRefresh: () => void
   onRequestPermission: () => Promise<boolean>
@@ -76,6 +82,7 @@ interface LiveCardFrontContentProps {
   sourceErrorMessage?: string
   sourceLoginUrl?: string
   sourcePermissionRequest?: SourcePermissionRequest
+  sourceWorkerTakeover?: LiveCardFrontProps["sourceWorkerTakeover"]
   onRefresh: () => void
   onRequestPermission: () => Promise<boolean>
 }
@@ -91,9 +98,21 @@ function LiveCardFrontContent({
   sourceErrorMessage,
   sourceLoginUrl,
   sourcePermissionRequest,
+  sourceWorkerTakeover,
   onRefresh,
   onRequestPermission,
 }: LiveCardFrontContentProps) {
+  if (sourceWorkerTakeover) {
+    return (
+      <SourceWorkerTakeoverState
+        disabled={sourceWorkerTakeover.isPending}
+        icon={icon}
+        onTakeOver={sourceWorkerTakeover.onTakeOver}
+        provider={provider}
+      />
+    )
+  }
+
   if (sourcePermissionRequest) {
     return (
       <SourcePermissionState
@@ -167,6 +186,7 @@ export function LiveCardFront({
   sourceErrorMessage,
   sourceLoginUrl,
   sourcePermissionRequest,
+  sourceWorkerTakeover,
   loadedAt,
   onRefresh,
   onRequestPermission,
@@ -185,19 +205,21 @@ export function LiveCardFront({
   )
   const markScale = useSourceMarkScales(markScaleGroups).get(source.id)
   const visibleSourceErrorMessage = isContentFetching ? undefined : sourceErrorMessage
-  const sourceStatusMessage = sourcePermissionRequest
-    ? (
-        <SourcePermissionDetails
-          cookieOrigins={getHostPermissionOrigins({
-            cookies: source.capabilities.cookies,
-            network: [],
-          })}
-          request={sourcePermissionRequest}
-        />
-      )
-    : sourceLoginUrl
-      ? t("logInToContinue", { provider: provider.title })
-      : visibleSourceErrorMessage
+  const sourceStatusMessage = sourceWorkerTakeover
+    ? sourceWorkerTakeover.message
+    : sourcePermissionRequest
+      ? (
+          <SourcePermissionDetails
+            cookieOrigins={getHostPermissionOrigins({
+              cookies: source.capabilities.cookies,
+              network: [],
+            })}
+            request={sourcePermissionRequest}
+          />
+        )
+      : sourceLoginUrl
+        ? t("logInToContinue", { provider: provider.title })
+        : visibleSourceErrorMessage
 
   return (
     <div className="relative h-full">
@@ -257,6 +279,7 @@ export function LiveCardFront({
                 sourceErrorMessage={visibleSourceErrorMessage}
                 sourceLoginUrl={sourceLoginUrl}
                 sourcePermissionRequest={sourcePermissionRequest}
+                sourceWorkerTakeover={sourceWorkerTakeover}
                 onRefresh={onRefresh}
                 onRequestPermission={onRequestPermission}
               />

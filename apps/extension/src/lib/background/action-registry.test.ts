@@ -36,7 +36,7 @@ function createContext(): BackgroundActionContext {
       getLogs: vi.fn(async () => []),
       getStatus: vi.fn(async () => ({
         capabilities: [],
-        claimableWorkerIds: [],
+        offlineWorkers: [],
         state: "disabled" as const,
         workerId: "worker",
       })),
@@ -46,19 +46,19 @@ function createContext(): BackgroundActionContext {
       putIllustration: vi.fn(async () => undefined),
       regenerateWorker: vi.fn(async () => ({
         capabilities: [],
-        claimableWorkerIds: [],
+        offlineWorkers: [],
         state: "connecting" as const,
         workerId: "new-worker",
       })),
       setEnabled: vi.fn(async () => ({
         capabilities: [],
-        claimableWorkerIds: [],
+        offlineWorkers: [],
         state: "disabled" as const,
         workerId: "worker",
       })),
-      setWorker: vi.fn(async () => ({
+      takeOverWorker: vi.fn(async () => ({
         capabilities: [],
-        claimableWorkerIds: [],
+        offlineWorkers: [],
         state: "disabled" as const,
         workerId: "worker",
       })),

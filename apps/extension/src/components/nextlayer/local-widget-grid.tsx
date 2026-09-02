@@ -12,6 +12,7 @@ import { useCardEntrance } from "@/components/board-view/use-card-entrance"
 import { PhArrowCounterClockwiseDuotone, PhCircleDashedDuotone } from "@/components/icons/ph"
 import { LiveCardHeaderActionButton } from "@/components/live-card/card-header"
 import { LiveCardSurface } from "@/components/live-card/card-surface"
+import { useAppIntegrationStatus } from "@/hooks/use-app-integration-status"
 import { useI18n } from "@/hooks/use-i18n"
 import { actions } from "@/lib/actions"
 import { boardsAtom } from "@/store/board"
@@ -253,11 +254,7 @@ function useElementVisible(ref: RefObject<Element | null>): boolean {
 const LOCAL_WIDGET_COMPONENTS: ComponentMap = { localWidget: LocalWidgetFrame }
 
 function useWidgetServerUrl() {
-  const query = useQuery({
-    queryKey: ["app-integration-status"],
-    queryFn: () => actions.appIntegration.getStatus(),
-    refetchInterval: 2_000,
-  })
+  const query = useAppIntegrationStatus()
   return { isLoading: query.isLoading, serverUrl: query.data?.widgetServerUrl, state: query.data?.state }
 }
 

@@ -6,6 +6,7 @@ import { PhInfo } from "../icons/ph"
 import { SourceIcon } from "./source-icon"
 
 interface SourceActionStateProps {
+  disabled?: boolean
   icon?: string
   label: string
   onClick: () => void
@@ -14,6 +15,7 @@ interface SourceActionStateProps {
 }
 
 function SourceActionState({
+  disabled,
   icon,
   label,
   onClick,
@@ -24,6 +26,7 @@ function SourceActionState({
     <div className="flex h-full min-h-56 items-center justify-center px-4 text-center">
       <Button
         type="button"
+        disabled={disabled}
         variant="outline"
         tone="theme"
         onClick={onClick}
@@ -35,6 +38,30 @@ function SourceActionState({
         {label}
       </Button>
     </div>
+  )
+}
+
+export function SourceWorkerTakeoverState({
+  disabled,
+  icon,
+  onTakeOver,
+  provider,
+}: {
+  disabled: boolean
+  icon?: string
+  onTakeOver: () => void
+  provider: LiveCardViewModel["provider"]
+}) {
+  const { t } = useI18n()
+  return (
+    <SourceActionState
+      disabled={disabled}
+      icon={icon}
+      label={disabled ? t("takingOver") : t("takeOver")}
+      onClick={onTakeOver}
+      provider={provider}
+      title={t("takeOverLiveCard")}
+    />
   )
 }
 

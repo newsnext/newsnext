@@ -5,6 +5,7 @@ import type {
   NativeCommandResult,
   NativeIllustration,
   NativeLogEntry,
+  NativeOfflineWorker,
   NativeWorkspace,
   NativeWorkspacePatch,
 } from "@newsnext/extension-connection"
@@ -49,7 +50,7 @@ import { applyWorkspacePatch, createWorkspacePatch } from "./workspace-patch"
 const NATIVE_HOST_NAME = import.meta.env.DEV
   ? "app.newsnext.host.dev"
   : "app.newsnext.host"
-const PROTOCOL_VERSION = 17
+const PROTOCOL_VERSION = 18
 const APP_INTEGRATION_WORKER_ID_KEY = "newsnext-app-integration-worker-id"
 const APP_INTEGRATION_RECONNECT_ALARM = "app-integration-native-reconnect"
 const RECONNECT_ALARM_PERIOD_MINUTES = 0.5
@@ -64,7 +65,7 @@ export type AppIntegrationState
 export interface AppIntegrationStatus {
   appVersion?: string
   capabilities: string[]
-  claimableWorkerIds: string[]
+  offlineWorkers: NativeOfflineWorker[]
   connectionError?: AppIntegrationConnectionError
   state: AppIntegrationState
   workerId: string
@@ -119,6 +120,10 @@ interface PendingConnectionRequest extends PendingRequest {
   resolve: (connection: NativePort) => void
 }
 
+interface PendingWorkerTakeoverRequest extends PendingRequest {
+  resolve: () => void
+}
+
 let port: NativePort | undefined
 let appVersion: string | undefined
 let capabilities: string[] = []
@@ -127,7 +132,8 @@ let connectionState: AppIntegrationState = "serviceNotRunning"
 let connectionError: AppIntegrationStatus["connectionError"]
 let enabled = false
 let workerId: string = crypto.randomUUID()
-let claimableWorkerIds: string[] = []
+let workerRoutingRevision = 0
+let offlineWorkers: NativeOfflineWorker[] = []
 let workspace: NativeWorkspace = { revision: 0, boards: [], instances: [] }
 let localInstanceIds = new Set<string>()
 let bootstrapBindings: Array<{ instanceId: string, workerId: string }> = []
@@ -138,6 +144,7 @@ const pendingIllustrationGetRequests = new Map<string, PendingIllustrationGetReq
 const pendingIllustrationPutRequests = new Map<string, PendingIllustrationPutRequest>()
 const pendingLogsRequests = new Map<string, PendingLogsRequest>()
 const pendingConnectionRequests = new Set<PendingConnectionRequest>()
+const pendingWorkerTakeoverRequests = new Map<string, PendingWorkerTakeoverRequest>()
 const activeIllustrationRequests = new Map<string, Promise<Uint8Array<ArrayBuffer> | null>>()
 const nativeMessageChunks = new NativeMessageChunkAssembler(NATIVE_REQUEST_TIMEOUT_MS)
 let reconnectAttempt = 0
@@ -155,8 +162,8 @@ export const appIntegrationActions: AppIntegrationActions = {
   setEnabled: async ({ enabled: nextEnabled }) => (
     await setAppIntegrationEnabled(nextEnabled)
   ),
-  setWorker: async ({ workerId: nextWorkerId }) => (
-    await setAppIntegrationWorker(nextWorkerId)
+  takeOverWorker: async ({ instanceIds, workerId: sourceWorkerId }) => (
+    await takeOverAppIntegrationWorker(sourceWorkerId, instanceIds)
   ),
 }
 
@@ -244,11 +251,27 @@ function parseLocalInstanceIds(value: unknown): string[] {
   return [...new Set(value)]
 }
 
-function parseClaimableWorkerIds(value: unknown): string[] {
-  if (!Array.isArray(value) || value.some(id => typeof id !== "string" || !id)) {
-    throw new Error("The native host returned invalid claimable Worker IDs")
+function parseOfflineWorkers(value: unknown): NativeOfflineWorker[] {
+  if (!Array.isArray(value) || value.some(worker => (
+    !isRecord(worker)
+    || typeof worker.id !== "string"
+    || !worker.id
+    || !isIdentifierArray(worker.instanceIds)
+    || worker.instanceIds.length === 0
+  ))) {
+    throw new Error("The native host returned invalid offline Workers")
   }
-  return [...new Set(value)]
+  return value.map(worker => ({
+    id: String(worker.id),
+    instanceIds: [...worker.instanceIds],
+  }))
+}
+
+function parseRevision(value: unknown, label: string): number {
+  if (!Number.isSafeInteger(value) || Number(value) < 0) {
+    throw new Error(`The native host returned an invalid ${label} revision`)
+  }
+  return Number(value)
 }
 
 function parseIllustration(value: unknown): NativeIllustration {
@@ -297,7 +320,19 @@ function parseHostMessage(value: unknown): ParsedHostMessage {
       widgetServerUrl: parseWidgetServerUrl(value.widgetServerUrl),
       workspace: parseWorkspace(value.workspace),
       localInstanceIds: parseLocalInstanceIds(value.localInstanceIds),
-      claimableWorkerIds: parseClaimableWorkerIds(value.claimableWorkerIds),
+      workerRoutingRevision: parseRevision(
+        value.workerRoutingRevision,
+        "Worker routing",
+      ),
+      offlineWorkers: parseOfflineWorkers(value.offlineWorkers),
+    }
+  }
+  if (value.type === "workerRoutingChanged") {
+    return {
+      type: "workerRoutingChanged",
+      revision: parseRevision(value.revision, "Worker routing"),
+      localInstanceIds: parseLocalInstanceIds(value.localInstanceIds),
+      offlineWorkers: parseOfflineWorkers(value.offlineWorkers),
     }
   }
   if (value.type === "logsResult" && typeof value.requestId === "string") {
@@ -400,7 +435,7 @@ export function getAppIntegrationStatus(): AppIntegrationStatus {
   return {
     appVersion,
     capabilities: [...capabilities],
-    claimableWorkerIds: [...claimableWorkerIds],
+    offlineWorkers: offlineWorkers.map(worker => ({ ...worker })),
     connectionError,
     state: enabled ? connectionState : "disabled",
     workerId,
@@ -458,6 +493,8 @@ function resetConnectionState(
   port = undefined
   appVersion = undefined
   capabilities = []
+  workerRoutingRevision = 0
+  offlineWorkers = []
   widgetServerUrl = undefined
   connectionState = state
   connectionError = error
@@ -468,6 +505,7 @@ function resetConnectionState(
   rejectPendingRequests(pendingIllustrationGetRequests, connectionFailure)
   rejectPendingRequests(pendingIllustrationPutRequests, connectionFailure)
   rejectPendingRequests(pendingLogsRequests, connectionFailure)
+  rejectPendingRequests(pendingWorkerTakeoverRequests, connectionFailure)
   rejectPendingConnectionRequests(connectionFailure)
   nativeMessageChunks.clear()
 }
@@ -659,13 +697,22 @@ function connect(): void {
         clearReconnectBackoff()
         appVersion = message.daemonVersion
         capabilities = [...message.capabilities]
-        claimableWorkerIds = message.claimableWorkerIds
+        workerRoutingRevision = message.workerRoutingRevision
+        offlineWorkers = message.offlineWorkers
         widgetServerUrl = message.widgetServerUrl
         connectionState = "connected"
         resolvePendingConnectionRequests(nextPort)
         void applyWorkspace(message.workspace, message.localInstanceIds).catch((error) => {
           console.error("Failed to apply the NewsNext Workspace", error)
         })
+      } else if (message.type === "workerRoutingChanged") {
+        if (message.revision > workerRoutingRevision) {
+          workerRoutingRevision = message.revision
+          localInstanceIds = new Set(message.localInstanceIds)
+          offlineWorkers = message.offlineWorkers
+        }
+      } else if (message.type === "workerTakeoverResult") {
+        settleWorkerTakeoverRequest(message.requestId)
       } else if (message.type === "execute") {
         void executeCommand(nextPort, message.request).catch((error) => {
           console.error("Failed to return native App integration result", error)
@@ -702,7 +749,8 @@ function connect(): void {
             || rejectPendingRequest(pendingWorkspaceRequests, message.requestId, error)
             || rejectPendingRequest(pendingIllustrationGetRequests, message.requestId, error)
             || rejectPendingRequest(pendingIllustrationPutRequests, message.requestId, error)
-            || rejectPendingRequest(pendingLogsRequests, message.requestId, error)) {
+            || rejectPendingRequest(pendingLogsRequests, message.requestId, error)
+            || rejectPendingRequest(pendingWorkerTakeoverRequests, message.requestId, error)) {
             return
           }
         }
@@ -931,6 +979,10 @@ function settleWidgetRequest(requestId: string, result: NativeCommandResult): vo
   }
 }
 
+function settleWorkerTakeoverRequest(requestId: string): void {
+  takePendingRequest(pendingWorkerTakeoverRequests, requestId)?.resolve()
+}
+
 function settleInstanceRequest(requestId: string, result: NativeCommandResult): void {
   const pending = takePendingRequest(pendingInstanceRequests, requestId)
   if (!pending) return
@@ -1136,17 +1188,32 @@ async function hasAppIntegrationPermission(): Promise<boolean> {
   }).catch(() => false)
 }
 
-export async function setAppIntegrationWorker(
-  nextWorkerId: string,
+export async function takeOverAppIntegrationWorker(
+  sourceWorkerId: string,
+  instanceIds: string[],
 ): Promise<AppIntegrationStatus> {
-  if (nextWorkerId === workerId) {
-    return getAppIntegrationStatus()
+  const offlineWorker = offlineWorkers.find(worker => worker.id === sourceWorkerId)
+  if (!offlineWorker
+    || instanceIds.length === 0
+    || new Set(instanceIds).size !== instanceIds.length
+    || instanceIds.some(instanceId => !offlineWorker.instanceIds.includes(instanceId))) {
+    throw new Error("The offline Worker's Instances are no longer available")
   }
-  if (!claimableWorkerIds.includes(nextWorkerId)) {
-    throw new Error("The selected NewsNext Worker is no longer available")
+  const connection = await requireAppConnection()
+  const message: ExtensionToHost = {
+    type: "workerTakeover",
+    requestId: crypto.randomUUID(),
+    workerId: sourceWorkerId,
+    instanceIds,
   }
-
-  await reconnectAsWorker(nextWorkerId)
+  await new Promise<void>((resolve, reject) => {
+    const timeoutId = setTimeout(() => {
+      pendingWorkerTakeoverRequests.delete(message.requestId)
+      reject(new Error("Timed out taking over the offline Worker's Instances"))
+    }, NATIVE_REQUEST_TIMEOUT_MS)
+    pendingWorkerTakeoverRequests.set(message.requestId, { reject, resolve, timeoutId })
+    connection.postMessage(message)
+  })
   return getAppIntegrationStatus()
 }
 
@@ -1161,7 +1228,8 @@ async function reconnectAsWorker(nextWorkerId: string): Promise<void> {
   })
   disconnect()
   workerId = nextWorkerId
-  claimableWorkerIds = []
+  offlineWorkers = []
+  workerRoutingRevision = 0
   localInstanceIds = new Set()
   bootstrapBindings = createLocalBindings(workspace.instances, workerId)
   if (enabled) {
