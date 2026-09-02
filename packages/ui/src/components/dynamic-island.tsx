@@ -5,6 +5,7 @@ import { useSquircle } from "@newsnext/ui/hooks/use-squircle"
 import { cn } from "@newsnext/ui/lib/utils"
 import { AnimatePresence, m, useReducedMotion } from "motion/react"
 import { useCallback, useEffect, useRef, useState } from "react"
+import "./dynamic-island.css"
 
 const getVal = (val: number | string): string => {
   return typeof val === "number" ? `${val}px` : val

@@ -71,7 +71,7 @@
   }
 
   body {
-    @apply h-screen select-none text-foreground zenith-theme-400;
+    @apply h-screen select-none text-foreground zenith-theme-400/60;
   }
 
   #root {
