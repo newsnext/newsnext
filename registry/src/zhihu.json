@@ -471,7 +471,7 @@
               "sort": "{{ scope.query.tab }}"
             },
             "metadata": {
-              "title": "{{ scope.page.title | regex_replace: '^\\([^)]*封私信\\)\\s*', '' | regex_replace: '\\s*-\\s*知乎$', '' }} | {{ source.vars.ringSortLabels[scope.params.sort] }}",
+              "title": "{{ scope.page.title | regex_replace: '^\\\\([^)]*封私信\\\\)\\\\s*', '' | regex_replace: '\\\\s*-\\\\s*知乎$', '' }} | {{ source.vars.ringSortLabels[scope.params.sort] }}",
               "home": "/ring/host/{{ scope.params.ringId | url_path }}?tab={{ scope.params.sort | url_query }}&tab_id=0"
             }
           }
@@ -491,7 +491,7 @@
               "ringId": "{{ scope.path.ringId }}"
             },
             "metadata": {
-              "title": "{{ scope.page.title | regex_replace: '^\\([^)]*封私信\\)\\s*', '' | regex_replace: '\\s*-\\s*知乎$', '' }} | 最新",
+              "title": "{{ scope.page.title | regex_replace: '^\\\\([^)]*封私信\\\\)\\\\s*', '' | regex_replace: '\\\\s*-\\\\s*知乎$', '' }} | 最新",
               "home": "/ring/host/{{ scope.params.ringId | url_path }}?tab=new&tab_id=0"
             }
           }

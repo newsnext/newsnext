@@ -495,6 +495,20 @@ describe("getRadarSuggestions", () => {
     ])
   })
 
+  it("removes Zhihu message counts and site names from ring titles", () => {
+    const suggestion = getSuggestions({
+      url: "https://www.zhihu.com/ring/host/1913608407048511547",
+      title: "(44 封私信) ourongxing - 知乎",
+    }).find(candidate => candidate.sourceId === "zhihu:ring")
+
+    expect(suggestion).toMatchObject({
+      patch: {
+        params: { ringId: "1913608407048511547" },
+        metadata: { title: "ourongxing | 最新" },
+      },
+    })
+  })
+
   it("does not treat hash routes as pathname matches", () => {
     expect(getRadarSuggestions(
       { url: "https://example.com/#/playlist?id=1" },

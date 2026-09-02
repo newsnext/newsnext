@@ -415,6 +415,10 @@ Examples:
 {{ scope.value | parse_compact_number }}
 ```
 
+Regex backslashes pass through both the source file and Liquid string parsing.
+In JSON Sources, write four backslashes for one regex backslash, for example
+`"{{ scope.value | regex_replace: '\\\\s+$', '' }}"`.
+
 Values inserted into `content.html` are HTML-escaped. File
 access, raw output, and the `include`, `layout`, `liquid`, `raw`, and `render`
 tags are unavailable.
