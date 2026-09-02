@@ -4,11 +4,552 @@
   "color": "blue",
   "defaults": {
     "baseUrl": "https://www.zhihu.com/",
+    "vars": {
+      "ringSortLabels": {
+        "new": "最新",
+        "hot": "最热"
+      }
+    },
     "metadata": {
       "home": "/"
     }
   },
   "sources": {
+    "column": {
+      "version": 2,
+      "metadata": {
+        "title": "专栏"
+      },
+      "params": {
+        "columnId": {
+          "type": "text",
+          "title": "专栏 ID",
+          "default": "c_155611518",
+          "required": true,
+          "validate": {
+            "regex": "^[A-Za-z0-9_-]{1,100}$"
+          }
+        }
+      },
+      "radar": [
+        {
+          "id": "zhihu-column",
+          "match": {
+            "hosts": [
+              "zhihu.com"
+            ],
+            "paths": [
+              "/column/:columnId"
+            ]
+          },
+          "patch": {
+            "params": {
+              "columnId": "{{ scope.path.columnId }}"
+            },
+            "metadata": {
+              "title": {
+                "select": "meta[property='og:title']",
+                "attr": "content"
+              },
+              "home": "/column/{{ scope.params.columnId | url_path }}"
+            }
+          }
+        },
+        {
+          "id": "zhihu-legacy-column",
+          "match": {
+            "hosts": [
+              "zhuanlan.zhihu.com"
+            ],
+            "paths": [
+              "/:columnId"
+            ]
+          },
+          "patch": {
+            "params": {
+              "columnId": "{{ scope.path.columnId }}"
+            },
+            "metadata": {
+              "title": {
+                "select": "meta[property='og:title']",
+                "attr": "content"
+              },
+              "home": "https://zhuanlan.zhihu.com/{{ scope.params.columnId | url_path }}"
+            }
+          }
+        }
+      ],
+      "loader": {
+        "type": "json",
+        "url": "/api/v4/columns/{{ scope.params.columnId | url_path }}/items?limit=50",
+        "items": "data",
+        "metadata": {
+          "home": {
+            "template": "/column/{{ scope.params.columnId | url_path }}"
+          }
+        },
+        "fields": {
+          "title": "question.title || title || excerpt_title",
+          "url": {
+            "select": "id",
+            "template": "{% if scope.item.type == 'answer' %}/question/{{ scope.item.question.id }}/answer/{{ scope.value }}{% elsif scope.item.type == 'article' %}https://zhuanlan.zhihu.com/p/{{ scope.value }}{% else %}{{ scope.item.url }}{% endif %}"
+          },
+          "publishedAt": {
+            "select": "created_time || created",
+            "template": "{{ scope.value | times: 1000 }}"
+          },
+          "updatedAt": {
+            "select": "updated_time || updated",
+            "template": "{{ scope.value | times: 1000 }}"
+          },
+          "author": {
+            "name": "author.name"
+          },
+          "stats": {
+            "score": "voteup_count",
+            "comments": "comment_count"
+          },
+          "icon": {
+            "src": "author.avatar_url",
+            "kind": {
+              "template": "author"
+            },
+            "label": "author.name"
+          },
+          "content": {
+            "text": "excerpt",
+            "pictures": "image_url"
+          }
+        },
+        "inlineTemplate": "{{ scope.item.author.name }}"
+      }
+    },
+    "following": {
+      "version": 2,
+      "metadata": {
+        "title": "关注动态",
+        "home": "/follow"
+      },
+      "loader": {
+        "type": "json",
+        "url": "/api/v3/moments?limit=50&desktop=true",
+        "items": "[data[?type == 'feed'], data[?type == 'feed_group'].list[]][]",
+        "fields": {
+          "title": {
+            "select": "target.question.title || target.title || target.excerpt_title || target.excerpt",
+            "template": "{{ scope.value | strip_html | normalize_whitespace | truncate: 160, '…' }}"
+          },
+          "url": {
+            "select": "target.id",
+            "template": "{% if scope.item.target.type == 'answer' %}/question/{{ scope.item.target.question.id }}/answer/{{ scope.value }}{% elsif scope.item.target.type == 'article' %}https://zhuanlan.zhihu.com/p/{{ scope.value }}{% elsif scope.item.target.type == 'pin' %}/pin/{{ scope.value }}{% elsif scope.item.target.type == 'question' %}/question/{{ scope.value }}{% elsif scope.item.target.type == 'zvideo' %}/zvideo/{{ scope.value }}{% else %}{{ scope.item.target.url }}{% endif %}"
+          },
+          "publishedAt": {
+            "select": "created_time",
+            "template": "{{ scope.value | times: 1000 }}"
+          },
+          "updatedAt": {
+            "select": "updated_time",
+            "template": "{{ scope.value | times: 1000 }}"
+          },
+          "author": {
+            "name": "target.author.name"
+          },
+          "stats": {
+            "score": "target.reaction.statistics.applaud_count || target.voteup_count || target.like_count",
+            "comments": "target.reaction.statistics.comment_count || target.comment_count",
+            "stars": "target.reaction.statistics.favorites || target.favorite_count || target.favlists_count",
+            "likes": "target.reaction.statistics.like_count"
+          },
+          "attributes": {
+            "activity": "action_text"
+          },
+          "icon": {
+            "src": "target.author.avatar_url",
+            "kind": {
+              "template": "author"
+            },
+            "label": "target.author.name"
+          },
+          "content": {
+            "text": {
+              "select": "target.excerpt || target.excerpt_title",
+              "template": "{{ scope.value | strip_html | normalize_whitespace }}"
+            },
+            "pictures": "target.image_url"
+          }
+        },
+        "inlineTemplate": "{{ scope.item.attributes.activity }}"
+      }
+    },
+    "member-answers": {
+      "version": 3,
+      "metadata": {
+        "title": "用户回答"
+      },
+      "params": {
+        "userId": {
+          "type": "text",
+          "title": "用户 ID",
+          "default": "ourongxing",
+          "required": true,
+          "validate": {
+            "regex": "^[A-Za-z0-9_-]{1,100}$"
+          }
+        }
+      },
+      "radar": [
+        {
+          "id": "zhihu-member-answers",
+          "match": {
+            "hosts": [
+              "zhihu.com"
+            ],
+            "paths": [
+              "/people/:userId/answers"
+            ]
+          },
+          "patch": {
+            "params": {
+              "userId": "{{ scope.path.userId }}"
+            },
+            "metadata": {
+              "title": {
+                "select": ".ProfileHeader-name",
+                "template": "{{ scope.value }} 的回答"
+              },
+              "badge": {
+                "select": ".UserAvatar-inner",
+                "attr": "src"
+              },
+              "home": "/people/{{ scope.params.userId | url_path }}/answers"
+            }
+          }
+        }
+      ],
+      "loader": {
+        "type": "json",
+        "url": "/api/v4/members/{{ scope.params.userId | url_path }}/answers?limit=50&sort_by=created&include=data%5B*%5D.excerpt%2Cvoteup_count%2Ccomment_count",
+        "items": "data",
+        "metadata": {
+          "title": {
+            "select": "data[0].author.name",
+            "template": "{{ scope.value }} 的回答"
+          },
+          "badge": "data[0].author.avatar_url",
+          "home": {
+            "template": "/people/{{ scope.params.userId | url_path }}/answers"
+          }
+        },
+        "fields": {
+          "title": {
+            "select": "excerpt || question.title",
+            "template": "{{ scope.value | strip_html | normalize_whitespace | truncate: 160, '…' }}"
+          },
+          "url": {
+            "select": "id",
+            "template": "/question/{{ scope.item.question.id }}/answer/{{ scope.value }}"
+          },
+          "publishedAt": {
+            "select": "created_time",
+            "template": "{{ scope.value | times: 1000 }}"
+          },
+          "updatedAt": {
+            "select": "updated_time",
+            "template": "{{ scope.value | times: 1000 }}"
+          },
+          "author": {
+            "name": "author.name"
+          },
+          "stats": {
+            "score": "voteup_count || reaction.statistics.like_count",
+            "comments": "comment_count"
+          },
+          "icon": {
+            "src": "author.avatar_url",
+            "kind": {
+              "template": "author"
+            },
+            "label": "author.name"
+          },
+          "content": {
+            "text": "excerpt"
+          }
+        },
+        "inlineTemplate": "{{ scope.item.author.name }}"
+      }
+    },
+    "question-answers": {
+      "version": 4,
+      "metadata": {
+        "title": "问题回答"
+      },
+      "params": {
+        "questionId": {
+          "type": "text",
+          "title": "问题 ID",
+          "default": "1983553349228987887",
+          "required": true,
+          "validate": {
+            "format": "digits"
+          }
+        },
+        "sort": {
+          "type": "select",
+          "title": "排序",
+          "values": [
+            {
+              "label": "默认",
+              "value": "default"
+            },
+            {
+              "label": "最新",
+              "value": "created"
+            }
+          ],
+          "default": "default"
+        }
+      },
+      "radar": [
+        {
+          "id": "zhihu-question-answers-sort",
+          "match": {
+            "hosts": [
+              "zhihu.com"
+            ],
+            "paths": [
+              "/question/:questionId",
+              "/question/:questionId/answer/:answerId"
+            ],
+            "query": [
+              "sort_by"
+            ]
+          },
+          "patch": {
+            "params": {
+              "questionId": "{{ scope.path.questionId }}",
+              "sort": "{{ scope.query.sort_by }}"
+            },
+            "metadata": {
+              "title": {
+                "select": ".QuestionHeader-title",
+                "template": "{{ scope.value }} | {% if scope.params.sort == 'created' %}最新回答{% else %}回答{% endif %}"
+              },
+              "home": "/question/{{ scope.params.questionId | url_path }}?sort_by={{ scope.params.sort | url_query }}",
+              "type": "{% if scope.params.sort == 'default' %}ranking{% else %}list{% endif %}"
+            }
+          }
+        },
+        {
+          "id": "zhihu-question-answers",
+          "match": {
+            "hosts": [
+              "zhihu.com"
+            ],
+            "paths": [
+              "/question/:questionId",
+              "/question/:questionId/answer/:answerId"
+            ]
+          },
+          "patch": {
+            "params": {
+              "questionId": "{{ scope.path.questionId }}"
+            },
+            "metadata": {
+              "title": {
+                "select": ".QuestionHeader-title",
+                "template": "{{ scope.value }} | 回答"
+              },
+              "home": "/question/{{ scope.params.questionId | url_path }}?sort_by=default",
+              "type": "ranking"
+            }
+          }
+        }
+      ],
+      "loader": {
+        "type": "json",
+        "url": "/api/v4/questions/{{ scope.params.questionId | url_path }}/answers?limit=20&sort_by={{ scope.params.sort | url_query }}&include=data%5B*%5D.excerpt%2Cvoteup_count%2Ccomment_count",
+        "items": "data",
+        "metadata": {
+          "title": {
+            "select": "data[0].question.title",
+            "template": "{{ scope.value }} | {% if scope.params.sort == 'created' %}最新回答{% else %}回答{% endif %}"
+          },
+          "home": {
+            "template": "/question/{{ scope.params.questionId | url_path }}?sort_by={{ scope.params.sort | url_query }}"
+          },
+          "type": {
+            "template": "{% if scope.params.sort == 'default' %}ranking{% else %}list{% endif %}"
+          }
+        },
+        "fields": {
+          "title": {
+            "select": "excerpt || question.title",
+            "template": "{{ scope.value | strip_html | normalize_whitespace | truncate: 160, '…' }}"
+          },
+          "url": {
+            "select": "id",
+            "template": "/question/{{ scope.item.question.id }}/answer/{{ scope.value }}"
+          },
+          "publishedAt": {
+            "select": "created_time",
+            "template": "{{ scope.value | times: 1000 }}"
+          },
+          "updatedAt": {
+            "select": "updated_time",
+            "template": "{{ scope.value | times: 1000 }}"
+          },
+          "author": {
+            "name": "author.name"
+          },
+          "stats": {
+            "score": "voteup_count || reaction.statistics.like_count",
+            "comments": "comment_count"
+          },
+          "icon": {
+            "src": "author.avatar_url",
+            "kind": {
+              "template": "author"
+            },
+            "label": "author.name"
+          },
+          "content": {
+            "text": "excerpt"
+          }
+        },
+        "inlineTemplate": "{{ scope.item.author.name }}"
+      }
+    },
+    "ring": {
+      "version": 2,
+      "metadata": {
+        "title": "圈子动态",
+        "type": "list"
+      },
+      "params": {
+        "ringId": {
+          "type": "text",
+          "title": "圈子 ID",
+          "default": "1913608407048511547",
+          "required": true,
+          "validate": {
+            "format": "digits"
+          }
+        },
+        "sort": {
+          "type": "select",
+          "title": "排序",
+          "values": [
+            {
+              "label": "最新",
+              "value": "new"
+            },
+            {
+              "label": "最热",
+              "value": "hot"
+            }
+          ],
+          "default": "new"
+        }
+      },
+      "radar": [
+        {
+          "id": "zhihu-ring-sort",
+          "match": {
+            "hosts": [
+              "zhihu.com"
+            ],
+            "paths": [
+              "/ring/host/:ringId"
+            ],
+            "query": [
+              "tab"
+            ]
+          },
+          "patch": {
+            "params": {
+              "ringId": "{{ scope.path.ringId }}",
+              "sort": "{{ scope.query.tab }}"
+            },
+            "metadata": {
+              "title": "{{ scope.page.title | regex_replace: '^\\([^)]*封私信\\)\\s*', '' | regex_replace: '\\s*-\\s*知乎$', '' }} | {{ source.vars.ringSortLabels[scope.params.sort] }}",
+              "home": "/ring/host/{{ scope.params.ringId | url_path }}?tab={{ scope.params.sort | url_query }}&tab_id=0"
+            }
+          }
+        },
+        {
+          "id": "zhihu-ring",
+          "match": {
+            "hosts": [
+              "zhihu.com"
+            ],
+            "paths": [
+              "/ring/host/:ringId"
+            ]
+          },
+          "patch": {
+            "params": {
+              "ringId": "{{ scope.path.ringId }}"
+            },
+            "metadata": {
+              "title": "{{ scope.page.title | regex_replace: '^\\([^)]*封私信\\)\\s*', '' | regex_replace: '\\s*-\\s*知乎$', '' }} | 最新",
+              "home": "/ring/host/{{ scope.params.ringId | url_path }}?tab=new&tab_id=0"
+            }
+          }
+        }
+      ],
+      "loader": {
+        "type": "json",
+        "url": "/api/v4/rings/v1/{{ scope.params.ringId | url_path }}/feeds/{{ scope.params.sort | url_path }}/pc?limit=10&offset=0",
+        "items": "data[?ring_biz_data.is_topping != `true`]",
+        "metadata": {
+          "home": {
+            "template": "/ring/host/{{ scope.params.ringId | url_path }}?tab={{ scope.params.sort | url_query }}&tab_id=0"
+          }
+        },
+        "fields": {
+          "title": {
+            "select": "excerpt_title",
+            "template": "{{ scope.value | strip_html | normalize_whitespace | truncate: 160, '…' }}"
+          },
+          "url": {
+            "select": "id",
+            "template": "/pin/{{ scope.value }}"
+          },
+          "publishedAt": {
+            "select": "created",
+            "template": "{{ scope.value | times: 1000 }}"
+          },
+          "updatedAt": {
+            "select": "updated",
+            "template": "{{ scope.value | times: 1000 }}"
+          },
+          "author": {
+            "name": "author.name"
+          },
+          "stats": {
+            "score": "reaction.statistics.applaud_count || like_count",
+            "comments": "reaction.statistics.comment_count || comment_count",
+            "stars": "reaction.statistics.favorites || favorite_count || favlists_count",
+            "likes": "reaction.statistics.like_count"
+          },
+          "icon": {
+            "src": "author.avatar_url",
+            "kind": {
+              "template": "author"
+            },
+            "label": "author.name"
+          },
+          "content": {
+            "text": {
+              "select": "excerpt_title",
+              "template": "{{ scope.value | strip_html | normalize_whitespace | truncate: 500, '…' }}"
+            },
+            "pictures": "content[?type == 'image'].url"
+          }
+        },
+        "inlineTemplate": "{{ scope.item.author.name }}"
+      }
+    },
     "hot-list": {
       "version": 3,
       "metadata": {

@@ -309,6 +309,11 @@ params: {
 }
 ```
 
+Keep opaque numeric identifiers as `text` parameters when they can exceed
+JavaScript's safe integer range. Store defaults and Radar patches as strings;
+when testing through the CLI, quote the value as a JSON string or pass it in a
+JSON object so parsing cannot round the identifier before text coercion.
+
 Set `required: true` when an empty value is invalid. Validation rules apply only
 to non-empty values: `format: "digits"` handles decimal IDs, while bounded
 `regex` handles uncommon site-specific contracts. Prefer a format and use regex
@@ -518,6 +523,12 @@ loader: {
 `items` runs against the full response. If omitted, the response itself must be
 an array. A string field is a JMESPath expression evaluated against the current
 item.
+
+Keep both item count and serialized result size bounded. Filter advertisements,
+oversized pinned announcements, and other modules that are not part of the
+Source's promised stream before field mapping, and truncate unusually long
+summary text. A small item count alone does not guarantee that the result is
+safe to transfer through the extension runtime.
 
 Use a field object when formatting is needed. Resolution order is:
 
