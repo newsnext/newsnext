@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import {
   classifyAppIntegrationFailure,
   getAppIntegrationReconnectDelay,
+  isVersionAtLeast,
 } from "./app-integration-connection"
 
 describe("app integration connection", () => {
@@ -28,5 +29,26 @@ describe("app integration connection", () => {
       30_000,
       30_000,
     ])
+  })
+
+  it.each([
+    ["1.0.0-beta.2", "1.0.0-beta.3", false],
+    ["1.0.0-beta.3", "1.0.0-beta.3", true],
+    ["1.0.0", "1.0.0-beta.3", true],
+    ["1.1.0", "1.0.0", true],
+    ["invalid", "1.0.0", false],
+  ] as const)("compares daemon version %s against %s", (actual, minimum, expected) => {
+    expect(isVersionAtLeast(actual, minimum)).toBe(expected)
+  })
+
+  it.each([
+    ["HOST_MISSING", "hostNotInstalled"],
+    ["PROTOCOL_INCOMPATIBLE", "protocolIncompatible"],
+    ["WORKER_ALREADY_CONNECTED", "workerConflict"],
+    ["DAEMON_OUTDATED", "daemonOutdated"],
+    ["DAEMON_START_FAILED", "serviceNotRunning"],
+  ] as const)("prefers structured error code %s", (code, expected) => {
+    const message = "unclassified message"
+    expect(classifyAppIntegrationFailure(message, code)).toBe(expected)
   })
 })

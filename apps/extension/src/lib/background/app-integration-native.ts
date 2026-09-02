@@ -18,6 +18,8 @@ import { browser } from "#imports"
 import {
   classifyAppIntegrationFailure,
   getAppIntegrationReconnectDelay,
+  isVersionAtLeast,
+  MINIMUM_DAEMON_VERSION,
 } from "../app-integration-connection"
 import { APP_INTEGRATION_PERMISSIONS } from "../app-integration-permission"
 import { APPLICATION_DATA_VERSION } from "../application"
@@ -61,15 +63,24 @@ export type AppIntegrationState
 
 export interface AppIntegrationStatus {
   appVersion?: string
+  capabilities: string[]
   claimableWorkerIds: string[]
-  connectionError?: string
+  connectionError?: AppIntegrationConnectionError
   state: AppIntegrationState
   workerId: string
   widgetServerUrl?: string
 }
 
+export interface AppIntegrationConnectionError {
+  code?: string
+  message: string
+}
+
 type NativePort = ReturnType<typeof browser.runtime.connectNative>
-type ParsedHostMessage = Exclude<HostToExtension, { type: "chunk" }>
+type ReadyHostMessage = Extract<HostToExtension, { type: "ready" }> & { capabilities: string[] }
+type ParsedHostMessage
+  = | Exclude<HostToExtension, { type: "chunk" | "ready" }>
+    | ReadyHostMessage
 
 interface PendingRequest {
   reject: (error: Error) => void
@@ -110,6 +121,7 @@ interface PendingConnectionRequest extends PendingRequest {
 
 let port: NativePort | undefined
 let appVersion: string | undefined
+let capabilities: string[] = []
 let widgetServerUrl: string | undefined
 let connectionState: AppIntegrationState = "serviceNotRunning"
 let connectionError: AppIntegrationStatus["connectionError"]
@@ -278,6 +290,10 @@ function parseHostMessage(value: unknown): ParsedHostMessage {
       type: "ready",
       protocolVersion: value.protocolVersion,
       daemonVersion: value.daemonVersion,
+      capabilities: Array.isArray(value.capabilities)
+        && value.capabilities.every(capability => typeof capability === "string")
+        ? value.capabilities
+        : [],
       widgetServerUrl: parseWidgetServerUrl(value.widgetServerUrl),
       workspace: parseWorkspace(value.workspace),
       localInstanceIds: parseLocalInstanceIds(value.localInstanceIds),
@@ -363,6 +379,7 @@ function parseHostMessage(value: unknown): ParsedHostMessage {
     return {
       type: "error",
       requestId: value.requestId,
+      code: typeof value.code === "string" ? value.code : undefined,
       message: value.message,
     }
   }
@@ -382,6 +399,7 @@ function isNativeCommandResult(value: unknown): value is NativeCommandResult {
 export function getAppIntegrationStatus(): AppIntegrationStatus {
   return {
     appVersion,
+    capabilities: [...capabilities],
     claimableWorkerIds: [...claimableWorkerIds],
     connectionError,
     state: enabled ? connectionState : "disabled",
@@ -435,21 +453,22 @@ function disconnect(): void {
 
 function resetConnectionState(
   state: AppIntegrationFailureState = "serviceNotRunning",
-  errorMessage?: string,
+  error?: AppIntegrationConnectionError,
 ): void {
   port = undefined
   appVersion = undefined
+  capabilities = []
   widgetServerUrl = undefined
   connectionState = state
-  connectionError = errorMessage
-  const error = new Error(errorMessage ?? "NewsNext App disconnected")
-  rejectPendingRequests(pendingWidgetSnapshotRequests, error)
-  rejectPendingRequests(pendingInstanceRequests, error)
-  rejectPendingRequests(pendingWorkspaceRequests, error)
-  rejectPendingRequests(pendingIllustrationGetRequests, error)
-  rejectPendingRequests(pendingIllustrationPutRequests, error)
-  rejectPendingRequests(pendingLogsRequests, error)
-  rejectPendingConnectionRequests(error)
+  connectionError = error
+  const connectionFailure = new Error(error?.message ?? "NewsNext App disconnected")
+  rejectPendingRequests(pendingWidgetSnapshotRequests, connectionFailure)
+  rejectPendingRequests(pendingInstanceRequests, connectionFailure)
+  rejectPendingRequests(pendingWorkspaceRequests, connectionFailure)
+  rejectPendingRequests(pendingIllustrationGetRequests, connectionFailure)
+  rejectPendingRequests(pendingIllustrationPutRequests, connectionFailure)
+  rejectPendingRequests(pendingLogsRequests, connectionFailure)
+  rejectPendingConnectionRequests(connectionFailure)
   nativeMessageChunks.clear()
 }
 
@@ -477,12 +496,28 @@ function scheduleReconnect(): void {
   }, delay)
 }
 
-function failConnection(connection: NativePort, message: string | undefined): void {
+function failConnection(connection: NativePort, message: string | undefined, code?: string): void {
   if (port !== connection) return
-  const state = classifyAppIntegrationFailure(message)
-  resetConnectionState(state, message)
+  const state = classifyAppIntegrationFailure(message, code)
+  resetConnectionState(state, createConnectionError(state, message, code))
   connection.disconnect()
   if (isRetryableConnectionState(state)) scheduleReconnect()
+}
+
+function createConnectionError(
+  state: AppIntegrationFailureState,
+  message: string | undefined,
+  code?: string,
+): AppIntegrationConnectionError | undefined {
+  if (!message) return undefined
+  const normalizedCode = code ?? {
+    daemonOutdated: "DAEMON_OUTDATED",
+    hostNotInstalled: "HOST_MISSING",
+    protocolIncompatible: "PROTOCOL_INCOMPATIBLE",
+    serviceNotRunning: "NATIVE_HOST_DISCONNECTED",
+    workerConflict: "WORKER_ALREADY_CONNECTED",
+  }[state]
+  return { code: normalizedCode, message }
 }
 
 function runtimeLastErrorMessage(): string | undefined {
@@ -567,6 +602,7 @@ function connect(): void {
   connectionState = "connecting"
   connectionError = undefined
   appVersion = undefined
+  capabilities = []
   widgetServerUrl = undefined
   let nextPort: NativePort
   try {
@@ -574,7 +610,7 @@ function connect(): void {
   } catch (error) {
     const message = error instanceof Error ? error.message : undefined
     const state = classifyAppIntegrationFailure(message)
-    resetConnectionState(state, message)
+    resetConnectionState(state, createConnectionError(state, message))
     if (isRetryableConnectionState(state)) scheduleReconnect()
     return
   }
@@ -582,10 +618,17 @@ function connect(): void {
   nextPort.onDisconnect.addListener(() => {
     if (port === nextPort) {
       const errorMessage = runtimeLastErrorMessage()
-      const state = connectionState === "protocolIncompatible" || connectionState === "workerConflict"
+      const state = connectionState === "daemonOutdated"
+        || connectionState === "protocolIncompatible"
+        || connectionState === "workerConflict"
         ? connectionState
-        : classifyAppIntegrationFailure(errorMessage)
-      resetConnectionState(state, errorMessage ?? connectionError)
+        : classifyAppIntegrationFailure(errorMessage, connectionError?.code)
+      resetConnectionState(
+        state,
+        errorMessage
+          ? createConnectionError(state, errorMessage, connectionError?.code)
+          : connectionError,
+      )
       if (isRetryableConnectionState(state)) scheduleReconnect()
     }
   })
@@ -601,11 +644,21 @@ function connect(): void {
           failConnection(
             nextPort,
             `Unsupported native protocol version ${message.protocolVersion}; expected ${PROTOCOL_VERSION}`,
+            "PROTOCOL_INCOMPATIBLE",
+          )
+          return
+        }
+        if (!isVersionAtLeast(message.daemonVersion, MINIMUM_DAEMON_VERSION)) {
+          failConnection(
+            nextPort,
+            `NewsNext daemon ${message.daemonVersion} is older than required ${MINIMUM_DAEMON_VERSION}`,
+            "DAEMON_OUTDATED",
           )
           return
         }
         clearReconnectBackoff()
         appVersion = message.daemonVersion
+        capabilities = [...message.capabilities]
         claimableWorkerIds = message.claimableWorkerIds
         widgetServerUrl = message.widgetServerUrl
         connectionState = "connected"
@@ -653,7 +706,7 @@ function connect(): void {
             return
           }
         }
-        failConnection(nextPort, message.message)
+        failConnection(nextPort, message.message, message.code)
         console.error("NewsNext native host error", message.message)
       }
     } catch (error) {

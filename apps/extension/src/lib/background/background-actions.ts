@@ -92,12 +92,17 @@ const SourceCacheResult = Type.Unsafe<SourceLoadResponse | null>(Type.Union([
 ]))
 const AppIntegrationStatusResult = Type.Unsafe<AppIntegrationStatus>(Type.Object({
   appVersion: Type.Optional(Type.String()),
+  capabilities: Type.Array(Type.String()),
   claimableWorkerIds: Type.Array(Identifier),
-  connectionError: Type.Optional(Type.String()),
+  connectionError: Type.Optional(Type.Object({
+    code: Type.Optional(Type.String()),
+    message: Type.String(),
+  }, { additionalProperties: false })),
   state: stringEnum([
     "disabled",
     "connected",
     "connecting",
+    "daemonOutdated",
     "hostNotInstalled",
     "protocolIncompatible",
     "serviceNotRunning",

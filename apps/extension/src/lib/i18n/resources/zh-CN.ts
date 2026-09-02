@@ -75,6 +75,7 @@ export const zhCN = {
   connected: "已连接",
   connecting: "连接中",
   custom: "自定义",
+  daemonOutdatedDescription: "本地服务版本过旧，无法与此扩展配合使用。请更新 NewsNext CLI。",
   disabled: "已停用",
   installNativeHost: "使用以下命令注册浏览器连接：",
   nativeHostNotInstalled: "尚未安装",

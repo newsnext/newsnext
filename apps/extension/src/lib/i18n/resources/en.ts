@@ -71,6 +71,7 @@ export const en = {
   connected: "Connected",
   connecting: "Connecting",
   custom: "Custom",
+  daemonOutdatedDescription: "The local service is too old for this extension. Update NewsNext CLI.",
   disabled: "Disabled",
   installNativeHost: "Register the browser connection with",
   nativeHostNotInstalled: "Not installed",

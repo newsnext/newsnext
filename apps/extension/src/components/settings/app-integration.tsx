@@ -27,6 +27,7 @@ const STATUS_PRESENTATION: Record<AppIntegrationStatus["state"], StatusPresentat
   disabled: { dotClassName: "bg-muted-foreground/50", labelKey: "disabled" },
   connected: { dotClassName: "bg-emerald-500", labelKey: "connected" },
   connecting: { dotClassName: "bg-amber-500", labelKey: "connecting" },
+  daemonOutdated: { dotClassName: "bg-destructive", labelKey: "updateRequired" },
   hostNotInstalled: { dotClassName: "bg-destructive", labelKey: "nativeHostNotInstalled" },
   protocolIncompatible: { dotClassName: "bg-destructive", labelKey: "updateRequired" },
   serviceNotRunning: { dotClassName: "bg-destructive", labelKey: "serviceNotRunning" },
@@ -223,14 +224,16 @@ export function AppIntegrationSettings(): React.JSX.Element {
                     )
                   : state === "protocolIncompatible"
                     ? t("protocolIncompatibleDescription")
-                    : (
-                        <>
-                          {t("startLocalServer")}
-                          {" "}
-                          <code>newsnext start</code>
-                          .
-                        </>
-                      )}
+                    : state === "daemonOutdated"
+                      ? t("daemonOutdatedDescription")
+                      : (
+                          <>
+                            {t("startLocalServer")}
+                            {" "}
+                            <code>newsnext start</code>
+                            .
+                          </>
+                        )}
             </p>
             {state === "workerConflict" && (
               <Button

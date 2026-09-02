@@ -75,6 +75,7 @@ export const zhTW = {
   connected: "已連線",
   connecting: "連線中",
   custom: "自訂",
+  daemonOutdatedDescription: "本機服務版本過舊，無法與此擴充功能搭配使用。請更新 NewsNext CLI。",
   disabled: "已停用",
   installNativeHost: "使用以下命令註冊瀏覽器連線：",
   nativeHostNotInstalled: "尚未安裝",
