@@ -18,10 +18,10 @@ Add providers under `registry/src`:
 Do not split one provider between JSON and TypeScript files; a provider and all
 of its Sources must use one format. Do not edit
 `registry/registry.json` or `registry/sources.ts`; they are
-generated. JSON providers are emitted only to `registry.json`; TypeScript
-providers are emitted as complete executable Runtime Sources only to
-`sources.ts`. This keeps JSON registry updates independent from TypeScript
-Source versions.
+generated. JSON providers are emitted only to `registry.json`. For TypeScript
+providers, the build emits declarative Sources to `registry.json` and keeps
+only Sources containing executable values in `sources.ts`. This lets one
+provider share metadata and defaults without making every Source executable.
 
 Minimal TypeScript provider:
 

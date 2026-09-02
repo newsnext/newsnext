@@ -61,13 +61,17 @@ registry/sources.ts
 ```
 
 `registry.json` is a flat object keyed by complete source IDs such as
-`example:latest`. It contains only JSON providers: serializable provider
-metadata, expanded source configuration, structured loaders, and resolved
-capabilities.
+`example:latest`. It contains serializable Sources from JSON providers and
+TypeScript providers: provider metadata, expanded source configuration,
+structured loaders, and resolved capabilities.
 
-`sources.ts` contains complete resolved Runtime Sources for TypeScript
-providers, including configuration, Source version, Radar, and loader behavior.
-TypeScript Sources have no projection in `registry.json`.
+`sources.ts` contains only the complete resolved Runtime Sources from
+TypeScript providers that require executable behavior, including custom
+loaders, request callbacks, or JavaScript Radar values. A declarative Source in
+a TypeScript provider is emitted to `registry.json` instead after provider
+defaults and metadata have been fully expanded. The generated TypeScript
+provider configs contain only executable Sources, so runtime startup does not
+repeat build-time classification or filter against the JSON registry.
 
 The build follows this sequence:
 
@@ -79,15 +83,18 @@ provider files
     │      └─ registry.json
     │
     └─ TypeScript providers
-           ├─ resolve complete executable Runtime Sources
-           └─ sources.ts
+           ├─ expand each complete Source
+           ├─ JSON-safe Sources ── registry.json
+           └─ Sources with executable values ── sources.ts
 
 registry.json + executable Runtime Sources
-    └─ reject provider IDs that mix JSON and TypeScript Sources
+    └─ reject duplicate complete Source IDs
 ```
 
-Duplicate provider or source IDs fail the build. A provider ID also cannot
-appear in both formats, even when its local Source IDs differ. Generated files
+Duplicate provider files or source IDs fail the build. An authored provider ID
+cannot appear in both JSON and TypeScript files, even when its local Source IDs
+differ. A TypeScript provider may produce both generated formats because the
+build partitions its expanded Sources by JSON serializability. Generated files
 are rewritten only when their content changes.
 
 ## Defaults and provider expansion
@@ -204,10 +211,10 @@ instance patches, and loader results share one merge boundary.
 
 Registry parsing validates the entire JSON wire format before resolving entries.
 Every registry entry owns its structured JSON, HTML, or RSS loader; missing or
-custom executable loaders are rejected. TypeScript Sources bypass the JSON
-registry parser because provider expansion already resolves their complete
-trusted runtime definition. Their JavaScript Radar parameter values remain
-available to the background Radar service.
+custom executable loaders are rejected. Executable TypeScript Sources bypass
+the JSON registry parser because provider expansion already resolves their
+complete trusted runtime definition. Their JavaScript Radar parameter values
+remain available to the background Radar service.
 Public descriptors strip those functions before extension messaging; the Radar
 popup asks the background service to execute matching functions in the active
 tab and receives only serializable suggestions.

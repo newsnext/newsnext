@@ -18,15 +18,90 @@ import provider_7 from "./src/xiaohongshu/index"
 import provider_8 from "./src/xueqiu/index"
 
 const providerConfigs: Record<string, ProviderConfig> = {
-  "bilibili": provider_0,
-  "cls": provider_1,
-  "folo": provider_2,
-  "jike": provider_3,
-  "reddit": provider_4,
-  "weibo": provider_5,
-  "x": provider_6,
-  "xiaohongshu": provider_7,
-  "xueqiu": provider_8
+  "bilibili": {
+    ...provider_0,
+    sources: {
+      "up-video": provider_0.sources["up-video"],
+      "up-opus": provider_0.sources["up-opus"],
+      "up-audio": provider_0.sources["up-audio"],
+      "search": provider_0.sources["search"],
+      "following": provider_0.sources["following"],
+      "user-dynamics": provider_0.sources["user-dynamics"],
+      "favorites": provider_0.sources["favorites"],
+      "series": provider_0.sources["series"],
+      "ranking": provider_0.sources["ranking"]
+    },
+  },
+  "cls": {
+    ...provider_1,
+    sources: {
+      "telegraph": provider_1.sources["telegraph"],
+      "depth": provider_1.sources["depth"],
+      "hot-article": provider_1.sources["hot-article"]
+    },
+  },
+  "folo": {
+    ...provider_2,
+    sources: {
+      "feed": provider_2.sources["feed"],
+      "list": provider_2.sources["list"]
+    },
+  },
+  "jike": {
+    ...provider_3,
+    sources: {
+      "following-updates": provider_3.sources["following-updates"],
+      "user-updates": provider_3.sources["user-updates"],
+      "search": provider_3.sources["search"],
+      "topic": provider_3.sources["topic"]
+    },
+  },
+  "reddit": {
+    ...provider_4,
+    sources: {
+      "user": provider_4.sources["user"],
+      "subreddit": provider_4.sources["subreddit"],
+      "subreddit-top": provider_4.sources["subreddit-top"]
+    },
+  },
+  "weibo": {
+    ...provider_5,
+    sources: {
+      "user": provider_5.sources["user"],
+      "keyword": provider_5.sources["keyword"],
+      "super-topic": provider_5.sources["super-topic"],
+      "following": provider_5.sources["following"]
+    },
+  },
+  "x": {
+    ...provider_6,
+    sources: {
+      "place-trends": provider_6.sources["place-trends"],
+      "following": provider_6.sources["following"],
+      "list": provider_6.sources["list"],
+      "user": provider_6.sources["user"]
+    },
+  },
+  "xiaohongshu": {
+    ...provider_7,
+    sources: {
+      "search": provider_7.sources["search"],
+      "user": provider_7.sources["user"]
+    },
+  },
+  "xueqiu": {
+    ...provider_8,
+    sources: {
+      "hot-stock": provider_8.sources["hot-stock"],
+      "market-movers": provider_8.sources["market-movers"],
+      "following": provider_8.sources["following"],
+      "hot": provider_8.sources["hot"],
+      "watchlist": provider_8.sources["watchlist"],
+      "stock-discussions": provider_8.sources["stock-discussions"],
+      "stock-news": provider_8.sources["stock-news"],
+      "stock-announcements": provider_8.sources["stock-announcements"]
+    },
+  }
 }
 
 export const typescriptSources: Record<string, RuntimeSource> = Object.fromEntries(
@@ -40,13 +115,9 @@ export const typescriptSources: Record<string, RuntimeSource> = Object.fromEntri
 
 export function resolveSources(registry: unknown): Record<string, RuntimeSource> {
   const registrySources = resolveSourceRegistry(registry)
-  const typescriptProviderIds = new Set(
-    Object.keys(typescriptSources).map(sourceId => sourceId.split(":", 1)[0]),
-  )
-  for (const sourceId of Object.keys(registrySources)) {
-    const providerId = sourceId.split(":", 1)[0]
-    if (providerId && typescriptProviderIds.has(providerId)) {
-      throw new Error(`Provider "${providerId}" cannot mix JSON and TypeScript Sources`)
+  for (const sourceId of Object.keys(typescriptSources)) {
+    if (Object.hasOwn(registrySources, sourceId)) {
+      throw new Error(`Duplicate source ID "${sourceId}"`)
     }
   }
   return { ...registrySources, ...typescriptSources }

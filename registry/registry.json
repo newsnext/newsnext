@@ -344,6 +344,40 @@
       "color": "blue"
     }
   },
+  "bilibili:hotword": {
+    "baseUrl": "https://www.bilibili.com/",
+    "metadata": {
+      "home": "/",
+      "title": "热搜",
+      "type": "ranking"
+    },
+    "version": 3,
+    "loader": {
+      "type": "json",
+      "url": "https://s.search.bilibili.com/main/hotword?limit=30",
+      "items": "list",
+      "fields": {
+        "title": "show_name",
+        "url": {
+          "select": "keyword",
+          "template": "https://search.bilibili.com/all?keyword={{ scope.value | url_query }}"
+        },
+        "mark": {
+          "src": "icon",
+          "kind": {
+            "template": "trend"
+          },
+          "label": "show_name"
+        }
+      }
+    },
+    "provider": {
+      "title": "哔哩哔哩",
+      "category": "social",
+      "icon": "https://i0.hdslb.com/bfs/static/jinkela/long/images/512.png",
+      "color": "red"
+    }
+  },
   "github:trending": {
     "baseUrl": "https://github.com/",
     "metadata": {
@@ -1278,6 +1312,283 @@
     "provider": {
       "title": "百度贴吧",
       "category": "forum",
+      "color": "blue"
+    }
+  },
+  "weibo:hot-search": {
+    "baseUrl": "https://weibo.com/",
+    "capabilities": {
+      "network": [
+        "weibo.com",
+        "*.sinaimg.cn"
+      ]
+    },
+    "requestRules": [
+      {
+        "action": {
+          "type": "modifyHeaders",
+          "requestHeaders": [
+            {
+              "header": "Referer",
+              "operation": "set",
+              "value": "https://weibo.com/"
+            }
+          ]
+        },
+        "condition": {
+          "requestDomains": [
+            "weibo.com",
+            "sinaimg.cn"
+          ],
+          "resourceTypes": [
+            "image",
+            "xmlhttprequest"
+          ]
+        }
+      }
+    ],
+    "loader": {
+      "type": "json",
+      "url": "/ajax/{{ source.vars.endpoint[scope.params.type] }}",
+      "items": "(data.realtime || data.band_list)[?is_ad != `1` && (rank != `null` || realpos != `null`)]",
+      "fields": {
+        "title": "note || word || name",
+        "url": {
+          "select": "url || word_scheme || word",
+          "template": "{% if scope.item.url %}{{ scope.value | replace: 'http://', 'https://' }}{% else %}https://s.weibo.com/weibo?q={{ scope.value | url_query }}{% endif %}"
+        },
+        "mark": {
+          "src": "icon || icon_url",
+          "kind": {
+            "template": "trend"
+          },
+          "label": "word"
+        }
+      }
+    },
+    "metadata": {
+      "title": "热搜",
+      "type": "ranking"
+    },
+    "vars": {
+      "endpoint": {
+        "search": "side/hotSearch",
+        "mine": "statuses/mineBand",
+        "entertainment": "statuses/entertainment",
+        "social": "statuses/social",
+        "tech": "statuses/technology",
+        "life": "statuses/life",
+        "sports": "statuses/sport",
+        "acg": "statuses/acg"
+      }
+    },
+    "params": {
+      "type": {
+        "type": "select",
+        "title": "类别",
+        "values": [
+          {
+            "label": "热搜",
+            "value": "search"
+          },
+          {
+            "label": "好友热搜",
+            "value": "mine"
+          },
+          {
+            "label": "文娱",
+            "value": "entertainment"
+          },
+          {
+            "label": "要闻",
+            "value": "social"
+          },
+          {
+            "label": "科技",
+            "value": "tech"
+          },
+          {
+            "label": "生活",
+            "value": "life"
+          },
+          {
+            "label": "体育",
+            "value": "sports"
+          },
+          {
+            "label": "ACG",
+            "value": "acg"
+          }
+        ],
+        "default": "search"
+      }
+    },
+    "radar": [
+      {
+        "id": "weibo-hot-search",
+        "match": {
+          "hosts": [
+            "weibo.com"
+          ],
+          "paths": [
+            "/hot/:type"
+          ]
+        },
+        "patch": {
+          "params": {
+            "type": "{{ scope.path.type }}"
+          },
+          "metadata": {
+            "title": {
+              "select": "a[aria-current=\"page\"] [title]"
+            },
+            "home": "/hot/{{ scope.path.type }}"
+          }
+        }
+      }
+    ],
+    "version": 6,
+    "provider": {
+      "title": "微博",
+      "category": "social",
+      "icon": "https://weibo.com/favicon.ico",
+      "color": "red"
+    }
+  },
+  "xueqiu:hot-fund": {
+    "baseUrl": "https://xueqiu.com/",
+    "metadata": {
+      "title": "热门基金",
+      "home": "/",
+      "type": "ranking"
+    },
+    "loader": {
+      "type": "json",
+      "url": "/snb/dj/fundx/activity/x/web/searchFund?fund_type=0&business_code=20",
+      "items": "data.public_fund",
+      "fields": {
+        "url": {
+          "select": "fund_code",
+          "template": "/S/{{ scope.value | url_path }}"
+        },
+        "title": "fund_name",
+        "attributes": {
+          "returnPeriod": "profit_desc",
+          "returnRate": {
+            "select": "profit_rate",
+            "template": "{{ scope.value | times: 100 | round: 2 }}"
+          }
+        }
+      },
+      "inlineTemplate": "{{ scope.item.attributes.returnPeriod }} · {{ scope.item.attributes.returnRate }}%"
+    },
+    "radar": [
+      {
+        "id": "xueqiu-hot-fund",
+        "match": {
+          "hosts": [
+            "xueqiu.com"
+          ],
+          "paths": [
+            "/"
+          ]
+        }
+      }
+    ],
+    "provider": {
+      "title": "雪球",
+      "category": "finance",
+      "color": "blue"
+    }
+  },
+  "xueqiu:hot-topic": {
+    "baseUrl": "https://xueqiu.com/",
+    "metadata": {
+      "title": "热门话题",
+      "home": "/",
+      "type": "ranking"
+    },
+    "loader": {
+      "type": "json",
+      "url": "/hot_event/list.json?count=10",
+      "items": "list",
+      "fields": {
+        "url": {
+          "select": "tag",
+          "template": "/k?q={{ scope.value | url_query }}"
+        },
+        "title": {
+          "select": "tag",
+          "template": "{{ scope.value | remove: \"#\" }}"
+        },
+        "content": {
+          "pictures": "pic"
+        }
+      }
+    },
+    "radar": [
+      {
+        "id": "xueqiu-hot-topic",
+        "match": {
+          "hosts": [
+            "xueqiu.com"
+          ],
+          "paths": [
+            "/"
+          ]
+        }
+      }
+    ],
+    "provider": {
+      "title": "雪球",
+      "category": "finance",
+      "color": "blue"
+    }
+  },
+  "xueqiu:live-news": {
+    "baseUrl": "https://xueqiu.com/",
+    "metadata": {
+      "title": "7×24",
+      "home": "/"
+    },
+    "loader": {
+      "type": "json",
+      "url": "/statuses/livenews/list.json?category=6&since_id=-1&count=30",
+      "items": "items",
+      "fields": {
+        "url": {
+          "select": "target",
+          "template": "{{ scope.value | regex_replace: \"^http:\", \"https:\" }}"
+        },
+        "title": {
+          "select": "text",
+          "template": "{{ scope.value | strip_html | normalize_whitespace | truncate: 120, \"…\" }}"
+        },
+        "publishedAt": "created_at",
+        "content": {
+          "text": {
+            "select": "text",
+            "template": "{{ scope.value | strip_html | normalize_whitespace }}"
+          }
+        }
+      }
+    },
+    "radar": [
+      {
+        "id": "xueqiu-live-news",
+        "match": {
+          "hosts": [
+            "xueqiu.com"
+          ],
+          "paths": [
+            "/"
+          ]
+        }
+      }
+    ],
+    "provider": {
+      "title": "雪球",
+      "category": "finance",
       "color": "blue"
     }
   },
