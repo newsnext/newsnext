@@ -5,48 +5,20 @@
 <g mask="url(#icon-mask)">
 <rect width="128" height="128" fill="currentColor"/>
 <rect width="128" height="128" fill="url(#background-light)"/>
-<rect width="128" height="128" fill="url(#background-shade)"/>
-<path d="M0 86C15 104 36 113 64 113C92 113 113 104 128 86V128H0V86Z" fill="url(#footer-color)"/>
-<path d="M0 86C15 104 36 113 64 113C92 113 113 104 128 86V128H0V86Z" fill="url(#footer-shade)"/>
-<path d="M64 94C99.3462 94 128 65.3462 128 30C128 -5.34623 99.3462 -34 64 -34C28.6538 -34 0 -5.34623 0 30C0 65.3462 28.6538 94 64 94Z" fill="currentColor" filter="url(#face-depth)"/>
+<path d="M64 94C99.3462 94 128 65.3462 128 30C128 -5.34623 99.3462 -34 64 -34C28.6538 -34 0 -5.34623 0 30C0 65.3462 28.6538 94 64 94Z" fill="currentColor"/>
 <path d="M64 94C99.3462 94 128 65.3462 128 30C128 -5.34623 99.3462 -34 64 -34C28.6538 -34 0 -5.34623 0 30C0 65.3462 28.6538 94 64 94Z" fill="url(#face-light)"/>
-<path d="M0 30C0 65.346 28.654 94 64 94C99.346 94 128 65.346 128 30C128 64.8 99.346 93 64 93C28.654 93 0 64.8 0 30Z" fill="white" fill-opacity="0.14" filter="url(#highlight-soften)"/>
-<path d="M8 5C13.3 1.7 20.7 0 31 0H97C107.3 0 114.7 1.7 120 5" stroke="white" stroke-opacity="0.38"/>
 </g>
 <defs>
 <linearGradient id="background-light" x1="64" y1="0" x2="64" y2="128" gradientUnits="userSpaceOnUse">
-<stop stop-color="white" stop-opacity="0.94"/>
-<stop offset="0.32" stop-color="white" stop-opacity="0.8"/>
-<stop offset="0.56" stop-color="white" stop-opacity="0.48"/>
-<stop offset="0.76" stop-color="white" stop-opacity="0.12"/>
-<stop offset="0.9" stop-color="white" stop-opacity="0"/>
-<stop offset="1" stop-color="white" stop-opacity="0"/>
-</linearGradient>
-<linearGradient id="background-shade" x1="64" y1="0" x2="64" y2="128" gradientUnits="userSpaceOnUse">
-<stop offset="0.9" stop-color="black" stop-opacity="0"/>
-<stop offset="1" stop-color="black" stop-opacity="0.04"/>
-</linearGradient>
-<linearGradient id="footer-color" x1="64" y1="90" x2="64" y2="128" gradientUnits="userSpaceOnUse">
-<stop stop-color="currentColor" stop-opacity="0"/>
-<stop offset="0.55" stop-color="currentColor" stop-opacity="0.06"/>
-<stop offset="1" stop-color="currentColor" stop-opacity="0.21"/>
-</linearGradient>
-<linearGradient id="footer-shade" x1="64" y1="90" x2="64" y2="128" gradientUnits="userSpaceOnUse">
-<stop offset="0.55" stop-color="black" stop-opacity="0"/>
-<stop offset="1" stop-color="black" stop-opacity="0.05"/>
+<stop stop-color="white" stop-opacity="0.96"/>
+<stop offset="0.48" stop-color="white" stop-opacity="0.62"/>
+<stop offset="0.78" stop-color="white" stop-opacity="0.2"/>
+<stop offset="1" stop-color="black" stop-opacity="0.03"/>
 </linearGradient>
 <linearGradient id="face-light" x1="64" y1="-34" x2="64" y2="94" gradientUnits="userSpaceOnUse">
-<stop stop-color="white" stop-opacity="0.99"/>
-<stop offset="0.34" stop-color="white" stop-opacity="0.96"/>
-<stop offset="0.6" stop-color="white" stop-opacity="0.88"/>
-<stop offset="0.8" stop-color="white" stop-opacity="0.74"/>
-<stop offset="1" stop-color="white" stop-opacity="0.48"/>
+<stop stop-color="white" stop-opacity="0.97"/>
+<stop offset="0.42" stop-color="white" stop-opacity="0.9"/>
+<stop offset="1" stop-color="white" stop-opacity="0.58"/>
 </linearGradient>
-<filter id="face-depth" x="-5" y="-39" width="138" height="143" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-<feDropShadow dx="0" dy="2" stdDeviation="1.7" flood-color="black" flood-opacity="0.08"/>
-</filter>
-<filter id="highlight-soften" x="-2" y="28" width="132" height="68" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-<feGaussianBlur stdDeviation="0.35"/>
-</filter>
 </defs>
 </svg>
