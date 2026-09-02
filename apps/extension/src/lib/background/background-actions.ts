@@ -93,11 +93,16 @@ const SourceCacheResult = Type.Unsafe<SourceLoadResponse | null>(Type.Union([
 const AppIntegrationStatusResult = Type.Unsafe<AppIntegrationStatus>(Type.Object({
   appVersion: Type.Optional(Type.String()),
   claimableWorkerIds: Type.Array(Identifier),
-  connectionError: Type.Optional(Type.Object({
-    message: Type.String(),
-    type: stringEnum(["unknown", "workerAlreadyConnected"] as const),
-  }, { additionalProperties: false })),
-  state: stringEnum(["disabled", "connected", "connecting", "disconnected"] as const),
+  connectionError: Type.Optional(Type.String()),
+  state: stringEnum([
+    "disabled",
+    "connected",
+    "connecting",
+    "hostNotInstalled",
+    "protocolIncompatible",
+    "serviceNotRunning",
+    "workerConflict",
+  ] as const),
   workerId: Identifier,
   widgetServerUrl: Type.Optional(Type.String()),
 }, { additionalProperties: false }))

@@ -8,12 +8,17 @@ import type {
   NativeWorkspace,
   NativeWorkspacePatch,
 } from "@newsnext/extension-connection"
+import type { AppIntegrationFailureState } from "../app-integration-connection"
 import type { SourceLoadResponse } from "../source/load-result"
 import type { AppIntegrationActions } from "./action-context"
 import {
   parseExtensionConnectionCommandRequest,
 } from "@newsnext/extension-connection"
 import { browser } from "#imports"
+import {
+  classifyAppIntegrationFailure,
+  getAppIntegrationReconnectDelay,
+} from "../app-integration-connection"
 import { APP_INTEGRATION_PERMISSIONS } from "../app-integration-permission"
 import { APPLICATION_DATA_VERSION } from "../application"
 import {
@@ -47,21 +52,17 @@ const APP_INTEGRATION_WORKER_ID_KEY = "newsnext-app-integration-worker-id"
 const APP_INTEGRATION_RECONNECT_ALARM = "app-integration-native-reconnect"
 const RECONNECT_ALARM_PERIOD_MINUTES = 0.5
 const NATIVE_REQUEST_TIMEOUT_MS = 65_000
-const WORKER_ALREADY_CONNECTED_ERROR = "The NewsNext Worker is already connected"
 
 export type AppIntegrationState
   = | "disabled"
     | "connected"
     | "connecting"
-    | "disconnected"
+    | AppIntegrationFailureState
 
 export interface AppIntegrationStatus {
   appVersion?: string
   claimableWorkerIds: string[]
-  connectionError?: {
-    message: string
-    type: "unknown" | "workerAlreadyConnected"
-  }
+  connectionError?: string
   state: AppIntegrationState
   workerId: string
   widgetServerUrl?: string
@@ -110,7 +111,7 @@ interface PendingConnectionRequest extends PendingRequest {
 let port: NativePort | undefined
 let appVersion: string | undefined
 let widgetServerUrl: string | undefined
-let connectionState: AppIntegrationState = "disconnected"
+let connectionState: AppIntegrationState = "serviceNotRunning"
 let connectionError: AppIntegrationStatus["connectionError"]
 let enabled = false
 let workerId: string = crypto.randomUUID()
@@ -127,6 +128,8 @@ const pendingLogsRequests = new Map<string, PendingLogsRequest>()
 const pendingConnectionRequests = new Set<PendingConnectionRequest>()
 const activeIllustrationRequests = new Map<string, Promise<Uint8Array<ArrayBuffer> | null>>()
 const nativeMessageChunks = new NativeMessageChunkAssembler(NATIVE_REQUEST_TIMEOUT_MS)
+let reconnectAttempt = 0
+let reconnectTimer: ReturnType<typeof setTimeout> | undefined
 
 export const appIntegrationActions: AppIntegrationActions = {
   getIllustration: requestIllustration,
@@ -425,16 +428,21 @@ async function executeCommand(
 
 function disconnect(): void {
   const connection = port
+  clearReconnectBackoff()
   resetConnectionState()
   connection?.disconnect()
 }
 
-function resetConnectionState(): void {
+function resetConnectionState(
+  state: AppIntegrationFailureState = "serviceNotRunning",
+  errorMessage?: string,
+): void {
   port = undefined
   appVersion = undefined
   widgetServerUrl = undefined
-  connectionState = "disconnected"
-  const error = new Error("NewsNext App disconnected")
+  connectionState = state
+  connectionError = errorMessage
+  const error = new Error(errorMessage ?? "NewsNext App disconnected")
   rejectPendingRequests(pendingWidgetSnapshotRequests, error)
   rejectPendingRequests(pendingInstanceRequests, error)
   rejectPendingRequests(pendingWorkspaceRequests, error)
@@ -445,6 +453,45 @@ function resetConnectionState(): void {
   nativeMessageChunks.clear()
 }
 
+function clearReconnectBackoff(): void {
+  if (reconnectTimer !== undefined) clearTimeout(reconnectTimer)
+  reconnectTimer = undefined
+  reconnectAttempt = 0
+}
+
+function isRetryableConnectionState(
+  state: AppIntegrationState,
+): state is "hostNotInstalled" | "serviceNotRunning" {
+  return state === "hostNotInstalled" || state === "serviceNotRunning"
+}
+
+function scheduleReconnect(): void {
+  if (!enabled || port || reconnectTimer !== undefined || !isRetryableConnectionState(connectionState)) {
+    return
+  }
+  const delay = getAppIntegrationReconnectDelay(reconnectAttempt)
+  reconnectAttempt += 1
+  reconnectTimer = setTimeout(() => {
+    reconnectTimer = undefined
+    connect()
+  }, delay)
+}
+
+function failConnection(connection: NativePort, message: string | undefined): void {
+  if (port !== connection) return
+  const state = classifyAppIntegrationFailure(message)
+  resetConnectionState(state, message)
+  connection.disconnect()
+  if (isRetryableConnectionState(state)) scheduleReconnect()
+}
+
+function runtimeLastErrorMessage(): string | undefined {
+  const runtime = browser.runtime as typeof browser.runtime & {
+    lastError?: { message?: string }
+  }
+  return runtime.lastError?.message
+}
+
 async function requireAppConnection(): Promise<NativePort> {
   if (!enabled) {
     throw new Error("NewsNext App integration is disabled")
@@ -452,7 +499,7 @@ async function requireAppConnection(): Promise<NativePort> {
   if (connectionState === "connected" && port) {
     return port
   }
-  if (connectionState === "disconnected") {
+  if (isRetryableConnectionState(connectionState) && reconnectTimer === undefined) {
     connect()
   }
   if (connectionState !== "connecting" || !port) {
@@ -521,11 +568,25 @@ function connect(): void {
   connectionError = undefined
   appVersion = undefined
   widgetServerUrl = undefined
-  const nextPort = browser.runtime.connectNative(NATIVE_HOST_NAME)
+  let nextPort: NativePort
+  try {
+    nextPort = browser.runtime.connectNative(NATIVE_HOST_NAME)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : undefined
+    const state = classifyAppIntegrationFailure(message)
+    resetConnectionState(state, message)
+    if (isRetryableConnectionState(state)) scheduleReconnect()
+    return
+  }
   port = nextPort
   nextPort.onDisconnect.addListener(() => {
     if (port === nextPort) {
-      resetConnectionState()
+      const errorMessage = runtimeLastErrorMessage()
+      const state = connectionState === "protocolIncompatible" || connectionState === "workerConflict"
+        ? connectionState
+        : classifyAppIntegrationFailure(errorMessage)
+      resetConnectionState(state, errorMessage ?? connectionError)
+      if (isRetryableConnectionState(state)) scheduleReconnect()
     }
   })
   nextPort.onMessage.addListener((value: unknown) => {
@@ -537,8 +598,13 @@ function connect(): void {
       if (!message) return
       if (message.type === "ready") {
         if (message.protocolVersion !== PROTOCOL_VERSION) {
-          throw new Error(`Unsupported native protocol version ${message.protocolVersion}`)
+          failConnection(
+            nextPort,
+            `Unsupported native protocol version ${message.protocolVersion}; expected ${PROTOCOL_VERSION}`,
+          )
+          return
         }
+        clearReconnectBackoff()
         appVersion = message.daemonVersion
         claimableWorkerIds = message.claimableWorkerIds
         widgetServerUrl = message.widgetServerUrl
@@ -587,17 +653,12 @@ function connect(): void {
             return
           }
         }
-        connectionError = {
-          message: message.message,
-          type: message.message === WORKER_ALREADY_CONNECTED_ERROR
-            ? "workerAlreadyConnected"
-            : "unknown",
-        }
+        failConnection(nextPort, message.message)
         console.error("NewsNext native host error", message.message)
       }
     } catch (error) {
       console.error("Failed to process NewsNext native host message", error)
-      disconnect()
+      failConnection(nextPort, error instanceof Error ? error.message : undefined)
     }
   })
 
@@ -1074,7 +1135,8 @@ export async function registerAppIntegrationNative(): Promise<void> {
     if (
       enabled
       && alarm.name === APP_INTEGRATION_RECONNECT_ALARM
-      && connectionState === "disconnected"
+      && isRetryableConnectionState(connectionState)
+      && reconnectTimer === undefined
     ) {
       connect()
     }

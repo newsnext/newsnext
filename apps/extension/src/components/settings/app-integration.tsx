@@ -27,7 +27,10 @@ const STATUS_PRESENTATION: Record<AppIntegrationStatus["state"], StatusPresentat
   disabled: { dotClassName: "bg-muted-foreground/50", labelKey: "disabled" },
   connected: { dotClassName: "bg-emerald-500", labelKey: "connected" },
   connecting: { dotClassName: "bg-amber-500", labelKey: "connecting" },
-  disconnected: { dotClassName: "bg-destructive", labelKey: "disconnected" },
+  hostNotInstalled: { dotClassName: "bg-destructive", labelKey: "nativeHostNotInstalled" },
+  protocolIncompatible: { dotClassName: "bg-destructive", labelKey: "updateRequired" },
+  serviceNotRunning: { dotClassName: "bg-destructive", labelKey: "serviceNotRunning" },
+  workerConflict: { dotClassName: "bg-destructive", labelKey: "workerInUse" },
 }
 
 const CHECKING_PRESENTATION: StatusPresentation = {
@@ -45,6 +48,8 @@ export function AppIntegrationSettings(): React.JSX.Element {
   )
   const state = status?.state
   const isEnabled = state !== undefined && state !== "disabled"
+  const hasConnectionFailure = state !== undefined
+    && !["disabled", "connected", "connecting"].includes(state)
   const presentation = state ? STATUS_PRESENTATION[state] : CHECKING_PRESENTATION
 
   const refreshStatus = useCallback(async (): Promise<void> => {
@@ -199,26 +204,35 @@ export function AppIntegrationSettings(): React.JSX.Element {
           </p>
         )}
 
-        {state === "disconnected" && (
+        {hasConnectionFailure && (
           <div className="space-y-3 border-t pt-3">
             <p
-              role={status?.connectionError ? "alert" : undefined}
-              className={`text-xs leading-5 ${
-                status?.connectionError ? "text-destructive" : "text-muted-foreground"
-              }`}
+              role="alert"
+              className="text-xs leading-5 text-destructive"
             >
-              {status?.connectionError?.type === "workerAlreadyConnected"
+              {state === "workerConflict"
                 ? t("workerAlreadyConnected")
-                : status?.connectionError?.message ?? (
-                  <>
-                    {t("startLocalServer")}
-                    {" "}
-                    <code>newsnext start</code>
-                    .
-                  </>
-                )}
+                : state === "hostNotInstalled"
+                  ? (
+                      <>
+                        {t("installNativeHost")}
+                        {" "}
+                        <code>newsnext install-native-host</code>
+                        .
+                      </>
+                    )
+                  : state === "protocolIncompatible"
+                    ? t("protocolIncompatibleDescription")
+                    : (
+                        <>
+                          {t("startLocalServer")}
+                          {" "}
+                          <code>newsnext start</code>
+                          .
+                        </>
+                      )}
             </p>
-            {status?.connectionError?.type === "workerAlreadyConnected" && (
+            {state === "workerConflict" && (
               <Button
                 type="button"
                 size="sm"
