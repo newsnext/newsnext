@@ -4,6 +4,7 @@ import type {
   XTimelineInstruction,
   XTweetResult,
   XTweetTextMode,
+  XUserTimelineMode,
 } from "./types"
 
 export const X_ORIGIN = "https://x.com"
@@ -13,12 +14,13 @@ export const HOME_LATEST_TIMELINE_QUERY_ID = "BLQWpfVqtgBqAqwRRJcJjA"
 export const HOME_LATEST_TIMELINE_URL = `${X_ORIGIN}/i/api/graphql/${HOME_LATEST_TIMELINE_QUERY_ID}/HomeLatestTimeline`
 export const LIST_LATEST_TWEETS_URL = `${X_ORIGIN}/i/api/graphql/1LE3u14FJjPZUHKFGzos2g/ListLatestTweetsTimeline`
 export const USER_BY_SCREEN_NAME_URL = `${X_ORIGIN}/i/api/graphql/Gb-d6r0vxPOADdG62OEBpQ/UserByScreenName`
-export const USER_TWEETS_URL = `${X_ORIGIN}/i/api/graphql/SXVCYB8XHSS25nzIljNtZA/UserTweets`
+export const USER_ORIGINALS_URL = `${X_ORIGIN}/i/api/graphql/jcbfqPu_2XMNOwVyGypRhw/UserOriginalsTimeline`
+export const USER_REPLIES_URL = `${X_ORIGIN}/i/api/graphql/dRUXRSlEIPlVmPgOQ8Z43g/UserRepliesTimeline`
+export const USER_REPOSTS_URL = `${X_ORIGIN}/i/api/graphql/bV_DHAIvQ945LAA1-eIIow/UserRepostsTimeline`
 export const X_CSRF_TOKEN_SECRET_KEY = "csrfToken"
 export const X_TIMELINE_COUNT = 50
 
 const X_BEARER_TOKEN = "AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
-const USER_TWEET_ENTRY_PREFIXES = ["tweet-", "profile-conversation-"]
 
 export const X_TIMELINE_FEATURES = {
   rweb_video_screen_enabled: false,
@@ -92,8 +94,10 @@ export function normalizeXSearchUrl(url: string): string {
   return url.replace(/^http:\/\/twitter\.com\//, "https://x.com/")
 }
 
-export function isUserTweetEntry(entry: XTimelineEntry): boolean {
-  return Boolean(entry.entryId && USER_TWEET_ENTRY_PREFIXES.some(prefix => entry.entryId?.startsWith(prefix)))
+export function getXUserTimelineUrl(timeline: XUserTimelineMode): string {
+  if (timeline === "replies") return USER_REPLIES_URL
+  if (timeline === "reposts") return USER_REPOSTS_URL
+  return USER_ORIGINALS_URL
 }
 
 function getTweetResult(entry: XTimelineEntry): XTweetResult | undefined {
@@ -168,12 +172,13 @@ function xTweetToNewsItem(
 
 export function entriesToNewsItems(
   entries: XTimelineEntry[],
-  options: { includeIcon?: boolean, textMode?: XTweetTextMode } = {},
+  options: { includeIcon?: boolean, textMode?: XTweetTextMode, userId?: string } = {},
 ): NewsItemInput[] {
-  const { includeIcon = true, textMode = "original" } = options
+  const { includeIcon = true, textMode = "original", userId } = options
   const seen = new Set<string>()
   return entries.flatMap((entry): NewsItemInput[] => {
     const tweet = getTweetResult(entry)
+    if (userId && tweet?.core?.user_results?.result?.rest_id !== userId) return []
     const item = tweet ? xTweetToNewsItem(tweet, includeIcon, textMode) : undefined
     if (!item || seen.has(item.url)) return []
     seen.add(item.url)

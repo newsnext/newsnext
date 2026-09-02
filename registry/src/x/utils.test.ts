@@ -13,6 +13,7 @@ function createTweet(id: string, screenName: string): XTweetResult {
     core: {
       user_results: {
         result: {
+          rest_id: `${screenName}-id`,
           avatar: {
             image_url: `https://pbs.twimg.com/profile_images/${id}/avatar_normal.jpg`,
           },
@@ -154,5 +155,26 @@ describe("getTimelineEntries", () => {
         title: "Tweet 2086353229894529148",
       }),
     ])
+  })
+
+  it("keeps only tweets authored by the requested user", () => {
+    const entries = [
+      createTweet("reply", "requested"),
+      createTweet("parent", "someone-else"),
+    ].map(tweet => ({
+      entryId: `tweet-${tweet.rest_id}`,
+      content: {
+        itemContent: {
+          tweet_results: { result: tweet },
+        },
+      },
+    }))
+
+    expect(normalize(entriesToNewsItems(entries, { userId: "requested-id" })))
+      .toEqual([
+        expect.objectContaining({
+          url: "https://x.com/requested/status/reply",
+        }),
+      ])
   })
 })

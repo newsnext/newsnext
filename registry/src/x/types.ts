@@ -80,8 +80,9 @@ export interface XTweetResult {
 }
 
 export type XTweetTextMode = "original" | "translation"
+export type XUserTimelineMode = "posts" | "replies" | "reposts"
 
-export interface XUserTweetsResponse {
+export interface XUserTimelineResponse {
   data?: {
     user?: {
       result?: {

@@ -768,6 +768,26 @@ describe("getRadarSuggestions", () => {
     ])
   })
 
+  it.each([
+    ["https://x.com/NewsNext/with_replies", "replies"],
+    ["https://x.com/NewsNext/reposts", "reposts"],
+  ])("selects the matching X user timeline from %s", (url, timeline) => {
+    expect(getRadarSuggestions(
+      {
+        url,
+        pageSelections: selectPageField("[data-testid=\"UserName\"]", "@NewsNext"),
+      },
+      sourceDescriptors.filter(source => source.id === "x:user"),
+    )).toMatchObject([
+      {
+        sourceId: "x:user",
+        patch: {
+          params: { timeline, username: "NewsNext" },
+        },
+      },
+    ])
+  })
+
   it("does not treat reserved X routes as user profiles", () => {
     expect(getRadarSuggestions(
       { url: "https://x.com/search" },

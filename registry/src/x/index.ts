@@ -9,22 +9,22 @@ import type {
   XPlaceTrendResponse,
   XTweetTextMode,
   XUserByScreenNameResponse,
-  XUserTweetsResponse,
+  XUserTimelineMode,
+  XUserTimelineResponse,
 } from "./types"
 import { LOCATION_OPTIONS } from "./types"
 import {
   createXLoggedInHeaders,
   entriesToNewsItems,
   getTimelineEntries,
+  getXUserTimelineUrl,
   HOME_LATEST_TIMELINE_QUERY_ID,
   HOME_LATEST_TIMELINE_URL,
-  isUserTweetEntry,
   LIST_LATEST_TWEETS_URL,
   normalizeXSearchUrl,
   PLACE_TRENDS_URL,
   sortNewsItemsByNewest,
   USER_BY_SCREEN_NAME_URL,
-  USER_TWEETS_URL,
   X_CSRF_TOKEN_SECRET_KEY,
   X_INLINE_TEMPLATE,
   X_ORIGIN,
@@ -54,6 +54,7 @@ interface XListParams extends XTweetTextParams {
 }
 
 interface XUserParams extends XTweetTextParams {
+  timeline: XUserTimelineMode
   username: string
 }
 
@@ -65,6 +66,15 @@ const tweetTextParam = {
     { label: "Translation", value: "translation" },
   ],
   default: "original",
+} as const
+
+const xUserRadarMetadata = {
+  title: {
+    select: "[data-testid=\"UserName\"]",
+  },
+  desc: {
+    select: "[data-testid=\"UserDescription\"]",
+  },
 } as const
 
 async function fetchXPlaceTrends(
@@ -140,8 +150,8 @@ async function fetchXListTweets(
   }
 }
 
-async function fetchXUserTweets(
-  { text, username }: XUserParams,
+async function fetchXUserTimeline(
+  { text, timeline, username }: XUserParams,
   context: SourceLoaderContext,
 ): Promise<SourceLoaderOutput> {
   const headers = createXLoggedInHeaders(context)
@@ -163,14 +173,15 @@ async function fetchXUserTweets(
   const userId = userResult?.rest_id
   if (!userId) throw new Error(`Cannot find X user: ${username}`)
 
-  const response = await context.fetch.get(USER_TWEETS_URL, {
+  const response = await context.fetch.get(getXUserTimelineUrl(timeline), {
     headers,
     searchParams: {
       variables: JSON.stringify({
         userId,
         count: X_TIMELINE_COUNT,
         includePromotedContent: false,
-        withQuickPromoteEligibilityTweetFields: true,
+        ...(timeline === "posts" ? { withQuickPromoteEligibilityTweetFields: true } : {}),
+        ...(timeline === "replies" ? { withCommunity: false } : {}),
         withVoice: true,
       }),
       features: JSON.stringify(X_TIMELINE_FEATURES),
@@ -178,14 +189,14 @@ async function fetchXUserTweets(
         withArticlePlainText: false,
       }),
     },
-  }).json<XUserTweetsResponse>()
+  }).json<XUserTimelineResponse>()
   const instructions = response.data?.user?.result?.timeline?.timeline?.instructions ?? []
   const badge = userResult.avatar?.image_url
   return {
     items: sortNewsItemsByNewest(
       entriesToNewsItems(
-        getTimelineEntries(instructions).filter(isUserTweetEntry),
-        { includeIcon: false, textMode: text },
+        getTimelineEntries(instructions),
+        { includeIcon: false, textMode: text, userId },
       ),
     ),
     metadata: badge ? { badge } : undefined,
@@ -307,31 +318,67 @@ export default {
       },
       radar: [
         {
+          id: "x-user-replies",
+          match: {
+            hosts: ["x.com", "twitter.com"],
+            paths: ["/:username/with_replies"],
+          },
+          patch: {
+            params: {
+              timeline: "replies",
+              username: "{{ scope.path.username }}",
+            },
+            metadata: xUserRadarMetadata,
+          },
+        },
+        {
+          id: "x-user-reposts",
+          match: {
+            hosts: ["x.com", "twitter.com"],
+            paths: ["/:username/reposts"],
+          },
+          patch: {
+            params: {
+              timeline: "reposts",
+              username: "{{ scope.path.username }}",
+            },
+            metadata: xUserRadarMetadata,
+          },
+        },
+        {
           id: "x-user",
           match: {
             hosts: ["x.com", "twitter.com"],
             paths: {
               include: ["/:username", "/:username/*rest"],
-              exclude: X_RADAR_RESERVED_PATHS.flatMap(path => [`/${path}`, `/${path}/*rest`]),
+              exclude: [
+                ...X_RADAR_RESERVED_PATHS.flatMap(path => [`/${path}`, `/${path}/*rest`]),
+                "/:username/reposts",
+                "/:username/with_replies",
+              ],
             },
           },
           patch: {
             params: {
+              timeline: "posts",
               username: "{{ scope.path.username }}",
             },
-            metadata: {
-              title: {
-                select: "[data-testid=\"UserName\"]",
-              },
-              desc: {
-                select: "[data-testid=\"UserDescription\"]",
-              },
-            },
+            metadata: xUserRadarMetadata,
           },
         },
       ],
       params: {
         text: tweetTextParam,
+        timeline: {
+          type: "select",
+          title: "Timeline",
+          values: [
+            { label: "Posts", value: "posts" },
+            { label: "Replies", value: "replies" },
+            { label: "Reposts", value: "reposts" },
+          ],
+          default: "posts",
+        },
         username: {
           type: "text",
           title: "Username",
@@ -341,9 +388,9 @@ export default {
         },
       },
       loader: {
-        load: fetchXUserTweets,
+        load: fetchXUserTimeline,
       },
-      version: 3,
+      version: 4,
     },
   },
 } satisfies ProviderConfig
