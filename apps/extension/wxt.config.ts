@@ -6,6 +6,7 @@ import Icons from "unplugin-icons/vite"
 import TurboConsole from "unplugin-turbo-console/vite"
 import { defineConfig } from "wxt"
 import packageJson from "./package.json"
+import { APP_INTEGRATION_PERMISSIONS } from "./src/lib/app-integration-permission"
 import { OPTIONAL_SOURCE_PERMISSIONS } from "./src/lib/source/permission-constants"
 
 const OPTIONAL_SOURCE_ORIGINS = ["*://*/*"] as const
@@ -15,7 +16,6 @@ const REQUIRED_PERMISSIONS = [
   "alarms",
   "contextMenus",
   "declarativeNetRequestWithHostAccess",
-  "nativeMessaging",
   "scripting",
   "storage",
 ] as const
@@ -103,7 +103,7 @@ export default defineConfig({
       version: manifestVersion,
       version_name: packageJson.version,
       permissions: yoloMode
-        ? [...REQUIRED_PERMISSIONS, ...OPTIONAL_SOURCE_PERMISSIONS]
+        ? [...REQUIRED_PERMISSIONS, ...APP_INTEGRATION_PERMISSIONS, ...OPTIONAL_SOURCE_PERMISSIONS]
         : [...REQUIRED_PERMISSIONS],
       content_security_policy: {
         extension_pages: "script-src 'self'; object-src 'self'; frame-src http://127.0.0.1:*",
@@ -114,8 +114,8 @@ export default defineConfig({
       optional_permissions: yoloMode
         ? undefined
         : browser === "firefox"
-          ? [...OPTIONAL_SOURCE_PERMISSIONS, ...OPTIONAL_SOURCE_ORIGINS]
-          : [...OPTIONAL_SOURCE_PERMISSIONS],
+          ? [...APP_INTEGRATION_PERMISSIONS, ...OPTIONAL_SOURCE_PERMISSIONS, ...OPTIONAL_SOURCE_ORIGINS]
+          : [...APP_INTEGRATION_PERMISSIONS, ...OPTIONAL_SOURCE_PERMISSIONS],
       optional_host_permissions: yoloMode || browser === "firefox"
         ? undefined
         : [...OPTIONAL_SOURCE_ORIGINS],

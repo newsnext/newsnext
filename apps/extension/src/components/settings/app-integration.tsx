@@ -11,10 +11,12 @@ import {
 } from "@newsnext/ui/components/select"
 import { Switch } from "@newsnext/ui/components/switch"
 import { useCallback, useEffect, useMemo, useState } from "react"
+import { browser } from "#imports"
 import { ConfigSection } from "@/components/common/config-section"
 import { useAsyncAction } from "@/hooks/use-async-action"
 import { useI18n } from "@/hooks/use-i18n"
 import { actions } from "@/lib/actions"
+import { APP_INTEGRATION_PERMISSIONS } from "@/lib/app-integration-permission"
 
 interface StatusPresentation {
   dotClassName: string
@@ -83,9 +85,22 @@ export function AppIntegrationSettings(): React.JSX.Element {
 
   const handleEnabledChange = useCallback(async (enabled: boolean): Promise<void> => {
     const succeeded = await runUpdate(async () => {
+      if (enabled) {
+        const granted = await browser.permissions.request({
+          permissions: [...APP_INTEGRATION_PERMISSIONS],
+        }).catch(() => false)
+        if (!granted) return
+      }
+
       setStatus(await actions.appIntegration.setEnabled({
         enabled,
       }))
+
+      if (!enabled) {
+        await browser.permissions.remove({
+          permissions: [...APP_INTEGRATION_PERMISSIONS],
+        }).catch(() => false)
+      }
     })
     if (!succeeded) {
       await refreshStatus()

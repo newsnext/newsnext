@@ -14,6 +14,7 @@ import {
   parseExtensionConnectionCommandRequest,
 } from "@newsnext/extension-connection"
 import { browser } from "#imports"
+import { APP_INTEGRATION_PERMISSIONS } from "../app-integration-permission"
 import { APPLICATION_DATA_VERSION } from "../application"
 import {
   readPersistedBgIllustrationBytes,
@@ -998,6 +999,10 @@ async function applyAppIntegrationEnabled(nextEnabled: boolean): Promise<void> {
 export async function setAppIntegrationEnabled(
   nextEnabled: boolean,
 ): Promise<AppIntegrationStatus> {
+  if (nextEnabled && !await hasAppIntegrationPermission()) {
+    throw new Error("NewsNext App integration requires Native Messaging permission")
+  }
+
   const key = PERSISTED_DATA_SLICES.settings.key
   const stored = await browser.storage.local.get(key)
   const settings = normalizePersistedSettings(stored[key])
@@ -1009,6 +1014,12 @@ export async function setAppIntegrationEnabled(
   })
   await applyAppIntegrationEnabled(nextEnabled)
   return getAppIntegrationStatus()
+}
+
+async function hasAppIntegrationPermission(): Promise<boolean> {
+  return await browser.permissions.contains({
+    permissions: [...APP_INTEGRATION_PERMISSIONS],
+  }).catch(() => false)
 }
 
 export async function setAppIntegrationWorker(
@@ -1075,6 +1086,11 @@ export async function registerAppIntegrationNative(): Promise<void> {
       void applyAppIntegrationEnabled(settings.general.appIntegrationEnabled)
     }
   })
+  browser.permissions.onRemoved.addListener((permissions) => {
+    if (enabled && permissions.permissions?.includes("nativeMessaging")) {
+      void setAppIntegrationEnabled(false)
+    }
+  })
 
   const stored = await browser.storage.local.get([
     PERSISTED_DATA_SLICES.settings.key,
@@ -1092,7 +1108,11 @@ export async function registerAppIntegrationNative(): Promise<void> {
   workspace = createWorkspace(application, 0)
   bootstrapBindings = createLocalBindings(workspace.instances, workerId)
   const settings = normalizePersistedSettings(stored[PERSISTED_DATA_SLICES.settings.key])
-  enabled = settings.general.appIntegrationEnabled
+  const hasPermission = await hasAppIntegrationPermission()
+  enabled = settings.general.appIntegrationEnabled && hasPermission
+  if (settings.general.appIntegrationEnabled && !hasPermission) {
+    await setAppIntegrationEnabled(false)
+  }
   if (enabled) {
     browser.alarms.create(APP_INTEGRATION_RECONNECT_ALARM, {
       periodInMinutes: RECONNECT_ALARM_PERIOD_MINUTES,
