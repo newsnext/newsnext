@@ -458,6 +458,13 @@ Keep content-specific layouts distinct when needed, but keep overlay opacity,
 shell color, primary radii, and motion consistent. Popover menus and anchored
 transient controls do not use a modal overlay.
 
+Dropdown menus and select popups use a compact translucent background surface
+with backdrop blur, a faint neutral outline, and a restrained shadow. Keep 6px
+between the trigger and popup, use 32px rows with regular-weight labels, and
+show selection with an uncontained theme-colored checkmark. Focused rows use
+only a subtle neutral wash. Size menus to their content; avoid wide empty
+surfaces for short action lists.
+
 Use the shared inline two-step confirmation for destructive actions instead of
 opening another modal. Never apply the `destructive` variant, destructive text,
 or destructive background color to the idle action. Destructive color is

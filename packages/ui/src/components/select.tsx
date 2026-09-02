@@ -9,6 +9,7 @@ import * as React from "react"
 type SelectVariant = "default" | "inline"
 
 const SelectVariantContext = React.createContext<SelectVariant>("default")
+const selectScrollButtonClassName = "z-10 flex w-full cursor-default items-center justify-center bg-background/90 py-1 backdrop-blur-xl [&_svg:not([class*='size-'])]:size-4"
 
 function Select<Value>({
   variant = "default",
@@ -78,7 +79,7 @@ function SelectContent({
   className,
   children,
   side = "bottom",
-  sideOffset = 4,
+  sideOffset = 6,
   align = "center",
   alignOffset = 0,
   alignItemWithTrigger = true,
@@ -88,8 +89,6 @@ function SelectContent({
     SelectPrimitive.Positioner.Props,
     "align" | "alignOffset" | "side" | "sideOffset" | "alignItemWithTrigger"
   >) {
-  const variant = React.use(SelectVariantContext)
-
   return (
     <SelectPrimitive.Portal>
       <SelectPrimitive.Positioner
@@ -103,10 +102,8 @@ function SelectContent({
         <SelectPrimitive.Popup
           data-slot="select-content"
           data-align-trigger={alignItemWithTrigger}
-          data-variant={variant}
           className={cn(
-            "relative isolate z-50 max-h-(--available-height) w-(--anchor-width) min-w-36 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-2xl bg-background text-foreground shadow-2xl ring-1 ring-foreground/5 duration-100 data-[align-trigger=true]:animate-none data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
-            variant === "inline" && "min-w-(--anchor-width) rounded-xl border-0 bg-background/80 p-1 shadow-lg shadow-black/10 backdrop-blur-xl ring-1 ring-border/60 [&_[data-slot=select-item]]:rounded-lg [&_[data-slot=select-item]]:focus:bg-foreground/5",
+            "relative isolate z-50 max-h-(--available-height) w-(--anchor-width) min-w-36 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-xl bg-background/90 p-1 text-foreground shadow-lg ring-1 ring-foreground/10 backdrop-blur-xl duration-100 data-[align-trigger=true]:animate-none data-[side=bottom]:slide-in-from-top-1 data-[side=inline-end]:slide-in-from-left-1 data-[side=inline-start]:slide-in-from-right-1 data-[side=left]:slide-in-from-right-1 data-[side=right]:slide-in-from-left-1 data-[side=top]:slide-in-from-bottom-1 dark:bg-background/85 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
             className,
           )}
           {...props}
@@ -127,7 +124,7 @@ function SelectLabel({
   return (
     <SelectPrimitive.GroupLabel
       data-slot="select-label"
-      className={cn("px-3 py-2.5 text-xs text-muted-foreground", className)}
+      className={cn("px-2.5 py-1.5 text-xs text-muted-foreground", className)}
       {...props}
     />
   )
@@ -135,12 +132,9 @@ function SelectLabel({
 
 function SelectItem({
   className,
-  indicatorClassName,
   children,
   ...props
-}: SelectPrimitive.Item.Props & {
-  indicatorClassName?: string
-}): React.JSX.Element {
+}: SelectPrimitive.Item.Props): React.JSX.Element {
   const variant = React.use(SelectVariantContext)
 
   return (
@@ -148,8 +142,8 @@ function SelectItem({
       data-slot="select-item"
       data-variant={variant}
       className={cn(
-        "relative flex w-full cursor-default items-center gap-2.5 rounded-xl py-2 pr-8 pl-3 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
-        variant === "inline" && "h-6 py-0 pl-1",
+        "relative flex w-full cursor-default items-center gap-2 rounded-lg py-1.5 pr-8 pl-2.5 text-sm outline-hidden select-none focus:bg-foreground/5 focus:text-foreground focus:**:text-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
+        variant === "inline" ? "h-6 min-h-6 py-0 pl-1" : "min-h-8",
         className,
       )}
       {...props}
@@ -159,7 +153,9 @@ function SelectItem({
       </SelectPrimitive.ItemText>
       <SelectPrimitive.ItemIndicator
         render={
-          <span className={cn("pointer-events-none absolute right-2 flex size-4 items-center justify-center", indicatorClassName)} />
+          (
+            <span className="pointer-events-none absolute right-2 flex size-4 items-center justify-center text-theme-600 dark:text-theme-300" />
+          )
         }
       >
         <CheckIcon className="pointer-events-none" />
@@ -176,7 +172,7 @@ function SelectSeparator({
     <SelectPrimitive.Separator
       data-slot="select-separator"
       className={cn(
-        "pointer-events-none -mx-1 my-1 h-px bg-border/50",
+        "pointer-events-none mx-2 my-1 h-px bg-foreground/10",
         className,
       )}
       {...props}
@@ -192,7 +188,8 @@ function SelectScrollUpButton({
     <SelectPrimitive.ScrollUpArrow
       data-slot="select-scroll-up-button"
       className={cn(
-        "top-0 z-10 flex w-full cursor-default items-center justify-center bg-background py-1 [&_svg:not([class*='size-'])]:size-4",
+        "top-0",
+        selectScrollButtonClassName,
         className,
       )}
       {...props}
@@ -210,7 +207,8 @@ function SelectScrollDownButton({
     <SelectPrimitive.ScrollDownArrow
       data-slot="select-scroll-down-button"
       className={cn(
-        "bottom-0 z-10 flex w-full cursor-default items-center justify-center bg-background py-1 [&_svg:not([class*='size-'])]:size-4",
+        "bottom-0",
+        selectScrollButtonClassName,
         className,
       )}
       {...props}

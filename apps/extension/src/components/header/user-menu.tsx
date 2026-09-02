@@ -39,7 +39,7 @@ export function UserMenu() {
         >
           <PhUser className="size-5" />
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-64">
+        <DropdownMenuContent align="end">
           <DropdownMenuGroup>
             <DropdownMenuItem onClick={() => openSettings()}>
               <PhGear className="size-4" />
