@@ -1,4 +1,3 @@
-import type { Hotkey } from "@tanstack/react-hotkeys"
 import type { ReactNode } from "react"
 import type { Board } from "@/lib/board"
 import type { LiveCardViewModel } from "@/typings/source"
@@ -84,30 +83,6 @@ function SearchLiveCardIcon({ liveCard }: { liveCard: LiveCardViewModel }): Reac
   )
 }
 
-function SearchShortcutHint({
-  keys,
-  label,
-}: {
-  keys: readonly string[]
-  label: string
-}): ReactNode {
-  return (
-    <span className="flex items-center gap-1.5 text-foreground/45">
-      <span className="flex gap-0.5">
-        {keys.map(key => (
-          <kbd
-            key={key}
-            className="flex h-5 min-w-5 items-center justify-center rounded-md bg-foreground/5 px-1.5 font-sans text-[10px] font-medium leading-none text-foreground/60"
-          >
-            {key}
-          </kbd>
-        ))}
-      </span>
-      {label}
-    </span>
-  )
-}
-
 export function SearchDialog(): ReactNode {
   const { t } = useI18n()
   const [open, setOpen] = useState(false)
@@ -150,7 +125,6 @@ export function SearchDialog(): ReactNode {
         {open && (
           <SearchDialogContent
             onSelectItem={handleSelectItem}
-            searchShortcut={shortcuts.search}
           />
         )}
       </Dialog>
@@ -160,10 +134,8 @@ export function SearchDialog(): ReactNode {
 
 function SearchDialogContent({
   onSelectItem,
-  searchShortcut,
 }: {
   onSelectItem: (liveCard: LiveCardViewModel, targetBoardId: string) => void
-  searchShortcut: Hotkey | null
 }): ReactNode {
   const boards = useAtomValue(boardsAtom)
   const instances = useAtomValue(instancesAtom)
@@ -217,7 +189,6 @@ function SearchDialogContent({
     <SearchModalContent
       groups={searchGroups}
       onSelectItem={onSelectItem}
-      searchShortcut={searchShortcut}
     />
   )
 }
@@ -225,16 +196,15 @@ function SearchDialogContent({
 export function SearchModalContent({
   groups,
   onSelectItem,
-  searchShortcut,
 }: {
   groups: SearchGroup[]
   onSelectItem: (liveCard: LiveCardViewModel, targetBoardId: string) => void
-  searchShortcut: Hotkey | null
 }): ReactNode {
   const { t } = useI18n()
   return (
     <ContentDialogContent
-      surfaceClassName="grid-rows-[minmax(0,1fr)_auto]"
+      className="h-[min(70dvh,500px)]"
+      surfaceClassName="p-0"
     >
       <DialogTitle className="sr-only">{t("searchLiveCards")}</DialogTitle>
       <DialogDescription className="sr-only">
@@ -298,22 +268,6 @@ export function SearchModalContent({
           </CommandList>
         </Command>
       </SquircleBox>
-      <footer
-        aria-label={t("searchKeyboardShortcuts")}
-        className="flex min-h-8 items-center justify-between px-2 pt-2 text-[11px]"
-      >
-        <span className="flex items-center gap-3">
-          {searchShortcut && (
-            <SearchShortcutHint
-              keys={[formatForDisplay(searchShortcut)]}
-              label={t("search")}
-            />
-          )}
-          <SearchShortcutHint keys={["↑", "↓"]} label={t("navigate")} />
-          <SearchShortcutHint keys={["↵"]} label={t("open")} />
-        </span>
-        <SearchShortcutHint keys={["Esc"]} label={t("close")} />
-      </footer>
     </ContentDialogContent>
   )
 }

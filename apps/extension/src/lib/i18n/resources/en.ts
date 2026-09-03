@@ -65,7 +65,6 @@ export const en = {
   reviewCliAccess: "Review the site access requested by the CLI.",
   search: "Search",
   searchDescription: "Find and open LiveCards from all boards.",
-  searchKeyboardShortcuts: "Search keyboard shortcuts",
   searchLiveCards: "Search LiveCards",
   searchPlaceholder: "Search by LiveCard, source, or board",
   settings: "Settings",

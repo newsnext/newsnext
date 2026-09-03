@@ -719,14 +719,13 @@ to the start of each row, and ensure no content can change the column widths.
 
 The Search dialog is a compact, single-column LiveCard locator. Do not show a
 visible title or header; open directly into the search field and results inside
-one nested `2xl` neutral squircle. Retain a screen-reader-only title and
-description for dialog semantics. Keep the saved Search binding plus navigation,
-open, and close keyboard hints in one quiet footer below and outside the nested
-result surface instead of repeating the action inside the selected row. Hide
-the Search hint when its binding is cleared. Render shortcuts as soft filled
-keycaps without borders, shadows, or separators. Group results by Board in the
-saved Board order and omit empty groups. Within each group, show the LiveCard
-title and provider;
+one nested `2xl` neutral squircle that sits flush with the modal shell without
+additional inset padding. Cap its height at `500px` while retaining the shared
+`70dvh` viewport limit. Retain a screen-reader-only title and
+description for dialog semantics. Keep the saved Search binding behavior, but
+do not show keyboard shortcut hints inside the dialog. Group results by
+Board in the saved Board order and omit empty groups. Within each group, show
+the LiveCard title and provider;
 the group heading supplies the board context without repeating it on every row.
 Use `12px` horizontal and `10px` vertical padding for search result rows so the
 single-line identity remains compact without feeling cramped. Keep the title

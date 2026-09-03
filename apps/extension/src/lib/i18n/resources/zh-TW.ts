@@ -67,7 +67,6 @@ export const zhTW = {
   reviewCliAccess: "檢視 CLI 請求的網站存取權限。",
   search: "搜尋",
   searchDescription: "尋找並開啟所有看板中的 LiveCard。",
-  searchKeyboardShortcuts: "搜尋快速鍵",
   searchLiveCards: "搜尋 LiveCard",
   searchPlaceholder: "依 LiveCard、來源或看板搜尋",
   settings: "設定",

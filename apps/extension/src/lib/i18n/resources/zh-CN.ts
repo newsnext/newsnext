@@ -67,7 +67,6 @@ export const zhCN = {
   reviewCliAccess: "查看 CLI 请求的网站访问权限。",
   search: "搜索",
   searchDescription: "查找并打开所有看板中的 LiveCard。",
-  searchKeyboardShortcuts: "搜索快捷键",
   searchLiveCards: "搜索 LiveCard",
   searchPlaceholder: "按 LiveCard、来源或看板搜索",
   settings: "设置",
