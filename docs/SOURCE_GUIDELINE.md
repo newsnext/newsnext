@@ -164,7 +164,7 @@ Use the following matching rules:
 | --- | --- | --- |
 | `social` | Identity-based publishing, following, channels, or creator feeds | X, Weibo, Telegram, Jike, Bilibili |
 | `forum` | Topic-based discussion organized around threads, replies, or Q&A | Reddit, Hacker News, Tieba, Zhihu |
-| `news` | Editorial reporting, news aggregation, or feed subscription and reading | 36Kr, AIHot, Folo, NewsNow, Zaobao |
+| `news` | Editorial reporting, news aggregation, or feed subscription and reading | 36Kr, Folo, NewsNow, Zaobao |
 | `finance` | Financial markets, investing, or finance-specialist reporting and data | CLS, Xueqiu |
 | `developer` | Software development, code collaboration, or developer workflows | GitHub |
 | `entertainment` | Music, video, games, or other media discovery and playback | NetEase Cloud Music |
