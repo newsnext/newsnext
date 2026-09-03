@@ -10,12 +10,6 @@ import type {
 } from "./developer-source-runner"
 import Type from "typebox"
 import { defineAction } from "../action"
-import { MAX_BG_ILLUSTRATION_DATA_URL_LENGTH } from "../bg-illustration/config"
-import {
-  createBgIllustrationId,
-  decodeBgIllustration,
-  encodeBgIllustration,
-} from "../bg-illustration/persisted-illustration"
 
 export interface ConnectedFetchInput {
   body?: string
@@ -53,7 +47,6 @@ export interface BackgroundActionContext extends ApplicationActionContext {
     }) => Promise<SourceLoadResponse>
   }
   appIntegration: {
-    getIllustration: (input: { id: string }) => Promise<Uint8Array<ArrayBuffer> | null>
     getLogs: () => Promise<NativeLogEntry[]>
     getStatus: () => Promise<AppIntegrationStatus>
     getWidgetSnapshot: (input: {
@@ -62,10 +55,6 @@ export interface BackgroundActionContext extends ApplicationActionContext {
     }) => Promise<unknown>
     loadInstance: (input: { instanceId: string }) => Promise<SourceLoadResponse>
     readInstanceCache: (input: { instanceId: string }) => Promise<SourceLoadResponse | null>
-    putIllustration: (input: {
-      bytes: Uint8Array<ArrayBuffer>
-      id: string
-    }) => Promise<void>
     regenerateWorker: () => Promise<AppIntegrationStatus>
     setEnabled: (input: { enabled: boolean }) => Promise<AppIntegrationStatus>
     takeOverWorker: (input: { instanceIds: string[], workerId: string }) => Promise<AppIntegrationStatus>
@@ -364,38 +353,6 @@ const appIntegrationTakeOverWorkerAction = defineAction({
   result: AppIntegrationStatusResult,
 }, async (input, context: BackgroundActionContext) => await context.appIntegration.takeOverWorker(input))
 
-const illustrationStoreAction = defineAction({
-  audiences: UI_ONLY,
-  name: "illustration.store",
-  kind: "mutation",
-  description: "Store a background illustration and return its content ID.",
-  params: Type.Object({
-    illustration: Type.String({ maxLength: MAX_BG_ILLUSTRATION_DATA_URL_LENGTH }),
-  }, { additionalProperties: false }),
-  result: Type.Object({ id: Identifier }, { additionalProperties: false }),
-}, async (input, context: BackgroundActionContext) => {
-  const bytes = encodeBgIllustration(input.illustration)
-  if (bytes === null) throw new Error("The background illustration is invalid")
-  const id = await createBgIllustrationId(bytes)
-  await context.appIntegration.putIllustration({ bytes, id })
-  return { id }
-})
-
-const illustrationGetAction = defineAction({
-  audiences: UI_ONLY,
-  name: "illustration.get",
-  kind: "query",
-  description: "Read a Board background illustration from local or App storage.",
-  params: Type.Object({ id: Identifier }, { additionalProperties: false }),
-  result: Type.Union([
-    Type.String({ maxLength: MAX_BG_ILLUSTRATION_DATA_URL_LENGTH }),
-    Type.Null(),
-  ]),
-}, async (input, context: BackgroundActionContext) => {
-  const bytes = await context.appIntegration.getIllustration(input)
-  return bytes === null ? null : decodeBgIllustration(bytes)
-})
-
 const nextLayerGetWidgetSnapshotAction = defineAction({
   audiences: UI_ONLY,
   name: "nextLayer.getWidgetSnapshot",
@@ -421,8 +378,6 @@ export const uiBackgroundActionDefinitions = [
   appIntegrationRegenerateWorkerAction,
   appIntegrationSetEnabledAction,
   appIntegrationTakeOverWorkerAction,
-  illustrationStoreAction,
-  illustrationGetAction,
   nextLayerGetWidgetSnapshotAction,
 ] as const
 

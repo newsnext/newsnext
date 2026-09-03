@@ -3,7 +3,6 @@ import type {
   ExtensionToHost,
   HostToExtension,
   NativeCommandResult,
-  NativeIllustration,
   NativeLogEntry,
   NativeOfflineWorker,
   NativeWorkspace,
@@ -24,10 +23,6 @@ import {
 } from "../app-integration-connection"
 import { APP_INTEGRATION_PERMISSIONS } from "../app-integration-permission"
 import { APPLICATION_DATA_VERSION } from "../application"
-import {
-  readPersistedBgIllustrationBytes,
-  writePersistedBgIllustration,
-} from "../bg-illustration"
 import { normalizeApplicationData, PERSISTED_DATA_SLICES } from "../settings/persisted-data"
 import {
   normalizePersistedSettings,
@@ -59,7 +54,7 @@ import {
 const NATIVE_HOST_NAME = import.meta.env.DEV
   ? "app.newsnext.host.dev"
   : "app.newsnext.host"
-const PROTOCOL_VERSION = 20
+const PROTOCOL_VERSION = 21
 const WORKSPACE_UPDATED_AT_KEY = "newsnext-workspace-updated-at"
 const APP_INTEGRATION_RECONNECT_ALARM = "app-integration-native-reconnect"
 const RECONNECT_ALARM_PERIOD_MINUTES = 0.5
@@ -111,18 +106,8 @@ interface PendingWorkspaceRequest extends PendingRequest {
   resolve: (value: NativeWorkspace) => void
 }
 
-interface PendingIllustrationGetRequest extends PendingRequest {
-  id: string
-  resolve: (value: Uint8Array<ArrayBuffer> | null) => void
-}
-
 interface PendingLogsRequest extends PendingRequest {
   resolve: (logs: NativeLogEntry[]) => void
-}
-
-interface PendingIllustrationPutRequest extends PendingRequest {
-  id: string
-  resolve: () => void
 }
 
 interface PendingConnectionRequest extends PendingRequest {
@@ -154,25 +139,20 @@ let localInstanceIds = new Set<string>()
 const pendingWidgetSnapshotRequests = new Map<string, PendingWidgetSnapshotRequest>()
 const pendingInstanceRequests = new Map<string, PendingInstanceRequest>()
 const pendingWorkspaceRequests = new Map<string, PendingWorkspaceRequest>()
-const pendingIllustrationGetRequests = new Map<string, PendingIllustrationGetRequest>()
-const pendingIllustrationPutRequests = new Map<string, PendingIllustrationPutRequest>()
 const pendingLogsRequests = new Map<string, PendingLogsRequest>()
 const pendingConnectionRequests = new Set<PendingConnectionRequest>()
 const pendingWorkerTakeoverRequests = new Map<string, PendingWorkerTakeoverRequest>()
-const activeIllustrationRequests = new Map<string, Promise<Uint8Array<ArrayBuffer> | null>>()
 const nativeMessageChunks = new NativeMessageChunkAssembler(NATIVE_REQUEST_TIMEOUT_MS)
 let reconnectAttempt = 0
 let reconnectTimer: ReturnType<typeof setTimeout> | undefined
 let workspaceCommitQueue: Promise<void> = Promise.resolve()
 
 export const appIntegrationActions: AppIntegrationActions = {
-  getIllustration: requestIllustration,
   getLogs: requestLogs,
   getStatus: async () => getAppIntegrationStatus(),
   getWidgetSnapshot: requestWidgetSnapshot,
   loadInstance: requestInstanceLoad,
   readInstanceCache: requestInstanceCache,
-  putIllustration: storeIllustration,
   regenerateWorker: regenerateAppIntegrationWorker,
   setEnabled: async ({ enabled: nextEnabled }) => (
     await setAppIntegrationEnabled(nextEnabled)
@@ -284,18 +264,6 @@ function parseRevision(value: unknown, label: string): number {
   return Number(value)
 }
 
-function parseIllustration(value: unknown): NativeIllustration {
-  if (!isRecord(value)
-    || typeof value.id !== "string"
-    || !/^[a-f\d]{64}$/u.test(value.id)
-    || value.mimeType !== "image/svg+xml"
-    || typeof value.data !== "string"
-    || value.data.length > 1_333_336) {
-    throw new Error("The native host returned an invalid Illustration")
-  }
-  return { id: value.id, mimeType: value.mimeType, data: value.data }
-}
-
 function parseLogs(value: unknown): NativeLogEntry[] {
   if (!Array.isArray(value) || value.some(entry => (
     !isRecord(entry)
@@ -398,24 +366,6 @@ function parseHostMessage(value: unknown): ParsedHostMessage {
       result: value.result,
     }
   }
-  if (value.type === "illustrationStored"
-    && typeof value.requestId === "string"
-    && typeof value.id === "string") {
-    return {
-      type: "illustrationStored",
-      requestId: value.requestId,
-      id: value.id,
-    }
-  }
-  if (value.type === "illustrationResult"
-    && typeof value.requestId === "string"
-    && (value.illustration === null || isRecord(value.illustration))) {
-    return {
-      type: "illustrationResult",
-      requestId: value.requestId,
-      illustration: value.illustration === null ? null : parseIllustration(value.illustration),
-    }
-  }
   if (
     value.type === "error"
     && (typeof value.requestId === "string" || value.requestId === null)
@@ -512,8 +462,6 @@ function resetConnectionState(
   rejectPendingRequests(pendingWidgetSnapshotRequests, connectionFailure)
   rejectPendingRequests(pendingInstanceRequests, connectionFailure)
   rejectPendingRequests(pendingWorkspaceRequests, connectionFailure)
-  rejectPendingRequests(pendingIllustrationGetRequests, connectionFailure)
-  rejectPendingRequests(pendingIllustrationPutRequests, connectionFailure)
   rejectPendingRequests(pendingLogsRequests, connectionFailure)
   rejectPendingRequests(pendingWorkerTakeoverRequests, connectionFailure)
   rejectPendingConnectionRequests(connectionFailure)
@@ -612,9 +560,6 @@ async function applyWorkspace(
   }
   await mirrorWorkspaceSettings(nextWorkspace.settings)
   await persistWorkspaceUpdatedAt(nextWorkspace.updatedAt)
-  void reconcileIllustrations(application.boards).catch((error) => {
-    console.error("Failed to reconcile background illustrations", error)
-  })
 }
 
 async function persistWorkspaceUpdatedAt(updatedAt: number): Promise<void> {
@@ -633,20 +578,6 @@ async function mirrorWorkspaceSettings(serialized: string): Promise<void> {
   if (JSON.stringify(local) !== JSON.stringify(settings)) {
     await browser.storage.local.set({ [key]: settings })
   }
-}
-
-async function reconcileIllustrations(
-  boards: NativeWorkspace["boards"],
-): Promise<void> {
-  const ids = new Set(boards.flatMap(board => board.illustration?.id ?? []))
-  await Promise.all(Array.from(ids, async (id) => {
-    const bytes = await readPersistedBgIllustrationBytes(id)
-    if (bytes !== null) {
-      await sendIllustrationToApp({ bytes, id })
-    } else {
-      await requestIllustration({ id })
-    }
-  }))
 }
 
 function acceptWorkspace(
@@ -767,12 +698,6 @@ function connect(): void {
         )
       } else if (message.type === "instanceResult") {
         settleInstanceRequest(message.requestId, message.result)
-      } else if (message.type === "illustrationStored") {
-        settleIllustrationPutRequest(message.requestId, message.id)
-      } else if (message.type === "illustrationResult") {
-        void settleIllustrationGetRequest(message.requestId, message.illustration).catch((error) => {
-          console.error("Failed to store the synced background illustration", error)
-        })
       } else if (message.type === "logsResult") {
         const pending = takePendingRequest(pendingLogsRequests, message.requestId)
         pending?.resolve(message.logs)
@@ -782,8 +707,6 @@ function connect(): void {
           if (rejectPendingRequest(pendingWidgetSnapshotRequests, message.requestId, error)
             || rejectPendingRequest(pendingInstanceRequests, message.requestId, error)
             || rejectPendingRequest(pendingWorkspaceRequests, message.requestId, error)
-            || rejectPendingRequest(pendingIllustrationGetRequests, message.requestId, error)
-            || rejectPendingRequest(pendingIllustrationPutRequests, message.requestId, error)
             || rejectPendingRequest(pendingLogsRequests, message.requestId, error)
             || rejectPendingRequest(pendingWorkerTakeoverRequests, message.requestId, error)) {
             return
@@ -855,87 +778,6 @@ export async function requestInstanceLoad(input: { instanceId: string }): Promis
 
 export async function requestInstanceCache(input: { instanceId: string }): Promise<SourceLoadResponse | null> {
   return await requestInstance(input, true)
-}
-
-export async function storeIllustration(input: {
-  bytes: Uint8Array<ArrayBuffer>
-  id: string
-}): Promise<void> {
-  await writePersistedBgIllustration(input.id, input.bytes)
-  if (!enabled) return
-  await sendIllustrationToApp(input)
-}
-
-async function sendIllustrationToApp(input: {
-  bytes: Uint8Array<ArrayBuffer>
-  id: string
-}): Promise<void> {
-  const connection = await requireAppConnection()
-  const message: ExtensionToHost = {
-    type: "illustrationPut",
-    requestId: crypto.randomUUID(),
-    illustration: {
-      id: input.id,
-      mimeType: "image/svg+xml",
-      data: bytesToBase64(input.bytes),
-    },
-  }
-  await new Promise<void>((resolve, reject) => {
-    const timeoutId = setTimeout(() => {
-      pendingIllustrationPutRequests.delete(message.requestId)
-      reject(new Error("Timed out storing the background illustration"))
-    }, NATIVE_REQUEST_TIMEOUT_MS)
-    pendingIllustrationPutRequests.set(message.requestId, {
-      id: input.id,
-      reject,
-      resolve,
-      timeoutId,
-    })
-    connection.postMessage(message)
-  })
-}
-
-export async function requestIllustration(input: {
-  id: string
-}): Promise<Uint8Array<ArrayBuffer> | null> {
-  const persisted = await readPersistedBgIllustrationBytes(input.id)
-  if (persisted !== null || !enabled) return persisted
-  const activeRequest = activeIllustrationRequests.get(input.id)
-  if (activeRequest) return await activeRequest
-  const request = requestIllustrationFromApp(input.id)
-  activeIllustrationRequests.set(input.id, request)
-  try {
-    return await request
-  } finally {
-    if (activeIllustrationRequests.get(input.id) === request) {
-      activeIllustrationRequests.delete(input.id)
-    }
-  }
-}
-
-async function requestIllustrationFromApp(
-  id: string,
-): Promise<Uint8Array<ArrayBuffer> | null> {
-  const connection = port
-  if (connectionState !== "connected" || !connection) return null
-  const message: ExtensionToHost = {
-    type: "illustrationGet",
-    requestId: crypto.randomUUID(),
-    id,
-  }
-  return await new Promise((resolve, reject) => {
-    const timeoutId = setTimeout(() => {
-      pendingIllustrationGetRequests.delete(message.requestId)
-      reject(new Error("Timed out loading the background illustration"))
-    }, NATIVE_REQUEST_TIMEOUT_MS)
-    pendingIllustrationGetRequests.set(message.requestId, {
-      id,
-      reject,
-      resolve,
-      timeoutId,
-    })
-    connection.postMessage(message)
-  })
 }
 
 async function requestInstance(
@@ -1083,56 +925,6 @@ function settleWorkspaceRequest(
   }
   acceptWorkspace(committed, nextLocalInstanceIds)
   pending.resolve(committed)
-}
-
-function settleIllustrationPutRequest(requestId: string, id: string): void {
-  const pending = takePendingRequest(pendingIllustrationPutRequests, requestId)
-  if (!pending) return
-  if (id !== pending.id) {
-    pending.reject(new Error("The NewsNext App stored an unexpected Illustration"))
-    return
-  }
-  pending.resolve()
-}
-
-async function settleIllustrationGetRequest(
-  requestId: string,
-  illustration: NativeIllustration | null,
-): Promise<void> {
-  const pending = takePendingRequest(pendingIllustrationGetRequests, requestId)
-  if (!pending) return
-  if (illustration === null) {
-    pending.resolve(null)
-    return
-  }
-  try {
-    if (illustration.id !== pending.id) {
-      throw new Error("The NewsNext App returned an unexpected Illustration")
-    }
-    const bytes = base64ToBytes(illustration.data)
-    await writePersistedBgIllustration(illustration.id, bytes)
-    pending.resolve(bytes)
-  } catch (error) {
-    pending.reject(error instanceof Error ? error : new Error("Invalid Illustration data"))
-  }
-}
-
-function bytesToBase64(bytes: Uint8Array<ArrayBuffer>): string {
-  let binary = ""
-  const chunkSize = 32_768
-  for (let offset = 0; offset < bytes.length; offset += chunkSize) {
-    binary += String.fromCharCode(...bytes.subarray(offset, offset + chunkSize))
-  }
-  return btoa(binary)
-}
-
-function base64ToBytes(value: string): Uint8Array<ArrayBuffer> {
-  const binary = atob(value)
-  const bytes = new Uint8Array(new ArrayBuffer(binary.length))
-  for (let index = 0; index < binary.length; index += 1) {
-    bytes[index] = binary.charCodeAt(index)
-  }
-  return bytes
 }
 
 function isSourceLoadResponse(value: unknown): value is SourceLoadResponse {

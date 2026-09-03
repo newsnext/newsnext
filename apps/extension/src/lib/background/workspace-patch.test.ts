@@ -16,7 +16,6 @@ function workspace(revision: number): NativeWorkspace {
         createdAt: 1,
         defaultLayer: "now",
         id: "board-a",
-        illustration: null,
         instanceIds: ["instance-a"],
         name: "A",
         nowLayer: {
@@ -29,7 +28,6 @@ function workspace(revision: number): NativeWorkspace {
         createdAt: 2,
         defaultLayer: "now",
         id: "board-b",
-        illustration: null,
         instanceIds: [],
         name: "B",
         nowLayer: {

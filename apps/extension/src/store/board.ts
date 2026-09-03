@@ -95,7 +95,6 @@ export const updateBoardAtom = atom(null, async (_get, _set, board: Board) => {
     boardId: board.id,
     color: board.color,
     defaultLayer: board.defaultLayer,
-    illustration: board.illustration,
     name: board.name,
     sortMode: board.nowLayer.sort.mode,
   })

@@ -19,7 +19,6 @@ function createData(): ApplicationData {
     boards: [{
       color: "blue",
       id: "reading",
-      illustration: null,
       name: "Reading",
       createdAt: 1,
       instanceIds: ["rss:feed::one"],
@@ -43,7 +42,6 @@ function createTargetBoard(instanceIds: string[] = []): ApplicationData["boards"
   return {
     color: "purple",
     id: "target",
-    illustration: null,
     name: "Target",
     createdAt: 2,
     instanceIds,
@@ -67,7 +65,6 @@ describe("application mutations", () => {
     expect(execution.data.boards.at(-1)).toEqual({
       color: "purple",
       id: "new",
-      illustration: null,
       name: "AI",
       createdAt: 100,
       instanceIds: [],

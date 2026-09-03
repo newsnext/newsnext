@@ -32,7 +32,6 @@ function createContext(): BackgroundActionContext {
       load: vi.fn(async () => ({}) as never),
     },
     appIntegration: {
-      getIllustration: vi.fn(async () => null),
       getLogs: vi.fn(async () => []),
       getStatus: vi.fn(async () => ({
         capabilities: [],
@@ -43,7 +42,6 @@ function createContext(): BackgroundActionContext {
       getWidgetSnapshot: vi.fn(async () => ({})),
       loadInstance: vi.fn(async () => ({}) as never),
       readInstanceCache: vi.fn(async () => null),
-      putIllustration: vi.fn(async () => undefined),
       regenerateWorker: vi.fn(async () => ({
         capabilities: [],
         offlineWorkers: [],

@@ -5,7 +5,6 @@ export type { CommandResult as NativeCommandResult } from "./generated/CommandRe
 export type { ExtensionCommand as NativeExtensionCommand } from "./generated/ExtensionCommand"
 export type { ExtensionToHost } from "./generated/ExtensionToHost"
 export type { HostToExtension } from "./generated/HostToExtension"
-export type { Illustration as NativeIllustration } from "./generated/Illustration"
 export type { LogEntry as NativeLogEntry } from "./generated/LogEntry"
 export type { OfflineWorker as NativeOfflineWorker } from "./generated/OfflineWorker"
 export type { Worker as NativeWorker } from "./generated/Worker"

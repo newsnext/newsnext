@@ -14,7 +14,6 @@ import { mergeInstancePatch } from "../source/live-cards"
 export interface BoardConfiguration {
   color?: Color
   defaultLayer?: BoardLayer
-  illustration?: Board["illustration"]
   sortMode?: NowLayerSortMode
 }
 
@@ -79,7 +78,6 @@ export function updateBoardMutation(
   if (input.name === undefined
     && input.color === undefined
     && input.defaultLayer === undefined
-    && input.illustration === undefined
     && input.sortMode === undefined) {
     throw new Error("Board update requires at least one change")
   }
@@ -380,7 +378,6 @@ function configureBoard(
     ...board,
     ...(configuration.color !== undefined ? { color: configuration.color } : {}),
     ...(configuration.defaultLayer !== undefined ? { defaultLayer: configuration.defaultLayer } : {}),
-    ...(configuration.illustration !== undefined ? { illustration: configuration.illustration } : {}),
     nowLayer: {
       ...board.nowLayer,
       sort: {

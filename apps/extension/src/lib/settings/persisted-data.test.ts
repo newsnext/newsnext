@@ -17,7 +17,6 @@ function createData(): PersistedUserData {
     boards: [{
       color: "blue",
       id: "reading",
-      illustration: null,
       name: "Reading",
       createdAt: 1,
       instanceIds: ["rss:feed::one"],
@@ -44,17 +43,6 @@ describe("persisted user data", () => {
       boards: [{
         color: "blue",
         id: "reading",
-        illustration: {
-          id: "b".repeat(64),
-          opacity: 12,
-          transform: {
-            positionMode: "viewport-center",
-            rotation: 15,
-            scale: 1.25,
-            x: 40,
-            y: 60,
-          },
-        },
         name: " Reading ",
         createdAt: 1,
         instanceIds: ["second", "first", "first", "missing"],
@@ -79,10 +67,6 @@ describe("persisted user data", () => {
     expect(data.boards[0]).toMatchObject({
       color: "blue",
       name: "Reading",
-      illustration: {
-        id: "b".repeat(64),
-        opacity: 12,
-      },
       instanceIds: ["second", "first"],
       nowLayer: {
         sort: {
@@ -107,7 +91,6 @@ describe("persisted user data", () => {
     data.boards.push({
       color: "purple",
       id: "duplicate",
-      illustration: null,
       name: "Duplicate",
       createdAt: 2,
       instanceIds: ["rss:feed::one"],

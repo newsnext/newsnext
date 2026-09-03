@@ -138,28 +138,6 @@ Now Layer TanStack cache, force-mounting LiveCards, or rerunning Agent-owned
 refresh and processing in React. Layer presentation must not determine whether
 a Source executes.
 
-Background illustration extraction runs only after the user selects an image or
-changes the edge-detail control. Debounce detail changes, resize the longest
-image dimension to at most 1800 pixels before reading pixel data, and persist
-only the selected processed result: a simplified centerline SVG. Run decoding,
-pixel reads, edge extraction, path tracing, and encoding in the dedicated
-bg-illustration worker rather than the UI thread. Cache one thinned Canny
-edge-magnitude result per selected file. Threshold changes reuse that result;
-selecting a different file
-replaces the cache, and closing the settings surface releases it. App startup
-and ordinary renders must only restore the saved result as a CSS mask; they must
-not decode the original upload or repeat edge extraction.
-Direct SVG uploads bypass raster decoding and edge extraction. Sanitize and
-percent-encode them once on selection, then use the resulting SVG data URL as
-the draft. Generated SVG uses the same non-base64 data URL representation. On apply,
-encode the SVG as UTF-8 binary data in device-local IndexedDB. Resolve it when the
-current Board reference changes and keep it outside portable Settings persistence. Use a SHA-256
-content ID as the Board's lightweight reference. Upload or fetch the binary through
-the dedicated App integration messages only when reconciling a referenced asset.
-The fixed React illustration layer owns its viewport subscription and derives
-its typed inline mask style from the current Board's illustration metadata.
-Opacity changes must persist only the Board metadata and rerender that layer;
-they must not rerun image decoding or edge extraction.
 Mirrored persistence must ignore its own `browser.storage.local` echo when the
 normalized value already matches the synchronous `localStorage` snapshot. An
 echo must not replace arrays or objects with equal copies and trigger a second

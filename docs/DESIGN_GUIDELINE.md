@@ -105,9 +105,7 @@ geometry with `currentColor` in the shared theme selector. Keep this separate fr
 the head bootstrap and provider composition so favicon work does not delay the
 initial background or depend on board effects.
 
-Place background illustration controls in the Board configuration modal when editing
-an existing Board. Do not expose them in global Appearance settings or during Board
-creation, before a Board identity exists. Give Create Board, Edit Board, and
+Give Create Board, Edit Board, and
 Settings the shared height of the smaller of 70% of the viewport and 640px.
 Search uses a fixed `516px` height so its LiveCard preview keeps standard
 dimensions plus its surrounding inset. Settings uses the `2xl` maximum width,
@@ -117,80 +115,6 @@ content column. Preserve 16px
 of horizontal viewport space on each side below the `sm` breakpoint. Scroll their
 inner content vertically without scrolling the outer dialog or its header. Keep
 compact confirmation dialogs sized naturally to their content.
-The user may choose a local raster image and extract its edges into background
-illustration, or use a local SVG directly.
-Keep processing in the browser, sanitize direct SVG illustration, resize large raster
-inputs before pixel work, and show the result before it is applied.
-The preview is also the primary drop target and pointer-based file picker trigger;
-give it a visible drag-over state. Group the preview and its controls inside one
-Background illustration section Card, with the preview above the controls.
-Keep the preview canvas's own background and avoid a nested Card around the controls.
-Place the clipped canvas inside a transparent editor gutter, and render direct-
-manipulation controls in an aligned overlay outside the canvas clipping boundary.
-Use the same compact gutter on every side. Keep the full selection inside the
-canvas by limiting its scale from the
-transformed bounds and constraining its center after every transform update; only
-the manipulation handles may extend into the gutter. Treat the gutter as the outer
-clipping boundary, and correct an existing out-of-bounds transform when the editor
-opens so the controls remain recoverable.
-Show file validation errors and processing progress inside the bottom-left of
-the preview so feedback stays attached to the affected content.
-Make the preview a scaled representation of the app background by reusing its
-base background color, theme wash, fading grid texture, illustration color mix, and
-current illustration opacity. Preserve the current app viewport's aspect ratio, and
-scale the grid spacing and illustration insets by the same ratio. Cap the preview at
-16rem high and reduce its width proportionally when the viewport is tall.
-Use the same illustration placement in the preview and the app. When illustration is
-present, let the user drag it to reposition, scale it proportionally from corner
-handles, and rotate it from a dedicated handle. Size the transform target to
-the illustration's actual contained bounds rather than the larger mask positioning
-region, and use the same bounds for the applied background. Provide themed snap
-guides for the preview center lines and quarter-turn rotations. Do not duplicate the direct
-manipulation handles with alignment buttons or scale and rotation sliders.
-Offer the reset action as a single icon button in the preview's upper-right
-corner. Keep the transform control box synchronized when reset or another
-programmatic adjustment changes the target. Keep transform edits in the draft until
-the Board dialog's `Save changes` action saves the illustration and its transform
-together with the other Board fields. Persist the
-illustration center as horizontal and vertical percentages of the viewport rather
-than persisting an offset from the responsive default layout. Resolve the
-required translation from that center after recalculating the contained illustration
-bounds, so placement remains stable when the window size changes.
-Use bottom alignment with horizontal centering as the default placement and
-preserve that responsive anchor until the user directly transforms the illustration.
-Reset must restore this bottom-center anchor, 100% scale, and 0° rotation.
-Provide one edge-detail control whose explanation makes the threshold direction
-clear. Selecting, transforming, or removing an illustration only updates the Board
-form draft; none of these controls may overwrite the saved background before
-`Save changes`. Closing the dialog discards the draft. Raster sources always produce
-SVG line art. Direct SVG uploads
-bypass edge extraction and use the sanitized vector as the draft. Keep drafts as
-percent-encoded `data:image/svg+xml` URLs without base64 encoding. Persist the applied
-SVG as UTF-8 binary data in IndexedDB. Each Board owns an illustration reference plus
-its opacity and transform, so Boards can use different backgrounds. Synchronize the
-referenced binary separately through App integration rather than embedding it in
-Settings, Application Data, Workspace patches, imports, or exports.
-
-Render saved SVG illustration as a transparent mask mixed from the foreground
-and active theme colors so it adapts to light, dark, and board themes. Keep it
-in a fixed, non-interactive React layer portaled to `body`, above the grid
-texture but below app content. Pass its mask, bounds, color, opacity, and
-transform through typed inline style rather than global CSS custom properties.
-Use a user-adjustable opacity
-from 1% to 20%, defaulting to 7%; LiveCards and controls must remain visually
-dominant. Use a fixed 1% grid-line opacity across themes and surfaces, regardless
-of whether illustration is active or which illustration opacity is selected. Allow the two
-transparent layers to blend naturally without adding a backing color beneath
-illustration pixels. Scope the illustration to the main app entry point rather than popup
-or component-preview surfaces. Process and store the image locally; do not
-upload it or retain the original input file.
-Bridge only short gaps whose endpoint directions align so faint strokes remain
-continuous without joining unrelated nearby contours. Remove small isolated
-edge components, then crop the generated SVG view box to the cleaned line-art
-bounds with a small safety margin. The illustration's intrinsic size and transform
-target must therefore follow the visible strokes rather than the source image
-canvas.
-
 ## LiveCard Surface Language
 
 LiveCards define the primary NewsNext surface treatment.

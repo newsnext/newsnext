@@ -1047,14 +1047,11 @@ commands and completions by request ID, rejects
 ambiguous browser selection, expires pending executions, and never replays a
 command after reconnection because source execution is not guaranteed to be
 idempotent. Settings exposes the daemon version as connection metadata only.
-The current protocol version is 20. It carries an initial shared Workspace,
+The current protocol version is 21. It carries an initial shared Workspace,
 revisioned Worker routing snapshots, atomic takeover of Instances from offline
 Workers, incremental Workspace patches produced by canonical Action commits, canonical
 Action requests, Widget snapshots, Source-result cache reads routed by Instance
-ID, Instance load requests, and dedicated content-addressed background illustration
-put/get messages. Board values carry only illustration IDs and presentation metadata;
-SVG bytes remain outside Workspace patches and are stored as binary data in browser
-IndexedDB and the App-owned durable illustration store. A patch contains the complete entity order but
+ID and Instance load requests. A patch contains the complete entity order but
 only changed Board and Instance values. The daemon validates and commits it
 against an expected revision, returns a compact receipt to the origin, and
 broadcasts the same deterministic patch to peer Workers. The Workspace owns

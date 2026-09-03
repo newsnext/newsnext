@@ -1,5 +1,4 @@
 import type { Color } from "@newsnext/shared/types"
-import type { BgIllustrationTransform } from "../bg-illustration/config"
 import type { NowLayerSort, NowLayerSortMode } from "./sorting"
 import { createNowLayerSort } from "./sorting"
 
@@ -32,7 +31,6 @@ export interface Board {
   createdAt: number
   defaultLayer: BoardLayer
   id: string
-  illustration: BoardIllustration | null
   instanceIds: string[]
   name: string
   nowLayer: {
@@ -41,12 +39,6 @@ export interface Board {
   nextLayer: {
     widgets: NextLayerWidget[]
   }
-}
-
-export interface BoardIllustration {
-  id: string
-  opacity: number
-  transform: BgIllustrationTransform
 }
 
 export interface BoardCreateInput {
@@ -69,7 +61,6 @@ export function createBoard(
     createdAt,
     defaultLayer,
     id,
-    illustration: null,
     instanceIds: [],
     name,
     nowLayer: { sort: createNowLayerSort(sortMode) },

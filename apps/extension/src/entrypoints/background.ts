@@ -32,6 +32,11 @@ function registerActionMenus(): void {
   }
 }
 
+function handleInstalled(): void {
+  registerActionMenus()
+  indexedDB.deleteDatabase("newsnext-extension-background-illustration")
+}
+
 export default defineBackground(() => {
   registerService(BACKGROUND_SERVICE_KEY, backgroundService)
   registerRadarBadge()
@@ -42,7 +47,7 @@ export default defineBackground(() => {
     console.error("Failed to synchronize source request rules", error)
   })
 
-  browser.runtime.onInstalled.addListener(registerActionMenus)
+  browser.runtime.onInstalled.addListener(handleInstalled)
 
   browser.contextMenus.onClicked.addListener((info) => {
     if (info.menuItemId === APP_MENU_ID) {

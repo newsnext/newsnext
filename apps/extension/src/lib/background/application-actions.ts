@@ -6,7 +6,7 @@ import type {
   ApplicationMutationResult,
   BoardDeleteInput,
 } from "../application"
-import type { BoardIllustration, NextLayerWidgetDataScope, NextLayerWidgetLayout } from "../board"
+import type { NextLayerWidgetDataScope, NextLayerWidgetLayout } from "../board"
 import type { InstancePatch } from "../source"
 import { COLORS } from "@newsnext/shared/constants"
 import Type from "typebox"
@@ -60,25 +60,9 @@ const EmptyResult = Type.Object({}, { additionalProperties: false })
 const Identifier = Type.String({ minLength: 1 })
 const IdentifierArray = Type.Array(Identifier, { uniqueItems: true })
 const RecordValue = Type.Record(Type.String(), Type.Unknown())
-const IllustrationTransformParams = Type.Object({
-  positionMode: stringEnum(["bottom-center", "viewport-center"] as const),
-  rotation: Type.Number({ minimum: -180, maximum: 180 }),
-  scale: Type.Number({ minimum: 0.25, maximum: 4 }),
-  x: Type.Number({ minimum: -100, maximum: 200 }),
-  y: Type.Number({ minimum: -100, maximum: 200 }),
-}, { additionalProperties: false })
-const BoardIllustrationParams = Type.Unsafe<BoardIllustration>(Type.Object({
-  id: Type.String({ pattern: "^[a-f0-9]{64}$" }),
-  opacity: Type.Integer({ minimum: 1, maximum: 20 }),
-  transform: IllustrationTransformParams,
-}, { additionalProperties: false }))
 const BoardConfigurationParams = Type.Object({
   color: Type.Optional(stringEnum(COLORS)),
   defaultLayer: Type.Optional(stringEnum(["now", "next"] as const)),
-  illustration: Type.Optional(Type.Unsafe<BoardIllustration | null>(Type.Union([
-    BoardIllustrationParams,
-    Type.Null(),
-  ]))),
   sortMode: Type.Optional(stringEnum(["addedAt", "provider", "manual"] as const)),
 }, { additionalProperties: false })
 const InstancePatchParams = Type.Unsafe<InstancePatch>(Type.Object({
@@ -141,7 +125,6 @@ const boardUpdateAction = defineAction({
     if (input.name === undefined
       && input.color === undefined
       && input.defaultLayer === undefined
-      && input.illustration === undefined
       && input.sortMode === undefined) {
       throw new Error("Board update requires at least one change")
     }
