@@ -7,6 +7,7 @@ import type {
 import { loadSourceDescriptors } from "@newsnext/source-kit/runtime"
 import { browser } from "#imports"
 import {
+  APPLICATION_DATA_VERSION,
   ensureApplicationDataIntegrity,
 } from "../application"
 import { i18next } from "../i18n"
@@ -140,11 +141,17 @@ export async function readApplicationData(): Promise<ApplicationData> {
 async function loadApplicationData(): Promise<ApplicationData> {
   const key = PERSISTED_DATA_SLICES.application.key
   const stored = await browser.storage.local.get(key)
-  const data = normalizeApplicationData(stored[key])
+  const storedData = stored[key]
+  const data = normalizeApplicationData(storedData)
   const initialized = ensureApplicationDataIntegrity(data, {
     boardName: getInitialBoardName(),
   })
-  if (initialized === data) return data
+  const storedVersion = storedData
+    && typeof storedData === "object"
+    && "version" in storedData
+    ? storedData.version
+    : undefined
+  if (initialized === data && storedVersion === APPLICATION_DATA_VERSION) return data
   await browser.storage.local.set({ [key]: initialized })
   return initialized
 }

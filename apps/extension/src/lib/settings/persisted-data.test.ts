@@ -12,7 +12,7 @@ function createData(): PersistedUserData {
   const settings = createDefaultPersistedSettings()
   settings.general.defaultBoardId = "reading"
   return {
-    version: 5,
+    version: 6,
     settings,
     boards: [{
       color: "blue",
@@ -38,9 +38,16 @@ function createData(): PersistedUserData {
 }
 
 describe("persisted user data", () => {
+  it("migrates version 5 Application Data to version 6", () => {
+    const migrated = normalizeApplicationData({ ...createData(), version: 5 })
+
+    expect(migrated.version).toBe(6)
+    expect(migrated.boards[0]?.instanceIds).toEqual(["rss:feed::one"])
+  })
+
   it("normalizes current Board membership, color, and layer state", () => {
     const data = normalizeApplicationData({
-      version: 5,
+      version: 6,
       boards: [{
         color: "blue",
         id: "reading",
@@ -142,7 +149,7 @@ describe("persisted user data", () => {
       instances: [],
     })
 
-    expect(data).toEqual({ version: 5, boards: [], instances: [] })
+    expect(data).toEqual({ version: 6, boards: [], instances: [] })
   })
 
   it("round-trips the current application shape and settings", () => {
@@ -170,7 +177,7 @@ describe("persisted user data", () => {
 
   it("repairs ownership after a partial Board import", () => {
     const merged = mergePersistedUserData(createData(), {
-      version: 5,
+      version: 6,
       boards: [],
     })
     expect(merged.boards).toHaveLength(1)

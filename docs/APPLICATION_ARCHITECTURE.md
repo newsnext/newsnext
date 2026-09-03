@@ -39,7 +39,7 @@ Each browser mirrors the complete Workspace in one versioned envelope:
 
 ```ts
 interface ApplicationData {
-  version: 5
+  version: 6
   boards: Board[]
   instances: Instance[]
 }
@@ -49,6 +49,13 @@ The background application repository applies acknowledged daemon commits to
 `browser.storage.local`. Frontend atoms are read-only mirrors plus thin Mutation
 Action dispatchers. Every Board reference resolves against the mirrored
 Workspace Instance collection.
+
+Version 6 makes single-Board ownership canonical. The persistence boundary
+migrates version 5 data once, keeps the first Board in persisted Board order as
+the owner when old data contains duplicates, removes duplicate Layer references,
+and writes the normalized version 6 snapshot back to browser storage. Current
+Actions and domain mutations accept only the version 6 model; legacy handling
+does not enter business logic.
 
 ### Instance
 
