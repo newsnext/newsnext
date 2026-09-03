@@ -1,4 +1,6 @@
 import type { Atom } from "jotai"
+import type { ReactNode } from "react"
+import type { LiveCardProps } from "./index"
 import type { LiveCardHeight } from "@/lib/settings"
 import type { Instance } from "@/lib/source"
 import type { SourceDescriptor } from "@/typings/source"
@@ -6,6 +8,7 @@ import { useAtomValue } from "jotai"
 import { memo, useMemo } from "react"
 import { useSortable } from "@/hooks/use-sortable"
 import { createLiveCard } from "@/lib/source"
+import { cn } from "@/lib/utils"
 import { liveCardHeightAtom } from "@/store/settings"
 import { LiveCard } from "./index"
 
@@ -27,6 +30,40 @@ interface DraggableLiveCardProps {
   dragging: boolean
   instanceAtom: Atom<Instance>
   sortable?: boolean
+}
+
+interface SortableLiveCardProps extends Pick<LiveCardProps, "className" | "eager" | "sizeClassName" | "source"> {
+  dragging?: boolean
+  sortable?: boolean
+}
+
+export function SortableLiveCard({
+  className,
+  dragging = false,
+  eager,
+  sizeClassName,
+  sortable = true,
+  source,
+}: SortableLiveCardProps): ReactNode {
+  const id = source.id
+  const { setNodeRef, setHandleRef } = useSortable({
+    canDrag: canDragFromLiveCardHeader,
+    enabled: sortable,
+    id,
+    onGenerateDragPreview: generateDragPreview,
+  })
+
+  return (
+    <LiveCard
+      source={source}
+      target={{ kind: "instance", instanceId: id }}
+      eager={eager}
+      nodeRef={setNodeRef}
+      dragHandleRef={sortable ? setHandleRef : undefined}
+      sizeClassName={sizeClassName}
+      className={cn(className, dragging && "opacity-50")}
+    />
+  )
 }
 
 function generateDragPreview({
@@ -88,22 +125,12 @@ function DraggableLiveCardComponent({ boardId, descriptor, dragging, instanceAto
     () => createLiveCard(descriptor, instance, boardId),
     [boardId, descriptor, instance],
   )
-  const id = instance.instanceId
-  const { setNodeRef, setHandleRef } = useSortable({
-    canDrag: canDragFromLiveCardHeader,
-    enabled: sortable,
-    id,
-    onGenerateDragPreview: generateDragPreview,
-  })
-
   return (
-    <LiveCard
+    <SortableLiveCard
       source={source}
-      target={{ kind: "instance", instanceId: id }}
-      nodeRef={setNodeRef}
-      dragHandleRef={sortable ? setHandleRef : undefined}
+      sortable={sortable}
       sizeClassName={LIVE_CARD_SIZE_CLASS_NAMES[liveCardHeight]}
-      className={dragging ? "opacity-50" : undefined}
+      dragging={dragging}
     />
   )
 }

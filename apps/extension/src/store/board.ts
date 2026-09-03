@@ -91,7 +91,7 @@ export const setNowLayerManualOrderAtom = atom(null, async (_get, _set, input: {
 })
 
 export const addInstanceAtom = atom(null, (_get, _set, input: {
-  boardIds: string[]
+  boardIds: [string]
   patch: InstancePatch
   sourceId: string
 }) => actions.instance.create(input))
@@ -151,13 +151,13 @@ export const deleteBoardAtom = atom(null, (_get, _set, input: DeleteBoardInput) 
     : actions.board.delete({ boardId: input.boardId, targetBoardId: input.targetBoardId })
 ))
 
-export const setInstanceBoardMembershipAtom = atom(null, (_get, _set, input: {
-  boardId: string
+export const moveInstanceToBoardAtom = atom(null, (_get, _set, input: {
   instanceId: string
-  member: boolean
-}) => input.member
-  ? actions.board.addInstance({ boardId: input.boardId, instanceId: input.instanceId })
-  : actions.board.removeInstance({ boardId: input.boardId, instanceId: input.instanceId }))
+  targetBoardId: string
+}) => actions.board.addInstance({
+  boardId: input.targetBoardId,
+  instanceId: input.instanceId,
+}))
 
 export const resetInstanceParamsAtom = atom(null, (get, _set, instanceId: string) => {
   const instance = get(instancesAtom).find(candidate => candidate.instanceId === instanceId)

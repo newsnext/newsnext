@@ -329,6 +329,11 @@ inside the configured preload margin without subscribing to header progress or
 layer activity. Keep the offscreen retention delay to avoid repeated mount work
 during short back-and-forth scrolls.
 
+LiveCard previews rendered through a dialog portal are not descendants of the
+app scroll container and must opt into eager content mounting. Keep this an
+explicit exception for the single active preview; do not disable viewport
+deferral for Board LiveCards or every Search result.
+
 ### Connect virtualizers to committed scroll elements
 
 Pass the committed scroll DOM element to `VirtualList`, not a mutable ref whose

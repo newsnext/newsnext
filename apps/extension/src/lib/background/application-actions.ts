@@ -29,7 +29,6 @@ import {
   listBoardsQuery,
   listInstancesQuery,
   listSourcesQuery,
-  removeBoardInstanceMutation,
   removeNextLayerWidgetMutation,
   resetInstanceParamsMutation,
   setNextLayerWidgetDataScopeMutation,
@@ -264,31 +263,20 @@ const boardAddInstanceAction = defineAction({
   audiences: CONNECTED_AND_UI,
   name: "board.addInstance",
   kind: "mutation",
-  description: "Add an existing Instance to a Board.",
+  description: "Move an existing Instance to a Board.",
   params: MembershipParams,
   result: EmptyResult,
 }, async (input, context: ApplicationActionContext) => (
   await context.mutate(data => addBoardInstanceMutation(data, input))
 ))
 
-const boardRemoveInstanceAction = defineAction({
-  audiences: CONNECTED_AND_UI,
-  name: "board.removeInstance",
-  kind: "mutation",
-  description: "Remove an Instance from one Board while keeping at least one membership.",
-  params: MembershipParams,
-  result: EmptyResult,
-}, async (input, context: ApplicationActionContext) => (
-  await context.mutate(data => removeBoardInstanceMutation(data, input))
-))
-
 const instanceCreateAction = defineAction({
   audiences: CONNECTED_AND_UI,
   name: "instance.create",
   kind: "mutation",
-  description: "Create a configured Instance and add it to one or more Boards.",
+  description: "Create a configured Instance in one Board.",
   params: Type.Object({
-    boardIds: Type.Array(Identifier, { minItems: 1, uniqueItems: true }),
+    boardIds: Type.Array(Identifier, { minItems: 1, maxItems: 1, uniqueItems: true }),
     patch: InstancePatchParams,
     sourceId: Identifier,
   }, { additionalProperties: false }),
@@ -461,7 +449,6 @@ export const applicationActionDefinitions = [
   nextLayerSetWidgetDataScopeAction,
   nextLayerSetWidgetLayoutsAction,
   boardAddInstanceAction,
-  boardRemoveInstanceAction,
   instanceCreateAction,
   instanceConfigureAction,
   instanceResetParamsAction,

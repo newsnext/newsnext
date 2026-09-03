@@ -39,6 +39,22 @@ function createData(): ApplicationData {
   }
 }
 
+function createTargetBoard(instanceIds: string[] = []): ApplicationData["boards"][number] {
+  return {
+    color: "purple",
+    id: "target",
+    illustration: null,
+    name: "Target",
+    createdAt: 2,
+    instanceIds,
+    defaultLayer: "now",
+    nowLayer: {
+      sort: { mode: "addedAt", automaticMode: "addedAt", manualOrder: [...instanceIds] },
+    },
+    nextLayer: { widgets: [] },
+  }
+}
+
 describe("application mutations", () => {
   it("creates a Board with its NowLayer configuration", () => {
     const execution = createBoardMutation(createData(), {
@@ -93,6 +109,30 @@ describe("application mutations", () => {
     })
 
     expect(execution.data.boards[0]).toBe(initial.boards[0])
+  })
+
+  it("moves an existing Instance when adding it to another Board", () => {
+    const initial = createData()
+    initial.boards.push(createTargetBoard())
+
+    const execution = addBoardInstanceMutation(initial, {
+      boardId: "target",
+      instanceId: "rss:feed::one",
+    })
+
+    expect(execution.data.boards[0]?.instanceIds).toEqual([])
+    expect(execution.data.boards[1]?.instanceIds).toEqual(["rss:feed::one"])
+  })
+
+  it("rejects creating an Instance in multiple Boards", () => {
+    const initial = createData()
+    initial.boards.push(createTargetBoard())
+
+    expect(() => createInstanceMutation(initial, {
+      boardIds: ["reading", "target"],
+      sourceId: "github:trending",
+      patch: {},
+    }, dependencies)).toThrow("exactly one Board")
   })
 
   it("stores manual order only in the NowLayer", () => {

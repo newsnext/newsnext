@@ -580,14 +580,19 @@ RuntimeSource.metadata
 Each step performs a field-level merge, with later values taking precedence.
 
 Every presentation surface must use this same merge boundary. LiveCards apply
-loader metadata directly from their active source query. Search subscribes to
-the same normalized source query keys with disabled observers, so an existing
-in-memory loader result can update searchable titles and result labels without
-starting loads merely because the Search dialog opened. Board-scoped restoration
-maps `fetchedAt` to TanStack's internal `dataUpdatedAt`, so stale presentation
-data cannot become artificially fresh or suppress normal LiveCard revalidation.
-For other Boards whose results are not in the page cache, Search follows the
-normal static, Instance, and provider-title fallback behavior.
+loader metadata directly from their active source query. The Search result list
+subscribes to each result's Instance query key with disabled observers, so
+existing in-memory loader results can update searchable dynamic titles and
+result labels. Its selected-result preview mounts the real LiveCard with a normal
+active observer, starting or reusing that Instance query as selection changes.
+Because the dialog portal is outside the Board scroll container, this preview
+explicitly mounts LiveCard content eagerly instead of applying the Board's
+intersection-based offscreen deferral.
+Board-scoped restoration maps `fetchedAt` to TanStack's internal `dataUpdatedAt`,
+so stale presentation data cannot become artificially fresh or suppress normal
+LiveCard revalidation. For other Boards whose results are not in the page cache,
+unselected Search results follow the normal static, Instance, and provider-title
+fallback behavior.
 
 Loader metadata reuses responses already required to produce the items. Source
 loaders must not issue profile, community, channel, batch, or other companion
@@ -894,15 +899,15 @@ Radar metadata can replace source-owned presentation fields such as title,
 badge, description, and home URL, but cannot modify source identity,
 provider title, icon, color, category, loader behavior, capabilities, secrets,
 request rules, or Source version.
-Accepting a Radar suggestion creates one Instance and adds it to one or more
-Boards. The Instance owns its Source ID and patch; each Board owns its
-membership. New Instance IDs combine the Source ID and a
+Accepting a Radar suggestion creates one Instance in exactly one Board. The
+Instance owns its Source ID and patch; its Board owns the membership. New
+Instance IDs combine the Source ID and a
 12-character Nano ID with `::`;
 Board IDs, including the initial `My Board`, use the Nano ID directly. Both
 remain opaque strings.
-Moving a LiveCard updates only Board membership; Source parameters,
+Moving a LiveCard transfers its sole Board membership; Source parameters,
 presentation metadata, and result identity remain unchanged. Every Instance has
-at least one Board membership. First-run data contains one
+exactly one Board membership. First-run data contains one
 ordinary Board named `My Board`; it can be renamed or deleted after another
 Board exists, and all Board routes resolve real Board IDs.
 The LiveCard editor writes the same instance patch shape and exposes every declared

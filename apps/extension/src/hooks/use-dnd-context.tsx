@@ -12,13 +12,20 @@ type MonitorCallbacks = Pick<
 >
 
 type ContextProps = MonitorCallbacks & {
-  dropTargetRef: RefObject<HTMLElement | null>
-  selectedInstanceIds: string[]
+  dropTargetRef?: RefObject<HTMLElement | null>
+  selectedInstanceIds?: string[]
 }
 
 type MonitorCallbackArgs<Key extends keyof MonitorCallbacks> = Parameters<NonNullable<MonitorCallbacks[Key]>>[0]
 
-export function DndContext({ children, dropTargetRef, selectedInstanceIds, ...callbacks }: PropsWithChildren<ContextProps>) {
+const EMPTY_SELECTED_INSTANCE_IDS: string[] = []
+
+export function DndContext({
+  children,
+  dropTargetRef,
+  selectedInstanceIds = EMPTY_SELECTED_INSTANCE_IDS,
+  ...callbacks
+}: PropsWithChildren<ContextProps>) {
   const instanceId = useId()
   const handleDragStart = useEffectEvent((args: MonitorCallbackArgs<"onDragStart">) => {
     callbacks.onDragStart?.(args)
@@ -31,7 +38,7 @@ export function DndContext({ children, dropTargetRef, selectedInstanceIds, ...ca
   })
 
   useEffect(() => {
-    const dropTarget = dropTargetRef.current
+    const dropTarget = dropTargetRef?.current
     const monitorCleanup = monitorForElements({
       canMonitor: ({ source }) => isSortableData(source.data)
         && source.data.instanceId === instanceId,

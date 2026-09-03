@@ -37,6 +37,7 @@ export type LiveCardTarget
 export interface LiveCardProps {
   source: LiveCardViewModel
   target: LiveCardTarget
+  eager?: boolean
   className?: string
   sizeClassName?: string
   nodeRef?: (node: HTMLElement | null) => void
@@ -213,7 +214,7 @@ function LiveCardContent({ source, target, dragHandleRef }: LiveCardProps) {
 }
 
 export function LiveCard(props: LiveCardProps): React.JSX.Element {
-  const { nodeRef } = props
+  const { eager = false, nodeRef } = props
   const { rootScrollContainerRef } = useScrollProgressContext()
   const ref = useRef<HTMLDivElement>(null)
   const setRef = useCallback((node: HTMLDivElement | null) => {
@@ -236,7 +237,7 @@ export function LiveCard(props: LiveCardProps): React.JSX.Element {
         props.className,
       )}
     >
-      {isInView && (
+      {(eager || isInView) && (
         <LiveCardContent {...props} />
       )}
     </div>

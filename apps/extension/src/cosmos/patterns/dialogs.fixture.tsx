@@ -6,8 +6,9 @@ import type { Board, BoardCreateInput } from "@/lib/board"
 import type { LiveCardViewModel } from "@/typings/source"
 import { Button } from "@newsnext/ui/components/button"
 import { Dialog } from "@newsnext/ui/components/dialog"
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { BoardDialog } from "@/components/board-dialog"
+import { ScrollProgressProvider } from "@/components/common/scroll-progress-provider"
 import { SearchModalContent } from "@/components/search"
 import { SettingsModalShell } from "@/components/settings/modal-shell"
 
@@ -188,7 +189,7 @@ function SettingsModalFixture() {
 
 function SearchModalFixture() {
   const [open, setOpen] = useState(true)
-  const [lastOpenedTitle, setLastOpenedTitle] = useState<string>()
+  const scrollContainerRef = useRef<HTMLElement>(null)
 
   return (
     <FixtureStage>
@@ -196,24 +197,17 @@ function SearchModalFixture() {
         <Button variant="outline" onClick={() => setOpen(true)}>
           Open search
         </Button>
-        {lastOpenedTitle && (
-          <p className="text-sm text-muted-foreground">
-            Opened
-            {lastOpenedTitle}
-          </p>
-        )}
       </div>
-      <Dialog open={open} onOpenChange={setOpen}>
-        {open && (
-          <SearchModalContent
-            groups={SEARCH_GROUPS}
-            onSelectItem={(source) => {
-              setLastOpenedTitle(source.metadata.title || source.provider.title)
-              setOpen(false)
-            }}
-          />
-        )}
-      </Dialog>
+      <ScrollProgressProvider
+        rootScrollContainer={null}
+        rootScrollContainerRef={scrollContainerRef}
+      >
+        <Dialog open={open} onOpenChange={setOpen}>
+          {open && (
+            <SearchModalContent groups={SEARCH_GROUPS} />
+          )}
+        </Dialog>
+      </ScrollProgressProvider>
     </FixtureStage>
   )
 }

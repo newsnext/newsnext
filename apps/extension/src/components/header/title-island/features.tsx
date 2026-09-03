@@ -94,20 +94,32 @@ export function useTrashFeature(
       monitorForElements({
         canMonitor: ({ source }) => isSortableData(source.data),
         onDragStart: () => setIsDragging(true),
-        onDrop: () => {
+        onDrag: ({ location }) => {
+          const { clientX, clientY } = location.current.input
+          const rect = surface.getBoundingClientRect()
+          setIsOverTrash(
+            clientX >= rect.left
+            && clientX <= rect.right
+            && clientY >= rect.top
+            && clientY <= rect.bottom,
+          )
+        },
+        onDrop: (args) => {
+          const { clientX, clientY } = args.location.current.input
+          const rect = surface.getBoundingClientRect()
+          const shouldDelete = clientX >= rect.left
+            && clientX <= rect.right
+            && clientY >= rect.top
+            && clientY <= rect.bottom
           setIsDragging(false)
           setIsOverTrash(false)
+          if (shouldDelete) void deleteDraggedLiveCards(args)
         },
       }),
       dropTargetForElements({
         element: surface,
         canDrop: ({ source }) => isSortableData(source.data),
-        onDragEnter: () => setIsOverTrash(true),
-        onDragLeave: () => setIsOverTrash(false),
-        onDrop: (args) => {
-          setIsOverTrash(false)
-          void deleteDraggedLiveCards(args)
-        },
+        getDropEffect: () => "move",
       }),
     )
   }, [surfaceRef])

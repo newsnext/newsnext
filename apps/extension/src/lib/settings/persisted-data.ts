@@ -90,11 +90,16 @@ export function normalizeBoards(
   if (!Array.isArray(value)) return []
   const seenIds = new Set<string>()
   const seenNames: string[] = []
+  const assignedInstanceIds = new Set<string>()
   return value.flatMap((candidate) => {
     const identity = normalizeBoardIdentity(candidate, seenIds, seenNames)
     if (!identity || !isRecord(candidate)) return []
 
-    const ids = normalizeIdentifierArray(candidate.instanceIds, instanceIds)
+    const ids = normalizeIdentifierArray(candidate.instanceIds, instanceIds).filter((instanceId) => {
+      if (assignedInstanceIds.has(instanceId)) return false
+      assignedInstanceIds.add(instanceId)
+      return true
+    })
     const nowLayer = isRecord(candidate.nowLayer) ? candidate.nowLayer : {}
     const nextLayer = isRecord(candidate.nextLayer) ? candidate.nextLayer : {}
     const sortValue = isRecord(nowLayer.sort) ? nowLayer.sort : {}

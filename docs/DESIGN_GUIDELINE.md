@@ -107,11 +107,13 @@ initial background or depend on board effects.
 
 Place background illustration controls in the Board configuration modal when editing
 an existing Board. Do not expose them in global Appearance settings or during Board
-creation, before a Board identity exists. Give all content-heavy modals, including
-Create Board, Edit Board, Settings, and Search, the shared height of the smaller
-of 70% of the viewport and 640px. Settings and Search use the `2xl` maximum
-width. Create Board and Edit Board use `520px` (`max-w-130`), approximately the
-width of the Settings content column. Preserve 16px
+creation, before a Board identity exists. Give Create Board, Edit Board, and
+Settings the shared height of the smaller of 70% of the viewport and 640px.
+Search uses a fixed `516px` height so its LiveCard preview keeps standard
+dimensions plus its surrounding inset. Settings uses the `2xl` maximum width,
+while the two-pane Search dialog uses `816px`. Create Board and
+Edit Board use `520px` (`max-w-130`), approximately the width of the Settings
+content column. Preserve 16px
 of horizontal viewport space on each side below the `sm` breakpoint. Scroll their
 inner content vertically without scrolling the outer dialog or its header. Keep
 compact confirmation dialogs sized naturally to their content.
@@ -619,13 +621,10 @@ add the following descriptions back to this dialog:
 
 ### LiveCard Board membership
 
-The LiveCard back edits Board membership with a checkbox menu, not a
-single-choice Board select. An Instance belongs to one or several Boards.
-The compact trigger shows the sole Board name or the
-membership count; the menu lists every Board with independent checked state.
-Toggling one row must not remove other memberships.
-Disable the final checked membership and any row whose Action is pending so
-every LiveCard remains on at least one Board.
+The LiveCard back moves the Instance between Boards with a single-choice radio
+menu. An Instance belongs to exactly one Board. The compact trigger shows that
+Board's name; selecting another Board performs one atomic transfer rather than
+adding a second membership. Disable rows while their transfer Action is pending.
 
 ### Settings dialog
 
@@ -717,15 +716,17 @@ to the start of each row, and ensure no content can change the column widths.
 
 ### Search dialog
 
-The Search dialog is a compact, single-column LiveCard locator. Do not show a
-visible title or header; open directly into the search field and results inside
-one nested `2xl` neutral squircle that sits flush with the modal shell without
-additional inset padding. Cap its height at `500px` while retaining the shared
-`70dvh` viewport limit. Retain a screen-reader-only title and
-description for dialog semantics. Keep the saved Search binding behavior, but
-do not show keyboard shortcut hints inside the dialog. Group results by
-Board in the saved Board order and omit empty groups. Within each group, show
-the LiveCard title and provider;
+The Search dialog is a two-pane LiveCard locator: keep search and results on the
+left, and show the currently selected LiveCard on the right. Do not show a
+visible title or header; place both panes inside one nested `2xl` neutral
+squircle that sits flush with the modal shell without additional outer inset
+padding. Separate the panes with one quiet divider. Keep the preview at its
+normal `400px` by `500px` (`w-100 h-125`) size inside `8px` padding, and keep the
+left pane at the same `400px` width as the card. Retain a screen-reader-only
+title and description for dialog semantics. Keep the saved Search binding behavior, but
+do not show keyboard shortcut hints inside the dialog. Group results by Board
+in the saved Board order and omit empty groups. Within each group, show the
+LiveCard title and provider;
 the group heading supplies the board context without repeating it on every row.
 Use `12px` horizontal and `10px` vertical padding for search result rows so the
 single-line identity remains compact without feeling cramped. Keep the title
@@ -738,16 +739,25 @@ use a quiet bottom divider that strengthens on focus without an outer focus
 ring. The input remains auto-focused and keeps a visible search icon.
 
 The modal shell inherits the current board theme and must remain stable while
-selection changes. Use the active `theme-400` color at 18% opacity for every
-active result row so selection consistently follows the current board theme.
-Result rows must not carry provider `zenith-*` theme classes. Keep dividers and
-selection treatments quiet.
+selection changes. Use the shared neutral muted background for active result
+rows rather than the current Board or provider theme. Result rows must not carry
+provider `zenith-*` theme classes. Keep dividers and selection treatments quiet.
 Selected result color must update immediately without a color transition so
-keyboard navigation never feels behind the current selection.
-Activating a result closes the dialog, opens the LiveCard's assigned Board, and
-scrolls the real LiveCard into view. Do not embed a LiveCard preview in Search: a full LiveCard turns the
-locator into a second board, duplicates surface insets, and delays useful
-results while LiveCard content loads. Do not add decorative illustration or generic
+keyboard navigation never feels behind the current selection. Keyboard
+selection must update the right-hand LiveCard immediately. Pointer hover alone
+must not change selection or the preview; show only the shared neutral muted
+background on hover and require a click to commit pointer selection. Render the
+actual Instance LiveCard so the preview shares
+its normal presentation, cached data, loading states, and interactions instead
+of maintaining a search-only card approximation. Clicking a result only selects it for the right-hand
+preview; it must not close the dialog, change Boards, or scroll the Board's
+LiveCard into view. Make the preview draggable from the same header surface as a
+Board LiveCard and reuse the shared drag preview. While dragging, clear the
+modal surface and backdrop's visual and pointer obstruction so the underlying
+Board and header trash target are available. Dropping on the trash deletes the Instance,
+matching Board behavior. Dropping on the current Board atomically transfers the
+selected result from its listed source Board to the current Board; show a quiet
+dashed Board-wide drop indicator. Do not add decorative illustration or generic
 helper copy.
 
 ### Radar dialog

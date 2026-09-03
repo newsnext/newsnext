@@ -57,6 +57,7 @@ interface GroupContextValue {
 
 interface CommandRootProps extends React.ComponentPropsWithoutRef<"div"> {
   children?: React.ReactNode
+  onValueChange?: (value: string | undefined) => void
 }
 
 interface CommandInputProps extends Omit<
@@ -90,7 +91,7 @@ function useCommandContext(): CommandContextValue {
   return context
 }
 
-function CommandRoot({ children, onKeyDown, ...props }: CommandRootProps): React.JSX.Element {
+function CommandRoot({ children, onKeyDown, onValueChange, ...props }: CommandRootProps): React.JSX.Element {
   const inputId = useId()
   const listId = useId()
   const [items, setItems] = useState<Map<string, CommandItemRegistration>>(() => new Map())
@@ -100,6 +101,9 @@ function CommandRoot({ children, onKeyDown, ...props }: CommandRootProps): React
   const activeSelectedId = selectedId && rankedItems.orderedEnabledIds.includes(selectedId)
     ? selectedId
     : rankedItems.orderedEnabledIds[0]
+  const activeValue = activeSelectedId
+    ? items.get(activeSelectedId)?.value
+    : undefined
 
   const registerItem = useCallback((item: CommandItemRegistration) => {
     setItems((currentItems) => {
@@ -141,6 +145,10 @@ function CommandRoot({ children, onKeyDown, ...props }: CommandRootProps): React
     }
     item?.scrollIntoView({ block: "nearest" })
   }, [activeSelectedId])
+
+  useLayoutEffect(() => {
+    onValueChange?.(activeValue)
+  }, [activeValue, onValueChange])
 
   function moveSelection(change: 1 | -1): void {
     const { orderedEnabledIds } = rankedItems

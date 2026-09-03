@@ -19,25 +19,26 @@ import {
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { formatForDisplay, useHotkey } from "@tanstack/react-hotkeys"
 import { useQueries } from "@tanstack/react-query"
-import { useNavigate } from "@tanstack/react-router"
 import { useAtomValue } from "jotai"
 import { useMemo, useState } from "react"
 import {
-  createSourceQueryTarget,
+  createInstanceQueryTarget,
   getSourceQueryOptions,
 } from "@/hooks/source-query"
+import { DndContext } from "@/hooks/use-dnd-context"
 import { useI18n } from "@/hooks/use-i18n"
 import { useSourceDescriptors } from "@/hooks/use-source-descriptors"
 import { useSourceIcon } from "@/hooks/use-source-icon"
-import { revealLiveCard } from "@/lib/board"
 import { DEFAULT_SHORTCUT_SETTINGS, SHORTCUT_DEFINITIONS } from "@/lib/settings"
 import {
   applySourceLoaderMetadata,
   buildLiveCards,
 } from "@/lib/source"
+import { cn } from "@/lib/utils"
 import { boardsAtom, instancesAtom } from "@/store/board"
 import { shortcutSettingsAtom } from "@/store/settings"
 import { PhMagnifyingGlass } from "../icons/ph"
+import { SortableLiveCard } from "../live-card/draggable-live-card"
 import { SourceIcon } from "../live-card/source-icon"
 
 interface SearchGroup {
@@ -87,7 +88,6 @@ export function SearchDialog(): ReactNode {
   const { t } = useI18n()
   const [open, setOpen] = useState(false)
   const shortcuts = useAtomValue(shortcutSettingsAtom)
-  const navigate = useNavigate()
 
   useHotkey(
     shortcuts.search ?? DEFAULT_SHORTCUT_SETTINGS.search,
@@ -101,12 +101,6 @@ export function SearchDialog(): ReactNode {
       requireReset: true,
     },
   )
-
-  async function handleSelectItem(liveCard: LiveCardViewModel, targetBoardId: string): Promise<void> {
-    setOpen(false)
-    await navigate({ to: "/board/$boardId", params: { boardId: targetBoardId } })
-    revealLiveCard(liveCard.id)
-  }
 
   return (
     <>
@@ -122,21 +116,13 @@ export function SearchDialog(): ReactNode {
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        {open && (
-          <SearchDialogContent
-            onSelectItem={handleSelectItem}
-          />
-        )}
+        {open && <SearchDialogContent />}
       </Dialog>
     </>
   )
 }
 
-function SearchDialogContent({
-  onSelectItem,
-}: {
-  onSelectItem: (liveCard: LiveCardViewModel, targetBoardId: string) => void
-}): ReactNode {
+function SearchDialogContent(): ReactNode {
   const boards = useAtomValue(boardsAtom)
   const instances = useAtomValue(instancesAtom)
   const { sources } = useSourceDescriptors()
@@ -153,23 +139,19 @@ function SearchDialogContent({
     })
   }, [sources, instances])
 
-  const sourceQueryTargets = useMemo(
-    () => liveCards.map(liveCard => createSourceQueryTarget(
-      liveCard.sourceId,
-      liveCard,
-      liveCard.paramsValue,
-    )),
+  const instanceQueryTargets = useMemo(
+    () => liveCards.map(liveCard => createInstanceQueryTarget(liveCard.id)),
     [liveCards],
   )
-  const sourceQueryOptions = useMemo(
-    () => sourceQueryTargets.map(target => ({
+  const instanceQueryOptions = useMemo(
+    () => instanceQueryTargets.map(target => ({
       ...getSourceQueryOptions(target),
       enabled: false,
     })),
-    [sourceQueryTargets],
+    [instanceQueryTargets],
   )
   const loaderMetadata = useQueries({
-    queries: sourceQueryOptions,
+    queries: instanceQueryOptions,
     combine: results => results.map(result => result.data?.result.metadata),
   })
 
@@ -186,24 +168,33 @@ function SearchDialogContent({
   )
 
   return (
-    <SearchModalContent
-      groups={searchGroups}
-      onSelectItem={onSelectItem}
-    />
+    <SearchModalContent groups={searchGroups} />
   )
 }
 
 export function SearchModalContent({
   groups,
-  onSelectItem,
 }: {
   groups: SearchGroup[]
-  onSelectItem: (liveCard: LiveCardViewModel, targetBoardId: string) => void
 }): ReactNode {
   const { t } = useI18n()
+  const [activeValue, setActiveValue] = useState<string>()
+  const [isDragging, setIsDragging] = useState(false)
+  const itemsByValue = useMemo(() => new Map<string, LiveCardViewModel>(
+    groups.flatMap(group => group.items.map(liveCard => [
+      `${group.id}:${liveCard.id}`,
+      liveCard,
+    ] as const)),
+  ), [groups])
+  const activeLiveCard = activeValue ? itemsByValue.get(activeValue) : undefined
+
   return (
     <ContentDialogContent
-      className="h-[min(70dvh,500px)]"
+      className={cn(
+        "h-129 sm:max-w-[51rem]",
+        isDragging && "pointer-events-none opacity-0",
+      )}
+      overlayClassName={isDragging ? "pointer-events-none opacity-0" : undefined}
       surfaceClassName="p-0"
     >
       <DialogTitle className="sr-only">{t("searchLiveCards")}</DialogTitle>
@@ -213,9 +204,12 @@ export function SearchModalContent({
 
       <SquircleBox
         radius="2xl"
-        className="min-h-0"
+        className="grid min-h-0 grid-cols-[25rem_26rem]"
       >
-        <Command className="size-full rounded-none bg-transparent p-0">
+        <Command
+          className="min-w-0 rounded-none bg-transparent p-0"
+          onValueChange={setActiveValue}
+        >
           <CommandInput
             autoFocus
             aria-label={t("searchLiveCards")}
@@ -241,7 +235,7 @@ export function SearchModalContent({
                   return (
                     <CommandItem
                       key={liveCard.id}
-                      className="gap-3 rounded-xl px-3 py-2.5 data-[selected=true]:bg-theme-400/18"
+                      className="gap-3 rounded-xl px-3 py-2.5 hover:bg-muted"
                       value={`${group.id}:${liveCard.id}`}
                       keywords={[
                         liveCard.id,
@@ -249,7 +243,7 @@ export function SearchModalContent({
                         liveCard.metadata.title ?? "",
                         group.name,
                       ]}
-                      onSelect={() => onSelectItem(liveCard, group.id)}
+                      onPointerMove={event => event.preventDefault()}
                     >
                       <SearchLiveCardIcon liveCard={liveCard} />
                       <span className="min-w-0 flex-1 truncate font-medium">
@@ -267,6 +261,24 @@ export function SearchModalContent({
             ))}
           </CommandList>
         </Command>
+        <aside
+          aria-label={t("liveCard")}
+          className="relative h-129 w-104 p-2 before:absolute before:inset-y-0 before:left-0 before:w-px before:bg-foreground/5"
+        >
+          {activeLiveCard && (
+            <DndContext
+              onDragStart={() => setIsDragging(true)}
+              onDrop={() => setIsDragging(false)}
+            >
+              <SortableLiveCard
+                key={activeLiveCard.id}
+                eager
+                source={activeLiveCard}
+                className="overflow-hidden rounded-3xl"
+              />
+            </DndContext>
+          )}
+        </aside>
       </SquircleBox>
     </ContentDialogContent>
   )

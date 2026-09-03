@@ -1050,10 +1050,9 @@ radar: [{
 ```
 
 Each Radar suggestion previews one LiveCard. Creating it persists a new Instance
-with the resolved parameter and presentation patches, plus Board membership
-for the selected destination Boards. Radar does not modify an existing
-LiveCard. Moving a LiveCard later changes only its Board membership.
-At least one destination Board is always required.
+with the resolved parameter and presentation patches in the selected destination
+Board. Radar does not modify an existing LiveCard. Moving a LiveCard later
+transfers its sole Board membership. Exactly one destination Board is required.
 
 Match rules:
 
@@ -1355,6 +1354,9 @@ newsnext action execute instance.create --input \
   '{"sourceId":"github:trending","boardIds":["BOARD_ID"],"patch":{"params":{"language":"typescript"}}}'
 ```
 
+`instance.create` keeps `boardIds` as an array for protocol compatibility, but
+it must contain exactly one destination Board ID.
+
 Catalog listings include each Action's `mutation`, `query`, or `command` kind,
 description, and JSON input/output schemas. Every execute input must be a JSON
 object. Each Action owns TypeBox parameter and result schemas next to its
@@ -1367,8 +1369,7 @@ destructive ones such as `board.delete` and `instance.delete`; inspect
 Board labels.
 Passing `deleteInstances: true` to `board.delete` also deletes Instances
 used only by that Board. Passing `targetBoardId` instead transfers
-the deleted Board's Instances to the selected Board without
-duplicating memberships. Instances shared with other Boards remain.
+the deleted Board's Instances to the selected Board.
 
 Use the direct `color`, `defaultLayer`, and `sortMode` fields when creation
 includes Board preferences. `board.create` also accepts an `instances` array of Source IDs and
@@ -1388,8 +1389,8 @@ configuration. Even when every Source target field matches, observations from
 different Workers belong to different datasets and are never mixed.
 
 Query Actions return canonical Boards and Instances without a
-parallel CLI-only Board representation. An Instance may be returned by several
-Board queries when it has several memberships. Ordinary Now Layer loads remain
+parallel CLI-only Board representation. An Instance is returned by exactly one
+Board query because it has one membership. Ordinary Now Layer loads remain
 browser-local and do not create History. Observation times may be Unix
 milliseconds or ISO 8601 values. List `observations` before using exact
 timestamps with `get` or `compare`. Add `--compact` when consuming JSON

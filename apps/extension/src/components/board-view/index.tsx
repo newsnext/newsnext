@@ -1,19 +1,22 @@
 import type { PropsWithChildren } from "react"
 import type { Board, BoardLayer } from "@/lib/board"
+import { dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter"
 import { useScrollProgressContext } from "@newsnext/ui/components/scroll-progress-context"
+import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { useHotkey } from "@tanstack/react-hotkeys"
 import { useElementScrollRestoration, useNavigate } from "@tanstack/react-router"
 import { useAtomValue, useSetAtom } from "jotai"
-import { useCallback, useLayoutEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useEffectEvent, useLayoutEffect, useRef, useState } from "react"
 import { NextLayer } from "@/components/nextlayer"
 import { NowLayer } from "@/components/nowlayer"
+import { isSortableData } from "@/lib/board"
 import {
   getBoardScrollRestorationKey,
   ROOT_SCROLL_RESTORATION_ID,
 } from "@/lib/scroll-restoration"
 import { DEFAULT_SHORTCUT_SETTINGS, SHORTCUT_DEFINITIONS } from "@/lib/settings"
 import { cn } from "@/lib/utils"
-import { updateBoardAtom } from "@/store/board"
+import { moveInstanceToBoardAtom, updateBoardAtom } from "@/store/board"
 import { shortcutSettingsAtom } from "@/store/settings"
 import { ScatterCardLayer } from "./scatter-card-layer"
 
@@ -36,10 +39,13 @@ interface RenderedView {
 export function BoardView({ board, layer }: { board: Board, layer: BoardLayer }) {
   const { rootScrollContainer } = useScrollProgressContext()
   const shortcuts = useAtomValue(shortcutSettingsAtom)
+  const moveInstanceToBoard = useSetAtom(moveInstanceToBoardAtom)
   const updateBoard = useSetAtom(updateBoardAtom)
   const navigate = useNavigate({ from: "/board/$boardId" })
   const isNextLayer = layer === "next"
   const [renderedView, setRenderedView] = useState<RenderedView>({ boardId: board.id, layer })
+  const [isSearchTransferOver, setIsSearchTransferOver] = useState(false)
+  const boardDropTargetRef = useRef<HTMLDivElement>(null)
   const [entranceReadyViewKey, setEntranceReadyViewKey] = useState<string | null>(null)
   const restoredViewKeyRef = useRef<string | null>(null)
   const scrollRestorationEntry = useElementScrollRestoration({
@@ -51,6 +57,37 @@ export function BoardView({ board, layer }: { board: Board, layer: BoardLayer })
   const isRenderedNextLayer = renderedView.layer === "next"
   const renderedViewKey = `${renderedView.boardId}:${renderedView.layer}`
   const entranceReady = entranceReadyViewKey === renderedViewKey
+
+  const moveSearchLiveCard = useEffectEvent(async (instanceId: string) => {
+    try {
+      await moveInstanceToBoard({
+        instanceId,
+        targetBoardId: board.id,
+      })
+    } catch (error) {
+      console.error("Failed to move dropped LiveCard", error)
+    }
+  })
+
+  useEffect(() => {
+    const dropTarget = boardDropTargetRef.current
+    if (!dropTarget) return
+
+    return dropTargetForElements({
+      element: dropTarget,
+      canDrop: ({ source }) => isSortableData(source.data)
+        && source.data.ids.length === 1
+        && !board.instanceIds.includes(source.data.id),
+      getDropEffect: () => "move",
+      onDragEnter: () => setIsSearchTransferOver(true),
+      onDragLeave: () => setIsSearchTransferOver(false),
+      onDrop: ({ source }) => {
+        setIsSearchTransferOver(false)
+        if (!isSortableData(source.data)) return
+        void moveSearchLiveCard(source.data.id)
+      },
+    })
+  }, [board.id, board.instanceIds])
 
   useLayoutEffect(() => {
     if (isOutgoing || !rootScrollContainer) return
@@ -119,7 +156,14 @@ export function BoardView({ board, layer }: { board: Board, layer: BoardLayer })
   )
 
   return (
-    <div className="relative flex min-h-0 w-full grow flex-col">
+    <div ref={boardDropTargetRef} className="relative flex min-h-0 w-full grow flex-col">
+      {isSearchTransferOver && (
+        <SquircleBox
+          aria-hidden
+          radius="4xl"
+          className="pointer-events-none absolute inset-4 z-40 border-2 border-dashed border-theme-400 bg-theme-400/10"
+        />
+      )}
       <ScatterCardLayer
         key={renderedViewKey}
         state={renderedLayerState}

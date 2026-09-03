@@ -250,27 +250,7 @@ export function addBoardInstanceMutation(
       ...data,
       boards: data.boards.map(board => board.id === input.boardId
         ? addInstanceToBoard(board, input.instanceId)
-        : board),
-    },
-  }
-}
-
-export function removeBoardInstanceMutation(
-  data: ApplicationData,
-  input: { boardId: string, instanceId: string },
-): ApplicationMutationExecution {
-  assertBoardExists(data, input.boardId)
-  assertInstanceExists(data, input.instanceId)
-  const membershipCount = data.boards.filter(board => board.instanceIds.includes(input.instanceId)).length
-  if (membershipCount <= 1 && getBoard(data, input.boardId).instanceIds.includes(input.instanceId)) {
-    throw new Error("A LiveCard must belong to at least one Board")
-  }
-  return {
-    data: {
-      ...data,
-      boards: data.boards.map(board => board.id === input.boardId
-        ? removeInstanceFromBoard(board, input.instanceId)
-        : board),
+        : removeInstanceFromBoard(board, input.instanceId)),
     },
   }
 }
@@ -283,7 +263,7 @@ export function createInstanceMutation(
   const { boardIds, patch, sourceId } = input
   if (!sourceId.trim()) throw new Error("Source ID is required")
   const uniqueBoardIds = [...new Set(boardIds)]
-  if (uniqueBoardIds.length === 0) throw new Error("A LiveCard must belong to at least one Board")
+  if (uniqueBoardIds.length !== 1) throw new Error("A LiveCard must belong to exactly one Board")
   for (const boardId of uniqueBoardIds) assertBoardExists(data, boardId)
   const instanceId = `${sourceId}::${dependencies.createId()}`
   if (data.instances.some(instance => instance.instanceId === instanceId)) {

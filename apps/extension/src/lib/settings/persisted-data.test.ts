@@ -102,6 +102,39 @@ describe("persisted user data", () => {
     expect(data.instances.map(instance => instance.workerId)).toEqual(["worker-a", "worker-b"])
   })
 
+  it("keeps only the first Board membership for each Instance", () => {
+    const data = createData()
+    data.boards.push({
+      color: "purple",
+      id: "duplicate",
+      illustration: null,
+      name: "Duplicate",
+      createdAt: 2,
+      instanceIds: ["rss:feed::one"],
+      defaultLayer: "now",
+      nowLayer: {
+        sort: { mode: "manual", automaticMode: "addedAt", manualOrder: ["rss:feed::one"] },
+      },
+      nextLayer: {
+        widgets: [{
+          widgetId: "latest",
+          dataScope: { type: "instances", instanceIds: ["rss:feed::one"] },
+          layout: { x: 0, y: 0, width: 4, height: 4 },
+        }],
+      },
+    })
+
+    const normalized = normalizeApplicationData(data)
+
+    expect(normalized.boards[0]?.instanceIds).toEqual(["rss:feed::one"])
+    expect(normalized.boards[1]?.instanceIds).toEqual([])
+    expect(normalized.boards[1]?.nowLayer.sort.manualOrder).toEqual([])
+    expect(normalized.boards[1]?.nextLayer.widgets[0]?.dataScope).toEqual({
+      type: "instances",
+      instanceIds: [],
+    })
+  })
+
   it("rejects noncurrent Application Data", () => {
     const data = normalizeApplicationData({
       version: 3,

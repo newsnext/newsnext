@@ -1,6 +1,6 @@
 export type { ApplicationData } from "./data"
 export { APPLICATION_DATA_VERSION, createEmptyApplicationData, createInitialApplicationData, ensureApplicationDataIntegrity } from "./data"
 export type { ApplicationMutationDependencies, ApplicationMutationExecution, ApplicationMutationResult, BoardConfiguration, BoardDeleteInput } from "./mutations"
-export { addBoardInstanceMutation, configureInstanceMutation, createBoardMutation, createInstanceMutation, deleteBoardMutation, deleteInstanceMutation, installNextLayerWidgetMutation, removeBoardInstanceMutation, removeNextLayerWidgetMutation, resetInstanceParamsMutation, setNextLayerWidgetDataScopeMutation, setNextLayerWidgetLayoutsMutation, setNowLayerManualOrderMutation, updateBoardMutation } from "./mutations"
+export { addBoardInstanceMutation, configureInstanceMutation, createBoardMutation, createInstanceMutation, deleteBoardMutation, deleteInstanceMutation, installNextLayerWidgetMutation, removeNextLayerWidgetMutation, resetInstanceParamsMutation, setNextLayerWidgetDataScopeMutation, setNextLayerWidgetLayoutsMutation, setNowLayerManualOrderMutation, updateBoardMutation } from "./mutations"
 export type { ApplicationBoardContext, ApplicationNowLayerLiveCard, BoardConfigurationResult, BoardDetail } from "./queries"
 export { getBoardConfigurationQuery, getBoardContextQuery, getBoardQuery, getInstanceQuery, getNowLayerLiveCardsQuery, getSourceQuery, listBoardInstancesQuery, listBoardsQuery, listInstancesQuery, listSourcesQuery } from "./queries"

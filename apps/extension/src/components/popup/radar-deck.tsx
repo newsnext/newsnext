@@ -8,7 +8,7 @@ import confetti from "canvas-confetti"
 import { useAtomValue, useSetAtom } from "jotai"
 import { animate, motion, useDragControls, useMotionValue, useReducedMotion, useTransform } from "motion/react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { BoardMembershipSelect } from "@/components/common/board-membership-select"
+import { BoardSelect } from "@/components/common/board-membership-select"
 import { PhArrowCircleLeft, PhCircleDashed, PhPlusCircle } from "@/components/icons/ph"
 import { LiveCard } from "@/components/live-card"
 import { useAsyncAction } from "@/hooks/use-async-action"
@@ -201,9 +201,7 @@ function RadarDeckContent({
   const { t } = useI18n()
   const isDialog = layout === "dialog"
   const addInstance = useSetAtom(addInstanceAtom)
-  const [targetBoardIds, setTargetBoardIds] = useState<string[]>(
-    initialBoardId ? [initialBoardId] : [],
-  )
+  const [targetBoardId, setTargetBoardId] = useState(initialBoardId)
   const [activeIndex, setActiveIndex] = useState(0)
   const [draftPatches, setDraftPatches] = useState<Record<string, InstancePatch>>({})
   const [trackItemOffset, setTrackItemOffset] = useState(1)
@@ -325,13 +323,13 @@ function RadarDeckContent({
   }), [x])
 
   const handleCreate = useCallback(async () => {
-    if (isCreated || !activeSuggestion || !activeLiveCard) {
+    if (isCreated || !activeSuggestion || !activeLiveCard || !targetBoardId) {
       return
     }
 
     await runCreate(async () => {
       await addInstance({
-        boardIds: targetBoardIds,
+        boardIds: [targetBoardId],
         sourceId: activeSuggestion.sourceId,
         patch: mergeInstancePatch(
           activeSuggestion.patch,
@@ -345,7 +343,7 @@ function RadarDeckContent({
         originElement: actionRef.current,
       })
     })
-  }, [activeLiveCard, activeSuggestion, addInstance, draftPatches, isCreated, onCreationStart, runCreate, targetBoardIds])
+  }, [activeLiveCard, activeSuggestion, addInstance, draftPatches, isCreated, onCreationStart, runCreate, targetBoardId])
 
   const handleDraftSourceChange = useCallback((suggestionId: string, patch: InstancePatch) => {
     setDraftPatches((prev) => {
@@ -445,13 +443,9 @@ function RadarDeckContent({
           )}
           style={radarActionStyle}
         >
-          <BoardMembershipSelect
-            value={targetBoardIds}
-            onMembershipChange={(boardId, member) => {
-              setTargetBoardIds(current => member
-                ? current.includes(boardId) ? current : [...current, boardId]
-                : current.filter(candidate => candidate !== boardId))
-            }}
+          <BoardSelect
+            value={targetBoardId}
+            onValueChange={setTargetBoardId}
             ariaLabel={t("destinationBoard")}
             align="end"
             className={cn(
@@ -462,7 +456,7 @@ function RadarDeckContent({
           <Button
             size="sm"
             onClick={handleCreate}
-            disabled={isCreated || isCreating || targetBoardIds.length === 0}
+            disabled={isCreated || isCreating || targetBoardId === undefined}
             aria-label={t("createLiveCard")}
             title={t("createLiveCard")}
             className={cn(

@@ -1,5 +1,5 @@
 import { useAtomValue, useSetAtom } from "jotai"
-import { BoardMembershipSelect } from "@/components/common/board-membership-select"
+import { BoardSelect } from "@/components/common/board-membership-select"
 import { ConfirmDestructiveButton } from "@/components/common/confirm-destructive-button"
 import { PhTrashDuotone } from "@/components/icons/ph"
 import { useAsyncAction, useKeyedAsyncAction } from "@/hooks/use-async-action"
@@ -7,34 +7,33 @@ import { useI18n } from "@/hooks/use-i18n"
 import {
   boardsAtom,
   deleteInstanceAtom,
-  setInstanceBoardMembershipAtom,
+  moveInstanceToBoardAtom,
 } from "@/store/board"
 
 export function LiveCardBoardSelect({ id }: { id: string }) {
   const { t } = useI18n()
   const boards = useAtomValue(boardsAtom)
-  const setMembership = useSetAtom(setInstanceBoardMembershipAtom)
+  const moveInstance = useSetAtom(moveInstanceToBoardAtom)
   const {
     error: membershipError,
     isPending: isMembershipPending,
     run: runMembershipUpdate,
   } = useKeyedAsyncAction<string>(t("updateBoardMembershipFailed"))
-  const boardIds = boards
-    .filter(board => board.instanceIds.includes(id))
-    .map(board => board.id)
-  async function updateMembership(boardId: string, member: boolean): Promise<void> {
-    await runMembershipUpdate(boardId, async () => {
-      await setMembership({ boardId, instanceId: id, member })
+  const boardId = boards.find(board => board.instanceIds.includes(id))?.id
+  async function moveToBoard(targetBoardId: string): Promise<void> {
+    if (!boardId || targetBoardId === boardId) return
+    await runMembershipUpdate(targetBoardId, async () => {
+      await moveInstance({ instanceId: id, targetBoardId })
     })
   }
 
   return (
     <div className="flex items-center justify-between gap-3">
       <span className="text-sm font-semibold opacity-80">{t("boards")}</span>
-      <BoardMembershipSelect
-        value={boardIds}
-        onMembershipChange={(boardId, member) => void updateMembership(boardId, member)}
-        ariaLabel={t("editBoardMemberships")}
+      <BoardSelect
+        value={boardId}
+        onValueChange={targetBoardId => void moveToBoard(targetBoardId)}
+        ariaLabel={t("moveLiveCardToBoard")}
         isBoardDisabled={isMembershipPending}
       />
       {membershipError && <span role="alert" className="sr-only">{membershipError}</span>}

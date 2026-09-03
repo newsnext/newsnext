@@ -70,8 +70,8 @@ describe("action Registry", () => {
   it("publishes the connected Action contract directly from definitions", () => {
     const actions = actionRegistry.list("connected")
 
-    expect(actions).toHaveLength(30)
-    expect(actions.filter(action => action.kind === "mutation")).toHaveLength(14)
+    expect(actions).toHaveLength(29)
+    expect(actions.filter(action => action.kind === "mutation")).toHaveLength(13)
     expect(actions.filter(action => action.kind === "query")).toHaveLength(12)
     expect(actions.filter(action => action.kind === "command")).toHaveLength(4)
     expect(actions.find(action => action.name === "instance.create")).toMatchObject({

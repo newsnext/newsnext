@@ -64,8 +64,9 @@ interface Instance {
 ```
 
 `createdAt` records when the Instance itself was created. It does not record
-when the Instance joined any Board. An Instance may belong to multiple
-Boards and therefore must not store a single Board or Board ID.
+when the Instance joined its Board. An Instance belongs to exactly one Board;
+the owning Board keeps that relationship in `instanceIds`, so the Instance does
+not duplicate a Board ID.
 
 ### Board
 
@@ -98,10 +99,10 @@ and durable Layer settings belong directly to the Board.
 2. Its order is the canonical `addedAt` order, from most recently added to least
    recently added.
 
-NewsNext does not persist an `addedAt` timestamp. Adding a membership places its
-Instance ID at the front. Adding an existing membership is idempotent and does
-not move it. Removing a membership removes the ID from both membership order
-and any manual NowLayer order.
+NewsNext does not persist an `addedAt` timestamp. Adding an unassigned Instance
+places its ID at the front. Adding an Instance already owned by another Board
+transfers it, removing the old membership and related Layer references.
+Re-adding the current membership is idempotent and does not move it.
 
 `createdAt` and membership order are deliberately different. Moving an old
 Instance into a new Board makes it recently added in that Board but
@@ -278,7 +279,6 @@ board.create
 board.delete
 board.update
 board.addInstance
-board.removeInstance
 
 nowLayer.setManualOrder
 ```
@@ -286,12 +286,15 @@ nowLayer.setManualOrder
 `board.create` and `board.update` accept Board fields directly, including
 `color`, `defaultLayer`, and `sortMode`. Bulk creation may include configured
 Instances and persists the Board, Instances, and memberships atomically.
+`instance.create` retains its `boardIds` array input for protocol compatibility,
+but the array must contain exactly one Board ID.
 
-`board.removeInstance` cannot remove an Instance's last membership.
+`board.addInstance` atomically transfers an existing Instance to its target
+Board; there is no standalone membership-removal Action because that would
+leave the Instance without an owner.
 `instance.delete` removes the Instance and every membership. Deleting a
 Board requires exactly one policy: delete Instances exclusive to it, or
-transfer its memberships to another Board without duplicating or moving
-memberships already present in the target.
+transfer its Instances to another Board.
 
 `nowLayer.setManualOrder` requires every Board Instance exactly once and
 selects manual mode atomically.
