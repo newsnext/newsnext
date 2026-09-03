@@ -179,7 +179,7 @@ function ConfigurableBoardDialog({
       }}
     >
       <ContentDialogContent
-        variant="themed"
+        className="w-[calc(100%-2rem)] sm:max-w-130"
         surfaceClassName={cn(initialColor, "min-h-0 gap-0")}
       >
         <form
@@ -203,7 +203,6 @@ function ConfigurableBoardDialog({
 
           <SquircleBox
             radius="2xl"
-            variant="modal-inner"
             className="grid min-h-0 gap-6 overflow-y-auto p-6"
           >
             <ConfigSection variant="field" title={t("name")} htmlFor="board-name">

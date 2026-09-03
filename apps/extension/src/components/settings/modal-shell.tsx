@@ -6,7 +6,6 @@ import {
   Dialog,
   DialogTitle,
 } from "@newsnext/ui/components/dialog"
-import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { Tabs, TabsList, TabsTrigger } from "@newsnext/ui/components/tabs"
 import { useEffect, useRef } from "react"
 import { useI18n } from "@/hooks/use-i18n"
@@ -47,12 +46,10 @@ export function SettingsModalShell({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <ContentDialogContent
-        variant="themed"
-        surfaceClassName="grid min-h-0"
-      >
+      <ContentDialogContent surfaceClassName="min-h-0 py-0">
         <DialogTitle className="sr-only">{t("preferences")}</DialogTitle>
         <Tabs
+          orientation="vertical"
           value={activeTab}
           onValueChange={(value) => {
             const tab = SETTINGS_TABS.find(item => item.id === value)
@@ -60,18 +57,18 @@ export function SettingsModalShell({
               onTabChange(tab.id)
             }
           }}
-          className="min-h-0 w-full min-w-0 flex-col gap-0"
+          className="min-h-0 w-full min-w-0"
         >
-          <div className="shrink-0 pb-2">
+          <div className="min-h-0 w-24 shrink-0 overflow-y-auto py-4.5 sm:w-32">
             <TabsList
-              variant="line"
-              className="grid h-10 w-full grid-cols-7 gap-0 p-0"
+              aria-label={t("preferences")}
+              variant="sidebar"
             >
               {SETTINGS_TABS.map(tab => (
                 <TabsTrigger
                   key={tab.id}
                   value={tab.id}
-                  className="h-10 min-w-0 w-full flex-none rounded-none border-0 px-0 py-2 text-xs text-foreground/50 after:hidden hover:text-foreground/75 data-active:text-foreground data-active:font-semibold sm:px-2 sm:text-sm"
+                  className="min-w-0 text-xs sm:text-sm"
                 >
                   <span className="min-w-0 truncate" title={t(tab.labelKey)}>
                     {t(tab.labelKey)}
@@ -80,18 +77,8 @@ export function SettingsModalShell({
               ))}
             </TabsList>
           </div>
-          <div className="relative min-h-0 min-w-0 flex-1">
-            <SquircleBox
-              aria-hidden
-              radius="2xl"
-              variant="modal-inner"
-              className="pointer-events-none absolute inset-0"
-            />
-            {children && (
-              <div ref={contentRef} className="relative size-full overflow-y-auto p-4 sm:p-6">
-                {children}
-              </div>
-            )}
+          <div ref={contentRef} className="min-h-0 min-w-0 flex-1 overflow-y-auto border-l border-border/60 px-4 py-6.5 sm:px-6 sm:py-8.5">
+            {children}
           </div>
         </Tabs>
       </ContentDialogContent>

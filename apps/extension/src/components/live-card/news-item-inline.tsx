@@ -53,7 +53,7 @@ export function NewsItemInline({
   if (!item.mark && !inlineText && !inlineSuffix && !item.stats) return null
 
   return (
-    <span className={cn("inline-flex max-w-full items-center gap-1 align-middle leading-none", className)}>
+    <span className={cn("inline-flex max-w-full items-center gap-1 align-middle leading-none text-neutral-400/80", className)}>
       {item.mark && (
         <SemanticImage
           picture={item.mark}
@@ -63,7 +63,7 @@ export function NewsItemInline({
       )}
       {(inlineText || inlineSuffix) && (
         <span className={cn(
-          "inline-flex min-w-0 self-center items-center text-neutral-400/80",
+          "inline-flex min-w-0 self-center items-center",
           size === "large" ? "h-5 text-sm leading-5" : "h-3.5 text-xs leading-3.5",
           truncate ? "max-w-80 truncate" : "whitespace-normal wrap-break-word",
         )}

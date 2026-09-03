@@ -40,6 +40,11 @@ Keep copy factual about public and separately distributed components. Treat
 motion as one restrained entry sequence and respect reduced-motion preferences.
 
 - Use theme color to communicate context and ownership, not as decoration.
+- Use `#F7F7F7` for the shared light-mode
+  `background` token. Keep the zenith gradient separate from this base color.
+- Use `neutral-700` at 20% opacity for the shared light-mode `border` token
+  so dividers remain visible on pale surfaces, including `border-border/60`
+  and `divide-border/50`. Retain white at 10% opacity in dark mode.
 - In light mode, use `neutral-700` for the shared foreground and
   `neutral-600` for muted foreground text. Let weight and semantic color create
   emphasis instead of placing near-black text across the pastel surfaces.
@@ -91,8 +96,10 @@ initial background or depend on board effects.
 Place background illustration controls in the Board configuration modal when editing
 an existing Board. Do not expose them in global Appearance settings or during Board
 creation, before a Board identity exists. Give all content-heavy modals, including
-Create Board, Edit Board, Settings, and Search, the shared `2xl` maximum width and
-the shared height of the smaller of 70% of the viewport and 640px. Preserve 16px
+Create Board, Edit Board, Settings, and Search, the shared height of the smaller
+of 70% of the viewport and 640px. Settings and Search use the `2xl` maximum
+width. Create Board and Edit Board use `520px` (`max-w-130`), approximately the
+width of the Settings content column. Preserve 16px
 of horizontal viewport space on each side below the `sm` breakpoint. Scroll their
 inner content vertically without scrolling the outer dialog or its header. Keep
 compact confirmation dialogs sized naturally to their content.
@@ -269,8 +276,12 @@ controls, and preserve the active picture when opening the full-size modal
 viewer. Treat both the picture and the text as entry points to that viewer, and
 use the title when no directly actionable preview content exists. In the
 expanded surface, pair media and article text side by side on wide viewports,
-stack them on narrow viewports, keep both regions on one continuous background,
-and let text-only items use the full surface without reserving an empty media
+stack them on narrow viewports, and give the media region a neutral backdrop:
+`bg-neutral-200/50` in light mode and `bg-neutral-800/25` over the dialog's
+`neutral-900` base in dark mode, producing approximately `#1B1B1B`. Apply it to
+the entire media region, including image letterboxing and iframe gutters.
+Keep the text region on `bg-background`, and let text-only items use the full
+surface without reserving an empty media
 column. Anchor footer actions to the surface's right edge so item navigation
 never shifts those controls when the content layout changes. Keep the detail
 column and item title visible for media previews even when no article body is
@@ -280,10 +291,12 @@ changing the surrounding detail column.
 
 Treat footer positioning as independent from article typography. Keep footer
 actions anchored to the surface edge while allowing text-only content to use a
-centered reading column with a comfortable measure, 32px body line height, and
+centered reading column with a comfortable measure and
 clear paragraph spacing. Justify multi-line titles and body copy so Chinese text
-can form a clean right edge while paragraph-ending lines remain natural. Use a
-tighter title scale inside the narrower media detail column. Give the inline
+can form a clean right edge while paragraph-ending lines remain natural. Use
+18px titles and 16px body text in media and text-only previews.
+Use medium (500) title weight and regular (400) body weight
+for a restrained hierarchy without enlarging or heavily bolding the title. Give the inline
 content at the footer's left edge a small optical inset to balance the intrinsic
 blank space inside the fixed-size action buttons on the right; do not move the
 right-side controls to compensate.
@@ -480,7 +493,7 @@ applying one frame treatment to every modal.
 
 Search, Settings, and single-column task dialogs are not exceptions to a default
 dialog layout. They are distinct compositions for different tasks and content
-relationships, while sharing the same surface language, theme treatment,
+relationships, while sharing the same neutral surface language,
 hierarchy, motion, and interaction principles. Structural consistency means
 applying that common foundation coherently, not forcing every dialog into the
 same arrangement.
@@ -493,9 +506,14 @@ shared modal components instead of defining local backdrop values or motion.
 `150ms` opacity fade. `ModalPopup` owns the centered modal motion, while
 `ModalTitle` and `ModalDescription` own their shared visual
 treatments. Centered surfaces use a `3xl` outer squircle with an opaque
-`bg-background` base beneath a `bg-theme-400/45` overlay, and a `10px` shell
-inset where a nested surface is present. Nested content uses a `2xl` shape with
-`bg-background/70` and `zenith-theme-400`.
+`bg-background` base matching the news item preview dialog, and a `10px` shell
+inset around the content. Keep content containers and scrollers transparent in
+both appearances, matching Settings: use one dialog background, with section
+Card surfaces directly on it where needed. Apply the shared
+`zenith-theme-400/60` top-weighted gradient directly to the modal shell's
+background, matching the main app's wash. Do not add another background layer
+or repeat the gradient on the content scroller or section surfaces. Keep
+stronger theme accents on controls, selection, and focus states.
 
 Primitive-specific components compose `ModalOverlay`, `ModalPopup`,
 `ModalTitle` and `ModalDescription` from
@@ -504,13 +522,14 @@ in these components instead of introducing parallel CSS utilities.
 
 For centered task modals with a visible title, keep a compact header in the
 exposed top shell, then place descriptions, fields, and primary content in a
-nested neutral surface below it. The title must never move into the nested
-surface. Board create and edit place their primary submit action in the header's
+nested content area below it. The title must never move into the nested
+content area. Board create and edit place their primary submit action in the header's
 upper-right while keeping the title centered; destructive edit actions remain
-in the nested surface. `DialogContent` provides the shell; callers compose
-`DialogHeader` followed by a `modal-inner` `SquircleBox`. Compact command
+in the content area. `DialogContent` provides the shell; callers compose
+`DialogHeader` followed by a transparent `SquircleBox` scroller. Its sections
+use the shared subtle Card surface. Compact command
 dialogs such as Search may omit the visible header and begin directly with the
-nested interactive surface, while retaining an accessible hidden title and
+transparent interactive content, while retaining an accessible hidden title and
 description.
 
 Keep content-specific layouts distinct when needed, but keep overlay opacity,
@@ -542,17 +561,17 @@ reset it after three seconds without confirmation.
 
 ### Single-column dialogs
 
-Single-column dialogs related to boards should use the LiveCard surface language.
+Single-column dialogs related to boards use the shared neutral modal surfaces.
 They must have:
 
-- A theme-colored outer `3xl` squircle with an opaque `bg-background` base and
-  a `bg-theme-400/45` overlay. Its structure follows LiveCards, but its
-  restrained theme opacity follows Settings.
-- `10px` (`p-2.5`) of outer padding on every side, leaving a visible theme-colored
+- An outer `3xl` squircle with an opaque `bg-background` base and the shared
+  `zenith-theme-400/60` wash.
+- `10px` (`p-2.5`) of outer padding on every side, leaving a visible neutral
   shell around the nested content.
 - A compact top shell area containing the dialog title for task-oriented forms.
-- A nested `2xl` content squircle using `bg-background/70` and
-  `zenith-theme-400`.
+- A nested `2xl` content scroller, transparent in both appearances.
+  Keep the section Card backgrounds on `bg-white/60`
+  in light mode instead of stacking another white or gray surface beneath them.
 - Content padding of `24px` (`p-6`).
 - A consistent vertical rhythm: `24px` between form sections and `8px`
   between a section title or field label and its control. Use `ConfigSection`
@@ -597,24 +616,40 @@ every LiveCard remains on at least one Board.
 
 ### Settings dialog
 
-Use a stacked layout for Settings: omit a visible dialog title, place the
-horizontal tab list in the exposed top shell, then place the active panel in the
-nested neutral squircle below. Keep an accessible hidden dialog title. Keep the
-tabs on one row at narrow widths. Constrain the tab list to the available width
-and let its items shrink and truncate instead of placing it inside a
-horizontal scroller. Render Settings navigation as a transparent text tab list
-with no pill background, shadow, blur, rounded active surface, or sliding pill.
-Align it with the nested content surface and distribute the tabs evenly. Do not
-add a baseline, active underline, dot, or other selection ornament. Distinguish
-the active tab through neutral foreground contrast and semibold weight alone.
-Reduce tab text to `text-xs` below the `sm` breakpoint so all labels retain
-useful width without a scroller. Do not show the active tab as a subtitle above
+Use a two-column layout for Settings: omit a visible dialog title, place the
+vertical tab list in the exposed left shell, and place the active panel in the
+content area on the right. Use one continuous `bg-background` surface with the
+shared `zenith-theme-400/60` wash across
+both columns; do not add a nested panel background. Keep a subtle neutral
+background around each settings section. Separate sections with headings and spacing, and use
+quiet dividers for repeated rows. Keep an accessible hidden dialog title.
+Use vertical tab semantics with Up/Down focus navigation and Enter or Space to
+activate a tab. Forward `orientation` to the Base UI root and match its
+`data-orientation` value in layout selectors; it does not emit `data-vertical`
+or `data-horizontal` flags. Keep the sidebar
+at `w-24` below `sm` and `w-32` at larger widths, with an `8px` gap before the
+flexible content panel. Separate the columns with a `1px` `border-border/60`
+left border on the content scroller, spanning the entire dialog height. Remove
+the shell's vertical padding for Settings and move that `10px` inset into each
+column's internal padding so the divider reaches both dialog edges. Retain the left
+sidebar at narrow widths and truncate
+long tab labels. Allow the sidebar and content panel to scroll independently
+when height is constrained. Use the shared `sidebar` tab variant on a transparent
+list. Align labels to the left in `40px` rows with `4px` gaps and `rounded-xl`
+corners. Give the active tab a `bg-foreground/10` neutral fill, full foreground
+contrast, and semibold weight in both appearances. Inactive tabs use muted text
+and a subtle `bg-muted` hover fill. Keep the selected fill visible on hover.
+Do not add a theme-colored fill, underline, shadow, or sliding selection pill.
+Reduce tab text to `text-xs` below the `sm` breakpoint. Do not show the active tab as a subtitle above
 the panel.
-Retain the active settings content's internal padding inside its nested surface.
+Use `px-4 py-6.5 sm:px-6 sm:py-8.5` on the settings content scroller and
+`py-4.5` on the sidebar to preserve their content insets. Background fills belong
+to settings sections, selected navigation, interactive controls, and individual records where they
+help distinguish items, rather than successive wrapping containers.
 
 Keep settings controls compact and visually consistent. Use a 6px slider track
 with a clearly visible themed range and a 14px thumb filled with a light theme
-shade; the track and thumb must remain legible against nested tinted surfaces.
+shade; the track and thumb must remain legible against the neutral dialog surface.
 Use 32px buttons for ordinary settings
 actions, keep adjacent actions the same height and text size, and use `ghost`
 rather than the icon-oriented LiveCard action composition for text-only tertiary actions.
@@ -630,10 +665,13 @@ Use `ConfigSection` for Settings panel headings and vertical form fields so
 both retain the shared 8px title-to-content rhythm. Choose its semantic variant
 for a section heading, a single labeled control, or a grouped control. These
 variants share the same title weight, horizontal inset, description placement,
-and spacing; only their HTML semantics differ. Its standard surface defaults to
-the subtle `2xl` LiveCard background and compact `10px` content inset used by
-Settings controls. Disable it only for nested fields or specialized list and
-preview layouts that already provide their own surface.
+and spacing; only their HTML semantics differ. Keep the default subtle `2xl`
+Card surface and its content inset for Settings sections. Use `surface={false}`
+for nested fields or specialized lists that already provide their own surface,
+so section backgrounds are not stacked inside one another.
+Use `bg-white/60` for the shared subtle Card in light mode so sections sit
+lightly above the neutral dialog background. Avoid dark gray washes on these
+light-mode section surfaces. Retain `bg-foreground/3` in dark mode.
 Reset the shared settings content scroller to the top when the active tab
 changes; do not remount tab content or discard unsaved control state to do so.
 

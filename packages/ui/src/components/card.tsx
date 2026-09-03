@@ -22,7 +22,7 @@ function Card({
       className={cn(
         "group/card flex flex-col text-sm text-foreground",
         variant === "default" && "gap-6 bg-background py-6 has-[>img:first-child]:pt-0 data-[size=sm]:gap-4 data-[size=sm]:py-4",
-        variant === "subtle" && "relative isolate gap-0 bg-foreground/3",
+        variant === "subtle" && "relative isolate gap-0 bg-white/60 dark:bg-foreground/3",
         className,
       )}
       {...props}

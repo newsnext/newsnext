@@ -53,7 +53,7 @@ function DialogContent({
   radius?: SquircleRadius | number
   overlayClassName?: string
   surfaceClassName?: string
-  variant?: "bare" | "default" | "themed"
+  variant?: "bare" | "default"
 }) {
   return (
     <DialogPortal>
@@ -87,12 +87,12 @@ function DialogContent({
 }
 
 function ContentDialogContent(
-  props: Omit<React.ComponentProps<typeof DialogContent>, "className">,
+  { className, ...props }: React.ComponentProps<typeof DialogContent>,
 ) {
   return (
     <DialogContent
       {...props}
-      className="h-[min(70dvh,640px)] overflow-hidden sm:max-w-2xl"
+      className={cn("h-[min(70dvh,640px)] overflow-hidden sm:max-w-2xl", className)}
     />
   )
 }

@@ -234,7 +234,6 @@ export function SearchModalContent({
   const { t } = useI18n()
   return (
     <ContentDialogContent
-      variant="themed"
       surfaceClassName="grid-rows-[minmax(0,1fr)_auto]"
     >
       <DialogTitle className="sr-only">{t("searchLiveCards")}</DialogTitle>
@@ -244,7 +243,6 @@ export function SearchModalContent({
 
       <SquircleBox
         radius="2xl"
-        variant="modal-inner"
         className="min-h-0"
       >
         <Command className="size-full rounded-none bg-transparent p-0">

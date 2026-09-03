@@ -51,7 +51,7 @@ export function NewsItemStats({ item, className, size = "default" }: {
 
   return (
     <span className={cn(
-      "inline-flex items-center gap-2 leading-none text-neutral-400/80",
+      "inline-flex items-center gap-2 leading-none",
       large ? "h-5 text-sm leading-5" : "h-3.5 text-xs leading-3.5",
       className,
     )}

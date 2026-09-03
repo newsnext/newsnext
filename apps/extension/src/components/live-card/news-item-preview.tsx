@@ -3,13 +3,12 @@ import type { CSSProperties, ReactNode } from "react"
 import type { NewsItem } from "@/typings/source"
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogTitle,
 } from "@newsnext/ui/components/dialog"
 import { ProxiedImage } from "@newsnext/ui/components/proxied-image"
 import { SafeHtml } from "@newsnext/ui/components/safe-html"
-import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ExternalLink, X } from "lucide-react"
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ExternalLink } from "lucide-react"
 import { useI18n } from "@/hooks/use-i18n"
 import { cn } from "@/lib/utils"
 import { NewsItemInline } from "./news-item-inline"
@@ -268,7 +267,7 @@ export function NewsItemPreviewDialog({
           )}
         >
           {hasMedia && (
-            <div className="min-h-0 lg:h-full">
+            <div className="min-h-0 bg-neutral-200/50 lg:h-full dark:bg-neutral-800/25">
               {pictures.length > 0
                 ? (
                     <NewsItemPictureCarousel
@@ -307,15 +306,11 @@ export function NewsItemPreviewDialog({
             </header>
             <article className="min-h-0 flex-1 overflow-y-auto px-4 pb-10">
               <div className={cn(!hasMedia && "mx-auto w-full max-w-3xl")}>
-                <DialogTitle className={cn(
-                  "text-justify font-semibold tracking-tight",
-                  hasMedia ? "text-lg leading-7" : "text-xl leading-8",
-                )}
-                >
+                <DialogTitle className="text-lg text-justify">
                   {item.title}
                 </DialogTitle>
                 {hasBody && (
-                  <div className="mt-4 text-justify text-base leading-8 text-foreground/90 [&_a]:underline [&_a]:underline-offset-3 [&_p]:mb-4 [&_p:last-child]:mb-0">
+                  <div className="mt-4 text-justify text-[16px] text-foreground/90 [&_a]:underline [&_a]:underline-offset-3 [&_p]:mb-4 [&_p:last-child]:mb-0">
                     {content?.html
                       ? (
                           <SafeHtml
@@ -337,7 +332,7 @@ export function NewsItemPreviewDialog({
                 markScale={markScale}
                 truncate={false}
                 size="large"
-                className="min-w-0 flex-1 flex-wrap gap-2"
+                className="min-w-0 flex-1 flex-wrap gap-2 text-foreground"
               />
               <div className="ml-auto flex shrink-0 items-center gap-1">
                 {(onPreviousItem || onNextItem) && (
@@ -368,12 +363,6 @@ export function NewsItemPreviewDialog({
             </footer>
           </section>
         </div>
-        <DialogClose
-          aria-label={t("close")}
-          className="absolute top-3 right-3 z-10 flex size-9 items-center justify-center rounded-full bg-black/60 text-white opacity-80 outline-none transition-opacity hover:opacity-100 focus-visible:ring-2 focus-visible:ring-white"
-        >
-          <X className="size-5" />
-        </DialogClose>
       </DialogContent>
     </Dialog>
   )

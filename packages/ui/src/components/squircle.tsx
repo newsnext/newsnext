@@ -4,7 +4,7 @@ import { useSquircle } from "@newsnext/ui/hooks/use-squircle"
 import { cn } from "@newsnext/ui/lib/utils"
 
 type SquircleRadius = "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl"
-type SquircleVariant = "default" | "modal-shell" | "modal-inner"
+type SquircleVariant = "default" | "modal-shell"
 
 const squircleRadiusValues = {
   "sm": 4,
@@ -47,8 +47,7 @@ function SquircleBox({
       data-squircle
       className={cn(
         "overflow-hidden",
-        variant === "modal-shell" && "relative isolate bg-background p-2.5 before:pointer-events-none before:absolute before:inset-0 before:-z-10 before:bg-theme-400/45 before:content-['']",
-        variant === "modal-inner" && "bg-background/70 zenith-theme-400",
+        variant === "modal-shell" && "relative isolate bg-background p-2.5 zenith-theme-400/60",
         className,
       )}
       style={{
