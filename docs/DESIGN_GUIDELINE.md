@@ -761,6 +761,9 @@ moving or scaling the LiveCard.
 Hide previous and next controls when only one
 suggestion is available; navigation appears only when it can change the active
 suggestion. Keep the accessible dialog title and description screen-reader-only.
+The standalone Radar popup declares red as its document theme before first
+paint, regardless of the current or destination Board color. Provider color
+remains scoped to each LiveCard and its primary action.
 
 ## Copy
 

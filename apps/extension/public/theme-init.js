@@ -17,7 +17,9 @@
   document.documentElement.classList.toggle("dark", isDark)
   document.documentElement.style.colorScheme = isDark ? "dark" : "light"
 
-  const storedThemeColor = localStorage.getItem(themeColorKey) ?? "red"
-  const themeColor = /^[a-z]+$/.test(storedThemeColor) ? storedThemeColor : "red"
+  const requestedThemeColor = document.documentElement.dataset.themeColor
+    ?? localStorage.getItem(themeColorKey)
+    ?? "red"
+  const themeColor = /^[a-z]+$/.test(requestedThemeColor) ? requestedThemeColor : "red"
   document.documentElement.classList.add(themeColor)
 })()
