@@ -8,7 +8,7 @@ export async function restoreInstanceResults(
   instances: readonly Pick<Instance, "instanceId" | "sourceId">[],
 ): Promise<void> {
   await Promise.allSettled(instances.map(async (instance) => {
-    const response = await actions.appIntegration.readInstanceCache({
+    const response = await actions.instance.readCache({
       instanceId: instance.instanceId,
     })
     if (!response) return

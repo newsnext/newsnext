@@ -8,7 +8,7 @@ export const NATIVE_INTEGRATION_STATUS_QUERY_KEY = ["native-integration-status"]
 export function useNativeIntegrationStatus(enabled = true): UseQueryResult<NativeIntegrationStatus> {
   return useQuery({
     queryKey: NATIVE_INTEGRATION_STATUS_QUERY_KEY,
-    queryFn: () => actions.appIntegration.getStatus(),
+    queryFn: () => actions.nativeIntegration.getStatus(),
     enabled,
     refetchInterval: 2_000,
   })

@@ -1,6 +1,6 @@
 import { browser } from "#imports"
 
-const WORKER_ID_KEY = "newsnext-app-integration-worker-id"
+const WORKER_ID_KEY = "newsnext-worker-id"
 
 let workerId: string = crypto.randomUUID()
 let initialization: Promise<string> | undefined

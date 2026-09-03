@@ -49,15 +49,21 @@ export interface BackgroundActionContext extends ApplicationActionContext {
   nativeIntegration: {
     getLogs: () => Promise<NativeLogEntry[]>
     getStatus: () => Promise<NativeIntegrationStatus>
-    getWidgetSnapshot: (input: {
+    setEnabled: (input: { enabled: boolean }) => Promise<NativeIntegrationStatus>
+  }
+  instanceRouter: {
+    load: (input: { instanceId: string }) => Promise<SourceLoadResponse>
+    readCache: (input: { instanceId: string }) => Promise<SourceLoadResponse | null>
+  }
+  widgetSnapshots: {
+    get: (input: {
       boardId: string
       widgetId: string
     }) => Promise<unknown>
-    loadInstance: (input: { instanceId: string }) => Promise<SourceLoadResponse>
-    readInstanceCache: (input: { instanceId: string }) => Promise<SourceLoadResponse | null>
-    regenerateWorker: () => Promise<NativeIntegrationStatus>
-    setEnabled: (input: { enabled: boolean }) => Promise<NativeIntegrationStatus>
-    takeOverWorker: (input: { instanceIds: string[], workerId: string }) => Promise<NativeIntegrationStatus>
+  }
+  workerRouter: {
+    regenerateIdentity: () => Promise<NativeIntegrationStatus>
+    takeOver: (input: { instanceIds: string[], workerId: string }) => Promise<NativeIntegrationStatus>
   }
 }
 
@@ -279,10 +285,9 @@ const loaderReadInstanceCacheAction = defineAction({
   await context.loader.readInstanceCache(input)
 ))
 
-// Keep the action names stable for connected clients using the existing protocol.
 const nativeIntegrationGetStatusAction = defineAction({
   audiences: UI_ONLY,
-  name: "appIntegration.getStatus",
+  name: "nativeIntegration.getStatus",
   kind: "query",
   description: "Get the local NewsNext App connection status.",
   params: EmptyParams,
@@ -291,38 +296,38 @@ const nativeIntegrationGetStatusAction = defineAction({
 
 const nativeIntegrationGetLogsAction = defineAction({
   audiences: UI_ONLY,
-  name: "appIntegration.getLogs",
+  name: "nativeIntegration.getLogs",
   kind: "query",
   description: "Get recent NewsNext App service logs.",
   params: EmptyParams,
   result: Type.Array(AppLogEntryResult),
 }, async (_input, context: BackgroundActionContext) => await context.nativeIntegration.getLogs())
 
-const nativeIntegrationLoadInstanceAction = defineAction({
+const instanceLoadAction = defineAction({
   audiences: UI_ONLY,
-  name: "appIntegration.loadInstance",
+  name: "instance.load",
   kind: "query",
   description: "Load an Instance through the Workspace router.",
   params: Type.Object({ instanceId: Identifier }, { additionalProperties: false }),
   result: SourceLoadResponseResult,
 }, async (input, context: BackgroundActionContext) => (
-  await context.nativeIntegration.loadInstance(input)
+  await context.instanceRouter.load(input)
 ))
 
-const nativeIntegrationReadInstanceCacheAction = defineAction({
+const instanceReadCacheAction = defineAction({
   audiences: UI_ONLY,
-  name: "appIntegration.readInstanceCache",
+  name: "instance.readCache",
   kind: "query",
   description: "Read an Instance's persisted result through the Workspace router.",
   params: Type.Object({ instanceId: Identifier }, { additionalProperties: false }),
   result: SourceCacheResult,
 }, async (input, context: BackgroundActionContext) => (
-  await context.nativeIntegration.readInstanceCache(input)
+  await context.instanceRouter.readCache(input)
 ))
 
 const nativeIntegrationSetEnabledAction = defineAction({
   audiences: UI_ONLY,
-  name: "appIntegration.setEnabled",
+  name: "nativeIntegration.setEnabled",
   kind: "mutation",
   description: "Enable or disable the local NewsNext App connection on this device.",
   params: Type.Object({
@@ -331,20 +336,20 @@ const nativeIntegrationSetEnabledAction = defineAction({
   result: NativeIntegrationStatusResult,
 }, async (input, context: BackgroundActionContext) => await context.nativeIntegration.setEnabled(input))
 
-const nativeIntegrationRegenerateWorkerAction = defineAction({
+const workerRegenerateIdentityAction = defineAction({
   audiences: UI_ONLY,
-  name: "appIntegration.regenerateWorker",
+  name: "worker.regenerateIdentity",
   kind: "mutation",
   description: "Generate a new Worker identity and reconnect this browser.",
   params: EmptyParams,
   result: NativeIntegrationStatusResult,
 }, async (_input, context: BackgroundActionContext) => (
-  await context.nativeIntegration.regenerateWorker()
+  await context.workerRouter.regenerateIdentity()
 ))
 
-const nativeIntegrationTakeOverWorkerAction = defineAction({
+const workerTakeOverAction = defineAction({
   audiences: UI_ONLY,
-  name: "appIntegration.takeOverWorker",
+  name: "worker.takeOver",
   kind: "mutation",
   description: "Reassign selected Instances from an offline Worker to this Worker.",
   params: Type.Object({
@@ -352,7 +357,7 @@ const nativeIntegrationTakeOverWorkerAction = defineAction({
     workerId: Identifier,
   }, { additionalProperties: false }),
   result: NativeIntegrationStatusResult,
-}, async (input, context: BackgroundActionContext) => await context.nativeIntegration.takeOverWorker(input))
+}, async (input, context: BackgroundActionContext) => await context.workerRouter.takeOver(input))
 
 const nextLayerGetWidgetSnapshotAction = defineAction({
   audiences: UI_ONLY,
@@ -365,21 +370,21 @@ const nextLayerGetWidgetSnapshotAction = defineAction({
   }, { additionalProperties: false }),
   result: Type.Unknown(),
 }, async (input, context: BackgroundActionContext) => (
-  await context.nativeIntegration.getWidgetSnapshot(input)
+  await context.widgetSnapshots.get(input)
 ))
 
 export const uiBackgroundActionDefinitions = [
   radarResolveSuggestionsAction,
   sourceLoadAction,
   sourceCancelAction,
-  nativeIntegrationGetStatusAction,
+  instanceLoadAction,
+  instanceReadCacheAction,
   nativeIntegrationGetLogsAction,
-  nativeIntegrationLoadInstanceAction,
-  nativeIntegrationReadInstanceCacheAction,
-  nativeIntegrationRegenerateWorkerAction,
+  nativeIntegrationGetStatusAction,
   nativeIntegrationSetEnabledAction,
-  nativeIntegrationTakeOverWorkerAction,
   nextLayerGetWidgetSnapshotAction,
+  workerRegenerateIdentityAction,
+  workerTakeOverAction,
 ] as const
 
 export const backgroundActionDefinitions = [

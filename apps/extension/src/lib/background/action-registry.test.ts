@@ -31,6 +31,10 @@ function createContext(): BackgroundActionContext {
       cancel: vi.fn(async () => undefined),
       load: vi.fn(async () => ({}) as never),
     },
+    instanceRouter: {
+      load: vi.fn(async () => ({}) as never),
+      readCache: vi.fn(async () => null),
+    },
     nativeIntegration: {
       getLogs: vi.fn(async () => []),
       getStatus: vi.fn(async () => ({
@@ -39,22 +43,24 @@ function createContext(): BackgroundActionContext {
         state: "disabled" as const,
         workerId: "worker",
       })),
-      getWidgetSnapshot: vi.fn(async () => ({})),
-      loadInstance: vi.fn(async () => ({}) as never),
-      readInstanceCache: vi.fn(async () => null),
-      regenerateWorker: vi.fn(async () => ({
-        capabilities: [],
-        offlineWorkers: [],
-        state: "connecting" as const,
-        workerId: "new-worker",
-      })),
       setEnabled: vi.fn(async () => ({
         capabilities: [],
         offlineWorkers: [],
         state: "disabled" as const,
         workerId: "worker",
       })),
-      takeOverWorker: vi.fn(async () => ({
+    },
+    widgetSnapshots: {
+      get: vi.fn(async () => ({})),
+    },
+    workerRouter: {
+      regenerateIdentity: vi.fn(async () => ({
+        capabilities: [],
+        offlineWorkers: [],
+        state: "connecting" as const,
+        workerId: "new-worker",
+      })),
+      takeOver: vi.fn(async () => ({
         capabilities: [],
         offlineWorkers: [],
         state: "disabled" as const,

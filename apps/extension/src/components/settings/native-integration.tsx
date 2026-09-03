@@ -55,7 +55,7 @@ export function NativeIntegrationSettings(): React.JSX.Element {
 
   const refreshStatus = useCallback(async (): Promise<void> => {
     try {
-      setStatus(await actions.appIntegration.getStatus())
+      setStatus(await actions.nativeIntegration.getStatus())
     } catch {
       setStatus(undefined)
     }
@@ -63,7 +63,7 @@ export function NativeIntegrationSettings(): React.JSX.Element {
 
   const refreshLogs = useCallback(async (): Promise<void> => {
     try {
-      setLogs(await actions.appIntegration.getLogs())
+      setLogs(await actions.nativeIntegration.getLogs())
     } catch {
       setLogs([])
     }
@@ -98,7 +98,7 @@ export function NativeIntegrationSettings(): React.JSX.Element {
         if (!granted) return
       }
 
-      setStatus(await actions.appIntegration.setEnabled({
+      setStatus(await actions.nativeIntegration.setEnabled({
         enabled,
       }))
 
@@ -117,7 +117,7 @@ export function NativeIntegrationSettings(): React.JSX.Element {
     const succeeded = await runUpdate(async () => {
       const offlineWorker = status?.offlineWorkers.find(worker => worker.id === workerId)
       if (!offlineWorker) return
-      setStatus(await actions.appIntegration.takeOverWorker({
+      setStatus(await actions.worker.takeOver({
         instanceIds: offlineWorker.instanceIds,
         workerId,
       }))
@@ -129,7 +129,7 @@ export function NativeIntegrationSettings(): React.JSX.Element {
 
   const handleRegenerateWorker = useCallback(async (): Promise<void> => {
     const succeeded = await runUpdate(async () => {
-      setStatus(await actions.appIntegration.regenerateWorker())
+      setStatus(await actions.worker.regenerateIdentity())
     })
     if (!succeeded) {
       await refreshStatus()

@@ -6,7 +6,7 @@ import type {
 } from "@newsnext/extension-connection"
 import type { PersistedSettings } from "../../settings/persisted-settings"
 import type { SourceLoadResponse } from "../../source/load-result"
-import type { NativeIntegrationActions } from "../action-context"
+import type { NativeIntegrationServices } from "../action-context"
 import type { NativeIntegrationFailureState } from "./connection"
 import type { NativeIntegrationConnectionError, NativeIntegrationStatus, NativePort } from "./types"
 import { browser } from "#imports"
@@ -56,8 +56,8 @@ import {
   WORKSPACE_UPDATED_AT_KEY,
 } from "./state"
 import {
-  regenerateNativeIntegrationWorker as regenerateWorker,
-  takeOverNativeIntegrationWorker as takeOverWorker,
+  regenerateWorker,
+  takeOverWorker,
 } from "./worker-routing"
 import {
   applyWorkspaceChangePatch,
@@ -74,20 +74,28 @@ export type {
   NativeIntegrationStatus,
 } from "./types"
 
-export const nativeIntegrationActions: NativeIntegrationActions = {
-  getLogs: requestLogs,
-  getStatus: async () => getNativeIntegrationStatus(),
-  getWidgetSnapshot: requestWidgetSnapshot,
-  loadInstance: requestInstanceLoad,
-  readInstanceCache: requestInstanceCache,
-  regenerateWorker: regenerateNativeIntegrationWorker,
-  setEnabled: async ({ enabled }) => await setNativeIntegrationEnabled(enabled),
-  takeOverWorker: async ({ instanceIds, workerId }) => (
-    await takeOverNativeIntegrationWorker(workerId, instanceIds)
-  ),
+export const nativeIntegrationServices: NativeIntegrationServices = {
+  instanceRouter: {
+    load: requestInstanceLoad,
+    readCache: requestInstanceCache,
+  },
+  nativeIntegration: {
+    getLogs: requestLogs,
+    getStatus: async () => getNativeIntegrationStatus(),
+    setEnabled: async ({ enabled }) => await setNativeIntegrationEnabled(enabled),
+  },
+  widgetSnapshots: {
+    get: requestWidgetSnapshot,
+  },
+  workerRouter: {
+    regenerateIdentity: regenerateWorkerIdentity,
+    takeOver: async ({ instanceIds, workerId }) => (
+      await takeOverOfflineWorker(workerId, instanceIds)
+    ),
+  },
 }
 
-const connectedActionContext = createBackgroundActionContext(nativeIntegrationActions)
+const connectedActionContext = createBackgroundActionContext(nativeIntegrationServices)
 
 export function getNativeIntegrationStatus(): NativeIntegrationStatus {
   return {
@@ -105,23 +113,23 @@ export async function requestWidgetSnapshot(input: {
   boardId: string
   widgetId: string
 }): Promise<unknown> {
-  return await requestWidgetSnapshotInternal(input, requireAppConnection)
+  return await requestWidgetSnapshotInternal(input, requireNativeConnection)
 }
 
 export async function requestLogs(): Promise<NativeLogEntry[]> {
-  return await requestLogsInternal(requireAppConnection)
+  return await requestLogsInternal(requireNativeConnection)
 }
 
 export async function requestInstanceLoad(
   input: { instanceId: string },
 ): Promise<SourceLoadResponse> {
-  return await requestInstanceLoadInternal(input, requireAppConnection, connectedActionContext)
+  return await requestInstanceLoadInternal(input, requireNativeConnection, connectedActionContext)
 }
 
 export async function requestInstanceCache(
   input: { instanceId: string },
 ): Promise<SourceLoadResponse | null> {
-  return await requestInstanceCacheInternal(input, requireAppConnection, connectedActionContext)
+  return await requestInstanceCacheInternal(input, requireNativeConnection, connectedActionContext)
 }
 
 export async function setNativeIntegrationEnabled(
@@ -141,7 +149,7 @@ export async function setNativeIntegrationEnabled(
       appIntegrationEnabled: nextEnabled,
     },
   }
-  await commitSettings(nextSettings, requireAppConnection)
+  await commitSettings(nextSettings, requireNativeConnection)
   await browser.storage.local.set({ [key]: nextSettings })
   await applyNativeIntegrationEnabled(nextEnabled)
   return getNativeIntegrationStatus()
@@ -151,17 +159,17 @@ const workerConnectionControls = {
   disconnect,
   getStatus: getNativeIntegrationStatus,
   reconnect: connect,
-  requireConnection: requireAppConnection,
+  requireConnection: requireNativeConnection,
 }
 
-export async function takeOverNativeIntegrationWorker(
+export async function takeOverOfflineWorker(
   sourceWorkerId: string,
   instanceIds: string[],
 ): Promise<NativeIntegrationStatus> {
   return await takeOverWorker(sourceWorkerId, instanceIds, workerConnectionControls)
 }
 
-export async function regenerateNativeIntegrationWorker(): Promise<NativeIntegrationStatus> {
+export async function regenerateWorkerIdentity(): Promise<NativeIntegrationStatus> {
   return await regenerateWorker(workerConnectionControls)
 }
 
@@ -280,7 +288,7 @@ function runtimeLastErrorMessage(): string | undefined {
   return browserRuntime.lastError?.message
 }
 
-async function requireAppConnection(): Promise<NativePort> {
+async function requireNativeConnection(): Promise<NativePort> {
   if (!runtime.enabled) throw new Error("NewsNext App integration is disabled")
   if (runtime.connectionState === "connected" && runtime.port) return runtime.port
   if (isRetryableConnectionState() && runtime.reconnectTimer === undefined) connect()
@@ -455,7 +463,7 @@ async function applySynchronizedNativeIntegrationEnabled(requestedEnabled: boole
 
 async function synchronizeSettingsChange(settings: PersistedSettings): Promise<void> {
   try {
-    await commitSettings(settings, requireAppConnection)
+    await commitSettings(settings, requireNativeConnection)
     await applySynchronizedNativeIntegrationEnabled(settings.general.appIntegrationEnabled)
   } catch (error) {
     console.error("Failed to synchronize Settings", error)
@@ -469,7 +477,7 @@ async function hasNativeIntegrationPermission(): Promise<boolean> {
 }
 
 export async function registerNativeIntegration(): Promise<void> {
-  registerApplicationDataSync(requireAppConnection)
+  registerApplicationDataSync(requireNativeConnection)
   browser.alarms.onAlarm.addListener((alarm) => {
     if (runtime.enabled
       && alarm.name === NATIVE_INTEGRATION_RECONNECT_ALARM

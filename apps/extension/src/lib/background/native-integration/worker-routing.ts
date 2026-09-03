@@ -12,7 +12,7 @@ interface WorkerConnectionControls {
   requireConnection: RequireNativeConnection
 }
 
-export async function takeOverNativeIntegrationWorker(
+export async function takeOverWorker(
   sourceWorkerId: string,
   instanceIds: string[],
   controls: WorkerConnectionControls,
@@ -42,7 +42,7 @@ export async function takeOverNativeIntegrationWorker(
   return controls.getStatus()
 }
 
-export async function regenerateNativeIntegrationWorker(
+export async function regenerateWorker(
   controls: WorkerConnectionControls,
 ): Promise<NativeIntegrationStatus> {
   const previousWorkerId = runtime.workerId
