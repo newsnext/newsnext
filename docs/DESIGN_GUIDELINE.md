@@ -258,6 +258,65 @@ and never show rank movement. Keep the marker column width stable across these
 presentations so item summaries do not shift when a Source changes its
 effective presentation.
 
+Give every news item an anchored preview popover after a 300ms hover delay,
+including items without extended content. Limit the hover trigger to the item's
+left half so the pointer can move toward the left-positioned preview without
+crossing a competing trigger area. Keep the complete item as the link target,
+do not open the preview on press, and render text, sanitized HTML, pictures, and
+iframes in the shared preview composition. Combine multiple pictures into one
+stable carousel rather than stacking them, provide wrapping previous and next
+controls, and preserve the active picture when opening the full-size modal
+viewer. Treat both the picture and the text as entry points to that viewer, and
+use the title when no directly actionable preview content exists. In the
+expanded surface, pair media and article text side by side on wide viewports,
+stack them on narrow viewports, keep both regions on one continuous background,
+and let text-only items use the full surface without reserving an empty media
+column. Anchor footer actions to the surface's right edge so item navigation
+never shifts those controls when the content layout changes. Keep the detail
+column and item title visible for media previews even when no article body is
+available. Keep expanded media flush with its region. When the title needs
+extra space for overlay controls, apply that inset symmetrically without
+changing the surrounding detail column.
+
+Treat footer positioning as independent from article typography. Keep footer
+actions anchored to the surface edge while allowing text-only content to use a
+centered reading column with a comfortable measure, 32px body line height, and
+clear paragraph spacing. Justify multi-line titles and body copy so Chinese text
+can form a clean right edge while paragraph-ending lines remain natural. Use a
+tighter title scale inside the narrower media detail column. Give the inline
+content at the footer's left edge a small optical inset to balance the intrinsic
+blank space inside the fixed-size action buttons on the right; do not move the
+right-side controls to compensate.
+Structure that detail column as an independently scrolling title and body
+region plus a fixed footer that repeats the complete, untruncated inline
+presentation alongside the original link. Preserve a fixed header slot above
+the title and render the item's icon there when one exists; do not synthesize a
+fallback or assume every icon represents an author. Use an approximately 60/40
+media-to-detail split on wide screens.
+
+Keep shared inline metadata vertically centered in both news items and preview
+footers. Use a fixed 14px alignment box for the compact 12px presentation and a
+fixed 20px alignment box for the expanded 14px presentation; size statistic
+icons to the same box as their adjacent text instead of aligning either side to
+the baseline or container edge.
+
+When the preview belongs to a multi-item list, place previous-item and
+next-item controls immediately before the original-link control in the footer.
+Disable the control at its corresponding list boundary, and reset the media
+carousel to its first picture after item navigation.
+
+Do not repeat the popover's outer radius on its inset media: the standard 16px
+popover padding already consumes the `rounded-2xl` radius, leaving a square
+inner corner. Likewise, do not add a second inner radius to expanded media; let
+the full-screen surface provide the only outer clipping shape.
+
+Keep text in compact news-item rows non-selectable so drag and click gestures
+remain predictable. Allow text selection in both the anchored preview and the
+expanded preview, and do not treat the click produced after a selection drag as
+a request to open the expanded surface.
+Support the same wrapping controls and Left/Right Arrow navigation in both
+surfaces.
+
 ### Next Layer Widget surfaces
 
 Next Layer uses a responsive GridStack presentation adapter for movable and

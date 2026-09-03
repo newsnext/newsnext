@@ -777,6 +777,9 @@ RSS and Atom map their channel/feed metadata and entries; JSON Feed maps its
 presentation metadata, first item author, and item URL fields. XML text values
 receive one strict HTML character-reference decoding pass after parsing so
 entities left literal by CDATA-producing feeds do not leak into presentation.
+RSS and Atom entry body candidates map to `content.html`; the frontend's shared
+sanitized HTML renderer owns their presentation. JSON Feed retains the format's
+explicit distinction between `content_html` and `content_text`.
 A missing JSON Feed item title is derived from its summary, text content, or
 stripped HTML and bounded to 200 characters. Entries without a usable title or
 URL are discarded. After filtering, the loader independently retains parseable publication and

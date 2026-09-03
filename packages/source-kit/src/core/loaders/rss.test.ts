@@ -85,6 +85,25 @@ describe("parseRss", () => {
     })
   })
 
+  it("renders RSS description content as HTML", () => {
+    expect(parseRss(`
+      <rss version="2.0">
+        <channel>
+          <title>Example Feed</title>
+          <item>
+            <title>HTML article</title>
+            <link>https://example.com/html-article</link>
+            <description><![CDATA[<p>Hello <strong>from RSS</strong>.</p>]]></description>
+          </item>
+        </channel>
+      </rss>
+    `)?.items).toEqual([{
+      title: "HTML article",
+      url: "https://example.com/html-article",
+      content: { html: "<p>Hello <strong>from RSS</strong>.</p>" },
+    }])
+  })
+
   it("preserves publication and update timestamps independently", () => {
     expect(parseRss(`
       <feed xmlns="http://www.w3.org/2005/Atom">

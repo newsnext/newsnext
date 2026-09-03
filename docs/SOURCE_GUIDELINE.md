@@ -693,6 +693,9 @@ semantic fields. Because JSON Feed item titles are optional, the loader derives
 a bounded title from `summary`, `content_text`, or `content_html` when needed.
 RSS and Atom text fields decode HTML character references once after XML
 parsing, including references preserved literally inside CDATA sections.
+Entry `content:encoded`, `summary`, `description`, and `content` values are
+preserved as `content.html` and sanitized by the UI when rendered. JSON Feed
+continues to distinguish `content_html` from plain `content_text`.
 When an RSS or Atom entry has no link, the loader uses the channel or feed home
 as its item URL and appends an available `guid` or `id` as `#guid=...` so the
 URL remains a stable item key. JSON Feed items similarly combine

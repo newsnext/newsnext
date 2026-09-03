@@ -30,6 +30,11 @@ export function Timeline({ items, inlinePresentation, markScale, scrollElement, 
         />
         <NewsItemLink
           item={item}
+          inlineText={inlinePresentation?.[index]}
+          markScale={markScale}
+          previewItems={items}
+          previewIndex={index}
+          previewInlinePresentation={inlinePresentation}
           className="flex min-w-0 rounded-xl transition-colors outline-none hover:bg-muted focus-visible:bg-muted focus-visible:ring-2 focus-visible:ring-theme-400"
         >
           <div className="w-5 shrink-0" aria-hidden />
@@ -50,7 +55,7 @@ export function Timeline({ items, inlinePresentation, markScale, scrollElement, 
         </NewsItemLink>
       </div>
     )
-  }, [gradientId, inlinePresentation, items.length, markScale, timeLabels])
+  }, [gradientId, inlinePresentation, items, markScale, timeLabels])
 
   return (
     <VirtualList

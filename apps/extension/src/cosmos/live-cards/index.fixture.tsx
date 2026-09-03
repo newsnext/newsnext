@@ -66,25 +66,42 @@ const RANKING_ITEMS: NewsItem[] = [
   {
     title: "Designing UI states that are easy to verify",
     url: "https://example.com/designing-ui-states",
+    author: { name: "Cosmos Design" },
     attributes: { category: "UI states" },
+    content: {
+      text: [
+        "A practical guide to making loading, empty, error, and success states observable and reliable.",
+        "Start by treating each state as part of the product rather than a temporary implementation detail. The best interfaces make progress, recovery, and the next available action immediately clear.",
+        "Use realistic content in visual fixtures, keep controls stable as data changes, and verify narrow and wide layouts independently.",
+      ].join("\n\n"),
+      pictures: [
+        "https://picsum.photos/seed/newsnext-design-1/1200/675",
+        "https://picsum.photos/seed/newsnext-design-2/1200/675",
+        "https://picsum.photos/seed/newsnext-design-3/1200/675",
+      ],
+    },
   },
   {
     title: "A component API that stays flexible",
     url: "https://example.com/component-api",
     attributes: { category: "Composition" },
+    content: { text: "Composition patterns that keep component APIs adaptable without pushing complexity onto callers." },
   },
   {
     title: "What makes a useful visual fixture?",
     url: "https://example.com/visual-fixtures",
     attributes: { category: "Testing" },
+    content: { text: "Build fixtures around meaningful product states so visual regressions are quick to understand." },
   },
   {
     title: "Color systems for light and dark themes",
     url: "https://example.com/color-systems",
+    content: { text: "Use semantic roles and perceptual contrast to keep a palette coherent across appearance modes." },
   },
   {
     title: "Motion that clarifies interface state",
     url: "https://example.com/interface-motion",
+    content: { text: "Motion should explain where content came from, where it went, and what changed." },
   },
 ]
 

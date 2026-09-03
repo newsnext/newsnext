@@ -110,6 +110,11 @@ export function Ranking({ items, inlinePresentation, markScale, scrollElement }:
       renderItem={(item, index) => (
         <NewsItemLink
           item={item}
+          inlineText={inlinePresentation?.[index]}
+          markScale={markScale}
+          previewItems={items}
+          previewIndex={index}
+          previewInlinePresentation={inlinePresentation}
           className="relative flex items-center gap-2 rounded-xl transition-colors hover:bg-muted"
         >
           <span className="flex min-h-6 w-6 shrink-0 self-stretch items-center justify-center rounded-full bg-muted text-sm opacity-80">

@@ -202,8 +202,8 @@ function parseXmlAuthor(value: unknown): NewsItemInput["author"] {
 function parseXmlContent(item: Record<string, unknown>): NewsItemInput["content"] {
   const html = readXmlOptionalText(item["content:encoded"])
   if (html) return { html }
-  const text = readXmlOptionalText(item.summary ?? item.description ?? item.content)
-  return text ? { text } : undefined
+  const fallbackHtml = readXmlOptionalText(item.summary ?? item.description ?? item.content)
+  return fallbackHtml ? { html: fallbackHtml } : undefined
 }
 
 function parseJsonFeedContent(item: Record<string, unknown>): NewsItemInput["content"] {
