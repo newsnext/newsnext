@@ -83,6 +83,10 @@ export function parseXiaohongshuNoteTimestamp(noteId: string | undefined): numbe
   return Number.isFinite(timestamp) && timestamp > 0 ? timestamp : undefined
 }
 
+export function sortXiaohongshuItemsByNewest(items: NewsItemInput[]): NewsItemInput[] {
+  return items.sort((left, right) => (right.publishedAt ?? 0) - (left.publishedAt ?? 0))
+}
+
 function normalizeImageUrl(value: string | undefined): string | undefined {
   if (!value) return undefined
   return value.startsWith("http://") ? `https://${value.slice(7)}` : value

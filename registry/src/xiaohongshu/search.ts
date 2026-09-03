@@ -2,7 +2,11 @@ import type { ProviderSourceConfig } from "@newsnext/source-kit/registry"
 import type { SourceLoaderContext, SourceLoaderOutput } from "@newsnext/source-kit/types"
 import type { XiaohongshuFeedItem } from "./shared"
 import { parseRelativeDate } from "@newsnext/date-parser"
-import { parseXiaohongshuNoteTimestamp, xiaohongshuFeedItemToNewsItem } from "./shared"
+import {
+  parseXiaohongshuNoteTimestamp,
+  sortXiaohongshuItemsByNewest,
+  xiaohongshuFeedItemToNewsItem,
+} from "./shared"
 import { signXiaohongshuPost } from "./signing"
 
 const SEARCH_URI = "/api/sns/web/v2/search/notes"
@@ -225,7 +229,7 @@ async function fetchXiaohongshuSearch(
     .map(item => xiaohongshuFeedItemToNewsItem(item, "pc_search"))
     .filter(item => item !== null)
   if (params.order === "time_descending") {
-    items.sort((left, right) => (right.publishedAt ?? 0) - (left.publishedAt ?? 0))
+    sortXiaohongshuItemsByNewest(items)
   }
   return {
     items,

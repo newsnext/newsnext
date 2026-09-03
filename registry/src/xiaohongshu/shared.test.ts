@@ -4,6 +4,7 @@ import {
   parseXiaohongshuCount,
   parseXiaohongshuInitialState,
   parseXiaohongshuNoteTimestamp,
+  sortXiaohongshuItemsByNewest,
   xiaohongshuFeedItemToNewsItem,
 } from "./shared"
 
@@ -25,6 +26,17 @@ describe("xiaohongshu helpers", () => {
     expect(parseXiaohongshuNoteTimestamp("6a943cbe00000000200351d4"))
       .toBe(Date.parse("2026-08-30T14:22:54.000Z"))
     expect(parseXiaohongshuNoteTimestamp("not-a-note-id")).toBeUndefined()
+  })
+
+  it("restores chronological order when an older note is pinned first", () => {
+    const items = [
+      { title: "Pinned", url: "https://example.com/pinned", publishedAt: 1 },
+      { title: "Newest", url: "https://example.com/newest", publishedAt: 3 },
+      { title: "Older", url: "https://example.com/older", publishedAt: 2 },
+    ]
+
+    expect(sortXiaohongshuItemsByNewest(items).map(item => item.title))
+      .toEqual(["Newest", "Older", "Pinned"])
   })
 
   it("maps a note without leaking tokens outside its navigation URL", () => {

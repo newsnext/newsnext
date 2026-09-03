@@ -4,6 +4,7 @@ import type { XiaohongshuFeedItem } from "./shared"
 import { searchSource } from "./search"
 import {
   parseXiaohongshuInitialState,
+  sortXiaohongshuItemsByNewest,
   xiaohongshuFeedItemToNewsItem,
 } from "./shared"
 
@@ -37,11 +38,12 @@ async function fetchUserNotes(
   const state = parseXiaohongshuInitialState(html) as UserState
   const user = state.user
   const basicInfo = user?.userPageData?.basicInfo
+  const items = (user?.notes?.[0] ?? [])
+    .map(item => xiaohongshuFeedItemToNewsItem({ ...item, modelType: "note" }, "pc_user"))
+    .filter(item => item !== null)
+  sortXiaohongshuItemsByNewest(items)
   return {
-    items: (user?.notes?.[0] ?? [])
-      .map(item => xiaohongshuFeedItemToNewsItem({ ...item, modelType: "note" }, "pc_user"))
-      .filter(item => item !== null)
-      .slice(0, RESULT_LIMIT),
+    items: items.slice(0, RESULT_LIMIT),
     metadata: {
       title: basicInfo?.nickname ? `${basicInfo.nickname} | 笔记` : "用户笔记",
       badge: basicInfo?.imageb ?? basicInfo?.images,
@@ -65,7 +67,7 @@ export default {
   sources: {
     search: searchSource,
     user: {
-      version: 1,
+      version: 2,
       metadata: {
         title: "用户笔记",
         desc: "指定小红书用户发布的笔记",
