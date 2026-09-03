@@ -12,18 +12,7 @@ interface LiveCardReorderInput {
     x: number
     y: number
   }
-  sourceIds: string[]
-}
-
-interface LiveCardMarqueeSelectionInput {
-  initialIds?: string[]
-  items: LiveCardLayoutItem[]
-  marquee: {
-    bottom: number
-    left: number
-    right: number
-    top: number
-  }
+  sourceId: string
 }
 
 function isSameVisualRow(first: LiveCardLayoutItem, second: LiveCardLayoutItem): boolean {
@@ -56,10 +45,9 @@ function getDistanceToRow(pointerY: number, row: LiveCardLayoutItem[]): number {
 export function getLiveCardReorderDestinationIndex({
   items,
   pointer,
-  sourceIds,
+  sourceId,
 }: LiveCardReorderInput): number {
-  const sourceIdSet = new Set(sourceIds)
-  const sourceIndex = items.findIndex(item => sourceIdSet.has(item.id))
+  const sourceIndex = items.findIndex(item => item.id === sourceId)
   if (sourceIndex === -1) return 0
 
   const rows = groupVisualRows(items)
@@ -71,10 +59,10 @@ export function getLiveCardReorderDestinationIndex({
   }, null)
   if (!targetRow) return 0
 
-  const remainingItems = items.filter(item => !sourceIdSet.has(item.id))
-  const rowTargets = targetRow.filter(item => !sourceIdSet.has(item.id))
+  const remainingItems = items.filter(item => item.id !== sourceId)
+  const rowTargets = targetRow.filter(item => item.id !== sourceId)
   if (rowTargets.length === 0) {
-    return items.slice(0, sourceIndex).filter(item => !sourceIdSet.has(item.id)).length
+    return sourceIndex
   }
 
   const itemBeforePointer = rowTargets.find(item => pointer.x < (item.left + item.right) / 2)
@@ -87,26 +75,9 @@ export function getLiveCardReorderDestinationIndex({
   return remainingItems.findIndex(item => item.id === lastRowItem.id) + 1
 }
 
-export function reorderLiveCardGroup(instanceIds: string[], sourceIds: string[], destinationIndex: number): string[] {
-  const sourceIdSet = new Set(sourceIds)
-  const draggedInstanceIds = instanceIds.filter(id => sourceIdSet.has(id))
-  const remainingInstanceIds = instanceIds.filter(id => !sourceIdSet.has(id))
-  remainingInstanceIds.splice(destinationIndex, 0, ...draggedInstanceIds)
+export function reorderLiveCard(instanceIds: string[], sourceId: string, destinationIndex: number): string[] {
+  if (!instanceIds.includes(sourceId)) return instanceIds
+  const remainingInstanceIds = instanceIds.filter(id => id !== sourceId)
+  remainingInstanceIds.splice(destinationIndex, 0, sourceId)
   return remainingInstanceIds
-}
-
-export function getLiveCardMarqueeSelection({
-  initialIds = [],
-  items,
-  marquee,
-}: LiveCardMarqueeSelectionInput): string[] {
-  const selectedIds = new Set(initialIds)
-  items.forEach((item) => {
-    const intersects = marquee.left < item.right
-      && marquee.right > item.left
-      && marquee.top < item.bottom
-      && marquee.bottom > item.top
-    if (intersects) selectedIds.add(item.id)
-  })
-  return items.flatMap(item => selectedIds.has(item.id) ? [item.id] : [])
 }

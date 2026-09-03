@@ -4,7 +4,7 @@ import type { LiveCardLayoutItem } from "@/lib/board/live-card-reorder"
 import { autoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/element"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { isSortableData } from "@/lib/board"
-import { getLiveCardReorderDestinationIndex, reorderLiveCardGroup } from "@/lib/board/live-card-reorder"
+import { getLiveCardReorderDestinationIndex, reorderLiveCard } from "@/lib/board/live-card-reorder"
 
 interface InstanceOrderState {
   instanceIds: string[]
@@ -47,15 +47,6 @@ function snapshotLayout(list: HTMLOListElement): LiveCardLayoutItem[] {
         left: rect.left - listRect.left,
       }]
     })
-}
-
-function hasSameOrder(first: string[], second: string[]): boolean {
-  return first.length === second.length && first.every((id, index) => second[index] === id)
-}
-
-function getDraggedInstanceIds(instanceIds: string[], draggedIds: string[]): string[] {
-  const draggedIdSet = new Set(draggedIds)
-  return instanceIds.filter(id => draggedIdSet.has(id))
 }
 
 export function useWrappedSortable({
@@ -110,26 +101,24 @@ export function useWrappedSortable({
 
     const listRect = list.getBoundingClientRect()
     const initialInstanceIds = initialOrderedInstanceIdsRef.current
-    const sourceIds = getDraggedInstanceIds(initialInstanceIds, source.data.ids)
-    if (sourceIds.length === 0) return
+    const sourceIndex = initialInstanceIds.indexOf(source.data.id)
+    if (sourceIndex === -1) return
 
     const destinationIndex = getLiveCardReorderDestinationIndex({
       items: dragLayout,
-      sourceIds,
+      sourceId: source.data.id,
       pointer: {
         x: location.current.input.clientX - listRect.left,
         y: location.current.input.clientY - listRect.top,
       },
     })
     destinationIndexRef.current = destinationIndex
-    const nextInstanceIds = reorderLiveCardGroup(initialInstanceIds, sourceIds, destinationIndex)
-    if (hasSameOrder(nextInstanceIds, initialInstanceIds)) {
+    if (destinationIndex === sourceIndex) {
       setInsertionIndicator(null)
       return
     }
 
-    const sourceIdSet = new Set(sourceIds)
-    const remainingInstanceIds = initialInstanceIds.filter(id => !sourceIdSet.has(id))
+    const remainingInstanceIds = initialInstanceIds.filter(id => id !== source.data.id)
     const beforeId = remainingInstanceIds[destinationIndex]
     const nextIndicator: InsertionIndicator = beforeId
       ? { edge: "left", id: beforeId }
@@ -161,15 +150,14 @@ export function useWrappedSortable({
     const initialInstanceIds = initialOrderedInstanceIdsRef.current
     if (!hasDropTarget || !isInsideList || destinationIndex === null || !isSortableData(source.data)) return
 
-    const sourceIds = getDraggedInstanceIds(initialInstanceIds, source.data.ids)
-    const finalInstanceIds = reorderLiveCardGroup(initialInstanceIds, sourceIds, destinationIndex)
-    if (!hasSameOrder(finalInstanceIds, initialInstanceIds)) {
-      setInstanceOrderState({
-        instanceIds,
-        orderedInstanceIds: finalInstanceIds,
-      })
-      onInstanceIdsChange(finalInstanceIds)
-    }
+    const sourceIndex = initialInstanceIds.indexOf(source.data.id)
+    if (sourceIndex === -1 || destinationIndex === sourceIndex) return
+    const finalInstanceIds = reorderLiveCard(initialInstanceIds, source.data.id, destinationIndex)
+    setInstanceOrderState({
+      instanceIds,
+      orderedInstanceIds: finalInstanceIds,
+    })
+    onInstanceIdsChange(finalInstanceIds)
   }, [instanceIds, onInstanceIdsChange])
 
   return {

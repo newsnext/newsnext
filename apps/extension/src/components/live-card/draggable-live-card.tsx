@@ -68,54 +68,32 @@ export function SortableLiveCard({
 
 function generateDragPreview({
   container,
-  draggedIds,
-  elements,
-}: { container: HTMLElement, draggedIds: string[], elements: HTMLElement[] }) {
-  const previewSources = elements.flatMap((item, index) => {
-    const header = item.querySelector<HTMLElement>("[data-live-card-header]")
-    const surface = item.querySelector<HTMLElement>("[data-live-card-surface]")
-    const backgroundColor = getComputedStyle(item).getPropertyValue("--color-background").trim()
-      || getComputedStyle(document.body).backgroundColor
-    return header && surface
-      ? [{
-          backgroundColor,
-          header,
-          id: item.dataset.liveCardId ?? draggedIds[index],
-          surfaceColor: getComputedStyle(surface).backgroundColor,
-          themeColor: getComputedStyle(header).getPropertyValue("--color-theme-400"),
-        }]
-      : []
-  })
-  if (previewSources.length === 0) return
+  element,
+}: { container: HTMLElement, element: HTMLElement }) {
+  const header = element.querySelector<HTMLElement>("[data-live-card-header]")
+  const surface = element.querySelector<HTMLElement>("[data-live-card-surface]")
+  if (!header || !surface) return
 
-  const previewWidth = elements[0]?.getBoundingClientRect().width ?? 400
+  const backgroundColor = getComputedStyle(element).getPropertyValue("--color-background").trim()
+    || getComputedStyle(document.body).backgroundColor
+  const previewWidth = element.getBoundingClientRect().width
   container.style.width = `${previewWidth}px`
-  container.className = "flex flex-col gap-1.5"
 
-  const layers = previewSources.map(({ backgroundColor, header, id, surfaceColor, themeColor }) => {
-    const layer = document.createElement("div")
-    if (id) layer.dataset.dragPreviewId = id
-    layer.className = "relative rounded-3xl shadow-md"
-    layer.style.width = `${previewWidth}px`
-    layer.style.padding = "0.625rem"
-    layer.style.background = `linear-gradient(${surfaceColor}, ${surfaceColor}), ${backgroundColor}`
-    layer.style.setProperty("--color-theme-400", themeColor)
+  const layer = document.createElement("div")
+  layer.dataset.dragPreview = ""
+  layer.className = "relative rounded-3xl shadow-md"
+  layer.style.width = `${previewWidth}px`
+  layer.style.padding = "0.625rem"
+  const surfaceColor = getComputedStyle(surface).backgroundColor
+  layer.style.background = `linear-gradient(${surfaceColor}, ${surfaceColor}), ${backgroundColor}`
+  layer.style.setProperty("--color-theme-400", getComputedStyle(header).getPropertyValue("--color-theme-400"))
 
-    const preview = header.cloneNode(true) as HTMLElement
-    preview.style.marginBottom = "0"
-    layer.append(preview)
-    return layer
-  })
-  layers.forEach(layer => container.append(layer))
+  const preview = header.cloneNode(true) as HTMLElement
+  preview.style.marginBottom = "0"
+  layer.append(preview)
+  container.append(layer)
 
-  if (draggedIds.length > 1) {
-    const count = document.createElement("span")
-    count.textContent = `${draggedIds.length}`
-    count.className = "absolute -right-2 -top-2 z-10 flex size-7 items-center justify-center rounded-full bg-theme-400 text-xs font-semibold text-background shadow-md"
-    layers[0]?.append(count)
-  }
-
-  return () => layers.forEach(layer => layer.remove())
+  return () => layer.remove()
 }
 
 function DraggableLiveCardComponent({ boardId, descriptor, dragging, instanceAtom, sortable = true }: DraggableLiveCardProps) {

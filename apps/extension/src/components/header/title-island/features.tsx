@@ -74,15 +74,13 @@ export function useTrashFeature(
   const deleteInstance = useSetAtom(deleteInstanceAtom)
   const shouldReduceMotion = useReducedMotion()
 
-  const deleteDraggedLiveCards = useEffectEvent(async ({ source }: ElementEventBasePayload) => {
+  const deleteDraggedLiveCard = useEffectEvent(async ({ source }: ElementEventBasePayload) => {
     if (!isSortableData(source.data)) return
 
     try {
-      for (const instanceId of source.data.ids) {
-        await deleteInstance(instanceId)
-      }
+      await deleteInstance(source.data.id)
     } catch (error) {
-      console.error("Failed to delete dropped LiveCards", error)
+      console.error("Failed to delete dropped LiveCard", error)
     }
   })
 
@@ -113,7 +111,7 @@ export function useTrashFeature(
             && clientY <= rect.bottom
           setIsDragging(false)
           setIsOverTrash(false)
-          if (shouldDelete) void deleteDraggedLiveCards(args)
+          if (shouldDelete) void deleteDraggedLiveCard(args)
         },
       }),
       dropTargetForElements({

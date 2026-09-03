@@ -13,17 +13,13 @@ type MonitorCallbacks = Pick<
 
 type ContextProps = MonitorCallbacks & {
   dropTargetRef?: RefObject<HTMLElement | null>
-  selectedInstanceIds?: string[]
 }
 
 type MonitorCallbackArgs<Key extends keyof MonitorCallbacks> = Parameters<NonNullable<MonitorCallbacks[Key]>>[0]
 
-const EMPTY_SELECTED_INSTANCE_IDS: string[] = []
-
 export function DndContext({
   children,
   dropTargetRef,
-  selectedInstanceIds = EMPTY_SELECTED_INSTANCE_IDS,
   ...callbacks
 }: PropsWithChildren<ContextProps>) {
   const instanceId = useId()
@@ -59,7 +55,7 @@ export function DndContext({
   }, [dropTargetRef, instanceId])
 
   return (
-    <SortableContext value={{ instanceId, selectedInstanceIds }}>
+    <SortableContext value={instanceId}>
       {children}
     </SortableContext>
   )

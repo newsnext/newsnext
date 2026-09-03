@@ -219,8 +219,8 @@ Keep render functions free of ref reads and writes. `DndContext` uses an Effect
 Event so its long-lived drag monitor always invokes the latest callbacks without
 resubscribing. Ordinary UI callbacks such as `DynamicIsland` open and close
 handlers should instead depend directly on the values they use. `LiveCardContainer`
-synchronizes its imperative drag-order ref in a layout effect and keeps scatter
-history in React state.
+keeps drag state close to the rendered cards, while `useWrappedSortable` snapshots
+the card order and layout only when dragging starts.
 
 TanStack Virtual returns functions that React Compiler cannot memoize safely.
 Keep `VirtualList` virtualized, and apply the

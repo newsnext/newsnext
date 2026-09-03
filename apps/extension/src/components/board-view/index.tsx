@@ -76,7 +76,6 @@ export function BoardView({ board, layer }: { board: Board, layer: BoardLayer })
     return dropTargetForElements({
       element: dropTarget,
       canDrop: ({ source }) => isSortableData(source.data)
-        && source.data.ids.length === 1
         && !board.instanceIds.includes(source.data.id),
       getDropEffect: () => "move",
       onDragEnter: () => setIsSearchTransferOver(true),

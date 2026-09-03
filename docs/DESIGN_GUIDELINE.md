@@ -255,9 +255,9 @@ LiveCards define the primary NewsNext surface treatment.
   Theme mode belongs in Appearance settings rather than the title island.
   Changing the active Board color here updates the same persisted Board
   preference used by its editor.
-- While one or more LiveCards are being dragged, temporarily replace the header
+- While a LiveCard is being dragged, temporarily replace the header
   Dynamic Island with an enlarged red trash target. Strengthen its tint and icon
-  motion when the pointer enters the island, delete the complete dragged selection
+  motion when the pointer enters the island, delete the dragged LiveCard
   on drop, and restore the normal title state when the drag ends. Dropping anywhere
   else must preserve the existing Board reordering behavior.
 
@@ -462,18 +462,6 @@ it so Now and Next can use separate scroll restoration keys.
   full LiveCard header. Do not render a separate drag button. Keep nested header
   controls clickable, and give the draggable header an accessible name that
   identifies the LiveCard being moved.
-- Start marquee selection only from empty space between LiveCards so card
-  controls and content scrolling keep their normal pointer behavior. Extend a
-  transparent marquee hit area across the full viewport so visually empty
-  perimeter space can reliably start a selection without changing the layout
-  or drop boundary. Use a translucent
-  theme-colored selection rectangle, then enclose the selected cards in one
-  continuous group outline instead of framing every card separately. Render
-  both selection states with the same `SquircleBox` `3xl` geometry as a
-  LiveCard, plus the same border width, border color, and translucent fill.
-  Dragging any selected card moves the full selection. Preserve the cards'
-  Board order even when the marquee selected them in a different sequence, and
-  clear the selection as soon as the drag ends.
 - Keep the LiveCard layout fixed while dragging and show a theme-colored
   insertion indicator at the resolved slot. Apply the new order only on drop so
   cards do not move away while the pointer is still choosing a destination.
@@ -489,16 +477,14 @@ it so Now and Next can use separate scroll restoration keys.
   board. Require an active list drop target as well as an in-bounds pointer
   before committing the order so Escape never acts like a drop. Gaps inside the
   board may retain the most recent valid placement.
-- Keep every dragged LiveCard in the layout and reduce all of their opacity
-  equally so the complete group's original position remains understandable.
+- Keep the dragged LiveCard in the layout and reduce its opacity so its original
+  position remains understandable.
 - Keep the drag preview inside the source provider's theme-color scope. Native
   drag previews are mounted outside the LiveCard tree, so inherited theme tokens
-  used by cloned content must remain available to each preview surface. Render
-  each preview as a compact clone of the LiveCard header, arrange grouped
-  previews vertically without overlap, and add a count badge when the selection
-  contains more than one LiveCard. Keep that list in Board order and offset the
-  native preview so the pointer stays on the preview whose handle started the
-  drag. Pre-compose every translucent theme surface over the opaque app
+  used by cloned content must remain available to the preview surface. Render
+  the preview as a compact clone of the LiveCard header and offset the native
+  preview so the pointer stays at the corresponding position on the clone.
+  Pre-compose every translucent theme surface over the opaque app
   background before the browser applies its native drag-image treatment.
 
 ## Dialog Patterns
