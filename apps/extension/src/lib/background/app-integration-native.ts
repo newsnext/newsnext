@@ -7,9 +7,9 @@ import type {
   NativeLogEntry,
   NativeOfflineWorker,
   NativeWorkspace,
-  NativeWorkspacePatch,
 } from "@newsnext/extension-connection"
 import type { AppIntegrationFailureState } from "../app-integration-connection"
+import type { PersistedSettings } from "../settings/persisted-settings"
 import type { SourceLoadResponse } from "../source/load-result"
 import type { AppIntegrationActions } from "./action-context"
 import {
@@ -31,7 +31,6 @@ import {
 import { normalizeApplicationData, PERSISTED_DATA_SLICES } from "../settings/persisted-data"
 import {
   normalizePersistedSettings,
-  withAppIntegrationEnabled,
 } from "../settings/persisted-settings"
 import { createBackgroundActionContext } from "./action-context"
 import {
@@ -42,16 +41,26 @@ import { serializeAppIntegrationError } from "./app-integration-error"
 import {
   mirrorApplicationData,
   readApplicationData,
+  replaceApplicationData,
   setApplicationDataCommitter,
 } from "./application-service"
 import { NativeMessageChunkAssembler } from "./native-message-chunks"
-import { applyWorkspacePatch, createWorkspacePatch } from "./workspace-patch"
+import {
+  getWorkerId,
+  initializeWorkerIdentity,
+  replaceWorkerIdentity,
+} from "./worker-identity"
+import {
+  applyWorkspacePatch,
+  createWorkspacePatch,
+  parseWorkspacePatch,
+} from "./workspace-patch"
 
 const NATIVE_HOST_NAME = import.meta.env.DEV
   ? "app.newsnext.host.dev"
   : "app.newsnext.host"
-const PROTOCOL_VERSION = 18
-const APP_INTEGRATION_WORKER_ID_KEY = "newsnext-app-integration-worker-id"
+const PROTOCOL_VERSION = 20
+const WORKSPACE_UPDATED_AT_KEY = "newsnext-workspace-updated-at"
 const APP_INTEGRATION_RECONNECT_ALARM = "app-integration-native-reconnect"
 const RECONNECT_ALARM_PERIOD_MINUTES = 0.5
 const NATIVE_REQUEST_TIMEOUT_MS = 65_000
@@ -131,12 +140,17 @@ let widgetServerUrl: string | undefined
 let connectionState: AppIntegrationState = "serviceNotRunning"
 let connectionError: AppIntegrationStatus["connectionError"]
 let enabled = false
-let workerId: string = crypto.randomUUID()
+let workerId = getWorkerId()
 let workerRoutingRevision = 0
 let offlineWorkers: NativeOfflineWorker[] = []
-let workspace: NativeWorkspace = { revision: 0, boards: [], instances: [] }
+let workspace: NativeWorkspace = {
+  revision: 0,
+  updatedAt: 0,
+  boards: [],
+  instances: [],
+  settings: serializeWorkspaceSettings(undefined),
+}
 let localInstanceIds = new Set<string>()
-let bootstrapBindings: Array<{ instanceId: string, workerId: string }> = []
 const pendingWidgetSnapshotRequests = new Map<string, PendingWidgetSnapshotRequest>()
 const pendingInstanceRequests = new Map<string, PendingInstanceRequest>()
 const pendingWorkspaceRequests = new Map<string, PendingWorkspaceRequest>()
@@ -149,6 +163,7 @@ const activeIllustrationRequests = new Map<string, Promise<Uint8Array<ArrayBuffe
 const nativeMessageChunks = new NativeMessageChunkAssembler(NATIVE_REQUEST_TIMEOUT_MS)
 let reconnectAttempt = 0
 let reconnectTimer: ReturnType<typeof setTimeout> | undefined
+let workspaceCommitQueue: Promise<void> = Promise.resolve()
 
 export const appIntegrationActions: AppIntegrationActions = {
   getIllustration: requestIllustration,
@@ -169,23 +184,41 @@ export const appIntegrationActions: AppIntegrationActions = {
 
 const connectedActionContext = createBackgroundActionContext(appIntegrationActions)
 
-function createWorkspace(value: unknown, revision: number): NativeWorkspace {
+function createWorkspace(
+  value: unknown,
+  revision: number,
+  updatedAt: number,
+  settings: unknown,
+): NativeWorkspace {
   const application = normalizeApplicationData(value)
   return {
     revision,
+    updatedAt,
     boards: application.boards,
     instances: application.instances,
+    settings: serializeWorkspaceSettings(settings),
   }
 }
 
-function createLocalBindings(
-  instances: NativeWorkspace["instances"],
-  currentWorkerId: string,
-): Array<{ instanceId: string, workerId: string }> {
-  return instances.map(instance => ({
-    instanceId: instance.instanceId,
-    workerId: currentWorkerId,
-  }))
+function serializeWorkspaceSettings(value: unknown): string {
+  const settings = normalizePersistedSettings(value)
+  return JSON.stringify(settings)
+}
+
+function parseWorkspaceSettings(value: unknown): PersistedSettings {
+  if (typeof value !== "string") {
+    throw new TypeError("The native host returned invalid Workspace Settings")
+  }
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(value)
+  } catch {
+    throw new Error("The native host returned invalid Workspace Settings")
+  }
+  if (!isRecord(parsed)) {
+    throw new TypeError("The native host returned invalid Workspace Settings")
+  }
+  return normalizePersistedSettings(parsed)
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -195,7 +228,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 function parseWorkspace(value: unknown): NativeWorkspace {
   if (!isRecord(value)
     || !Number.isSafeInteger(value.revision)
-    || Number(value.revision) < 0) {
+    || Number(value.revision) < 0
+    || !Number.isSafeInteger(value.updatedAt)
+    || Number(value.updatedAt) < 0
+    || typeof value.settings !== "string") {
     throw new Error("The native host returned an invalid Workspace")
   }
   const application = normalizeApplicationData({
@@ -205,36 +241,10 @@ function parseWorkspace(value: unknown): NativeWorkspace {
   })
   return {
     revision: Number(value.revision),
+    updatedAt: Number(value.updatedAt),
     boards: application.boards,
     instances: application.instances,
-  }
-}
-
-function parseWorkspacePatch(value: unknown): NativeWorkspacePatch {
-  if (!isRecord(value)
-    || !Number.isSafeInteger(value.expectedRevision)
-    || Number(value.expectedRevision) < 0
-    || !isIdentifierArray(value.boardOrder)
-    || !Array.isArray(value.boards)
-    || !isIdentifierArray(value.instanceOrder)
-    || !Array.isArray(value.instances)) {
-    throw new Error("The native host returned an invalid Workspace patch")
-  }
-  const partial = parseWorkspace({
-    revision: Number(value.expectedRevision),
-    boards: value.boards,
-    instances: value.instances,
-  })
-  if (partial.boards.length !== value.boards.length
-    || partial.instances.length !== value.instances.length) {
-    throw new Error("The native host returned invalid Workspace patch entities")
-  }
-  return {
-    expectedRevision: Number(value.expectedRevision),
-    boardOrder: [...value.boardOrder],
-    boards: partial.boards,
-    instanceOrder: [...value.instanceOrder],
-    instances: partial.instances,
+    settings: value.settings,
   }
 }
 
@@ -246,7 +256,7 @@ function isIdentifierArray(value: unknown): value is string[] {
 
 function parseLocalInstanceIds(value: unknown): string[] {
   if (!Array.isArray(value) || value.some(id => typeof id !== "string" || !id)) {
-    throw new Error("The native host returned invalid local Instance bindings")
+    throw new Error("The native host returned invalid local Instance IDs")
   }
   return [...new Set(value)]
 }
@@ -600,9 +610,29 @@ async function applyWorkspace(
   if (JSON.stringify(current) !== JSON.stringify(application)) {
     await mirrorApplicationData(application)
   }
+  await mirrorWorkspaceSettings(nextWorkspace.settings)
+  await persistWorkspaceUpdatedAt(nextWorkspace.updatedAt)
   void reconcileIllustrations(application.boards).catch((error) => {
     console.error("Failed to reconcile background illustrations", error)
   })
+}
+
+async function persistWorkspaceUpdatedAt(updatedAt: number): Promise<void> {
+  await browser.storage.local.set({ [WORKSPACE_UPDATED_AT_KEY]: updatedAt })
+}
+
+function nextWorkspaceUpdatedAt(current: number): number {
+  return Math.max(Date.now(), current + 1)
+}
+
+async function mirrorWorkspaceSettings(serialized: string): Promise<void> {
+  const key = PERSISTED_DATA_SLICES.settings.key
+  const stored = await browser.storage.local.get(key)
+  const local = normalizePersistedSettings(stored[key])
+  const settings = parseWorkspaceSettings(serialized)
+  if (JSON.stringify(local) !== JSON.stringify(settings)) {
+    await browser.storage.local.set({ [key]: settings })
+  }
 }
 
 async function reconcileIllustrations(
@@ -702,9 +732,12 @@ function connect(): void {
         widgetServerUrl = message.widgetServerUrl
         connectionState = "connected"
         resolvePendingConnectionRequests(nextPort)
-        void applyWorkspace(message.workspace, message.localInstanceIds).catch((error) => {
-          console.error("Failed to apply the NewsNext Workspace", error)
-        })
+        enqueueIncomingWorkspace(
+          nextPort,
+          () => message.workspace,
+          message.localInstanceIds,
+          "Failed to apply the NewsNext Workspace",
+        )
       } else if (message.type === "workerRoutingChanged") {
         if (message.revision > workerRoutingRevision) {
           workerRoutingRevision = message.revision
@@ -720,10 +753,12 @@ function connect(): void {
       } else if (message.type === "widgetSnapshotResult") {
         settleWidgetRequest(message.requestId, message.result)
       } else if (message.type === "workspaceChanged") {
-        const nextWorkspace = applyWorkspacePatch(workspace, message.patch)
-        void applyWorkspace(nextWorkspace, message.localInstanceIds).catch((error) => {
-          console.error("Failed to apply the NewsNext Workspace update", error)
-        })
+        enqueueIncomingWorkspace(
+          nextPort,
+          () => applyWorkspacePatch(workspace, message.patch),
+          message.localInstanceIds,
+          "Failed to apply the NewsNext Workspace update",
+        )
       } else if (message.type === "workspaceResult") {
         settleWorkspaceRequest(
           message.requestId,
@@ -772,7 +807,6 @@ function connect(): void {
       extensionVersion: browser.runtime.getManifest().version,
     },
     workspace,
-    bindings: bootstrapBindings,
   }
   nextPort.postMessage(hello)
 }
@@ -912,6 +946,9 @@ async function requestInstance(
     const application = !enabled ? await readApplicationData() : workspace
     const instance = application.instances.find(candidate => candidate.instanceId === input.instanceId)
     if (!instance) throw new Error(`Instance '${input.instanceId}' not found`)
+    if (instance.workerId !== workerId) {
+      throw new Error("The Instance's NewsNext Worker is not connected")
+    }
     const result = await executeRegisteredAction(
       cacheOnly ? "loader.readInstanceCache" : "loader.loadInstance",
       { instance },
@@ -966,6 +1003,38 @@ async function requestWorkspaceReplacement(candidate: NativeWorkspace): Promise<
       timeoutId,
     })
     connection.postMessage(message)
+  })
+}
+
+function enqueueWorkspaceReplacement(
+  update: (current: NativeWorkspace) => NativeWorkspace,
+): Promise<NativeWorkspace> {
+  return enqueueWorkspaceOperation(async () => {
+    const committed = await requestWorkspaceReplacement(update(workspace))
+    await persistWorkspaceUpdatedAt(committed.updatedAt)
+    return committed
+  })
+}
+
+function enqueueWorkspaceOperation<Result>(
+  operation: () => Promise<Result>,
+): Promise<Result> {
+  const result = workspaceCommitQueue.then(operation)
+  workspaceCommitQueue = result.then(() => undefined, () => undefined)
+  return result
+}
+
+function enqueueIncomingWorkspace(
+  connection: NativePort,
+  resolveWorkspace: () => NativeWorkspace,
+  nextLocalInstanceIds: string[],
+  errorMessage: string,
+): void {
+  void enqueueWorkspaceOperation(async () => {
+    if (!enabled || port !== connection) return
+    await applyWorkspace(resolveWorkspace(), nextLocalInstanceIds)
+  }).catch((error) => {
+    console.error(errorMessage, error)
   })
 }
 
@@ -1162,6 +1231,24 @@ async function applyAppIntegrationEnabled(nextEnabled: boolean): Promise<void> {
   await browser.alarms.clear(APP_INTEGRATION_RECONNECT_ALARM)
 }
 
+async function applySynchronizedAppIntegrationEnabled(
+  requestedEnabled: boolean,
+): Promise<void> {
+  const effectiveEnabled = requestedEnabled && await hasAppIntegrationPermission()
+  await applyAppIntegrationEnabled(effectiveEnabled)
+}
+
+async function synchronizeSettingsChange(settings: PersistedSettings): Promise<void> {
+  try {
+    await commitSettings(settings)
+    await applySynchronizedAppIntegrationEnabled(
+      settings.general.appIntegrationEnabled,
+    )
+  } catch (error) {
+    console.error("Failed to synchronize Settings", error)
+  }
+}
+
 export async function setAppIntegrationEnabled(
   nextEnabled: boolean,
 ): Promise<AppIntegrationStatus> {
@@ -1172,11 +1259,16 @@ export async function setAppIntegrationEnabled(
   const key = PERSISTED_DATA_SLICES.settings.key
   const stored = await browser.storage.local.get(key)
   const settings = normalizePersistedSettings(stored[key])
+  const nextSettings: PersistedSettings = {
+    ...settings,
+    general: {
+      ...settings.general,
+      appIntegrationEnabled: nextEnabled,
+    },
+  }
+  await commitSettings(nextSettings)
   await browser.storage.local.set({
-    [key]: withAppIntegrationEnabled(
-      settings,
-      nextEnabled,
-    ),
+    [key]: nextSettings,
   })
   await applyAppIntegrationEnabled(nextEnabled)
   return getAppIntegrationStatus()
@@ -1218,34 +1310,82 @@ export async function takeOverAppIntegrationWorker(
 }
 
 export async function regenerateAppIntegrationWorker(): Promise<AppIntegrationStatus> {
-  await reconnectAsWorker(crypto.randomUUID())
+  const previousWorkerId = workerId
+  const nextWorkerId = crypto.randomUUID()
+  const application = await readApplicationData()
+  await replaceWorkerIdentity(nextWorkerId)
+  try {
+    await replaceApplicationData({
+      ...application,
+      instances: application.instances.map(instance => instance.workerId === previousWorkerId
+        ? { ...instance, workerId: nextWorkerId }
+        : instance),
+    })
+  } catch (error) {
+    await replaceWorkerIdentity(previousWorkerId)
+    throw error
+  }
+  reconnectAsWorker(nextWorkerId)
   return getAppIntegrationStatus()
 }
 
-async function reconnectAsWorker(nextWorkerId: string): Promise<void> {
-  await browser.storage.local.set({
-    [APP_INTEGRATION_WORKER_ID_KEY]: nextWorkerId,
-  })
+function reconnectAsWorker(nextWorkerId: string): void {
   disconnect()
   workerId = nextWorkerId
   offlineWorkers = []
   workerRoutingRevision = 0
   localInstanceIds = new Set()
-  bootstrapBindings = createLocalBindings(workspace.instances, workerId)
   if (enabled) {
     connect()
   }
 }
 
+async function commitSettings(settings: PersistedSettings): Promise<void> {
+  const serialized = serializeWorkspaceSettings(settings)
+  if (workspace.settings === serialized) return
+  if (!enabled) {
+    workspace = {
+      ...workspace,
+      updatedAt: nextWorkspaceUpdatedAt(workspace.updatedAt),
+      settings: serialized,
+    }
+    await persistWorkspaceUpdatedAt(workspace.updatedAt)
+    return
+  }
+
+  try {
+    await enqueueWorkspaceReplacement(current => ({
+      ...current,
+      updatedAt: nextWorkspaceUpdatedAt(current.updatedAt),
+      settings: serialized,
+    }))
+  } catch (error) {
+    await mirrorWorkspaceSettings(workspace.settings)
+    throw error
+  }
+}
+
 export async function registerAppIntegrationNative(): Promise<void> {
   setApplicationDataCommitter(async (application) => {
-    const candidate = createWorkspace(application, workspace.revision)
     if (!enabled) {
-      const nextLocalInstanceIds = candidate.instances.map(instance => instance.instanceId)
-      bootstrapBindings = createLocalBindings(candidate.instances, workerId)
+      const candidate = createWorkspace(
+        application,
+        workspace.revision,
+        nextWorkspaceUpdatedAt(workspace.updatedAt),
+        parseWorkspaceSettings(workspace.settings),
+      )
+      const nextLocalInstanceIds = candidate.instances
+        .filter(instance => instance.workerId === workerId)
+        .map(instance => instance.instanceId)
+      await persistWorkspaceUpdatedAt(candidate.updatedAt)
       return acceptWorkspace(candidate, nextLocalInstanceIds)
     }
-    const committed = await requestWorkspaceReplacement(candidate)
+    const committed = await enqueueWorkspaceReplacement(current => createWorkspace(
+      application,
+      current.revision,
+      nextWorkspaceUpdatedAt(current.updatedAt),
+      parseWorkspaceSettings(current.settings),
+    ))
     return normalizeApplicationData({
       version: APPLICATION_DATA_VERSION,
       boards: committed.boards,
@@ -1266,7 +1406,7 @@ export async function registerAppIntegrationNative(): Promise<void> {
     const change = changes[PERSISTED_DATA_SLICES.settings.key]
     if (areaName === "local" && change) {
       const settings = normalizePersistedSettings(change.newValue)
-      void applyAppIntegrationEnabled(settings.general.appIntegrationEnabled)
+      void synchronizeSettingsChange(settings)
     }
   })
   browser.permissions.onRemoved.addListener((permissions) => {
@@ -1277,25 +1417,19 @@ export async function registerAppIntegrationNative(): Promise<void> {
 
   const stored = await browser.storage.local.get([
     PERSISTED_DATA_SLICES.settings.key,
-    APP_INTEGRATION_WORKER_ID_KEY,
+    WORKSPACE_UPDATED_AT_KEY,
   ])
   const application = await readApplicationData()
-  const storedWorkerId = stored[APP_INTEGRATION_WORKER_ID_KEY]
-  workerId = typeof storedWorkerId === "string" && storedWorkerId
-    ? storedWorkerId
-    : workerId
-  if (stored[APP_INTEGRATION_WORKER_ID_KEY] !== workerId) {
-    await browser.storage.local.set({ [APP_INTEGRATION_WORKER_ID_KEY]: workerId })
-  }
-  localInstanceIds = new Set()
-  workspace = createWorkspace(application, 0)
-  bootstrapBindings = createLocalBindings(workspace.instances, workerId)
   const settings = normalizePersistedSettings(stored[PERSISTED_DATA_SLICES.settings.key])
+  workerId = await initializeWorkerIdentity()
+  localInstanceIds = new Set()
+  const storedUpdatedAt = stored[WORKSPACE_UPDATED_AT_KEY]
+  const updatedAt = Number.isSafeInteger(storedUpdatedAt) && Number(storedUpdatedAt) >= 0
+    ? Number(storedUpdatedAt)
+    : 0
+  workspace = createWorkspace(application, 0, updatedAt, settings)
   const hasPermission = await hasAppIntegrationPermission()
   enabled = settings.general.appIntegrationEnabled && hasPermission
-  if (settings.general.appIntegrationEnabled && !hasPermission) {
-    await setAppIntegrationEnabled(false)
-  }
   if (enabled) {
     browser.alarms.create(APP_INTEGRATION_RECONNECT_ALARM, {
       periodInMinutes: RECONNECT_ALARM_PERIOD_MINUTES,

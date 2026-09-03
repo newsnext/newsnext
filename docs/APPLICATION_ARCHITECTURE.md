@@ -18,15 +18,20 @@ The central model has four product-level concepts:
 | Layer | Presents or materializes a Board's data |
 | Worker | Provides a browser UI and runs browser-owned Loaders |
 
-A browser extension is one Worker. Instances are canonical Workspace data, while
-each Instance has a private binding to the browser Worker that created it. The
-binding selects the account, permissions, credentials, and session used by its
-Loader; it is not a fifth global navigation concept.
+A browser extension is one Worker. Instances are canonical Workspace data and
+persist their owning `workerId`. New Instances record the Worker that created
+them, and ownership moves only through explicit takeover. The owner selects the
+account, permissions, credentials, and session used by the Instance's Loader;
+it is not a fifth global navigation concept.
 
-The CLI daemon is optional. When present, it persists and broadcasts the
-Workspace and routes an Instance load to its bound Worker without exposing Worker
-identity to application code. Without the CLI, the extension can read its last
-Workspace mirror and run locally bound Loaders directly.
+The CLI daemon is optional. When present, it coordinates and broadcasts an
+in-memory Workspace and routes an Instance load to its bound Worker without
+exposing Worker identity to application code. Each browser persists the
+Workspace's last-update time. The first browser connected after daemon startup
+supplies the initial baseline. If a later browser has a newer snapshot, the
+daemon adopts and broadcasts it, including persisted Instance ownership.
+Browser storage remains the durable owner. Without the CLI, the extension reads
+its local Workspace and runs locally owned Loaders directly.
 
 ## Persistent Application Data
 
@@ -34,7 +39,7 @@ Each browser mirrors the complete Workspace in one versioned envelope:
 
 ```ts
 interface ApplicationData {
-  version: 4
+  version: 5
   boards: Board[]
   instances: Instance[]
 }
@@ -153,9 +158,10 @@ interface SourceLoadResult {
 }
 ```
 
-The daemon persists the canonical Workspace, including complete Instance
-configuration, and each browser maintains a read-only local mirror. A private
-binding maps each Instance to the browser Worker that created it. The bound Loader
+The daemon holds the session's canonical Workspace, including complete Instance
+configuration and portable Settings, without storing it in the database. Each
+browser persists a local copy. The daemon derives Instance routing directly
+from each Instance's persisted `workerId`. The owning Loader
 persists protection-cache responses by Source request identity. Before rendering,
 the App restores results through the opaque Instance router: local bindings use
 the current background directly and other bindings relay through the daemon.
@@ -350,8 +356,9 @@ extension validates and reassembles them with a 64 MiB aggregate limit.
 - Mutation transports return compact receipts. Updated Application Data reaches
   each frontend through its background storage subscription. When App
   integration is enabled, the originating Action produces a candidate
-  Workspace, the connection layer commits only changed Board and Instance
-  entities plus their ID order, and peer Workers apply the same versioned patch.
+  Workspace, the connection layer commits changed Board and Instance entities,
+  their ID order, and an opaque portable Settings snapshot; peer Workers apply
+  the same versioned patch.
   Queries and Commands return their declared outputs directly.
 - Browser credentials, permissions, Source execution, and persisted current
   results remain browser-owned. Durable History and daemon lifecycle remain

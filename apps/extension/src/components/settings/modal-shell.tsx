@@ -24,6 +24,7 @@ interface SettingsModalShellProps {
 const SETTINGS_TABS: Array<{ id: SettingsTabId, labelKey: StaticMessageKey }> = [
   { id: "appearance", labelKey: "appearance" },
   { id: "general", labelKey: "general" },
+  { id: "registry", labelKey: "registry" },
   { id: "cli", labelKey: "integration" },
   { id: "shortcuts", labelKey: "shortcuts" },
   { id: "permissions", labelKey: "permissions" },
@@ -64,7 +65,7 @@ export function SettingsModalShell({
           <div className="shrink-0 pb-2">
             <TabsList
               variant="line"
-              className="grid h-10 w-full grid-cols-6 gap-0 p-0"
+              className="grid h-10 w-full grid-cols-7 gap-0 p-0"
             >
               {SETTINGS_TABS.map(tab => (
                 <TabsTrigger

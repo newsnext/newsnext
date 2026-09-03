@@ -29,8 +29,11 @@ export type {
 export {
   createDefaultPersistedDeviceState,
   createDefaultPersistedSettings,
+  MAX_REGISTRY_URLS,
   normalizePersistedDeviceState,
   normalizePersistedSettings,
+  normalizeRegistryUrl,
+  normalizeRegistryUrls,
 } from "./persisted-settings"
 export type { ShortcutId, ShortcutSettings } from "./shortcuts"
 export {

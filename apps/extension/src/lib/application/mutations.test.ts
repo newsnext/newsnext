@@ -11,11 +11,11 @@ import {
   setNowLayerManualOrderMutation,
 } from "./mutations"
 
-const dependencies = { createId: () => "new", now: () => 100 }
+const dependencies = { createId: () => "new", now: () => 100, workerId: "worker-a" }
 
 function createData(): ApplicationData {
   return {
-    version: 4,
+    version: 5,
     boards: [{
       color: "blue",
       id: "reading",
@@ -31,6 +31,7 @@ function createData(): ApplicationData {
     }],
     instances: [{
       instanceId: "rss:feed::one",
+      workerId: "worker-a",
       sourceId: "rss:feed",
       patch: {},
       createdAt: 1,
@@ -77,13 +78,14 @@ describe("application mutations", () => {
       "github:trending::new",
       "rss:feed::one",
     ])
+    expect(execution.data.instances.at(-1)?.workerId).toBe("worker-a")
   })
 
   it("does not reorder an existing membership when it is added again", () => {
     const initial = createData()
     initial.boards[0]!.instanceIds.unshift("rss:feed::two")
     initial.boards[0]!.nowLayer.sort.manualOrder.unshift("rss:feed::two")
-    initial.instances.push({ instanceId: "rss:feed::two", sourceId: "rss:feed", patch: {}, createdAt: 2 })
+    initial.instances.push({ instanceId: "rss:feed::two", workerId: "worker-a", sourceId: "rss:feed", patch: {}, createdAt: 2 })
 
     const execution = addBoardInstanceMutation(initial, {
       boardId: "reading",
@@ -97,7 +99,7 @@ describe("application mutations", () => {
     const initial = createData()
     initial.boards[0]!.instanceIds.unshift("rss:feed::two")
     initial.boards[0]!.nowLayer.sort.manualOrder.unshift("rss:feed::two")
-    initial.instances.push({ instanceId: "rss:feed::two", sourceId: "rss:feed", patch: {}, createdAt: 2 })
+    initial.instances.push({ instanceId: "rss:feed::two", workerId: "worker-a", sourceId: "rss:feed", patch: {}, createdAt: 2 })
 
     const execution = setNowLayerManualOrderMutation(initial, {
       boardId: "reading",

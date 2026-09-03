@@ -4,7 +4,7 @@ import {
   createDefaultPersistedSettings,
   normalizePersistedDeviceState,
   normalizePersistedSettings,
-  withAppIntegrationEnabled,
+  normalizeRegistryUrl,
 } from "./persisted-settings"
 import { DEFAULT_SHORTCUT_SETTINGS } from "./shortcuts"
 
@@ -60,17 +60,26 @@ describe("persisted settings", () => {
     }).shortcuts).toEqual(DEFAULT_SHORTCUT_SETTINGS)
   })
 
-  it("updates the App integration preference without changing other settings", () => {
-    const settings = createDefaultPersistedSettings()
-    settings.general.defaultBoardId = "reading"
-
-    expect(withAppIntegrationEnabled(settings, true)).toEqual({
-      ...settings,
+  it("normalizes registry URLs", () => {
+    expect(normalizePersistedSettings({
       general: {
-        ...settings.general,
-        appIntegrationEnabled: true,
+        registryUrls: [
+          " https://example.com/registry.json ",
+          "https://example.com/registry.json",
+          "http://localhost:3000/registry.json",
+          "file:///tmp/registry.json",
+          "invalid",
+        ],
       },
-    })
+      version: 1,
+    }).general.registryUrls).toEqual([
+      "https://example.com/registry.json",
+      "http://localhost:3000/registry.json",
+    ])
+  })
+
+  it("limits registry URLs by their normalized byte length", () => {
+    expect(normalizeRegistryUrl(`https://example.com/${"é".repeat(400)}`)).toBeUndefined()
   })
 
   it("normalizes invalid device-only fields", () => {
@@ -85,8 +94,18 @@ describe("persisted settings", () => {
     expect(normalizePersistedDeviceState({ settingsTab: "cli", version: 1 }).settingsTab).toBe("cli")
   })
 
-  it("normalizes the device locale preference", () => {
-    expect(normalizePersistedDeviceState({ localePreference: "zh-TW", version: 1 }).localePreference).toBe("zh-TW")
-    expect(normalizePersistedDeviceState({ localePreference: "fr", version: 1 }).localePreference).toBe("system")
+  it("keeps the Registry settings tab", () => {
+    expect(normalizePersistedDeviceState({ settingsTab: "registry", version: 1 }).settingsTab).toBe("registry")
+  })
+
+  it("normalizes the synchronized locale preference", () => {
+    expect(normalizePersistedSettings({
+      appearance: { localePreference: "zh-TW" },
+      version: 1,
+    }).appearance.localePreference).toBe("zh-TW")
+    expect(normalizePersistedSettings({
+      appearance: { localePreference: "fr" },
+      version: 1,
+    }).appearance.localePreference).toBe("system")
   })
 })

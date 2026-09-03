@@ -30,6 +30,7 @@ export type BoardDeleteInput
 export interface ApplicationMutationDependencies {
   createId: () => string
   now: () => number
+  workerId: string
 }
 
 export interface ApplicationMutationExecution {
@@ -293,6 +294,7 @@ export function createInstanceMutation(
       ...data,
       instances: [...data.instances, {
         instanceId,
+        workerId: dependencies.workerId,
         sourceId,
         patch,
         createdAt: dependencies.now(),

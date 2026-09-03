@@ -578,6 +578,33 @@ preview layouts that already provide their own surface.
 Reset the shared settings content scroller to the top when the active tab
 changes; do not remount tab content or discard unsaved control state to do so.
 
+Registry management belongs in its own Settings tab. Keep the URL field empty
+by default and show the bundled Registry as the explicit empty state. Present
+each configured Registry as an ordered status card with its origin, complete
+URL, health, Source count, last successful update, and any actionable error.
+Use numbered order and adjacent move controls to make later-entry merge
+precedence understandable, require confirmation before removal, and provide one
+visible manual refresh action for the collection.
+
+Follow Registry management with a searchable Source browser rather than a raw
+ID list. Show summary counts for Sources, Providers, and effective Registries;
+support filtering by bundled or configured Registry provenance; and render each
+Source with its title, canonical ID, Provider, category, description, and
+effective origin. Show the resolved Provider icon at the start of the header,
+place the canonical ID at the top right, and do not display a presentation-type
+badge. Keep Source cards compact and use natural,
+content-driven heights with the shared nested translucent settings surfaces.
+Group filtered Sources by Provider category with a localized heading and Source
+count, and omit the repeated category label from individual card footers.
+Show actual parameter titles and network targets in a visually separate
+definition block. Omit each absent row, and omit the block when it would be
+empty. Show a non-zero Instance count as a compact usage badge beside the
+Provider in the footer, deriving it from application data by Source ID. Do not
+truncate descriptions or detail values; wrap long network targets safely.
+Use an equal-width two-column grid where space permits and collapse to one
+column on narrow viewports. Let each card keep its natural height, align cards
+to the start of each row, and ensure no content can change the column widths.
+
 ### Search dialog
 
 The Search dialog is a compact, single-column LiveCard locator. Do not show a
@@ -637,8 +664,8 @@ suggestion. Keep the accessible dialog title and description screen-reader-only.
   Simplified Chinese, and Traditional Chinese stay aligned. Brand names,
   provider content, user data, and technical identifiers remain untranslated.
 - Language selection follows the system by default. An explicit selection is
-  device-local, applies immediately, and must update the document language so
-  assistive technology receives the correct locale.
+  part of synchronized Settings, applies immediately, and must update the
+  document language so assistive technology receives the correct locale.
 - Keep manifest and browser-owned copy in `src/locales/` through the WXT i18n
   module. Keep manually switchable React copy in the typed i18next resources
   and render it through react-i18next; browser-owned copy always follows the

@@ -17,11 +17,22 @@ export function createExtensionStorage<Value>(
   options: ExtensionStorageOptions<Value>,
 ): InitializableStorage<Value> {
   let value = options.normalize(options.defaultValue())
+  let initialized = false
+  const subscribers = new Set<(value: Value) => void>()
 
   function update(nextValue: unknown): Value {
     value = options.normalize(nextValue)
     options.onValue?.(value)
     return value
+  }
+
+  const handleStorageChange: Parameters<
+    typeof browser.storage.onChanged.addListener
+  >[0] = (changes, areaName): void => {
+    const change = changes[options.key]
+    if (areaName !== "local" || !change) return
+    const nextValue = update(change.newValue)
+    for (const subscriber of subscribers) subscriber(nextValue)
   }
 
   return {
@@ -39,19 +50,14 @@ export function createExtensionStorage<Value>(
       }
     },
     subscribe: (_key, callback) => {
-      const handleStorageChange: Parameters<
-        typeof browser.storage.onChanged.addListener
-      >[0] = (changes, areaName): void => {
-        const change = changes[options.key]
-        if (areaName === "local" && change) {
-          callback(update(change.newValue))
-        }
-      }
-
-      browser.storage.onChanged.addListener(handleStorageChange)
-      return () => browser.storage.onChanged.removeListener(handleStorageChange)
+      subscribers.add(callback)
+      return () => subscribers.delete(callback)
     },
     initialize: async () => {
+      if (!initialized) {
+        initialized = true
+        browser.storage.onChanged.addListener(handleStorageChange)
+      }
       const stored = await browser.storage.local.get(options.key)
       const canonical = stored[options.key]
       if (canonical !== undefined) {

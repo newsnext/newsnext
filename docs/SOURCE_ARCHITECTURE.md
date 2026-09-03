@@ -149,9 +149,9 @@ membership, and membership order. Extension pages read synchronous `localStorage
 snapshots first, then reconcile them with canonical copies in
 `browser.storage.local`; background storage wins when both copies exist.
 A versioned `newsnext-user-data` envelope validates and combines the portable
-slices for import and export. Import accepts only the current version 4 envelope.
-Current Board selection, NewsNext App connectivity, browser permissions, and
-caches are device-local and are not part of that envelope.
+slices for import and export. Import accepts only the current version 5 envelope.
+Current Board selection, the effective NewsNext App connection, browser
+permissions, and caches are device-local and are not part of that envelope.
 The Settings data reset restores every persisted slice to its default, deletes
 the device-local source-secret state and IndexedDB source results, clears active
 source queries, and revokes user-granted optional browser and host permissions.
@@ -172,14 +172,21 @@ authoring and matching rules.
 
 ## Registry resolution
 
-The extension bundles `registry.json` and the generated `resolveSources`
-function. Background startup configures the source runtime with a loader that
-resolves both artifacts:
+The extension bundles `registry.json` as the default registry and bundles the
+generated `resolveSources` function. Users may add multiple HTTP(S) registry
+URLs in the dedicated Registry settings tab; the list is empty by default. The
+background downloads each configured declarative registry, validates it, and
+caches the last valid result for that URL in extension-local storage before
+resolving it with the bundled function:
 
 ```text
-bundled registry.json
-        │
-        └─ resolveSourceRegistry ── JSON Runtime Sources
+configured registry URLs ── per-URL validation ── per-URL cache fallback
+             │
+             ▼
+bundled registry.json ── merge in configured order
+             │             later duplicate IDs override earlier JSON entries
+             ▼
+resolveSourceRegistry ── JSON Runtime Sources
 
 generated complete TypeScript Runtime Sources
         │
@@ -196,11 +203,12 @@ The record key is the canonical source ID, such as `github:trending`.
 segment. Public descriptors receive an `id` only when the keyed runtime record
 is converted for clients.
 
-The extension page memoizes descriptor-list requests for consumers that need
-Source discovery or configuration, such as Search, Settings, and Drafts. A
-failed request clears the memoized promise so a later request can retry. Board
-routes and persisted Instance queries neither list nor wait for descriptors;
-they render from Loader result snapshots.
+The extension page caches descriptor-list requests through its query client for
+consumers that need Source discovery or configuration, such as Search,
+Settings, and Drafts. Completing a registry merge invalidates that query so the
+Registry settings tab and other consumers receive the updated Source list.
+Board routes and persisted Instance queries neither list nor wait for
+descriptors; they render from Loader result snapshots.
 
 Static source presentation remains nested as
 `RuntimeSource.metadata: SourcePresentationMetadata`. Runtime resolution
@@ -223,9 +231,40 @@ Resolved sources are cached within the active runtime context. Concurrent
 requests share the same in-flight registry promise. Reconfiguring the external
 loader invalidates both the cached result and any previous generation.
 
-The runtime never fetches a registry over HTTP or reads one from extension
-storage. Registry changes therefore require rebuilding the bundled artifacts
-and releasing or reloading the extension.
+The background checks configured registries at first use, whenever the URL list
+changes, when the user requests a refresh, and every hour. A valid download
+replaces that URL's extension-local cache and reconfigures the external loader
+so subsequent requests use the merged result without an extension release.
+Source request rules are synchronized again after an update. A failed or
+invalid download falls back to the last valid cache for that URL; URLs without
+a valid download or cache are omitted while the bundled registry remains
+available. Remote data passes the same per-registry and merged-registry limits
+and parser as bundled data before it can be cached or used. Adding a URL
+requests host access for its origin. Registry downloads time out after 15
+seconds so health checks always reach a terminal state.
+
+`general.registryUrls` remains part of the extension's persisted Settings. When
+App integration is enabled, portable Settings are serialized into the
+revisioned Workspace snapshot held in memory and broadcast by the CLI daemon.
+The CLI treats that snapshot as opaque data; the extension owns its schema and
+validation. All user-facing Settings, including language, theme, and App
+integration enablement, are synchronized. Effective App connectivity still
+depends on each browser's local Native Messaging permission. Each browser
+retains the Workspace update time, allowing a newer browser snapshot to replace
+an older daemon session baseline during startup. Downloaded Registry documents,
+health state, and browser host permissions remain local derived state.
+
+The background publishes per-URL health, last-success time, errors, and Source
+IDs to extension-local state after each check. The Registry settings tab uses
+that state for status feedback and Source provenance, and lets users reorder
+URLs to change merge precedence. Its Source browser searches the complete
+resolved list and filters it by bundled or configured Registry origin.
+
+Only declarative structured loaders come from the downloaded JSON. Executable
+TypeScript Sources and JavaScript Radar parameter functions remain trusted
+bundled code and can change only with an extension release. The resolver still
+rejects IDs duplicated between those bundled Sources and the merged JSON
+registry.
 
 ## Source request lifecycle
 
@@ -311,7 +350,7 @@ Actions reuse the same protected Loader implementation without sharing History
 policy.
 
 The daemon owns complete Workspace Instance configuration independently of Worker
-connections. A disconnected binding therefore never makes a card read-only or
+connections. A disconnected owner therefore never makes a card read-only or
 removes it from a Board; it only suspends routed cache reads and fresh execution
 until that browser reconnects.
 
@@ -1000,7 +1039,7 @@ commands and completions by request ID, rejects
 ambiguous browser selection, expires pending executions, and never replays a
 command after reconnection because source execution is not guaranteed to be
 idempotent. Settings exposes the daemon version as connection metadata only.
-The current protocol version is 18. It carries an initial shared Workspace,
+The current protocol version is 20. It carries an initial shared Workspace,
 revisioned Worker routing snapshots, atomic takeover of Instances from offline
 Workers, incremental Workspace patches produced by canonical Action commits, canonical
 Action requests, Widget snapshots, Source-result cache reads routed by Instance
@@ -1011,15 +1050,15 @@ IndexedDB and the App-owned durable illustration store. A patch contains the com
 only changed Board and Instance values. The daemon validates and commits it
 against an expected revision, returns a compact receipt to the origin, and
 broadcasts the same deterministic patch to peer Workers. The Workspace owns
-Boards, Layers, and Instances. The daemon privately binds each Instance to its creation browser
-Worker and resolves execution to exactly one connected Worker without exposing
-that identity or transferring browser credentials or session state. A browser
+Boards, Layers, and Instances. Each Instance persists its owning `workerId`, and
+the daemon derives execution routing directly from that field without
+transferring browser credentials or session state. A browser
 keeps only its Worker ID in extension-local storage because Native Messaging
-does not expose a stable browser-profile identity. Instance ownership remains
-authoritative in the daemon and is cached only in extension memory while
-connected; the extension does not persist a duplicate binding list. If
+does not expose a stable browser-profile identity. There is no separate binding
+map or binding lifecycle: Workspace synchronization, daemon restart, and browser
+reconnection preserve the Instance's owner. If
 reinstalling the extension clears its Worker ID, the daemon reports disconnected
-Worker IDs retained by Instance bindings or History so the user can explicitly
+Worker IDs retained by Instances or History so the user can explicitly
 restore the browser's prior identity from Settings. Connected Worker IDs cannot
 be claimed.
 Incompatible daemon and extension versions disconnect instead of accepting a

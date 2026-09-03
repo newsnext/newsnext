@@ -17,6 +17,7 @@ import {
   normalizePersistedSettings,
   PERSISTED_DATA_SLICES,
 } from "../settings"
+import { initializeWorkerIdentity } from "./worker-identity"
 
 let mutationQueue: Promise<void> = loadApplicationData().then(
   () => undefined,
@@ -44,9 +45,11 @@ export async function mutateApplicationData(
 ): Promise<ApplicationMutationResult> {
   const execution = mutationQueue.then(async () => {
     const data = await loadApplicationData()
+    const workerId = await initializeWorkerIdentity()
     const result = operation(data, {
       createId,
       now: Date.now,
+      workerId,
     })
     const committedData = applicationDataCommitter
       ? await applicationDataCommitter(result.data)

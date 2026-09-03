@@ -11,7 +11,7 @@ import type { ThemeMode } from "@/lib/utils/swith-theme"
 import { atom } from "jotai"
 import { atomWithStorage } from "jotai/utils"
 import { createDefaultPersistedDeviceState, createDefaultPersistedSettings, normalizePersistedDeviceState, normalizePersistedSettings, PERSISTED_DATA_SLICES } from "@/lib/settings"
-import { THEME_MODE_KEY } from "@/lib/utils/swith-theme"
+import { handleThemeModeSwitch, THEME_MODE_KEY } from "@/lib/utils/swith-theme"
 import { createExtensionStorage, createLocalStorage } from "./persisted-storage"
 
 type SettingsValueUpdate<Value> = Value | ((current: Value) => Value)
@@ -25,6 +25,7 @@ const persistedSettingsStorageOptions = {
     if (localStorage.getItem(THEME_MODE_KEY) !== themeMode) {
       localStorage.setItem(THEME_MODE_KEY, themeMode)
     }
+    handleThemeModeSwitch(themeMode)
   },
 }
 
@@ -102,6 +103,20 @@ export const sourceIconSettingsAtom = atom(
   },
 )
 
+export const registryUrlsAtom = atom(
+  get => get(persistedSettingsAtom).general.registryUrls,
+  (get, set, update: SettingsValueUpdate<string[]>) => {
+    const settings = get(persistedSettingsAtom)
+    const registryUrls = typeof update === "function"
+      ? update(settings.general.registryUrls)
+      : update
+    set(persistedSettingsAtom, {
+      ...settings,
+      general: { ...settings.general, registryUrls },
+    })
+  },
+)
+
 export const shortcutSettingsAtom = atom(
   get => get(persistedSettingsAtom).shortcuts,
   (get, set, update: SettingsValueUpdate<ShortcutSettings>) => {
@@ -125,10 +140,13 @@ export const currentBoardIdAtom = atom(
 )
 
 export const localePreferenceAtom = atom(
-  get => get(persistedDeviceStateAtom).localePreference,
+  get => get(persistedSettingsAtom).appearance.localePreference,
   (get, set, localePreference: LocalePreference) => {
-    const state = get(persistedDeviceStateAtom)
-    set(persistedDeviceStateAtom, { ...state, localePreference })
+    const settings = get(persistedSettingsAtom)
+    set(persistedSettingsAtom, {
+      ...settings,
+      appearance: { ...settings.appearance, localePreference },
+    })
   },
 )
 

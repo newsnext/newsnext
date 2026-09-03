@@ -117,6 +117,7 @@ const AppIntegrationStatusResult = Type.Unsafe<AppIntegrationStatus>(Type.Object
 const InstanceParams = Type.Unsafe<Instance>(Type.Object({
   createdAt: Type.Number(),
   instanceId: Identifier,
+  workerId: Identifier,
   patch: Type.Object({}, { additionalProperties: true }),
   sourceId: Identifier,
 }, { additionalProperties: false }))

@@ -25,7 +25,7 @@ import {
 import { normalizePersistedSettings } from "./persisted-settings"
 import { isThemeColor } from "./theme-color"
 
-export const PERSISTED_DATA_EXPORT_VERSION = 4
+export const PERSISTED_DATA_EXPORT_VERSION = 5
 export const PERSISTED_DATA_EXPORT_KIND = "newsnext-user-data"
 export const PERSISTED_PORTABLE_SLICE_IDS = [
   "settings",
@@ -73,7 +73,8 @@ export function normalizeApplicationData(value: unknown): ApplicationData {
   }
 
   const instances = normalizeInstances(value.instances)
-  const boards = normalizeBoards(value.boards)
+  const instanceIds = new Set(instances.map(instance => instance.instanceId))
+  const boards = normalizeBoards(value.boards, instanceIds)
 
   return {
     version: APPLICATION_DATA_VERSION,
@@ -198,6 +199,8 @@ export function normalizeInstances(value: unknown): Instance[] {
     if (!isRecord(candidate)
       || typeof candidate.instanceId !== "string"
       || candidate.instanceId.trim().length === 0
+      || typeof candidate.workerId !== "string"
+      || candidate.workerId.trim().length === 0
       || typeof candidate.sourceId !== "string"
       || candidate.sourceId.trim().length === 0
       || typeof candidate.createdAt !== "number"
@@ -209,6 +212,7 @@ export function normalizeInstances(value: unknown): Instance[] {
     seenIds.add(candidate.instanceId)
     return [{
       instanceId: candidate.instanceId,
+      workerId: candidate.workerId,
       sourceId: candidate.sourceId,
       patch: candidate.patch,
       createdAt: candidate.createdAt,
@@ -285,7 +289,7 @@ export function mergePersistedUserData(
   imported: Partial<PersistedUserData>,
 ): PersistedUserData {
   const settings = imported.settings
-    ? preserveLocalSettings(current.settings, imported.settings)
+    ? normalizePersistedSettings(imported.settings)
     : current.settings
   return normalizePersistedUserData({
     version: APPLICATION_DATA_VERSION,
@@ -293,21 +297,6 @@ export function mergePersistedUserData(
     boards: imported.boards ?? current.boards,
     instances: imported.instances ?? current.instances,
   })
-}
-
-function preserveLocalSettings(
-  current: PersistedSettings,
-  imported: PersistedSettings,
-): PersistedSettings {
-  const normalizedCurrent = normalizePersistedSettings(current)
-  const normalizedImported = normalizePersistedSettings(imported)
-  return {
-    ...normalizedImported,
-    general: {
-      ...normalizedImported.general,
-      appIntegrationEnabled: normalizedCurrent.general.appIntegrationEnabled,
-    },
-  }
 }
 
 export function normalizePersistedUserData(data: PersistedUserData): PersistedUserData {

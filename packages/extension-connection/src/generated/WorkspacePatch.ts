@@ -2,4 +2,4 @@
 import type { WorkspaceBoard } from "./WorkspaceBoard";
 import type { WorkspaceInstance } from "./WorkspaceInstance";
 
-export type WorkspacePatch = { expectedRevision: number, boardOrder: Array<string>, boards: Array<WorkspaceBoard>, instanceOrder: Array<string>, instances: Array<WorkspaceInstance>, };
+export type WorkspacePatch = { expectedRevision: number, updatedAt: number, boardOrder: Array<string>, boards: Array<WorkspaceBoard>, instanceOrder: Array<string>, instances: Array<WorkspaceInstance>, settings: string, };

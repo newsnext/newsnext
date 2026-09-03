@@ -9,6 +9,7 @@ import { mergeSourceParamValues } from "./params"
 
 export interface Instance {
   instanceId: string
+  workerId: string
   sourceId: string
   patch: InstancePatch
   createdAt: number

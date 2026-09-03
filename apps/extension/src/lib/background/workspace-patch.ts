@@ -1,6 +1,52 @@
 import type { NativeWorkspace, NativeWorkspacePatch } from "@newsnext/extension-connection"
 import { APPLICATION_DATA_VERSION } from "../application"
-import { normalizeApplicationData } from "../settings/persisted-data"
+import {
+  normalizeApplicationData,
+  normalizeBoards,
+  normalizeInstances,
+} from "../settings/persisted-data"
+
+export function parseWorkspacePatch(value: unknown): NativeWorkspacePatch {
+  if (!isRecord(value)
+    || !isNonNegativeSafeInteger(value.expectedRevision)
+    || !isNonNegativeSafeInteger(value.updatedAt)
+    || !isIdentifierArray(value.boardOrder)
+    || !Array.isArray(value.boards)
+    || !isIdentifierArray(value.instanceOrder)
+    || !Array.isArray(value.instances)
+    || typeof value.settings !== "string") {
+    throw new Error("The native host returned an invalid Workspace patch")
+  }
+  const boards = normalizeBoards(value.boards)
+  const instances = normalizeInstances(value.instances)
+  if (boards.length !== value.boards.length
+    || instances.length !== value.instances.length) {
+    throw new Error("The native host returned invalid Workspace patch entities")
+  }
+  return {
+    expectedRevision: value.expectedRevision,
+    updatedAt: value.updatedAt,
+    boardOrder: [...value.boardOrder],
+    boards,
+    instanceOrder: [...value.instanceOrder],
+    instances,
+    settings: value.settings,
+  }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value)
+}
+
+function isNonNegativeSafeInteger(value: unknown): value is number {
+  return Number.isSafeInteger(value) && Number(value) >= 0
+}
+
+function isIdentifierArray(value: unknown): value is string[] {
+  return Array.isArray(value)
+    && value.every(id => typeof id === "string" && id.length > 0)
+    && new Set(value).size === value.length
+}
 
 export function createWorkspacePatch(
   current: NativeWorkspace,
@@ -8,6 +54,7 @@ export function createWorkspacePatch(
 ): NativeWorkspacePatch {
   return {
     expectedRevision: current.revision,
+    updatedAt: candidate.updatedAt,
     boardOrder: candidate.boards.map(board => board.id),
     boards: changedValues(current.boards, candidate.boards, board => board.id),
     instanceOrder: candidate.instances.map(instance => instance.instanceId),
@@ -16,6 +63,7 @@ export function createWorkspacePatch(
       candidate.instances,
       instance => instance.instanceId,
     ),
+    settings: candidate.settings,
   }
 }
 
@@ -53,8 +101,10 @@ export function applyWorkspacePatch(
   }
   return {
     revision: current.revision + 1,
+    updatedAt: patch.updatedAt,
     boards: normalized.boards,
     instances: normalized.instances,
+    settings: patch.settings,
   }
 }
 

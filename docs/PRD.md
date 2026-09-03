@@ -254,9 +254,9 @@ is resolved.
 
 | Data | Storage owner | Retention contract |
 | --- | --- | --- |
-| Workspace Boards, Layers, membership, and Instances | Shared local database plus browser mirror | Durable in the companion; mirrored into each connected extension |
-| Instance Loader bindings | Shared local database | Private routing metadata from each Instance to its creation browser Worker |
-| Browser preferences | Owning browser storage | Durable per browser profile |
+| Workspace Boards, Layers, membership, Instances, and portable Settings | Owning browser storage | Synchronized between connected browsers through the daemon's in-memory revisioned Workspace |
+| Instance Loader ownership | Instance `workerId` in owning browser storage | Synchronized with Workspace; daemon derives routing without a second binding store |
+| Ephemeral browser UI state and permissions | Owning browser storage | Durable per browser profile and not synchronized |
 | Next Layer Widgets, layouts, task definitions, and materialized outputs | Shared local database | Durable and schema-versioned |
 | Agent-owned observations, transformations, provenance, and task health | Shared local database | Durable according to explicit task policy |
 | Now Layer current results | Bound Loader browser cache | Replaceable latest data routed by Instance ID without exposing Worker identity; no implicit History |
@@ -312,19 +312,15 @@ evaluation.
 
 ### Ownership and access
 
-The App/CLI daemon is the single database owner and writer. Extensions and
-Agents use canonical Actions over Native Messaging and local IPC;
-they never open the SQLite file directly. The daemon enables WAL mode, wraps
-each logical mutation in a transaction, validates its current schema before
-serving requests, and exposes structured busy, schema, corruption, and disk errors.
-Multiple browsers may connect concurrently, but they observe one ordered
-production mutation stream.
+The App/CLI daemon is the single writer for daemon-owned database data.
+Extensions and Agents use canonical Actions over Native Messaging and local
+IPC; they never open the SQLite file directly. Browser-owned Workspace data is
+not written to that database. Multiple browsers may connect concurrently and
+observe one revisioned in-memory Workspace mutation stream.
 
 The first schema increment covers:
 
 - current schema version metadata;
-- Workspace Boards, Layers, membership, and order;
-- connected Worker identity and durable private Instance-to-Loader bindings;
 - Next Layer Widget definitions, layout, and dependency declarations;
 - Agent task definitions, schedules, leases, attempts, and health;
 - retained observations and normalized items required by those tasks;
@@ -568,7 +564,7 @@ must not be described to users as available until its acceptance criteria pass.
 | Source definitions | Implemented foundation | Registry providers, parameters, metadata, loaders, transforms, templates, Radar rules, capabilities, secrets, and security limits | Registry health, version lifecycle, and dependency diagnostics |
 | Source execution | Implemented foundation | Registered and local Sources run through the extension runtime and CLI; recurring Jobs request protected registered-Source loads | Add Agent-owned scheduling without duplicating the extension runtime |
 | Shared local database | Partial | The daemon owns an embedded Turso database with dev/prod file isolation, strict current-schema validation, structured errors, and a serialized writer for retained History | Move remaining Board, Widget, and task state out of extension storage |
-| Instance and Board data | Implemented foundation | Canonical Instances, Boards, membership, manual order, and Layer preferences are persisted in the daemon Workspace and mirrored to connected browsers | Complete UI diagnostics for revision conflicts and unavailable bound Loaders |
+| Instance, Board, and Settings data | Implemented foundation | Browsers persist their own copies; the daemon revision-coordinates and broadcasts an in-memory canonical Workspace for the current session | Complete UI diagnostics for revision conflicts and unavailable bound Loaders |
 | UI and Agent control | Implemented foundation | UI and CLI use the same typed Mutation and Query Actions and the same background persistence boundary | Database-backed Widget, task, and Source-health operations are not exposed yet |
 | Now Layer | Implemented | Each Instance is independently presented as a LiveCard using the unified LiveCard model | Make view-driven refresh explicit while keeping each result in its bound Loader |
 | Next Layer | Not implemented | The Board retains its Next Layer view entry and an explicit placeholder | Add CLI/daemon-backed Widgets, retained inputs, and materialized outputs |
@@ -614,10 +610,10 @@ The remaining product gaps are:
 | --- | --- | --- |
 | DAT-01 | The desktop daemon is the only process that opens the product database | Browser extensions and CLI clients can read and mutate durable state only through canonical Mutation and Query Actions |
 | DAT-02 | Development and production use separate directories | CLI/dev operations use `NewsNext Dev`; packaged App/production operations use `NewsNext`; an automated test proves the paths remain isolated |
-| DAT-03 | Production data is shared across supported browsers | A mutation submitted from one authorized production extension is visible from another through the same daemon without copying browser storage |
+| DAT-03 | Browser Workspace data is synchronized across supported browsers | Browsers retain snapshot update times; daemon startup selects and broadcasts the newest connected snapshot, and later mutations are revisioned without database persistence |
 | DAT-04 | Database setup is local-first | First launch creates and migrates the local database without a Turso account, remote connection, or network access |
 | DAT-05 | Schema initialization is atomic | The daemon creates the complete current schema transactionally before accepting requests and refuses incompatible versions |
-| DAT-06 | Logical mutations are transactional | A failed Board, Widget, observation, or task mutation leaves no partially updated durable state |
+| DAT-06 | Durable daemon mutations are transactional | A failed Widget, observation, or task mutation leaves no partially updated durable state |
 | DAT-07 | Concurrent clients use one ordered writer | Independent bounded-wait reads remain available while the daemon serializes immediate write transactions and returns structured busy errors instead of hanging |
 | DAT-08 | Now Layer does not create implicit History | Repeated view-driven refresh replaces the current browser-local result and does not insert observation rows; only a configured Job or Agent task retains observations |
 | DAT-09 | Next Layer background work is Agent-owned | Agent task state, retained inputs, provenance, and materialized output commit together; opening Next Layer performs no implicit refresh or transformation |
@@ -819,7 +815,7 @@ without changing the two-Layer Board contract.
 - Add schema versioning, WAL configuration, transactional helpers, and
   structured database errors.
 - Persist Workspace Boards, Instances, Layers, membership, and order behind
-  canonical Mutation and Query Actions. Keep only Loader bindings Worker-specific.
+  canonical Mutation and Query Actions. Keep only Loader execution Worker-specific.
 - Add Agent task, retained observation, materialized output, and provenance
   tables required by the next phase without yet implementing every Widget.
 - Keep Now Layer results in replaceable cache storage and prove that normal

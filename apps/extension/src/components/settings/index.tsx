@@ -10,7 +10,6 @@ import { ConfigSection } from "@/components/common/config-section"
 import { useI18n } from "@/hooks/use-i18n"
 import { revealLiveCard } from "@/lib/board"
 import { cn } from "@/lib/utils"
-import { handleThemeModeSwitch } from "@/lib/utils/swith-theme"
 import { boardsAtom } from "@/store/board"
 import {
   defaultBoardIdAtom,
@@ -23,6 +22,7 @@ import { AppIntegrationSettings } from "./app-integration"
 import { DataTransferSettings } from "./data-transfer"
 import { SettingsModalShell } from "./modal-shell"
 import { PermissionsSettings } from "./permissions"
+import { RegistrySettings } from "./registry-urls"
 import { ShortcutsSettings } from "./shortcuts"
 import { SourceIconSettings } from "./source-icon"
 
@@ -111,6 +111,7 @@ function SettingsModalContent({
     >
       <TabsContent value="appearance"><AppearanceSettings /></TabsContent>
       <TabsContent value="general"><GeneralSettings /></TabsContent>
+      <TabsContent value="registry"><RegistrySettings /></TabsContent>
       <TabsContent value="cli"><AppIntegrationSettings /></TabsContent>
       <TabsContent value="shortcuts"><ShortcutsSettings /></TabsContent>
       <TabsContent value="permissions">
@@ -126,9 +127,6 @@ function SettingsModalContent({
 function AppearanceSettings() {
   const { t } = useI18n()
   const [themeMode, setThemeMode] = useAtom(themeModeAtom)
-  useEffect(() => {
-    handleThemeModeSwitch(themeMode)
-  }, [themeMode])
 
   return (
     <div className="space-y-6">

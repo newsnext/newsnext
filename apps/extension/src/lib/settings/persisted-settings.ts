@@ -16,16 +16,20 @@ export type LiveCardHeight = typeof LIVE_CARD_HEIGHTS[number]
 
 export const DEFAULT_LIVE_CARD_HEIGHT: LiveCardHeight = "balanced"
 
-export type SettingsTabId = "appearance" | "general" | "cli" | "shortcuts" | "permissions" | "data"
+export const MAX_REGISTRY_URLS = 20
+
+export type SettingsTabId = "appearance" | "general" | "registry" | "cli" | "shortcuts" | "permissions" | "data"
 
 export interface PersistedSettings {
   appearance: {
     liveCardHeight: LiveCardHeight
+    localePreference: LocalePreference
     themeMode: ThemeMode
   }
   general: {
     defaultBoardId: string | null
     appIntegrationEnabled: boolean
+    registryUrls: string[]
     sourceIcon: SourceIconSettings
   }
   shortcuts: ShortcutSettings
@@ -34,7 +38,6 @@ export interface PersistedSettings {
 
 export interface PersistedDeviceState {
   currentBoardId: string
-  localePreference: LocalePreference
   settingsTab: SettingsTabId
   version: typeof PERSISTED_SETTINGS_VERSION
 }
@@ -43,11 +46,13 @@ export function createDefaultPersistedSettings(): PersistedSettings {
   return {
     appearance: {
       liveCardHeight: DEFAULT_LIVE_CARD_HEIGHT,
+      localePreference: "system",
       themeMode: "system",
     },
     general: {
       defaultBoardId: null,
       appIntegrationEnabled: false,
+      registryUrls: [],
       sourceIcon: { ...DEFAULT_SOURCE_ICON_SETTINGS },
     },
     shortcuts: { ...DEFAULT_SHORTCUT_SETTINGS },
@@ -58,7 +63,6 @@ export function createDefaultPersistedSettings(): PersistedSettings {
 export function createDefaultPersistedDeviceState(currentBoardId = ""): PersistedDeviceState {
   return {
     currentBoardId,
-    localePreference: "system",
     settingsTab: "appearance",
     version: PERSISTED_SETTINGS_VERSION,
   }
@@ -77,6 +81,9 @@ export function normalizePersistedSettings(value: unknown): PersistedSettings {
       liveCardHeight: isLiveCardHeight(appearance?.liveCardHeight)
         ? appearance.liveCardHeight
         : defaults.appearance.liveCardHeight,
+      localePreference: isLocalePreference(appearance?.localePreference)
+        ? appearance.localePreference
+        : defaults.appearance.localePreference,
       themeMode: isThemeMode(appearance?.themeMode)
         ? appearance.themeMode
         : defaults.appearance.themeMode,
@@ -90,6 +97,7 @@ export function normalizePersistedSettings(value: unknown): PersistedSettings {
       appIntegrationEnabled: typeof general?.appIntegrationEnabled === "boolean"
         ? general.appIntegrationEnabled
         : defaults.general.appIntegrationEnabled,
+      registryUrls: normalizeRegistryUrls(general?.registryUrls),
       sourceIcon: normalizeSourceIconSettings(
         general?.sourceIcon,
         defaults.general.sourceIcon,
@@ -98,6 +106,30 @@ export function normalizePersistedSettings(value: unknown): PersistedSettings {
     shortcuts: normalizeShortcutSettings(value.shortcuts),
     version: PERSISTED_SETTINGS_VERSION,
   }
+}
+
+export function normalizeRegistryUrl(value: unknown): string | undefined {
+  if (typeof value !== "string" || value.length > 2048) return undefined
+
+  try {
+    const url = new URL(value.trim())
+    if (url.protocol !== "https:" && url.protocol !== "http:") return undefined
+    return new TextEncoder().encode(url.href).length <= 2048 ? url.href : undefined
+  } catch {
+    return undefined
+  }
+}
+
+export function normalizeRegistryUrls(value: unknown): string[] {
+  if (!Array.isArray(value)) return []
+
+  const urls = new Set<string>()
+  for (const candidate of value) {
+    const url = normalizeRegistryUrl(candidate)
+    if (url) urls.add(url)
+    if (urls.size === MAX_REGISTRY_URLS) break
+  }
+  return [...urls]
 }
 
 export function normalizePersistedDeviceState(value: unknown): PersistedDeviceState {
@@ -110,9 +142,6 @@ export function normalizePersistedDeviceState(value: unknown): PersistedDeviceSt
     currentBoardId: typeof value.currentBoardId === "string"
       ? value.currentBoardId
       : defaults.currentBoardId,
-    localePreference: isLocalePreference(value.localePreference)
-      ? value.localePreference
-      : defaults.localePreference,
     settingsTab: isSettingsTabId(value.settingsTab)
       ? value.settingsTab
       : defaults.settingsTab,
@@ -120,22 +149,10 @@ export function normalizePersistedDeviceState(value: unknown): PersistedDeviceSt
   }
 }
 
-export function withAppIntegrationEnabled(
-  settings: PersistedSettings,
-  enabled: boolean,
-): PersistedSettings {
-  return {
-    ...settings,
-    general: {
-      ...settings.general,
-      appIntegrationEnabled: enabled,
-    },
-  }
-}
-
 export function isSettingsTabId(value: unknown): value is SettingsTabId {
   return value === "appearance"
     || value === "general"
+    || value === "registry"
     || value === "cli"
     || value === "shortcuts"
     || value === "permissions"

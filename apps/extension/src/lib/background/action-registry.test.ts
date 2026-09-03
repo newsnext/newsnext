@@ -7,7 +7,7 @@ import {
 
 function createContext(): BackgroundActionContext {
   return {
-    data: vi.fn(async () => ({ boards: [], instances: [], version: 4 as const })),
+    data: vi.fn(async () => ({ boards: [], instances: [], version: 5 as const })),
     mutate: vi.fn(async () => ({ instanceId: "new" })),
     replace: vi.fn(async data => data),
     requireSources: vi.fn(async () => undefined),

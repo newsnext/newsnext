@@ -47,6 +47,7 @@ const testSources: SourceDescriptor[] = [
 function createCustomInstance(patch: Partial<Instance> = {}): Instance {
   return {
     instanceId: "test:feed::AbCdEfGh1234",
+    workerId: "worker-a",
     sourceId: "test:feed",
     patch: {},
     createdAt: 1,

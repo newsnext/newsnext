@@ -2,4 +2,4 @@
 import type { WorkspaceBoard } from "./WorkspaceBoard";
 import type { WorkspaceInstance } from "./WorkspaceInstance";
 
-export type Workspace = { revision: number, boards: Array<WorkspaceBoard>, instances: Array<WorkspaceInstance>, };
+export type Workspace = { revision: number, updatedAt: number, boards: Array<WorkspaceBoard>, instances: Array<WorkspaceInstance>, settings: string, };
