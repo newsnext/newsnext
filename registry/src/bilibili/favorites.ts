@@ -230,7 +230,7 @@ export const favoriteSources = {
   favorites: {
     version: 3,
     metadata: {
-      title: "收藏 | 最近收藏",
+      title: "收藏夹视频",
       desc: "收藏夹中的视频",
     },
     params: {

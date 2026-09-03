@@ -139,9 +139,12 @@ request already required to load the items. Parameter-dependent home URLs
 belong at the same instance-aware layer; omit the static home when no useful
 parameter-independent URL exists.
 
-Use ` | ` to separate an Instance identity or query from its selected variant,
-such as `NewsNext | Latest`. Reserve compact separators such as `·` for inline
-item attributes rather than Source or Instance titles.
+A Source's static default `metadata.title` must not contain either the ASCII
+`|` or full-width `｜` separator; keep it generic and independent of parameter
+defaults, such as `User Posts` or `Video Search`. For an Instance title, use
+ASCII ` | ` to separate its resolved identity or query from the selected
+variant, such as `NewsNext | Latest`. Reserve compact separators such as `·`
+for inline item attributes rather than Source or Instance titles.
 
 Provider categories are `social` (social platforms), `forum` (forums), `news`
 (news and readers), `finance` (finance), `developer` (developer platforms), and

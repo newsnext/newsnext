@@ -208,7 +208,7 @@ function readSearchDateRange(): BilibiliSearchDate | undefined {
 export const searchSource = {
   version: 3,
   metadata: {
-    title: "视频搜索 | 最新发布",
+    title: "视频搜索",
     desc: "按关键词搜索哔哩哔哩视频",
   },
   params: {

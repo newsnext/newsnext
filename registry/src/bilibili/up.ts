@@ -292,7 +292,7 @@ async function fetchBilibiliUpAudio(
 export const upSources = {
   "up-video": {
     metadata: {
-      title: "UP 主视频 | 最新发布",
+      title: "UP 主视频",
       desc: "指定 UP 主的视频投稿",
     },
     params: {

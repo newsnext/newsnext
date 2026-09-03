@@ -344,7 +344,7 @@ async function fetchBilibiliUserDynamics(
 
 export const followingSource = {
   metadata: {
-    title: "动态 | 全部",
+    title: "关注动态",
     desc: "已关注 UP 主发布的最新动态",
   },
   params: {

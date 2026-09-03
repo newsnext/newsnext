@@ -50,6 +50,7 @@ Keep the configuration focused:
 
 - Set provider `title`, `color`, and a matching `category`; set `baseUrl` when URLs share a stable base.
 - Use a stable first-party `icon` or omit it. Use source or loader metadata for `title`, `home`, `desc`, and instance-specific `badge`.
+- Keep a Source's static default `metadata.title` generic and do not include either the ASCII `|` or full-width `｜` separator. For an Instance title, prefer ASCII ` | ` between its resolved identity or query and the selected variant, such as `NewsNext | Latest`.
 - Model user choices as validated parameters. Prefer one parameterized Source over duplicated variants when their loader and output shape are shared.
 - Add Radar rules when a page URL or page state can fully configure a Source. A suggestion must capture all meaningful state already expressed by the page.
 - For JSON loaders, use bounded JMESPath expressions and Liquid templates. For HTML loaders, use stable CSS selectors and ordered fallbacks.
