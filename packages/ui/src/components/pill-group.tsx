@@ -10,13 +10,11 @@ interface PillGroupIndicatorProps {
   layoutId: string
 }
 
-export const pillGroupClassName = "island-pill flex h-10 w-fit items-center justify-normal gap-1 rounded-full bg-background/60 p-1 text-xs leading-[18px] text-inherit dark:bg-black/10"
-
 export function PillGroup({ className, ...props }: React.ComponentProps<"div">): React.JSX.Element {
   return (
     <div
       data-slot="pill-group"
-      className={cn(pillGroupClassName, className)}
+      className={cn("island-pill flex w-fit items-center gap-1 p-1 text-xs leading-[18px] text-inherit", className)}
       {...props}
     />
   )

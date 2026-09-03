@@ -20,7 +20,20 @@
 }
 
 @utility island-pill {
-  @apply h-10 rounded-full bg-background/60 shadow-sm shadow-theme-400/5 backdrop-blur-xl transition-all pointer-events-auto dark:bg-black/10;
+  @apply h-10 rounded-full bg-black/3 shadow-sm shadow-theme-400/15 backdrop-blur-xl transition-all pointer-events-auto dark:bg-black/10 dark:shadow-theme-400/5;
+
+  --island-pill-shading: linear-gradient(
+    to bottom,
+    rgb(0 0 0 / 1%),
+    transparent 9px,
+    transparent calc(100% - 12px),
+    rgb(255 255 255 / 18%)
+  );
+  background-image: var(--island-pill-shading);
+
+  @variant dark {
+    --island-pill-shading: none;
+  }
 
   &:not(:disabled):hover {
     @apply shadow-theme-400/30;

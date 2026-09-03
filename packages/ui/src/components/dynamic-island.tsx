@@ -109,22 +109,13 @@ function DynamicIsland({
   }
 
   useEffect(() => {
-    const onScroll = () => onClose()
-
-    window.addEventListener("scroll", onScroll, true)
+    window.addEventListener("scroll", onClose, true)
     return () => {
-      window.removeEventListener("scroll", onScroll, true)
+      window.removeEventListener("scroll", onClose, true)
     }
   }, [onClose])
 
-  useClickAway(
-    () => {
-      if (isSmall) return
-      onClose()
-    },
-    wrapperRef,
-    "pointerdown",
-  )
+  useClickAway(onClose, wrapperRef, "pointerdown")
 
   return (
     <div
@@ -163,7 +154,6 @@ function DynamicIsland({
           }}
           transition={shapeTransition}
           style={shellStyle}
-          whileHover={isSmall && !shouldReduceMotion ? { scale: 1.025 } : undefined}
           whileTap={isSmall && !shouldReduceMotion ? { scale: 0.975 } : undefined}
           className={cn(
             "dynamic-island-shell relative transform-gpu",

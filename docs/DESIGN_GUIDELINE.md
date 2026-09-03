@@ -50,9 +50,17 @@ motion as one restrained entry sequence and respect reduced-motion preferences.
   emphasis instead of placing near-black text across the pastel surfaces.
 - Use the active `theme-400` color for shared light-mode focus borders and
   rings instead of a neutral ring that reads as a black outline.
-- Render the header's shared island controls on `bg-background/60` in light
-  mode so they inherit the page wash without becoming muddy gray. Retain the
-  deeper `bg-black/10` treatment in dark mode.
+- The central Dynamic Island is the header's raised focal point; supporting
+  navigation, search, refresh, time, and user controls recede into the page.
+  In light mode, render shared `island-pill` controls on `bg-black/3` with a
+  shallow surface gradient: 1% black at the top fading over 9px, and 18% white
+  at the bottom fading over 12px. This shading suggests depth without an inset
+  shadow or a flat gray fill. In dark mode, keep `bg-black/10` and no surface
+  gradient. Explicit control gradients override the shared shading. Keep
+  `shadow-sm` at rest with `shadow-theme-400/15` in light mode and
+  `shadow-theme-400/5` in dark mode so the theme tint remains visible against
+  each background. Keep backdrop blur and `shadow-sm shadow-theme-400/30`
+  hover feedback in both modes.
 - Build depth with layered translucent surfaces instead of opaque panels and
   heavy borders.
 - Do not add static hairline rings to LiveCard surfaces, modal shells, or nested
@@ -108,8 +116,9 @@ illustration, or use a local SVG directly.
 Keep processing in the browser, sanitize direct SVG illustration, resize large raster
 inputs before pixel work, and show the result before it is applied.
 The preview is also the primary drop target and pointer-based file picker trigger;
-give it a visible drag-over state. Keep the preview canvas on its
-own background and outside the padded settings card that contains its controls.
+give it a visible drag-over state. Group the preview and its controls inside one
+Background illustration section Card, with the preview above the controls.
+Keep the preview canvas's own background and avoid a nested Card around the controls.
 Place the clipped canvas inside a transparent editor gutter, and render direct-
 manipulation controls in an aligned overlay outside the canvas clipping boundary.
 Use the same compact gutter on every side. Keep the full selection inside the
@@ -847,9 +856,13 @@ Dynamic islands are compact, centered controls that expand in place to reveal
 a single focused interaction. The shared component owns a translucent semantic
 background layer with a restrained `theme-400` wash, plus the subtle top light,
 appearance-aware shadow, clipping, and spring-based size and radius transition.
-In light mode, keep the surface tint restrained and carry more of the Board
-color in the collapsed state's ambient
-shadow. In dark mode, reduce the tint further and use a neutral deep shadow. Keep
+In light mode, raise the collapsed island above the recessed supporting controls
+with an 88% white surface, a 3% theme wash, and a neutral contact shadow.
+Use a 76% semantic background and 4% theme wash
+when expanded, preserving its translucent material and broader elevation.
+Strengthen the collapsed contact shadow with theme color on hover.
+In dark mode, retain the existing 5% collapsed
+and 7% expanded wash with a neutral deep resting shadow. Keep
 the surface and its content tied to the actual light or dark appearance instead
 of forcing dark-mode colors. Build restrained material depth with a subtle
 vertical top light, asymmetric inner edge lighting, and separate contact and

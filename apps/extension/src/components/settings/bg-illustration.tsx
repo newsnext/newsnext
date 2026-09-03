@@ -2,7 +2,6 @@ import type { ChangeEvent, CSSProperties, DragEvent, ReactNode } from "react"
 import type { BgIllustrationTransform } from "@/lib/bg-illustration"
 import type { Board } from "@/lib/board"
 import { Button } from "@newsnext/ui/components/button"
-import { Card, CardContent } from "@newsnext/ui/components/card"
 import { Slider } from "@newsnext/ui/components/slider"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { useEffect, useRef, useState } from "react"
@@ -419,172 +418,163 @@ function BgIllustrationSettingsContent({
   ])
 
   return (
-    <ConfigSection
-      title={t("backgroundIllustration")}
-      surface={false}
-    >
-      <div className="grid gap-2">
-        <div
-          role="group"
-          aria-label={previewIllustration
-            ? t("backgroundIllustrationPreview")
-            : t("chooseBackgroundIllustration")}
-          className="relative mx-auto overflow-hidden p-2"
-          style={previewEditorStyle}
-          onClick={() => {
-            if (!previewIllustration) fileInputRef.current?.click()
-          }}
-          onDragEnter={(event) => {
-            event.preventDefault()
-            setIsDragging(true)
-          }}
-          onDragOver={(event) => {
-            event.preventDefault()
-            event.dataTransfer.dropEffect = "copy"
-          }}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-        >
-          <SquircleBox
-            radius="2xl"
-            ref={setPreviewCanvasElement}
-            style={previewCanvasStyle}
-            className={cn(
-              "grid-texture-background relative bg-background transition-[box-shadow] zenith-theme-400",
-              isDragging && "ring-2 ring-primary ring-offset-2 ring-offset-background",
-            )}
-          >
-            {previewContent}
-            {status && (
-              <p
-                role={status.kind === "error" ? "alert" : "status"}
-                className={cn(
-                  "absolute bottom-3 left-3 z-10 max-w-[calc(100%_-_1.5rem)] rounded-lg bg-background/85 px-3 py-2 text-left text-sm shadow-sm backdrop-blur",
-                  status.kind === "error" ? "text-destructive" : "text-muted-foreground",
-                )}
-              >
-                {status.message}
-              </p>
-            )}
-          </SquircleBox>
-
-          {previewIllustration && illustrationElement && previewIllustrationLayout && previewIllustrationCenter && previewCanvasElement && !isDragging && (
-            <div className="pointer-events-none absolute inset-2">
-              <BgIllustrationControls
-                target={illustrationElement}
-                transform={{ ...draftTransform, ...previewIllustrationCenter }}
-                baseCenterX={previewIllustrationLayout.left + previewIllustrationLayout.width / 2}
-                baseCenterY={previewIllustrationLayout.top + previewIllustrationLayout.height / 2}
-                referenceWidth={previewCanvasSize.width}
-                referenceHeight={previewCanvasSize.height}
-                referenceElement={previewCanvasElement}
-                onTransformChange={updateDraftTransform}
-              />
-            </div>
+    <ConfigSection title={t("backgroundIllustration")} surfaceClassName="gap-4">
+      <div
+        role="group"
+        aria-label={previewIllustration
+          ? t("backgroundIllustrationPreview")
+          : t("chooseBackgroundIllustration")}
+        className="relative mx-auto overflow-hidden p-2"
+        style={previewEditorStyle}
+        onClick={() => {
+          if (!previewIllustration) fileInputRef.current?.click()
+        }}
+        onDragEnter={(event) => {
+          event.preventDefault()
+          setIsDragging(true)
+        }}
+        onDragOver={(event) => {
+          event.preventDefault()
+          event.dataTransfer.dropEffect = "copy"
+        }}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
+        <SquircleBox
+          radius="2xl"
+          ref={setPreviewCanvasElement}
+          style={previewCanvasStyle}
+          className={cn(
+            "grid-texture-background relative bg-background transition-[box-shadow] zenith-theme-400",
+            isDragging && "ring-2 ring-primary ring-offset-2 ring-offset-background",
           )}
-
-          {previewIllustration && (
-            <div className="absolute top-5 right-5 z-30 flex items-center gap-2">
-              {!isDefaultTransform && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon-sm"
-                  className="bg-background/70 backdrop-blur"
-                  aria-label={t("resetIllustrationPlacement")}
-                  title={t("resetIllustrationPlacement")}
-                  onClick={(event) => {
-                    event.stopPropagation()
-                    replaceDraftTransform(DEFAULT_BG_ILLUSTRATION_TRANSFORM)
-                  }}
-                >
-                  <PhArrowCounterClockwise />
-                </Button>
+        >
+          {previewContent}
+          {status && (
+            <p
+              role={status.kind === "error" ? "alert" : "status"}
+              className={cn(
+                "absolute bottom-3 left-3 z-10 max-w-[calc(100%_-_1.5rem)] rounded-lg bg-background/85 px-3 py-2 text-left text-sm shadow-sm backdrop-blur",
+                status.kind === "error" ? "text-destructive" : "text-muted-foreground",
               )}
+            >
+              {status.message}
+            </p>
+          )}
+        </SquircleBox>
+
+        {previewIllustration && illustrationElement && previewIllustrationLayout && previewIllustrationCenter && previewCanvasElement && !isDragging && (
+          <div className="pointer-events-none absolute inset-2">
+            <BgIllustrationControls
+              target={illustrationElement}
+              transform={{ ...draftTransform, ...previewIllustrationCenter }}
+              baseCenterX={previewIllustrationLayout.left + previewIllustrationLayout.width / 2}
+              baseCenterY={previewIllustrationLayout.top + previewIllustrationLayout.height / 2}
+              referenceWidth={previewCanvasSize.width}
+              referenceHeight={previewCanvasSize.height}
+              referenceElement={previewCanvasElement}
+              onTransformChange={updateDraftTransform}
+            />
+          </div>
+        )}
+
+        {previewIllustration && (
+          <div className="absolute top-5 right-5 z-30 flex items-center gap-2">
+            {!isDefaultTransform && (
               <Button
                 type="button"
+                variant="outline"
                 size="icon-sm"
-                variant="destructive"
-                className="backdrop-blur"
-                aria-label={t("removeBackgroundIllustration")}
-                title={t("removeBackgroundIllustration")}
-                disabled={isProcessing}
+                className="bg-background/70 backdrop-blur"
+                aria-label={t("resetIllustrationPlacement")}
+                title={t("resetIllustrationPlacement")}
                 onClick={(event) => {
                   event.stopPropagation()
-                  handleRemove()
+                  replaceDraftTransform(DEFAULT_BG_ILLUSTRATION_TRANSFORM)
                 }}
               >
-                <PhTrash />
+                <PhArrowCounterClockwise />
               </Button>
-            </div>
+            )}
+            <Button
+              type="button"
+              size="icon-sm"
+              variant="destructive"
+              className="backdrop-blur"
+              aria-label={t("removeBackgroundIllustration")}
+              title={t("removeBackgroundIllustration")}
+              disabled={isProcessing}
+              onClick={(event) => {
+                event.stopPropagation()
+                handleRemove()
+              }}
+            >
+              <PhTrash />
+            </Button>
+          </div>
+        )}
+      </div>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*,.svg,image/svg+xml"
+        className="sr-only"
+        onChange={handleFileChange}
+      />
+
+      <div className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
+        <ConfigSection
+          variant="field"
+          title={t("edgeDetail")}
+          htmlFor="bg-illustration-detail"
+          surface={false}
+          titleAccessory={<span className="tabular-nums text-muted-foreground">{threshold}</span>}
+        >
+          <Slider
+            id="bg-illustration-detail"
+            aria-label={t("edgeDetail")}
+            min={12}
+            max={96}
+            step={2}
+            value={[threshold]}
+            disabled={!sourceFile}
+            onValueChange={(value) => {
+              const nextValue = Array.isArray(value) ? value[0] : value
+              if (nextValue !== undefined && nextValue !== threshold) {
+                setIsProcessing(true)
+                setThreshold(nextValue)
+              }
+            }}
+          />
+        </ConfigSection>
+
+        <ConfigSection
+          variant="field"
+          title={t("opacity")}
+          htmlFor="bg-illustration-opacity"
+          surface={false}
+          titleAccessory={(
+            <span className="tabular-nums text-muted-foreground">
+              {illustrationOpacity}
+              %
+            </span>
           )}
-        </div>
-
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*,.svg,image/svg+xml"
-          className="sr-only"
-          onChange={handleFileChange}
-        />
-
-        <Card variant="subtle">
-          <CardContent>
-            <div className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
-              <ConfigSection
-                variant="field"
-                title={t("edgeDetail")}
-                htmlFor="bg-illustration-detail"
-                surface={false}
-                titleAccessory={<span className="tabular-nums text-muted-foreground">{threshold}</span>}
-              >
-                <Slider
-                  id="bg-illustration-detail"
-                  aria-label={t("edgeDetail")}
-                  min={12}
-                  max={96}
-                  step={2}
-                  value={[threshold]}
-                  disabled={!sourceFile}
-                  onValueChange={(value) => {
-                    const nextValue = Array.isArray(value) ? value[0] : value
-                    if (nextValue !== undefined && nextValue !== threshold) {
-                      setIsProcessing(true)
-                      setThreshold(nextValue)
-                    }
-                  }}
-                />
-              </ConfigSection>
-
-              <ConfigSection
-                variant="field"
-                title={t("opacity")}
-                htmlFor="bg-illustration-opacity"
-                surface={false}
-                titleAccessory={(
-                  <span className="tabular-nums text-muted-foreground">
-                    {illustrationOpacity}
-                    %
-                  </span>
-                )}
-              >
-                <Slider
-                  id="bg-illustration-opacity"
-                  aria-label={t("illustrationOpacity")}
-                  min={MIN_BG_ILLUSTRATION_OPACITY}
-                  max={MAX_BG_ILLUSTRATION_OPACITY}
-                  step={1}
-                  value={[illustrationOpacity]}
-                  disabled={!savedConfiguration && !draftIllustration}
-                  onValueChange={(value) => {
-                    const nextValue = Array.isArray(value) ? value[0] : value
-                    if (nextValue !== undefined) setIllustrationOpacity(nextValue)
-                  }}
-                />
-              </ConfigSection>
-            </div>
-          </CardContent>
-        </Card>
+        >
+          <Slider
+            id="bg-illustration-opacity"
+            aria-label={t("illustrationOpacity")}
+            min={MIN_BG_ILLUSTRATION_OPACITY}
+            max={MAX_BG_ILLUSTRATION_OPACITY}
+            step={1}
+            value={[illustrationOpacity]}
+            disabled={!savedConfiguration && !draftIllustration}
+            onValueChange={(value) => {
+              const nextValue = Array.isArray(value) ? value[0] : value
+              if (nextValue !== undefined) setIllustrationOpacity(nextValue)
+            }}
+          />
+        </ConfigSection>
       </div>
     </ConfigSection>
   )
