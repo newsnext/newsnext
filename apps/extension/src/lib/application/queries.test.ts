@@ -42,8 +42,10 @@ describe("application queries", () => {
   })
 
   it("returns NowLayer cards without registry filtering", () => {
-    expect(getNowLayerLiveCardsQuery(createData(), "reading").map(card => card.instanceId))
-      .toEqual(["second", "first"])
+    expect(getNowLayerLiveCardsQuery(createData(), "reading")).toEqual([
+      { boardId: "reading", instanceId: "second", sourceId: "rss:second" },
+      { boardId: "reading", instanceId: "first", sourceId: "rss:first" },
+    ])
   })
 
   it("returns nested Board configuration", () => {

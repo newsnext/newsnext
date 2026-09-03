@@ -78,6 +78,8 @@ describe("action Registry", () => {
       inputSchema: { type: "object", additionalProperties: false },
       outputSchema: { type: "object" },
     })
+    expect(actions.some(action => action.name === "instance.move")).toBe(true)
+    expect(actions.some(action => action.name === "board.addInstance")).toBe(false)
     expect(actions[0]).not.toHaveProperty("execute")
   })
 
@@ -85,7 +87,7 @@ describe("action Registry", () => {
     const ActionContext = createContext()
 
     await expect(executeRegisteredAction("instance.create", {
-      boardIds: ["reading"],
+      boardId: "reading",
       patch: {},
       sourceId: "github:trending",
     }, "ui", ActionContext)).resolves.toEqual({ instanceId: "new" })
@@ -93,7 +95,7 @@ describe("action Registry", () => {
     expect(ActionContext.mutate).toHaveBeenCalledOnce()
 
     await expect(executeRegisteredAction("instance.create", {
-      boardId: "reading",
+      boardIds: ["reading"],
       patch: {},
       sourceId: "github:trending",
     }, "ui", ActionContext)).rejects.toThrow("Invalid Action parameters")

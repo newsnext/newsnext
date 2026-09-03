@@ -101,8 +101,8 @@ and durable Layer settings belong directly to the Board.
 
 NewsNext does not persist an `addedAt` timestamp. Adding an unassigned Instance
 places its ID at the front. Adding an Instance already owned by another Board
-transfers it, removing the old membership and related Layer references.
-Re-adding the current membership is idempotent and does not move it.
+transfers it, removing it from the previous Board and related Layer references.
+Moving an Instance to its current Board is idempotent and does not reorder it.
 
 `createdAt` and membership order are deliberately different. Moving an old
 Instance into a new Board makes it recently added in that Board but
@@ -273,28 +273,27 @@ are:
 instance.create
 instance.configure
 instance.delete
+instance.move
 instance.resetParams
 
 board.create
 board.delete
 board.update
-board.addInstance
 
 nowLayer.setManualOrder
 ```
 
 `board.create` and `board.update` accept Board fields directly, including
 `color`, `defaultLayer`, and `sortMode`. Bulk creation may include configured
-Instances and persists the Board, Instances, and memberships atomically.
-`instance.create` retains its `boardIds` array input for protocol compatibility,
-but the array must contain exactly one Board ID.
+Instances and persists the Board, Instances, and ownership atomically.
+`instance.create` requires one scalar `boardId`.
 
-`board.addInstance` atomically transfers an existing Instance to its target
-Board; there is no standalone membership-removal Action because that would
+`instance.move` atomically transfers an existing Instance to its target Board;
+there is no standalone membership-removal Action because that would
 leave the Instance without an owner.
-`instance.delete` removes the Instance and every membership. Deleting a
-Board requires exactly one policy: delete Instances exclusive to it, or
-transfer its Instances to another Board.
+`instance.delete` removes the Instance from its Board. Deleting a
+Board requires exactly one policy: delete its Instances, or transfer them to
+another Board.
 
 `nowLayer.setManualOrder` requires every Board Instance exactly once and
 selects manual mode atomically.

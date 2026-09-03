@@ -1052,7 +1052,7 @@ radar: [{
 Each Radar suggestion previews one LiveCard. Creating it persists a new Instance
 with the resolved parameter and presentation patches in the selected destination
 Board. Radar does not modify an existing LiveCard. Moving a LiveCard later
-transfers its sole Board membership. Exactly one destination Board is required.
+changes its owning Board. Exactly one destination Board is required.
 
 Match rules:
 
@@ -1351,11 +1351,12 @@ newsnext action execute board.create --input \
 newsnext action execute board.update --input \
   '{"boardId":"BOARD_ID","name":"Research queue","color":"purple"}'
 newsnext action execute instance.create --input \
-  '{"sourceId":"github:trending","boardIds":["BOARD_ID"],"patch":{"params":{"language":"typescript"}}}'
+  '{"sourceId":"github:trending","boardId":"BOARD_ID","patch":{"params":{"language":"typescript"}}}'
+newsnext action execute instance.move --input \
+  '{"instanceId":"INSTANCE_ID","boardId":"BOARD_ID"}'
 ```
 
-`instance.create` keeps `boardIds` as an array for protocol compatibility, but
-it must contain exactly one destination Board ID.
+`instance.create` requires exactly one destination `boardId`.
 
 Catalog listings include each Action's `mutation`, `query`, or `command` kind,
 description, and JSON input/output schemas. Every execute input must be a JSON
@@ -1390,7 +1391,7 @@ different Workers belong to different datasets and are never mixed.
 
 Query Actions return canonical Boards and Instances without a
 parallel CLI-only Board representation. An Instance is returned by exactly one
-Board query because it has one membership. Ordinary Now Layer loads remain
+Board query because it belongs to one Board. Ordinary Now Layer loads remain
 browser-local and do not create History. Observation times may be Unix
 milliseconds or ISO 8601 values. List `observations` before using exact
 timestamps with `get` or `compare`. Add `--compact` when consuming JSON

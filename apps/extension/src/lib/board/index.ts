@@ -13,7 +13,6 @@ export {
   DEFAULT_BOARD_LAYER,
   getAdjacentBoardId,
   getBoardLayerFromState,
-  indexBoardIdsByInstance,
   INITIAL_BOARD_NAME,
   normalizeBoardLayer,
 } from "./board"

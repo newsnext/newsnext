@@ -16,7 +16,7 @@ import {
 } from "@/lib/scroll-restoration"
 import { DEFAULT_SHORTCUT_SETTINGS, SHORTCUT_DEFINITIONS } from "@/lib/settings"
 import { cn } from "@/lib/utils"
-import { moveInstanceToBoardAtom, updateBoardAtom } from "@/store/board"
+import { moveInstanceAtom, updateBoardAtom } from "@/store/board"
 import { shortcutSettingsAtom } from "@/store/settings"
 import { ScatterCardLayer } from "./scatter-card-layer"
 
@@ -39,7 +39,7 @@ interface RenderedView {
 export function BoardView({ board, layer }: { board: Board, layer: BoardLayer }) {
   const { rootScrollContainer } = useScrollProgressContext()
   const shortcuts = useAtomValue(shortcutSettingsAtom)
-  const moveInstanceToBoard = useSetAtom(moveInstanceToBoardAtom)
+  const moveInstance = useSetAtom(moveInstanceAtom)
   const updateBoard = useSetAtom(updateBoardAtom)
   const navigate = useNavigate({ from: "/board/$boardId" })
   const isNextLayer = layer === "next"
@@ -60,9 +60,9 @@ export function BoardView({ board, layer }: { board: Board, layer: BoardLayer })
 
   const moveSearchLiveCard = useEffectEvent(async (instanceId: string) => {
     try {
-      await moveInstanceToBoard({
+      await moveInstance({
+        boardId: board.id,
         instanceId,
-        targetBoardId: board.id,
       })
     } catch (error) {
       console.error("Failed to move dropped LiveCard", error)

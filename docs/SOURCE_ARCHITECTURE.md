@@ -905,9 +905,9 @@ Instance IDs combine the Source ID and a
 12-character Nano ID with `::`;
 Board IDs, including the initial `My Board`, use the Nano ID directly. Both
 remain opaque strings.
-Moving a LiveCard transfers its sole Board membership; Source parameters,
+Moving a LiveCard changes its owning Board; Source parameters,
 presentation metadata, and result identity remain unchanged. Every Instance has
-exactly one Board membership. First-run data contains one
+exactly one owning Board. First-run data contains one
 ordinary Board named `My Board`; it can be renamed or deleted after another
 Board exists, and all Board routes resolve real Board IDs.
 The LiveCard editor writes the same instance patch shape and exposes every declared

@@ -610,7 +610,7 @@ only edit mode exposes board deletion, while the title and primary action
 reflect the current mode. Keep `Create board` and `Save changes` in the
 upper-right of the shared header. Disable deletion when it would remove the last Board;
 NewsNext must always retain at least one. `Delete with LiveCards` removes
-LiveCards owned only by that Board. `Transfer and Delete` requires a target
+LiveCards owned by that Board. `Transfer and Delete` requires a target
 Board and merges the deleted Board's LiveCards into it. Default layer uses a
 compact segmented `Now` / `Next` control and determines which Board view opens
 by default. In particular, do not
@@ -619,12 +619,12 @@ add the following descriptions back to this dialog:
 - `Personalize this board and choose how its LiveCards are arranged.`
 - `Group LiveCards around a topic, project, or reading routine.`
 
-### LiveCard Board membership
+### LiveCard Board ownership
 
 The LiveCard back moves the Instance between Boards with a single-choice radio
 menu. An Instance belongs to exactly one Board. The compact trigger shows that
-Board's name; selecting another Board performs one atomic transfer rather than
-adding a second membership. Disable rows while their transfer Action is pending.
+Board's name; selecting another Board performs one atomic move. Disable rows
+while the move Action is pending.
 
 ### Settings dialog
 

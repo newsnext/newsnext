@@ -8,7 +8,7 @@ import confetti from "canvas-confetti"
 import { useAtomValue, useSetAtom } from "jotai"
 import { animate, motion, useDragControls, useMotionValue, useReducedMotion, useTransform } from "motion/react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { BoardSelect } from "@/components/common/board-membership-select"
+import { BoardSelect } from "@/components/common/board-select"
 import { PhArrowCircleLeft, PhCircleDashed, PhPlusCircle } from "@/components/icons/ph"
 import { LiveCard } from "@/components/live-card"
 import { useAsyncAction } from "@/hooks/use-async-action"
@@ -16,7 +16,7 @@ import { useI18n } from "@/hooks/use-i18n"
 import { createRadarLiveCard } from "@/lib/radar"
 import { mergeInstancePatch } from "@/lib/source"
 import { cn } from "@/lib/utils"
-import { addInstanceAtom, boardsAtom } from "@/store/board"
+import { boardsAtom, createInstanceAtom } from "@/store/board"
 import { currentBoardIdAtom } from "@/store/settings"
 
 const RADAR_SWIPE_THRESHOLD = 90
@@ -200,7 +200,7 @@ function RadarDeckContent({
 }: RadarDeckContentProps) {
   const { t } = useI18n()
   const isDialog = layout === "dialog"
-  const addInstance = useSetAtom(addInstanceAtom)
+  const createInstance = useSetAtom(createInstanceAtom)
   const [targetBoardId, setTargetBoardId] = useState(initialBoardId)
   const [activeIndex, setActiveIndex] = useState(0)
   const [draftPatches, setDraftPatches] = useState<Record<string, InstancePatch>>({})
@@ -328,8 +328,8 @@ function RadarDeckContent({
     }
 
     await runCreate(async () => {
-      await addInstance({
-        boardIds: [targetBoardId],
+      await createInstance({
+        boardId: targetBoardId,
         sourceId: activeSuggestion.sourceId,
         patch: mergeInstancePatch(
           activeSuggestion.patch,
@@ -343,7 +343,7 @@ function RadarDeckContent({
         originElement: actionRef.current,
       })
     })
-  }, [activeLiveCard, activeSuggestion, addInstance, draftPatches, isCreated, onCreationStart, runCreate, targetBoardId])
+  }, [activeLiveCard, activeSuggestion, createInstance, draftPatches, isCreated, onCreationStart, runCreate, targetBoardId])
 
   const handleDraftSourceChange = useCallback((suggestionId: string, patch: InstancePatch) => {
     setDraftPatches((prev) => {

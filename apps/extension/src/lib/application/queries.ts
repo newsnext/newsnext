@@ -2,7 +2,6 @@ import type { SourceDescriptor } from "@newsnext/source-kit/types"
 import type { Board } from "../board"
 import type { Instance } from "../source/live-cards"
 import type { ApplicationData } from "./data"
-import { indexBoardIdsByInstance } from "../board"
 
 export interface ApplicationBoardContext {
   boardId: string
@@ -11,7 +10,6 @@ export interface ApplicationBoardContext {
 
 export interface ApplicationNowLayerLiveCard {
   boardId: string
-  boardIds: string[]
   instanceId: string
   sourceId: string
 }
@@ -93,10 +91,8 @@ export function getNowLayerLiveCardsQuery(
 ): ApplicationNowLayerLiveCard[] {
   const context = resolveBoardContext(data, currentBoardId)
   const board = getBoard(data, context.boardId)
-  const boardIdsByInstance = indexBoardIdsByInstance(data.boards)
   return resolveBoardInstances(data, board).map(instance => ({
     boardId: board.id,
-    boardIds: boardIdsByInstance.get(instance.instanceId) ?? [],
     instanceId: instance.instanceId,
     sourceId: instance.sourceId,
   }))

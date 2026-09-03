@@ -65,7 +65,7 @@ export function createBoardMutation(
   for (const instance of input.instances ?? []) {
     nextData = createInstanceMutation(nextData, {
       ...instance,
-      boardIds: [boardId],
+      boardId,
     }, dependencies).data
   }
   return { data: nextData, result: { boardId } }
@@ -114,7 +114,7 @@ export function deleteBoardMutation(
     assertBoardExists(data, targetBoardId)
   }
   const instances = deleteInstances
-    ? data.instances.filter(instance => !getExclusiveBoardInstanceIds(data, boardId).has(instance.instanceId))
+    ? data.instances.filter(instance => !board.instanceIds.includes(instance.instanceId))
     : data.instances
   return {
     data: {
@@ -239,7 +239,7 @@ export function setNextLayerWidgetLayoutsMutation(
   })
 }
 
-export function addBoardInstanceMutation(
+export function moveInstanceMutation(
   data: ApplicationData,
   input: { boardId: string, instanceId: string },
 ): ApplicationMutationExecution {
@@ -257,14 +257,12 @@ export function addBoardInstanceMutation(
 
 export function createInstanceMutation(
   data: ApplicationData,
-  input: ApplicationInstanceCreationInput & { boardIds: string[] },
+  input: ApplicationInstanceCreationInput & { boardId: string },
   dependencies: ApplicationMutationDependencies,
 ): ApplicationMutationExecution {
-  const { boardIds, patch, sourceId } = input
+  const { boardId, patch, sourceId } = input
   if (!sourceId.trim()) throw new Error("Source ID is required")
-  const uniqueBoardIds = [...new Set(boardIds)]
-  if (uniqueBoardIds.length !== 1) throw new Error("A LiveCard must belong to exactly one Board")
-  for (const boardId of uniqueBoardIds) assertBoardExists(data, boardId)
+  assertBoardExists(data, boardId)
   const instanceId = `${sourceId}::${dependencies.createId()}`
   if (data.instances.some(instance => instance.instanceId === instanceId)) {
     throw new Error(`Instance '${instanceId}' already exists`)
@@ -279,7 +277,7 @@ export function createInstanceMutation(
         patch,
         createdAt: dependencies.now(),
       }],
-      boards: data.boards.map(board => uniqueBoardIds.includes(board.id)
+      boards: data.boards.map(board => board.id === boardId
         ? addInstanceToBoard(board, instanceId)
         : board),
     },
@@ -371,17 +369,6 @@ function removeInstanceFromBoard(board: Board, instanceId: string): Board {
         : widget),
     },
   }
-}
-
-function getExclusiveBoardInstanceIds(
-  data: ApplicationData,
-  boardId: string,
-): Set<string> {
-  const board = getBoard(data, boardId)
-  const otherBoardInstanceIds = new Set(data.boards
-    .filter(candidate => candidate.id !== boardId)
-    .flatMap(candidate => candidate.instanceIds))
-  return new Set(board.instanceIds.filter(instanceId => !otherBoardInstanceIds.has(instanceId)))
 }
 
 function configureBoard(

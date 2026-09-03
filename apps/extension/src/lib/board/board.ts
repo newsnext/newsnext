@@ -77,20 +77,6 @@ export function createBoard(
   }
 }
 
-export function indexBoardIdsByInstance(
-  boards: readonly Board[],
-): Map<string, string[]> {
-  const boardIdsByInstance = new Map<string, string[]>()
-  for (const board of boards) {
-    for (const instanceId of board.instanceIds) {
-      const boardIds = boardIdsByInstance.get(instanceId) ?? []
-      boardIds.push(board.id)
-      boardIdsByInstance.set(instanceId, boardIds)
-    }
-  }
-  return boardIdsByInstance
-}
-
 export function normalizeBoardLayer(value: unknown): BoardLayer {
   return value === "next" ? "next" : DEFAULT_BOARD_LAYER
 }

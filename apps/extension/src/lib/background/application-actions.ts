@@ -12,7 +12,6 @@ import { COLORS } from "@newsnext/shared/constants"
 import Type from "typebox"
 import { defineAction } from "../action"
 import {
-  addBoardInstanceMutation,
   configureInstanceMutation,
   createBoardMutation,
   createInstanceMutation,
@@ -29,6 +28,7 @@ import {
   listBoardsQuery,
   listInstancesQuery,
   listSourcesQuery,
+  moveInstanceMutation,
   removeNextLayerWidgetMutation,
   resetInstanceParamsMutation,
   setNextLayerWidgetDataScopeMutation,
@@ -165,7 +165,7 @@ const boardDeleteAction = defineAction({
   audiences: CONNECTED_AND_UI,
   name: "board.delete",
   kind: "mutation",
-  description: "Delete a Board and either delete exclusively owned Instances or transfer all of its Instances.",
+  description: "Delete a Board and either delete or transfer its Instances.",
   params: BoardDeleteParams,
   result: EmptyResult,
 }, async (input, context: ApplicationActionContext) => (
@@ -254,20 +254,18 @@ const nextLayerSetWidgetLayoutsAction = defineAction({
   await context.mutate(data => setNextLayerWidgetLayoutsMutation(data, input))
 ))
 
-const MembershipParams = Type.Object({
-  boardId: Identifier,
-  instanceId: Identifier,
-}, { additionalProperties: false })
-
-const boardAddInstanceAction = defineAction({
+const instanceMoveAction = defineAction({
   audiences: CONNECTED_AND_UI,
-  name: "board.addInstance",
+  name: "instance.move",
   kind: "mutation",
   description: "Move an existing Instance to a Board.",
-  params: MembershipParams,
+  params: Type.Object({
+    boardId: Identifier,
+    instanceId: Identifier,
+  }, { additionalProperties: false }),
   result: EmptyResult,
 }, async (input, context: ApplicationActionContext) => (
-  await context.mutate(data => addBoardInstanceMutation(data, input))
+  await context.mutate(data => moveInstanceMutation(data, input))
 ))
 
 const instanceCreateAction = defineAction({
@@ -276,7 +274,7 @@ const instanceCreateAction = defineAction({
   kind: "mutation",
   description: "Create a configured Instance in one Board.",
   params: Type.Object({
-    boardIds: Type.Array(Identifier, { minItems: 1, maxItems: 1, uniqueItems: true }),
+    boardId: Identifier,
     patch: InstancePatchParams,
     sourceId: Identifier,
   }, { additionalProperties: false }),
@@ -317,7 +315,7 @@ const instanceDeleteAction = defineAction({
   audiences: CONNECTED_AND_UI,
   name: "instance.delete",
   kind: "mutation",
-  description: "Delete an Instance and all of its Board memberships.",
+  description: "Delete an Instance from its Board.",
   params: Type.Object({ instanceId: Identifier }, { additionalProperties: false }),
   result: EmptyResult,
 }, async (input, context: ApplicationActionContext) => (
@@ -448,7 +446,7 @@ export const applicationActionDefinitions = [
   nextLayerRemoveWidgetAction,
   nextLayerSetWidgetDataScopeAction,
   nextLayerSetWidgetLayoutsAction,
-  boardAddInstanceAction,
+  instanceMoveAction,
   instanceCreateAction,
   instanceConfigureAction,
   instanceResetParamsAction,

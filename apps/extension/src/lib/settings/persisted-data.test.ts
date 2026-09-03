@@ -102,7 +102,7 @@ describe("persisted user data", () => {
     expect(data.instances.map(instance => instance.workerId)).toEqual(["worker-a", "worker-b"])
   })
 
-  it("keeps only the first Board membership for each Instance", () => {
+  it("keeps the first Board as each Instance's owner", () => {
     const data = createData()
     data.boards.push({
       color: "purple",

@@ -1,11 +1,11 @@
 import type { ApplicationData } from "./data"
 import { describe, expect, it } from "vitest"
 import {
-  addBoardInstanceMutation,
   createBoardMutation,
   createInstanceMutation,
   deleteInstanceMutation,
   installNextLayerWidgetMutation,
+  moveInstanceMutation,
   setNextLayerWidgetDataScopeMutation,
   setNextLayerWidgetLayoutsMutation,
   setNowLayerManualOrderMutation,
@@ -79,9 +79,9 @@ describe("application mutations", () => {
     })
   })
 
-  it("adds new Instances to the front of membership order", () => {
+  it("adds new Instances to the front of their Board order", () => {
     const execution = createInstanceMutation(createData(), {
-      boardIds: ["reading"],
+      boardId: "reading",
       sourceId: "github:trending",
       patch: {},
     }, dependencies)
@@ -97,13 +97,13 @@ describe("application mutations", () => {
     expect(execution.data.instances.at(-1)?.workerId).toBe("worker-a")
   })
 
-  it("does not reorder an existing membership when it is added again", () => {
+  it("does not reorder an Instance moved to its current Board", () => {
     const initial = createData()
     initial.boards[0]!.instanceIds.unshift("rss:feed::two")
     initial.boards[0]!.nowLayer.sort.manualOrder.unshift("rss:feed::two")
     initial.instances.push({ instanceId: "rss:feed::two", workerId: "worker-a", sourceId: "rss:feed", patch: {}, createdAt: 2 })
 
-    const execution = addBoardInstanceMutation(initial, {
+    const execution = moveInstanceMutation(initial, {
       boardId: "reading",
       instanceId: "rss:feed::one",
     })
@@ -111,28 +111,17 @@ describe("application mutations", () => {
     expect(execution.data.boards[0]).toBe(initial.boards[0])
   })
 
-  it("moves an existing Instance when adding it to another Board", () => {
+  it("moves an existing Instance to another Board", () => {
     const initial = createData()
     initial.boards.push(createTargetBoard())
 
-    const execution = addBoardInstanceMutation(initial, {
+    const execution = moveInstanceMutation(initial, {
       boardId: "target",
       instanceId: "rss:feed::one",
     })
 
     expect(execution.data.boards[0]?.instanceIds).toEqual([])
     expect(execution.data.boards[1]?.instanceIds).toEqual(["rss:feed::one"])
-  })
-
-  it("rejects creating an Instance in multiple Boards", () => {
-    const initial = createData()
-    initial.boards.push(createTargetBoard())
-
-    expect(() => createInstanceMutation(initial, {
-      boardIds: ["reading", "target"],
-      sourceId: "github:trending",
-      patch: {},
-    }, dependencies)).toThrow("exactly one Board")
   })
 
   it("stores manual order only in the NowLayer", () => {
@@ -160,7 +149,7 @@ describe("application mutations", () => {
     })).toThrow("every Board Instance")
   })
 
-  it("removes an Instance and every membership", () => {
+  it("removes an Instance from its Board", () => {
     const execution = deleteInstanceMutation(createData(), { instanceId: "rss:feed::one" })
 
     expect(execution.data.instances).toEqual([])

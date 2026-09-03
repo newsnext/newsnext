@@ -1,5 +1,5 @@
 import { useAtomValue, useSetAtom } from "jotai"
-import { BoardSelect } from "@/components/common/board-membership-select"
+import { BoardSelect } from "@/components/common/board-select"
 import { ConfirmDestructiveButton } from "@/components/common/confirm-destructive-button"
 import { PhTrashDuotone } from "@/components/icons/ph"
 import { useAsyncAction, useKeyedAsyncAction } from "@/hooks/use-async-action"
@@ -7,23 +7,23 @@ import { useI18n } from "@/hooks/use-i18n"
 import {
   boardsAtom,
   deleteInstanceAtom,
-  moveInstanceToBoardAtom,
+  moveInstanceAtom,
 } from "@/store/board"
 
 export function LiveCardBoardSelect({ id }: { id: string }) {
   const { t } = useI18n()
   const boards = useAtomValue(boardsAtom)
-  const moveInstance = useSetAtom(moveInstanceToBoardAtom)
+  const moveInstance = useSetAtom(moveInstanceAtom)
   const {
-    error: membershipError,
-    isPending: isMembershipPending,
-    run: runMembershipUpdate,
-  } = useKeyedAsyncAction<string>(t("updateBoardMembershipFailed"))
+    error: moveError,
+    isPending: isMovePending,
+    run: runMove,
+  } = useKeyedAsyncAction<string>(t("moveLiveCardFailed"))
   const boardId = boards.find(board => board.instanceIds.includes(id))?.id
   async function moveToBoard(targetBoardId: string): Promise<void> {
     if (!boardId || targetBoardId === boardId) return
-    await runMembershipUpdate(targetBoardId, async () => {
-      await moveInstance({ instanceId: id, targetBoardId })
+    await runMove(targetBoardId, async () => {
+      await moveInstance({ boardId: targetBoardId, instanceId: id })
     })
   }
 
@@ -34,9 +34,9 @@ export function LiveCardBoardSelect({ id }: { id: string }) {
         value={boardId}
         onValueChange={targetBoardId => void moveToBoard(targetBoardId)}
         ariaLabel={t("moveLiveCardToBoard")}
-        isBoardDisabled={isMembershipPending}
+        isBoardDisabled={isMovePending}
       />
-      {membershipError && <span role="alert" className="sr-only">{membershipError}</span>}
+      {moveError && <span role="alert" className="sr-only">{moveError}</span>}
     </div>
   )
 }

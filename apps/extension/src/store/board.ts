@@ -8,7 +8,6 @@ import { actions } from "../lib/actions"
 import {
   DEFAULT_BOARD_LAYER,
   DEFAULT_NOW_LAYER_SORT,
-  indexBoardIdsByInstance,
 } from "../lib/board"
 import { normalizeApplicationData, PERSISTED_DATA_SLICES } from "../lib/settings"
 import { createExtensionStorage } from "./persisted-storage"
@@ -39,46 +38,7 @@ export const currentBoardAtom = atom((get) => {
   return get(boardsAtom).find(board => board.id === currentBoardId)
 })
 export const instancesAtom = selectAtom(applicationDataAtom, data => data.instances)
-export interface InstanceViewLayout {
-  boardIds: string[]
-  createdAt: number
-  instanceId: string
-  sourceId: string
-  title?: string
-}
-
-function selectInstanceLayouts(data: ApplicationData): InstanceViewLayout[] {
-  const boardIdsByInstance = indexBoardIdsByInstance(data.boards)
-  return data.instances.map(instance => ({
-    boardIds: boardIdsByInstance.get(instance.instanceId) ?? [],
-    createdAt: instance.createdAt,
-    instanceId: instance.instanceId,
-    sourceId: instance.sourceId,
-    title: instance.patch.metadata?.title,
-  }))
-}
-
-function areInstanceLayoutsEqual(left: InstanceViewLayout[], right: InstanceViewLayout[]): boolean {
-  return left.length === right.length && left.every((layout, index) => {
-    const candidate = right[index]
-    return candidate !== undefined
-      && layout.createdAt === candidate.createdAt
-      && layout.instanceId === candidate.instanceId
-      && layout.sourceId === candidate.sourceId
-      && layout.title === candidate.title
-      && layout.boardIds.length === candidate.boardIds.length
-      && layout.boardIds.every((boardId, boardIndex) => (
-        boardId === candidate.boardIds[boardIndex]
-      ))
-  })
-}
-
 export const instanceAtomsAtom = splitAtom(instancesAtom, instance => instance.instanceId)
-export const instanceLayoutsAtom = selectAtom(
-  applicationDataAtom,
-  selectInstanceLayouts,
-  areInstanceLayoutsEqual,
-)
 
 export const setNowLayerManualOrderAtom = atom(null, async (_get, _set, input: {
   boardId: string
@@ -90,8 +50,8 @@ export const setNowLayerManualOrderAtom = atom(null, async (_get, _set, input: {
   })
 })
 
-export const addInstanceAtom = atom(null, (_get, _set, input: {
-  boardIds: [string]
+export const createInstanceAtom = atom(null, (_get, _set, input: {
+  boardId: string
   patch: InstancePatch
   sourceId: string
 }) => actions.instance.create(input))
@@ -151,13 +111,10 @@ export const deleteBoardAtom = atom(null, (_get, _set, input: DeleteBoardInput) 
     : actions.board.delete({ boardId: input.boardId, targetBoardId: input.targetBoardId })
 ))
 
-export const moveInstanceToBoardAtom = atom(null, (_get, _set, input: {
+export const moveInstanceAtom = atom(null, (_get, _set, input: {
+  boardId: string
   instanceId: string
-  targetBoardId: string
-}) => actions.board.addInstance({
-  boardId: input.targetBoardId,
-  instanceId: input.instanceId,
-}))
+}) => actions.instance.move(input))
 
 export const resetInstanceParamsAtom = atom(null, (get, _set, instanceId: string) => {
   const instance = get(instancesAtom).find(candidate => candidate.instanceId === instanceId)
