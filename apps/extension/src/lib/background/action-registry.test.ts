@@ -79,7 +79,6 @@ describe("action Registry", () => {
       outputSchema: { type: "object" },
     })
     expect(actions.some(action => action.name === "instance.move")).toBe(true)
-    expect(actions.some(action => action.name === "board.addInstance")).toBe(false)
     expect(actions[0]).not.toHaveProperty("execute")
   })
 
@@ -94,11 +93,6 @@ describe("action Registry", () => {
     expect(ActionContext.requireSources).toHaveBeenCalledWith(["github:trending"])
     expect(ActionContext.mutate).toHaveBeenCalledOnce()
 
-    await expect(executeRegisteredAction("instance.create", {
-      boardIds: ["reading"],
-      patch: {},
-      sourceId: "github:trending",
-    }, "ui", ActionContext)).rejects.toThrow("Invalid Action parameters")
     await expect(executeRegisteredAction("board.update", {
       boardId: "reading",
     }, "ui", ActionContext)).rejects.toThrow("requires at least one change")

@@ -26,7 +26,6 @@ import { normalizePersistedSettings } from "./persisted-settings"
 import { isThemeColor } from "./theme-color"
 
 export const PERSISTED_DATA_EXPORT_VERSION = 5
-const PREVIOUS_APPLICATION_DATA_VERSION = 5
 export const PERSISTED_DATA_EXPORT_KIND = "newsnext-user-data"
 export const PERSISTED_PORTABLE_SLICE_IDS = [
   "settings",
@@ -69,25 +68,19 @@ export interface PersistedDataExport {
 }
 
 export function normalizeApplicationData(value: unknown): ApplicationData {
-  const migrated = migrateApplicationData(value)
-  if (!isRecord(migrated) || migrated.version !== APPLICATION_DATA_VERSION) {
+  if (!isRecord(value) || value.version !== APPLICATION_DATA_VERSION) {
     return createEmptyApplicationData()
   }
 
-  const instances = normalizeInstances(migrated.instances)
+  const instances = normalizeInstances(value.instances)
   const instanceIds = new Set(instances.map(instance => instance.instanceId))
-  const boards = normalizeBoards(migrated.boards, instanceIds)
+  const boards = normalizeBoards(value.boards, instanceIds)
 
   return {
     version: APPLICATION_DATA_VERSION,
     boards,
     instances,
   }
-}
-
-function migrateApplicationData(value: unknown): unknown {
-  if (!isRecord(value) || value.version !== PREVIOUS_APPLICATION_DATA_VERSION) return value
-  return { ...value, version: APPLICATION_DATA_VERSION }
 }
 
 export function normalizeBoards(
@@ -325,23 +318,21 @@ export function normalizePersistedUserData(data: PersistedUserData): PersistedUs
 function normalizePartialPersistedUserData(
   data: Record<string, unknown>,
 ): Partial<PersistedUserData> {
-  const migrated = migrateApplicationData(data)
-  if (!isRecord(migrated)) return {}
-  const hasInstances = Object.hasOwn(migrated, "instances")
-  const hasBoards = Object.hasOwn(migrated, "boards")
-  if ((hasBoards || hasInstances) && migrated.version !== APPLICATION_DATA_VERSION) {
+  const hasInstances = Object.hasOwn(data, "instances")
+  const hasBoards = Object.hasOwn(data, "boards")
+  if ((hasBoards || hasInstances) && data.version !== APPLICATION_DATA_VERSION) {
     return {}
   }
-  const instances = normalizeInstances(migrated.instances)
+  const instances = normalizeInstances(data.instances)
   const instanceIds = hasInstances
     ? new Set(instances.map(instance => instance.instanceId))
     : undefined
   const boards = hasBoards
-    ? normalizeBoards(migrated.boards, instanceIds)
+    ? normalizeBoards(data.boards, instanceIds)
     : undefined
   return {
     ...((boards || hasInstances) ? { version: APPLICATION_DATA_VERSION } : {}),
-    ...(Object.hasOwn(migrated, "settings") ? { settings: normalizePersistedSettings(migrated.settings) } : {}),
+    ...(Object.hasOwn(data, "settings") ? { settings: normalizePersistedSettings(data.settings) } : {}),
     ...(boards ? { boards } : {}),
     ...(hasInstances ? { instances } : {}),
   }

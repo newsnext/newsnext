@@ -38,13 +38,6 @@ function createData(): PersistedUserData {
 }
 
 describe("persisted user data", () => {
-  it("migrates version 5 Application Data to version 6", () => {
-    const migrated = normalizeApplicationData({ ...createData(), version: 5 })
-
-    expect(migrated.version).toBe(6)
-    expect(migrated.boards[0]?.instanceIds).toEqual(["rss:feed::one"])
-  })
-
   it("normalizes current Board membership, color, and layer state", () => {
     const data = normalizeApplicationData({
       version: 6,

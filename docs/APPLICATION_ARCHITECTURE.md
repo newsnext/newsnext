@@ -50,12 +50,10 @@ The background application repository applies acknowledged daemon commits to
 Action dispatchers. Every Board reference resolves against the mirrored
 Workspace Instance collection.
 
-Version 6 makes single-Board ownership canonical. The persistence boundary
-migrates version 5 data once, keeps the first Board in persisted Board order as
-the owner when old data contains duplicates, removes duplicate Layer references,
-and writes the normalized version 6 snapshot back to browser storage. Current
-Actions and domain mutations accept only the version 6 model; legacy handling
-does not enter business logic.
+Version 6 makes single-Board ownership canonical. Persistence normalization
+keeps the first Board in persisted Board order as the owner if malformed data
+contains duplicates and removes duplicate Layer references. Actions and domain
+mutations accept only the version 6 model.
 
 ### Instance
 
