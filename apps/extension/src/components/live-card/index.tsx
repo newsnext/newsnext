@@ -8,10 +8,10 @@ import { useSetAtom } from "jotai"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useSourceParams } from "@/hooks"
 import { createInstanceQueryTarget, getSourceQueryKey } from "@/hooks/source-query"
-import { APP_INTEGRATION_STATUS_QUERY_KEY, useAppIntegrationStatus } from "@/hooks/use-app-integration-status"
 import { useAsyncAction } from "@/hooks/use-async-action"
 import { useI18n } from "@/hooks/use-i18n"
 import { useInView } from "@/hooks/use-in-view"
+import { NATIVE_INTEGRATION_STATUS_QUERY_KEY, useNativeIntegrationStatus } from "@/hooks/use-native-integration-status"
 import { useSourcePermission } from "@/hooks/use-source-permission"
 import { useSourceQuery } from "@/hooks/use-source-query"
 import { actions } from "@/lib/actions"
@@ -51,7 +51,7 @@ function LiveCardContent({ source, target, dragHandleRef }: LiveCardProps) {
   const resetLocalParams = useSetAtom(resetInstanceParamsAtom)
   const [isFlipped, setIsFlipped] = useState(false)
   const instanceId = target.kind === "instance" ? target.instanceId : undefined
-  const appIntegrationStatus = useAppIntegrationStatus(instanceId !== undefined)
+  const nativeIntegrationStatus = useNativeIntegrationStatus(instanceId !== undefined)
   const instanceQueryKey = useMemo(
     () => instanceId
       ? getSourceQueryKey(createInstanceQueryTarget(instanceId))
@@ -60,15 +60,15 @@ function LiveCardContent({ source, target, dragHandleRef }: LiveCardProps) {
   )
   const offlineWorker = useMemo(
     () => instanceId
-      ? appIntegrationStatus.data?.offlineWorkers.find(worker => (
+      ? nativeIntegrationStatus.data?.offlineWorkers.find(worker => (
           worker.instanceIds.includes(instanceId)
         ))
       : undefined,
-    [appIntegrationStatus.data?.offlineWorkers, instanceId],
+    [nativeIntegrationStatus.data?.offlineWorkers, instanceId],
   )
   const routingResolved = instanceId === undefined
-    || appIntegrationStatus.data !== undefined
-    || appIntegrationStatus.isError
+    || nativeIntegrationStatus.data !== undefined
+    || nativeIntegrationStatus.isError
   useEffect(() => {
     if (offlineWorker && instanceQueryKey) {
       void queryClient.cancelQueries({ exact: true, queryKey: instanceQueryKey })
@@ -129,7 +129,7 @@ function LiveCardContent({ source, target, dragHandleRef }: LiveCardProps) {
         workerId: offlineWorker.id,
       })
       queryClient.removeQueries({ exact: true, queryKey: instanceQueryKey })
-      queryClient.setQueryData(APP_INTEGRATION_STATUS_QUERY_KEY, status)
+      queryClient.setQueryData(NATIVE_INTEGRATION_STATUS_QUERY_KEY, status)
     })
   }, [instanceId, instanceQueryKey, offlineWorker, queryClient, runTakeover])
 

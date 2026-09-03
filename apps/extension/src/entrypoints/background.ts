@@ -2,16 +2,16 @@ import { registerService } from "@webext-core/proxy-service"
 import { browser, defineBackground } from "#imports"
 import { openAppTab } from "@/lib/app-tab"
 import {
-  appIntegrationActions,
-  registerAppIntegrationNative,
-} from "@/lib/background/app-integration-native"
+  nativeIntegrationActions,
+  registerNativeIntegration,
+} from "@/lib/background/native-integration"
 import { registerRadarBadge } from "@/lib/background/radar-badge"
 import { registerSourceRegistryLoader } from "@/lib/background/registry"
 import { BACKGROUND_SERVICE_KEY, createBackgroundService } from "@/lib/background/service"
 import { syncConfiguredSourceRequestRules } from "@/lib/background/source-request-rules"
 
 registerSourceRegistryLoader()
-const backgroundService = createBackgroundService(appIntegrationActions)
+const backgroundService = createBackgroundService(nativeIntegrationActions)
 const APP_MENU_ID = "app"
 const COSMOS_MENU_ID = "cosmos"
 const ACTION_CONTEXT = import.meta.env.MANIFEST_VERSION === 3 ? "action" : "browser_action"
@@ -35,7 +35,7 @@ function registerActionMenus(): void {
 export default defineBackground(() => {
   registerService(BACKGROUND_SERVICE_KEY, backgroundService)
   registerRadarBadge()
-  void registerAppIntegrationNative().catch((error) => {
+  void registerNativeIntegration().catch((error) => {
     console.error("Failed to initialize the App integration", error)
   })
   void syncConfiguredSourceRequestRules().catch((error) => {

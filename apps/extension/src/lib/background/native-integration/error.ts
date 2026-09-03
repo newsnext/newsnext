@@ -5,7 +5,7 @@ function getStringProperty(value: object, key: string): string | undefined {
   return typeof property === "string" ? property : undefined
 }
 
-export function serializeAppIntegrationError(error: unknown): ExtensionConnectionSerializedError {
+export function serializeNativeIntegrationError(error: unknown): ExtensionConnectionSerializedError {
   if (error instanceof Error) {
     return {
       name: error.name,

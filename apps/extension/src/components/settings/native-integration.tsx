@@ -1,5 +1,5 @@
 import type { NativeLogEntry } from "@newsnext/extension-connection"
-import type { AppIntegrationStatus } from "@/lib/background/app-integration-native"
+import type { NativeIntegrationStatus } from "@/lib/background/native-integration"
 import type { StaticMessageKey } from "@/lib/i18n"
 import { Button } from "@newsnext/ui/components/button"
 import {
@@ -16,14 +16,14 @@ import { ConfigSection } from "@/components/common/config-section"
 import { useAsyncAction } from "@/hooks/use-async-action"
 import { useI18n } from "@/hooks/use-i18n"
 import { actions } from "@/lib/actions"
-import { APP_INTEGRATION_PERMISSIONS } from "@/lib/app-integration-permission"
+import { NATIVE_INTEGRATION_PERMISSIONS } from "@/lib/background/native-integration/permission"
 
 interface StatusPresentation {
   dotClassName: string
   labelKey: StaticMessageKey
 }
 
-const STATUS_PRESENTATION: Record<AppIntegrationStatus["state"], StatusPresentation> = {
+const STATUS_PRESENTATION: Record<NativeIntegrationStatus["state"], StatusPresentation> = {
   disabled: { dotClassName: "bg-muted-foreground/50", labelKey: "disabled" },
   connected: { dotClassName: "bg-emerald-500", labelKey: "connected" },
   connecting: { dotClassName: "bg-amber-500", labelKey: "connecting" },
@@ -39,13 +39,13 @@ const CHECKING_PRESENTATION: StatusPresentation = {
   labelKey: "checking",
 }
 
-export function AppIntegrationSettings(): React.JSX.Element {
+export function NativeIntegrationSettings(): React.JSX.Element {
   const { t } = useI18n()
-  const [status, setStatus] = useState<AppIntegrationStatus>()
+  const [status, setStatus] = useState<NativeIntegrationStatus>()
   const [logs, setLogs] = useState<NativeLogEntry[]>([])
   const [logLevel, setLogLevel] = useState<"all" | NativeLogEntry["level"]>("all")
   const { error: updateError, isPending: updating, run: runUpdate } = useAsyncAction(
-    t("updateAppIntegrationFailed"),
+    t("updateNativeIntegrationFailed"),
   )
   const state = status?.state
   const isEnabled = state !== undefined && state !== "disabled"
@@ -93,7 +93,7 @@ export function AppIntegrationSettings(): React.JSX.Element {
     const succeeded = await runUpdate(async () => {
       if (enabled) {
         const granted = await browser.permissions.request({
-          permissions: [...APP_INTEGRATION_PERMISSIONS],
+          permissions: [...NATIVE_INTEGRATION_PERMISSIONS],
         }).catch(() => false)
         if (!granted) return
       }
@@ -104,7 +104,7 @@ export function AppIntegrationSettings(): React.JSX.Element {
 
       if (!enabled) {
         await browser.permissions.remove({
-          permissions: [...APP_INTEGRATION_PERMISSIONS],
+          permissions: [...NATIVE_INTEGRATION_PERMISSIONS],
         }).catch(() => false)
       }
     })
@@ -140,7 +140,7 @@ export function AppIntegrationSettings(): React.JSX.Element {
     <div className="space-y-6">
       <ConfigSection
         title={t("integration")}
-        description={t("appIntegrationDescription")}
+        description={t("nativeIntegrationDescription")}
         surfaceClassName="gap-3 p-4"
       >
         <div className="flex items-center justify-between gap-4">
@@ -163,7 +163,7 @@ export function AppIntegrationSettings(): React.JSX.Element {
           <Switch
             checked={isEnabled}
             disabled={!status || updating}
-            aria-label={t("enableAppIntegration")}
+            aria-label={t("enableNativeIntegration")}
             onCheckedChange={enabled => void handleEnabledChange(enabled)}
           />
         </div>

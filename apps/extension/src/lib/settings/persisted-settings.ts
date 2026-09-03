@@ -28,6 +28,7 @@ export interface PersistedSettings {
   }
   general: {
     defaultBoardId: string | null
+    // Keep this persisted property name stable for existing browser profiles.
     appIntegrationEnabled: boolean
     registryUrls: string[]
     sourceIcon: SourceIconSettings

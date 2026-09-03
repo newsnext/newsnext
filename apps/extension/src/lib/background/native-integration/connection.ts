@@ -1,18 +1,18 @@
-export const APP_INTEGRATION_RECONNECT_DELAYS_MS = [1_000, 2_000, 5_000, 15_000, 30_000] as const
+export const NATIVE_INTEGRATION_RECONNECT_DELAYS_MS = [1_000, 2_000, 5_000, 15_000, 30_000] as const
 // Raise this only when the extension actually drops support for an older daemon release.
 export const MINIMUM_DAEMON_VERSION = "1.0.0-beta.3"
 
-export type AppIntegrationFailureState
+export type NativeIntegrationFailureState
   = | "daemonOutdated"
     | "hostNotInstalled"
     | "protocolIncompatible"
     | "serviceNotRunning"
     | "workerConflict"
 
-export function classifyAppIntegrationFailure(
+export function classifyNativeIntegrationFailure(
   message: string | undefined,
   code?: string,
-): AppIntegrationFailureState {
+): NativeIntegrationFailureState {
   switch (code?.toUpperCase()) {
     case "DAEMON_OUTDATED": return "daemonOutdated"
     case "HOST_MISSING": return "hostNotInstalled"
@@ -64,10 +64,10 @@ function parseVersion(value: string): { prerelease: string[], release: number[] 
   }
 }
 
-export function getAppIntegrationReconnectDelay(attempt: number): number {
+export function getNativeIntegrationReconnectDelay(attempt: number): number {
   const index = Math.min(
     Math.max(Math.trunc(attempt), 0),
-    APP_INTEGRATION_RECONNECT_DELAYS_MS.length - 1,
+    NATIVE_INTEGRATION_RECONNECT_DELAYS_MS.length - 1,
   )
-  return APP_INTEGRATION_RECONNECT_DELAYS_MS[index]!
+  return NATIVE_INTEGRATION_RECONNECT_DELAYS_MS[index]!
 }

@@ -31,7 +31,7 @@ function createContext(): BackgroundActionContext {
       cancel: vi.fn(async () => undefined),
       load: vi.fn(async () => ({}) as never),
     },
-    appIntegration: {
+    nativeIntegration: {
       getLogs: vi.fn(async () => []),
       getStatus: vi.fn(async () => ({
         capabilities: [],

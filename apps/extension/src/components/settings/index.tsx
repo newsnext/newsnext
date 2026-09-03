@@ -18,9 +18,9 @@ import {
   themeModeAtom,
 } from "@/store/settings"
 import { ThemeModeSelector } from "../theme-mode-selector"
-import { AppIntegrationSettings } from "./app-integration"
 import { DataTransferSettings } from "./data-transfer"
 import { SettingsModalShell } from "./modal-shell"
+import { NativeIntegrationSettings } from "./native-integration"
 import { PermissionsSettings } from "./permissions"
 import { RegistrySettings } from "./registry-urls"
 import { ShortcutsSettings } from "./shortcuts"
@@ -112,7 +112,7 @@ function SettingsModalContent({
       <TabsContent value="appearance"><AppearanceSettings /></TabsContent>
       <TabsContent value="general"><GeneralSettings /></TabsContent>
       <TabsContent value="registry"><RegistrySettings /></TabsContent>
-      <TabsContent value="cli"><AppIntegrationSettings /></TabsContent>
+      <TabsContent value="cli"><NativeIntegrationSettings /></TabsContent>
       <TabsContent value="shortcuts"><ShortcutsSettings /></TabsContent>
       <TabsContent value="permissions">
         <PermissionsSettings onOpenLiveCard={handleOpenLiveCard} />

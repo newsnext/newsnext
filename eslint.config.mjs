@@ -62,8 +62,8 @@ export default antfu(
     rules: {
       "no-restricted-imports": ["error", {
         paths: [{
-          name: "./app-integration-native",
-          message: "Inject App integration from the background entrypoint to avoid a runtime import cycle.",
+          name: "./native-integration",
+          message: "Inject Native integration from the background entrypoint to avoid a runtime import cycle.",
         }],
       }],
     },

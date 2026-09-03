@@ -2,12 +2,12 @@ import type { ExtensionConnectionFetchResponse, NativeLogEntry } from "@newsnext
 import type { ResolvedRadarSuggestion } from "../radar"
 import type { Instance } from "../source"
 import type { SourceLoadResponse } from "../source/load-result"
-import type { AppIntegrationStatus } from "./app-integration-native"
 import type { ApplicationActionContext } from "./application-actions"
 import type {
   RunDeveloperSourceInput,
   RunDeveloperSourceOutput,
 } from "./developer-source-runner"
+import type { NativeIntegrationStatus } from "./native-integration"
 import Type from "typebox"
 import { defineAction } from "../action"
 
@@ -46,18 +46,18 @@ export interface BackgroundActionContext extends ApplicationActionContext {
       sourceId: string
     }) => Promise<SourceLoadResponse>
   }
-  appIntegration: {
+  nativeIntegration: {
     getLogs: () => Promise<NativeLogEntry[]>
-    getStatus: () => Promise<AppIntegrationStatus>
+    getStatus: () => Promise<NativeIntegrationStatus>
     getWidgetSnapshot: (input: {
       boardId: string
       widgetId: string
     }) => Promise<unknown>
     loadInstance: (input: { instanceId: string }) => Promise<SourceLoadResponse>
     readInstanceCache: (input: { instanceId: string }) => Promise<SourceLoadResponse | null>
-    regenerateWorker: () => Promise<AppIntegrationStatus>
-    setEnabled: (input: { enabled: boolean }) => Promise<AppIntegrationStatus>
-    takeOverWorker: (input: { instanceIds: string[], workerId: string }) => Promise<AppIntegrationStatus>
+    regenerateWorker: () => Promise<NativeIntegrationStatus>
+    setEnabled: (input: { enabled: boolean }) => Promise<NativeIntegrationStatus>
+    takeOverWorker: (input: { instanceIds: string[], workerId: string }) => Promise<NativeIntegrationStatus>
   }
 }
 
@@ -79,7 +79,7 @@ const SourceCacheResult = Type.Unsafe<SourceLoadResponse | null>(Type.Union([
   SourceLoadResponseResult,
   Type.Null(),
 ]))
-const AppIntegrationStatusResult = Type.Unsafe<AppIntegrationStatus>(Type.Object({
+const NativeIntegrationStatusResult = Type.Unsafe<NativeIntegrationStatus>(Type.Object({
   appVersion: Type.Optional(Type.String()),
   capabilities: Type.Array(Type.String()),
   offlineWorkers: Type.Array(Type.Object({
@@ -279,25 +279,26 @@ const loaderReadInstanceCacheAction = defineAction({
   await context.loader.readInstanceCache(input)
 ))
 
-const appIntegrationGetStatusAction = defineAction({
+// Keep the action names stable for connected clients using the existing protocol.
+const nativeIntegrationGetStatusAction = defineAction({
   audiences: UI_ONLY,
   name: "appIntegration.getStatus",
   kind: "query",
   description: "Get the local NewsNext App connection status.",
   params: EmptyParams,
-  result: AppIntegrationStatusResult,
-}, async (_input, context: BackgroundActionContext) => await context.appIntegration.getStatus())
+  result: NativeIntegrationStatusResult,
+}, async (_input, context: BackgroundActionContext) => await context.nativeIntegration.getStatus())
 
-const appIntegrationGetLogsAction = defineAction({
+const nativeIntegrationGetLogsAction = defineAction({
   audiences: UI_ONLY,
   name: "appIntegration.getLogs",
   kind: "query",
   description: "Get recent NewsNext App service logs.",
   params: EmptyParams,
   result: Type.Array(AppLogEntryResult),
-}, async (_input, context: BackgroundActionContext) => await context.appIntegration.getLogs())
+}, async (_input, context: BackgroundActionContext) => await context.nativeIntegration.getLogs())
 
-const appIntegrationLoadInstanceAction = defineAction({
+const nativeIntegrationLoadInstanceAction = defineAction({
   audiences: UI_ONLY,
   name: "appIntegration.loadInstance",
   kind: "query",
@@ -305,10 +306,10 @@ const appIntegrationLoadInstanceAction = defineAction({
   params: Type.Object({ instanceId: Identifier }, { additionalProperties: false }),
   result: SourceLoadResponseResult,
 }, async (input, context: BackgroundActionContext) => (
-  await context.appIntegration.loadInstance(input)
+  await context.nativeIntegration.loadInstance(input)
 ))
 
-const appIntegrationReadInstanceCacheAction = defineAction({
+const nativeIntegrationReadInstanceCacheAction = defineAction({
   audiences: UI_ONLY,
   name: "appIntegration.readInstanceCache",
   kind: "query",
@@ -316,10 +317,10 @@ const appIntegrationReadInstanceCacheAction = defineAction({
   params: Type.Object({ instanceId: Identifier }, { additionalProperties: false }),
   result: SourceCacheResult,
 }, async (input, context: BackgroundActionContext) => (
-  await context.appIntegration.readInstanceCache(input)
+  await context.nativeIntegration.readInstanceCache(input)
 ))
 
-const appIntegrationSetEnabledAction = defineAction({
+const nativeIntegrationSetEnabledAction = defineAction({
   audiences: UI_ONLY,
   name: "appIntegration.setEnabled",
   kind: "mutation",
@@ -327,21 +328,21 @@ const appIntegrationSetEnabledAction = defineAction({
   params: Type.Object({
     enabled: Type.Boolean(),
   }, { additionalProperties: false }),
-  result: AppIntegrationStatusResult,
-}, async (input, context: BackgroundActionContext) => await context.appIntegration.setEnabled(input))
+  result: NativeIntegrationStatusResult,
+}, async (input, context: BackgroundActionContext) => await context.nativeIntegration.setEnabled(input))
 
-const appIntegrationRegenerateWorkerAction = defineAction({
+const nativeIntegrationRegenerateWorkerAction = defineAction({
   audiences: UI_ONLY,
   name: "appIntegration.regenerateWorker",
   kind: "mutation",
   description: "Generate a new Worker identity and reconnect this browser.",
   params: EmptyParams,
-  result: AppIntegrationStatusResult,
+  result: NativeIntegrationStatusResult,
 }, async (_input, context: BackgroundActionContext) => (
-  await context.appIntegration.regenerateWorker()
+  await context.nativeIntegration.regenerateWorker()
 ))
 
-const appIntegrationTakeOverWorkerAction = defineAction({
+const nativeIntegrationTakeOverWorkerAction = defineAction({
   audiences: UI_ONLY,
   name: "appIntegration.takeOverWorker",
   kind: "mutation",
@@ -350,8 +351,8 @@ const appIntegrationTakeOverWorkerAction = defineAction({
     instanceIds: Type.Array(Identifier, { minItems: 1, uniqueItems: true }),
     workerId: Identifier,
   }, { additionalProperties: false }),
-  result: AppIntegrationStatusResult,
-}, async (input, context: BackgroundActionContext) => await context.appIntegration.takeOverWorker(input))
+  result: NativeIntegrationStatusResult,
+}, async (input, context: BackgroundActionContext) => await context.nativeIntegration.takeOverWorker(input))
 
 const nextLayerGetWidgetSnapshotAction = defineAction({
   audiences: UI_ONLY,
@@ -364,20 +365,20 @@ const nextLayerGetWidgetSnapshotAction = defineAction({
   }, { additionalProperties: false }),
   result: Type.Unknown(),
 }, async (input, context: BackgroundActionContext) => (
-  await context.appIntegration.getWidgetSnapshot(input)
+  await context.nativeIntegration.getWidgetSnapshot(input)
 ))
 
 export const uiBackgroundActionDefinitions = [
   radarResolveSuggestionsAction,
   sourceLoadAction,
   sourceCancelAction,
-  appIntegrationGetStatusAction,
-  appIntegrationGetLogsAction,
-  appIntegrationLoadInstanceAction,
-  appIntegrationReadInstanceCacheAction,
-  appIntegrationRegenerateWorkerAction,
-  appIntegrationSetEnabledAction,
-  appIntegrationTakeOverWorkerAction,
+  nativeIntegrationGetStatusAction,
+  nativeIntegrationGetLogsAction,
+  nativeIntegrationLoadInstanceAction,
+  nativeIntegrationReadInstanceCacheAction,
+  nativeIntegrationRegenerateWorkerAction,
+  nativeIntegrationSetEnabledAction,
+  nativeIntegrationTakeOverWorkerAction,
   nextLayerGetWidgetSnapshotAction,
 ] as const
 
