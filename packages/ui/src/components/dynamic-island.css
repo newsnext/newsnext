@@ -6,6 +6,18 @@
   --dynamic-island-shadow-large:
     0 2px 5px color-mix(in oklab, var(--foreground) 8%, transparent),
     0 20px 56px color-mix(in oklab, var(--foreground) 12%, transparent);
+  box-shadow: var(--dynamic-island-shadow-small);
+  transition: box-shadow 200ms ease-out;
+}
+
+.dynamic-island-shell[data-state="large"] {
+  box-shadow: var(--dynamic-island-shadow-large);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dynamic-island-shell {
+    transition: none;
+  }
 }
 
 .dynamic-island-surface {
@@ -18,11 +30,6 @@
     --alpha(var(--color-theme-400) / 0.03),
     --alpha(var(--color-theme-400) / 0.03)
   );
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.5),
-    inset 1px 0 0 rgb(255 255 255 / 0.16),
-    inset -1px 0 0 color-mix(in oklab, var(--foreground) 4%, transparent),
-    inset 0 -1px 0 color-mix(in oklab, var(--foreground) 8%, transparent);
   backdrop-filter: blur(40px) saturate(1.25);
 }
 
@@ -43,9 +50,6 @@
       --alpha(var(--color-theme-400) / 0.04),
       --alpha(var(--color-theme-400) / 0.04)
     );
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.42),
-    inset 0 -1px 0 color-mix(in oklab, var(--foreground) 6%, transparent);
   backdrop-filter: blur(32px) saturate(1.18);
 }
 
@@ -66,11 +70,6 @@
     --alpha(var(--color-theme-400) / 0.05),
     --alpha(var(--color-theme-400) / 0.05)
   );
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.14),
-    inset 1px 0 0 rgb(255 255 255 / 0.04),
-    inset -1px 0 0 rgb(0 0 0 / 0.08),
-    inset 0 -1px 0 rgb(0 0 0 / 0.16);
 }
 
 .dark .dynamic-island-surface[data-state="small"]::before {
@@ -85,7 +84,4 @@
       --alpha(var(--color-theme-400) / 0.07),
       --alpha(var(--color-theme-400) / 0.07)
     );
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.18),
-    inset 0 -1px 0 rgb(0 0 0 / 0.14);
 }

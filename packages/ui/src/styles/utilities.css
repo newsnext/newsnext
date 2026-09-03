@@ -20,7 +20,7 @@
 }
 
 @utility island-pill {
-  @apply h-10 rounded-full bg-black/3 shadow-sm shadow-theme-400/15 backdrop-blur-xl transition-all pointer-events-auto dark:bg-black/10 dark:shadow-theme-400/5;
+  @apply h-10 rounded-full bg-background/50 shadow-sm shadow-theme-400/15 backdrop-blur-xl transition-all duration-200 ease-out pointer-events-auto dark:bg-black/10 dark:shadow-theme-400/5 motion-reduce:transition-none;
 
   --island-pill-shading: linear-gradient(
     to bottom,
@@ -30,6 +30,11 @@
     rgb(255 255 255 / 18%)
   );
   background-image: var(--island-pill-shading);
+
+  &[data-slot="button"] {
+    background-clip: border-box;
+    background-origin: border-box;
+  }
 
   @variant dark {
     --island-pill-shading: none;

@@ -136,6 +136,7 @@ function DynamicIsland({
 
       <div className="pointer-events-auto absolute left-1/2 top-0 -translate-x-1/2">
         <m.div
+          data-state={isSmall ? "small" : "large"}
           role={isSmall ? "button" : undefined}
           tabIndex={isSmall ? 0 : undefined}
           aria-expanded={isSmall ? false : undefined}
@@ -146,9 +147,6 @@ function DynamicIsland({
             width: getVal(isSmall ? smallWidth : largeWidth),
             height: getVal(isSmall ? smallHeight : largeHeight),
             borderRadius: isSmall ? collapsedRadius : expandedRadius,
-            boxShadow: isSmall
-              ? "var(--dynamic-island-shadow-small)"
-              : "var(--dynamic-island-shadow-large)",
             opacity: 1,
             scale: 1,
           }}

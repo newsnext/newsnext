@@ -52,7 +52,7 @@ motion as one restrained entry sequence and respect reduced-motion preferences.
   rings instead of a neutral ring that reads as a black outline.
 - The central Dynamic Island is the header's raised focal point; supporting
   navigation, search, refresh, time, and user controls recede into the page.
-  In light mode, render shared `island-pill` controls on `bg-black/3` with a
+  In light mode, render shared `island-pill` controls on `bg-background/50` with a
   shallow surface gradient: 1% black at the top fading over 9px, and 18% white
   at the bottom fading over 12px. This shading suggests depth without an inset
   shadow or a flat gray fill. In dark mode, keep `bg-black/10` and no surface
@@ -60,7 +60,11 @@ motion as one restrained entry sequence and respect reduced-motion preferences.
   `shadow-sm` at rest with `shadow-theme-400/15` in light mode and
   `shadow-theme-400/5` in dark mode so the theme tint remains visible against
   each background. Keep backdrop blur and `shadow-sm shadow-theme-400/30`
-  hover feedback in both modes.
+  hover feedback in both modes. Ease hover changes in and out over 200ms, and
+  disable these transitions when reduced motion is requested.
+  On Buttons, set both `background-clip` and `background-origin` to `border-box`
+  so the fill and gradient cover the transparent border. Keep these aligned to
+  avoid a bright gap beside the shadow or repeated gradient seams at the edges.
 - Build depth with layered translucent surfaces instead of opaque panels and
   heavy borders.
 - Do not add static hairline rings to LiveCard surfaces, modal shells, or nested
@@ -861,12 +865,16 @@ with an 88% white surface, a 3% theme wash, and a neutral contact shadow.
 Use a 76% semantic background and 4% theme wash
 when expanded, preserving its translucent material and broader elevation.
 Strengthen the collapsed contact shadow with theme color on hover.
+Let CSS own the shell's shadow with a 200ms ease-out transition for hover and
+state changes; keep size and radius animation in Motion. Disable the shadow
+transition when reduced motion is requested.
 In dark mode, retain the existing 5% collapsed
 and 7% expanded wash with a neutral deep resting shadow. Keep
 the surface and its content tied to the actual light or dark appearance instead
 of forcing dark-mode colors. Build restrained material depth with a subtle
-vertical top light, asymmetric inner edge lighting, and separate contact and
-ambient shadows. Do not use a uniform border, visible noise texture, directional
+vertical top light and separate contact and ambient shadows. Keep the inner
+surface free of inset shadows, which create a border-like rim in both states
+and appearances. Do not use a uniform border, visible noise texture, directional
 theme refraction, or animated specular highlight. Treat the expanded state as
 the same material at a calmer scale: let the translucent background reveal the
 surrounding environment through blur, retain only faint active-theme identity,
