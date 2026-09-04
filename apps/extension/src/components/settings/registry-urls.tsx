@@ -505,7 +505,8 @@ function SourceCard({
     <li className="min-w-0 max-w-full overflow-hidden rounded-2xl bg-background/40 p-3">
       <div className="flex min-w-0 items-center gap-2">
         <SourceIcon
-          className="shrink-0 rounded-md"
+          badge={source.metadata.badge}
+          className="shrink-0"
           color={source.provider.color}
           icon={icon}
           size="sm"

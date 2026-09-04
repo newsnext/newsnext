@@ -25,6 +25,7 @@ import {
   SourceWorkerTakeoverState,
 } from "./card-source-state"
 import { LiveCardSurface } from "./card-surface"
+import { LiveCardIdentityContext } from "./live-card-identity-context"
 import { Ranking } from "./ranking"
 import { SourcePermissionDetails } from "./source-permission-details"
 import { Timeline } from "./timeline"
@@ -72,11 +73,10 @@ function LiveCardRefreshButton({
 }
 
 interface LiveCardFrontContentProps {
-  icon?: string
   items: NewsItem[]
   inlinePresentation?: string[]
   markScale?: number
-  provider: LiveCardViewModel["provider"]
+  providerTitle: string
   presentationType?: LiveCardViewModel["metadata"]["type"]
   scrollElement: HTMLDivElement | null
   sourceErrorMessage?: string
@@ -88,11 +88,10 @@ interface LiveCardFrontContentProps {
 }
 
 function LiveCardFrontContent({
-  icon,
   items,
   inlinePresentation,
   markScale,
-  provider,
+  providerTitle,
   presentationType,
   scrollElement,
   sourceErrorMessage,
@@ -106,9 +105,7 @@ function LiveCardFrontContent({
     return (
       <SourceWorkerTakeoverState
         disabled={sourceWorkerTakeover.isPending}
-        icon={icon}
         onTakeOver={sourceWorkerTakeover.onTakeOver}
-        provider={provider}
       />
     )
   }
@@ -116,9 +113,7 @@ function LiveCardFrontContent({
   if (sourcePermissionRequest) {
     return (
       <SourcePermissionState
-        icon={icon}
         onRequestPermission={onRequestPermission}
-        provider={provider}
       />
     )
   }
@@ -126,8 +121,7 @@ function LiveCardFrontContent({
   if (sourceLoginUrl) {
     return (
       <SourceLoginState
-        icon={icon}
-        provider={provider}
+        providerTitle={providerTitle}
         loginUrl={sourceLoginUrl}
       />
     )
@@ -136,9 +130,7 @@ function LiveCardFrontContent({
   if (sourceErrorMessage) {
     return (
       <SourceErrorState
-        icon={icon}
         onRefresh={onRefresh}
-        provider={provider}
       />
     )
   }
@@ -198,6 +190,11 @@ export function LiveCardFront({
   const { provider } = source
   const { badge, desc, home, title } = source.metadata
   const icon = useSourceIcon(source)
+  const identity = useMemo(() => ({
+    badge,
+    icon,
+    name: title || provider.title,
+  }), [badge, icon, provider.title, title])
   const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(null)
   const markScaleGroups = useMemo(
     () => [{ items, sourceKey: source.id }],
@@ -268,21 +265,22 @@ export function LiveCardFront({
             className="relative size-full overflow-y-auto px-2 py-2 scrollbar-hidden"
           >
             <div className={cn("min-h-full transition-opacity duration-500", isContentFetching && "opacity-20")}>
-              <LiveCardFrontContent
-                icon={icon}
-                items={items}
-                inlinePresentation={inlinePresentation}
-                markScale={markScale}
-                provider={provider}
-                presentationType={source.metadata.type}
-                scrollElement={scrollElement}
-                sourceErrorMessage={visibleSourceErrorMessage}
-                sourceLoginUrl={sourceLoginUrl}
-                sourcePermissionRequest={sourcePermissionRequest}
-                sourceWorkerTakeover={sourceWorkerTakeover}
-                onRefresh={onRefresh}
-                onRequestPermission={onRequestPermission}
-              />
+              <LiveCardIdentityContext value={identity}>
+                <LiveCardFrontContent
+                  items={items}
+                  inlinePresentation={inlinePresentation}
+                  markScale={markScale}
+                  providerTitle={provider.title}
+                  presentationType={source.metadata.type}
+                  scrollElement={scrollElement}
+                  sourceErrorMessage={visibleSourceErrorMessage}
+                  sourceLoginUrl={sourceLoginUrl}
+                  sourcePermissionRequest={sourcePermissionRequest}
+                  sourceWorkerTakeover={sourceWorkerTakeover}
+                  onRefresh={onRefresh}
+                  onRequestPermission={onRequestPermission}
+                />
+              </LiveCardIdentityContext>
             </div>
           </div>
           {sourceStatusMessage && (

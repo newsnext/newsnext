@@ -1,27 +1,24 @@
 import type { ReactNode } from "react"
-import type { LiveCardViewModel } from "@/typings/source"
 import { Button } from "@newsnext/ui/components/button"
 import { useI18n } from "@/hooks/use-i18n"
 import { PhInfo } from "../icons/ph"
+import { useLiveCardIdentity } from "./live-card-identity-context"
 import { SourceIcon } from "./source-icon"
 
 interface SourceActionStateProps {
   disabled?: boolean
-  icon?: string
   label: string
   onClick: () => void
-  provider: LiveCardViewModel["provider"]
   title: string
 }
 
 function SourceActionState({
   disabled,
-  icon,
   label,
   onClick,
-  provider,
   title,
 }: SourceActionStateProps) {
+  const identity = useLiveCardIdentity()
   return (
     <div className="flex h-full min-h-56 items-center justify-center px-4 text-center">
       <Button
@@ -34,7 +31,7 @@ function SourceActionState({
         aria-label={title}
         title={title}
       >
-        <SourceIcon icon={icon} title={provider.title} />
+        <SourceIcon badge={identity.badge} icon={identity.icon} title={identity.name} />
         {label}
       </Button>
     </div>
@@ -43,86 +40,64 @@ function SourceActionState({
 
 export function SourceWorkerTakeoverState({
   disabled,
-  icon,
   onTakeOver,
-  provider,
 }: {
   disabled: boolean
-  icon?: string
   onTakeOver: () => void
-  provider: LiveCardViewModel["provider"]
 }) {
   const { t } = useI18n()
   return (
     <SourceActionState
       disabled={disabled}
-      icon={icon}
       label={disabled ? t("takingOver") : t("takeOver")}
       onClick={onTakeOver}
-      provider={provider}
       title={t("takeOverLiveCard")}
     />
   )
 }
 
 export function SourceLoginState({
-  icon,
-  provider,
+  providerTitle,
   loginUrl,
 }: {
-  icon?: string
-  provider: LiveCardViewModel["provider"]
+  providerTitle: string
   loginUrl: string
 }) {
   const { t } = useI18n()
   return (
     <SourceActionState
-      icon={icon}
       label={t("logIn")}
       onClick={() => window.open(loginUrl, "_blank")}
-      provider={provider}
-      title={t("logInTo", { provider: provider.title })}
+      title={t("logInTo", { provider: providerTitle })}
     />
   )
 }
 
 export function SourceErrorState({
-  icon,
   onRefresh,
-  provider,
 }: {
-  icon?: string
   onRefresh: () => void
-  provider: LiveCardViewModel["provider"]
 }) {
   const { t } = useI18n()
   return (
     <SourceActionState
-      icon={icon}
       label={t("refresh")}
       onClick={onRefresh}
-      provider={provider}
       title={t("refreshSource")}
     />
   )
 }
 
 export function SourcePermissionState({
-  icon,
   onRequestPermission,
-  provider,
 }: {
-  icon?: string
   onRequestPermission: () => Promise<boolean>
-  provider: LiveCardViewModel["provider"]
 }) {
   const { t } = useI18n()
   return (
     <SourceActionState
-      icon={icon}
       label={t("authorize")}
       onClick={() => void onRequestPermission()}
-      provider={provider}
       title={t("authorizeSource")}
     />
   )

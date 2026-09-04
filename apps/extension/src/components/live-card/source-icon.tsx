@@ -1,4 +1,5 @@
 import type { Color } from "@newsnext/shared/types"
+import type { ReactNode } from "react"
 import {
   Avatar,
   AvatarBadge,
@@ -24,11 +25,11 @@ export function SourceIcon({
   icon,
   size = "xs",
   title,
-}: SourceIconProps) {
+}: SourceIconProps): ReactNode {
   const { t } = useI18n()
   return (
     <Avatar
-      className={cn("rounded-sm after:rounded-sm after:border-0", color, className)}
+      className={cn("rounded-full after:rounded-full after:border-0", color, className)}
       size={size}
     >
       <AvatarImage

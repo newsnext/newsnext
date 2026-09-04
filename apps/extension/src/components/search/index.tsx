@@ -75,7 +75,8 @@ function SearchLiveCardIcon({ liveCard }: { liveCard: LiveCardViewModel }): Reac
 
   return (
     <SourceIcon
-      className="shrink-0 rounded-full"
+      badge={liveCard.metadata.badge}
+      className="shrink-0"
       color={liveCard.provider.color}
       icon={icon}
       size="sm"

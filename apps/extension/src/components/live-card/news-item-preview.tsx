@@ -2,6 +2,11 @@ import type { AdvancedIframe } from "@newsnext/shared/types"
 import type { CSSProperties, ReactNode } from "react"
 import type { NewsItem } from "@/typings/source"
 import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@newsnext/ui/components/avatar"
+import {
   Dialog,
   DialogContent,
   DialogTitle,
@@ -11,7 +16,9 @@ import { SafeHtml } from "@newsnext/ui/components/safe-html"
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ExternalLink } from "lucide-react"
 import { useI18n } from "@/hooks/use-i18n"
 import { cn } from "@/lib/utils"
+import { useLiveCardIdentity } from "./live-card-identity-context"
 import { NewsItemInline } from "./news-item-inline"
+import { SourceIcon } from "./source-icon"
 
 interface NewsItemPreviewProps {
   item: NewsItem
@@ -28,6 +35,41 @@ function getPictures(item: NewsItem): string[] {
 
 function hasTextSelection(): boolean {
   return window.getSelection()?.isCollapsed === false
+}
+
+interface NewsItemPreviewIdentityProps {
+  centered: boolean
+  item: NewsItem
+}
+
+function NewsItemPreviewIdentity({ centered, item }: NewsItemPreviewIdentityProps): ReactNode {
+  const identity = useLiveCardIdentity()
+  const authorName = item.author?.name
+  const authorIcon = item.icon?.kind === "author" ? item.icon : undefined
+  const authorInitial = authorName ? Array.from(authorName.trim())[0]?.toLocaleUpperCase() : undefined
+
+  return (
+    <div className={cn("flex w-full items-center gap-2.5", centered && "mx-auto max-w-3xl")}>
+      {authorName
+        ? (
+            <Avatar>
+              {authorIcon && <AvatarImage src={authorIcon.src} alt="" />}
+              <AvatarFallback>{authorInitial}</AvatarFallback>
+            </Avatar>
+          )
+        : (
+            <SourceIcon
+              badge={identity.badge}
+              icon={identity.icon}
+              size="default"
+              title={identity.name}
+            />
+          )}
+      <span className="min-w-0 truncate text-base font-medium">
+        {authorName ?? identity.name}
+      </span>
+    </div>
+  )
 }
 
 export function NewsItemPreview({
@@ -290,21 +332,10 @@ export function NewsItemPreviewDialog({
             hasMedia && "border-t border-border/60 lg:border-t-0 lg:border-l",
           )}
           >
-            <header className="flex h-18 shrink-0 items-center px-4">
-              <div className={cn("flex w-full items-center", !hasMedia && "mx-auto max-w-3xl")}>
-                {item.icon && (
-                  <ProxiedImage
-                    src={item.icon.src}
-                    alt={item.icon.label ?? ""}
-                    className={cn(
-                      "max-h-8 max-w-28 object-contain",
-                      item.icon.kind === "author" && "size-8 rounded-full object-cover",
-                    )}
-                  />
-                )}
-              </div>
+            <header className="flex h-18 shrink-0 items-center px-6">
+              <NewsItemPreviewIdentity centered={!hasMedia} item={item} />
             </header>
-            <article className="min-h-0 flex-1 overflow-y-auto px-4 pb-10">
+            <article className="min-h-0 flex-1 overflow-y-auto px-6 pb-10">
               <div className={cn(!hasMedia && "mx-auto w-full max-w-3xl")}>
                 <DialogTitle className="text-lg text-justify">
                   {item.title}

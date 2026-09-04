@@ -157,6 +157,11 @@ LiveCards define the primary NewsNext surface treatment.
   selected theme accent to the silhouette outline and shape label.
 - Place identity and surface actions in the exposed outer shell. Place editable
   fields and primary content in the quieter inner panel.
+- Render source identity through the shared `SourceIcon` with a consistently
+  circular shape across LiveCards, search, settings, and status surfaces. Vary
+  its size by context without introducing local corner-radius overrides. Treat
+  the resolved provider icon and optional source badge as one visual identity;
+  pass both whenever source metadata is available.
 - Keep compact LiveCard action icons content-sized and background-free. Use the
   shared `LiveCardHeaderActionButton`; hover may raise icon opacity but must not add
   a filled hover surface or enlarge the action target spacing.
@@ -242,8 +247,11 @@ right-side controls to compensate.
 Structure that detail column as an independently scrolling title and body
 region plus a fixed footer that repeats the complete, untruncated inline
 presentation alongside the original link. Preserve a fixed header slot above
-the title and render the item's icon there when one exists; do not synthesize a
-fallback or assume every icon represents an author. Use an approximately 60/40
+the title for its identity. Show an item icon only when its kind is `author`,
+paired with the author name. When the author name exists without an author
+icon, generate an avatar from the name's initial. When neither exists, show the
+LiveCard's shared source icon, including its resolved provider icon, badge, and
+fallback behavior, alongside the instance name. Use an approximately 60/40
 media-to-detail split on wide screens.
 
 Keep shared inline metadata vertically centered in both news items and preview

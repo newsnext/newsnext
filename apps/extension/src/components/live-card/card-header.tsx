@@ -71,7 +71,6 @@ export function LiveCardHeader({
         >
           <SourceIcon
             badge={badge}
-            className="rounded-full after:rounded-full"
             icon={icon}
             size="default"
             title={displayTitle}
