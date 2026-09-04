@@ -156,7 +156,7 @@ The store listing may describe optional local desktop history and agent context 
 **Severity:** High
 **Policy area:** Minimum Permission
 
-The manifest requires `nativeMessaging` and `http://127.0.0.1/*`, while `appIntegrationEnabled` defaults to `false`. Chrome displays a Native Messaging warning at installation even when the user never enables the desktop feature.
+The manifest requires `nativeMessaging` and `http://127.0.0.1/*`, while `nativeIntegrationEnabled` defaults to `false`. Chrome displays a Native Messaging warning at installation even when the user never enables the desktop feature.
 
 `alarms` is also currently used only by the desktop reconnection loop, although it does not itself produce a warning.
 

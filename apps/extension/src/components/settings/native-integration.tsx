@@ -154,9 +154,9 @@ export function NativeIntegrationSettings(): React.JSX.Element {
               className={`size-2 shrink-0 rounded-full ${presentation.dotClassName}`}
             />
             <span>{t(presentation.labelKey)}</span>
-            {state === "connected" && status?.appVersion && (
+            {state === "connected" && status?.daemonVersion && (
               <span className="font-mono text-xs font-normal text-muted-foreground">
-                {`v${status.appVersion}`}
+                {`v${status.daemonVersion}`}
               </span>
             )}
           </div>

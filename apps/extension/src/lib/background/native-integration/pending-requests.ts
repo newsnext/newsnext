@@ -7,12 +7,12 @@ interface PendingRequest {
   timeoutId: ReturnType<typeof setTimeout>
 }
 
-export interface PendingInstanceRequest extends PendingRequest {
+interface PendingInstanceRequest extends PendingRequest {
   cacheOnly: boolean
   resolve: (value: SourceLoadResponse | null) => void
 }
 
-export interface PendingWorkspaceRequest extends PendingRequest {
+interface PendingWorkspaceRequest extends PendingRequest {
   candidate: NativeWorkspace
   resolve: (value: NativeWorkspace) => void
 }

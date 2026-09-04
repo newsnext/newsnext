@@ -163,14 +163,14 @@ describe("persisted user data", () => {
 
   it("imports the complete Settings snapshot", () => {
     const current = createData()
-    current.settings.general.appIntegrationEnabled = true
+    current.settings.general.nativeIntegrationEnabled = true
     const importedSettings = createDefaultPersistedSettings()
     importedSettings.appearance.themeMode = "dark"
-    importedSettings.general.appIntegrationEnabled = false
+    importedSettings.general.nativeIntegrationEnabled = false
 
     const merged = mergePersistedUserData(current, { settings: importedSettings })
 
     expect(merged.settings.appearance.themeMode).toBe("dark")
-    expect(merged.settings.general.appIntegrationEnabled).toBe(false)
+    expect(merged.settings.general.nativeIntegrationEnabled).toBe(false)
   })
 })

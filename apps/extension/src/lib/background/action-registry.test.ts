@@ -53,7 +53,7 @@ function createContext(): BackgroundActionContext {
     widgetSnapshots: {
       get: vi.fn(async () => ({})),
     },
-    workerRouter: {
+    workerManagement: {
       regenerateIdentity: vi.fn(async () => ({
         capabilities: [],
         offlineWorkers: [],

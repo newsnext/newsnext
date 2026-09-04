@@ -9,13 +9,13 @@ export type NativeIntegrationState
     | NativeIntegrationFailureState
 
 export interface NativeIntegrationStatus {
-  appVersion?: string
+  daemonVersion?: string
   capabilities: string[]
   offlineWorkers: NativeOfflineWorker[]
   connectionError?: NativeIntegrationConnectionError
   state: NativeIntegrationState
   workerId: string
-  widgetServerUrl?: string
+  widgetServerOrigin?: string
 }
 
 export interface NativeIntegrationConnectionError {

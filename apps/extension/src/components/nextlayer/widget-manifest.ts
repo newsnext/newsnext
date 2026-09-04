@@ -10,10 +10,10 @@ export interface LocalWidgetManifest {
 
 export function parseLocalWidgetManifests(
   value: unknown,
-  serverUrl: string,
+  serverOrigin: string,
 ): LocalWidgetManifest[] {
   if (!Array.isArray(value)) throw new Error("The widget server returned an invalid manifest list")
-  const serverOrigin = new URL(serverUrl).origin
+  const expectedOrigin = new URL(serverOrigin).origin
   const ids = new Set<string>()
   return value.map((candidate) => {
     if (!isRecord(candidate)
@@ -29,7 +29,7 @@ export function parseLocalWidgetManifests(
     if (ids.has(candidate.id)) throw new Error(`Duplicate widget ID '${candidate.id}'`)
     ids.add(candidate.id)
     const url = new URL(candidate.url)
-    if (url.origin !== serverOrigin || !url.pathname.startsWith(`/widgets/${candidate.id}/`)) {
+    if (url.origin !== expectedOrigin || !url.pathname.startsWith(`/widgets/${candidate.id}/`)) {
       throw new Error(`Widget '${candidate.id}' has an invalid entry URL`)
     }
     return {

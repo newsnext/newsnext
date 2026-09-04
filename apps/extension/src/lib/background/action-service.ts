@@ -1,4 +1,4 @@
-import type { NativeIntegrationServices } from "./action-context"
+import type { BackgroundActionDependencies } from "./action-context"
 import type {
   UiActionName,
   UiActionParams,
@@ -15,9 +15,9 @@ export interface BackgroundActionService {
 }
 
 export function createBackgroundActionService(
-  nativeServices: NativeIntegrationServices,
+  dependencies: BackgroundActionDependencies,
 ): BackgroundActionService {
-  const actionContext = createBackgroundActionContext(nativeServices)
+  const actionContext = createBackgroundActionContext(dependencies)
 
   return {
     async execute<Name extends UiActionName>(

@@ -14,7 +14,7 @@ import { NATIVE_REQUEST_TIMEOUT_MS } from "./state"
 
 type ReadyHostMessage = Extract<HostToExtension, { type: "ready" }> & { capabilities: string[] }
 
-export type ParsedHostMessage
+type ParsedHostMessage
   = | Exclude<HostToExtension, { type: "chunk" | "ready" }>
     | ReadyHostMessage
 
@@ -46,7 +46,7 @@ function parseHostMessage(value: unknown): ParsedHostMessage {
         && value.capabilities.every(capability => typeof capability === "string")
         ? value.capabilities
         : [],
-      widgetServerUrl: parseWidgetServerUrl(value.widgetServerUrl),
+      widgetServerUrl: parseWidgetServerOrigin(value.widgetServerUrl),
       workspace: parseWorkspace(value.workspace),
       localInstanceIds: parseLocalInstanceIds(value.localInstanceIds),
       workerRoutingRevision: parseRevision(value.workerRoutingRevision, "Worker routing"),
@@ -207,7 +207,7 @@ function isNativeCommandResult(value: unknown): value is NativeCommandResult {
   return value.ok ? true : isRecord(value.error) && typeof value.error.message === "string"
 }
 
-function parseWidgetServerUrl(value: unknown): string {
+function parseWidgetServerOrigin(value: unknown): string {
   if (typeof value !== "string") {
     throw new TypeError("The native host returned an invalid widget server URL")
   }

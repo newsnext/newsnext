@@ -28,8 +28,7 @@ export interface PersistedSettings {
   }
   general: {
     defaultBoardId: string | null
-    // Keep this persisted property name stable for existing browser profiles.
-    appIntegrationEnabled: boolean
+    nativeIntegrationEnabled: boolean
     registryUrls: string[]
     sourceIcon: SourceIconSettings
   }
@@ -52,7 +51,7 @@ export function createDefaultPersistedSettings(): PersistedSettings {
     },
     general: {
       defaultBoardId: null,
-      appIntegrationEnabled: false,
+      nativeIntegrationEnabled: false,
       registryUrls: [],
       sourceIcon: { ...DEFAULT_SOURCE_ICON_SETTINGS },
     },
@@ -95,9 +94,9 @@ export function normalizePersistedSettings(value: unknown): PersistedSettings {
         : general?.defaultBoardId === null
           ? null
           : defaults.general.defaultBoardId,
-      appIntegrationEnabled: typeof general?.appIntegrationEnabled === "boolean"
-        ? general.appIntegrationEnabled
-        : defaults.general.appIntegrationEnabled,
+      nativeIntegrationEnabled: typeof general?.nativeIntegrationEnabled === "boolean"
+        ? general.nativeIntegrationEnabled
+        : defaults.general.nativeIntegrationEnabled,
       registryUrls: normalizeRegistryUrls(general?.registryUrls),
       sourceIcon: normalizeSourceIconSettings(
         general?.sourceIcon,

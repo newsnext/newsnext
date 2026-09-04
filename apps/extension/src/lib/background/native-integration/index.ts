@@ -2,11 +2,10 @@ import type {
   ExtensionConnectionCommandRequest,
   ExtensionToHost,
   NativeCommandResult,
-  NativeLogEntry,
 } from "@newsnext/extension-connection"
 import type { PersistedSettings } from "../../settings/persisted-settings"
-import type { SourceLoadResponse } from "../../source/load-result"
-import type { NativeIntegrationServices } from "../action-context"
+import type { BackgroundActionDependencies } from "../action-context"
+import type { BackgroundActionContext } from "../background-actions"
 import type { NativeIntegrationFailureState } from "./connection"
 import type { NativeIntegrationConnectionError, NativeIntegrationStatus, NativePort } from "./types"
 import { browser } from "#imports"
@@ -22,7 +21,15 @@ import {
   isVersionAtLeast,
   MINIMUM_DAEMON_VERSION,
 } from "./connection"
+import {
+  requestLogs as requestLogsFromDaemon,
+  requestWidgetSnapshot as requestWidgetSnapshotFromDaemon,
+} from "./daemon-requests"
 import { serializeNativeIntegrationError } from "./error"
+import {
+  loadRoutedInstance,
+  readRoutedInstanceCache,
+} from "./instance-routing"
 import {
   pendingConnectionRequests,
   pendingInstanceRequests,
@@ -41,12 +48,6 @@ import {
 import { NATIVE_INTEGRATION_PERMISSIONS } from "./permission"
 import { clearNativeMessageChunks, parseNativeHostValue } from "./protocol"
 import {
-  requestInstanceCache as requestInstanceCacheInternal,
-  requestInstanceLoad as requestInstanceLoadInternal,
-  requestLogs as requestLogsInternal,
-  requestWidgetSnapshot as requestWidgetSnapshotInternal,
-} from "./requests"
-import {
   NATIVE_HOST_NAME,
   NATIVE_INTEGRATION_RECONNECT_ALARM,
   NATIVE_REQUEST_TIMEOUT_MS,
@@ -58,7 +59,7 @@ import {
 import {
   regenerateWorker,
   takeOverWorker,
-} from "./worker-routing"
+} from "./worker-management"
 import {
   applyWorkspaceChangePatch,
   commitSettings,
@@ -74,65 +75,62 @@ export type {
   NativeIntegrationStatus,
 } from "./types"
 
-export const nativeIntegrationServices: NativeIntegrationServices = {
+const workerConnectionControls = {
+  disconnect,
+  getStatus: getNativeIntegrationStatus,
+  reconnect: connect,
+  requireConnection: requireNativeConnection,
+}
+
+export const backgroundActionDependencies: BackgroundActionDependencies = {
   instanceRouter: {
-    load: requestInstanceLoad,
-    readCache: requestInstanceCache,
+    load: input => loadRoutedInstance(
+      input,
+      requireNativeConnection,
+      getConnectedActionContext(),
+    ),
+    readCache: input => readRoutedInstanceCache(
+      input,
+      requireNativeConnection,
+      getConnectedActionContext(),
+    ),
   },
   nativeIntegration: {
-    getLogs: requestLogs,
+    getLogs: () => requestLogsFromDaemon(requireNativeConnection),
     getStatus: async () => getNativeIntegrationStatus(),
-    setEnabled: async ({ enabled }) => await setNativeIntegrationEnabled(enabled),
+    setEnabled: ({ enabled }) => setNativeIntegrationEnabled(enabled),
   },
   widgetSnapshots: {
-    get: requestWidgetSnapshot,
+    get: input => requestWidgetSnapshotFromDaemon(input, requireNativeConnection),
   },
-  workerRouter: {
-    regenerateIdentity: regenerateWorkerIdentity,
-    takeOver: async ({ instanceIds, workerId }) => (
-      await takeOverOfflineWorker(workerId, instanceIds)
+  workerManagement: {
+    regenerateIdentity: () => regenerateWorker(workerConnectionControls),
+    takeOver: ({ instanceIds, workerId }) => (
+      takeOverWorker(workerId, instanceIds, workerConnectionControls)
     ),
   },
 }
 
-const connectedActionContext = createBackgroundActionContext(nativeIntegrationServices)
+let connectedActionContext: BackgroundActionContext | undefined
 
-export function getNativeIntegrationStatus(): NativeIntegrationStatus {
+function getConnectedActionContext(): BackgroundActionContext {
+  connectedActionContext ??= createBackgroundActionContext(backgroundActionDependencies)
+  return connectedActionContext
+}
+
+function getNativeIntegrationStatus(): NativeIntegrationStatus {
   return {
-    appVersion: runtime.appVersion,
+    daemonVersion: runtime.daemonVersion,
     capabilities: [...runtime.capabilities],
     offlineWorkers: runtime.offlineWorkers.map(worker => ({ ...worker })),
     connectionError: runtime.connectionError,
     state: runtime.enabled ? runtime.connectionState : "disabled",
     workerId: runtime.workerId,
-    widgetServerUrl: runtime.widgetServerUrl,
+    widgetServerOrigin: runtime.widgetServerOrigin,
   }
 }
 
-export async function requestWidgetSnapshot(input: {
-  boardId: string
-  widgetId: string
-}): Promise<unknown> {
-  return await requestWidgetSnapshotInternal(input, requireNativeConnection)
-}
-
-export async function requestLogs(): Promise<NativeLogEntry[]> {
-  return await requestLogsInternal(requireNativeConnection)
-}
-
-export async function requestInstanceLoad(
-  input: { instanceId: string },
-): Promise<SourceLoadResponse> {
-  return await requestInstanceLoadInternal(input, requireNativeConnection, connectedActionContext)
-}
-
-export async function requestInstanceCache(
-  input: { instanceId: string },
-): Promise<SourceLoadResponse | null> {
-  return await requestInstanceCacheInternal(input, requireNativeConnection, connectedActionContext)
-}
-
-export async function setNativeIntegrationEnabled(
+async function setNativeIntegrationEnabled(
   nextEnabled: boolean,
 ): Promise<NativeIntegrationStatus> {
   if (nextEnabled && !await hasNativeIntegrationPermission()) {
@@ -146,31 +144,13 @@ export async function setNativeIntegrationEnabled(
     ...settings,
     general: {
       ...settings.general,
-      appIntegrationEnabled: nextEnabled,
+      nativeIntegrationEnabled: nextEnabled,
     },
   }
   await commitSettings(nextSettings, requireNativeConnection)
   await browser.storage.local.set({ [key]: nextSettings })
   await applyNativeIntegrationEnabled(nextEnabled)
   return getNativeIntegrationStatus()
-}
-
-const workerConnectionControls = {
-  disconnect,
-  getStatus: getNativeIntegrationStatus,
-  reconnect: connect,
-  requireConnection: requireNativeConnection,
-}
-
-export async function takeOverOfflineWorker(
-  sourceWorkerId: string,
-  instanceIds: string[],
-): Promise<NativeIntegrationStatus> {
-  return await takeOverWorker(sourceWorkerId, instanceIds, workerConnectionControls)
-}
-
-export async function regenerateWorkerIdentity(): Promise<NativeIntegrationStatus> {
-  return await regenerateWorker(workerConnectionControls)
 }
 
 async function executeCommand(
@@ -187,7 +167,7 @@ async function executeCommand(
             request.name,
             request.input,
             "connected",
-            connectedActionContext,
+            getConnectedActionContext(),
             request.id,
           ),
     }
@@ -219,11 +199,11 @@ function resetConnectionState(
   error?: NativeIntegrationConnectionError,
 ): void {
   runtime.port = undefined
-  runtime.appVersion = undefined
+  runtime.daemonVersion = undefined
   runtime.capabilities = []
   runtime.workerRoutingRevision = 0
   runtime.offlineWorkers = []
-  runtime.widgetServerUrl = undefined
+  runtime.widgetServerOrigin = undefined
   runtime.connectionState = state
   runtime.connectionError = error
   const connectionFailure = new Error(error?.message ?? "NewsNext App disconnected")
@@ -313,9 +293,9 @@ function connect(): void {
 
   runtime.connectionState = "connecting"
   runtime.connectionError = undefined
-  runtime.appVersion = undefined
+  runtime.daemonVersion = undefined
   runtime.capabilities = []
-  runtime.widgetServerUrl = undefined
+  runtime.widgetServerOrigin = undefined
   let nextPort: NativePort
   try {
     nextPort = browser.runtime.connectNative(NATIVE_HOST_NAME)
@@ -383,11 +363,11 @@ function handleMessage(connection: NativePort, value: unknown): void {
         return
       }
       clearReconnectBackoff()
-      runtime.appVersion = message.daemonVersion
+      runtime.daemonVersion = message.daemonVersion
       runtime.capabilities = [...message.capabilities]
       runtime.workerRoutingRevision = message.workerRoutingRevision
       runtime.offlineWorkers = message.offlineWorkers
-      runtime.widgetServerUrl = message.widgetServerUrl
+      runtime.widgetServerOrigin = message.widgetServerUrl
       runtime.connectionState = "connected"
       resolvePendingConnectionRequests(connection)
       enqueueIncomingWorkspace(
@@ -464,7 +444,7 @@ async function applySynchronizedNativeIntegrationEnabled(requestedEnabled: boole
 async function synchronizeSettingsChange(settings: PersistedSettings): Promise<void> {
   try {
     await commitSettings(settings, requireNativeConnection)
-    await applySynchronizedNativeIntegrationEnabled(settings.general.appIntegrationEnabled)
+    await applySynchronizedNativeIntegrationEnabled(settings.general.nativeIntegrationEnabled)
   } catch (error) {
     console.error("Failed to synchronize Settings", error)
   }
@@ -484,12 +464,6 @@ export async function registerNativeIntegration(): Promise<void> {
       && isRetryableConnectionState()
       && runtime.reconnectTimer === undefined) {
       connect()
-    }
-  })
-  browser.storage.onChanged.addListener((changes, areaName) => {
-    const change = changes[PERSISTED_DATA_SLICES.settings.key]
-    if (areaName === "local" && change) {
-      void synchronizeSettingsChange(normalizePersistedSettings(change.newValue))
     }
   })
   browser.permissions.onRemoved.addListener((permissions) => {
@@ -512,7 +486,13 @@ export async function registerNativeIntegration(): Promise<void> {
     : 0
   runtime.workspace = createWorkspace(application, 0, updatedAt, settings)
   const hasPermission = await hasNativeIntegrationPermission()
-  runtime.enabled = settings.general.appIntegrationEnabled && hasPermission
+  runtime.enabled = settings.general.nativeIntegrationEnabled && hasPermission
+  browser.storage.onChanged.addListener((changes, areaName) => {
+    const change = changes[PERSISTED_DATA_SLICES.settings.key]
+    if (areaName === "local" && change) {
+      void synchronizeSettingsChange(normalizePersistedSettings(change.newValue))
+    }
+  })
   if (runtime.enabled) {
     browser.alarms.create(NATIVE_INTEGRATION_RECONNECT_ALARM, {
       periodInMinutes: RECONNECT_ALARM_PERIOD_MINUTES,

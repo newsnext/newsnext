@@ -253,21 +253,21 @@ function useElementVisible(ref: RefObject<Element | null>): boolean {
 
 const LOCAL_WIDGET_COMPONENTS: ComponentMap = { localWidget: LocalWidgetFrame }
 
-function useWidgetServerUrl() {
+function useWidgetServerOrigin() {
   const query = useNativeIntegrationStatus()
-  return { isLoading: query.isLoading, serverUrl: query.data?.widgetServerUrl, state: query.data?.state }
+  return { isLoading: query.isLoading, serverOrigin: query.data?.widgetServerOrigin, state: query.data?.state }
 }
 
-function useLocalWidgets(serverUrl: string | undefined) {
+function useLocalWidgets(serverOrigin: string | undefined) {
   const query = useQuery({
-    queryKey: ["local-widgets", serverUrl],
+    queryKey: ["local-widgets", serverOrigin],
     queryFn: async ({ signal }) => {
-      if (!serverUrl) return []
-      const response = await fetch(`${serverUrl}/widgets`, { signal })
+      if (!serverOrigin) return []
+      const response = await fetch(`${serverOrigin}/widgets`, { signal })
       if (!response.ok) throw new Error(`Widget server returned HTTP ${response.status}`)
-      return parseLocalWidgetManifests(await response.json(), serverUrl)
+      return parseLocalWidgetManifests(await response.json(), serverOrigin)
     },
-    enabled: serverUrl !== undefined,
+    enabled: serverOrigin !== undefined,
     refetchInterval: 5_000,
   })
   return {
@@ -282,8 +282,8 @@ export function LocalWidgetGrid({ boardId, entranceReady }: { boardId: string, e
   const { rootScrollContainerRef } = useScrollProgressContext()
   const gridRef = useRef<GridStackHandle>(null)
   const sectionRef = useRef<HTMLElement>(null)
-  const connection = useWidgetServerUrl()
-  const manifestQuery = useLocalWidgets(connection.serverUrl)
+  const connection = useWidgetServerOrigin()
+  const manifestQuery = useLocalWidgets(connection.serverOrigin)
   const boards = useAtomValue(boardsAtom)
   const board = boards.find(candidate => candidate.id === boardId)
   const widgets = useMemo(() => {
@@ -315,7 +315,7 @@ export function LocalWidgetGrid({ boardId, entranceReady }: { boardId: string, e
   })
 
   if (connection.isLoading || manifestQuery.isLoading) return null
-  if (connection.state !== "connected" || !connection.serverUrl) {
+  if (connection.state !== "connected" || !connection.serverOrigin) {
     return <NextLayerMessage>{t("connectAppForWidgets")}</NextLayerMessage>
   }
   if (manifestQuery.error) {

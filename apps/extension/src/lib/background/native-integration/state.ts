@@ -8,8 +8,7 @@ export const NATIVE_HOST_NAME = import.meta.env.DEV
   : "app.newsnext.host"
 export const PROTOCOL_VERSION = 21
 export const WORKSPACE_UPDATED_AT_KEY = "newsnext-workspace-updated-at"
-// Keep the persisted alarm name stable across the module rename.
-export const NATIVE_INTEGRATION_RECONNECT_ALARM = "app-integration-native-reconnect"
+export const NATIVE_INTEGRATION_RECONNECT_ALARM = "newsnext-native-integration-reconnect"
 export const RECONNECT_ALARM_PERIOD_MINUTES = 0.5
 export const NATIVE_REQUEST_TIMEOUT_MS = 65_000
 
@@ -24,7 +23,7 @@ function createInitialWorkspace(): NativeWorkspace {
 }
 
 interface NativeIntegrationRuntime {
-  appVersion: string | undefined
+  daemonVersion: string | undefined
   capabilities: string[]
   connectionError: NativeIntegrationStatus["connectionError"]
   connectionState: NativeIntegrationState
@@ -34,7 +33,7 @@ interface NativeIntegrationRuntime {
   port: NativePort | undefined
   reconnectAttempt: number
   reconnectTimer: ReturnType<typeof setTimeout> | undefined
-  widgetServerUrl: string | undefined
+  widgetServerOrigin: string | undefined
   workerId: string
   workerRoutingRevision: number
   workspace: NativeWorkspace
@@ -42,7 +41,7 @@ interface NativeIntegrationRuntime {
 }
 
 export const runtime: NativeIntegrationRuntime = {
-  appVersion: undefined,
+  daemonVersion: undefined,
   capabilities: [],
   connectionError: undefined,
   connectionState: "serviceNotRunning",
@@ -52,7 +51,7 @@ export const runtime: NativeIntegrationRuntime = {
   port: undefined,
   reconnectAttempt: 0,
   reconnectTimer: undefined,
-  widgetServerUrl: undefined,
+  widgetServerOrigin: undefined,
   workerId: getWorkerId(),
   workerRoutingRevision: 0,
   workspace: createInitialWorkspace(),

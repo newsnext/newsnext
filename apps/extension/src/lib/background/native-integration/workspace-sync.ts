@@ -30,12 +30,12 @@ export function createWorkspace(
   }
 }
 
-export function serializeWorkspaceSettings(value: unknown): string {
+function serializeWorkspaceSettings(value: unknown): string {
   const settings = normalizePersistedSettings(value)
   return JSON.stringify(settings)
 }
 
-export function parseWorkspaceSettings(value: unknown): PersistedSettings {
+function parseWorkspaceSettings(value: unknown): PersistedSettings {
   if (typeof value !== "string") {
     throw new TypeError("The native host returned invalid Workspace Settings")
   }
@@ -51,7 +51,7 @@ export function parseWorkspaceSettings(value: unknown): PersistedSettings {
   return normalizePersistedSettings(parsed)
 }
 
-export async function applyWorkspace(
+async function applyWorkspace(
   nextWorkspace: NativeWorkspace,
   nextLocalInstanceIds: string[],
 ): Promise<void> {
@@ -64,7 +64,7 @@ export async function applyWorkspace(
   await persistWorkspaceUpdatedAt(nextWorkspace.updatedAt)
 }
 
-export function acceptWorkspace(
+function acceptWorkspace(
   nextWorkspace: NativeWorkspace,
   nextLocalInstanceIds: string[],
 ) {
@@ -91,7 +91,7 @@ export function enqueueIncomingWorkspace(
   })
 }
 
-export function enqueueWorkspaceReplacement(
+function enqueueWorkspaceReplacement(
   update: (current: NativeWorkspace) => NativeWorkspace,
   requireConnection: RequireNativeConnection,
 ): Promise<NativeWorkspace> {
@@ -178,11 +178,11 @@ export function applyWorkspaceChangePatch(patch: Parameters<typeof applyWorkspac
   return applyWorkspacePatch(runtime.workspace, patch)
 }
 
-export async function persistWorkspaceUpdatedAt(updatedAt: number): Promise<void> {
+async function persistWorkspaceUpdatedAt(updatedAt: number): Promise<void> {
   await browser.storage.local.set({ [WORKSPACE_UPDATED_AT_KEY]: updatedAt })
 }
 
-export function nextWorkspaceUpdatedAt(current: number): number {
+function nextWorkspaceUpdatedAt(current: number): number {
   return Math.max(Date.now(), current + 1)
 }
 

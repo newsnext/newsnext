@@ -17,11 +17,11 @@ import { createProtectedSourceLoader } from "./protected-source-loader"
 import { createBackgroundRadarService } from "./radar-service"
 import { createSourceLoaderInvoker } from "./source-loader-invoker"
 
-export interface NativeIntegrationServices {
+export interface BackgroundActionDependencies {
   instanceRouter: BackgroundActionContext["instanceRouter"]
   nativeIntegration: BackgroundActionContext["nativeIntegration"]
   widgetSnapshots: BackgroundActionContext["widgetSnapshots"]
-  workerRouter: BackgroundActionContext["workerRouter"]
+  workerManagement: BackgroundActionContext["workerManagement"]
 }
 
 const sourceLoaderInvoker = createSourceLoaderInvoker()
@@ -59,7 +59,7 @@ async function readBoundInstanceCache({ instance }: { instance: Instance }) {
 }
 
 export function createBackgroundActionContext(
-  nativeServices: NativeIntegrationServices,
+  dependencies: BackgroundActionDependencies,
 ): BackgroundActionContext {
   return {
     data: readApplicationData,
@@ -87,6 +87,6 @@ export function createBackgroundActionContext(
       cancel: sourceLoaderInvoker.cancel,
       load: sourceLoader.load,
     },
-    ...nativeServices,
+    ...dependencies,
   }
 }

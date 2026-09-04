@@ -61,7 +61,7 @@ export interface BackgroundActionContext extends ApplicationActionContext {
       widgetId: string
     }) => Promise<unknown>
   }
-  workerRouter: {
+  workerManagement: {
     regenerateIdentity: () => Promise<NativeIntegrationStatus>
     takeOver: (input: { instanceIds: string[], workerId: string }) => Promise<NativeIntegrationStatus>
   }
@@ -86,7 +86,7 @@ const SourceCacheResult = Type.Unsafe<SourceLoadResponse | null>(Type.Union([
   Type.Null(),
 ]))
 const NativeIntegrationStatusResult = Type.Unsafe<NativeIntegrationStatus>(Type.Object({
-  appVersion: Type.Optional(Type.String()),
+  daemonVersion: Type.Optional(Type.String()),
   capabilities: Type.Array(Type.String()),
   offlineWorkers: Type.Array(Type.Object({
     id: Identifier,
@@ -107,7 +107,7 @@ const NativeIntegrationStatusResult = Type.Unsafe<NativeIntegrationStatus>(Type.
     "workerConflict",
   ] as const),
   workerId: Identifier,
-  widgetServerUrl: Type.Optional(Type.String()),
+  widgetServerOrigin: Type.Optional(Type.String()),
 }, { additionalProperties: false }))
 const InstanceParams = Type.Unsafe<Instance>(Type.Object({
   createdAt: Type.Number(),
@@ -344,7 +344,7 @@ const workerRegenerateIdentityAction = defineAction({
   params: EmptyParams,
   result: NativeIntegrationStatusResult,
 }, async (_input, context: BackgroundActionContext) => (
-  await context.workerRouter.regenerateIdentity()
+  await context.workerManagement.regenerateIdentity()
 ))
 
 const workerTakeOverAction = defineAction({
@@ -357,7 +357,7 @@ const workerTakeOverAction = defineAction({
     workerId: Identifier,
   }, { additionalProperties: false }),
   result: NativeIntegrationStatusResult,
-}, async (input, context: BackgroundActionContext) => await context.workerRouter.takeOver(input))
+}, async (input, context: BackgroundActionContext) => await context.workerManagement.takeOver(input))
 
 const nextLayerGetWidgetSnapshotAction = defineAction({
   audiences: UI_ONLY,
