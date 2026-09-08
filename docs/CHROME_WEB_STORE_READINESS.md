@@ -1,6 +1,6 @@
 # Chrome Web Store readiness review
 
-Historical review: **2026-08-30**, extension **1.0.0-beta.3** (manifest `1.0.0`).
+Historical review: **2026-08-30**, manifest version **1.0.0**.
 The decision at that time was **not ready for submission**. This record preserves
 findings and release follow-up; it is not a current certification or dependency
 audit. Recheck the exact production ZIP and current store policies before release.
