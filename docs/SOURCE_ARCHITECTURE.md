@@ -19,21 +19,6 @@ apps/extension
   owns browser integration, permissions, secrets, caching, and execution
 ```
 
-Extension library code is grouped behind responsibility-level entry points:
-
-```text
-apps/extension/src/lib/
-├── background/  background services and the frontend service client
-├── board/       board models and sorting
-├── radar/       page discovery, matching, and suggestion conversion
-├── settings/    persisted user data, preferences, and settings helpers
-└── source/      LiveCards, loading, caching, permissions, and history
-```
-
-App code imports these directory entry points. Modules inside a responsibility
-use direct relative imports so their dependencies remain explicit and do not
-loop back through their own barrel.
-
 `@newsnext/source-kit` does not import concrete providers. It receives resolved
 sources through an `ExternalSourcesLoader`, which keeps the source runtime
 independent from the bundled registry and its wire format.
@@ -111,55 +96,15 @@ path. Expansion:
 7. attaches provider-owned presentation metadata to every source;
 8. validates the complete source and rejects source-owned `icon` or `color`.
 
-Required source values, including the loader, come from defaults or individual
-source configuration. Source version defaults to `2` and may be overridden by
-a positive integer. Provider color is required and registry
-validation accepts only values from the shared `COLORS` palette; provider icon
-and category are optional. The author-facing palette is documented in the
-[Source Guideline](./SOURCE_GUIDELINE.md#provider-and-source-configuration).
+The expanded Source keeps provider identity separate from source metadata.
+Icons remain opaque data; embedded images add no network capability. When no
+icon is supplied, extension presentation derives a favicon from effective home
+metadata and the portable Settings preference. Provider palette, categories,
+defaults, and authoring constraints are defined in the
+[authoring guide](SOURCE_GUIDELINE.md#provider-and-source-configuration).
 
-Provider identity remains separate from source metadata:
-
-```ts
-provider: {
-  title: "Example",
-  color: "blue",
-  category: "social", // optional
-}
-```
-
-Provider expansion treats `icon` as opaque presentation data and preserves
-standard `data:image/...` URLs as well as remote image URLs. Embedded icons are
-serialized directly into the generated registry and rendered as image sources;
-they do not add network or browser capabilities.
-
-When `icon` is absent, the extension presentation layer derives a favicon
-service URL from the resolved source `metadata.home` and the user's icon source
-preference. The URL template supports `{hostname}`, `{origin}`, and `{url}`;
-the latter two substitutions are percent-encoded. An empty template disables
-the fallback. Favicon.im is the default preset, with Google, Vemetric,
-DuckDuckGo, and custom templates available. The extension persists the selected
-preset and template as a local user setting. This keeps third-party favicon
-service URLs out of provider definitions and the generated registry while
-allowing instance-specific home overrides to select the matching icon. The
-preference is part of the portable Settings slice. Application Data persists
-Boards and Instances in one normalized envelope. An Instance never stores a
-Board identifier. Each Board directly owns its color, default layer, sort mode,
-membership, and membership order. Extension pages read synchronous `localStorage`
-snapshots first, then reconcile them with canonical copies in
-`browser.storage.local`; background storage wins when both copies exist.
-A versioned `newsnext-user-data` envelope validates and combines the portable
-slices for import and export. Import accepts only the current version 5 envelope.
-Current Board selection, the effective NewsNext App connection, browser
-permissions, and caches are device-local and are not part of that envelope.
-The Settings data reset restores every persisted slice to its default, deletes
-the device-local source-secret state and IndexedDB source results, clears active
-source queries, and revokes user-granted optional browser and host permissions.
-Required development permissions remain controlled by the extension manifest
-and cannot be removed at runtime.
-
-This prevents a source definition, Radar rule, or Instance patch from changing
-the identity and visual treatment shared by its provider.
+Workspace persistence, import/export, and Board membership belong to
+[Application Architecture](APPLICATION_ARCHITECTURE.md), not provider expansion.
 
 Provider category is a static registry attribute. Provider expansion copies it
 into every flattened source descriptor, and registry parsing validates it
@@ -243,16 +188,9 @@ and parser as bundled data before it can be cached or used. Adding a URL
 requests host access for its origin. Registry downloads time out after 15
 seconds so health checks always reach a terminal state.
 
-`general.registryUrls` remains part of the extension's persisted Settings. When
-App integration is enabled, portable Settings are serialized into the
-revisioned Workspace snapshot held in memory and broadcast by the CLI daemon.
-The CLI treats that snapshot as opaque data; the extension owns its schema and
-validation. All user-facing Settings, including language, theme, and App
-integration enablement, are synchronized. Effective App connectivity still
-depends on each browser's local Native Messaging permission. Each browser
-retains the Workspace update time, allowing a newer browser snapshot to replace
-an older daemon session baseline during startup. Downloaded Registry documents,
-health state, and browser host permissions remain local derived state.
+`general.registryUrls` is portable Settings synchronized in the daemon's opaque
+Workspace snapshot. Downloaded documents, health state, and host permissions
+remain local to each browser; Workspace synchronization does not grant access.
 
 The background publishes per-URL health, last-success time, errors, and Source
 IDs to extension-local state after each check. The Registry settings tab uses
@@ -340,26 +278,17 @@ Persisted results are discarded after 30 days. Increasing the Source version
 changes result identity immediately, while old versions age out independently.
 Persistence failures remain fail-open and never prevent Source execution.
 
-UI reads use an Instance ID. The background takes a local fast path for Instances
-bound to the current browser and otherwise uses `loader.loadInstance` through the
-daemon's private binding router. The daemon returns results without retaining
-History, while the bound Loader uses its Source result cache.
-Scheduled work uses `job.executeInstance`, and only the daemon's explicit Job
-runner retains a newly fetched, unprotected response as an observation. Both
-Actions reuse the same protected Loader implementation without sharing History
-policy.
+UI loads take an Instance ID and use a local fast path or `loader.loadInstance`
+through the daemon. Routing alone does not retain History. A disconnected owner
+suspends cache reads and execution but does not remove the Instance or make its
+configuration read-only.
 
-The daemon owns complete Workspace Instance configuration independently of Worker
-connections. A disconnected owner therefore never makes a card read-only or
-removes it from a Board; it only suspends routed cache reads and fresh execution
-until that browser reconnects.
-
-Source history is stored separately in the local Turso database owned by the
-desktop daemon. Reused protected results never create observations. Newly
-executed background Job loads return normalized results for the daemon to
-commit; a Job that reuses a result is
-reported as successful without duplicate retention. The database receives
-no Source credentials, fetch response bodies, or browser session state.
+The daemon retains results from automatic Instance collection and Jobs in Turso.
+Automatic collection can retain a protected cached result at its original
+`fetchedAt` to fill a foreground-history gap; dataset/timestamp uniqueness
+prevents duplicates. Unchanged fresh fetches are separate observations. Explicit
+Jobs retain fresh, unprotected responses. No retention path receives credentials
+or raw fetch response bodies.
 
 A dataset is the unique tuple of execution Worker ID, Source ID, Source version,
 and canonical normalized parameter JSON. Worker ID is explicit because the
@@ -412,70 +341,10 @@ preserve a completeness envelope for future partial-retention policies.
 Product-specific interpretations are derived by the consumer and are not part
 of persistence code.
 
-The daemon-backed CLI exposes these repository operations as four read-only
-commands: `newsnext history datasets`, `newsnext history observations`,
-`newsnext history get`, and `newsnext history compare`. Dataset discovery does
-not require a connected extension. Source execution and new retention still
-require the extension because the daemon never receives browser authority or
-credentials.
-
-The same transport exposes canonical application and runtime control through
-`newsnext action list` and `newsnext action execute`. Catalog listing returns
-stable names, `mutation`, `query`, or `command` kinds, descriptions, and JSON
-input/output schemas. Execute requests carry a name and JSON object; the
-extension resolves one `defineAction` registration, validates that object with
-its TypeBox parameter schema, and invokes the same handler used by the typed UI
-Action Client. The published JSON schemas are the TypeBox schemas themselves,
-not separately maintained projections. Agent
-Source discovery and frontend Source picker discovery both execute
-`source.list` through this boundary; there is no parallel Registry or Native
-listing service. Native and frontend Action writes enter the same background
-queue, are normalized and
-persisted to `browser.storage.local`, and propagate to open extension pages
-through read-only storage subscriptions. Bulk import and reset use the same
-queued background repository replacement rather than setting frontend atoms.
-Composite Board create/update and NowLayer manual-order Actions apply
-their changes to one in-memory envelope and perform one storage write. The
-manual-order Action requires every Board Instance exactly once.
-
-Board `instanceIds` store membership in recently-added-first order. The
-NowLayer renders every member without consulting the current registry. A
-successful Source load publishes the result and Source presentation snapshot
-into TanStack Query and persists the same result for restoration. An Instance
-therefore renders from its restored presentation snapshot, or from a generic
-`sourceId` fallback when no result remains. A later load replaces that
-presentation in place. It stays in drag ordering and cannot be silently removed
-by saving a visible subset.
-Action transports return only compact receipts; the updated envelope reaches
-each frontend through its own subscription state rather than a duplicate proxy
-payload.
-The Application Data mirror never initializes or normalizes browser storage
-from a frontend page; the background runtime is the only persistent writer.
-`board.getContext` resolves a requested Board identity, while
-`nowLayer.getLiveCards` returns every LiveCard logically displayed by the
-requested Board with its Instance and membership identities, independent of registry
-availability.
-
-Requests travel through the same per-user local IPC connection as source authoring
-commands and return JSON. The extension validates every request before
-dispatch. Enabling the NewsNext App connection authorizes its local CLI to
-mutate Boards and Instances, including destructive Actions; it does not grant
-web content or arbitrary processes direct extension access. History reads do
-not enter the extension: the companion daemon queries its own Turso database by
-the opaque dataset IDs returned from `history datasets`. Fresh `source.load`
-Job results cross the
-extension boundary before the daemon commits the normalized result. Board and Instance queries still
-execute in the extension background and read the Application Data envelope from
-`browser.storage.local` because frontend Jotai atoms are unavailable there.
-Source runs collect and return raw fetch diagnostics only when the caller
-explicitly enables debug output. Normal runs and background Jobs omit response
-bodies from the Native Messaging result.
-
-The Rust CLI daemon owns the local-socket framed-JSON control listener. Shutdown
-closes connected Native Messaging bridges, fails pending commands, removes any
-filesystem-backed socket endpoint, and exits the detached process. Startup also
-reclaims a stale filesystem socket left by an ungraceful previous exit, but it
-does not replace a non-socket file at that path.
+History commands read the daemon database without a connected browser. Fresh
+execution requires the owning Worker. Application Actions and Workspace storage
+are documented in [Application Architecture](APPLICATION_ARCHITECTURE.md);
+command syntax is in the [CLI reference](../skills/newsnext-cli/references/commands.md).
 
 LiveCard queries mount when their container enters the preload margin of the app's
 root scroll container. The observer must use that scrolling element as its root;
@@ -522,40 +391,10 @@ TanStack Query deduplicates page observers for one query. The background
 protected loader separately deduplicates actual Source execution across page and
 connected CLI consumers, so concurrent callers cannot burst a third-party API.
 
-Instance-facing consumers route `instanceId` to its bound Loader. The Loader
-resolves Source ID, Source version, and normalized effective parameters inside
-that Worker's IndexedDB cache namespace. When an explicit Job retains the
-result, the daemon combines the actual execution Worker ID with the same Source
-target. Thus Instance ID is the page query and routing identity, Worker plus the
-resolved Source target is the effective Loader-cache identity, and the same
-Worker-scoped target is the History dataset identity.
-
-Next Layer does not read or invalidate the Now Layer TanStack cache. A local
-Widget declares named data queries in `widget.json`, but those
-declarations remain entirely inside the CLI. The static manifest response only
-exposes presentation metadata needed by the host. Each Widget host owns one
-TanStack query keyed by Board, Widget, and Board-resolved Instance scope; that
-query crosses Native Messaging once to read one daemon-owned Snapshot containing
-all declared query results.
-The host owns the title, layout, resize persistence, and refresh button. The
-sandboxed iframe only announces readiness and renders the Snapshot delivered by the
-host; it cannot select Instances, execute Sources, or initiate refreshes.
-
-The daemon validates each query against its local manifest and the Board/Widget
-projection supplied by the authenticated extension connection. Every installed
-Widget has a daemon-owned Job whose schedule comes from the manifest. Board
-projection changes reconcile these managed Jobs, and each run executes the
-granted Instances through the same connected background Job action used by
-ordinary Jobs. That action uses the browser Source runtime without reading or
-writing the Now Layer cache. The
-daemon retains fresh observations in History and stores independently revisioned
-Widget Snapshots in Turso. A Snapshot stores the manifest and scope fingerprints,
-one revision, one refresh timestamp, and every named query result in a single
-atomic row. The localhost Widget server remains a static asset and
-manifest service; Widget data does not use an HTTP API. Opening an inactive or
-offscreen Widget does not execute Sources. The outer refresh button immediately
-rereads the materialized Snapshot; it never executes a Source or bypasses the
-Widget Job.
+The three identities stay separate: Instance ID routes page queries; Worker plus
+resolved Source target isolates Loader cache and History datasets. NextLayer
+reads daemon-owned Widget Snapshots; its lifecycle is documented under
+[Layers and Widgets](APPLICATION_ARCHITECTURE.md#layers-and-widgets).
 
 Loader metadata is response-scoped and remains part of the load result stored in
 TanStack Query and persisted for later restoration.
@@ -594,28 +433,10 @@ LiveCard revalidation. For other Boards whose results are not in the page cache,
 unselected Search results follow the normal static, Instance, and provider-title
 fallback behavior.
 
-Loader metadata reuses responses already required to produce the items. Source
-loaders must not issue profile, community, channel, batch, or other companion
-requests only to enrich metadata. If the required item requests do not expose a
-field, authoring falls back to static or page-derived Radar metadata instead.
-
-The background and source runtime preserve the optional Source presentation
-type together with effective metadata and preserve loader output order through
-persistence, Query caching, and transport. JSON and
-HTML loaders may first apply their shared optional `sortByTimestamp` step after
-field normalization; it orders items by `publishedAt`, falling back to
-`updatedAt`, and keeps items without either time last. The frontend renders a
-declared `ranking` with ordinal positions and rank movement, and a declared
-`list` as an unordered list with available item times in inline metadata. With
-no declared type, it renders a timeline when
-the non-empty result has finite, monotonically
-non-increasing `publishedAt` values on every item. If that check fails, it
-applies the same test to `updatedAt`. A result is a timeline when either
-complete field passes.
-All other non-empty results render as an unordered list. Empty results fail before
-persistence, Query caching, or presentation. A provider may deliberately sort inside a request,
-JMESPath selection, structured loader configuration, or custom loader when
-chronological order is the correct source behavior.
+Presentation order and metadata precedence follow the
+[authoring contract](SOURCE_GUIDELINE.md#provider-and-source-configuration).
+The runtime preserves validated ordering and effective `type` through persistence
+and transport; the frontend infers timelines when no explicit type applies.
 
 The extension executes registry access and source loaders through its background
 service so loaders can use extension host permissions, cookie and local-storage
@@ -686,47 +507,17 @@ keeping the first 50 items. Only that bounded result reaches URL normalization
 and inline presentation rendering, followed by clients, persistence, the Query
 cache, or History.
 
-`NewsItem` stores semantic facts: publication and update times, author,
-well-known stats, source-specific scalar attributes, semantic pictures, and
-content. The static loader definition's `inlineTemplate` composes those
-facts for the compact LiveCard row and may access only `scope.item`, but shared
-stats are excluded because the frontend renders them consistently as
-icon-and-count pairs. Source validation compiles the loader template once while
-resolving the Runtime Source. After loader-result validation, bounding, and URL
-normalization, the background runtime renders that compiled template once for
-each item. The index-aligned plain-text `inlinePresentation` array travels with
-persisted, Query-cached, and transported loader results; an empty string selects
-the UI fallback, and executable templates never reach the UI. History snapshots
-continue to store only the items so presentation changes do not become
-historical fact changes. The UI uses a deterministic author/attribute fallback
-when no template exists or one item renders an empty value or fails.
-Source-specific templates omit facts already conveyed by the Instance,
-while those facts remain on the item for history and analysis.
-The shared template module initializes its Liquid engines lazily. Keep template
-engine construction out of module evaluation: extension UI entry points import
-responsibility barrels that expose background-only Radar APIs, and eager
-construction would retain Liquid and date parsing dependencies in UI chunks
-even though executable templates never run there.
-The default inline composer also omits the author name when an
-`icon.kind: "author"` picture is present. Explicit source templates follow the
-same rule and fall back to the name when that semantic icon is absent.
-Semantic pictures carry only `src`, optional `kind`, and optional `label`;
-frontend components own their uniform height, intrinsic width, crop, and corner
-treatment. Content pictures remain URL strings rather than presentation
-objects.
-The LiveCard presentation layer scans the first mark from each Instance for
-symmetric top and bottom transparent padding, derives a scale targeting 14px of
-visible content inside the 16px image box, and caches it for the remaining
-marks. Width and height are sampled independently so wide assets retain enough
-vertical resolution. The frontend applies the value as a centered CSS transform
-without changing the fixed image height or clipping the image; horizontal
-proportions remain intrinsic. Decode, CORS, or size-limit failures fall back to
-the original image layout.
-The shared loader-result boundary removes nullish nested item values and empty
-semantic groups after any loader returns. This keeps normalization out of
-individual providers and preserves numeric zero and boolean false.
-Source versions partition caches and History datasets whenever an item schema
-changes.
+After validation, the runtime bounds and normalizes items, then renders the
+precompiled `inlineTemplate` to index-aligned plain text. Empty or failed per-item
+renders select the UI fallback. Executable templates never reach the UI, and
+rendered inline text is not stored as an item fact in History.
+
+Liquid engines initialize lazily so background exports in shared barrels do not
+retain template/date dependencies in UI entry chunks. The shared result boundary
+removes nullish nested values and empty semantic groups while preserving zero
+and false. Source versions partition caches and datasets after schema changes.
+For item fields and template syntax, see
+[loader results](SOURCE_GUIDELINE.md#rss-custom-loaders-and-loader-results).
 
 ## Structured loader pipelines
 
@@ -739,7 +530,7 @@ request
     → select each field with JMESPath
     → render field Liquid templates
     → normalize and validate NewsItem values
-    → optionally sort by updatedAt or publishedAt newest first
+    → optionally sort by publishedAt, falling back to updatedAt, newest first
 ```
 
 JSON and HTML helper contracts use `*LoaderOptions` for loader configuration
@@ -757,7 +548,7 @@ request
     → render field Liquid templates
     → select and render document metadata
     → normalize and validate NewsItem values
-    → optionally sort by updatedAt or publishedAt newest first
+    → optionally sort by publishedAt, falling back to updatedAt, newest first
 ```
 
 The Hacker News provider intentionally remains a single-request HTML loader.
@@ -899,25 +690,11 @@ Radar metadata can replace source-owned presentation fields such as title,
 badge, description, and home URL, but cannot modify source identity,
 provider title, icon, color, category, loader behavior, capabilities, secrets,
 request rules, or Source version.
-Accepting a Radar suggestion creates one Instance in exactly one Board. The
-Instance owns its Source ID and patch; its Board owns the membership. New
-Instance IDs combine the Source ID and a
-12-character Nano ID with `::`;
-Board IDs, including the initial `My Board`, use the Nano ID directly. Both
-remain opaque strings.
-Moving a LiveCard changes its owning Board; Source parameters,
-presentation metadata, and result identity remain unchanged. Every Instance has
-exactly one owning Board. First-run data contains one
-ordinary Board named `My Board`; it can be renamed or deleted after another
-Board exists, and all Board routes resolve real Board IDs.
-The LiveCard editor writes the same instance patch shape and exposes every declared
-source parameter plus each editable source-owned presentation metadata field.
-The inferred LiveCard presentation is read-only. Provider
-title, icon, color, and category remain read-only. Editing preserves patches as
-sparse overrides: only explicitly changed parameter and metadata fields are
-persisted. Parameter defaults are resolved for display and loading, while
-inherited source metadata is resolved for display, without copying either into
-the instance patch.
+Accepting a Radar suggestion creates an Instance in exactly one Board. The editor
+uses the same sparse parameter and metadata patch; inherited defaults are resolved
+for display/loading without being copied into persistence. Provider identity and
+inferred presentation remain read-only. Membership and identity rules belong to
+[Application Architecture](APPLICATION_ARCHITECTURE.md#persistent-application-data).
 
 Parameter normalization and validation live in `source-kit` rather than in a
 specific caller. A serializable parameter `validate` rule travels with public
@@ -1005,193 +782,59 @@ raw output, and dynamic include/render features are disabled.
 
 ## CLI execution
 
-`newsnext run` sends a request through the local daemon to a connected
-extension. The extension executes the same provider expansion, parameter
-normalization, registry validation, capabilities, secrets, and background loader
-path as normal source loading. For CLI runs only, the background fetch wrapper
-clones each response before the loader consumes it and returns request metadata
-and duration plus the response status, headers, and text body alongside the
-complete loader result, normalized parameters, and execution timing. Normal
-extension source loads do not pay this capture cost.
+`run` and `fetch` travel through the local Rust daemon and Native Messaging host
+to the connected extension. `run` shares provider expansion, parameter validation,
+capabilities, secrets, and result validation with normal Source execution, but
+bypasses the normal persisted-result protection path for authoring. Only `--debug`
+captures cloned request/response diagnostics. Local JSON providers use an isolated
+`cli:<provider-id>` secret namespace unless `--use-provider-secrets` is supplied;
+they do not install or modify the registry.
 
-`newsnext fetch` uses the same command transport and shared source fetch
-infrastructure in the extension background, including browser credentials and
-per-host request scheduling. It disables source retries and HTTP status errors
-so the command preserves the requested one-shot raw response. It returns the
-status, response headers, and decoded text body to the CLI. The command accepts
-HTTP(S) URLs without embedded credentials and never serializes browser cookies
-into the command or response. Browser host permissions still govern access. If
-the exact target has not been granted, the extension opens a dedicated approval
-window and waits for the user to authorize that origin before continuing. The
-same approval flow runs before `developer.runSource` when the resolved Source and params
-require permissions that are not already granted. Request headers remain subject
-to the browser Fetch API's forbidden-header rules. The CLI execution timeout
-also aborts the browser-side network request.
+`fetch` makes one browser-owned HTTP(S) request without source retries or HTTP
+status exceptions. Browser forbidden-header rules still apply. Missing host
+access opens a scoped permission window; `developer.runSource` uses the same
+approval flow for its resolved Source. Execution timeout aborts browser work.
+Direct fetching does not verify the complete Source contract.
 
-The CLI runtime is built and distributed from the separate private NewsNext App
-repository. It is intentionally not part of this open-source workspace. One
-executable provides CLI control commands, the long-lived daemon and tray icon,
-and the short-lived Native Messaging host mode. The browser starts one host
-process per `runtime.connectNative()` port. That process only translates the
-browser's length-prefixed stdio messages to the daemon's per-user local IPC; it
-does not own daemon state. This separation preserves one daemon and one tray
-icon across multiple browsers and profiles.
+The private CLI repository owns the executable, daemon, and short-lived Native
+Host. Each browser port starts a bridge that forwards length-prefixed stdio to
+one per-user daemon over a Unix socket or Windows named pipe. The daemon owns
+state; a bridge does not. Shutdown fails pending work and removes socket endpoints;
+startup reclaims stale sockets but never replaces an unrelated non-socket file.
 
-Rust `serde` enums in the private App repository are the canonical wire
-contract. Their released `ts-rs` projections are checked into
-`packages/extension-connection/src/generated`; do not edit those files manually.
-Browser runtime code imports protocol types and validation from the browser-safe
-`@newsnext/extension-connection` package.
-Extension messages carry an explicit protocol version. The daemon associates
-commands and completions by request ID, rejects
-ambiguous browser selection, expires pending executions, and never replays a
-command after reconnection because source execution is not guaranteed to be
-idempotent. Settings exposes the daemon version as connection metadata only.
-The current protocol version is 21. It carries an initial shared Workspace,
-revisioned Worker routing snapshots, atomic takeover of Instances from offline
-Workers, incremental Workspace patches produced by canonical Action commits, canonical
-Action requests, Widget snapshots, Source-result cache reads routed by Instance
-ID and Instance load requests. A patch contains the complete entity order but
-only changed Board and Instance values. The daemon validates and commits it
-against an expected revision, returns a compact receipt to the origin, and
-broadcasts the same deterministic patch to peer Workers. The Workspace owns
-Boards, Layers, and Instances. Each Instance persists its owning `workerId`, and
-the daemon derives execution routing directly from that field without
-transferring browser credentials or session state. A browser
-keeps only its Worker ID in extension-local storage because Native Messaging
-does not expose a stable browser-profile identity. There is no separate binding
-map or binding lifecycle: Workspace synchronization, daemon restart, and browser
-reconnection preserve the Instance's owner. If
-reinstalling the extension clears its Worker ID, the daemon reports disconnected
-Worker IDs retained by Instances or History so the user can explicitly
-restore the browser's prior identity from Settings. Connected Worker IDs cannot
-be claimed.
-Incompatible daemon and extension versions disconnect instead of accepting a
-partial control surface.
+Rust `serde` enums own the wire contract. Released `ts-rs` projections in
+`packages/extension-connection/src/generated` are not hand-edited. Browser code
+imports protocol types and validation from `@newsnext/extension-connection`.
+Protocol 21 carries Workspace patches, Instance routing, Actions, cached results,
+and Widget Snapshots. Incompatible versions disconnect. Request IDs correlate
+completions; timed-out or disconnected executions are not replayed automatically.
+Additive features use explicit capability negotiation.
 
-Native Messaging registration is the browser-facing security boundary.
-Development and production use distinct host identities so their executables
-and extension permissions cannot overwrite or authorize each other. Installing,
-repairing, checking, or uninstalling a host affects only the executable's own
-environment; the production App never manages the development host, and the
-development CLI never manages the production host. A regular
-CLI executable registers `app.newsnext.host.dev` for the development Chromium
-ID or `dev@newsnext.app` Firefox ID. An executable inside the packaged app
-registers `app.newsnext.host` for the Chrome Web Store ID or the stable
-`addon@newsnext.app` Firefox ID. The extension selects the matching host from
-its WXT build mode. Chrome, Chromium, Edge, and Firefox are supported across
-desktop platforms. Ego Lite, Dia, and Arc use their dedicated Chromium
-user-data roots and are currently registered on macOS only.
-Interactive registration lists detected browser installations and defaults the
-selection to all of them. Explicit browser arguments bypass selection for
-automation; non-interactive registration uses all detected browsers. Detection
-does not inspect browser profiles, so an explicit argument can still register a
-browser missed by detection. Windows stores a separate manifest per browser
-because Firefox and Chromium-family manifests use different authorization
-fields. A current-directory mode writes either manifest family without platform
-registration, supporting manual installation for browsers outside the detection
-table. The `native_messaging::installer` module owns browser metadata, manifest
-generation, installation, and platform-specific filesystem or registry
-integration, including registration-state detection and uninstall. The
-`cli::commands::install_native_host` module only owns command arguments,
-interactive selection, validation, and user-facing output. The tray's browser
-integration menu lists detected installations only, calls the same installer
-API, and refreshes each checkbox from the resulting registration state after an
-operation. The binary `main.rs` is a thin entry point into the Rust library;
-`lib.rs` owns the module tree, `cli` owns Clap parsing and dispatch,
-`cli::service` owns daemon lifecycle commands, and `tray` owns the desktop event
-loop and menu. Other CLI commands are split by capability under `cli::commands`,
-with shared connection and output behavior in `common`. Native Messaging process
-invocation detection and its tests live with the bridge runtime in
-`native_messaging::host`. The extension cannot choose an arbitrary executable or
-network endpoint.
-Native messages are UTF-8 JSON framed by a native-endian 32-bit byte length. The
-host accepts extension messages up to 64 MiB and keeps every host-to-extension
-frame below Chromium's 1 MiB limit. Larger protocol messages, including an
-initial Workspace snapshot, are split into 256 KiB UTF-8 chunks and reassembled
-by the extension under a 64 MiB aggregate limit. The host writes protocol data
-only to stdout and reserves stderr for diagnostics. The internal daemon listener uses a Unix domain socket
-on Unix platforms and a named pipe on Windows instead of opening a TCP port.
-Default endpoint names are scoped to the effective Unix user or the Windows
-local application-data location. Development data lives under the `NewsNext Dev`
-application-data directory, while production data lives under `NewsNext`; both
-use ordinary `newsnext.db` and `widgets/` names inside their isolated root.
-Development CLI processes use
-`app.newsnext.daemon.dev`, while packaged app processes use
-`app.newsnext.daemon`, preventing a correctly bound Native Messaging host from
-crossing into the other environment's daemon. `NEWSNEXT_IPC_NAME` can override
-the name for isolated test runs. Both sides verify Unix peer credentials before
-exchanging protocol messages. Windows named pipes retain the access control
-derived from the creating user's process token. Filesystem-backed Unix sockets
-are removed during normal shutdown and reclaimed on the next startup after an
-ungraceful exit.
+Workspace commits validate expected revisions and broadcast deterministic patches
+with complete entity order and only changed values. Instance `workerId` supplies
+routing; there is no second binding store. Worker identity is browser-local and
+survives service-worker restarts. Settings can explicitly restore an offline
+Worker identity after reinstall; connected identities cannot be claimed.
 
-The Rust CLI implements daemon lifecycle and tray status plus the `run`,
-`fetch`, `action`, and `history` commands and command families. All
-extension-backed commands use the same typed execute/result IPC path. `run`
-supports registered sources, provider files, standard input, parameter
-overrides, provider-secret selection, compact output, verbose remote errors,
-and watch mode.
+Development and production have separate host names (`app.newsnext.host.dev` /
+`app.newsnext.host`) and IPC prefixes (`app.newsnext.daemon.dev` /
+`app.newsnext.daemon`). Runtime selection and data paths belong to
+`runtime_environment.rs` in the CLI: `NEWSNEXT_ENV` overrides the debug/release
+build default, and data lives under `~/.config/newsnext.dev/` or
+`~/.config/newsnext/`, with `newsnext.db` and `widgets/` inside. Explicit database,
+Widget, and IPC overrides support isolated runs. Native registration affects only
+the selected environment and cannot choose an arbitrary extension-controlled
+executable or network endpoint. Installation options live in the
+[CLI reference](../skills/newsnext-cli/references/commands.md).
 
-The same Rust executable is packaged as the NewsNext desktop companion. A
-normal CLI invocation continues through Clap, while the hidden `__app` command
-starts the desktop UI for `tauri dev`; launching the executable inside a macOS
-application bundle without arguments starts the same UI directly. This lets
-`tauri dev` exercise the complete App against the isolated development Native
-Messaging host, IPC endpoint, database, and Widget directory without producing
-an application bundle. The explicit development App launch first stops any
-daemon that the browser may have started from the same debug executable, then
-takes over the daemon and tray lifecycle so Tauri's single-instance plugin does
-not terminate the development runner. The bundle is a background application,
-so macOS exposes it through
-the menu bar without adding a Dock icon. The tray keeps an icon-only menu bar
-presence; its tooltip and menu actions use `NewsNext Dev` for a CLI daemon and
-`NewsNext` for the packaged app so both can run without becoming ambiguous.
-Packaging preserves one executable for the CLI, daemon, tray, and Native
-Messaging host rather than introducing a second runtime or protocol boundary.
-On bundle launch, existing production
-Native Messaging registrations are repaired to reference the executable at the
-current bundle location. Development registrations use a separate manifest and
-remain untouched. Registration state validates the executable recorded in the
-environment-specific manifest, so moving or upgrading the app cannot leave a
-stale registration reported as active. Browsers without an existing production
-registration remain disabled. App developers register the stable debug
-executable with `newsnext install-native-host`.
+Messages are UTF-8 JSON with native-endian 32-bit length framing. The host accepts
+up to 64 MiB from the extension, keeps host-to-extension frames below 1 MiB, and
+splits large messages into 256 KiB UTF-8 chunks. Extension reassembly is bounded
+at 64 MiB. Stdout carries protocol data only; stderr carries diagnostics. Unix
+peers verify credentials; Windows pipes inherit the creating user's access
+control. Browser credentials stay inside extension execution.
 
-The Native Host replaces the extension build target with the launching parent
-process executable name when it is available. The name remains unchanged except
-that Windows strips a trailing `.exe`. This keeps Chromium derivatives distinct
-while retaining the build target as a cross-platform fallback. The extension
-persists a generated connection instance ID in profile-local storage so the tray
-identity remains stable across Manifest V3 service-worker restarts. Chrome does
-not expose its local profile display name to extensions, so the connection does
-not claim to identify it or request account identity permissions as a substitute.
-
-The tray exposes Open NewsNext only while an extension is connected. Every
-connected instance has one menu containing its Boards and a separated Settings
-action. With multiple connections, those instance menus are grouped and sorted
-by browser and instance ID. Each instance displays the detected browser and a
-short unique instance ID, and targets the exact instance rather than using the
-CLI's potentially ambiguous browser-name selector.
-
-Local provider runs use an isolated `cli:<provider-id>` secret namespace unless
-`--use-provider-secrets` is supplied. CLI execution does not install the
-provider, change the bundled registry, persist the result used by normal loads, or
-grant additional browser permissions. It does use the same loader-result
-validation as registered extension app loads.
-
-This is why direct HTTP requests are useful for investigation but are not a
-substitute for extension-backed source verification.
-
-Source-history commands read the daemon-owned Turso repository directly.
-Dataset discovery accepts source and provider filters plus opaque pagination
-cursors and returns an opaque dataset ID. Observation listing accepts that ID,
-time bounds, and timestamp pagination. Exact reads and comparisons require the
-same dataset ID plus observation timestamps returned by the listing command.
-CLI history access is read-only and preserves completeness warnings.
-
-
-### Stream collection diagnostics
+## Stream collection diagnostics
 
 The collection chain uses `collection-status.ts`, `parseCollectionStatus`,
 `getCollectionStatus`, and `snapshot.collection`. Protocol types are generated from

@@ -1,81 +1,18 @@
-# NewsNow 用户 Source 需求汇总
+# Source request research
 
-## 文档目的
+Historical snapshot of `ourongxing/newsnow` issues and comments on 2026-08-11:
+242 issues, excluding pull requests. Statuses below describe that snapshot, not
+current GitHub state or NewsNext implementation. A closed issue does not establish
+that a Source is available. Recheck the live registry and the requested feed before
+scheduling work.
 
-本文汇总 `ourongxing/newsnow` 仓库中用户提出过的 source（信息源）需求，用于 NewsNext 的 source 规划和优先级判断。
+Repeated demand centered on Xiaohongshu, overseas social platforms, international
+news, WeChat, games, and finance. The original suggested priority was social/news/
+WeChat first, then specialist feeds, followed by long-tail requests. This is demand
+evidence, not a current implementation backlog. Exact sources and issue links are
+listed once below.
 
-统计时间为 2026 年 8 月 11 日。统计范围包括仓库当时的全部 242 条 issue（包含 open 和 closed，排除 Pull Request）以及 issue 评论。本文将重复请求合并，并区分当前仍 open 的需求和已经关闭的历史需求。
-
-Issue 关闭不一定表示对应 source 已经稳定可用，也可能表示请求已处理、已拒绝、已被其他 issue 覆盖或失去后续。因此，关闭状态只作为规划参考，不能直接等同于“已经实现”。
-
-## 结论摘要
-
-用户需求最集中的方向如下：
-
-1. 小红书热点或爆款内容，是独立 issue 数量最多的明确 source 需求。
-2. X/Twitter、Reddit、Instagram、TikTok、YouTube 等海外社交平台热点。
-3. Reuters、AP News、Bloomberg、Google News 等国际新闻来源。
-4. 微信公众号及微信生态内容。
-5. Steam、任天堂、索尼、3DM、游侠网、小黑盒等游戏资讯。
-6. 同花顺、雪球、淘股吧、开盘啦、韭研公社等财经投资来源。
-7. 允许用户自定义 RSS、API 或网页 source，而不是完全依赖内置来源。
-
-## 重复需求
-
-### 小红书
-
-小红书是最集中的明确需求，用户希望获取热搜、热点或爆款内容：
-
-- [#19 oauth 登录，急缺小红书热搜](https://github.com/ourongxing/newsnow/issues/19)（closed）
-- [#58 提议添加小红书的数据吗？](https://github.com/ourongxing/newsnow/issues/58)（open）
-- [#199 后续能否增加微信公众号和小红书版块](https://github.com/ourongxing/newsnow/issues/199)（open）
-- [#289 希望可以增加小红书热搜、热点](https://github.com/ourongxing/newsnow/issues/289)（open）
-- [#366 希望增加一个小红书的热点或者爆款的？](https://github.com/ourongxing/newsnow/issues/366)（open）
-
-### 海外社交平台
-
-用户提出了 X/Twitter、Reddit、Instagram、TikTok、YouTube 和 Google 热点等来源：
-
-- [#73 please add x, thanks~](https://github.com/ourongxing/newsnow/issues/73)（open）
-- [#164 希望可以增加推特、reddit、ins、youtube 这些每日热点](https://github.com/ourongxing/newsnow/issues/164)（open）
-- [#183 关于增加国外主要社交媒体热搜板的请求](https://github.com/ourongxing/newsnow/issues/183)（open）
-- [#312 信息源补充](https://github.com/ourongxing/newsnow/issues/312)（open，提出抓取 Reddit 等媒体中的痛点讨论）
-
-### 国际新闻媒体
-
-Reuters 被重复提出，并经常与 AP News、Bloomberg 和 Google News 一同出现：
-
-- [#53 添加美联社和路透社](https://github.com/ourongxing/newsnow/issues/53)（open）
-- [#67 建议支持彭博社、路透社消息](https://github.com/ourongxing/newsnow/issues/67)（open）
-- [#107 hope to add news source for google news and reuters news](https://github.com/ourongxing/newsnow/issues/107)（open）
-- [#230 请求添加来源](https://github.com/ourongxing/newsnow/issues/230)（open，提出 Reuters 多语言镜像、两个至上和大纪元）
-- [#231 对“实时”及“信息源”建议](https://github.com/ourongxing/newsnow/issues/231)（open，提出国际主流新闻平台和 Google News）
-- [#235 请问大佬有新增世界主流新闻源的计划吗？](https://github.com/ourongxing/newsnow/issues/235)（open，未指定具体媒体）
-
-### 微信生态
-
-- [#199 后续能否增加微信公众号和小红书版块](https://github.com/ourongxing/newsnow/issues/199)（open）
-- [#323 申请加入微信读书榜单](https://github.com/ourongxing/newsnow/issues/323)（open）
-- [#364 没有微信公众号](https://github.com/ourongxing/newsnow/issues/364)（open）
-
-### 游戏资讯
-
-- [#139 游戏频道](https://github.com/ourongxing/newsnow/issues/139)（open）：Steam、任天堂、索尼、3DM、游侠网。
-- [#240 请求订阅新源「小黑盒」「游侠网」等游戏资讯网站](https://github.com/ourongxing/newsnow/issues/240)（open）。
-
-### mktnews.com
-
-- [#62 建议增加 mktnews.com](https://github.com/ourongxing/newsnow/issues/62)（open）
-- [#137 希望能增加 mktnews.com](https://github.com/ourongxing/newsnow/issues/137)（open）
-
-### 已关闭的重复需求
-
-以下来源曾被重复提出，但相关新增请求已经关闭：
-
-- 36氪：[#48](https://github.com/ourongxing/newsnow/issues/48)、[#65](https://github.com/ourongxing/newsnow/issues/65)、[#271](https://github.com/ourongxing/newsnow/issues/271)。
-- 少数派：[#42](https://github.com/ourongxing/newsnow/issues/42)、[#48](https://github.com/ourongxing/newsnow/issues/48)、[#130](https://github.com/ourongxing/newsnow/issues/130)。
-
-## 当前 Open Issue 中的明确 Source
+## Requests open at the snapshot date
 
 ### 中文新闻与内容平台
 
@@ -96,6 +33,8 @@ Reuters 被重复提出，并经常与 AP News、Bloomberg 和 Google News 一�
 | cnBeta | RSS 新闻 | [#28](https://github.com/ourongxing/newsnow/issues/28) |
 
 ### 国际新闻、科技与研究
+
+Broader international-news coverage was also requested in [#235](https://github.com/ourongxing/newsnow/issues/235); no specific outlet was named.
 
 | Source | 用户希望获取的内容 | Issue |
 | --- | --- | --- |
@@ -153,7 +92,7 @@ Reuters 被重复提出，并经常与 AP News、Bloomberg 和 Google News 一�
 | Wikinews | 维基新闻 | [#66](https://github.com/ourongxing/newsnow/issues/66) |
 | Kickstarter | 众筹项目排行榜 | [#371](https://github.com/ourongxing/newsnow/issues/371) |
 
-## 已关闭 Issue 中的历史 Source 需求
+## Requests closed at the snapshot date
 
 以下来源曾被用户提出，但对应 issue 已关闭：
 
@@ -172,7 +111,7 @@ Reuters 被重复提出，并经常与 AP News、Bloomberg 和 Google News 一�
 | CVE 漏洞情报 `cve.imfht.com` | [#270](https://github.com/ourongxing/newsnow/issues/270) |
 | OpenCVE | [#270 的评论](https://github.com/ourongxing/newsnow/issues/270#issuecomment-3625210042) |
 
-## 自定义 Source 能力
+## Custom Source requests
 
 除具体网站外，一个反复出现的产品需求是允许用户自行添加或管理 source，包括：
 
@@ -195,31 +134,3 @@ Reuters 被重复提出，并经常与 AP News、Bloomberg 和 Google News 一�
 - [#311 可以自定义吗？](https://github.com/ourongxing/newsnow/issues/311)（open）
 
 由于不同网站的数据格式、认证方式和反爬策略并不统一，“输入任意网址即可使用”通常不可行。NewsNext 若实现该能力，应优先考虑 RSS、标准 JSON API 和可声明的抓取规则，而不是承诺自动解析所有网页。
-
-## 建议优先级
-
-### P0：需求明确且重复出现
-
-1. 小红书热点或爆款。
-2. X/Twitter 和 Reddit 热点。
-3. Reuters、AP News、Google News 等国际新闻。
-4. 微信公众号。
-
-### P1：垂直领域需求明确
-
-1. 游戏资讯：Steam、任天堂、索尼、3DM、游侠网、小黑盒。
-2. 财经投资：同花顺、雪球、淘股吧、开盘啦、韭研公社。
-3. 科技研究：机器之心、TechCrunch、arXiv。
-4. 中文媒体：观察者网、睡前消息、界面新闻、人民日报、新华社。
-
-### P2：单个请求或目标仍需确认
-
-1. 阅读和小说平台榜单。
-2. Kickstarter 众筹榜。
-3. Wikipedia 和 Wikinews 栏目。
-4. AMZ123、mktnews.com、两个至上、大纪元和 qore.com。
-5. 未指定具体平台的加密货币资讯。
-
-### 平台能力
-
-自定义 RSS/API/source 是独立于单个来源的长期能力。它不能完全替代内置 source，但可以降低长尾来源的维护压力。建议先限定支持范围和安全边界，再决定是否进入正式路线图。

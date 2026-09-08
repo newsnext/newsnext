@@ -36,8 +36,8 @@ loading, SVG parsing, or serialization.
 
 Measure before and after a change with the same board, viewport, loaded LiveCard
 count, and interaction sequence. React Scan is opt-in through a dynamic import
-in `apps/extension/src/entrypoints/app/main.tsx`. Start the existing development
-server with `WXT_ENABLE_REACT_SCAN=true bun run dev` when profiling.
+in `apps/extension/src/entrypoints/app/main.tsx`. Profiling requires the user-run development server to have
+`WXT_ENABLE_REACT_SCAN=true`; do not start a second server.
 
 - React Scan must load before the React root mounts.
 - React Scan must load only when `WXT_ENABLE_REACT_SCAN` is exactly `true` in a
@@ -138,31 +138,19 @@ Now Layer TanStack cache, force-mounting LiveCards, or rerunning Agent-owned
 refresh and processing in React. Layer presentation must not determine whether
 a Source executes.
 
-Mirrored persistence must ignore its own `browser.storage.local` echo when the
-normalized value already matches the synchronous `localStorage` snapshot. An
-echo must not replace arrays or objects with equal copies and trigger a second
-render after every Board (including sorting), Instance, or Settings update. A real
-background change still replaces the affected slice and notifies its atom.
-Application Data differs from ordinary frontend-owned settings: React dispatch
-atoms await the background Application service and never write the persisted
-Application Data atom. Its mirrored adapter is read-only, so initialization and
-normalization update only the frontend cache. The background serializes UI and
-Agent mutations, writes one normalized envelope, and the storage subscription
-publishes that envelope to React. Do not add optimistic Application Data writes
-unless profiling proves the storage round trip is a visible bottleneck and the
-design includes conflict reconciliation.
+Mirrored storage must suppress equal-value echoes without suppressing real
+cross-document changes. Compare against each adapter's own snapshot, not shared
+`localStorage`: otherwise one document's cache write can hide another document's
+storage notification. Preserve references for equal normalized values.
 
-Mirrored storage deduplication must compare against state held by each adapter
-instance, not shared `localStorage`. Several extension documents share the same
-cache but own independent atom trees; one document updating the cache must not
-cause another document to skip its `browser.storage.onChanged` notification.
-Background Action proxies return only compact receipts such as `boardId`
-or `instanceId`; the normalized Application Data envelope propagates once via
-the storage subscription instead of being serialized again as an Action result.
-Board rendering names must reflect identity: arrays and maps keyed by configured
-LiveCards use `instanceIds` and `liveCardsByInstanceId`. Reserve `sourceId` for the
-reusable Source descriptor identity so performance selectors do not obscure
-which entity invalidated.
+Application Data is a read-only frontend mirror. Background Actions serialize
+mutations and return compact receipts; storage subscriptions deliver the updated
+envelope. Do not add optimistic writes without measured need and a conflict
+reconciliation design. Persistence boundaries are defined in
+[Application Architecture](APPLICATION_ARCHITECTURE.md#adapter-rules).
+
+Name Instance-keyed projections `instanceIds` and `liveCardsByInstanceId`; reserve
+`sourceId` for descriptor identity so selectors expose what actually invalidates.
 
 ### Add memo boundaries at independent units
 
@@ -289,10 +277,9 @@ renders.
 Do not remove renders that are required to update Motion props, measured scatter
 vectors, or drag state. Optimize the content boundary instead.
 
-The Now/Next transition must not animate a transform or large backdrop filter
-over the full Next Layer while LiveCards scatter. The LiveCard scatter is the
-transition's primary motion; `WidgetContainer` owns the brief, delayed
-opacity-only reveal.
+Use the shared exit-then-enter sequence for both Layers; its visual contract is
+in [Design Guideline](DESIGN_GUIDELINE.md#next-layer-widget-surfaces). Keep
+transition work outside card content and never transform or blur the full page.
 
 ### Observe against the real scroll container
 
@@ -387,18 +374,15 @@ production duration.
 
 ## Development diagnostics subscriptions
 
-The NewsNext Devtool uses event subscriptions, with no interval polling. Each open
-panel owns a runtime Port; the background subscribes to daemon status while at least
-one Port remains connected and unsubscribes when the last panel closes. Native
-reconnection restores the subscription. Scheduler state changes and committed history
-observations push snapshots into a background cache; activity/storage events reuse
-that cache. An initial request bootstraps missing state. Snapshot reads share the
-existing single-flight queue. Deadlines use absolute timestamps so idle panels do
-not need countdown timers. Without subscribers the daemon skips diagnostic count
-queries and push messages.
-Reading daemon collection diagnostics bypasses action dispatch, preventing diagnostic
-reads from creating activity events and a refresh feedback loop. This endpoint is
-read-only and must never trigger a Source load. Production diagnostics remain disabled.
+The development-only NewsNext Devtool uses one native subscription shared by
+open panels. The last close unsubscribes; reconnection restores it. Bootstrap
+reads share a single-flight queue, and subsequent activity/storage events reuse
+the pushed cache. With no subscribers the daemon skips diagnostic count queries.
+Use absolute deadlines instead of polling or countdown timers.
+
+Diagnostics bypass Action dispatch to avoid activity-event feedback loops and
+must never trigger Source loads. The protocol and payload boundaries are in
+[Source Architecture](SOURCE_ARCHITECTURE.md#stream-collection-diagnostics).
 
 Stream summaries and sorting are pure projections of pushed diagnostics. Overview
 and Streams share presentation, sort preference, and selection without additional

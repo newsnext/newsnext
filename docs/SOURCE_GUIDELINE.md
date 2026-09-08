@@ -146,11 +146,6 @@ ASCII ` | ` to separate its resolved identity or query from the selected
 variant, such as `NewsNext | Latest`. Reserve compact separators such as `·`
 for inline item attributes rather than Source or Instance titles.
 
-Provider categories are `social` (social platforms), `forum` (forums), `news`
-(news and readers), `finance` (finance), `developer` (developer platforms), and
-`entertainment` (entertainment). Set `category` at the top level when the
-provider belongs to one of them. Omitting it leaves the provider unclassified.
-
 ### Provider category taxonomy
 
 Category describes the provider's primary product and content experience. It
@@ -182,11 +177,6 @@ experience rather than isolated features:
    information is primary.
 5. Use `entertainment` for media catalogs whose primary experience is discovery
    or playback rather than creator-following.
-
-For example, Hacker News is `forum` because discussion threads distinguish it
-from a news reader. Folo is `news` because the content experience matters more
-than its implementation as a reading tool. Xueqiu is `finance` because its
-specialist domain takes precedence over its social features.
 
 Leave `category` unset when no category clearly matches. Do not use `others` as
 a placeholder and do not create a category named after one provider.
@@ -760,7 +750,7 @@ Preserve the intended display order before returning so the most relevant 50
 items remain in the Instance result.
 
 Dynamic loader metadata always supports the complete source metadata shape:
-`title`, `badge`, `desc`, and `home`. It travels with the items through
+`title`, `badge`, `desc`, `home`, and optional `type` (`list` or `ranking`). It travels with the items through
 persistence and the in-memory Query cache and has the
 highest display priority, overriding static metadata and persisted Radar or
 Instance metadata patches field by field. It is unavailable until the first
@@ -864,15 +854,6 @@ Source resolution before loading. Custom loaders receive the same validation as
 structured loaders. Returning a bare `NewsItem[]` is not supported; use
 `{ items }` even when metadata is absent.
 
-Minimize request count as part of the source contract. When one listing request
-can return both items and metadata, directly or through expansion, include, or
-field-selection options, the loader must use that single request. Metadata
-enrichment never justifies a companion request or batch request. Additional
-requests are allowed only when they are required to produce the items
-themselves. This is especially important for authenticated sources because
-unnecessary API traffic can trigger rate limits, anti-abuse systems, or account
-suspension.
-
 ## Version, request protection, capabilities, and secrets
 
 Sources do not configure TanStack Query freshness or the request-protection
@@ -888,34 +869,13 @@ stored results and mark a new version boundary in retained observations:
 version: 3
 ```
 
-Validated Source results are cached once by the extension background in
-IndexedDB as a derived key, real fetch time, and result snapshot. The key is
-computed from Source ID, Source version, and normalized parameters without
-duplicating that target in the record. This key exists only within its Worker;
-another Worker never reads or reuses the record even when the complete Source
-target is identical. The same record supports request protection and startup
-placeholders. Instances bound to the same Worker may reuse the protected Loader
-record, while page-side results remain isolated by Instance ID. The App restores
-cache records through Instance routing and renders directly from their Source
-snapshots without listing registry descriptors. Page queries become stale after two minutes, so
-remounting or regaining focus can revalidate them, while active Sources also
-revalidate on a fixed five-minute interval. Manual Request is a page-side user
-intent that bypasses page freshness. It sends the same load action as automatic
-revalidation, without a manual-request flag, so the background does not
-distinguish the two paths. Neither path may issue a new Loader request when the same
-Source and normalized parameters completed a real load less than one minute
-ago. After that fixed protection interval, NewsNext publishes the stored result
-as a placeholder while the new request runs.
-
-The manual-request indicator remains visible for at least 500ms when a protected
-Manual Request action reuses the preceding result, so the action still has
-perceptible feedback. It returns `fetchProtected: true` and updates caller-visible
-`loadedAt` without changing stored `fetchedAt`, rewriting the stored state, or extending the protection interval. Concurrent
-requests for the same Source and normalized parameters remain deduplicated.
-
-Persisted Source results expire after 30 days. Increasing `version` changes
-persisted-result identity immediately; superseded versions remain isolated and
-expire normally.
+Results are isolated by Worker and cached by Source ID, version, and normalized
+parameters. Concurrent loads share execution. A real load less than one minute
+old is reused with `fetchProtected: true`; `loadedAt` advances but `fetchedAt`
+and the protection deadline do not. Manual refresh obeys the same protection.
+Results expire after 30 days; a version change isolates old results immediately.
+See [request lifecycle](SOURCE_ARCHITECTURE.md#source-request-lifecycle) for
+page freshness, restoration, and cache implementation.
 
 Structured loaders infer the hostname of a static URL. Declare every additional
 or dynamically selected hostname:
@@ -996,14 +956,9 @@ Use `credentials: "omit"` only when a request must be explicitly anonymous.
 Do not declare cookie secrets merely to authenticate a request; cookie secrets
 are for reading a specific value that the loader must inspect.
 
-The client behind `context.fetch` serializes requests per hostname and spaces
-their start times to avoid bursts when multiple Instances target the same
-service. Custom loaders must use `context.fetch` instead of importing the shared
-client or using global `fetch`; the context client keeps request policy and
-cancellation attached to the current source execution. Requests to different
-hostnames may run in parallel. A structured-loader custom `request` callback
-receives the resolved URL, bound Ky client, and execution signal in one context.
-It must return a `Response`; the structured loader parses the JSON or HTML body:
+Requests to one hostname are serialized and spaced; different hostnames may run
+in parallel. A structured-loader custom `request` receives the resolved URL,
+bound client, and signal, and must return a `Response` for the loader to parse:
 
 ```ts
 request: async ({ url, fetch }) => {
@@ -1021,15 +976,9 @@ header when the browser cookie jar is sufficient.
 
 ## Radar discovery
 
-Radar detects a source from the active page:
-
-Radar's UX contract is one-click Instance creation. Treat the matched page as
-the user's fully configured view, not merely evidence that a Source exists. A
-suggestion should resolve every parameter that the page already expresses,
-including account or resource identity, search terms, content type, filters,
-sorting, and time range. The expected user flow is to review the preview and
-click `Create`; do not require the user to reopen the editor and repeat choices
-that are already visible on the page.
+Radar maps the active page to a ready-to-create Instance. Capture every choice
+already expressed by the page: identity, query, filters, sorting, and time range.
+The user reviews the preview and clicks `Create` without repeating those choices.
 
 ```ts
 radar: [{
@@ -1079,10 +1028,6 @@ the path level, exact paths outrank parameterized paths, which outrank
 wildcards. More static segments, greater path depth, and more required query
 keys increase specificity; fewer dynamic and wildcard segments win the remaining
 ties. When several include patterns match, Radar uses the most specific one.
-
-Radar derives specificity as an ordered set of structural fields rather than a
-weighted score. This makes ordering deterministic and explainable without
-author-tuned weights.
 
 The optional rule `priority` is a safe integer used only as a tie-breaker
 between suggestions with equal structural specificity. It cannot override a
@@ -1221,54 +1166,12 @@ Author-facing limits:
 Runtime registries accept declarative JSON, HTML, and RSS loaders only.
 Prototype-related source ID segments and JMESPath properties are rejected.
 
-Use the separately distributed NewsNext App CLI to validate live behavior.
-Enable **Settings → Integration**. Development builds connect only to the
-development Native Messaging host. Register the installed executable, then
-start the daemon:
-
-```sh
-newsnext install-native-host
-newsnext start
-newsnext status
-```
-
-When developing the App itself, register its debug executable once and run the
-full desktop UI without packaging:
-
-```sh
-bun run install-native-host
-bun run dev
-```
-
-`bun run dev` uses `tauri dev` and the isolated development Native Messaging
-host, IPC endpoint, database, and Widget directory. Restart registered browsers
-after the first host registration; later debug rebuilds keep the same executable
-path and do not require a new application bundle.
-
-The installer presents detected browsers only and selects all of them by
-default. Pass one or more browser names, such as `install-native-host chrome
-firefox`, to skip the interactive selector. In non-interactive environments,
-omitting browser names installs for every detected browser. Development Firefox
-uses `dev@newsnext.app`; the packaged extension and app use
-`addon@newsnext.app` through a separate production host. Ego Lite, Dia, and Arc
-registration is supported on macOS and uses each browser's own Chromium
-user-data root; pass `ego-lite`, `dia`, or `arc` explicitly when needed. Browser
-processes must be restarted after host registration. While the daemon is running, the tray's
-**Browser Integration** submenu lists detected browsers and provides the same
-controls: selecting a browser installs its host registration, and clearing it
-removes the manifest and any platform registration. The commands below use the
-Rust control client and Native Messaging transport.
-
-For a browser whose installation path is not known to NewsNext, write a manifest
-to the current directory for manual placement:
-
-```sh
-newsnext install-native-host --current-dir
-newsnext install-native-host --current-dir chromium-based
-newsnext install-native-host --current-dir firefox-based
-```
-
-This mode does not modify browser directories or the Windows registry.
+Use the separately distributed CLI with **Settings → Integration** enabled.
+For installation, browser selection, command options, and automation, see the
+[CLI command reference](../skills/newsnext-cli/references/commands.md).
+In this wrapper, run commands from `cli/` as `bun run dev <arguments>`;
+for example, `bun run dev run github:trending`. The examples below use the
+distributed command name; local provider paths are relative to the caller.
 
 Run a registered source:
 
@@ -1284,7 +1187,7 @@ newsnext run registry/src/telegram.json \
   --param channel=telegram
 ```
 
-Useful options include `--params`, `--watch`, `--browser`, `--timeout`,
+Useful options include `--params`, `--watch`, `--worker`, `--timeout`,
 `--provider-id`, `--use-provider-secrets`, `--debug`, and `--verbose`. See the complete
 list with:
 
@@ -1292,8 +1195,8 @@ list with:
 newsnext run --help
 ```
 
-When `--browser` is omitted, the CLI prompts you to select a connected browser.
-Pass a browser name, full connection ID, or unique ID prefix to skip the prompt.
+Use `--worker` with a connected Worker ID prefix for deterministic selection;
+otherwise the CLI prompts when selection is needed.
 
 The command prints the source result as `data`, `metadata`, and `inlinePresentation`,
 with normalized parameters and timing under `execution`. Pass `--debug` to also
@@ -1320,88 +1223,11 @@ and `-i` includes response status and headers. Browser-managed cookies cannot be
 overridden with a `Cookie` header. Use this command for raw endpoint debugging,
 then run `run` to verify the complete source behavior.
 
-Background Jobs retain newly executed Source results in the daemon-owned local
-database. Reusing a protected result does not create a duplicate observation:
-
-```sh
-newsnext history datasets --source-id github:trending
-newsnext history datasets --node-id NODE_ID --source-version 3
-newsnext history observations DATASET_ID
-newsnext history get DATASET_ID 1786212000000
-newsnext history compare DATASET_ID \
-  1786212000000 1786215600000
-```
-
-Discover and use the canonical application control surface:
-
-```sh
-newsnext action list
-newsnext action execute source.list
-newsnext action execute source.get --input \
-  '{"sourceId":"github:trending"}'
-newsnext action execute board.list
-newsnext action execute board.getContext --input \
-  '{"boardId":"BOARD_ID"}'
-newsnext action execute board.getConfiguration --input \
-  '{"boardId":"BOARD_ID"}'
-newsnext action execute nowLayer.getLiveCards --input \
-  '{"boardId":"BOARD_ID"}'
-newsnext action execute board.create --input \
-  '{"name":"Research","color":"blue","sortMode":"addedAt"}'
-newsnext action execute board.update --input \
-  '{"boardId":"BOARD_ID","name":"Research queue","color":"purple"}'
-newsnext action execute instance.create --input \
-  '{"sourceId":"github:trending","boardId":"BOARD_ID","patch":{"params":{"language":"typescript"}}}'
-newsnext action execute instance.move --input \
-  '{"instanceId":"INSTANCE_ID","boardId":"BOARD_ID"}'
-```
-
-`instance.create` requires exactly one destination `boardId`.
-
-Catalog listings include each Action's `mutation`, `query`, or `command` kind,
-description, and JSON input/output schemas. Every execute input must be a JSON
-object. Each Action owns TypeBox parameter and result schemas next to its
-handler; the extension performs runtime shape and domain validation from that
-single definition, then invokes the same registered Action used by the typed
-UI client.
-Enabling the NewsNext App connection permits CLI operations, including
-destructive ones such as `board.delete` and `instance.delete`; inspect
-`action list` before automation and use stable Data identities rather than
-Board labels.
-Passing `deleteInstances: true` to `board.delete` also deletes Instances
-used only by that Board. Passing `targetBoardId` instead transfers
-the deleted Board's Instances to the selected Board.
-
-Use the direct `color`, `defaultLayer`, and `sortMode` fields when creation
-includes Board preferences. `board.create` also accepts an `instances` array of Source IDs and
-patches when a Board and its configured Instances must be created in one
-atomic import. Use `board.update` when one intent changes Board data
-and Board preferences together. These composite Actions persist once and
-cannot be interleaved with another UI or Agent mutation.
-
-Use `action execute board.getContext --input '{"boardId":"BOARD_ID"}'` when
-starting from a known Board, then `action execute board.listInstances --input
-'{"boardId":"BOARD_ID"}'` for a custom Board. Use `action execute
-instance.list` when the Board is irrelevant. History commands intentionally use
-the opaque ID returned by `history datasets`; they do not resolve extension
-Instance state. Filter dataset discovery by Worker, Source version, Source, or
-provider when selecting a retained execution environment and parameter
-configuration. Even when every Source target field matches, observations from
-different Workers belong to different datasets and are never mixed.
-
-Query Actions return canonical Boards and Instances without a
-parallel CLI-only Board representation. An Instance is returned by exactly one
-Board query because it belongs to one Board. Ordinary Now Layer loads remain
-browser-local and do not create History. Observation times may be Unix
-milliseconds or ISO 8601 values. List `observations` before using exact
-timestamps with `get` or `compare`. Add `--compact` when consuming JSON
-programmatically. History reads require the daemon but not a connected browser.
-Creating new observations requires an active Job and its connected browser
-because Source execution remains browser-owned.
-
-Direct `fetch` requests are useful for endpoint investigation, but they do not verify
-parameter parsing, extension permissions, capability enforcement, secrets, or
-the background runtime.
+History and Board automation are documented in the
+[CLI command reference](../skills/newsnext-cli/references/commands.md) and
+[Application Architecture](APPLICATION_ARCHITECTURE.md). They are separate from
+Source verification: `fetch` inspects an endpoint, while `run` verifies the
+complete loader, parameter, capability, secret, and result-validation contract.
 
 Before submitting:
 

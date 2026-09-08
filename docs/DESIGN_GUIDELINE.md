@@ -14,30 +14,20 @@ like generic overlays.
 
 ### Landing page
 
-The public landing page presents NewsNext as one product made from the browser
-extension and the separately distributed desktop App. Explain their boundary
-and connection directly: the extension owns live Source execution, browser
-sessions, and the human Board surface; the App owns local History, durable data,
-CLI and agent access, and desktop integration.
+The landing page explains the extension's browser-owned Source execution and
+Board UI alongside the separately distributed local companion's History and CLI.
+Use large typography and continuous colored threads converging into the red brand
+horizon. Until real product imagery is available, avoid simulated windows, cards,
+menus, or terminal output. Use one restrained entry sequence and reduced-motion
+support.
 
-Use the public landing page as the expressive side of the NewsNext identity,
-not as a simulation of the product UI. Until real product imagery is ready,
-avoid mock browser windows, desktop windows, LiveCards, menus, and terminal output.
-Build the story from large typography and a continuous "thread" motif using the
-brand red and cream plus the product's blue, purple, green, and amber theme
-families. Treat those secondary colors as distinct live signals that converge
-into the red NewsNext horizon, rather than as a generic grid of decorative
-blocks. Let the composition explain that live browser signals flow into a local
-desktop foundation without pretending the abstract marks are controls.
-Use `apps/extension/public/icon/icon.svg` as the shared product icon. Keep the
-browser manifest raster sizes in `apps/extension/public/icon/`, but render
-themed interface icons as inline SVG and derive every colored layer from
-`currentColor`; do not maintain separate theme-specific raster variants. The
-extension does not use a separate dark icon. Keep the shared SVG compatible with
-standalone image renderers: use an sRGB fallback color and basic opacity layers
-instead of CSS custom properties, `oklch()`, or `color-mix()` inside the asset.
-Keep copy factual about public and separately distributed components. Treat
-motion as one restrained entry sequence and respect reduced-motion preferences.
+Reuse `apps/extension/public/icon/icon.svg`. Interface SVG layers use
+`currentColor`; manifest raster sizes stay in `public/icon/`. Keep the shared SVG
+compatible with standalone renderers through an sRGB fallback and basic opacity,
+without CSS variables, `oklch()`, or `color-mix()` inside the asset. Do not maintain
+a separate dark icon or themed raster variants.
+
+### Shared tokens and surfaces
 
 - Use theme color to communicate context and ownership, not as decoration.
 - Use `#F7F7F7` for the shared light-mode
@@ -105,16 +95,6 @@ geometry with `currentColor` in the shared theme selector. Keep this separate fr
 the head bootstrap and provider composition so favicon work does not delay the
 initial background or depend on board effects.
 
-Give Create Board, Edit Board, and
-Settings the shared height of the smaller of 70% of the viewport and 640px.
-Search uses a fixed `516px` height so its LiveCard preview keeps standard
-dimensions plus its surrounding inset. Settings uses the `2xl` maximum width,
-while the two-pane Search dialog uses `816px`. Create Board and
-Edit Board use `520px` (`max-w-130`), approximately the width of the Settings
-content column. Preserve 16px
-of horizontal viewport space on each side below the `sm` breakpoint. Scroll their
-inner content vertically without scrolling the outer dialog or its header. Keep
-compact confirmation dialogs sized naturally to their content.
 ## LiveCard Surface Language
 
 LiveCards define the primary NewsNext surface treatment.
@@ -233,26 +213,16 @@ available. Keep expanded media flush with its region. When the title needs
 extra space for overlay controls, apply that inset symmetrically without
 changing the surrounding detail column.
 
-Treat footer positioning as independent from article typography. Keep footer
-actions anchored to the surface edge while allowing text-only content to use a
-centered reading column with a comfortable measure and
-clear paragraph spacing. Justify multi-line titles and body copy so Chinese text
-can form a clean right edge while paragraph-ending lines remain natural. Use
-18px titles and 16px body text in media and text-only previews.
-Use medium (500) title weight and regular (400) body weight
-for a restrained hierarchy without enlarging or heavily bolding the title. Give the inline
-content at the footer's left edge a small optical inset to balance the intrinsic
-blank space inside the fixed-size action buttons on the right; do not move the
-right-side controls to compensate.
-Structure that detail column as an independently scrolling title and body
-region plus a fixed footer that repeats the complete, untruncated inline
-presentation alongside the original link. Preserve a fixed header slot above
-the title for its identity. Show an item icon only when its kind is `author`,
-paired with the author name. When the author name exists without an author
-icon, generate an avatar from the name's initial. When neither exists, show the
-LiveCard's shared source icon, including its resolved provider icon, badge, and
-fallback behavior, alongside the instance name. Use an approximately 60/40
-media-to-detail split on wide screens.
+Text-only previews use a centered reading column; footer controls stay anchored
+to the surface edge. Use justified multi-line titles/body with natural final
+lines, 18px/500 titles, and 16px/400 body text. Give the footer's left inline text
+a small optical inset without moving its right-side controls.
+
+The detail column has a fixed identity header, independently scrolling title/body,
+and fixed footer with complete inline presentation and the original link. Show
+an `author` icon with the author name, an initial avatar if only the name exists,
+or the shared Source icon/badge and Instance name otherwise. Wide layouts use
+approximately 60/40 media-to-detail proportions.
 
 Keep shared inline metadata vertically centered in both news items and preview
 footers. Use a fixed 14px alignment box for the compact 12px presentation and a
@@ -330,16 +300,10 @@ Apply the same entrance duration, vertical offset, and stagger to Next Layer
 Widgets whenever Next Layer mounts. Board View owns one entrance lifecycle for
 both Layers: mount the incoming Layer hidden, restore its root scroll position,
 allow visible content and layout work to settle, and then start the entrance.
-Run the same Web Animations keyframes on the Now Layer LiveCard wrapper and Next
-Layer GridStack content wrapper so the entrance does not interfere with
-GridStack positioning. Animate only visible items, derive stagger from visible
-order rather than full-list indexes, and release the animations after the
-sequence finishes so offscreen items do not replay it when scrolled into view.
-Keep Motion layout projection mounted on sortable Now Layer items, but suspend
-its measurements with a stable `layoutDependency` until their entrance finishes.
-Then use the ordered ID array as the dependency for drag reordering. The entrance
-must begin from the restored scroll position without a competing layout
-transition.
+Animate visible items in visible order and release completed entrance animations.
+Keep entrance and layout projection from competing with restored scroll positions;
+implementation constraints belong to the
+[Performance Guideline](PERFORMANCE_GUIDELINE.md#keep-animation-work-above-livecard-content).
 
 Snapshot both the rendered Board and Layer for the duration of an exit. Never
 replace an outgoing Now Layer with the target Board's LiveCards before the exit
@@ -381,9 +345,9 @@ Previous and next board commands wrap across the ordered board list. Keep their
 default arrow bindings active from the page and focused board tabs, while
 preserving directional-key behavior inside other interactive controls.
 Represent the active Board layer in the route and preserve scroll positions by
-Board and layer. Now and Next use separate scroll containers; restore either
-position without scroll animation, and synchronize the Dynamic Island progress
-outline with the active container immediately afterward.
+Board and layer. Now and Next share the root scroll container with separate restoration keys.
+Restore after the incoming view mounts, without scroll animation, and update
+the Dynamic Island progress outline from that container.
 Treat a Board's default layer as its persisted active layer. The layer shortcut
 and Board settings update the same preference; Router history state only mirrors
 it so Now and Next can use separate scroll restoration keys.
@@ -421,17 +385,16 @@ it so Now and Next can use separate scroll restoration keys.
 
 ## Dialog Patterns
 
-Choose the dialog structure from its information architecture rather than
-applying one frame treatment to every modal.
-
-Search, Settings, and single-column task dialogs are not exceptions to a default
-dialog layout. They are distinct compositions for different tasks and content
-relationships, while sharing the same neutral surface language,
-hierarchy, motion, and interaction principles. Structural consistency means
-applying that common foundation coherently, not forcing every dialog into the
-same arrangement.
+Choose Search, Settings, or single-column composition to fit the task. All
+share the modal foundation below.
 
 ### Shared modal foundation
+
+Create Board, Edit Board, and Settings use `min(70vh, 640px)` height; Search
+uses `516px`. Maximum widths are `520px` for Board dialogs, `2xl` for Settings,
+and `816px` for Search. Preserve 16px horizontal viewport margins below `sm`.
+Scroll inner content, keeping the shell and header fixed. Confirmations fit
+content naturally.
 
 All modal-style UI, including task dialogs and command dialogs, must reuse the
 shared modal components instead of defining local backdrop values or motion.
@@ -494,17 +457,9 @@ reset it after three seconds without confirmation.
 
 ### Single-column dialogs
 
-Single-column dialogs related to boards use the shared neutral modal surfaces.
-They must have:
+Board forms use the shared modal shell and a transparent `2xl` content scroller.
+Use subtle section Cards directly on that scroller, plus:
 
-- An outer `3xl` squircle with an opaque `bg-background` base and the shared
-  `zenith-theme-400/60` wash.
-- `10px` (`p-2.5`) of outer padding on every side, leaving a visible neutral
-  shell around the nested content.
-- A compact top shell area containing the dialog title for task-oriented forms.
-- A nested `2xl` content scroller, transparent in both appearances.
-  Keep the section Card backgrounds on `bg-white/60`
-  in light mode instead of stacking another white or gray surface beneath them.
 - Content padding of `24px` (`p-6`).
 - A consistent vertical rhythm: `24px` between form sections and `8px`
   between a section title or field label and its control. Use `ConfigSection`
@@ -531,11 +486,7 @@ NewsNext must always retain at least one. `Delete with LiveCards` removes
 LiveCards owned by that Board. `Transfer and Delete` requires a target
 Board and merges the deleted Board's LiveCards into it. Default layer uses a
 compact segmented `Now` / `Next` control and determines which Board view opens
-by default. In particular, do not
-add the following descriptions back to this dialog:
-
-- `Personalize this board and choose how its LiveCards are arranged.`
-- `Group LiveCards around a topic, project, or reading routine.`
+by default.
 
 ### LiveCard Board ownership
 
@@ -718,44 +669,22 @@ remains scoped to each LiveCard and its primary action.
 
 ## Component previews
 
-Organize Cosmos as a component catalog with three clear levels: `Basics` for
-reusable UI primitives, `Patterns` for NewsNext-specific compositions, and
-`LiveCards` for complete LiveCard states. Business dialogs and full LiveCards
-must not appear in Basics when only one of their underlying controls is
-being documented.
+Cosmos has three shallow catalog levels: `Basics` for primitives, `Patterns` for
+product compositions, and `LiveCards` for complete states. Group Basics by
+foundation, actions, forms, feedback, surfaces, navigation, overlays, and shapes;
+Patterns by theme, Dynamic Island, notifications, and dialogs. Register each
+fixture once and prefer real product examples over redundant implementation demos.
 
-Keep the catalog navigation task-oriented and shallow. Group Basics by
-foundation, actions, forms, feedback, surfaces, navigation, overlays, and
-shapes. Group Patterns by theme, Dynamic Island, notifications, and dialogs.
-Do not register the same fixture in multiple catalog locations, and remove
-generic implementation demos when an existing component or LiveCard specimen
-already demonstrates the behavior in its real product context.
+Basics specimens use a category label, title, one-sentence usage description,
+neutral canvas, and quiet bordered sections. Monospace state labels compare only
+meaningful states. Keep one Typography fixture for the actual reading hierarchy
+and one Colors fixture for semantic pairs and provider scales.
 
-Use the shared Cosmos specimen layout for Basics pages: a category label,
-component title, one-sentence usage description, and quiet bordered specimen
-sections. Use monospace state labels only when comparing meaningful states
-such as hierarchy, size, invalid, or disabled. Keep the catalog canvas neutral
-and let the rendered component carry the visual emphasis.
-
-Keep a Typography fixture in Basics that covers the actual NewsNext hierarchy:
-display and section headings, feed titles, reading text, metadata, links, labels,
-tabular numbers, and code identifiers. Use representative product content so
-the specimen validates reading rhythm rather than isolated font sizes.
-
-Keep a single Colors fixture in Basics as the palette reference. Group all
-semantic surface and foreground pairs, supporting control colors, and every
-provider theme scale there. Component fixtures may still demonstrate their
-color-dependent states, but must not become competing palette references.
-
-Give Buttons and Badges separate Basics fixtures. The Buttons reference covers
-every public variant and size once, then demonstrates supported states, icon
-placement, provider theme tone, and render-prop composition without expanding
-them into a redundant matrix of every possible combination. Keep the actual
-LiveCard button families together in a provider-scoped specimen: header icon
-controls, compact edit actions, parameter choices, and source-state actions.
-Show those controls without moving a complete LiveCard into Basics. Preserve
-their intrinsic content width in the catalog and cap them at the specimen width;
-grid-based fixture containers must not stretch buttons into full-width actions.
+Buttons and Badges have separate fixtures. Show each public variant/size once,
+then meaningful states, icon placement, provider tone, and render-prop composition.
+Keep LiveCard header, edit, parameter, and state actions together in a provider-
+scoped specimen without moving a full card into Basics. Buttons retain intrinsic
+width, capped by the specimen; grids must not stretch them.
 
 Keep shared Button variants limited to reusable visual hierarchy. Contextual
 treatments are compositions: LiveCard header icons use `LiveCardHeaderActionButton`,
@@ -852,22 +781,6 @@ otherwise return the island to its collapsed state.
 - Preserve a visible keyboard focus treatment and honor reduced-motion
   preferences.
 
-## Desktop Tray Menu
-
-Keep the desktop tray menu task-first and compact. Settings is the first action
-and opens the NewsNext App settings window. Connection status is non-interactive
-supporting information, and Quit NewsNext remains the final action separated
-from status. Browser integration is managed from the App settings window rather
-than the tray menu.
-
-Expose Open at Login as the same checked setting in the App settings window
-and tray menu. Either control updates the system login item and immediately
-synchronizes the other control. When enabled, launch the App at login as a
-silent menu bar service without showing the settings window or Dock icon.
-Showing Settings adds the App to the Dock while the window is open; closing the
-window hides it and removes the Dock icon without stopping the menu bar service
-or daemon.
-
 ## Implementation Checklist
 
 When changing interface styling:
@@ -876,14 +789,14 @@ When changing interface styling:
    the intended treatment.
 2. Keep theme variables and shared Tailwind utilities intact instead of using
    isolated literal colors.
-3. Verify hierarchy, squircle clipping, padding, close-button alignment, focus
+3. Verify hierarchy, squircle clipping, padding, dismissal behavior, focus
    states, and both light and dark themes.
-4. Use ego-lite to inspect extension UI changes at
-   `chrome-extension://blkhpdbooolmhamhbpnfinmfghginnbh/app.html`.
+4. Follow the browser inspection policy in `../AGENTS.md`; use ego-lite only
+   when explicitly requested.
 5. Update this document when the change creates, removes, or revises a durable
    design rule.
 
-### Stream diagnostics
+## Stream diagnostics
 
 Use **Streams** for continuously collected data, **Collection interval** and
 **Next collection** for scheduling, and **Observations** for retained fetch

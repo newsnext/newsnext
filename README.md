@@ -8,7 +8,15 @@ of this repository.
 
 ## Documentation
 
-- [Product requirements](docs/PRD.md)
+- [Product requirements and current baseline](docs/PRD.md)
+- [Application architecture](docs/APPLICATION_ARCHITECTURE.md)
 - [Source authoring guide](docs/SOURCE_GUIDELINE.md)
 - [Source architecture](docs/SOURCE_ARCHITECTURE.md)
-- [Application architecture](docs/APPLICATION_ARCHITECTURE.md)
+- [Proposed data stream processing](docs/DATA_STREAM_ARCHITECTURE.md)
+- [Design guideline](docs/DESIGN_GUIDELINE.md)
+- [Performance guideline](docs/PERFORMANCE_GUIDELINE.md)
+- [CLI command reference](skills/newsnext-cli/references/commands.md)
+
+Historical references: [Source request research](docs/SOURCE_REQUESTS.md) and
+[Chrome Web Store review](docs/CHROME_WEB_STORE_READINESS.md). Their dated findings
+are not current implementation or release status.

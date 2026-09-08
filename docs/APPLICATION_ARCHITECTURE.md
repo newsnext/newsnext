@@ -65,6 +65,7 @@ interface Instance {
   instanceId: string
   patch: InstancePatch
   sourceId: string
+  workerId: string
 }
 ```
 
@@ -91,6 +92,9 @@ interface Board {
   defaultLayer: "now" | "next"
   nowLayer: {
     sort: NowLayerSort
+  }
+  nextLayer: {
+    widgets: NextLayerWidget[]
   }
 }
 ```
@@ -145,34 +149,12 @@ An Instance is durable application data. A registry descriptor is only the
 currently available executable definition of its Source. Removing a Source
 from a new registry must not remove, hide, or reorder its Instances.
 
-Every successful Source load returns both content and a serializable Source
-presentation snapshot:
-
-```ts
-interface SourceLoadResult {
-  items: NewsItem[]
-  inlinePresentation?: string[]
-  metadata?: SourcePresentationMetadata // dynamic Loader metadata
-  source: {
-    id: string
-    version: number
-    provider: SourceProvider
-    metadata: SourcePresentationMetadata // static Source metadata
-    params?: SourceParamSchemaMap
-    capabilities: SourceCapabilities
-  }
-}
-```
-
-The daemon holds the session's canonical Workspace, including complete Instance
-configuration and portable Settings, without storing it in the database. Each
-browser persists a local copy. The daemon derives Instance routing directly
-from each Instance's persisted `workerId`. The owning Loader
-persists protection-cache responses by Source request identity. Before rendering,
-the App restores results through the opaque Instance router: local bindings use
-the current background directly and other bindings relay through the daemon.
-The viewing browser never persists the relayed result. Dynamic Loader metadata
-remains part of each refreshed result and may change normally.
+Successful loads include items and a serializable Source presentation snapshot.
+The owning Worker's protected Loader persists the result by Source ID, version,
+and normalized parameters. The App restores it through opaque Instance routing:
+local reads go directly to the background; remote reads relay through the daemon.
+The viewing browser does not persist another Worker's result. See
+[Source request lifecycle](SOURCE_ARCHITECTURE.md#source-request-lifecycle).
 
 NowLayer resolves a card in this order:
 
@@ -192,17 +174,33 @@ and presentation continuity; neither owns membership. Clearing them may reduce
 an unavailable card to the generic presentation, but cannot remove the Instance
 from Application Data.
 
-## Layers
+## Layers and Widgets
 
-NowLayer and NextLayer are two views of one Board. They are not separate data
-containers.
+NowLayer and NextLayer are views of one Board. `defaultLayer` persists the active
+preference; switching views does not change membership or trigger collection.
+Both share the root scroll container with restoration keyed by Board and Layer.
 
-- NowLayer owns interactive LiveCards, Source queries, cached current results,
-  and its ordering preferences.
-- NextLayer reads future persisted outputs produced by daemon- and CLI-owned
-  processing. It does not subscribe to NowLayer React query state.
-- `defaultLayer` selects which layer opens; switching layers does not change
-  Board membership, Instances, Query cache, or History.
+NowLayer owns LiveCards and Instance-scoped queries. NextLayer owns the Board's
+`nextLayer.widgets`: each entry has `widgetId`, grid `layout` (`x`, `y`, `width`,
+`height`), and `dataScope` (the whole Board or selected `instanceIds`). GridStack
+is a presentation adapter, not the persistence model.
+
+Local Widget files and `widget.json` live in the CLI's Widget directory. The
+manifest declares named data queries and a refresh policy. The daemon reconciles
+managed Jobs from the authenticated Board projection, collects through the bound
+Workers, and persists revisioned Snapshots in Turso. A Snapshot atomically stores
+all query results, manifest/scope fingerprints, and a refresh timestamp.
+
+The host reads one Snapshot over Native Messaging for its Board, Widget, and
+resolved Instance scope. It owns title, layout, refresh, and error state. The
+sandboxed iframe announces readiness and renders the supplied data; it cannot
+select Instances, execute Sources, or request refresh. The host refresh button
+rereads the saved Snapshot. The loopback server serves only assets and presentation
+metadata, not Widget data. NextLayer does not observe NowLayer's query cache.
+
+Generic transformation graphs, transitive provenance, replay, and a complete
+Widget preview/maintenance workflow remain target scope in the [PRD](PRD.md) and
+[Data Stream Architecture](DATA_STREAM_ARCHITECTURE.md).
 
 ## Action Registry
 
@@ -271,22 +269,9 @@ bounded connection timeout rejects all pending connection waiters.
 
 ### Mutations
 
-Persistent writes enter one typed execution boundary. Current canonical names
-are:
-
-```text
-instance.create
-instance.configure
-instance.delete
-instance.move
-instance.resetParams
-
-board.create
-board.delete
-board.update
-
-nowLayer.setManualOrder
-```
+Persistent writes enter one typed execution boundary. Discover the complete
+catalog with `action list`; definitions live in
+`apps/extension/src/lib/background/application-actions.ts`.
 
 `board.create` and `board.update` accept Board fields directly, including
 `color`, `defaultLayer`, and `sortMode`. Bulk creation may include configured
@@ -301,24 +286,17 @@ Board requires exactly one policy: delete its Instances, or transfer them to
 another Board.
 
 `nowLayer.setManualOrder` requires every Board Instance exactly once and
-selects manual mode atomically.
+selects manual mode atomically. NextLayer mutations install/remove Widgets,
+change their data scope, and save layouts through `nextLayer.installWidget`,
+`nextLayer.removeWidget`, `nextLayer.setWidgetDataScope`, and
+`nextLayer.setWidgetLayouts`.
 
 ### Queries
 
-Canonical data and presentation-context queries are:
+Source discovery, Board context, and Instance queries include:
 
-```text
-source.get
-source.list
-instance.get
-instance.list
-board.get
-board.list
-board.listInstances
-board.getContext
-board.getConfiguration
-nowLayer.getLiveCards
-```
+`source.get/list`, `instance.get/list`, `board.get/list/listInstances`,
+`board.getContext`, and `board.getConfiguration`.
 
 `nowLayer.getLiveCards` returns every logical card in the requested Board in
 Board membership order. It does not filter against the current registry
@@ -327,30 +305,11 @@ state, not an Instance-existence condition.
 
 ### Commands
 
-The connected-browser catalog currently exposes:
-
-```text
-developer.fetch
-developer.runSource
-source.load
-```
-
-`developer.fetch` performs a one-shot browser-owned HTTP request for Source
-authoring. `source.load` loads a registered Source through the shared
-one-minute third-party API protection for background Jobs. The latest successful
-result is persisted so protected requests can reuse it without calling the
-third-party API again. `developer.runSource` executes a registered or supplied Source
-outside that protected path for authoring and debugging. It returns
-raw request and response diagnostics only when debug output is explicitly
-enabled. Commands may
-depend on browser permissions, credentials, network state, timeouts, or
-cancellation and are not presented as deterministic Application Data changes.
-
-Native Messaging framing follows Chromium's directional limits: messages from
-the extension to the Native Host may be up to 64 MiB, while messages from the
-Native Host to the extension remain limited to 1 MiB. The Native Host
-transparently splits larger protocol messages into bounded UTF-8 chunks, and the
-extension validates and reassembles them with a 64 MiB aggregate limit.
+Browser-dependent operations include `developer.fetch`, `developer.runSource`,
+and `source.load`. Developer operations investigate endpoints or validate Sources;
+normal loads share the protected Loader. Debug request/response capture is opt-in.
+See [CLI execution](SOURCE_ARCHITECTURE.md#cli-execution) for transport, permission,
+and protocol boundaries. Use the live catalog for audience availability.
 
 ## Adapter Rules
 
@@ -371,37 +330,13 @@ extension validates and reassembles them with a 64 MiB aggregate limit.
   results remain browser-owned. Durable History and daemon lifecycle remain
   App-owned.
 
-These boundaries keep card existence stable even when executable Source
-availability changes independently across registry releases.
+## Stream inspection
 
+The Devtool joins scheduler stream IDs to Workspace Instances for names and
+parameter overrides; absent Instances and unknown observation counts remain
+explicit. Counts represent retained fetch snapshots, including unchanged results,
+with dataset/timestamp replays deduplicated.
 
-### Stream inspection in the NewsNext Devtool
-
-Overview leads with retained observations across currently scheduled streams,
-attention count, and streams waiting for their first data. Shared streams count
-once, not once per Instance; unknown counts remain explicit. Each observation is
-one retained fetch snapshot, including unchanged content. Replays at the same
-fetchedAt do not increment it.
-
-Overview and Streams share row presentation, selection, search, and sort preference.
-Default ordering uses Source ID, Worker ID, then Stream ID; collection results do
-not reorder rows. Explicit **Attention first** groups offline, backoff, or recorded
-errors first. Quiet content and due work alone do not imply failure.
-
-Stream identity joins every associated Instance to the application snapshot and
-shows its name and parameter overrides. Search includes parameter keys and values.
-Missing Instances are reported as unavailable. Overrides are never presented as
-resolved Source defaults. Instance details reuse the same collection metrics.
-
-Primary details show observation count, latest successful collection and content
-change, latest item changes, collection interval, and next attempt or retry.
-Policy parameters, full identifiers, sharing metadata, and raw configuration use
-collapsed disclosures. Model estimates are not measured freshness guarantees.
-Current activity determines whether collection is running, offline, or due;
-future deadlines and recorded events use absolute timestamps.
-
-The development-only diagnostics service subscribes while panels are open. Multiple
-panels share one native subscription, the last close unsubscribes, and native
-reconnection restores subscriptions. Scheduler/history events update cached state
-without interval polling. Unsupported daemons and storage failures remain visible;
-normal list chrome omits persistent status or sorting explanations.
+Presentation belongs to [Design Guideline](DESIGN_GUIDELINE.md#stream-diagnostics),
+the wire contract to [Source Architecture](SOURCE_ARCHITECTURE.md#stream-collection-diagnostics),
+and subscription performance to [Performance Guideline](PERFORMANCE_GUIDELINE.md#development-diagnostics-subscriptions).
