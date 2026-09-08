@@ -12,22 +12,23 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "NewsNext — Follow now. Understand next." },
+      { title: "NewsNext — What’s next is happening now" },
       {
         name: "description",
         content: "NewsNext pairs a browser extension with a local desktop App for live Sources, durable History, and agent-ready context.",
       },
-      { name: "theme-color", content: "#e5e5e5" },
+      { name: "theme-color", content: "#f7f7f7", media: "(prefers-color-scheme: light)" },
+      { name: "theme-color", content: "#171717", media: "(prefers-color-scheme: dark)" },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://newsnext.app/" },
       { property: "og:site_name", content: "NewsNext" },
-      { property: "og:title", content: "Follow now. Understand next." },
+      { property: "og:title", content: "What’s next is happening now" },
       {
         property: "og:description",
         content: "A browser extension for live Sources and a local desktop App for durable context.",
       },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:title", content: "NewsNext" },
+      { name: "twitter:title", content: "NewsNext — What’s next is happening now" },
       {
         name: "twitter:description",
         content: "Browser-native Sources, local History, and one model for you and your agents.",
@@ -36,7 +37,6 @@ export const Route = createRootRoute({
     links: [
       { rel: "stylesheet", href: appCss },
       { rel: "icon", type: "image/svg+xml", href: iconUrl },
-      { rel: "canonical", href: "https://newsnext.app/" },
     ],
   }),
   notFoundComponent: NotFound,
@@ -45,12 +45,14 @@ export const Route = createRootRoute({
 
 function NotFound() {
   return (
-    <main className="not-found">
-      <img src={iconUrl} alt="" width="52" height="52" />
-      <p className="eyebrow">404 · Signal lost</p>
-      <h1>This page moved beyond the board.</h1>
-      <Link to="/" className="button button-primary">Return home</Link>
-    </main>
+    <div className="site-shell">
+      <main className="intro">
+        <img src={iconUrl} alt="NewsNext" width="40" height="40" />
+        <h1>Page not found.</h1>
+        <p className="description">The page you are looking for does not exist.</p>
+        <Link to="/" className="primary-action">Return home</Link>
+      </main>
+    </div>
   )
 }
 

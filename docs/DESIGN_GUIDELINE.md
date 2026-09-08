@@ -14,12 +14,29 @@ like generic overlays.
 
 ### Landing page
 
-The landing page explains the extension's browser-owned Source execution and
-Board UI alongside the separately distributed local companion's History and CLI.
-Use large typography and continuous colored threads converging into the red brand
-horizon. Until real product imagery is available, avoid simulated windows, cards,
-menus, or terminal output. Use one restrained entry sequence and reduced-motion
-support.
+Keep the landing page to one centered product introduction with an Apple-inspired
+emphasis on the app icon, confident typography, and generous whitespace. Stack a
+96–128px app icon and the shared wordmark above a balanced two-line slogan. Use
+consistent semibold weight and high-contrast neutral text for both slogan lines;
+keep supporting copy softer and constrained to roughly two lines. Use a simple
+solid neutral GitHub pill, without glass layers or decorative highlights.
+Give the icon one restrained neutral shadow following its actual SVG silhouette.
+Use optical centering with more space below the introduction, and let short
+viewports scroll naturally. Keep the footer centered on one line with the product
+name and supporting links; omit a separate brand header and footer divider.
+Adapt text, buttons, and shadows to dark mode and honor reduced motion.
+Use the extension's current gradient SVG icon, generous whitespace, and the same
+light/dark neutral background and foreground tokens. Reuse `zenith-theme-400/60`
+for the soft red light from above and `page-background.css` for the faint masked
+grid below. Keep this background fixed to the viewport on long supporting pages.
+Keep the footer quiet and
+allow the content to scroll on short screens. Omit decorative illustrations,
+animation, feature sections, and repeated calls to action. The 404 page shares
+the same layout and action treatment.
+
+Keep Privacy and Support links in the shared landing footer. Supporting pages
+use a narrow reading column, plain section headings, a home link, and the same
+appearance tokens. Give each page its own title, description, and canonical URL.
 
 Reuse `apps/extension/public/icon/icon.svg`. Interface SVG layers use
 `currentColor`; manifest raster sizes stay in `public/icon/`. Keep the shared SVG

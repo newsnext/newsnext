@@ -1,0 +1,49 @@
+@utility zenith-* {
+  --zenith-opacity: --modifier(integer, --default(100));
+  background-image: radial-gradient(
+    ellipse 120% 95% at 50% -25%,
+    --alpha(--value(--color-*) / calc(var(--zenith-opacity) * 0.24%)) 0%,
+    --alpha(--value(--color-*) / calc(var(--zenith-opacity) * 0.14%)) 38%,
+    --alpha(--value(--color-*) / calc(var(--zenith-opacity) * 0.05%)) 64%,
+    transparent 88%
+  );
+  background-repeat: no-repeat;
+  background-size: 100% 115%;
+}
+
+@layer components {
+  body,
+  .grid-texture-background {
+    position: relative;
+    background-color: var(--background);
+  }
+
+  body::before,
+  .grid-texture-background::before {
+    content: "";
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background-image:
+      linear-gradient(to right, var(--background-grid-line) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--background-grid-line) 1px, transparent 1px);
+    background-size: 24px 32px;
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 100%, var(--color-black) 60%, transparent 100%);
+  }
+
+  body::before {
+    position: fixed;
+  }
+
+  body > *,
+  .grid-texture-background > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .grid-texture-background {
+    isolation: isolate;
+  }
+
+}
