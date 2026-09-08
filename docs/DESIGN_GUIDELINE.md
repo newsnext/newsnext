@@ -757,6 +757,11 @@ browser should skip clipping, such as surfaces with their own outset shadows,
 filters, or complex compositing. Native `corner-shape` remains the first choice
 when available.
 
+Native integration settings distinguish connection attempts, an unavailable service,
+and daemon startup failure. Show the concrete connection error inline with alert
+semantics and wrapping for long paths. Retain the latest error during automatic
+retries; clear it after a successful connection or when integration is disabled.
+
 Use the header Dynamic Island for non-blocking notifications that report an
 outcome and require no decision, such as an OPML import failure. The
 notification temporarily takes priority over the island's usual content and

@@ -106,6 +106,7 @@ const NativeIntegrationStatusResult = Type.Unsafe<NativeIntegrationStatus>(Type.
     "hostNotInstalled",
     "protocolIncompatible",
     "serviceNotRunning",
+    "daemonStartFailed",
     "workerConflict",
   ] as const),
   workerId: Identifier,

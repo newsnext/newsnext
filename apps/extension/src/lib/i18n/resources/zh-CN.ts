@@ -112,6 +112,7 @@ export const zhCN = {
   installNativeHost: "使用以下命令注册浏览器连接：",
   nativeHostNotInstalled: "尚未安装",
   protocolIncompatibleDescription: "扩展与本地服务的协议不兼容，请更新 NewsNext CLI 和扩展。",
+  daemonStartFailed: "Service startup failed",
   serviceNotRunning: "服务未运行",
   updateRequired: "需要更新",
   enableNativeIntegration: "启用 NewsNext 应用集成",

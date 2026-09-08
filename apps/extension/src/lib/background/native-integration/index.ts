@@ -248,6 +248,7 @@ function clearReconnectBackoff(): void {
 function isRetryableConnectionState(): boolean {
   return runtime.connectionState === "hostNotInstalled"
     || runtime.connectionState === "serviceNotRunning"
+    || runtime.connectionState === "daemonStartFailed"
 }
 
 function scheduleReconnect(): void {
@@ -284,6 +285,7 @@ function createConnectionError(
     hostNotInstalled: "HOST_MISSING",
     protocolIncompatible: "PROTOCOL_INCOMPATIBLE",
     serviceNotRunning: "NATIVE_HOST_DISCONNECTED",
+    daemonStartFailed: "DAEMON_START_FAILED",
     workerConflict: "WORKER_ALREADY_CONNECTED",
   }[state]
   return { code: normalizedCode, message }
@@ -320,7 +322,6 @@ function connect(): void {
   if (!runtime.enabled || runtime.port) return
 
   runtime.connectionState = "connecting"
-  runtime.connectionError = undefined
   runtime.daemonVersion = undefined
   runtime.capabilities = []
   runtime.widgetServerOrigin = undefined
@@ -354,16 +355,13 @@ function connect(): void {
 function handleDisconnect(connection: NativePort): void {
   if (runtime.port !== connection) return
   const errorMessage = runtimeLastErrorMessage()
-  const state = runtime.connectionState === "daemonOutdated"
-    || runtime.connectionState === "protocolIncompatible"
-    || runtime.connectionState === "workerConflict"
-    ? runtime.connectionState
-    : classifyNativeIntegrationFailure(errorMessage, runtime.connectionError?.code)
+  const state = classifyNativeIntegrationFailure(
+    runtime.connectionError?.message ?? errorMessage,
+    runtime.connectionError?.code,
+  )
   resetConnectionState(
     state,
-    errorMessage
-      ? createConnectionError(state, errorMessage, runtime.connectionError?.code)
-      : runtime.connectionError,
+    runtime.connectionError ?? createConnectionError(state, errorMessage),
   )
   if (isRetryableConnectionState()) scheduleReconnect()
 }
@@ -397,6 +395,7 @@ function handleMessage(connection: NativePort, value: unknown): void {
       runtime.offlineWorkers = message.offlineWorkers
       runtime.widgetServerOrigin = message.widgetServerUrl
       runtime.connectionState = "connected"
+      runtime.connectionError = undefined
       sendCollectionSubscription()
       notifyDiagnostics()
       resolvePendingConnectionRequests(connection)

@@ -46,7 +46,7 @@ describe("native integration connection", () => {
     ["PROTOCOL_INCOMPATIBLE", "protocolIncompatible"],
     ["WORKER_ALREADY_CONNECTED", "workerConflict"],
     ["DAEMON_OUTDATED", "daemonOutdated"],
-    ["DAEMON_START_FAILED", "serviceNotRunning"],
+    ["DAEMON_START_FAILED", "daemonStartFailed"],
   ] as const)("prefers structured error code %s", (code, expected) => {
     const message = "unclassified message"
     expect(classifyNativeIntegrationFailure(message, code)).toBe(expected)

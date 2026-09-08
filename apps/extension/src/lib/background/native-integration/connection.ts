@@ -7,6 +7,7 @@ export type NativeIntegrationFailureState
     | "hostNotInstalled"
     | "protocolIncompatible"
     | "serviceNotRunning"
+    | "daemonStartFailed"
     | "workerConflict"
 
 export function classifyNativeIntegrationFailure(
@@ -14,6 +15,7 @@ export function classifyNativeIntegrationFailure(
   code?: string,
 ): NativeIntegrationFailureState {
   switch (code?.toUpperCase()) {
+    case "DAEMON_START_FAILED": return "daemonStartFailed"
     case "DAEMON_OUTDATED": return "daemonOutdated"
     case "HOST_MISSING": return "hostNotInstalled"
     case "PROTOCOL_INCOMPATIBLE":

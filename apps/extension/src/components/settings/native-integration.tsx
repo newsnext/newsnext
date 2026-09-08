@@ -30,6 +30,7 @@ const STATUS_PRESENTATION: Record<NativeIntegrationStatus["state"], StatusPresen
   daemonOutdated: { dotClassName: "bg-destructive", labelKey: "updateRequired" },
   hostNotInstalled: { dotClassName: "bg-destructive", labelKey: "nativeHostNotInstalled" },
   protocolIncompatible: { dotClassName: "bg-destructive", labelKey: "updateRequired" },
+  daemonStartFailed: { dotClassName: "bg-destructive", labelKey: "daemonStartFailed" },
   serviceNotRunning: { dotClassName: "bg-destructive", labelKey: "serviceNotRunning" },
   workerConflict: { dotClassName: "bg-destructive", labelKey: "workerInUse" },
 }
@@ -49,8 +50,8 @@ export function NativeIntegrationSettings(): React.JSX.Element {
   )
   const state = status?.state
   const isEnabled = state !== undefined && state !== "disabled"
-  const hasConnectionFailure = state !== undefined
-    && !["disabled", "connected", "connecting"].includes(state)
+  const hasConnectionGuidance = state !== undefined
+    && ["workerConflict", "hostNotInstalled", "protocolIncompatible", "daemonOutdated", "serviceNotRunning"].includes(state)
   const presentation = state ? STATUS_PRESENTATION[state] : CHECKING_PRESENTATION
 
   const refreshStatus = useCallback(async (): Promise<void> => {
@@ -168,6 +169,12 @@ export function NativeIntegrationSettings(): React.JSX.Element {
           />
         </div>
 
+        {isEnabled && status?.connectionError && (
+          <p role="alert" className="whitespace-pre-wrap wrap-anywhere text-xs leading-5 text-destructive">
+            {status.connectionError.message}
+          </p>
+        )}
+
         {status && isEnabled && (
           <div className="flex items-center justify-between gap-4 border-t pt-3">
             <div className="min-w-0">
@@ -205,7 +212,7 @@ export function NativeIntegrationSettings(): React.JSX.Element {
           </div>
         )}
 
-        {hasConnectionFailure && (
+        {hasConnectionGuidance && (
           <div className="space-y-3 border-t pt-3">
             <p
               role="alert"

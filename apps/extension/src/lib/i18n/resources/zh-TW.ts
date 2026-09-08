@@ -112,6 +112,7 @@ export const zhTW = {
   installNativeHost: "使用以下命令註冊瀏覽器連線：",
   nativeHostNotInstalled: "尚未安裝",
   protocolIncompatibleDescription: "擴充功能與本機服務的協定不相容，請更新 NewsNext CLI 和擴充功能。",
+  daemonStartFailed: "Service startup failed",
   serviceNotRunning: "服務未執行",
   updateRequired: "需要更新",
   enableNativeIntegration: "啟用 NewsNext 應用程式整合",

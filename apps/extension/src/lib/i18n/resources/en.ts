@@ -108,6 +108,7 @@ export const en = {
   installNativeHost: "Register the browser connection with",
   nativeHostNotInstalled: "Not installed",
   protocolIncompatibleDescription: "The extension and local service use incompatible protocols. Update NewsNext CLI and the extension.",
+  daemonStartFailed: "Service startup failed",
   serviceNotRunning: "Service not running",
   updateRequired: "Update required",
   enableNativeIntegration: "Enable NewsNext App integration",
