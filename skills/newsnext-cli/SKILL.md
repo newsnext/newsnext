@@ -17,6 +17,8 @@ Honor a repository's `AGENTS.md` when it selects another environment. Environmen
 
 Read [references/commands.md](references/commands.md) before answering a command-usage question or operating the CLI. Use `newsnext <command> --help` to confirm details if the installed version may differ from the reference.
 
+Use `@newsnext/sdk` for structured history analysis, full snapshot exports and canonical Actions. Read [references/sdk.md](references/sdk.md) before using the SDK. Do not repeatedly spawn the CLI once per history observation.
+
 Read [references/source-authoring.md](references/source-authoring.md) before investigating, creating, changing, or testing a Source. It defines the required browser-led discovery order, JSON-first implementation policy, existing-source references, and `fetch`/`run` verification loop.
 
 Keep authorization boundaries intact. Commands such as `job remove`, `stop`, and `install-native-host` mutate state; explaining them does not authorize running them.

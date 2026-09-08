@@ -138,6 +138,21 @@
         "vitest": "catalog:",
       },
     },
+    "packages/sdk": {
+      "name": "@newsnext/sdk",
+      "version": "1.0.0-beta.3",
+      "devDependencies": {
+        "@newsnext/tsconfigs": "workspace:*",
+        "@types/node": "catalog:",
+        "vitest": "catalog:",
+      },
+      "peerDependencies": {
+        "@newsnext/cli": "1.0.0-beta.3",
+      },
+      "optionalPeers": [
+        "@newsnext/cli",
+      ],
+    },
     "packages/shared": {
       "name": "@newsnext/shared",
       "devDependencies": {
@@ -543,6 +558,8 @@
     "@newsnext/landing": ["@newsnext/landing@workspace:apps/landing"],
 
     "@newsnext/registry": ["@newsnext/registry@workspace:registry"],
+
+    "@newsnext/sdk": ["@newsnext/sdk@workspace:packages/sdk"],
 
     "@newsnext/shared": ["@newsnext/shared@workspace:packages/shared"],
 

@@ -1,0 +1,15 @@
+{
+  "name": "@newsnext/sdk",
+  "type": "module",
+  "version": "1.0.0-beta.3",
+  "description": "Typed programmatic access to the NewsNext CLI",
+  "license": "MPL-2.0",
+  "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } },
+  "files": ["dist"],
+  "engines": { "node": ">=22" },
+  "publishConfig": { "access": "public" },
+  "scripts": { "build": "tsc -p tsconfig.build.json", "typecheck": "tsc --noEmit", "prepack": "bun run build" },
+  "peerDependencies": { "@newsnext/cli": "1.0.0-beta.3" },
+  "peerDependenciesMeta": { "@newsnext/cli": { "optional": true } },
+  "devDependencies": { "@newsnext/tsconfigs": "workspace:*", "@types/node": "catalog:", "vitest": "catalog:" }
+}

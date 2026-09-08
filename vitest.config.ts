@@ -41,6 +41,7 @@ export default defineConfig({
       "registry/**/*.{test,spec}.{ts,tsx}",
       "packages/shared/**/*.{test,spec}.{ts,tsx}",
       "packages/source-kit/**/*.{test,spec}.{ts,tsx}",
+      "packages/sdk/**/*.{test,spec}.{ts,tsx}",
       "packages/ui/**/*.{test,spec}.{ts,tsx}",
     ],
     exclude: [

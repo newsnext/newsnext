@@ -294,7 +294,12 @@ A dataset is the unique tuple of execution Worker ID, Source ID, Source version,
 and canonical normalized parameter JSON. Worker ID is explicit because the
 daemon combines observations from browser Loaders with different credentials,
 permissions, and network environments. Each new dataset receives an opaque 16-character alphanumeric Nano ID
-exposed by `history datasets` and used by the other history commands.
+exposed by `client.history.datasets()` in `@newsnext/sdk` and used by the other
+SDK history methods. The SDK invokes the CLI through a versioned JSONL transport;
+it does not open the database or import the private Rust implementation.
+`history.export()` uses one CLI process, reconstructs complete observations through
+the daemon, and pins an upper timestamp for ascending traversal. This is not a
+transactional snapshot: backfilled observations can still affect an earlier interval.
 
 Worker ID is the isolation boundary for all Source results, not only
 account-scoped Sources. Each Worker owns its browser credentials, Loader cache,

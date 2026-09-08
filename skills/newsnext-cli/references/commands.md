@@ -6,7 +6,7 @@ The examples below show `newsnext` directly. Prefix them with the environment se
 
 - `newsnext --help` lists public commands; `newsnext --version` prints the installed version.
 - Commands that contact a browser Worker require the daemon and browser extension to be connected. Start with `newsnext status` and use `newsnext doctor` when connectivity fails.
-- `--worker <WORKER>` accepts a connected Worker ID prefix. Without it, the CLI prompts when needed. Use it for deterministic or non-interactive operation.
+- `--worker <WORKER>` accepts a connected Worker ID prefix. Without it, a single connected Worker is selected automatically; multiple Workers prompt in a terminal and require an explicit selector in scripts. Use it for deterministic or non-interactive operation.
 - `--timeout <SECONDS>` defaults to `60` and must be greater than `0` and no more than `600`.
 - `--compact` emits JSON on one line. Without it, JSON output is pretty-printed.
 - Shell-quote JSON values, headers, URLs containing shell metacharacters, and source parameters.
@@ -179,86 +179,15 @@ newsnext job remove <ID>
 
 Use the ID returned by `job add` or `job list` for pause, resume, and remove.
 
-## Canonical actions
+## TypeScript SDK
 
-### `action list`
+Complex structured operations are exposed through `@newsnext/sdk`, not terminal
+subcommands. Use the SDK for history queries, streaming exports and canonical
+Actions. The former `history` and `action` CLI commands have been removed.
+See [sdk.md](sdk.md) for installation, development configuration and examples.
 
-List available Actions and their input schemas for a connected Worker:
-
-```sh
-newsnext action list [--worker <WORKER>] [--timeout <SECONDS>] [--compact]
-```
-
-### `action execute`
-
-Execute a stable Action name:
-
-```text
-newsnext action execute [OPTIONS] <NAME>
-```
-
-- `--input '<JSON_OBJECT>'`: Action input; defaults to `{}` and must be a JSON object.
-- `--worker <WORKER>`, `--timeout <SECONDS>`, and `--compact` have shared meanings.
-
-Discover the name and schema first, then pass an object that matches the schema:
-
-```sh
-newsnext action list --compact
-newsnext action execute action.name --input '{"key":"value"}'
-```
-
-Prefer a purpose-built top-level command such as `fetch` or `run` when one exists; it performs additional validation and presents more useful output.
-
-## Local history
-
-History commands query observations retained in the selected environment's local database. All accept `--timeout <SECONDS>` and `--compact`.
-
-Time values accept Unix milliseconds, an RFC 3339 timestamp, or `YYYY-MM-DD` interpreted as midnight UTC. Limits must be integers from `1` through `250`.
-
-### `history datasets`
-
-List stored datasets, optionally filtering or paginating:
-
-```text
-newsnext history datasets [--cursor <CURSOR>] [--limit <LIMIT>]
-  [--worker-id <WORKER_ID>] [--provider-id <PROVIDER_ID>]
-  [--source-id <SOURCE_ID>] [--source-version <SOURCE_VERSION>]
-```
-
-```sh
-newsnext history datasets --provider-id github --source-id notifications --limit 50
-```
-
-### `history observations`
-
-List observation metadata for a dataset ID returned by `history datasets`:
-
-```text
-newsnext history observations <DATASET_ID>
-  [--cursor <TIME>] [--from <TIME>] [--to <TIME>] [--limit <LIMIT>]
-```
-
-```sh
-newsnext history observations dataset-id --from 2026-08-01 --to 2026-09-01 --limit 100
-```
-
-### `history get`
-
-Read one exact observation:
-
-```sh
-newsnext history get <DATASET_ID> <OBSERVED_AT>
-newsnext history get dataset-id '2026-09-01T12:30:00Z' --compact
-```
-
-### `history compare`
-
-Compare an earlier and later observation:
-
-```sh
-newsnext history compare <DATASET_ID> <BEFORE> <AFTER>
-newsnext history compare dataset-id 2026-08-01 2026-09-01
-```
+Simple terminal operations remain `start`, `status`, `doctor`, `stop`, `restart`,
+`fetch`, `run`, `job`, and `install-native-host`.
 
 ## Native Messaging registration
 
@@ -305,4 +234,4 @@ Use these only when the task requires isolated data or widget storage.
 
 ## Internal commands
 
-`native-host` and `__daemon` are hidden implementation entry points used by browser registration and background startup. They are not supported as routine user commands; use `install-native-host` and `start` instead.
+`native-host`, `__daemon`, and `__sdk` are hidden implementation entry points used by browser registration and background startup. They are not supported as routine user commands; use `install-native-host` and `start` instead.
