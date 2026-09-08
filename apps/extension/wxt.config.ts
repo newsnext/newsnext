@@ -21,6 +21,7 @@ const REQUIRED_PERMISSIONS = [
 ] as const
 const WIDGET_SERVER_ORIGIN = "http://127.0.0.1/*"
 const RSSHUB_RADAR_CHROMIUM_ID = "kefjpfngnndepjbopdmoebkipbgkggaa"
+const NEW_TAB_CHROMIUM_ID = "mmjbdbjnoablegbkcklggeknkfcjkjia"
 const manifestVersion = packageJson.version.split("-", 1)[0]
 
 // See https://wxt.dev/api/config.html
@@ -127,7 +128,7 @@ export default defineConfig({
         ? undefined
         : [{
             resources: ["app.html"],
-            extension_ids: [RSSHUB_RADAR_CHROMIUM_ID],
+            extension_ids: [RSSHUB_RADAR_CHROMIUM_ID, NEW_TAB_CHROMIUM_ID],
           }],
       browser_specific_settings: browser === "firefox"
         ? {
