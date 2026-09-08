@@ -44,7 +44,6 @@ export type { HtmlField, HtmlFieldConfig, HtmlTraversal } from "../../types"
 interface HtmlExtractedItem {
   title?: unknown
   url?: unknown
-  mobileUrl?: unknown
   publishedAt?: unknown
   author?: Record<string, unknown>
   stats?: Record<string, unknown>
@@ -107,9 +106,6 @@ function collectFieldEntries(fields: HtmlLoaderOptions["fields"]): FieldEntry[] 
     createFieldEntry(["url"], fields.url),
   ]
 
-  if (fields.mobileUrl) {
-    entries.push(createFieldEntry(["mobileUrl"], fields.mobileUrl))
-  }
   if (fields.publishedAt) {
     entries.push(createFieldEntry(["publishedAt"], fields.publishedAt))
   }
@@ -322,10 +318,6 @@ export async function loadHtml(
     const item: NewsItem = {
       title: String(title),
       url: String(itemUrl),
-    }
-
-    if (resolvedItem.mobileUrl) {
-      item.mobileUrl = String(resolvedItem.mobileUrl)
     }
 
     const rawTimestamp = resolvedItem.publishedAt

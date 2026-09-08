@@ -108,9 +108,10 @@ a trailing slash when the base represents a directory.
 
 When `baseUrl` is present, NewsNext resolves the structured loader request URL,
 static, Radar, and response `home` and `badge` metadata, and
-URL-bearing `NewsItem` values. These item values include `url`, `mobileUrl`,
+URL-bearing `NewsItem` values. These item values include `url`,
 `author.home`, `icon` and `mark` image values, and content pictures and
-iframes. The same result normalization applies to RSS and custom loaders.
+iframes. Items expose a single destination through `url`. The same result
+normalization applies to RSS and custom loaders.
 Absolute and protocol-relative URLs continue to work.
 
 NewsNext does not rewrite URLs embedded inside `content.html` or arbitrary

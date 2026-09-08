@@ -168,9 +168,6 @@ function collectJsonFields(
     { field: fields.url, htmlOutput: false, path: ["url"] },
   ]
 
-  if (fields.mobileUrl) {
-    entries.push({ field: fields.mobileUrl, htmlOutput: false, path: ["mobileUrl"] })
-  }
   if (fields.publishedAt) {
     entries.push({ field: fields.publishedAt, htmlOutput: false, path: ["publishedAt"] })
   }
@@ -262,11 +259,6 @@ export async function loadJson(
     const newsItem: NewsItem = {
       title: String(titleValue),
       url: String(itemUrlValue),
-    }
-
-    if (fields.mobileUrl) {
-      const mobileUrl = resolveValue(item, fieldContext, fields.mobileUrl)
-      if (mobileUrl) newsItem.mobileUrl = String(mobileUrl)
     }
 
     assignResolvedJsonFields(newsItem, fields, item, fieldContext)

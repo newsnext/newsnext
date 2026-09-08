@@ -68,9 +68,6 @@ function resolveNewsItemUrls(item: NewsItem, baseUrl: string): NewsItem {
     url: resolveSourceUrl(item.url, baseUrl),
   }
 
-  if (item.mobileUrl !== undefined) {
-    resolved.mobileUrl = resolveSourceUrl(item.mobileUrl, baseUrl)
-  }
   if (item.author?.home !== undefined) {
     resolved.author = {
       ...item.author,

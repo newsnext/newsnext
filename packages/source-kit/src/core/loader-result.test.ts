@@ -13,10 +13,13 @@ describe("source loader result", () => {
     expect(validateSourceLoaderOutput(result)).toEqual(result)
   })
 
-  it("rejects removed item fields at the loader boundary", () => {
+  it.each([
+    ["updatedAt", 1000],
+    ["mobileUrl", "https://m.example.com/item"],
+  ])("rejects removed item field %s at the loader boundary", (field, value) => {
     expect(() => validateSourceLoaderOutput({
-      items: [{ title: "Example", url: "https://example.com", updatedAt: 1000 }],
-    })).toThrowError("items[0].updatedAt is not supported")
+      items: [{ title: "Example", url: "https://example.com", [field]: value }],
+    })).toThrowError(`items[0].${field} is not supported`)
   })
 
   it("limits loader results to the first 50 items", () => {

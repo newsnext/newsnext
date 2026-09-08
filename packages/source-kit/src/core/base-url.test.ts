@@ -63,7 +63,6 @@ describe("source base URL", () => {
       items: [{
         title: "Item",
         url: "/item",
-        mobileUrl: "/mobile/item",
         author: {
           name: "Author",
           home: "/authors/author",
@@ -86,7 +85,6 @@ describe("source base URL", () => {
 
     expect(output.items[0]).toMatchObject({
       url: "https://example.com/item",
-      mobileUrl: "https://example.com/mobile/item",
       author: {
         home: "https://example.com/authors/author",
       },

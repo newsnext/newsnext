@@ -17,17 +17,12 @@ export function getJikeUserAvatar(user: JikeUser | undefined): string | undefine
   return user?.profileImageUrl ?? getPictureUrl(user?.avatarImage ?? {})
 }
 
-function getPostMobileUrl(post: JikePost): string | undefined {
-  if (!post.id) return undefined
-  if (post.type === "REPOST") return `${JIKE_SHARE_ORIGIN}/reposts/${post.id}`
-  if (post.type === "ORIGINAL_POST") return `${JIKE_SHARE_ORIGIN}/originalPosts/${post.id}`
-  return undefined
-}
-
-function getPostWebUrl(post: JikePost): string | undefined {
+function getPostUrl(post: JikePost): string | undefined {
   const type = post.type === "ORIGINAL_POST" ? "post" : post.type === "REPOST" ? "repost" : undefined
-  if (!post.id || !post.user?.username || !type) return undefined
-  return `${JIKE_WEB_ORIGIN}/u/${post.user.username}/${type}/${post.id}`
+  if (!post.id || !type) return undefined
+  if (post.user?.username) return `${JIKE_WEB_ORIGIN}/u/${post.user.username}/${type}/${post.id}`
+  const sharePath = type === "post" ? "originalPosts" : "reposts"
+  return `${JIKE_SHARE_ORIGIN}/${sharePath}/${post.id}`
 }
 
 function getPostTitle(post: JikePost): string {
@@ -46,8 +41,8 @@ export function jikePostsToNewsItems(
 ): NewsItemInput[] {
   const { includeIcon = true } = options
   return posts.flatMap((post): NewsItemInput[] => {
-    const mobileUrl = getPostMobileUrl(post)
-    if (!mobileUrl) return []
+    const url = getPostUrl(post)
+    if (!url) return []
 
     const timestampSource = post.actionTime ?? post.createdAt
     const parsedTimestamp = timestampSource ? Date.parse(timestampSource) : Number.NaN
@@ -60,10 +55,9 @@ export function jikePostsToNewsItems(
     const pictures = (post.pictures?.length ? post.pictures : post.target?.pictures)
       ?.map(getPictureUrl)
       .filter((url): url is string => Boolean(url))
-    const item: NewsItemInput = {
+    return [{
       title: getPostTitle(post),
-      url: getPostWebUrl(post) ?? mobileUrl,
-      mobileUrl,
+      url,
       publishedAt,
       author: {
         name: authorName,
@@ -84,8 +78,7 @@ export function jikePostsToNewsItems(
         text: previewText,
         pictures: pictures?.length ? pictures : post.linkInfo?.pictureUrl,
       },
-    }
-    return [item]
+    }]
   })
 }
 

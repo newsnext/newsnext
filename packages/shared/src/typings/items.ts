@@ -39,8 +39,6 @@ export interface NewsItem {
   title: string
   /** URL of the news item, used as its unique identifier. */
   url: string
-  /** Mobile-optimized URL. Defaults to `url`. */
-  mobileUrl?: string
   /** Original publication time in milliseconds. */
   publishedAt?: number
   author?: NewsItemAuthor
@@ -60,7 +58,6 @@ type OptionalValue<T> = T | null | undefined
 export interface NewsItemInput {
   title: string
   url: string
-  mobileUrl?: OptionalValue<string>
   publishedAt?: OptionalValue<number>
   author?: OptionalValue<{
     name?: OptionalValue<string>

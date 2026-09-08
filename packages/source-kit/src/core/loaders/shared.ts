@@ -64,7 +64,6 @@ export type LoaderMetadataFields<TField> = {
 export interface LoaderFields<TField> {
   title: TField
   url: TField
-  mobileUrl?: TField
   publishedAt?: TField
   author?: {
     name: TField

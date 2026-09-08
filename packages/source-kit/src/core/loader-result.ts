@@ -92,10 +92,9 @@ function assertSourceLoaderOutput(value: unknown): asserts value is SourceLoader
 function assertNewsItem(value: unknown, index: number): void {
   const location = `items[${index}]`
   if (!isRecord(value)) throwInvalidLoaderResult(`${location} must be an object`)
-  assertOnlyKeys(value, ["title", "url", "mobileUrl", "publishedAt", "author", "stats", "attributes", "icon", "mark", "content"], location)
+  assertOnlyKeys(value, ["title", "url", "publishedAt", "author", "stats", "attributes", "icon", "mark", "content"], location)
   assertNonEmptyString(value.title, `${location}.title`)
   assertNonEmptyString(value.url, `${location}.url`)
-  assertOptionalString(value.mobileUrl, `${location}.mobileUrl`)
   assertOptionalTimestamp(value.publishedAt, `${location}.publishedAt`)
   if (value.author !== undefined) assertAuthor(value.author, `${location}.author`)
   if (value.stats !== undefined) assertStats(value.stats, `${location}.stats`)

@@ -30,7 +30,6 @@ describe("jikePostsToNewsItems", () => {
       {
         title: "Cursor officially joins SpaceX",
         url: "https://web.okjike.com/u/f81494ee-f3b1-4e96-8fe3-38789df5ded1/post/6a7f15e560ddcfb0afac0774",
-        mobileUrl: "https://m.okjike.com/originalPosts/6a7f15e560ddcfb0afac0774",
         publishedAt: 1786713574000,
         author: {
           name: "Leo's AI Journal",
@@ -48,6 +47,28 @@ describe("jikePostsToNewsItems", () => {
         },
       },
     ])
+  })
+
+  it.each([
+    ["ORIGINAL_POST", "author", "https://web.okjike.com/u/author/post/post-id"],
+    ["REPOST", "author", "https://web.okjike.com/u/author/repost/post-id"],
+    ["ORIGINAL_POST", undefined, "https://m.okjike.com/originalPosts/post-id"],
+    ["REPOST", undefined, "https://m.okjike.com/reposts/post-id"],
+  ])("resolves %s with username %s to one URL", (type, username, expected) => {
+    const items = jikePostsToNewsItems([{
+      id: "post-id",
+      type,
+      content: "Post",
+      user: { username },
+    }])
+    expect(items.map(item => item.url)).toEqual([expected])
+  })
+
+  it("omits posts without a supported destination", () => {
+    expect(jikePostsToNewsItems([
+      { type: "ORIGINAL_POST", content: "Missing ID" },
+      { id: "post-id", type: "UNKNOWN", content: "Unsupported type" },
+    ])).toEqual([])
   })
 
   it("uses repost target content and pictures as fallbacks", () => {

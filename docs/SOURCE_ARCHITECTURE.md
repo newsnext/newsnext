@@ -494,7 +494,7 @@ variables, feature set, response path, and parser must be updated together.
 
 After any structured, RSS, or custom loader returns, the resolver applies the
 same optional `baseUrl` to explicit URL-bearing result fields. This boundary
-normalization covers item navigation URLs, `author.home`, semantic `icon` and
+normalization covers the single item navigation field `url`, `author.home`, semantic `icon` and
 `mark` pictures, content pictures and iframes, and dynamic home and badge
 metadata without interpreting arbitrary text or rewriting HTML strings. Static
 source home and badge metadata are normalized during
