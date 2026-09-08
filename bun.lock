@@ -28,7 +28,7 @@
     },
     "apps/extension": {
       "name": "@newsnext/extension",
-      "version": "1.0.0",
+      "version": "1.0.0-alpha.1",
       "dependencies": {
         "@atlaskit/pragmatic-drag-and-drop": "catalog:",
         "@atlaskit/pragmatic-drag-and-drop-auto-scroll": "catalog:",
@@ -88,7 +88,7 @@
     },
     "apps/landing": {
       "name": "@newsnext/landing",
-      "version": "1.0.0",
+      "version": "1.0.0-alpha.1",
       "dependencies": {
         "@newsnext/ui": "workspace:*",
         "@phosphor-icons/react": "^2.1.10",
@@ -140,14 +140,14 @@
     },
     "packages/sdk": {
       "name": "@newsnext/sdk",
-      "version": "1.0.0",
+      "version": "1.0.0-alpha.1",
       "devDependencies": {
         "@newsnext/tsconfigs": "workspace:*",
         "@types/node": "catalog:",
         "vitest": "catalog:",
       },
       "peerDependencies": {
-        "@newsnext/cli": "1.0.0",
+        "@newsnext/cli": "1.0.0-alpha.1",
       },
       "optionalPeers": [
         "@newsnext/cli",

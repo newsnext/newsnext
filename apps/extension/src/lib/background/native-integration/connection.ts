@@ -1,6 +1,6 @@
 export const NATIVE_INTEGRATION_RECONNECT_DELAYS_MS = [1_000, 2_000, 5_000, 15_000, 30_000] as const
 // Raise this only when the extension actually drops support for an older daemon release.
-export const MINIMUM_DAEMON_VERSION = "1.0.0"
+export const MINIMUM_DAEMON_VERSION = "1.0.0-alpha.1"
 
 export type NativeIntegrationFailureState
   = | "daemonOutdated"

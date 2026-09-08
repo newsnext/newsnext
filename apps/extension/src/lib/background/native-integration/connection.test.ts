@@ -32,11 +32,11 @@ describe("native integration connection", () => {
   })
 
   it.each([
-    ["0.9.0", "1.0.0", false],
-    ["1.0.0", "1.0.0", true],
-    ["1.0.0+build.1", "1.0.0", true],
-    ["1.1.0", "1.0.0", true],
-    ["invalid", "1.0.0", false],
+    ["0.9.0", "1.0.0-alpha.1", false],
+    ["1.0.0-alpha.1", "1.0.0-alpha.1", true],
+    ["1.0.0-alpha.1+build.1", "1.0.0-alpha.1", true],
+    ["1.1.0", "1.0.0-alpha.1", true],
+    ["invalid", "1.0.0-alpha.1", false],
   ] as const)("compares daemon version %s against %s", (actual, minimum, expected) => {
     expect(isVersionAtLeast(actual, minimum)).toBe(expected)
   })
