@@ -1189,3 +1189,30 @@ cursors and returns an opaque dataset ID. Observation listing accepts that ID,
 time bounds, and timestamp pagination. Exact reads and comparisons require the
 same dataset ID plus observation timestamps returned by the listing command.
 CLI history access is read-only and preserves completeness warnings.
+
+
+### Stream collection diagnostics
+
+The collection chain uses `collection-status.ts`, `parseCollectionStatus`,
+`getCollectionStatus`, and `snapshot.collection`. Protocol types are generated from
+the daemon: `CollectionStatus` contains per-stream `StreamStatus` records.
+
+The daemon advertises additive `collectionStatus` and `collectionStatusPush` capabilities.
+Registered Workers bootstrap with `collectionStatusGet` / `collectionStatusResult`, then
+use `collectionStatusSubscribe { enabled }` to receive typed `collectionStatusChanged`
+events through Native Messaging. Only changes to scheduler state or committed history
+observations trigger pushes; a changing sample timestamp alone does not. The result is a projection of the live scheduler, including in-flight
+work, offline Workers, retry deadlines, persistence failures and per-stream learning
+metrics; it is not reconstructed from stale database rows or extension query cache.
+Only stream/Instance identifiers, counters, timestamps and error text are exposed,
+not raw items, parameter values or persisted fingerprints. Native payloads are
+validated before resolving the pending request or updating the subscription cache. Unsupported daemons are detected by
+capability before sending the request, so older hosts retain their connection.
+The development-only diagnostics service reads this endpoint directly and keeps
+failures separate from the rest of its application snapshot.
+
+Stream diagnostics also read `history_datasets.observation_count` for each resolved
+stream when serving a request or delivering a subscribed update, including observations retained by explicit Jobs and before
+daemon restart. Counts use the same Worker/Source/version/resolved-params identity
+as scheduling. Unresolved streams report an unknown count. Diagnostics read dataset
+summaries without scanning observation items or holding the daemon state lock.

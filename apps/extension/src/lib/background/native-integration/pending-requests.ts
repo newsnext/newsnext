@@ -1,4 +1,4 @@
-import type { NativeCommandResult, NativeLogEntry, NativeWorkspace } from "@newsnext/extension-connection"
+import type { NativeCollectionStatus, NativeCommandResult, NativeLogEntry, NativeWorkspace } from "@newsnext/extension-connection"
 import type { SourceLoadResponse } from "../../source/load-result"
 import type { NativePort } from "./types"
 
@@ -25,6 +25,10 @@ interface PendingLogsRequest extends PendingRequest {
   resolve: (logs: NativeLogEntry[]) => void
 }
 
+interface PendingCollectionRequest extends PendingRequest {
+  resolve: (status: NativeCollectionStatus) => void
+}
+
 interface PendingConnectionRequest extends PendingRequest {
   resolve: (connection: NativePort) => void
 }
@@ -36,6 +40,7 @@ interface PendingWorkerTakeoverRequest extends PendingRequest {
 export const pendingWidgetSnapshotRequests = new Map<string, PendingWidgetSnapshotRequest>()
 export const pendingInstanceRequests = new Map<string, PendingInstanceRequest>()
 export const pendingWorkspaceRequests = new Map<string, PendingWorkspaceRequest>()
+export const pendingCollectionRequests = new Map<string, PendingCollectionRequest>()
 export const pendingLogsRequests = new Map<string, PendingLogsRequest>()
 export const pendingConnectionRequests = new Set<PendingConnectionRequest>()
 export const pendingWorkerTakeoverRequests = new Map<string, PendingWorkerTakeoverRequest>()
@@ -45,6 +50,7 @@ export function rejectAllPendingRequests(error: Error): void {
   rejectPendingRequests(pendingInstanceRequests, error)
   rejectPendingRequests(pendingWorkspaceRequests, error)
   rejectPendingRequests(pendingLogsRequests, error)
+  rejectPendingRequests(pendingCollectionRequests, error)
   rejectPendingRequests(pendingWorkerTakeoverRequests, error)
   rejectPendingConnectionRequests(error)
 }

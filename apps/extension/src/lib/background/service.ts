@@ -23,7 +23,7 @@ export function createBackgroundService(
   return {
     action: createBackgroundActionService(dependencies),
     diagnostics: import.meta.env.DEV
-      ? createBackgroundDiagnosticsService()
+      ? createBackgroundDiagnosticsService(dependencies.nativeIntegration)
       : unavailableDiagnosticsService,
   }
 }

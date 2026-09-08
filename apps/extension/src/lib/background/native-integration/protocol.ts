@@ -10,6 +10,7 @@ import { APPLICATION_DATA_VERSION } from "../../application"
 import { normalizeApplicationData } from "../../settings/persisted-data"
 import { NativeMessageChunkAssembler } from "../native-message-chunks"
 import { parseWorkspacePatch } from "../workspace-patch"
+import { parseCollectionStatus } from "./collection-status"
 import { NATIVE_REQUEST_TIMEOUT_MS } from "./state"
 
 type ReadyHostMessage = Extract<HostToExtension, { type: "ready" }> & { capabilities: string[] }
@@ -60,6 +61,10 @@ function parseHostMessage(value: unknown): ParsedHostMessage {
       localInstanceIds: parseLocalInstanceIds(value.localInstanceIds),
       offlineWorkers: parseOfflineWorkers(value.offlineWorkers),
     }
+  }
+  if (value.type === "collectionStatusChanged") return { type: "collectionStatusChanged", status: parseCollectionStatus(value.status) }
+  if (value.type === "collectionStatusResult" && typeof value.requestId === "string") {
+    return { type: "collectionStatusResult", requestId: value.requestId, status: parseCollectionStatus(value.status) }
   }
   if (value.type === "logsResult" && typeof value.requestId === "string") {
     return {

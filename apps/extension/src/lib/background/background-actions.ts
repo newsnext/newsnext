@@ -1,4 +1,4 @@
-import type { ExtensionConnectionFetchResponse, NativeLogEntry } from "@newsnext/extension-connection"
+import type { ExtensionConnectionFetchResponse, NativeCollectionStatus, NativeLogEntry } from "@newsnext/extension-connection"
 import type { ResolvedRadarSuggestion } from "../radar"
 import type { Instance } from "../source"
 import type { SourceLoadResponse } from "../source/load-result"
@@ -48,6 +48,8 @@ export interface BackgroundActionContext extends ApplicationActionContext {
   }
   nativeIntegration: {
     getLogs: () => Promise<NativeLogEntry[]>
+    getCollectionStatus: () => Promise<NativeCollectionStatus>
+    setCollectionSubscribed: (enabled: boolean) => void
     getStatus: () => Promise<NativeIntegrationStatus>
     setEnabled: (input: { enabled: boolean }) => Promise<NativeIntegrationStatus>
   }

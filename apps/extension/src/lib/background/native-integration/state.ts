@@ -1,4 +1,4 @@
-import type { NativeOfflineWorker, NativeWorkspace } from "@newsnext/extension-connection"
+import type { NativeCollectionStatus, NativeOfflineWorker, NativeWorkspace } from "@newsnext/extension-connection"
 import type { NativeIntegrationState, NativeIntegrationStatus, NativePort } from "./types"
 import { normalizePersistedSettings } from "../../settings/persisted-settings"
 import { getWorkerId } from "../worker-identity"
@@ -23,6 +23,8 @@ function createInitialWorkspace(): NativeWorkspace {
 }
 
 interface NativeIntegrationRuntime {
+  collectionSubscribed: boolean
+  collectionStatus: NativeCollectionStatus | undefined
   daemonVersion: string | undefined
   capabilities: string[]
   connectionError: NativeIntegrationStatus["connectionError"]
@@ -41,6 +43,8 @@ interface NativeIntegrationRuntime {
 }
 
 export const runtime: NativeIntegrationRuntime = {
+  collectionSubscribed: false,
+  collectionStatus: undefined,
   daemonVersion: undefined,
   capabilities: [],
   connectionError: undefined,

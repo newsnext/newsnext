@@ -384,3 +384,23 @@ React Scan adds development overhead, especially when unnecessary-render
 tracking or per-render callbacks are enabled. Compare relative results under
 the same instrumentation and do not interpret instrumented duration as
 production duration.
+
+## Development diagnostics subscriptions
+
+The NewsNext Devtool uses event subscriptions, with no interval polling. Each open
+panel owns a runtime Port; the background subscribes to daemon status while at least
+one Port remains connected and unsubscribes when the last panel closes. Native
+reconnection restores the subscription. Scheduler state changes and committed history
+observations push snapshots into a background cache; activity/storage events reuse
+that cache. An initial request bootstraps missing state. Snapshot reads share the
+existing single-flight queue. Deadlines use absolute timestamps so idle panels do
+not need countdown timers. Without subscribers the daemon skips diagnostic count
+queries and push messages.
+Reading daemon collection diagnostics bypasses action dispatch, preventing diagnostic
+reads from creating activity events and a refresh feedback loop. This endpoint is
+read-only and must never trigger a Source load. Production diagnostics remain disabled.
+
+Stream summaries and sorting are pure projections of pushed diagnostics. Overview
+and Streams share presentation, sort preference, and selection without additional
+native requests. Default sorting uses stable identity fields, so timestamp, count,
+and activity updates do not move rows. Attention ordering requires explicit opt-in.

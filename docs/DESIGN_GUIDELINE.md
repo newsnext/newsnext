@@ -882,3 +882,29 @@ When changing interface styling:
    `chrome-extension://blkhpdbooolmhamhbpnfinmfghginnbh/app.html`.
 5. Update this document when the change creates, removes, or revises a durable
    design rule.
+
+### Stream diagnostics
+
+Use **Streams** for continuously collected data, **Collection interval** and
+**Next collection** for scheduling, and **Observations** for retained fetch
+snapshots. Use **Automatic collection** in Instance details.
+
+Lead Overview with data accumulation and collection problems. Stream rows open
+their details directly and emphasize observation count. Show latest collection,
+activity, and interval on one line. Keep errors visible; do not infer failure from
+quiet content or present model estimates as measured freshness. Incomplete totals
+are lower bounds and disclose missing counts.
+
+Disambiguate Instances and Streams with Source identity, Instance names, and
+explicit `key=value` parameter overrides. Show every sharing Instance's overrides,
+the owning Worker, and a short Stream ID. Parameter summaries wrap and remain
+visible in details; distinguish missing information from default parameters.
+
+Default to stable identity order. The toolbar's **Stream order** selector explicitly
+opts into **Attention first**. Avoid persistent list header/footer explanations for
+sorting, interval bounds, or snapshot update times. Show restoration and storage
+problems only when applicable.
+
+Details prioritize retained observations, collection results, content changes,
+waiting reasons, and the next collection or retry. Collapse model diagnostics,
+full identifiers, sharing metadata, and raw configuration behind native disclosures.

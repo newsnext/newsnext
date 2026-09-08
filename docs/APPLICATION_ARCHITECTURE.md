@@ -373,3 +373,35 @@ extension validates and reassembles them with a 64 MiB aggregate limit.
 
 These boundaries keep card existence stable even when executable Source
 availability changes independently across registry releases.
+
+
+### Stream inspection in the NewsNext Devtool
+
+Overview leads with retained observations across currently scheduled streams,
+attention count, and streams waiting for their first data. Shared streams count
+once, not once per Instance; unknown counts remain explicit. Each observation is
+one retained fetch snapshot, including unchanged content. Replays at the same
+fetchedAt do not increment it.
+
+Overview and Streams share row presentation, selection, search, and sort preference.
+Default ordering uses Source ID, Worker ID, then Stream ID; collection results do
+not reorder rows. Explicit **Attention first** groups offline, backoff, or recorded
+errors first. Quiet content and due work alone do not imply failure.
+
+Stream identity joins every associated Instance to the application snapshot and
+shows its name and parameter overrides. Search includes parameter keys and values.
+Missing Instances are reported as unavailable. Overrides are never presented as
+resolved Source defaults. Instance details reuse the same collection metrics.
+
+Primary details show observation count, latest successful collection and content
+change, latest item changes, collection interval, and next attempt or retry.
+Policy parameters, full identifiers, sharing metadata, and raw configuration use
+collapsed disclosures. Model estimates are not measured freshness guarantees.
+Current activity determines whether collection is running, offline, or due;
+future deadlines and recorded events use absolute timestamps.
+
+The development-only diagnostics service subscribes while panels are open. Multiple
+panels share one native subscription, the last close unsubscribes, and native
+reconnection restores subscriptions. Scheduler/history events update cached state
+without interval polling. Unsupported daemons and storage failures remain visible;
+normal list chrome omits persistent status or sorting explanations.

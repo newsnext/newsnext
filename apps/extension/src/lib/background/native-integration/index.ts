@@ -14,6 +14,7 @@ import { normalizePersistedSettings } from "../../settings/persisted-settings"
 import { createBackgroundActionContext } from "../action-context"
 import { actionRegistry, executeRegisteredAction } from "../action-registry"
 import { readApplicationData } from "../application-service"
+import { BACKGROUND_DIAGNOSTICS_CHANGED } from "../diagnostics-events"
 import { initializeWorkerIdentity } from "../worker-identity"
 import {
   classifyNativeIntegrationFailure,
@@ -22,6 +23,7 @@ import {
   MINIMUM_DAEMON_VERSION,
 } from "./connection"
 import {
+  requestCollectionStatus,
   requestLogs as requestLogsFromDaemon,
   requestWidgetSnapshot as requestWidgetSnapshotFromDaemon,
 } from "./daemon-requests"
@@ -31,6 +33,7 @@ import {
   readRoutedInstanceCache,
 } from "./instance-routing"
 import {
+  pendingCollectionRequests,
   pendingConnectionRequests,
   pendingInstanceRequests,
   pendingLogsRequests,
@@ -97,6 +100,19 @@ export const backgroundActionDependencies: BackgroundActionDependencies = {
   },
   nativeIntegration: {
     getLogs: () => requestLogsFromDaemon(requireNativeConnection),
+    getCollectionStatus: async () => {
+      if (!runtime.capabilities.includes("collectionStatusPush")) throw new Error("This NewsNext App does not support live stream diagnostics. Update and restart the daemon.")
+      const cached = runtime.collectionStatus
+      if (cached) return cached
+      const snapshot = await requestCollectionStatus(requireNativeConnection)
+      if (runtime.collectionSubscribed) runtime.collectionStatus ??= snapshot
+      return runtime.collectionStatus ?? snapshot
+    },
+    setCollectionSubscribed: (enabled) => {
+      runtime.collectionSubscribed = enabled
+      if (!enabled) runtime.collectionStatus = undefined
+      sendCollectionSubscription()
+    },
     getStatus: async () => getNativeIntegrationStatus(),
     setEnabled: ({ enabled }) => setNativeIntegrationEnabled(enabled),
   },
@@ -109,6 +125,16 @@ export const backgroundActionDependencies: BackgroundActionDependencies = {
       takeOverWorker(workerId, instanceIds, workerConnectionControls)
     ),
   },
+}
+
+function sendCollectionSubscription(): void {
+  if (runtime.connectionState === "connected" && runtime.port && runtime.capabilities.includes("collectionStatusPush")) {
+    runtime.port.postMessage({ type: "collectionStatusSubscribe", enabled: runtime.collectionSubscribed } satisfies ExtensionToHost)
+  }
+}
+
+function notifyDiagnostics(): void {
+  if (runtime.collectionSubscribed) void browser.runtime.sendMessage({ type: BACKGROUND_DIAGNOSTICS_CHANGED }).catch(() => undefined)
 }
 
 let connectedActionContext: BackgroundActionContext | undefined
@@ -199,6 +225,7 @@ function resetConnectionState(
   error?: NativeIntegrationConnectionError,
 ): void {
   runtime.port = undefined
+  runtime.collectionStatus = undefined
   runtime.daemonVersion = undefined
   runtime.capabilities = []
   runtime.workerRoutingRevision = 0
@@ -209,6 +236,7 @@ function resetConnectionState(
   const connectionFailure = new Error(error?.message ?? "NewsNext App disconnected")
   rejectAllPendingRequests(connectionFailure)
   clearNativeMessageChunks()
+  notifyDiagnostics()
 }
 
 function clearReconnectBackoff(): void {
@@ -369,6 +397,8 @@ function handleMessage(connection: NativePort, value: unknown): void {
       runtime.offlineWorkers = message.offlineWorkers
       runtime.widgetServerOrigin = message.widgetServerUrl
       runtime.connectionState = "connected"
+      sendCollectionSubscription()
+      notifyDiagnostics()
       resolvePendingConnectionRequests(connection)
       enqueueIncomingWorkspace(
         connection,
@@ -401,6 +431,13 @@ function handleMessage(connection: NativePort, value: unknown): void {
       settleWorkspaceRequest(message.requestId, message.revision, message.localInstanceIds)
     } else if (message.type === "instanceResult") {
       settleInstanceRequest(message.requestId, message.result)
+    } else if (message.type === "collectionStatusChanged") {
+      if (runtime.collectionSubscribed) {
+        runtime.collectionStatus = message.status
+        notifyDiagnostics()
+      }
+    } else if (message.type === "collectionStatusResult") {
+      takePendingRequest(pendingCollectionRequests, message.requestId)?.resolve(message.status)
     } else if (message.type === "logsResult") {
       takePendingRequest(pendingLogsRequests, message.requestId)?.resolve(message.logs)
     } else {
@@ -410,6 +447,7 @@ function handleMessage(connection: NativePort, value: unknown): void {
           || rejectPendingRequest(pendingInstanceRequests, message.requestId, error)
           || rejectPendingRequest(pendingWorkspaceRequests, message.requestId, error)
           || rejectPendingRequest(pendingLogsRequests, message.requestId, error)
+          || rejectPendingRequest(pendingCollectionRequests, message.requestId, error)
           || rejectPendingRequest(pendingWorkerTakeoverRequests, message.requestId, error)) {
           return
         }

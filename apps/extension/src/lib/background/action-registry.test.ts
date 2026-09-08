@@ -36,7 +36,9 @@ function createContext(): BackgroundActionContext {
       readCache: vi.fn(async () => null),
     },
     nativeIntegration: {
+      setCollectionSubscribed: vi.fn(),
       getLogs: vi.fn(async () => []),
+      getCollectionStatus: vi.fn(async () => ({ initialized: false, sampledAt: 0, persistenceError: null, pendingWrites: 0, streams: [] })),
       getStatus: vi.fn(async () => ({
         capabilities: [],
         offlineWorkers: [],

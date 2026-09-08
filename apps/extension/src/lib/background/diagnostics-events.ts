@@ -1,3 +1,4 @@
+export const BACKGROUND_DIAGNOSTICS_PORT = "newsnext.background-diagnostics.subscription"
 export const BACKGROUND_DIAGNOSTICS_CHANGED = "newsnext.background-diagnostics.changed"
 
 export interface BackgroundDiagnosticsChangedMessage {
