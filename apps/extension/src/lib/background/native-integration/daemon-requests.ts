@@ -1,5 +1,6 @@
 import type { ExtensionToHost, NativeCollectionStatus, NativeLogEntry } from "@newsnext/extension-connection"
 import type { RequireNativeConnection } from "./types"
+import { createId } from "@/lib/id"
 import { pendingCollectionRequests, pendingLogsRequests, pendingWidgetSnapshotRequests } from "./pending-requests"
 import { NATIVE_REQUEST_TIMEOUT_MS } from "./state"
 
@@ -10,7 +11,7 @@ export async function requestWidgetSnapshot(
   const connection = await requireConnection()
   const message: ExtensionToHost = {
     type: "widgetSnapshotGet",
-    requestId: crypto.randomUUID(),
+    requestId: createId(),
     ...input,
   }
   return await new Promise((resolve, reject) => {
@@ -29,7 +30,7 @@ export async function requestLogs(
   const connection = await requireConnection()
   const message: ExtensionToHost = {
     type: "logsGet",
-    requestId: crypto.randomUUID(),
+    requestId: createId(),
   }
   return await new Promise((resolve, reject) => {
     const timeoutId = setTimeout(() => {
@@ -45,7 +46,7 @@ export async function requestCollectionStatus(
   requireConnection: RequireNativeConnection,
 ): Promise<NativeCollectionStatus> {
   const connection = await requireConnection()
-  const message: ExtensionToHost = { type: "collectionStatusGet", requestId: crypto.randomUUID() }
+  const message: ExtensionToHost = { type: "collectionStatusGet", requestId: createId() }
   return await new Promise((resolve, reject) => {
     const timeoutId = setTimeout(() => {
       pendingCollectionRequests.delete(message.requestId)

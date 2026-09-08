@@ -1,5 +1,6 @@
 import type { ExtensionToHost } from "@newsnext/extension-connection"
 import type { NativeIntegrationStatus, RequireNativeConnection } from "./types"
+import { createId } from "@/lib/id"
 import { readApplicationData, replaceApplicationData } from "../application-service"
 import { replaceWorkerIdentity } from "../worker-identity"
 import { pendingWorkerTakeoverRequests } from "./pending-requests"
@@ -27,7 +28,7 @@ export async function takeOverWorker(
   const connection = await controls.requireConnection()
   const message: ExtensionToHost = {
     type: "workerTakeover",
-    requestId: crypto.randomUUID(),
+    requestId: createId(),
     workerId: sourceWorkerId,
     instanceIds,
   }
@@ -46,7 +47,7 @@ export async function regenerateWorker(
   controls: WorkerConnectionControls,
 ): Promise<NativeIntegrationStatus> {
   const previousWorkerId = runtime.workerId
-  const nextWorkerId = crypto.randomUUID()
+  const nextWorkerId = createId()
   const application = await readApplicationData()
   await replaceWorkerIdentity(nextWorkerId)
   try {

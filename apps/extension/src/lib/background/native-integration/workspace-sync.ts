@@ -2,6 +2,7 @@ import type { NativeWorkspace } from "@newsnext/extension-connection"
 import type { PersistedSettings } from "../../settings/persisted-settings"
 import type { NativePort, RequireNativeConnection } from "./types"
 import { browser } from "#imports"
+import { createId } from "@/lib/id"
 import { APPLICATION_DATA_VERSION } from "../../application"
 import { normalizeApplicationData, PERSISTED_DATA_SLICES } from "../../settings/persisted-data"
 import { normalizePersistedSettings } from "../../settings/persisted-settings"
@@ -193,7 +194,7 @@ async function requestWorkspaceReplacement(
   const connection = await requireConnection()
   const message = {
     type: "workspaceChanged" as const,
-    requestId: crypto.randomUUID(),
+    requestId: createId(),
     patch: createWorkspacePatch(runtime.workspace, candidate),
   }
   return await new Promise((resolve, reject) => {

@@ -33,6 +33,19 @@ daemon adopts and broadcasts it, including persisted Instance ownership.
 Browser storage remains the durable owner. Without the CLI, the extension reads
 its local Workspace and runs locally owned Loaders directly.
 
+## Identity
+
+New Board, Instance, Worker, request, transfer, Job, and History dataset IDs use
+16-character Nano IDs from `A-Z`, `a-z`, and `0-9`. The extension's `lib/id.ts`
+and CLI's `identity.rs` own generation. Instance IDs no longer embed Source IDs;
+use the separate `sourceId` field. Existing IDs remain opaque and valid without
+rewriting persisted references. Widget IDs remain authored manifest identifiers.
+
+Content fingerprints and derived keys use domain-separated SHA-256 over canonical
+JSON (sorted object keys, preserved array order), encoded as 64 lowercase hex
+characters. They identify equal content/configuration, not new entities. Source,
+revision, and Widget fingerprints use separate domains.
+
 ## Persistent Application Data
 
 Each browser mirrors the complete Workspace in one versioned envelope:

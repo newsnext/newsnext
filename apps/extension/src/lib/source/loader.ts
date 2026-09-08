@@ -2,6 +2,7 @@ import type { SourceLoadResponse } from "./load-result"
 import {
   normalizeSourceParams,
 } from "@newsnext/source-kit/runtime"
+import { createId } from "@/lib/id"
 import { actions } from "../actions"
 import { loadSourceDescriptor } from "./registry"
 
@@ -36,7 +37,7 @@ async function loadFreshSource(
   queryParams: Record<string, unknown>,
   signal?: AbortSignal,
 ): Promise<SourceLoadResponse> {
-  const requestId = crypto.randomUUID()
+  const requestId = createId()
   const cancelRequest = () => {
     void actions.source.cancel({ requestId }).catch(() => undefined)
   }

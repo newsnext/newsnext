@@ -1,7 +1,7 @@
-import { nanoid } from "nanoid"
+import { customAlphabet } from "nanoid"
 
-const ID_SIZE = 12
+const generateId = customAlphabet("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", 16)
 
 export function createId(): string {
-  return nanoid(ID_SIZE)
+  return generateId()
 }

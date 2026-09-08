@@ -1,5 +1,6 @@
 import type { SourcePermissionRequest } from "../source/permissions"
 import { browser } from "#imports"
+import { createId } from "@/lib/id"
 
 const CLI_PERMISSION_PAGE = "/cli-permission.html"
 
@@ -85,7 +86,7 @@ export async function requestCliPermission(
   if (await browser.permissions.contains(request).catch(() => false)) return true
 
   registerCliPermissionPrompt()
-  const requestId = crypto.randomUUID()
+  const requestId = createId()
   let resolvePermission!: (granted: boolean) => void
   const result = new Promise<boolean>((resolve) => {
     resolvePermission = resolve

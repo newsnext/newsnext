@@ -1,8 +1,9 @@
 import { browser } from "#imports"
+import { createId } from "@/lib/id"
 
 const WORKER_ID_KEY = "newsnext-worker-id"
 
-let workerId: string = crypto.randomUUID()
+let workerId: string = createId()
 let initialization: Promise<string> | undefined
 
 export function getWorkerId(): string {

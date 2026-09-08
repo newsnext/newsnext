@@ -293,7 +293,7 @@ or raw fetch response bodies.
 A dataset is the unique tuple of execution Worker ID, Source ID, Source version,
 and canonical normalized parameter JSON. Worker ID is explicit because the
 daemon combines observations from browser Loaders with different credentials,
-permissions, and network environments. Each dataset receives an opaque UUID
+permissions, and network environments. Each new dataset receives an opaque 16-character alphanumeric Nano ID
 exposed by `history datasets` and used by the other history commands.
 
 Worker ID is the isolation boundary for all Source results, not only
@@ -307,7 +307,7 @@ when they select a feed or resource independently within the same Worker.
 
 The schema normalizes retained values into `history_datasets`,
 `history_observations`, provider-scoped `history_items`, content-addressed
-`history_revisions`, and ordered `history_observation_items`. A revision UUID is
+`history_revisions`, and ordered `history_observation_items`. A domain-separated SHA-256 revision key is
 derived from provider ID, exact URL, and canonical item JSON, so Sources and
 parameter sets under the same provider reuse unchanged item values. Observation
 position remains dataset-specific and one-based. Observation kinds use the
@@ -323,6 +323,9 @@ observation and ordered item links, and updates dataset counters atomically.
 Read operations open independent bounded-wait connections and use keyset
 pagination. A dropped or failed transaction rolls back instead of exposing a
 partial observation.
+
+The daemon initializes new databases at schema 10 and opens existing schema 10
+databases directly. Other schema versions are rejected without migration.
 
 History exposes four daemon operations: dataset discovery, cursor-paginated
 observation summaries, one hydrated observation, and deterministic comparison

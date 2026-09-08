@@ -2,6 +2,7 @@ import type { ExtensionToHost } from "@newsnext/extension-connection"
 import type { SourceLoadResponse } from "../../source/load-result"
 import type { BackgroundActionContext } from "../background-actions"
 import type { RequireNativeConnection } from "./types"
+import { createId } from "@/lib/id"
 import { executeRegisteredAction } from "../action-registry"
 import { readApplicationData } from "../application-service"
 import { isSourceLoadResponse, pendingInstanceRequests } from "./pending-requests"
@@ -43,7 +44,7 @@ async function routeInstanceRequest(
       { instance },
       "connected",
       actionContext,
-      crypto.randomUUID(),
+      createId(),
     )
     if (result === null && cacheOnly) return null
     if (!isSourceLoadResponse(result)) {
@@ -54,7 +55,7 @@ async function routeInstanceRequest(
   const connection = await requireConnection()
   const message: ExtensionToHost = {
     type: "instanceGet",
-    requestId: crypto.randomUUID(),
+    requestId: createId(),
     instanceId: input.instanceId,
     cacheOnly,
   }

@@ -1,3 +1,5 @@
+import { createId } from "@/lib/id"
+
 export type BackgroundActionOrigin = "cli" | "ui"
 
 export interface BackgroundActionRecord {
@@ -80,7 +82,7 @@ function beginBackgroundAction(
 ): BackgroundActionRecord {
   const record: BackgroundActionRecord = {
     ...action,
-    id: crypto.randomUUID(),
+    id: createId(),
     input: cloneDiagnosticValue(action.input),
     startedAt: Date.now(),
     status: "running",

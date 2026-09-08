@@ -261,7 +261,7 @@ export function createInstanceMutation(
   const { boardId, patch, sourceId } = input
   if (!sourceId.trim()) throw new Error("Source ID is required")
   assertBoardExists(data, boardId)
-  const instanceId = `${sourceId}::${dependencies.createId()}`
+  const instanceId = dependencies.createId()
   if (data.instances.some(instance => instance.instanceId === instanceId)) {
     throw new Error(`Instance '${instanceId}' already exists`)
   }

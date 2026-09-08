@@ -84,11 +84,11 @@ describe("application mutations", () => {
     }, dependencies)
 
     expect(execution.data.boards[0]?.instanceIds).toEqual([
-      "github:trending::new",
+      "new",
       "rss:feed::one",
     ])
     expect(execution.data.boards[0]?.nowLayer.sort.manualOrder).toEqual([
-      "github:trending::new",
+      "new",
       "rss:feed::one",
     ])
     expect(execution.data.instances.at(-1)?.workerId).toBe("worker-a")
