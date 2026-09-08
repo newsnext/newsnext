@@ -13,6 +13,12 @@ describe("source loader result", () => {
     expect(validateSourceLoaderOutput(result)).toEqual(result)
   })
 
+  it("rejects removed item fields at the loader boundary", () => {
+    expect(() => validateSourceLoaderOutput({
+      items: [{ title: "Example", url: "https://example.com", updatedAt: 1000 }],
+    })).toThrowError("items[0].updatedAt is not supported")
+  })
+
   it("limits loader results to the first 50 items", () => {
     const items = Array.from({ length: 51 }, (_, index) => ({
       title: `Item ${index + 1}`,

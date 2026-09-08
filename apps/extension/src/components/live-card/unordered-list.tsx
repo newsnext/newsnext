@@ -1,7 +1,6 @@
 import type { NewsItem } from "@/typings/source"
 import { VirtualList } from "@newsnext/ui/components/virtual-list"
 import { RelativeTime } from "@/hooks/useRelativeTime"
-import { getNewsItemTime } from "@/lib/source"
 import { NewsItemLink, NewsItemSummary } from "./news-item-common"
 
 interface Props {
@@ -19,7 +18,7 @@ export function UnorderedList({ items, inlinePresentation, markScale, scrollElem
       estimateSize={60}
       itemClassName="pb-2 last:pb-0"
       renderItem={(item, index) => {
-        const time = getNewsItemTime(item)
+        const time = item.publishedAt
         const inlineSuffix = time === undefined ? undefined : <RelativeTime date={time} />
         return (
           <NewsItemLink

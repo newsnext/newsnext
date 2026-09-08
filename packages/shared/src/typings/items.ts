@@ -43,8 +43,6 @@ export interface NewsItem {
   mobileUrl?: string
   /** Original publication time in milliseconds. */
   publishedAt?: number
-  /** Last content update time in milliseconds. */
-  updatedAt?: number
   author?: NewsItemAuthor
   stats?: NewsItemStats
   /** Source-specific facts that do not belong to the shared fields. */
@@ -64,7 +62,6 @@ export interface NewsItemInput {
   url: string
   mobileUrl?: OptionalValue<string>
   publishedAt?: OptionalValue<number>
-  updatedAt?: OptionalValue<number>
   author?: OptionalValue<{
     name?: OptionalValue<string>
     home?: OptionalValue<string>

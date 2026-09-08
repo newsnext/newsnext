@@ -17,6 +17,11 @@ const JSON_FEED_VERSIONS = new Set([
 ])
 const MAX_DERIVED_TITLE_LENGTH = 200
 
+interface ParsedFeedItem {
+  item: NewsItemInput
+  updatedAt?: number
+}
+
 export async function loadRss(
   { url }: { url: string },
   loaderContext: LoaderContext = {},
@@ -55,7 +60,7 @@ function parseXmlFeed(data: string): SourceLoaderOutput | undefined {
   const parsedItems = (Array.isArray(itemInput) ? itemInput : itemInput ? [itemInput] : [])
     .filter(isRecord)
     .map(item => parseXmlFeedItem(item, home))
-    .filter((item): item is NewsItemInput => item !== undefined)
+    .filter((item): item is ParsedFeedItem => item !== undefined)
 
   return createParsedFeed(parsedItems, {
     badge: readXmlImageUrl(channel.image),
@@ -68,19 +73,23 @@ function parseXmlFeed(data: string): SourceLoaderOutput | undefined {
 function parseXmlFeedItem(
   item: Record<string, unknown>,
   feedHome: string | undefined,
-): NewsItemInput | undefined {
+): ParsedFeedItem | undefined {
   const title = readXmlText(item.title)
   const url = readXmlLink(item.link)
     || createFeedHomeItemUrl(feedHome, readXmlText(item.guid ?? item.id))
   if (!title || !url) return
 
+  const updatedAt = parseOptionalTimestamp(item.updated)
   return {
-    title,
-    url,
-    publishedAt: parseOptionalTimestamp(item.published ?? item.pubDate ?? item.created),
-    updatedAt: parseOptionalTimestamp(item.updated),
-    author: parseXmlAuthor(item.author ?? item.creator ?? item["dc:creator"]),
-    content: parseXmlContent(item),
+    updatedAt,
+    item: {
+      title,
+      url,
+      publishedAt: parseOptionalTimestamp(item.published ?? item.pubDate ?? item.created)
+        ?? updatedAt,
+      author: parseXmlAuthor(item.author ?? item.creator ?? item["dc:creator"]),
+      content: parseXmlContent(item),
+    },
   }
 }
 
@@ -101,7 +110,7 @@ function parseJsonFeed(data: string): SourceLoaderOutput | undefined {
   const parsedItems = feed.items
     .filter(isRecord)
     .map(item => parseJsonFeedItem(item, home))
-    .filter((item): item is NewsItemInput => item !== undefined)
+    .filter((item): item is ParsedFeedItem => item !== undefined)
 
   return createParsedFeed(parsedItems, {
     badge: readString(feed.icon) || readString(feed.favicon),
@@ -114,7 +123,7 @@ function parseJsonFeed(data: string): SourceLoaderOutput | undefined {
 function parseJsonFeedItem(
   item: Record<string, unknown>,
   feedHome: string,
-): NewsItemInput | undefined {
+): ParsedFeedItem | undefined {
   const title = readJsonFeedItemTitle(item)
   const url = readJsonFeedItemUrl(item)
     || createFeedHomeItemUrl(feedHome, readString(item.id))
@@ -126,18 +135,22 @@ function parseJsonFeedItem(
   const authorName = authorInput ? readString(authorInput.name) : ""
   const authorAvatar = authorInput ? readString(authorInput.avatar) : ""
 
+  const updatedAt = parseOptionalTimestamp(item.date_modified)
   return {
-    title,
-    url,
-    publishedAt: parseOptionalTimestamp(item.date_published),
-    updatedAt: parseOptionalTimestamp(item.date_modified),
-    author: { name: authorName || undefined },
-    icon: {
-      kind: "author",
-      label: authorName || undefined,
-      src: authorAvatar || undefined,
+    updatedAt,
+    item: {
+      title,
+      url,
+      publishedAt: parseOptionalTimestamp(item.date_published)
+        ?? updatedAt,
+      author: { name: authorName || undefined },
+      icon: {
+        kind: "author",
+        label: authorName || undefined,
+        src: authorAvatar || undefined,
+      },
+      content: parseJsonFeedContent(item),
     },
-    content: parseJsonFeedContent(item),
   }
 }
 
@@ -180,11 +193,19 @@ function deriveTitle(value: string): string {
 }
 
 function createParsedFeed(
-  parsedItems: NewsItemInput[],
+  parsedItems: ParsedFeedItem[],
   metadata: Record<string, unknown>,
 ): SourceLoaderOutput {
+  const orderedByUpdateTime = parsedItems.every((entry, index) => (
+    entry.updatedAt !== undefined
+    && (index === 0 || entry.updatedAt <= (parsedItems[index - 1]?.updatedAt ?? Number.NEGATIVE_INFINITY))
+  ))
+  if (orderedByUpdateTime) {
+    parsedItems.sort((left, right) => (right.item.publishedAt ?? 0) - (left.item.publishedAt ?? 0))
+  }
+
   return {
-    items: parsedItems,
+    items: parsedItems.map(entry => entry.item),
     metadata: normalizeLoaderMetadata(metadata),
   }
 }

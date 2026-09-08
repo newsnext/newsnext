@@ -187,5 +187,5 @@ export function entriesToNewsItems(
 }
 
 export function sortNewsItemsByNewest(items: NewsItemInput[]): NewsItemInput[] {
-  return items.sort((a, b) => (b.publishedAt ?? b.updatedAt ?? 0) - (a.publishedAt ?? a.updatedAt ?? 0))
+  return items.sort((a, b) => (b.publishedAt ?? 0) - (a.publishedAt ?? 0))
 }

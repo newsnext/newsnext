@@ -42,7 +42,6 @@ interface BilibiliFavoriteMedia {
     play?: number
   }
   cover?: string
-  fav_time?: number
   intro?: string
   pubtime?: number
   title?: string
@@ -92,18 +91,15 @@ interface BilibiliSeriesResponse {
 
 export function favoriteMediaToNewsItem(
   media: BilibiliFavoriteMedia,
-  order: BilibiliFavoriteOrder,
 ): NewsItemInput | null {
   const bvid = media.bvid ?? media.bv_id
   if (!media.title || !bvid) return null
-  const favoriteAt = media.fav_time ? media.fav_time * 1000 : undefined
   const publishedAt = media.pubtime ? media.pubtime * 1000 : undefined
 
   return {
     title: media.title,
     url: `https://www.bilibili.com/video/${bvid}`,
-    publishedAt: order === "mtime" ? undefined : publishedAt,
-    updatedAt: order === "mtime" ? favoriteAt : undefined,
+    publishedAt,
     author: {
       name: media.upper?.name,
       home: media.upper?.mid ? `https://space.bilibili.com/${media.upper.mid}` : undefined,
@@ -178,7 +174,7 @@ async function fetchBilibiliFavorites(
   const ownerId = folderInfo?.mid ?? (targetMid ? Number(targetMid) : undefined)
   return {
     items: medias
-      .map(media => favoriteMediaToNewsItem(media, order))
+      .map(favoriteMediaToNewsItem)
       .filter((item): item is NewsItemInput => item !== null)
       .slice(0, FAVORITE_RESULT_LIMIT),
     metadata: {
@@ -215,7 +211,7 @@ async function fetchBilibiliSeries(
   const badge = info?.cover ? normalizeBilibiliUrl(info.cover) : undefined
   return {
     items: (response.data?.medias ?? [])
-      .map(media => favoriteMediaToNewsItem(media, "pubtime"))
+      .map(favoriteMediaToNewsItem)
       .filter((item): item is NewsItemInput => item !== null)
       .sort((left, right) => (right.publishedAt ?? 0) - (left.publishedAt ?? 0)),
     metadata: {

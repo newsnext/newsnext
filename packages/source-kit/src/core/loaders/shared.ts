@@ -66,7 +66,6 @@ export interface LoaderFields<TField> {
   url: TField
   mobileUrl?: TField
   publishedAt?: TField
-  updatedAt?: TField
   author?: {
     name: TField
     home?: TField
@@ -116,8 +115,8 @@ export function sortLoaderItemsByTimestamp(
   if (!enabled) return items
 
   return items.sort((left, right) => {
-    const leftTime = left.publishedAt ?? left.updatedAt
-    const rightTime = right.publishedAt ?? right.updatedAt
+    const leftTime = left.publishedAt
+    const rightTime = right.publishedAt
     if (leftTime === undefined) return rightTime === undefined ? 0 : 1
     if (rightTime === undefined) return -1
     return rightTime - leftTime

@@ -7,7 +7,6 @@ import {
 } from "@newsnext/ui/components/popover"
 import { useState } from "react"
 import { RelativeTime } from "@/hooks/useRelativeTime"
-import { getNewsItemTime } from "@/lib/source"
 import { cn } from "@/lib/utils"
 import { NewsItemInline, SemanticImage } from "./news-item-inline"
 import { NewsItemPreview, NewsItemPreviewDialog } from "./news-item-preview"
@@ -44,7 +43,7 @@ export function NewsItemLink({
   const activeItem = previewItems?.[activePreviewIndex] ?? item
   const activeInlineText = previewInlinePresentation?.[activePreviewIndex]
     ?? (activePreviewIndex === previewIndex ? inlineText : undefined)
-  const activeTime = showPreviewTime ? getNewsItemTime(activeItem) : undefined
+  const activeTime = showPreviewTime ? activeItem.publishedAt : undefined
   const activeInlineSuffix = activeTime === undefined
     ? (activePreviewIndex === previewIndex ? inlineSuffix : undefined)
     : <RelativeTime date={activeTime} />

@@ -54,7 +54,7 @@ Keep the configuration focused:
 - Model user choices as validated parameters. Prefer one parameterized Source over duplicated variants when their loader and output shape are shared.
 - Add Radar rules when a page URL or page state can fully configure a Source. A suggestion must capture all meaningful state already expressed by the page.
 - For JSON loaders, use bounded JMESPath expressions and Liquid templates. For HTML loaders, use stable CSS selectors and ordered fallbacks.
-- Every item must produce a non-empty `title` and `url`. Use milliseconds for `publishedAt` and `updatedAt`; keep semantic author, stats, attributes, icon, mark, and content fields separate.
+- Every item must produce a non-empty `title` and `url`. Use milliseconds for `publishedAt`; keep semantic author, stats, attributes, icon, mark, and content fields separate.
 - Preserve meaningful upstream order. Use `metadata.type: "ranking"` for ranked results and `sortByTimestamp` only when grouped chronological items need normalization.
 - Declare every possible network hostname. Keep request options minimal and never add a request solely to enrich metadata.
 - Increase `version` only when a behavioral or result-shape change must invalidate stored results.

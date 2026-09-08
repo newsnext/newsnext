@@ -171,9 +171,8 @@ function collectJsonFields(
   if (fields.mobileUrl) {
     entries.push({ field: fields.mobileUrl, htmlOutput: false, path: ["mobileUrl"] })
   }
-  for (const fieldName of ["publishedAt", "updatedAt"] as const) {
-    const field = fields[fieldName]
-    if (field) entries.push({ field, htmlOutput: false, path: [fieldName] })
+  if (fields.publishedAt) {
+    entries.push({ field: fields.publishedAt, htmlOutput: false, path: ["publishedAt"] })
   }
   collectNestedJsonFields(entries, fields, ["author", "stats", "attributes", "icon", "mark", "content"])
   return entries
@@ -288,12 +287,10 @@ function assignResolvedJsonFields(
   input: unknown,
   context: JsonFieldContext,
 ): void {
-  for (const fieldName of ["publishedAt", "updatedAt"] as const) {
-    const field = fields[fieldName]
-    if (!field) continue
-    const value = resolveValue(input, context, field)
+  if (fields.publishedAt) {
+    const value = resolveValue(input, context, fields.publishedAt)
     const timestamp = value === undefined || value === null || value === "" ? undefined : Number(value)
-    if (timestamp !== undefined && Number.isFinite(timestamp)) newsItem[fieldName] = timestamp
+    if (timestamp !== undefined && Number.isFinite(timestamp)) newsItem.publishedAt = timestamp
   }
   for (const group of ["author", "stats", "attributes", "icon", "mark", "content"] as const) {
     const fieldGroup = fields[group]

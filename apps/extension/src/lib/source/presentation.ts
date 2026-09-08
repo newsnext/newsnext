@@ -6,18 +6,13 @@ export type NewsItemsPresentation
     | { type: "ranking" }
     | { type: "timeline", times: number[] }
 
-export function getNewsItemTime(item: NewsItem): number | undefined {
-  return item.publishedAt ?? item.updatedAt
-}
+export function getTimelineItemTimes(items: readonly NewsItem[]): number[] | undefined {
+  if (items.length === 0) return undefined
 
-function getDescendingItemTimes(
-  items: readonly NewsItem[],
-  field: "publishedAt" | "updatedAt",
-): number[] | undefined {
   const times: number[] = []
   let previousTimestamp = Number.POSITIVE_INFINITY
   for (const item of items) {
-    const timestamp = item[field]
+    const timestamp = item.publishedAt
     if (timestamp === undefined || !Number.isFinite(timestamp) || timestamp > previousTimestamp) {
       return undefined
     }
@@ -26,15 +21,6 @@ function getDescendingItemTimes(
   }
 
   return times
-}
-
-export function getTimelineItemTimes(items: readonly NewsItem[]): number[] | undefined {
-  if (items.length === 0) {
-    return undefined
-  }
-
-  return getDescendingItemTimes(items, "publishedAt")
-    ?? getDescendingItemTimes(items, "updatedAt")
 }
 
 export function getNewsItemsPresentation(

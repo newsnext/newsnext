@@ -51,7 +51,7 @@ describe("parseRss", () => {
       items: [{
         title: "Latest entry",
         url: "https://example.com/entry",
-        updatedAt: 1784851936000,
+        publishedAt: 1784851936000,
       }],
       metadata: {
         desc: "Example Atom description",
@@ -59,6 +59,23 @@ describe("parseRss", () => {
         title: "Example Atom Feed",
       },
     })
+  })
+
+  it.each([undefined, "not a date"])("uses JSON Feed modification time when publication is %s", (published) => {
+    expect(parseRss(JSON.stringify({
+      version: "https://jsonfeed.org/version/1.1",
+      title: "Feed",
+      items: [{
+        title: "Entry",
+        url: "https://example.com/entry",
+        date_published: published,
+        date_modified: "2026-07-24T00:12:16Z",
+      }],
+    }))?.items).toEqual([{
+      title: "Entry",
+      url: "https://example.com/entry",
+      publishedAt: 1784851936000,
+    }])
   })
 
   it("decodes HTML entities preserved inside XML CDATA", () => {
@@ -104,7 +121,7 @@ describe("parseRss", () => {
     }])
   })
 
-  it("preserves publication and update timestamps independently", () => {
+  it("uses publication time when both publication and update times exist", () => {
     expect(parseRss(`
       <feed xmlns="http://www.w3.org/2005/Atom">
         <entry>
@@ -125,18 +142,16 @@ describe("parseRss", () => {
         title: "Newer publication",
         url: "https://example.com/newer",
         publishedAt: 1784851200000,
-        updatedAt: 1784937600000,
       },
       {
         title: "Older publication",
         url: "https://example.com/older",
         publishedAt: 1784764800000,
-        updatedAt: 1785024000000,
       },
     ])
   })
 
-  it("preserves timestamps without changing feed order", () => {
+  it("reorders update-sorted feeds by publication time", () => {
     expect(parseRss(`
       <feed xmlns="http://www.w3.org/2005/Atom">
         <entry>
@@ -154,16 +169,14 @@ describe("parseRss", () => {
       </feed>
     `)?.items).toEqual([
       {
-        title: "Recently updated",
-        url: "https://example.com/recently-updated",
-        publishedAt: 1784764800000,
-        updatedAt: 1785024000000,
-      },
-      {
         title: "Previously updated",
         url: "https://example.com/previously-updated",
         publishedAt: 1784851200000,
-        updatedAt: 1784937600000,
+      },
+      {
+        title: "Recently updated",
+        url: "https://example.com/recently-updated",
+        publishedAt: 1784764800000,
       },
     ])
   })
@@ -189,15 +202,67 @@ describe("parseRss", () => {
         title: "First ranked entry",
         url: "https://example.com/first",
         publishedAt: 1784764800000,
-        updatedAt: 1784937600000,
       },
       {
         title: "Second ranked entry",
         url: "https://example.com/second",
         publishedAt: 1784851200000,
-        updatedAt: 1785024000000,
       },
     ])
+  })
+
+  it.each([
+    ["descending updates", [30, 20, 10], ["Second", "Third", "First"]],
+    ["equal updates", [30, 30, 30], ["Second", "Third", "First"]],
+    ["unordered updates", [20, 30, 10], ["First", "Second", "Third"]],
+    ["missing updates", [30, undefined, 10], ["First", "Second", "Third"]],
+    ["invalid updates", [30, "invalid", 10], ["First", "Second", "Third"]],
+  ])("handles JSON Feed %s", (_description, updates, expected) => {
+    const items = [
+      { title: "First", publication: 1 },
+      { title: "Second", publication: 3 },
+      { title: "Third", publication: 3 },
+    ].map(({ title, publication }, index) => {
+      const update = updates[index]
+      return {
+        title,
+        url: `https://example.com/${title}`,
+        date_published: new Date(publication * 1000).toISOString(),
+        date_modified: typeof update === "number" ? new Date(update * 1000).toISOString() : update,
+      }
+    })
+    const result = parseRss(JSON.stringify({
+      version: "https://jsonfeed.org/version/1.1",
+      title: "Feed",
+      items,
+    }))
+    expect(result?.items.map(item => item.title)).toEqual(expected)
+    expect(result?.items.every(item => !("updatedAt" in item))).toBe(true)
+  })
+
+  it("uses update time as publication time for undated entries when sorting", () => {
+    expect(parseRss(JSON.stringify({
+      version: "https://jsonfeed.org/version/1.1",
+      title: "Feed",
+      items: [{
+        title: "Older publication",
+        url: "https://example.com/older",
+        date_published: "2026-07-23T00:00:00Z",
+        date_modified: "2026-07-26T00:00:00Z",
+      }, {
+        title: "Update only",
+        url: "https://example.com/update-only",
+        date_modified: "2026-07-25T00:00:00Z",
+      }],
+    }))?.items).toEqual([{
+      title: "Update only",
+      url: "https://example.com/update-only",
+      publishedAt: 1784937600000,
+    }, {
+      title: "Older publication",
+      url: "https://example.com/older",
+      publishedAt: 1784764800000,
+    }])
   })
 
   it("filters invalid entries and omits invalid timestamps", () => {
@@ -259,6 +324,7 @@ describe("parseRss", () => {
         url: "https://example.com/newer",
         title: "Newer item",
         date_published: "2026-07-24T00:00:00Z",
+        date_modified: "2026-07-26T00:00:00Z",
         authors: [{ name: "Ada", avatar: "/ada.png" }],
       }, {
         id: "2",

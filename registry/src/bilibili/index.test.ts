@@ -63,7 +63,6 @@ describe("bilibili video items", () => {
       bvid: "BV1favorite",
       cnt_info: { collect: 20, play: 100 },
       cover: "http://example.com/cover.jpg",
-      fav_time: 2_000,
       intro: "Example intro",
       pubtime: 1_000,
       title: "Example favorite",
@@ -74,19 +73,15 @@ describe("bilibili video items", () => {
       },
     }
 
-    expect(favoriteMediaToNewsItem(media, "mtime")).toEqual(expect.objectContaining({
+    expect(favoriteMediaToNewsItem(media)).toEqual(expect.objectContaining({
       title: "Example favorite",
       url: "https://www.bilibili.com/video/BV1favorite",
-      publishedAt: undefined,
-      updatedAt: 2_000_000,
+      publishedAt: 1_000_000,
       author: { home: "https://space.bilibili.com/1", name: "Example UP" },
       stats: { stars: 20, views: 100 },
       content: { pictures: "https://example.com/cover.jpg", text: "Example intro" },
     }))
-    expect(favoriteMediaToNewsItem(media, "view")?.publishedAt).toBe(1_000_000)
-    expect(favoriteMediaToNewsItem(media, "view")?.updatedAt).toBeUndefined()
-    expect(favoriteMediaToNewsItem(media, "pubtime")?.publishedAt).toBe(1_000_000)
-    expect(favoriteMediaToNewsItem({ title: "Unavailable" }, "mtime")).toBeNull()
+    expect(favoriteMediaToNewsItem({ title: "Unavailable" })).toBeNull()
   })
 
   it("maps all supported ranking counters to shared stats", () => {

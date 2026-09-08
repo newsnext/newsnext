@@ -46,7 +46,6 @@ interface HtmlExtractedItem {
   url?: unknown
   mobileUrl?: unknown
   publishedAt?: unknown
-  updatedAt?: unknown
   author?: Record<string, unknown>
   stats?: Record<string, unknown>
   attributes?: Record<string, unknown>
@@ -111,9 +110,8 @@ function collectFieldEntries(fields: HtmlLoaderOptions["fields"]): FieldEntry[] 
   if (fields.mobileUrl) {
     entries.push(createFieldEntry(["mobileUrl"], fields.mobileUrl))
   }
-  for (const fieldName of ["publishedAt", "updatedAt"] as const) {
-    const field = fields[fieldName]
-    if (field) entries.push(createFieldEntry([fieldName], field))
+  if (fields.publishedAt) {
+    entries.push(createFieldEntry(["publishedAt"], fields.publishedAt))
   }
   for (const group of ["author", "stats", "attributes", "icon", "mark", "content"] as const) {
     const fieldGroup = fields[group]
@@ -330,13 +328,11 @@ export async function loadHtml(
       item.mobileUrl = String(resolvedItem.mobileUrl)
     }
 
-    for (const fieldName of ["publishedAt", "updatedAt"] as const) {
-      const rawValue = resolvedItem[fieldName]
-      const timestamp = rawValue === undefined || rawValue === null || rawValue === ""
-        ? undefined
-        : Number(rawValue)
-      if (timestamp !== undefined && Number.isFinite(timestamp)) item[fieldName] = timestamp
-    }
+    const rawTimestamp = resolvedItem.publishedAt
+    const timestamp = rawTimestamp === undefined || rawTimestamp === null || rawTimestamp === ""
+      ? undefined
+      : Number(rawTimestamp)
+    if (timestamp !== undefined && Number.isFinite(timestamp)) item.publishedAt = timestamp
     for (const group of ["author", "stats", "attributes", "icon", "mark", "content"] as const) {
       const value = resolvedItem[group]
       if (value && Object.values(value).some(hasValue)) {

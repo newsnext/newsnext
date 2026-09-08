@@ -192,10 +192,8 @@ registry, and run type-checking and tests.
 Loaders return items in their meaningful display order. Leave `metadata.type`
 unset for ordinary chronological or unordered results. The extension presents
 the result as a timeline only when every item has a finite `publishedAt` and
-those values are ordered from newest to oldest, or, when that check fails,
-every item has an equivalently ordered finite `updatedAt`. Otherwise it
-presents the result as an unordered list. An empty loader result is rejected as
-a load error.
+those values are ordered from newest to oldest. Otherwise it presents the
+result as an unordered list. An empty loader result is rejected as a load error.
 
 Set `metadata.type: "ranking"` when positions express rank and should display
 ordinal numbers and movement between loads. Ranking explicitly preserves that
@@ -208,24 +206,27 @@ timelines remain inferred from item times and order.
 
 JSON and HTML loaders preserve the selected item order by default. When a page
 groups chronological items instead of ordering them globally, opt into sorting
-items from newest to oldest by `publishedAt`, falling back to `updatedAt` when
-an item has no publication time:
+items from newest to oldest by `publishedAt`:
 
 ```ts
 sortByTimestamp: true
 ```
 
-Items without either time remain last. Preserve upstream order and declare
-`type: "ranking"` for ranked or popularity-based results even when every item
-includes a time. Other
-intentional ordering belongs in the upstream request, the JSON `items` JMESPath
-expression, or custom loader code.
+Items without a publication time remain last in their original order. Preserve
+upstream order and declare `type: "ranking"` for ranked or popularity-based
+results even when every item includes a time. Other intentional ordering belongs
+in the upstream request, the JSON `items` JMESPath expression, or custom loader code.
 
-The RSS loader preserves feed order and independently retains every parseable
-publication and update time. RSS and Atom map `published`, `pubDate`, or
-`created` to `publishedAt` and `updated` to `updatedAt`; JSON Feed maps
-`date_published` and `date_modified`. Feed order still determines whether the
-frontend treats the result as a list or timeline.
+The RSS loader emits one `publishedAt` value. RSS and
+Atom use `published`, `pubDate`, or `created`, falling back to `updated` when
+no parseable publication time exists. JSON Feed uses `date_published`, falling
+back to `date_modified`. Update times are not emitted separately. This fallback
+belongs to RSS parsing; downstream sorting and timeline inference use only
+`publishedAt`. When every retained entry has a parseable update time and those
+times are newest-first (ties allowed), the loader reorders entries by the
+resolved `publishedAt`, newest first. Equal publication times retain feed order.
+Otherwise it preserves feed order, including feeds with missing update times or
+non-chronological order. The resulting order determines list or timeline display.
 
 Write human-facing strings in the website's primary interface language. Keep
 brand names, IDs, parameter keys and values, and selectors unchanged.
@@ -772,7 +773,6 @@ not preformatted presentation strings:
   title: "Example",
   url: "https://example.com/article",
   publishedAt: 1767225600000,
-  updatedAt: 1767312000000,
   author: {
     name: "Ada",
     home: "https://example.com/authors/ada",
@@ -808,8 +808,10 @@ removes those values, empty nested objects, and empty picture arrays while
 preserving meaningful `0` and `false` values. Do not assemble optional fields
 with conditional object spreads in each source.
 
-Times are milliseconds. `publishedAt` is the original publication time;
-`updatedAt` is the last content update time. `author` retains identity,
+Times are milliseconds. `publishedAt` is the only item time field. Only the RSS
+loader may substitute a feed update time when publication time is unavailable.
+Unsupported top-level item fields are rejected; use `attributes` for
+source-specific facts. `author` retains identity,
 `stats` uses the shared `likes`, `comments`, `reposts`, `views`, `stars`, and
 `score` keys, and `attributes` stores source-specific string, number, or
 boolean facts. `score` may be negative; the shared count fields must not be.
@@ -1236,7 +1238,7 @@ Before submitting:
   variants have distinct discovery semantics and default identities.
 - Use JMESPath and CSS selectors before writing a custom loader.
 - Declare every possible network hostname.
-- Use milliseconds for `publishedAt` and `updatedAt`, and text instead of HTML
+- Use milliseconds for `publishedAt`, and text instead of HTML
   when possible.
 - Add Radar rules for parameterized sources when appropriate.
 - Confirm each Radar suggestion captures all parameters expressed by the page

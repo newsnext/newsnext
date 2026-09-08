@@ -312,8 +312,9 @@ derived from provider ID, exact URL, and canonical item JSON, so Sources and
 parameter sets under the same provider reuse unchanged item values. Observation
 position remains dataset-specific and one-based. Observation kinds use the
 same presentation semantics as the extension: an effective declared `ranking`
-or `list` wins, otherwise descending timestamps infer `timeline` and remaining
-results become `list`. Loader metadata overrides static Source metadata. History
+or `list` wins, otherwise descending publication timestamps infer
+`timeline` and remaining results become `list`. Only `publishedAt`
+is used; RSS parsing resolves missing publication times before this stage. Loader metadata overrides static Source metadata. History
 reports position movement only when both compared observations are rankings.
 
 The daemon owns one Turso engine and one mutex-protected write connection.
@@ -533,7 +534,7 @@ request
     → select each field with JMESPath
     → render field Liquid templates
     → normalize and validate NewsItem values
-    → optionally sort by publishedAt, falling back to updatedAt, newest first
+    → optionally sort by publishedAt newest first, with undated items last
 ```
 
 JSON and HTML helper contracts use `*LoaderOptions` for loader configuration
@@ -551,7 +552,7 @@ request
     → render field Liquid templates
     → select and render document metadata
     → normalize and validate NewsItem values
-    → optionally sort by publishedAt, falling back to updatedAt, newest first
+    → optionally sort by publishedAt newest first, with undated items last
 ```
 
 The Hacker News provider intentionally remains a single-request HTML loader.
@@ -581,8 +582,16 @@ sanitized HTML renderer owns their presentation. JSON Feed retains the format's
 explicit distinction between `content_html` and `content_text`.
 A missing JSON Feed item title is derived from its summary, text content, or
 stripped HTML and bounded to 200 characters. Entries without a usable title or
-URL are discarded. After filtering, the loader independently retains parseable publication and
-update times on each entry without using feed order to discard either fact.
+URL are discarded. The loader emits only `publishedAt`, using the parseable
+publication time or falling back to the update time inside RSS parsing. Parsed
+entries temporarily pair their item with the raw parsed update time. If every
+retained entry has an update time in descending order (including ties), the
+loader stably sorts by the resolved publication time before the shared result
+limit is applied. Other feeds retain their order. The internal update times are
+discarded before returning items; downstream sorting and timeline inference do
+not inspect them. The shared item type and JSON/HTML field contracts expose only
+`publishedAt`; the loader-result boundary rejects unsupported top-level item
+fields instead of retaining a second time field.
 RSS metadata uses the same normalization, URL resolution, persistence, Query caching, and
 presentation override pipeline as JSON, HTML, and custom loader metadata.
 

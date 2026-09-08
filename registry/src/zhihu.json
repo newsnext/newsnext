@@ -98,10 +98,6 @@
             "select": "created_time || created",
             "template": "{{ scope.value | times: 1000 }}"
           },
-          "updatedAt": {
-            "select": "updated_time || updated",
-            "template": "{{ scope.value | times: 1000 }}"
-          },
           "author": {
             "name": "author.name"
           },
@@ -145,10 +141,6 @@
           },
           "publishedAt": {
             "select": "created_time",
-            "template": "{{ scope.value | times: 1000 }}"
-          },
-          "updatedAt": {
-            "select": "updated_time",
             "template": "{{ scope.value | times: 1000 }}"
           },
           "author": {
@@ -251,10 +243,6 @@
           },
           "publishedAt": {
             "select": "created_time",
-            "template": "{{ scope.value | times: 1000 }}"
-          },
-          "updatedAt": {
-            "select": "updated_time",
             "template": "{{ scope.value | times: 1000 }}"
           },
           "author": {
@@ -394,10 +382,6 @@
             "select": "created_time",
             "template": "{{ scope.value | times: 1000 }}"
           },
-          "updatedAt": {
-            "select": "updated_time",
-            "template": "{{ scope.value | times: 1000 }}"
-          },
           "author": {
             "name": "author.name"
           },
@@ -517,10 +501,6 @@
           },
           "publishedAt": {
             "select": "created",
-            "template": "{{ scope.value | times: 1000 }}"
-          },
-          "updatedAt": {
-            "select": "updated",
             "template": "{{ scope.value | times: 1000 }}"
           },
           "author": {

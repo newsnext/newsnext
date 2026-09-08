@@ -26,32 +26,12 @@ describe("sortLoaderItemsByTimestamp", () => {
     { title: "Middle", url: "https://example.com/middle", publishedAt: 2_000 },
     { title: "Undated", url: "https://example.com/undated" },
     { title: "Oldest", url: "https://example.com/oldest", publishedAt: 1_000 },
-    { title: "Newest", url: "https://example.com/newest", updatedAt: 3_000 },
+    { title: "Newest", url: "https://example.com/newest", publishedAt: 3_000 },
   ]
 
   it("sorts timestamps newest first with missing timestamps last", () => {
     expect(sortLoaderItemsByTimestamp([...items], true).map(item => item.title))
       .toEqual(["Newest", "Middle", "Oldest", "Undated"])
-  })
-
-  it("prefers publication time when an item also has an update time", () => {
-    const publishedFirst: NewsItem[] = [
-      {
-        title: "Published later",
-        url: "https://example.com/later",
-        publishedAt: 2_000,
-        updatedAt: 2_000,
-      },
-      {
-        title: "Updated later",
-        url: "https://example.com/updated",
-        publishedAt: 1_000,
-        updatedAt: 3_000,
-      },
-    ]
-
-    expect(sortLoaderItemsByTimestamp(publishedFirst, true).map(item => item.title))
-      .toEqual(["Published later", "Updated later"])
   })
 
   it("preserves the selected order when sorting is disabled", () => {
