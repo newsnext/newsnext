@@ -3,13 +3,13 @@ import type { LiveCardDragHandleRef } from "./card-header"
 import type { SourcePermissionRequest } from "@/lib/source"
 import type { LiveCardViewModel, NewsItem } from "@/typings/source"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
+import { cn } from "@newsnext/ui/lib/utils"
 import { useMemo, useState } from "react"
 import { useI18n } from "@/hooks/use-i18n"
 import { useSourceIcon } from "@/hooks/use-source-icon"
 import { useSourceMarkScales } from "@/hooks/use-source-mark-scales"
 import { RelativeTime } from "@/hooks/useRelativeTime"
 import { getHostPermissionOrigins, getNewsItemsPresentation } from "@/lib/source"
-import { cn } from "@/lib/utils"
 import {
   PhArrowCounterClockwiseDuotone,
   PhCircleDashedDuotone,

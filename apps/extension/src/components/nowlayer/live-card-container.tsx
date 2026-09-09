@@ -1,13 +1,13 @@
 import type { ElementEventBasePayload } from "@atlaskit/pragmatic-drag-and-drop/element/adapter"
 import type { NowLayerLiveCard } from "@/hooks/use-now-layer-live-cards"
 import { useScrollProgressContext } from "@newsnext/ui/components/scroll-progress-context"
+import { cn } from "@newsnext/ui/lib/utils"
 import { m } from "motion/react"
 import { useCallback, useMemo, useState } from "react"
 import { useCardEntrance } from "@/components/board-view/use-card-entrance"
 import { DndContext } from "@/hooks/use-dnd-context"
 import { useWrappedSortable } from "@/hooks/use-wrapped-sortable"
 import { isSortableData } from "@/lib/board"
-import { cn } from "@/lib/utils"
 import { DraggableLiveCard } from "../live-card/draggable-live-card"
 
 const LAYOUT_MEASUREMENT_SUSPENDED = Symbol("layout-measurement-suspended")

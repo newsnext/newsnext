@@ -3,6 +3,7 @@ import type { InstanceMetadata, InstancePatch } from "@/lib/source"
 import type { LiveCardViewModel } from "@/typings/source"
 import { FlipAnimate } from "@newsnext/ui/components/flip-animate"
 import { useScrollProgressContext } from "@newsnext/ui/components/scroll-progress-context"
+import { cn } from "@newsnext/ui/lib/utils"
 import { useQueryClient } from "@tanstack/react-query"
 import { useSetAtom } from "jotai"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
@@ -16,7 +17,6 @@ import { useSourcePermission } from "@/hooks/use-source-permission"
 import { useSourceQuery } from "@/hooks/use-source-query"
 import { actions } from "@/lib/actions"
 import { applySourceLoaderMetadata, applySourceSnapshot, SOURCE_QUERY_OFFSCREEN_RETENTION_MS, SOURCE_QUERY_PRELOAD_MARGIN } from "@/lib/source"
-import { cn } from "@/lib/utils"
 import {
   resetInstanceParamsAtom,
   setInstancePatchAtom,

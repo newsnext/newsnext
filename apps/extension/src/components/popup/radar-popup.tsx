@@ -1,5 +1,6 @@
 import { Button } from "@newsnext/ui/components/button"
 import { ThemeIcon } from "@newsnext/ui/components/theme-icon"
+import { cn } from "@newsnext/ui/lib/utils"
 import { useCallback, useRef, useState } from "react"
 import { ScrollProgressProvider } from "@/components/common/scroll-progress-provider"
 import { PhGear, PhHouse } from "@/components/icons/ph"
@@ -8,7 +9,6 @@ import { useCurrentTabRadarSuggestions } from "@/hooks/use-current-tab-radar-sug
 import { useI18n } from "@/hooks/use-i18n"
 import { openAppTab } from "@/lib/app-tab"
 import { openSettings } from "@/lib/settings"
-import { cn } from "@/lib/utils"
 
 interface RadarOverlayHeaderProps {
   count: number

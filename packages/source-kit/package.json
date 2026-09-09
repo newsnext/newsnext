@@ -19,14 +19,14 @@
     "@newsnext/date-parser": "workspace:*",
     "@newsnext/sdk": "workspace:*",
     "@newsnext/shared": "workspace:*",
-    "@smithy/md5-js": "^4.4.16",
+    "@smithy/md5-js": "^4.5.2",
     "cheerio": "catalog:",
     "defu": "catalog:",
     "entities": "^7.0.1",
-    "fast-xml-parser": "^5.10.1",
+    "fast-xml-parser": "^5.11.1",
     "jmespath": "^0.16.0",
     "ky": "catalog:",
-    "liquidjs": "^10.28.0",
+    "liquidjs": "^10.29.0",
     "p-queue": "^9.3.3"
   },
   "devDependencies": {

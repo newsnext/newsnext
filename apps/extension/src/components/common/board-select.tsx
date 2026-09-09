@@ -6,9 +6,9 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@newsnext/ui/components/dropdown-menu"
-import { useAtomValue } from "jotai"
+import { cn } from "@newsnext/ui/lib/utils"
+import { useAtomValueRawSync } from "jotai"
 import { useI18n } from "@/hooks/use-i18n"
-import { cn } from "@/lib/utils"
 import { boardsAtom } from "@/store/board"
 
 interface BoardSelectProps {
@@ -29,7 +29,7 @@ export function BoardSelect({
   isBoardDisabled,
 }: BoardSelectProps): React.JSX.Element {
   const { t } = useI18n()
-  const boards = useAtomValue(boardsAtom)
+  const boards = useAtomValueRawSync(boardsAtom)
   const selectedBoard = boards.find(board => board.id === value)
   const label = selectedBoard?.name ?? t("noBoards")
 

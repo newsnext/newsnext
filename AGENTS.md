@@ -65,6 +65,25 @@ Newsnext is a personalized web crawler that runs inside a browser extension (mv3
 - Keep its baselines and recommended verification steps aligned with current
   React components and runtime behavior.
 
+### Jotai State Subscriptions
+
+- Use only Jotai's public package entry points; do not import internal files.
+- Jotai 3's `useAtomValue` and the read side of `useAtom` can miss updates
+  between initial render and effect subscription. Awaiting storage initialization
+  before rendering does not guarantee an already-created `atomWithStorage` has
+  hydrated its in-memory value; it also reads storage on mount.
+- Use `useAtomValueRawSync` for synchronous persisted state that determines
+  initial navigation, provider configuration, or selection defaults. Audit each
+  independently mounted app, popup, and shared selector. For writable state,
+  pair it with `useSetAtom` instead of relying on `useAtom` to close this gap.
+- Keep `useAtomValue` for ordinary concurrent subscriptions and async atoms that
+  need Suspense. `useAtomValueRawSync` returns promises unchanged and makes store
+  updates synchronous; do not replace all subscriptions mechanically.
+- Validate subscription or dependency migrations with fresh mounts and affected
+  interactions, not only HMR, type checks, or builds. Follow the browser automation
+  policy above. Distinguish verified behavior from paths not exercised, and record
+  durable findings in `docs/PERFORMANCE_GUIDELINE.md`.
+
 ### Version Control
 
 - Use `git` as the primary version control system for this repository.

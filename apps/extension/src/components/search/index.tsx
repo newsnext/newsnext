@@ -17,6 +17,7 @@ import {
   DialogTitle,
 } from "@newsnext/ui/components/dialog"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
+import { cn } from "@newsnext/ui/lib/utils"
 import { formatForDisplay, useHotkey } from "@tanstack/react-hotkeys"
 import { useQueries } from "@tanstack/react-query"
 import { useAtomValue } from "jotai"
@@ -34,7 +35,6 @@ import {
   applySourceLoaderMetadata,
   buildLiveCards,
 } from "@/lib/source"
-import { cn } from "@/lib/utils"
 import { boardsAtom, instancesAtom } from "@/store/board"
 import { shortcutSettingsAtom } from "@/store/settings"
 import { PhMagnifyingGlass } from "../icons/ph"

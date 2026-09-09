@@ -14,13 +14,13 @@ import { RadioGroup, RadioGroupItem } from "@newsnext/ui/components/radio-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@newsnext/ui/components/select"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { ThemeSelector } from "@newsnext/ui/components/theme-selector"
+import { cn } from "@newsnext/ui/lib/utils"
 import { useState } from "react"
 import { ConfigSection } from "@/components/common/config-section"
 import { ConfirmDestructiveButton } from "@/components/common/confirm-destructive-button"
 import { useAsyncAction } from "@/hooks/use-async-action"
 import { useI18n } from "@/hooks/use-i18n"
 import { DEFAULT_BOARD_COLOR, DEFAULT_BOARD_LAYER, DEFAULT_NOW_LAYER_SORT, updateNowLayerSortMode } from "@/lib/board"
-import { cn } from "@/lib/utils"
 
 const SORT_OPTIONS: { labelKey: StaticMessageKey, value: NowLayerSortMode }[] = [
   { labelKey: "manual", value: "manual" },

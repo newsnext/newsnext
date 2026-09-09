@@ -1,9 +1,9 @@
 import type { ComponentProps, ReactNode } from "react"
 import { Button } from "@newsnext/ui/components/button"
+import { cn } from "@newsnext/ui/lib/utils"
 import { useEffect, useState } from "react"
 import { PhCheckCircle } from "@/components/icons/ph"
 import { useI18n } from "@/hooks/use-i18n"
-import { cn } from "@/lib/utils"
 
 interface BaseConfirmDestructiveButtonProps extends Omit<
   ComponentProps<typeof Button>,

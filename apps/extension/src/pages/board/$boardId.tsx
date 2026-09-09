@@ -1,7 +1,7 @@
 import type { BoardLayer } from "@/lib/board"
 import { useQueryClient } from "@tanstack/react-query"
 import { Navigate, useLocation, useParams } from "@tanstack/react-router"
-import { useAtomValue, useSetAtom } from "jotai"
+import { useAtomValueRawSync, useSetAtom } from "jotai"
 import { useEffect, useMemo, useState } from "react"
 import { BoardView } from "@/components/board-view"
 import { getBoardLayerFromState } from "@/lib/board"
@@ -18,8 +18,8 @@ interface ReadyBoardView {
 export function BoardIdComponent() {
   const { boardId } = useParams({ strict: false }) as { boardId: string }
   const layer = useLocation({ select: location => getBoardLayerFromState(location.state) })
-  const boards = useAtomValue(boardsAtom)
-  const instances = useAtomValue(instancesAtom)
+  const boards = useAtomValueRawSync(boardsAtom)
+  const instances = useAtomValueRawSync(instancesAtom)
   const queryClient = useQueryClient()
   const setCurrentBoardId = useSetAtom(currentBoardIdAtom)
   const [restoredBoardId, setRestoredBoardId] = useState<string>()

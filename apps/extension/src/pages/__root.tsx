@@ -1,6 +1,6 @@
 import type { QueryClient } from "@tanstack/react-query"
 import { createRootRouteWithContext, Outlet, useNavigate, useParams } from "@tanstack/react-router"
-import { useAtomValue } from "jotai"
+import { useAtomValueRawSync } from "jotai"
 import { Suspense, useCallback, useEffect, useRef, useState } from "react"
 import { TanStackDevtools } from "@/components/common/devtools"
 import { ScrollProgressProvider } from "@/components/common/scroll-progress-provider"
@@ -22,8 +22,8 @@ function NotFoundComponent() {
 }
 
 function RootComponent() {
-  const boards = useAtomValue(boardsAtom)
-  const currentBoardId = useAtomValue(currentBoardIdAtom)
+  const boards = useAtomValueRawSync(boardsAtom)
+  const currentBoardId = useAtomValueRawSync(currentBoardIdAtom)
   const navigate = useNavigate()
   const { boardId: routeBoardId } = useParams({ strict: false }) as { boardId?: string }
   const previousBoardIdRef = useRef(currentBoardId)

@@ -1,8 +1,8 @@
 import type { NewsItem } from "@/typings/source"
 import { VirtualList } from "@newsnext/ui/components/virtual-list"
+import { cn } from "@newsnext/ui/lib/utils"
 import { AnimatePresence, m } from "motion/react"
 import { useEffect, useState } from "react"
-import { cn } from "@/lib/utils"
 import { NewsItemLink, NewsItemSummary } from "./news-item-common"
 
 interface Props {

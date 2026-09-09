@@ -1,7 +1,7 @@
 import type { PropsWithChildren } from "react"
 import { Button } from "@newsnext/ui/components/button"
 import { Input } from "@newsnext/ui/components/input"
-import { cn } from "@/lib/utils"
+import { cn } from "@newsnext/ui/lib/utils"
 
 export function EditableInput({ text, editable = false, onChange }: { text: string, editable?: boolean, onChange?: (value: string) => void }) {
   if (!editable) {

@@ -3,10 +3,10 @@ import type { Color } from "@newsnext/shared/types"
 import type { SourcePermissionRequest } from "@/lib/source"
 import type { LiveCardViewModel, NewsItem } from "@/typings/source"
 import { COLORS } from "@newsnext/shared/constants"
+import { cn } from "@newsnext/ui/lib/utils"
 import { useState } from "react"
 import { LiveCardBack } from "@/components/live-card/card-back"
 import { LiveCardFront } from "@/components/live-card/card-front"
-import { cn } from "@/lib/utils"
 
 const LOADED_AT = Date.now() - 4 * 60 * 1000
 

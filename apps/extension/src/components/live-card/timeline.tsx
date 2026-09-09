@@ -1,8 +1,8 @@
 import type { NewsItem } from "@/typings/source"
 import { VirtualList } from "@newsnext/ui/components/virtual-list"
+import { cn } from "@newsnext/ui/lib/utils"
 import { useCallback, useId } from "react"
 import { useRelativeTimes } from "@/hooks/useRelativeTime"
-import { cn } from "@/lib/utils"
 import { NewsItemLink, NewsItemSummary } from "./news-item-common"
 import { TimelineRail } from "./timeline-rail"
 

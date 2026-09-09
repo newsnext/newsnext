@@ -7,8 +7,8 @@ import {
   SelectTrigger,
 } from "@newsnext/ui/components/select"
 import { Switch } from "@newsnext/ui/components/switch"
+import { cn } from "@newsnext/ui/lib/utils"
 import { useI18n } from "@/hooks/use-i18n"
-import { cn } from "@/lib/utils"
 import {
   EditableInput,
   Info,

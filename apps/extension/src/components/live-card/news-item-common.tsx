@@ -5,9 +5,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@newsnext/ui/components/popover"
+import { cn } from "@newsnext/ui/lib/utils"
 import { useState } from "react"
 import { RelativeTime } from "@/hooks/useRelativeTime"
-import { cn } from "@/lib/utils"
 import { NewsItemInline, SemanticImage } from "./news-item-inline"
 import { NewsItemPreview, NewsItemPreviewDialog } from "./news-item-preview"
 

@@ -1,6 +1,6 @@
 import type { PropsWithChildren } from "react"
+import { cn } from "@newsnext/ui/lib/utils"
 import { useLayoutEffect, useRef } from "react"
-import { cn } from "@/lib/utils"
 
 const SCATTER_DURATION_MS = 320
 const SCATTER_STAGGER_MS = 10

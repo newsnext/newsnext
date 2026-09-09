@@ -32,6 +32,28 @@ canonical SVG source and each generated theme-color data URL, and remember the
 applied color so board resolution with the same color does not repeat network
 loading, SVG parsing, or serialization.
 
+### Persisted state during route mounting
+
+Route components, the locale provider, the Radar target-board initializer, and
+the shared board selector read synchronous persisted atoms with
+`useAtomValueRawSync`.
+Jotai 3 removed the unconditional post-mount render from `useAtomValue`, so an
+`atomWithStorage` hydration update between rendering and subscription can be
+missed. This left the index route holding an empty board list while the store
+and header already contained the saved boards, preventing initial navigation.
+Use the synchronous subscription at these initialization boundaries to recheck
+the snapshot after subscribing; keep ordinary card subscriptions concurrent.
+Awaiting storage initialization alone is insufficient: `atomWithStorage` captures
+its initial value when created and refreshes it on mount. Audit app and popup
+mounts separately. Pair synchronous reads with `useSetAtom` for writable settings;
+do not use the raw hook for async atoms that need Suspense.
+
+Verify a fresh app load without a hash, switching between populated boards,
+persisted locale restoration, and the Radar target-board selection, not just HMR
+or type checks. The minute-clock atom also writes on mount, but its consumers
+sample `Math.max(lastTickAt, Date.now())` and receive subsequent timer updates;
+it does not require synchronous subscriptions for initial clock accuracy.
+
 ## Measurement Workflow
 
 Measure before and after a change with the same board, viewport, loaded LiveCard

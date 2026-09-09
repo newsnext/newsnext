@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils"
+import { cn } from "@newsnext/ui/lib/utils"
 
 interface FixturePageProps extends React.PropsWithChildren {
   category: "Basics" | "LiveCards" | "Patterns"

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 import type { NewsItem } from "@/typings/source"
-import { cn } from "@/lib/utils"
+import { cn } from "@newsnext/ui/lib/utils"
 import { PhArrowFatUp, PhChatCircle, PhEye, PhHeart, PhRepeat, PhStar } from "../icons/ph"
 
 const compactNumberFormatter = new Intl.NumberFormat("en-US", {

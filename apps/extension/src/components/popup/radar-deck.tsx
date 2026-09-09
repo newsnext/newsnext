@@ -4,8 +4,9 @@ import type { ResolvedRadarSuggestion } from "@/lib/radar"
 import type { InstancePatch } from "@/lib/source"
 import type { LiveCardViewModel } from "@/typings/source"
 import { Button } from "@newsnext/ui/components/button"
+import { cn } from "@newsnext/ui/lib/utils"
 import confetti from "canvas-confetti"
-import { useAtomValue, useSetAtom } from "jotai"
+import { useAtomValueRawSync, useSetAtom } from "jotai"
 import { animate, motion, useDragControls, useMotionValue, useReducedMotion, useTransform } from "motion/react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { BoardSelect } from "@/components/common/board-select"
@@ -15,7 +16,6 @@ import { useAsyncAction } from "@/hooks/use-async-action"
 import { useI18n } from "@/hooks/use-i18n"
 import { createRadarLiveCard } from "@/lib/radar"
 import { mergeInstancePatch } from "@/lib/source"
-import { cn } from "@/lib/utils"
 import { boardsAtom, createInstanceAtom } from "@/store/board"
 import { currentBoardIdAtom } from "@/store/settings"
 
@@ -174,8 +174,8 @@ export function RadarDeck({
   onCreationStart,
   suggestions,
 }: RadarDeckProps) {
-  const boards = useAtomValue(boardsAtom)
-  const currentBoardId = useAtomValue(currentBoardIdAtom)
+  const boards = useAtomValueRawSync(boardsAtom)
+  const currentBoardId = useAtomValueRawSync(currentBoardIdAtom)
   const initialBoardId = boards.find(board => board.id === currentBoardId)?.id
     ?? boards[0]?.id
   const deckKey = `${suggestions.map(suggestion => suggestion.id).join("\0")}\0${initialBoardId ?? ""}`

@@ -1,12 +1,12 @@
 import { Navigate } from "@tanstack/react-router"
-import { useAtomValue } from "jotai"
+import { useAtomValueRawSync } from "jotai"
 import { boardsAtom } from "@/store/board"
 import { currentBoardIdAtom, defaultBoardIdAtom } from "@/store/settings"
 
 export function IndexComponent() {
-  const currentBoardId = useAtomValue(currentBoardIdAtom)
-  const defaultBoardId = useAtomValue(defaultBoardIdAtom)
-  const boards = useAtomValue(boardsAtom)
+  const currentBoardId = useAtomValueRawSync(currentBoardIdAtom)
+  const defaultBoardId = useAtomValueRawSync(defaultBoardIdAtom)
+  const boards = useAtomValueRawSync(boardsAtom)
   const preferredBoardId = defaultBoardId ?? currentBoardId
   const boardId = boards.some(board => board.id === preferredBoardId)
     ? preferredBoardId

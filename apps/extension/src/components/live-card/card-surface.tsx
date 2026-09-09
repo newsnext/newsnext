@@ -1,5 +1,5 @@
 import { SquircleBox } from "@newsnext/ui/components/squircle"
-import { cn } from "@/lib/utils"
+import { cn } from "@newsnext/ui/lib/utils"
 
 interface LiveCardSurfaceProps {
   className?: string

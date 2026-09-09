@@ -1,5 +1,7 @@
-import type { SyncStorage } from "jotai/vanilla/utils/atomWithStorage"
+import type { createJSONStorage } from "jotai/vanilla/utils"
 import { browser } from "#imports"
+
+type SyncStorage<Value> = ReturnType<typeof createJSONStorage<Value>>
 
 interface ExtensionStorageOptions<Value> {
   defaultValue: () => Value

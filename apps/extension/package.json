@@ -33,11 +33,11 @@
     "@webext-core/proxy-service": "^3.0.2",
     "canvas-confetti": "^1.9.4",
     "defu": "catalog:",
-    "dexie": "^4.4.3",
+    "dexie": "^4.4.5",
     "es-toolkit": "catalog:",
-    "fast-xml-parser": "^5.10.1",
+    "fast-xml-parser": "^5.11.1",
     "gridstack": "catalog:",
-    "i18next": "^26.4.0",
+    "i18next": "^26.4.2",
     "jotai": "catalog:",
     "lucide-react": "catalog:",
     "motion": "catalog:",
@@ -45,12 +45,12 @@
     "path-to-regexp": "^8.4.2",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "react-i18next": "^17.0.12"
+    "react-i18next": "^17.0.13"
   },
   "devDependencies": {
     "@babel/core": "^8.0.1",
     "@iconify-json/ph": "catalog:",
-    "@rolldown/plugin-babel": "^0.2.3",
+    "@rolldown/plugin-babel": "^0.2.4",
     "@svgr/core": "^8.1.0",
     "@svgr/plugin-jsx": "^8.1.0",
     "@tailwindcss/vite": "catalog:",
@@ -62,16 +62,16 @@
     "@vitejs/plugin-react": "catalog:",
     "@wxt-dev/i18n": "^0.2.7",
     "babel-plugin-react-compiler": "^1.0.0",
-    "react-cosmos": "^7.3.0",
-    "react-cosmos-plugin-vite": "^7.3.0",
-    "react-cosmos-ui": "^7.3.0",
+    "react-cosmos": "^7.4.1",
+    "react-cosmos-plugin-vite": "^7.4.0",
+    "react-cosmos-ui": "^7.4.0",
     "react-scan": "^0.5.7",
     "tailwindcss": "catalog:",
-    "typebox": "^1.3.16",
+    "typebox": "^1.3.29",
     "unplugin-icons": "catalog:",
     "unplugin-turbo-console": "catalog:",
     "vite": "catalog:",
     "vitest": "catalog:",
-    "wxt": "^0.21.3"
+    "wxt": "^0.21.4"
   }
 }

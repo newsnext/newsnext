@@ -1,6 +1,6 @@
 import type { PropsWithChildren } from "react"
 import type { I18nRuntimeContextValue, Locale } from "@/lib/i18n"
-import { useAtom } from "jotai"
+import { useAtomValueRawSync, useSetAtom } from "jotai"
 import { useEffect, useLayoutEffect, useMemo, useState } from "react"
 import { I18nextProvider } from "react-i18next"
 import { i18next, I18nRuntimeContext } from "@/lib/i18n"
@@ -12,7 +12,8 @@ function detectSystemLocale(): Locale {
 }
 
 export function I18nProvider({ children }: PropsWithChildren): React.JSX.Element {
-  const [preference, setPreference] = useAtom(localePreferenceAtom)
+  const preference = useAtomValueRawSync(localePreferenceAtom)
+  const setPreference = useSetAtom(localePreferenceAtom)
   const [systemLocale, setSystemLocale] = useState<Locale>(detectSystemLocale)
   const locale = preference === "system" ? systemLocale : preference
 

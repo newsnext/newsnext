@@ -14,6 +14,7 @@ import {
   PillGroupIndicator,
   pillGroupItemClassName,
 } from "@newsnext/ui/components/pill-group"
+import { cn } from "@newsnext/ui/lib/utils"
 import { useHotkeys } from "@tanstack/react-hotkeys"
 import { useNavigate } from "@tanstack/react-router"
 import { useAtomValue, useSetAtom } from "jotai"
@@ -24,7 +25,6 @@ import { useI18n } from "@/hooks/use-i18n"
 import { DEFAULT_BOARD_LAYER, getAdjacentBoardId } from "@/lib/board"
 import { OpmlImportError, parseOpml } from "@/lib/opml"
 import { DEFAULT_SHORTCUT_SETTINGS, SHORTCUT_DEFINITIONS } from "@/lib/settings"
-import { cn } from "@/lib/utils"
 import {
   boardsAtom,
   createBoardAtom,

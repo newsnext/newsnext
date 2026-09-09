@@ -3,6 +3,7 @@ import type { StaticMessageKey } from "@/lib/i18n"
 import type { ShortcutId } from "@/lib/settings"
 import { Button } from "@newsnext/ui/components/button"
 import { Card, CardContent } from "@newsnext/ui/components/card"
+import { cn } from "@newsnext/ui/lib/utils"
 import {
   formatForDisplay,
   useHotkeyRecorder,
@@ -16,7 +17,6 @@ import {
   DEFAULT_SHORTCUT_SETTINGS,
   SHORTCUT_ORDER,
 } from "@/lib/settings"
-import { cn } from "@/lib/utils"
 import { shortcutSettingsAtom } from "@/store/settings"
 
 const SHORTCUT_MESSAGES: Record<ShortcutId, { descriptionKey: StaticMessageKey, labelKey: StaticMessageKey }> = {

@@ -1,7 +1,7 @@
 import type { ReactNode } from "react"
 import type { NewsItem, SemanticPicture } from "@/typings/source"
 import { ProxiedImage } from "@newsnext/ui/components/proxied-image"
-import { cn } from "@/lib/utils"
+import { cn } from "@newsnext/ui/lib/utils"
 import { NewsItemStats } from "./news-item-stats"
 
 export function SemanticImage({ picture, className, scale, delay }: {

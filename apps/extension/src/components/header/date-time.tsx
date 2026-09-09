@@ -1,6 +1,6 @@
+import { cn } from "@newsnext/ui/lib/utils"
 import { useI18n } from "@/hooks/use-i18n"
 import { useMinuteDate } from "@/hooks/useRelativeTime"
-import { cn } from "@/lib/utils"
 
 export function DateTime({ className }: { className?: string }) {
   const { locale } = useI18n()

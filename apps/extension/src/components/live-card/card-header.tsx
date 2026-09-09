@@ -1,7 +1,7 @@
 import type { SourceProvider } from "@newsnext/source-kit/types"
 import type { ComponentProps, ReactNode } from "react"
 import { Button } from "@newsnext/ui/components/button"
-import { cn } from "@/lib/utils"
+import { cn } from "@newsnext/ui/lib/utils"
 import { SourceIcon } from "./source-icon"
 
 export type LiveCardDragHandleRef = (node: HTMLDivElement | null) => void
