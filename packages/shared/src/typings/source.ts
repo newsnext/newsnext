@@ -1,4 +1,4 @@
-import type { NewsItem } from "./items"
+import type { NewsItem } from "./items.ts"
 
 /**
  * Response structure for source data.

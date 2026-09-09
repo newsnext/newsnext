@@ -15,6 +15,9 @@ registry
 packages/sdk
   owns all Action contracts and shared public Source, Board, and Instance models
 
+packages/shared
+  owns foundational theme colors and news item types without SDK or CLI dependencies
+
 packages/source-kit
   owns source validation, resolution, loader contracts, and structured loaders
 
@@ -46,8 +49,11 @@ by those names. Catalog construction rejects duplicate names across both lists.
 Application and background handlers in the extension bind implementations to these
 contracts with the extension-local `defineAction`; diagnostic redaction lives with
 these handlers, and they do not declare another schema. Public model
-shapes live in `packages/sdk/src/models`. Source-kit and shared package exports
-forward these models while keeping loader execution and browser behavior local.
+shapes are exported from `packages/sdk/src/models`. The theme palette, color type,
+news item types, and `MaybeArray` originate in `packages/shared/src`. The SDK
+imports and re-exports these foundations through its workspace dependency on
+`@newsnext/shared`. Shared never imports the SDK. Source-kit consumes these
+definitions while keeping loader execution and browser behavior local.
 
 The browser-safe `@newsnext/sdk/actions` and `@newsnext/sdk/models` entry points
 never import the Node CLI transport. The SDK derives nested methods, inputs, and

@@ -5,6 +5,13 @@ interaction-level visual decisions. Keep it aligned with the implemented React
 components and Tailwind utilities whenever a UI change establishes or revises a
 reusable design rule.
 
+## Shared foundations
+
+`@newsnext/shared` owns the theme palette and foundational data types and must
+not depend on the SDK or CLI. UI components consume these shared definitions
+directly. The SDK also imports and re-exports these definitions from shared;
+keep each definition in `packages/shared/src` without generated copies.
+
 ## Visual Direction
 
 NewsNext should feel like a collection of live, tactile LiveCards rather

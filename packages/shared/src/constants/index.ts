@@ -2,4 +2,4 @@
  * Shared constants for the NewsNext application
  */
 
-export * from "./colors"
+export * from "./colors.ts"
