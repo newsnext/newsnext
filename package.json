@@ -55,6 +55,7 @@
     "dev:yolo": "bun --filter=@newsnext/extension run dev:yolo",
     "dev:chrome": "bun --filter=@newsnext/extension run dev:chrome",
     "dev:firefox": "bun --filter=@newsnext/extension run dev:firefox",
+    "landing:install": "bun run apps/landing/scripts/install-ci.ts",
     "landing:dev": "bun --filter=@newsnext/landing run dev",
     "landing:build": "bun --filter=@newsnext/landing run build",
     "landing:deploy": "bun --filter=@newsnext/landing run deploy",
