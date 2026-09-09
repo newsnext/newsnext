@@ -15,7 +15,7 @@ of this repository.
 - [Proposed data stream processing](docs/DATA_STREAM_ARCHITECTURE.md)
 - [Design guideline](docs/DESIGN_GUIDELINE.md)
 - [Performance guideline](docs/PERFORMANCE_GUIDELINE.md)
-- [CLI command reference](skills/newsnext-cli/references/commands.md)
+- [CLI command reference](skills/newsnext-sdk/references/commands.md)
 
 Historical references: [Source request research](docs/SOURCE_REQUESTS.md) and
 [Chrome Web Store review](docs/CHROME_WEB_STORE_READINESS.md). Their dated findings

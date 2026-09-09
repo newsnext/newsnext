@@ -380,7 +380,7 @@ of persistence code.
 History commands read the daemon database without a connected browser. Fresh
 execution requires the owning Worker. Application Actions and Workspace storage
 are documented in [Application Architecture](APPLICATION_ARCHITECTURE.md);
-command syntax is in the [CLI reference](../skills/newsnext-cli/references/commands.md).
+command syntax is in the [CLI reference](../skills/newsnext-sdk/references/commands.md).
 
 LiveCard queries mount when their container enters the preload margin of the app's
 root scroll container. The observer must use that scrolling element as its root;
@@ -892,7 +892,7 @@ build default, and data lives under `~/.config/newsnext.dev/` or
 Widget, and IPC overrides support isolated runs. Native registration affects only
 the selected environment and cannot choose an arbitrary extension-controlled
 executable or network endpoint. Installation options live in the
-[CLI reference](../skills/newsnext-cli/references/commands.md).
+[CLI reference](../skills/newsnext-sdk/references/commands.md).
 
 Messages are UTF-8 JSON with native-endian 32-bit length framing. The host accepts
 up to 64 MiB from the extension, keeps host-to-extension frames below 1 MiB, and

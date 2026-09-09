@@ -1,9 +1,9 @@
 ---
-name: newsnext-cli
+name: newsnext-sdk
 description: Use the NewsNext CLI and TypeScript SDK to query history, manage Boards and Instances, invoke Actions, and create or test Sources, including discovering a Source from a website URL. Apply to NewsNext operations and Widget SDK usage; do not use it for changing the CLI or SDK implementation itself.
 ---
 
-# NewsNext CLI
+# NewsNext SDK
 
 For terminal commands, invoke the executable by command name as `newsnext`. Do not search for its binary, infer an installation path, or replace it with `cargo run` unless the user explicitly asks to locate, build, or debug the CLI implementation.
 

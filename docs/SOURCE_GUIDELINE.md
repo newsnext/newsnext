@@ -1171,7 +1171,7 @@ Prototype-related source ID segments and JMESPath properties are rejected.
 
 Use the separately distributed CLI with **Settings → Integration** enabled.
 For installation, browser selection, command options, and automation, see the
-[CLI command reference](../skills/newsnext-cli/references/commands.md).
+[CLI command reference](../skills/newsnext-sdk/references/commands.md).
 In this wrapper, run commands from `cli/` as `bun run dev <arguments>`;
 for example, `bun run dev run github:trending`. The examples below use the
 distributed command name; local provider paths are relative to the caller.
@@ -1227,7 +1227,7 @@ overridden with a `Cookie` header. Use this command for raw endpoint debugging,
 then run `run` to verify the complete source behavior.
 
 History and Board automation are documented in the
-[CLI command reference](../skills/newsnext-cli/references/commands.md) and
+[CLI command reference](../skills/newsnext-sdk/references/commands.md) and
 [Application Architecture](APPLICATION_ARCHITECTURE.md). They are separate from
 Source verification: `fetch` inspects an endpoint, while `run` verifies the
 complete loader, parameter, capability, secret, and result-validation contract.

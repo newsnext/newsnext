@@ -44,7 +44,7 @@ Implementation boundaries live in [Application Architecture](APPLICATION_ARCHITE
 and [Source Architecture](SOURCE_ARCHITECTURE.md). Future analytical processing
 is defined in [Data Stream Architecture](DATA_STREAM_ARCHITECTURE.md). Keep API
 schemas, transport details, and command syntax in those references and the
-[CLI command reference](../skills/newsnext-cli/references/commands.md).
+[CLI command reference](../skills/newsnext-sdk/references/commands.md).
 
 ## Implemented baseline and remaining gaps
 
