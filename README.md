@@ -1,10 +1,12 @@
 # NewsNext
 
-The Next Official version of [ourongxing/newsnow](https://github.com/ourongxing/newsnow)
+The next official version of [ourongxing/newsnow](https://github.com/ourongxing/newsnow)
 
-This open-source repository contains the browser extension and shared Source
-packages. The separately distributed NewsNext App, daemon, and CLI are not part
-of this repository.
+**NewsNext is in early development. Expect frequent breaking changes.**
+
+The browser extension works on its own. Use it with the CLI and SDK for the full
+experience. The CLI is currently closed source, but will be open-sourced when
+the time is right.
 
 ## Documentation
 
