@@ -281,8 +281,10 @@ or runtime flags. The browser root entry selects the Widget client; other
 runtimes select the CLI client.
 
 Keep the extension's installation hook limited to `wxt prepare`. Explicit SDK
-builds are only for distribution: they emit JavaScript, declarations, and a
-compiled package manifest in `dist`, which is the directory to pack or publish.
+builds use tsdown to bundle JavaScript and declarations into `dist`. They do not
+rewrite package exports or generate a release manifest.
+Enable `dts.eager` for the SDK's multiple entry points and bundled shared source
+so declaration generation loads the full TypeScript program for each config.
 Local development never imports that output, so SDK packaging cannot invalidate
 modules used by the dev server. Do not reintroduce automatic builds into checks.
 
