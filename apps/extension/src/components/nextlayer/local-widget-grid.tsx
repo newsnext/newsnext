@@ -1,3 +1,4 @@
+import type { Color } from "@newsnext/shared/types"
 import type { ComponentMap, GridStackHandle, GridStackNode, GridStackOptions } from "gridstack/dist/react"
 import type { RefObject } from "react"
 import type { LocalWidgetManifest } from "./widget-manifest"
@@ -13,6 +14,7 @@ import { LiveCardSurface } from "@/components/live-card/card-surface"
 import { useI18n } from "@/hooks/use-i18n"
 import { useNativeIntegrationStatus } from "@/hooks/use-native-integration-status"
 import { actions } from "@/lib/actions"
+import { isThemeColor } from "@/lib/settings/theme-color"
 import { boardsAtom } from "@/store/board"
 import { getChangedWidgetLayouts, getGridWidgetId } from "./widget-layout"
 import { parseLocalWidgetManifests } from "./widget-manifest"
@@ -30,6 +32,7 @@ interface WidgetSnapshot {
 }
 
 interface WidgetFrameProps {
+  color: Color
   active: boolean
   boardId: string
   scopeKey: string
@@ -70,6 +73,7 @@ function createGridOptions(
       minW: manifest.minWidth,
       props: {
         active,
+        color: manifest.color,
         boardId,
         scopeKey: JSON.stringify(placement.dataScope.type === "board"
           ? boardInstanceIds
@@ -144,7 +148,7 @@ function LocalWidgetFrame(props: Record<string, unknown>) {
   const refreshing = snapshot.isFetching
 
   return (
-    <article ref={articleRef} className="relative h-full min-h-0 select-none">
+    <article ref={articleRef} className={`relative h-full min-h-0 select-none ${frame.color}`}>
       <LiveCardSurface />
       <div className="relative flex h-full min-h-0 flex-col p-2.5">
         <header className="mx-1 mb-3 flex min-h-8 shrink-0 cursor-grab items-center gap-2 active:cursor-grabbing">
@@ -213,7 +217,8 @@ function parseWidgetSnapshot(value: unknown): WidgetSnapshot {
 }
 
 function parseFrameProps(props: Record<string, unknown>): WidgetFrameProps {
-  if (typeof props.active !== "boolean"
+  if (!isThemeColor(props.color)
+    || typeof props.active !== "boolean"
     || typeof props.boardId !== "string"
     || typeof props.scopeKey !== "string"
     || typeof props.title !== "string"
@@ -280,7 +285,13 @@ function useLocalWidgets(serverOrigin: string | undefined) {
   }
 }
 
-export function LocalWidgetGrid({ boardId, viewReady }: { boardId: string, viewReady: boolean }) {
+interface LocalWidgetGridProps {
+  boardId: string
+  onReady?: () => void
+  viewReady: boolean
+}
+
+export function LocalWidgetGrid({ boardId, onReady, viewReady }: LocalWidgetGridProps) {
   const { t } = useI18n()
   const gridRef = useRef<GridStackHandle>(null)
   const connection = useWidgetServerOrigin()
@@ -308,7 +319,12 @@ export function LocalWidgetGrid({ boardId, viewReady }: { boardId: string, viewR
     })
   }, [board, boardId])
 
-  if (connection.isLoading || manifestQuery.isLoading) return null
+  const isLoading = connection.isLoading || manifestQuery.isLoading
+  useLayoutEffect(() => {
+    if (!isLoading) onReady?.()
+  }, [gridKey, isLoading, onReady])
+
+  if (isLoading) return null
   if (connection.state !== "connected" || !connection.serverOrigin) {
     return <NextLayerMessage>{t("connectAppForWidgets")}</NextLayerMessage>
   }

@@ -3,13 +3,11 @@ import { useScrollProgressContext } from "@newsnext/ui/components/scroll-progres
 import { cn } from "@newsnext/ui/lib/utils"
 import { useEffectEvent, useLayoutEffect, useRef } from "react"
 
-const SCATTER_DURATION_MS = 320
+const EXIT_DURATION_MS = 320
+const ENTRANCE_DURATION_MS = 420
+const ENTRANCE_DELAY_MS = 80
 const SCATTER_STAGGER_MS = 10
-const SCATTER_MAX_DELAY_MS = 40
-const HORIZONTAL_EXIT_PADDING = 200
-
-// A fresh document gets one entrance, even if routing later remounts BoardView.
-let initialEntranceClaimed = false
+const HORIZONTAL_EXIT_PADDING = 80
 
 interface ScatterCardLayerProps {
   className?: string
@@ -27,8 +25,7 @@ interface Bounds {
   top: number
 }
 
-function getVisibleBounds(element: HTMLElement): Bounds {
-  const rect = element.getBoundingClientRect()
+function getVisibleBounds(rect: DOMRect): Bounds {
   return {
     top: Math.max(rect.top, 0),
     right: Math.min(rect.right, window.innerWidth),
@@ -66,7 +63,6 @@ export function ScatterCardLayer({
 }: PropsWithChildren<ScatterCardLayerProps>) {
   const { rootScrollContainerRef } = useScrollProgressContext()
   const animationsRef = useRef<Animation[]>([])
-  const animateEntranceRef = useRef<boolean | null>(null)
   const enteredRef = useRef(false)
   const rootRef = useRef<HTMLDivElement>(null)
   const completeTransition = useEffectEvent((outgoing: boolean) => {
@@ -85,21 +81,12 @@ export function ScatterCardLayer({
     const root = rootRef.current
     if (!root) return
 
-    if (animateEntranceRef.current === null) {
-      animateEntranceRef.current = !initialEntranceClaimed
-      initialEntranceClaimed = true
-    }
-
     const outgoing = state === "outgoing"
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
     if (!outgoing && !viewReady && !reducedMotion) return
-    if (!outgoing && enteredRef.current && animationsRef.current.length === 0) return
-    if (outgoing) {
-      enteredRef.current = false
-      animateEntranceRef.current = false
-    }
+    if (!outgoing && enteredRef.current) return
 
-    // Capture the initial entrance before cancelling it so an interrupting exit
+    // Capture the entrance before cancelling it so an interrupting exit
     // continues from the visible position instead of snapping back to the slot.
     const candidates = Array.from(root.querySelectorAll<HTMLElement>(itemSelector))
     const interrupted = animationsRef.current.length > 0
@@ -112,12 +99,13 @@ export function ScatterCardLayer({
     animationsRef.current.forEach(animation => animation.cancel())
     animationsRef.current = []
 
-    if (reducedMotion || (outgoing && !viewReady) || (!outgoing && !animateEntranceRef.current)) {
+    if (reducedMotion || (outgoing && !viewReady)) {
       completeTransition(outgoing)
       return
     }
 
-    const bounds = getVisibleBounds(root)
+    const rootRect = root.getBoundingClientRect()
+    const bounds = getVisibleBounds(rootRect)
     const scrollBounds = rootScrollContainerRef.current?.getBoundingClientRect()
     if (scrollBounds) {
       bounds.top = Math.max(bounds.top, scrollBounds.top)
@@ -125,12 +113,33 @@ export function ScatterCardLayer({
       bounds.left = Math.max(bounds.left, scrollBounds.left)
       bounds.right = Math.min(bounds.right, scrollBounds.right)
     }
-    const items = candidates.filter(item => isVisible(item.getBoundingClientRect(), bounds))
-    const animations = items.map((item, index) => {
+    // Read all resting geometry before pinning the root or starting animations.
+    const items = candidates.flatMap((item) => {
+      const rect = item.getBoundingClientRect()
+      if (!isVisible(rect, bounds)) return []
       const style = getComputedStyle(item)
-      const baseTransform = style.transform === "none" ? "" : style.transform
-      const offsetX = getHorizontalExitOffset(item.getBoundingClientRect(), bounds, index)
-      const restingFrame = { opacity: style.opacity, transform: style.transform }
+      return [{ item, rect, opacity: style.opacity, transform: style.transform }]
+    })
+
+    // Pin the departing view before the incoming view restores shared scroll.
+    if (outgoing) {
+      const top = Math.max(0, bounds.top - rootRect.top)
+      const right = Math.max(0, rootRect.right - bounds.right)
+      const bottom = Math.max(0, rootRect.bottom - bounds.bottom)
+      const left = Math.max(0, bounds.left - rootRect.left)
+      Object.assign(root.style, {
+        position: "fixed",
+        top: `${rootRect.top}px`,
+        left: `${rootRect.left}px`,
+        width: `${rootRect.width}px`,
+        height: `${rootRect.height}px`,
+        clipPath: `inset(${top}px ${right}px ${bottom}px ${left}px)`,
+      })
+    }
+    const animations = items.map(({ item, rect, opacity, transform }, index) => {
+      const baseTransform = transform === "none" ? "" : transform
+      const offsetX = getHorizontalExitOffset(rect, bounds, index)
+      const restingFrame = { opacity, transform }
       const scatteredFrame = {
         opacity: 0,
         transform: `${baseTransform} translate3d(${offsetX}px, 0, 0)`,
@@ -140,9 +149,9 @@ export function ScatterCardLayer({
       return item.animate(
         [startFrame, outgoing ? scatteredFrame : restingFrame],
         {
-          delay: interrupted ? 0 : Math.min(index * SCATTER_STAGGER_MS, SCATTER_MAX_DELAY_MS),
-          duration: SCATTER_DURATION_MS,
-          easing: outgoing ? "cubic-bezier(0.4, 0, 1, 1)" : "cubic-bezier(0, 0, 0.6, 1)",
+          delay: interrupted ? 0 : (outgoing ? 0 : ENTRANCE_DELAY_MS) + index * SCATTER_STAGGER_MS,
+          duration: outgoing ? EXIT_DURATION_MS : ENTRANCE_DURATION_MS,
+          easing: outgoing ? "cubic-bezier(0.4, 0, 1, 1)" : "cubic-bezier(0.22, 1, 0.36, 1)",
           fill: "both",
         },
       )
@@ -166,12 +175,15 @@ export function ScatterCardLayer({
     animations.forEach(animation => animation.cancel())
   }, [])
 
+  const inactive = state !== "active" || !viewReady
+
   return (
     <div
       ref={rootRef}
       style={{ visibility: "hidden" }}
-      aria-hidden={state !== "active" || !viewReady}
-      className={cn((state !== "active" || !viewReady) && "pointer-events-none", className)}
+      inert={inactive}
+      aria-hidden={inactive}
+      className={cn(inactive && "pointer-events-none", className)}
     >
       {children}
     </div>

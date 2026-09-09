@@ -11,7 +11,6 @@ export {
   DEFAULT_BOARD_COLOR,
   DEFAULT_BOARD_LAYER,
   getAdjacentBoardId,
-  getBoardLayerFromState,
   INITIAL_BOARD_NAME,
   normalizeBoardLayer,
 } from "./board"

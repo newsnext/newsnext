@@ -91,5 +91,8 @@
   },
   "lint-staged": {
     "*": "eslint --fix"
+  },
+  "patchedDependencies": {
+    "gridstack@13.2.0": "patches/gridstack@13.2.0.patch"
   }
 }

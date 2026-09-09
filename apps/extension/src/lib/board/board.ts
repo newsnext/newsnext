@@ -43,11 +43,6 @@ export function normalizeBoardLayer(value: unknown): BoardLayer {
   return value === "next" ? "next" : DEFAULT_BOARD_LAYER
 }
 
-export function getBoardLayerFromState(state: unknown): BoardLayer | undefined {
-  if (!state || typeof state !== "object" || !("layer" in state)) return undefined
-  return state.layer === "next" || state.layer === "now" ? state.layer : undefined
-}
-
 export function getAdjacentBoardId(
   boards: readonly Pick<Board, "id">[],
   currentBoardId: string,

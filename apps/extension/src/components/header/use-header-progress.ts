@@ -2,9 +2,10 @@ import type { MotionValue } from "motion/react"
 import type { MouseEvent } from "react"
 import { useScrollProgressContext } from "@newsnext/ui/components/scroll-progress-context"
 import { useLocation, useRouter } from "@tanstack/react-router"
+import { useAtomValueRawSync } from "jotai"
 import { useMotionValue } from "motion/react"
 import { useCallback, useLayoutEffect, useRef, useState } from "react"
-import { getBoardLayerFromState } from "@/lib/board"
+import { currentBoardAtom } from "@/store/board"
 
 const SCROLL_THRESHOLD_VIEWPORT_RATIO = 0.1
 
@@ -19,12 +20,9 @@ export interface HeaderProgressState {
 export function useHeaderProgress(): HeaderProgressState {
   const { rootScrollContainer, rootScrollContainerRef } = useScrollProgressContext()
   const router = useRouter()
-  const { isNextLayer, routeHref } = useLocation({
-    select: location => ({
-      routeHref: location.href,
-      isNextLayer: getBoardLayerFromState(location.state) === "next",
-    }),
-  })
+  const routeHref = useLocation({ select: location => location.href })
+  const currentBoard = useAtomValueRawSync(currentBoardAtom)
+  const isNextLayer = currentBoard?.defaultLayer === "next"
   const [isAtTop, setIsAtTop] = useState(true)
   const isAtTopRef = useRef(true)
   const opacity = useMotionValue(0)
@@ -89,7 +87,7 @@ export function useHeaderProgress(): HeaderProgressState {
       resizeObserver.disconnect()
       unsubscribeFromRendered()
     }
-  }, [rootScrollContainer, routeHref, router, syncProgress])
+  }, [isNextLayer, rootScrollContainer, routeHref, router, syncProgress])
 
   return {
     handleScrollToTop,

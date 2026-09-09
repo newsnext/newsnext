@@ -1,7 +1,7 @@
 import type { ChangeEvent } from "react"
 import type { BoardDeleteAction, BoardDialogTarget } from "@/components/board-dialog"
 import type { HeaderNotification } from "@/components/header/notification"
-import type { Board, BoardCreateInput, BoardLayer } from "@/lib/board"
+import type { BoardCreateInput } from "@/lib/board"
 import { Button } from "@newsnext/ui/components/button"
 import {
   DropdownMenu,
@@ -22,7 +22,7 @@ import { useEffect, useRef, useState } from "react"
 import { BoardDialog } from "@/components/board-dialog"
 import { PhCircleDashed, PhFileArrowUp, PhPlusCircle } from "@/components/icons/ph"
 import { useI18n } from "@/hooks/use-i18n"
-import { DEFAULT_BOARD_LAYER, getAdjacentBoardId } from "@/lib/board"
+import { getAdjacentBoardId } from "@/lib/board"
 import { OpmlImportError, parseOpml } from "@/lib/opml"
 import { DEFAULT_SHORTCUT_SETTINGS, SHORTCUT_DEFINITIONS } from "@/lib/settings"
 import {
@@ -76,15 +76,10 @@ export function BoardNav({ onNotify }: BoardNavProps) {
     })
   }, [currentBoardId])
 
-  function openBoard(boardId: string, layer?: BoardLayer): void {
-    const targetLayer = layer
-      ?? boards.find(board => board.id === boardId)?.defaultLayer
-      ?? DEFAULT_BOARD_LAYER
-
+  function openBoard(boardId: string): void {
     void navigate({
       to: "/board/$boardId",
       params: { boardId },
-      state: state => ({ ...state, layer: targetLayer }),
     })
   }
 
@@ -140,7 +135,7 @@ export function BoardNav({ onNotify }: BoardNavProps) {
   async function handleCreate(input: BoardCreateInput): Promise<void> {
     const result = await addBoard(input)
     if (result?.boardId) {
-      openBoard(result.boardId, input.defaultLayer)
+      openBoard(result.boardId)
     }
   }
 
@@ -151,18 +146,6 @@ export function BoardNav({ onNotify }: BoardNavProps) {
     if (!destinationBoardId) return
     await deleteBoard({ boardId, ...action })
     openBoard(destinationBoardId)
-  }
-
-  async function handleUpdate(board: Board): Promise<void> {
-    await updateBoard(board)
-    if (board.id !== currentBoardId) return
-
-    await navigate({
-      to: "/board/$boardId",
-      params: { boardId: board.id },
-      state: state => ({ ...state, layer: board.defaultLayer }),
-      replace: true,
-    })
   }
 
   async function handleOpmlImport(event: ChangeEvent<HTMLInputElement>): Promise<void> {
@@ -291,7 +274,7 @@ export function BoardNav({ onNotify }: BoardNavProps) {
           onClose={() => setDialogTarget(null)}
           onCreate={handleCreate}
           onDelete={handleDelete}
-          onUpdate={handleUpdate}
+          onUpdate={updateBoard}
         />
       )}
     </>

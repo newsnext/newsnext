@@ -295,31 +295,70 @@ vectors or layout transitions. Keep that animation work in the board item and
 Motion layers. Stable `DraggableLiveCard` props prevent it from entering queries,
 virtual lists, and LiveCard editor controls.
 
-Keep the initial entrance and navigation exits in `ScatterCardLayer`, using the
-same horizontal offset calculation on inner card wrappers. Claim the entrance
-once per document during the first committed mount, retaining that decision
-across effect replays. Route remounts and Board/Layer switches must reveal their
-content directly. Starting an exit consumes any remaining entrance eligibility,
-so cancelling navigation cannot trigger another entrance. Motion and GridStack
-own the outer slot geometry; their transforms must not compete with these animations.
-Restore the shared root scroll position after the target Layer mounts, then mark
-the view ready on the following animation frame without an idle wait. Measure
-visible cards against the root scroll viewport and, on initial load, apply
-entrance keyframes before revealing the Layer. Widget snapshot queries use view
-readiness together with viewport visibility so they start against the restored
-viewport.
+Keep entrances and navigation exits in `ScatterCardLayer`, using the same
+horizontal offset calculation on inner card wrappers. Each keyed Board/Layer
+visit gets an entrance, including Tab switches and route remounts. Retain
+entrance state across effect replays. Motion and GridStack own outer slot
+geometry; their transforms must not compete with these animations.
 
-When an exit interrupts the initial entrance, snapshot current animated styles
-before cancelling animations, then measure resting slot geometry and continue
-from those captured styles. Cancelling an exit reveals the Layer directly.
-Invalidate old completion handlers when replacing animations, cancel finished
-entrance animations to release their fill state, and cancel all animations on
-unmount. Reset readiness when mounting a new target, including rapid return trips
-to the previous Board.
+Overlap one outgoing view with the active incoming view. Pin the outgoing root
+in a layout effect before the parent restores the incoming view's scroll, and
+make it inert. Rapid navigation replaces the older outgoing view only if the
+current view is ready; otherwise retain the existing exit without restarting it.
+This bounds the number of mounted views to two. Use a unique visit revision in
+keys so returning to the same Board cannot reuse stale readiness or a departing
+Widget grid.
+Derive the active Layer directly from the rendered Board's persisted
+`defaultLayer`. Do not mirror it in history state or route context. Router location
+updates before route matches; combining route params with an independently
+subscribed history Layer can trigger an intermediate animation on the old Board.
+The route retains only the last Board whose Instance cache restoration finished;
+`BoardView` owns the departing Board/Layer snapshot used by the animation.
+
+`useBoardScrollRestoration` owns scroll restoration and readiness by view visit,
+independently of Router navigation. Restore from a Board/Layer session key after
+content mounts, then capture scroll events after the settling frame. Save the last
+observed position on view cleanup and page hide; do not read departing geometry
+during cleanup because content replacement can already have clamped root scroll.
+Do not overwrite a saved position for an incoming view interrupted before it
+settles. Layer-only changes use this same path without creating history entries.
+Static checks do not validate fresh mounts, rapid switches, or session scroll
+restoration visually; exercise these in the extension when browser verification
+is authorized.
+Next Layer reports content readiness from a layout effect after its manifest
+query settles and its grid or fallback mounts. Gate root scroll restoration on
+that signal, then mark the incoming view ready on the following animation frame.
+Do not depend on Widget snapshot queries for content readiness: those queries
+are enabled only after scroll restoration. A page-level frame alone can run
+before asynchronous manifests arrive and consume the entrance with zero cards. Measure visible cards against the root scroll viewport
+and apply entrance keyframes before revealing the Layer. Batch all resting rect
+and computed-style reads before pinning the outgoing root or starting any card
+animations. Apply the shared `10ms` stagger only to the filtered visible cards
+for both entrance and exit; skip delays when interrupting an entrance. Capture
+clipping bounds before removing the outgoing root from flow, so scroll clamping
+cannot change the measured viewport. Widget snapshot queries
+use active view readiness together with viewport visibility.
+
+GridStack 13.2.0 sorts Widget DOM nodes after layout changes using `appendChild`,
+which reloads nested iframes even when React preserves their components. The
+tracked Bun patch uses `moveBefore` when available to preserve iframe documents
+and focus while retaining visual DOM order. Browsers without that API retain
+the upstream fallback. Keep this patch until the dependency provides equivalent
+state-preserving sorting. When verifying dependency upgrades, drag Widgets past
+each other and check that iframe load events do not repeat and content state
+survives the drop; type checks cannot cover this browser behavior. This fix has
+not yet been verified in a live browser session.
+
+When an exit interrupts an entrance, snapshot current animated styles before
+cancelling animations, then measure resting slot geometry and continue from
+those captured styles. Invalidate old completion handlers when replacing
+animations, cancel finished entrance animations to release their fill state,
+and cancel all animations on unmount. Match exit completion to its departing
+view so a stale completion cannot remove a newer outgoing view.
 
 Keep Motion layout projection mounted on sortable Now Layer items, but use a
 named stable `layoutDependency` token to suspend its measurements until the
-initial entrance finishes, or scroll restoration completes on navigation.
+entrance finishes after scroll restoration on each mount.
 Dynamically mounting projection leaves it without the continuous layout lifecycle
 needed for reliable reordering. Once revealed, set `layoutDependency` to the
 ordered ID array so drag reordering retains FLIP animation without measuring

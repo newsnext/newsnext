@@ -1,7 +1,8 @@
-import type { createRouter } from "@tanstack/react-router"
+import type { Router } from "@tanstack/react-router"
+import type { routeTree } from "@/entrypoints/app/routeTree"
 
 declare module "@tanstack/react-router" {
   interface Register {
-    router: ReturnType<typeof createRouter>
+    router: Router<typeof routeTree>
   }
 }

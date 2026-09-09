@@ -15,6 +15,21 @@ describe("parseLocalWidgetManifests", () => {
     }], SERVER_URL)).toHaveLength(1)
   })
 
+  it("resolves an omitted palette and rejects unsupported colors", () => {
+    const widget = {
+      height: 4,
+      id: "headlines",
+      minHeight: 2,
+      minWidth: 2,
+      title: "Headlines",
+      url: `${SERVER_URL}/widgets/headlines/index.html`,
+      width: 6,
+    }
+    expect(parseLocalWidgetManifests([widget], SERVER_URL)[0]?.color).toBe("slate")
+    expect(parseLocalWidgetManifests([{ ...widget, color: "teal" }], SERVER_URL)[0]?.color).toBe("teal")
+    expect(() => parseLocalWidgetManifests([{ ...widget, color: "invalid" }], SERVER_URL)).toThrow("invalid widget manifest")
+  })
+
   it("rejects entry URLs from another origin", () => {
     expect(() => parseLocalWidgetManifests([{
       height: 4,

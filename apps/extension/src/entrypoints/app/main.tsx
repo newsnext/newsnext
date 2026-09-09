@@ -3,10 +3,6 @@ import { createHashHistory, createRouter, RouterProvider } from "@tanstack/react
 import { AppProvider } from "@/components/app-provider"
 import { stageExternalRssRadarIntent } from "@/lib/radar"
 import { renderPersistentReactRoot } from "@/lib/react-root"
-import {
-  getBoardScrollRestorationKey,
-  ROOT_SCROLL_RESTORATION_SELECTOR,
-} from "@/lib/scroll-restoration"
 import { syncThemeFavicon, THEME_COLOR_KEY } from "@/lib/utils/swith-theme"
 import { initializeApplicationDataStorage } from "@/store/board"
 import { initializeSettingsStorage } from "@/store/settings"
@@ -26,13 +22,11 @@ if (externalRssLocation) {
 
 const queryClient = new QueryClient()
 const hashHistory = createHashHistory()
+// Board views restore scroll after their content mounts, including Layer-only changes.
+window.history.scrollRestoration = "manual"
 const router = createRouter({
   routeTree,
   history: hashHistory,
-  scrollRestoration: ({ location }) => !location.pathname.startsWith("/board/"),
-  scrollRestorationBehavior: "instant",
-  getScrollRestorationKey: getBoardScrollRestorationKey,
-  scrollToTopSelectors: [ROOT_SCROLL_RESTORATION_SELECTOR],
   context: {
     queryClient,
   },

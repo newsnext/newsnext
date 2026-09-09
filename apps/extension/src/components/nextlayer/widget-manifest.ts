@@ -1,4 +1,8 @@
+import type { Color } from "@newsnext/shared/types"
+import { isThemeColor } from "@/lib/settings/theme-color"
+
 export interface LocalWidgetManifest {
+  color: Color
   height: number
   id: string
   minHeight: number
@@ -17,6 +21,7 @@ export function parseLocalWidgetManifests(
   const ids = new Set<string>()
   return value.map((candidate) => {
     if (!isRecord(candidate)
+      || (candidate.color !== undefined && !isThemeColor(candidate.color))
       || !isIdentifier(candidate.id)
       || !isNonEmptyString(candidate.title)
       || !isGridSize(candidate.width, 12)
@@ -33,6 +38,7 @@ export function parseLocalWidgetManifests(
       throw new Error(`Widget '${candidate.id}' has an invalid entry URL`)
     }
     return {
+      color: candidate.color ?? "slate",
       height: candidate.height,
       id: candidate.id,
       minHeight: candidate.minHeight,

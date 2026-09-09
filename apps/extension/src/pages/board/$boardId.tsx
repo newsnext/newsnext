@@ -1,29 +1,20 @@
-import type { BoardLayer } from "@/lib/board"
 import { useQueryClient } from "@tanstack/react-query"
-import { Navigate, useLocation, useParams } from "@tanstack/react-router"
+import { useParams } from "@tanstack/react-router"
 import { useAtomValueRawSync, useSetAtom } from "jotai"
 import { useEffect, useMemo, useState } from "react"
 import { BoardView } from "@/components/board-view"
-import { getBoardLayerFromState } from "@/lib/board"
 import { restoreInstanceResults } from "@/lib/source/restore-instance-results"
 import { handleThemeSwitch } from "@/lib/utils/swith-theme"
 import { boardsAtom, instancesAtom } from "@/store/board"
 import { currentBoardIdAtom } from "@/store/settings"
 
-interface ReadyBoardView {
-  boardId: string
-  layer: BoardLayer
-}
-
 export function BoardIdComponent() {
-  const { boardId } = useParams({ strict: false }) as { boardId: string }
-  const layer = useLocation({ select: location => getBoardLayerFromState(location.state) })
+  const { boardId } = useParams({ from: "/board/$boardId" })
   const boards = useAtomValueRawSync(boardsAtom)
   const instances = useAtomValueRawSync(instancesAtom)
   const queryClient = useQueryClient()
   const setCurrentBoardId = useSetAtom(currentBoardIdAtom)
   const [restoredBoardId, setRestoredBoardId] = useState<string>()
-  const [readyView, setReadyView] = useState<ReadyBoardView>()
   const board = boards.find(board => board.id === boardId)
   const boardInstanceIds = board?.instanceIds
   const boardInstances = useMemo(() => {
@@ -59,14 +50,6 @@ export function BoardIdComponent() {
     }
   }, [boardId, boardInstanceIds, boardInstances, queryClient])
 
-  if (
-    layer
-    && restoredBoardId === boardId
-    && (readyView?.boardId !== boardId || readyView.layer !== layer)
-  ) {
-    setReadyView({ boardId, layer })
-  }
-
   if (!board) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center text-sm text-muted-foreground">
@@ -75,24 +58,6 @@ export function BoardIdComponent() {
     )
   }
 
-  if (!layer) {
-    return (
-      <Navigate
-        to="/board/$boardId"
-        params={{ boardId }}
-        state={state => ({ ...state, layer: board.defaultLayer })}
-        replace
-      />
-    )
-  }
-
-  const readyBoard = readyView
-    ? boards.find(candidate => candidate.id === readyView.boardId)
-    : undefined
-
-  if (!readyView || !readyBoard) return null
-
-  return (
-    <BoardView board={readyBoard} layer={readyView.layer} />
-  )
+  const readyBoard = boards.find(candidate => candidate.id === restoredBoardId)
+  return readyBoard ? <BoardView board={readyBoard} /> : null
 }

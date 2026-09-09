@@ -1,20 +1,14 @@
 import type { PropsWithChildren } from "react"
 import type { Board, BoardLayer } from "@/lib/board"
 import { dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter"
-import { useScrollProgressContext } from "@newsnext/ui/components/scroll-progress-context"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
-import { cn } from "@newsnext/ui/lib/utils"
 import { useHotkey } from "@tanstack/react-hotkeys"
-import { useElementScrollRestoration, useNavigate } from "@tanstack/react-router"
 import { useAtomValue, useSetAtom } from "jotai"
-import { useCallback, useEffect, useEffectEvent, useLayoutEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react"
 import { NextLayer } from "@/components/nextlayer"
 import { NowLayer } from "@/components/nowlayer"
+import { useBoardScrollRestoration } from "@/hooks/use-board-scroll-restoration"
 import { isSortableData } from "@/lib/board"
-import {
-  getBoardScrollRestorationKey,
-  ROOT_SCROLL_RESTORATION_ID,
-} from "@/lib/scroll-restoration"
 import { DEFAULT_SHORTCUT_SETTINGS, SHORTCUT_DEFINITIONS } from "@/lib/settings"
 import { moveInstanceAtom, updateBoardAtom } from "@/store/board"
 import { shortcutSettingsAtom } from "@/store/settings"
@@ -23,9 +17,9 @@ import { ScatterCardLayer } from "./scatter-card-layer"
 const BOARD_CONTENT_INSET_CLASS_NAME = "px-2 pb-6 xs:px-6"
 const BOARD_CONTENT_WIDTH_CLASS_NAME = "mx-auto w-full max-w-[104.5rem]"
 
-function BoardContent({ children, className }: PropsWithChildren<{ className?: string }>) {
+function BoardContent({ children }: PropsWithChildren) {
   return (
-    <div className={cn(BOARD_CONTENT_INSET_CLASS_NAME, className)}>
+    <div className={BOARD_CONTENT_INSET_CLASS_NAME}>
       <div className={BOARD_CONTENT_WIDTH_CLASS_NAME}>{children}</div>
     </div>
   )
@@ -34,30 +28,36 @@ function BoardContent({ children, className }: PropsWithChildren<{ className?: s
 interface RenderedView {
   boardId: string
   layer: BoardLayer
+  revision: number
 }
 
-export function BoardView({ board, layer }: { board: Board, layer: BoardLayer }) {
-  const { rootScrollContainer } = useScrollProgressContext()
+export function BoardView({ board }: { board: Board }) {
+  const layer = board.defaultLayer
   const shortcuts = useAtomValue(shortcutSettingsAtom)
   const moveInstance = useSetAtom(moveInstanceAtom)
   const updateBoard = useSetAtom(updateBoardAtom)
-  const navigate = useNavigate({ from: "/board/$boardId" })
   const isNextLayer = layer === "next"
-  const [renderedView, setRenderedView] = useState<RenderedView>({ boardId: board.id, layer })
+  const [renderedView, setRenderedView] = useState<RenderedView>({ boardId: board.id, layer, revision: 0 })
+  const [outgoingView, setOutgoingView] = useState<RenderedView | null>(null)
   const [isSearchTransferOver, setIsSearchTransferOver] = useState(false)
   const boardDropTargetRef = useRef<HTMLDivElement>(null)
-  const [readyViewKey, setReadyViewKey] = useState<string | null>(null)
+  const [loadedViewKey, setLoadedViewKey] = useState<string | null>(null)
   const [enteredViewKey, setEnteredViewKey] = useState<string | null>(null)
-  const restoredViewKeyRef = useRef<string | null>(null)
-  const scrollRestorationEntry = useElementScrollRestoration({
-    id: ROOT_SCROLL_RESTORATION_ID,
-    getKey: getBoardScrollRestorationKey,
+  const renderedViewKey = `${renderedView.boardId}:${renderedView.layer}:${renderedView.revision}`
+  const contentReady = renderedView.layer === "now" || loadedViewKey === renderedViewKey
+  const viewReady = useBoardScrollRestoration({
+    boardId: renderedView.boardId,
+    layer: renderedView.layer,
+    viewKey: renderedViewKey,
+    contentReady,
   })
-  const isOutgoing = renderedView.layer !== layer || renderedView.boardId !== board.id
-  const renderedLayerState = isOutgoing ? "outgoing" : "active"
-  const isRenderedNextLayer = renderedView.layer === "next"
-  const renderedViewKey = `${renderedView.boardId}:${renderedView.layer}`
-  const viewReady = readyViewKey === renderedViewKey
+
+  if (renderedView.boardId !== board.id || renderedView.layer !== layer) {
+    if (viewReady) setOutgoingView(renderedView)
+    setRenderedView({ boardId: board.id, layer, revision: renderedView.revision + 1 })
+    setLoadedViewKey(null)
+    setEnteredViewKey(null)
+  }
 
   const moveSearchLiveCard = useEffectEvent(async (instanceId: string) => {
     try {
@@ -89,50 +89,17 @@ export function BoardView({ board, layer }: { board: Board, layer: BoardLayer })
     })
   }, [board.id, board.instanceIds])
 
-  useLayoutEffect(() => {
-    if (isOutgoing || !rootScrollContainer) return
-
-    if (restoredViewKeyRef.current !== renderedViewKey) {
-      restoredViewKeyRef.current = renderedViewKey
-      rootScrollContainer.scrollTo({
-        behavior: "instant",
-        left: scrollRestorationEntry?.scrollX ?? 0,
-        top: scrollRestorationEntry?.scrollY ?? 0,
-      })
-    }
-    if (readyViewKey === renderedViewKey) return
-
-    const settleFrameId = window.requestAnimationFrame(() => {
-      setReadyViewKey(renderedViewKey)
-    })
-
-    return () => window.cancelAnimationFrame(settleFrameId)
-  }, [
-    readyViewKey,
-    isOutgoing,
-    renderedViewKey,
-    rootScrollContainer,
-    scrollRestorationEntry?.scrollX,
-    scrollRestorationEntry?.scrollY,
-  ])
+  const handleContentReady = useCallback(() => {
+    setLoadedViewKey(renderedViewKey)
+  }, [renderedViewKey])
 
   const handleEnterComplete = useCallback(() => {
     setEnteredViewKey(renderedViewKey)
   }, [renderedViewKey])
 
-  const handleExitComplete = useCallback(() => {
-    setReadyViewKey(null)
-    setEnteredViewKey(null)
-    restoredViewKeyRef.current = null
-    setRenderedView({ boardId: board.id, layer })
-  }, [board.id, layer])
-
   async function handleToggleLayer(): Promise<void> {
     const nextLayer = isNextLayer ? "now" : "next"
     try {
-      await navigate({
-        state: state => ({ ...state, layer: nextLayer }),
-      })
       await updateBoard({ ...board, defaultLayer: nextLayer })
     } catch (error) {
       console.error("Failed to update the default Board layer", error)
@@ -152,6 +119,8 @@ export function BoardView({ board, layer }: { board: Board, layer: BoardLayer })
     },
   )
 
+  const views = outgoingView ? [outgoingView, renderedView] : [renderedView]
+
   return (
     <div ref={boardDropTargetRef} className="relative flex min-h-0 w-full grow flex-col">
       {isSearchTransferOver && (
@@ -161,35 +130,35 @@ export function BoardView({ board, layer }: { board: Board, layer: BoardLayer })
           className="pointer-events-none absolute inset-4 z-40 border-2 border-dashed border-theme-400 bg-theme-400/10"
         />
       )}
-      <ScatterCardLayer
-        key={renderedViewKey}
-        state={renderedLayerState}
-        onEnterComplete={handleEnterComplete}
-        onExitComplete={handleExitComplete}
-        viewReady={viewReady}
-        itemSelector={isRenderedNextLayer
-          ? ".grid-stack-item:not(.grid-stack-placeholder) > .grid-stack-item-content"
-          : "[data-live-card-transition]"}
-        className="relative z-0"
-      >
-        {isRenderedNextLayer
-          ? (
-              <BoardContent>
-                <NextLayer
-                  boardId={renderedView.boardId}
-                  viewReady={viewReady}
-                />
-              </BoardContent>
-            )
-          : (
-              <BoardContent>
-                <NowLayer
-                  boardId={renderedView.boardId}
-                  viewReady={enteredViewKey === renderedViewKey}
-                />
-              </BoardContent>
-            )}
-      </ScatterCardLayer>
+      {views.map((view) => {
+        const key = `${view.boardId}:${view.layer}:${view.revision}`
+        const outgoing = view !== renderedView
+        return (
+          <ScatterCardLayer
+            key={key}
+            state={outgoing ? "outgoing" : "active"}
+            onEnterComplete={handleEnterComplete}
+            onExitComplete={() => setOutgoingView(current => current === view ? null : current)}
+            viewReady={outgoing || viewReady}
+            itemSelector={view.layer === "next"
+              ? ".grid-stack-item:not(.grid-stack-placeholder) > .grid-stack-item-content"
+              : "[data-live-card-transition]"}
+            className="relative z-0"
+          >
+            <BoardContent>
+              {view.layer === "next"
+                ? (
+                    <NextLayer
+                      boardId={view.boardId}
+                      onReady={outgoing ? undefined : handleContentReady}
+                      viewReady={!outgoing && viewReady}
+                    />
+                  )
+                : <NowLayer boardId={view.boardId} viewReady={!outgoing && enteredViewKey === key} />}
+            </BoardContent>
+          </ScatterCardLayer>
+        )
+      })}
     </div>
   )
 }

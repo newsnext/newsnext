@@ -301,10 +301,18 @@ Board rather than treating GridStack as the durable layout model. Resize from
 the lower and right edges without adding dedicated visible drag or resize
 controls.
 
+While a Widget is being dragged or resized, disable pointer events on every
+iframe in its grid using GridStack's interaction classes. This keeps movement
+and release events in the host document when the pointer crosses another
+Widget. Restore iframe interaction as soon as the gesture ends.
+
 Keep the trusted Widget shell outside the iframe and reuse the LiveCard surface
 language directly: `LiveCardSurface`, `p-2.5`, a `text-base font-bold` title, and
-`LiveCardHeaderActionButton`. The shell follows the Board theme because an
-aggregating Widget has no single Source provider palette. The host owns the
+`LiveCardHeaderActionButton`. Set each Widget's `color` property in `widget.json`
+using the same named palette as LiveCards (for example, `blue` or `teal`). It
+defaults to `slate` when omitted. Apply this palette to the shell so the outer
+surface, nested `zenith-theme-400` wash, and header controls use the Widget's
+scoped `theme-*` tokens independently of the Board color. The host owns the
 title, refresh state and button, drag behavior, nested `2xl` content surface,
 and error or connection treatment.
 
@@ -314,7 +322,7 @@ control, outer padding, rounded shell, or background. It may render links as
 normal new-tab links; the host sandbox permits popups while retaining script,
 DOM, storage, and same-origin isolation. Widget content should use NewsNext
 semantic typography, foreground, muted, divider, hover, spacing, and motion
-tokens instead of copying raw colors or defining an unrelated visual system.
+tokens instead of defining an unrelated visual system.
 
 Preserve Now Layer's intrinsic centered LiveCard layout inside the same maximum
 content width as Next Layer. Limit both Layers to the equivalent width of a
@@ -329,47 +337,52 @@ target Board and Layer have replaced the outgoing transition content. Route
 completion alone is too early because the outgoing view remains mounted during
 its card scatter animation. Board-only, Layer-only, and combined Board/Layer
 changes must use the same post-mount restoration path.
+When navigation changes both Board and Layer, transition directly between the
+two complete views. Keep the departing view while the destination route resolves;
+do not briefly switch the departing Board to the destination's Layer.
 
-Treat Now Layer and Next Layer as peers during transitions. Reveal the incoming
-Layer only after the departing Layer's visible cards exit horizontally and fade.
-Keep exactly one Layer mounted at a time: finish the current Layer's exit,
-unmount it, and only then mount the target Layer. Apply the same exit animation
-to LiveCards and Widgets: send cards on the left toward the left edge and cards
-on the right toward the right edge while preserving their vertical positions.
-After the exit, show the target Layer directly without an entrance animation.
-Use a `320ms` exit with accelerating easing (`cubic-bezier(0.4, 0, 1, 1)`) and a
-visible-order stagger of `10ms`, capped at `40ms`. Respect reduced-motion
-preferences by switching Layers immediately. Do not scale or blur the full page.
+Treat Now Layer and Next Layer as peers during transitions. Overlap the incoming
+Layer's entrance with the departing Layer's exit. Keep at most one outgoing view
+alongside the active view; a rapid switch replaces the older outgoing view only
+when the current view is ready. Skipping a view before scroll restoration settles
+keeps the existing exit running instead of clearing the screen.
+Pin the outgoing view at its viewport position before restoring the incoming
+view's scroll, and make it inert until it unmounts after its exit. Keep incoming
+content inert until scroll restoration settles as well.
+Apply the same horizontal motion to LiveCards and Widgets: cards on the left
+travel past the left edge and cards on the right past the right edge, with an
+`80px` margin and no vertical displacement. Use a `320ms` exit with accelerating
+easing (`cubic-bezier(0.4, 0, 1, 1)`) and a `10ms` stagger per visible card.
+Respect reduced-motion preferences by switching immediately. Do not scale or blur the full page.
 
 LiveCard detail flips rotate the front and back faces independently, with the
 same duration and easing. Keep the inactive face slightly scaled down and
 non-interactive, and hide each face when its back is facing the viewer. Avoid a
 shared rotating 3D container around the card's scrollable content.
 
-Play the horizontal entrance only once on a fresh page load or refresh. Cards
-converge from the same side used by the exit and fade in over `320ms` with
-`cubic-bezier(0, 0, 0.6, 1)` easing and the same capped stagger. Switching Boards
-or Layers, returning to an earlier Tab, or remounting the view within the same
-page must not replay it. Do not pair an exit with another entrance on navigation.
+Play the horizontal entrance on page load and whenever a Board or Layer mounts,
+including Tab switches and return visits. Cards converge from the same offscreen
+side used by the exit and fade in over `420ms` with
+`cubic-bezier(0.22, 1, 0.36, 1)` easing. Start after `80ms`, with a visible-order
+stagger of `10ms` per visible card, matching the exit stagger. Do not cap the
+stagger after the first few cards: later rows should retain their cascading
+rhythm while incoming and outgoing cards overlap. Interrupted entrances exit
+immediately from their current positions without adding another stagger.
 
-Board View restores the incoming Layer's root scroll position after mounting
-and reveals it on the following frame without an idle wait. On initial load,
-apply the entrance starting positions before revealing content and resume
-sortable layout measurements when the animation finishes. On navigation, reveal
-content directly and resume layout measurements after scroll restoration. If
-navigation interrupts the initial entrance, start the exit from the current
-animated styles; cancelling navigation restores the current Layer directly.
+Board View waits for the incoming content to mount before restoring its root
+scroll position, then starts its entrance on the following frame without an idle
+wait. Next Layer must finish loading its Widget manifest list and mount the grid
+before signaling readiness; empty and error states also complete readiness. Apply the
+entrance starting positions before revealing content and resume sortable layout
+measurements when the animation finishes. If navigation interrupts an entrance,
+start the exit from the current animated styles.
 Implementation constraints belong to the
 [Performance Guideline](PERFORMANCE_GUIDELINE.md#keep-animation-work-above-livecard-content).
 
-Snapshot both the rendered Board and Layer for the duration of an exit. Never
-replace an outgoing Now Layer with the target Board's LiveCards before the exit
-finishes. Keep one exit in flight when the pending Board or Layer changes, and
-mount only the latest target when that exit finishes instead of restarting the
-outgoing animation. Board changes within Now Layer use the same exit-then-reveal sequence;
-Board changes within Next Layer use the same sequence and mount a distinct
-Widget grid for the target Board. Never share a Next Layer instance or layout
-between Boards.
+Snapshot both Board and Layer for each departing view. Never replace its cards
+with the target Board's content during the exit. Mount a distinct Widget grid for
+each view and use a unique visit key, including rapid returns to the same Board.
+Never share a Next Layer instance or layout between Boards.
 
 Blank page space is part of the reading surface and must not switch back to Now
 Layer when clicked. Now Layer and Next Layer are peer views, so switch between
@@ -401,13 +414,15 @@ defaults in feature UI. Hide a hint when its command binding is cleared.
 Previous and next board commands wrap across the ordered board list. Keep their
 default arrow bindings active from the page and focused board tabs, while
 preserving directional-key behavior inside other interactive controls.
-Represent the active Board layer in the route and preserve scroll positions by
-Board and layer. Now and Next share the root scroll container with separate restoration keys.
+Keep the Board ID in the route and read the active Layer from that Board's
+persisted `defaultLayer`. Now and Next share the root scroll container with
+separate session scroll positions keyed by Board and Layer.
 Restore after the incoming view mounts, without scroll animation, and update
 the Dynamic Island progress outline from that container.
 Treat a Board's default layer as its persisted active layer. The layer shortcut
-and Board settings update the same preference; Router history state only mirrors
-it so Now and Next can use separate scroll restoration keys.
+and Board settings update the same preference without creating navigation history
+entries. Opening a Board, including through Back or Forward, uses its latest
+persisted Layer rather than a Layer snapshot from navigation history.
 
 ### LiveCard reordering
 

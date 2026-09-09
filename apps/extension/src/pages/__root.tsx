@@ -6,7 +6,6 @@ import { TanStackDevtools } from "@/components/common/devtools"
 import { ScrollProgressProvider } from "@/components/common/scroll-progress-provider"
 import { Header } from "@/components/header"
 import { ExternalRssRadarDialog } from "@/components/radar/external-rss-radar-dialog"
-import { ROOT_SCROLL_RESTORATION_ID } from "@/lib/scroll-restoration"
 import { boardsAtom } from "@/store/board"
 import { currentBoardIdAtom } from "@/store/settings"
 
@@ -25,7 +24,7 @@ function RootComponent() {
   const boards = useAtomValueRawSync(boardsAtom)
   const currentBoardId = useAtomValueRawSync(currentBoardIdAtom)
   const navigate = useNavigate()
-  const { boardId: routeBoardId } = useParams({ strict: false }) as { boardId?: string }
+  const { boardId: routeBoardId } = useParams({ strict: false })
   const previousBoardIdRef = useRef(currentBoardId)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const [scrollContainer, setScrollContainer] = useState<HTMLDivElement | null>(null)
@@ -48,7 +47,6 @@ function RootComponent() {
     void navigate({
       to: "/board/$boardId",
       params: { boardId: currentBoardId },
-      state: state => ({ ...state, layer: targetBoard.defaultLayer }),
     })
   }, [boards, currentBoardId, navigate, routeBoardId])
 
@@ -59,7 +57,6 @@ function RootComponent() {
     >
       <div
         ref={handleScrollContainerRef}
-        data-scroll-restoration-id={ROOT_SCROLL_RESTORATION_ID}
         className="relative h-full min-h-0 w-full overflow-y-auto scrollbar-hidden"
       >
         <div className="flex min-h-full w-full flex-col">

@@ -15,3 +15,9 @@
 .next-layer-grid .grid-stack-item > .ui-resizable-handle {
   background-image: none;
 }
+
+/* Keep mouse events in the host document when crossing any Widget iframe. */
+.next-layer-grid.grid-stack-dragging iframe,
+.next-layer-grid:has(> .ui-resizable-resizing) iframe {
+  pointer-events: none;
+}
