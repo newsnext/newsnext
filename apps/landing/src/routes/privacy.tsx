@@ -17,7 +17,7 @@ export const Route = createFileRoute("/privacy")({
 function PrivacyPage() {
   return (
     <DocumentPage title="Privacy policy">
-      <p className="document-meta">Last updated: September 8, 2026</p>
+      <p className="text-sm text-(--muted)">Last updated: September 8, 2026</p>
       <p>This policy describes data handling by the NewsNext browser extension, maintained by the NewsNext project, including its optional connection to the local desktop companion.</p>
 
       <h2>Data we access and why</h2>

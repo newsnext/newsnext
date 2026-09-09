@@ -14,16 +14,38 @@ like generic overlays.
 
 ### Landing page
 
+Use Tailwind utilities in the landing app's React components for layout,
+typography, spacing, responsive behavior, and interaction states. Keep the global
+stylesheet limited to theme tokens, shared background imports, and base rules.
+Use mobile-first styles and default Tailwind breakpoints for responsive layouts.
+Use the standard container widths, spacing, typography, and shadow scales rather
+than carrying over arbitrary pixel values from older CSS. Keep semantic theme
+colors and SVG geometry separate from those layout scales.
+Reuse the page shell and the intro outcome component for repeated structure.
+
 Keep the landing page to one centered product introduction with an Apple-inspired
 emphasis on the app icon, confident typography, and generous whitespace. Stack a
-96–128px app icon and the shared wordmark above a balanced two-line slogan. Use
-consistent semibold weight and high-contrast neutral text for both slogan lines;
-keep supporting copy softer and constrained to roughly two lines. Use a simple
+`w-24 sm:w-32` app icon and `w-32` shared wordmark with `gap-5`, followed by the
+product introduction after `mt-8`. Keep the introduction within `max-w-lg` and
+the centered main area within `max-w-3xl`.
+Use "Your personal dashboard" as the page heading, with medium-weight neutral
+`text-2xl sm:text-3xl` typography and `tracking-tight`. Place "Live updates",
+"Track changes", and "Spot trends" in three equal columns with `mt-5` and
+`gap-2 sm:gap-5`. Use muted, medium-weight `text-xs sm:text-sm` text and small
+static accent-colored symbols for live signals, change, and trend. Keep all three
+columns in one row; symbols sit above their phrases by default and beside them
+from `sm` upward. Keep symbols decorative and hidden from assistive technology.
+Place the GitHub action after `mt-7`, using `min-h-12 px-6 py-3`. Use a simple
 solid neutral GitHub pill, without glass layers or decorative highlights.
-Give the icon one restrained neutral shadow following its actual SVG silhouette.
+Preserve the icon's soft silhouette shadow with the named `drop-shadow-brand`
+theme token: `0 8px 12px rgb(0 0 0 / 8%)`, with `dark:drop-shadow-black/20`.
+This brand treatment is an intentional exception to the standard shadow scale.
 Use optical centering with more space below the introduction, and let short
-viewports scroll naturally. Keep the footer centered on one line with the product
-name and supporting links; omit a separate brand header and footer divider.
+viewports scroll naturally. Center the footer in two compact rows with `gap-1`:
+the project attribution in a `max-w-sm` balanced paragraph, followed by Privacy
+and Support separated by a decorative middle dot. Keep the attribution softer,
+underline its repository link, and give navigation links `min-h-8 px-2` targets.
+Omit a separate brand header and footer divider.
 Adapt text, buttons, and shadows to dark mode and honor reduced motion.
 Use the extension's current gradient SVG icon, generous whitespace, and the same
 light/dark neutral background and foreground tokens. Reuse `zenith-theme-400/60`
@@ -35,7 +57,7 @@ animation, feature sections, and repeated calls to action. The 404 page shares
 the same layout and action treatment.
 
 Keep Privacy and Support links in the shared landing footer. Supporting pages
-use a narrow reading column, plain section headings, a home link, and the same
+use a `max-w-2xl` reading column, plain section headings, a home link, and the same
 appearance tokens. Give each page its own title, description, and canonical URL.
 
 Reuse `apps/extension/public/icon/icon.svg`. Interface SVG layers use
