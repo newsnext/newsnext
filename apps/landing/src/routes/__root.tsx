@@ -15,7 +15,7 @@ export const Route = createRootRoute({
       { title: "NewsNext — What’s next is happening now" },
       {
         name: "description",
-        content: "NewsNext pairs a browser extension with a local desktop App for live Sources, durable History, and agent-ready context.",
+        content: "Your personal dashboard for updates as they happen.",
       },
       { name: "theme-color", content: "#f7f7f7", media: "(prefers-color-scheme: light)" },
       { name: "theme-color", content: "#171717", media: "(prefers-color-scheme: dark)" },
@@ -25,13 +25,13 @@ export const Route = createRootRoute({
       { property: "og:title", content: "What’s next is happening now" },
       {
         property: "og:description",
-        content: "A browser extension for live Sources and a local desktop App for durable context.",
+        content: "Your personal dashboard for updates as they happen.",
       },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:title", content: "NewsNext — What’s next is happening now" },
       {
         name: "twitter:description",
-        content: "Browser-native Sources, local History, and one model for you and your agents.",
+        content: "Your personal dashboard for updates as they happen.",
       },
     ],
     links: [
