@@ -1,38 +1,32 @@
 import type {
-  ActionParamsOf,
-  ActionResultOf,
   AnyActionDefinition,
-} from "../action"
+} from "@newsnext/sdk/actions"
 import type { BackgroundActionContext } from "./background-actions"
-import { defineActionRegistry } from "../action"
+import { defineActionRegistry } from "@newsnext/sdk/actions"
 import { dispatchBackgroundAction } from "./action-dispatcher"
 import {
   applicationActionDefinitions,
 } from "./application-actions"
 import {
   backgroundActionDefinitions,
-  uiBackgroundActionDefinitions,
 } from "./background-actions"
 
-export const uiActionDefinitions = [
-  ...applicationActionDefinitions,
-  ...uiBackgroundActionDefinitions,
-] as const
-
-export const actionRegistry = defineActionRegistry([
+const actionDefinitions = [
   ...applicationActionDefinitions,
   ...backgroundActionDefinitions,
-] as const)
+] as const
+
+export const actionRegistry = defineActionRegistry(actionDefinitions)
 
 export async function executeRegisteredAction(
   name: string,
   input: unknown,
-  audience: "connected" | "ui",
+  origin: "connected" | "ui",
   context: BackgroundActionContext,
   commandId?: string,
 ): Promise<unknown> {
   const definition = actionRegistry.get(name)
-  if (!definition || !definition.audiences.includes(audience)) {
+  if (!definition) {
     throw new Error(`Unknown Action '${name}'`)
   }
   const executable = definition as AnyActionDefinition
@@ -40,7 +34,7 @@ export async function executeRegisteredAction(
     ...(commandId === undefined ? {} : { commandId }),
     input,
     name,
-    origin: audience === "connected" ? "cli" : "ui",
+    origin: origin === "connected" ? "cli" : "ui",
   }, async () => await executable.execute(input, context), {
     input: (value) => {
       const parsed = executable.parse(value)
@@ -53,9 +47,3 @@ export async function executeRegisteredAction(
       : {}),
   })
 }
-
-type UiActionDefinition = typeof uiActionDefinitions[number]
-export type UiActionName = UiActionDefinition["name"]
-export type UiActionDefinitionFor<Name extends UiActionName> = Extract<UiActionDefinition, { name: Name }>
-export type UiActionParams<Name extends UiActionName> = ActionParamsOf<UiActionDefinitionFor<Name>>
-export type UiActionResult<Name extends UiActionName> = ActionResultOf<UiActionDefinitionFor<Name>>

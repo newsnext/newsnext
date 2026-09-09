@@ -1,4 +1,6 @@
-import type { ExtensionToHost, NativeCollectionStatus, NativeLogEntry } from "@newsnext/extension-connection"
+import type { CollectionStatus as NativeCollectionStatus } from "@newsnext/sdk/protocol/CollectionStatus"
+import type { ExtensionToHost } from "@newsnext/sdk/protocol/ExtensionToHost"
+import type { LogEntry as NativeLogEntry } from "@newsnext/sdk/protocol/LogEntry"
 import type { RequireNativeConnection } from "./types"
 import { createId } from "@/lib/id"
 import { pendingCollectionRequests, pendingLogsRequests, pendingWidgetSnapshotRequests } from "./pending-requests"

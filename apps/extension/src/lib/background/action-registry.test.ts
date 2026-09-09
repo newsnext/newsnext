@@ -73,13 +73,13 @@ function createContext(): BackgroundActionContext {
 }
 
 describe("action Registry", () => {
-  it("publishes the connected Action contract directly from definitions", () => {
-    const actions = actionRegistry.list("connected")
+  it("publishes the complete Action contract directly from definitions", () => {
+    const actions = actionRegistry.list()
 
-    expect(actions).toHaveLength(29)
-    expect(actions.filter(action => action.kind === "mutation")).toHaveLength(13)
-    expect(actions.filter(action => action.kind === "query")).toHaveLength(12)
-    expect(actions.filter(action => action.kind === "command")).toHaveLength(4)
+    expect(actions).toHaveLength(40)
+    expect(actions.filter(action => action.kind === "mutation")).toHaveLength(17)
+    expect(actions.filter(action => action.kind === "query")).toHaveLength(18)
+    expect(actions.filter(action => action.kind === "command")).toHaveLength(5)
     expect(actions.find(action => action.name === "instance.create")).toMatchObject({
       inputSchema: { type: "object", additionalProperties: false },
       outputSchema: { type: "object" },
@@ -104,7 +104,7 @@ describe("action Registry", () => {
     }, "ui", ActionContext)).rejects.toThrow("requires at least one change")
   })
 
-  it("enforces audiences and command-specific validation", async () => {
+  it("allows CLI access to all Actions and preserves command-specific validation", async () => {
     const ActionContext = createContext()
 
     await expect(executeRegisteredAction("developer.fetch", {
@@ -119,9 +119,11 @@ describe("action Registry", () => {
       timeoutMs: 10_000,
       url: "https://example.com/api",
     }, "connected", ActionContext)).rejects.toThrow("browser-managed")
-    await expect(executeRegisteredAction("application.replace", {}, "connected", ActionContext))
-      .rejects
-      .toThrow("Unknown Action")
+    const data = { boards: [], instances: [], version: 6 as const }
+    await expect(executeRegisteredAction("application.replace", data, "connected", ActionContext))
+      .resolves
+      .toEqual(data)
+    expect(ActionContext.replace).toHaveBeenCalledWith(data)
     await expect(executeRegisteredAction("ui.dialog.open", {}, "ui", ActionContext))
       .rejects
       .toThrow("Unknown Action")

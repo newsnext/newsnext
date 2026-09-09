@@ -1,5 +1,5 @@
+import type { Instance, InstancePatch } from "@newsnext/sdk/models"
 import type {
-  SourcePatch,
   SourcePresentationMetadata,
 } from "@newsnext/source-kit/types"
 import type { LiveCardViewModel, SourceDescriptor } from "@/typings/source"
@@ -7,20 +7,7 @@ import { SOURCE_PRESENTATION_METADATA_KEYS } from "@newsnext/source-kit"
 import { pick } from "es-toolkit"
 import { mergeSourceParamValues } from "./params"
 
-export interface Instance {
-  instanceId: string
-  workerId: string
-  sourceId: string
-  patch: InstancePatch
-  createdAt: number
-}
-
-export type InstanceMetadata = SourcePresentationMetadata
-
-export type InstancePatch = SourcePatch<
-  Record<string, unknown>,
-  InstanceMetadata
->
+export type { Instance, InstanceMetadata, InstancePatch } from "@newsnext/sdk/models"
 
 export function mergeInstancePatch(
   current: InstancePatch | undefined,

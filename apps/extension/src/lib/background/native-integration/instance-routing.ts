@@ -1,4 +1,4 @@
-import type { ExtensionToHost } from "@newsnext/extension-connection"
+import type { ExtensionToHost } from "@newsnext/sdk/protocol/ExtensionToHost"
 import type { SourceLoadResponse } from "../../source/load-result"
 import type { BackgroundActionContext } from "../background-actions"
 import type { RequireNativeConnection } from "./types"

@@ -206,10 +206,31 @@ all query results, manifest/scope fingerprints, and a refresh timestamp.
 
 The host reads one Snapshot over Native Messaging for its Board, Widget, and
 resolved Instance scope. It owns title, layout, refresh, and error state. The
-sandboxed iframe announces readiness and renders the supplied data; it cannot
-select Instances, execute Sources, or request refresh. The host refresh button
-rereads the saved Snapshot. The loopback server serves only assets and presentation
-metadata, not Widget data. NextLayer does not observe NowLayer's query cache.
+sandboxed iframe announces readiness and renders the supplied data. The host
+refresh button rereads the saved Snapshot. NextLayer does not observe NowLayer's
+query cache. The loopback server serves only assets and presentation metadata.
+
+Widgets can also import `createClient` from `@newsnext/sdk/widget` and actively
+query history, fetch through the browser, execute Sources, and invoke every typed
+Action. Browser-aware bundlers select this same entry for `@newsnext/sdk`.
+Snapshot queries and SDK calls are independent: placement `dataScope` limits
+materialized query inputs, not SDK access. Installed local Widgets therefore have
+full SDK access, including mutations outside their Board.
+
+The iframe transfers a MessagePort to its parent for each SDK request. The host
+checks the sending window against the mounted iframe and forwards the stream over
+an extension runtime port. The background accepts these ports only from the
+extension app. Native Messaging carries requests, pull signals, cancellation,
+and response frames; the native host runs its own executable's existing `__sdk`
+dispatcher. It advertises the additive `sdk` capability and supplies its Worker
+when the request does not select one. Widget clients inherit the host environment;
+they cannot choose an executable or IPC endpoint.
+
+Each pull releases one frame, preserving history export streaming and avoiding
+unbounded buffering. Abort, iterator return, document pagehide, iframe unmount,
+and port disconnection release the request and terminate its SDK child process.
+Timeouts cover waiting for a response, not time spent consuming yielded data.
+Existing Snapshot ready/data messages remain unchanged.
 
 Generic transformation graphs, transitive provenance, replay, and a complete
 Widget preview/maintenance workflow remain target scope in the [PRD](PRD.md) and
@@ -217,25 +238,25 @@ Widget preview/maintenance workflow remain target scope in the [PRD](PRD.md) and
 
 ## Action Registry
 
-Every stable capability exposed to the UI, agents, or CLI is an Action. An
-Action is defined once with `defineAction`: its name, kind, audiences,
-description, TypeBox parameter and result schemas, optional validation and
-diagnostic projections, and handler live together. TypeBox schemas are both
-the runtime contract and the JSON Schema returned by `action.list`; there is no
-parallel descriptor or hand-written parser catalog.
+Every stable capability exposed to the UI, agents, or CLI is an Action.
+`@newsnext/sdk/actions` owns each Action's name, kind, description, TypeBox
+parameter and result schemas, optional validation, and diagnostic projections.
+The extension binds its handler to the SDK contract with `defineAction`.
+TypeBox schemas supply static types, runtime validation, and the JSON Schema
+returned by `action.list`; there is no parallel descriptor or parser catalog.
 
 ```ts
-const createBoard = defineAction({
-  name: "board.create",
-  kind: "mutation",
-  audiences: ["ui", "connected"],
-  params: Type.Object({ name: Type.String({ minLength: 1 }) }),
-  result: Type.Object({ boardId: Type.String() }),
-}, async (params, context) => {
-  return await context.mutate((data, dependencies) => (
-    createBoardMutation(data, params, dependencies)
-  ))
-})
+const createBoard = defineAction(
+  applicationActionContracts["board.create"],
+  async (params, context: ApplicationActionContext) => {
+    await context.requireSources((params.instances ?? []).map(instance => instance.sourceId))
+    const result = await context.mutate((data, dependencies) => (
+      createBoardMutation(data, params, dependencies)
+    ))
+    if (!result.boardId) throw new Error("Board creation returned no Board ID")
+    return { boardId: result.boardId }
+  },
+)
 ```
 
 The three kinds have distinct contracts:
@@ -250,7 +271,7 @@ UI mechanics such as opening dialogs, flipping cards, focus, scrolling, and
 form drafts are not registered Actions. Agents operate those surfaces through
 general browser control when needed.
 
-The UI uses a type-safe client inferred from the UI-visible definitions:
+The UI uses a type-safe client inferred from the shared SDK contracts:
 
 ```ts
 await actions.board.create({ name: "Research" })
@@ -261,10 +282,11 @@ const sources = await actions.source.list()
 The client sends only the canonical Action name and parameters to the
 background. It never imports a handler or browser-owned dependency. The
 background Registry validates parameters, invokes the registered handler, and
-validates its result. `connected` audience filtering publishes only Actions
-available to the local CLI; UI-only operations such as `source.cancel`,
-`radar.resolveSuggestions`, `application.replace`, and CLI
-connection settings remain absent from that catalog.
+validates its result. All registered Actions are available through both UI and
+CLI clients, including `source.cancel`, `radar.resolveSuggestions`,
+`application.replace`, and connection settings. Invocation origin is recorded
+for diagnostics, not used as an availability filter. Browser-dependent Actions
+still require their normal browser context and parameters.
 
 Background services receive environment integrations through factory
 arguments. In particular, the Action service must not import the Native
@@ -322,7 +344,7 @@ Browser-dependent operations include `developer.fetch`, `developer.runSource`,
 and `source.load`. Developer operations investigate endpoints or validate Sources;
 normal loads share the protected Loader. Debug request/response capture is opt-in.
 See [CLI execution](SOURCE_ARCHITECTURE.md#cli-execution) for transport, permission,
-and protocol boundaries. Use the live catalog for audience availability.
+and protocol boundaries. The SDK types expose every registered Action without a catalog request.
 
 ## Adapter Rules
 

@@ -1,3 +1,5 @@
+import type { NowLayerSort, NowLayerSortMode } from "@newsnext/sdk/models"
+
 export interface SortableNowLayerLiveCard {
   id: string
   metadata: {
@@ -8,14 +10,7 @@ export interface SortableNowLayerLiveCard {
   }
 }
 
-export type NowLayerAutomaticSortMode = "addedAt" | "provider"
-export type NowLayerSortMode = NowLayerAutomaticSortMode | "manual"
-
-export interface NowLayerSort {
-  mode: NowLayerSortMode
-  automaticMode: NowLayerAutomaticSortMode
-  manualOrder: string[]
-}
+export type { NowLayerAutomaticSortMode, NowLayerSort, NowLayerSortMode } from "@newsnext/sdk/models"
 
 export const DEFAULT_NOW_LAYER_SORT: NowLayerSort = {
   mode: "addedAt",

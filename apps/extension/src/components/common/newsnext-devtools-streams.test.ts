@@ -1,4 +1,4 @@
-import type { NativeStreamStatus } from "@newsnext/extension-connection"
+import type { StreamStatus as NativeStreamStatus } from "@newsnext/sdk/protocol/StreamStatus"
 import { describe, expect, it } from "vitest"
 import { collectionExplanation, needsStreamAttention, sortStreams, summarizeStreams } from "./newsnext-devtools-streams"
 

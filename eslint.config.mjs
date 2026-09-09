@@ -14,7 +14,7 @@ export default antfu(
       "**/.wrangler/**",
       "apps/landing/src/routeTree.gen.ts",
       "public/**",
-      "packages/extension-connection/src/generated/**",
+      "packages/sdk/src/protocol/**",
       "registry/registry.json",
       "registry/sources.ts",
     ],

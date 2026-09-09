@@ -1,29 +1,10 @@
+import type { ApplicationBoardContext, ApplicationNowLayerLiveCard, BoardConfigurationResult, BoardDetail } from "@newsnext/sdk/models"
 import type { SourceDescriptor } from "@newsnext/source-kit/types"
 import type { Board } from "../board"
 import type { Instance } from "../source/live-cards"
 import type { ApplicationData } from "./data"
 
-export interface ApplicationBoardContext {
-  boardId: string
-  boardName: string
-}
-
-export interface ApplicationNowLayerLiveCard {
-  boardId: string
-  instanceId: string
-  sourceId: string
-}
-
-export interface BoardConfigurationResult {
-  color: Board["color"]
-  defaultLayer: Board["defaultLayer"]
-  nowLayer: Board["nowLayer"]
-}
-
-export interface BoardDetail {
-  board: Board
-  instances: Instance[]
-}
+export type { ApplicationBoardContext, ApplicationNowLayerLiveCard, BoardConfigurationResult, BoardDetail } from "@newsnext/sdk/models"
 
 export function listSourcesQuery(sources: readonly SourceDescriptor[]): SourceDescriptor[] {
   return [...sources]

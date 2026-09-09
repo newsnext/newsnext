@@ -1,45 +1,16 @@
+import type { Board, BoardLayer } from "@newsnext/sdk/models"
 import type { Color } from "@newsnext/shared/types"
-import type { NowLayerSort, NowLayerSortMode } from "./sorting"
+import type { NowLayerSortMode } from "./sorting"
 import { createNowLayerSort } from "./sorting"
 
 export const INITIAL_BOARD_NAME = "My Board"
 export const DEFAULT_BOARD_COLOR: Color = "red"
 
-export type BoardLayer = "now" | "next"
+export type { BoardLayer } from "@newsnext/sdk/models"
 
 export const DEFAULT_BOARD_LAYER: BoardLayer = "now"
 
-export type NextLayerWidgetDataScope
-  = | { type: "board" }
-    | { type: "instances", instanceIds: string[] }
-
-export interface NextLayerWidgetLayout {
-  height: number
-  width: number
-  x: number
-  y: number
-}
-
-export interface NextLayerWidget {
-  dataScope: NextLayerWidgetDataScope
-  layout: NextLayerWidgetLayout
-  widgetId: string
-}
-
-export interface Board {
-  color: Color
-  createdAt: number
-  defaultLayer: BoardLayer
-  id: string
-  instanceIds: string[]
-  name: string
-  nowLayer: {
-    sort: NowLayerSort
-  }
-  nextLayer: {
-    widgets: NextLayerWidget[]
-  }
-}
+export type { Board, NextLayerWidget, NextLayerWidgetDataScope, NextLayerWidgetLayout } from "@newsnext/sdk/models"
 
 export interface BoardCreateInput {
   color: Color

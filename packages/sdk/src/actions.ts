@@ -1,40 +1,9 @@
-import type { JsonObject, JsonValue } from "./types.js"
+import type { ActionInput, ActionResult } from "./action/index.js"
 
-export interface ActionDescriptor {
-  name: string
-  description: string
-  kind: "mutation" | "query" | "command"
-  inputSchema: JsonObject
-  outputSchema: JsonObject
-}
+export type { ActionDescriptor, ActionInput, ActionName, ActionResult, AllActionName } from "./action/index.js"
 
-export interface FetchInput {
-  url: string
-  method?: string
-  headers?: [string, string][]
-  body?: string
-}
-export interface FetchResult {
-  status: number
-  statusText: string
-  headers: [string, string][]
-  body: string
-}
-export type RunInput = {
-  sourceId: string
-  params?: JsonObject
-  debug?: boolean
-} & ({ provider?: never, providerId?: never, useProviderSecrets?: never } | { provider: JsonObject, providerId: string, useProviderSecrets?: boolean })
-
-export interface RunResult {
-  data: JsonObject[]
-  execution: {
-    durationMs: number
-    loadedAt: number
-    params: JsonObject
-    providerId: string
-    sourceId: string
-    sourceVersion: number
-  }
-  fetches?: JsonValue[]
-}
+export type FetchInput = Pick<ActionInput<"developer.fetch">, "url" | "body"> & Partial<Pick<ActionInput<"developer.fetch">, "headers" | "method">>
+export type FetchResult = ActionResult<"developer.fetch">
+type OptionalDebug<Input> = Input extends object ? Omit<Input, "debug"> & { debug?: boolean } : never
+export type RunInput = OptionalDebug<ActionInput<"developer.runSource">>
+export type RunResult = ActionResult<"developer.runSource">

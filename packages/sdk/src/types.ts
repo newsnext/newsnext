@@ -1,3 +1,7 @@
+import type { Worker } from "./protocol/Worker.js"
+
+export type { Worker } from "./protocol/Worker.js"
+
 export type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue }
 export interface JsonObject { [key: string]: JsonValue }
 export type HistoryTime = number | string | Date
@@ -82,7 +86,6 @@ export interface Comparison {
     afterObservedAt: number
   }
 }
-export interface Worker { id: string, browser: string, extensionVersion: string }
 export interface Status {
   capabilities: string[]
   daemonVersion: string | null

@@ -1,4 +1,4 @@
-import type { ExtensionConnectionFetchResponse } from "@newsnext/extension-connection"
+import type { FetchResponse } from "@newsnext/sdk/models"
 import type { SourcePermissionTarget } from "../source/permissions"
 import type { ConnectedFetchInput } from "./background-actions"
 import { createSourceFetch } from "@newsnext/source-kit/utils"
@@ -7,7 +7,7 @@ import { requestCliPermission } from "./cli-permission"
 
 export async function executeConnectedFetch(
   input: ConnectedFetchInput,
-): Promise<ExtensionConnectionFetchResponse> {
+): Promise<FetchResponse> {
   const url = new URL(input.url)
   const permissionRequest = { origins: [`${url.protocol}//${url.hostname}/*`] }
   if (!await requestCliPermission(permissionRequest, "Required to complete this fetch.")) {

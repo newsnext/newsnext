@@ -6,14 +6,17 @@ authoring examples, see the [source authoring guide](SOURCE_GUIDELINE.md).
 
 ## System boundaries
 
-Source support is split across three packages:
+Source support is split across these packages:
 
 ```text
 registry
   owns provider definitions and generated registry artifacts
 
+packages/sdk
+  owns all Action contracts and shared public Source, Board, and Instance models
+
 packages/source-kit
-  owns source contracts, validation, resolution, and structured loaders
+  owns source validation, resolution, loader contracts, and structured loaders
 
 apps/extension
   owns browser integration, permissions, secrets, caching, and execution
@@ -30,9 +33,30 @@ packages/source-kit/src/
 ├── core/       defaults, parameters, templates, loaders, and capabilities
 ├── registry/   provider expansion and registry parsing
 ├── runtime/    source lookup and request preparation
-├── types/      shared contracts
+├── types/      loader contracts and re-exports of SDK public models
 └── utils/      source-facing fetch, crypto, and JWT helpers
 ```
+
+## Action contracts
+
+`packages/sdk/src/action` is the single source of truth for every Action's name,
+parameter schema, result schema, validation, and diagnostic redaction.
+Application and background handlers in the extension bind implementations to these
+contracts with `defineAction`; they do not declare another schema. Public model
+shapes live in `packages/sdk/src/models`. Source-kit and shared package exports
+forward these models while keeping loader execution and browser behavior local.
+
+The browser-safe `@newsnext/sdk/actions` and `@newsnext/sdk/models` entry points
+never import the Node CLI transport. The SDK derives nested methods, inputs, and
+results directly from the contracts. Node clients can call
+`client.actions.board.create({ name: "Reading" })` without requesting a catalog.
+All Actions are exposed through both CLI and UI clients. Invocation origin is
+recorded for diagnostics and does not restrict Action availability.
+`actions.list()` is runtime diagnostic information, not the type source.
+
+The SDK is a compiled workspace dependency. Extension preparation and root test
+and typecheck commands build it first, including on a clean checkout. Rebuild
+`@newsnext/sdk` after editing its contracts when running an existing dev server.
 
 ## Build pipeline
 
@@ -820,12 +844,34 @@ state; a bridge does not. Shutdown fails pending work and removes socket endpoin
 startup reclaims stale sockets but never replaces an unrelated non-socket file.
 
 Rust `serde` enums own the wire contract. Released `ts-rs` projections in
-`packages/extension-connection/src/generated` are not hand-edited. Browser code
-imports protocol types and validation from `@newsnext/extension-connection`.
+`packages/sdk/src/protocol` are not hand-edited. Browser code
+imports protocol types through `@newsnext/sdk/protocol/*` (for example,
+`@newsnext/sdk/protocol/Workspace`) and message parsing from
+`@newsnext/sdk/native-messaging`.
+Run from the CLI repository:
+
+```sh
+bun run protocol:export
+```
+
+This clears `bindings/`, exports fresh types with `.js` import extensions,
+replaces `../web/packages/sdk/src/protocol/` in full, and rebuilds the SDK's
+public `dist/` exports. This development command expects the CLI and web checkouts
+to be siblings, as in the NewsNext wrapper repository.
+Wildcard package exports expose the generated files directly, without a
+maintained export index. SDK builds clear `dist/` to prevent removed types from
+remaining in the published package. Commit the generated types with the change.
+Ordinary SDK builds use the committed files and do not require Rust or the
+private CLI repository. The native-messaging entry point stays browser-safe.
 Protocol 21 carries Workspace patches, Instance routing, Actions, cached results,
 and Widget Snapshots. Incompatible versions disconnect. Request IDs correlate
 completions; timed-out or disconnected executions are not replayed automatically.
-Additive features use explicit capability negotiation.
+Additive features use explicit capability negotiation. The native host advertises
+`sdk` when it supports pull-based SDK streams from Widgets. The SDK shares one
+client implementation between the Node subprocess transport and browser
+MessagePort transport; Widget requests reuse the existing CLI SDK dispatcher.
+See [Layers and Widgets](APPLICATION_ARCHITECTURE.md#layers-and-widgets) for the
+host boundary and lifecycle.
 
 Workspace commits validate expected revisions and broadcast deterministic patches
 with complete entity order and only changed values. Instance `workerId` supplies

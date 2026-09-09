@@ -7,7 +7,7 @@ import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { useQuery } from "@tanstack/react-query"
 import { GridStack } from "gridstack/dist/react"
 import { useAtomValue } from "jotai"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { useCardEntrance } from "@/components/board-view/use-card-entrance"
 import { PhArrowCounterClockwiseDuotone, PhCircleDashedDuotone } from "@/components/icons/ph"
 import { LiveCardHeaderActionButton } from "@/components/live-card/card-header"
@@ -18,6 +18,7 @@ import { actions } from "@/lib/actions"
 import { boardsAtom } from "@/store/board"
 import { getChangedWidgetLayouts, getGridWidgetId } from "./widget-layout"
 import { parseLocalWidgetManifests } from "./widget-manifest"
+import { bindWidgetSdk } from "./widget-sdk"
 import "gridstack/dist/gridstack.css"
 
 const WIDGET_PROTOCOL_VERSION = 1
@@ -91,6 +92,10 @@ function LocalWidgetFrame(props: Record<string, unknown>) {
   const frame = parseFrameProps(props)
   const articleRef = useRef<HTMLElement>(null)
   const iframeRef = useRef<HTMLIFrameElement>(null)
+  useLayoutEffect(() => {
+    const iframe = iframeRef.current
+    if (iframe) return bindWidgetSdk(iframe)
+  }, [frame.url])
   const loadedRef = useRef(false)
   const visible = useElementVisible(articleRef)
   const documentVisible = useDocumentVisible()

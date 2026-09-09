@@ -1,4 +1,4 @@
-import type { NativeWorkspace } from "@newsnext/extension-connection"
+import type { Workspace as NativeWorkspace } from "@newsnext/sdk/protocol/Workspace"
 import { describe, expect, it } from "vitest"
 import {
   applyWorkspacePatch,

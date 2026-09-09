@@ -1,4 +1,4 @@
-import type { NativeStreamStatus } from "@newsnext/extension-connection"
+import type { StreamStatus as NativeStreamStatus } from "@newsnext/sdk/protocol/StreamStatus"
 import type { CSSProperties, ReactNode } from "react"
 import type { BackgroundActionRecord } from "@/lib/background/action-dispatcher"
 import type { BackgroundDiagnosticsSnapshot } from "@/lib/background/diagnostics-service"

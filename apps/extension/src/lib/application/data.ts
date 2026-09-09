@@ -1,15 +1,10 @@
-import type { Board } from "../board"
-import type { Instance } from "../source"
+import type { ApplicationData } from "@newsnext/sdk/models"
+import { APPLICATION_DATA_VERSION } from "@newsnext/sdk/models"
 import { createBoard, INITIAL_BOARD_NAME } from "../board"
 import { createId } from "../id"
 
-export const APPLICATION_DATA_VERSION = 6 as const
-
-export interface ApplicationData {
-  version: typeof APPLICATION_DATA_VERSION
-  boards: Board[]
-  instances: Instance[]
-}
+export { APPLICATION_DATA_VERSION } from "@newsnext/sdk/models"
+export type { ApplicationData } from "@newsnext/sdk/models"
 
 export interface InitialApplicationDataOptions {
   boardId?: string

@@ -32,8 +32,8 @@
       "dependencies": {
         "@atlaskit/pragmatic-drag-and-drop": "catalog:",
         "@atlaskit/pragmatic-drag-and-drop-auto-scroll": "catalog:",
-        "@newsnext/extension-connection": "workspace:*",
         "@newsnext/registry": "workspace:*",
+        "@newsnext/sdk": "workspace:*",
         "@newsnext/shared": "workspace:*",
         "@newsnext/source-kit": "workspace:*",
         "@newsnext/ui": "workspace:*",
@@ -131,18 +131,15 @@
         "vitest": "catalog:",
       },
     },
-    "packages/extension-connection": {
-      "name": "@newsnext/extension-connection",
-      "devDependencies": {
-        "@newsnext/tsconfigs": "workspace:*",
-        "vitest": "catalog:",
-      },
-    },
     "packages/sdk": {
       "name": "@newsnext/sdk",
       "version": "1.0.0-alpha.1",
+      "dependencies": {
+        "@types/react": "^19.2.18",
+        "@wxt-dev/browser": "^0.2.5",
+        "typebox": "^1.3.16",
+      },
       "devDependencies": {
-        "@newsnext/tsconfigs": "workspace:*",
         "@types/node": "catalog:",
         "vitest": "catalog:",
       },
@@ -155,6 +152,9 @@
     },
     "packages/shared": {
       "name": "@newsnext/shared",
+      "dependencies": {
+        "@newsnext/sdk": "workspace:*",
+      },
       "devDependencies": {
         "@newsnext/tsconfigs": "workspace:*",
         "react": "catalog:",
@@ -165,6 +165,7 @@
       "name": "@newsnext/source-kit",
       "dependencies": {
         "@newsnext/date-parser": "workspace:*",
+        "@newsnext/sdk": "workspace:*",
         "@newsnext/shared": "workspace:*",
         "@smithy/md5-js": "^4.4.16",
         "cheerio": "catalog:",
@@ -552,8 +553,6 @@
     "@newsnext/date-parser": ["@newsnext/date-parser@workspace:packages/date-parser"],
 
     "@newsnext/extension": ["@newsnext/extension@workspace:apps/extension"],
-
-    "@newsnext/extension-connection": ["@newsnext/extension-connection@workspace:packages/extension-connection"],
 
     "@newsnext/landing": ["@newsnext/landing@workspace:apps/landing"],
 

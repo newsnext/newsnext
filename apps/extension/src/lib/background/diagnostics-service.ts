@@ -1,4 +1,4 @@
-import type { NativeCollectionStatus } from "@newsnext/extension-connection"
+import type { CollectionStatus as NativeCollectionStatus } from "@newsnext/sdk/protocol/CollectionStatus"
 import type { ApplicationData } from "../application"
 import type {
   PersistedSettings,

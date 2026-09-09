@@ -1,3 +1,4 @@
+import type { RunDeveloperSourceInput, RunDeveloperSourceOutput } from "@newsnext/sdk/models"
 import type { ProviderConfig } from "@newsnext/source-kit/registry"
 import type { SourceLoaderResult } from "@newsnext/source-kit/types"
 import type { SourcePermissionTarget } from "../source/permissions"
@@ -11,37 +12,7 @@ import { createBackgroundSourceFetch } from "./source-fetch"
 import { createSourceLoaderInvoker } from "./source-loader-invoker"
 import { resolveSourceSecrets, updateSourceSecrets } from "./source-secrets"
 
-interface RunDeveloperSourceOptions {
-  debug: boolean
-  params?: Record<string, unknown>
-  sourceId: string
-}
-
-export type RunDeveloperSourceInput = RunDeveloperSourceOptions & (
-  | {
-    provider?: never
-    providerId?: never
-    useProviderSecrets?: never
-  }
-  | {
-    provider: unknown
-    providerId: string
-    useProviderSecrets?: boolean
-  }
-)
-
-export interface RunDeveloperSourceOutput extends Omit<SourceLoaderResult, "items"> {
-  data: SourceLoaderResult["items"]
-  execution: {
-    durationMs: number
-    loadedAt: number
-    params: Record<string, unknown>
-    providerId: string
-    sourceId: string
-    sourceVersion: number
-  }
-  fetches?: BackgroundSourceFetchResult[]
-}
+export type { RunDeveloperSourceInput, RunDeveloperSourceOutput } from "@newsnext/sdk/models"
 
 export type AuthorizeConnectedSource = (
   source: SourcePermissionTarget,

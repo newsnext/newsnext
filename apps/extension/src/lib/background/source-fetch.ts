@@ -1,18 +1,9 @@
-import type { ExtensionConnectionFetchResponse } from "@newsnext/extension-connection"
+import type { BackgroundSourceFetchResult } from "@newsnext/sdk/models"
 import type { SourceFetch } from "@newsnext/source-kit/types"
 import { assertNetworkCapability } from "@newsnext/source-kit/core"
 import { createSourceFetch } from "@newsnext/source-kit/utils"
 
-export interface BackgroundSourceFetchResult {
-  durationMs: number
-  request: {
-    method: string
-    url: string
-  }
-  response: ExtensionConnectionFetchResponse & {
-    url: string
-  }
-}
+export type { BackgroundSourceFetchResult } from "@newsnext/sdk/models"
 
 export function createBackgroundSourceFetch(
   sourceId: string,

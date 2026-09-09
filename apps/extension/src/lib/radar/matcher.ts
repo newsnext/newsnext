@@ -1,3 +1,4 @@
+import type { RadarSuggestion } from "@newsnext/sdk/models"
 import type { CompiledSourceTemplate } from "@newsnext/source-kit/core"
 import type {
   HtmlField,
@@ -9,7 +10,7 @@ import type {
   SourceRadarRule,
 } from "@newsnext/source-kit/types"
 import type { RadarPageQuery } from "./page-query"
-import type { InstanceMetadata, InstancePatch } from "@/lib/source"
+import type { InstanceMetadata } from "@/lib/source"
 import {
   compileSourceTemplate,
   createSourceTemplateScope,
@@ -37,16 +38,7 @@ export interface RadarPageScript {
   script: SourceRadarParamScript
 }
 
-export interface RadarSuggestion {
-  id: string
-  ruleId: string
-  sourceId: string
-  patch: InstancePatch
-}
-
-export interface ResolvedRadarSuggestion extends RadarSuggestion {
-  source: SourceDescriptor
-}
+export type { RadarSuggestion, ResolvedRadarSuggestion } from "@newsnext/sdk/models"
 
 export type RadarSourceMetadata = Pick<
   SourceDescriptor,

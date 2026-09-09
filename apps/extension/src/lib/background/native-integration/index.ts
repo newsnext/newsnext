@@ -1,8 +1,6 @@
-import type {
-  ExtensionConnectionCommandRequest,
-  ExtensionToHost,
-  NativeCommandResult,
-} from "@newsnext/extension-connection"
+import type { CommandResult as NativeCommandResult } from "@newsnext/sdk/protocol/CommandResult"
+import type { ExtensionCommand } from "@newsnext/sdk/protocol/ExtensionCommand"
+import type { ExtensionToHost } from "@newsnext/sdk/protocol/ExtensionToHost"
 import type { PersistedSettings } from "../../settings/persisted-settings"
 import type { BackgroundActionDependencies } from "../action-context"
 import type { BackgroundActionContext } from "../background-actions"
@@ -50,6 +48,7 @@ import {
 } from "./pending-requests"
 import { NATIVE_INTEGRATION_PERMISSIONS } from "./permission"
 import { clearNativeMessageChunks, parseNativeHostValue } from "./protocol"
+import { receiveSdkFrame, registerSdkBridge } from "./sdk"
 import {
   NATIVE_HOST_NAME,
   NATIVE_INTEGRATION_RECONNECT_ALARM,
@@ -181,14 +180,14 @@ async function setNativeIntegrationEnabled(
 
 async function executeCommand(
   connection: NativePort,
-  request: ExtensionConnectionCommandRequest,
+  request: ExtensionCommand,
 ): Promise<void> {
   let result: NativeCommandResult
   try {
     result = {
       ok: true,
       data: request.type === "action.list"
-        ? actionRegistry.list("connected")
+        ? actionRegistry.list()
         : await executeRegisteredAction(
             request.name,
             request.input,
@@ -413,6 +412,8 @@ function handleMessage(connection: NativePort, value: unknown): void {
       }
     } else if (message.type === "workerTakeoverResult") {
       settleWorkerTakeoverRequest(message.requestId)
+    } else if (message.type === "sdkFrame") {
+      receiveSdkFrame(message.requestId, message.frame)
     } else if (message.type === "execute") {
       void executeCommand(connection, message.request).catch((error) => {
         console.error("Failed to return native App integration result", error)
@@ -494,6 +495,7 @@ async function hasNativeIntegrationPermission(): Promise<boolean> {
 }
 
 export async function registerNativeIntegration(): Promise<void> {
+  registerSdkBridge(requireNativeConnection)
   registerApplicationDataSync(requireNativeConnection)
   browser.alarms.onAlarm.addListener((alarm) => {
     if (runtime.enabled

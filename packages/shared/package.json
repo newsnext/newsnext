@@ -11,6 +11,9 @@
   "scripts": {
     "typecheck": "tsc --noEmit"
   },
+  "dependencies": {
+    "@newsnext/sdk": "workspace:*"
+  },
   "devDependencies": {
     "@newsnext/tsconfigs": "workspace:*",
     "react": "catalog:",

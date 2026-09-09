@@ -16,13 +16,13 @@
     "zip:chrome": "wxt zip",
     "zip:firefox": "wxt zip -b firefox",
     "typecheck": "tsc -b --noEmit",
-    "postinstall": "wxt prepare"
+    "postinstall": "bun run --cwd ../../packages/sdk build && wxt prepare"
   },
   "dependencies": {
     "@atlaskit/pragmatic-drag-and-drop": "catalog:",
     "@atlaskit/pragmatic-drag-and-drop-auto-scroll": "catalog:",
-    "@newsnext/extension-connection": "workspace:*",
     "@newsnext/registry": "workspace:*",
+    "@newsnext/sdk": "workspace:*",
     "@newsnext/shared": "workspace:*",
     "@newsnext/source-kit": "workspace:*",
     "@newsnext/ui": "workspace:*",

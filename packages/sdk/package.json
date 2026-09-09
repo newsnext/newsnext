@@ -4,12 +4,62 @@
   "version": "1.0.0-alpha.1",
   "description": "Typed programmatic access to the NewsNext CLI",
   "license": "MPL-2.0",
-  "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } },
-  "files": ["dist"],
-  "engines": { "node": ">=22" },
-  "publishConfig": { "access": "public" },
-  "scripts": { "build": "tsc -p tsconfig.build.json", "typecheck": "tsc --noEmit", "prepack": "bun run build" },
-  "peerDependencies": { "@newsnext/cli": "1.0.0-alpha.1" },
-  "peerDependenciesMeta": { "@newsnext/cli": { "optional": true } },
-  "devDependencies": { "@newsnext/tsconfigs": "workspace:*", "@types/node": "catalog:", "vitest": "catalog:" }
+  "exports": {
+    ".": {
+      "browser": {
+        "types": "./dist/widget.d.ts",
+        "import": "./dist/widget.js"
+      },
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./models": {
+      "types": "./dist/models/index.d.ts",
+      "import": "./dist/models/index.js"
+    },
+    "./actions": {
+      "types": "./dist/action/index.d.ts",
+      "import": "./dist/action/index.js"
+    },
+    "./native-messaging": {
+      "types": "./dist/native-messaging.d.ts",
+      "import": "./dist/native-messaging.js"
+    },
+    "./protocol/*": {
+      "types": "./dist/protocol/*.d.ts",
+      "import": "./dist/protocol/*.js"
+    },
+    "./widget": {
+      "types": "./dist/widget.d.ts",
+      "import": "./dist/widget.js"
+    },
+    "./widget-host": {
+      "types": "./dist/widget-host.d.ts",
+      "import": "./dist/widget-host.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "mkdir -p dist && rm -r dist && tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "prepack": "bun run build"
+  },
+  "dependencies": {
+    "@newsnext/cli": "1.0.0-alpha.1",
+    "@types/react": "^19.2.18",
+    "@wxt-dev/browser": "^0.2.5",
+    "typebox": "^1.3.16"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "vitest": "catalog:"
+  }
 }

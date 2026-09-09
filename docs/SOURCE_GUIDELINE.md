@@ -186,7 +186,7 @@ Create a new category only when it represents a stable product class, has a
 clear boundary from existing categories, and is expected to apply beyond a
 single source configuration. Category IDs must be lowercase English nouns,
 remain concise, and use kebab-case only when multiple words are necessary. Add
-the ID to `CATEGORY_IDS` in `packages/source-kit/src/types/source.ts`, document its
+the ID to `CATEGORY_IDS` in `packages/sdk/src/models/source.ts`, document its
 matching rule and examples here, update affected providers, rebuild the
 registry, and run type-checking and tests.
 
@@ -1248,3 +1248,45 @@ Before submitting:
 - Validate the source through `newsnext run`.
 - Run `bun run typecheck`, `bun run test`, and `git diff --check`.
 - Update this guide whenever source authoring behavior changes.
+
+## Typed SDK Actions
+
+`@newsnext/sdk` owns the Action contracts and public Source models. Source authors
+can continue importing Source types from `@newsnext/source-kit/types`; those
+exports reference the same models. For CLI automation, use typed methods directly:
+
+```ts
+import { createClient } from "@newsnext/sdk"
+
+const client = createClient()
+const sources = await client.actions.source.list()
+const source = await client.actions.source.get({ sourceId: "weibo:hot-search" })
+```
+
+Action names, inputs, and results come from the SDK contract. No `actions.list()`
+request is needed for type discovery. Execution still requires a connected browser
+Worker for browser-owned Actions and retains the existing permission checks.
+
+### SDK calls inside Widgets
+
+Widgets have two independent ways to obtain data: manifest queries receive
+materialized Snapshots, and SDK calls actively query data or execute Actions.
+A Widget may use both. The manifest's data scope applies to Snapshot queries;
+it does not restrict SDK calls.
+
+```ts
+import { createClient } from "@newsnext/sdk/widget"
+
+const client = createClient()
+const boards = await client.actions.board.list()
+const datasets = await client.history.datasets({ sourceId: "weibo:hot-search" })
+```
+
+The Widget entry runs inside an installed NewsNext iframe and uses its host's
+runtime environment and Worker. It exposes the same Actions, `run`, `fetch`,
+`status`, and history API as the Node client, with timeout and AbortSignal
+support. Browser-aware bundlers also resolve `@newsnext/sdk` to this entry.
+Bundle the SDK with the Widget's JavaScript; bare npm imports do not work in
+unbundled HTML. The native host must advertise the `sdk` capability; after
+updating it, reconnect the extension. An older host returns an explicit update
+error. Installed local Widgets can execute mutating Actions as well as queries.

@@ -1,4 +1,4 @@
-import type { NativeStreamStatus } from "@newsnext/extension-connection"
+import type { StreamStatus as NativeStreamStatus } from "@newsnext/sdk/protocol/StreamStatus"
 
 export function needsStreamAttention(stream: NativeStreamStatus): boolean {
   return stream.activity === "offline" || stream.activity === "backoff" || stream.policy.lastOutcome === "error"

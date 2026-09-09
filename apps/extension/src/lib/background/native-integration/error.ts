@@ -1,11 +1,11 @@
-import type { ExtensionConnectionSerializedError } from "@newsnext/extension-connection"
+import type { SerializedError } from "@newsnext/sdk/protocol/SerializedError"
 
 function getStringProperty(value: object, key: string): string | undefined {
   const property = (value as Record<string, unknown>)[key]
   return typeof property === "string" ? property : undefined
 }
 
-export function serializeNativeIntegrationError(error: unknown): ExtensionConnectionSerializedError {
+export function serializeNativeIntegrationError(error: unknown): SerializedError {
   if (error instanceof Error) {
     return {
       name: error.name,

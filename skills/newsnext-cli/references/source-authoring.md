@@ -63,20 +63,13 @@ Use TypeScript custom loaders as a last resort. They must use `context.fetch`, d
 
 ## Investigate with `fetch`
 
-Resolve the CLI invocation from the active instructions. Normally it is `newsnext`; in the private wrapper it is `bun run dev` from the `cli` directory.
+Use the installed `newsnext` CLI for the commands below.
 
 Use `fetch` to verify the exact feed, API, or HTML request from the connected extension before encoding it:
 
 ```sh
 newsnext fetch 'https://example.com/feed.xml' -i
 newsnext fetch 'https://example.com/api/items' -H 'Accept: application/json' -i
-```
-
-In the private wrapper, equivalent commands run from `cli/`:
-
-```sh
-bun run dev fetch 'https://example.com/feed.xml' -i
-bun run dev fetch 'https://example.com/api/items' -H 'Accept: application/json' -i
 ```
 
 Use the response to confirm status, content type, redirects, encoding, and the actual item shape. Begin with the minimum request and add only demonstrated requirements. `fetch` uses the connected browser's cookies but cannot verify Source parameter parsing, capability enforcement, secrets, result normalization, or Radar; it is investigation, not the final test.
@@ -97,14 +90,6 @@ From a normal NewsNext web checkout:
 newsnext run registry/src/example.json latest --debug
 newsnext run registry/src/example.json latest --param topic=technology
 newsnext run registry/src/example.json latest --watch
-```
-
-From `cli/` in the private wrapper, point to the sibling web checkout:
-
-```sh
-bun run dev run ../web/registry/src/example.json latest --debug
-bun run dev run ../web/registry/src/example.json latest --param topic=technology
-bun run dev run ../web/registry/src/example.json latest --watch
 ```
 
 For a TypeScript provider, first build the registry and run the registered Source ID unless the installed CLI version explicitly supports that local format. For a local provider that uses stored secrets, pass `--use-provider-secrets`; never print or commit the secret values.

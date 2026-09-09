@@ -1,4 +1,7 @@
-import type { NativeCollectionStatus, NativeCommandResult, NativeLogEntry, NativeWorkspace } from "@newsnext/extension-connection"
+import type { CollectionStatus as NativeCollectionStatus } from "@newsnext/sdk/protocol/CollectionStatus"
+import type { CommandResult as NativeCommandResult } from "@newsnext/sdk/protocol/CommandResult"
+import type { LogEntry as NativeLogEntry } from "@newsnext/sdk/protocol/LogEntry"
+import type { Workspace as NativeWorkspace } from "@newsnext/sdk/protocol/Workspace"
 import type { SourceLoadResponse } from "../../source/load-result"
 import type { NativePort } from "./types"
 

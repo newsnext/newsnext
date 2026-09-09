@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { historyTime, NewsNextError, parseFrame, timeRange } from "./protocol.js"
+import { historyTime, NewsNextError, parseFrame, prepareRequest, timeRange } from "./protocol.js"
 
 describe("history time boundaries", () => {
   it("normalizes milliseconds, UTC dates and explicit offsets", () => {
@@ -26,5 +26,20 @@ describe("cLI protocol frames", () => {
     for (const value of [null, {}, { version: 2, type: "end" }, { version: 1, type: "data" }, { version: 1, type: "error", error: "failed" }]) {
       expect(() => parseFrame(JSON.stringify(value))).toThrow(NewsNextError)
     }
+  })
+})
+
+describe("sdk request limits", () => {
+  it("validates timeouts and protects protocol envelope fields", () => {
+    for (const timeout of [0, -1, 600001, 1.5, NaN, Infinity]) {
+      expect(() => prepareRequest({ method: "status" }, timeout)).toThrow(RangeError)
+    }
+    const { payload, serialized } = prepareRequest({ method: "status", version: 2, timeoutMs: -1 })
+    expect(payload).toEqual({ method: "status", version: 1, timeoutMs: 60000 })
+    expect(JSON.parse(serialized)).toEqual(payload)
+  })
+
+  it("measures request size in UTF-8 bytes", () => {
+    expect(() => prepareRequest({ data: "界".repeat(3 * 1024 * 1024) })).toThrow("8 MiB")
   })
 })

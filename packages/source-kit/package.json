@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@newsnext/date-parser": "workspace:*",
+    "@newsnext/sdk": "workspace:*",
     "@newsnext/shared": "workspace:*",
     "@smithy/md5-js": "^4.4.16",
     "cheerio": "catalog:",

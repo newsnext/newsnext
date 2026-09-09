@@ -1,10 +1,10 @@
-import type { uiActionDefinitions } from "./background/action-registry"
-import { createActionsClient } from "./action"
+import type { AllActionContract } from "@newsnext/sdk/actions"
+import { createActionsClient } from "@newsnext/sdk/actions"
 import { createBackgroundClient } from "./background"
 
 const actionService = createBackgroundClient().action
 
-export const actions = createActionsClient<typeof uiActionDefinitions>(async (name, input) => {
+export const actions = createActionsClient<readonly AllActionContract[]>(async (name, input) => {
   const execute = actionService.execute as (
     actionName: string,
     actionInput: unknown,

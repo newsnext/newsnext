@@ -1,9 +1,8 @@
 import type { CallOptions, ClientOptions } from "./types.js"
-import { Buffer } from "node:buffer"
 import { spawn } from "node:child_process"
 import { createRequire } from "node:module"
 import process from "node:process"
-import { DEFAULT_TIMEOUT_MS, NewsNextError, parseFrame } from "./protocol.js"
+import { NewsNextError, parseFrame, prepareRequest } from "./protocol.js"
 
 const require = createRequire(import.meta.url)
 const MAX_FRAME_LENGTH = 64 * 1024 * 1024
@@ -28,11 +27,8 @@ function defaultCommand(): readonly [string, ...string[]] {
 export async function* stream<T>(client: ClientOptions, request: object, options: CallOptions = {}): AsyncGenerator<T> {
   const signal = options.signal ?? client.signal
   signal?.throwIfAborted()
-  const timeoutMs = options.timeoutMs ?? client.timeoutMs ?? DEFAULT_TIMEOUT_MS
-  if (!Number.isInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 600_000) throw new RangeError("timeoutMs must be an integer between 1 and 600000")
+  const { payload: { timeoutMs }, serialized: input } = prepareRequest(request, options.timeoutMs ?? client.timeoutMs)
   const command = client.command ?? defaultCommand()
-  const input = JSON.stringify({ version: 1, timeoutMs, ...request })
-  if (Buffer.byteLength(input) > 8 * 1024 * 1024) throw new RangeError("SDK request exceeds 8 MiB")
   const child = spawn(command[0], [...command.slice(1), "__sdk"], {
     cwd: client.cwd,
     env: { ...process.env, NEWSNEXT_ENV: client.environment ?? "production" },
@@ -118,15 +114,4 @@ export async function* stream<T>(client: ClientOptions, request: object, options
     kill()
     await completion
   }
-}
-
-export async function call<T>(client: ClientOptions, request: object, options?: CallOptions): Promise<T> {
-  let result: T | undefined
-  let count = 0
-  for await (const value of stream<T>(client, request, options)) {
-    result = value
-    count++
-  }
-  if (count !== 1) throw new NewsNextError("SDK_PROTOCOL_ERROR", `Expected one response, received ${count}`)
-  return result as T
 }

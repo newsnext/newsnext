@@ -1,3 +1,4 @@
+import type { BoardDeleteInput } from "@newsnext/sdk/models"
 import type { Color } from "@newsnext/shared/types"
 import type {
   Board,
@@ -22,9 +23,7 @@ interface ApplicationInstanceCreationInput {
   sourceId: string
 }
 
-export type BoardDeleteInput
-  = | { boardId: string, deleteInstances: true, targetBoardId?: never }
-    | { boardId: string, deleteInstances?: never, targetBoardId: string }
+export type { BoardDeleteInput } from "@newsnext/sdk/models"
 
 export interface ApplicationMutationDependencies {
   createId: () => string

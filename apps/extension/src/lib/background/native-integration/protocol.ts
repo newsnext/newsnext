@@ -1,11 +1,9 @@
-import type {
-  HostToExtension,
-  NativeCommandResult,
-  NativeLogEntry,
-  NativeOfflineWorker,
-  NativeWorkspace,
-} from "@newsnext/extension-connection"
-import { parseExtensionConnectionCommandRequest } from "@newsnext/extension-connection"
+import type { CommandResult as NativeCommandResult } from "@newsnext/sdk/protocol/CommandResult"
+import type { HostToExtension } from "@newsnext/sdk/protocol/HostToExtension"
+import type { LogEntry as NativeLogEntry } from "@newsnext/sdk/protocol/LogEntry"
+import type { OfflineWorker as NativeOfflineWorker } from "@newsnext/sdk/protocol/OfflineWorker"
+import type { Workspace as NativeWorkspace } from "@newsnext/sdk/protocol/Workspace"
+import { parseExtensionCommand } from "@newsnext/sdk/native-messaging"
 import { APPLICATION_DATA_VERSION } from "../../application"
 import { normalizeApplicationData } from "../../settings/persisted-data"
 import { NativeMessageChunkAssembler } from "../native-message-chunks"
@@ -54,6 +52,9 @@ function parseHostMessage(value: unknown): ParsedHostMessage {
       offlineWorkers: parseOfflineWorkers(value.offlineWorkers),
     }
   }
+  if (value.type === "sdkFrame" && typeof value.requestId === "string" && "frame" in value) {
+    return { type: "sdkFrame", requestId: value.requestId, frame: value.frame }
+  }
   if (value.type === "workerRoutingChanged") {
     return {
       type: "workerRoutingChanged",
@@ -76,7 +77,7 @@ function parseHostMessage(value: unknown): ParsedHostMessage {
   if (value.type === "execute") {
     return {
       type: "execute",
-      request: parseExtensionConnectionCommandRequest(value.request),
+      request: parseExtensionCommand(value.request),
     }
   }
   if (value.type === "workspaceChanged") {

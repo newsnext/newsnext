@@ -1,5 +1,5 @@
 {
-  "extends": "@newsnext/tsconfigs/base.json",
-  "compilerOptions": { "target": "ES2022", "lib": ["ES2022"], "types": ["node"] },
+  "extends": "../tsconfigs/tsconfig.base.json",
+  "compilerOptions": { "target": "ES2022", "lib": ["ES2022", "DOM"], "types": ["node"] },
   "include": ["src"]
 }
