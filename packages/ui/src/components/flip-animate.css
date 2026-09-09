@@ -1,0 +1,34 @@
+@property --newsnext-flip-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.flip-animate-face {
+  --flip-half-extent: 50cqw;
+  --flip-depth: calc(-1 * var(--flip-half-extent) * max(sin(var(--newsnext-flip-angle)), -1 * sin(var(--newsnext-flip-angle))));
+  transform: translateZ(var(--flip-depth)) rotateY(var(--newsnext-flip-angle));
+  transition-property: --newsnext-flip-angle;
+  transition-duration: inherit;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.flip-animate[data-axis="x"] > .flip-animate-face {
+  --flip-half-extent: 50cqh;
+  transform: translateZ(var(--flip-depth)) rotateX(var(--newsnext-flip-angle));
+}
+
+.flip-animate-face[data-turned="true"] {
+  --newsnext-flip-angle: 180deg;
+  pointer-events: none;
+}
+
+.flip-animate-face[data-turned="true"][data-reverse] {
+  --newsnext-flip-angle: -180deg;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flip-animate-face {
+    transition-property: none;
+  }
+}

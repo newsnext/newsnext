@@ -1,5 +1,6 @@
 import type { ReactNode } from "react"
 import { cn } from "@newsnext/ui/lib/utils"
+import "./flip-animate.css"
 
 export interface FlipAnimateProps {
   rotate: "x" | "y"
@@ -13,37 +14,30 @@ export function FlipAnimate({
   rotate,
   flipped,
   className,
-  duration = 700,
+  duration = 600,
   children,
 }: FlipAnimateProps): React.JSX.Element {
-  const rotateCSS = rotate === "x" ? "[transform:rotateX(180deg)]" : "[transform:rotateY(180deg)]"
-  const reverseRotateCSS = rotate === "x" ? "[transform:rotateX(-180deg)]" : "[transform:rotateY(-180deg)]"
-  const easeOutExpo = "cubic-bezier(0.16, 1, 0.3, 1)"
-
-  const sideCSS = "absolute inset-0 h-full w-full transition-transform [backface-visibility:hidden]"
+  const sideCSS = "flip-animate-face absolute inset-0 h-full w-full [backface-visibility:hidden]"
 
   return (
     <div
       className={cn(
-        "relative w-full h-full perspective-[1000px]",
+        "flip-animate relative w-full h-full perspective-[1200px] [container-type:size]",
         className,
       )}
+      data-axis={rotate}
+      style={{ transitionDuration: `${duration}ms` }}
     >
       <div
-        className={cn(sideCSS, flipped && "pointer-events-none scale-95", flipped && rotateCSS)}
-        style={{
-          transitionDuration: `${duration}ms`,
-          transitionTimingFunction: easeOutExpo,
-        }}
+        className={sideCSS}
+        data-turned={flipped}
       >
         {children[0]}
       </div>
       <div
-        className={cn(sideCSS, !flipped && "pointer-events-none scale-95", !flipped && reverseRotateCSS)}
-        style={{
-          transitionDuration: `${duration}ms`,
-          transitionTimingFunction: easeOutExpo,
-        }}
+        className={sideCSS}
+        data-turned={!flipped}
+        data-reverse
       >
         {children[1]}
       </div>

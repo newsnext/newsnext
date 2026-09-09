@@ -356,9 +356,17 @@ easing (`cubic-bezier(0.4, 0, 1, 1)`) and a `10ms` stagger per visible card.
 Respect reduced-motion preferences by switching immediately. Do not scale or blur the full page.
 
 LiveCard detail flips rotate the front and back faces independently, with the
-same duration and easing. Keep the inactive face slightly scaled down and
+same `600ms` duration and `cubic-bezier(0.4, 0, 0.2, 1)` easing, with a gentle
+start and finish. Keep the inactive face
 non-interactive, and hide each face when its back is facing the viewer. Avoid a
-shared rotating 3D container around the card's scrollable content.
+shared rotating 3D container around the card's scrollable content. Apply a
+centered `1200px` perspective to the stationary flip container for restrained
+depth and less apparent shrinking. As each face
+rotates, translate it away from the viewer by half its extent along the rotating
+dimension multiplied by the absolute sine of its angle. This keeps its nearest
+edge at or behind the original plane, so the entire face stays within the card's
+bounds without clipping. Use container-relative dimensions so this also holds
+when cards resize, and switch immediately when reduced motion is requested.
 
 Play the horizontal entrance on page load and whenever a Board or Layer mounts,
 including Tab switches and return visits. Cards converge from the same offscreen
