@@ -1,18 +1,20 @@
 import type { Color } from "@newsnext/shared/types"
 import type { ComponentMap, GridStackHandle, GridStackNode, GridStackOptions } from "gridstack/dist/react"
-import type { RefObject } from "react"
+import type { ReactNode, RefObject } from "react"
 import type { LocalWidgetManifest } from "./widget-manifest"
 import type { NextLayerWidget } from "@/lib/board"
+import { FlipAnimate } from "@newsnext/ui/components/flip-animate"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { useQuery } from "@tanstack/react-query"
 import { GridStack } from "gridstack/dist/react"
 import { useAtomValue } from "jotai"
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
-import { PhArrowCounterClockwiseDuotone, PhCircleDashedDuotone } from "@/components/icons/ph"
+import { PhArrowCircleLeftDuotone, PhArrowCounterClockwiseDuotone, PhCircleDashedDuotone, PhInfoDuotone } from "@/components/icons/ph"
 import { LiveCardHeaderActionButton } from "@/components/live-card/card-header"
 import { LiveCardSurface } from "@/components/live-card/card-surface"
 import { useI18n } from "@/hooks/use-i18n"
 import { useNativeIntegrationStatus } from "@/hooks/use-native-integration-status"
+import { RelativeTime } from "@/hooks/useRelativeTime"
 import { actions } from "@/lib/actions"
 import { isThemeColor } from "@/lib/settings/theme-color"
 import { boardsAtom } from "@/store/board"
@@ -36,6 +38,7 @@ interface WidgetFrameProps {
   active: boolean
   boardId: string
   scopeKey: string
+  instanceCount: number
   title: string
   url: string
   widgetId: string
@@ -65,33 +68,38 @@ function createGridOptions(
     },
     margin: 6,
     resizable: { handles: "e, se, s" },
-    children: widgets.map(({ manifest, placement }) => ({
-      component: "localWidget",
-      h: placement.layout.height,
-      id: getGridWidgetId(manifest.id),
-      minH: manifest.minHeight,
-      minW: manifest.minWidth,
-      props: {
-        active,
-        color: manifest.color,
-        boardId,
-        scopeKey: JSON.stringify(placement.dataScope.type === "board"
-          ? boardInstanceIds
-          : placement.dataScope.instanceIds.filter(id => boardInstanceIds.includes(id))),
-        title: manifest.title,
-        url: manifest.url,
-        widgetId: manifest.id,
-      },
-      w: placement.layout.width,
-      x: placement.layout.x,
-      y: placement.layout.y,
-    })),
+    children: widgets.map(({ manifest, placement }) => {
+      const instanceIds = placement.dataScope.type === "board"
+        ? boardInstanceIds
+        : placement.dataScope.instanceIds.filter(id => boardInstanceIds.includes(id))
+      return {
+        component: "localWidget",
+        h: placement.layout.height,
+        id: getGridWidgetId(manifest.id),
+        minH: manifest.minHeight,
+        minW: manifest.minWidth,
+        props: {
+          active,
+          color: manifest.color,
+          boardId,
+          scopeKey: JSON.stringify(instanceIds),
+          instanceCount: instanceIds.length,
+          title: manifest.title,
+          url: manifest.url,
+          widgetId: manifest.id,
+        },
+        w: placement.layout.width,
+        x: placement.layout.x,
+        y: placement.layout.y,
+      }
+    }),
   }
 }
 
 function LocalWidgetFrame(props: Record<string, unknown>) {
   const { t } = useI18n()
   const frame = parseFrameProps(props)
+  const [isFlipped, setIsFlipped] = useState(false)
   const articleRef = useRef<HTMLElement>(null)
   const iframeRef = useRef<HTMLIFrameElement>(null)
   useLayoutEffect(() => {
@@ -149,32 +157,31 @@ function LocalWidgetFrame(props: Record<string, unknown>) {
 
   return (
     <article ref={articleRef} className={`relative h-full min-h-0 select-none ${frame.color}`}>
-      <LiveCardSurface />
-      <div className="relative flex h-full min-h-0 flex-col p-2.5">
-        <header className="mx-1 mb-3 flex min-h-8 shrink-0 cursor-grab items-center gap-2 active:cursor-grabbing">
-          <p className="ml-1 min-w-0 flex-1 truncate text-base font-bold">{frame.title}</p>
-          <div
-            className="flex shrink-0 cursor-auto items-center gap-1 text-theme-400"
-            onClick={event => event.stopPropagation()}
-          >
-            <LiveCardHeaderActionButton
-              className={refreshing ? "animate-spin" : undefined}
-              type="button"
-              aria-label={t("refreshWidget", { title: frame.title })}
-              disabled={refreshing}
-              onClick={() => void snapshot.refetch()}
-              onPointerDown={event => event.stopPropagation()}
-            >
-              {refreshing ? <PhCircleDashedDuotone /> : <PhArrowCounterClockwiseDuotone />}
-            </LiveCardHeaderActionButton>
-          </div>
-        </header>
-        <div className="relative min-h-0 flex-1 overflow-hidden rounded-2xl">
-          <SquircleBox
-            aria-hidden
-            radius="2xl"
-            className="pointer-events-none absolute inset-0 bg-background/70 zenith-theme-400"
-          />
+      <FlipAnimate rotate="y" flipped={isFlipped}>
+        <WidgetFace
+          title={frame.title}
+          hidden={isFlipped}
+          actions={(
+            <>
+              <LiveCardHeaderActionButton
+                className={refreshing ? "animate-spin" : undefined}
+                type="button"
+                aria-label={t("refreshWidget", { title: frame.title })}
+                disabled={refreshing}
+                onClick={() => void snapshot.refetch()}
+              >
+                {refreshing ? <PhCircleDashedDuotone /> : <PhArrowCounterClockwiseDuotone />}
+              </LiveCardHeaderActionButton>
+              <LiveCardHeaderActionButton
+                type="button"
+                aria-label={t("widgetDetails")}
+                onClick={() => setIsFlipped(true)}
+              >
+                <PhInfoDuotone />
+              </LiveCardHeaderActionButton>
+            </>
+          )}
+        >
           <iframe
             ref={iframeRef}
             className="relative size-full border-0 bg-transparent"
@@ -187,9 +194,84 @@ function LocalWidgetFrame(props: Record<string, unknown>) {
               postData()
             }}
           />
+        </WidgetFace>
+        <WidgetFace
+          title={frame.title}
+          hidden={!isFlipped}
+          actions={(
+            <LiveCardHeaderActionButton
+              type="button"
+              aria-label={t("widgetFront")}
+              onClick={() => setIsFlipped(false)}
+            >
+              <PhArrowCircleLeftDuotone />
+            </LiveCardHeaderActionButton>
+          )}
+        >
+          <dl className="relative h-full space-y-4 overflow-auto p-3 text-sm" onPointerDown={event => event.stopPropagation()}>
+            <div>
+              <dt className="text-muted-foreground">{t("widgetDataStatus")}</dt>
+              <dd className="mt-1" role="status">
+                {snapshot.error
+                  ? snapshot.error.message
+                  : t(
+                      !snapshot.data
+                        ? "widgetDataLoading"
+                        : snapshot.data.status === "missing"
+                          ? "widgetDataMissing"
+                          : snapshot.data.stale ? "widgetDataStale" : "widgetDataReady",
+                    )}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">{t("widgetDataSources")}</dt>
+              <dd className="mt-1">{t("instanceCount", { count: frame.instanceCount })}</dd>
+            </div>
+            {snapshot.data?.refreshedAt !== undefined && (
+              <div>
+                <dt className="text-muted-foreground">{t("widgetUpdatedAt")}</dt>
+                <dd className="mt-1"><RelativeTime date={snapshot.data.refreshedAt} /></dd>
+              </div>
+            )}
+          </dl>
+        </WidgetFace>
+      </FlipAnimate>
+    </article>
+  )
+}
+
+interface WidgetFaceProps {
+  title: string
+  hidden: boolean
+  actions: ReactNode
+  children: ReactNode
+}
+
+function WidgetFace({ title, hidden, actions, children }: WidgetFaceProps): React.JSX.Element {
+  return (
+    <div className="relative h-full min-h-0" inert={hidden} aria-hidden={hidden}>
+      <LiveCardSurface />
+      <div className="relative flex h-full min-h-0 flex-col p-2.5">
+        <header className="mx-1 mb-2 flex min-h-8 shrink-0 cursor-grab items-center gap-2 active:cursor-grabbing">
+          <p className="ml-1 min-w-0 flex-1 truncate text-base font-bold">{title}</p>
+          <div
+            className="flex shrink-0 cursor-auto items-center gap-1 text-theme-400"
+            onClick={event => event.stopPropagation()}
+            onPointerDown={event => event.stopPropagation()}
+          >
+            {actions}
+          </div>
+        </header>
+        <div className="relative min-h-0 flex-1 overflow-hidden rounded-2xl">
+          <SquircleBox
+            aria-hidden
+            radius="2xl"
+            className="pointer-events-none absolute inset-0 bg-background/70 zenith-theme-400"
+          />
+          {children}
         </div>
       </div>
-    </article>
+    </div>
   )
 }
 
@@ -220,6 +302,8 @@ function parseFrameProps(props: Record<string, unknown>): WidgetFrameProps {
   if (!isThemeColor(props.color)
     || typeof props.active !== "boolean"
     || typeof props.boardId !== "string"
+    || !Number.isInteger(props.instanceCount)
+    || Number(props.instanceCount) < 0
     || typeof props.scopeKey !== "string"
     || typeof props.title !== "string"
     || typeof props.url !== "string"

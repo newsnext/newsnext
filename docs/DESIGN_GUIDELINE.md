@@ -188,6 +188,9 @@ LiveCards define the primary NewsNext surface treatment.
   its size by context without introducing local corner-radius overrides. Treat
   the resolved provider icon and optional source badge as one visual identity;
   pass both whenever source metadata is available.
+- Keep LiveCard headers to a single title line beside the source icon and actions,
+  with an 8px gap before the inner panel on both faces. Do not show refresh times
+  or a subtitle; indicate refreshing through the refresh action animation.
 - Keep compact LiveCard action icons content-sized and background-free. Use the
   shared `LiveCardHeaderActionButton`; hover may raise icon opacity but must not add
   a filled hover surface or enlarge the action target spacing.
@@ -308,13 +311,23 @@ Widget. Restore iframe interaction as soon as the gesture ends.
 
 Keep the trusted Widget shell outside the iframe and reuse the LiveCard surface
 language directly: `LiveCardSurface`, `p-2.5`, a `text-base font-bold` title, and
-`LiveCardHeaderActionButton`. Set each Widget's `color` property in `widget.json`
+`LiveCardHeaderActionButton`. Match the compact LiveCard header on both Widget
+faces: a single title line in a 32px row and an 8px gap before the content panel.
+Set each Widget's `color` property in `widget.json`
 using the same named palette as LiveCards (for example, `blue` or `teal`). It
 defaults to `slate` when omitted. Apply this palette to the shell so the outer
 surface, nested `zenith-theme-400` wash, and header controls use the Widget's
 scoped `theme-*` tokens independently of the Board color. The host owns the
 title, refresh state and button, drag behavior, nested `2xl` content surface,
-and error or connection treatment.
+and error or connection treatment. Widgets also have a host-owned details back,
+opened with the same information icon as LiveCards and closed with a back arrow.
+Reuse `FlipAnimate` for the Y-axis transition and the same shell on both faces.
+Override GridStack's content overflow with `visible` so the perspective animation
+can extend beyond the cell. Keep clipping inside each face's nested content panel,
+and raise hovered or focused grid items above their neighbors.
+Keep the iframe mounted during flips and make the hidden face inert so keyboard
+focus cannot enter it. The back shows snapshot status, the number of scoped Instances, and the last
+update time.
 
 Keep the iframe and its document background transparent so the host's nested
 surface remains visible. iframe content must not repeat the title, refresh

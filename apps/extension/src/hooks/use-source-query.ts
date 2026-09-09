@@ -1,7 +1,7 @@
 import type { LoadedSourceDescriptor } from "@/lib/source/load-result"
 import type { NewsItem } from "@/typings/source"
 import { hashKey, useQuery, useQueryClient } from "@tanstack/react-query"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef } from "react"
 import { getLoginUrlFromError } from "./source-login-error"
 import {
   createInstanceQueryTarget,
@@ -68,7 +68,6 @@ export function useSourceQuery({
   }, [instanceId, instanceRequestHash, queryClient, target])
   const manualRequestSources = useManualRequestSources()
   const isManualRequesting = useIsSourceManualRequesting(queryHash)
-  const [initialLoadedAt] = useState(Date.now)
   const query = useQuery({
     ...getSourceQueryOptions(target),
     enabled: enabled && (instanceId !== undefined || source.version > 0),
@@ -97,8 +96,5 @@ export function useSourceQuery({
     loginUrl: hasData ? undefined : getLoginUrlFromError(query.error),
     metadata: data?.metadata,
     sourceSnapshot: data?.source,
-    loadedAt: enabled
-      ? query.data?.loadedAt ?? cachedQuery?.loadedAt ?? initialLoadedAt
-      : initialLoadedAt,
   }
 }

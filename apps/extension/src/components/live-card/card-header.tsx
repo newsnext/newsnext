@@ -13,9 +13,7 @@ interface LiveCardHeaderProps {
   icon?: string
   provider: SourceProvider
   title?: string
-  subtitle: ReactNode
   actions: ReactNode
-  className?: string
   dragHandleRef?: LiveCardDragHandleRef
 }
 
@@ -39,9 +37,7 @@ export function LiveCardHeader({
   icon,
   provider,
   title,
-  subtitle,
   actions,
-  className,
   dragHandleRef,
 }: LiveCardHeaderProps) {
   const displayTitle = title || provider.title
@@ -54,9 +50,8 @@ export function LiveCardHeader({
       aria-label={isDraggable ? `Drag to move ${displayTitle}` : undefined}
       role={isDraggable ? "group" : undefined}
       className={cn(
-        "flex justify-between mb-3 items-center mx-1 gap-2",
+        "flex justify-between mb-2 items-center mx-1 gap-2",
         isDraggable && "cursor-grab active:cursor-grabbing",
-        className,
       )}
     >
       <div className="flex gap-2.5 items-center ml-1 min-w-0 flex-1">
@@ -76,16 +71,9 @@ export function LiveCardHeader({
             title={displayTitle}
           />
         </Button>
-        <div className="flex flex-col min-w-0 flex-1">
-          <div className="flex max-w-full min-w-0 text-base">
-            <span className="w-full min-w-0 truncate font-bold">
-              {displayTitle}
-            </span>
-          </div>
-          <span className="text-xs opacity-70 max-w-full truncate">
-            {subtitle}
-          </span>
-        </div>
+        <span className="min-w-0 flex-1 truncate text-base font-bold">
+          {displayTitle}
+        </span>
       </div>
       <div
         data-live-card-drag-excluded

@@ -8,7 +8,6 @@ import { useMemo, useState } from "react"
 import { useI18n } from "@/hooks/use-i18n"
 import { useSourceIcon } from "@/hooks/use-source-icon"
 import { useSourceMarkScales } from "@/hooks/use-source-mark-scales"
-import { RelativeTime } from "@/hooks/useRelativeTime"
 import { getHostPermissionOrigins, getNewsItemsPresentation } from "@/lib/source"
 import {
   PhArrowCounterClockwiseDuotone,
@@ -45,7 +44,6 @@ interface LiveCardFrontProps {
     message: string
     onTakeOver: () => void
   }
-  loadedAt: number
   onRefresh: () => void
   onRequestPermission: () => Promise<boolean>
   onFlip?: () => void
@@ -179,7 +177,6 @@ export function LiveCardFront({
   sourceLoginUrl,
   sourcePermissionRequest,
   sourceWorkerTakeover,
-  loadedAt,
   onRefresh,
   onRequestPermission,
   onFlip,
@@ -229,7 +226,6 @@ export function LiveCardFront({
           icon={icon}
           provider={provider}
           title={title}
-          subtitle={isFetching ? t("updating") : <RelativeTime date={loadedAt} />}
           dragHandleRef={dragHandleRef}
           actions={actions ?? (
             <>

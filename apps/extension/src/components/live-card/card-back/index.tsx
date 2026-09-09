@@ -7,7 +7,6 @@ import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { useState } from "react"
 import { PhArrowCircleLeftDuotone } from "@/components/icons/ph"
 import { useSourceIcon } from "@/hooks/use-source-icon"
-import { RelativeTime } from "@/hooks/useRelativeTime"
 import { LiveCardHeader, LiveCardHeaderActionButton } from "../card-header"
 import { LiveCardSurface } from "../card-surface"
 import { DeleteLiveCardButton, LiveCardBoardSelect } from "./actions"
@@ -22,7 +21,6 @@ export interface LiveCardBackProps {
   hasSourceParams: boolean
   hasSourceParamChanges: boolean
   sourceParamValidation: SourceParamValidationState
-  loadedAt: number
   onSourceParamChange: (key: string, value: unknown) => void
   onSaveSourceParams: () => Promise<void> | void
   onResetSourceParams: () => Promise<void> | void
@@ -39,7 +37,6 @@ export function LiveCardBack({
   hasSourceParams,
   hasSourceParamChanges,
   sourceParamValidation,
-  loadedAt,
   onSourceParamChange,
   onSaveSourceParams,
   onResetSourceParams,
@@ -66,13 +63,11 @@ export function LiveCardBack({
       <div className="relative flex h-full flex-col p-2.5 transition-colors duration-300">
         <LiveCardHeader
           badge={previewBadge}
-          className="mb-2"
           desc={previewDesc}
           home={previewHome}
           icon={icon}
           provider={provider}
           title={previewTitle}
-          subtitle={previewDesc || <RelativeTime date={loadedAt} />}
           dragHandleRef={dragHandleRef}
           actions={(
             <>
