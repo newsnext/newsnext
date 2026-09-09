@@ -2,16 +2,16 @@ import { LocalWidgetGrid } from "./local-widget-grid"
 
 interface NextLayerProps {
   boardId: string
-  entranceReady: boolean
+  viewReady: boolean
 }
 
-export function NextLayer({ boardId, entranceReady }: NextLayerProps) {
+export function NextLayer({ boardId, viewReady }: NextLayerProps) {
   return (
     <>
       <h1 className="sr-only">Next Layer</h1>
       <LocalWidgetGrid
         boardId={boardId}
-        entranceReady={entranceReady}
+        viewReady={viewReady}
       />
     </>
   )

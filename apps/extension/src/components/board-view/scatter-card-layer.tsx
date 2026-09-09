@@ -1,15 +1,22 @@
 import type { PropsWithChildren } from "react"
+import { useScrollProgressContext } from "@newsnext/ui/components/scroll-progress-context"
 import { cn } from "@newsnext/ui/lib/utils"
-import { useLayoutEffect, useRef } from "react"
+import { useEffectEvent, useLayoutEffect, useRef } from "react"
 
 const SCATTER_DURATION_MS = 320
 const SCATTER_STAGGER_MS = 10
+const SCATTER_MAX_DELAY_MS = 40
 const HORIZONTAL_EXIT_PADDING = 200
+
+// A fresh document gets one entrance, even if routing later remounts BoardView.
+let initialEntranceClaimed = false
 
 interface ScatterCardLayerProps {
   className?: string
   itemSelector: string
+  onEnterComplete: () => void
   onExitComplete: () => void
+  viewReady: boolean
   state: "active" | "outgoing"
 }
 
@@ -52,71 +59,119 @@ export function ScatterCardLayer({
   children,
   className,
   itemSelector,
+  onEnterComplete,
   onExitComplete,
   state,
+  viewReady,
 }: PropsWithChildren<ScatterCardLayerProps>) {
+  const { rootScrollContainerRef } = useScrollProgressContext()
+  const animationsRef = useRef<Animation[]>([])
+  const animateEntranceRef = useRef<boolean | null>(null)
+  const enteredRef = useRef(false)
   const rootRef = useRef<HTMLDivElement>(null)
-  const onExitCompleteRef = useRef(onExitComplete)
-
-  useLayoutEffect(() => {
-    onExitCompleteRef.current = onExitComplete
-  }, [onExitComplete])
+  const completeTransition = useEffectEvent((outgoing: boolean) => {
+    const root = rootRef.current
+    if (!root) return
+    root.style.visibility = outgoing ? "hidden" : "visible"
+    if (outgoing) {
+      onExitComplete()
+    } else {
+      enteredRef.current = true
+      onEnterComplete()
+    }
+  })
 
   useLayoutEffect(() => {
     const root = rootRef.current
     if (!root) return
 
-    root.style.visibility = "visible"
-    if (state === "active") return
+    if (animateEntranceRef.current === null) {
+      animateEntranceRef.current = !initialEntranceClaimed
+      initialEntranceClaimed = true
+    }
 
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      root.style.visibility = "hidden"
-      onExitCompleteRef.current()
+    const outgoing = state === "outgoing"
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    if (!outgoing && !viewReady && !reducedMotion) return
+    if (!outgoing && enteredRef.current && animationsRef.current.length === 0) return
+    if (outgoing) {
+      enteredRef.current = false
+      animateEntranceRef.current = false
+    }
+
+    // Capture the initial entrance before cancelling it so an interrupting exit
+    // continues from the visible position instead of snapping back to the slot.
+    const candidates = Array.from(root.querySelectorAll<HTMLElement>(itemSelector))
+    const interrupted = animationsRef.current.length > 0
+    const currentFrames = outgoing && interrupted
+      ? new Map(candidates.map((item) => {
+          const style = getComputedStyle(item)
+          return [item, { opacity: style.opacity, transform: style.transform }]
+        }))
+      : undefined
+    animationsRef.current.forEach(animation => animation.cancel())
+    animationsRef.current = []
+
+    if (reducedMotion || (outgoing && !viewReady) || (!outgoing && !animateEntranceRef.current)) {
+      completeTransition(outgoing)
       return
     }
 
     const bounds = getVisibleBounds(root)
-    const items = Array.from(root.querySelectorAll<HTMLElement>(itemSelector))
-      .filter(item => isVisible(item.getBoundingClientRect(), bounds))
-
+    const scrollBounds = rootScrollContainerRef.current?.getBoundingClientRect()
+    if (scrollBounds) {
+      bounds.top = Math.max(bounds.top, scrollBounds.top)
+      bounds.bottom = Math.min(bounds.bottom, scrollBounds.bottom)
+      bounds.left = Math.max(bounds.left, scrollBounds.left)
+      bounds.right = Math.min(bounds.right, scrollBounds.right)
+    }
+    const items = candidates.filter(item => isVisible(item.getBoundingClientRect(), bounds))
     const animations = items.map((item, index) => {
       const style = getComputedStyle(item)
       const baseTransform = style.transform === "none" ? "" : style.transform
       const offsetX = getHorizontalExitOffset(item.getBoundingClientRect(), bounds, index)
+      const restingFrame = { opacity: style.opacity, transform: style.transform }
+      const scatteredFrame = {
+        opacity: 0,
+        transform: `${baseTransform} translate3d(${offsetX}px, 0, 0)`,
+      }
+      const startFrame = currentFrames?.get(item) ?? (outgoing ? restingFrame : scatteredFrame)
 
       return item.animate(
-        [
-          { opacity: style.opacity, transform: baseTransform },
-          {
-            opacity: 0,
-            transform: `${baseTransform} translate3d(${offsetX}px, 0, 0)`,
-          },
-        ],
+        [startFrame, outgoing ? scatteredFrame : restingFrame],
         {
-          delay: index * SCATTER_STAGGER_MS,
+          delay: interrupted ? 0 : Math.min(index * SCATTER_STAGGER_MS, SCATTER_MAX_DELAY_MS),
           duration: SCATTER_DURATION_MS,
-          easing: "cubic-bezier(0.4, 0, 1, 1)",
-          fill: "forwards",
+          easing: outgoing ? "cubic-bezier(0.4, 0, 1, 1)" : "cubic-bezier(0, 0, 0.6, 1)",
+          fill: "both",
         },
       )
     })
-    let cancelled = false
+    animationsRef.current = animations
+    root.style.visibility = "visible"
 
     void Promise.allSettled(animations.map(animation => animation.finished)).then(() => {
-      if (!cancelled) onExitCompleteRef.current()
+      if (animationsRef.current !== animations) return
+      if (!outgoing) {
+        animationsRef.current = []
+        animations.forEach(animation => animation.cancel())
+      }
+      completeTransition(outgoing)
     })
+  }, [itemSelector, rootScrollContainerRef, state, viewReady])
 
-    return () => {
-      cancelled = true
-      animations.forEach(animation => animation.cancel())
-    }
-  }, [itemSelector, state])
+  useLayoutEffect(() => () => {
+    const animations = animationsRef.current
+    animationsRef.current = []
+    animations.forEach(animation => animation.cancel())
+  }, [])
 
   return (
     <div
       ref={rootRef}
-      aria-hidden={state !== "active"}
-      className={cn(state !== "active" && "pointer-events-none", className)}
+      style={{ visibility: "hidden" }}
+      aria-hidden={state !== "active" || !viewReady}
+      className={cn((state !== "active" || !viewReady) && "pointer-events-none", className)}
     >
       {children}
     </div>

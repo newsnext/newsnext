@@ -336,32 +336,37 @@ Keep exactly one Layer mounted at a time: finish the current Layer's exit,
 unmount it, and only then mount the target Layer. Apply the same exit animation
 to LiveCards and Widgets: send cards on the left toward the left edge and cards
 on the right toward the right edge while preserving their vertical positions.
-Never reverse these paths to make either Layer converge back into place, and
-respect reduced-motion preferences by switching Layers immediately. Do not
-scale or blur the full page during this transition.
+After the exit, show the target Layer directly without an entrance animation.
+Use a `320ms` exit with accelerating easing (`cubic-bezier(0.4, 0, 1, 1)`) and a
+visible-order stagger of `10ms`, capped at `40ms`. Respect reduced-motion
+preferences by switching Layers immediately. Do not scale or blur the full page.
 
 LiveCard detail flips rotate the front and back faces independently, with the
 same duration and easing. Keep the inactive face slightly scaled down and
 non-interactive, and hide each face when its back is facing the viewer. Avoid a
 shared rotating 3D container around the card's scrollable content.
 
-Play Now Layer's staggered LiveCard entrance on its first mount, after changing
-Boards, and whenever returning from Next Layer. Treat it as a fresh reveal from
-below with opacity, not as a reversal of the departing scatter paths.
-Apply the same entrance duration, vertical offset, and stagger to Next Layer
-Widgets whenever Next Layer mounts. Board View owns one entrance lifecycle for
-both Layers: mount the incoming Layer hidden, restore its root scroll position,
-allow visible content and layout work to settle, and then start the entrance.
-Animate visible items in visible order and release completed entrance animations.
-Keep entrance and layout projection from competing with restored scroll positions;
-implementation constraints belong to the
+Play the horizontal entrance only once on a fresh page load or refresh. Cards
+converge from the same side used by the exit and fade in over `320ms` with
+`cubic-bezier(0, 0, 0.6, 1)` easing and the same capped stagger. Switching Boards
+or Layers, returning to an earlier Tab, or remounting the view within the same
+page must not replay it. Do not pair an exit with another entrance on navigation.
+
+Board View restores the incoming Layer's root scroll position after mounting
+and reveals it on the following frame without an idle wait. On initial load,
+apply the entrance starting positions before revealing content and resume
+sortable layout measurements when the animation finishes. On navigation, reveal
+content directly and resume layout measurements after scroll restoration. If
+navigation interrupts the initial entrance, start the exit from the current
+animated styles; cancelling navigation restores the current Layer directly.
+Implementation constraints belong to the
 [Performance Guideline](PERFORMANCE_GUIDELINE.md#keep-animation-work-above-livecard-content).
 
 Snapshot both the rendered Board and Layer for the duration of an exit. Never
 replace an outgoing Now Layer with the target Board's LiveCards before the exit
 finishes. Keep one exit in flight when the pending Board or Layer changes, and
 mount only the latest target when that exit finishes instead of restarting the
-outgoing animation. Board changes within Now Layer use the same exit-then-enter sequence;
+outgoing animation. Board changes within Now Layer use the same exit-then-reveal sequence;
 Board changes within Next Layer use the same sequence and mount a distinct
 Widget grid for the target Board. Never share a Next Layer instance or layout
 between Boards.

@@ -46,7 +46,8 @@ export function BoardView({ board, layer }: { board: Board, layer: BoardLayer })
   const [renderedView, setRenderedView] = useState<RenderedView>({ boardId: board.id, layer })
   const [isSearchTransferOver, setIsSearchTransferOver] = useState(false)
   const boardDropTargetRef = useRef<HTMLDivElement>(null)
-  const [entranceReadyViewKey, setEntranceReadyViewKey] = useState<string | null>(null)
+  const [readyViewKey, setReadyViewKey] = useState<string | null>(null)
+  const [enteredViewKey, setEnteredViewKey] = useState<string | null>(null)
   const restoredViewKeyRef = useRef<string | null>(null)
   const scrollRestorationEntry = useElementScrollRestoration({
     id: ROOT_SCROLL_RESTORATION_ID,
@@ -56,7 +57,7 @@ export function BoardView({ board, layer }: { board: Board, layer: BoardLayer })
   const renderedLayerState = isOutgoing ? "outgoing" : "active"
   const isRenderedNextLayer = renderedView.layer === "next"
   const renderedViewKey = `${renderedView.boardId}:${renderedView.layer}`
-  const entranceReady = entranceReadyViewKey === renderedViewKey
+  const viewReady = readyViewKey === renderedViewKey
 
   const moveSearchLiveCard = useEffectEvent(async (instanceId: string) => {
     try {
@@ -99,25 +100,15 @@ export function BoardView({ board, layer }: { board: Board, layer: BoardLayer })
         top: scrollRestorationEntry?.scrollY ?? 0,
       })
     }
-    if (entranceReadyViewKey === renderedViewKey) return
+    if (readyViewKey === renderedViewKey) return
 
-    let idleCallbackId: number | undefined
-    let entranceFrameId: number | undefined
     const settleFrameId = window.requestAnimationFrame(() => {
-      idleCallbackId = window.requestIdleCallback(() => {
-        entranceFrameId = window.requestAnimationFrame(() => {
-          setEntranceReadyViewKey(renderedViewKey)
-        })
-      }, { timeout: 300 })
+      setReadyViewKey(renderedViewKey)
     })
 
-    return () => {
-      window.cancelAnimationFrame(settleFrameId)
-      if (idleCallbackId !== undefined) window.cancelIdleCallback(idleCallbackId)
-      if (entranceFrameId !== undefined) window.cancelAnimationFrame(entranceFrameId)
-    }
+    return () => window.cancelAnimationFrame(settleFrameId)
   }, [
-    entranceReadyViewKey,
+    readyViewKey,
     isOutgoing,
     renderedViewKey,
     rootScrollContainer,
@@ -125,7 +116,14 @@ export function BoardView({ board, layer }: { board: Board, layer: BoardLayer })
     scrollRestorationEntry?.scrollY,
   ])
 
+  const handleEnterComplete = useCallback(() => {
+    setEnteredViewKey(renderedViewKey)
+  }, [renderedViewKey])
+
   const handleExitComplete = useCallback(() => {
+    setReadyViewKey(null)
+    setEnteredViewKey(null)
+    restoredViewKeyRef.current = null
     setRenderedView({ boardId: board.id, layer })
   }, [board.id, layer])
 
@@ -166,10 +164,12 @@ export function BoardView({ board, layer }: { board: Board, layer: BoardLayer })
       <ScatterCardLayer
         key={renderedViewKey}
         state={renderedLayerState}
+        onEnterComplete={handleEnterComplete}
         onExitComplete={handleExitComplete}
+        viewReady={viewReady}
         itemSelector={isRenderedNextLayer
-          ? ".grid-stack-item:not(.grid-stack-placeholder)"
-          : "[data-live-card-id]"}
+          ? ".grid-stack-item:not(.grid-stack-placeholder) > .grid-stack-item-content"
+          : "[data-live-card-transition]"}
         className="relative z-0"
       >
         {isRenderedNextLayer
@@ -177,7 +177,7 @@ export function BoardView({ board, layer }: { board: Board, layer: BoardLayer })
               <BoardContent>
                 <NextLayer
                   boardId={renderedView.boardId}
-                  entranceReady={entranceReady}
+                  viewReady={viewReady}
                 />
               </BoardContent>
             )
@@ -185,7 +185,7 @@ export function BoardView({ board, layer }: { board: Board, layer: BoardLayer })
               <BoardContent>
                 <NowLayer
                   boardId={renderedView.boardId}
-                  entranceReady={entranceReady}
+                  viewReady={enteredViewKey === renderedViewKey}
                 />
               </BoardContent>
             )}

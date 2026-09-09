@@ -4,7 +4,6 @@ import { useScrollProgressContext } from "@newsnext/ui/components/scroll-progres
 import { cn } from "@newsnext/ui/lib/utils"
 import { m } from "motion/react"
 import { useCallback, useMemo, useState } from "react"
-import { useCardEntrance } from "@/components/board-view/use-card-entrance"
 import { DndContext } from "@/hooks/use-dnd-context"
 import { useWrappedSortable } from "@/hooks/use-wrapped-sortable"
 import { isSortableData } from "@/lib/board"
@@ -13,7 +12,7 @@ import { DraggableLiveCard } from "../live-card/draggable-live-card"
 const LAYOUT_MEASUREMENT_SUSPENDED = Symbol("layout-measurement-suspended")
 
 interface LiveCardContainerProps {
-  entranceReady: boolean
+  viewReady: boolean
   instanceIds: string[]
   liveCardsByInstanceId: Record<string, NowLayerLiveCard>
   sortable?: boolean
@@ -22,7 +21,7 @@ interface LiveCardContainerProps {
 }
 
 export function LiveCardContainer({
-  entranceReady,
+  viewReady,
   instanceIds,
   liveCardsByInstanceId,
   sortable = true,
@@ -31,7 +30,6 @@ export function LiveCardContainer({
 }: LiveCardContainerProps) {
   const { rootScrollContainerRef } = useScrollProgressContext()
   const [draggingInstanceId, setDraggingInstanceId] = useState<string | null>(null)
-  const [entranceComplete, setEntranceComplete] = useState(false)
   const {
     insertionIndicator,
     listRef,
@@ -62,16 +60,6 @@ export function LiveCardContainer({
     onDrop(args)
     setDraggingInstanceId(null)
   }, [onDrop])
-  const handleEntranceComplete = useCallback(() => {
-    setEntranceComplete(true)
-  }, [])
-  useCardEntrance({
-    active: entranceReady,
-    containerRef: listRef,
-    itemSelector: "[data-live-card-entrance]",
-    onComplete: handleEntranceComplete,
-    scrollContainerRef: rootScrollContainerRef,
-  })
 
   return (
     <DndContext
@@ -93,7 +81,7 @@ export function LiveCardContainer({
             data-live-card-id={id}
             className="relative"
             layout
-            layoutDependency={entranceComplete
+            layoutDependency={viewReady
               ? orderedInstanceIds
               : LAYOUT_MEASUREMENT_SUSPENDED}
           >
@@ -107,10 +95,7 @@ export function LiveCardContainer({
                 }`}
               />
             )}
-            <div
-              data-live-card-entrance
-              className={entranceComplete ? undefined : "layer-card-entrance-pending"}
-            >
+            <div data-live-card-transition>
               <DraggableLiveCard
                 boardId={boardId}
                 descriptor={descriptor}

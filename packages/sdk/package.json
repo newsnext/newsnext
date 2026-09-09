@@ -6,28 +6,15 @@
   "license": "MPL-2.0",
   "exports": {
     ".": {
-      "browser": {
-        "types": "./dist/widget.d.ts",
-        "import": "./dist/widget.js"
-      },
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "browser": "./src/widget.ts",
+      "default": "./src/index.ts"
     },
-    "./models": {
-      "types": "./dist/models/index.d.ts",
-      "import": "./dist/models/index.js"
-    },
-    "./actions": {
-      "types": "./dist/action/index.d.ts",
-      "import": "./dist/action/index.js"
-    },
-    "./widget": {
-      "types": "./dist/widget.d.ts",
-      "import": "./dist/widget.js"
-    }
+    "./models": "./src/models/index.ts",
+    "./actions": "./src/action/index.ts",
+    "./widget": "./src/widget.ts"
   },
   "files": [
-    "dist"
+    "src"
   ],
   "engines": {
     "node": ">=22"
@@ -36,9 +23,8 @@
     "access": "public"
   },
   "scripts": {
-    "build": "mkdir -p dist && rm -r dist && tsc -p tsconfig.build.json",
-    "typecheck": "tsc --noEmit",
-    "prepack": "bun run build"
+    "build": "rm -rf dist && tsc -p tsconfig.build.json && bun run package.ts",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@newsnext/shared": "workspace:*",

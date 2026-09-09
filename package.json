@@ -49,8 +49,8 @@
   },
   "scripts": {
     "lint": "bun run --bun eslint .",
-    "test": "bun run --filter @newsnext/sdk build && vitest",
-    "typecheck": "bun run --filter @newsnext/sdk build && tsc -b --noEmit",
+    "test": "vitest",
+    "typecheck": "tsc -b --noEmit",
     "prepare": "simple-git-hooks",
     "dev": "bun --filter=@newsnext/extension run dev",
     "dev:yolo": "bun --filter=@newsnext/extension run dev:yolo",

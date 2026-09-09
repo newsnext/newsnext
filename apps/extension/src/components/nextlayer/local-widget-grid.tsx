@@ -2,13 +2,11 @@ import type { ComponentMap, GridStackHandle, GridStackNode, GridStackOptions } f
 import type { RefObject } from "react"
 import type { LocalWidgetManifest } from "./widget-manifest"
 import type { NextLayerWidget } from "@/lib/board"
-import { useScrollProgressContext } from "@newsnext/ui/components/scroll-progress-context"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { useQuery } from "@tanstack/react-query"
 import { GridStack } from "gridstack/dist/react"
 import { useAtomValue } from "jotai"
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
-import { useCardEntrance } from "@/components/board-view/use-card-entrance"
 import { PhArrowCounterClockwiseDuotone, PhCircleDashedDuotone } from "@/components/icons/ph"
 import { LiveCardHeaderActionButton } from "@/components/live-card/card-header"
 import { LiveCardSurface } from "@/components/live-card/card-surface"
@@ -282,11 +280,9 @@ function useLocalWidgets(serverOrigin: string | undefined) {
   }
 }
 
-export function LocalWidgetGrid({ boardId, entranceReady }: { boardId: string, entranceReady: boolean }) {
+export function LocalWidgetGrid({ boardId, viewReady }: { boardId: string, viewReady: boolean }) {
   const { t } = useI18n()
-  const { rootScrollContainerRef } = useScrollProgressContext()
   const gridRef = useRef<GridStackHandle>(null)
-  const sectionRef = useRef<HTMLElement>(null)
   const connection = useWidgetServerOrigin()
   const manifestQuery = useLocalWidgets(connection.serverOrigin)
   const boards = useAtomValue(boardsAtom)
@@ -299,8 +295,8 @@ export function LocalWidgetGrid({ boardId, entranceReady }: { boardId: string, e
     }) ?? []
   }, [board?.nextLayer.widgets, manifestQuery.widgets])
   const gridOptions = useMemo(
-    () => createGridOptions(widgets, boardId, board?.instanceIds ?? [], entranceReady),
-    [board?.instanceIds, boardId, entranceReady, widgets],
+    () => createGridOptions(widgets, boardId, board?.instanceIds ?? [], viewReady),
+    [board?.instanceIds, boardId, viewReady, widgets],
   )
   const gridKey = widgets.map(widget => `${widget.manifest.id}@${widget.manifest.url}`).join(":")
   const handleGridChange = useCallback((_event: Event, nodes: GridStackNode[]) => {
@@ -311,13 +307,6 @@ export function LocalWidgetGrid({ boardId, entranceReady }: { boardId: string, e
       console.error("Failed to save Next Layer Widget layouts", error)
     })
   }, [board, boardId])
-
-  useCardEntrance({
-    active: entranceReady,
-    containerRef: sectionRef,
-    itemSelector: ".grid-stack-item:not(.grid-stack-placeholder) > .grid-stack-item-content",
-    scrollContainerRef: rootScrollContainerRef,
-  })
 
   if (connection.isLoading || manifestQuery.isLoading) return null
   if (connection.state !== "connected" || !connection.serverOrigin) {
@@ -334,7 +323,7 @@ export function LocalWidgetGrid({ boardId, entranceReady }: { boardId: string, e
   if (widgets.length === 0) return <NextLayerMessage>{t("widgetFilesUnavailable")}</NextLayerMessage>
 
   return (
-    <section ref={sectionRef} aria-label={t("nextLayerWidgets")}>
+    <section aria-label={t("nextLayerWidgets")}>
       <GridStack
         key={`${boardId}:${gridKey}`}
         ref={gridRef}

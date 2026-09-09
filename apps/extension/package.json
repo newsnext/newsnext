@@ -16,7 +16,7 @@
     "zip:chrome": "wxt zip",
     "zip:firefox": "wxt zip -b firefox",
     "typecheck": "tsc -b --noEmit",
-    "postinstall": "bun run --cwd ../../packages/sdk build && wxt prepare"
+    "postinstall": "wxt prepare"
   },
   "dependencies": {
     "@atlaskit/pragmatic-drag-and-drop": "catalog:",

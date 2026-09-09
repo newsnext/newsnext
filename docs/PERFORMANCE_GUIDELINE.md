@@ -271,6 +271,21 @@ Use stable empty arrays and stable merged metadata objects. Expressions such as
 `data?.items ?? []` create a new fallback array on every render and defeat
 downstream memoization.
 
+### Keep SDK verification safe for the running dev server
+
+Run `bun run typecheck` for type checking and `bun run test` for tests. Neither
+command may trigger a build. Like `@newsnext/ui`, the local SDK's package exports
+point directly to `src` TypeScript files. Bun, WXT, TypeScript, and Vitest resolve
+those normal workspace exports without SDK-specific aliases, custom conditions,
+or runtime flags. The browser root entry selects the Widget client; other
+runtimes select the CLI client.
+
+Keep the extension's installation hook limited to `wxt prepare`. Explicit SDK
+builds are only for distribution: they emit JavaScript, declarations, and a
+compiled package manifest in `dist`, which is the directory to pack or publish.
+Local development never imports that output, so SDK packaging cannot invalidate
+modules used by the dev server. Do not reintroduce automatic builds into checks.
+
 ### Keep animation work above LiveCard content
 
 Board and Motion components may render multiple times while calculating scatter
@@ -278,28 +293,40 @@ vectors or layout transitions. Keep that animation work in the board item and
 Motion layers. Stable `DraggableLiveCard` props prevent it from entering queries,
 virtual lists, and LiveCard editor controls.
 
-Start Layer entrance animation only after the shared root scroll position is
-restored and the browser has had an idle period to finish visible content and
-layout work. Now Layer and Next Layer must use the same Web Animations path on
-their inner content wrappers. Animate and stagger visible wrappers only, then
-cancel the finished animation objects to release their fill state. Full-list
-stagger indexes delay restored deep views and make offscreen animation compete
-with visible LiveCard mount work.
+Keep the initial entrance and navigation exits in `ScatterCardLayer`, using the
+same horizontal offset calculation on inner card wrappers. Claim the entrance
+once per document during the first committed mount, retaining that decision
+across effect replays. Route remounts and Board/Layer switches must reveal their
+content directly. Starting an exit consumes any remaining entrance eligibility,
+so cancelling navigation cannot trigger another entrance. Motion and GridStack
+own the outer slot geometry; their transforms must not compete with these animations.
+Restore the shared root scroll position after the target Layer mounts, then mark
+the view ready on the following animation frame without an idle wait. Measure
+visible cards against the root scroll viewport and, on initial load, apply
+entrance keyframes before revealing the Layer. Widget snapshot queries use view
+readiness together with viewport visibility so they start against the restored
+viewport.
+
+When an exit interrupts the initial entrance, snapshot current animated styles
+before cancelling animations, then measure resting slot geometry and continue
+from those captured styles. Cancelling an exit reveals the Layer directly.
+Invalidate old completion handlers when replacing animations, cancel finished
+entrance animations to release their fill state, and cancel all animations on
+unmount. Reset readiness when mounting a new target, including rapid return trips
+to the previous Board.
 
 Keep Motion layout projection mounted on sortable Now Layer items, but use a
 named stable `layoutDependency` token to suspend its measurements until the
-entrance finishes. Dynamically mounting projection after the entrance leaves it
-without the continuous layout lifecycle needed for reliable reordering. Its
-geometry measurements and compensating transforms can overlap root scroll
-restoration and the entrance sequence, making restored positions visibly jump
-before settling. After the entrance, set `layoutDependency` to the ordered ID
-array so drag reordering retains FLIP animation without measuring unrelated
-renders.
+initial entrance finishes, or scroll restoration completes on navigation.
+Dynamically mounting projection leaves it without the continuous layout lifecycle
+needed for reliable reordering. Once revealed, set `layoutDependency` to the
+ordered ID array so drag reordering retains FLIP animation without measuring
+unrelated renders.
 
 Do not remove renders that are required to update Motion props, measured scatter
 vectors, or drag state. Optimize the content boundary instead.
 
-Use the shared exit-then-enter sequence for both Layers; its visual contract is
+Use the shared exit-then-reveal sequence for both Layers; its visual contract is
 in [Design Guideline](DESIGN_GUIDELINE.md#next-layer-widget-surfaces). Keep
 transition work outside card content and never transform or blur the full page.
 

@@ -15,16 +15,3 @@
 .next-layer-grid .grid-stack-item > .ui-resizable-handle {
   background-image: none;
 }
-
-.layer-card-entrance-pending {
-  opacity: 0;
-  transform: translate3d(0, 20px, 0);
-  will-change: opacity, transform;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .layer-card-entrance-pending {
-    opacity: 1;
-    transform: none;
-  }
-}
