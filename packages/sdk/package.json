@@ -41,7 +41,6 @@
     "prepack": "bun run build"
   },
   "dependencies": {
-    "@newsnext/cli": "1.0.0-alpha.1",
     "@newsnext/shared": "workspace:*",
     "@types/react": "^19.2.18",
     "@wxt-dev/browser": "^0.2.5",

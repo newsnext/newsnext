@@ -1,27 +1,27 @@
 # NewsNext CLI SDK
 
 `@newsnext/sdk` provides typed access to NewsNext Actions and history through the
-CLI. Installing it also installs the matching `@newsnext/cli` package and platform
-binary; no Rust compiler is needed.
+CLI. The SDK and CLI are installed independently; installing the SDK does not
+download the CLI.
 
 ## Installation
 
-Install the SDK in the project where the script will run:
+Install the SDK in the project and the CLI globally:
 
 ```sh
 npm install @newsnext/sdk
-npx newsnext status
+npm install -g @newsnext/cli
+newsnext status
 ```
 
-The SDK installs `@newsnext/cli` as a regular dependency, which selects the
-platform binary through optional dependencies. No separate CLI installation is
-required.
+The CLI runs independently as `newsnext`. The SDK invokes `newsnext` on PATH by
+default, or uses the client's explicit `command`. It does not resolve CLI npm
+packages or install an executable automatically.
 
 Node.js 22+ and Bun are supported. CLI packages target macOS, Linux glibc and
-Windows, on x64 and arm64. The SDK first resolves the installed `@newsnext/cli`
-binary, then uses `newsnext` on PATH if the package is absent. A broken installed
-package is an error. Optional dependencies must remain enabled when installing the
-CLI.
+Windows, on x64 and arm64. The CLI selects its platform binary through optional
+dependencies, which must remain enabled during CLI installation. No Rust compiler
+is needed.
 
 ## Client and environment
 

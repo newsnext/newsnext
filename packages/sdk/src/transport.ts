@@ -1,34 +1,15 @@
 import type { CallOptions, ClientOptions } from "./types.js"
 import { spawn } from "node:child_process"
-import { createRequire } from "node:module"
 import process from "node:process"
 import { NewsNextError, parseFrame, prepareRequest } from "./protocol.js"
 
-const require = createRequire(import.meta.url)
 const MAX_FRAME_LENGTH = 64 * 1024 * 1024
-
-function defaultCommand(): readonly [string, ...string[]] {
-  let modulePath: string
-  try {
-    modulePath = require.resolve("@newsnext/cli")
-  } catch (error) {
-    if (error && typeof error === "object" && "code" in error && error.code === "MODULE_NOT_FOUND") return ["newsnext"]
-    throw error
-  }
-  const cli: unknown = require(modulePath)
-  if (!cli || typeof cli !== "object" || !("resolveBinary" in cli) || typeof cli.resolveBinary !== "function") {
-    throw new NewsNextError("CLI_PACKAGE_INVALID", "@newsnext/cli does not export resolveBinary()")
-  }
-  const binary: unknown = cli.resolveBinary()
-  if (typeof binary !== "string") throw new NewsNextError("CLI_PACKAGE_INVALID", "Invalid CLI executable path")
-  return [binary]
-}
 
 export async function* stream<T>(client: ClientOptions, request: object, options: CallOptions = {}): AsyncGenerator<T> {
   const signal = options.signal ?? client.signal
   signal?.throwIfAborted()
   const { payload: { timeoutMs }, serialized: input } = prepareRequest(request, options.timeoutMs ?? client.timeoutMs)
-  const command = client.command ?? defaultCommand()
+  const command = client.command ?? ["newsnext"]
   const child = spawn(command[0], [...command.slice(1), "__sdk"], {
     cwd: client.cwd,
     env: { ...process.env, NEWSNEXT_ENV: client.environment ?? "production" },

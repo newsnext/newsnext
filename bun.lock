@@ -144,12 +144,6 @@
         "@types/node": "catalog:",
         "vitest": "catalog:",
       },
-      "peerDependencies": {
-        "@newsnext/cli": "1.0.0-alpha.1",
-      },
-      "optionalPeers": [
-        "@newsnext/cli",
-      ],
     },
     "packages/shared": {
       "name": "@newsnext/shared",
