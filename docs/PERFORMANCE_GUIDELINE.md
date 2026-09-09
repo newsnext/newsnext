@@ -312,6 +312,16 @@ When checking a blank list, compare its total spacer height with its rendered
 `data-index` rows: a non-zero height with zero rows indicates a virtualizer
 attachment or measurement problem rather than missing query data.
 
+Keep LiveCard scroll content out of a shared `preserve-3d` flip container with
+permanent `will-change: transform`. Rotate the two faces independently under a
+perspective container instead. If blank content recovers on hover, inspect row
+bounds and painting before resetting query data or virtualizer measurements.
+Changing virtual row positioning from transforms to `top` did not resolve the
+reported resize issue and was reverted. On 2026-09-09, the user confirmed that
+independent face rotation resolved the blank content with their native window
+resize sequence. Automated checks covered scrolling and flipping, but did not
+reproduce the original blank state or measure compositor performance.
+
 ## 2026-08-03 Audit Results
 
 The audit used a 1080 by 1890 viewport and a Board containing 12 LiveCards,

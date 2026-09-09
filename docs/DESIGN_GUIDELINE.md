@@ -310,6 +310,12 @@ on the right toward the right edge while preserving their vertical positions.
 Never reverse these paths to make either Layer converge back into place, and
 respect reduced-motion preferences by switching Layers immediately. Do not
 scale or blur the full page during this transition.
+
+LiveCard detail flips rotate the front and back faces independently, with the
+same duration and easing. Keep the inactive face slightly scaled down and
+non-interactive, and hide each face when its back is facing the viewer. Avoid a
+shared rotating 3D container around the card's scrollable content.
+
 Play Now Layer's staggered LiveCard entrance on its first mount, after changing
 Boards, and whenever returning from Next Layer. Treat it as a fresh reveal from
 below with opacity, not as a reversal of the departing scatter paths.

@@ -17,6 +17,7 @@ export function FlipAnimate({
   children,
 }: FlipAnimateProps): React.JSX.Element {
   const rotateCSS = rotate === "x" ? "[transform:rotateX(180deg)]" : "[transform:rotateY(180deg)]"
+  const reverseRotateCSS = rotate === "x" ? "[transform:rotateX(-180deg)]" : "[transform:rotateY(-180deg)]"
   const easeOutExpo = "cubic-bezier(0.16, 1, 0.3, 1)"
 
   const sideCSS = "absolute inset-0 h-full w-full transition-transform [backface-visibility:hidden]"
@@ -29,35 +30,22 @@ export function FlipAnimate({
       )}
     >
       <div
-        className={cn(
-          "relative h-full w-full transform-3d transition-transform will-change-transform",
-          flipped && rotateCSS,
-        )}
+        className={cn(sideCSS, flipped && "pointer-events-none scale-95", flipped && rotateCSS)}
         style={{
           transitionDuration: `${duration}ms`,
           transitionTimingFunction: easeOutExpo,
         }}
       >
-        <div
-          className={cn(sideCSS, flipped && "pointer-events-none scale-95")}
-          style={{
-            transitionDuration: `${duration * 0.6}ms`,
-            transitionTimingFunction: flipped ? "ease-in" : easeOutExpo,
-            transitionDelay: flipped ? "0ms" : `${duration * 0.3}ms`,
-          }}
-        >
-          {children[0]}
-        </div>
-        <div
-          className={cn(sideCSS, !flipped && "pointer-events-none scale-95", rotateCSS)}
-          style={{
-            transitionDuration: `${duration * 0.6}ms`,
-            transitionTimingFunction: !flipped ? "ease-in" : easeOutExpo,
-            transitionDelay: !flipped ? "0ms" : `${duration * 0.3}ms`,
-          }}
-        >
-          {children[1]}
-        </div>
+        {children[0]}
+      </div>
+      <div
+        className={cn(sideCSS, !flipped && "pointer-events-none scale-95", !flipped && reverseRotateCSS)}
+        style={{
+          transitionDuration: `${duration}ms`,
+          transitionTimingFunction: easeOutExpo,
+        }}
+      >
+        {children[1]}
       </div>
     </div>
   )
