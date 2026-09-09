@@ -1,10 +1,10 @@
-import type { CollectionStatus as NativeCollectionStatus } from "@newsnext/sdk/protocol/CollectionStatus"
 import type { ApplicationData } from "../application"
 import type {
   PersistedSettings,
 } from "../settings"
 import type { BackgroundActionDependencies } from "./action-context"
 import type { BackgroundActionRecord } from "./action-dispatcher"
+import type { CollectionStatus as NativeCollectionStatus } from "@/lib/native-protocol/CollectionStatus"
 import { browser } from "#imports"
 import {
   normalizePersistedSettings,

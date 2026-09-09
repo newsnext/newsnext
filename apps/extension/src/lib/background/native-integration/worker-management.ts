@@ -1,5 +1,5 @@
-import type { ExtensionToHost } from "@newsnext/sdk/protocol/ExtensionToHost"
 import type { NativeIntegrationStatus, RequireNativeConnection } from "./types"
+import type { ExtensionToHost } from "@/lib/native-protocol/ExtensionToHost"
 import { createId } from "@/lib/id"
 import { readApplicationData, replaceApplicationData } from "../application-service"
 import { replaceWorkerIdentity } from "../worker-identity"

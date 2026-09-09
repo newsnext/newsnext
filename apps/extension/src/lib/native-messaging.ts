@@ -1,4 +1,4 @@
-import type { ExtensionCommand } from "./protocol/ExtensionCommand.js"
+import type { ExtensionCommand } from "./native-protocol/ExtensionCommand.js"
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value)

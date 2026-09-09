@@ -1,4 +1,4 @@
-import type { CollectionStatus as NativeCollectionStatus } from "@newsnext/sdk/protocol/CollectionStatus"
+import type { CollectionStatus as NativeCollectionStatus } from "@/lib/native-protocol/CollectionStatus"
 import Type from "typebox"
 import Value from "typebox/value"
 

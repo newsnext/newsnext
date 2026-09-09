@@ -1,7 +1,7 @@
-import type { CollectionStatus as NativeCollectionStatus } from "@newsnext/sdk/protocol/CollectionStatus"
-import type { OfflineWorker as NativeOfflineWorker } from "@newsnext/sdk/protocol/OfflineWorker"
-import type { Workspace as NativeWorkspace } from "@newsnext/sdk/protocol/Workspace"
+import type { OfflineWorker as NativeOfflineWorker } from "@newsnext/sdk/models"
 import type { NativeIntegrationState, NativeIntegrationStatus, NativePort } from "./types"
+import type { CollectionStatus as NativeCollectionStatus } from "@/lib/native-protocol/CollectionStatus"
+import type { Workspace as NativeWorkspace } from "@/lib/native-protocol/Workspace"
 import { normalizePersistedSettings } from "../../settings/persisted-settings"
 import { getWorkerId } from "../worker-identity"
 

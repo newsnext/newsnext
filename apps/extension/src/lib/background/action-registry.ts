@@ -1,8 +1,8 @@
 import type {
   AnyActionDefinition,
-} from "@newsnext/sdk/actions"
+} from "./action-definition"
 import type { BackgroundActionContext } from "./background-actions"
-import { defineActionRegistry } from "@newsnext/sdk/actions"
+import { defineActionRegistry } from "./action-definition"
 import { dispatchBackgroundAction } from "./action-dispatcher"
 import {
   applicationActionDefinitions,

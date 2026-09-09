@@ -1,6 +1,6 @@
-import type { LogEntry as NativeLogEntry } from "@newsnext/sdk/protocol/LogEntry"
 import type { NativeIntegrationStatus } from "@/lib/background/native-integration"
 import type { StaticMessageKey } from "@/lib/i18n"
+import type { LogEntry as NativeLogEntry } from "@/lib/native-protocol/LogEntry"
 import { Button } from "@newsnext/ui/components/button"
 import {
   Select,

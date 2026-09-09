@@ -21,21 +21,9 @@
       "types": "./dist/action/index.d.ts",
       "import": "./dist/action/index.js"
     },
-    "./native-messaging": {
-      "types": "./dist/native-messaging.d.ts",
-      "import": "./dist/native-messaging.js"
-    },
-    "./protocol/*": {
-      "types": "./dist/protocol/*.d.ts",
-      "import": "./dist/protocol/*.js"
-    },
     "./widget": {
       "types": "./dist/widget.d.ts",
       "import": "./dist/widget.js"
-    },
-    "./widget-host": {
-      "types": "./dist/widget-host.d.ts",
-      "import": "./dist/widget-host.js"
     }
   },
   "files": [

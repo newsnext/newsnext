@@ -74,21 +74,6 @@ const developerFetchAction = defineActionContract({
   validate(input) {
     validateFetch(input)
   },
-  diagnostics: {
-    input: input => ({
-      body: input.body === undefined ? undefined : "[redacted]",
-      headerNames: input.headers.map(([headerName]) => headerName),
-      method: input.method.toUpperCase(),
-      timeoutMs: input.timeoutMs,
-      url: input.url,
-    }),
-    output: output => ({
-      body: "[redacted]",
-      headerNames: output.headers.map(([headerName]) => headerName),
-      status: output.status,
-      statusText: output.statusText,
-    }),
-  },
 })
 
 const AppLogEntryResult = Type.Object({
@@ -134,15 +119,6 @@ const developerRunSourceAction = defineActionContract({
   description: "Run a registered or supplied Source for development and debugging.",
   params: DeveloperRunSourceParams,
   result: DeveloperRunSourceResult,
-  diagnostics: {
-    input: input => ({
-      debug: input.debug,
-      params: input.params,
-      providerId: input.providerId,
-      sourceId: input.sourceId,
-      useProviderSecrets: input.useProviderSecrets,
-    }),
-  },
 })
 
 const radarResolveSuggestionsAction = defineActionContract({
@@ -309,21 +285,21 @@ function isHttpToken(value: string): boolean {
   return /^[!#$%&'*+.^\w`|~-]+$/.test(value)
 }
 
-export const backgroundActionContracts = {
-  "developer.fetch": developerFetchAction,
-  "developer.runSource": developerRunSourceAction,
-  "radar.resolveSuggestions": radarResolveSuggestionsAction,
-  "source.load": sourceLoadAction,
-  "source.cancel": sourceCancelAction,
-  "job.executeInstance": jobExecuteInstanceAction,
-  "loader.loadInstance": loaderLoadInstanceAction,
-  "loader.readInstanceCache": loaderReadInstanceCacheAction,
-  "nativeIntegration.getStatus": nativeIntegrationGetStatusAction,
-  "nativeIntegration.getLogs": nativeIntegrationGetLogsAction,
-  "instance.load": instanceLoadAction,
-  "instance.readCache": instanceReadCacheAction,
-  "nativeIntegration.setEnabled": nativeIntegrationSetEnabledAction,
-  "worker.regenerateIdentity": workerRegenerateIdentityAction,
-  "worker.takeOver": workerTakeOverAction,
-  "nextLayer.getWidgetSnapshot": nextLayerGetWidgetSnapshotAction,
-} as const
+export const backgroundActionContracts = [
+  developerFetchAction,
+  developerRunSourceAction,
+  radarResolveSuggestionsAction,
+  sourceLoadAction,
+  sourceCancelAction,
+  jobExecuteInstanceAction,
+  loaderLoadInstanceAction,
+  loaderReadInstanceCacheAction,
+  nativeIntegrationGetStatusAction,
+  nativeIntegrationGetLogsAction,
+  instanceLoadAction,
+  instanceReadCacheAction,
+  nativeIntegrationSetEnabledAction,
+  workerRegenerateIdentityAction,
+  workerTakeOverAction,
+  nextLayerGetWidgetSnapshotAction,
+] as const

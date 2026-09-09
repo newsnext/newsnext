@@ -1,6 +1,6 @@
-import type { Workspace as NativeWorkspace } from "@newsnext/sdk/protocol/Workspace"
 import type { PersistedSettings } from "../../settings/persisted-settings"
 import type { NativePort, RequireNativeConnection } from "./types"
+import type { Workspace as NativeWorkspace } from "@/lib/native-protocol/Workspace"
 import { browser } from "#imports"
 import { createId } from "@/lib/id"
 import { APPLICATION_DATA_VERSION } from "../../application"

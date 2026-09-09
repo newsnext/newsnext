@@ -1,7 +1,7 @@
-import type { ExtensionToHost } from "@newsnext/sdk/protocol/ExtensionToHost"
 import type { SourceLoadResponse } from "../../source/load-result"
 import type { BackgroundActionContext } from "../background-actions"
 import type { RequireNativeConnection } from "./types"
+import type { ExtensionToHost } from "@/lib/native-protocol/ExtensionToHost"
 import { createId } from "@/lib/id"
 import { executeRegisteredAction } from "../action-registry"
 import { readApplicationData } from "../application-service"

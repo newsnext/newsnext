@@ -1,7 +1,7 @@
-import type { ExtensionToHost } from "@newsnext/sdk/protocol/ExtensionToHost"
 import type { RequireNativeConnection } from "./types"
-import { isWidgetSdkControl, isWidgetSdkRequest, sdkErrorFrame, WIDGET_SDK_PORT } from "@newsnext/sdk/widget-host"
+import type { ExtensionToHost } from "@/lib/native-protocol/ExtensionToHost"
 import { browser } from "#imports"
+import { isWidgetSdkControl, isWidgetSdkRequest, sdkErrorFrame, WIDGET_SDK_PORT } from "@/lib/widget-host"
 import { runtime } from "./state"
 
 const streams = new Map<string, (frame: unknown) => void>()

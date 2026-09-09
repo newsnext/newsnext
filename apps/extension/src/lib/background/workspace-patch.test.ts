@@ -1,4 +1,4 @@
-import type { Workspace as NativeWorkspace } from "@newsnext/sdk/protocol/Workspace"
+import type { Workspace as NativeWorkspace } from "@/lib/native-protocol/Workspace"
 import { describe, expect, it } from "vitest"
 import {
   applyWorkspacePatch,

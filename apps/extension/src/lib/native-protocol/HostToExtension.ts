@@ -3,7 +3,7 @@ import type { CollectionStatus } from "./CollectionStatus.js";
 import type { CommandResult } from "./CommandResult.js";
 import type { ExtensionCommand } from "./ExtensionCommand.js";
 import type { LogEntry } from "./LogEntry.js";
-import type { OfflineWorker } from "./OfflineWorker.js";
+import type { OfflineWorker } from "@newsnext/sdk/models";
 import type { Workspace } from "./Workspace.js";
 import type { WorkspacePatch } from "./WorkspacePatch.js";
 

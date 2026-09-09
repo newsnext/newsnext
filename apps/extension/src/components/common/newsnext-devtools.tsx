@@ -1,7 +1,7 @@
-import type { StreamStatus as NativeStreamStatus } from "@newsnext/sdk/protocol/StreamStatus"
 import type { CSSProperties, ReactNode } from "react"
 import type { BackgroundActionRecord } from "@/lib/background/action-dispatcher"
 import type { BackgroundDiagnosticsSnapshot } from "@/lib/background/diagnostics-service"
+import type { StreamStatus as NativeStreamStatus } from "@/lib/native-protocol/StreamStatus"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { browser } from "#imports"
 import { createBackgroundClient } from "@/lib/background"

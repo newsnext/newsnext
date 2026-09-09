@@ -1253,7 +1253,10 @@ Before submitting:
 
 `@newsnext/sdk` owns the Action contracts and public Source models. Source authors
 can continue importing Source types from `@newsnext/source-kit/types`; those
-exports reference the same models. For CLI automation, use typed methods directly:
+exports reference the same models. `@newsnext/sdk/actions` exports the unified
+`actionContracts` catalog and public input/result types. Native wire protocols,
+Widget host helpers, and Action handler registration belong to the extension and
+are not public SDK entry points. For CLI automation, use typed methods directly:
 
 ```ts
 import { createClient } from "@newsnext/sdk"

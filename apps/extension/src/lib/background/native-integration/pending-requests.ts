@@ -1,9 +1,9 @@
-import type { CollectionStatus as NativeCollectionStatus } from "@newsnext/sdk/protocol/CollectionStatus"
-import type { CommandResult as NativeCommandResult } from "@newsnext/sdk/protocol/CommandResult"
-import type { LogEntry as NativeLogEntry } from "@newsnext/sdk/protocol/LogEntry"
-import type { Workspace as NativeWorkspace } from "@newsnext/sdk/protocol/Workspace"
 import type { SourceLoadResponse } from "../../source/load-result"
 import type { NativePort } from "./types"
+import type { CollectionStatus as NativeCollectionStatus } from "@/lib/native-protocol/CollectionStatus"
+import type { CommandResult as NativeCommandResult } from "@/lib/native-protocol/CommandResult"
+import type { LogEntry as NativeLogEntry } from "@/lib/native-protocol/LogEntry"
+import type { Workspace as NativeWorkspace } from "@/lib/native-protocol/Workspace"
 
 interface PendingRequest {
   reject: (error: Error) => void

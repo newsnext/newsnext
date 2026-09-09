@@ -40,9 +40,12 @@ packages/source-kit/src/
 ## Action contracts
 
 `packages/sdk/src/action` is the single source of truth for every Action's name,
-parameter schema, result schema, validation, and diagnostic redaction.
+parameter schema, result schema, and validation. Each contract declares its name
+once; application and background contract lists are combined into a catalog keyed
+by those names. Catalog construction rejects duplicate names across both lists.
 Application and background handlers in the extension bind implementations to these
-contracts with `defineAction`; they do not declare another schema. Public model
+contracts with the extension-local `defineAction`; diagnostic redaction lives with
+these handlers, and they do not declare another schema. Public model
 shapes live in `packages/sdk/src/models`. Source-kit and shared package exports
 forward these models while keeping loader execution and browser behavior local.
 
@@ -843,11 +846,12 @@ one per-user daemon over a Unix socket or Windows named pipe. The daemon owns
 state; a bridge does not. Shutdown fails pending work and removes socket endpoints;
 startup reclaims stale sockets but never replaces an unrelated non-socket file.
 
-Rust `serde` enums own the wire contract. Released `ts-rs` projections in
-`packages/sdk/src/protocol` are not hand-edited. Browser code
-imports protocol types through `@newsnext/sdk/protocol/*` (for example,
-`@newsnext/sdk/protocol/Workspace`) and message parsing from
-`@newsnext/sdk/native-messaging`.
+Rust `serde` enums own the wire contract. Generated internal projections live in
+`apps/extension/src/lib/native-protocol` and are not hand-edited. Browser code
+imports them through `@/lib/native-protocol/*`; message parsing lives in
+`@/lib/native-messaging`. Only `Worker` and `OfflineWorker`, which occur in public
+SDK results, live in `packages/sdk/src/protocol` and are exported through
+`@newsnext/sdk/models`. The SDK exposes no `protocol/*` subpath.
 Run from the CLI repository:
 
 ```sh
@@ -855,8 +859,8 @@ bun run protocol:export
 ```
 
 This clears `bindings/`, exports fresh types with `.js` import extensions,
-replaces `../web/packages/sdk/src/protocol/` in full, and rebuilds the SDK's
-public `dist/` exports. This development command expects the CLI and web checkouts
+replaces both generated directories, routes public result types to the SDK and
+internal wire types to the extension, and rebuilds the SDK. This development command expects the CLI and web checkouts
 to be siblings, as in the NewsNext wrapper repository.
 Wildcard package exports expose the generated files directly, without a
 maintained export index. SDK builds clear `dist/` to prevent removed types from

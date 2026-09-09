@@ -1,5 +1,5 @@
-import { isWidgetSdkControl, isWidgetSdkRequest, sdkErrorFrame, WIDGET_SDK_PORT } from "@newsnext/sdk/widget-host"
 import { browser } from "#imports"
+import { isWidgetSdkControl, isWidgetSdkRequest, sdkErrorFrame, WIDGET_SDK_PORT } from "@/lib/widget-host"
 
 /** Each iframe request owns a port; source identity is checked before granting access. */
 export function bindWidgetSdk(iframe: HTMLIFrameElement): () => void {

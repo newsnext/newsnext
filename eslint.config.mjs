@@ -15,6 +15,7 @@ export default antfu(
       "apps/landing/src/routeTree.gen.ts",
       "public/**",
       "packages/sdk/src/protocol/**",
+      "apps/extension/src/lib/native-protocol/**",
       "registry/registry.json",
       "registry/sources.ts",
     ],

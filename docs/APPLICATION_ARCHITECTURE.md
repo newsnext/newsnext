@@ -236,18 +236,26 @@ Generic transformation graphs, transitive provenance, replay, and a complete
 Widget preview/maintenance workflow remain target scope in the [PRD](PRD.md) and
 [Data Stream Architecture](DATA_STREAM_ARCHITECTURE.md).
 
+Widget host message validation and error framing live in the extension at
+`src/lib/widget-host.ts`. Widget authors use `@newsnext/sdk/widget`; host-side
+helpers are not SDK exports.
+
 ## Action Registry
 
 Every stable capability exposed to the UI, agents, or CLI is an Action.
 `@newsnext/sdk/actions` owns each Action's name, kind, description, TypeBox
-parameter and result schemas, optional validation, and diagnostic projections.
-The extension binds its handler to the SDK contract with `defineAction`.
+parameter and result schemas, and optional validation.
+The extension binds its handler to the SDK contract with its local `defineAction`
+and supplies diagnostic projections alongside the handler. Action execution and
+registry helpers are internal; consumers use the unified `actionContracts` export.
+Its keys are derived from each contract's `name`, preserving the corresponding
+parameter and result types. Duplicate names fail during catalog construction.
 TypeBox schemas supply static types, runtime validation, and the JSON Schema
 returned by `action.list`; there is no parallel descriptor or parser catalog.
 
 ```ts
 const createBoard = defineAction(
-  applicationActionContracts["board.create"],
+  actionContracts["board.create"],
   async (params, context: ApplicationActionContext) => {
     await context.requireSources((params.instances ?? []).map(instance => instance.sourceId))
     const result = await context.mutate((data, dependencies) => (

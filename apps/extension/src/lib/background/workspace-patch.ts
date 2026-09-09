@@ -1,5 +1,5 @@
-import type { Workspace as NativeWorkspace } from "@newsnext/sdk/protocol/Workspace"
-import type { WorkspacePatch as NativeWorkspacePatch } from "@newsnext/sdk/protocol/WorkspacePatch"
+import type { Workspace as NativeWorkspace } from "@/lib/native-protocol/Workspace"
+import type { WorkspacePatch as NativeWorkspacePatch } from "@/lib/native-protocol/WorkspacePatch"
 import { APPLICATION_DATA_VERSION } from "../application"
 import {
   normalizeApplicationData,
