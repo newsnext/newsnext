@@ -20,7 +20,7 @@ import { boardsAtom } from "@/store/board"
 import { BuiltinLiveCard } from "./builtin-live-card"
 import { SortableWidgetGrid } from "./sortable-widget-grid"
 import { useWidgetData } from "./use-widget-data"
-import { getChangedWidgetLayouts, getGridWidgetId, getWidgetColumnSpan } from "./widget-layout"
+import { clampWidgetWidth, getChangedWidgetLayouts, getGridWidgetId } from "./widget-layout"
 import { parseLocalWidgetManifests } from "./widget-manifest"
 import { bindWidgetSdk } from "./widget-sdk"
 
@@ -317,9 +317,9 @@ export function LocalWidgetGrid({ boardId, onReady, viewReady }: LocalWidgetGrid
     id: getGridWidgetId(placement.widgetId),
     x: placement.layout.x,
     y: placement.layout.y,
-    w: Math.max(getWidgetColumnSpan(manifest.minWidth), getWidgetColumnSpan(placement.layout.width)),
+    w: Math.max(clampWidgetWidth(manifest.minWidth), clampWidgetWidth(placement.layout.width)),
     h: Math.max(manifest.minHeight, placement.layout.height),
-    minW: getWidgetColumnSpan(manifest.minWidth),
+    minW: clampWidgetWidth(manifest.minWidth),
     minH: manifest.minHeight,
   })), [widgets])
   const saveLayout = useCallback(async (layout: SortableWidgetNode[]) => {

@@ -1272,6 +1272,20 @@ Worker for browser-owned Actions and retains the existing permission checks.
 
 ### Data-only Widgets with built-in UI
 
+Widget manifest `width`, `height`, `minWidth`, and `minHeight` use half-LiveCard
+grid units. `width: 2, height: 2` matches a standard 400px × 500px LiveCard.
+The 24px grid gutter is included in each footprint: one unit renders as 188px
+wide or 238px high. Width and height default to 2; `minWidth` and `minHeight`
+default to 1. Resizing and saved Board layouts use the same units.
+
+When converting older local Widgets, update both the manifest sizes (including
+minimums) and the saved Board layouts. Convert old widths with
+`max(1, min(4, round(width / 2)))` and old heights with
+`max(1, round(height * 56 / 262))` to snap their previous footprints to the
+nearest new unit. Apply this once to known old data; the numeric fields alone
+do not identify the unit system. Changing defaults does not update explicit
+manifest sizes or already installed placements.
+
 Data and view are independent. Use a JS entry for custom data:
 
 ```json

@@ -1,8 +1,9 @@
 import type { NextLayerWidget, NextLayerWidgetLayout } from "@/lib/board"
 
-export const WIDGET_COLUMN_WIDTH = 212
-export const WIDGET_ROW_HEIGHT = 56
 export const WIDGET_GAP = 24
+// Split the 400 × 500 LiveCard footprint, including its gutter, into two units.
+export const WIDGET_COLUMN_WIDTH = (400 + WIDGET_GAP) / 2
+export const WIDGET_ROW_HEIGHT = (500 + WIDGET_GAP) / 2
 
 const GRID_WIDGET_ID_PREFIX = "widget-"
 
@@ -19,9 +20,9 @@ export interface WidgetGridNode {
   y?: number
 }
 
-// Persisted widths use four units per LiveCard; the grid snaps to half cards.
-export function getWidgetColumnSpan(width: number): number {
-  return Math.max(1, Math.min(4, Math.round(width / 2)))
+// Manifest, persisted, and rendered sizes all use half-LiveCard units.
+export function clampWidgetWidth(width: number): number {
+  return Math.max(1, Math.min(4, Math.round(width)))
 }
 
 export function getWidgetColumns(availableWidth: number, nodes: readonly WidgetGridNode[]): number {
@@ -35,7 +36,7 @@ export function getResizedWidgetSize(
   delta: { x: number, y: number },
 ): { w: number, h: number } {
   return {
-    w: Math.max(initial.minW, Math.min(4, initial.w + Math.round(delta.x / WIDGET_COLUMN_WIDTH))),
+    w: Math.max(initial.minW, clampWidgetWidth(initial.w + Math.round(delta.x / WIDGET_COLUMN_WIDTH))),
     h: Math.max(initial.minH, Math.min(100, initial.h + Math.round(delta.y / WIDGET_ROW_HEIGHT))),
   }
 }
@@ -140,7 +141,7 @@ export function getChangedWidgetLayouts(
     const widget = widgetsById.get(widgetId)
     if (!widget) return []
     // Keep the existing wire shape, but persist an order rather than viewport coordinates.
-    const layout = { x: 0, y: order++, width: node.w * 2, height: node.h }
+    const layout = { x: 0, y: order++, width: node.w, height: node.h }
     return layoutsEqual(widget.layout, layout) ? [] : [{ widgetId, layout }]
   })
 }

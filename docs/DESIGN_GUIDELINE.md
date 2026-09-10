@@ -302,12 +302,14 @@ Widget cannot trigger Instance moves in the Board or Header. The shared header
 trash target dispatches by drag kind and requires the originating Board and Widget
 IDs before accepting Widget removal.
 
-Widths snap in half-LiveCard increments, from half through two cards. With the
-shared 24px gutter, visible widths are 188px, 400px, 612px, and 824px. Keep that
+Widget width and height use half-LiveCard units in manifests, persisted layouts,
+and resize steps: `2 × 2` matches a 400px × 500px LiveCard.
+Widths range from half through two cards. With the shared 24px gutter, visible widths are 188px, 400px, 612px, and 824px. Keep that
 gutter and those widths at every viewport size. Center complete card columns,
 up to four LiveCards; allow horizontal scrolling when the widest Widget cannot
-fit. Horizontal cells are 212px and vertical cells are 56px, each including the
-gutter. Do not backfill an earlier gap with a later Widget.
+fit. Horizontal cells are 212px and vertical cells are 262px, each including the
+gutter. A `1 × 1` Widget is 188px × 238px after reserving the gutter.
+Do not backfill an earlier gap with a later Widget.
 
 Snapshot order and the pointer's grab offset at drag start. Precompute the packed
 result of each possible insertion, retaining every other Widget's relative order.
