@@ -205,10 +205,13 @@ is still compiled.
 
 Keep render functions free of ref reads and writes. `DndContext` uses an Effect
 Event so its long-lived drag monitor always invokes the latest callbacks without
-resubscribing. Ordinary UI callbacks such as `DynamicIsland` open and close
+resubscribing. It also owns auto-scroll registrations, scoped to its drag kind
+and context ID, with per-Layer axes and speed. Ordinary UI callbacks such as `DynamicIsland` open and close
 handlers should instead depend directly on the values they use. `LiveCardContainer`
 keeps drag state close to the rendered cards, while `useWrappedSortable` snapshots
-the card order and layout only when dragging starts.
+the card order and layout only when dragging starts. Resolve live reorder previews
+against that immutable geometry and update state only when the destination index
+changes. Do not remeasure moving cards on every drag event.
 
 TanStack Virtual returns functions that React Compiler cannot memoize safely.
 Keep `VirtualList` virtualized, and apply the
@@ -216,12 +219,10 @@ Keep `VirtualList` virtualized, and apply the
 with an explanatory comment. Do not disable the diagnostic globally or pass
 virtualizer functions through separately memoized boundaries.
 
-The scatter transition measures rendered LiveCard bounds and must publish its Motion
-variants synchronously in a layout effect before paint. Keep the targeted
-`react/set-state-in-effect` exception at that state update; moving it to a passive
-effect or timer introduces a visible position flash. Other synchronous Effect
-state updates remain actionable warnings. `bun run lint` should complete with
-zero warnings outside these documented, line-level exceptions.
+The scatter transition measures card bounds and starts native animations in a
+layout effect before paint. Batch resting geometry reads before animation writes;
+moving initialization to a passive effect or timer introduces a visible position
+flash. No Motion variants or React state updates are needed for these frames.
 
 ### Keep refs and callbacks stable
 
@@ -298,8 +299,13 @@ virtual lists, and LiveCard editor controls.
 Keep entrances and navigation exits in `ScatterCardLayer`, using the same
 horizontal offset calculation on inner card wrappers. Each keyed Board/Layer
 visit gets an entrance, including Tab switches and route remounts. Retain
-entrance state across effect replays. Motion and GridStack own outer slot
-geometry; their transforms must not compete with these animations.
+entrance state across effect replays. Motion owns LiveCard slots and the Widget grid owns its outer CSS slot
+geometry; neither may compete with these inner navigation animations.
+`ScatterCardLayer` exposes its phase through `data-card-transition-state`. Widget
+slot transitions stay disabled until entrance completion, including initial
+ResizeObserver layout correction. Widget scrolling must not clip the scatter
+path during navigation. Measure resting rectangles and sort them in visual
+reading order before assigning stagger delays, since Widget DOM order is stable.
 
 Overlap one outgoing view with the active incoming view. Pin the outgoing root
 in a layout effect before the parent restores the incoming view's scroll, and
@@ -339,15 +345,19 @@ clipping bounds before removing the outgoing root from flow, so scroll clamping
 cannot change the measured viewport. Widget snapshot queries
 use active view readiness together with viewport visibility.
 
-GridStack 13.2.0 sorts Widget DOM nodes after layout changes using `appendChild`,
-which reloads nested iframes even when React preserves their components. The
-tracked Bun patch uses `moveBefore` when available to preserve iframe documents
-and focus while retaining visual DOM order. Browsers without that API retain
-the upstream fallback. Keep this patch until the dependency provides equivalent
-state-preserving sorting. When verifying dependency upgrades, drag Widgets past
-each other and check that iframe load events do not repeat and content state
-survives the drop; type checks cannot cover this browser behavior. This fix has
-not yet been verified in a live browser session.
+Widget slots keep a stable DOM order keyed by installation identity; visual
+positions and `aria-posinset` follow the current user order. Do not reorder or
+remount iframe elements during a drag or resize. DOM focus traversal remains in
+installation order; visual ordering does not change iframe browsing contexts.
+Keep transient layout state in `SortableWidgetGrid`, outside Widget data-query
+frames, and reuse the parent's React children while slots move. Precompute drag
+insertion candidates once per gesture/column count; update React state only when
+the selected insertion changes. Retain typed candidate layouts and reuse the
+selected result directly instead of packing it again on each switch. Compare persisted layout values, not manifest
+object identity, when retaining an optimistic layout across data refreshes.
+Resize previews use pointer capture and commit
+only on release. Pure layout, persistence, and resize checks cover these rules;
+the replacement drag UI has not yet been verified in a live browser session.
 
 When an exit interrupts an entrance, snapshot current animated styles before
 cancelling animations, then measure resting slot geometry and continue from
@@ -356,13 +366,13 @@ animations, cancel finished entrance animations to release their fill state,
 and cancel all animations on unmount. Match exit completion to its departing
 view so a stale completion cannot remove a newer outgoing view.
 
-Keep Motion layout projection mounted on sortable Now Layer items, but use a
-named stable `layoutDependency` token to suspend its measurements until the
-entrance finishes after scroll restoration on each mount.
-Dynamically mounting projection leaves it without the continuous layout lifecycle
-needed for reliable reordering. Once revealed, set `layoutDependency` to the
-ordered ID array so drag reordering retains FLIP animation without measuring
-unrelated renders.
+Use native Web Animations for Now Layer sorting on plain outer list items.
+Measure resting offsets only when the visible order changes or the list resizes,
+with animation disabled until navigation entrance finishes. Batch geometry reads
+before animation writes. When another reorder interrupts movement, include the
+current animated translation so cards continue from their visible positions.
+Cancel owned animations on unmount and respect reduced motion. Next Layer uses
+CSS geometry transitions; neither Layer needs Motion layout projection for sorting.
 
 Do not remove renders that are required to update Motion props, measured scatter
 vectors, or drag state. Optimize the content boundary instead.

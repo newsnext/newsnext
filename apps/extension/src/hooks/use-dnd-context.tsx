@@ -1,5 +1,8 @@
+import type { ElementEventBasePayload } from "@atlaskit/pragmatic-drag-and-drop/element/adapter"
 import type { ElementDragType, MonitorArgs } from "@atlaskit/pragmatic-drag-and-drop/types"
 import type { PropsWithChildren, RefObject } from "react"
+import type { SortableKind } from "@/lib/board/sortable-data"
+import { autoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/element"
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine"
 import { dropTargetForElements, monitorForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter"
 import { useEffect, useEffectEvent, useId } from "react"
@@ -12,7 +15,11 @@ type MonitorCallbacks = Pick<
 >
 
 type ContextProps = MonitorCallbacks & {
+  kind?: SortableKind
   dropTargetRef?: RefObject<HTMLElement | null>
+  verticalScrollRef?: RefObject<HTMLElement | null>
+  horizontalScrollRef?: RefObject<HTMLElement | null>
+  scrollSpeed?: "standard" | "fast"
 }
 
 type MonitorCallbackArgs<Key extends keyof MonitorCallbacks> = Parameters<NonNullable<MonitorCallbacks[Key]>>[0]
@@ -20,6 +27,10 @@ type MonitorCallbackArgs<Key extends keyof MonitorCallbacks> = Parameters<NonNul
 export function DndContext({
   children,
   dropTargetRef,
+  kind = "instance",
+  verticalScrollRef,
+  horizontalScrollRef,
+  scrollSpeed = "standard",
   ...callbacks
 }: PropsWithChildren<ContextProps>) {
   const instanceId = useId()
@@ -35,9 +46,10 @@ export function DndContext({
 
   useEffect(() => {
     const dropTarget = dropTargetRef?.current
+    const ownsDrag = ({ source }: Pick<ElementEventBasePayload, "source">) => isSortableData(source.data, kind)
+      && source.data.instanceId === instanceId
     const monitorCleanup = monitorForElements({
-      canMonitor: ({ source }) => isSortableData(source.data)
-        && source.data.instanceId === instanceId,
+      canMonitor: ownsDrag,
       onDragStart: handleDragStart,
       onDrag: handleDrag,
       onDrop: handleDrop,
@@ -46,13 +58,23 @@ export function DndContext({
 
     return combine(
       monitorCleanup,
+      ...([
+        [verticalScrollRef?.current, "vertical"],
+        [horizontalScrollRef?.current, "horizontal"],
+      ] as const).flatMap(([element, axis]) => element
+        ? [autoScrollForElements({
+            element,
+            canScroll: ownsDrag,
+            getAllowedAxis: () => axis,
+            getConfiguration: () => ({ maxScrollSpeed: scrollSpeed }),
+          })]
+        : []),
       dropTargetForElements({
         element: dropTarget,
-        canDrop: ({ source }) => isSortableData(source.data)
-          && source.data.instanceId === instanceId,
+        canDrop: ownsDrag,
       }),
     )
-  }, [dropTargetRef, instanceId])
+  }, [dropTargetRef, horizontalScrollRef, instanceId, kind, scrollSpeed, verticalScrollRef])
 
   return (
     <SortableContext value={instanceId}>

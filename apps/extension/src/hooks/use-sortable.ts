@@ -1,3 +1,4 @@
+import type { SortableKind } from "@/lib/board/sortable-data"
 import { draggable } from "@atlaskit/pragmatic-drag-and-drop/element/adapter"
 import { setCustomNativeDragPreview } from "@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview"
 import { createContext, use, useEffect, useState } from "react"
@@ -6,6 +7,9 @@ import { getSortableData } from "@/lib/board"
 export const SortableContext = createContext<string | null>(null)
 
 interface SortableProps {
+  kind?: SortableKind
+  boardId?: string
+  widgetId?: string
   canDrag?: (target: Element | null) => boolean
   enabled?: boolean
   id: string
@@ -15,7 +19,7 @@ interface SortableProps {
   }) => void | (() => void)
 }
 
-export function useSortable({ canDrag, enabled = true, id, onGenerateDragPreview }: SortableProps) {
+export function useSortable({ canDrag, enabled = true, id, kind = "instance", boardId, widgetId, onGenerateDragPreview }: SortableProps) {
   const instanceId = use(SortableContext)
   const [handleRef, setHandleRef] = useState<HTMLElement | null>(null)
   const [nodeRef, setNodeRef] = useState<HTMLElement | null>(null)
@@ -28,7 +32,7 @@ export function useSortable({ canDrag, enabled = true, id, onGenerateDragPreview
         canDrag: canDrag
           ? ({ input }) => canDrag(document.elementFromPoint(input.clientX, input.clientY))
           : undefined,
-        getInitialData: () => getSortableData({ id, instanceId }),
+        getInitialData: () => getSortableData({ id, instanceId, kind, boardId, widgetId }),
         onGenerateDragPreview({ nativeSetDragImage, location }) {
           setCustomNativeDragPreview({
             getOffset({ container }) {
@@ -58,7 +62,7 @@ export function useSortable({ canDrag, enabled = true, id, onGenerateDragPreview
         },
       })
     }
-  }, [canDrag, enabled, handleRef, id, instanceId, nodeRef, onGenerateDragPreview])
+  }, [boardId, widgetId, canDrag, enabled, handleRef, id, instanceId, kind, nodeRef, onGenerateDragPreview])
 
   return {
     setHandleRef,

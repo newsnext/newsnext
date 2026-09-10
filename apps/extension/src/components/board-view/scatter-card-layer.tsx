@@ -69,6 +69,7 @@ export function ScatterCardLayer({
     const root = rootRef.current
     if (!root) return
     root.style.visibility = outgoing ? "hidden" : "visible"
+    root.dataset.cardTransitionState = outgoing ? "exited" : "entered"
     if (outgoing) {
       onExitComplete()
     } else {
@@ -85,6 +86,8 @@ export function ScatterCardLayer({
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
     if (!outgoing && !viewReady && !reducedMotion) return
     if (!outgoing && enteredRef.current) return
+
+    root.dataset.cardTransitionState = outgoing ? "exiting" : "entering"
 
     // Capture the entrance before cancelling it so an interrupting exit
     // continues from the visible position instead of snapping back to the slot.
@@ -119,7 +122,7 @@ export function ScatterCardLayer({
       if (!isVisible(rect, bounds)) return []
       const style = getComputedStyle(item)
       return [{ item, rect, opacity: style.opacity, transform: style.transform }]
-    })
+    }).sort((a, b) => a.rect.top - b.rect.top || a.rect.left - b.rect.left)
 
     // Pin the departing view before the incoming view restores shared scroll.
     if (outgoing) {
@@ -180,6 +183,7 @@ export function ScatterCardLayer({
   return (
     <div
       ref={rootRef}
+      data-card-transition-state="pending"
       style={{ visibility: "hidden" }}
       inert={inactive}
       aria-hidden={inactive}

@@ -1,33 +1,33 @@
 import type { Color } from "@newsnext/shared/types"
-import type { ComponentMap, GridStackHandle, GridStackNode, GridStackOptions } from "gridstack/dist/react"
 import type { ReactNode, RefObject } from "react"
-import type { LocalWidgetManifest, WidgetUi } from "./widget-manifest"
-import type { NextLayerWidget } from "@/lib/board"
+import type { SortableWidgetNode } from "./sortable-widget-grid"
+import type { WidgetUi } from "./widget-manifest"
 import { FlipAnimate } from "@newsnext/ui/components/flip-animate"
 import { useQuery } from "@tanstack/react-query"
-import { GridStack } from "gridstack/dist/react"
 import { useAtomValue } from "jotai"
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { PhArrowCircleLeftDuotone, PhInfoDuotone } from "@/components/icons/ph"
 import { LiveCardHeaderActionButton } from "@/components/live-card/card-header"
 import { LiveCardContentBackground, LiveCardContentTransition, LiveCardRefreshButton } from "@/components/live-card/card-refresh"
 import { LiveCardSurface } from "@/components/live-card/card-surface"
+import { canDragCardHeader, generateLiveCardDragPreview } from "@/components/live-card/drag-preview"
 import { useI18n } from "@/hooks/use-i18n"
 import { useNativeIntegrationStatus } from "@/hooks/use-native-integration-status"
+import { useSortable } from "@/hooks/use-sortable"
 import { RelativeTime } from "@/hooks/useRelativeTime"
 import { actions } from "@/lib/actions"
-import { isThemeColor } from "@/lib/settings/theme-color"
 import { boardsAtom } from "@/store/board"
 import { BuiltinLiveCard } from "./builtin-live-card"
+import { SortableWidgetGrid } from "./sortable-widget-grid"
 import { widgetDataQueryOptions } from "./widget-data-query"
-import { getChangedWidgetLayouts, getGridWidgetId } from "./widget-layout"
-import { parseLocalWidgetManifests, parseWidgetUi } from "./widget-manifest"
+import { getChangedWidgetLayouts, getGridWidgetId, getWidgetColumnSpan } from "./widget-layout"
+import { parseLocalWidgetManifests } from "./widget-manifest"
 import { bindWidgetSdk } from "./widget-sdk"
-import "gridstack/dist/gridstack.css"
 
 const WIDGET_PROTOCOL_VERSION = 1
 
 interface WidgetFrameProps {
+  boardId: string
   color: Color
   active: boolean
   instanceIds: string[]
@@ -41,65 +41,23 @@ interface WidgetFrameProps {
   widgetId: string
 }
 
-interface InstalledLocalWidget {
-  manifest: LocalWidgetManifest
-  placement: NextLayerWidget
-}
-
-function createGridOptions(
-  widgets: InstalledLocalWidget[],
-  boardInstanceIds: readonly string[],
-  active: boolean,
-): GridStackOptions {
-  return {
-    animate: true,
-    cellHeight: 56,
-    column: 12,
-    columnOpts: {
-      breakpoints: [
-        { w: 640, c: 1, layout: "list" },
-        { w: 960, c: 6, layout: "moveScale" },
-      ],
-      layout: "moveScale",
-    },
-    margin: 6,
-    resizable: { handles: "e, se, s" },
-    children: widgets.map(({ manifest, placement }) => {
-      const instanceIds = placement.dataScope.type === "board"
-        ? boardInstanceIds
-        : placement.dataScope.instanceIds.filter(id => boardInstanceIds.includes(id))
-      return {
-        component: "localWidget",
-        h: placement.layout.height,
-        id: getGridWidgetId(manifest.id),
-        minH: manifest.minHeight,
-        minW: manifest.minWidth,
-        props: {
-          active,
-          color: manifest.color,
-          instanceIds: [...instanceIds],
-          dataRevision: manifest.dataRevision,
-          staleTimeMs: manifest.staleTimeMs,
-          title: manifest.title,
-          url: manifest.url,
-          ui: manifest.view,
-          refreshIntervalMs: manifest.refreshIntervalMs,
-          dataFiles: manifest.dataFiles,
-          widgetId: manifest.id,
-        },
-        w: placement.layout.width,
-        x: placement.layout.x,
-        y: placement.layout.y,
-      }
-    }),
-  }
-}
-
-function LocalWidgetFrame(props: Record<string, unknown>) {
+function LocalWidgetFrame(frame: WidgetFrameProps) {
   const { t } = useI18n()
-  const frame = parseFrameProps(props)
   const [isFlipped, setIsFlipped] = useState(false)
   const articleRef = useRef<HTMLElement>(null)
+  const { setNodeRef, setHandleRef } = useSortable({
+    id: getGridWidgetId(frame.widgetId),
+    kind: "widget",
+    boardId: frame.boardId,
+    widgetId: frame.widgetId,
+    enabled: frame.active && !isFlipped,
+    canDrag: canDragCardHeader,
+    onGenerateDragPreview: generateLiveCardDragPreview,
+  })
+  const setArticleRef = useCallback((element: HTMLElement | null) => {
+    articleRef.current = element
+    setNodeRef(element)
+  }, [setNodeRef])
   const iframeRef = useRef<HTMLIFrameElement>(null)
   useLayoutEffect(() => {
     const iframe = iframeRef.current
@@ -149,10 +107,11 @@ function LocalWidgetFrame(props: Record<string, unknown>) {
   const refreshing = dataQuery.isFetching
 
   return (
-    <article ref={articleRef} className={`relative h-full min-h-0 select-none ${frame.color}`}>
+    <article ref={setArticleRef} className={`relative h-full min-h-0 select-none ${frame.color}`}>
       <FlipAnimate rotate="y" flipped={isFlipped}>
         <WidgetFace
           title={frame.title}
+          headerRef={setHandleRef}
           hidden={isFlipped}
           isFetching={refreshing}
           actions={(
@@ -252,18 +211,19 @@ function LocalWidgetFrame(props: Record<string, unknown>) {
 
 interface WidgetFaceProps {
   title: string
+  headerRef?: (element: HTMLElement | null) => void
   hidden: boolean
   isFetching?: boolean
   actions: ReactNode
   children: ReactNode
 }
 
-function WidgetFace({ title, hidden, actions, children, isFetching = false }: WidgetFaceProps): React.JSX.Element {
+function WidgetFace({ title, headerRef, hidden, actions, children, isFetching = false }: WidgetFaceProps): React.JSX.Element {
   return (
     <div className="relative h-full min-h-0" inert={hidden} aria-hidden={hidden}>
       <LiveCardSurface />
       <div className="relative flex h-full min-h-0 flex-col p-2.5">
-        <header className="mx-1 mb-2 flex min-h-8 shrink-0 cursor-grab items-center gap-2 active:cursor-grabbing">
+        <header ref={headerRef} data-live-card-header className="mx-1 mb-2 flex min-h-8 shrink-0 cursor-grab items-center gap-2 active:cursor-grabbing">
           <p className="ml-1 min-w-0 flex-1 truncate text-base font-bold">{title}</p>
           <div
             className="flex shrink-0 cursor-auto items-center gap-1 text-theme-400"
@@ -282,28 +242,6 @@ function WidgetFace({ title, hidden, actions, children, isFetching = false }: Wi
       </div>
     </div>
   )
-}
-
-function parseFrameProps(props: Record<string, unknown>): WidgetFrameProps {
-  if (!isThemeColor(props.color)
-    || typeof props.active !== "boolean"
-    || typeof props.dataRevision !== "string"
-    || !Number.isSafeInteger(props.staleTimeMs)
-    || Number(props.staleTimeMs) < 0
-    || !Array.isArray(props.instanceIds)
-    || !props.instanceIds.every(id => typeof id === "string")
-    || typeof props.title !== "string"
-    || (props.url !== undefined && typeof props.url !== "string")
-    || !Array.isArray(props.dataFiles)
-    || !props.dataFiles.every(path => typeof path === "string")
-    || !Number.isSafeInteger(props.refreshIntervalMs)
-    || Number(props.refreshIntervalMs) < 60_000
-    || typeof props.widgetId !== "string") {
-    throw new TypeError("GridStack supplied invalid local Widget properties")
-  }
-  const ui = parseWidgetUi(props.ui)
-  if (ui.type === "custom" && typeof props.url !== "string") throw new TypeError("Custom Widget UI requires an entry URL")
-  return { ...props, ui } as unknown as WidgetFrameProps
 }
 
 function isWidgetReady(value: unknown): boolean {
@@ -335,8 +273,6 @@ function useElementVisible(ref: RefObject<Element | null>): boolean {
   }, [ref])
   return visible
 }
-
-const LOCAL_WIDGET_COMPONENTS: ComponentMap = { localWidget: LocalWidgetFrame }
 
 function useWidgetServerOrigin() {
   const query = useNativeIntegrationStatus()
@@ -370,7 +306,6 @@ interface LocalWidgetGridProps {
 
 export function LocalWidgetGrid({ boardId, onReady, viewReady }: LocalWidgetGridProps) {
   const { t } = useI18n()
-  const gridRef = useRef<GridStackHandle>(null)
   const connection = useWidgetServerOrigin()
   const manifestQuery = useLocalWidgets(connection.serverOrigin)
   const boards = useAtomValue(boardsAtom)
@@ -382,24 +317,24 @@ export function LocalWidgetGrid({ boardId, onReady, viewReady }: LocalWidgetGrid
       return manifest ? [{ manifest, placement }] : []
     }) ?? []
   }, [board?.nextLayer.widgets, manifestQuery.widgets])
-  const gridOptions = useMemo(
-    () => createGridOptions(widgets, board?.instanceIds ?? [], viewReady),
-    [board?.instanceIds, viewReady, widgets],
-  )
-  const gridKey = widgets.map(widget => `${widget.manifest.id}@${widget.manifest.url ?? JSON.stringify(widget.manifest.view)}`).join(":")
-  const handleGridChange = useCallback((_event: Event, nodes: GridStackNode[]) => {
-    if (!board || gridRef.current?.getGrid()?.getColumn() !== 12) return
-    const updates = getChangedWidgetLayouts(nodes, board.nextLayer.widgets)
-    if (updates.length === 0) return
-    void actions.nextLayer.setWidgetLayouts({ boardId, widgets: updates }).catch((error) => {
-      console.error("Failed to save Next Layer Widget layouts", error)
-    })
+  const nodes = useMemo<SortableWidgetNode[]>(() => widgets.map(({ manifest, placement }) => ({
+    id: getGridWidgetId(placement.widgetId),
+    x: placement.layout.x,
+    y: placement.layout.y,
+    w: Math.max(getWidgetColumnSpan(manifest.minWidth), getWidgetColumnSpan(placement.layout.width)),
+    h: Math.max(manifest.minHeight, placement.layout.height),
+    minW: getWidgetColumnSpan(manifest.minWidth),
+    minH: manifest.minHeight,
+  })), [widgets])
+  const saveLayout = useCallback(async (layout: SortableWidgetNode[]) => {
+    if (!board) return
+    const updates = getChangedWidgetLayouts(layout, board.nextLayer.widgets)
+    if (updates.length > 0) await actions.nextLayer.setWidgetLayouts({ boardId, widgets: updates })
   }, [board, boardId])
-
   const isLoading = connection.isLoading || manifestQuery.isLoading
   useLayoutEffect(() => {
-    if (!isLoading) onReady?.()
-  }, [gridKey, isLoading, onReady])
+    if (!isLoading && (widgets.length === 0 || connection.state !== "connected" || manifestQuery.error)) onReady?.()
+  }, [connection.state, isLoading, manifestQuery.error, onReady, widgets.length])
 
   if (isLoading) return null
   if (connection.state !== "connected" || !connection.serverOrigin) {
@@ -416,16 +351,27 @@ export function LocalWidgetGrid({ boardId, onReady, viewReady }: LocalWidgetGrid
   if (widgets.length === 0) return <NextLayerMessage>{t("widgetFilesUnavailable")}</NextLayerMessage>
 
   return (
-    <section aria-label={t("nextLayerWidgets")}>
-      <GridStack
-        key={`${boardId}:${gridKey}`}
-        ref={gridRef}
-        className="next-layer-grid"
-        components={LOCAL_WIDGET_COMPONENTS}
-        options={gridOptions}
-        onChange={handleGridChange}
-      />
-    </section>
+    <SortableWidgetGrid key={boardId} onReady={onReady} nodes={nodes} enabled={viewReady} label={t("nextLayerWidgets")} onLayoutChange={saveLayout}>
+      {widgets.map(({ manifest, placement }) => (
+        <LocalWidgetFrame
+          key={placement.widgetId}
+          boardId={boardId}
+          widgetId={placement.widgetId}
+          active={viewReady}
+          color={manifest.color}
+          instanceIds={placement.dataScope.type === "board"
+            ? board?.instanceIds ?? []
+            : placement.dataScope.instanceIds.filter(id => board?.instanceIds.includes(id))}
+          title={manifest.title}
+          url={manifest.url}
+          ui={manifest.view}
+          dataRevision={manifest.dataRevision}
+          staleTimeMs={manifest.staleTimeMs}
+          refreshIntervalMs={manifest.refreshIntervalMs}
+          dataFiles={manifest.dataFiles}
+        />
+      ))}
+    </SortableWidgetGrid>
   )
 }
 

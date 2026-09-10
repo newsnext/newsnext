@@ -141,7 +141,7 @@ export function BoardView({ board }: { board: Board }) {
             onExitComplete={() => setOutgoingView(current => current === view ? null : current)}
             viewReady={outgoing || viewReady}
             itemSelector={view.layer === "next"
-              ? ".grid-stack-item:not(.grid-stack-placeholder) > .grid-stack-item-content"
+              ? "[data-widget-transition]"
               : "[data-live-card-transition]"}
             className="relative z-0"
           >

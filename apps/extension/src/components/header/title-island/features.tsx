@@ -8,7 +8,9 @@ import { useSetAtom } from "jotai"
 import { m, useReducedMotion } from "motion/react"
 import { useEffect, useEffectEvent, useState } from "react"
 import { useI18n } from "@/hooks/use-i18n"
-import { isSortableData } from "@/lib/board"
+import { actions } from "@/lib/actions"
+import { isDropWithin } from "@/lib/board/drop-target"
+import { getSortableRemovalTarget } from "@/lib/board/sortable-data"
 import { deleteInstanceAtom } from "@/store/board"
 import { PhTrash } from "../../icons/ph"
 import { IslandNotification } from "../island-notification"
@@ -74,13 +76,18 @@ export function useTrashFeature(
   const deleteInstance = useSetAtom(deleteInstanceAtom)
   const shouldReduceMotion = useReducedMotion()
 
-  const deleteDraggedLiveCard = useEffectEvent(async ({ source }: ElementEventBasePayload) => {
-    if (!isSortableData(source.data)) return
+  const deleteDraggedCard = useEffectEvent(async ({ source }: ElementEventBasePayload) => {
+    const target = getSortableRemovalTarget(source.data)
+    if (!target) return
 
     try {
-      await deleteInstance(source.data.id)
+      if (target.kind === "widget") {
+        await actions.nextLayer.removeWidget({ boardId: target.boardId, widgetId: target.widgetId })
+      } else {
+        await deleteInstance(target.instanceId)
+      }
     } catch (error) {
-      console.error("Failed to delete dropped LiveCard", error)
+      console.error("Failed to delete dropped card", error)
     }
   })
 
@@ -90,7 +97,7 @@ export function useTrashFeature(
 
     return combine(
       monitorForElements({
-        canMonitor: ({ source }) => isSortableData(source.data),
+        canMonitor: ({ source }) => getSortableRemovalTarget(source.data) !== undefined,
         onDragStart: () => setIsDragging(true),
         onDrag: ({ location }) => {
           const { clientX, clientY } = location.current.input
@@ -103,20 +110,15 @@ export function useTrashFeature(
           )
         },
         onDrop: (args) => {
-          const { clientX, clientY } = args.location.current.input
-          const rect = surface.getBoundingClientRect()
-          const shouldDelete = clientX >= rect.left
-            && clientX <= rect.right
-            && clientY >= rect.top
-            && clientY <= rect.bottom
+          const shouldDelete = isDropWithin(args, surface)
           setIsDragging(false)
           setIsOverTrash(false)
-          if (shouldDelete) void deleteDraggedLiveCard(args)
+          if (shouldDelete) void deleteDraggedCard(args)
         },
       }),
       dropTargetForElements({
         element: surface,
-        canDrop: ({ source }) => isSortableData(source.data),
+        canDrop: ({ source }) => getSortableRemovalTarget(source.data) !== undefined,
         getDropEffect: () => "move",
       }),
     )
@@ -128,7 +130,7 @@ export function useTrashFeature(
     content: (
       <div
         className="flex size-full items-center justify-center gap-2.5 text-red-600 dark:text-red-400"
-        aria-label={isOverTrash ? t("releaseToDeleteLiveCard") : t("deleteLiveCard")}
+        aria-label={isOverTrash ? t("releaseToDelete") : t("dropToDelete")}
       >
         <m.div
           animate={isOverTrash && !shouldReduceMotion
@@ -144,7 +146,7 @@ export function useTrashFeature(
       </div>
     ),
     height: 72,
-    id: "live-card-trash",
+    id: "card-trash",
     priority: TITLE_ISLAND_FEATURE_PRIORITY.interaction,
     surfaceClassName: isOverTrash
       ? "bg-red-500/24! text-red-700! shadow-[inset_0_0_0_2px_color-mix(in_oklab,var(--color-red-500)_60%,transparent)] dark:text-red-300!"

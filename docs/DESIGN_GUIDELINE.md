@@ -213,11 +213,12 @@ LiveCards define the primary NewsNext surface treatment.
   Theme mode belongs in Appearance settings rather than the title island.
   Changing the active Board color here updates the same persisted Board
   preference used by its editor.
-- While a LiveCard is being dragged, temporarily replace the header
+- While a LiveCard or Widget is being dragged, temporarily replace the header
   Dynamic Island with an enlarged red trash target. Strengthen its tint and icon
-  motion when the pointer enters the island, delete the dragged LiveCard
-  on drop, and restore the normal title state when the drag ends. Dropping anywhere
-  else must preserve the existing Board reordering behavior.
+  motion when the pointer enters the island. A valid drop deletes the LiveCard
+  Instance or removes the Widget placement from its originating Board. Restore
+  the normal title state when the drag ends. Cancel the sorting preview without
+  saving a new order when dropping on trash or outside the list.
 
 Treat each expanded Title Island state as a composable feature. A feature owns its
 content, expanded dimensions, surface treatment, dismissal behavior, interaction
@@ -298,16 +299,49 @@ surfaces.
 
 ### Next Layer Widget surfaces
 
-Next Layer uses a responsive GridStack presentation adapter for movable and
-resizable local Widgets. Persist each Widget's position and dimensions in its
-Board rather than treating GridStack as the durable layout model. Resize from
-the lower and right edges without adding dedicated visible drag or resize
-controls.
+Next Layer uses the shared Pragmatic Drag and Drop infrastructure and one pure
+ordered packing function for initial layout, live drag previews, resize previews,
+and responsive reflow. Persist user order and dimensions, never screen coordinates.
+The existing wire layout stores `x: 0`, `y: orderIndex`; read older placements in
+`y`, then `x` order. Keep Widget drag data separate from Instance drag data so a
+Widget cannot trigger Instance moves in the Board or Header. The shared header
+trash target dispatches by drag kind and requires the originating Board and Widget
+IDs before accepting Widget removal.
 
-While a Widget is being dragged or resized, disable pointer events on every
-iframe in its grid using GridStack's interaction classes. This keeps movement
-and release events in the host document when the pointer crosses another
-Widget. Restore iframe interaction as soon as the gesture ends.
+Widths snap in half-LiveCard increments, from half through two cards. With the
+shared 24px gutter, visible widths are 188px, 400px, 612px, and 824px. Keep that
+gutter and those widths at every viewport size. Center complete card columns,
+up to four LiveCards; allow horizontal scrolling when the widest Widget cannot
+fit. Horizontal cells are 212px and vertical cells are 56px, each including the
+gutter. Do not backfill an earlier gap with a later Widget.
+
+Snapshot order and the pointer's grab offset at drag start. Precompute the packed
+result of each possible insertion, retaining every other Widget's relative order.
+As the pointer moves, choose the nearest dragged-card position in pixels and move
+all slots to that preview layout. Switch only when another candidate is more than
+12px closer than the current candidate. Equal landing positions retain the current
+preview; without one, prefer the smallest change from the original order. Leaving
+the grid, including entering the header trash, restores the original order
+immediately without saving. Re-entering resolves a fresh preview.
+The dragged slot remains visible as a subdued
+placeholder. On a valid drop, commit that exact preview; dropping outside cancels.
+Window resizing reflows order without saving. Resize from the right, bottom, or
+lower-right edges with pointer capture; arrow keys on a focused handle resize by
+one cell. Animate snapped width and height changes with the same 180ms ease
+transition as slot movement, including during pointer resizing. Disable these
+transitions only for navigation or reduced motion. Resize changes dimensions
+without changing order. Escape or pointer
+cancellation restores the previous sizes. Honor manifest minimum dimensions.
+
+Keep iframes mounted in stable React slots while changing outer geometry. Disable
+iframe pointer events during dragging or resizing and restore them when the
+gesture ends. Keep navigation scatter animations on the inner
+`data-widget-transition` wrapper, separate from animated slot geometry. Preserve
+its shared 420ms entrance, 80ms delay, and 10ms stagger. Stagger by visual row and
+column, not installation DOM order. Disable slot transitions while the shared
+scatter layer is pending, entering, or exiting; initial width measurement must
+settle without competing motion. Keep Widget container overflow visible during
+navigation and enable horizontal scrolling afterward only when content overflows.
 
 Treat LiveCard as a built-in Widget UI, independent of the data producer.
 Widgets selecting `view: { type: "live-card", query: "feed" }` render through the shared `LiveCardItems` presentation layer
@@ -335,7 +369,7 @@ title, refresh state and button, drag behavior, nested `2xl` content surface,
 and error or connection treatment. Widgets also have a host-owned details back,
 opened with the same information icon as LiveCards and closed with a back arrow.
 Reuse `FlipAnimate` for the Y-axis transition and the same shell on both faces.
-Override GridStack's content overflow with `visible` so the perspective animation
+Keep slot content overflow `visible` so the perspective animation
 can extend beyond the cell. Keep clipping inside each face's nested content panel,
 and raise hovered or focused grid items above their neighbors.
 Keep the iframe mounted during flips and make the hidden face inert so keyboard
@@ -355,8 +389,8 @@ content width as Next Layer. Limit both Layers to the equivalent width of a
 four-column LiveCard row. The shared Board container owns both Layers'
 responsive content insets and fills the space naturally allocated below the
 responsive Header. Now Layer and Next Layer must share the application root
-viewport and must not define their own scrolling, page padding, or content-width
-rules. This keeps their visible region, Header progress, and scroll restoration
+viewport and must not define their own vertical scrolling or page padding.
+Next Layer may scroll horizontally when a fixed-width Widget cannot fit. This keeps their visible region, Header progress, and scroll restoration
 consistent when switching Layers.
 Record scroll positions by Board and Layer, but restore them only after the
 target Board and Layer have replaced the outgoing transition content. Route
@@ -463,24 +497,31 @@ persisted Layer rather than a Layer snapshot from navigation history.
 - Every Board supports the same ordering modes and manual dragging from the
   full LiveCard header. Do not render a separate drag button. Keep nested header
   controls clickable, and give the draggable header an accessible name that
-  identifies the LiveCard being moved.
-- Keep the LiveCard layout fixed while dragging and show a theme-colored
-  insertion indicator at the resolved slot. Apply the new order only on drop so
-  cards do not move away while the pointer is still choosing a destination.
+  identifies the LiveCard being moved. Both Layers share the header exclusion
+  rules for interactive controls and the `card-drag-placeholder` treatment.
+- Preview the LiveCard order in real time, animating neighboring cards into
+  their new slots using native 180ms ease translation animations on the outer
+  list items. Keep navigation animation on the nested card wrapper, and disable
+  sorting animation for reduced motion. Commit that preview only on a valid drop.
   Register the list itself as the drop target so a valid release dismisses the
   native preview instead of animating it back to the source position.
   Snapshot the wrapped LiveCard slots when dragging starts, then resolve the
   pointer against the nearest row and the horizontal midpoint of its slots.
+  Always derive previews from this original order and geometry, so animated cards
+  cannot shift the destination calculation.
 - Auto-scroll the root Now Layer scroll container vertically when a dragged
   LiveCard approaches its viewport edges. Use the fast PDD scroll profile so
   movement remains perceptible beside full-height LiveCards, and keep horizontal
   auto-scroll disabled.
-- Preserve the original order when a drag is cancelled or ends outside the
-  board. Require an active list drop target as well as an in-bounds pointer
+- Immediately restore the original order when a drag leaves the list or enters
+  the header trash, without saving. Clear the preview destination so re-entering
+  the list resolves a fresh preview from the original drag snapshot. Preserve
+  the original order on cancellation. Require an active list drop target as well
+  as an in-bounds pointer
   before committing the order so Escape never acts like a drop. Gaps inside the
   board may retain the most recent valid placement.
 - Keep the dragged LiveCard in the layout and reduce its opacity so its original
-  position remains understandable.
+  preview position remains understandable.
 - Keep the drag preview inside the source provider's theme-color scope. Native
   drag previews are mounted outside the LiveCard tree, so inherited theme tokens
   used by cloned content must remain available to the preview surface. Render

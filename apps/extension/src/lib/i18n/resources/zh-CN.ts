@@ -250,7 +250,6 @@ export const zhCN = {
   noLocalWidgets: "此看板未安装本地小组件。",
   widgetFilesUnavailable: "已安装的小组件文件不可用。",
   nextLayerWidgets: "Next Layer 小组件",
-  releaseToDeleteLiveCard: "松开以删除 LiveCard",
   releaseToDelete: "松开以删除",
   dropToDelete: "拖放以删除",
   shortcutConflict: "{{hotkey}} 已分配给 {{label}}。",

@@ -1,9 +1,9 @@
 import type { ElementEventBasePayload } from "@atlaskit/pragmatic-drag-and-drop/element/adapter"
 import type { RefObject } from "react"
 import type { LiveCardLayoutItem } from "@/lib/board/live-card-reorder"
-import { autoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/element"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useRef, useState } from "react"
 import { isSortableData } from "@/lib/board"
+import { isDropWithin } from "@/lib/board/drop-target"
 import { getLiveCardReorderDestinationIndex, reorderLiveCard } from "@/lib/board/live-card-reorder"
 
 interface InstanceOrderState {
@@ -12,19 +12,11 @@ interface InstanceOrderState {
 }
 
 interface UseWrappedSortableOptions {
-  enabled: boolean
   instanceIds: string[]
   onInstanceIdsChange: (instanceIds: string[]) => void
-  scrollContainerRef: RefObject<HTMLElement | null>
-}
-
-interface InsertionIndicator {
-  edge: "left" | "right"
-  id: string
 }
 
 interface WrappedSortableResult {
-  insertionIndicator: InsertionIndicator | null
   listRef: RefObject<HTMLOListElement | null>
   onDrag: (args: ElementEventBasePayload) => void
   onDragStart: () => void
@@ -50,10 +42,8 @@ function snapshotLayout(list: HTMLOListElement): LiveCardLayoutItem[] {
 }
 
 export function useWrappedSortable({
-  enabled,
   instanceIds,
   onInstanceIdsChange,
-  scrollContainerRef,
 }: UseWrappedSortableOptions): WrappedSortableResult {
   const [instanceOrderState, setInstanceOrderState] = useState<InstanceOrderState>(() => ({
     instanceIds,
@@ -71,27 +61,13 @@ export function useWrappedSortable({
   const initialOrderedInstanceIdsRef = useRef(instanceIds)
   const dragLayoutRef = useRef<LiveCardLayoutItem[] | null>(null)
   const destinationIndexRef = useRef<number | null>(null)
-  const [insertionIndicator, setInsertionIndicator] = useState<InsertionIndicator | null>(null)
   const listRef = useRef<HTMLOListElement>(null)
-
-  useEffect(() => {
-    const scrollContainer = scrollContainerRef.current
-    if (!enabled || !scrollContainer) return
-
-    return autoScrollForElements({
-      element: scrollContainer,
-      canScroll: ({ source }) => isSortableData(source.data),
-      getAllowedAxis: () => "vertical",
-      getConfiguration: () => ({ maxScrollSpeed: "fast" }),
-    })
-  }, [enabled, scrollContainerRef])
 
   const onDragStart = useCallback(() => {
     initialOrderedInstanceIdsRef.current = orderedInstanceIds
     const list = listRef.current
     dragLayoutRef.current = list ? snapshotLayout(list) : null
     destinationIndexRef.current = null
-    setInsertionIndicator(null)
   }, [orderedInstanceIds])
 
   const onDrag = useCallback(({ location, source }: ElementEventBasePayload) => {
@@ -99,10 +75,17 @@ export function useWrappedSortable({
     const dragLayout = dragLayoutRef.current
     if (!list || !dragLayout || !isSortableData(source.data)) return
 
-    const listRect = list.getBoundingClientRect()
     const initialInstanceIds = initialOrderedInstanceIdsRef.current
-    const sourceIndex = initialInstanceIds.indexOf(source.data.id)
-    if (sourceIndex === -1) return
+    if (!isDropWithin({ location }, list)) {
+      if (destinationIndexRef.current !== null) {
+        destinationIndexRef.current = null
+        setInstanceOrderState({ instanceIds, orderedInstanceIds: initialInstanceIds })
+      }
+      return
+    }
+
+    const listRect = list.getBoundingClientRect()
+    if (!initialInstanceIds.includes(source.data.id)) return
 
     const destinationIndex = getLiveCardReorderDestinationIndex({
       items: dragLayout,
@@ -112,43 +95,22 @@ export function useWrappedSortable({
         y: location.current.input.clientY - listRect.top,
       },
     })
+    if (destinationIndexRef.current === destinationIndex) return
     destinationIndexRef.current = destinationIndex
-    if (destinationIndex === sourceIndex) {
-      setInsertionIndicator(null)
-      return
-    }
-
-    const remainingInstanceIds = initialInstanceIds.filter(id => id !== source.data.id)
-    const beforeId = remainingInstanceIds[destinationIndex]
-    const nextIndicator: InsertionIndicator = beforeId
-      ? { edge: "left", id: beforeId }
-      : { edge: "right", id: remainingInstanceIds.at(-1) ?? source.data.id }
-    setInsertionIndicator(current => (
-      current?.edge === nextIndicator.edge && current.id === nextIndicator.id
-        ? current
-        : nextIndicator
-    ))
-  }, [])
+    const preview = reorderLiveCard(initialInstanceIds, source.data.id, destinationIndex)
+    setInstanceOrderState({ instanceIds, orderedInstanceIds: preview })
+  }, [instanceIds])
 
   const onDrop = useCallback(({ location, source }: ElementEventBasePayload) => {
     const list = listRef.current
-    const { clientX, clientY } = location.current.input
-    const listRect = list?.getBoundingClientRect()
-    const hasDropTarget = location.current.dropTargets.length > 0
-    const isInsideList = Boolean(
-      listRect
-      && clientX >= listRect.left
-      && clientX <= listRect.right
-      && clientY >= listRect.top
-      && clientY <= listRect.bottom,
-    )
-
     dragLayoutRef.current = null
     const destinationIndex = destinationIndexRef.current
     destinationIndexRef.current = null
-    setInsertionIndicator(null)
     const initialInstanceIds = initialOrderedInstanceIdsRef.current
-    if (!hasDropTarget || !isInsideList || destinationIndex === null || !isSortableData(source.data)) return
+    if (!isDropWithin({ location }, list) || destinationIndex === null || !isSortableData(source.data)) {
+      setInstanceOrderState({ instanceIds, orderedInstanceIds: initialInstanceIds })
+      return
+    }
 
     const sourceIndex = initialInstanceIds.indexOf(source.data.id)
     if (sourceIndex === -1 || destinationIndex === sourceIndex) return
@@ -161,7 +123,6 @@ export function useWrappedSortable({
   }, [instanceIds, onInstanceIdsChange])
 
   return {
-    insertionIndicator,
     listRef,
     onDrag,
     onDragStart,

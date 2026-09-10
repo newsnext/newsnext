@@ -7,17 +7,27 @@
 @source "../entrypoints";
 @source "../pages";
 
-.next-layer-grid .grid-stack-placeholder > .placeholder-content {
-  border-radius: 1.5rem;
-  background: color-mix(in oklab, var(--next-widget-accent) 18%, transparent);
-}
+/* Both Layers use the same subdued slot while dragging. */
+.card-drag-placeholder { @apply opacity-30 outline-2 outline-theme-400 rounded-3xl; }
 
-.next-layer-grid .grid-stack-item > .ui-resizable-handle {
-  background-image: none;
+/* Widget positions share one ordered layout for dragging and responsive reflow. */
+.widget-scroll-container { overflow: visible; }
+.widget-scroll-container[data-overflow] { overflow-x: auto; }
+/* Navigation owns motion until the entrance finishes; do not clip its path. */
+[data-card-transition-state]:not([data-card-transition-state="entered"]) .widget-scroll-container { overflow: visible; }
+[data-card-transition-state]:not([data-card-transition-state="entered"]) .widget-slot { transition: none; }
+.widget-grid { position: relative; margin-inline: auto; }
+.widget-slot {
+  position: absolute;
+  transition: left 180ms ease, top 180ms ease, width 180ms ease, height 180ms ease;
 }
-
-/* Keep mouse events in the host document when crossing any Widget iframe. */
-.next-layer-grid.grid-stack-dragging iframe,
-.next-layer-grid:has(> .ui-resizable-resizing) iframe {
-  pointer-events: none;
+.widget-slot:hover, .widget-slot:focus-within { z-index: 1; }
+.widget-grid[data-interacting] iframe { pointer-events: none; }
+.widget-resize-handle { position: absolute; z-index: 10; touch-action: none; }
+.widget-resize-handle:focus-visible { outline: 2px solid var(--color-theme-400); border-radius: 0.5rem; }
+.widget-resize-width { right: 0; top: 24px; bottom: 16px; width: 8px; cursor: ew-resize; }
+.widget-resize-height { bottom: 0; left: 24px; right: 16px; height: 8px; cursor: ns-resize; }
+.widget-resize-both { right: 0; bottom: 0; width: 16px; height: 16px; cursor: nwse-resize; }
+@media (prefers-reduced-motion: reduce) {
+  .widget-slot { transition: none; }
 }

@@ -250,7 +250,6 @@ export const zhTW = {
   noLocalWidgets: "此看板未安裝本機小工具。",
   widgetFilesUnavailable: "已安裝的小工具檔案無法使用。",
   nextLayerWidgets: "Next Layer 小工具",
-  releaseToDeleteLiveCard: "放開以刪除 LiveCard",
   releaseToDelete: "放開以刪除",
   dropToDelete: "拖放以刪除",
   shortcutConflict: "{{hotkey}} 已指派給 {{label}}。",

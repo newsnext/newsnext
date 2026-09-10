@@ -32,7 +32,6 @@
       "date-fns": "^4.4.0",
       "defu": "^6.1.7",
       "es-toolkit": "^1.52.0",
-      "gridstack": "^13.2.0",
       "jotai": "^3.0.0",
       "ky": "^2.1.0",
       "lucide-react": "^1.43.0",
@@ -91,8 +90,5 @@
   },
   "lint-staged": {
     "*": "eslint --fix"
-  },
-  "patchedDependencies": {
-    "gridstack@13.2.0": "patches/gridstack@13.2.0.patch"
   }
 }

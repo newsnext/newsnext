@@ -2,14 +2,12 @@ import type { ElementEventBasePayload } from "@atlaskit/pragmatic-drag-and-drop/
 import type { NowLayerLiveCard } from "@/hooks/use-now-layer-live-cards"
 import { useScrollProgressContext } from "@newsnext/ui/components/scroll-progress-context"
 import { cn } from "@newsnext/ui/lib/utils"
-import { m } from "motion/react"
 import { useCallback, useMemo, useState } from "react"
 import { DndContext } from "@/hooks/use-dnd-context"
+import { useSortableLayoutAnimation } from "@/hooks/use-sortable-layout-animation"
 import { useWrappedSortable } from "@/hooks/use-wrapped-sortable"
 import { isSortableData } from "@/lib/board"
 import { DraggableLiveCard } from "../live-card/draggable-live-card"
-
-const LAYOUT_MEASUREMENT_SUSPENDED = Symbol("layout-measurement-suspended")
 
 interface LiveCardContainerProps {
   viewReady: boolean
@@ -31,17 +29,14 @@ export function LiveCardContainer({
   const { rootScrollContainerRef } = useScrollProgressContext()
   const [draggingInstanceId, setDraggingInstanceId] = useState<string | null>(null)
   const {
-    insertionIndicator,
     listRef,
     onDrag,
     onDragStart,
     onDrop,
     orderedInstanceIds,
   } = useWrappedSortable({
-    enabled: sortable,
     instanceIds,
     onInstanceIdsChange,
-    scrollContainerRef: rootScrollContainerRef,
   })
   const visibleLiveCards = useMemo(
     () => orderedInstanceIds.flatMap((id) => {
@@ -50,6 +45,7 @@ export function LiveCardContainer({
     }),
     [orderedInstanceIds, liveCardsByInstanceId],
   )
+  useSortableLayoutAnimation(listRef, visibleLiveCards.map(card => card.id), viewReady)
   const handleDragStart = useCallback((args: ElementEventBasePayload) => {
     if (isSortableData(args.source.data)) {
       setDraggingInstanceId(args.source.data.id)
@@ -64,6 +60,8 @@ export function LiveCardContainer({
   return (
     <DndContext
       dropTargetRef={listRef}
+      verticalScrollRef={sortable ? rootScrollContainerRef : undefined}
+      scrollSpeed="fast"
       onDragStart={handleDragStart}
       onDrag={onDrag}
       onDrop={handleDrop}
@@ -76,25 +74,11 @@ export function LiveCardContainer({
         )}
       >
         {visibleLiveCards.map(({ id, boardId, descriptor, instanceAtom }) => (
-          <m.li
+          <li
             key={id}
             data-live-card-id={id}
             className="relative"
-            layout
-            layoutDependency={viewReady
-              ? orderedInstanceIds
-              : LAYOUT_MEASUREMENT_SUSPENDED}
           >
-            {insertionIndicator?.id === id && (
-              <div
-                aria-hidden="true"
-                className={`pointer-events-none absolute inset-y-3 z-20 w-1 rounded-full bg-theme-400 shadow-[0_0_0_1px_color-mix(in_oklab,var(--color-theme-400),white_35%)] ${
-                  insertionIndicator.edge === "left"
-                    ? "-left-1.5 xs:-left-3.5"
-                    : "-right-1.5 xs:-right-3.5"
-                }`}
-              />
-            )}
             <div data-live-card-transition>
               <DraggableLiveCard
                 boardId={boardId}
@@ -104,7 +88,7 @@ export function LiveCardContainer({
                 sortable={sortable}
               />
             </div>
-          </m.li>
+          </li>
         ))}
       </ol>
     </DndContext>

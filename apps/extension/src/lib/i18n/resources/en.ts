@@ -246,7 +246,6 @@ export const en = {
   noLocalWidgets: "No local widgets are installed on this board.",
   widgetFilesUnavailable: "The installed widget files are unavailable.",
   nextLayerWidgets: "Next Layer widgets",
-  releaseToDeleteLiveCard: "Release to delete LiveCard",
   releaseToDelete: "Release to delete",
   dropToDelete: "Drop to delete",
   shortcutConflict: "{{hotkey}} is already assigned to {{label}}.",

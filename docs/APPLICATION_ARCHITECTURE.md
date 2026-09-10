@@ -195,8 +195,19 @@ Both share the root scroll container with restoration keyed by Board and Layer.
 
 NowLayer owns LiveCards and Instance-scoped queries. NextLayer owns the Board's
 `nextLayer.widgets`: each entry has `widgetId`, grid `layout` (`x`, `y`, `width`,
-`height`), and `dataScope` (the whole Board or selected `instanceIds`). GridStack
-is a presentation adapter, not the persistence model.
+`height`), and `dataScope` (the whole Board or selected `instanceIds`). Widget
+layout persistence encodes order as `x: 0`, `y: orderIndex`, alongside dimensions.
+The React grid derives positions with ordered packing and uses the shared
+Pragmatic Drag and Drop infrastructure for live insertion previews. Widget drag
+data is scoped separately from Instance dragging; there is no grid-library
+position cache or collision engine.
+
+Both Layers share `DndContext` for drag scope, drop-target registration, and
+axis-specific auto-scrolling. Scroll targets accept only drags from their owning
+context. `isDropWithin` requires both the registered target and an in-bounds
+pointer for sorting and trash drops. Shared card header rules, native previews,
+and placeholder styling keep feedback consistent; each Layer retains its own
+layout and persistence logic.
 
 Local Widget files and `widget.json` live in the CLI's Widget directory. The
 manifest declares named data queries and a refresh policy. The daemon reconciles

@@ -10,18 +10,13 @@ import { memo, useMemo } from "react"
 import { useSortable } from "@/hooks/use-sortable"
 import { createLiveCard } from "@/lib/source"
 import { liveCardHeightAtom } from "@/store/settings"
+import { canDragCardHeader, generateLiveCardDragPreview } from "./drag-preview"
 import { LiveCard } from "./index"
 
 const LIVE_CARD_SIZE_CLASS_NAMES: Record<LiveCardHeight, string> = {
   compact: "h-120 w-100",
   balanced: "h-125 w-100",
   tall: "h-144 w-100",
-}
-
-const LIVE_CARD_DRAG_EXCLUDED_SELECTOR = "[data-live-card-drag-excluded]"
-
-function canDragFromLiveCardHeader(target: Element | null): boolean {
-  return !target?.closest(LIVE_CARD_DRAG_EXCLUDED_SELECTOR)
 }
 
 interface DraggableLiveCardProps {
@@ -47,10 +42,10 @@ export function SortableLiveCard({
 }: SortableLiveCardProps): ReactNode {
   const id = source.id
   const { setNodeRef, setHandleRef } = useSortable({
-    canDrag: canDragFromLiveCardHeader,
+    canDrag: canDragCardHeader,
     enabled: sortable,
     id,
-    onGenerateDragPreview: generateDragPreview,
+    onGenerateDragPreview: generateLiveCardDragPreview,
   })
 
   return (
@@ -61,39 +56,9 @@ export function SortableLiveCard({
       nodeRef={setNodeRef}
       dragHandleRef={sortable ? setHandleRef : undefined}
       sizeClassName={sizeClassName}
-      className={cn(className, dragging && "opacity-50")}
+      className={cn(className, dragging && "card-drag-placeholder")}
     />
   )
-}
-
-function generateDragPreview({
-  container,
-  element,
-}: { container: HTMLElement, element: HTMLElement }) {
-  const header = element.querySelector<HTMLElement>("[data-live-card-header]")
-  const surface = element.querySelector<HTMLElement>("[data-live-card-surface]")
-  if (!header || !surface) return
-
-  const backgroundColor = getComputedStyle(element).getPropertyValue("--color-background").trim()
-    || getComputedStyle(document.body).backgroundColor
-  const previewWidth = element.getBoundingClientRect().width
-  container.style.width = `${previewWidth}px`
-
-  const layer = document.createElement("div")
-  layer.dataset.dragPreview = ""
-  layer.className = "relative rounded-3xl shadow-md"
-  layer.style.width = `${previewWidth}px`
-  layer.style.padding = "0.625rem"
-  const surfaceColor = getComputedStyle(surface).backgroundColor
-  layer.style.background = `linear-gradient(${surfaceColor}, ${surfaceColor}), ${backgroundColor}`
-  layer.style.setProperty("--color-theme-400", getComputedStyle(header).getPropertyValue("--color-theme-400"))
-
-  const preview = header.cloneNode(true) as HTMLElement
-  preview.style.marginBottom = "0"
-  layer.append(preview)
-  container.append(layer)
-
-  return () => layer.remove()
 }
 
 function DraggableLiveCardComponent({ boardId, descriptor, dragging, instanceAtom, sortable = true }: DraggableLiveCardProps) {
