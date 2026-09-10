@@ -1,4 +1,5 @@
 import type { Browser } from "@wxt-dev/browser"
+import type { CardMetadata } from "./card.js"
 import type { Color } from "./color.js"
 import type { HtmlField } from "./html-field.js"
 import type { NewsItem, NewsItemInput } from "./items.js"
@@ -77,11 +78,7 @@ export interface SourceRadarRule {
   priority?: number
 }
 
-export interface SourcePresentationMetadata {
-  title?: string
-  badge?: string
-  desc?: string
-  home?: string
+export interface SourcePresentationMetadata extends CardMetadata {
   type?: SourcePresentationType
 }
 
@@ -110,6 +107,7 @@ export const SOURCE_PRESENTATION_METADATA_KEYS = [
   "badge",
   "desc",
   "home",
+  "color",
   "type",
 ] as const satisfies readonly (keyof SourcePresentationMetadata)[]
 

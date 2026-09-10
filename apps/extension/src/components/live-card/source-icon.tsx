@@ -8,8 +8,10 @@ import {
 } from "@newsnext/ui/components/avatar"
 import { cn } from "@newsnext/ui/lib/utils"
 import { useI18n } from "@/hooks/use-i18n"
+import { CardAvatar } from "./card-avatar"
 
 interface SourceIconProps {
+  avatarSeed?: string
   badge?: string
   className?: string
   color?: Color
@@ -19,6 +21,7 @@ interface SourceIconProps {
 }
 
 export function SourceIcon({
+  avatarSeed,
   badge,
   className,
   color,
@@ -32,13 +35,17 @@ export function SourceIcon({
       className={cn("rounded-full after:rounded-full after:border-0", color, className)}
       size={size}
     >
-      <AvatarImage
-        className="rounded-[inherit]"
-        src={icon}
-        alt={t("sourceIconAlt", { title })}
-        referrerPolicy="no-referrer"
-      />
-      <AvatarFallback className="rounded-[inherit] bg-theme-400" />
+      {icon && (
+        <AvatarImage
+          className="rounded-[inherit]"
+          src={icon}
+          alt={t("sourceIconAlt", { title })}
+          referrerPolicy="no-referrer"
+        />
+      )}
+      <AvatarFallback className="rounded-[inherit] bg-theme-400">
+        <CardAvatar seed={avatarSeed ?? title} title={t("sourceIconAlt", { title })} />
+      </AvatarFallback>
       {badge && (
         <AvatarBadge className="-right-0.5 -bottom-0.5 overflow-hidden bg-transparent drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)] ring-0">
           <img

@@ -1,11 +1,14 @@
 import type { Color } from "@newsnext/shared/types"
-import { isThemeColor } from "@/lib/settings/theme-color"
+import type { SourceParamSchemaMap } from "@newsnext/source-kit/types"
+import { isThemeColor } from "@newsnext/sdk/models"
+import { validateSourceParamDefinitions } from "@newsnext/source-kit/core"
 
 export type WidgetUi
   = | { type: "custom" }
     | { type: "live-card", query: string, presentation?: "ranking" | "list" }
 
 export interface LocalWidgetManifest {
+  params?: SourceParamSchemaMap
   color: Color
   height: number
   id: string
@@ -40,6 +43,8 @@ export function parseLocalWidgetManifests(
     }
     if (ids.has(candidate.id)) throw new Error(`Duplicate widget ID '${candidate.id}'`)
     ids.add(candidate.id)
+    validateSourceParamDefinitions(candidate.params, `Widget ${candidate.id}.params`)
+    const params = candidate.params as SourceParamSchemaMap | undefined
     const ui = parseWidgetUi(candidate.view)
     let url: URL | undefined
     if (ui.type === "custom") {
@@ -60,6 +65,7 @@ export function parseLocalWidgetManifests(
     const dataFiles = candidate.dataFiles ?? []
     if (!Array.isArray(dataFiles) || !dataFiles.every(isNonEmptyString)) throw new Error("Invalid Widget data files")
     return {
+      ...(params ? { params } : {}),
       dataFiles,
       dataRevision,
       color: candidate.color ?? "slate",

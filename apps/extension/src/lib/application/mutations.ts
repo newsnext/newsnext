@@ -1,4 +1,4 @@
-import type { BoardDeleteInput } from "@newsnext/sdk/models"
+import type { BoardDeleteInput, WidgetMetadata } from "@newsnext/sdk/models"
 import type { Color } from "@newsnext/shared/types"
 import type {
   Board,
@@ -178,6 +178,37 @@ export function installNextLayerWidgetMutation(
   })
 }
 
+export function moveNextLayerWidgetMutation(
+  data: ApplicationData,
+  input: { boardId: string, targetBoardId: string, widgetId: string },
+): ApplicationMutationExecution {
+  const source = getBoard(data, input.boardId)
+  const target = getBoard(data, input.targetBoardId)
+  assertWidgetInstalled(source, input.widgetId)
+  if (source.id === target.id) return { data }
+  if (target.nextLayer.widgets.some(widget => widget.widgetId === input.widgetId)) {
+    throw new Error("The target Board already contains this Widget")
+  }
+  const widget = source.nextLayer.widgets.find(widget => widget.widgetId === input.widgetId)!
+  const moved = {
+    ...widget,
+    layout: { ...widget.layout, x: 0, y: Math.max(-1, ...target.nextLayer.widgets.map(item => item.layout.y)) + 1 },
+    dataScope: widget.dataScope.type === "instances"
+      ? { ...widget.dataScope, instanceIds: widget.dataScope.instanceIds.filter(id => target.instanceIds.includes(id)) }
+      : widget.dataScope,
+  }
+  return {
+    data: {
+      ...data,
+      boards: data.boards.map(board => board.id === source.id
+        ? { ...board, nextLayer: { widgets: board.nextLayer.widgets.filter(item => item.widgetId !== input.widgetId) } }
+        : board.id === target.id
+          ? { ...board, nextLayer: { widgets: [...board.nextLayer.widgets, moved] } }
+          : board),
+    },
+  }
+}
+
 export function removeNextLayerWidgetMutation(
   data: ApplicationData,
   input: { boardId: string, widgetId: string },
@@ -204,6 +235,42 @@ export function setNextLayerWidgetDataScopeMutation(
     nextLayer: {
       widgets: board.nextLayer.widgets.map(widget => widget.widgetId === input.widgetId
         ? { ...widget, dataScope: input.dataScope }
+        : widget),
+    },
+  })
+}
+
+export function setNextLayerWidgetMetadataMutation(
+  data: ApplicationData,
+  input: { boardId: string, widgetId: string, metadata: WidgetMetadata },
+): ApplicationMutationExecution {
+  const board = getBoard(data, input.boardId)
+  assertWidgetInstalled(board, input.widgetId)
+  const metadata = { ...input.metadata }
+  const title = metadata.title?.trim()
+  if (title) metadata.title = title
+  else delete metadata.title
+  return replaceBoard(data, {
+    ...board,
+    nextLayer: {
+      widgets: board.nextLayer.widgets.map(widget => widget.widgetId === input.widgetId
+        ? { ...widget, metadata }
+        : widget),
+    },
+  })
+}
+
+export function setNextLayerWidgetParamsMutation(
+  data: ApplicationData,
+  input: { boardId: string, widgetId: string, params: Record<string, unknown> },
+): ApplicationMutationExecution {
+  const board = getBoard(data, input.boardId)
+  assertWidgetInstalled(board, input.widgetId)
+  return replaceBoard(data, {
+    ...board,
+    nextLayer: {
+      widgets: board.nextLayer.widgets.map(widget => widget.widgetId === input.widgetId
+        ? { ...widget, params: input.params }
         : widget),
     },
   })
@@ -292,6 +359,21 @@ export function configureInstanceMutation(
       ...data,
       instances: data.instances.map(instance => instance.instanceId === input.instanceId
         ? { ...instance, patch: mergeInstancePatch(instance.patch, input.patch) }
+        : instance),
+    },
+  }
+}
+
+export function resetInstanceMetadataMutation(
+  data: ApplicationData,
+  input: { instanceId: string },
+): ApplicationMutationExecution {
+  assertInstanceExists(data, input.instanceId)
+  return {
+    data: {
+      ...data,
+      instances: data.instances.map(instance => instance.instanceId === input.instanceId
+        ? { ...instance, patch: { ...instance.patch, metadata: {} } }
         : instance),
     },
   }

@@ -169,7 +169,7 @@ function LiveCardContent({ source, target, dragHandleRef }: LiveCardProps) {
     <FlipAnimate
       rotate="y"
       flipped={isFlipped}
-      className={displaySource.provider.color}
+      className={displaySource.metadata.color ?? displaySource.provider.color}
     >
       <LiveCardFront
         source={displaySource}
@@ -204,6 +204,11 @@ function LiveCardContent({ source, target, dragHandleRef }: LiveCardProps) {
         onResetSourceParams={handleResetSourceParams}
         onDiscardSourceParams={discardDraftParams}
         onSaveSourceMeta={handleSaveSourceMeta}
+        onResetSourceMeta={target.kind === "instance"
+          ? async () => {
+            await actions.instance.resetMetadata({ instanceId: target.instanceId })
+          }
+          : undefined}
         onFlip={handleFlip}
         dragHandleRef={isFlipped ? dragHandleRef : undefined}
       />

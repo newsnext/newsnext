@@ -40,4 +40,4 @@ export {
   SHORTCUT_DEFINITIONS,
   SHORTCUT_ORDER,
 } from "./shortcuts"
-export { isThemeColor } from "./theme-color"
+export { isThemeColor } from "@newsnext/sdk/models"

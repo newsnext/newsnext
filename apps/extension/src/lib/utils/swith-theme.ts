@@ -1,5 +1,5 @@
 import type { Color } from "@newsnext/shared/types"
-import { isThemeColor } from "../settings/theme-color"
+import { isThemeColor } from "@newsnext/sdk/models"
 
 export const THEME_COLOR_KEY = "newsnext-theme-color"
 export const THEME_MODE_KEY = "newsnext-theme-mode"

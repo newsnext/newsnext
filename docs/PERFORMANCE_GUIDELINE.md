@@ -510,3 +510,15 @@ browser freshness window around this SDK method. On activation and at the refres
 interval, read through the daemon. Abort requests on deactivation or input changes,
 and ignore late results so one data scope cannot overwrite another. The same
 protection applies to SDK callers and extension views.
+
+
+Widget refresh state separates `isFetching` (header activity) from
+`isContentFetching` (initial/manual content feedback), matching LiveCard behavior.
+Automatic reads with display data do not fade it. Manual reads keep feedback for
+at least 500ms using `waitForMinimumManualRequestFeedback`, including cache hits
+and failures. The helper controls presentation only; daemon request protection
+is unchanged. Metadata drafts stay local to their editor and only drive the back
+header/theme preview, not Widget data request identity. Both card kinds use the
+same face/header/settings components; `FlipAnimate` keeps faces mounted while
+marking the hidden face inert. Browser interaction checks were not run for this
+refactor; type checks do not establish drag, focus, or animation correctness.

@@ -31,6 +31,7 @@
     "@tanstack/react-router": "catalog:",
     "@webext-core/messaging": "^4.0.0",
     "@webext-core/proxy-service": "^3.0.2",
+    "boring-avatars": "^2.0.4",
     "canvas-confetti": "^1.9.4",
     "defu": "catalog:",
     "dexie": "^4.4.5",

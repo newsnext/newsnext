@@ -11,6 +11,7 @@ import type {
 } from "@newsnext/source-kit/types"
 import type { RadarPageQuery } from "./page-query"
 import type { InstanceMetadata } from "@/lib/source"
+import { isThemeColor } from "@newsnext/sdk/models"
 import {
   compileSourceTemplate,
   createSourceTemplateScope,
@@ -569,6 +570,11 @@ function resolveMetaPatch(
   const badge = resolveMetaPatchValue("badge", rule.metadata.badge, context, extractedItem)
   const desc = resolveMetaPatchValue("desc", rule.metadata.desc, context, extractedItem)
   const home = resolveMetaPatchValue("home", rule.metadata.home, context, extractedItem)
+  const color = resolveMetaPatchValue("color", rule.metadata.color, context, extractedItem)
+  if (isPresent(color)) {
+    if (!isThemeColor(color)) throw new Error("Metadata color must name a supported palette")
+    metadata.color = color
+  }
 
   if (isPresent(title)) {
     metadata.title = String(title)

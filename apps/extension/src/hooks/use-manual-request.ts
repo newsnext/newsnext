@@ -2,7 +2,7 @@ import type { QueryFilters } from "@tanstack/react-query"
 import type { SourceQueryTarget } from "./source-query"
 import { useIsFetching, useQueryClient } from "@tanstack/react-query"
 import { useCallback, useSyncExternalStore } from "react"
-import { MANUAL_REQUEST_MINIMUM_FEEDBACK_MS } from "@/lib/source"
+import { waitForMinimumManualRequestFeedback } from "@/lib/manual-request-feedback"
 import {
   getSourceQueryHash,
   INSTANCE_QUERY_KEY,
@@ -43,15 +43,6 @@ function useIsManualRequesting(): boolean {
     () => activeManualRequestCounts.size > 0,
     () => false,
   )
-}
-
-async function waitForMinimumManualRequestFeedback(startedAt: number): Promise<void> {
-  const remainingMs = MANUAL_REQUEST_MINIMUM_FEEDBACK_MS - (Date.now() - startedAt)
-  if (remainingMs <= 0) {
-    return
-  }
-
-  await new Promise(resolve => setTimeout(resolve, remainingMs))
 }
 
 async function withManualRequestTracking(

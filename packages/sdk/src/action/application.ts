@@ -120,6 +120,14 @@ const nextLayerInstallWidgetAction = defineActionContract({
   result: EmptyObject,
 })
 
+const nextLayerMoveWidgetAction = defineActionContract({
+  name: "nextLayer.moveWidget",
+  kind: "mutation",
+  description: "Move a Widget placement to another Board while preserving its settings and size.",
+  params: Type.Object({ boardId: Identifier, targetBoardId: Identifier, widgetId: Identifier }, { additionalProperties: false }),
+  result: EmptyObject,
+})
+
 const nextLayerRemoveWidgetAction = defineActionContract({
   name: "nextLayer.removeWidget",
   kind: "mutation",
@@ -139,6 +147,36 @@ const nextLayerSetWidgetDataScopeAction = defineActionContract({
     boardId: Identifier,
     dataScope: WidgetDataScopeParams,
     widgetId: Identifier,
+  }, { additionalProperties: false }),
+  result: EmptyObject,
+})
+
+const nextLayerSetWidgetMetadataAction = defineActionContract({
+  name: "nextLayer.setWidgetMetadata",
+  kind: "mutation",
+  description: "Replace a Board Widget's display metadata overrides; an empty object restores its definition.",
+  params: Type.Object({
+    boardId: Identifier,
+    widgetId: Identifier,
+    metadata: Type.Object({
+      title: Type.Optional(Type.String()),
+      badge: Type.Optional(Type.String()),
+      desc: Type.Optional(Type.String()),
+      home: Type.Optional(Type.String()),
+      color: Type.Optional(stringEnum(COLORS)),
+    }, { additionalProperties: false }),
+  }, { additionalProperties: false }),
+  result: EmptyObject,
+})
+
+const nextLayerSetWidgetParamsAction = defineActionContract({
+  name: "nextLayer.setWidgetParams",
+  kind: "mutation",
+  description: "Replace a Board Widget's parameter overrides; pass an empty object to reset defaults.",
+  params: Type.Object({
+    boardId: Identifier,
+    widgetId: Identifier,
+    params: Type.Record(Type.String(), Type.Unknown()),
   }, { additionalProperties: false }),
   result: EmptyObject,
 })
@@ -188,6 +226,14 @@ const instanceConfigureAction = defineActionContract({
     instanceId: Identifier,
     patch: InstancePatchParams,
   }, { additionalProperties: false }),
+  result: EmptyObject,
+})
+
+const instanceResetMetadataAction = defineActionContract({
+  name: "instance.resetMetadata",
+  kind: "mutation",
+  description: "Reset an Instance's presentation overrides while preserving its parameters.",
+  params: Type.Object({ instanceId: Identifier }, { additionalProperties: false }),
   result: EmptyObject,
 })
 
@@ -316,12 +362,16 @@ export const applicationActionContracts = [
   nowLayerSetManualOrderAction,
   nextLayerInstallWidgetAction,
   nextLayerRemoveWidgetAction,
+  nextLayerMoveWidgetAction,
   nextLayerSetWidgetDataScopeAction,
   nextLayerSetWidgetLayoutsAction,
+  nextLayerSetWidgetParamsAction,
+  nextLayerSetWidgetMetadataAction,
   instanceMoveAction,
   instanceCreateAction,
   instanceConfigureAction,
   instanceResetParamsAction,
+  instanceResetMetadataAction,
   instanceDeleteAction,
   sourceListAction,
   sourceGetAction,

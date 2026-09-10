@@ -6,7 +6,8 @@ export function generateLiveCardDragPreview({
   container,
   element,
 }: { container: HTMLElement, element: HTMLElement }): (() => void) | undefined {
-  const header = element.querySelector<HTMLElement>("[data-live-card-header]")
+  const header = Array.from(element.querySelectorAll<HTMLElement>("[data-live-card-header]"))
+    .find(candidate => !candidate.closest("[inert]"))
   const surface = element.querySelector<HTMLElement>("[data-live-card-surface]")
   if (!header || !surface) return
 

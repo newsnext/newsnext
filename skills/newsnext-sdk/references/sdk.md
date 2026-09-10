@@ -185,13 +185,14 @@ can call every Action, including mutations outside their Board.
 
 ### Data-only Widgets
 
-Data and view are independent. Use a JS entry for custom data:
+Data and view are independent. Place custom data logic in `data.mjs` beside
+`widget.json`; the runtime discovers it automatically. The directory name is
+the Widget ID (for example, `keyword-watch/widget.json` identifies
+`keyword-watch`); do not declare `id` in the JSON:
 
 ```json
 {
-  "id": "keyword-watch",
   "title": "Keyword Watch",
-  "data": { "entry": "data.mjs" },
   "view": { "type": "live-card", "query": "feed" }
 }
 ```
@@ -212,7 +213,6 @@ Alternatively, declare queries directly in the manifest:
 
 ```json
 {
-  "id": "ai-feed",
   "data": {
     "queries": {
       "feed": { "type": "latest", "keyword": "AI", "limit": 30 }
@@ -253,12 +253,12 @@ Automatic and manual requests follow the same rule, with no `force` option or
 additional `staleTimeMs` cache. Concurrent calls share the computed result. A
 changed data definition or resolved scope starts a separate protection window.
 Extension views retain display state but do not maintain a separate data cache.
-A definition without `view` needs only `id` and `data`. The independent data
-loader ignores visual configuration. JS uses the first available runtime in this order: Bun, Deno, then Node.js 22+.
+With `data.mjs` present, a data-only `widget.json` can be `{}`. Without that
+file, declare `data.queries`. The independent data loader ignores visual configuration. JS uses the first available runtime in this order: Bun, Deno, then Node.js 22+.
 The daemon searches PATH and standard installation directories, including
 `~/.bun/bin` and `~/.deno/bin`, so browser launches do not depend on shell PATH.
 The selected runtime receives
-`signal`, `widgetId`, optional `boardId`, and `clientOptions` for the Node SDK.
+`signal`, `widgetId`, optional `boardId`, resolved `params`, and `clientOptions` for the Node SDK.
 Execution is bounded to 60 seconds, 16 MiB of JSON and 64 KiB of diagnostics.
 Use console logging for diagnostics; do not write other data to stdout. Local
 scripts are trusted code with the runtime's normal filesystem/network access.
@@ -271,8 +271,66 @@ executes on SDK request. No separate producer or data.json is necessary. Existin
 `file` queries can still import `{ items: [...] }` JSON (16 MiB / 500 items).
 
 `view` may select `live-card` with optional `presentation: "list" | "ranking"`;
-omit presentation for automatic timeline/list selection. Built-in views omit the
-HTML `entry`. Custom views use an HTML `entry` and `view: { "type": "custom" }`.
+omit presentation for automatic timeline/list selection. Built-in views need no HTML file. Custom views use `index.html` beside
+`widget.json` and may declare `view: { "type": "custom" }`. With `view` omitted,
+`index.html` selects a custom view; without it the Widget is data-only.
+Neither `entry` nor `data.entry` is a supported manifest field.
 Preserve original millisecond `publishedAt` values; never substitute fetch time.
 When displaying an HN submission, use its discussion URL and submission time,
 not a timestamp that implies the linked article was published then.
+
+
+### Widget parameters
+
+Declare optional top-level `params` in `widget.json` using the same parameter
+schema as Sources (`text`, `url`, `number`, `switch`, `select`, `multiselect`):
+
+```json
+{
+  "params": {
+    "limit": { "type": "number", "title": "Limit", "default": 10, "min": 1, "max": 50 }
+  }
+}
+```
+
+Placed Widgets show these settings on their back, with Edit, Save, Cancel, and
+Reset. Values belong to the Widget's Board placement. Reset clears overrides.
+Use `client.actions.nextLayer.setWidgetParams({ boardId, widgetId, params })` to
+replace overrides programmatically. Pass `{}` to restore manifest defaults.
+
+`data.mjs` receives resolved values as `context.params`; custom HTML receives
+`params` in each `newsnext.widget.data` message, including loading messages.
+Direct data calls accept overrides independently of Board placement:
+
+```ts
+const result = await client.widgets.data({
+  widgetId: "keyword-watch",
+  params: { limit: 5 },
+})
+```
+
+Parameters participate in the daemon cache identity. Declarative queries remain
+literal; read `params` in the data script to filter/transform query results or
+choose SDK query arguments. The shared settings editor validates the Source
+schema's constraints. The daemon checks JSON types, bounds, and option membership.
+
+
+### Widget display metadata
+
+`widget.json.title` and `widget.json.color` define the default display identity,
+using a string title and the same named color palette as Sources. The Widget back
+exposes these separately from business parameters. Board placements may override
+them with `metadata: { title, color, badge, desc, home }`, the same identity fields
+as Cards. Use
+`client.actions.nextLayer.setWidgetMetadata({ boardId, widgetId, metadata })` to
+replace those overrides; `{}` restores the definition. Blank titles also fall
+back to the definition. Metadata edits affect the shell and built-in view title,
+without reloading the data pipeline.
+
+
+Use `client.actions.nextLayer.moveWidget({ boardId, targetBoardId, widgetId })` to
+move a placement while keeping its dimensions, metadata, and params. The target
+must not already contain the Widget. Board-wide data follows the new Board;
+explicit Instance selections are restricted to that Board's Instances.
+`client.actions.instance.resetMetadata({ instanceId })` resets a Card's saved
+metadata independently of its Source parameters.

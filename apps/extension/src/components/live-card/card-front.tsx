@@ -10,6 +10,7 @@ import { getHostPermissionOrigins } from "@/lib/source"
 import {
   PhInfoDuotone,
 } from "../icons/ph"
+import { CardFace } from "./card-face"
 import { LiveCardHeader, LiveCardHeaderActionButton } from "./card-header"
 import { LiveCardItems } from "./card-items"
 import { LiveCardContentBackground, LiveCardContentTransition, LiveCardRefreshButton } from "./card-refresh"
@@ -21,7 +22,6 @@ import {
   SourceStatusPattern,
   SourceWorkerTakeoverState,
 } from "./card-source-state"
-import { LiveCardSurface } from "./card-surface"
 import { LiveCardIdentityContext } from "./live-card-identity-context"
 import { SourcePermissionDetails } from "./source-permission-details"
 
@@ -138,13 +138,14 @@ export function LiveCardFront({
 }: LiveCardFrontProps) {
   const { t } = useI18n()
   const { provider } = source
-  const { badge, desc, home, title } = source.metadata
+  const { badge, color, desc, home, title } = source.metadata
   const icon = useSourceIcon(source)
   const identity = useMemo(() => ({
     badge,
     icon,
     name: title || provider.title,
-  }), [badge, icon, provider.title, title])
+    color: color ?? provider.color,
+  }), [badge, color, icon, provider.color, provider.title, title])
   const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(null)
   const markScaleGroups = useMemo(
     () => [{ items, sourceKey: source.id }],
@@ -169,69 +170,67 @@ export function LiveCardFront({
         : visibleSourceErrorMessage
 
   return (
-    <div className="relative h-full">
-      <LiveCardSurface />
-      <div className="relative flex h-full flex-col p-2.5">
-        <LiveCardHeader
-          badge={badge}
-          desc={desc}
-          home={home}
-          icon={icon}
-          provider={provider}
-          title={title}
-          dragHandleRef={dragHandleRef}
-          actions={actions ?? (
-            <>
-              <LiveCardRefreshButton isFetching={isFetching} onRefresh={onRefresh} />
-              {onFlip && (
-                <LiveCardHeaderActionButton
-                  onClick={onFlip}
-                  aria-label={t("showLiveCardDetails")}
-                >
-                  <PhInfoDuotone />
-                </LiveCardHeaderActionButton>
-              )}
-            </>
-          )}
-        />
-
-        {/* Content */}
-        <div className="relative min-h-0 flex-1 overflow-hidden rounded-2xl">
-          <LiveCardContentBackground isFetching={isContentFetching} />
-          {sourceStatusMessage && (
-            <SourceStatusPattern icon={icon} />
-          )}
-          <div
-            ref={setScrollElement}
-            onPointerDown={event => event.stopPropagation()}
-            className="relative size-full overflow-y-auto px-2 py-2 scrollbar-hidden"
-          >
-            <LiveCardContentTransition isFetching={isContentFetching}>
-              <LiveCardIdentityContext value={identity}>
-                <LiveCardFrontContent
-                  items={items}
-                  inlinePresentation={inlinePresentation}
-                  markScale={markScale}
-                  providerTitle={provider.title}
-                  presentationType={source.metadata.type}
-                  scrollElement={scrollElement}
-                  sourceErrorMessage={visibleSourceErrorMessage}
-                  sourceLoginUrl={sourceLoginUrl}
-                  sourcePermissionRequest={sourcePermissionRequest}
-                  sourceWorkerTakeover={sourceWorkerTakeover}
-                  onRefresh={onRefresh}
-                  onRequestPermission={onRequestPermission}
-                />
-              </LiveCardIdentityContext>
-            </LiveCardContentTransition>
-          </div>
-          {sourceStatusMessage && (
-            <SourceStatusMessage
-              message={sourceStatusMessage}
-            />
-          )}
+    <CardFace header={(
+      <LiveCardHeader
+        badge={badge}
+        desc={desc}
+        home={home}
+        icon={icon}
+        providerTitle={provider.title}
+        title={title}
+        dragHandleRef={dragHandleRef}
+        actions={actions ?? (
+          <>
+            <LiveCardRefreshButton isFetching={isFetching} onRefresh={onRefresh} />
+            {onFlip && (
+              <LiveCardHeaderActionButton
+                onClick={onFlip}
+                aria-label={t("showLiveCardDetails")}
+              >
+                <PhInfoDuotone />
+              </LiveCardHeaderActionButton>
+            )}
+          </>
+        )}
+      />
+    )}
+    >
+      {/* Content */}
+      <div className="relative min-h-0 flex-1 overflow-hidden rounded-2xl">
+        <LiveCardContentBackground isFetching={isContentFetching} />
+        {sourceStatusMessage && (
+          <SourceStatusPattern icon={icon} />
+        )}
+        <div
+          ref={setScrollElement}
+          onPointerDown={event => event.stopPropagation()}
+          className="relative size-full overflow-y-auto px-2 py-2 scrollbar-hidden"
+        >
+          <LiveCardContentTransition isFetching={isContentFetching}>
+            <LiveCardIdentityContext value={identity}>
+              <LiveCardFrontContent
+                items={items}
+                inlinePresentation={inlinePresentation}
+                markScale={markScale}
+                providerTitle={provider.title}
+                presentationType={source.metadata.type}
+                scrollElement={scrollElement}
+                sourceErrorMessage={visibleSourceErrorMessage}
+                sourceLoginUrl={sourceLoginUrl}
+                sourcePermissionRequest={sourcePermissionRequest}
+                sourceWorkerTakeover={sourceWorkerTakeover}
+                onRefresh={onRefresh}
+                onRequestPermission={onRequestPermission}
+              />
+            </LiveCardIdentityContext>
+          </LiveCardContentTransition>
         </div>
+        {sourceStatusMessage && (
+          <SourceStatusMessage
+            message={sourceStatusMessage}
+          />
+        )}
       </div>
-    </div>
+    </CardFace>
   )
 }

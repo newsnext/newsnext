@@ -1,6 +1,8 @@
+import type { Color } from "@newsnext/sdk/models"
 import { createContext, use } from "react"
 
 interface LiveCardIdentity {
+  color: Color
   badge?: string
   icon?: string
   name: string

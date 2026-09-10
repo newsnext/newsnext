@@ -16,6 +16,7 @@ import { SafeHtml } from "@newsnext/ui/components/safe-html"
 import { cn } from "@newsnext/ui/lib/utils"
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ExternalLink } from "lucide-react"
 import { useI18n } from "@/hooks/use-i18n"
+import { CardAvatar } from "./card-avatar"
 import { useLiveCardIdentity } from "./live-card-identity-context"
 import { NewsItemInline } from "./news-item-inline"
 import { SourceIcon } from "./source-icon"
@@ -46,19 +47,19 @@ function NewsItemPreviewIdentity({ centered, item }: NewsItemPreviewIdentityProp
   const identity = useLiveCardIdentity()
   const authorName = item.author?.name
   const authorIcon = item.icon?.kind === "author" ? item.icon : undefined
-  const authorInitial = authorName ? Array.from(authorName.trim())[0]?.toLocaleUpperCase() : undefined
 
   return (
     <div className={cn("flex w-full items-center gap-2.5", centered && "mx-auto max-w-3xl")}>
       {authorName
         ? (
-            <Avatar>
+            <Avatar className={identity.color}>
               {authorIcon && <AvatarImage src={authorIcon.src} alt="" />}
-              <AvatarFallback>{authorInitial}</AvatarFallback>
+              <AvatarFallback><CardAvatar seed={authorName} title={authorName} variant="beam" /></AvatarFallback>
             </Avatar>
           )
         : (
             <SourceIcon
+              color={identity.color}
               badge={identity.badge}
               icon={identity.icon}
               size="default"

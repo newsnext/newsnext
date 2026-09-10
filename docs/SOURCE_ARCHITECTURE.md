@@ -451,7 +451,7 @@ the runtime lifecycle in [APPLICATION_ARCHITECTURE.md](APPLICATION_ARCHITECTURE.
 Loader metadata is response-scoped and remains part of the load result stored in
 TanStack Query and persisted for later restoration.
 It uses the complete source presentation metadata shape: title, badge,
-description, and home URL. While displayed, it has the highest field-level
+description, home URL, and named card color. While displayed, it has the highest field-level
 priority over static metadata and persisted Radar or Instance patches, without
 persisting response-derived values into the saved Instance. Before the first
 successful load, the LiveCard continues to use static or Instance
@@ -942,3 +942,11 @@ stream when serving a request or delivering a subscribed update, including obser
 daemon restart. Counts use the same Worker/Source/version/resolved-params identity
 as scheduling. Unresolved streams report an unknown count. Diagnostics read dataset
 summaries without scanning observation items or holding the daemon state lock.
+
+
+`SourcePresentationMetadata` extends the shared `CardMetadata` shape used by
+Widgets. `metadata.color` controls the displayed card palette independently of the
+provider's immutable identity. Registry configuration, loader results, and Radar
+literal/extracted colors validate against the same named palette. The common
+`CardMetadataSettings` editor renders Title, Description, Home, Badge, and Color;
+its preview stays outside query identity. Instance metadata reset preserves params.

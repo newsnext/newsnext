@@ -68,8 +68,10 @@ bun --filter=@newsnext/registry run build
 
 A provider has `title`, `color`, optional `icon` and `category`, `defaults`, and
 `sources`. `title`, `icon`, `color`, and `category` describe the provider and
-cannot be set or overridden by individual sources, Radar rules, or LiveCard
-instances. Every source descriptor receives the provider's `icon` and `color`.
+remain provider identity fields. Every source descriptor receives that provider
+identity. Source/Instance `metadata.color` may override the displayed card palette
+without mutating `provider.color`; it uses the same named palette. Source metadata
+shares `CardMetadata` with Widgets: `title`, `badge`, `desc`, `home`, and `color`.
 
 `defaults` may contain `baseUrl`, `version`, `capabilities`, `loader`, `metadata`,
 `vars`, `params`, `radar`, `requestRules`, and `secrets`. Defaults recursively
@@ -752,7 +754,7 @@ Preserve the intended display order before returning so the most relevant 50
 items remain in the Instance result.
 
 Dynamic loader metadata always supports the complete source metadata shape:
-`title`, `badge`, `desc`, `home`, and optional `type` (`list` or `ranking`). It travels with the items through
+`title`, `badge`, `desc`, `home`, `color`, and optional `type` (`list` or `ranking`). It travels with the items through
 persistence and the in-memory Query cache and has the
 highest display priority, overriding static metadata and persisted Radar or
 Instance metadata patches field by field. It is unavailable until the first
@@ -1118,10 +1120,10 @@ Parse `scope.page.title` only when the value is unavailable from the top-level
 DOM, such as content rendered inside an iframe.
 
 Radar metadata can override source-owned presentation fields: `title`, `badge`,
-`desc`, `home`, and `type`. A resolved `type` must be `list` or `ranking`.
+`desc`, `home`, `color`, and `type`. A resolved color must name a supported palette. A resolved `type` must be `list` or `ranking`.
 Radar metadata uses the same selector, traversal,
-extraction, and template behavior as HTML loader fields. Provider-owned `icon`
-and `color` are not valid Radar metadata fields.
+extraction, and template behavior as HTML loader fields. Provider-owned `icon` is not a valid Radar metadata field; `metadata.color` only
+changes the card presentation.
 
 When a source has no parameters or explicit `radar`, an HTTP(S)
 `metadata.home` creates a same-host rule automatically. Set `radar: []` to opt
@@ -1286,13 +1288,14 @@ nearest new unit. Apply this once to known old data; the numeric fields alone
 do not identify the unit system. Changing defaults does not update explicit
 manifest sizes or already installed placements.
 
-Data and view are independent. Use a JS entry for custom data:
+Data and view are independent. Place custom data logic in `data.mjs` beside
+`widget.json`; the runtime discovers it automatically. The directory name is
+the Widget ID (for example, `keyword-watch/widget.json` identifies
+`keyword-watch`); do not declare `id` in the JSON:
 
 ```json
 {
-  "id": "keyword-watch",
   "title": "Keyword Watch",
-  "data": { "entry": "data.mjs" },
   "view": { "type": "live-card", "query": "feed" }
 }
 ```
@@ -1313,7 +1316,6 @@ Alternatively, declare queries directly in the manifest:
 
 ```json
 {
-  "id": "ai-feed",
   "data": {
     "queries": {
       "feed": { "type": "latest", "keyword": "AI", "limit": 30 }
@@ -1347,8 +1349,8 @@ const feed = result.queries.feed
 ```
 
 The result includes `queries`, completion `refreshedAt`, and Instance `errors`.
-A definition without `view` needs only `id` and `data`. The independent data
-loader ignores visual configuration. JS uses the first available runtime in this order: Bun, Deno, then Node.js 22+.
+With `data.mjs` present, a data-only `widget.json` can be `{}`. Without that
+file, declare `data.queries`. The independent data loader ignores visual configuration. JS uses the first available runtime in this order: Bun, Deno, then Node.js 22+.
 The daemon searches PATH and standard installation directories, including
 `~/.bun/bin` and `~/.deno/bin`, so browser launches do not depend on shell PATH.
 The selected runtime receives
@@ -1365,8 +1367,10 @@ executes on SDK request. No separate producer or data.json is necessary. Existin
 `file` queries can still import `{ items: [...] }` JSON (16 MiB / 500 items).
 
 `view` may select `live-card` with optional `presentation: "list" | "ranking"`;
-omit presentation for automatic timeline/list selection. Built-in views omit the
-HTML `entry`. Custom views use an HTML `entry` and `view: { "type": "custom" }`.
+omit presentation for automatic timeline/list selection. Built-in views need no HTML file. Custom views use `index.html` beside
+`widget.json` and may declare `view: { "type": "custom" }`. With `view` omitted,
+`index.html` selects a custom view; without it the Widget is data-only.
+Neither `entry` nor `data.entry` is a supported manifest field.
 Preserve original millisecond `publishedAt` values; never substitute fetch time.
 When displaying an HN submission, use its discussion URL and submission time,
 not a timestamp that implies the linked article was published then.
@@ -1394,3 +1398,10 @@ Bundle the SDK with the Widget's JavaScript; bare npm imports do not work in
 unbundled HTML. The native host must advertise the `sdk` capability; after
 updating it, reconnect the extension. An older host returns an explicit update
 error. Installed local Widgets can execute mutating Actions as well as queries.
+
+
+Card and Widget backs share the same metadata editor, parameter editor, and Board
+selection controls. Metadata drafts preview locally; saving changes presentation
+without changing source parameters. `instance.resetMetadata` clears saved display
+overrides independently of `instance.resetParams`. Widget metadata uses the same
+fields through `nextLayer.setWidgetMetadata`; its data inputs remain separate.

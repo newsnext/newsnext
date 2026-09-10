@@ -8,6 +8,7 @@ import type {
 } from "../board"
 import type { Instance, InstancePatch } from "../source"
 import type { PersistedSettings } from "./persisted-settings"
+import { isThemeColor } from "@newsnext/sdk/models"
 import {
   APPLICATION_DATA_VERSION,
   createEmptyApplicationData,
@@ -19,7 +20,6 @@ import {
   normalizeBoardLayer,
 } from "../board"
 import { normalizePersistedSettings } from "./persisted-settings"
-import { isThemeColor } from "./theme-color"
 
 export const PERSISTED_DATA_EXPORT_VERSION = 5
 export const PERSISTED_DATA_EXPORT_KIND = "newsnext-user-data"
@@ -157,6 +157,20 @@ function normalizeNextLayerWidgets(
         x: layout.x,
         y: layout.y,
       },
+      ...(isRecord(candidate.metadata)
+        ? {
+            metadata: {
+              ...(typeof candidate.metadata.badge === "string" ? { badge: candidate.metadata.badge } : {}),
+              ...(typeof candidate.metadata.desc === "string" ? { desc: candidate.metadata.desc } : {}),
+              ...(typeof candidate.metadata.home === "string" ? { home: candidate.metadata.home } : {}),
+              ...(typeof candidate.metadata.title === "string" && candidate.metadata.title.trim()
+                ? { title: candidate.metadata.title.trim() }
+                : {}),
+              ...(isThemeColor(candidate.metadata.color) ? { color: candidate.metadata.color } : {}),
+            },
+          }
+        : {}),
+      ...(isRecord(candidate.params) ? { params: candidate.params } : {}),
       widgetId: candidate.widgetId,
     }]
   })

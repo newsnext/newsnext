@@ -181,7 +181,13 @@ LiveCards define the primary NewsNext surface treatment.
   circular shape across LiveCards, search, settings, and status surfaces. Vary
   its size by context without introducing local corner-radius overrides. Treat
   the resolved provider icon and optional source badge as one visual identity;
-  pass both whenever source metadata is available.
+  pass both whenever source metadata is available. Missing or failed icons use a
+  locally generated Boring Avatars `bauhaus` avatar through `SourceIcon`, using
+  abstract geometric shapes without facial or human features. Render inline SVG
+  with inherited `--color-theme-*` shades so the avatar follows the card palette,
+  including unsaved Color previews. The seed fixes geometry and palette assignment; theme changes update the shades. Seed Widget avatars with the
+  stable Widget ID so rename, palette edits, refresh, Board moves, and flips keep
+  the same identity. Keep the avatar circular and retain any Badge overlay.
 - Keep LiveCard headers to a single title line beside the source icon and actions,
   with an 8px gap before the inner panel on both faces. Do not show refresh times
   or a subtitle; indicate refreshing through the refresh action animation.
@@ -264,9 +270,11 @@ a small optical inset without moving its right-side controls.
 
 The detail column has a fixed identity header, independently scrolling title/body,
 and fixed footer with complete inline presentation and the original link. Show
-an `author` icon with the author name, an initial avatar if only the name exists,
+an `author` icon with the author name, a shared `beam` avatar seeded by author
+name when the icon is missing or fails,
 or the shared Source icon/badge and Instance name otherwise. Wide layouts use
-approximately 60/40 media-to-detail proportions.
+approximately 60/40 media-to-detail proportions. Carry the card color through
+the identity context so generated avatars retain its palette inside the dialog portal.
 
 Keep shared inline metadata vertically centered in both news items and preview
 footers. Use a fixed 14px alignment box for the compact 12px presentation and a
@@ -290,6 +298,16 @@ expanded preview, and do not treat the click produced after a selection drag as
 a request to open the expanded surface.
 Support the same wrapping controls and Left/Right Arrow navigation in both
 surfaces.
+
+### Shared Card behavior
+
+Card and Widget share one interaction model. The only Widget variations are
+resizable dimensions, content renderers, and data adapters. Identity headers,
+metadata fields, parameter controls, Board switching, removal confirmation,
+flip/focus behavior, and refresh feedback must use the same components.
+`CardMetadataSettings` renders Title, Description, Home, Badge, and Color for both.
+Provider identity remains unchanged by display overrides. Source-specific
+permissions and Widget-specific data diagnostics belong to data-adapter content.
 
 ### Next Layer Widget surfaces
 
@@ -346,13 +364,16 @@ statistics in local HTML. Only custom UIs need an iframe. Preserve the same
 shell, details back, palette, and controls for either renderer. Empty item
 results are an ordinary empty state; malformed data must show an error.
 
-Keep the trusted Widget shell outside the iframe and reuse the LiveCard surface
-language directly: `LiveCardSurface`, `p-2.5`, a `text-base font-bold` title, and
-`LiveCardHeaderActionButton`. Match the compact LiveCard header on both Widget
+Keep the trusted Widget shell outside the iframe. LiveCards and Widgets share
+`CardFace`, `LiveCardHeader`, `CardBackContent`, and `LiveCardHeaderActionButton`;
+Source identity is a leading slot in the common header. Keep surface, spacing,
+back scrolling, and action placement in these shared components. Match the compact LiveCard header on both Widget
 faces: a single title line in a 32px row and an 8px gap before the content panel.
 LiveCards and Widgets share `LiveCardRefreshButton` and the content refresh
 background/opacity treatment. Disable the refresh button while fetching, spin its
-indicator, pulse the content wash, and dim existing content without clearing it.
+indicator, and apply content dimming/pulsing only for initial loading and explicit
+refreshes. Keep automatic background refreshes visually stable when data exists.
+Explicit feedback lasts at least 500ms through the shared minimum-duration helper.
 A failed background refresh retains the last successful items. First-load errors
 reuse the LiveCard retry action; error details remain available in the shell.
 
@@ -369,8 +390,27 @@ Keep slot content overflow `visible` so the perspective animation
 can extend beyond the cell. Keep clipping inside each face's nested content panel,
 and raise hovered or focused grid items above their neighbors.
 Keep the iframe mounted during flips and make the hidden face inert so keyboard
-focus cannot enter it. The back shows snapshot status, the number of scoped Instances, and the last
-update time.
+focus cannot enter it. `FlipAnimate` owns `inert` and `aria-hidden` for both kinds
+of card. Register only the visible face's header as the drag handle, and build the
+drag preview from that header. Both faces remain draggable. The back's removal
+action shares `DeleteCardButton` and its two-step confirmation with LiveCards;
+removing a Widget deletes its Board placement. The back shows snapshot status, the number of scoped Instances, and the last
+update time. Place the common metadata editor in a section first, separate
+from business parameters. Use the LiveCard metadata editing pattern and shared
+`ThemeSelector` palette. Save applies Board placement overrides to both faces;
+Cancel discards the draft and Reset restores the `widget.json` defaults.
+Preview the draft identity in the back header and theme without persisting it or
+changing data inputs. Use `CardSettingsSection` for both metadata and parameter
+editors: share Edit/Cancel/Save/Reset controls, validation gates, pending-state
+field disabling, and inline errors. Keep failed saves editable and clear errors
+when cancelling or starting a new edit. Allow settings action rows and the shared
+color palette to wrap within narrow Widget widths; do not force a six-column
+palette or fixed height when the available width is smaller.
+When `widget.json` declares parameters, place their settings above
+the status details. Reuse the LiveCard `ParameterSettings` section and fields,
+including read-only values, Edit, Cancel, Reset, Save, and inline validation.
+Keep drafts local until Save; Reset clears placement overrides to manifest
+defaults. Hide the parameter section when none are declared.
 
 Keep the iframe and its document background transparent so the host's nested
 surface remains visible. iframe content must not repeat the title, refresh

@@ -3,6 +3,24 @@ import { parseLocalWidgetManifests } from "./widget-manifest"
 
 const SERVER_URL = "http://127.0.0.1:43121"
 describe("parseLocalWidgetManifests", () => {
+  it("accepts shared parameter definitions and rejects invalid defaults", () => {
+    const widget = {
+      id: "feed",
+      title: "Feed",
+      height: 4,
+      minHeight: 1,
+      width: 6,
+      minWidth: 1,
+      view: { type: "live-card", query: "feed" },
+      params: { limit: { type: "number", title: "Limit", default: 10, min: 1, max: 20 } },
+    }
+    expect(parseLocalWidgetManifests([widget], SERVER_URL)[0]?.params).toEqual(widget.params)
+    expect(() => parseLocalWidgetManifests([{
+      ...widget,
+      params: { limit: { ...widget.params.limit, default: 30 } },
+    }], SERVER_URL)).toThrow("default is invalid")
+  })
+
   it("accepts widgets served by the declared loopback origin", () => {
     expect(parseLocalWidgetManifests([{
       height: 4,

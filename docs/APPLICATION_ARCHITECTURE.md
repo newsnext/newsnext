@@ -195,7 +195,9 @@ Both share the root scroll container with restoration keyed by Board and Layer.
 
 NowLayer owns LiveCards and Instance-scoped queries. NextLayer owns the Board's
 `nextLayer.widgets`: each entry has `widgetId`, grid `layout` (`x`, `y`, `width`,
-`height`), and `dataScope` (the whole Board or selected `instanceIds`). Widget
+`height`), `dataScope` (the whole Board or selected `instanceIds`), and optional
+`params` and `metadata` overrides. Metadata uses shared `CardMetadata`: optional `title`, `badge`, `desc`, `home`, and `color`,
+using the same title and named palette contract as Source definitions. Widget
 layout persistence encodes order as `x: 0`, `y: orderIndex`, alongside dimensions.
 The React grid derives positions with ordered packing and uses the shared
 Pragmatic Drag and Drop infrastructure for live insertion previews. Widget drag
@@ -209,7 +211,8 @@ pointer for sorting and trash drops. Shared card header rules, native previews,
 and placeholder styling keep feedback consistent; each Layer retains its own
 layout and persistence logic.
 
-Local Widget files and `widget.json` live in the CLI's Widget directory. The
+Local Widget files and `widget.json` live in the CLI's Widget directory. Each
+Widget's directory name is its ID; the manifest has no configurable `id`. The
 manifest declares named data queries and a refresh policy. The daemon reconciles
 managed Jobs from the authenticated Board projection, reads retained Instance
 history, and persists revisioned Snapshots in Turso. Widget refreshes do not execute
@@ -217,8 +220,8 @@ Sources. A Snapshot atomically stores
 all query results, manifest/scope fingerprints, and a refresh timestamp.
 
 Widget data and view are independent contracts. `data.queries` declares named
-queries; optional `data.entry` names an ES module whose default async function
-receives `{ queries, widgetId, boardId, signal, clientOptions }`. Queries execute
+queries; an optional `data.mjs` beside `widget.json` is discovered automatically.
+Its default async function receives `{ queries, params, widgetId, boardId, signal, clientOptions }`. Queries execute
 first; the JS function returns the final named results, for example
 `{ feed: { items: [...] }, stats: { count: 42 } }`. Item arrays are adapted to
 `{ items: [{ value: NewsItem }] }`, matching Instance query results. Non-item JSON
@@ -250,7 +253,7 @@ filters logs at INFO before event construction so Turso instruction-level tracin
 does not dominate history-query execution. `file` queries
 remain an optional JSON import path, not the required data mechanism.
 
-The CLI runs `data.entry` in a fresh process in the Widget directory, preferring
+The CLI runs `data.mjs` in a fresh process in the Widget directory, preferring
 Bun, then Deno, then Node.js 22+. For each runtime it searches PATH followed by
 standard user and system installation directories. This also handles the minimal
 PATH inherited by browser Native Messaging hosts. A script failure is returned
@@ -263,34 +266,59 @@ stdout is reserved for JSON; console diagnostics use stderr. Failed runs retain
 the previous placed Snapshot. Entrypoint paths and symlinks must stay within the
 Widget directory; dependencies follow the JS runtime's normal module resolution.
 
-`client.widgets.data({ widgetId, instanceIds? })` executes this same data pipeline
+`client.widgets.data({ widgetId, instanceIds?, params? })` executes this same data pipeline
 directly through SDK/daemon IPC and returns `{ queries, refreshedAt, errors }`.
 It requires neither a Board placement nor a view. With no Instance inputs,
 JS-only data works without a connected browser. Declarative Instance queries use
-the explicit `instanceIds` supplied by this consumer. Direct calls return a fresh
-result without writing a Board Snapshot. The daemon advertises `widgetData`.
-Data loading ignores view, HTML entry, title, palette, and grid configuration;
-only data/id/refresh fields participate in this contract.
+the explicit `instanceIds` supplied by this consumer. Direct calls use the persistent one-minute request protection cache, stored
+without a Board placement ID. Calls after that window recompute the result. The daemon advertises `widgetData`.
+Data loading ignores view, HTML, title, palette, and grid configuration;
+only data/refresh/params fields and the presence of `data.mjs` participate in
+this contract. Both loaders resolve conventional files through the same path
+validation, rejecting files and symlinks outside the Widget directory. Script
+presence participates in the data fingerprint, so adding or removing `data.mjs`
+invalidates the previous definition.
 
-The extension centralizes Widget data fetching in `widgetDataQueryOptions`.
-Its TanStack Query key includes Widget, sorted Instance scope, and the
-manifest data fingerprint; Board identity, view and layout do not participate.
-Identical scoped requests share a cache across Boards. `staleTime` and
-polling use the manifest refresh policy. Views receive data and query state from
-the shell. Refresh failures preserve prior data for both built-in and iframe
-views. `queryFn` calls `client.widgets.data({ widgetId, instanceIds }, { signal })`
+The extension centralizes Widget data fetching in `useWidgetData`. Its request
+identity includes Widget, sorted Instance scope, manifest data fingerprint, and
+resolved parameters. Changing these inputs aborts the obsolete request and clears
+its displayed result. The daemon's persistent one-minute protection cache includes
+parameter definitions and resolved values, so edited settings cannot reuse data
+computed with different values. Identical defaults and explicit default values
+share a cache entry. Refresh failures preserve prior data for the same inputs.
+The hook calls `client.widgets.data({ widgetId, instanceIds, params }, { signal })`
 through `@newsnext/sdk/extension`. The extension client uses a validated runtime
-port and the existing Native Messaging SDK bridge. The iframe and extension
-transports share pull-based framing, timeout, abort, and cleanup logic. Changing
-scope or unmounting aborts the obsolete request. UI refreshes do not read or write
-Board snapshots; snapshot Jobs remain separate consumers of the data pipeline.
+port and the existing Native Messaging SDK bridge. UI requests and background
+Board Snapshot Jobs both resolve manifest defaults and placement overrides;
+UI requests use the direct-data cache while Jobs persist Board snapshots.
+
+LiveCard and Widget presentation share `CardFace`, `LiveCardHeader`,
+`CardBackContent`, `CardMetadataSettings`, `CardSettingsSection`, `CardBoardSelect`,
+and `DeleteCardButton`. Only the visible
+header receives the drag handle. The hidden flip face remains mounted and inert.
+Widget metadata drafts preview the back title/theme; successful saves update the
+placement, while cancellation restores saved values. Removing from the back uses
+the same confirmation interaction as LiveCards and removes only the placement.
+
+Optional top-level `widget.json.params` uses the shared Source parameter schema.
+The manifest parser validates definitions with `validateSourceParamDefinitions`.
+The Widget back reuses `ParameterSettings`, `ParamField`, and `useSourceParams`
+with LiveCards. `nextLayer.setWidgetParams` replaces one Board placement's
+persisted overrides; `{}` resets defaults. `nextLayer.setWidgetMetadata` separately
+replaces the shared Title, Color, Badge, Description, and Home overrides. The shell resolves metadata over manifest defaults
+without changing data cache identity; an empty title falls back to the definition. Import/export normalization preserves
+them. Parameters are sent to custom iframe `newsnext.widget.data` messages and
+`data.mjs` as `context.params`. The daemon resolves defaults and checks value
+types, numeric bounds, and select membership before invoking author code; the
+shared editor also applies required/format/regex validation. Declarative queries
+remain literal; scripts can use parameters to filter or transform their results.
 
 Optional `view: { type: "live-card", query: "feed" }` selects the extension's
 built-in renderer, sharing `LiveCardItems` with NowLayer. Automatic timeline/list
 selection and explicit `presentation: "list" | "ranking"` reuse the Source
-presentation contract. Custom views retain `entry` and may declare
-`view: { type: "custom" }`. Omitted view plus an HTML entry keeps legacy custom
-Widgets working; omitted view without an HTML entry defines data only and is
+presentation contract. Custom views use the fixed `index.html` file and may declare
+`view: { type: "custom" }`. An omitted view selects custom UI when `index.html`
+exists; without that file it defines data only and is
 excluded from the renderable manifest list. Built-in views validate the complete
 NewsItem contract, accept empty arrays, and cap aggregates at 500 items.
 
@@ -426,7 +454,7 @@ another Board.
 selects manual mode atomically. NextLayer mutations install/remove Widgets,
 change their data scope, and save layouts through `nextLayer.installWidget`,
 `nextLayer.removeWidget`, `nextLayer.setWidgetDataScope`, and
-`nextLayer.setWidgetLayouts`.
+`nextLayer.setWidgetLayouts`, and `nextLayer.setWidgetParams`.
 
 ### Queries
 
@@ -477,3 +505,11 @@ with dataset/timestamp replays deduplicated.
 Presentation belongs to [Design Guideline](DESIGN_GUIDELINE.md#stream-diagnostics),
 the wire contract to [Source Architecture](SOURCE_ARCHITECTURE.md#stream-collection-diagnostics),
 and subscription performance to [Performance Guideline](PERFORMANCE_GUIDELINE.md#development-diagnostics-subscriptions).
+
+
+`nextLayer.moveWidget` atomically transfers the placement to another Board,
+preserving metadata, params, and dimensions and appending it to the destination
+layout. It rejects a destination already containing that Widget. Whole-Board
+scopes follow the destination Board; explicit Instance scopes retain only IDs
+belonging to it, without moving Instances. Both card types use `CardBoardSelect`
+with pending/error handling; these data-scope rules belong to the Widget adapter.

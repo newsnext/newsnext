@@ -174,3 +174,18 @@ describe("persisted user data", () => {
     expect(merged.settings.general.nativeIntegrationEnabled).toBe(false)
   })
 })
+
+describe("widget parameter persistence", () => {
+  it("preserves parameter overrides through export and normalization", () => {
+    const data = createData()
+    data.boards[0]!.nextLayer.widgets = [{
+      widgetId: "feed",
+      dataScope: { type: "board" },
+      layout: { x: 0, y: 0, width: 6, height: 4 },
+      params: { limit: 5, enabled: false, categories: ["tech"] },
+      metadata: { title: "My feed", color: "teal", badge: "https://example.com/badge.png", home: "https://example.com", desc: "Description" },
+    }]
+    const restored = parsePersistedDataExport(serializePersistedDataExport(data))
+    expect(restored?.data.boards?.[0]?.nextLayer.widgets).toEqual(data.boards[0]!.nextLayer.widgets)
+  })
+})

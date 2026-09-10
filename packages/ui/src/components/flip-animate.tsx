@@ -30,12 +30,16 @@ export function FlipAnimate({
     >
       <div
         className={sideCSS}
+        inert={flipped}
+        aria-hidden={flipped}
         data-turned={flipped}
       >
         {children[0]}
       </div>
       <div
         className={sideCSS}
+        inert={!flipped}
+        aria-hidden={!flipped}
         data-turned={!flipped}
         data-reverse
       >

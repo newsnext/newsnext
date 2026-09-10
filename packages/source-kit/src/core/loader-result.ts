@@ -1,5 +1,6 @@
 import type { NewsItem, SourceLoaderResult } from "../types"
 import type { CompiledSourceTemplate } from "./template"
+import { isThemeColor } from "@newsnext/sdk/models"
 import { NEWS_ITEM_STAT_KEYS } from "@newsnext/shared/types"
 import { isSourcePresentationMetadataKey, isSourcePresentationType } from "../types"
 import {
@@ -186,6 +187,7 @@ function assertSourceLoaderMetadata(value: unknown): void {
     if (!isSourcePresentationMetadataKey(key)) {
       throwInvalidLoaderResult(`metadata.${key} is not supported`)
     }
+    if (key === "color" && !isThemeColor(metadataValue)) throwInvalidLoaderResult("metadata.color must name a supported palette")
     if (key === "type") {
       if (!isSourcePresentationType(metadataValue)) {
         throwInvalidLoaderResult("metadata.type must be \"list\" or \"ranking\"")

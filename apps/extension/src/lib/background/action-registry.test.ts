@@ -76,8 +76,8 @@ describe("action Registry", () => {
   it("publishes the complete Action contract directly from definitions", () => {
     const actions = actionRegistry.list()
 
-    expect(actions).toHaveLength(40)
-    expect(actions.filter(action => action.kind === "mutation")).toHaveLength(17)
+    expect(actions).toHaveLength(44)
+    expect(actions.filter(action => action.kind === "mutation")).toHaveLength(21)
     expect(actions.filter(action => action.kind === "query")).toHaveLength(18)
     expect(actions.filter(action => action.kind === "command")).toHaveLength(5)
     expect(actions.find(action => action.name === "instance.create")).toMatchObject({

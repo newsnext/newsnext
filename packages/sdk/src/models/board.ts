@@ -1,3 +1,4 @@
+import type { CardMetadata } from "./card.js"
 import type { Color } from "./color.js"
 
 export type BoardLayer = "now" | "next"
@@ -21,7 +22,11 @@ export interface NextLayerWidgetLayout {
   y: number
 }
 
+export type WidgetMetadata = CardMetadata
+
 export interface NextLayerWidget {
+  metadata?: WidgetMetadata
+  params?: Record<string, unknown>
   dataScope: NextLayerWidgetDataScope
   layout: NextLayerWidgetLayout
   widgetId: string

@@ -1,3 +1,4 @@
+import type { Color } from "@newsnext/sdk/models"
 import type { WidgetUi } from "./widget-manifest"
 import { useMemo, useState } from "react"
 import { LiveCardItems } from "@/components/live-card/card-items"
@@ -9,13 +10,14 @@ import { parseWidgetItems } from "./widget-items"
 interface BuiltinLiveCardProps {
   ui: Extract<WidgetUi, { type: "live-card" }>
   title: string
+  color: Color
   queries: Record<string, unknown>
   isFetching: boolean
   onRefresh: () => void
   statusMessage?: string
 }
 
-export function BuiltinLiveCard({ ui, title, queries, statusMessage, isFetching, onRefresh }: BuiltinLiveCardProps): React.JSX.Element {
+export function BuiltinLiveCard({ ui, title, color, queries, statusMessage, isFetching, onRefresh }: BuiltinLiveCardProps): React.JSX.Element {
   const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(null)
   const result = useMemo(() => {
     try {
@@ -24,7 +26,7 @@ export function BuiltinLiveCard({ ui, title, queries, statusMessage, isFetching,
       return { items: [], error: error instanceof Error ? error.message : "Invalid Widget data" }
     }
   }, [queries, ui.query])
-  const identity = useMemo(() => ({ name: title }), [title])
+  const identity = useMemo(() => ({ name: title, color }), [title, color])
   const groups = useMemo(() => [{ items: result.items, sourceKey: ui.query }], [result.items, ui.query])
   const markScale = useSourceMarkScales(groups).get(ui.query)
   const message = isFetching ? undefined : statusMessage ?? result.error

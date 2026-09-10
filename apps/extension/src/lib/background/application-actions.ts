@@ -24,10 +24,14 @@ import {
   listInstancesQuery,
   listSourcesQuery,
   moveInstanceMutation,
+  moveNextLayerWidgetMutation,
   removeNextLayerWidgetMutation,
+  resetInstanceMetadataMutation,
   resetInstanceParamsMutation,
   setNextLayerWidgetDataScopeMutation,
   setNextLayerWidgetLayoutsMutation,
+  setNextLayerWidgetMetadataMutation,
+  setNextLayerWidgetParamsMutation,
   setNowLayerManualOrderMutation,
   updateBoardMutation,
 } from "../application"
@@ -78,12 +82,24 @@ const nextLayerInstallWidgetAction = defineAction(actionContracts["nextLayer.ins
   await context.mutate(data => installNextLayerWidgetMutation(data, input))
 ))
 
+const nextLayerMoveWidgetAction = defineAction(actionContracts["nextLayer.moveWidget"], async (input, context: ApplicationActionContext) => (
+  await context.mutate(data => moveNextLayerWidgetMutation(data, input))
+))
+
 const nextLayerRemoveWidgetAction = defineAction(actionContracts["nextLayer.removeWidget"], async (input, context: ApplicationActionContext) => (
   await context.mutate(data => removeNextLayerWidgetMutation(data, input))
 ))
 
 const nextLayerSetWidgetDataScopeAction = defineAction(actionContracts["nextLayer.setWidgetDataScope"], async (input, context: ApplicationActionContext) => (
   await context.mutate(data => setNextLayerWidgetDataScopeMutation(data, input))
+))
+
+const nextLayerSetWidgetMetadataAction = defineAction(actionContracts["nextLayer.setWidgetMetadata"], async (input, context: ApplicationActionContext) => (
+  await context.mutate(data => setNextLayerWidgetMetadataMutation(data, input))
+))
+
+const nextLayerSetWidgetParamsAction = defineAction(actionContracts["nextLayer.setWidgetParams"], async (input, context: ApplicationActionContext) => (
+  await context.mutate(data => setNextLayerWidgetParamsMutation(data, input))
 ))
 
 const nextLayerSetWidgetLayoutsAction = defineAction(actionContracts["nextLayer.setWidgetLayouts"], async (input, context: ApplicationActionContext) => (
@@ -103,6 +119,10 @@ const instanceCreateAction = defineAction(actionContracts["instance.create"], as
 
 const instanceConfigureAction = defineAction(actionContracts["instance.configure"], async (input, context: ApplicationActionContext) => (
   await context.mutate(data => configureInstanceMutation(data, input))
+))
+
+const instanceResetMetadataAction = defineAction(actionContracts["instance.resetMetadata"], async (input, context: ApplicationActionContext) => (
+  await context.mutate(data => resetInstanceMetadataMutation(data, input))
 ))
 
 const instanceResetParamsAction = defineAction(actionContracts["instance.resetParams"], async (input, context: ApplicationActionContext) => (
@@ -150,12 +170,16 @@ export const applicationActionDefinitions = [
   nowLayerSetManualOrderAction,
   nextLayerInstallWidgetAction,
   nextLayerRemoveWidgetAction,
+  nextLayerMoveWidgetAction,
   nextLayerSetWidgetDataScopeAction,
   nextLayerSetWidgetLayoutsAction,
+  nextLayerSetWidgetParamsAction,
+  nextLayerSetWidgetMetadataAction,
   instanceMoveAction,
   instanceCreateAction,
   instanceConfigureAction,
   instanceResetParamsAction,
+  instanceResetMetadataAction,
   instanceDeleteAction,
   sourceListAction,
   sourceGetAction,
