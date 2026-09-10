@@ -1270,9 +1270,96 @@ Action names, inputs, and results come from the SDK contract. No `actions.list()
 request is needed for type discovery. Execution still requires a connected browser
 Worker for browser-owned Actions and retains the existing permission checks.
 
+### Data-only Widgets with built-in UI
+
+Data and view are independent. Use a JS entry for custom data:
+
+```json
+{
+  "id": "keyword-watch",
+  "title": "Keyword Watch",
+  "data": { "entry": "data.mjs" },
+  "view": { "type": "live-card", "query": "feed" }
+}
+```
+
+`data.mjs` default-exports an async function. It returns named query results;
+LiveCard consumes a result containing standard NewsItems:
+
+```js
+export default async function load({ signal }) {
+  const response = await fetch("https://example.com/feed.json", { signal })
+  if (!response.ok) throw new Error(`HTTP ${response.status}`)
+  const items = await response.json() // Must conform to NewsItem.
+  return { feed: { items } }
+}
+```
+
+Alternatively, declare queries directly in the manifest:
+
+```json
+{
+  "id": "ai-feed",
+  "data": {
+    "queries": {
+      "feed": { "type": "latest", "keyword": "AI", "limit": 30 }
+    }
+  }
+}
+```
+
+`latest` searches retained history for all scoped Instances directly in SQL.
+It applies case-insensitive literal title matching, sorting, deduplication and limit
+before returning items. Missing publication times sort last; a publication window
+excludes items without a publication time. For standalone execution,
+pass `instanceIds` to the SDK; installed views use their placement's scope.
+Queries and JS may coexist: JS receives materialized results in `queries`, where
+query items use `{ value: NewsItem, instanceId?, sourceId?, metadata? }` envelopes.
+Its return value replaces those results. Return raw NewsItems in output `items`
+arrays; the runtime adds the common envelope. Other named JSON results can carry
+statistics or other data independently of LiveCard.
+`latest` does not execute Sources or fetch external feeds. Board scope follows the current
+Board's complete Instance list. History is isolated by each Instance's Worker,
+Source, and resolved parameters; repeated URLs use their newest retained value.
+Items absent from the newest observation remain searchable. `publishedAt` remains
+the source publication time; refresh time is never substituted for it. No matches
+produce an empty list.
+
+Access data without a view, open page, or Board placement:
+
+```ts
+const result = await client.widgets.data({ widgetId: "keyword-watch" })
+const feed = result.queries.feed
+```
+
+The result includes `queries`, completion `refreshedAt`, and Instance `errors`.
+A definition without `view` needs only `id` and `data`. The independent data
+loader ignores visual configuration. JS uses the first available runtime in this order: Bun, Deno, then Node.js 22+.
+The daemon searches PATH and standard installation directories, including
+`~/.bun/bin` and `~/.deno/bin`, so browser launches do not depend on shell PATH.
+The selected runtime receives
+`signal`, `widgetId`, optional `boardId`, and `clientOptions` for the Node SDK.
+Execution is bounded to 60 seconds, 16 MiB of JSON and 64 KiB of diagnostics.
+Use console logging for diagnostics; do not write other data to stdout. Local
+scripts are trusted code with the runtime's normal filesystem/network access.
+Each run imports a fresh module. Entry paths/symlinks must stay inside the Widget
+directory; dependencies use normal module resolution.
+
+Initial load, manual refresh and periodic placed-Widget refresh execute the data
+pipeline. Placed Widgets also have daemon-managed background Jobs. Unplaced data
+executes on SDK request. No separate producer or data.json is necessary. Existing
+`file` queries can still import `{ items: [...] }` JSON (16 MiB / 500 items).
+
+`view` may select `live-card` with optional `presentation: "list" | "ranking"`;
+omit presentation for automatic timeline/list selection. Built-in views omit the
+HTML `entry`. Custom views use an HTML `entry` and `view: { "type": "custom" }`.
+Preserve original millisecond `publishedAt` values; never substitute fetch time.
+When displaying an HN submission, use its discussion URL and submission time,
+not a timestamp that implies the linked article was published then.
+
 ### SDK calls inside Widgets
 
-Widgets have two independent ways to obtain data: manifest queries receive
+Custom-UI Widgets have two independent ways to obtain data: manifest queries receive
 materialized Snapshots, and SDK calls actively query data or execute Actions.
 A Widget may use both. The manifest's data scope applies to Snapshot queries;
 it does not restrict SDK calls.

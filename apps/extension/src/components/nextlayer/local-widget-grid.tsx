@@ -1,16 +1,16 @@
 import type { Color } from "@newsnext/shared/types"
 import type { ComponentMap, GridStackHandle, GridStackNode, GridStackOptions } from "gridstack/dist/react"
 import type { ReactNode, RefObject } from "react"
-import type { LocalWidgetManifest } from "./widget-manifest"
+import type { LocalWidgetManifest, WidgetUi } from "./widget-manifest"
 import type { NextLayerWidget } from "@/lib/board"
 import { FlipAnimate } from "@newsnext/ui/components/flip-animate"
-import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { useQuery } from "@tanstack/react-query"
 import { GridStack } from "gridstack/dist/react"
 import { useAtomValue } from "jotai"
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
-import { PhArrowCircleLeftDuotone, PhArrowCounterClockwiseDuotone, PhCircleDashedDuotone, PhInfoDuotone } from "@/components/icons/ph"
+import { PhArrowCircleLeftDuotone, PhInfoDuotone } from "@/components/icons/ph"
 import { LiveCardHeaderActionButton } from "@/components/live-card/card-header"
+import { LiveCardContentBackground, LiveCardContentTransition, LiveCardRefreshButton } from "@/components/live-card/card-refresh"
 import { LiveCardSurface } from "@/components/live-card/card-surface"
 import { useI18n } from "@/hooks/use-i18n"
 import { useNativeIntegrationStatus } from "@/hooks/use-native-integration-status"
@@ -18,29 +18,26 @@ import { RelativeTime } from "@/hooks/useRelativeTime"
 import { actions } from "@/lib/actions"
 import { isThemeColor } from "@/lib/settings/theme-color"
 import { boardsAtom } from "@/store/board"
+import { BuiltinLiveCard } from "./builtin-live-card"
+import { widgetDataQueryOptions } from "./widget-data-query"
 import { getChangedWidgetLayouts, getGridWidgetId } from "./widget-layout"
-import { parseLocalWidgetManifests } from "./widget-manifest"
+import { parseLocalWidgetManifests, parseWidgetUi } from "./widget-manifest"
 import { bindWidgetSdk } from "./widget-sdk"
 import "gridstack/dist/gridstack.css"
 
 const WIDGET_PROTOCOL_VERSION = 1
 
-interface WidgetSnapshot {
-  queries: Record<string, unknown>
-  refreshedAt?: number
-  revision?: number
-  stale: boolean
-  status: "missing" | "ready"
-}
-
 interface WidgetFrameProps {
   color: Color
   active: boolean
-  boardId: string
-  scopeKey: string
-  instanceCount: number
+  instanceIds: string[]
   title: string
-  url: string
+  url?: string
+  ui: WidgetUi
+  dataRevision: string
+  staleTimeMs: number
+  refreshIntervalMs: number
+  dataFiles: string[]
   widgetId: string
 }
 
@@ -51,7 +48,6 @@ interface InstalledLocalWidget {
 
 function createGridOptions(
   widgets: InstalledLocalWidget[],
-  boardId: string,
   boardInstanceIds: readonly string[],
   active: boolean,
 ): GridStackOptions {
@@ -81,11 +77,14 @@ function createGridOptions(
         props: {
           active,
           color: manifest.color,
-          boardId,
-          scopeKey: JSON.stringify(instanceIds),
-          instanceCount: instanceIds.length,
+          instanceIds: [...instanceIds],
+          dataRevision: manifest.dataRevision,
+          staleTimeMs: manifest.staleTimeMs,
           title: manifest.title,
           url: manifest.url,
+          ui: manifest.view,
+          refreshIntervalMs: manifest.refreshIntervalMs,
+          dataFiles: manifest.dataFiles,
           widgetId: manifest.id,
         },
         w: placement.layout.width,
@@ -110,36 +109,30 @@ function LocalWidgetFrame(props: Record<string, unknown>) {
   const visible = useElementVisible(articleRef)
   const documentVisible = useDocumentVisible()
   const active = frame.active && visible && documentVisible
-  const snapshot = useQuery({
-    queryKey: ["nextLayer", "widgetSnapshot", frame.boardId, frame.widgetId, frame.scopeKey],
-    queryFn: async () => parseWidgetSnapshot(await actions.nextLayer.getWidgetSnapshot({
-      boardId: frame.boardId,
-      widgetId: frame.widgetId,
-    })),
+  const dataQuery = useQuery({
+    ...widgetDataQueryOptions(frame),
     enabled: active,
-    refetchInterval: query => query.state.data?.status === "missing" ? 2_000 : false,
-    refetchIntervalInBackground: false,
-    retry: false,
   })
-  const snapshotPayload = useMemo(() => snapshot.error
+  const dataPayload = useMemo(() => dataQuery.error
     ? {
-        error: snapshot.error instanceof Error ? snapshot.error.message : "Widget Snapshot failed",
-        queries: {},
+        error: dataQuery.error instanceof Error ? dataQuery.error.message : "Widget data request failed",
+        ...dataQuery.data,
+        queries: dataQuery.data?.queries ?? {},
         stale: true,
         status: "error",
       }
-    : snapshot.data ?? { queries: {}, stale: true, status: "loading" }, [snapshot.data, snapshot.error])
+    : dataQuery.data ? { ...dataQuery.data, stale: false, status: "ready" } : { queries: {}, stale: true, status: "loading" }, [dataQuery.data, dataQuery.error])
 
   const postData = useCallback(() => {
     const contentWindow = iframeRef.current?.contentWindow
     if (!contentWindow) return
     contentWindow.postMessage({
-      ...snapshotPayload,
+      ...dataPayload,
       type: "newsnext.widget.data",
       version: WIDGET_PROTOCOL_VERSION,
       widgetId: frame.widgetId,
     }, "*")
-  }, [frame.widgetId, snapshotPayload])
+  }, [frame.widgetId, dataPayload])
 
   useEffect(() => {
     function handleMessage(event: MessageEvent<unknown>): void {
@@ -153,7 +146,7 @@ function LocalWidgetFrame(props: Record<string, unknown>) {
     if (loadedRef.current) postData()
   }, [postData])
 
-  const refreshing = snapshot.isFetching
+  const refreshing = dataQuery.isFetching
 
   return (
     <article ref={articleRef} className={`relative h-full min-h-0 select-none ${frame.color}`}>
@@ -161,17 +154,14 @@ function LocalWidgetFrame(props: Record<string, unknown>) {
         <WidgetFace
           title={frame.title}
           hidden={isFlipped}
+          isFetching={refreshing}
           actions={(
             <>
-              <LiveCardHeaderActionButton
-                className={refreshing ? "animate-spin" : undefined}
-                type="button"
-                aria-label={t("refreshWidget", { title: frame.title })}
-                disabled={refreshing}
-                onClick={() => void snapshot.refetch()}
-              >
-                {refreshing ? <PhCircleDashedDuotone /> : <PhArrowCounterClockwiseDuotone />}
-              </LiveCardHeaderActionButton>
+              <LiveCardRefreshButton
+                isFetching={refreshing}
+                label={t("refreshWidget", { title: frame.title })}
+                onRefresh={() => void dataQuery.refetch({ cancelRefetch: false })}
+              />
               <LiveCardHeaderActionButton
                 type="button"
                 aria-label={t("widgetDetails")}
@@ -182,18 +172,37 @@ function LocalWidgetFrame(props: Record<string, unknown>) {
             </>
           )}
         >
-          <iframe
-            ref={iframeRef}
-            className="relative size-full border-0 bg-transparent"
-            referrerPolicy="no-referrer"
-            sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"
-            src={frame.url}
-            title={frame.title}
-            onLoad={() => {
-              loadedRef.current = true
-              postData()
-            }}
-          />
+          {frame.ui.type === "live-card"
+            ? (
+                <BuiltinLiveCard
+                  ui={frame.ui}
+                  title={frame.title}
+                  isFetching={refreshing}
+                  onRefresh={() => void dataQuery.refetch({ cancelRefetch: false })}
+                  queries={dataQuery.data?.queries ?? {}}
+                  statusMessage={refreshing
+                    ? undefined
+                    : dataQuery.error?.message ?? (
+                      !dataQuery.data
+                        ? t("widgetDataLoading")
+                        : undefined
+                    )}
+                />
+              )
+            : (
+                <iframe
+                  ref={iframeRef}
+                  className="relative size-full border-0 bg-transparent"
+                  referrerPolicy="no-referrer"
+                  sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"
+                  src={frame.url}
+                  title={frame.title}
+                  onLoad={() => {
+                    loadedRef.current = true
+                    postData()
+                  }}
+                />
+              )}
         </WidgetFace>
         <WidgetFace
           title={frame.title}
@@ -212,25 +221,26 @@ function LocalWidgetFrame(props: Record<string, unknown>) {
             <div>
               <dt className="text-muted-foreground">{t("widgetDataStatus")}</dt>
               <dd className="mt-1" role="status">
-                {snapshot.error
-                  ? snapshot.error.message
+                {dataQuery.error
+                  ? dataQuery.error.message
                   : t(
-                      !snapshot.data
+                      !dataQuery.data
                         ? "widgetDataLoading"
-                        : snapshot.data.status === "missing"
-                          ? "widgetDataMissing"
-                          : snapshot.data.stale ? "widgetDataStale" : "widgetDataReady",
+                        : "widgetDataReady",
                     )}
               </dd>
             </div>
             <div>
               <dt className="text-muted-foreground">{t("widgetDataSources")}</dt>
-              <dd className="mt-1">{t("instanceCount", { count: frame.instanceCount })}</dd>
+              <dd className="mt-1">
+                {frame.dataFiles.length > 0 && <span className="block">{frame.dataFiles.join(", ")}</span>}
+                {(frame.instanceIds.length > 0 || frame.dataFiles.length === 0) && t("instanceCount", { count: frame.instanceIds.length })}
+              </dd>
             </div>
-            {snapshot.data?.refreshedAt !== undefined && (
+            {dataQuery.data?.refreshedAt !== undefined && (
               <div>
                 <dt className="text-muted-foreground">{t("widgetUpdatedAt")}</dt>
-                <dd className="mt-1"><RelativeTime date={snapshot.data.refreshedAt} /></dd>
+                <dd className="mt-1"><RelativeTime date={dataQuery.data.refreshedAt} /></dd>
               </div>
             )}
           </dl>
@@ -243,11 +253,12 @@ function LocalWidgetFrame(props: Record<string, unknown>) {
 interface WidgetFaceProps {
   title: string
   hidden: boolean
+  isFetching?: boolean
   actions: ReactNode
   children: ReactNode
 }
 
-function WidgetFace({ title, hidden, actions, children }: WidgetFaceProps): React.JSX.Element {
+function WidgetFace({ title, hidden, actions, children, isFetching = false }: WidgetFaceProps): React.JSX.Element {
   return (
     <div className="relative h-full min-h-0" inert={hidden} aria-hidden={hidden}>
       <LiveCardSurface />
@@ -263,54 +274,36 @@ function WidgetFace({ title, hidden, actions, children }: WidgetFaceProps): Reac
           </div>
         </header>
         <div className="relative min-h-0 flex-1 overflow-hidden rounded-2xl">
-          <SquircleBox
-            aria-hidden
-            radius="2xl"
-            className="pointer-events-none absolute inset-0 bg-background/70 zenith-theme-400"
-          />
-          {children}
+          <LiveCardContentBackground isFetching={isFetching} />
+          <LiveCardContentTransition className="relative size-full" isFetching={isFetching}>
+            {children}
+          </LiveCardContentTransition>
         </div>
       </div>
     </div>
   )
 }
 
-function parseWidgetSnapshot(value: unknown): WidgetSnapshot {
-  if (!isRecord(value)
-    || !isRecord(value.queries)
-    || typeof value.stale !== "boolean"
-    || (value.status !== "missing" && value.status !== "ready")
-    || (value.status === "ready" && (
-      !Number.isInteger(value.refreshedAt)
-      || Number(value.refreshedAt) <= 0
-      || !Number.isInteger(value.revision)
-      || Number(value.revision) <= 0
-    ))) {
-    throw new TypeError("The NewsNext App returned an invalid Widget Snapshot")
-  }
-  return {
-    queries: value.queries,
-    ...(value.status === "ready"
-      ? { refreshedAt: Number(value.refreshedAt), revision: Number(value.revision) }
-      : {}),
-    stale: value.stale,
-    status: value.status,
-  }
-}
-
 function parseFrameProps(props: Record<string, unknown>): WidgetFrameProps {
   if (!isThemeColor(props.color)
     || typeof props.active !== "boolean"
-    || typeof props.boardId !== "string"
-    || !Number.isInteger(props.instanceCount)
-    || Number(props.instanceCount) < 0
-    || typeof props.scopeKey !== "string"
+    || typeof props.dataRevision !== "string"
+    || !Number.isSafeInteger(props.staleTimeMs)
+    || Number(props.staleTimeMs) < 0
+    || !Array.isArray(props.instanceIds)
+    || !props.instanceIds.every(id => typeof id === "string")
     || typeof props.title !== "string"
-    || typeof props.url !== "string"
+    || (props.url !== undefined && typeof props.url !== "string")
+    || !Array.isArray(props.dataFiles)
+    || !props.dataFiles.every(path => typeof path === "string")
+    || !Number.isSafeInteger(props.refreshIntervalMs)
+    || Number(props.refreshIntervalMs) < 60_000
     || typeof props.widgetId !== "string") {
     throw new TypeError("GridStack supplied invalid local Widget properties")
   }
-  return props as unknown as WidgetFrameProps
+  const ui = parseWidgetUi(props.ui)
+  if (ui.type === "custom" && typeof props.url !== "string") throw new TypeError("Custom Widget UI requires an entry URL")
+  return { ...props, ui } as unknown as WidgetFrameProps
 }
 
 function isWidgetReady(value: unknown): boolean {
@@ -390,10 +383,10 @@ export function LocalWidgetGrid({ boardId, onReady, viewReady }: LocalWidgetGrid
     }) ?? []
   }, [board?.nextLayer.widgets, manifestQuery.widgets])
   const gridOptions = useMemo(
-    () => createGridOptions(widgets, boardId, board?.instanceIds ?? [], viewReady),
-    [board?.instanceIds, boardId, viewReady, widgets],
+    () => createGridOptions(widgets, board?.instanceIds ?? [], viewReady),
+    [board?.instanceIds, viewReady, widgets],
   )
-  const gridKey = widgets.map(widget => `${widget.manifest.id}@${widget.manifest.url}`).join(":")
+  const gridKey = widgets.map(widget => `${widget.manifest.id}@${widget.manifest.url ?? JSON.stringify(widget.manifest.view)}`).join(":")
   const handleGridChange = useCallback((_event: Event, nodes: GridStackNode[]) => {
     if (!board || gridRef.current?.getGrid()?.getColumn() !== 12) return
     const updates = getChangedWidgetLayouts(nodes, board.nextLayer.widgets)

@@ -200,15 +200,98 @@ is a presentation adapter, not the persistence model.
 
 Local Widget files and `widget.json` live in the CLI's Widget directory. The
 manifest declares named data queries and a refresh policy. The daemon reconciles
-managed Jobs from the authenticated Board projection, collects through the bound
-Workers, and persists revisioned Snapshots in Turso. A Snapshot atomically stores
+managed Jobs from the authenticated Board projection, reads retained Instance
+history, and persists revisioned Snapshots in Turso. Widget refreshes do not execute
+Sources. A Snapshot atomically stores
 all query results, manifest/scope fingerprints, and a refresh timestamp.
 
-The host reads one Snapshot over Native Messaging for its Board, Widget, and
-resolved Instance scope. It owns title, layout, refresh, and error state. The
-sandboxed iframe announces readiness and renders the supplied data. The host
-refresh button rereads the saved Snapshot. NextLayer does not observe NowLayer's
-query cache. The loopback server serves only assets and presentation metadata.
+Widget data and view are independent contracts. `data.queries` declares named
+queries; optional `data.entry` names an ES module whose default async function
+receives `{ queries, widgetId, boardId, signal, clientOptions }`. Queries execute
+first; the JS function returns the final named results, for example
+`{ feed: { items: [...] }, stats: { count: 42 } }`. Item arrays are adapted to
+`{ items: [{ value: NewsItem }] }`, matching Instance query results. Non-item JSON
+is preserved for other consumers. `latest` queries support a case-insensitive
+`keyword` substring filter on titles before sorting and limiting. History scope
+uses each Instance's Worker and Source with resolved parameters from collection
+bindings (or exact explicit parameters when no binding exists). Each URL keeps its newest retained value across Source versions before keyword
+filtering. Historical items need not still appear
+in the latest Source response. Publication timestamps are preserved. History search uses `history_search_items`,
+a transactional projection with one
+latest retained row per dataset and URL, a normalized title, and normalized
+publication time. Schema 12 backfills it once from existing history; each later
+retention updates it in the same transaction, ignoring older backfilled values.
+SQL resolves latest versions, applies literal substring matching and publication
+windows, deduplicates, orders, and limits results before decoding JSON in Rust.
+Window sorts carry lightweight columns; full JSON is joined only for the final page.
+Widget history queries execute on blocking worker threads with a shared two-query
+semaphore; queued work waits asynchronously instead of occupying daemon event
+threads. This isolates database computation from IPC processing.
+On the development history copy with 12 datasets, eight keyword searches took
+266–330 ms each after migration. An eight-card concurrent SDK check completed
+all data requests in about 2.2 seconds while five status requests succeeded
+(0.7–1.14 seconds including the local CLI launcher). The one-time backfill took
+about 25 seconds; these measurements are a local baseline, not a latency guarantee.
+The dataset and publication-time indexes narrow retrieval to retained search rows;
+substring matching still scans titles within the selected datasets and is not
+a full-text index. The daemon
+filters logs at INFO before event construction so Turso instruction-level tracing
+does not dominate history-query execution. `file` queries
+remain an optional JSON import path, not the required data mechanism.
+
+The CLI runs `data.entry` in a fresh process in the Widget directory, preferring
+Bun, then Deno, then Node.js 22+. For each runtime it searches PATH followed by
+standard user and system installation directories. This also handles the minimal
+PATH inherited by browser Native Messaging hosts. A script failure is returned
+without rerunning it under another runtime. Modules can use native `fetch` or bundle/import
+the SDK and construct a client with the supplied `clientOptions`, which select
+the running CLI and its environment. Scripts are trusted local code, not browser
+sandbox code. Execution is limited to 60 seconds (the supplied AbortSignal fires
+at 55 seconds); result output is bounded to 16 MiB and diagnostics to 64 KiB.
+stdout is reserved for JSON; console diagnostics use stderr. Failed runs retain
+the previous placed Snapshot. Entrypoint paths and symlinks must stay within the
+Widget directory; dependencies follow the JS runtime's normal module resolution.
+
+`client.widgets.data({ widgetId, instanceIds? })` executes this same data pipeline
+directly through SDK/daemon IPC and returns `{ queries, refreshedAt, errors }`.
+It requires neither a Board placement nor a view. With no Instance inputs,
+JS-only data works without a connected browser. Declarative Instance queries use
+the explicit `instanceIds` supplied by this consumer. Direct calls return a fresh
+result without writing a Board Snapshot. The daemon advertises `widgetData`.
+Data loading ignores view, HTML entry, title, palette, and grid configuration;
+only data/id/refresh fields participate in this contract.
+
+The extension centralizes Widget data fetching in `widgetDataQueryOptions`.
+Its TanStack Query key includes Widget, sorted Instance scope, and the
+manifest data fingerprint; Board identity, view and layout do not participate.
+Identical scoped requests share a cache across Boards. `staleTime` and
+polling use the manifest refresh policy. Views receive data and query state from
+the shell. Refresh failures preserve prior data for both built-in and iframe
+views. `queryFn` calls `client.widgets.data({ widgetId, instanceIds }, { signal })`
+through `@newsnext/sdk/extension`. The extension client uses a validated runtime
+port and the existing Native Messaging SDK bridge. The iframe and extension
+transports share pull-based framing, timeout, abort, and cleanup logic. Changing
+scope or unmounting aborts the obsolete request. UI refreshes do not read or write
+Board snapshots; snapshot Jobs remain separate consumers of the data pipeline.
+
+Optional `view: { type: "live-card", query: "feed" }` selects the extension's
+built-in renderer, sharing `LiveCardItems` with NowLayer. Automatic timeline/list
+selection and explicit `presentation: "list" | "ranking"` reuse the Source
+presentation contract. Custom views retain `entry` and may declare
+`view: { type: "custom" }`. Omitted view plus an HTML entry keeps legacy custom
+Widgets working; omitted view without an HTML entry defines data only and is
+excluded from the renderable manifest list. Built-in views validate the complete
+NewsItem contract, accept empty arrays, and cap aggregates at 500 items.
+
+For placed views, initial load, manual refresh, visible polling, and managed Jobs
+all use the same query/JS execution pipeline before persisting the Snapshot.
+Overlapping executions for one placement are serialized. The view's data scope
+supplies the Instance inputs; no iframe needs to run for data to refresh. Managed
+background schedules remain attached to placements; unplaced data runs on SDK
+request. The loopback HTTP server serves assets and presentation metadata, not
+an unauthenticated endpoint that executes local JavaScript. NextLayer does not
+observe NowLayer's query cache. The host owns title, palette, refresh state,
+layout, and the details back, including local data entry filenames.
 
 Widgets can also import `createClient` from `@newsnext/sdk/widget` and actively
 query history, fetch through the browser, execute Sources, and invoke every typed

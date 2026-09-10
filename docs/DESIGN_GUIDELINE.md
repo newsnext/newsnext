@@ -309,10 +309,23 @@ iframe in its grid using GridStack's interaction classes. This keeps movement
 and release events in the host document when the pointer crosses another
 Widget. Restore iframe interaction as soon as the gesture ends.
 
+Treat LiveCard as a built-in Widget UI, independent of the data producer.
+Widgets selecting `view: { type: "live-card", query: "feed" }` render through the shared `LiveCardItems` presentation layer
+in the extension; do not recreate item rows, time formatting, previews, or
+statistics in local HTML. Only custom UIs need an iframe. Preserve the same
+shell, details back, palette, and controls for either renderer. Empty item
+results are an ordinary empty state; malformed data must show an error.
+
 Keep the trusted Widget shell outside the iframe and reuse the LiveCard surface
 language directly: `LiveCardSurface`, `p-2.5`, a `text-base font-bold` title, and
 `LiveCardHeaderActionButton`. Match the compact LiveCard header on both Widget
 faces: a single title line in a 32px row and an 8px gap before the content panel.
+LiveCards and Widgets share `LiveCardRefreshButton` and the content refresh
+background/opacity treatment. Disable the refresh button while fetching, spin its
+indicator, pulse the content wash, and dim existing content without clearing it.
+A failed background refresh retains the last successful items. First-load errors
+reuse the LiveCard retry action; error details remain available in the shell.
+
 Set each Widget's `color` property in `widget.json`
 using the same named palette as LiveCards (for example, `blue` or `teal`). It
 defaults to `slate` when omitted. Apply this palette to the shell so the outer

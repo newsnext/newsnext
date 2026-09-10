@@ -11,6 +11,7 @@
     },
     "./models": "./src/models/index.ts",
     "./actions": "./src/action/index.ts",
+    "./extension": "./src/extension.ts",
     "./widget": "./src/widget.ts"
   },
   "files": [

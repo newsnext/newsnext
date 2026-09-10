@@ -2,19 +2,17 @@ import type { ReactNode } from "react"
 import type { LiveCardDragHandleRef } from "./card-header"
 import type { SourcePermissionRequest } from "@/lib/source"
 import type { LiveCardViewModel, NewsItem } from "@/typings/source"
-import { SquircleBox } from "@newsnext/ui/components/squircle"
-import { cn } from "@newsnext/ui/lib/utils"
 import { useMemo, useState } from "react"
 import { useI18n } from "@/hooks/use-i18n"
 import { useSourceIcon } from "@/hooks/use-source-icon"
 import { useSourceMarkScales } from "@/hooks/use-source-mark-scales"
-import { getHostPermissionOrigins, getNewsItemsPresentation } from "@/lib/source"
+import { getHostPermissionOrigins } from "@/lib/source"
 import {
-  PhArrowCounterClockwiseDuotone,
-  PhCircleDashedDuotone,
   PhInfoDuotone,
 } from "../icons/ph"
 import { LiveCardHeader, LiveCardHeaderActionButton } from "./card-header"
+import { LiveCardItems } from "./card-items"
+import { LiveCardContentBackground, LiveCardContentTransition, LiveCardRefreshButton } from "./card-refresh"
 import {
   SourceErrorState,
   SourceLoginState,
@@ -25,10 +23,7 @@ import {
 } from "./card-source-state"
 import { LiveCardSurface } from "./card-surface"
 import { LiveCardIdentityContext } from "./live-card-identity-context"
-import { Ranking } from "./ranking"
 import { SourcePermissionDetails } from "./source-permission-details"
-import { Timeline } from "./timeline"
-import { UnorderedList } from "./unordered-list"
 
 interface LiveCardFrontProps {
   source: LiveCardViewModel
@@ -49,25 +44,6 @@ interface LiveCardFrontProps {
   onFlip?: () => void
   actions?: ReactNode
   dragHandleRef?: LiveCardDragHandleRef
-}
-
-function LiveCardRefreshButton({
-  isFetching,
-  onRefresh,
-}: {
-  isFetching: boolean
-  onRefresh: () => void
-}) {
-  const { t } = useI18n()
-  return (
-    <LiveCardHeaderActionButton
-      className={isFetching ? "animate-spin" : undefined}
-      onClick={onRefresh}
-      aria-label={t("refresh")}
-    >
-      {isFetching ? <PhCircleDashedDuotone /> : <PhArrowCounterClockwiseDuotone />}
-    </LiveCardHeaderActionButton>
-  )
 }
 
 interface LiveCardFrontContentProps {
@@ -133,36 +109,13 @@ function LiveCardFrontContent({
     )
   }
 
-  const presentation = getNewsItemsPresentation(items, presentationType)
-  if (presentation.type === "ranking") {
-    return (
-      <Ranking
-        items={items}
-        inlinePresentation={inlinePresentation}
-        markScale={markScale}
-        scrollElement={scrollElement}
-      />
-    )
-  }
-
-  if (presentation.type === "list") {
-    return (
-      <UnorderedList
-        items={items}
-        inlinePresentation={inlinePresentation}
-        markScale={markScale}
-        scrollElement={scrollElement}
-      />
-    )
-  }
-
   return (
-    <Timeline
+    <LiveCardItems
       items={items}
       inlinePresentation={inlinePresentation}
       markScale={markScale}
+      presentationType={presentationType}
       scrollElement={scrollElement}
-      times={presentation.times}
     />
   )
 }
@@ -244,14 +197,7 @@ export function LiveCardFront({
 
         {/* Content */}
         <div className="relative min-h-0 flex-1 overflow-hidden rounded-2xl">
-          <SquircleBox
-            aria-hidden
-            radius="2xl"
-            className={cn(
-              "pointer-events-none absolute inset-0 bg-background/70 zenith-theme-400",
-              isContentFetching && "animate-pulse",
-            )}
-          />
+          <LiveCardContentBackground isFetching={isContentFetching} />
           {sourceStatusMessage && (
             <SourceStatusPattern icon={icon} />
           )}
@@ -260,7 +206,7 @@ export function LiveCardFront({
             onPointerDown={event => event.stopPropagation()}
             className="relative size-full overflow-y-auto px-2 py-2 scrollbar-hidden"
           >
-            <div className={cn("min-h-full transition-opacity duration-500", isContentFetching && "opacity-20")}>
+            <LiveCardContentTransition isFetching={isContentFetching}>
               <LiveCardIdentityContext value={identity}>
                 <LiveCardFrontContent
                   items={items}
@@ -277,7 +223,7 @@ export function LiveCardFront({
                   onRequestPermission={onRequestPermission}
                 />
               </LiveCardIdentityContext>
-            </div>
+            </LiveCardContentTransition>
           </div>
           {sourceStatusMessage && (
             <SourceStatusMessage

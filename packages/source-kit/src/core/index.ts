@@ -7,6 +7,7 @@ export {
   validateSourceRequestRules,
 } from "./capabilities"
 export {
+  validateNewsItems,
   validateSourceLoaderOutput,
 } from "./loader-result"
 export {

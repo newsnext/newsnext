@@ -97,3 +97,10 @@ export interface Status {
   widgetServerUrl: string
 }
 export interface ActionOptions extends CallOptions { workerId?: string }
+
+export interface WidgetDataQuery { widgetId: string, instanceIds?: string[] }
+export interface WidgetDataResult {
+  queries: Record<string, JsonValue>
+  refreshedAt: number
+  errors: JsonValue[]
+}

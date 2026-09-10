@@ -438,6 +438,16 @@ resolved Source target isolates Loader cache and History datasets. NextLayer
 reads daemon-owned Widget Snapshots; its lifecycle is documented under
 [Layers and Widgets](APPLICATION_ARCHITECTURE.md#layers-and-widgets).
 
+Widget item validation reuses `validateNewsItems` from source-kit core. This
+normalizes optional values and validates the complete NewsItem contract without
+the Source loader's nonempty-result requirement or 50-item collection cap.
+`validateSourceLoaderOutput` retains its existing Source semantics. The native
+LiveCard Widget renderer consumes the same normalized items as NowLayer through
+`LiveCardItems`; query and JS data do not bypass item validation. Data execution
+and view rendering are independent; see the data-only Widget contract in
+[SOURCE_GUIDELINE.md](SOURCE_GUIDELINE.md#data-only-widgets-with-built-in-ui) and
+the runtime lifecycle in [APPLICATION_ARCHITECTURE.md](APPLICATION_ARCHITECTURE.md#layers-and-widgets).
+
 Loader metadata is response-scoped and remains part of the load result stored in
 TanStack Query and persisted for later restoration.
 It uses the complete source presentation metadata shape: title, badge,

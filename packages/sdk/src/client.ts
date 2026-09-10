@@ -1,6 +1,6 @@
 import type { AllActionContract } from "./action/index.js"
 import type { ActionDescriptor, ActionInput, ActionName, ActionResult, FetchInput, FetchResult, RunInput, RunResult } from "./actions.js"
-import type { ActionOptions, CallOptions, CompareQuery, Comparison, Dataset, DatasetPage, DatasetQuery, ExportQuery, HistoryTime, Observation, ObservationPage, ObservationQuery, ObservationResult, Status } from "./types.js"
+import type { ActionOptions, CallOptions, CompareQuery, Comparison, Dataset, DatasetPage, DatasetQuery, ExportQuery, HistoryTime, Observation, ObservationPage, ObservationQuery, ObservationResult, Status, WidgetDataQuery, WidgetDataResult } from "./types.js"
 import { createActionsClient } from "./action/client.js"
 import { DEFAULT_TIMEOUT_MS, historyTime, NewsNextError, timeRange } from "./protocol.js"
 
@@ -63,6 +63,14 @@ export class NewsNextClient {
       headers: input.headers ?? [],
       timeoutMs: options.timeoutMs ?? this.options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
     }, options)
+  }
+
+  readonly widgets = {
+    /** Execute local Widget data independently of any view or Board placement. */
+    data: (query: WidgetDataQuery, options?: CallOptions): Promise<WidgetDataResult> => this.call({
+      method: "widgets.data",
+      ...query,
+    }, options),
   }
 
   readonly history = {

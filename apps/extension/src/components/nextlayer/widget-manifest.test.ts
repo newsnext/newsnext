@@ -55,3 +55,17 @@ describe("parseLocalWidgetManifests", () => {
     expect(() => parseLocalWidgetManifests([widget, widget], SERVER_URL)).toThrow("Duplicate widget ID")
   })
 })
+
+describe("built-in Widget UI", () => {
+  const widget = { id: "feed", title: "Feed", height: 4, minHeight: 2, width: 4, minWidth: 2, view: { type: "live-card", query: "items" } }
+  it("accepts a data-only Widget without an HTML entry", () => {
+    const [manifest] = parseLocalWidgetManifests([widget], SERVER_URL)
+    expect(manifest?.view).toEqual({ type: "live-card", query: "items" })
+    expect(manifest?.url).toBeUndefined()
+  })
+  it("rejects mixed renderers, unknown UIs and invalid presentation options", () => {
+    expect(() => parseLocalWidgetManifests([{ ...widget, url: `${SERVER_URL}/widgets/feed/index.html` }], SERVER_URL)).toThrow("must not declare")
+    expect(() => parseLocalWidgetManifests([{ ...widget, view: { type: "unknown" } }], SERVER_URL)).toThrow("Invalid Widget UI")
+    expect(() => parseLocalWidgetManifests([{ ...widget, view: { type: "live-card", query: "items", presentation: "invalid" } }], SERVER_URL)).toThrow("Invalid Widget UI")
+  })
+})

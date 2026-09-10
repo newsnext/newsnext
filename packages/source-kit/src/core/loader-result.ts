@@ -1,4 +1,4 @@
-import type { SourceLoaderResult } from "../types"
+import type { NewsItem, SourceLoaderResult } from "../types"
 import type { CompiledSourceTemplate } from "./template"
 import { NEWS_ITEM_STAT_KEYS } from "@newsnext/shared/types"
 import { isSourcePresentationMetadataKey, isSourcePresentationType } from "../types"
@@ -17,6 +17,16 @@ export function validateSourceLoaderOutput(value: unknown): SourceLoaderResult {
     ...normalized,
     items: normalized.items.slice(0, SOURCE_LOADER_RESULT_MAX_ITEMS),
   }
+}
+
+/** Validate shared item data without imposing Source collection limits. */
+export function validateNewsItems(value: unknown): NewsItem[] {
+  if (!Array.isArray(value)) throwInvalidLoaderResult("expected an items array")
+  return value.map((item, index) => {
+    const normalized = normalizeNewsItem(item)
+    assertNewsItem(normalized, index)
+    return normalized
+  })
 }
 
 export function renderSourceLoaderResult(
@@ -89,7 +99,7 @@ function assertSourceLoaderOutput(value: unknown): asserts value is SourceLoader
   if (value.metadata !== undefined) assertSourceLoaderMetadata(value.metadata)
 }
 
-function assertNewsItem(value: unknown, index: number): void {
+function assertNewsItem(value: unknown, index: number): asserts value is NewsItem {
   const location = `items[${index}]`
   if (!isRecord(value)) throwInvalidLoaderResult(`${location} must be an object`)
   assertOnlyKeys(value, ["title", "url", "publishedAt", "author", "stats", "attributes", "icon", "mark", "content"], location)
