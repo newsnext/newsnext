@@ -1,4 +1,4 @@
-import type { Instance, InstancePatch } from "@newsnext/sdk/models"
+import type { LiveCard, LiveCardPatch } from "@newsnext/sdk/models"
 import type {
   SourcePresentationMetadata,
 } from "@newsnext/source-kit/types"
@@ -7,12 +7,12 @@ import { SOURCE_PRESENTATION_METADATA_KEYS } from "@newsnext/source-kit"
 import { pick } from "es-toolkit"
 import { mergeSourceParamValues } from "./params"
 
-export type { Instance, InstanceMetadata, InstancePatch } from "@newsnext/sdk/models"
+export type { LiveCard, LiveCardMetadata, LiveCardPatch } from "@newsnext/sdk/models"
 
-export function mergeInstancePatch(
-  current: InstancePatch | undefined,
-  patch: InstancePatch,
-): InstancePatch {
+export function mergeLiveCardPatch(
+  current: LiveCardPatch | undefined,
+  patch: LiveCardPatch,
+): LiveCardPatch {
   return {
     params: current?.params || patch.params
       ? mergeSourceParamValues(current?.params, patch.params)
@@ -23,9 +23,9 @@ export function mergeInstancePatch(
   }
 }
 
-export function applyInstancePatch(
+export function applyLiveCardPatch(
   liveCard: LiveCardViewModel,
-  patch: InstancePatch,
+  patch: LiveCardPatch,
 ): LiveCardViewModel {
   const metadata = pick(patch.metadata ?? {}, SOURCE_PRESENTATION_METADATA_KEYS)
 
@@ -40,13 +40,13 @@ export function applyInstancePatch(
   }
 }
 
-function applyInstanceOverrides(
+function applyLiveCardOverrides(
   liveCard: LiveCardViewModel,
-  instance: Instance,
+  card: LiveCard,
 ): LiveCardViewModel {
   return {
-    ...applyInstancePatch(liveCard, instance.patch),
-    createdAt: instance.createdAt,
+    ...applyLiveCardPatch(liveCard, card.patch),
+    createdAt: card.createdAt,
   }
 }
 
@@ -71,45 +71,45 @@ export function applySourceSnapshot(
 
 export function createLiveCard(
   source: SourceDescriptor,
-  instance: Instance,
+  card: LiveCard,
   boardId: string | null = null,
 ): LiveCardViewModel {
-  return applyInstanceOverrides({
+  return applyLiveCardOverrides({
     ...source,
-    id: instance.instanceId,
-    sourceId: instance.sourceId,
+    id: card.cardId,
+    sourceId: card.sourceId,
     boardId,
-  }, instance)
+  }, card)
 }
 
 export function buildLiveCards({
   sources,
-  instances,
+  liveCards,
   boardId,
-  boardInstanceIds,
+  boardCardIds,
 }: {
   sources: SourceDescriptor[]
-  instances: Instance[]
+  liveCards: LiveCard[]
   boardId: string | null
-  boardInstanceIds?: readonly string[]
+  boardCardIds?: readonly string[]
 }): LiveCardViewModel[] {
-  const instanceGroups = new Map<string, Instance[]>()
-  const visibleIds = boardInstanceIds ? new Set(boardInstanceIds) : undefined
+  const liveCardGroups = new Map<string, LiveCard[]>()
+  const visibleIds = boardCardIds ? new Set(boardCardIds) : undefined
 
-  instances.forEach((instance) => {
-    if (visibleIds && !visibleIds.has(instance.instanceId)) {
+  liveCards.forEach((card) => {
+    if (visibleIds && !visibleIds.has(card.cardId)) {
       return
     }
 
-    const currentInstances = instanceGroups.get(instance.sourceId) ?? []
-    currentInstances.push(instance)
-    instanceGroups.set(instance.sourceId, currentInstances)
+    const currentLiveCards = liveCardGroups.get(card.sourceId) ?? []
+    currentLiveCards.push(card)
+    liveCardGroups.set(card.sourceId, currentLiveCards)
   })
 
   return sources.flatMap(source =>
-    (instanceGroups.get(source.id) ?? [])
+    (liveCardGroups.get(source.id) ?? [])
       .sort((a, b) => a.createdAt - b.createdAt)
-      .map(instance => createLiveCard(source, instance, boardId)),
+      .map(card => createLiveCard(source, card, boardId)),
   )
 }
 

@@ -1,4 +1,4 @@
-import type { NextLayerWidget, NextLayerWidgetLayout } from "@/lib/board"
+import type { LiveWidget, LiveWidgetLayout } from "@/lib/board"
 
 export const WIDGET_GAP = 24
 // Split the 400 × 500 LiveCard footprint, including its gutter, into two units.
@@ -8,7 +8,7 @@ export const WIDGET_ROW_HEIGHT = (500 + WIDGET_GAP) / 2
 const GRID_WIDGET_ID_PREFIX = "widget-"
 
 export interface ChangedWidgetLayout {
-  layout: NextLayerWidgetLayout
+  layout: LiveWidgetLayout
   widgetId: string
 }
 
@@ -124,7 +124,7 @@ export function getGridWidgetId(widgetId: string): string {
 
 export function getChangedWidgetLayouts(
   nodes: readonly WidgetGridNode[],
-  widgets: readonly NextLayerWidget[],
+  widgets: readonly LiveWidget[],
 ): ChangedWidgetLayout[] {
   const widgetsById = new Map(widgets.map(widget => [widget.widgetId, widget]))
   const orderedNodes = [...nodes].sort((a, b) => (a.y ?? 0) - (b.y ?? 0) || (a.x ?? 0) - (b.x ?? 0))
@@ -146,7 +146,7 @@ export function getChangedWidgetLayouts(
   })
 }
 
-function layoutsEqual(left: NextLayerWidgetLayout, right: NextLayerWidgetLayout): boolean {
+function layoutsEqual(left: LiveWidgetLayout, right: LiveWidgetLayout): boolean {
   return left.x === right.x
     && left.y === right.y
     && left.width === right.width

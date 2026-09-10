@@ -47,7 +47,7 @@ function parseHostMessage(value: unknown): ParsedHostMessage {
         : [],
       widgetServerUrl: parseWidgetServerOrigin(value.widgetServerUrl),
       workspace: parseWorkspace(value.workspace),
-      localInstanceIds: parseLocalInstanceIds(value.localInstanceIds),
+      localCardIds: parseLocalCardIds(value.localCardIds),
       workerRoutingRevision: parseRevision(value.workerRoutingRevision, "Worker routing"),
       offlineWorkers: parseOfflineWorkers(value.offlineWorkers),
     }
@@ -59,7 +59,7 @@ function parseHostMessage(value: unknown): ParsedHostMessage {
     return {
       type: "workerRoutingChanged",
       revision: parseRevision(value.revision, "Worker routing"),
-      localInstanceIds: parseLocalInstanceIds(value.localInstanceIds),
+      localCardIds: parseLocalCardIds(value.localCardIds),
       offlineWorkers: parseOfflineWorkers(value.offlineWorkers),
     }
   }
@@ -84,7 +84,7 @@ function parseHostMessage(value: unknown): ParsedHostMessage {
     return {
       type: "workspaceChanged",
       patch: parseWorkspacePatch(value.patch),
-      localInstanceIds: parseLocalInstanceIds(value.localInstanceIds),
+      localCardIds: parseLocalCardIds(value.localCardIds),
     }
   }
   if (value.type === "workspaceResult"
@@ -95,27 +95,16 @@ function parseHostMessage(value: unknown): ParsedHostMessage {
       type: "workspaceResult",
       requestId: value.requestId,
       revision: Number(value.revision),
-      localInstanceIds: parseLocalInstanceIds(value.localInstanceIds),
+      localCardIds: parseLocalCardIds(value.localCardIds),
     }
   }
   if (
-    value.type === "instanceResult"
+    value.type === "liveCardResult"
     && typeof value.requestId === "string"
     && isNativeCommandResult(value.result)
   ) {
     return {
-      type: "instanceResult",
-      requestId: value.requestId,
-      result: value.result,
-    }
-  }
-  if (
-    value.type === "widgetSnapshotResult"
-    && typeof value.requestId === "string"
-    && isNativeCommandResult(value.result)
-  ) {
-    return {
-      type: "widgetSnapshotResult",
+      type: "liveCardResult",
       requestId: value.requestId,
       result: value.result,
     }
@@ -147,20 +136,20 @@ function parseWorkspace(value: unknown): NativeWorkspace {
   const application = normalizeApplicationData({
     version: APPLICATION_DATA_VERSION,
     boards: value.boards,
-    instances: value.instances,
+    liveCards: value.liveCards,
   })
   return {
     revision: Number(value.revision),
     updatedAt: Number(value.updatedAt),
     boards: application.boards,
-    instances: application.instances,
+    liveCards: application.liveCards,
     settings: value.settings,
   }
 }
 
-function parseLocalInstanceIds(value: unknown): string[] {
+function parseLocalCardIds(value: unknown): string[] {
   if (!Array.isArray(value) || value.some(id => typeof id !== "string" || !id)) {
-    throw new Error("The native host returned invalid local Instance IDs")
+    throw new Error("The native host returned invalid local LiveCard IDs")
   }
   return [...new Set(value)]
 }
@@ -170,14 +159,14 @@ function parseOfflineWorkers(value: unknown): NativeOfflineWorker[] {
     !isRecord(worker)
     || typeof worker.id !== "string"
     || !worker.id
-    || !isIdentifierArray(worker.instanceIds)
-    || worker.instanceIds.length === 0
+    || !isIdentifierArray(worker.cardIds)
+    || worker.cardIds.length === 0
   ))) {
     throw new Error("The native host returned invalid offline Workers")
   }
   return value.map(worker => ({
     id: String(worker.id),
-    instanceIds: [...worker.instanceIds],
+    cardIds: [...worker.cardIds],
   }))
 }
 

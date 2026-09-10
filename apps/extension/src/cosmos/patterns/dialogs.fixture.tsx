@@ -18,24 +18,24 @@ const BOARD_DIALOG_BOARDS: Board[] = [
     createdAt: 1,
     defaultLayer: "now",
     id: "V1StGXR8_Z5j",
-    instanceIds: [],
+    cardIds: [],
     name: "My Board",
     nowLayer: {
       sort: { mode: "addedAt", automaticMode: "addedAt", manualOrder: [] },
     },
-    nextLayer: { widgets: [] },
+    nextLayer: { liveWidgets: [] },
   },
   {
     color: "purple",
     createdAt: 2,
     defaultLayer: "next",
     id: "board-design",
-    instanceIds: [],
+    cardIds: [],
     name: "Design signals",
     nowLayer: {
       sort: { mode: "provider", automaticMode: "provider", manualOrder: [] },
     },
-    nextLayer: { widgets: [] },
+    nextLayer: { liveWidgets: [] },
   },
 ]
 

@@ -23,26 +23,23 @@ import {
 import {
   requestCollectionStatus,
   requestLogs as requestLogsFromDaemon,
-  requestWidgetSnapshot as requestWidgetSnapshotFromDaemon,
 } from "./daemon-requests"
 import { serializeNativeIntegrationError } from "./error"
 import {
-  loadRoutedInstance,
-  readRoutedInstanceCache,
-} from "./instance-routing"
+  loadRoutedLiveCard,
+  readRoutedLiveCardCache,
+} from "./live-card-routing"
 import {
   pendingCollectionRequests,
   pendingConnectionRequests,
-  pendingInstanceRequests,
+  pendingLiveCardRequests,
   pendingLogsRequests,
-  pendingWidgetSnapshotRequests,
   pendingWorkerTakeoverRequests,
   pendingWorkspaceRequests,
   rejectAllPendingRequests,
   rejectPendingRequest,
   resolvePendingConnectionRequests,
-  settleInstanceRequest,
-  settleWidgetRequest,
+  settleLiveCardRequest,
   settleWorkerTakeoverRequest,
   takePendingRequest,
 } from "./pending-requests"
@@ -85,13 +82,13 @@ const workerConnectionControls = {
 }
 
 export const backgroundActionDependencies: BackgroundActionDependencies = {
-  instanceRouter: {
-    load: input => loadRoutedInstance(
+  liveCardRouter: {
+    load: input => loadRoutedLiveCard(
       input,
       requireNativeConnection,
       getConnectedActionContext(),
     ),
-    readCache: input => readRoutedInstanceCache(
+    readCache: input => readRoutedLiveCardCache(
       input,
       requireNativeConnection,
       getConnectedActionContext(),
@@ -115,13 +112,10 @@ export const backgroundActionDependencies: BackgroundActionDependencies = {
     getStatus: async () => getNativeIntegrationStatus(),
     setEnabled: ({ enabled }) => setNativeIntegrationEnabled(enabled),
   },
-  widgetSnapshots: {
-    get: input => requestWidgetSnapshotFromDaemon(input, requireNativeConnection),
-  },
   workerManagement: {
     regenerateIdentity: () => regenerateWorker(workerConnectionControls),
-    takeOver: ({ instanceIds, workerId }) => (
-      takeOverWorker(workerId, instanceIds, workerConnectionControls)
+    takeOver: ({ cardIds, workerId }) => (
+      takeOverWorker(workerId, cardIds, workerConnectionControls)
     ),
   },
 }
@@ -401,13 +395,13 @@ function handleMessage(connection: NativePort, value: unknown): void {
       enqueueIncomingWorkspace(
         connection,
         () => message.workspace,
-        message.localInstanceIds,
+        message.localCardIds,
         "Failed to apply the NewsNext Workspace",
       )
     } else if (message.type === "workerRoutingChanged") {
       if (message.revision > runtime.workerRoutingRevision) {
         runtime.workerRoutingRevision = message.revision
-        runtime.localInstanceIds = new Set(message.localInstanceIds)
+        runtime.localCardIds = new Set(message.localCardIds)
         runtime.offlineWorkers = message.offlineWorkers
       }
     } else if (message.type === "workerTakeoverResult") {
@@ -418,19 +412,17 @@ function handleMessage(connection: NativePort, value: unknown): void {
       void executeCommand(connection, message.request).catch((error) => {
         console.error("Failed to return native App integration result", error)
       })
-    } else if (message.type === "widgetSnapshotResult") {
-      settleWidgetRequest(message.requestId, message.result)
     } else if (message.type === "workspaceChanged") {
       enqueueIncomingWorkspace(
         connection,
         () => applyWorkspaceChangePatch(message.patch),
-        message.localInstanceIds,
+        message.localCardIds,
         "Failed to apply the NewsNext Workspace update",
       )
     } else if (message.type === "workspaceResult") {
-      settleWorkspaceRequest(message.requestId, message.revision, message.localInstanceIds)
-    } else if (message.type === "instanceResult") {
-      settleInstanceRequest(message.requestId, message.result)
+      settleWorkspaceRequest(message.requestId, message.revision, message.localCardIds)
+    } else if (message.type === "liveCardResult") {
+      settleLiveCardRequest(message.requestId, message.result)
     } else if (message.type === "collectionStatusChanged") {
       if (runtime.collectionSubscribed) {
         runtime.collectionStatus = message.status
@@ -443,8 +435,7 @@ function handleMessage(connection: NativePort, value: unknown): void {
     } else {
       if (message.requestId) {
         const error = new Error(message.message)
-        if (rejectPendingRequest(pendingWidgetSnapshotRequests, message.requestId, error)
-          || rejectPendingRequest(pendingInstanceRequests, message.requestId, error)
+        if (rejectPendingRequest(pendingLiveCardRequests, message.requestId, error)
           || rejectPendingRequest(pendingWorkspaceRequests, message.requestId, error)
           || rejectPendingRequest(pendingLogsRequests, message.requestId, error)
           || rejectPendingRequest(pendingCollectionRequests, message.requestId, error)
@@ -518,7 +509,7 @@ export async function registerNativeIntegration(): Promise<void> {
   const application = await readApplicationData()
   const settings = normalizePersistedSettings(stored[PERSISTED_DATA_SLICES.settings.key])
   runtime.workerId = await initializeWorkerIdentity()
-  runtime.localInstanceIds = new Set()
+  runtime.localCardIds = new Set()
   const storedUpdatedAt = stored[WORKSPACE_UPDATED_AT_KEY]
   const updatedAt = Number.isSafeInteger(storedUpdatedAt) && Number(storedUpdatedAt) >= 0
     ? Number(storedUpdatedAt)

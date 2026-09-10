@@ -96,7 +96,7 @@ Profile at least the scenarios affected by a change:
 - Single LiveCard refresh from request start through completion.
 - Global refresh with multiple active LiveCards.
 - Minute-boundary relative-time updates.
-- Application Actions that update Instances, Boards, membership, or Layer
+- Application Actions that update LiveCards, Boards, membership, or Layer
   settings through the background mutation runtime and its read-only
   frontend Application Data subscription.
 - LiveCard reorder, cancelled drag, and a drop that changes order.
@@ -125,11 +125,11 @@ to `BoardView` without subscribing the board to header progress state.
 ### Keep derivation ownership local
 
 `buildLiveCards` is a pure derivation without cross-call caches. Board
-membership is selected before projection; the Instance contains no Board
+membership is selected before projection; the LiveCard contains no Board
 identifier. Search and
 refresh call it for their own snapshots. The rendered board uses Jotai's
-`splitAtom` with `instanceId` as its stable key so every LiveCard subscribes to its
-own `Instance`. `NowLayer` subscribes separately to a lightweight layout
+`splitAtom` with `cardId` as its stable key so every LiveCard subscribes to its
+own `LiveCard`. `NowLayer` subscribes separately to a lightweight layout
 projection containing only Board IDs and sorting fields.
 
 Resolve board-only appearance settings at the `DraggableLiveCard` boundary and pass
@@ -144,14 +144,14 @@ ordering. Keep dynamically created atom configs referentially stable, and use
 `selectAtom` only where an equality function is required to stabilize a
 structural projection.
 
-Gate Board rendering on Instance cache restoration only when entering a Board.
-Later Instance creation or configuration may restore or invalidate the affected
+Gate Board rendering on LiveCard cache restoration only when entering a Board.
+Later LiveCard creation or configuration may restore or invalidate the affected
 query, but must keep the mounted Board visible so unrelated LiveCards, scroll
 position, and interaction state are preserved.
 
 Do not add module-global identity caches to make `memo` boundaries pass. Such
 caches make correctness depend on an implicit immutability contract and can
-return stale LiveCards after in-place changes. If Instance updates become a
+return stale LiveCards after in-place changes. If LiveCard updates become a
 measured bottleneck, optimize them at the React or Jotai owner that has the
 complete input lifecycle.
 
@@ -171,7 +171,7 @@ envelope. Do not add optimistic writes without measured need and a conflict
 reconciliation design. Persistence boundaries are defined in
 [Application Architecture](APPLICATION_ARCHITECTURE.md#adapter-rules).
 
-Name Instance-keyed projections `instanceIds` and `liveCardsByInstanceId`; reserve
+Name LiveCard-keyed projections `cardIds` and `liveCardsByCardId`; reserve
 `sourceId` for descriptor identity so selectors expose what actually invalidates.
 
 ### Add memo boundaries at independent units
@@ -239,7 +239,7 @@ registrations.
 ### Own source-wide image analysis above item rows
 
 Semantic mark normalization is source-wide work. LiveCard content finds the
-first mark for each Instance, scans at most a 128px image once, and passes the cached, capped scale into item summaries. Keep pixel
+first mark for each LiveCard, scans at most a 128px image once, and passes the cached, capped scale into item summaries. Keep pixel
 analysis effects, promises, and profile state out of virtualized item rows.
 Failed image requests must leave the source cache retryable on the next result
 update; a confirmed no-padding result may remain cached.
@@ -318,7 +318,7 @@ Derive the active Layer directly from the rendered Board's persisted
 `defaultLayer`. Do not mirror it in history state or route context. Router location
 updates before route matches; combining route params with an independently
 subscribed history Layer can trigger an intermediate animation on the old Board.
-The route retains only the last Board whose Instance cache restoration finished;
+The route retains only the last Board whose LiveCard cache restoration finished;
 `BoardView` owns the departing Board/Layer snapshot used by the animation.
 
 `useBoardScrollRestoration` owns scroll restoration and readiness by view visit,
@@ -334,7 +334,7 @@ is authorized.
 Next Layer reports content readiness from a layout effect after its manifest
 query settles and its grid or fallback mounts. Gate root scroll restoration on
 that signal, then mark the incoming view ready on the following animation frame.
-Do not depend on Widget snapshot queries for content readiness: those queries
+Do not depend on Widget data queries for content readiness: those queries
 are enabled only after scroll restoration. A page-level frame alone can run
 before asynchronous manifests arrive and consume the entrance with zero cards. Measure visible cards against the root scroll viewport
 and apply entrance keyframes before revealing the Layer. Batch all resting rect
@@ -342,7 +342,7 @@ and computed-style reads before pinning the outgoing root or starting any card
 animations. Apply the shared `10ms` stagger only to the filtered visible cards
 for both entrance and exit; skip delays when interrupting an entrance. Capture
 clipping bounds before removing the outgoing root from flow, so scroll clamping
-cannot change the measured viewport. Widget snapshot queries
+cannot change the measured viewport. Widget data queries
 use active view readiness together with viewport visibility.
 
 Widget slots keep a stable DOM order keyed by installation identity; visual
@@ -453,7 +453,7 @@ Before completing React performance work:
 - Check both visible and hidden sides of a flipped LiveCard.
 - Cross a real minute boundary; do not infer timer behavior from static code.
 - Let refresh operations reach completion before reading render counts.
-- Verify that editing one instance does not render unrelated LiveCard content.
+- Verify that editing one card does not render unrelated LiveCard content.
 - Test scroll and animation behavior visually after adding memo boundaries.
 - Switch repeatedly between boards and confirm every populated LiveCard renders
   virtual rows after its scroll element is committed.
@@ -501,7 +501,7 @@ and activity updates do not move rows. Attention ordering requires explicit opt-
 
 ### Widget request protection
 
-The daemon owns a fixed 60-second request protection window for `widgets.data`,
+The daemon owns a fixed 60-second request protection window for `liveWidgets.data`,
 using the last successful result persisted in SQLite. Every request after that
 window recomputes data; there is no additional freshness cache or force option.
 Automatic and manual requests follow the same rule. Widget frames retain only

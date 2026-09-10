@@ -75,9 +75,9 @@ export function getLiveCardReorderDestinationIndex({
   return remainingItems.findIndex(item => item.id === lastRowItem.id) + 1
 }
 
-export function reorderLiveCard(instanceIds: string[], sourceId: string, destinationIndex: number): string[] {
-  if (!instanceIds.includes(sourceId)) return instanceIds
-  const remainingInstanceIds = instanceIds.filter(id => id !== sourceId)
-  remainingInstanceIds.splice(destinationIndex, 0, sourceId)
-  return remainingInstanceIds
+export function reorderLiveCard(cardIds: string[], sourceId: string, destinationIndex: number): string[] {
+  if (!cardIds.includes(sourceId)) return cardIds
+  const remainingCardIds = cardIds.filter(id => id !== sourceId)
+  remainingCardIds.splice(destinationIndex, 0, sourceId)
+  return remainingCardIds
 }

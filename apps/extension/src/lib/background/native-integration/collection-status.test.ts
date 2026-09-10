@@ -10,7 +10,7 @@ const snapshot = {
     streamId: "stream",
     sourceId: "test:feed",
     workerId: "worker",
-    instanceIds: ["instance-a", "instance-b"],
+    cardIds: ["card-a", "card-b"],
     resolved: true,
     observationCount: 123,
     activity: "backoff",

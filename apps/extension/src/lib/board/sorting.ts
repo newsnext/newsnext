@@ -60,12 +60,12 @@ function compareByProvider(
 }
 
 function sortByProvider(
-  instanceIds: string[],
-  liveCardsByInstanceId: Record<string, SortableNowLayerLiveCard>,
+  cardIds: string[],
+  liveCardsByCardId: Record<string, SortableNowLayerLiveCard>,
 ): string[] {
-  const knownIds = instanceIds
+  const knownIds = cardIds
     .flatMap((id, addedOrder) => {
-      const liveCard = liveCardsByInstanceId[id]
+      const liveCard = liveCardsByCardId[id]
       return liveCard ? [{ addedOrder, id, liveCard }] : []
     })
     .toSorted((left, right) => (
@@ -74,12 +74,12 @@ function sortByProvider(
     ))
     .map(({ id }) => id)
   const knownIdSet = new Set(knownIds)
-  return [...knownIds, ...instanceIds.filter(id => !knownIdSet.has(id))]
+  return [...knownIds, ...cardIds.filter(id => !knownIdSet.has(id))]
 }
 
 function reconcileManualOrder(manualOrder: string[], fallbackOrder: string[]): string[] {
-  const instanceIdSet = new Set(fallbackOrder)
-  const orderedIds = manualOrder.filter(id => instanceIdSet.has(id))
+  const cardIdSet = new Set(fallbackOrder)
+  const orderedIds = manualOrder.filter(id => cardIdSet.has(id))
   const orderedIdSet = new Set(orderedIds)
 
   return [
@@ -88,19 +88,19 @@ function reconcileManualOrder(manualOrder: string[], fallbackOrder: string[]): s
   ]
 }
 
-export function orderNowLayerInstanceIds({
-  instanceIds,
-  liveCardsByInstanceId,
+export function orderNowLayerCardIds({
+  cardIds,
+  liveCardsByCardId,
   sort,
 }: {
-  instanceIds: string[]
-  liveCardsByInstanceId: Record<string, SortableNowLayerLiveCard>
+  cardIds: string[]
+  liveCardsByCardId: Record<string, SortableNowLayerLiveCard>
   sort: NowLayerSort
 }): string[] {
   const automaticMode = sort.mode === "manual" ? sort.automaticMode : sort.mode
   const automaticOrder = automaticMode === "provider"
-    ? sortByProvider(instanceIds, liveCardsByInstanceId)
-    : instanceIds
+    ? sortByProvider(cardIds, liveCardsByCardId)
+    : cardIds
 
   return sort.mode === "manual"
     ? reconcileManualOrder(sort.manualOrder, automaticOrder)

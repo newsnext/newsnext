@@ -10,7 +10,7 @@ export type { BoardLayer } from "@newsnext/sdk/models"
 
 export const DEFAULT_BOARD_LAYER: BoardLayer = "now"
 
-export type { Board, NextLayerWidget, NextLayerWidgetDataScope, NextLayerWidgetLayout } from "@newsnext/sdk/models"
+export type { Board, LiveWidget, LiveWidgetDataScope, LiveWidgetLayout } from "@newsnext/sdk/models"
 
 export interface BoardCreateInput {
   color: Color
@@ -32,10 +32,10 @@ export function createBoard(
     createdAt,
     defaultLayer,
     id,
-    instanceIds: [],
+    cardIds: [],
     name,
     nowLayer: { sort: createNowLayerSort(sortMode) },
-    nextLayer: { widgets: [] },
+    nextLayer: { liveWidgets: [] },
   }
 }
 

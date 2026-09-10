@@ -1,6 +1,6 @@
 import type { AllActionContract } from "./action/index.js"
 import type { ActionDescriptor, ActionInput, ActionName, ActionResult, FetchInput, FetchResult, RunInput, RunResult } from "./actions.js"
-import type { ActionOptions, CallOptions, CompareQuery, Comparison, Dataset, DatasetPage, DatasetQuery, ExportQuery, HistoryTime, Observation, ObservationPage, ObservationQuery, ObservationResult, Status, WidgetDataQuery, WidgetDataResult } from "./types.js"
+import type { ActionOptions, CallOptions, CompareQuery, Comparison, Dataset, DatasetPage, DatasetQuery, ExportQuery, HistoryTime, LiveCardDataQuery, LiveCardDataResult, LiveWidgetDataQuery, LiveWidgetDataResult, Observation, ObservationPage, ObservationQuery, ObservationResult, Status } from "./types.js"
 import { createActionsClient } from "./action/client.js"
 import { DEFAULT_TIMEOUT_MS, historyTime, NewsNextError, timeRange } from "./protocol.js"
 
@@ -65,10 +65,16 @@ export class NewsNextClient {
     }, options)
   }
 
-  readonly widgets = {
+  readonly liveCards = {
+    /** Load a saved LiveCard through its owning Worker and the Source protection cache. */
+    data: (query: LiveCardDataQuery, options: ActionOptions = {}): Promise<LiveCardDataResult> =>
+      this.executeAction("liveCard.load", query, options),
+  }
+
+  readonly liveWidgets = {
     /** Compute Widget data with a daemon-owned one-minute request protection window. */
-    data: (query: WidgetDataQuery, options?: CallOptions): Promise<WidgetDataResult> => this.call({
-      method: "widgets.data",
+    data: (query: LiveWidgetDataQuery, options?: CallOptions): Promise<LiveWidgetDataResult> => this.call({
+      method: "liveWidgets.data",
       ...query,
     }, options),
   }

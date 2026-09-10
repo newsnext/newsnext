@@ -2,8 +2,8 @@ import type { CardMetadata } from "@newsnext/sdk/models"
 import { ThemeIcon } from "@newsnext/ui/components/theme-icon"
 import { ThemeSelector } from "@newsnext/ui/components/theme-selector"
 import { useEffect, useId, useState } from "react"
-import { EditableImage, EditableInput, Info } from "@/components/live-card/card-back/fields"
-import { CardSettingsSection } from "@/components/live-card/card-back/settings-section"
+import { EditableImage, EditableInput, Info } from "@/components/card-shell/settings/fields"
+import { CardSettingsSection } from "@/components/card-shell/settings/settings-section"
 import { useI18n } from "@/hooks/use-i18n"
 
 interface CardMetadataSettingsProps {

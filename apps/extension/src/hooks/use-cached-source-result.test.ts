@@ -1,12 +1,12 @@
 import { QueryClient } from "@tanstack/react-query"
 import { describe, expect, it, vi } from "vitest"
 import {
-  createInstanceQueryTarget,
+  createLiveCardQueryTarget,
   createSourceQueryTarget,
   getSourceQueryKey,
 } from "./source-query"
 import {
-  findCachedInstanceQuery,
+  findCachedLiveCardQuery,
   findCachedSourceQuery,
   findCachedSourceResult,
 } from "./use-cached-source-result"
@@ -66,9 +66,9 @@ describe("findCachedSourceResult", () => {
     expect(findCachedSourceResult(queryClient, source.id, {})).toBeUndefined()
   })
 
-  it("finds a persisted Instance by identity after its request configuration changes", () => {
+  it("finds a persisted LiveCard by identity after its request configuration changes", () => {
     const queryClient = new QueryClient()
-    const target = createInstanceQueryTarget("instance-a")
+    const target = createLiveCardQueryTarget("card-a")
     const result = { items: [], source }
     queryClient.setQueryData(getSourceQueryKey(target), {
       fetchProtected: true,
@@ -79,10 +79,10 @@ describe("findCachedSourceResult", () => {
     })
 
     expect(
-      findCachedInstanceQuery(queryClient, "instance-a", source.id)?.data,
+      findCachedLiveCardQuery(queryClient, "card-a", source.id)?.data,
     ).toBe(result)
     expect(
-      findCachedInstanceQuery(queryClient, "instance-b", source.id),
+      findCachedLiveCardQuery(queryClient, "card-b", source.id),
     ).toBeUndefined()
   })
 })

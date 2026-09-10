@@ -4,7 +4,7 @@ import { parseWidgetItems } from "./widget-items"
 describe("parseWidgetItems", () => {
   it("preserves semantic item data and permits empty results", () => {
     const item = { title: "News", url: "https://example.com/news", publishedAt: 1788950000000, stats: { score: 42 }, content: { text: "Details" } }
-    expect(parseWidgetItems({ items: [{ value: item, instanceId: "source" }] })).toEqual([item])
+    expect(parseWidgetItems({ items: [{ value: item, cardId: "source" }] })).toEqual([item])
     expect(parseWidgetItems({ items: [] })).toEqual([])
   })
   it("validates the full shared item contract before native rendering", () => {

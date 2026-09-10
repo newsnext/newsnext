@@ -1,22 +1,22 @@
 import { useAtomValue, useSetAtom } from "jotai"
+import { CardBoardSelect } from "@/components/card-shell/settings/board-select"
+import { DeleteCardButton } from "@/components/card-shell/settings/delete-card-button"
 import { useI18n } from "@/hooks/use-i18n"
 import {
   boardsAtom,
-  deleteInstanceAtom,
-  moveInstanceAtom,
+  deleteLiveCardAtom,
+  moveLiveCardAtom,
 } from "@/store/board"
-import { CardBoardSelect } from "./board-select"
-import { DeleteCardButton } from "./delete-card-button"
 
 export function LiveCardBoardSelect({ id }: { id: string }): React.JSX.Element {
   const boards = useAtomValue(boardsAtom)
-  const moveInstance = useSetAtom(moveInstanceAtom)
-  const boardId = boards.find(board => board.instanceIds.includes(id))?.id
+  const moveLiveCard = useSetAtom(moveLiveCardAtom)
+  const boardId = boards.find(board => board.cardIds.includes(id))?.id
   return (
     <CardBoardSelect
       boardId={boardId}
       onMove={async (boardId) => {
-        await moveInstance({ boardId, instanceId: id })
+        await moveLiveCard({ boardId, cardId: id })
       }}
     />
   )
@@ -24,7 +24,7 @@ export function LiveCardBoardSelect({ id }: { id: string }): React.JSX.Element {
 
 export function DeleteLiveCardButton({ id }: { id: string }): React.JSX.Element {
   const { t } = useI18n()
-  const deleteLocal = useSetAtom(deleteInstanceAtom)
+  const deleteLocal = useSetAtom(deleteLiveCardAtom)
   return (
     <DeleteCardButton
       onDelete={async () => {

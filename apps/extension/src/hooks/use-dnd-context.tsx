@@ -27,13 +27,13 @@ type MonitorCallbackArgs<Key extends keyof MonitorCallbacks> = Parameters<NonNul
 export function DndContext({
   children,
   dropTargetRef,
-  kind = "instance",
+  kind = "card",
   verticalScrollRef,
   horizontalScrollRef,
   scrollSpeed = "standard",
   ...callbacks
 }: PropsWithChildren<ContextProps>) {
-  const instanceId = useId()
+  const cardId = useId()
   const handleDragStart = useEffectEvent((args: MonitorCallbackArgs<"onDragStart">) => {
     callbacks.onDragStart?.(args)
   })
@@ -47,7 +47,7 @@ export function DndContext({
   useEffect(() => {
     const dropTarget = dropTargetRef?.current
     const ownsDrag = ({ source }: Pick<ElementEventBasePayload, "source">) => isSortableData(source.data, kind)
-      && source.data.instanceId === instanceId
+      && source.data.cardId === cardId
     const monitorCleanup = monitorForElements({
       canMonitor: ownsDrag,
       onDragStart: handleDragStart,
@@ -74,10 +74,10 @@ export function DndContext({
         canDrop: ownsDrag,
       }),
     )
-  }, [dropTargetRef, horizontalScrollRef, instanceId, kind, scrollSpeed, verticalScrollRef])
+  }, [dropTargetRef, horizontalScrollRef, cardId, kind, scrollSpeed, verticalScrollRef])
 
   return (
-    <SortableContext value={instanceId}>
+    <SortableContext value={cardId}>
       {children}
     </SortableContext>
   )

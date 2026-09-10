@@ -3,4 +3,4 @@ import type { BoardLayer } from "./BoardLayer.js";
 import type { NextLayer } from "./NextLayer.js";
 import type { NowLayer } from "./NowLayer.js";
 
-export type WorkspaceBoard = { color: string, createdAt: number, defaultLayer: BoardLayer, id: string, instanceIds: Array<string>, name: string, nowLayer: NowLayer, nextLayer: NextLayer, };
+export type WorkspaceBoard = { color: string, createdAt: number, defaultLayer: BoardLayer, id: string, cardIds: Array<string>, name: string, nowLayer: NowLayer, nextLayer: NextLayer, };

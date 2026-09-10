@@ -22,7 +22,7 @@ export const importPersistedUserDataAtom = atom(
     await actions.application.replace({
       version: data.version,
       boards: data.boards,
-      instances: data.instances,
+      liveCards: data.liveCards,
     })
     set(persistedSettingsAtom, data.settings)
     return data

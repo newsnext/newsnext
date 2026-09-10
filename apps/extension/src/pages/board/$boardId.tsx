@@ -3,25 +3,25 @@ import { useParams } from "@tanstack/react-router"
 import { useAtomValueRawSync, useSetAtom } from "jotai"
 import { useEffect, useMemo, useState } from "react"
 import { BoardView } from "@/components/board-view"
-import { restoreInstanceResults } from "@/lib/source/restore-instance-results"
+import { restoreLiveCardResults } from "@/lib/source/restore-live-card-results"
 import { handleThemeSwitch } from "@/lib/utils/swith-theme"
-import { boardsAtom, instancesAtom } from "@/store/board"
+import { boardsAtom, liveCardsAtom } from "@/store/board"
 import { currentBoardIdAtom } from "@/store/settings"
 
 export function BoardIdComponent() {
   const { boardId } = useParams({ from: "/board/$boardId" })
   const boards = useAtomValueRawSync(boardsAtom)
-  const instances = useAtomValueRawSync(instancesAtom)
+  const liveCards = useAtomValueRawSync(liveCardsAtom)
   const queryClient = useQueryClient()
   const setCurrentBoardId = useSetAtom(currentBoardIdAtom)
   const [restoredBoardId, setRestoredBoardId] = useState<string>()
   const board = boards.find(board => board.id === boardId)
-  const boardInstanceIds = board?.instanceIds
-  const boardInstances = useMemo(() => {
-    if (!boardInstanceIds) return []
-    const instanceIdSet = new Set(boardInstanceIds)
-    return instances.filter(instance => instanceIdSet.has(instance.instanceId))
-  }, [boardInstanceIds, instances])
+  const boardCardIds = board?.cardIds
+  const boardLiveCards = useMemo(() => {
+    if (!boardCardIds) return []
+    const cardIdSet = new Set(boardCardIds)
+    return liveCards.filter(card => cardIdSet.has(card.cardId))
+  }, [boardCardIds, liveCards])
   useEffect(() => {
     document.title = board ? `NewsNext | ${board.name}` : "NewsNext"
     if (board) {
@@ -34,21 +34,21 @@ export function BoardIdComponent() {
   }, [board])
 
   useEffect(() => {
-    if (boardInstanceIds) {
+    if (boardCardIds) {
       setCurrentBoardId(boardId)
     }
-  }, [boardId, boardInstanceIds, setCurrentBoardId])
+  }, [boardId, boardCardIds, setCurrentBoardId])
 
   useEffect(() => {
-    if (!boardInstanceIds) return
+    if (!boardCardIds) return
     let active = true
-    void restoreInstanceResults(queryClient, boardInstances).finally(() => {
+    void restoreLiveCardResults(queryClient, boardLiveCards).finally(() => {
       if (active) setRestoredBoardId(boardId)
     })
     return () => {
       active = false
     }
-  }, [boardId, boardInstanceIds, boardInstances, queryClient])
+  }, [boardId, boardCardIds, boardLiveCards, queryClient])
 
   if (!board) {
     return (

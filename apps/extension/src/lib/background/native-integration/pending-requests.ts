@@ -10,7 +10,7 @@ interface PendingRequest {
   timeoutId: ReturnType<typeof setTimeout>
 }
 
-interface PendingInstanceRequest extends PendingRequest {
+interface PendingLiveCardRequest extends PendingRequest {
   cacheOnly: boolean
   resolve: (value: SourceLoadResponse | null) => void
 }
@@ -18,10 +18,6 @@ interface PendingInstanceRequest extends PendingRequest {
 interface PendingWorkspaceRequest extends PendingRequest {
   candidate: NativeWorkspace
   resolve: (value: NativeWorkspace) => void
-}
-
-interface PendingWidgetSnapshotRequest extends PendingRequest {
-  resolve: (value: unknown) => void
 }
 
 interface PendingLogsRequest extends PendingRequest {
@@ -40,8 +36,7 @@ interface PendingWorkerTakeoverRequest extends PendingRequest {
   resolve: () => void
 }
 
-export const pendingWidgetSnapshotRequests = new Map<string, PendingWidgetSnapshotRequest>()
-export const pendingInstanceRequests = new Map<string, PendingInstanceRequest>()
+export const pendingLiveCardRequests = new Map<string, PendingLiveCardRequest>()
 export const pendingWorkspaceRequests = new Map<string, PendingWorkspaceRequest>()
 export const pendingCollectionRequests = new Map<string, PendingCollectionRequest>()
 export const pendingLogsRequests = new Map<string, PendingLogsRequest>()
@@ -49,8 +44,7 @@ export const pendingConnectionRequests = new Set<PendingConnectionRequest>()
 export const pendingWorkerTakeoverRequests = new Map<string, PendingWorkerTakeoverRequest>()
 
 export function rejectAllPendingRequests(error: Error): void {
-  rejectPendingRequests(pendingWidgetSnapshotRequests, error)
-  rejectPendingRequests(pendingInstanceRequests, error)
+  rejectPendingRequests(pendingLiveCardRequests, error)
   rejectPendingRequests(pendingWorkspaceRequests, error)
   rejectPendingRequests(pendingLogsRequests, error)
   rejectPendingRequests(pendingCollectionRequests, error)
@@ -58,22 +52,12 @@ export function rejectAllPendingRequests(error: Error): void {
   rejectPendingConnectionRequests(error)
 }
 
-export function settleWidgetRequest(requestId: string, result: NativeCommandResult): void {
-  const pending = takePendingRequest(pendingWidgetSnapshotRequests, requestId)
-  if (!pending) return
-  if (result.ok) {
-    pending.resolve(result.data)
-  } else {
-    pending.reject(new Error(result.error.message))
-  }
-}
-
 export function settleWorkerTakeoverRequest(requestId: string): void {
   takePendingRequest(pendingWorkerTakeoverRequests, requestId)?.resolve()
 }
 
-export function settleInstanceRequest(requestId: string, result: NativeCommandResult): void {
-  const pending = takePendingRequest(pendingInstanceRequests, requestId)
+export function settleLiveCardRequest(requestId: string, result: NativeCommandResult): void {
+  const pending = takePendingRequest(pendingLiveCardRequests, requestId)
   if (!pending) return
   if (result.ok) {
     if (result.data === null && pending.cacheOnly) {

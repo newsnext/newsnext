@@ -11,50 +11,50 @@ import { DraggableLiveCard } from "../live-card/draggable-live-card"
 
 interface LiveCardContainerProps {
   viewReady: boolean
-  instanceIds: string[]
-  liveCardsByInstanceId: Record<string, NowLayerLiveCard>
+  cardIds: string[]
+  liveCardsByCardId: Record<string, NowLayerLiveCard>
   sortable?: boolean
   className?: string
-  onInstanceIdsChange: (instanceIds: string[]) => void
+  onCardIdsChange: (cardIds: string[]) => void
 }
 
 export function LiveCardContainer({
   viewReady,
-  instanceIds,
-  liveCardsByInstanceId,
+  cardIds,
+  liveCardsByCardId,
   sortable = true,
   className,
-  onInstanceIdsChange,
+  onCardIdsChange,
 }: LiveCardContainerProps) {
   const { rootScrollContainerRef } = useScrollProgressContext()
-  const [draggingInstanceId, setDraggingInstanceId] = useState<string | null>(null)
+  const [draggingCardId, setDraggingCardId] = useState<string | null>(null)
   const {
     listRef,
     onDrag,
     onDragStart,
     onDrop,
-    orderedInstanceIds,
+    orderedCardIds,
   } = useWrappedSortable({
-    instanceIds,
-    onInstanceIdsChange,
+    cardIds,
+    onCardIdsChange,
   })
   const visibleLiveCards = useMemo(
-    () => orderedInstanceIds.flatMap((id) => {
-      const liveCard = liveCardsByInstanceId[id]
+    () => orderedCardIds.flatMap((id) => {
+      const liveCard = liveCardsByCardId[id]
       return liveCard ? [{ id, ...liveCard }] : []
     }),
-    [orderedInstanceIds, liveCardsByInstanceId],
+    [orderedCardIds, liveCardsByCardId],
   )
   useSortableLayoutAnimation(listRef, visibleLiveCards.map(card => card.id), viewReady)
   const handleDragStart = useCallback((args: ElementEventBasePayload) => {
     if (isSortableData(args.source.data)) {
-      setDraggingInstanceId(args.source.data.id)
+      setDraggingCardId(args.source.data.id)
     }
     onDragStart()
   }, [onDragStart])
   const handleDrop = useCallback((args: ElementEventBasePayload) => {
     onDrop(args)
-    setDraggingInstanceId(null)
+    setDraggingCardId(null)
   }, [onDrop])
 
   return (
@@ -73,7 +73,7 @@ export function LiveCardContainer({
           className,
         )}
       >
-        {visibleLiveCards.map(({ id, boardId, descriptor, instanceAtom }) => (
+        {visibleLiveCards.map(({ id, boardId, descriptor, liveCardAtom }) => (
           <li
             key={id}
             data-live-card-id={id}
@@ -83,8 +83,8 @@ export function LiveCardContainer({
               <DraggableLiveCard
                 boardId={boardId}
                 descriptor={descriptor}
-                dragging={draggingInstanceId === id}
-                instanceAtom={instanceAtom}
+                dragging={draggingCardId === id}
+                liveCardAtom={liveCardAtom}
                 sortable={sortable}
               />
             </div>

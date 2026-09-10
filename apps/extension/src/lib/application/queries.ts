@@ -1,7 +1,7 @@
 import type { ApplicationBoardContext, ApplicationNowLayerLiveCard, BoardConfigurationResult, BoardDetail } from "@newsnext/sdk/models"
 import type { SourceDescriptor } from "@newsnext/source-kit/types"
 import type { Board } from "../board"
-import type { Instance } from "../source/live-cards"
+import type { LiveCard } from "../source/live-cards"
 import type { ApplicationData } from "./data"
 
 export type { ApplicationBoardContext, ApplicationNowLayerLiveCard, BoardConfigurationResult, BoardDetail } from "@newsnext/sdk/models"
@@ -28,27 +28,27 @@ export function getBoardQuery(
   input: { boardId: string },
 ): BoardDetail {
   const board = getBoard(data, input.boardId)
-  return { board, instances: resolveBoardInstances(data, board) }
+  return { board, liveCards: resolveBoardLiveCards(data, board) }
 }
 
-export function listBoardInstancesQuery(
+export function listBoardLiveCardsQuery(
   data: ApplicationData,
   input: { boardId: string },
-): Instance[] {
-  return resolveBoardInstances(data, getBoard(data, input.boardId))
+): LiveCard[] {
+  return resolveBoardLiveCards(data, getBoard(data, input.boardId))
 }
 
-export function listInstancesQuery(data: ApplicationData): Instance[] {
-  return data.instances
+export function listLiveCardsQuery(data: ApplicationData): LiveCard[] {
+  return data.liveCards
 }
 
-export function getInstanceQuery(
+export function getLiveCardQuery(
   data: ApplicationData,
-  input: { instanceId: string },
-): Instance {
-  const instance = data.instances.find(candidate => candidate.instanceId === input.instanceId)
-  if (!instance) throw new Error(`Instance '${input.instanceId}' not found`)
-  return instance
+  input: { cardId: string },
+): LiveCard {
+  const card = data.liveCards.find(candidate => candidate.cardId === input.cardId)
+  if (!card) throw new Error(`LiveCard '${input.cardId}' not found`)
+  return card
 }
 
 export function getBoardContextQuery(
@@ -72,10 +72,10 @@ export function getNowLayerLiveCardsQuery(
 ): ApplicationNowLayerLiveCard[] {
   const context = resolveBoardContext(data, currentBoardId)
   const board = getBoard(data, context.boardId)
-  return resolveBoardInstances(data, board).map(instance => ({
+  return resolveBoardLiveCards(data, board).map(card => ({
     boardId: board.id,
-    instanceId: instance.instanceId,
-    sourceId: instance.sourceId,
+    cardId: card.cardId,
+    sourceId: card.sourceId,
   }))
 }
 
@@ -95,13 +95,13 @@ function getBoard(data: ApplicationData, boardId: string): Board {
   return board
 }
 
-function resolveBoardInstances(
+function resolveBoardLiveCards(
   data: ApplicationData,
   board: Board,
-): Instance[] {
-  const instances = new Map(data.instances.map(instance => [instance.instanceId, instance]))
-  return board.instanceIds.flatMap((instanceId) => {
-    const instance = instances.get(instanceId)
-    return instance ? [instance] : []
+): LiveCard[] {
+  const liveCards = new Map(data.liveCards.map(card => [card.cardId, card]))
+  return board.cardIds.flatMap((cardId) => {
+    const card = liveCards.get(cardId)
+    return card ? [card] : []
   })
 }

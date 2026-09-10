@@ -7,7 +7,7 @@ import { LiveCardIdentityContext } from "@/components/live-card/live-card-identi
 import { useSourceMarkScales } from "@/hooks/use-source-mark-scales"
 import { parseWidgetItems } from "./widget-items"
 
-interface BuiltinLiveCardProps {
+interface WidgetItemListContentProps {
   ui: Extract<WidgetUi, { type: "live-card" }>
   title: string
   color: Color
@@ -17,7 +17,7 @@ interface BuiltinLiveCardProps {
   statusMessage?: string
 }
 
-export function BuiltinLiveCard({ ui, title, color, queries, statusMessage, isFetching, onRefresh }: BuiltinLiveCardProps): React.JSX.Element {
+export function WidgetItemListContent({ ui, title, color, queries, statusMessage, isFetching, onRefresh }: WidgetItemListContentProps): React.JSX.Element {
   const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(null)
   const result = useMemo(() => {
     try {

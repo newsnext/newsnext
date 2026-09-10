@@ -1,4 +1,4 @@
-import { LocalWidgetGrid } from "./local-widget-grid"
+import { LiveWidgetGrid } from "./live-widget-grid"
 
 interface NextLayerProps {
   boardId: string
@@ -10,7 +10,7 @@ export function NextLayer({ boardId, onReady, viewReady }: NextLayerProps) {
   return (
     <>
       <h1 className="sr-only">Next Layer</h1>
-      <LocalWidgetGrid
+      <LiveWidgetGrid
         boardId={boardId}
         onReady={onReady}
         viewReady={viewReady}

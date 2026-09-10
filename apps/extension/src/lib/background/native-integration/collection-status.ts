@@ -14,7 +14,7 @@ const schema = Type.Object({
     streamId: Type.String(),
     sourceId: Type.String(),
     workerId: Type.String(),
-    instanceIds: Type.Array(Type.String()),
+    cardIds: Type.Array(Type.String()),
     resolved: Type.Boolean(),
     observationCount: Type.Optional(Type.Union([count, Type.Null()])),
     activity: Type.Union((["loading", "offline", "backoff", "due", "scheduled"] as const).map(value => Type.Literal(value))),

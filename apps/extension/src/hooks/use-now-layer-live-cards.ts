@@ -1,23 +1,23 @@
 import type { Atom } from "jotai"
 import type { Board, SortableNowLayerLiveCard } from "@/lib/board"
-import type { Instance } from "@/lib/source"
+import type { LiveCard } from "@/lib/source"
 import type { SourceDescriptor } from "@/typings/source"
 import { useAtomValue } from "jotai"
 import { useMemo } from "react"
-import { orderNowLayerInstanceIds } from "@/lib/board"
-import { boardsAtom, instanceAtomsAtom, instancesAtom } from "@/store/board"
+import { orderNowLayerCardIds } from "@/lib/board"
+import { boardsAtom, liveCardAtomsAtom, liveCardsAtom } from "@/store/board"
 import { useSourceDescriptors } from "./use-source-descriptors"
 
 export interface NowLayerLiveCard {
   boardId: string
   descriptor: SourceDescriptor
-  instanceAtom: Atom<Instance>
+  liveCardAtom: Atom<LiveCard>
 }
 
 interface NowLayerLiveCardsResult {
   currentBoard: Board
-  liveCardsByInstanceId: Record<string, NowLayerLiveCard>
-  instanceIds: string[]
+  liveCardsByCardId: Record<string, NowLayerLiveCard>
+  cardIds: string[]
 }
 
 function createSourcePlaceholder(sourceId: string): SourceDescriptor {
@@ -36,58 +36,58 @@ function createSourcePlaceholder(sourceId: string): SourceDescriptor {
 
 export function useNowLayerLiveCards(boardId: string): NowLayerLiveCardsResult {
   const boards = useAtomValue(boardsAtom)
-  const instances = useAtomValue(instancesAtom)
-  const instanceAtoms = useAtomValue(instanceAtomsAtom)
+  const liveCards = useAtomValue(liveCardsAtom)
+  const liveCardAtoms = useAtomValue(liveCardAtomsAtom)
   const currentBoard = boards.find(board => board.id === boardId)!
   const { sources } = useSourceDescriptors()
 
-  const { liveCardsByInstanceId, sortableLiveCardsByInstanceId } = useMemo(() => {
+  const { liveCardsByCardId, sortableLiveCardsByCardId } = useMemo(() => {
     const descriptorsById = new Map(sources.map(source => [source.id, source]))
-    const instancesById = new Map<string, {
-      instance: Instance
-      instanceAtom: Atom<Instance>
-    }>(instances.flatMap((instance, index) => {
-      const instanceAtom = instanceAtoms[index]
-      return instanceAtom
-        ? [[instance.instanceId, { instance, instanceAtom }] as const]
+    const liveCardsById = new Map<string, {
+      card: LiveCard
+      liveCardAtom: Atom<LiveCard>
+    }>(liveCards.flatMap((card, index) => {
+      const liveCardAtom = liveCardAtoms[index]
+      return liveCardAtom
+        ? [[card.cardId, { card, liveCardAtom }] as const]
         : []
     }))
     const nextLiveCards: Record<string, NowLayerLiveCard> = {}
     const nextSortableLiveCards: Record<string, SortableNowLayerLiveCard> = {}
 
-    for (const instanceId of currentBoard.instanceIds) {
-      const entry = instancesById.get(instanceId)
+    for (const cardId of currentBoard.cardIds) {
+      const entry = liveCardsById.get(cardId)
       if (!entry) continue
-      const { instance, instanceAtom } = entry
+      const { card, liveCardAtom } = entry
 
-      const descriptor = descriptorsById.get(instance.sourceId)
-        ?? createSourcePlaceholder(instance.sourceId)
+      const descriptor = descriptorsById.get(card.sourceId)
+        ?? createSourcePlaceholder(card.sourceId)
 
-      nextLiveCards[instanceId] = {
+      nextLiveCards[cardId] = {
         boardId,
         descriptor,
-        instanceAtom,
+        liveCardAtom,
       }
-      nextSortableLiveCards[instanceId] = {
-        id: instanceId,
+      nextSortableLiveCards[cardId] = {
+        id: cardId,
         provider: descriptor.provider,
         metadata: {
-          title: instance.patch.metadata?.title ?? descriptor.metadata.title,
+          title: card.patch.metadata?.title ?? descriptor.metadata.title,
         },
       }
     }
 
     return {
-      liveCardsByInstanceId: nextLiveCards,
-      sortableLiveCardsByInstanceId: nextSortableLiveCards,
+      liveCardsByCardId: nextLiveCards,
+      sortableLiveCardsByCardId: nextSortableLiveCards,
     }
-  }, [boardId, currentBoard.instanceIds, instanceAtoms, instances, sources])
+  }, [boardId, currentBoard.cardIds, liveCardAtoms, liveCards, sources])
 
-  const instanceIds = useMemo(() => orderNowLayerInstanceIds({
-    instanceIds: currentBoard.instanceIds,
-    liveCardsByInstanceId: sortableLiveCardsByInstanceId,
+  const cardIds = useMemo(() => orderNowLayerCardIds({
+    cardIds: currentBoard.cardIds,
+    liveCardsByCardId: sortableLiveCardsByCardId,
     sort: currentBoard.nowLayer.sort,
-  }), [currentBoard.instanceIds, currentBoard.nowLayer.sort, sortableLiveCardsByInstanceId])
+  }), [currentBoard.cardIds, currentBoard.nowLayer.sort, sortableLiveCardsByCardId])
 
-  return { currentBoard, liveCardsByInstanceId, instanceIds }
+  return { currentBoard, liveCardsByCardId, cardIds }
 }

@@ -119,7 +119,7 @@ export function NativeIntegrationSettings(): React.JSX.Element {
       const offlineWorker = status?.offlineWorkers.find(worker => worker.id === workerId)
       if (!offlineWorker) return
       setStatus(await actions.worker.takeOver({
-        instanceIds: offlineWorker.instanceIds,
+        cardIds: offlineWorker.cardIds,
         workerId,
       }))
     })
@@ -196,7 +196,7 @@ export function NativeIntegrationSettings(): React.JSX.Element {
                 <div className="min-w-0">
                   <p className="truncate font-mono text-xs">{offlineWorker.id}</p>
                   <p className="text-xs text-muted-foreground">
-                    {t("offlineInstanceCount", { count: offlineWorker.instanceIds.length })}
+                    {t("offlineLiveCardCount", { count: offlineWorker.cardIds.length })}
                   </p>
                 </div>
                 <Button

@@ -3,7 +3,7 @@ import type { SourceLoadResponse, SourceLoadResult } from "@/lib/source/load-res
 import { useQueryClient } from "@tanstack/react-query"
 import { useCallback } from "react"
 import {
-  createInstanceQueryTarget,
+  createLiveCardQueryTarget,
   createSourceQueryTarget,
   getSourceQueryHash,
   getSourceQueryKey,
@@ -38,14 +38,14 @@ function readCachedSourceQuery(
   return { data: result, loadedAt: response.loadedAt }
 }
 
-export function findCachedInstanceQuery(
+export function findCachedLiveCardQuery(
   queryClient: QueryClient,
-  instanceId: string,
+  cardId: string,
   sourceId: string,
 ): CachedSourceQuery | undefined {
   return readCachedSourceQuery(
     queryClient.getQueryData(
-      getSourceQueryKey(createInstanceQueryTarget(instanceId)),
+      getSourceQueryKey(createLiveCardQueryTarget(cardId)),
     ),
     sourceId,
   )
@@ -78,12 +78,12 @@ export function findCachedSourceResult(
   return findCachedSourceQuery(queryClient, sourceId, params)?.data
 }
 
-export function useCachedInstanceResultFinder(): (
-  instanceId: string,
+export function useCachedLiveCardResultFinder(): (
+  cardId: string,
   sourceId: string,
 ) => SourceLoadResult | undefined {
   const queryClient = useQueryClient()
-  return useCallback((instanceId, sourceId) => {
-    return findCachedInstanceQuery(queryClient, instanceId, sourceId)?.data
+  return useCallback((cardId, sourceId) => {
+    return findCachedLiveCardQuery(queryClient, cardId, sourceId)?.data
   }, [queryClient])
 }

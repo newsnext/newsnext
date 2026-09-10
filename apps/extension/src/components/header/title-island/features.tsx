@@ -11,7 +11,7 @@ import { useI18n } from "@/hooks/use-i18n"
 import { actions } from "@/lib/actions"
 import { isDropWithin } from "@/lib/board/drop-target"
 import { getSortableRemovalTarget } from "@/lib/board/sortable-data"
-import { deleteInstanceAtom } from "@/store/board"
+import { deleteLiveCardAtom } from "@/store/board"
 import { PhTrash } from "../../icons/ph"
 import { IslandNotification } from "../island-notification"
 import {
@@ -73,7 +73,7 @@ export function useTrashFeature(
   const { t } = useI18n()
   const [isDragging, setIsDragging] = useState(false)
   const [isOverTrash, setIsOverTrash] = useState(false)
-  const deleteInstance = useSetAtom(deleteInstanceAtom)
+  const deleteLiveCard = useSetAtom(deleteLiveCardAtom)
   const shouldReduceMotion = useReducedMotion()
 
   const deleteDraggedCard = useEffectEvent(async ({ source }: ElementEventBasePayload) => {
@@ -82,9 +82,9 @@ export function useTrashFeature(
 
     try {
       if (target.kind === "widget") {
-        await actions.nextLayer.removeWidget({ boardId: target.boardId, widgetId: target.widgetId })
+        await actions.nextLayer.removeLiveWidget({ boardId: target.boardId, widgetId: target.widgetId })
       } else {
-        await deleteInstance(target.instanceId)
+        await deleteLiveCard(target.cardId)
       }
     } catch (error) {
       console.error("Failed to delete dropped card", error)

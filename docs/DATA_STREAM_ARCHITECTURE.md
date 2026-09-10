@@ -11,11 +11,11 @@ priorities and acceptance criteria.
 
 ## Baseline and target
 
-The daemon already collects Workspace Instances automatically and through Jobs.
+The daemon already collects Workspace LiveCards through adaptive automatic collection.
 History retains observations by execution Worker, Source ID, version, normalized
 parameters, and fetch time, reusing content-addressed item revisions. Unchanged
 fresh fetches remain distinct observations; replaying the same dataset/timestamp
-does not insert another. Local Widgets read independently revisioned Snapshots.
+does not insert another. Local Widgets compute data on demand and reuse persisted request-protection caches.
 
 The next analytical layer should reuse these facts to compare observations,
 maintain incremental state, aggregate windows, combine streams, and materialize
@@ -27,16 +27,16 @@ or a permanently running extension service worker.
 
 | Concept | Responsibility |
 | --- | --- |
-| Instance | Stable user-configured stream and consumer identity; remains distinct even when execution is shared |
+| LiveCard | Stable user-configured stream and consumer identity; remains distinct even when execution is shared |
 | Execution target | Worker ID + Source ID + Source version + normalized parameters |
 | Run (proposed) | Attempt identity, start/completion, duration, outcome, error, and content reference |
 | Observation | Validated sampled state, actual fetch time, ordered items, effective metadata, and Source version |
-| Observation use (proposed) | Associates an Instance/task and retention reason with a Run or Observation |
+| Observation use (proposed) | Associates a LiveCard/task and retention reason with a Run or Observation |
 | Change | Deterministic added, missing, moved, and updated facts between compatible observations |
 | Materialization | Versioned derived output with generation time, input coverage, and lineage |
 
 Execution and cache sharing are Worker-scoped because Workers have different
-credentials, permissions, and sessions. Sharing a target must not merge Instance
+credentials, permissions, and sessions. Sharing a target must not merge LiveCard
 ownership or erase consumer attribution. Item revisions may reuse content while
 observations preserve each sample's time and ordering.
 

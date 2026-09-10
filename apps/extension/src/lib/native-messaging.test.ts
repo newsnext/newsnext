@@ -11,12 +11,12 @@ describe("native messaging protocol", () => {
       id: "action-id",
       type: "action.execute",
       name: "board.delete",
-      input: { boardId: "reading", deleteInstances: true },
+      input: { boardId: "reading", deleteLiveCards: true },
     })).toEqual({
       id: "action-id",
       type: "action.execute",
       name: "board.delete",
-      input: { boardId: "reading", deleteInstances: true },
+      input: { boardId: "reading", deleteLiveCards: true },
     })
   })
 

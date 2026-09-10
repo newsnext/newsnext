@@ -1,17 +1,17 @@
-import type { ParameterSettingsProps } from "./parameter-settings"
-import type { InstanceMetadata } from "@/lib/source"
+import type { ParameterSettingsProps } from "@/components/card-shell/settings/parameter-settings"
+import type { LiveCardMetadata } from "@/lib/source"
 import type { LiveCardViewModel } from "@/typings/source"
+import { CardMetadataSettings } from "@/components/card-shell/settings/metadata-settings"
+import { ParameterSettings } from "@/components/card-shell/settings/parameter-settings"
 import { useI18n } from "@/hooks/use-i18n"
 import { getHostPermissionOrigins, getPermissionRequestForSource } from "@/lib/source"
 import { SourcePermissionDetails } from "../source-permission-details"
-import { CardMetadataSettings } from "./metadata-settings"
-import { ParameterSettings } from "./parameter-settings"
 
 export interface LiveCardEditFormProps extends Omit<ParameterSettingsProps, "params"> {
   source: LiveCardViewModel
   onResetSourceMeta?: () => Promise<void> | void
-  onSaveSourceMeta: (meta: InstanceMetadata) => Promise<void> | void
-  onPreviewMetadataChange?: (meta: InstanceMetadata | null) => void
+  onSaveSourceMeta: (meta: LiveCardMetadata) => Promise<void> | void
+  onPreviewMetadataChange?: (meta: LiveCardMetadata | null) => void
 }
 
 export function LiveCardEditForm({

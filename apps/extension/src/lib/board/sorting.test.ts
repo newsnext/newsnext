@@ -2,7 +2,7 @@ import type { LiveCardViewModel } from "@/typings/source"
 import { describe, expect, it } from "vitest"
 import {
   DEFAULT_NOW_LAYER_SORT,
-  orderNowLayerInstanceIds,
+  orderNowLayerCardIds,
 } from "./sorting"
 
 function createLiveCard({
@@ -40,7 +40,7 @@ function indexLiveCards(sources: LiveCardViewModel[]): Record<string, LiveCardVi
   return Object.fromEntries(sources.map(liveCard => [liveCard.id, liveCard]))
 }
 
-describe("orderNowLayerInstanceIds", () => {
+describe("orderNowLayerCardIds", () => {
   it("uses board membership order for addedAt sorting", () => {
     const sources = [
       createLiveCard({ id: "test:old::1", provider: "Test", createdAt: 1 }),
@@ -48,9 +48,9 @@ describe("orderNowLayerInstanceIds", () => {
       createLiveCard({ id: "test:middle::3", provider: "Test", createdAt: 2 }),
     ]
 
-    expect(orderNowLayerInstanceIds({
-      instanceIds: sources.map(liveCard => liveCard.id),
-      liveCardsByInstanceId: indexLiveCards(sources),
+    expect(orderNowLayerCardIds({
+      cardIds: sources.map(liveCard => liveCard.id),
+      liveCardsByCardId: indexLiveCards(sources),
       sort: DEFAULT_NOW_LAYER_SORT,
     })).toEqual([
       "test:old::1",
@@ -67,9 +67,9 @@ describe("orderNowLayerInstanceIds", () => {
       createLiveCard({ id: "alpha:fallback::4", provider: "Alpha", createdAt: 1 }),
     ]
 
-    expect(orderNowLayerInstanceIds({
-      instanceIds: sources.map(liveCard => liveCard.id),
-      liveCardsByInstanceId: indexLiveCards(sources),
+    expect(orderNowLayerCardIds({
+      cardIds: sources.map(liveCard => liveCard.id),
+      liveCardsByCardId: indexLiveCards(sources),
       sort: {
         mode: "provider",
         automaticMode: "provider",
@@ -90,9 +90,9 @@ describe("orderNowLayerInstanceIds", () => {
       createLiveCard({ id: "test:middle::3", provider: "Test", createdAt: 2 }),
     ]
 
-    expect(orderNowLayerInstanceIds({
-      instanceIds: sources.map(liveCard => liveCard.id),
-      liveCardsByInstanceId: indexLiveCards(sources),
+    expect(orderNowLayerCardIds({
+      cardIds: sources.map(liveCard => liveCard.id),
+      liveCardsByCardId: indexLiveCards(sources),
       sort: {
         mode: "manual",
         automaticMode: "addedAt",
@@ -111,9 +111,9 @@ describe("orderNowLayerInstanceIds", () => {
       createLiveCard({ id: "alpha:feed::2", provider: "Alpha", createdAt: 1 }),
     ]
 
-    expect(orderNowLayerInstanceIds({
-      instanceIds: sources.map(liveCard => liveCard.id),
-      liveCardsByInstanceId: indexLiveCards(sources),
+    expect(orderNowLayerCardIds({
+      cardIds: sources.map(liveCard => liveCard.id),
+      liveCardsByCardId: indexLiveCards(sources),
       sort: {
         mode: "manual",
         automaticMode: "provider",
@@ -128,9 +128,9 @@ describe("orderNowLayerInstanceIds", () => {
   it("preserves LiveCard IDs while presentation data is unavailable", () => {
     const liveCard = createLiveCard({ id: "test:available::1", provider: "Test", createdAt: 1 })
 
-    expect(orderNowLayerInstanceIds({
-      instanceIds: [liveCard.id, "test:missing::2"],
-      liveCardsByInstanceId: indexLiveCards([liveCard]),
+    expect(orderNowLayerCardIds({
+      cardIds: [liveCard.id, "test:missing::2"],
+      liveCardsByCardId: indexLiveCards([liveCard]),
       sort: DEFAULT_NOW_LAYER_SORT,
     })).toEqual([liveCard.id, "test:missing::2"])
   })

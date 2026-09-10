@@ -6,14 +6,14 @@ import { isSortableData } from "@/lib/board"
 import { isDropWithin } from "@/lib/board/drop-target"
 import { getLiveCardReorderDestinationIndex, reorderLiveCard } from "@/lib/board/live-card-reorder"
 
-interface InstanceOrderState {
-  instanceIds: string[]
-  orderedInstanceIds: string[]
+interface LiveCardOrderState {
+  cardIds: string[]
+  orderedCardIds: string[]
 }
 
 interface UseWrappedSortableOptions {
-  instanceIds: string[]
-  onInstanceIdsChange: (instanceIds: string[]) => void
+  cardIds: string[]
+  onCardIdsChange: (cardIds: string[]) => void
 }
 
 interface WrappedSortableResult {
@@ -21,7 +21,7 @@ interface WrappedSortableResult {
   onDrag: (args: ElementEventBasePayload) => void
   onDragStart: () => void
   onDrop: (args: ElementEventBasePayload) => void
-  orderedInstanceIds: string[]
+  orderedCardIds: string[]
 }
 
 function snapshotLayout(list: HTMLOListElement): LiveCardLayoutItem[] {
@@ -42,50 +42,50 @@ function snapshotLayout(list: HTMLOListElement): LiveCardLayoutItem[] {
 }
 
 export function useWrappedSortable({
-  instanceIds,
-  onInstanceIdsChange,
+  cardIds,
+  onCardIdsChange,
 }: UseWrappedSortableOptions): WrappedSortableResult {
-  const [instanceOrderState, setInstanceOrderState] = useState<InstanceOrderState>(() => ({
-    instanceIds,
-    orderedInstanceIds: instanceIds,
+  const [cardOrderState, setCardOrderState] = useState<LiveCardOrderState>(() => ({
+    cardIds,
+    orderedCardIds: cardIds,
   }))
-  let orderedInstanceIds = instanceOrderState.orderedInstanceIds
-  if (instanceOrderState.instanceIds !== instanceIds) {
-    orderedInstanceIds = instanceIds
-    setInstanceOrderState({
-      instanceIds,
-      orderedInstanceIds,
+  let orderedCardIds = cardOrderState.orderedCardIds
+  if (cardOrderState.cardIds !== cardIds) {
+    orderedCardIds = cardIds
+    setCardOrderState({
+      cardIds,
+      orderedCardIds,
     })
   }
 
-  const initialOrderedInstanceIdsRef = useRef(instanceIds)
+  const initialOrderedCardIdsRef = useRef(cardIds)
   const dragLayoutRef = useRef<LiveCardLayoutItem[] | null>(null)
   const destinationIndexRef = useRef<number | null>(null)
   const listRef = useRef<HTMLOListElement>(null)
 
   const onDragStart = useCallback(() => {
-    initialOrderedInstanceIdsRef.current = orderedInstanceIds
+    initialOrderedCardIdsRef.current = orderedCardIds
     const list = listRef.current
     dragLayoutRef.current = list ? snapshotLayout(list) : null
     destinationIndexRef.current = null
-  }, [orderedInstanceIds])
+  }, [orderedCardIds])
 
   const onDrag = useCallback(({ location, source }: ElementEventBasePayload) => {
     const list = listRef.current
     const dragLayout = dragLayoutRef.current
     if (!list || !dragLayout || !isSortableData(source.data)) return
 
-    const initialInstanceIds = initialOrderedInstanceIdsRef.current
+    const initialCardIds = initialOrderedCardIdsRef.current
     if (!isDropWithin({ location }, list)) {
       if (destinationIndexRef.current !== null) {
         destinationIndexRef.current = null
-        setInstanceOrderState({ instanceIds, orderedInstanceIds: initialInstanceIds })
+        setCardOrderState({ cardIds, orderedCardIds: initialCardIds })
       }
       return
     }
 
     const listRect = list.getBoundingClientRect()
-    if (!initialInstanceIds.includes(source.data.id)) return
+    if (!initialCardIds.includes(source.data.id)) return
 
     const destinationIndex = getLiveCardReorderDestinationIndex({
       items: dragLayout,
@@ -97,36 +97,36 @@ export function useWrappedSortable({
     })
     if (destinationIndexRef.current === destinationIndex) return
     destinationIndexRef.current = destinationIndex
-    const preview = reorderLiveCard(initialInstanceIds, source.data.id, destinationIndex)
-    setInstanceOrderState({ instanceIds, orderedInstanceIds: preview })
-  }, [instanceIds])
+    const preview = reorderLiveCard(initialCardIds, source.data.id, destinationIndex)
+    setCardOrderState({ cardIds, orderedCardIds: preview })
+  }, [cardIds])
 
   const onDrop = useCallback(({ location, source }: ElementEventBasePayload) => {
     const list = listRef.current
     dragLayoutRef.current = null
     const destinationIndex = destinationIndexRef.current
     destinationIndexRef.current = null
-    const initialInstanceIds = initialOrderedInstanceIdsRef.current
+    const initialCardIds = initialOrderedCardIdsRef.current
     if (!isDropWithin({ location }, list) || destinationIndex === null || !isSortableData(source.data)) {
-      setInstanceOrderState({ instanceIds, orderedInstanceIds: initialInstanceIds })
+      setCardOrderState({ cardIds, orderedCardIds: initialCardIds })
       return
     }
 
-    const sourceIndex = initialInstanceIds.indexOf(source.data.id)
+    const sourceIndex = initialCardIds.indexOf(source.data.id)
     if (sourceIndex === -1 || destinationIndex === sourceIndex) return
-    const finalInstanceIds = reorderLiveCard(initialInstanceIds, source.data.id, destinationIndex)
-    setInstanceOrderState({
-      instanceIds,
-      orderedInstanceIds: finalInstanceIds,
+    const finalCardIds = reorderLiveCard(initialCardIds, source.data.id, destinationIndex)
+    setCardOrderState({
+      cardIds,
+      orderedCardIds: finalCardIds,
     })
-    onInstanceIdsChange(finalInstanceIds)
-  }, [instanceIds, onInstanceIdsChange])
+    onCardIdsChange(finalCardIds)
+  }, [cardIds, onCardIdsChange])
 
   return {
     listRef,
     onDrag,
     onDragStart,
     onDrop,
-    orderedInstanceIds,
+    orderedCardIds,
   }
 }

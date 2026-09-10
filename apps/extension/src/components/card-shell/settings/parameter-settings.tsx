@@ -1,8 +1,8 @@
 import type { SourceParamSchemaMap } from "@newsnext/source-kit/types"
 import { useState } from "react"
+import { ParamField } from "@/components/card-shell/settings/param-field"
+import { CardSettingsSection } from "@/components/card-shell/settings/settings-section"
 import { useI18n } from "@/hooks/use-i18n"
-import { ParamField } from "./param-field"
-import { CardSettingsSection } from "./settings-section"
 
 export interface SourceParamValidationState {
   errors: Record<string, string | undefined>

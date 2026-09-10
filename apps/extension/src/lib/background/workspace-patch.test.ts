@@ -16,29 +16,29 @@ function workspace(revision: number): NativeWorkspace {
         createdAt: 1,
         defaultLayer: "now",
         id: "board-a",
-        instanceIds: ["instance-a"],
+        cardIds: ["card-a"],
         name: "A",
         nowLayer: {
           sort: { automaticMode: "addedAt", manualOrder: [], mode: "addedAt" },
         },
-        nextLayer: { widgets: [] },
+        nextLayer: { liveWidgets: [] },
       },
       {
         color: "blue",
         createdAt: 2,
         defaultLayer: "now",
         id: "board-b",
-        instanceIds: [],
+        cardIds: [],
         name: "B",
         nowLayer: {
           sort: { automaticMode: "addedAt", manualOrder: [], mode: "addedAt" },
         },
-        nextLayer: { widgets: [] },
+        nextLayer: { liveWidgets: [] },
       },
     ],
-    instances: [{
+    liveCards: [{
       createdAt: 1,
-      instanceId: "instance-a",
+      cardId: "card-a",
       workerId: "worker-a",
       patch: {},
       sourceId: "source:a",
@@ -57,7 +57,7 @@ describe("workspace patches", () => {
       defaultLayer: "next",
       name: "Updated",
     }]
-    candidate.instances = []
+    candidate.liveCards = []
 
     const patch = createWorkspacePatch(current, candidate)
 
@@ -66,8 +66,8 @@ describe("workspace patches", () => {
       updatedAt: candidate.updatedAt,
       boardOrder: ["board-b"],
       boards: [candidate.boards[0]],
-      instanceOrder: [],
-      instances: [],
+      cardOrder: [],
+      liveCards: [],
       settings: candidate.settings,
     })
     expect(applyWorkspacePatch(current, patch)).toEqual({
@@ -98,28 +98,28 @@ describe("workspace patches", () => {
     expect(applyWorkspacePatch(current, patch).settings).toEqual(candidate.settings)
   })
 
-  it("preserves Board references to unchanged Instances when parsing a patch", () => {
+  it("preserves Board references to unchanged LiveCards when parsing a patch", () => {
     const current = workspace(4)
     const candidate = workspace(4)
-    candidate.instances.push({
+    candidate.liveCards.push({
       createdAt: 2,
-      instanceId: "instance-b",
+      cardId: "card-b",
       workerId: "worker-b",
       patch: {},
       sourceId: "source:b",
     })
     candidate.boards[0] = {
       ...candidate.boards[0]!,
-      instanceIds: ["instance-b", "instance-a"],
+      cardIds: ["card-b", "card-a"],
     }
 
     const patch = parseWorkspacePatch(createWorkspacePatch(current, candidate))
 
-    expect(patch.instances.map(instance => instance.instanceId)).toEqual(["instance-b"])
-    expect(patch.boards[0]?.instanceIds).toEqual(["instance-b", "instance-a"])
-    expect(applyWorkspacePatch(current, patch).boards[0]?.instanceIds).toEqual([
-      "instance-b",
-      "instance-a",
+    expect(patch.liveCards.map(card => card.cardId)).toEqual(["card-b"])
+    expect(patch.boards[0]?.cardIds).toEqual(["card-b", "card-a"])
+    expect(applyWorkspacePatch(current, patch).boards[0]?.cardIds).toEqual([
+      "card-b",
+      "card-a",
     ])
   })
 })

@@ -8,12 +8,12 @@ import { loadSourceDescriptor } from "./registry"
 
 export type { SourceLoadResponse, SourceLoadResult } from "./load-result"
 
-export async function loadInstance(
-  instanceId: string,
+export async function loadLiveCard(
+  cardId: string,
   signal?: AbortSignal,
 ): Promise<SourceLoadResponse> {
   signal?.throwIfAborted()
-  const response = await actions.instance.load({ instanceId })
+  const response = await actions.liveCard.load({ cardId })
   signal?.throwIfAborted()
   return response
 }

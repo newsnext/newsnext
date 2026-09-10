@@ -69,7 +69,7 @@ bun --filter=@newsnext/registry run build
 A provider has `title`, `color`, optional `icon` and `category`, `defaults`, and
 `sources`. `title`, `icon`, `color`, and `category` describe the provider and
 remain provider identity fields. Every source descriptor receives that provider
-identity. Source/Instance `metadata.color` may override the displayed card palette
+identity. Source/LiveCard `metadata.color` may override the displayed card palette
 without mutating `provider.color`; it uses the same named palette. Source metadata
 shares `CardMetadata` with Widgets: `title`, `badge`, `desc`, `home`, and `color`.
 
@@ -134,20 +134,20 @@ metadata: {
 
 Static source metadata must describe the source definition and remain correct
 for every valid parameter value. Do not put a concrete user, channel, feed,
-community, playlist, ranking, or other instance identity into static `title`,
+community, playlist, ranking, or other card identity into static `title`,
 `badge`, `desc`, or `home`, even when it matches the parameter default. Use a
 generic static fallback such as `User Posts`, `Channel`, or `Playlist`.
 Resolve the concrete identity through Radar metadata or loader metadata from a
 request already required to load the items. Parameter-dependent home URLs
-belong at the same instance-aware layer; omit the static home when no useful
+belong at the same card-aware layer; omit the static home when no useful
 parameter-independent URL exists.
 
 A Source's static default `metadata.title` must not contain either the ASCII
 `|` or full-width `｜` separator; keep it generic and independent of parameter
-defaults, such as `User Posts` or `Video Search`. For an Instance title, use
+defaults, such as `User Posts` or `Video Search`. For a LiveCard title, use
 ASCII ` | ` to separate its resolved identity or query from the selected
 variant, such as `NewsNext | Latest`. Reserve compact separators such as `·`
-for inline item attributes rather than Source or Instance titles.
+for inline item attributes rather than Source or LiveCard titles.
 
 ### Provider category taxonomy
 
@@ -243,7 +243,7 @@ an embedded standard `data:image/...` URL; use the `data:` scheme without `//`
 and percent-encode SVG markup. Choose one provider `color` from the shared
 palette: `red`, `pink`, `fuchsia`, `purple`, `indigo`, `blue`, `cyan`, `teal`,
 `green`, `amber`, `orange`, or `slate`. Use `metadata.badge` for
-instance-specific identity such as a channel or user avatar. Source metadata is
+card-specific identity such as a channel or user avatar. Source metadata is
 static and must not contain Liquid; use a Radar metadata patch for dynamic
 values. Defining `icon` or `color` in source metadata is invalid.
 
@@ -751,14 +751,14 @@ A loader always returns a `SourceLoaderOutput` object:
 NewsNext validates the complete loader output, then keeps only its first 50
 items. This limit applies uniformly to structured, RSS, and custom loaders.
 Preserve the intended display order before returning so the most relevant 50
-items remain in the Instance result.
+items remain in the LiveCard result.
 
 Dynamic loader metadata always supports the complete source metadata shape:
 `title`, `badge`, `desc`, `home`, `color`, and optional `type` (`list` or `ranking`). It travels with the items through
 persistence and the in-memory Query cache and has the
 highest display priority, overriding static metadata and persisted Radar or
-Instance metadata patches field by field. It is unavailable until the first
-successful request and is never persisted into the Instance. A loader
+LiveCard metadata patches field by field. It is unavailable until the first
+successful request and is never persisted into the LiveCard. A loader
 title may provide the effective title for a LiveCard created through Radar.
 
 When authoring a source, prefer loader metadata when a request already required
@@ -844,7 +844,7 @@ index-aligned `inlinePresentation` string array. An empty string represents the
 default frontend fallback after an empty or failed per-item rendering. Neither
 the template nor its rendered presentation is an item fact, so neither is stored
 in item history.
-Do not repeat context already established by the Instance:
+Do not repeat context already established by the LiveCard:
 for example, a topic-specific source should retain the topic in each item's
 semantic `attributes`, but omit it from that source's inline template. Likewise,
 when `icon.kind` is `author`, omit the author's name from inline presentation;
@@ -944,7 +944,7 @@ GET requests retry transient failures; mutation requests are not retried
 automatically. Non-success HTTP responses reject after the retry policy is
 exhausted. Retries use exponential backoff with full jitter, honor
 `Retry-After` for rate limits and service unavailability, and cap any retry
-delay at the shared request timeout. Use the provided instance directly; do not
+delay at the shared request timeout. Use the provided card directly; do not
 call `create()` and lose the bound request lifecycle and security policy.
 
 Provider-specific response recovery may derive a client with `extend()` and an
@@ -981,7 +981,7 @@ header when the browser cookie jar is sufficient.
 
 ## Radar discovery
 
-Radar maps the active page to a ready-to-create Instance. Capture every choice
+Radar maps the active page to a ready-to-create LiveCard. Capture every choice
 already expressed by the page: identity, query, filters, sorting, and time range.
 The user reviews the preview and clicks `Create` without repeating those choices.
 
@@ -1003,7 +1003,7 @@ radar: [{
 }]
 ```
 
-Each Radar suggestion previews one LiveCard. Creating it persists a new Instance
+Each Radar suggestion previews one LiveCard. Creating it persists a new LiveCard
 with the resolved parameter and presentation patches in the selected destination
 Board. Radar does not modify an existing LiveCard. Moving a LiveCard later
 changes its owning Board. Exactly one destination Board is required.
@@ -1136,9 +1136,9 @@ registry to forum routes, templates, or JSON APIs. Users add the feed URL
 explicitly; Radar does not scan pages for feeds. Add a dedicated forum provider
 only for a site-specific contract that RSS, Atom, or JSON Feed cannot represent.
 
-Use `badge` for secondary instance identity. Reuse a stable image URL from the
+Use `badge` for secondary card identity. Reuse a stable image URL from the
 required item request whenever it is available. Page-derived Radar badges must
-also be stable because their resolved URLs are persisted with the Instance; do
+also be stable because their resolved URLs are persisted with the LiveCard; do
 not capture signed, expiring, session-bound, or transiently transformed image
 URLs from the DOM. When the required item request has no stable badge and the
 page exposes only a transient one, omit the badge instead of adding a
@@ -1324,18 +1324,18 @@ Alternatively, declare queries directly in the manifest:
 }
 ```
 
-`latest` searches retained history for all scoped Instances directly in SQL.
+`latest` searches retained history for all scoped LiveCards directly in SQL.
 It applies case-insensitive literal title matching, sorting, deduplication and limit
 before returning items. Missing publication times sort last; a publication window
 excludes items without a publication time. For standalone execution,
-pass `instanceIds` to the SDK; installed views use their placement's scope.
+pass `cardIds` to the SDK; installed views use their placement's scope.
 Queries and JS may coexist: JS receives materialized results in `queries`, where
-query items use `{ value: NewsItem, instanceId?, sourceId?, metadata? }` envelopes.
+query items use `{ value: NewsItem, cardId?, sourceId?, metadata? }` envelopes.
 Its return value replaces those results. Return raw NewsItems in output `items`
 arrays; the runtime adds the common envelope. Other named JSON results can carry
 statistics or other data independently of LiveCard.
 `latest` does not execute Sources or fetch external feeds. Board scope follows the current
-Board's complete Instance list. History is isolated by each Instance's Worker,
+Board's complete LiveCard list. History is isolated by each LiveCard's Worker,
 Source, and resolved parameters; repeated URLs use their newest retained value.
 Items absent from the newest observation remain searchable. `publishedAt` remains
 the source publication time; refresh time is never substituted for it. No matches
@@ -1344,11 +1344,11 @@ produce an empty list.
 Access data without a view, open page, or Board placement:
 
 ```ts
-const result = await client.widgets.data({ widgetId: "keyword-watch" })
+const result = await client.liveWidgets.data({ widgetId: "keyword-watch" })
 const feed = result.queries.feed
 ```
 
-The result includes `queries`, completion `refreshedAt`, and Instance `errors`.
+The result includes `queries`, completion `refreshedAt`, and LiveCard `errors`.
 With `data.mjs` present, a data-only `widget.json` can be `{}`. Without that
 file, declare `data.queries`. The independent data loader ignores visual configuration. JS uses the first available runtime in this order: Bun, Deno, then Node.js 22+.
 The daemon searches PATH and standard installation directories, including
@@ -1361,9 +1361,9 @@ scripts are trusted code with the runtime's normal filesystem/network access.
 Each run imports a fresh module. Entry paths/symlinks must stay inside the Widget
 directory; dependencies use normal module resolution.
 
-Initial load, manual refresh and periodic placed-Widget refresh execute the data
-pipeline. Placed Widgets also have daemon-managed background Jobs. Unplaced data
-executes on SDK request. No separate producer or data.json is necessary. Existing
+Initial load, manual refresh and visible placed-Widget polling execute the data
+pipeline. Widgets have no background schedule; `refresh.intervalMs` controls
+visible polling. Unplaced data executes on SDK request. No separate producer or data.json is necessary. Existing
 `file` queries can still import `{ items: [...] }` JSON (16 MiB / 500 items).
 
 `view` may select `live-card` with optional `presentation: "list" | "ranking"`;
@@ -1402,6 +1402,6 @@ error. Installed local Widgets can execute mutating Actions as well as queries.
 
 Card and Widget backs share the same metadata editor, parameter editor, and Board
 selection controls. Metadata drafts preview locally; saving changes presentation
-without changing source parameters. `instance.resetMetadata` clears saved display
-overrides independently of `instance.resetParams`. Widget metadata uses the same
-fields through `nextLayer.setWidgetMetadata`; its data inputs remain separate.
+without changing source parameters. `liveCard.resetMetadata` clears saved display
+overrides independently of `liveCard.resetParams`. Widget metadata uses the same
+fields through `nextLayer.setLiveWidgetMetadata`; its data inputs remain separate.

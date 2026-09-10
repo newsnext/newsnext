@@ -7,31 +7,31 @@ import type {
 } from "../application"
 import { actionContracts } from "@newsnext/sdk/actions"
 import {
-  configureInstanceMutation,
+  configureLiveCardMutation,
   createBoardMutation,
-  createInstanceMutation,
+  createLiveCardMutation,
   deleteBoardMutation,
-  deleteInstanceMutation,
+  deleteLiveCardMutation,
   getBoardConfigurationQuery,
   getBoardContextQuery,
   getBoardQuery,
-  getInstanceQuery,
+  getLiveCardQuery,
   getNowLayerLiveCardsQuery,
   getSourceQuery,
-  installNextLayerWidgetMutation,
-  listBoardInstancesQuery,
+  installLiveWidgetMutation,
+  listBoardLiveCardsQuery,
   listBoardsQuery,
-  listInstancesQuery,
+  listLiveCardsQuery,
   listSourcesQuery,
-  moveInstanceMutation,
-  moveNextLayerWidgetMutation,
-  removeNextLayerWidgetMutation,
-  resetInstanceMetadataMutation,
-  resetInstanceParamsMutation,
-  setNextLayerWidgetDataScopeMutation,
-  setNextLayerWidgetLayoutsMutation,
-  setNextLayerWidgetMetadataMutation,
-  setNextLayerWidgetParamsMutation,
+  moveLiveCardMutation,
+  moveLiveWidgetMutation,
+  removeLiveWidgetMutation,
+  resetLiveCardMetadataMutation,
+  resetLiveCardParamsMutation,
+  setLiveWidgetDataScopeMutation,
+  setLiveWidgetLayoutsMutation,
+  setLiveWidgetMetadataMutation,
+  setLiveWidgetParamsMutation,
   setNowLayerManualOrderMutation,
   updateBoardMutation,
 } from "../application"
@@ -55,7 +55,7 @@ export interface ApplicationActionContext {
 }
 
 const boardCreateAction = defineAction(actionContracts["board.create"], async (input, context: ApplicationActionContext) => {
-  await context.requireSources((input.instances ?? []).map(instance => instance.sourceId))
+  await context.requireSources((input.liveCards ?? []).map(card => card.sourceId))
   const result = await context.mutate((data, dependencies) => createBoardMutation(data, input, dependencies))
   if (!result.boardId) throw new Error("Board creation returned no Board ID")
   return { boardId: result.boardId }
@@ -78,59 +78,59 @@ const nowLayerSetManualOrderAction = defineAction(actionContracts["nowLayer.setM
   await context.mutate(data => setNowLayerManualOrderMutation(data, input))
 ))
 
-const nextLayerInstallWidgetAction = defineAction(actionContracts["nextLayer.installWidget"], async (input, context: ApplicationActionContext) => (
-  await context.mutate(data => installNextLayerWidgetMutation(data, input))
+const nextLayerInstallWidgetAction = defineAction(actionContracts["nextLayer.installLiveWidget"], async (input, context: ApplicationActionContext) => (
+  await context.mutate(data => installLiveWidgetMutation(data, input))
 ))
 
-const nextLayerMoveWidgetAction = defineAction(actionContracts["nextLayer.moveWidget"], async (input, context: ApplicationActionContext) => (
-  await context.mutate(data => moveNextLayerWidgetMutation(data, input))
+const nextLayerMoveWidgetAction = defineAction(actionContracts["nextLayer.moveLiveWidget"], async (input, context: ApplicationActionContext) => (
+  await context.mutate(data => moveLiveWidgetMutation(data, input))
 ))
 
-const nextLayerRemoveWidgetAction = defineAction(actionContracts["nextLayer.removeWidget"], async (input, context: ApplicationActionContext) => (
-  await context.mutate(data => removeNextLayerWidgetMutation(data, input))
+const nextLayerRemoveWidgetAction = defineAction(actionContracts["nextLayer.removeLiveWidget"], async (input, context: ApplicationActionContext) => (
+  await context.mutate(data => removeLiveWidgetMutation(data, input))
 ))
 
-const nextLayerSetWidgetDataScopeAction = defineAction(actionContracts["nextLayer.setWidgetDataScope"], async (input, context: ApplicationActionContext) => (
-  await context.mutate(data => setNextLayerWidgetDataScopeMutation(data, input))
+const nextLayerSetWidgetDataScopeAction = defineAction(actionContracts["nextLayer.setLiveWidgetDataScope"], async (input, context: ApplicationActionContext) => (
+  await context.mutate(data => setLiveWidgetDataScopeMutation(data, input))
 ))
 
-const nextLayerSetWidgetMetadataAction = defineAction(actionContracts["nextLayer.setWidgetMetadata"], async (input, context: ApplicationActionContext) => (
-  await context.mutate(data => setNextLayerWidgetMetadataMutation(data, input))
+const nextLayerSetWidgetMetadataAction = defineAction(actionContracts["nextLayer.setLiveWidgetMetadata"], async (input, context: ApplicationActionContext) => (
+  await context.mutate(data => setLiveWidgetMetadataMutation(data, input))
 ))
 
-const nextLayerSetWidgetParamsAction = defineAction(actionContracts["nextLayer.setWidgetParams"], async (input, context: ApplicationActionContext) => (
-  await context.mutate(data => setNextLayerWidgetParamsMutation(data, input))
+const nextLayerSetWidgetParamsAction = defineAction(actionContracts["nextLayer.setLiveWidgetParams"], async (input, context: ApplicationActionContext) => (
+  await context.mutate(data => setLiveWidgetParamsMutation(data, input))
 ))
 
-const nextLayerSetWidgetLayoutsAction = defineAction(actionContracts["nextLayer.setWidgetLayouts"], async (input, context: ApplicationActionContext) => (
-  await context.mutate(data => setNextLayerWidgetLayoutsMutation(data, input))
+const nextLayerSetWidgetLayoutsAction = defineAction(actionContracts["nextLayer.setLiveWidgetLayouts"], async (input, context: ApplicationActionContext) => (
+  await context.mutate(data => setLiveWidgetLayoutsMutation(data, input))
 ))
 
-const instanceMoveAction = defineAction(actionContracts["instance.move"], async (input, context: ApplicationActionContext) => (
-  await context.mutate(data => moveInstanceMutation(data, input))
+const liveCardMoveAction = defineAction(actionContracts["liveCard.move"], async (input, context: ApplicationActionContext) => (
+  await context.mutate(data => moveLiveCardMutation(data, input))
 ))
 
-const instanceCreateAction = defineAction(actionContracts["instance.create"], async (input, context: ApplicationActionContext) => {
+const liveCardCreateAction = defineAction(actionContracts["liveCard.create"], async (input, context: ApplicationActionContext) => {
   await context.requireSources([input.sourceId])
-  const result = await context.mutate((data, dependencies) => createInstanceMutation(data, input, dependencies))
-  if (!result.instanceId) throw new Error("Instance creation returned no Instance ID")
-  return { instanceId: result.instanceId }
+  const result = await context.mutate((data, dependencies) => createLiveCardMutation(data, input, dependencies))
+  if (!result.cardId) throw new Error("LiveCard creation returned no LiveCard ID")
+  return { cardId: result.cardId }
 })
 
-const instanceConfigureAction = defineAction(actionContracts["instance.configure"], async (input, context: ApplicationActionContext) => (
-  await context.mutate(data => configureInstanceMutation(data, input))
+const liveCardConfigureAction = defineAction(actionContracts["liveCard.configure"], async (input, context: ApplicationActionContext) => (
+  await context.mutate(data => configureLiveCardMutation(data, input))
 ))
 
-const instanceResetMetadataAction = defineAction(actionContracts["instance.resetMetadata"], async (input, context: ApplicationActionContext) => (
-  await context.mutate(data => resetInstanceMetadataMutation(data, input))
+const liveCardResetMetadataAction = defineAction(actionContracts["liveCard.resetMetadata"], async (input, context: ApplicationActionContext) => (
+  await context.mutate(data => resetLiveCardMetadataMutation(data, input))
 ))
 
-const instanceResetParamsAction = defineAction(actionContracts["instance.resetParams"], async (input, context: ApplicationActionContext) => (
-  await context.mutate(data => resetInstanceParamsMutation(data, input))
+const liveCardResetParamsAction = defineAction(actionContracts["liveCard.resetParams"], async (input, context: ApplicationActionContext) => (
+  await context.mutate(data => resetLiveCardParamsMutation(data, input))
 ))
 
-const instanceDeleteAction = defineAction(actionContracts["instance.delete"], async (input, context: ApplicationActionContext) => (
-  await context.mutate(data => deleteInstanceMutation(data, input))
+const liveCardDeleteAction = defineAction(actionContracts["liveCard.delete"], async (input, context: ApplicationActionContext) => (
+  await context.mutate(data => deleteLiveCardMutation(data, input))
 ))
 
 const sourceListAction = defineAction(actionContracts["source.list"], async (_input, context: ApplicationActionContext) => listSourcesQuery(await context.sources()))
@@ -141,13 +141,13 @@ const boardListAction = defineAction(actionContracts["board.list"], async (_inpu
 
 const boardGetAction = defineAction(actionContracts["board.get"], async (input, context: ApplicationActionContext) => getBoardQuery(await context.data(), input))
 
-const boardListInstancesAction = defineAction(actionContracts["board.listInstances"], async (input, context: ApplicationActionContext) => (
-  listBoardInstancesQuery(await context.data(), input)
+const boardListLiveCardsAction = defineAction(actionContracts["board.listLiveCards"], async (input, context: ApplicationActionContext) => (
+  listBoardLiveCardsQuery(await context.data(), input)
 ))
 
-const instanceListAction = defineAction(actionContracts["instance.list"], async (_input, context: ApplicationActionContext) => listInstancesQuery(await context.data()))
+const liveCardListAction = defineAction(actionContracts["liveCard.list"], async (_input, context: ApplicationActionContext) => listLiveCardsQuery(await context.data()))
 
-const instanceGetAction = defineAction(actionContracts["instance.get"], async (input, context: ApplicationActionContext) => getInstanceQuery(await context.data(), input))
+const liveCardGetAction = defineAction(actionContracts["liveCard.get"], async (input, context: ApplicationActionContext) => getLiveCardQuery(await context.data(), input))
 
 const boardGetContextAction = defineAction(actionContracts["board.getContext"], async (input, context: ApplicationActionContext) => (
   getBoardContextQuery(await context.data(), input.boardId)
@@ -175,19 +175,19 @@ export const applicationActionDefinitions = [
   nextLayerSetWidgetLayoutsAction,
   nextLayerSetWidgetParamsAction,
   nextLayerSetWidgetMetadataAction,
-  instanceMoveAction,
-  instanceCreateAction,
-  instanceConfigureAction,
-  instanceResetParamsAction,
-  instanceResetMetadataAction,
-  instanceDeleteAction,
+  liveCardMoveAction,
+  liveCardCreateAction,
+  liveCardConfigureAction,
+  liveCardResetParamsAction,
+  liveCardResetMetadataAction,
+  liveCardDeleteAction,
   sourceListAction,
   sourceGetAction,
   boardListAction,
   boardGetAction,
-  boardListInstancesAction,
-  instanceListAction,
-  instanceGetAction,
+  boardListLiveCardsAction,
+  liveCardListAction,
+  liveCardGetAction,
   boardGetContextAction,
   boardGetConfigurationAction,
   nowLayerGetLiveCardsAction,

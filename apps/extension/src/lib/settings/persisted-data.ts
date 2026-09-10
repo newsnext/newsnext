@@ -1,12 +1,12 @@
 import type { ApplicationData } from "../application/data"
 import type {
   Board,
-  NextLayerWidget,
-  NextLayerWidgetDataScope,
+  LiveWidget,
+  LiveWidgetDataScope,
   NowLayerAutomaticSortMode,
   NowLayerSortMode,
 } from "../board"
-import type { Instance, InstancePatch } from "../source"
+import type { LiveCard, LiveCardPatch } from "../source"
 import type { PersistedSettings } from "./persisted-settings"
 import { isThemeColor } from "@newsnext/sdk/models"
 import {
@@ -26,7 +26,7 @@ export const PERSISTED_DATA_EXPORT_KIND = "newsnext-user-data"
 export const PERSISTED_PORTABLE_SLICE_IDS = [
   "settings",
   "boards",
-  "instances",
+  "liveCards",
 ] as const
 
 export type PersistedPortableSliceId = typeof PERSISTED_PORTABLE_SLICE_IDS[number]
@@ -68,32 +68,32 @@ export function normalizeApplicationData(value: unknown): ApplicationData {
     return createEmptyApplicationData()
   }
 
-  const instances = normalizeInstances(value.instances)
-  const instanceIds = new Set(instances.map(instance => instance.instanceId))
-  const boards = normalizeBoards(value.boards, instanceIds)
+  const liveCards = normalizeLiveCards(value.liveCards)
+  const cardIds = new Set(liveCards.map(card => card.cardId))
+  const boards = normalizeBoards(value.boards, cardIds)
 
   return {
     version: APPLICATION_DATA_VERSION,
     boards,
-    instances,
+    liveCards,
   }
 }
 
 export function normalizeBoards(
   value: unknown,
-  instanceIds?: ReadonlySet<string>,
+  cardIds?: ReadonlySet<string>,
 ): Board[] {
   if (!Array.isArray(value)) return []
   const seenIds = new Set<string>()
   const seenNames: string[] = []
-  const assignedInstanceIds = new Set<string>()
+  const assignedCardIds = new Set<string>()
   return value.flatMap((candidate) => {
     const identity = normalizeBoardIdentity(candidate, seenIds, seenNames)
     if (!identity || !isRecord(candidate)) return []
 
-    const ids = normalizeIdentifierArray(candidate.instanceIds, instanceIds).filter((instanceId) => {
-      if (assignedInstanceIds.has(instanceId)) return false
-      assignedInstanceIds.add(instanceId)
+    const ids = normalizeIdentifierArray(candidate.cardIds, cardIds).filter((cardId) => {
+      if (assignedCardIds.has(cardId)) return false
+      assignedCardIds.add(cardId)
       return true
     })
     const nowLayer = isRecord(candidate.nowLayer) ? candidate.nowLayer : {}
@@ -105,28 +105,28 @@ export function normalizeBoards(
       ...identity,
       color: isThemeColor(candidate.color) ? candidate.color : DEFAULT_BOARD_COLOR,
       defaultLayer: normalizeBoardLayer(candidate.defaultLayer),
-      instanceIds: ids,
+      cardIds: ids,
       nowLayer: {
         sort: {
           mode,
           automaticMode: mode === "manual" ? automaticMode : mode,
           manualOrder: reconcileOrder(
-            normalizeIdentifierArray(sortValue.manualOrder, instanceIds),
+            normalizeIdentifierArray(sortValue.manualOrder, cardIds),
             ids,
           ),
         },
       },
       nextLayer: {
-        widgets: normalizeNextLayerWidgets(nextLayer.widgets, new Set(ids)),
+        liveWidgets: normalizeLiveWidgets(nextLayer.liveWidgets, new Set(ids)),
       },
     }]
   })
 }
 
-function normalizeNextLayerWidgets(
+function normalizeLiveWidgets(
   value: unknown,
-  boardInstanceIds: ReadonlySet<string>,
-): NextLayerWidget[] {
+  boardCardIds: ReadonlySet<string>,
+): LiveWidget[] {
   if (!Array.isArray(value)) return []
   const seen = new Set<string>()
   return value.flatMap((candidate) => {
@@ -146,7 +146,7 @@ function normalizeNextLayerWidgets(
       || !isIntegerBetween(layout.height, 1, 100)) {
       return []
     }
-    const dataScope = normalizeWidgetDataScope(candidate.dataScope, boardInstanceIds)
+    const dataScope = normalizeWidgetDataScope(candidate.dataScope, boardCardIds)
     if (!dataScope) return []
     seen.add(candidate.widgetId)
     return [{
@@ -178,14 +178,14 @@ function normalizeNextLayerWidgets(
 
 function normalizeWidgetDataScope(
   value: unknown,
-  boardInstanceIds: ReadonlySet<string>,
-): NextLayerWidgetDataScope | undefined {
+  boardCardIds: ReadonlySet<string>,
+): LiveWidgetDataScope | undefined {
   if (!isRecord(value) || typeof value.type !== "string") return undefined
   if (value.type === "board") return { type: "board" }
-  if (value.type !== "instances") return undefined
+  if (value.type !== "cards") return undefined
   return {
-    type: "instances",
-    instanceIds: normalizeIdentifierArray(value.instanceIds, boardInstanceIds),
+    type: "cards",
+    cardIds: normalizeIdentifierArray(value.cardIds, boardCardIds),
   }
 }
 
@@ -193,26 +193,26 @@ function isIntegerBetween(value: unknown, minimum: number, maximum: number): val
   return Number.isInteger(value) && Number(value) >= minimum && Number(value) <= maximum
 }
 
-export function normalizeInstances(value: unknown): Instance[] {
+export function normalizeLiveCards(value: unknown): LiveCard[] {
   if (!Array.isArray(value)) return []
   const seenIds = new Set<string>()
   return value.flatMap((candidate) => {
     if (!isRecord(candidate)
-      || typeof candidate.instanceId !== "string"
-      || candidate.instanceId.trim().length === 0
+      || typeof candidate.cardId !== "string"
+      || candidate.cardId.trim().length === 0
       || typeof candidate.workerId !== "string"
       || candidate.workerId.trim().length === 0
       || typeof candidate.sourceId !== "string"
       || candidate.sourceId.trim().length === 0
       || typeof candidate.createdAt !== "number"
       || !Number.isFinite(candidate.createdAt)
-      || !isInstancePatch(candidate.patch)
-      || seenIds.has(candidate.instanceId)) {
+      || !isLiveCardPatch(candidate.patch)
+      || seenIds.has(candidate.cardId)) {
       return []
     }
-    seenIds.add(candidate.instanceId)
+    seenIds.add(candidate.cardId)
     return [{
-      instanceId: candidate.instanceId,
+      cardId: candidate.cardId,
       workerId: candidate.workerId,
       sourceId: candidate.sourceId,
       patch: candidate.patch,
@@ -267,12 +267,12 @@ export function selectPersistedUserData(
   sliceIds: readonly PersistedPortableSliceId[],
 ): Partial<PersistedUserData> {
   const selected = new Set(sliceIds)
-  const includesApplicationData = selected.has("boards") || selected.has("instances")
+  const includesApplicationData = selected.has("boards") || selected.has("liveCards")
   return {
     ...(includesApplicationData ? { version: APPLICATION_DATA_VERSION } : {}),
     ...(selected.has("settings") && data.settings !== undefined ? { settings: data.settings } : {}),
     ...(selected.has("boards") && data.boards !== undefined ? { boards: data.boards } : {}),
-    ...(selected.has("instances") && data.instances !== undefined ? { instances: data.instances } : {}),
+    ...(selected.has("liveCards") && data.liveCards !== undefined ? { liveCards: data.liveCards } : {}),
   }
 }
 
@@ -281,7 +281,7 @@ export function hasPersistedUserDataSlice(
   sliceId: PersistedPortableSliceId,
 ): boolean {
   if (sliceId === "settings") return data.settings !== undefined
-  if (sliceId === "instances") return data.instances !== undefined
+  if (sliceId === "liveCards") return data.liveCards !== undefined
   return data.boards !== undefined
 }
 
@@ -296,7 +296,7 @@ export function mergePersistedUserData(
     version: APPLICATION_DATA_VERSION,
     settings,
     boards: imported.boards ?? current.boards,
-    instances: imported.instances ?? current.instances,
+    liveCards: imported.liveCards ?? current.liveCards,
   })
 }
 
@@ -314,23 +314,23 @@ export function normalizePersistedUserData(data: PersistedUserData): PersistedUs
 function normalizePartialPersistedUserData(
   data: Record<string, unknown>,
 ): Partial<PersistedUserData> {
-  const hasInstances = Object.hasOwn(data, "instances")
+  const hasLiveCards = Object.hasOwn(data, "liveCards")
   const hasBoards = Object.hasOwn(data, "boards")
-  if ((hasBoards || hasInstances) && data.version !== APPLICATION_DATA_VERSION) {
+  if ((hasBoards || hasLiveCards) && data.version !== APPLICATION_DATA_VERSION) {
     return {}
   }
-  const instances = normalizeInstances(data.instances)
-  const instanceIds = hasInstances
-    ? new Set(instances.map(instance => instance.instanceId))
+  const liveCards = normalizeLiveCards(data.liveCards)
+  const cardIds = hasLiveCards
+    ? new Set(liveCards.map(card => card.cardId))
     : undefined
   const boards = hasBoards
-    ? normalizeBoards(data.boards, instanceIds)
+    ? normalizeBoards(data.boards, cardIds)
     : undefined
   return {
-    ...((boards || hasInstances) ? { version: APPLICATION_DATA_VERSION } : {}),
+    ...((boards || hasLiveCards) ? { version: APPLICATION_DATA_VERSION } : {}),
     ...(Object.hasOwn(data, "settings") ? { settings: normalizePersistedSettings(data.settings) } : {}),
     ...(boards ? { boards } : {}),
-    ...(hasInstances ? { instances } : {}),
+    ...(hasLiveCards ? { liveCards } : {}),
   }
 }
 
@@ -380,11 +380,11 @@ function normalizeIdentifierArray(
   })
 }
 
-function reconcileOrder(order: string[], instanceIds: string[]): string[] {
-  const instanceIdSet = new Set(instanceIds)
-  const ordered = order.filter(instanceId => instanceIdSet.has(instanceId))
+function reconcileOrder(order: string[], cardIds: string[]): string[] {
+  const cardIdSet = new Set(cardIds)
+  const ordered = order.filter(cardId => cardIdSet.has(cardId))
   const orderedSet = new Set(ordered)
-  return [...ordered, ...instanceIds.filter(instanceId => !orderedSet.has(instanceId))]
+  return [...ordered, ...cardIds.filter(cardId => !orderedSet.has(cardId))]
 }
 
 function normalizeNowLayerSortMode(value: unknown): NowLayerSortMode {
@@ -397,7 +397,7 @@ function normalizeNowLayerAutomaticSortMode(value: unknown): NowLayerAutomaticSo
   return value === "provider" ? value : DEFAULT_NOW_LAYER_SORT.automaticMode
 }
 
-function isInstancePatch(value: unknown): value is InstancePatch {
+function isLiveCardPatch(value: unknown): value is LiveCardPatch {
   return isRecord(value)
     && (value.params === undefined || isRecord(value.params))
     && (value.metadata === undefined || isRecord(value.metadata))

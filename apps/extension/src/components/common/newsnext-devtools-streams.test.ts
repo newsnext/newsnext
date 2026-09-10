@@ -7,7 +7,7 @@ function stream(id: string, overrides: Partial<NativeStreamStatus> = {}): Native
     streamId: id,
     sourceId: "test:feed",
     workerId: "worker",
-    instanceIds: ["a", "b"],
+    cardIds: ["a", "b"],
     resolved: true,
     observationCount: 10,
     activity: "scheduled",

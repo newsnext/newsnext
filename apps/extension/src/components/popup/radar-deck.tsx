@@ -1,7 +1,7 @@
 import type { MotionValue, PanInfo } from "motion/react"
 import type { CSSProperties, PointerEvent } from "react"
 import type { ResolvedRadarSuggestion } from "@/lib/radar"
-import type { InstancePatch } from "@/lib/source"
+import type { LiveCardPatch } from "@/lib/source"
 import type { LiveCardViewModel } from "@/typings/source"
 import { Button } from "@newsnext/ui/components/button"
 import { cn } from "@newsnext/ui/lib/utils"
@@ -15,8 +15,8 @@ import { LiveCard } from "@/components/live-card"
 import { useAsyncAction } from "@/hooks/use-async-action"
 import { useI18n } from "@/hooks/use-i18n"
 import { createRadarLiveCard } from "@/lib/radar"
-import { mergeInstancePatch } from "@/lib/source"
-import { boardsAtom, createInstanceAtom } from "@/store/board"
+import { mergeLiveCardPatch } from "@/lib/source"
+import { boardsAtom, createLiveCardAtom } from "@/store/board"
 import { currentBoardIdAtom } from "@/store/settings"
 
 const RADAR_SWIPE_THRESHOLD = 90
@@ -95,7 +95,7 @@ function launchRadarConfetti({ color, originElement }: RadarConfettiOptions): vo
 interface RadarLiveCardProps {
   liveCard: LiveCardViewModel
   className?: string
-  onPatchChange: (patch: InstancePatch) => void
+  onPatchChange: (patch: LiveCardPatch) => void
 }
 
 function RadarLiveCard({ liveCard, className, onPatchChange }: RadarLiveCardProps) {
@@ -118,7 +118,7 @@ interface RadarTrackCardProps {
   trackItemOffset: number
   x: MotionValue<number>
   onDragHandlePointerDown: (event: PointerEvent<HTMLDivElement>) => void
-  onPatchChange: (patch: InstancePatch) => void
+  onPatchChange: (patch: LiveCardPatch) => void
 }
 
 function RadarTrackCard({
@@ -200,10 +200,10 @@ function RadarDeckContent({
 }: RadarDeckContentProps) {
   const { t } = useI18n()
   const isDialog = layout === "dialog"
-  const createInstance = useSetAtom(createInstanceAtom)
+  const createLiveCard = useSetAtom(createLiveCardAtom)
   const [targetBoardId, setTargetBoardId] = useState(initialBoardId)
   const [activeIndex, setActiveIndex] = useState(0)
-  const [draftPatches, setDraftPatches] = useState<Record<string, InstancePatch>>({})
+  const [draftPatches, setDraftPatches] = useState<Record<string, LiveCardPatch>>({})
   const [trackItemOffset, setTrackItemOffset] = useState(1)
   const [hasMeasuredDeck, setHasMeasuredDeck] = useState(false)
   const [isCreated, setIsCreated] = useState(false)
@@ -328,10 +328,10 @@ function RadarDeckContent({
     }
 
     await runCreate(async () => {
-      await createInstance({
+      await createLiveCard({
         boardId: targetBoardId,
         sourceId: activeSuggestion.sourceId,
-        patch: mergeInstancePatch(
+        patch: mergeLiveCardPatch(
           activeSuggestion.patch,
           draftPatches[activeSuggestion.id] ?? {},
         ),
@@ -343,11 +343,11 @@ function RadarDeckContent({
         originElement: actionRef.current,
       })
     })
-  }, [activeLiveCard, activeSuggestion, createInstance, draftPatches, isCreated, onCreationStart, runCreate, targetBoardId])
+  }, [activeLiveCard, activeSuggestion, createLiveCard, draftPatches, isCreated, onCreationStart, runCreate, targetBoardId])
 
-  const handleDraftSourceChange = useCallback((suggestionId: string, patch: InstancePatch) => {
+  const handleDraftSourceChange = useCallback((suggestionId: string, patch: LiveCardPatch) => {
     setDraftPatches((prev) => {
-      const nextPatch = mergeInstancePatch(prev[suggestionId], patch)
+      const nextPatch = mergeLiveCardPatch(prev[suggestionId], patch)
       const resolvedPatch = patch.params && Object.keys(patch.params).length === 0
         ? { ...nextPatch, params: {} }
         : nextPatch

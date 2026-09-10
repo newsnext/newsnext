@@ -10,7 +10,7 @@ import type {
   SourceRadarRule,
 } from "@newsnext/source-kit/types"
 import type { RadarPageQuery } from "./page-query"
-import type { InstanceMetadata } from "@/lib/source"
+import type { LiveCardMetadata } from "@/lib/source"
 import { isThemeColor } from "@newsnext/sdk/models"
 import {
   compileSourceTemplate,
@@ -553,8 +553,8 @@ function resolveMetaPatch(
   rule: CompiledRadarRule,
   context: RadarMatchContext,
   input: RadarContext,
-): InstanceMetadata {
-  const metadata: InstanceMetadata = {
+): LiveCardMetadata {
+  const metadata: LiveCardMetadata = {
     home: context.url.toString(),
   }
   const extractedItem = Object.fromEntries(

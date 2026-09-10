@@ -8,13 +8,13 @@ import { FlipAnimate } from "@newsnext/ui/components/flip-animate"
 import { useQuery } from "@tanstack/react-query"
 import { useAtomValue } from "jotai"
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
+import { CardBackContent, CardShell } from "@/components/card-shell"
+import { CardHeader, CardHeaderActionButton } from "@/components/card-shell/card-header"
+import { CardContentBackground, CardContentTransition, CardRefreshButton } from "@/components/card-shell/card-refresh"
+import { canDragCardHeader, generateCardDragPreview } from "@/components/card-shell/drag-preview"
+import { CardMetadataSettings } from "@/components/card-shell/settings/metadata-settings"
+import { ParameterSettings } from "@/components/card-shell/settings/parameter-settings"
 import { PhArrowCircleLeftDuotone, PhInfoDuotone } from "@/components/icons/ph"
-import { CardMetadataSettings } from "@/components/live-card/card-back/metadata-settings"
-import { ParameterSettings } from "@/components/live-card/card-back/parameter-settings"
-import { CardBackContent, CardFace } from "@/components/live-card/card-face"
-import { LiveCardHeader, LiveCardHeaderActionButton } from "@/components/live-card/card-header"
-import { LiveCardContentBackground, LiveCardContentTransition, LiveCardRefreshButton } from "@/components/live-card/card-refresh"
-import { canDragCardHeader, generateLiveCardDragPreview } from "@/components/live-card/drag-preview"
 import { useI18n } from "@/hooks/use-i18n"
 import { useNativeIntegrationStatus } from "@/hooks/use-native-integration-status"
 import { useSortable } from "@/hooks/use-sortable"
@@ -22,24 +22,24 @@ import { useSourceParams } from "@/hooks/use-source-params"
 import { RelativeTime } from "@/hooks/useRelativeTime"
 import { actions } from "@/lib/actions"
 import { boardsAtom } from "@/store/board"
-import { BuiltinLiveCard } from "./builtin-live-card"
 import { SortableWidgetGrid } from "./sortable-widget-grid"
-import { useWidgetData } from "./use-widget-data"
+import { useLiveWidgetData } from "./use-live-widget-data"
 import { DeleteWidgetButton, WidgetBoardSelect } from "./widget-actions"
+import { WidgetItemListContent } from "./widget-item-list-content"
 import { clampWidgetWidth, getChangedWidgetLayouts, getGridWidgetId } from "./widget-layout"
 import { parseLocalWidgetManifests } from "./widget-manifest"
 import { bindWidgetSdk } from "./widget-sdk"
 
 const WIDGET_PROTOCOL_VERSION = 1
 
-interface WidgetFrameProps {
+interface LiveWidgetCardProps {
   metadata?: WidgetMetadata
   params?: SourceParamSchemaMap
   paramsValue?: Record<string, unknown>
   boardId: string
   color: Color
   active: boolean
-  instanceIds: string[]
+  cardIds: string[]
   title: string
   url?: string
   ui: WidgetUi
@@ -49,7 +49,7 @@ interface WidgetFrameProps {
   widgetId: string
 }
 
-function LocalWidgetFrame(frame: WidgetFrameProps) {
+function LiveWidgetCard(frame: LiveWidgetCardProps) {
   const { t } = useI18n()
   const [previewMetadata, setPreviewMetadata] = useState<WidgetMetadata | null>(null)
   const title = frame.metadata?.title || frame.title
@@ -65,7 +65,7 @@ function LocalWidgetFrame(frame: WidgetFrameProps) {
     widgetId: frame.widgetId,
     enabled: frame.active,
     canDrag: canDragCardHeader,
-    onGenerateDragPreview: generateLiveCardDragPreview,
+    onGenerateDragPreview: generateCardDragPreview,
   })
   const setArticleRef = useCallback((element: HTMLElement | null) => {
     articleRef.current = element
@@ -88,9 +88,9 @@ function LocalWidgetFrame(frame: WidgetFrameProps) {
     ])),
     [frame.params, parameterState.savedParams],
   )
-  const dataQuery = useWidgetData({ ...frame, params: resolvedParams }, active)
+  const dataQuery = useLiveWidgetData({ ...frame, params: resolvedParams }, active)
   async function saveParams(params: Record<string, unknown>): Promise<void> {
-    await actions.nextLayer.setWidgetParams({ boardId: frame.boardId, widgetId: frame.widgetId, params })
+    await actions.nextLayer.setLiveWidgetParams({ boardId: frame.boardId, widgetId: frame.widgetId, params })
     parameterState.commitParams(params)
   }
   const dataPayload = useMemo(() => dataQuery.error
@@ -138,24 +138,24 @@ function LocalWidgetFrame(frame: WidgetFrameProps) {
           isFetching={dataQuery.isContentFetching}
           actions={(
             <>
-              <LiveCardRefreshButton
+              <CardRefreshButton
                 isFetching={dataQuery.isFetching}
                 label={t("refreshWidget", { title })}
                 onRefresh={dataQuery.refetch}
               />
-              <LiveCardHeaderActionButton
+              <CardHeaderActionButton
                 type="button"
                 aria-label={t("widgetDetails")}
                 onClick={() => setIsFlipped(true)}
               >
                 <PhInfoDuotone />
-              </LiveCardHeaderActionButton>
+              </CardHeaderActionButton>
             </>
           )}
         >
           {frame.ui.type === "live-card"
             ? (
-                <BuiltinLiveCard
+                <WidgetItemListContent
                   color={color}
                   ui={frame.ui}
                   title={title}
@@ -195,13 +195,13 @@ function LocalWidgetFrame(frame: WidgetFrameProps) {
           actions={(
             <>
               <DeleteWidgetButton boardId={frame.boardId} widgetId={frame.widgetId} />
-              <LiveCardHeaderActionButton
+              <CardHeaderActionButton
                 type="button"
                 aria-label={t("widgetFront")}
                 onClick={() => setIsFlipped(false)}
               >
                 <PhArrowCircleLeftDuotone />
-              </LiveCardHeaderActionButton>
+              </CardHeaderActionButton>
             </>
           )}
         >
@@ -210,10 +210,10 @@ function LocalWidgetFrame(frame: WidgetFrameProps) {
             metadata={{ ...frame.metadata, title, color }}
             onPreviewMetadataChange={setPreviewMetadata}
             onReset={async () => {
-              await actions.nextLayer.setWidgetMetadata({ boardId: frame.boardId, widgetId: frame.widgetId, metadata: {} })
+              await actions.nextLayer.setLiveWidgetMetadata({ boardId: frame.boardId, widgetId: frame.widgetId, metadata: {} })
             }}
             onSave={async (metadata) => {
-              await actions.nextLayer.setWidgetMetadata({ boardId: frame.boardId, widgetId: frame.widgetId, metadata: { ...frame.metadata, ...metadata } })
+              await actions.nextLayer.setLiveWidgetMetadata({ boardId: frame.boardId, widgetId: frame.widgetId, metadata: { ...frame.metadata, ...metadata } })
             }}
           />
           <ParameterSettings
@@ -244,7 +244,7 @@ function LocalWidgetFrame(frame: WidgetFrameProps) {
               <dt className="text-muted-foreground">{t("widgetDataSources")}</dt>
               <dd className="mt-1">
                 {frame.dataFiles.length > 0 && <span className="block">{frame.dataFiles.join(", ")}</span>}
-                {(frame.instanceIds.length > 0 || frame.dataFiles.length === 0) && t("instanceCount", { count: frame.instanceIds.length })}
+                {(frame.cardIds.length > 0 || frame.dataFiles.length === 0) && t("liveCardCount", { count: frame.cardIds.length })}
               </dd>
             </div>
             {dataQuery.data?.refreshedAt !== undefined && (
@@ -273,18 +273,18 @@ interface WidgetFaceProps {
 
 function WidgetFace({ avatarSeed, title, metadata, headerRef, back = false, actions, children, isFetching = false }: WidgetFaceProps): React.JSX.Element {
   return (
-    <CardFace header={<LiveCardHeader avatarSeed={avatarSeed} title={title} providerTitle={title} badge={metadata?.badge} desc={metadata?.desc} home={metadata?.home} dragHandleRef={headerRef} actions={actions} />}>
+    <CardShell header={<CardHeader avatarSeed={avatarSeed} title={title} providerTitle={title} badge={metadata?.badge} desc={metadata?.desc} home={metadata?.home} dragHandleRef={headerRef} actions={actions} />}>
       {back
         ? <CardBackContent>{children}</CardBackContent>
         : (
             <div className="relative min-h-0 flex-1 overflow-hidden rounded-2xl">
-              <LiveCardContentBackground isFetching={isFetching} />
-              <LiveCardContentTransition className="relative size-full" isFetching={isFetching}>
+              <CardContentBackground isFetching={isFetching} />
+              <CardContentTransition className="relative size-full" isFetching={isFetching}>
                 {children}
-              </LiveCardContentTransition>
+              </CardContentTransition>
             </div>
           )}
-    </CardFace>
+    </CardShell>
   )
 }
 
@@ -342,13 +342,13 @@ function useLocalWidgets(serverOrigin: string | undefined) {
   }
 }
 
-interface LocalWidgetGridProps {
+interface LiveWidgetGridProps {
   boardId: string
   onReady?: () => void
   viewReady: boolean
 }
 
-export function LocalWidgetGrid({ boardId, onReady, viewReady }: LocalWidgetGridProps) {
+export function LiveWidgetGrid({ boardId, onReady, viewReady }: LiveWidgetGridProps) {
   const { t } = useI18n()
   const connection = useWidgetServerOrigin()
   const manifestQuery = useLocalWidgets(connection.serverOrigin)
@@ -356,11 +356,11 @@ export function LocalWidgetGrid({ boardId, onReady, viewReady }: LocalWidgetGrid
   const board = boards.find(candidate => candidate.id === boardId)
   const widgets = useMemo(() => {
     const manifestsById = new Map(manifestQuery.widgets.map(widget => [widget.id, widget]))
-    return board?.nextLayer.widgets.flatMap((placement) => {
+    return board?.nextLayer.liveWidgets.flatMap((placement) => {
       const manifest = manifestsById.get(placement.widgetId)
       return manifest ? [{ manifest, placement }] : []
     }) ?? []
-  }, [board?.nextLayer.widgets, manifestQuery.widgets])
+  }, [board?.nextLayer.liveWidgets, manifestQuery.widgets])
   const nodes = useMemo<SortableWidgetNode[]>(() => widgets.map(({ manifest, placement }) => ({
     id: getGridWidgetId(placement.widgetId),
     x: placement.layout.x,
@@ -372,8 +372,8 @@ export function LocalWidgetGrid({ boardId, onReady, viewReady }: LocalWidgetGrid
   })), [widgets])
   const saveLayout = useCallback(async (layout: SortableWidgetNode[]) => {
     if (!board) return
-    const updates = getChangedWidgetLayouts(layout, board.nextLayer.widgets)
-    if (updates.length > 0) await actions.nextLayer.setWidgetLayouts({ boardId, widgets: updates })
+    const updates = getChangedWidgetLayouts(layout, board.nextLayer.liveWidgets)
+    if (updates.length > 0) await actions.nextLayer.setLiveWidgetLayouts({ boardId, liveWidgets: updates })
   }, [board, boardId])
   const isLoading = connection.isLoading || manifestQuery.isLoading
   useLayoutEffect(() => {
@@ -391,21 +391,21 @@ export function LocalWidgetGrid({ boardId, onReady, viewReady }: LocalWidgetGrid
       </NextLayerMessage>
     )
   }
-  if (board?.nextLayer.widgets.length === 0) return <NextLayerMessage>{t("noLocalWidgets")}</NextLayerMessage>
+  if (board?.nextLayer.liveWidgets.length === 0) return <NextLayerMessage>{t("noLocalWidgets")}</NextLayerMessage>
   if (widgets.length === 0) return <NextLayerMessage>{t("widgetFilesUnavailable")}</NextLayerMessage>
 
   return (
     <SortableWidgetGrid key={boardId} onReady={onReady} nodes={nodes} enabled={viewReady} label={t("nextLayerWidgets")} onLayoutChange={saveLayout}>
       {widgets.map(({ manifest, placement }) => (
-        <LocalWidgetFrame
+        <LiveWidgetCard
           key={placement.widgetId}
           boardId={boardId}
           widgetId={placement.widgetId}
           active={viewReady}
           color={manifest.color}
-          instanceIds={placement.dataScope.type === "board"
-            ? board?.instanceIds ?? []
-            : placement.dataScope.instanceIds.filter(id => board?.instanceIds.includes(id))}
+          cardIds={placement.dataScope.type === "board"
+            ? board?.cardIds ?? []
+            : placement.dataScope.cardIds.filter(id => board?.cardIds.includes(id))}
           title={manifest.title}
           url={manifest.url}
           ui={manifest.view}

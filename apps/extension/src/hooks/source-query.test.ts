@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest"
 import {
-  createInstanceQueryTarget,
+  createLiveCardQueryTarget,
   getSourceQueryKey,
 } from "./source-query"
 
@@ -26,12 +26,12 @@ describe("source queries", () => {
     ])
   })
 
-  it("identifies configured queries only by Instance", () => {
+  it("identifies configured queries only by LiveCard", () => {
     expect(
-      getSourceQueryKey(createInstanceQueryTarget("personal")),
-    ).toEqual(["instance", "personal"])
+      getSourceQueryKey(createLiveCardQueryTarget("personal")),
+    ).toEqual(["card", "personal"])
     expect(
-      getSourceQueryKey(createInstanceQueryTarget("work")),
-    ).toEqual(["instance", "work"])
+      getSourceQueryKey(createLiveCardQueryTarget("work")),
+    ).toEqual(["card", "work"])
   })
 })

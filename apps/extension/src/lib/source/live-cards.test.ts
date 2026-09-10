@@ -1,11 +1,11 @@
-import type { Instance } from "./live-cards"
+import type { LiveCard } from "./live-cards"
 import type { SourceDescriptor } from "@/typings/source"
 import { describe, expect, it } from "vitest"
 import {
   applySourceLoaderMetadata,
   applySourceSnapshot,
   buildLiveCards,
-  mergeInstancePatch,
+  mergeLiveCardPatch,
 } from "./live-cards"
 
 const testSources: SourceDescriptor[] = [
@@ -44,9 +44,9 @@ const testSources: SourceDescriptor[] = [
   },
 ]
 
-function createCustomInstance(patch: Partial<Instance> = {}): Instance {
+function createCustomLiveCard(patch: Partial<LiveCard> = {}): LiveCard {
   return {
-    instanceId: "test:feed::AbCdEfGh1234",
+    cardId: "test:feed::AbCdEfGh1234",
     workerId: "worker-a",
     sourceId: "test:feed",
     patch: {},
@@ -56,12 +56,12 @@ function createCustomInstance(patch: Partial<Instance> = {}): Instance {
 }
 
 describe("buildLiveCards", () => {
-  it("projects saved Instances as LiveCards", () => {
+  it("projects saved LiveCards as LiveCards", () => {
     const liveCards = buildLiveCards({
       sources: testSources,
       boardId: null,
-      instances: [
-        createCustomInstance({ patch: { params: { topic: "custom" } } }),
+      liveCards: [
+        createCustomLiveCard({ patch: { params: { topic: "custom" } } }),
       ],
     })
 
@@ -72,12 +72,12 @@ describe("buildLiveCards", () => {
     })
   })
 
-  it("applies Instance title overrides", () => {
+  it("applies LiveCard title overrides", () => {
     const liveCards = buildLiveCards({
       sources: testSources,
       boardId: null,
-      instances: [
-        createCustomInstance({
+      liveCards: [
+        createCustomLiveCard({
           patch: { metadata: { title: "Custom Radar Title" } },
         }),
       ],
@@ -90,12 +90,12 @@ describe("buildLiveCards", () => {
     })
   })
 
-  it("applies source-owned instance metadata overrides", () => {
+  it("applies source-owned card metadata overrides", () => {
     const liveCards = buildLiveCards({
       sources: testSources,
       boardId: null,
-      instances: [
-        createCustomInstance({
+      liveCards: [
+        createCustomLiveCard({
           patch: {
             metadata: {
               title: "Custom Title",
@@ -122,12 +122,12 @@ describe("buildLiveCards", () => {
     })
   })
 
-  it("does not allow persisted instance metadata to override provider metadata", () => {
+  it("does not allow persisted card metadata to override provider metadata", () => {
     const liveCards = buildLiveCards({
       sources: testSources,
       boardId: null,
-      instances: [
-        createCustomInstance({
+      liveCards: [
+        createCustomLiveCard({
           patch: {
             metadata: {
               category: "forum",
@@ -138,7 +138,7 @@ describe("buildLiveCards", () => {
                 category: "forum",
               },
             },
-          } as unknown as Instance["patch"],
+          } as unknown as LiveCard["patch"],
         }),
       ],
     })
@@ -160,7 +160,7 @@ describe("buildLiveCards", () => {
     const liveCards = buildLiveCards({
       sources: testSources,
       boardId: null,
-      instances: [],
+      liveCards: [],
     })
 
     expect(liveCards).toEqual([])
@@ -170,10 +170,10 @@ describe("buildLiveCards", () => {
     const liveCards = buildLiveCards({
       sources: testSources,
       boardId: null,
-      instances: [
-        createCustomInstance(),
-        createCustomInstance({
-          instanceId: "test:latest::ZyXwVuTs9876",
+      liveCards: [
+        createCustomLiveCard(),
+        createCustomLiveCard({
+          cardId: "test:latest::ZyXwVuTs9876",
           sourceId: "test:latest",
         }),
       ],
@@ -189,11 +189,11 @@ describe("buildLiveCards", () => {
     const liveCards = buildLiveCards({
       sources: testSources,
       boardId: "reading",
-      boardInstanceIds: ["test:latest::ZyXwVuTs9876"],
-      instances: [
-        createCustomInstance(),
-        createCustomInstance({
-          instanceId: "test:latest::ZyXwVuTs9876",
+      boardCardIds: ["test:latest::ZyXwVuTs9876"],
+      liveCards: [
+        createCustomLiveCard(),
+        createCustomLiveCard({
+          cardId: "test:latest::ZyXwVuTs9876",
           sourceId: "test:latest",
         }),
       ],
@@ -204,12 +204,12 @@ describe("buildLiveCards", () => {
 })
 
 describe("applySourceLoaderMetadata", () => {
-  it("overrides instance presentation fields while preserving missing fields", () => {
+  it("overrides card presentation fields while preserving missing fields", () => {
     const liveCards = buildLiveCards({
       sources: testSources,
       boardId: null,
-      instances: [
-        createCustomInstance({
+      liveCards: [
+        createCustomLiveCard({
           patch: { metadata: { title: "Radar title", desc: "Radar description" } },
         }),
       ],
@@ -230,8 +230,8 @@ describe("applySourceLoaderMetadata", () => {
 })
 
 describe("applySourceSnapshot", () => {
-  it("renders from the Loader snapshot while preserving Instance overrides", () => {
-    const instance = createCustomInstance({
+  it("renders from the Loader snapshot while preserving LiveCard overrides", () => {
+    const card = createCustomLiveCard({
       patch: {
         metadata: { title: "Saved title" },
         params: { topic: "rust" },
@@ -246,13 +246,13 @@ describe("applySourceSnapshot", () => {
     const liveCard = buildLiveCards({
       sources: [placeholder],
       boardId: "reading",
-      instances: [instance],
+      liveCards: [card],
     })[0]!
 
     expect(applySourceSnapshot(liveCard, testSources[0]!)).toMatchObject({
       boardId: "reading",
-      id: instance.instanceId,
-      sourceId: instance.sourceId,
+      id: card.cardId,
+      sourceId: card.sourceId,
       version: 1,
       paramsValue: { topic: "rust" },
       metadata: { title: "Saved title" },
@@ -261,9 +261,9 @@ describe("applySourceSnapshot", () => {
   })
 })
 
-describe("mergeInstancePatch", () => {
+describe("mergeLiveCardPatch", () => {
   it("merges params and metadata independently", () => {
-    expect(mergeInstancePatch(
+    expect(mergeLiveCardPatch(
       {
         params: { username: "newsnext_dev" },
         metadata: { title: "NewsNext" },

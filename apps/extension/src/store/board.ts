@@ -1,7 +1,7 @@
 import type { ApplicationData } from "../lib/application"
 import type { Board, BoardCreateInput } from "../lib/board"
 import type { OpmlImport } from "../lib/opml"
-import type { InstancePatch } from "../lib/source"
+import type { LiveCardPatch } from "../lib/source"
 import { atom } from "jotai"
 import { atomWithStorage, selectAtom, splitAtom } from "jotai/utils"
 import { actions } from "../lib/actions"
@@ -37,32 +37,32 @@ export const currentBoardAtom = atom((get) => {
   const currentBoardId = get(currentBoardIdAtom)
   return get(boardsAtom).find(board => board.id === currentBoardId)
 })
-export const instancesAtom = selectAtom(applicationDataAtom, data => data.instances)
-export const instanceAtomsAtom = splitAtom(instancesAtom, instance => instance.instanceId)
+export const liveCardsAtom = selectAtom(applicationDataAtom, data => data.liveCards)
+export const liveCardAtomsAtom = splitAtom(liveCardsAtom, card => card.cardId)
 
 export const setNowLayerManualOrderAtom = atom(null, async (_get, _set, input: {
   boardId: string
-  instanceIds: string[]
+  cardIds: string[]
 }) => {
   await actions.nowLayer.setManualOrder({
     boardId: input.boardId,
-    instanceIds: input.instanceIds,
+    cardIds: input.cardIds,
   })
 })
 
-export const createInstanceAtom = atom(null, (_get, _set, input: {
+export const createLiveCardAtom = atom(null, (_get, _set, input: {
   boardId: string
-  patch: InstancePatch
+  patch: LiveCardPatch
   sourceId: string
-}) => actions.instance.create(input))
+}) => actions.liveCard.create(input))
 
-export const setInstancePatchAtom = atom(null, (_get, _set, input: {
-  instanceId: string
-  patch: InstancePatch
-}) => actions.instance.configure(input))
+export const setLiveCardPatchAtom = atom(null, (_get, _set, input: {
+  cardId: string
+  patch: LiveCardPatch
+}) => actions.liveCard.configure(input))
 
-export const deleteInstanceAtom = atom(null, (_get, _set, instanceId: string) => (
-  actions.instance.delete({ instanceId })
+export const deleteLiveCardAtom = atom(null, (_get, _set, cardId: string) => (
+  actions.liveCard.delete({ cardId })
 ))
 
 export const createBoardAtom = atom(null, (_get, _set, input: BoardCreateInput) => (
@@ -76,7 +76,7 @@ export const createBoardAtom = atom(null, (_get, _set, input: BoardCreateInput) 
 
 export const createBoardFromOpmlAtom = atom(null, (_get, _set, input: OpmlImport) => (
   actions.board.create({
-    instances: input.feeds.map(feed => ({
+    liveCards: input.feeds.map(feed => ({
       sourceId: "rss:feed",
       patch: {
         params: { url: feed.url },
@@ -106,17 +106,17 @@ type DeleteBoardInput
 
 export const deleteBoardAtom = atom(null, (_get, _set, input: DeleteBoardInput) => (
   input.mode === "delete"
-    ? actions.board.delete({ boardId: input.boardId, deleteInstances: true })
+    ? actions.board.delete({ boardId: input.boardId, deleteLiveCards: true })
     : actions.board.delete({ boardId: input.boardId, targetBoardId: input.targetBoardId })
 ))
 
-export const moveInstanceAtom = atom(null, (_get, _set, input: {
+export const moveLiveCardAtom = atom(null, (_get, _set, input: {
   boardId: string
-  instanceId: string
-}) => actions.instance.move(input))
+  cardId: string
+}) => actions.liveCard.move(input))
 
-export const resetInstanceParamsAtom = atom(null, (get, _set, instanceId: string) => {
-  const instance = get(instancesAtom).find(candidate => candidate.instanceId === instanceId)
-  if (!instance || Object.keys(instance.patch.params ?? {}).length === 0) return
-  return actions.instance.resetParams({ instanceId })
+export const resetLiveCardParamsAtom = atom(null, (get, _set, cardId: string) => {
+  const card = get(liveCardsAtom).find(candidate => candidate.cardId === cardId)
+  if (!card || Object.keys(card.patch.params ?? {}).length === 0) return
+  return actions.liveCard.resetParams({ cardId })
 })

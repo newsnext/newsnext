@@ -1,6 +1,6 @@
 import { useAtomValue } from "jotai"
-import { CardBoardSelect } from "@/components/live-card/card-back/board-select"
-import { DeleteCardButton } from "@/components/live-card/card-back/delete-card-button"
+import { CardBoardSelect } from "@/components/card-shell/settings/board-select"
+import { DeleteCardButton } from "@/components/card-shell/settings/delete-card-button"
 import { useI18n } from "@/hooks/use-i18n"
 import { actions } from "@/lib/actions"
 import { boardsAtom } from "@/store/board"
@@ -9,11 +9,11 @@ export function DeleteWidgetButton({ boardId, widgetId }: { boardId: string, wid
   const { t } = useI18n()
   return (
     <DeleteCardButton
-      label={t("removeWidget")}
+      label={t("removeLiveWidget")}
       pendingLabel={t("removingWidget")}
-      errorMessage={t("removeWidgetFailed")}
+      errorMessage={t("removeLiveWidgetFailed")}
       onDelete={async () => {
-        await actions.nextLayer.removeWidget({ boardId, widgetId })
+        await actions.nextLayer.removeLiveWidget({ boardId, widgetId })
       }}
     />
   )
@@ -24,9 +24,9 @@ export function WidgetBoardSelect({ boardId, widgetId }: { boardId: string, widg
   return (
     <CardBoardSelect
       boardId={boardId}
-      isBoardDisabled={id => id !== boardId && Boolean(boards.find(board => board.id === id)?.nextLayer.widgets.some(widget => widget.widgetId === widgetId))}
+      isBoardDisabled={id => id !== boardId && Boolean(boards.find(board => board.id === id)?.nextLayer.liveWidgets.some(widget => widget.widgetId === widgetId))}
       onMove={async (targetBoardId) => {
-        await actions.nextLayer.moveWidget({ boardId, targetBoardId, widgetId })
+        await actions.nextLayer.moveLiveWidget({ boardId, targetBoardId, widgetId })
       }}
     />
   )

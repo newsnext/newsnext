@@ -1,12 +1,12 @@
 import type { Board } from "./board.js"
-import type { Instance } from "./instance.js"
+import type { LiveCard } from "./live-card.js"
 
-export const APPLICATION_DATA_VERSION = 6 as const
+export const APPLICATION_DATA_VERSION = 7 as const
 
 export interface ApplicationData {
   version: typeof APPLICATION_DATA_VERSION
   boards: Board[]
-  instances: Instance[]
+  liveCards: LiveCard[]
 }
 
 export interface ApplicationBoardContext {
@@ -16,7 +16,7 @@ export interface ApplicationBoardContext {
 
 export interface ApplicationNowLayerLiveCard {
   boardId: string
-  instanceId: string
+  cardId: string
   sourceId: string
 }
 
@@ -28,9 +28,9 @@ export interface BoardConfigurationResult {
 
 export interface BoardDetail {
   board: Board
-  instances: Instance[]
+  liveCards: LiveCard[]
 }
 
 export type BoardDeleteInput
-  = | { boardId: string, deleteInstances: true, targetBoardId?: never }
-    | { boardId: string, deleteInstances?: never, targetBoardId: string }
+  = | { boardId: string, deleteLiveCards: true, targetBoardId?: never }
+    | { boardId: string, deleteLiveCards?: never, targetBoardId: string }

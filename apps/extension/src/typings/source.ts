@@ -5,7 +5,7 @@ export type { NewsItem, SemanticPicture, SourceDescriptor }
 
 /**
  * Frontend source shape used by draggable LiveCards and Boards.
- * `id` is the Instance identifier carried by the LiveCard projection.
+ * `id` is the LiveCard identifier carried by the LiveCard projection.
  */
 export type LiveCardViewModel = Omit<SourceDescriptor, "id"> & {
   id: string

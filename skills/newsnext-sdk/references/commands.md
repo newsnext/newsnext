@@ -121,64 +121,6 @@ newsnext run - articles < provider.json
 
 If authentication is required, open the login URL printed by the CLI and rerun the command afterward.
 
-## Background jobs
-
-Jobs execute locally through the daemon. All job commands accept `--timeout <SECONDS>` and `--compact`.
-
-### `job add`
-
-Create a recurring job with exactly one target selector:
-
-```text
-newsnext job add [OPTIONS] <--all|--board <BOARD>|--instance <INSTANCE>>
-```
-
-- `--all`: run every configured Instance.
-- `--board <BOARD>`: run Instances in one Board.
-- `--instance <INSTANCE>`: run one Instance.
-- `--interval <SECONDS>`: execution interval, default `300`; valid range is 1 second through 365 days.
-
-```sh
-newsnext job add --all --interval 900
-newsnext job add --board board-id --interval 300 --compact
-newsnext job add --instance instance-id
-```
-
-### `job list`
-
-List jobs and their IDs:
-
-```sh
-newsnext job list
-newsnext job list --compact
-```
-
-### `job pause`
-
-Pause a job while preserving its configuration:
-
-```sh
-newsnext job pause <ID>
-```
-
-### `job resume`
-
-Resume a paused job and queue it immediately:
-
-```sh
-newsnext job resume <ID>
-```
-
-### `job remove`
-
-Permanently remove a job:
-
-```sh
-newsnext job remove <ID>
-```
-
-Use the ID returned by `job add` or `job list` for pause, resume, and remove.
-
 ## TypeScript SDK
 
 Complex structured operations are exposed through `@newsnext/sdk`, not terminal
@@ -187,7 +129,7 @@ Actions. The former `history` and `action` CLI commands have been removed.
 See [sdk.md](sdk.md) for installation, development configuration and examples.
 
 Simple terminal operations remain `start`, `status`, `doctor`, `stop`, `restart`,
-`fetch`, `run`, `job`, and `install-native-host`.
+`fetch`, `run`, and `install-native-host`.
 
 ## Native Messaging registration
 

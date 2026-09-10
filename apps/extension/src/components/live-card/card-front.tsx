@@ -1,8 +1,11 @@
 import type { ReactNode } from "react"
-import type { LiveCardDragHandleRef } from "./card-header"
+import type { CardDragHandleRef } from "@/components/card-shell/card-header"
 import type { SourcePermissionRequest } from "@/lib/source"
 import type { LiveCardViewModel, NewsItem } from "@/typings/source"
 import { useMemo, useState } from "react"
+import { CardShell } from "@/components/card-shell"
+import { CardHeader, CardHeaderActionButton } from "@/components/card-shell/card-header"
+import { CardContentBackground, CardContentTransition, CardRefreshButton } from "@/components/card-shell/card-refresh"
 import { useI18n } from "@/hooks/use-i18n"
 import { useSourceIcon } from "@/hooks/use-source-icon"
 import { useSourceMarkScales } from "@/hooks/use-source-mark-scales"
@@ -10,10 +13,7 @@ import { getHostPermissionOrigins } from "@/lib/source"
 import {
   PhInfoDuotone,
 } from "../icons/ph"
-import { CardFace } from "./card-face"
-import { LiveCardHeader, LiveCardHeaderActionButton } from "./card-header"
 import { LiveCardItems } from "./card-items"
-import { LiveCardContentBackground, LiveCardContentTransition, LiveCardRefreshButton } from "./card-refresh"
 import {
   SourceErrorState,
   SourceLoginState,
@@ -43,7 +43,7 @@ interface LiveCardFrontProps {
   onRequestPermission: () => Promise<boolean>
   onFlip?: () => void
   actions?: ReactNode
-  dragHandleRef?: LiveCardDragHandleRef
+  dragHandleRef?: CardDragHandleRef
 }
 
 interface LiveCardFrontContentProps {
@@ -170,8 +170,8 @@ export function LiveCardFront({
         : visibleSourceErrorMessage
 
   return (
-    <CardFace header={(
-      <LiveCardHeader
+    <CardShell header={(
+      <CardHeader
         badge={badge}
         desc={desc}
         home={home}
@@ -181,14 +181,14 @@ export function LiveCardFront({
         dragHandleRef={dragHandleRef}
         actions={actions ?? (
           <>
-            <LiveCardRefreshButton isFetching={isFetching} onRefresh={onRefresh} />
+            <CardRefreshButton isFetching={isFetching} onRefresh={onRefresh} />
             {onFlip && (
-              <LiveCardHeaderActionButton
+              <CardHeaderActionButton
                 onClick={onFlip}
                 aria-label={t("showLiveCardDetails")}
               >
                 <PhInfoDuotone />
-              </LiveCardHeaderActionButton>
+              </CardHeaderActionButton>
             )}
           </>
         )}
@@ -197,7 +197,7 @@ export function LiveCardFront({
     >
       {/* Content */}
       <div className="relative min-h-0 flex-1 overflow-hidden rounded-2xl">
-        <LiveCardContentBackground isFetching={isContentFetching} />
+        <CardContentBackground isFetching={isContentFetching} />
         {sourceStatusMessage && (
           <SourceStatusPattern icon={icon} />
         )}
@@ -206,7 +206,7 @@ export function LiveCardFront({
           onPointerDown={event => event.stopPropagation()}
           className="relative size-full overflow-y-auto px-2 py-2 scrollbar-hidden"
         >
-          <LiveCardContentTransition isFetching={isContentFetching}>
+          <CardContentTransition isFetching={isContentFetching}>
             <LiveCardIdentityContext value={identity}>
               <LiveCardFrontContent
                 items={items}
@@ -223,7 +223,7 @@ export function LiveCardFront({
                 onRequestPermission={onRequestPermission}
               />
             </LiveCardIdentityContext>
-          </LiveCardContentTransition>
+          </CardContentTransition>
         </div>
         {sourceStatusMessage && (
           <SourceStatusMessage
@@ -231,6 +231,6 @@ export function LiveCardFront({
           />
         )}
       </div>
-    </CardFace>
+    </CardShell>
   )
 }

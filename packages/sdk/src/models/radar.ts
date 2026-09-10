@@ -1,11 +1,11 @@
-import type { InstancePatch } from "./instance.js"
+import type { LiveCardPatch } from "./live-card.js"
 import type { SourceDescriptor } from "./source.js"
 
 export interface RadarSuggestion {
   id: string
   ruleId: string
   sourceId: string
-  patch: InstancePatch
+  patch: LiveCardPatch
 }
 
 export interface ResolvedRadarSuggestion extends RadarSuggestion {

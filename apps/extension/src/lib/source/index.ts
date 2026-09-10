@@ -11,19 +11,19 @@ export {
   SOURCE_ICON_PRESETS,
 } from "./icon"
 export type {
-  Instance,
-  InstanceMetadata,
-  InstancePatch,
+  LiveCard,
+  LiveCardMetadata,
+  LiveCardPatch,
 } from "./live-cards"
 export {
   applySourceLoaderMetadata,
   applySourceSnapshot,
   buildLiveCards,
   createLiveCard,
-  mergeInstancePatch,
+  mergeLiveCardPatch,
 } from "./live-cards"
 export type { SourceLoadResponse, SourceLoadResult } from "./loader"
-export { loadInstance, loadSource } from "./loader"
+export { loadLiveCard, loadSource } from "./loader"
 export type { SourceParamValues } from "./params"
 export { mergeSourceParamValues, sanitizeSourceParamPatch } from "./params"
 export type { SourcePermissionRequest, SourcePermissionTarget } from "./permissions"

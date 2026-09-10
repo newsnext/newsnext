@@ -67,10 +67,10 @@ function parseActionValue<Schema extends TSchema>(
     return Value.Parse(schema, value)
   } catch (error) {
     const cause = error instanceof Error
-      ? error.cause as { errors?: Array<{ instancePath?: string, message?: string }> } | undefined
+      ? error.cause as { errors?: Array<{ liveCardPath?: string, message?: string }> } | undefined
       : undefined
     const issue = cause?.errors?.[0]
-    const path = issue?.instancePath ? ` at '${issue.instancePath}'` : ""
+    const path = issue?.liveCardPath ? ` at '${issue.liveCardPath}'` : ""
     throw new Error(`Invalid Action ${label}${path}: ${issue?.message ?? "schema validation failed"}`)
   }
 }

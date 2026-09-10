@@ -22,8 +22,9 @@ import { formatForDisplay, useHotkey } from "@tanstack/react-hotkeys"
 import { useQueries } from "@tanstack/react-query"
 import { useAtomValue } from "jotai"
 import { useMemo, useState } from "react"
+import { SourceIcon } from "@/components/card-shell/source-icon"
 import {
-  createInstanceQueryTarget,
+  createLiveCardQueryTarget,
   getSourceQueryOptions,
 } from "@/hooks/source-query"
 import { DndContext } from "@/hooks/use-dnd-context"
@@ -35,11 +36,10 @@ import {
   applySourceLoaderMetadata,
   buildLiveCards,
 } from "@/lib/source"
-import { boardsAtom, instancesAtom } from "@/store/board"
+import { boardsAtom, liveCardsAtom } from "@/store/board"
 import { shortcutSettingsAtom } from "@/store/settings"
 import { PhMagnifyingGlass } from "../icons/ph"
 import { SortableLiveCard } from "../live-card/draggable-live-card"
-import { SourceIcon } from "../live-card/source-icon"
 
 interface SearchGroup {
   id: string
@@ -54,7 +54,7 @@ function groupSearchItems(
   const itemsByBoardId = new Map<string, LiveCardViewModel[]>()
   liveCards.forEach((liveCard) => {
     for (const board of boards) {
-      if (board.instanceIds.includes(liveCard.id)) {
+      if (board.cardIds.includes(liveCard.id)) {
         const items = itemsByBoardId.get(board.id) ?? []
         items.push({ ...liveCard, boardId: board.id })
         itemsByBoardId.set(board.id, items)
@@ -125,7 +125,7 @@ export function SearchDialog(): ReactNode {
 
 function SearchDialogContent(): ReactNode {
   const boards = useAtomValue(boardsAtom)
-  const instances = useAtomValue(instancesAtom)
+  const savedCards = useAtomValue(liveCardsAtom)
   const { sources } = useSourceDescriptors()
 
   const liveCards = useMemo<LiveCardViewModel[]>(() => {
@@ -135,24 +135,24 @@ function SearchDialogContent(): ReactNode {
 
     return buildLiveCards({
       sources,
-      instances,
+      liveCards: savedCards,
       boardId: null,
     })
-  }, [sources, instances])
+  }, [sources, savedCards])
 
-  const instanceQueryTargets = useMemo(
-    () => liveCards.map(liveCard => createInstanceQueryTarget(liveCard.id)),
+  const liveCardQueryTargets = useMemo(
+    () => liveCards.map(liveCard => createLiveCardQueryTarget(liveCard.id)),
     [liveCards],
   )
-  const instanceQueryOptions = useMemo(
-    () => instanceQueryTargets.map(target => ({
+  const liveCardQueryOptions = useMemo(
+    () => liveCardQueryTargets.map(target => ({
       ...getSourceQueryOptions(target),
       enabled: false,
     })),
-    [instanceQueryTargets],
+    [liveCardQueryTargets],
   )
   const loaderMetadata = useQueries({
-    queries: instanceQueryOptions,
+    queries: liveCardQueryOptions,
     combine: results => results.map(result => result.data?.result.metadata),
   })
 

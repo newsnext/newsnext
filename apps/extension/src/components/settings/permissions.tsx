@@ -1,4 +1,4 @@
-import type { Instance } from "@/lib/source"
+import type { LiveCard } from "@/lib/source"
 import type { SourceDescriptor } from "@/typings/source"
 import { Button } from "@newsnext/ui/components/button"
 import { useAtomValue, useSetAtom } from "jotai"
@@ -16,7 +16,7 @@ import {
   getUserManagedHostPermissionOrigins,
   revokeHostPermissionOrigin,
 } from "@/lib/source"
-import { boardsAtom, deleteInstanceAtom, instancesAtom } from "@/store/board"
+import { boardsAtom, deleteLiveCardAtom, liveCardsAtom } from "@/store/board"
 
 interface PermissionLiveCard {
   id: string
@@ -31,12 +31,12 @@ function grantedOriginIncludes(grantedOrigin: string, requestedOrigin: string): 
 function getLiveCardsUsingOrigin(
   origin: string,
   sources: SourceDescriptor[],
-  instances: Instance[],
+  liveCards: LiveCard[],
 ): PermissionLiveCard[] {
   const sourcesById = new Map(sources.map(source => [source.id, source]))
 
-  return instances.flatMap((instance) => {
-    const source = sourcesById.get(instance.sourceId)
+  return liveCards.flatMap((card) => {
+    const source = sourcesById.get(card.sourceId)
     if (!source) return []
 
     const request = getPermissionRequestForSource({
@@ -44,15 +44,15 @@ function getLiveCardsUsingOrigin(
       params: source.params,
       provider: source.provider,
       sourceId: source.id,
-    }, instance.patch.params)
+    }, card.patch.params)
     const usesOrigin = request?.origins?.some(requestedOrigin => (
       grantedOriginIncludes(origin, requestedOrigin)
     ))
     if (!usesOrigin) return []
 
     return [{
-      id: instance.instanceId,
-      title: instance.patch.metadata?.title
+      id: card.cardId,
+      title: card.patch.metadata?.title
         ?? source.metadata.title
         ?? source.provider.title,
     }]
@@ -66,9 +66,9 @@ export function PermissionsSettings({
 }) {
   const { t } = useI18n()
   const [origins, setOrigins] = useState<string[]>([])
-  const instances = useAtomValue(instancesAtom)
+  const liveCards = useAtomValue(liveCardsAtom)
   const boards = useAtomValue(boardsAtom)
-  const deleteInstance = useSetAtom(deleteInstanceAtom)
+  const deleteLiveCard = useSetAtom(deleteLiveCardAtom)
   const { isLoading: areSourcesLoading, sources } = useSourceDescriptors()
   const {
     error: revokeError,
@@ -79,10 +79,10 @@ export function PermissionsSettings({
 
   const cardsByOrigin = useMemo(() => new Map(origins.map(origin => [
     origin,
-    getLiveCardsUsingOrigin(origin, sources, instances),
-  ])), [instances, origins, sources])
-  const boardIdByInstanceId = useMemo(() => new Map(
-    boards.flatMap(board => board.instanceIds.map(instanceId => [instanceId, board.id] as const)),
+    getLiveCardsUsingOrigin(origin, sources, liveCards),
+  ])), [liveCards, origins, sources])
+  const boardIdByCardId = useMemo(() => new Map(
+    boards.flatMap(board => board.cardIds.map(cardId => [cardId, board.id] as const)),
   ), [boards])
 
   const refreshOrigins = useCallback(async (): Promise<void> => {
@@ -117,12 +117,12 @@ export function PermissionsSettings({
       }
       if (removeCards) {
         for (const card of cards) {
-          await deleteInstance(card.id)
+          await deleteLiveCard(card.id)
         }
       }
       await refreshOrigins()
     })
-  }, [cardsByOrigin, deleteInstance, refreshOrigins, runRevoke, t])
+  }, [cardsByOrigin, deleteLiveCard, refreshOrigins, runRevoke, t])
 
   return (
     <>
@@ -171,7 +171,7 @@ export function PermissionsSettings({
                             <div className="flex min-w-0 flex-1 items-center text-xs">
                               <ul className="flex min-w-0 flex-wrap gap-x-2 gap-y-0.5">
                                 {cards.map((card) => {
-                                  const boardId = boardIdByInstanceId.get(card.id)
+                                  const boardId = boardIdByCardId.get(card.id)
                                   if (!boardId) return null
                                   return (
                                     <li key={card.id} className="min-w-0">

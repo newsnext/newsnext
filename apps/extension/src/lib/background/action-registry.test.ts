@@ -7,8 +7,8 @@ import {
 
 function createContext(): BackgroundActionContext {
   return {
-    data: vi.fn(async () => ({ boards: [], instances: [], version: 6 as const })),
-    mutate: vi.fn(async () => ({ instanceId: "new" })),
+    data: vi.fn(async () => ({ boards: [], liveCards: [], version: 7 as const })),
+    mutate: vi.fn(async () => ({ cardId: "new" })),
     replace: vi.fn(async data => data),
     requireSources: vi.fn(async () => undefined),
     sources: vi.fn(async () => []),
@@ -22,16 +22,15 @@ function createContext(): BackgroundActionContext {
       runSource: vi.fn(async () => ({}) as never),
     },
     radar: { resolveSuggestions: vi.fn(async () => []) },
-    job: { executeInstance: vi.fn(async () => ({}) as never) },
     loader: {
-      loadInstance: vi.fn(async () => ({}) as never),
-      readInstanceCache: vi.fn(async () => null),
+      loadLiveCard: vi.fn(async () => ({}) as never),
+      readLiveCardCache: vi.fn(async () => null),
     },
     source: {
       cancel: vi.fn(async () => undefined),
       load: vi.fn(async () => ({}) as never),
     },
-    instanceRouter: {
+    liveCardRouter: {
       load: vi.fn(async () => ({}) as never),
       readCache: vi.fn(async () => null),
     },
@@ -51,9 +50,6 @@ function createContext(): BackgroundActionContext {
         state: "disabled" as const,
         workerId: "worker",
       })),
-    },
-    widgetSnapshots: {
-      get: vi.fn(async () => ({})),
     },
     workerManagement: {
       regenerateIdentity: vi.fn(async () => ({
@@ -76,26 +72,26 @@ describe("action Registry", () => {
   it("publishes the complete Action contract directly from definitions", () => {
     const actions = actionRegistry.list()
 
-    expect(actions).toHaveLength(44)
+    expect(actions).toHaveLength(42)
     expect(actions.filter(action => action.kind === "mutation")).toHaveLength(21)
-    expect(actions.filter(action => action.kind === "query")).toHaveLength(18)
-    expect(actions.filter(action => action.kind === "command")).toHaveLength(5)
-    expect(actions.find(action => action.name === "instance.create")).toMatchObject({
+    expect(actions.filter(action => action.kind === "query")).toHaveLength(17)
+    expect(actions.filter(action => action.kind === "command")).toHaveLength(4)
+    expect(actions.find(action => action.name === "liveCard.create")).toMatchObject({
       inputSchema: { type: "object", additionalProperties: false },
       outputSchema: { type: "object" },
     })
-    expect(actions.some(action => action.name === "instance.move")).toBe(true)
+    expect(actions.some(action => action.name === "liveCard.move")).toBe(true)
     expect(actions[0]).not.toHaveProperty("execute")
   })
 
   it("validates parameters before invoking an Action handler", async () => {
     const ActionContext = createContext()
 
-    await expect(executeRegisteredAction("instance.create", {
+    await expect(executeRegisteredAction("liveCard.create", {
       boardId: "reading",
       patch: {},
       sourceId: "github:trending",
-    }, "ui", ActionContext)).resolves.toEqual({ instanceId: "new" })
+    }, "ui", ActionContext)).resolves.toEqual({ cardId: "new" })
     expect(ActionContext.requireSources).toHaveBeenCalledWith(["github:trending"])
     expect(ActionContext.mutate).toHaveBeenCalledOnce()
 
@@ -119,7 +115,7 @@ describe("action Registry", () => {
       timeoutMs: 10_000,
       url: "https://example.com/api",
     }, "connected", ActionContext)).rejects.toThrow("browser-managed")
-    const data = { boards: [], instances: [], version: 6 as const }
+    const data = { boards: [], liveCards: [], version: 7 as const }
     await expect(executeRegisteredAction("application.replace", data, "connected", ActionContext))
       .resolves
       .toEqual(data)

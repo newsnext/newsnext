@@ -3,28 +3,8 @@ import type { CollectionStatus as NativeCollectionStatus } from "@/lib/native-pr
 import type { ExtensionToHost } from "@/lib/native-protocol/ExtensionToHost"
 import type { LogEntry as NativeLogEntry } from "@/lib/native-protocol/LogEntry"
 import { createId } from "@/lib/id"
-import { pendingCollectionRequests, pendingLogsRequests, pendingWidgetSnapshotRequests } from "./pending-requests"
+import { pendingCollectionRequests, pendingLogsRequests } from "./pending-requests"
 import { NATIVE_REQUEST_TIMEOUT_MS } from "./state"
-
-export async function requestWidgetSnapshot(
-  input: { boardId: string, widgetId: string },
-  requireConnection: RequireNativeConnection,
-): Promise<unknown> {
-  const connection = await requireConnection()
-  const message: ExtensionToHost = {
-    type: "widgetSnapshotGet",
-    requestId: createId(),
-    ...input,
-  }
-  return await new Promise((resolve, reject) => {
-    const timeoutId = setTimeout(() => {
-      pendingWidgetSnapshotRequests.delete(message.requestId)
-      reject(new Error("Timed out waiting for the NewsNext App"))
-    }, NATIVE_REQUEST_TIMEOUT_MS)
-    pendingWidgetSnapshotRequests.set(message.requestId, { reject, resolve, timeoutId })
-    connection.postMessage(message)
-  })
-}
 
 export async function requestLogs(
   requireConnection: RequireNativeConnection,

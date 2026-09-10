@@ -15,6 +15,7 @@ import {
 import { useAtom, useAtomValue } from "jotai"
 import { useEffect, useMemo, useState } from "react"
 import { browser } from "#imports"
+import { SourceIcon } from "@/components/card-shell/source-icon"
 import { ConfigSection } from "@/components/common/config-section"
 import { ConfirmDestructiveButton } from "@/components/common/confirm-destructive-button"
 import {
@@ -23,7 +24,6 @@ import {
   PhPlusCircle,
   PhTrash,
 } from "@/components/icons/ph"
-import { SourceIcon } from "@/components/live-card/source-icon"
 import { useI18n } from "@/hooks/use-i18n"
 import { useSourceDescriptors } from "@/hooks/use-source-descriptors"
 import { useSourceIcon } from "@/hooks/use-source-icon"
@@ -34,7 +34,7 @@ import {
   SOURCE_REGISTRIES_REFRESH_KEY,
   SOURCE_REGISTRIES_STATE_KEY,
 } from "@/lib/source/registry-cache"
-import { instancesAtom } from "@/store/board"
+import { liveCardsAtom } from "@/store/board"
 import { registryUrlsAtom } from "@/store/settings"
 
 const ALL_REGISTRIES = "__all__"
@@ -353,7 +353,7 @@ function RegistrySourceBrowser({
 }): React.JSX.Element {
   const { t } = useI18n()
   const { error, isLoading, sources } = useSourceDescriptors()
-  const instances = useAtomValue(instancesAtom)
+  const liveCards = useAtomValue(liveCardsAtom)
   const [query, setQuery] = useState("")
   const [registryFilter, setRegistryFilter] = useState(ALL_REGISTRIES)
   const sourceOrigins = useMemo(() => {
@@ -393,13 +393,13 @@ function RegistrySourceBrowser({
     }
     return [...groups].map(([category, groupSources]) => ({ category, sources: groupSources }))
   }, [filteredSources])
-  const instanceCountsBySource = useMemo(() => {
+  const liveCardCountsBySource = useMemo(() => {
     const counts = new Map<string, number>()
-    for (const instance of instances) {
-      counts.set(instance.sourceId, (counts.get(instance.sourceId) ?? 0) + 1)
+    for (const card of liveCards) {
+      counts.set(card.sourceId, (counts.get(card.sourceId) ?? 0) + 1)
     }
     return counts
-  }, [instances])
+  }, [liveCards])
   return (
     <ConfigSection
       title={t("sources")}
@@ -463,7 +463,7 @@ function RegistrySourceBrowser({
                         {group.sources.map(source => (
                           <SourceCard
                             key={source.id}
-                            instanceCount={instanceCountsBySource.get(source.id) ?? 0}
+                            liveCardCount={liveCardCountsBySource.get(source.id) ?? 0}
                             origin={sourceOrigins.get(source.id)}
                             source={source}
                           />
@@ -487,11 +487,11 @@ function Metric({ label, value }: { label: string, value: number }): React.JSX.E
 }
 
 function SourceCard({
-  instanceCount,
+  liveCardCount,
   origin,
   source,
 }: {
-  instanceCount: number
+  liveCardCount: number
   origin?: string
   source: SourceDescriptor
 }): React.JSX.Element {
@@ -552,9 +552,9 @@ function SourceCard({
       <div className="mt-3 flex min-w-0 items-center justify-between gap-2 border-t border-foreground/5 pt-2 text-[11px] text-muted-foreground">
         <div className="flex min-w-0 flex-1 items-center gap-1.5">
           <span className="truncate">{source.provider.title}</span>
-          {instanceCount > 0 && (
+          {liveCardCount > 0 && (
             <span className="shrink-0 rounded-full bg-foreground/5 px-1.5 py-0.5 tabular-nums text-foreground/70">
-              {t("instanceCount", { count: instanceCount })}
+              {t("liveCardCount", { count: liveCardCount })}
             </span>
           )}
         </div>

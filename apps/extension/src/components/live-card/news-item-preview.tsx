@@ -15,11 +15,11 @@ import { ProxiedImage } from "@newsnext/ui/components/proxied-image"
 import { SafeHtml } from "@newsnext/ui/components/safe-html"
 import { cn } from "@newsnext/ui/lib/utils"
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ExternalLink } from "lucide-react"
+import { CardAvatar } from "@/components/card-shell/card-avatar"
+import { SourceIcon } from "@/components/card-shell/source-icon"
 import { useI18n } from "@/hooks/use-i18n"
-import { CardAvatar } from "./card-avatar"
 import { useLiveCardIdentity } from "./live-card-identity-context"
 import { NewsItemInline } from "./news-item-inline"
-import { SourceIcon } from "./source-icon"
 
 interface NewsItemPreviewProps {
   item: NewsItem

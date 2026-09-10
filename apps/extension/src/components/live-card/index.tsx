@@ -1,5 +1,5 @@
-import type { LiveCardDragHandleRef } from "./card-header"
-import type { InstanceMetadata, InstancePatch } from "@/lib/source"
+import type { CardDragHandleRef } from "@/components/card-shell/card-header"
+import type { LiveCardMetadata, LiveCardPatch } from "@/lib/source"
 import type { LiveCardViewModel } from "@/typings/source"
 import { FlipAnimate } from "@newsnext/ui/components/flip-animate"
 import { useScrollProgressContext } from "@newsnext/ui/components/scroll-progress-context"
@@ -8,7 +8,7 @@ import { useQueryClient } from "@tanstack/react-query"
 import { useSetAtom } from "jotai"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useSourceParams } from "@/hooks"
-import { createInstanceQueryTarget, getSourceQueryKey } from "@/hooks/source-query"
+import { createLiveCardQueryTarget, getSourceQueryKey } from "@/hooks/source-query"
 import { useAsyncAction } from "@/hooks/use-async-action"
 import { useI18n } from "@/hooks/use-i18n"
 import { useInView } from "@/hooks/use-in-view"
@@ -18,20 +18,20 @@ import { useSourceQuery } from "@/hooks/use-source-query"
 import { actions } from "@/lib/actions"
 import { applySourceLoaderMetadata, applySourceSnapshot, SOURCE_QUERY_OFFSCREEN_RETENTION_MS, SOURCE_QUERY_PRELOAD_MARGIN } from "@/lib/source"
 import {
-  resetInstanceParamsAtom,
-  setInstancePatchAtom,
+  resetLiveCardParamsAtom,
+  setLiveCardPatchAtom,
 } from "@/store/board"
 import { LiveCardBack } from "./card-back"
 import { LiveCardFront } from "./card-front"
 
 export type LiveCardTarget
   = | {
-    kind: "instance"
-    instanceId: string
+    kind: "card"
+    cardId: string
   }
   | {
     kind: "draft"
-    onPatchChange: (patch: InstancePatch) => void
+    onPatchChange: (patch: LiveCardPatch) => void
   }
 
 export interface LiveCardProps {
@@ -41,43 +41,43 @@ export interface LiveCardProps {
   className?: string
   sizeClassName?: string
   nodeRef?: (node: HTMLElement | null) => void
-  dragHandleRef?: LiveCardDragHandleRef
+  dragHandleRef?: CardDragHandleRef
 }
 
 function LiveCardContent({ source, target, dragHandleRef }: LiveCardProps) {
   const { t } = useI18n()
   const queryClient = useQueryClient()
-  const setInstancePatch = useSetAtom(setInstancePatchAtom)
-  const resetLocalParams = useSetAtom(resetInstanceParamsAtom)
+  const setLiveCardPatch = useSetAtom(setLiveCardPatchAtom)
+  const resetLocalParams = useSetAtom(resetLiveCardParamsAtom)
   const [isFlipped, setIsFlipped] = useState(false)
-  const instanceId = target.kind === "instance" ? target.instanceId : undefined
-  const nativeIntegrationStatus = useNativeIntegrationStatus(instanceId !== undefined)
-  const instanceQueryKey = useMemo(
-    () => instanceId
-      ? getSourceQueryKey(createInstanceQueryTarget(instanceId))
+  const cardId = target.kind === "card" ? target.cardId : undefined
+  const nativeIntegrationStatus = useNativeIntegrationStatus(cardId !== undefined)
+  const liveCardQueryKey = useMemo(
+    () => cardId
+      ? getSourceQueryKey(createLiveCardQueryTarget(cardId))
       : undefined,
-    [instanceId],
+    [cardId],
   )
   const offlineWorker = useMemo(
-    () => instanceId
+    () => cardId
       ? nativeIntegrationStatus.data?.offlineWorkers.find(worker => (
-          worker.instanceIds.includes(instanceId)
+          worker.cardIds.includes(cardId)
         ))
       : undefined,
-    [nativeIntegrationStatus.data?.offlineWorkers, instanceId],
+    [nativeIntegrationStatus.data?.offlineWorkers, cardId],
   )
-  const routingResolved = instanceId === undefined
+  const routingResolved = cardId === undefined
     || nativeIntegrationStatus.data !== undefined
     || nativeIntegrationStatus.isError
   useEffect(() => {
-    if (offlineWorker && instanceQueryKey) {
-      void queryClient.cancelQueries({ exact: true, queryKey: instanceQueryKey })
+    if (offlineWorker && liveCardQueryKey) {
+      void queryClient.cancelQueries({ exact: true, queryKey: liveCardQueryKey })
     }
-  }, [instanceQueryKey, offlineWorker, queryClient])
+  }, [liveCardQueryKey, offlineWorker, queryClient])
   const { items, inlinePresentation, metadata, sourceSnapshot, manualRequest, isFetching, isManualRequesting, isLoading, isError, errorMessage, loginUrl } = useSourceQuery({
     source,
     sourceId: source.sourceId,
-    instanceId,
+    cardId,
     params: source.paramsValue,
     enabled: routingResolved && offlineWorker === undefined,
   })
@@ -122,16 +122,16 @@ function LiveCardContent({ source, target, dragHandleRef }: LiveCardProps) {
   }, [])
 
   const handleTakeOver = useCallback(async (): Promise<void> => {
-    if (!offlineWorker || !instanceId || !instanceQueryKey) return
+    if (!offlineWorker || !cardId || !liveCardQueryKey) return
     await runTakeover(async () => {
       const status = await actions.worker.takeOver({
-        instanceIds: [instanceId],
+        cardIds: [cardId],
         workerId: offlineWorker.id,
       })
-      queryClient.removeQueries({ exact: true, queryKey: instanceQueryKey })
+      queryClient.removeQueries({ exact: true, queryKey: liveCardQueryKey })
       queryClient.setQueryData(NATIVE_INTEGRATION_STATUS_QUERY_KEY, status)
     })
-  }, [instanceId, instanceQueryKey, offlineWorker, queryClient, runTakeover])
+  }, [cardId, liveCardQueryKey, offlineWorker, queryClient, runTakeover])
 
   const handleSaveSourceParams = useCallback(async () => {
     const nextParams = getDraftParams()
@@ -141,9 +141,9 @@ function LiveCardContent({ source, target, dragHandleRef }: LiveCardProps) {
       return
     }
 
-    await setInstancePatch({ instanceId: target.instanceId, patch: { params: nextParams } })
+    await setLiveCardPatch({ cardId: target.cardId, patch: { params: nextParams } })
     commitParams(nextParams)
-  }, [commitParams, getDraftParams, setInstancePatch, target])
+  }, [commitParams, getDraftParams, setLiveCardPatch, target])
 
   const handleResetSourceParams = useCallback(async () => {
     if (target.kind === "draft") {
@@ -152,18 +152,18 @@ function LiveCardContent({ source, target, dragHandleRef }: LiveCardProps) {
       return
     }
 
-    await resetLocalParams(target.instanceId)
+    await resetLocalParams(target.cardId)
     commitParams({})
   }, [commitParams, resetLocalParams, target])
 
-  const handleSaveSourceMeta = useCallback(async (metadata: InstanceMetadata) => {
+  const handleSaveSourceMeta = useCallback(async (metadata: LiveCardMetadata) => {
     if (target.kind === "draft") {
       target.onPatchChange({ metadata })
       return
     }
 
-    await setInstancePatch({ instanceId: target.instanceId, patch: { metadata } })
-  }, [setInstancePatch, target])
+    await setLiveCardPatch({ cardId: target.cardId, patch: { metadata } })
+  }, [setLiveCardPatch, target])
 
   return (
     <FlipAnimate
@@ -204,9 +204,9 @@ function LiveCardContent({ source, target, dragHandleRef }: LiveCardProps) {
         onResetSourceParams={handleResetSourceParams}
         onDiscardSourceParams={discardDraftParams}
         onSaveSourceMeta={handleSaveSourceMeta}
-        onResetSourceMeta={target.kind === "instance"
+        onResetSourceMeta={target.kind === "card"
           ? async () => {
-            await actions.instance.resetMetadata({ instanceId: target.instanceId })
+            await actions.liveCard.resetMetadata({ cardId: target.cardId })
           }
           : undefined}
         onFlip={handleFlip}

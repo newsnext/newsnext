@@ -10,7 +10,7 @@ import { NowLayer } from "@/components/nowlayer"
 import { useBoardScrollRestoration } from "@/hooks/use-board-scroll-restoration"
 import { isSortableData } from "@/lib/board"
 import { DEFAULT_SHORTCUT_SETTINGS, SHORTCUT_DEFINITIONS } from "@/lib/settings"
-import { moveInstanceAtom, updateBoardAtom } from "@/store/board"
+import { moveLiveCardAtom, updateBoardAtom } from "@/store/board"
 import { shortcutSettingsAtom } from "@/store/settings"
 import { ScatterCardLayer } from "./scatter-card-layer"
 
@@ -34,7 +34,7 @@ interface RenderedView {
 export function BoardView({ board }: { board: Board }) {
   const layer = board.defaultLayer
   const shortcuts = useAtomValue(shortcutSettingsAtom)
-  const moveInstance = useSetAtom(moveInstanceAtom)
+  const moveLiveCard = useSetAtom(moveLiveCardAtom)
   const updateBoard = useSetAtom(updateBoardAtom)
   const isNextLayer = layer === "next"
   const [renderedView, setRenderedView] = useState<RenderedView>({ boardId: board.id, layer, revision: 0 })
@@ -59,11 +59,11 @@ export function BoardView({ board }: { board: Board }) {
     setEnteredViewKey(null)
   }
 
-  const moveSearchLiveCard = useEffectEvent(async (instanceId: string) => {
+  const moveSearchLiveCard = useEffectEvent(async (cardId: string) => {
     try {
-      await moveInstance({
+      await moveLiveCard({
         boardId: board.id,
-        instanceId,
+        cardId,
       })
     } catch (error) {
       console.error("Failed to move dropped LiveCard", error)
@@ -77,7 +77,7 @@ export function BoardView({ board }: { board: Board }) {
     return dropTargetForElements({
       element: dropTarget,
       canDrop: ({ source }) => isSortableData(source.data)
-        && !board.instanceIds.includes(source.data.id),
+        && !board.cardIds.includes(source.data.id),
       getDropEffect: () => "move",
       onDragEnter: () => setIsSearchTransferOver(true),
       onDragLeave: () => setIsSearchTransferOver(false),
@@ -87,7 +87,7 @@ export function BoardView({ board }: { board: Board }) {
         void moveSearchLiveCard(source.data.id)
       },
     })
-  }, [board.id, board.instanceIds])
+  }, [board.id, board.cardIds])
 
   const handleContentReady = useCallback(() => {
     setLoadedViewKey(renderedViewKey)

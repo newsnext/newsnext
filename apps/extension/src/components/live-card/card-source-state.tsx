@@ -1,9 +1,9 @@
 import type { ReactNode } from "react"
 import { Button } from "@newsnext/ui/components/button"
+import { SourceIcon } from "@/components/card-shell/source-icon"
 import { useI18n } from "@/hooks/use-i18n"
 import { PhInfo } from "../icons/ph"
 import { useLiveCardIdentity } from "./live-card-identity-context"
-import { SourceIcon } from "./source-icon"
 
 interface SourceActionStateProps {
   disabled?: boolean

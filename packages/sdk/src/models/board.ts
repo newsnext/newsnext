@@ -11,11 +11,11 @@ export interface NowLayerSort {
   manualOrder: string[]
 }
 
-export type NextLayerWidgetDataScope
+export type LiveWidgetDataScope
   = | { type: "board" }
-    | { type: "instances", instanceIds: string[] }
+    | { type: "cards", cardIds: string[] }
 
-export interface NextLayerWidgetLayout {
+export interface LiveWidgetLayout {
   height: number
   width: number
   x: number
@@ -24,11 +24,11 @@ export interface NextLayerWidgetLayout {
 
 export type WidgetMetadata = CardMetadata
 
-export interface NextLayerWidget {
+export interface LiveWidget {
   metadata?: WidgetMetadata
   params?: Record<string, unknown>
-  dataScope: NextLayerWidgetDataScope
-  layout: NextLayerWidgetLayout
+  dataScope: LiveWidgetDataScope
+  layout: LiveWidgetLayout
   widgetId: string
 }
 
@@ -37,12 +37,12 @@ export interface Board {
   createdAt: number
   defaultLayer: BoardLayer
   id: string
-  instanceIds: string[]
+  cardIds: string[]
   name: string
   nowLayer: {
     sort: NowLayerSort
   }
   nextLayer: {
-    widgets: NextLayerWidget[]
+    liveWidgets: LiveWidget[]
   }
 }

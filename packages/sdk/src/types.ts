@@ -1,3 +1,4 @@
+import type { SourceLoadResponse } from "./models/load-result.js"
 import type { Worker } from "./protocol/Worker.js"
 
 export type { Worker } from "./protocol/Worker.js"
@@ -98,8 +99,11 @@ export interface Status {
 }
 export interface ActionOptions extends CallOptions { workerId?: string }
 
-export interface WidgetDataQuery { widgetId: string, instanceIds?: string[], params?: Record<string, unknown> }
-export interface WidgetDataResult {
+export interface LiveCardDataQuery { cardId: string }
+export type LiveCardDataResult = SourceLoadResponse
+
+export interface LiveWidgetDataQuery { widgetId: string, cardIds?: string[], params?: Record<string, unknown> }
+export interface LiveWidgetDataResult {
   queries: Record<string, JsonValue>
   refreshedAt: number
   errors: JsonValue[]

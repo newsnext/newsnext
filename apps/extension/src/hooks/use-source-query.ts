@@ -4,14 +4,14 @@ import { hashKey, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useCallback, useEffect, useMemo, useRef } from "react"
 import { getLoginUrlFromError } from "./source-login-error"
 import {
-  createInstanceQueryTarget,
+  createLiveCardQueryTarget,
   createSourceQueryTarget,
   getSourceQueryHash,
   getSourceQueryKey,
   getSourceQueryOptions,
 } from "./source-query"
 import {
-  findCachedInstanceQuery,
+  findCachedLiveCardQuery,
   findCachedSourceQuery,
 } from "./use-cached-source-result"
 import { useIsSourceManualRequesting, useManualRequestSources } from "./use-manual-request"
@@ -22,55 +22,55 @@ export interface UseSourceQueryOptions {
   source: LoadedSourceDescriptor
   sourceId: string
   enabled?: boolean
-  instanceId?: string
+  cardId?: string
   params?: Record<string, unknown>
 }
 
 export function useSourceQuery({
   sourceId,
   source,
-  instanceId,
+  cardId,
   params,
   enabled = true,
 }: UseSourceQueryOptions) {
   const queryClient = useQueryClient()
-  const cachedQuery = instanceId
-    ? findCachedInstanceQuery(queryClient, instanceId, sourceId)
+  const cachedQuery = cardId
+    ? findCachedLiveCardQuery(queryClient, cardId, sourceId)
     : findCachedSourceQuery(queryClient, sourceId, params)
   const cachedResult = cachedQuery?.data
   const target = useMemo(
-    () => instanceId
-      ? createInstanceQueryTarget(instanceId)
+    () => cardId
+      ? createLiveCardQueryTarget(cardId)
       : createSourceQueryTarget(sourceId, source, params),
-    [instanceId, params, source, sourceId],
+    [cardId, params, source, sourceId],
   )
   const queryHash = useMemo(() => getSourceQueryHash(target), [target])
-  const instanceRequestHash = useMemo(() => instanceId
+  const liveCardRequestHash = useMemo(() => cardId
     ? hashKey([sourceId, params ?? {}])
-    : undefined, [instanceId, params, sourceId])
-  const previousInstanceRequestRef = useRef<{
+    : undefined, [cardId, params, sourceId])
+  const previousLiveCardRequestRef = useRef<{
     hash: string
-    instanceId: string
+    cardId: string
   } | undefined>(undefined)
   useEffect(() => {
-    if (!instanceId || !instanceRequestHash) {
-      previousInstanceRequestRef.current = undefined
+    if (!cardId || !liveCardRequestHash) {
+      previousLiveCardRequestRef.current = undefined
       return
     }
-    const previous = previousInstanceRequestRef.current
-    previousInstanceRequestRef.current = { hash: instanceRequestHash, instanceId }
-    if (previous?.instanceId === instanceId && previous.hash !== instanceRequestHash) {
+    const previous = previousLiveCardRequestRef.current
+    previousLiveCardRequestRef.current = { hash: liveCardRequestHash, cardId }
+    if (previous?.cardId === cardId && previous.hash !== liveCardRequestHash) {
       void queryClient.invalidateQueries({
         exact: true,
         queryKey: getSourceQueryKey(target),
       })
     }
-  }, [instanceId, instanceRequestHash, queryClient, target])
+  }, [cardId, liveCardRequestHash, queryClient, target])
   const manualRequestSources = useManualRequestSources()
   const isManualRequesting = useIsSourceManualRequesting(queryHash)
   const query = useQuery({
     ...getSourceQueryOptions(target),
-    enabled: enabled && (instanceId !== undefined || source.version > 0),
+    enabled: enabled && (cardId !== undefined || source.version > 0),
     placeholderData: prev => prev,
   })
   const data = enabled ? query.data?.result ?? cachedResult : undefined

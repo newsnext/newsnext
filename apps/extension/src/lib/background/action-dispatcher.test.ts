@@ -49,17 +49,17 @@ describe("background action dispatcher", () => {
 
   it("records failures and preserves rejection", async () => {
     const execution = dispatchBackgroundAction({
-      input: { instanceId: "missing" },
-      name: "instance.load",
+      input: { cardId: "missing" },
+      name: "liveCard.load",
       origin: "ui",
     }, () => {
-      throw new Error("Instance not found")
+      throw new Error("LiveCard not found")
     })
 
-    await expect(execution).rejects.toThrow("Instance not found")
+    await expect(execution).rejects.toThrow("LiveCard not found")
     expect(listBackgroundActions()[0]).toMatchObject({
-      error: "Instance not found",
-      name: "instance.load",
+      error: "LiveCard not found",
+      name: "liveCard.load",
       status: "error",
     })
   })

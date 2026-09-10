@@ -4,26 +4,26 @@ import { describe, expect, it } from "vitest"
 import {
   getBoardConfigurationQuery,
   getNowLayerLiveCardsQuery,
-  listBoardInstancesQuery,
+  listBoardLiveCardsQuery,
   listSourcesQuery,
 } from "./queries"
 
 function createData(): ApplicationData {
   return {
-    version: 6,
+    version: 7,
     boards: [{
       color: "blue",
       id: "reading",
       name: "Reading",
       createdAt: 1,
-      instanceIds: ["second", "first"],
+      cardIds: ["second", "first"],
       defaultLayer: "now",
       nowLayer: { sort: { mode: "addedAt", automaticMode: "addedAt", manualOrder: [] } },
-      nextLayer: { widgets: [] },
+      nextLayer: { liveWidgets: [] },
     }],
-    instances: [
-      { instanceId: "first", workerId: "worker-a", sourceId: "rss:first", patch: {}, createdAt: 1 },
-      { instanceId: "second", workerId: "worker-a", sourceId: "rss:second", patch: {}, createdAt: 2 },
+    liveCards: [
+      { cardId: "first", workerId: "worker-a", sourceId: "rss:first", patch: {}, createdAt: 1 },
+      { cardId: "second", workerId: "worker-a", sourceId: "rss:second", patch: {}, createdAt: 2 },
     ],
   }
 }
@@ -35,15 +35,15 @@ describe("application queries", () => {
       .toEqual([source])
   })
 
-  it("lists Board Instances in instanceIds order", () => {
-    const instances = listBoardInstancesQuery(createData(), { boardId: "reading" })
-    expect(instances.map(instance => instance.instanceId)).toEqual(["second", "first"])
+  it("lists Board LiveCards in cardIds order", () => {
+    const liveCards = listBoardLiveCardsQuery(createData(), { boardId: "reading" })
+    expect(liveCards.map(card => card.cardId)).toEqual(["second", "first"])
   })
 
   it("returns NowLayer cards without registry filtering", () => {
     expect(getNowLayerLiveCardsQuery(createData(), "reading")).toEqual([
-      { boardId: "reading", instanceId: "second", sourceId: "rss:second" },
-      { boardId: "reading", instanceId: "first", sourceId: "rss:first" },
+      { boardId: "reading", cardId: "second", sourceId: "rss:second" },
+      { boardId: "reading", cardId: "first", sourceId: "rss:first" },
     ])
   })
 

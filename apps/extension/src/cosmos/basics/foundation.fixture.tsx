@@ -8,6 +8,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { PillGroup, PillGroupIndicator, pillGroupItemClassName } from "@newsnext/ui/components/pill-group"
 import { ScrollArea } from "@newsnext/ui/components/scroll-area"
 import { ArrowRight, Bell, MoreHorizontal, Plus, Trash2 } from "lucide-react"
+import { CardHeaderActionButton } from "@/components/card-shell/card-header"
 import {
   PhArrowCircleLeftDuotone,
   PhArrowCounterClockwiseDuotone,
@@ -15,7 +16,6 @@ import {
   PhInfoDuotone,
   PhTrashDuotone,
 } from "@/components/icons/ph"
-import { LiveCardHeaderActionButton } from "@/components/live-card/card-header"
 import { FixturePage, FixtureSection, FixtureState } from "@/cosmos/fixture-layout"
 
 const SEMANTIC_COLORS = [
@@ -263,10 +263,10 @@ export function ButtonsFixture(): React.JSX.Element {
                 <span className="grid size-8 place-items-center rounded-full bg-theme-500 text-xs font-bold text-white">NN</span>
               </Button>
               <div className="flex items-center gap-2">
-                <LiveCardHeaderActionButton aria-label="Refresh"><PhArrowCounterClockwiseDuotone /></LiveCardHeaderActionButton>
-                <LiveCardHeaderActionButton aria-label="View details"><PhInfoDuotone /></LiveCardHeaderActionButton>
-                <LiveCardHeaderActionButton aria-label="Delete LiveCard"><PhTrashDuotone /></LiveCardHeaderActionButton>
-                <LiveCardHeaderActionButton aria-label="Flip LiveCard"><PhArrowCircleLeftDuotone /></LiveCardHeaderActionButton>
+                <CardHeaderActionButton aria-label="Refresh"><PhArrowCounterClockwiseDuotone /></CardHeaderActionButton>
+                <CardHeaderActionButton aria-label="View details"><PhInfoDuotone /></CardHeaderActionButton>
+                <CardHeaderActionButton aria-label="Delete LiveCard"><PhTrashDuotone /></CardHeaderActionButton>
+                <CardHeaderActionButton aria-label="Flip LiveCard"><PhArrowCircleLeftDuotone /></CardHeaderActionButton>
               </div>
             </div>
           </FixtureState>

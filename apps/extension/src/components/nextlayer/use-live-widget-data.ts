@@ -1,4 +1,4 @@
-import type { WidgetDataResult } from "@newsnext/sdk/extension"
+import type { LiveWidgetDataResult } from "@newsnext/sdk/extension"
 import { createClient } from "@newsnext/sdk/extension"
 import { useEffect, useRef, useState } from "react"
 import { waitForMinimumManualRequestFeedback } from "@/lib/manual-request-feedback"
@@ -8,30 +8,30 @@ const client = createClient()
 interface WidgetDataInput {
   params: Record<string, unknown>
   widgetId: string
-  instanceIds: string[]
+  cardIds: string[]
   dataRevision: string
   refreshIntervalMs: number
 }
 
 interface WidgetDataState {
   key: string
-  data?: WidgetDataResult
+  data?: LiveWidgetDataResult
   error?: Error
   isFetching: boolean
   isContentFetching: boolean
 }
 
 interface WidgetDataView {
-  data?: WidgetDataResult
+  data?: LiveWidgetDataResult
   error?: Error
   isFetching: boolean
   isContentFetching: boolean
   refetch: () => void
 }
 
-export function useWidgetData(input: WidgetDataInput, active: boolean): WidgetDataView {
+export function useLiveWidgetData(input: WidgetDataInput, active: boolean): WidgetDataView {
   const { widgetId, dataRevision, refreshIntervalMs } = input
-  const scope = JSON.stringify([...input.instanceIds].sort())
+  const scope = JSON.stringify([...input.cardIds].sort())
   const params = JSON.stringify(input.params)
   const key = JSON.stringify([widgetId, scope, dataRevision, params])
   const [state, setState] = useState<WidgetDataState>({ key, isFetching: false, isContentFetching: false })
@@ -47,7 +47,7 @@ export function useWidgetData(input: WidgetDataInput, active: boolean): WidgetDa
       pending = true
       setState(previous => ({ ...(previous.key === key ? previous : { key }), isFetching: true, isContentFetching: manual || previous.key !== key || !previous.data }))
       try {
-        const data = await client.widgets.data({ widgetId, instanceIds: JSON.parse(scope), params: JSON.parse(params) }, { signal: controller.signal })
+        const data = await client.liveWidgets.data({ widgetId, cardIds: JSON.parse(scope), params: JSON.parse(params) }, { signal: controller.signal })
         if (!controller.signal.aborted) setState({ key, data, isFetching: manual, isContentFetching: manual })
       } catch (error) {
         if (!controller.signal.aborted) {

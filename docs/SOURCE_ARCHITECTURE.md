@@ -13,7 +13,7 @@ registry
   owns provider definitions and generated registry artifacts
 
 packages/sdk
-  owns all Action contracts and shared public Source, Board, and Instance models
+  owns all Action contracts and shared public Source, Board, and LiveCard models
 
 packages/shared
   owns foundational theme colors and news item types without SDK or CLI dependencies
@@ -144,7 +144,7 @@ into every flattened source descriptor, and registry parsing validates it
 against the shared `CategoryId` taxonomy. Runtime resolution does not infer a
 category from source content, parameters, URLs, or loader behavior. An omitted
 category remains absent. Source metadata, Radar patches, loader metadata, and
-persisted Instance patches cannot add or replace it. See the
+persisted LiveCard patches cannot add or replace it. See the
 [provider category taxonomy](SOURCE_GUIDELINE.md#provider-category-taxonomy) for
 authoring and matching rules.
 
@@ -185,7 +185,7 @@ The extension page caches descriptor-list requests through its query client for
 consumers that need Source discovery or configuration, such as Search,
 Settings, and Drafts. Completing a registry merge invalidates that query so the
 Registry settings tab and other consumers receive the updated Source list.
-Board routes and persisted Instance queries neither list nor wait for
+Board routes and persisted LiveCard queries neither list nor wait for
 descriptors; they render from Loader result snapshots.
 
 Static source presentation remains nested as
@@ -193,7 +193,7 @@ Static source presentation remains nested as
 normalizes `metadata.home` and `metadata.badge` but does not flatten presentation
 fields onto the operational source object. Public `SourceDescriptor` and
 extension `BoardSource` preserve the same nested shape, so static metadata,
-instance patches, and loader results share one merge boundary.
+card patches, and loader results share one merge boundary.
 
 Registry parsing validates the entire JSON wire format before resolving entries.
 Every registry entry owns its structured JSON, HTML, or RSS loader; missing or
@@ -267,8 +267,8 @@ third-party APIs from accidental bursts that can trigger rate limits or account
 suspension. It also deduplicates in-flight loads across UI and connected CLI
 consumers. The background does not own a Query cache. Page-side TanStack Query
 owns component subscriptions, loading and error state, page-local freshness,
-and in-memory result reuse. A persisted Instance query is keyed only by
-`["instance", instanceId]`; a Draft without an Instance uses Source ID, Source
+and in-memory result reuse. A persisted LiveCard query is keyed only by
+`["card", cardId]`; a Draft without a LiveCard uses Source ID, Source
 version, and normalized parameters. Query options are created with those keys
 so React observers, imperative manual requests, and future prefetch consumers
 share the correct identity. Both
@@ -291,9 +291,9 @@ The bound browser Loader writes every successful execution once to its
 Worker-local Dexie-backed Source result cache, keyed by Source ID, Source version,
 and normalized parameters. No record is shared across Workers, even when that
 complete key matches. The same record supplies both API protection and startup
-placeholder data. Instance IDs are deliberately absent from this Loader cache
+placeholder data. LiveCard IDs are deliberately absent from this Loader cache
 because they do not affect Source execution. Page-side TanStack queries for saved
-Instances use only the Instance ID, while configuration changes explicitly
+LiveCards use only the LiveCard ID, while configuration changes explicitly
 invalidate that stable query.
 
 Each cache record contains only its schema version, derived key, validated
@@ -301,9 +301,9 @@ result, and real `fetchedAt` completion time; it does not duplicate the
 normalized target. The schema version invalidates results whose runtime result
 contract predates the active extension. When
 a Board route renders, the App asks the opaque
-Instance router for each referenced Instance's cached result. The router reads
+LiveCard router for each referenced LiveCard's cached result. The router reads
 directly in the current browser when it is the binding and otherwise relays to
-the bound browser through the daemon. Successful responses seed Instance-scoped
+the bound browser through the daemon. Successful responses seed LiveCard-scoped
 TanStack queries before Board content renders without copying another durable
 cache. Misses and failures do not discard successful responses. This hydration
 never executes a Source.
@@ -311,16 +311,16 @@ Persisted results are discarded after 30 days. Increasing the Source version
 changes result identity immediately, while old versions age out independently.
 Persistence failures remain fail-open and never prevent Source execution.
 
-UI loads take an Instance ID and use a local fast path or `loader.loadInstance`
+UI loads take a LiveCard ID and use a local fast path or `loader.loadLiveCard`
 through the daemon. Routing alone does not retain History. A disconnected owner
-suspends cache reads and execution but does not remove the Instance or make its
+suspends cache reads and execution but does not remove the LiveCard or make its
 configuration read-only.
 
-The daemon retains results from automatic Instance collection and Jobs in Turso.
+The daemon retains results from automatic LiveCard collection in Turso.
+Collection calls `loader.loadLiveCard`; it does not depend on a Job Action or table.
 Automatic collection can retain a protected cached result at its original
 `fetchedAt` to fill a foreground-history gap; dataset/timestamp uniqueness
-prevents duplicates. Unchanged fresh fetches are separate observations. Explicit
-Jobs retain fresh, unprotected responses. No retention path receives credentials
+prevents duplicates. Unchanged fresh fetches are separate observations. No retention path receives credentials
 or raw fetch response bodies.
 
 A dataset is the unique tuple of execution Worker ID, Source ID, Source version,
@@ -363,7 +363,7 @@ Read operations open independent bounded-wait connections and use keyset
 pagination. A dropped or failed transaction rolls back instead of exposing a
 partial observation.
 
-The daemon initializes new databases at schema 10 and opens existing schema 10
+The daemon initializes new databases at schema 15 and opens existing schema 15
 databases directly. Other schema versions are rejected without migration.
 
 History exposes four daemon operations: dataset discovery, cursor-paginated
@@ -401,10 +401,10 @@ stale queries. Active LiveCard queries also revalidate once every five minutes,
 but interval revalidation is skipped while the app is in the background.
 Inactive query data follows TanStack Query's default garbage-collection policy;
 the durable Source result remains independently available in IndexedDB. Each
-saved Instance owns one page query, while Instances bound to the same Worker may
+saved LiveCard owns one page query, while LiveCards bound to the same Worker may
 still share the Loader's Source-request cache. Source queries use offline-first
 network mode. Before rendering Board content, the App restores valid persisted
-Source results for that Board into its QueryClient. This lets Instances render
+Source results for that Board into its QueryClient. This lets LiveCards render
 cached Source snapshots without loading the registry. Disabled Search observers reuse data already present in the page
 cache but do not cause other Boards' persisted results to be restored or execute
 a Source.
@@ -433,9 +433,9 @@ TanStack Query deduplicates page observers for one query. The background
 protected loader separately deduplicates actual Source execution across page and
 connected CLI consumers, so concurrent callers cannot burst a third-party API.
 
-The three identities stay separate: Instance ID routes page queries; Worker plus
+The three identities stay separate: LiveCard ID routes page queries; Worker plus
 resolved Source target isolates Loader cache and History datasets. NextLayer
-reads daemon-owned Widget Snapshots; its lifecycle is documented under
+requests on-demand Widget data through the SDK; its lifecycle is documented under
 [Layers and Widgets](APPLICATION_ARCHITECTURE.md#layers-and-widgets).
 
 Widget item validation reuses `validateNewsItems` from source-kit core. This
@@ -452,9 +452,9 @@ Loader metadata is response-scoped and remains part of the load result stored in
 TanStack Query and persisted for later restoration.
 It uses the complete source presentation metadata shape: title, badge,
 description, home URL, and named card color. While displayed, it has the highest field-level
-priority over static metadata and persisted Radar or Instance patches, without
-persisting response-derived values into the saved Instance. Before the first
-successful load, the LiveCard continues to use static or Instance
+priority over static metadata and persisted Radar or LiveCard patches, without
+persisting response-derived values into the saved LiveCard. Before the first
+successful load, the LiveCard continues to use static or LiveCard
 metadata and ultimately the provider title. Radar title patches are optional,
 including for parameterized sources; a successful loader result may provide the
 effective title without changing discovery-time configuration.
@@ -464,7 +464,7 @@ execution configuration:
 
 ```text
 RuntimeSource.metadata
-    → persisted instance patch.metadata
+    → persisted card patch.metadata
     → SourceLoaderResult.metadata
 ```
 
@@ -472,17 +472,17 @@ Each step performs a field-level merge, with later values taking precedence.
 
 Every presentation surface must use this same merge boundary. LiveCards apply
 loader metadata directly from their active source query. The Search result list
-subscribes to each result's Instance query key with disabled observers, so
+subscribes to each result's LiveCard query key with disabled observers, so
 existing in-memory loader results can update searchable dynamic titles and
 result labels. Its selected-result preview mounts the real LiveCard with a normal
-active observer, starting or reusing that Instance query as selection changes.
+active observer, starting or reusing that LiveCard query as selection changes.
 Because the dialog portal is outside the Board scroll container, this preview
 explicitly mounts LiveCard content eagerly instead of applying the Board's
 intersection-based offscreen deferral.
 Board-scoped restoration maps `fetchedAt` to TanStack's internal `dataUpdatedAt`,
 so stale presentation data cannot become artificially fresh or suppress normal
 LiveCard revalidation. For other Boards whose results are not in the page cache,
-unselected Search results follow the normal static, Instance, and provider-title
+unselected Search results follow the normal static, LiveCard, and provider-title
 fallback behavior.
 
 Presentation order and metadata precedence follow the
@@ -677,7 +677,7 @@ active tab URL
     → render Liquid parameter patches and apply JavaScript results
     → normalize and validate parameters
     → render metadata patches
-    → apply source presentation metadata to the discovered instance
+    → apply source presentation metadata to the discovered card
     → rank simultaneous matches by query/hash, path, and host specificity
     → break equal-specificity ties with explicit rule priority
     → persist the accepted suggestion with the selected board membership
@@ -732,7 +732,7 @@ repeating parameter or parameter-combination policy. Loaders still validate
 untrusted external data at the response boundary.
 
 Radar parameter patches remain sparse. Radar validates only discovered values
-and stores only those values in the Instance patch; defaults are combined with
+and stores only those values in the LiveCard patch; defaults are combined with
 the patch when producing the effective parameters used by metadata templates
 and Source execution.
 
@@ -750,7 +750,7 @@ Radar metadata can replace source-owned presentation fields such as title,
 badge, description, and home URL, but cannot modify source identity,
 provider title, icon, color, category, loader behavior, capabilities, secrets,
 request rules, or Source version.
-Accepting a Radar suggestion creates an Instance in exactly one Board. The editor
+Accepting a Radar suggestion creates a LiveCard in exactly one Board. The editor
 uses the same sparse parameter and metadata patch; inherited defaults are resolved
 for display/loading without being copied into persistence. Provider identity and
 inferred presentation remain read-only. Membership and identity rules belong to
@@ -883,8 +883,8 @@ maintained export index. SDK builds clear `dist/` to prevent removed types from
 remaining in the published package. Commit the generated types with the change.
 Ordinary SDK builds use the committed files and do not require Rust or the
 private CLI repository. The native-messaging entry point stays browser-safe.
-Protocol 21 carries Workspace patches, Instance routing, Actions, cached results,
-and Widget Snapshots. Incompatible versions disconnect. Request IDs correlate
+Protocol 23 carries Workspace patches, LiveCard routing, Actions, cached results,
+and SDK streams. Incompatible versions disconnect. Request IDs correlate
 completions; timed-out or disconnected executions are not replayed automatically.
 Additive features use explicit capability negotiation. The native host advertises
 `sdk` when it supports pull-based SDK streams from Widgets. The SDK shares one
@@ -894,7 +894,7 @@ See [Layers and Widgets](APPLICATION_ARCHITECTURE.md#layers-and-widgets) for the
 host boundary and lifecycle.
 
 Workspace commits validate expected revisions and broadcast deterministic patches
-with complete entity order and only changed values. Instance `workerId` supplies
+with complete entity order and only changed values. LiveCard `workerId` supplies
 routing; there is no second binding store. Worker identity is browser-local and
 survives service-worker restarts. Settings can explicitly restore an offline
 Worker identity after reinstall; connected identities cannot be claimed.
@@ -930,7 +930,7 @@ events through Native Messaging. Only changes to scheduler state or committed hi
 observations trigger pushes; a changing sample timestamp alone does not. The result is a projection of the live scheduler, including in-flight
 work, offline Workers, retry deadlines, persistence failures and per-stream learning
 metrics; it is not reconstructed from stale database rows or extension query cache.
-Only stream/Instance identifiers, counters, timestamps and error text are exposed,
+Only stream/LiveCard identifiers, counters, timestamps and error text are exposed,
 not raw items, parameter values or persisted fingerprints. Native payloads are
 validated before resolving the pending request or updating the subscription cache. Unsupported daemons are detected by
 capability before sending the request, so older hosts retain their connection.
@@ -938,7 +938,7 @@ The development-only diagnostics service reads this endpoint directly and keeps
 failures separate from the rest of its application snapshot.
 
 Stream diagnostics also read `history_datasets.observation_count` for each resolved
-stream when serving a request or delivering a subscribed update, including observations retained by explicit Jobs and before
+stream when serving a request or delivering a subscribed update, including observations retained before
 daemon restart. Counts use the same Worker/Source/version/resolved-params identity
 as scheduling. Unresolved streams report an unknown count. Diagnostics read dataset
 summaries without scanning observation items or holding the daemon state lock.
@@ -949,4 +949,4 @@ Widgets. `metadata.color` controls the displayed card palette independently of t
 provider's immutable identity. Registry configuration, loader results, and Radar
 literal/extracted colors validate against the same named palette. The common
 `CardMetadataSettings` editor renders Title, Description, Home, Badge, and Color;
-its preview stays outside query identity. Instance metadata reset preserves params.
+its preview stays outside query identity. LiveCard metadata reset preserves params.

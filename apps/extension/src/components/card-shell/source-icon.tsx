@@ -7,8 +7,8 @@ import {
   AvatarImage,
 } from "@newsnext/ui/components/avatar"
 import { cn } from "@newsnext/ui/lib/utils"
+import { CardAvatar } from "@/components/card-shell/card-avatar"
 import { useI18n } from "@/hooks/use-i18n"
-import { CardAvatar } from "./card-avatar"
 
 interface SourceIconProps {
   avatarSeed?: string

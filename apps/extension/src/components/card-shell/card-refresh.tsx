@@ -1,10 +1,10 @@
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { cn } from "@newsnext/ui/lib/utils"
+import { CardHeaderActionButton } from "@/components/card-shell/card-header"
+import { PhArrowCounterClockwiseDuotone, PhCircleDashedDuotone } from "@/components/icons/ph"
 import { useI18n } from "@/hooks/use-i18n"
-import { PhArrowCounterClockwiseDuotone, PhCircleDashedDuotone } from "../icons/ph"
-import { LiveCardHeaderActionButton } from "./card-header"
 
-export function LiveCardRefreshButton({
+export function CardRefreshButton({
   isFetching,
   onRefresh,
   label,
@@ -15,22 +15,22 @@ export function LiveCardRefreshButton({
 }): React.JSX.Element {
   const { t } = useI18n()
   return (
-    <LiveCardHeaderActionButton
+    <CardHeaderActionButton
       className={isFetching ? "animate-spin" : undefined}
       disabled={isFetching}
       onClick={onRefresh}
       aria-label={label ?? t("refresh")}
     >
       {isFetching ? <PhCircleDashedDuotone /> : <PhArrowCounterClockwiseDuotone />}
-    </LiveCardHeaderActionButton>
+    </CardHeaderActionButton>
   )
 }
 
-export function LiveCardContentBackground({ isFetching = false }: { isFetching?: boolean }): React.JSX.Element {
+export function CardContentBackground({ isFetching = false }: { isFetching?: boolean }): React.JSX.Element {
   return <SquircleBox aria-hidden radius="2xl" className={cn("pointer-events-none absolute inset-0 bg-background/70 zenith-theme-400", isFetching && "animate-pulse")} />
 }
 
-export function LiveCardContentTransition({ isFetching, children, className }: {
+export function CardContentTransition({ isFetching, children, className }: {
   isFetching: boolean
   children: React.ReactNode
   className?: string

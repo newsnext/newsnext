@@ -18,15 +18,15 @@ export function NowLayer({
 }: NowLayerProps) {
   const { t } = useI18n()
   const setManualOrder = useSetAtom(setNowLayerManualOrderAtom)
-  const { currentBoard, liveCardsByInstanceId, instanceIds } = useNowLayerLiveCards(boardId)
+  const { currentBoard, liveCardsByCardId, cardIds } = useNowLayerLiveCards(boardId)
 
-  const handleInstanceIdsChange = useCallback((newInstanceIds: string[]) => {
-    void setManualOrder({ boardId, instanceIds: newInstanceIds }).catch((error) => {
+  const handleCardIdsChange = useCallback((newCardIds: string[]) => {
+    void setManualOrder({ boardId, cardIds: newCardIds }).catch((error) => {
       console.error("Failed to save manual LiveCard order", error)
     })
   }, [boardId, setManualOrder])
 
-  if (instanceIds.length === 0) {
+  if (cardIds.length === 0) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center px-6 text-center text-sm text-muted-foreground">
         {t("emptyBoardDescription", { board: currentBoard.name })}
@@ -37,12 +37,12 @@ export function NowLayer({
   return (
     <LiveCardContainer
       key={boardId}
-      instanceIds={instanceIds}
-      liveCardsByInstanceId={liveCardsByInstanceId}
+      cardIds={cardIds}
+      liveCardsByCardId={liveCardsByCardId}
       viewReady={viewReady}
       sortable
       className={className}
-      onInstanceIdsChange={handleInstanceIdsChange}
+      onCardIdsChange={handleCardIdsChange}
     />
   )
 }

@@ -2,4 +2,4 @@
 import type { CollectionActivity } from "./CollectionActivity.js";
 import type { CollectionPolicyStatus } from "./CollectionPolicyStatus.js";
 
-export type StreamStatus = { streamId: string, sourceId: string, workerId: string, instanceIds: Array<string>, resolved: boolean, observationCount?: number | null, activity: CollectionActivity, policy: CollectionPolicyStatus, };
+export type StreamStatus = { streamId: string, sourceId: string, workerId: string, cardIds: Array<string>, resolved: boolean, observationCount?: number | null, activity: CollectionActivity, policy: CollectionPolicyStatus, };

@@ -36,7 +36,7 @@ const DATA_SLICE_OPTIONS: Array<{
     descriptionKey: "boardsDataDescription",
   },
   {
-    id: "instances",
+    id: "liveCards",
     labelKey: "liveCards",
     descriptionKey: "liveCardsDataDescription",
   },

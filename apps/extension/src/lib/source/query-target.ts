@@ -3,10 +3,10 @@ import { normalizeSourceParams } from "@newsnext/source-kit/runtime"
 import { hashKey } from "@tanstack/react-query"
 
 export const SOURCE_QUERY_KEY = ["source"] as const
-export const INSTANCE_QUERY_KEY = ["instance"] as const
+export const LIVE_CARD_QUERY_KEY = ["card"] as const
 
-export interface InstanceQueryTarget {
-  instanceId: string
+export interface LiveCardQueryTarget {
+  cardId: string
 }
 
 export interface DraftSourceQueryTarget {
@@ -15,12 +15,12 @@ export interface DraftSourceQueryTarget {
   version: number
 }
 
-export type SourceQueryTarget = InstanceQueryTarget | DraftSourceQueryTarget
+export type SourceQueryTarget = LiveCardQueryTarget | DraftSourceQueryTarget
 
-export function createInstanceQueryTarget(
-  instanceId: string,
-): InstanceQueryTarget {
-  return { instanceId }
+export function createLiveCardQueryTarget(
+  cardId: string,
+): LiveCardQueryTarget {
+  return { cardId }
 }
 
 export function createSourceQueryTarget(
@@ -37,10 +37,10 @@ export function createSourceQueryTarget(
 
 export function getSourceQueryKey(
   target: SourceQueryTarget,
-): readonly ["instance", string]
+): readonly ["card", string]
   | readonly ["source", string, number, Record<string, unknown>] {
-  if ("instanceId" in target) {
-    return [...INSTANCE_QUERY_KEY, target.instanceId]
+  if ("cardId" in target) {
+    return [...LIVE_CARD_QUERY_KEY, target.cardId]
   }
   return [
     ...SOURCE_QUERY_KEY,

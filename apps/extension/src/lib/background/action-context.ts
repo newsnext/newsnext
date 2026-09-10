@@ -1,4 +1,4 @@
-import type { Instance } from "../source"
+import type { LiveCard } from "../source"
 import type { BackgroundActionContext } from "./background-actions"
 import { loadSourceDescriptors, prepareSourceRequest } from "@newsnext/source-kit/runtime"
 import { readPersistedSourceResult } from "../source/persisted-results"
@@ -18,9 +18,8 @@ import { createBackgroundRadarService } from "./radar-service"
 import { createSourceLoaderInvoker } from "./source-loader-invoker"
 
 export interface BackgroundActionDependencies {
-  instanceRouter: BackgroundActionContext["instanceRouter"]
+  liveCardRouter: BackgroundActionContext["liveCardRouter"]
   nativeIntegration: BackgroundActionContext["nativeIntegration"]
-  widgetSnapshots: BackgroundActionContext["widgetSnapshots"]
   workerManagement: BackgroundActionContext["workerManagement"]
 }
 
@@ -28,23 +27,15 @@ const sourceLoaderInvoker = createSourceLoaderInvoker()
 const sourceLoader = createProtectedSourceLoader(sourceLoaderInvoker)
 const radarService = createBackgroundRadarService()
 
-async function executeInstance({ instance }: { instance: Instance }) {
-  const response = await sourceLoader.load({
-    params: instance.patch.params,
-    sourceId: instance.sourceId,
-  })
-  return { instance, response }
+async function loadBoundLiveCard({ card }: { card: LiveCard }) {
+  return sourceLoader.load({ params: card.patch.params, sourceId: card.sourceId })
 }
 
-async function loadBoundInstance(input: { instance: Instance }) {
-  return (await executeInstance(input)).response
-}
-
-async function readBoundInstanceCache({ instance }: { instance: Instance }) {
-  const request = await prepareSourceRequest(instance.sourceId, instance.patch.params ?? {})
+async function readBoundLiveCardCache({ card }: { card: LiveCard }) {
+  const request = await prepareSourceRequest(card.sourceId, card.patch.params ?? {})
   const persisted = await readPersistedSourceResult({
     params: request.params,
-    sourceId: instance.sourceId,
+    sourceId: card.sourceId,
     version: request.source.version,
   })
   if (!persisted) return null
@@ -74,14 +65,9 @@ export function createBackgroundActionContext(
     radar: {
       resolveSuggestions: radarService.resolveSuggestions,
     },
-    job: {
-      async executeInstance(input) {
-        return (await executeInstance(input)).response
-      },
-    },
     loader: {
-      loadInstance: loadBoundInstance,
-      readInstanceCache: readBoundInstanceCache,
+      loadLiveCard: loadBoundLiveCard,
+      readLiveCardCache: readBoundLiveCardCache,
     },
     source: {
       cancel: sourceLoaderInvoker.cancel,

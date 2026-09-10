@@ -16,7 +16,7 @@ export function createEmptyApplicationData(): ApplicationData {
   return {
     version: APPLICATION_DATA_VERSION,
     boards: [],
-    instances: [],
+    liveCards: [],
   }
 }
 
@@ -31,7 +31,7 @@ export function createInitialApplicationData(
   return {
     version: APPLICATION_DATA_VERSION,
     boards: [createBoard(boardId, boardName, createdAt)],
-    instances: [],
+    liveCards: [],
   }
 }
 
@@ -43,28 +43,28 @@ export function ensureApplicationDataIntegrity(
     ? data
     : {
         ...createInitialApplicationData(options),
-        instances: data.instances,
+        liveCards: data.liveCards,
       }
-  const assignedInstanceIds = new Set(initialized.boards.flatMap(board => board.instanceIds))
-  const unassignedInstanceIds = initialized.instances
-    .filter(instance => !assignedInstanceIds.has(instance.instanceId))
-    .toSorted((left, right) => right.createdAt - left.createdAt || left.instanceId.localeCompare(right.instanceId))
-    .map(instance => instance.instanceId)
-  if (unassignedInstanceIds.length === 0) return initialized
+  const assignedCardIds = new Set(initialized.boards.flatMap(board => board.cardIds))
+  const unassignedCardIds = initialized.liveCards
+    .filter(card => !assignedCardIds.has(card.cardId))
+    .toSorted((left, right) => right.createdAt - left.createdAt || left.cardId.localeCompare(right.cardId))
+    .map(card => card.cardId)
+  if (unassignedCardIds.length === 0) return initialized
 
   const fallbackBoard = initialized.boards[0]!
-  const instanceIds = [...unassignedInstanceIds, ...fallbackBoard.instanceIds]
+  const cardIds = [...unassignedCardIds, ...fallbackBoard.cardIds]
   return {
     ...initialized,
     boards: initialized.boards.map(board => board.id === fallbackBoard.id
       ? {
           ...board,
-          instanceIds,
+          cardIds,
           nowLayer: {
             ...board.nowLayer,
             sort: {
               ...board.nowLayer.sort,
-              manualOrder: [...unassignedInstanceIds, ...board.nowLayer.sort.manualOrder],
+              manualOrder: [...unassignedCardIds, ...board.nowLayer.sort.manualOrder],
             },
           },
         }

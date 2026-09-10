@@ -1,4 +1,4 @@
-import type { ApplicationBoardContext, ApplicationData, ApplicationNowLayerLiveCard, Board, BoardConfigurationResult, BoardDeleteInput, BoardDetail, Instance, InstancePatch, NextLayerWidgetDataScope, NextLayerWidgetLayout, SourceDescriptor } from "../models/index.js"
+import type { ApplicationBoardContext, ApplicationData, ApplicationNowLayerLiveCard, Board, BoardConfigurationResult, BoardDeleteInput, BoardDetail, LiveCard, LiveCardPatch, LiveWidgetDataScope, LiveWidgetLayout, SourceDescriptor } from "../models/index.js"
 import Type from "typebox"
 import { COLORS } from "../models/index.js"
 import { defineActionContract } from "./definition.js"
@@ -12,13 +12,13 @@ const BoardConfigurationParams = Type.Object({
   sortMode: Type.Optional(stringEnum(["addedAt", "provider", "manual"] as const)),
 }, { additionalProperties: false })
 
-const InstancePatchParams = Type.Unsafe<InstancePatch>(Type.Object({
+const LiveCardPatchParams = Type.Unsafe<LiveCardPatch>(Type.Object({
   metadata: Type.Optional(RecordValue),
   params: Type.Optional(RecordValue),
 }, { additionalProperties: false }))
 
-const InstanceCreationParams = Type.Object({
-  patch: InstancePatchParams,
+const LiveCardCreationParams = Type.Object({
+  patch: LiveCardPatchParams,
   sourceId: Identifier,
 }, { additionalProperties: false })
 
@@ -26,32 +26,32 @@ const BoardCreatedResult = Type.Object({
   boardId: Identifier,
 }, { additionalProperties: false })
 
-const InstanceCreatedResult = Type.Object({
-  instanceId: Identifier,
+const LiveCardCreatedResult = Type.Object({
+  cardId: Identifier,
 }, { additionalProperties: false })
 
-const WidgetLayoutParams = Type.Unsafe<NextLayerWidgetLayout>(Type.Object({
+const WidgetLayoutParams = Type.Unsafe<LiveWidgetLayout>(Type.Object({
   height: Type.Integer({ minimum: 1, maximum: 100 }),
   width: Type.Integer({ minimum: 1, maximum: 12 }),
   x: Type.Integer({ minimum: 0, maximum: 11 }),
   y: Type.Integer({ minimum: 0 }),
 }, { additionalProperties: false }))
 
-const WidgetDataScopeParams = Type.Unsafe<NextLayerWidgetDataScope>(Type.Union([
+const WidgetDataScopeParams = Type.Unsafe<LiveWidgetDataScope>(Type.Union([
   Type.Object({ type: Type.Literal("board") }, { additionalProperties: false }),
   Type.Object({
-    instanceIds: IdentifierArray,
-    type: Type.Literal("instances"),
+    cardIds: IdentifierArray,
+    type: Type.Literal("cards"),
   }, { additionalProperties: false }),
 ]))
 
 const boardCreateAction = defineActionContract({
   name: "board.create",
   kind: "mutation",
-  description: "Create a Board and optional configured Instances.",
+  description: "Create a Board and optional configured LiveCards.",
   params: Type.Object({
     ...BoardConfigurationParams.properties,
-    instances: Type.Optional(Type.Array(InstanceCreationParams)),
+    liveCards: Type.Optional(Type.Array(LiveCardCreationParams)),
     name: Identifier,
   }, { additionalProperties: false }),
   result: BoardCreatedResult,
@@ -80,7 +80,7 @@ const boardUpdateAction = defineActionContract({
 const BoardDeleteParams = Type.Unsafe<BoardDeleteInput>(Type.Union([
   Type.Object({
     boardId: Identifier,
-    deleteInstances: Type.Literal(true),
+    deleteLiveCards: Type.Literal(true),
   }, { additionalProperties: false }),
   Type.Object({
     boardId: Identifier,
@@ -91,7 +91,7 @@ const BoardDeleteParams = Type.Unsafe<BoardDeleteInput>(Type.Union([
 const boardDeleteAction = defineActionContract({
   name: "board.delete",
   kind: "mutation",
-  description: "Delete a Board and either delete or transfer its Instances.",
+  description: "Delete a Board and either delete or transfer its LiveCards.",
   params: BoardDeleteParams,
   result: EmptyObject,
 })
@@ -102,13 +102,13 @@ const nowLayerSetManualOrderAction = defineActionContract({
   description: "Set the complete manual LiveCard order for a Board's Now Layer.",
   params: Type.Object({
     boardId: Identifier,
-    instanceIds: IdentifierArray,
+    cardIds: IdentifierArray,
   }, { additionalProperties: false }),
   result: EmptyObject,
 })
 
 const nextLayerInstallWidgetAction = defineActionContract({
-  name: "nextLayer.installWidget",
+  name: "nextLayer.installLiveWidget",
   kind: "mutation",
   description: "Install a local Widget in a Board's Next Layer.",
   params: Type.Object({
@@ -121,7 +121,7 @@ const nextLayerInstallWidgetAction = defineActionContract({
 })
 
 const nextLayerMoveWidgetAction = defineActionContract({
-  name: "nextLayer.moveWidget",
+  name: "nextLayer.moveLiveWidget",
   kind: "mutation",
   description: "Move a Widget placement to another Board while preserving its settings and size.",
   params: Type.Object({ boardId: Identifier, targetBoardId: Identifier, widgetId: Identifier }, { additionalProperties: false }),
@@ -129,7 +129,7 @@ const nextLayerMoveWidgetAction = defineActionContract({
 })
 
 const nextLayerRemoveWidgetAction = defineActionContract({
-  name: "nextLayer.removeWidget",
+  name: "nextLayer.removeLiveWidget",
   kind: "mutation",
   description: "Remove a local Widget from a Board's Next Layer.",
   params: Type.Object({
@@ -140,9 +140,9 @@ const nextLayerRemoveWidgetAction = defineActionContract({
 })
 
 const nextLayerSetWidgetDataScopeAction = defineActionContract({
-  name: "nextLayer.setWidgetDataScope",
+  name: "nextLayer.setLiveWidgetDataScope",
   kind: "mutation",
-  description: "Set the Board-scoped Instance access granted to a Next Layer Widget.",
+  description: "Set the Board-scoped LiveCard access granted to a Next Layer Widget.",
   params: Type.Object({
     boardId: Identifier,
     dataScope: WidgetDataScopeParams,
@@ -152,7 +152,7 @@ const nextLayerSetWidgetDataScopeAction = defineActionContract({
 })
 
 const nextLayerSetWidgetMetadataAction = defineActionContract({
-  name: "nextLayer.setWidgetMetadata",
+  name: "nextLayer.setLiveWidgetMetadata",
   kind: "mutation",
   description: "Replace a Board Widget's display metadata overrides; an empty object restores its definition.",
   params: Type.Object({
@@ -170,7 +170,7 @@ const nextLayerSetWidgetMetadataAction = defineActionContract({
 })
 
 const nextLayerSetWidgetParamsAction = defineActionContract({
-  name: "nextLayer.setWidgetParams",
+  name: "nextLayer.setLiveWidgetParams",
   kind: "mutation",
   description: "Replace a Board Widget's parameter overrides; pass an empty object to reset defaults.",
   params: Type.Object({
@@ -182,12 +182,12 @@ const nextLayerSetWidgetParamsAction = defineActionContract({
 })
 
 const nextLayerSetWidgetLayoutsAction = defineActionContract({
-  name: "nextLayer.setWidgetLayouts",
+  name: "nextLayer.setLiveWidgetLayouts",
   kind: "mutation",
   description: "Persist one or more Next Layer Widget positions and sizes.",
   params: Type.Object({
     boardId: Identifier,
-    widgets: Type.Array(Type.Object({
+    liveWidgets: Type.Array(Type.Object({
       layout: WidgetLayoutParams,
       widgetId: Identifier,
     }, { additionalProperties: false }), { minItems: 1 }),
@@ -195,68 +195,68 @@ const nextLayerSetWidgetLayoutsAction = defineActionContract({
   result: EmptyObject,
 })
 
-const instanceMoveAction = defineActionContract({
-  name: "instance.move",
+const liveCardMoveAction = defineActionContract({
+  name: "liveCard.move",
   kind: "mutation",
-  description: "Move an existing Instance to a Board.",
+  description: "Move an existing LiveCard to a Board.",
   params: Type.Object({
     boardId: Identifier,
-    instanceId: Identifier,
+    cardId: Identifier,
   }, { additionalProperties: false }),
   result: EmptyObject,
 })
 
-const instanceCreateAction = defineActionContract({
-  name: "instance.create",
+const liveCardCreateAction = defineActionContract({
+  name: "liveCard.create",
   kind: "mutation",
-  description: "Create a configured Instance in one Board.",
+  description: "Create a configured LiveCard in one Board.",
   params: Type.Object({
     boardId: Identifier,
-    patch: InstancePatchParams,
+    patch: LiveCardPatchParams,
     sourceId: Identifier,
   }, { additionalProperties: false }),
-  result: InstanceCreatedResult,
+  result: LiveCardCreatedResult,
 })
 
-const instanceConfigureAction = defineActionContract({
-  name: "instance.configure",
+const liveCardConfigureAction = defineActionContract({
+  name: "liveCard.configure",
   kind: "mutation",
-  description: "Merge configuration and presentation overrides into an Instance.",
+  description: "Merge configuration and presentation overrides into a LiveCard.",
   params: Type.Object({
-    instanceId: Identifier,
-    patch: InstancePatchParams,
+    cardId: Identifier,
+    patch: LiveCardPatchParams,
   }, { additionalProperties: false }),
   result: EmptyObject,
 })
 
-const instanceResetMetadataAction = defineActionContract({
-  name: "instance.resetMetadata",
+const liveCardResetMetadataAction = defineActionContract({
+  name: "liveCard.resetMetadata",
   kind: "mutation",
-  description: "Reset an Instance's presentation overrides while preserving its parameters.",
-  params: Type.Object({ instanceId: Identifier }, { additionalProperties: false }),
+  description: "Reset a LiveCard's presentation overrides while preserving its parameters.",
+  params: Type.Object({ cardId: Identifier }, { additionalProperties: false }),
   result: EmptyObject,
 })
 
-const instanceResetParamsAction = defineActionContract({
-  name: "instance.resetParams",
+const liveCardResetParamsAction = defineActionContract({
+  name: "liveCard.resetParams",
   kind: "mutation",
-  description: "Reset an Instance's parameters while preserving presentation overrides.",
-  params: Type.Object({ instanceId: Identifier }, { additionalProperties: false }),
+  description: "Reset a LiveCard's parameters while preserving presentation overrides.",
+  params: Type.Object({ cardId: Identifier }, { additionalProperties: false }),
   result: EmptyObject,
 })
 
-const instanceDeleteAction = defineActionContract({
-  name: "instance.delete",
+const liveCardDeleteAction = defineActionContract({
+  name: "liveCard.delete",
   kind: "mutation",
-  description: "Delete an Instance from its Board.",
-  params: Type.Object({ instanceId: Identifier }, { additionalProperties: false }),
+  description: "Delete a LiveCard from its Board.",
+  params: Type.Object({ cardId: Identifier }, { additionalProperties: false }),
   result: EmptyObject,
 })
 
 const sourceListAction = defineActionContract({
   name: "source.list",
   kind: "query",
-  description: "List Sources available for creating or resolving Instances.",
+  description: "List Sources available for creating or resolving LiveCards.",
   params: EmptyObject,
   result: typedArrayResult<SourceDescriptor[]>(),
 })
@@ -280,33 +280,33 @@ const boardListAction = defineActionContract({
 const boardGetAction = defineActionContract({
   name: "board.get",
   kind: "query",
-  description: "Get a Board with ordered entries and resolved Instances.",
+  description: "Get a Board with ordered entries and resolved LiveCards.",
   params: Type.Object({ boardId: Identifier }, { additionalProperties: false }),
   result: typedObjectResult<BoardDetail>(),
 })
 
-const boardListInstancesAction = defineActionContract({
-  name: "board.listInstances",
+const boardListLiveCardsAction = defineActionContract({
+  name: "board.listLiveCards",
   kind: "query",
-  description: "List the Instances in a Board in membership order.",
+  description: "List the LiveCards in a Board in membership order.",
   params: Type.Object({ boardId: Identifier }, { additionalProperties: false }),
-  result: typedArrayResult<Instance[]>(),
+  result: typedArrayResult<LiveCard[]>(),
 })
 
-const instanceListAction = defineActionContract({
-  name: "instance.list",
+const liveCardListAction = defineActionContract({
+  name: "liveCard.list",
   kind: "query",
-  description: "List configured Instances.",
+  description: "List configured LiveCards.",
   params: EmptyObject,
-  result: typedArrayResult<Instance[]>(),
+  result: typedArrayResult<LiveCard[]>(),
 })
 
-const instanceGetAction = defineActionContract({
-  name: "instance.get",
+const liveCardGetAction = defineActionContract({
+  name: "liveCard.get",
   kind: "query",
-  description: "Get one configured Instance.",
-  params: Type.Object({ instanceId: Identifier }, { additionalProperties: false }),
-  result: typedObjectResult<Instance>(),
+  description: "Get one configured LiveCard.",
+  params: Type.Object({ cardId: Identifier }, { additionalProperties: false }),
+  result: typedObjectResult<LiveCard>(),
 })
 
 const boardGetContextAction = defineActionContract({
@@ -335,7 +335,7 @@ const nowLayerGetLiveCardsAction = defineActionContract({
 
 const ApplicationDataSchema = Type.Unsafe<ApplicationData>(Type.Object({
   boards: Type.Array(Type.Unknown()),
-  instances: Type.Array(Type.Unknown()),
+  liveCards: Type.Array(Type.Unknown()),
   version: Type.Number(),
 }, { additionalProperties: false }))
 
@@ -367,19 +367,19 @@ export const applicationActionContracts = [
   nextLayerSetWidgetLayoutsAction,
   nextLayerSetWidgetParamsAction,
   nextLayerSetWidgetMetadataAction,
-  instanceMoveAction,
-  instanceCreateAction,
-  instanceConfigureAction,
-  instanceResetParamsAction,
-  instanceResetMetadataAction,
-  instanceDeleteAction,
+  liveCardMoveAction,
+  liveCardCreateAction,
+  liveCardConfigureAction,
+  liveCardResetParamsAction,
+  liveCardResetMetadataAction,
+  liveCardDeleteAction,
   sourceListAction,
   sourceGetAction,
   boardListAction,
   boardGetAction,
-  boardListInstancesAction,
-  instanceListAction,
-  instanceGetAction,
+  boardListLiveCardsAction,
+  liveCardListAction,
+  liveCardGetAction,
   boardGetContextAction,
   boardGetConfigurationAction,
   nowLayerGetLiveCardsAction,

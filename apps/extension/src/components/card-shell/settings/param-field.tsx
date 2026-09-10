@@ -8,14 +8,14 @@ import {
 } from "@newsnext/ui/components/select"
 import { Switch } from "@newsnext/ui/components/switch"
 import { cn } from "@newsnext/ui/lib/utils"
-import { useI18n } from "@/hooks/use-i18n"
 import {
   EditableInput,
   Info,
   NumberInput,
   SelectLikeValue,
   Text,
-} from "./fields"
+} from "@/components/card-shell/settings/fields"
+import { useI18n } from "@/hooks/use-i18n"
 
 export function ParamField({
   param,

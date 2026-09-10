@@ -1,19 +1,19 @@
-import type { LiveCardDragHandleRef } from "../card-header"
-import type { SourceParamValidationState } from "./parameter-settings"
-import type { InstanceMetadata } from "@/lib/source"
+import type { CardDragHandleRef } from "@/components/card-shell/card-header"
+import type { SourceParamValidationState } from "@/components/card-shell/settings/parameter-settings"
+import type { LiveCardMetadata } from "@/lib/source"
 import type { LiveCardViewModel } from "@/typings/source"
 import { useState } from "react"
+import { CardBackContent, CardShell } from "@/components/card-shell"
+import { CardHeader, CardHeaderActionButton } from "@/components/card-shell/card-header"
 import { PhArrowCircleLeftDuotone } from "@/components/icons/ph"
 import { useSourceIcon } from "@/hooks/use-source-icon"
-import { CardBackContent, CardFace } from "../card-face"
-import { LiveCardHeader, LiveCardHeaderActionButton } from "../card-header"
 import { DeleteLiveCardButton, LiveCardBoardSelect } from "./actions"
 import { LiveCardEditForm } from "./edit-form"
 
 export interface LiveCardBackProps {
   source: LiveCardViewModel
   target:
-    | { kind: "instance", instanceId: string }
+    | { kind: "card", cardId: string }
     | { kind: "draft" }
   draftSourceParams: Record<string, unknown>
   hasSourceParams: boolean
@@ -24,9 +24,9 @@ export interface LiveCardBackProps {
   onResetSourceParams: () => Promise<void> | void
   onDiscardSourceParams: () => void
   onResetSourceMeta?: () => Promise<void> | void
-  onSaveSourceMeta: (meta: InstanceMetadata) => Promise<void> | void
+  onSaveSourceMeta: (meta: LiveCardMetadata) => Promise<void> | void
   onFlip: () => void
-  dragHandleRef?: LiveCardDragHandleRef
+  dragHandleRef?: CardDragHandleRef
 }
 
 export function LiveCardBack({
@@ -47,7 +47,7 @@ export function LiveCardBack({
 }: LiveCardBackProps) {
   const { provider } = source
   const { badge, desc, home, title } = source.metadata
-  const [previewMetadata, setPreviewMetadata] = useState<InstanceMetadata | null>(null)
+  const [previewMetadata, setPreviewMetadata] = useState<LiveCardMetadata | null>(null)
   const previewTitle = previewMetadata?.title ?? title
   const previewBadge = previewMetadata?.badge ?? badge
   const previewDesc = previewMetadata?.desc ?? desc
@@ -58,10 +58,10 @@ export function LiveCardBack({
   })
 
   return (
-    <CardFace
+    <CardShell
       className={previewMetadata?.color}
       header={(
-        <LiveCardHeader
+        <CardHeader
           badge={previewBadge}
           desc={previewDesc}
           home={previewHome}
@@ -71,22 +71,22 @@ export function LiveCardBack({
           dragHandleRef={dragHandleRef}
           actions={(
             <>
-              {target.kind === "instance" && <DeleteLiveCardButton id={target.instanceId} />}
-              <LiveCardHeaderActionButton
+              {target.kind === "card" && <DeleteLiveCardButton id={target.cardId} />}
+              <CardHeaderActionButton
                 onClick={(e) => {
                   e.stopPropagation()
                   onFlip()
                 }}
               >
                 <PhArrowCircleLeftDuotone />
-              </LiveCardHeaderActionButton>
+              </CardHeaderActionButton>
             </>
           )}
         />
       )}
     >
       <CardBackContent>
-        {target.kind === "instance" && <LiveCardBoardSelect id={target.instanceId} />}
+        {target.kind === "card" && <LiveCardBoardSelect id={target.cardId} />}
         <LiveCardEditForm
           source={source}
           draftSourceParams={draftSourceParams}
@@ -102,6 +102,6 @@ export function LiveCardBack({
           onPreviewMetadataChange={setPreviewMetadata}
         />
       </CardBackContent>
-    </CardFace>
+    </CardShell>
   )
 }

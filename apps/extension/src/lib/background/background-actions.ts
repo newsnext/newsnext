@@ -1,6 +1,6 @@
 import type { ConnectedFetchInput, FetchResponse } from "@newsnext/sdk/models"
 import type { ResolvedRadarSuggestion } from "../radar"
-import type { Instance } from "../source"
+import type { LiveCard } from "../source"
 import type { SourceLoadResponse } from "../source/load-result"
 import type { ApplicationActionContext } from "./application-actions"
 import type {
@@ -27,12 +27,9 @@ export interface BackgroundActionContext extends ApplicationActionContext {
       url: string
     }) => Promise<ResolvedRadarSuggestion[]>
   }
-  job: {
-    executeInstance: (input: { instance: Instance }) => Promise<SourceLoadResponse>
-  }
   loader: {
-    loadInstance: (input: { instance: Instance }) => Promise<SourceLoadResponse>
-    readInstanceCache: (input: { instance: Instance }) => Promise<SourceLoadResponse | null>
+    loadLiveCard: (input: { card: LiveCard }) => Promise<SourceLoadResponse>
+    readLiveCardCache: (input: { card: LiveCard }) => Promise<SourceLoadResponse | null>
   }
   source: {
     cancel: (input: { requestId: string }) => Promise<void>
@@ -49,19 +46,13 @@ export interface BackgroundActionContext extends ApplicationActionContext {
     getStatus: () => Promise<NativeIntegrationStatus>
     setEnabled: (input: { enabled: boolean }) => Promise<NativeIntegrationStatus>
   }
-  instanceRouter: {
-    load: (input: { instanceId: string }) => Promise<SourceLoadResponse>
-    readCache: (input: { instanceId: string }) => Promise<SourceLoadResponse | null>
-  }
-  widgetSnapshots: {
-    get: (input: {
-      boardId: string
-      widgetId: string
-    }) => Promise<unknown>
+  liveCardRouter: {
+    load: (input: { cardId: string }) => Promise<SourceLoadResponse>
+    readCache: (input: { cardId: string }) => Promise<SourceLoadResponse | null>
   }
   workerManagement: {
     regenerateIdentity: () => Promise<NativeIntegrationStatus>
-    takeOver: (input: { instanceIds: string[], workerId: string }) => Promise<NativeIntegrationStatus>
+    takeOver: (input: { cardIds: string[], workerId: string }) => Promise<NativeIntegrationStatus>
   }
 }
 
@@ -103,28 +94,24 @@ const sourceCancelAction = defineAction(actionContracts["source.cancel"], async 
   return {}
 })
 
-const jobExecuteInstanceAction = defineAction(actionContracts["job.executeInstance"], async (input, context: BackgroundActionContext) => (
-  await context.job.executeInstance(input)
+const loaderLoadLiveCardAction = defineAction(actionContracts["loader.loadLiveCard"], async (input, context: BackgroundActionContext) => (
+  await context.loader.loadLiveCard(input)
 ))
 
-const loaderLoadInstanceAction = defineAction(actionContracts["loader.loadInstance"], async (input, context: BackgroundActionContext) => (
-  await context.loader.loadInstance(input)
-))
-
-const loaderReadInstanceCacheAction = defineAction(actionContracts["loader.readInstanceCache"], async (input, context: BackgroundActionContext) => (
-  await context.loader.readInstanceCache(input)
+const loaderReadLiveCardCacheAction = defineAction(actionContracts["loader.readLiveCardCache"], async (input, context: BackgroundActionContext) => (
+  await context.loader.readLiveCardCache(input)
 ))
 
 const nativeIntegrationGetStatusAction = defineAction(actionContracts["nativeIntegration.getStatus"], async (_input, context: BackgroundActionContext) => await context.nativeIntegration.getStatus())
 
 const nativeIntegrationGetLogsAction = defineAction(actionContracts["nativeIntegration.getLogs"], async (_input, context: BackgroundActionContext) => await context.nativeIntegration.getLogs())
 
-const instanceLoadAction = defineAction(actionContracts["instance.load"], async (input, context: BackgroundActionContext) => (
-  await context.instanceRouter.load(input)
+const liveCardLoadAction = defineAction(actionContracts["liveCard.load"], async (input, context: BackgroundActionContext) => (
+  await context.liveCardRouter.load(input)
 ))
 
-const instanceReadCacheAction = defineAction(actionContracts["instance.readCache"], async (input, context: BackgroundActionContext) => (
-  await context.instanceRouter.readCache(input)
+const liveCardReadCacheAction = defineAction(actionContracts["liveCard.readCache"], async (input, context: BackgroundActionContext) => (
+  await context.liveCardRouter.readCache(input)
 ))
 
 const nativeIntegrationSetEnabledAction = defineAction(actionContracts["nativeIntegration.setEnabled"], async (input, context: BackgroundActionContext) => await context.nativeIntegration.setEnabled(input))
@@ -135,25 +122,19 @@ const workerRegenerateIdentityAction = defineAction(actionContracts["worker.rege
 
 const workerTakeOverAction = defineAction(actionContracts["worker.takeOver"], async (input, context: BackgroundActionContext) => await context.workerManagement.takeOver(input))
 
-const nextLayerGetWidgetSnapshotAction = defineAction(actionContracts["nextLayer.getWidgetSnapshot"], async (input, context: BackgroundActionContext) => (
-  await context.widgetSnapshots.get(input)
-))
-
 export const backgroundActionDefinitions = [
   developerFetchAction,
   developerRunSourceAction,
-  jobExecuteInstanceAction,
-  loaderLoadInstanceAction,
-  loaderReadInstanceCacheAction,
+  loaderLoadLiveCardAction,
+  loaderReadLiveCardCacheAction,
   radarResolveSuggestionsAction,
   sourceLoadAction,
   sourceCancelAction,
-  instanceLoadAction,
-  instanceReadCacheAction,
+  liveCardLoadAction,
+  liveCardReadCacheAction,
   nativeIntegrationGetLogsAction,
   nativeIntegrationGetStatusAction,
   nativeIntegrationSetEnabledAction,
-  nextLayerGetWidgetSnapshotAction,
   workerRegenerateIdentityAction,
   workerTakeOverAction,
 ] as const

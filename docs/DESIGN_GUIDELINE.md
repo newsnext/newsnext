@@ -192,7 +192,7 @@ LiveCards define the primary NewsNext surface treatment.
   with an 8px gap before the inner panel on both faces. Do not show refresh times
   or a subtitle; indicate refreshing through the refresh action animation.
 - Keep compact LiveCard action icons content-sized and background-free. Use the
-  shared `LiveCardHeaderActionButton`; hover may raise icon opacity but must not add
+  shared `CardHeaderActionButton`; hover may raise icon opacity but must not add
   a filled hover surface or enlarge the action target spacing.
 - Fade and pulse LiveCard content during an explicit latest-data refresh, or while
   an automatic query is fetching without current or placeholder data. Keep
@@ -216,7 +216,7 @@ LiveCards define the primary NewsNext surface treatment.
 - While a LiveCard or Widget is being dragged, temporarily replace the header
   Dynamic Island with an enlarged red trash target. Strengthen its tint and icon
   motion when the pointer enters the island. A valid drop deletes the LiveCard
-  Instance or removes the Widget placement from its originating Board. Restore
+  LiveCard or removes the Widget placement from its originating Board. Restore
   the normal title state when the drag ends. Cancel the sorting preview without
   saving a new order when dropping on trash or outside the list.
 
@@ -228,7 +228,7 @@ interactions above notifications, and notifications above user-opened panels.
 Add new states through the `TitleIslandFeature` contract instead of adding another
 business-specific branch to the shell.
 
-The reference implementation is `LiveCardSurface` in
+The reference implementation is `CardSurface` in
 `apps/extension/src/components/live-card/card-surface.tsx`.
 
 LiveCard item markers communicate ordering semantics. Timelines use the shared
@@ -272,7 +272,7 @@ The detail column has a fixed identity header, independently scrolling title/bod
 and fixed footer with complete inline presentation and the original link. Show
 an `author` icon with the author name, a shared `beam` avatar seeded by author
 name when the icon is missing or fails,
-or the shared Source icon/badge and Instance name otherwise. Wide layouts use
+or the shared Source icon/badge and LiveCard name otherwise. Wide layouts use
 approximately 60/40 media-to-detail proportions. Carry the card color through
 the identity context so generated avatars retain its palette inside the dialog portal.
 
@@ -315,8 +315,8 @@ Next Layer uses the shared Pragmatic Drag and Drop infrastructure and one pure
 ordered packing function for initial layout, live drag previews, resize previews,
 and responsive reflow. Persist user order and dimensions, never screen coordinates.
 The existing wire layout stores `x: 0`, `y: orderIndex`; read older placements in
-`y`, then `x` order. Keep Widget drag data separate from Instance drag data so a
-Widget cannot trigger Instance moves in the Board or Header. The shared header
+`y`, then `x` order. Keep Widget drag data separate from LiveCard drag data so a
+Widget cannot trigger LiveCard moves in the Board or Header. The shared header
 trash target dispatches by drag kind and requires the originating Board and Widget
 IDs before accepting Widget removal.
 
@@ -365,11 +365,11 @@ shell, details back, palette, and controls for either renderer. Empty item
 results are an ordinary empty state; malformed data must show an error.
 
 Keep the trusted Widget shell outside the iframe. LiveCards and Widgets share
-`CardFace`, `LiveCardHeader`, `CardBackContent`, and `LiveCardHeaderActionButton`;
+`CardShell`, `CardHeader`, `CardBackContent`, and `CardHeaderActionButton`;
 Source identity is a leading slot in the common header. Keep surface, spacing,
 back scrolling, and action placement in these shared components. Match the compact LiveCard header on both Widget
 faces: a single title line in a 32px row and an 8px gap before the content panel.
-LiveCards and Widgets share `LiveCardRefreshButton` and the content refresh
+LiveCards and Widgets share `CardRefreshButton` and the content refresh
 background/opacity treatment. Disable the refresh button while fetching, spin its
 indicator, and apply content dimming/pulsing only for initial loading and explicit
 refreshes. Keep automatic background refreshes visually stable when data exists.
@@ -394,7 +394,7 @@ focus cannot enter it. `FlipAnimate` owns `inert` and `aria-hidden` for both kin
 of card. Register only the visible face's header as the drag handle, and build the
 drag preview from that header. Both faces remain draggable. The back's removal
 action shares `DeleteCardButton` and its two-step confirmation with LiveCards;
-removing a Widget deletes its Board placement. The back shows snapshot status, the number of scoped Instances, and the last
+removing a Widget deletes its Board placement. The back shows snapshot status, the number of scoped LiveCards, and the last
 update time. Place the common metadata editor in a section first, separate
 from business parameters. Use the LiveCard metadata editing pattern and shared
 `ThemeSelector` palette. Save applies Board placement overrides to both faces;
@@ -486,7 +486,7 @@ Implementation constraints belong to the
 Snapshot both Board and Layer for each departing view. Never replace its cards
 with the target Board's content during the exit. Mount a distinct Widget grid for
 each view and use a unique visit key, including rapid returns to the same Board.
-Never share a Next Layer instance or layout between Boards.
+Never share a Next Layer card or layout between Boards.
 
 Blank page space is part of the reading surface and must not switch back to Now
 Layer when clicked. Now Layer and Next Layer are peer views, so switch between
@@ -673,8 +673,8 @@ by default.
 
 ### LiveCard Board ownership
 
-The LiveCard back moves the Instance between Boards with a single-choice radio
-menu. An Instance belongs to exactly one Board. The compact trigger shows that
+The LiveCard back moves the LiveCard between Boards with a single-choice radio
+menu. A LiveCard belongs to exactly one Board. The compact trigger shows that
 Board's name; selecting another Board performs one atomic move. Disable rows
 while the move Action is pending.
 
@@ -762,7 +762,7 @@ Group filtered Sources by Provider category with a localized heading and Source
 count, and omit the repeated category label from individual card footers.
 Show actual parameter titles and network targets in a visually separate
 definition block. Omit each absent row, and omit the block when it would be
-empty. Show a non-zero Instance count as a compact usage badge beside the
+empty. Show a non-zero LiveCard count as a compact usage badge beside the
 Provider in the footer, deriving it from application data by Source ID. Do not
 truncate descriptions or detail values; wrap long network targets safely.
 Use an equal-width two-column grid where space permits and collapse to one
@@ -802,14 +802,14 @@ keyboard navigation never feels behind the current selection. Keyboard
 selection must update the right-hand LiveCard immediately. Pointer hover alone
 must not change selection or the preview; show only the shared neutral muted
 background on hover and require a click to commit pointer selection. Render the
-actual Instance LiveCard so the preview shares
+actual LiveCard LiveCard so the preview shares
 its normal presentation, cached data, loading states, and interactions instead
 of maintaining a search-only card approximation. Clicking a result only selects it for the right-hand
 preview; it must not close the dialog, change Boards, or scroll the Board's
 LiveCard into view. Make the preview draggable from the same header surface as a
 Board LiveCard and reuse the shared drag preview. While dragging, clear the
 modal surface and backdrop's visual and pointer obstruction so the underlying
-Board and header trash target are available. Dropping on the trash deletes the Instance,
+Board and header trash target are available. Dropping on the trash deletes the LiveCard,
 matching Board behavior. Dropping on the current Board atomically transfers the
 selected result from its listed source Board to the current Board; show a quiet
 dashed Board-wide drop indicator. Do not add decorative illustration or generic
@@ -873,7 +873,7 @@ scoped specimen without moving a full card into Basics. Buttons retain intrinsic
 width, capped by the specimen; grids must not stretch them.
 
 Keep shared Button variants limited to reusable visual hierarchy. Contextual
-treatments are compositions: LiveCard header icons use `LiveCardHeaderActionButton`,
+treatments are compositions: LiveCard header icons use `CardHeaderActionButton`,
 and top-level translucent controls apply `island-pill` to a transparent Button.
 Do not add `quiet`, `island`, or other business-context names back to the shared
 variant API.
@@ -991,7 +991,7 @@ When changing interface styling:
 
 Use **Streams** for continuously collected data, **Collection interval** and
 **Next collection** for scheduling, and **Observations** for retained fetch
-snapshots. Use **Automatic collection** in Instance details.
+snapshots. Use **Automatic collection** in LiveCard details.
 
 Lead Overview with data accumulation and collection problems. Stream rows open
 their details directly and emphasize observation count. Show latest collection,
@@ -999,8 +999,8 @@ activity, and interval on one line. Keep errors visible; do not infer failure fr
 quiet content or present model estimates as measured freshness. Incomplete totals
 are lower bounds and disclose missing counts.
 
-Disambiguate Instances and Streams with Source identity, Instance names, and
-explicit `key=value` parameter overrides. Show every sharing Instance's overrides,
+Disambiguate LiveCards and Streams with Source identity, LiveCard names, and
+explicit `key=value` parameter overrides. Show every sharing LiveCard's overrides,
 the owning Worker, and a short Stream ID. Parameter summaries wrap and remain
 visible in details; distinguish missing information from default parameters.
 
@@ -1012,3 +1012,7 @@ problems only when applicable.
 Details prioritize retained observations, collection results, content changes,
 waiting reasons, and the next collection or retry. Collapse model diagnostics,
 full identifiers, sharing metadata, and raw configuration behind native disclosures.
+
+LiveCard and LiveWidget use the shared `components/card-shell` frame, header,
+refresh primitives, and drag preview. Product-specific content and settings stay
+in their adapters; the shell does not branch on the entity type or fetch data.

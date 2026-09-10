@@ -2,9 +2,9 @@ export type {
   Board,
   BoardCreateInput,
   BoardLayer,
-  NextLayerWidget,
-  NextLayerWidgetDataScope,
-  NextLayerWidgetLayout,
+  LiveWidget,
+  LiveWidgetDataScope,
+  LiveWidgetLayout,
 } from "./board"
 export {
   createBoard,
@@ -25,6 +25,6 @@ export type {
 export {
   createNowLayerSort,
   DEFAULT_NOW_LAYER_SORT,
-  orderNowLayerInstanceIds,
+  orderNowLayerCardIds,
   updateNowLayerSortMode,
 } from "./sorting"

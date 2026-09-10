@@ -8,7 +8,7 @@ import { getWorkerId } from "../worker-identity"
 export const NATIVE_HOST_NAME = import.meta.env.DEV
   ? "app.newsnext.host.dev"
   : "app.newsnext.host"
-export const PROTOCOL_VERSION = 21
+export const PROTOCOL_VERSION = 23
 export const WORKSPACE_UPDATED_AT_KEY = "newsnext-workspace-updated-at"
 export const NATIVE_INTEGRATION_RECONNECT_ALARM = "newsnext-native-integration-reconnect"
 export const RECONNECT_ALARM_PERIOD_MINUTES = 0.5
@@ -19,7 +19,7 @@ function createInitialWorkspace(): NativeWorkspace {
     revision: 0,
     updatedAt: 0,
     boards: [],
-    instances: [],
+    liveCards: [],
     settings: JSON.stringify(normalizePersistedSettings(undefined)),
   }
 }
@@ -32,7 +32,7 @@ interface NativeIntegrationRuntime {
   connectionError: NativeIntegrationStatus["connectionError"]
   connectionState: NativeIntegrationState
   enabled: boolean
-  localInstanceIds: Set<string>
+  localCardIds: Set<string>
   offlineWorkers: NativeOfflineWorker[]
   port: NativePort | undefined
   reconnectAttempt: number
@@ -52,7 +52,7 @@ export const runtime: NativeIntegrationRuntime = {
   connectionError: undefined,
   connectionState: "serviceNotRunning",
   enabled: false,
-  localInstanceIds: new Set(),
+  localCardIds: new Set(),
   offlineWorkers: [],
   port: undefined,
   reconnectAttempt: 0,

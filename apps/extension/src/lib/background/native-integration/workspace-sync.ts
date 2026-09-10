@@ -26,7 +26,7 @@ export function createWorkspace(
     revision,
     updatedAt,
     boards: application.boards,
-    instances: application.instances,
+    liveCards: application.liveCards,
     settings: serializeWorkspaceSettings(settings),
   }
 }
@@ -54,9 +54,9 @@ function parseWorkspaceSettings(value: unknown): PersistedSettings {
 
 async function applyWorkspace(
   nextWorkspace: NativeWorkspace,
-  nextLocalInstanceIds: string[],
+  nextLocalCardIds: string[],
 ): Promise<void> {
-  const application = acceptWorkspace(nextWorkspace, nextLocalInstanceIds)
+  const application = acceptWorkspace(nextWorkspace, nextLocalCardIds)
   const current = await readApplicationData()
   if (JSON.stringify(current) !== JSON.stringify(application)) {
     await mirrorApplicationData(application)
@@ -67,26 +67,26 @@ async function applyWorkspace(
 
 function acceptWorkspace(
   nextWorkspace: NativeWorkspace,
-  nextLocalInstanceIds: string[],
+  nextLocalCardIds: string[],
 ) {
   runtime.workspace = nextWorkspace
-  runtime.localInstanceIds = new Set(nextLocalInstanceIds)
+  runtime.localCardIds = new Set(nextLocalCardIds)
   return normalizeApplicationData({
     version: APPLICATION_DATA_VERSION,
     boards: nextWorkspace.boards,
-    instances: nextWorkspace.instances,
+    liveCards: nextWorkspace.liveCards,
   })
 }
 
 export function enqueueIncomingWorkspace(
   connection: NativePort,
   resolveWorkspace: () => NativeWorkspace,
-  nextLocalInstanceIds: string[],
+  nextLocalCardIds: string[],
   errorMessage: string,
 ): void {
   void enqueueWorkspaceOperation(async () => {
     if (!runtime.enabled || runtime.port !== connection) return
-    await applyWorkspace(resolveWorkspace(), nextLocalInstanceIds)
+    await applyWorkspace(resolveWorkspace(), nextLocalCardIds)
   }).catch((error) => {
     console.error(errorMessage, error)
   })
@@ -106,7 +106,7 @@ function enqueueWorkspaceReplacement(
 export function settleWorkspaceRequest(
   requestId: string,
   revision: number,
-  nextLocalInstanceIds: string[],
+  nextLocalCardIds: string[],
 ): void {
   const pending = takePendingRequest(pendingWorkspaceRequests, requestId)
   if (!pending) return
@@ -114,7 +114,7 @@ export function settleWorkspaceRequest(
     ...pending.candidate,
     revision,
   }
-  acceptWorkspace(committed, nextLocalInstanceIds)
+  acceptWorkspace(committed, nextLocalCardIds)
   pending.resolve(committed)
 }
 
@@ -155,11 +155,11 @@ export function registerApplicationDataSync(requireConnection: RequireNativeConn
         nextWorkspaceUpdatedAt(runtime.workspace.updatedAt),
         parseWorkspaceSettings(runtime.workspace.settings),
       )
-      const nextLocalInstanceIds = candidate.instances
-        .filter(instance => instance.workerId === runtime.workerId)
-        .map(instance => instance.instanceId)
+      const nextLocalCardIds = candidate.liveCards
+        .filter(card => card.workerId === runtime.workerId)
+        .map(card => card.cardId)
       await persistWorkspaceUpdatedAt(candidate.updatedAt)
-      return acceptWorkspace(candidate, nextLocalInstanceIds)
+      return acceptWorkspace(candidate, nextLocalCardIds)
     }
     const committed = await enqueueWorkspaceReplacement(current => createWorkspace(
       application,
@@ -170,7 +170,7 @@ export function registerApplicationDataSync(requireConnection: RequireNativeConn
     return normalizeApplicationData({
       version: APPLICATION_DATA_VERSION,
       boards: committed.boards,
-      instances: committed.instances,
+      liveCards: committed.liveCards,
     })
   })
 }

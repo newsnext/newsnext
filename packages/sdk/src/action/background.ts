@@ -1,4 +1,4 @@
-import type { ConnectedFetchInput, FetchResponse, Instance, NativeIntegrationStatus, ResolvedRadarSuggestion, RunDeveloperSourceInput, RunDeveloperSourceOutput, SourceLoadResponse } from "../models/index.js"
+import type { ConnectedFetchInput, FetchResponse, LiveCard, NativeIntegrationStatus, ResolvedRadarSuggestion, RunDeveloperSourceInput, RunDeveloperSourceOutput, SourceLoadResponse } from "../models/index.js"
 import Type from "typebox"
 import { defineActionContract } from "./definition.js"
 import { EmptyObject, Identifier, RecordValue, stringEnum } from "./schema.js"
@@ -21,7 +21,7 @@ const NativeIntegrationStatusResult = Type.Unsafe<NativeIntegrationStatus>(Type.
   capabilities: Type.Array(Type.String()),
   offlineWorkers: Type.Array(Type.Object({
     id: Identifier,
-    instanceIds: Type.Array(Identifier, { minItems: 1, uniqueItems: true }),
+    cardIds: Type.Array(Identifier, { minItems: 1, uniqueItems: true }),
   }, { additionalProperties: false })),
   connectionError: Type.Optional(Type.Object({
     code: Type.Optional(Type.String()),
@@ -42,15 +42,15 @@ const NativeIntegrationStatusResult = Type.Unsafe<NativeIntegrationStatus>(Type.
   widgetServerOrigin: Type.Optional(Type.String()),
 }, { additionalProperties: false }))
 
-const InstanceParams = Type.Unsafe<Instance>(Type.Object({
+const LiveCardParams = Type.Unsafe<LiveCard>(Type.Object({
   createdAt: Type.Number(),
-  instanceId: Identifier,
+  cardId: Identifier,
   workerId: Identifier,
   patch: Type.Object({}, { additionalProperties: true }),
   sourceId: Identifier,
 }, { additionalProperties: false }))
 
-const RoutedInstanceParams = Type.Object({ instance: InstanceParams }, { additionalProperties: false })
+const RoutedLiveCardParams = Type.Object({ card: LiveCardParams }, { additionalProperties: false })
 
 const FetchParams = Type.Unsafe<ConnectedFetchInput>(Type.Object({
   body: Type.Optional(Type.String()),
@@ -153,27 +153,19 @@ const sourceCancelAction = defineActionContract({
   result: EmptyObject,
 })
 
-const jobExecuteInstanceAction = defineActionContract({
-  name: "job.executeInstance",
-  kind: "command",
-  description: "Execute one configured Instance for a CLI-owned background Job.",
-  params: RoutedInstanceParams,
+const loaderLoadLiveCardAction = defineActionContract({
+  name: "loader.loadLiveCard",
+  kind: "query",
+  description: "Load one routed Workspace LiveCard in its bound browser Loader.",
+  params: RoutedLiveCardParams,
   result: SourceLoadResponseResult,
 })
 
-const loaderLoadInstanceAction = defineActionContract({
-  name: "loader.loadInstance",
+const loaderReadLiveCardCacheAction = defineActionContract({
+  name: "loader.readLiveCardCache",
   kind: "query",
-  description: "Load one routed Workspace Instance in its bound browser Loader.",
-  params: RoutedInstanceParams,
-  result: SourceLoadResponseResult,
-})
-
-const loaderReadInstanceCacheAction = defineActionContract({
-  name: "loader.readInstanceCache",
-  kind: "query",
-  description: "Read one routed Workspace Instance's persisted result without executing its Source.",
-  params: RoutedInstanceParams,
+  description: "Read one routed Workspace LiveCard's persisted result without executing its Source.",
+  params: RoutedLiveCardParams,
   result: SourceCacheResult,
 })
 
@@ -193,19 +185,19 @@ const nativeIntegrationGetLogsAction = defineActionContract({
   result: Type.Array(AppLogEntryResult),
 })
 
-const instanceLoadAction = defineActionContract({
-  name: "instance.load",
+const liveCardLoadAction = defineActionContract({
+  name: "liveCard.load",
   kind: "query",
-  description: "Load an Instance through the Workspace router.",
-  params: Type.Object({ instanceId: Identifier }, { additionalProperties: false }),
+  description: "Load a LiveCard through the Workspace router.",
+  params: Type.Object({ cardId: Identifier }, { additionalProperties: false }),
   result: SourceLoadResponseResult,
 })
 
-const instanceReadCacheAction = defineActionContract({
-  name: "instance.readCache",
+const liveCardReadCacheAction = defineActionContract({
+  name: "liveCard.readCache",
   kind: "query",
-  description: "Read an Instance's persisted result through the Workspace router.",
-  params: Type.Object({ instanceId: Identifier }, { additionalProperties: false }),
+  description: "Read a LiveCard's persisted result through the Workspace router.",
+  params: Type.Object({ cardId: Identifier }, { additionalProperties: false }),
   result: SourceCacheResult,
 })
 
@@ -230,23 +222,12 @@ const workerRegenerateIdentityAction = defineActionContract({
 const workerTakeOverAction = defineActionContract({
   name: "worker.takeOver",
   kind: "mutation",
-  description: "Reassign selected Instances from an offline Worker to this Worker.",
+  description: "Reassign selected LiveCards from an offline Worker to this Worker.",
   params: Type.Object({
-    instanceIds: Type.Array(Identifier, { minItems: 1, uniqueItems: true }),
+    cardIds: Type.Array(Identifier, { minItems: 1, uniqueItems: true }),
     workerId: Identifier,
   }, { additionalProperties: false }),
   result: NativeIntegrationStatusResult,
-})
-
-const nextLayerGetWidgetSnapshotAction = defineActionContract({
-  name: "nextLayer.getWidgetSnapshot",
-  kind: "query",
-  description: "Read one CLI-owned materialized Widget Snapshot.",
-  params: Type.Object({
-    boardId: Identifier,
-    widgetId: Identifier,
-  }, { additionalProperties: false }),
-  result: Type.Unknown(),
 })
 
 function validateFetch(input: ConnectedFetchInput): void {
@@ -291,15 +272,13 @@ export const backgroundActionContracts = [
   radarResolveSuggestionsAction,
   sourceLoadAction,
   sourceCancelAction,
-  jobExecuteInstanceAction,
-  loaderLoadInstanceAction,
-  loaderReadInstanceCacheAction,
+  loaderLoadLiveCardAction,
+  loaderReadLiveCardCacheAction,
   nativeIntegrationGetStatusAction,
   nativeIntegrationGetLogsAction,
-  instanceLoadAction,
-  instanceReadCacheAction,
+  liveCardLoadAction,
+  liveCardReadCacheAction,
   nativeIntegrationSetEnabledAction,
   workerRegenerateIdentityAction,
   workerTakeOverAction,
-  nextLayerGetWidgetSnapshotAction,
 ] as const

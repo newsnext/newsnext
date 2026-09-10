@@ -1,14 +1,14 @@
 export function canDragCardHeader(target: Element | null): boolean {
-  return !target?.closest("[data-live-card-drag-excluded], button, a, input, select, textarea")
+  return !target?.closest("[data-card-drag-excluded], button, a, input, select, textarea")
 }
 
-export function generateLiveCardDragPreview({
+export function generateCardDragPreview({
   container,
   element,
 }: { container: HTMLElement, element: HTMLElement }): (() => void) | undefined {
-  const header = Array.from(element.querySelectorAll<HTMLElement>("[data-live-card-header]"))
+  const header = Array.from(element.querySelectorAll<HTMLElement>("[data-card-header]"))
     .find(candidate => !candidate.closest("[inert]"))
-  const surface = element.querySelector<HTMLElement>("[data-live-card-surface]")
+  const surface = element.querySelector<HTMLElement>("[data-card-surface]")
   if (!header || !surface) return
 
   const backgroundColor = getComputedStyle(element).getPropertyValue("--color-background").trim()

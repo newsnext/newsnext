@@ -4,7 +4,7 @@ import { APPLICATION_DATA_VERSION } from "../application"
 import {
   normalizeApplicationData,
   normalizeBoards,
-  normalizeInstances,
+  normalizeLiveCards,
 } from "../settings/persisted-data"
 
 export function parseWorkspacePatch(value: unknown): NativeWorkspacePatch {
@@ -13,15 +13,15 @@ export function parseWorkspacePatch(value: unknown): NativeWorkspacePatch {
     || !isNonNegativeSafeInteger(value.updatedAt)
     || !isIdentifierArray(value.boardOrder)
     || !Array.isArray(value.boards)
-    || !isIdentifierArray(value.instanceOrder)
-    || !Array.isArray(value.instances)
+    || !isIdentifierArray(value.cardOrder)
+    || !Array.isArray(value.liveCards)
     || typeof value.settings !== "string") {
     throw new Error("The native host returned an invalid Workspace patch")
   }
   const boards = normalizeBoards(value.boards)
-  const instances = normalizeInstances(value.instances)
+  const liveCards = normalizeLiveCards(value.liveCards)
   if (boards.length !== value.boards.length
-    || instances.length !== value.instances.length) {
+    || liveCards.length !== value.liveCards.length) {
     throw new Error("The native host returned invalid Workspace patch entities")
   }
   return {
@@ -29,8 +29,8 @@ export function parseWorkspacePatch(value: unknown): NativeWorkspacePatch {
     updatedAt: value.updatedAt,
     boardOrder: [...value.boardOrder],
     boards,
-    instanceOrder: [...value.instanceOrder],
-    instances,
+    cardOrder: [...value.cardOrder],
+    liveCards,
     settings: value.settings,
   }
 }
@@ -58,11 +58,11 @@ export function createWorkspacePatch(
     updatedAt: candidate.updatedAt,
     boardOrder: candidate.boards.map(board => board.id),
     boards: changedValues(current.boards, candidate.boards, board => board.id),
-    instanceOrder: candidate.instances.map(instance => instance.instanceId),
-    instances: changedValues(
-      current.instances,
-      candidate.instances,
-      instance => instance.instanceId,
+    cardOrder: candidate.liveCards.map(card => card.cardId),
+    liveCards: changedValues(
+      current.liveCards,
+      candidate.liveCards,
+      card => card.cardId,
     ),
     settings: candidate.settings,
   }
@@ -84,27 +84,27 @@ export function applyWorkspacePatch(
     board => board.id,
     "Board",
   )
-  const instances = applyOrderedPatch(
-    current.instances,
-    patch.instanceOrder,
-    patch.instances,
-    instance => instance.instanceId,
-    "Instance",
+  const liveCards = applyOrderedPatch(
+    current.liveCards,
+    patch.cardOrder,
+    patch.liveCards,
+    card => card.cardId,
+    "LiveCard",
   )
   const normalized = normalizeApplicationData({
     version: APPLICATION_DATA_VERSION,
     boards,
-    instances,
+    liveCards,
   })
   if (normalized.boards.length !== boards.length
-    || normalized.instances.length !== instances.length) {
+    || normalized.liveCards.length !== liveCards.length) {
     throw new Error("Workspace patch produced invalid entities")
   }
   return {
     revision: current.revision + 1,
     updatedAt: patch.updatedAt,
     boards: normalized.boards,
-    instances: normalized.instances,
+    liveCards: normalized.liveCards,
     settings: patch.settings,
   }
 }

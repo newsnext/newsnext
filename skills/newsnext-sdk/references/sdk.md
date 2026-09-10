@@ -43,6 +43,25 @@ processing a yielded observation is excluded. Exports have no fixed total timeou
 use AbortSignal for a total deadline. Killing a request does not undo an Action
 already sent to the Worker.
 
+## LiveCard and LiveWidget data
+
+```ts
+const card = await client.liveCards.data({ cardId: "saved-card-id" })
+const widget = await client.liveWidgets.data({
+  widgetId: "digest",
+  cardIds: ["saved-card-id"],
+  params: { limit: 20 },
+})
+```
+
+LiveCard data loads the saved Source through its owning Worker and existing
+protection cache. Its response contains `result`, `params`, `fetchedAt`, `loadedAt`,
+and `fetchProtected`. Missing cards or unavailable Workers fail through the router.
+Configuration is available separately through `client.actions.liveCard.get`.
+LiveWidget data returns `{ queries, refreshedAt, errors }`, supports arbitrary
+named JSON results, and needs neither a Board placement nor a view. `cardIds` is
+an explicit input scope; refreshing a LiveWidget does not refresh its Sources.
+
 ## History
 
 ```ts
@@ -136,7 +155,7 @@ if (updated?.color !== "blue") throw new Error("Board color verification failed"
 console.log({ boardId, name: updated.name, color: updated.color })
 ```
 
-The same typed client exposes `instance`, `source`, `nowLayer`, `nextLayer`,
+The same typed client exposes `card`, `source`, `nowLayer`, `nextLayer`,
 `application`, `developer`, and Worker/native integration Actions. Consult
 `@newsnext/sdk/actions` declarations for exact methods, inputs, and results;
 do not maintain a second Action catalog in scripts. `ActionName`,
@@ -148,7 +167,7 @@ extension; the SDK does not execute browser Sources inside Node.
 ## Extension app client
 
 NewsNext's own extension app can import `createClient` from
-`@newsnext/sdk/extension` and call `client.widgets.data({ widgetId, instanceIds },
+`@newsnext/sdk/extension` and call `client.liveWidgets.data({ widgetId, cardIds },
 { signal })`. It uses the background's runtime-port SDK bridge and inherits the
 host environment. The background accepts this transport only from its own
 `app.html`; third-party pages and local widget iframes must use the Widget entry.
@@ -221,18 +240,18 @@ Alternatively, declare queries directly in the manifest:
 }
 ```
 
-`latest` searches retained history for all scoped Instances directly in SQL.
+`latest` searches retained history for all scoped LiveCards directly in SQL.
 It applies case-insensitive literal title matching, sorting, deduplication and limit
 before returning items. Missing publication times sort last; a publication window
 excludes items without a publication time. For standalone execution,
-pass `instanceIds` to the SDK; installed views use their placement's scope.
+pass `cardIds` to the SDK; installed views use their placement's scope.
 Queries and JS may coexist: JS receives materialized results in `queries`, where
-query items use `{ value: NewsItem, instanceId?, sourceId?, metadata? }` envelopes.
+query items use `{ value: NewsItem, cardId?, sourceId?, metadata? }` envelopes.
 Its return value replaces those results. Return raw NewsItems in output `items`
 arrays; the runtime adds the common envelope. Other named JSON results can carry
 statistics or other data independently of LiveCard.
 `latest` does not execute Sources or fetch external feeds. Board scope follows the current
-Board's complete Instance list. History is isolated by each Instance's Worker,
+Board's complete LiveCard list. History is isolated by each LiveCard's Worker,
 Source, and resolved parameters; repeated URLs use their newest retained value.
 Items absent from the newest observation remain searchable. `publishedAt` remains
 the source publication time; refresh time is never substituted for it. No matches
@@ -241,11 +260,11 @@ produce an empty list.
 Access data without a view, open page, or Board placement:
 
 ```ts
-const result = await client.widgets.data({ widgetId: "keyword-watch" })
+const result = await client.liveWidgets.data({ widgetId: "keyword-watch" })
 const feed = result.queries.feed
 ```
 
-The result includes `queries`, completion `refreshedAt`, and Instance `errors`.
+The result includes `queries`, completion `refreshedAt`, and LiveCard `errors`.
 The daemon enforces a fixed 60-second request protection window by retaining the
 last successful result in SQLite for each Widget and resolved data scope. Calls
 inside that window reuse the result; every request after it recomputes data.
@@ -265,9 +284,9 @@ scripts are trusted code with the runtime's normal filesystem/network access.
 Each run imports a fresh module. Entry paths/symlinks must stay inside the Widget
 directory; dependencies use normal module resolution.
 
-Initial load, manual refresh and periodic placed-Widget refresh execute the data
-pipeline. Placed Widgets also have daemon-managed background Jobs. Unplaced data
-executes on SDK request. No separate producer or data.json is necessary. Existing
+Initial load, manual refresh and visible placed-Widget polling execute the data
+pipeline. Widgets have no background schedule; `refresh.intervalMs` controls
+visible polling. Unplaced data executes on SDK request. No separate producer or data.json is necessary. Existing
 `file` queries can still import `{ items: [...] }` JSON (16 MiB / 500 items).
 
 `view` may select `live-card` with optional `presentation: "list" | "ranking"`;
@@ -295,7 +314,7 @@ schema as Sources (`text`, `url`, `number`, `switch`, `select`, `multiselect`):
 
 Placed Widgets show these settings on their back, with Edit, Save, Cancel, and
 Reset. Values belong to the Widget's Board placement. Reset clears overrides.
-Use `client.actions.nextLayer.setWidgetParams({ boardId, widgetId, params })` to
+Use `client.actions.nextLayer.setLiveWidgetParams({ boardId, widgetId, params })` to
 replace overrides programmatically. Pass `{}` to restore manifest defaults.
 
 `data.mjs` receives resolved values as `context.params`; custom HTML receives
@@ -303,7 +322,7 @@ replace overrides programmatically. Pass `{}` to restore manifest defaults.
 Direct data calls accept overrides independently of Board placement:
 
 ```ts
-const result = await client.widgets.data({
+const result = await client.liveWidgets.data({
   widgetId: "keyword-watch",
   params: { limit: 5 },
 })
@@ -322,15 +341,15 @@ using a string title and the same named color palette as Sources. The Widget bac
 exposes these separately from business parameters. Board placements may override
 them with `metadata: { title, color, badge, desc, home }`, the same identity fields
 as Cards. Use
-`client.actions.nextLayer.setWidgetMetadata({ boardId, widgetId, metadata })` to
+`client.actions.nextLayer.setLiveWidgetMetadata({ boardId, widgetId, metadata })` to
 replace those overrides; `{}` restores the definition. Blank titles also fall
 back to the definition. Metadata edits affect the shell and built-in view title,
 without reloading the data pipeline.
 
 
-Use `client.actions.nextLayer.moveWidget({ boardId, targetBoardId, widgetId })` to
+Use `client.actions.nextLayer.moveLiveWidget({ boardId, targetBoardId, widgetId })` to
 move a placement while keeping its dimensions, metadata, and params. The target
 must not already contain the Widget. Board-wide data follows the new Board;
-explicit Instance selections are restricted to that Board's Instances.
-`client.actions.instance.resetMetadata({ instanceId })` resets a Card's saved
+explicit LiveCard selections are restricted to that Board's LiveCards.
+`client.actions.liveCard.resetMetadata({ cardId })` resets a Card's saved
 metadata independently of its Source parameters.

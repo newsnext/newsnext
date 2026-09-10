@@ -1,21 +1,21 @@
 import type { Atom } from "jotai"
 import type { ReactNode } from "react"
 import type { LiveCardProps } from "./index"
-import type { Instance } from "@/lib/source"
+import type { LiveCard as LiveCardModel } from "@/lib/source"
 import type { SourceDescriptor } from "@/typings/source"
 import { cn } from "@newsnext/ui/lib/utils"
 import { useAtomValue } from "jotai"
 import { memo, useMemo } from "react"
+import { canDragCardHeader, generateCardDragPreview } from "@/components/card-shell/drag-preview"
 import { useSortable } from "@/hooks/use-sortable"
 import { createLiveCard } from "@/lib/source"
-import { canDragCardHeader, generateLiveCardDragPreview } from "./drag-preview"
 import { LiveCard } from "./index"
 
 interface DraggableLiveCardProps {
   boardId: string | null
   descriptor: SourceDescriptor
   dragging: boolean
-  instanceAtom: Atom<Instance>
+  liveCardAtom: Atom<LiveCardModel>
   sortable?: boolean
 }
 
@@ -36,13 +36,13 @@ export function SortableLiveCard({
     canDrag: canDragCardHeader,
     enabled: sortable,
     id,
-    onGenerateDragPreview: generateLiveCardDragPreview,
+    onGenerateDragPreview: generateCardDragPreview,
   })
 
   return (
     <LiveCard
       source={source}
-      target={{ kind: "instance", instanceId: id }}
+      target={{ kind: "card", cardId: id }}
       eager={eager}
       nodeRef={setNodeRef}
       dragHandleRef={sortable ? setHandleRef : undefined}
@@ -51,11 +51,11 @@ export function SortableLiveCard({
   )
 }
 
-function DraggableLiveCardComponent({ boardId, descriptor, dragging, instanceAtom, sortable = true }: DraggableLiveCardProps) {
-  const instance = useAtomValue(instanceAtom)
+function DraggableLiveCardComponent({ boardId, descriptor, dragging, liveCardAtom, sortable = true }: DraggableLiveCardProps) {
+  const card = useAtomValue(liveCardAtom)
   const source = useMemo(
-    () => createLiveCard(descriptor, instance, boardId),
-    [boardId, descriptor, instance],
+    () => createLiveCard(descriptor, card, boardId),
+    [boardId, descriptor, card],
   )
   return (
     <SortableLiveCard

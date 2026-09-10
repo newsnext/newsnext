@@ -5,7 +5,7 @@ import { useCallback, useSyncExternalStore } from "react"
 import { waitForMinimumManualRequestFeedback } from "@/lib/manual-request-feedback"
 import {
   getSourceQueryHash,
-  INSTANCE_QUERY_KEY,
+  LIVE_CARD_QUERY_KEY,
   SOURCE_QUERY_KEY,
 } from "./source-query"
 
@@ -102,5 +102,5 @@ export function useManualRequest() {
 }
 
 function isLoadQuery(queryKey: readonly unknown[]): boolean {
-  return queryKey[0] === SOURCE_QUERY_KEY[0] || queryKey[0] === INSTANCE_QUERY_KEY[0]
+  return queryKey[0] === SOURCE_QUERY_KEY[0] || queryKey[0] === LIVE_CARD_QUERY_KEY[0]
 }

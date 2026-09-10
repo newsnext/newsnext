@@ -8,23 +8,23 @@ workflow has passed end-to-end acceptance.
 
 NewsNext is an agent-programmable Board powered by stable data streams. Users
 follow a subject through configured Sources; agents operate the same typed
-Actions to discover Sources, organize Instances, and work with retained evidence.
+Actions to discover Sources, organize LiveCards, and work with retained evidence.
 
 Each Board has two views:
 
-- **Now Layer:** one independent LiveCard per Instance, with shared reading,
+- **Now Layer:** one independent LiveCard per LiveCard, with shared reading,
   configuration, status, and refresh behavior.
 - **Next Layer:** personalized Widgets that combine selected Board streams into
   useful views or derived results. Composition preserves each input's identity.
 
-A Source acquires and normalizes data. An Instance gives that configuration a
-stable identity and owning browser Worker. A Board owns Instances and Widget
+A Source acquires and normalizes data. A LiveCard gives that configuration a
+stable identity and owning browser Worker. A Board owns LiveCards and Widget
 placements. An Observation records sampled data at its actual fetch time.
 A Widget presents selected inputs or a saved derived result.
 
 ## Product boundaries
 
-- Reuse registered Sources and existing Instances before adding coverage.
+- Reuse registered Sources and existing LiveCards before adding coverage.
   Personalized Source authoring remains an expert capability. Report gaps rather
   than silently installing new collection logic.
 - Preserve Source boundaries in Now Layer. Next Layer may combine streams, but
@@ -33,7 +33,7 @@ A Widget presents selected inputs or a saved derived result.
   credentials, or execute Sources. Opening a materialized Widget reads its saved
   result without rerunning collection or processing.
 - Human and agent operations share validation and persistence rules. Ephemeral
-  exploration must not silently become a permanent Board, Job, or permission grant.
+  exploration must not silently become a permanent Board or permission grant.
 - Claims identify inputs, observation windows, transformations, and limitations.
   Missing from a sample does not mean deleted; observation time is not publication
   time; ranking movement alone does not prove popularity or cause.
@@ -51,11 +51,11 @@ schemas, transport details, and command syntax in those references and the
 | Area | Current implementation | Remaining product work |
 | --- | --- | --- |
 | Sources | Registry discovery, structured/custom bundled loaders, parameters, Radar, permissions, secrets, validation, and CLI diagnostics | Versioned maintenance grants, repair/rollback, dependency health |
-| Workspace | Browsers persist Boards, Instances, Widget placement/scope, and portable Settings; the daemon coordinates a revisioned in-memory snapshot | User-facing conflict and unavailable-Worker recovery |
+| Workspace | Browsers persist Boards, LiveCards, Widget placement/scope, and portable Settings; the daemon coordinates a revisioned in-memory snapshot | User-facing conflict and unavailable-Worker recovery |
 | Now Layer | Independent LiveCards, routed Worker-local cache, protected refresh, generic fallback when registry entries disappear | Preserve this contract as collection and Widgets expand |
-| Automatic collection | Daemon schedules all Workspace Instances, shares equivalent Worker-scoped streams, learns bounded intervals, and retains observations | Explicit retention controls, real-trace evaluation, broader health UX |
-| History and Jobs | Turso datasets, observation reads/comparisons, recurring Jobs, and collection policy persistence | Retention/compaction, richer task attribution and provenance |
-| Next Layer | Board-owned Widget layouts and scopes, local manifests/assets, sandboxed iframe rendering, managed Jobs, and revisioned Snapshots | Full discovery/preview/maintenance workflow, reusable transformations and templates |
+| Automatic collection | Daemon schedules all Workspace LiveCards, shares equivalent Worker-scoped streams, learns bounded intervals, and retains observations | Explicit retention controls, real-trace evaluation, broader health UX |
+| History | Turso datasets, observation reads/comparisons, and collection policy persistence | Retention/compaction, richer task attribution and provenance |
+| Next Layer | Board-owned Widget layouts and scopes, local manifests/assets, sandboxed iframe rendering, on-demand data computation, and request protection caching | Full discovery/preview/maintenance workflow, reusable transformations and templates |
 | Code Widgets | Local iframe assets with host-controlled data delivery | Reviewed executable updates, resource budgets, version history, rollback, and broader acceptance testing |
 | Diagnostics | Development panels expose collection state, observation counts, failures, and shared streams through subscriptions | Production-facing health and evidence inspection |
 
@@ -63,10 +63,10 @@ schemas, transport details, and command syntax in those references and the
 
 | Data | Owner |
 | --- | --- |
-| Boards, Instances, Widget placement/scope, portable Settings | Browser storage; synchronized through the daemon's in-memory Workspace |
+| Boards, LiveCards, Widget placement/scope, portable Settings | Browser storage; synchronized through the daemon's in-memory Workspace |
 | Source permissions, credentials, device identity | Owning browser only |
 | Current Source results | Owning Worker's replaceable Loader cache |
-| History, Jobs, collection policies, Widget Snapshots | Daemon-owned local Turso database |
+| History, collection policies, Widget data caches | Daemon-owned local Turso database |
 | Local Widget manifests and assets | CLI Widget directory |
 
 Development and production default to `~/.config/newsnext.dev/` and
@@ -76,19 +76,19 @@ is daemon-only and requires no cloud account. Browser Workspace data is not move
 into the database.
 
 Foreground reads refresh the current cache without directly inserting History.
-Automatic daemon collection is independent of explicit Jobs and retains fresh
+Automatic daemon collection retains fresh
 results, including unchanged content. It may retain a cached foreground result
 at its original fetch time; dataset/timestamp uniqueness prevents duplicates.
-Jobs and Widget materialization have their own schedules. Reading a Widget
-Snapshot does not execute those schedules.
+Widget data is computed on demand and during visible polling; it has no separate
+background schedule.
 
 ## User and agent workflows
 
 1. Inspect a goal and existing Board context; discover reusable Sources and explain
-   coverage before configuring Instances.
+   coverage before configuring LiveCards.
 2. Browse current results independently, inspect parameters and permissions, and
    recover from unavailable Workers without losing Board membership.
-3. Select one, several, or all Board Instances for a Widget. Preview inputs,
+3. Select one, several, or all Board LiveCards for a Widget. Preview inputs,
    processing, warnings, and proposed layout before saving when that workflow is
    available; saving must not grant unrelated authority.
 4. Inspect freshness, supporting observations, transformations, and failures.
@@ -127,7 +127,7 @@ create Board-owned configuration instead of shared mutable state.
 | DAT-05 | Schema initialization is atomic | The daemon creates the complete current schema transactionally before accepting requests and refuses incompatible versions |
 | DAT-06 | Durable daemon mutations are transactional | A failed Widget, observation, or task mutation leaves no partially updated durable state |
 | DAT-07 | Concurrent clients use one ordered writer | Independent bounded-wait reads remain available while the daemon serializes immediate write transactions and returns structured busy errors instead of hanging |
-| DAT-08 | Now Layer does not create implicit History | Repeated view-driven refresh replaces the current browser-local result and does not insert observation rows; automatic collection and Jobs own retention, and collection may later retain a cached foreground result at its original fetch time |
+| DAT-08 | Now Layer does not create implicit History | Repeated view-driven refresh replaces the current browser-local result and does not insert observation rows; automatic collection owns retention, and collection may later retain a cached foreground result at its original fetch time |
 | DAT-09 | Next Layer background work is Agent-owned | Widget query results commit as one revisioned Snapshot; stronger task/input/output atomicity remains target scope; opening Next Layer performs no implicit refresh or transformation |
 | DAT-10 | Source execution remains browser-owned | Agent tasks request registered Source execution from a connected extension and receive normalized output without receiving browser credentials or duplicating the Source runtime |
 | DAT-11 | Credentials remain browser-owned | Source credentials and browser session secrets never enter Native Messaging, IPC, logs, task inputs, materialized outputs, or database fields |
@@ -139,18 +139,18 @@ create Board-owned configuration instead of shared mutable state.
 | ID | Requirement | Acceptance criteria |
 | --- | --- | --- |
 | BRD-01 | A Board exposes Now Layer and Next Layer as two views of one context | Switching Layers preserves the Board identity, route context, and selection |
-| BRD-02 | Both Layers consume canonical Instance state | Opening or rendering Next Layer does not create a second Instance or presentation-only Source execution |
+| BRD-02 | Both Layers consume canonical LiveCard state | Opening or rendering Next Layer does not create a second LiveCard or presentation-only Source execution |
 | BRD-03 | Board deletion and other destructive changes remain explicit | The UI or Agent receives confirmation before durable Board data is deleted |
-| BRD-04 | A Board persists its default Layer | Reopening a custom Board starts in its saved Now or Next Layer without changing its Board or Instance data |
+| BRD-04 | A Board persists its default Layer | Reopening a custom Board starts in its saved Now or Next Layer without changing its Board or LiveCard data |
 
 ### Now Layer requirements
 
 | ID | Requirement | Acceptance criteria |
 | --- | --- | --- |
-| NOW-01 | One Instance is shown through one independent LiveCard placement in a Board | Items from another Instance are never merged into that LiveCard's result |
+| NOW-01 | One LiveCard is shown through one independent LiveCard placement in a Board | Items from another LiveCard are never merged into that LiveCard's result |
 | NOW-02 | All Sources use the shared LiveCard model | Source metadata and inline templates can vary content, but shared LiveCard identity, status, configuration, and interactions remain available |
 | NOW-03 | Next Layer personalization does not mutate Now Layer structure | Adding, editing, moving, or deleting a Widget leaves Now Layer LiveCard composition unchanged |
-| NOW-04 | Visible Now Layer content refreshes as current data | Viewing an active Board may refresh stale Instances and replace their cache without directly writing History |
+| NOW-04 | Visible Now Layer content refreshes as current data | Viewing an active Board may refresh stale LiveCards and replace their cache without directly writing History |
 | NOW-05 | Now Layer remains cache-only | Clearing the cache removes current results but never deletes durable Board, Widget, Agent task, or retained Next Layer data |
 
 ### Next Layer and Widget requirements
@@ -158,10 +158,10 @@ create Board-owned configuration instead of shared mutable state.
 | ID | Requirement | Acceptance criteria |
 | --- | --- | --- |
 | NXT-01 | A Board persists its Next Layer Widget composition | Widget identity, type, configuration, position, size, and dependencies survive extension restart |
-| NXT-02 | A Widget can consume one, several, or all Board Instances | The saved input specification uses stable Instance identities and rejects unavailable or out-of-scope inputs |
+| NXT-02 | A Widget can consume one, several, or all Board LiveCards | The saved input specification uses stable LiveCard identities and rejects unavailable or out-of-scope inputs |
 | NXT-03 | A Widget can consume current results, observation ranges, and supported derived data | Each input declares its kind, dataset scope, time scope, and completeness state |
 | NXT-04 | A Widget can create an open-ended derived result | The runtime is extensible beyond the initial built-in categories without changing the Board or Now Layer data model |
-| NXT-05 | A Widget exposes provenance | The user or Agent can inspect input Instances, observation window, transformation version, warnings, and last computation time |
+| NXT-05 | A Widget exposes provenance | The user or Agent can inspect input LiveCards, observation window, transformation version, warnings, and last computation time |
 | NXT-06 | A Widget isolates failures | One failed transformation or renderer exposes a local error state and does not prevent other LiveCards or Widgets from working |
 | NXT-07 | Corrected or reconciled values remain derived | Widget processing never silently changes stored Source results or historical observations |
 | NXT-08 | Widgets expose useful runtime states | Empty, loading, stale, partial, failed, and ready states are distinguishable and accessible |
@@ -174,11 +174,11 @@ create Board-owned configuration instead of shared mutable state.
 | ID | Requirement | Acceptance criteria |
 | --- | --- | --- |
 | AGT-01 | The Agent can discover Widget capabilities | The CLI returns stable operation names, descriptions, and machine-readable input and output schemas |
-| AGT-02 | The Agent can inspect Board data before authoring a Widget | Queries expose a requested Board, available Instances, fields, observations, existing Widgets, and dependency health |
+| AGT-02 | The Agent can inspect Board data before authoring a Widget | Queries expose a requested Board, available LiveCards, fields, observations, existing Widgets, and dependency health |
 | AGT-03 | The Agent can preview before persistence | A preview returns the proposed result, provenance, warnings, and resource failures without modifying the Board |
 | AGT-04 | The Agent can create, update, order, and delete Widgets | CLI changes use canonical Actions, validate at runtime, persist once, and propagate to open UI pages |
 | AGT-05 | Agent changes are inspectable | Each durable Agent-created Widget, task, or derived dataset records its origin, version, configuration, and update time |
-| AGT-06 | The Agent reuses existing capabilities | Before requesting new collection coverage or creating derived data, discovery identifies suitable registered Sources, Instances, transformations, or templates |
+| AGT-06 | The Agent reuses existing capabilities | Before requesting new collection coverage or creating derived data, discovery identifies suitable registered Sources, LiveCards, transformations, or templates |
 | AGT-07 | The Agent sees one environment-specific data model | Dev CLI queries use the dev database and production App queries use the production database without browser-profile-specific results |
 
 ### Source lifecycle requirements
@@ -187,7 +187,7 @@ create Board-owned configuration instead of shared mutable state.
 | --- | --- | --- |
 | SRC-01 | The Agent discovers registered Sources before configuring coverage | Discovery returns stable identities, capabilities, parameters, permissions, health, and supported environments |
 | SRC-02 | Source execution returns structured diagnostics | Diagnostics cover fields, stable identity, duplicates, pagination, domains, permissions, secrets, result size, and security limits where applicable |
-| SRC-03 | Instance creation uses an approved registered Source | The default product workflow cannot silently install or generate a personalized Source |
+| SRC-03 | LiveCard creation uses an approved registered Source | The default product workflow cannot silently install or generate a personalized Source |
 | SRC-04 | Material authority changes require approval | New host permissions, secrets, private data, executable logic, or expanded collection scope cannot be granted silently |
 | SRC-05 | Installed streams expose health | Latest success, latest failure, Source version, configuration, schedule, warnings, and dependent Widgets are inspectable |
 | SRC-06 | Maintenance is versioned and reversible | Automated repair is limited by the maintenance grant and retains the previous working version for rollback |
@@ -196,7 +196,7 @@ create Board-owned configuration instead of shared mutable state.
 
 | ID | Requirement | Acceptance criteria |
 | --- | --- | --- |
-| PRV-01 | Every derived result identifies its evidence scope | Input datasets, Instance identities, observation coverage, transformation, and completeness warnings are available |
+| PRV-01 | Every derived result identifies its evidence scope | Input datasets, LiveCard identities, observation coverage, transformation, and completeness warnings are available |
 | PRV-02 | The product distinguishes fact from interpretation | Direct observation changes, Agent inference, reconciliation, and forecast are labeled as different result kinds |
 | PRV-03 | Forecasts communicate uncertainty | A forecast includes assumptions, confidence or range, evidence window, and conditions that could change it |
 | PRV-04 | Sparse or partial data is not presented as continuous coverage | The Widget surfaces sampling gaps and relevant repository completeness warnings |
@@ -236,13 +236,13 @@ future phases. Extend them while preserving the acceptance criteria above.
 ## Measurement
 
 Set numerical targets after measuring the implemented baseline. Track time to a
-useful Board, Source/Instance reuse, repeat Widget use, multi-stream usefulness,
+useful Board, Source/LiveCard reuse, repeat Widget use, multi-stream usefulness,
 scheduled-run health, repair time, and completeness of derived provenance.
 Unauthorized authority changes, presentation-only Source executions, cross-browser
 acknowledged mutation loss, and development/production crossover must remain zero.
 Distinguish direct foreground History writes from later automatic retention.
 
-Validate whether users understand Now versus Next, Instance versus combined Widget,
+Validate whether users understand Now versus Next, LiveCard versus combined Widget,
 observed facts versus inference, and why new permissions or permanent work are
 being proposed. Synthetic replay results do not establish production freshness.
 

@@ -13,31 +13,31 @@ The central model has four product-level concepts:
 
 | Concept | Responsibility |
 | --- | --- |
-| Workspace | Owns the shared Board and Instance collections |
+| Workspace | Owns the shared Board and LiveCard collections |
 | Board | Owns membership and its Now and Next Layers |
 | Layer | Presents or materializes a Board's data |
 | Worker | Provides a browser UI and runs browser-owned Loaders |
 
-A browser extension is one Worker. Instances are canonical Workspace data and
-persist their owning `workerId`. New Instances record the Worker that created
+A browser extension is one Worker. LiveCards are canonical Workspace data and
+persist their owning `workerId`. New LiveCards record the Worker that created
 them, and ownership moves only through explicit takeover. The owner selects the
-account, permissions, credentials, and session used by the Instance's Loader;
+account, permissions, credentials, and session used by the LiveCard's Loader;
 it is not a fifth global navigation concept.
 
 The CLI daemon is optional. When present, it coordinates and broadcasts an
-in-memory Workspace and routes an Instance load to its bound Worker without
+in-memory Workspace and routes a LiveCard load to its bound Worker without
 exposing Worker identity to application code. Each browser persists the
 Workspace's last-update time. The first browser connected after daemon startup
 supplies the initial baseline. If a later browser has a newer snapshot, the
-daemon adopts and broadcasts it, including persisted Instance ownership.
+daemon adopts and broadcasts it, including persisted LiveCard ownership.
 Browser storage remains the durable owner. Without the CLI, the extension reads
 its local Workspace and runs locally owned Loaders directly.
 
 ## Identity
 
-New Board, Instance, Worker, request, transfer, Job, and History dataset IDs use
+New Board, LiveCard, Worker, request, transfer, and History dataset IDs use
 16-character Nano IDs from `A-Z`, `a-z`, and `0-9`. The extension's `lib/id.ts`
-and CLI's `identity.rs` own generation. Instance IDs no longer embed Source IDs;
+and CLI's `identity.rs` own generation. LiveCard IDs no longer embed Source IDs;
 use the separate `sourceId` field. Existing IDs remain opaque and valid without
 rewriting persisted references. Widget IDs remain authored manifest identifiers.
 
@@ -52,39 +52,46 @@ Each browser mirrors the complete Workspace in one versioned envelope:
 
 ```ts
 interface ApplicationData {
-  version: 6
+  version: 7
   boards: Board[]
-  instances: Instance[]
+  liveCards: LiveCard[]
 }
 ```
 
 The background application repository applies acknowledged daemon commits to
 `browser.storage.local`. Frontend atoms are read-only mirrors plus thin Mutation
 Action dispatchers. Every Board reference resolves against the mirrored
-Workspace Instance collection.
+Workspace LiveCard collection.
 
-Version 6 makes single-Board ownership canonical. Persistence normalization
+Application data accepts version 7 only, with `liveCards`, `cardId`, `cardIds`,
+`nextLayer.liveWidgets`, and explicit Widget scopes `{ type: "cards", cardIds }`.
+Old application exports are not converted. The daemon keeps Workspace in memory
+and receives the browser projection. New databases initialize schema 15; existing
+databases must already use schema 15. Startup does not run legacy migrations,
+search-index backfills, or table cleanup.
+
+Single-Board ownership remains canonical. Persistence normalization
 keeps the first Board in persisted Board order as the owner if malformed data
 contains duplicates and removes duplicate Layer references. Actions and domain
-mutations accept only the version 6 model.
+mutations accept only the version 7 model.
 
-### Instance
+### LiveCard
 
-An Instance is a configured Source:
+A LiveCard is a configured Source:
 
 ```ts
-interface Instance {
+interface LiveCard {
   createdAt: number
-  instanceId: string
-  patch: InstancePatch
+  cardId: string
+  patch: LiveCardPatch
   sourceId: string
   workerId: string
 }
 ```
 
-`createdAt` records when the Instance itself was created. It does not record
-when the Instance joined its Board. An Instance belongs to exactly one Board;
-the owning Board keeps that relationship in `instanceIds`, so the Instance does
+`createdAt` records when the LiveCard itself was created. It does not record
+when the LiveCard joined its Board. A LiveCard belongs to exactly one Board;
+the owning Board keeps that relationship in `cardIds`, so the LiveCard does
 not duplicate a Board ID.
 
 ### Board
@@ -100,14 +107,14 @@ interface Board {
   name: string
 
   // Membership in recently-added-first order.
-  instanceIds: string[]
+  cardIds: string[]
 
   defaultLayer: "now" | "next"
   nowLayer: {
     sort: NowLayerSort
   }
   nextLayer: {
-    widgets: NextLayerWidget[]
+    liveWidgets: LiveWidget[]
   }
 }
 ```
@@ -115,20 +122,20 @@ interface Board {
 There is no separate entry or view table. Membership, membership order, color,
 and durable Layer settings belong directly to the Board.
 
-`instanceIds` has two responsibilities:
+`cardIds` has two responsibilities:
 
-1. It identifies the Instances that belong to the Board.
+1. It identifies the LiveCards that belong to the Board.
 2. Its order is the canonical `addedAt` order, from most recently added to least
    recently added.
 
-NewsNext does not persist an `addedAt` timestamp. Adding an unassigned Instance
-places its ID at the front. Adding an Instance already owned by another Board
+NewsNext does not persist an `addedAt` timestamp. Adding an unassigned LiveCard
+places its ID at the front. Adding a LiveCard already owned by another Board
 transfers it, removing it from the previous Board and related Layer references.
-Moving an Instance to its current Board is idempotent and does not reorder it.
+Moving a LiveCard to its current Board is idempotent and does not reorder it.
 
 `createdAt` and membership order are deliberately different. Moving an old
-Instance into a new Board makes it recently added in that Board but
-does not change the Instance's creation time.
+LiveCard into a new Board makes it recently added in that Board but
+does not change the LiveCard's creation time.
 
 ### NowLayer ordering
 
@@ -146,10 +153,10 @@ interface NowLayerSort {
 }
 ```
 
-`addedAt` is the default and reads `board.instanceIds` directly. Provider
+`addedAt` is the default and reads `board.cardIds` directly. Provider
 sorting derives a presentation order without changing membership order.
 Dragging selects `manual` mode and writes the complete membership permutation
-to `manualOrder`; it does not rewrite `instanceIds`.
+to `manualOrder`; it does not rewrite `cardIds`.
 
 New memberships are also inserted at the front of `manualOrder`, so returning
 to manual mode never loses a newly added card. `automaticMode` remembers which
@@ -158,25 +165,25 @@ order.
 
 ## Source Results and Registry Independence
 
-An Instance is durable application data. A registry descriptor is only the
+A LiveCard is durable application data. A registry descriptor is only the
 currently available executable definition of its Source. Removing a Source
-from a new registry must not remove, hide, or reorder its Instances.
+from a new registry must not remove, hide, or reorder its LiveCards.
 
 Successful loads include items and a serializable Source presentation snapshot.
 The owning Worker's protected Loader persists the result by Source ID, version,
-and normalized parameters. The App restores it through opaque Instance routing:
+and normalized parameters. The App restores it through opaque LiveCard routing:
 local reads go directly to the background; remote reads relay through the daemon.
 The viewing browser does not persist another Worker's result. See
 [Source request lifecycle](SOURCE_ARCHITECTURE.md#source-request-lifecycle).
 
 NowLayer resolves a card in this order:
 
-1. use the Source snapshot restored into the Instance's TanStack query;
+1. use the Source snapshot restored into the LiveCard's TanStack query;
 2. otherwise construct a minimal generic presentation from `sourceId`;
 3. replace either presentation in place when a routed load returns a newer
    Source snapshot.
 
-Neither path lists or waits for registry descriptors. Every Instance renders a
+Neither path lists or waits for registry descriptors. Every LiveCard renders a
 card and may request refresh through its router; a Loader that can no longer
 resolve the Source returns an ordinary execution error while the last snapshot
 remains readable. Cards can always be selected, reordered, moved between
@@ -184,24 +191,42 @@ Boards, or deleted.
 
 The persisted result and in-memory Query cache provide disposable acceleration
 and presentation continuity; neither owns membership. Clearing them may reduce
-an unavailable card to the generic presentation, but cannot remove the Instance
+an unavailable card to the generic presentation, but cannot remove the LiveCard
 from Application Data.
 
 ## Layers and Widgets
+
+The product entities are LiveCard and LiveWidget. Both use the shared CardShell
+primitives in `components/card-shell`; content/data adapters retain their own
+loading, refresh, configuration, and Board mutation semantics. CardShell is not
+another persistent entity. Shared item rendering lets a LiveWidget display the
+standard list content without becoming a LiveCard.
+
+A Widget definition remains identified by its directory's `widgetId`. A LiveWidget
+is a placement addressed by `(boardId, widgetId)`, with at most one placement of
+that definition per Board. No independent `liveWidgetId` is introduced.
+
+`client.liveCards.data({ cardId })` delegates to `liveCard.load`, returning the
+existing SourceLoadResponse including normalized content, timestamps, resolved
+parameters, and protection status. It uses the owning Worker's load/cache path;
+it does not introduce a Card Data table. Missing cards and unavailable Workers
+fail through that existing router. `liveCard.readCache` remains the explicit
+cache-only operation.
+
 
 NowLayer and NextLayer are views of one Board. `defaultLayer` persists the active
 preference; switching views does not change membership or trigger collection.
 Both share the root scroll container with restoration keyed by Board and Layer.
 
-NowLayer owns LiveCards and Instance-scoped queries. NextLayer owns the Board's
-`nextLayer.widgets`: each entry has `widgetId`, grid `layout` (`x`, `y`, `width`,
-`height`), `dataScope` (the whole Board or selected `instanceIds`), and optional
+NowLayer owns LiveCards and LiveCard-scoped queries. NextLayer owns the Board's
+`nextLayer.liveWidgets`: each entry has `widgetId`, grid `layout` (`x`, `y`, `width`,
+`height`), `dataScope` (the whole Board or selected `cardIds`), and optional
 `params` and `metadata` overrides. Metadata uses shared `CardMetadata`: optional `title`, `badge`, `desc`, `home`, and `color`,
 using the same title and named palette contract as Source definitions. Widget
 layout persistence encodes order as `x: 0`, `y: orderIndex`, alongside dimensions.
 The React grid derives positions with ordered packing and uses the shared
 Pragmatic Drag and Drop infrastructure for live insertion previews. Widget drag
-data is scoped separately from Instance dragging; there is no grid-library
+data is scoped separately from LiveCard dragging; there is no grid-library
 position cache or collision engine.
 
 Both Layers share `DndContext` for drag scope, drop-target registration, and
@@ -211,11 +236,17 @@ pointer for sorting and trash drops. Shared card header rules, native previews,
 and placeholder styling keep feedback consistent; each Layer retains its own
 layout and persistence logic.
 
+Widget catalog discovery isolates invalid or unfinished directories: `/widgets`
+returns valid renderable definitions and logs each rejected manifest with its
+Widget ID and validation error. A rejected definition still fails when queried
+directly. Old local manifests must remove `id`, `entry`, and `data.entry` when
+these match the directory name, `index.html`, and `data.mjs`; the loader continues
+to enforce the current schema rather than silently accepting obsolete fields.
+
 Local Widget files and `widget.json` live in the CLI's Widget directory. Each
 Widget's directory name is its ID; the manifest has no configurable `id`. The
-manifest declares named data queries and a refresh policy. The daemon reconciles
-managed Jobs from the authenticated Board projection, reads retained Instance
-history, and persists revisioned Snapshots in Turso. Widget refreshes do not execute
+manifest declares named data queries and a refresh policy. The daemon reads retained LiveCard history and caches on-demand computation
+results in Turso. Widgets do not create background schedules. Widget refreshes do not execute
 Sources. A Snapshot atomically stores
 all query results, manifest/scope fingerprints, and a refresh timestamp.
 
@@ -224,17 +255,17 @@ queries; an optional `data.mjs` beside `widget.json` is discovered automatically
 Its default async function receives `{ queries, params, widgetId, boardId, signal, clientOptions }`. Queries execute
 first; the JS function returns the final named results, for example
 `{ feed: { items: [...] }, stats: { count: 42 } }`. Item arrays are adapted to
-`{ items: [{ value: NewsItem }] }`, matching Instance query results. Non-item JSON
+`{ items: [{ value: NewsItem }] }`, matching LiveCard query results. Non-item JSON
 is preserved for other consumers. `latest` queries support a case-insensitive
 `keyword` substring filter on titles before sorting and limiting. History scope
-uses each Instance's Worker and Source with resolved parameters from collection
+uses each LiveCard's Worker and Source with resolved parameters from collection
 bindings (or exact explicit parameters when no binding exists). Each URL keeps its newest retained value across Source versions before keyword
 filtering. Historical items need not still appear
 in the latest Source response. Publication timestamps are preserved. History search uses `history_search_items`,
 a transactional projection with one
 latest retained row per dataset and URL, a normalized title, and normalized
-publication time. Schema 12 backfills it once from existing history; each later
-retention updates it in the same transaction, ignoring older backfilled values.
+publication time. Retention updates it in the same transaction, ignoring older
+observations.
 SQL resolves latest versions, applies literal substring matching and publication
 windows, deduplicates, orders, and limits results before decoding JSON in Rust.
 Window sorts carry lightweight columns; full JSON is joined only for the final page.
@@ -242,10 +273,10 @@ Widget history queries execute on blocking worker threads with a shared two-quer
 semaphore; queued work waits asynchronously instead of occupying daemon event
 threads. This isolates database computation from IPC processing.
 On the development history copy with 12 datasets, eight keyword searches took
-266–330 ms each after migration. An eight-card concurrent SDK check completed
+266–330 ms each. An eight-card concurrent SDK check completed
 all data requests in about 2.2 seconds while five status requests succeeded
-(0.7–1.14 seconds including the local CLI launcher). The one-time backfill took
-about 25 seconds; these measurements are a local baseline, not a latency guarantee.
+(0.7–1.14 seconds including the local CLI launcher). These measurements are a
+local baseline, not a latency guarantee.
 The dataset and publication-time indexes narrow retrieval to retained search rows;
 substring matching still scans titles within the selected datasets and is not
 a full-text index. The daemon
@@ -263,14 +294,14 @@ the running CLI and its environment. Scripts are trusted local code, not browser
 sandbox code. Execution is limited to 60 seconds (the supplied AbortSignal fires
 at 55 seconds); result output is bounded to 16 MiB and diagnostics to 64 KiB.
 stdout is reserved for JSON; console diagnostics use stderr. Failed runs retain
-the previous placed Snapshot. Entrypoint paths and symlinks must stay within the
+the previous cached data. Entrypoint paths and symlinks must stay within the
 Widget directory; dependencies follow the JS runtime's normal module resolution.
 
-`client.widgets.data({ widgetId, instanceIds?, params? })` executes this same data pipeline
+`client.liveWidgets.data({ widgetId, cardIds?, params? })` executes this same data pipeline
 directly through SDK/daemon IPC and returns `{ queries, refreshedAt, errors }`.
-It requires neither a Board placement nor a view. With no Instance inputs,
-JS-only data works without a connected browser. Declarative Instance queries use
-the explicit `instanceIds` supplied by this consumer. Direct calls use the persistent one-minute request protection cache, stored
+It requires neither a Board placement nor a view. With no LiveCard inputs,
+JS-only data works without a connected browser. Declarative LiveCard queries use
+the explicit `cardIds` supplied by this consumer. Direct calls use the persistent one-minute request protection cache, stored
 without a Board placement ID. Calls after that window recompute the result. The daemon advertises `widgetData`.
 Data loading ignores view, HTML, title, palette, and grid configuration;
 only data/refresh/params fields and the presence of `data.mjs` participate in
@@ -279,20 +310,19 @@ validation, rejecting files and symlinks outside the Widget directory. Script
 presence participates in the data fingerprint, so adding or removing `data.mjs`
 invalidates the previous definition.
 
-The extension centralizes Widget data fetching in `useWidgetData`. Its request
-identity includes Widget, sorted Instance scope, manifest data fingerprint, and
+The extension centralizes Widget data fetching in `useLiveWidgetData`. Its request
+identity includes Widget, sorted LiveCard scope, manifest data fingerprint, and
 resolved parameters. Changing these inputs aborts the obsolete request and clears
 its displayed result. The daemon's persistent one-minute protection cache includes
 parameter definitions and resolved values, so edited settings cannot reuse data
 computed with different values. Identical defaults and explicit default values
 share a cache entry. Refresh failures preserve prior data for the same inputs.
-The hook calls `client.widgets.data({ widgetId, instanceIds, params }, { signal })`
+The hook calls `client.liveWidgets.data({ widgetId, cardIds, params }, { signal })`
 through `@newsnext/sdk/extension`. The extension client uses a validated runtime
-port and the existing Native Messaging SDK bridge. UI requests and background
-Board Snapshot Jobs both resolve manifest defaults and placement overrides;
-UI requests use the direct-data cache while Jobs persist Board snapshots.
+port and the existing Native Messaging SDK bridge. UI requests resolve manifest defaults and placement overrides and use the
+direct-data cache. No background Widget scheduler runs while the view is closed.
 
-LiveCard and Widget presentation share `CardFace`, `LiveCardHeader`,
+LiveCard and Widget presentation share `CardShell`, `CardHeader`,
 `CardBackContent`, `CardMetadataSettings`, `CardSettingsSection`, `CardBoardSelect`,
 and `DeleteCardButton`. Only the visible
 header receives the drag handle. The hidden flip face remains mounted and inert.
@@ -303,8 +333,8 @@ the same confirmation interaction as LiveCards and removes only the placement.
 Optional top-level `widget.json.params` uses the shared Source parameter schema.
 The manifest parser validates definitions with `validateSourceParamDefinitions`.
 The Widget back reuses `ParameterSettings`, `ParamField`, and `useSourceParams`
-with LiveCards. `nextLayer.setWidgetParams` replaces one Board placement's
-persisted overrides; `{}` resets defaults. `nextLayer.setWidgetMetadata` separately
+with LiveCards. `nextLayer.setLiveWidgetParams` replaces one Board placement's
+persisted overrides; `{}` resets defaults. `nextLayer.setLiveWidgetMetadata` separately
 replaces the shared Title, Color, Badge, Description, and Home overrides. The shell resolves metadata over manifest defaults
 without changing data cache identity; an empty title falls back to the definition. Import/export normalization preserves
 them. Parameters are sent to custom iframe `newsnext.widget.data` messages and
@@ -322,12 +352,15 @@ exists; without that file it defines data only and is
 excluded from the renderable manifest list. Built-in views validate the complete
 NewsItem contract, accept empty arrays, and cap aggregates at 500 items.
 
-For placed views, initial load, manual refresh, visible polling, and managed Jobs
-all use the same query/JS execution pipeline before persisting the Snapshot.
-Overlapping executions for one placement are serialized. The view's data scope
-supplies the Instance inputs; no iframe needs to run for data to refresh. Managed
-background schedules remain attached to placements; unplaced data runs on SDK
-request. The loopback HTTP server serves assets and presentation metadata, not
+For placed views, initial load, manual refresh, and visible polling use the same
+query/JS execution pipeline and request protection cache. Overlapping requests
+with the same inputs are serialized. The view's data scope supplies the LiveCard
+inputs; SDK requests can compute data independently of any mounted view.
+`refresh.intervalMs` controls visible polling, not daemon scheduling.
+Placed views call `liveWidgets.data`; there is no separate placed Snapshot Action
+or Native Messaging request. Cache identity depends on Widget definition,
+resolved inputs, and parameters, independent of Board placement.
+The loopback HTTP server serves assets and presentation metadata, not
 an unauthenticated endpoint that executes local JavaScript. NextLayer does not
 observe NowLayer's query cache. The host owns title, palette, refresh state,
 layout, and the details back, including local data entry filenames.
@@ -335,7 +368,7 @@ layout, and the details back, including local data entry filenames.
 Widgets can also import `createClient` from `@newsnext/sdk/widget` and actively
 query history, fetch through the browser, execute Sources, and invoke every typed
 Action. Browser-aware bundlers select this same entry for `@newsnext/sdk`.
-Snapshot queries and SDK calls are independent: placement `dataScope` limits
+Declarative queries and other SDK calls are independent: placement `dataScope` limits
 materialized query inputs, not SDK access. Installed local Widgets therefore have
 full SDK access, including mutations outside their Board.
 
@@ -352,7 +385,7 @@ Each pull releases one frame, preserving history export streaming and avoiding
 unbounded buffering. Abort, iterator return, document pagehide, iframe unmount,
 and port disconnection release the request and terminate its SDK child process.
 Timeouts cover waiting for a response, not time spent consuming yielded data.
-Existing Snapshot ready/data messages remain unchanged.
+The host delivers data to the iframe through the Widget view ready/data messages.
 
 Generic transformation graphs, transitive provenance, replay, and a complete
 Widget preview/maintenance workflow remain target scope in the [PRD](PRD.md) and
@@ -379,7 +412,7 @@ returned by `action.list`; there is no parallel descriptor or parser catalog.
 const createBoard = defineAction(
   actionContracts["board.create"],
   async (params, context: ApplicationActionContext) => {
-    await context.requireSources((params.instances ?? []).map(instance => instance.sourceId))
+    await context.requireSources((params.liveCards ?? []).map(card => card.sourceId))
     const result = await context.mutate((data, dependencies) => (
       createBoardMutation(data, params, dependencies)
     ))
@@ -440,33 +473,33 @@ catalog with `action list`; definitions live in
 
 `board.create` and `board.update` accept Board fields directly, including
 `color`, `defaultLayer`, and `sortMode`. Bulk creation may include configured
-Instances and persists the Board, Instances, and ownership atomically.
-`instance.create` requires one scalar `boardId`.
+LiveCards and persists the Board, LiveCards, and ownership atomically.
+`liveCard.create` requires one scalar `boardId`.
 
-`instance.move` atomically transfers an existing Instance to its target Board;
+`liveCard.move` atomically transfers an existing LiveCard to its target Board;
 there is no standalone membership-removal Action because that would
-leave the Instance without an owner.
-`instance.delete` removes the Instance from its Board. Deleting a
-Board requires exactly one policy: delete its Instances, or transfer them to
+leave the LiveCard without an owner.
+`liveCard.delete` removes the LiveCard from its Board. Deleting a
+Board requires exactly one policy: delete its LiveCards, or transfer them to
 another Board.
 
-`nowLayer.setManualOrder` requires every Board Instance exactly once and
+`nowLayer.setManualOrder` requires every Board LiveCard exactly once and
 selects manual mode atomically. NextLayer mutations install/remove Widgets,
-change their data scope, and save layouts through `nextLayer.installWidget`,
-`nextLayer.removeWidget`, `nextLayer.setWidgetDataScope`, and
-`nextLayer.setWidgetLayouts`, and `nextLayer.setWidgetParams`.
+change their data scope, and save layouts through `nextLayer.installLiveWidget`,
+`nextLayer.removeLiveWidget`, `nextLayer.setLiveWidgetDataScope`, and
+`nextLayer.setLiveWidgetLayouts`, and `nextLayer.setLiveWidgetParams`.
 
 ### Queries
 
-Source discovery, Board context, and Instance queries include:
+Source discovery, Board context, and LiveCard queries include:
 
-`source.get/list`, `instance.get/list`, `board.get/list/listInstances`,
+`source.get/list`, `liveCard.get/list`, `board.get/list/listLiveCards`,
 `board.getContext`, and `board.getConfiguration`.
 
 `nowLayer.getLiveCards` returns every logical card in the requested Board in
 Board membership order. It does not filter against the current registry
 or mounted DOM nodes. Registry availability is a presentation and execution
-state, not an Instance-existence condition.
+state, not a LiveCard-existence condition.
 
 ### Commands
 
@@ -487,7 +520,7 @@ and protocol boundaries. The SDK types expose every registered Action without a 
 - Mutation transports return compact receipts. Updated Application Data reaches
   each frontend through its background storage subscription. When App
   integration is enabled, the originating Action produces a candidate
-  Workspace, the connection layer commits changed Board and Instance entities,
+  Workspace, the connection layer commits changed Board and LiveCard entities,
   their ID order, and an opaque portable Settings snapshot; peer Workers apply
   the same versioned patch.
   Queries and Commands return their declared outputs directly.
@@ -497,8 +530,8 @@ and protocol boundaries. The SDK types expose every registered Action without a 
 
 ## Stream inspection
 
-The Devtool joins scheduler stream IDs to Workspace Instances for names and
-parameter overrides; absent Instances and unknown observation counts remain
+The Devtool joins scheduler stream IDs to Workspace LiveCards for names and
+parameter overrides; absent LiveCards and unknown observation counts remain
 explicit. Counts represent retained fetch snapshots, including unchanged results,
 with dataset/timestamp replays deduplicated.
 
@@ -507,9 +540,9 @@ the wire contract to [Source Architecture](SOURCE_ARCHITECTURE.md#stream-collect
 and subscription performance to [Performance Guideline](PERFORMANCE_GUIDELINE.md#development-diagnostics-subscriptions).
 
 
-`nextLayer.moveWidget` atomically transfers the placement to another Board,
+`nextLayer.moveLiveWidget` atomically transfers the placement to another Board,
 preserving metadata, params, and dimensions and appending it to the destination
 layout. It rejects a destination already containing that Widget. Whole-Board
-scopes follow the destination Board; explicit Instance scopes retain only IDs
-belonging to it, without moving Instances. Both card types use `CardBoardSelect`
+scopes follow the destination Board; explicit LiveCard scopes retain only IDs
+belonging to it, without moving LiveCards. Both card types use `CardBoardSelect`
 with pending/error handling; these data-scope rules belong to the Widget adapter.
