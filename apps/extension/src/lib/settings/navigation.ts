@@ -8,7 +8,7 @@ function requestSettingsOpen(tab: SettingsTabId): void {
   localStorage.setItem(OPEN_SETTINGS_INTENT_KEY, tab)
 }
 
-export async function openSettings(tab: SettingsTabId = "appearance"): Promise<void> {
+export async function openSettings(tab: SettingsTabId = "general"): Promise<void> {
   requestSettingsOpen(tab)
   await openAppTab()
 }

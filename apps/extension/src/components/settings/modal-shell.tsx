@@ -21,7 +21,6 @@ interface SettingsModalShellProps {
 }
 
 const SETTINGS_TABS: Array<{ id: SettingsTabId, labelKey: StaticMessageKey }> = [
-  { id: "appearance", labelKey: "appearance" },
   { id: "general", labelKey: "general" },
   { id: "registry", labelKey: "registry" },
   { id: "cli", labelKey: "integration" },

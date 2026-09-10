@@ -18,11 +18,11 @@ const initialSettingsTab = consumeSettingsOpenRequest()
 export function UserMenu() {
   const { t } = useI18n()
   const [isSettingsOpen, setIsSettingsOpen] = useState(Boolean(initialSettingsTab))
-  const [settingsTab, setSettingsTab] = useState<SettingsTabId>(initialSettingsTab ?? "appearance")
+  const [settingsTab, setSettingsTab] = useState<SettingsTabId>(initialSettingsTab ?? "general")
 
   useEffect(() => subscribeToSettingsOpenRequests(openSettings), [])
 
-  function openSettings(tab: SettingsTabId = "appearance"): void {
+  function openSettings(tab: SettingsTabId = "general"): void {
     setSettingsTab(tab)
     setIsSettingsOpen(true)
   }

@@ -173,14 +173,8 @@ LiveCards define the primary NewsNext surface treatment.
   purple, indigo, blue, cyan, teal, green, amber, orange, and slate.
 - Use `10px` (`p-2.5`) between the outer shell and nested content where the LiveCard
   shell must remain visible.
-- Let users choose a desktop LiveCard height in Appearance settings:
-  `Compact` (`480px`), `Balanced` (`500px`), or `Tall` (`576px`). Default to
-  `Balanced`. Allow specialized responsive surfaces such as Radar to provide
-  their own LiveCard dimensions.
-- Present LiveCard height choices with equal-width silhouettes rendered at their
-  actual heights. Order them from compact to tall, with the default balanced
-  height in the middle. Keep option backgrounds transparent and confine the
-  selected theme accent to the silhouette outline and shape label.
+- Use a fixed desktop LiveCard height of `500px` (`h-125`). Allow specialized
+  responsive surfaces such as Radar to provide their own LiveCard dimensions.
 - Place identity and surface actions in the exposed outer shell. Place editable
   fields and primary content in the quieter inner panel.
 - Render source identity through the shared `SourceIcon` with a consistently
@@ -674,6 +668,9 @@ Use `px-4 py-6.5 sm:px-6 sm:py-8.5` on the settings content scroller and
 `py-4.5` on the sidebar to preserve their content insets. Background fills belong
 to settings sections, selected navigation, interactive controls, and individual records where they
 help distinguish items, rather than successive wrapping containers.
+
+Open Settings on General by default. Place language first and theme mode second
+in General; do not provide a separate Appearance tab.
 
 Keep settings controls compact and visually consistent. Use a 6px slider track
 with a clearly visible themed range and a 14px thumb filled with a light theme

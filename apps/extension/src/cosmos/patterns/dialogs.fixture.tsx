@@ -170,7 +170,7 @@ function EditBoardDialogFixture() {
 
 function SettingsModalFixture() {
   const [open, setOpen] = useState(true)
-  const [activeTab, setActiveTab] = useState<SettingsTabId>("appearance")
+  const [activeTab, setActiveTab] = useState<SettingsTabId>("general")
 
   return (
     <FixtureStage>

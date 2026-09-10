@@ -21,7 +21,6 @@ export {
   serializePersistedDataExport,
 } from "./persisted-data"
 export type {
-  LiveCardHeight,
   PersistedDeviceState,
   PersistedSettings,
   SettingsTabId,

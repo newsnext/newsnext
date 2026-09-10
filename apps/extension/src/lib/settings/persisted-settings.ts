@@ -10,19 +10,12 @@ import { DEFAULT_SHORTCUT_SETTINGS, normalizeShortcutSettings } from "./shortcut
 
 export const PERSISTED_SETTINGS_VERSION = 1
 
-export const LIVE_CARD_HEIGHTS = ["compact", "balanced", "tall"] as const
-
-export type LiveCardHeight = typeof LIVE_CARD_HEIGHTS[number]
-
-export const DEFAULT_LIVE_CARD_HEIGHT: LiveCardHeight = "balanced"
-
 export const MAX_REGISTRY_URLS = 20
 
-export type SettingsTabId = "appearance" | "general" | "registry" | "cli" | "shortcuts" | "permissions" | "data"
+export type SettingsTabId = "general" | "registry" | "cli" | "shortcuts" | "permissions" | "data"
 
 export interface PersistedSettings {
   appearance: {
-    liveCardHeight: LiveCardHeight
     localePreference: LocalePreference
     themeMode: ThemeMode
   }
@@ -45,7 +38,6 @@ export interface PersistedDeviceState {
 export function createDefaultPersistedSettings(): PersistedSettings {
   return {
     appearance: {
-      liveCardHeight: DEFAULT_LIVE_CARD_HEIGHT,
       localePreference: "system",
       themeMode: "system",
     },
@@ -63,7 +55,7 @@ export function createDefaultPersistedSettings(): PersistedSettings {
 export function createDefaultPersistedDeviceState(currentBoardId = ""): PersistedDeviceState {
   return {
     currentBoardId,
-    settingsTab: "appearance",
+    settingsTab: "general",
     version: PERSISTED_SETTINGS_VERSION,
   }
 }
@@ -78,9 +70,6 @@ export function normalizePersistedSettings(value: unknown): PersistedSettings {
   const general = isRecord(value.general) ? value.general : undefined
   return {
     appearance: {
-      liveCardHeight: isLiveCardHeight(appearance?.liveCardHeight)
-        ? appearance.liveCardHeight
-        : defaults.appearance.liveCardHeight,
       localePreference: isLocalePreference(appearance?.localePreference)
         ? appearance.localePreference
         : defaults.appearance.localePreference,
@@ -150,17 +139,12 @@ export function normalizePersistedDeviceState(value: unknown): PersistedDeviceSt
 }
 
 export function isSettingsTabId(value: unknown): value is SettingsTabId {
-  return value === "appearance"
-    || value === "general"
+  return value === "general"
     || value === "registry"
     || value === "cli"
     || value === "shortcuts"
     || value === "permissions"
     || value === "data"
-}
-
-export function isLiveCardHeight(value: unknown): value is LiveCardHeight {
-  return typeof value === "string" && LIVE_CARD_HEIGHTS.includes(value as LiveCardHeight)
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

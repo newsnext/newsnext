@@ -22,21 +22,6 @@ describe("persisted settings", () => {
     expect(settings).toEqual(createDefaultPersistedSettings())
   })
 
-  it("normalizes the LiveCard height", () => {
-    expect(normalizePersistedSettings({
-      appearance: { liveCardHeight: "compact" },
-      version: 1,
-    }).appearance.liveCardHeight).toBe("compact")
-    expect(normalizePersistedSettings({
-      appearance: { liveCardHeight: "tall" },
-      version: 1,
-    }).appearance.liveCardHeight).toBe("tall")
-    expect(normalizePersistedSettings({
-      appearance: { liveCardHeight: "giant" },
-      version: 1,
-    }).appearance.liveCardHeight).toBe("balanced")
-  })
-
   it("normalizes keyboard shortcuts", () => {
     expect(normalizePersistedSettings({
       shortcuts: { search: "Mod+F", toggleNextLayer: "Mod+Shift+L" },

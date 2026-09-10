@@ -1,6 +1,5 @@
 import type { LocalePreference } from "@/lib/i18n/locale"
 import type {
-  LiveCardHeight,
   PersistedDeviceState,
   PersistedSettings,
   SettingsTabId,
@@ -63,17 +62,6 @@ export const themeModeAtom = atom(
     set(persistedSettingsAtom, {
       ...settings,
       appearance: { ...settings.appearance, themeMode },
-    })
-  },
-)
-
-export const liveCardHeightAtom = atom(
-  get => get(persistedSettingsAtom).appearance.liveCardHeight,
-  (get, set, liveCardHeight: LiveCardHeight) => {
-    const settings = get(persistedSettingsAtom)
-    set(persistedSettingsAtom, {
-      ...settings,
-      appearance: { ...settings.appearance, liveCardHeight },
     })
   },
 )
