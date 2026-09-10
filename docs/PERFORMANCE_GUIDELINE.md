@@ -498,3 +498,15 @@ Stream summaries and sorting are pure projections of pushed diagnostics. Overvie
 and Streams share presentation, sort preference, and selection without additional
 native requests. Default sorting uses stable identity fields, so timestamp, count,
 and activity updates do not move rows. Attention ordering requires explicit opt-in.
+
+### Widget request protection
+
+The daemon owns a fixed 60-second request protection window for `widgets.data`,
+using the last successful result persisted in SQLite. Every request after that
+window recomputes data; there is no additional freshness cache or force option.
+Automatic and manual requests follow the same rule. Widget frames retain only
+their current display and request state; do not add a TanStack Query cache or a
+browser freshness window around this SDK method. On activation and at the refresh
+interval, read through the daemon. Abort requests on deactivation or input changes,
+and ignore late results so one data scope cannot overwrite another. The same
+protection applies to SDK callers and extension views.

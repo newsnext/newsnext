@@ -246,6 +246,13 @@ const feed = result.queries.feed
 ```
 
 The result includes `queries`, completion `refreshedAt`, and Instance `errors`.
+The daemon enforces a fixed 60-second request protection window by retaining the
+last successful result in SQLite for each Widget and resolved data scope. Calls
+inside that window reuse the result; every request after it recomputes data.
+Automatic and manual requests follow the same rule, with no `force` option or
+additional `staleTimeMs` cache. Concurrent calls share the computed result. A
+changed data definition or resolved scope starts a separate protection window.
+Extension views retain display state but do not maintain a separate data cache.
 A definition without `view` needs only `id` and `data`. The independent data
 loader ignores visual configuration. JS uses the first available runtime in this order: Bun, Deno, then Node.js 22+.
 The daemon searches PATH and standard installation directories, including

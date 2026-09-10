@@ -66,7 +66,7 @@ export class NewsNextClient {
   }
 
   readonly widgets = {
-    /** Execute local Widget data independently of any view or Board placement. */
+    /** Compute Widget data with a daemon-owned one-minute request protection window. */
     data: (query: WidgetDataQuery, options?: CallOptions): Promise<WidgetDataResult> => this.call({
       method: "widgets.data",
       ...query,

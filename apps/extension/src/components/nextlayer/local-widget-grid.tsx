@@ -19,7 +19,7 @@ import { actions } from "@/lib/actions"
 import { boardsAtom } from "@/store/board"
 import { BuiltinLiveCard } from "./builtin-live-card"
 import { SortableWidgetGrid } from "./sortable-widget-grid"
-import { widgetDataQueryOptions } from "./widget-data-query"
+import { useWidgetData } from "./use-widget-data"
 import { getChangedWidgetLayouts, getGridWidgetId, getWidgetColumnSpan } from "./widget-layout"
 import { parseLocalWidgetManifests } from "./widget-manifest"
 import { bindWidgetSdk } from "./widget-sdk"
@@ -35,7 +35,6 @@ interface WidgetFrameProps {
   url?: string
   ui: WidgetUi
   dataRevision: string
-  staleTimeMs: number
   refreshIntervalMs: number
   dataFiles: string[]
   widgetId: string
@@ -67,13 +66,10 @@ function LocalWidgetFrame(frame: WidgetFrameProps) {
   const visible = useElementVisible(articleRef)
   const documentVisible = useDocumentVisible()
   const active = frame.active && visible && documentVisible
-  const dataQuery = useQuery({
-    ...widgetDataQueryOptions(frame),
-    enabled: active,
-  })
+  const dataQuery = useWidgetData(frame, active)
   const dataPayload = useMemo(() => dataQuery.error
     ? {
-        error: dataQuery.error instanceof Error ? dataQuery.error.message : "Widget data request failed",
+        error: dataQuery.error.message,
         ...dataQuery.data,
         queries: dataQuery.data?.queries ?? {},
         stale: true,
@@ -119,7 +115,7 @@ function LocalWidgetFrame(frame: WidgetFrameProps) {
               <LiveCardRefreshButton
                 isFetching={refreshing}
                 label={t("refreshWidget", { title: frame.title })}
-                onRefresh={() => void dataQuery.refetch({ cancelRefetch: false })}
+                onRefresh={dataQuery.refetch}
               />
               <LiveCardHeaderActionButton
                 type="button"
@@ -137,7 +133,7 @@ function LocalWidgetFrame(frame: WidgetFrameProps) {
                   ui={frame.ui}
                   title={frame.title}
                   isFetching={refreshing}
-                  onRefresh={() => void dataQuery.refetch({ cancelRefetch: false })}
+                  onRefresh={dataQuery.refetch}
                   queries={dataQuery.data?.queries ?? {}}
                   statusMessage={refreshing
                     ? undefined
@@ -366,7 +362,6 @@ export function LocalWidgetGrid({ boardId, onReady, viewReady }: LocalWidgetGrid
           url={manifest.url}
           ui={manifest.view}
           dataRevision={manifest.dataRevision}
-          staleTimeMs={manifest.staleTimeMs}
           refreshIntervalMs={manifest.refreshIntervalMs}
           dataFiles={manifest.dataFiles}
         />

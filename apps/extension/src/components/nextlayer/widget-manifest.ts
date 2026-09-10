@@ -15,7 +15,6 @@ export interface LocalWidgetManifest {
   url?: string
   view: WidgetUi
   dataRevision: string
-  staleTimeMs: number
   refreshIntervalMs: number
   dataFiles: string[]
   width: number
@@ -57,14 +56,12 @@ export function parseLocalWidgetManifests(
       throw new Error("Invalid Widget refresh interval")
     }
     const dataRevision = candidate.dataRevision ?? "legacy"
-    const staleTimeMs = candidate.staleTimeMs ?? 120_000
-    if (typeof dataRevision !== "string" || !Number.isSafeInteger(staleTimeMs) || Number(staleTimeMs) < 0) throw new Error("Invalid Widget data cache policy")
+    if (typeof dataRevision !== "string") throw new Error("Invalid Widget data revision")
     const dataFiles = candidate.dataFiles ?? []
     if (!Array.isArray(dataFiles) || !dataFiles.every(isNonEmptyString)) throw new Error("Invalid Widget data files")
     return {
       dataFiles,
       dataRevision,
-      staleTimeMs: Number(staleTimeMs),
       color: candidate.color ?? "slate",
       height: candidate.height,
       id: candidate.id,
