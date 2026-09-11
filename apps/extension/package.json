@@ -39,6 +39,7 @@
     "fast-xml-parser": "^5.11.1",
     "i18next": "^26.4.2",
     "jotai": "catalog:",
+    "json-rpc-2.0": "^1.8.0",
     "lucide-react": "catalog:",
     "motion": "catalog:",
     "nanoid": "^6.0.1",

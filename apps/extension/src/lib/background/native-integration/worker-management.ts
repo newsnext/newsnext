@@ -1,10 +1,9 @@
 import type { NativeIntegrationStatus, RequireNativeConnection } from "./types"
-import type { ExtensionToHost } from "@/lib/native-protocol/ExtensionToHost"
 import { createId } from "@/lib/id"
 import { readApplicationData, replaceApplicationData } from "../application-service"
 import { replaceWorkerIdentity } from "../worker-identity"
-import { pendingWorkerTakeoverRequests } from "./pending-requests"
-import { NATIVE_REQUEST_TIMEOUT_MS, runtime } from "./state"
+import { nativeRpc } from "./rpc"
+import { runtime } from "./state"
 
 interface WorkerConnectionControls {
   disconnect: () => void
@@ -26,20 +25,7 @@ export async function takeOverWorker(
     throw new Error("The offline Worker's LiveCards are no longer available")
   }
   const connection = await controls.requireConnection()
-  const message: ExtensionToHost = {
-    type: "workerTakeover",
-    requestId: createId(),
-    workerId: sourceWorkerId,
-    cardIds,
-  }
-  await new Promise<void>((resolve, reject) => {
-    const timeoutId = setTimeout(() => {
-      pendingWorkerTakeoverRequests.delete(message.requestId)
-      reject(new Error("Timed out taking over the offline Worker's LiveCards"))
-    }, NATIVE_REQUEST_TIMEOUT_MS)
-    pendingWorkerTakeoverRequests.set(message.requestId, { reject, resolve, timeoutId })
-    connection.postMessage(message)
-  })
+  await nativeRpc(connection).request("workerTakeover", { workerId: sourceWorkerId, cardIds })
   return controls.getStatus()
 }
 

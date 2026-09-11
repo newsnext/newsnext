@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { isWidgetSdkControl, isWidgetSdkRequest } from "./widget-host.js"
+import { isWidgetSdkControl, isWidgetSdkRequest, sdkErrorFrame } from "./widget-host.js"
 
 describe("widget SDK messages", () => {
   it("accepts SDK envelopes without confusing them with snapshot messages", () => {
@@ -23,4 +23,9 @@ describe("widget SDK messages", () => {
       expect(isWidgetSdkControl(value)).toBe(false)
     }
   })
+})
+
+it("preserves domain codes from RPC errors for SDK consumers", () => {
+  const error = Object.assign(new Error("Stream cancelled"), { code: -32000, data: { code: "SDK_REQUEST_CANCELLED" } })
+  expect(sdkErrorFrame(error)).toEqual({ version: 1, type: "error", error: { code: "SDK_REQUEST_CANCELLED", message: "Stream cancelled" } })
 })

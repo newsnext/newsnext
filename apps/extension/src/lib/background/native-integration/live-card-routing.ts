@@ -1,12 +1,12 @@
 import type { SourceLoadResponse } from "../../source/load-result"
 import type { BackgroundActionContext } from "../background-actions"
 import type { RequireNativeConnection } from "./types"
-import type { ExtensionToHost } from "@/lib/native-protocol/ExtensionToHost"
 import { createId } from "@/lib/id"
+import { isSourceLoadResponse } from "../../source/load-result"
 import { executeRegisteredAction } from "../action-registry"
 import { readApplicationData } from "../application-service"
-import { isSourceLoadResponse, pendingLiveCardRequests } from "./pending-requests"
-import { NATIVE_REQUEST_TIMEOUT_MS, runtime } from "./state"
+import { nativeRpc } from "./rpc"
+import { runtime } from "./state"
 
 export async function loadRoutedLiveCard(
   input: { cardId: string },
@@ -53,23 +53,8 @@ async function routeLiveCardRequest(
     return result
   }
   const connection = await requireConnection()
-  const message: ExtensionToHost = {
-    type: "liveCardGet",
-    requestId: createId(),
-    cardId: input.cardId,
-    cacheOnly,
-  }
-  return await new Promise((resolve, reject) => {
-    const timeoutId = setTimeout(() => {
-      pendingLiveCardRequests.delete(message.requestId)
-      reject(new Error("Timed out waiting for the LiveCard's NewsNext Worker"))
-    }, NATIVE_REQUEST_TIMEOUT_MS)
-    pendingLiveCardRequests.set(message.requestId, {
-      cacheOnly,
-      reject,
-      resolve,
-      timeoutId,
-    })
-    connection.postMessage(message)
-  })
+  const result = await nativeRpc(connection).request("liveCardGet", { cardId: input.cardId, cacheOnly })
+  if (result === null && cacheOnly) return null
+  if (!isSourceLoadResponse(result)) throw new Error("The NewsNext Worker returned an invalid Source result")
+  return result
 }

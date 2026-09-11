@@ -2,7 +2,6 @@ import type { PersistedSettings } from "../../settings/persisted-settings"
 import type { NativePort, RequireNativeConnection } from "./types"
 import type { Workspace as NativeWorkspace } from "@/lib/native-protocol/Workspace"
 import { browser } from "#imports"
-import { createId } from "@/lib/id"
 import { APPLICATION_DATA_VERSION } from "../../application"
 import { normalizeApplicationData, PERSISTED_DATA_SLICES } from "../../settings/persisted-data"
 import { normalizePersistedSettings } from "../../settings/persisted-settings"
@@ -12,8 +11,8 @@ import {
   setApplicationDataCommitter,
 } from "../application-service"
 import { applyWorkspacePatch, createWorkspacePatch } from "../workspace-patch"
-import { pendingWorkspaceRequests, takePendingRequest } from "./pending-requests"
-import { NATIVE_REQUEST_TIMEOUT_MS, runtime, WORKSPACE_UPDATED_AT_KEY } from "./state"
+import { nativeRpc } from "./rpc"
+import { runtime, WORKSPACE_UPDATED_AT_KEY } from "./state"
 
 export function createWorkspace(
   value: unknown,
@@ -103,21 +102,6 @@ function enqueueWorkspaceReplacement(
   })
 }
 
-export function settleWorkspaceRequest(
-  requestId: string,
-  revision: number,
-  nextLocalCardIds: string[],
-): void {
-  const pending = takePendingRequest(pendingWorkspaceRequests, requestId)
-  if (!pending) return
-  const committed = {
-    ...pending.candidate,
-    revision,
-  }
-  acceptWorkspace(committed, nextLocalCardIds)
-  pending.resolve(committed)
-}
-
 export async function commitSettings(
   settings: PersistedSettings,
   requireConnection: RequireNativeConnection,
@@ -192,24 +176,16 @@ async function requestWorkspaceReplacement(
   requireConnection: RequireNativeConnection,
 ): Promise<NativeWorkspace> {
   const connection = await requireConnection()
-  const message = {
-    type: "workspaceChanged" as const,
-    requestId: createId(),
+  const routingRevision = runtime.workerRoutingRevision
+  const result = await nativeRpc(connection).request("workspaceCommit", {
     patch: createWorkspacePatch(runtime.workspace, candidate),
-  }
-  return await new Promise((resolve, reject) => {
-    const timeoutId = setTimeout(() => {
-      pendingWorkspaceRequests.delete(message.requestId)
-      reject(new Error("Timed out waiting for the NewsNext Workspace commit"))
-    }, NATIVE_REQUEST_TIMEOUT_MS)
-    pendingWorkspaceRequests.set(message.requestId, {
-      candidate,
-      reject,
-      resolve,
-      timeoutId,
-    })
-    connection.postMessage(message)
   })
+  if (!runtime.enabled || runtime.port !== connection) throw new Error("NewsNext App disconnected during Workspace commit")
+  const committed = { ...candidate, revision: result.revision }
+  acceptWorkspace(committed, runtime.workerRoutingRevision === routingRevision
+    ? result.localCardIds
+    : [...runtime.localCardIds])
+  return committed
 }
 
 function enqueueWorkspaceOperation<Result>(

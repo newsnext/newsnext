@@ -1,14 +1,13 @@
 import type { OfflineWorker as NativeOfflineWorker } from "@newsnext/sdk/models"
-import type { CommandResult as NativeCommandResult } from "@/lib/native-protocol/CommandResult"
 import type { HostToExtension } from "@/lib/native-protocol/HostToExtension"
-import type { LogEntry as NativeLogEntry } from "@/lib/native-protocol/LogEntry"
+import type { NativeNotification } from "@/lib/native-protocol/NativeNotification"
 import type { Workspace as NativeWorkspace } from "@/lib/native-protocol/Workspace"
-import { parseExtensionCommand } from "@/lib/native-messaging"
 import { APPLICATION_DATA_VERSION } from "../../application"
 import { normalizeApplicationData } from "../../settings/persisted-data"
 import { NativeMessageChunkAssembler } from "../native-message-chunks"
 import { parseWorkspacePatch } from "../workspace-patch"
 import { parseCollectionStatus } from "./collection-status"
+import { parseLocalCardIds, parseRevision } from "./message-values"
 import { NATIVE_REQUEST_TIMEOUT_MS } from "./state"
 
 type ReadyHostMessage = Extract<HostToExtension, { type: "ready" }> & { capabilities: string[] }
@@ -52,63 +51,7 @@ function parseHostMessage(value: unknown): ParsedHostMessage {
       offlineWorkers: parseOfflineWorkers(value.offlineWorkers),
     }
   }
-  if (value.type === "sdkFrame" && typeof value.requestId === "string" && "frame" in value) {
-    return { type: "sdkFrame", requestId: value.requestId, frame: value.frame }
-  }
-  if (value.type === "workerRoutingChanged") {
-    return {
-      type: "workerRoutingChanged",
-      revision: parseRevision(value.revision, "Worker routing"),
-      localCardIds: parseLocalCardIds(value.localCardIds),
-      offlineWorkers: parseOfflineWorkers(value.offlineWorkers),
-    }
-  }
-  if (value.type === "collectionStatusChanged") return { type: "collectionStatusChanged", status: parseCollectionStatus(value.status) }
-  if (value.type === "collectionStatusResult" && typeof value.requestId === "string") {
-    return { type: "collectionStatusResult", requestId: value.requestId, status: parseCollectionStatus(value.status) }
-  }
-  if (value.type === "logsResult" && typeof value.requestId === "string") {
-    return {
-      type: "logsResult",
-      requestId: value.requestId,
-      logs: parseLogs(value.logs),
-    }
-  }
-  if (value.type === "execute") {
-    return {
-      type: "execute",
-      request: parseExtensionCommand(value.request),
-    }
-  }
-  if (value.type === "workspaceChanged") {
-    return {
-      type: "workspaceChanged",
-      patch: parseWorkspacePatch(value.patch),
-      localCardIds: parseLocalCardIds(value.localCardIds),
-    }
-  }
-  if (value.type === "workspaceResult"
-    && typeof value.requestId === "string"
-    && Number.isSafeInteger(value.revision)
-    && Number(value.revision) > 0) {
-    return {
-      type: "workspaceResult",
-      requestId: value.requestId,
-      revision: Number(value.revision),
-      localCardIds: parseLocalCardIds(value.localCardIds),
-    }
-  }
-  if (
-    value.type === "liveCardResult"
-    && typeof value.requestId === "string"
-    && isNativeCommandResult(value.result)
-  ) {
-    return {
-      type: "liveCardResult",
-      requestId: value.requestId,
-      result: value.result,
-    }
-  }
+  if (value.type === "rpc" && "message" in value) return { type: "rpc", message: value.message }
   if (
     value.type === "error"
     && (typeof value.requestId === "string" || value.requestId === null)
@@ -147,13 +90,6 @@ function parseWorkspace(value: unknown): NativeWorkspace {
   }
 }
 
-function parseLocalCardIds(value: unknown): string[] {
-  if (!Array.isArray(value) || value.some(id => typeof id !== "string" || !id)) {
-    throw new Error("The native host returned invalid local LiveCard IDs")
-  }
-  return [...new Set(value)]
-}
-
 function parseOfflineWorkers(value: unknown): NativeOfflineWorker[] {
   if (!Array.isArray(value) || value.some(worker => (
     !isRecord(worker)
@@ -174,32 +110,6 @@ function isIdentifierArray(value: unknown): value is string[] {
   return Array.isArray(value)
     && value.every(id => typeof id === "string" && id.length > 0)
     && new Set(value).size === value.length
-}
-
-function parseRevision(value: unknown, label: string): number {
-  if (!Number.isSafeInteger(value) || Number(value) < 0) {
-    throw new Error(`The native host returned an invalid ${label} revision`)
-  }
-  return Number(value)
-}
-
-function parseLogs(value: unknown): NativeLogEntry[] {
-  if (!Array.isArray(value) || value.some(entry => (
-    !isRecord(entry)
-    || !Number.isSafeInteger(entry.id)
-    || typeof entry.timestamp !== "string"
-    || !["error", "warn", "info"].includes(String(entry.level))
-    || typeof entry.target !== "string"
-    || typeof entry.message !== "string"
-  ))) {
-    throw new Error("The native host returned invalid logs")
-  }
-  return value as NativeLogEntry[]
-}
-
-function isNativeCommandResult(value: unknown): value is NativeCommandResult {
-  if (!isRecord(value) || typeof value.ok !== "boolean") return false
-  return value.ok ? true : isRecord(value.error) && typeof value.error.message === "string"
 }
 
 function parseWidgetServerOrigin(value: unknown): string {
@@ -224,4 +134,22 @@ function parseWidgetServerOrigin(value: unknown): string {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value)
+}
+
+export function parseNativeNotification(method: string, params: unknown): NativeNotification {
+  if (!isRecord(params)) throw new Error("The native host returned invalid notification parameters")
+  switch (method) {
+    case "workerRoutingChanged":
+      return { method, params: {
+        revision: parseRevision(params.revision, "Worker routing"),
+        localCardIds: parseLocalCardIds(params.localCardIds),
+        offlineWorkers: parseOfflineWorkers(params.offlineWorkers),
+      } }
+    case "workspaceChanged":
+      return { method, params: { patch: parseWorkspacePatch(params.patch), localCardIds: parseLocalCardIds(params.localCardIds) } }
+    case "collectionStatusChanged":
+      return { method, params: { status: parseCollectionStatus(params.status) } }
+    default:
+      throw new Error(`Unsupported native notification '${method}'`)
+  }
 }

@@ -19,7 +19,10 @@ export function isWidgetSdkControl(value: unknown): value is { type: "next" | "c
 }
 
 export function sdkErrorFrame(error: unknown): object {
-  const code = isRecord(error) && typeof error.code === "string" ? error.code : "SDK_REQUEST_FAILED"
+  const data = isRecord(error) && isRecord(error.data) ? error.data : undefined
+  const code = isRecord(error) && typeof error.code === "string"
+    ? error.code
+    : typeof data?.code === "string" ? data.code : "SDK_REQUEST_FAILED"
   return {
     version: 1,
     type: "error",

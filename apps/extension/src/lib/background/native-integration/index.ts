@@ -3,9 +3,9 @@ import type { BackgroundActionDependencies } from "../action-context"
 import type { BackgroundActionContext } from "../background-actions"
 import type { NativeIntegrationFailureState } from "./connection"
 import type { NativeIntegrationConnectionError, NativeIntegrationStatus, NativePort } from "./types"
-import type { CommandResult as NativeCommandResult } from "@/lib/native-protocol/CommandResult"
 import type { ExtensionCommand } from "@/lib/native-protocol/ExtensionCommand"
 import type { ExtensionToHost } from "@/lib/native-protocol/ExtensionToHost"
+import { JSONRPCErrorException } from "json-rpc-2.0"
 import { browser } from "#imports"
 import { PERSISTED_DATA_SLICES } from "../../settings/persisted-data"
 import { normalizePersistedSettings } from "../../settings/persisted-settings"
@@ -20,36 +20,19 @@ import {
   isVersionAtLeast,
   MINIMUM_DAEMON_VERSION,
 } from "./connection"
-import {
-  requestCollectionStatus,
-  requestLogs as requestLogsFromDaemon,
-} from "./daemon-requests"
+import { rejectNativeConnection, resolveNativeConnection, waitForNativeConnection } from "./connection-ready"
 import { serializeNativeIntegrationError } from "./error"
 import {
   loadRoutedLiveCard,
   readRoutedLiveCardCache,
 } from "./live-card-routing"
-import {
-  pendingCollectionRequests,
-  pendingConnectionRequests,
-  pendingLiveCardRequests,
-  pendingLogsRequests,
-  pendingWorkerTakeoverRequests,
-  pendingWorkspaceRequests,
-  rejectAllPendingRequests,
-  rejectPendingRequest,
-  resolvePendingConnectionRequests,
-  settleLiveCardRequest,
-  settleWorkerTakeoverRequest,
-  takePendingRequest,
-} from "./pending-requests"
 import { NATIVE_INTEGRATION_PERMISSIONS } from "./permission"
-import { clearNativeMessageChunks, parseNativeHostValue } from "./protocol"
-import { receiveSdkFrame, registerSdkBridge } from "./sdk"
+import { clearNativeMessageChunks, parseNativeHostValue, parseNativeNotification } from "./protocol"
+import { closeNativeRpc, nativeRpc, openNativeRpc, receiveNativeRpc } from "./rpc"
+import { registerSdkBridge } from "./sdk"
 import {
   NATIVE_HOST_NAME,
   NATIVE_INTEGRATION_RECONNECT_ALARM,
-  NATIVE_REQUEST_TIMEOUT_MS,
   PROTOCOL_VERSION,
   RECONNECT_ALARM_PERIOD_MINUTES,
   runtime,
@@ -65,7 +48,6 @@ import {
   createWorkspace,
   enqueueIncomingWorkspace,
   registerApplicationDataSync,
-  settleWorkspaceRequest,
 } from "./workspace-sync"
 
 export type {
@@ -95,12 +77,12 @@ export const backgroundActionDependencies: BackgroundActionDependencies = {
     ),
   },
   nativeIntegration: {
-    getLogs: () => requestLogsFromDaemon(requireNativeConnection),
+    getLogs: async () => nativeRpc(await requireNativeConnection()).request("logsGet", {}),
     getCollectionStatus: async () => {
       if (!runtime.capabilities.includes("collectionStatusPush")) throw new Error("This NewsNext App does not support live stream diagnostics. Update and restart the daemon.")
       const cached = runtime.collectionStatus
       if (cached) return cached
-      const snapshot = await requestCollectionStatus(requireNativeConnection)
+      const snapshot = await nativeRpc(await requireNativeConnection()).request("collectionStatusGet", {})
       if (runtime.collectionSubscribed) runtime.collectionStatus ??= snapshot
       return runtime.collectionStatus ?? snapshot
     },
@@ -122,7 +104,10 @@ export const backgroundActionDependencies: BackgroundActionDependencies = {
 
 function sendCollectionSubscription(): void {
   if (runtime.connectionState === "connected" && runtime.port && runtime.capabilities.includes("collectionStatusPush")) {
-    runtime.port.postMessage({ type: "collectionStatusSubscribe", enabled: runtime.collectionSubscribed } satisfies ExtensionToHost)
+    const connection = runtime.port
+    void nativeRpc(connection).request("collectionStatusSubscribe", { enabled: runtime.collectionSubscribed }).catch((error) => {
+      failConnection(connection, error instanceof Error ? error.message : "Failed to subscribe to collection status")
+    })
   }
 }
 
@@ -172,38 +157,22 @@ async function setNativeIntegrationEnabled(
   return getNativeIntegrationStatus()
 }
 
-async function executeCommand(
-  connection: NativePort,
-  request: ExtensionCommand,
-): Promise<void> {
-  let result: NativeCommandResult
+async function executeCommand(connection: NativePort, request: ExtensionCommand): Promise<unknown> {
+  if (!runtime.enabled || runtime.port !== connection) throw new Error("NewsNext App disconnected")
   try {
-    result = {
-      ok: true,
-      data: request.type === "action.list"
-        ? actionRegistry.list()
-        : await executeRegisteredAction(
-            request.name,
-            request.input,
-            "connected",
-            getConnectedActionContext(),
-            request.id,
-          ),
-    }
+    return request.type === "action.list"
+      ? actionRegistry.list()
+      : await executeRegisteredAction(
+          request.name,
+          request.input,
+          "connected",
+          getConnectedActionContext(),
+          request.id,
+        )
   } catch (error) {
-    result = {
-      ok: false,
-      error: serializeNativeIntegrationError(error),
-    }
+    const serialized = serializeNativeIntegrationError(error)
+    throw new JSONRPCErrorException(serialized.message, -32000, serialized)
   }
-
-  if (!runtime.enabled || runtime.port !== connection) return
-  const message: ExtensionToHost = {
-    type: "complete",
-    requestId: request.id,
-    result,
-  }
-  connection.postMessage(message)
 }
 
 function disconnect(): void {
@@ -217,6 +186,7 @@ function resetConnectionState(
   state: NativeIntegrationFailureState = "serviceNotRunning",
   error?: NativeIntegrationConnectionError,
 ): void {
+  if (runtime.port) closeNativeRpc(runtime.port, error?.message ?? "NewsNext App disconnected")
   runtime.port = undefined
   runtime.collectionStatus = undefined
   runtime.daemonVersion = undefined
@@ -227,7 +197,7 @@ function resetConnectionState(
   runtime.connectionState = state
   runtime.connectionError = error
   const connectionFailure = new Error(error?.message ?? "NewsNext App disconnected")
-  rejectAllPendingRequests(connectionFailure)
+  rejectNativeConnection(connectionFailure)
   clearNativeMessageChunks()
   notifyDiagnostics()
 }
@@ -298,17 +268,7 @@ async function requireNativeConnection(): Promise<NativePort> {
   if (runtime.connectionState !== "connecting" || !runtime.port) {
     throw new Error("NewsNext App is not connected")
   }
-  return await new Promise((resolve, reject) => {
-    const pending = {
-      reject,
-      resolve,
-      timeoutId: setTimeout(() => {
-        pendingConnectionRequests.delete(pending)
-        reject(new Error("Timed out connecting to the NewsNext App"))
-      }, NATIVE_REQUEST_TIMEOUT_MS),
-    }
-    pendingConnectionRequests.add(pending)
-  })
+  return await waitForNativeConnection()
 }
 
 function connect(): void {
@@ -329,6 +289,7 @@ function connect(): void {
     return
   }
   runtime.port = nextPort
+  openNativeRpc(nextPort, request => executeCommand(nextPort, request), message => handleNotification(nextPort, message.method, message.params), message => failConnection(nextPort, message))
   nextPort.onDisconnect.addListener(() => handleDisconnect(nextPort))
   nextPort.onMessage.addListener((value: unknown) => handleMessage(nextPort, value))
 
@@ -342,7 +303,11 @@ function connect(): void {
     },
     workspace: runtime.workspace,
   }
-  nextPort.postMessage(hello)
+  try {
+    nextPort.postMessage(hello)
+  } catch (error) {
+    failConnection(nextPort, error instanceof Error ? error.message : "Failed to initialize native connection")
+  }
 }
 
 function handleDisconnect(connection: NativePort): void {
@@ -391,58 +356,19 @@ function handleMessage(connection: NativePort, value: unknown): void {
       runtime.connectionError = undefined
       sendCollectionSubscription()
       notifyDiagnostics()
-      resolvePendingConnectionRequests(connection)
+      resolveNativeConnection(connection)
       enqueueIncomingWorkspace(
         connection,
         () => message.workspace,
         message.localCardIds,
         "Failed to apply the NewsNext Workspace",
       )
-    } else if (message.type === "workerRoutingChanged") {
-      if (message.revision > runtime.workerRoutingRevision) {
-        runtime.workerRoutingRevision = message.revision
-        runtime.localCardIds = new Set(message.localCardIds)
-        runtime.offlineWorkers = message.offlineWorkers
-      }
-    } else if (message.type === "workerTakeoverResult") {
-      settleWorkerTakeoverRequest(message.requestId)
-    } else if (message.type === "sdkFrame") {
-      receiveSdkFrame(message.requestId, message.frame)
-    } else if (message.type === "execute") {
-      void executeCommand(connection, message.request).catch((error) => {
-        console.error("Failed to return native App integration result", error)
+    } else if (message.type === "rpc") {
+      void receiveNativeRpc(connection, message.message).catch((error) => {
+        console.error("Failed to process native RPC message", error)
+        failConnection(connection, error instanceof Error ? error.message : "Native RPC failed")
       })
-    } else if (message.type === "workspaceChanged") {
-      enqueueIncomingWorkspace(
-        connection,
-        () => applyWorkspaceChangePatch(message.patch),
-        message.localCardIds,
-        "Failed to apply the NewsNext Workspace update",
-      )
-    } else if (message.type === "workspaceResult") {
-      settleWorkspaceRequest(message.requestId, message.revision, message.localCardIds)
-    } else if (message.type === "liveCardResult") {
-      settleLiveCardRequest(message.requestId, message.result)
-    } else if (message.type === "collectionStatusChanged") {
-      if (runtime.collectionSubscribed) {
-        runtime.collectionStatus = message.status
-        notifyDiagnostics()
-      }
-    } else if (message.type === "collectionStatusResult") {
-      takePendingRequest(pendingCollectionRequests, message.requestId)?.resolve(message.status)
-    } else if (message.type === "logsResult") {
-      takePendingRequest(pendingLogsRequests, message.requestId)?.resolve(message.logs)
     } else {
-      if (message.requestId) {
-        const error = new Error(message.message)
-        if (rejectPendingRequest(pendingLiveCardRequests, message.requestId, error)
-          || rejectPendingRequest(pendingWorkspaceRequests, message.requestId, error)
-          || rejectPendingRequest(pendingLogsRequests, message.requestId, error)
-          || rejectPendingRequest(pendingCollectionRequests, message.requestId, error)
-          || rejectPendingRequest(pendingWorkerTakeoverRequests, message.requestId, error)) {
-          return
-        }
-      }
       failConnection(connection, message.message, message.code)
       console.error("NewsNext native host error", message.message)
     }
@@ -530,5 +456,32 @@ export async function registerNativeIntegration(): Promise<void> {
     connect()
   } else {
     await browser.alarms.clear(NATIVE_INTEGRATION_RECONNECT_ALARM)
+  }
+}
+
+function handleNotification(connection: NativePort, method: string, params: unknown): void {
+  if (!runtime.enabled || runtime.port !== connection) return
+  const notification = parseNativeNotification(method, params)
+  switch (notification.method) {
+    case "workerRoutingChanged": {
+      const message = notification.params
+      if (message.revision > runtime.workerRoutingRevision) {
+        runtime.workerRoutingRevision = message.revision
+        runtime.localCardIds = new Set(message.localCardIds)
+        runtime.offlineWorkers = message.offlineWorkers
+      }
+      break
+    }
+    case "workspaceChanged": {
+      const message = notification.params
+      enqueueIncomingWorkspace(connection, () => applyWorkspaceChangePatch(message.patch), message.localCardIds, "Failed to apply the NewsNext Workspace update")
+      break
+    }
+    case "collectionStatusChanged":
+      if (runtime.collectionSubscribed) {
+        runtime.collectionStatus = notification.params.status
+        notifyDiagnostics()
+      }
+      break
   }
 }

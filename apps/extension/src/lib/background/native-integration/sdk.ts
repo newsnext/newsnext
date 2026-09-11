@@ -1,14 +1,9 @@
 import type { RequireNativeConnection } from "./types"
-import type { ExtensionToHost } from "@/lib/native-protocol/ExtensionToHost"
 import { browser } from "#imports"
 import { isWidgetSdkControl, isWidgetSdkRequest, sdkErrorFrame, WIDGET_SDK_PORT } from "@/lib/widget-host"
+import { nativeRpc } from "./rpc"
+import { NativeRequestNotSentError } from "./rpc-client"
 import { runtime } from "./state"
-
-const streams = new Map<string, (frame: unknown) => void>()
-
-export function receiveSdkFrame(requestId: string, frame: unknown): void {
-  streams.get(requestId)?.(frame)
-}
 
 export function registerSdkBridge(requireConnection: RequireNativeConnection): void {
   browser.runtime.onConnect.addListener((port) => {
@@ -19,11 +14,13 @@ export function registerSdkBridge(requireConnection: RequireNativeConnection): v
       port.disconnect()
       return
     }
-    const requestId = crypto.randomUUID()
+    const streamId = crypto.randomUUID()
     let closed = false
     let connection: Awaited<ReturnType<RequireNativeConnection>> | undefined
     let started: Promise<void> | undefined
-    const send = (message: ExtensionToHost): void => connection?.postMessage(message)
+    let opening = false
+    let pulling = false
+    let pullTimeoutMs = 63_000
     const fail = (error: unknown): void => {
       try {
         if (!closed) port.postMessage(sdkErrorFrame(error))
@@ -34,11 +31,12 @@ export function registerSdkBridge(requireConnection: RequireNativeConnection): v
     function cleanup(): void {
       if (closed) return
       closed = true
-      streams.delete(requestId)
       connection?.onDisconnect.removeListener(disconnected)
-      try {
-        send({ type: "sdkCancel", requestId })
-      } catch { /* The native connection may already be closed. */ }
+      // Cancel after open settles, including a lost open response. The stream ID is
+      // independent of RPC IDs, so cleanup is idempotent and cannot race creation.
+      void started?.catch(() => undefined).then(async () => {
+        if (connection && opening) await nativeRpc(connection).request("sdk.cancel", { streamId }, 5000)
+      }).catch(() => undefined)
     }
     port.onDisconnect.addListener(cleanup)
     port.onMessage.addListener((message: unknown) => {
@@ -51,23 +49,35 @@ export function registerSdkBridge(requireConnection: RequireNativeConnection): v
             throw new Error("Update the NewsNext native host and reconnect the extension to use the Widget SDK")
           }
           connection.onDisconnect.addListener(disconnected)
-          streams.set(requestId, (frame) => {
-            try {
-              port.postMessage(frame)
-            } catch {
-              cleanup()
-            }
-          })
-          send({ type: "sdkRequest", requestId, request: message.request })
+          const request = message.request
+          if (typeof request.timeoutMs === "number") pullTimeoutMs = request.timeoutMs + 3000
+          opening = true
+          try {
+            await nativeRpc(connection).request("sdk.open", { streamId, request })
+          } catch (error) {
+            if (error instanceof NativeRequestNotSentError) opening = false
+            throw error
+          }
         })()
         void started.catch(fail)
       } else if (isWidgetSdkControl(message)) {
         if (message.type === "cancel") {
           cleanup()
         } else if (started) {
-          void started.then(() => {
-            if (!closed) send({ type: "sdkNext", requestId })
-          }).catch(fail)
+          if (pulling) {
+            fail(new Error("An SDK pull is already pending"))
+            return
+          }
+          pulling = true
+          void started.then(async () => {
+            if (closed || !connection) return
+            const frame = await nativeRpc(connection).request("sdk.next", { streamId }, pullTimeoutMs)
+            if (closed) return
+            port.postMessage(frame)
+            if (frame && typeof frame === "object" && "type" in frame && (frame.type === "end" || frame.type === "error")) cleanup()
+          }).catch(fail).finally(() => {
+            pulling = false
+          })
         }
       } else {
         fail(new Error("Invalid Widget SDK request"))

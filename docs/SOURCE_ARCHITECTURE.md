@@ -876,20 +876,119 @@ bun run protocol:export
 
 This clears `bindings/`, exports fresh types with `.js` import extensions,
 replaces both generated directories, routes public result types to the SDK and
-internal wire types to the extension, and rebuilds the SDK. This development command expects the CLI and web checkouts
+internal wire types to the extension, without building the SDK. This development command expects the CLI and web checkouts
 to be siblings, as in the NewsNext wrapper repository.
 Wildcard package exports expose the generated files directly, without a
 maintained export index. SDK builds clear `dist/` to prevent removed types from
 remaining in the published package. Commit the generated types with the change.
 Ordinary SDK builds use the committed files and do not require Rust or the
 private CLI repository. The native-messaging entry point stays browser-safe.
-Protocol 23 carries Workspace patches, LiveCard routing, Actions, cached results,
-and SDK streams. Incompatible versions disconnect. Request IDs correlate
-completions; timed-out or disconnected executions are not replayed automatically.
+Protocol 27 carries Workspace patches, LiveCard routing, Actions, cached results,
+and SDK streams. Incompatible versions disconnect. The six extension-initiated
+request/reply operations (`workspaceCommit`, `liveCardGet`, `logsGet`,
+`collectionStatusGet`, `collectionStatusSubscribe`, and `workerTakeover`) use JSON-RPC 2.0 inside a typed
+`rpc { message }` envelope. `json-rpc-2.0` owns correlation and deadlines in the
+extension; `jsonrpsee-core` dispatches methods and makes reverse calls in the daemon. Native Hosts relay
+daemon RPC envelopes; SDK RPC terminates in the Host and retains bounded stream sessions. Rust owns exported parameter and
+result structures; the extension validates the envelope and each result before
+returning it to business code.
+
+CLI-to-daemon control calls also use the `rpc` envelope: `actions.execute`,
+`history.query`, `widgets.data`, `status`, and `stop`. Each control call owns one
+local socket and one response, with a fixed connection-local ID and strict response
+validation; no shared pending registry is needed. The control method registry is
+separate from registered Worker methods, which require a live Worker identity.
+Disconnecting a control socket drops its in-flight operation, including any reverse
+RPC waiter. Action deadlines remain per-call (at most ten minutes); the control
+transport has a 602-second outer ceiling. Stop is acknowledged before shutdown.
+Action results retain their Worker identity and structured domain result for CLI/SDK
+reporting. Legacy `status` and `stop` envelopes remain only as lifecycle entry points
+so a newer CLI can probe and stop an older daemon during upgrade; other legacy
+control request/result envelopes are removed. SDK history exports continue pulling
+bounded queries through this interface without changing their stream contract.
+
+Native and IPC readers distinguish EOF before a frame from a truncated length
+prefix or payload; partial frames are errors. Native Host input and registered
+Worker IPC input each buffer at most four messages, pausing their reader when
+full. Individual frames retain the 64 MiB input limit. Worker output is serialized
+once and bounded to 64 queued messages plus one active write, with a shared
+64 MiB serialized-byte budget covering both queued and active frames. Exceeding
+either output limit closes the slow Worker connection and releases its RPC
+waiters; replies and Workspace patches are never silently dropped while keeping
+the connection usable. Sending does not wait for capacity while holding State's
+lock. A failed queue also interrupts a blocked IPC write. Reconnection uses the
+normal Workspace/routing handshake. Serializers stop at the available output byte
+budget instead of fully allocating an oversized payload. This bounds serialized
+frames, not the source objects or all transient allocations.
+Native Host stdout belongs to a dedicated writer thread, with 64 queued messages
+plus one active write and a 64 MiB serialized-byte budget. Async handlers enqueue
+without waiting for pipe writes; queue overflow or writer failure closes the Host.
+Normal exit drains accepted messages with a five-second shutdown deadline.
+Small messages reuse their serialized bytes; large messages retain UTF-8-safe
+chunking and the browser's 1 MiB per-message limit. Each complete native frame is
+flushed by the writer.
+
+Each browser port owns one RPC client. Disconnect closes that client and rejects
+its outstanding calls; a reconnect creates a new client. Late replies are ignored,
+and requests are never automatically replayed. Ordinary RPC calls are limited to
+64 per direction. SDK cleanup has 64 separate extension-side slots, so saturated
+ordinary calls cannot block cancellation. Cleanup overflow, timeout, or error
+closes the connection to release Host-local sessions. An open rejected by local
+admission sends no cancellation.
+Extension-to-daemon calls use a 65-second deadline; reverse calls
+preserve the requesting CLI/SDK operation's individual deadline. Daemon request tasks belong to their
+connection and are aborted when it closes. Reverse calls have a connection-scoped lifecycle index containing only wire IDs
+and whether each request has been sent. The RPC library owns result waiters.
+Cancellation retires an already-sent library request through a local error response;
+a cancelled queued request is retired when it reaches the transport, without
+being sent to the browser. Late or duplicate responses are filtered before reaching
+jsonrpsee. Removing a Worker closes its peer, immediately failing outstanding calls.
+
+This transport negotiates single calls with nonempty string IDs from the extension
+and numeric IDs from the daemon. Server-to-extension state pushes are JSON-RPC
+notifications without IDs: `workerRoutingChanged`, `workspaceChanged`, and
+`collectionStatusChanged`. Rust exports their discriminated parameter types and
+the extension validates each notification before applying it; notifications never
+produce responses. Batches and extension-to-daemon notifications are not negotiated. The daemon validates envelopes before invoking
+`RpcModule::raw_json_request`; invalid envelopes and unknown methods get protocol
+errors, and application errors retain their domain code in `error.data`.
+Workspace commits, Worker takeovers and subscription changes execute serially in each connection's
+input loop; ordinary reads may run concurrently. Workspace updates still use the
+extension's existing commit queue. A commit acknowledgment must not overwrite
+routing information from a newer routing notification.
+
+Reverse Actions use the `execute` RPC method with `params.request` carrying the
+Rust-owned `ExtensionCommand`. Its execution ID is preserved independently of
+the RPC wire ID. Success uses `result`; failures use JSON-RPC `error` with the
+serialized domain error in `error.data`, preserving error name, code and login URL.
+The extension handles reverse calls asynchronously without blocking response
+processing, so an Action can call back into the daemon on the same connection.
+Old native execution, state push, subscription and SDK control/frame envelopes
+are removed. Handshake, connection errors and chunk framing retain their transport
+envelopes. RPC timeout ends waiting; it does not roll back an already applied
+Workspace change or guarantee cancellation of browser execution.
 Additive features use explicit capability negotiation. The native host advertises
 `sdk` when it supports pull-based SDK streams from Widgets. The SDK shares one
 client implementation between the Node subprocess transport and browser
 MessagePort transport; Widget requests reuse the existing CLI SDK dispatcher.
+SDK streams use Host-local `sdk.open`, `sdk.next`, and `sdk.cancel` RPC methods.
+Open validates and reserves a caller-generated stream ID, independently of RPC
+wire IDs; it acknowledges without launching a child. The first next starts the
+local `__sdk` child, and each next returns exactly one unchanged SDK data/end/error
+frame. No unsolicited frame notifications are needed. The Host permits 32 stream
+sessions and 32 active pull handlers; open/cancel run in input order, while pulls
+run asynchronously so reverse Actions can complete on the same connection.
+A stream has one queued pull slot; the extension bridge allows only one pending
+pull per consumer. There is no timeout while consumer code processes a frame.
+Each pull uses the SDK request's timeout plus startup allowance, including requests
+up to ten minutes. Cancel removes the session and aborts its task, dropping the
+child and any waiting pull; disconnect drops all sessions. Terminal frames close
+the child and the extension cleans up the session. Cleanup waits for open to settle,
+including a lost acknowledgement, so early cancellation cannot leave a late-created
+stream behind. RPC errors retain domain codes when converted to SDK error frames.
+The extension no longer maintains a separate stream-to-frame dispatch map. The
+public Node and Widget SDK stream contracts remain unchanged.
+
 See [Layers and Widgets](APPLICATION_ARCHITECTURE.md#layers-and-widgets) for the
 host boundary and lifecycle.
 
@@ -924,7 +1023,7 @@ The collection chain uses `collection-status.ts`, `parseCollectionStatus`,
 the daemon: `CollectionStatus` contains per-stream `StreamStatus` records.
 
 The daemon advertises additive `collectionStatus` and `collectionStatusPush` capabilities.
-Registered Workers bootstrap with `collectionStatusGet` / `collectionStatusResult`, then
+Registered Workers bootstrap with the `collectionStatusGet` RPC method, then
 use `collectionStatusSubscribe { enabled }` to receive typed `collectionStatusChanged`
 events through Native Messaging. Only changes to scheduler state or committed history
 observations trigger pushes; a changing sample timestamp alone does not. The result is a projection of the live scheduler, including in-flight
