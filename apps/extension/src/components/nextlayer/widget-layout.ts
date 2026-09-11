@@ -1,4 +1,5 @@
 import type { LiveWidget, LiveWidgetLayout } from "@/lib/board"
+import { MIN_WIDGET_WIDTH } from "@newsnext/sdk/models"
 
 export const WIDGET_GAP = 24
 // Split the 400 × 500 LiveCard footprint, including its gutter, into two units.
@@ -22,7 +23,7 @@ export interface WidgetGridNode {
 
 // Manifest, persisted, and rendered sizes all use half-LiveCard units.
 export function clampWidgetWidth(width: number): number {
-  return Math.max(1, Math.min(4, Math.round(width)))
+  return Math.max(MIN_WIDGET_WIDTH, Math.min(4, Math.round(width)))
 }
 
 export function getWidgetColumns(availableWidth: number, nodes: readonly WidgetGridNode[]): number {

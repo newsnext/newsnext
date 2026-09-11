@@ -1,6 +1,6 @@
 import type { ApplicationBoardContext, ApplicationData, ApplicationNowLayerLiveCard, Board, BoardConfigurationResult, BoardDeleteInput, BoardDetail, LiveCard, LiveCardPatch, LiveWidgetDataScope, LiveWidgetLayout, SourceDescriptor } from "../models/index.js"
 import Type from "typebox"
-import { COLORS, WIDGET_CHARTS } from "../models/index.js"
+import { COLORS, MIN_WIDGET_WIDTH, WIDGET_CHARTS } from "../models/index.js"
 import { defineActionContract } from "./definition.js"
 import { EmptyObject, Identifier, RecordValue, stringEnum } from "./schema.js"
 
@@ -32,7 +32,7 @@ const LiveCardCreatedResult = Type.Object({
 
 const WidgetLayoutParams = Type.Unsafe<LiveWidgetLayout>(Type.Object({
   height: Type.Integer({ minimum: 1, maximum: 100 }),
-  width: Type.Integer({ minimum: 1, maximum: 12 }),
+  width: Type.Integer({ minimum: MIN_WIDGET_WIDTH, maximum: 12 }),
   x: Type.Integer({ minimum: 0, maximum: 11 }),
   y: Type.Integer({ minimum: 0 }),
 }, { additionalProperties: false }))

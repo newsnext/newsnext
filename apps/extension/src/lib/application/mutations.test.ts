@@ -45,6 +45,25 @@ function createTargetBoard(cardIds: string[] = []): ApplicationData["boards"][nu
 }
 
 describe("application mutations", () => {
+  it("rejects half-card widths on installation and resizing while allowing one-and-a-half cards", () => {
+    const input = {
+      boardId: "reading",
+      widgetId: "feed",
+      dataScope: { type: "board" as const },
+      layout: { x: 0, y: 0, width: 1, height: 1 },
+    }
+    expect(() => installLiveWidgetMutation(createData(), input)).toThrow("Widget layout is invalid")
+    const installed = installLiveWidgetMutation(createData(), {
+      ...input,
+      layout: { ...input.layout, width: 3 },
+    }).data
+    expect(installed.boards[0]?.nextLayer.liveWidgets[0]?.layout.width).toBe(3)
+    expect(() => setLiveWidgetLayoutsMutation(installed, {
+      boardId: "reading",
+      liveWidgets: [{ widgetId: "feed", layout: input.layout }],
+    })).toThrow("Widget layout is invalid")
+  })
+
   it("moves a Widget atomically while retaining its size, metadata and parameters", () => {
     const data = createData()
     data.boards.push(createTargetBoard())
@@ -69,7 +88,7 @@ describe("application mutations", () => {
     expect(configured.boards[0]?.nextLayer.liveWidgets).toHaveLength(1)
     expect(moved.liveCards).toEqual(configured.liveCards)
     expect(moveLiveWidgetMutation(moved, { boardId: "target", targetBoardId: "target", widgetId: "feed" }).data).toBe(moved)
-    const duplicate = installLiveWidgetMutation(moved, { boardId: "reading", widgetId: "feed", dataScope: { type: "board" }, layout: { x: 0, y: 0, width: 1, height: 1 } }).data
+    const duplicate = installLiveWidgetMutation(moved, { boardId: "reading", widgetId: "feed", dataScope: { type: "board" }, layout: { x: 0, y: 0, width: 2, height: 1 } }).data
     expect(() => moveLiveWidgetMutation(duplicate, { boardId: "reading", targetBoardId: "target", widgetId: "feed" })).toThrow("already contains")
   })
 

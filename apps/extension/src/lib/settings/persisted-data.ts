@@ -8,7 +8,7 @@ import type {
 } from "../board"
 import type { LiveCard, LiveCardPatch } from "../source"
 import type { PersistedSettings } from "./persisted-settings"
-import { isThemeColor, parseWidgetChartOptions } from "@newsnext/sdk/models"
+import { isThemeColor, MIN_WIDGET_WIDTH, parseWidgetChartOptions } from "@newsnext/sdk/models"
 import {
   APPLICATION_DATA_VERSION,
   createEmptyApplicationData,
@@ -156,12 +156,13 @@ function normalizeLiveWidgets(
       view = undefined
     }
     seen.add(candidate.widgetId)
+    const width = Math.max(MIN_WIDGET_WIDTH, layout.width)
     return [{
       dataScope,
       layout: {
         height: layout.height,
-        width: layout.width,
-        x: layout.x,
+        width,
+        x: Math.min(layout.x, 12 - width),
         y: layout.y,
       },
       ...((patch.metadata || patch.params || view)

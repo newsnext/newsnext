@@ -9,7 +9,7 @@ import type {
 } from "../board"
 import type { LiveCardPatch } from "../source/live-cards"
 import type { ApplicationData } from "./data"
-import { parseWidgetChartOptions } from "@newsnext/sdk/models"
+import { MIN_WIDGET_WIDTH, parseWidgetChartOptions } from "@newsnext/sdk/models"
 import { createBoard } from "../board"
 import { mergeLiveCardPatch } from "../source/live-cards"
 
@@ -559,7 +559,7 @@ function assertWidgetLayout(layout: LiveWidgetLayout): void {
     || !Number.isInteger(layout.y)
     || layout.y < 0
     || !Number.isInteger(layout.width)
-    || layout.width < 1
+    || layout.width < MIN_WIDGET_WIDTH
     || layout.width > 12
     || layout.x + layout.width > 12
     || !Number.isInteger(layout.height)

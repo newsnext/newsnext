@@ -376,15 +376,18 @@ export function LiveWidgetGrid({ boardId, onReady, viewReady }: LiveWidgetGridPr
       return manifest ? [{ manifest, placement }] : []
     }) ?? []
   }, [board?.nextLayer.liveWidgets, manifestQuery.widgets])
-  const nodes = useMemo<SortableWidgetNode[]>(() => widgets.map(({ manifest, placement }) => ({
-    id: getGridWidgetId(placement.widgetId),
-    x: placement.layout.x,
-    y: placement.layout.y,
-    w: Math.max(clampWidgetWidth(manifest.minWidth), clampWidgetWidth(placement.layout.width)),
-    h: Math.max(manifest.minHeight, placement.layout.height),
-    minW: clampWidgetWidth(manifest.minWidth),
-    minH: manifest.minHeight,
-  })), [widgets])
+  const nodes = useMemo<SortableWidgetNode[]>(() => widgets.map(({ manifest, placement }) => {
+    const minW = clampWidgetWidth(manifest.minWidth)
+    return {
+      id: getGridWidgetId(placement.widgetId),
+      x: placement.layout.x,
+      y: placement.layout.y,
+      w: Math.max(minW, clampWidgetWidth(placement.layout.width)),
+      h: Math.max(manifest.minHeight, placement.layout.height),
+      minW,
+      minH: manifest.minHeight,
+    }
+  }), [widgets])
   const saveLayout = useCallback(async (layout: SortableWidgetNode[]) => {
     if (!board) return
     const updates = getChangedWidgetLayouts(layout, board.nextLayer.liveWidgets)

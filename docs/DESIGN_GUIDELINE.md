@@ -357,11 +357,13 @@ IDs before accepting Widget removal.
 
 Widget width and height use half-LiveCard units in manifests, persisted layouts,
 and resize steps: `2 × 2` matches a 400px × 500px LiveCard.
-Widths range from half through two cards. With the shared 24px gutter, visible widths are 188px, 400px, 612px, and 824px. Keep that
+Widths range from one through two cards in half-card increments (2, 3, or 4 units). With the shared 24px gutter, visible widths are 400px, 612px, and 824px. Keep that
 gutter and those widths at every viewport size. Center complete card columns,
 up to four LiveCards; allow horizontal scrolling when the widest Widget cannot
 fit. Horizontal cells are 212px and vertical cells are 262px, each including the
-gutter. A `1 × 1` Widget is 188px × 238px after reserving the gutter.
+gutter. A minimum-size `2 × 1` Widget is 400px × 238px after reserving the gutter.
+Clamp legacy half-card widths and manifest width minima to at least two units.
+New placements and layout updates must also enforce this minimum.
 Do not backfill an earlier gap with a later Widget.
 
 Snapshot order and the pointer's grab offset at drag start. Precompute the packed

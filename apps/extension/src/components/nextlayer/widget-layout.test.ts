@@ -30,8 +30,8 @@ describe("getChangedWidgetLayouts", () => {
 })
 
 describe("clampWidgetWidth", () => {
-  it("clamps widths to the supported half-card range", () => {
-    expect([1, 2, 3, 4, 6, 8, 12].map(clampWidgetWidth)).toEqual([1, 2, 3, 4, 4, 4, 4])
+  it("clamps widths to at least one card while retaining half-card increments", () => {
+    expect([1, 2, 3, 4, 6, 8, 12].map(clampWidgetWidth)).toEqual([2, 2, 3, 4, 4, 4, 4])
   })
 })
 
@@ -150,7 +150,7 @@ describe("fixed widget widths and resizing", () => {
     const original = { w: 2, h: 4, minW: 1, minH: 2 }
     expect(getResizedWidgetSize(original, { x: 100, y: 20 })).toEqual({ w: 2, h: 4 })
     expect(getResizedWidgetSize(original, { x: 212, y: 262 })).toEqual({ w: 3, h: 5 })
-    expect(getResizedWidgetSize(original, { x: -1000, y: -1000 })).toEqual({ w: 1, h: 2 })
+    expect(getResizedWidgetSize(original, { x: -1000, y: -1000 })).toEqual({ w: 2, h: 2 })
     expect(getResizedWidgetSize(original, { x: 10000, y: 100000 })).toEqual({ w: 4, h: 100 })
     expect(original).toEqual({ w: 2, h: 4, minW: 1, minH: 2 })
   })

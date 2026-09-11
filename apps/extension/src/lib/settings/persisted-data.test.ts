@@ -190,6 +190,24 @@ describe("widget parameter persistence", () => {
 })
 
 describe("legacy Widget settings", () => {
+  it("expands half-card placements without crossing the grid boundary", () => {
+    const data = createData()
+    data.boards[0]!.nextLayer.liveWidgets = [{
+      widgetId: "narrow",
+      dataScope: { type: "board" },
+      layout: { x: 11, y: 3, width: 1, height: 1 },
+    }]
+    const normalized = normalizeApplicationData(data)
+    expect(normalized.boards[0]?.nextLayer.liveWidgets[0]?.layout).toEqual({
+      x: 10,
+      y: 3,
+      width: 2,
+      height: 1,
+    })
+    expect(normalizeApplicationData(normalized)).toEqual(normalized)
+    expect(data.boards[0]?.nextLayer.liveWidgets[0]?.layout.width).toBe(1)
+  })
+
   it("migrates old placements once and honors an explicit patch", () => {
     const data = createData()
     const widget = { widgetId: "chart", dataScope: { type: "board" }, layout: { x: 0, y: 0, width: 2, height: 2 }, params: { enabled: false }, metadata: { title: "Custom" } }

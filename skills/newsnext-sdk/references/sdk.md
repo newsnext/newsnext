@@ -334,6 +334,11 @@ choose SDK query arguments. The shared settings editor validates the Source
 schema's constraints. The daemon checks JSON types, bounds, and option membership.
 
 
+Widget layout dimensions use half-LiveCard units. Placement width must be at least
+`2` (one LiveCard); the UI supports widths `2`, `3`, and `4`, retaining half-card
+resize increments. Height may still be `1`. Older narrower placements expand to
+the minimum when loaded.
+
 ### Widget display metadata
 
 `widget.json.title` and `widget.json.color` define the default display identity,

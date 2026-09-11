@@ -16,6 +16,9 @@ export type LiveWidgetDataScope
   = | { type: "board" }
     | { type: "cards", cardIds: string[] }
 
+// Layout widths use half-LiveCard units; two units match one LiveCard.
+export const MIN_WIDGET_WIDTH = 2
+
 export interface LiveWidgetLayout {
   height: number
   width: number
