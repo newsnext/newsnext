@@ -1,7 +1,6 @@
 import type { CardMetadata } from "@newsnext/sdk/models"
-import { ThemeIcon } from "@newsnext/ui/components/theme-icon"
-import { ThemeSelector } from "@newsnext/ui/components/theme-selector"
-import { useEffect, useId, useState } from "react"
+import { useEffect, useState } from "react"
+import { CardColorSelector } from "@/components/card-shell/settings/card-color-selector"
 import { EditableImage, EditableInput, Info } from "@/components/card-shell/settings/fields"
 import { CardSettingsSection } from "@/components/card-shell/settings/settings-section"
 import { useI18n } from "@/hooks/use-i18n"
@@ -15,7 +14,6 @@ interface CardMetadataSettingsProps {
 
 export function CardMetadataSettings({ metadata, onSave, onReset, onPreviewMetadataChange }: CardMetadataSettingsProps): React.JSX.Element {
   const { t } = useI18n()
-  const layoutId = useId()
   const [draft, setDraft] = useState<CardMetadata | null>(null)
   useEffect(() => {
     onPreviewMetadataChange?.(draft)
@@ -58,23 +56,13 @@ export function CardMetadataSettings({ metadata, onSave, onReset, onPreviewMetad
       <Info label={t("badge")}>
         <EditableImage src={current.badge ?? ""} alt={`${current.title ?? ""} badge`} rounded editable={isEditing} onChange={badge => setDraft(previous => ({ ...previous, badge }))} />
       </Info>
-      {isEditing
-        ? (
-            <div className="mt-2 space-y-2">
-              <span className="font-medium text-muted-foreground">{t("themeColor")}</span>
-              <div className="min-h-28">
-                <ThemeSelector value={selectedColor} onValueChange={color => setDraft(previous => ({ ...previous, color }))} layoutId={layoutId} />
-              </div>
-            </div>
-          )
-        : (
-            <Info label={t("themeColor")}>
-              <span className="ml-auto flex items-center gap-2">
-                <ThemeIcon color={selectedColor} className="size-5" />
-                {selectedColor}
-              </span>
-            </Info>
-          )}
+      <Info label={t("themeColor")}>
+        <CardColorSelector
+          value={selectedColor}
+          editable={isEditing}
+          onValueChange={color => setDraft(previous => ({ ...previous, color }))}
+        />
+      </Info>
     </CardSettingsSection>
   )
 }

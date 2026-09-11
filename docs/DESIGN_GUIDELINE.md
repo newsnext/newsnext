@@ -239,9 +239,15 @@ LiveCards define the primary NewsNext surface treatment.
   its 232px by 72px option grid so the visible clearance is 19px on every side.
   In its collapsed title state, show the active Board's canonical SVG icon
   colored through `currentColor`; do not substitute the legacy vector logo.
+  Keep `ThemeSelector` fixed at six columns throughout the island animation.
   Theme mode belongs in Appearance settings rather than the title island.
   Changing the active Board color here updates the same persisted Board
   preference used by its editor.
+- LiveCard and Widget metadata settings use a separate `CardColorSelector`
+  as an inline field: show a small color swatch at rest, and open a compact
+  six-column swatch menu when editing. Reuse the shared inline Select surface
+  and use circular hover backgrounds and selection rings around the swatches;
+  do not embed the Board icon palette in card settings.
 - While a LiveCard or Widget is being dragged, temporarily replace the header
   Dynamic Island with an enlarged red trash target. Strengthen its tint and icon
   motion when the pointer enters the island. A valid drop deletes the LiveCard

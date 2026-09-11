@@ -137,8 +137,9 @@ function SelectLabel({
 function SelectItem({
   className,
   children,
+  showIndicator = true,
   ...props
-}: SelectPrimitive.Item.Props): React.JSX.Element {
+}: SelectPrimitive.Item.Props & { showIndicator?: boolean }): React.JSX.Element {
   const variant = React.use(SelectVariantContext)
 
   return (
@@ -152,18 +153,20 @@ function SelectItem({
       )}
       {...props}
     >
-      <SelectPrimitive.ItemText className="flex flex-1 shrink-0 gap-2 whitespace-nowrap">
+      <SelectPrimitive.ItemText data-slot="select-item-text" className="flex flex-1 shrink-0 gap-2 whitespace-nowrap">
         {children}
       </SelectPrimitive.ItemText>
-      <SelectPrimitive.ItemIndicator
-        render={
-          (
-            <span className="pointer-events-none absolute right-2 flex size-4 items-center justify-center text-theme-600 dark:text-theme-300" />
-          )
-        }
-      >
-        <CheckIcon className="pointer-events-none" />
-      </SelectPrimitive.ItemIndicator>
+      {showIndicator && (
+        <SelectPrimitive.ItemIndicator
+          render={
+            (
+              <span className="pointer-events-none absolute right-2 flex size-4 items-center justify-center text-theme-600 dark:text-theme-300" />
+            )
+          }
+        >
+          <CheckIcon className="pointer-events-none" />
+        </SelectPrimitive.ItemIndicator>
+      )}
     </SelectPrimitive.Item>
   )
 }

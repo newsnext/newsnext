@@ -19,7 +19,7 @@ export function ThemeSelector({ value, onValueChange, layoutId = "theme-indicato
     <RadioGroup
       data-slot="theme-selector"
       aria-label="Theme color"
-      className="mx-auto grid h-full w-full max-w-58 grid-cols-[repeat(auto-fit,2rem)] place-content-center gap-2"
+      className="grid h-full w-full grid-cols-[repeat(6,2rem)] place-content-center gap-2"
       value={value}
       onValueChange={onValueChange}
       onClick={event => event.stopPropagation()}
