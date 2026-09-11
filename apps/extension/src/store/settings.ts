@@ -51,6 +51,10 @@ export const persistedDeviceStateAtom = atomWithStorage<PersistedDeviceState>(
   { getOnInit: true },
 )
 
+export const nativeIntegrationEnabledAtom = atom(
+  get => get(persistedSettingsAtom).general.nativeIntegrationEnabled,
+)
+
 export async function initializeSettingsStorage(): Promise<void> {
   await settingsStorage.initialize()
 }

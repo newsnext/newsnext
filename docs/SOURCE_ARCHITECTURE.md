@@ -928,6 +928,13 @@ Small messages reuse their serialized bytes; large messages retain UTF-8-safe
 chunking and the browser's 1 MiB per-message limit. Each complete native frame is
 flushed by the writer.
 
+Disabling native integration is a local operation: disconnect and reject pending
+connection/RPC requests before draining queued Workspace commits and saving the
+disabled preference locally. Failed Settings commits must not restore the old
+preference after integration has been disabled. Apply this ordering to both the
+settings action and storage-driven changes, so an unavailable or incompatible
+daemon cannot prevent the user from returning to local operation.
+
 Each browser port owns one RPC client. Disconnect closes that client and rejects
 its outstanding calls; a reconnect creates a new client. Late replies are ignored,
 and requests are never automatically replayed. Ordinary RPC calls are limited to

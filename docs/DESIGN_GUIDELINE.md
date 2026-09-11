@@ -742,6 +742,11 @@ light-mode section surfaces. Retain `bg-foreground/3` in dark mode.
 Reset the shared settings content scroller to the top when the active tab
 changes; do not remount tab content or discard unsaved control state to do so.
 
+The native integration switch reflects the persisted user preference. Show daemon
+connection health separately; missing status, connection errors, and pending
+Worker operations must not disable the switch. Only a pending toggle operation
+temporarily disables it.
+
 Registry management belongs in its own Settings tab. Keep the URL field empty
 by default and show the bundled Registry as the explicit empty state. Present
 each configured Registry as an ordered status card with its origin, complete

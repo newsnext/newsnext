@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from "@newsnext/ui/components/select"
 import { Switch } from "@newsnext/ui/components/switch"
+import { useAtomValueRawSync } from "jotai"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { browser } from "#imports"
 import { ConfigSection } from "@/components/common/config-section"
@@ -17,6 +18,7 @@ import { useAsyncAction } from "@/hooks/use-async-action"
 import { useI18n } from "@/hooks/use-i18n"
 import { actions } from "@/lib/actions"
 import { NATIVE_INTEGRATION_PERMISSIONS } from "@/lib/background/native-integration/permission"
+import { nativeIntegrationEnabledAtom } from "@/store/settings"
 
 interface StatusPresentation {
   dotClassName: string
@@ -48,8 +50,11 @@ export function NativeIntegrationSettings(): React.JSX.Element {
   const { error: updateError, isPending: updating, run: runUpdate } = useAsyncAction(
     t("updateNativeIntegrationFailed"),
   )
+  const { error: toggleError, isPending: toggling, run: runToggle } = useAsyncAction(
+    t("updateNativeIntegrationFailed"),
+  )
   const state = status?.state
-  const isEnabled = state !== undefined && state !== "disabled"
+  const isEnabled = useAtomValueRawSync(nativeIntegrationEnabledAtom)
   const hasConnectionGuidance = state !== undefined
     && ["workerConflict", "hostNotInstalled", "protocolIncompatible", "daemonOutdated", "serviceNotRunning"].includes(state)
   const presentation = state ? STATUS_PRESENTATION[state] : CHECKING_PRESENTATION
@@ -91,7 +96,7 @@ export function NativeIntegrationSettings(): React.JSX.Element {
   ), [logLevel, logs])
 
   const handleEnabledChange = useCallback(async (enabled: boolean): Promise<void> => {
-    const succeeded = await runUpdate(async () => {
+    const succeeded = await runToggle(async () => {
       if (enabled) {
         const granted = await browser.permissions.request({
           permissions: [...NATIVE_INTEGRATION_PERMISSIONS],
@@ -112,7 +117,7 @@ export function NativeIntegrationSettings(): React.JSX.Element {
     if (!succeeded) {
       await refreshStatus()
     }
-  }, [refreshStatus, runUpdate])
+  }, [refreshStatus, runToggle])
 
   const handleWorkerTakeover = useCallback(async (workerId: string): Promise<void> => {
     const succeeded = await runUpdate(async () => {
@@ -163,7 +168,7 @@ export function NativeIntegrationSettings(): React.JSX.Element {
           </div>
           <Switch
             checked={isEnabled}
-            disabled={!status || updating}
+            disabled={toggling}
             aria-label={t("enableNativeIntegration")}
             onCheckedChange={enabled => void handleEnabledChange(enabled)}
           />
@@ -254,9 +259,9 @@ export function NativeIntegrationSettings(): React.JSX.Element {
             )}
           </div>
         )}
-        {updateError && (
+        {(toggleError || updateError) && (
           <p role="alert" className="text-xs text-destructive">
-            {updateError}
+            {toggleError || updateError}
           </p>
         )}
       </ConfigSection>

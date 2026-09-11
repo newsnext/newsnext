@@ -151,7 +151,7 @@ async function setNativeIntegrationEnabled(
       nativeIntegrationEnabled: nextEnabled,
     },
   }
-  await commitSettings(nextSettings, requireNativeConnection)
+  await commitNativeIntegrationSettings(nextSettings)
   await browser.storage.local.set({ [key]: nextSettings })
   await applyNativeIntegrationEnabled(nextEnabled)
   return getNativeIntegrationStatus()
@@ -396,9 +396,18 @@ async function applySynchronizedNativeIntegrationEnabled(requestedEnabled: boole
   await applyNativeIntegrationEnabled(requestedEnabled && await hasNativeIntegrationPermission())
 }
 
+async function commitNativeIntegrationSettings(settings: PersistedSettings): Promise<void> {
+  if (!settings.general.nativeIntegrationEnabled) {
+    // Disabling must remain available even when the daemon cannot be reached.
+    await applyNativeIntegrationEnabled(false)
+    await runtime.workspaceCommitQueue
+  }
+  await commitSettings(settings, requireNativeConnection)
+}
+
 async function synchronizeSettingsChange(settings: PersistedSettings): Promise<void> {
   try {
-    await commitSettings(settings, requireNativeConnection)
+    await commitNativeIntegrationSettings(settings)
     await applySynchronizedNativeIntegrationEnabled(settings.general.nativeIntegrationEnabled)
   } catch (error) {
     console.error("Failed to synchronize Settings", error)

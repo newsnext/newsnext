@@ -125,7 +125,7 @@ export async function commitSettings(
       settings: serialized,
     }), requireConnection)
   } catch (error) {
-    await mirrorWorkspaceSettings(runtime.workspace.settings)
+    if (runtime.enabled) await mirrorWorkspaceSettings(runtime.workspace.settings)
     throw error
   }
 }

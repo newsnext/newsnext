@@ -36,7 +36,10 @@ loading, SVG parsing, or serialization.
 
 Route components, the locale provider, the Radar target-board initializer, and
 the shared board selector read synchronous persisted atoms with
-`useAtomValueRawSync`.
+`useAtomValueRawSync`. The native integration switch also reads its persisted
+preference through a dedicated derived atom with this subscription, independently
+of daemon status polling. Its initial hydration and disconnected toggle behavior
+still require browser interaction verification; static checks do not cover them.
 Jotai 3 removed the unconditional post-mount render from `useAtomValue`, so an
 `atomWithStorage` hydration update between rendering and subscription can be
 missed. This left the index route holding an empty board list while the store
