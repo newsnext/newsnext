@@ -9,13 +9,15 @@ import { CardContentBackground } from "@/components/card-shell/card-refresh"
 import { PhArrowCircleLeftDuotone, PhInfoDuotone } from "@/components/icons/ph"
 import { WidgetChartContent } from "@/components/nextlayer/widget-chart-content"
 import { WidgetViewSettings } from "@/components/nextlayer/widget-view-settings"
+import { datasets, presetDatasets } from "../../../../../examples/widgets/demo-data.mjs"
+
 import { FixturePage } from "../fixture-layout"
 
-const rows = ["Technology", "Science", "Design", "Business", "Culture", "Climate"].map((label, i) => ({ label, value: 84 - i * 12, x: i * 10, y: 20 + i * 7 }))
-const queries = { observations: { rows } }
-const views: WidgetChartView[] = WIDGET_CHARTS.map(chart => ({ type: "chart", chart, query: "observations", limit: chart === "metric" ? 4 : 100 }))
+const views: WidgetChartView[] = WIDGET_CHARTS.map(chart => ({ type: "chart", chart, query: "observations", series: chart === "stacked-bar" ? "series" : undefined, limit: chart === "trend-metric" ? 1 : 500 }))
 
-function DemoCard({ view, data = queries }: { view: WidgetChartView, data?: Record<string, unknown> }): React.JSX.Element {
+const demoQueries = Object.fromEntries(WIDGET_CHARTS.map(chart => [chart, { observations: { rows: datasets[presetDatasets[chart]] } }]))
+
+function DemoCard({ view, data = demoQueries[view.chart]! }: { view: WidgetChartView, data?: Record<string, unknown> }): React.JSX.Element {
   const [flipped, setFlipped] = useState(false)
   const [patch, setPatch] = useState<Partial<WidgetChartOptions>>()
   const title = view.chart.replaceAll("-", " ")
@@ -36,7 +38,7 @@ function DemoCard({ view, data = queries }: { view: WidgetChartView, data?: Reco
 }
 
 function Gallery(): React.JSX.Element {
-  return <FixturePage category="Patterns" title="Widget presets" description="One data contract, fifteen views. Flip a card to configure its view." width="xl"><div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{views.map(view => <DemoCard key={view.chart} view={view} />)}</div></FixturePage>
+  return <FixturePage category="Patterns" title="Widget presets" description="Twenty-five presets with reusable data producers. Flip a card to configure its view." width="xl"><div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{views.map(view => <DemoCard key={view.chart} view={view} />)}</div></FixturePage>
 }
 function States(): React.JSX.Element {
   return (

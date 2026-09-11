@@ -1,6 +1,7 @@
 import type { WidgetChartView } from "@newsnext/sdk/models"
 import type { EChartsOption, SeriesOption } from "echarts"
 import type { ChartRow } from "./widget-chart-data"
+import { advancedChartOption } from "./widget-advanced-options"
 import { histogramRows } from "./widget-chart-data"
 
 export interface ChartTheme { colors: string[], foreground: string, muted: string, divider: string, fontFamily: string }
@@ -24,6 +25,8 @@ export function createChartOption(input: ChartRow[], view: WidgetChartView, them
     aria: { enabled: true },
     tooltip: { trigger: "item", renderMode: "richText", confine: true, textStyle: { fontSize: 12 }, valueFormatter: value => typeof value === "number" ? format(value) : String(value) },
   }
+  const advanced = advancedChartOption(rows, view, theme, format)
+  if (advanced) return { ...base, ...advanced }
   if (view.chart === "donut") return { ...base, series: [{ type: "pie", radius: ["40%", "64%"], avoidLabelOverlap: true, label: { color: theme.muted, fontSize: 11, overflow: "truncate", width: 60, alignTo: "edge", edgeDistance: 6 }, labelLine: { length: 8, length2: 6 }, emphasis: { scale: false }, data: rows.map(row => ({ name: row.label, value: row.value })) }] }
   if (view.chart === "funnel") return { ...base, series: [{ type: "funnel", top: 12, bottom: 12, left: "12%", width: "76%", gap: 3, sort: "none", label: { position: "inside", color: "#fff", fontSize: 11, formatter: "{b}: {c}" }, data: rows.map(row => ({ name: row.label, value: row.value })) }] }
   if (view.chart === "radar") return { ...base, radar: { radius: "64%", indicator: rows.map(row => ({ name: row.label, max: Math.max(...rows.map(row => row.value), 1) })), axisName: { color: theme.muted, fontSize: 11, overflow: "truncate", width: 75 }, splitArea: { show: false }, splitLine: { lineStyle: { color: theme.divider } }, axisLine: { lineStyle: { color: theme.divider } } }, series: [{ type: "radar", symbolSize: 4, areaStyle: { opacity: 0.14 }, data: [{ value: rows.map(row => row.value) }] }] }

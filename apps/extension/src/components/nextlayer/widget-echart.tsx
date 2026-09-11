@@ -1,15 +1,15 @@
 import type { WidgetChartView } from "@newsnext/sdk/models"
 import type { ChartRow } from "./widget-chart-data"
 import type { ChartTheme } from "./widget-chart-options"
-import { BarChart, FunnelChart, HeatmapChart, LineChart, PieChart, RadarChart, ScatterChart } from "echarts/charts"
-import { AriaComponent, GridComponent, LegendComponent, TooltipComponent, VisualMapComponent } from "echarts/components"
+import { BarChart, BoxplotChart, CustomChart, FunnelChart, HeatmapChart, LineChart, PieChart, RadarChart, SankeyChart, ScatterChart, TreemapChart } from "echarts/charts"
+import { AriaComponent, CalendarComponent, GridComponent, LegendComponent, TooltipComponent, VisualMapComponent } from "echarts/components"
 import { getInstanceByDom, init, use as registerCharts } from "echarts/core"
 import { CanvasRenderer } from "echarts/renderers"
 import { useEffect, useRef } from "react"
 import { createChartOption } from "./widget-chart-options"
 import "echarts-wordcloud"
 
-registerCharts([BarChart, FunnelChart, HeatmapChart, LineChart, PieChart, RadarChart, ScatterChart, AriaComponent, GridComponent, LegendComponent, TooltipComponent, VisualMapComponent, CanvasRenderer])
+registerCharts([CustomChart, BoxplotChart, SankeyChart, TreemapChart, BarChart, FunnelChart, HeatmapChart, LineChart, PieChart, RadarChart, ScatterChart, CalendarComponent, AriaComponent, GridComponent, LegendComponent, TooltipComponent, VisualMapComponent, CanvasRenderer])
 
 /** Canvas color utilities expect RGB; resolve the application's OKLCH tokens in-browser. */
 function readTheme(element: HTMLElement): ChartTheme {
@@ -34,7 +34,7 @@ function readTheme(element: HTMLElement): ChartTheme {
   return theme
 }
 
-export default function WidgetEchart({ rows, view }: { rows: ChartRow[], view: WidgetChartView }): React.JSX.Element {
+export default function WidgetEchart({ rows, view, compact = false }: { rows: ChartRow[], view: WidgetChartView, compact?: boolean }): React.JSX.Element {
   const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
     const element = ref.current
@@ -55,6 +55,7 @@ export default function WidgetEchart({ rows, view }: { rows: ChartRow[], view: W
             series: [{ type: "wordCloud", shape: "circle", width: "96%", height: "96%", sizeRange: [12, 42], rotationRange: [0, 0], gridSize: 5, drawOutOfBound: false, shrinkToFit: true, layoutAnimation: false, textStyle: { fontFamily: theme.fontFamily, fontWeight: 600 }, data: rows.map((row, i) => ({ name: row.label, value: row.value, textStyle: { color: theme.colors[i % theme.colors.length] } })) }],
           }
         : createChartOption(rows, view, theme)
+      if (compact) Object.assign(option, { grid: { top: 4, bottom: 4, left: 4, right: 4, containLabel: false }, xAxis: { type: "category", show: false, data: rows.map(row => row.label) }, yAxis: { type: "value", show: false, scale: true } })
       chart.setOption(option, { notMerge: true })
     }
     render()
@@ -66,6 +67,6 @@ export default function WidgetEchart({ rows, view }: { rows: ChartRow[], view: W
       resize.disconnect()
       theme.disconnect()
     }
-  }, [rows, view])
+  }, [rows, view, compact])
   return <div ref={ref} className="min-h-0 w-full flex-1" aria-label={`${view.chart} chart`} />
 }

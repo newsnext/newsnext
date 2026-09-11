@@ -49,6 +49,38 @@
         {
           "label": "Words",
           "value": "words"
+        },
+        {
+          "label": "Comparisons",
+          "value": "comparisons"
+        },
+        {
+          "label": "Calendar",
+          "value": "calendar"
+        },
+        {
+          "label": "Statuses",
+          "value": "statuses"
+        },
+        {
+          "label": "Events",
+          "value": "events"
+        },
+        {
+          "label": "Targets",
+          "value": "targets"
+        },
+        {
+          "label": "Boxes",
+          "value": "boxes"
+        },
+        {
+          "label": "Contributions",
+          "value": "contributions"
+        },
+        {
+          "label": "Flows",
+          "value": "flows"
         }
       ]
     }

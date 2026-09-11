@@ -21,15 +21,16 @@ export function WidgetViewSettings({ view, patch, onSave }: Props): React.JSX.El
     sort: { type: "select", title: "Sort by value", default: view.sort ?? "none", values: [{ value: "none", label: "Data order" }, { value: "asc", label: "Ascending" }, { value: "desc", label: "Descending" }] },
     decimals: { type: "number", title: "Decimal places", default: view.decimals ?? 1, min: 0, max: 6, step: 1 },
     suffix: { type: "text", title: "Value suffix", default: view.suffix ?? "" },
-    target: { type: "number", title: "Progress target", default: view.target ?? 100, min: 0.000001 },
+    target: { type: "number", title: "Default target", default: view.target ?? 100, min: 0.000001 },
     bins: { type: "number", title: "Histogram bins", default: view.bins ?? 10, min: 1, max: 50, step: 1 },
   }), [view])
   const state = useSourceParams({ params, initialValues: patch })
   const chart = state.draftParams.chart ?? view.chart
   const visible = Object.entries(params).filter(([key]) => {
+    if (["status", "timeline"].includes(String(chart)) && ["value", "sort", "decimals", "suffix"].includes(key)) return false
     if (key === "x" || key === "y") return chart === "scatter" || chart === "heatmap"
     if (key === "series") return ["line", "area", "bar", "stacked-bar", "scatter", "table"].includes(String(chart))
-    if (key === "target") return chart === "progress"
+    if (key === "target") return chart === "progress" || chart === "bullet"
     if (key === "bins") return chart === "histogram"
     return true
   })

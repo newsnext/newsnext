@@ -531,3 +531,14 @@ observers cover theme changes without observing chart-generated descendants.
 View configuration is separate from producer parameters and must not enter the
 data query identity. Validate chart changes with resize, flip, theme, and fresh
 mount interactions as well as deterministic data/option tests.
+
+Advanced presets register calendar, treemap, boxplot, Sankey and custom interval
+renderers in the existing lazy chart chunk. Waterfall intervals support negative
+and zero-crossing totals without another chart dependency. Trend sparklines use
+the same lifecycle and theme observer as other charts; use one metric per compact
+card to avoid unnecessary canvas instances.
+
+With 25 presets, the production ECharts chunk is approximately 702 kB minified
+(total extension output 3.66 MB). Browser verification covered compact cards in
+dark/light themes and a view save/reload/reset cycle; changing only view fields
+left the daemon data cache timestamp unchanged.

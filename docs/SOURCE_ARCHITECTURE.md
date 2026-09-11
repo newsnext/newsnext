@@ -1058,3 +1058,10 @@ protocol 28 serializes these overrides under `LiveWidget.patch`, with legacy
 placement fields migrated on read. See the preset authoring contract in
 [SOURCE_GUIDELINE.md](SOURCE_GUIDELINE.md#preset-chart-widgets) and renderer
 lifecycle in [APPLICATION_ARCHITECTURE.md](APPLICATION_ARCHITECTURE.md#layers-and-widgets).
+
+Widget producer analytics live in the transport-free `@newsnext/sdk/analytics`
+entry. Grouping, time bucketing, ranking, moving windows, identity differences,
+and period comparison are pure producer operations. Advanced preset validation
+checks calendar bounds, ordered box statistics, and acyclic Sankey edges before
+constructing ECharts options. Textual status/timeline views share the card shell
+without loading the chart engine.

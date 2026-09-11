@@ -1,4 +1,4 @@
-export const WIDGET_CHARTS = ["metric", "line", "area", "bar", "ranking", "stacked-bar", "donut", "scatter", "heatmap", "histogram", "radar", "funnel", "table", "word-cloud", "progress"] as const
+export const WIDGET_CHARTS = ["metric", "line", "area", "bar", "ranking", "stacked-bar", "donut", "scatter", "heatmap", "histogram", "radar", "funnel", "table", "word-cloud", "progress", "trend-metric", "change-ranking", "calendar", "status", "timeline", "treemap", "bullet", "boxplot", "waterfall", "sankey"] as const
 export type WidgetChart = typeof WIDGET_CHARTS[number]
 
 /** Presentation only. Data producers return named results independently of this configuration. */

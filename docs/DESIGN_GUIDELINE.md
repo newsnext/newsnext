@@ -1027,3 +1027,9 @@ Metric and table presets use semantic HTML; charts also expose their observation
 in a screen-reader table. Keep view controls in a separate View section on the
 back using the shared card settings and parameter fields. Cancel discards drafts,
 Save updates the placement patch, and Reset removes only view overrides.
+
+Advanced Widget presets keep controls on the card back. Trend metrics combine a
+value and explicit period delta with a compact ECharts sparkline. Status rows show
+a written state beside their colored dot; timelines include local display times
+and machine-readable timestamps. Bullet charts separate actual bars, reference
+bands, and target markers. Missing comparison baselines display explicit text.

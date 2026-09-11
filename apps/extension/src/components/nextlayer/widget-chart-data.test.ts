@@ -29,3 +29,37 @@ describe("widget chart observations", () => {
     expect(option.series).toMatchObject([{ name: "A", data: [3, null] }, { name: "B", data: [null, 5] }])
   })
 })
+
+describe("advanced widget observations", () => {
+  const parse = (chart: WidgetChartView["chart"], rows: unknown[]) => parseChartRows({ rows }, { ...view, chart, limit: 500 })
+  it("validates real calendar dates and bounded ranges", () => {
+    expect(parse("calendar", [{ label: "2024-02-29", value: 1 }])).toHaveLength(1)
+    expect(() => parse("calendar", [{ label: "2026-02-29", value: 1 }])).toThrow("dates")
+    expect(() => parse("calendar", [{ label: "2024-01-01", value: 1 }, { label: "2026-01-01", value: 2 }])).toThrow("range")
+  })
+  it("accepts text-only events and requires timezone-aware timestamps", () => {
+    expect(parse("status", [{ label: "Feed", status: "ok", timestamp: "2026-09-11T00:00:00Z" }])[0]?.status).toBe("ok")
+    expect(() => parse("timeline", [{ label: "Event", timestamp: "2026-09-11T00:00:00" }])).toThrow("timezone")
+    expect(() => parse("status", [{ label: "Feed", status: "green", timestamp: "2026-09-11T00:00:00Z" }])).toThrow("status")
+  })
+  it("requires ordered box summaries and finite outliers", () => {
+    expect(parse("boxplot", [{ label: "A", value: 3, box: [1, 2, 3, 4, 5], outliers: [9] }])[0]?.outliers).toEqual([9])
+    expect(() => parse("boxplot", [{ label: "A", value: 3, box: [1, 3, 2, 4, 5] }])).toThrow("ordered")
+    expect(() => parse("boxplot", [{ label: "A", value: 3, box: [1, 2, 3, 4, 5], outliers: [NaN] }])).toThrow("outliers")
+  })
+  it("rejects cyclic flows before rendering", () => {
+    expect(parse("sankey", [{ label: "A", destination: "B", value: 2 }, { label: "B", destination: "C", value: 1 }])).toHaveLength(2)
+    expect(() => parse("sankey", [{ label: "A", destination: "B", value: 2 }, { label: "B", destination: "A", value: 1 }])).toThrow("cycles")
+  })
+  it("keeps comparisons and bullet targets distinct from current values", () => {
+    expect(parse("change-ranking", [{ label: "A", value: 3, previous: 0, previousRank: 2 }])[0]?.previous).toBe(0)
+    expect(() => parse("trend-metric", [{ label: "A", value: 3, previous: 2, history: [] }])).toThrow("history")
+    expect(parse("bullet", [{ label: "A", value: 3, target: 5, range: [0, 10] }])[0]?.target).toBe(5)
+    expect(() => parse("bullet", [{ label: "A", value: 3, range: [5, 2] }])).toThrow("ordered")
+  })
+  it("represents waterfall intervals across zero", () => {
+    const rows = parse("waterfall", [{ label: "Start", value: 5 }, { label: "Loss", value: -8 }, { label: "Gain", value: 6 }])
+    const option = createChartOption(rows, { ...view, chart: "waterfall" }, { colors: ["#08a", "#048"], foreground: "#111", muted: "#666", divider: "#eee", fontFamily: "sans-serif" })
+    expect(option.series).toMatchObject([{ data: [[0, 0, 5, 5], [1, 5, -3, -8], [2, -3, 3, 6]] }])
+  })
+})

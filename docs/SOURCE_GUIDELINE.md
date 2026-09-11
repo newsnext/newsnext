@@ -1413,9 +1413,11 @@ Use `view: { "type": "chart", "chart": "bar", "query": "observations" }`
 for a built-in visualization. No HTML, chart library import, or network request is
 needed in the view. Supported presets are `metric`, `line`, `area`, `bar`,
 `ranking` (horizontal bars), `stacked-bar`, `donut`, `scatter`, `heatmap`,
-`histogram`, `radar`, `funnel`, `table`, `word-cloud`, and `progress`.
+`histogram`, `radar`, `funnel`, `table`, `word-cloud`, `progress`,
+`trend-metric`, `change-ranking`, `calendar`, `status`, `timeline`, `treemap`,
+`bullet`, `boxplot`, `waterfall`, and `sankey`.
 The host uses ECharts and its word-cloud extension; metric and table views use
-semantic HTML. The front contains only the visualization and shared card header.
+semantic HTML, as do status, timeline and comparison summaries. The front contains only the visualization and shared card header.
 
 Return a named result from `data.mjs`:
 
@@ -1480,10 +1482,58 @@ as values. `null` resets an entire section; `{}` is an empty merge. Existing
 so `{}` with those Actions still resets them. Only resolved data parameters and
 scope affect the daemon's data identity; metadata and view patches do not.
 
-Runnable examples for all fifteen presets live in `examples/widgets`. Copy its
+Runnable examples for all twenty-five presets live in `examples/widgets`. Copy its
 contents (including the shared `demo-data.mjs`) to the Widget directory reported
 by `newsnext status`, then install the `demo-*` directories on a Board through
 `nextLayer.installLiveWidget`. The shared producer contains deterministic sample
 data; its `dataset` parameter is editable on the back. Use the extension's Cosmos
 **Patterns → Widgets → Gallery** for interactive previews and **States** for
 empty, malformed and negative-value examples.
+
+#### Additional preset data
+
+Additional fields below have fixed names; `label` and `value` retain their view
+field mappings. Producers own comparisons, statistics, chronological ordering,
+and rank calculations. A view change does not manufacture missing fields.
+
+| Preset | Additional row fields and behavior |
+| --- | --- |
+| `trend-metric` | Finite `previous` and `history` (1–500 finite numbers, oldest first). Displays current value, period change and sparkline. Use `limit: 1` for one compact metric. |
+| `change-ranking` | Finite `previous`; optional positive integer `previousRank`. Current rank follows visible row order. Percentage changes use the absolute previous value; a zero baseline has no percentage. |
+| `calendar` | `label` is a real `YYYY-MM-DD` date; `value` is non-negative. Unique dates, maximum span 366 days between endpoints. Increase `limit` above 100 for longer periods. Missing dates remain empty. |
+| `status` | `status`: `ok`, `warning`, `error`, or `unknown`; timezone-qualified ISO `timestamp`; optional nonempty `detail`. No numeric value needed. |
+| `timeline` | Timezone-qualified ISO `timestamp`, optional nonempty `detail`. No numeric value needed. Producer order is retained. |
+| `treemap` | Non-negative category values. A flat composition treemap. |
+| `bullet` | Non-negative actual `value`, optional non-negative row `target` (falls back to view target, then 100); optional ordered non-negative `range: [low, high]`. Thin foreground marker indicates the target; shaded band indicates the reference range. |
+| `boxplot` | Ordered `box: [min, q1, median, q3, max]`; optional finite `outliers` array. `value` remains required for sorting/table switching; normally use the median. |
+| `waterfall` | Signed contributions in producer order, accumulating from zero. A starting balance is an ordinary first contribution. Zero-crossing intervals are supported. |
+| `sankey` | `label` names the source node, `destination` names the target node, non-negative `value` is flow magnitude. Cyclic flows are rejected. |
+
+Status meanings are shown in text as well as color. Sorting waterfall rows changes
+the contribution sequence; leave `sort: "none"` to preserve its meaning.
+
+#### Reusable producer analytics
+
+Import pure helpers from `@newsnext/sdk/analytics` in a data producer with the SDK
+available in its runtime module resolution. This entry has no browser, network,
+or transport dependencies and never mutates inputs:
+
+```js
+import { groupCount, topN, periodChange, movingAverage, timeBuckets, compareItems } from "@newsnext/sdk/analytics"
+
+const counts = groupCount(items, item => item.category)
+const rows = topN(counts, row => row.value, 10)
+const change = periodChange(currentCount, previousCount)
+const averages = movingAverage([12, 18, null, 20, 24], 2)
+const days = timeBuckets(items, item => item.publishedAt, "day")
+const { added, removed } = compareItems(previousItems, items, item => item.id)
+```
+
+`groupCount` preserves first-seen group order; `topN` preserves ties.
+`timeBuckets` counts occupied UTC hour/day/week/month buckets (Monday weeks),
+sorted chronologically; it does not fill missing buckets. Use timestamps with an
+explicit timezone. `movingAverage` returns null until a complete trailing window
+is present; null observations break the window. `compareItems` deduplicates by
+identity, keeping the first item. `periodChange` returns current, previous, delta,
+and percent (null for a zero baseline). Invalid numbers and invalid window/count
+arguments throw rather than silently changing observations.
