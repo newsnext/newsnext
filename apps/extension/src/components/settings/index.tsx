@@ -2,6 +2,7 @@ import type { LocalePreference } from "@/lib/i18n"
 import type { SettingsTabId } from "@/lib/settings"
 import { RadioGroup, RadioGroupItem } from "@newsnext/ui/components/radio-group"
 import { TabsContent } from "@newsnext/ui/components/tabs"
+import { overlayScrollbarsRef } from "@newsnext/ui/hooks/use-overlay-scrollbars"
 import { useNavigate } from "@tanstack/react-router"
 import { useAtom, useAtomValue } from "jotai"
 import { useEffect } from "react"
@@ -123,7 +124,7 @@ function GeneralSettings() {
             setDefaultBoardId(value === LAST_USED_BOARD_VALUE ? null : value)
           }}
         >
-          <div className="flex min-w-0 items-center gap-1 overflow-x-auto scrollbar-hidden">
+          <div ref={overlayScrollbarsRef} className="flex min-w-0 items-center gap-1 overflow-x-auto">
             {boards.map(board => (
               <RadioGroupItem key={board.id} value={board.id} className="shrink-0">
                 {board.name}
@@ -149,7 +150,8 @@ function LanguageSelector({ value, onValueChange }: {
     <RadioGroup
       aria-label={t("language")}
       variant="segmented"
-      className="max-w-full overflow-x-auto scrollbar-hidden"
+      ref={overlayScrollbarsRef}
+      className="max-w-full overflow-x-auto"
       value={value}
       onValueChange={onValueChange}
     >

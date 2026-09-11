@@ -204,7 +204,7 @@ export function LiveCardFront({
         <div
           ref={setScrollElement}
           onPointerDown={event => event.stopPropagation()}
-          className="relative size-full overflow-y-auto px-2 py-2 scrollbar-hidden"
+          className="relative size-full overflow-y-auto px-2 py-2"
         >
           <CardContentTransition isFetching={isContentFetching}>
             <LiveCardIdentityContext value={identity}>

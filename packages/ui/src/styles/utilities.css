@@ -36,7 +36,10 @@
 
 @utility scrollbar-hidden {
   scrollbar-width: none;
-  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 [data-slot="tabs-content"][inert] {

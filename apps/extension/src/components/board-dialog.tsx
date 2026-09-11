@@ -14,6 +14,7 @@ import { RadioGroup, RadioGroupItem } from "@newsnext/ui/components/radio-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@newsnext/ui/components/select"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { ThemeSelector } from "@newsnext/ui/components/theme-selector"
+import { overlayScrollbarsRef } from "@newsnext/ui/hooks/use-overlay-scrollbars"
 import { cn } from "@newsnext/ui/lib/utils"
 import { useState } from "react"
 import { ConfigSection } from "@/components/common/config-section"
@@ -150,13 +151,13 @@ function ConfigurableBoardDialog({
     >
       <ContentDialogContent
         className="w-[calc(100%-2rem)] sm:max-w-130"
-        surfaceClassName={cn(initialColor, "min-h-0 gap-0")}
+        surfaceClassName={cn(initialColor, "min-h-0 gap-0 pr-0")}
       >
         <form
           className="grid size-full min-h-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden"
           onSubmit={handleSubmit}
         >
-          <DialogHeader className="relative -mt-2.5 h-12.5 justify-center px-2">
+          <DialogHeader className="relative -mt-2.5 mr-2.5 h-12.5 justify-center px-2">
             <DialogTitle className="font-bold">
               {t(isEditing ? "editBoard" : "createBoard")}
             </DialogTitle>
@@ -173,7 +174,8 @@ function ConfigurableBoardDialog({
 
           <SquircleBox
             radius="2xl"
-            className="grid min-h-0 gap-6 overflow-y-auto p-6"
+            ref={overlayScrollbarsRef}
+            className="grid min-h-0 gap-6 overflow-y-auto p-6 pr-8.5"
           >
             <ConfigSection variant="field" title={t("name")} htmlFor="board-name">
               <Input

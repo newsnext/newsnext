@@ -21,7 +21,7 @@ export function WidgetChartContent({ view, queries, statusMessage }: Props): Rea
   const message = statusMessage ?? result.error
   if (!rows.length) return <div role="status" className="flex size-full items-center justify-center p-4 text-center text-sm text-muted-foreground">{message ?? "No data to display."}</div>
   return (
-    <div className="relative flex size-full min-h-0 flex-col overflow-auto p-3 text-foreground scrollbar-hidden" onPointerDown={event => event.stopPropagation()}>
+    <div className="relative flex size-full min-h-0 flex-col overflow-auto p-3 text-foreground" onPointerDown={event => event.stopPropagation()}>
       {message && <p role="status" className="mb-2 text-xs text-muted-foreground">{message}</p>}
       {view.chart === "metric"
         ? (

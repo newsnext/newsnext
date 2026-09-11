@@ -20,6 +20,21 @@ This guideline covers React renders and related component work. Network latency,
 source execution, background service performance, and persisted cache policy
 remain separate concerns.
 
+### Overlay scrollbar initialization
+
+Keep native overlay detection independent of OverlayScrollbars. The shared ref
+callback measures one offscreen scroll container per document and caches the
+result. Native overlay environments do not import the library or its CSS, call
+its environment API, or install its observers and listeners. Only environments
+with space-consuming native scrollbars load the separate module. Initialize with
+the existing element as both target and viewport so popup keyboard navigation,
+scroll refs, and scroll restoration keep using the same DOM element. Ref cleanup
+cancels pending initialization and destroys an existing instance, including when
+a popup closes before its dynamic import completes. System scrollbar preference
+changes are detected on the next page load. Verify chunk separation in production
+builds; native behavior and popup unmount races still require browser verification
+under the repository's browser policy.
+
 ### Initial theme path
 
 Resolve the appearance mode and theme color in the shared blocking head script

@@ -124,6 +124,35 @@ a separate dark icon or themed raster variants.
   properties. Use `transition-all` when more than two properties animate to
   keep utility declarations concise.
 
+### Scrollbars
+
+Settings, dialogs, menus, and other supporting surfaces use the system's native
+scrollbars when both axes overlay content. Otherwise use the shared
+`overlayScrollbarsRef` callback, or `useOverlayScrollbars` when composing an
+existing ref, to load the overlay implementation and `overlay-scrollbars.css`.
+Keep native scrollbar CSS untouched so it does not change the system's overlay
+behavior or interfere with detection. See the initialization rules in
+`PERFORMANCE_GUIDELINE.md`.
+
+Custom tracks overlay content without consuming layout space. Reveal them on
+scrolling or pointer movement and hide them after 800ms of inactivity. Keep them
+visible during scrollbar interaction and keyboard focus inside the viewport.
+Use transparent tracks and rounded neutral thumbs derived from `foreground`:
+24% at rest, 40% on hover, and 56% while pressed. Use an 8px track with a 6px
+visible thumb and a 1px edge inset on both axes. Honor reduced motion and use
+system colors in forced-colors mode.
+
+Hide scrollbars in the Board viewport, Board navigation, the horizontal Widget
+grid, and host-owned content on both faces of LiveCards and LiveWidgets. Use
+native scroll containers and the shared `scrollbar-hidden` utility at these
+boundaries; do not mount custom scrollbar components or initialize overlay
+instances there. Preserve keyboard scrolling, existing scroll refs, and virtual
+lists. Embedded Widget documents own their internal styles.
+
+Place visible tracks against the scrolling surface's outer edge. In Settings
+and Board dialogs, move the shell's 10px right padding into the content scroller
+so text retains its inset while the scrollbar reaches the dialog edge.
+
 ### App background
 
 Use the top-weighted `zenith-theme-400` wash for the main app background and
@@ -706,7 +735,8 @@ and a subtle `bg-muted` hover fill. Keep the selected fill visible on hover.
 Do not add a theme-colored fill, underline, shadow, or sliding selection pill.
 Reduce tab text to `text-xs` below the `sm` breakpoint. Do not show the active tab as a subtitle above
 the panel.
-Use `px-4 py-6.5 sm:px-6 sm:py-8.5` on the settings content scroller and
+Use `pl-4 pr-6.5 py-6.5 sm:pl-6 sm:pr-8.5 sm:py-8.5` on the settings content
+scroller, with no right padding on the dialog shell, and
 `py-4.5` on the sidebar to preserve their content insets. Background fills belong
 to settings sections, selected navigation, interactive controls, and individual records where they
 help distinguish items, rather than successive wrapping containers.

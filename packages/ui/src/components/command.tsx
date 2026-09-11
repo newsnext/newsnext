@@ -13,6 +13,7 @@ import {
   InputGroup,
   InputGroupAddon,
 } from "@newsnext/ui/components/input-group"
+import { useOverlayScrollbars } from "@newsnext/ui/hooks/use-overlay-scrollbars"
 import { cn } from "@newsnext/ui/lib/utils"
 import { MagnifyingGlassIcon } from "@phosphor-icons/react"
 import * as React from "react"
@@ -65,13 +66,16 @@ function CommandInput({
 
 function CommandList({
   className,
+  ref,
   ...props
 }: React.ComponentProps<typeof CommandListPrimitive>) {
+  const scrollRef = useOverlayScrollbars(ref)
   return (
     <CommandListPrimitive
+      ref={scrollRef}
       data-slot="command-list"
       className={cn(
-        "no-scrollbar max-h-72 scroll-py-1 overflow-x-hidden overflow-y-auto outline-none",
+        "max-h-72 scroll-py-1 overflow-x-hidden overflow-y-auto outline-none",
         className,
       )}
       {...props}

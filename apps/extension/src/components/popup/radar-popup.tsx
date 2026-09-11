@@ -1,5 +1,6 @@
 import { Button } from "@newsnext/ui/components/button"
 import { ThemeIcon } from "@newsnext/ui/components/theme-icon"
+import { useOverlayScrollbars } from "@newsnext/ui/hooks/use-overlay-scrollbars"
 import { cn } from "@newsnext/ui/lib/utils"
 import { useCallback, useRef, useState } from "react"
 import { ScrollProgressProvider } from "@/components/common/scroll-progress-provider"
@@ -63,6 +64,7 @@ export function RadarPopup() {
     scrollContainerRef.current = container
     setScrollContainer(container)
   }, [])
+  const overlayScrollRef = useOverlayScrollbars(handleScrollContainerRef)
   const suggestions = useCurrentTabRadarSuggestions()
   const suggestionCount = suggestions?.length ?? 0
 
@@ -72,7 +74,7 @@ export function RadarPopup() {
       rootScrollContainerRef={scrollContainerRef}
     >
       <main
-        ref={handleScrollContainerRef}
+        ref={overlayScrollRef}
         className={cn(
           "grid-texture-background relative flex min-h-0 flex-col gap-2 overflow-y-auto bg-background p-3 text-foreground zenith-theme-400",
           suggestionCount > 0 ? "h-[600px]" : "h-16",

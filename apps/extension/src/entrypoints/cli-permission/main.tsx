@@ -1,6 +1,7 @@
 import type { CliPermissionPrompt } from "@/lib/background/cli-permission"
 import { Button } from "@newsnext/ui/components/button"
 import { ThemeIcon } from "@newsnext/ui/components/theme-icon"
+import { overlayScrollbarsRef } from "@newsnext/ui/hooks/use-overlay-scrollbars"
 import { useEffect, useState } from "react"
 import { browser } from "#imports"
 import { I18nProvider } from "@/components/i18n-provider"
@@ -94,7 +95,7 @@ function CliPermissionApp(): React.JSX.Element {
           )}
           {state.status === "ready" && (
             <>
-              <div className="flex max-h-24 items-start gap-2 overflow-y-auto border-y border-foreground/8 py-3 scrollbar-hidden">
+              <div ref={overlayScrollbarsRef} className="flex max-h-24 items-start gap-2 overflow-y-auto border-y border-foreground/8 py-3">
                 <ul className="flex min-w-0 flex-1 flex-wrap gap-2">
                   {origins.map(origin => (
                     <li

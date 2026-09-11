@@ -65,7 +65,7 @@ interface CommandInputProps extends Omit<
   "defaultValue" | "onChange" | "type" | "value"
 > {}
 
-interface CommandListProps extends React.ComponentPropsWithoutRef<"div"> {
+interface CommandListProps extends React.ComponentPropsWithRef<"div"> {
   label?: string
 }
 

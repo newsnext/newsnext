@@ -7,6 +7,7 @@ import {
   DialogTitle,
 } from "@newsnext/ui/components/dialog"
 import { Tabs, TabsList, TabsTrigger } from "@newsnext/ui/components/tabs"
+import { overlayScrollbarsRef, useOverlayScrollbars } from "@newsnext/ui/hooks/use-overlay-scrollbars"
 import { useEffect, useRef } from "react"
 import { useI18n } from "@/hooks/use-i18n"
 
@@ -38,6 +39,7 @@ export function SettingsModalShell({
 }: SettingsModalShellProps): React.JSX.Element {
   const { t } = useI18n()
   const contentRef = useRef<HTMLDivElement>(null)
+  const contentScrollRef = useOverlayScrollbars(contentRef)
 
   useEffect(() => {
     contentRef.current?.scrollTo({ top: 0 })
@@ -45,7 +47,7 @@ export function SettingsModalShell({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <ContentDialogContent surfaceClassName="min-h-0 py-0">
+      <ContentDialogContent surfaceClassName="min-h-0 py-0 pr-0">
         <DialogTitle className="sr-only">{t("preferences")}</DialogTitle>
         <Tabs
           orientation="vertical"
@@ -58,7 +60,7 @@ export function SettingsModalShell({
           }}
           className="min-h-0 w-full min-w-0"
         >
-          <div className="min-h-0 w-24 shrink-0 overflow-y-auto py-4.5 sm:w-32">
+          <div ref={overlayScrollbarsRef} className="min-h-0 w-24 shrink-0 overflow-y-auto py-4.5 sm:w-32">
             <TabsList
               aria-label={t("preferences")}
               variant="sidebar"
@@ -76,7 +78,7 @@ export function SettingsModalShell({
               ))}
             </TabsList>
           </div>
-          <div ref={contentRef} className="min-h-0 min-w-0 flex-1 overflow-y-auto border-l border-border/60 px-4 py-6.5 sm:px-6 sm:py-8.5">
+          <div ref={contentScrollRef} className="min-h-0 min-w-0 flex-1 overflow-y-auto border-l border-border/60 py-6.5 pr-6.5 pl-4 sm:py-8.5 sm:pr-8.5 sm:pl-6">
             {children}
           </div>
         </Tabs>

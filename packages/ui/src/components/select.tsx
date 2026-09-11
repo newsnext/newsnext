@@ -1,6 +1,7 @@
 "use client"
 
 import { Select as SelectPrimitive } from "@base-ui/react/select"
+import { useOverlayScrollbars } from "@newsnext/ui/hooks/use-overlay-scrollbars"
 import { cn } from "@newsnext/ui/lib/utils"
 
 import { CaretDownIcon, CaretUpIcon, CheckIcon } from "@phosphor-icons/react"
@@ -83,12 +84,14 @@ function SelectContent({
   align = "center",
   alignOffset = 0,
   alignItemWithTrigger = true,
+  ref,
   ...props
 }: SelectPrimitive.Popup.Props
   & Pick<
     SelectPrimitive.Positioner.Props,
     "align" | "alignOffset" | "side" | "sideOffset" | "alignItemWithTrigger"
   >) {
+  const scrollRef = useOverlayScrollbars(ref)
   return (
     <SelectPrimitive.Portal>
       <SelectPrimitive.Positioner
@@ -100,6 +103,7 @@ function SelectContent({
         className="isolate z-50"
       >
         <SelectPrimitive.Popup
+          ref={scrollRef}
           data-slot="select-content"
           data-align-trigger={alignItemWithTrigger}
           className={cn(

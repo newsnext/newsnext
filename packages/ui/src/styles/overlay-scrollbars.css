@@ -1,0 +1,36 @@
+@import "overlayscrollbars/overlayscrollbars.css" layer(base);
+
+@layer base {
+  .os-theme-newsnext {
+    --os-size: 8px;
+    --os-padding-perpendicular: 1px;
+    --os-padding-axis: 4px;
+    --os-track-border-radius: 999px;
+    --os-handle-border-radius: 999px;
+    --os-handle-interactive-area-offset: 4px;
+    --os-handle-bg: color-mix(in oklab, var(--foreground) 24%, transparent);
+    --os-handle-bg-hover: color-mix(in oklab, var(--foreground) 40%, transparent);
+    --os-handle-bg-active: color-mix(in oklab, var(--foreground) 56%, transparent);
+  }
+
+  [data-overlayscrollbars]:focus-visible > .os-scrollbar,
+  [data-overlayscrollbars]:has(:focus-visible) > .os-scrollbar {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .os-theme-newsnext,
+    .os-theme-newsnext .os-scrollbar-handle {
+      transition: none;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .os-theme-newsnext {
+      --os-handle-bg: ButtonText;
+      --os-handle-bg-hover: Highlight;
+      --os-handle-bg-active: Highlight;
+    }
+  }
+}

@@ -24,6 +24,7 @@
     "dompurify": "^3.4.15",
     "es-toolkit": "catalog:",
     "motion": "catalog:",
+    "overlayscrollbars": "^2.16.0",
     "react": "catalog:"
   },
   "devDependencies": {

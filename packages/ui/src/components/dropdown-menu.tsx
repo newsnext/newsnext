@@ -1,4 +1,5 @@
 import { Menu as MenuPrimitive } from "@base-ui/react/menu"
+import { useOverlayScrollbars } from "@newsnext/ui/hooks/use-overlay-scrollbars"
 import { cn } from "@newsnext/ui/lib/utils"
 
 import { CaretRightIcon, CheckIcon } from "@phosphor-icons/react"
@@ -25,12 +26,14 @@ function DropdownMenuContent({
   side = "bottom",
   sideOffset = 6,
   className,
+  ref,
   ...props
 }: MenuPrimitive.Popup.Props
   & Pick<
     MenuPrimitive.Positioner.Props,
     "align" | "alignOffset" | "side" | "sideOffset"
   >) {
+  const scrollRef = useOverlayScrollbars(ref)
   return (
     <MenuPrimitive.Portal>
       <MenuPrimitive.Positioner
@@ -41,6 +44,7 @@ function DropdownMenuContent({
         sideOffset={sideOffset}
       >
         <MenuPrimitive.Popup
+          ref={scrollRef}
           data-slot="dropdown-menu-content"
           className={cn("z-50 max-h-(--available-height) w-(--anchor-width) min-w-40 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-xl bg-background/90 p-1 text-foreground shadow-lg ring-1 ring-foreground/10 backdrop-blur-xl duration-100 outline-none data-[side=bottom]:slide-in-from-top-1 data-[side=inline-end]:slide-in-from-left-1 data-[side=inline-start]:slide-in-from-right-1 data-[side=left]:slide-in-from-right-1 data-[side=right]:slide-in-from-left-1 data-[side=top]:slide-in-from-bottom-1 dark:bg-background/85 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:overflow-hidden data-closed:fade-out-0 data-closed:zoom-out-95", className)}
           {...props}

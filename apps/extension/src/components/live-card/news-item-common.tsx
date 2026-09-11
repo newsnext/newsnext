@@ -5,6 +5,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@newsnext/ui/components/popover"
+import { overlayScrollbarsRef } from "@newsnext/ui/hooks/use-overlay-scrollbars"
 import { cn } from "@newsnext/ui/lib/utils"
 import { useState } from "react"
 import { RelativeTime } from "@/hooks/useRelativeTime"
@@ -101,7 +102,8 @@ export function NewsItemLink({
           side="left"
           align="start"
           alignOffset={0}
-          className="max-h-96 gap-2 overflow-y-auto scrollbar-hidden"
+          ref={overlayScrollbarsRef}
+          className="max-h-96 gap-2 overflow-y-auto"
           initialFocus={false}
           finalFocus={false}
         >

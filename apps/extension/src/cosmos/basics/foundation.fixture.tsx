@@ -6,7 +6,7 @@ import { Button } from "@newsnext/ui/components/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@newsnext/ui/components/card"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@newsnext/ui/components/command"
 import { PillGroup, PillGroupIndicator, pillGroupItemClassName } from "@newsnext/ui/components/pill-group"
-import { ScrollArea } from "@newsnext/ui/components/scroll-area"
+import { overlayScrollbarsRef } from "@newsnext/ui/hooks/use-overlay-scrollbars"
 import { ArrowRight, Bell, MoreHorizontal, Plus, Trash2 } from "lucide-react"
 import { CardHeaderActionButton } from "@/components/card-shell/card-header"
 import {
@@ -415,7 +415,7 @@ export function NavigationAndDataFixture(): React.JSX.Element {
         </FixtureSection>
 
         <FixtureSection title="Scroll area" description="A styled viewport that preserves native scrolling behavior.">
-          <ScrollArea className="h-64 rounded-xl border p-4">
+          <div ref={overlayScrollbarsRef} className="h-64 overflow-auto rounded-xl border p-4">
             <div className="grid gap-3 pr-4 text-sm">
               {Array.from({ length: 12 }, (_, index) => (
                 <div key={index} className="flex items-center justify-between gap-4 border-b border-border/50 pb-3 last:border-0">
@@ -428,7 +428,7 @@ export function NavigationAndDataFixture(): React.JSX.Element {
                 </div>
               ))}
             </div>
-          </ScrollArea>
+          </div>
         </FixtureSection>
       </div>
     </FixturePage>

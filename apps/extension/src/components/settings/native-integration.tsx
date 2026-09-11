@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from "@newsnext/ui/components/select"
 import { Switch } from "@newsnext/ui/components/switch"
+import { overlayScrollbarsRef } from "@newsnext/ui/hooks/use-overlay-scrollbars"
 import { useAtomValueRawSync } from "jotai"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { browser } from "#imports"
@@ -286,7 +287,7 @@ export function NativeIntegrationSettings(): React.JSX.Element {
               {t("appLogCount", { count: filteredLogs.length })}
             </span>
           </div>
-          <div className="max-h-72 overflow-y-auto rounded-xl border bg-background/25">
+          <div ref={overlayScrollbarsRef} className="max-h-72 overflow-y-auto rounded-xl border bg-background/25">
             {filteredLogs.length === 0
               ? <p className="p-6 text-center text-xs text-muted-foreground">{t("noAppLogs")}</p>
               : filteredLogs.map(entry => (

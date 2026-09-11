@@ -13,6 +13,7 @@ import {
 } from "@newsnext/ui/components/dialog"
 import { ProxiedImage } from "@newsnext/ui/components/proxied-image"
 import { SafeHtml } from "@newsnext/ui/components/safe-html"
+import { overlayScrollbarsRef } from "@newsnext/ui/hooks/use-overlay-scrollbars"
 import { cn } from "@newsnext/ui/lib/utils"
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ExternalLink } from "lucide-react"
 import { CardAvatar } from "@/components/card-shell/card-avatar"
@@ -336,7 +337,7 @@ export function NewsItemPreviewDialog({
             <header className="flex h-18 shrink-0 items-center px-6">
               <NewsItemPreviewIdentity centered={!hasMedia} item={item} />
             </header>
-            <article className="min-h-0 flex-1 overflow-y-auto px-6 pb-10">
+            <article ref={overlayScrollbarsRef} className="min-h-0 flex-1 overflow-y-auto px-6 pb-10">
               <div className={cn(!hasMedia && "mx-auto w-full max-w-3xl")}>
                 <DialogTitle className="text-lg text-justify">
                   {item.title}

@@ -32,7 +32,7 @@ export function WidgetItemListContent({ ui, title, color, queries, statusMessage
   const message = isFetching ? undefined : statusMessage ?? result.error
 
   return (
-    <div ref={setScrollElement} className="relative size-full overflow-y-auto px-2 py-2 scrollbar-hidden" onPointerDown={event => event.stopPropagation()}>
+    <div ref={setScrollElement} className="relative size-full overflow-y-auto px-2 py-2" onPointerDown={event => event.stopPropagation()}>
       {message && <p role="status" className="p-2 text-sm text-muted-foreground">{message}</p>}
       {!isFetching && !message && result.items.length === 0 && <p role="status" className="p-2 text-sm text-muted-foreground">No matching items.</p>}
       <LiveCardIdentityContext value={identity}>

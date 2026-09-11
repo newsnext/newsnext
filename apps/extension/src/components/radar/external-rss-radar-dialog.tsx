@@ -5,6 +5,7 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@newsnext/ui/components/dialog"
+import { useOverlayScrollbars } from "@newsnext/ui/hooks/use-overlay-scrollbars"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { ScrollProgressProvider } from "@/components/common/scroll-progress-provider"
 import { RadarDeck } from "@/components/popup/radar-deck"
@@ -39,6 +40,7 @@ export function ExternalRssRadarDialog(): React.JSX.Element | null {
     scrollContainerRef.current = container
     setScrollContainer(container)
   }, [])
+  const overlayScrollRef = useOverlayScrollbars(handleScrollContainerRef)
 
   const close = useCallback(() => {
     setState(null)
@@ -97,7 +99,7 @@ export function ExternalRssRadarDialog(): React.JSX.Element | null {
         }}
       >
         <DialogContent
-          ref={handleScrollContainerRef}
+          ref={overlayScrollRef}
           variant="bare"
           radius={0}
           className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-100"
